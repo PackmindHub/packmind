@@ -1,0 +1,11 @@
+import { PackmindGateway } from '../../../../shared/PackmindGateway';
+import { I<%= classify(originalName) %>Gateway } from './I<%= classify(originalName) %>Gateway';
+
+export class <%= classify(originalName) %>GatewayApi
+  extends PackmindGateway
+  implements I<%= classify(originalName) %>Gateway
+{
+  constructor() {
+    super('/<%= originalName %>');
+  }
+}

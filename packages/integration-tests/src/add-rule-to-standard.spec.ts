@@ -1,0 +1,243 @@
+import { AccountsHexa, accountsSchemas } from '@packmind/accounts';
+import { User, Organization } from '@packmind/accounts/types';
+import { StandardsHexa, standardsSchemas } from '@packmind/standards';
+import { Standard, StandardVersion } from '@packmind/standards/types';
+import { GitHexa, gitSchemas } from '@packmind/git';
+import { HexaRegistry } from '@packmind/shared';
+import { makeTestDatasource } from '@packmind/shared/test';
+
+import { DataSource } from 'typeorm';
+import assert from 'assert';
+
+// Mock only Configuration from @packmind/shared
+jest.mock('@packmind/shared', () => {
+  const actual = jest.requireActual('@packmind/shared');
+  return {
+    ...actual,
+    Configuration: {
+      getConfig: jest.fn().mockImplementation((key: string) => {
+        if (key === 'ENCRYPTION_KEY') {
+          return Promise.resolve('random-encryption-key-for-testing');
+        }
+        return Promise.resolve(null);
+      }),
+    },
+  };
+});
+
+describe('Add rule to standard integration', () => {
+  let accountsHexa: AccountsHexa;
+  let standardsHexa: StandardsHexa;
+  let registry: HexaRegistry;
+  let dataSource: DataSource;
+
+  let standard: Standard;
+  let organization: Organization;
+  let user: User;
+
+  beforeEach(async () => {
+    // Create test datasource with all necessary schemas
+    dataSource = await makeTestDatasource([
+      ...accountsSchemas,
+      ...standardsSchemas,
+      ...gitSchemas,
+    ]);
+    await dataSource.initialize();
+    await dataSource.synchronize();
+
+    // Create HexaRegistry
+    registry = new HexaRegistry();
+
+    // Register hexas before initialization
+    registry.register(GitHexa);
+    registry.register(AccountsHexa);
+    registry.register(StandardsHexa);
+
+    // Initialize the registry with the datasource
+    registry.init(dataSource);
+
+    // Get initialized hexas
+    accountsHexa = registry.get(AccountsHexa);
+    standardsHexa = registry.get(StandardsHexa);
+
+    // Create test data
+    organization = await accountsHexa.createOrganization({
+      name: 'test organization',
+    });
+    user = await accountsHexa.signUpUser({
+      username: 'toto',
+      password: 's3cr3t',
+      organizationId: organization.id,
+    });
+
+    // Create a standard to work with
+    standard = await standardsHexa.createStandard({
+      name: 'My Test Standard',
+      description: 'A test standard for integration testing',
+      rules: [
+        { content: 'Use meaningful variable names' },
+        { content: 'Write unit tests for your code' },
+      ],
+      organizationId: organization.id,
+      userId: user.id,
+      scope: 'typescript',
+    });
+  });
+
+  afterEach(async () => {
+    await dataSource.destroy();
+  });
+
+  describe('when standard slug is not found in the organization', () => {
+    test('An error is thrown', async () => {
+      const nonExistentSlug = 'non-existent-standard';
+
+      await expect(
+        standardsHexa.addRuleToStandard({
+          standardSlug: nonExistentSlug,
+          ruleContent: 'Some new rule',
+          organizationId: organization.id,
+          userId: user.id,
+        }),
+      ).rejects.toThrow(
+        'Standard slug not found, please check current standards first',
+      );
+    });
+  });
+
+  describe('when standard slug exists but belongs to different organization', () => {
+    test('An error is thrown', async () => {
+      // Create another organization and user
+      const otherOrganization = await accountsHexa.createOrganization({
+        name: 'other organization',
+      });
+      const otherUser = await accountsHexa.signUpUser({
+        username: 'other',
+        password: 's3cr3t',
+        organizationId: otherOrganization.id,
+      });
+
+      // Try to add rule to standard from the first organization using the second organization's context
+      await expect(
+        standardsHexa.addRuleToStandard({
+          standardSlug: standard.slug,
+          ruleContent: 'Unauthorized rule',
+          organizationId: otherOrganization.id,
+          userId: otherUser.id,
+        }),
+      ).rejects.toThrow(
+        'Standard slug not found, please check current standards first',
+      );
+    });
+  });
+
+  test('The new standard version should contain the added rule', async () => {
+    const newRuleContent = 'Always validate input parameters';
+
+    // Get the current version before adding the rule
+    const initialVersion = standard.version;
+
+    // Add the rule to the standard
+    const newStandardVersion: StandardVersion =
+      await standardsHexa.addRuleToStandard({
+        standardSlug: standard.slug,
+        ruleContent: newRuleContent,
+        organizationId: organization.id,
+        userId: user.id,
+      });
+
+    // Verify the new version was created with incremented version number
+    expect(newStandardVersion.version).toBe(initialVersion + 1);
+    expect(newStandardVersion.standardId).toBe(standard.id);
+    expect(newStandardVersion.userId).toBe(user.id);
+
+    // Get the rules for the updated standard to verify the rule was added
+    const rules = await standardsHexa.getRulesByStandardId(standard.id);
+
+    expect(rules).toBeDefined();
+    expect(rules).toHaveLength(3); // 2 original + 1 new
+
+    // Verify the original rules are preserved
+    const ruleContents = rules.map((rule) => rule.content);
+    expect(ruleContents).toContain('Use meaningful variable names');
+    expect(ruleContents).toContain('Write unit tests for your code');
+
+    // Verify the new rule was added
+    expect(ruleContents).toContain(newRuleContent);
+
+    // Verify that the main standard record was updated with the new version number
+    const updatedStandard = await standardsHexa.getStandardById(standard.id);
+    assert(updatedStandard);
+    expect(updatedStandard.version).toBe(initialVersion + 1);
+  });
+
+  test('Multiple rules can be added sequentially', async () => {
+    const firstRuleContent = 'Use TypeScript strict mode';
+    const secondRuleContent = 'Implement proper error handling';
+
+    // Add first rule
+    const firstVersion = await standardsHexa.addRuleToStandard({
+      standardSlug: standard.slug,
+      ruleContent: firstRuleContent,
+      organizationId: organization.id,
+      userId: user.id,
+    });
+
+    expect(firstVersion.version).toBe(2); // Initial was 1
+
+    // Add second rule
+    const secondVersion = await standardsHexa.addRuleToStandard({
+      standardSlug: standard.slug,
+      ruleContent: secondRuleContent,
+      organizationId: organization.id,
+      userId: user.id,
+    });
+
+    expect(secondVersion.version).toBe(3); // Incremented again
+
+    // Verify final state by getting rules for the standard
+    const finalRules = await standardsHexa.getRulesByStandardId(standard.id);
+
+    expect(finalRules).toHaveLength(4); // 2 original + 2 new
+
+    const ruleContents = finalRules.map((rule) => rule.content);
+    expect(ruleContents).toContain('Use meaningful variable names');
+    expect(ruleContents).toContain('Write unit tests for your code');
+    expect(ruleContents).toContain(firstRuleContent);
+    expect(ruleContents).toContain(secondRuleContent);
+  });
+
+  test('Standard slug should be case-insensitive', async () => {
+    const newRuleContent = 'Use consistent naming conventions';
+
+    // Test with mixed case version of the standard slug
+    const mixedCaseSlug = standard.slug
+      .split('-')
+      .map((part, index) =>
+        index === 0
+          ? part.charAt(0).toUpperCase() + part.slice(1)
+          : part.charAt(0).toUpperCase() + part.slice(1),
+      )
+      .join('-');
+
+    // Ensure the mixed case slug is actually different from the original
+    expect(mixedCaseSlug).not.toBe(standard.slug);
+
+    // Add rule using mixed case slug - this should work and normalize the slug internally
+    const newStandardVersion = await standardsHexa.addRuleToStandard({
+      standardSlug: mixedCaseSlug,
+      ruleContent: newRuleContent,
+      organizationId: organization.id,
+      userId: user.id,
+    });
+
+    // Verify the rule was added successfully
+    expect(newStandardVersion.version).toBe(standard.version + 1);
+    expect(newStandardVersion.standardId).toBe(standard.id);
+
+    // Verify the rule was actually added to the standard
+    const rules = await standardsHexa.getRulesByStandardId(standard.id);
+    const ruleContents = rules.map((rule) => rule.content);
+    expect(ruleContents).toContain(newRuleContent);
+  });
+});

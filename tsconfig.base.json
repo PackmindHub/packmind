@@ -1,0 +1,58 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "importHelpers": true,
+    "target": "es2015",
+    "module": "esnext",
+    "lib": ["es2020", "dom"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@packmind/accounts": ["packages/accounts/src/index.ts"],
+      "@packmind/accounts/types": ["packages/accounts/src/types/index.ts"],
+      "@packmind/assets": ["packages/assets/src/index.ts"],
+      "@packmind/assets/*": ["packages/assets/src/*"],
+      "@packmind/coding-agent": ["packages/coding-agent/src/index.ts"],
+      "@packmind/coding-agent/types": [
+        "packages/coding-agent/src/types/index.ts"
+      ],
+      "@packmind/deployments": ["packages/deployments/src/index.ts"],
+      "@packmind/deployments/test": ["packages/deployments/test/index.ts"],
+      "@packmind/deployments/test/*": ["packages/deployments/test/*"],
+      "@packmind/deployments/types": [
+        "packages/deployments/src/types/index.ts"
+      ],
+      "@packmind/editions": ["packages/editions/src/index.ts"],
+      "@packmind/git": ["packages/git/src/index.ts"],
+      "@packmind/git/types": ["packages/git/src/types/index.ts"],
+      "@packmind/integration-tests": [
+        "packages/integration-tests/src/index.ts"
+      ],
+      "@packmind/migrations": ["packages/migrations/src/index.ts"],
+      "@packmind/recipes": ["packages/recipes/src/index.ts"],
+      "@packmind/recipes/test": ["packages/recipes/test/index.ts"],
+      "@packmind/recipes/types": ["packages/recipes/src/types/index.ts"],
+      "@packmind/shared": ["packages/shared/src/index.ts"],
+      "@packmind/shared/test": ["packages/shared/test/index.ts"],
+      "@packmind/shared/types": ["packages/shared/src/types/index.ts"],
+      "@packmind/shared-nest": ["packages/shared-nest/src/index.ts"],
+      "@packmind/standards": ["packages/standards/src/index.ts"],
+      "@packmind/standards/types": ["packages/standards/src/types/index.ts"],
+      "@packmind/ui": ["packages/ui/src/index.ts"],
+      "features/analytics/RecipeUsageAnalytics": [
+        "apps/frontend/src/domain/analytics/components/RecipeUsageAnalytics"
+      ],
+      "packmind-plugin": ["tools/packmind-plugin/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}

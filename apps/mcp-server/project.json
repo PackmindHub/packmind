@@ -1,0 +1,68 @@
+{
+  "name": "mcp-server",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/mcp-server/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit --project apps/mcp-server/tsconfig.app.json"
+      }
+    },
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "dependsOn": ["^build"],
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/mcp-server",
+        "format": ["cjs"],
+        "bundle": true,
+        "main": "apps/mcp-server/src/main.ts",
+        "tsConfig": "apps/mcp-server/tsconfig.app.json",
+        "assets": ["apps/mcp-server/src/assets"],
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "outExtension": {
+            ".js": ".js"
+          },
+          "external": ["class-validator", "class-transformer"]
+        }
+      },
+      "configurations": {
+        "development": {},
+        "production": {
+          "esbuildOptions": {
+            "sourcemap": false,
+            "outExtension": {
+              ".js": ".js"
+            },
+            "external": ["class-validator", "class-transformer"]
+          }
+        }
+      }
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "dependsOn": ["build"],
+      "options": {
+        "buildTarget": "mcp-server:build",
+        "runBuildTargetDependencies": false
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "mcp-server:build:development"
+        },
+        "production": {
+          "buildTarget": "mcp-server:build:production"
+        }
+      }
+    }
+  }
+}

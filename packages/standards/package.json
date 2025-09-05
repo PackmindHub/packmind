@@ -1,0 +1,21 @@
+{
+  "name": "@packmind/standards",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "scripts": {
+    "test": "jest"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0",
+    "typeorm": "0.3.25",
+    "@packmind/shared": "*",
+    "@packmind/git": "*",
+    "@packmind/accounts": "*",
+    "slug": "^11.0.0",
+    "ts-jest": "^29.1.0",
+    "uuid": "^11.1.0"
+  }
+}

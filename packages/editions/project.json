@@ -1,0 +1,20 @@
+{
+  "name": "editions",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/editions/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/editions",
+        "tsConfig": "packages/editions/tsconfig.lib.json",
+        "packageJson": "packages/editions/package.json",
+        "main": "packages/editions/src/index.ts",
+        "assets": ["packages/editions/*.md"]
+      }
+    }
+  }
+}

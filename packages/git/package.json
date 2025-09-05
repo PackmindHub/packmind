@@ -1,0 +1,17 @@
+{
+  "name": "@packmind/git",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "dependencies": {
+    "tslib": "^2.3.0",
+    "axios": "^1.11.0",
+    "ts-jest": "^29.1.0",
+    "@packmind/shared": "*",
+    "@packmind/accounts": "*",
+    "typeorm": "0.3.25",
+    "uuid": "^11.1.0"
+  }
+}

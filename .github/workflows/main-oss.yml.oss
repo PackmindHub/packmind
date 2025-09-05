@@ -1,0 +1,22 @@
+name: Main OSS CI/CD Pipeline
+
+# ┌─────────────────────────────────────────────────────────────────┐
+# │ GLOBAL CONFIGURATION                                            │
+# │ To update Node.js version, change all occurrences below        │
+# │ Current version: 22.17.0                                       │
+# └─────────────────────────────────────────────────────────────────┘
+
+on:
+  push:
+    branches: ['main']
+    tags:
+      - 'release/*'
+  pull_request:
+    branches: ['main']
+
+jobs:
+  # Stage 1: Build and Test OSS
+  build-oss:
+    uses: ./.github/workflows/build-oss.yml
+    with:
+      node-version: 22.17.0

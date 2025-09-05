@@ -1,0 +1,160 @@
+name: Build and Test OSS
+
+env:
+  OSS_EDITION: oss
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        required: true
+        type: string
+        description: 'Node.js version to use'
+    outputs:
+      api-artifact-oss:
+        description: 'API OSS build artifact name'
+        value: ${{ jobs.build-api-oss.outputs.artifact-name }}
+      frontend-artifact-oss:
+        description: 'Frontend OSS build artifact name'
+        value: ${{ jobs.build-frontend-oss.outputs.artifact-name }}
+      mcp-server-artifact-oss:
+        description: 'MCP Server OSS build artifact name'
+        value: ${{ jobs.build-mcp-server-oss.outputs.artifact-name }}
+
+jobs:
+  build-api-oss:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    outputs:
+      artifact-name: api-dist-oss-${{ github.run_number }}-${{ github.sha }}
+    strategy:
+      matrix:
+        node-version: ['${{ inputs.node-version }}']
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - run: npm ci
+      - name: Generate OSS tsconfig
+        env:
+          PACKMIND_EDITION: ${{ env.OSS_EDITION }}
+        run: node scripts/select-tsconfig.mjs
+      - name: Build API (OSS)
+        env:
+          PACKMIND_EDITION: ${{ env.OSS_EDITION }}
+        run: ./node_modules/.bin/nx build api
+      - name: Test API (OSS)
+        env:
+          PACKMIND_EDITION: ${{ env.OSS_EDITION }}
+        run: ./node_modules/.bin/nx test api
+      - run: cp package.json dist/apps/api/.
+      - run: cp package-lock.json dist/apps/api/.
+      - run: cp tsconfig.base.effective.json dist/apps/api/.
+
+      - name: Upload API OSS build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-dist-oss-${{ github.run_number }}-${{ github.sha }}
+          path: dist/apps/api/
+
+  build-frontend-oss:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    outputs:
+      artifact-name: frontend-dist-oss-${{ github.run_number }}-${{ github.sha }}
+    strategy:
+      matrix:
+        node-version: ['${{ inputs.node-version }}']
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - run: npm ci
+      - name: Generate OSS tsconfig
+        env:
+          PACKMIND_EDITION: ${{ env.OSS_EDITION }}
+        run: node scripts/select-tsconfig.mjs
+      - name: Generate Chakra types (OSS)
+        env:
+          PACKMIND_EDITION: ${{ env.OSS_EDITION }}
+        run: npm run chakra:typegen
+      - name: Test Frontend (OSS)
+        env:
+          PACKMIND_EDITION: ${{ env.OSS_EDITION }}
+        run: ./node_modules/.bin/nx test frontend
+      - name: Build frontend (OSS)
+        env:
+          PACKMIND_EDITION: ${{ env.OSS_EDITION }}
+        run: ./node_modules/.bin/nx build frontend
+      - run: cp tsconfig.base.effective.json apps/frontend/build/client/.
+
+      - name: Upload Frontend OSS build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist-oss-${{ github.run_number }}-${{ github.sha }}
+          path: apps/frontend/build/client
+
+  build-mcp-server-oss:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    outputs:
+      artifact-name: mcp-server-dist-oss-${{ github.run_number }}-${{ github.sha }}
+    strategy:
+      matrix:
+        node-version: ['${{ inputs.node-version }}']
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - run: npm ci
+      - name: Generate OSS tsconfig
+        env:
+          PACKMIND_EDITION: ${{ env.OSS_EDITION }}
+        run: node scripts/select-tsconfig.mjs
+      - name: Build MCP Server (OSS)
+        env:
+          PACKMIND_EDITION: ${{ env.OSS_EDITION }}
+        run: ./node_modules/.bin/nx build mcp-server
+      - run: cp tsconfig.base.effective.json dist/apps/mcp-server/.
+
+      - name: Upload MCP-Server OSS build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mcp-server-dist-oss-${{ github.run_number }}-${{ github.sha }}
+          path: dist/apps/mcp-server/
+
+  build-cli:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    strategy:
+      matrix:
+        node-version: ['${{ inputs.node-version }}']
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - run: npm ci
+      - name: Generate OSS tsconfig
+        env:
+          PACKMIND_EDITION: ${{ env.OSS_EDITION }}
+        run: node scripts/select-tsconfig.mjs
+      - name: Build CLI (OSS)
+        env:
+          PACKMIND_EDITION: ${{ env.OSS_EDITION }}
+        run: ./node_modules/.bin/nx build packmind-cli
+      - name: Test CLI (OSS)
+        env:
+          PACKMIND_EDITION: ${{ env.OSS_EDITION }}
+        run: ./node_modules/.bin/nx test packmind-cli

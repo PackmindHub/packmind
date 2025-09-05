@@ -1,0 +1,17 @@
+{
+  "name": "@packmind/migrations",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "scripts": {
+    "typeorm": "typeorm-ts-node-commonjs"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0",
+    "typeorm": "^0.3.25",
+    "@packmind/shared": "*",
+    "tsconfig-paths": "^4.2.0"
+  }
+}

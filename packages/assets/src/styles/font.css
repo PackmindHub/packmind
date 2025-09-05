@@ -1,0 +1,59 @@
+@font-face {
+  font-family: 'Borna';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src:
+    url('../fonts/borna-regular-webfont.woff2') format('woff2'),
+    url('../fonts/borna-regular-webfont.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Borna';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src:
+    url('../fonts/borna-regularitalic-webfont.woff2') format('woff2'),
+    url('../fonts/borna-regularitalic-webfont.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Borna';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src:
+    url('../fonts/borna-medium-webfont.woff2') format('woff2'),
+    url('../fonts/borna-medium-webfont.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Borna';
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  src:
+    url('../fonts/borna-mediumitalic-webfont.woff2') format('woff2'),
+    url('../fonts/borna-mediumitalic-webfont.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Borna';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src:
+    url('../fonts/borna-bold-webfont.woff2') format('woff2'),
+    url('../fonts/borna-bold-webfont.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Borna';
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src:
+    url('../fonts/borna-bolditalic-webfont.woff2') format('woff2'),
+    url('../fonts/borna-bolditalic-webfont.woff') format('woff');
+}

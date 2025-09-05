@@ -1,0 +1,11 @@
+{
+  "name": "@packmind/migrations-docker",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./packages/migrations/src/runMigrationsDocker.js",
+  "dependencies": {
+    "typeorm": "^0.3.25",
+    "tsconfig-paths": "^4.2.0"
+  }
+}

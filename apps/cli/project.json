@@ -1,0 +1,118 @@
+{
+  "name": "packmind-cli",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/cli/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/cli",
+        "format": ["cjs"],
+        "bundle": false,
+        "main": "apps/cli/src/main.ts",
+        "tsConfig": "apps/cli/tsconfig.app.json",
+        "assets": [
+          {
+            "input": "apps/cli/src/assets",
+            "glob": "**/*",
+            "output": "apps/cli/src/assets"
+          },
+          {
+            "input": "node_modules/tree-sitter-typescript",
+            "glob": "tree-sitter-typescript.wasm",
+            "output": "apps/cli/src/wasm"
+          }
+        ],
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "outExtension": {
+            ".js": ".js"
+          }
+        }
+      },
+      "configurations": {
+        "development": {},
+        "production": {
+          "esbuildOptions": {
+            "sourcemap": false,
+            "outExtension": {
+              ".js": ".js"
+            }
+          }
+        }
+      }
+    },
+    "bundle": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/cli-bundle",
+        "format": ["cjs"],
+        "bundle": true,
+        "minify": false,
+        "main": "apps/cli/src/main.ts",
+        "tsConfig": "apps/cli/tsconfig.app.json",
+        "assets": [
+          {
+            "input": "apps/cli/src/assets",
+            "glob": "**/*",
+            "output": "./assets"
+          },
+          {
+            "input": "node_modules/tree-sitter-typescript",
+            "glob": "tree-sitter-typescript.wasm",
+            "output": "./wasm"
+          }
+        ],
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "outExtension": {
+            ".js": ".js"
+          },
+          "banner": {
+            "js": "#!/usr/bin/env node"
+          }
+        }
+      },
+      "configurations": {
+        "development": {},
+        "production": {
+          "minify": true,
+          "esbuildOptions": {
+            "sourcemap": false,
+            "outExtension": {
+              ".js": ".js"
+            },
+            "banner": {
+              "js": "#!/usr/bin/env node"
+            }
+          }
+        }
+      }
+    },
+    "run": {
+      "executor": "@nx/js:node",
+      "dependsOn": ["build"],
+      "options": {
+        "buildTarget": "packmind-cli:build",
+        "runBuildTargetDependencies": false,
+        "watch": false,
+        "args": []
+      }
+    },
+    "test": {
+      "options": {
+        "passWithNoTests": true
+      }
+    }
+  }
+}

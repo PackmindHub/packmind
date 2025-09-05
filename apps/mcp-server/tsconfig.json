@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.base.effective.json",
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    }
+  ],
+  "compilerOptions": {
+    "esModuleInterop": true
+  }
+}

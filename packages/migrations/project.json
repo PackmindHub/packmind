@@ -1,0 +1,69 @@
+{
+  "name": "migrations",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/migrations/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit --project packages/migrations/tsconfig.lib.json"
+      }
+    },
+    "bundle": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/packages/migrations-bundle",
+        "format": ["cjs"],
+        "bundle": false,
+        "main": "packages/migrations/src/index.ts",
+        "tsConfig": "packages/migrations/tsconfig.lib.json",
+        "assets": [
+          {
+            "input": "packages/migrations/src",
+            "glob": "**/*",
+            "output": "packages/migrations/src"
+          }
+        ],
+        "esbuildOptions": {
+          "outExtension": {
+            ".js": ".js"
+          }
+        }
+      },
+      "configurations": {
+        "development": {},
+        "production": {
+          "esbuildOptions": {
+            "sourcemap": false,
+            "outExtension": {
+              ".js": ".js"
+            }
+          }
+        }
+      }
+    },
+    "bundle-docker": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["bundle"],
+      "options": {
+        "commands": [
+          "node -e \"const fs=require('fs'),path=require('path');const BUNDLE_DIR='dist/packages/migrations-bundle';const MIGRATIONS_DIR=path.join(BUNDLE_DIR,'packages/migrations/src/migrations');function fixImports(filePath){if(!filePath.endsWith('.js'))return;let content=fs.readFileSync(filePath,'utf8');content=content.replace(/require\\(\\\"@packmind\\\\/shared\\\\/src\\\\/database\\\\/migrationColumns\\\"\\)/g,'require(\\\"../docker/migrationColumns\\\")');content=content.replace(/require\\(\\\"@packmind\\\\/shared\\\"\\)/g,'require(\\\"../docker/DockerLogger\\\")');content=content.replace(/new import_shared\\\\.PackmindLogger\\(/g,'new import_shared.DockerLogger(');content=content.replace(/PackmindLogger/g,'DockerLogger');fs.writeFileSync(filePath,content);}if(fs.existsSync(MIGRATIONS_DIR)){const files=fs.readdirSync(MIGRATIONS_DIR);files.forEach(file=>fixImports(path.join(MIGRATIONS_DIR,file)));console.log('✅ Fixed imports in',files.length,'migration files');}else{console.error('❌ Migrations directory not found:',MIGRATIONS_DIR);}\""
+        ],
+        "parallel": false
+      }
+    },
+    "run": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "npm run typeorm migration:run -- --dataSource=datasourceDocker.ts --transaction each",
+        "cwd": "packages/migrations"
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "@packmind/shared-nest",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "dependencies": {
+    "tslib": "^2.3.0",
+    "@packmind/accounts": "*",
+    "express": "^5.1.0",
+    "ts-jest": "^29.4.0"
+  }
+}

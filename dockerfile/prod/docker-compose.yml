@@ -1,0 +1,127 @@
+# Production Docker Compose configuration
+# Uses pre-built images with secure secrets management
+
+# Packmind image configuration
+x-packmind-images: &packmind-images
+  PACKMIND_TAG: ${PACKMIND_TAG:-latest}
+
+# Port configuration
+x-frontend-port: &frontend-port
+  FRONTEND_PUBLIC_PORT: ${FRONTEND_PUBLIC_PORT:-8081}
+
+# Common environment variables
+x-database-url: &database-url
+  DATABASE_URL: postgres://postgres:postgres@packmind-postgres:5432/packmind
+
+x-redis-config: &redis-config
+  REDIS_HOST: packmind-redis
+  REDIS_PORT: '6379'
+  # REDIS_USER: ""  # Optional - uncomment if Redis auth needed
+  # REDIS_PASSWORD: ""  # Optional - uncomment if Redis auth needed
+
+x-openai-config: &openai-config
+  OPENAI_API_KEY: ${OPENAI_API_KEY:-} # Set via environment variable to enable calls to OpenAI
+
+services:
+  # Infrastructure services
+  postgres:
+    image: postgres:17.6-alpine3.21
+    container_name: packmind-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: packmind
+    ports:
+      - '5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.2.4-alpine
+    container_name: packmind-redis
+    ports:
+      - '6379'
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+  # Production application services
+  api:
+    image: packmind/api:${PACKMIND_TAG:-latest}
+    container_name: packmind-api
+    ports:
+      - '3000:3000'
+    environment:
+      <<: [*database-url, *redis-config, *openai-config]
+      COOKIE_SECURE: false # Set to true if exposed behind HTTPS
+    secrets:
+      - encryption_key
+      - api_jwt_secret_key
+      - mcp_jwt_secret_key
+    entrypoint: []
+    command:
+      - sh
+      - -c
+      - |
+        export ENCRYPTION_KEY="$(cat /run/secrets/encryption_key)"
+        export API_JWT_SECRET_KEY="$(cat /run/secrets/api_jwt_secret_key)"
+        export MCP_JWT_SECRET_KEY="$(cat /run/secrets/mcp_jwt_secret_key)"
+        cd migrations && node packages/migrations/src/runMigrationsDocker.js && cd ..
+        exec node main.js
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+
+  mcp-server:
+    image: packmind/mcp:${PACKMIND_TAG:-latest}
+    container_name: packmind-mcp
+    ports:
+      - '3001:3001'
+    environment:
+      <<: [*database-url, *redis-config, *openai-config]
+      RATE_LIMIT_MAX_REQUESTS: 10000
+      PACKMIND_MCP_BASE_URL: http://localhost:8081/mcp
+    secrets:
+      - encryption_key
+      - mcp_jwt_secret_key
+    entrypoint: []
+    command:
+      - sh
+      - -c
+      - |
+        export ENCRYPTION_KEY="$(cat /run/secrets/encryption_key)"
+        export MCP_JWT_SECRET_KEY="$(cat /run/secrets/mcp_jwt_secret_key)"
+        exec node main.js
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+
+  frontend:
+    image: packmind/frontend:${PACKMIND_TAG:-latest}
+    container_name: packmind-frontend
+    ports:
+      - '${FRONTEND_PUBLIC_PORT:-8081}:80'
+    depends_on:
+      - api
+      - mcp-server
+    restart: unless-stopped
+
+# Secrets definition - files are read from the host filesystem
+secrets:
+  encryption_key:
+    file: ./secrets/encryption_key.txt
+  api_jwt_secret_key:
+    file: ./secrets/api_jwt_secret_key.txt
+  mcp_jwt_secret_key:
+    file: ./secrets/mcp_jwt_secret_key.txt
+
+volumes:
+  postgres-data:
+  redis-data:
+
+networks:
+  default:
+    name: packmind-network

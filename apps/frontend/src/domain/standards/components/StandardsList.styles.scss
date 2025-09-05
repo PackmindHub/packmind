@@ -1,0 +1,31 @@
+.standards-list {
+  width: 100%;
+
+  .standards-table {
+    margin-top: 1rem;
+  }
+
+  .selection-actions {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.375rem;
+    background-color: #f7fafc;
+  }
+
+  .standards-row {
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: #f7fafc;
+    }
+  }
+
+  .description-cell {
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

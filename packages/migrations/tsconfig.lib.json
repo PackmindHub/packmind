@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "declaration": true,
+    "types": ["node"],
+    "baseUrl": "../../",
+    "paths": {
+      "@packmind/git": ["packages/git/src/index.ts"],
+      "@packmind/migrations": ["packages/migrations/src/index.ts"],
+      "@packmind/recipes": ["packages/recipes/src/index.ts"],
+      "@packmind/shared": ["packages/shared/src/index.ts"],
+      "packmind-plugin": ["tools/packmind-plugin/src/index.ts"],
+      "@packmind/ui": ["packages/ui/src/index.ts"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+}

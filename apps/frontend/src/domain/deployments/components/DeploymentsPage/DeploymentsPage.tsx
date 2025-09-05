@@ -1,0 +1,251 @@
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router';
+import {
+  PMHStack,
+  PMText,
+  PMVStack,
+  PMInput,
+  PMNativeSelect,
+  PMTabs,
+} from '@packmind/ui';
+import { RepositoryCentricView } from '../RepositoryCentricView';
+import { RecipeCentricView } from '../RecipeCentricView';
+import { StandardCentricView } from '../StandardCentricView';
+import {
+  useGetRecipesDeploymentOverviewQuery,
+  useGetStandardsDeploymentOverviewQuery,
+} from '../../api/queries/DeploymentsQueries';
+
+type ViewMode = 'repositories' | 'recipes' | 'standards';
+type RepositoryFilter = 'all' | 'outdated';
+type RecipeFilter = 'all' | 'outdated' | 'undeployed';
+type StandardFilter = 'all' | 'outdated' | 'undeployed';
+
+export const DeploymentsPage: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // URL-synchronized state for viewMode
+  const rawView = searchParams.get('view');
+  const viewMode: ViewMode =
+    rawView === 'repositories' ||
+    rawView === 'recipes' ||
+    rawView === 'standards'
+      ? rawView
+      : 'repositories';
+  const setViewMode = (newViewMode: ViewMode) => {
+    setSearchParams((prev) => {
+      const newParams = new URLSearchParams(prev);
+      newParams.set('view', newViewMode);
+      return newParams;
+    });
+  };
+
+  // Debounced search term implementation
+  const urlSearchTerm = searchParams.get('search') || '';
+  const [searchTerm, setSearchTerm] = useState(urlSearchTerm);
+
+  // Debounce search term updates to URL (500ms delay)
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setSearchParams((prev) => {
+        const newParams = new URLSearchParams(prev);
+        if (searchTerm) {
+          newParams.set('search', searchTerm);
+        } else {
+          newParams.delete('search');
+        }
+        return newParams;
+      });
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, setSearchParams]);
+
+  // Sync local state with URL when URL changes (e.g., browser back/forward)
+  useEffect(() => {
+    setSearchTerm(urlSearchTerm);
+  }, [urlSearchTerm]);
+
+  // URL-synchronized state for repositoryFilter
+  const rawRepoFilter = searchParams.get('repoFilter');
+  const repositoryFilter: RepositoryFilter =
+    rawRepoFilter === 'all' || rawRepoFilter === 'outdated'
+      ? rawRepoFilter
+      : 'all';
+  const setRepositoryFilter = (newRepositoryFilter: RepositoryFilter) => {
+    setSearchParams((prev) => {
+      const newParams = new URLSearchParams(prev);
+      newParams.set('repoFilter', newRepositoryFilter);
+      return newParams;
+    });
+  };
+
+  // URL-synchronized state for recipeFilter
+  const rawRecipeFilter = searchParams.get('recipeFilter');
+  const recipeFilter: RecipeFilter =
+    rawRecipeFilter === 'all' ||
+    rawRecipeFilter === 'outdated' ||
+    rawRecipeFilter === 'undeployed'
+      ? rawRecipeFilter
+      : 'all';
+  const setRecipeFilter = (newRecipeFilter: RecipeFilter) => {
+    setSearchParams((prev) => {
+      const newParams = new URLSearchParams(prev);
+      newParams.set('recipeFilter', newRecipeFilter);
+      return newParams;
+    });
+  };
+
+  // URL-synchronized state for standardFilter
+  const rawStandardFilter = searchParams.get('standardFilter');
+  const standardFilter: StandardFilter =
+    rawStandardFilter === 'all' ||
+    rawStandardFilter === 'outdated' ||
+    rawStandardFilter === 'undeployed'
+      ? rawStandardFilter
+      : 'all';
+  const setStandardFilter = (newStandardFilter: StandardFilter) => {
+    setSearchParams((prev) => {
+      const newParams = new URLSearchParams(prev);
+      newParams.set('standardFilter', newStandardFilter);
+      return newParams;
+    });
+  };
+
+  const {
+    data: recipesData,
+    isLoading,
+    error,
+  } = useGetRecipesDeploymentOverviewQuery();
+  const {
+    data: standardData,
+    isLoading: standardIsLoading,
+    error: standardError,
+  } = useGetStandardsDeploymentOverviewQuery();
+
+  if (isLoading || standardIsLoading) {
+    return <PMText>Loading...</PMText>;
+  }
+
+  if (error || standardError) {
+    return <PMText color="error">Error loading deployment data</PMText>;
+  }
+
+  if (!recipesData) {
+    return <PMText>No deployment data available</PMText>;
+  }
+
+  const searchField = (
+    <PMInput
+      id="deployment-search"
+      placeholder={
+        viewMode === 'repositories'
+          ? 'Search repositories...'
+          : viewMode === 'recipes'
+            ? 'Search recipes...'
+            : 'Search standards...'
+      }
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      width="300px"
+    />
+  );
+
+  const renderRepositoriesView = () => (
+    <PMVStack gap={4} marginTop={4} align={'stretch'}>
+      <PMHStack gap={4}>
+        {searchField}
+        <PMNativeSelect
+          value={repositoryFilter}
+          items={[
+            { label: 'All repositories', value: 'all' },
+            { label: 'Only outdated repositories', value: 'outdated' },
+          ]}
+          onChange={(e) =>
+            setRepositoryFilter(e.target.value as RepositoryFilter)
+          }
+        />
+      </PMHStack>
+      <RepositoryCentricView
+        recipeRepositories={recipesData.repositories}
+        standardRepositories={standardData?.repositories}
+        searchTerm={searchTerm}
+        showOnlyOutdated={repositoryFilter === 'outdated'}
+      />
+    </PMVStack>
+  );
+
+  const renderRecipesView = () => (
+    <PMVStack gap={4} marginTop={4} align={'stretch'}>
+      <PMHStack gap={4}>
+        {searchField}
+        <PMNativeSelect
+          value={recipeFilter}
+          onChange={(e) => setRecipeFilter(e.target.value as RecipeFilter)}
+          items={[
+            { label: 'All recipes', value: 'all' },
+            { label: 'Outdated recipes', value: 'outdated' },
+            { label: 'Undeployed recipes', value: 'undeployed' },
+          ]}
+        />
+      </PMHStack>
+      <RecipeCentricView
+        recipes={recipesData.recipes}
+        searchTerm={searchTerm}
+        showOnlyOutdated={recipeFilter === 'outdated'}
+        showOnlyUndeployed={recipeFilter === 'undeployed'}
+      />
+    </PMVStack>
+  );
+
+  const renderStandardView = () => (
+    <PMVStack gap={4} marginTop={4} align={'stretch'}>
+      <PMHStack gap={4}>
+        {searchField}
+        <PMNativeSelect
+          value={standardFilter}
+          onChange={(e) => setStandardFilter(e.target.value as StandardFilter)}
+          items={[
+            { label: 'All standards', value: 'all' },
+            { label: 'Outdated standards', value: 'outdated' },
+            { label: 'Undeployed standards', value: 'undeployed' },
+          ]}
+        />
+      </PMHStack>
+      {standardData && (
+        <StandardCentricView
+          standards={standardData.standards}
+          searchTerm={searchTerm}
+          showOnlyOutdated={standardFilter === 'outdated'}
+          showOnlyUndeployed={standardFilter === 'undeployed'}
+        />
+      )}
+    </PMVStack>
+  );
+
+  return (
+    <PMTabs
+      defaultValue={viewMode}
+      onValueChange={(e: { value: string }) => setViewMode(e.value as ViewMode)}
+      lazyMount
+      unmountOnExit
+      tabs={[
+        {
+          value: 'repositories',
+          triggerLabel: 'Repositories',
+          content: renderRepositoriesView(),
+        },
+        {
+          value: 'recipes',
+          triggerLabel: 'Recipes',
+          content: renderRecipesView(),
+        },
+        {
+          value: 'standards',
+          triggerLabel: 'Standards',
+          content: renderStandardView(),
+        },
+      ]}
+    />
+  );
+};

@@ -1,0 +1,38 @@
+{
+  "name": "shared",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/shared/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit --project packages/shared/tsconfig.lib.json"
+      }
+    },
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/shared",
+        "tsConfig": "packages/shared/tsconfig.lib.json",
+        "packageJson": "packages/shared/package.json",
+        "main": "packages/shared/src/index.ts",
+        "assets": ["packages/shared/*.md"]
+      },
+      "lint": {
+        "executor": "@nx/linter:eslint",
+        "options": {
+          "lintFilePatterns": ["packages/shared/**/*.{ts,tsx}"],
+          "pluginsConfig": {
+            "@nx/dependency-checks": {
+              "ignoredDependencies": ["pg-mem"],
+              "allowDevDependencies": ["packages/shared/test/**"]
+            }
+          }
+        }
+      }
+    }
+  }
+}

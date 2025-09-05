@@ -1,0 +1,73 @@
+{
+  "name": "api",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/api/src",
+  "projectType": "application",
+  "tags": [],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit --project apps/api/tsconfig.app.json"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/apps/api"],
+      "options": {
+        "command": "webpack",
+        "args": ["--config", "apps/api/webpack.config.js", "--mode=production"]
+      },
+      "configurations": {
+        "development": {
+          "command": "webpack",
+          "args": [
+            "--config",
+            "apps/api/webpack.config.js",
+            "--mode=development",
+            "--watch"
+          ]
+        },
+        "production": {
+          "command": "webpack",
+          "args": [
+            "--config",
+            "apps/api/webpack.config.js",
+            "--mode=production"
+          ]
+        }
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "defaultConfiguration": "development",
+      "options": {
+        "parallel": true,
+        "commands": [
+          "nx run api:build:development --skip-nx-cache",
+          "sh -lc 'mkdir -p dist/apps/api; while [ ! -f dist/apps/api/main.js ]; do sleep 0.2; done; npx nodemon --config apps/api/nodemon.json --legacy-watch --polling-interval 500'"
+        ]
+      },
+      "configurations": {
+        "development": {},
+        "production": {
+          "parallel": false,
+          "commands": [
+            "nx run api:build:production --skip-nx-cache",
+            "node dist/apps/api/main.js"
+          ]
+        }
+      }
+    },
+    "start": {
+      "executor": "nx:run-commands",
+      "options": {
+        "parallel": false,
+        "commands": [
+          "nx run api:build:production --skip-nx-cache",
+          "node dist/apps/api/main.js"
+        ]
+      }
+    }
+  }
+}

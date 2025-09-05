@@ -1,0 +1,67 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: packmind-prod-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: packmind
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data-prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  install-dependencies:
+    image: node:22.17.0-alpine3.21
+    container_name: packmind-prod-install-deps
+    volumes:
+      - .:/packmind
+    working_dir: /packmind
+    entrypoint: npm install
+
+  build-mcp-server:
+    image: node:22.17.0-alpine3.21
+    container_name: packmind-prod-build-mcp-server
+    volumes:
+      - .:/packmind
+    working_dir: /packmind
+    entrypoint: node_modules/.bin/nx run mcp-server:build:production
+    depends_on:
+      install-dependencies:
+        condition: service_completed_successfully
+
+  install-mcp-server:
+    image: node:22.17.0-alpine3.21
+    container_name: packmind-prod-install-mcp-server
+    volumes:
+      - ./dist/apps/mcp-server:/mcp-server
+    working_dir: /mcp-server
+    entrypoint: npm i
+    depends_on:
+      build-mcp-server:
+        condition: service_completed_successfully
+
+  mcp-server:
+    image: node:22.17.0-alpine3.21
+    container_name: packmind-prod-mcp-server
+    volumes:
+      - ./dist/apps/mcp-server:/mcp-server
+    working_dir: /mcp-server
+    ports:
+      - '3001:3001'
+    entrypoint: node main.js --host=0.0.0.0 --verbose
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@packmind-prod-postgres:5432/packmind
+    depends_on:
+      install-mcp-server:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres-data-prod:

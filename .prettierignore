@@ -1,0 +1,15 @@
+# Add files here to ignore them from prettier formatting
+/dist
+/coverage
+/.nx/cache
+/.nx/workspace-data
+/.packmind
+/docs
+**/.react-router/
+**/build/
+.packmind
+.github
+.junie
+.cursor
+CLAUDE.md
+.docusaurus

@@ -1,0 +1,12 @@
+{
+  // This file is not used in compilation. It is here just for a nice editor experience.
+  "extends": ["@docusaurus/tsconfig", "../../tsconfig.base.json"],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@packmind/ui": ["../../packages/ui/src/index.ts"],
+      "@site/*": ["./*"]
+    }
+  },
+  "exclude": [".docusaurus", "build"]
+}

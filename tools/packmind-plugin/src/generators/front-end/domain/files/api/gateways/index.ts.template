@@ -1,0 +1,5 @@
+import { I<%= classify(originalName) %>Gateway } from './I<%= classify(originalName) %>Gateway';
+
+import { <%= classify(originalName) %>GatewayApi } from './<%= classify(originalName) %>GatewayApi';
+
+export const <%= originalName %>Gateway: I<%= classify(originalName) %>Gateway = new <%= classify(originalName) %>GatewayApi();

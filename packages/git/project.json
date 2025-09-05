@@ -1,0 +1,26 @@
+{
+  "name": "git",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/git/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit --project packages/git/tsconfig.lib.json"
+      }
+    },
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/git",
+        "tsConfig": "packages/git/tsconfig.lib.json",
+        "packageJson": "packages/git/package.json",
+        "main": "packages/git/src/index.ts",
+        "assets": ["packages/git/*.md"]
+      }
+    }
+  }
+}

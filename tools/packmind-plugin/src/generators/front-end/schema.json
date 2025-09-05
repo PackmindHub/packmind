@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "Domain",
+  "title": "",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the domain/feature",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "Enter the name of the domain"
+    },
+    "project": {
+      "type": "string",
+      "description": "The name of the project to add the domain to",
+      "$default": {
+        "$source": "projectName"
+      },
+      "x-dropdown": "projects",
+      "x-prompt": "What project should this domain be added to?"
+    }
+  },
+  "required": ["name", "project"]
+}

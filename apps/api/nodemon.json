@@ -1,0 +1,10 @@
+{
+  "watch": ["dist/apps/api"],
+  "ext": "js,json",
+  "exec": "node dist/apps/api/main.js",
+  "legacyWatch": true,
+  "delay": "200ms",
+  "signal": "SIGTERM",
+  "ignore": ["dist/apps/api/**/*.map"],
+  "env": { "NODE_ENV": "development" }
+}

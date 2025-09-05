@@ -1,0 +1,108 @@
+{
+  "name": "doc",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/doc/src",
+  "private": true,
+  "tags": [],
+  "targets": {
+    "docusaurus": {
+      "executor": "nx:run-commands", // this is the nx executor we can use to run custom commands
+      "options": {
+        "commands": [
+          {
+            "command": "docusaurus", // command (extracted from package.json in apps/<Docusaurus_app>)
+            "cwd": "apps/doc" // directory to run the command
+          }
+        ]
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "command": "docusaurus build --out-dir=../../dist/apps/doc", // --out-dir specify the nx-workspace output directory
+        "cwd": "apps/doc",
+        "inputs": ["{root}/docs/*.(md|mdx)", "{root}/docs/**/*.(md|mdx)"], // specify the file types to pick for build if the docs folder is outside of the project
+        "outputs": ["apps/doc/build"],
+        "styles": ["apps/doc/src/css/custom.css"] // include the custom styles in the build
+      }
+    },
+    "start": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docusaurus start --port 4300",
+        "cwd": "apps/doc",
+        "styles": ["apps/doc/src/css/custom.css"]
+      }
+    },
+    "swizzle": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docusaurus swizzle",
+        "cwd": "apps/doc"
+      }
+    },
+    "clear": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docusaurus clear",
+        "cwd": "apps/doc"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docusaurus serve --dir=../../dist/apps/doc", // --dir pass the build directory path
+        "cwd": "apps/doc"
+      }
+    },
+    "deploy": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docusaurus deploy",
+        "cwd": "apps/doc"
+      }
+    },
+    "deploy-gh-pages": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docusaurus deploy",
+        "cwd": "apps/doc"
+      }
+    },
+    "write-translations": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docusaurus write-translations",
+        "cwd": "apps/doc"
+      }
+    },
+    "write-heading-ids": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docusaurus write-heading-ids",
+        "cwd": "apps/doc"
+      }
+    },
+    "version": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docusaurus docs:version",
+        "cwd": "apps/doc",
+        "forwardAllArgs": true
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "browserslist": {
+      "production": [">0.5%", "not dead", "not op_mini all"],
+      "development": [
+        "last 3 chrome version",
+        "last 3 firefox version",
+        "last 5 safari version"
+      ]
+    }
+  }
+}

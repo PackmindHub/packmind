@@ -1,0 +1,56 @@
+{
+  "name": "assets",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/assets/src",
+  "projectType": "library",
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit --project packages/assets/tsconfig.lib.json"
+      }
+    },
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/assets",
+        "main": "packages/assets/src/index.ts",
+        "tsConfig": "packages/assets/tsconfig.lib.json",
+        "assets": ["packages/assets/*.md"]
+      }
+    },
+    "postbuild": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "cp -R packages/assets/src/styles dist/packages/assets/src/styles"
+          },
+          {
+            "command": "cp -R packages/assets/src/fonts dist/packages/assets/src/fonts"
+          },
+          {
+            "command": "cp -R packages/assets/src/images dist/packages/assets/src/images"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "build-all": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "nx build assets"
+          },
+          {
+            "command": "nx run assets:postbuild"
+          }
+        ],
+        "parallel": false
+      }
+    }
+  },
+  "tags": []
+}

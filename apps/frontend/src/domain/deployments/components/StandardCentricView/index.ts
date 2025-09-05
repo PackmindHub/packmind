@@ -1,0 +1,1 @@
+export { StandardCentricView } from './StandardCentricView';

@@ -1,0 +1,282 @@
+services:
+  nx-daemon:
+    image: node:22.17.0-alpine3.21
+    container_name: packmind-nx-daemon
+    working_dir: /packmind
+    command: >
+      sh -lc "
+        set -eu;
+        node scripts/select-tsconfig.mjs;
+        mkdir -p /nx-sock && chmod 777 /nx-sock;
+        (npx nx daemon --start || true);
+        tail -f /dev/null
+      "
+    volumes:
+      - .:/packmind
+      - node_modules:/packmind/node_modules
+      - nx-sock:/nx-sock
+    environment:
+      NX_DAEMON: 'true'
+      NX_DAEMON_SOCKET_DIR: /nx-sock
+      NX_WATCHER: polling
+      NX_WATCHER_POLLING_INTERVAL: '1000'
+      NX_ISOLATE_PLUGINS: 'false'
+      NX_PLUGIN_NO_TIMEOUTS: 'true'
+      PACKMIND_EDITION: ${PACKMIND_EDITION:-proprietary}
+    healthcheck:
+      test: ['CMD-SHELL', 'test -S /nx-sock/d.sock']
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    depends_on:
+      install-dependencies:
+        condition: service_completed_successfully
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: packmind-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: packmind
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.2.4
+    container_name: redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: packmind-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@pgadmin.com
+      PGADMIN_DEFAULT_PASSWORD: password
+      PGADMIN_LISTEN_PORT: 80
+    ports:
+      - '2345:80'
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+    depends_on:
+      - postgres
+
+  install-dependencies:
+    image: node:22.17.0-alpine3.21
+    container_name: packmind-install-deps
+    working_dir: /packmind
+    entrypoint:
+      - sh
+      - -c
+      - |
+        apk add --no-cache python3 make g++ py3-setuptools && \
+        ln -sf /usr/bin/python3 /usr/bin/python && \
+        rm -rf node_modules/.cache && \
+        npm install --unsafe-perm && \
+        chmod -R +x node_modules/.bin 2>/dev/null || true
+    volumes:
+      - .:/packmind
+      - node_modules:/packmind/node_modules
+
+  run-migrations:
+    image: node:22.17.0-alpine3.21
+    container_name: packmind-run-migrations
+    working_dir: /packmind
+    entrypoint: >
+      sh -lc '
+        set -euo pipefail
+        node scripts/select-tsconfig.mjs;
+        echo "[migrations] node: $(node -v)"
+        echo "[migrations] NX_* env:"; env | grep -E "^NX_" || true
+        echo "[migrations] /nx-sock:"; ls -l /nx-sock || true
+        echo "[migrations] Checking daemon status..."
+        if npx nx daemon --status >/dev/null 2>&1; then
+          echo "[migrations] Daemon OK -> WITH daemon (verbose, no cache)"
+          exec env DEBUG="nx:*" NX_PERF_LOGGING=true NODE_OPTIONS="--trace-uncaught" \
+            npx nx run migrations:run --verbose --skip-nx-cache
+        else
+          echo "[migrations] Daemon NOT reachable -> WITHOUT daemon (verbose, no cache)"
+          exec env DEBUG="nx:*" NX_PERF_LOGGING=true NODE_OPTIONS="--trace-uncaught" NX_DAEMON=false \
+            npx nx run migrations:run --no-daemon --verbose --skip-nx-cache
+        fi
+      '
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@packmind-postgres:5432/packmind
+      NX_DAEMON: 'true'
+      NX_DAEMON_SOCKET_DIR: /nx-sock
+      NX_WATCHER: polling
+      NX_WATCHER_POLLING_INTERVAL: '1000'
+      NX_ISOLATE_PLUGINS: 'false'
+      NX_PLUGIN_NO_TIMEOUTS: 'true'
+      PACKMIND_EDITION: ${PACKMIND_EDITION:-proprietary}
+    volumes:
+      - .:/packmind
+      - dist:/packmind/dist
+      - tmp:/packmind/tmp
+      - node_modules:/packmind/node_modules
+      - nx-sock:/nx-sock
+    depends_on:
+      nx-daemon:
+        condition: service_healthy
+      install-dependencies:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    image: node:22.17.0-alpine3.21
+    container_name: packmind-frontend
+    working_dir: /packmind
+    ports:
+      - '4200:4200'
+    entrypoint: >
+      sh -lc '
+        set -eu
+        node scripts/select-tsconfig.mjs;
+        echo "[frontend] NX_* env:"; env | grep -E "^NX_" || true
+        echo "[frontend] /nx-sock:"; ls -l /nx-sock || true
+        if npx nx daemon --status >/dev/null 2>&1; then
+          echo "[frontend] Daemon OK -> WITH daemon"
+          exec npx nx run frontend:dev --host=0.0.0.0
+        else
+          echo "[frontend] Daemon NOT reachable -> WITHOUT daemon"
+          exec NX_DAEMON=false npx nx run frontend:dev --host=0.0.0.0 --no-daemon
+        fi
+      '
+    environment:
+      VITE_PACKMIND_API_BASE_URL: 'http://localhost:3000/api'
+      NX_DAEMON: 'true'
+      NX_DAEMON_SOCKET_DIR: /nx-sock
+      NX_WATCHER: polling
+      NX_WATCHER_POLLING_INTERVAL: '1000'
+      NX_ISOLATE_PLUGINS: 'false'
+      NX_PLUGIN_NO_TIMEOUTS: 'true'
+      PACKMIND_EDITION: ${PACKMIND_EDITION:-proprietary}
+
+    volumes:
+      - .:/packmind
+      - node_modules:/packmind/node_modules
+      - dist:/packmind/dist
+      - tmp:/packmind/tmp
+      - nx-sock:/nx-sock
+    depends_on:
+      nx-daemon:
+        condition: service_healthy
+      install-dependencies:
+        condition: service_completed_successfully
+
+  backend:
+    image: node:22.17.0-alpine3.21
+    container_name: packmind-backend
+    working_dir: /packmind
+    ports:
+      - '3000:3000'
+    entrypoint: >
+      sh -lc '
+        set -eu
+        node scripts/select-tsconfig.mjs;
+        echo "[backend] NX_* env:"; env | grep -E "^NX_" || true
+        echo "[backend] /nx-sock:"; ls -l /nx-sock || true
+        if npx nx daemon --status >/dev/null 2>&1; then
+          echo "[backend] Daemon OK -> WITH daemon"
+          exec npx nx run api:serve:development --skip-nx-cache
+        else
+          echo "[backend] Daemon NOT reachable -> WITHOUT daemon"
+          exec NX_DAEMON=false npx nx run api:serve:development --skip-nx-cache
+        fi
+      '
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@packmind-postgres:5432/packmind
+      COOKIE_SECURE: 'false'
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      NX_DAEMON: 'true'
+      NX_DAEMON_SOCKET_DIR: /nx-sock
+      NX_WATCHER: polling
+      NX_WATCHER_POLLING_INTERVAL: '1000'
+      NX_ISOLATE_PLUGINS: 'false'
+      NX_PLUGIN_NO_TIMEOUTS: 'true'
+      CHOKIDAR_USEPOLLING: '1'
+      CHOKIDAR_INTERVAL: '200'
+      WATCHPACK_POLLING: 'true'
+      PACKMIND_EDITION: ${PACKMIND_EDITION:-proprietary}
+
+    volumes:
+      - .:/packmind
+      - node_modules:/packmind/node_modules
+      - dist:/packmind/dist
+      - tmp:/packmind/tmp
+      - nx-sock:/nx-sock
+    depends_on:
+      nx-daemon:
+        condition: service_healthy
+      run-migrations:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
+  mcp-server:
+    image: node:22.17.0-alpine3.21
+    container_name: packmind-mcp-server
+    working_dir: /packmind
+    ports:
+      - '3001:3001'
+    entrypoint: >
+      sh -lc '
+        set -eu
+        node scripts/select-tsconfig.mjs;
+        echo "[mcp] NX_* env:"; env | grep -E "^NX_" || true
+        echo "[mcp] /nx-sock:"; ls -l /nx-sock || true
+        if npx nx daemon --status >/dev/null 2>&1; then
+          echo "[mcp] Daemon OK -> WITH daemon"
+          exec npx nx run mcp-server:serve:development --host=0.0.0.0 --verbose
+        else
+          echo "[mcp] Daemon NOT reachable -> WITHOUT daemon"
+          exec NX_DAEMON=false npx nx run mcp-server:serve:development --host=0.0.0.0 --verbose --no-daemon
+        fi
+      '
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@packmind-postgres:5432/packmind
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      NX_DAEMON: 'true'
+      NX_DAEMON_SOCKET_DIR: /nx-sock
+      NX_WATCHER: polling
+      NX_WATCHER_POLLING_INTERVAL: '1000'
+      NX_ISOLATE_PLUGINS: 'false'
+      NX_PLUGIN_NO_TIMEOUTS: 'true'
+      PACKMIND_EDITION: ${PACKMIND_EDITION:-proprietary}
+
+    volumes:
+      - .:/packmind
+      - node_modules:/packmind/node_modules
+      - dist:/packmind/dist
+      - tmp:/packmind/tmp
+      - nx-sock:/nx-sock
+    depends_on:
+      nx-daemon:
+        condition: service_healthy
+      run-migrations:
+        condition: service_completed_successfully
+
+volumes:
+  nx-sock:
+  postgres-data:
+  redis-data:
+  pgadmin:
+  dist:
+  tmp:
+  node_modules:

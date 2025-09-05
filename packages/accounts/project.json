@@ -1,0 +1,26 @@
+{
+  "name": "accounts",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/accounts/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit --project packages/accounts/tsconfig.lib.json"
+      }
+    },
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/accounts",
+        "tsConfig": "packages/accounts/tsconfig.lib.json",
+        "packageJson": "packages/accounts/package.json",
+        "main": "packages/accounts/src/index.ts",
+        "assets": ["packages/accounts/*.md"]
+      }
+    }
+  }
+}

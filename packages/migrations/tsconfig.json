@@ -1,0 +1,25 @@
+{
+  "extends": "../../tsconfig.base.effective.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "baseUrl": "../../",
+    "paths": {
+      "@packmind/git": ["packages/git/src/index.ts"],
+      "@packmind/migrations": ["packages/migrations/src/index.ts"],
+      "@packmind/recipes": ["packages/recipes/src/index.ts"],
+      "@packmind/shared": ["packages/shared/src/index.ts"],
+      "packmind-plugin": ["tools/packmind-plugin/src/index.ts"],
+      "@packmind/ui": ["packages/ui/src/index.ts"]
+    }
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.lib.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "packmind-cli": "ts-node --project tsconfig.app.json src/main.ts"
+  },
+  "dependencies": {
+    "web-tree-sitter": "^0.23.0",
+    "tree-sitter-typescript": "^0.23.2"
+  }
+}

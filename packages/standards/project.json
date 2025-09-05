@@ -1,0 +1,26 @@
+{
+  "name": "standards",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/standards/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit --project packages/standards/tsconfig.lib.json"
+      }
+    },
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/standards",
+        "tsConfig": "packages/standards/tsconfig.lib.json",
+        "packageJson": "packages/standards/package.json",
+        "main": "packages/standards/src/index.ts",
+        "assets": ["packages/standards/*.md"]
+      }
+    }
+  }
+}

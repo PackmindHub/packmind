@@ -1,0 +1,285 @@
+import { Controller, Get, Param, Post, Body, Req } from '@nestjs/common';
+import { GitRepoId } from '@packmind/git';
+import { RecipeVersionId } from '@packmind/recipes';
+import {
+  DeploymentOverview,
+  StandardsDeployment,
+  RecipesDeployment,
+  StandardDeploymentOverview,
+  PublishRecipesCommand,
+  PublishStandardsCommand,
+} from '@packmind/shared';
+import { DeploymentsService } from './deployments.service';
+import { PackmindLogger } from '@packmind/shared';
+import { AuthService } from '../auth/auth.service';
+import { RecipeId } from '@packmind/recipes/types';
+import type { StandardId, StandardVersionId } from '@packmind/shared/types';
+import { AuthenticatedRequest } from '@packmind/shared-nest';
+
+const origin = 'DeploymentsController';
+
+@Controller('/deployments')
+export class DeploymentsController {
+  constructor(
+    private readonly deploymentsService: DeploymentsService,
+    private readonly authService: AuthService,
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
+  ) {
+    this.logger.info('DeploymentsController initialized');
+  }
+
+  @Get('recipe/:id')
+  async getDeploymentRecipe(
+    @Param('id') id: RecipeId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<RecipesDeployment[]> {
+    this.logger.info(
+      'GET /deployments/recipe/:id - Fetching deployments by recipe ID',
+      {
+        standardId: id,
+      },
+    );
+
+    try {
+      const deployments = await this.deploymentsService.listDeploymentsByRecipe(
+        this.authService.makePackmindCommand(request, { recipeId: id }),
+      );
+
+      if (!deployments || deployments.length === 0) {
+        this.logger.warn('GET /deployments/recipe/:id - No deployments found', {
+          standardId: id,
+        });
+        return [];
+      }
+
+      this.logger.info(
+        'GET /deployments/recipe/:id - Deployments fetched successfully',
+        {
+          standardId: id,
+          count: deployments.length,
+        },
+      );
+
+      return deployments;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /deployments/recipe/:id - Failed to fetch deployments',
+        {
+          standardId: id,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Get('standard/:id')
+  async getDeploymentsByStandardId(
+    @Param('id') id: StandardId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<StandardsDeployment[]> {
+    this.logger.info(
+      'GET /deployments/standard/:id - Fetching deployments by standard ID',
+      {
+        standardId: id,
+      },
+    );
+
+    try {
+      const deployments =
+        await this.deploymentsService.listDeploymentsByStandard(
+          this.authService.makePackmindCommand(request, { standardId: id }),
+        );
+
+      if (!deployments || deployments.length === 0) {
+        this.logger.warn(
+          'GET /deployments/standard/:id - No deployments found',
+          {
+            standardId: id,
+          },
+        );
+        return [];
+      }
+
+      this.logger.info(
+        'GET /deployments/standard/:id - Deployments fetched successfully',
+        {
+          standardId: id,
+          count: deployments.length,
+        },
+      );
+
+      return deployments;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /deployments/standard/:id - Failed to fetch deployments',
+        {
+          standardId: id,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Get('standards/overview')
+  async getStandardDeploymentOverview(
+    @Req() request: AuthenticatedRequest,
+  ): Promise<StandardDeploymentOverview> {
+    this.logger.info(
+      'GET /deployments/standards/overview - Fetching standard deployment overview',
+    );
+
+    try {
+      const overview =
+        await this.deploymentsService.getStandardDeploymentOverview(
+          this.authService.makePackmindCommand(request),
+        );
+
+      this.logger.info(
+        'GET /deployments/overview - Standard deployment overview fetched successfully',
+        {
+          repositoriesCount: overview.repositories.length,
+          standardsCount: overview.standards.length,
+        },
+      );
+
+      return overview;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /deployments/overview - Failed to fetch standard deployment overview',
+        {
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Get('recipes/overview')
+  async getRecipesDeploymentOverview(
+    @Req() request: AuthenticatedRequest,
+  ): Promise<DeploymentOverview> {
+    this.logger.info(
+      'GET /deployments/recipes/overview - Fetching recipes deployment overview',
+    );
+
+    try {
+      const overview = await this.deploymentsService.getDeploymentOverview(
+        this.authService.makePackmindCommand(request),
+      );
+
+      this.logger.info(
+        'GET /deployments/recipes/overview - Recipes deployment overview fetched successfully',
+        {
+          repositoriesCount: overview.repositories.length,
+          standardsCount: overview.recipes.length,
+        },
+      );
+
+      return overview;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /deployments/recipes/overview - Failed to fetch standard deployment overview',
+        {
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Post('recipes/publish')
+  async publishRecipes(
+    @Body()
+    body: { gitRepoIds: GitRepoId[]; recipeVersionIds: RecipeVersionId[] },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<RecipesDeployment[]> {
+    this.logger.info('POST /deployments/recipes/publish - Publishing recipes', {
+      gitRepoIdsCount: body.gitRepoIds.length,
+      recipeVersionIdsCount: body.recipeVersionIds.length,
+    });
+
+    try {
+      const command: PublishRecipesCommand =
+        this.authService.makePackmindCommand(request, {
+          gitRepoIds: body.gitRepoIds,
+          recipeVersionIds: body.recipeVersionIds,
+        });
+
+      const deployments = await this.deploymentsService.publishRecipes(command);
+
+      this.logger.info(
+        'POST /deployments/recipes/publish - Recipes published successfully',
+        {
+          deploymentsCount: deployments.length,
+        },
+      );
+
+      return deployments;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /deployments/recipes/publish - Failed to publish recipes',
+        {
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Post('standards/publish')
+  async publishStandards(
+    @Body()
+    body: { gitRepoIds: GitRepoId[]; standardVersionIds: StandardVersionId[] },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<StandardsDeployment> {
+    this.logger.info(
+      'POST /deployments/standards/publish - Publishing standards',
+      {
+        gitRepoIdsCount: body.gitRepoIds.length,
+        standardVersionIdsCount: body.standardVersionIds.length,
+      },
+    );
+
+    try {
+      const command: PublishStandardsCommand =
+        this.authService.makePackmindCommand(request, {
+          gitRepoIds: body.gitRepoIds,
+          standardVersionIds: body.standardVersionIds,
+        });
+
+      const deployment =
+        await this.deploymentsService.publishStandards(command);
+
+      this.logger.info(
+        'POST /deployments/standards/publish - Standards published successfully',
+        {
+          deploymentId: deployment.id,
+        },
+      );
+
+      return deployment;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /deployments/standards/publish - Failed to publish standards',
+        {
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+}
