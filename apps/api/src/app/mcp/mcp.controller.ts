@@ -79,7 +79,7 @@ export class McpController {
   async getUrl(): Promise<{ url: string }> {
     const url =
       (await Configuration.getConfig('PACKMIND_MCP_BASE_URL')) ||
-      'http://localhost:8081';
+      'http://localhost:8081/mcp';
     return { url };
   }
 }

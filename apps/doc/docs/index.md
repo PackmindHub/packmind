@@ -29,7 +29,7 @@ By default, Packmind will be available in `http://localhost:8081`
 
 ## Connect your LLM (Optional)
 
-Connect a LLM offers a better experience when distributing your standards and recipes in your Git Repositories, while it's _not mandatory_ and you can use Packmind without this.
+Connecting a LLM offers a better experience when distributing your standards and recipes in your Git Repositories, while it's _not mandatory_ and you can use Packmind without this.
 
 _OpenAI_ is the only currently supported AI Provider.
 You need to set your OpenAI key in the `docker-compose.yml` file.
@@ -45,11 +45,9 @@ Restart then with:
 docker compose up -d
 ```
 
-On the interface, creating your first **organization** and your **user account**.
-
 ## Connect your MCP server to your Agent
 
-The MCP server lets you interacts with Packmind within your AI Agents sessions, to create new recipes and coding rules for instances.
+The MCP server lets you interact with Packmind within your AI Agents sessions, to create new recipes and coding rules for instances.
 
 Go into **Settings** and get your MCP Access token.
 
@@ -87,13 +85,13 @@ You can update your standard later to add and remove rules. Each rule can be doc
 
 While working with your AI Agent, you often provide instructions regarding code guidelines and standards.
 
-To capitalize on it and no keep it locally, you can use one tool from the MCP like this:
+To capitalize on it and not keep it locally, you can use one tool from the MCP like this:
 
 _"Add a rule to our standards 'Back-end unit tests' that states that one single expect must be set for each test"_
 
 ## Create Recipes
 
-A coding recipe is structured set of instructions, a know-how, or a process that can be applied to achieve a specific outcome.
+A coding recipe is a structured set of instructions, a know-how, or a process that can be applied to achieve a specific outcome.
 Recipes are repeatable and predictable instructions patterns.
 
 Examples of recipes can be:
@@ -102,7 +100,7 @@ Examples of recipes can be:
 - Add a new use case in a business domain
 
 Recipes are created through the **MCP server** .
-As it's a suite of instructions and steps to follow, we recommend, to provide the better context, to create a recipe:
+As it's a suite of instructions and steps to follow, we recommend providing the better context to create a recipe:
 
 - When you've accomplished a series of tasks in a session with your AI Agent, and you ask to create a recipe based on what's you've done so far
 - A commit or a pull request reflects a recipe, and you can ask explicitly to your AI Agent to create a recipe by analyzing one or several commits or by providing a Pull Request URL.
@@ -115,12 +113,12 @@ _"Synthetize the steps we followed to create a new use case and create a Packmin
 
 ## Standards and Recipes Versions
 
-Everytime you update a standard or a recipe, this creates a new version.
+Every time you update a standard or a recipe, this creates a new version.
 This keeps track of the history of your changes, and it's useful to keep track of which versions are currently deployed on Git repositories.
 
 ## Distribute your standards and recipes
 
-Now Packmind contains coding standards and recipes, let's distribute them one your Git Repositories.
+Now Packmind contains coding standards and recipes, let's distribute them on your Git Repositories.
 
 The distribution will commit instructions files that will be used by AI Agents (Claude Code, Cursor, ...)
 
@@ -155,7 +153,7 @@ You can connect several Git providers in Packmind:
    - `api` - Full API access
 3. Copy your token (starts with `glpat-`)
 
-One you've added your providers, **add repositories** for each provider.
+Once you've added your providers, **add repositories** for each provider.
 
 ### Distribute Standards and Recipes
 
@@ -168,9 +166,9 @@ This distribution creates a single commit for each target repository.
 
 ### Get overview of deployments
 
-On the menu, click on \*_Overview_ to list the state of your latest recipes and standards distributions.
+On the menu, click on **Overview** to list the state of your latest recipes and standards distributions.
 
 This section provides insights on:
 
-- Which Git repositories contains outdated standards and recipes
+- Which Git repositories contain outdated standards and recipes
 - Where standards and recipes are deployed

@@ -121,7 +121,7 @@ const config: Config = {
           ],
         },
         {
-          href: 'https://github.com/PackmindHub/packmind-monorepo',
+          href: `https://github.com/PackmindHub/${gitRepo}`,
           label: 'GitHub',
           position: 'right',
         },
@@ -153,7 +153,7 @@ const config: Config = {
           items: [
             {
               label: 'GitHub',
-              href: 'https://github.com/PackmindHub/packmind-monorepo',
+              href: `https://github.com/PackmindHub/${gitRepo}`,
             },
           ],
         },
