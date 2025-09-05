@@ -5,6 +5,8 @@ import { join } from 'path';
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
+const gitRepo = process.env.GIT_REPO || 'packmind';
+
 const config: Config = {
   title: 'Packmind',
   tagline: 'Your Tech Lead Copilot',
@@ -19,12 +21,12 @@ const config: Config = {
   url: 'https://PackmindHub.github.io',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/packmind-monorepo/',
+  baseUrl: `/${gitRepo}/`,
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'PackmindHub', // Usually your GitHub org/user name.
-  projectName: 'packmind-monorepo', // Usually your repo name.
+  projectName: gitRepo, // Usually your repo name.
   deploymentBranch: 'gh-pages', // The branch that GitHub Pages will deploy from
   trailingSlash: false, // GitHub Pages works better without trailing slashes
 
@@ -48,7 +50,7 @@ const config: Config = {
           routeBasePath: '/', // Serve the docs at the site's root
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
-          editUrl: 'https://github.com/PackmindHub/packmind-monorepo/apps/doc/',
+          editUrl: `https://github.com/PackmindHub/${gitRepo}/apps/doc/`,
         },
         theme: {
           customCss: './src/css/custom.css',

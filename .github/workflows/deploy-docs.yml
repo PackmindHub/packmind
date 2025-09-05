@@ -53,6 +53,7 @@ jobs:
         run: ./node_modules/.bin/nx build doc
         env:
           NODE_ENV: production
+          GIT_REPO: ${{ vars.GIT_REPO }}
 
       - name: Upload Build Artifact
         uses: actions/upload-pages-artifact@v3
