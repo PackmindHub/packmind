@@ -8,3 +8,10 @@ export type {
   PMCopiableTriggerProps,
   PMCopiableIndicatorProps,
 } from './PMCopiable/PMCopiable';
+export {
+  PMConfirmationModal,
+  PMConfirmationModalHeader,
+  PMConfirmationModalBody,
+  PMConfirmationModalFooter,
+} from './PMConfirmationModal';
+export type { PMConfirmationModalProps } from './PMConfirmationModal';

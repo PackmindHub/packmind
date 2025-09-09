@@ -129,6 +129,7 @@ Here is an overview of the supported agents:
 | **Cursor**         | Creates rules in YAML format | `.cursor/rules/`                  |
 | **GitHub Copilot** | Updates instructions file    | `.github/copilot-instructions.md` |
 | **Claude Code**    | Updates instructions file    | `CLAUDE.md`                       |
+| **AGENTS.md**      | Updates instructions file    | `AGENTS.md`                       |
 | **Junie**          | Updates guidelines file      | `.junie/guidelines.md`            |
 
 Files are also written in the `.packmind` folder to be reused by these agents.

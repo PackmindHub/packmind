@@ -18,7 +18,9 @@ describe('Language', () => {
 
       // Check that they are sorted by display name
       const displayNames = sortedLanguages.map((item) => item.info.displayName);
-      const sortedDisplayNames = [...displayNames].sort();
+      const sortedDisplayNames = [...displayNames].sort((a, b) =>
+        a.localeCompare(b),
+      );
       expect(displayNames).toEqual(sortedDisplayNames);
 
       // Check structure of returned objects
@@ -31,9 +33,9 @@ describe('Language', () => {
       });
     });
 
-    it('has C# as the first language alphabetically', () => {
+    it('has Bash as the first language alphabetically', () => {
       const sortedLanguages = getAllLanguagesSortedByDisplayName();
-      expect(sortedLanguages[0].info.displayName).toBe('C#');
+      expect(sortedLanguages[0].info.displayName).toBe('Bash');
     });
 
     it('includes all expected languages', () => {
@@ -233,7 +235,7 @@ describe('Language', () => {
         expect(stringToProgrammingLanguage('c++')).toBe(
           ProgrammingLanguage.CPP,
         );
-        expect(stringToProgrammingLanguage('h')).toBe(ProgrammingLanguage.CPP);
+        expect(stringToProgrammingLanguage('h')).toBe(ProgrammingLanguage.C);
         expect(stringToProgrammingLanguage('hpp')).toBe(
           ProgrammingLanguage.CPP,
         );
@@ -266,8 +268,8 @@ describe('Language', () => {
         expect(() => stringToProgrammingLanguage('unknown')).toThrow(
           'Unknown programming language: "unknown"',
         );
-        expect(() => stringToProgrammingLanguage('rust')).toThrow(
-          'Unknown programming language: "rust"',
+        expect(() => stringToProgrammingLanguage('cobol')).toThrow(
+          'Unknown programming language: "cobol"',
         );
       });
 

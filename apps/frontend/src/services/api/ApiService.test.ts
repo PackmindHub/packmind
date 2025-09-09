@@ -167,7 +167,7 @@ describe('ApiService', () => {
       mockAxiosInstance.get.mockRejectedValue(mockError);
 
       await expect(apiService.get('/users')).rejects.toThrow(
-        '[PackmindError] Internal Server Error (500 - Internal Server Error)',
+        'Internal Server Error',
       );
     });
   });
@@ -209,7 +209,7 @@ describe('ApiService', () => {
       mockAxiosInstance.post.mockRejectedValue(mockError);
 
       await expect(apiService.post('/users', postData)).rejects.toThrow(
-        '[PackmindError] Bad Request (400 - Bad Request)',
+        'Bad Request',
       );
     });
   });

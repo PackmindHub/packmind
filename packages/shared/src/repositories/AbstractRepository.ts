@@ -9,6 +9,7 @@ import {
 import assert from 'assert';
 import { WithSoftDelete } from '../database/types';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
+import { BadRequestException } from '@nestjs/common';
 
 export abstract class AbstractRepository<Entity extends { id: string }>
   implements IRepository<Entity>
@@ -124,7 +125,7 @@ export abstract class AbstractRepository<Entity extends { id: string }>
   }
 
   private handleDuplicateKeyError(entity: Entity): Error {
-    return new Error(this.makeDuplicationErrorMessage(entity));
+    return new BadRequestException(this.makeDuplicationErrorMessage(entity));
   }
 
   private async softDelete(

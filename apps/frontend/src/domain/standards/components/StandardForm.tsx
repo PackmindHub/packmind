@@ -111,13 +111,6 @@ export const StandardForm: React.FC<StandardFormProps> = ({
     }
 
     const validRules = rules.filter((rule) => rule.content.trim());
-    if (validRules.length === 0) {
-      setAlert({
-        type: 'error',
-        message: STANDARD_MESSAGES.validation.rulesRequired,
-      });
-      return;
-    }
 
     const standardData = {
       name: name.trim(),
@@ -179,10 +172,7 @@ export const StandardForm: React.FC<StandardFormProps> = ({
     }
   };
 
-  const isFormValid =
-    name.trim() &&
-    description.trim() &&
-    rules.some((rule) => rule.content.trim());
+  const isFormValid = name.trim() && description.trim();
 
   if (mode === 'edit' && rulesLoading) {
     return <PMText>Loading rules...</PMText>;
@@ -259,8 +249,7 @@ export const StandardForm: React.FC<StandardFormProps> = ({
           </PMFieldset.Legend>
           <PMFieldset.HelperText>
             List the rules that define this standard. Each rule describe what
-            you should or must do (or not) to comply with the standard. At least
-            one rule is required.
+            you should or must do (or not) to comply with the standard.
           </PMFieldset.HelperText>
           <PMFieldset.Content
             border={'solid 1px'}
@@ -277,10 +266,8 @@ export const StandardForm: React.FC<StandardFormProps> = ({
                   p={3}
                   borderRadius="md"
                 >
-                  <PMField.Root required={index === 0}>
-                    <PMField.Label>
-                      {`Rule ${index + 1}`} <PMField.RequiredIndicator />
-                    </PMField.Label>
+                  <PMField.Root>
+                    <PMField.Label>{`Rule ${index + 1}`}</PMField.Label>
                     <PMTextArea
                       placeholder={`Rule ${index + 1}`}
                       value={rule.content}

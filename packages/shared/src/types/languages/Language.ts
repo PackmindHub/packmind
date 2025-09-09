@@ -10,8 +10,21 @@ export enum ProgrammingLanguage {
   HTML = 'HTML',
   CSHARP = 'CSHARP',
   GO = 'GO',
+  C = 'C',
   CPP = 'CPP',
   SQL = 'SQL',
+  KOTLIN = 'KOTLIN',
+  VUE = 'VUE',
+  CSS = 'CSS',
+  YAML = 'YAML',
+  JSON = 'JSON',
+  XML = 'XML',
+  BASH = 'BASH',
+  MARKDOWN = 'MARKDOWN',
+  RUST = 'RUST',
+  SAP_ABAP = 'SAP_ABAP',
+  SAP_CDS = 'SAP_CDS',
+  SAP_HANA_SQL = 'SAP_HANA_SQL',
 }
 
 export type ProgrammingLanguageInfo = {
@@ -67,13 +80,70 @@ export const ProgrammingLanguageDetails: Record<
     displayName: 'Go',
     fileExtensions: ['go'],
   },
+  [ProgrammingLanguage.C]: {
+    displayName: 'C',
+    fileExtensions: ['c', 'h'],
+  },
   [ProgrammingLanguage.CPP]: {
     displayName: 'C++',
-    fileExtensions: ['cpp', 'cc', 'cxx', 'c++', 'h', 'hpp', 'hxx'],
+    fileExtensions: ['cpp', 'cc', 'cxx', 'c++', 'hpp', 'hxx'],
   },
   [ProgrammingLanguage.SQL]: {
     displayName: 'SQL',
     fileExtensions: ['sql'],
+  },
+  [ProgrammingLanguage.KOTLIN]: {
+    displayName: 'Kotlin',
+    fileExtensions: ['kt', 'kts'],
+  },
+  [ProgrammingLanguage.VUE]: {
+    displayName: 'Vue',
+    fileExtensions: ['vue'],
+  },
+  [ProgrammingLanguage.CSS]: {
+    displayName: 'CSS',
+    fileExtensions: ['css'],
+  },
+  [ProgrammingLanguage.YAML]: {
+    displayName: 'YAML',
+    fileExtensions: ['yaml', 'yml'],
+  },
+  [ProgrammingLanguage.JSON]: {
+    displayName: 'JSON',
+    fileExtensions: ['json'],
+  },
+  [ProgrammingLanguage.XML]: {
+    displayName: 'XML',
+    fileExtensions: ['xml'],
+  },
+  [ProgrammingLanguage.BASH]: {
+    displayName: 'Bash',
+    fileExtensions: ['sh', 'bash'],
+  },
+  [ProgrammingLanguage.MARKDOWN]: {
+    displayName: 'Markdown',
+    fileExtensions: ['md'],
+  },
+  [ProgrammingLanguage.RUST]: {
+    displayName: 'Rust',
+    fileExtensions: ['rs'],
+  },
+  [ProgrammingLanguage.SAP_ABAP]: {
+    displayName: 'SAP ABAP',
+    fileExtensions: ['abap', 'ab4'],
+  },
+  [ProgrammingLanguage.SAP_CDS]: {
+    displayName: 'SAP CDS',
+    fileExtensions: ['cds'],
+  },
+  [ProgrammingLanguage.SAP_HANA_SQL]: {
+    displayName: 'SAP HANA SQL',
+    fileExtensions: [
+      'hdbprocedure',
+      'hdbfunction',
+      'hdbview',
+      'hdbcalculationview',
+    ],
   },
 };
 

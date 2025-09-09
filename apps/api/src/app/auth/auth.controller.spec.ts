@@ -140,6 +140,7 @@ describe('AuthController', () => {
     const signInRequest: SignInUserCommand = {
       username: 'testuser',
       password: 'password123',
+      organizationId: createOrganizationId('org-1'),
     };
 
     it('signs in user successfully and sets cookie', async () => {

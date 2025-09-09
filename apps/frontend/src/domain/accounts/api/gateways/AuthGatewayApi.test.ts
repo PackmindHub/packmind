@@ -97,7 +97,11 @@ describe('AuthGatewayApi', () => {
 
   describe('signIn', () => {
     it('calls API service with correct parameters', async () => {
-      const signInRequest = { username: 'testuser', password: 'password123' };
+      const signInRequest = {
+        username: 'testuser',
+        password: 'password123',
+        organizationId: createOrganizationId('org-1'),
+      };
       const mockResponse = {
         message: 'Sign in successful',
         user: {
@@ -117,7 +121,11 @@ describe('AuthGatewayApi', () => {
     });
 
     it('handles API errors', async () => {
-      const signInRequest = { username: 'testuser', password: 'wrongpassword' };
+      const signInRequest = {
+        username: 'testuser',
+        password: 'wrongpassword',
+        organizationId: createOrganizationId('org-1'),
+      };
       const error = new Error('Invalid credentials');
       mockApiPost.mockRejectedValue(error);
 

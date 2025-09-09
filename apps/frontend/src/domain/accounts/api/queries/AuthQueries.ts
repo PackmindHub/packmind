@@ -40,7 +40,6 @@ export const useSignInMutation = () => {
       return authGateway.signIn(request);
     },
     onSuccess: (data) => {
-      console.log('User signed in successfully:', data);
       // Invalidate authentication queries to refresh user state
       queryClient.invalidateQueries({ queryKey: ['getMe'] });
     },
@@ -59,7 +58,6 @@ export const useSignOutMutation = () => {
       return authGateway.signOut();
     },
     onSuccess: (data) => {
-      console.log('User signed out successfully:', data);
       // Clear all queries to reset authentication state
       queryClient
         .invalidateQueries({ queryKey: ['getMe'] })

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { RuleExample } from '@packmind/standards/types';
-import { RuleId } from '@packmind/shared/types';
 import {
+  RuleId,
   ProgrammingLanguage,
   getAllLanguagesSortedByDisplayName,
 } from '@packmind/shared/types';
@@ -9,6 +9,7 @@ import {
   useUpdateRuleExampleMutation,
   useDeleteRuleExampleMutation,
 } from '../../api/queries';
+import { NewExample } from '../RuleExamplesManager/RuleExamplesManager';
 import {
   PMCodeMirror,
   PMText,
@@ -28,25 +29,71 @@ import {
 import { LuCircleCheckBig, LuCircleX } from 'react-icons/lu';
 
 interface RuleExampleItemProps {
-  example: RuleExample;
+  example: RuleExample | NewExample;
   standardId: string;
   ruleId: RuleId;
+  isNew?: boolean;
+  onSaveNew?: (
+    example: NewExample,
+    values: { lang: string; positive: string; negative: string },
+  ) => Promise<void>;
+  onCancelNew?: (exampleId: string) => void;
 }
 
 export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
   example,
   standardId,
   ruleId,
+  isNew = false,
+  onSaveNew,
+  onCancelNew,
 }) => {
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(isNew);
   const [editValues, setEditValues] = useState({
     lang: example.lang,
     positive: example.positive,
     negative: example.negative,
   });
+  const [isSaving, setIsSaving] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<{
+    positive?: string;
+    negative?: string;
+    total?: string;
+  }>({});
 
   const updateMutation = useUpdateRuleExampleMutation();
   const deleteMutation = useDeleteRuleExampleMutation();
+
+  // Validation constants
+  const MAX_LINES = 500;
+  const MAX_TOTAL_CHARS = 30000;
+
+  // Validation function
+  const validateExample = (positive: string, negative: string) => {
+    const errors: { positive?: string; negative?: string; total?: string } = {};
+
+    // Count lines and characters efficiently
+    // Note: For future optimization, could leverage CodeMirror's editor state APIs
+    // via refs to get line count from editor.state.doc.lines
+    const positiveLines = positive.split('\n').length;
+    const negativeLines = negative.split('\n').length;
+    const totalChars = positive.length + negative.length;
+
+    if (positiveLines > MAX_LINES) {
+      errors.positive = `${positiveLines} / ${MAX_LINES} lines`;
+    }
+
+    if (negativeLines > MAX_LINES) {
+      errors.negative = `${negativeLines} / ${MAX_LINES} lines`;
+    }
+
+    if (totalChars > MAX_TOTAL_CHARS) {
+      errors.total = `Total character count exceeds ${MAX_TOTAL_CHARS.toLocaleString()} characters (${totalChars.toLocaleString()} characters)`;
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   // Get sorted languages for the dropdown
   const sortedLanguages = getAllLanguagesSortedByDisplayName();
@@ -55,15 +102,42 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
     label: info.displayName,
   }));
 
-  const handleEditToggle = () => {
+  const handleEditToggle = async () => {
     if (isEditing) {
-      // Save changes
-      updateMutation.mutate({
-        standardId,
-        ruleId,
-        exampleId: example.id,
-        updates: editValues,
-      });
+      if (
+        editValues.positive.trim() === '' &&
+        editValues.negative.trim() === ''
+      ) {
+        handleCancel();
+        return;
+      }
+
+      // Validate before saving
+      const isValid = validateExample(editValues.positive, editValues.negative);
+      if (!isValid) {
+        return; // Don't save if validation fails
+      }
+
+      if (isNew && onSaveNew) {
+        setIsSaving(true);
+        try {
+          await onSaveNew(example as NewExample, editValues);
+          setIsSaving(false);
+          setIsEditing(false);
+        } catch (error) {
+          console.error('Failed to save new example:', error);
+          setIsSaving(false);
+        }
+      } else {
+        // Save changes to existing example
+        updateMutation.mutate({
+          standardId,
+          ruleId,
+          exampleId: (example as RuleExample).id,
+          updates: editValues,
+        });
+        setIsEditing(false);
+      }
     } else {
       // Reset values when starting to edit
       setEditValues({
@@ -71,25 +145,54 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
         positive: example.positive,
         negative: example.negative,
       });
+      setValidationErrors({}); // Clear validation errors
+      setIsEditing(true);
     }
-    setIsEditing(!isEditing);
   };
 
   const handleCancel = () => {
-    setEditValues({
-      lang: example.lang,
-      positive: example.positive,
-      negative: example.negative,
-    });
-    setIsEditing(false);
+    if (isNew && onCancelNew) {
+      // Cancel new example creation
+      onCancelNew(example.id);
+    } else {
+      // Cancel editing existing example
+      setEditValues({
+        lang: example.lang,
+        positive: example.positive,
+        negative: example.negative,
+      });
+      setValidationErrors({}); // Clear validation errors
+      setIsEditing(false);
+    }
+  };
+
+  // Handle input changes with real-time validation
+  const handlePositiveChange = (value: string) => {
+    const newEditValues = { ...editValues, positive: value };
+    setEditValues(newEditValues);
+    // Validate in real-time
+    validateExample(newEditValues.positive, newEditValues.negative);
+  };
+
+  const handleNegativeChange = (value: string) => {
+    const newEditValues = { ...editValues, negative: value };
+    setEditValues(newEditValues);
+    // Validate in real-time
+    validateExample(newEditValues.positive, newEditValues.negative);
   };
 
   const handleRemove = () => {
-    deleteMutation.mutate({
-      standardId,
-      ruleId,
-      exampleId: example.id,
-    });
+    if (isNew && onCancelNew) {
+      // Remove new example from local state
+      onCancelNew(example.id);
+    } else {
+      // Delete existing example from database
+      deleteMutation.mutate({
+        standardId,
+        ruleId,
+        exampleId: (example as RuleExample).id,
+      });
+    }
   };
 
   return (
@@ -105,7 +208,7 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
       <PMFlex justify="space-between" align="center" mb={4}>
         <PMHStack>
           <PMText>Language:</PMText>
-          {isEditing ? (
+          {isEditing && isNew ? (
             <PMNativeSelect
               value={editValues.lang}
               onChange={(e) =>
@@ -126,10 +229,23 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
         </PMHStack>
         {isEditing ? (
           <PMButtonGroup size="sm">
-            <PMButton variant="tertiary" onClick={handleCancel}>
+            <PMButton
+              variant="tertiary"
+              onClick={handleCancel}
+              disabled={isSaving || updateMutation.isPending}
+            >
               Cancel
             </PMButton>
-            <PMButton variant="primary" onClick={handleEditToggle}>
+            <PMButton
+              variant="primary"
+              onClick={handleEditToggle}
+              loading={isSaving || updateMutation.isPending}
+              disabled={
+                isSaving ||
+                updateMutation.isPending ||
+                Object.keys(validationErrors).length > 0
+              }
+            >
               Save
             </PMButton>
           </PMButtonGroup>
@@ -138,16 +254,18 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
             <PMButton
               variant="secondary"
               onClick={handleEditToggle}
-              aria-label={isEditing ? 'Save changes' : 'Edit example'}
+              aria-label="Edit example"
             >
               Edit
             </PMButton>
             <PMButton
               variant="tertiary"
               onClick={handleRemove}
-              aria-label="Remove example"
+              aria-label={isNew ? 'Cancel' : 'Delete'}
+              loading={deleteMutation.isPending}
+              disabled={deleteMutation.isPending}
             >
-              Delete
+              {isNew ? 'Cancel' : 'Delete'}
             </PMButton>
           </PMButtonGroup>
         )}
@@ -167,11 +285,11 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
             <PMBox>
               <PMCodeMirror
                 value={isEditing ? editValues.positive : example.positive}
-                onChange={(value: string) =>
-                  setEditValues((prev) => ({ ...prev, positive: value }))
-                }
-                readOnly={!isEditing}
-                language={example.lang}
+                onChange={handlePositiveChange}
+                editable={isEditing}
+                language={isEditing ? editValues.lang : example.lang}
+                placeholder={'Code complying with the rule...'}
+                height="200px"
                 basicSetup={{
                   lineNumbers: true,
                   foldGutter: false,
@@ -188,6 +306,11 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
                   cursor: isEditing ? 'text' : 'default',
                 }}
               />
+              {validationErrors.positive && (
+                <PMText color="error" variant="small" mt={1}>
+                  {validationErrors.positive}
+                </PMText>
+              )}
             </PMBox>
           </PMVStack>
         </PMGridItem>
@@ -203,11 +326,11 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
             <PMBox>
               <PMCodeMirror
                 value={isEditing ? editValues.negative : example.negative}
-                onChange={(value: string) =>
-                  setEditValues((prev) => ({ ...prev, negative: value }))
-                }
-                readOnly={!isEditing}
-                language={example.lang}
+                onChange={handleNegativeChange}
+                editable={isEditing}
+                language={isEditing ? editValues.lang : example.lang}
+                placeholder={'Code violating the rule...'}
+                height="200px"
                 basicSetup={{
                   lineNumbers: true,
                   foldGutter: false,
@@ -224,10 +347,31 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
                   cursor: isEditing ? 'text' : 'default',
                 }}
               />
+              {validationErrors.negative && (
+                <PMText color="error" variant="small" mt={1}>
+                  {validationErrors.negative}
+                </PMText>
+              )}
             </PMBox>
           </PMVStack>
         </PMGridItem>
       </PMGrid>
+
+      {/* Total character count error */}
+      {validationErrors.total && (
+        <PMBox
+          mt={2}
+          p={2}
+          bg="red.50"
+          border="1px solid"
+          borderColor="red.200"
+          borderRadius="md"
+        >
+          <PMText color="error" variant="small">
+            {validationErrors.total}
+          </PMText>
+        </PMBox>
+      )}
     </PMBox>
   );
 };

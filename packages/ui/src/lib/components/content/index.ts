@@ -16,3 +16,4 @@ export { PMDrawer } from './PMDrawer/PMDrawer';
 export { PMCloseButton } from './PMCloseButton/PMCloseButton';
 export { PMIcon } from './PMIcon/PMIcon';
 export { PMTwoColumnsLayout } from './PMTwoColumnsLayout/PMTwoColumnsLayout';
+export { PMImage } from './PMImage/PMImage';

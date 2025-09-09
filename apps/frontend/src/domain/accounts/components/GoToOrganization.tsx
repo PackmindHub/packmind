@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { PMInput, PMButton, PMFormContainer, PMLabel } from '@packmind/ui';
+import {
+  PMInput,
+  PMButton,
+  PMFormContainer,
+  PMField,
+  PMAlert,
+} from '@packmind/ui';
 import { organizationGateway } from '../api/gateways';
 
 export default function GoToOrganization() {
@@ -41,21 +47,31 @@ export default function GoToOrganization() {
   return (
     <form onSubmit={handleSubmit}>
       <PMFormContainer maxWidth="500px" spacing={4}>
-        <PMLabel htmlFor={inputId} required>
-          Organization Name
-        </PMLabel>
-        <PMInput
-          id={inputId}
-          value={organizationSlug}
-          onChange={(e) => setOrganizationSlug(e.target.value)}
-          placeholder="Enter organization name"
-          required
-          disabled={isChecking}
-          error={error}
-        />
-        {error && <div style={{ color: 'red', marginTop: 8 }}>{error}</div>}
+        <PMField.Root required>
+          <PMField.Label>
+            Organization Name
+            <PMField.RequiredIndicator />
+          </PMField.Label>
+
+          <PMInput
+            id={inputId}
+            value={organizationSlug}
+            onChange={(e) => setOrganizationSlug(e.target.value)}
+            placeholder="Enter organization name"
+            required
+            disabled={isChecking}
+            error={error}
+          />
+        </PMField.Root>
+
+        {error && (
+          <PMAlert.Root status="error">
+            <PMAlert.Indicator />
+            <PMAlert.Title>{error}</PMAlert.Title>
+          </PMAlert.Root>
+        )}
         <PMButton type="submit" disabled={isChecking}>
-          {isChecking ? 'Checking...' : 'Go to Organization'}
+          {isChecking ? 'Checking...' : 'Go to organization'}
         </PMButton>
       </PMFormContainer>
     </form>

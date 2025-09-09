@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { PMInput, PMButton, PMFormContainer, PMLabel } from '@packmind/ui';
+import { PMInput, PMButton, PMFormContainer, PMField } from '@packmind/ui';
 import { Organization } from '@packmind/accounts/types';
 import { useSignInMutation } from '../api/queries/AuthQueries';
 import { useCheckUsernameMutation } from '../api/queries/UserQueries';
@@ -22,15 +22,28 @@ export default function SignInForm({ organization }: SignInFormProps) {
   const checkUsernameMutation = useCheckUsernameMutation();
   const navigate = useNavigate();
 
-  // Check username availability when username changes (with debounce)
+  // Check username availability when username changes (with debounce and deduplication)
+  const [lastCheckedUsername, setLastCheckedUsername] = useState<string | null>(
+    null,
+  );
   useEffect(() => {
-    if (username.trim().length >= 3) {
+    const trimmed = username.trim();
+    if (
+      trimmed.length >= 3 &&
+      trimmed !== lastCheckedUsername &&
+      !checkUsernameMutation.isPending
+    ) {
       const timeoutId = setTimeout(() => {
-        checkUsernameMutation.mutate(username.trim());
+        checkUsernameMutation.mutate(trimmed);
+        setLastCheckedUsername(trimmed);
       }, 500);
       return () => clearTimeout(timeoutId);
     }
-  }, [username, checkUsernameMutation]);
+    // Reset lastCheckedUsername if username is too short
+    if (trimmed.length < 3 && lastCheckedUsername !== null) {
+      setLastCheckedUsername(null);
+    }
+  }, [username, lastCheckedUsername, checkUsernameMutation]);
 
   const validateForm = () => {
     const newErrors: typeof errors = {};
@@ -65,6 +78,7 @@ export default function SignInForm({ organization }: SignInFormProps) {
       {
         username: username.trim(),
         password,
+        organizationId: organization.id,
       },
       {
         onSuccess: () => {
@@ -96,33 +110,42 @@ export default function SignInForm({ organization }: SignInFormProps) {
 
   return (
     <form onSubmit={handleSubmit}>
-      <PMFormContainer maxWidth="500px" spacing={4}>
-        <PMLabel htmlFor={usernameId} required>
-          Username
-        </PMLabel>
-        <PMInput
-          id={usernameId}
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          placeholder="Enter your username"
-          required
-          disabled={signInMutation.isPending}
-          error={getUsernameError()}
-        />
+      <PMFormContainer spacing={4} maxWidth="full">
+        <PMField.Root required invalid={!!getUsernameError()}>
+          <PMField.Label>
+            Username
+            <PMField.RequiredIndicator />
+          </PMField.Label>
 
-        <PMLabel htmlFor={passwordId} required>
-          Password
-        </PMLabel>
-        <PMInput
-          id={passwordId}
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Enter your password"
-          required
-          disabled={signInMutation.isPending}
-          error={errors.password}
-        />
+          <PMInput
+            id={usernameId}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="Enter your username"
+            required
+            disabled={signInMutation.isPending}
+            error={getUsernameError()}
+          />
+
+          <PMField.ErrorText>{getUsernameError()}</PMField.ErrorText>
+        </PMField.Root>
+
+        <PMField.Root required>
+          <PMField.Label>
+            Password
+            <PMField.RequiredIndicator />
+          </PMField.Label>
+          <PMInput
+            id={passwordId}
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter your password"
+            required
+            disabled={signInMutation.isPending}
+            error={errors.password}
+          />
+        </PMField.Root>
 
         {errors.form && (
           <div style={{ color: 'red', marginTop: 8 }}>{errors.form}</div>

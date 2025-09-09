@@ -5,6 +5,7 @@ import {
 } from '../../../domain/useCases/ISignInUserUseCase';
 import { UserService } from '../../services/UserService';
 import { OrganizationService } from '../../services/OrganizationService';
+import { UnauthorizedException } from '@nestjs/common';
 
 export class SignInUserUseCase implements ISignInUserUseCase {
   constructor(
@@ -13,10 +14,18 @@ export class SignInUserUseCase implements ISignInUserUseCase {
   ) {}
 
   async execute(command: SignInUserCommand): Promise<SignInUserResponse> {
+    // Validate organization exists first
+    const organization = await this.organizationService.getOrganizationById(
+      command.organizationId,
+    );
+    if (!organization) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
     // Find user by username
     const user = await this.userService.getUserByUsername(command.username);
     if (!user) {
-      throw new Error('Invalid credentials');
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     // Validate password
@@ -25,15 +34,12 @@ export class SignInUserUseCase implements ISignInUserUseCase {
       user.passwordHash,
     );
     if (!isPasswordValid) {
-      throw new Error('Invalid credentials');
+      throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Fetch organization data
-    const organization = await this.organizationService.getOrganizationById(
-      user.organizationId,
-    );
-    if (!organization) {
-      throw new Error('User organization not found');
+    // Validate user belongs to the specified organization
+    if (user.organizationId !== command.organizationId) {
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     return {

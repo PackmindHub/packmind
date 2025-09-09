@@ -134,11 +134,6 @@ export class StandardsController {
         throw new BadRequestException('Rules array is required');
       }
 
-      if (standard.rules.length === 0) {
-        this.logger.error('PUT /standards - At least one rule is required');
-        throw new BadRequestException('At least one rule is required');
-      }
-
       // Validate each rule
       for (let i = 0; i < standard.rules.length; i++) {
         const rule = standard.rules[i];
@@ -292,13 +287,6 @@ export class StandardsController {
       if (!standard.rules || !Array.isArray(standard.rules)) {
         this.logger.error('POST /standards/:id - Rules array is required');
         throw new BadRequestException('Rules array is required');
-      }
-
-      if (standard.rules.length === 0) {
-        this.logger.error(
-          'POST /standards/:id - At least one rule is required',
-        );
-        throw new BadRequestException('At least one rule is required');
       }
 
       // Validate each rule

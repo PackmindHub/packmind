@@ -33,11 +33,5 @@ export const useCheckUsernameMutation = () => {
     mutationFn: async (username: string) => {
       return userGateway.doesUsernameExist(username);
     },
-    onSuccess: (data, username) => {
-      console.log(`Username '${username}' exists:`, data.exists);
-    },
-    onError: (error, username) => {
-      console.error(`Error checking username '${username}':`, error);
-    },
   });
 };

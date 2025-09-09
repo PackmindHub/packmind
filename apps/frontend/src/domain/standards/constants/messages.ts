@@ -3,7 +3,6 @@ export const STANDARD_MESSAGES = {
   validation: {
     nameRequired: 'Standard name is required',
     descriptionRequired: 'Standard description is required',
-    rulesRequired: 'At least one rule is required',
   },
   success: {
     created: 'Standard created successfully!',

@@ -1,12 +1,21 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { PMPage, PMButton } from '@packmind/ui';
+import {
+  PMPage,
+  PMButton,
+  PMVStack,
+  PMBox,
+  PMHeading,
+  PMText,
+  PMAlert,
+  PMHStack,
+} from '@packmind/ui';
 import { useIsAuthenticated } from '../../src/domain/accounts/hooks/useIsAuthenticated';
 import { organizationGateway } from '../../src/domain/accounts/api/gateways';
 import { Organization } from '@packmind/accounts/types';
-import SignInForm from '../../src/domain/accounts/components/SignInForm';
+import SignUpForm from '../../src/domain/accounts/components/SignUpForm';
 
-export default function SignInRoute() {
+export default function SignUpRoute() {
   const { orgSlug } = useParams<{ orgSlug: string }>();
   const { isAuthenticated, isLoading } = useIsAuthenticated();
   const navigate = useNavigate();
@@ -57,39 +66,49 @@ export default function SignInRoute() {
 
   if (organizationError || !organization) {
     return (
-      <PMPage title="Organization Not Found">
-        <div style={{ textAlign: 'center', padding: '2rem' }}>
-          <p>
-            {organizationError ||
-              'The requested organization could not be found.'}
-          </p>
-          <button onClick={() => navigate('/get-started')}>
-            Create New Organization
-          </button>
-        </div>
-      </PMPage>
+      <PMVStack gap={6} align="stretch">
+        <PMAlert.Root status="error">
+          <PMAlert.Indicator />
+          <PMAlert.Title>
+            {organizationError || 'The organization could not be found.'}
+          </PMAlert.Title>
+        </PMAlert.Root>
+
+        <PMButton onClick={() => navigate('/get-started')} variant="tertiary">
+          Back to sign in page
+        </PMButton>
+      </PMVStack>
     );
   }
 
   return (
-    <PMPage
-      title={`Sign In to ${organization.name}`}
-      subtitle="Enter your credentials to access your account"
-    >
-      <SignInForm organization={organization} />
+    <PMVStack gap={6} align="stretch">
+      <PMBox textAlign="center">
+        <PMHeading level="h2">Join {organization.name}</PMHeading>
+      </PMBox>
 
-      <div style={{ textAlign: 'center', marginTop: '2rem', padding: '1rem' }}>
-        <p style={{ marginBottom: '1rem', color: '#666' }}>
-          Don't have an account?
-        </p>
+      <SignUpForm organization={organization} />
+
+      <PMHStack justifyContent={'space-between'} paddingX={6}>
         <PMButton
-          variant="outline"
+          variant="ghost"
           size="sm"
-          onClick={() => navigate(`/org/${orgSlug}/sign-up`)}
+          onClick={() => navigate(`/get-started`)}
         >
-          Create Account
+          &lt; Change organization
         </PMButton>
-      </div>
-    </PMPage>
+        <PMHStack>
+          <PMText>Have an access?</PMText>
+
+          <PMButton
+            variant="tertiary"
+            size="xs"
+            onClick={() => navigate(`/org/${orgSlug}/sign-in`)}
+          >
+            Sign in
+          </PMButton>
+        </PMHStack>
+      </PMHStack>
+    </PMVStack>
   );
 }

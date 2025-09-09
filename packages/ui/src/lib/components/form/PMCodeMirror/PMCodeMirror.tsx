@@ -10,6 +10,18 @@ import { html } from '@codemirror/lang-html';
 import { php } from '@codemirror/lang-php';
 import { sass } from '@codemirror/lang-sass';
 import { csharp } from '@replit/codemirror-lang-csharp';
+import { markdown } from '@codemirror/lang-markdown';
+import { json } from '@codemirror/lang-json';
+import { xml } from '@codemirror/lang-xml';
+import { rust } from '@codemirror/lang-rust';
+import { vue } from '@codemirror/lang-vue';
+import { css } from '@codemirror/lang-css';
+import { yaml } from '@codemirror/lang-yaml';
+import { shell } from '@codemirror/legacy-modes/mode/shell';
+import { ruby } from '@codemirror/legacy-modes/mode/ruby';
+import { StreamLanguage } from '@codemirror/language';
+// Note: Kotlin support would require: import { kotlin } from '@codemirror/lang-kotlin';
+
 export interface IPMCodeMirrorProps extends ReactCodeMirrorProps {
   language?: string;
 }
@@ -45,6 +57,9 @@ const getLanguageExtensions = (language?: string) => {
     case 'GOLANG':
       normalizedLanguage = 'GO';
       break;
+    case 'C':
+      normalizedLanguage = 'C';
+      break;
     case 'C++':
     case 'CXX':
       normalizedLanguage = 'CPP';
@@ -58,6 +73,51 @@ const getLanguageExtensions = (language?: string) => {
       break;
     case 'HTM':
       normalizedLanguage = 'HTML';
+      break;
+    case 'KT':
+    case 'KOTLIN':
+      normalizedLanguage = 'KOTLIN';
+      break;
+    case 'VUE':
+      normalizedLanguage = 'VUE';
+      break;
+    case 'CSS':
+      normalizedLanguage = 'CSS';
+      break;
+    case 'YAML':
+    case 'YML':
+      normalizedLanguage = 'YAML';
+      break;
+    case 'JSON':
+      normalizedLanguage = 'JSON';
+      break;
+    case 'XML':
+      normalizedLanguage = 'XML';
+      break;
+    case 'BASH':
+    case 'SH':
+    case 'SHELL':
+      normalizedLanguage = 'BASH';
+      break;
+    case 'MARKDOWN':
+    case 'MD':
+      normalizedLanguage = 'MARKDOWN';
+      break;
+    case 'RUST':
+    case 'RS':
+      normalizedLanguage = 'RUST';
+      break;
+    case 'ABAP':
+    case 'SAP_ABAP':
+      normalizedLanguage = 'SAP_ABAP';
+      break;
+    case 'CDS':
+    case 'SAP_CDS':
+      normalizedLanguage = 'SAP_CDS';
+      break;
+    case 'SAP_HANA_SQL':
+    case 'HANA_SQL':
+      normalizedLanguage = 'SAP_HANA_SQL';
       break;
   }
 
@@ -74,6 +134,8 @@ const getLanguageExtensions = (language?: string) => {
       return [python()];
     case 'GO':
       return [go()];
+    case 'C':
+      return [cpp()];
     case 'CPP':
       return [cpp()];
     case 'SQL':
@@ -88,6 +150,35 @@ const getLanguageExtensions = (language?: string) => {
       return [java()];
     case 'CSHARP':
       return [csharp()];
+    case 'KOTLIN':
+      // Note: Kotlin support requires @codemirror/lang-kotlin package
+      // For now, fallback to Java syntax highlighting
+      return [java()];
+    case 'VUE':
+      return [vue()];
+    case 'CSS':
+      return [css()];
+    case 'YAML':
+      return [yaml()];
+    case 'JSON':
+      return [json()];
+    case 'XML':
+      return [xml()];
+    case 'BASH':
+      return [StreamLanguage.define(shell)];
+    case 'MARKDOWN':
+      return [markdown()];
+    case 'RUST':
+      return [rust()];
+    case 'SAP_ABAP':
+      // Using Ruby syntax highlighting as fallback for SAP ABAP
+      return [StreamLanguage.define(ruby)];
+    case 'SAP_CDS':
+      // Using Ruby syntax highlighting as fallback for SAP CDS
+      return [StreamLanguage.define(ruby)];
+    case 'SAP_HANA_SQL':
+      // Using Ruby syntax highlighting as fallback for SAP HANA SQL
+      return [StreamLanguage.define(ruby)];
     default:
       return [];
   }

@@ -3,7 +3,8 @@ export type CodingAgent =
   | 'junie'
   | 'claude'
   | 'cursor'
-  | 'copilot';
+  | 'copilot'
+  | 'agents_md';
 
 export const CodingAgents: Record<CodingAgent, CodingAgent> = {
   packmind: 'packmind',
@@ -11,4 +12,5 @@ export const CodingAgents: Record<CodingAgent, CodingAgent> = {
   claude: 'claude',
   cursor: 'cursor',
   copilot: 'copilot',
+  agents_md: 'agents_md',
 };

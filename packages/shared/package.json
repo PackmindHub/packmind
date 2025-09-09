@@ -16,7 +16,8 @@
     "uuid": "^11.1.0",
     "winston": "^3.8.2",
     "@infisical/sdk": "^4.0.2",
-    "ioredis": "^5.3.2"
+    "ioredis": "^5.3.2",
+    "@nestjs/common": "^11.1.6"
   },
   "devDependencies": {
     "@types/winston": "^2.4.4",

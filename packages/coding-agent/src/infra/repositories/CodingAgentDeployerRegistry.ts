@@ -6,6 +6,7 @@ import { JunieDeployer } from './junie/JunieDeployer';
 import { ClaudeDeployer } from './claude/ClaudeDeployer';
 import { CursorDeployer } from './cursor/CursorDeployer';
 import { CopilotDeployer } from './copilot/CopilotDeployer';
+import { AgentsMDDeployer } from './agentsmd/AgentsMDDeployer';
 import { StandardsHexa } from '@packmind/standards';
 import { GitHexa } from '@packmind/git';
 
@@ -50,6 +51,8 @@ export class CodingAgentDeployerRegistry
         return new CursorDeployer(this.gitHexa);
       case 'copilot':
         return new CopilotDeployer(this.gitHexa);
+      case 'agents_md':
+        return new AgentsMDDeployer(this.gitHexa);
       default:
         throw new Error(`Unknown coding agent: ${agent}`);
     }
@@ -61,7 +64,8 @@ export class CodingAgentDeployerRegistry
       agent === 'junie' ||
       agent === 'claude' ||
       agent === 'cursor' ||
-      agent === 'copilot'
+      agent === 'copilot' ||
+      agent === 'agents_md'
     );
   }
 }

@@ -1,18 +1,9 @@
 import { useParams, useLoaderData } from 'react-router';
-import {
-  PMBox,
-  PMPage,
-  PMPageSection,
-  PMVStack,
-  PMButton,
-  PMTabs,
-} from '@packmind/ui';
+import { PMBox, PMPage, PMPageSection, PMVStack, PMTabs } from '@packmind/ui';
 import { queryClient } from '../../src/shared/data/queryClient';
 import { Rule, RuleId, StandardId } from '@packmind/standards/types';
-import { ProgrammingLanguage } from '@packmind/shared/types';
 import { ProgramEditor } from '@packmind/proprietary/frontend/domain/detection/components/ProgramEditor';
-import { RuleExamplesList } from '../../src/domain/rules/components';
-import { useCreateRuleExampleMutation } from '../../src/domain/rules/api/queries';
+import { RuleExamplesManager } from '../../src/domain/rules/components';
 import { getRulesByStandardIdOptions } from '../../src/domain/standards/api/queries/StandardsQueries';
 
 export async function clientLoader({
@@ -33,23 +24,6 @@ export default function RuleDetailRouteModule() {
     ruleId: RuleId;
   };
   const rule = useLoaderData() as Rule | null;
-  const createRuleExampleMutation = useCreateRuleExampleMutation();
-
-  const handleCreateNewExample = async () => {
-    try {
-      await createRuleExampleMutation.mutateAsync({
-        standardId,
-        ruleId,
-        example: {
-          lang: ProgrammingLanguage.JAVASCRIPT,
-          positive: '// Code complying with the rule',
-          negative: '// Code violating the rule',
-        },
-      });
-    } catch (error) {
-      console.error('Failed to create new example:', error);
-    }
-  };
 
   if (!ruleId || !rule) {
     return <PMBox>Rule not found</PMBox>;
@@ -64,24 +38,13 @@ export default function RuleDetailRouteModule() {
             value: 'examples',
             triggerLabel: 'Examples',
             content: (
-              <PMVStack alignItems={'stretch'} gap="4" paddingY={'4'}>
-                <PMPageSection
-                  title={'Examples'}
-                  variant="outline"
-                  cta={
-                    <PMButton
-                      variant="primary"
-                      size="sm"
-                      onClick={handleCreateNewExample}
-                      loading={createRuleExampleMutation.isPending}
-                      disabled={createRuleExampleMutation.isPending}
-                    >
-                      Add
-                    </PMButton>
-                  }
-                >
-                  <RuleExamplesList standardId={standardId} ruleId={ruleId} />
-                </PMPageSection>
+              <PMVStack
+                alignItems={'stretch'}
+                gap="4"
+                paddingY={'4'}
+                width="100%"
+              >
+                <RuleExamplesManager standardId={standardId} ruleId={ruleId} />
               </PMVStack>
             ),
           },

@@ -11,9 +11,7 @@ export class PackmindError extends Error {
     public readonly serverError: ServerErrorResponse,
     public readonly name = 'PackmindError',
   ) {
-    super(
-      `[PackmindError] ${serverError.data.message} (${serverError.status} - ${serverError.statusText})`,
-    );
+    super(serverError.data.message);
     Object.setPrototypeOf(this, PackmindError.prototype);
   }
 }

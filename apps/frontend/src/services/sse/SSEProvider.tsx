@@ -5,6 +5,7 @@ import {
   createContext,
   useContext,
   useCallback,
+  useMemo,
 } from 'react';
 import { getEnvVar } from '../../shared/utils/getEnvVar';
 import { useAuthContext } from '../../domain/accounts/hooks/useAuthContext';
@@ -54,31 +55,18 @@ export function SSEProvider({ children }: SSEProviderProps) {
     async (eventType: string, params: string[] = []): Promise<void> => {
       const baseUrl = getEnvVar('VITE_PACKMIND_API_BASE_URL');
       const apiUrl = baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
-
-      try {
-        const response = await fetch(`${apiUrl}/v0/sse/subscribe`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({ eventType, params }),
-        });
-
-        if (!response.ok) {
-          throw new Error(
-            `Failed to subscribe to ${eventType}: ${response.statusText}`,
-          );
-        }
-
-        console.log('SSE: Successfully subscribed to', { eventType, params });
-      } catch (error) {
-        console.error('SSE: Failed to subscribe to event', {
-          eventType,
-          params,
-          error,
-        });
-        throw error;
+      const response = await fetch(`${apiUrl}/v0/sse/subscribe`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ eventType, params }),
+      });
+      if (!response.ok) {
+        throw new Error(
+          `Failed to subscribe to ${eventType}: ${response.statusText}`,
+        );
       }
     },
     [],
@@ -88,34 +76,18 @@ export function SSEProvider({ children }: SSEProviderProps) {
     async (eventType: string, params: string[] = []): Promise<void> => {
       const baseUrl = getEnvVar('VITE_PACKMIND_API_BASE_URL');
       const apiUrl = baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
-
-      try {
-        const response = await fetch(`${apiUrl}/v0/sse/unsubscribe`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({ eventType, params }),
-        });
-
-        if (!response.ok) {
-          throw new Error(
-            `Failed to unsubscribe from ${eventType}: ${response.statusText}`,
-          );
-        }
-
-        console.log('SSE: Successfully unsubscribed from', {
-          eventType,
-          params,
-        });
-      } catch (error) {
-        console.error('SSE: Failed to unsubscribe from event', {
-          eventType,
-          params,
-          error,
-        });
-        throw error;
+      const response = await fetch(`${apiUrl}/v0/sse/unsubscribe`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ eventType, params }),
+      });
+      if (!response.ok) {
+        throw new Error(
+          `Failed to unsubscribe from ${eventType}: ${response.statusText}`,
+        );
       }
     },
     [],
@@ -161,17 +133,12 @@ export function SSEProvider({ children }: SSEProviderProps) {
   useEffect(() => {
     // Clean up any existing connection first
     if (eventSourceRef.current) {
-      console.log('SSE: Closing existing connection');
       eventSourceRef.current.close();
       eventSourceRef.current = null;
     }
 
     // Don't connect if still loading or not authenticated
     if (isLoading || !isAuthenticated) {
-      console.log('SSE: Waiting for authentication...', {
-        isLoading,
-        isAuthenticated,
-      });
       return;
     }
 
@@ -180,8 +147,6 @@ export function SSEProvider({ children }: SSEProviderProps) {
       ? `${baseUrl}/v0/sse/stream`
       : `${baseUrl}/api/v0/sse/stream`;
 
-    console.log('SSE: User authenticated, connecting to', sseUrl);
-
     const eventSource = new EventSource(sseUrl, {
       withCredentials: true, // Include cookies for authentication
     });
@@ -189,17 +154,9 @@ export function SSEProvider({ children }: SSEProviderProps) {
     // Store reference for cleanup
     eventSourceRef.current = eventSource;
 
-    const handleOpen = () => {
-      console.log('SSE: Connection opened');
-    };
-
-    const handleError = (error: Event) => {
-      console.error('SSE: Connection error', error);
-    };
-
-    // Add default event listeners
-    eventSource.addEventListener('open', handleOpen);
-    eventSource.addEventListener('error', handleError);
+    // Add default event listeners (no-op)
+    eventSource.addEventListener('open', () => undefined);
+    eventSource.addEventListener('error', () => undefined);
 
     // Re-attach all stored event listeners
     for (const [eventType, handlers] of eventListenersRef.current.entries()) {
@@ -210,7 +167,6 @@ export function SSEProvider({ children }: SSEProviderProps) {
 
     // Clean up on unmount or when authentication changes
     return () => {
-      console.log('SSE: Disconnecting');
       if (eventSourceRef.current) {
         eventSourceRef.current.close();
         eventSourceRef.current = null;
@@ -218,13 +174,21 @@ export function SSEProvider({ children }: SSEProviderProps) {
     };
   }, [isAuthenticated, isLoading]);
 
-  const contextValue: SSEContextValue = {
-    subscribe: subscribeToEvent,
-    unsubscribe: unsubscribeFromEvent,
-    addEventListener: addSSEEventListener,
-    removeEventListener: removeSSEEventListener,
-    isConnected: eventSourceRef.current?.readyState === EventSource.OPEN,
-  };
+  const contextValue: SSEContextValue = useMemo(
+    () => ({
+      subscribe: subscribeToEvent,
+      unsubscribe: unsubscribeFromEvent,
+      addEventListener: addSSEEventListener,
+      removeEventListener: removeSSEEventListener,
+      isConnected: eventSourceRef.current?.readyState === EventSource.OPEN,
+    }),
+    [
+      subscribeToEvent,
+      unsubscribeFromEvent,
+      addSSEEventListener,
+      removeSSEEventListener,
+    ],
+  );
 
   return (
     <SSEContext.Provider value={contextValue}>{children}</SSEContext.Provider>

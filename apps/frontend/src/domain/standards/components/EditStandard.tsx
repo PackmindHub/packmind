@@ -77,10 +77,6 @@ export const EditStandard: React.FC<EditStandardProps> = ({
     }
 
     const validRules = rules.filter((rule) => rule.content.trim());
-    if (validRules.length === 0) {
-      alert(STANDARD_MESSAGES.validation.rulesRequired);
-      return;
-    }
 
     mutate(
       {
@@ -105,10 +101,7 @@ export const EditStandard: React.FC<EditStandardProps> = ({
     );
   };
 
-  const isFormValid =
-    name.trim() &&
-    description.trim() &&
-    rules.some((rule) => rule.content.trim());
+  const isFormValid = name.trim() && description.trim();
 
   if (rulesLoading) {
     return (
@@ -182,7 +175,7 @@ export const EditStandard: React.FC<EditStandardProps> = ({
 
           <PMBox>
             <PMHStack justify="space-between" mb={3}>
-              <PMText>Rules *</PMText>
+              <PMText>Rules</PMText>
               <PMButton
                 variant="outline"
                 size="sm"

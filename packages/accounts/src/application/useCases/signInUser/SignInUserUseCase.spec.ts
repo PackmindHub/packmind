@@ -39,18 +39,19 @@ describe('SignInUserUseCase', () => {
     useCase = new SignInUserUseCase(userService, organizationService);
   });
 
-  describe('when user signs in with valid credentials', () => {
+  describe('when user signs in with valid credentials and correct organizationId', () => {
     it('returns the user and organization', async () => {
       const command: SignInUserCommand = {
         username: 'testuser',
         password: 'password123',
+        organizationId: createOrganizationId('org-123'),
       };
 
-      userService.getUserByUsername.mockResolvedValue(testUser);
-      userService.validatePassword.mockResolvedValue(true);
       organizationService.getOrganizationById.mockResolvedValue(
         testOrganization,
       );
+      userService.getUserByUsername.mockResolvedValue(testUser);
+      userService.validatePassword.mockResolvedValue(true);
 
       const result = await useCase.execute(command);
 
@@ -58,64 +59,97 @@ describe('SignInUserUseCase', () => {
         user: testUser,
         organization: testOrganization,
       });
+      expect(organizationService.getOrganizationById).toHaveBeenCalledWith(
+        createOrganizationId('org-123'),
+      );
       expect(userService.getUserByUsername).toHaveBeenCalledWith('testuser');
       expect(userService.validatePassword).toHaveBeenCalledWith(
         'password123',
         'hashedPassword',
       );
-      expect(organizationService.getOrganizationById).toHaveBeenCalledWith(
-        createOrganizationId('org-123'),
+    });
+  });
+
+  describe('when organization does not exist', () => {
+    it('throws Invalid credentials error', async () => {
+      const command: SignInUserCommand = {
+        username: 'testuser',
+        password: 'password123',
+        organizationId: createOrganizationId('nonexistent-org'),
+      };
+
+      organizationService.getOrganizationById.mockResolvedValue(null);
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        new Error('Invalid credentials'),
       );
+      expect(userService.getUserByUsername).not.toHaveBeenCalled();
+      expect(userService.validatePassword).not.toHaveBeenCalled();
     });
   });
 
   describe('when user does not exist', () => {
-    it('throws Error', async () => {
+    it('throws Invalid credentials error', async () => {
       const command: SignInUserCommand = {
         username: 'nonexistent',
         password: 'password123',
+        organizationId: createOrganizationId('org-123'),
       };
 
+      organizationService.getOrganizationById.mockResolvedValue(
+        testOrganization,
+      );
       userService.getUserByUsername.mockResolvedValue(null);
 
       await expect(useCase.execute(command)).rejects.toThrow(
         new Error('Invalid credentials'),
       );
       expect(userService.validatePassword).not.toHaveBeenCalled();
-      expect(organizationService.getOrganizationById).not.toHaveBeenCalled();
     });
   });
 
   describe('when password is invalid', () => {
-    it('throws Error', async () => {
+    it('throws Invalid credentials error', async () => {
       const command: SignInUserCommand = {
         username: 'testuser',
         password: 'wrongpassword',
+        organizationId: createOrganizationId('org-123'),
       };
 
+      organizationService.getOrganizationById.mockResolvedValue(
+        testOrganization,
+      );
       userService.getUserByUsername.mockResolvedValue(testUser);
       userService.validatePassword.mockResolvedValue(false);
 
       await expect(useCase.execute(command)).rejects.toThrow(
         new Error('Invalid credentials'),
       );
-      expect(organizationService.getOrganizationById).not.toHaveBeenCalled();
     });
   });
 
-  describe('when organization is not found', () => {
-    it('throws Error', async () => {
+  describe('when user does not belong to the specified organization', () => {
+    it('throws Invalid credentials error', async () => {
       const command: SignInUserCommand = {
         username: 'testuser',
         password: 'password123',
+        organizationId: createOrganizationId('different-org'),
       };
 
+      const differentOrganization: Organization = {
+        id: createOrganizationId('different-org'),
+        name: 'Different Organization',
+        slug: 'different-org',
+      };
+
+      organizationService.getOrganizationById.mockResolvedValue(
+        differentOrganization,
+      );
       userService.getUserByUsername.mockResolvedValue(testUser);
       userService.validatePassword.mockResolvedValue(true);
-      organizationService.getOrganizationById.mockResolvedValue(null);
 
       await expect(useCase.execute(command)).rejects.toThrow(
-        new Error('User organization not found'),
+        new Error('Invalid credentials'),
       );
     });
   });

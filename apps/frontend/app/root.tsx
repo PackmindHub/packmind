@@ -96,6 +96,7 @@ export default function App() {
       <PMVStack
         flex="1"
         gap={0}
+        minH={'100%'}
         maxH={'100%'}
         h="100%"
         w="100%"

@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { PMInput, PMButton, PMFormContainer, PMLabel } from '@packmind/ui';
+import {
+  PMInput,
+  PMButton,
+  PMFormContainer,
+  PMField,
+  PMText,
+  PMAlert,
+} from '@packmind/ui';
 import { Organization } from '@packmind/accounts/types';
 import { useSignUpMutation, useSignInMutation } from '../api/queries';
 
@@ -73,6 +80,7 @@ export default function SignUpForm({ organization }: SignUpFormProps) {
             {
               username: username.trim(),
               password,
+              organizationId: organization.id,
             },
             {
               onSuccess: () => {
@@ -95,54 +103,80 @@ export default function SignUpForm({ organization }: SignUpFormProps) {
   const passwordId = 'signup-password';
   const confirmPasswordId = 'signup-confirm-password';
 
+  const USERNAME_MAX_LENGTH = 64;
+  const PASSWORD_MAX_LENGTH = 128;
+
   return (
     <form onSubmit={handleSubmit}>
-      <PMFormContainer maxWidth="500px" spacing={4}>
-        <PMLabel htmlFor={usernameId} required>
-          Username
-        </PMLabel>
-        <PMInput
-          id={usernameId}
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          placeholder="Enter your username"
-          required
-          disabled={signUpMutation.isPending || signInMutation.isPending}
-          error={errors.username}
-        />
+      <PMFormContainer maxWidth="full" spacing={4}>
+        <PMField.Root required invalid={!!errors.username}>
+          <PMField.Label>
+            Username{' '}
+            <PMText as="span" variant="small" color="secondary">
+              ({username.length} / {USERNAME_MAX_LENGTH} max)
+            </PMText>
+            <PMField.RequiredIndicator />
+          </PMField.Label>
 
-        <PMLabel htmlFor={passwordId} required>
-          Password
-        </PMLabel>
-        <PMInput
-          id={passwordId}
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Enter your password"
-          required
-          disabled={signUpMutation.isPending || signInMutation.isPending}
-          error={errors.password}
-        />
+          <PMInput
+            id={usernameId}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="Enter your username"
+            required
+            disabled={signUpMutation.isPending || signInMutation.isPending}
+            maxLength={USERNAME_MAX_LENGTH}
+          />
+          <PMField.ErrorText>{errors.username}</PMField.ErrorText>
+        </PMField.Root>
 
-        <PMLabel htmlFor={confirmPasswordId} required>
-          Confirm Password
-        </PMLabel>
-        <PMInput
-          id={confirmPasswordId}
-          type="password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          placeholder="Confirm your password"
-          required
-          disabled={signUpMutation.isPending || signInMutation.isPending}
-          error={errors.confirmPassword}
-        />
+        <PMField.Root required invalid={!!errors.password}>
+          <PMField.Label>
+            Password{' '}
+            <PMText as="span" variant="small" color="secondary">
+              ({password.length} / {PASSWORD_MAX_LENGTH} max)
+            </PMText>
+            <PMField.RequiredIndicator />
+          </PMField.Label>
+          <PMInput
+            id={passwordId}
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter your password"
+            required
+            disabled={signUpMutation.isPending || signInMutation.isPending}
+            maxLength={PASSWORD_MAX_LENGTH}
+          />
+          <PMField.ErrorText>{errors.password}</PMField.ErrorText>
+        </PMField.Root>
+
+        <PMField.Root required invalid={!!errors.confirmPassword}>
+          <PMField.Label>
+            Confirm Password
+            <PMField.RequiredIndicator />
+          </PMField.Label>
+          <PMInput
+            id={confirmPasswordId}
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Confirm your password"
+            required
+            disabled={signUpMutation.isPending || signInMutation.isPending}
+            maxLength={PASSWORD_MAX_LENGTH}
+          />
+          <PMField.ErrorText>{errors.confirmPassword}</PMField.ErrorText>
+        </PMField.Root>
 
         {signUpMutation.error && (
-          <div style={{ color: 'red', marginTop: 8 }}>
-            Failed to create account. Please try again.
-          </div>
+          <PMAlert.Root status="error">
+            <PMAlert.Indicator />
+            <PMAlert.Title>
+              {signUpMutation.error.message ||
+                'Failed to create account. Please try again.'}
+            </PMAlert.Title>
+          </PMAlert.Root>
         )}
 
         <PMButton

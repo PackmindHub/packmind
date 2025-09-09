@@ -1,32 +1,19 @@
 import { JunieDeployer } from './JunieDeployer';
 import {
-  RecipeVersion,
-  RecipeVersionId,
-  Recipe,
-  RecipeId,
-} from '@packmind/recipes';
-import {
+  GitRepo,
+  createGitRepoId,
+  createGitProviderId,
   StandardVersion,
-  StandardVersionId,
   Standard,
-  StandardId,
-} from '@packmind/standards';
-import { GitRepo, GitRepoId, GitProviderId } from '@packmind/git';
-import { OrganizationId, UserId } from '@packmind/accounts';
-
-// Create mock entities without using the factories to avoid import issues
-const createTestRecipeId = (id: string): RecipeId => id as RecipeId;
-const createTestRecipeVersionId = (id: string): RecipeVersionId =>
-  id as RecipeVersionId;
-const createTestStandardId = (id: string): StandardId => id as StandardId;
-const createTestStandardVersionId = (id: string): StandardVersionId =>
-  id as StandardVersionId;
-const createTestOrganizationId = (id: string): OrganizationId =>
-  id as OrganizationId;
-const createTestUserId = (id: string): UserId => id as UserId;
-const createTestGitRepoId = (id: string): GitRepoId => id as GitRepoId;
-const createTestGitProviderId = (id: string): GitProviderId =>
-  id as GitProviderId;
+  createStandardId,
+  createStandardVersionId,
+  Recipe,
+  RecipeVersion,
+  createRecipeVersionId,
+  createRecipeId,
+  createOrganizationId,
+  createUserId,
+} from '@packmind/shared';
 
 describe('JunieDeployer', () => {
   let deployer: JunieDeployer;
@@ -36,10 +23,10 @@ describe('JunieDeployer', () => {
     // Create deployer without StandardsHexa or GitHexa for basic tests
     deployer = new JunieDeployer();
     mockGitRepo = {
-      id: createTestGitRepoId('test-repo-id'),
+      id: createGitRepoId('test-repo-id'),
       owner: 'test-owner',
       repo: 'test-repo',
-      providerId: createTestGitProviderId('provider-id'),
+      providerId: createGitProviderId('provider-id'),
       branch: 'main',
     };
   });
@@ -47,24 +34,24 @@ describe('JunieDeployer', () => {
   describe('deployRecipes', () => {
     it('creates Junie guidelines file with recipe instructions', async () => {
       const recipe: Recipe = {
-        id: createTestRecipeId('recipe-1'),
+        id: createRecipeId('recipe-1'),
         name: 'Test Recipe',
         slug: 'test-recipe',
         content: 'Original recipe content',
         version: 1,
-        organizationId: createTestOrganizationId('org-1'),
-        userId: createTestUserId('user-1'),
+        organizationId: createOrganizationId('org-1'),
+        userId: createUserId('user-1'),
       };
 
       const recipeVersion: RecipeVersion = {
-        id: createTestRecipeVersionId('recipe-version-1'),
+        id: createRecipeVersionId('recipe-version-1'),
         recipeId: recipe.id,
         name: recipe.name,
         slug: recipe.slug,
         content: 'This is the recipe content',
         version: 1,
         summary: 'A test recipe summary',
-        userId: createTestUserId('user-1'),
+        userId: createUserId('user-1'),
       };
 
       const result = await deployer.deployRecipes([recipeVersion], mockGitRepo);
@@ -98,45 +85,45 @@ describe('JunieDeployer', () => {
 
     it('includes multiple recipes in instructions', async () => {
       const recipe1: Recipe = {
-        id: createTestRecipeId('recipe-1'),
+        id: createRecipeId('recipe-1'),
         name: 'Recipe One',
         slug: 'recipe-one',
         content: 'Recipe one content',
         version: 1,
-        organizationId: createTestOrganizationId('org-1'),
-        userId: createTestUserId('user-1'),
+        organizationId: createOrganizationId('org-1'),
+        userId: createUserId('user-1'),
       };
 
       const recipe2: Recipe = {
-        id: createTestRecipeId('recipe-2'),
+        id: createRecipeId('recipe-2'),
         name: 'Recipe Two',
         slug: 'recipe-two',
         content: 'Recipe two content',
         version: 1,
-        organizationId: createTestOrganizationId('org-1'),
-        userId: createTestUserId('user-1'),
+        organizationId: createOrganizationId('org-1'),
+        userId: createUserId('user-1'),
       };
 
       const recipeVersions: RecipeVersion[] = [
         {
-          id: createTestRecipeVersionId('recipe-version-1'),
+          id: createRecipeVersionId('recipe-version-1'),
           recipeId: recipe1.id,
           name: recipe1.name,
           slug: recipe1.slug,
           content: 'Recipe one content',
           version: 1,
           summary: 'Recipe one summary',
-          userId: createTestUserId('user-1'),
+          userId: createUserId('user-1'),
         },
         {
-          id: createTestRecipeVersionId('recipe-version-2'),
+          id: createRecipeVersionId('recipe-version-2'),
           recipeId: recipe2.id,
           name: recipe2.name,
           slug: recipe2.slug,
           content: 'Recipe two content',
           version: 1,
           summary: 'Recipe two summary',
-          userId: createTestUserId('user-1'),
+          userId: createUserId('user-1'),
         },
       ];
 
@@ -152,25 +139,25 @@ describe('JunieDeployer', () => {
   describe('deployStandards', () => {
     it('creates Junie guidelines file with standards instructions', async () => {
       const standard: Standard = {
-        id: createTestStandardId('standard-1'),
+        id: createStandardId('standard-1'),
         name: 'Test Standard',
         slug: 'test-standard',
         description: 'Original standard description',
         version: 1,
-        organizationId: createTestOrganizationId('org-1'),
-        userId: createTestUserId('user-1'),
+        organizationId: createOrganizationId('org-1'),
+        userId: createUserId('user-1'),
         scope: 'backend',
       };
 
       const standardVersion: StandardVersion = {
-        id: createTestStandardVersionId('standard-version-1'),
+        id: createStandardVersionId('standard-version-1'),
         standardId: standard.id,
         name: standard.name,
         slug: standard.slug,
         description: 'This is the standard description',
         version: 1,
         summary: 'A test standard summary',
-        userId: createTestUserId('user-1'),
+        userId: createUserId('user-1'),
         scope: 'backend',
       };
 
@@ -222,25 +209,25 @@ describe('JunieDeployer', () => {
       const deployerWithHexa = new JunieDeployer(mockStandardsHexa);
 
       const standard: Standard = {
-        id: createTestStandardId('standard-1'),
+        id: createStandardId('standard-1'),
         name: 'Standard Test',
         slug: 'standard-test',
         description: 'Standard description',
         version: 1,
-        organizationId: createTestOrganizationId('org-1'),
-        userId: createTestUserId('user-1'),
+        organizationId: createOrganizationId('org-1'),
+        userId: createUserId('user-1'),
         scope: 'backend',
       };
 
       const standardVersion: StandardVersion = {
-        id: createTestStandardVersionId('standard-version-1'),
+        id: createStandardVersionId('standard-version-1'),
         standardId: standard.id,
         name: standard.name,
         slug: standard.slug,
         description: 'Standard description',
         version: 1,
         summary: 'Test summary',
-        userId: createTestUserId('user-1'),
+        userId: createUserId('user-1'),
         scope: 'backend',
       };
 
@@ -259,48 +246,48 @@ describe('JunieDeployer', () => {
 
     it('includes multiple standards in instructions', async () => {
       const standard1: Standard = {
-        id: createTestStandardId('standard-1'),
+        id: createStandardId('standard-1'),
         name: 'Standard One',
         slug: 'standard-one',
         description: 'Standard one description',
         version: 1,
-        organizationId: createTestOrganizationId('org-1'),
-        userId: createTestUserId('user-1'),
+        organizationId: createOrganizationId('org-1'),
+        userId: createUserId('user-1'),
         scope: 'backend',
       };
 
       const standard2: Standard = {
-        id: createTestStandardId('standard-2'),
+        id: createStandardId('standard-2'),
         name: 'Standard Two',
         slug: 'standard-two',
         description: 'Standard two description',
         version: 1,
-        organizationId: createTestOrganizationId('org-1'),
-        userId: createTestUserId('user-1'),
+        organizationId: createOrganizationId('org-1'),
+        userId: createUserId('user-1'),
         scope: 'frontend',
       };
 
       const standardVersions: StandardVersion[] = [
         {
-          id: createTestStandardVersionId('standard-version-1'),
+          id: createStandardVersionId('standard-version-1'),
           standardId: standard1.id,
           name: standard1.name,
           slug: standard1.slug,
           description: 'Standard one description',
           version: 1,
           summary: 'Standard one summary',
-          userId: createTestUserId('user-1'),
+          userId: createUserId('user-1'),
           scope: 'backend',
         },
         {
-          id: createTestStandardVersionId('standard-version-2'),
+          id: createStandardVersionId('standard-version-2'),
           standardId: standard2.id,
           name: standard2.name,
           slug: standard2.slug,
           description: 'Standard two description',
           version: 1,
           summary: 'Standard two summary',
-          userId: createTestUserId('user-1'),
+          userId: createUserId('user-1'),
           scope: 'frontend',
         },
       ];

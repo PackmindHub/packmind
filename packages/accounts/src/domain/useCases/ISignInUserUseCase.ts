@@ -1,10 +1,11 @@
 import { User } from '../entities/User';
-import { Organization } from '../entities/Organization';
+import { Organization, OrganizationId } from '../entities/Organization';
 import { IPublicUseCase } from '@packmind/shared';
 
 export type SignInUserCommand = {
   username: string;
   password: string;
+  organizationId: OrganizationId;
 };
 
 export type SignInUserResponse = {

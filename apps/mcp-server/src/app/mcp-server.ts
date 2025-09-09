@@ -63,7 +63,14 @@ export function createMCPServer(
     {
       message: z.string().min(1).describe('The message to say to the user'),
     },
-    async ({ message }) => {
+    async ({ message }, extra) => {
+      try {
+        const userAgent = extra.requestInfo.headers['user-agent'];
+        logger.info(`Say hello called with user-agent: ${userAgent}`);
+      } catch {
+        // No-op
+      }
+
       const greeting = userContext
         ? `Hello ${userContext.username}`
         : 'Hello you';

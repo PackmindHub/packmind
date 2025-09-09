@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { PMInput, PMButton, PMFormContainer, PMLabel } from '@packmind/ui';
+import {
+  PMInput,
+  PMButton,
+  PMFormContainer,
+  PMField,
+  PMText,
+  PMAlert,
+} from '@packmind/ui';
 import { useCreateOrganizationMutation } from '../api/queries';
 import { isPackmindConflictError } from '../../../services/api/errors/PackmindConflictError';
 
@@ -21,8 +28,7 @@ export default function CreateOrganization() {
       { name: name.trim() },
       {
         onSuccess: (organization) => {
-          // Redirect to organization login page after creation
-          navigate(`/org/${organization.slug}/sign-in`);
+          navigate(`/org/${organization.slug}/sign-up`);
         },
         onError: (error: unknown) => {
           if (isPackmindConflictError(error)) {
@@ -36,26 +42,42 @@ export default function CreateOrganization() {
   };
 
   const inputId = 'organization-name';
+  const MAX_CHARACTERS = 64;
 
   return (
     <form onSubmit={handleSubmit}>
       <PMFormContainer maxWidth="500px" spacing={4}>
-        <PMLabel htmlFor={inputId} required>
-          Organization Name
-        </PMLabel>
-        <PMInput
-          id={inputId}
-          value={name}
-          onChange={(e) => {
-            setName(e.target.value);
-            setError(undefined);
-          }}
-          placeholder="Enter organization name"
-          required
-          disabled={createOrganizationMutation.isPending}
-          error={error}
-        />
-        {error && <div style={{ color: 'red', marginTop: 8 }}>{error}</div>}
+        <PMField.Root required>
+          <PMField.Label>
+            Organization Name{' '}
+            {
+              <PMText as="span" variant="small" color="secondary">
+                ({name.length} / {MAX_CHARACTERS} max)
+              </PMText>
+            }
+            <PMField.RequiredIndicator />
+          </PMField.Label>
+
+          <PMInput
+            id={inputId}
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              setError(undefined);
+            }}
+            placeholder="Enter organization name"
+            required
+            disabled={createOrganizationMutation.isPending}
+            error={error}
+            maxLength={MAX_CHARACTERS}
+          />
+        </PMField.Root>
+        {error && (
+          <PMAlert.Root status="error">
+            <PMAlert.Indicator />
+            <PMAlert.Title>{error}</PMAlert.Title>
+          </PMAlert.Root>
+        )}
         <PMButton type="submit" disabled={createOrganizationMutation.isPending}>
           {createOrganizationMutation.isPending
             ? 'Creating...'

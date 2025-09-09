@@ -108,7 +108,8 @@ export class PublishRecipesUseCase implements IPublishRecipes {
             CodingAgents.claude,
             CodingAgents.cursor,
             CodingAgents.copilot,
-          ], // Deploy to Packmind, Junie, Claude Code, Cursor, and GitHub Copilot
+            CodingAgents.agents_md,
+          ], // Deploy to Packmind, Junie, Claude Code, Cursor, GitHub Copilot, and AGENTS.md
         };
 
         const fileUpdates =
