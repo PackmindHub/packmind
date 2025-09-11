@@ -1,5 +1,7 @@
 # [Unreleased]
 
+# [1.0.1] - 2015-09-11
+
 ## Added
 
 - Support AGENTS.md as new target AI Agent (#123)
