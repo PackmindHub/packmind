@@ -9,7 +9,7 @@ import {
   PMPageSection,
   PMAlert,
   PMSpinner,
-  PMDialog,
+  PMAlertDialog,
   PMTabs,
   PMGrid,
   PMGridItem,
@@ -53,7 +53,7 @@ export const StandardDetails = ({
     type: 'success' | 'error' | 'info';
     message: string;
   } | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteAlert, setDeleteAlert] = useState<{
     type: 'success' | 'error';
     message: string;
@@ -85,12 +85,12 @@ export const StandardDetails = ({
         type: 'success',
         message: STANDARD_MESSAGES.success.deleted,
       });
-      setDeleteDialogOpen(false);
+      setDeleteModalOpen(false);
 
       // Auto-dismiss success alert and navigate back after 2 seconds
       setTimeout(() => {
         setDeleteAlert(null);
-        window.history.back();
+        navigate(`../`);
       }, 2000);
     } catch (error) {
       console.error('Failed to delete standard:', error);
@@ -98,7 +98,7 @@ export const StandardDetails = ({
         type: 'error',
         message: STANDARD_MESSAGES.error.deleteFailed,
       });
-      setDeleteDialogOpen(false);
+      setDeleteModalOpen(false);
     }
   };
 
@@ -150,13 +150,29 @@ export const StandardDetails = ({
           <PMButton variant="primary" onClick={() => navigate(`./edit`)}>
             Edit
           </PMButton>
-          <PMButton
-            variant="tertiary"
-            onClick={() => setDeleteDialogOpen(true)}
-            loading={deleteStandardMutation.isPending}
-          >
-            Delete
-          </PMButton>
+          <PMAlertDialog
+            trigger={
+              <PMButton
+                variant="tertiary"
+                loading={deleteStandardMutation.isPending}
+              >
+                Delete
+              </PMButton>
+            }
+            title="Delete Standard"
+            message={
+              standard
+                ? STANDARD_MESSAGES.confirmation.deleteStandard(standard.name)
+                : 'Are you sure you want to delete this standard?'
+            }
+            confirmText="Delete"
+            cancelText="Cancel"
+            confirmColorScheme="red"
+            onConfirm={handleDelete}
+            open={deleteModalOpen}
+            onOpenChange={setDeleteModalOpen}
+            isLoading={deleteStandardMutation.isPending}
+          />
         </PMHStack>
       }
     >
@@ -261,42 +277,6 @@ export const StandardDetails = ({
           ]}
         />
       </PMVStack>
-
-      {/* Delete Confirmation Dialog */}
-      <PMDialog.Root
-        open={deleteDialogOpen}
-        onOpenChange={({ open }) => setDeleteDialogOpen(open)}
-      >
-        <PMDialog.Backdrop />
-        <PMDialog.Positioner>
-          <PMDialog.Content>
-            <PMDialog.Header>
-              <PMDialog.Title>Delete Standard</PMDialog.Title>
-            </PMDialog.Header>
-            <PMDialog.Body>
-              <PMText>
-                {standard &&
-                  STANDARD_MESSAGES.confirmation.deleteStandard(standard.name)}
-              </PMText>
-            </PMDialog.Body>
-            <PMDialog.Footer>
-              <PMButton
-                variant="outline"
-                onClick={() => setDeleteDialogOpen(false)}
-              >
-                Cancel
-              </PMButton>
-              <PMButton
-                colorScheme="red"
-                onClick={handleDelete}
-                loading={deleteStandardMutation.isPending}
-              >
-                Delete
-              </PMButton>
-            </PMDialog.Footer>
-          </PMDialog.Content>
-        </PMDialog.Positioner>
-      </PMDialog.Root>
     </PMPage>
   );
 };

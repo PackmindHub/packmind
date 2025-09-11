@@ -86,17 +86,6 @@ export const SidebarNavigation: React.FunctionComponent<
           />,
         ]}
       />
-      <PMVerticalNavSection
-        navEntries={[
-          <SidebarNavigationLink
-            key="settings"
-            url={
-              organization ? `/org/${organization.slug}/settings` : '/settings'
-            }
-            label="Settings"
-          />,
-        ]}
-      />
     </PMVerticalNav>
   );
 };

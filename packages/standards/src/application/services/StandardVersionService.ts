@@ -3,13 +3,18 @@ import { StandardId } from '../../domain/entities/Standard';
 import { Rule, createRuleId } from '../../domain/entities/Rule';
 import { IStandardVersionRepository } from '../../domain/repositories/IStandardVersionRepository';
 import { IRuleRepository } from '../../domain/repositories/IRuleRepository';
-import { PackmindLogger } from '@packmind/shared';
+import {
+  createRuleExampleId,
+  PackmindLogger,
+  RuleExample,
+} from '@packmind/shared';
 import { UserId } from '@packmind/accounts/types';
 import {
   createStandardVersionId,
   StandardVersionId,
   StandardVersion,
 } from '../../domain/entities/StandardVersion';
+import { IRuleExampleRepository } from '../../domain/repositories/IRuleExampleRepository';
 
 const origin = 'StandardVersionService';
 
@@ -19,7 +24,7 @@ export type CreateStandardVersionData = {
   slug: string;
   description: string;
   version: number;
-  rules: Array<{ content: string }>;
+  rules: Array<{ content: string; examples: RuleExample[] }>;
   scope: string | null;
   summary?: string | null;
   userId?: UserId | null; // User who created this version through Web UI, null for git commits
@@ -29,6 +34,7 @@ export class StandardVersionService {
   constructor(
     private readonly standardVersionRepository: IStandardVersionRepository,
     private readonly ruleRepository: IRuleRepository,
+    private readonly ruleExampleRepository: IRuleExampleRepository,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('StandardVersionService initialized');
@@ -74,7 +80,17 @@ export class StandardVersionService {
           content: ruleData.content,
           standardVersionId: savedVersion.id,
         };
-        await this.ruleRepository.add(rule);
+        const newRule = await this.ruleRepository.add(rule);
+        for (const exampleData of ruleData.examples) {
+          const example: RuleExample = {
+            id: createRuleExampleId(uuidv4()),
+            ruleId: newRule.id,
+            lang: exampleData.lang,
+            positive: exampleData.positive,
+            negative: exampleData.negative,
+          };
+          await this.ruleExampleRepository.add(example);
+        }
       }
 
       this.logger.info('Standard version and rules added successfully', {

@@ -7,9 +7,9 @@ USER node
 
 WORKDIR /app
 
-# Copy package files and install main app dependencies
-COPY --chown=node:node package*.json ./
-RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
+# Copy optimized API package.json and install only required dependencies
+COPY --chown=node:node apps/api/*package*.json package.json
+RUN npm install --omit=dev --ignore-scripts && npm cache clean --force
 
 # Copy the built application and migrations bundle with correct ownership
 COPY --chown=node:node dist/apps/api/main.js ./

@@ -235,7 +235,9 @@ export const CreateGitProviderForm: React.FC<CreateGitProviderFormProps> = ({
             <PMText variant="small">
               {formData.source === GitProviders.GITLAB
                 ? 'Personal access token with api, read_repository, and write_repository scopes'
-                : 'Personal access token with repo permissions'}
+                : `Personal access token with repository access and
+                read/write access on 'Contents' permission for 'fine-grained tokens'
+                OR 'repo' scope for 'classic tokens'`}
             </PMText>
             {errors.token && (
               <PMText variant="small" color="error">

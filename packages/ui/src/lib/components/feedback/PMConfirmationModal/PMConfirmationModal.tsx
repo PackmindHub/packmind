@@ -4,6 +4,8 @@ import {
   DialogContent,
   DialogCloseTrigger,
   DialogBackdrop,
+  DialogPositioner,
+  Portal,
 } from '@chakra-ui/react';
 import { ReactNode, useRef } from 'react';
 import { PMButton } from '../../form/PMButton/PMButton';
@@ -53,33 +55,37 @@ export const PMConfirmationModal = ({
   };
 
   return (
-    <DialogRoot open={open} onOpenChange={onOpenChange}>
+    <DialogRoot open={open} onOpenChange={onOpenChange} placement="center">
       {/* @ts-expect-error https://github.com/radix-ui/primitives/issues/2309#issuecomment-1916541133 */}
       <DialogTrigger asChild>{trigger}</DialogTrigger>
 
-      <DialogBackdrop />
+      <Portal>
+        <DialogBackdrop />
 
-      <DialogContent>
-        <PMConfirmationModalHeader>{title}</PMConfirmationModalHeader>
+        <DialogPositioner>
+          <DialogContent>
+            <PMConfirmationModalHeader>{title}</PMConfirmationModalHeader>
 
-        <PMConfirmationModalBody>{message}</PMConfirmationModalBody>
+            <PMConfirmationModalBody>{message}</PMConfirmationModalBody>
 
-        <PMConfirmationModalFooter>
-          <PMButton variant="outline" onClick={() => onOpenChange?.(false)}>
-            {cancelText}
-          </PMButton>
-          <PMButton
-            colorScheme={confirmColorScheme}
-            onClick={handleConfirm}
-            loading={isLoading}
-            ml={3}
-          >
-            {confirmText}
-          </PMButton>
-        </PMConfirmationModalFooter>
+            <PMConfirmationModalFooter>
+              <PMButton variant="outline" onClick={() => onOpenChange?.(false)}>
+                {cancelText}
+              </PMButton>
+              <PMButton
+                colorScheme={confirmColorScheme}
+                onClick={handleConfirm}
+                loading={isLoading}
+                ml={3}
+              >
+                {confirmText}
+              </PMButton>
+            </PMConfirmationModalFooter>
 
-        <DialogCloseTrigger />
-      </DialogContent>
+            <DialogCloseTrigger />
+          </DialogContent>
+        </DialogPositioner>
+      </Portal>
     </DialogRoot>
   );
 };

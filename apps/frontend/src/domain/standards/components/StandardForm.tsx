@@ -13,12 +13,18 @@ import {
   useUpdateStandardMutation,
   useGetRulesByStandardIdQuery,
 } from '../api/queries/StandardsQueries';
-import { Standard, StandardId } from '@packmind/standards/types';
+import {
+  createRuleId,
+  RuleId,
+  Standard,
+  StandardId,
+} from '@packmind/shared/types';
 import { STANDARD_MESSAGES } from '../constants/messages';
 import { MarkdownEditor } from '../../../shared/components/editor/MarkdownEditor';
 
 interface Rule {
   content: string;
+  id: RuleId;
 }
 
 interface StandardFormProps {
@@ -37,7 +43,9 @@ export const StandardForm: React.FC<StandardFormProps> = ({
 }) => {
   const [name, setName] = useState(standard?.name || '');
   const [description, setDescription] = useState(standard?.description || '');
-  const [rules, setRules] = useState<Rule[]>([{ content: '' }]);
+  const [rules, setRules] = useState<Rule[]>([
+    { content: '', id: createRuleId('') },
+  ]);
   const [scope, setScope] = useState(standard?.scope || '');
 
   // Alert state management
@@ -60,38 +68,39 @@ export const StandardForm: React.FC<StandardFormProps> = ({
   // Initialize rules from fetched data for edit mode
   useEffect(() => {
     if (mode === 'edit' && fetchedRules && fetchedRules.length > 0) {
-      setRules(fetchedRules.map((rule) => ({ content: rule.content })));
+      setRules(
+        fetchedRules.map((rule) => ({ id: rule.id, content: rule.content })),
+      );
     } else if (mode === 'edit' && !rulesLoading && !rulesError) {
       // If no rules found and not loading, initialize with empty rule
-      setRules([{ content: '' }]);
+      setRules([{ content: '', id: createRuleId('') }]);
     }
   }, [fetchedRules, rulesLoading, rulesError, mode]);
 
   const handleAddRule = () => {
-    setRules([...rules, { content: '' }]);
+    setRules([...rules, { content: '', id: createRuleId('') }]);
   };
 
   const handleRemoveRule = (index: number) => {
-    if (rules.length > 1) {
-      setRules(rules.filter((_, i) => i !== index));
-    }
+    setRules(rules.filter((_, i) => i !== index));
   };
 
   const handleRuleChange = (index: number, content: string) => {
     const newRules = [...rules];
-    newRules[index] = { content };
+    newRules[index] = { id: newRules[index].id, content };
     setRules(newRules);
   };
 
   const resetForm = () => {
     setName('');
     setDescription('');
-    setRules([{ content: '' }]);
+    setRules([{ content: '', id: createRuleId('') }]);
     setScope('');
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('submit');
 
     // Validation
     if (!name.trim()) {
@@ -112,10 +121,17 @@ export const StandardForm: React.FC<StandardFormProps> = ({
 
     const validRules = rules.filter((rule) => rule.content.trim());
 
+    console.log(
+      validRules.map((rule) => ({ id: rule.id, content: rule.content.trim() })),
+    );
+
     const standardData = {
       name: name.trim(),
       description: description.trim(),
-      rules: validRules.map((rule) => ({ content: rule.content.trim() })),
+      rules: validRules.map((rule) => ({
+        id: rule.id,
+        content: rule.content.trim(),
+      })),
       scope: scope.trim() || null,
     };
 
@@ -280,16 +296,14 @@ export const StandardForm: React.FC<StandardFormProps> = ({
                     <PMField.ErrorText />
                   </PMField.Root>
 
-                  {index > 0 && (
-                    <PMButton
-                      variant="tertiary"
-                      size="sm"
-                      onClick={() => handleRemoveRule(index)}
-                      disabled={isPending}
-                    >
-                      Remove
-                    </PMButton>
-                  )}
+                  <PMButton
+                    variant="tertiary"
+                    size="sm"
+                    onClick={() => handleRemoveRule(index)}
+                    disabled={isPending}
+                  >
+                    Remove
+                  </PMButton>
                 </PMVStack>
               ))}
 

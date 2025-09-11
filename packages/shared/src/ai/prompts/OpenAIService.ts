@@ -16,7 +16,7 @@ export class OpenAIService implements AIService {
   private client: OpenAI | null = null;
   private readonly defaultModel = 'gpt-4o-mini';
   private readonly maxRetries = 5;
-  private readonly defaultMaxTokens = 50000;
+  private readonly defaultMaxTokens = 16000;
   private readonly defaultTemperature = 0.5;
   private initialized = false;
 

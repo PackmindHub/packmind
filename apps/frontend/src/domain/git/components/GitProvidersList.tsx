@@ -12,7 +12,7 @@ import {
   PMPageSection,
   PMEmptyState,
   PMAlert,
-  PMDialog,
+  PMAlertDialog,
 } from '@packmind/ui';
 import { OrganizationId } from '@packmind/accounts/types';
 import {
@@ -49,11 +49,6 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
     type: 'success' | 'error';
     message: string;
   } | null>(null);
-
-  const handleDeleteProvider = useCallback((provider: GitProviderUI) => {
-    setProviderToDelete(provider);
-    setDeleteDialogOpen(true);
-  }, []);
 
   const confirmDeleteProvider = useCallback(async () => {
     if (!providerToDelete) return;
@@ -97,13 +92,6 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
       ),
       url: provider.url,
       repositoryCount: provider.repos?.length || 0,
-      accessToken: (
-        <PMBox fontFamily="mono" fontSize="sm" color="gray.600">
-          {provider.token
-            ? `${provider.token.substring(0, 12)}...`
-            : 'No token'}
-        </PMBox>
-      ),
       actions: (
         <PMHStack gap={2}>
           <PMButton
@@ -121,22 +109,44 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
           >
             Edit
           </PMButton>
-          <PMButton
-            variant="outline"
-            colorScheme="red"
-            size="sm"
-            onClick={() => handleDeleteProvider(provider)}
-            loading={deleteProviderMutation.isPending}
-          >
-            Delete
-          </PMButton>
+          <PMAlertDialog
+            trigger={
+              <PMButton
+                variant="outline"
+                colorScheme="red"
+                size="sm"
+                loading={deleteProviderMutation.isPending}
+              >
+                Delete
+              </PMButton>
+            }
+            title="Delete Git Provider"
+            message={GIT_MESSAGES.confirmation.deleteProvider(provider.source)}
+            confirmText="Delete"
+            cancelText="Cancel"
+            confirmColorScheme="red"
+            onConfirm={confirmDeleteProvider}
+            open={deleteDialogOpen && providerToDelete?.id === provider.id}
+            onOpenChange={(open) => {
+              if (open) {
+                setProviderToDelete(provider);
+                setDeleteDialogOpen(true);
+              } else {
+                setDeleteDialogOpen(false);
+                setProviderToDelete(null);
+              }
+            }}
+            isLoading={deleteProviderMutation.isPending}
+          />
         </PMHStack>
       ),
     }));
   }, [
     providers,
     deleteProviderMutation.isPending,
-    handleDeleteProvider,
+    confirmDeleteProvider,
+    deleteDialogOpen,
+    providerToDelete,
     onEditProvider,
     onManageRepositories,
   ]);
@@ -177,15 +187,14 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
   // Define columns for the table
   const columns: PMTableColumn[] = [
     { key: 'source', header: 'Provider', width: '15%', align: 'center' },
-    { key: 'url', header: 'URL', width: '25%', grow: true },
+    { key: 'url', header: 'URL', width: '35%', grow: true },
     {
       key: 'repositoryCount',
       header: 'Repositories',
       width: '15%',
       align: 'center',
     },
-    { key: 'accessToken', header: 'Access Token', width: '20%' },
-    { key: 'actions', header: 'Actions', width: '20%', align: 'center' },
+    { key: 'actions', header: 'Actions', width: '35%', align: 'center' },
   ];
 
   return (
@@ -226,47 +235,6 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
           showColumnBorder={false}
         />
       )}
-
-      {/* Delete Confirmation Dialog */}
-      <PMDialog.Root
-        open={deleteDialogOpen}
-        onOpenChange={({ open }) => setDeleteDialogOpen(open)}
-      >
-        <PMDialog.Backdrop />
-        <PMDialog.Positioner>
-          <PMDialog.Content>
-            <PMDialog.Header>
-              <PMDialog.Title>Delete Git Provider</PMDialog.Title>
-            </PMDialog.Header>
-            <PMDialog.Body>
-              <PMText>
-                {providerToDelete &&
-                  GIT_MESSAGES.confirmation.deleteProvider(
-                    providerToDelete.source,
-                  )}
-              </PMText>
-            </PMDialog.Body>
-            <PMDialog.Footer>
-              <PMButton
-                variant="outline"
-                onClick={() => {
-                  setDeleteDialogOpen(false);
-                  setProviderToDelete(null);
-                }}
-              >
-                Cancel
-              </PMButton>
-              <PMButton
-                colorScheme="red"
-                onClick={confirmDeleteProvider}
-                loading={deleteProviderMutation.isPending}
-              >
-                Delete
-              </PMButton>
-            </PMDialog.Footer>
-          </PMDialog.Content>
-        </PMDialog.Positioner>
-      </PMDialog.Root>
     </PMPageSection>
   );
 };

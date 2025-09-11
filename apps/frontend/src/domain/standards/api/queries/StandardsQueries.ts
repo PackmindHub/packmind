@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { standardsGateway } from '../gateways';
-import { StandardId } from '@packmind/standards';
+import { RuleId, StandardId } from '@packmind/shared/types';
 import { GET_STANDARDS_DEPLOYMENT_OVERVIEW_QUERY_KEY } from '../../../deployments/api/queries/DeploymentsQueries';
 
 export const GET_STANDARDS_QUERY_KEY = 'standards';
@@ -75,7 +75,7 @@ export const useUpdateStandardMutation = () => {
       standard: {
         name: string;
         description: string;
-        rules: Array<{ content: string }>;
+        rules: Array<{ id: RuleId; content: string }>;
         scope?: string | null;
       };
     }) => {

@@ -53,14 +53,33 @@ export class CreateStandardUsecase {
     });
 
     try {
-      this.logger.debug('Generating slug from standard name', { name });
-      const standardSlug = slug(name);
-      this.logger.debug('Slug generated', { slug: standardSlug });
+      this.logger.info('Generating slug from standard name', { name });
+      const baseSlug = slug(name);
+      this.logger.info('Base slug generated', { slug: baseSlug });
+
+      // Ensure slug is unique per organization. If it exists, append "-1", "-2", ... until unique
+      this.logger.info('Checking slug uniqueness within organization', {
+        baseSlug,
+        organizationId,
+      });
+      const existingStandards =
+        await this.standardService.listStandardsByOrganization(organizationId);
+      const existingSlugs = new Set(existingStandards.map((s) => s.slug));
+
+      let standardSlug = baseSlug;
+      if (existingSlugs.has(standardSlug)) {
+        let counter = 1;
+        while (existingSlugs.has(`${baseSlug}-${counter}`)) {
+          counter++;
+        }
+        standardSlug = `${baseSlug}-${counter}`;
+      }
+      this.logger.info('Resolved unique slug', { slug: standardSlug });
 
       // Business logic: Create standard with initial version 1
       const initialVersion = 1;
 
-      this.logger.debug('Creating standard entity');
+      this.logger.info('Creating standard entity');
       const standard = await this.standardService.addStandard({
         name,
         description,
@@ -88,14 +107,14 @@ export class CreateStandardUsecase {
         rules,
       );
 
-      this.logger.debug('Creating initial standard version with rules');
+      this.logger.info('Creating initial standard version with rules');
       const standardVersionData: CreateStandardVersionData = {
         standardId: standard.id,
         name,
         slug: standardSlug,
         description,
         version: initialVersion,
-        rules,
+        rules: rules.map((r) => ({ content: r.content, examples: [] })),
         scope,
         summary,
         userId, // Track the user who created this through Web UI

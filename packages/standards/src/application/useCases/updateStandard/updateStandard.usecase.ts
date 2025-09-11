@@ -5,8 +5,10 @@ import {
 } from '../../services/StandardVersionService';
 import { StandardSummaryService } from '../../services/StandardSummaryService';
 import { StandardId } from '../../../domain/entities/Standard';
-import { Rule, createRuleId } from '../../../domain/entities/Rule';
+import { Rule, createRuleId, RuleId } from '../../../domain/entities/Rule';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
+import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
+import { RuleExample } from '@packmind/shared';
 
 import { LogLevel, PackmindLogger, AiNotConfigured } from '@packmind/shared';
 import { OrganizationId, UserId } from '@packmind/accounts';
@@ -19,7 +21,7 @@ export type UpdateStandardRequest = {
   standardId: StandardId;
   name: string;
   description: string;
-  rules: Array<{ content: string }>;
+  rules: Array<{ id: RuleId; content: string }>;
   organizationId: OrganizationId;
   userId: UserId;
   scope: string | null;
@@ -30,6 +32,7 @@ export class UpdateStandardUsecase {
     private readonly standardService: StandardService,
     private readonly standardVersionService: StandardVersionService,
     private readonly ruleRepository: IRuleRepository,
+    private readonly ruleExampleRepository: IRuleExampleRepository,
     private readonly standardSummaryService: StandardSummaryService,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
@@ -190,6 +193,27 @@ export class UpdateStandardUsecase {
         }
       }
 
+      // Build rules with copied examples for rules that persist
+      this.logger.debug('Preparing rules with examples for new version');
+      const existingRulesById = new Map(existingRules.map((r) => [r.id, r]));
+      const rulesWithExamples: Array<{
+        content: string;
+        examples: RuleExample[];
+      }> = [];
+      for (const r of rules) {
+        const persisted = existingRulesById.get(r.id);
+        if (persisted) {
+          // Copy examples from the persisted rule
+          const examples = await this.ruleExampleRepository.findByRuleId(
+            persisted.id,
+          );
+          rulesWithExamples.push({ content: r.content, examples });
+        } else {
+          // New rule or id not found: no examples to copy
+          rulesWithExamples.push({ content: r.content, examples: [] });
+        }
+      }
+
       // Create new standard version with updated rules
       this.logger.debug('Creating new standard version with updated rules');
       const standardVersionData: CreateStandardVersionData = {
@@ -198,7 +222,7 @@ export class UpdateStandardUsecase {
         slug: standardSlug,
         description,
         version: nextVersion,
-        rules,
+        rules: rulesWithExamples,
         scope,
         summary,
         userId, // Track the user who updated this through Web UI

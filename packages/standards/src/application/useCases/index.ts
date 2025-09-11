@@ -1,4 +1,4 @@
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger, RuleId } from '@packmind/shared';
 import { CreateStandardUsecase } from './createStandard/createStandard.usecase';
 import { UpdateStandardUsecase } from './updateStandard/updateStandard.usecase';
 import { AddRuleToStandardUsecase } from './addRuleToStandard/addRuleToStandard.usecase';
@@ -69,6 +69,7 @@ export class StandardsUseCases {
       standardsServices.getStandardService(),
       standardsServices.getStandardVersionService(),
       standardsRepositories.getRuleRepository(),
+      standardsRepositories.getRuleExampleRepository(),
       standardsServices.getStandardSummaryService(),
       this.logger,
     );
@@ -76,6 +77,7 @@ export class StandardsUseCases {
       standardsServices.getStandardService(),
       standardsServices.getStandardVersionService(),
       standardsRepositories.getRuleRepository(),
+      standardsRepositories.getRuleExampleRepository(),
       standardsServices.getStandardSummaryService(),
       this.logger,
     );
@@ -182,7 +184,7 @@ export class StandardsUseCases {
     standardId: StandardId;
     name: string;
     description: string;
-    rules: Array<{ content: string }>;
+    rules: Array<{ id: RuleId; content: string }>;
     organizationId: OrganizationId;
     userId: UserId;
     scope: string | null;

@@ -66,7 +66,7 @@ export class GitProvidersController {
   @Get()
   async listProviders(
     @Request() req: AuthenticatedRequest,
-  ): Promise<GitProvider[]> {
+  ): Promise<Omit<GitProvider, 'token'>[]> {
     const organizationId = req.organization.id;
 
     this.logger.info('GET /git/providers - Fetching git providers', {
@@ -74,7 +74,10 @@ export class GitProvidersController {
     });
 
     try {
-      return await this.gitProvidersService.listProviders(organizationId);
+      const providers =
+        await this.gitProvidersService.listProviders(organizationId);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      return providers.map(({ token, ...provider }) => provider);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);

@@ -50,7 +50,7 @@ jobs:
         env:
           PACKMIND_EDITION: ${{ env.OSS_EDITION }}
         run: ./node_modules/.bin/nx test api
-      - run: cp package.json dist/apps/api/.
+      - run: cp apps/api/docker-package.json dist/apps/api/.
       - run: cp package-lock.json dist/apps/api/.
       - run: cp tsconfig.base.effective.json dist/apps/api/.
 

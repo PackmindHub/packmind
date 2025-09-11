@@ -65,10 +65,11 @@ export function createMCPServer(
     },
     async ({ message }, extra) => {
       try {
-        const userAgent = extra.requestInfo.headers['user-agent'];
-        logger.info(`Say hello called with user-agent: ${userAgent}`);
-      } catch {
-        // No-op
+        logger.info(
+          `Say hello called with requestInfo: ${JSON.stringify(extra.requestInfo)}`,
+        );
+      } catch (err) {
+        logger.error(err);
       }
 
       const greeting = userContext

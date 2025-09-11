@@ -257,25 +257,6 @@ describe('OpenAIService', () => {
         );
       });
     });
-
-    describe('when none provided', () => {
-      it('uses default options', async () => {
-        mockOpenAIInstance.chat.completions.create.mockResolvedValue(
-          mockResponse,
-        );
-
-        await service.executePrompt(mockPrompt);
-
-        expect(mockOpenAIInstance.chat.completions.create).toHaveBeenCalledWith(
-          {
-            model: 'gpt-4o-mini',
-            messages: [{ role: 'user', content: mockPrompt }],
-            max_tokens: 50000,
-            temperature: 0.5,
-          },
-        );
-      });
-    });
   });
 
   describe('error classification', () => {

@@ -4,6 +4,7 @@ import { StandardVersion } from '@packmind/standards';
 import { FileUpdates } from '../../../domain/entities/FileUpdates';
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
 import { PackmindLogger } from '@packmind/shared';
+import { GenericRecipeSectionWriter } from '../genericRecipe/GenericRecipeSectionWriter';
 
 const origin = 'CopilotDeployer';
 
@@ -118,26 +119,12 @@ export class CopilotDeployer implements ICodingAgentDeployer {
     // Generate recipes list
     const recipesSection = this.generateRecipesSection(recipeVersions);
 
-    const packmindInstructions = `🚨 **MANDATORY STEP** 🚨
-
-Before writing, editing, or generating ANY code:
-
-**ALWAYS READ**: the available recipes below to see what recipes are available
-
-## Recipe Usage Rules:
-- **MANDATORY**: Always check the recipes list first
-- **CONDITIONAL**: Only read/use individual recipes if they are relevant to your task
-- **OPTIONAL**: If no recipes are relevant, proceed without using any
-
-## Recipe Usage Tracking:
-When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you MUST call the 'packmind_notify_recipe_usage' MCP tool with:
-* Recipe slugs array (e.g., ["recipe-name"] from "recipe-name.md")
-* aiAgent: "GitHub Copilot"
-* gitRepo: "${repoName}"
-
-**Remember: Always check the recipes list first, but only use recipes that actually apply to your specific task.**
-
-${recipesSection}`;
+    const packmindInstructions =
+      GenericRecipeSectionWriter.generateRecipesSection({
+        agentName: 'GitHub Copilot',
+        repoName,
+        recipesSection,
+      });
 
     // Check if recipe instructions are already present
     const hasRecipeInstructions =

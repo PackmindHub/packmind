@@ -12,6 +12,8 @@ import {
   PMAlert,
   PMDialog,
   PMText,
+  PMAlertDialog,
+  PMButtonGroup,
 } from '@packmind/ui';
 
 import {
@@ -20,10 +22,8 @@ import {
 } from '../api/queries/RecipesQueries';
 
 import { DeployRecipeButton } from './DeployRecipeButton';
-import { useDeployRecipe } from '../../deployments/hooks';
 import './RecipesList.styles.scss';
-import { RecipeId } from '@packmind/recipes/types';
-import { GitRepoId } from '@packmind/git/types';
+import { Recipe } from '@packmind/recipes/types';
 import { RECIPE_MESSAGES } from '../constants/messages';
 
 interface RecipesListProps {
@@ -33,40 +33,37 @@ interface RecipesListProps {
 export const RecipesList = ({ orgSlug }: RecipesListProps) => {
   const { data: recipes, isLoading, isError } = useGetRecipesQuery();
   const deleteBatchMutation = useDeleteRecipesBatchMutation();
-  const { deployRecipes, isDeploying } = useDeployRecipe();
   const [tableData, setTableData] = React.useState<PMTableRow[]>([]);
-  const [selectedRecipeIds, setSelectedRecipeIds] = React.useState<RecipeId[]>(
-    [],
-  );
+  const [selectedRecipes, setSelectedRecipes] = React.useState<Recipe[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [deleteAlert, setDeleteAlert] = React.useState<{
     type: 'success' | 'error';
     message: string;
   } | null>(null);
 
-  const handleSelectRecipe = (recipeId: RecipeId, isChecked: boolean) => {
+  const handleSelectRecipe = (recipe: Recipe, isChecked: boolean) => {
     if (isChecked) {
-      setSelectedRecipeIds((prev) => [...prev, recipeId]);
+      setSelectedRecipes((prev) => [...prev, recipe]);
     } else {
-      setSelectedRecipeIds((prev) => prev.filter((id) => id !== recipeId));
+      setSelectedRecipes((prev) => prev.filter((r) => r.id !== recipe.id));
     }
   };
 
   const handleSelectAll = (isChecked: boolean) => {
     if (isChecked && recipes) {
-      setSelectedRecipeIds(recipes.map((recipe) => recipe.id));
+      setSelectedRecipes(recipes);
     } else {
-      setSelectedRecipeIds([]);
+      setSelectedRecipes([]);
     }
   };
 
   const handleBatchDelete = async () => {
-    if (selectedRecipeIds.length === 0) return;
+    if (!isSomeSelected) return;
 
     try {
-      const count = selectedRecipeIds.length;
-      await deleteBatchMutation.mutateAsync(selectedRecipeIds);
-      setSelectedRecipeIds([]);
+      const count = selectedRecipes.length;
+      await deleteBatchMutation.mutateAsync(selectedRecipes.map((r) => r.id));
+      setSelectedRecipes([]);
       setDeleteAlert({
         type: 'success',
         message:
@@ -90,21 +87,6 @@ export const RecipesList = ({ orgSlug }: RecipesListProps) => {
     }
   };
 
-  const handleBatchDeploy = async (repositoryIds: GitRepoId[]) => {
-    if (selectedRecipeIds.length === 0) return;
-
-    const selectedRecipes =
-      recipes
-        ?.filter((recipe) => selectedRecipeIds.includes(recipe.id))
-        .map((recipe) => ({
-          id: recipe.id,
-          version: recipe.version,
-          name: recipe.name,
-        })) || [];
-
-    await deployRecipes({ recipes: selectedRecipes }, repositoryIds);
-  };
-
   React.useEffect(() => {
     if (!recipes) return;
 
@@ -113,10 +95,10 @@ export const RecipesList = ({ orgSlug }: RecipesListProps) => {
         key: recipe.id,
         select: (
           <PMCheckbox
-            checked={selectedRecipeIds.includes(recipe.id)}
+            checked={selectedRecipes.includes(recipe)}
             onChange={(event) => {
               const input = event.target as HTMLInputElement;
-              handleSelectRecipe(recipe.id, input.checked);
+              handleSelectRecipe(recipe, input.checked);
             }}
           />
         ),
@@ -131,10 +113,10 @@ export const RecipesList = ({ orgSlug }: RecipesListProps) => {
         version: recipe.version,
       })),
     );
-  }, [recipes, selectedRecipeIds, orgSlug]);
+  }, [recipes, selectedRecipes, orgSlug]);
 
-  const isAllSelected = recipes && selectedRecipeIds.length === recipes.length;
-  const isSomeSelected = selectedRecipeIds.length > 0;
+  const isAllSelected = recipes && selectedRecipes.length === recipes.length;
+  const isSomeSelected = selectedRecipes.length > 0;
 
   const columns: PMTableColumn[] = [
     {
@@ -145,6 +127,7 @@ export const RecipesList = ({ orgSlug }: RecipesListProps) => {
           onChange={(e) => {
             handleSelectAll(!isAllSelected);
           }}
+          controlProps={{ borderColor: 'border.checkbox' }}
         />
       ),
       width: '50px',
@@ -171,32 +154,43 @@ export const RecipesList = ({ orgSlug }: RecipesListProps) => {
       {isError && <p>Error loading recipes.</p>}
       {recipes?.length ? (
         <PMBox>
-          {isSomeSelected && (
-            <PMBox mb={4}>
-              <PMHStack gap={2}>
-                <DeployRecipeButton
-                  label={`Deploy Selected (${selectedRecipeIds.length})`}
-                  onDeploy={handleBatchDeploy}
-                  loading={isDeploying}
-                  disabled={selectedRecipeIds.length === 0}
-                />
-                <PMButton
-                  variant="outline"
-                  colorScheme="red"
-                  onClick={() => setDeleteDialogOpen(true)}
-                  loading={deleteBatchMutation.isPending}
-                >
-                  {`Delete Selected (${selectedRecipeIds.length})`}
-                </PMButton>
+          <PMButtonGroup size="sm">
+            <DeployRecipeButton
+              label={`Deploy (${selectedRecipes.length})`}
+              disabled={!isSomeSelected}
+              selectedRecipes={selectedRecipes}
+              size="sm"
+            />
+            <PMAlertDialog
+              trigger={
                 <PMButton
                   variant="secondary"
-                  onClick={() => setSelectedRecipeIds([])}
+                  loading={deleteBatchMutation.isPending}
+                  disabled={!isSomeSelected}
                 >
-                  Clear Selection
+                  {`Delete (${selectedRecipes.length})`}
                 </PMButton>
-              </PMHStack>
-            </PMBox>
-          )}
+              }
+              title="Delete Recipes"
+              message={RECIPE_MESSAGES.confirmation.deleteBatchRecipes(
+                selectedRecipes.length,
+              )}
+              confirmText="Delete"
+              cancelText="Cancel"
+              confirmColorScheme="red"
+              onConfirm={handleBatchDelete}
+              open={deleteDialogOpen}
+              onOpenChange={setDeleteDialogOpen}
+              isLoading={deleteBatchMutation.isPending}
+            />
+            <PMButton
+              variant="secondary"
+              onClick={() => setSelectedRecipes([])}
+              disabled={!isSomeSelected}
+            >
+              Clear Selection
+            </PMButton>
+          </PMButtonGroup>
           <PMTable
             columns={columns}
             data={tableData}
@@ -209,43 +203,6 @@ export const RecipesList = ({ orgSlug }: RecipesListProps) => {
       ) : (
         <p>No recipes found</p>
       )}
-
-      {/* Delete Confirmation Dialog */}
-      <PMDialog.Root
-        open={deleteDialogOpen}
-        onOpenChange={({ open }) => setDeleteDialogOpen(open)}
-      >
-        <PMDialog.Backdrop />
-        <PMDialog.Positioner>
-          <PMDialog.Content>
-            <PMDialog.Header>
-              <PMDialog.Title>Delete Recipes</PMDialog.Title>
-            </PMDialog.Header>
-            <PMDialog.Body>
-              <PMText>
-                {RECIPE_MESSAGES.confirmation.deleteBatchRecipes(
-                  selectedRecipeIds.length,
-                )}
-              </PMText>
-            </PMDialog.Body>
-            <PMDialog.Footer>
-              <PMButton
-                variant="outline"
-                onClick={() => setDeleteDialogOpen(false)}
-              >
-                Cancel
-              </PMButton>
-              <PMButton
-                colorScheme="red"
-                onClick={handleBatchDelete}
-                loading={deleteBatchMutation.isPending}
-              >
-                Delete
-              </PMButton>
-            </PMDialog.Footer>
-          </PMDialog.Content>
-        </PMDialog.Positioner>
-      </PMDialog.Root>
     </div>
   );
 };

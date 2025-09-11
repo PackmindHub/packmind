@@ -193,6 +193,7 @@ export const packmindTheme = (preflight: boolean) =>
             primary: { value: '{colors.beige.1000}' },
             secondary: { value: '{colors.beige.900}' },
             tertiary: { value: '{colors.beige.800}' },
+            checkbox: { value: '{colors.beige.700}' },
           },
         },
       },

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
+  RuleId,
   Standard,
   StandardId,
   StandardsHexa,
@@ -60,7 +61,7 @@ export class StandardsService {
     standard: {
       name: string;
       description: string;
-      rules: Array<{ content: string }>;
+      rules: Array<{ id: RuleId; content: string }>;
       scope?: string | null;
     },
     organizationId: OrganizationId,

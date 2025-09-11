@@ -5,13 +5,12 @@ import {
   PMHStack,
   PMLink,
   PMButton,
-  PMText,
   PMTable,
   PMTableColumn,
   PMTableRow,
   PMAlert,
   PMSpinner,
-  PMDialog,
+  PMAlertDialog,
   PMCheckbox,
 } from '@packmind/ui';
 
@@ -45,7 +44,7 @@ export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
     type: 'success' | 'error' | 'info';
     message: string;
   } | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
   const [deleteAlert, setDeleteAlert] = React.useState<{
     type: 'success' | 'error';
     message: string;
@@ -81,7 +80,7 @@ export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
             ? STANDARD_MESSAGES.success.deleted
             : `${count} standards deleted successfully!`,
       });
-      setDeleteDialogOpen(false);
+      setDeleteModalOpen(false);
 
       // Auto-dismiss success alert after 3 seconds
       setTimeout(() => {
@@ -93,7 +92,7 @@ export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
         type: 'error',
         message: STANDARD_MESSAGES.error.deleteFailed,
       });
-      setDeleteDialogOpen(false);
+      setDeleteModalOpen(false);
     }
   };
 
@@ -245,14 +244,28 @@ export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
                   disabled={selectedStandardIds.length === 0}
                   size="sm"
                 />
-                <PMButton
-                  variant="secondary"
-                  onClick={() => setDeleteDialogOpen(true)}
-                  loading={deleteBatchMutation.isPending}
-                  size={'sm'}
-                >
-                  {`Delete (${selectedStandardIds.length})`}
-                </PMButton>
+                <PMAlertDialog
+                  trigger={
+                    <PMButton
+                      variant="secondary"
+                      loading={deleteBatchMutation.isPending}
+                      size={'sm'}
+                    >
+                      {`Delete (${selectedStandardIds.length})`}
+                    </PMButton>
+                  }
+                  title="Delete Standards"
+                  message={STANDARD_MESSAGES.confirmation.deleteBatchStandards(
+                    selectedStandardIds.length,
+                  )}
+                  confirmText="Delete"
+                  cancelText="Cancel"
+                  confirmColorScheme="red"
+                  onConfirm={handleBatchDelete}
+                  open={deleteModalOpen}
+                  onOpenChange={setDeleteModalOpen}
+                  isLoading={deleteBatchMutation.isPending}
+                />
                 <PMButton
                   variant="secondary"
                   onClick={() => setSelectedStandardIds([])}
@@ -275,43 +288,6 @@ export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
       ) : (
         <p>No standards found</p>
       )}
-
-      {/* Delete Confirmation Dialog */}
-      <PMDialog.Root
-        open={deleteDialogOpen}
-        onOpenChange={({ open }) => setDeleteDialogOpen(open)}
-      >
-        <PMDialog.Backdrop />
-        <PMDialog.Positioner>
-          <PMDialog.Content>
-            <PMDialog.Header>
-              <PMDialog.Title>Delete Standards</PMDialog.Title>
-            </PMDialog.Header>
-            <PMDialog.Body>
-              <PMText>
-                {STANDARD_MESSAGES.confirmation.deleteBatchStandards(
-                  selectedStandardIds.length,
-                )}
-              </PMText>
-            </PMDialog.Body>
-            <PMDialog.Footer>
-              <PMButton
-                variant="outline"
-                onClick={() => setDeleteDialogOpen(false)}
-              >
-                Cancel
-              </PMButton>
-              <PMButton
-                colorScheme="red"
-                onClick={handleBatchDelete}
-                loading={deleteBatchMutation.isPending}
-              >
-                Delete
-              </PMButton>
-            </PMDialog.Footer>
-          </PMDialog.Content>
-        </PMDialog.Positioner>
-      </PMDialog.Root>
     </div>
   );
 };

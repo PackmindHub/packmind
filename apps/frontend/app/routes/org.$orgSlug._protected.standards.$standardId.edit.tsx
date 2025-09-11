@@ -3,7 +3,7 @@ import { PMPage } from '@packmind/ui';
 import { PMVStack, PMBox } from '@packmind/ui';
 import { StandardForm } from '../../src/domain/standards/components/StandardForm';
 import { useGetStandardByIdQuery } from '../../src/domain/standards/api/queries/StandardsQueries';
-import { StandardId } from '@packmind/standards/types';
+import { StandardId } from '@packmind/shared/types';
 import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
 import { MarkdownEditorProvider } from '../../src/shared/components/editor/MarkdownEditor';
 

@@ -23,6 +23,7 @@ export class StandardsServices implements IStandardsServices {
     this.standardVersionService = new StandardVersionService(
       this.standardsRepositories.getStandardVersionRepository(),
       this.standardsRepositories.getRuleRepository(),
+      this.standardsRepositories.getRuleExampleRepository(),
       this.logger,
     );
     this.standardBookService = new StandardBookService();

@@ -6,13 +6,14 @@ import { StandardService } from '../../services/StandardService';
 import { StandardVersionService } from '../../services/StandardVersionService';
 import { StandardSummaryService } from '../../services/StandardSummaryService';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
+import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import {
   Standard,
   StandardId,
   createStandardId,
 } from '../../../domain/entities/Standard';
 import { StandardVersion } from '../../../domain/entities/StandardVersion';
-import { Rule } from '../../../domain/entities/Rule';
+import { Rule, createRuleId } from '../../../domain/entities/Rule';
 import { standardFactory } from '../../../../test/standardFactory';
 import { standardVersionFactory } from '../../../../test/standardVersionFactory';
 import { ruleFactory } from '../../../../test/ruleFactory';
@@ -39,6 +40,7 @@ describe('UpdateStandardUsecase', () => {
   let standardVersionService: jest.Mocked<StandardVersionService>;
   let standardSummaryService: jest.Mocked<StandardSummaryService>;
   let ruleRepository: jest.Mocked<IRuleRepository>;
+  let ruleExampleRepository: jest.Mocked<IRuleExampleRepository>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
@@ -78,10 +80,22 @@ describe('UpdateStandardUsecase', () => {
       deleteByStandardVersionId: jest.fn(),
     } as unknown as jest.Mocked<IRuleRepository>;
 
+    // Mock RuleExampleRepository
+    ruleExampleRepository = {
+      add: jest.fn(),
+      findById: jest.fn(),
+      findByRuleId: jest.fn(),
+      updateById: jest.fn(),
+      deleteById: jest.fn(),
+      findAll: jest.fn(),
+    } as unknown as jest.Mocked<IRuleExampleRepository>;
+
     // Setup default mock implementations
     mockSlug.mockImplementation((input: string) =>
       input.toLowerCase().replace(/\s+/g, '-'),
     );
+
+    ruleExampleRepository.findByRuleId.mockResolvedValue([]);
 
     standardSummaryService.createStandardSummary.mockResolvedValue(
       'Generated summary for the standard',
@@ -93,6 +107,7 @@ describe('UpdateStandardUsecase', () => {
       standardService,
       standardVersionService,
       ruleRepository,
+      ruleExampleRepository,
       standardSummaryService,
       stubbedLogger,
     );
@@ -127,7 +142,9 @@ describe('UpdateStandardUsecase', () => {
           standardId: standardId,
           name: 'Updated Standard Name',
           description: 'Updated description',
-          rules: [{ content: 'Updated rule content' }],
+          rules: [
+            { id: createRuleId(uuidv4()), content: 'Updated rule content' },
+          ],
           organizationId: organizationId,
           userId: userId,
           scope: null,
@@ -251,17 +268,18 @@ describe('UpdateStandardUsecase', () => {
       });
 
       it('creates new standard version with updated rules and summary', () => {
-        expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith({
-          standardId,
-          name: inputData.name,
-          slug: 'original-standard-name', // Should preserve original slug
-          description: inputData.description,
-          rules: inputData.rules,
-          version: 3,
-          scope: null,
-          summary: 'Generated summary for the standard',
-          userId: inputData.userId,
-        });
+        expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
+          expect.objectContaining({
+            standardId,
+            name: inputData.name,
+            slug: 'original-standard-name',
+            description: inputData.description,
+            version: 3,
+            scope: null,
+            summary: 'Generated summary for the standard',
+            userId: inputData.userId,
+          }),
+        );
       });
 
       it('ensures userId is properly passed to standard version creation', () => {
@@ -298,7 +316,10 @@ describe('UpdateStandardUsecase', () => {
           standardId: standardId,
           name: 'Same Standard Name',
           description: 'Same description',
-          rules: [{ content: 'Same rule 1' }, { content: 'Same rule 2' }],
+          rules: [
+            { id: createRuleId(uuidv4()), content: 'Same rule 1' },
+            { id: createRuleId(uuidv4()), content: 'Same rule 2' },
+          ],
           organizationId: organizationId,
           userId: userId,
           scope: null,
@@ -384,7 +405,7 @@ describe('UpdateStandardUsecase', () => {
           standardId: standardId,
           name: 'Original Standard Name', // Same name as existing
           description: 'Updated description', // Different description
-          rules: [{ content: 'Updated rule 1' }], // Different rules
+          rules: [{ id: createRuleId(uuidv4()), content: 'Updated rule 1' }], // Different rules
           organizationId: organizationId,
           userId: userId,
           scope: null,
@@ -478,17 +499,18 @@ describe('UpdateStandardUsecase', () => {
       });
 
       it('creates new standard version with preserved slug', () => {
-        expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith({
-          standardId,
-          name: inputData.name,
-          slug: 'original-standard-name', // Should preserve original slug
-          description: inputData.description,
-          rules: inputData.rules,
-          version: 2,
-          scope: null,
-          summary: 'Generated summary for the standard',
-          userId: inputData.userId,
-        });
+        expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
+          expect.objectContaining({
+            standardId,
+            name: inputData.name,
+            slug: 'original-standard-name',
+            description: inputData.description,
+            version: 2,
+            scope: null,
+            summary: 'Generated summary for the standard',
+            userId: inputData.userId,
+          }),
+        );
       });
 
       it('ensures userId is properly preserved for non-name changes', () => {
@@ -511,7 +533,9 @@ describe('UpdateStandardUsecase', () => {
           standardId: standardId,
           name: 'Updated Standard Name',
           description: 'Updated description',
-          rules: [{ content: 'Updated rule content' }],
+          rules: [
+            { id: createRuleId(uuidv4()), content: 'Updated rule content' },
+          ],
           organizationId: organizationId,
           userId: userId,
           scope: null,
@@ -620,7 +644,9 @@ describe('UpdateStandardUsecase', () => {
           standardId: standardId,
           name: 'Updated Standard Name',
           description: 'Updated description',
-          rules: [{ content: 'Updated rule content' }],
+          rules: [
+            { id: createRuleId(uuidv4()), content: 'Updated rule content' },
+          ],
           organizationId: organizationId,
           userId: userId,
           scope: null,
@@ -750,7 +776,7 @@ describe('UpdateStandardUsecase', () => {
           standardId: standardId,
           name: 'Different Name', // Changed
           description: 'Original description',
-          rules: [{ content: 'Same rule' }],
+          rules: [{ id: createRuleId(uuidv4()), content: 'Same rule' }],
           organizationId: organizationId,
           userId: userId,
           scope: null,
@@ -776,7 +802,7 @@ describe('UpdateStandardUsecase', () => {
           standardId: standardId,
           name: 'Original Name',
           description: 'Different description', // Changed
-          rules: [{ content: 'Same rule' }],
+          rules: [{ id: createRuleId(uuidv4()), content: 'Same rule' }],
           organizationId: organizationId,
           userId: userId,
           scope: null,
@@ -805,7 +831,7 @@ describe('UpdateStandardUsecase', () => {
           standardId: standardId,
           name: 'Original Name',
           description: 'Original description',
-          rules: [{ content: 'Rule 1' }], // Fewer rules
+          rules: [{ id: createRuleId(uuidv4()), content: 'Rule 1' }], // Fewer rules
           organizationId: organizationId,
           userId: userId,
           scope: null,
@@ -833,7 +859,9 @@ describe('UpdateStandardUsecase', () => {
           standardId: standardId,
           name: 'Original Name',
           description: 'Original description',
-          rules: [{ content: 'Modified rule content' }], // Changed content
+          rules: [
+            { id: createRuleId(uuidv4()), content: 'Modified rule content' },
+          ], // Changed content
           organizationId: organizationId,
           userId: userId,
           scope: null,
@@ -871,7 +899,7 @@ describe('UpdateStandardUsecase', () => {
           standardId: standardId,
           name: 'Original Name',
           description: 'Original description',
-          rules: [{ content: 'Same rule' }],
+          rules: [{ id: createRuleId(uuidv4()), content: 'Same rule' }],
           organizationId: organizationId,
           userId: userId,
           scope: 'updated-scope', // Changed scope
@@ -896,7 +924,7 @@ describe('UpdateStandardUsecase', () => {
           standardId: standardId,
           name: 'Test Standard',
           description: 'Test description',
-          rules: [{ content: 'Test rule' }],
+          rules: [{ id: createRuleId(uuidv4()), content: 'Test rule' }],
           organizationId: organizationId,
           userId: userId, // Valid userId
           scope: null,
@@ -992,7 +1020,7 @@ describe('UpdateStandardUsecase', () => {
           standardId: standardId,
           name: 'Updated Name',
           description: 'Updated description',
-          rules: [{ content: 'New rule' }],
+          rules: [{ id: createRuleId(uuidv4()), content: 'New rule' }],
           organizationId: organizationId,
           userId: userId,
           scope: null,

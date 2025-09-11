@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { standardVersionFactory } from '../../../test/standardVersionFactory';
 import { ruleFactory } from '../../../test/ruleFactory';
 import { PackmindLogger } from '@packmind/shared';
+import { IRuleExampleRepository } from '../../domain/repositories/IRuleExampleRepository';
 import { stubLogger } from '@packmind/shared/test';
 import { createUserId } from '@packmind/accounts';
 import {
@@ -21,6 +22,7 @@ describe('StandardVersionService', () => {
   let standardVersionService: StandardVersionService;
   let standardVersionRepository: IStandardVersionRepository;
   let ruleRepository: IRuleRepository;
+  let ruleExampleRepository: IRuleExampleRepository;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
@@ -45,9 +47,19 @@ describe('StandardVersionService', () => {
 
     stubbedLogger = stubLogger();
 
+    ruleExampleRepository = {
+      add: jest.fn(),
+      findById: jest.fn(),
+      findByRuleId: jest.fn(),
+      updateById: jest.fn(),
+      deleteById: jest.fn(),
+      findAll: jest.fn(),
+    } as unknown as IRuleExampleRepository;
+
     standardVersionService = new StandardVersionService(
       standardVersionRepository,
       ruleRepository,
+      ruleExampleRepository,
       stubbedLogger,
     );
   });
@@ -68,7 +80,10 @@ describe('StandardVersionService', () => {
         slug: 'test-standard-version',
         description: 'Test standard version description',
         version: 1,
-        rules: [{ content: 'Test rule 1' }, { content: 'Test rule 2' }],
+        rules: [
+          { content: 'Test rule 1', examples: [] },
+          { content: 'Test rule 2', examples: [] },
+        ],
         scope: null,
       };
 
@@ -138,7 +153,7 @@ describe('StandardVersionService', () => {
           slug: 'web-ui-standard-version',
           description: 'Standard version created through Web UI',
           version: 1,
-          rules: [{ content: 'Web UI rule' }],
+          rules: [{ content: 'Web UI rule', examples: [] }],
           scope: null,
           userId,
         };
@@ -190,7 +205,7 @@ describe('StandardVersionService', () => {
           slug: 'git-standard-version',
           description: 'Standard version created through Git',
           version: 1,
-          rules: [{ content: 'Git rule' }],
+          rules: [{ content: 'Git rule', examples: [] }],
           scope: null,
           userId: null, // Explicitly null for git commits
         };

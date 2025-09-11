@@ -5,11 +5,17 @@ import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { StandardVersion } from '../../../domain/entities/StandardVersion';
 import { Rule, createRuleId } from '../../../domain/entities/Rule';
 import { CreateStandardVersionData } from '../../services/StandardVersionService';
-import { LogLevel, PackmindLogger, AiNotConfigured } from '@packmind/shared';
+import {
+  LogLevel,
+  PackmindLogger,
+  AiNotConfigured,
+  RuleExample,
+} from '@packmind/shared';
 import { OrganizationId, UserId } from '@packmind/accounts';
 import { v4 as uuidv4 } from 'uuid';
 
 import { createStandardVersionId } from '../../../domain/entities/StandardVersion';
+import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 
 const origin = 'AddRuleToStandardUsecase';
 
@@ -25,6 +31,7 @@ export class AddRuleToStandardUsecase {
     private readonly standardService: StandardService,
     private readonly standardVersionService: StandardVersionService,
     private readonly ruleRepository: IRuleRepository,
+    private readonly ruleExampleRepository: IRuleExampleRepository,
     private readonly standardSummaryService: StandardSummaryService,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
@@ -116,11 +123,17 @@ export class AddRuleToStandardUsecase {
         scope: existingStandard.scope,
       });
 
-      // Prepare rules for the new version (existing + new rule)
-      const allRules = [
-        ...existingRules.map((rule) => ({ content: rule.content })),
-        { content: ruleContent },
-      ];
+      const allRules: Array<{
+        content: string;
+        examples: RuleExample[];
+      }> = [];
+      for (const rule of existingRules) {
+        const examples = await this.ruleExampleRepository.findByRuleId(rule.id);
+        allRules.push({ content: rule.content, examples: examples || [] });
+      }
+
+      //Push new rule to allRules
+      allRules.push({ content: ruleContent, examples: [] });
 
       this.logger.debug('Prepared rules for new version', {
         existingRulesCount: existingRules.length,

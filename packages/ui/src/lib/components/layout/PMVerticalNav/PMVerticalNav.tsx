@@ -42,7 +42,7 @@ export const PMVerticalNav: React.FC<IPMVerticalNavProps> = ({
       </PMVStack>
 
       {footerNav && (
-        <PMBox w={'100%'} display={'flex'} justifyContent={'center'}>
+        <PMBox w={'100%'} paddingX={2}>
           {footerNav}
         </PMBox>
       )}

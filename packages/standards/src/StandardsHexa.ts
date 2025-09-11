@@ -4,6 +4,7 @@ import {
   IDeploymentPort,
   IStandardsPort,
   PackmindLogger,
+  RuleId,
 } from '@packmind/shared';
 import { StandardsHexaFactory } from './StandardsHexaFactory';
 import { Standard, StandardId } from './domain/entities/Standard';
@@ -120,7 +121,7 @@ export class StandardsHexa extends BaseHexa {
     standardId: StandardId;
     name: string;
     description: string;
-    rules: Array<{ content: string }>;
+    rules: Array<{ id: RuleId; content: string }>;
     organizationId: OrganizationId;
     userId: UserId;
     scope: string | null;

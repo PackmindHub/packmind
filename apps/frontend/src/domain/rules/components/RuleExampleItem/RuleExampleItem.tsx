@@ -18,6 +18,7 @@ import {
   PMHStack,
   PMVStack,
   PMBox,
+  PMAlertDialog,
   PMFlex,
   PMButtonGroup,
   PMBadge,
@@ -195,6 +196,12 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
     }
   };
 
+  const handleCancelNew = () => {
+    if (isNew && onCancelNew) {
+      onCancelNew(example.id);
+    }
+  };
+
   return (
     <PMBox
       border="1px solid"
@@ -258,15 +265,35 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
             >
               Edit
             </PMButton>
-            <PMButton
-              variant="tertiary"
-              onClick={handleRemove}
-              aria-label={isNew ? 'Cancel' : 'Delete'}
-              loading={deleteMutation.isPending}
-              disabled={deleteMutation.isPending}
-            >
-              {isNew ? 'Cancel' : 'Delete'}
-            </PMButton>
+            {isNew ? (
+              <PMButton
+                variant="tertiary"
+                onClick={handleCancelNew}
+                aria-label="Cancel"
+              >
+                Cancel
+              </PMButton>
+            ) : (
+              <PMAlertDialog
+                trigger={
+                  <PMButton
+                    variant="tertiary"
+                    loading={deleteMutation.isPending}
+                    disabled={deleteMutation.isPending}
+                    aria-label="Delete"
+                  >
+                    Delete
+                  </PMButton>
+                }
+                title="Delete Rule Example"
+                message="Are you sure you want to delete this rule example? This action cannot be undone."
+                confirmText="Delete"
+                cancelText="Cancel"
+                confirmColorScheme="red"
+                onConfirm={handleRemove}
+                isLoading={deleteMutation.isPending}
+              />
+            )}
           </PMButtonGroup>
         )}
       </PMFlex>

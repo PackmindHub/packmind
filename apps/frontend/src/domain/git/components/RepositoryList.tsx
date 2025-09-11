@@ -11,7 +11,7 @@ import {
   PMHeading,
   PMText,
   PMAlert,
-  PMDialog,
+  PMAlertDialog,
   PMEmptyState,
 } from '@packmind/ui';
 import {
@@ -43,11 +43,6 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
     type: 'success' | 'error';
     message: string;
   } | null>(null);
-
-  const handleRemoveRepository = useCallback((repo: GitRepoUI) => {
-    setRepoToRemove(repo);
-    setDeleteDialogOpen(true);
-  }, []);
 
   const confirmRemoveRepository = useCallback(async () => {
     if (!repoToRemove) return;
@@ -98,21 +93,46 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
         </PMBadge>
       ),
       actions: (
-        <PMButton
-          variant="outline"
-          colorScheme="red"
-          size="sm"
-          onClick={() => handleRemoveRepository(repo)}
-          loading={removeRepositoryMutation.isPending}
-        >
-          Remove
-        </PMButton>
+        <PMAlertDialog
+          trigger={
+            <PMButton
+              variant="outline"
+              colorScheme="red"
+              size="sm"
+              loading={removeRepositoryMutation.isPending}
+            >
+              Remove
+            </PMButton>
+          }
+          title="Remove Repository"
+          message={GIT_MESSAGES.confirmation.removeRepository(
+            repo.owner,
+            repo.repo,
+          )}
+          confirmText="Remove"
+          cancelText="Cancel"
+          confirmColorScheme="red"
+          onConfirm={confirmRemoveRepository}
+          open={deleteDialogOpen && repoToRemove?.id === repo.id}
+          onOpenChange={(open) => {
+            if (open) {
+              setRepoToRemove(repo);
+              setDeleteDialogOpen(true);
+            } else {
+              setDeleteDialogOpen(false);
+              setRepoToRemove(null);
+            }
+          }}
+          isLoading={removeRepositoryMutation.isPending}
+        />
       ),
     }));
   }, [
     repositories,
     removeRepositoryMutation.isPending,
-    handleRemoveRepository,
+    confirmRemoveRepository,
+    deleteDialogOpen,
+    repoToRemove,
   ]);
 
   if (isLoading) {
@@ -206,48 +226,6 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
           showColumnBorder={false}
         />
       )}
-
-      {/* Delete Confirmation Dialog */}
-      <PMDialog.Root
-        open={deleteDialogOpen}
-        onOpenChange={({ open }) => setDeleteDialogOpen(open)}
-      >
-        <PMDialog.Backdrop />
-        <PMDialog.Positioner>
-          <PMDialog.Content>
-            <PMDialog.Header>
-              <PMDialog.Title>Remove Repository</PMDialog.Title>
-            </PMDialog.Header>
-            <PMDialog.Body>
-              <PMText>
-                {repoToRemove &&
-                  GIT_MESSAGES.confirmation.removeRepository(
-                    repoToRemove.owner,
-                    repoToRemove.repo,
-                  )}
-              </PMText>
-            </PMDialog.Body>
-            <PMDialog.Footer>
-              <PMButton
-                variant="outline"
-                onClick={() => {
-                  setDeleteDialogOpen(false);
-                  setRepoToRemove(null);
-                }}
-              >
-                Cancel
-              </PMButton>
-              <PMButton
-                colorScheme="red"
-                onClick={confirmRemoveRepository}
-                loading={removeRepositoryMutation.isPending}
-              >
-                Remove
-              </PMButton>
-            </PMDialog.Footer>
-          </PMDialog.Content>
-        </PMDialog.Positioner>
-      </PMDialog.Root>
     </PMBox>
   );
 };

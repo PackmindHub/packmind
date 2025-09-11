@@ -11,7 +11,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { StandardsService } from './standards.service';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger, RuleId } from '@packmind/shared';
 import { AuthService } from '../auth/auth.service';
 import { Request } from 'express';
 import { GitRepoId } from '@packmind/git';
@@ -242,7 +242,7 @@ export class StandardsController {
     standard: {
       name: string;
       description: string;
-      rules: Array<{ content: string }>;
+      rules: Array<{ id: RuleId; content: string }>;
       scope?: string | null;
     },
     @Req() request: AuthenticatedRequest,

@@ -2,12 +2,15 @@ import { useParams, useNavigate, NavLink } from 'react-router';
 import { useEffect } from 'react';
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
 import { SettingsPage } from '../../src/domain/accounts/components/SettingsPage';
-import { PMBox, PMVStack, PMSpinner } from '@packmind/ui';
-import { PMPage } from '@packmind/ui';
+import { PMPage, PMBox, PMVStack, PMSpinner } from '@packmind/ui';
 
 export const handle = {
   crumb: ({ params }: { params: { orgSlug: string; standardId: string } }) => {
-    return <NavLink to={`/org/${params.orgSlug}/Settings`}>Settings</NavLink>;
+    return (
+      <NavLink to={`/org/${params.orgSlug}/account-settings`}>
+        Account settings
+      </NavLink>
+    );
   },
 };
 

@@ -15,3 +15,5 @@ export {
   PMConfirmationModalFooter,
 } from './PMConfirmationModal';
 export type { PMConfirmationModalProps } from './PMConfirmationModal';
+export { PMAlertDialog } from './PMAlertDialog';
+export type { PMAlertDialogProps } from './PMAlertDialog';

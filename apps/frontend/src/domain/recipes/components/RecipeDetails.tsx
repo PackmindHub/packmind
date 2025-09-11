@@ -11,6 +11,7 @@ import {
   PMBadge,
   PMAlert,
   PMDialog,
+  PMAlertDialog,
 } from '@packmind/ui';
 import { useNavigate, Link } from 'react-router';
 import {
@@ -158,14 +159,30 @@ export const RecipeDetails = ({ id, orgSlug, orgName }: RecipeDetailsProps) => {
           <PMButton variant="outline" onClick={() => setIsEditing(true)}>
             Edit
           </PMButton>
-          <PMButton
-            variant="outline"
-            colorScheme="red"
-            onClick={() => setDeleteDialogOpen(true)}
-            loading={deleteMutation.isPending}
-          >
-            Delete
-          </PMButton>
+          <PMAlertDialog
+            trigger={
+              <PMButton
+                variant="outline"
+                colorScheme="red"
+                loading={deleteMutation.isPending}
+              >
+                Delete
+              </PMButton>
+            }
+            title="Delete Recipe"
+            message={
+              recipe
+                ? RECIPE_MESSAGES.confirmation.deleteRecipe(recipe.name)
+                : 'Are you sure you want to delete this recipe?'
+            }
+            confirmText="Delete"
+            cancelText="Cancel"
+            confirmColorScheme="red"
+            onConfirm={handleDeleteRecipe}
+            open={deleteDialogOpen}
+            onOpenChange={setDeleteDialogOpen}
+            isLoading={deleteMutation.isPending}
+          />
         </PMHStack>
       }
     >
@@ -194,42 +211,6 @@ export const RecipeDetails = ({ id, orgSlug, orgName }: RecipeDetailsProps) => {
         <RecipeVersionsList recipeId={recipe.id} />
         <RecipeDeploymentsList recipeId={recipe.id} />
       </PMVStack>
-
-      {/* Delete Confirmation Dialog */}
-      <PMDialog.Root
-        open={deleteDialogOpen}
-        onOpenChange={({ open }) => setDeleteDialogOpen(open)}
-      >
-        <PMDialog.Backdrop />
-        <PMDialog.Positioner>
-          <PMDialog.Content>
-            <PMDialog.Header>
-              <PMDialog.Title>Delete Recipe</PMDialog.Title>
-            </PMDialog.Header>
-            <PMDialog.Body>
-              <PMText>
-                {recipe &&
-                  RECIPE_MESSAGES.confirmation.deleteRecipe(recipe.name)}
-              </PMText>
-            </PMDialog.Body>
-            <PMDialog.Footer>
-              <PMButton
-                variant="outline"
-                onClick={() => setDeleteDialogOpen(false)}
-              >
-                Cancel
-              </PMButton>
-              <PMButton
-                colorScheme="red"
-                onClick={handleDeleteRecipe}
-                loading={deleteMutation.isPending}
-              >
-                Delete
-              </PMButton>
-            </PMDialog.Footer>
-          </PMDialog.Content>
-        </PMDialog.Positioner>
-      </PMDialog.Root>
     </PMPage>
   );
 };

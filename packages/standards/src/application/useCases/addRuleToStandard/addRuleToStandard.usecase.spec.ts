@@ -22,6 +22,7 @@ import {
   UserId,
 } from '@packmind/accounts';
 import { createStandardVersionId } from '../../../domain/entities/StandardVersion';
+import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 
 describe('AddRuleToStandardUsecase', () => {
   let addRuleToStandardUsecase: AddRuleToStandardUsecase;
@@ -29,6 +30,7 @@ describe('AddRuleToStandardUsecase', () => {
   let standardVersionService: jest.Mocked<StandardVersionService>;
   let standardSummaryService: jest.Mocked<StandardSummaryService>;
   let ruleRepository: jest.Mocked<IRuleRepository>;
+  let ruleExampleRepository: jest.Mocked<IRuleExampleRepository>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   let organizationId: OrganizationId;
@@ -74,6 +76,15 @@ describe('AddRuleToStandardUsecase', () => {
       deleteByStandardVersionId: jest.fn(),
     } as unknown as jest.Mocked<IRuleRepository>;
 
+    ruleExampleRepository = {
+      add: jest.fn(),
+      findById: jest.fn(),
+      findByRuleId: jest.fn(),
+      updateById: jest.fn(),
+      deleteById: jest.fn(),
+      findAll: jest.fn(),
+    } as unknown as jest.Mocked<IRuleExampleRepository>;
+
     stubbedLogger = stubLogger();
 
     // Setup default mock implementations
@@ -85,6 +96,7 @@ describe('AddRuleToStandardUsecase', () => {
       standardService,
       standardVersionService,
       ruleRepository,
+      ruleExampleRepository,
       standardSummaryService,
       stubbedLogger,
     );
@@ -243,24 +255,27 @@ describe('AddRuleToStandardUsecase', () => {
       });
 
       it('creates new standard version with existing rules plus new rule', () => {
-        expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith({
-          standardId: existingStandard.id,
-          name: existingStandard.name,
-          slug: existingStandard.slug,
-          description: existingStandard.description,
-          version: 3,
-          rules: [
-            { content: 'Use assertive names for test cases' },
-            { content: 'Clean mocks after each test' },
-            {
-              content:
-                'Use descriptive test names that explain expected behavior',
-            },
-          ],
-          scope: existingStandard.scope,
-          summary: 'Generated summary for the standard with the new rule',
-          userId,
-        });
+        expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
+          expect.objectContaining({
+            standardId: existingStandard.id,
+            name: existingStandard.name,
+            slug: existingStandard.slug,
+            description: existingStandard.description,
+            version: 3,
+            rules: [
+              { content: 'Use assertive names for test cases', examples: [] },
+              { content: 'Clean mocks after each test', examples: [] },
+              {
+                content:
+                  'Use descriptive test names that explain expected behavior',
+                examples: [],
+              },
+            ],
+            scope: existingStandard.scope,
+            summary: 'Generated summary for the standard with the new rule',
+            userId,
+          }),
+        );
       });
 
       it('returns the new standard version', () => {
@@ -569,10 +584,10 @@ describe('AddRuleToStandardUsecase', () => {
         expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
           expect.objectContaining({
             rules: [
-              { content: 'Existing rule 1' },
-              { content: 'Existing rule 2' },
-              { content: 'Existing rule 3' },
-              { content: 'New coding rule' }, // New rule appended
+              { content: 'Existing rule 1', examples: [] },
+              { content: 'Existing rule 2', examples: [] },
+              { content: 'Existing rule 3', examples: [] },
+              { content: 'New coding rule', examples: [] }, // New rule appended
             ],
           }),
         );
@@ -613,7 +628,7 @@ describe('AddRuleToStandardUsecase', () => {
         expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
           expect.objectContaining({
             rules: [
-              { content: 'First rule for this standard' }, // Only the new rule
+              { content: 'First rule for this standard', examples: [] }, // Only the new rule
             ],
           }),
         );

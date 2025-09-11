@@ -26,7 +26,7 @@ const pmLinkRecipe = defineRecipe({
         display: 'block',
         width: '100%',
         borderRadius: 'sm',
-        paddingY: 2,
+        paddingY: 1,
         paddingX: 2,
         fontWeight: 'medium',
         _hover: {
