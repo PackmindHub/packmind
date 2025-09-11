@@ -118,7 +118,7 @@ describe('CaptureRecipeUsecase', () => {
           createdRecipeVersion,
         );
 
-        result = await captureRecipeUsecase.captureRecipe(inputData);
+        result = await captureRecipeUsecase.execute(inputData);
       });
 
       it('generates the correct slug from the recipe name', () => {
@@ -196,7 +196,7 @@ describe('CaptureRecipeUsecase', () => {
           createdRecipeVersion,
         );
 
-        await captureRecipeUsecase.captureRecipe(inputData);
+        await captureRecipeUsecase.execute(inputData);
 
         expect(mockSlug).toHaveBeenCalledWith('My Complex Recipe Name');
         expect(recipeService.addRecipe).toHaveBeenCalledWith({
@@ -235,7 +235,7 @@ describe('CaptureRecipeUsecase', () => {
           createdRecipeVersion,
         );
 
-        await captureRecipeUsecase.captureRecipe(inputData);
+        await captureRecipeUsecase.execute(inputData);
 
         expect(mockSlug).toHaveBeenCalledWith(
           'Recipe with "Special" Characters!',
@@ -281,7 +281,7 @@ describe('CaptureRecipeUsecase', () => {
         );
         mockSlug.mockReturnValue('test-recipe');
 
-        const result = await captureRecipeUsecase.captureRecipe(inputData);
+        const result = await captureRecipeUsecase.execute(inputData);
 
         expect(result).toEqual(createdRecipe);
         expect(recipeVersionService.addRecipeVersion).toHaveBeenCalledWith(
@@ -320,7 +320,7 @@ describe('CaptureRecipeUsecase', () => {
         );
         mockSlug.mockReturnValue('test-recipe');
 
-        const result = await captureRecipeUsecase.captureRecipe(inputData);
+        const result = await captureRecipeUsecase.execute(inputData);
 
         expect(result).toEqual(createdRecipe);
         expect(recipeVersionService.addRecipeVersion).toHaveBeenCalledWith(
@@ -343,9 +343,9 @@ describe('CaptureRecipeUsecase', () => {
         const error = new Error('Database connection failed');
         recipeService.addRecipe.mockRejectedValue(error);
 
-        await expect(
-          captureRecipeUsecase.captureRecipe(inputData),
-        ).rejects.toThrow('Database connection failed');
+        await expect(captureRecipeUsecase.execute(inputData)).rejects.toThrow(
+          'Database connection failed',
+        );
         expect(recipeService.addRecipe).toHaveBeenCalledWith({
           name: inputData.name,
           content: inputData.content,

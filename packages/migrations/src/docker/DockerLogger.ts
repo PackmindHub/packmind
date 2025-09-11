@@ -2,6 +2,7 @@
  * Log levels enum to match PackmindLogger
  */
 export enum LogLevel {
+  SILENT = 'silent',
   ERROR = 'error',
   WARN = 'warn',
   INFO = 'info',
@@ -17,9 +18,11 @@ export enum LogLevel {
  */
 export class DockerLogger {
   private readonly name: string;
+  private currentLevel: LogLevel;
 
-  constructor(name: string) {
+  constructor(name: string, level: LogLevel = LogLevel.INFO) {
     this.name = name;
+    this.currentLevel = level;
   }
 
   private log(
@@ -27,6 +30,7 @@ export class DockerLogger {
     message: string,
     meta?: Record<string, unknown>,
   ): void {
+    if (this.currentLevel === LogLevel.SILENT) return;
     const timestamp = new Date().toISOString();
     const metaStr = meta ? ` ${JSON.stringify(meta)}` : '';
     console.log(
@@ -52,6 +56,10 @@ export class DockerLogger {
 
   http(message: string, meta?: Record<string, unknown>): void {
     this.log('http', message, meta);
+  }
+
+  setLevel(level: LogLevel): void {
+    this.currentLevel = level;
   }
 
   getName(): string {

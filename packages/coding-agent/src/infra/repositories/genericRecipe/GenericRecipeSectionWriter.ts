@@ -17,9 +17,11 @@ export class GenericRecipeSectionWriter {
     opts: GenericRecipeSectionWriterOpts,
   ): string {
     const content: string[] = [
-      `🚨 **MANDATORY STEP** 🚨
+      `# Packmind Recipes
 
-      Before writing, editing, or generating ANY code:`,
+🚨 **MANDATORY STEP** 🚨
+
+Before writing, editing, or generating ANY code:`,
     ];
 
     if (opts.recipesSection) {
@@ -53,8 +55,38 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
   }
 
   public static replace(
-    opts: GenericRecipeSectionWriterOpts & { currentContent: string },
-  ) {
-    return `Writing ${opts.currentContent} with: ${GenericRecipeSectionWriter.generateRecipesSection(opts)}`;
+    opts: GenericRecipeSectionWriterOpts & {
+      currentContent: string;
+      commentMarker: string;
+    },
+  ): string {
+    const startMarker = `<!-- start: ${opts.commentMarker} -->`;
+    const endMarker = `<!-- end: ${opts.commentMarker} -->`;
+
+    // Generate the new content
+    const newContent = GenericRecipeSectionWriter.generateRecipesSection(opts);
+
+    // Create the regex pattern to find the existing section
+    const escapedStartMarker = startMarker.replace(
+      /[.*+?^${}()|[\]\\]/g,
+      '\\$&',
+    );
+    const escapedEndMarker = endMarker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const sectionPattern = new RegExp(
+      `${escapedStartMarker}[\\s\\S]*?${escapedEndMarker}`,
+      'g',
+    );
+
+    // Check if the section exists
+    if (sectionPattern.test(opts.currentContent)) {
+      // Replace existing section
+      return opts.currentContent.replace(
+        sectionPattern,
+        `${startMarker}\n${newContent}\n${endMarker}`,
+      );
+    } else {
+      // Append new section
+      return `${opts.currentContent}\n${startMarker}\n${newContent}\n${endMarker}`;
+    }
   }
 }

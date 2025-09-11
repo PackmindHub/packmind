@@ -29,11 +29,14 @@ export class JunieDeployer implements ICodingAgentDeployer {
     const existingContent = await this.getExistingContent(gitRepo);
 
     // Generate content with recipe instructions
-    const updatedContent = await this.generateRecipeContent(
-      recipeVersions,
-      gitRepo,
-      existingContent,
-    );
+    const updatedContent = GenericRecipeSectionWriter.replace({
+      agentName: 'Junie',
+      repoName: `${gitRepo.owner}/${gitRepo.repo}`,
+      recipesIndexPath:
+        '[.packmind/recipes-index.md](.packmind/recipes-index.md)',
+      commentMarker: 'Packmind recipes',
+      currentContent: existingContent,
+    });
 
     const fileUpdates: FileUpdates = {
       createOrUpdate: [],
@@ -46,6 +49,8 @@ export class JunieDeployer implements ICodingAgentDeployer {
         path: JunieDeployer.JUNIE_PATH,
         content: updatedContent,
       });
+
+      console.log({ existingContent, updatedContent });
     }
 
     return fileUpdates;
@@ -110,36 +115,6 @@ export class JunieDeployer implements ICodingAgentDeployer {
   }
 
   /**
-   * Generate content with recipe instructions, checking existing content
-   */
-  private async generateRecipeContent(
-    recipeVersions: RecipeVersion[],
-    gitRepo: GitRepo,
-    existingContent: string,
-  ): Promise<string> {
-    const repoName = `${gitRepo.owner}/${gitRepo.repo}`;
-
-    const packmindInstructions =
-      GenericRecipeSectionWriter.generateRecipesSection({
-        agentName: 'Junie',
-        repoName,
-        recipesIndexPath:
-          '[.packmind/recipes-index.md](.packmind/recipes-index.md)',
-      });
-    // Check if recipe instructions are already present
-    const hasRecipeInstructions =
-      this.checkForRecipeInstructions(existingContent);
-
-    if (hasRecipeInstructions) {
-      this.logger.debug('Recipe instructions already present in Junie content');
-      return existingContent;
-    }
-
-    // Add recipe instructions
-    return this.addRecipeInstructions(existingContent, packmindInstructions);
-  }
-
-  /**
    * Generate content with standards instructions, checking existing content
    */
   private async generateStandardsContent(
@@ -168,24 +143,6 @@ export class JunieDeployer implements ICodingAgentDeployer {
   }
 
   /**
-   * Check if recipe instructions are already present
-   */
-  private checkForRecipeInstructions(existingContent: string): boolean {
-    const requiredHeader = '# Packmind Recipes';
-    const requiredInstructionPhrase = '🚨 **MANDATORY STEP** 🚨';
-    const requiredFileReference = 'recipes-index.md';
-
-    const headerRegex = new RegExp(`^${requiredHeader}\\s*$`, 'm');
-    const hasExactHeader = headerRegex.test(existingContent);
-    const hasInstructions = existingContent.includes(requiredInstructionPhrase);
-    const hasFileReference = existingContent
-      .toLowerCase()
-      .includes(requiredFileReference.toLowerCase());
-
-    return hasExactHeader && hasInstructions && hasFileReference;
-  }
-
-  /**
    * Check if standards instructions are already present
    */
   private checkForStandardsInstructions(existingContent: string): boolean {
@@ -201,26 +158,6 @@ export class JunieDeployer implements ICodingAgentDeployer {
       .includes(requiredFileReference.toLowerCase());
 
     return hasExactHeader && hasInstructions && hasFileReference;
-  }
-
-  /**
-   * Add recipe instructions to existing content
-   */
-  private addRecipeInstructions(
-    existingContent: string,
-    instructions: string,
-  ): string {
-    const instructionsBlock = `# Packmind Recipes
-
-${instructions}`;
-
-    if (!existingContent.trim()) {
-      return instructionsBlock;
-    }
-
-    // Always append at the end, preserving existing content
-    const separator = existingContent.endsWith('\n') ? '\n' : '\n\n';
-    return `${existingContent}${separator}${instructionsBlock}`;
   }
 
   /**

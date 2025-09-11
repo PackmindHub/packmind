@@ -306,7 +306,8 @@ describe('Claude Deployment Integration', () => {
   });
 
   describe('when CLAUDE.md already exists with complete instructions', () => {
-    const existingContent = `# Packmind Recipes
+    const existingContent = `<!-- start: Packmind recipes -->
+# Packmind Recipes
 
 🚨 **MANDATORY STEP** 🚨
 
@@ -315,7 +316,7 @@ Before writing, editing, or generating ANY code:
 **ALWAYS READ**: @.packmind/recipes-index.md to see what recipes are available
 
 ## Recipe Usage Rules:
-- **MANDATORY**: Always check the recipes index first
+- **MANDATORY**: Always check the recipes list first
 - **CONDITIONAL**: Only read/use individual recipes if they are relevant to your task
 - **OPTIONAL**: If no recipes are relevant, proceed without using any
 
@@ -325,11 +326,12 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
 * aiAgent: "Claude Code"
 * gitRepo: "test-owner/test-repo"
 
-**Remember: Always check the recipes index first, but only use recipes that actually apply to your specific task.**
-
+**Remember: Always check the recipes list first, but only use recipes that actually apply to your specific task.**\`
+<!-- end: Packmind recipes -->
 ## Packmind Standards
 
-Follow the coding standards defined in @.packmind/standards-index.md`;
+Follow the coding standards defined in @.packmind/standards-index.md
+`;
 
     beforeEach(() => {
       // Mock GitHexa.getFileFromRepo to return existing content
@@ -497,7 +499,8 @@ Follow the coding standards defined in @.packmind/standards-index.md`;
   });
 
   describe('when CLAUDE.md exists but is missing standards instructions', () => {
-    const partialContent = `# Packmind Recipes
+    const partialContent = `<!-- start: Packmind recipes -->
+# Packmind Recipes
 
 🚨 **MANDATORY STEP** 🚨
 
@@ -506,7 +509,7 @@ Before writing, editing, or generating ANY code:
 **ALWAYS READ**: @.packmind/recipes-index.md to see what recipes are available
 
 ## Recipe Usage Rules:
-- **MANDATORY**: Always check the recipes index first
+- **MANDATORY**: Always check the recipes list first
 - **CONDITIONAL**: Only read/use individual recipes if they are relevant to your task
 - **OPTIONAL**: If no recipes are relevant, proceed without using any
 
@@ -516,7 +519,8 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
 * aiAgent: "Claude Code"
 * gitRepo: "test-owner/test-repo"
 
-**Remember: Always check the recipes index first, but only use recipes that actually apply to your specific task.**
+**Remember: Always check the recipes list first, but only use recipes that actually apply to your specific task.**\`
+<!-- end: Packmind recipes -->
 
 # Some User Content
 

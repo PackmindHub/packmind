@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { PMBox, PMVStack, PMHStack } from '@packmind/ui';
 import {
+  PMBox,
+  PMVStack,
+  PMHStack,
+  PMPopover,
+  PMIconButton,
   PMInput,
   PMButton,
   PMFormContainer,
   PMLabel,
-  PMHeading,
   PMText,
 } from '@packmind/ui';
 import { OrganizationId } from '@packmind/accounts/types';
@@ -18,6 +21,7 @@ import {
   GitProviders,
   GitProviderUI,
 } from '../types/GitProviderTypes';
+import { LuMessageCircleQuestion } from 'react-icons/lu';
 
 interface CreateGitProviderFormProps {
   organizationId: OrganizationId;
@@ -128,20 +132,17 @@ export const CreateGitProviderForm: React.FC<CreateGitProviderFormProps> = ({
   const urlInputId = 'provider-url';
 
   return (
-    <PMBox p={6} borderRadius="md" shadow="md">
-      <PMVStack align="stretch" gap={4} mb={4}>
-        <PMHeading level="h2">
-          {isEditing ? 'Edit Git Provider' : 'Add New Git Provider'}
-        </PMHeading>
-        <PMText variant="body">
-          {isEditing
-            ? 'Update your git provider configuration.'
-            : 'Connect a new git provider to manage your repositories.'}
-        </PMText>
-      </PMVStack>
-
+    <PMBox>
       <form onSubmit={handleSubmit}>
-        <PMFormContainer maxWidth="500px" spacing={4}>
+        <PMVStack
+          alignItems="stretch"
+          width="500px"
+          marginX={'auto'}
+          padding={8}
+          borderRadius={'md'}
+          border={'solid 1px'}
+          borderColor={'border.primary'}
+        >
           {/* Git Provider Selection */}
           <PMVStack align="stretch" gap={1}>
             <PMLabel htmlFor={providerSelectId} required>
@@ -204,6 +205,7 @@ export const CreateGitProviderForm: React.FC<CreateGitProviderFormProps> = ({
               required
               disabled={mutation.isPending}
               error={errors.url}
+              maxLength={150}
             />
             <PMText variant="small">Base URL for your git provider</PMText>
             {errors.url && (
@@ -214,9 +216,42 @@ export const CreateGitProviderForm: React.FC<CreateGitProviderFormProps> = ({
           </PMVStack>
 
           {/* Access Token */}
-          <PMVStack align="stretch" gap={1}>
+          <PMVStack align="stretch" gap={1} alignItems="stretch">
             <PMLabel htmlFor={tokenInputId} required>
               Access Token
+              <PMPopover
+                content={
+                  <PMBox maxWidth="300px">
+                    <PMText variant="body-important" mb={2} as="p">
+                      What is an access token?
+                    </PMText>
+                    <PMText variant="small" mb={2} as="p" color="secondary">
+                      Access token is a secret key that allows Packmind to
+                      access your Git repositories to perform operations on your
+                      behalf. Never share this token publicly.
+                    </PMText>
+                    <PMText variant="body-important" as="p" mb={2}>
+                      {formData.source === GitProviders.GITLAB && 'GitLab'}
+                      {formData.source === GitProviders.GITHUB && 'GitHub'}
+                    </PMText>
+
+                    <PMText variant="small" as="p" color="secondary">
+                      {formData.source === GitProviders.GITLAB &&
+                        'Generate a personal access token with api, read_repository, and write_repository scopes from your GitLab account settings.'}
+                      {formData.source === GitProviders.GITHUB &&
+                        `Generate a personal access token with repository access and
+                      read/write access on 'Contents' permission for 'fine-grained tokens'
+                      OR 'repo' scope for 'classic tokens' from your GitHub account settings.`}
+                    </PMText>
+                  </PMBox>
+                }
+                placement="right"
+                showArrow
+              >
+                <PMButton variant="ghost" size="xs" marginLeft={2}>
+                  Needed permissions
+                </PMButton>
+              </PMPopover>
             </PMLabel>
             <PMInput
               id={tokenInputId}
@@ -231,14 +266,8 @@ export const CreateGitProviderForm: React.FC<CreateGitProviderFormProps> = ({
               required
               disabled={mutation.isPending}
               error={errors.token}
+              maxLength={150}
             />
-            <PMText variant="small">
-              {formData.source === GitProviders.GITLAB
-                ? 'Personal access token with api, read_repository, and write_repository scopes'
-                : `Personal access token with repository access and
-                read/write access on 'Contents' permission for 'fine-grained tokens'
-                OR 'repo' scope for 'classic tokens'`}
-            </PMText>
             {errors.token && (
               <PMText variant="small" color="error">
                 {errors.token}
@@ -264,7 +293,7 @@ export const CreateGitProviderForm: React.FC<CreateGitProviderFormProps> = ({
           {/* Action Buttons */}
           <PMHStack gap={3} justify="flex-end">
             <PMButton
-              variant="outline"
+              variant="tertiary"
               onClick={onCancel}
               disabled={mutation.isPending}
             >
@@ -278,7 +307,7 @@ export const CreateGitProviderForm: React.FC<CreateGitProviderFormProps> = ({
               {isEditing ? 'Update Provider' : 'Add Provider'}
             </PMButton>
           </PMHStack>
-        </PMFormContainer>
+        </PMVStack>
       </form>
     </PMBox>
   );

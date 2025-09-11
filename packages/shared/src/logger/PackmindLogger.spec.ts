@@ -19,6 +19,7 @@ describe('PackmindLogger', () => {
 
   describe('LogLevel enum', () => {
     it('has all expected log levels', () => {
+      expect(LogLevel.SILENT).toBe('silent');
       expect(LogLevel.ERROR).toBe('error');
       expect(LogLevel.WARN).toBe('warn');
       expect(LogLevel.INFO).toBe('info');
@@ -77,6 +78,71 @@ describe('PackmindLogger', () => {
         const namedLogger = new PackmindLogger(name);
         expect(namedLogger.getName()).toBe(name);
       });
+    });
+  });
+
+  describe('SILENT level behavior', () => {
+    it('creates logger with SILENT level', () => {
+      logger = new PackmindLogger('SilentLogger', LogLevel.SILENT);
+      expect(logger).toBeInstanceOf(PackmindLogger);
+      expect(logger.getName()).toBe('SilentLogger');
+    });
+
+    it('does not execute logging methods in SILENT mode', () => {
+      logger = new PackmindLogger('SilentLogger', LogLevel.SILENT);
+
+      // Mock console to capture any potential output
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+
+      // These should all execute without throwing and without logging
+      expect(() => {
+        logger.error('Silent error');
+        logger.warn('Silent warn');
+        logger.info('Silent info');
+        logger.http('Silent http');
+        logger.verbose('Silent verbose');
+        logger.debug('Silent debug');
+        logger.silly('Silent silly');
+        logger.log(LogLevel.ERROR, 'Silent generic log');
+      }).not.toThrow();
+
+      // Verify no console output occurred
+      expect(consoleSpy).not.toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
+    });
+
+    it('can switch to SILENT mode after construction', () => {
+      logger = new PackmindLogger('TestLogger', LogLevel.INFO);
+
+      // Mock console to capture any potential output
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+
+      // Switch to silent mode
+      logger.setLevel(LogLevel.SILENT);
+
+      // These should not produce any output
+      expect(() => {
+        logger.error('Silent error after setLevel');
+        logger.info('Silent info after setLevel');
+      }).not.toThrow();
+
+      // Verify no console output occurred
+      expect(consoleSpy).not.toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
+    });
+
+    it('can switch from SILENT mode back to normal logging', () => {
+      logger = new PackmindLogger('TestLogger', LogLevel.SILENT);
+
+      // Switch back to normal logging
+      logger.setLevel(LogLevel.ERROR);
+
+      // This should work normally (though we can't easily test actual output)
+      expect(() => {
+        logger.error('Error after switching from silent');
+      }).not.toThrow();
     });
   });
 

@@ -47,14 +47,12 @@ export class RecipeService {
 
     try {
       const recipeId = createRecipeId(uuidv4());
-      this.logger.debug('Generated recipe ID', { recipeId });
 
       const recipe: Recipe = {
         id: recipeId,
         ...recipeData,
       };
 
-      this.logger.debug('Adding recipe to repository');
       const savedRecipe = await this.recipeRepository.add(recipe);
       this.logger.info('Recipe added to repository successfully', {
         recipeId,
@@ -206,21 +204,17 @@ export class RecipeService {
     });
 
     try {
-      // Check if the recipe exists
-      this.logger.debug('Checking if recipe exists', { recipeId });
       const existingRecipe = await this.recipeRepository.findById(recipeId);
       if (!existingRecipe) {
         this.logger.error('Recipe not found for update', { recipeId });
         throw new Error(`Recipe with id ${recipeId} not found`);
       }
 
-      // Update the recipe
       const updatedRecipe: Recipe = {
         id: recipeId,
         ...recipeData,
       };
 
-      this.logger.debug('Updating recipe in repository');
       const savedRecipe = await this.recipeRepository.add(updatedRecipe);
       this.logger.info('Recipe updated in repository successfully', {
         recipeId,
@@ -241,8 +235,6 @@ export class RecipeService {
     this.logger.info('Deleting recipe and all its versions', { recipeId });
 
     try {
-      // Check if the recipe exists
-      this.logger.debug('Checking if recipe exists for deletion', { recipeId });
       const recipe = await this.recipeRepository.findById(recipeId);
       if (!recipe) {
         this.logger.error('Recipe not found for deletion', { recipeId });

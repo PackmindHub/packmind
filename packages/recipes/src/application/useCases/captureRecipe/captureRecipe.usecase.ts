@@ -1,36 +1,43 @@
 import { RecipeService } from '../../services/RecipeService';
 import { RecipeVersionService } from '../../services/RecipeVersionService';
 import slug from 'slug';
-import { LogLevel, PackmindLogger, AiNotConfigured } from '@packmind/shared';
-import { OrganizationId, UserId } from '@packmind/accounts';
+import {
+  LogLevel,
+  PackmindLogger,
+  AiNotConfigured,
+  ICaptureRecipeUseCase,
+  CaptureRecipeCommand,
+  CaptureRecipeResponse,
+} from '@packmind/shared';
 import { RecipeSummaryService } from '../../services/RecipeSummaryService';
+import { createOrganizationId, createUserId } from '@packmind/accounts';
 
 const origin = 'CaptureRecipeUsecase';
 
-export class CaptureRecipeUsecase {
+export class CaptureRecipeUsecase implements ICaptureRecipeUseCase {
   constructor(
     private readonly recipeService: RecipeService,
     private readonly recipeVersionService: RecipeVersionService,
     private readonly recipeSummaryService: RecipeSummaryService,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
-      LogLevel.DEBUG,
+      LogLevel.INFO,
     ),
   ) {
     this.logger.info('CaptureRecipeUsecase initialized');
   }
 
-  public async captureRecipe({
-    name,
-    content,
-    organizationId,
-    userId,
-  }: {
-    name: string;
-    content: string;
-    organizationId: OrganizationId;
-    userId: UserId;
-  }) {
+  public async execute(
+    command: CaptureRecipeCommand,
+  ): Promise<CaptureRecipeResponse> {
+    const {
+      name,
+      content,
+      organizationId: orgIdString,
+      userId: userIdString,
+    } = command;
+    const organizationId = createOrganizationId(orgIdString);
+    const userId = createUserId(userIdString);
     this.logger.info('Starting captureRecipe process', {
       name,
       organizationId,
@@ -38,14 +45,10 @@ export class CaptureRecipeUsecase {
     });
 
     try {
-      this.logger.debug('Generating slug from recipe name', { name });
       const recipeSlug = slug(name);
-      this.logger.debug('Slug generated', { slug: recipeSlug });
 
       // Business logic: Create recipe with initial version 1
       const initialVersion = 1;
-
-      this.logger.debug('Creating recipe entity');
       const recipe = await this.recipeService.addRecipe({
         name,
         content,
@@ -65,7 +68,6 @@ export class CaptureRecipeUsecase {
       // Generate summary for the recipe version
       let summary: string | null = null;
       try {
-        this.logger.debug('Generating summary for recipe version');
         summary = await this.recipeSummaryService.createRecipeSummary({
           recipeId: recipe.id,
           name,
@@ -75,9 +77,6 @@ export class CaptureRecipeUsecase {
           summary: null,
           gitCommit: undefined,
           userId, // UI creation has a user
-        });
-        this.logger.debug('Summary generated successfully', {
-          summaryLength: summary.length,
         });
       } catch (summaryError) {
         if (summaryError instanceof AiNotConfigured) {
@@ -101,7 +100,6 @@ export class CaptureRecipeUsecase {
         }
       }
 
-      this.logger.debug('Creating initial recipe version');
       const recipeVersion = await this.recipeVersionService.addRecipeVersion({
         recipeId: recipe.id,
         name,

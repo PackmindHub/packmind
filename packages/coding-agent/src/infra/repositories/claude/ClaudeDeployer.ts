@@ -119,26 +119,13 @@ export class ClaudeDeployer implements ICodingAgentDeployer {
   ): Promise<string> {
     const repoName = `${gitRepo.owner}/${gitRepo.repo}`;
 
-    const packmindInstructions =
-      GenericRecipeSectionWriter.generateRecipesSection({
-        agentName: 'Claude Code',
-        repoName,
-        recipesIndexPath: '@.packmind/recipes-index.md',
-      });
-
-    // Check if recipe instructions are already present
-    const hasRecipeInstructions =
-      this.checkForRecipeInstructions(existingContent);
-
-    if (hasRecipeInstructions) {
-      this.logger.debug(
-        'Recipe instructions already present in Claude content',
-      );
-      return existingContent;
-    }
-
-    // Add recipe instructions
-    return this.addRecipeInstructions(existingContent, packmindInstructions);
+    return GenericRecipeSectionWriter.replace({
+      agentName: 'Claude Code',
+      repoName,
+      recipesIndexPath: '@.packmind/recipes-index.md',
+      currentContent: existingContent,
+      commentMarker: 'Packmind recipes',
+    });
   }
 
   /**
@@ -170,24 +157,6 @@ export class ClaudeDeployer implements ICodingAgentDeployer {
   }
 
   /**
-   * Check if recipe instructions are already present
-   */
-  private checkForRecipeInstructions(existingContent: string): boolean {
-    const requiredHeader = '# Packmind Recipes';
-    const requiredInstructionPhrase = '🚨 **MANDATORY STEP** 🚨';
-    const requiredFileReference = 'recipes-index.md';
-
-    const headerRegex = new RegExp(`^${requiredHeader}\\s*$`, 'm');
-    const hasExactHeader = headerRegex.test(existingContent);
-    const hasInstructions = existingContent.includes(requiredInstructionPhrase);
-    const hasFileReference = existingContent
-      .toLowerCase()
-      .includes(requiredFileReference.toLowerCase());
-
-    return hasExactHeader && hasInstructions && hasFileReference;
-  }
-
-  /**
    * Check if standards instructions are already present
    */
   private checkForStandardsInstructions(existingContent: string): boolean {
@@ -203,26 +172,6 @@ export class ClaudeDeployer implements ICodingAgentDeployer {
       .includes(requiredFileReference.toLowerCase());
 
     return hasExactHeader && hasInstructions && hasFileReference;
-  }
-
-  /**
-   * Add recipe instructions to existing content
-   */
-  private addRecipeInstructions(
-    existingContent: string,
-    instructions: string,
-  ): string {
-    const instructionsBlock = `# Packmind Recipes
-
-${instructions}`;
-
-    if (!existingContent.trim()) {
-      return instructionsBlock;
-    }
-
-    // Always append at the end, preserving existing content
-    const separator = existingContent.endsWith('\n') ? '\n' : '\n\n';
-    return `${existingContent}${separator}${instructionsBlock}`;
   }
 
   /**

@@ -1,4 +1,4 @@
-# \[Unreleased\]
+# [Unreleased]
 
 ## Added
 
@@ -17,7 +17,7 @@
 - A standard with the same name as a previously deleted one can now be deleted (#135)
 - Fix redirection after deleting a standard (#145)
 
-# 1.0.0 - (Sep 05th 2025)
+# [1.0.0] - 2015-09-05
 
 ## Added
 
@@ -32,5 +32,5 @@
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
-[unreleased]: https://github.com/PackmindHub/packmind-monorepo/compare/release%2F1.0.0...HEAD
-[1.0.0]: https://github.com/PackmindHub/packmind-monorepo/releases/tag/release%2F1.0.0
+[Unreleased]: https://github.com/PackmindHub/packmind-monorepo/compare/release/1.0.0...HEAD
+[1.0.0]: https://github.com/PackmindHub/packmind-monorepo/compare/1286712f81d6e2b8e18888ee8e23c5503a52c887...release/1.0.0

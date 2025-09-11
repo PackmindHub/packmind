@@ -357,34 +357,35 @@ describe('GitHub Copilot Deployment Integration', () => {
   });
 
   describe('when .github/instructions/packmind-recipes-index.instructions.md already exists', () => {
-    const existingContent = `---
-applyTo: '**'
----
-
-# Packmind Recipes
-
-🚨 **MANDATORY STEP** 🚨
-
-Before writing, editing, or generating ANY code:
-
-**ALWAYS READ**: the available recipes below to see what recipes are available
-
-## Recipe Usage Rules:
-- **MANDATORY**: Always check the recipes list first
-- **CONDITIONAL**: Only read/use individual recipes if they are relevant to your task
-- **OPTIONAL**: If no recipes are relevant, proceed without using any
-
-## Recipe Usage Tracking:
-When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you MUST call the 'packmind_notify_recipe_usage' MCP tool with:
-* Recipe slugs array (e.g., ["recipe-name"] from "recipe-name.md")
-* aiAgent: "GitHub Copilot"
-* gitRepo: "test-owner/test-repo"
-
-**Remember: Always check the recipes list first, but only use recipes that actually apply to your specific task.**
-
-## Available Recipes
-
-- [Existing Recipe](.packmind/recipes/existing-recipe.md) : An existing recipe that was already deployed`;
+    const existingContent =
+      '---\n' +
+      "applyTo: '**'\n" +
+      '---\n' +
+      '\n' +
+      '# Packmind Recipes\n' +
+      '\n' +
+      '🚨 **MANDATORY STEP** 🚨\n' +
+      '\n' +
+      'Before writing, editing, or generating ANY code:\n' +
+      '\n' +
+      '**ALWAYS READ**: the available recipes below to see what recipes are available\n' +
+      '\n' +
+      '## Recipe Usage Rules:\n' +
+      '- **MANDATORY**: Always check the recipes list first\n' +
+      '- **CONDITIONAL**: Only read/use individual recipes if they are relevant to your task\n' +
+      '- **OPTIONAL**: If no recipes are relevant, proceed without using any\n' +
+      '\n' +
+      '## Recipe Usage Tracking:\n' +
+      "When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you MUST call the 'packmind_notify_recipe_usage' MCP tool with:\n" +
+      '* Recipe slugs array (e.g., ["recipe-name"] from "recipe-name.md")\n' +
+      '* aiAgent: "GitHub Copilot"\n' +
+      '* gitRepo: "test-owner/test-repo"\n' +
+      '\n' +
+      '**Remember: Always check the recipes list first, but only use recipes that actually apply to your specific task.**`\n' +
+      '\n' +
+      '## Available Recipes\n' +
+      '\n' +
+      '- [Test Recipe for Copilot](.packmind/recipes/test-recipe-for-copilot.md) : Test recipe for deployment';
 
     beforeEach(() => {
       // Mock GitHexa.getFileFromRepo to return existing content

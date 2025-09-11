@@ -1,5 +1,7 @@
 import { Input, InputProps } from '@chakra-ui/react';
 
+const DEFAULT_MAX_LENGTH = 255;
+
 export interface IPMInputProps extends InputProps {
   label?: string;
   error?: string;
@@ -7,11 +9,18 @@ export interface IPMInputProps extends InputProps {
 }
 
 export const PMInput = (props: IPMInputProps) => {
-  const { label, error, helperText, ...inputProps } = props;
+  const {
+    label,
+    error,
+    helperText,
+    maxLength = DEFAULT_MAX_LENGTH,
+    ...inputProps
+  } = props;
 
   return (
     <Input
       {...inputProps}
+      maxLength={maxLength}
       backgroundColor={'{colors.background.tertiary}'}
       borderColor={error ? 'red.500' : 'transparent'}
       _placeholder={{ color: '{colors.text.faded}' }}

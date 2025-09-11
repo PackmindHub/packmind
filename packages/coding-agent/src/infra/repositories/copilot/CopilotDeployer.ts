@@ -33,7 +33,6 @@ export class CopilotDeployer implements ICodingAgentDeployer {
     const updatedContent = await this.generateRecipeContent(
       recipeVersions,
       gitRepo,
-      existingContent,
     );
 
     const fileUpdates: FileUpdates = {
@@ -112,7 +111,6 @@ export class CopilotDeployer implements ICodingAgentDeployer {
   private async generateRecipeContent(
     recipeVersions: RecipeVersion[],
     gitRepo: GitRepo,
-    existingContent: string,
   ): Promise<string> {
     const repoName = `${gitRepo.owner}/${gitRepo.repo}`;
 
@@ -126,21 +124,11 @@ export class CopilotDeployer implements ICodingAgentDeployer {
         recipesSection,
       });
 
-    // Check if recipe instructions are already present
-    const hasRecipeInstructions =
-      this.checkForRecipeInstructions(existingContent);
+    return `---
+applyTo: '**'
+---
 
-    if (hasRecipeInstructions) {
-      this.logger.debug(
-        'Recipe instructions already present in Copilot recipes index content',
-      );
-      // When content already exists, return existing content unchanged
-      // The combination of recipes is handled at a higher level
-      return existingContent;
-    }
-
-    // Create new content with Copilot header
-    return this.createRecipesIndexContent(packmindInstructions);
+${packmindInstructions}`;
   }
 
   /**
@@ -190,35 +178,5 @@ Apply the coding rules described #file:../../.packmind/standards/${standardVersi
       path,
       content,
     };
-  }
-
-  /**
-   * Check if recipe instructions are already present
-   */
-  private checkForRecipeInstructions(existingContent: string): boolean {
-    const requiredHeaderPrefix = '# Packmind Recipes';
-    const requiredInstructionPhrase = '🚨 **MANDATORY STEP** 🚨';
-    const requiredAvailableRecipesSection = '## Available Recipes';
-
-    const hasHeaderPrefix = existingContent.includes(requiredHeaderPrefix);
-    const hasInstructions = existingContent.includes(requiredInstructionPhrase);
-    const hasAvailableRecipesSection = existingContent.includes(
-      requiredAvailableRecipesSection,
-    );
-
-    return hasHeaderPrefix && hasInstructions && hasAvailableRecipesSection;
-  }
-
-  /**
-   * Create the complete recipes index content
-   */
-  private createRecipesIndexContent(instructions: string): string {
-    return `---
-applyTo: '**'
----
-
-# Packmind Recipes
-
-${instructions}`;
   }
 }

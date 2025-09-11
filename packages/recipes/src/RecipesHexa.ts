@@ -3,6 +3,7 @@ import {
   HexaRegistry,
   PackmindLogger,
   QueryOption,
+  CaptureRecipeCommand,
 } from '@packmind/shared';
 import { RecipesHexaFactory } from './RecipesHexaFactory';
 import { Recipe, RecipeId } from './domain/entities/Recipe';
@@ -82,13 +83,8 @@ export class RecipesHexa extends BaseHexa {
   /**
    * Capture a new recipe with initial content
    */
-  public async captureRecipe(params: {
-    name: string;
-    content: string;
-    organizationId: OrganizationId;
-    userId: UserId;
-  }): Promise<Recipe> {
-    return this.hexa.useCases.captureRecipe(params);
+  public async captureRecipe(command: CaptureRecipeCommand): Promise<Recipe> {
+    return this.hexa.useCases.captureRecipe(command);
   }
 
   /**

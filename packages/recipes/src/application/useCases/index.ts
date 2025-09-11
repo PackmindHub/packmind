@@ -9,7 +9,11 @@ import { ListRecipeVersionsUsecase } from './listRecipeVersions/listRecipeVersio
 import { GetRecipeVersionUsecase } from './getRecipeVersion/getRecipeVersion.usecase';
 import { DeleteRecipesBatchUsecase } from './deleteRecipesBatch/deleteRecipesBatch.usecase';
 import { IRecipesServices } from '../IRecipesServices';
-import { PackmindLogger, QueryOption } from '@packmind/shared';
+import {
+  CaptureRecipeCommand,
+  PackmindLogger,
+  QueryOption,
+} from '@packmind/shared';
 import { GitHexa } from '@packmind/git';
 import { OrganizationId, UserId } from '@packmind/accounts';
 import { RecipeId } from '@packmind/shared';
@@ -90,13 +94,8 @@ export class RecipeUseCases {
     this.logger.info('RecipeUseCases initialized successfully');
   }
 
-  public captureRecipe(param: {
-    name: string;
-    content: string;
-    organizationId: OrganizationId;
-    userId: UserId;
-  }) {
-    return this._captureRecipe.captureRecipe(param);
+  public captureRecipe(command: CaptureRecipeCommand) {
+    return this._captureRecipe.execute(command);
   }
 
   public updateRecipeFromUI(param: {
