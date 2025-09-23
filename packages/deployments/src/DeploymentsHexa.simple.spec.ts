@@ -108,7 +108,7 @@ describe('DeploymentsHexa - Simple Integration', () => {
   describe('constructor', () => {
     it('initializes successfully with valid dependencies', () => {
       expect(() => {
-        new DeploymentsHexa(mockRegistry, mockLogger);
+        new DeploymentsHexa(mockRegistry, { logger: mockLogger });
       }).not.toThrow();
     });
 
@@ -128,7 +128,7 @@ describe('DeploymentsHexa - Simple Integration', () => {
         });
 
         expect(() => {
-          new DeploymentsHexa(mockRegistry, mockLogger);
+          new DeploymentsHexa(mockRegistry, { logger: mockLogger });
         }).toThrow('CodingAgentHexa not found in registry');
       });
     });
@@ -146,12 +146,12 @@ describe('DeploymentsHexa - Simple Integration', () => {
         });
 
         expect(() => {
-          new DeploymentsHexa(mockRegistry, mockLogger);
+          new DeploymentsHexa(mockRegistry, { logger: mockLogger });
         }).toThrow('GitHexa not found in registry');
       });
     });
 
-    describe('when RecipesHexa is not in registry', () => {
+    describe('when StandardsHexa is not in registry', () => {
       it('throws error', () => {
         mockRegistry.get = jest.fn().mockImplementation((type) => {
           if (type === CodingAgentHexa) {
@@ -160,19 +160,22 @@ describe('DeploymentsHexa - Simple Integration', () => {
           if (type === GitHexa) {
             return mockGitHexa;
           }
-          return null; // RecipesHexa not found
+          // StandardsHexa not found, RecipesHexa is optional
+          return null;
         });
 
         expect(() => {
-          new DeploymentsHexa(mockRegistry, mockLogger);
-        }).toThrow('RecipesHexa not found in registry');
+          new DeploymentsHexa(mockRegistry, { logger: mockLogger });
+        }).toThrow('StandardsHexa not found in registry');
       });
     });
   });
 
   describe('destroy', () => {
     it('cleans up resources', () => {
-      const deploymentsHexa = new DeploymentsHexa(mockRegistry, mockLogger);
+      const deploymentsHexa = new DeploymentsHexa(mockRegistry, {
+        logger: mockLogger,
+      });
 
       deploymentsHexa.destroy();
     });

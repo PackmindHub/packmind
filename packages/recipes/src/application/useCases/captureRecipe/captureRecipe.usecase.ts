@@ -33,6 +33,7 @@ export class CaptureRecipeUsecase implements ICaptureRecipeUseCase {
     const {
       name,
       content,
+      summary: providedSummary,
       organizationId: orgIdString,
       userId: userIdString,
     } = command;
@@ -65,39 +66,53 @@ export class CaptureRecipeUsecase implements ICaptureRecipeUseCase {
         userId,
       });
 
-      // Generate summary for the recipe version
+      // Handle summary generation
       let summary: string | null = null;
-      try {
-        summary = await this.recipeSummaryService.createRecipeSummary({
-          recipeId: recipe.id,
-          name,
-          slug: recipeSlug,
-          content,
-          version: initialVersion,
-          summary: null,
-          gitCommit: undefined,
-          userId, // UI creation has a user
-        });
-      } catch (summaryError) {
-        if (summaryError instanceof AiNotConfigured) {
-          this.logger.warn(
-            'AI service not configured - proceeding without summary',
-            {
-              error: summaryError.message,
-            },
-          );
-        } else {
-          const errorMessage =
-            summaryError instanceof Error
-              ? summaryError.message
-              : String(summaryError);
-          this.logger.error(
-            'Failed to generate summary, proceeding without summary',
-            {
-              error: errorMessage,
-            },
-          );
+
+      // Check if summary is provided and not just whitespace
+      const shouldGenerateSummary =
+        !providedSummary || providedSummary.trim() === '';
+
+      if (shouldGenerateSummary) {
+        // Generate summary if not provided or empty
+        try {
+          summary = await this.recipeSummaryService.createRecipeSummary({
+            recipeId: recipe.id,
+            name,
+            slug: recipeSlug,
+            content,
+            version: initialVersion,
+            summary: null,
+            gitCommit: undefined,
+            userId, // UI creation has a user
+          });
+        } catch (summaryError) {
+          if (summaryError instanceof AiNotConfigured) {
+            this.logger.warn(
+              'AI service not configured - proceeding without summary',
+              {
+                error: summaryError.message,
+              },
+            );
+          } else {
+            const errorMessage =
+              summaryError instanceof Error
+                ? summaryError.message
+                : String(summaryError);
+            this.logger.error(
+              'Failed to generate summary, proceeding without summary',
+              {
+                error: errorMessage,
+              },
+            );
+          }
         }
+      } else {
+        // Use provided summary
+        this.logger.info('Use summary passed as input', {
+          recipeId: recipe.id,
+        });
+        summary = providedSummary;
       }
 
       const recipeVersion = await this.recipeVersionService.addRecipeVersion({

@@ -1,5 +1,6 @@
 import {
   BaseHexa,
+  BaseHexaOpts,
   HexaRegistry,
   IDeploymentPort,
   IStandardsPort,
@@ -39,16 +40,13 @@ const origin = 'StandardsHexa';
  */
 export class StandardsHexa extends BaseHexa {
   private readonly hexa: StandardsHexaFactory;
-  private readonly logger: PackmindLogger;
   private readonly standardsAdapter: IStandardsPort;
 
   constructor(
     registry: HexaRegistry,
-    logger: PackmindLogger = new PackmindLogger(origin),
+    opts: Partial<BaseHexaOpts> = { logger: new PackmindLogger(origin) },
   ) {
-    super(registry);
-
-    this.logger = logger;
+    super(registry, opts);
     this.logger.info('Initializing StandardsHexa');
 
     try {
@@ -112,6 +110,21 @@ export class StandardsHexa extends BaseHexa {
     scope: string | null;
   }): Promise<Standard> {
     return this.hexa.useCases.createStandard(params);
+  }
+
+  /**
+   * Create a new standard with rules and examples in a single operation
+   */
+  public async createStandardWithExamples(params: {
+    name: string;
+    description: string;
+    summary: string | null;
+    rules: import('@packmind/shared').RuleWithExamples[];
+    organizationId: OrganizationId;
+    userId: UserId;
+    scope: string | null;
+  }): Promise<Standard> {
+    return this.hexa.useCases.createStandardWithExamples(params);
   }
 
   /**

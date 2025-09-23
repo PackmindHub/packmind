@@ -2,7 +2,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { gitProviderGateway, repositoryGateway } from '../gateways';
 import { GitProviderId, GitRepoId } from '@packmind/git';
 import { AddRepositoryForm } from '../../types/GitProviderTypes';
-import { GET_GIT_PROVIDER_QUERY_KEY } from './GitProviderQueries';
+import { CheckDirectoryExistenceResult } from '@packmind/shared';
+import {
+  GET_GIT_PROVIDER_QUERY_KEY,
+  GET_GIT_PROVIDERS_QUERY_KEY,
+} from './GitProviderQueries';
 import {
   GET_RECIPES_DEPLOYMENT_OVERVIEW_QUERY_KEY,
   GET_STANDARDS_DEPLOYMENT_OVERVIEW_QUERY_KEY,
@@ -59,6 +63,9 @@ export const useAddRepositoryMutation = () => {
         queryKey: [GET_GIT_PROVIDER_QUERY_KEY, repo.providerId],
       });
       await queryClient.invalidateQueries({
+        queryKey: [GET_GIT_PROVIDERS_QUERY_KEY],
+      });
+      await queryClient.invalidateQueries({
         queryKey: [GET_STANDARDS_DEPLOYMENT_OVERVIEW_QUERY_KEY],
       });
       await queryClient.invalidateQueries({
@@ -94,6 +101,9 @@ export const useRemoveRepositoryMutation = () => {
         queryKey: [GET_REPOSITORIES_BY_PROVIDER_QUERY_KEY, providerId],
       });
       await queryClient.invalidateQueries({
+        queryKey: [GET_GIT_PROVIDERS_QUERY_KEY],
+      });
+      await queryClient.invalidateQueries({
         queryKey: [GET_GIT_PROVIDER_QUERY_KEY, providerId],
       });
       await queryClient.invalidateQueries({
@@ -108,6 +118,53 @@ export const useRemoveRepositoryMutation = () => {
     },
     onError: (error) => {
       console.error('Error removing repository:', error);
+    },
+  });
+};
+
+// Available Targets Query
+const GET_AVAILABLE_TARGETS_QUERY_KEY = 'availableTargets';
+
+export const getAvailableTargetsOptions = (
+  repositoryId: GitRepoId,
+  path?: string,
+  enabled = true,
+) => ({
+  queryKey: [GET_AVAILABLE_TARGETS_QUERY_KEY, repositoryId, path],
+  queryFn: () =>
+    gitProviderGateway.getAvailableRemoteDirectories(repositoryId, path),
+  enabled: !!repositoryId && enabled,
+  retry: false,
+});
+
+export const useGetAvailableTargetsQuery = (
+  repositoryId: GitRepoId,
+  path?: string,
+  enabled = true,
+) => {
+  return useQuery(getAvailableTargetsOptions(repositoryId, path, enabled));
+};
+
+// Check Directory Existence Mutation
+export const useCheckDirectoryExistenceMutation = () => {
+  return useMutation({
+    mutationFn: async ({
+      repositoryId,
+      directoryPath,
+      branch,
+    }: {
+      repositoryId: GitRepoId;
+      directoryPath: string;
+      branch: string;
+    }): Promise<CheckDirectoryExistenceResult> => {
+      return gitProviderGateway.checkDirectoryExistence(
+        repositoryId,
+        directoryPath,
+        branch,
+      );
+    },
+    onError: (error) => {
+      console.error('Error checking directory existence:', error);
     },
   });
 };

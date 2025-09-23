@@ -49,11 +49,13 @@ docker compose up -d
 
 The MCP server lets you interact with Packmind within your AI Agents sessions, to create new recipes and coding rules for instances.
 
-Go into **Settings** and get your MCP Access token.
+Go into **Account Settings** and get your MCP Access token.
 
 **NB: make sure the URL of Packmind matches the current URL you're using to accessing Packmind**;
 
 ## Create your first standard and rules
+
+### Understand Standards and Rules
 
 A standard is unit of rules and guidelines that define how code should be written, organized, and documented.
 
@@ -71,6 +73,26 @@ Here is a basic example of standard:
 
 ---
 
+### Create a Standard with MCP
+
+You can create a standard directly from your IDE using the MCP server. This is particularly useful when you want to extract coding rules from existing code files.
+
+Use commands like:
+
+_"Create a Packmind standard 'Unit tests with Jest' and extract coding rules by analyzing the file @test.spec.ts"_
+
+Rules are optional when creating a standard through MCP - you can create the standard first and add rules later.
+
+### Add rule to an existing standard with MCP
+
+While working with your AI Agent, you often provide instructions regarding code guidelines and standards.
+
+To capitalize on it and not keep it locally, you can use one tool from the MCP like this:
+
+_"Add a rule to our standards 'Back-end unit tests' that states that one single expect must be set for each test"_
+
+### Create Standards through UI
+
 Go in the **Standards** menu and create your first standard.
 The description area supports Markdown so you can give more context about it.
 
@@ -80,14 +102,6 @@ The _scope_ let you define files and folders patterns where the standard applies
 For instance, you may want to use `**/*.spec.ts` if your standards is related to tests.
 
 You can update your standard later to add and remove rules. Each rule can be documented with code examples as well.
-
-### Add rule to an existing standard with MCP
-
-While working with your AI Agent, you often provide instructions regarding code guidelines and standards.
-
-To capitalize on it and not keep it locally, you can use one tool from the MCP like this:
-
-_"Add a rule to our standards 'Back-end unit tests' that states that one single expect must be set for each test"_
 
 ## Create Recipes
 
@@ -136,6 +150,19 @@ Files are also written in the `.packmind` folder to be reused by these agents.
 
 _Need support for a new AI agent? You can create an issue in our repository to request support for additional AI coding assistants_
 
+### Configure Deployment Targets
+
+Before distributing your standards and recipes, you can configure **Targets** in the **Targets** menu. A target defines a specific path within your Git repository where standards and recipes will be deployed.
+
+Targets are particularly useful in monorepo environments where you want to apply different standards to different parts of your codebase. For example:
+
+- `/frontend/` - Apply frontend-specific standards to your React components
+- `/apps/api/` - Deploy backend standards to your API code
+- `/packages/shared/` - Apply shared library standards to common utilities
+- `/` (Created by default when you add a Git Repo)
+
+Each target creates instruction files in its specified path, allowing AI agents to follow the appropriate standards based on the code they're working with.
+
 ### Connect Git Repositories
 
 You can connect several Git providers in Packmind:
@@ -156,12 +183,16 @@ You can connect several Git providers in Packmind:
 
 Once you've added your providers, **add repositories** for each provider.
 
+When you add a Git repository, Packmind automatically creates a default target with the root path "/" for that repository. This allows you to immediately start deploying standards and recipes to the entire repository. You can later create additional targets for specific paths within the repository if needed.
+
 ### Distribute Standards and Recipes
 
 Go on the respective **Recipes** and **Standards** menu to deploy them on Git repositories.
 
 You can either deploy a single or multiple standards/recipes at the same time.
 This can be achieved on the page that lists standards and recipes, or in the dedicated page for each standard and recipes.
+
+When deploying, you must choose one or several targets where your standards and recipes will be applied. This allows you to customize which parts of your repositories receive specific guidelines.
 
 This distribution creates a single commit for each target repository.
 

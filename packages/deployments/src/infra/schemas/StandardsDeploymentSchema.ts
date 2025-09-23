@@ -22,6 +22,15 @@ export const StandardsDeploymentSchema = new EntitySchema<
       name: 'organization_id',
       type: 'uuid',
     },
+    // New columns for single target model (required for new deployments)
+    status: {
+      type: 'varchar',
+      nullable: false, // Required for new standards deployments
+    },
+    error: {
+      type: 'text',
+      nullable: true, // Can be null for successful deployments
+    },
     ...uuidSchema,
     ...timestampsSchemas,
     ...softDeleteSchemas,
@@ -42,35 +51,26 @@ export const StandardsDeploymentSchema = new EntitySchema<
         },
       },
     },
-    gitRepos: {
-      type: 'many-to-many',
-      target: 'GitRepo',
-      joinTable: {
-        name: 'standard_deployment_git_repos',
-        joinColumn: {
-          name: 'standard_deployment_id',
-          referencedColumnName: 'id',
-        },
-        inverseJoinColumn: {
-          name: 'git_repo_id',
-          referencedColumnName: 'id',
-        },
-      },
-    },
-    gitCommits: {
-      type: 'many-to-many',
+    // Old junction table relations removed for standards (now using direct relations)
+    // Note: Kept as empty arrays in code for backward compatibility during transition
+    // Direct relations for single target model (required for new deployments)
+    gitCommit: {
+      type: 'many-to-one',
       target: 'GitCommit',
-      joinTable: {
-        name: 'standard_deployment_git_commits',
-        joinColumn: {
-          name: 'standard_deployment_id',
-          referencedColumnName: 'id',
-        },
-        inverseJoinColumn: {
-          name: 'git_commit_id',
-          referencedColumnName: 'id',
-        },
+      joinColumn: {
+        name: 'git_commit_id',
+        referencedColumnName: 'id',
       },
+      nullable: true, // Can be null for failed deployments
+    },
+    target: {
+      type: 'many-to-one',
+      target: 'Target',
+      joinColumn: {
+        name: 'target_id',
+        referencedColumnName: 'id',
+      },
+      nullable: false, // Required for new standards deployments
     },
   },
   indices: [

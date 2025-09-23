@@ -10,12 +10,22 @@ import {
 } from '../../../domain/entities/GitProvider';
 import { GitRepo, createGitRepoId } from '../../../domain/entities/GitRepo';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
+import {
+  IDeploymentPort,
+  Target,
+  createTargetId,
+  GitRepoAlreadyExistsError,
+  GitProviderNotFoundError,
+  GitProviderOrganizationMismatchError,
+} from '@packmind/shared';
+import { stubLogger } from '@packmind/shared/test';
 import { v4 as uuidv4 } from 'uuid';
 
 describe('AddGitRepoUseCase', () => {
   let useCase: AddGitRepoUseCase;
   let mockGitProviderService: jest.Mocked<GitProviderService>;
   let mockGitRepoService: jest.Mocked<GitRepoService>;
+  let mockDeploymentPort: jest.Mocked<IDeploymentPort>;
 
   const organizationId = createOrganizationId(uuidv4());
   const userId = createUserId(uuidv4());
@@ -33,7 +43,16 @@ describe('AddGitRepoUseCase', () => {
       addGitRepo: jest.fn(),
     } as Partial<jest.Mocked<GitRepoService>> as jest.Mocked<GitRepoService>;
 
-    useCase = new AddGitRepoUseCase(mockGitProviderService, mockGitRepoService);
+    mockDeploymentPort = {
+      addTarget: jest.fn(),
+    } as Partial<jest.Mocked<IDeploymentPort>> as jest.Mocked<IDeploymentPort>;
+
+    useCase = new AddGitRepoUseCase(
+      mockGitProviderService,
+      mockGitRepoService,
+      mockDeploymentPort,
+      stubLogger(),
+    );
   });
 
   afterEach(() => {
@@ -140,6 +159,71 @@ describe('AddGitRepoUseCase', () => {
     });
   });
 
+  describe('default target creation', () => {
+    it('creates default target if deployment port is available', async () => {
+      const useCaseWithDeployment = new AddGitRepoUseCase(
+        mockGitProviderService,
+        mockGitRepoService,
+        mockDeploymentPort,
+        stubLogger(),
+      );
+
+      const command: AddGitRepoCommand = {
+        userId,
+        organizationId,
+        gitProviderId,
+        owner: 'testowner',
+        repo: 'testrepo',
+        branch: 'main',
+      };
+
+      const mockProvider: GitProvider = {
+        id: gitProviderId,
+        source: GitProviderVendors.github,
+        organizationId,
+        url: 'https://github.com',
+        token: 'token',
+      };
+
+      const expectedResult: GitRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'testowner',
+        repo: 'testrepo',
+        branch: 'main',
+        providerId: gitProviderId,
+      };
+
+      const mockTarget: Target = {
+        id: createTargetId(uuidv4()),
+        name: 'Default',
+        path: '.',
+        gitRepoId: expectedResult.id,
+      };
+
+      mockGitProviderService.findGitProviderById.mockResolvedValue(
+        mockProvider,
+      );
+      mockGitRepoService.findGitRepoByOwnerRepoAndBranchInOrganization.mockResolvedValue(
+        null,
+      );
+      mockGitRepoService.addGitRepo.mockResolvedValue(expectedResult);
+      mockDeploymentPort.addTarget.mockResolvedValue(mockTarget);
+
+      const result = await useCaseWithDeployment.execute(command);
+
+      expect(result).toEqual(expectedResult);
+      expect(mockDeploymentPort.addTarget).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Default',
+          path: '/',
+          gitRepoId: expectedResult.id,
+          userId: expect.any(String),
+          organizationId: expect.any(String),
+        }),
+      );
+    });
+  });
+
   describe('validation errors', () => {
     it('throws error for missing git provider ID', async () => {
       const command: AddGitRepoCommand = {
@@ -214,7 +298,7 @@ describe('AddGitRepoUseCase', () => {
       mockGitProviderService.findGitProviderById.mockResolvedValue(null);
 
       await expect(useCase.execute(command)).rejects.toThrow(
-        'Git provider not found',
+        GitProviderNotFoundError,
       );
     });
 
@@ -241,7 +325,7 @@ describe('AddGitRepoUseCase', () => {
       );
 
       await expect(useCase.execute(command)).rejects.toThrow(
-        'Git provider does not belong to the specified organization',
+        GitProviderOrganizationMismatchError,
       );
     });
 
@@ -279,7 +363,7 @@ describe('AddGitRepoUseCase', () => {
       );
 
       await expect(useCase.execute(command)).rejects.toThrow(
-        "Repository testowner/testrepo on branch 'main' already exists in this organization",
+        GitRepoAlreadyExistsError,
       );
     });
   });

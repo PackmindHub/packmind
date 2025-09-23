@@ -2,7 +2,7 @@ import { RecipesServices } from './application/services/RecipesServices';
 import { RecipesRepositories } from './infra/repositories/RecipesRepositories';
 import { DataSource } from 'typeorm';
 import { RecipeUseCases } from './application/useCases';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger, IDeploymentPort } from '@packmind/shared';
 import { GitHexa } from '@packmind/git';
 import { IRecipesRepositories } from './domain/repositories/IRecipesRepositories';
 
@@ -17,6 +17,7 @@ export class RecipesHexaFactory {
   constructor(
     dataSource: DataSource,
     gitHexa: GitHexa,
+    deploymentPort?: IDeploymentPort,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('Initializing RecipesHexa');
@@ -40,6 +41,7 @@ export class RecipesHexaFactory {
       this.useCases = new RecipeUseCases(
         this.recipesServices,
         this.gitHexa,
+        deploymentPort,
         this.logger,
       );
 
@@ -50,5 +52,12 @@ export class RecipesHexaFactory {
       });
       throw error;
     }
+  }
+
+  /**
+   * Update the deployment port for webhook use cases
+   */
+  updateDeploymentPort(deploymentPort: IDeploymentPort): void {
+    this.useCases.updateDeploymentPort(deploymentPort);
   }
 }

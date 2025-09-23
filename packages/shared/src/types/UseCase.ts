@@ -8,6 +8,11 @@ export type PackmindCommand = {
   userId: string;
   organizationId: string;
 };
+
+export type SystemPackmindCommand = {
+  organizationId: string;
+  userId?: string; // Optional for system operations
+};
 export type PackmindCommandBody<Command extends PackmindCommand> = Omit<
   Command,
   'userId' | 'organizationId'
@@ -24,6 +29,13 @@ export interface IPublicUseCase<
 
 export interface IUseCase<
   Command extends PackmindCommand,
+  Result extends PackmindResult,
+> {
+  execute: (command: Command) => Promise<Result>;
+}
+
+export interface ISystemUseCase<
+  Command extends SystemPackmindCommand,
   Result extends PackmindResult,
 > {
   execute: (command: Command) => Promise<Result>;

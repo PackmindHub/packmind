@@ -1,0 +1,20 @@
+apiVersion: v2
+name: packmind
+description: A Helm chart for Packmind - AI-powered coding assistance platform
+type: application
+version: 1.0.0
+appVersion: 'latest'
+home: https://packmind.com
+sources:
+  - https://github.com/PackmindHub/packmind-monorepo
+keywords:
+  - ai
+  - coding
+  - development
+  - recipes
+  - standards
+maintainers:
+  - name: Packmind Team
+    email: support@packmind.com
+annotations:
+  category: Development

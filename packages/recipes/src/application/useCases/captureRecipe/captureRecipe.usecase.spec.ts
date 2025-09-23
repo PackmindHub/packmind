@@ -251,8 +251,118 @@ describe('CaptureRecipeUsecase', () => {
       });
     });
 
-    describe('when summary generation fails due to missing API key', () => {
-      it('logs warning instead of error and proceeds without summary', async () => {
+    describe('when summary is provided', () => {
+      it('uses provided summary', async () => {
+        const providedSummary = 'This is a custom summary provided by the user';
+        const inputData = {
+          name: 'Test Recipe',
+          content: 'Test content',
+          summary: providedSummary,
+          organizationId: createOrganizationId(uuidv4()),
+          userId: createUserId(uuidv4()),
+        };
+
+        const createdRecipe: Recipe = recipeFactory({
+          id: createRecipeId(uuidv4()),
+          name: inputData.name,
+          content: inputData.content,
+        });
+        const createdRecipeVersion: RecipeVersion = recipeVersionFactory({
+          id: createRecipeVersionId(uuidv4()),
+          recipeId: createdRecipe.id,
+        });
+
+        recipeService.addRecipe.mockResolvedValue(createdRecipe);
+        recipeVersionService.addRecipeVersion.mockResolvedValue(
+          createdRecipeVersion,
+        );
+        mockSlug.mockReturnValue('test-recipe');
+
+        const result = await captureRecipeUsecase.execute(inputData);
+
+        expect(result).toEqual(createdRecipe);
+        expect(recipeSummaryService.createRecipeSummary).not.toHaveBeenCalled();
+        expect(recipeVersionService.addRecipeVersion).toHaveBeenCalledWith(
+          expect.objectContaining({
+            summary: providedSummary,
+          }),
+        );
+      });
+    });
+
+    describe('when summary is not provided', () => {
+      it('generates summary for null summary', async () => {
+        const inputData = {
+          name: 'Test Recipe',
+          content: 'Test content',
+          organizationId: createOrganizationId(uuidv4()),
+          userId: createUserId(uuidv4()),
+        };
+
+        const createdRecipe: Recipe = recipeFactory({
+          id: createRecipeId(uuidv4()),
+          name: inputData.name,
+          content: inputData.content,
+        });
+        const createdRecipeVersion: RecipeVersion = recipeVersionFactory({
+          id: createRecipeVersionId(uuidv4()),
+          recipeId: createdRecipe.id,
+        });
+
+        recipeService.addRecipe.mockResolvedValue(createdRecipe);
+        recipeVersionService.addRecipeVersion.mockResolvedValue(
+          createdRecipeVersion,
+        );
+        mockSlug.mockReturnValue('test-recipe');
+
+        const result = await captureRecipeUsecase.execute(inputData);
+
+        expect(result).toEqual(createdRecipe);
+        expect(recipeSummaryService.createRecipeSummary).toHaveBeenCalled();
+        expect(recipeVersionService.addRecipeVersion).toHaveBeenCalledWith(
+          expect.objectContaining({
+            summary: 'AI-generated summary',
+          }),
+        );
+      });
+
+      it('generates summary for empty string summary', async () => {
+        const inputData = {
+          name: 'Test Recipe',
+          content: 'Test content',
+          summary: '   ', // Empty/whitespace string
+          organizationId: createOrganizationId(uuidv4()),
+          userId: createUserId(uuidv4()),
+        };
+
+        const createdRecipe: Recipe = recipeFactory({
+          id: createRecipeId(uuidv4()),
+          name: inputData.name,
+          content: inputData.content,
+        });
+        const createdRecipeVersion: RecipeVersion = recipeVersionFactory({
+          id: createRecipeVersionId(uuidv4()),
+          recipeId: createdRecipe.id,
+        });
+
+        recipeService.addRecipe.mockResolvedValue(createdRecipe);
+        recipeVersionService.addRecipeVersion.mockResolvedValue(
+          createdRecipeVersion,
+        );
+        mockSlug.mockReturnValue('test-recipe');
+
+        const result = await captureRecipeUsecase.execute(inputData);
+
+        expect(result).toEqual(createdRecipe);
+        expect(recipeSummaryService.createRecipeSummary).toHaveBeenCalled();
+        expect(recipeVersionService.addRecipeVersion).toHaveBeenCalledWith(
+          expect.objectContaining({
+            summary: 'AI-generated summary',
+          }),
+        );
+      });
+
+      it('handles AI service not configured gracefully', async () => {
         const inputData = {
           name: 'Test Recipe',
           content: 'Test content',
@@ -290,10 +400,8 @@ describe('CaptureRecipeUsecase', () => {
           }),
         );
       });
-    });
 
-    describe('when summary generation fails for other reasons', () => {
-      it('proceeds without summary', async () => {
+      it('handles summary generation failure gracefully', async () => {
         const inputData = {
           name: 'Test Recipe',
           content: 'Test content',
@@ -331,29 +439,27 @@ describe('CaptureRecipeUsecase', () => {
       });
     });
 
-    describe('when recipe creation fails', () => {
-      it('throws an error', async () => {
-        const inputData = {
-          name: 'Test Recipe',
-          content: 'Test content',
-          organizationId: createOrganizationId(uuidv4()),
-          userId: createUserId(uuidv4()),
-        };
+    it('throws error if recipe creation fails', async () => {
+      const inputData = {
+        name: 'Test Recipe',
+        content: 'Test content',
+        organizationId: createOrganizationId(uuidv4()),
+        userId: createUserId(uuidv4()),
+      };
 
-        const error = new Error('Database connection failed');
-        recipeService.addRecipe.mockRejectedValue(error);
+      const error = new Error('Database connection failed');
+      recipeService.addRecipe.mockRejectedValue(error);
 
-        await expect(captureRecipeUsecase.execute(inputData)).rejects.toThrow(
-          'Database connection failed',
-        );
-        expect(recipeService.addRecipe).toHaveBeenCalledWith({
-          name: inputData.name,
-          content: inputData.content,
-          slug: 'test-recipe',
-          version: 1,
-          organizationId: inputData.organizationId,
-          userId: inputData.userId,
-        });
+      await expect(captureRecipeUsecase.execute(inputData)).rejects.toThrow(
+        'Database connection failed',
+      );
+      expect(recipeService.addRecipe).toHaveBeenCalledWith({
+        name: inputData.name,
+        content: inputData.content,
+        slug: 'test-recipe',
+        version: 1,
+        organizationId: inputData.organizationId,
+        userId: inputData.userId,
       });
     });
   });

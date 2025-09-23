@@ -2,12 +2,14 @@ import { EntitySchema } from 'typeorm';
 import { Target, GitRepo } from '@packmind/shared';
 import {
   WithTimestamps,
+  WithSoftDelete,
   uuidSchema,
   timestampsSchemas,
+  softDeleteSchemas,
 } from '@packmind/shared';
 
 export const TargetSchema = new EntitySchema<
-  WithTimestamps<Target & { gitRepo?: GitRepo }>
+  WithSoftDelete<WithTimestamps<Target & { gitRepo?: GitRepo }>>
 >({
   name: 'Target',
   tableName: 'targets',
@@ -27,6 +29,7 @@ export const TargetSchema = new EntitySchema<
     },
     ...uuidSchema,
     ...timestampsSchemas,
+    ...softDeleteSchemas,
   },
   relations: {
     gitRepo: {

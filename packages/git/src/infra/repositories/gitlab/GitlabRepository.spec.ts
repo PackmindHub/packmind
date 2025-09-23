@@ -29,6 +29,7 @@ describe('GitlabRepository', () => {
     gitlabRepository = new GitlabRepository(
       'test-token',
       repositoryOptions,
+      'https://gitlab.com',
       mockLogger,
     );
   });
@@ -54,8 +55,8 @@ describe('GitlabRepository', () => {
         new GitlabRepository(
           'test-token',
           repositoryOptions,
-          mockLogger,
           'https://custom-gitlab.com/api/v4',
+          mockLogger,
         );
 
         expect(mockedAxios.create).toHaveBeenCalledWith({
@@ -74,8 +75,8 @@ describe('GitlabRepository', () => {
         new GitlabRepository(
           'test-token',
           repositoryOptions,
-          mockLogger,
           'https://gitlab.company.com',
+          mockLogger,
         );
 
         expect(mockedAxios.create).toHaveBeenCalledWith({

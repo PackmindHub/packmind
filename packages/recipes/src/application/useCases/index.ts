@@ -1,5 +1,6 @@
 import { CaptureRecipeUsecase } from './captureRecipe/captureRecipe.usecase';
-import { UpdateRecipeUsecase } from './updateRecipe/updateRecipe.usecase';
+import { UpdateRecipesFromGitHubUsecase } from './updateRecipesFromGitHub/updateRecipesFromGitHub.usecase';
+import { UpdateRecipesFromGitLabUsecase } from './updateRecipesFromGitLab/updateRecipesFromGitLab.usecase';
 import { UpdateRecipeFromUIUsecase } from './updateRecipeFromUI/updateRecipeFromUI.usecase';
 import { DeleteRecipeUsecase } from './deleteRecipe/deleteRecipe.usecase';
 import { GetRecipeByIdUsecase } from './getRecipeById/getRecipeById.usecase';
@@ -11,8 +12,11 @@ import { DeleteRecipesBatchUsecase } from './deleteRecipesBatch/deleteRecipesBat
 import { IRecipesServices } from '../IRecipesServices';
 import {
   CaptureRecipeCommand,
+  UpdateRecipesFromGitHubCommand,
+  UpdateRecipesFromGitLabCommand,
   PackmindLogger,
   QueryOption,
+  IDeploymentPort,
 } from '@packmind/shared';
 import { GitHexa } from '@packmind/git';
 import { OrganizationId, UserId } from '@packmind/accounts';
@@ -27,7 +31,8 @@ const origin = 'RecipeUseCases';
 
 export class RecipeUseCases {
   private readonly _captureRecipe: CaptureRecipeUsecase;
-  private readonly _updateRecipe: UpdateRecipeUsecase;
+  private _updateRecipesFromGitHub: UpdateRecipesFromGitHubUsecase;
+  private _updateRecipesFromGitLab: UpdateRecipesFromGitLabUsecase;
   private readonly _updateRecipeFromUI: UpdateRecipeFromUIUsecase;
   private readonly _deleteRecipe: DeleteRecipeUsecase;
   private readonly _getRecipeById: GetRecipeByIdUsecase;
@@ -39,7 +44,8 @@ export class RecipeUseCases {
 
   constructor(
     private readonly recipesServices: IRecipesServices,
-    gitHexa: GitHexa,
+    private readonly gitHexa: GitHexa,
+    private readonly deploymentPort?: IDeploymentPort,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this._captureRecipe = new CaptureRecipeUsecase(
@@ -48,12 +54,19 @@ export class RecipeUseCases {
       recipesServices.getRecipeSummaryService(),
       this.logger,
     );
-    this._updateRecipe = new UpdateRecipeUsecase(
+    this._updateRecipesFromGitHub = new UpdateRecipesFromGitHubUsecase(
       recipesServices.getRecipeService(),
       recipesServices.getRecipeVersionService(),
       gitHexa,
       recipesServices.getRecipeSummaryService(),
-      this.logger,
+      this.deploymentPort,
+    );
+    this._updateRecipesFromGitLab = new UpdateRecipesFromGitLabUsecase(
+      recipesServices.getRecipeService(),
+      recipesServices.getRecipeVersionService(),
+      gitHexa,
+      recipesServices.getRecipeSummaryService(),
+      this.deploymentPort,
     );
     this._updateRecipeFromUI = new UpdateRecipeFromUIUsecase(
       recipesServices.getRecipeService(),
@@ -107,28 +120,12 @@ export class RecipeUseCases {
     return this._updateRecipeFromUI.updateRecipeFromUI(param);
   }
 
-  public updateRecipesFromGitHub(
-    payload: unknown,
-    organizationId: OrganizationId,
-    headers: Record<string, string> = {},
-  ) {
-    return this._updateRecipe.updateRecipesFromGitHub(
-      payload,
-      organizationId,
-      headers,
-    );
+  public updateRecipesFromGitHub(command: UpdateRecipesFromGitHubCommand) {
+    return this._updateRecipesFromGitHub.execute(command);
   }
 
-  public updateRecipesFromGitLab(
-    payload: unknown,
-    organizationId: OrganizationId,
-    headers: Record<string, string> = {},
-  ) {
-    return this._updateRecipe.updateRecipesFromGitLab(
-      payload,
-      organizationId,
-      headers,
-    );
+  public updateRecipesFromGitLab(command: UpdateRecipesFromGitLabCommand) {
+    return this._updateRecipesFromGitLab.execute(command);
   }
 
   public deleteRecipe(command: DeleteRecipeCommand) {
@@ -162,5 +159,26 @@ export class RecipeUseCases {
 
   public deleteRecipesBatch(command: DeleteRecipesBatchCommand) {
     return this._deleteRecipesBatch.execute(command);
+  }
+
+  /**
+   * Update the deployment port for webhook use cases after initialization
+   */
+  updateDeploymentPort(deploymentPort: IDeploymentPort): void {
+    // Need to recreate the webhook use cases with the new deployment port
+    this._updateRecipesFromGitHub = new UpdateRecipesFromGitHubUsecase(
+      this.recipesServices.getRecipeService(),
+      this.recipesServices.getRecipeVersionService(),
+      this.gitHexa,
+      this.recipesServices.getRecipeSummaryService(),
+      deploymentPort,
+    );
+    this._updateRecipesFromGitLab = new UpdateRecipesFromGitLabUsecase(
+      this.recipesServices.getRecipeService(),
+      this.recipesServices.getRecipeVersionService(),
+      this.gitHexa,
+      this.recipesServices.getRecipeSummaryService(),
+      deploymentPort,
+    );
   }
 }

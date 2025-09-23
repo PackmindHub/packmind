@@ -25,7 +25,7 @@ import { HEXA_REGISTRY_TOKEN } from '../shared/HexaRegistryModule';
           jwtService,
           logger,
         );
-        return new AccountsHexa(registry, logger, apiKeyService);
+        return new AccountsHexa(registry, { logger, apiKeyService });
       },
       inject: [HEXA_REGISTRY_TOKEN, JwtService, ApiKeyServiceProvider],
     },

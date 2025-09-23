@@ -30,6 +30,7 @@ export class PrepareStandardsDeploymentUseCase
         await this.codingAgentServices.prepareStandardsDeployment(
           command.standardVersions,
           command.gitRepo,
+          command.targets,
           command.codingAgents,
         );
 

@@ -7,9 +7,16 @@ import {
   Post,
   Put,
   Request,
+  ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { GitProvidersService } from './git-providers.service';
-import { LogLevel, PackmindLogger } from '@packmind/shared';
+import {
+  LogLevel,
+  PackmindLogger,
+  GitRepoAlreadyExistsError,
+  GitProviderHasRepositoriesError,
+} from '@packmind/shared';
 import { GitProvider, GitRepo, GitProviderId, GitRepoId } from '@packmind/git';
 import { AuthService } from '../../auth/auth.service';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
@@ -256,16 +263,12 @@ export class GitProvidersController {
         },
       );
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'DELETE /git/providers/:id - Failed to delete git provider',
-        {
-          organizationId,
-          gitProviderId,
-          error: errorMessage,
-        },
-      );
+      // Handle the business case: provider has associated repositories
+      if (error instanceof GitProviderHasRepositoriesError) {
+        throw new BadRequestException(error.message);
+      }
+
+      // Let other errors bubble up (they're already logged in the use case)
       throw error;
     }
   }
@@ -299,19 +302,12 @@ export class GitProvidersController {
         addRepositoryDto.branch,
       );
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'POST /git/providers/:id/repositories - Failed to add repository to provider',
-        {
-          organizationId,
-          gitProviderId,
-          owner: addRepositoryDto.owner,
-          repo: addRepositoryDto.repo,
-          branch: addRepositoryDto.branch,
-          error: errorMessage,
-        },
-      );
+      // Handle the main business case: repository already exists
+      if (error instanceof GitRepoAlreadyExistsError) {
+        throw new ConflictException(error.message);
+      }
+
+      // Let other errors bubble up (they're already logged in the use case)
       throw error;
     }
   }

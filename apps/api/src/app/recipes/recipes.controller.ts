@@ -18,6 +18,7 @@ import {
   RecipeVersionId,
 } from '@packmind/recipes';
 import { GitRepoId } from '@packmind/git';
+import { TargetId } from '@packmind/shared';
 import { RecipesService } from './recipes.service';
 import { PackmindLogger } from '@packmind/shared';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
@@ -214,13 +215,13 @@ export class RecipesController {
     @Body()
     body: {
       recipeVersionIds: RecipeVersionId[];
-      repositoryIds: GitRepoId[];
+      targetIds: TargetId[];
     },
     @Req() request: Request,
   ): Promise<void> {
-    this.logger.info('POST /recipes/publish - Publishing recipes to Git', {
+    this.logger.info('POST /recipes/publish - Publishing recipes to targets', {
       recipeVersionIds: body.recipeVersionIds,
-      repositoryIds: body.repositoryIds,
+      targetIds: body.targetIds,
     });
 
     try {
@@ -237,14 +238,14 @@ export class RecipesController {
       }
 
       if (
-        !body.repositoryIds ||
-        !Array.isArray(body.repositoryIds) ||
-        body.repositoryIds.length === 0
+        !body.targetIds ||
+        !Array.isArray(body.targetIds) ||
+        body.targetIds.length === 0
       ) {
         this.logger.error(
-          'POST /recipes/publish - Repository IDs array is required',
+          'POST /recipes/publish - Target IDs array is required',
         );
-        throw new BadRequestException('Repository IDs array is required');
+        throw new BadRequestException('Target IDs array is required');
       }
 
       const accessToken = request.cookies?.auth_token;
@@ -254,18 +255,18 @@ export class RecipesController {
         throw new BadRequestException('User not authenticated');
       }
 
-      await this.recipesService.publishRecipeToGit(
+      await this.recipesService.publishRecipeToTargets(
         body.recipeVersionIds,
-        body.repositoryIds,
+        body.targetIds,
         me.user.id,
         me.user.organizationId,
       );
 
       this.logger.info(
-        'POST /recipes/publish - Recipes published to Git successfully',
+        'POST /recipes/publish - Recipes published to targets successfully',
         {
           recipeVersionIds: body.recipeVersionIds,
-          repositoryIds: body.repositoryIds,
+          targetIds: body.targetIds,
           authorId: me.user.id,
           organizationId: me.user.organizationId,
         },
@@ -274,10 +275,10 @@ export class RecipesController {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(
-        'POST /recipes/publish - Failed to publish recipes to Git',
+        'POST /recipes/publish - Failed to publish recipes to targets',
         {
           recipeVersionIds: body.recipeVersionIds,
-          repositoryIds: body.repositoryIds,
+          targetIds: body.targetIds,
           error: errorMessage,
         },
       );

@@ -3,6 +3,8 @@ import { GitProviderService } from './GitProviderService';
 import { GitRepoService } from './GitRepoService';
 import { GitCommitService } from './services/GitCommitService';
 import { IGitRepositories } from '../domain/repositories/IGitRepositories';
+import { IGitRepoFactory } from '../domain/repositories/IGitRepoFactory';
+import { IGitProviderFactory } from '../domain/repositories/IGitProviderFactory';
 import { PackmindLogger } from '@packmind/shared';
 
 /**
@@ -24,6 +26,8 @@ export class GitServices implements IGitServices {
     // Initialize all services with their respective repositories from the aggregator
     this.gitProviderService = new GitProviderService(
       this.gitRepositories.getGitProviderRepository(),
+      this.gitRepositories.getGitProviderFactory(),
+      this.gitRepositories.getGitRepoFactory(),
       this.logger,
     );
     this.gitRepoService = new GitRepoService(
@@ -45,5 +49,13 @@ export class GitServices implements IGitServices {
 
   getGitCommitService(): GitCommitService {
     return this.gitCommitService;
+  }
+
+  getGitRepoFactory(): IGitRepoFactory {
+    return this.gitRepositories.getGitRepoFactory();
+  }
+
+  getGitProviderFactory(): IGitProviderFactory {
+    return this.gitRepositories.getGitProviderFactory();
   }
 }

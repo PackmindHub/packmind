@@ -1,4 +1,5 @@
 import { Checkbox as ChakraCheckbox } from '@chakra-ui/react';
+import type { CheckedChangeDetails } from '@zag-js/checkbox';
 import * as React from 'react';
 
 export interface PMCheckboxProps extends ChakraCheckbox.RootProps {
@@ -7,6 +8,7 @@ export interface PMCheckboxProps extends ChakraCheckbox.RootProps {
   controlProps?: ChakraCheckbox.ControlProps;
   rootRef?: React.RefObject<HTMLLabelElement | null>;
 }
+export type PMCheckboxCheckedChangeDetails = CheckedChangeDetails;
 
 export const PMCheckbox = React.forwardRef<HTMLInputElement, PMCheckboxProps>(
   function Checkbox(props, ref) {

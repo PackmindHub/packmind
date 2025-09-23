@@ -1,14 +1,13 @@
 import { GitRepo } from '../../../domain/entities/GitRepo';
 import { GitProvider } from '../../../domain/entities/GitProvider';
+import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
 import { GitProviderService } from '../../GitProviderService';
 import { PackmindLogger } from '@packmind/shared';
-import { GithubRepository } from '../../../infra/repositories/github/GithubRepository';
-import { GitlabRepository } from '../../../infra/repositories/gitlab/GitlabRepository';
-import { GitProviderVendors } from '../../../domain/entities/GitProvider';
 
 export class GetFileFromRepo {
   constructor(
     private readonly gitProviderService: GitProviderService,
+    private readonly gitRepoFactory: IGitRepoFactory,
     private readonly logger: PackmindLogger,
   ) {}
 
@@ -85,30 +84,6 @@ export class GetFileFromRepo {
   }
 
   private createGitRepoInstance(gitRepo: GitRepo, provider: GitProvider) {
-    if (!provider.token) {
-      throw new Error('Git provider token not configured');
-    }
-
-    switch (provider.source) {
-      case GitProviderVendors.github:
-        return new GithubRepository(provider.token, {
-          owner: gitRepo.owner,
-          repo: gitRepo.repo,
-          branch: gitRepo.branch,
-        });
-      case GitProviderVendors.gitlab:
-        return new GitlabRepository(
-          provider.token,
-          {
-            owner: gitRepo.owner,
-            repo: gitRepo.repo,
-            branch: gitRepo.branch,
-          },
-          this.logger,
-          provider.url || undefined,
-        );
-      default:
-        throw new Error(`Unsupported git provider source: ${provider.source}`);
-    }
+    return this.gitRepoFactory.createGitRepo(gitRepo, provider);
   }
 }

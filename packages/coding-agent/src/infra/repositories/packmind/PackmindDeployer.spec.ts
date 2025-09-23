@@ -1,45 +1,50 @@
 import { PackmindDeployer } from './PackmindDeployer';
-import {
-  RecipeVersion,
-  RecipeVersionId,
-  Recipe,
-  RecipeId,
-} from '@packmind/recipes';
+import { RecipeVersion, Recipe } from '@packmind/recipes';
 import {
   StandardVersion,
-  StandardVersionId,
   Standard,
-  StandardId,
+  StandardsHexa,
+  Rule,
 } from '@packmind/standards';
-import { GitRepo, GitRepoId, GitProviderId } from '@packmind/git';
-import { OrganizationId, UserId } from '@packmind/accounts';
-
-// Create mock entities without using the factories to avoid import issues
-const createTestRecipeId = (id: string): RecipeId => id as RecipeId;
-const createTestRecipeVersionId = (id: string): RecipeVersionId =>
-  id as RecipeVersionId;
-const createTestStandardId = (id: string): StandardId => id as StandardId;
-const createTestStandardVersionId = (id: string): StandardVersionId =>
-  id as StandardVersionId;
-const createTestOrganizationId = (id: string): OrganizationId =>
-  id as OrganizationId;
-const createTestUserId = (id: string): UserId => id as UserId;
-const createTestGitRepoId = (id: string): GitRepoId => id as GitRepoId;
-const createTestGitProviderId = (id: string): GitProviderId =>
-  id as GitProviderId;
+import { GitRepo } from '@packmind/git';
+import {
+  createGitRepoId,
+  createGitProviderId,
+  createStandardId,
+  createStandardVersionId,
+  createRecipeVersionId,
+  createRecipeId,
+  createOrganizationId,
+  createUserId,
+  Target,
+  createTargetId,
+  createRuleId,
+} from '@packmind/shared';
 
 describe('PackmindDeployer', () => {
   let deployer: PackmindDeployer;
   let mockGitRepo: GitRepo;
+  let mockTarget: Target;
+  let mockStandardsHexa: jest.Mocked<StandardsHexa>;
 
   beforeEach(() => {
-    // Create deployer without StandardsHexa for basic tests
-    deployer = new PackmindDeployer();
+    mockStandardsHexa = {
+      getRulesByStandardId: jest.fn(),
+    } as unknown as jest.Mocked<StandardsHexa>;
+    deployer = new PackmindDeployer(mockStandardsHexa);
+
+    mockTarget = {
+      id: createTargetId('test-target-id'),
+      name: 'Test Target',
+      path: '/',
+      gitRepoId: createGitRepoId('test-repo-id'),
+    };
+
     mockGitRepo = {
-      id: createTestGitRepoId('test-repo-id'),
+      id: createGitRepoId('test-repo-id'),
       owner: 'test-owner',
       repo: 'test-repo',
-      providerId: createTestGitProviderId('provider-id'),
+      providerId: createGitProviderId('provider-id'),
       branch: 'main',
     };
   });
@@ -47,27 +52,31 @@ describe('PackmindDeployer', () => {
   describe('deployRecipes', () => {
     it('deploys a single recipe with correct file structure', async () => {
       const recipe: Recipe = {
-        id: createTestRecipeId('recipe-1'),
+        id: createRecipeId('recipe-1'),
         name: 'Test Recipe',
         slug: 'test-recipe',
         content: 'Original recipe content',
         version: 1,
-        organizationId: createTestOrganizationId('org-1'),
-        userId: createTestUserId('user-1'),
+        organizationId: createOrganizationId('org-1'),
+        userId: createUserId('user-1'),
       };
 
       const recipeVersion: RecipeVersion = {
-        id: createTestRecipeVersionId('recipe-version-1'),
+        id: createRecipeVersionId('recipe-version-1'),
         recipeId: recipe.id,
         name: recipe.name,
         slug: recipe.slug,
         content: 'This is the recipe content',
         version: 1,
         summary: 'A test recipe summary',
-        userId: createTestUserId('user-1'),
+        userId: createUserId('user-1'),
       };
 
-      const result = await deployer.deployRecipes([recipeVersion], mockGitRepo);
+      const result = await deployer.deployRecipes(
+        [recipeVersion],
+        mockGitRepo,
+        mockTarget,
+      );
 
       expect(result.createOrUpdate).toHaveLength(2);
       expect(result.delete).toHaveLength(0);
@@ -93,49 +102,53 @@ describe('PackmindDeployer', () => {
 
     it('deploys multiple recipes sorted alphabetically', async () => {
       const zebraRecipe: Recipe = {
-        id: createTestRecipeId('recipe-z'),
+        id: createRecipeId('recipe-z'),
         name: 'Zebra Recipe',
         slug: 'zebra-recipe',
         content: 'Original zebra content',
         version: 1,
-        organizationId: createTestOrganizationId('org-1'),
-        userId: createTestUserId('user-1'),
+        organizationId: createOrganizationId('org-1'),
+        userId: createUserId('user-1'),
       };
 
       const appleRecipe: Recipe = {
-        id: createTestRecipeId('recipe-a'),
+        id: createRecipeId('recipe-a'),
         name: 'Apple Recipe',
         slug: 'apple-recipe',
         content: 'Original apple content',
         version: 2,
-        organizationId: createTestOrganizationId('org-1'),
-        userId: createTestUserId('user-1'),
+        organizationId: createOrganizationId('org-1'),
+        userId: createUserId('user-1'),
       };
 
       const recipeVersions: RecipeVersion[] = [
         {
-          id: createTestRecipeVersionId('recipe-version-z'),
+          id: createRecipeVersionId('recipe-version-z'),
           recipeId: zebraRecipe.id,
           name: zebraRecipe.name,
           slug: zebraRecipe.slug,
           content: 'Zebra content',
           version: 1,
           summary: 'Last alphabetically',
-          userId: createTestUserId('user-1'),
+          userId: createUserId('user-1'),
         },
         {
-          id: createTestRecipeVersionId('recipe-version-a'),
+          id: createRecipeVersionId('recipe-version-a'),
           recipeId: appleRecipe.id,
           name: appleRecipe.name,
           slug: appleRecipe.slug,
           content: 'Apple content',
           version: 2,
           summary: 'First alphabetically',
-          userId: createTestUserId('user-1'),
+          userId: createUserId('user-1'),
         },
       ];
 
-      const result = await deployer.deployRecipes(recipeVersions, mockGitRepo);
+      const result = await deployer.deployRecipes(
+        recipeVersions,
+        mockGitRepo,
+        mockTarget,
+      );
 
       expect(result.createOrUpdate).toHaveLength(3); // 2 recipes + 1 recipes index
 
@@ -150,7 +163,7 @@ describe('PackmindDeployer', () => {
     });
 
     it('handles empty recipe list', async () => {
-      const result = await deployer.deployRecipes([], mockGitRepo);
+      const result = await deployer.deployRecipes([], mockGitRepo, mockTarget);
 
       expect(result.createOrUpdate).toHaveLength(1); // Only recipes index
       expect(result.delete).toHaveLength(0);
@@ -163,31 +176,41 @@ describe('PackmindDeployer', () => {
   describe('deployStandards', () => {
     it('deploys a single standard with correct file structure', async () => {
       const standard: Standard = {
-        id: createTestStandardId('standard-1'),
+        id: createStandardId('standard-1'),
         name: 'Test Standard',
         slug: 'test-standard',
         description: 'Original standard description',
         version: 1,
-        organizationId: createTestOrganizationId('org-1'),
-        userId: createTestUserId('user-1'),
+        organizationId: createOrganizationId('org-1'),
+        userId: createUserId('user-1'),
         scope: 'backend',
       };
 
       const standardVersion: StandardVersion = {
-        id: createTestStandardVersionId('standard-version-1'),
+        id: createStandardVersionId('standard-version-1'),
         standardId: standard.id,
         name: standard.name,
         slug: standard.slug,
         description: 'This is the standard description',
         version: 1,
         summary: 'A test standard summary',
-        userId: createTestUserId('user-1'),
+        userId: createUserId('user-1'),
         scope: 'backend',
       };
+
+      const rules: Rule[] = [
+        {
+          id: createRuleId('rule-id'),
+          standardVersionId: standardVersion.id,
+          content: 'My super rule',
+        },
+      ];
+      mockStandardsHexa.getRulesByStandardId.mockResolvedValue(rules);
 
       const result = await deployer.deployStandards(
         [standardVersion],
         mockGitRepo,
+        mockTarget,
       );
 
       expect(result.createOrUpdate).toHaveLength(2);
@@ -203,9 +226,6 @@ describe('PackmindDeployer', () => {
         'This is the standard description',
       );
       expect(standardFile?.content).toContain('## Rules');
-      expect(standardFile?.content).toContain(
-        '*This standard was automatically generated from version 1.*',
-      );
 
       // Check standards index
       const standardsIndexFile = result.createOrUpdate.find(
@@ -223,25 +243,25 @@ describe('PackmindDeployer', () => {
 
     it('includes rules in standard content', async () => {
       const standard: Standard = {
-        id: createTestStandardId('standard-with-rules'),
+        id: createStandardId('standard-with-rules'),
         name: 'Standard With Rules',
         slug: 'standard-with-rules',
         description: 'Original standard with rules',
         version: 1,
-        organizationId: createTestOrganizationId('org-1'),
-        userId: createTestUserId('user-1'),
+        organizationId: createOrganizationId('org-1'),
+        userId: createUserId('user-1'),
         scope: 'backend',
       };
 
       const standardVersion: StandardVersion = {
-        id: createTestStandardVersionId('standard-version-with-rules'),
+        id: createStandardVersionId('standard-version-with-rules'),
         standardId: standard.id,
         name: standard.name,
         slug: standard.slug,
         description: 'This standard has rules',
         version: 1,
         summary: 'Standard with rules summary',
-        userId: createTestUserId('user-1'),
+        userId: createUserId('user-1'),
         scope: 'backend',
         rules: [
           {
@@ -260,6 +280,7 @@ describe('PackmindDeployer', () => {
       const result = await deployer.deployStandards(
         [standardVersion],
         mockGitRepo,
+        mockTarget,
       );
 
       const standardFile = result.createOrUpdate.find(
@@ -276,94 +297,88 @@ describe('PackmindDeployer', () => {
       expect(standardFile?.content).toContain(
         '* Prefer async/await over promises',
       );
-      expect(standardFile?.content).toContain(
-        '*This standard was automatically generated from version 1.*',
-      );
     });
 
     it('handles standard without scope', async () => {
       const standard: Standard = {
-        id: createTestStandardId('standard-no-scope'),
+        id: createStandardId('standard-no-scope'),
         name: 'No Scope Standard',
         slug: 'no-scope-standard',
         description: 'Original description without scope',
         version: 1,
-        organizationId: createTestOrganizationId('org-1'),
-        userId: createTestUserId('user-1'),
+        organizationId: createOrganizationId('org-1'),
+        userId: createUserId('user-1'),
         scope: null,
       };
 
       const standardVersion: StandardVersion = {
-        id: createTestStandardVersionId('standard-version-no-scope'),
+        id: createStandardVersionId('standard-version-no-scope'),
         standardId: standard.id,
         name: standard.name,
         slug: standard.slug,
         description: 'Description without scope',
         version: 1,
         summary: null,
-        userId: createTestUserId('user-1'),
+        userId: createUserId('user-1'),
         scope: null,
       };
 
       const result = await deployer.deployStandards(
         [standardVersion],
         mockGitRepo,
+        mockTarget,
       );
 
       const standardFile = result.createOrUpdate.find(
         (f) => f.path === '.packmind/standards/no-scope-standard.md',
       );
       expect(standardFile?.content).toContain('Description without scope');
-      expect(standardFile?.content).toContain('## Rules');
-      expect(standardFile?.content).toContain(
-        '*This standard was automatically generated from version 1.*',
-      );
     });
 
     it('deploys multiple standards sorted alphabetically', async () => {
       const zebraStandard: Standard = {
-        id: createTestStandardId('standard-z'),
+        id: createStandardId('standard-z'),
         name: 'Zebra Standard',
         slug: 'zebra-standard',
         description: 'Original zebra description',
         version: 1,
-        organizationId: createTestOrganizationId('org-1'),
-        userId: createTestUserId('user-1'),
+        organizationId: createOrganizationId('org-1'),
+        userId: createUserId('user-1'),
         scope: null,
       };
 
       const appleStandard: Standard = {
-        id: createTestStandardId('standard-a'),
+        id: createStandardId('standard-a'),
         name: 'Apple Standard',
         slug: 'apple-standard',
         description: 'Original apple description',
         version: 2,
-        organizationId: createTestOrganizationId('org-1'),
-        userId: createTestUserId('user-1'),
+        organizationId: createOrganizationId('org-1'),
+        userId: createUserId('user-1'),
         scope: 'frontend',
       };
 
       const standardVersions: StandardVersion[] = [
         {
-          id: createTestStandardVersionId('standard-version-z'),
+          id: createStandardVersionId('standard-version-z'),
           standardId: zebraStandard.id,
           name: zebraStandard.name,
           slug: zebraStandard.slug,
           description: 'Zebra description',
           version: 1,
           summary: 'Last alphabetically',
-          userId: createTestUserId('user-1'),
+          userId: createUserId('user-1'),
           scope: null,
         },
         {
-          id: createTestStandardVersionId('standard-version-a'),
+          id: createStandardVersionId('standard-version-a'),
           standardId: appleStandard.id,
           name: appleStandard.name,
           slug: appleStandard.slug,
           description: 'Apple description',
           version: 2,
           summary: 'First alphabetically',
-          userId: createTestUserId('user-1'),
+          userId: createUserId('user-1'),
           scope: 'frontend',
         },
       ];
@@ -371,6 +386,7 @@ describe('PackmindDeployer', () => {
       const result = await deployer.deployStandards(
         standardVersions,
         mockGitRepo,
+        mockTarget,
       );
 
       expect(result.createOrUpdate).toHaveLength(3); // 2 standards + 1 index
@@ -386,7 +402,11 @@ describe('PackmindDeployer', () => {
     });
 
     it('handles empty standards list', async () => {
-      const result = await deployer.deployStandards([], mockGitRepo);
+      const result = await deployer.deployStandards(
+        [],
+        mockGitRepo,
+        mockTarget,
+      );
 
       expect(result.createOrUpdate).toHaveLength(1); // Only standards index
       expect(result.delete).toHaveLength(0);
@@ -415,25 +435,25 @@ describe('PackmindDeployer', () => {
       const deployerWithHexa = new PackmindDeployer(mockStandardsHexa);
 
       const standard: Standard = {
-        id: createTestStandardId('standard-1'),
+        id: createStandardId('standard-1'),
         name: 'Standard Without Rules',
         slug: 'standard-without-rules',
         description: 'Original standard description',
         version: 1,
-        organizationId: createTestOrganizationId('org-1'),
-        userId: createTestUserId('user-1'),
+        organizationId: createOrganizationId('org-1'),
+        userId: createUserId('user-1'),
         scope: 'backend',
       };
 
       const standardVersion: StandardVersion = {
-        id: createTestStandardVersionId('standard-version-1'),
+        id: createStandardVersionId('standard-version-1'),
         standardId: standard.id,
         name: standard.name,
         slug: standard.slug,
         description: 'Standard without rules initially',
         version: 1,
         summary: 'Test summary',
-        userId: createTestUserId('user-1'),
+        userId: createUserId('user-1'),
         scope: 'backend',
         // No rules property - should be fetched from StandardsHexa
       };
@@ -441,6 +461,7 @@ describe('PackmindDeployer', () => {
       const result = await deployerWithHexa.deployStandards(
         [standardVersion],
         mockGitRepo,
+        mockTarget,
       );
 
       // Verify StandardsHexa was called with the standardId

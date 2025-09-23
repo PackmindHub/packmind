@@ -112,10 +112,7 @@ export const DeployToRepos: React.FC<DeployToReposProps> = ({
             >
               <PMVStack align="flex-start" gap={0.5} flex={1}>
                 <PMText fontWeight="medium" fontSize="sm">
-                  {repository.owner}/{repository.repo}
-                </PMText>
-                <PMText fontSize="xs" textAlign="left">
-                  Branch: {repository.branch}
+                  {repository.owner}/{repository.repo}:{repository.branch}
                 </PMText>
               </PMVStack>
               <PMButton

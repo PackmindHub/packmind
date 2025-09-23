@@ -8,6 +8,7 @@ import { gitSchemas } from '@packmind/git';
 import { accountsSchemas } from '@packmind/accounts';
 import { standardsSchemas } from '@packmind/standards';
 import { recipesUsageSchemas } from '@packmind/analytics';
+import { deploymentsSchemas } from '@packmind/deployments';
 
 export async function registerDb(fastify: FastifyInstance) {
   fastify.register(dbConnection, {
@@ -20,6 +21,7 @@ export async function registerDb(fastify: FastifyInstance) {
       ...gitSchemas,
       ...accountsSchemas,
       ...standardsSchemas,
+      ...deploymentsSchemas,
     ],
     synchronize: false,
   });

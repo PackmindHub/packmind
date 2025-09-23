@@ -7,8 +7,8 @@
   "types": "./src/index.d.ts",
   "dependencies": {
     "tslib": "^2.3.0",
-    "axios": "^1.11.0",
-    "ts-jest": "^29.1.0",
+    "axios": "^1.12.0",
+    "ts-jest": "^29.4.1",
     "@packmind/shared": "*",
     "@packmind/accounts": "*",
     "typeorm": "0.3.25",

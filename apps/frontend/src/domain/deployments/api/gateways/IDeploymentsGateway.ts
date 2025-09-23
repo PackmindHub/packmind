@@ -1,18 +1,28 @@
-import { Gateway } from '@packmind/shared';
 import {
-  IGetDeploymentOverviewUseCase,
-  IGetStandardDeploymentOverviewUseCase,
-  IListDeploymentsByRecipeUseCase,
-  IListDeploymentsByStandardUseCase,
-  IPublishRecipesUseCase,
-  IPublishStandardsUseCase,
-} from '@packmind/deployments';
+  Gateway,
+  IGetDeploymentOverview,
+  IGetStandardDeploymentOverview,
+  IListDeploymentsByRecipe,
+  IListDeploymentsByStandard,
+  IPublishRecipes,
+  IPublishStandards,
+  IGetTargetsByRepositoryUseCase,
+  IGetTargetsByOrganizationUseCase,
+  IAddTargetUseCase,
+  IUpdateTargetUseCase,
+  IDeleteTargetUseCase,
+} from '@packmind/shared';
 
 export interface IDeploymentsGateway {
-  listDeploymentsByRecipeId: Gateway<IListDeploymentsByRecipeUseCase>;
-  listDeploymentsByStandardId: Gateway<IListDeploymentsByStandardUseCase>;
-  getRecipesDeploymentOverview: Gateway<IGetDeploymentOverviewUseCase>;
-  getStandardsDeploymentOverview: Gateway<IGetStandardDeploymentOverviewUseCase>;
-  publishRecipes: Gateway<IPublishRecipesUseCase>;
-  publishStandards: Gateway<IPublishStandardsUseCase>;
+  listDeploymentsByRecipeId: Gateway<IListDeploymentsByRecipe>;
+  listDeploymentsByStandardId: Gateway<IListDeploymentsByStandard>;
+  getRecipesDeploymentOverview: Gateway<IGetDeploymentOverview>;
+  getStandardsDeploymentOverview: Gateway<IGetStandardDeploymentOverview>;
+  publishRecipes: Gateway<IPublishRecipes>;
+  publishStandards: Gateway<IPublishStandards>;
+  getTargetsByRepository: Gateway<IGetTargetsByRepositoryUseCase>;
+  getTargetsByOrganization: Gateway<IGetTargetsByOrganizationUseCase>;
+  addTarget: Gateway<IAddTargetUseCase>;
+  updateTarget: Gateway<IUpdateTargetUseCase>;
+  deleteTarget: Gateway<IDeleteTargetUseCase>;
 }

@@ -1,13 +1,13 @@
 import { IUseCase, PackmindCommand } from '../../UseCase';
 import { StandardVersionId } from '../../standards';
-import { GitRepoId } from '../../git';
+import { TargetId } from '../Target';
 import { StandardsDeployment } from '../StandardsDeployment';
 
 export type PublishStandardsCommand = PackmindCommand & {
-  gitRepoIds: GitRepoId[];
+  targetIds: TargetId[];
   standardVersionIds: StandardVersionId[];
 };
 export type IPublishStandards = IUseCase<
   PublishStandardsCommand,
-  StandardsDeployment
+  StandardsDeployment[]
 >;

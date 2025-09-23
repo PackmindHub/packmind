@@ -14,11 +14,20 @@ import {
 } from '../api/queries/AuthQueries';
 import { CopiableTextarea } from '../../../shared/components/inputs';
 import { getEnvVar } from '../../../shared/utils/getEnvVar';
+import { useAuthContext } from '../../accounts/hooks/useAuthContext';
+import { UserId } from '@packmind/accounts';
 
 export const ApiKeyConfig: React.FunctionComponent = () => {
+  const { user, organization } = useAuthContext();
   const [showConfirmGenerate, setShowConfirmGenerate] = useState(false);
-  const getCurrentApiKeyQuery = useGetCurrentApiKeyQuery();
+  const getCurrentApiKeyQuery = useGetCurrentApiKeyQuery({
+    userId: user?.id || ('' as UserId),
+  });
   const generateApiKeyMutation = useGenerateApiKeyMutation();
+
+  if (!user || !organization) {
+    return;
+  }
 
   const handleGenerateApiKey = () => {
     if (getCurrentApiKeyQuery.data?.hasApiKey && !showConfirmGenerate) {
@@ -27,6 +36,8 @@ export const ApiKeyConfig: React.FunctionComponent = () => {
     }
 
     generateApiKeyMutation.mutate({
+      userId: user.id,
+      organizationId: organization.id,
       host: getEnvVar(
         'VITE_PACKMIND_API_BASE_URL',
         'https://v3.packmind.com',

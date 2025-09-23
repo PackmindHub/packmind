@@ -1,5 +1,6 @@
 import { PackmindLogger, RuleId } from '@packmind/shared';
 import { CreateStandardUsecase } from './createStandard/createStandard.usecase';
+import { CreateStandardWithExamplesUsecase } from './createStandardWithExamples/createStandardWithExamples.usecase';
 import { UpdateStandardUsecase } from './updateStandard/updateStandard.usecase';
 import { AddRuleToStandardUsecase } from './addRuleToStandard/addRuleToStandard.usecase';
 import { GetStandardByIdUsecase } from './getStandardById/getStandardById.usecase';
@@ -35,6 +36,7 @@ const origin = 'StandardsUseCases';
 
 export class StandardsUseCases {
   private readonly _createStandard: CreateStandardUsecase;
+  private readonly _createStandardWithExamples: CreateStandardWithExamplesUsecase;
   private readonly _updateStandard: UpdateStandardUsecase;
   private readonly _addRuleToStandard: AddRuleToStandardUsecase;
   private readonly _getStandardById: GetStandardByIdUsecase;
@@ -63,6 +65,13 @@ export class StandardsUseCases {
       standardsServices.getStandardService(),
       standardsServices.getStandardVersionService(),
       standardsServices.getStandardSummaryService(),
+      this.logger,
+    );
+    this._createStandardWithExamples = new CreateStandardWithExamplesUsecase(
+      standardsServices.getStandardService(),
+      standardsServices.getStandardVersionService(),
+      standardsServices.getStandardSummaryService(),
+      standardsRepositories.getRuleExampleRepository(),
       this.logger,
     );
     this._updateStandard = new UpdateStandardUsecase(
@@ -175,6 +184,21 @@ export class StandardsUseCases {
     scope: string | null;
   }) {
     return this._createStandard.createStandard(params);
+  }
+
+  /**
+   * Create a new standard with rules and examples in a single operation
+   */
+  public async createStandardWithExamples(params: {
+    name: string;
+    description: string;
+    summary: string | null;
+    rules: import('@packmind/shared').RuleWithExamples[];
+    organizationId: OrganizationId;
+    userId: UserId;
+    scope: string | null;
+  }) {
+    return this._createStandardWithExamples.createStandardWithExamples(params);
   }
 
   /**

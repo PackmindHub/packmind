@@ -1,5 +1,19 @@
 # [Unreleased]
 
+# [1.1.0] - 2015-09-22
+
+## Added
+
+- Introduce the concept of `Targets` to distribute recipes and standards in specific folders on a repo, which makes sense in a mono-repo context (#137)
+
+## Changed
+
+- Improve UI/UX settings for the configuration of Git providers (#155)
+
+## Fixed
+
+- Rendering of recipes index was not properly updated in some edge cases (#101)
+
 # [1.0.1] - 2015-09-11
 
 ## Added
@@ -34,5 +48,6 @@
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
-[Unreleased]: https://github.com/PackmindHub/packmind-monorepo/compare/release/1.0.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind-monorepo/compare/release/1.0.1...HEAD
+[1.0.1]: https://github.com/PackmindHub/packmind-monorepo/compare/release/1.0.0...release/1.0.1
 [1.0.0]: https://github.com/PackmindHub/packmind-monorepo/compare/1286712f81d6e2b8e18888ee8e23c5503a52c887...release/1.0.0

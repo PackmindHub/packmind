@@ -1,3 +1,5 @@
+import { PackmindLogger } from '../logger/PackmindLogger';
+
 /**
  * Forward declaration to avoid circular dependency
  */
@@ -15,15 +17,26 @@ interface AppRegistry {
  * The App classes hold the Hexa instance and serve as a clean facade for use cases,
  * while the Hexa classes focus on dependency injection and service instantiation.
  */
-export abstract class BaseHexa {
+
+export type BaseHexaOpts = { logger: PackmindLogger };
+
+export abstract class BaseHexa<T extends BaseHexaOpts = BaseHexaOpts> {
+  protected readonly logger: PackmindLogger;
+
   /**
    * Create the app with access to the app registry.
    * Dependencies can be resolved immediately in the constructor, eliminating
    * the need for nullable properties.
    *
    * @param registry - The app registry instance for accessing other apps
+   * @param opts - the options to create the Hexa
    */
-  constructor(protected readonly registry: AppRegistry) {}
+  constructor(
+    protected readonly registry: AppRegistry,
+    protected readonly opts?: Partial<T>,
+  ) {
+    this.logger = opts?.logger ?? new PackmindLogger('BaseHexa');
+  }
 
   /**
    * Clean up resources when the app is being destroyed.

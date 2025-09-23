@@ -7,7 +7,7 @@
   "types": "./src/index.d.ts",
   "dependencies": {
     "tslib": "^2.3.0",
-    "ts-jest": "^29.4.0",
+    "ts-jest": "^29.4.1",
     "@packmind/accounts": "*",
     "@packmind/recipes": "*",
     "@packmind/analytics": "*",
@@ -15,6 +15,8 @@
     "@packmind/shared": "*",
     "typeorm": "^0.3.25",
     "@packmind/standards": "*",
-    "@packmind/coding-agent": "*"
+    "@packmind/coding-agent": "*",
+    "@packmind/deployments": "*",
+    "uuid": "11.1.0"
   }
 }

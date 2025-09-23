@@ -32,6 +32,16 @@ export default async function (fastify: FastifyInstance) {
   // JWT auth plugin is already registered via AutoLoad in app.ts
   // No need to register it again here
 
+  // Public healthcheck endpoint (no authentication required)
+  fastify.get('/mcp/healthcheck', async function () {
+    logger.debug('Handling healthcheck request');
+    return {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      service: 'packmind-mcp-server',
+    };
+  });
+
   async function handleMCPRequest(
     request: FastifyRequest,
     reply: FastifyReply,

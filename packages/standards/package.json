@@ -15,7 +15,7 @@
     "@packmind/git": "*",
     "@packmind/accounts": "*",
     "slug": "^11.0.0",
-    "ts-jest": "^29.1.0",
+    "ts-jest": "^29.4.1",
     "uuid": "^11.1.0"
   }
 }

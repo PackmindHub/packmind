@@ -1,0 +1,25 @@
+{{- if .Values.postgresql.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "packmind.fullname" . }}-postgresql
+  labels:
+    {{- include "packmind.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql
+  {{- with (include "packmind.annotations" .) }}
+  annotations:
+    {{- if . }}
+    {{- . | nindent 4 }}
+    {{- end }}
+  {{- end }}
+spec:
+  type: {{ .Values.postgresql.service.type }}
+  ports:
+    - port: 5432
+      targetPort: 5432
+      protocol: TCP
+      name: postgresql
+  selector:
+    {{- include "packmind.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: postgresql
+{{- end }}

@@ -82,7 +82,7 @@ export class StandardsService {
 
   async deployStandardsToGit(
     command: PublishStandardsCommand,
-  ): Promise<StandardsDeployment> {
+  ): Promise<StandardsDeployment[]> {
     return this.deploymentAdapter.publishStandards(command);
   }
 

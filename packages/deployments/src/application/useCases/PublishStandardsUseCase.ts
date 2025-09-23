@@ -1,7 +1,15 @@
-import { OrganizationId, PackmindLogger, UserId } from '@packmind/shared';
+import {
+  OrganizationId,
+  PackmindLogger,
+  UserId,
+  DistributionStatus,
+  Target,
+  GitRepo,
+  StandardVersion,
+} from '@packmind/shared';
 import { v4 as uuidv4 } from 'uuid';
 import { StandardsHexa } from '@packmind/standards';
-import { GitHexa, GitRepo, GitCommit } from '@packmind/git';
+import { GitHexa } from '@packmind/git';
 import { CodingAgentHexa, CodingAgents } from '@packmind/coding-agent';
 import { IPublishStandards, PublishStandardsCommand } from '@packmind/shared';
 import {
@@ -10,6 +18,7 @@ import {
 } from '../../domain/entities/StandardsDeployment';
 import { PrepareStandardsDeploymentCommand } from '@packmind/coding-agent';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
+import { TargetService } from '../services/TargetService';
 
 const origin = 'PublishStandardsUseCase';
 
@@ -19,45 +28,51 @@ export class PublishStandardsUseCase implements IPublishStandards {
     private readonly gitHexa: GitHexa,
     private readonly codingAgentHexa: CodingAgentHexa,
     private readonly standardsDeploymentRepository: IStandardsDeploymentRepository,
+    private readonly targetService: TargetService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
   async execute(
     command: PublishStandardsCommand,
-  ): Promise<StandardsDeployment> {
+  ): Promise<StandardsDeployment[]> {
     this.logger.info('Publishing standards', {
       standardVersionIdsCount: command.standardVersionIds.length,
-      gitRepoIdsCount: command.gitRepoIds.length,
+      targetIdsCount: command.targetIds.length,
       organizationId: command.organizationId,
     });
 
-    const allGitRepos: GitRepo[] = [];
-    const allGitCommits: GitCommit[] = [];
+    // Get repository for each target
+    const targetRepositoryMap = new Map();
+    for (const targetId of command.targetIds) {
+      const { target, repository } =
+        await this.targetService.getRepositoryByTargetId(targetId);
+      targetRepositoryMap.set(targetId, { target, repository });
+      this.logger.info('Repository found for target', {
+        targetId,
+        repositoryId: repository.id,
+        owner: repository.owner,
+        repo: repository.repo,
+      });
+    }
+
+    const deployments: StandardsDeployment[] = [];
     const allStandardVersionsMap = new Map();
 
-    // Process each git repository
-    for (const gitRepoId of command.gitRepoIds) {
-      this.logger.info('Processing repository', {
-        gitRepoId,
+    // Process each target
+    for (const targetId of command.targetIds) {
+      const { target, repository: gitRepo } = targetRepositoryMap.get(targetId);
+
+      this.logger.info('Processing target', {
+        targetId,
+        gitRepoId: gitRepo.id,
         standardVersionIdsCount: command.standardVersionIds.length,
       });
 
+      // Get standard versions by IDs (declared outside try block for catch access)
+      let standardVersions: StandardVersion[] = [];
+
       try {
-        // Get the git repository
-        const gitRepo = await this.gitHexa.getRepositoryById(gitRepoId);
-        if (!gitRepo) {
-          this.logger.error('Repository not found', { gitRepoId });
-          throw new Error(`Repository with id ${gitRepoId} not found`);
-        }
-
-        this.logger.debug('Found repository', {
-          gitRepoId,
-          owner: gitRepo.owner,
-          repo: gitRepo.repo,
-        });
-
-        // Get standard versions by IDs
-        const standardVersions = await Promise.all(
+        standardVersions = await Promise.all(
           command.standardVersionIds.map(async (standardVersionId) => {
             const standardVersion =
               await this.standardsHexa.getStandardVersionById(
@@ -85,12 +100,12 @@ export class PublishStandardsUseCase implements IPublishStandards {
           })),
         });
 
-        // Get previously deployed standard versions for this repository
+        // Get previously deployed standard versions for this target
         // This ensures we maintain all previously deployed standards in the index
         const previousStandardVersions =
-          await this.standardsDeploymentRepository.findActiveStandardVersionsByRepository(
+          await this.standardsDeploymentRepository.findActiveStandardVersionsByTarget(
             command.organizationId as OrganizationId,
-            gitRepo.id,
+            targetId,
           );
 
         this.logger.info('Found previously deployed standard versions', {
@@ -119,10 +134,14 @@ export class PublishStandardsUseCase implements IPublishStandards {
           previousCount: previousStandardVersions.length,
         });
 
+        // We already have the target for this iteration
+        const repositoryTargets = [target];
+
         // Prepare the deployment using CodingAgentHexa
         const prepareCommand: PrepareStandardsDeploymentCommand = {
           standardVersions: allStandardVersions,
           gitRepo,
+          targets: repositoryTargets,
           codingAgents: [
             CodingAgents.packmind,
             CodingAgents.junie,
@@ -177,8 +196,7 @@ ${standardVersions.map((sv) => `- ${sv.name} (${sv.slug}) v${sv.version}`).join(
         });
 
         // Add to collections for combined deployment
-        allGitRepos.push(gitRepo);
-        allGitCommits.push(gitCommit);
+        // Individual deployments are now created per target instead of collecting in arrays
 
         // Merge standard versions (avoid duplicates by standardId, keep latest version)
         for (const standardVersion of allStandardVersions) {
@@ -196,54 +214,153 @@ ${standardVersions.map((sv) => `- ${sv.name} (${sv.slug}) v${sv.version}`).join(
           }
         }
 
-        // Create individual deployment entry for the database
+        // Create individual deployment entry using clean model
         const standardsDeployment: StandardsDeployment = {
           id: createStandardsDeploymentId(uuidv4()),
           standardVersions: allStandardVersions, // already cast as any above
-          gitRepos: [gitRepo],
-          gitCommits: [gitCommit],
           createdAt: new Date().toISOString(),
           authorId: command.userId as UserId,
           organizationId: command.organizationId as OrganizationId,
+          // Single target model fields
+          gitCommit: gitCommit,
+          target: target,
+          status: DistributionStatus.success,
         };
 
         // Save the deployment to the database
         await this.standardsDeploymentRepository.add(standardsDeployment);
 
-        this.logger.info('Created deployment entry', {
+        // Add to deployments array for return
+        deployments.push(standardsDeployment);
+
+        this.logger.info('Created successful deployment entry', {
           standardsDeploymentId: standardsDeployment.id,
-          gitRepoId,
+          targetId,
+          gitRepoId: gitRepo.id,
+          status: DistributionStatus.success,
+          commitSha: gitCommit.sha,
         });
       } catch (error) {
-        this.logger.error('Failed to process repository', {
-          gitRepoId,
-          error: error instanceof Error ? error.message : String(error),
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        this.logger.error('Failed to process target', {
+          targetId,
+          gitRepoId: gitRepo.id,
+          error: errorMessage,
         });
-        throw error;
+
+        await this.saveStandardDeploymentInFailure(
+          command,
+          target,
+          deployments,
+          gitRepo,
+          errorMessage,
+          standardVersions, // Pass the already-fetched standard versions (may be empty if fetch failed)
+        );
       }
     }
 
-    // Convert map to array for final deployment
-    const finalStandardVersions = Array.from(allStandardVersionsMap.values());
-
-    // Create the combined StandardDeployment to return
-    const deployment: StandardsDeployment = {
-      id: createStandardsDeploymentId(uuidv4()),
-      standardVersions: finalStandardVersions,
-      gitRepos: allGitRepos,
-      gitCommits: allGitCommits,
-      createdAt: new Date().toISOString(),
-      authorId: command.userId as UserId,
-      organizationId: command.organizationId as OrganizationId,
-    };
-
     this.logger.info('Successfully published standards', {
-      standardVersionsCount: finalStandardVersions.length,
-      gitRepoIdsCount: command.gitRepoIds.length,
-      deploymentId: deployment.id,
-      commitsCount: allGitCommits.length,
+      deploymentsCount: deployments.length,
+      targetIdsCount: command.targetIds.length,
+      successfulDeployments: deployments.filter(
+        (d) => d.status === DistributionStatus.success,
+      ).length,
+      failedDeployments: deployments.filter(
+        (d) => d.status === DistributionStatus.failure,
+      ).length,
     });
 
-    return deployment;
+    return deployments;
+  }
+
+  private async saveStandardDeploymentInFailure(
+    command: PublishStandardsCommand,
+    target: Target,
+    deployments: StandardsDeployment[],
+    gitRepo: GitRepo,
+    errorMessage: string,
+    standardVersions: StandardVersion[], // Reuse the already-fetched standard versions
+  ) {
+    // Create failure deployment record using clean model
+    try {
+      // If standardVersions is empty (fetch failed), try to fetch what was intended
+      let versionsToRecord = standardVersions;
+      if (standardVersions.length === 0) {
+        this.logger.info(
+          'No standard versions available, attempting to fetch intended versions for failure record',
+          {
+            standardVersionIdsCount: command.standardVersionIds.length,
+          },
+        );
+
+        try {
+          const fetchedVersions = await Promise.all(
+            command.standardVersionIds.map(async (standardVersionId) => {
+              const standardVersion =
+                await this.standardsHexa.getStandardVersionById(
+                  standardVersionId,
+                );
+              return standardVersion;
+            }),
+          );
+          // Filter out null values and ensure type safety
+          versionsToRecord = fetchedVersions.filter(
+            (sv): sv is StandardVersion => sv !== null,
+          );
+
+          this.logger.info(
+            'Successfully fetched intended versions for failure record',
+            {
+              count: versionsToRecord.length,
+            },
+          );
+        } catch (fetchError) {
+          this.logger.warn(
+            'Could not fetch intended standard versions for failure record',
+            {
+              error:
+                fetchError instanceof Error
+                  ? fetchError.message
+                  : String(fetchError),
+            },
+          );
+          // Keep empty array if we can't fetch
+          versionsToRecord = [];
+        }
+      }
+
+      const failureDeployment: StandardsDeployment = {
+        id: createStandardsDeploymentId(uuidv4()),
+        standardVersions: versionsToRecord, // Use the versions (either passed or fetched)
+        createdAt: new Date().toISOString(),
+        authorId: command.userId as UserId,
+        organizationId: command.organizationId as OrganizationId,
+        gitCommit: undefined, // No commit created on failure
+        target: target,
+        status: DistributionStatus.failure,
+        error: errorMessage,
+      };
+
+      await this.standardsDeploymentRepository.add(failureDeployment);
+
+      // Add failure deployment to array for return
+      deployments.push(failureDeployment);
+
+      this.logger.info('Created failure deployment record', {
+        deploymentId: failureDeployment.id,
+        targetId: target.id,
+        gitRepoId: gitRepo.id,
+        status: DistributionStatus.failure,
+        error: errorMessage,
+      });
+    } catch (saveError) {
+      this.logger.error('Failed to save failure deployment record', {
+        targetId: target.id,
+        gitRepoId: gitRepo.id,
+        saveError:
+          saveError instanceof Error ? saveError.message : String(saveError),
+      });
+    }
   }
 }

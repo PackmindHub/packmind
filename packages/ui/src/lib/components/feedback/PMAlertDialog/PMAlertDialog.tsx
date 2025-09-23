@@ -4,7 +4,7 @@ import { PMButton } from '../../form/PMButton/PMButton';
 
 export type PMAlertDialogProps = {
   /** The trigger element that opens the alert dialog */
-  trigger: ReactNode;
+  trigger?: ReactNode;
   /** Title displayed in the alert dialog header */
   title: string;
   /** Message displayed in the alert dialog body */
@@ -60,7 +60,7 @@ export const PMAlertDialog = ({
       placement="center"
     >
       {/* @ts-expect-error https://github.com/radix-ui/primitives/issues/2309#issuecomment-1916541133 */}
-      <Dialog.Trigger asChild>{trigger}</Dialog.Trigger>
+      {trigger && <Dialog.Trigger asChild>{trigger}</Dialog.Trigger>}
 
       <Portal>
         <Dialog.Backdrop />

@@ -1,9 +1,5 @@
-import {
-  GitProviderVendors,
-  GitProvider,
-} from '../domain/entities/GitProvider';
-import { GithubProvider } from '../infra/repositories/github/GithubProvider';
-import { GitlabProvider } from '../infra/repositories/gitlab/GitlabProvider';
+import { GitProvider } from '../domain/entities/GitProvider';
+import { IGitProviderFactory } from '../domain/repositories/IGitProviderFactory';
 import { PackmindLogger } from '@packmind/shared';
 
 export interface ExternalRepository {
@@ -17,7 +13,10 @@ export interface ExternalRepository {
 }
 
 export class ExternalGitService {
-  constructor(private readonly logger: PackmindLogger) {}
+  constructor(
+    private readonly gitProviderFactory: IGitProviderFactory,
+    private readonly logger: PackmindLogger,
+  ) {}
 
   async listAvailableRepositories(
     gitProvider: GitProvider,
@@ -37,23 +36,6 @@ export class ExternalGitService {
   }
 
   private createGitProviderInstance(gitProvider: GitProvider) {
-    if (!gitProvider.token) {
-      throw new Error('Git provider token not configured');
-    }
-
-    switch (gitProvider.source) {
-      case GitProviderVendors.github:
-        return new GithubProvider(gitProvider.token, this.logger);
-      case GitProviderVendors.gitlab:
-        return new GitlabProvider(
-          gitProvider.token,
-          this.logger,
-          gitProvider.url || undefined,
-        );
-      default:
-        throw new Error(
-          `Unsupported git provider source: ${gitProvider.source}`,
-        );
-    }
+    return this.gitProviderFactory.createGitProvider(gitProvider);
   }
 }

@@ -9,6 +9,6 @@
     "tslib": "^2.3.0",
     "@packmind/accounts": "*",
     "express": "^5.1.0",
-    "ts-jest": "^29.4.0"
+    "ts-jest": "^29.4.1"
   }
 }

@@ -1,0 +1,677 @@
+# Global configuration
+global:
+  # Labels to be applied to all resources
+  labels: {}
+    # environment: production
+    # team: platform
+  
+  # Annotations to be applied to all resources
+  annotations: {}
+    # managed-by: helm
+    # version: v1.0.0
+  
+  # Global storage configuration
+  # Default storage class for all PVCs (if not specified per component)
+  storageClass: ""
+
+# Image pull secrets (if using private registries)
+imagePullSecrets: []
+  # - name: registry-secret
+
+# Docker registry configuration for private registries
+dockerRegistry:
+  # Set to true to create a docker-registry secret
+  enabled: true
+  # Registry configuration
+  registry: ""  # e.g., "registry.example.com" or "docker.io"
+  username: ""
+  password: ""
+  email: ""
+  # Alternative: use existing secret
+  existingSecret: ""
+  # Secret name will be: {{ include "packmind.fullname" . }}-registry-secret
+
+# Name override for the chart
+nameOverride: ""
+fullnameOverride: ""
+
+# Service account configuration
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use
+  name: ""
+
+# Security context for pods
+podSecurityContext:
+  fsGroup: 2000
+  # runAsUser: 1000
+  # runAsGroup: 3000
+  # runAsNonRoot: true
+  # fsGroupChangePolicy: "Always"
+  # supplementalGroups: []
+  # seLinuxOptions:
+  #   level: "s0:c123,c456"
+  # seccompProfile:
+  #   type: RuntimeDefault
+  # sysctls:
+  #   - name: net.core.somaxconn
+  #     value: "1024"
+  # windowsOptions:
+  #   gmsaCredentialSpecName: my-gmsa-credential
+  #   gmsaCredentialSpec: credential spec
+  #   runAsUserName: "ContainerUser"
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+    # add: []
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 1000
+  # runAsGroup: 3000
+  # seLinuxOptions:
+  #   level: "s0:c123,c456"
+  # seccompProfile:
+  #   type: RuntimeDefault
+  # windowsOptions:
+  #   gmsaCredentialSpecName: my-gmsa-credential
+  #   gmsaCredentialSpec: credential spec
+  #   runAsUserName: "ContainerUser"
+  # procMount: Default
+
+# API Service Configuration
+api:
+  enabled: true
+  
+  image:
+    repository: packmind/api
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  
+  replicaCount: 1
+  
+  service:
+    type: ClusterIP
+    port: 3000
+    targetPort: 3000
+    annotations: {}
+    labels: {}
+  
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  
+  # Liveness and readiness probes
+  livenessProbe:
+    httpGet:
+      path: /api/v0/healthcheck
+      port: 3000
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  readinessProbe:
+    httpGet:
+      path: /api/v0/healthcheck
+      port: 3000
+    initialDelaySeconds: 15
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+  
+  # Environment variables
+  env:
+    COOKIE_SECURE: "false"
+    NODE_ENV: "production"
+    # Add any additional environment variables here
+    # NEW_ENV_VAR: "value"
+    # DATABASE_POOL_SIZE: "10"
+    # LOG_LEVEL: "info"
+  
+  # CA Certificates configuration for Node.js applications
+  caCerts:
+    # Enable custom CA bundle injection
+    enabled: false
+    secret:
+      # Name of the secret containing the CA bundle
+      name: "ca-certs"
+      # Key in the secret containing the CA bundle file
+      key: "bundle.crt"
+  
+  # Additional labels and annotations
+  podLabels: {}
+  podAnnotations: {}
+  
+  # Service-specific security contexts (overrides global if set)
+  podSecurityContext: {}
+    # fsGroup: 2000
+    # runAsUser: 1000
+    # runAsGroup: 3000
+  securityContext: {}
+    # allowPrivilegeEscalation: false
+    # runAsNonRoot: true
+    # runAsUser: 1000
+  
+  # Node selector, tolerations and affinity
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  
+  # Auto scaling
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+
+# Frontend Service Configuration
+frontend:
+  enabled: true
+  
+  image:
+    repository: packmind/frontend
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  
+  replicaCount: 1
+  
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 80
+    annotations: {}
+    labels: {}
+  
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 200m
+      memory: 256Mi
+  
+  # Liveness and readiness probes
+  livenessProbe:
+    httpGet:
+      path: /
+      port: 80
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  readinessProbe:
+    httpGet:
+      path: /
+      port: 80
+    initialDelaySeconds: 15
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+  
+  # Environment variables (if needed for runtime configuration)
+  env: {}
+    # Add any additional environment variables here
+    # API_BASE_URL: "http://api.example.com"
+    # FEATURE_FLAGS: "feature1,feature2"
+  
+  # Additional labels and annotations
+  podLabels: {}
+  podAnnotations: {}
+  
+  # Service-specific security contexts (overrides global if set)
+  podSecurityContext: {}
+  securityContext: {}
+  
+  # Node selector, tolerations and affinity
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  
+  # Auto scaling
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+
+# MCP Server Configuration
+mcpServer:
+  enabled: true
+  
+  image:
+    repository: packmind/mcp
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  
+  replicaCount: 1
+  
+  service:
+    type: ClusterIP
+    port: 3001
+    targetPort: 3001
+    annotations: {}
+    labels: {}
+  
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  
+  # Liveness and readiness probes
+  livenessProbe:
+    httpGet:
+      path: /mcp/healthcheck
+      port: 3001
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  
+  readinessProbe:
+    httpGet:
+      path: /mcp/healthcheck
+      port: 3001
+    initialDelaySeconds: 15
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+  
+  # Environment variables
+  env:
+    RATE_LIMIT_MAX_REQUESTS: "10000"
+    # Add any additional environment variables here
+    # NEW_ENV_VAR: "value"
+    # ANOTHER_CONFIG: "setting"
+  
+  # CA Certificates configuration for Node.js applications
+  caCerts:
+    # Enable custom CA bundle injection
+    enabled: false
+    secret:
+      # Name of the secret containing the CA bundle
+      name: "ca-certs"
+      # Key in the secret containing the CA bundle file
+      key: "bundle.crt"
+  
+  # Additional labels and annotations
+  podLabels: {}
+  podAnnotations: {}
+  
+  # Service-specific security contexts (overrides global if set)
+  podSecurityContext: {}
+  securityContext: {}
+  
+  # Node selector, tolerations and affinity
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  
+  # Auto scaling
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+
+# Ingress configuration
+ingress:
+  enabled: true
+  # IngressClass configuration (recommended for Kubernetes 1.18+)
+  # Supported: "nginx", "traefik", "haproxy", "tailscale", "kong", "istio"
+  # Presets are automatically applied based on className when presets.enabled=true
+  className: ""
+  # Default host when no hosts are specified
+  defaultHost: "packmind.local"
+  
+  # Ingress annotations - these are applied when no custom annotations are provided
+  # Override these by providing your own annotations in the annotations section
+  annotations: {}
+  
+  # Ingress controller-specific annotation presets
+  # These are applied automatically based on the className when annotations is empty
+  presets:
+    # Enable automatic preset selection based on className
+    enabled: false
+    
+    # Nginx Ingress Controller presets
+    nginx:
+      "nginx.ingress.kubernetes.io/ssl-redirect": "true"
+      "nginx.ingress.kubernetes.io/force-ssl-redirect": "true"
+      "nginx.ingress.kubernetes.io/proxy-body-size": "32m"
+      "nginx.ingress.kubernetes.io/proxy-connect-timeout": "15"
+      "nginx.ingress.kubernetes.io/proxy-send-timeout": "600"
+      "nginx.ingress.kubernetes.io/proxy-read-timeout": "600"
+    
+    # Traefik Ingress Controller presets
+    traefik:
+      "traefik.ingress.kubernetes.io/router.tls": "true"
+      "traefik.ingress.kubernetes.io/router.middlewares": "default-headers@kubernetescrd"
+    
+    # HAProxy Ingress Controller presets
+    haproxy:
+      "haproxy.org/ssl-redirect": "true"
+      "haproxy.org/timeout-client": "600s"
+      "haproxy.org/timeout-server": "600s"
+    
+    # Tailscale Ingress (minimal configuration needed)
+    tailscale: {}
+    
+    # Kong Ingress Controller presets
+    kong:
+      "konghq.com/strip-path": "true"
+      "konghq.com/preserve-host": "true"
+    
+    # Istio Gateway presets
+    istio:
+      "kubernetes.io/ingress.class": "istio"
+  
+  # Example custom annotations (override presets):
+  # annotations:
+  #   # Nginx + Let's Encrypt:
+  #   cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  #   nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  #   nginx.ingress.kubernetes.io/proxy-body-size: "64m"
+  #   
+  #   # Traefik + Let's Encrypt:
+  #   cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  #   traefik.ingress.kubernetes.io/router.tls: "true"
+  #   traefik.ingress.kubernetes.io/router.tls.certresolver: "letsencrypt"
+  #   
+  #   # HAProxy + Let's Encrypt:
+  #   cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  #   haproxy.org/ssl-redirect: "true"
+  #   
+  #   # Kong Gateway:
+  #   konghq.com/strip-path: "true"
+  #   cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  #   
+  #   # Tailscale (minimal config):
+  #   # (Tailscale handles TLS automatically - no additional annotations needed)
+  
+  # Custom host configuration
+  # Routes are predefined: /api → API service, /mcp → MCP service, / → Frontend (catch-all)
+  # Only one host is supported (no multiple hosts or wildcards)
+  hosts: []
+    # Example single host configuration:
+    # - host: packmind.example.com
+    
+  # TLS configuration (works with all ingress controllers)
+  tls: []
+    # Standard TLS with cert-manager (Nginx, Traefik, HAProxy, Kong):
+    # - secretName: packmind-tls  # cert-manager will create this
+    #   hosts:
+    #     - packmind.example.com
+    #
+    # Tailscale Ingress (automatic TLS):
+    # - hosts:
+    #     - packmind  # First label only (becomes packmind.tailxyz.ts.net)
+    #
+    # Manual TLS secret (any ingress controller):
+    # - secretName: my-existing-tls-secret
+    #   hosts:
+    #     - packmind.example.com
+  
+  # Additional ingress configuration for advanced use cases
+  advanced:
+    # Rate limiting configuration
+    rateLimiting:
+      enabled: false
+      requestsPerMinute: 100
+      burstSize: 50
+    
+    # CORS configuration
+    cors:
+      enabled: false
+      allowOrigins: ["https://packmind.example.com"]
+      allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+      allowHeaders: ["Content-Type", "Authorization"]
+      allowCredentials: true
+      maxAge: 86400
+    
+    # Custom backend protocol (for GRPC, HTTP2, etc.)
+    backendProtocol: "HTTP"  # Options: HTTP, HTTPS, GRPC, HTTP2
+
+# PostgreSQL configuration
+postgresql:
+  # Set to false to use external PostgreSQL
+  enabled: true
+  
+  # External PostgreSQL configuration (when enabled: false)
+  external:
+    # Complete database URL (e.g., postgres://user:password@host:port/database)
+    databaseUrl: ""
+    # Alternative: if you want to use an existing secret containing the database URL
+    existingSecret: ""
+    existingSecretKey: "database-url"
+  
+  # Internal PostgreSQL configuration (when enabled: true)
+  image:
+    repository: postgres
+    tag: "17.6-alpine3.21"
+    pullPolicy: IfNotPresent
+  
+  auth:
+    username: "postgres"
+    password: "postgres"
+    database: "packmind"
+  
+  service:
+    type: ClusterIP
+  
+  # Environment variables (for runtime configuration)
+  env: {}
+    # Add any additional environment variables here
+    # POSTGRES_CUSTOM_CONFIG: "value"
+  
+  persistence:
+    enabled: true
+    size: 2Gi
+    # Storage class for PostgreSQL PVC
+    # Leave empty to use default storage class
+    storageClass: ""
+    
+    # Advanced PVC configuration
+    # Storage resource limits (optional)
+    limits: {}
+      # storage: 50Gi
+    
+    # PV selector for binding to specific volumes
+    selector: {}
+      # matchLabels:
+      #   environment: production
+      #   database: postgresql
+  
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  
+  # Additional labels and annotations
+  podLabels: {}
+  podAnnotations: {}
+  
+  # Service-specific security contexts (overrides global if set)
+  podSecurityContext: {}
+    # fsGroup: 2000
+    # runAsUser: 1000
+    # runAsGroup: 3000
+  securityContext: {}
+    # allowPrivilegeEscalation: false
+    # runAsNonRoot: true
+    # runAsUser: 1000
+  
+  # Node selector, tolerations and affinity
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# Redis configuration
+redis:
+  # Set to false to use external Redis
+  enabled: true
+  
+  # External Redis configuration (when enabled: false)
+  external:
+    # Complete Redis URI (e.g., redis://user:password@host:port/database)
+    uri: ""
+    # Alternative: if you want to use an existing secret containing the Redis URI
+    existingSecret: ""
+    existingSecretKey: "redis-uri"
+  
+  # Internal Redis configuration (when enabled: true)
+  image:
+    repository: redis
+    tag: "7.2.4-alpine"
+    pullPolicy: IfNotPresent
+  
+  auth:
+    enabled: false
+    password: ""
+  
+  service:
+    type: ClusterIP
+  
+  # Environment variables (for runtime configuration)
+  env: {}
+    # Add any additional environment variables here
+    # REDIS_CUSTOM_CONFIG: "value"
+  
+  persistence:
+    enabled: true
+    size: 8Gi
+    # Storage class for Redis PVC
+    # Leave empty to use default storage class
+    storageClass: ""
+    
+    # Advanced PVC configuration
+    # Storage resource limits (optional)
+    limits: {}
+      # storage: 50Gi
+    
+    # PV selector for binding to specific volumes
+    selector: {}
+      # matchLabels:
+      #   environment: production
+      #   cache: redis
+  
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  
+  # Additional labels and annotations
+  podLabels: {}
+  podAnnotations: {}
+  
+  # Service-specific security contexts (overrides global if set)
+  podSecurityContext: {}
+    # fsGroup: 2000
+    # runAsUser: 1000
+    # runAsGroup: 3000
+  securityContext: {}
+    # allowPrivilegeEscalation: false
+    # runAsNonRoot: true
+    # runAsUser: 1000
+  
+  # Node selector, tolerations and affinity
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# Secrets configuration
+# This section manages how secrets are handled in the cluster
+# 
+# External Secret Management:
+# When using external secret operators (Vault, Infisical, External Secrets Operator, etc.),
+# set secrets.create=false to prevent this chart from creating any Secret resources.
+# The external operator will create and manage the secrets instead.
+#
+# Example configurations:
+# 1. Default (Helm manages secrets):     secrets.create=true
+# 2. External operator manages all:      secrets.create=false  
+# 3. Mixed approach (per-component):     secrets.create=true, secrets.api.create=false
+#
+secrets:
+  # Global secret management configuration
+  # Set to false when using external secret operators (Vault, Infisical, etc.)
+  create: true
+  
+  # API secrets
+  api:
+    # Set to false to disable API secret creation (when using external operators)
+    create: true
+    # JWT secret key for API authentication
+    jwtSecretKey: ""
+    # Encryption key for sensitive data
+    encryptionKey: ""
+    # OpenAI API key (optional)
+    openaiApiKey: ""
+  
+  # MCP secrets
+  mcp:
+    # Set to false to disable MCP secret creation (when using external operators)
+    create: true
+    # JWT secret key for MCP authentication
+    jwtSecretKey: ""
+  
+  # Database secrets (for external databases)
+  database:
+    # Set to false to disable database secret creation (when using external operators)
+    create: true
+  
+  # Redis secrets (for external Redis)
+  redis:
+    # Set to false to disable Redis secret creation (when using external operators)
+    create: true
+  
+  # Existing secrets (alternative to providing values above)
+  # These take precedence over creating new secrets
+  existing:
+    # If you have existing secrets, specify their names
+    apiSecret: ""
+    mcpSecret: ""
+    databaseSecret: ""
+    redisSecret: ""
+
+# ConfigMaps for additional configuration
+configMaps:
+  # Additional configuration files can be mounted
+  # Example:
+  # app-config:
+  #   data:
+  #     config.json: |
+  #       {
+  #         "feature1": true,
+  #         "feature2": false
+  #       }
+
+
+# Network policies
+networkPolicy:
+  enabled: false
+  ingress: []
+  egress: []
+

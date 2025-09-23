@@ -1,7 +1,7 @@
 import { RecipeVersion } from '@packmind/recipes';
 import { StandardVersion } from '@packmind/standards';
 import { GitRepo } from '@packmind/git';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger, Target } from '@packmind/shared';
 import { FileUpdates } from '../../domain/entities/FileUpdates';
 import { CodingAgent } from '../../domain/CodingAgents';
 import { DeployerService } from './DeployerService';
@@ -19,16 +19,23 @@ export class CodingAgentServices {
   async prepareRecipesDeployment(
     recipeVersions: RecipeVersion[],
     gitRepo: GitRepo,
+    targets: Target[],
     codingAgents: CodingAgent[],
   ): Promise<FileUpdates> {
     this.logger.info('Preparing recipes deployment', {
       recipesCount: recipeVersions.length,
+      targetsCount: targets.length,
       agentsCount: codingAgents.length,
       gitRepoId: gitRepo.id,
     });
 
     if (recipeVersions.length === 0) {
       this.logger.warn('No recipes provided for deployment');
+      return { createOrUpdate: [], delete: [] };
+    }
+
+    if (targets.length === 0) {
+      this.logger.warn('No targets specified for deployment');
       return { createOrUpdate: [], delete: [] };
     }
 
@@ -40,6 +47,7 @@ export class CodingAgentServices {
     const result = await this.deployerService.aggregateRecipeDeployments(
       recipeVersions,
       gitRepo,
+      targets,
       codingAgents,
     );
 
@@ -53,16 +61,23 @@ export class CodingAgentServices {
   async prepareStandardsDeployment(
     standardVersions: StandardVersion[],
     gitRepo: GitRepo,
+    targets: Target[],
     codingAgents: CodingAgent[],
   ): Promise<FileUpdates> {
     this.logger.info('Preparing standards deployment', {
       standardsCount: standardVersions.length,
+      targetsCount: targets.length,
       agentsCount: codingAgents.length,
       gitRepoId: gitRepo.id,
     });
 
     if (standardVersions.length === 0) {
       this.logger.warn('No standards provided for deployment');
+      return { createOrUpdate: [], delete: [] };
+    }
+
+    if (targets.length === 0) {
+      this.logger.warn('No targets specified for deployment');
       return { createOrUpdate: [], delete: [] };
     }
 
@@ -74,6 +89,7 @@ export class CodingAgentServices {
     const result = await this.deployerService.aggregateStandardsDeployments(
       standardVersions,
       gitRepo,
+      targets,
       codingAgents,
     );
 

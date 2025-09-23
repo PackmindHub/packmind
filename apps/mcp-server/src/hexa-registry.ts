@@ -5,8 +5,10 @@ import { AccountsHexa } from '@packmind/accounts';
 import { GitHexa } from '@packmind/git';
 import { RecipesHexa } from '@packmind/recipes';
 import { StandardsHexa } from '@packmind/standards';
+import { DeploymentsHexa } from '@packmind/deployments';
 import { HexaRegistry, PackmindLogger, LogLevel } from '@packmind/shared';
 import { RecipesUsageHexa } from '@packmind/analytics';
+import { CodingAgentHexa } from '@packmind/coding-agent';
 
 const logger = new PackmindLogger('HexaRegistryPlugin', LogLevel.INFO);
 
@@ -48,6 +50,13 @@ async function hexaRegistryPlugin(fastify: FastifyInstance) {
     logger.debug('RecipesHexa registered');
     registry.register(StandardsHexa);
     logger.debug('StandardsHexa registered');
+
+    //Deployments hexa need coding agent hexa for now
+    registry.register(CodingAgentHexa);
+    logger.debug('CodingAgentHexa registered');
+
+    registry.register(DeploymentsHexa);
+    logger.debug('DeploymentsHexa registered');
     registry.register(RecipesUsageHexa);
     logger.debug('RecipesUsageHexa registered');
 
@@ -119,6 +128,17 @@ async function hexaRegistryPlugin(fastify: FastifyInstance) {
     });
     logger.debug('standardsHexa decorator added');
 
+    fastify.decorate('deploymentsHexa', () => {
+      logger.debug('deploymentsHexa() called');
+      if (!registry.initialized) {
+        throw new Error(
+          'HexaRegistry not initialized yet. Ensure database connection is ready.',
+        );
+      }
+      return registry.get(DeploymentsHexa);
+    });
+    logger.debug('deploymentsHexa decorator added');
+
     fastify.decorate('recipesUsageHexa', () => {
       logger.debug('recipesUsageHexa() called');
       if (!registry.initialized) {
@@ -128,7 +148,7 @@ async function hexaRegistryPlugin(fastify: FastifyInstance) {
       }
       return registry.get(RecipesUsageHexa);
     });
-    logger.debug('recipesHexa decorator added');
+    logger.debug('recipesUsageHexa decorator added');
   } catch (error) {
     logger.error('Failed to register HexaRegistry plugin', {
       error: error instanceof Error ? error.message : String(error),
@@ -152,5 +172,6 @@ declare module 'fastify' {
     recipesHexa: () => RecipesHexa;
     recipesUsageHexa: () => RecipesUsageHexa;
     standardsHexa: () => StandardsHexa;
+    deploymentsHexa: () => DeploymentsHexa;
   }
 }

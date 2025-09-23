@@ -1,0 +1,26 @@
+{{- if .Values.mcpServer.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "packmind.fullname" . }}-mcp-server
+  labels:
+    {{- include "packmind.mcpServer.labels" . | nindent 4 }}
+  {{- with .Values.mcpServer.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with (include "packmind.annotations" .) }}
+    {{- if . }}
+    {{- . | nindent 4 }}
+    {{- end }}
+  {{- end }}
+spec:
+  type: {{ .Values.mcpServer.service.type }}
+  ports:
+    - port: {{ .Values.mcpServer.service.port }}
+      targetPort: {{ .Values.mcpServer.service.targetPort }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "packmind.mcpServer.selectorLabels" . | nindent 4 }}
+{{- end }}

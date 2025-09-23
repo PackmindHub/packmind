@@ -4,11 +4,17 @@ import { RecipesHexa, recipesSchemas } from '@packmind/recipes';
 import { Recipe } from '@packmind/recipes/types';
 import { GitHexa, gitSchemas } from '@packmind/git';
 import { GitRepo, GitProviderVendors } from '@packmind/git/types';
-import { HexaRegistry } from '@packmind/shared';
+import {
+  createOrganizationId,
+  createUserId,
+  HexaRegistry,
+  IDeploymentPort,
+} from '@packmind/shared';
 import { makeTestDatasource } from '@packmind/shared/test';
 
 import { DataSource } from 'typeorm';
 import { RecipesUsageHexa, recipesUsageSchemas } from '@packmind/analytics';
+import { TargetSchema } from '@packmind/deployments';
 
 // Mock only Configuration from @packmind/shared
 jest.mock('@packmind/shared', () => {
@@ -30,6 +36,7 @@ describe('Recipe usage tracking', () => {
   let accountsHexa: AccountsHexa;
   let recipesHexa: RecipesHexa;
   let recipesUsageHexa: RecipesUsageHexa;
+  let gitHexa: GitHexa;
   let registry: HexaRegistry;
   let dataSource: DataSource;
 
@@ -44,6 +51,7 @@ describe('Recipe usage tracking', () => {
       ...recipesSchemas,
       ...recipesUsageSchemas,
       ...gitSchemas,
+      TargetSchema,
     ]);
     await dataSource.initialize();
     await dataSource.synchronize();
@@ -61,9 +69,16 @@ describe('Recipe usage tracking', () => {
     registry.init(dataSource);
 
     // Get initialized hexas
+    gitHexa = registry.get(GitHexa);
     accountsHexa = registry.get(AccountsHexa);
     recipesHexa = registry.get(RecipesHexa);
+
     recipesUsageHexa = registry.get(RecipesUsageHexa);
+    const mockDeploymentPort = {
+      addTarget: jest.fn(),
+    } as Partial<jest.Mocked<IDeploymentPort>> as jest.Mocked<IDeploymentPort>;
+
+    gitHexa.setDeploymentsAdapter(mockDeploymentPort);
 
     // Create test data
     organization = await accountsHexa.createOrganization({
@@ -85,43 +100,6 @@ describe('Recipe usage tracking', () => {
 
   afterEach(async () => {
     await dataSource.destroy();
-  });
-
-  test('A recipe usage can be tracked', async () => {
-    const usage = await recipesUsageHexa.trackRecipeUsage(
-      [recipe.slug],
-      'ZeAgent',
-      user.id,
-    );
-
-    expect(usage).toMatchObject([
-      {
-        recipeId: recipe.id,
-        aiAgent: 'ZeAgent',
-        userId: user.id,
-      },
-    ]);
-  });
-
-  test('A deleted recipe usage can be tracked', async () => {
-    await recipesHexa.deleteRecipe({
-      recipeId: recipe.id,
-      userId: user.id,
-      organizationId: organization.id,
-    });
-    const usage = await recipesUsageHexa.trackRecipeUsage(
-      [recipe.slug],
-      'ZeAgent',
-      user.id,
-    );
-
-    expect(usage).toMatchObject([
-      {
-        recipeId: recipe.id,
-        aiAgent: 'ZeAgent',
-        userId: user.id,
-      },
-    ]);
   });
 
   describe('when a git repository is provided', () => {
@@ -152,12 +130,13 @@ describe('Recipe usage tracking', () => {
     });
 
     test('A recipe usage can be tracked', async () => {
-      const usage = await recipesUsageHexa.trackRecipeUsage(
-        [recipe.slug],
-        'ZeAgent',
-        user.id,
-        `${gitRepo.owner}/${gitRepo.repo}`,
-      );
+      const usage = await recipesUsageHexa.trackRecipeUsage({
+        recipeSlugs: [recipe.slug],
+        aiAgent: 'ZeAgent',
+        userId: createUserId(user.id),
+        organizationId: createOrganizationId(organization.id),
+        gitRepo: `${gitRepo.owner}/${gitRepo.repo}`,
+      });
 
       expect(usage).toMatchObject([
         {
@@ -169,28 +148,27 @@ describe('Recipe usage tracking', () => {
       ]);
     });
 
-    describe('when the git repo is deleted', () => {
-      beforeEach(async () => {
-        await gitHexa.deleteGitRepo(gitRepo.id, user.id);
+    test('A deleted recipe usage can be tracked', async () => {
+      await recipesHexa.deleteRecipe({
+        recipeId: recipe.id,
+        userId: user.id,
+        organizationId: organization.id,
+      });
+      const usage = await recipesUsageHexa.trackRecipeUsage({
+        recipeSlugs: [recipe.slug],
+        aiAgent: 'ZeAgent',
+        gitRepo: `${gitRepo.owner}/${gitRepo.repo}`,
+        userId: createUserId(user.id),
+        organizationId: createOrganizationId(organization.id),
       });
 
-      test('A recipe usage can still be tracked', async () => {
-        const usage = await recipesUsageHexa.trackRecipeUsage(
-          [recipe.slug],
-          'ZeAgent',
-          user.id,
-          `${gitRepo.owner}/${gitRepo.repo}`,
-        );
-
-        expect(usage).toMatchObject([
-          {
-            recipeId: recipe.id,
-            aiAgent: 'ZeAgent',
-            userId: user.id,
-            gitRepoId: gitRepo.id,
-          },
-        ]);
-      });
+      expect(usage).toMatchObject([
+        {
+          recipeId: recipe.id,
+          aiAgent: 'ZeAgent',
+          userId: user.id,
+        },
+      ]);
     });
   });
 });

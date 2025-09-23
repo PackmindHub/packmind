@@ -19,6 +19,7 @@
     "paths": {
       "@packmind/accounts": ["packages/accounts/src/index.ts"],
       "@packmind/accounts/types": ["packages/accounts/src/types/index.ts"],
+      "@packmind/analytics/types": ["packages/analytics/src/types/index.ts"],
       "@packmind/assets": ["packages/assets/src/index.ts"],
       "@packmind/assets/*": ["packages/assets/src/*"],
       "@packmind/coding-agent": ["packages/coding-agent/src/index.ts"],

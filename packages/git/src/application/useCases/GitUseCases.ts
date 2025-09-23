@@ -13,8 +13,10 @@ import { ListProvidersUseCase } from './listProviders/listProviders.usecase';
 import { GetOrganizationRepositoriesUseCase } from './getOrganizationRepositories/getOrganizationRepositories.usecase';
 import { GetRepositoryByIdUseCase } from './getRepositoryById/getRepositoryById.usecase';
 import { UpdateGitProviderUseCase } from './updateGitProvider/updateGitProvider.usecase';
+import { GetAvailableRemoteDirectoriesUseCase } from './getAvailableRemoteDirectories/getAvailableRemoteDirectories.usecase';
+import { CheckDirectoryExistenceUseCase } from './checkDirectoryExistence/checkDirectoryExistence.usecase';
 import { IGitServices } from '../IGitServices';
-import { PackmindLogger, QueryOption } from '@packmind/shared';
+import { PackmindLogger, QueryOption, IDeploymentPort } from '@packmind/shared';
 import { GitProvider, GitProviderId } from '../../domain/entities/GitProvider';
 import { GitRepo, GitRepoId } from '../../domain/entities/GitRepo';
 import { GitCommit } from '../../domain/entities/GitCommit';
@@ -25,11 +27,16 @@ import {
   IFindGitRepoByOwnerRepoAndBranchInOrganizationUseCase,
 } from '../../domain/useCases/IFindGitRepoByOwnerRepoAndBranchInOrganization';
 import { FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase } from './findGitRepoByOwnerRepoAndBranchInOrganization/findGitRepoByOwnerRepoAndBranchInOrganization.usecase';
+import { GetAvailableRemoteDirectoriesCommand } from '@packmind/shared';
+import {
+  CheckDirectoryExistenceCommand,
+  CheckDirectoryExistenceResult,
+} from '@packmind/shared';
 const origin = 'GitUseCases';
 
 export class GitUseCases {
   private readonly _addGitProvider: AddGitProviderUseCase;
-  private readonly _addGitRepo: AddGitRepoUseCase;
+  private _addGitRepo: AddGitRepoUseCase;
   private readonly _deleteGitProvider: DeleteGitProviderUseCase;
   private readonly _deleteGitRepo: DeleteGitRepoUseCase;
   private readonly _listAvailableRepos: ListAvailableReposUseCase;
@@ -44,6 +51,10 @@ export class GitUseCases {
   private readonly _getRepositoryById: GetRepositoryByIdUseCase;
   private readonly _updateGitProvider: UpdateGitProviderUseCase;
   private readonly _findGitRepoByOwnerRepoAndBranchInOrganization: IFindGitRepoByOwnerRepoAndBranchInOrganizationUseCase;
+  private readonly _getAvailableRemoteDirectories: GetAvailableRemoteDirectoriesUseCase;
+  private readonly _checkDirectoryExistence: CheckDirectoryExistenceUseCase;
+
+  private deploymentsAdapter?: IDeploymentPort;
 
   constructor(
     private readonly gitServices: IGitServices,
@@ -73,15 +84,18 @@ export class GitUseCases {
     this._commitToGit = new CommitToGit(
       gitServices.getGitCommitService(),
       gitServices.getGitProviderService(),
+      gitServices.getGitRepoFactory(),
       this.logger,
     );
     this._handleWebHook = new HandleWebHook(
       gitServices.getGitCommitService(),
       gitServices.getGitProviderService(),
+      gitServices.getGitRepoFactory(),
       this.logger,
     );
     this._getFileFromRepo = new GetFileFromRepo(
       gitServices.getGitProviderService(),
+      gitServices.getGitRepoFactory(),
       this.logger,
     );
     this._findGitRepoByOwnerAndRepo = new FindGitRepoByOwnerAndRepoUseCase(
@@ -107,8 +121,30 @@ export class GitUseCases {
       new FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase(
         gitServices.getGitRepoService(),
       );
+    this._getAvailableRemoteDirectories =
+      new GetAvailableRemoteDirectoriesUseCase(
+        gitServices.getGitProviderService(),
+      );
+    this._checkDirectoryExistence = new CheckDirectoryExistenceUseCase(
+      gitServices.getGitRepoService(),
+      gitServices.getGitProviderService(),
+      gitServices.getGitRepoFactory(),
+    );
 
     this.logger.info('GitUseCases initialized successfully');
+  }
+
+  /**
+   * Set the deployments adapter for creating default targets
+   */
+  public setDeploymentsAdapter(adapter: IDeploymentPort): void {
+    this.deploymentsAdapter = adapter;
+    // Recreate the AddGitRepoUseCase with the deployment adapter
+    this._addGitRepo = new AddGitRepoUseCase(
+      this.gitServices.getGitProviderService(),
+      this.gitServices.getGitRepoService(),
+      this.deploymentsAdapter,
+    );
   }
 
   public addGitProvider(
@@ -248,5 +284,17 @@ export class GitUseCases {
     command: FindGitRepoByOwnerRepoAndBranchInOrganizationCommand,
   ): Promise<GitRepo | null> {
     return this._findGitRepoByOwnerRepoAndBranchInOrganization.execute(command);
+  }
+
+  public async getAvailableRemoteDirectories(
+    command: GetAvailableRemoteDirectoriesCommand,
+  ): Promise<string[]> {
+    return this._getAvailableRemoteDirectories.execute(command);
+  }
+
+  public async checkDirectoryExistence(
+    command: CheckDirectoryExistenceCommand,
+  ): Promise<CheckDirectoryExistenceResult> {
+    return this._checkDirectoryExistence.execute(command);
   }
 }

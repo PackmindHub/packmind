@@ -5,16 +5,34 @@ import {
   IAddGitRepoUseCase,
 } from '../../../domain/useCases/IAddGitRepo';
 import { GitRepo } from '../../../domain/entities/GitRepo';
-import { createOrganizationId } from '@packmind/shared';
+import {
+  createOrganizationId,
+  IDeploymentPort,
+  createUserId,
+  GitRepoAlreadyExistsError,
+  GitProviderNotFoundError,
+  GitProviderOrganizationMismatchError,
+  PackmindLogger,
+} from '@packmind/shared';
+
+const origin = 'AddGitRepoUseCase';
 
 export class AddGitRepoUseCase implements IAddGitRepoUseCase {
   constructor(
     private readonly gitProviderService: GitProviderService,
     private readonly gitRepoService: GitRepoService,
+    private readonly deploymentsAdapter?: IDeploymentPort,
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
   async execute(command: AddGitRepoCommand): Promise<GitRepo> {
-    const { organizationId, gitProviderId, owner, repo, branch } = command;
+    const { organizationId, gitProviderId, owner, repo, branch, userId } =
+      command;
+
+    // Check deployment port availability at the beginning
+    if (!this.deploymentsAdapter) {
+      throw new Error('DeploymentsAdapter is not available');
+    }
 
     // Business rule: gitProviderId is required
     if (!gitProviderId) {
@@ -30,13 +48,25 @@ export class AddGitRepoUseCase implements IAddGitRepoUseCase {
     const gitProvider =
       await this.gitProviderService.findGitProviderById(gitProviderId);
     if (!gitProvider) {
-      throw new Error('Git provider not found');
+      this.logger.error('Git provider not found', {
+        gitProviderId,
+        organizationId,
+        userId,
+      });
+      throw new GitProviderNotFoundError(gitProviderId);
     }
 
     // Business rule: git provider must belong to the same organization
     if (gitProvider.organizationId !== organizationId) {
-      throw new Error(
-        'Git provider does not belong to the specified organization',
+      this.logger.error('Git provider does not belong to organization', {
+        gitProviderId,
+        providerOrganizationId: gitProvider.organizationId,
+        requestedOrganizationId: organizationId,
+        userId,
+      });
+      throw new GitProviderOrganizationMismatchError(
+        gitProviderId,
+        organizationId,
       );
     }
 
@@ -50,9 +80,16 @@ export class AddGitRepoUseCase implements IAddGitRepoUseCase {
       );
 
     if (existingRepo) {
-      throw new Error(
-        `Repository ${owner}/${repo} on branch '${branch}' already exists in this organization`,
-      );
+      this.logger.error('Repository already exists in organization', {
+        owner,
+        repo,
+        branch,
+        organizationId,
+        gitProviderId,
+        userId,
+        existingRepoId: existingRepo.id,
+      });
+      throw new GitRepoAlreadyExistsError(owner, repo, branch, organizationId);
     }
 
     // Create the repository with provider association
@@ -63,6 +100,17 @@ export class AddGitRepoUseCase implements IAddGitRepoUseCase {
       providerId: gitProviderId,
     };
 
-    return this.gitRepoService.addGitRepo(gitRepoWithProvider);
+    const createdRepo =
+      await this.gitRepoService.addGitRepo(gitRepoWithProvider);
+
+    await this.deploymentsAdapter.addTarget({
+      userId: createUserId(userId),
+      organizationId: createOrganizationId(organizationId),
+      name: 'Default',
+      path: '/',
+      gitRepoId: createdRepo.id,
+    });
+
+    return createdRepo;
   }
 }

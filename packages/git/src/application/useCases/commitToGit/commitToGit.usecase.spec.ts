@@ -9,23 +9,17 @@ import {
   GitProviderVendors,
 } from '../../../domain/entities/GitProvider';
 import { IGitRepo } from '../../../domain/repositories/IGitRepo';
+import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
 import { gitCommitFactory } from '../../../../test/gitCommitFactory';
 import { PackmindLogger } from '@packmind/shared';
 import { stubLogger } from '@packmind/shared/test';
 import { createOrganizationId } from '@packmind/accounts';
-import { GithubRepository } from '../../../infra/repositories/github/GithubRepository';
-
-// Mock the GithubRepository
-jest.mock('../../../infra/repositories/github/GithubRepository');
-
-const MockedGithubRepository = GithubRepository as jest.MockedClass<
-  typeof GithubRepository
->;
 
 describe('CommitToGit', () => {
   let commitToGit: CommitToGit;
   let mockGitCommitService: jest.Mocked<GitCommitService>;
   let mockGitProviderService: jest.Mocked<GitProviderService>;
+  let mockGitRepoFactory: jest.Mocked<IGitRepoFactory>;
   let mockLogger: jest.Mocked<PackmindLogger>;
   let mockGithubRepository: jest.Mocked<IGitRepo>;
 
@@ -51,15 +45,25 @@ describe('CommitToGit', () => {
       commitFiles: jest.fn(),
       handlePushHook: jest.fn(),
       getFileOnRepo: jest.fn(),
+      listDirectoriesOnRepo: jest.fn(),
+      checkDirectoryExists: jest.fn(),
     } as jest.Mocked<IGitRepo>;
 
-    MockedGithubRepository.mockImplementation(
-      () => mockGithubRepository as unknown as GithubRepository,
-    );
+    mockGitRepoFactory = {
+      createGitRepo: jest.fn().mockImplementation((gitRepo, provider) => {
+        if (provider.source === 'UNSUPPORTED') {
+          throw new Error(
+            `Unsupported git provider source: ${provider.source}`,
+          );
+        }
+        return mockGithubRepository;
+      }),
+    } as jest.Mocked<IGitRepoFactory>;
 
     commitToGit = new CommitToGit(
       mockGitCommitService,
       mockGitProviderService,
+      mockGitRepoFactory,
       mockLogger,
     );
   });
@@ -115,14 +119,9 @@ describe('CommitToGit', () => {
         'Commit message',
       );
 
-      expect(MockedGithubRepository).toHaveBeenCalledWith(
-        'github-token',
-        {
-          owner: 'test-owner',
-          repo: 'test-repo',
-          branch: 'main',
-        },
-        mockLogger,
+      expect(mockGitRepoFactory.createGitRepo).toHaveBeenCalledWith(
+        mockGitRepo,
+        mockGitProvider,
       );
 
       expect(mockGithubRepository.commitFiles).toHaveBeenCalledWith(

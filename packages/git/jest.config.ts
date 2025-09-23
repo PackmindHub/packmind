@@ -11,7 +11,7 @@ export default {
   },
   transformIgnorePatterns: ['/node_modules/(?!slug).+\\.js$'],
   moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: '../../coverage/packages/recipes',
+  coverageDirectory: '../../coverage/packages/git',
   moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, {
     prefix: '<rootDir>/../../',
   }),

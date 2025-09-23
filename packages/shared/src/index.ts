@@ -3,6 +3,7 @@ export * from './ai/prompts/OpenAIService';
 export * from './ai/prompts/types';
 export * from './ai/agents/AiAgentTypes';
 export * from './ai/errors/AiNotConfigured';
+export * from './cache/Cache';
 export * from './hexa/BaseHexa';
 export * from './hexa/HexaRegistry';
 export * from './database/migrationColumns';

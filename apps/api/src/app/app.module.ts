@@ -25,6 +25,7 @@ import { McpModule } from './mcp/mcp.module';
 import { HexaRegistryModule } from './shared/HexaRegistryModule';
 import { DeploymentsController } from './deployments/deployments.controller';
 import { DeploymentsModule } from './deployments/deployments.module';
+import { TargetsModule } from './targets/targets.module';
 import { SSEModule } from './sse/sse.module';
 import { JobsHexa } from '@packmind/jobs';
 import { LinterHexa } from '@packmind/linter';
@@ -93,6 +94,7 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
     McpModule,
     AnalyticsModule,
     DeploymentsModule,
+    TargetsModule,
     SSEModule,
   ],
   controllers: [AppController, DeploymentsController],

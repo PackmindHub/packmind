@@ -7,12 +7,15 @@ import {
   PMTable,
   PMTableColumn,
   PMTableRow,
-  PMHeading,
   PMText,
-  PMPageSection,
   PMEmptyState,
   PMAlert,
   PMAlertDialog,
+  PMVStack,
+  PMSpinner,
+  PMMenu,
+  PMPortal,
+  PMIcon,
 } from '@packmind/ui';
 import { OrganizationId } from '@packmind/accounts/types';
 import {
@@ -21,19 +24,16 @@ import {
 } from '../api/queries';
 import { GitProviderUI } from '../types/GitProviderTypes';
 import { GIT_MESSAGES } from '../constants/messages';
+import { ManageGitProviderDialog } from './ManageGitProviderDialog';
+import { extractErrorMessage } from '../utils/errorUtils';
+import { LuEllipsis } from 'react-icons/lu';
 
 interface GitProvidersListProps {
   organizationId: OrganizationId;
-  onCreateProvider: () => void;
-  onEditProvider: (provider: GitProviderUI) => void;
-  onManageRepositories: (provider: GitProviderUI) => void;
 }
 
 export const GitProvidersList: React.FC<GitProvidersListProps> = ({
   organizationId,
-  onCreateProvider,
-  onEditProvider,
-  onManageRepositories,
 }) => {
   const {
     data: providers,
@@ -49,6 +49,16 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
     type: 'success' | 'error';
     message: string;
   } | null>(null);
+
+  const [editingProvider, setEditingProvider] = useState<GitProviderUI | null>(
+    null,
+  );
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+
+  const handleEditDialogVisibility = (open: boolean) => {
+    setEditingProvider(null);
+    setOpenEditDialog(open);
+  };
 
   const confirmDeleteProvider = useCallback(async () => {
     if (!providerToDelete) return;
@@ -73,7 +83,10 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
       console.error('Failed to delete git provider:', error);
       setDeleteAlert({
         type: 'error',
-        message: GIT_MESSAGES.error.providerDeleteFailed,
+        message: extractErrorMessage(
+          error,
+          GIT_MESSAGES.error.providerDeleteFailed,
+        ),
       });
       setDeleteDialogOpen(false);
       setProviderToDelete(null);
@@ -82,7 +95,6 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
 
   const tableData = useMemo<PMTableRow[]>(() => {
     if (!providers) return [];
-
     return providers.map((provider: GitProviderUI) => ({
       id: provider.id,
       source: (
@@ -93,100 +105,74 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
       url: provider.url,
       repositoryCount: provider.repos?.length || 0,
       actions: (
-        <PMHStack gap={2}>
-          <PMButton
-            variant="primary"
-            colorScheme="blue"
-            size="sm"
-            onClick={() => onManageRepositories(provider)}
-          >
-            Manage Repositories
-          </PMButton>
-          <PMButton
-            variant="outline"
-            size="sm"
-            onClick={() => onEditProvider(provider)}
-          >
-            Edit
-          </PMButton>
-          <PMAlertDialog
-            trigger={
-              <PMButton
-                variant="outline"
-                colorScheme="red"
-                size="sm"
-                loading={deleteProviderMutation.isPending}
-              >
-                Delete
+        <PMHStack gap={2} justifyContent={'center'}>
+          <PMMenu.Root>
+            <PMMenu.Trigger asChild>
+              <PMButton variant="secondary" size="sm">
+                <PMIcon>
+                  <LuEllipsis />
+                </PMIcon>
               </PMButton>
-            }
-            title="Delete Git Provider"
-            message={GIT_MESSAGES.confirmation.deleteProvider(provider.source)}
-            confirmText="Delete"
-            cancelText="Cancel"
-            confirmColorScheme="red"
-            onConfirm={confirmDeleteProvider}
-            open={deleteDialogOpen && providerToDelete?.id === provider.id}
-            onOpenChange={(open) => {
-              if (open) {
-                setProviderToDelete(provider);
-                setDeleteDialogOpen(true);
-              } else {
-                setDeleteDialogOpen(false);
-                setProviderToDelete(null);
-              }
-            }}
-            isLoading={deleteProviderMutation.isPending}
-          />
+            </PMMenu.Trigger>
+
+            <PMPortal>
+              <PMMenu.Positioner>
+                <PMMenu.Content>
+                  <PMMenu.Item
+                    value="edit"
+                    cursor={'pointer'}
+                    onClick={() => {
+                      setEditingProvider(provider);
+                      setOpenEditDialog(true);
+                    }}
+                  >
+                    <PMText color="secondary">Edit</PMText>
+                  </PMMenu.Item>
+                  <PMMenu.Item
+                    value="delete"
+                    cursor={'pointer'}
+                    onClick={() => {
+                      setProviderToDelete(provider);
+                      setDeleteDialogOpen(true);
+                    }}
+                  >
+                    <PMText color="error">Delete</PMText>
+                  </PMMenu.Item>
+                </PMMenu.Content>
+              </PMMenu.Positioner>
+            </PMPortal>
+          </PMMenu.Root>
         </PMHStack>
       ),
     }));
-  }, [
-    providers,
-    deleteProviderMutation.isPending,
-    confirmDeleteProvider,
-    deleteDialogOpen,
-    providerToDelete,
-    onEditProvider,
-    onManageRepositories,
-  ]);
+  }, [providers]);
 
   if (isLoading) {
     return (
-      <PMBox p={4} borderRadius="md" shadow="sm">
-        <PMHeading level="h2">Loading Git Providers...</PMHeading>
-        <PMText as="p" variant="body">
-          Please wait while we fetch your git providers.
-        </PMText>
-      </PMBox>
+      <PMEmptyState
+        icon={<PMSpinner />}
+        title="Loading Git Providers..."
+        description="Please wait while we fetch your git providers."
+      />
     );
   }
 
   if (isError) {
     return (
-      <PMBox
-        p={4}
-        borderRadius="md"
-        shadow="sm"
-        borderLeft="4px solid"
-        borderLeftColor="red.500"
-      >
-        <PMHeading level="h2">Error Loading Git Providers</PMHeading>
-        <PMText as="p" variant="body">
-          Sorry, we couldn't load your git providers.
-        </PMText>
-        {error && (
-          <PMText as="p" variant="small" color="error">
-            Error: {error.message}
-          </PMText>
-        )}
-      </PMBox>
+      <PMAlert.Root status="error" my={4}>
+        <PMAlert.Indicator />
+        <PMAlert.Title>Error Loading Git Providers</PMAlert.Title>
+        <PMAlert.Description>
+          Sorry, we couldn't load your git providers.{' '}
+          {error && `Error: ${error.message}`}
+        </PMAlert.Description>
+      </PMAlert.Root>
     );
   }
 
   // Define columns for the table
   const columns: PMTableColumn[] = [
-    { key: 'source', header: 'Provider', width: '15%', align: 'center' },
+    { key: 'source', header: 'Vendor', width: '15%', align: 'center' },
     { key: 'url', header: 'URL', width: '35%', grow: true },
     {
       key: 'repositoryCount',
@@ -198,30 +184,42 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
   ];
 
   return (
-    <PMPageSection
-      title="Git Providers"
-      cta={
-        <PMButton colorScheme="blue" onClick={onCreateProvider}>
-          Add Git provider
-        </PMButton>
-      }
-    >
-      {/* Delete Success/Error Alert */}
+    <PMVStack alignItems={'stretch'} gap={0} width="full">
+      {tableData.length > 0 && (
+        <PMHStack justifyContent={'flex-end'}>
+          <PMButton
+            onClick={() => {
+              setEditingProvider(null);
+              setOpenEditDialog(true);
+            }}
+          >
+            Add
+          </PMButton>
+        </PMHStack>
+      )}
+
       {deleteAlert && (
-        <PMBox mb={4}>
+        <PMBox my={4}>
           <PMAlert.Root status={deleteAlert.type}>
             <PMAlert.Indicator />
             <PMAlert.Title>{deleteAlert.message}</PMAlert.Title>
           </PMAlert.Root>
         </PMBox>
       )}
+
       {tableData.length === 0 ? (
         <PMEmptyState
-          title={'No Git Providers Found'}
-          description="Add your first git provider to start managing repositories."
+          title={'No providers Found'}
+          description="Add your first git provider to start distributing your content"
         >
-          <PMButton colorScheme="blue" onClick={onCreateProvider}>
-            Add Your First Git Provider
+          <PMButton
+            size={'xl'}
+            onClick={() => {
+              setEditingProvider(null);
+              setOpenEditDialog(true);
+            }}
+          >
+            Add a git provider
           </PMButton>
         </PMEmptyState>
       ) : (
@@ -235,6 +233,41 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
           showColumnBorder={false}
         />
       )}
-    </PMPageSection>
+
+      <ManageGitProviderDialog
+        organizationId={organizationId}
+        editingProvider={editingProvider}
+        open={openEditDialog}
+        setOpen={handleEditDialogVisibility}
+        onSuccess={(provider) => {
+          if (!editingProvider) {
+            setEditingProvider(provider);
+          } else {
+            setEditingProvider(null);
+          }
+        }}
+      />
+
+      <PMAlertDialog
+        title="Delete Git Provider"
+        message={GIT_MESSAGES.confirmation.deleteProvider(
+          providerToDelete?.source || '',
+        )}
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmColorScheme="red"
+        onConfirm={confirmDeleteProvider}
+        open={deleteDialogOpen}
+        onOpenChange={(open) => {
+          if (open) {
+            setDeleteDialogOpen(true);
+          } else {
+            setDeleteDialogOpen(false);
+            setProviderToDelete(null);
+          }
+        }}
+        isLoading={deleteProviderMutation.isPending}
+      />
+    </PMVStack>
   );
 };

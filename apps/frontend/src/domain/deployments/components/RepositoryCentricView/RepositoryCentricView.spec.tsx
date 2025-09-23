@@ -32,7 +32,7 @@ describe('RepositoryCentricView', () => {
       <RepositoryCentricView recipeRepositories={repositories} />,
     );
 
-    expect(screen.getByText('test-owner/test-repo')).toBeInTheDocument();
+    expect(screen.getByText('test-owner/test-repo:main')).toBeInTheDocument();
   });
 
   it('displays deployed recipe names with (Recipe) label', () => {
@@ -120,7 +120,9 @@ describe('RepositoryCentricView', () => {
       />,
     );
 
-    expect(screen.getByText('shared-owner/shared-repo')).toBeInTheDocument();
+    expect(
+      screen.getByText('shared-owner/shared-repo:main'),
+    ).toBeInTheDocument();
     expect(screen.getByText('Test Recipe')).toBeInTheDocument();
     expect(screen.getByText('Test Standard')).toBeInTheDocument();
   });
@@ -227,9 +229,9 @@ describe('RepositoryCentricView', () => {
         />,
       );
 
-      expect(screen.getByText('test-owner/test-repo')).toBeInTheDocument();
+      expect(screen.getByText('test-owner/test-repo:main')).toBeInTheDocument();
       expect(
-        screen.queryByText('other-owner/other-repo'),
+        screen.queryByText('other-owner/other-repo:main'),
       ).not.toBeInTheDocument();
     });
 
@@ -259,10 +261,10 @@ describe('RepositoryCentricView', () => {
       );
 
       expect(
-        screen.getByText('outdated-owner/outdated-repo'),
+        screen.getByText('outdated-owner/outdated-repo:main'),
       ).toBeInTheDocument();
       expect(
-        screen.queryByText('uptodate-owner/uptodate-repo'),
+        screen.queryByText('uptodate-owner/uptodate-repo:main'),
       ).not.toBeInTheDocument();
     });
 
@@ -294,10 +296,14 @@ describe('RepositoryCentricView', () => {
       );
 
       expect(
-        screen.getByText('outdated-standards-owner/outdated-standards-repo'),
+        screen.getByText(
+          'outdated-standards-owner/outdated-standards-repo:main',
+        ),
       ).toBeInTheDocument();
       expect(
-        screen.queryByText('uptodate-standards-owner/uptodate-standards-repo'),
+        screen.queryByText(
+          'uptodate-standards-owner/uptodate-standards-repo:main',
+        ),
       ).not.toBeInTheDocument();
     });
 
@@ -345,13 +351,15 @@ describe('RepositoryCentricView', () => {
       );
 
       expect(
-        screen.getByText('outdated-recipes-owner/outdated-recipes-repo'),
+        screen.getByText('outdated-recipes-owner/outdated-recipes-repo:main'),
       ).toBeInTheDocument();
       expect(
-        screen.getByText('outdated-standards-owner/outdated-standards-repo'),
+        screen.getByText(
+          'outdated-standards-owner/outdated-standards-repo:main',
+        ),
       ).toBeInTheDocument();
       expect(
-        screen.queryByText('uptodate-all-owner/uptodate-all-repo'),
+        screen.queryByText('uptodate-all-owner/uptodate-all-repo:main'),
       ).not.toBeInTheDocument();
     });
 
@@ -388,12 +396,14 @@ describe('RepositoryCentricView', () => {
         />,
       );
 
-      expect(screen.getByText('test-owner/outdated-repo')).toBeInTheDocument();
       expect(
-        screen.queryByText('test-owner/uptodate-repo'),
+        screen.getByText('test-owner/outdated-repo:main'),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByText('test-owner/uptodate-repo:main'),
       ).not.toBeInTheDocument();
       expect(
-        screen.queryByText('other-owner/outdated-repo'),
+        screen.queryByText('other-owner/outdated-repo:main'),
       ).not.toBeInTheDocument();
     });
   });
@@ -465,7 +475,9 @@ describe('RepositoryCentricView', () => {
         <RepositoryCentricView recipeRepositories={repositories} />,
       );
 
-      expect(screen.getByText('empty-owner/empty-repo')).toBeInTheDocument();
+      expect(
+        screen.getByText('empty-owner/empty-repo:main'),
+      ).toBeInTheDocument();
       expect(
         screen.getByText('No recipes or standards deployed here'),
       ).toBeInTheDocument();

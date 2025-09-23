@@ -1,4 +1,4 @@
-import Redis, { RedisOptions } from 'ioredis';
+import Redis from 'ioredis';
 import { PackmindLogger, Configuration } from '../index';
 
 const origin = 'RedisSSEClient';
@@ -13,7 +13,6 @@ export class RedisSSEClient {
 
   private publisherClient?: Redis;
   private subscriberClient?: Redis;
-  private connectionConfig: RedisOptions;
   private initialized = false;
 
   static getInstance(): RedisSSEClient {
@@ -25,14 +24,8 @@ export class RedisSSEClient {
     return RedisSSEClient.instance;
   }
 
-  private constructor() {
-    // Private constructor for singleton pattern
-    // Initialize with default config, will be overridden during initialize()
-    this.connectionConfig = {
-      host: 'redis',
-      port: 6379,
-    };
-  }
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  private constructor() {}
 
   /**
    * Initialize Redis clients using the same configuration as BullMQ
@@ -44,25 +37,11 @@ export class RedisSSEClient {
 
     try {
       // Use the same Redis configuration as BullMQ (from DelayedJobsFactory pattern)
-      const redisHost =
-        (await Configuration.getConfig('REDIS_HOST')) || 'redis';
-      const redisPort = await Configuration.getConfig('REDIS_PORT');
-      const redisUser = await Configuration.getConfig('REDIS_USER');
-      const redisPassword = await Configuration.getConfig('REDIS_PASSWORD');
-
-      this.connectionConfig = {
-        host: redisHost,
-        port: this.parseRedisPort(redisPort),
-        username: redisUser || undefined,
-        password: redisPassword || undefined,
-        maxRetriesPerRequest: 3,
-        lazyConnect: true,
-      };
-
+      const redisURI = (await Configuration.getConfig('REDIS_URI')) || 'redis';
       // Create separate clients for publisher and subscriber
       // This is required for Redis pub/sub - you cannot use the same connection for both
-      this.publisherClient = new Redis(this.connectionConfig);
-      this.subscriberClient = new Redis(this.connectionConfig);
+      this.publisherClient = new Redis(redisURI);
+      this.subscriberClient = new Redis(redisURI);
 
       // Set up error handling
       this.publisherClient.on('error', (error) => {
@@ -82,10 +61,7 @@ export class RedisSSEClient {
       await this.subscriberClient.ping();
 
       this.initialized = true;
-      RedisSSEClient.logger.info('Redis SSE clients initialized successfully', {
-        host: redisHost,
-        port: this.parseRedisPort(redisPort),
-      });
+      RedisSSEClient.logger.info('Redis SSE clients initialized successfully');
     } catch (error) {
       RedisSSEClient.logger.error('Failed to initialize Redis SSE clients', {
         error: error instanceof Error ? error.message : String(error),

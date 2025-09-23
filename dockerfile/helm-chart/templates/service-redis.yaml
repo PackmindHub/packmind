@@ -1,0 +1,25 @@
+{{- if .Values.redis.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "packmind.fullname" . }}-redis
+  labels:
+    {{- include "packmind.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+  {{- with (include "packmind.annotations" .) }}
+  annotations:
+    {{- if . }}
+    {{- . | nindent 4 }}
+    {{- end }}
+  {{- end }}
+spec:
+  type: {{ .Values.redis.service.type }}
+  ports:
+    - port: 6379
+      targetPort: 6379
+      protocol: TCP
+      name: redis
+  selector:
+    {{- include "packmind.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+{{- end }}

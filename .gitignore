@@ -14,6 +14,7 @@ apps/mcp-server/.env
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 dockerfile/local
+dockerfile/helm-chart/values-minikube.yaml
 
 vite.config.*.timestamp*
 vitest.config.*.timestamp*

@@ -10,13 +10,11 @@ import {
   PMLink,
   PMBox,
   PMSpinner,
+  PMBadge,
 } from '@packmind/ui';
 import { formatDate } from '../../../../shared/utils/dateUtils';
 import { useGetUsersInMyOrganizationQuery } from '../../../accounts/api/queries/UserQueries';
 import { useListRecipeDeploymentsQuery } from '../../api/queries/DeploymentsQueries';
-
-import { GitCommit } from '@packmind/git/types';
-import { GitRepo } from '@packmind/git/types';
 
 interface RecipeDeploymentsListProps {
   recipeId: RecipeId;
@@ -56,33 +54,28 @@ export const RecipeDeploymentsList: React.FC<RecipeDeploymentsListProps> = ({
   const createCommitLinks = (
     deployment: RecipesDeployment,
   ): React.ReactNode => {
-    if (!deployment.gitCommits || deployment.gitCommits.length === 0) {
+    // Use new single gitCommit field
+    if (!deployment.gitCommit) {
       return 'No commits';
     }
 
+    const commit = deployment.gitCommit;
     return (
       <PMBox>
-        {deployment.gitCommits.map((commit: GitCommit, index: number) => (
-          <PMBox
-            key={commit.id}
-            mb={index < deployment.gitCommits.length - 1 ? 1 : 0}
-          >
-            <PMLink
-              href={commit.url}
-              textDecoration="underline"
-              title={commit.message}
-            >
-              {commit.sha.substring(0, 7)}
-            </PMLink>
-            {commit.message && (
-              <PMText as="span" variant="small">
-                {commit.message.length > 50
-                  ? `${commit.message.substring(0, 50)}...`
-                  : commit.message}
-              </PMText>
-            )}
-          </PMBox>
-        ))}
+        <PMLink
+          href={commit.url}
+          textDecoration="underline"
+          title={commit.message}
+        >
+          {commit.sha.substring(0, 7)}
+        </PMLink>
+        {commit.message && (
+          <PMText as="span" variant="small" ml={2}>
+            {commit.message.length > 50
+              ? `${commit.message.substring(0, 50)}...`
+              : commit.message}
+          </PMText>
+        )}
       </PMBox>
     );
   };
@@ -93,31 +86,45 @@ export const RecipeDeploymentsList: React.FC<RecipeDeploymentsListProps> = ({
       recipeId: string,
       userMap: Record<string, string>,
     ): PMTableRow[] => {
-      return deployments.flatMap((deployment: RecipesDeployment) => {
+      return deployments.map((deployment: RecipesDeployment) => {
         const recipeVersion = deployment.recipeVersions.find(
           (version) => version.recipeId === recipeId,
         );
         const versionNumber = recipeVersion?.version || 'N/A';
 
-        if (!deployment.gitRepos || deployment.gitRepos.length === 0) {
-          return [
-            {
-              version: versionNumber,
-              repo: 'N/A',
-              commits: createCommitLinks(deployment),
-              author: userMap[deployment.authorId || 'N/A'],
-              deployedAt: formatDate(deployment.createdAt) || 'N/A',
-            },
-          ];
-        }
+        // Use new target-based model
+        const repoInfo = deployment.target
+          ? `${deployment.target.path} in ${deployment.target.gitRepo?.owner}/${deployment.target.gitRepo?.repo}:${deployment.target.gitRepo?.branch}`
+          : 'N/A';
 
-        return deployment.gitRepos.map((repo: GitRepo) => ({
+        // Create status badge
+        const statusBadge = deployment.status ? (
+          <PMBadge
+            colorScheme={deployment.status === 'success' ? 'green' : 'red'}
+          >
+            {deployment.status === 'success' ? 'Success' : 'Failed'}
+          </PMBadge>
+        ) : (
+          <PMBadge colorScheme="green">Deployed</PMBadge> // Fallback for old deployments
+        );
+
+        // Message column - show error for failed deployments, success message or empty for successful ones
+        const message =
+          deployment.status === 'failure' && deployment.error
+            ? deployment.error
+            : deployment.status === 'success'
+              ? 'Deployment completed successfully'
+              : '-';
+
+        return {
           version: versionNumber,
-          repo: repo.repo || 'N/A',
+          repo: repoInfo,
           commits: createCommitLinks(deployment),
           author: userMap[deployment.authorId || 'N/A'],
           deployedAt: formatDate(deployment.createdAt) || 'N/A',
-        }));
+          status: statusBadge,
+          message: message,
+        };
       });
     },
     [],
@@ -183,11 +190,13 @@ export const RecipeDeploymentsList: React.FC<RecipeDeploymentsListProps> = ({
 
   // Define columns for the table
   const columns: PMTableColumn[] = [
-    { key: 'version', header: 'Version', width: '15%', align: 'center' },
-    { key: 'repo', header: 'Repository', width: '25%', grow: true },
-    { key: 'commits', header: 'Git Commits', width: '25%' },
-    { key: 'author', header: 'Author', width: '20%' },
-    { key: 'deployedAt', header: 'Deployment Date', width: '15%' },
+    { key: 'version', header: 'Version', width: '10%', align: 'center' },
+    { key: 'repo', header: 'Target', width: '20%' },
+    { key: 'commits', header: 'Git Commits', width: '18%' },
+    { key: 'author', header: 'Author', width: '15%' },
+    { key: 'deployedAt', header: 'Deployment Date', width: '12%' },
+    { key: 'status', header: 'Status', width: '10%', align: 'center' },
+    { key: 'message', header: 'Message', grow: true, align: 'left' },
   ];
 
   return (

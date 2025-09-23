@@ -13,15 +13,28 @@ import {
   createRecipeId,
   createOrganizationId,
   createUserId,
+  Target,
+  createTargetId,
 } from '@packmind/shared';
+import { v4 as uuidv4 } from 'uuid';
+import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
 
 describe('JunieDeployer', () => {
   let deployer: JunieDeployer;
   let mockGitRepo: GitRepo;
+  let mockTarget: Target;
 
   beforeEach(() => {
     // Create deployer without StandardsHexa or GitHexa for basic tests
     deployer = new JunieDeployer();
+
+    mockTarget = {
+      id: createTargetId('test-target-id'),
+      name: 'Test Target',
+      path: '/',
+      gitRepoId: createGitRepoId(uuidv4()),
+    };
+
     mockGitRepo = {
       id: createGitRepoId('test-repo-id'),
       owner: 'test-owner',
@@ -54,7 +67,11 @@ describe('JunieDeployer', () => {
         userId: createUserId('user-1'),
       };
 
-      const result = await deployer.deployRecipes([recipeVersion], mockGitRepo);
+      const result = await deployer.deployRecipes(
+        [recipeVersion],
+        mockGitRepo,
+        mockTarget,
+      );
 
       expect(result.createOrUpdate).toHaveLength(1);
       expect(result.delete).toHaveLength(0);
@@ -64,7 +81,7 @@ describe('JunieDeployer', () => {
       expect(guidelinesFile.content).toContain('# Packmind Recipes');
       expect(guidelinesFile.content).toContain('🚨 **MANDATORY STEP** 🚨');
       expect(guidelinesFile.content).toContain('ALWAYS READ');
-      expect(guidelinesFile.content).toContain('.packmind/recipes-index.md');
+      expect(guidelinesFile.content).toContain(recipe.name);
       expect(guidelinesFile.content).toContain('aiAgent: "Junie"');
       expect(guidelinesFile.content).toContain(
         'gitRepo: "test-owner/test-repo"',
@@ -72,7 +89,7 @@ describe('JunieDeployer', () => {
     });
 
     it('handles empty recipe list', async () => {
-      const result = await deployer.deployRecipes([], mockGitRepo);
+      const result = await deployer.deployRecipes([], mockGitRepo, mockTarget);
 
       expect(result.createOrUpdate).toHaveLength(1);
       expect(result.delete).toHaveLength(0);
@@ -127,7 +144,11 @@ describe('JunieDeployer', () => {
         },
       ];
 
-      const result = await deployer.deployRecipes(recipeVersions, mockGitRepo);
+      const result = await deployer.deployRecipes(
+        recipeVersions,
+        mockGitRepo,
+        mockTarget,
+      );
 
       const guidelinesFile = result.createOrUpdate[0];
       expect(guidelinesFile.content).toContain('# Packmind Recipes');
@@ -164,6 +185,7 @@ describe('JunieDeployer', () => {
       const result = await deployer.deployStandards(
         [standardVersion],
         mockGitRepo,
+        mockTarget,
       );
 
       expect(result.createOrUpdate).toHaveLength(1);
@@ -171,22 +193,28 @@ describe('JunieDeployer', () => {
 
       const guidelinesFile = result.createOrUpdate[0];
       expect(guidelinesFile.path).toBe('.junie/guidelines.md');
-      expect(guidelinesFile.content).toContain('## Packmind Standards');
+      expect(guidelinesFile.content).toContain('# Packmind Standards');
       expect(guidelinesFile.content).toContain(
-        'Follow the coding standards defined in',
+        GenericStandardSectionWriter.standardsIntroduction,
       );
-      expect(guidelinesFile.content).toContain('.packmind/standards-index.md');
+      expect(guidelinesFile.content).toContain(standardVersion.name);
     });
 
     it('handles empty standards list', async () => {
-      const result = await deployer.deployStandards([], mockGitRepo);
+      const result = await deployer.deployStandards(
+        [],
+        mockGitRepo,
+        mockTarget,
+      );
 
       expect(result.createOrUpdate).toHaveLength(1);
       expect(result.delete).toHaveLength(0);
 
       const guidelinesFile = result.createOrUpdate[0];
-      expect(guidelinesFile.content).toContain('## Packmind Standards');
-      expect(guidelinesFile.content).toContain('Follow the coding standards');
+      expect(guidelinesFile.content).not.toContain('# Packmind Standards');
+      expect(guidelinesFile.content).not.toContain(
+        GenericStandardSectionWriter.standardsIntroduction,
+      );
     });
 
     it('works with StandardsHexa dependency', async () => {
@@ -234,14 +262,17 @@ describe('JunieDeployer', () => {
       const result = await deployerWithHexa.deployStandards(
         [standardVersion],
         mockGitRepo,
+        mockTarget,
       );
 
       // Check that the guidelines file was created
       const guidelinesFile = result.createOrUpdate[0];
       expect(guidelinesFile).toBeDefined();
       expect(guidelinesFile.path).toBe('.junie/guidelines.md');
-      expect(guidelinesFile.content).toContain('## Packmind Standards');
-      expect(guidelinesFile.content).toContain('Follow the coding standards');
+      expect(guidelinesFile.content).toContain('# Packmind Standards');
+      expect(guidelinesFile.content).toContain(
+        GenericStandardSectionWriter.standardsIntroduction,
+      );
     });
 
     it('includes multiple standards in instructions', async () => {
@@ -295,11 +326,14 @@ describe('JunieDeployer', () => {
       const result = await deployer.deployStandards(
         standardVersions,
         mockGitRepo,
+        mockTarget,
       );
 
       const guidelinesFile = result.createOrUpdate[0];
-      expect(guidelinesFile.content).toContain('## Packmind Standards');
-      expect(guidelinesFile.content).toContain('Follow the coding standards');
+      expect(guidelinesFile.content).toContain('# Packmind Standards');
+      expect(guidelinesFile.content).toContain(
+        GenericStandardSectionWriter.standardsIntroduction,
+      );
     });
   });
 });

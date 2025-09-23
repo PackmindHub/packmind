@@ -24,4 +24,13 @@ export interface IGitRepo {
     path: string,
     branch?: string,
   ): Promise<{ sha: string; content: string } | null>;
+
+  listDirectoriesOnRepo(
+    name: string,
+    owner: string,
+    branch: string,
+    path?: string,
+  ): Promise<string[]>;
+
+  checkDirectoryExists(directoryPath: string, branch: string): Promise<boolean>;
 }

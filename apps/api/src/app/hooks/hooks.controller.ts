@@ -1,6 +1,6 @@
 import { Body, Controller, Headers, Post, Param } from '@nestjs/common';
 import { RecipesService } from '../recipes/recipes.service';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger, Recipe } from '@packmind/shared';
 import { Public } from '../auth/auth.guard';
 import { OrganizationId, createOrganizationId } from '@packmind/accounts';
 
@@ -21,7 +21,7 @@ export class HooksController {
     @Param('orgId') orgId: string,
     @Body() hookBody: unknown,
     @Headers() headers: Record<string, string>,
-  ): Promise<void> {
+  ): Promise<Recipe[]> {
     const organizationId: OrganizationId = createOrganizationId(orgId);
 
     this.logger.info('POST /:orgId/hooks/github - Processing GitHub webhook', {
@@ -31,7 +31,7 @@ export class HooksController {
     });
 
     try {
-      await this.recipesService.updateRecipesFromGitHub(
+      return await this.recipesService.updateRecipesFromGitHub(
         hookBody,
         organizationId,
         headers,
@@ -55,7 +55,7 @@ export class HooksController {
     @Param('orgId') orgId: string,
     @Body() hookBody: unknown,
     @Headers() headers: Record<string, string>,
-  ): Promise<void> {
+  ): Promise<Recipe[]> {
     const organizationId: OrganizationId = createOrganizationId(orgId);
 
     this.logger.info('POST /:orgId/hooks/gitlab - Processing GitLab webhook', {
@@ -65,7 +65,7 @@ export class HooksController {
     });
 
     try {
-      await this.recipesService.updateRecipesFromGitLab(
+      return await this.recipesService.updateRecipesFromGitLab(
         hookBody,
         organizationId,
         headers,

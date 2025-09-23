@@ -30,4 +30,28 @@ export class AppController {
       throw error;
     }
   }
+
+  @Public()
+  @Get('healthcheck')
+  healthcheck() {
+    this.logger.debug('GET /healthcheck - Health check request');
+
+    try {
+      return {
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        service: 'packmind-api',
+      };
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /healthcheck - Failed to respond to health check',
+        {
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
 }

@@ -1,22 +1,17 @@
 import { PrepareRecipesDeploymentUseCase } from './PrepareRecipesDeploymentUseCase';
-import { RecipeVersionId, Recipe, RecipeId } from '@packmind/recipes';
-import { GitRepoId, GitProviderId } from '@packmind/git';
+import { Recipe } from '@packmind/recipes';
 import { FileUpdates } from '../../domain/entities/FileUpdates';
-import { OrganizationId, UserId } from '@packmind/accounts';
 import { PrepareRecipesDeploymentCommand } from '../../domain/useCases/IPrepareRecipesDeploymentUseCase';
+import {
+  createRecipeId,
+  createRecipeVersionId,
+  createOrganizationId,
+  createUserId,
+  createGitRepoId,
+  createGitProviderId,
+  createTargetId,
+} from '@packmind/shared';
 
-// Create test helper functions
-const createTestRecipeId = (id: string): RecipeId => id as RecipeId;
-const createTestRecipeVersionId = (id: string): RecipeVersionId =>
-  id as RecipeVersionId;
-const createTestOrganizationId = (id: string): OrganizationId =>
-  id as OrganizationId;
-const createTestUserId = (id: string): UserId => id as UserId;
-const createTestGitRepoId = (id: string): GitRepoId => id as GitRepoId;
-const createTestGitProviderId = (id: string): GitProviderId =>
-  id as GitProviderId;
-
-// Mock services
 class MockCodingAgentServices {
   async prepareRecipesDeployment(): Promise<FileUpdates> {
     return {
@@ -42,35 +37,43 @@ describe('PrepareRecipesDeploymentUseCase', () => {
     );
 
     const mockRecipe: Recipe = {
-      id: createTestRecipeId('recipe-1'),
+      id: createRecipeId('recipe-1'),
       name: 'Test Recipe',
       slug: 'test-recipe',
       content: 'Original recipe content',
       version: 1,
-      organizationId: createTestOrganizationId('org-1'),
-      userId: createTestUserId('user-1'),
+      organizationId: createOrganizationId('org-1'),
+      userId: createUserId('user-1'),
     };
 
     mockCommand = {
       recipeVersions: [
         {
-          id: createTestRecipeVersionId('recipe-version-1'),
+          id: createRecipeVersionId('recipe-version-1'),
           recipeId: mockRecipe.id,
           name: mockRecipe.name,
           slug: mockRecipe.slug,
           content: 'Recipe content',
           version: 1,
           summary: 'Test recipe summary',
-          userId: createTestUserId('user-1'),
+          userId: createUserId('user-1'),
         },
       ],
       gitRepo: {
-        id: createTestGitRepoId('repo-1'),
+        id: createGitRepoId('repo-1'),
         owner: 'test-owner',
         repo: 'test-repo',
-        providerId: createTestGitProviderId('provider-1'),
+        providerId: createGitProviderId('provider-1'),
         branch: 'main',
       },
+      targets: [
+        {
+          id: createTargetId('test-target-id'),
+          name: 'Test Target',
+          path: '/',
+          gitRepoId: createGitRepoId('repo-1'),
+        },
+      ],
       codingAgents: ['packmind'],
     };
   });
@@ -96,6 +99,7 @@ describe('PrepareRecipesDeploymentUseCase', () => {
       expect(spy).toHaveBeenCalledWith(
         mockCommand.recipeVersions,
         mockCommand.gitRepo,
+        mockCommand.targets,
         mockCommand.codingAgents,
       );
     });

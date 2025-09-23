@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { standardsGateway } from '../../standards/api/gateways';
-import { GitRepoId } from '@packmind/git/types';
 import { StandardId, StandardVersionId } from '@packmind/standards/types';
+import { TargetId } from '@packmind/shared';
 import { useDeployStandardsMutation } from '../api/queries/DeploymentsQueries';
 
 interface DeployParams {
@@ -40,8 +40,8 @@ const getStandardVersionId = async (
 export const useDeployStandard = () => {
   const deployMutation = useDeployStandardsMutation();
 
-  const deployToRepository = useCallback(
-    async (params: DeployParams, gitRepoIds: GitRepoId[]) => {
+  const deployToTargets = useCallback(
+    async (params: DeployParams, targetIds: TargetId[]) => {
       // Get the StandardVersionId for this standard and version
       const standardVersionId = await getStandardVersionId(
         params.id,
@@ -55,26 +55,28 @@ export const useDeployStandard = () => {
       }
 
       // Deploy the standard using the StandardVersionId
-      await deployMutation.mutateAsync({
+      const deployments = await deployMutation.mutateAsync({
         standardVersionIds: [standardVersionId],
-        gitRepoIds,
+        targetIds,
       });
 
       const standardName = params.name || params.id;
       console.log(
-        `Standard ${standardName} v${params.version} deployed to ${gitRepoIds.length} repositories successfully`,
+        `Standard ${standardName} v${params.version} deployed to ${targetIds.length} targets successfully`,
       );
+
+      return deployments;
     },
     [deployMutation],
   );
 
   const deploySingle = useCallback(
-    async (params: DeployParams, gitRepoIds: GitRepoId[]) => {
+    async (params: DeployParams, targetIds: TargetId[]) => {
       try {
-        if (!gitRepoIds.length) {
-          throw new Error('Repository IDs array cannot be empty');
+        if (!targetIds.length) {
+          throw new Error('Target IDs array cannot be empty');
         } else {
-          await deployToRepository(params, gitRepoIds);
+          return await deployToTargets(params, targetIds);
         }
       } catch (error) {
         const standardName = params.name || params.id;
@@ -85,19 +87,16 @@ export const useDeployStandard = () => {
         throw error;
       }
     },
-    [deployToRepository],
+    [deployToTargets],
   );
 
   const deployBatch = useCallback(
-    async (batchParams: BatchDeployParams, gitRepoIds: GitRepoId[]) => {
+    async (batchParams: BatchDeployParams, targetIds: TargetId[]) => {
       try {
-        if (!gitRepoIds.length) {
-          throw new Error('Repository IDs array cannot be empty');
+        if (!targetIds.length) {
+          throw new Error('Target IDs array cannot be empty');
         } else {
-          console.log(
-            'Deploying batch of standards to repositories:',
-            gitRepoIds,
-          );
+          console.log('Deploying batch of standards to targets:', targetIds);
 
           // Get StandardVersionIds for all standards in the batch
           const standardVersionIdsPromises = batchParams.standards.map(
@@ -129,13 +128,13 @@ export const useDeployStandard = () => {
             (result) => result.standardVersionId as StandardVersionId,
           );
 
-          await deployMutation.mutateAsync({
+          const deployments = await deployMutation.mutateAsync({
             standardVersionIds,
-            gitRepoIds,
+            targetIds,
           });
 
           console.log(
-            `${validResults.length} standards deployed to ${gitRepoIds.length} repositories successfully`,
+            `${validResults.length} standards deployed to ${targetIds.length} targets successfully`,
           );
 
           // Log any skipped standards
@@ -146,6 +145,8 @@ export const useDeployStandard = () => {
               `${skippedCount} standards were skipped due to missing version information`,
             );
           }
+
+          return deployments;
         }
       } catch (error) {
         console.error(`Failed to deploy selected standards:`, error);

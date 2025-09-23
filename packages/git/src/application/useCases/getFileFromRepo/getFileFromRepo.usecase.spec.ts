@@ -1,5 +1,7 @@
 import { GetFileFromRepo } from './getFileFromRepo.usecase';
 import { GitProviderService } from '../../GitProviderService';
+import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
+import { IGitRepo } from '../../../domain/repositories/IGitRepo';
 import { GitRepo } from '../../../domain/entities/GitRepo';
 import {
   GitProvider,
@@ -7,14 +9,15 @@ import {
 } from '../../../domain/entities/GitProvider';
 import { PackmindLogger } from '@packmind/shared';
 import { stubLogger } from '@packmind/shared/test';
-import { GithubRepository } from '../../../infra/repositories/github/GithubRepository';
 
 describe('GetFileFromRepo', () => {
   let useCase: GetFileFromRepo;
   let gitProviderService: jest.Mocked<GitProviderService>;
+  let gitRepoFactory: jest.Mocked<IGitRepoFactory>;
+  let mockGitRepoInstance: jest.Mocked<IGitRepo>;
   let logger: PackmindLogger;
 
-  const mockGitRepo: GitRepo = {
+  const mockGitRepoEntity: GitRepo = {
     id: 'repo-123',
     owner: 'test-owner',
     repo: 'test-repo',
@@ -33,9 +36,21 @@ describe('GetFileFromRepo', () => {
       findGitProviderById: jest.fn(),
     } as unknown as jest.Mocked<GitProviderService>;
 
+    mockGitRepoInstance = {
+      getFileOnRepo: jest.fn(),
+      commitFiles: jest.fn(),
+      handlePushHook: jest.fn(),
+      listDirectoriesOnRepo: jest.fn(),
+      checkDirectoryExists: jest.fn(),
+    } as jest.Mocked<IGitRepo>;
+
+    gitRepoFactory = {
+      createGitRepo: jest.fn().mockReturnValue(mockGitRepoInstance),
+    } as jest.Mocked<IGitRepoFactory>;
+
     logger = stubLogger();
 
-    useCase = new GetFileFromRepo(gitProviderService, logger);
+    useCase = new GetFileFromRepo(gitProviderService, gitRepoFactory, logger);
   });
 
   describe('when file exists and contains valid base64 content', () => {
@@ -46,18 +61,14 @@ describe('GetFileFromRepo', () => {
 
       gitProviderService.findGitProviderById.mockResolvedValue(mockProvider);
 
-      // Mock the GithubRepository.getFileOnRepo method
-      const mockGetFileOnRepo = jest.fn().mockResolvedValue({
+      // Mock the git repo instance
+      mockGitRepoInstance.getFileOnRepo.mockResolvedValue({
         sha: fileSha,
         content: base64Content,
       });
 
-      jest
-        .spyOn(GithubRepository.prototype, 'getFileOnRepo')
-        .mockImplementation(mockGetFileOnRepo);
-
       const result = await useCase.getFileFromRepo(
-        mockGitRepo,
+        mockGitRepoEntity,
         'test-file.txt',
       );
 
@@ -85,17 +96,14 @@ describe('GetFileFromRepo', () => {
 
       gitProviderService.findGitProviderById.mockResolvedValue(mockProvider);
 
-      const mockGetFileOnRepo = jest.fn().mockResolvedValue({
+      // Mock the git repo instance
+      mockGitRepoInstance.getFileOnRepo.mockResolvedValue({
         sha: fileSha,
         content: garbageBase64Content,
       });
 
-      jest
-        .spyOn(GithubRepository.prototype, 'getFileOnRepo')
-        .mockImplementation(mockGetFileOnRepo);
-
       const result = await useCase.getFileFromRepo(
-        mockGitRepo,
+        mockGitRepoEntity,
         'test-file.txt',
       );
 
@@ -118,13 +126,11 @@ describe('GetFileFromRepo', () => {
     it('returns null', async () => {
       gitProviderService.findGitProviderById.mockResolvedValue(mockProvider);
 
-      const mockGetFileOnRepo = jest.fn().mockResolvedValue(null);
-      jest
-        .spyOn(GithubRepository.prototype, 'getFileOnRepo')
-        .mockImplementation(mockGetFileOnRepo);
+      // Mock the git repo instance to return null (file not found)
+      mockGitRepoInstance.getFileOnRepo.mockResolvedValue(null);
 
       const result = await useCase.getFileFromRepo(
-        mockGitRepo,
+        mockGitRepoEntity,
         'non-existent-file.txt',
       );
 
@@ -144,7 +150,7 @@ describe('GetFileFromRepo', () => {
       gitProviderService.findGitProviderById.mockResolvedValue(null);
 
       await expect(
-        useCase.getFileFromRepo(mockGitRepo, 'test-file.txt'),
+        useCase.getFileFromRepo(mockGitRepoEntity, 'test-file.txt'),
       ).rejects.toThrow('Git provider not found');
     });
   });
@@ -157,7 +163,7 @@ describe('GetFileFromRepo', () => {
       );
 
       await expect(
-        useCase.getFileFromRepo(mockGitRepo, 'test-file.txt'),
+        useCase.getFileFromRepo(mockGitRepoEntity, 'test-file.txt'),
       ).rejects.toThrow('Git provider token not configured');
     });
   });
@@ -170,17 +176,14 @@ describe('GetFileFromRepo', () => {
 
       gitProviderService.findGitProviderById.mockResolvedValue(mockProvider);
 
-      const mockGetFileOnRepo = jest.fn().mockResolvedValue({
+      // Mock the git repo instance
+      mockGitRepoInstance.getFileOnRepo.mockResolvedValue({
         sha: 'branch-sha',
         content: base64Content,
       });
 
-      jest
-        .spyOn(GithubRepository.prototype, 'getFileOnRepo')
-        .mockImplementation(mockGetFileOnRepo);
-
       const result = await useCase.getFileFromRepo(
-        mockGitRepo,
+        mockGitRepoEntity,
         'test-file.txt',
         customBranch,
       );
@@ -190,7 +193,7 @@ describe('GetFileFromRepo', () => {
         content: originalContent,
       });
 
-      expect(mockGetFileOnRepo).toHaveBeenCalledWith(
+      expect(mockGitRepoInstance.getFileOnRepo).toHaveBeenCalledWith(
         'test-file.txt',
         customBranch,
       );

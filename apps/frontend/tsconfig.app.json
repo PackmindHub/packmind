@@ -30,8 +30,5 @@
     "src/**/*.spec.js",
     "src/**/*.test.jsx",
     "src/**/*.spec.jsx"
-  ],
-  "compilerOptions": {
-    "types": ["node", "vite/client"]
-  }
+  ]
 }

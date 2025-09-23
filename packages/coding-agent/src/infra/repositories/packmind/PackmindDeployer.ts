@@ -5,7 +5,9 @@ import { FileUpdates } from '../../../domain/entities/FileUpdates';
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
 import { RecipesIndexService } from '../../../application/services/RecipesIndexService';
 import { StandardsIndexService } from '../../../application/services/StandardsIndexService';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger, Target } from '@packmind/shared';
+import { getTargetPrefixedPath } from '../utils/FileUtils';
+import { GenericStandardWriter } from '../genericSectionWriter/GenericStandardWriter';
 
 const origin = 'PackmindDeployer';
 
@@ -23,11 +25,13 @@ export class PackmindDeployer implements ICodingAgentDeployer {
 
   async deployRecipes(
     recipeVersions: RecipeVersion[],
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _gitRepo: GitRepo,
+    target: Target,
   ): Promise<FileUpdates> {
     this.logger.info('Deploying recipes for Packmind', {
       recipesCount: recipeVersions.length,
+      targetId: target.id,
+      targetPath: target.path,
     });
 
     const fileUpdates: FileUpdates = {
@@ -38,8 +42,9 @@ export class PackmindDeployer implements ICodingAgentDeployer {
     // Deploy each recipe to its own file
     for (const recipeVersion of recipeVersions) {
       const recipeFilePath = `.packmind/recipes/${recipeVersion.slug}.md`;
+      const targetPrefixedPath = getTargetPrefixedPath(recipeFilePath, target);
       fileUpdates.createOrUpdate.push({
-        path: recipeFilePath,
+        path: targetPrefixedPath,
         content: recipeVersion.content,
       });
     }
@@ -48,8 +53,12 @@ export class PackmindDeployer implements ICodingAgentDeployer {
     const recipesIndexContent =
       this.recipesIndexService.buildRecipesIndex(recipeVersions);
 
+    const indexTargetPrefixedPath = getTargetPrefixedPath(
+      PackmindDeployer.RECIPES_INDEX_PATH,
+      target,
+    );
     fileUpdates.createOrUpdate.push({
-      path: PackmindDeployer.RECIPES_INDEX_PATH,
+      path: indexTargetPrefixedPath,
       content: recipesIndexContent,
     });
 
@@ -58,9 +67,15 @@ export class PackmindDeployer implements ICodingAgentDeployer {
 
   async deployStandards(
     standardVersions: StandardVersion[],
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _gitRepo: GitRepo,
+    target: Target,
   ): Promise<FileUpdates> {
+    this.logger.info('Deploying standards for Packmind', {
+      standardsCount: standardVersions.length,
+      targetId: target.id,
+      targetPath: target.path,
+    });
+
     const fileUpdates: FileUpdates = {
       createOrUpdate: [],
       delete: [],
@@ -68,19 +83,21 @@ export class PackmindDeployer implements ICodingAgentDeployer {
 
     // Deploy each standard to its own file
     for (const standardVersion of standardVersions) {
-      // Fetch rules if not provided
-      let versionWithRules = standardVersion;
-      if (!standardVersion.rules && this.standardsHexa) {
-        const rules = await this.standardsHexa.getRulesByStandardId(
+      const rules =
+        standardVersion.rules ??
+        (await this.standardsHexa?.getRulesByStandardId(
           standardVersion.standardId,
-        );
-        versionWithRules = { ...standardVersion, rules };
-      }
+        )) ??
+        [];
 
       const standardFilePath = `.packmind/standards/${standardVersion.slug}.md`;
+      const targetPrefixedPath = getTargetPrefixedPath(
+        standardFilePath,
+        target,
+      );
       fileUpdates.createOrUpdate.push({
-        path: standardFilePath,
-        content: this.formatStandardVersionContent(versionWithRules),
+        path: targetPrefixedPath,
+        content: GenericStandardWriter.writeStandard(standardVersion, rules),
       });
     }
 
@@ -94,8 +111,12 @@ export class PackmindDeployer implements ICodingAgentDeployer {
         })),
       );
 
+    const indexTargetPrefixedPath = getTargetPrefixedPath(
+      '.packmind/standards-index.md',
+      target,
+    );
     fileUpdates.createOrUpdate.push({
-      path: '.packmind/standards-index.md',
+      path: indexTargetPrefixedPath,
       content: standardsIndexContent,
     });
 

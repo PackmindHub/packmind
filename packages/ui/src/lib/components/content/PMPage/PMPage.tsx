@@ -7,6 +7,7 @@ import { PMGrid, PMGridItem, PMHeader } from '../../layout';
 export interface IPMPageProps {
   title?: string;
   titleLevel?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+  centeredHeader?: boolean;
   subtitle?: string;
   breadcrumbComponent?: React.ReactNode;
   actions?: React.ReactNode;
@@ -19,6 +20,7 @@ export interface IPMPageProps {
 export const PMPage: React.FC<IPMPageProps> = ({
   title,
   titleLevel = 'h1',
+  centeredHeader = false,
   subtitle,
   breadcrumbComponent,
   actions,
@@ -28,20 +30,21 @@ export const PMPage: React.FC<IPMPageProps> = ({
   isFullWidth = false,
 }) => {
   const renderHeader = () => (
-    <Box mb={4}>
-      <Flex
-        justify="space-between"
-        align="start"
-        gap={4}
-        direction={{ base: 'column', md: 'row' }}
-      >
-        <VStack align="stretch" gap={1} flex={1}>
-          <PMHeading level={titleLevel}>{title}</PMHeading>
-          {subtitle && <PMText variant="body">{subtitle}</PMText>}
-        </VStack>
-        {actions && <Box flexShrink={0}>{actions}</Box>}
-      </Flex>
-    </Box>
+    <Flex
+      justify="space-between"
+      align="start"
+      gap={4}
+      direction={{ base: 'column', md: 'row' }}
+      alignItems={'flex-start'}
+      mb={4}
+      textAlign={centeredHeader ? 'center' : 'left'}
+    >
+      <VStack align="stretch" gap={1} flex={1}>
+        <PMHeading level={titleLevel}>{title}</PMHeading>
+        {subtitle && <PMText variant="body">{subtitle}</PMText>}
+      </VStack>
+      {actions && <Box flexShrink={0}>{actions}</Box>}
+    </Flex>
   );
 
   const renderContent = () => {

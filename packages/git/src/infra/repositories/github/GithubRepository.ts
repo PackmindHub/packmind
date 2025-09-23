@@ -421,6 +421,139 @@ export class GithubRepository implements IGitRepo {
     return fileToLatestCommit;
   }
 
+  async listDirectoriesOnRepo(
+    name: string,
+    owner: string,
+    branch: string,
+    path?: string,
+  ): Promise<string[]> {
+    this.logger.info('Listing available repositories from GitHub', {
+      name,
+      owner,
+      branch,
+      path: path || '/',
+    });
+
+    try {
+      // Step 1: Get the SHA of the tree from the branch
+      const branchResponse = await this.axiosInstance.get(
+        `/repos/${owner}/${name}/branches/${branch}`,
+      );
+
+      const treeSha = branchResponse.data.commit.commit.tree.sha;
+
+      // Step 2: Get the entire tree recursively and filter for directories
+      const treeResponse = await this.axiosInstance.get(
+        `/repos/${owner}/${name}/git/trees/${treeSha}`,
+        {
+          params: { recursive: 1 },
+        },
+      );
+
+      let directories = treeResponse.data.tree
+        .filter((item: { type: string }) => item.type === 'tree')
+        .map((item: { path: string }) => item.path);
+
+      // If a specific path is provided (and not root "/"), show all subdirectories recursively
+      if (path && path !== '/') {
+        const normalizedPath = path.startsWith('/') ? path.slice(1) : path;
+        const pathPrefix = normalizedPath.endsWith('/')
+          ? normalizedPath
+          : `${normalizedPath}/`;
+
+        directories = directories
+          .filter((dirPath: string) => dirPath.startsWith(pathPrefix))
+          .map((dirPath: string) => dirPath.slice(pathPrefix.length))
+          .filter(
+            (relativePath: string) => relativePath && relativePath.length > 0,
+          );
+      }
+
+      this.logger.info('Successfully retrieved directories', {
+        owner,
+        repo: name,
+        branch,
+        path: path || '/',
+        directoryCount: directories.length,
+        truncated: treeResponse.data.truncated || false,
+      });
+
+      if (treeResponse.data.truncated) {
+        this.logger.warn(
+          'Tree response was truncated by GitHub API - some directories may be missing',
+          {
+            owner,
+            repo: name,
+            branch,
+          },
+        );
+      }
+
+      return directories;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to list available repositories from GitHub', {
+        name,
+        owner,
+        branch,
+        error: errorMessage,
+      });
+      throw new Error(
+        `Failed to list repositories from GitHub: ${errorMessage}`,
+      );
+    }
+  }
+
+  async checkDirectoryExists(
+    directoryPath: string,
+    branch: string,
+  ): Promise<boolean> {
+    const { owner, repo } = this.options;
+
+    try {
+      // Use GitHub's contents API to check if the directory exists
+      // For directories, GitHub returns an array of directory contents
+      const response = await this.axiosInstance.get(
+        `/repos/${owner}/${repo}/contents/${directoryPath}`,
+        { params: { ref: branch } },
+      );
+
+      // If we get a successful response with an array, it's a directory
+      if (Array.isArray(response.data)) {
+        return true;
+      }
+
+      // If we get a single object, it's a file, not a directory
+      return false;
+    } catch (error) {
+      // If we get a 404, the directory doesn't exist
+      if (
+        error &&
+        typeof error === 'object' &&
+        'response' in error &&
+        error.response &&
+        typeof error.response === 'object' &&
+        'status' in error.response &&
+        error.response.status === 404
+      ) {
+        return false;
+      }
+
+      // Re-throw other errors
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to check directory existence in repository', {
+        path: directoryPath,
+        owner,
+        repo,
+        branch: branch,
+        error: errorMessage,
+      });
+      throw error;
+    }
+  }
+
   async handlePushHook(
     payload: unknown,
     fileMatcher: RegExp,

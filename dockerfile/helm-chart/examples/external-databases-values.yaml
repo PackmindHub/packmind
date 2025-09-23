@@ -1,0 +1,93 @@
+# External databases configuration for Packmind Helm Chart
+# Use this when you have existing PostgreSQL and Redis instances
+
+global:
+  labels:
+    environment: staging
+    database-provider: external
+
+# Disable internal databases
+postgresql:
+  enabled: false
+  external:
+    # Complete database URL - replace with your actual database connection string
+    databaseUrl: 'postgres://packmind_user:your_password@your-postgres-host.example.com:5432/packmind'
+    # Alternative: use existing secret containing the database URL
+    # existingSecret: "packmind-db-credentials"
+    # existingSecretKey: "database-url"
+
+redis:
+  enabled: false
+  external:
+    host: 'your-redis-host.example.com'
+    port: 6379
+    # Optional: if your Redis requires authentication
+    # existingSecret: "packmind-redis-credentials"
+    # existingSecretPasswordKey: "password"
+
+# Standard application configuration
+api:
+  image:
+    repository: packmind/api
+    tag: 'v1.0.0'
+
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+
+frontend:
+  image:
+    repository: packmind/frontend
+    tag: 'v1.0.0'
+
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 200m
+      memory: 256Mi
+
+mcpServer:
+  image:
+    repository: packmind/mcp
+    tag: 'v1.0.0'
+
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+# Use existing secrets
+secrets:
+  existing:
+    apiSecret: 'packmind-api-secrets'
+    mcpSecret: 'packmind-mcp-secrets'
+    databaseSecret: 'packmind-db-credentials'
+    # redisSecret: "packmind-redis-credentials"  # Uncomment if Redis auth is needed
+# Instructions for creating required secrets:
+#
+# Database secret (if using existingSecret instead of databaseUrl):
+# kubectl create secret generic packmind-db-credentials \
+#   --from-literal=database-url="postgres://user:password@host:port/database"
+#
+# API secrets:
+# kubectl create secret generic packmind-api-secrets \
+#   --from-literal=api-jwt-secret-key="your-api-jwt-secret" \
+#   --from-literal=encryption-key="your-encryption-key" \
+#   --from-literal=openai-api-key="your-openai-key"
+#
+# MCP secrets:
+# kubectl create secret generic packmind-mcp-secrets \
+#   --from-literal=mcp-jwt-secret-key="your-mcp-jwt-secret"
+#
+# Optional Redis secret (if authentication is required):
+# kubectl create secret generic packmind-redis-credentials \
+#   --from-literal=password="your-redis-password"

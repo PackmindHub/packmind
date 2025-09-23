@@ -13,7 +13,7 @@
     "typeorm": "0.3.25",
     "@packmind/shared": "*",
     "@packmind/git": "*",
-    "ts-jest": "^29.4.0",
+    "ts-jest": "^29.4.1",
     "@packmind/accounts": "*",
     "uuid": "^11.1.0",
     "slug": "^11.0.0"

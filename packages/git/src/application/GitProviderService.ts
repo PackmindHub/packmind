@@ -1,12 +1,12 @@
 import { IGitProviderRepository } from '../domain/repositories/IGitProviderRepository';
+import { IGitProviderFactory } from '../domain/repositories/IGitProviderFactory';
+import { IGitRepoFactory } from '../domain/repositories/IGitRepoFactory';
 import {
-  GitProviderVendors,
   GitProvider,
   GitProviderId,
   createGitProviderId,
 } from '../domain/entities/GitProvider';
-import { GithubProvider } from '../infra/repositories/github/GithubProvider';
-import { GitlabProvider } from '../infra/repositories/gitlab/GitlabProvider';
+import { GitRepo } from '../domain/entities/GitRepo';
 import { OrganizationId, UserId } from '@packmind/accounts';
 import { PackmindLogger } from '@packmind/shared';
 import { v4 as uuidv4 } from 'uuid';
@@ -14,6 +14,8 @@ import { v4 as uuidv4 } from 'uuid';
 export class GitProviderService {
   constructor(
     private readonly gitProviderRepository: IGitProviderRepository,
+    private readonly gitProviderFactory: IGitProviderFactory,
+    private readonly gitRepoFactory: IGitRepoFactory,
     private readonly logger: PackmindLogger,
   ) {}
 
@@ -76,26 +78,10 @@ export class GitProviderService {
       throw new Error('Git provider token not configured');
     }
 
-    // Create an instance of IGitProvider based on the provider type
-    switch (gitProvider.source) {
-      case GitProviderVendors.github: {
-        const githubProvider = new GithubProvider(token, this.logger);
-        return githubProvider.listAvailableRepositories(); // Always filters for write-only repositories
-      }
-      case GitProviderVendors.gitlab: {
-        const gitlabProvider = new GitlabProvider(
-          token,
-          this.logger,
-          gitProvider.url || undefined,
-        );
-        return gitlabProvider.listAvailableRepositories(); // Always filters for write-only repositories
-      }
-
-      default:
-        throw new Error(
-          `Unsupported git provider source: ${gitProvider.source}`,
-        );
-    }
+    // Create an instance of IGitProvider using the factory
+    const providerInstance =
+      this.gitProviderFactory.createGitProvider(gitProvider);
+    return providerInstance.listAvailableRepositories(); // Always filters for write-only repositories
   }
 
   async checkBranchExists(
@@ -121,24 +107,39 @@ export class GitProviderService {
       throw new Error('Git provider token not configured');
     }
 
-    // Create an instance of IGitProvider based on the provider type
-    switch (gitProvider.source) {
-      case GitProviderVendors.github:
-        return new GithubProvider(token, this.logger).checkBranchExists(
-          owner,
-          repo,
-          branch,
-        );
-      case GitProviderVendors.gitlab:
-        return new GitlabProvider(
-          token,
-          this.logger,
-          gitProvider.url || undefined,
-        ).checkBranchExists(owner, repo, branch);
-      default:
-        throw new Error(
-          `Unsupported git provider source: ${gitProvider.source}`,
-        );
+    // Create an instance of IGitProvider using the factory
+    const providerInstance =
+      this.gitProviderFactory.createGitProvider(gitProvider);
+    return providerInstance.checkBranchExists(owner, repo, branch);
+  }
+
+  async listAvailableTargets(
+    gitRepo: GitRepo,
+    path?: string,
+  ): Promise<string[]> {
+    // Find the specific git provider for this repository
+    const gitProvider = await this.gitProviderRepository.findById(
+      gitRepo.providerId,
+    );
+
+    if (!gitProvider) {
+      throw new Error('Git provider not found for this repository');
     }
+
+    if (!gitProvider.token) {
+      throw new Error('Git provider token not configured');
+    }
+
+    // Create an instance of IGitRepo using the factory
+    const gitRepoInstance = this.gitRepoFactory.createGitRepo(
+      gitRepo,
+      gitProvider,
+    );
+    return gitRepoInstance.listDirectoriesOnRepo(
+      gitRepo.repo,
+      gitRepo.owner,
+      gitRepo.branch,
+      path,
+    );
   }
 }

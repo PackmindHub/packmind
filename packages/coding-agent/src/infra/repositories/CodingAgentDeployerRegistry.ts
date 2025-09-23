@@ -44,15 +44,15 @@ export class CodingAgentDeployerRegistry
       case 'packmind':
         return new PackmindDeployer(this.standardsHexa);
       case 'junie':
-        return new JunieDeployer(this.gitHexa);
+        return new JunieDeployer(this.standardsHexa, this.gitHexa);
       case 'claude':
-        return new ClaudeDeployer(this.gitHexa);
+        return new ClaudeDeployer(this.standardsHexa, this.gitHexa);
       case 'cursor':
-        return new CursorDeployer(this.gitHexa);
+        return new CursorDeployer(this.standardsHexa, this.gitHexa);
       case 'copilot':
-        return new CopilotDeployer(this.gitHexa);
+        return new CopilotDeployer(this.standardsHexa, this.gitHexa);
       case 'agents_md':
-        return new AgentsMDDeployer(this.gitHexa);
+        return new AgentsMDDeployer(this.standardsHexa, this.gitHexa);
       default:
         throw new Error(`Unknown coding agent: ${agent}`);
     }

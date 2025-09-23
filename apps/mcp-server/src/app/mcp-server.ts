@@ -6,6 +6,7 @@ import {
   LogLevel,
   PackmindLogger,
   ProgrammingLanguage,
+  RuleWithExamples,
   stringToProgrammingLanguage,
 } from '@packmind/shared';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
@@ -54,8 +55,16 @@ export function createMCPServer(
   const recipesHexa = fastify.recipesHexa();
   logger.debug('Attempting to call fastify.standardsHexa()');
   const standardsHexa = fastify.standardsHexa();
-  logger.debug('Attempting to call fastify.standardsHexa()');
+  logger.debug('Attempting to call fastify.deploymentsHexa()');
+  const deploymentsHexa = fastify.deploymentsHexa();
+  logger.debug('Attempting to call fastify.recipesUsageHexa()');
   const recipesUsageHexa = fastify.recipesUsageHexa();
+
+  // Set up deployment port injection for analytics
+  logger.debug('Setting up deployment port injection for analytics');
+  const deploymentPort = deploymentsHexa.getDeploymentsUseCases();
+  recipesUsageHexa.setDeploymentPort(deploymentPort);
+  logger.debug('Deployment port injection completed');
 
   mcpServer.tool(
     `${mcpToolPrefix}_say_hello`,
@@ -96,8 +105,15 @@ export function createMCPServer(
         .string()
         .min(1)
         .describe('A description of the recipe to create (in markdown format)'),
+      summary: z
+        .string()
+        .min(1)
+        .optional()
+        .describe(
+          'A concise sentence describing the intent of this recipe (what it does) and its value (why it is useful) and when it is relevant to use it',
+        ),
     },
-    async ({ name, content }) => {
+    async ({ name, content, summary }) => {
       if (!userContext) {
         throw new Error('User context is required to create recipes');
       }
@@ -107,6 +123,7 @@ export function createMCPServer(
         content,
         organizationId: createOrganizationId(userContext.organizationId),
         userId: createUserId(userContext.userId),
+        summary,
       });
 
       return {
@@ -139,19 +156,27 @@ export function createMCPServer(
         .describe(
           'The git repository in "owner/repo" format where the recipes were used',
         ),
+      target: z
+        .string()
+        .optional()
+        .describe(
+          'The path where the recipes are distributed (ex: /, /src/frontend/, /src/backend/)',
+        ),
     },
-    async ({ recipesSlug, aiAgent, gitRepo }) => {
+    async ({ recipesSlug, aiAgent, gitRepo, target }) => {
       if (!userContext) {
         throw new Error('User context is required to track recipe usage');
       }
 
       try {
-        const usageRecords = await recipesUsageHexa.trackRecipeUsage(
-          recipesSlug,
+        const usageRecords = await recipesUsageHexa.trackRecipeUsage({
+          recipeSlugs: recipesSlug,
           aiAgent,
-          createUserId(userContext.userId),
+          userId: userContext.userId,
+          organizationId: userContext.organizationId,
           gitRepo,
-        );
+          target,
+        });
 
         return {
           content: [
@@ -317,6 +342,133 @@ export function createMCPServer(
             {
               type: 'text',
               text: `Failed to list standards: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        };
+      }
+    },
+  );
+
+  mcpServer.tool(
+    `${mcpToolPrefix}_create_standard`,
+    'Create a new coding standard with multiple rules and optional examples in a single operation',
+    {
+      name: z.string().min(1).describe('The name of the standard to create'),
+      description: z
+        .string()
+        .min(1)
+        .describe(
+          'A comprehensive description of the standard and its purpose (markdown format)',
+        ),
+      summary: z
+        .string()
+        .min(1)
+        .optional()
+        .describe(
+          'A concise sentence describing the intent of this standard and when it is relevant to apply its rules.',
+        ),
+      rules: z
+        .array(
+          z.object({
+            content: z
+              .string()
+              .min(1)
+              .describe(
+                'A descriptive name for the coding rule that explains its intention and how it should be used. It must start with a verb to give the intention.',
+              ),
+            examples: z
+              .array(
+                z.object({
+                  positive: z
+                    .string()
+                    .describe(
+                      'A code snippet that is a valid example of the rule, if applicable. Make sure to use the appropriate language. Code snippet can be multi-line if relevant.',
+                    ),
+                  negative: z
+                    .string()
+                    .describe(
+                      'A code snippet that is an invalid example of the rule, if applicable. Make sure to use the appropriate language. Code snippet can be multi-line if relevant.',
+                    ),
+                  language: z
+                    .string()
+                    .describe(
+                      `The programming language of the code snippet, if applicable. Pick from ${getAllProgrammingLanguages()}`,
+                    ),
+                }),
+              )
+              .optional()
+              .describe(
+                'Optional array of code examples demonstrating the rule',
+              ),
+          }),
+        )
+        .optional()
+        .describe('Array of rules with optional examples for the standard'),
+    },
+    async ({ name, description, summary, rules = [] }) => {
+      if (!userContext) {
+        throw new Error('User context is required to create standards');
+      }
+
+      try {
+        // Process and validate the rules with examples
+        const processedRules: RuleWithExamples[] = rules.map((rule) => {
+          const processedRule: RuleWithExamples = {
+            content: rule.content,
+          };
+
+          if (rule.examples && rule.examples.length > 0) {
+            processedRule.examples = rule.examples
+              .map((example) => {
+                const language = stringToProgrammingLanguage(example.language);
+                if (!language) {
+                  logger.warn(
+                    'Invalid programming language provided, skipping example',
+                    {
+                      language: example.language,
+                      ruleContent: rule.content.substring(0, 50) + '...',
+                    },
+                  );
+                  return null;
+                }
+                return {
+                  positive: example.positive,
+                  negative: example.negative,
+                  language: language,
+                };
+              })
+              .filter(
+                (example) => example !== null,
+              ) as RuleWithExamples['examples'];
+          }
+
+          return processedRule;
+        });
+
+        const standard = await standardsHexa.createStandardWithExamples({
+          name,
+          description,
+          summary,
+          rules: processedRules,
+          organizationId: createOrganizationId(userContext.organizationId),
+          userId: createUserId(userContext.userId),
+          scope: null,
+        });
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Standard '${standard.slug}' has been created successfully with ${processedRules.length} rules and ${processedRules.reduce((sum, r) => sum + (r.examples?.length || 0), 0)} examples.`,
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Failed to create standard: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
         };

@@ -59,9 +59,7 @@ export const EditRecipe: React.FC<EditRecipeProps> = ({
 
   return (
     <PMBox maxW="800px" mx="auto" p={6}>
-      <PMText size="xl" mb={6}>
-        Edit Recipe
-      </PMText>
+      <PMText mb={6}>Edit Recipe</PMText>
 
       <form onSubmit={handleSubmit}>
         <PMVStack gap={6} align="stretch">
@@ -85,7 +83,7 @@ export const EditRecipe: React.FC<EditRecipeProps> = ({
               rows={20}
               minHeight="400px"
             />
-            <PMText size="sm" color="gray.600" mt={1}>
+            <PMText color="secondary" mt={1}>
               You can use markdown formatting. The content will be used to
               generate an AI summary automatically.
             </PMText>

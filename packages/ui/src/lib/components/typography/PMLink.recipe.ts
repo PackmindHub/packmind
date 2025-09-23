@@ -20,6 +20,14 @@ const pmLinkRecipe = defineRecipe({
           color: 'branding.primary',
         },
       },
+      active: {
+        color: 'branding.primary',
+        fontWeight: 'medium',
+        _hover: {
+          textDecoration: 'underline',
+          color: 'branding.primary',
+        },
+      },
       navbar: {
         color: 'text.secondary',
         fontSize: 'sm',

@@ -7,6 +7,7 @@ import {
   AvailableRepository,
 } from '../../types/GitProviderTypes';
 import { GitProviderId, GitRepoId } from '@packmind/git/types';
+import { CheckDirectoryExistenceResult } from '@packmind/shared';
 
 export interface IGitProviderGateway {
   // Git Provider CRUD operations
@@ -43,4 +44,17 @@ export interface IGitProviderGateway {
     repo: string,
     branch: string,
   ): Promise<boolean>;
+
+  // Target operations
+  getAvailableRemoteDirectories(
+    repositoryId: GitRepoId,
+    path?: string,
+  ): Promise<string[]>;
+
+  // Directory operations
+  checkDirectoryExistence(
+    repositoryId: GitRepoId,
+    directoryPath: string,
+    branch: string,
+  ): Promise<CheckDirectoryExistenceResult>;
 }

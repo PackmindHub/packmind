@@ -9,7 +9,7 @@ import {
 } from '../../../deployments/api/queries/DeploymentsQueries';
 
 // Query Keys
-const GET_GIT_PROVIDERS_QUERY_KEY = 'gitProviders';
+export const GET_GIT_PROVIDERS_QUERY_KEY = 'gitProviders';
 
 // Git Provider Queries
 export const useGetGitProvidersQuery = (organizationId: OrganizationId) => {

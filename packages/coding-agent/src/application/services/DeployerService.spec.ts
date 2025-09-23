@@ -17,6 +17,7 @@ import {
 import { GitRepo, GitRepoId, GitProviderId } from '@packmind/git';
 import { FileUpdates } from '../../domain/entities/FileUpdates';
 import { OrganizationId, UserId } from '@packmind/accounts';
+import { Target, TargetId } from '@packmind/shared';
 
 // Create test helper functions
 const createTestRecipeId = (id: string): RecipeId => id as RecipeId;
@@ -31,6 +32,7 @@ const createTestUserId = (id: string): UserId => id as UserId;
 const createTestGitRepoId = (id: string): GitRepoId => id as GitRepoId;
 const createTestGitProviderId = (id: string): GitProviderId =>
   id as GitProviderId;
+const createTestTargetId = (id: string): TargetId => id as TargetId;
 
 // Mock deployer
 class MockDeployer implements ICodingAgentDeployer {
@@ -39,11 +41,25 @@ class MockDeployer implements ICodingAgentDeployer {
     private standardResult: FileUpdates = { createOrUpdate: [], delete: [] },
   ) {}
 
-  async deployRecipes(): Promise<FileUpdates> {
+  async deployRecipes(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    recipeVersions: RecipeVersion[],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    gitRepo: GitRepo,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    target: Target,
+  ): Promise<FileUpdates> {
     return this.recipeResult;
   }
 
-  async deployStandards(): Promise<FileUpdates> {
+  async deployStandards(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    standardVersions: StandardVersion[],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    gitRepo: GitRepo,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    target: Target,
+  ): Promise<FileUpdates> {
     return this.standardResult;
   }
 }
@@ -69,12 +85,20 @@ describe('DeployerService', () => {
   let service: DeployerService;
   let registry: MockRegistry;
   let mockGitRepo: GitRepo;
+  let mockTarget: Target;
   let mockRecipeVersions: RecipeVersion[];
   let mockStandardVersions: StandardVersion[];
 
   beforeEach(() => {
     registry = new MockRegistry();
     service = new DeployerService(registry);
+
+    mockTarget = {
+      id: createTestTargetId('test-target-id'),
+      name: 'Test Target',
+      path: '/',
+      gitRepoId: createTestGitRepoId('repo-1'),
+    };
 
     mockGitRepo = {
       id: createTestGitRepoId('repo-1'),
@@ -145,6 +169,7 @@ describe('DeployerService', () => {
       const result = await service.aggregateRecipeDeployments(
         mockRecipeVersions,
         mockGitRepo,
+        [mockTarget],
         ['packmind'],
       );
 
@@ -171,6 +196,7 @@ describe('DeployerService', () => {
       const result = await service.aggregateRecipeDeployments(
         mockRecipeVersions,
         mockGitRepo,
+        [mockTarget],
         ['packmind'], // Single agent in this case
       );
 
@@ -192,6 +218,7 @@ describe('DeployerService', () => {
       const result = await service.aggregateRecipeDeployments(
         mockRecipeVersions,
         mockGitRepo,
+        [mockTarget],
         ['packmind'],
       );
 
@@ -212,6 +239,7 @@ describe('DeployerService', () => {
       const result = await service.aggregateRecipeDeployments(
         mockRecipeVersions,
         mockGitRepo,
+        [mockTarget],
         ['packmind'],
       );
 
@@ -226,6 +254,7 @@ describe('DeployerService', () => {
       const result = await service.aggregateRecipeDeployments(
         mockRecipeVersions,
         mockGitRepo,
+        [mockTarget],
         [],
       );
 
@@ -246,9 +275,12 @@ describe('DeployerService', () => {
       registry.registerDeployer('packmind', errorDeployer);
 
       await expect(
-        service.aggregateRecipeDeployments(mockRecipeVersions, mockGitRepo, [
-          'packmind',
-        ]),
+        service.aggregateRecipeDeployments(
+          mockRecipeVersions,
+          mockGitRepo,
+          [mockTarget],
+          ['packmind'],
+        ),
       ).rejects.toThrow('Deployment failed');
     });
   });
@@ -270,6 +302,7 @@ describe('DeployerService', () => {
       const result = await service.aggregateStandardsDeployments(
         mockStandardVersions,
         mockGitRepo,
+        [mockTarget],
         ['packmind'],
       );
 
@@ -284,6 +317,7 @@ describe('DeployerService', () => {
       const result = await service.aggregateStandardsDeployments(
         [],
         mockGitRepo,
+        [mockTarget],
         ['packmind'],
       );
 

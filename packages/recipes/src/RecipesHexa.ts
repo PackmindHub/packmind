@@ -4,6 +4,10 @@ import {
   PackmindLogger,
   QueryOption,
   CaptureRecipeCommand,
+  UpdateRecipesFromGitHubCommand,
+  UpdateRecipesFromGitLabCommand,
+  IDeploymentPort,
+  BaseHexaOpts,
 } from '@packmind/shared';
 import { RecipesHexaFactory } from './RecipesHexaFactory';
 import { Recipe, RecipeId } from './domain/entities/Recipe';
@@ -38,15 +42,14 @@ const origin = 'RecipesHexa';
  */
 export class RecipesHexa extends BaseHexa {
   private readonly hexa: RecipesHexaFactory;
-  private readonly logger: PackmindLogger;
+  private _deploymentPort: IDeploymentPort | undefined | null = undefined;
 
   constructor(
     registry: HexaRegistry,
-    logger: PackmindLogger = new PackmindLogger(origin),
+    opts: Partial<BaseHexaOpts> = { logger: new PackmindLogger(origin) },
   ) {
-    super(registry);
+    super(registry, opts);
 
-    this.logger = logger;
     this.logger.info('Initializing RecipesHexa');
 
     try {
@@ -57,7 +60,13 @@ export class RecipesHexa extends BaseHexa {
       const gitHexa = registry.get(GitHexa);
 
       // Initialize the hexagon with the shared DataSource
-      this.hexa = new RecipesHexaFactory(dataSource, gitHexa, this.logger);
+      // DeploymentPort will be resolved lazily to avoid circular dependencies
+      this.hexa = new RecipesHexaFactory(
+        dataSource,
+        gitHexa,
+        undefined,
+        this.logger,
+      );
       this.logger.info('RecipesHexa initialized successfully');
     } catch (error) {
       this.logger.error('Failed to initialize RecipesHexa', {
@@ -65,6 +74,15 @@ export class RecipesHexa extends BaseHexa {
       });
       throw error;
     }
+  }
+
+  /**
+   * Set the deployment port after initialization to avoid circular dependencies
+   */
+  public setDeploymentPort(deploymentPort: IDeploymentPort): void {
+    this._deploymentPort = deploymentPort;
+    // Update the use cases with the new deployment port
+    this.hexa.updateDeploymentPort(deploymentPort);
   }
 
   /**
@@ -173,30 +191,18 @@ export class RecipesHexa extends BaseHexa {
    * Update recipes from GitHub webhook events
    */
   public async updateRecipesFromGitHub(
-    payload: unknown,
-    organizationId: OrganizationId,
-    headers: Record<string, string> = {},
+    command: UpdateRecipesFromGitHubCommand,
   ): Promise<Recipe[]> {
-    return this.hexa.useCases.updateRecipesFromGitHub(
-      payload,
-      organizationId,
-      headers,
-    );
+    return this.hexa.useCases.updateRecipesFromGitHub(command);
   }
 
   /**
    * Update recipes from GitLab webhook events
    */
   public async updateRecipesFromGitLab(
-    payload: unknown,
-    organizationId: OrganizationId,
-    headers: Record<string, string> = {},
+    command: UpdateRecipesFromGitLabCommand,
   ): Promise<Recipe[]> {
-    return this.hexa.useCases.updateRecipesFromGitLab(
-      payload,
-      organizationId,
-      headers,
-    );
+    return this.hexa.useCases.updateRecipesFromGitLab(command);
   }
 
   /**

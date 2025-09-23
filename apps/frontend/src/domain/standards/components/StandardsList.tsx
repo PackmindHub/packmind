@@ -9,7 +9,6 @@ import {
   PMTableColumn,
   PMTableRow,
   PMAlert,
-  PMSpinner,
   PMAlertDialog,
   PMCheckbox,
 } from '@packmind/ui';
@@ -20,10 +19,8 @@ import {
 } from '../api/queries/StandardsQueries';
 
 import { DeployStandardButton } from '../../deployments/components/StandardDeployments/DeployStandardButton';
-import { useDeployStandard } from '../../deployments/hooks';
 import './StandardsList.styles.scss';
 import { StandardId } from '@packmind/standards/types';
-import { GitRepoId } from '@packmind/git/types';
 import { STANDARD_MESSAGES } from '../constants/messages';
 
 interface StandardsListProps {
@@ -33,17 +30,12 @@ interface StandardsListProps {
 export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
   const { data: standards, isLoading, isError } = useGetStandardsQuery();
   const deleteBatchMutation = useDeleteStandardsBatchMutation();
-  const { deployStandards, isDeploying } = useDeployStandard();
   const [tableData, setTableData] = React.useState<PMTableRow[]>([]);
   const [selectedStandardIds, setSelectedStandardIds] = React.useState<
     StandardId[]
   >([]);
 
-  // Alert state management for batch deployment
-  const [batchDeploymentAlert, setBatchDeploymentAlert] = React.useState<{
-    type: 'success' | 'error' | 'info';
-    message: string;
-  } | null>(null);
+  // Alert state management for batch deployment (plus utilisé)
   const [deleteModalOpen, setDeleteModalOpen] = React.useState(false);
   const [deleteAlert, setDeleteAlert] = React.useState<{
     type: 'success' | 'error';
@@ -96,48 +88,10 @@ export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
     }
   };
 
-  const handleBatchDeploy = async (repositoryIds: GitRepoId[]) => {
-    if (selectedStandardIds.length === 0) return;
-
-    try {
-      // Show loading alert with spinner
-      setBatchDeploymentAlert({
-        type: 'info',
-        message: `Deploying ${selectedStandardIds.length} standard(s)...`,
-      });
-
-      const selectedStandards =
-        standards
-          ?.filter((standard) => selectedStandardIds.includes(standard.id))
-          .map((standard) => ({
-            id: standard.id,
-            version: standard.version,
-            name: standard.name,
-          })) || [];
-
-      await deployStandards({ standards: selectedStandards }, repositoryIds);
-
-      // Show success alert
-      setBatchDeploymentAlert({
-        type: 'success',
-        message: `${selectedStandardIds.length} standard(s) deployed successfully!`,
-      });
-
-      // Auto-dismiss success alert after 3 seconds
-      setTimeout(() => {
-        setBatchDeploymentAlert(null);
-      }, 3000);
-
-      // Clear selection after successful deployment
-      setSelectedStandardIds([]);
-    } catch (error) {
-      console.error('Failed to deploy standards:', error);
-      setBatchDeploymentAlert({
-        type: 'error',
-        message: STANDARD_MESSAGES.error.deployFailed,
-      });
-    }
-  };
+  const selectedStandards =
+    standards?.filter((standard) =>
+      selectedStandardIds.includes(standard.id),
+    ) || [];
 
   React.useEffect(() => {
     if (!standards) return;
@@ -148,9 +102,8 @@ export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
         select: (
           <PMCheckbox
             checked={selectedStandardIds.includes(standard.id)}
-            onChange={(event) => {
-              const input = event.target as HTMLInputElement;
-              handleSelectStandard(standard.id, input.checked);
+            onCheckedChange={(event) => {
+              handleSelectStandard(standard.id, event.checked === true);
             }}
           />
         ),
@@ -188,9 +141,10 @@ export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
       header: (
         <PMCheckbox
           checked={isAllSelected || false}
-          onChange={(e) => {
+          onCheckedChange={() => {
             handleSelectAll(!isAllSelected);
           }}
+          controlProps={{ borderColor: 'border.checkbox' }}
         />
       ),
       width: '50px',
@@ -205,21 +159,6 @@ export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
 
   return (
     <div className={'standards-list'}>
-      {batchDeploymentAlert && (
-        <PMBox mb={4}>
-          <PMAlert.Root status={batchDeploymentAlert.type}>
-            {batchDeploymentAlert.type === 'info' ? (
-              <PMAlert.Indicator>
-                <PMSpinner size="sm" />
-              </PMAlert.Indicator>
-            ) : (
-              <PMAlert.Indicator />
-            )}
-            <PMAlert.Title>{batchDeploymentAlert.message}</PMAlert.Title>
-          </PMAlert.Root>
-        </PMBox>
-      )}
-
       {/* Delete Success/Error Alert */}
       {deleteAlert && (
         <PMBox mb={4}>
@@ -239,8 +178,7 @@ export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
               <PMHStack gap={2}>
                 <DeployStandardButton
                   label={`Deploy (${selectedStandardIds.length})`}
-                  onDeploy={handleBatchDeploy}
-                  loading={isDeploying}
+                  selectedStandards={selectedStandards}
                   disabled={selectedStandardIds.length === 0}
                   size="sm"
                 />

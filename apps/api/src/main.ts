@@ -11,7 +11,12 @@ import { NestFactory } from '@nestjs/core';
 import { INestApplication } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app/app.module';
-import { PackmindLogger, LogLevel, Configuration } from '@packmind/shared';
+import {
+  PackmindLogger,
+  LogLevel,
+  Configuration,
+  Cache,
+} from '@packmind/shared';
 import { LinterHexa } from '@packmind/linter';
 
 const logger = new PackmindLogger('PackmindAPI', LogLevel.INFO);
@@ -52,6 +57,26 @@ async function getCorsOrigins(): Promise<string[] | boolean> {
     'No CORS origins configured, allowing all origins. This may be a security risk in production.',
   );
   return true; // This allows all origins
+}
+
+/**
+ * Initialize global Cache instance
+ */
+async function initializeCache(): Promise<void> {
+  logger.info('Initializing global cache...');
+
+  try {
+    const cache = Cache.getInstance();
+    await cache.initialize();
+
+    logger.info('Global cache initialized successfully');
+  } catch (error) {
+    logger.error('Failed to initialize global cache', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    // Continue without cache if initialization fails - cache operations will handle gracefully
+    logger.warn('Continuing without cache - cache operations will be skipped');
+  }
 }
 
 /**
@@ -117,6 +142,9 @@ async function bootstrap() {
     app.setGlobalPrefix(globalPrefix);
     logger.debug('Global prefix set', { prefix: globalPrefix });
 
+    // Initialize global cache before starting the server
+    await initializeCache();
+
     // Initialize job queues before starting the server
     await initializeJobQueues(app);
 
@@ -144,7 +172,18 @@ async function bootstrap() {
 
       app
         .close()
-        .then(() => {
+        .then(async () => {
+          // Cleanup cache connection
+          try {
+            const cache = Cache.getInstance();
+            await cache.disconnect();
+            logger.info('Cache disconnected gracefully');
+          } catch (error) {
+            logger.warn('Error disconnecting cache during shutdown', {
+              error: error instanceof Error ? error.message : String(error),
+            });
+          }
+
           logger.info('✅ Packmind API server shut down gracefully', {
             signal,
             shutdownTime: new Date().toISOString(),

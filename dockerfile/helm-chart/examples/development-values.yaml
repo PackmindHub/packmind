@@ -1,0 +1,151 @@
+# Development values for Packmind Helm Chart
+# This file contains development-friendly configurations
+
+global:
+  labels:
+    environment: development
+    team: dev
+
+# Use internal databases for development
+postgresql:
+  enabled: true
+  auth:
+    username: 'packmind'
+    password: 'dev-password'
+    database: 'packmind'
+ 
+  persistence:
+    enabled: true
+    size: 2Gi
+ 
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+redis:
+  enabled: true
+  auth:
+    enabled: false
+ 
+  persistence:
+    enabled: true
+    size: 1Gi
+ 
+  resources:
+    limits:
+      cpu: 250m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+# Development API configuration
+api:
+  replicaCount: 1
+
+  image:
+    repository: packmind/api
+    tag: 'latest'
+    pullPolicy: Always # Always pull latest for development
+
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+  env:
+    NODE_ENV: 'development'
+    COOKIE_SECURE: 'false'
+
+# Development Frontend configuration
+frontend:
+  replicaCount: 1
+
+  image:
+    repository: packmind/frontend
+    tag: 'latest'
+    pullPolicy: Always
+
+  resources:
+    limits:
+      cpu: 300m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+
+# Development MCP Server configuration
+mcpServer:
+  replicaCount: 1
+
+  image:
+    repository: packmind/mcp
+    tag: 'latest'
+    pullPolicy: Always
+
+  resources:
+    limits:
+      cpu: 300m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+
+  env:
+    RATE_LIMIT_MAX_REQUESTS: '1000'
+
+# Simple ingress for development
+ingress:
+  enabled: true
+  className: 'nginx'
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: 'false'
+  hosts:
+    - host: packmind.local
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service: frontend
+        - path: /api
+          pathType: Prefix
+          backend:
+            service: api
+        - path: /mcp
+          pathType: Prefix
+          backend:
+            service: mcp-server
+
+# Simple secrets for development (not secure - don't use in production)
+secrets:
+  api:
+    jwtSecretKey: 'dev-jwt-secret-key-12345'
+    encryptionKey: 'dev-encryption-key-67890'
+    openaiApiKey: '' # Set this if you want to test OpenAI integration
+  mcp:
+    jwtSecretKey: 'dev-mcp-jwt-secret-12345'
+
+# Disable production features for development
+
+networkPolicy:
+  enabled: false
+
+# Relaxed security for development
+podSecurityContext:
+  fsGroup: 2000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+  runAsNonRoot: false

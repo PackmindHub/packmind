@@ -1,5 +1,8 @@
 import { GitProviderService } from './GitProviderService';
 import { IGitProviderRepository } from '../domain/repositories/IGitProviderRepository';
+import { IGitProviderFactory } from '../domain/repositories/IGitProviderFactory';
+import { IGitRepoFactory } from '../domain/repositories/IGitRepoFactory';
+import { IGitProvider } from '../domain/repositories/IGitProvider';
 import {
   GitProvider,
   GitProviderVendor,
@@ -9,26 +12,16 @@ import {
 import { createOrganizationId } from '@packmind/accounts';
 import { PackmindLogger } from '@packmind/shared';
 import { stubLogger } from '@packmind/shared/test';
-import { GithubProvider } from '../infra/repositories/github/GithubProvider';
-import { GitlabProvider } from '../infra/repositories/gitlab/GitlabProvider';
 import { gitProviderFactory, gitlabProviderFactory } from '../../test';
-
-// Mock the providers
-jest.mock('../infra/repositories/github/GithubProvider');
-jest.mock('../infra/repositories/gitlab/GitlabProvider');
-const MockedGithubProvider = GithubProvider as jest.MockedClass<
-  typeof GithubProvider
->;
-const MockedGitlabProvider = GitlabProvider as jest.MockedClass<
-  typeof GitlabProvider
->;
 
 describe('GitProviderService', () => {
   let gitProviderService: GitProviderService;
   let mockGitProviderRepository: jest.Mocked<IGitProviderRepository>;
+  let mockGitProviderFactory: jest.Mocked<IGitProviderFactory>;
+  let mockGitRepoFactory: jest.Mocked<IGitRepoFactory>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
-  let mockGithubProviderInstance: jest.Mocked<GithubProvider>;
-  let mockGitlabProviderInstance: jest.Mocked<GitlabProvider>;
+  let mockGithubProviderInstance: jest.Mocked<IGitProvider>;
+  let mockGitlabProviderInstance: jest.Mocked<IGitProvider>;
 
   const mockGitProvider: GitProvider = gitProviderFactory({
     id: createGitProviderId('provider-1'),
@@ -62,18 +55,33 @@ describe('GitProviderService', () => {
     mockGithubProviderInstance = {
       listAvailableRepositories: jest.fn(),
       checkBranchExists: jest.fn(),
-    } as unknown as jest.Mocked<GithubProvider>;
+    } as jest.Mocked<IGitProvider>;
 
     mockGitlabProviderInstance = {
       listAvailableRepositories: jest.fn(),
       checkBranchExists: jest.fn(),
-    } as unknown as jest.Mocked<GitlabProvider>;
+    } as jest.Mocked<IGitProvider>;
 
-    MockedGithubProvider.mockImplementation(() => mockGithubProviderInstance);
-    MockedGitlabProvider.mockImplementation(() => mockGitlabProviderInstance);
+    mockGitProviderFactory = {
+      createGitProvider: jest.fn().mockImplementation((provider) => {
+        if (provider.source === GitProviderVendors.github) {
+          return mockGithubProviderInstance;
+        }
+        if (provider.source === GitProviderVendors.gitlab) {
+          return mockGitlabProviderInstance;
+        }
+        throw new Error(`Unsupported git provider source: ${provider.source}`);
+      }),
+    } as jest.Mocked<IGitProviderFactory>;
+
+    mockGitRepoFactory = {
+      createGitRepo: jest.fn(),
+    } as jest.Mocked<IGitRepoFactory>;
 
     gitProviderService = new GitProviderService(
       mockGitProviderRepository,
+      mockGitProviderFactory,
+      mockGitRepoFactory,
       stubbedLogger,
     );
   });
@@ -132,10 +140,6 @@ describe('GitProviderService', () => {
         expect(mockGitProviderRepository.findById).toHaveBeenCalledWith(
           createGitProviderId('provider-1'),
         );
-        expect(MockedGithubProvider).toHaveBeenCalledWith(
-          'github-token',
-          stubbedLogger,
-        );
         expect(
           mockGithubProviderInstance.listAvailableRepositories,
         ).toHaveBeenCalledWith();
@@ -171,10 +175,8 @@ describe('GitProviderService', () => {
         expect(mockGitProviderRepository.findById).toHaveBeenCalledWith(
           createGitProviderId('provider-2'),
         );
-        expect(MockedGitlabProvider).toHaveBeenCalledWith(
-          'gitlab-token',
-          stubbedLogger,
-          'https://gitlab.com',
+        expect(mockGitProviderFactory.createGitProvider).toHaveBeenCalledWith(
+          mockGitlabProvider,
         );
         expect(
           mockGitlabProviderInstance.listAvailableRepositories,
@@ -219,10 +221,12 @@ describe('GitProviderService', () => {
         expect(mockGitProviderRepository.findById).toHaveBeenCalledWith(
           createGitProviderId('provider-3'),
         );
-        expect(MockedGitlabProvider).toHaveBeenCalledWith(
-          'gitlab-token',
-          stubbedLogger,
-          'https://gitlab.company.com/api/v4',
+        expect(mockGitProviderFactory.createGitProvider).toHaveBeenCalledWith(
+          expect.objectContaining({
+            source: GitProviderVendors.gitlab,
+            token: 'gitlab-token',
+            url: 'https://gitlab.company.com/api/v4',
+          }),
         );
         expect(
           mockGitlabProviderInstance.listAvailableRepositories,
@@ -348,9 +352,8 @@ describe('GitProviderService', () => {
         expect(mockGitProviderRepository.findById).toHaveBeenCalledWith(
           createGitProviderId('provider-1'),
         );
-        expect(MockedGithubProvider).toHaveBeenCalledWith(
-          'github-token',
-          stubbedLogger,
+        expect(mockGitProviderFactory.createGitProvider).toHaveBeenCalledWith(
+          mockGitProvider,
         );
         expect(
           mockGithubProviderInstance.checkBranchExists,
@@ -376,10 +379,8 @@ describe('GitProviderService', () => {
         expect(mockGitProviderRepository.findById).toHaveBeenCalledWith(
           createGitProviderId('provider-2'),
         );
-        expect(MockedGitlabProvider).toHaveBeenCalledWith(
-          'gitlab-token',
-          stubbedLogger,
-          'https://gitlab.com',
+        expect(mockGitProviderFactory.createGitProvider).toHaveBeenCalledWith(
+          mockGitlabProvider,
         );
         expect(
           mockGitlabProviderInstance.checkBranchExists,
@@ -413,10 +414,12 @@ describe('GitProviderService', () => {
         expect(mockGitProviderRepository.findById).toHaveBeenCalledWith(
           createGitProviderId('provider-3'),
         );
-        expect(MockedGitlabProvider).toHaveBeenCalledWith(
-          'gitlab-token',
-          stubbedLogger,
-          'https://gitlab.enterprise.com/api/v4',
+        expect(mockGitProviderFactory.createGitProvider).toHaveBeenCalledWith(
+          expect.objectContaining({
+            source: GitProviderVendors.gitlab,
+            token: 'gitlab-token',
+            url: 'https://gitlab.enterprise.com/api/v4',
+          }),
         );
         expect(
           mockGitlabProviderInstance.checkBranchExists,

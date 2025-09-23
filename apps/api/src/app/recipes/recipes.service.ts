@@ -7,7 +7,7 @@ import {
   RecipeVersionId,
 } from '@packmind/recipes';
 import { OrganizationId, UserId } from '@packmind/accounts';
-import { IDeploymentPort, PackmindLogger } from '@packmind/shared';
+import { IDeploymentPort, PackmindLogger, TargetId } from '@packmind/shared';
 import { GitRepoId } from '@packmind/git';
 import { DeploymentsHexa } from '@packmind/deployments';
 
@@ -20,6 +20,9 @@ export class RecipesService {
     private readonly logger: PackmindLogger,
   ) {
     this.deploymentAdapter = this.deploymentHexa.getDeploymentsUseCases();
+    // Set up bidirectional dependency to break circular reference
+    recipesHexa.setDeploymentPort(this.deploymentAdapter);
+    deploymentHexa.setRecipesPort(recipesHexa);
   }
 
   async getRecipesByOrganization(
@@ -52,11 +55,11 @@ export class RecipesService {
     organizationId: OrganizationId,
     headers: Record<string, string> = {},
   ) {
-    return this.recipesHexa.updateRecipesFromGitHub(
+    return this.recipesHexa.updateRecipesFromGitHub({
       payload,
       organizationId,
       headers,
-    );
+    });
   }
 
   async updateRecipesFromGitLab(
@@ -64,11 +67,11 @@ export class RecipesService {
     organizationId: OrganizationId,
     headers: Record<string, string> = {},
   ) {
-    return this.recipesHexa.updateRecipesFromGitLab(
+    return this.recipesHexa.updateRecipesFromGitLab({
       payload,
       organizationId,
       headers,
-    );
+    });
   }
 
   async updateRecipeFromUI(
@@ -106,9 +109,31 @@ export class RecipesService {
       deploymentsCreated: true,
       success: true,
       commitsWithChangesCount: deployments.reduce(
-        (sum, deployment) => sum + deployment.gitCommits.length,
+        (sum, deployment) => sum + (deployment.gitCommit ? 1 : 0),
         0,
       ),
+    };
+  }
+
+  async publishRecipeToTargets(
+    recipeVersionIds: RecipeVersionId[],
+    targetIds: TargetId[],
+    authorId: UserId,
+    organizationId: OrganizationId,
+  ) {
+    const deployments = await this.deploymentAdapter.publishRecipes({
+      userId: authorId,
+      organizationId,
+      recipeVersionIds,
+      targetIds,
+    });
+
+    return {
+      deploymentsCreated: true,
+      success: true,
+      commitsWithChangesCount: deployments.filter(
+        (deployment) => deployment.gitCommit,
+      ).length,
     };
   }
 

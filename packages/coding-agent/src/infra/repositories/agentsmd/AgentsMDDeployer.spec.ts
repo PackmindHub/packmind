@@ -13,15 +13,28 @@ import {
   createRecipeId,
   createOrganizationId,
   createUserId,
+  Target,
+  createTargetId,
 } from '@packmind/shared';
+import { v4 as uuidv4 } from 'uuid';
+import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
 
 describe('AgentsMDDeployer', () => {
   let deployer: AgentsMDDeployer;
   let mockGitRepo: GitRepo;
+  let mockTarget: Target;
 
   beforeEach(() => {
     // Create deployer without StandardsHexa or GitHexa for basic tests
     deployer = new AgentsMDDeployer();
+
+    mockTarget = {
+      id: createTargetId('test-target-id'),
+      name: 'Test Target',
+      path: '/',
+      gitRepoId: createGitRepoId(uuidv4()),
+    };
+
     mockGitRepo = {
       id: createGitRepoId('test-repo-id'),
       owner: 'test-owner',
@@ -58,7 +71,11 @@ describe('AgentsMDDeployer', () => {
         userId: createUserId('user-1'),
       };
 
-      const result = await deployer.deployRecipes([recipeVersion], mockGitRepo);
+      const result = await deployer.deployRecipes(
+        [recipeVersion],
+        mockGitRepo,
+        mockTarget,
+      );
 
       expect(result.createOrUpdate).toHaveLength(1);
       expect(result.delete).toHaveLength(0);
@@ -68,13 +85,13 @@ describe('AgentsMDDeployer', () => {
       expect(agentsMDFile.content).toContain('# Packmind Recipes');
       expect(agentsMDFile.content).toContain('🚨 **MANDATORY STEP** 🚨');
       expect(agentsMDFile.content).toContain('ALWAYS READ');
-      expect(agentsMDFile.content).toContain('.packmind/recipes-index.md');
+      expect(agentsMDFile.content).toContain(recipe.name);
       expect(agentsMDFile.content).toContain('aiAgent: "AGENTS.md"');
       expect(agentsMDFile.content).toContain('gitRepo: "test-owner/test-repo"');
     });
 
     it('handles empty recipe list', async () => {
-      const result = await deployer.deployRecipes([], mockGitRepo);
+      const result = await deployer.deployRecipes([], mockGitRepo, mockTarget);
 
       expect(result.createOrUpdate).toHaveLength(1);
       expect(result.delete).toHaveLength(0);
@@ -131,6 +148,7 @@ describe('AgentsMDDeployer', () => {
       const result = await deployer.deployRecipes(
         [recipeVersion1, recipeVersion2],
         mockGitRepo,
+        mockTarget,
       );
 
       expect(result.createOrUpdate).toHaveLength(1);
@@ -140,7 +158,8 @@ describe('AgentsMDDeployer', () => {
       expect(agentsMDFile.path).toBe('AGENTS.md');
       expect(agentsMDFile.content).toContain('# Packmind Recipes');
       expect(agentsMDFile.content).toContain('🚨 **MANDATORY STEP** 🚨');
-      expect(agentsMDFile.content).toContain('.packmind/recipes-index.md');
+      expect(agentsMDFile.content).toContain(recipeVersion1.name);
+      expect(agentsMDFile.content).toContain(recipeVersion2.name);
       expect(agentsMDFile.content).toContain('aiAgent: "AGENTS.md"');
     });
   });
@@ -174,6 +193,7 @@ describe('AgentsMDDeployer', () => {
       const result = await deployer.deployStandards(
         [standardVersion],
         mockGitRepo,
+        mockTarget,
       );
 
       expect(result.createOrUpdate).toHaveLength(1);
@@ -181,23 +201,27 @@ describe('AgentsMDDeployer', () => {
 
       const agentsMDFile = result.createOrUpdate[0];
       expect(agentsMDFile.path).toBe('AGENTS.md');
-      expect(agentsMDFile.content).toContain('## Packmind Standards');
+      expect(agentsMDFile.content).toContain('# Packmind Standards');
       expect(agentsMDFile.content).toContain(
-        'Follow the coding standards defined in',
+        GenericStandardSectionWriter.standardsIntroduction,
       );
-      expect(agentsMDFile.content).toContain('.packmind/standards-index.md');
+      expect(agentsMDFile.content).toContain(standardVersion.name);
     });
 
     it('handles empty standards list', async () => {
-      const result = await deployer.deployStandards([], mockGitRepo);
+      const result = await deployer.deployStandards(
+        [],
+        mockGitRepo,
+        mockTarget,
+      );
 
       expect(result.createOrUpdate).toHaveLength(1);
       expect(result.delete).toHaveLength(0);
 
       const agentsMDFile = result.createOrUpdate[0];
-      expect(agentsMDFile.content).toContain('## Packmind Standards');
-      expect(agentsMDFile.content).toContain(
-        'Follow the coding standards defined in',
+      expect(agentsMDFile.content).not.toContain('# Packmind Standards');
+      expect(agentsMDFile.content).not.toContain(
+        GenericStandardSectionWriter.standardsIntroduction,
       );
     });
 
@@ -253,6 +277,7 @@ describe('AgentsMDDeployer', () => {
       const result = await deployer.deployStandards(
         [standardVersion1, standardVersion2],
         mockGitRepo,
+        mockTarget,
       );
 
       expect(result.createOrUpdate).toHaveLength(1);
@@ -260,8 +285,10 @@ describe('AgentsMDDeployer', () => {
 
       const agentsMDFile = result.createOrUpdate[0];
       expect(agentsMDFile.path).toBe('AGENTS.md');
-      expect(agentsMDFile.content).toContain('## Packmind Standards');
-      expect(agentsMDFile.content).toContain('.packmind/standards-index.md');
+      expect(agentsMDFile.content).toContain('# Packmind Standards');
+      expect(agentsMDFile.content).toContain(
+        GenericStandardSectionWriter.standardsIntroduction,
+      );
     });
   });
 
@@ -301,6 +328,7 @@ describe('AgentsMDDeployer', () => {
         const result = await deployer.deployRecipes(
           [recipeVersion],
           mockGitRepo,
+          mockTarget,
         );
 
         expect(result.createOrUpdate).toHaveLength(1);
@@ -351,11 +379,19 @@ Before writing, editing, or generating ANY code:
         const result = await deployer.deployRecipes(
           [recipeVersion],
           mockGitRepo,
+          mockTarget,
         );
 
-        // Should not create any updates since instructions already exist
-        expect(result.createOrUpdate).toHaveLength(0);
+        // Should create update with properly formatted content using comment markers
+        expect(result.createOrUpdate).toHaveLength(1);
         expect(result.delete).toHaveLength(0);
+        expect(result.createOrUpdate[0].path).toBe('AGENTS.md'); // root target should have no prefix
+        expect(result.createOrUpdate[0].content).toContain(
+          '<!-- start: Packmind recipes -->',
+        );
+        expect(result.createOrUpdate[0].content).toContain(
+          '<!-- end: Packmind recipes -->',
+        );
       });
     });
   });

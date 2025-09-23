@@ -30,6 +30,7 @@ describe('StandardCentricView', () => {
   it('displays repository names', () => {
     const standards = [
       createStandardDeploymentStatus({
+        targetDeployments: [], // Force use of repository-based deployments
         deployments: [
           createRepositoryStandardDeploymentInfo({
             gitRepo: gitRepoFactory({ owner: 'test-owner', repo: 'test-repo' }),
@@ -40,12 +41,13 @@ describe('StandardCentricView', () => {
 
     renderWithProvider(<StandardCentricView standards={standards} />);
 
-    expect(screen.getByText('test-owner/test-repo')).toBeInTheDocument();
+    expect(screen.getByText('test-owner/test-repo:main')).toBeInTheDocument();
   });
 
   it('displays deployment status badges', () => {
     const standards = [
       createStandardDeploymentStatus({
+        targetDeployments: [], // Force use of repository-based deployments
         deployments: [
           createRepositoryStandardDeploymentInfo({
             gitRepo: gitRepoFactory({ owner: 'test-owner', repo: 'test-repo' }),
@@ -57,7 +59,7 @@ describe('StandardCentricView', () => {
 
     renderWithProvider(<StandardCentricView standards={standards} />);
 
-    expect(screen.getByText('✅ Up-to-date')).toBeInTheDocument();
+    expect(screen.getByText('Up-to-date')).toBeInTheDocument();
   });
 
   it('displays undeployed standards with appropriate message', () => {
@@ -65,6 +67,7 @@ describe('StandardCentricView', () => {
       createStandardDeploymentStatus({
         standard: standardFactory({ name: 'Undeployed Standard' }),
         deployments: [],
+        targetDeployments: [], // Ensure both are empty
         hasOutdatedDeployments: false,
       }),
     ];

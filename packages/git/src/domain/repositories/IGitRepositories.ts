@@ -1,6 +1,8 @@
 import { IGitProviderRepository } from './IGitProviderRepository';
 import { IGitRepoRepository } from './IGitRepoRepository';
 import { IGitCommitRepository } from './IGitCommitRepository';
+import { IGitRepoFactory } from './IGitRepoFactory';
+import { IGitProviderFactory } from './IGitProviderFactory';
 
 /**
  * IGitRepositories - Repository aggregator interface for the Git domain
@@ -24,4 +26,14 @@ export interface IGitRepositories {
    * Get the git commit repository instance
    */
   getGitCommitRepository(): IGitCommitRepository;
+
+  /**
+   * Get the git repo factory instance
+   */
+  getGitRepoFactory(): IGitRepoFactory;
+
+  /**
+   * Get the git provider factory instance
+   */
+  getGitProviderFactory(): IGitProviderFactory;
 }

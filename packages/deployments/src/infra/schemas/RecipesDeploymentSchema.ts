@@ -22,6 +22,15 @@ export const RecipesDeploymentSchema = new EntitySchema<
       name: 'organization_id',
       type: 'uuid',
     },
+    // New columns for single target model
+    status: {
+      type: 'varchar',
+      nullable: false, // Required for new recipes deployments
+    },
+    error: {
+      type: 'text',
+      nullable: true, // Can be null for successful deployments
+    },
     ...uuidSchema,
     ...timestampsSchemas,
     ...softDeleteSchemas,
@@ -42,36 +51,8 @@ export const RecipesDeploymentSchema = new EntitySchema<
         },
       },
     },
-    gitRepos: {
-      type: 'many-to-many',
-      target: 'GitRepo',
-      joinTable: {
-        name: 'deployment_git_repos',
-        joinColumn: {
-          name: 'deployment_id',
-          referencedColumnName: 'id',
-        },
-        inverseJoinColumn: {
-          name: 'git_repo_id',
-          referencedColumnName: 'id',
-        },
-      },
-    },
-    gitCommits: {
-      type: 'many-to-many',
-      target: 'GitCommit',
-      joinTable: {
-        name: 'deployment_git_commits',
-        joinColumn: {
-          name: 'deployment_id',
-          referencedColumnName: 'id',
-        },
-        inverseJoinColumn: {
-          name: 'git_commit_id',
-          referencedColumnName: 'id',
-        },
-      },
-    },
+    // Old junction table relations removed for recipes (now using direct relations)
+    // Note: Kept as empty arrays in code for backward compatibility during transition
     organizationId: {
       type: 'many-to-one',
       target: 'Organization',
@@ -79,6 +60,25 @@ export const RecipesDeploymentSchema = new EntitySchema<
         name: 'organization_id',
         referencedColumnName: 'id',
       },
+    },
+    // Direct relations for single target model
+    gitCommit: {
+      type: 'many-to-one',
+      target: 'GitCommit',
+      joinColumn: {
+        name: 'git_commit_id',
+        referencedColumnName: 'id',
+      },
+      nullable: true, // Can be null for failed deployments
+    },
+    target: {
+      type: 'many-to-one',
+      target: 'Target',
+      joinColumn: {
+        name: 'target_id',
+        referencedColumnName: 'id',
+      },
+      nullable: false, // Required for new recipes deployments
     },
   },
 });

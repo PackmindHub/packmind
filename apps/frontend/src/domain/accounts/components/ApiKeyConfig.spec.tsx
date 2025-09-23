@@ -4,10 +4,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
 import { ApiKeyConfig } from './ApiKeyConfig';
+import * as AuthContextModule from '../../accounts/hooks/useAuthContext';
 import {
   useGetCurrentApiKeyQuery,
   useGenerateApiKeyMutation,
 } from '../api/queries/AuthQueries';
+import type { UserId, OrganizationId } from '@packmind/accounts/types';
 
 // Mock the queries
 jest.mock('../api/queries/AuthQueries', () => ({
@@ -69,6 +71,30 @@ interface MockMutationResult {
 }
 
 describe('ApiKeyConfig', () => {
+  const mockUser = {
+    id: 'user-1' as UserId,
+    username: 'testuser',
+    organizationId: 'org-1' as OrganizationId,
+  };
+
+  const mockOrganization = {
+    id: 'org-1' as OrganizationId,
+    name: 'Test Organization',
+    slug: 'test-organization',
+  };
+
+  beforeAll(() => {
+    jest.spyOn(AuthContextModule, 'useAuthContext').mockReturnValue({
+      user: mockUser,
+      organization: mockOrganization,
+      isAuthenticated: true,
+      isLoading: false,
+    });
+  });
+
+  afterAll(() => {
+    jest.restoreAllMocks();
+  });
   const mockUseGetCurrentApiKeyQuery =
     useGetCurrentApiKeyQuery as jest.MockedFunction<
       typeof useGetCurrentApiKeyQuery

@@ -4,13 +4,15 @@ import { PackmindLogger } from '@packmind/shared';
 import { isNativeError } from 'util/types';
 import { GitlabProject, MIN_PUSH_ACCESS_LEVEL } from './types';
 
+const origin = 'GitlabProvider';
+
 export class GitlabProvider implements IGitProvider {
   private readonly client: AxiosInstance;
   private readonly baseUrl: string;
 
   constructor(
     private readonly token: string,
-    private readonly logger: PackmindLogger,
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
     baseUrl?: string,
   ) {
     // Handle both cases: user enters base GitLab URL or full API URL

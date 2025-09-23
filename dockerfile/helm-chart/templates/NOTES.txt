@@ -1,0 +1,81 @@
+🚀 Packmind has been deployed successfully!
+
+{{- if .Values.ingress.enabled }}
+{{- range $host := .Values.ingress.hosts }}
+  {{- range .paths }}
+1. Get the application URL by running these commands:
+{{- if $.Values.ingress.tls }}
+  https://{{ $host.host }}{{ .path }}
+{{- else }}
+  http://{{ $host.host }}{{ .path }}
+{{- end }}
+  {{- end }}
+{{- end }}
+{{- else if contains "NodePort" .Values.frontend.service.type }}
+1. Get the application URL by running these commands:
+  export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "packmind.fullname" . }}-frontend)
+  export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo http://$NODE_IP:$NODE_PORT
+{{- else if contains "LoadBalancer" .Values.frontend.service.type }}
+1. Get the application URL by running these commands:
+     NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+           You can watch the status of by running 'kubectl get --namespace {{ .Release.Namespace }} svc -w {{ include "packmind.fullname" . }}-frontend'
+  export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "packmind.fullname" . }}-frontend --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+  echo http://$SERVICE_IP:{{ .Values.frontend.service.port }}
+{{- else if contains "ClusterIP" .Values.frontend.service.type }}
+1. Get the application URL by running these commands:
+  export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "packmind.name" . }},app.kubernetes.io/instance={{ .Release.Name }},app.kubernetes.io/component=frontend" -o jsonpath="{.items[0].metadata.name}")
+  export CONTAINER_PORT=$(kubectl get pod --namespace {{ .Release.Namespace }} $POD_NAME -o jsonpath="{.spec.containers[0].ports[0].containerPort}")
+  echo "Visit http://127.0.0.1:8080 to use your application"
+  kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 8080:$CONTAINER_PORT
+{{- end }}
+
+📊 Service Status:
+{{- if .Values.api.enabled }}
+  ✅ API Service: {{ include "packmind.fullname" . }}-api:{{ .Values.api.service.port }}
+{{- end }}
+{{- if .Values.frontend.enabled }}
+  ✅ Frontend Service: {{ include "packmind.fullname" . }}-frontend:{{ .Values.frontend.service.port }}
+{{- end }}
+{{- if .Values.mcpServer.enabled }}
+  ✅ MCP Server: {{ include "packmind.fullname" . }}-mcp-server:{{ .Values.mcpServer.service.port }}
+{{- end }}
+
+🗄️ Database Status:
+{{- if .Values.postgresql.enabled }}
+  ✅ PostgreSQL: Internal database enabled
+{{- else }}
+  🔗 PostgreSQL: External database configured ({{ .Values.postgresql.external.host }}:{{ .Values.postgresql.external.port }})
+{{- end }}
+
+💾 Cache Status:
+{{- if .Values.redis.enabled }}
+  ✅ Redis: Internal cache enabled
+{{- else }}
+  🔗 Redis: External cache configured ({{ .Values.redis.external.host }}:{{ .Values.redis.external.port }})
+{{- end }}
+
+📋 Useful Commands:
+
+View all pods:
+  kubectl get pods -n {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }}
+
+View logs for API:
+  kubectl logs -n {{ .Release.Namespace }} -l app.kubernetes.io/component=api -f
+
+View logs for Frontend:
+  kubectl logs -n {{ .Release.Namespace }} -l app.kubernetes.io/component=frontend -f
+
+View logs for MCP Server:
+  kubectl logs -n {{ .Release.Namespace }} -l app.kubernetes.io/component=mcp-server -f
+
+Check service endpoints:
+  kubectl get svc -n {{ .Release.Namespace }}
+
+🔧 Configuration:
+- Chart version: {{ .Chart.Version }}
+- App version: {{ .Chart.AppVersion }}
+- Release: {{ .Release.Name }}
+- Namespace: {{ .Release.Namespace }}
+
+For more information, visit: https://docs.packmind.com

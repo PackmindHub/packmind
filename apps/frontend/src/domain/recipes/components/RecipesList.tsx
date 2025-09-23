@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from 'react-router';
 import {
   PMBox,
-  PMHStack,
   PMLink,
   PMButton,
   PMTable,
@@ -10,8 +9,6 @@ import {
   PMTableRow,
   PMCheckbox,
   PMAlert,
-  PMDialog,
-  PMText,
   PMAlertDialog,
   PMButtonGroup,
 } from '@packmind/ui';
@@ -23,7 +20,7 @@ import {
 
 import { DeployRecipeButton } from './DeployRecipeButton';
 import './RecipesList.styles.scss';
-import { Recipe } from '@packmind/recipes/types';
+import { RecipeId } from '@packmind/recipes/types';
 import { RECIPE_MESSAGES } from '../constants/messages';
 
 interface RecipesListProps {
@@ -34,26 +31,30 @@ export const RecipesList = ({ orgSlug }: RecipesListProps) => {
   const { data: recipes, isLoading, isError } = useGetRecipesQuery();
   const deleteBatchMutation = useDeleteRecipesBatchMutation();
   const [tableData, setTableData] = React.useState<PMTableRow[]>([]);
-  const [selectedRecipes, setSelectedRecipes] = React.useState<Recipe[]>([]);
+  const [selectedRecipeIds, setSelectedRecipeIds] = React.useState<RecipeId[]>(
+    [],
+  );
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
   const [deleteAlert, setDeleteAlert] = React.useState<{
     type: 'success' | 'error';
     message: string;
   } | null>(null);
 
-  const handleSelectRecipe = (recipe: Recipe, isChecked: boolean) => {
+  const handleSelectRecipe = (recipeId: RecipeId, isChecked: boolean) => {
     if (isChecked) {
-      setSelectedRecipes((prev) => [...prev, recipe]);
+      setSelectedRecipeIds((prev) =>
+        prev.includes(recipeId) ? prev : [...prev, recipeId],
+      );
     } else {
-      setSelectedRecipes((prev) => prev.filter((r) => r.id !== recipe.id));
+      setSelectedRecipeIds((prev) => prev.filter((id) => id !== recipeId));
     }
   };
 
   const handleSelectAll = (isChecked: boolean) => {
     if (isChecked && recipes) {
-      setSelectedRecipes(recipes);
+      setSelectedRecipeIds(recipes.map((r) => r.id));
     } else {
-      setSelectedRecipes([]);
+      setSelectedRecipeIds([]);
     }
   };
 
@@ -61,9 +62,9 @@ export const RecipesList = ({ orgSlug }: RecipesListProps) => {
     if (!isSomeSelected) return;
 
     try {
-      const count = selectedRecipes.length;
-      await deleteBatchMutation.mutateAsync(selectedRecipes.map((r) => r.id));
-      setSelectedRecipes([]);
+      const count = selectedRecipeIds.length;
+      await deleteBatchMutation.mutateAsync(selectedRecipeIds);
+      setSelectedRecipeIds([]);
       setDeleteAlert({
         type: 'success',
         message:
@@ -95,10 +96,9 @@ export const RecipesList = ({ orgSlug }: RecipesListProps) => {
         key: recipe.id,
         select: (
           <PMCheckbox
-            checked={selectedRecipes.includes(recipe)}
-            onChange={(event) => {
-              const input = event.target as HTMLInputElement;
-              handleSelectRecipe(recipe, input.checked);
+            checked={selectedRecipeIds.includes(recipe.id)}
+            onCheckedChange={(e) => {
+              handleSelectRecipe(recipe.id, e.checked === true);
             }}
           />
         ),
@@ -113,10 +113,10 @@ export const RecipesList = ({ orgSlug }: RecipesListProps) => {
         version: recipe.version,
       })),
     );
-  }, [recipes, selectedRecipes, orgSlug]);
+  }, [recipes, selectedRecipeIds, orgSlug]);
 
-  const isAllSelected = recipes && selectedRecipes.length === recipes.length;
-  const isSomeSelected = selectedRecipes.length > 0;
+  const isAllSelected = recipes && selectedRecipeIds.length === recipes.length;
+  const isSomeSelected = selectedRecipeIds.length > 0;
 
   const columns: PMTableColumn[] = [
     {
@@ -124,7 +124,7 @@ export const RecipesList = ({ orgSlug }: RecipesListProps) => {
       header: (
         <PMCheckbox
           checked={isAllSelected || false}
-          onChange={(e) => {
+          onCheckedChange={() => {
             handleSelectAll(!isAllSelected);
           }}
           controlProps={{ borderColor: 'border.checkbox' }}
@@ -156,9 +156,11 @@ export const RecipesList = ({ orgSlug }: RecipesListProps) => {
         <PMBox>
           <PMButtonGroup size="sm">
             <DeployRecipeButton
-              label={`Deploy (${selectedRecipes.length})`}
+              label={`Deploy (${selectedRecipeIds.length})`}
               disabled={!isSomeSelected}
-              selectedRecipes={selectedRecipes}
+              selectedRecipes={
+                recipes?.filter((r) => selectedRecipeIds.includes(r.id)) ?? []
+              }
               size="sm"
             />
             <PMAlertDialog
@@ -168,12 +170,12 @@ export const RecipesList = ({ orgSlug }: RecipesListProps) => {
                   loading={deleteBatchMutation.isPending}
                   disabled={!isSomeSelected}
                 >
-                  {`Delete (${selectedRecipes.length})`}
+                  {`Delete (${selectedRecipeIds.length})`}
                 </PMButton>
               }
               title="Delete Recipes"
               message={RECIPE_MESSAGES.confirmation.deleteBatchRecipes(
-                selectedRecipes.length,
+                selectedRecipeIds.length,
               )}
               confirmText="Delete"
               cancelText="Cancel"
@@ -185,7 +187,7 @@ export const RecipesList = ({ orgSlug }: RecipesListProps) => {
             />
             <PMButton
               variant="secondary"
-              onClick={() => setSelectedRecipes([])}
+              onClick={() => setSelectedRecipeIds([])}
               disabled={!isSomeSelected}
             >
               Clear Selection

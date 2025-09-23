@@ -1,13 +1,14 @@
-import { Box, ButtonGroup, HStack, VStack } from '@chakra-ui/react';
+import { Box, BoxProps, ButtonGroup, HStack, VStack } from '@chakra-ui/react';
 import { PMHeading } from '../../typography/PMHeading';
 import { ComponentPropsWithoutRef } from 'react';
 
 interface PMBoxProps extends ComponentPropsWithoutRef<'div'> {
-  title: string;
+  title?: string;
   cta?: React.ReactNode;
   variant?: 'plain' | 'outline';
   backgroundColor?: 'primary' | 'secondary' | 'tertiary';
   headingLevel?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+  boxProps?: BoxProps;
   children: React.ReactNode;
 }
 
@@ -17,22 +18,24 @@ const PMPageSection = ({
   variant = 'plain',
   backgroundColor = 'secondary',
   headingLevel = 'h3',
+  boxProps,
   children,
 }: PMBoxProps) => {
-  let boxProps = {};
+  let boxCustomProps = {};
 
   if (variant === 'outline') {
-    boxProps = {
+    boxCustomProps = {
       padding: '4',
       border: '1px solid',
       borderColor: '{colors.border.primary}',
       borderRadius: 'md',
+      ...boxProps,
     };
   }
 
   return (
     <Box
-      {...boxProps}
+      {...boxCustomProps}
       backgroundColor={`{colors.background.${backgroundColor}}`}
       p={4}
     >

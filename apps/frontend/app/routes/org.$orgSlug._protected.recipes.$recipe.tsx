@@ -1,7 +1,6 @@
-import { useParams, useNavigate, Link } from 'react-router';
+import { useParams, useNavigate } from 'react-router';
 import { useEffect } from 'react';
-import { PMPage } from '@packmind/ui';
-import { PMBox, PMVStack, PMSpinner } from '@packmind/ui';
+import { PMPage, PMBox, PMVStack, PMSpinner } from '@packmind/ui';
 import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
 import { RecipeDetails } from '../../src/domain/recipes/components/RecipeDetails';
 import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
@@ -66,7 +65,6 @@ export default function OrgRecipeDetail() {
         title="Recipe Not Found"
         subtitle="No recipe ID provided"
         breadcrumbComponent={<AutobreadCrumb />}
-        LinkComponent={Link}
       >
         <PMBox>
           <p>

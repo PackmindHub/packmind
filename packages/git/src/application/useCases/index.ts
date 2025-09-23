@@ -1,6 +1,7 @@
 // Use cases exports
 export { AddGitProviderUseCase } from './addGitProvider/addGitProvider.usecase';
 export { AddGitRepoUseCase } from './addGitRepo/addGitRepo.usecase';
+export { CheckDirectoryExistenceUseCase } from './checkDirectoryExistence/checkDirectoryExistence.usecase';
 export { DeleteGitProviderUseCase } from './deleteGitProvider/deleteGitProvider.usecase';
 export { DeleteGitRepoUseCase } from './deleteGitRepo/deleteGitRepo.usecase';
 export { ListAvailableReposUseCase } from './listAvailableRepos/listAvailableRepos.usecase';

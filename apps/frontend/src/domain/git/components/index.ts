@@ -1,9 +1,8 @@
 export { GitProvidersPage } from './GitProvidersPage';
-export { CreateGitProviderPage } from './CreateGitProviderPage';
-export { EditGitProviderPage } from './EditGitProviderPage';
-export { GitRepositoriesPage } from './GitRepositoriesPage';
-export { AddRepositoryPage } from './AddRepositoryPage';
+export { ManageGitProviderDialog } from './ManageGitProviderDialog';
 export { GitProvidersList } from './GitProvidersList';
 export { CreateGitProviderForm } from './CreateGitProviderForm';
-export { RepositoryList } from './RepositoryList';
-export { RepositorySelector } from './RepositorySelector';
+export { RepositorySelector } from './ManageGitProvider/RepositorySelector';
+export { WebHookConfig } from './WebHookConfig';
+export { GitProviderConnection } from './ManageGitProvider/GitProviderConnection';
+export { RepositoriesManagement } from './ManageGitProvider/RepositoriesManagement';

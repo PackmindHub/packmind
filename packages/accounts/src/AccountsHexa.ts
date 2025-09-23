@@ -1,4 +1,9 @@
-import { BaseHexa, HexaRegistry, PackmindLogger } from '@packmind/shared';
+import {
+  BaseHexa,
+  BaseHexaOpts,
+  HexaRegistry,
+  PackmindLogger,
+} from '@packmind/shared';
 import { AccountsHexaFactory } from './AccountsHexaFactory';
 import { User } from './domain/entities/User';
 import { Organization } from './domain/entities/Organization';
@@ -35,18 +40,17 @@ const origin = 'AccountsHexa';
  *
  * Uses the DataSource provided through the HexaRegistry for database operations.
  */
-export class AccountsHexa extends BaseHexa {
+export type AccountsHexaOpts = BaseHexaOpts & {
+  apiKeyService?: ApiKeyService;
+};
+
+const baseAccountsHexaOpts = { logger: new PackmindLogger(origin) };
+
+export class AccountsHexa extends BaseHexa<AccountsHexaOpts> {
   private readonly hexa: AccountsHexaFactory;
-  private readonly logger: PackmindLogger;
 
-  constructor(
-    registry: HexaRegistry,
-    logger: PackmindLogger = new PackmindLogger(origin),
-    apiKeyService?: ApiKeyService,
-  ) {
-    super(registry);
-
-    this.logger = logger;
+  constructor(registry: HexaRegistry, opts?: Partial<AccountsHexaOpts>) {
+    super(registry, { ...baseAccountsHexaOpts, ...opts });
     this.logger.info('Initializing AccountsHexa');
 
     try {
@@ -58,7 +62,7 @@ export class AccountsHexa extends BaseHexa {
       this.hexa = new AccountsHexaFactory(
         dataSource,
         this.logger,
-        apiKeyService,
+        opts?.apiKeyService,
       );
       this.logger.info('AccountsHexa initialized successfully');
     } catch (error) {

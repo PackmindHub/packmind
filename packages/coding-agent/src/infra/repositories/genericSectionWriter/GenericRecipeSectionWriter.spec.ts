@@ -20,6 +20,7 @@ Some content after`;
         recipesSection: '## Available Recipes\n\n- Recipe 1\n- Recipe 2',
         currentContent,
         commentMarker: 'packmind-recipes',
+        target: '/',
       };
 
       const result = GenericRecipeSectionWriter.replace(opts);
@@ -63,6 +64,7 @@ More content`;
         recipesSection: 'New recipes content',
         currentContent,
         commentMarker: 'recipes-section',
+        target: '/',
       };
 
       const result = GenericRecipeSectionWriter.replace(opts);
@@ -90,29 +92,6 @@ More content`;
       });
     });
 
-    describe('when using recipesIndexPath instead of recipesSection', () => {
-      const currentContent = `# Config File`;
-
-      const opts = {
-        agentName: 'PathAgent',
-        repoName: 'path-repo',
-        recipesIndexPath: '@recipes/index.md',
-        currentContent,
-        commentMarker: 'path-recipes',
-      };
-
-      const result = GenericRecipeSectionWriter.replace(opts);
-
-      it('includes the recipes index path reference', () => {
-        expect(result).toContain('@recipes/index.md');
-      });
-
-      it('creates proper markers', () => {
-        expect(result).toContain('<!-- start: path-recipes -->');
-        expect(result).toContain('<!-- end: path-recipes -->');
-      });
-    });
-
     describe('when content has multiple sections with same marker', () => {
       const currentContent = `# Document
 
@@ -132,6 +111,7 @@ Second occurrence
         recipesSection: 'Replacement content',
         currentContent,
         commentMarker: 'my-marker',
+        target: '/',
       };
 
       const result = GenericRecipeSectionWriter.replace(opts);
@@ -164,6 +144,7 @@ Second occurrence
         recipesSection: 'Special content',
         currentContent,
         commentMarker: 'recipes.$*+?[]{}()|^',
+        target: '/',
       };
 
       const result = GenericRecipeSectionWriter.replace(opts);
@@ -181,6 +162,7 @@ Second occurrence
         recipesSection: 'Content for empty',
         currentContent: '',
         commentMarker: 'empty-marker',
+        target: '/',
       };
 
       const result = GenericRecipeSectionWriter.replace(opts);
@@ -199,6 +181,7 @@ Second occurrence
         agentName: 'TestAgent',
         repoName: 'test-repo',
         recipesSection: '## Custom Recipes\n\nRecipe content here',
+        target: '/',
       };
 
       const result = GenericRecipeSectionWriter.generateRecipesSection(opts);
@@ -223,28 +206,6 @@ Second occurrence
         expect(result).toContain(
           '**ALWAYS READ**: the available recipes below',
         );
-      });
-    });
-
-    describe('when using recipesIndexPath', () => {
-      const opts = {
-        agentName: 'PathAgent',
-        repoName: 'path-repo',
-        recipesIndexPath: '@recipes/index.md',
-      };
-
-      const result = GenericRecipeSectionWriter.generateRecipesSection(opts);
-
-      it('references the recipes index path', () => {
-        expect(result).toContain('@recipes/index.md');
-      });
-
-      it('does not include inline recipes', () => {
-        expect(result).not.toContain('## Custom Recipes');
-      });
-
-      it('includes instruction to read index path', () => {
-        expect(result).toContain('**ALWAYS READ**: @recipes/index.md');
       });
     });
   });

@@ -1,6 +1,6 @@
 import { IGitRepo } from '../../../domain/repositories/IGitRepo';
-import axios, { AxiosInstance } from 'axios';
-import { PackmindLogger, LogLevel } from '@packmind/shared';
+import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import { PackmindLogger } from '@packmind/shared';
 import { GitCommit } from '../../../domain/entities/GitCommit';
 import { GitlabRepositoryOptions, GitlabWebhookPushPayload } from './types';
 
@@ -16,11 +16,8 @@ export class GitlabRepository implements IGitRepo {
   constructor(
     private readonly token: string,
     options: GitlabRepositoryOptions,
-    private readonly logger: PackmindLogger = new PackmindLogger(
-      origin,
-      LogLevel.INFO,
-    ),
     baseUrl?: string,
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('Initializing GitlabRepository', {
       owner: options.owner,
@@ -29,18 +26,14 @@ export class GitlabRepository implements IGitRepo {
     });
 
     // Handle both cases: user enters base GitLab URL or full API URL
-    const providedUrl =
-      baseUrl || process.env['GITLAB_BASE_URL'] || 'https://gitlab.com';
+    const providedUrl = baseUrl || 'https://gitlab.com';
 
     // If the URL already includes /api/v4, use it as-is, otherwise append it
     this.baseUrl = providedUrl.includes('/api/v4')
       ? providedUrl
       : `${providedUrl.replace(/\/$/, '')}/api/v4`;
     // For GitLab, intelligently construct project path
-    // If repo name has spaces, convert to kebab-case (GitLab standard)
-    const normalizedRepo = options.repo.includes(' ')
-      ? options.repo.toLowerCase().replace(/\s+/g, '-')
-      : options.repo;
+    const normalizedRepo = this.normalizeRepo(options.repo);
 
     this.projectPath = `${options.owner}/${normalizedRepo}`;
     this.encodedProjectPath = encodeURIComponent(this.projectPath);
@@ -68,6 +61,13 @@ export class GitlabRepository implements IGitRepo {
     this.logger.debug('GitlabRepository initialized successfully', {
       projectPath: this.projectPath,
     });
+  }
+
+  private normalizeRepo(repoName: string): string {
+    // For GitLab, if repo name has spaces, convert to kebab-case (GitLab standard)
+    return repoName.includes(' ')
+      ? repoName.toLowerCase().replace(/\s+/g, '-')
+      : repoName;
   }
 
   async commitFiles(
@@ -429,6 +429,256 @@ export class GitlabRepository implements IGitRepo {
     }
 
     return fileToLatestCommit;
+  }
+
+  async listDirectoriesOnRepo(
+    name: string,
+    owner: string,
+    branch: string,
+    path?: string,
+  ): Promise<string[]> {
+    this.logger.info('Listing available repositories from GitLab', {
+      name,
+      owner,
+      branch,
+      path: path || '/',
+    });
+
+    try {
+      // For GitLab, we need to construct the project path and use recursive pagination
+      const normalizedRepo = this.normalizeRepo(name);
+
+      const projectPath = `${owner}/${normalizedRepo}`;
+      const encodedProjectPath = encodeURIComponent(projectPath);
+
+      const directories: string[] = [];
+      let nextPage: string | null = null;
+      let pageNumber = 1;
+      const perPage = 100;
+
+      do {
+        // Construct the URL for the current request
+        const url = nextPage
+          ? nextPage
+          : `/projects/${encodedProjectPath}/repository/tree`;
+
+        const params: Record<string, string | number> = {
+          ref: branch,
+          recursive: 'true',
+          per_page: perPage,
+        };
+
+        // If a specific path is provided, add it to the API request
+        if (path && path !== '/') {
+          const normalizedPath = path.startsWith('/') ? path.slice(1) : path;
+          params['path'] = normalizedPath;
+        }
+
+        if (!nextPage) {
+          params['page'] = pageNumber;
+        }
+
+        const response: AxiosResponse<
+          Array<{ type: string; path: string }> | { message?: string }
+        > = await this.axiosInstance.get(url, {
+          params: nextPage ? undefined : params,
+        });
+
+        // Validate that the response is a JSON array
+        if (!Array.isArray(response.data)) {
+          if (
+            typeof response.data === 'object' &&
+            response.data &&
+            'message' in response.data
+          ) {
+            throw new Error(`GitLab API error: ${response.data.message}`);
+          }
+          throw new Error(
+            'GitLab API did not return an array - unexpected response format',
+          );
+        }
+
+        // Filter directories and add their paths
+        let pageDirectories = response.data
+          .filter((item: { type: string }) => item.type === 'tree')
+          .map((item: { path: string }) => item.path);
+
+        // If a specific path was provided, GitLab API returns items within that path
+        // Show all subdirectories recursively under the specified path
+        if (path && path !== '/') {
+          const normalizedPath = path.startsWith('/') ? path.slice(1) : path;
+          const pathPrefix = normalizedPath.endsWith('/')
+            ? normalizedPath
+            : `${normalizedPath}/`;
+
+          pageDirectories = pageDirectories
+            .filter((dirPath: string) => dirPath.startsWith(pathPrefix))
+            .map((dirPath: string) => dirPath.slice(pathPrefix.length))
+            .filter(
+              (relativePath: string) => relativePath && relativePath.length > 0,
+            );
+        }
+
+        directories.push(...pageDirectories);
+
+        this.logger.info('Processed page response', {
+          pageNumber,
+          totalItemsInResponse: response.data.length,
+          directoriesInPage: pageDirectories.length,
+          totalDirectoriesCollected: directories.length,
+          projectPath,
+          branch,
+        });
+
+        // Check for pagination headers
+        const headers = response.headers as Record<string, string>;
+        nextPage = null;
+
+        // Check for offset pagination (x-next-page header)
+        const xNextPage = headers['x-next-page'];
+        if (xNextPage && xNextPage.trim() !== '') {
+          // Build next page URL with the same parameters
+          let nextPageUrl = `/projects/${encodedProjectPath}/repository/tree?ref=${branch}&recursive=true&per_page=${perPage}&page=${xNextPage}`;
+          if (path && path !== '/') {
+            const normalizedPath = path.startsWith('/') ? path.slice(1) : path;
+            nextPageUrl += `&path=${encodeURIComponent(normalizedPath)}`;
+          }
+          nextPage = nextPageUrl;
+        } else {
+          // Check for keyset pagination (Link header)
+          const linkHeader = headers['link'];
+          if (linkHeader) {
+            const linkMatch = linkHeader.match(/<([^>]+)>;\s*rel="next"/);
+            if (linkMatch) {
+              nextPage = linkMatch[1];
+            }
+          }
+        }
+
+        pageNumber++;
+
+        // Safety check to prevent infinite loops
+        if (pageNumber > 1000) {
+          this.logger.warn(
+            'Reached maximum page limit (1000) for GitLab tree listing',
+            {
+              projectPath,
+              branch,
+              totalDirectories: directories.length,
+              pagesProcessed: pageNumber - 1,
+            },
+          );
+          break;
+        }
+      } while (nextPage);
+
+      this.logger.info('Successfully retrieved directories from GitLab', {
+        owner,
+        repo: normalizedRepo,
+        branch,
+        path: path || '/',
+        directoryCount: directories.length,
+        pagesProcessed: pageNumber - 1,
+      });
+
+      return directories;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
+      // Check if this is a permission or not found error
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as {
+          response?: { status: number; data?: { message?: string } };
+        };
+
+        this.logger.error('GitLab API error during directory listing', {
+          statusCode: axiosError.response?.status,
+          projectPath: `${owner}/${name}`,
+          branch,
+          error: axiosError.response?.data?.message || errorMessage,
+        });
+
+        if (axiosError.response?.status === 403) {
+          throw new Error(
+            `Insufficient permissions to list directories in GitLab repository. Please ensure your token has read access to ${owner}/${name}`,
+          );
+        }
+
+        if (axiosError.response?.status === 404) {
+          throw new Error(
+            `GitLab repository not found or branch '${branch}' does not exist. Please verify the repository path: ${owner}/${name} and branch: ${branch}`,
+          );
+        }
+      }
+
+      this.logger.error('Failed to list available repositories from GitLab', {
+        name,
+        owner,
+        branch,
+        error: errorMessage,
+      });
+      throw new Error(
+        `Failed to list repositories from GitLab: ${errorMessage}`,
+      );
+    }
+  }
+
+  async checkDirectoryExists(
+    directoryPath: string,
+    branch: string,
+  ): Promise<boolean> {
+    try {
+      // Use GitLab's repository tree API to check if the directory exists
+      // We'll get the tree for the specific path to see if it exists
+      const response = await this.axiosInstance.get(
+        `/projects/${this.encodedProjectPath}/repository/tree`,
+        {
+          params: {
+            ref: branch,
+            path: directoryPath,
+            per_page: 1, // We only need to know if something exists
+          },
+        },
+      );
+
+      // If we get a successful response with an array, the directory exists
+      if (Array.isArray(response.data) && response.data.length > 0) {
+        return true;
+      }
+
+      // If we get an empty array, the directory exists but is empty
+      if (Array.isArray(response.data) && response.data.length === 0) {
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      // If we get a 404, the directory doesn't exist
+      if (
+        error &&
+        typeof error === 'object' &&
+        'response' in error &&
+        error.response &&
+        typeof error.response === 'object' &&
+        'status' in error.response &&
+        error.response.status === 404
+      ) {
+        return false;
+      }
+
+      // Re-throw other errors
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('Failed to check directory existence in repository', {
+        path: directoryPath,
+        owner: this.options.owner,
+        repo: this.options.repo,
+        branch: branch,
+        error: errorMessage,
+      });
+      throw error;
+    }
   }
 
   async handlePushHook(

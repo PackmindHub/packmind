@@ -1,18 +1,24 @@
 import React, { createContext, useContext, useMemo, useState } from 'react';
-import { GitRepoId } from '@packmind/git';
-import { useDeployRecipe } from '../../hooks';
+import {
+  TargetId,
+  TargetWithRepository,
+  RecipesDeployment,
+  StandardsDeployment,
+} from '@packmind/shared';
+import { useDeployRecipe, useDeployStandard } from '../../hooks';
 import { Recipe } from '@packmind/recipes/types';
-import { useGetGitReposQuery } from '../../../git/api/queries/GitRepoQueries';
-import { Repository } from '../../../git/api/gateways/IRepositoryGateway';
+import { useGetTargetsByOrganizationQuery } from '../../api/queries/DeploymentsQueries';
 import { RunDistributionBodyImpl } from './RunDistributionBody';
 import { RunDistributionCTAImpl } from './RunDistributionCTA';
+import { Standard } from '@packmind/standards/types';
+import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 
 type RunDistributionCtxType = {
-  repositoriesList: Repository[];
-  repositoriesLoading: boolean;
-  repositoriesError: boolean;
-  selectedRepoIds: GitRepoId[];
-  setSelectedRepoIds: React.Dispatch<React.SetStateAction<GitRepoId[]>>;
+  targetsList: TargetWithRepository[];
+  targetsLoading: boolean;
+  targetsError: boolean;
+  selectedTargetIds: TargetId[];
+  setSelectedTargetIds: React.Dispatch<React.SetStateAction<TargetId[]>>;
   isDeploying: boolean;
   deploy: () => Promise<void>;
   deploymentError?: Error | null;
@@ -29,34 +35,57 @@ export const useRunDistribution = () => {
 
 interface RunDistributionProps {
   selectedRecipes: Recipe[];
-  onDistributionComplete?: () => void;
+  selectedStandards: Standard[];
+  onDistributionComplete?: (deploymentResults?: {
+    recipesDeployments: RecipesDeployment[];
+    standardsDeployments: StandardsDeployment[];
+  }) => void;
   children?: React.ReactNode;
 }
 
 const RunDistributionComponent: React.FC<RunDistributionProps> = ({
   selectedRecipes,
+  selectedStandards,
   onDistributionComplete,
   children,
 }) => {
-  const { deployRecipes, isDeploying } = useDeployRecipe();
+  const { deployRecipes, isDeploying: isRecipesDeploying } = useDeployRecipe();
+  const { deployStandards, isDeploying: isStandardsDeploying } =
+    useDeployStandard();
   const [deploymentError, setDeploymentError] = useState<Error | null>(null);
+  const { organization } = useAuthContext();
   const {
-    data: repositoriesList = [],
-    isLoading: repositoriesLoading,
-    isError: repositoriesError,
-  } = useGetGitReposQuery();
+    data: targetsList = [],
+    isLoading: targetsLoading,
+    isError: targetsError,
+  } = useGetTargetsByOrganizationQuery(organization?.id);
 
-  const [selectedRepoIds, setSelectedRepoIds] = useState<GitRepoId[]>([]);
-
+  const [selectedTargetIds, setSelectedTargetIds] = useState<TargetId[]>([]);
   const canRunDistribution =
-    selectedRecipes.length > 0 && selectedRepoIds.length > 0 && !isDeploying;
+    (selectedRecipes.length > 0 || selectedStandards.length > 0) &&
+    selectedTargetIds.length > 0 &&
+    !isRecipesDeploying;
 
   const deploy = React.useCallback(async () => {
-    if (selectedRecipes.length === 0) return;
-
     try {
-      await deployRecipes({ recipes: selectedRecipes }, selectedRepoIds);
-      onDistributionComplete?.();
+      let recipesDeployments: RecipesDeployment[] = [];
+      let standardsDeployments: StandardsDeployment[] = [];
+
+      if (selectedRecipes.length > 0) {
+        recipesDeployments = await deployRecipes(
+          { recipes: selectedRecipes },
+          selectedTargetIds,
+        );
+      }
+
+      if (selectedStandards.length > 0) {
+        standardsDeployments = await deployStandards(
+          { standards: selectedStandards },
+          selectedTargetIds,
+        );
+      }
+      setDeploymentError(null);
+      onDistributionComplete?.({ recipesDeployments, standardsDeployments });
     } catch (e: unknown) {
       console.error('Deployment failed:', e);
       if (e instanceof Error) {
@@ -67,26 +96,35 @@ const RunDistributionComponent: React.FC<RunDistributionProps> = ({
         );
       }
     }
-  }, [deployRecipes, selectedRecipes, onDistributionComplete, selectedRepoIds]);
+  }, [
+    selectedRecipes,
+    selectedStandards,
+    onDistributionComplete,
+    deployRecipes,
+    selectedTargetIds,
+    deployStandards,
+  ]);
 
   const value = useMemo<RunDistributionCtxType>(
     () => ({
-      repositoriesList,
-      repositoriesLoading,
-      repositoriesError,
-      selectedRepoIds,
-      setSelectedRepoIds,
-      isDeploying,
+      targetsList,
+      targetsLoading,
+      targetsError,
+      selectedTargetIds,
+      setSelectedTargetIds,
+      isDeploying: isRecipesDeploying || isStandardsDeploying,
       deploy,
       deploymentError,
       canRunDistribution,
     }),
     [
-      repositoriesList,
-      repositoriesLoading,
-      repositoriesError,
-      selectedRepoIds,
-      isDeploying,
+      targetsList,
+      targetsLoading,
+      targetsError,
+      selectedTargetIds,
+      setSelectedTargetIds,
+      isRecipesDeploying,
+      isStandardsDeploying,
       deploy,
       deploymentError,
       canRunDistribution,

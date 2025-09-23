@@ -17,3 +17,5 @@ export {
 export type { PMConfirmationModalProps } from './PMConfirmationModal';
 export { PMAlertDialog } from './PMAlertDialog';
 export type { PMAlertDialogProps } from './PMAlertDialog';
+export { PMTooltip } from './PMTooltip';
+export type { PMTooltipProps } from './PMTooltip';

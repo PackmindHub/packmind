@@ -30,6 +30,7 @@ describe('RecipeCentricView', () => {
   it('displays repository names', () => {
     const recipes = [
       createRecipeDeploymentStatus({
+        targetDeployments: [], // Force use of repository-based deployments
         deployments: [
           createRepositoryDeploymentInfo({
             gitRepo: gitRepoFactory({ owner: 'test-owner', repo: 'test-repo' }),
@@ -40,12 +41,13 @@ describe('RecipeCentricView', () => {
 
     renderWithProvider(<RecipeCentricView recipes={recipes} />);
 
-    expect(screen.getByText('test-owner/test-repo')).toBeInTheDocument();
+    expect(screen.getByText('test-owner/test-repo:main')).toBeInTheDocument();
   });
 
   it('displays deployment status badges', () => {
     const recipes = [
       createRecipeDeploymentStatus({
+        targetDeployments: [], // Force use of repository-based deployments
         deployments: [
           createRepositoryDeploymentInfo({
             gitRepo: gitRepoFactory({ owner: 'test-owner', repo: 'test-repo' }),
@@ -57,7 +59,7 @@ describe('RecipeCentricView', () => {
 
     renderWithProvider(<RecipeCentricView recipes={recipes} />);
 
-    expect(screen.getByText('✅ Up-to-date')).toBeInTheDocument();
+    expect(screen.getByText('Up-to-date')).toBeInTheDocument();
   });
 
   it('displays undeployed recipes with appropriate message', () => {
@@ -65,6 +67,7 @@ describe('RecipeCentricView', () => {
       createRecipeDeploymentStatus({
         recipe: recipeFactory({ name: 'Undeployed Recipe' }),
         deployments: [],
+        targetDeployments: [], // Ensure both are empty
         hasOutdatedDeployments: false,
       }),
     ];

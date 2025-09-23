@@ -1,9 +1,15 @@
-export type AiAgentType = 'cursor' | 'copilot' | 'junie' | 'claude_code';
+export type AiAgentType =
+  | 'cursor'
+  | 'copilot'
+  | 'junie'
+  | 'claude_code'
+  | 'agents_md';
 export const AiAgentTypes: Record<AiAgentType, AiAgentType> = {
   cursor: 'cursor',
   copilot: 'copilot',
   junie: 'junie',
   claude_code: 'claude_code',
+  agents_md: 'agents_md',
 };
 
 export type AiAgentConfigFile = {

@@ -1,7 +1,7 @@
 import { Link, LinkProps } from '@chakra-ui/react';
 
 export interface IPMLinkProps extends LinkProps {
-  variant?: 'plain' | 'navbar' | 'underline';
+  variant?: 'plain' | 'navbar' | 'underline' | 'active';
   to?: string;
 }
 

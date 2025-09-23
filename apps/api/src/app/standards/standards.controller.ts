@@ -14,12 +14,12 @@ import { StandardsService } from './standards.service';
 import { PackmindLogger, RuleId } from '@packmind/shared';
 import { AuthService } from '../auth/auth.service';
 import { Request } from 'express';
-import { GitRepoId } from '@packmind/git';
 import type {
   Standard,
   StandardId,
   StandardVersion,
   StandardVersionId,
+  TargetId,
 } from '@packmind/shared/types';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
 
@@ -164,13 +164,13 @@ export class StandardsController {
     @Body()
     body: {
       standardVersionIds: StandardVersionId[];
-      repositoryIds: GitRepoId[];
+      targetIds: TargetId[];
     },
     @Req() request: Request,
   ): Promise<void> {
     this.logger.info('POST /standards/deploy - Deploying standards to Git', {
       standardVersionIds: body.standardVersionIds,
-      repositoryIds: body.repositoryIds,
+      targetIds: body.targetIds,
     });
 
     try {
@@ -187,14 +187,14 @@ export class StandardsController {
       }
 
       if (
-        !body.repositoryIds ||
-        !Array.isArray(body.repositoryIds) ||
-        body.repositoryIds.length === 0
+        !body.targetIds ||
+        !Array.isArray(body.targetIds) ||
+        body.targetIds.length === 0
       ) {
         this.logger.error(
-          'POST /standards/deploy - Repository IDs array is required',
+          'POST /standards/deploy - Target IDs array is required',
         );
-        throw new BadRequestException('Repository IDs array is required');
+        throw new BadRequestException('Target IDs array is required');
       }
 
       const accessToken = request.cookies?.auth_token;
@@ -206,7 +206,7 @@ export class StandardsController {
 
       await this.standardsService.deployStandardsToGit({
         standardVersionIds: body.standardVersionIds,
-        gitRepoIds: body.repositoryIds,
+        targetIds: body.targetIds,
         userId: me.user.id,
         organizationId: me.user.organizationId,
       });
@@ -215,7 +215,7 @@ export class StandardsController {
         'POST /standards/deploy - Standards deployed to Git successfully',
         {
           standardVersionIds: body.standardVersionIds,
-          repositoryIds: body.repositoryIds,
+          targetIds: body.targetIds,
           authorId: me.user.id,
           organizationId: me.user.organizationId,
         },
@@ -227,7 +227,7 @@ export class StandardsController {
         'POST /standards/deploy - Failed to deploy standards to Git',
         {
           standardVersionIds: body.standardVersionIds,
-          repositoryIds: body.repositoryIds,
+          targetIds: body.targetIds,
           error: errorMessage,
         },
       );
@@ -354,27 +354,27 @@ export class StandardsController {
   @Post(':versionId/deploy')
   async deployStandardToGit(
     @Param('versionId') versionId: StandardVersionId,
-    @Body() body: { repositoryId: GitRepoId },
+    @Body() body: { targetId: TargetId },
     @Req() request: Request,
   ): Promise<void> {
     this.logger.info(
       'POST /standards/:versionId/deploy - Deploying standard to Git',
       {
         standardVersionId: versionId,
-        repositoryId: body.repositoryId,
+        targetId: body.targetId,
       },
     );
 
     try {
-      // Validate repository ID
-      if (!body.repositoryId) {
+      // Validate target ID
+      if (!body.targetId) {
         this.logger.error(
-          'POST /standards/:versionId/deploy - Repository ID is required',
+          'POST /standards/:versionId/deploy - Target ID is required',
           {
             standardVersionId: versionId,
           },
         );
-        throw new BadRequestException('Repository ID is required');
+        throw new BadRequestException('Target ID is required');
       }
 
       const accessToken = request.cookies?.auth_token;
@@ -391,7 +391,7 @@ export class StandardsController {
 
       await this.standardsService.deployStandardsToGit({
         standardVersionIds: [versionId],
-        gitRepoIds: [body.repositoryId],
+        targetIds: [body.targetId],
         userId: me.user.id,
         organizationId: me.user.organizationId,
       });
@@ -400,7 +400,7 @@ export class StandardsController {
         'POST /standards/:versionId/deploy - Standard deployed to Git successfully',
         {
           standardVersionId: versionId,
-          repositoryId: body.repositoryId,
+          targetId: body.targetId,
           authorId: me.user.id,
           organizationId: me.user.organizationId,
         },
@@ -412,7 +412,7 @@ export class StandardsController {
         'POST /standards/:versionId/deploy - Failed to deploy standard to Git',
         {
           standardVersionId: versionId,
-          repositoryId: body.repositoryId,
+          targetId: body.targetId,
           error: errorMessage,
         },
       );

@@ -8,6 +8,8 @@ import {
   PackmindLogger,
   localDataSource,
   AbstractRepository,
+  TargetId,
+  DistributionStatus,
 } from '@packmind/shared';
 import { OrganizationId } from '@packmind/accounts';
 import { GitRepoId } from '@packmind/git';
@@ -50,7 +52,7 @@ export class StandardsDeploymentRepository
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         where: { organizationId: organizationId as any }, // TypeORM compatibility with branded types
         order: { createdAt: 'DESC' },
-        relations: ['standardVersions', 'gitRepos', 'gitCommits'],
+        relations: ['standardVersions', 'gitCommit', 'target'],
       });
       this.logger.info('Standards deployments found by organization ID', {
         organizationId,
@@ -84,8 +86,9 @@ export class StandardsDeploymentRepository
       const deployments = await this.repository
         .createQueryBuilder('deployment')
         .leftJoinAndSelect('deployment.standardVersions', 'standardVersion')
-        .leftJoinAndSelect('deployment.gitRepos', 'gitRepos')
-        .leftJoinAndSelect('deployment.gitCommits', 'gitCommits')
+        .leftJoinAndSelect('deployment.gitCommit', 'gitCommit')
+        .leftJoinAndSelect('deployment.target', 'target')
+        .leftJoinAndSelect('target.gitRepo', 'gitRepo')
         .where('deployment.organizationId = :organizationId', {
           organizationId,
         })
@@ -131,12 +134,12 @@ export class StandardsDeploymentRepository
       const deployments = await this.repository
         .createQueryBuilder('deployment')
         .leftJoinAndSelect('deployment.standardVersions', 'standardVersions')
-        .leftJoinAndSelect('deployment.gitRepos', 'gitRepo')
-        .leftJoinAndSelect('deployment.gitCommits', 'gitCommits')
+        .leftJoinAndSelect('deployment.gitCommit', 'gitCommit')
+        .leftJoinAndSelect('deployment.target', 'target')
         .where('deployment.organizationId = :organizationId', {
           organizationId,
         })
-        .andWhere('gitRepo.id IN (:...gitRepoIds)', { gitRepoIds })
+        .andWhere('target.gitRepoId IN (:...gitRepoIds)', { gitRepoIds })
         .orderBy('deployment.createdAt', 'DESC')
         .getMany();
 
@@ -172,15 +175,19 @@ export class StandardsDeploymentRepository
     });
 
     try {
-      // Find all deployments to this repository for this organization
+      // Find all successful deployments to this repository for this organization
       const deployments = await this.repository
         .createQueryBuilder('deployment')
         .leftJoinAndSelect('deployment.standardVersions', 'standardVersion')
-        .leftJoinAndSelect('deployment.gitRepos', 'gitRepo')
+        .leftJoinAndSelect('deployment.gitCommit', 'gitCommit')
+        .leftJoinAndSelect('deployment.target', 'target')
         .where('deployment.organizationId = :organizationId', {
           organizationId,
         })
-        .andWhere('gitRepo.id = :gitRepoId', { gitRepoId })
+        .andWhere('target.gitRepoId = :gitRepoId', { gitRepoId })
+        .andWhere('deployment.status = :status', {
+          status: DistributionStatus.success,
+        })
         .orderBy('deployment.createdAt', 'DESC')
         .getMany();
 
@@ -203,7 +210,7 @@ export class StandardsDeploymentRepository
       this.logger.info('Active standard versions found by repository', {
         organizationId,
         gitRepoId,
-        totalDeployments: deployments.length,
+        totalSuccessfulDeployments: deployments.length,
         activeStandardVersionsCount: activeStandardVersions.length,
         standardIds: activeStandardVersions.map((sv) => sv.standardId),
       });
@@ -215,6 +222,173 @@ export class StandardsDeploymentRepository
         {
           organizationId,
           gitRepoId,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      throw error;
+    }
+  }
+
+  async findActiveStandardVersionsByTarget(
+    organizationId: OrganizationId,
+    targetId: TargetId,
+  ): Promise<StandardVersion[]> {
+    this.logger.info('Finding active standard versions by target', {
+      organizationId,
+      targetId,
+    });
+
+    try {
+      // Find all successful deployments to this target for this organization
+      const deployments = await this.repository
+        .createQueryBuilder('deployment')
+        .leftJoinAndSelect('deployment.standardVersions', 'standardVersion')
+        .leftJoinAndSelect('deployment.gitCommit', 'gitCommit')
+        .leftJoinAndSelect('deployment.target', 'target')
+        .where('deployment.organizationId = :organizationId', {
+          organizationId,
+        })
+        .andWhere('deployment.target_id = :targetId', { targetId })
+        .andWhere('deployment.status = :status', {
+          status: DistributionStatus.success,
+        })
+        .orderBy('deployment.createdAt', 'DESC')
+        .getMany();
+
+      // Extract all standard versions and deduplicate by standardId,
+      // keeping the most recently deployed version of each standard
+      const standardVersionMap = new Map<string, StandardVersion>();
+
+      // Process deployments in chronological order (most recent first)
+      for (const deployment of deployments) {
+        for (const standardVersion of deployment.standardVersions) {
+          // Only keep the first (most recent) version of each standard
+          if (!standardVersionMap.has(standardVersion.standardId)) {
+            standardVersionMap.set(standardVersion.standardId, standardVersion);
+          }
+        }
+      }
+
+      const activeStandardVersions = Array.from(standardVersionMap.values());
+
+      this.logger.info('Active standard versions found by target', {
+        organizationId,
+        targetId,
+        totalSuccessfulDeployments: deployments.length,
+        activeStandardVersionsCount: activeStandardVersions.length,
+        standardIds: activeStandardVersions.map((sv) => sv.standardId),
+      });
+
+      return activeStandardVersions;
+    } catch (error) {
+      this.logger.error('Failed to find active standard versions by target', {
+        organizationId,
+        targetId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async listByTargetIds(
+    organizationId: OrganizationId,
+    targetIds: TargetId[],
+  ): Promise<StandardsDeployment[]> {
+    this.logger.info(
+      'Listing standards deployments by organization ID and target IDs',
+      {
+        organizationId,
+        targetIds,
+        targetCount: targetIds.length,
+      },
+    );
+
+    try {
+      const queryBuilder = this.repository
+        .createQueryBuilder('deployment')
+        .innerJoinAndSelect('deployment.standardVersions', 'standardVersion')
+        .leftJoinAndSelect('deployment.gitCommit', 'gitCommit')
+        .leftJoinAndSelect('deployment.target', 'target')
+        .where('deployment.organizationId = :organizationId', {
+          organizationId,
+        });
+
+      // Use the new direct target relation
+      queryBuilder.andWhere('deployment.target_id IN (:...targetIds)', {
+        targetIds: targetIds as string[],
+      });
+
+      queryBuilder.orderBy('deployment.createdAt', 'ASC');
+
+      const deployments = await queryBuilder.getMany();
+
+      this.logger.info(
+        'Standards deployments listed by organization ID and target IDs successfully',
+        {
+          organizationId,
+          targetIds,
+          count: deployments.length,
+        },
+      );
+      return deployments;
+    } catch (error) {
+      this.logger.error(
+        'Failed to list standards deployments by organization ID and target IDs',
+        {
+          organizationId,
+          targetIds,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      throw error;
+    }
+  }
+
+  async listByOrganizationIdWithStatus(
+    organizationId: OrganizationId,
+    status?: DistributionStatus,
+  ): Promise<StandardsDeployment[]> {
+    this.logger.info(
+      'Listing standards deployments by organization ID with status filter',
+      {
+        organizationId,
+        status,
+      },
+    );
+
+    try {
+      const queryBuilder = this.repository
+        .createQueryBuilder('deployment')
+        .innerJoinAndSelect('deployment.standardVersions', 'standardVersion')
+        .leftJoinAndSelect('deployment.gitCommit', 'gitCommit')
+        .leftJoinAndSelect('deployment.target', 'target')
+        .where('deployment.organizationId = :organizationId', {
+          organizationId,
+        });
+
+      if (status) {
+        queryBuilder.andWhere('deployment.status = :status', { status });
+      }
+
+      queryBuilder.orderBy('deployment.createdAt', 'DESC');
+
+      const deployments = await queryBuilder.getMany();
+
+      this.logger.info(
+        'Standards deployments listed by organization ID with status filter successfully',
+        {
+          organizationId,
+          status,
+          count: deployments.length,
+        },
+      );
+      return deployments;
+    } catch (error) {
+      this.logger.error(
+        'Failed to list standards deployments by organization ID with status filter',
+        {
+          organizationId,
+          status,
           error: error instanceof Error ? error.message : String(error),
         },
       );

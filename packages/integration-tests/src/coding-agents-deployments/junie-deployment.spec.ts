@@ -14,7 +14,12 @@ import {
 } from '@packmind/standards/types';
 import { GitHexa, gitSchemas } from '@packmind/git';
 import { GitRepo, GitProviderVendors } from '@packmind/git/types';
-import { HexaRegistry } from '@packmind/shared';
+import {
+  HexaRegistry,
+  IDeploymentPort,
+  Target,
+  createTargetId,
+} from '@packmind/shared';
 import { makeTestDatasource } from '@packmind/shared/test';
 import {
   CodingAgentHexaFactory,
@@ -89,6 +94,12 @@ describe('Junie Deployment Integration', () => {
     codingAgentFactory = new CodingAgentHexaFactory(registry);
     deployerService = codingAgentFactory.getDeployerService();
 
+    const mockDeploymentPort = {
+      addTarget: jest.fn(),
+    } as Partial<jest.Mocked<IDeploymentPort>> as jest.Mocked<IDeploymentPort>;
+
+    gitHexa.setDeploymentsAdapter(mockDeploymentPort);
+
     // Create test data
     organization = await accountsHexa.createOrganization({
       name: 'test organization',
@@ -147,7 +158,16 @@ describe('Junie Deployment Integration', () => {
   });
 
   describe('when .junie/guidelines.md does not exist', () => {
+    let defaultTarget: Target;
+
     beforeEach(() => {
+      // Create a default target for testing
+      defaultTarget = {
+        id: createTargetId('default-target-id'),
+        name: 'Default',
+        path: '/',
+        gitRepoId: gitRepo.id,
+      };
       // Mock GitHexa.getFileFromRepo to return null (file doesn't exist)
       jest.spyOn(gitHexa, 'getFileFromRepo').mockResolvedValue(null);
     });
@@ -173,6 +193,7 @@ describe('Junie Deployment Integration', () => {
       const fileUpdates = await deployerService.aggregateRecipeDeployments(
         recipeVersions,
         gitRepo,
+        [defaultTarget],
         ['junie'],
       );
 
@@ -188,7 +209,7 @@ describe('Junie Deployment Integration', () => {
         expect(guidelinesFile.content).toContain('# Packmind Recipes');
         expect(guidelinesFile.content).toContain('🚨 **MANDATORY STEP** 🚨');
         expect(guidelinesFile.content).toContain('ALWAYS READ');
-        expect(guidelinesFile.content).toContain('.packmind/recipes-index.md');
+        expect(guidelinesFile.content).toContain(recipeVersions[0].name);
         expect(guidelinesFile.content).toContain('aiAgent: "Junie"');
         expect(guidelinesFile.content).toContain(
           'gitRepo: "test-owner/test-repo"',
@@ -217,6 +238,7 @@ describe('Junie Deployment Integration', () => {
       const fileUpdates = await deployerService.aggregateStandardsDeployments(
         standardVersions,
         gitRepo,
+        [defaultTarget],
         ['junie'],
       );
 
@@ -229,13 +251,8 @@ describe('Junie Deployment Integration', () => {
 
       expect(guidelinesFile).toBeDefined();
       if (guidelinesFile) {
-        expect(guidelinesFile.content).toContain('## Packmind Standards');
-        expect(guidelinesFile.content).toContain(
-          'Follow the coding standards defined in',
-        );
-        expect(guidelinesFile.content).toContain(
-          '.packmind/standards-index.md',
-        );
+        expect(guidelinesFile.content).toContain('# Packmind Standards');
+        expect(guidelinesFile.content).toContain(standardVersions[0].name);
 
         // Should NOT contain recipes content yet
         expect(guidelinesFile.content).not.toContain('# Packmind Recipes');
@@ -270,10 +287,19 @@ describe('Junie Deployment Integration', () => {
         },
       ];
 
+      // Create a default target for testing
+      const defaultTarget = {
+        id: createTargetId('default-target-id'),
+        name: 'Default',
+        path: '/',
+        gitRepoId: gitRepo.id,
+      };
+
       // Deploy recipes first
       const recipeUpdates = await deployerService.aggregateRecipeDeployments(
         recipeVersions,
         gitRepo,
+        [defaultTarget],
         ['junie'],
       );
 
@@ -282,6 +308,7 @@ describe('Junie Deployment Integration', () => {
         await deployerService.aggregateStandardsDeployments(
           standardVersions,
           gitRepo,
+          [defaultTarget],
           ['junie'],
         );
 
@@ -304,41 +331,63 @@ describe('Junie Deployment Integration', () => {
       const finalContent = pathMap.get('.junie/guidelines.md');
       expect(finalContent).toBeDefined();
       if (finalContent) {
-        expect(finalContent).toContain('## Packmind Standards');
+        expect(finalContent).toContain('# Packmind Standards');
       }
     });
   });
 
   describe('when .junie/guidelines.md already exists with complete instructions', () => {
-    const existingContent =
-      '<!-- start: Packmind recipes -->\n' +
-      '# Packmind Recipes\n' +
-      '\n' +
-      '🚨 **MANDATORY STEP** 🚨\n' +
-      '\n' +
-      'Before writing, editing, or generating ANY code:\n' +
-      '\n' +
-      '**ALWAYS READ**: [.packmind/recipes-index.md](.packmind/recipes-index.md) to see what recipes are available\n' +
-      '\n' +
-      '## Recipe Usage Rules:\n' +
-      '- **MANDATORY**: Always check the recipes list first\n' +
-      '- **CONDITIONAL**: Only read/use individual recipes if they are relevant to your task\n' +
-      '- **OPTIONAL**: If no recipes are relevant, proceed without using any\n' +
-      '\n' +
-      '## Recipe Usage Tracking:\n' +
-      "When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you MUST call the 'packmind_notify_recipe_usage' MCP tool with:\n" +
-      '* Recipe slugs array (e.g., ["recipe-name"] from "recipe-name.md")\n' +
-      '* aiAgent: "Junie"\n' +
-      '* gitRepo: "test-owner/test-repo"\n' +
-      '\n' +
-      '**Remember: Always check the recipes list first, but only use recipes that actually apply to your specific task.**`\n' +
-      '<!-- end: Packmind recipes -->\n' +
-      '\n' +
-      '## Packmind Standards\n' +
-      '\n' +
-      'Follow the coding standards defined in [.packmind/standards-index.md](.packmind/standards-index.md)';
+    let defaultTarget: Target;
+    const existingContent = `<!-- start: Packmind recipes -->
+# Packmind Recipes
+
+🚨 **MANDATORY STEP** 🚨
+
+Before writing, editing, or generating ANY code:
+
+**ALWAYS READ**: the available recipes below to see what recipes are available
+
+## Recipe Usage Rules:
+- **MANDATORY**: Always check the recipes list first
+- **CONDITIONAL**: Only read/use individual recipes if they are relevant to your task
+- **OPTIONAL**: If no recipes are relevant, proceed without using any
+
+## Recipe Usage Tracking:
+When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you MUST call the 'packmind_notify_recipe_usage' MCP tool with:
+* Recipe slugs array (e.g., ["recipe-name"] from "recipe-name.md")
+* aiAgent: "Junie"
+* gitRepo: "test-owner/test-repo"
+* target: "/"
+
+**Remember: Always check the recipes list first, but only use recipes that actually apply to your specific task.**\`
+
+## Available recipes
+
+* [Test Recipe](../.packmind/recipes/test-recipe.md): Test recipe for deployment
+<!-- end: Packmind recipes -->
+
+<!-- start: Packmind standards -->
+# Packmind Standards
+
+Before starting your work, make sure to review the coding standards relevant to your current task.
+
+Always consult the sections that apply to the technology, framework, or type of contribution you are working on.
+
+All rules and guidelines defined in these standards are mandatory and must be followed consistently.
+
+Failure to follow these standards may lead to inconsistencies, errors, or rework. Treat them as the source of truth for how code should be written, structured, and maintained.
+
+* [Test Standard](../.packmind/standards/test-standard.md): Test standard for deployment
+<!-- end: Packmind standards -->`;
 
     beforeEach(() => {
+      // Create a default target for testing
+      defaultTarget = {
+        id: createTargetId('default-target-id'),
+        name: 'Default',
+        path: '/',
+        gitRepoId: gitRepo.id,
+      };
       // Mock GitHexa.getFileFromRepo to return existing content
       const existingFile = {
         content: existingContent,
@@ -368,6 +417,7 @@ describe('Junie Deployment Integration', () => {
       const fileUpdates = await deployerService.aggregateRecipeDeployments(
         recipeVersions,
         gitRepo,
+        [defaultTarget],
         ['junie'],
       );
 
@@ -394,6 +444,7 @@ describe('Junie Deployment Integration', () => {
       const fileUpdates = await deployerService.aggregateStandardsDeployments(
         standardVersions,
         gitRepo,
+        [defaultTarget],
         ['junie'],
       );
 
@@ -404,6 +455,7 @@ describe('Junie Deployment Integration', () => {
   });
 
   describe('when .junie/guidelines.md exists but is missing recipe instructions', () => {
+    let defaultTarget: Target;
     const partialContent = `# Some User Instructions
 
 This is user-defined content that should be preserved.
@@ -412,11 +464,28 @@ This is user-defined content that should be preserved.
 
 More user content here.
 
-## Packmind Standards
+<!-- start: Packmind standards -->
+# Packmind Standards
 
-Follow the coding standards defined in [.packmind/standards-index.md](.packmind/standards-index.md)`;
+Before starting your work, make sure to review the coding standards relevant to your current task.
+
+Always consult the sections that apply to the technology, framework, or type of contribution you are working on.
+
+All rules and guidelines defined in these standards are mandatory and must be followed consistently.
+
+Failure to follow these standards may lead to inconsistencies, errors, or rework. Treat them as the source of truth for how code should be written, structured, and maintained.
+
+* [Test Standard](../.packmind/standards/test-standard.md): Test standard for deployment
+<!-- end: Packmind standards -->`;
 
     beforeEach(() => {
+      // Create a default target for testing
+      defaultTarget = {
+        id: createTargetId('default-target-id'),
+        name: 'Default',
+        path: '/',
+        gitRepoId: gitRepo.id,
+      };
       // Mock GitHexa.getFileFromRepo to return partial content (missing recipe instructions)
       const existingFile = {
         content: partialContent,
@@ -446,6 +515,7 @@ Follow the coding standards defined in [.packmind/standards-index.md](.packmind/
       const fileUpdates = await deployerService.aggregateRecipeDeployments(
         recipeVersions,
         gitRepo,
+        [defaultTarget],
         ['junie'],
       );
 
@@ -464,9 +534,9 @@ Follow the coding standards defined in [.packmind/standards-index.md](.packmind/
       expect(guidelinesFile.content).toContain('More user content here.');
 
       // Should preserve existing standards instructions
-      expect(guidelinesFile.content).toContain('## Packmind Standards');
+      expect(guidelinesFile.content).toContain('# Packmind Standards');
       expect(guidelinesFile.content).toContain(
-        'Follow the coding standards defined in',
+        'Before starting your work, make sure to review the coding standards relevant to your current task',
       );
 
       // Should add recipe instructions
@@ -496,45 +566,59 @@ Follow the coding standards defined in [.packmind/standards-index.md](.packmind/
       const fileUpdates = await deployerService.aggregateStandardsDeployments(
         standardVersions,
         gitRepo,
+        [defaultTarget],
         ['junie'],
       );
 
       // No files should be updated since standards instructions already exist
+
       expect(fileUpdates.createOrUpdate).toHaveLength(0);
       expect(fileUpdates.delete).toHaveLength(0);
     });
   });
 
   describe('when .junie/guidelines.md exists but is missing standards instructions', () => {
-    const partialContent =
-      '<!-- start: Packmind recipes -->\n' +
-      '# Packmind Recipes\n' +
-      '\n' +
-      '🚨 **MANDATORY STEP** 🚨\n' +
-      '\n' +
-      'Before writing, editing, or generating ANY code:\n' +
-      '\n' +
-      '**ALWAYS READ**: [.packmind/recipes-index.md](.packmind/recipes-index.md) to see what recipes are available\n' +
-      '\n' +
-      '## Recipe Usage Rules:\n' +
-      '- **MANDATORY**: Always check the recipes list first\n' +
-      '- **CONDITIONAL**: Only read/use individual recipes if they are relevant to your task\n' +
-      '- **OPTIONAL**: If no recipes are relevant, proceed without using any\n' +
-      '\n' +
-      '## Recipe Usage Tracking:\n' +
-      "When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you MUST call the 'packmind_notify_recipe_usage' MCP tool with:\n" +
-      '* Recipe slugs array (e.g., ["recipe-name"] from "recipe-name.md")\n' +
-      '* aiAgent: "Junie"\n' +
-      '* gitRepo: "test-owner/test-repo"\n' +
-      '\n' +
-      '**Remember: Always check the recipes list first, but only use recipes that actually apply to your specific task.**`\n' +
-      '<!-- end: Packmind recipes -->\n' +
-      '\n' +
-      '# Some User Content\n' +
-      '\n' +
-      'User-defined instructions that should be preserved.';
+    let defaultTarget: Target;
+    const partialContent = `<!-- start: Packmind recipes -->
+# Packmind Recipes
+
+🚨 **MANDATORY STEP** 🚨
+
+Before writing, editing, or generating ANY code:
+
+**ALWAYS READ**: the available recipes below to see what recipes are available
+
+## Recipe Usage Rules:
+- **MANDATORY**: Always check the recipes list first
+- **CONDITIONAL**: Only read/use individual recipes if they are relevant to your task
+- **OPTIONAL**: If no recipes are relevant, proceed without using any
+
+## Recipe Usage Tracking:
+When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you MUST call the 'packmind_notify_recipe_usage' MCP tool with:
+* Recipe slugs array (e.g., ["recipe-name"] from "recipe-name.md")
+* aiAgent: "Junie"
+* gitRepo: "test-owner/test-repo"
+* target: "/"
+
+**Remember: Always check the recipes list first, but only use recipes that actually apply to your specific task.**\`
+
+## Available recipes
+
+* [Test Recipe](../.packmind/recipes/test-recipe.md): Test recipe for deployment
+<!-- end: Packmind recipes -->
+
+# Some User Content
+
+User-defined instructions that should be preserved.`;
 
     beforeEach(() => {
+      // Create a default target for testing
+      defaultTarget = {
+        id: createTargetId('default-target-id'),
+        name: 'Default',
+        path: '/',
+        gitRepoId: gitRepo.id,
+      };
       // Mock GitHexa.getFileFromRepo to return partial content (missing standards instructions)
       const existingFile = {
         content: partialContent,
@@ -564,6 +648,7 @@ Follow the coding standards defined in [.packmind/standards-index.md](.packmind/
       const fileUpdates = await deployerService.aggregateRecipeDeployments(
         recipeVersions,
         gitRepo,
+        [defaultTarget],
         ['junie'],
       );
 
@@ -590,6 +675,7 @@ Follow the coding standards defined in [.packmind/standards-index.md](.packmind/
       const fileUpdates = await deployerService.aggregateStandardsDeployments(
         standardVersions,
         gitRepo,
+        [defaultTarget],
         ['junie'],
       );
 
@@ -614,25 +700,36 @@ Follow the coding standards defined in [.packmind/standards-index.md](.packmind/
       );
 
       // Should add standards instructions
-      expect(guidelinesFile.content).toContain('## Packmind Standards');
+      expect(guidelinesFile.content).toContain('# Packmind Standards');
       expect(guidelinesFile.content).toContain(
-        'Follow the coding standards defined in',
+        'Before starting your work, make sure to review the coding standards relevant to your current task',
       );
-      expect(guidelinesFile.content).toContain('.packmind/standards-index.md');
+      expect(guidelinesFile.content).toContain(standardVersions[0].name);
     });
   });
 
   describe('unit tests for JunieDeployer', () => {
+    let defaultTarget: Target;
     let junieDeployer: JunieDeployer;
 
     beforeEach(() => {
-      junieDeployer = new JunieDeployer(gitHexa);
+      defaultTarget = {
+        id: createTargetId('default-target-id'),
+        name: 'Default',
+        path: '/',
+        gitRepoId: gitRepo.id,
+      };
+      junieDeployer = new JunieDeployer(standardsHexa, gitHexa);
     });
 
     it('handles empty recipe list gracefully', async () => {
       jest.spyOn(gitHexa, 'getFileFromRepo').mockResolvedValue(null);
 
-      const fileUpdates = await junieDeployer.deployRecipes([], gitRepo);
+      const fileUpdates = await junieDeployer.deployRecipes(
+        [],
+        gitRepo,
+        defaultTarget,
+      );
 
       expect(fileUpdates.createOrUpdate).toHaveLength(1);
       expect(fileUpdates.delete).toHaveLength(0);
@@ -646,17 +743,18 @@ Follow the coding standards defined in [.packmind/standards-index.md](.packmind/
     it('handles empty standards list gracefully', async () => {
       jest.spyOn(gitHexa, 'getFileFromRepo').mockResolvedValue(null);
 
-      const fileUpdates = await junieDeployer.deployStandards([], gitRepo);
+      const fileUpdates = await junieDeployer.deployStandards(
+        [],
+        gitRepo,
+        defaultTarget,
+      );
 
       expect(fileUpdates.createOrUpdate).toHaveLength(1);
       expect(fileUpdates.delete).toHaveLength(0);
 
       const guidelinesFile = fileUpdates.createOrUpdate[0];
       expect(guidelinesFile.path).toBe('.junie/guidelines.md');
-      expect(guidelinesFile.content).toContain('## Packmind Standards');
-      expect(guidelinesFile.content).toContain(
-        'Follow the coding standards defined in',
-      );
+      expect(guidelinesFile.content).not.toContain('# Packmind Standards');
     });
 
     it('handles GitHexa errors gracefully', async () => {
@@ -680,6 +778,7 @@ Follow the coding standards defined in [.packmind/standards-index.md](.packmind/
       const fileUpdates = await junieDeployer.deployRecipes(
         recipeVersions,
         gitRepo,
+        defaultTarget,
       );
 
       // Should still work despite the error, treating it as if file doesn't exist

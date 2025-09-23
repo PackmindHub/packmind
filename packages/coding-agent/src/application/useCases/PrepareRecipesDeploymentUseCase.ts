@@ -30,6 +30,7 @@ export class PrepareRecipesDeploymentUseCase
         await this.codingAgentServices.prepareRecipesDeployment(
           command.recipeVersions,
           command.gitRepo,
+          command.targets,
           command.codingAgents,
         );
 

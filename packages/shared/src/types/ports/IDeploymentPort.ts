@@ -11,6 +11,14 @@ import {
   ListDeploymentsByStandardCommand,
   GetStandardDeploymentOverviewCommand,
   StandardDeploymentOverview,
+  Target,
+  TargetWithRepository,
+  AddTargetCommand,
+  UpdateTargetCommand,
+  DeleteTargetCommand,
+  DeleteTargetResponse,
+  GetTargetsByRepositoryCommand,
+  GetTargetsByOrganizationCommand,
 } from '../deployments';
 
 export interface IDeploymentPort {
@@ -37,33 +45,34 @@ export interface IDeploymentPort {
    * Publishes recipes to specified git repositories
    *
    * For each repository:
-   * 1. Finds all previously deployed recipes
-   * 2. Combines them with new recipes
-   * 3. Prepares file updates using CodingAgentHexa
-   * 4. Commits changes to the git repository
-   * 5. Creates a RecipesDeployment entry in the database
+   * 1. Finds the default target for the repository
+   * 2. Finds all previously deployed recipes for the repository
+   * 3. Combines them with new recipes
+   * 4. Prepares file updates using CodingAgentHexa
+   * 5. Commits changes to the git repository
+   * 6. Creates individual RecipesDeployment entry per target
    *
-   * @param command - Command containing git repositories and recipes to deploy
-   * @returns Promise of created RecipesDeployment entries
+   * @param command - Command containing git repository IDs and recipes to deploy
+   * @returns Promise of created RecipesDeployment entries (one per repository's default target)
    */
   publishRecipes(command: PublishRecipesCommand): Promise<RecipesDeployment[]>;
 
   /**
-   * Publishes standards to specified git repositories
+   * Publishes standards to specified targets
    *
-   * For each repository:
-   * 1. Finds all previously deployed standards
+   * For each target:
+   * 1. Finds all previously deployed standards for the target's repository
    * 2. Combines them with new standards
    * 3. Prepares file updates using CodingAgentHexa
    * 4. Commits changes to the git repository
-   * 5. Creates a StandardDeployment entry in the database
+   * 5. Creates individual StandardsDeployment entries per target
    *
-   * @param command - Command containing git repositories and standard versions to deploy
-   * @returns Promise of created StandardDeployment
+   * @param command - Command containing target IDs and standard versions to deploy
+   * @returns Promise of created StandardsDeployment entries
    */
   publishStandards(
     command: PublishStandardsCommand,
-  ): Promise<StandardsDeployment>;
+  ): Promise<StandardsDeployment[]>;
 
   /**
    * Lists all deployments for a specific recipe
@@ -99,4 +108,69 @@ export interface IDeploymentPort {
   getStandardDeploymentOverview(
     command: GetStandardDeploymentOverviewCommand,
   ): Promise<StandardDeploymentOverview>;
+
+  /**
+   * Creates a target for a git repository
+   *
+   * A target represents a deployment destination within a git repository,
+   * containing a name and path where recipes and standards can be deployed.
+   *
+   * @param command - Command containing target details and user/organization context
+   * @returns Promise of the created Target
+   * @throws Error if name is empty, path format is invalid, or gitRepoId doesn't exist
+   */
+  addTarget(command: AddTargetCommand): Promise<Target>;
+
+  /**
+   * Updates an existing target
+   *
+   * Updates the name and/or path of an existing deployment target.
+   * The Root target (path '/') cannot be updated.
+   *
+   * @param command - Command containing target ID, updated name and path, and user/organization context
+   * @returns Promise of the updated Target
+   * @throws Error if target not found, name is empty, path format is invalid, or target is Root target
+   */
+  updateTarget(command: UpdateTargetCommand): Promise<Target>;
+
+  /**
+   * Deletes a target (soft delete)
+   *
+   * Soft-deletes a deployment target, making it unavailable for future deployments
+   * while preserving historical deployment records.
+   * The Root target (path '/') cannot be deleted.
+   *
+   * @param command - Command containing target ID and user/organization context
+   * @returns Promise of deletion confirmation
+   * @throws Error if target not found or target is Root target
+   */
+  deleteTarget(command: DeleteTargetCommand): Promise<DeleteTargetResponse>;
+
+  /**
+   * Gets all targets for a specific git repository
+   *
+   * Retrieves all deployment targets associated with a given git repository.
+   * Targets represent specific paths within a repository where recipes and
+   * standards can be deployed.
+   *
+   * @param command - Command containing git repository ID and user/organization context
+   * @returns Promise of array of targets for the repository
+   */
+  getTargetsByRepository(
+    command: GetTargetsByRepositoryCommand,
+  ): Promise<Target[]>;
+
+  /**
+   * Gets all targets for an organization
+   *
+   * Retrieves all deployment targets associated with all repositories
+   * belonging to the specified organization. This provides a comprehensive
+   * view of all available deployment targets across the organization.
+   *
+   * @param command - Command containing organization ID and user context
+   * @returns Promise of array of all targets with repository information for the organization
+   */
+  getTargetsByOrganization(
+    command: GetTargetsByOrganizationCommand,
+  ): Promise<TargetWithRepository[]>;
 }

@@ -1,10 +1,12 @@
 import { RecipeVersion } from '@packmind/recipes';
 import { GitRepo, GitHexa } from '@packmind/git';
-import { StandardVersion } from '@packmind/standards';
+import { StandardsHexa, StandardVersion } from '@packmind/standards';
 import { FileUpdates } from '../../../domain/entities/FileUpdates';
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
-import { PackmindLogger } from '@packmind/shared';
-import { GenericRecipeSectionWriter } from '../genericRecipe/GenericRecipeSectionWriter';
+import { PackmindLogger, Target } from '@packmind/shared';
+import { GenericRecipeSectionWriter } from '../genericSectionWriter/GenericRecipeSectionWriter';
+import { getTargetPrefixedPath } from '../utils/FileUtils';
+import { GenericStandardWriter } from '../genericSectionWriter/GenericStandardWriter';
 
 const origin = 'CursorDeployer';
 
@@ -13,29 +15,37 @@ export class CursorDeployer implements ICodingAgentDeployer {
     '.cursor/rules/packmind/recipes-index.mdc';
   private readonly logger: PackmindLogger;
 
-  constructor(private readonly gitHexa?: GitHexa) {
+  constructor(
+    private readonly standardsHexa?: StandardsHexa,
+    private readonly gitHexa?: GitHexa,
+  ) {
     this.logger = new PackmindLogger(origin);
   }
 
   async deployRecipes(
     recipeVersions: RecipeVersion[],
     gitRepo: GitRepo,
+    target: Target,
   ): Promise<FileUpdates> {
     this.logger.info('Deploying recipes for Cursor', {
       recipesCount: recipeVersions.length,
       gitRepoId: gitRepo.id,
+      targetId: target.id,
+      targetPath: target.path,
     });
 
     // Get existing recipes index content
-    const existingContent = await this.getExistingRecipesIndexContent(gitRepo);
+    const existingContent = await this.getExistingRecipesIndexContent(
+      gitRepo,
+      target,
+    );
 
     // Generate content with recipe instructions
     const updatedContent = await this.generateRecipeContent(
       recipeVersions,
       gitRepo,
+      target,
     );
-
-    console.log({ updatedContent });
 
     const fileUpdates: FileUpdates = {
       createOrUpdate: [],
@@ -44,8 +54,12 @@ export class CursorDeployer implements ICodingAgentDeployer {
 
     // Only create file if content was updated
     if (updatedContent !== existingContent) {
+      const targetPrefixedPath = getTargetPrefixedPath(
+        CursorDeployer.RECIPES_INDEX_PATH,
+        target,
+      );
       fileUpdates.createOrUpdate.push({
-        path: CursorDeployer.RECIPES_INDEX_PATH,
+        path: targetPrefixedPath,
         content: updatedContent,
       });
     }
@@ -56,10 +70,13 @@ export class CursorDeployer implements ICodingAgentDeployer {
   async deployStandards(
     standardVersions: StandardVersion[],
     gitRepo: GitRepo,
+    target: Target,
   ): Promise<FileUpdates> {
     this.logger.info('Deploying standards for Cursor', {
       standardsCount: standardVersions.length,
       gitRepoId: gitRepo.id,
+      targetId: target.id,
+      targetPath: target.path,
     });
 
     const fileUpdates: FileUpdates = {
@@ -69,9 +86,11 @@ export class CursorDeployer implements ICodingAgentDeployer {
 
     // Generate individual Cursor configuration files for each standard
     for (const standardVersion of standardVersions) {
-      const configFile = this.generateCursorConfigForStandard(standardVersion);
+      const configFile =
+        await this.generateCursorConfigForStandard(standardVersion);
+      const targetPrefixedPath = getTargetPrefixedPath(configFile.path, target);
       fileUpdates.createOrUpdate.push({
-        path: configFile.path,
+        path: targetPrefixedPath,
         content: configFile.content,
       });
     }
@@ -84,6 +103,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
    */
   private async getExistingRecipesIndexContent(
     gitRepo: GitRepo,
+    target: Target,
   ): Promise<string> {
     if (!this.gitHexa) {
       this.logger.debug('No GitHexa available, returning empty content');
@@ -91,14 +111,19 @@ export class CursorDeployer implements ICodingAgentDeployer {
     }
 
     try {
+      const targetPrefixedPath = getTargetPrefixedPath(
+        CursorDeployer.RECIPES_INDEX_PATH,
+        target,
+      );
       const existingFile = await this.gitHexa.getFileFromRepo(
         gitRepo,
-        CursorDeployer.RECIPES_INDEX_PATH,
+        targetPrefixedPath,
       );
       return existingFile?.content || '';
     } catch (error) {
       this.logger.debug('Failed to get existing Cursor recipes index content', {
         error: error instanceof Error ? error.message : String(error),
+        targetPath: target.path,
       });
       return '';
     }
@@ -110,8 +135,10 @@ export class CursorDeployer implements ICodingAgentDeployer {
   private async generateRecipeContent(
     recipeVersions: RecipeVersion[],
     gitRepo: GitRepo,
+    target: Target,
   ): Promise<string> {
     const repoName = `${gitRepo.owner}/${gitRepo.repo}`;
+    const targetPath = target.path;
 
     // Generate recipes list
     const recipesSection = this.generateRecipesSection(recipeVersions);
@@ -121,6 +148,7 @@ export class CursorDeployer implements ICodingAgentDeployer {
         agentName: 'Cursor',
         repoName,
         recipesSection,
+        target: targetPath,
       });
 
     return `---
@@ -135,34 +163,34 @@ ${packmindInstructions}`;
    */
   private generateRecipesSection(recipeVersions: RecipeVersion[]): string {
     if (recipeVersions.length === 0) {
-      return `## Available Recipes
-
-No recipes are currently available for this repository.`;
+      return `No recipes are currently available for this repository.`;
     }
 
-    const recipesList = recipeVersions
+    return recipeVersions
       .map(
         (recipe) =>
           `- [${recipe.name}](.packmind/recipes/${recipe.slug}.md) : ${recipe.summary || recipe.name}`,
       )
       .join('\n');
-
-    return `## Available Recipes
-
-${recipesList}`;
   }
 
   /**
    * Generate Cursor configuration file for a specific standard
    */
-  private generateCursorConfigForStandard(standardVersion: StandardVersion): {
+  private async generateCursorConfigForStandard(
+    standardVersion: StandardVersion,
+  ): Promise<{
     path: string;
     content: string;
-  } {
+  }> {
     this.logger.debug('Generating Cursor configuration for standard', {
       standardSlug: standardVersion.slug,
       scope: standardVersion.scope,
     });
+    const rules =
+      (await this.standardsHexa?.getRulesByStandardId(
+        standardVersion.standardId,
+      )) ?? [];
 
     let content: string;
 
@@ -172,13 +200,13 @@ ${recipesList}`;
 globs: ${standardVersion.scope}
 alwaysApply: false
 ---
-Apply the coding rules defined in @.packmind/standards/${standardVersion.slug}.md`;
+${GenericStandardWriter.writeStandard(standardVersion, rules)}`;
     } else {
       // When the scope is empty
       content = `---
 alwaysApply: true
 ---
-Apply the coding rules defined in @.packmind/standards/${standardVersion.slug}.md`;
+${GenericStandardWriter.writeStandard(standardVersion, rules)}`;
     }
 
     const path = `.cursor/rules/packmind/standard-${standardVersion.slug}.mdc`;

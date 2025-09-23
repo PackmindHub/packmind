@@ -7,7 +7,12 @@ import {
 import { stubLogger } from '@packmind/shared/test';
 import { RecipeId } from '@packmind/recipes';
 import { OrganizationId, UserId } from '@packmind/accounts';
-import { ListDeploymentsByRecipeCommand } from '@packmind/shared';
+import {
+  ListDeploymentsByRecipeCommand,
+  DistributionStatus,
+  createTargetId,
+  GitRepoId,
+} from '@packmind/shared';
 
 describe('ListDeploymentsByRecipeUseCase', () => {
   let useCase: ListDeploymentsByRecipeUseCase;
@@ -16,6 +21,13 @@ describe('ListDeploymentsByRecipeUseCase', () => {
   beforeEach(() => {
     mockRepository = {
       listByRecipeId: jest.fn(),
+      listByOrganizationId: jest.fn(),
+      listByOrganizationIdAndGitRepos: jest.fn(),
+      findActiveRecipeVersionsByTarget: jest.fn(),
+      add: jest.fn(),
+      findById: jest.fn(),
+      deleteById: jest.fn(),
+      restoreById: jest.fn(),
     };
 
     useCase = new ListDeploymentsByRecipeUseCase(
@@ -40,8 +52,13 @@ describe('ListDeploymentsByRecipeUseCase', () => {
           id: createRecipesDeploymentId('deployment-1'),
           organizationId: command.organizationId as OrganizationId,
           recipeVersions: [],
-          gitRepos: [],
-          gitCommits: [],
+          target: {
+            id: createTargetId('target-123'),
+            name: 'Test Target',
+            path: '/test',
+            gitRepoId: 'repo-123' as GitRepoId,
+          },
+          status: DistributionStatus.success,
           authorId: 'author-123' as UserId,
           createdAt: new Date().toISOString(),
         },

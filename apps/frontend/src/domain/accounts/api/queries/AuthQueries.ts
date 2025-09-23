@@ -1,6 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { SignUpUserCommand } from '@packmind/accounts/types';
+import {
+  SignUpUserCommand,
+  GenerateApiKeyCommand,
+} from '@packmind/accounts/types';
 import { authGateway } from '../gateways';
+import { UserId } from '@packmind/accounts/types';
 
 type SignInRequest = SignUpUserCommand;
 
@@ -93,10 +97,13 @@ export const useGetMcpURLQuery = () => {
   });
 };
 
-export const useGetCurrentApiKeyQuery = () => {
+export const useGetCurrentApiKeyQuery = ({ userId }: { userId: UserId }) => {
   return useQuery({
     queryKey: [GET_CURRENT_API_KEY_QUERY_KEY],
-    queryFn: () => authGateway.getCurrentApiKey(),
+    queryFn: () =>
+      authGateway.getCurrentApiKey({
+        userId,
+      }),
     refetchOnMount: false,
     refetchOnWindowFocus: false,
   });
@@ -107,7 +114,7 @@ export const useGenerateApiKeyMutation = () => {
 
   return useMutation({
     mutationKey: [GENERATE_API_KEY_MUTATION_KEY],
-    mutationFn: async (request: { host: string }) => {
+    mutationFn: async (request: GenerateApiKeyCommand) => {
       return authGateway.generateApiKey(request);
     },
     onSuccess: (data) => {

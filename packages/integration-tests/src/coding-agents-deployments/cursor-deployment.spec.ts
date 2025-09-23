@@ -14,7 +14,12 @@ import {
 } from '@packmind/standards/types';
 import { GitHexa, gitSchemas } from '@packmind/git';
 import { GitRepo, GitProviderVendors } from '@packmind/git/types';
-import { HexaRegistry } from '@packmind/shared';
+import {
+  HexaRegistry,
+  IDeploymentPort,
+  Target,
+  createTargetId,
+} from '@packmind/shared';
 import { makeTestDatasource } from '@packmind/shared/test';
 import {
   CodingAgentHexaFactory,
@@ -89,6 +94,12 @@ describe('Cursor Deployment Integration', () => {
     codingAgentFactory = new CodingAgentHexaFactory(registry);
     deployerService = codingAgentFactory.getDeployerService();
 
+    const mockDeploymentPort = {
+      addTarget: jest.fn(),
+    } as Partial<jest.Mocked<IDeploymentPort>> as jest.Mocked<IDeploymentPort>;
+
+    gitHexa.setDeploymentsAdapter(mockDeploymentPort);
+
     // Create test data
     organization = await accountsHexa.createOrganization({
       name: 'test organization',
@@ -147,7 +158,16 @@ describe('Cursor Deployment Integration', () => {
   });
 
   describe('when .cursor/rules/packmind/recipes-index.mdc does not exist', () => {
+    let defaultTarget: Target;
+
     beforeEach(() => {
+      // Create a default target for testing
+      defaultTarget = {
+        id: createTargetId('default-target-id'),
+        name: 'Default',
+        path: '/',
+        gitRepoId: gitRepo.id,
+      };
       // Mock GitHexa.getFileFromRepo to return null (file doesn't exist)
       jest.spyOn(gitHexa, 'getFileFromRepo').mockResolvedValue(null);
     });
@@ -174,6 +194,7 @@ describe('Cursor Deployment Integration', () => {
       const fileUpdates = await deployerService.aggregateRecipeDeployments(
         recipeVersions,
         gitRepo,
+        [defaultTarget],
         ['cursor'],
       );
 
@@ -199,7 +220,7 @@ describe('Cursor Deployment Integration', () => {
         expect(cursorFile.content).toContain('gitRepo: "test-owner/test-repo"');
 
         // Check recipes list
-        expect(cursorFile.content).toContain('## Available Recipes');
+        expect(cursorFile.content).toContain('## Available recipes');
         expect(cursorFile.content).toContain('Test Recipe for Cursor');
         expect(cursorFile.content).toContain(recipe.slug);
         expect(cursorFile.content).toContain(
@@ -226,6 +247,7 @@ describe('Cursor Deployment Integration', () => {
       const fileUpdates = await deployerService.aggregateStandardsDeployments(
         standardVersions,
         gitRepo,
+        [defaultTarget],
         ['cursor'],
       );
 
@@ -244,9 +266,7 @@ describe('Cursor Deployment Integration', () => {
         expect(cursorStandardFile.content).toContain('globs: **/*.{ts,tsx}');
         expect(cursorStandardFile.content).toContain('alwaysApply: false');
         expect(cursorStandardFile.content).toContain('---');
-        expect(cursorStandardFile.content).toContain(
-          `Apply the coding rules defined in @.packmind/standards/${standard.slug}.md`,
-        );
+        expect(cursorStandardFile.content).toContain(standard.name);
       }
     });
 
@@ -278,6 +298,7 @@ describe('Cursor Deployment Integration', () => {
       const fileUpdates = await deployerService.aggregateStandardsDeployments(
         standardVersions,
         gitRepo,
+        [defaultTarget],
         ['cursor'],
       );
 
@@ -321,10 +342,19 @@ describe('Cursor Deployment Integration', () => {
         },
       ];
 
+      // Create a default target for testing
+      const defaultTarget = {
+        id: createTargetId('default-target-id'),
+        name: 'Default',
+        path: '/',
+        gitRepoId: gitRepo.id,
+      };
+
       // Deploy recipes
       const recipeUpdates = await deployerService.aggregateRecipeDeployments(
         recipeVersions,
         gitRepo,
+        [defaultTarget],
         ['cursor'],
       );
 
@@ -333,6 +363,7 @@ describe('Cursor Deployment Integration', () => {
         await deployerService.aggregateStandardsDeployments(
           standardVersions,
           gitRepo,
+          [defaultTarget],
           ['cursor'],
         );
 
@@ -352,37 +383,45 @@ describe('Cursor Deployment Integration', () => {
   });
 
   describe('when .cursor/rules/packmind/recipes-index.mdc already exists', () => {
-    const existingContent =
-      '---\n' +
-      'alwaysApply: true\n' +
-      '---\n' +
-      '\n' +
-      '# Packmind Recipes\n' +
-      '\n' +
-      '🚨 **MANDATORY STEP** 🚨\n' +
-      '\n' +
-      'Before writing, editing, or generating ANY code:\n' +
-      '\n' +
-      '**ALWAYS READ**: the available recipes below to see what recipes are available\n' +
-      '\n' +
-      '## Recipe Usage Rules:\n' +
-      '- **MANDATORY**: Always check the recipes list first\n' +
-      '- **CONDITIONAL**: Only read/use individual recipes if they are relevant to your task\n' +
-      '- **OPTIONAL**: If no recipes are relevant, proceed without using any\n' +
-      '\n' +
-      '## Recipe Usage Tracking:\n' +
-      "When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you MUST call the 'packmind_notify_recipe_usage' MCP tool with:\n" +
-      '* Recipe slugs array (e.g., ["recipe-name"] from "recipe-name.md")\n' +
-      '* aiAgent: "Cursor"\n' +
-      '* gitRepo: "test-owner/test-repo"\n' +
-      '\n' +
-      '**Remember: Always check the recipes list first, but only use recipes that actually apply to your specific task.**`\n' +
-      '\n' +
-      '## Available Recipes\n' +
-      '\n' +
-      '- [Test Recipe for Cursor](.packmind/recipes/test-recipe-for-cursor.md) : Test recipe for deployment';
+    let defaultTarget: Target;
+    const existingContent = `---
+alwaysApply: true
+---
+
+# Packmind Recipes
+
+🚨 **MANDATORY STEP** 🚨
+
+Before writing, editing, or generating ANY code:
+
+**ALWAYS READ**: the available recipes below to see what recipes are available
+
+## Recipe Usage Rules:
+- **MANDATORY**: Always check the recipes list first
+- **CONDITIONAL**: Only read/use individual recipes if they are relevant to your task
+- **OPTIONAL**: If no recipes are relevant, proceed without using any
+
+## Recipe Usage Tracking:
+When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you MUST call the 'packmind_notify_recipe_usage' MCP tool with:
+* Recipe slugs array (e.g., ["recipe-name"] from "recipe-name.md")
+* aiAgent: "Cursor"
+* gitRepo: "test-owner/test-repo"
+* target: "/"
+
+**Remember: Always check the recipes list first, but only use recipes that actually apply to your specific task.**\`
+
+## Available recipes
+
+- [Test Recipe for Cursor](.packmind/recipes/test-recipe-for-cursor.md) : Test recipe for deployment`;
 
     beforeEach(() => {
+      // Create a default target for testing
+      defaultTarget = {
+        id: createTargetId('default-target-id'),
+        name: 'Default',
+        path: '/',
+        gitRepoId: gitRepo.id,
+      };
       // Mock GitHexa.getFileFromRepo to return existing content
       const existingFile = {
         content: existingContent,
@@ -412,6 +451,7 @@ describe('Cursor Deployment Integration', () => {
       const fileUpdates = await deployerService.aggregateRecipeDeployments(
         recipeVersions,
         gitRepo,
+        [defaultTarget],
         ['cursor'],
       );
 
@@ -422,16 +462,27 @@ describe('Cursor Deployment Integration', () => {
   });
 
   describe('unit tests for CursorDeployer', () => {
+    let defaultTarget: Target;
     let cursorDeployer: CursorDeployer;
 
     beforeEach(() => {
-      cursorDeployer = new CursorDeployer(gitHexa);
+      defaultTarget = {
+        id: createTargetId('default-target-id'),
+        name: 'Default',
+        path: '/',
+        gitRepoId: gitRepo.id,
+      };
+      cursorDeployer = new CursorDeployer(standardsHexa, gitHexa);
     });
 
     it('handles empty recipe list gracefully', async () => {
       jest.spyOn(gitHexa, 'getFileFromRepo').mockResolvedValue(null);
 
-      const fileUpdates = await cursorDeployer.deployRecipes([], gitRepo);
+      const fileUpdates = await cursorDeployer.deployRecipes(
+        [],
+        gitRepo,
+        defaultTarget,
+      );
 
       expect(fileUpdates.createOrUpdate).toHaveLength(1);
       expect(fileUpdates.delete).toHaveLength(0);
@@ -446,7 +497,11 @@ describe('Cursor Deployment Integration', () => {
     });
 
     it('handles empty standards list gracefully', async () => {
-      const fileUpdates = await cursorDeployer.deployStandards([], gitRepo);
+      const fileUpdates = await cursorDeployer.deployStandards(
+        [],
+        gitRepo,
+        defaultTarget,
+      );
 
       expect(fileUpdates.createOrUpdate).toHaveLength(0);
       expect(fileUpdates.delete).toHaveLength(0);
@@ -473,6 +528,7 @@ describe('Cursor Deployment Integration', () => {
       const fileUpdates = await cursorDeployer.deployRecipes(
         recipeVersions,
         gitRepo,
+        defaultTarget,
       );
 
       // Should still work despite the error, treating it as if file doesn't exist
@@ -531,6 +587,7 @@ describe('Cursor Deployment Integration', () => {
       const fileUpdates = await cursorDeployer.deployStandards(
         standardVersions,
         gitRepo,
+        defaultTarget,
       );
 
       expect(fileUpdates.createOrUpdate).toHaveLength(2);

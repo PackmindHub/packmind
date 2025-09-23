@@ -62,6 +62,13 @@ export const SidebarNavigation: React.FunctionComponent<
         title="Deployments"
         navEntries={[
           <SidebarNavigationLink
+            key="targets"
+            url={
+              organization ? `/org/${organization.slug}/targets` : '/targets'
+            }
+            label="Targets"
+          />,
+          <SidebarNavigationLink
             key="overview"
             url={
               organization
@@ -71,11 +78,6 @@ export const SidebarNavigation: React.FunctionComponent<
             label="Overview"
           />,
           <SidebarNavigationLink
-            key="git"
-            url={organization ? `/org/${organization.slug}/git` : '/git'}
-            label="Git"
-          />,
-          <SidebarNavigationLink
             key="analytics"
             url={
               organization
@@ -83,6 +85,17 @@ export const SidebarNavigation: React.FunctionComponent<
                 : '/analytics'
             }
             label="Analytics"
+          />,
+        ]}
+      />
+      <PMVerticalNavSection
+        navEntries={[
+          <SidebarNavigationLink
+            key="settings"
+            url={
+              organization ? `/org/${organization.slug}/settings` : '/settings'
+            }
+            label="Settings"
           />,
         ]}
       />

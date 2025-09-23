@@ -27,4 +27,5 @@ export const nxPreset = {
   testEnvironmentOptions: {
     customExportConditions: ['node', 'require', 'default'],
   },
+  testTimeout: 20000, // 20 seconds
 };

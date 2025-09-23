@@ -44,20 +44,6 @@ export const RecipeDetails = ({ id, orgSlug, orgName }: RecipeDetailsProps) => {
   } | null>(null);
   const { data: recipe, isLoading, isError, error } = useGetRecipeByIdQuery(id);
   const deleteMutation = useDeleteRecipeMutation();
-  const { deployRecipe, isDeploying } = useDeployRecipe();
-
-  const handleDeploy = async (repositoryIds: GitRepoId[]) => {
-    if (!recipe) return;
-
-    await deployRecipe(
-      {
-        id: recipe.id,
-        version: recipe.version,
-        name: recipe.name,
-      },
-      repositoryIds,
-    );
-  };
 
   const handleDeleteRecipe = async () => {
     if (!recipe) return;
@@ -91,7 +77,6 @@ export const RecipeDetails = ({ id, orgSlug, orgName }: RecipeDetailsProps) => {
         title="Loading Recipe..."
         subtitle="Please wait while we fetch the recipe details"
         breadcrumbComponent={<AutobreadCrumb />}
-        LinkComponent={Link}
       >
         <PMBox>
           <PMText>Loading recipe details...</PMText>
@@ -152,9 +137,8 @@ export const RecipeDetails = ({ id, orgSlug, orgName }: RecipeDetailsProps) => {
         <PMHStack gap={2}>
           <DeployRecipeButton
             label={`Deploy v${recipe.version}`}
-            onDeploy={handleDeploy}
-            loading={isDeploying}
             disabled={!recipe}
+            selectedRecipes={[recipe]}
           />
           <PMButton variant="outline" onClick={() => setIsEditing(true)}>
             Edit

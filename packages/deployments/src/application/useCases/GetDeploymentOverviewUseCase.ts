@@ -1,5 +1,9 @@
-import { PackmindLogger, LogLevel, WithTimestamps } from '@packmind/shared';
-import { RecipesHexa } from '@packmind/recipes';
+import {
+  PackmindLogger,
+  LogLevel,
+  WithTimestamps,
+  IRecipesPort,
+} from '@packmind/shared';
 import { GitHexa } from '@packmind/git';
 import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
 import {
@@ -8,20 +12,28 @@ import {
   IGetDeploymentOverview,
   RecipeDeploymentStatus,
   RepositoryDeploymentStatus,
+  TargetDeploymentStatus,
+  TargetDeploymentInfo,
+  DeployedRecipeTargetInfo,
   Recipe,
   RecipeId,
   RecipeVersion,
+  RecipesDeployment,
   createRecipeVersionId,
   GitRepo,
   GitRepoId,
+  DistributionStatus,
+  TargetWithRepository,
 } from '@packmind/shared';
 import assert from 'assert';
+import { GetTargetsByOrganizationUseCase } from './GetTargetsByOrganizationUseCase';
 
 export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
   constructor(
     private readonly deploymentsRepository: IRecipesDeploymentRepository,
-    private readonly recipesHexa: RecipesHexa,
+    private readonly recipesPort: IRecipesPort,
     private readonly gitHexa: GitHexa,
+    private readonly getTargetsByOrganizationUseCase: GetTargetsByOrganizationUseCase,
     private readonly logger: PackmindLogger = new PackmindLogger(
       'GetDeploymentOverviewUseCase',
       LogLevel.INFO,
@@ -37,24 +49,30 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
     this.logger.info('Fetching deployment overview', { organizationId });
 
     try {
-      // Fetch all required data
+      // Fetch all required data - only successful deployments for overview
       const [deployments, recipes, gitRepos] = await Promise.all([
-        this.deploymentsRepository.listByOrganizationId(organizationId),
-        this.recipesHexa.listRecipesByOrganization(organizationId),
+        this.deploymentsRepository.listByOrganizationIdWithStatus(
+          organizationId,
+          DistributionStatus.success,
+        ),
+        this.recipesPort.listRecipesByOrganization(organizationId),
         this.gitHexa.getOrganizationRepositories(organizationId),
       ]);
 
-      // Build a map of latest recipe versions per git repository
+      // Build a map of latest recipe versions per target (target-centric approach)
       const latestRecipeVersionsMap = new Map<
         GitRepoId,
         WithTimestamps<RecipeVersion>[]
       >();
 
-      // Process deployments to extract latest recipe versions per repository
+      // Process deployments to extract latest recipe versions per target's repository
       for (const deployment of deployments) {
-        for (const gitRepo of deployment.gitRepos) {
-          const existingVersions =
-            latestRecipeVersionsMap.get(gitRepo.id) || [];
+        // Handle both old array-based and new single-reference models
+        const targets = deployment.target ? [deployment.target] : [];
+
+        for (const target of targets) {
+          const gitRepoId = target.gitRepoId;
+          const existingVersions = latestRecipeVersionsMap.get(gitRepoId) || [];
 
           // Convert deployment recipe versions to WithTimestamps format
           const timestampedVersions = deployment.recipeVersions.map((rv) => ({
@@ -68,16 +86,9 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
             existingVersions,
             timestampedVersions,
           );
-          latestRecipeVersionsMap.set(gitRepo.id, mergedVersions);
+          latestRecipeVersionsMap.set(gitRepoId, mergedVersions);
         }
       }
-
-      this.logger.debug('Data fetched for deployment overview', {
-        deploymentsCount: deployments.length,
-        recipesCount: recipes.length,
-        gitReposCount: gitRepos.length,
-        latestVersionsMapSize: latestRecipeVersionsMap.size,
-      });
 
       // Transform data for repository-centric view
       const repositories = await this.getRepositories(
@@ -91,29 +102,39 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
         gitRepos,
         recipes,
         latestRecipeVersionsMap,
+        deployments,
+      );
+
+      // Get all targets for the organization (including those with no deployments)
+      const allTargetsWithRepository =
+        await this.getTargetsByOrganizationUseCase.execute({
+          organizationId,
+          userId: command.userId,
+        });
+
+      // Transform data for target-centric view
+      const targets = await this.getTargetDeploymentStatus(
+        deployments,
+        gitRepos,
+        recipes,
+        allTargetsWithRepository,
       );
 
       // Log undeployed recipes
       const undeployedRecipes = recipeDeployments.filter(
         (r) => r.deployments.length === 0,
       );
-      this.logger.debug('Undeployed recipes in result', {
-        count: undeployedRecipes.length,
-        undeployedRecipes: undeployedRecipes.map((r) => ({
-          id: r.recipe.id,
-          name: r.recipe.name,
-          deploymentsCount: r.deployments.length,
-        })),
-      });
 
       this.logger.info('Deployment overview generated successfully', {
         repositoriesCount: repositories.length,
+        targetsCount: targets.length,
         recipesCount: recipeDeployments.length,
         undeployedRecipesCount: undeployedRecipes.length,
       });
 
       return {
         repositories,
+        targets,
         recipes: recipeDeployments,
       };
     } catch (error) {
@@ -212,6 +233,7 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
     gitRepos: GitRepo[],
     recipes: Recipe[],
     latestRecipeVersionsMap: Map<GitRepoId, WithTimestamps<RecipeVersion>[]>,
+    allDeployments: RecipesDeployment[],
   ): Promise<RecipeDeploymentStatus[]> {
     return recipes.map((recipe) => {
       const deployments = [];
@@ -252,13 +274,99 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
 
       const hasOutdatedDeployments = deployments.some((d) => !d.isUpToDate);
 
+      // Build target-based deployments for this recipe
+      const targetDeployments = this.buildTargetDeploymentsForRecipe(
+        recipe,
+        allDeployments,
+        gitRepos,
+      );
+
       return {
         recipe,
         latestVersion,
         deployments,
+        targetDeployments,
         hasOutdatedDeployments,
       };
     });
+  }
+
+  public buildTargetDeploymentsForRecipe(
+    recipe: Recipe,
+    allDeployments: RecipesDeployment[],
+    gitRepos: GitRepo[],
+  ): TargetDeploymentInfo[] {
+    // Filter deployments for this specific recipe
+    const recipeDeployments = allDeployments.filter((deployment) =>
+      deployment.recipeVersions.some((rv) => rv.recipeId === recipe.id),
+    );
+
+    // Group by target
+    const targetDeploymentMap = new Map<string, RecipesDeployment[]>();
+
+    for (const deployment of recipeDeployments) {
+      if (deployment.target) {
+        const targetId = deployment.target.id;
+        if (!targetDeploymentMap.has(targetId)) {
+          targetDeploymentMap.set(targetId, []);
+        }
+        const targetDeployments = targetDeploymentMap.get(targetId);
+        if (targetDeployments) {
+          targetDeployments.push(deployment);
+        }
+      }
+    }
+
+    const targetDeployments: TargetDeploymentInfo[] = [];
+
+    for (const [, deployments] of targetDeploymentMap.entries()) {
+      const target = deployments[0]?.target;
+      if (!target) continue;
+      const gitRepo = gitRepos.find((repo) => repo.id === target.gitRepoId);
+
+      if (!gitRepo) continue;
+
+      // Find the latest deployed version for this recipe on this target
+      let latestDeployedVersion: RecipeVersion | null = null;
+      let latestDeploymentDate = '';
+
+      for (const deployment of deployments) {
+        for (const recipeVersion of deployment.recipeVersions) {
+          if (recipeVersion.recipeId === recipe.id) {
+            if (
+              !latestDeployedVersion ||
+              recipeVersion.version > latestDeployedVersion.version
+            ) {
+              latestDeployedVersion = recipeVersion;
+              latestDeploymentDate = deployment.createdAt;
+            }
+          }
+        }
+      }
+
+      if (latestDeployedVersion) {
+        const latestVersion: RecipeVersion = {
+          id: createRecipeVersionId(recipe.id),
+          recipeId: recipe.id,
+          name: recipe.name,
+          slug: recipe.slug,
+          version: recipe.version,
+          content: recipe.content,
+          gitCommit: recipe.gitCommit,
+          userId: recipe.userId,
+        };
+
+        targetDeployments.push({
+          target,
+          gitRepo,
+          deployedVersion: latestDeployedVersion,
+          isUpToDate: latestDeployedVersion.version >= latestVersion.version,
+          deploymentDate: latestDeploymentDate,
+        });
+      }
+    }
+
+    return targetDeployments;
   }
 
   private getLatestRecipe(recipeId: RecipeId, recipes: Recipe[]) {
@@ -273,5 +381,126 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
       );
     assert(latestRecipeVersion);
     return latestRecipeVersion;
+  }
+
+  public async getTargetDeploymentStatus(
+    deployments: RecipesDeployment[],
+    gitRepos: GitRepo[],
+    recipes: Recipe[],
+    allTargetsWithRepository?: TargetWithRepository[], // All targets including those with no deployments
+  ): Promise<TargetDeploymentStatus[]> {
+    // Group deployments by target
+    const targetMap = new Map<string, RecipesDeployment[]>();
+
+    for (const deployment of deployments) {
+      if (deployment.target) {
+        const targetId = deployment.target.id;
+        if (!targetMap.has(targetId)) {
+          targetMap.set(targetId, []);
+        }
+        const targetDeployments = targetMap.get(targetId);
+        if (targetDeployments) {
+          targetDeployments.push(deployment);
+        }
+      }
+    }
+
+    // Build target deployment status for each target (both with and without deployments)
+    const targetStatuses: TargetDeploymentStatus[] = [];
+
+    // If we have allTargetsWithRepository, include all targets (even those without deployments)
+    const targetsToProcess = allTargetsWithRepository || [];
+
+    // Add targets from deployments that might not be in allTargetsWithRepository (fallback)
+    if (!allTargetsWithRepository) {
+      for (const [, targetDeployments] of targetMap.entries()) {
+        const target = targetDeployments[0]?.target;
+        if (target) {
+          const gitRepo = gitRepos.find((repo) => repo.id === target.gitRepoId);
+          if (gitRepo) {
+            targetsToProcess.push({
+              ...target,
+              repository: {
+                owner: gitRepo.owner,
+                repo: gitRepo.repo,
+                branch: gitRepo.branch,
+              },
+            });
+          }
+        }
+      }
+    }
+
+    for (const targetWithRepo of targetsToProcess) {
+      const target = targetWithRepo;
+      const gitRepo = gitRepos.find((repo) => repo.id === target.gitRepoId);
+
+      if (!gitRepo) continue;
+
+      const targetDeployments = targetMap.get(target.id) || []; // Empty array for targets with no deployments
+
+      // Get deployed recipes for this target
+      const deployedRecipes: DeployedRecipeTargetInfo[] = [];
+      let hasOutdatedRecipes = false;
+
+      // Process each recipe deployed to this target
+      const recipeVersionsMap = new Map<
+        RecipeId,
+        RecipeVersion & { deploymentDate: string }
+      >();
+
+      for (const deployment of targetDeployments) {
+        // All deployments are successful since we filtered at query level
+        for (const recipeVersion of deployment.recipeVersions) {
+          const existing = recipeVersionsMap.get(recipeVersion.recipeId);
+          if (!existing || recipeVersion.version > existing.version) {
+            recipeVersionsMap.set(recipeVersion.recipeId, {
+              ...recipeVersion,
+              deploymentDate: deployment.createdAt,
+            });
+          }
+        }
+      }
+
+      // Convert to DeployedRecipeTargetInfo format
+      for (const [recipeId, deployedVersion] of recipeVersionsMap.entries()) {
+        const recipe = this.getLatestRecipe(recipeId, recipes);
+
+        // Convert recipe to RecipeVersion format
+        const latestVersion: RecipeVersion = {
+          id: createRecipeVersionId(recipe.id),
+          recipeId: recipe.id,
+          name: recipe.name,
+          slug: recipe.slug,
+          version: recipe.version,
+          content: recipe.content,
+          gitCommit: recipe.gitCommit,
+          userId: recipe.userId,
+        };
+
+        const isUpToDate = deployedVersion.version >= latestVersion.version;
+
+        if (!isUpToDate) {
+          hasOutdatedRecipes = true;
+        }
+
+        deployedRecipes.push({
+          recipe,
+          deployedVersion,
+          latestVersion,
+          isUpToDate,
+          deploymentDate: deployedVersion.deploymentDate,
+        });
+      }
+
+      targetStatuses.push({
+        target,
+        gitRepo,
+        deployedRecipes,
+        hasOutdatedRecipes,
+      });
+    }
+
+    return targetStatuses;
   }
 }

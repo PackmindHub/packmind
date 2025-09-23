@@ -5,11 +5,11 @@ import {
   createStandardVersionId,
   createOrganizationId,
   createUserId,
-  createGitCommitId,
   createGitRepoId,
-  createGitProviderId,
   createStandardsDeploymentId,
   StandardsDeployment,
+  createTargetId,
+  DistributionStatus,
 } from '@packmind/shared';
 import { stubLogger } from '@packmind/shared/test';
 
@@ -21,7 +21,6 @@ describe('ListDeploymentsByStandardUseCase', () => {
   const mockStandardId = createStandardId('standard-123');
   const mockOrganizationId = createOrganizationId('org-123');
   const mockUserId = createUserId('user-123');
-  const mockGitRepoId = createGitRepoId('repo-123');
 
   beforeEach(() => {
     mockStandardsDeploymentRepository = {
@@ -29,10 +28,13 @@ describe('ListDeploymentsByStandardUseCase', () => {
       listByOrganizationId: jest.fn(),
       listByOrganizationIdAndGitRepos: jest.fn(),
       findActiveStandardVersionsByRepository: jest.fn(),
+      findActiveStandardVersionsByTarget: jest.fn(),
       add: jest.fn(),
       findById: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
+      listByTargetIds: jest.fn(),
+      listByOrganizationIdWithStatus: jest.fn(),
     } as jest.Mocked<IStandardsDeploymentRepository>;
 
     useCase = new ListDeploymentsByStandardUseCase(
@@ -57,27 +59,16 @@ describe('ListDeploymentsByStandardUseCase', () => {
             rules: [],
           },
         ],
-        gitRepos: [
-          {
-            id: mockGitRepoId,
-            owner: 'test-owner',
-            repo: 'test-repo',
-            branch: 'main',
-            providerId: createGitProviderId('provider-123'),
-          },
-        ],
-        gitCommits: [
-          {
-            id: createGitCommitId('commit-1'),
-            sha: 'abc123',
-            message: 'Test commit',
-            author: 'test-author',
-            url: 'https://github.com/test/commit/abc123',
-          },
-        ],
         createdAt: '2024-01-01T00:00:00Z',
         authorId: mockUserId,
         organizationId: mockOrganizationId,
+        target: {
+          id: createTargetId('deployment-1'),
+          name: '',
+          path: '',
+          gitRepoId: createGitRepoId('repo-123'),
+        },
+        status: DistributionStatus.success,
       },
     ];
 
@@ -99,15 +90,14 @@ describe('ListDeploymentsByStandardUseCase', () => {
     expect(result).toHaveLength(1);
     expect(result[0]).toMatchObject({
       standardVersions: mockStandardsDeployments[0].standardVersions,
-      gitRepos: mockStandardsDeployments[0].gitRepos,
-      gitCommits: mockStandardsDeployments[0].gitCommits,
+      target: mockStandardsDeployments[0].target,
+      status: mockStandardsDeployments[0].status,
       createdAt: mockStandardsDeployments[0].createdAt,
       authorId: mockStandardsDeployments[0].authorId,
       organizationId: mockStandardsDeployments[0].organizationId,
     });
-    // Verify that a new StandardDeploymentId is generated
-    expect(result[0].id).toBeDefined();
-    expect(typeof result[0].id).toBe('string');
+    // Verify that the deployment ID is preserved (no longer generating new IDs)
+    expect(result[0].id).toBe(mockStandardsDeployments[0].id);
   });
 
   describe('when no deployments exist', () => {
@@ -146,27 +136,16 @@ describe('ListDeploymentsByStandardUseCase', () => {
               rules: [],
             },
           ],
-          gitRepos: [
-            {
-              id: mockGitRepoId,
-              owner: 'test-owner',
-              repo: 'test-repo',
-              branch: 'main',
-              providerId: createGitProviderId('provider-123'),
-            },
-          ],
-          gitCommits: [
-            {
-              id: createGitCommitId('commit-1'),
-              sha: 'abc123',
-              message: 'Test commit',
-              author: 'test-author',
-              url: 'https://github.com/test/commit/abc123',
-            },
-          ],
           createdAt: '2024-01-01T00:00:00Z',
           authorId: mockUserId,
           organizationId: mockOrganizationId,
+          target: {
+            id: createTargetId('deployment-1'),
+            name: '',
+            path: '',
+            gitRepoId: createGitRepoId('repo-123'),
+          },
+          status: DistributionStatus.success,
         },
         {
           id: createStandardsDeploymentId('deployment-2'),
@@ -182,27 +161,16 @@ describe('ListDeploymentsByStandardUseCase', () => {
               rules: [],
             },
           ],
-          gitRepos: [
-            {
-              id: createGitRepoId('repo-456'),
-              owner: 'test-owner',
-              repo: 'test-repo-2',
-              branch: 'main',
-              providerId: createGitProviderId('provider-123'),
-            },
-          ],
-          gitCommits: [
-            {
-              id: createGitCommitId('commit-2'),
-              sha: 'def456',
-              message: 'Test commit 2',
-              author: 'test-author',
-              url: 'https://github.com/test/commit/def456',
-            },
-          ],
           createdAt: '2024-01-02T00:00:00Z',
           authorId: mockUserId,
           organizationId: mockOrganizationId,
+          target: {
+            id: createTargetId('deployment-1'),
+            name: '',
+            path: '',
+            gitRepoId: createGitRepoId('repo-123'),
+          },
+          status: DistributionStatus.success,
         },
       ];
 

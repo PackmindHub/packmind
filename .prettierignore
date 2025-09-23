@@ -12,4 +12,7 @@
 .junie
 .cursor
 CLAUDE.md
+AGENTS.md
+**/AGENTS.md
 .docusaurus
+dockerfile/helm-chart/**

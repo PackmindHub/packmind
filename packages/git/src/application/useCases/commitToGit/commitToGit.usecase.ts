@@ -1,20 +1,17 @@
 import { GitRepo } from '../../../domain/entities/GitRepo';
 import { GitCommit } from '../../../domain/entities/GitCommit';
-import {
-  GitProviderVendors,
-  GitProvider,
-} from '../../../domain/entities/GitProvider';
+import { GitProvider } from '../../../domain/entities/GitProvider';
 import { IGitRepo } from '../../../domain/repositories/IGitRepo';
+import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
 import { GitCommitService } from '../../services/GitCommitService';
 import { GitProviderService } from '../../GitProviderService';
-import { GithubRepository } from '../../../infra/repositories/github/GithubRepository';
-import { GitlabRepository } from '../../../infra/repositories/gitlab/GitlabRepository';
 import { PackmindLogger } from '@packmind/shared';
 
 export class CommitToGit {
   constructor(
     private readonly gitCommitService: GitCommitService,
     private readonly gitProviderService: GitProviderService,
+    private readonly gitRepoFactory: IGitRepoFactory,
     private readonly logger: PackmindLogger,
   ) {}
 
@@ -73,38 +70,6 @@ export class CommitToGit {
     repo: GitRepo,
     provider: GitProvider,
   ): IGitRepo {
-    switch (provider.source) {
-      case GitProviderVendors.github:
-        // We've already validated that provider.token exists
-        if (!provider.token) {
-          throw new Error('Git provider token not configured');
-        }
-        return new GithubRepository(
-          provider.token,
-          {
-            owner: repo.owner,
-            repo: repo.repo,
-            branch: repo.branch,
-          },
-          this.logger,
-        );
-      case GitProviderVendors.gitlab:
-        // We've already validated that provider.token exists
-        if (!provider.token) {
-          throw new Error('Git provider token not configured');
-        }
-        return new GitlabRepository(
-          provider.token,
-          {
-            owner: repo.owner,
-            repo: repo.repo,
-            branch: repo.branch,
-          },
-          this.logger,
-          provider.url || undefined,
-        );
-      default:
-        throw new Error(`Unsupported git provider source: ${provider.source}`);
-    }
+    return this.gitRepoFactory.createGitRepo(repo, provider);
   }
 }

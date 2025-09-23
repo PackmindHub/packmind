@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { recipesGateway } from '../../recipes/api/gateways';
-import { GitRepoId } from '@packmind/git/types';
 import { RecipeId, RecipeVersionId } from '@packmind/recipes/types';
+import { TargetId } from '@packmind/shared';
 import { useDeployRecipesMutation } from '../api/queries/DeploymentsQueries';
 
 interface DeployParams {
@@ -40,8 +40,8 @@ const getRecipeVersionId = async (
 export const useDeployRecipe = () => {
   const publishMutation = useDeployRecipesMutation();
 
-  const deployToRepository = useCallback(
-    async (params: DeployParams, gitRepoIds: GitRepoId[]) => {
+  const deployToTargets = useCallback(
+    async (params: DeployParams, targetIds: TargetId[]) => {
       // Get the RecipeVersionId for this recipe and version
       const recipeVersionId = await getRecipeVersionId(
         params.id,
@@ -55,26 +55,28 @@ export const useDeployRecipe = () => {
       }
 
       // Deploy the recipe using the RecipeVersionId
-      await publishMutation.mutateAsync({
+      const deployments = await publishMutation.mutateAsync({
         recipeVersionIds: [recipeVersionId],
-        gitRepoIds: gitRepoIds,
+        targetIds: targetIds,
       });
 
       const recipeName = params.name || params.id;
       console.log(
-        `Recipe ${recipeName} v${params.version} deployed to ${gitRepoIds.length} repositories successfully`,
+        `Recipe ${recipeName} v${params.version} deployed to ${targetIds.length} targets successfully`,
       );
+
+      return deployments;
     },
     [publishMutation],
   );
 
   const deploySingle = useCallback(
-    async (params: DeployParams, repositoryIds: GitRepoId[]) => {
+    async (params: DeployParams, targetIds: TargetId[]) => {
       try {
-        if (!repositoryIds.length) {
-          throw new Error('Repository IDs array cannot be empty');
+        if (!targetIds.length) {
+          throw new Error('Target IDs array cannot be empty');
         } else {
-          await deployToRepository(params, repositoryIds);
+          return await deployToTargets(params, targetIds);
         }
       } catch (error) {
         const recipeName = params.name || params.id;
@@ -85,19 +87,16 @@ export const useDeployRecipe = () => {
         throw error;
       }
     },
-    [deployToRepository],
+    [deployToTargets],
   );
 
   const deployBatch = useCallback(
-    async (batchParams: BatchDeployParams, gitRepoIds: GitRepoId[]) => {
+    async (batchParams: BatchDeployParams, targetIds: TargetId[]) => {
       try {
-        if (!gitRepoIds.length) {
-          throw new Error('Repository IDs array cannot be empty');
+        if (!targetIds.length) {
+          throw new Error('Target IDs array cannot be empty');
         } else {
-          console.log(
-            'Deploying batch of recipes to repositories:',
-            gitRepoIds,
-          );
+          console.log('Deploying batch of recipes to targets:', targetIds);
 
           // Get RecipeVersionIds for all recipes in the batch
           const recipeVersionIdsPromises = batchParams.recipes.map(
@@ -129,13 +128,13 @@ export const useDeployRecipe = () => {
             (result) => result.recipeVersionId as RecipeVersionId,
           );
 
-          await publishMutation.mutateAsync({
+          const deployments = await publishMutation.mutateAsync({
             recipeVersionIds,
-            gitRepoIds,
+            targetIds,
           });
 
           console.log(
-            `${validResults.length} recipes deployed to ${gitRepoIds.length} repositories successfully`,
+            `${validResults.length} recipes deployed to ${targetIds.length} targets successfully`,
           );
 
           // Log any skipped recipes
@@ -145,6 +144,8 @@ export const useDeployRecipe = () => {
               `${skippedCount} recipes were skipped due to missing version information`,
             );
           }
+
+          return deployments;
         }
       } catch (error) {
         console.error(`Failed to deploy selected recipes:`, error);

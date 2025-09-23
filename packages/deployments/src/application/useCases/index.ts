@@ -3,6 +3,7 @@ import {
   FindDeployedStandardByRepositoryResponse,
   GetStandardDeploymentOverviewCommand,
   IDeploymentPort,
+  IRecipesPort,
   ListDeploymentsByRecipeCommand,
   ListDeploymentsByStandardCommand,
   PublishRecipesCommand,
@@ -10,10 +11,19 @@ import {
   RecipesDeployment,
   StandardDeploymentOverview,
   StandardsDeployment,
+  Target,
+  TargetWithRepository,
+  AddTargetCommand,
+  UpdateTargetCommand,
+  DeleteTargetCommand,
+  DeleteTargetResponse,
+  GetTargetsByRepositoryCommand,
+  GetTargetsByOrganizationCommand,
 } from '@packmind/shared';
 import { FindDeployedStandardByRepositoryUseCase } from './FindDeployedStandardByRepositoryUseCase';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
 import { DeploymentsHexaFactory } from '../../DeploymentsHexaFactory';
+import { IDeploymentsServices } from '../IDeploymentsServices';
 import {
   DeploymentOverview,
   GetDeploymentOverviewCommand,
@@ -21,7 +31,6 @@ import {
 import { GetDeploymentOverviewUseCase } from './GetDeploymentOverviewUseCase';
 import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
 import { GitHexa } from '@packmind/git';
-import { RecipesHexa } from '@packmind/recipes';
 import { PublishRecipesUseCase } from './PublishRecipesUseCase';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { PublishStandardsUseCase } from './PublishStandardsUseCase';
@@ -29,19 +38,25 @@ import { StandardsHexa } from '@packmind/standards';
 import { ListDeploymentsByRecipeUseCase } from './ListDeploymentsByRecipeUseCase';
 import { ListDeploymentsByStandardUseCase } from './ListDeploymentsByStandardUseCase';
 import { GetStandardDeploymentOverviewUseCase } from './GetStandardDeploymentOverviewUseCase';
+import { AddTargetUseCase } from './AddTargetUseCase';
+import { GetTargetsByRepositoryUseCase } from './GetTargetsByRepositoryUseCase';
+import { GetTargetsByOrganizationUseCase } from './GetTargetsByOrganizationUseCase';
+import { UpdateTargetUseCase } from './UpdateTargetUseCase';
+import { DeleteTargetUseCase } from './DeleteTargetUseCase';
 
 export class DeploymentsUseCases implements IDeploymentPort {
   private readonly standardDeploymentRepository: IStandardsDeploymentRepository;
   private readonly recipesDeploymentRepository: IRecipesDeploymentRepository;
-  private gitHexa: GitHexa;
-  private recipesHexa: RecipesHexa;
-  private codingAgentHexa: CodingAgentHexa;
-  private standardsHexa: StandardsHexa;
+  private readonly deploymentsServices: IDeploymentsServices;
+  private readonly gitHexa: GitHexa;
+  private recipesPort?: IRecipesPort;
+  private readonly codingAgentHexa: CodingAgentHexa;
+  private readonly standardsHexa: StandardsHexa;
 
   constructor(
     deploymentsHexa: DeploymentsHexaFactory,
     gitHexa: GitHexa,
-    recipesHexa: RecipesHexa,
+    recipesPort: IRecipesPort | undefined,
     codingAgentHexa: CodingAgentHexa,
     standardsHexa: StandardsHexa,
   ) {
@@ -49,12 +64,19 @@ export class DeploymentsUseCases implements IDeploymentPort {
       deploymentsHexa.repositories.standardsDeployment;
     this.recipesDeploymentRepository =
       deploymentsHexa.repositories.recipesDeployment;
+    this.deploymentsServices = deploymentsHexa.services.deployments;
 
-    //TODO: refactor using adapter pattern
     this.gitHexa = gitHexa;
-    this.recipesHexa = recipesHexa;
+    this.recipesPort = recipesPort; // Optional - using port pattern to avoid circular dependency
     this.codingAgentHexa = codingAgentHexa;
     this.standardsHexa = standardsHexa;
+  }
+
+  /**
+   * Update the recipes port for use cases that depend on it
+   */
+  public updateRecipesPort(recipesPort: IRecipesPort): void {
+    this.recipesPort = recipesPort;
   }
 
   listDeploymentsByRecipe(
@@ -68,22 +90,27 @@ export class DeploymentsUseCases implements IDeploymentPort {
 
   publishStandards(
     command: PublishStandardsCommand,
-  ): Promise<StandardsDeployment> {
+  ): Promise<StandardsDeployment[]> {
     const useCase = new PublishStandardsUseCase(
       this.standardsHexa,
       this.gitHexa,
       this.codingAgentHexa,
       this.standardDeploymentRepository,
+      this.deploymentsServices.getTargetService(),
     );
     return useCase.execute(command);
   }
 
   publishRecipes(command: PublishRecipesCommand): Promise<RecipesDeployment[]> {
+    if (!this.recipesPort) {
+      throw new Error('RecipesPort not available - cannot publish recipes');
+    }
     const useCase = new PublishRecipesUseCase(
       this.recipesDeploymentRepository,
       this.gitHexa,
-      this.recipesHexa,
+      this.recipesPort,
       this.codingAgentHexa,
+      this.deploymentsServices.getTargetService(),
     );
     return useCase.execute(command);
   }
@@ -100,10 +127,21 @@ export class DeploymentsUseCases implements IDeploymentPort {
   getDeploymentOverview(
     command: GetDeploymentOverviewCommand,
   ): Promise<DeploymentOverview> {
+    if (!this.recipesPort) {
+      throw new Error(
+        'RecipesPort not available - cannot get deployment overview',
+      );
+    }
+    const getTargetsByOrganizationUseCase = new GetTargetsByOrganizationUseCase(
+      this.deploymentsServices.getTargetService(),
+      this.gitHexa,
+    );
+
     const useCase = new GetDeploymentOverviewUseCase(
       this.recipesDeploymentRepository,
-      this.recipesHexa,
+      this.recipesPort,
       this.gitHexa,
+      getTargetsByOrganizationUseCase,
     );
     return useCase.execute(command);
   }
@@ -124,6 +162,48 @@ export class DeploymentsUseCases implements IDeploymentPort {
       this.standardDeploymentRepository,
       this.standardsHexa,
       this.gitHexa,
+    );
+    return useCase.execute(command);
+  }
+
+  async addTarget(command: AddTargetCommand): Promise<Target> {
+    const useCase = new AddTargetUseCase(
+      this.deploymentsServices.getTargetService(),
+    );
+    return useCase.execute(command);
+  }
+
+  async getTargetsByRepository(
+    command: GetTargetsByRepositoryCommand,
+  ): Promise<Target[]> {
+    const useCase = new GetTargetsByRepositoryUseCase(
+      this.deploymentsServices.getTargetService(),
+    );
+    return useCase.execute(command);
+  }
+
+  async getTargetsByOrganization(
+    command: GetTargetsByOrganizationCommand,
+  ): Promise<TargetWithRepository[]> {
+    const useCase = new GetTargetsByOrganizationUseCase(
+      this.deploymentsServices.getTargetService(),
+      this.gitHexa,
+    );
+    return useCase.execute(command);
+  }
+
+  async updateTarget(command: UpdateTargetCommand): Promise<Target> {
+    const useCase = new UpdateTargetUseCase(
+      this.deploymentsServices.getTargetService(),
+    );
+    return useCase.execute(command);
+  }
+
+  async deleteTarget(
+    command: DeleteTargetCommand,
+  ): Promise<DeleteTargetResponse> {
+    const useCase = new DeleteTargetUseCase(
+      this.deploymentsServices.getTargetService(),
     );
     return useCase.execute(command);
   }

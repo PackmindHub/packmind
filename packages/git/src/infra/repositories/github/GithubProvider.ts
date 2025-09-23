@@ -3,12 +3,14 @@ import axios, { AxiosInstance } from 'axios';
 import { PackmindLogger } from '@packmind/shared';
 import { isNativeError } from 'util/types';
 
+const origin = 'GithubProvider';
+
 export class GithubProvider implements IGitProvider {
   private readonly client: AxiosInstance;
 
   constructor(
     private readonly token: string,
-    private readonly logger: PackmindLogger,
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.client = axios.create({
       baseURL: 'https://api.github.com',

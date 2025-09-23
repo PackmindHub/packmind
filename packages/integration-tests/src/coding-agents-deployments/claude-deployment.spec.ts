@@ -14,7 +14,12 @@ import {
 } from '@packmind/standards/types';
 import { GitHexa, gitSchemas } from '@packmind/git';
 import { GitRepo, GitProviderVendors } from '@packmind/git/types';
-import { HexaRegistry } from '@packmind/shared';
+import {
+  HexaRegistry,
+  IDeploymentPort,
+  Target,
+  createTargetId,
+} from '@packmind/shared';
 import { makeTestDatasource } from '@packmind/shared/test';
 import {
   CodingAgentHexaFactory,
@@ -89,6 +94,12 @@ describe('Claude Deployment Integration', () => {
     codingAgentFactory = new CodingAgentHexaFactory(registry);
     deployerService = codingAgentFactory.getDeployerService();
 
+    const mockDeploymentPort = {
+      addTarget: jest.fn(),
+    } as Partial<jest.Mocked<IDeploymentPort>> as jest.Mocked<IDeploymentPort>;
+
+    gitHexa.setDeploymentsAdapter(mockDeploymentPort);
+
     // Create test data
     organization = await accountsHexa.createOrganization({
       name: 'test organization',
@@ -147,7 +158,16 @@ describe('Claude Deployment Integration', () => {
   });
 
   describe('when CLAUDE.md does not exist', () => {
+    let defaultTarget: Target;
+
     beforeEach(() => {
+      // Create a default target for testing
+      defaultTarget = {
+        id: createTargetId('default-target-id'),
+        name: 'Default',
+        path: '/',
+        gitRepoId: gitRepo.id,
+      };
       // Mock GitHexa.getFileFromRepo to return null (file doesn't exist)
       jest.spyOn(gitHexa, 'getFileFromRepo').mockResolvedValue(null);
     });
@@ -173,6 +193,7 @@ describe('Claude Deployment Integration', () => {
       const fileUpdates = await deployerService.aggregateRecipeDeployments(
         recipeVersions,
         gitRepo,
+        [defaultTarget],
         ['claude'],
       );
 
@@ -188,7 +209,7 @@ describe('Claude Deployment Integration', () => {
         expect(claudeFile.content).toContain('# Packmind Recipes');
         expect(claudeFile.content).toContain('🚨 **MANDATORY STEP** 🚨');
         expect(claudeFile.content).toContain('ALWAYS READ');
-        expect(claudeFile.content).toContain('@.packmind/recipes-index.md');
+        expect(claudeFile.content).toContain(recipeVersions[0].name);
         expect(claudeFile.content).toContain('aiAgent: "Claude Code"');
         expect(claudeFile.content).toContain('gitRepo: "test-owner/test-repo"');
 
@@ -215,6 +236,7 @@ describe('Claude Deployment Integration', () => {
       const fileUpdates = await deployerService.aggregateStandardsDeployments(
         standardVersions,
         gitRepo,
+        [defaultTarget],
         ['claude'],
       );
 
@@ -227,11 +249,11 @@ describe('Claude Deployment Integration', () => {
 
       expect(claudeFile).toBeDefined();
       if (claudeFile) {
-        expect(claudeFile.content).toContain('## Packmind Standards');
+        expect(claudeFile.content).toContain('# Packmind Standards');
         expect(claudeFile.content).toContain(
-          'Follow the coding standards defined in',
+          'Before starting your work, make sure to review the coding standards relevant to your current task',
         );
-        expect(claudeFile.content).toContain('@.packmind/standards-index.md');
+        expect(claudeFile.content).toContain(standardVersions[0].name);
 
         // Should NOT contain recipes content yet
         expect(claudeFile.content).not.toContain('# Packmind Recipes');
@@ -270,6 +292,7 @@ describe('Claude Deployment Integration', () => {
       const recipeUpdates = await deployerService.aggregateRecipeDeployments(
         recipeVersions,
         gitRepo,
+        [defaultTarget],
         ['claude'],
       );
 
@@ -278,6 +301,7 @@ describe('Claude Deployment Integration', () => {
         await deployerService.aggregateStandardsDeployments(
           standardVersions,
           gitRepo,
+          [defaultTarget],
           ['claude'],
         );
 
@@ -300,12 +324,13 @@ describe('Claude Deployment Integration', () => {
       const finalContent = pathMap.get('CLAUDE.md');
       expect(finalContent).toBeDefined();
       if (finalContent) {
-        expect(finalContent).toContain('## Packmind Standards');
+        expect(finalContent).toContain('# Packmind Standards');
       }
     });
   });
 
   describe('when CLAUDE.md already exists with complete instructions', () => {
+    let defaultTarget: Target;
     const existingContent = `<!-- start: Packmind recipes -->
 # Packmind Recipes
 
@@ -313,7 +338,7 @@ describe('Claude Deployment Integration', () => {
 
 Before writing, editing, or generating ANY code:
 
-**ALWAYS READ**: @.packmind/recipes-index.md to see what recipes are available
+**ALWAYS READ**: the available recipes below to see what recipes are available
 
 ## Recipe Usage Rules:
 - **MANDATORY**: Always check the recipes list first
@@ -325,15 +350,36 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
 * Recipe slugs array (e.g., ["recipe-name"] from "recipe-name.md")
 * aiAgent: "Claude Code"
 * gitRepo: "test-owner/test-repo"
+* target: "/"
 
 **Remember: Always check the recipes list first, but only use recipes that actually apply to your specific task.**\`
-<!-- end: Packmind recipes -->
-## Packmind Standards
 
-Follow the coding standards defined in @.packmind/standards-index.md
-`;
+## Available recipes
+
+* [Test Recipe](.packmind/recipes/test-recipe.md): Test recipe for deployment
+<!-- end: Packmind recipes -->
+<!-- start: Packmind standards -->
+# Packmind Standards
+
+Before starting your work, make sure to review the coding standards relevant to your current task.
+
+Always consult the sections that apply to the technology, framework, or type of contribution you are working on.
+
+All rules and guidelines defined in these standards are mandatory and must be followed consistently.
+
+Failure to follow these standards may lead to inconsistencies, errors, or rework. Treat them as the source of truth for how code should be written, structured, and maintained.
+
+* [Test Standard](.packmind/standards/test-standard.md): Test standard for deployment
+<!-- end: Packmind standards -->`;
 
     beforeEach(() => {
+      // Create a default target for testing
+      defaultTarget = {
+        id: createTargetId('default-target-id'),
+        name: 'Default',
+        path: '/',
+        gitRepoId: gitRepo.id,
+      };
       // Mock GitHexa.getFileFromRepo to return existing content
       const existingFile = {
         content: existingContent,
@@ -363,6 +409,7 @@ Follow the coding standards defined in @.packmind/standards-index.md
       const fileUpdates = await deployerService.aggregateRecipeDeployments(
         recipeVersions,
         gitRepo,
+        [defaultTarget],
         ['claude'],
       );
 
@@ -389,6 +436,7 @@ Follow the coding standards defined in @.packmind/standards-index.md
       const fileUpdates = await deployerService.aggregateStandardsDeployments(
         standardVersions,
         gitRepo,
+        [defaultTarget],
         ['claude'],
       );
 
@@ -399,6 +447,7 @@ Follow the coding standards defined in @.packmind/standards-index.md
   });
 
   describe('when CLAUDE.md exists but is missing recipe instructions', () => {
+    let defaultTarget: Target;
     const partialContent = `# Some User Instructions
 
 This is user-defined content that should be preserved.
@@ -407,11 +456,28 @@ This is user-defined content that should be preserved.
 
 More user content here.
 
-## Packmind Standards
+<!-- start: Packmind standards -->
+# Packmind Standards
 
-Follow the coding standards defined in @.packmind/standards-index.md`;
+Before starting your work, make sure to review the coding standards relevant to your current task.
+
+Always consult the sections that apply to the technology, framework, or type of contribution you are working on.
+
+All rules and guidelines defined in these standards are mandatory and must be followed consistently.
+
+Failure to follow these standards may lead to inconsistencies, errors, or rework. Treat them as the source of truth for how code should be written, structured, and maintained.
+
+* [Test Standard](.packmind/standards/test-standard.md): Test standard for deployment
+<!-- end: Packmind standards -->`;
 
     beforeEach(() => {
+      // Create a default target for testing
+      defaultTarget = {
+        id: createTargetId('default-target-id'),
+        name: 'Default',
+        path: '/',
+        gitRepoId: gitRepo.id,
+      };
       // Mock GitHexa.getFileFromRepo to return partial content (missing recipe instructions)
       const existingFile = {
         content: partialContent,
@@ -441,6 +507,7 @@ Follow the coding standards defined in @.packmind/standards-index.md`;
       const fileUpdates = await deployerService.aggregateRecipeDeployments(
         recipeVersions,
         gitRepo,
+        [defaultTarget],
         ['claude'],
       );
 
@@ -459,9 +526,9 @@ Follow the coding standards defined in @.packmind/standards-index.md`;
       expect(claudeFile.content).toContain('More user content here.');
 
       // Should preserve existing standards instructions
-      expect(claudeFile.content).toContain('## Packmind Standards');
+      expect(claudeFile.content).toContain('# Packmind Standards');
       expect(claudeFile.content).toContain(
-        'Follow the coding standards defined in',
+        'Before starting your work, make sure to review the coding standards relevant to your current task',
       );
 
       // Should add recipe instructions
@@ -489,6 +556,7 @@ Follow the coding standards defined in @.packmind/standards-index.md`;
       const fileUpdates = await deployerService.aggregateStandardsDeployments(
         standardVersions,
         gitRepo,
+        [defaultTarget],
         ['claude'],
       );
 
@@ -499,6 +567,7 @@ Follow the coding standards defined in @.packmind/standards-index.md`;
   });
 
   describe('when CLAUDE.md exists but is missing standards instructions', () => {
+    let defaultTarget: Target;
     const partialContent = `<!-- start: Packmind recipes -->
 # Packmind Recipes
 
@@ -506,7 +575,7 @@ Follow the coding standards defined in @.packmind/standards-index.md`;
 
 Before writing, editing, or generating ANY code:
 
-**ALWAYS READ**: @.packmind/recipes-index.md to see what recipes are available
+**ALWAYS READ**: the available recipes below to see what recipes are available
 
 ## Recipe Usage Rules:
 - **MANDATORY**: Always check the recipes list first
@@ -518,8 +587,13 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
 * Recipe slugs array (e.g., ["recipe-name"] from "recipe-name.md")
 * aiAgent: "Claude Code"
 * gitRepo: "test-owner/test-repo"
+* target: "/"
 
 **Remember: Always check the recipes list first, but only use recipes that actually apply to your specific task.**\`
+
+## Available recipes
+
+* [Test Recipe](.packmind/recipes/test-recipe.md): Test recipe for deployment
 <!-- end: Packmind recipes -->
 
 # Some User Content
@@ -527,6 +601,13 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
 User-defined instructions that should be preserved.`;
 
     beforeEach(() => {
+      // Create a default target for testing
+      defaultTarget = {
+        id: createTargetId('default-target-id'),
+        name: 'Default',
+        path: '/',
+        gitRepoId: gitRepo.id,
+      };
       // Mock GitHexa.getFileFromRepo to return partial content (missing standards instructions)
       const existingFile = {
         content: partialContent,
@@ -556,6 +637,7 @@ User-defined instructions that should be preserved.`;
       const fileUpdates = await deployerService.aggregateRecipeDeployments(
         recipeVersions,
         gitRepo,
+        [defaultTarget],
         ['claude'],
       );
 
@@ -582,6 +664,7 @@ User-defined instructions that should be preserved.`;
       const fileUpdates = await deployerService.aggregateStandardsDeployments(
         standardVersions,
         gitRepo,
+        [defaultTarget],
         ['claude'],
       );
 
@@ -604,25 +687,36 @@ User-defined instructions that should be preserved.`;
       );
 
       // Should add standards instructions
-      expect(claudeFile.content).toContain('## Packmind Standards');
+      expect(claudeFile.content).toContain('# Packmind Standards');
       expect(claudeFile.content).toContain(
-        'Follow the coding standards defined in',
+        'Before starting your work, make sure to review the coding standards relevant to your current task',
       );
-      expect(claudeFile.content).toContain('@.packmind/standards-index.md');
+      expect(claudeFile.content).toContain(standardVersions[0].name);
     });
   });
 
   describe('unit tests for ClaudeDeployer', () => {
+    let defaultTarget: Target;
     let claudeDeployer: ClaudeDeployer;
 
     beforeEach(() => {
-      claudeDeployer = new ClaudeDeployer(gitHexa);
+      defaultTarget = {
+        id: createTargetId('default-target-id'),
+        name: 'Default',
+        path: '/',
+        gitRepoId: gitRepo.id,
+      };
+      claudeDeployer = new ClaudeDeployer(standardsHexa, gitHexa);
     });
 
     it('handles empty recipe list gracefully', async () => {
       jest.spyOn(gitHexa, 'getFileFromRepo').mockResolvedValue(null);
 
-      const fileUpdates = await claudeDeployer.deployRecipes([], gitRepo);
+      const fileUpdates = await claudeDeployer.deployRecipes(
+        [],
+        gitRepo,
+        defaultTarget,
+      );
 
       expect(fileUpdates.createOrUpdate).toHaveLength(1);
       expect(fileUpdates.delete).toHaveLength(0);
@@ -636,17 +730,18 @@ User-defined instructions that should be preserved.`;
     it('handles empty standards list gracefully', async () => {
       jest.spyOn(gitHexa, 'getFileFromRepo').mockResolvedValue(null);
 
-      const fileUpdates = await claudeDeployer.deployStandards([], gitRepo);
+      const fileUpdates = await claudeDeployer.deployStandards(
+        [],
+        gitRepo,
+        defaultTarget,
+      );
 
       expect(fileUpdates.createOrUpdate).toHaveLength(1);
       expect(fileUpdates.delete).toHaveLength(0);
 
       const claudeFile = fileUpdates.createOrUpdate[0];
       expect(claudeFile.path).toBe('CLAUDE.md');
-      expect(claudeFile.content).toContain('## Packmind Standards');
-      expect(claudeFile.content).toContain(
-        'Follow the coding standards defined in',
-      );
+      expect(claudeFile.content).not.toContain('# Packmind Standards');
     });
 
     it('handles GitHexa errors gracefully', async () => {
@@ -670,6 +765,7 @@ User-defined instructions that should be preserved.`;
       const fileUpdates = await claudeDeployer.deployRecipes(
         recipeVersions,
         gitRepo,
+        defaultTarget,
       );
 
       // Should still work despite the error, treating it as if file doesn't exist

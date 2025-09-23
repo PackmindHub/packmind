@@ -9,6 +9,7 @@ import {
 } from '@packmind/ui';
 import { RunDistribution } from '../../deployments/components/RunDistribution/RunDistribution';
 import { Recipe } from '@packmind/recipes/types';
+import { analyzeDeploymentResults } from '../../deployments/utils/deploymentNotificationUtils';
 export interface DeployRecipeButtonProps {
   label?: string;
   disabled?: boolean;
@@ -42,18 +43,35 @@ export const DeployRecipeButton: React.FC<DeployRecipeButtonProps> = ({
               {(store) => (
                 <RunDistribution
                   selectedRecipes={selectedRecipes}
-                  onDistributionComplete={() => {
+                  selectedStandards={[]}
+                  onDistributionComplete={(deploymentResults) => {
                     store.setOpen(false);
-                    pmToaster.create({
-                      type: 'success',
-                      title: 'Deployment done',
-                      description: 'Recipes are now deployed on your repo(s)',
-                    });
+
+                    if (deploymentResults) {
+                      const notification = analyzeDeploymentResults(
+                        deploymentResults.recipesDeployments,
+                        deploymentResults.standardsDeployments,
+                      );
+
+                      pmToaster.create({
+                        type: notification.type,
+                        title: notification.title,
+                        description: notification.description,
+                      });
+                    } else {
+                      // Fallback for backward compatibility
+                      pmToaster.create({
+                        type: 'success',
+                        title: 'Deployment done',
+                        description:
+                          'Recipe(s) are now deployed to your targets',
+                      });
+                    }
                   }}
                 >
                   <PMDialog.Header>
                     <PMDialog.Title asChild>
-                      <PMHeading level="h2">Deploy to repositories</PMHeading>
+                      <PMHeading level="h2">Deploy to targets</PMHeading>
                     </PMDialog.Title>
                     <PMDialog.CloseTrigger asChild>
                       <PMCloseButton size="sm" />

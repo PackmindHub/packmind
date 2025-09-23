@@ -10,49 +10,55 @@ import {
   PMEmptyState,
 } from '@packmind/ui';
 import { useRunDistribution } from './RunDistribution';
-import { GitRepoId } from '@packmind/git/types';
+import { TargetId } from '@packmind/shared';
 
 export const RunDistributionBodyImpl: React.FC = () => {
   const {
-    repositoriesList,
-    repositoriesLoading,
-    repositoriesError,
-    selectedRepoIds,
-    setSelectedRepoIds,
+    targetsList,
+    targetsLoading,
+    targetsError,
+    selectedTargetIds,
+    setSelectedTargetIds,
     deploymentError,
   } = useRunDistribution();
 
-  if (repositoriesLoading) return <PMSpinner />;
-  if (repositoriesError)
+  if (targetsLoading) return <PMSpinner />;
+  if (targetsError)
     return (
       <PMAlert.Root status="error">
         <PMAlert.Indicator />
         <PMAlert.Title>
-          Error while loading repositories. Please try again later
+          Error while loading targets. Please try again later
         </PMAlert.Title>
       </PMAlert.Root>
     );
 
-  if (repositoriesList.length === 0)
+  if (targetsList.length === 0)
     return (
       <PMEmptyState
-        title="No repositories connected"
-        description="Connect a repository to deploy recipes"
+        title="No targets configured"
+        description="Configure deployment targets in your repositories to deploy recipes and standards"
       />
     );
 
-  const sortedRepositories = [...repositoriesList].sort((a, b) => {
-    const ownerCompare = a.owner.localeCompare(b.owner);
+  const sortedTargets = [...targetsList].sort((a, b) => {
+    const ownerCompare = a.repository.owner.localeCompare(b.repository.owner);
     if (ownerCompare !== 0) return ownerCompare;
-    return a.repo.localeCompare(b.repo);
+    const repoCompare = a.repository.repo.localeCompare(b.repository.repo);
+    if (repoCompare !== 0) return repoCompare;
+    const branchCompare = a.repository.branch.localeCompare(
+      b.repository.branch,
+    );
+    if (branchCompare !== 0) return branchCompare;
+    return a.name.localeCompare(b.name);
   });
 
-  const handleCheckboxChange = (repositoryId: GitRepoId, checked: boolean) => {
+  const handleCheckboxChange = (targetId: TargetId, checked: boolean) => {
     if (checked) {
-      setSelectedRepoIds((prev: GitRepoId[]) => [...prev, repositoryId]);
+      setSelectedTargetIds((prev: TargetId[]) => [...prev, targetId]);
     } else {
-      setSelectedRepoIds((prev: GitRepoId[]) =>
-        prev.filter((id) => id !== repositoryId),
+      setSelectedTargetIds((prev: TargetId[]) =>
+        prev.filter((id) => id !== targetId),
       );
     }
   };
@@ -63,35 +69,39 @@ export const RunDistributionBodyImpl: React.FC = () => {
         <PMButton
           variant="secondary"
           onClick={() =>
-            setSelectedRepoIds(sortedRepositories.map((repo) => repo.id))
+            setSelectedTargetIds(sortedTargets.map((target) => target.id))
           }
         >
           Select All
         </PMButton>
-        <PMButton variant="secondary" onClick={() => setSelectedRepoIds([])}>
+        <PMButton variant="secondary" onClick={() => setSelectedTargetIds([])}>
           Clear Selection
         </PMButton>
       </PMButtonGroup>
       <PMBox maxHeight="lg" overflow={'auto'}>
-        {sortedRepositories.map((repository) => (
+        {sortedTargets.map((target) => (
           <PMCheckbox
-            key={repository.id}
-            value={repository.id}
-            checked={selectedRepoIds.includes(repository.id)}
+            key={target.id}
+            value={target.id}
+            checked={selectedTargetIds.includes(target.id)}
             controlProps={{ borderColor: 'border.checkbox' }}
             padding={2}
             gap={4}
             onChange={(event) => {
               const input = event.target as HTMLInputElement;
-              handleCheckboxChange(repository.id, input.checked);
+              handleCheckboxChange(target.id, input.checked);
             }}
           >
             <PMVStack align="flex-start" gap={0.5} flex={1}>
               <PMText fontWeight="medium" fontSize="sm">
-                {repository.owner}/{repository.repo}
+                {target.name}
               </PMText>
               <PMText fontSize="xs" color="secondary" textAlign="left">
-                Branch: {repository.branch}
+                {target.repository.owner}/{target.repository.repo}:
+                {target.repository.branch}
+              </PMText>
+              <PMText fontSize="xs" color="secondary" textAlign="left">
+                Path: {target.path}
               </PMText>
             </PMVStack>
           </PMCheckbox>

@@ -34,6 +34,7 @@ export const PMNativeSelect = React.forwardRef<
         value={value}
         defaultValue={defaultValue}
         onChange={onChange}
+        backgroundColor={'{colors.background.tertiary}'}
       >
         {children}
         {items?.map((item) => (

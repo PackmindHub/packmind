@@ -5,16 +5,16 @@ import {
   GitProvider,
 } from '../../../domain/entities/GitProvider';
 import { IGitRepo } from '../../../domain/repositories/IGitRepo';
+import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
 import { GitCommitService } from '../../services/GitCommitService';
 import { GitProviderService } from '../../GitProviderService';
-import { GithubRepository } from '../../../infra/repositories/github/GithubRepository';
-import { GitlabRepository } from '../../../infra/repositories/gitlab/GitlabRepository';
 import { PackmindLogger } from '@packmind/shared';
 
 export class HandleWebHook {
   constructor(
     private readonly gitCommitService: GitCommitService,
     private readonly gitProviderService: GitProviderService,
+    private readonly gitRepoFactory: IGitRepoFactory,
     private readonly logger: PackmindLogger,
   ) {}
 
@@ -122,32 +122,6 @@ export class HandleWebHook {
     repo: GitRepo,
     provider: GitProvider,
   ): IGitRepo {
-    switch (provider.source) {
-      case GitProviderVendors.github:
-        return new GithubRepository(
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          provider.token!,
-          {
-            owner: repo.owner,
-            repo: repo.repo,
-            branch: repo.branch,
-          },
-          this.logger,
-        );
-      case GitProviderVendors.gitlab:
-        return new GitlabRepository(
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          provider.token!,
-          {
-            owner: repo.owner,
-            repo: repo.repo,
-            branch: repo.branch,
-          },
-          this.logger,
-          provider.url || undefined,
-        );
-      default:
-        throw new Error(`Unsupported git provider source: ${provider.source}`);
-    }
+    return this.gitRepoFactory.createGitRepo(repo, provider);
   }
 }

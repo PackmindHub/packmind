@@ -8,12 +8,22 @@ import {
   OrganizationId,
   UserId,
   GetStandardDeploymentOverviewCommand,
+  DistributionStatus,
+  createStandardVersionId,
+  createStandardId,
 } from '@packmind/shared';
 import { stubLogger } from '@packmind/shared/test';
+import { gitRepoFactory } from '@packmind/shared/test/factories/gitRepoFactory';
 import { GetStandardDeploymentOverviewUseCase } from './GetStandardDeploymentOverviewUseCase';
 import { StandardsDeployment } from '../../domain/entities/StandardsDeployment';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
 import { StandardDeploymentOverview } from '../../domain/types/StandardDeploymentOverview';
+import { standardsDeploymentFactory } from '../../../test/standardsDeploymentFactory';
+import { targetFactory } from '../../../test/targetFactory';
+import {
+  createMockStandard,
+  createMockStandardVersion,
+} from '../../../test/standardDeploymentOverviewFactory';
 
 describe('GetStandardDeploymentOverviewUseCase', () => {
   let useCase: GetStandardDeploymentOverviewUseCase;
@@ -27,6 +37,7 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
 
   const mockOverview: StandardDeploymentOverview = {
     repositories: [],
+    targets: [],
     standards: [],
   };
 
@@ -36,6 +47,9 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
       listByStandardId: jest.fn(),
       listByOrganizationIdAndGitRepos: jest.fn(),
       findActiveStandardVersionsByRepository: jest.fn(),
+      findActiveStandardVersionsByTarget: jest.fn(),
+      listByTargetIds: jest.fn(),
+      listByOrganizationIdWithStatus: jest.fn(),
       create: jest.fn(),
       findById: jest.fn(),
       update: jest.fn(),
@@ -72,7 +86,7 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
       const mockStandards: Standard[] = [];
       const mockGitRepos: GitRepo[] = [];
 
-      mockStandardsDeploymentRepository.listByOrganizationId.mockResolvedValue(
+      mockStandardsDeploymentRepository.listByOrganizationIdWithStatus.mockResolvedValue(
         mockDeployments,
       );
       mockStandardsHexa.listStandardsByOrganization.mockResolvedValue(
@@ -84,8 +98,8 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
 
       expect(result).toEqual(mockOverview);
       expect(
-        mockStandardsDeploymentRepository.listByOrganizationId,
-      ).toHaveBeenCalledWith(organizationId);
+        mockStandardsDeploymentRepository.listByOrganizationIdWithStatus,
+      ).toHaveBeenCalledWith(organizationId, DistributionStatus.success);
       expect(
         mockStandardsHexa.listStandardsByOrganization,
       ).toHaveBeenCalledWith(organizationId);
@@ -103,7 +117,7 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
       };
 
       const error = new Error('Repository error');
-      mockStandardsDeploymentRepository.listByOrganizationId.mockRejectedValue(
+      mockStandardsDeploymentRepository.listByOrganizationIdWithStatus.mockRejectedValue(
         error,
       );
 
@@ -157,7 +171,7 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
         } as GitRepo,
       ];
 
-      mockStandardsDeploymentRepository.listByOrganizationId.mockResolvedValue(
+      mockStandardsDeploymentRepository.listByOrganizationIdWithStatus.mockResolvedValue(
         mockDeployments,
       );
       mockStandardsHexa.listStandardsByOrganization.mockResolvedValue(
@@ -172,6 +186,344 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
       expect(result.repositories[0].gitRepo.id).toBe(createGitRepoId('repo-1'));
       expect(result.repositories[1].gitRepo.id).toBe(createGitRepoId('repo-2'));
       expect(result.standards[0].standard.id).toBe('std-1');
+    });
+  });
+
+  describe('when deployments with targets exist', () => {
+    const mockGitRepo = gitRepoFactory();
+    const mockTarget = targetFactory({ gitRepoId: mockGitRepo.id });
+    const mockStandard = createMockStandard({
+      id: createStandardId('std-1'),
+      name: 'Test Standard',
+      version: 2,
+    });
+
+    let result: StandardDeploymentOverview;
+
+    beforeEach(async () => {
+      const command: GetStandardDeploymentOverviewCommand = {
+        organizationId,
+        userId,
+      };
+
+      const mockStandardVersion = createMockStandardVersion({
+        id: createStandardVersionId('standard-version-1'),
+        standardId: mockStandard.id,
+        version: 1,
+      });
+
+      const mockDeployment = standardsDeploymentFactory({
+        organizationId,
+        target: mockTarget,
+        status: DistributionStatus.success,
+        standardVersions: [mockStandardVersion],
+      });
+
+      mockStandardsDeploymentRepository.listByOrganizationIdWithStatus.mockResolvedValue(
+        [mockDeployment],
+      );
+      mockStandardsHexa.listStandardsByOrganization.mockResolvedValue([
+        mockStandard,
+      ]);
+      mockGitHexa.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
+
+      result = await useCase.execute(command);
+    });
+
+    it('includes target-centric deployment information', () => {
+      expect(result.targets).toHaveLength(1);
+      const targetStatus = result.targets[0];
+      expect(targetStatus.target.id).toBe(mockTarget.id);
+      expect(targetStatus.gitRepo.id).toBe(mockGitRepo.id);
+      expect(targetStatus.deployedStandards).toHaveLength(1);
+      expect(targetStatus.hasOutdatedStandards).toBe(true); // version 1 deployed, latest is 2
+    });
+
+    it('includes repository-centric deployment information for backward compatibility', () => {
+      expect(result.repositories).toHaveLength(1);
+      const repoStatus = result.repositories[0];
+      expect(repoStatus.gitRepo.id).toBe(mockGitRepo.id);
+      expect(repoStatus.deployedStandards).toHaveLength(1);
+      expect(repoStatus.hasOutdatedStandards).toBe(true);
+    });
+
+    it('includes standard-centric deployment information', () => {
+      expect(result.standards).toHaveLength(1);
+      const standardStatus = result.standards[0];
+      expect(standardStatus.standard.id).toBe(mockStandard.id);
+      expect(standardStatus.targetDeployments).toHaveLength(1);
+      expect(standardStatus.targetDeployments[0].target.id).toBe(mockTarget.id);
+      expect(standardStatus.targetDeployments[0].isUpToDate).toBe(false);
+      expect(standardStatus.hasOutdatedDeployments).toBe(true);
+    });
+  });
+
+  describe('when multiple targets exist for same repository', () => {
+    const mockGitRepo = gitRepoFactory();
+    const mockTarget1 = targetFactory({
+      gitRepoId: mockGitRepo.id,
+      name: 'backend',
+      path: '/backend',
+    });
+    const mockTarget2 = targetFactory({
+      gitRepoId: mockGitRepo.id,
+      name: 'frontend',
+      path: '/frontend',
+    });
+    const mockStandard = createMockStandard({
+      id: createStandardId('std-1'),
+      name: 'Test Standard',
+      version: 1,
+    });
+
+    let result: StandardDeploymentOverview;
+
+    beforeEach(async () => {
+      const command: GetStandardDeploymentOverviewCommand = {
+        organizationId,
+        userId,
+      };
+
+      const mockStandardVersion = createMockStandardVersion({
+        standardId: mockStandard.id,
+        version: 1,
+      });
+
+      const mockDeployment1 = standardsDeploymentFactory({
+        organizationId,
+        target: mockTarget1,
+        status: DistributionStatus.success,
+        standardVersions: [mockStandardVersion],
+      });
+
+      const mockDeployment2 = standardsDeploymentFactory({
+        organizationId,
+        target: mockTarget2,
+        status: DistributionStatus.success,
+        standardVersions: [mockStandardVersion],
+      });
+
+      mockStandardsDeploymentRepository.listByOrganizationIdWithStatus.mockResolvedValue(
+        [mockDeployment1, mockDeployment2],
+      );
+      mockStandardsHexa.listStandardsByOrganization.mockResolvedValue([
+        mockStandard,
+      ]);
+      mockGitHexa.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
+
+      result = await useCase.execute(command);
+    });
+
+    it('creates separate target statuses for each target', () => {
+      expect(result.targets).toHaveLength(2);
+      expect(result.targets.map((t) => t.target.name)).toContain('backend');
+      expect(result.targets.map((t) => t.target.name)).toContain('frontend');
+    });
+
+    it('standard deployment includes both targets', () => {
+      expect(result.standards).toHaveLength(1);
+      const standardStatus = result.standards[0];
+      expect(standardStatus.targetDeployments).toHaveLength(2);
+      expect(
+        standardStatus.targetDeployments.map((td) => td.target.name),
+      ).toContain('backend');
+      expect(
+        standardStatus.targetDeployments.map((td) => td.target.name),
+      ).toContain('frontend');
+    });
+  });
+
+  describe('when standards exist without deployments', () => {
+    const mockGitRepo = gitRepoFactory();
+    const mockStandard = createMockStandard({
+      id: createStandardId('std-1'),
+      name: 'Undeployed Standard',
+      version: 1,
+    });
+
+    let result: StandardDeploymentOverview;
+
+    beforeEach(async () => {
+      const command: GetStandardDeploymentOverviewCommand = {
+        organizationId,
+        userId,
+      };
+
+      mockStandardsDeploymentRepository.listByOrganizationIdWithStatus.mockResolvedValue(
+        [],
+      );
+      mockStandardsHexa.listStandardsByOrganization.mockResolvedValue([
+        mockStandard,
+      ]);
+      mockGitHexa.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
+
+      result = await useCase.execute(command);
+    });
+
+    it('includes standards with no deployments in standard-centric view', () => {
+      expect(result.standards).toHaveLength(1);
+      const undeployedStandard = result.standards[0];
+      expect(undeployedStandard.standard.id).toBe(mockStandard.id);
+      expect(undeployedStandard.deployments).toHaveLength(0);
+      expect(undeployedStandard.targetDeployments).toHaveLength(0);
+      expect(undeployedStandard.hasOutdatedDeployments).toBe(false);
+      expect(undeployedStandard.latestVersion.version).toBe(1);
+    });
+
+    it('includes repository with no deployed standards', () => {
+      expect(result.repositories).toHaveLength(1);
+      expect(result.repositories[0].deployedStandards).toHaveLength(0);
+      expect(result.repositories[0].hasOutdatedStandards).toBe(false);
+    });
+
+    describe('when no deployments exist', () => {
+      it('includes empty targets array', () => {
+        expect(result.targets).toHaveLength(0);
+      });
+    });
+  });
+
+  describe('public helper methods', () => {
+    const mockGitRepo = gitRepoFactory();
+    const mockTarget = targetFactory({ gitRepoId: mockGitRepo.id });
+    const mockStandard = createMockStandard();
+
+    describe('buildTargetCentricView', () => {
+      it('groups deployments by target correctly', () => {
+        const mockStandardVersion = createMockStandardVersion({
+          standardId: mockStandard.id,
+          version: 1,
+        });
+
+        const mockDeployment = standardsDeploymentFactory({
+          organizationId,
+          target: mockTarget,
+          status: DistributionStatus.success,
+          standardVersions: [mockStandardVersion],
+        });
+
+        const targetStatuses = useCase.buildTargetCentricView(
+          [mockDeployment],
+          [mockStandard],
+          [mockGitRepo],
+        );
+
+        expect(targetStatuses).toHaveLength(1);
+        expect(targetStatuses[0].target.id).toBe(mockTarget.id);
+        expect(targetStatuses[0].deployedStandards).toHaveLength(1);
+      });
+
+      it('handles deployments without targets gracefully', () => {
+        const mockDeployment = standardsDeploymentFactory({
+          organizationId,
+          target: undefined,
+          status: DistributionStatus.success,
+          standardVersions: [],
+        });
+
+        const targetStatuses = useCase.buildTargetCentricView(
+          [mockDeployment],
+          [mockStandard],
+          [mockGitRepo],
+        );
+
+        expect(targetStatuses).toHaveLength(0);
+      });
+    });
+
+    describe('buildTargetDeploymentsForStandard', () => {
+      it('builds target deployments for a specific standard', () => {
+        const mockStandardVersion = createMockStandardVersion({
+          standardId: mockStandard.id,
+          version: 1,
+        });
+
+        const mockDeployment = standardsDeploymentFactory({
+          organizationId,
+          target: mockTarget,
+          status: DistributionStatus.success,
+          standardVersions: [mockStandardVersion],
+        });
+
+        const targetDeployments = useCase.buildTargetDeploymentsForStandard(
+          mockStandard,
+          [mockDeployment],
+          [mockGitRepo],
+        );
+
+        expect(targetDeployments).toHaveLength(1);
+        expect(targetDeployments[0].target.id).toBe(mockTarget.id);
+        expect(targetDeployments[0].deployedVersion.standardId).toBe(
+          mockStandard.id,
+        );
+      });
+
+      it('filters out deployments for other standards', () => {
+        const otherStandard = createMockStandard({
+          id: createStandardId('other-standard'),
+        });
+        const otherStandardVersion = createMockStandardVersion({
+          standardId: otherStandard.id,
+          version: 1,
+        });
+
+        const mockDeployment = standardsDeploymentFactory({
+          organizationId,
+          target: mockTarget,
+          status: DistributionStatus.success,
+          standardVersions: [otherStandardVersion], // Different standard
+        });
+
+        const targetDeployments = useCase.buildTargetDeploymentsForStandard(
+          mockStandard, // Looking for this standard
+          [mockDeployment],
+          [mockGitRepo],
+        );
+
+        expect(targetDeployments).toHaveLength(0);
+      });
+
+      describe('when multiple deployments exist for same target', () => {
+        it('returns latest version', () => {
+          const olderVersion = createMockStandardVersion({
+            standardId: mockStandard.id,
+            version: 1,
+          });
+
+          const newerVersion = createMockStandardVersion({
+            standardId: mockStandard.id,
+            version: 2,
+          });
+
+          const olderDeployment = standardsDeploymentFactory({
+            organizationId,
+            target: mockTarget,
+            status: DistributionStatus.success,
+            standardVersions: [olderVersion],
+            createdAt: '2023-01-01T00:00:00Z',
+          });
+
+          const newerDeployment = standardsDeploymentFactory({
+            organizationId,
+            target: mockTarget,
+            status: DistributionStatus.success,
+            standardVersions: [newerVersion],
+            createdAt: '2023-01-02T00:00:00Z',
+          });
+
+          const targetDeployments = useCase.buildTargetDeploymentsForStandard(
+            mockStandard,
+            [olderDeployment, newerDeployment],
+            [mockGitRepo],
+          );
+
+          expect(targetDeployments).toHaveLength(1);
+          expect(targetDeployments[0].deployedVersion.version).toBe(2);
+          expect(targetDeployments[0].deploymentDate).toBe(
+            '2023-01-02T00:00:00Z',
+          );
+        });
+      });
     });
   });
 });

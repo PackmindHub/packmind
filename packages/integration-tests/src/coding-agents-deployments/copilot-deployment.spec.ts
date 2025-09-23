@@ -14,7 +14,12 @@ import {
 } from '@packmind/standards/types';
 import { GitHexa, gitSchemas } from '@packmind/git';
 import { GitRepo, GitProviderVendors } from '@packmind/git/types';
-import { HexaRegistry } from '@packmind/shared';
+import {
+  HexaRegistry,
+  IDeploymentPort,
+  Target,
+  createTargetId,
+} from '@packmind/shared';
 import { makeTestDatasource } from '@packmind/shared/test';
 import {
   CodingAgentHexaFactory,
@@ -89,6 +94,12 @@ describe('GitHub Copilot Deployment Integration', () => {
     codingAgentFactory = new CodingAgentHexaFactory(registry);
     deployerService = codingAgentFactory.getDeployerService();
 
+    const mockDeploymentPort = {
+      addTarget: jest.fn(),
+    } as Partial<jest.Mocked<IDeploymentPort>> as jest.Mocked<IDeploymentPort>;
+
+    gitHexa.setDeploymentsAdapter(mockDeploymentPort);
+
     // Create test data
     organization = await accountsHexa.createOrganization({
       name: 'test organization',
@@ -147,7 +158,16 @@ describe('GitHub Copilot Deployment Integration', () => {
   });
 
   describe('when .github/instructions/packmind-recipes-index.instructions.md does not exist', () => {
+    let defaultTarget: Target;
+
     beforeEach(() => {
+      // Create a default target for testing
+      defaultTarget = {
+        id: createTargetId('default-target-id'),
+        name: 'Default',
+        path: '/',
+        gitRepoId: gitRepo.id,
+      };
       // Mock GitHexa.getFileFromRepo to return null (file doesn't exist)
       jest.spyOn(gitHexa, 'getFileFromRepo').mockResolvedValue(null);
     });
@@ -174,6 +194,7 @@ describe('GitHub Copilot Deployment Integration', () => {
       const fileUpdates = await deployerService.aggregateRecipeDeployments(
         recipeVersions,
         gitRepo,
+        [defaultTarget],
         ['copilot'],
       );
 
@@ -203,7 +224,7 @@ describe('GitHub Copilot Deployment Integration', () => {
         );
 
         // Check recipes list
-        expect(copilotFile.content).toContain('## Available Recipes');
+        expect(copilotFile.content).toContain('## Available recipes');
         expect(copilotFile.content).toContain('Test Recipe for Copilot');
         expect(copilotFile.content).toContain(recipe.slug);
         expect(copilotFile.content).toContain(
@@ -230,6 +251,7 @@ describe('GitHub Copilot Deployment Integration', () => {
       const fileUpdates = await deployerService.aggregateStandardsDeployments(
         standardVersions,
         gitRepo,
+        [defaultTarget],
         ['copilot'],
       );
 
@@ -250,9 +272,8 @@ describe('GitHub Copilot Deployment Integration', () => {
           "applyTo: '**/*.{js,ts}'",
         );
         expect(copilotStandardFile.content).toContain('---');
-        expect(copilotStandardFile.content).toContain(
-          `Apply the coding rules described #file:../../.packmind/standards/${standard.slug}.md`,
-        );
+        expect(copilotStandardFile.content).toContain(standard.name);
+        expect(copilotStandardFile.content).toContain(standard.description);
       }
     });
 
@@ -284,6 +305,7 @@ describe('GitHub Copilot Deployment Integration', () => {
       const fileUpdates = await deployerService.aggregateStandardsDeployments(
         standardVersions,
         gitRepo,
+        [defaultTarget],
         ['copilot'],
       );
 
@@ -326,10 +348,19 @@ describe('GitHub Copilot Deployment Integration', () => {
         },
       ];
 
+      // Create a default target for testing
+      const defaultTarget = {
+        id: createTargetId('default-target-id'),
+        name: 'Default',
+        path: '/',
+        gitRepoId: gitRepo.id,
+      };
+
       // Deploy recipes
       const recipeUpdates = await deployerService.aggregateRecipeDeployments(
         recipeVersions,
         gitRepo,
+        [defaultTarget],
         ['copilot'],
       );
 
@@ -338,6 +369,7 @@ describe('GitHub Copilot Deployment Integration', () => {
         await deployerService.aggregateStandardsDeployments(
           standardVersions,
           gitRepo,
+          [defaultTarget],
           ['copilot'],
         );
 
@@ -357,37 +389,45 @@ describe('GitHub Copilot Deployment Integration', () => {
   });
 
   describe('when .github/instructions/packmind-recipes-index.instructions.md already exists', () => {
-    const existingContent =
-      '---\n' +
-      "applyTo: '**'\n" +
-      '---\n' +
-      '\n' +
-      '# Packmind Recipes\n' +
-      '\n' +
-      '🚨 **MANDATORY STEP** 🚨\n' +
-      '\n' +
-      'Before writing, editing, or generating ANY code:\n' +
-      '\n' +
-      '**ALWAYS READ**: the available recipes below to see what recipes are available\n' +
-      '\n' +
-      '## Recipe Usage Rules:\n' +
-      '- **MANDATORY**: Always check the recipes list first\n' +
-      '- **CONDITIONAL**: Only read/use individual recipes if they are relevant to your task\n' +
-      '- **OPTIONAL**: If no recipes are relevant, proceed without using any\n' +
-      '\n' +
-      '## Recipe Usage Tracking:\n' +
-      "When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you MUST call the 'packmind_notify_recipe_usage' MCP tool with:\n" +
-      '* Recipe slugs array (e.g., ["recipe-name"] from "recipe-name.md")\n' +
-      '* aiAgent: "GitHub Copilot"\n' +
-      '* gitRepo: "test-owner/test-repo"\n' +
-      '\n' +
-      '**Remember: Always check the recipes list first, but only use recipes that actually apply to your specific task.**`\n' +
-      '\n' +
-      '## Available Recipes\n' +
-      '\n' +
-      '- [Test Recipe for Copilot](.packmind/recipes/test-recipe-for-copilot.md) : Test recipe for deployment';
+    let defaultTarget: Target;
+    const existingContent = `---
+applyTo: '**'
+---
+
+# Packmind Recipes
+
+🚨 **MANDATORY STEP** 🚨
+
+Before writing, editing, or generating ANY code:
+
+**ALWAYS READ**: the available recipes below to see what recipes are available
+
+## Recipe Usage Rules:
+- **MANDATORY**: Always check the recipes list first
+- **CONDITIONAL**: Only read/use individual recipes if they are relevant to your task
+- **OPTIONAL**: If no recipes are relevant, proceed without using any
+
+## Recipe Usage Tracking:
+When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you MUST call the 'packmind_notify_recipe_usage' MCP tool with:
+* Recipe slugs array (e.g., ["recipe-name"] from "recipe-name.md")
+* aiAgent: "GitHub Copilot"
+* gitRepo: "test-owner/test-repo"
+* target: "/"
+
+**Remember: Always check the recipes list first, but only use recipes that actually apply to your specific task.**\`
+
+## Available recipes
+
+- [Test Recipe for Copilot](.packmind/recipes/test-recipe-for-copilot.md) : Test recipe for deployment`;
 
     beforeEach(() => {
+      // Create a default target for testing
+      defaultTarget = {
+        id: createTargetId('default-target-id'),
+        name: 'Default',
+        path: '/',
+        gitRepoId: gitRepo.id,
+      };
       // Mock GitHexa.getFileFromRepo to return existing content
       const existingFile = {
         content: existingContent,
@@ -417,6 +457,7 @@ describe('GitHub Copilot Deployment Integration', () => {
       const fileUpdates = await deployerService.aggregateRecipeDeployments(
         recipeVersions,
         gitRepo,
+        [defaultTarget],
         ['copilot'],
       );
 
@@ -427,16 +468,27 @@ describe('GitHub Copilot Deployment Integration', () => {
   });
 
   describe('unit tests for CopilotDeployer', () => {
+    let defaultTarget: Target;
     let copilotDeployer: CopilotDeployer;
 
     beforeEach(() => {
-      copilotDeployer = new CopilotDeployer(gitHexa);
+      defaultTarget = {
+        id: createTargetId('default-target-id'),
+        name: 'Default',
+        path: '/',
+        gitRepoId: gitRepo.id,
+      };
+      copilotDeployer = new CopilotDeployer(standardsHexa, gitHexa);
     });
 
     it('handles empty recipe list gracefully', async () => {
       jest.spyOn(gitHexa, 'getFileFromRepo').mockResolvedValue(null);
 
-      const fileUpdates = await copilotDeployer.deployRecipes([], gitRepo);
+      const fileUpdates = await copilotDeployer.deployRecipes(
+        [],
+        gitRepo,
+        defaultTarget,
+      );
 
       expect(fileUpdates.createOrUpdate).toHaveLength(1);
       expect(fileUpdates.delete).toHaveLength(0);
@@ -453,7 +505,11 @@ describe('GitHub Copilot Deployment Integration', () => {
     });
 
     it('handles empty standards list gracefully', async () => {
-      const fileUpdates = await copilotDeployer.deployStandards([], gitRepo);
+      const fileUpdates = await copilotDeployer.deployStandards(
+        [],
+        gitRepo,
+        defaultTarget,
+      );
 
       expect(fileUpdates.createOrUpdate).toHaveLength(0);
       expect(fileUpdates.delete).toHaveLength(0);
@@ -480,6 +536,7 @@ describe('GitHub Copilot Deployment Integration', () => {
       const fileUpdates = await copilotDeployer.deployRecipes(
         recipeVersions,
         gitRepo,
+        defaultTarget,
       );
 
       // Should still work despite the error, treating it as if file doesn't exist
@@ -538,6 +595,7 @@ describe('GitHub Copilot Deployment Integration', () => {
       const fileUpdates = await copilotDeployer.deployStandards(
         standardVersions,
         gitRepo,
+        defaultTarget,
       );
 
       expect(fileUpdates.createOrUpdate).toHaveLength(2);

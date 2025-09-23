@@ -1,10 +1,6 @@
 import { PackmindLogger } from '@packmind/shared';
 import {
   StandardsDeployment,
-  createStandardsDeploymentId,
-} from '@packmind/shared';
-import { v4 as uuidv4 } from 'uuid';
-import {
   IListDeploymentsByStandard,
   ListDeploymentsByStandardCommand,
 } from '@packmind/shared';
@@ -36,17 +32,8 @@ export class ListDeploymentsByStandardUseCase
           command.organizationId as any, // eslint-disable-line @typescript-eslint/no-explicit-any
         );
 
-      // Convert StandardsDeployment to StandardDeployment
-      const standardDeployments: StandardsDeployment[] =
-        standardsDeployments.map((standardsDeployment) => ({
-          id: createStandardsDeploymentId(uuidv4()), // Generate new ID for StandardDeployment
-          standardVersions: standardsDeployment.standardVersions,
-          gitRepos: standardsDeployment.gitRepos,
-          gitCommits: standardsDeployment.gitCommits,
-          createdAt: standardsDeployment.createdAt,
-          authorId: standardsDeployment.authorId,
-          organizationId: standardsDeployment.organizationId,
-        }));
+      // Return the StandardsDeployment entities directly as they now conform to the type
+      const standardDeployments: StandardsDeployment[] = standardsDeployments;
 
       this.logger.info('Successfully listed deployments by standard', {
         standardId: command.standardId,

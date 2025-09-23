@@ -1,7 +1,7 @@
 import { RecipeVersion } from '@packmind/recipes';
 import { StandardVersion } from '@packmind/standards';
 import { GitRepo } from '@packmind/git';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger, Target } from '@packmind/shared';
 import { FileUpdates } from '../../domain/entities/FileUpdates';
 import { CodingAgent } from '../../domain/CodingAgents';
 import { ICodingAgentDeployerRegistry } from '../../domain/repository/ICodingAgentDeployerRegistry';
@@ -17,33 +17,55 @@ export class DeployerService {
   async aggregateRecipeDeployments(
     recipeVersions: RecipeVersion[],
     gitRepo: GitRepo,
+    targets: Target[],
     codingAgents: CodingAgent[],
   ): Promise<FileUpdates> {
     this.logger.info('Aggregating recipe deployments', {
       recipesCount: recipeVersions.length,
+      targetsCount: targets.length,
       agentsCount: codingAgents.length,
       agents: codingAgents,
     });
 
     const allUpdates: FileUpdates[] = [];
 
-    for (const agent of codingAgents) {
-      try {
-        this.logger.debug('Deploying recipes for agent', { agent });
-        const deployer = this.deployerRegistry.getDeployer(agent);
-        const updates = await deployer.deployRecipes(recipeVersions, gitRepo);
-        allUpdates.push(updates);
-        this.logger.debug('Successfully deployed recipes for agent', {
-          agent,
-          createOrUpdateCount: updates.createOrUpdate.length,
-          deleteCount: updates.delete.length,
-        });
-      } catch (error) {
-        this.logger.error('Failed to deploy recipes for agent', {
-          agent,
-          error: error instanceof Error ? error.message : String(error),
-        });
-        throw error;
+    // Deploy to each target
+    for (const target of targets) {
+      this.logger.debug('Deploying recipes for target', {
+        targetId: target.id,
+        targetPath: target.path,
+      });
+
+      for (const agent of codingAgents) {
+        try {
+          this.logger.debug('Deploying recipes for agent and target', {
+            agent,
+            targetId: target.id,
+          });
+          const deployer = this.deployerRegistry.getDeployer(agent);
+          const updates = await deployer.deployRecipes(
+            recipeVersions,
+            gitRepo,
+            target,
+          );
+          allUpdates.push(updates);
+          this.logger.debug(
+            'Successfully deployed recipes for agent and target',
+            {
+              agent,
+              targetId: target.id,
+              createOrUpdateCount: updates.createOrUpdate.length,
+              deleteCount: updates.delete.length,
+            },
+          );
+        } catch (error) {
+          this.logger.error('Failed to deploy recipes for agent and target', {
+            agent,
+            targetId: target.id,
+            error: error instanceof Error ? error.message : String(error),
+          });
+          throw error;
+        }
       }
     }
 
@@ -59,36 +81,55 @@ export class DeployerService {
   async aggregateStandardsDeployments(
     standardVersions: StandardVersion[],
     gitRepo: GitRepo,
+    targets: Target[],
     codingAgents: CodingAgent[],
   ): Promise<FileUpdates> {
     this.logger.info('Aggregating standards deployments', {
       standardsCount: standardVersions.length,
+      targetsCount: targets.length,
       agentsCount: codingAgents.length,
       agents: codingAgents,
     });
 
     const allUpdates: FileUpdates[] = [];
 
-    for (const agent of codingAgents) {
-      try {
-        this.logger.debug('Deploying standards for agent', { agent });
-        const deployer = this.deployerRegistry.getDeployer(agent);
-        const updates = await deployer.deployStandards(
-          standardVersions,
-          gitRepo,
-        );
-        allUpdates.push(updates);
-        this.logger.debug('Successfully deployed standards for agent', {
-          agent,
-          createOrUpdateCount: updates.createOrUpdate.length,
-          deleteCount: updates.delete.length,
-        });
-      } catch (error) {
-        this.logger.error('Failed to deploy standards for agent', {
-          agent,
-          error: error instanceof Error ? error.message : String(error),
-        });
-        throw error;
+    // Deploy to each target
+    for (const target of targets) {
+      this.logger.debug('Deploying standards for target', {
+        targetId: target.id,
+        targetPath: target.path,
+      });
+
+      for (const agent of codingAgents) {
+        try {
+          this.logger.debug('Deploying standards for agent and target', {
+            agent,
+            targetId: target.id,
+          });
+          const deployer = this.deployerRegistry.getDeployer(agent);
+          const updates = await deployer.deployStandards(
+            standardVersions,
+            gitRepo,
+            target,
+          );
+          allUpdates.push(updates);
+          this.logger.debug(
+            'Successfully deployed standards for agent and target',
+            {
+              agent,
+              targetId: target.id,
+              createOrUpdateCount: updates.createOrUpdate.length,
+              deleteCount: updates.delete.length,
+            },
+          );
+        } catch (error) {
+          this.logger.error('Failed to deploy standards for agent and target', {
+            agent,
+            targetId: target.id,
+            error: error instanceof Error ? error.message : String(error),
+          });
+          throw error;
+        }
       }
     }
 

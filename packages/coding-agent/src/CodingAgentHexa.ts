@@ -1,4 +1,9 @@
-import { BaseHexa, HexaRegistry, PackmindLogger } from '@packmind/shared';
+import {
+  BaseHexa,
+  BaseHexaOpts,
+  HexaRegistry,
+  PackmindLogger,
+} from '@packmind/shared';
 import { FileUpdates } from './domain/entities/FileUpdates';
 import { CodingAgentHexaFactory } from './CodingAgentHexaFactory';
 import { PrepareRecipesDeploymentCommand } from './domain/useCases/IPrepareRecipesDeploymentUseCase';
@@ -22,15 +27,12 @@ const origin = 'CodingAgentHexa';
  */
 export class CodingAgentHexa extends BaseHexa {
   private readonly hexa: CodingAgentHexaFactory;
-  private readonly logger: PackmindLogger;
 
   constructor(
     registry: HexaRegistry,
-    logger: PackmindLogger = new PackmindLogger(origin),
+    opts: Partial<BaseHexaOpts> = { logger: new PackmindLogger(origin) },
   ) {
-    super(registry);
-
-    this.logger = logger;
+    super(registry, opts);
     this.logger.info('Initializing CodingAgentHexa');
 
     try {

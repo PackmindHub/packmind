@@ -9,6 +9,7 @@ import {
   AddRepositoryForm,
   AvailableRepository,
 } from '../../types/GitProviderTypes';
+import { CheckDirectoryExistenceResult } from '@packmind/shared';
 
 export class GitProviderGatewayApi
   extends PackmindGateway
@@ -147,5 +148,37 @@ export class GitProviderGatewayApi
       // Return false for any error (branch doesn't exist, network issues, etc.)
       return false;
     }
+  }
+
+  async getAvailableRemoteDirectories(
+    repositoryId: GitRepoId,
+    path?: string,
+  ): Promise<string[]> {
+    // Use a longer timeout for this specific request since it can take up to 30 seconds
+    const axiosInstance = this._api.getAxiosInstance();
+    const params = path ? { path } : {};
+    const response = await axiosInstance.get<string[]>(
+      `${this._endpoint}/repositories/${repositoryId}/available-remote-directories`,
+      {
+        params,
+        timeout: 35000, // 35 seconds timeout to accommodate the 30-second processing time
+      },
+    );
+    return response.data;
+  }
+
+  async checkDirectoryExistence(
+    repositoryId: GitRepoId,
+    directoryPath: string,
+    branch: string,
+  ): Promise<CheckDirectoryExistenceResult> {
+    const response = await this._api.post<CheckDirectoryExistenceResult>(
+      `${this._endpoint}/repositories/${repositoryId}/check-directory-existence`,
+      {
+        directoryPath,
+        branch,
+      },
+    );
+    return response;
   }
 }

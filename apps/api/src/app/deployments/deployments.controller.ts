@@ -1,5 +1,4 @@
 import { Controller, Get, Param, Post, Body, Req } from '@nestjs/common';
-import { GitRepoId } from '@packmind/git';
 import { RecipeVersionId } from '@packmind/recipes';
 import {
   DeploymentOverview,
@@ -8,6 +7,8 @@ import {
   StandardDeploymentOverview,
   PublishRecipesCommand,
   PublishStandardsCommand,
+  TargetId,
+  DistributionStatus,
 } from '@packmind/shared';
 import { DeploymentsService } from './deployments.service';
 import { PackmindLogger } from '@packmind/shared';
@@ -200,18 +201,18 @@ export class DeploymentsController {
   @Post('recipes/publish')
   async publishRecipes(
     @Body()
-    body: { gitRepoIds: GitRepoId[]; recipeVersionIds: RecipeVersionId[] },
+    body: { targetIds: TargetId[]; recipeVersionIds: RecipeVersionId[] },
     @Req() request: AuthenticatedRequest,
   ): Promise<RecipesDeployment[]> {
     this.logger.info('POST /deployments/recipes/publish - Publishing recipes', {
-      gitRepoIdsCount: body.gitRepoIds.length,
+      targetIdsCount: body.targetIds.length,
       recipeVersionIdsCount: body.recipeVersionIds.length,
     });
 
     try {
       const command: PublishRecipesCommand =
         this.authService.makePackmindCommand(request, {
-          gitRepoIds: body.gitRepoIds,
+          targetIds: body.targetIds,
           recipeVersionIds: body.recipeVersionIds,
         });
 
@@ -241,13 +242,13 @@ export class DeploymentsController {
   @Post('standards/publish')
   async publishStandards(
     @Body()
-    body: { gitRepoIds: GitRepoId[]; standardVersionIds: StandardVersionId[] },
+    body: { targetIds: TargetId[]; standardVersionIds: StandardVersionId[] },
     @Req() request: AuthenticatedRequest,
-  ): Promise<StandardsDeployment> {
+  ): Promise<StandardsDeployment[]> {
     this.logger.info(
       'POST /deployments/standards/publish - Publishing standards',
       {
-        gitRepoIdsCount: body.gitRepoIds.length,
+        targetIdsCount: body.targetIds.length,
         standardVersionIdsCount: body.standardVersionIds.length,
       },
     );
@@ -255,21 +256,28 @@ export class DeploymentsController {
     try {
       const command: PublishStandardsCommand =
         this.authService.makePackmindCommand(request, {
-          gitRepoIds: body.gitRepoIds,
+          targetIds: body.targetIds,
           standardVersionIds: body.standardVersionIds,
         });
 
-      const deployment =
+      const deployments =
         await this.deploymentsService.publishStandards(command);
 
       this.logger.info(
         'POST /deployments/standards/publish - Standards published successfully',
         {
-          deploymentId: deployment.id,
+          deploymentsCount: deployments.length,
+          deploymentIds: deployments.map((d) => d.id),
+          successfulDeployments: deployments.filter(
+            (d) => d.status === DistributionStatus.success,
+          ).length,
+          failedDeployments: deployments.filter(
+            (d) => d.status === DistributionStatus.failure,
+          ).length,
         },
       );
 
-      return deployment;
+      return deployments;
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);

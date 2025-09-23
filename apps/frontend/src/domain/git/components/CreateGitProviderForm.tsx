@@ -4,10 +4,8 @@ import {
   PMVStack,
   PMHStack,
   PMPopover,
-  PMIconButton,
   PMInput,
   PMButton,
-  PMFormContainer,
   PMLabel,
   PMText,
 } from '@packmind/ui';
@@ -21,7 +19,7 @@ import {
   GitProviders,
   GitProviderUI,
 } from '../types/GitProviderTypes';
-import { LuMessageCircleQuestion } from 'react-icons/lu';
+import { extractErrorMessage } from '../utils/errorUtils';
 
 interface CreateGitProviderFormProps {
   organizationId: OrganizationId;
@@ -115,7 +113,12 @@ export const CreateGitProviderForm: React.FC<CreateGitProviderFormProps> = ({
       onSuccess();
     } catch (error) {
       console.error('Error saving git provider:', error);
-      setErrors({ form: 'Failed to save git provider. Please try again.' });
+      setErrors({
+        form: extractErrorMessage(
+          error,
+          'Failed to save git provider. Please try again.',
+        ),
+      });
     }
   };
 

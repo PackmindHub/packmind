@@ -41,6 +41,7 @@ describe('RecipesController', () => {
       deleteRecipesBatch: jest.fn(),
       getUsageByOrganization: jest.fn(),
       listDeploymentsByRecipe: jest.fn(),
+      setDeploymentPort: jest.fn(),
     };
 
     app = await Test.createTestingModule({
@@ -72,6 +73,7 @@ describe('RecipesController', () => {
           useValue: {
             publishRecipes: jest.fn(),
             getDeploymentsUseCases: jest.fn(),
+            setRecipesPort: jest.fn(),
           },
         },
         {

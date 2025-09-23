@@ -54,7 +54,7 @@ export class DeploymentsService {
 
   async publishStandards(
     command: PublishStandardsCommand,
-  ): Promise<StandardsDeployment> {
+  ): Promise<StandardsDeployment[]> {
     return this.deploymentAdapter.publishStandards(command);
   }
 }

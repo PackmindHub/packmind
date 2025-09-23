@@ -1,4 +1,10 @@
-import { BaseHexa, HexaRegistry, PackmindLogger } from '@packmind/shared';
+import {
+  BaseHexa,
+  HexaRegistry,
+  PackmindLogger,
+  IRecipesPort,
+  BaseHexaOpts,
+} from '@packmind/shared';
 import { IDeploymentPort } from '@packmind/shared';
 import { DeploymentsHexaFactory } from './DeploymentsHexaFactory';
 import { DeploymentsUseCases } from './application/useCases/index';
@@ -6,6 +12,7 @@ import { GitHexa } from '@packmind/git';
 import { RecipesHexa } from '@packmind/recipes';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { StandardsHexa } from '@packmind/standards';
+import { RecipesAdapter } from './adapters/RecipesAdapter';
 
 const origin = 'DeploymentsHexa';
 
@@ -22,35 +29,41 @@ const origin = 'DeploymentsHexa';
  */
 export class DeploymentsHexa extends BaseHexa {
   private readonly hexa: DeploymentsHexaFactory;
-  private readonly logger: PackmindLogger;
   private readonly deploymentsUsecases: IDeploymentPort;
 
   constructor(
     registry: HexaRegistry,
-    logger: PackmindLogger = new PackmindLogger(origin),
+    opts: Partial<BaseHexaOpts> = { logger: new PackmindLogger(origin) },
   ) {
-    super(registry);
-
-    this.logger = logger;
+    super(registry, opts);
     this.logger.info('Initializing DeploymentsHexa');
 
     try {
       const dataSource = registry.getDataSource();
-      this.logger.debug('Retrieved DataSource from registry');
 
       // Initialize the hexagon factory
       this.hexa = new DeploymentsHexaFactory(this.logger, dataSource, registry);
 
-      //TODO: refactor using adapter pattern
       const gitHexa = registry.get(GitHexa);
-      const recipesHexa = registry.get(RecipesHexa);
+
+      // RecipesHexa might not be available during initialization due to circular dependency
+      // Using adapter pattern to decouple from RecipesHexa
+      let recipesPort: IRecipesPort | undefined;
+      try {
+        const recipesHexa = registry.get(RecipesHexa);
+        recipesPort = new RecipesAdapter(recipesHexa);
+      } catch {
+        // RecipesHexa will be resolved later when fully initialized
+        recipesPort = undefined;
+      }
+
       const codingAgentHexa = registry.get(CodingAgentHexa);
       const standardsHexa = registry.get(StandardsHexa);
 
       this.deploymentsUsecases = new DeploymentsUseCases(
         this.hexa,
         gitHexa,
-        recipesHexa,
+        recipesPort,
         codingAgentHexa,
         standardsHexa,
       );
@@ -62,6 +75,18 @@ export class DeploymentsHexa extends BaseHexa {
       });
       throw error;
     }
+  }
+
+  /**
+   * Set the recipes port after initialization to avoid circular dependencies
+   */
+  public setRecipesPort(recipesHexa: RecipesHexa): void {
+    const recipesPort = new RecipesAdapter(recipesHexa);
+    // Update the use cases with the new recipes port
+    (this.deploymentsUsecases as DeploymentsUseCases).updateRecipesPort(
+      recipesPort,
+    );
+    this.logger.info('RecipesPort updated in DeploymentsHexa');
   }
 
   /**

@@ -11,8 +11,6 @@ import {
   PMTableRow,
 } from '@packmind/ui';
 import { DeployRecipeButton } from './DeployRecipeButton';
-import { useDeployRecipe } from '../../deployments/hooks';
-import { GitRepoId } from '@packmind/git/types';
 
 interface RecipeVersionsListProps {
   recipeId: RecipeId;
@@ -27,23 +25,6 @@ export const RecipeVersionsList: React.FC<RecipeVersionsListProps> = ({
     isError,
     error,
   } = useGetRecipeVersionsQuery(recipeId);
-
-  const { deployRecipe, isDeploying } = useDeployRecipe();
-
-  // Memoize the deploy handler to prevent recreation on every render
-  const handleVersionDeploy = useCallback(
-    async (version: number, repositoryIds: GitRepoId[]) => {
-      await deployRecipe(
-        {
-          id: recipeId,
-          version,
-          name: `Recipe v${version}`,
-        },
-        repositoryIds,
-      );
-    },
-    [deployRecipe, recipeId],
-  );
 
   // Compute versionRows in render phase to avoid Rules of Hooks violations
   const versionRows: PMTableRow[] = versions
@@ -64,15 +45,12 @@ export const RecipeVersionsList: React.FC<RecipeVersionsListProps> = ({
           'N/A'
         ),
         actions: (
-          <DeployRecipeButton
-            label={`Deploy v${version.version}`}
-            variant="outline"
-            size="sm"
-            onDeploy={(repositoryId) =>
-              handleVersionDeploy(version.version, repositoryId)
-            }
-            loading={isDeploying}
-          />
+          <></>
+          // <DeployRecipeButton
+          //   label={`Deploy v${version.version}`}
+          //   size="sm"
+          //   selectedRecipes={[version.re]}
+          // />
         ),
       }))
     : [];

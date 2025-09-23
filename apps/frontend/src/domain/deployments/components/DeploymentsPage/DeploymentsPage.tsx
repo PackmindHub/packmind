@@ -169,6 +169,8 @@ export const DeploymentsPage: React.FC = () => {
       <RepositoryCentricView
         recipeRepositories={recipesData.repositories}
         standardRepositories={standardData?.repositories}
+        recipeTargets={recipesData.targets}
+        standardTargets={standardData?.targets}
         searchTerm={searchTerm}
         showOnlyOutdated={repositoryFilter === 'outdated'}
       />

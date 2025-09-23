@@ -3,6 +3,8 @@ import {
   HexaRegistry,
   PackmindLogger,
   QueryOption,
+  IDeploymentPort,
+  BaseHexaOpts,
 } from '@packmind/shared';
 import { GitHexaFactory } from './GitHexaFactory';
 import { GitProvider, GitProviderId } from './domain/entities/GitProvider';
@@ -11,6 +13,12 @@ import { GitCommit } from './domain/entities/GitCommit';
 import { OrganizationId, UserId } from '@packmind/accounts';
 import { AddGitRepoCommand } from './domain/useCases/IAddGitRepo';
 import { FindGitRepoByOwnerRepoAndBranchInOrganizationCommand } from './domain/useCases/IFindGitRepoByOwnerRepoAndBranchInOrganization';
+import { GetAvailableRemoteDirectoriesCommand } from '@packmind/shared';
+import {
+  CheckDirectoryExistenceCommand,
+  CheckDirectoryExistenceResult,
+} from '@packmind/shared';
+import { IGitRepoFactory } from './domain/repositories/IGitRepoFactory';
 
 const origin = 'GitHexa';
 
@@ -26,17 +34,18 @@ const origin = 'GitHexa';
  *
  * Uses the DataSource provided through the HexaRegistry for database operations.
  */
-export class GitHexa extends BaseHexa {
+
+export type GitHexaOpts = BaseHexaOpts & {
+  gitRepoFactory?: IGitRepoFactory;
+};
+
+const BaseGitHexaOpts: GitHexaOpts = { logger: new PackmindLogger(origin) };
+
+export class GitHexa extends BaseHexa<GitHexaOpts> {
   private readonly hexa: GitHexaFactory;
-  private readonly logger: PackmindLogger;
 
-  constructor(
-    registry: HexaRegistry,
-    logger: PackmindLogger = new PackmindLogger(origin),
-  ) {
-    super(registry);
-
-    this.logger = logger;
+  constructor(registry: HexaRegistry, opts?: Partial<GitHexaOpts>) {
+    super(registry, { ...BaseGitHexaOpts, ...opts });
     this.logger.info('Initializing GitHexa');
 
     try {
@@ -45,7 +54,10 @@ export class GitHexa extends BaseHexa {
       this.logger.debug('Retrieved DataSource from registry');
 
       // Initialize the hexagon with the shared DataSource
-      this.hexa = new GitHexaFactory(dataSource, this.logger);
+      this.hexa = new GitHexaFactory(dataSource, {
+        ...BaseGitHexaOpts,
+        ...opts,
+      });
       this.logger.info('GitHexa initialized successfully');
     } catch (error) {
       this.logger.error('Failed to initialize GitHexa', {
@@ -53,6 +65,13 @@ export class GitHexa extends BaseHexa {
       });
       throw error;
     }
+  }
+
+  /**
+   * Set the deployments adapter for creating default targets
+   */
+  public setDeploymentsAdapter(adapter: IDeploymentPort): void {
+    this.hexa.setDeploymentsAdapter(adapter);
   }
 
   /**
@@ -139,6 +158,15 @@ export class GitHexa extends BaseHexa {
       repo,
       branch,
     );
+  }
+
+  /**
+   * Get available targets (directories) from a git repository
+   */
+  public async getAvailableRemoteDirectories(
+    command: GetAvailableRemoteDirectoriesCommand,
+  ): Promise<string[]> {
+    return this.hexa.useCases.getAvailableRemoteDirectories(command);
   }
 
   // ====================
@@ -236,5 +264,14 @@ export class GitHexa extends BaseHexa {
     branch?: string,
   ): Promise<{ sha: string; content: string } | null> {
     return this.hexa.useCases.getFileFromRepo(gitRepo, filePath, branch);
+  }
+
+  /**
+   * Check if a directory exists in a git repository
+   */
+  public async checkDirectoryExistence(
+    command: CheckDirectoryExistenceCommand,
+  ): Promise<CheckDirectoryExistenceResult> {
+    return this.hexa.useCases.checkDirectoryExistence(command);
   }
 }

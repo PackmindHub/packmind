@@ -6,7 +6,7 @@ import {
   IGenerateApiKeyUseCase,
   IGetCurrentApiKeyUseCase,
 } from '@packmind/accounts/types';
-import { PublicGateway, Gateway } from '@packmind/shared';
+import { PublicGateway } from '@packmind/shared';
 
 export interface SignOutResponse {
   message: string;

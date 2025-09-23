@@ -11,6 +11,7 @@
     "@packmind/git": "*",
     "@packmind/standards": "*",
     "@packmind/accounts": "*",
-    "@packmind/shared": "*"
+    "@packmind/shared": "*",
+    "uuid": "^11.1.0"
   }
 }

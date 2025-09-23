@@ -1,10 +1,12 @@
 import { RecipeVersion } from '@packmind/recipes';
 import { GitRepo, GitHexa } from '@packmind/git';
-import { StandardVersion } from '@packmind/standards';
+import { StandardsHexa, StandardVersion } from '@packmind/standards';
 import { FileUpdates } from '../../../domain/entities/FileUpdates';
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
-import { PackmindLogger } from '@packmind/shared';
-import { GenericRecipeSectionWriter } from '../genericRecipe/GenericRecipeSectionWriter';
+import { PackmindLogger, Target } from '@packmind/shared';
+import { GenericRecipeSectionWriter } from '../genericSectionWriter/GenericRecipeSectionWriter';
+import { getTargetPrefixedPath } from '../utils/FileUtils';
+import { GenericStandardWriter } from '../genericSectionWriter/GenericStandardWriter';
 
 const origin = 'CopilotDeployer';
 
@@ -13,26 +15,36 @@ export class CopilotDeployer implements ICodingAgentDeployer {
     '.github/instructions/packmind-recipes-index.instructions.md';
   private readonly logger: PackmindLogger;
 
-  constructor(private readonly gitHexa?: GitHexa) {
+  constructor(
+    private readonly standardsHexa?: StandardsHexa,
+    private readonly gitHexa?: GitHexa,
+  ) {
     this.logger = new PackmindLogger(origin);
   }
 
   async deployRecipes(
     recipeVersions: RecipeVersion[],
     gitRepo: GitRepo,
+    target: Target,
   ): Promise<FileUpdates> {
     this.logger.info('Deploying recipes for GitHub Copilot', {
       recipesCount: recipeVersions.length,
       gitRepoId: gitRepo.id,
+      targetId: target.id,
+      targetPath: target.path,
     });
 
     // Get existing recipes index content
-    const existingContent = await this.getExistingRecipesIndexContent(gitRepo);
+    const existingContent = await this.getExistingRecipesIndexContent(
+      gitRepo,
+      target,
+    );
 
     // Generate content with recipe instructions
     const updatedContent = await this.generateRecipeContent(
       recipeVersions,
       gitRepo,
+      target,
     );
 
     const fileUpdates: FileUpdates = {
@@ -42,8 +54,12 @@ export class CopilotDeployer implements ICodingAgentDeployer {
 
     // Only create file if content was updated
     if (updatedContent !== existingContent) {
+      const targetPrefixedPath = getTargetPrefixedPath(
+        CopilotDeployer.RECIPES_INDEX_PATH,
+        target,
+      );
       fileUpdates.createOrUpdate.push({
-        path: CopilotDeployer.RECIPES_INDEX_PATH,
+        path: targetPrefixedPath,
         content: updatedContent,
       });
     }
@@ -54,10 +70,13 @@ export class CopilotDeployer implements ICodingAgentDeployer {
   async deployStandards(
     standardVersions: StandardVersion[],
     gitRepo: GitRepo,
+    target: Target,
   ): Promise<FileUpdates> {
     this.logger.info('Deploying standards for GitHub Copilot', {
       standardsCount: standardVersions.length,
       gitRepoId: gitRepo.id,
+      targetId: target.id,
+      targetPath: target.path,
     });
 
     const fileUpdates: FileUpdates = {
@@ -67,9 +86,11 @@ export class CopilotDeployer implements ICodingAgentDeployer {
 
     // Generate individual Copilot configuration files for each standard
     for (const standardVersion of standardVersions) {
-      const configFile = this.generateCopilotConfigForStandard(standardVersion);
+      const configFile =
+        await this.generateCopilotConfigForStandard(standardVersion);
+      const targetPrefixedPath = getTargetPrefixedPath(configFile.path, target);
       fileUpdates.createOrUpdate.push({
-        path: configFile.path,
+        path: targetPrefixedPath,
         content: configFile.content,
       });
     }
@@ -82,6 +103,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
    */
   private async getExistingRecipesIndexContent(
     gitRepo: GitRepo,
+    target: Target,
   ): Promise<string> {
     if (!this.gitHexa) {
       this.logger.debug('No GitHexa available, returning empty content');
@@ -89,9 +111,13 @@ export class CopilotDeployer implements ICodingAgentDeployer {
     }
 
     try {
+      const targetPrefixedPath = getTargetPrefixedPath(
+        CopilotDeployer.RECIPES_INDEX_PATH,
+        target,
+      );
       const existingFile = await this.gitHexa.getFileFromRepo(
         gitRepo,
-        CopilotDeployer.RECIPES_INDEX_PATH,
+        targetPrefixedPath,
       );
       return existingFile?.content || '';
     } catch (error) {
@@ -99,6 +125,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
         'Failed to get existing Copilot recipes index content',
         {
           error: error instanceof Error ? error.message : String(error),
+          targetPath: target.path,
         },
       );
       return '';
@@ -111,8 +138,10 @@ export class CopilotDeployer implements ICodingAgentDeployer {
   private async generateRecipeContent(
     recipeVersions: RecipeVersion[],
     gitRepo: GitRepo,
+    target: Target,
   ): Promise<string> {
     const repoName = `${gitRepo.owner}/${gitRepo.repo}`;
+    const targetPath = target.path;
 
     // Generate recipes list
     const recipesSection = this.generateRecipesSection(recipeVersions);
@@ -122,6 +151,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
         agentName: 'GitHub Copilot',
         repoName,
         recipesSection,
+        target: targetPath,
       });
 
     return `---
@@ -136,41 +166,41 @@ ${packmindInstructions}`;
    */
   private generateRecipesSection(recipeVersions: RecipeVersion[]): string {
     if (recipeVersions.length === 0) {
-      return `## Available Recipes
-
-No recipes are currently available for this repository.`;
+      return `No recipes are currently available for this repository.`;
     }
 
-    const recipesList = recipeVersions
+    return recipeVersions
       .map(
         (recipe) =>
           `- [${recipe.name}](.packmind/recipes/${recipe.slug}.md) : ${recipe.summary || recipe.name}`,
       )
       .join('\n');
-
-    return `## Available Recipes
-
-${recipesList}`;
   }
 
   /**
    * Generate GitHub Copilot configuration file for a specific standard
    */
-  private generateCopilotConfigForStandard(standardVersion: StandardVersion): {
+  private async generateCopilotConfigForStandard(
+    standardVersion: StandardVersion,
+  ): Promise<{
     path: string;
     content: string;
-  } {
+  }> {
     this.logger.debug('Generating Copilot configuration for standard', {
       standardSlug: standardVersion.slug,
       scope: standardVersion.scope,
     });
+    const rules =
+      (await this.standardsHexa?.getRulesByStandardId(
+        standardVersion.standardId,
+      )) ?? [];
 
     const applyTo = standardVersion.scope || '**';
 
     const content = `---
 applyTo: '${applyTo}'
 ---
-Apply the coding rules described #file:../../.packmind/standards/${standardVersion.slug}.md`;
+${GenericStandardWriter.writeStandard(standardVersion, rules)}`;
 
     const path = `.github/instructions/packmind-${standardVersion.slug}.instructions.md`;
 

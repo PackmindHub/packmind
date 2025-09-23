@@ -4,13 +4,19 @@ import { DataSource } from 'typeorm';
 /**
  * Constructor type for BaseHexa subclasses.
  */
-type HexaConstructor<T extends BaseHexa> = new (registry: HexaRegistry) => T;
+type ExtractOpts<T extends BaseHexa> = T extends BaseHexa<infer X> ? X : never;
+
+type HexaConstructor<T extends BaseHexa> = new (
+  registry: HexaRegistry,
+  opts?: Partial<ExtractOpts<T>>,
+) => T;
 
 /**
  * Registration entry for storing hexa constructors before instantiation.
  */
 interface HexaRegistration<T extends BaseHexa = BaseHexa> {
   constructor: HexaConstructor<T>;
+  opts?: Partial<ExtractOpts<T>>;
 }
 
 /**
@@ -54,13 +60,16 @@ export class HexaRegistry {
    * @param constructor - Constructor function for the hexa
    * @throws Error if an hexa with the same constructor is already registered
    */
-  public register<T extends BaseHexa>(constructor: HexaConstructor<T>): void {
+  public register<T extends BaseHexa>(
+    constructor: HexaConstructor<T>,
+    opts?: Partial<ExtractOpts<T>>,
+  ): void {
     if (this.registrations.has(constructor))
       throw new Error(`Hexa ${constructor.name} already registered`);
     if (this.isInitialized)
       throw new Error('Cannot register hexas after initialization');
 
-    this.registrations.set(constructor, { constructor });
+    this.registrations.set(constructor, { constructor, opts });
   }
 
   /**
@@ -84,7 +93,7 @@ export class HexaRegistry {
     try {
       // Instantiate all registered hexas in registration order
       for (const registration of this.registrations.values()) {
-        const instance = new registration.constructor(this);
+        const instance = new registration.constructor(this, registration.opts);
         this.hexas.set(registration.constructor, instance);
       }
     } catch (error) {

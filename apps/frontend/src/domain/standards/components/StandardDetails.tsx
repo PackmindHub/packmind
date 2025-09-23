@@ -28,6 +28,7 @@ import { RulesList } from './RulesList';
 import { useDeployStandard } from '../../deployments/hooks';
 import { Standard } from '@packmind/standards/types';
 import { GitRepoId } from '@packmind/git/types';
+import { TargetId } from '@packmind/shared';
 import { STANDARD_MESSAGES } from '../constants/messages';
 import { AutobreadCrumb } from '../../../shared/components/navigation/AutobreadCrumb';
 import { DeploymentsPanel } from '../../deployments/components/StandardDeployments/DeploymentsPanel';
@@ -35,6 +36,7 @@ import {
   MarkdownEditor,
   MarkdownEditorProvider,
 } from '../../../shared/components/editor/MarkdownEditor';
+import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 
 interface StandardDetailsProps {
   standard: Standard;
@@ -46,6 +48,7 @@ export const StandardDetails = ({
   orgSlug,
 }: StandardDetailsProps) => {
   const navigate = useNavigate();
+  const { organization } = useAuthContext();
   const [minRulesWidth, maxRulesWidth] = pmUseToken('sizes', ['md', '2xl']);
 
   // Alert state management for deployment
@@ -102,7 +105,7 @@ export const StandardDetails = ({
     }
   };
 
-  const handleDeploy = async (gitRepoIds: GitRepoId[]) => {
+  const handleDeploy = async (targetIds: TargetId[]) => {
     if (!standard) return;
 
     try {
@@ -118,7 +121,7 @@ export const StandardDetails = ({
           version: standard.version,
           name: standard.name,
         },
-        gitRepoIds,
+        targetIds,
       );
 
       // Show success alert
@@ -265,13 +268,16 @@ export const StandardDetails = ({
             {
               value: 'deployments',
               triggerLabel: 'Deployments',
-              content: (
+              content: organization ? (
                 <DeploymentsPanel
                   standard={standard}
                   orgSlug={orgSlug}
+                  organizationId={organization.id}
                   handleDeploy={handleDeploy}
                   isDeploying={isDeploying}
                 />
+              ) : (
+                <PMText>Loading organization...</PMText>
               ),
             },
           ]}

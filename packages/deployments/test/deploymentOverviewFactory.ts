@@ -8,7 +8,11 @@ import {
   RecipeDeploymentStatus,
   RepositoryDeploymentInfo,
   RepositoryDeploymentStatus,
+  TargetDeploymentStatus,
+  TargetDeploymentInfo,
+  DeployedRecipeTargetInfo,
 } from '@packmind/shared';
+import { targetFactory } from './targetFactory';
 
 export const createDeployedRecipeInfo = (
   deployedRecipeInfo?: Partial<DeployedRecipeInfo>,
@@ -61,8 +65,57 @@ export const createRecipeDeploymentStatus = (
     recipe,
     latestVersion: recipeVersionFactory({ recipeId: recipe.id }),
     deployments: [createRepositoryDeploymentInfo()],
+    targetDeployments: [createTargetDeploymentInfo()],
     hasOutdatedDeployments: true,
     ...recipeDeploymentStatus,
+  };
+};
+
+// Target-centric factory functions
+export const createDeployedRecipeTargetInfo = (
+  deployedRecipeTargetInfo?: Partial<DeployedRecipeTargetInfo>,
+): DeployedRecipeTargetInfo => {
+  const recipe = recipeFactory();
+  const deployedVersion = recipeVersionFactory({ recipeId: recipe.id });
+  const latestVersion = recipeVersionFactory({
+    recipeId: recipe.id,
+    version: deployedVersion.version + 1,
+  });
+
+  return {
+    recipe,
+    deployedVersion,
+    latestVersion,
+    isUpToDate: false,
+    deploymentDate: new Date().toISOString(),
+    ...deployedRecipeTargetInfo,
+  };
+};
+
+export const createTargetDeploymentStatus = (
+  targetDeploymentStatus?: Partial<TargetDeploymentStatus>,
+): TargetDeploymentStatus => {
+  const target = targetFactory();
+  return {
+    target,
+    gitRepo: gitRepoFactory({ id: target.gitRepoId }),
+    deployedRecipes: [createDeployedRecipeTargetInfo()],
+    hasOutdatedRecipes: true,
+    ...targetDeploymentStatus,
+  };
+};
+
+export const createTargetDeploymentInfo = (
+  targetDeploymentInfo?: Partial<TargetDeploymentInfo>,
+): TargetDeploymentInfo => {
+  const target = targetFactory();
+  return {
+    target,
+    gitRepo: gitRepoFactory({ id: target.gitRepoId }),
+    deployedVersion: recipeVersionFactory(),
+    isUpToDate: false,
+    deploymentDate: new Date().toISOString(),
+    ...targetDeploymentInfo,
   };
 };
 
@@ -71,6 +124,7 @@ export const createDeploymentOverview: Factory<DeploymentOverview> = (
 ) => {
   return {
     repositories: [createRepositoryDeploymentStatus()],
+    targets: [createTargetDeploymentStatus()],
     recipes: [createRecipeDeploymentStatus()],
     ...deploymentOverview,
   };

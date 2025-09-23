@@ -1,6 +1,8 @@
 import { GitProviderService } from './GitProviderService';
 import { GitRepoService } from './GitRepoService';
 import { GitCommitService } from './services/GitCommitService';
+import { IGitRepoFactory } from '../domain/repositories/IGitRepoFactory';
+import { IGitProviderFactory } from '../domain/repositories/IGitProviderFactory';
 
 /**
  * IGitServices - Service aggregator interface for the Git application layer
@@ -24,4 +26,14 @@ export interface IGitServices {
    * Get the git commit service instance
    */
   getGitCommitService(): GitCommitService;
+
+  /**
+   * Get the git repo factory instance
+   */
+  getGitRepoFactory(): IGitRepoFactory;
+
+  /**
+   * Get the git provider factory instance
+   */
+  getGitProviderFactory(): IGitProviderFactory;
 }

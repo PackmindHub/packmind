@@ -1,147 +1,166 @@
 import { Factory } from '@packmind/shared/test';
+import { gitRepoFactory } from '@packmind/git/test/gitRepoFactory';
 import {
   StandardDeploymentOverview,
   RepositoryStandardDeploymentStatus,
-  DeployedStandardInfo,
+  TargetStandardDeploymentStatus,
   StandardDeploymentStatus,
+  DeployedStandardInfo,
+  DeployedStandardTargetInfo,
   RepositoryStandardDeploymentInfo,
-} from '../src/domain/types/StandardDeploymentOverview';
-import { GitRepo } from '@packmind/git/types';
-import {
+  TargetStandardDeploymentInfo,
   Standard,
   StandardVersion,
-  createStandardVersionId,
+  createOrganizationId,
   createStandardId,
-} from '@packmind/standards';
-import { createGitRepoId, createGitProviderId } from '@packmind/git';
-import { createOrganizationId, createUserId } from '@packmind/accounts';
-import { v4 as uuidv4 } from 'uuid';
+  createUserId,
+  createStandardVersionId,
+} from '@packmind/shared';
+import { targetFactory } from './targetFactory';
+
+// Mock standard and standard version for testing
+export const createMockStandard = (standard?: Partial<Standard>): Standard => ({
+  id: createStandardId('test-standard-id'),
+  name: 'Test Standard',
+  slug: 'test-standard',
+  version: 1,
+  description: 'Test standard description',
+  organizationId: createOrganizationId('test-org-id'),
+  userId: createUserId('test-user-id'),
+  scope: 'test-scope',
+  ...standard,
+});
+
+export const createMockStandardVersion = (
+  standardVersion?: Partial<StandardVersion>,
+): StandardVersion => ({
+  id: createStandardVersionId('test-standard-version-id'),
+  standardId: createStandardId('test-standard-id'),
+  name: 'Test Standard',
+  slug: 'test-standard',
+  version: 1,
+  description: 'Test standard description',
+  summary: null,
+  userId: createUserId('test-user-id'),
+  scope: null,
+  ...standardVersion,
+});
+
+export const createDeployedStandardInfo = (
+  deployedStandardInfo?: Partial<DeployedStandardInfo>,
+): DeployedStandardInfo => {
+  const standard = createMockStandard();
+  const deployedVersion = createMockStandardVersion({
+    standardId: standard.id,
+  });
+  const latestVersion = createMockStandardVersion({
+    standardId: standard.id,
+    version: deployedVersion.version + 1,
+  });
+
+  return {
+    standard,
+    deployedVersion,
+    latestVersion,
+    isUpToDate: false,
+    deploymentDate: new Date().toISOString(),
+    ...deployedStandardInfo,
+  };
+};
+
+export const createDeployedStandardTargetInfo = (
+  deployedStandardTargetInfo?: Partial<DeployedStandardTargetInfo>,
+): DeployedStandardTargetInfo => {
+  const standard = createMockStandard();
+  const deployedVersion = createMockStandardVersion({
+    standardId: standard.id,
+  });
+  const latestVersion = createMockStandardVersion({
+    standardId: standard.id,
+    version: deployedVersion.version + 1,
+  });
+
+  return {
+    standard,
+    deployedVersion,
+    latestVersion,
+    isUpToDate: false,
+    deploymentDate: new Date().toISOString(),
+    ...deployedStandardTargetInfo,
+  };
+};
+
+export const createRepositoryStandardDeploymentStatus = (
+  repositoryStandardDeploymentStatus?: Partial<RepositoryStandardDeploymentStatus>,
+): RepositoryStandardDeploymentStatus => {
+  return {
+    gitRepo: gitRepoFactory(),
+    deployedStandards: [createDeployedStandardInfo()],
+    hasOutdatedStandards: true,
+    ...repositoryStandardDeploymentStatus,
+  };
+};
+
+export const createTargetStandardDeploymentStatus = (
+  targetStandardDeploymentStatus?: Partial<TargetStandardDeploymentStatus>,
+): TargetStandardDeploymentStatus => {
+  const target = targetFactory();
+  return {
+    target,
+    gitRepo: gitRepoFactory({ id: target.gitRepoId }),
+    deployedStandards: [createDeployedStandardTargetInfo()],
+    hasOutdatedStandards: true,
+    ...targetStandardDeploymentStatus,
+  };
+};
+
+export const createRepositoryStandardDeploymentInfo = (
+  repositoryStandardDeploymentInfo?: Partial<RepositoryStandardDeploymentInfo>,
+): RepositoryStandardDeploymentInfo => {
+  return {
+    gitRepo: gitRepoFactory(),
+    deployedVersion: createMockStandardVersion(),
+    isUpToDate: false,
+    deploymentDate: new Date().toISOString(),
+    ...repositoryStandardDeploymentInfo,
+  };
+};
+
+export const createTargetStandardDeploymentInfo = (
+  targetStandardDeploymentInfo?: Partial<TargetStandardDeploymentInfo>,
+): TargetStandardDeploymentInfo => {
+  const target = targetFactory();
+  return {
+    target,
+    gitRepo: gitRepoFactory({ id: target.gitRepoId }),
+    deployedVersion: createMockStandardVersion(),
+    isUpToDate: false,
+    deploymentDate: new Date().toISOString(),
+    ...targetStandardDeploymentInfo,
+  };
+};
+
+export const createStandardDeploymentStatus = (
+  standardDeploymentStatus?: Partial<StandardDeploymentStatus>,
+): StandardDeploymentStatus => {
+  const standard = createMockStandard();
+  return {
+    standard,
+    latestVersion: createMockStandardVersion({ standardId: standard.id }),
+    deployments: [createRepositoryStandardDeploymentInfo()],
+    targetDeployments: [createTargetStandardDeploymentInfo()],
+    hasOutdatedDeployments: true,
+    ...standardDeploymentStatus,
+  };
+};
 
 export const createStandardDeploymentOverview: Factory<
   StandardDeploymentOverview
-> = (overview?: Partial<StandardDeploymentOverview>) => {
+> = (standardDeploymentOverview?: Partial<StandardDeploymentOverview>) => {
   return {
-    repositories: [],
-    standards: [],
-    ...overview,
-  };
-};
-
-export const createRepositoryStandardDeploymentStatus: Factory<
-  RepositoryStandardDeploymentStatus
-> = (status?: Partial<RepositoryStandardDeploymentStatus>) => {
-  return {
-    gitRepo: {
-      id: createGitRepoId(uuidv4()),
-      name: 'Test Repository',
-      owner: 'testowner',
-      repo: 'testrepo',
-      branch: 'main',
-      providerId: createGitProviderId(uuidv4()),
-      organizationId: createOrganizationId(uuidv4()),
-    } as GitRepo,
-    deployedStandards: [],
-    hasOutdatedStandards: false,
-    ...status,
-  };
-};
-
-export const createDeployedStandardInfo: Factory<DeployedStandardInfo> = (
-  info?: Partial<DeployedStandardInfo>,
-) => {
-  const standardId = createStandardId('test-standard-id');
-  const standardVersion: StandardVersion = {
-    id: createStandardVersionId(uuidv4()),
-    standardId,
-    name: 'Test Standard',
-    slug: 'test-standard',
-    version: 1,
-    description: 'Test standard description',
-    summary: null,
-    userId: createUserId(uuidv4()),
-    scope: null,
-  };
-
-  return {
-    standard: {
-      id: standardId,
-      name: 'Test Standard',
-      slug: 'test-standard',
-      version: 1,
-      description: 'Test standard description',
-      userId: createUserId(uuidv4()),
-      organizationId: createOrganizationId(uuidv4()),
-      scope: null,
-    } as Standard,
-    deployedVersion: standardVersion,
-    latestVersion: standardVersion,
-    isUpToDate: true,
-    deploymentDate: new Date().toISOString(),
-    ...info,
-  };
-};
-
-export const createStandardDeploymentStatus: Factory<
-  StandardDeploymentStatus
-> = (status?: Partial<StandardDeploymentStatus>) => {
-  const standardId = createStandardId('test-standard-id');
-  const standardVersion: StandardVersion = {
-    id: createStandardVersionId(uuidv4()),
-    standardId,
-    name: 'Test Standard',
-    slug: 'test-standard',
-    version: 1,
-    description: 'Test standard description',
-    summary: null,
-    userId: createUserId(uuidv4()),
-    scope: null,
-  };
-
-  return {
-    standard: {
-      id: standardId,
-      name: 'Test Standard',
-      slug: 'test-standard',
-      version: 1,
-      description: 'Test standard description',
-      userId: createUserId(uuidv4()),
-      organizationId: createOrganizationId(uuidv4()),
-      scope: null,
-    } as Standard,
-    latestVersion: standardVersion,
-    deployments: [],
-    hasOutdatedDeployments: false,
-    ...status,
-  };
-};
-
-export const createRepositoryStandardDeploymentInfo: Factory<
-  RepositoryStandardDeploymentInfo
-> = (info?: Partial<RepositoryStandardDeploymentInfo>) => {
-  const standardId = createStandardId('test-standard-id');
-  return {
-    gitRepo: {
-      id: createGitRepoId(uuidv4()),
-      name: 'Test Repository',
-      owner: 'testowner',
-      repo: 'testrepo',
-      branch: 'main',
-      providerId: createGitProviderId(uuidv4()),
-      organizationId: createOrganizationId(uuidv4()),
-    } as GitRepo,
-    deployedVersion: {
-      id: createStandardVersionId(uuidv4()),
-      standardId,
-      name: 'Test Standard',
-      slug: 'test-standard',
-      version: 1,
-      description: 'Test standard description',
-      summary: null,
-      userId: createUserId(uuidv4()),
-      scope: null,
-    },
-    isUpToDate: true,
-    deploymentDate: new Date().toISOString(),
-    ...info,
+    repositories: [createRepositoryStandardDeploymentStatus()],
+    targets: [createTargetStandardDeploymentStatus()],
+    standards: [createStandardDeploymentStatus()],
+    ...standardDeploymentOverview,
   };
 };

@@ -10,10 +10,7 @@ jest.mock('../config/config/Configuration', () => ({
   Configuration: {
     getConfig: jest.fn().mockImplementation((key: string) => {
       const mockConfig: Record<string, string> = {
-        REDIS_HOST: 'localhost',
-        REDIS_PORT: '6379',
-        REDIS_USER: '',
-        REDIS_PASSWORD: '',
+        REDIS_URI: 'redis:6379',
       };
       return Promise.resolve(mockConfig[key] || null);
     }),
