@@ -1,5 +1,13 @@
 # [Unreleased]
 
+# [1.1.1] - 2015-09-26
+
+## Changed
+
+- Overview is now grouped by Targets (#172)
+- Multiple UI improvements
+- Add MCP tool to create first standards
+
 # [1.1.0] - 2015-09-22
 
 ## Added
