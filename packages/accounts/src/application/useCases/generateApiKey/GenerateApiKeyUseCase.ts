@@ -31,6 +31,13 @@ export class GenerateApiKeyUseCase implements IGenerateApiKeyUseCase {
         throw new Error('User not found');
       }
 
+      const membership = user.memberships.find(
+        (item) => item.organizationId === command.organizationId,
+      );
+      if (!membership) {
+        throw new Error('User organization membership not found');
+      }
+
       const organization = await this.organizationService.getOrganizationById(
         command.organizationId,
       );
@@ -42,6 +49,7 @@ export class GenerateApiKeyUseCase implements IGenerateApiKeyUseCase {
       const apiKey = this.apiKeyService.generateApiKey(
         user,
         organization,
+        membership.role,
         command.host,
       );
       const expiresAt = this.apiKeyService.getApiKeyExpiration(apiKey);

@@ -40,25 +40,6 @@ export class OrganizationRepository
     return `Organization name '${organization.name}' already exists`;
   }
 
-  async findByName(name: string): Promise<Organization | null> {
-    this.logger.info('Finding organization by name', { name });
-
-    try {
-      const organization = await this.repository.findOne({ where: { name } });
-      this.logger.info('Organization found by name', {
-        name,
-        found: !!organization,
-      });
-      return organization;
-    } catch (error) {
-      this.logger.error('Failed to find organization by name', {
-        name,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }
-
   async findBySlug(slug: string): Promise<Organization | null> {
     this.logger.info('Finding organization by slug', { slug });
 

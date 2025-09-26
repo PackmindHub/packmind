@@ -50,9 +50,15 @@ describe('GenerateApiKeyUseCase', () => {
 
       const testUser = userFactory({
         id: userId,
-        username: 'testuser',
+        email: 'testuser@packmind.com',
         passwordHash: 'hash',
-        organizationId,
+        memberships: [
+          {
+            userId,
+            organizationId,
+            role: 'admin',
+          },
+        ],
       });
 
       const testOrganization = organizationFactory({
@@ -90,6 +96,7 @@ describe('GenerateApiKeyUseCase', () => {
       expect(mockApiKeyService.generateApiKey).toHaveBeenCalledWith(
         testUser,
         testOrganization,
+        'admin',
         host,
       );
       expect(mockApiKeyService.getApiKeyExpiration).toHaveBeenCalledWith(
@@ -125,9 +132,15 @@ describe('GenerateApiKeyUseCase', () => {
 
       const testUser = userFactory({
         id: userId,
-        username: 'testuser',
+        email: 'testuser@packmind.com',
         passwordHash: 'hash',
-        organizationId,
+        memberships: [
+          {
+            userId,
+            organizationId,
+            role: 'admin',
+          },
+        ],
       });
 
       mockUserService.getUserById.mockResolvedValue(testUser);
@@ -142,6 +155,35 @@ describe('GenerateApiKeyUseCase', () => {
       );
     });
 
+    it('throws error if user is not a member of the organization', async () => {
+      const userId = createUserId('user-123');
+      const organizationId = createOrganizationId('org-456');
+      const command: GenerateApiKeyCommand = {
+        userId,
+        organizationId,
+        host: 'https://api.example.com',
+      };
+
+      const testUser = userFactory({
+        id: userId,
+        email: 'testuser@packmind.com',
+        passwordHash: 'hash',
+        memberships: [
+          {
+            userId,
+            organizationId: createOrganizationId('org-789'),
+            role: 'admin',
+          },
+        ],
+      });
+
+      mockUserService.getUserById.mockResolvedValue(testUser);
+
+      await expect(generateApiKeyUseCase.execute(command)).rejects.toThrow(
+        'User organization membership not found',
+      );
+    });
+
     it('throws error if API key expiration fails', async () => {
       const userId = createUserId('user-123');
       const organizationId = createOrganizationId('org-456');
@@ -153,9 +195,15 @@ describe('GenerateApiKeyUseCase', () => {
 
       const testUser = userFactory({
         id: userId,
-        username: 'testuser',
+        email: 'testuser@packmind.com',
         passwordHash: 'hash',
-        organizationId,
+        memberships: [
+          {
+            userId,
+            organizationId,
+            role: 'admin',
+          },
+        ],
       });
 
       const testOrganization = organizationFactory({

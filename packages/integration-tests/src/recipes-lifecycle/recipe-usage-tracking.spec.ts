@@ -85,8 +85,8 @@ describe('Recipe usage tracking', () => {
       name: 'test organization',
     });
     user = await accountsHexa.signUpUser({
-      username: 'toto',
-      password: 's3cret',
+      email: 'toto@packmind.com',
+      password: 's3cret!@',
       organizationId: organization.id,
     });
 

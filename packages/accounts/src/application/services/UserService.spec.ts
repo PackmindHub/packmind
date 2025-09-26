@@ -13,7 +13,7 @@ jest.mock('bcrypt', () => ({
 }));
 
 const mockHash = jest.fn<Promise<string>, [string, number]>();
-const mockCompare = jest.fn<Promise<boolean>, [string, string]>();
+const mockCompare = jest.fn<Promise<boolean>, [string, string | null]>();
 
 describe('UserService', () => {
   let userService: UserService;
@@ -24,7 +24,8 @@ describe('UserService', () => {
     mockUserRepository = {
       add: jest.fn(),
       findById: jest.fn(),
-      findByUsername: jest.fn(),
+      findByEmail: jest.fn(),
+      findByEmailCaseInsensitive: jest.fn(),
       list: jest.fn(),
       deleteById: jest.fn(),
       restoreById: jest.fn(),
@@ -50,49 +51,60 @@ describe('UserService', () => {
     });
 
     it('creates a new user successfully', async () => {
-      const username = 'testuser';
+      const email = 'testuser@packmind.com';
       const password = 'plainpassword';
       const organizationId = '123e4567-e89b-12d3-a456-426614174001';
 
-      mockUserRepository.add.mockResolvedValue({
-        id: expect.any(String),
-        username,
-        passwordHash: 'hashedpassword123',
-        organizationId: createOrganizationId(organizationId),
-      });
+      const organization = createOrganizationId(organizationId);
+      mockUserRepository.findByEmailCaseInsensitive.mockResolvedValue(null);
+      mockUserRepository.add.mockImplementation(async (user) => user);
 
       const result = await userService.createUser(
-        username,
+        email,
         password,
-        createOrganizationId(organizationId),
+        organization,
       );
 
+      expect(
+        mockUserRepository.findByEmailCaseInsensitive,
+      ).toHaveBeenCalledWith(email);
       expect(mockHash).toHaveBeenCalledWith(password, 10);
-      expect(mockUserRepository.add).toHaveBeenCalledWith({
-        id: expect.any(String),
-        username,
-        passwordHash: 'hashedpassword123',
-        organizationId: createOrganizationId(organizationId),
-      });
-      expect(result.username).toBe(username);
-      expect(result.organizationId).toBe(organizationId);
+      expect(mockUserRepository.add).toHaveBeenCalledWith(
+        expect.objectContaining({
+          email,
+          passwordHash: 'hashedpassword123',
+          active: true,
+          memberships: [
+            expect.objectContaining({
+              organizationId: organization,
+              role: 'admin',
+            }),
+          ],
+        }),
+      );
+      expect(result.email).toBe(email);
+      expect(result.active).toBe(true);
+      expect(result.memberships).toEqual([
+        expect.objectContaining({
+          organizationId: organization,
+          role: 'admin',
+        }),
+      ]);
     });
 
-    describe('when username is missing', () => {
+    describe('when email is missing', () => {
       it('throws error', async () => {
-        const username = '';
+        const email = '';
         const password = 'plainpassword';
         const organizationId = '123e4567-e89b-12d3-a456-426614174001';
 
         await expect(
           userService.createUser(
-            username,
+            email,
             password,
             createOrganizationId(organizationId),
           ),
-        ).rejects.toThrow(
-          'Username, password, and organizationId are required',
-        );
+        ).rejects.toThrow('Email, password, and organizationId are required');
 
         expect(mockUserRepository.add).not.toHaveBeenCalled();
       });
@@ -100,19 +112,17 @@ describe('UserService', () => {
 
     describe('when password is missing', () => {
       it('throws error', async () => {
-        const username = 'testuser';
+        const email = 'testuser@packmind.com';
         const password = '';
         const organizationId = '123e4567-e89b-12d3-a456-426614174001';
 
         await expect(
           userService.createUser(
-            username,
+            email,
             password,
             createOrganizationId(organizationId),
           ),
-        ).rejects.toThrow(
-          'Username, password, and organizationId are required',
-        );
+        ).rejects.toThrow('Email, password, and organizationId are required');
 
         expect(mockUserRepository.add).not.toHaveBeenCalled();
       });
@@ -120,43 +130,72 @@ describe('UserService', () => {
 
     describe('when organizationId is missing', () => {
       it('throws error', async () => {
-        const username = 'testuser';
+        const email = 'testuser@packmind.com';
         const password = 'plainpassword';
         const organizationId = '';
 
         await expect(
           userService.createUser(
-            username,
+            email,
             password,
             createOrganizationId(organizationId),
           ),
-        ).rejects.toThrow(
-          'Username, password, and organizationId are required',
-        );
+        ).rejects.toThrow('Email, password, and organizationId are required');
 
         expect(mockUserRepository.add).not.toHaveBeenCalled();
       });
     });
 
-    describe('when username already exists', () => {
-      it('throws error', async () => {
-        const username = 'testuser';
+    describe('when email already exists (case-insensitive)', () => {
+      it('throws error for exact case match', async () => {
+        const email = 'testuser@packmind.com';
         const password = 'plainpassword';
         const organizationId = '123e4567-e89b-12d3-a456-426614174001';
 
-        mockUserRepository.add.mockRejectedValue(
-          new Error("Username 'testuser' already exists"),
+        const existingUser = userFactory({ email });
+        mockUserRepository.findByEmailCaseInsensitive.mockResolvedValue(
+          existingUser,
         );
 
         await expect(
           userService.createUser(
-            username,
+            email,
             password,
             createOrganizationId(organizationId),
           ),
-        ).rejects.toThrow("Username 'testuser' already exists");
+        ).rejects.toThrow(`Email '${email}' already exists`);
 
-        expect(mockUserRepository.add).toHaveBeenCalled();
+        expect(
+          mockUserRepository.findByEmailCaseInsensitive,
+        ).toHaveBeenCalledWith(email);
+        expect(mockUserRepository.add).not.toHaveBeenCalled();
+      });
+
+      it('throws error for different case match', async () => {
+        const email = 'NewUser@packmind.com';
+        const password = 'plainpassword';
+        const organizationId = '123e4567-e89b-12d3-a456-426614174001';
+
+        const existingUser = userFactory({
+          email: 'newuser@PACKMIND.com', // Different case
+        });
+
+        mockUserRepository.findByEmailCaseInsensitive.mockResolvedValue(
+          existingUser,
+        );
+
+        await expect(
+          userService.createUser(
+            email,
+            password,
+            createOrganizationId(organizationId),
+          ),
+        ).rejects.toThrow(`Email '${email}' already exists`);
+
+        expect(
+          mockUserRepository.findByEmailCaseInsensitive,
+        ).toHaveBeenCalledWith(email);
+        expect(mockUserRepository.add).not.toHaveBeenCalled();
       });
     });
   });
@@ -167,9 +206,15 @@ describe('UserService', () => {
         const userId = createUserId('123e4567-e89b-12d3-a456-426614174000');
         const user = userFactory({
           id: userId,
-          organizationId: createOrganizationId(
-            '123e4567-e89b-12d3-a456-426614174001',
-          ),
+          memberships: [
+            {
+              userId,
+              organizationId: createOrganizationId(
+                '123e4567-e89b-12d3-a456-426614174001',
+              ),
+              role: 'admin',
+            },
+          ],
         });
 
         mockUserRepository.findById.mockResolvedValue(user);
@@ -195,40 +240,117 @@ describe('UserService', () => {
     });
   });
 
-  describe('.getUserByUsername', () => {
+  describe('.getUserByEmail', () => {
     describe('when user is found', () => {
       it('returns the user', async () => {
-        const username = 'testuser';
+        const email = 'testuser@packmind.com';
         const user = userFactory({
           id: createUserId('123e4567-e89b-12d3-a456-426614174000'),
-          username,
-          organizationId: createOrganizationId(
-            '123e4567-e89b-12d3-a456-426614174001',
-          ),
+          email,
+          memberships: [
+            {
+              userId: createUserId('123e4567-e89b-12d3-a456-426614174000'),
+              organizationId: createOrganizationId(
+                '123e4567-e89b-12d3-a456-426614174001',
+              ),
+              role: 'admin',
+            },
+          ],
         });
 
-        mockUserRepository.findByUsername.mockResolvedValue(user);
+        mockUserRepository.findByEmail.mockResolvedValue(user);
 
-        const result = await userService.getUserByUsername(username);
+        const result = await userService.getUserByEmail(email);
 
-        expect(mockUserRepository.findByUsername).toHaveBeenCalledWith(
-          username,
-        );
+        expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(email);
         expect(result).toEqual(user);
       });
     });
 
     describe('when user is not found', () => {
       it('returns null', async () => {
-        const username = 'testuser';
+        const email = 'testuser@packmind.com';
 
-        mockUserRepository.findByUsername.mockResolvedValue(null);
+        mockUserRepository.findByEmail.mockResolvedValue(null);
 
-        const result = await userService.getUserByUsername(username);
+        const result = await userService.getUserByEmail(email);
 
-        expect(mockUserRepository.findByUsername).toHaveBeenCalledWith(
-          username,
-        );
+        expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(email);
+        expect(result).toBeNull();
+      });
+    });
+  });
+
+  describe('.getUserByEmailCaseInsensitive', () => {
+    describe('when user is found with different case', () => {
+      it('returns the user', async () => {
+        const searchEmail = 'TestUser@PACKMIND.com';
+        const user = userFactory({
+          id: createUserId('123e4567-e89b-12d3-a456-426614174000'),
+          email: 'testuser@packmind.com', // Different case in database
+          memberships: [
+            {
+              userId: createUserId('123e4567-e89b-12d3-a456-426614174000'),
+              organizationId: createOrganizationId(
+                '123e4567-e89b-12d3-a456-426614174001',
+              ),
+              role: 'admin',
+            },
+          ],
+        });
+
+        mockUserRepository.findByEmailCaseInsensitive.mockResolvedValue(user);
+
+        const result =
+          await userService.getUserByEmailCaseInsensitive(searchEmail);
+
+        expect(
+          mockUserRepository.findByEmailCaseInsensitive,
+        ).toHaveBeenCalledWith(searchEmail);
+        expect(result).toEqual(user);
+        expect(result?.email).toBe('testuser@packmind.com'); // Original case preserved
+      });
+    });
+
+    describe('when user is found with same case', () => {
+      it('returns the user', async () => {
+        const email = 'testuser@packmind.com';
+        const user = userFactory({
+          id: createUserId('123e4567-e89b-12d3-a456-426614174000'),
+          email,
+          memberships: [
+            {
+              userId: createUserId('123e4567-e89b-12d3-a456-426614174000'),
+              organizationId: createOrganizationId(
+                '123e4567-e89b-12d3-a456-426614174001',
+              ),
+              role: 'admin',
+            },
+          ],
+        });
+
+        mockUserRepository.findByEmailCaseInsensitive.mockResolvedValue(user);
+
+        const result = await userService.getUserByEmailCaseInsensitive(email);
+
+        expect(
+          mockUserRepository.findByEmailCaseInsensitive,
+        ).toHaveBeenCalledWith(email);
+        expect(result).toEqual(user);
+      });
+    });
+
+    describe('when user is not found', () => {
+      it('returns null', async () => {
+        const email = 'nonexistent@packmind.com';
+
+        mockUserRepository.findByEmailCaseInsensitive.mockResolvedValue(null);
+
+        const result = await userService.getUserByEmailCaseInsensitive(email);
+
+        expect(
+          mockUserRepository.findByEmailCaseInsensitive,
+        ).toHaveBeenCalledWith(email);
         expect(result).toBeNull();
       });
     });
@@ -276,6 +398,17 @@ describe('UserService', () => {
         expect(result).toBe(false);
       });
     });
+
+    describe('when stored hash is null', () => {
+      it('returns false without invoking bcrypt', async () => {
+        const password = 'plainpassword';
+
+        const result = await userService.validatePassword(password, null);
+
+        expect(mockCompare).not.toHaveBeenCalled();
+        expect(result).toBe(false);
+      });
+    });
   });
 
   describe('.listUsers', () => {
@@ -283,19 +416,33 @@ describe('UserService', () => {
       const users: User[] = [
         {
           id: createUserId('123e4567-e89b-12d3-a456-426614174000'),
-          username: 'testuser1',
+          email: 'testuser1@packmind.com',
           passwordHash: 'hashedpassword123',
-          organizationId: createOrganizationId(
-            '123e4567-e89b-12d3-a456-426614174001',
-          ),
+          active: true,
+          memberships: [
+            {
+              userId: createUserId('123e4567-e89b-12d3-a456-426614174000'),
+              organizationId: createOrganizationId(
+                '123e4567-e89b-12d3-a456-426614174001',
+              ),
+              role: 'admin',
+            },
+          ],
         },
         {
           id: createUserId('123e4567-e89b-12d3-a456-426614174001'),
-          username: 'testuser2',
+          email: 'testuser2@packmind.com',
           passwordHash: 'hashedpassword456',
-          organizationId: createOrganizationId(
-            '123e4567-e89b-12d3-a456-426614174002',
-          ),
+          active: true,
+          memberships: [
+            {
+              userId: createUserId('123e4567-e89b-12d3-a456-426614174001'),
+              organizationId: createOrganizationId(
+                '123e4567-e89b-12d3-a456-426614174002',
+              ),
+              role: 'admin',
+            },
+          ],
         },
       ];
 

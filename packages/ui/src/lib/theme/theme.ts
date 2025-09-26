@@ -6,6 +6,7 @@ import { pmButtonRecipe } from '../components/form/PMButton/PMButton.recipe';
 import { pmMenuRecipe } from '../components/form/PMMenu/PMMenu.recipe';
 import { pmLinkRecipe } from '../components/typography/PMLink.recipe';
 import { pmTabsRecipe } from '../components/navigation/PMTabs/PMTabs.recipe';
+import { pmComboboxRecipe } from '../components/form/PMCombobox/PMCombobox.recipe';
 export const packmindTheme = (preflight: boolean) =>
   defineConfig({
     preflight,
@@ -141,6 +142,7 @@ export const packmindTheme = (preflight: boolean) =>
         table: pmTableRecipe,
         menu: pmMenuRecipe,
         tabs: pmTabsRecipe,
+        combobox: pmComboboxRecipe,
       },
       semanticTokens: {
         colors: {

@@ -250,7 +250,7 @@ export class RecipesController {
 
       const accessToken = request.cookies?.auth_token;
       const me = await this.authService.getMe(accessToken);
-      if (!me.authenticated || !me.user) {
+      if (!me.authenticated || !me.user || !me.organization) {
         this.logger.error('POST /recipes/publish - User not authenticated');
         throw new BadRequestException('User not authenticated');
       }
@@ -259,7 +259,7 @@ export class RecipesController {
         body.recipeVersionIds,
         body.targetIds,
         me.user.id,
-        me.user.organizationId,
+        me.organization.id,
       );
 
       this.logger.info(
@@ -268,7 +268,7 @@ export class RecipesController {
           recipeVersionIds: body.recipeVersionIds,
           targetIds: body.targetIds,
           authorId: me.user.id,
-          organizationId: me.user.organizationId,
+          organizationId: me.organization.id,
         },
       );
     } catch (error) {
@@ -314,7 +314,7 @@ export class RecipesController {
 
       const accessToken = request.cookies?.auth_token;
       const me = await this.authService.getMe(accessToken);
-      if (!me.authenticated || !me.user) {
+      if (!me.authenticated || !me.user || !me.organization) {
         this.logger.error(
           'POST /recipes/:versionId/publish - User not authenticated',
           {
@@ -328,7 +328,7 @@ export class RecipesController {
         [versionId],
         [body.repositoryId],
         me.user.id,
-        me.user.organizationId,
+        me.organization.id,
       );
 
       this.logger.info(
@@ -337,7 +337,7 @@ export class RecipesController {
           recipeVersionId: versionId,
           repositoryId: body.repositoryId,
           authorId: me.user.id,
-          organizationId: me.user.organizationId,
+          organizationId: me.organization.id,
         },
       );
     } catch (error) {

@@ -1,5 +1,5 @@
 import { ApiKeyPayload, DecodedApiKey } from '../../domain/entities/ApiKey';
-import { User } from '../../domain/entities/User';
+import { User, UserOrganizationRole } from '../../domain/entities/User';
 import { Organization } from '../../domain/entities/Organization';
 import { encodeApiKey, decodeApiKey } from '../../domain/utils/api-key.utils';
 import { PackmindLogger, LogLevel } from '@packmind/shared';
@@ -18,6 +18,7 @@ interface JwtPayload {
     id: string;
     name: string;
     slug: string;
+    role: string;
   };
   exp?: number;
   iat?: number;
@@ -60,7 +61,8 @@ function isValidJwtPayload(value: unknown): value is JwtPayload {
   if (
     typeof organization['id'] !== 'string' ||
     typeof organization['name'] !== 'string' ||
-    typeof organization['slug'] !== 'string'
+    typeof organization['slug'] !== 'string' ||
+    typeof organization['role'] !== 'string'
   ) {
     return false;
   }
@@ -100,10 +102,16 @@ export class ApiKeyService {
    * @param host The API host URL
    * @returns The generated API key string
    */
-  generateApiKey(user: User, organization: Organization, host: string): string {
+  generateApiKey(
+    user: User,
+    organization: Organization,
+    role: UserOrganizationRole,
+    host: string,
+  ): string {
     this.logger.info('Generating API key', {
       userId: user.id,
       organizationId: organization.id,
+      role,
       host,
     });
 
@@ -111,13 +119,14 @@ export class ApiKeyService {
       // Create JWT payload with same structure as regular auth
       const jwtPayload = {
         user: {
-          name: user.username,
+          name: user.email,
           userId: user.id,
         },
         organization: {
           id: organization.id,
           name: organization.name,
           slug: organization.slug,
+          role,
         },
       };
 
@@ -216,7 +225,7 @@ export class ApiKeyService {
    */
   extractUserFromApiKey(apiKey: string): {
     user: { name: string; userId: string };
-    organization: { id: string; name: string; slug: string };
+    organization: { id: string; name: string; slug: string; role: string };
   } | null {
     this.logger.info('Extracting user from API key');
 

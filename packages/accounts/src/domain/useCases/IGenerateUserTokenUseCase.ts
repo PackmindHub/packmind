@@ -1,15 +1,16 @@
-import { UserId } from '../entities/User';
-import { User } from '../entities/User';
-import { Organization } from '../entities/Organization';
+import { User, UserId, UserOrganizationRole } from '../entities/User';
+import { Organization, OrganizationId } from '../entities/Organization';
 import { IPublicUseCase } from '@packmind/shared';
 
 export type GenerateUserTokenCommand = {
   userId: UserId;
+  organizationId: OrganizationId;
 };
 
 export type GenerateUserTokenResponse = {
   user: User;
   organization: Organization;
+  role: UserOrganizationRole;
 };
 
 export type IGenerateUserTokenUseCase = IPublicUseCase<

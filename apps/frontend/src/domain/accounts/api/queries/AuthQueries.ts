@@ -1,12 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   SignUpUserCommand,
+  SignInUserCommand,
   GenerateApiKeyCommand,
 } from '@packmind/accounts/types';
 import { authGateway } from '../gateways';
 import { UserId } from '@packmind/accounts/types';
 
-type SignInRequest = SignUpUserCommand;
+type SignInRequest = SignInUserCommand;
 
 const SIGN_UP_MUTATION_KEY = 'signUp';
 const SIGN_IN_MUTATION_KEY = 'signIn';

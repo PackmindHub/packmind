@@ -106,7 +106,7 @@ const UserListItem: React.FC<UserListItemProps> = ({ user }) => {
     <PMBox p={3} borderRadius="md" borderWidth="1px" transition="all 0.2s">
       <PMHStack justify="space-between" align="center">
         <PMVStack align="start">
-          <PMText variant="body-important">{user.username}</PMText>
+          <PMText variant="body-important">{user.email}</PMText>
           <PMText variant="small">User ID: {user.id}</PMText>
         </PMVStack>
 

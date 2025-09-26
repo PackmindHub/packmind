@@ -9,7 +9,11 @@ import {
   useGetCurrentApiKeyQuery,
   useGenerateApiKeyMutation,
 } from '../api/queries/AuthQueries';
-import type { UserId, OrganizationId } from '@packmind/accounts/types';
+import type {
+  UserId,
+  OrganizationId,
+  UserOrganizationRole,
+} from '@packmind/accounts/types';
 
 // Mock the queries
 jest.mock('../api/queries/AuthQueries', () => ({
@@ -71,16 +75,27 @@ interface MockMutationResult {
 }
 
 describe('ApiKeyConfig', () => {
+  const userRole: UserOrganizationRole = 'admin';
+
   const mockUser = {
     id: 'user-1' as UserId,
-    username: 'testuser',
-    organizationId: 'org-1' as OrganizationId,
+    email: 'testuser@packmind.com',
+    passwordHash: null,
+    active: true,
+    memberships: [
+      {
+        userId: 'user-1' as UserId,
+        organizationId: 'org-1' as OrganizationId,
+        role: userRole,
+      },
+    ],
   };
 
   const mockOrganization = {
     id: 'org-1' as OrganizationId,
     name: 'Test Organization',
     slug: 'test-organization',
+    role: userRole,
   };
 
   beforeAll(() => {

@@ -25,7 +25,7 @@ export class McpController {
    * OAuth2 token endpoint for MCP server authentication
    *
    * This endpoint generates a JWT token for the currently authenticated user
-   * without requiring username/password credentials.
+   * without requiring email/password credentials.
    */
   @Get('token')
   @HttpCode(HttpStatus.OK)
@@ -40,6 +40,7 @@ export class McpController {
     try {
       const response = await this.mcpService.generateTokenForAuthenticatedUser({
         userId: request.user.userId,
+        organizationId: request.organization.id,
       });
 
       this.logger.log(

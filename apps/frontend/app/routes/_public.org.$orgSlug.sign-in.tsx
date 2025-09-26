@@ -86,7 +86,7 @@ export default function SignInRoute() {
         <PMHeading level="h2">Sign in to {organization.name}</PMHeading>
       </PMBox>
 
-      <SignInForm organization={organization} />
+      <SignInForm />
 
       <PMHStack justifyContent={'space-between'} paddingX={6}>
         <PMButton

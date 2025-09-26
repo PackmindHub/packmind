@@ -76,11 +76,20 @@ describe('ApiKeyService', () => {
     mockLogger = new PackmindLogger('ApiKeyService', LogLevel.ERROR); // Use ERROR to suppress logs in tests
     apiKeyService = new ApiKeyService(mockJwtService, mockLogger);
 
+    const userId = createUserId('user-123');
+
     mockUser = {
-      id: createUserId('user-123'),
-      username: 'testuser',
+      id: userId,
+      email: 'testuser@packmind.com',
       passwordHash: 'hash',
-      organizationId: createOrganizationId('org-456'),
+      active: true,
+      memberships: [
+        {
+          userId,
+          organizationId: createOrganizationId('org-456'),
+          role: 'admin',
+        },
+      ],
     };
 
     mockOrganization = {
@@ -97,6 +106,7 @@ describe('ApiKeyService', () => {
       const apiKey = apiKeyService.generateApiKey(
         mockUser,
         mockOrganization,
+        'admin',
         host,
       );
 
@@ -115,6 +125,7 @@ describe('ApiKeyService', () => {
       const apiKey = apiKeyService.generateApiKey(
         mockUser,
         mockOrganization,
+        'admin',
         host,
       );
       const expiration = apiKeyService.getApiKeyExpiration(apiKey);
@@ -142,17 +153,19 @@ describe('ApiKeyService', () => {
       const apiKey = apiKeyService.generateApiKey(
         mockUser,
         mockOrganization,
+        'admin',
         host,
       );
       const userInfo = apiKeyService.extractUserFromApiKey(apiKey);
 
       expect(userInfo).not.toBeNull();
       if (userInfo) {
-        expect(userInfo.user.name).toBe(mockUser.username);
+        expect(userInfo.user.name).toBe(mockUser.email);
         expect(userInfo.user.userId).toBe(mockUser.id);
         expect(userInfo.organization.id).toBe(mockOrganization.id);
         expect(userInfo.organization.name).toBe(mockOrganization.name);
         expect(userInfo.organization.slug).toBe(mockOrganization.slug);
+        expect(userInfo.organization.role).toBe('admin');
       }
     });
 
@@ -170,6 +183,7 @@ describe('ApiKeyService', () => {
         faultyService.generateApiKey(
           mockUser,
           mockOrganization,
+          'admin',
           'http://localhost:3000',
         );
       }).toThrow('Failed to generate API key');
@@ -182,6 +196,7 @@ describe('ApiKeyService', () => {
       const apiKey = apiKeyService.generateApiKey(
         mockUser,
         mockOrganization,
+        'admin',
         host,
       );
 
@@ -202,7 +217,7 @@ describe('ApiKeyService', () => {
     it('rejects API keys with expired JWT tokens', () => {
       // Create an API key with expired JWT
       const expiredJwt = mockJwtService.createExpiredToken({
-        user: { name: mockUser.username, userId: mockUser.id },
+        user: { name: mockUser.email, userId: mockUser.id },
         organization: {
           id: mockOrganization.id,
           name: mockOrganization.name,
@@ -247,6 +262,7 @@ describe('ApiKeyService', () => {
       const apiKey = apiKeyService.generateApiKey(
         mockUser,
         mockOrganization,
+        'admin',
         'http://localhost:3000',
       );
 
@@ -254,7 +270,7 @@ describe('ApiKeyService', () => {
 
       expect(userInfo).not.toBeNull();
       if (userInfo) {
-        expect(userInfo.user.name).toBe(mockUser.username);
+        expect(userInfo.user.name).toBe(mockUser.email);
         expect(userInfo.user.userId).toBe(mockUser.id);
         expect(userInfo.organization.id).toBe(mockOrganization.id);
         expect(userInfo.organization.name).toBe(mockOrganization.name);
@@ -270,7 +286,7 @@ describe('ApiKeyService', () => {
 
     it('returns null for API key with expired JWT', () => {
       const expiredJwt = mockJwtService.createExpiredToken({
-        user: { name: mockUser.username, userId: mockUser.id },
+        user: { name: mockUser.email, userId: mockUser.id },
         organization: {
           id: mockOrganization.id,
           name: mockOrganization.name,
@@ -298,6 +314,7 @@ describe('ApiKeyService', () => {
       const apiKey = apiKeyService.generateApiKey(
         mockUser,
         mockOrganization,
+        'admin',
         'http://localhost:3000',
       );
 
@@ -318,7 +335,7 @@ describe('ApiKeyService', () => {
     it('returns null for API key without expiration', () => {
       // Create a JWT without expiration
       const jwtWithoutExp = mockJwtService.sign({
-        user: { name: mockUser.username, userId: mockUser.id },
+        user: { name: mockUser.email, userId: mockUser.id },
         organization: {
           id: mockOrganization.id,
           name: mockOrganization.name,

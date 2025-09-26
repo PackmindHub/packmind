@@ -1,7 +1,6 @@
 export * from './ISignUpUserUseCase';
 export * from './ISignInUserUseCase';
 export * from './IGetUserByIdUseCase';
-export * from './IGetUserByUsernameUseCase';
 export * from './IListUsersUseCase';
 export * from './IValidatePasswordUseCase';
 export * from './ICreateOrganizationUseCase';

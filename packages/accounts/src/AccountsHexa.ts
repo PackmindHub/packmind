@@ -13,7 +13,6 @@ import {
   SignUpUserCommand,
   SignInUserCommand,
   GetUserByIdCommand,
-  GetUserByUsernameCommand,
   ListUsersCommand,
   ValidatePasswordCommand,
   CreateOrganizationCommand,
@@ -24,6 +23,7 @@ import {
   GenerateUserTokenCommand,
   GenerateApiKeyCommand,
   GetCurrentApiKeyCommand,
+  ListUsersResponse,
 } from './domain/useCases';
 
 const origin = 'AccountsHexa';
@@ -91,7 +91,7 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts> {
   }
 
   /**
-   * Sign in a user with username and password.
+   * Sign in a user with email and password.
    */
   async signInUser(command: SignInUserCommand) {
     return this.hexa.useCases.signInUser(command);
@@ -105,18 +105,10 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts> {
   }
 
   /**
-   * Get a user by their username.
+   * List users (internal use only - not a public use case).
+   * @internal
    */
-  async getUserByUsername(
-    command: GetUserByUsernameCommand,
-  ): Promise<User | null> {
-    return this.hexa.useCases.getUserByUsername(command);
-  }
-
-  /**
-   * List all users in the system.
-   */
-  async listUsers(command: ListUsersCommand): Promise<User[]> {
+  async listUsers(command: ListUsersCommand): Promise<ListUsersResponse> {
     return this.hexa.useCases.listUsers(command);
   }
 
@@ -150,7 +142,7 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts> {
   }
 
   /**
-   * Get an organization by its name.
+   * Get an organization by its name (will slugify internally).
    */
   async getOrganizationByName(
     command: GetOrganizationByNameCommand,

@@ -1,27 +1,45 @@
 import { GenerateUserTokenUseCase } from './GenerateUserTokenUseCase';
 import { UserService } from '../../services/UserService';
 import { OrganizationService } from '../../services/OrganizationService';
-import { GenerateUserTokenCommand } from '../../../domain/useCases/IGenerateUserTokenUseCase';
-import { createUserId, User } from '../../../domain/entities/User';
+import {
+  GenerateUserTokenCommand,
+  GenerateUserTokenResponse,
+} from '../../../domain/useCases/IGenerateUserTokenUseCase';
+import {
+  createUserId,
+  User,
+  UserOrganizationMembership,
+} from '../../../domain/entities/User';
 import {
   createOrganizationId,
   Organization,
 } from '../../../domain/entities/Organization';
+import { userFactory } from '../../../../test';
 
 describe('GenerateUserTokenUseCase', () => {
   let useCase: GenerateUserTokenUseCase;
   let userService: jest.Mocked<UserService>;
   let organizationService: jest.Mocked<OrganizationService>;
 
+  const organizationId = createOrganizationId('org-123');
+  const userId = createUserId('user-123');
+  const membership: UserOrganizationMembership = {
+    userId,
+    organizationId,
+    role: 'admin',
+  };
+
   const testUser: User = {
-    id: createUserId('user-123'),
-    username: 'testuser',
-    organizationId: createOrganizationId('org-123'),
-    passwordHash: 'hashedPassword',
+    ...userFactory({
+      id: userId,
+      email: 'testuser@packmind.com',
+      passwordHash: 'hashedPassword',
+      memberships: [membership],
+    }),
   };
 
   const testOrganization: Organization = {
-    id: createOrganizationId('org-123'),
+    id: organizationId,
     name: 'Test Organization',
     slug: 'test-org',
   };
@@ -39,9 +57,10 @@ describe('GenerateUserTokenUseCase', () => {
   });
 
   describe('when generating token for valid user', () => {
-    it('returns the user and organization', async () => {
+    it('returns the user, organization, and role', async () => {
       const command: GenerateUserTokenCommand = {
-        userId: createUserId('user-123'),
+        userId,
+        organizationId,
       };
 
       userService.getUserById.mockResolvedValue(testUser);
@@ -51,15 +70,16 @@ describe('GenerateUserTokenUseCase', () => {
 
       const result = await useCase.execute(command);
 
-      expect(result).toEqual({
+      const expected: GenerateUserTokenResponse = {
         user: testUser,
         organization: testOrganization,
-      });
-      expect(userService.getUserById).toHaveBeenCalledWith(
-        createUserId('user-123'),
-      );
+        role: 'admin',
+      };
+
+      expect(result).toEqual(expected);
+      expect(userService.getUserById).toHaveBeenCalledWith(userId);
       expect(organizationService.getOrganizationById).toHaveBeenCalledWith(
-        createOrganizationId('org-123'),
+        organizationId,
       );
     });
   });
@@ -68,6 +88,7 @@ describe('GenerateUserTokenUseCase', () => {
     it('throws Error', async () => {
       const command: GenerateUserTokenCommand = {
         userId: createUserId('nonexistent'),
+        organizationId,
       };
 
       userService.getUserById.mockResolvedValue(null);
@@ -79,10 +100,26 @@ describe('GenerateUserTokenUseCase', () => {
     });
   });
 
+  describe('when organization membership is missing', () => {
+    it('throws Error', async () => {
+      const command: GenerateUserTokenCommand = {
+        userId,
+        organizationId: createOrganizationId('org-456'),
+      };
+
+      userService.getUserById.mockResolvedValue(testUser);
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        new Error('User organization membership not found'),
+      );
+    });
+  });
+
   describe('when organization is not found', () => {
     it('throws Error', async () => {
       const command: GenerateUserTokenCommand = {
-        userId: createUserId('user-123'),
+        userId,
+        organizationId,
       };
 
       userService.getUserById.mockResolvedValue(testUser);

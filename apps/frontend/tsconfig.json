@@ -6,6 +6,7 @@
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "types": ["vite/client", "@react-router/node"],
+    "module": "ESNext",
     "moduleResolution": "bundler"
   },
   "files": [],

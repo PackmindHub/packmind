@@ -10,17 +10,18 @@ import {
 } from '@packmind/ui';
 import { Organization } from '@packmind/accounts/types';
 import { useSignUpMutation, useSignInMutation } from '../api/queries';
+import validator from 'validator';
 
 interface SignUpFormProps {
   organization: Organization;
 }
 
 export default function SignUpForm({ organization }: SignUpFormProps) {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errors, setErrors] = useState<{
-    username?: string;
+    email?: string;
     password?: string;
     confirmPassword?: string;
   }>({});
@@ -38,16 +39,23 @@ export default function SignUpForm({ organization }: SignUpFormProps) {
   const validateForm = () => {
     const newErrors: typeof errors = {};
 
-    if (!username.trim()) {
-      newErrors.username = 'Username is required';
-    } else if (username.trim().length < 3) {
-      newErrors.username = 'Username must be at least 3 characters';
+    if (!email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!validator.isEmail(email)) {
+      newErrors.email = 'Email must be a valid email address';
     }
 
     if (!password) {
       newErrors.password = 'Password is required';
-    } else if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+    } else if (password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters';
+    } else {
+      // Count non-alphanumerical characters
+      const nonAlphaNumCount = (password.match(/[^a-zA-Z0-9]/g) || []).length;
+      if (nonAlphaNumCount < 2) {
+        newErrors.password =
+          'Password must contain at least 2 non-alphanumerical characters';
+      }
     }
 
     if (!confirmPassword) {
@@ -69,7 +77,7 @@ export default function SignUpForm({ organization }: SignUpFormProps) {
 
     signUpMutation.mutate(
       {
-        username: username.trim(),
+        email: email.trim(),
         password,
         organizationId: organization.id,
       },
@@ -78,7 +86,7 @@ export default function SignUpForm({ organization }: SignUpFormProps) {
           // Auto-login the user after successful registration
           signInMutation.mutate(
             {
-              username: username.trim(),
+              email: email.trim(),
               password,
               organizationId: organization.id,
             },
@@ -99,35 +107,36 @@ export default function SignUpForm({ organization }: SignUpFormProps) {
     );
   };
 
-  const usernameId = 'signup-username';
+  const emailId = 'signup-email';
   const passwordId = 'signup-password';
   const confirmPasswordId = 'signup-confirm-password';
 
-  const USERNAME_MAX_LENGTH = 64;
+  const EMAIL_MAX_LENGTH = 255;
   const PASSWORD_MAX_LENGTH = 128;
 
   return (
     <form onSubmit={handleSubmit}>
       <PMFormContainer maxWidth="full" spacing={4}>
-        <PMField.Root required invalid={!!errors.username}>
+        <PMField.Root required invalid={!!errors.email}>
           <PMField.Label>
-            Username{' '}
+            Email{' '}
             <PMText as="span" variant="small" color="secondary">
-              ({username.length} / {USERNAME_MAX_LENGTH} max)
+              ({email.length} / {EMAIL_MAX_LENGTH} max)
             </PMText>
             <PMField.RequiredIndicator />
           </PMField.Label>
 
           <PMInput
-            id={usernameId}
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="Enter your username"
+            id={emailId}
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter your email"
             required
             disabled={signUpMutation.isPending || signInMutation.isPending}
-            maxLength={USERNAME_MAX_LENGTH}
+            maxLength={EMAIL_MAX_LENGTH}
           />
-          <PMField.ErrorText>{errors.username}</PMField.ErrorText>
+          <PMField.ErrorText>{errors.email}</PMField.ErrorText>
         </PMField.Root>
 
         <PMField.Root required invalid={!!errors.password}>
@@ -138,6 +147,10 @@ export default function SignUpForm({ organization }: SignUpFormProps) {
             </PMText>
             <PMField.RequiredIndicator />
           </PMField.Label>
+          <PMField.HelperText as={'article'}>
+            8 characters min. with at least 2 non-alphanumerical characters.
+          </PMField.HelperText>
+
           <PMInput
             id={passwordId}
             type="password"

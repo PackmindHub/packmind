@@ -22,8 +22,15 @@ export class GenerateUserTokenUseCase implements IGenerateUserTokenUseCase {
     }
 
     // Fetch organization data
+    const membership = user.memberships.find(
+      (item) => item.organizationId === command.organizationId,
+    );
+    if (!membership) {
+      throw new Error('User organization membership not found');
+    }
+
     const organization = await this.organizationService.getOrganizationById(
-      user.organizationId,
+      command.organizationId,
     );
     if (!organization) {
       throw new Error('User organization not found');
@@ -32,6 +39,7 @@ export class GenerateUserTokenUseCase implements IGenerateUserTokenUseCase {
     return {
       user,
       organization,
+      role: membership.role,
     };
   }
 }

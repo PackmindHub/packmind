@@ -1,7 +1,6 @@
 export { GitProvidersPage } from './GitProvidersPage';
 export { ManageGitProviderDialog } from './ManageGitProviderDialog';
 export { GitProvidersList } from './GitProvidersList';
-export { CreateGitProviderForm } from './CreateGitProviderForm';
 export { RepositorySelector } from './ManageGitProvider/RepositorySelector';
 export { WebHookConfig } from './WebHookConfig';
 export { GitProviderConnection } from './ManageGitProvider/GitProviderConnection';

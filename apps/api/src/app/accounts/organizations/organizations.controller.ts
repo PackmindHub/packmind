@@ -11,7 +11,7 @@ import {
 import {
   Organization,
   OrganizationId,
-  OrganizationNameConflictError,
+  OrganizationSlugConflictError,
 } from '@packmind/accounts';
 import { OrganizationsService } from './organizations.service';
 import { PackmindLogger } from '@packmind/shared';
@@ -79,7 +79,7 @@ export class OrganizationsController {
     @Param('name') name: string,
   ): Promise<Organization> {
     this.logger.info(
-      'GET /organizations/by-name/:name - Fetching organization by name',
+      'GET /organizations/by-name/:name - Fetching organization by name (will slugify internally)',
       {
         organizationName: name,
       },
@@ -168,7 +168,7 @@ export class OrganizationsController {
         error: errorMessage,
       });
 
-      if (error instanceof OrganizationNameConflictError) {
+      if (error instanceof OrganizationSlugConflictError) {
         throw new ConflictException(error.message);
       }
 

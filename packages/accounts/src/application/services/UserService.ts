@@ -1,4 +1,9 @@
-import { User, createUserId, UserId } from '../../domain/entities/User';
+import {
+  User,
+  createUserId,
+  UserId,
+  UserOrganizationMembership,
+} from '../../domain/entities/User';
 import { OrganizationId } from '../../domain/entities/Organization';
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
 import * as bcrypt from 'bcrypt';
@@ -19,16 +24,22 @@ export class UserService {
   }
 
   async createUser(
-    username: string,
+    email: string,
     password: string,
     organizationId: OrganizationId,
   ): Promise<User> {
-    this.logger.info('Creating user', { username, organizationId });
+    this.logger.info('Creating user', { email, organizationId });
 
     try {
       // Validate input
-      if (!username || !password || !organizationId) {
-        throw new Error('Username, password, and organizationId are required');
+      if (!email || !password || !organizationId) {
+        throw new Error('Email, password, and organizationId are required');
+      }
+
+      // Check if user already exists (case-insensitive)
+      const existingUser = await this.getUserByEmailCaseInsensitive(email);
+      if (existingUser) {
+        throw new Error(`Email '${email}' already exists`);
       }
 
       // Hash password
@@ -36,22 +47,31 @@ export class UserService {
       const passwordHash = await bcrypt.hash(password, saltRounds);
 
       // Create user
-      const user: User = {
-        id: createUserId(uuidv4()),
-        username,
-        passwordHash,
+      const id = createUserId(uuidv4());
+      const membership: UserOrganizationMembership = {
+        userId: id,
         organizationId,
+        role: 'admin',
+      };
+
+      const user: User = {
+        id,
+        email,
+        passwordHash,
+        active: true,
+        memberships: [membership],
       };
 
       const createdUser = await this.userRepository.add(user);
       this.logger.info('User created successfully', {
         userId: createdUser.id,
-        username,
+        email,
+        organizationId,
       });
       return createdUser;
     } catch (error) {
       this.logger.error('Failed to create user', {
-        username,
+        email,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
@@ -63,12 +83,23 @@ export class UserService {
     return this.userRepository.findById(id);
   }
 
-  async getUserByUsername(username: string): Promise<User | null> {
-    this.logger.info('Getting user by username', { username });
-    return this.userRepository.findByUsername(username);
+  async getUserByEmail(email: string): Promise<User | null> {
+    this.logger.info('Getting user by email', { email });
+    return this.userRepository.findByEmail(email);
   }
 
-  async validatePassword(password: string, hash: string): Promise<boolean> {
+  async getUserByEmailCaseInsensitive(email: string): Promise<User | null> {
+    this.logger.info('Getting user by email (case-insensitive)', { email });
+    return this.userRepository.findByEmailCaseInsensitive(email);
+  }
+
+  async validatePassword(
+    password: string,
+    hash: string | null,
+  ): Promise<boolean> {
+    if (!hash) {
+      return false;
+    }
     return bcrypt.compare(password, hash);
   }
 

@@ -5,42 +5,78 @@ import { userFactory } from '../../../test';
 describe('User', () => {
   describe('User entity', () => {
     it('creates a valid user with all required fields', () => {
+      const organizationId = createOrganizationId(
+        '123e4567-e89b-12d3-a456-426614174001',
+      );
+      const userId = createUserId('123e4567-e89b-12d3-a456-426614174000');
       const user = userFactory({
-        id: createUserId('123e4567-e89b-12d3-a456-426614174000'),
-        organizationId: createOrganizationId(
-          '123e4567-e89b-12d3-a456-426614174001',
-        ),
+        id: userId,
+        memberships: [
+          {
+            userId,
+            organizationId,
+            role: 'admin',
+          },
+        ],
       });
 
       expect(user.id).toBe('123e4567-e89b-12d3-a456-426614174000');
-      expect(user.username).toBe('testuser');
+      expect(user.email).toBe('testuser@packmind.com');
       expect(user.passwordHash).toBe('hashedpassword123');
-      expect(user.organizationId).toBe('123e4567-e89b-12d3-a456-426614174001');
+      expect(user.active).toBe(true);
+      expect(user.memberships).toHaveLength(1);
+      expect(user.memberships[0]).toEqual({
+        userId,
+        organizationId,
+        role: 'admin',
+      });
     });
 
-    it('creates a user with organization ID', () => {
+    it('creates a user with organization membership', () => {
+      const organizationId = createOrganizationId(
+        '123e4567-e89b-12d3-a456-426614174001',
+      );
+      const userId = createUserId('123e4567-e89b-12d3-a456-426614174000');
       const user = userFactory({
-        id: createUserId('123e4567-e89b-12d3-a456-426614174000'),
-        organizationId: createOrganizationId(
-          '123e4567-e89b-12d3-a456-426614174001',
-        ),
+        id: userId,
+        memberships: [
+          {
+            userId,
+            organizationId,
+            role: 'admin',
+          },
+        ],
       });
 
-      expect(user.organizationId).toBe('123e4567-e89b-12d3-a456-426614174001');
+      expect(user.memberships).toHaveLength(1);
+      expect(user.memberships[0].organizationId).toBe(organizationId);
     });
 
     it('validates user type structure', () => {
+      const organizationId = createOrganizationId(
+        '123e4567-e89b-12d3-a456-426614174001',
+      );
+      const userId = createUserId('123e4567-e89b-12d3-a456-426614174000');
       const user = userFactory({
-        id: createUserId('123e4567-e89b-12d3-a456-426614174000'),
-        organizationId: createOrganizationId(
-          '123e4567-e89b-12d3-a456-426614174001',
-        ),
+        id: userId,
+        memberships: [
+          {
+            userId,
+            organizationId,
+            role: 'admin',
+          },
+        ],
       });
 
       expect(typeof user.id).toBe('string');
-      expect(typeof user.username).toBe('string');
-      expect(typeof user.passwordHash).toBe('string');
-      expect(typeof user.organizationId).toBe('string');
+      expect(typeof user.email).toBe('string');
+      expect(
+        user.passwordHash === null || typeof user.passwordHash === 'string',
+      ).toBe(true);
+      expect(typeof user.active).toBe('boolean');
+      expect(Array.isArray(user.memberships)).toBe(true);
+      expect(user.memberships[0].organizationId).toBe(organizationId);
+      expect(user.memberships[0].role).toBe('admin');
     });
   });
 });

@@ -15,7 +15,7 @@ describe('GetUserByIdUseCase', () => {
     mockUserService = {
       createUser: jest.fn(),
       getUserById: jest.fn(),
-      getUserByUsername: jest.fn(),
+      getUserByEmail: jest.fn(),
       hashPassword: jest.fn(),
       validatePassword: jest.fn(),
       listUsers: jest.fn(),
@@ -35,7 +35,7 @@ describe('GetUserByIdUseCase', () => {
       it('returns the user wrapped in response object', async () => {
         const mockUser = userFactory({
           id: createUserId('user-123'),
-          username: 'testuser',
+          email: 'testuser@packmind.com',
         });
 
         mockUserService.getUserById.mockResolvedValue(mockUser);

@@ -6,10 +6,12 @@ import { userFactory } from './userFactory';
 import { Organization } from '../src/domain/entities/Organization';
 import { OrganizationSchema } from '../src/infra/schemas/index';
 import { organizationFactory } from './organizationFactory';
+import { invitationFactory } from './invitationFactory';
 
 export { organizationFactory } from './organizationFactory';
 
 export { userFactory };
+export { invitationFactory };
 
 export const createUser = async (
   dataSource: DataSource,

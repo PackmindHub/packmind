@@ -1,62 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { PMInput, PMButton, PMFormContainer, PMField } from '@packmind/ui';
-import { Organization } from '@packmind/accounts/types';
 import { useSignInMutation } from '../api/queries/AuthQueries';
-import { useCheckUsernameMutation } from '../api/queries/UserQueries';
 
-interface SignInFormProps {
-  organization: Organization;
-}
-
-export default function SignInForm({ organization }: SignInFormProps) {
-  const [username, setUsername] = useState('');
+export default function SignInForm() {
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<{
-    username?: string;
+    email?: string;
     password?: string;
     form?: string;
   }>({});
 
   const signInMutation = useSignInMutation();
-  const checkUsernameMutation = useCheckUsernameMutation();
   const navigate = useNavigate();
-
-  // Check username availability when username changes (with debounce and deduplication)
-  const [lastCheckedUsername, setLastCheckedUsername] = useState<string | null>(
-    null,
-  );
-  useEffect(() => {
-    const trimmed = username.trim();
-    if (
-      trimmed.length >= 3 &&
-      trimmed !== lastCheckedUsername &&
-      !checkUsernameMutation.isPending
-    ) {
-      const timeoutId = setTimeout(() => {
-        checkUsernameMutation.mutate(trimmed);
-        setLastCheckedUsername(trimmed);
-      }, 500);
-      return () => clearTimeout(timeoutId);
-    }
-    // Reset lastCheckedUsername if username is too short
-    if (trimmed.length < 3 && lastCheckedUsername !== null) {
-      setLastCheckedUsername(null);
-    }
-  }, [username, lastCheckedUsername, checkUsernameMutation]);
 
   const validateForm = () => {
     const newErrors: typeof errors = {};
 
-    if (!username.trim()) {
-      newErrors.username = 'Username is required';
-    } else if (username.trim().length < 3) {
-      newErrors.username = 'Username must be at least 3 characters';
-    } else if (
-      checkUsernameMutation.data &&
-      !checkUsernameMutation.data.exists
-    ) {
-      newErrors.username = 'Username does not exist';
+    if (!email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (email.trim().length < 3) {
+      newErrors.email = 'Email must be at least 3 characters';
     }
 
     if (!password) {
@@ -76,58 +41,50 @@ export default function SignInForm({ organization }: SignInFormProps) {
 
     signInMutation.mutate(
       {
-        username: username.trim(),
+        email: email.trim(),
         password,
-        organizationId: organization.id,
       },
       {
-        onSuccess: () => {
-          // Redirect to organization homepage
-          navigate(`/org/${organization.slug}`);
+        onSuccess: (data) => {
+          // Redirect to organization homepage using the returned organization
+          navigate(`/org/${data.organization.slug}`);
         },
         onError: () => {
-          setErrors({ form: 'Invalid username or password' });
+          setErrors({ form: 'Invalid email or password' });
         },
       },
     );
   };
 
-  const usernameId = 'signin-username';
+  const emailId = 'signin-email';
   const passwordId = 'signin-password';
 
-  // Get username validation status
-  const getUsernameError = () => {
-    if (errors.username) return errors.username;
-    if (
-      username.trim().length >= 3 &&
-      checkUsernameMutation.data &&
-      !checkUsernameMutation.data.exists
-    ) {
-      return 'Username does not exist';
-    }
+  // Get email validation status
+  const getEmailError = () => {
+    if (errors.email) return errors.email;
     return undefined;
   };
 
   return (
     <form onSubmit={handleSubmit}>
       <PMFormContainer spacing={4} maxWidth="full">
-        <PMField.Root required invalid={!!getUsernameError()}>
+        <PMField.Root required invalid={!!getEmailError()}>
           <PMField.Label>
-            Username
+            Email
             <PMField.RequiredIndicator />
           </PMField.Label>
 
           <PMInput
-            id={usernameId}
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="Enter your username"
+            id={emailId}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter your email"
             required
             disabled={signInMutation.isPending}
-            error={getUsernameError()}
+            error={getEmailError()}
           />
 
-          <PMField.ErrorText>{getUsernameError()}</PMField.ErrorText>
+          <PMField.ErrorText>{getEmailError()}</PMField.ErrorText>
         </PMField.Root>
 
         <PMField.Root required>
@@ -157,10 +114,7 @@ export default function SignInForm({ organization }: SignInFormProps) {
           </div>
         )}
 
-        <PMButton
-          type="submit"
-          disabled={signInMutation.isPending || checkUsernameMutation.isPending}
-        >
+        <PMButton type="submit" disabled={signInMutation.isPending}>
           {signInMutation.isPending ? 'Signing In...' : 'Sign In'}
         </PMButton>
       </PMFormContainer>

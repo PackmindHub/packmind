@@ -6,6 +6,7 @@ import {
   PackmindLogger,
   localDataSource,
   AbstractRepository,
+  QueryOption,
 } from '@packmind/shared';
 
 const origin = 'UserRepository';
@@ -24,31 +25,106 @@ export class UserRepository
     this.logger.info('UserRepository initialized');
   }
 
+  override async findById(
+    id: User['id'],
+    opts?: QueryOption,
+  ): Promise<User | null> {
+    this.logger.info('Finding user by ID with memberships', { id });
+
+    try {
+      const user = await this.repository.findOne({
+        where: { id },
+        withDeleted: opts?.includeDeleted ?? false,
+        relations: {
+          memberships: {
+            organization: true,
+          },
+        },
+      });
+
+      if (user) {
+        this.logger.info('Found user by ID with memberships', {
+          id: user.id,
+          email: user.email,
+        });
+      } else {
+        this.logger.warn('User not found by ID', { id });
+      }
+
+      return user;
+    } catch (error) {
+      this.logger.error('Failed to find user by ID', {
+        id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
   protected override loggableEntity(entity: User): Partial<User> {
     return {
       id: entity.id,
-      username: entity.username,
-      organizationId: entity.organizationId,
+      email: entity.email,
+      active: entity.active,
+      memberships: entity.memberships?.map((membership) => ({
+        userId: membership.userId,
+        organizationId: membership.organizationId,
+        role: membership.role,
+      })),
     };
   }
 
   protected override makeDuplicationErrorMessage(user: User) {
-    return `Username '${user.username}' already exists`;
+    return `Email '${user.email}' already exists`;
   }
 
-  async findByUsername(username: string): Promise<User | null> {
-    this.logger.info('Finding user by username', { username });
+  async findByEmail(email: string): Promise<User | null> {
+    this.logger.info('Finding user by email', { email });
 
     try {
-      const user = await this.repository.findOne({ where: { username } });
-      this.logger.info('User found by username', {
-        username,
+      const user = await this.repository.findOne({
+        where: { email },
+        relations: {
+          memberships: {
+            organization: true,
+          },
+        },
+      });
+      this.logger.info('User found by email', {
+        email,
         found: !!user,
+        active: user?.active,
       });
       return user;
     } catch (error) {
-      this.logger.error('Failed to find user by username', {
-        username,
+      this.logger.error('Failed to find user by email', {
+        email,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async findByEmailCaseInsensitive(email: string): Promise<User | null> {
+    this.logger.info('Finding user by email (case-insensitive)', { email });
+
+    try {
+      const user = await this.repository
+        .createQueryBuilder('user')
+        .leftJoinAndSelect('user.memberships', 'memberships')
+        .leftJoinAndSelect('memberships.organization', 'organization')
+        .where('LOWER(user.email) = LOWER(:email)', { email })
+        .getOne();
+
+      this.logger.info('User found by email (case-insensitive)', {
+        email,
+        found: !!user,
+        foundEmail: user?.email,
+      });
+      return user;
+    } catch (error) {
+      this.logger.error('Failed to find user by email (case-insensitive)', {
+        email,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
@@ -59,7 +135,13 @@ export class UserRepository
     this.logger.info('Listing users');
 
     try {
-      const users = await this.repository.find();
+      const users = await this.repository.find({
+        relations: {
+          memberships: {
+            organization: true,
+          },
+        },
+      });
       this.logger.info('Users listed successfully', {
         count: users.length,
       });

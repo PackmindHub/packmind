@@ -92,7 +92,7 @@ const org = await accountsHexa.createOrganization('Tech Corporation');
 // Get organization by ID
 const org = await accountsHexa.getOrganizationById('org-id');
 
-// Get organization by name
+// Get organization by name (backend will slugify internally)
 const org = await accountsHexa.getOrganizationByName('Tech Corporation');
 
 // List all organizations

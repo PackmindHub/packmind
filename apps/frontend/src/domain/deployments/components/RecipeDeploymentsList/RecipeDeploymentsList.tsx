@@ -35,12 +35,12 @@ export const RecipeDeploymentsList: React.FC<RecipeDeploymentsListProps> = ({
 
   const isLoading = isLoadingDeployments || isLoadingUsers;
 
-  // Create a mapping of user IDs to usernames
+  // Create a mapping of user IDs to emails
   const userMap = useMemo(() => {
     if (!users) return {};
     const usersName = users.reduce(
       (map, user) => {
-        map[user.id] = user.username;
+        map[user.id] = user.email;
         return map;
       },
       {} as Record<string, string>,
@@ -200,14 +200,8 @@ export const RecipeDeploymentsList: React.FC<RecipeDeploymentsListProps> = ({
   ];
 
   return (
-    <PMBox
-      className="recipe-deployments"
-      p={4}
-      borderRadius="md"
-      shadow="md"
-      mt={6}
-    >
-      <PMHeading level="h2">Recipe Deployments</PMHeading>
+    <PMBox>
+      <PMHeading level="h5">Deployments history</PMHeading>
       <PMTable
         columns={columns}
         data={deploymentRows}

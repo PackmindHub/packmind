@@ -2,15 +2,16 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
-    "module": "commonjs",
-    "moduleResolution": "node10",
+    "jsx": "react-jsx",
     "types": [
       "vite/client",
       "node",
       "jest",
       "@nx/react/typings/cssmodule.d.ts",
       "@nx/react/typings/image.d.ts"
-    ]
+    ],
+    "module": "ESNext",
+    "moduleResolution": "Bundler"
   },
   "include": [
     "jest.config.ts",

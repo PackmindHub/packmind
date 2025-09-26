@@ -8,7 +8,6 @@ import {
   PMText,
   PMPageSection,
   PMAlert,
-  PMSpinner,
   PMAlertDialog,
   PMTabs,
   PMGrid,
@@ -16,6 +15,7 @@ import {
   PMDataList,
   PMBox,
   pmUseToken,
+  PMHeading,
 } from '@packmind/ui';
 import {
   useGetStandardVersionsQuery,
@@ -25,18 +25,15 @@ import {
 import { StandardVersionsList } from './StandardVersionsList';
 import { RulesList } from './RulesList';
 
-import { useDeployStandard } from '../../deployments/hooks';
-import { Standard } from '@packmind/standards/types';
-import { GitRepoId } from '@packmind/git/types';
-import { TargetId } from '@packmind/shared';
+import { Standard } from '@packmind/shared';
 import { STANDARD_MESSAGES } from '../constants/messages';
 import { AutobreadCrumb } from '../../../shared/components/navigation/AutobreadCrumb';
-import { DeploymentsPanel } from '../../deployments/components/StandardDeployments/DeploymentsPanel';
 import {
   MarkdownEditor,
   MarkdownEditorProvider,
 } from '../../../shared/components/editor/MarkdownEditor';
-import { useAuthContext } from '../../accounts/hooks/useAuthContext';
+import { DeploymentsHistory } from '../../deployments/components/StandardDeployments/DeploymentsHistory';
+import { DeployStandardButton } from '../../deployments/components/StandardDeployments/DeployStandardButton';
 
 interface StandardDetailsProps {
   standard: Standard;
@@ -48,14 +45,9 @@ export const StandardDetails = ({
   orgSlug,
 }: StandardDetailsProps) => {
   const navigate = useNavigate();
-  const { organization } = useAuthContext();
   const [minRulesWidth, maxRulesWidth] = pmUseToken('sizes', ['md', '2xl']);
+  const defaultPath = `.packmind/standards/${standard.slug}.md`;
 
-  // Alert state management for deployment
-  const [deploymentAlert, setDeploymentAlert] = useState<{
-    type: 'success' | 'error' | 'info';
-    message: string;
-  } | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteAlert, setDeleteAlert] = useState<{
     type: 'success' | 'error';
@@ -72,7 +64,6 @@ export const StandardDetails = ({
   } = useGetRulesByStandardIdQuery(standard.id);
 
   const deleteStandardMutation = useDeleteStandardMutation();
-  const { deployStandard, isDeploying } = useDeployStandard();
 
   // Early return if no standardId is provided
   if (!standard) {
@@ -102,44 +93,6 @@ export const StandardDetails = ({
         message: STANDARD_MESSAGES.error.deleteFailed,
       });
       setDeleteModalOpen(false);
-    }
-  };
-
-  const handleDeploy = async (targetIds: TargetId[]) => {
-    if (!standard) return;
-
-    try {
-      // Show loading alert with spinner
-      setDeploymentAlert({
-        type: 'info',
-        message: STANDARD_MESSAGES.loading.deploying,
-      });
-
-      await deployStandard(
-        {
-          id: standard.id,
-          version: standard.version,
-          name: standard.name,
-        },
-        targetIds,
-      );
-
-      // Show success alert
-      setDeploymentAlert({
-        type: 'success',
-        message: STANDARD_MESSAGES.success.deployed,
-      });
-
-      // Auto-dismiss success alert after 3 seconds
-      setTimeout(() => {
-        setDeploymentAlert(null);
-      }, 3000);
-    } catch (error) {
-      console.error('Failed to deploy standard:', error);
-      setDeploymentAlert({
-        type: 'error',
-        message: STANDARD_MESSAGES.error.deployFailed,
-      });
     }
   };
 
@@ -179,19 +132,6 @@ export const StandardDetails = ({
         </PMHStack>
       }
     >
-      {deploymentAlert && (
-        <PMAlert.Root status={deploymentAlert.type} width="lg" mb={4}>
-          {deploymentAlert.type === 'info' ? (
-            <PMAlert.Indicator>
-              <PMSpinner size="sm" />
-            </PMAlert.Indicator>
-          ) : (
-            <PMAlert.Indicator />
-          )}
-          <PMAlert.Title>{deploymentAlert.message}</PMAlert.Title>
-        </PMAlert.Root>
-      )}
-
       {/* Delete Success/Error Alert */}
       {deleteAlert && (
         <PMAlert.Root status={deleteAlert.type} width="lg" mb={4}>
@@ -268,16 +208,50 @@ export const StandardDetails = ({
             {
               value: 'deployments',
               triggerLabel: 'Deployments',
-              content: organization ? (
-                <DeploymentsPanel
-                  standard={standard}
-                  orgSlug={orgSlug}
-                  organizationId={organization.id}
-                  handleDeploy={handleDeploy}
-                  isDeploying={isDeploying}
-                />
-              ) : (
-                <PMText>Loading organization...</PMText>
+              content: (
+                <PMVStack align="stretch" gap={6} marginTop={6} w={'4xl'}>
+                  <PMPageSection
+                    title="Run deployment"
+                    backgroundColor="primary"
+                    headingLevel="h4"
+                    cta={
+                      <DeployStandardButton
+                        label={`Deploy v${standard.version}`}
+                        disabled={!standard}
+                        selectedStandards={[standard]}
+                        size="sm"
+                        variant="secondary"
+                      />
+                    }
+                  >
+                    <PMBox
+                      marginTop={4}
+                      padding={4}
+                      border={'solid 1px'}
+                      borderColor="border.secondary"
+                      borderRadius="md"
+                    >
+                      <PMHeading level="h5">
+                        Deployed file information
+                      </PMHeading>
+                      <PMDataList
+                        my={2}
+                        flexDirection={'row'}
+                        size={'sm'}
+                        gap={6}
+                        items={[
+                          { label: 'Path', value: defaultPath },
+                          { label: 'Scope', value: standard.scope || '**/*' },
+                        ]}
+                      />
+                    </PMBox>
+                  </PMPageSection>
+
+                  <DeploymentsHistory
+                    standardId={standard.id}
+                    orgSlug={orgSlug}
+                  />
+                </PMVStack>
               ),
             },
           ]}

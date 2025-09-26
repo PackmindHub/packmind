@@ -1,4 +1,9 @@
-import { OrganizationId, UserId } from '@packmind/accounts';
+import {
+  OrganizationId,
+  UserId,
+  UserOrganizationMembership,
+  UserOrganizationRole,
+} from '@packmind/accounts';
 
 export interface JwtPayload {
   user: {
@@ -9,7 +14,11 @@ export interface JwtPayload {
     id: OrganizationId;
     name: string;
     slug: string;
+    role: UserOrganizationRole;
   };
+  memberships?: Array<
+    Pick<UserOrganizationMembership, 'organizationId' | 'role'>
+  >;
   iat: number;
   exp: number;
 }

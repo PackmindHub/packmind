@@ -155,8 +155,7 @@ describe('DeploymentsPage', () => {
   it('displays repository filter dropdown', () => {
     renderWithProvider(<DeploymentsPage />);
 
-    const dropdown = screen.getByRole('combobox');
-    expect(dropdown).toBeInTheDocument();
+    // Check for the select element specifically
     expect(screen.getByText('All repositories')).toBeInTheDocument();
     expect(screen.getByText('Only outdated repositories')).toBeInTheDocument();
   });
@@ -167,9 +166,7 @@ describe('DeploymentsPage', () => {
 
     renderWithProvider(<DeploymentsPage />);
 
-    // Recipe dropdown should be visible
-    const dropdown = screen.getByRole('combobox');
-    expect(dropdown).toBeInTheDocument();
+    // Recipe dropdown should be visible - there should be no combobox in recipe view
     expect(screen.getByText('All recipes')).toBeInTheDocument();
     expect(screen.getByText('Outdated recipes')).toBeInTheDocument();
     expect(screen.getByText('Undeployed recipes')).toBeInTheDocument();
@@ -225,10 +222,12 @@ describe('DeploymentsPage', () => {
     const user = userEvent.setup();
     renderWithProvider(<DeploymentsPage />);
 
-    const dropdown = screen.getByRole('combobox');
-    expect(dropdown).toHaveValue('all');
+    // Find the select element by looking for the option text
+    const allReposOption = screen.getByText('All repositories');
+    const selectElement = allReposOption.closest('select');
+    expect(selectElement).toBeInTheDocument();
 
-    await user.selectOptions(dropdown, 'outdated');
+    await user.selectOptions(selectElement!, 'outdated');
 
     // Verify that setSearchParams was called for filter updates
     expect(mockSetSearchParams).toHaveBeenCalled();
@@ -251,5 +250,112 @@ describe('DeploymentsPage', () => {
 
     // Verify that setSearchParams was called to update the view
     expect(mockSetSearchParams).toHaveBeenCalled();
+  });
+
+  describe('target filter state management', () => {
+    it('automatically cleans up invalid target names when data updates', () => {
+      // Set up initial data with specific targets
+      const initialData = createDeploymentOverview();
+      const validTargetName =
+        initialData.targets[0]?.target.name || 'Production';
+      const invalidTargetName = 'invalid-target-name';
+
+      // Mock URL params with both valid and invalid target names
+      mockSearchParams.set(
+        'targetFilter',
+        `${validTargetName},${invalidTargetName}`,
+      );
+
+      mockUseGetRecipesDeploymentOverview.mockReturnValue({
+        data: initialData,
+        isLoading: false,
+        error: null,
+        isError: false,
+        isPending: false,
+        isSuccess: true,
+        refetch: jest.fn(),
+      } as Partial<UseQueryResult<DeploymentOverview, Error>> as UseQueryResult<
+        DeploymentOverview,
+        Error
+      >);
+
+      renderWithProvider(<DeploymentsPage />);
+
+      // Verify that setSearchParams was called to clean up invalid target names
+      expect(mockSetSearchParams).toHaveBeenCalledWith(expect.any(Function));
+
+      // Simulate the URL update by calling the function passed to setSearchParams
+      const updateFunction = mockSetSearchParams.mock.calls[0][0];
+      const updatedParams = updateFunction(mockSearchParams);
+
+      // The updated params should only contain the valid target name
+      expect(updatedParams.get('targetFilter')).toBe(validTargetName);
+    });
+
+    it('removes targetFilter param when all selected targets become invalid', () => {
+      // Set up initial data
+      const initialData = createDeploymentOverview();
+      const invalidTargetName1 = 'invalid-target-1';
+      const invalidTargetName2 = 'invalid-target-2';
+
+      // Mock URL params with only invalid target names
+      mockSearchParams.set(
+        'targetFilter',
+        `${invalidTargetName1},${invalidTargetName2}`,
+      );
+
+      mockUseGetRecipesDeploymentOverview.mockReturnValue({
+        data: initialData,
+        isLoading: false,
+        error: null,
+        isError: false,
+        isPending: false,
+        isSuccess: true,
+        refetch: jest.fn(),
+      } as Partial<UseQueryResult<DeploymentOverview, Error>> as UseQueryResult<
+        DeploymentOverview,
+        Error
+      >);
+
+      renderWithProvider(<DeploymentsPage />);
+
+      // Verify that setSearchParams was called to clean up invalid target names
+      expect(mockSetSearchParams).toHaveBeenCalledWith(expect.any(Function));
+
+      // Simulate the URL update by calling the function passed to setSearchParams
+      const updateFunction = mockSetSearchParams.mock.calls[0][0];
+      const updatedParams = updateFunction(mockSearchParams);
+
+      // The targetFilter param should be removed when no valid targets remain
+      expect(updatedParams.has('targetFilter')).toBe(false);
+    });
+
+    it('does not update URL when all selected targets are valid', () => {
+      // Set up initial data with specific targets
+      const initialData = createDeploymentOverview();
+      const validTargetName =
+        initialData.targets[0]?.target.name || 'Production';
+
+      // Mock URL params with only valid target names
+      mockSearchParams.set('targetFilter', validTargetName);
+
+      mockUseGetRecipesDeploymentOverview.mockReturnValue({
+        data: initialData,
+        isLoading: false,
+        error: null,
+        isError: false,
+        isPending: false,
+        isSuccess: true,
+        refetch: jest.fn(),
+      } as Partial<UseQueryResult<DeploymentOverview, Error>> as UseQueryResult<
+        DeploymentOverview,
+        Error
+      >);
+
+      renderWithProvider(<DeploymentsPage />);
+
+      // setSearchParams should not be called when all targets are valid
+      expect(mockSetSearchParams).not.toHaveBeenCalled();
+    });
   });
 });

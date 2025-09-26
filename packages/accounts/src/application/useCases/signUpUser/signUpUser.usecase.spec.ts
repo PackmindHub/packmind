@@ -19,7 +19,7 @@ describe('SignUpUserUseCase', () => {
     mockUserService = {
       createUser: jest.fn(),
       getUserById: jest.fn(),
-      getUserByUsername: jest.fn(),
+      getUserByEmail: jest.fn(),
       hashPassword: jest.fn(),
       validatePassword: jest.fn(),
       listUsers: jest.fn(),
@@ -50,18 +50,25 @@ describe('SignUpUserUseCase', () => {
       id: createOrganizationId('org-123'),
     });
 
+    const userId = createUserId('user-123');
     const mockUser = userFactory({
-      id: createUserId('user-123'),
-      username: 'testuser',
+      id: userId,
+      email: 'testuser@packmind.com',
       passwordHash: 'hashedpassword',
-      organizationId: createOrganizationId('org-123'),
+      memberships: [
+        {
+          userId,
+          organizationId: createOrganizationId('org-123'),
+          role: 'admin',
+        },
+      ],
     });
 
     describe('when organization exists', () => {
       it('signs up a user successfully', async () => {
         const command: SignUpUserCommand = {
-          username: 'testuser',
-          password: 'password123',
+          email: 'testuser@packmind.com',
+          password: 'password123!@',
           organizationId: createOrganizationId('org-123'),
         };
 
@@ -75,11 +82,11 @@ describe('SignUpUserUseCase', () => {
         expect(result).toEqual(mockUser);
         expect(
           mockOrganizationService.getOrganizationById,
-        ).toHaveBeenCalledWith('org-123');
+        ).toHaveBeenCalledWith(createOrganizationId('org-123'));
         expect(mockUserService.createUser).toHaveBeenCalledWith(
-          'testuser',
-          'password123',
-          'org-123',
+          'testuser@packmind.com',
+          'password123!@',
+          createOrganizationId('org-123'),
         );
       });
     });
@@ -87,8 +94,8 @@ describe('SignUpUserUseCase', () => {
     describe('when organization is not found', () => {
       it('throws error', async () => {
         const command: SignUpUserCommand = {
-          username: 'testuser',
-          password: 'password123',
+          email: 'testuser@packmind.com',
+          password: 'password123!@',
           organizationId: createOrganizationId('org-123'),
         };
 
@@ -100,14 +107,14 @@ describe('SignUpUserUseCase', () => {
 
         expect(
           mockOrganizationService.getOrganizationById,
-        ).toHaveBeenCalledWith('org-123');
+        ).toHaveBeenCalledWith(createOrganizationId('org-123'));
         expect(mockUserService.createUser).not.toHaveBeenCalled();
       });
 
-      it('throws error for missing username', async () => {
+      it('throws error for missing email', async () => {
         const command: SignUpUserCommand = {
-          username: '',
-          password: 'password123',
+          email: '',
+          password: 'password123!@',
           organizationId: createOrganizationId('org-123'),
         };
 
@@ -115,26 +122,26 @@ describe('SignUpUserUseCase', () => {
           mockOrganization,
         );
         mockUserService.createUser.mockRejectedValue(
-          new Error('Username, password, and organizationId are required'),
+          new Error('Email, password, and organizationId are required'),
         );
 
         await expect(signUpUserUseCase.execute(command)).rejects.toThrow(
-          'Username, password, and organizationId are required',
+          'Email, password, and organizationId are required',
         );
 
         expect(
           mockOrganizationService.getOrganizationById,
-        ).toHaveBeenCalledWith('org-123');
+        ).toHaveBeenCalledWith(createOrganizationId('org-123'));
         expect(mockUserService.createUser).toHaveBeenCalledWith(
           '',
-          'password123',
-          'org-123',
+          'password123!@',
+          createOrganizationId('org-123'),
         );
       });
 
       it('throws error for missing password', async () => {
         const command: SignUpUserCommand = {
-          username: 'testuser',
+          email: 'testuser@packmind.com',
           password: '',
           organizationId: createOrganizationId('org-123'),
         };
@@ -142,28 +149,16 @@ describe('SignUpUserUseCase', () => {
         mockOrganizationService.getOrganizationById.mockResolvedValue(
           mockOrganization,
         );
-        mockUserService.createUser.mockRejectedValue(
-          new Error('Username, password, and organizationId are required'),
-        );
 
         await expect(signUpUserUseCase.execute(command)).rejects.toThrow(
-          'Username, password, and organizationId are required',
-        );
-
-        expect(
-          mockOrganizationService.getOrganizationById,
-        ).toHaveBeenCalledWith('org-123');
-        expect(mockUserService.createUser).toHaveBeenCalledWith(
-          'testuser',
-          '',
-          'org-123',
+          'Password is required',
         );
       });
 
       it('throws error for missing organizationId', async () => {
         const command: SignUpUserCommand = {
-          username: 'testuser',
-          password: 'password123',
+          email: 'testuser@packmind.com',
+          password: 'password123!@',
           organizationId: createOrganizationId(''),
         };
 
@@ -175,15 +170,15 @@ describe('SignUpUserUseCase', () => {
 
         expect(
           mockOrganizationService.getOrganizationById,
-        ).toHaveBeenCalledWith('');
+        ).toHaveBeenCalledWith(createOrganizationId(''));
         expect(mockUserService.createUser).not.toHaveBeenCalled();
       });
 
-      describe('when username already exists', () => {
+      describe('when email already exists', () => {
         it('throws error', async () => {
           const command: SignUpUserCommand = {
-            username: 'testuser',
-            password: 'password123',
+            email: 'testuser@packmind.com',
+            password: 'password123!@',
             organizationId: createOrganizationId('org-123'),
           };
 
@@ -191,20 +186,20 @@ describe('SignUpUserUseCase', () => {
             mockOrganization,
           );
           mockUserService.createUser.mockRejectedValue(
-            new Error("Username 'testuser' already exists"),
+            new Error("Email 'testuser@packmind.com' already exists"),
           );
 
           await expect(signUpUserUseCase.execute(command)).rejects.toThrow(
-            "Username 'testuser' already exists",
+            "Email 'testuser@packmind.com' already exists",
           );
 
           expect(
             mockOrganizationService.getOrganizationById,
-          ).toHaveBeenCalledWith('org-123');
+          ).toHaveBeenCalledWith(createOrganizationId('org-123'));
           expect(mockUserService.createUser).toHaveBeenCalledWith(
-            'testuser',
-            'password123',
-            'org-123',
+            'testuser@packmind.com',
+            'password123!@',
+            createOrganizationId('org-123'),
           );
         });
       });
@@ -212,8 +207,8 @@ describe('SignUpUserUseCase', () => {
       describe('when userService throws unexpected error', () => {
         it('throws error', async () => {
           const command: SignUpUserCommand = {
-            username: 'testuser',
-            password: 'password123',
+            email: 'testuser@packmind.com',
+            password: 'password123!@',
             organizationId: createOrganizationId('org-123'),
           };
 
@@ -230,11 +225,11 @@ describe('SignUpUserUseCase', () => {
 
           expect(
             mockOrganizationService.getOrganizationById,
-          ).toHaveBeenCalledWith('org-123');
+          ).toHaveBeenCalledWith(createOrganizationId('org-123'));
           expect(mockUserService.createUser).toHaveBeenCalledWith(
-            'testuser',
-            'password123',
-            'org-123',
+            'testuser@packmind.com',
+            'password123!@',
+            createOrganizationId('org-123'),
           );
         });
       });
@@ -242,8 +237,8 @@ describe('SignUpUserUseCase', () => {
       describe('when organizationService throws unexpected error', () => {
         it('throws error', async () => {
           const command: SignUpUserCommand = {
-            username: 'testuser',
-            password: 'password123',
+            email: 'testuser@packmind.com',
+            password: 'password123!@',
             organizationId: createOrganizationId('org-123'),
           };
 
@@ -257,7 +252,7 @@ describe('SignUpUserUseCase', () => {
 
           expect(
             mockOrganizationService.getOrganizationById,
-          ).toHaveBeenCalledWith('org-123');
+          ).toHaveBeenCalledWith(createOrganizationId('org-123'));
           expect(mockUserService.createUser).not.toHaveBeenCalled();
         });
       });

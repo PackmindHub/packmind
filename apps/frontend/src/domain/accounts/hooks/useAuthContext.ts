@@ -1,16 +1,22 @@
 import { useGetMeQuery } from '../api/queries/UserQueries';
-import { OrganizationId, UserId } from '@packmind/accounts/types';
+import {
+  OrganizationId,
+  UserId,
+  UserOrganizationMembership,
+  UserOrganizationRole,
+} from '@packmind/accounts/types';
 
 export interface AuthContextUser {
   id: UserId;
-  username: string;
-  organizationId: OrganizationId;
+  email: string;
+  memberships: UserOrganizationMembership[];
 }
 
 export interface AuthContextOrganization {
   id: OrganizationId;
   name: string;
   slug: string;
+  role: UserOrganizationRole;
 }
 
 export interface AuthContext {

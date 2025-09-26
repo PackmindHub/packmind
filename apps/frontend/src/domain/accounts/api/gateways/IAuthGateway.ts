@@ -1,6 +1,8 @@
 import {
   OrganizationId,
   UserId,
+  UserOrganizationMembership,
+  UserOrganizationRole,
   ISignUpUserUseCase,
   ISignInUserUseCase,
   IGenerateApiKeyUseCase,
@@ -17,13 +19,14 @@ export interface MeResponse {
   authenticated: boolean;
   user?: {
     id: UserId;
-    username: string;
-    organizationId: OrganizationId;
+    email: string;
+    memberships: UserOrganizationMembership[];
   };
   organization?: {
     id: OrganizationId;
     name: string;
     slug: string;
+    role: UserOrganizationRole;
   };
 }
 

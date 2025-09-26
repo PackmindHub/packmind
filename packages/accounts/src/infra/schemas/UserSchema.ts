@@ -14,7 +14,7 @@ export const UserSchema = new EntitySchema<
   name: 'User',
   tableName: 'users',
   columns: {
-    username: {
+    email: {
       type: 'varchar',
       length: 255,
       unique: true,
@@ -23,32 +23,23 @@ export const UserSchema = new EntitySchema<
       name: 'password_hash',
       type: 'varchar',
       length: 255,
+      nullable: true,
     },
-    organizationId: {
-      name: 'organization_id',
-      type: 'uuid',
-      nullable: false,
+    active: {
+      type: 'boolean',
+      default: true,
     },
     ...uuidSchema,
     ...timestampsSchemas,
     ...softDeleteSchemas,
   },
   relations: {
-    organization: {
-      type: 'many-to-one',
-      target: 'Organization',
-      joinColumn: {
-        name: 'organization_id',
-        referencedColumnName: 'id',
-      },
-      onDelete: 'RESTRICT',
-      onUpdate: 'CASCADE',
+    memberships: {
+      type: 'one-to-many',
+      target: 'UserOrganizationMembership',
+      inverseSide: 'user',
+      cascade: ['insert', 'update'],
+      eager: false,
     },
   },
-  indices: [
-    {
-      name: 'idx_user_organization',
-      columns: ['organizationId'],
-    },
-  ],
 });

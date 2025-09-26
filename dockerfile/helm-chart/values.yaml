@@ -38,11 +38,12 @@ fullnameOverride: ""
 # Service account configuration
 serviceAccount:
   # Specifies whether a service account should be created
-  create: true
+  create: false
   # Annotations to add to the service account
-  annotations: {}
-  # The name of the service account to use
-  name: ""
+  # annotations: {}
+  # The name of the service account to use.
+  # If not set, a name is generated using the fullname template
+  # name: ""
 
 # Security context for pods
 podSecurityContext:
@@ -138,6 +139,19 @@ api:
     # DATABASE_POOL_SIZE: "10"
     # LOG_LEVEL: "info"
   
+  # Environment variables from secrets
+  # Use this when you have secrets created by external systems (Vault, ESO, etc.)
+  secretEnvVars: []
+    # Example configurations:
+    # - name: THIRD_PARTY_API_KEY
+    #   secretName: my-external-secret
+    #   key: api-key
+    #   optional: false
+    # - name: OPTIONAL_TOKEN
+    #   secretName: vault-managed-secret
+    #   key: token
+    #   optional: true
+  
   # CA Certificates configuration for Node.js applications
   caCerts:
     # Enable custom CA bundle injection
@@ -231,8 +245,16 @@ frontend:
   podAnnotations: {}
   
   # Service-specific security contexts (overrides global if set)
+  # Frontend requires non-root user context to match Docker image setup
   podSecurityContext: {}
-  securityContext: {}
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+      - ALL
+    readOnlyRootFilesystem: false
+    runAsNonRoot: true
+    runAsUser: 1000
   
   # Node selector, tolerations and affinity
   nodeSelector: {}
@@ -253,7 +275,7 @@ mcpServer:
   
   image:
     repository: packmind/mcp
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
     tag: "latest"
   
   replicaCount: 1
@@ -298,6 +320,19 @@ mcpServer:
     # Add any additional environment variables here
     # NEW_ENV_VAR: "value"
     # ANOTHER_CONFIG: "setting"
+  
+  # Environment variables from secrets
+  # Use this when you have secrets created by external systems (Vault, ESO, etc.)
+  secretEnvVars: []
+    # Example configurations:
+    # - name: MCP_EXTERNAL_TOKEN
+    #   secretName: vault-mcp-secret
+    #   key: external-token
+    #   optional: false
+    # - name: OPTIONAL_SERVICE_KEY
+    #   secretName: external-service-secret
+    #   key: service-key
+    #   optional: true
   
   # CA Certificates configuration for Node.js applications
   caCerts:
@@ -465,7 +500,7 @@ postgresql:
   image:
     repository: postgres
     tag: "17.6-alpine3.21"
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
   
   auth:
     username: "postgres"
@@ -542,7 +577,7 @@ redis:
   image:
     repository: redis
     tag: "7.2.4-alpine"
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
   
   auth:
     enabled: false

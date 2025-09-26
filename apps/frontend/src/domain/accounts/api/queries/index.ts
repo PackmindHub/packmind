@@ -5,4 +5,4 @@ export {
   useGetMcpURLQuery,
   useGetMcpTokenMutation,
 } from './AuthQueries';
-export { useGetMeQuery, useCheckUsernameMutation } from './UserQueries';
+export { useGetMeQuery } from './UserQueries';

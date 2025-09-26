@@ -11,15 +11,45 @@ import {
 import { RepositoryCentricView } from '../RepositoryCentricView';
 import { RecipeCentricView } from '../RecipeCentricView';
 import { StandardCentricView } from '../StandardCentricView';
+import { TargetMultiSelect } from '../TargetMultiSelect';
 import {
   useGetRecipesDeploymentOverviewQuery,
   useGetStandardsDeploymentOverviewQuery,
 } from '../../api/queries/DeploymentsQueries';
+import { Target } from '@packmind/shared';
+import {
+  TargetDeploymentStatus,
+  TargetStandardDeploymentStatus,
+} from '@packmind/shared';
 
 type ViewMode = 'repositories' | 'recipes' | 'standards';
 type RepositoryFilter = 'all' | 'outdated';
 type RecipeFilter = 'all' | 'outdated' | 'undeployed';
 type StandardFilter = 'all' | 'outdated' | 'undeployed';
+
+/**
+ * Extracts unique targets from deployment data for filtering purposes
+ */
+const extractAvailableTargets = (
+  recipeTargets: TargetDeploymentStatus[] = [],
+  standardTargets: TargetStandardDeploymentStatus[] = [],
+): Target[] => {
+  const targetMap = new Map<string, Target>();
+
+  // Add targets from recipe deployments
+  recipeTargets.forEach((targetDeployment) => {
+    targetMap.set(targetDeployment.target.id, targetDeployment.target);
+  });
+
+  // Add targets from standard deployments
+  standardTargets.forEach((targetDeployment) => {
+    targetMap.set(targetDeployment.target.id, targetDeployment.target);
+  });
+
+  return Array.from(targetMap.values()).sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
+};
 
 export const DeploymentsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -112,6 +142,23 @@ export const DeploymentsPage: React.FC = () => {
     });
   };
 
+  // URL-synchronized state for targetFilter (comma-separated target names)
+  const rawTargetFilter = searchParams.get('targetFilter');
+  const selectedTargetNames: string[] = rawTargetFilter
+    ? rawTargetFilter.split(',')
+    : [];
+  const setSelectedTargetNames = (targetNames: string[]) => {
+    setSearchParams((prev) => {
+      const newParams = new URLSearchParams(prev);
+      if (targetNames.length > 0) {
+        newParams.set('targetFilter', targetNames.join(','));
+      } else {
+        newParams.delete('targetFilter');
+      }
+      return newParams;
+    });
+  };
+
   const {
     data: recipesData,
     isLoading,
@@ -122,6 +169,32 @@ export const DeploymentsPage: React.FC = () => {
     isLoading: standardIsLoading,
     error: standardError,
   } = useGetStandardsDeploymentOverviewQuery();
+
+  // Extract available targets for filtering (safe to call even when data is loading)
+  const availableTargets = extractAvailableTargets(
+    recipesData?.targets,
+    standardData?.targets,
+  );
+
+  // Automatic cleanup of invalid target names when data updates
+  useEffect(() => {
+    if (selectedTargetNames.length > 0 && availableTargets.length > 0) {
+      const availableTargetNames = new Set(
+        availableTargets.map((target) => target.name),
+      );
+      // Keep only valid names and deduplicate
+      const validTargetNames = Array.from(
+        new Set(
+          selectedTargetNames.filter((name) => availableTargetNames.has(name)),
+        ),
+      );
+
+      // If some selected targets are no longer available, update the selection
+      if (validTargetNames.length !== selectedTargetNames.length) {
+        setSelectedTargetNames(validTargetNames);
+      }
+    }
+  }, [availableTargets, selectedTargetNames, setSelectedTargetNames]);
 
   if (isLoading || standardIsLoading) {
     return <PMText>Loading...</PMText>;
@@ -155,6 +228,12 @@ export const DeploymentsPage: React.FC = () => {
     <PMVStack gap={4} marginTop={4} align={'stretch'}>
       <PMHStack gap={4}>
         {searchField}
+        <TargetMultiSelect
+          availableTargets={availableTargets}
+          selectedTargetNames={selectedTargetNames}
+          onSelectionChange={setSelectedTargetNames}
+          placeholder="Filter by targets..."
+        />
         <PMNativeSelect
           value={repositoryFilter}
           items={[
@@ -173,6 +252,7 @@ export const DeploymentsPage: React.FC = () => {
         standardTargets={standardData?.targets}
         searchTerm={searchTerm}
         showOnlyOutdated={repositoryFilter === 'outdated'}
+        selectedTargetNames={selectedTargetNames}
       />
     </PMVStack>
   );

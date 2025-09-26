@@ -14,16 +14,10 @@ export class SignInUserUseCase implements ISignInUserUseCase {
   ) {}
 
   async execute(command: SignInUserCommand): Promise<SignInUserResponse> {
-    // Validate organization exists first
-    const organization = await this.organizationService.getOrganizationById(
-      command.organizationId,
+    // Find user by email (case-insensitive)
+    const user = await this.userService.getUserByEmailCaseInsensitive(
+      command.email,
     );
-    if (!organization) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    // Find user by username
-    const user = await this.userService.getUserByUsername(command.username);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -37,14 +31,25 @@ export class SignInUserUseCase implements ISignInUserUseCase {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Validate user belongs to the specified organization
-    if (user.organizationId !== command.organizationId) {
+    // Check if user has any memberships
+    if (!user.memberships || user.memberships.length === 0) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    // Get the first membership and its organization
+    const firstMembership = user.memberships[0];
+    const organization = await this.organizationService.getOrganizationById(
+      firstMembership.organizationId,
+    );
+
+    if (!organization) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
     return {
       user,
       organization,
+      role: firstMembership.role,
     };
   }
 }

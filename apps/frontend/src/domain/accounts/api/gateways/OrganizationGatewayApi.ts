@@ -16,6 +16,12 @@ export class OrganizationGatewayApi
     return this._api.post<Organization>(this._endpoint, organization);
   }
 
+  async getByName(name: string): Promise<Organization> {
+    return this._api.get<Organization>(
+      `${this._endpoint}/by-name/${encodeURIComponent(name)}`,
+    );
+  }
+
   async getBySlug(slug: string): Promise<Organization> {
     return this._api.get<Organization>(`${this._endpoint}/slug/${slug}`);
   }

@@ -36,13 +36,11 @@ spec:
         {{- end }}
     spec:
       {{- include "packmind.imagePullSecrets" . | nindent 6 }}
-      serviceAccountName: {{ include "packmind.serviceAccountName" . }}
-      securityContext:
-        {{- include "packmind.podSecurityContext" (dict "context" . "component" "postgresql") | nindent 8 }}
+      {{- include "packmind.serviceAccountNameField" . | nindent 6 }}
+      {{- include "packmind.podSecurityContextField" (dict "context" . "component" "postgresql") | nindent 6 }}
       containers:
         - name: postgresql
-          securityContext:
-            {{- include "packmind.securityContext" (dict "context" . "component" "postgresql") | nindent 12 }}
+          {{- include "packmind.securityContextField" (dict "context" . "component" "postgresql") | nindent 10 }}
           image: "{{ .Values.postgresql.image.repository }}:{{ .Values.postgresql.image.tag }}"
           imagePullPolicy: {{ .Values.postgresql.image.pullPolicy }}
           ports:

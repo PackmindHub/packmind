@@ -68,8 +68,18 @@ export function PMTable<T extends object = object>({
     }
   };
 
-  // Calculate how many columns can grow
   const growingColumns = columns.filter((col) => col.grow);
+  const fixedColumns = columns.filter((col) => !col.grow);
+  function parseWidth(width?: string): number {
+    if (!width) return 0;
+    if (width.endsWith('%')) return parseFloat(width);
+    if (width.endsWith('px')) return (parseFloat(width) * 100) / 1200; // approx px to %
+    return 0;
+  }
+  const totalFixedPercent = fixedColumns.reduce(
+    (sum, col) => sum + parseWidth(col.width),
+    0,
+  );
 
   // Include selection column in calculations if selectable
   const allColumns = selectable
@@ -84,7 +94,6 @@ export function PMTable<T extends object = object>({
       ]
     : columns;
 
-  // If we have growing columns, distribute remaining space among them
   const getEffectiveColumnWidth = (
     column:
       | PMTableColumn
@@ -100,8 +109,9 @@ export function PMTable<T extends object = object>({
       if (column.width) {
         return column.width;
       } else if (growingColumns.length > 0) {
-        const remainingPercentage = Math.floor(100 / growingColumns.length);
-        return `${remainingPercentage}%`;
+        const remaining = Math.max(0, 100 - totalFixedPercent);
+        const percent = remaining / growingColumns.length;
+        return `${percent}%`;
       }
       return 'auto';
     } else {

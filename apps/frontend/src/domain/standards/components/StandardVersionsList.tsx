@@ -1,7 +1,15 @@
 import React from 'react';
-import { PMCloseButton, PMDrawer, PMLink, PMPortal } from '@packmind/ui';
-import { PMText, PMTable, PMTableColumn, PMTableRow } from '@packmind/ui';
-import { StandardVersion, StandardId } from '@packmind/standards/types';
+import {
+  PMCloseButton,
+  PMDrawer,
+  PMLink,
+  PMPortal,
+  PMText,
+  PMTable,
+  PMTableColumn,
+  PMTableRow,
+} from '@packmind/ui';
+import { StandardId, StandardVersion } from '@packmind/shared';
 
 interface StandardVersionsListProps {
   standardId: StandardId;

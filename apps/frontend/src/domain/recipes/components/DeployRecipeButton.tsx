@@ -14,6 +14,7 @@ export interface DeployRecipeButtonProps {
   label?: string;
   disabled?: boolean;
   size?: 'sm' | 'md' | 'lg';
+  variant?: 'primary' | 'secondary' | 'tertiary';
   selectedRecipes: Recipe[];
 }
 
@@ -21,6 +22,7 @@ export const DeployRecipeButton: React.FC<DeployRecipeButtonProps> = ({
   label = 'Deploy',
   disabled = false,
   size = 'md',
+  variant = 'primary',
   selectedRecipes,
 }) => {
   return (
@@ -31,7 +33,7 @@ export const DeployRecipeButton: React.FC<DeployRecipeButtonProps> = ({
       scrollBehavior={'outside'}
     >
       <PMDialog.Trigger asChild>
-        <PMButton size={size} variant={'primary'} disabled={disabled}>
+        <PMButton size={size} variant={variant} disabled={disabled}>
           {label}
         </PMButton>
       </PMDialog.Trigger>

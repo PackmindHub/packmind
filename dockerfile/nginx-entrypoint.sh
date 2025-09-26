@@ -1,14 +1,11 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
-# Select nginx configuration based on environment
+# Select and start nginx with the appropriate complete configuration
 if [ "$NGINX_ENV" = "K8S" ]; then
     echo "Using K8S nginx configuration"
-    cp /etc/nginx/nginx.k8s.conf /etc/nginx/conf.d/default.conf
+    exec nginx -c /etc/nginx/nginx.k8s.conf -g "daemon off;"
 else
     echo "Using compose nginx configuration"
-    cp /etc/nginx/nginx.compose.conf /etc/nginx/conf.d/default.conf
+    exec nginx -c /etc/nginx/nginx.compose.conf -g "daemon off;"
 fi
-
-# Start nginx
-exec nginx -g "daemon off;"

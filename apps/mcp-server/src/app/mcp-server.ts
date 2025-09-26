@@ -10,14 +10,31 @@ import {
   stringToProgrammingLanguage,
 } from '@packmind/shared';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
+import packmindOnboardingModeSelection from './prompts/packmind-onboarding-mode-selection';
+import packmindOnboardingCodebaseAnalysis from './prompts/packmind-onboarding-codebase-analysis';
+import packmindOnboardingGitHistory from './prompts/packmind-onboarding-git-history';
+import packmindOnboardingDocumentation from './prompts/packmind-onboarding-documentation';
+import packmindOnboardingAiInstructions from './prompts/packmind-onboarding-ai-instructions';
+import packmindOnboardingWebResearch from './prompts/packmind-onboarding-web-research';
 
 interface UserContext {
-  username: string;
+  email: string;
   userId: string;
   organizationId: string;
+  role: string;
 }
 
 const mcpToolPrefix = 'packmind';
+
+// Onboarding prompt content imported as strings
+const ONBOARDING_PROMPTS = {
+  'mode-selection': packmindOnboardingModeSelection,
+  'codebase-analysis': packmindOnboardingCodebaseAnalysis,
+  'git-history': packmindOnboardingGitHistory,
+  documentation: packmindOnboardingDocumentation,
+  'ai-instructions': packmindOnboardingAiInstructions,
+  'web-research': packmindOnboardingWebResearch,
+};
 
 export function createMCPServer(
   fastify: FastifyInstance,
@@ -36,7 +53,7 @@ export function createMCPServer(
   });
 
   logger.info('Create MCP server', {
-    user: userContext ? userContext.username : 'anonymous',
+    user: userContext ? userContext.email : 'anonymous',
   });
 
   // Debug logging for fastify decorators
@@ -81,9 +98,7 @@ export function createMCPServer(
         logger.error(err);
       }
 
-      const greeting = userContext
-        ? `Hello ${userContext.username}`
-        : 'Hello you';
+      const greeting = userContext ? `Hello ${userContext.email}` : 'Hello you';
 
       return {
         content: [
@@ -469,6 +484,72 @@ export function createMCPServer(
             {
               type: 'text',
               text: `Failed to create standard: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        };
+      }
+    },
+  );
+
+  mcpServer.tool(
+    `${mcpToolPrefix}_onboarding`,
+    'Get onboarding workflows for coding standards creation. Returns mode selection if no workflow specified, or specific workflow content.',
+    {
+      workflow: z
+        .string()
+        .optional()
+        .describe(
+          'The workflow name to retrieve. Available: codebase-analysis, git-history, documentation, ai-instructions, web-research',
+        ),
+    },
+    async ({ workflow }) => {
+      try {
+        // If no workflow specified, return mode selection
+        console.log('Onboarding tool called with workflow:', workflow);
+        if (!workflow) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: ONBOARDING_PROMPTS['mode-selection'],
+              },
+            ],
+          };
+        }
+
+        // Check if the requested workflow exists
+        if (workflow in ONBOARDING_PROMPTS) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: ONBOARDING_PROMPTS[
+                  workflow as keyof typeof ONBOARDING_PROMPTS
+                ],
+              },
+            ],
+          };
+        }
+
+        // Workflow not found
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `No workflow found for '${workflow}'. Available workflows: ${Object.keys(
+                ONBOARDING_PROMPTS,
+              )
+                .filter((k) => k !== 'mode-selection')
+                .join(', ')}`,
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Failed to retrieve onboarding content: ${error instanceof Error ? error.message : String(error)}`,
             },
           ],
         };

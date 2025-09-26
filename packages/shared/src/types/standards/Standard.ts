@@ -16,4 +16,5 @@ export type Standard = {
   organizationId: OrganizationId;
   userId: UserId; // The owner of the standard
   scope: string | null; // Scope from the latest StandardVersion
+  updatedAt?: Date;
 };

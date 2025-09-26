@@ -1,5 +1,6 @@
+import { User } from '../../../domain/entities/User';
 import { UserService } from '../../services/UserService';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger, SanitizedUser } from '@packmind/shared';
 import {
   IListUsersUseCase,
   ListUsersCommand,
@@ -16,18 +17,39 @@ export class ListUsersUseCase implements IListUsersUseCase {
     this.logger.info('ListUsersUseCase initialized');
   }
 
-  async execute(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _command: ListUsersCommand,
-  ): Promise<ListUsersResponse> {
-    this.logger.info('Executing list users use case');
+  async execute(command: ListUsersCommand): Promise<ListUsersResponse> {
+    const { userId, organizationId } = command;
+
+    this.logger.info('Executing list users use case', {
+      userId,
+      organizationId,
+    });
 
     try {
       const users = await this.userService.listUsers();
-      this.logger.info('List users use case executed successfully', {
-        count: users.length,
+
+      const filteredUsers = organizationId
+        ? users.filter((user) =>
+            user.memberships?.some(
+              (membership) => membership.organizationId === organizationId,
+            ),
+          )
+        : users;
+
+      const sanitizedUsers = filteredUsers.map((user) => {
+        const safeUser = { ...user } as Partial<User>;
+
+        delete safeUser.memberships;
+        delete safeUser.passwordHash;
+
+        return safeUser as SanitizedUser;
       });
-      return { users };
+
+      this.logger.info('List users use case executed successfully', {
+        count: sanitizedUsers.length,
+        organizationId,
+      });
+      return { users: sanitizedUsers };
     } catch (error) {
       this.logger.error('Failed to execute list users use case', {
         error: error instanceof Error ? error.message : String(error),

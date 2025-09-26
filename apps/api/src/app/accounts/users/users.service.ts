@@ -1,32 +1,33 @@
 import { Injectable } from '@nestjs/common';
-import { AccountsHexa, OrganizationId, User, UserId } from '@packmind/accounts';
+import {
+  AccountsHexa,
+  ListUsersResponse,
+  OrganizationId,
+  User,
+  UserId,
+} from '@packmind/accounts';
 
 @Injectable()
 export class UsersService {
   constructor(private readonly accountsHexa: AccountsHexa) {}
 
-  async getUsers(): Promise<User[]> {
-    return this.accountsHexa.listUsers({});
+  async getUsers(
+    userId: UserId,
+    organizationId: OrganizationId,
+  ): Promise<ListUsersResponse> {
+    return this.accountsHexa.listUsers({ userId, organizationId });
   }
 
   async getUserById(id: UserId): Promise<User | null> {
     return this.accountsHexa.getUserById({ userId: id });
   }
 
-  async getUserByUsername(username: string): Promise<User | null> {
-    return this.accountsHexa.getUserByUsername({ username });
-  }
-
-  async doesUsernameExist(username: string): Promise<boolean> {
-    const user = await this.accountsHexa.getUserByUsername({ username });
-    return user !== null;
-  }
-
   async getUsersByOrganizationId(
+    userId: UserId,
     organizationId: OrganizationId,
-  ): Promise<User[]> {
-    const allUsers = await this.accountsHexa.listUsers({});
-    return allUsers.filter((user) => user.organizationId === organizationId);
+  ): Promise<ListUsersResponse['users']> {
+    const { users } = await this.getUsers(userId, organizationId);
+    return users;
   }
 
   async getOrganizationById(organizationId: OrganizationId) {

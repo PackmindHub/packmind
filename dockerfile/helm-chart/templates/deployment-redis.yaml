@@ -36,13 +36,11 @@ spec:
         {{- end }}
     spec:
       {{- include "packmind.imagePullSecrets" . | nindent 6 }}
-      serviceAccountName: {{ include "packmind.serviceAccountName" . }}
-      securityContext:
-        {{- include "packmind.podSecurityContext" (dict "context" . "component" "redis") | nindent 8 }}
+      {{- include "packmind.serviceAccountNameField" . | nindent 6 }}
+      {{- include "packmind.podSecurityContextField" (dict "context" . "component" "redis") | nindent 6 }}
       containers:
         - name: redis
-          securityContext:
-            {{- include "packmind.securityContext" (dict "context" . "component" "redis") | nindent 12 }}
+          {{- include "packmind.securityContextField" (dict "context" . "component" "redis") | nindent 10 }}
           image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
           imagePullPolicy: {{ .Values.redis.image.pullPolicy }}
           ports:

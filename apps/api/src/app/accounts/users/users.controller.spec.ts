@@ -6,11 +6,13 @@ import {
   createOrganizationId,
   createUserId,
   AccountsHexa,
+  ListUsersResponse,
 } from '@packmind/accounts';
 import { NotFoundException } from '@nestjs/common';
 import { AuthService } from '../../auth/auth.service';
 import { PackmindLogger } from '@packmind/shared';
 import { stubLogger } from '@packmind/shared/test';
+import { AuthenticatedRequest } from '@packmind/shared-nest';
 
 describe('UsersController', () => {
   let app: TestingModule;
@@ -22,7 +24,6 @@ describe('UsersController', () => {
     const mockAccountsApp = {
       listUsers: jest.fn(),
       getUserById: jest.fn(),
-      getUserByUsername: jest.fn(),
       signUpUser: jest.fn(),
       getOrganizationById: jest.fn(),
     };
@@ -55,26 +56,41 @@ describe('UsersController', () => {
   });
 
   describe('getUsers', () => {
-    it('returns an array of users', async () => {
-      const users: User[] = [
+    it('returns an array of users for the request organization', async () => {
+      const user1Id = createUserId('1');
+      const user2Id = createUserId('2');
+      const users: ListUsersResponse['users'] = [
         {
-          id: createUserId('1'),
-          username: 'user1',
-          passwordHash: 'hash1',
-          organizationId: createOrganizationId('org-1'),
+          id: user1Id,
+          email: 'user1@packmind.com',
+          active: true,
         },
         {
-          id: createUserId('2'),
-          username: 'user2',
-          passwordHash: 'hash2',
-          organizationId: createOrganizationId('org-2'),
+          id: user2Id,
+          email: 'user2@packmind.com',
+          active: true,
         },
       ];
       jest
         .spyOn(usersService, 'getUsers')
-        .mockImplementation(async () => users);
+        .mockImplementation(async () => ({ users }));
 
-      expect(await usersController.getUsers()).toBe(users);
+      const request = {
+        user: {
+          userId: user1Id,
+        },
+        organization: {
+          id: createOrganizationId('org-1'),
+          name: 'Organization 1',
+          slug: 'organization-1',
+        },
+      } as unknown as AuthenticatedRequest;
+
+      expect(await usersController.getUsers(request)).toEqual({ users });
+      expect(usersService.getUsers).toHaveBeenCalledWith(
+        request.user.userId,
+        request.organization.id,
+      );
     });
   });
 
@@ -84,9 +100,16 @@ describe('UsersController', () => {
         const userId = createUserId('1');
         const user: User = {
           id: userId,
-          username: 'user1',
+          email: 'user1@packmind.com',
           passwordHash: 'hash1',
-          organizationId: createOrganizationId('org-1'),
+          active: true,
+          memberships: [
+            {
+              userId,
+              organizationId: createOrganizationId('org-1'),
+              role: 'admin',
+            },
+          ],
         };
         jest
           .spyOn(usersService, 'getUserById')
@@ -108,48 +131,6 @@ describe('UsersController', () => {
           NotFoundException,
         );
       });
-    });
-  });
-
-  describe('doesUsernameExist', () => {
-    describe('when username exists', () => {
-      it('returns true', async () => {
-        jest.spyOn(usersService, 'doesUsernameExist').mockResolvedValue(true);
-
-        const result = await usersController.doesUsernameExist({
-          username: 'existinguser',
-        });
-
-        expect(result).toEqual({ exists: true });
-        expect(usersService.doesUsernameExist).toHaveBeenCalledWith(
-          'existinguser',
-        );
-      });
-    });
-
-    describe('when username does not exist', () => {
-      it('returns false', async () => {
-        jest.spyOn(usersService, 'doesUsernameExist').mockResolvedValue(false);
-
-        const result = await usersController.doesUsernameExist({
-          username: 'nonexistentuser',
-        });
-
-        expect(result).toEqual({ exists: false });
-        expect(usersService.doesUsernameExist).toHaveBeenCalledWith(
-          'nonexistentuser',
-        );
-      });
-    });
-
-    it('handles service errors', async () => {
-      const error = new Error('Database error');
-      jest.spyOn(usersService, 'doesUsernameExist').mockRejectedValue(error);
-
-      await expect(
-        usersController.doesUsernameExist({ username: 'testuser' }),
-      ).rejects.toThrow('Database error');
-      expect(usersService.doesUsernameExist).toHaveBeenCalledWith('testuser');
     });
   });
 });

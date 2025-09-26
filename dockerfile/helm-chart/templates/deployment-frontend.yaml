@@ -37,13 +37,11 @@ spec:
         {{- end }}
     spec:
       {{- include "packmind.imagePullSecrets" . | nindent 6 }}
-      serviceAccountName: {{ include "packmind.serviceAccountName" . }}
-      securityContext:
-        {{- include "packmind.podSecurityContext" (dict "context" . "component" "frontend") | nindent 8 }}
+      {{- include "packmind.serviceAccountNameField" . | nindent 6 }}
+      {{- include "packmind.podSecurityContextField" (dict "context" . "component" "frontend") | nindent 6 }}
       containers:
         - name: frontend
-          securityContext:
-            {{- include "packmind.securityContext" (dict "context" . "component" "frontend") | nindent 12 }}
+          {{- include "packmind.securityContextField" (dict "context" . "component" "frontend") | nindent 10 }}
           image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
           imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
           ports:

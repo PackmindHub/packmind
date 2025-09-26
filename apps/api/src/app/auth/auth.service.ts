@@ -2,6 +2,8 @@ import { Injectable, Logger, Inject } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import {
   AccountsHexa,
+  UserOrganizationMembership,
+  UserOrganizationRole,
   createOrganizationId,
   OrganizationId,
   SignInUserCommand,
@@ -22,7 +24,7 @@ import { AuthenticatedRequest } from '@packmind/shared-nest';
 
 export interface TokenRequestBody {
   grant_type: string;
-  username: string;
+  email: string;
   password: string;
   client_id?: string;
   scope?: string;
@@ -35,30 +37,32 @@ export interface TokenResponse {
   scope?: string;
 }
 
-export interface SignInUserResponse {
+export type SignInUserResponse = {
   user: {
     id: UserId;
-    username: string;
-    organizationId: OrganizationId;
+    email: string;
+    memberships: UserOrganizationMembership[];
   };
   organization: {
     id: OrganizationId;
     name: string;
     slug: string;
+    role: UserOrganizationRole;
   };
   accessToken: string;
-}
+};
 
 export interface GetMeResponse {
   user: {
     id: UserId;
-    username: string;
-    organizationId: OrganizationId;
+    email: string;
+    memberships: UserOrganizationMembership[];
   };
   organization: {
     id: OrganizationId;
     name: string;
     slug: string;
+    role: UserOrganizationRole;
   };
   authenticated: boolean;
   message?: string;
@@ -87,16 +91,16 @@ export class AuthService {
   }
 
   async signUp(signUpRequest: SignUpUserCommand): Promise<User> {
-    this.logger.log(`Attempting to sign up user: ${signUpRequest.username}`);
+    this.logger.log(`Attempting to sign up user: ${signUpRequest.email}`);
 
     try {
       const user = await this.accountsHexa.signUpUser(signUpRequest);
 
-      this.logger.log(`User signed up successfully: ${user.username}`);
+      this.logger.log(`User signed up successfully: ${user.email}`);
       return user;
     } catch (error) {
       this.logger.error(
-        `Sign up failed for user: ${signUpRequest.username}`,
+        `Sign up failed for user: ${signUpRequest.email}`,
         error,
       );
       throw error;
@@ -104,47 +108,50 @@ export class AuthService {
   }
 
   async signIn(signInRequest: SignInUserCommand): Promise<SignInUserResponse> {
-    this.logger.log(`Attempting to sign in user: ${signInRequest.username}`);
+    this.logger.log(`Attempting to sign in user: ${signInRequest.email}`);
 
     try {
       // Use the SignInUser use case
-      const { user, organization } =
+      const { user, organization, role } =
         await this.accountsHexa.signInUser(signInRequest);
 
       // Create JWT payload
       const payload = {
         user: {
-          name: user.username,
+          name: user.email,
           userId: user.id,
         },
         organization: {
           id: organization.id,
           name: organization.name,
           slug: organization.slug,
+          role,
         },
+        memberships: user.memberships,
       };
 
       // Generate access token
       const accessToken = this.jwtService.sign(payload);
 
-      this.logger.log(`User signed in successfully: ${user.username}`);
+      this.logger.log(`User signed in successfully: ${user.email}`);
 
       return {
         user: {
           id: user.id,
-          username: user.username,
-          organizationId: createOrganizationId(user.organizationId),
+          email: user.email,
+          memberships: user.memberships,
         },
         organization: {
           id: createOrganizationId(organization.id),
           name: organization.name,
           slug: organization.slug,
+          role,
         },
         accessToken,
       };
     } catch (error) {
       this.logger.error(
-        `Sign in failed for user: ${signInRequest.username}`,
+        `Sign in failed for user: ${signInRequest.email}`,
         error,
       );
       throw error;
@@ -163,16 +170,29 @@ export class AuthService {
       // Verify and decode the JWT
       const payload = this.jwtService.verify(accessToken) as JwtPayload;
 
+      const memberships = payload.memberships?.map((membership) => ({
+        userId: payload.user.userId,
+        organizationId: createOrganizationId(membership.organizationId),
+        role: membership.role,
+      })) || [
+        {
+          userId: payload.user.userId,
+          organizationId: createOrganizationId(payload.organization.id),
+          role: payload.organization.role,
+        },
+      ];
+
       return {
         user: {
           id: payload.user.userId,
-          username: payload.user.name,
-          organizationId: createOrganizationId(payload.organization.id),
+          email: payload.user.name,
+          memberships,
         },
         organization: {
           id: createOrganizationId(payload.organization.id),
           name: payload.organization.name,
           slug: payload.organization.slug,
+          role: payload.organization.role,
         },
         authenticated: true,
       };

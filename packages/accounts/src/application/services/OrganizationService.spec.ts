@@ -23,7 +23,6 @@ describe('OrganizationService', () => {
     mockOrganizationRepository = {
       add: jest.fn(),
       findById: jest.fn(),
-      findByName: jest.fn(),
       findBySlug: jest.fn(),
       list: jest.fn(),
       deleteById: jest.fn(),
@@ -47,7 +46,6 @@ describe('OrganizationService', () => {
     it('creates a new organization successfully', async () => {
       const name = 'Test Organization';
 
-      mockOrganizationRepository.findByName.mockResolvedValue(null);
       mockOrganizationRepository.findBySlug.mockResolvedValue(null);
       mockOrganizationRepository.add.mockResolvedValue({
         id: expect.any(String),
@@ -58,7 +56,6 @@ describe('OrganizationService', () => {
       const result = await organizationService.createOrganization(name);
 
       expect(mockSlug).toHaveBeenCalledWith(name);
-      expect(mockOrganizationRepository.findByName).toHaveBeenCalledWith(name);
       expect(mockOrganizationRepository.findBySlug).toHaveBeenCalledWith(
         'test-organization',
       );
@@ -71,53 +68,25 @@ describe('OrganizationService', () => {
       expect(result.slug).toBe('test-organization');
     });
 
-    describe('when organization name already exists', () => {
+    describe('when organization slug already exists', () => {
       it('throws error', async () => {
         const name = 'Test Organization';
         const existingOrganization = organizationFactory({
           id: createOrganizationId('123e4567-e89b-12d3-a456-426614174000'),
-          name,
+          name: 'Different Name',
+          slug: 'test-organization',
         });
 
-        mockOrganizationRepository.findByName.mockResolvedValue(
+        mockOrganizationRepository.findBySlug.mockResolvedValue(
           existingOrganization,
         );
 
         await expect(
           organizationService.createOrganization(name),
         ).rejects.toThrow(
-          `An organization with the name '${name}' already exists`,
+          'An organization with a similar name already exists. The name "Test Organization" conflicts with an existing organization when converted to URL-friendly format.',
         );
         expect(mockOrganizationRepository.add).not.toHaveBeenCalled();
-      });
-    });
-
-    describe('when organization slug already exists', () => {
-      const name = 'Test Organization';
-      const existingSlug = 'test-organization';
-      const existingOrganization = organizationFactory({
-        id: createOrganizationId('123e4567-e89b-12d3-a456-426614174000'),
-        name: 'Different Name',
-        slug: existingSlug,
-      });
-
-      it('generates a slug that do not conflict', async () => {
-        mockOrganizationRepository.findByName.mockResolvedValue(null);
-        mockOrganizationRepository.findBySlug.mockImplementation(
-          async (slug) => {
-            if (slug === existingSlug) return existingOrganization;
-            return null;
-          },
-        );
-        mockOrganizationRepository.add.mockImplementation(async (org) => org);
-
-        await organizationService.createOrganization(name);
-
-        expect(mockOrganizationRepository.add).toHaveBeenCalledWith({
-          id: expect.any(String),
-          name: name,
-          slug: `${existingSlug}-1`,
-        });
       });
     });
 
@@ -125,7 +94,6 @@ describe('OrganizationService', () => {
       const name = 'My Complex Organization Name';
       mockSlug.mockReturnValue('my-complex-organization-name');
 
-      mockOrganizationRepository.findByName.mockResolvedValue(null);
       mockOrganizationRepository.findBySlug.mockResolvedValue(null);
       mockOrganizationRepository.add.mockResolvedValue({
         id: expect.any(String),
@@ -190,21 +158,23 @@ describe('OrganizationService', () => {
 
   describe('.getOrganizationByName', () => {
     describe('when organization is found', () => {
-      it('returns organization', async () => {
+      it('returns organization by slugifying the name', async () => {
         const name = 'Test Organization';
+        const expectedSlug = 'test-organization';
         const expectedOrganization = organizationFactory({
           id: createOrganizationId('123e4567-e89b-12d3-a456-426614174000'),
           name,
+          slug: expectedSlug,
         });
 
-        mockOrganizationRepository.findByName.mockResolvedValue(
+        mockOrganizationRepository.findBySlug.mockResolvedValue(
           expectedOrganization,
         );
 
         const result = await organizationService.getOrganizationByName(name);
 
-        expect(mockOrganizationRepository.findByName).toHaveBeenCalledWith(
-          name,
+        expect(mockOrganizationRepository.findBySlug).toHaveBeenCalledWith(
+          expectedSlug,
         );
         expect(result).toEqual(expectedOrganization);
       });
@@ -213,13 +183,14 @@ describe('OrganizationService', () => {
     describe('when organization is not found', () => {
       it('returns null', async () => {
         const name = 'Test Organization';
+        const expectedSlug = 'test-organization';
 
-        mockOrganizationRepository.findByName.mockResolvedValue(null);
+        mockOrganizationRepository.findBySlug.mockResolvedValue(null);
 
         const result = await organizationService.getOrganizationByName(name);
 
-        expect(mockOrganizationRepository.findByName).toHaveBeenCalledWith(
-          name,
+        expect(mockOrganizationRepository.findBySlug).toHaveBeenCalledWith(
+          expectedSlug,
         );
         expect(result).toBeNull();
       });

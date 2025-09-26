@@ -65,8 +65,8 @@ describe('Add rule to standard integration', () => {
       name: 'test organization',
     });
     user = await accountsHexa.signUpUser({
-      username: 'toto',
-      password: 's3cr3t',
+      email: 'toto@packmind.com',
+      password: 's3cr3t!@',
       organizationId: organization.id,
     });
 
@@ -112,8 +112,8 @@ describe('Add rule to standard integration', () => {
         name: 'other organization',
       });
       const otherUser = await accountsHexa.signUpUser({
-        username: 'other',
-        password: 's3cr3t',
+        email: 'other@packmind.com',
+        password: 's3cr3t!@',
         organizationId: otherOrganization.id,
       });
 

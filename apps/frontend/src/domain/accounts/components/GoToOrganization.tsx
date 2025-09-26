@@ -10,7 +10,7 @@ import {
 import { organizationGateway } from '../api/gateways';
 
 export default function GoToOrganization() {
-  const [organizationSlug, setOrganizationSlug] = useState('');
+  const [organizationName, setOrganizationName] = useState('');
   const [error, setError] = useState<string | undefined>(undefined);
   const [isChecking, setIsChecking] = useState(false);
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ export default function GoToOrganization() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!organizationSlug.trim()) {
+    if (!organizationName.trim()) {
       setError('Organization name is required');
       return;
     }
@@ -27,13 +27,13 @@ export default function GoToOrganization() {
     setIsChecking(true);
 
     try {
-      // Check if organization exists by trying to fetch it
-      await organizationGateway.getBySlug(
-        organizationSlug.trim().toLowerCase(),
+      // Check if organization exists by name (backend will handle slugification)
+      const organization = await organizationGateway.getByName(
+        organizationName.trim(),
       );
 
-      // If we reach here, organization exists - redirect to sign-in
-      navigate(`/org/${organizationSlug.trim().toLowerCase()}/sign-in`);
+      // If we reach here, organization exists - redirect to sign-in using the slug
+      navigate(`/org/${organization.slug}/sign-in`);
     } catch {
       // Organization doesn't exist
       setError('Organization not found. Please check the name and try again.');
@@ -42,7 +42,7 @@ export default function GoToOrganization() {
     }
   };
 
-  const inputId = 'organization-slug';
+  const inputId = 'organization-name';
 
   return (
     <form onSubmit={handleSubmit}>
@@ -55,8 +55,8 @@ export default function GoToOrganization() {
 
           <PMInput
             id={inputId}
-            value={organizationSlug}
-            onChange={(e) => setOrganizationSlug(e.target.value)}
+            value={organizationName}
+            onChange={(e) => setOrganizationName(e.target.value)}
             placeholder="Enter organization name"
             required
             disabled={isChecking}

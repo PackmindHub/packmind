@@ -100,32 +100,6 @@ describe('OrganizationRepository', () => {
     });
   });
 
-  describe('.findByName', () => {
-    it('finds organization by name', async () => {
-      const organization = organizationFactory({
-        id: createOrganizationId('123e4567-e89b-12d3-a456-426614174000'),
-      });
-      await organizationRepository.add(organization);
-
-      const result = await organizationRepository.findByName(organization.name);
-
-      expect(result).not.toBeNull();
-      expect(result?.id).toBe(organization.id);
-      expect(result?.name).toBe(organization.name);
-      expect(result?.slug).toBe(organization.slug);
-    });
-
-    describe('when organization name is not found', () => {
-      it('returns null', async () => {
-        const nonExistentName = 'Non-existent Organization';
-
-        const result = await organizationRepository.findByName(nonExistentName);
-
-        expect(result).toBeNull();
-      });
-    });
-  });
-
   describe('.findBySlug', () => {
     it('finds organization by slug', async () => {
       const organization = organizationFactory({

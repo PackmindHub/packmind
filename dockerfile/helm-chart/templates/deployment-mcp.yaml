@@ -37,13 +37,11 @@ spec:
         {{- end }}
     spec:
       {{- include "packmind.imagePullSecrets" . | nindent 6 }}
-      serviceAccountName: {{ include "packmind.serviceAccountName" . }}
-      securityContext:
-        {{- include "packmind.podSecurityContext" (dict "context" . "component" "mcpServer") | nindent 8 }}
+      {{- include "packmind.serviceAccountNameField" . | nindent 6 }}
+      {{- include "packmind.podSecurityContextField" (dict "context" . "component" "mcpServer") | nindent 6 }}
       containers:
         - name: mcp-server
-          securityContext:
-            {{- include "packmind.securityContext" (dict "context" . "component" "mcpServer") | nindent 12 }}
+          {{- include "packmind.securityContextField" (dict "context" . "component" "mcpServer") | nindent 10 }}
           image: "{{ .Values.mcpServer.image.repository }}:{{ .Values.mcpServer.image.tag }}"
           imagePullPolicy: {{ .Values.mcpServer.image.pullPolicy }}
           ports:

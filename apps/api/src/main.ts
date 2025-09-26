@@ -8,7 +8,6 @@ import './instrument';
 
 import { Logger, VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { INestApplication } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app/app.module';
 import {
@@ -17,7 +16,6 @@ import {
   Configuration,
   Cache,
 } from '@packmind/shared';
-import { LinterHexa } from '@packmind/linter';
 
 const logger = new PackmindLogger('PackmindAPI', LogLevel.INFO);
 
@@ -79,30 +77,6 @@ async function initializeCache(): Promise<void> {
   }
 }
 
-/**
- * Initialize job queues before starting the server
- */
-async function initializeJobQueues(app: INestApplication): Promise<void> {
-  logger.info('Initializing job queues...');
-
-  try {
-    const linterHexa = app.get(LinterHexa);
-
-    if (linterHexa) {
-      await linterHexa.initializeJobQueues();
-    } else {
-      logger.warn(
-        'LinterHexa not found in container - job queues not initialized',
-      );
-    }
-  } catch (error) {
-    logger.error('Failed to initialize job queues', {
-      error: error instanceof Error ? error.message : String(error),
-    });
-    throw error; // Stop server startup if job initialization fails
-  }
-}
-
 async function bootstrap() {
   try {
     logger.info('Starting Packmind API server', {
@@ -144,9 +118,6 @@ async function bootstrap() {
 
     // Initialize global cache before starting the server
     await initializeCache();
-
-    // Initialize job queues before starting the server
-    await initializeJobQueues(app);
 
     const port = process.env.PORT || 3000;
     const host = process.env.HOST || 'localhost';

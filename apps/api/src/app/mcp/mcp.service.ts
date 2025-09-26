@@ -20,7 +20,7 @@ export class McpService {
    * Generate an OAuth2 token for the currently authenticated user
    *
    * This method generates a JWT token for the currently authenticated user
-   * without requiring username/password credentials.
+   * without requiring email/password credentials.
    * Uses the MCP-specific JWT service with MCP_JWT_SECRET_KEY.
    */
   async generateTokenForAuthenticatedUser(
@@ -32,22 +32,23 @@ export class McpService {
 
     try {
       // Use the GenerateUserToken use case
-      const { user, organization } =
+      const { user, organization, role } =
         await this.accountsHexa.generateUserToken(command);
 
       // Create JWT payload with sub claim for compatibility with MCP server
       const payload = {
         sub: user.id, // Required by MCP server
-        username: user.username,
-        organizationId: user.organizationId,
+        email: user.email,
+        organizationId: organization.id,
         user: {
-          name: user.username,
+          name: user.email,
           userId: user.id,
         },
         organization: {
           id: organization.id,
           name: organization.name,
           slug: organization.slug,
+          role,
         },
       };
 
@@ -66,7 +67,7 @@ export class McpService {
         'MCP token generated successfully for authenticated user',
         {
           userId: user.id,
-          username: user.username,
+          email: user.email,
         },
       );
 

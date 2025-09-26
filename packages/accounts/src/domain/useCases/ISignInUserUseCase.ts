@@ -1,16 +1,16 @@
-import { User } from '../entities/User';
-import { Organization, OrganizationId } from '../entities/Organization';
+import { User, UserOrganizationRole } from '../entities/User';
+import { Organization } from '../entities/Organization';
 import { IPublicUseCase } from '@packmind/shared';
 
 export type SignInUserCommand = {
-  username: string;
+  email: string;
   password: string;
-  organizationId: OrganizationId;
 };
 
 export type SignInUserResponse = {
   user: User;
   organization: Organization;
+  role: UserOrganizationRole;
 };
 
 export type ISignInUserUseCase = IPublicUseCase<

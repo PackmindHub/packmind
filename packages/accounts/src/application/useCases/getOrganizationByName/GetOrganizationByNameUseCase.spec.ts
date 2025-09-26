@@ -1,126 +1,103 @@
 import { GetOrganizationByNameUseCase } from './GetOrganizationByNameUseCase';
 import { OrganizationService } from '../../services/OrganizationService';
 import { stubLogger } from '@packmind/shared/test';
-import { PackmindLogger } from '@packmind/shared';
-import {
-  Organization,
-  createOrganizationId,
-} from '../../../domain/entities/Organization';
+import { organizationFactory } from '../../../../test/organizationFactory';
+import { createOrganizationId } from '../../../domain/entities/Organization';
+
+jest.mock('../../services/OrganizationService');
 
 describe('GetOrganizationByNameUseCase', () => {
-  let getOrganizationByNameUseCase: GetOrganizationByNameUseCase;
+  let useCase: GetOrganizationByNameUseCase;
   let mockOrganizationService: jest.Mocked<OrganizationService>;
-  let stubbedLogger: PackmindLogger;
 
   beforeEach(() => {
-    mockOrganizationService = {
-      getOrganizationByName: jest.fn(),
-    } as unknown as jest.Mocked<OrganizationService>;
+    mockOrganizationService = new OrganizationService(
+      {} as never,
+      {} as never,
+    ) as jest.Mocked<OrganizationService>;
 
-    stubbedLogger = stubLogger();
-
-    getOrganizationByNameUseCase = new GetOrganizationByNameUseCase(
+    useCase = new GetOrganizationByNameUseCase(
       mockOrganizationService,
-      stubbedLogger,
+      stubLogger(),
     );
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
+  describe('.execute', () => {
+    describe('when organization is found', () => {
+      it('returns organization by slugifying the name and searching by slug', async () => {
+        const name = 'Test Organization';
+        const expectedSlug = 'test-organization';
+        const expectedOrganization = organizationFactory({
+          id: createOrganizationId('123e4567-e89b-12d3-a456-426614174000'),
+          name,
+          slug: expectedSlug,
+        });
 
-  describe('execute', () => {
-    const organizationName = 'Test Organization';
-    const validCommand = {
-      name: organizationName,
-    };
-
-    const mockOrganization: Organization = {
-      id: createOrganizationId('org-123'),
-      name: organizationName,
-      slug: 'test-organization',
-    };
-
-    describe('when organization exists', () => {
-      it('returns organization successfully', async () => {
-        mockOrganizationService.getOrganizationByName.mockResolvedValue(
-          mockOrganization,
+        mockOrganizationService.getOrganizationBySlug.mockResolvedValue(
+          expectedOrganization,
         );
 
-        const result = await getOrganizationByNameUseCase.execute(validCommand);
+        const result = await useCase.execute({ name });
 
-        expect(result).toEqual({ organization: mockOrganization });
         expect(
-          mockOrganizationService.getOrganizationByName,
-        ).toHaveBeenCalledWith(organizationName);
+          mockOrganizationService.getOrganizationBySlug,
+        ).toHaveBeenCalledWith(expectedSlug);
+        expect(result.organization).toEqual(expectedOrganization);
       });
     });
 
-    describe('when organization does not exist', () => {
-      it('returns null organization', async () => {
-        mockOrganizationService.getOrganizationByName.mockResolvedValue(null);
+    describe('when organization is not found', () => {
+      it('returns null', async () => {
+        const name = 'Non-existent Organization';
+        const expectedSlug = 'non-existent-organization';
 
-        const result = await getOrganizationByNameUseCase.execute(validCommand);
+        mockOrganizationService.getOrganizationBySlug.mockResolvedValue(null);
 
-        expect(result).toEqual({ organization: null });
+        const result = await useCase.execute({ name });
+
         expect(
-          mockOrganizationService.getOrganizationByName,
-        ).toHaveBeenCalledWith(organizationName);
+          mockOrganizationService.getOrganizationBySlug,
+        ).toHaveBeenCalledWith(expectedSlug);
+        expect(result.organization).toBeNull();
       });
     });
 
-    describe('when service throws error', () => {
-      it('rethrows error', async () => {
-        const serviceError = new Error('Database connection failed');
-        mockOrganizationService.getOrganizationByName.mockRejectedValue(
-          serviceError,
-        );
+    describe('when service throws an error', () => {
+      it('logs error and rethrows', async () => {
+        const name = 'Test Organization';
+        const error = new Error('Database error');
 
-        await expect(
-          getOrganizationByNameUseCase.execute(validCommand),
-        ).rejects.toThrow('Database connection failed');
+        mockOrganizationService.getOrganizationBySlug.mockRejectedValue(error);
 
-        expect(
-          mockOrganizationService.getOrganizationByName,
-        ).toHaveBeenCalledWith(organizationName);
+        await expect(useCase.execute({ name })).rejects.toThrow(error);
       });
     });
 
-    describe('when service throws non-Error exception', () => {
-      it('rethrows exception', async () => {
-        const serviceError = 'Service unavailable';
-        mockOrganizationService.getOrganizationByName.mockRejectedValue(
-          serviceError,
-        );
+    describe('slug generation', () => {
+      it('properly handles special characters and spaces', async () => {
+        const name = 'My Company & Co.!';
+        const expectedSlug = 'my-company-co';
 
-        await expect(
-          getOrganizationByNameUseCase.execute(validCommand),
-        ).rejects.toBe('Service unavailable');
-      });
-    });
+        mockOrganizationService.getOrganizationBySlug.mockResolvedValue(null);
 
-    describe('when handling different organization names', () => {
-      it('handles different organization names correctly', async () => {
-        const differentName = 'Different Organization';
-        const differentCommand = {
-          name: differentName,
-        };
-        const differentOrganization: Organization = {
-          id: createOrganizationId('different-org-456'),
-          name: differentName,
-          slug: 'different-organization',
-        };
-        mockOrganizationService.getOrganizationByName.mockResolvedValue(
-          differentOrganization,
-        );
+        await useCase.execute({ name });
 
-        const result =
-          await getOrganizationByNameUseCase.execute(differentCommand);
-
-        expect(result).toEqual({ organization: differentOrganization });
         expect(
-          mockOrganizationService.getOrganizationByName,
-        ).toHaveBeenCalledWith(differentName);
+          mockOrganizationService.getOrganizationBySlug,
+        ).toHaveBeenCalledWith(expectedSlug);
+      });
+
+      it('properly handles case insensitive matching', async () => {
+        const name = 'TEST ORGANIZATION';
+        const expectedSlug = 'test-organization';
+
+        mockOrganizationService.getOrganizationBySlug.mockResolvedValue(null);
+
+        await useCase.execute({ name });
+
+        expect(
+          mockOrganizationService.getOrganizationBySlug,
+        ).toHaveBeenCalledWith(expectedSlug);
       });
     });
   });

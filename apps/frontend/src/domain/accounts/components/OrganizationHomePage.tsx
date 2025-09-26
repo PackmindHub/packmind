@@ -78,7 +78,7 @@ export const OrganizationHomePage: React.FC = () => {
     }
     return {
       title: organization.name,
-      subtitle: `Welcome to your organization dashboard, ${user.username}`,
+      subtitle: `Welcome to your organization dashboard, ${user.email}`,
       breadcrumbs: [{ label: 'Home', isCurrentPage: true }],
       content: (
         <PMVStack align="stretch" gap={8}>

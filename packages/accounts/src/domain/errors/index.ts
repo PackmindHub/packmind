@@ -1,1 +1,4 @@
-export { OrganizationNameConflictError } from './OrganizationNameConflictError';
+export {
+  OrganizationSlugConflictError,
+  OrganizationNameConflictError,
+} from './OrganizationNameConflictError';

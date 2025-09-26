@@ -65,6 +65,16 @@ Create the name of the service account to use
 {{- end }}
 
 {{/*
+Conditionally render serviceAccountName field
+Only renders the field if a service account is configured
+*/}}
+{{- define "packmind.serviceAccountNameField" -}}
+{{- if or .Values.serviceAccount.create .Values.serviceAccount.name }}
+serviceAccountName: {{ include "packmind.serviceAccountName" . }}
+{{- end }}
+{{- end }}
+
+{{/*
 API specific labels
 */}}
 {{- define "packmind.api.labels" -}}
@@ -239,6 +249,42 @@ Pod Security Context - with service-specific override support
 {{- toYaml $mergedPodSecurityContext | nindent 8 }}
 {{- end }}
 
+{{/*
+Conditionally render securityContext field
+Only renders the field if security context values are configured
+*/}}
+{{- define "packmind.securityContextField" -}}
+{{- $context := .context -}}
+{{- $component := .component -}}
+{{- $componentSecurityContext := index .context.Values $component "securityContext" | default dict -}}
+{{- $globalSecurityContext := .context.Values.securityContext | default dict -}}
+{{- if and (kindIs "map" $componentSecurityContext) (kindIs "map" $globalSecurityContext) -}}
+{{- $mergedSecurityContext := merge $componentSecurityContext $globalSecurityContext -}}
+{{- if $mergedSecurityContext }}
+securityContext:
+  {{- toYaml $mergedSecurityContext | nindent 2 }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{/*
+Conditionally render podSecurityContext field
+Only renders the field if pod security context values are configured
+*/}}
+{{- define "packmind.podSecurityContextField" -}}
+{{- $context := .context -}}
+{{- $component := .component -}}
+{{- $componentPodSecurityContext := index .context.Values $component "podSecurityContext" | default dict -}}
+{{- $globalPodSecurityContext := .context.Values.podSecurityContext | default dict -}}
+{{- if and (kindIs "map" $componentPodSecurityContext) (kindIs "map" $globalPodSecurityContext) -}}
+{{- $mergedPodSecurityContext := merge $componentPodSecurityContext $globalPodSecurityContext -}}
+{{- if $mergedPodSecurityContext }}
+securityContext:
+  {{- toYaml $mergedPodSecurityContext | nindent 2 }}
+{{- end }}
+{{- end }}
+{{- end }}
+
 
 {{/*
 Backend services environment variables (API and MCP only)
@@ -334,6 +380,28 @@ Service-specific environment variables
 {{- end }}
 
 {{/*
+Dynamic secret environment variables helper
+Allows defining arbitrary environment variables from secrets
+*/}}
+{{- define "packmind.dynamicSecretEnvVars" -}}
+{{- $component := .component -}}
+{{- $context := .context -}}
+{{- $serviceValues := index $context.Values $component -}}
+{{- if $serviceValues.secretEnvVars }}
+{{- range $serviceValues.secretEnvVars }}
+- name: {{ .name }}
+  valueFrom:
+    secretKeyRef:
+      name: {{ .secretName }}
+      key: {{ .key }}
+      {{- if .optional }}
+      optional: {{ .optional }}
+      {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{/*
 Complete environment variables for a service
 */}}
 {{- define "packmind.allEnvVars" -}}
@@ -341,6 +409,7 @@ Complete environment variables for a service
 {{- if or (eq $component "api") (eq $component "mcpServer") }}
 {{- include "packmind.backendEnvVars" .context }}
 {{- include "packmind.secretEnvVars" . }}
+{{- include "packmind.dynamicSecretEnvVars" . }}
 {{- end }}
 {{- include "packmind.serviceEnvVars" . }}
 {{- end }}

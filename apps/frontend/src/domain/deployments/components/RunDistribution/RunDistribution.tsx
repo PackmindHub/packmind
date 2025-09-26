@@ -4,6 +4,7 @@ import {
   TargetWithRepository,
   RecipesDeployment,
   StandardsDeployment,
+  OrganizationId,
 } from '@packmind/shared';
 import { useDeployRecipe, useDeployStandard } from '../../hooks';
 import { Recipe } from '@packmind/recipes/types';
@@ -58,7 +59,9 @@ const RunDistributionComponent: React.FC<RunDistributionProps> = ({
     data: targetsList = [],
     isLoading: targetsLoading,
     isError: targetsError,
-  } = useGetTargetsByOrganizationQuery(organization?.id);
+  } = useGetTargetsByOrganizationQuery(
+    organization?.id || ('' as OrganizationId),
+  );
 
   const [selectedTargetIds, setSelectedTargetIds] = useState<TargetId[]>([]);
   const canRunDistribution =

@@ -58,14 +58,14 @@ export const SidebarAccountMenu: React.FunctionComponent = () => {
             backgroundColor={'background.secondary'}
             color={'text.primary'}
           >
-            <PMAvatar.Fallback name={user?.username} />
+            <PMAvatar.Fallback name={user?.email} />
           </PMAvatar.Root>
           <PMBox
             maxWidth={'full'}
             textOverflow={'ellipsis'}
             overflow={'hidden'}
           >
-            {user?.username}
+            {user?.email}
           </PMBox>
         </PMButton>
       </PMMenu.Trigger>

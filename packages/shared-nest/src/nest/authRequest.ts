@@ -1,5 +1,9 @@
 import { Request } from 'express';
-import { OrganizationId, UserId } from '@packmind/accounts';
+import {
+  OrganizationId,
+  UserId,
+  UserOrganizationRole,
+} from '@packmind/accounts';
 
 export interface AuthenticatedRequest extends Request {
   user: {
@@ -10,5 +14,6 @@ export interface AuthenticatedRequest extends Request {
     id: OrganizationId;
     name: string;
     slug: string;
+    role: UserOrganizationRole;
   };
 }

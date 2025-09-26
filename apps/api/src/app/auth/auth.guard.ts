@@ -101,6 +101,7 @@ export class AuthGuard implements CanActivate {
       id: createOrganizationId(userInfo.organization.id),
       name: userInfo.organization.name,
       slug: userInfo.organization.slug,
+      role: 'admin',
     };
 
     return true;

@@ -1,6 +1,7 @@
 import { ListUsersUseCase } from './ListUsersUseCase';
 import { UserService } from '../../services/UserService';
 import { createUserId } from '../../../domain/entities/User';
+import { createOrganizationId } from '../../../domain/entities/Organization';
 import { PackmindLogger } from '@packmind/shared';
 import { stubLogger } from '@packmind/shared/test';
 import { userFactory } from '../../../../test';
@@ -15,7 +16,7 @@ describe('ListUsersUseCase', () => {
     mockUserService = {
       createUser: jest.fn(),
       getUserById: jest.fn(),
-      getUserByUsername: jest.fn(),
+      getUserByEmail: jest.fn(),
       hashPassword: jest.fn(),
       validatePassword: jest.fn(),
       listUsers: jest.fn(),
@@ -32,34 +33,81 @@ describe('ListUsersUseCase', () => {
 
   describe('execute', () => {
     describe('when users exist in the system', () => {
-      it('returns all users wrapped in response object', async () => {
+      it('returns only users belonging to the organization', async () => {
+        const organizationId = createOrganizationId('org-1');
+        const otherOrganizationId = createOrganizationId('org-2');
+        const firstUserId = createUserId('user-1');
+        const secondUserId = createUserId('user-2');
         const mockUsers = [
           userFactory({
-            id: createUserId('user-1'),
-            username: 'user1',
+            id: firstUserId,
+            email: 'user1@packmind.com',
+            memberships: [
+              {
+                userId: firstUserId,
+                organizationId,
+                role: 'admin',
+              },
+            ],
           }),
           userFactory({
-            id: createUserId('user-2'),
-            username: 'user2',
+            id: secondUserId,
+            email: 'user2@packmind.com',
+            memberships: [
+              {
+                userId: secondUserId,
+                organizationId: otherOrganizationId,
+                role: 'admin',
+              },
+            ],
           }),
         ];
 
         mockUserService.listUsers.mockResolvedValue(mockUsers);
 
-        const command: ListUsersCommand = {};
+        const command: ListUsersCommand = {
+          userId: createUserId('requesting-user'),
+          organizationId,
+        };
 
         const result = await listUsersUseCase.execute(command);
 
-        expect(result).toEqual({ users: mockUsers });
+        const expectedUsers = [
+          {
+            active: true,
+            id: firstUserId,
+            email: 'user1@packmind.com',
+          },
+        ];
+
+        expect(result).toEqual({ users: expectedUsers });
         expect(mockUserService.listUsers).toHaveBeenCalledWith();
       });
     });
 
     describe('when no users exist in the system', () => {
       it('returns empty array wrapped in response object', async () => {
-        mockUserService.listUsers.mockResolvedValue([]);
+        const organizationId = createOrganizationId('org-1');
+        const otherOrganizationId = createOrganizationId('org-2');
+        const onlyUserId = createUserId('user-1');
+        mockUserService.listUsers.mockResolvedValue([
+          userFactory({
+            id: onlyUserId,
+            email: 'other@packmind.com',
+            memberships: [
+              {
+                userId: onlyUserId,
+                organizationId: otherOrganizationId,
+                role: 'admin',
+              },
+            ],
+          }),
+        ]);
 
-        const command: ListUsersCommand = {};
+        const command: ListUsersCommand = {
+          userId: createUserId('requesting-user'),
+          organizationId,
+        };
 
         const result = await listUsersUseCase.execute(command);
 
@@ -73,7 +121,10 @@ describe('ListUsersUseCase', () => {
         const error = new Error('Database error');
         mockUserService.listUsers.mockRejectedValue(error);
 
-        const command: ListUsersCommand = {};
+        const command: ListUsersCommand = {
+          userId: createUserId('requesting-user'),
+          organizationId: createOrganizationId('org-1'),
+        };
 
         await expect(listUsersUseCase.execute(command)).rejects.toThrow(error);
       });

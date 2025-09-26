@@ -1,7 +1,6 @@
 import { SignUpUserUseCase } from './signUpUser/signUpUser.usecase';
 import { SignInUserUseCase } from './signInUser/SignInUserUseCase';
 import { GetUserByIdUseCase } from './getUserById/GetUserByIdUseCase';
-import { GetUserByUsernameUseCase } from './getUserByUsername/GetUserByUsernameUseCase';
 import { ListUsersUseCase } from './listUsers/ListUsersUseCase';
 import { ValidatePasswordUseCase } from './validatePasswordUseCase/ValidatePasswordUseCase';
 import { CreateOrganizationUseCase } from './createOrganization/CreateOrganizationUseCase';
@@ -19,7 +18,6 @@ import {
   ISignUpUserUseCase,
   ISignInUserUseCase,
   IGetUserByIdUseCase,
-  IGetUserByUsernameUseCase,
   IListUsersUseCase,
   IValidatePasswordUseCase,
   ICreateOrganizationUseCase,
@@ -33,18 +31,17 @@ import {
   SignUpUserCommand,
   SignInUserCommand,
   GetUserByIdCommand,
-  GetUserByUsernameCommand,
   ListUsersCommand,
   ValidatePasswordCommand,
   CreateOrganizationCommand,
   GetOrganizationByIdCommand,
-  GetOrganizationByNameCommand,
   GetOrganizationBySlugCommand,
   ListOrganizationsCommand,
   GenerateUserTokenCommand,
   GenerateApiKeyCommand,
   GetCurrentApiKeyCommand,
 } from '../../domain/useCases';
+import { GetOrganizationByNameCommand } from '../../domain/useCases/IGetOrganizationByNameUseCase';
 
 const origin = 'AccountsUseCases';
 
@@ -52,7 +49,6 @@ export class AccountsUseCases {
   private readonly _signUpUser: ISignUpUserUseCase;
   private readonly _signInUser: ISignInUserUseCase;
   private readonly _getUserById: IGetUserByIdUseCase;
-  private readonly _getUserByUsername: IGetUserByUsernameUseCase;
   private readonly _listUsers: IListUsersUseCase;
   private readonly _validatePassword: IValidatePasswordUseCase;
   private readonly _createOrganization: ICreateOrganizationUseCase;
@@ -77,9 +73,6 @@ export class AccountsUseCases {
       accountsServices.getOrganizationService(),
     );
     this._getUserById = new GetUserByIdUseCase(
-      accountsServices.getUserService(),
-    );
-    this._getUserByUsername = new GetUserByUsernameUseCase(
       accountsServices.getUserService(),
     );
     this._listUsers = new ListUsersUseCase(accountsServices.getUserService());
@@ -138,14 +131,8 @@ export class AccountsUseCases {
     return result.user;
   }
 
-  public async getUserByUsername(command: GetUserByUsernameCommand) {
-    const result = await this._getUserByUsername.execute(command);
-    return result.user;
-  }
-
   public async listUsers(command: ListUsersCommand) {
-    const result = await this._listUsers.execute(command);
-    return result.users;
+    return await this._listUsers.execute(command);
   }
 
   public async validatePassword(command: ValidatePasswordCommand) {

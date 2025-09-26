@@ -15,14 +15,9 @@ import {
   GetMeResponse,
   GenerateApiKeyResponse,
   GetCurrentApiKeyResponse,
+  SignInUserResponse,
 } from './auth.service';
-import {
-  User,
-  OrganizationId,
-  UserId,
-  SignUpUserCommand,
-  SignInUserCommand,
-} from '@packmind/accounts';
+import { User, SignUpUserCommand, SignInUserCommand } from '@packmind/accounts';
 import { Public } from './auth.guard';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
 import { Configuration } from '@packmind/shared';
@@ -40,7 +35,7 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   async signUp(@Body() signUpRequest: SignUpUserCommand): Promise<User> {
     this.logger.log(`POST /auth/signup - Signing up user`, {
-      username: signUpRequest.username,
+      email: signUpRequest.email,
     });
 
     try {
@@ -48,13 +43,13 @@ export class AuthController {
 
       this.logger.log(`POST /auth/signup - User signed up successfully`, {
         userId: user.id,
-        username: user.username,
+        email: user.email,
       });
 
       return user;
     } catch (error) {
       this.logger.error(`POST /auth/signup - Failed to sign up user`, {
-        username: signUpRequest.username,
+        email: signUpRequest.email,
         error: error.message,
       });
       throw error;
@@ -69,10 +64,11 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ): Promise<{
     message: string;
-    user: { id: UserId; username: string; organizationId: OrganizationId };
+    user: SignInUserResponse['user'];
+    organization: SignInUserResponse['organization'];
   }> {
     this.logger.log(`POST /auth/signin - Signing in user`, {
-      username: signInRequest.username,
+      email: signInRequest.email,
     });
 
     try {
@@ -99,16 +95,17 @@ export class AuthController {
 
       this.logger.log(`POST /auth/signin - User signed in successfully`, {
         userId: result.user.id,
-        username: result.user.username,
+        email: result.user.email,
       });
 
       return {
         message: 'Sign in successful',
         user: result.user,
+        organization: result.organization,
       };
     } catch (error) {
       this.logger.error(`POST /auth/signin - Failed to sign in user`, {
-        username: signInRequest.username,
+        email: signInRequest.email,
         error: error.message,
       });
       throw error;
@@ -145,7 +142,7 @@ export class AuthController {
       if (result.authenticated) {
         this.logger.log('GET /auth/me - User info retrieved successfully', {
           userId: result.user?.id,
-          username: result.user?.username,
+          email: result.user?.email,
           organizationName: result.organization?.name,
         });
       } else {

@@ -199,7 +199,7 @@ export class StandardsController {
 
       const accessToken = request.cookies?.auth_token;
       const me = await this.authService.getMe(accessToken);
-      if (!me.authenticated || !me.user) {
+      if (!me.authenticated || !me.user || !me.organization) {
         this.logger.error('POST /standards/deploy - User not authenticated');
         throw new BadRequestException('User not authenticated');
       }
@@ -208,7 +208,7 @@ export class StandardsController {
         standardVersionIds: body.standardVersionIds,
         targetIds: body.targetIds,
         userId: me.user.id,
-        organizationId: me.user.organizationId,
+        organizationId: me.organization.id,
       });
 
       this.logger.info(
@@ -217,7 +217,7 @@ export class StandardsController {
           standardVersionIds: body.standardVersionIds,
           targetIds: body.targetIds,
           authorId: me.user.id,
-          organizationId: me.user.organizationId,
+          organizationId: me.organization.id,
         },
       );
     } catch (error) {
@@ -379,7 +379,7 @@ export class StandardsController {
 
       const accessToken = request.cookies?.auth_token;
       const me = await this.authService.getMe(accessToken);
-      if (!me.authenticated || !me.user) {
+      if (!me.authenticated || !me.user || !me.organization) {
         this.logger.error(
           'POST /standards/:versionId/deploy - User not authenticated',
           {
@@ -393,7 +393,7 @@ export class StandardsController {
         standardVersionIds: [versionId],
         targetIds: [body.targetId],
         userId: me.user.id,
-        organizationId: me.user.organizationId,
+        organizationId: me.organization.id,
       });
 
       this.logger.info(
@@ -402,7 +402,7 @@ export class StandardsController {
           standardVersionId: versionId,
           targetId: body.targetId,
           authorId: me.user.id,
-          organizationId: me.user.organizationId,
+          organizationId: me.organization.id,
         },
       );
     } catch (error) {

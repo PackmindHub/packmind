@@ -126,11 +126,8 @@ export const GitProviderConnection: React.FC<GitProviderConnectionProps> = ({
 
   return (
     <PMVStack
-      border={'solid 1px'}
-      borderColor="border.tertiary"
-      p={4}
       borderRadius="md"
-      w="full"
+      w={{ smToXl: 'full', base: '1/3' }}
       alignItems={'stretch'}
       gap={4}
     >
@@ -205,38 +202,44 @@ export const GitProviderConnection: React.FC<GitProviderConnectionProps> = ({
           <PMField.Root required invalid={!!errors.token}>
             <PMField.Label htmlFor={tokenInputId}>
               Access Token
-              <PMPopover
-                content={
-                  <PMBox maxWidth="300px">
-                    <PMText variant="body-important" mb={2} as="p">
-                      What is an access token?
-                    </PMText>
-                    <PMText variant="small" mb={2} as="p" color="secondary">
-                      Access token is a secret key that allows Packmind to
-                      access your Git repositories to perform operations on your
-                      behalf. Never share this token publicly.
-                    </PMText>
-                    <PMText variant="body-important" as="p" mb={2}>
-                      {formData.source === GitProviders.GITLAB && 'GitLab'}
-                      {formData.source === GitProviders.GITHUB && 'GitHub'}
-                    </PMText>
-                    <PMText variant="small" as="p" color="secondary">
-                      {formData.source === GitProviders.GITLAB &&
-                        'Generate a personal access token with api, read_repository, and write_repository scopes from your GitLab account settings.'}
-                      {formData.source === GitProviders.GITHUB &&
-                        `Generate a personal access token with repository access and
+              <PMPopover.Root positioning={{ placement: 'right' }}>
+                <PMPopover.Trigger asChild>
+                  <PMButton variant="ghost" size="xs" marginLeft={2}>
+                    Needed permissions
+                  </PMButton>
+                </PMPopover.Trigger>
+                <PMPopover.Positioner>
+                  <PMPopover.Content>
+                    <PMPopover.CloseTrigger />
+                    <PMPopover.Arrow>
+                      <PMPopover.ArrowTip />
+                    </PMPopover.Arrow>
+                    <PMPopover.Body>
+                      <PMPopover.Title>
+                        What is an access token?
+                      </PMPopover.Title>
+
+                      <PMText variant="small" mb={2} as="p" color="secondary">
+                        Access token is a secret key that allows Packmind to
+                        access your Git repositories to perform operations on
+                        your behalf. Never share this token publicly.
+                      </PMText>
+                      <PMText variant="body-important" as="p" mb={2}>
+                        {formData.source === GitProviders.GITLAB && 'GitLab'}
+                        {formData.source === GitProviders.GITHUB && 'GitHub'}
+                      </PMText>
+                      <PMText variant="small" as="p" color="secondary">
+                        {formData.source === GitProviders.GITLAB &&
+                          'Generate a personal access token with api, read_repository, and write_repository scopes from your GitLab account settings.'}
+                        {formData.source === GitProviders.GITHUB &&
+                          `Generate a personal access token with repository access and
                         read/write access on 'Contents' permission for 'fine-grained tokens'
                         OR 'repo' scope for 'classic tokens' from your GitHub account settings.`}
-                    </PMText>
-                  </PMBox>
-                }
-                placement="right"
-                showArrow
-              >
-                <PMButton variant="ghost" size="xs" marginLeft={2}>
-                  Needed permissions
-                </PMButton>
-              </PMPopover>
+                      </PMText>
+                    </PMPopover.Body>
+                  </PMPopover.Content>
+                </PMPopover.Positioner>
+              </PMPopover.Root>
             </PMField.Label>
             <PMInput
               id={tokenInputId}

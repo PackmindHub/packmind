@@ -77,29 +77,6 @@ export class ManageOrganizationUseCase {
     }
   }
 
-  async getOrganizationByName(name: string): Promise<Organization | null> {
-    this.logger.info('Executing get organization by name use case', { name });
-
-    try {
-      const organization =
-        await this.organizationService.getOrganizationByName(name);
-      this.logger.info(
-        'Get organization by name use case executed successfully',
-        {
-          name,
-          found: !!organization,
-        },
-      );
-      return organization;
-    } catch (error) {
-      this.logger.error('Failed to execute get organization by name use case', {
-        name,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }
-
   async getOrganizationBySlug(slug: string): Promise<Organization | null> {
     this.logger.info('Executing get organization by slug use case', { slug });
 

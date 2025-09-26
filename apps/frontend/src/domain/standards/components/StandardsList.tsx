@@ -22,6 +22,7 @@ import { DeployStandardButton } from '../../deployments/components/StandardDeplo
 import './StandardsList.styles.scss';
 import { StandardId } from '@packmind/standards/types';
 import { STANDARD_MESSAGES } from '../constants/messages';
+import { formatDistanceToNowStrict } from 'date-fns';
 
 interface StandardsListProps {
   orgSlug?: string;
@@ -120,12 +121,13 @@ export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
             </Link>
           </PMLink>
         ),
-        slug: standard.slug,
-        description:
-          standard.description.length > 100
-            ? `${standard.description.substring(0, 100)}...`
-            : standard.description,
-        scope: standard.scope || '-',
+        updatedAt: (
+          <>
+            {formatDistanceToNowStrict(standard.updatedAt || new Date(), {
+              addSuffix: true,
+            })}
+          </>
+        ),
         version: standard.version,
       })),
     );
@@ -151,9 +153,12 @@ export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
       align: 'center',
     },
     { key: 'name', header: 'Name', grow: true },
-    { key: 'slug', header: 'Slug', grow: true },
-    { key: 'description', header: 'Description', grow: true },
-    { key: 'scope', header: 'Scope', width: '120px', align: 'center' },
+    {
+      key: 'updatedAt',
+      header: 'Last Updated',
+      width: '250px',
+      align: 'center',
+    },
     { key: 'version', header: 'Version', width: '100px', align: 'center' },
   ];
 
@@ -173,47 +178,47 @@ export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
       {isError && <p>Error loading standards.</p>}
       {standards?.length ? (
         <PMBox>
-          {isSomeSelected && (
-            <PMBox mb={4}>
-              <PMHStack gap={2}>
-                <DeployStandardButton
-                  label={`Deploy (${selectedStandardIds.length})`}
-                  selectedStandards={selectedStandards}
-                  disabled={selectedStandardIds.length === 0}
-                  size="sm"
-                />
-                <PMAlertDialog
-                  trigger={
-                    <PMButton
-                      variant="secondary"
-                      loading={deleteBatchMutation.isPending}
-                      size={'sm'}
-                    >
-                      {`Delete (${selectedStandardIds.length})`}
-                    </PMButton>
-                  }
-                  title="Delete Standards"
-                  message={STANDARD_MESSAGES.confirmation.deleteBatchStandards(
-                    selectedStandardIds.length,
-                  )}
-                  confirmText="Delete"
-                  cancelText="Cancel"
-                  confirmColorScheme="red"
-                  onConfirm={handleBatchDelete}
-                  open={deleteModalOpen}
-                  onOpenChange={setDeleteModalOpen}
-                  isLoading={deleteBatchMutation.isPending}
-                />
-                <PMButton
-                  variant="secondary"
-                  onClick={() => setSelectedStandardIds([])}
-                  size={'sm'}
-                >
-                  Clear Selection
-                </PMButton>
-              </PMHStack>
-            </PMBox>
-          )}
+          <PMBox mb={2}>
+            <PMHStack gap={2}>
+              <DeployStandardButton
+                label={`Deploy (${selectedStandardIds.length})`}
+                selectedStandards={selectedStandards}
+                disabled={selectedStandardIds.length === 0}
+                size="sm"
+              />
+              <PMAlertDialog
+                trigger={
+                  <PMButton
+                    variant="secondary"
+                    loading={deleteBatchMutation.isPending}
+                    size={'sm'}
+                    disabled={!isSomeSelected}
+                  >
+                    {`Delete (${selectedStandardIds.length})`}
+                  </PMButton>
+                }
+                title="Delete Standards"
+                message={STANDARD_MESSAGES.confirmation.deleteBatchStandards(
+                  selectedStandardIds.length,
+                )}
+                confirmText="Delete"
+                cancelText="Cancel"
+                confirmColorScheme="red"
+                onConfirm={handleBatchDelete}
+                open={deleteModalOpen}
+                onOpenChange={setDeleteModalOpen}
+                isLoading={deleteBatchMutation.isPending}
+              />
+              <PMButton
+                variant="secondary"
+                onClick={() => setSelectedStandardIds([])}
+                size={'sm'}
+                disabled={!isSomeSelected}
+              >
+                Clear Selection
+              </PMButton>
+            </PMHStack>
+          </PMBox>
           <PMTable
             columns={columns}
             data={tableData}

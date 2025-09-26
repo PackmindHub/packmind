@@ -44,6 +44,7 @@ interface RepositoryCentricViewProps {
   standardTargets?: TargetStandardDeploymentStatus[];
   searchTerm?: string;
   showOnlyOutdated?: boolean;
+  selectedTargetNames?: string[];
 }
 
 export const RepositoryCentricView: React.FC<RepositoryCentricViewProps> = ({
@@ -53,6 +54,7 @@ export const RepositoryCentricView: React.FC<RepositoryCentricViewProps> = ({
   standardTargets = [],
   searchTerm = '',
   showOnlyOutdated = false,
+  selectedTargetNames = [],
 }) => {
   // Use target-based data if available, fallback to repository-based data
   const shouldUseTargetData =
@@ -156,6 +158,23 @@ export const RepositoryCentricView: React.FC<RepositoryCentricViewProps> = ({
 
   const filteredRepositories = Array.from(combinedRepositories.values()).filter(
     (repository: CombinedRepositoryDeploymentStatus) => {
+      // Apply target filter (OR logic for multiple targets)
+      if (selectedTargetNames && selectedTargetNames.length > 0) {
+        const hasAnySelectedTargetDeployments = selectedTargetNames.some(
+          (targetName) =>
+            repository.recipeTargets?.some(
+              (t) => t.target.name === targetName,
+            ) ||
+            repository.standardTargets?.some(
+              (t) => t.target.name === targetName,
+            ),
+        );
+
+        if (!hasAnySelectedTargetDeployments) {
+          return false;
+        }
+      }
+
       // Apply search filter
       if (searchTerm) {
         const fullName =
@@ -179,6 +198,24 @@ export const RepositoryCentricView: React.FC<RepositoryCentricViewProps> = ({
   );
 
   if (filteredRepositories.length === 0) {
+    if (selectedTargetNames && selectedTargetNames.length > 0 && searchTerm) {
+      return (
+        <PMEmptyState
+          title="No repositories found"
+          description={`No repositories match your search "${searchTerm}" for the selected targets`}
+        />
+      );
+    }
+
+    if (selectedTargetNames && selectedTargetNames.length > 0) {
+      return (
+        <PMEmptyState
+          title="No repositories found"
+          description="No repositories have deployments for the selected targets"
+        />
+      );
+    }
+
     if (searchTerm) {
       return (
         <PMEmptyState
@@ -259,160 +296,185 @@ export const RepositoryCentricView: React.FC<RepositoryCentricViewProps> = ({
                     ...(repository.standardTargets?.map((t) => t.target.id) ||
                       []),
                   ]),
-                ).map((targetId) => {
-                  // Find recipe and standard deployments for this target
-                  const recipeTarget = repository.recipeTargets?.find(
-                    (t) => t.target.id === targetId,
-                  );
-                  const standardTarget = repository.standardTargets?.find(
-                    (t) => t.target.id === targetId,
-                  );
+                )
+                  .filter((targetId) => {
+                    if (
+                      !selectedTargetNames ||
+                      selectedTargetNames.length === 0
+                    )
+                      return true;
+                    const recipeTarget = repository.recipeTargets?.find(
+                      (t) => t.target.id === targetId,
+                    );
+                    const standardTarget = repository.standardTargets?.find(
+                      (t) => t.target.id === targetId,
+                    );
+                    const target =
+                      recipeTarget?.target || standardTarget?.target;
+                    return (
+                      !!target && selectedTargetNames.includes(target.name)
+                    );
+                  })
+                  .map((targetId) => {
+                    // Find recipe and standard deployments for this target
+                    const recipeTarget = repository.recipeTargets?.find(
+                      (t) => t.target.id === targetId,
+                    );
+                    const standardTarget = repository.standardTargets?.find(
+                      (t) => t.target.id === targetId,
+                    );
 
-                  // Get the target info (prefer recipe target, fallback to standard target)
-                  const target = recipeTarget?.target || standardTarget?.target;
-                  if (!target) return null;
+                    // Get the target info (prefer recipe target, fallback to standard target)
+                    const target =
+                      recipeTarget?.target || standardTarget?.target;
+                    if (!target) return null;
 
-                  // Combine all deployments for this target
-                  const allRecipes = recipeTarget?.deployedRecipes || [];
-                  const allStandards = standardTarget?.deployedStandards || [];
+                    // Combine all deployments for this target
+                    const allRecipes = recipeTarget?.deployedRecipes || [];
+                    const allStandards =
+                      standardTarget?.deployedStandards || [];
 
-                  // Separate outdated and up-to-date for combined view
-                  const outdatedItems = [
-                    ...allRecipes
-                      .filter((r) => !r.isUpToDate)
-                      .map((r) => ({ ...r, type: 'recipe' as const })),
-                    ...allStandards
-                      .filter((s) => !s.isUpToDate)
-                      .map((s) => ({ ...s, type: 'standard' as const })),
-                  ];
+                    // Separate outdated and up-to-date for combined view
+                    const outdatedItems = [
+                      ...allRecipes
+                        .filter((r) => !r.isUpToDate)
+                        .map((r) => ({ ...r, type: 'recipe' as const })),
+                      ...allStandards
+                        .filter((s) => !s.isUpToDate)
+                        .map((s) => ({ ...s, type: 'standard' as const })),
+                    ];
 
-                  const upToDateItems = [
-                    ...allRecipes
-                      .filter((r) => r.isUpToDate)
-                      .map((r) => ({ ...r, type: 'recipe' as const })),
-                    ...allStandards
-                      .filter((s) => s.isUpToDate)
-                      .map((s) => ({ ...s, type: 'standard' as const })),
-                  ];
+                    const upToDateItems = [
+                      ...allRecipes
+                        .filter((r) => r.isUpToDate)
+                        .map((r) => ({ ...r, type: 'recipe' as const })),
+                      ...allStandards
+                        .filter((s) => s.isUpToDate)
+                        .map((s) => ({ ...s, type: 'standard' as const })),
+                    ];
 
-                  const hasTargetDeployments =
-                    outdatedItems.length > 0 || upToDateItems.length > 0;
+                    const hasTargetDeployments =
+                      outdatedItems.length > 0 || upToDateItems.length > 0;
 
-                  return (
-                    <PMBox
-                      key={`target-${targetId}`}
-                      border={'solid 1px'}
-                      borderColor={'border.tertiary'}
-                      borderRadius={'sm'}
-                      padding={4}
-                      mb={4}
-                    >
-                      <PMVStack align="flex-start" gap={3} flex={1}>
-                        <PMVStack align="flex-start" gap={0.5} flex={1}>
-                          <PMHeading level="h5" color="secondary">
-                            {target.name}
-                          </PMHeading>
-                          <PMHeading level="h6" color="faded" textAlign="left">
-                            Path: {target.path}
-                          </PMHeading>
+                    return (
+                      <PMBox
+                        key={`target-${targetId}`}
+                        border={'solid 1px'}
+                        borderColor={'border.tertiary'}
+                        borderRadius={'sm'}
+                        padding={4}
+                        mb={4}
+                      >
+                        <PMVStack align="flex-start" gap={3} flex={1}>
+                          <PMVStack align="flex-start" gap={0.5} flex={1}>
+                            <PMHeading level="h5" color="secondary">
+                              {target.name}
+                            </PMHeading>
+                            <PMHeading
+                              level="h6"
+                              color="faded"
+                              textAlign="left"
+                            >
+                              Path: {target.path}
+                            </PMHeading>
+                          </PMVStack>
+
+                          {/* Show empty state if this target has no deployments */}
+                          {!hasTargetDeployments && (
+                            <PMText variant="body" color="faded">
+                              No recipes or standards deployed here
+                            </PMText>
+                          )}
+
+                          {/* Outdated items in this target */}
+                          {outdatedItems.length > 0 && (
+                            <PMBox mb={2}>
+                              <DeploymentItem
+                                title={
+                                  <PMHStack gap="1">
+                                    <PMIcon color={'text.warning'}>
+                                      <LuClockAlert />
+                                    </PMIcon>
+                                    <PMText>Outdated</PMText>
+                                  </PMHStack>
+                                }
+                              >
+                                {outdatedItems.map((item) => (
+                                  <DeploymentEntry
+                                    key={`${item.type}-${item.type === 'recipe' ? item.recipe.id : item.standard.id}-${targetId}`}
+                                    name={
+                                      <PMHStack alignItems={'baseline'}>
+                                        <PMText>
+                                          {item.type === 'recipe'
+                                            ? item.recipe.name
+                                            : item.standard.name}
+                                        </PMText>
+                                        <PMBadge
+                                          color={
+                                            item.type === 'recipe'
+                                              ? undefined
+                                              : 'blue.200'
+                                          }
+                                        >
+                                          {item.type === 'recipe'
+                                            ? 'Recipe'
+                                            : 'Standard'}
+                                        </PMBadge>
+                                      </PMHStack>
+                                    }
+                                    versionInfo={`Current: v${item.deployedVersion.version} → Latest: v${item.latestVersion.version}`}
+                                  />
+                                ))}
+                              </DeploymentItem>
+                            </PMBox>
+                          )}
+
+                          {/* Up-to-date items in this target */}
+                          {upToDateItems.length > 0 && (
+                            <PMBox>
+                              <DeploymentItem
+                                title={
+                                  <PMHStack gap="1">
+                                    <PMIcon color={'text.success'}>
+                                      <LuCircleCheckBig />
+                                    </PMIcon>
+                                    <PMText>Up-to-date</PMText>
+                                  </PMHStack>
+                                }
+                              >
+                                {upToDateItems.map((item) => (
+                                  <DeploymentEntry
+                                    key={`${item.type}-${item.type === 'recipe' ? item.recipe.id : item.standard.id}-${targetId}`}
+                                    name={
+                                      <PMHStack alignItems={'baseline'}>
+                                        <PMText>
+                                          {item.type === 'recipe'
+                                            ? item.recipe.name
+                                            : item.standard.name}
+                                        </PMText>
+                                        <PMBadge
+                                          color={
+                                            item.type === 'recipe'
+                                              ? undefined
+                                              : 'blue.200'
+                                          }
+                                        >
+                                          {item.type === 'recipe'
+                                            ? 'Recipe'
+                                            : 'Standard'}
+                                        </PMBadge>
+                                      </PMHStack>
+                                    }
+                                    versionInfo={`Version: v${item.deployedVersion.version}`}
+                                  />
+                                ))}
+                              </DeploymentItem>
+                            </PMBox>
+                          )}
                         </PMVStack>
-
-                        {/* Show empty state if this target has no deployments */}
-                        {!hasTargetDeployments && (
-                          <PMText variant="body" color="faded">
-                            No recipes or standards deployed here
-                          </PMText>
-                        )}
-
-                        {/* Outdated items in this target */}
-                        {outdatedItems.length > 0 && (
-                          <PMBox mb={2}>
-                            <DeploymentItem
-                              title={
-                                <PMHStack gap="1">
-                                  <PMIcon color={'text.warning'}>
-                                    <LuClockAlert />
-                                  </PMIcon>
-                                  <PMText>Outdated</PMText>
-                                </PMHStack>
-                              }
-                            >
-                              {outdatedItems.map((item) => (
-                                <DeploymentEntry
-                                  key={`${item.type}-${item.type === 'recipe' ? item.recipe.id : item.standard.id}-${targetId}`}
-                                  name={
-                                    <PMHStack alignItems={'baseline'}>
-                                      <PMText>
-                                        {item.type === 'recipe'
-                                          ? item.recipe.name
-                                          : item.standard.name}
-                                      </PMText>
-                                      <PMBadge
-                                        color={
-                                          item.type === 'recipe'
-                                            ? undefined
-                                            : 'blue.200'
-                                        }
-                                      >
-                                        {item.type === 'recipe'
-                                          ? 'Recipe'
-                                          : 'Standard'}
-                                      </PMBadge>
-                                    </PMHStack>
-                                  }
-                                  versionInfo={`Current: v${item.deployedVersion.version} → Latest: v${item.latestVersion.version}`}
-                                />
-                              ))}
-                            </DeploymentItem>
-                          </PMBox>
-                        )}
-
-                        {/* Up-to-date items in this target */}
-                        {upToDateItems.length > 0 && (
-                          <PMBox>
-                            <DeploymentItem
-                              title={
-                                <PMHStack gap="1">
-                                  <PMIcon color={'text.success'}>
-                                    <LuCircleCheckBig />
-                                  </PMIcon>
-                                  <PMText>Up-to-date</PMText>
-                                </PMHStack>
-                              }
-                            >
-                              {upToDateItems.map((item) => (
-                                <DeploymentEntry
-                                  key={`${item.type}-${item.type === 'recipe' ? item.recipe.id : item.standard.id}-${targetId}`}
-                                  name={
-                                    <PMHStack alignItems={'baseline'}>
-                                      <PMText>
-                                        {item.type === 'recipe'
-                                          ? item.recipe.name
-                                          : item.standard.name}
-                                      </PMText>
-                                      <PMBadge
-                                        color={
-                                          item.type === 'recipe'
-                                            ? undefined
-                                            : 'blue.200'
-                                        }
-                                      >
-                                        {item.type === 'recipe'
-                                          ? 'Recipe'
-                                          : 'Standard'}
-                                      </PMBadge>
-                                    </PMHStack>
-                                  }
-                                  versionInfo={`Version: v${item.deployedVersion.version}`}
-                                />
-                              ))}
-                            </DeploymentItem>
-                          </PMBox>
-                        )}
-                      </PMVStack>
-                    </PMBox>
-                  );
-                })}
+                      </PMBox>
+                    );
+                  })}
               </>
             ) : (
               // Legacy repository-based rendering

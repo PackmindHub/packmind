@@ -6,15 +6,15 @@ import { PackmindLogger, LogLevel } from '@packmind/shared';
 import { createMCPServer } from '../mcp-server';
 
 interface UserContext {
-  username: string;
+  email: string;
   userId: string;
   organizationId: string;
+  role: string;
 }
 
 interface JWTPayload {
   sub: string;
-  username: string;
-  organizationId: string;
+  email: string;
   user: {
     name: string;
     userId: string;
@@ -23,7 +23,12 @@ interface JWTPayload {
     id: string;
     name: string;
     slug: string;
+    role: string;
   };
+  memberships?: Array<{
+    organizationId: string;
+    role: string;
+  }>;
 }
 
 export default async function (fastify: FastifyInstance) {
@@ -52,9 +57,10 @@ export default async function (fastify: FastifyInstance) {
     if (request.user && typeof request.user === 'object') {
       const user = request.user as JWTPayload;
       userContext = {
-        username: user.username || user.user?.name || 'unknown',
-        userId: user.sub || user.user?.userId || 'unknown',
-        organizationId: user.organizationId || 'unknown',
+        email: user.email,
+        userId: user.sub,
+        organizationId: user.organization.id,
+        role: user.organization.role,
       };
     }
 

@@ -110,7 +110,7 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
   }
 
   return (
-    <PMGrid gridTemplateColumns={'2fr 1fr'} gap={8}>
+    <PMGrid gridTemplateColumns={'1fr minmax(0, 400px)'} gap={8}>
       <PMGridItem>
         <PMVStack align="stretch" gap={8} mt={4}>
           <PMField.Root>
@@ -131,7 +131,7 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
             <PMText variant="body-important" color={'secondary'}>
               Available Repositories ({filteredRepos.length})
             </PMText>
-            <PMBox border="1px solid" borderColor="border.tertiary" p={2}>
+            <PMBox>
               {filteredRepos.length === 0 ? (
                 <PMEmptyState
                   title={
@@ -219,16 +219,16 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
                 </PMHStack>
 
                 {branchOption === 'custom' && (
-                  <PMBox pl={8}>
+                  <PMBox>
                     <PMInput
-                      placeholder="Enter branch name (e.g., main, develop, feature/branch-name)"
+                      placeholder="Enter branch name (e.g., main, feature/branch-name)"
                       value={customBranch}
                       onChange={(e: {
                         target: { value: React.SetStateAction<string> };
                       }) => setCustomBranch(e.target.value)}
                       disabled={addRepositoryMutation.isPending}
                       size={'xs'}
-                      width="lg"
+                      width="sm"
                       maxLength={100}
                     />
                   </PMBox>

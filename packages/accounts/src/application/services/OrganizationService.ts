@@ -7,7 +7,7 @@ import {
 } from '../../domain/entities/Organization';
 import { IOrganizationRepository } from '../../domain/repositories/IOrganizationRepository';
 import { PackmindLogger } from '@packmind/shared';
-import { OrganizationNameConflictError } from '../../domain/errors';
+import { OrganizationSlugConflictError } from '../../domain/errors';
 
 const origin = 'OrganizationService';
 
@@ -23,23 +23,21 @@ export class OrganizationService {
     this.logger.info('Creating organization', { name });
 
     try {
-      // Generate slug from name
+      // Generate slug from name and check if it conflicts with existing organizations
       this.logger.debug('Generating slug from organization name', { name });
-      const organizationSlug = await this.getUniqueSlug(name);
-      this.logger.debug('Slug generated', { slug: organizationSlug });
-
-      // Check if organization name already exists
+      const baseSlug = slug(name);
       const existingOrganization =
-        await this.organizationRepository.findByName(name);
+        await this.organizationRepository.findBySlug(baseSlug);
+
       if (existingOrganization) {
-        throw new OrganizationNameConflictError(name);
+        throw new OrganizationSlugConflictError(name);
       }
 
       // Create the organization
       const organization: Organization = {
         id: createOrganizationId(uuidv4()),
         name,
-        slug: organizationSlug,
+        slug: baseSlug,
       };
 
       const createdOrganization =
@@ -47,7 +45,7 @@ export class OrganizationService {
       this.logger.info('Organization created successfully', {
         organizationId: createdOrganization.id,
         name,
-        slug: organizationSlug,
+        slug: baseSlug,
       });
       return createdOrganization;
     } catch (error) {
@@ -65,8 +63,16 @@ export class OrganizationService {
   }
 
   async getOrganizationByName(name: string): Promise<Organization | null> {
-    this.logger.info('Getting organization by name', { name });
-    return await this.organizationRepository.findByName(name);
+    this.logger.info('Getting organization by name (will slugify internally)', {
+      name,
+    });
+    // Convert name to slug and search by slug
+    const organizationSlug = slug(name);
+    this.logger.debug('Slugified name for search', {
+      originalName: name,
+      slug: organizationSlug,
+    });
+    return await this.organizationRepository.findBySlug(organizationSlug);
   }
 
   async getOrganizationBySlug(slug: string): Promise<Organization | null> {
@@ -77,19 +83,5 @@ export class OrganizationService {
   async listOrganizations(): Promise<Organization[]> {
     this.logger.info('Listing all organizations');
     return await this.organizationRepository.list();
-  }
-
-  private async getUniqueSlug(
-    organizationName: string,
-    index = 0,
-  ): Promise<string> {
-    const organizationSlug = `${slug(organizationName)}${index > 0 ? `-${index}` : ''}`;
-    const existingSlugOrganization =
-      await this.organizationRepository.findBySlug(organizationSlug);
-    if (existingSlugOrganization) {
-      return this.getUniqueSlug(organizationName, index + 1);
-    }
-
-    return organizationSlug;
   }
 }

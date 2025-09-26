@@ -5,9 +5,11 @@
 ## Added
 
 - Introduce the concept of `Targets` to distribute recipes and standards in specific folders on a repo, which makes sense in a mono-repo context (#137)
+- Creation of standards is now available through MCP (#178)
 
 ## Changed
 
+- Improve rendering of the standards and recipes for AI Agents (#181)
 - Improve UI/UX settings for the configuration of Git providers (#155)
 
 ## Fixed

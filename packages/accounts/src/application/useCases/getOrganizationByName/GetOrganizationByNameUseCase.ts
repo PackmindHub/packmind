@@ -1,3 +1,4 @@
+import slug from 'slug';
 import { OrganizationService } from '../../services/OrganizationService';
 import { PackmindLogger } from '@packmind/shared';
 import {
@@ -28,13 +29,21 @@ export class GetOrganizationByNameUseCase
     });
 
     try {
+      // Slugify the name and search by slug
+      const organizationSlug = slug(name);
+      this.logger.debug('Slugified organization name for search', {
+        originalName: name,
+        slug: organizationSlug,
+      });
+
       const organization =
-        await this.organizationService.getOrganizationByName(name);
+        await this.organizationService.getOrganizationBySlug(organizationSlug);
 
       this.logger.info(
         'Get organization by name use case executed successfully',
         {
           name,
+          slug: organizationSlug,
           found: !!organization,
         },
       );

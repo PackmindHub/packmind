@@ -1,3 +1,25 @@
+- When running commands, ensure you use the correct Node version (see .nvmrc at the project's root level)
+- When renaming or moving a file that is commited to git, use `git mv` instead of `mv`
+
+# Issues Management
+
+- Issues are defined and tracked in the **Packmind MonoRepo GitHub Project** (Project #2)
+- All development work should reference the appropriate GitHub issue number when applicable
+- Issues follow a structured workflow: Backlog → Todo → In Progress → To review → Done
+
+# Task splitting
+
+- For any task you perform, you MUST split it into multiple into sub-tasks which have a logical increment (eg: new endpoint, new component, new use case etc). When a task is done, run all the validation steps (lint, test, packmind etc) and ask me for validation of the work you did.
+- Each sub task MUST have its own commit.
+- Before commiting anything, you must ensure that `npm run quality-gate` does not raise any issue.
+
+# Commiting
+
+- When referencing an issue (example #123), DO NOT write "Close" or "Fix", as this closes the issue which has not been validated by other developers.
+- Before proposing to commit, ALWAYS run `npm run quality-gate` and fix the issues found
+- NEVER use the `--no-verify` argument when commiting
+- After commiting, ALWAYS ensure that the commit was successful.
+
 <!-- start: Packmind standards -->
 # Packmind Standards
 
@@ -10,12 +32,12 @@ All rules and guidelines defined in these standards are mandatory and must be fo
 Failure to follow these standards may lead to inconsistencies, errors, or rework. Treat them as the source of truth for how code should be written, structured, and maintained.
 
 * [Back-end Typescript](.packmind/standards/back-end-typescript.md): Establish clean code practices in TypeScript for back-end development by limiting logger.debug calls in production, organizing import statements, using dedicated error types, and injecting PackmindLogger to enhance maintainability and ensure consistent logging across services.
-* [DDD monorepo architecture](.packmind/standards/ddd-monorepo-architecture.md): Establish DDD monorepo architecture by implementing domain adapters through shared/types and managing dependencies lazily with dependency injection to prevent circular dependencies and maintain clean separation of concerns across TypeScript projects.
-* [Back-end repositories SQL queries using TypeORM](.packmind/standards/back-end-repositories-sql-queries-using-typeorm.md): Utilize TypeORM's Repository or QueryBuilder methods for writing SQL queries in back-end repositories located in /infra/repositories/*Repository.ts to enhance type safety, ensure automatic parameterization, and improve maintainability of the codebase.
-* [Use cases](.packmind/standards/use-cases.md): Define use cases for each public method of a hexagon by implementing `IUseCase` in the shared package `types/<domain>/contracts/` to ensure clear separation of concerns and maintainability in TypeScript applications.
-* [Front-end UI and Design Systems](.packmind/standards/front-end-ui-and-design-systems.md): Adopt consistent UI component usage by importing from '@packmind/ui' instead of '@chakra-ui' in React applications to ensure uniformity in design and maintainability across the front-end codebase.
-* [Frontend data flow](.packmind/standards/frontend-data-flow.md): Establish a structured frontend data flow pattern using React Router v7, @react-router/fs-routes, and TanStack Query in the Packmind codebase to centralize data fetching logic and ensure data availability before rendering, enhancing maintainability and user experience across applications.
 * [Tests redaction](.packmind/standards/tests-redaction.md): Streamline the writing of unit tests for both back-end and front-end applications using Jest by eliminating redundant comments, enforcing clear test structures, and utilizing specific testing patterns to enhance readability and maintainability of the test code.
+* [Frontend data flow](.packmind/standards/frontend-data-flow.md): Establish a structured frontend data flow pattern using React Router v7, @react-router/fs-routes, and TanStack Query in the Packmind codebase to centralize data fetching logic and ensure data availability before rendering, enhancing maintainability and user experience across applications.
+* [Front-end UI and Design Systems](.packmind/standards/front-end-ui-and-design-systems.md): Adopt consistent UI component usage by importing from '@packmind/ui' instead of '@chakra-ui' in React applications to ensure uniformity in design and maintainability across the front-end codebase.
+* [Use cases](.packmind/standards/use-cases.md): Define use cases for each public method of a hexagon by implementing `IUseCase` in the shared package `types/<domain>/contracts/` to ensure clear separation of concerns and maintainability in TypeScript applications.
+* [Back-end repositories SQL queries using TypeORM](.packmind/standards/back-end-repositories-sql-queries-using-typeorm.md): Utilize TypeORM's Repository or QueryBuilder methods for writing SQL queries in back-end repositories located in /infra/repositories/*Repository.ts to enhance type safety, ensure automatic parameterization, and improve maintainability of the codebase.
+* [DDD monorepo architecture](.packmind/standards/ddd-monorepo-architecture.md): Establish DDD monorepo architecture by implementing domain adapters through shared/types and managing dependencies lazily with dependency injection to prevent circular dependencies and maintain clean separation of concerns across TypeScript projects.
 <!-- end: Packmind standards -->
 
 <!-- start: Packmind recipes -->

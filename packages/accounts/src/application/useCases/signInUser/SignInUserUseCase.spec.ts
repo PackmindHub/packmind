@@ -1,34 +1,53 @@
 import { SignInUserUseCase } from './SignInUserUseCase';
 import { UserService } from '../../services/UserService';
 import { OrganizationService } from '../../services/OrganizationService';
-import { SignInUserCommand } from '../../../domain/useCases/ISignInUserUseCase';
-import { createUserId, User } from '../../../domain/entities/User';
+import {
+  ISignInUserUseCase,
+  SignInUserCommand,
+} from '../../../domain/useCases/ISignInUserUseCase';
+import {
+  createUserId,
+  User,
+  UserOrganizationMembership,
+} from '../../../domain/entities/User';
 import {
   createOrganizationId,
   Organization,
 } from '../../../domain/entities/Organization';
+import { userFactory } from '../../../../test';
 
 describe('SignInUserUseCase', () => {
-  let useCase: SignInUserUseCase;
+  let useCase: ISignInUserUseCase;
   let userService: jest.Mocked<UserService>;
   let organizationService: jest.Mocked<OrganizationService>;
 
+  const organizationId = createOrganizationId('org-123');
+  const userId = createUserId('user-123');
+  const membership: UserOrganizationMembership = {
+    userId,
+    organizationId,
+    role: 'admin',
+  };
+
   const testUser: User = {
-    id: createUserId('user-123'),
-    username: 'testuser',
-    organizationId: createOrganizationId('org-123'),
-    passwordHash: 'hashedPassword',
+    ...userFactory({
+      id: userId,
+      email: 'testuser@packmind.com',
+      passwordHash: 'hashedPassword',
+      memberships: [membership],
+    }),
   };
 
   const testOrganization: Organization = {
-    id: createOrganizationId('org-123'),
+    id: organizationId,
     name: 'Test Organization',
     slug: 'test-org',
   };
 
   beforeEach(() => {
     userService = {
-      getUserByUsername: jest.fn(),
+      getUserByEmail: jest.fn(),
+      getUserByEmailCaseInsensitive: jest.fn(),
       validatePassword: jest.fn(),
     } as unknown as jest.Mocked<UserService>;
 
@@ -39,33 +58,69 @@ describe('SignInUserUseCase', () => {
     useCase = new SignInUserUseCase(userService, organizationService);
   });
 
-  describe('when user signs in with valid credentials and correct organizationId', () => {
-    it('returns the user and organization', async () => {
+  describe('when user signs in with valid credentials', () => {
+    it('returns the user, organization from first membership, and membership role', async () => {
       const command: SignInUserCommand = {
-        username: 'testuser',
+        email: 'testuser@packmind.com',
         password: 'password123',
-        organizationId: createOrganizationId('org-123'),
       };
 
+      userService.getUserByEmailCaseInsensitive.mockResolvedValue(testUser);
+      userService.validatePassword.mockResolvedValue(true);
       organizationService.getOrganizationById.mockResolvedValue(
         testOrganization,
       );
-      userService.getUserByUsername.mockResolvedValue(testUser);
-      userService.validatePassword.mockResolvedValue(true);
 
       const result = await useCase.execute(command);
 
       expect(result).toEqual({
         user: testUser,
         organization: testOrganization,
+        role: 'admin',
       });
-      expect(organizationService.getOrganizationById).toHaveBeenCalledWith(
-        createOrganizationId('org-123'),
+      expect(userService.getUserByEmailCaseInsensitive).toHaveBeenCalledWith(
+        'testuser@packmind.com',
       );
-      expect(userService.getUserByUsername).toHaveBeenCalledWith('testuser');
       expect(userService.validatePassword).toHaveBeenCalledWith(
         'password123',
         'hashedPassword',
+      );
+      expect(organizationService.getOrganizationById).toHaveBeenCalledWith(
+        organizationId,
+      );
+    });
+  });
+
+  describe('when user signs in with different email case', () => {
+    it('finds user with case-insensitive search and preserves original email case', async () => {
+      const command: SignInUserCommand = {
+        email: 'TestUser@PACKMIND.com', // Different case than stored email
+        password: 'password123',
+      };
+
+      const userWithOriginalCase: User = {
+        ...testUser,
+        email: 'testuser@packmind.com', // Original case in database
+      };
+
+      userService.getUserByEmailCaseInsensitive.mockResolvedValue(
+        userWithOriginalCase,
+      );
+      userService.validatePassword.mockResolvedValue(true);
+      organizationService.getOrganizationById.mockResolvedValue(
+        testOrganization,
+      );
+
+      const result = await useCase.execute(command);
+
+      expect(result).toEqual({
+        user: userWithOriginalCase,
+        organization: testOrganization,
+        role: 'admin',
+      });
+      expect(result.user.email).toBe('testuser@packmind.com'); // Original case preserved
+      expect(userService.getUserByEmailCaseInsensitive).toHaveBeenCalledWith(
+        'TestUser@PACKMIND.com', // Search was with different case
       );
     });
   });
@@ -73,84 +128,85 @@ describe('SignInUserUseCase', () => {
   describe('when organization does not exist', () => {
     it('throws Invalid credentials error', async () => {
       const command: SignInUserCommand = {
-        username: 'testuser',
+        email: 'testuser@packmind.com',
         password: 'password123',
-        organizationId: createOrganizationId('nonexistent-org'),
       };
 
+      userService.getUserByEmailCaseInsensitive.mockResolvedValue(testUser);
+      userService.validatePassword.mockResolvedValue(true);
       organizationService.getOrganizationById.mockResolvedValue(null);
 
       await expect(useCase.execute(command)).rejects.toThrow(
         new Error('Invalid credentials'),
       );
-      expect(userService.getUserByUsername).not.toHaveBeenCalled();
-      expect(userService.validatePassword).not.toHaveBeenCalled();
+      expect(userService.getUserByEmailCaseInsensitive).toHaveBeenCalledWith(
+        'testuser@packmind.com',
+      );
+      expect(userService.validatePassword).toHaveBeenCalledWith(
+        'password123',
+        'hashedPassword',
+      );
+      expect(organizationService.getOrganizationById).toHaveBeenCalledWith(
+        organizationId,
+      );
     });
   });
 
   describe('when user does not exist', () => {
     it('throws Invalid credentials error', async () => {
       const command: SignInUserCommand = {
-        username: 'nonexistent',
+        email: 'nonexistent@packmind.com',
         password: 'password123',
-        organizationId: createOrganizationId('org-123'),
       };
 
-      organizationService.getOrganizationById.mockResolvedValue(
-        testOrganization,
-      );
-      userService.getUserByUsername.mockResolvedValue(null);
+      userService.getUserByEmailCaseInsensitive.mockResolvedValue(null);
 
       await expect(useCase.execute(command)).rejects.toThrow(
         new Error('Invalid credentials'),
       );
       expect(userService.validatePassword).not.toHaveBeenCalled();
+      expect(organizationService.getOrganizationById).not.toHaveBeenCalled();
     });
   });
 
   describe('when password is invalid', () => {
     it('throws Invalid credentials error', async () => {
       const command: SignInUserCommand = {
-        username: 'testuser',
+        email: 'testuser@packmind.com',
         password: 'wrongpassword',
-        organizationId: createOrganizationId('org-123'),
       };
 
-      organizationService.getOrganizationById.mockResolvedValue(
-        testOrganization,
-      );
-      userService.getUserByUsername.mockResolvedValue(testUser);
+      userService.getUserByEmailCaseInsensitive.mockResolvedValue(testUser);
       userService.validatePassword.mockResolvedValue(false);
 
       await expect(useCase.execute(command)).rejects.toThrow(
         new Error('Invalid credentials'),
       );
+      expect(organizationService.getOrganizationById).not.toHaveBeenCalled();
     });
   });
 
-  describe('when user does not belong to the specified organization', () => {
+  describe('when user has no memberships', () => {
     it('throws Invalid credentials error', async () => {
       const command: SignInUserCommand = {
-        username: 'testuser',
+        email: 'testuser@packmind.com',
         password: 'password123',
-        organizationId: createOrganizationId('different-org'),
       };
 
-      const differentOrganization: Organization = {
-        id: createOrganizationId('different-org'),
-        name: 'Different Organization',
-        slug: 'different-org',
+      const userWithNoMemberships: User = {
+        ...testUser,
+        memberships: [],
       };
 
-      organizationService.getOrganizationById.mockResolvedValue(
-        differentOrganization,
+      userService.getUserByEmailCaseInsensitive.mockResolvedValue(
+        userWithNoMemberships,
       );
-      userService.getUserByUsername.mockResolvedValue(testUser);
       userService.validatePassword.mockResolvedValue(true);
 
       await expect(useCase.execute(command)).rejects.toThrow(
         new Error('Invalid credentials'),
       );
+      expect(organizationService.getOrganizationById).not.toHaveBeenCalled();
     });
   });
 });

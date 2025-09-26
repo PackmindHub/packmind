@@ -85,13 +85,8 @@ export const RepositoriesManagement: React.FC<RepositoriesManagementProps> = ({
   }
 
   return (
-    <PMVStack gap={4} align="stretch" width="full">
-      <PMBox
-        border={'solid 1px'}
-        borderColor={'border.tertiary'}
-        borderRadius={'sm'}
-        padding={4}
-      >
+    <PMBox w={{ smToXl: 'full', base: '2/3' }}>
+      <PMBox paddingY={4}>
         <PMHeading level="h6" color={'tertiary'}>
           Connected Repositories
         </PMHeading>
@@ -158,17 +153,12 @@ export const RepositoriesManagement: React.FC<RepositoriesManagementProps> = ({
         </PMVStack>
       </PMBox>
 
-      <PMBox
-        border={'solid 1px'}
-        borderColor={'border.tertiary'}
-        borderRadius={'sm'}
-        padding={4}
-      >
+      <PMBox paddingY={4}>
         <PMHeading level="h6" color={'tertiary'}>
           Add Repository
         </PMHeading>
         <RepositorySelector provider={provider} />
       </PMBox>
-    </PMVStack>
+    </PMBox>
   );
 };

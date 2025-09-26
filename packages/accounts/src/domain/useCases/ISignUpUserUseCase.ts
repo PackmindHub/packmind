@@ -3,7 +3,7 @@ import { IPublicUseCase } from '@packmind/shared';
 import { OrganizationId } from '../entities/Organization';
 
 export type SignUpUserCommand = {
-  username: string;
+  email: string;
   password: string;
   organizationId: OrganizationId;
 };

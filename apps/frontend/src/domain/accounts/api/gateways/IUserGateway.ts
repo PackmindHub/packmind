@@ -5,16 +5,11 @@ export interface UserMeResponse {
   authenticated: boolean;
   user?: {
     id: UserId;
-    username: string;
+    email: string;
     organizationId: OrganizationId;
   };
 }
 
-export interface UsernameExistsResponse {
-  exists: boolean;
-}
-
 export interface IUserGateway {
   getUsersInMyOrganization(): Promise<User[]>;
-  doesUsernameExist(username: string): Promise<UsernameExistsResponse>;
 }

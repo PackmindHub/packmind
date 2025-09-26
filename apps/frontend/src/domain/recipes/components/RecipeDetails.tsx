@@ -8,25 +8,25 @@ import {
   PMBox,
   PMHStack,
   PMVStack,
-  PMBadge,
   PMAlert,
-  PMDialog,
   PMAlertDialog,
+  PMDataList,
+  PMTabs,
+  PMSpinner,
+  PMHeading,
 } from '@packmind/ui';
-import { useNavigate, Link } from 'react-router';
+import { useNavigate } from 'react-router';
 import {
   useGetRecipeByIdQuery,
   useDeleteRecipeMutation,
 } from '../api/queries/RecipesQueries';
-import { RecipeVersionsList } from './RecipeVersionsList';
+import { RecipeVersionsListDrawer } from './RecipeVersionsListDrawer';
 import { RecipeDeploymentsList } from '../../deployments/components/RecipeDeploymentsList/RecipeDeploymentsList';
 import { DeployRecipeButton } from './DeployRecipeButton';
 import { EditRecipe } from './EditRecipe';
-import { useDeployRecipe } from '../../deployments/hooks';
-import { RecipeId } from '@packmind/recipes/types';
-import { GitRepoId } from '@packmind/git/types';
 import { AutobreadCrumb } from '../../../../src/shared/components/navigation/AutobreadCrumb';
 import { RECIPE_MESSAGES } from '../constants/messages';
+import { RecipeId } from '@packmind/shared';
 
 interface RecipeDetailsProps {
   id: RecipeId;
@@ -37,13 +37,14 @@ interface RecipeDetailsProps {
 export const RecipeDetails = ({ id, orgSlug, orgName }: RecipeDetailsProps) => {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteAlert, setDeleteAlert] = useState<{
     type: 'success' | 'error';
     message: string;
   } | null>(null);
   const { data: recipe, isLoading, isError, error } = useGetRecipeByIdQuery(id);
   const deleteMutation = useDeleteRecipeMutation();
+  const defaultPath = `.packmind/recipes/${recipe?.slug}.md`;
 
   const handleDeleteRecipe = async () => {
     if (!recipe) return;
@@ -54,7 +55,7 @@ export const RecipeDetails = ({ id, orgSlug, orgName }: RecipeDetailsProps) => {
         type: 'success',
         message: RECIPE_MESSAGES.success.deleted,
       });
-      setDeleteDialogOpen(false);
+      setDeleteModalOpen(false);
 
       // Auto-dismiss success alert and navigate back after 2 seconds
       setTimeout(() => {
@@ -67,7 +68,7 @@ export const RecipeDetails = ({ id, orgSlug, orgName }: RecipeDetailsProps) => {
         type: 'error',
         message: RECIPE_MESSAGES.error.deleteFailed,
       });
-      setDeleteDialogOpen(false);
+      setDeleteModalOpen(false);
     }
   };
 
@@ -78,8 +79,14 @@ export const RecipeDetails = ({ id, orgSlug, orgName }: RecipeDetailsProps) => {
         subtitle="Please wait while we fetch the recipe details"
         breadcrumbComponent={<AutobreadCrumb />}
       >
-        <PMBox>
-          <PMText>Loading recipe details...</PMText>
+        <PMBox
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          minH="200px"
+        >
+          <PMSpinner size="lg" mr={2} />
+          <PMText ml={2}>Loading recipe details...</PMText>
         </PMBox>
       </PMPage>
     );
@@ -92,10 +99,11 @@ export const RecipeDetails = ({ id, orgSlug, orgName }: RecipeDetailsProps) => {
         subtitle="Sorry, we couldn't load the recipe details"
         breadcrumbComponent={<AutobreadCrumb />}
       >
-        <PMBox>
-          <PMText>There was an error loading the recipe.</PMText>
+        <PMAlert.Root status="error" width="lg" mb={4}>
+          <PMAlert.Indicator />
+          <PMAlert.Title>There was an error loading the recipe.</PMAlert.Title>
           {error && <PMText color="error">Error: {error.message}</PMText>}
-        </PMBox>
+        </PMAlert.Root>
       </PMPage>
     );
   }
@@ -131,25 +139,15 @@ export const RecipeDetails = ({ id, orgSlug, orgName }: RecipeDetailsProps) => {
   return (
     <PMPage
       title={recipe.name}
-      subtitle={`Recipe version ${recipe.version}`}
       breadcrumbComponent={<AutobreadCrumb />}
       actions={
         <PMHStack gap={2}>
-          <DeployRecipeButton
-            label={`Deploy v${recipe.version}`}
-            disabled={!recipe}
-            selectedRecipes={[recipe]}
-          />
-          <PMButton variant="outline" onClick={() => setIsEditing(true)}>
+          <PMButton variant="primary" onClick={() => setIsEditing(true)}>
             Edit
           </PMButton>
           <PMAlertDialog
             trigger={
-              <PMButton
-                variant="outline"
-                colorScheme="red"
-                loading={deleteMutation.isPending}
-              >
+              <PMButton variant="tertiary" loading={deleteMutation.isPending}>
                 Delete
               </PMButton>
             }
@@ -163,8 +161,8 @@ export const RecipeDetails = ({ id, orgSlug, orgName }: RecipeDetailsProps) => {
             cancelText="Cancel"
             confirmColorScheme="red"
             onConfirm={handleDeleteRecipe}
-            open={deleteDialogOpen}
-            onOpenChange={setDeleteDialogOpen}
+            open={deleteModalOpen}
+            onOpenChange={setDeleteModalOpen}
             isLoading={deleteMutation.isPending}
           />
         </PMHStack>
@@ -172,28 +170,85 @@ export const RecipeDetails = ({ id, orgSlug, orgName }: RecipeDetailsProps) => {
     >
       {/* Delete Success/Error Alert */}
       {deleteAlert && (
-        <PMBox mb={4}>
-          <PMAlert.Root status={deleteAlert.type}>
-            <PMAlert.Indicator />
-            <PMAlert.Title>{deleteAlert.message}</PMAlert.Title>
-          </PMAlert.Root>
-        </PMBox>
+        <PMAlert.Root status={deleteAlert.type} width="lg" mb={4}>
+          <PMAlert.Indicator />
+          <PMAlert.Title>{deleteAlert.message}</PMAlert.Title>
+        </PMAlert.Root>
       )}
 
       <PMVStack align="stretch" gap={6}>
-        <PMBox>
-          <PMHStack gap={4} mb={4}>
-            <PMBadge colorScheme="blue">Slug: {recipe.slug}</PMBadge>
-            <PMBadge colorScheme="green">Version: {recipe.version}</PMBadge>
-          </PMHStack>
-        </PMBox>
+        <PMDataList
+          size="md"
+          orientation="horizontal"
+          items={[
+            {
+              label: 'Version',
+              value: (
+                <PMHStack>
+                  {recipe.version}
+                  <RecipeVersionsListDrawer recipeId={recipe.id} />
+                </PMHStack>
+              ),
+            },
+          ]}
+        />
 
-        <PMPageSection title="Instructions" variant="outline">
-          <PMMarkdownViewer content={recipe.content} />
-        </PMPageSection>
+        <PMTabs
+          defaultValue="instructions"
+          tabs={[
+            {
+              value: 'instructions',
+              triggerLabel: 'Instructions',
+              content: <PMMarkdownViewer content={recipe.content} />,
+            },
+            {
+              value: 'deployments',
+              triggerLabel: 'Deployments',
+              content: (
+                <PMVStack align="flex-start" gap={6} marginTop={6}>
+                  <PMPageSection
+                    title="Run deployment"
+                    backgroundColor="primary"
+                    headingLevel="h4"
+                    cta={
+                      <DeployRecipeButton
+                        label={`Deploy v${recipe.version}`}
+                        disabled={!recipe}
+                        selectedRecipes={[recipe]}
+                        size="sm"
+                        variant="secondary"
+                      />
+                    }
+                  >
+                    <PMBox
+                      marginTop={4}
+                      padding={4}
+                      border={'solid 1px'}
+                      borderColor="border.secondary"
+                      borderRadius="md"
+                    >
+                      <PMHeading level="h5">
+                        Deployed file information
+                      </PMHeading>
+                      <PMDataList
+                        my={2}
+                        flexDirection={'row'}
+                        size={'sm'}
+                        gap={6}
+                        items={[
+                          { label: 'Path', value: defaultPath },
+                          { label: 'Scope', value: '**/*' },
+                        ]}
+                      />
+                    </PMBox>
+                  </PMPageSection>
 
-        <RecipeVersionsList recipeId={recipe.id} />
-        <RecipeDeploymentsList recipeId={recipe.id} />
+                  <RecipeDeploymentsList recipeId={recipe.id} />
+                </PMVStack>
+              ),
+            },
+          ]}
+        />
       </PMVStack>
     </PMPage>
   );

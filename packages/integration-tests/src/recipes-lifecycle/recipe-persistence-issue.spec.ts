@@ -75,8 +75,8 @@ describe('Recipe deployment', () => {
     });
 
     user = await accountsHexa.signUpUser({
-      username: 'testuser',
-      password: 's3cret',
+      email: 'testuser@packmind.com',
+      password: 's3cret!@',
       organizationId: organization.id,
     });
 

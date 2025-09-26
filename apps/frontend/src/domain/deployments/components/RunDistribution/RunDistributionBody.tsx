@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   PMSpinner,
   PMText,
@@ -8,6 +9,10 @@ import {
   PMAlert,
   PMBox,
   PMEmptyState,
+  PMHeading,
+  PMHStack,
+  PMBadge,
+  PMNativeSelect,
 } from '@packmind/ui';
 import { useRunDistribution } from './RunDistribution';
 import { TargetId } from '@packmind/shared';
@@ -21,6 +26,29 @@ export const RunDistributionBodyImpl: React.FC = () => {
     setSelectedTargetIds,
     deploymentError,
   } = useRunDistribution();
+
+  const [selectedRepo, setSelectedRepo] = React.useState<string>('');
+
+  const groupedTargets = React.useMemo(() => {
+    return [...targetsList].reduce(
+      (acc, target) => {
+        const repoKey = `${target.repository.owner}/${target.repository.repo}`;
+        if (!acc[repoKey]) acc[repoKey] = [];
+        acc[repoKey].push(target);
+        return acc;
+      },
+      {} as Record<string, typeof targetsList>,
+    );
+  }, [targetsList]);
+
+  const repoOptions = React.useMemo(
+    () =>
+      Object.keys(groupedTargets).map((repoKey) => ({
+        label: repoKey,
+        value: repoKey,
+      })),
+    [groupedTargets],
+  );
 
   if (targetsLoading) return <PMSpinner />;
   if (targetsError)
@@ -65,47 +93,73 @@ export const RunDistributionBodyImpl: React.FC = () => {
 
   return (
     <PMVStack gap={2} align={'stretch'} height="full">
-      <PMButtonGroup size={'xs'}>
-        <PMButton
-          variant="secondary"
-          onClick={() =>
-            setSelectedTargetIds(sortedTargets.map((target) => target.id))
-          }
-        >
-          Select All
-        </PMButton>
-        <PMButton variant="secondary" onClick={() => setSelectedTargetIds([])}>
-          Clear Selection
-        </PMButton>
-      </PMButtonGroup>
-      <PMBox maxHeight="lg" overflow={'auto'}>
-        {sortedTargets.map((target) => (
-          <PMCheckbox
-            key={target.id}
-            value={target.id}
-            checked={selectedTargetIds.includes(target.id)}
-            controlProps={{ borderColor: 'border.checkbox' }}
-            padding={2}
-            gap={4}
-            onChange={(event) => {
-              const input = event.target as HTMLInputElement;
-              handleCheckboxChange(target.id, input.checked);
-            }}
+      <PMHStack>
+        <PMButtonGroup size={'xs'}>
+          <PMButton
+            variant="secondary"
+            onClick={() =>
+              setSelectedTargetIds(sortedTargets.map((target) => target.id))
+            }
           >
-            <PMVStack align="flex-start" gap={0.5} flex={1}>
-              <PMText fontWeight="medium" fontSize="sm">
-                {target.name}
-              </PMText>
-              <PMText fontSize="xs" color="secondary" textAlign="left">
-                {target.repository.owner}/{target.repository.repo}:
-                {target.repository.branch}
-              </PMText>
-              <PMText fontSize="xs" color="secondary" textAlign="left">
-                Path: {target.path}
-              </PMText>
+            Select All
+          </PMButton>
+          <PMButton
+            variant="secondary"
+            onClick={() => setSelectedTargetIds([])}
+          >
+            Clear Selection
+          </PMButton>
+        </PMButtonGroup>
+        <PMNativeSelect
+          items={[{ label: 'All repositories', value: '' }, ...repoOptions]}
+          value={selectedRepo}
+          onChange={(e) => setSelectedRepo(e.target.value)}
+          size={'sm'}
+        />
+      </PMHStack>
+      <PMBox maxHeight="lg" overflow={'auto'}>
+        {Object.entries(groupedTargets)
+          .filter(([repoKey]) => !selectedRepo || repoKey === selectedRepo)
+          .map(([repoKey, repoTargets]) => (
+            <PMVStack key={repoKey} align="stretch" gap={1} mb={4}>
+              <PMHeading level="h6" mb={1}>
+                {repoKey}
+              </PMHeading>
+              <PMVStack mb={2}>
+                {repoTargets.map((target) => (
+                  <PMCheckbox
+                    key={target.id}
+                    value={target.id}
+                    checked={selectedTargetIds.includes(target.id)}
+                    controlProps={{ borderColor: 'border.checkbox' }}
+                    padding={2}
+                    gap={4}
+                    size={'sm'}
+                    border={'solid 1px'}
+                    borderColor={'border.tertiary'}
+                    width="full"
+                    onChange={(event) => {
+                      const input = event.target as HTMLInputElement;
+                      handleCheckboxChange(target.id, input.checked);
+                    }}
+                    _checked={{ bg: 'blue.900', borderColor: 'blue.500' }}
+                  >
+                    <PMVStack align="flex-start" gap={2}>
+                      <PMText fontWeight="medium" fontSize="sm">
+                        {target.name}
+                      </PMText>
+                      <PMHStack>
+                        <PMBadge size="sm">
+                          Branch: {target.repository.branch}
+                        </PMBadge>
+                        <PMBadge size="sm">Path: {target.path}</PMBadge>
+                      </PMHStack>
+                    </PMVStack>
+                  </PMCheckbox>
+                ))}
+              </PMVStack>
             </PMVStack>
-          </PMCheckbox>
-        ))}
+          ))}
       </PMBox>
       {deploymentError && (
         <PMAlert.Root status="error">

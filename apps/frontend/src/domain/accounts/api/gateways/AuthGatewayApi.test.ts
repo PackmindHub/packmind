@@ -36,7 +36,7 @@ describe('AuthGatewayApi', () => {
 
   describe('signUp', () => {
     const signUpRequest: SignUpUserCommand = {
-      username: 'testuser',
+      email: 'testuser@packmind.com',
       password: 'password123',
       organizationId: createOrganizationId('org-1'),
     };
@@ -44,9 +44,16 @@ describe('AuthGatewayApi', () => {
     it('calls API service with correct parameters', async () => {
       const mockResponse = {
         id: '1',
-        username: 'testuser',
+        email: 'testuser@packmind.com',
         passwordHash: 'hashedpassword',
-        organizationId: 'org-1',
+        active: true,
+        memberships: [
+          {
+            userId: '1',
+            organizationId: createOrganizationId('org-1'),
+            role: 'admin',
+          },
+        ],
       };
       mockApiPost.mockResolvedValue(mockResponse);
 
@@ -57,27 +64,27 @@ describe('AuthGatewayApi', () => {
     });
 
     it('handles API errors', async () => {
-      const error = new Error('Username already exists');
+      const error = new Error('Email already exists');
       mockApiPost.mockRejectedValue(error);
 
       await expect(gateway.signUp(signUpRequest)).rejects.toThrow(
-        'Username already exists',
+        'Email already exists',
       );
     });
 
     it('handles validation errors', async () => {
       const error = new Error(
-        'Username, password, and organizationId are required',
+        'Email, password, and organizationId are required',
       );
       mockApiPost.mockRejectedValue(error);
 
       const invalidRequest = {
-        username: '',
+        email: '',
         password: '',
         organizationId: createOrganizationId(''),
       };
       await expect(gateway.signUp(invalidRequest)).rejects.toThrow(
-        'Username, password, and organizationId are required',
+        'Email, password, and organizationId are required',
       );
     });
 
@@ -98,7 +105,7 @@ describe('AuthGatewayApi', () => {
   describe('signIn', () => {
     it('calls API service with correct parameters', async () => {
       const signInRequest = {
-        username: 'testuser',
+        email: 'testuser@packmind.com',
         password: 'password123',
         organizationId: createOrganizationId('org-1'),
       };
@@ -106,10 +113,22 @@ describe('AuthGatewayApi', () => {
         message: 'Sign in successful',
         user: {
           id: '1',
-          username: 'testuser',
-          organizationId: createOrganizationId('org-1'),
+          email: 'testuser@packmind.com',
+          active: true,
+          memberships: [
+            {
+              userId: '1',
+              organizationId: createOrganizationId('org-1'),
+              role: 'admin',
+            },
+          ],
         },
-        organization: { id: 'org-1', name: 'Test Org', slug: 'test-org' },
+        organization: {
+          id: 'org-1',
+          name: 'Test Org',
+          slug: 'test-org',
+          role: 'admin',
+        },
         accessToken: 'token123',
       };
       mockApiPost.mockResolvedValue(mockResponse);
@@ -122,7 +141,7 @@ describe('AuthGatewayApi', () => {
 
     it('handles API errors', async () => {
       const signInRequest = {
-        username: 'testuser',
+        email: 'testuser@packmind.com',
         password: 'wrongpassword',
         organizationId: createOrganizationId('org-1'),
       };
@@ -142,10 +161,22 @@ describe('AuthGatewayApi', () => {
         authenticated: true,
         user: {
           id: '1',
-          username: 'testuser',
-          organizationId: createOrganizationId('org-1'),
+          email: 'testuser@packmind.com',
+          active: true,
+          memberships: [
+            {
+              userId: '1',
+              organizationId: createOrganizationId('org-1'),
+              role: 'admin',
+            },
+          ],
         },
-        organization: { id: 'org-1', name: 'Test Org', slug: 'test-org' },
+        organization: {
+          id: 'org-1',
+          name: 'Test Org',
+          slug: 'test-org',
+          role: 'admin',
+        },
       };
       mockApiGet.mockResolvedValue(mockResponse);
 

@@ -15,10 +15,20 @@ export default {
   displayName: 'frontend',
   rootDir: '.',
   testEnvironment: 'jsdom',
+  extensionsToTreatAsEsm: ['.ts', '.tsx'],
   transform: {
-    '^.+\\.[tj]sx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+    '^.+\\.[tj]sx?$': [
+      'ts-jest',
+      {
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+        useESM: true,
+        isolatedModules: true,
+      },
+    ],
   },
-  transformIgnorePatterns: ['/node_modules/(?!(slug|marked)).+\\.js$'],
+  transformIgnorePatterns: [
+    '/node_modules/(?!(slug|marked|@chakra-ui|@zag-js|framer-motion|lucide-react)).+\\.[tj]sx?$',
+  ],
   testMatch: ['<rootDir>/src/**/*.(spec|test).[jt]s?(x)'],
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   coverageDirectory: '../../coverage/apps/frontend',

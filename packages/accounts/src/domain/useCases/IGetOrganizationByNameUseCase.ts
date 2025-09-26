@@ -1,4 +1,3 @@
-import { IPublicUseCase } from '@packmind/shared';
 import { Organization } from '../entities/Organization';
 
 export type GetOrganizationByNameCommand = {
@@ -9,7 +8,8 @@ export type GetOrganizationByNameResponse = {
   organization: Organization | null;
 };
 
-export type IGetOrganizationByNameUseCase = IPublicUseCase<
-  GetOrganizationByNameCommand,
-  GetOrganizationByNameResponse
->;
+export interface IGetOrganizationByNameUseCase {
+  execute(
+    command: GetOrganizationByNameCommand,
+  ): Promise<GetOrganizationByNameResponse>;
+}

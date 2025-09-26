@@ -29,16 +29,36 @@ describe('AuthController', () => {
 
   const mockUser: User = {
     id: createUserId('1'),
-    username: 'testuser',
+    email: 'testuser@packmind.com',
     passwordHash: 'hashedPassword',
-    organizationId: createOrganizationId('org-1'),
+    active: true,
+    memberships: [
+      {
+        userId: createUserId('1'),
+        organizationId: createOrganizationId('org-1'),
+        role: 'admin',
+      },
+    ],
   };
 
   const mockSignInResponse = {
     user: {
       id: '1',
-      username: 'testuser',
-      organizationId: 'org-1',
+      email: 'testuser@packmind.com',
+      active: true,
+      memberships: [
+        {
+          userId: createUserId('1'),
+          organizationId: createOrganizationId('org-1'),
+          role: 'admin',
+        },
+      ],
+    },
+    organization: {
+      id: createOrganizationId('org-1'),
+      name: 'Test Organization',
+      slug: 'test-org',
+      role: 'admin',
     },
     accessToken: 'mock-jwt-token',
   };
@@ -75,7 +95,7 @@ describe('AuthController', () => {
 
   describe('signUp', () => {
     const signUpRequest: SignUpUserCommand = {
-      username: 'testuser',
+      email: 'testuser@packmind.com',
       password: 'password123',
       organizationId: createOrganizationId('org-1'),
     };
@@ -89,10 +109,10 @@ describe('AuthController', () => {
       expect(mockAuthService.signUp).toHaveBeenCalledWith(signUpRequest);
     });
 
-    describe('when username already exists', () => {
+    describe('when email already exists', () => {
       it('throws ConflictException', async () => {
         mockAuthService.signUp.mockRejectedValue(
-          new ConflictException('Username already exists'),
+          new ConflictException('Email already exists'),
         );
 
         await expect(controller.signUp(signUpRequest)).rejects.toThrow(
@@ -118,13 +138,13 @@ describe('AuthController', () => {
     describe('when required fields are missing', () => {
       it('throws BadRequestException', async () => {
         const invalidRequest = {
-          username: '',
+          email: '',
           password: '',
           organizationId: createOrganizationId(''),
         };
         mockAuthService.signUp.mockRejectedValue(
           new BadRequestException(
-            'Username, password, and organizationId are required',
+            'Email, password, and organizationId are required',
           ),
         );
 
@@ -138,9 +158,8 @@ describe('AuthController', () => {
 
   describe('signIn', () => {
     const signInRequest: SignInUserCommand = {
-      username: 'testuser',
+      email: 'testuser@packmind.com',
       password: 'password123',
-      organizationId: createOrganizationId('org-1'),
     };
 
     it('signs in user successfully and sets cookie', async () => {
@@ -152,6 +171,7 @@ describe('AuthController', () => {
       expect(result).toEqual({
         message: 'Sign in successful',
         user: mockSignInResponse.user,
+        organization: mockSignInResponse.organization,
       });
       expect(mockAuthService.signIn).toHaveBeenCalledWith(signInRequest);
       expect(mockConfiguration.getConfig).toHaveBeenCalledWith('COOKIE_SECURE');

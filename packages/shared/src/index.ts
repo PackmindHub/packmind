@@ -17,6 +17,7 @@ export * from './repositories/AbstractRepository';
 export * from './security/EncryptionService';
 export * from './sse';
 export * from './types';
+export * from './mail';
 
 import localDataSource from './dataSources/local';
 export { localDataSource };

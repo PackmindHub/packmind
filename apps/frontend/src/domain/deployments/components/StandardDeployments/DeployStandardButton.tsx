@@ -14,6 +14,7 @@ export interface DeployStandardButtonProps {
   label?: string;
   disabled?: boolean;
   size?: 'sm' | 'md' | 'lg';
+  variant?: 'primary' | 'secondary';
   selectedStandards: Standard[];
 }
 
@@ -21,6 +22,7 @@ export const DeployStandardButton: React.FC<DeployStandardButtonProps> = ({
   label = 'Deploy',
   disabled = false,
   size = 'md',
+  variant = 'primary',
   selectedStandards,
 }) => {
   return (
@@ -31,7 +33,7 @@ export const DeployStandardButton: React.FC<DeployStandardButtonProps> = ({
       scrollBehavior={'outside'}
     >
       <PMDialog.Trigger asChild>
-        <PMButton size={size} variant={'primary'} disabled={disabled}>
+        <PMButton size={size} variant={variant} disabled={disabled}>
           {label}
         </PMButton>
       </PMDialog.Trigger>
