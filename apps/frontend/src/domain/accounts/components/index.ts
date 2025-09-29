@@ -1,6 +1,5 @@
 export { default as GoToOrganization } from './GoToOrganization';
 export { default as SignUpWithOrganizationForm } from './SignUpWithOrganizationForm';
-export { default as SignUpForm } from './SignUpForm';
 export { default as SignInForm } from './SignInForm';
 export { OrganizationUsersList } from './OrganizationUsersList';
 export { OrganizationHomePage } from './OrganizationHomePage';

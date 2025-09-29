@@ -3,23 +3,7 @@ import { organizationGateway } from '../gateways';
 import { GET_USER_STATUSES_QUERY_KEY } from './UserQueries';
 import { UserOrganizationRole } from '@packmind/shared';
 
-const CREATE_ORGANIZATION_MUTATION_KEY = 'createOrganization';
 const INVITE_USERS_MUTATION_KEY = 'inviteUsers';
-
-export const useCreateOrganizationMutation = () => {
-  return useMutation({
-    mutationKey: [CREATE_ORGANIZATION_MUTATION_KEY],
-    mutationFn: async (organization: { name: string }) => {
-      return organizationGateway.createOrganization(organization);
-    },
-    onSuccess: (data) => {
-      console.log('Organization created successfully:', data);
-    },
-    onError: (error) => {
-      console.error('Error creating organization:', error);
-    },
-  });
-};
 
 export const useInviteUsersMutation = () => {
   const queryClient = useQueryClient();
