@@ -8,11 +8,13 @@ import { logoPackmind } from '@packmind/assets';
 
 export interface IPMVerticalNavProps {
   children: React.ReactNode;
+  headerNav?: React.ReactNode;
   footerNav?: React.ReactNode;
 }
 
 export const PMVerticalNav: React.FC<IPMVerticalNavProps> = ({
   children,
+  headerNav,
   footerNav,
 }) => {
   return (
@@ -37,6 +39,11 @@ export const PMVerticalNav: React.FC<IPMVerticalNavProps> = ({
       >
         <PMImage src={logoPackmind} maxHeight={'20px'} />
       </PMBox>
+      {headerNav && (
+        <PMBox w={'100%'} paddingX={2}>
+          {headerNav}
+        </PMBox>
+      )}
       <PMVStack align="stretch" gap={6} height="100%" paddingY={4} width="100%">
         {children}
       </PMVStack>

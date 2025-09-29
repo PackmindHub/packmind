@@ -2,10 +2,13 @@ import { DataSource } from 'typeorm';
 import { IAccountsRepository } from '../../domain/repositories/IAccountsRepository';
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
 import { IOrganizationRepository } from '../../domain/repositories/IOrganizationRepository';
+import { IInvitationRepository } from '../../domain/repositories/IInvitationRepository';
 import { UserRepository } from './UserRepository';
 import { OrganizationRepository } from './OrganizationRepository';
+import { InvitationRepository } from './InvitationRepository';
 import { UserSchema } from '../schemas/UserSchema';
 import { OrganizationSchema } from '../schemas/OrganizationSchema';
+import { InvitationSchema } from '../schemas/InvitationSchema';
 
 /**
  * AccountsRepository - Repository aggregator implementation for the Accounts domain
@@ -17,6 +20,7 @@ import { OrganizationSchema } from '../schemas/OrganizationSchema';
 export class AccountsRepository implements IAccountsRepository {
   private readonly userRepository: IUserRepository;
   private readonly organizationRepository: IOrganizationRepository;
+  private readonly invitationRepository: IInvitationRepository;
 
   constructor(private readonly dataSource: DataSource) {
     // Initialize all repositories with their respective schemas
@@ -26,6 +30,9 @@ export class AccountsRepository implements IAccountsRepository {
     this.organizationRepository = new OrganizationRepository(
       this.dataSource.getRepository(OrganizationSchema),
     );
+    this.invitationRepository = new InvitationRepository(
+      this.dataSource.getRepository(InvitationSchema),
+    );
   }
 
   getUserRepository(): IUserRepository {
@@ -34,5 +41,9 @@ export class AccountsRepository implements IAccountsRepository {
 
   getOrganizationRepository(): IOrganizationRepository {
     return this.organizationRepository;
+  }
+
+  getInvitationRepository(): IInvitationRepository {
+    return this.invitationRepository;
   }
 }

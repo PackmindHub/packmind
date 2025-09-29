@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AccountsHexa, Organization, OrganizationId } from '@packmind/accounts';
+import { UserOrganizationRole } from '@packmind/shared';
 
 @Injectable()
 export class OrganizationsService {
@@ -23,5 +24,20 @@ export class OrganizationsService {
 
   async createOrganization(name: string): Promise<Organization> {
     return this.accountsHexa.createOrganization({ name });
+  }
+
+  async inviteUsers(
+    organizationId: OrganizationId,
+    userId: string,
+    emails: string[],
+    role: UserOrganizationRole,
+  ) {
+    // Note: role is currently unused in the invitation flow
+    return this.accountsHexa.createInvitations({
+      organizationId,
+      userId,
+      emails,
+      role,
+    });
   }
 }

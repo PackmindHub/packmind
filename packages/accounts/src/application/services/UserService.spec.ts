@@ -1,10 +1,15 @@
 import { UserService } from './UserService';
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
-import { User, createUserId } from '../../domain/entities/User';
+import {
+  User,
+  createUserId,
+  UserOrganizationMembership,
+} from '../../domain/entities/User';
 import { createOrganizationId } from '../../domain/entities/Organization';
 import { PackmindLogger } from '@packmind/shared';
 import { stubLogger } from '@packmind/shared/test';
 import { userFactory } from '../../../test';
+import { InvalidInvitationEmailError } from '../../domain/errors';
 
 // Mock bcrypt
 jest.mock('bcrypt', () => ({
@@ -43,6 +48,113 @@ describe('UserService', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  describe('.createInactiveUser', () => {
+    it('creates a new inactive user if none exists', async () => {
+      const email = 'new-user@packmind.com';
+      mockUserRepository.findByEmailCaseInsensitive.mockResolvedValue(null);
+      mockUserRepository.add.mockImplementation(async (user) => user);
+
+      const result = await userService.createInactiveUser(email);
+
+      expect(
+        mockUserRepository.findByEmailCaseInsensitive,
+      ).toHaveBeenCalledWith(email.toLowerCase());
+      expect(mockUserRepository.add).toHaveBeenCalledWith(
+        expect.objectContaining({
+          email: email.toLowerCase(),
+          passwordHash: null,
+          active: false,
+          memberships: [],
+        }),
+      );
+      expect(result.active).toBe(false);
+      expect(result.passwordHash).toBeNull();
+    });
+
+    it('returns existing user if already present', async () => {
+      const email = 'existing@packmind.com';
+      const existingUser = userFactory({ email });
+      mockUserRepository.findByEmailCaseInsensitive.mockResolvedValue(
+        existingUser,
+      );
+
+      const result = await userService.createInactiveUser(email);
+
+      expect(result).toBe(existingUser);
+      expect(mockUserRepository.add).not.toHaveBeenCalled();
+    });
+
+    it('throws if email is empty', async () => {
+      await expect(userService.createInactiveUser('')).rejects.toBeInstanceOf(
+        InvalidInvitationEmailError,
+      );
+      expect(mockUserRepository.add).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('.addOrganizationMembership', () => {
+    const organizationId = createOrganizationId('org-123');
+
+    describe('when membership already exists', () => {
+      it('returns the provided user', async () => {
+        const existingMembership: UserOrganizationMembership = {
+          userId: createUserId('user-1'),
+          organizationId,
+          role: 'admin',
+        };
+        const user: User = {
+          id: existingMembership.userId,
+          email: 'member@packmind.com',
+          passwordHash: null,
+          active: true,
+          memberships: [existingMembership],
+        };
+
+        const result = await userService.addOrganizationMembership(
+          user,
+          organizationId,
+          'admin',
+        );
+
+        expect(result).toBe(user);
+        expect(mockUserRepository.add).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when membership is missing', () => {
+      it('persists the new membership and returns the saved user', async () => {
+        const user = userFactory({ memberships: [] });
+        const expectedMembership: UserOrganizationMembership = {
+          userId: user.id,
+          organizationId,
+          role: 'admin',
+        };
+
+        mockUserRepository.add.mockImplementation(
+          async (savedUser) => savedUser,
+        );
+
+        const result = await userService.addOrganizationMembership(
+          user,
+          organizationId,
+          'admin',
+        );
+
+        expect(mockUserRepository.add).toHaveBeenCalledWith(
+          expect.objectContaining({
+            id: user.id,
+            memberships: expect.arrayContaining([
+              expect.objectContaining(expectedMembership),
+            ]),
+          }),
+        );
+        expect(result.memberships).toEqual([
+          expect.objectContaining(expectedMembership),
+        ]);
+      });
+    });
   });
 
   describe('.createUser', () => {

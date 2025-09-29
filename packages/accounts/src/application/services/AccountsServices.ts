@@ -1,8 +1,10 @@
 import { IAccountsServices } from '../IAccountsServices';
 import { UserService } from './UserService';
 import { OrganizationService } from './OrganizationService';
+import { InvitationService } from './InvitationService';
+import { LoginRateLimiterService } from './LoginRateLimiterService';
 import { IAccountsRepository } from '../../domain/repositories/IAccountsRepository';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger, SmtpMailService } from '@packmind/shared';
 
 /**
  * AccountsServices - Service aggregator implementation for the Accounts application layer
@@ -14,6 +16,8 @@ import { PackmindLogger } from '@packmind/shared';
 export class AccountsServices implements IAccountsServices {
   private readonly userService: UserService;
   private readonly organizationService: OrganizationService;
+  private readonly invitationService: InvitationService;
+  private readonly loginRateLimiterService: LoginRateLimiterService;
 
   constructor(
     private readonly accountsRepository: IAccountsRepository,
@@ -28,6 +32,12 @@ export class AccountsServices implements IAccountsServices {
       this.accountsRepository.getOrganizationRepository(),
       this.logger,
     );
+    this.invitationService = new InvitationService(
+      this.accountsRepository.getInvitationRepository(),
+      new SmtpMailService(this.logger),
+      this.logger,
+    );
+    this.loginRateLimiterService = new LoginRateLimiterService();
   }
 
   getUserService(): UserService {
@@ -36,5 +46,13 @@ export class AccountsServices implements IAccountsServices {
 
   getOrganizationService(): OrganizationService {
     return this.organizationService;
+  }
+
+  getInvitationService(): InvitationService {
+    return this.invitationService;
+  }
+
+  getLoginRateLimiterService(): LoginRateLimiterService {
+    return this.loginRateLimiterService;
   }
 }

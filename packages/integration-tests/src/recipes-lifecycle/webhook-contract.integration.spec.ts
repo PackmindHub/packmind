@@ -150,15 +150,13 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
       gitHexa.setDeploymentsAdapter(deploymentPort);
 
       // Create test data
-      organization = await accountsHexa.createOrganization({
-        name: 'test organization',
-      });
-
-      user = await accountsHexa.signUpUser({
+      const signUpResult = await accountsHexa.signUpWithOrganization({
+        organizationName: 'test organization',
         email: 'testuser@packmind.com',
         password: 's3cret!@',
-        organizationId: organization.id,
       });
+      user = signUpResult.user;
+      organization = signUpResult.organization;
 
       // Create git provider and repository
       const gitProvider = await gitHexa.addGitProvider(

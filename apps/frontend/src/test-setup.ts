@@ -93,5 +93,80 @@ if (typeof global.structuredClone === 'undefined') {
     return JSON.parse(JSON.stringify(obj));
   };
 }
+
+// Polyfills for TextEncoder and TextDecoder which are not available in Jest environment
+if (typeof global.TextEncoder === 'undefined') {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { TextEncoder, TextDecoder } = require('util');
+  global.TextEncoder = TextEncoder;
+  global.TextDecoder = TextDecoder;
+}
+
+// Proper mocks for Chakra UI v3 testing environment
+// Based on: https://www.chakra-ui.com/docs/components/concepts/testing
+
+// ResizeObserver mock - required for Chakra UI components
+if (typeof global.ResizeObserver === 'undefined') {
+  global.ResizeObserver = class ResizeObserver {
+    observe() {
+      // Mock implementation
+    }
+    unobserve() {
+      // Mock implementation
+    }
+    disconnect() {
+      // Mock implementation
+    }
+  };
+}
+
+// IntersectionObserver mock - required for some Chakra UI components
+if (typeof global.IntersectionObserver === 'undefined') {
+  global.IntersectionObserver = class IntersectionObserver {
+    root = null;
+    rootMargin = '';
+    thresholds: number[] = [];
+
+    constructor(
+      _callback: IntersectionObserverCallback,
+      _options?: IntersectionObserverInit,
+    ) {
+      // Mock constructor
+    }
+    observe() {
+      // Mock implementation
+    }
+    unobserve() {
+      // Mock implementation
+    }
+    disconnect() {
+      // Mock implementation
+    }
+    takeRecords(): IntersectionObserverEntry[] {
+      return [];
+    }
+  };
+}
+
+// requestAnimationFrame mock for proper async handling
+if (typeof global.requestAnimationFrame === 'undefined') {
+  global.requestAnimationFrame = (cb: FrameRequestCallback) =>
+    setTimeout(cb, 1000 / 60);
+  global.cancelAnimationFrame = (id: number) => clearTimeout(id);
+}
+
+// Scroll methods mock - required for some Chakra UI components
+if (typeof Element !== 'undefined') {
+  Element.prototype.scrollTo =
+    Element.prototype.scrollTo ||
+    function () {
+      // Mock implementation
+    };
+  Element.prototype.scrollIntoView =
+    Element.prototype.scrollIntoView ||
+    function () {
+      // Mock implementation
+    };
+}
 // Make this file a module
 export {};

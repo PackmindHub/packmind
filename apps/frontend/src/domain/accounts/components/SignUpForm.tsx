@@ -98,7 +98,7 @@ export default function SignUpForm({ organization }: SignUpFormProps) {
               onError: (error) => {
                 console.error('Auto-login failed after registration:', error);
                 // Fallback to sign-in page if auto-login fails
-                navigate(`/org/${organization.slug}/sign-in`);
+                navigate(`/sign-in`);
               },
             },
           );

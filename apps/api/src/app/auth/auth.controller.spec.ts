@@ -6,7 +6,12 @@ import {
   createOrganizationId,
   SignUpUserCommand,
   SignInUserCommand,
+  Organization,
 } from '@packmind/accounts';
+import {
+  CheckEmailAvailabilityCommand,
+  CheckEmailAvailabilityResponse,
+} from '@packmind/shared';
 import { createUserId } from '@packmind/accounts';
 import {
   ConflictException,
@@ -41,6 +46,12 @@ describe('AuthController', () => {
     ],
   };
 
+  const mockOrganization: Organization = {
+    id: createOrganizationId('org-1'),
+    name: 'Test Organization',
+    slug: 'test-organization',
+  };
+
   const mockSignInResponse = {
     user: {
       id: '1',
@@ -67,6 +78,9 @@ describe('AuthController', () => {
     signUp: jest.fn(),
     signIn: jest.fn(),
     getMe: jest.fn(),
+    checkEmailAvailability: jest.fn(),
+    activateAccount: jest.fn(),
+    validateInvitationToken: jest.fn(),
   };
 
   const mockResponse = {
@@ -97,15 +111,19 @@ describe('AuthController', () => {
     const signUpRequest: SignUpUserCommand = {
       email: 'testuser@packmind.com',
       password: 'password123',
-      organizationId: createOrganizationId('org-1'),
+      organizationName: 'Test Organization',
     };
 
-    it('creates a new user successfully', async () => {
-      mockAuthService.signUp.mockResolvedValue(mockUser);
+    it('creates a new user with organization successfully', async () => {
+      const mockResponse = {
+        user: mockUser,
+        organization: mockOrganization,
+      };
+      mockAuthService.signUp.mockResolvedValue(mockResponse);
 
       const result = await controller.signUp(signUpRequest);
 
-      expect(result).toEqual(mockUser);
+      expect(result).toEqual(mockResponse);
       expect(mockAuthService.signUp).toHaveBeenCalledWith(signUpRequest);
     });
 
@@ -122,10 +140,10 @@ describe('AuthController', () => {
       });
     });
 
-    describe('when organization is not found', () => {
+    describe('when organization name is invalid', () => {
       it('throws BadRequestException', async () => {
         mockAuthService.signUp.mockRejectedValue(
-          new BadRequestException('Organization not found'),
+          new BadRequestException('Organization name is invalid'),
         );
 
         await expect(controller.signUp(signUpRequest)).rejects.toThrow(
@@ -140,11 +158,11 @@ describe('AuthController', () => {
         const invalidRequest = {
           email: '',
           password: '',
-          organizationId: createOrganizationId(''),
+          organizationName: '',
         };
         mockAuthService.signUp.mockRejectedValue(
           new BadRequestException(
-            'Email, password, and organizationId are required',
+            'Email, password, and organizationName are required',
           ),
         );
 
@@ -152,6 +170,32 @@ describe('AuthController', () => {
           BadRequestException,
         );
         expect(mockAuthService.signUp).toHaveBeenCalledWith(invalidRequest);
+      });
+    });
+
+    describe('when organization name already exists', () => {
+      it('throws ConflictException', async () => {
+        mockAuthService.signUp.mockRejectedValue(
+          new ConflictException('Organization name already exists'),
+        );
+
+        await expect(controller.signUp(signUpRequest)).rejects.toThrow(
+          ConflictException,
+        );
+        expect(mockAuthService.signUp).toHaveBeenCalledWith(signUpRequest);
+      });
+    });
+
+    describe('when user creation fails after organization creation', () => {
+      it('throws error but organization remains created', async () => {
+        mockAuthService.signUp.mockRejectedValue(
+          new Error('Email testuser@packmind.com already exists'),
+        );
+
+        await expect(controller.signUp(signUpRequest)).rejects.toThrow(
+          'Email testuser@packmind.com already exists',
+        );
+        expect(mockAuthService.signUp).toHaveBeenCalledWith(signUpRequest);
       });
     });
   });
@@ -169,7 +213,6 @@ describe('AuthController', () => {
       const result = await controller.signIn(signInRequest, mockResponse);
 
       expect(result).toEqual({
-        message: 'Sign in successful',
         user: mockSignInResponse.user,
         organization: mockSignInResponse.organization,
       });
@@ -259,6 +302,251 @@ describe('AuthController', () => {
           expect(options.expires.getTime()).toBeLessThan(Date.now());
         }
       }
+    });
+  });
+
+  describe('checkEmailAvailability', () => {
+    const checkEmailRequest: CheckEmailAvailabilityCommand = {
+      email: 'testuser@packmind.com',
+    };
+
+    it('returns available true for unregistered email', async () => {
+      const mockResponse: CheckEmailAvailabilityResponse = {
+        available: true,
+      };
+      mockAuthService.checkEmailAvailability.mockResolvedValue(mockResponse);
+
+      const result = await controller.checkEmailAvailability(checkEmailRequest);
+
+      expect(result).toEqual(mockResponse);
+      expect(mockAuthService.checkEmailAvailability).toHaveBeenCalledWith(
+        checkEmailRequest,
+      );
+    });
+
+    it('returns available false for already registered email', async () => {
+      const mockResponse: CheckEmailAvailabilityResponse = {
+        available: false,
+      };
+      mockAuthService.checkEmailAvailability.mockResolvedValue(mockResponse);
+
+      const result = await controller.checkEmailAvailability(checkEmailRequest);
+
+      expect(result).toEqual(mockResponse);
+      expect(mockAuthService.checkEmailAvailability).toHaveBeenCalledWith(
+        checkEmailRequest,
+      );
+    });
+
+    describe('when service throws error', () => {
+      it('propagates the error', async () => {
+        mockAuthService.checkEmailAvailability.mockRejectedValue(
+          new Error('Database connection failed'),
+        );
+
+        await expect(
+          controller.checkEmailAvailability(checkEmailRequest),
+        ).rejects.toThrow('Database connection failed');
+        expect(mockAuthService.checkEmailAvailability).toHaveBeenCalledWith(
+          checkEmailRequest,
+        );
+      });
+    });
+  });
+
+  describe('activateAccount', () => {
+    it('activates account successfully and sets auth cookie', async () => {
+      const token = 'valid-token-123';
+      const password = 'newPassword123!';
+      const mockResult = {
+        success: true,
+        user: {
+          id: createUserId('1'),
+          email: 'test@example.com',
+          isActive: true,
+        },
+        authToken: 'jwt-auth-token',
+      };
+
+      const mockResponse = {
+        cookie: jest.fn(),
+      } as unknown as Response;
+
+      mockAuthService.activateAccount = jest.fn().mockResolvedValue(mockResult);
+      (Configuration.getConfig as jest.Mock).mockResolvedValue('true');
+
+      const result = await controller.activateAccount(
+        token,
+        { password },
+        mockResponse,
+      );
+
+      expect(result).toEqual({
+        message: 'Account activated successfully',
+        user: mockResult.user,
+      });
+
+      expect(mockAuthService.activateAccount).toHaveBeenCalledWith({
+        token,
+        password,
+      });
+
+      expect(mockResponse.cookie).toHaveBeenCalledWith(
+        'auth_token',
+        'jwt-auth-token',
+        {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'strict',
+          maxAge: 30 * 24 * 60 * 60 * 1000,
+          path: '/',
+        },
+      );
+    });
+
+    describe('when no auth token is provided', () => {
+      it('activates account without setting cookie', async () => {
+        const token = 'valid-token-123';
+        const password = 'newPassword123!';
+        const mockResult = {
+          success: true,
+          user: {
+            id: createUserId('1'),
+            email: 'test@example.com',
+            isActive: true,
+          },
+        };
+
+        const mockResponse = {
+          cookie: jest.fn(),
+        } as unknown as Response;
+
+        mockAuthService.activateAccount = jest
+          .fn()
+          .mockResolvedValue(mockResult);
+
+        const result = await controller.activateAccount(
+          token,
+          { password },
+          mockResponse,
+        );
+
+        expect(result).toEqual({
+          message: 'Account activated successfully',
+          user: mockResult.user,
+        });
+
+        expect(mockAuthService.activateAccount).toHaveBeenCalledWith({
+          token,
+          password,
+        });
+
+        expect(mockResponse.cookie).not.toHaveBeenCalled();
+      });
+    });
+
+    it('handles activation errors', async () => {
+      const token = 'invalid-token';
+      const password = 'newPassword123!';
+      const mockResponse = {
+        cookie: jest.fn(),
+      } as unknown as Response;
+
+      const error = new Error('Invitation not found');
+      mockAuthService.activateAccount = jest.fn().mockRejectedValue(error);
+
+      await expect(
+        controller.activateAccount(token, { password }, mockResponse),
+      ).rejects.toThrow('Invitation not found');
+
+      expect(mockAuthService.activateAccount).toHaveBeenCalledWith({
+        token,
+        password,
+      });
+
+      expect(mockResponse.cookie).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('validateInvitation', () => {
+    it('validates invitation token successfully', async () => {
+      const token = 'valid-token-123';
+      const mockResult = {
+        email: 'test@example.com',
+        isValid: true,
+      };
+
+      mockAuthService.validateInvitationToken = jest
+        .fn()
+        .mockResolvedValue(mockResult);
+
+      const result = await controller.validateInvitation(token);
+
+      expect(result).toEqual(mockResult);
+      expect(mockAuthService.validateInvitationToken).toHaveBeenCalledWith({
+        token,
+      });
+    });
+
+    describe('when invitation token is invalid', () => {
+      it('returns invalid result', async () => {
+        const token = 'invalid-token';
+        const mockResult = {
+          email: '',
+          isValid: false,
+        };
+
+        mockAuthService.validateInvitationToken = jest
+          .fn()
+          .mockResolvedValue(mockResult);
+
+        const result = await controller.validateInvitation(token);
+
+        expect(result).toEqual(mockResult);
+        expect(mockAuthService.validateInvitationToken).toHaveBeenCalledWith({
+          token,
+        });
+      });
+    });
+
+    describe('when invitation token is expired', () => {
+      it('returns invalid result', async () => {
+        const token = 'expired-token';
+        const mockResult = {
+          email: '',
+          isValid: false,
+        };
+
+        mockAuthService.validateInvitationToken = jest
+          .fn()
+          .mockResolvedValue(mockResult);
+
+        const result = await controller.validateInvitation(token);
+
+        expect(result).toEqual(mockResult);
+        expect(mockAuthService.validateInvitationToken).toHaveBeenCalledWith({
+          token,
+        });
+      });
+    });
+
+    describe('when validation fails', () => {
+      it('throws the error', async () => {
+        const token = 'malformed-token';
+        const error = new Error('Token validation failed');
+
+        mockAuthService.validateInvitationToken = jest
+          .fn()
+          .mockRejectedValue(error);
+
+        await expect(controller.validateInvitation(token)).rejects.toThrow(
+          'Token validation failed',
+        );
+
+        expect(mockAuthService.validateInvitationToken).toHaveBeenCalledWith({
+          token,
+        });
+      });
     });
   });
 });

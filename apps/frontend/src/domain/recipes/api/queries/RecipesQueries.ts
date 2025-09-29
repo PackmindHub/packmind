@@ -17,14 +17,16 @@ export const useGetRecipesQuery = () => {
 
 const GET_RECIPE_BY_ID_QUERY_KEY = 'recipe';
 
+export const getRecipeByIdOptions = (id: RecipeId) => ({
+  queryKey: [GET_RECIPE_BY_ID_QUERY_KEY, id],
+  queryFn: () => {
+    return recipesGateway.getRecipeById(id);
+  },
+  enabled: !!id, // Only run query if id is provided
+});
+
 export const useGetRecipeByIdQuery = (id: RecipeId) => {
-  return useQuery({
-    queryKey: [GET_RECIPE_BY_ID_QUERY_KEY, id],
-    queryFn: () => {
-      return recipesGateway.getRecipeById(id);
-    },
-    enabled: !!id, // Only run query if id is provided
-  });
+  return useQuery(getRecipeByIdOptions(id));
 };
 
 const UPDATE_RECIPE_MUTATION_KEY = 'updateRecipe';

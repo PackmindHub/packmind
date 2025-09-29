@@ -10,7 +10,7 @@ import { Organization } from './domain/entities/Organization';
 import { ApiKeyService } from './application/services/ApiKeyService';
 
 import {
-  SignUpUserCommand,
+  SignUpWithOrganizationCommand,
   SignInUserCommand,
   GetUserByIdCommand,
   ListUsersCommand,
@@ -23,8 +23,19 @@ import {
   GenerateUserTokenCommand,
   GenerateApiKeyCommand,
   GetCurrentApiKeyCommand,
+  CreateInvitationsCommand,
+  CreateInvitationsResponse,
   ListUsersResponse,
+  SignUpWithOrganizationResponse,
+  ListOrganizationUserStatusesCommand,
+  ListOrganizationUserStatusesResponse,
 } from './domain/useCases';
+import {
+  CheckEmailAvailabilityCommand,
+  CheckEmailAvailabilityResponse,
+  ActivateUserAccountCommand,
+  ActivateUserAccountResponse,
+} from '@packmind/shared';
 
 const origin = 'AccountsHexa';
 
@@ -84,10 +95,12 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts> {
   // ========================================
 
   /**
-   * Sign up a new user with the given credentials and organization.
+   * Sign up a new user and create their organization in a single operation.
    */
-  async signUpUser(command: SignUpUserCommand): Promise<User> {
-    return this.hexa.useCases.signUpUser(command);
+  async signUpWithOrganization(
+    command: SignUpWithOrganizationCommand,
+  ): Promise<SignUpWithOrganizationResponse> {
+    return this.hexa.useCases.signUpWithOrganization(command);
   }
 
   /**
@@ -117,6 +130,15 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts> {
    */
   async validatePassword(command: ValidatePasswordCommand): Promise<boolean> {
     return this.hexa.useCases.validatePassword(command);
+  }
+
+  /**
+   * Check if an email address is available for registration.
+   */
+  async checkEmailAvailability(
+    command: CheckEmailAvailabilityCommand,
+  ): Promise<CheckEmailAvailabilityResponse> {
+    return this.hexa.useCases.checkEmailAvailability(command);
   }
 
   // ========================================
@@ -173,6 +195,39 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts> {
    */
   async generateUserToken(command: GenerateUserTokenCommand) {
     return this.hexa.useCases.generateUserToken(command);
+  }
+
+  async createInvitations(
+    command: CreateInvitationsCommand,
+  ): Promise<CreateInvitationsResponse> {
+    return this.hexa.useCases.createInvitations(command);
+  }
+
+  /**
+   * List organization users with their statuses (admin only).
+   */
+  async listOrganizationUserStatuses(
+    command: ListOrganizationUserStatusesCommand,
+  ): Promise<ListOrganizationUserStatusesResponse> {
+    return this.hexa.useCases.listOrganizationUserStatuses(command);
+  }
+
+  /**
+   * Activate a user account using an invitation token and password.
+   */
+  async activateUserAccount(
+    command: ActivateUserAccountCommand,
+  ): Promise<ActivateUserAccountResponse> {
+    return this.hexa.useCases.activateUserAccount(command);
+  }
+
+  /**
+   * Validate an invitation token and return email and validity status.
+   */
+  async validateInvitationToken(command: {
+    token: string;
+  }): Promise<{ email: string; isValid: boolean }> {
+    return this.hexa.useCases.validateInvitationToken(command);
   }
 
   // ========================================

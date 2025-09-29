@@ -27,6 +27,10 @@ import { EditRecipe } from './EditRecipe';
 import { AutobreadCrumb } from '../../../../src/shared/components/navigation/AutobreadCrumb';
 import { RECIPE_MESSAGES } from '../constants/messages';
 import { RecipeId } from '@packmind/shared';
+import {
+  MarkdownEditor,
+  MarkdownEditorProvider,
+} from '../../../shared/components/editor/MarkdownEditor';
 
 interface RecipeDetailsProps {
   id: RecipeId;
@@ -140,6 +144,7 @@ export const RecipeDetails = ({ id, orgSlug, orgName }: RecipeDetailsProps) => {
     <PMPage
       title={recipe.name}
       breadcrumbComponent={<AutobreadCrumb />}
+      isFullWidth
       actions={
         <PMHStack gap={2}>
           <PMButton variant="primary" onClick={() => setIsEditing(true)}>
@@ -199,17 +204,30 @@ export const RecipeDetails = ({ id, orgSlug, orgName }: RecipeDetailsProps) => {
             {
               value: 'instructions',
               triggerLabel: 'Instructions',
-              content: <PMMarkdownViewer content={recipe.content} />,
+              content: (
+                <PMPageSection title="Instructions">
+                  <PMBox
+                    border="solid 1px"
+                    borderColor="border.primary"
+                    width={{ '2xl': '4xl', xsToXl: 'full' }}
+                  >
+                    <MarkdownEditorProvider>
+                      <MarkdownEditor defaultValue={recipe.content} readOnly />
+                    </MarkdownEditorProvider>
+                  </PMBox>
+                </PMPageSection>
+              ),
             },
             {
               value: 'deployments',
               triggerLabel: 'Deployments',
               content: (
-                <PMVStack align="flex-start" gap={6} marginTop={6}>
+                <PMVStack align="stretch" gap={6} marginTop={6}>
                   <PMPageSection
                     title="Run deployment"
                     backgroundColor="primary"
                     headingLevel="h4"
+                    boxProps={{ width: 'xl' }}
                     cta={
                       <DeployRecipeButton
                         label={`Deploy v${recipe.version}`}

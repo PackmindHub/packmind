@@ -3,12 +3,14 @@ import {
   createUserId,
   UserId,
   UserOrganizationMembership,
+  UserOrganizationRole,
 } from '../../domain/entities/User';
 import { OrganizationId } from '../../domain/entities/Organization';
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
 import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import { PackmindLogger, LogLevel } from '@packmind/shared';
+import { InvalidInvitationEmailError } from '../../domain/errors';
 
 const origin = 'UserService';
 
@@ -78,6 +80,80 @@ export class UserService {
     }
   }
 
+  async createInactiveUser(email: string): Promise<User> {
+    const normalizedEmail = email.trim().toLowerCase();
+    this.logger.info('Creating inactive user for invitation', {
+      email: normalizedEmail,
+    });
+
+    if (!normalizedEmail) {
+      throw new InvalidInvitationEmailError(email);
+    }
+
+    const existingUser =
+      await this.getUserByEmailCaseInsensitive(normalizedEmail);
+    if (existingUser) {
+      this.logger.info('Inactive user creation skipped - user already exists', {
+        email: normalizedEmail,
+      });
+      return existingUser;
+    }
+
+    const newUser: User = {
+      id: createUserId(uuidv4()),
+      email: normalizedEmail,
+      passwordHash: null,
+      active: false,
+      memberships: [],
+    };
+
+    const createdUser = await this.userRepository.add(newUser);
+    this.logger.info('Inactive user created successfully', {
+      userId: createdUser.id,
+      email: normalizedEmail,
+    });
+    return createdUser;
+  }
+
+  async addOrganizationMembership(
+    user: User,
+    organizationId: OrganizationId,
+    role: UserOrganizationRole,
+  ): Promise<User> {
+    const alreadyMember = user.memberships?.some(
+      (membership) => membership.organizationId === organizationId,
+    );
+
+    if (alreadyMember) {
+      this.logger.info('User already member of organization', {
+        userId: user.id,
+        organizationId,
+      });
+      return user;
+    }
+
+    const membership: UserOrganizationMembership = {
+      userId: user.id,
+      organizationId,
+      role,
+    };
+
+    const updatedUser: User = {
+      ...user,
+      memberships: [...(user.memberships ?? []), membership],
+    };
+
+    const savedUser = await this.userRepository.add(updatedUser);
+
+    this.logger.info('User organization membership created', {
+      userId: user.id,
+      organizationId,
+      role,
+    });
+
+    return savedUser;
+  }
+
   async getUserById(id: UserId): Promise<User | null> {
     this.logger.info('Getting user by ID', { id });
     return this.userRepository.findById(id);
@@ -111,5 +187,10 @@ export class UserService {
   async listUsers(): Promise<User[]> {
     this.logger.info('Listing all users');
     return this.userRepository.list();
+  }
+
+  async updateUser(user: User): Promise<User> {
+    this.logger.info('Updating user', { userId: user.id, email: user.email });
+    return this.userRepository.add(user);
   }
 }

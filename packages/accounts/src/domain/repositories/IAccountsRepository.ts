@@ -1,5 +1,6 @@
 import { IUserRepository } from './IUserRepository';
 import { IOrganizationRepository } from './IOrganizationRepository';
+import { IInvitationRepository } from './IInvitationRepository';
 
 /**
  * IAccountsRepository - Repository aggregator interface for the Accounts domain
@@ -18,4 +19,9 @@ export interface IAccountsRepository {
    * Get the organization repository instance
    */
   getOrganizationRepository(): IOrganizationRepository;
+
+  /**
+   * Get the invitation repository instance
+   */
+  getInvitationRepository(): IInvitationRepository;
 }

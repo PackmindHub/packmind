@@ -29,9 +29,10 @@ const PMPageSection = ({
       border: '1px solid',
       borderColor: '{colors.border.primary}',
       borderRadius: 'md',
-      ...boxProps,
     };
   }
+
+  boxCustomProps = { ...boxCustomProps, ...boxProps };
 
   return (
     <Box

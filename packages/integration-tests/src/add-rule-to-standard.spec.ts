@@ -61,14 +61,13 @@ describe('Add rule to standard integration', () => {
     standardsHexa = registry.get(StandardsHexa);
 
     // Create test data
-    organization = await accountsHexa.createOrganization({
-      name: 'test organization',
-    });
-    user = await accountsHexa.signUpUser({
+    const signUpResult = await accountsHexa.signUpWithOrganization({
+      organizationName: 'test organization',
       email: 'toto@packmind.com',
       password: 's3cr3t!@',
-      organizationId: organization.id,
     });
+    user = signUpResult.user;
+    organization = signUpResult.organization;
 
     // Create a standard to work with
     standard = await standardsHexa.createStandard({
@@ -108,21 +107,19 @@ describe('Add rule to standard integration', () => {
   describe('when standard slug exists but belongs to different organization', () => {
     test('An error is thrown', async () => {
       // Create another organization and user
-      const otherOrganization = await accountsHexa.createOrganization({
-        name: 'other organization',
-      });
-      const otherUser = await accountsHexa.signUpUser({
+      const otherSignUpResult = await accountsHexa.signUpWithOrganization({
+        organizationName: 'other organization',
         email: 'other@packmind.com',
         password: 's3cr3t!@',
-        organizationId: otherOrganization.id,
       });
+      const otherUser = otherSignUpResult.user;
 
       // Try to add rule to standard from the first organization using the second organization's context
       await expect(
         standardsHexa.addRuleToStandard({
           standardSlug: standard.slug,
           ruleContent: 'Unauthorized rule',
-          organizationId: otherOrganization.id,
+          organizationId: otherSignUpResult.organization.id,
           userId: otherUser.id,
         }),
       ).rejects.toThrow(

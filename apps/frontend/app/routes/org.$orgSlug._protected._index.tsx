@@ -11,9 +11,9 @@ export default function OrganizationHomeRoute() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Redirect unauthenticated users to get started page
+    // Redirect unauthenticated users to sign in page
     if (!isLoading && !isAuthenticated) {
-      navigate('/get-started');
+      navigate('/sign-in');
       return;
     }
 

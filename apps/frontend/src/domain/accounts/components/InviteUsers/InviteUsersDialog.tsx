@@ -14,6 +14,9 @@ import {
 } from '@packmind/ui';
 import { LuMail } from 'react-icons/lu';
 import validator from 'validator';
+import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
+import { useInviteUsersMutation } from '../../../accounts/api/queries/AccountsQueries';
+import { UserOrganizationRole } from '@packmind/shared';
 
 interface InviteUsersDialogProps {
   open: boolean;
@@ -25,8 +28,10 @@ export const InviteUsersDialog: React.FC<InviteUsersDialogProps> = ({
   setOpen,
 }) => {
   const [emails, setEmails] = React.useState<string[]>([]);
-  const [role, setRole] = React.useState<'Admin' | 'Member'>('Member');
+  const [role, setRole] = React.useState<UserOrganizationRole>('member');
   const [emailError, setEmailError] = React.useState<string | null>(null);
+  const { organization } = useAuthContext();
+  const { mutateAsync: inviteUsers, isPending } = useInviteUsersMutation();
 
   const MAX_EMAILS = 200;
 
@@ -46,21 +51,54 @@ export const InviteUsersDialog: React.FC<InviteUsersDialogProps> = ({
   };
 
   const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setRole(e.target.value as 'Admin' | 'Member');
+    setRole(e.target.value as UserOrganizationRole);
   };
 
-  const handleOnSubmit = () => {
-    if (emails.length > MAX_EMAILS) return;
-    console.log('Email sent to ', emails, 'with role', role);
-    setOpen(false);
-    setEmails([]);
-    setRole('Member');
-    setEmailError(null);
-    pmToaster.create({
-      type: 'success',
-      title: 'Invites Sent',
-      description: 'The invites have been sent successfully.',
-    });
+  const handleOnSubmit = async () => {
+    if (emails.length === 0 || emails.length > MAX_EMAILS || emailError) return;
+
+    if (!organization?.id) {
+      pmToaster.create({
+        type: 'error',
+        title: 'No organization selected',
+        description: 'Please select an organization before sending invites.',
+      });
+      return;
+    }
+
+    try {
+      const result = await inviteUsers({
+        orgId: organization.id,
+        emails,
+        role,
+      });
+
+      setOpen(false);
+      setEmails([]);
+      setRole('member');
+      setEmailError(null);
+
+      const createdCount = result?.created?.length ?? 0;
+      const directlyAddedCount = result?.organizationInvitations?.length ?? 0;
+      const skippedCount = result?.skipped?.length ?? 0;
+      const totalProcessed = createdCount + directlyAddedCount;
+
+      pmToaster.create({
+        type: 'success',
+        title: 'Users Processed',
+        description:
+          skippedCount > 0
+            ? `${totalProcessed} users processed (${createdCount} invites sent, ${directlyAddedCount} added directly). ${skippedCount} emails were skipped.`
+            : `${totalProcessed} users processed successfully (${createdCount} invites sent, ${directlyAddedCount} added directly).`,
+      });
+    } catch (error) {
+      pmToaster.create({
+        type: 'error',
+        title: 'Failed to send invites',
+        description:
+          (error as Error)?.message || 'An unexpected error occurred.',
+      });
+    }
   };
 
   return (
@@ -105,8 +143,8 @@ export const InviteUsersDialog: React.FC<InviteUsersDialogProps> = ({
                   value={role}
                   onChange={handleRoleChange}
                   items={[
-                    { value: 'Admin', label: 'Admin' },
-                    { value: 'Member', label: 'Member' },
+                    { value: 'admin', label: 'Admin' },
+                    { value: 'member', label: 'Member' },
                   ]}
                 />
               </PMField.Root>
@@ -121,6 +159,7 @@ export const InviteUsersDialog: React.FC<InviteUsersDialogProps> = ({
                 variant="primary"
                 onClick={handleOnSubmit}
                 disabled={
+                  isPending ||
                   emails.length === 0 ||
                   emails.length > MAX_EMAILS ||
                   !!emailError

@@ -1,4 +1,5 @@
-export * from './ISignUpUserUseCase';
+export * from './ISignUpUserCommand';
+export * from './ISignUpWithOrganizationUseCase';
 export * from './ISignInUserUseCase';
 export * from './IGetUserByIdUseCase';
 export * from './IListUsersUseCase';
@@ -11,3 +12,5 @@ export * from './IListOrganizationsUseCase';
 export * from './IGenerateUserTokenUseCase';
 export * from './IGenerateApiKeyUseCase';
 export * from './IGetCurrentApiKeyUseCase';
+export * from './ICreateInvitationsUseCase';
+export * from './IListOrganizationUserStatusesUseCase';

@@ -1,9 +1,11 @@
 import { IAccountsServices } from '../IAccountsServices';
 import { UserService } from './UserService';
 import { OrganizationService } from './OrganizationService';
+import { InvitationService } from './InvitationService';
 import { ApiKeyService } from './ApiKeyService';
+import { LoginRateLimiterService } from './LoginRateLimiterService';
 import { IAccountsRepository } from '../../domain/repositories/IAccountsRepository';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger, SmtpMailService } from '@packmind/shared';
 
 /**
  * Enhanced AccountsServices that can accept an optional API key service
@@ -13,6 +15,8 @@ import { PackmindLogger } from '@packmind/shared';
 export class EnhancedAccountsServices implements IAccountsServices {
   private readonly userService: UserService;
   private readonly organizationService: OrganizationService;
+  private readonly invitationService: InvitationService;
+  private readonly loginRateLimiterService: LoginRateLimiterService;
   private readonly apiKeyService?: ApiKeyService;
 
   constructor(
@@ -29,6 +33,12 @@ export class EnhancedAccountsServices implements IAccountsServices {
       this.accountsRepository.getOrganizationRepository(),
       this.logger,
     );
+    this.invitationService = new InvitationService(
+      this.accountsRepository.getInvitationRepository(),
+      new SmtpMailService(this.logger),
+      this.logger,
+    );
+    this.loginRateLimiterService = new LoginRateLimiterService();
 
     // Store optional API key service if provided
     this.apiKeyService = apiKeyService;
@@ -46,7 +56,15 @@ export class EnhancedAccountsServices implements IAccountsServices {
     return this.organizationService;
   }
 
+  getInvitationService(): InvitationService {
+    return this.invitationService;
+  }
+
   getApiKeyService(): ApiKeyService | undefined {
     return this.apiKeyService;
+  }
+
+  getLoginRateLimiterService(): LoginRateLimiterService {
+    return this.loginRateLimiterService;
   }
 }

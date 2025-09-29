@@ -108,7 +108,8 @@
     "vite-plugin-checker": "^0.10.3",
     "vite-plugin-dts": "~4.5.0",
     "vite-tsconfig-paths": "^5.1.4",
-    "webpack-cli": "^5.1.4"
+    "webpack-cli": "^5.1.4",
+    "tar-fs": "^2.1.4"
   },
   "dependencies": {
     "@chakra-ui/react": "3.27",

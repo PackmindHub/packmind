@@ -11,11 +11,13 @@ import {
   PMButton,
   PMIcon,
   PMHStack,
+  PMButtonGroup,
 } from '@packmind/ui';
-import { useGetUsersInMyOrganizationQuery } from '../api/queries/UserQueries';
-import { Invitation, OrganizationId, User } from '@packmind/accounts/types';
-import { LuCirclePlus } from 'react-icons/lu';
+import { useGetUserStatusesQuery } from '../api/queries/UserQueries';
+import { OrganizationId, UserStatus } from '@packmind/accounts/types';
+import { LuCirclePlus, LuMail } from 'react-icons/lu';
 import { InviteUsersDialog } from './InviteUsers/InviteUsersDialog';
+import { useInviteUsersMutation } from '../api/queries/AccountsQueries';
 
 interface UsersListProps {
   organizationId: OrganizationId;
@@ -23,44 +25,41 @@ interface UsersListProps {
 
 export const UsersList: React.FC<UsersListProps> = ({ organizationId }) => {
   const {
-    data: users,
+    data: userStatusesData,
     isLoading,
     isError,
-    error,
-  } = useGetUsersInMyOrganizationQuery();
+    error: errorMessage,
+  } = useGetUserStatusesQuery();
 
   const [inviteUserOpened, setInviteUserOpened] = React.useState(false);
 
   const columns: PMTableColumn[] = [
     { key: 'email', header: 'Email', grow: true },
-    { key: 'status', header: 'Status', grow: true },
-    { key: 'role', header: 'Role', grow: true },
+    { key: 'status', header: 'Status', grow: false },
+    { key: 'role', header: 'Role', grow: false },
+    { key: 'actions', header: 'Actions', grow: false },
   ];
 
   const tableData = useMemo<PMTableRow[]>(() => {
-    if (!users) return [];
+    if (!userStatusesData) return [];
 
-    return users.map((user: User) => ({
-      id: user.id,
-      email: user.email,
-      status: (
-        <UserStatusBadge
-          user={user}
-          invitation={
-            { expirationDate: new Date(2025, 10, 12) } as unknown as Invitation
-          }
-        />
+    return userStatusesData.userStatuses.map((userStatus: UserStatus) => ({
+      id: userStatus.userId,
+      email: userStatus.email,
+      status: <UserStatusBadge userStatus={userStatus} />,
+      role: <PMBadge colorPalette="blue">{userStatus.role}</PMBadge>,
+      actions: (
+        <UserActions organizationId={organizationId} userStatus={userStatus} />
       ),
-      role: <PMBadge colorPalette="blue">Admin</PMBadge>, // Placeholder role, replace with actual role if available (member | admin)
     }));
-  }, [users]);
+  }, [userStatusesData, organizationId]);
 
   if (isLoading) {
     return (
       <PMEmptyState
         icon={<PMSpinner />}
         title="Loading Users..."
-        description="Please wait while we fetch your organization users."
+        description="Please wait while we fetch your organization users and invitations."
       />
     );
   }
@@ -69,10 +68,10 @@ export const UsersList: React.FC<UsersListProps> = ({ organizationId }) => {
     return (
       <PMAlert.Root status="error" my={4}>
         <PMAlert.Indicator />
-        <PMAlert.Title>Error Loading Users</PMAlert.Title>
+        <PMAlert.Title>Error Loading Data</PMAlert.Title>
         <PMAlert.Description>
-          Sorry, we couldn't load your organization users.{' '}
-          {error && `Error: ${error.message}`}
+          Sorry, we couldn't load your organization users or invitations.{' '}
+          {errorMessage && `Error: ${errorMessage.message}`}
         </PMAlert.Description>
       </PMAlert.Root>
     );
@@ -121,16 +120,49 @@ export const UsersList: React.FC<UsersListProps> = ({ organizationId }) => {
 };
 
 const UserStatusBadge: React.FunctionComponent<{
-  user: User;
-  invitation: Invitation;
-}> = ({ user, invitation }) => {
-  if (user.active) {
+  userStatus: UserStatus;
+}> = ({ userStatus }) => {
+  if (userStatus.isActive) {
     return <PMBadge colorPalette="green">Active</PMBadge>;
   }
 
-  if (invitation.expirationDate < new Date(Date.now())) {
-    return <PMBadge colorPalette="red">Invitation expired</PMBadge>;
+  switch (userStatus.invitationStatus) {
+    case 'pending':
+      return <PMBadge colorPalette="blue">Invitation pending</PMBadge>;
+    case 'expired':
+      return <PMBadge colorPalette="red">Invitation expired</PMBadge>;
+    case 'accepted':
+      return <PMBadge colorPalette="green">Invitation accepted</PMBadge>;
+    case 'none':
+      return <PMBadge colorPalette="gray">No invitation</PMBadge>;
+    default:
+      return <PMBadge colorPalette="gray">Unknown status</PMBadge>;
   }
+};
 
-  return <PMBadge colorPalette="yellow">Invitation pending</PMBadge>;
+const UserActions: React.FunctionComponent<{
+  organizationId: OrganizationId;
+  userStatus: UserStatus;
+}> = ({ organizationId, userStatus }) => {
+  const { mutateAsync: inviteUsers, isPending } = useInviteUsersMutation();
+
+  return (
+    <PMButtonGroup>
+      {!userStatus.isActive && (
+        <PMButton
+          variant={'secondary'}
+          title={'Resend invitation'}
+          loading={isPending}
+          onClick={() =>
+            inviteUsers({ orgId: organizationId, emails: [userStatus.email] })
+          }
+          children={
+            <PMIcon>
+              <LuMail />
+            </PMIcon>
+          }
+        />
+      )}
+    </PMButtonGroup>
+  );
 };

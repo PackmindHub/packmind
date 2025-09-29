@@ -1,24 +1,31 @@
-import { SignUpUserUseCase } from './signUpUser/signUpUser.usecase';
+import { SignUpWithOrganizationUseCase } from './signUpWithOrganization/SignUpWithOrganizationUseCase';
+import { CheckEmailAvailabilityUseCase } from './checkEmailAvailability/CheckEmailAvailabilityUseCase';
 import { SignInUserUseCase } from './signInUser/SignInUserUseCase';
 import { GetUserByIdUseCase } from './getUserById/GetUserByIdUseCase';
 import { ListUsersUseCase } from './listUsers/ListUsersUseCase';
+import { ListOrganizationUserStatusesUseCase } from './listOrganizationUserStatuses/ListOrganizationUserStatusesUseCase';
 import { ValidatePasswordUseCase } from './validatePasswordUseCase/ValidatePasswordUseCase';
 import { CreateOrganizationUseCase } from './createOrganization/CreateOrganizationUseCase';
 import { GetOrganizationByIdUseCase } from './getOrganizationById/GetOrganizationByIdUseCase';
 import { GetOrganizationByNameUseCase } from './getOrganizationByName/GetOrganizationByNameUseCase';
 import { GetOrganizationBySlugUseCase } from './getOrganizationBySlug/GetOrganizationBySlugUseCase';
 import { ListOrganizationsUseCase } from './listOrganizations/ListOrganizationsUseCase';
+import { CreateInvitationsUseCase } from './createInvitations/CreateInvitationsUseCase';
 import { GenerateUserTokenUseCase } from './generateUserToken/GenerateUserTokenUseCase';
 import { GenerateApiKeyUseCase } from './generateApiKey/GenerateApiKeyUseCase';
 import { GetCurrentApiKeyUseCase } from './getCurrentApiKey/GetCurrentApiKeyUseCase';
+import { ActivateUserAccountUseCase } from './activateUserAccount/ActivateUserAccountUseCase';
+import { ValidateInvitationTokenUseCase } from './validateInvitationToken/ValidateInvitationTokenUseCase';
 import { IAccountsServices } from '../IAccountsServices';
 import { PackmindLogger } from '@packmind/shared';
+import { DataSource } from 'typeorm';
 
 import {
-  ISignUpUserUseCase,
+  ISignUpWithOrganizationUseCase,
   ISignInUserUseCase,
   IGetUserByIdUseCase,
   IListUsersUseCase,
+  IListOrganizationUserStatusesUseCase,
   IValidatePasswordUseCase,
   ICreateOrganizationUseCase,
   IGetOrganizationByIdUseCase,
@@ -28,10 +35,15 @@ import {
   IGenerateUserTokenUseCase,
   IGenerateApiKeyUseCase,
   IGetCurrentApiKeyUseCase,
-  SignUpUserCommand,
+  ICreateInvitationsUseCase,
+  CreateInvitationsCommand,
+  CreateInvitationsResponse,
+  SignUpWithOrganizationCommand,
   SignInUserCommand,
   GetUserByIdCommand,
   ListUsersCommand,
+  ListOrganizationUserStatusesCommand,
+  ListOrganizationUserStatusesResponse,
   ValidatePasswordCommand,
   CreateOrganizationCommand,
   GetOrganizationByIdCommand,
@@ -41,15 +53,28 @@ import {
   GenerateApiKeyCommand,
   GetCurrentApiKeyCommand,
 } from '../../domain/useCases';
+import {
+  ICheckEmailAvailabilityUseCase,
+  CheckEmailAvailabilityCommand,
+  IActivateUserAccountUseCase,
+  ActivateUserAccountCommand,
+  ActivateUserAccountResponse,
+} from '@packmind/shared';
+import {
+  IValidateInvitationTokenUseCase,
+  ValidateInvitationTokenCommand,
+  ValidateInvitationTokenResponse,
+} from './validateInvitationToken/ValidateInvitationTokenUseCase';
 import { GetOrganizationByNameCommand } from '../../domain/useCases/IGetOrganizationByNameUseCase';
 
 const origin = 'AccountsUseCases';
 
 export class AccountsUseCases {
-  private readonly _signUpUser: ISignUpUserUseCase;
+  private readonly _signUpWithOrganization: ISignUpWithOrganizationUseCase;
   private readonly _signInUser: ISignInUserUseCase;
   private readonly _getUserById: IGetUserByIdUseCase;
   private readonly _listUsers: IListUsersUseCase;
+  private readonly _listOrganizationUserStatuses: IListOrganizationUserStatusesUseCase;
   private readonly _validatePassword: IValidatePasswordUseCase;
   private readonly _createOrganization: ICreateOrganizationUseCase;
   private readonly _getOrganizationById: IGetOrganizationByIdUseCase;
@@ -57,25 +82,33 @@ export class AccountsUseCases {
   private readonly _getOrganizationBySlug: IGetOrganizationBySlugUseCase;
   private readonly _listOrganizations: IListOrganizationsUseCase;
   private readonly _generateUserToken: IGenerateUserTokenUseCase;
+  private readonly _createInvitations: ICreateInvitationsUseCase;
+  private readonly _activateUserAccount: IActivateUserAccountUseCase;
+  private readonly _validateInvitationToken: IValidateInvitationTokenUseCase;
   private readonly _generateApiKey?: IGenerateApiKeyUseCase;
   private readonly _getCurrentApiKey?: IGetCurrentApiKeyUseCase;
+  private readonly _checkEmailAvailability: ICheckEmailAvailabilityUseCase;
 
   constructor(
     private readonly accountsServices: IAccountsServices,
+    private readonly dataSource: DataSource,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    this._signUpUser = new SignUpUserUseCase(
+    this._signUpWithOrganization = new SignUpWithOrganizationUseCase(
       accountsServices.getUserService(),
       accountsServices.getOrganizationService(),
     );
     this._signInUser = new SignInUserUseCase(
       accountsServices.getUserService(),
       accountsServices.getOrganizationService(),
+      accountsServices.getLoginRateLimiterService(),
     );
     this._getUserById = new GetUserByIdUseCase(
       accountsServices.getUserService(),
     );
     this._listUsers = new ListUsersUseCase(accountsServices.getUserService());
+    this._listOrganizationUserStatuses =
+      new ListOrganizationUserStatusesUseCase(this.dataSource, this.logger);
     this._validatePassword = new ValidatePasswordUseCase(
       accountsServices.getUserService(),
     );
@@ -98,6 +131,25 @@ export class AccountsUseCases {
       accountsServices.getUserService(),
       accountsServices.getOrganizationService(),
     );
+    this._checkEmailAvailability = new CheckEmailAvailabilityUseCase(
+      accountsServices.getUserService(),
+    );
+    this._createInvitations = new CreateInvitationsUseCase(
+      accountsServices.getUserService(),
+      accountsServices.getOrganizationService(),
+      accountsServices.getInvitationService(),
+      this.logger,
+    );
+    this._activateUserAccount = new ActivateUserAccountUseCase(
+      accountsServices.getUserService(),
+      accountsServices.getInvitationService(),
+      this.logger,
+    );
+    this._validateInvitationToken = new ValidateInvitationTokenUseCase(
+      accountsServices.getInvitationService(),
+      accountsServices.getUserService(),
+      this.logger,
+    );
 
     // API key use cases are optional since they require additional dependencies
     const apiKeyService = accountsServices.getApiKeyService?.();
@@ -118,8 +170,8 @@ export class AccountsUseCases {
   }
 
   // User-related use cases
-  public async signUpUser(command: SignUpUserCommand) {
-    return this._signUpUser.execute(command);
+  public async signUpWithOrganization(command: SignUpWithOrganizationCommand) {
+    return this._signUpWithOrganization.execute(command);
   }
 
   public async signInUser(command: SignInUserCommand) {
@@ -135,9 +187,19 @@ export class AccountsUseCases {
     return await this._listUsers.execute(command);
   }
 
+  public async listOrganizationUserStatuses(
+    command: ListOrganizationUserStatusesCommand,
+  ): Promise<ListOrganizationUserStatusesResponse> {
+    return await this._listOrganizationUserStatuses.execute(command);
+  }
+
   public async validatePassword(command: ValidatePasswordCommand) {
     const result = await this._validatePassword.execute(command);
     return result.isValid;
+  }
+
+  public async checkEmailAvailability(command: CheckEmailAvailabilityCommand) {
+    return this._checkEmailAvailability.execute(command);
   }
 
   // Organization-related use cases
@@ -168,6 +230,24 @@ export class AccountsUseCases {
 
   public async generateUserToken(command: GenerateUserTokenCommand) {
     return this._generateUserToken.execute(command);
+  }
+
+  public async createInvitations(
+    command: CreateInvitationsCommand,
+  ): Promise<CreateInvitationsResponse> {
+    return this._createInvitations.execute(command);
+  }
+
+  public async activateUserAccount(
+    command: ActivateUserAccountCommand,
+  ): Promise<ActivateUserAccountResponse> {
+    return this._activateUserAccount.execute(command);
+  }
+
+  public async validateInvitationToken(
+    command: ValidateInvitationTokenCommand,
+  ): Promise<ValidateInvitationTokenResponse> {
+    return this._validateInvitationToken.execute(command);
   }
 
   // API key-related use cases

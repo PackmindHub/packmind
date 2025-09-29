@@ -37,7 +37,6 @@ export const RecipeVersionsListDrawer: React.FC<
       version.description && version.description.length > 100
         ? `${version.description.substring(0, 100)}...`
         : version.description || '-',
-    slug: version.slug,
     source: version.gitCommit ? (
       <a
         href={version.gitCommit.url}
@@ -56,7 +55,6 @@ export const RecipeVersionsListDrawer: React.FC<
     { key: 'version', header: 'Version', width: '100px', align: 'center' },
     { key: 'name', header: 'Name', grow: true },
     { key: 'description', header: 'Description', grow: true },
-    { key: 'slug', header: 'Slug', width: '120px', align: 'center' },
     { key: 'source', header: 'Source', width: '120px', align: 'center' },
   ];
 

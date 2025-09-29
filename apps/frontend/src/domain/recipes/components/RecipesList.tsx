@@ -22,6 +22,7 @@ import { DeployRecipeButton } from './DeployRecipeButton';
 import './RecipesList.styles.scss';
 import { RecipeId } from '@packmind/recipes/types';
 import { RECIPE_MESSAGES } from '../constants/messages';
+import { formatDistanceToNowStrict } from 'date-fns';
 
 interface RecipesListProps {
   orgSlug: string;
@@ -109,7 +110,13 @@ export const RecipesList = ({ orgSlug }: RecipesListProps) => {
             </Link>
           </PMLink>
         ),
-        slug: recipe.slug,
+        updatedAt: (
+          <>
+            {formatDistanceToNowStrict(recipe.updatedAt || new Date(), {
+              addSuffix: true,
+            })}
+          </>
+        ),
         version: recipe.version,
       })),
     );
@@ -134,7 +141,12 @@ export const RecipesList = ({ orgSlug }: RecipesListProps) => {
       align: 'center',
     },
     { key: 'name', header: 'Name', grow: true },
-    { key: 'slug', header: 'Slug', grow: true },
+    {
+      key: 'updatedAt',
+      header: 'Last Updated',
+      width: '250px',
+      align: 'center',
+    },
     { key: 'version', header: 'Version', width: '100px', align: 'center' },
   ];
 

@@ -5,7 +5,6 @@ import {
   PMAvatar,
   PMPortal,
   PMBox,
-  PMHStack,
   PMIcon,
 } from '@packmind/ui';
 import { useSignOutMutation } from '../api/queries/AuthQueries';
@@ -20,8 +19,7 @@ export const SidebarAccountMenu: React.FunctionComponent = () => {
 
   const handleSignOut = () => {
     // Capture organization slug before logout clears context
-    const orgSlug = organization?.slug;
-    const redirectPath = orgSlug ? `/org/${orgSlug}/sign-in` : '/get-started';
+    const redirectPath = '/sign-in';
 
     signOutMutation.mutate(undefined, {
       onSuccess: () => {
@@ -38,7 +36,7 @@ export const SidebarAccountMenu: React.FunctionComponent = () => {
     const orgSlug = organization?.slug;
     const redirectPath = orgSlug
       ? `/org/${orgSlug}/account-settings`
-      : '/get-started';
+      : '/sign-in';
 
     navigate(redirectPath);
   };

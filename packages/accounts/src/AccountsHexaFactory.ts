@@ -41,7 +41,11 @@ export class AccountsHexaFactory {
         this.apiKeyService,
       );
 
-      this.useCases = new AccountsUseCases(this.accountsServices, this.logger);
+      this.useCases = new AccountsUseCases(
+        this.accountsServices,
+        this.dataSource,
+        this.logger,
+      );
       this.logger.debug(
         'Repository aggregator, service aggregator, and use cases created successfully',
       );

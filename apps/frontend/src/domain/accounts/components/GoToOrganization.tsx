@@ -28,12 +28,10 @@ export default function GoToOrganization() {
 
     try {
       // Check if organization exists by name (backend will handle slugification)
-      const organization = await organizationGateway.getByName(
-        organizationName.trim(),
-      );
+      await organizationGateway.getByName(organizationName.trim());
 
       // If we reach here, organization exists - redirect to sign-in using the slug
-      navigate(`/org/${organization.slug}/sign-in`);
+      navigate(`/sign-in`);
     } catch {
       // Organization doesn't exist
       setError('Organization not found. Please check the name and try again.');

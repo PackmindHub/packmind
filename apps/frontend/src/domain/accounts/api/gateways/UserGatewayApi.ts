@@ -1,4 +1,7 @@
-import { User } from '@packmind/accounts/types';
+import {
+  User,
+  ListOrganizationUserStatusesResponse,
+} from '@packmind/accounts/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import { IUserGateway } from './IUserGateway';
 
@@ -9,5 +12,11 @@ export class UserGatewayApi extends PackmindGateway implements IUserGateway {
 
   async getUsersInMyOrganization(): Promise<User[]> {
     return this._api.get<User[]>(`${this._endpoint}/organization`);
+  }
+
+  async getUserStatuses(): Promise<ListOrganizationUserStatusesResponse> {
+    return this._api.get<ListOrganizationUserStatusesResponse>(
+      `${this._endpoint}/statuses`,
+    );
   }
 }

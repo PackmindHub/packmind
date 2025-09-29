@@ -9,8 +9,12 @@ export type SignInUserCommand = {
 
 export type SignInUserResponse = {
   user: User;
-  organization: Organization;
-  role: UserOrganizationRole;
+  organization?: Organization;
+  role?: UserOrganizationRole;
+  organizations?: Array<{
+    organization: Organization;
+    role: UserOrganizationRole;
+  }>;
 };
 
 export type ISignInUserUseCase = IPublicUseCase<

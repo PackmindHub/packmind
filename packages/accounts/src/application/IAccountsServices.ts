@@ -1,6 +1,8 @@
 import { UserService } from './services/UserService';
 import { OrganizationService } from './services/OrganizationService';
 import { ApiKeyService } from './services/ApiKeyService';
+import { InvitationService } from './services/InvitationService';
+import { LoginRateLimiterService } from './services/LoginRateLimiterService';
 
 /**
  * IAccountsServices - Service aggregator interface for the Accounts application layer
@@ -21,7 +23,17 @@ export interface IAccountsServices {
   getOrganizationService(): OrganizationService;
 
   /**
+   * Get the invitation service instance
+   */
+  getInvitationService(): InvitationService;
+
+  /**
    * Get the API key service instance (optional as it requires JWT dependencies)
    */
   getApiKeyService?(): ApiKeyService | undefined;
+
+  /**
+   * Get the login rate limiter service instance
+   */
+  getLoginRateLimiterService(): LoginRateLimiterService;
 }

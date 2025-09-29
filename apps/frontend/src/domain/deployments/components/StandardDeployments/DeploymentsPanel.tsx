@@ -1,8 +1,7 @@
-import { Standard } from '@packmind/standards/types';
 import { DeployToTargets } from './DeployToTargets';
-import { DeploymentsHistory } from './DeploymentsHistory';
+import { DeploymentsHistory } from './StandardDeploymentsList';
 import { PMVStack } from '@packmind/ui';
-import { TargetWithRepository, TargetId } from '@packmind/shared';
+import { TargetWithRepository, TargetId, Standard } from '@packmind/shared';
 import { OrganizationId } from '@packmind/accounts';
 
 interface IDeploymentsPanelProps {
@@ -34,7 +33,7 @@ export const DeploymentsPanel = ({
         onDeploy={handleTargetDeploy}
         loading={isDeploying}
       />
-      <DeploymentsHistory standardId={standard.id} orgSlug={orgSlug} />
+      <DeploymentsHistory standardId={standard.id} />
     </PMVStack>
   );
 };

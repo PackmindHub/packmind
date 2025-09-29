@@ -33,6 +33,6 @@ RUN chmod +x /home/packmind/nginx.sh
 
 USER packmind
 
-EXPOSE 80
+EXPOSE 8080
 
 ENTRYPOINT ["/home/packmind/nginx.sh"]

@@ -3,6 +3,7 @@
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
     "jsx": "react-jsx",
+    "isolatedModules": true,
     "types": [
       "vite/client",
       "node",

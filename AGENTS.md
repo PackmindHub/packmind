@@ -7,6 +7,41 @@
 - All development work should reference the appropriate GitHub issue number when applicable
 - Issues follow a structured workflow: Backlog → Todo → In Progress → To review → Done
 
+## GitHub MCP Issue Operations
+
+The GitHub MCP provides tools to interact with issues programmatically:
+
+### List Issues
+```typescript
+mcp_github_list_issues({
+  owner: "PackmindHub",
+  repo: "packmind-monorepo",
+  state: "OPEN",        // "OPEN", "CLOSED", or omit for all
+  perPage: 50           // Number of results per page
+})
+```
+
+### Get Specific Issue
+```typescript
+mcp_github_get_issue({
+  owner: "PackmindHub",
+  repo: "packmind-monorepo", 
+  issue_number: 197     // The issue number (not ID)
+})
+```
+
+### Add Comment to Issue
+```typescript
+mcp_github_add_issue_comment({
+  owner: "PackmindHub",
+  repo: "packmind-monorepo",
+  issue_number: 197,
+  body: "## Your comment content\n\nMarkdown is supported for formatting."
+})
+```
+
+**Note**: Use these tools to track progress, document decisions, and communicate with the team directly through GitHub issues.
+
 # Task splitting
 
 - For any task you perform, you MUST split it into multiple into sub-tasks which have a logical increment (eg: new endpoint, new component, new use case etc). When a task is done, run all the validation steps (lint, test, packmind etc) and ask me for validation of the work you did.

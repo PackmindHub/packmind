@@ -3,6 +3,9 @@ import { PMVerticalNav, PMVerticalNavSection, PMLink } from '@packmind/ui';
 import { NavLink } from 'react-router';
 import { AuthContextOrganization } from '../../accounts/hooks/useAuthContext';
 import { SidebarAccountMenu } from '../../accounts/components/SidebarAccountMenu';
+import { SidebarOrgaSelector } from './OrgaSelector';
+import { Organization } from '@packmind/shared';
+import { OrganizationId } from '@packmind/accounts';
 
 interface ISidebarNavigationProps {
   organization: AuthContextOrganization | undefined;
@@ -35,8 +38,14 @@ function SidebarNavigationLink({
 export const SidebarNavigation: React.FunctionComponent<
   ISidebarNavigationProps
 > = ({ organization }) => {
+  if (!organization) {
+    return;
+  }
   return (
-    <PMVerticalNav footerNav={<SidebarAccountMenu />}>
+    <PMVerticalNav
+      headerNav={<SidebarOrgaSelector currentOrganization={organization} />}
+      footerNav={<SidebarAccountMenu />}
+    >
       <PMVerticalNavSection
         title="Knowledge base"
         navEntries={[

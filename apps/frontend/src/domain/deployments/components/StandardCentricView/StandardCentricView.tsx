@@ -13,7 +13,7 @@ import { StandardDeploymentStatus } from '@packmind/deployments';
 import {
   TargetStandardDeploymentInfo,
   RepositoryStandardDeploymentInfo,
-} from '@packmind/shared/types';
+} from '@packmind/shared';
 import {
   DeploymentItem,
   DeploymentEntry,

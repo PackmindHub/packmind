@@ -1,6 +1,11 @@
 import { Controller, Get, NotFoundException, Param, Req } from '@nestjs/common';
 
-import { ListUsersResponse, User, UserId } from '@packmind/accounts';
+import {
+  ListOrganizationUserStatusesResponse,
+  ListUsersResponse,
+  User,
+  UserId,
+} from '@packmind/accounts';
 import { UsersService } from './users.service';
 import { PackmindLogger } from '@packmind/shared';
 import { AuthService } from '../../auth/auth.service';
@@ -80,6 +85,41 @@ export class UsersController {
           error: errorMessage,
         },
       );
+      throw error;
+    }
+  }
+
+  @Get('statuses')
+  async getUserStatuses(
+    @Req() request: AuthenticatedRequest,
+  ): Promise<ListOrganizationUserStatusesResponse> {
+    this.logger.info(
+      'GET /users/statuses - Fetching user statuses for organization',
+      {
+        organizationId: request.organization.id,
+      },
+    );
+
+    try {
+      const response = await this.usersService.getUserStatuses(
+        request.user.userId,
+        request.organization.id,
+      );
+      this.logger.info(
+        'GET /users/statuses - User statuses fetched successfully',
+        {
+          userCount: response.userStatuses.length,
+          organizationId: request.organization.id,
+        },
+      );
+      return response;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('GET /users/statuses - Failed to fetch user statuses', {
+        error: errorMessage,
+        organizationId: request.organization.id,
+      });
       throw error;
     }
   }

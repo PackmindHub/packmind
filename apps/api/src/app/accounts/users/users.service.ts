@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
   AccountsHexa,
+  ListOrganizationUserStatusesResponse,
   ListUsersResponse,
   OrganizationId,
   User,
@@ -30,7 +31,13 @@ export class UsersService {
     return users;
   }
 
-  async getOrganizationById(organizationId: OrganizationId) {
-    return this.accountsHexa.getOrganizationById({ organizationId });
+  async getUserStatuses(
+    userId: UserId,
+    organizationId: OrganizationId,
+  ): Promise<ListOrganizationUserStatusesResponse> {
+    return this.accountsHexa.listOrganizationUserStatuses({
+      userId,
+      organizationId,
+    });
   }
 }

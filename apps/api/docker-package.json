@@ -32,6 +32,7 @@
     "typeorm": "^0.3.25",
     "@types/nodemailer": "^7.0.1",
     "uuid": "^11.1.0",
+    "validator": "^13.15.15",
     "winston": "^3.17.0"
   }
 }

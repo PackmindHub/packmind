@@ -10,20 +10,14 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
   try {
     const me = await queryClient.ensureQueryData(getMeQueryOptions());
     if (!me.authenticated) {
-      if (params.orgSlug) {
-        throw redirect(`/org/${params.orgSlug}/sign-in`);
-      }
-      throw redirect('/get-started');
+      throw redirect('/sign-in');
     }
     if (me.organization?.slug && me.organization.slug !== params.orgSlug) {
       throw redirect(`/org/${me.organization.slug}`);
     }
     return { me };
   } catch {
-    if (params.orgSlug) {
-      throw redirect(`/org/${params.orgSlug}/sign-in`);
-    }
-    throw redirect('/get-started');
+    throw redirect('/sign-in');
   }
 }
 

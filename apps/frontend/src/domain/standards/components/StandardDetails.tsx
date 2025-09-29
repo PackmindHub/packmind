@@ -32,8 +32,8 @@ import {
   MarkdownEditor,
   MarkdownEditorProvider,
 } from '../../../shared/components/editor/MarkdownEditor';
-import { DeploymentsHistory } from '../../deployments/components/StandardDeployments/DeploymentsHistory';
 import { DeployStandardButton } from '../../deployments/components/StandardDeployments/DeployStandardButton';
+import { DeploymentsHistory } from '../../deployments/components/StandardDeployments/StandardDeploymentsList';
 
 interface StandardDetailsProps {
   standard: Standard;
@@ -209,11 +209,12 @@ export const StandardDetails = ({
               value: 'deployments',
               triggerLabel: 'Deployments',
               content: (
-                <PMVStack align="stretch" gap={6} marginTop={6} w={'4xl'}>
+                <PMVStack align="stretch" gap={6} marginTop={6}>
                   <PMPageSection
                     title="Run deployment"
                     backgroundColor="primary"
                     headingLevel="h4"
+                    boxProps={{ width: 'xl' }}
                     cta={
                       <DeployStandardButton
                         label={`Deploy v${standard.version}`}
@@ -247,10 +248,7 @@ export const StandardDetails = ({
                     </PMBox>
                   </PMPageSection>
 
-                  <DeploymentsHistory
-                    standardId={standard.id}
-                    orgSlug={orgSlug}
-                  />
+                  <DeploymentsHistory standardId={standard.id} />
                 </PMVStack>
               ),
             },

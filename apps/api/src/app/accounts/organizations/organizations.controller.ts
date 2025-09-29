@@ -4,6 +4,7 @@ import {
   Post,
   Body,
   Param,
+  Req,
   NotFoundException,
   BadRequestException,
   ConflictException,
@@ -12,10 +13,14 @@ import {
   Organization,
   OrganizationId,
   OrganizationSlugConflictError,
+  OrganizationNotFoundError,
+  InviterNotFoundError,
+  InvitationBatchEmptyError,
 } from '@packmind/accounts';
 import { OrganizationsService } from './organizations.service';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger, UserOrganizationRole } from '@packmind/shared';
 import { Public } from '../../auth/auth.guard';
+import { AuthenticatedRequest } from '@packmind/shared-nest';
 
 const origin = 'OrganizationsController';
 
@@ -170,6 +175,66 @@ export class OrganizationsController {
 
       if (error instanceof OrganizationSlugConflictError) {
         throw new ConflictException(error.message);
+      }
+
+      throw error;
+    }
+  }
+
+  @Post(':orgId/invite')
+  async inviteUsers(
+    @Param('orgId') orgId: OrganizationId,
+    @Body() body: { emails: string[]; role: UserOrganizationRole },
+    @Req() request: AuthenticatedRequest,
+  ) {
+    const inviterId = request.user?.userId;
+    this.logger.info('POST /organizations/:orgId/invite - Inviting users', {
+      organizationId: orgId,
+      inviterId,
+      emailCount: Array.isArray(body?.emails) ? body.emails.length : 0,
+    });
+
+    try {
+      if (!Array.isArray(body?.emails)) {
+        throw new BadRequestException('emails must be an array of strings');
+      }
+
+      if (!inviterId) {
+        throw new BadRequestException('User authentication required');
+      }
+
+      return await this.organizationsService.inviteUsers(
+        orgId,
+        inviterId,
+        body.emails,
+        body.role,
+      );
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /organizations/:orgId/invite - Failed to invite users',
+        {
+          organizationId: orgId,
+          inviterId,
+          error: errorMessage,
+        },
+      );
+
+      if (error instanceof OrganizationNotFoundError) {
+        throw new NotFoundException(error.message);
+      }
+      if (error instanceof InviterNotFoundError) {
+        throw new NotFoundException(error.message);
+      }
+      if (error instanceof InvitationBatchEmptyError) {
+        throw new BadRequestException(error.message);
+      }
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
       }
 
       throw error;

@@ -70,15 +70,13 @@ describe('Recipe deployment', () => {
     recipesHexa = registry.get(RecipesHexa);
 
     // Create test data
-    organization = await accountsHexa.createOrganization({
-      name: 'test organization',
-    });
-
-    user = await accountsHexa.signUpUser({
+    const signUpResult = await accountsHexa.signUpWithOrganization({
+      organizationName: 'test organization',
       email: 'testuser@packmind.com',
       password: 's3cret!@',
-      organizationId: organization.id,
     });
+    user = signUpResult.user;
+    organization = signUpResult.organization;
 
     // Create three test recipes
     recipeA = await recipesHexa.captureRecipe({

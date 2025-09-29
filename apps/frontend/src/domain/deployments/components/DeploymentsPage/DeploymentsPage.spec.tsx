@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, act, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
@@ -46,13 +46,24 @@ const createTestQueryClient = () =>
     },
   });
 
-const renderWithProvider = (ui: React.ReactElement) => {
+const renderWithProvider = async (ui: React.ReactElement) => {
   const queryClient = createTestQueryClient();
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <UIProvider>{ui}</UIProvider>
-    </QueryClientProvider>,
-  );
+  let renderResult;
+
+  await act(async () => {
+    renderResult = render(
+      <QueryClientProvider client={queryClient}>
+        <UIProvider>{ui}</UIProvider>
+      </QueryClientProvider>,
+    );
+  });
+
+  // Wait for any async state updates from Chakra UI/Zag.js components
+  await waitFor(() => {
+    expect(document.body).toBeInTheDocument();
+  });
+
+  return renderResult;
 };
 
 jest.mock('../../api/queries/DeploymentsQueries', () => ({
@@ -105,15 +116,15 @@ describe('DeploymentsPage', () => {
     jest.clearAllMocks();
   });
 
-  it('displays view toggle buttons', () => {
-    renderWithProvider(<DeploymentsPage />);
+  it('displays view toggle buttons', async () => {
+    await renderWithProvider(<DeploymentsPage />);
 
     expect(screen.getByText('Repositories')).toBeInTheDocument();
     expect(screen.getByText('Recipes')).toBeInTheDocument();
     expect(screen.getByText('Standards')).toBeInTheDocument();
   });
 
-  it('shows loading state initially', () => {
+  it('shows loading state initially', async () => {
     mockUseGetRecipesDeploymentOverview.mockReturnValue({
       data: undefined,
       isLoading: true,
@@ -139,21 +150,21 @@ describe('DeploymentsPage', () => {
       UseQueryResult<StandardDeploymentOverview, Error>
     > as UseQueryResult<StandardDeploymentOverview, Error>);
 
-    renderWithProvider(<DeploymentsPage />);
+    await renderWithProvider(<DeploymentsPage />);
 
     expect(screen.getByText('Loading...')).toBeInTheDocument();
   });
 
-  it('displays search input field', () => {
-    renderWithProvider(<DeploymentsPage />);
+  it('displays search input field', async () => {
+    await renderWithProvider(<DeploymentsPage />);
 
     expect(
       screen.getByPlaceholderText('Search repositories...'),
     ).toBeInTheDocument();
   });
 
-  it('displays repository filter dropdown', () => {
-    renderWithProvider(<DeploymentsPage />);
+  it('displays repository filter dropdown', async () => {
+    await renderWithProvider(<DeploymentsPage />);
 
     // Check for the select element specifically
     expect(screen.getByText('All repositories')).toBeInTheDocument();
@@ -164,7 +175,7 @@ describe('DeploymentsPage', () => {
     // Set up URL params to start in recipe view
     mockSearchParams.set('view', 'recipes');
 
-    renderWithProvider(<DeploymentsPage />);
+    await renderWithProvider(<DeploymentsPage />);
 
     // Recipe dropdown should be visible - there should be no combobox in recipe view
     expect(screen.getByText('All recipes')).toBeInTheDocument();
@@ -172,8 +183,8 @@ describe('DeploymentsPage', () => {
     expect(screen.getByText('Undeployed recipes')).toBeInTheDocument();
   });
 
-  it('shows repository filter options in repository view', () => {
-    renderWithProvider(<DeploymentsPage />);
+  it('shows repository filter options in repository view', async () => {
+    await renderWithProvider(<DeploymentsPage />);
 
     // In repository view (default) - only repository options should be visible
     expect(screen.getByText('All repositories')).toBeInTheDocument();
@@ -183,7 +194,7 @@ describe('DeploymentsPage', () => {
 
   it('calls setSearchParams when switching views', async () => {
     const user = userEvent.setup();
-    renderWithProvider(<DeploymentsPage />);
+    await renderWithProvider(<DeploymentsPage />);
 
     // Initially in repository view
     expect(
@@ -202,7 +213,7 @@ describe('DeploymentsPage', () => {
 
     it('debounces setSearchParams calls to avoid URL history pollution', async () => {
       const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
-      renderWithProvider(<DeploymentsPage />);
+      await renderWithProvider(<DeploymentsPage />);
 
       const searchInput = screen.getByPlaceholderText('Search repositories...');
       await user.type(searchInput, 'test-search');
@@ -220,7 +231,7 @@ describe('DeploymentsPage', () => {
 
   it('calls setSearchParams when changing filter selection', async () => {
     const user = userEvent.setup();
-    renderWithProvider(<DeploymentsPage />);
+    await renderWithProvider(<DeploymentsPage />);
 
     // Find the select element by looking for the option text
     const allReposOption = screen.getByText('All repositories');
@@ -239,7 +250,7 @@ describe('DeploymentsPage', () => {
     // Mock URL params to simulate search state
     mockSearchParams.set('search', 'test-search');
 
-    renderWithProvider(<DeploymentsPage />);
+    await renderWithProvider(<DeploymentsPage />);
 
     // Verify initial search term
     const searchInput = screen.getByPlaceholderText('Search repositories...');
@@ -253,7 +264,7 @@ describe('DeploymentsPage', () => {
   });
 
   describe('target filter state management', () => {
-    it('automatically cleans up invalid target names when data updates', () => {
+    it('automatically cleans up invalid target names when data updates', async () => {
       // Set up initial data with specific targets
       const initialData = createDeploymentOverview();
       const validTargetName =
@@ -279,7 +290,7 @@ describe('DeploymentsPage', () => {
         Error
       >);
 
-      renderWithProvider(<DeploymentsPage />);
+      await renderWithProvider(<DeploymentsPage />);
 
       // Verify that setSearchParams was called to clean up invalid target names
       expect(mockSetSearchParams).toHaveBeenCalledWith(expect.any(Function));
@@ -292,7 +303,7 @@ describe('DeploymentsPage', () => {
       expect(updatedParams.get('targetFilter')).toBe(validTargetName);
     });
 
-    it('removes targetFilter param when all selected targets become invalid', () => {
+    it('removes targetFilter param when all selected targets become invalid', async () => {
       // Set up initial data
       const initialData = createDeploymentOverview();
       const invalidTargetName1 = 'invalid-target-1';
@@ -317,7 +328,7 @@ describe('DeploymentsPage', () => {
         Error
       >);
 
-      renderWithProvider(<DeploymentsPage />);
+      await renderWithProvider(<DeploymentsPage />);
 
       // Verify that setSearchParams was called to clean up invalid target names
       expect(mockSetSearchParams).toHaveBeenCalledWith(expect.any(Function));
@@ -330,7 +341,7 @@ describe('DeploymentsPage', () => {
       expect(updatedParams.has('targetFilter')).toBe(false);
     });
 
-    it('does not update URL when all selected targets are valid', () => {
+    it('does not update URL when all selected targets are valid', async () => {
       // Set up initial data with specific targets
       const initialData = createDeploymentOverview();
       const validTargetName =
@@ -352,7 +363,7 @@ describe('DeploymentsPage', () => {
         Error
       >);
 
-      renderWithProvider(<DeploymentsPage />);
+      await renderWithProvider(<DeploymentsPage />);
 
       // setSearchParams should not be called when all targets are valid
       expect(mockSetSearchParams).not.toHaveBeenCalled();

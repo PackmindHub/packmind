@@ -1,4 +1,9 @@
-import { User, OrganizationId, UserId } from '@packmind/accounts/types';
+import {
+  User,
+  OrganizationId,
+  UserId,
+  ListOrganizationUserStatusesResponse,
+} from '@packmind/accounts/types';
 
 export interface UserMeResponse {
   message: string;
@@ -12,4 +17,5 @@ export interface UserMeResponse {
 
 export interface IUserGateway {
   getUsersInMyOrganization(): Promise<User[]>;
+  getUserStatuses(): Promise<ListOrganizationUserStatusesResponse>;
 }

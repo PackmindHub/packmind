@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import {
   QueryClient,
   QueryClientProvider,
@@ -68,22 +69,33 @@ describe('McpConfig', () => {
     jest.clearAllMocks();
   });
 
-  const renderWithQueryClient = (component: React.ReactElement) => {
-    return render(
-      <UIProvider>
-        <QueryClientProvider client={queryClient}>
-          {component}
-        </QueryClientProvider>
-      </UIProvider>,
-    );
+  const renderWithQueryClient = async (component: React.ReactElement) => {
+    let renderResult;
+    await act(async () => {
+      renderResult = render(
+        <UIProvider>
+          <QueryClientProvider client={queryClient}>
+            {component}
+          </QueryClientProvider>
+        </UIProvider>,
+      );
+    });
+
+    // Wait for any async state updates from Chakra UI/Zag.js components to complete
+    await waitFor(() => {
+      // This ensures all async operations have completed
+      expect(screen.getByText('MCP Access Token')).toBeInTheDocument();
+    });
+
+    return renderResult;
   };
 
   describe('when component is rendered', () => {
-    it('displays the MCP Access Token section', () => {
+    it('displays the MCP Access Token section', async () => {
       const mockMutation = createMockMutation();
       mockUseGetMcpTokenMutation.mockReturnValue(mockMutation);
 
-      renderWithQueryClient(<McpConfig />);
+      await renderWithQueryClient(<McpConfig />);
 
       expect(screen.getByText('MCP Access Token')).toBeInTheDocument();
       expect(
@@ -96,28 +108,29 @@ describe('McpConfig', () => {
   });
 
   describe('when get token button is clicked', () => {
-    it('calls the mutation', () => {
+    it('calls the mutation', async () => {
+      const user = userEvent.setup();
       const mockMutation = createMockMutation();
       mockUseGetMcpTokenMutation.mockReturnValue(mockMutation);
 
-      renderWithQueryClient(<McpConfig />);
+      await renderWithQueryClient(<McpConfig />);
 
       const button = screen.getByText('Get MCP Access Token');
-      fireEvent.click(button);
+      await user.click(button);
 
       expect(mockMutation.mutate).toHaveBeenCalled();
     });
   });
 
   describe('when mutation is pending', () => {
-    it('shows loading state', () => {
+    it('shows loading state', async () => {
       const mockMutation = createMockMutation({
         isPending: true,
         status: 'pending',
       });
       mockUseGetMcpTokenMutation.mockReturnValue(mockMutation);
 
-      renderWithQueryClient(<McpConfig />);
+      await renderWithQueryClient(<McpConfig />);
 
       expect(screen.getByText('Getting Token...')).toBeInTheDocument();
       expect(screen.getByRole('button')).toBeDisabled();
@@ -125,7 +138,7 @@ describe('McpConfig', () => {
   });
 
   describe('when mutation fails', () => {
-    it('displays error message', () => {
+    it('displays error message', async () => {
       const mockMutation = createMockMutation({
         isError: true,
         status: 'error',
@@ -133,7 +146,7 @@ describe('McpConfig', () => {
       });
       mockUseGetMcpTokenMutation.mockReturnValue(mockMutation);
 
-      renderWithQueryClient(<McpConfig />);
+      await renderWithQueryClient(<McpConfig />);
 
       expect(screen.getByText('Error!')).toBeInTheDocument();
       expect(screen.getByText('Failed to get token')).toBeInTheDocument();
@@ -175,7 +188,7 @@ describe('McpConfig', () => {
     const expectedCliCommand =
       'claude mcp add packmind https://mcp.packmind.com --header "Authorization=Bearer test-token-123"';
 
-    beforeEach(() => {
+    beforeEach(async () => {
       const mockMutation = createMockMutation({
         isSuccess: true,
         status: 'success',
@@ -183,7 +196,7 @@ describe('McpConfig', () => {
       });
       mockUseGetMcpTokenMutation.mockReturnValue(mockMutation);
 
-      renderWithQueryClient(<McpConfig />);
+      await renderWithQueryClient(<McpConfig />);
     });
 
     it('displays a message about successful generation', () => {

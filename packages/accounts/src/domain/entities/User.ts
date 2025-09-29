@@ -4,7 +4,7 @@ import { Organization, OrganizationId } from './Organization';
 export type UserId = Branded<'UserId'>;
 export const createUserId = brandedIdFactory<UserId>();
 
-export type UserOrganizationRole = 'admin';
+export type UserOrganizationRole = 'admin' | 'member';
 
 export type UserOrganizationMembership = {
   userId: UserId;

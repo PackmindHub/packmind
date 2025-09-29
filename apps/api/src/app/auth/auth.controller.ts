@@ -8,6 +8,8 @@ import {
   HttpStatus,
   Res,
   Req,
+  Param,
+  HttpException,
 } from '@nestjs/common';
 import { Response, Request } from 'express';
 import {
@@ -15,9 +17,20 @@ import {
   GetMeResponse,
   GenerateApiKeyResponse,
   GetCurrentApiKeyResponse,
-  SignInUserResponse,
+  SelectOrganizationCommand,
+  SelectOrganizationResponse,
 } from './auth.service';
-import { User, SignUpUserCommand, SignInUserCommand } from '@packmind/accounts';
+import {
+  SignUpUserCommand,
+  SignInUserCommand,
+  SignInUserResponse,
+  TooManyLoginAttemptsError,
+} from '@packmind/accounts';
+import {
+  SignUpWithOrganizationResponse,
+  CheckEmailAvailabilityCommand,
+  CheckEmailAvailabilityResponse,
+} from '@packmind/shared';
 import { Public } from './auth.guard';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
 import { Configuration } from '@packmind/shared';
@@ -33,20 +46,29 @@ export class AuthController {
   @Public()
   @Post('signup')
   @HttpCode(HttpStatus.CREATED)
-  async signUp(@Body() signUpRequest: SignUpUserCommand): Promise<User> {
+  async signUp(
+    @Body() signUpRequest: SignUpUserCommand,
+  ): Promise<SignUpWithOrganizationResponse> {
     this.logger.log(`POST /auth/signup - Signing up user`, {
       email: signUpRequest.email,
+      organizationName: signUpRequest.organizationName,
+      hasOrganizationId: !!signUpRequest.organizationId,
     });
 
     try {
-      const user = await this.authService.signUp(signUpRequest);
+      const result = await this.authService.signUp(signUpRequest);
 
-      this.logger.log(`POST /auth/signup - User signed up successfully`, {
-        userId: user.id,
-        email: user.email,
-      });
+      this.logger.log(
+        `POST /auth/signup - User signed up with organization successfully`,
+        {
+          userId: result.user.id,
+          email: result.user.email,
+          organizationId: result.organization.id,
+          organizationName: result.organization.name,
+        },
+      );
 
-      return user;
+      return result;
     } catch (error) {
       this.logger.error(`POST /auth/signup - Failed to sign up user`, {
         email: signUpRequest.email,
@@ -57,22 +79,56 @@ export class AuthController {
   }
 
   @Public()
+  @Post('check-email-availability')
+  @HttpCode(HttpStatus.OK)
+  async checkEmailAvailability(
+    @Body() request: CheckEmailAvailabilityCommand,
+  ): Promise<CheckEmailAvailabilityResponse> {
+    this.logger.log(
+      `POST /auth/check-email-availability - Checking email availability`,
+      {
+        email: request.email,
+      },
+    );
+
+    try {
+      const result = await this.authService.checkEmailAvailability(request);
+
+      this.logger.log(
+        `POST /auth/check-email-availability - Email availability checked successfully`,
+        {
+          email: request.email,
+          available: result.available,
+        },
+      );
+
+      return result;
+    } catch (error) {
+      this.logger.error(
+        `POST /auth/check-email-availability - Failed to check email availability`,
+        {
+          email: request.email,
+          error: error.message,
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Public()
   @Post('signin')
   @HttpCode(HttpStatus.OK)
   async signIn(
     @Body() signInRequest: SignInUserCommand,
     @Res({ passthrough: true }) response: Response,
-  ): Promise<{
-    message: string;
-    user: SignInUserResponse['user'];
-    organization: SignInUserResponse['organization'];
-  }> {
+  ): Promise<SignInUserResponse> {
     this.logger.log(`POST /auth/signin - Signing in user`, {
       email: signInRequest.email,
     });
 
     try {
-      const result = await this.authService.signIn(signInRequest);
+      const { accessToken, ...result } =
+        await this.authService.signIn(signInRequest);
 
       // Get cookie security setting from Configuration
       const cookieSecure = await Configuration.getConfig('COOKIE_SECURE');
@@ -85,7 +141,7 @@ export class AuthController {
       });
 
       // Set JWT token as httpOnly cookie
-      response.cookie('auth_token', result.accessToken, {
+      response.cookie('auth_token', accessToken, {
         httpOnly: true,
         secure: isSecure,
         sameSite: 'strict',
@@ -98,16 +154,24 @@ export class AuthController {
         email: result.user.email,
       });
 
-      return {
-        message: 'Sign in successful',
-        user: result.user,
-        organization: result.organization,
-      };
+      return result;
     } catch (error) {
       this.logger.error(`POST /auth/signin - Failed to sign in user`, {
         email: signInRequest.email,
         error: error.message,
       });
+
+      // Handle rate limiting errors with 429 status
+      if (error instanceof TooManyLoginAttemptsError) {
+        throw new HttpException(
+          {
+            message: error.message,
+            bannedUntil: error.bannedUntil.toISOString(),
+          },
+          HttpStatus.TOO_MANY_REQUESTS,
+        );
+      }
+
       throw error;
     }
   }
@@ -125,6 +189,63 @@ export class AuthController {
       expires: new Date(0), // Expire the cookie immediately
     });
     return { message: 'Sign out successful' };
+  }
+
+  @Public()
+  @Post('selectOrganization')
+  @HttpCode(HttpStatus.OK)
+  async selectOrganization(
+    @Body() request: SelectOrganizationCommand,
+    @Req() req: Request,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<SelectOrganizationResponse> {
+    this.logger.log('POST /auth/selectOrganization - Selecting organization', {
+      organizationId: request.organizationId,
+    });
+
+    try {
+      const accessToken = req.cookies?.auth_token;
+
+      if (!accessToken) {
+        throw new Error('No valid access token found');
+      }
+
+      const result = await this.authService.selectOrganization(
+        accessToken,
+        request,
+      );
+
+      // Get cookie security setting from Configuration
+      const cookieSecure = await Configuration.getConfig('COOKIE_SECURE');
+      const isSecure = cookieSecure === 'true';
+
+      // Update the JWT token cookie with the new token that includes the organization
+      response.cookie('auth_token', result.accessToken, {
+        httpOnly: true,
+        secure: isSecure,
+        sameSite: 'strict',
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
+        path: '/',
+      });
+
+      this.logger.log(
+        'POST /auth/selectOrganization - Organization selected successfully',
+        {
+          organizationId: request.organizationId,
+        },
+      );
+
+      return { message: result.message };
+    } catch (error) {
+      this.logger.error(
+        'POST /auth/selectOrganization - Failed to select organization',
+        {
+          organizationId: request.organizationId,
+          error: error.message,
+        },
+      );
+      throw error;
+    }
   }
 
   @Public()
@@ -235,5 +356,114 @@ export class AuthController {
       );
       throw error;
     }
+  }
+
+  @Public()
+  @Get('validate-invitation/:token')
+  @HttpCode(HttpStatus.OK)
+  async validateInvitation(
+    @Param('token') token: string,
+  ): Promise<{ email: string; isValid: boolean }> {
+    this.logger.log(
+      'GET /auth/validate-invitation/:token - Validating invitation token',
+      {
+        token: this.maskToken(token),
+      },
+    );
+
+    try {
+      const result = await this.authService.validateInvitationToken({ token });
+
+      this.logger.log(
+        'GET /auth/validate-invitation/:token - Invitation token validated',
+        {
+          token: this.maskToken(token),
+          isValid: result.isValid,
+          hasEmail: !!result.email,
+        },
+      );
+
+      return result;
+    } catch (error) {
+      this.logger.error(
+        'GET /auth/validate-invitation/:token - Failed to validate invitation token',
+        {
+          token: this.maskToken(token),
+          error: error.message,
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Public()
+  @Post('activate/:token')
+  @HttpCode(HttpStatus.OK)
+  async activateAccount(
+    @Param('token') token: string,
+    @Body() body: { password: string },
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<{
+    message: string;
+    user: {
+      id: string;
+      email: string;
+      isActive: boolean;
+    };
+  }> {
+    this.logger.log('POST /auth/activate/:token - Activating user account', {
+      token: this.maskToken(token),
+    });
+
+    try {
+      const result = await this.authService.activateAccount({
+        token,
+        password: body.password,
+      });
+
+      if (result.success && result.authToken) {
+        // Get cookie security setting from Configuration
+        const cookieSecure = await Configuration.getConfig('COOKIE_SECURE');
+        const isSecure = cookieSecure === 'true';
+
+        // Set JWT token as httpOnly cookie for auto-login
+        response.cookie('auth_token', result.authToken, {
+          httpOnly: true,
+          secure: isSecure,
+          sameSite: 'strict',
+          maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
+          path: '/',
+        });
+      }
+
+      this.logger.log(
+        'POST /auth/activate/:token - Account activated successfully',
+        {
+          userId: result.user.id,
+          email: result.user.email,
+        },
+      );
+
+      return {
+        message: 'Account activated successfully',
+        user: result.user,
+      };
+    } catch (error) {
+      this.logger.error(
+        'POST /auth/activate/:token - Failed to activate account',
+        {
+          token: this.maskToken(token),
+          error: error.message,
+        },
+      );
+      throw error;
+    }
+  }
+
+  private maskToken(token: string): string {
+    if (token.length <= 8) {
+      return '***';
+    }
+    return `${token.slice(0, 4)}***${token.slice(-4)}`;
   }
 }
