@@ -1,5 +1,11 @@
 # [Unreleased]
 
+# [1.2.1] - 2015-10-03
+
+## Changed
+
+- Various UI/UX improvements
+
 # [1.2.0] - 2015-10-02
 
 ## Added
