@@ -167,8 +167,8 @@ describe('DeploymentsPage', () => {
     await renderWithProvider(<DeploymentsPage />);
 
     // Check for the select element specifically
-    expect(screen.getByText('All repositories')).toBeInTheDocument();
-    expect(screen.getByText('Only outdated repositories')).toBeInTheDocument();
+    expect(screen.getByText('All targets')).toBeInTheDocument();
+    expect(screen.getByText('Only outdated targets')).toBeInTheDocument();
   });
 
   it('displays recipe filter dropdown in recipe view', async () => {
@@ -187,8 +187,8 @@ describe('DeploymentsPage', () => {
     await renderWithProvider(<DeploymentsPage />);
 
     // In repository view (default) - only repository options should be visible
-    expect(screen.getByText('All repositories')).toBeInTheDocument();
-    expect(screen.getByText('Only outdated repositories')).toBeInTheDocument();
+    expect(screen.getByText('All targets')).toBeInTheDocument();
+    expect(screen.getByText('Only outdated targets')).toBeInTheDocument();
     expect(screen.queryByText('Undeployed recipes')).not.toBeInTheDocument();
   });
 
@@ -234,7 +234,7 @@ describe('DeploymentsPage', () => {
     await renderWithProvider(<DeploymentsPage />);
 
     // Find the select element by looking for the option text
-    const allReposOption = screen.getByText('All repositories');
+    const allReposOption = screen.getByText('All targets');
     const selectElement = allReposOption.closest('select');
     expect(selectElement).toBeInTheDocument();
 

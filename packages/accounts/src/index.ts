@@ -9,8 +9,11 @@ export { EnhancedAccountsServices } from './application/services/EnhancedAccount
 export { UserService } from './application/services/UserService';
 export { OrganizationService } from './application/services/OrganizationService';
 export { InvitationService } from './application/services/InvitationService';
+export { PasswordResetTokenService } from './application/services/PasswordResetTokenService';
 export { IAccountsRepository } from './domain/repositories/IAccountsRepository';
 export { IInvitationRepository } from './domain/repositories/IInvitationRepository';
+export { IPasswordResetTokenRepository } from './domain/repositories/IPasswordResetTokenRepository';
+export { PasswordResetTokenRepository } from './infra/repositories/PasswordResetTokenRepository';
 export * from './domain/entities';
 export * from './domain/useCases';
 export * from './domain/errors';

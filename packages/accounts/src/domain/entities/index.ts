@@ -18,3 +18,10 @@ export {
   InvitationToken,
   createInvitationToken,
 } from './Invitation';
+export {
+  PasswordResetTokenEntity,
+  PasswordResetTokenId,
+  createPasswordResetTokenId,
+  PasswordResetToken,
+  createPasswordResetToken,
+} from './PasswordResetToken';

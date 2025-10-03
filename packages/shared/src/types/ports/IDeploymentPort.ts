@@ -17,6 +17,7 @@ import {
   UpdateTargetCommand,
   DeleteTargetCommand,
   DeleteTargetResponse,
+  GetTargetsByGitRepoCommand,
   GetTargetsByRepositoryCommand,
   GetTargetsByOrganizationCommand,
 } from '../deployments';
@@ -147,18 +148,31 @@ export interface IDeploymentPort {
   deleteTarget(command: DeleteTargetCommand): Promise<DeleteTargetResponse>;
 
   /**
-   * Gets all targets for a specific git repository
+   * Gets all targets for a specific git repository (branch-specific)
    *
-   * Retrieves all deployment targets associated with a given git repository.
+   * Retrieves all deployment targets associated with a given git repository ID.
+   * Since GitRepoId is branch-specific, this returns targets for that specific branch only.
    * Targets represent specific paths within a repository where recipes and
    * standards can be deployed.
    *
-   * @param command - Command containing git repository ID and user/organization context
-   * @returns Promise of array of targets for the repository
+   * @param command - Command containing git repository ID (branch-specific) and user/organization context
+   * @returns Promise of array of targets for the specific repository branch
+   */
+  getTargetsByGitRepo(command: GetTargetsByGitRepoCommand): Promise<Target[]>;
+
+  /**
+   * Gets all targets for a repository across all branches
+   *
+   * Retrieves all deployment targets for the specified repository identified by
+   * owner and repo name, across all branches. Each target includes repository information
+   * indicating which branch it belongs to.
+   *
+   * @param command - Command containing owner, repo and user/organization context
+   * @returns Promise of array of targets with repository information for all branches
    */
   getTargetsByRepository(
     command: GetTargetsByRepositoryCommand,
-  ): Promise<Target[]>;
+  ): Promise<TargetWithRepository[]>;
 
   /**
    * Gets all targets for an organization

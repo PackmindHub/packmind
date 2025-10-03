@@ -1,4 +1,7 @@
-import { AddGitProviderUseCase } from './addGitProvider/addGitProvider.usecase';
+import {
+  AddGitProviderCommand,
+  AddGitProviderUseCase,
+} from './addGitProvider/addGitProvider.usecase';
 import { AddGitRepoUseCase } from './addGitRepo/addGitRepo.usecase';
 import { DeleteGitProviderUseCase } from './deleteGitProvider/deleteGitProvider.usecase';
 import { DeleteGitRepoUseCase } from './deleteGitRepo/deleteGitRepo.usecase';
@@ -16,7 +19,13 @@ import { UpdateGitProviderUseCase } from './updateGitProvider/updateGitProvider.
 import { GetAvailableRemoteDirectoriesUseCase } from './getAvailableRemoteDirectories/getAvailableRemoteDirectories.usecase';
 import { CheckDirectoryExistenceUseCase } from './checkDirectoryExistence/checkDirectoryExistence.usecase';
 import { IGitServices } from '../IGitServices';
-import { PackmindLogger, QueryOption, IDeploymentPort } from '@packmind/shared';
+import {
+  PackmindLogger,
+  QueryOption,
+  IDeploymentPort,
+  UserProvider,
+  OrganizationProvider,
+} from '@packmind/shared';
 import { GitProvider, GitProviderId } from '../../domain/entities/GitProvider';
 import { GitRepo, GitRepoId } from '../../domain/entities/GitRepo';
 import { GitCommit } from '../../domain/entities/GitCommit';
@@ -35,10 +44,20 @@ import {
 const origin = 'GitUseCases';
 
 export class GitUseCases {
-  private readonly _addGitProvider: AddGitProviderUseCase;
+  private _addGitProvider: AddGitProviderUseCase;
+  private userProvider: UserProvider = {
+    async getUserById() {
+      throw new Error('User provider not configured for Git domain');
+    },
+  };
+  private organizationProvider: OrganizationProvider = {
+    async getOrganizationById() {
+      throw new Error('Organization provider not configured for Git domain');
+    },
+  };
   private _addGitRepo: AddGitRepoUseCase;
-  private readonly _deleteGitProvider: DeleteGitProviderUseCase;
-  private readonly _deleteGitRepo: DeleteGitRepoUseCase;
+  private _deleteGitProvider: DeleteGitProviderUseCase;
+  private _deleteGitRepo: DeleteGitRepoUseCase;
   private readonly _listAvailableRepos: ListAvailableReposUseCase;
   private readonly _checkBranchExists: CheckBranchExistsUseCase;
   private readonly _commitToGit: CommitToGit;
@@ -49,7 +68,7 @@ export class GitUseCases {
   private readonly _listProviders: ListProvidersUseCase;
   private readonly _getOrganizationRepositories: GetOrganizationRepositoriesUseCase;
   private readonly _getRepositoryById: GetRepositoryByIdUseCase;
-  private readonly _updateGitProvider: UpdateGitProviderUseCase;
+  private _updateGitProvider: UpdateGitProviderUseCase;
   private readonly _findGitRepoByOwnerRepoAndBranchInOrganization: IFindGitRepoByOwnerRepoAndBranchInOrganizationUseCase;
   private readonly _getAvailableRemoteDirectories: GetAvailableRemoteDirectoriesUseCase;
   private readonly _checkDirectoryExistence: CheckDirectoryExistenceUseCase;
@@ -60,21 +79,10 @@ export class GitUseCases {
     private readonly gitServices: IGitServices,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    this._addGitProvider = new AddGitProviderUseCase(
-      gitServices.getGitProviderService(),
-    );
-    this._addGitRepo = new AddGitRepoUseCase(
-      gitServices.getGitProviderService(),
-      gitServices.getGitRepoService(),
-    );
-    this._deleteGitProvider = new DeleteGitProviderUseCase(
-      gitServices.getGitProviderService(),
-      gitServices.getGitRepoService(),
-    );
-    this._deleteGitRepo = new DeleteGitRepoUseCase(
-      gitServices.getGitProviderService(),
-      gitServices.getGitRepoService(),
-    );
+    this._addGitProvider = this.createAddGitProviderUseCase();
+    this._addGitRepo = this.createAddGitRepoUseCase();
+    this._deleteGitProvider = this.createDeleteGitProviderUseCase();
+    this._deleteGitRepo = this.createDeleteGitRepoUseCase();
     this._listAvailableRepos = new ListAvailableReposUseCase(
       gitServices.getGitProviderService(),
     );
@@ -114,9 +122,7 @@ export class GitUseCases {
     this._getRepositoryById = new GetRepositoryByIdUseCase(
       gitServices.getGitRepoService(),
     );
-    this._updateGitProvider = new UpdateGitProviderUseCase(
-      gitServices.getGitProviderService(),
-    );
+    this._updateGitProvider = this.createUpdateGitProviderUseCase();
     this._findGitRepoByOwnerRepoAndBranchInOrganization =
       new FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase(
         gitServices.getGitRepoService(),
@@ -140,41 +146,109 @@ export class GitUseCases {
   public setDeploymentsAdapter(adapter: IDeploymentPort): void {
     this.deploymentsAdapter = adapter;
     // Recreate the AddGitRepoUseCase with the deployment adapter
-    this._addGitRepo = new AddGitRepoUseCase(
+    this._addGitRepo = this.createAddGitRepoUseCase();
+  }
+
+  private createAddGitProviderUseCase(): AddGitProviderUseCase {
+    return new AddGitProviderUseCase(
+      this.gitServices.getGitProviderService(),
+      this.userProvider,
+      this.organizationProvider,
+      this.logger,
+    );
+  }
+
+  private createAddGitRepoUseCase(): AddGitRepoUseCase {
+    return new AddGitRepoUseCase(
       this.gitServices.getGitProviderService(),
       this.gitServices.getGitRepoService(),
+      this.userProvider,
+      this.organizationProvider,
       this.deploymentsAdapter,
     );
   }
 
-  public addGitProvider(
-    gitProvider: Omit<GitProvider, 'id'>,
-    organizationId: OrganizationId,
-  ): Promise<GitProvider> {
-    return this._addGitProvider.execute({
-      gitProvider,
-      organizationId,
-    });
+  private createDeleteGitProviderUseCase(): DeleteGitProviderUseCase {
+    return new DeleteGitProviderUseCase(
+      this.gitServices.getGitProviderService(),
+      this.gitServices.getGitRepoService(),
+      this.userProvider,
+      this.organizationProvider,
+      this.logger,
+    );
+  }
+
+  private createDeleteGitRepoUseCase(): DeleteGitRepoUseCase {
+    return new DeleteGitRepoUseCase(
+      this.gitServices.getGitProviderService(),
+      this.gitServices.getGitRepoService(),
+      this.userProvider,
+      this.organizationProvider,
+      this.logger,
+    );
+  }
+
+  private createUpdateGitProviderUseCase(): UpdateGitProviderUseCase {
+    return new UpdateGitProviderUseCase(
+      this.gitServices.getGitProviderService(),
+      this.userProvider,
+      this.organizationProvider,
+      this.logger,
+    );
+  }
+
+  public setUserProvider(provider: UserProvider): void {
+    this.userProvider = provider;
+    this._addGitProvider = this.createAddGitProviderUseCase();
+    this._addGitRepo = this.createAddGitRepoUseCase();
+    this._deleteGitProvider = this.createDeleteGitProviderUseCase();
+    this._deleteGitRepo = this.createDeleteGitRepoUseCase();
+    this._updateGitProvider = this.createUpdateGitProviderUseCase();
+  }
+
+  public setOrganizationProvider(provider: OrganizationProvider): void {
+    this.organizationProvider = provider;
+    this._addGitProvider = this.createAddGitProviderUseCase();
+    this._addGitRepo = this.createAddGitRepoUseCase();
+    this._deleteGitProvider = this.createDeleteGitProviderUseCase();
+    this._deleteGitRepo = this.createDeleteGitRepoUseCase();
+    this._updateGitProvider = this.createUpdateGitProviderUseCase();
+  }
+
+  public addGitProvider(command: AddGitProviderCommand): Promise<GitProvider> {
+    return this._addGitProvider.execute(command);
   }
 
   public async addGitRepo(command: AddGitRepoCommand): Promise<GitRepo> {
     return this._addGitRepo.execute(command);
   }
 
-  public deleteGitProvider(
+  public async deleteGitProvider(
     id: GitProviderId,
     userId: UserId,
+    organizationId: OrganizationId,
     force?: boolean,
   ): Promise<void> {
-    return this._deleteGitProvider.execute({ id, userId, force });
+    await this._deleteGitProvider.execute({
+      id,
+      userId: String(userId),
+      organizationId: String(organizationId),
+      force,
+    });
   }
 
-  public deleteGitRepo(
+  public async deleteGitRepo(
     repositoryId: GitRepoId,
     userId: UserId,
+    organizationId: OrganizationId,
     providerId?: GitProviderId,
   ): Promise<void> {
-    return this._deleteGitRepo.execute({ repositoryId, userId, providerId });
+    await this._deleteGitRepo.execute({
+      repositoryId,
+      userId: String(userId),
+      organizationId: String(organizationId),
+      providerId,
+    });
   }
 
   public listAvailableRepos(gitProviderId: GitProviderId): Promise<
@@ -276,8 +350,15 @@ export class GitUseCases {
   public async updateGitProvider(
     id: GitProviderId,
     gitProvider: Partial<Omit<GitProvider, 'id'>>,
+    userId: UserId,
+    organizationId: OrganizationId,
   ): Promise<GitProvider> {
-    return this._updateGitProvider.execute({ id, gitProvider });
+    return this._updateGitProvider.execute({
+      id,
+      gitProvider,
+      userId: String(userId),
+      organizationId: String(organizationId),
+    });
   }
 
   public async findGitRepoByOwnerRepoAndBranchInOrganization(

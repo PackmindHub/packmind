@@ -1,12 +1,12 @@
 import { IUseCase, PackmindCommand } from '../../UseCase';
-import { Target } from '../Target';
-import { GitRepoId } from '../../git';
+import { TargetWithRepository } from '../TargetWithRepository';
 
 export type GetTargetsByRepositoryCommand = PackmindCommand & {
-  gitRepoId: GitRepoId;
+  owner: string;
+  repo: string;
 };
 
 export type IGetTargetsByRepositoryUseCase = IUseCase<
   GetTargetsByRepositoryCommand,
-  Target[]
+  TargetWithRepository[]
 >;

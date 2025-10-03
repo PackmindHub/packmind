@@ -78,9 +78,15 @@ export class McpController {
   @Get('url')
   @HttpCode(HttpStatus.OK)
   async getUrl(): Promise<{ url: string }> {
-    const url =
-      (await Configuration.getConfig('PACKMIND_MCP_BASE_URL')) ||
-      'http://localhost:8081/mcp';
+    let url = await Configuration.getConfig('PACKMIND_MCP_BASE_URL');
+    if (!url) {
+      // This is the main platform APP, in production mode there will be one single URI for all the app
+      url = await Configuration.getConfig('APP_WEB_URL');
+      if (url) {
+        url = `${url}/mcp`;
+      }
+      url = 'http://localhost:8081/mcp';
+    }
     return { url };
   }
 }

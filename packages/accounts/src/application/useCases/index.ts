@@ -3,22 +3,26 @@ import { CheckEmailAvailabilityUseCase } from './checkEmailAvailability/CheckEma
 import { SignInUserUseCase } from './signInUser/SignInUserUseCase';
 import { GetUserByIdUseCase } from './getUserById/GetUserByIdUseCase';
 import { ListUsersUseCase } from './listUsers/ListUsersUseCase';
+import { RemoveUserFromOrganizationUseCase } from './removeUserFromOrganization/RemoveUserFromOrganizationUseCase';
 import { ListOrganizationUserStatusesUseCase } from './listOrganizationUserStatuses/ListOrganizationUserStatusesUseCase';
 import { ValidatePasswordUseCase } from './validatePasswordUseCase/ValidatePasswordUseCase';
 import { CreateOrganizationUseCase } from './createOrganization/CreateOrganizationUseCase';
 import { GetOrganizationByIdUseCase } from './getOrganizationById/GetOrganizationByIdUseCase';
 import { GetOrganizationByNameUseCase } from './getOrganizationByName/GetOrganizationByNameUseCase';
 import { GetOrganizationBySlugUseCase } from './getOrganizationBySlug/GetOrganizationBySlugUseCase';
-import { ListOrganizationsUseCase } from './listOrganizations/ListOrganizationsUseCase';
 import { CreateInvitationsUseCase } from './createInvitations/CreateInvitationsUseCase';
 import { GenerateUserTokenUseCase } from './generateUserToken/GenerateUserTokenUseCase';
+import { ListUserOrganizationsUseCase } from './listUserOrganizations/ListUserOrganizationsUseCase';
 import { GenerateApiKeyUseCase } from './generateApiKey/GenerateApiKeyUseCase';
 import { GetCurrentApiKeyUseCase } from './getCurrentApiKey/GetCurrentApiKeyUseCase';
 import { ActivateUserAccountUseCase } from './activateUserAccount/ActivateUserAccountUseCase';
 import { ValidateInvitationTokenUseCase } from './validateInvitationToken/ValidateInvitationTokenUseCase';
+import { ChangeUserRoleUseCase } from './changeUserRole/ChangeUserRoleUseCase';
+import { RequestPasswordResetUseCase } from './RequestPasswordResetUseCase';
+import { ResetPasswordUseCase } from './ResetPasswordUseCase';
+import { ValidatePasswordResetTokenUseCase } from './ValidatePasswordResetTokenUseCase';
 import { IAccountsServices } from '../IAccountsServices';
 import { PackmindLogger } from '@packmind/shared';
-import { DataSource } from 'typeorm';
 
 import {
   ISignUpWithOrganizationUseCase,
@@ -31,11 +35,12 @@ import {
   IGetOrganizationByIdUseCase,
   IGetOrganizationByNameUseCase,
   IGetOrganizationBySlugUseCase,
-  IListOrganizationsUseCase,
   IGenerateUserTokenUseCase,
   IGenerateApiKeyUseCase,
   IGetCurrentApiKeyUseCase,
   ICreateInvitationsUseCase,
+  IRemoveUserFromOrganizationUseCase,
+  IListUserOrganizationsUseCase,
   CreateInvitationsCommand,
   CreateInvitationsResponse,
   SignUpWithOrganizationCommand,
@@ -48,10 +53,13 @@ import {
   CreateOrganizationCommand,
   GetOrganizationByIdCommand,
   GetOrganizationBySlugCommand,
-  ListOrganizationsCommand,
   GenerateUserTokenCommand,
   GenerateApiKeyCommand,
   GetCurrentApiKeyCommand,
+  RemoveUserFromOrganizationCommand,
+  RemoveUserFromOrganizationResponse,
+  ListUserOrganizationsCommand,
+  ListUserOrganizationsResponse,
 } from '../../domain/useCases';
 import {
   ICheckEmailAvailabilityUseCase,
@@ -59,6 +67,18 @@ import {
   IActivateUserAccountUseCase,
   ActivateUserAccountCommand,
   ActivateUserAccountResponse,
+  IChangeUserRoleUseCase,
+  ChangeUserRoleCommand,
+  ChangeUserRoleResponse,
+  IRequestPasswordResetUseCase,
+  RequestPasswordResetCommand,
+  RequestPasswordResetResponse,
+  IResetPasswordUseCase,
+  ResetPasswordCommand,
+  ResetPasswordResponse,
+  IValidatePasswordResetTokenUseCase,
+  ValidatePasswordResetTokenCommand,
+  ValidatePasswordResetTokenResponse,
 } from '@packmind/shared';
 import {
   IValidateInvitationTokenUseCase,
@@ -74,13 +94,13 @@ export class AccountsUseCases {
   private readonly _signInUser: ISignInUserUseCase;
   private readonly _getUserById: IGetUserByIdUseCase;
   private readonly _listUsers: IListUsersUseCase;
+  private readonly _removeUserFromOrganization: IRemoveUserFromOrganizationUseCase;
   private readonly _listOrganizationUserStatuses: IListOrganizationUserStatusesUseCase;
   private readonly _validatePassword: IValidatePasswordUseCase;
   private readonly _createOrganization: ICreateOrganizationUseCase;
   private readonly _getOrganizationById: IGetOrganizationByIdUseCase;
   private readonly _getOrganizationByName: IGetOrganizationByNameUseCase;
   private readonly _getOrganizationBySlug: IGetOrganizationBySlugUseCase;
-  private readonly _listOrganizations: IListOrganizationsUseCase;
   private readonly _generateUserToken: IGenerateUserTokenUseCase;
   private readonly _createInvitations: ICreateInvitationsUseCase;
   private readonly _activateUserAccount: IActivateUserAccountUseCase;
@@ -88,10 +108,14 @@ export class AccountsUseCases {
   private readonly _generateApiKey?: IGenerateApiKeyUseCase;
   private readonly _getCurrentApiKey?: IGetCurrentApiKeyUseCase;
   private readonly _checkEmailAvailability: ICheckEmailAvailabilityUseCase;
+  private readonly _changeUserRole: IChangeUserRoleUseCase;
+  private readonly _listUserOrganizations: IListUserOrganizationsUseCase;
+  private readonly _requestPasswordReset: IRequestPasswordResetUseCase;
+  private readonly _resetPassword: IResetPasswordUseCase;
+  private readonly _validatePasswordResetToken: IValidatePasswordResetTokenUseCase;
 
   constructor(
     private readonly accountsServices: IAccountsServices,
-    private readonly dataSource: DataSource,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this._signUpWithOrganization = new SignUpWithOrganizationUseCase(
@@ -107,13 +131,26 @@ export class AccountsUseCases {
       accountsServices.getUserService(),
     );
     this._listUsers = new ListUsersUseCase(accountsServices.getUserService());
+    this._removeUserFromOrganization = new RemoveUserFromOrganizationUseCase(
+      accountsServices.getUserService(),
+      accountsServices.getOrganizationService(),
+      accountsServices.getUserService(),
+      this.logger,
+    );
     this._listOrganizationUserStatuses =
-      new ListOrganizationUserStatusesUseCase(this.dataSource, this.logger);
+      new ListOrganizationUserStatusesUseCase(
+        accountsServices.getUserService(),
+        accountsServices.getOrganizationService(),
+        accountsServices.getUserService(),
+        accountsServices.getInvitationService(),
+        this.logger,
+      );
     this._validatePassword = new ValidatePasswordUseCase(
       accountsServices.getUserService(),
     );
     this._createOrganization = new CreateOrganizationUseCase(
       accountsServices.getOrganizationService(),
+      accountsServices.getUserService(),
     );
     this._getOrganizationById = new GetOrganizationByIdUseCase(
       accountsServices.getOrganizationService(),
@@ -124,9 +161,6 @@ export class AccountsUseCases {
     this._getOrganizationBySlug = new GetOrganizationBySlugUseCase(
       accountsServices.getOrganizationService(),
     );
-    this._listOrganizations = new ListOrganizationsUseCase(
-      accountsServices.getOrganizationService(),
-    );
     this._generateUserToken = new GenerateUserTokenUseCase(
       accountsServices.getUserService(),
       accountsServices.getOrganizationService(),
@@ -134,9 +168,13 @@ export class AccountsUseCases {
     this._checkEmailAvailability = new CheckEmailAvailabilityUseCase(
       accountsServices.getUserService(),
     );
+    this._listUserOrganizations = new ListUserOrganizationsUseCase(
+      accountsServices.getUserService(),
+    );
     this._createInvitations = new CreateInvitationsUseCase(
       accountsServices.getUserService(),
       accountsServices.getOrganizationService(),
+      accountsServices.getUserService(),
       accountsServices.getInvitationService(),
       this.logger,
     );
@@ -147,6 +185,28 @@ export class AccountsUseCases {
     );
     this._validateInvitationToken = new ValidateInvitationTokenUseCase(
       accountsServices.getInvitationService(),
+      accountsServices.getUserService(),
+      this.logger,
+    );
+    this._changeUserRole = new ChangeUserRoleUseCase(
+      accountsServices.getUserService(),
+      accountsServices.getOrganizationService(),
+      accountsServices.getUserService(),
+      this.logger,
+    );
+    this._requestPasswordReset = new RequestPasswordResetUseCase(
+      accountsServices.getUserService(),
+      accountsServices.getPasswordResetTokenService(),
+      this.logger,
+    );
+    this._resetPassword = new ResetPasswordUseCase(
+      accountsServices.getUserService(),
+      accountsServices.getPasswordResetTokenService(),
+      accountsServices.getLoginRateLimiterService(),
+      this.logger,
+    );
+    this._validatePasswordResetToken = new ValidatePasswordResetTokenUseCase(
+      accountsServices.getPasswordResetTokenService(),
       accountsServices.getUserService(),
       this.logger,
     );
@@ -187,6 +247,12 @@ export class AccountsUseCases {
     return await this._listUsers.execute(command);
   }
 
+  public async removeUserFromOrganization(
+    command: RemoveUserFromOrganizationCommand,
+  ): Promise<RemoveUserFromOrganizationResponse> {
+    return this._removeUserFromOrganization.execute(command);
+  }
+
   public async listOrganizationUserStatuses(
     command: ListOrganizationUserStatusesCommand,
   ): Promise<ListOrganizationUserStatusesResponse> {
@@ -223,9 +289,10 @@ export class AccountsUseCases {
     return result.organization;
   }
 
-  public async listOrganizations(command: ListOrganizationsCommand) {
-    const result = await this._listOrganizations.execute(command);
-    return result.organizations;
+  public async listUserOrganizations(
+    command: ListUserOrganizationsCommand,
+  ): Promise<ListUserOrganizationsResponse> {
+    return this._listUserOrganizations.execute(command);
   }
 
   public async generateUserToken(command: GenerateUserTokenCommand) {
@@ -250,6 +317,12 @@ export class AccountsUseCases {
     return this._validateInvitationToken.execute(command);
   }
 
+  public async changeUserRole(
+    command: ChangeUserRoleCommand,
+  ): Promise<ChangeUserRoleResponse> {
+    return this._changeUserRole.execute(command);
+  }
+
   // API key-related use cases
   public async generateApiKey(command: GenerateApiKeyCommand) {
     if (!this._generateApiKey) {
@@ -267,5 +340,24 @@ export class AccountsUseCases {
       );
     }
     return this._getCurrentApiKey.execute(command);
+  }
+
+  // Password reset use cases
+  public async requestPasswordReset(
+    command: RequestPasswordResetCommand,
+  ): Promise<RequestPasswordResetResponse> {
+    return this._requestPasswordReset.execute(command);
+  }
+
+  public async resetPassword(
+    command: ResetPasswordCommand,
+  ): Promise<ResetPasswordResponse> {
+    return this._resetPassword.execute(command);
+  }
+
+  public async validatePasswordResetToken(
+    command: ValidatePasswordResetTokenCommand,
+  ): Promise<ValidatePasswordResetTokenResponse> {
+    return this._validatePasswordResetToken.execute(command);
   }
 }

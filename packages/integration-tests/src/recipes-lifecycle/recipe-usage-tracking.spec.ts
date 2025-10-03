@@ -69,9 +69,9 @@ describe('Recipe usage tracking', () => {
     registry.init(dataSource);
 
     // Get initialized hexas
-    gitHexa = registry.get(GitHexa);
     accountsHexa = registry.get(AccountsHexa);
     recipesHexa = registry.get(RecipesHexa);
+    gitHexa = registry.get(GitHexa);
 
     recipesUsageHexa = registry.get(RecipesUsageHexa);
     const mockDeploymentPort = {
@@ -79,6 +79,9 @@ describe('Recipe usage tracking', () => {
     } as Partial<jest.Mocked<IDeploymentPort>> as jest.Mocked<IDeploymentPort>;
 
     gitHexa.setDeploymentsAdapter(mockDeploymentPort);
+
+    gitHexa.setUserProvider(accountsHexa.getUserProvider());
+    gitHexa.setOrganizationProvider(accountsHexa.getOrganizationProvider());
 
     // Create test data
     const signUpResult = await accountsHexa.signUpWithOrganization({
@@ -108,15 +111,15 @@ describe('Recipe usage tracking', () => {
     beforeEach(async () => {
       gitHexa = registry.get(GitHexa);
 
-      const gitProvider = await gitHexa.addGitProvider(
-        {
-          organizationId: organization.id,
+      const gitProvider = await gitHexa.addGitProvider({
+        userId: user.id,
+        organizationId: organization.id,
+        gitProvider: {
           source: GitProviderVendors.github,
           url: 'whatever',
           token: 'some-token',
         },
-        organization.id,
-      );
+      });
 
       gitRepo = await gitHexa.addGitRepo({
         userId: user.id,

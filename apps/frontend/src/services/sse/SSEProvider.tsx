@@ -6,6 +6,7 @@ import {
   useContext,
   useCallback,
   useMemo,
+  useState,
 } from 'react';
 import { getEnvVar } from '../../shared/utils/getEnvVar';
 import { useAuthContext } from '../../domain/accounts/hooks/useAuthContext';
@@ -49,6 +50,7 @@ export function SSEProvider({ children }: SSEProviderProps) {
   const eventListenersRef = useRef<
     Map<string, Set<(event: MessageEvent) => void>>
   >(new Map());
+  const [isConnected, setIsConnected] = useState(false);
 
   // API functions for subscription management
   const subscribeToEvent = useCallback(
@@ -131,11 +133,12 @@ export function SSEProvider({ children }: SSEProviderProps) {
   );
 
   useEffect(() => {
-    // Clean up any existing connection first
+    // Always close any existing connection before establishing a new one
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
     }
+    setIsConnected(false);
 
     // Don't connect if still loading or not authenticated
     if (isLoading || !isAuthenticated) {
@@ -153,10 +156,16 @@ export function SSEProvider({ children }: SSEProviderProps) {
 
     // Store reference for cleanup
     eventSourceRef.current = eventSource;
+    setIsConnected(eventSource.readyState === EventSource.OPEN);
 
-    // Add default event listeners (no-op)
-    eventSource.addEventListener('open', () => undefined);
-    eventSource.addEventListener('error', () => undefined);
+    eventSource.addEventListener('open', () => {
+      setIsConnected(true);
+    });
+    eventSource.addEventListener('error', () => {
+      if (eventSource.readyState === EventSource.CLOSED) {
+        setIsConnected(false);
+      }
+    });
 
     // Re-attach all stored event listeners
     for (const [eventType, handlers] of eventListenersRef.current.entries()) {
@@ -171,6 +180,7 @@ export function SSEProvider({ children }: SSEProviderProps) {
         eventSourceRef.current.close();
         eventSourceRef.current = null;
       }
+      setIsConnected(false);
     };
   }, [isAuthenticated, isLoading]);
 
@@ -180,13 +190,14 @@ export function SSEProvider({ children }: SSEProviderProps) {
       unsubscribe: unsubscribeFromEvent,
       addEventListener: addSSEEventListener,
       removeEventListener: removeSSEEventListener,
-      isConnected: eventSourceRef.current?.readyState === EventSource.OPEN,
+      isConnected,
     }),
     [
       subscribeToEvent,
       unsubscribeFromEvent,
       addSSEEventListener,
       removeSSEEventListener,
+      isConnected,
     ],
   );
 

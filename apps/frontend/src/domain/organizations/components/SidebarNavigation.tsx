@@ -4,8 +4,6 @@ import { NavLink } from 'react-router';
 import { AuthContextOrganization } from '../../accounts/hooks/useAuthContext';
 import { SidebarAccountMenu } from '../../accounts/components/SidebarAccountMenu';
 import { SidebarOrgaSelector } from './OrgaSelector';
-import { Organization } from '@packmind/shared';
-import { OrganizationId } from '@packmind/accounts';
 
 interface ISidebarNavigationProps {
   organization: AuthContextOrganization | undefined;
@@ -14,14 +12,16 @@ interface ISidebarNavigationProps {
 interface SidebarNavigationLinkProps {
   url: string;
   label: string;
+  exact?: boolean;
 }
 
 function SidebarNavigationLink({
   url,
   label,
+  exact = false,
 }: SidebarNavigationLinkProps): React.ReactElement {
   return (
-    <NavLink to={url}>
+    <NavLink to={url} end={exact}>
       {({ isActive }) => (
         <PMLink
           variant="navbar"
@@ -46,6 +46,16 @@ export const SidebarNavigation: React.FunctionComponent<
       headerNav={<SidebarOrgaSelector currentOrganization={organization} />}
       footerNav={<SidebarAccountMenu />}
     >
+      <PMVerticalNavSection
+        navEntries={[
+          <SidebarNavigationLink
+            key="dashboard"
+            url={organization ? `/org/${organization.slug}/` : '/'}
+            label="Dashboard"
+            exact
+          />,
+        ]}
+      />
       <PMVerticalNavSection
         title="Knowledge base"
         navEntries={[
@@ -97,17 +107,21 @@ export const SidebarNavigation: React.FunctionComponent<
           />,
         ]}
       />
-      <PMVerticalNavSection
-        navEntries={[
-          <SidebarNavigationLink
-            key="settings"
-            url={
-              organization ? `/org/${organization.slug}/settings` : '/settings'
-            }
-            label="Settings"
-          />,
-        ]}
-      />
+      {organization.role === 'admin' && (
+        <PMVerticalNavSection
+          navEntries={[
+            <SidebarNavigationLink
+              key="settings"
+              url={
+                organization
+                  ? `/org/${organization.slug}/settings`
+                  : '/settings'
+              }
+              label="Settings"
+            />,
+          ]}
+        />
+      )}
     </PMVerticalNav>
   );
 };

@@ -1,54 +1,58 @@
 import { ListOrganizationUserStatusesUseCase } from './ListOrganizationUserStatusesUseCase';
 import { ListOrganizationUserStatusesCommand } from '../../../domain/useCases/IListOrganizationUserStatusesUseCase';
-import { DataSource } from 'typeorm';
 import { stubLogger } from '@packmind/shared/test';
 import { createUserId } from '../../../domain/entities/User';
 import { createOrganizationId } from '../../../domain/entities/Organization';
-import { userFactory } from '../../../../test/userFactory';
+import { organizationFactory, userFactory } from '../../../../test';
 import { invitationFactory } from '../../../../test/invitationFactory';
-
-jest.mock('../../services/EnhancedAccountsServices');
+import { UserService } from '../../services/UserService';
+import { OrganizationService } from '../../services/OrganizationService';
+import { InvitationService } from '../../services/InvitationService';
+import { OrganizationAdminRequiredError } from '../../../domain/errors';
 
 describe('ListOrganizationUserStatusesUseCase', () => {
   let useCase: ListOrganizationUserStatusesUseCase;
-  let mockDataSource: jest.Mocked<DataSource>;
   let mockLogger: ReturnType<typeof stubLogger>;
   let mockGetUserById: jest.Mock;
+  let mockGetOrganizationById: jest.Mock;
   let mockListUsers: jest.Mock;
   let mockFindByUserIds: jest.Mock;
+  let userService: jest.Mocked<UserService>;
+  let organizationService: jest.Mocked<OrganizationService>;
+  let invitationService: jest.Mocked<InvitationService>;
 
   const adminUserId = createUserId('admin-user');
   const organizationId = createOrganizationId('test-org');
 
   beforeEach(() => {
-    mockDataSource = {
-      getRepository: jest.fn().mockReturnValue({
-        findOne: jest.fn(),
-        find: jest.fn(),
-        save: jest.fn(),
-      }),
-    } as unknown as jest.Mocked<DataSource>;
     mockGetUserById = jest.fn();
+    mockGetOrganizationById = jest.fn();
     mockListUsers = jest.fn();
     mockFindByUserIds = jest.fn();
 
-    const EnhancedAccountsServices = jest.requireMock(
-      '../../services/EnhancedAccountsServices',
-    ).EnhancedAccountsServices;
-    EnhancedAccountsServices.mockImplementation(() => ({
-      getUserService: () => ({
-        getUserById: mockGetUserById,
-        listUsers: mockListUsers,
-      }),
-      getInvitationService: () => ({
-        findByUserIds: mockFindByUserIds,
-      }),
-    }));
+    userService = {
+      getUserById: mockGetUserById,
+      listUsers: mockListUsers,
+    } as unknown as jest.Mocked<UserService>;
+
+    organizationService = {
+      getOrganizationById: mockGetOrganizationById,
+    } as unknown as jest.Mocked<OrganizationService>;
+
+    invitationService = {
+      findByUserIds: mockFindByUserIds,
+    } as unknown as jest.Mocked<InvitationService>;
 
     mockLogger = stubLogger();
 
+    const organization = organizationFactory({ id: organizationId });
+    mockGetOrganizationById.mockResolvedValue(organization);
+
     useCase = new ListOrganizationUserStatusesUseCase(
-      mockDataSource,
+      userService,
+      organizationService,
+      userService,
+      invitationService,
       mockLogger,
     );
   });
@@ -311,7 +315,7 @@ describe('ListOrganizationUserStatusesUseCase', () => {
     };
 
     await expect(useCase.execute(command)).rejects.toThrow(
-      'User must be an admin to perform this action',
+      OrganizationAdminRequiredError,
     );
   });
 });

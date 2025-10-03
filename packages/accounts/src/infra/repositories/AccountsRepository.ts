@@ -3,12 +3,18 @@ import { IAccountsRepository } from '../../domain/repositories/IAccountsReposito
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
 import { IOrganizationRepository } from '../../domain/repositories/IOrganizationRepository';
 import { IInvitationRepository } from '../../domain/repositories/IInvitationRepository';
+import { IPasswordResetTokenRepository } from '../../domain/repositories/IPasswordResetTokenRepository';
 import { UserRepository } from './UserRepository';
 import { OrganizationRepository } from './OrganizationRepository';
 import { InvitationRepository } from './InvitationRepository';
+import { PasswordResetTokenRepository } from './PasswordResetTokenRepository';
 import { UserSchema } from '../schemas/UserSchema';
 import { OrganizationSchema } from '../schemas/OrganizationSchema';
 import { InvitationSchema } from '../schemas/InvitationSchema';
+import { PasswordResetTokenSchema } from '../schemas/PasswordResetTokenSchema';
+import { UserOrganizationMembershipSchema } from '../schemas/UserOrganizationMembershipSchema';
+import { UserOrganizationMembershipRepository } from './UserOrganizationMembershipRepository';
+import { IUserOrganizationMembershipRepository } from '../../domain/repositories/IUserOrganizationMembershipRepository';
 
 /**
  * AccountsRepository - Repository aggregator implementation for the Accounts domain
@@ -21,7 +27,8 @@ export class AccountsRepository implements IAccountsRepository {
   private readonly userRepository: IUserRepository;
   private readonly organizationRepository: IOrganizationRepository;
   private readonly invitationRepository: IInvitationRepository;
-
+  private readonly passwordResetTokenRepository: IPasswordResetTokenRepository;
+  private readonly userOrganizationMembershipRepository: IUserOrganizationMembershipRepository;
   constructor(private readonly dataSource: DataSource) {
     // Initialize all repositories with their respective schemas
     this.userRepository = new UserRepository(
@@ -33,6 +40,13 @@ export class AccountsRepository implements IAccountsRepository {
     this.invitationRepository = new InvitationRepository(
       this.dataSource.getRepository(InvitationSchema),
     );
+    this.passwordResetTokenRepository = new PasswordResetTokenRepository(
+      this.dataSource.getRepository(PasswordResetTokenSchema),
+    );
+    this.userOrganizationMembershipRepository =
+      new UserOrganizationMembershipRepository(
+        this.dataSource.getRepository(UserOrganizationMembershipSchema),
+      );
   }
 
   getUserRepository(): IUserRepository {
@@ -45,5 +59,13 @@ export class AccountsRepository implements IAccountsRepository {
 
   getInvitationRepository(): IInvitationRepository {
     return this.invitationRepository;
+  }
+
+  getUserOrganizationMembershipRepository(): IUserOrganizationMembershipRepository {
+    return this.userOrganizationMembershipRepository;
+  }
+
+  getPasswordResetTokenRepository(): IPasswordResetTokenRepository {
+    return this.passwordResetTokenRepository;
   }
 }

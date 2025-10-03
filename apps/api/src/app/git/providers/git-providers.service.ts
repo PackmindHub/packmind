@@ -5,18 +5,35 @@ import {
   GitProviderId,
   GitRepoId,
   GitHexa,
+  AddGitProviderCommand,
 } from '@packmind/git';
+import { AccountsHexa } from '@packmind/accounts';
 import { OrganizationId, UserId } from '@packmind/accounts';
 
 @Injectable()
 export class GitProvidersService {
-  constructor(private readonly gitHexa: GitHexa) {}
+  constructor(
+    private readonly gitHexa: GitHexa,
+    private readonly accountsHexa: AccountsHexa,
+  ) {
+    this.gitHexa.setUserProvider(this.accountsHexa.getUserProvider());
+    this.gitHexa.setOrganizationProvider(
+      this.accountsHexa.getOrganizationProvider(),
+    );
+  }
 
   async addGitProvider(
+    userId: UserId,
     organizationId: OrganizationId,
     gitProvider: Omit<GitProvider, 'id'>,
   ): Promise<GitProvider> {
-    return this.gitHexa.addGitProvider(gitProvider, organizationId);
+    const command: AddGitProviderCommand = {
+      userId: String(userId),
+      organizationId: String(organizationId),
+      gitProvider,
+    };
+
+    return this.gitHexa.addGitProvider(command);
   }
 
   async addRepositoryToProvider(
@@ -74,19 +91,36 @@ export class GitProvidersService {
   async updateGitProvider(
     id: GitProviderId,
     gitProvider: Partial<Omit<GitProvider, 'id'>>,
+    userId: UserId,
+    organizationId: OrganizationId,
   ): Promise<GitProvider> {
-    return this.gitHexa.updateGitProvider(id, gitProvider);
+    return this.gitHexa.updateGitProvider(
+      id,
+      gitProvider,
+      userId,
+      organizationId,
+    );
   }
 
-  async deleteGitProvider(id: GitProviderId, userId: UserId): Promise<void> {
-    return this.gitHexa.deleteGitProvider(id, userId);
+  async deleteGitProvider(
+    id: GitProviderId,
+    userId: UserId,
+    organizationId: OrganizationId,
+  ): Promise<void> {
+    return this.gitHexa.deleteGitProvider(id, userId, organizationId);
   }
 
   async removeRepositoryFromProvider(
     providerId: GitProviderId,
     userId: UserId,
+    organizationId: OrganizationId,
     repositoryId: GitRepoId,
   ): Promise<void> {
-    return this.gitHexa.deleteGitRepo(repositoryId, userId, providerId);
+    return this.gitHexa.deleteGitRepo(
+      repositoryId,
+      userId,
+      organizationId,
+      providerId,
+    );
   }
 }

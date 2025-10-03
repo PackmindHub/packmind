@@ -6,6 +6,7 @@ import {
   IAuthGateway,
   TokenResponse,
   ValidateInvitationResponse,
+  ValidatePasswordResetResponse,
 } from './IAuthGateway';
 import { AuthGatewayApi } from './AuthGatewayApi';
 
@@ -14,4 +15,8 @@ export const organizationGateway: IOrganizationGateway =
 export const userGateway: IUserGateway = new UserGatewayApi();
 export const authGateway: IAuthGateway = new AuthGatewayApi();
 
-export type { TokenResponse, ValidateInvitationResponse };
+export type {
+  TokenResponse,
+  ValidateInvitationResponse,
+  ValidatePasswordResetResponse,
+};

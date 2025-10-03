@@ -6,44 +6,46 @@ import {
   InvitationSkipResult,
   DirectMembershipResult,
 } from '../../../domain/useCases/ICreateInvitationsUseCase';
-import { PackmindLogger } from '@packmind/shared';
+import {
+  AbstractAdminUseCase,
+  AdminContext,
+  PackmindLogger,
+  UserProvider,
+  OrganizationProvider,
+} from '@packmind/shared';
 import { UserService } from '../../services/UserService';
-import { OrganizationService } from '../../services/OrganizationService';
 import {
   InvitationCreationRequest,
   InvitationCreationRecord,
   InvitationService,
 } from '../../services/InvitationService';
-import {
-  createOrganizationId,
-  Organization,
-} from '../../../domain/entities/Organization';
-import {
-  createUserId,
-  User,
-  UserOrganizationRole,
-} from '../../../domain/entities/User';
-import {
-  InvitationBatchEmptyError,
-  OrganizationNotFoundError,
-  InviterNotFoundError,
-} from '../../../domain/errors';
+import { Organization } from '../../../domain/entities/Organization';
+import { User, UserOrganizationRole } from '../../../domain/entities/User';
+import { InvitationBatchEmptyError } from '../../../domain/errors';
 import validator from 'validator';
 
 const origin = 'CreateInvitationsUseCase';
 
-export class CreateInvitationsUseCase implements ICreateInvitationsUseCase {
+export class CreateInvitationsUseCase
+  extends AbstractAdminUseCase<
+    CreateInvitationsCommand,
+    CreateInvitationsResponse
+  >
+  implements ICreateInvitationsUseCase
+{
   constructor(
+    userProvider: UserProvider,
+    organizationProvider: OrganizationProvider,
     private readonly userService: UserService,
-    private readonly organizationService: OrganizationService,
     private readonly invitationService: InvitationService,
-    private readonly logger: PackmindLogger = new PackmindLogger(origin),
+    logger: PackmindLogger = new PackmindLogger(origin),
   ) {
+    super(userProvider, organizationProvider, logger);
     this.logger.info('CreateInvitationsUseCase initialized');
   }
 
-  async execute(
-    command: CreateInvitationsCommand,
+  async executeForAdmins(
+    command: CreateInvitationsCommand & AdminContext,
   ): Promise<CreateInvitationsResponse> {
     this.logger.info('Executing CreateInvitationsUseCase', {
       organizationId: command.organizationId,
@@ -55,12 +57,6 @@ export class CreateInvitationsUseCase implements ICreateInvitationsUseCase {
       this.logger.warn('Invitation batch empty');
       throw new InvitationBatchEmptyError();
     }
-
-    const organizationId = createOrganizationId(command.organizationId);
-    const inviterId = createUserId(command.userId);
-
-    const organization = await this.ensureOrganizationExists(organizationId);
-    const inviter = await this.ensureInviterExists(inviterId);
 
     const { candidates, skipped: preSkipped } = this.prepareEmails(
       command.emails,
@@ -74,8 +70,8 @@ export class CreateInvitationsUseCase implements ICreateInvitationsUseCase {
       directMembershipEmails,
     } = await this.buildCreationRequests({
       candidates,
-      organization,
-      inviter,
+      organization: command.organization,
+      inviter: command.user,
       role: command.role,
     });
 
@@ -102,29 +98,6 @@ export class CreateInvitationsUseCase implements ICreateInvitationsUseCase {
       organizationInvitations: directResults,
       skipped: combinedSkipped,
     };
-  }
-
-  private async ensureOrganizationExists(
-    organizationId: Organization['id'],
-  ): Promise<Organization> {
-    const organization =
-      await this.organizationService.getOrganizationById(organizationId);
-
-    if (!organization) {
-      throw new OrganizationNotFoundError(organizationId as string);
-    }
-
-    return organization;
-  }
-
-  private async ensureInviterExists(inviterId: User['id']): Promise<User> {
-    const inviter = await this.userService.getUserById(inviterId);
-
-    if (!inviter) {
-      throw new InviterNotFoundError(inviterId as string);
-    }
-
-    return inviter;
   }
 
   private prepareEmails(emails: string[]): {

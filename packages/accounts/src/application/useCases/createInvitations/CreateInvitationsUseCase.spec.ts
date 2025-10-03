@@ -11,11 +11,8 @@ import {
   Organization,
 } from '../../../domain/entities/Organization';
 import { CreateInvitationsCommand } from '../../../domain/useCases/ICreateInvitationsUseCase';
-import {
-  InvitationBatchEmptyError,
-  OrganizationNotFoundError,
-  InviterNotFoundError,
-} from '../../../domain/errors';
+import { InvitationBatchEmptyError } from '../../../domain/errors';
+import { UserNotFoundError } from '@packmind/shared';
 import { stubLogger } from '@packmind/shared/test';
 import {
   organizationFactory,
@@ -34,6 +31,13 @@ describe('CreateInvitationsUseCase', () => {
   const inviter = userFactory({
     id: createUserId('user-1'),
     email: 'admin@packmind.com',
+    memberships: [
+      {
+        userId: createUserId('user-1'),
+        organizationId: createOrganizationId('org-123'),
+        role: 'admin',
+      },
+    ],
   });
 
   beforeEach(() => {
@@ -81,6 +85,7 @@ describe('CreateInvitationsUseCase', () => {
     useCase = new CreateInvitationsUseCase(
       mockUserService,
       mockOrganizationService,
+      mockUserService,
       mockInvitationService,
       stubLogger(),
     );
@@ -514,8 +519,8 @@ describe('CreateInvitationsUseCase', () => {
       role: 'admin',
     };
 
-    await expect(useCase.execute(command)).rejects.toBeInstanceOf(
-      OrganizationNotFoundError,
+    await expect(useCase.execute(command)).rejects.toThrow(
+      `Organization ${organizationId} not found`,
     );
   });
 
@@ -530,7 +535,7 @@ describe('CreateInvitationsUseCase', () => {
     };
 
     await expect(useCase.execute(command)).rejects.toBeInstanceOf(
-      InviterNotFoundError,
+      UserNotFoundError,
     );
   });
 });

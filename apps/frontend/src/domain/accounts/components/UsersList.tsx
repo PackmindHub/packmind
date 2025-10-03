@@ -1,23 +1,28 @@
 import React, { useMemo } from 'react';
+import { LuCirclePlus, LuMail, LuUserCog, LuUserMinus } from 'react-icons/lu';
+
 import {
+  PMAlert,
+  PMBadge,
+  PMButton,
+  PMButtonGroup,
+  PMEmptyState,
+  PMHStack,
+  PMIcon,
+  PMSpinner,
   PMTable,
   PMTableColumn,
   PMTableRow,
-  PMEmptyState,
-  PMAlert,
   PMVStack,
-  PMSpinner,
-  PMBadge,
-  PMButton,
-  PMIcon,
-  PMHStack,
-  PMButtonGroup,
 } from '@packmind/ui';
-import { useGetUserStatusesQuery } from '../api/queries/UserQueries';
 import { OrganizationId, UserStatus } from '@packmind/accounts/types';
-import { LuCirclePlus, LuMail } from 'react-icons/lu';
-import { InviteUsersDialog } from './InviteUsers/InviteUsersDialog';
+
+import { useGetUserStatusesQuery } from '../api/queries/UserQueries';
 import { useInviteUsersMutation } from '../api/queries/AccountsQueries';
+import { AuthContextUser, useAuthContext } from '../hooks/useAuthContext';
+import { InviteUsersDialog } from './InviteUsers/InviteUsersDialog';
+import { ExcludeUserDialog } from './ExcludeUserDialog';
+import { ChangeUserRoleDialog } from './ChangeUserRole/ChangeUserRoleDialog';
 
 interface UsersListProps {
   organizationId: OrganizationId;
@@ -30,8 +35,13 @@ export const UsersList: React.FC<UsersListProps> = ({ organizationId }) => {
     isError,
     error: errorMessage,
   } = useGetUserStatusesQuery();
-
   const [inviteUserOpened, setInviteUserOpened] = React.useState(false);
+  const [changeRoleUserStatus, setChangeRoleUserStatus] =
+    React.useState<UserStatus | null>(null);
+  const [excludeUserState, setExcludeUserState] = React.useState<{
+    isOpen: boolean;
+    userStatus: UserStatus | null;
+  }>({ isOpen: false, userStatus: null });
 
   const columns: PMTableColumn[] = [
     { key: 'email', header: 'Email', grow: true },
@@ -49,7 +59,14 @@ export const UsersList: React.FC<UsersListProps> = ({ organizationId }) => {
       status: <UserStatusBadge userStatus={userStatus} />,
       role: <PMBadge colorPalette="blue">{userStatus.role}</PMBadge>,
       actions: (
-        <UserActions organizationId={organizationId} userStatus={userStatus} />
+        <UserActions
+          organizationId={organizationId}
+          userStatus={userStatus}
+          onChangeRole={() => setChangeRoleUserStatus(userStatus)}
+          onExcludeUser={(userStatus) =>
+            setExcludeUserState({ isOpen: true, userStatus })
+          }
+        />
       ),
     }));
   }, [userStatusesData, organizationId]);
@@ -115,6 +132,26 @@ export const UsersList: React.FC<UsersListProps> = ({ organizationId }) => {
           setOpen={setInviteUserOpened}
         />
       )}
+      {changeRoleUserStatus && (
+        <ChangeUserRoleDialog
+          open={!!changeRoleUserStatus}
+          setOpen={(open) => !open && setChangeRoleUserStatus(null)}
+          userStatus={changeRoleUserStatus}
+        />
+      )}
+      {excludeUserState.isOpen && (
+        <ExcludeUserDialog
+          open={excludeUserState.isOpen}
+          onOpenChange={(open) =>
+            setExcludeUserState({
+              isOpen: open,
+              userStatus: open ? excludeUserState.userStatus : null,
+            })
+          }
+          userStatus={excludeUserState.userStatus}
+          organizationId={organizationId}
+        />
+      )}
     </PMVStack>
   );
 };
@@ -143,18 +180,31 @@ const UserStatusBadge: React.FunctionComponent<{
 const UserActions: React.FunctionComponent<{
   organizationId: OrganizationId;
   userStatus: UserStatus;
-}> = ({ organizationId, userStatus }) => {
+  currentUser?: AuthContextUser;
+  onChangeRole: () => void;
+  onExcludeUser: (userStatus: UserStatus) => void;
+}> = ({ organizationId, userStatus, onChangeRole, onExcludeUser }) => {
   const { mutateAsync: inviteUsers, isPending } = useInviteUsersMutation();
+  const { user: currentUser, organization } = useAuthContext();
+
+  // Don't show change role action for current user or if user is not admin
+  const isCurrentUser = currentUser?.id === userStatus.userId;
+  const isCurrentUserAdmin = organization?.role === 'admin';
 
   return (
     <PMButtonGroup>
       {!userStatus.isActive && (
         <PMButton
           variant={'secondary'}
+          size="sm"
           title={'Resend invitation'}
           loading={isPending}
           onClick={() =>
-            inviteUsers({ orgId: organizationId, emails: [userStatus.email] })
+            inviteUsers({
+              orgId: organizationId,
+              emails: [userStatus.email],
+              role: userStatus.role,
+            })
           }
           children={
             <PMIcon>
@@ -162,6 +212,40 @@ const UserActions: React.FunctionComponent<{
             </PMIcon>
           }
         />
+      )}
+      {userStatus.isActive && isCurrentUserAdmin && (
+        <>
+          <PMButton
+            variant={'secondary'}
+            size="sm"
+            title={
+              isCurrentUser ? 'Cannot change your own role' : 'Change user role'
+            }
+            onClick={onChangeRole}
+            disabled={isCurrentUser}
+            children={
+              <PMIcon>
+                <LuUserCog />
+              </PMIcon>
+            }
+          />
+          <PMButton
+            variant={'secondary'}
+            size="sm"
+            title={
+              isCurrentUser
+                ? 'Cannot remove yourself from organization'
+                : 'Remove user from organization'
+            }
+            onClick={() => onExcludeUser(userStatus)}
+            disabled={isCurrentUser}
+            children={
+              <PMIcon>
+                <LuUserMinus />
+              </PMIcon>
+            }
+          />
+        </>
       )}
     </PMButtonGroup>
   );

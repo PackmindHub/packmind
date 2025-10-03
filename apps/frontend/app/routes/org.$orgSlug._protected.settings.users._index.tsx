@@ -1,7 +1,7 @@
-import { NavLink, useParams } from 'react-router';
+import { NavLink } from 'react-router';
 import { PMPage } from '@packmind/ui';
 import { useAuthContext } from '../../src/domain/accounts/hooks';
-import { UsersPage } from '../../src/domain/accounts/components';
+import { UsersPage } from '../../src/domain/accounts/components/UsersPage';
 import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
 
 export const handle = {
@@ -13,10 +13,9 @@ export const handle = {
 };
 
 export default function SettingsUsersRouteModule() {
-  const { orgSlug } = useParams();
   const { organization } = useAuthContext();
 
-  if (!organization || orgSlug !== organization.slug) {
+  if (!organization) {
     return null;
   }
 

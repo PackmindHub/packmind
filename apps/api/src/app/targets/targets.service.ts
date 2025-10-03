@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   Target,
   TargetWithRepository,
+  GetTargetsByGitRepoCommand,
   GetTargetsByRepositoryCommand,
   GetTargetsByOrganizationCommand,
   AddTargetCommand,
@@ -20,9 +21,15 @@ export class TargetsService {
     this.deploymentAdapter = this.deploymentsHexa.getDeploymentsUseCases();
   }
 
+  async getTargetsByGitRepo(
+    command: GetTargetsByGitRepoCommand,
+  ): Promise<Target[]> {
+    return this.deploymentAdapter.getTargetsByGitRepo(command);
+  }
+
   async getTargetsByRepository(
     command: GetTargetsByRepositoryCommand,
-  ): Promise<Target[]> {
+  ): Promise<TargetWithRepository[]> {
     return this.deploymentAdapter.getTargetsByRepository(command);
   }
 

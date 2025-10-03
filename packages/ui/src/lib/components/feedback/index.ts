@@ -19,3 +19,4 @@ export { PMAlertDialog } from './PMAlertDialog';
 export type { PMAlertDialogProps } from './PMAlertDialog';
 export { PMTooltip } from './PMTooltip';
 export type { PMTooltipProps } from './PMTooltip';
+export { PMStatus } from './PMStatus/PMStatus';

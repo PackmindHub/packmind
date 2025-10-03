@@ -1,13 +1,21 @@
 import { Injectable } from '@nestjs/common';
-import { AccountsHexa, Organization, OrganizationId } from '@packmind/accounts';
-import { UserOrganizationRole } from '@packmind/shared';
+import {
+  AccountsHexa,
+  Organization,
+  OrganizationId,
+  RemoveUserFromOrganizationCommand,
+  RemoveUserFromOrganizationResponse,
+} from '@packmind/accounts';
+import { UserId, UserOrganizationRole } from '@packmind/shared';
 
 @Injectable()
 export class OrganizationsService {
   constructor(private readonly accountsHexa: AccountsHexa) {}
 
-  async getOrganizations(): Promise<Organization[]> {
-    return this.accountsHexa.listOrganizations({});
+  async removeUserFromOrganization(
+    command: RemoveUserFromOrganizationCommand,
+  ): Promise<RemoveUserFromOrganizationResponse> {
+    return this.accountsHexa.removeUserFromOrganization(command);
   }
 
   async getOrganizationById(id: OrganizationId): Promise<Organization | null> {
@@ -22,8 +30,16 @@ export class OrganizationsService {
     return this.accountsHexa.getOrganizationBySlug({ slug });
   }
 
-  async createOrganization(name: string): Promise<Organization> {
-    return this.accountsHexa.createOrganization({ name });
+  async getUserOrganizations(userId: UserId): Promise<Organization[]> {
+    const result = await this.accountsHexa.listUserOrganizations({ userId });
+    return result.organizations;
+  }
+
+  async createOrganization(
+    userId: UserId,
+    name: string,
+  ): Promise<Organization> {
+    return this.accountsHexa.createOrganization({ userId, name });
   }
 
   async inviteUsers(

@@ -8,7 +8,10 @@ import { PackmindLogger } from '../logger/PackmindLogger';
 import {
   AnySSEEvent,
   createProgramStatusChangeEvent,
+  createUserContextChangeEvent,
+  type UserContextChangeType,
 } from '../types/sse/SSEEvent';
+import { UserOrganizationRole } from '../types/accounts/User';
 
 const origin = 'SSEEventPublisher';
 
@@ -74,6 +77,57 @@ export class SSEEventPublisher {
         {
           programId,
           userId,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Publish an event to notify a user that their context (role or membership) changed
+   * This should trigger a refetch of the /me route on the frontend
+   */
+  static async publishUserContextChangeEvent(
+    userId: string,
+    organizationId: string,
+    changeType: UserContextChangeType,
+    role?: UserOrganizationRole,
+  ): Promise<void> {
+    SSEEventPublisher.logger.info('Publishing user context change event', {
+      userId,
+      organizationId,
+      changeType,
+      role,
+    });
+
+    try {
+      const event = createUserContextChangeEvent(
+        userId,
+        organizationId,
+        changeType,
+        role,
+      );
+
+      await SSEEventPublisher.publishEvent('user_context_change', [], event, [
+        userId,
+      ]);
+
+      SSEEventPublisher.logger.debug(
+        'Successfully published user context change event',
+        {
+          userId,
+          organizationId,
+          changeType,
+        },
+      );
+    } catch (error) {
+      SSEEventPublisher.logger.error(
+        'Failed to publish user context change event',
+        {
+          userId,
+          organizationId,
+          changeType,
           error: error instanceof Error ? error.message : String(error),
         },
       );

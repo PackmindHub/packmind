@@ -82,6 +82,44 @@ describe('SingleFileDeployer', () => {
       },
     ];
 
+    it('never outputs "null" for recipe with null summary', async () => {
+      const recipeWithNullSummary: RecipeVersion[] = [
+        {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: createRecipeId('recipe-1'),
+          name: 'Recipe Without Summary',
+          slug: 'recipe-without-summary',
+          content: '# Recipe Content',
+          version: 1,
+          summary: null,
+          userId: createUserId('user-1'),
+        },
+      ];
+
+      mockGitHexa.getFileFromRepo.mockResolvedValue(null);
+
+      const result = await deployer.deployRecipes(
+        recipeWithNullSummary,
+        mockGitRepo,
+        jetbrainsTarget,
+      );
+
+      expect(result.createOrUpdate).toHaveLength(1);
+      const content = result.createOrUpdate[0].content;
+
+      // Should not contain the string "null" as a value
+      expect(content).not.toMatch(/:\s*null\s*$/m);
+      expect(content).not.toMatch(/:\s*null\n/);
+
+      // Should contain only the link without colon and description
+      expect(content).toContain(
+        '* [Recipe Without Summary](.packmind/recipes/recipe-without-summary.md)',
+      );
+      expect(content).not.toMatch(
+        /Recipe Without Summary\].*:\s+Recipe Without Summary/,
+      );
+    });
+
     it('uses getTargetPrefixedPath for file path in recipe deployment', async () => {
       mockGitHexa.getFileFromRepo.mockResolvedValue(null);
 
@@ -140,6 +178,174 @@ describe('SingleFileDeployer', () => {
         scope: 'test',
       },
     ];
+
+    it('never outputs "null" for standard with null summary but existing description', async () => {
+      const standardWithNullSummary: StandardVersion[] = [
+        {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: createStandardId('standard-1'),
+          name: 'Standard Without Summary',
+          slug: 'standard-without-summary',
+          description: 'This is the description',
+          version: 1,
+          summary: null,
+          userId: createUserId('user-1'),
+          scope: 'test',
+        },
+      ];
+
+      mockGitHexa.getFileFromRepo.mockResolvedValue(null);
+
+      const result = await deployer.deployStandards(
+        standardWithNullSummary,
+        mockGitRepo,
+        vscodeTarget,
+      );
+
+      expect(result.createOrUpdate).toHaveLength(1);
+      const content = result.createOrUpdate[0].content;
+
+      // Should not contain the string "null" as a value
+      expect(content).not.toMatch(/:\s*null\s*$/m);
+      expect(content).not.toMatch(/:\s*null\n/);
+
+      // Should use description as fallback (only first line)
+      expect(content).toContain(': This is the description');
+    });
+
+    it('truncates long descriptions (not summaries) to 200 characters', async () => {
+      const standardWithLongDescription: StandardVersion[] = [
+        {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: createStandardId('standard-1'),
+          name: 'Standard With Long Description',
+          slug: 'standard-long-description',
+          description: 'A'.repeat(250),
+          version: 1,
+          summary: null, // Using description fallback, should truncate
+          userId: createUserId('user-1'),
+          scope: 'test',
+        },
+      ];
+
+      mockGitHexa.getFileFromRepo.mockResolvedValue(null);
+
+      const result = await deployer.deployStandards(
+        standardWithLongDescription,
+        mockGitRepo,
+        vscodeTarget,
+      );
+
+      expect(result.createOrUpdate).toHaveLength(1);
+      const content = result.createOrUpdate[0].content;
+
+      // Should truncate description at 200 characters and add ellipsis
+      expect(content).toContain(': ' + 'A'.repeat(200) + '...');
+      expect(content).not.toContain('A'.repeat(250));
+    });
+
+    it('does not truncate long summaries', async () => {
+      const standardWithLongSummary: StandardVersion[] = [
+        {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: createStandardId('standard-1'),
+          name: 'Standard With Long Summary',
+          slug: 'standard-long-summary',
+          description: 'Short description',
+          version: 1,
+          summary: 'B'.repeat(250), // Using summary, should NOT truncate
+          userId: createUserId('user-1'),
+          scope: 'test',
+        },
+      ];
+
+      mockGitHexa.getFileFromRepo.mockResolvedValue(null);
+
+      const result = await deployer.deployStandards(
+        standardWithLongSummary,
+        mockGitRepo,
+        vscodeTarget,
+      );
+
+      expect(result.createOrUpdate).toHaveLength(1);
+      const content = result.createOrUpdate[0].content;
+
+      // Should NOT truncate summary even if long
+      expect(content).toContain(': ' + 'B'.repeat(250));
+      expect(content).not.toContain('...');
+    });
+
+    it('only uses first line of multiline descriptions', async () => {
+      const standardWithMultilineDescription: StandardVersion[] = [
+        {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: createStandardId('standard-1'),
+          name: 'Standard With Multiline',
+          slug: 'standard-multiline',
+          description:
+            'First line of description\nSecond line should not appear\nThird line also not',
+          version: 1,
+          summary: null,
+          userId: createUserId('user-1'),
+          scope: 'test',
+        },
+      ];
+
+      mockGitHexa.getFileFromRepo.mockResolvedValue(null);
+
+      const result = await deployer.deployStandards(
+        standardWithMultilineDescription,
+        mockGitRepo,
+        vscodeTarget,
+      );
+
+      expect(result.createOrUpdate).toHaveLength(1);
+      const content = result.createOrUpdate[0].content;
+
+      // Should only contain first line
+      expect(content).toContain(': First line of description');
+      expect(content).not.toContain('Second line');
+      expect(content).not.toContain('Third line');
+    });
+
+    it('never outputs "null" for standard with both null summary and description', async () => {
+      const standardWithNullEverything: StandardVersion[] = [
+        {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: createStandardId('standard-1'),
+          name: 'Standard Name Only',
+          slug: 'standard-name-only',
+          description: null as unknown as string,
+          version: 1,
+          summary: null,
+          userId: createUserId('user-1'),
+          scope: 'test',
+        },
+      ];
+
+      mockGitHexa.getFileFromRepo.mockResolvedValue(null);
+
+      const result = await deployer.deployStandards(
+        standardWithNullEverything,
+        mockGitRepo,
+        vscodeTarget,
+      );
+
+      expect(result.createOrUpdate).toHaveLength(1);
+      const content = result.createOrUpdate[0].content;
+
+      // Should not contain the string "null" as a value
+      expect(content).not.toMatch(/:\s*null\s*$/m);
+      expect(content).not.toMatch(/:\s*null\n/);
+
+      // Should contain only the link without colon and description
+      expect(content).toContain(
+        '* [Standard Name Only](.packmind/standards/standard-name-only.md)',
+      );
+      expect(content).not.toMatch(
+        /Standard Name Only\].*:\s+Standard Name Only/,
+      );
+    });
 
     it('uses getTargetPrefixedPath for file path in standards deployment', async () => {
       mockGitHexa.getFileFromRepo.mockResolvedValue(null);

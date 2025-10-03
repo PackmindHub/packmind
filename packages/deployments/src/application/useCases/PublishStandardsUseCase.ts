@@ -15,7 +15,7 @@ import { IPublishStandards, PublishStandardsCommand } from '@packmind/shared';
 import {
   StandardsDeployment,
   createStandardsDeploymentId,
-} from '../../domain/entities/StandardsDeployment';
+} from '@packmind/shared';
 import { PrepareStandardsDeploymentCommand } from '@packmind/coding-agent';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
 import { TargetService } from '../services/TargetService';
@@ -68,37 +68,9 @@ export class PublishStandardsUseCase implements IPublishStandards {
         standardVersionIdsCount: command.standardVersionIds.length,
       });
 
-      // Get standard versions by IDs (declared outside try block for catch access)
       let standardVersions: StandardVersion[] = [];
-
       try {
-        standardVersions = await Promise.all(
-          command.standardVersionIds.map(async (standardVersionId) => {
-            const standardVersion =
-              await this.standardsHexa.getStandardVersionById(
-                standardVersionId,
-              );
-            if (!standardVersion) {
-              this.logger.error('Standard version not found', {
-                standardVersionId,
-              });
-              throw new Error(
-                `Standard version with id ${standardVersionId} not found`,
-              );
-            }
-            return standardVersion;
-          }),
-        );
-
-        this.logger.info('Retrieved standard versions', {
-          count: standardVersions.length,
-          standardVersions: standardVersions.map((sv) => ({
-            id: sv.id,
-            name: sv.name,
-            slug: sv.slug,
-            version: sv.version,
-          })),
-        });
+        standardVersions = await this.extractStandardVersions(command);
 
         // Get previously deployed standard versions for this target
         // This ensures we maintain all previously deployed standards in the index
@@ -126,7 +98,9 @@ export class PublishStandardsUseCase implements IPublishStandards {
           standardVersionsMap.set(sv.standardId, sv);
         });
 
-        const allStandardVersions = Array.from(standardVersionsMap.values());
+        const allStandardVersions = Array.from(
+          standardVersionsMap.values(),
+        ).sort((a, b) => a.name.localeCompare(b.name));
 
         this.logger.info('Combined standard versions', {
           totalCount: allStandardVersions.length,
@@ -170,30 +144,36 @@ Standards updated:
 ${standardVersions.map((sv) => `- ${sv.name} (${sv.slug}) v${sv.version}`).join('\n')}`;
 
         let gitCommit;
+        let deploymentStatus = DistributionStatus.success;
         try {
           gitCommit = await this.gitHexa.commitToGit(
             gitRepo,
             fileUpdates.createOrUpdate,
             commitMessage,
           );
+          this.logger.info('Committed changes', {
+            commitId: gitCommit.id,
+            commitSha: gitCommit.sha,
+          });
         } catch (error) {
           if (
             error instanceof Error &&
             error.message === 'NO_CHANGES_DETECTED'
           ) {
-            this.logger.info('No changes detected, skipping this repository', {
-              gitRepoId: gitRepo.id,
-              standardVersionsCount: allStandardVersions.length,
-            });
-            continue; // Skip to next repository
+            this.logger.info(
+              'No changes detected, creating no_changes deployment entry',
+              {
+                gitRepoId: gitRepo.id,
+                standardVersionsCount: allStandardVersions.length,
+              },
+            );
+            // Set status to no_changes and continue without git commit
+            deploymentStatus = DistributionStatus.no_changes;
+            gitCommit = undefined;
+          } else {
+            throw error; // Re-throw other errors
           }
-          throw error; // Re-throw other errors
         }
-
-        this.logger.info('Committed changes', {
-          commitId: gitCommit.id,
-          commitSha: gitCommit.sha,
-        });
 
         // Add to collections for combined deployment
         // Individual deployments are now created per target instead of collecting in arrays
@@ -217,14 +197,14 @@ ${standardVersions.map((sv) => `- ${sv.name} (${sv.slug}) v${sv.version}`).join(
         // Create individual deployment entry using clean model
         const standardsDeployment: StandardsDeployment = {
           id: createStandardsDeploymentId(uuidv4()),
-          standardVersions: allStandardVersions, // already cast as any above
+          standardVersions: standardVersions, // Only store the standards that were actually requested to be deployed
           createdAt: new Date().toISOString(),
           authorId: command.userId as UserId,
           organizationId: command.organizationId as OrganizationId,
           // Single target model fields
           gitCommit: gitCommit,
           target: target,
-          status: DistributionStatus.success,
+          status: deploymentStatus,
         };
 
         // Save the deployment to the database
@@ -233,12 +213,12 @@ ${standardVersions.map((sv) => `- ${sv.name} (${sv.slug}) v${sv.version}`).join(
         // Add to deployments array for return
         deployments.push(standardsDeployment);
 
-        this.logger.info('Created successful deployment entry', {
+        this.logger.info('Created deployment entry', {
           standardsDeploymentId: standardsDeployment.id,
           targetId,
           gitRepoId: gitRepo.id,
-          status: DistributionStatus.success,
-          commitSha: gitCommit.sha,
+          status: deploymentStatus,
+          commitSha: gitCommit?.sha,
         });
       } catch (error) {
         const errorMessage =
@@ -269,12 +249,50 @@ ${standardVersions.map((sv) => `- ${sv.name} (${sv.slug}) v${sv.version}`).join(
       failedDeployments: deployments.filter(
         (d) => d.status === DistributionStatus.failure,
       ).length,
+      noChangesDeployments: deployments.filter(
+        (d) => d.status === DistributionStatus.no_changes,
+      ).length,
     });
 
     return deployments;
   }
 
-  private async saveStandardDeploymentInFailure(
+  public async extractStandardVersions(command: PublishStandardsCommand) {
+    // Get standard versions by IDs (declared outside try block for catch access)
+    let standardVersions: StandardVersion[] = [];
+
+    standardVersions = await Promise.all(
+      command.standardVersionIds.map(async (standardVersionId) => {
+        const standardVersion =
+          await this.standardsHexa.getStandardVersionById(standardVersionId);
+        if (!standardVersion) {
+          this.logger.error('Standard version not found', {
+            standardVersionId,
+          });
+          throw new Error(
+            `Standard version with id ${standardVersionId} not found`,
+          );
+        }
+        return standardVersion;
+      }),
+    );
+
+    // Sort standard versions alphabetically by name for deterministic ordering
+    standardVersions.sort((a, b) => a.name.localeCompare(b.name));
+
+    this.logger.info('Retrieved standard versions', {
+      count: standardVersions.length,
+      standardVersions: standardVersions.map((sv) => ({
+        id: sv.id,
+        name: sv.name,
+        slug: sv.slug,
+        version: sv.version,
+      })),
+    });
+    return standardVersions;
+  }
+
+  public async saveStandardDeploymentInFailure(
     command: PublishStandardsCommand,
     target: Target,
     deployments: StandardsDeployment[],
@@ -308,6 +326,9 @@ ${standardVersions.map((sv) => `- ${sv.name} (${sv.slug}) v${sv.version}`).join(
           versionsToRecord = fetchedVersions.filter(
             (sv): sv is StandardVersion => sv !== null,
           );
+
+          // Sort alphabetically for consistency
+          versionsToRecord.sort((a, b) => a.name.localeCompare(b.name));
 
           this.logger.info(
             'Successfully fetched intended versions for failure record',

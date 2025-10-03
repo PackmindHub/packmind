@@ -7,6 +7,11 @@ import {
   User,
   UserId,
 } from '@packmind/accounts';
+import {
+  ChangeUserRoleCommand,
+  ChangeUserRoleResponse,
+  UserOrganizationRole,
+} from '@packmind/shared';
 
 @Injectable()
 export class UsersService {
@@ -39,5 +44,20 @@ export class UsersService {
       userId,
       organizationId,
     });
+  }
+
+  async changeUserRole(
+    userId: UserId,
+    organizationId: OrganizationId,
+    targetUserId: UserId,
+    newRole: UserOrganizationRole,
+  ): Promise<ChangeUserRoleResponse> {
+    const command: ChangeUserRoleCommand = {
+      userId,
+      organizationId,
+      targetUserId,
+      newRole,
+    };
+    return this.accountsHexa.changeUserRole(command);
   }
 }

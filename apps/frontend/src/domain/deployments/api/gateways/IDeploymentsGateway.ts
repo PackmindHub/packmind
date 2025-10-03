@@ -6,6 +6,7 @@ import {
   IListDeploymentsByStandard,
   IPublishRecipes,
   IPublishStandards,
+  IGetTargetsByGitRepoUseCase,
   IGetTargetsByRepositoryUseCase,
   IGetTargetsByOrganizationUseCase,
   IAddTargetUseCase,
@@ -20,6 +21,7 @@ export interface IDeploymentsGateway {
   getStandardsDeploymentOverview: Gateway<IGetStandardDeploymentOverview>;
   publishRecipes: Gateway<IPublishRecipes>;
   publishStandards: Gateway<IPublishStandards>;
+  getTargetsByGitRepo: Gateway<IGetTargetsByGitRepoUseCase>;
   getTargetsByRepository: Gateway<IGetTargetsByRepositoryUseCase>;
   getTargetsByOrganization: Gateway<IGetTargetsByOrganizationUseCase>;
   addTarget: Gateway<IAddTargetUseCase>;

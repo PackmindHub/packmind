@@ -7,6 +7,7 @@ import { pmMenuRecipe } from '../components/form/PMMenu/PMMenu.recipe';
 import { pmLinkRecipe } from '../components/typography/PMLink.recipe';
 import { pmTabsRecipe } from '../components/navigation/PMTabs/PMTabs.recipe';
 import { pmComboboxRecipe } from '../components/form/PMCombobox/PMCombobox.recipe';
+import { pmToasterRecipe } from '../components/feedback/PMToaster/PMToaster.recipe';
 export const packmindTheme = (preflight: boolean) =>
   defineConfig({
     preflight,
@@ -143,6 +144,7 @@ export const packmindTheme = (preflight: boolean) =>
         menu: pmMenuRecipe,
         tabs: pmTabsRecipe,
         combobox: pmComboboxRecipe,
+        toast: pmToasterRecipe,
       },
       semanticTokens: {
         colors: {
@@ -162,8 +164,12 @@ export const packmindTheme = (preflight: boolean) =>
             subtle: { value: '{colors.red.800}' },
             fg: { value: '{colors.red.200}' },
           },
+          purple: {
+            subtle: { value: '{colors.purple.800}' },
+            fg: { value: '{colors.purple.200}' },
+          },
           gray: {
-            subtle: { value: '{colors.beige.800}' },
+            subtle: { value: '{colors.beige.700}' },
             fg: { value: '{colors.beige.200}' },
           },
           branding: {

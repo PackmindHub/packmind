@@ -1,9 +1,43 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { organizationGateway } from '../gateways';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { organizationGateway, userGateway } from '../gateways';
 import { GET_USER_STATUSES_QUERY_KEY } from './UserQueries';
-import { UserOrganizationRole } from '@packmind/shared';
+import { UserId, UserOrganizationRole } from '@packmind/accounts/types';
+import { Organization } from '@packmind/shared';
+
+const CREATE_ORGANIZATION_MUTATION_KEY = 'createOrganization';
+export const GET_USER_ORGANIZATIONS_QUERY_KEY = 'getUserOrganizations';
 
 const INVITE_USERS_MUTATION_KEY = 'inviteUsers';
+const CHANGE_USER_ROLE_MUTATION_KEY = 'changeUserRole';
+const EXCLUDE_USER_MUTATION_KEY = 'excludeUser';
+
+export const getUserOrganizationsQueryOptions = () => ({
+  queryKey: [GET_USER_ORGANIZATIONS_QUERY_KEY],
+  queryFn: () => organizationGateway.getUserOrganizations(),
+});
+
+export const useGetUserOrganizationsQuery = () => {
+  return useQuery(getUserOrganizationsQueryOptions());
+};
+
+export const useCreateOrganizationMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: [CREATE_ORGANIZATION_MUTATION_KEY],
+    mutationFn: async (organization: { name: string }) => {
+      return organizationGateway.createOrganization(organization);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: [GET_USER_ORGANIZATIONS_QUERY_KEY],
+      });
+    },
+    onError: (error) => {
+      console.error('Error creating organization:', error);
+    },
+  });
+};
 
 export const useInviteUsersMutation = () => {
   const queryClient = useQueryClient();
@@ -19,6 +53,43 @@ export const useInviteUsersMutation = () => {
       return organizationGateway.inviteUsers(orgId, emails, role);
     },
     onSuccess: async (data) => {
+      await queryClient.invalidateQueries({
+        queryKey: [GET_USER_STATUSES_QUERY_KEY],
+      });
+    },
+  });
+};
+
+export const useChangeUserRoleMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: [CHANGE_USER_ROLE_MUTATION_KEY],
+    mutationFn: async (params: {
+      targetUserId: UserId;
+      newRole: UserOrganizationRole;
+    }) => {
+      const { targetUserId, newRole } = params;
+      return userGateway.changeUserRole(targetUserId, newRole);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: [GET_USER_STATUSES_QUERY_KEY],
+      });
+    },
+  });
+};
+
+export const useExcludeUserMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: [EXCLUDE_USER_MUTATION_KEY],
+    mutationFn: async (params: { orgId: string; userId: string }) => {
+      const { orgId, userId } = params;
+      return organizationGateway.excludeUser(orgId, userId);
+    },
+    onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: [GET_USER_STATUSES_QUERY_KEY],
       });

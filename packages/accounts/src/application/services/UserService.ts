@@ -7,16 +7,33 @@ import {
 } from '../../domain/entities/User';
 import { OrganizationId } from '../../domain/entities/Organization';
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
+import { IUserOrganizationMembershipRepository } from '../../domain/repositories/IUserOrganizationMembershipRepository';
 import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
-import { PackmindLogger, LogLevel } from '@packmind/shared';
-import { InvalidInvitationEmailError } from '../../domain/errors';
+import {
+  PackmindLogger,
+  LogLevel,
+  SSEEventPublisher,
+  UserContextChangeType,
+} from '@packmind/shared';
+import {
+  InvalidInvitationEmailError,
+  UserNotInOrganizationError,
+  UserCannotExcludeSelfError,
+} from '../../domain/errors';
 
 const origin = 'UserService';
+
+export type ExcludeUserFromOrganizationParams = {
+  requestingUser: User;
+  targetUser: User;
+  organizationId: OrganizationId;
+};
 
 export class UserService {
   constructor(
     private readonly userRepository: IUserRepository,
+    private readonly userOrganizationMembershipRepository: IUserOrganizationMembershipRepository,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.INFO,
@@ -145,6 +162,8 @@ export class UserService {
 
     const savedUser = await this.userRepository.add(updatedUser);
 
+    await this.publishUserContextChange(user.id, organizationId, 'invited');
+
     this.logger.info('User organization membership created', {
       userId: user.id,
       organizationId,
@@ -189,8 +208,114 @@ export class UserService {
     return this.userRepository.list();
   }
 
+  async excludeUserFromOrganization(
+    params: ExcludeUserFromOrganizationParams,
+  ): Promise<void> {
+    const { requestingUser, targetUser, organizationId } = params;
+
+    this.logger.info('Excluding user from organization', {
+      organizationId,
+      requestingUserId: requestingUser.id,
+      targetUserId: targetUser.id,
+    });
+
+    if (requestingUser.id === targetUser.id) {
+      throw new UserCannotExcludeSelfError();
+    }
+
+    const removed =
+      await this.userOrganizationMembershipRepository.removeMembership(
+        targetUser.id,
+        organizationId,
+      );
+
+    if (!removed) {
+      throw new UserNotInOrganizationError({
+        userId: String(targetUser.id),
+        organizationId: String(organizationId),
+      });
+    }
+
+    this.logger.info('User exclusion completed', {
+      organizationId,
+      requestingUserId: requestingUser.id,
+      targetUserId: targetUser.id,
+    });
+
+    await this.publishUserContextChange(
+      targetUser.id,
+      organizationId,
+      'removed',
+    );
+  }
+
   async updateUser(user: User): Promise<User> {
     this.logger.info('Updating user', { userId: user.id, email: user.email });
     return this.userRepository.add(user);
+  }
+
+  async changeUserRole(
+    targetUserId: UserId,
+    organizationId: OrganizationId,
+    newRole: UserOrganizationRole,
+  ): Promise<boolean> {
+    this.logger.info('Changing user role', {
+      targetUserId,
+      organizationId,
+      newRole,
+    });
+
+    const success = await this.userOrganizationMembershipRepository.updateRole(
+      targetUserId,
+      organizationId,
+      newRole,
+    );
+
+    if (success) {
+      this.logger.info('User role updated successfully', {
+        targetUserId,
+        organizationId,
+        newRole,
+      });
+
+      await this.publishUserContextChange(
+        targetUserId,
+        organizationId,
+        'role_changed',
+        newRole,
+      );
+    } else {
+      this.logger.warn('Failed to update user role - membership not found', {
+        targetUserId,
+        organizationId,
+        newRole,
+      });
+    }
+
+    return success;
+  }
+
+  private async publishUserContextChange(
+    targetUserId: UserId,
+    organizationId: OrganizationId,
+    changeType: UserContextChangeType,
+    role?: UserOrganizationRole,
+  ): Promise<void> {
+    try {
+      await SSEEventPublisher.publishUserContextChangeEvent(
+        String(targetUserId),
+        String(organizationId),
+        changeType,
+        role,
+      );
+    } catch (error) {
+      this.logger.error('Failed to publish user context change event', {
+        targetUserId,
+        organizationId,
+        changeType,
+        role,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
 }

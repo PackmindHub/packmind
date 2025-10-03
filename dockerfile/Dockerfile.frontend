@@ -1,7 +1,7 @@
 FROM nginx:1.29.1-alpine3.22-slim
 
 # Create a single-layer for all setup operations
-RUN apk add --no-cache bash && \
+RUN apk add --no-cache bash openssl=3.5.4-r0 && \
     rm /etc/nginx/conf.d/default.conf && \
     mkdir -p /home/packmind && \
     # Create non-root user with explicit UID 1000
@@ -33,6 +33,6 @@ RUN chmod +x /home/packmind/nginx.sh
 
 USER packmind
 
-EXPOSE 8080
+EXPOSE 80 8080
 
 ENTRYPOINT ["/home/packmind/nginx.sh"]

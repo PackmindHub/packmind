@@ -8,7 +8,7 @@ import {
 } from '@packmind/ui';
 import { RunDistribution } from '../RunDistribution/RunDistribution';
 import { Standard } from '@packmind/standards/types';
-import { analyzeDeploymentResults } from '../../utils/deploymentNotificationUtils';
+import { createSeparateDeploymentNotifications } from '../../utils/deploymentNotificationUtils';
 
 export interface DeployStandardButtonProps {
   label?: string;
@@ -50,15 +50,19 @@ export const DeployStandardButton: React.FC<DeployStandardButtonProps> = ({
                     store.setOpen(false);
 
                     if (deploymentResults) {
-                      const notification = analyzeDeploymentResults(
-                        deploymentResults.recipesDeployments,
-                        deploymentResults.standardsDeployments,
-                      );
+                      const notifications =
+                        createSeparateDeploymentNotifications(
+                          deploymentResults.recipesDeployments,
+                          deploymentResults.standardsDeployments,
+                        );
 
-                      pmToaster.create({
-                        type: notification.type,
-                        title: notification.title,
-                        description: notification.description,
+                      // Create separate toaster for each status type
+                      notifications.forEach((notification) => {
+                        pmToaster.create({
+                          type: notification.type,
+                          title: notification.title,
+                          description: notification.description,
+                        });
                       });
                     } else {
                       // Fallback for backward compatibility

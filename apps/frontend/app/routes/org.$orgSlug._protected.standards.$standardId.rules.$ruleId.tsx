@@ -2,7 +2,6 @@ import { useParams, useLoaderData } from 'react-router';
 import { PMBox, PMPage, PMPageSection, PMVStack, PMTabs } from '@packmind/ui';
 import { queryClient } from '../../src/shared/data/queryClient';
 import { Rule, RuleId, StandardId } from '@packmind/standards/types';
-import { ProgramEditor } from '@packmind/proprietary/frontend/domain/detection/components/ProgramEditor';
 import { RuleExamplesManager } from '../../src/domain/rules/components';
 import { getRulesByStandardIdOptions } from '../../src/domain/standards/api/queries/StandardsQueries';
 
@@ -45,17 +44,6 @@ export default function RuleDetailRouteModule() {
                 width="100%"
               >
                 <RuleExamplesManager standardId={standardId} ruleId={ruleId} />
-              </PMVStack>
-            ),
-          },
-          {
-            value: 'detection',
-            triggerLabel: 'Detection',
-            content: (
-              <PMVStack alignItems={'stretch'} gap="4" paddingY={'4'}>
-                <PMPageSection title={'Detection'} variant="outline">
-                  <ProgramEditor standardId={standardId} ruleId={ruleId} />
-                </PMPageSection>
               </PMVStack>
             ),
           },

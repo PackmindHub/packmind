@@ -1,5 +1,8 @@
 // Use cases exports
-export { AddGitProviderUseCase } from './addGitProvider/addGitProvider.usecase';
+export {
+  AddGitProviderUseCase,
+  AddGitProviderCommand,
+} from './addGitProvider/addGitProvider.usecase';
 export { AddGitRepoUseCase } from './addGitRepo/addGitRepo.usecase';
 export { CheckDirectoryExistenceUseCase } from './checkDirectoryExistence/checkDirectoryExistence.usecase';
 export { DeleteGitProviderUseCase } from './deleteGitProvider/deleteGitProvider.usecase';

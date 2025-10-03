@@ -209,7 +209,7 @@ describe('SignInUserUseCase', () => {
   });
 
   describe('when user has no memberships', () => {
-    it('throws Invalid credentials error', async () => {
+    it('returns the user with empty organizations array', async () => {
       const command: SignInUserCommand = {
         email: 'testuser@packmind.com',
         password: 'password123',
@@ -226,10 +226,16 @@ describe('SignInUserUseCase', () => {
       );
       userService.validatePassword.mockResolvedValue(true);
 
-      await expect(useCase.execute(command)).rejects.toThrow(
-        new Error('Invalid credentials'),
-      );
+      const result = await useCase.execute(command);
+
+      expect(result).toEqual({
+        user: userWithNoMemberships,
+        organizations: [],
+      });
       expect(organizationService.getOrganizationById).not.toHaveBeenCalled();
+      expect(loginRateLimiterService.clearAttempts).toHaveBeenCalledWith(
+        command.email,
+      );
     });
   });
 
@@ -400,7 +406,7 @@ describe('SignInUserUseCase', () => {
       expect(loginRateLimiterService.clearAttempts).not.toHaveBeenCalled();
     });
 
-    it('does not record failed attempt for user with no memberships', async () => {
+    it('clears attempts for successful login with user with no memberships', async () => {
       const command: SignInUserCommand = {
         email: 'testuser@packmind.com',
         password: 'password123',
@@ -417,17 +423,21 @@ describe('SignInUserUseCase', () => {
       );
       userService.validatePassword.mockResolvedValue(true);
 
-      await expect(useCase.execute(command)).rejects.toThrow(
-        UnauthorizedException,
-      );
+      const result = await useCase.execute(command);
 
+      expect(result).toEqual({
+        user: userWithNoMemberships,
+        organizations: [],
+      });
       expect(loginRateLimiterService.checkLoginAllowed).toHaveBeenCalledWith(
         'testuser@packmind.com',
       );
       expect(
         loginRateLimiterService.recordFailedAttempt,
       ).not.toHaveBeenCalled();
-      expect(loginRateLimiterService.clearAttempts).not.toHaveBeenCalled();
+      expect(loginRateLimiterService.clearAttempts).toHaveBeenCalledWith(
+        'testuser@packmind.com',
+      );
     });
 
     it('does not record failed attempt for nonexistent organization', async () => {

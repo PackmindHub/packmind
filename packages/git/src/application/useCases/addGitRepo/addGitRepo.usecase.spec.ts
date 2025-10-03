@@ -17,6 +17,11 @@ import {
   GitRepoAlreadyExistsError,
   GitProviderNotFoundError,
   GitProviderOrganizationMismatchError,
+  UserProvider,
+  OrganizationProvider,
+  User,
+  Organization,
+  OrganizationAdminRequiredError,
 } from '@packmind/shared';
 import { stubLogger } from '@packmind/shared/test';
 import { v4 as uuidv4 } from 'uuid';
@@ -26,6 +31,8 @@ describe('AddGitRepoUseCase', () => {
   let mockGitProviderService: jest.Mocked<GitProviderService>;
   let mockGitRepoService: jest.Mocked<GitRepoService>;
   let mockDeploymentPort: jest.Mocked<IDeploymentPort>;
+  let mockUserProvider: jest.Mocked<UserProvider>;
+  let mockOrganizationProvider: jest.Mocked<OrganizationProvider>;
 
   const organizationId = createOrganizationId(uuidv4());
   const userId = createUserId(uuidv4());
@@ -47,9 +54,41 @@ describe('AddGitRepoUseCase', () => {
       addTarget: jest.fn(),
     } as Partial<jest.Mocked<IDeploymentPort>> as jest.Mocked<IDeploymentPort>;
 
+    const adminUser: User = {
+      id: userId,
+      email: 'admin@example.com',
+      passwordHash: null,
+      active: true,
+      memberships: [
+        {
+          userId,
+          organizationId,
+          role: 'admin',
+        },
+      ],
+    };
+
+    const organization: Organization = {
+      id: organizationId,
+      name: 'Test Org',
+      slug: 'test-org',
+    };
+
+    mockUserProvider = {
+      getUserById: jest.fn().mockResolvedValue(adminUser),
+    } as Partial<jest.Mocked<UserProvider>> as jest.Mocked<UserProvider>;
+
+    mockOrganizationProvider = {
+      getOrganizationById: jest.fn().mockResolvedValue(organization),
+    } as Partial<
+      jest.Mocked<OrganizationProvider>
+    > as jest.Mocked<OrganizationProvider>;
+
     useCase = new AddGitRepoUseCase(
       mockGitProviderService,
       mockGitRepoService,
+      mockUserProvider,
+      mockOrganizationProvider,
       mockDeploymentPort,
       stubLogger(),
     );
@@ -164,6 +203,8 @@ describe('AddGitRepoUseCase', () => {
       const useCaseWithDeployment = new AddGitRepoUseCase(
         mockGitProviderService,
         mockGitRepoService,
+        mockUserProvider,
+        mockOrganizationProvider,
         mockDeploymentPort,
         stubLogger(),
       );
@@ -225,6 +266,37 @@ describe('AddGitRepoUseCase', () => {
   });
 
   describe('validation errors', () => {
+    it('throws error if user is not admin', async () => {
+      const command: AddGitRepoCommand = {
+        userId,
+        organizationId,
+        gitProviderId,
+        owner: 'testowner',
+        repo: 'testrepo',
+        branch: 'main',
+      };
+
+      const nonAdminUser: User = {
+        id: userId,
+        email: 'member@example.com',
+        passwordHash: null,
+        active: true,
+        memberships: [
+          {
+            userId,
+            organizationId,
+            role: 'member',
+          },
+        ],
+      };
+
+      mockUserProvider.getUserById.mockResolvedValueOnce(nonAdminUser);
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        OrganizationAdminRequiredError,
+      );
+    });
+
     it('throws error for missing git provider ID', async () => {
       const command: AddGitRepoCommand = {
         userId,

@@ -314,7 +314,6 @@ describe('SignUpWithOrganizationForm', () => {
       {
         email: 'test@example.com',
         password: 'password123!@',
-        organizationId: 'org-1',
       },
       expect.objectContaining({
         onSuccess: expect.any(Function),

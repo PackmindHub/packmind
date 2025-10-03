@@ -29,29 +29,14 @@ export default function TargetsRouteModule() {
 
   const {
     data: targetsWithRepository,
-    isLoading,
     isError,
     error,
   } = useGetTargetsByOrganizationQuery(
     organization?.id || ('' as OrganizationId),
   );
 
-  // If org slug doesn't match, return null (redirect will happen in useEffect)
-  if (!organization || orgSlug !== organization.slug) {
+  if (!organization) {
     return null;
-  }
-
-  if (isLoading) {
-    return (
-      <PMPage title="Targets" breadcrumbComponent={<AutobreadCrumb />}>
-        <PMBox display="flex" justifyContent="center" py={8}>
-          <PMVStack gap={4}>
-            <PMSpinner size="lg" />
-            <PMText>Loading targets...</PMText>
-          </PMVStack>
-        </PMBox>
-      </PMPage>
-    );
   }
 
   if (isError) {

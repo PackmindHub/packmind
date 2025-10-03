@@ -15,7 +15,7 @@ export const pmToaster = createToaster({
 
 type ToastItem = {
   id: string;
-  type?: 'loading' | 'success' | 'error' | 'info';
+  type?: 'loading' | 'success' | 'error' | 'info' | 'warning';
   title?: string;
   description?: string;
   action?: {
@@ -38,7 +38,7 @@ export const PMToaster = () => {
     <Portal>
       <ChakraToasterTyped toaster={pmToaster} insetInline={{ mdDown: '4' }}>
         {(toast) => (
-          <Toast.Root width={{ md: 'sm' }}>
+          <Toast.Root width={{ md: 'sm' }} status={toast.type}>
             {toast.type === 'loading' ? (
               <Spinner size="sm" color="blue.solid" />
             ) : (

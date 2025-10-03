@@ -66,16 +66,6 @@ export class SignUpWithOrganizationUseCase
         organizationName.trim(),
       );
 
-      this.logger.debug('Organization created successfully', {
-        organizationId: organization.id,
-        organizationName: organization.name,
-      });
-
-      // Step 2: Create user with the new organization
-      this.logger.debug('Creating user for organization', {
-        email,
-        organizationId: organization.id,
-      });
       const user = await this.userService.createUser(
         email,
         password,

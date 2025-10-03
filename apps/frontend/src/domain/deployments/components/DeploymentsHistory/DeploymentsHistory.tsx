@@ -74,6 +74,8 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
       return <PMBadge colorPalette="green">Success</PMBadge>;
     if (status === 'failure')
       return <PMBadge colorPalette="red">Failed</PMBadge>;
+    if (status === 'no_changes')
+      return <PMBadge colorPalette="blue">No Changes</PMBadge>;
     return <PMBadge colorPalette="green">{fallback || 'Deployed'}</PMBadge>;
   };
 
@@ -145,6 +147,8 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
       return deployment.error;
     if (deployment.status === 'success')
       return 'Deployment completed successfully';
+    if (deployment.status === 'no_changes')
+      return 'No changes detected - already up to date';
     return '-';
   };
 

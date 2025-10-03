@@ -3,6 +3,7 @@ import { UserService } from './UserService';
 import { OrganizationService } from './OrganizationService';
 import { InvitationService } from './InvitationService';
 import { LoginRateLimiterService } from './LoginRateLimiterService';
+import { PasswordResetTokenService } from './PasswordResetTokenService';
 import { IAccountsRepository } from '../../domain/repositories/IAccountsRepository';
 import { PackmindLogger, SmtpMailService } from '@packmind/shared';
 
@@ -18,6 +19,7 @@ export class AccountsServices implements IAccountsServices {
   private readonly organizationService: OrganizationService;
   private readonly invitationService: InvitationService;
   private readonly loginRateLimiterService: LoginRateLimiterService;
+  private readonly passwordResetTokenService: PasswordResetTokenService;
 
   constructor(
     private readonly accountsRepository: IAccountsRepository,
@@ -26,6 +28,7 @@ export class AccountsServices implements IAccountsServices {
     // Initialize all services with their respective repositories from the aggregator
     this.userService = new UserService(
       this.accountsRepository.getUserRepository(),
+      this.accountsRepository.getUserOrganizationMembershipRepository(),
       this.logger,
     );
     this.organizationService = new OrganizationService(
@@ -38,6 +41,11 @@ export class AccountsServices implements IAccountsServices {
       this.logger,
     );
     this.loginRateLimiterService = new LoginRateLimiterService();
+    this.passwordResetTokenService = new PasswordResetTokenService(
+      this.accountsRepository.getPasswordResetTokenRepository(),
+      new SmtpMailService(this.logger),
+      this.logger,
+    );
   }
 
   getUserService(): UserService {
@@ -54,5 +62,9 @@ export class AccountsServices implements IAccountsServices {
 
   getLoginRateLimiterService(): LoginRateLimiterService {
     return this.loginRateLimiterService;
+  }
+
+  getPasswordResetTokenService(): PasswordResetTokenService {
+    return this.passwordResetTokenService;
   }
 }

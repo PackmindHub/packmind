@@ -48,6 +48,7 @@ export class GitProvidersController {
     @Body() gitProvider: Omit<GitProvider, 'id'>,
   ): Promise<GitProvider> {
     const organizationId = req.organization.id;
+    const userId = req.user.userId;
 
     this.logger.info('POST /git/providers - Adding git provider', {
       organizationId,
@@ -56,6 +57,7 @@ export class GitProvidersController {
 
     try {
       return await this.gitProvidersService.addGitProvider(
+        userId,
         organizationId,
         gitProvider,
       );
@@ -214,6 +216,8 @@ export class GitProvidersController {
       const updatedProvider = await this.gitProvidersService.updateGitProvider(
         gitProviderId,
         gitProvider,
+        req.user.userId,
+        organizationId,
       );
       this.logger.info(
         'PUT /git/providers/:id - Git provider updated successfully',
@@ -254,6 +258,7 @@ export class GitProvidersController {
       await this.gitProvidersService.deleteGitProvider(
         gitProviderId,
         req.user.userId,
+        organizationId,
       );
       this.logger.info(
         'DELETE /git/providers/:id - Git provider deleted successfully',
@@ -333,6 +338,7 @@ export class GitProvidersController {
       await this.gitProvidersService.removeRepositoryFromProvider(
         providerId,
         req.user.userId,
+        organizationId,
         repositoryId,
       );
       this.logger.info(

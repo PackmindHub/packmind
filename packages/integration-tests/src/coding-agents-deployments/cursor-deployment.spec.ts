@@ -100,6 +100,9 @@ describe('Cursor Deployment Integration', () => {
 
     gitHexa.setDeploymentsAdapter(mockDeploymentPort);
 
+    gitHexa.setUserProvider(accountsHexa.getUserProvider());
+    gitHexa.setOrganizationProvider(accountsHexa.getOrganizationProvider());
+
     // Create test data
     const signUpResult = await accountsHexa.signUpWithOrganization({
       organizationName: 'test organization',
@@ -131,15 +134,15 @@ describe('Cursor Deployment Integration', () => {
     });
 
     // Create git provider and repository
-    const gitProvider = await gitHexa.addGitProvider(
-      {
-        organizationId: organization.id,
+    const gitProvider = await gitHexa.addGitProvider({
+      userId: user.id,
+      organizationId: organization.id,
+      gitProvider: {
         source: GitProviderVendors.github,
         url: 'https://api.github.com',
         token: 'test-github-token',
       },
-      organization.id,
-    );
+    });
 
     gitRepo = await gitHexa.addGitRepo({
       userId: user.id,

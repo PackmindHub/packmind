@@ -1,7 +1,6 @@
 import {
   OrganizationId,
   UserId,
-  UserOrganizationMembership,
   UserOrganizationRole,
 } from '@packmind/accounts';
 
@@ -15,10 +14,7 @@ export interface JwtPayload {
     name: string;
     slug: string;
     role: UserOrganizationRole;
-  };
-  memberships?: Array<
-    Pick<UserOrganizationMembership, 'organizationId' | 'role'>
-  >;
+  } | null;
   iat: number;
   exp: number;
 }

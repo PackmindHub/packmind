@@ -1,30 +1,46 @@
 import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
 import { GitProviderId } from '../../../domain/entities/GitProvider';
-import { UserId } from '@packmind/accounts';
 import {
+  AbstractAdminUseCase,
+  AdminContext,
   GitProviderNotFoundError,
   GitProviderHasRepositoriesError,
+  GitProviderOrganizationMismatchError,
   PackmindLogger,
+  PackmindCommand,
+  UserProvider,
+  OrganizationProvider,
+  createUserId,
 } from '@packmind/shared';
-
-export interface DeleteGitProviderUseCaseInput {
-  id: GitProviderId;
-  userId: UserId;
-  force?: boolean; // Optional flag to force deletion even with dependencies
-}
 
 const origin = 'DeleteGitProviderUseCase';
 
-export class DeleteGitProviderUseCase {
+export type DeleteGitProviderCommand = PackmindCommand & {
+  id: GitProviderId;
+  force?: boolean;
+};
+
+type DeleteGitProviderResult = Record<string, never>;
+
+export class DeleteGitProviderUseCase extends AbstractAdminUseCase<
+  DeleteGitProviderCommand,
+  DeleteGitProviderResult
+> {
   constructor(
     private readonly gitProviderService: GitProviderService,
     private readonly gitRepoService: GitRepoService,
-    private readonly logger: PackmindLogger = new PackmindLogger(origin),
-  ) {}
+    userProvider: UserProvider,
+    organizationProvider: OrganizationProvider,
+    logger: PackmindLogger = new PackmindLogger(origin),
+  ) {
+    super(userProvider, organizationProvider, logger);
+  }
 
-  async execute(input: DeleteGitProviderUseCaseInput): Promise<void> {
-    const { id, userId, force = false } = input;
+  protected async executeForAdmins(
+    command: DeleteGitProviderCommand & AdminContext,
+  ): Promise<DeleteGitProviderResult> {
+    const { id, userId, force = false, organization } = command;
 
     // Business rule: provider ID is required
     if (!id) {
@@ -37,8 +53,19 @@ export class DeleteGitProviderUseCase {
       this.logger.error('Git provider not found', {
         gitProviderId: id,
         userId,
+        organizationId: organization.id,
       });
       throw new GitProviderNotFoundError(id);
+    }
+
+    if (gitProvider.organizationId !== organization.id) {
+      this.logger.error('Git provider does not belong to organization', {
+        gitProviderId: id,
+        providerOrganizationId: gitProvider.organizationId,
+        requestedOrganizationId: organization.id,
+        userId,
+      });
+      throw new GitProviderOrganizationMismatchError(id, organization.id);
     }
 
     // Business rule: check for dependent repositories before deletion
@@ -61,11 +88,13 @@ export class DeleteGitProviderUseCase {
     // Business rule: if force deletion, remove all dependent repositories first
     if (dependentRepos.length > 0 && force) {
       for (const repo of dependentRepos) {
-        await this.gitRepoService.deleteGitRepo(repo.id, userId);
+        await this.gitRepoService.deleteGitRepo(repo.id, createUserId(userId));
       }
     }
 
     // Delete the git provider
-    await this.gitProviderService.deleteGitProvider(id, userId);
+    await this.gitProviderService.deleteGitProvider(id, createUserId(userId));
+
+    return {};
   }
 }

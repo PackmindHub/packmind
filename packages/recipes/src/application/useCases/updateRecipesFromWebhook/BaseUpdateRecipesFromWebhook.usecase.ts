@@ -315,7 +315,7 @@ export abstract class BaseUpdateRecipesFromWebhookUsecase {
     if (this.deploymentPort && newRecipeVersionIds.length > 0) {
       try {
         // Get all targets for this repository to find the ones matching affected paths
-        const allTargets = await this.deploymentPort.getTargetsByRepository({
+        const allTargets = await this.deploymentPort.getTargetsByGitRepo({
           gitRepoId: matchingRepo.id,
           organizationId,
           userId: createUserId('system'),

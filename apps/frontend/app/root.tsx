@@ -15,6 +15,8 @@ import {
   PMToaster,
   UIProvider,
 } from '@packmind/ui';
+import { useAuthContext } from '../src/domain/accounts/hooks';
+import { UserContextChangeSubscription } from '../src/domain/accounts/components/UserContextChangeSubscription';
 
 initSentry();
 
@@ -81,6 +83,8 @@ export function HydrateFallback() {
 }
 
 export default function App() {
+  const { isAuthenticated } = useAuthContext();
+
   return (
     <div
       style={{
@@ -103,6 +107,7 @@ export default function App() {
         maxW={'100%'}
         mx="auto"
       >
+        {isAuthenticated && <UserContextChangeSubscription />}
         <Outlet />
         <PMToaster />
       </PMVStack>

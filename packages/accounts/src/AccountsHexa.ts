@@ -3,6 +3,8 @@ import {
   BaseHexaOpts,
   HexaRegistry,
   PackmindLogger,
+  UserProvider,
+  OrganizationProvider,
 } from '@packmind/shared';
 import { AccountsHexaFactory } from './AccountsHexaFactory';
 import { User } from './domain/entities/User';
@@ -19,7 +21,6 @@ import {
   GetOrganizationByIdCommand,
   GetOrganizationByNameCommand,
   GetOrganizationBySlugCommand,
-  ListOrganizationsCommand,
   GenerateUserTokenCommand,
   GenerateApiKeyCommand,
   GetCurrentApiKeyCommand,
@@ -29,12 +30,24 @@ import {
   SignUpWithOrganizationResponse,
   ListOrganizationUserStatusesCommand,
   ListOrganizationUserStatusesResponse,
+  RemoveUserFromOrganizationCommand,
+  RemoveUserFromOrganizationResponse,
+  ListUserOrganizationsCommand,
+  ListUserOrganizationsResponse,
 } from './domain/useCases';
 import {
   CheckEmailAvailabilityCommand,
   CheckEmailAvailabilityResponse,
   ActivateUserAccountCommand,
   ActivateUserAccountResponse,
+  ChangeUserRoleCommand,
+  ChangeUserRoleResponse,
+  RequestPasswordResetCommand,
+  RequestPasswordResetResponse,
+  ResetPasswordCommand,
+  ResetPasswordResponse,
+  ValidatePasswordResetTokenCommand,
+  ValidatePasswordResetTokenResponse,
 } from '@packmind/shared';
 
 const origin = 'AccountsHexa';
@@ -59,6 +72,8 @@ const baseAccountsHexaOpts = { logger: new PackmindLogger(origin) };
 
 export class AccountsHexa extends BaseHexa<AccountsHexaOpts> {
   private readonly hexa: AccountsHexaFactory;
+  private userProvider?: UserProvider;
+  private organizationProvider?: OrganizationProvider;
 
   constructor(registry: HexaRegistry, opts?: Partial<AccountsHexaOpts>) {
     super(registry, { ...baseAccountsHexaOpts, ...opts });
@@ -118,11 +133,47 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts> {
   }
 
   /**
+   * Expose the user provider adapter for other hexagons
+   */
+  getUserProvider(): UserProvider {
+    if (!this.userProvider) {
+      this.userProvider = {
+        getUserById: (userId) => this.getUserById({ userId }),
+      };
+    }
+
+    return this.userProvider;
+  }
+
+  /**
+   * Expose the organization provider adapter for other hexagons
+   */
+  getOrganizationProvider(): OrganizationProvider {
+    if (!this.organizationProvider) {
+      this.organizationProvider = {
+        getOrganizationById: (organizationId) =>
+          this.getOrganizationById({ organizationId }),
+      };
+    }
+
+    return this.organizationProvider;
+  }
+
+  /**
    * List users (internal use only - not a public use case).
    * @internal
    */
   async listUsers(command: ListUsersCommand): Promise<ListUsersResponse> {
     return this.hexa.useCases.listUsers(command);
+  }
+
+  /**
+   * Remove a user membership from an organization.
+   */
+  async removeUserFromOrganization(
+    command: RemoveUserFromOrganizationCommand,
+  ): Promise<RemoveUserFromOrganizationResponse> {
+    return this.hexa.useCases.removeUserFromOrganization(command);
   }
 
   /**
@@ -182,12 +233,12 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts> {
   }
 
   /**
-   * List all organizations in the system.
+   * List all organizations a user belongs to.
    */
-  async listOrganizations(
-    command: ListOrganizationsCommand,
-  ): Promise<Organization[]> {
-    return this.hexa.useCases.listOrganizations(command);
+  async listUserOrganizations(
+    command: ListUserOrganizationsCommand,
+  ): Promise<ListUserOrganizationsResponse> {
+    return this.hexa.useCases.listUserOrganizations(command);
   }
 
   /**
@@ -230,6 +281,15 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts> {
     return this.hexa.useCases.validateInvitationToken(command);
   }
 
+  /**
+   * Change a user's role within an organization (admin only).
+   */
+  async changeUserRole(
+    command: ChangeUserRoleCommand,
+  ): Promise<ChangeUserRoleResponse> {
+    return this.hexa.useCases.changeUserRole(command);
+  }
+
   // ========================================
   // API KEY USE CASES
   // ========================================
@@ -246,5 +306,36 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts> {
    */
   async getCurrentApiKey(command: GetCurrentApiKeyCommand) {
     return this.hexa.useCases.getCurrentApiKey(command);
+  }
+
+  // ========================================
+  // PASSWORD RESET USE CASES
+  // ========================================
+
+  /**
+   * Request a password reset by sending a reset link via email.
+   */
+  async requestPasswordReset(
+    command: RequestPasswordResetCommand,
+  ): Promise<RequestPasswordResetResponse> {
+    return this.hexa.useCases.requestPasswordReset(command);
+  }
+
+  /**
+   * Validate a password reset token and return email and validity status.
+   */
+  async validatePasswordResetToken(
+    command: ValidatePasswordResetTokenCommand,
+  ): Promise<ValidatePasswordResetTokenResponse> {
+    return this.hexa.useCases.validatePasswordResetToken(command);
+  }
+
+  /**
+   * Reset a user's password using a valid token.
+   */
+  async resetPassword(
+    command: ResetPasswordCommand,
+  ): Promise<ResetPasswordResponse> {
+    return this.hexa.useCases.resetPassword(command);
   }
 }

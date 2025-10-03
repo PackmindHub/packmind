@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { userGateway, authGateway } from '../gateways';
 
-const GET_ME_QUERY_KEY = 'getMe';
+export const GET_ME_QUERY_KEY = 'getMe';
 export const GET_USERS_IN_MY_ORGANIZATION_QUERY_KEY =
   'getUsersInMyOrganization';
 export const GET_USER_STATUSES_QUERY_KEY = 'getUserStatuses';
@@ -12,6 +12,7 @@ export const getMeQueryOptions = () => ({
     return authGateway.getMe();
   },
   retry: false,
+  staleTime: 1000 * 30,
 });
 
 export const useGetMeQuery = () => {

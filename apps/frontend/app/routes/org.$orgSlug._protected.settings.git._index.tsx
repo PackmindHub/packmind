@@ -1,4 +1,4 @@
-import { NavLink, useParams } from 'react-router';
+import { NavLink } from 'react-router';
 import { PMPage } from '@packmind/ui';
 import { useAuthContext } from '../../src/domain/accounts/hooks';
 import { GitProvidersPage } from '../../src/domain/git/components';
@@ -11,10 +11,9 @@ export const handle = {
 };
 
 export default function SettingsGitRouteModule() {
-  const { orgSlug } = useParams();
   const { organization } = useAuthContext();
 
-  if (!organization || orgSlug !== organization.slug) {
+  if (!organization) {
     return null;
   }
 

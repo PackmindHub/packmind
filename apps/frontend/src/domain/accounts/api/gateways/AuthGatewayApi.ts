@@ -1,10 +1,8 @@
 import {
   SignInUserCommand,
   SignInUserResponse,
-  SignUpUserCommand,
   SignUpWithOrganizationCommand,
   SignUpWithOrganizationResponse,
-  User,
   GenerateApiKeyResponse,
   GetCurrentApiKeyResponse,
 } from '@packmind/accounts';
@@ -13,6 +11,11 @@ import {
   CheckEmailAvailabilityResponse,
   ActivateUserAccountCommand,
   ActivateUserAccountResponse,
+  RequestPasswordResetCommand,
+  RequestPasswordResetResponse,
+  ResetPasswordCommand,
+  ResetPasswordResponse,
+  ValidatePasswordResetTokenResponse,
 } from '@packmind/shared';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import {
@@ -23,15 +26,12 @@ import {
   SelectOrganizationCommand,
   SelectOrganizationResponse,
   ValidateInvitationResponse,
+  ValidatePasswordResetResponse,
 } from './IAuthGateway';
 
 export class AuthGatewayApi extends PackmindGateway implements IAuthGateway {
   constructor() {
     super('/auth');
-  }
-
-  async signUp(request: SignUpUserCommand): Promise<User> {
-    return this._api.post<User>(`${this._endpoint}/signup`, request);
   }
 
   async signUpWithOrganization(
@@ -104,6 +104,32 @@ export class AuthGatewayApi extends PackmindGateway implements IAuthGateway {
     return this._api.post<ActivateUserAccountResponse>(
       `${this._endpoint}/activate/${request.token}`,
       { password: request.password },
+    );
+  }
+
+  async requestPasswordReset(
+    request: RequestPasswordResetCommand,
+  ): Promise<RequestPasswordResetResponse> {
+    return this._api.post<RequestPasswordResetResponse>(
+      `${this._endpoint}/forgot-password`,
+      request,
+    );
+  }
+
+  async validatePasswordResetToken(
+    token: string,
+  ): Promise<ValidatePasswordResetResponse> {
+    return this._api.get<ValidatePasswordResetTokenResponse>(
+      `${this._endpoint}/validate-password-reset/${token}`,
+    );
+  }
+
+  async resetPassword(
+    request: ResetPasswordCommand,
+  ): Promise<ResetPasswordResponse> {
+    return this._api.post<ResetPasswordResponse>(
+      `${this._endpoint}/reset-password`,
+      request,
     );
   }
 

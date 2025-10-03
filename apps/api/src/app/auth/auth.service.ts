@@ -2,7 +2,6 @@ import { Injectable, Logger, Inject } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import {
   AccountsHexa,
-  UserOrganizationMembership,
   UserOrganizationRole,
   createOrganizationId,
   OrganizationId,
@@ -17,6 +16,12 @@ import {
 import {
   ActivateUserAccountCommand,
   ActivateUserAccountResponse,
+  RequestPasswordResetCommand,
+  RequestPasswordResetResponse,
+  ResetPasswordCommand,
+  ResetPasswordResponse,
+  ValidatePasswordResetTokenCommand,
+  ValidatePasswordResetTokenResponse,
 } from '@packmind/shared';
 import {
   SignUpWithOrganizationCommand,
@@ -52,14 +57,21 @@ export interface GetMeResponse {
   user: {
     id: UserId;
     email: string;
-    memberships: UserOrganizationMembership[];
   };
-  organization: {
+  organization?: {
     id: OrganizationId;
     name: string;
     slug: string;
     role: UserOrganizationRole;
   };
+  organizations?: Array<{
+    organization: {
+      id: OrganizationId;
+      name: string;
+      slug: string;
+    };
+    role: UserOrganizationRole;
+  }>;
   authenticated: boolean;
   message?: string;
 }
@@ -76,10 +88,6 @@ export interface GetCurrentApiKeyResponse {
 
 export interface SelectOrganizationCommand {
   organizationId: OrganizationId;
-}
-
-export interface SelectOrganizationResponse {
-  message: string;
 }
 
 @Injectable()
@@ -161,7 +169,6 @@ export class AuthService {
           name: signInUserResponse.user.email,
           userId: signInUserResponse.user.id,
         },
-        memberships: signInUserResponse.user.memberships,
         organization: signInUserResponse.organization
           ? {
               id: signInUserResponse.organization.id,
@@ -199,31 +206,80 @@ export class AuthService {
 
     try {
       // Verify and decode the JWT
-      const payload = this.jwtService.verify(accessToken) as JwtPayload;
+      const payload: JwtPayload = this.jwtService.verify(accessToken);
 
-      const memberships = payload.memberships?.map((membership) => ({
-        userId: payload.user.userId,
-        organizationId: createOrganizationId(membership.organizationId),
-        role: membership.role,
-      })) || [
-        {
+      // Check if organization is present in the token
+      if (!payload.organization) {
+        this.logger.log(
+          `User ${payload.user.userId} is authenticated but has not selected an organization`,
+        );
+
+        // Fetch user to get their organizations
+        const user = await this.accountsHexa.getUserById({
           userId: payload.user.userId,
-          organizationId: createOrganizationId(payload.organization.id),
-          role: payload.organization.role,
-        },
-      ];
+        });
+
+        // Fetch organization details for each membership
+        const organizationsWithDetails = await Promise.all(
+          user.memberships.map(async (membership) => {
+            const org = await this.accountsHexa.getOrganizationById({
+              organizationId: membership.organizationId,
+            });
+            return {
+              organization: {
+                id: org.id,
+                name: org.name,
+                slug: org.slug,
+              },
+              role: membership.role,
+            };
+          }),
+        );
+
+        return {
+          user: {
+            id: user.id,
+            email: user.email,
+          },
+          organizations: organizationsWithDetails,
+          message: 'User is authenticated but has not selected an organization',
+          authenticated: true,
+        } as GetMeResponse;
+      }
+
+      // Verify that the user has access to the organization in the token
+      const user = await this.accountsHexa.getUserById({
+        userId: payload.user.userId,
+      });
+
+      const organizationMembership = user.memberships.find(
+        (membership) => membership.organizationId === payload.organization.id,
+      );
+
+      if (!organizationMembership) {
+        this.logger.warn(
+          `User ${payload.user.userId} does not have access to organization ${payload.organization.id}`,
+        );
+        return {
+          message: 'User does not have access to the organization in token',
+          authenticated: false,
+        } as GetMeResponse;
+      }
+
+      const org = await this.accountsHexa.getOrganizationById({
+        organizationId: organizationMembership.organizationId,
+      });
 
       return {
         user: {
-          id: payload.user.userId,
-          email: payload.user.name,
-          memberships,
+          id: user.id,
+          email: user.email,
         },
         organization: {
-          id: createOrganizationId(payload.organization.id),
-          name: payload.organization.name,
-          slug: payload.organization.slug,
-          role: payload.organization.role,
+          id: createOrganizationId(organizationMembership.organizationId),
+          name: org.name,
+          slug: org.slug,
+          role: organizationMembership.role,
         },
         authenticated: true,
       };
@@ -423,21 +479,12 @@ export class AuthService {
   async selectOrganization(
     accessToken: string,
     command: SelectOrganizationCommand,
-  ): Promise<{ accessToken: string } & SelectOrganizationResponse> {
+  ): Promise<{ accessToken: string }> {
     this.logger.log(`Selecting organization ${command.organizationId}`);
 
     try {
       // Verify and decode the current JWT
-      const payload = this.jwtService.verify(accessToken) as JwtPayload;
-
-      // Validate that the user is a member of the requested organization
-      const membership = payload.memberships?.find(
-        (m) => m.organizationId === command.organizationId,
-      );
-
-      if (!membership) {
-        throw new Error('User is not a member of the requested organization');
-      }
+      const payload: JwtPayload = this.jwtService.verify(accessToken);
 
       // Get organization details from the user's memberships
       // We need to fetch the organization details since memberships only have id and role
@@ -466,7 +513,6 @@ export class AuthService {
       // Build fresh payload without JWT standard claims to avoid conflicts
       const newPayload = {
         user: payload.user,
-        memberships: payload.memberships,
         organization: {
           id: organizationResponse.id,
           name: organizationResponse.name,
@@ -484,13 +530,147 @@ export class AuthService {
 
       return {
         accessToken: newAccessToken,
-        message: 'Organization selected successfully',
       };
     } catch (error) {
       this.logger.error(
         `Failed to select organization ${command.organizationId}`,
         error,
       );
+      throw error;
+    }
+  }
+
+  /**
+   * Requests a password reset by sending a reset link via email
+   */
+  async requestPasswordReset(
+    command: RequestPasswordResetCommand,
+  ): Promise<RequestPasswordResetResponse> {
+    this.logger.log('Attempting to request password reset', {
+      email: command.email,
+    });
+
+    try {
+      const result = await this.accountsHexa.requestPasswordReset(command);
+
+      this.logger.log('Password reset request completed', {
+        email: command.email,
+        success: result.success,
+      });
+
+      return result;
+    } catch (error) {
+      this.logger.error('Failed to request password reset', {
+        email: command.email,
+        error: error.message,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Validates a password reset token and returns email and validity status
+   */
+  async validatePasswordResetToken(request: {
+    token: string;
+  }): Promise<ValidatePasswordResetTokenResponse> {
+    this.logger.log('Attempting to validate password reset token', {
+      token: this.maskToken(request.token),
+    });
+
+    try {
+      const command: ValidatePasswordResetTokenCommand = {
+        token: request.token,
+      };
+
+      const result =
+        await this.accountsHexa.validatePasswordResetToken(command);
+
+      this.logger.log('Password reset token validation completed', {
+        token: this.maskToken(request.token),
+        isValid: result.isValid,
+        hasEmail: !!result.email,
+      });
+
+      return result;
+    } catch (error) {
+      this.logger.error('Failed to validate password reset token', {
+        token: this.maskToken(request.token),
+        error: error.message,
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Resets a user's password using a valid token and generates auth token for auto-login
+   */
+  async resetPassword(request: {
+    token: string;
+    password: string;
+  }): Promise<ResetPasswordResponse & { authToken?: string }> {
+    this.logger.log('Attempting to reset password', {
+      token: this.maskToken(request.token),
+    });
+
+    try {
+      const command: ResetPasswordCommand = {
+        token: request.token,
+        password: request.password,
+      };
+
+      const result = await this.accountsHexa.resetPassword(command);
+
+      // Generate auth token for auto-login (same as signin flow)
+      let authToken: string | undefined;
+      if (result.success) {
+        // Get the full user details for token generation
+        const user = await this.accountsHexa.getUserById({
+          userId: createUserId(result.user.id),
+        });
+
+        if (user && user.memberships && user.memberships.length > 0) {
+          // Get organization details for the first membership
+          const membership = user.memberships[0];
+          const organization = await this.accountsHexa.getOrganizationById({
+            organizationId: membership.organizationId,
+          });
+
+          // Create JWT payload (same structure as signin)
+          const payload = {
+            user: {
+              name: user.email,
+              userId: user.id,
+            },
+            organization: organization
+              ? {
+                  id: organization.id,
+                  name: organization.name,
+                  slug: organization.slug,
+                  role: membership.role,
+                }
+              : null,
+            memberships: user.memberships,
+          };
+
+          authToken = this.jwtService.sign(payload);
+        }
+      }
+
+      this.logger.log('Password reset completed successfully', {
+        userId: result.user.id,
+        email: result.user.email,
+      });
+
+      return {
+        ...result,
+        authToken,
+      };
+    } catch (error) {
+      this.logger.error('Failed to reset password', {
+        token: this.maskToken(request.token),
+        error: error.message,
+      });
       throw error;
     }
   }

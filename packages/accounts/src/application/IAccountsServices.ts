@@ -3,6 +3,7 @@ import { OrganizationService } from './services/OrganizationService';
 import { ApiKeyService } from './services/ApiKeyService';
 import { InvitationService } from './services/InvitationService';
 import { LoginRateLimiterService } from './services/LoginRateLimiterService';
+import { PasswordResetTokenService } from './services/PasswordResetTokenService';
 
 /**
  * IAccountsServices - Service aggregator interface for the Accounts application layer
@@ -36,4 +37,9 @@ export interface IAccountsServices {
    * Get the login rate limiter service instance
    */
   getLoginRateLimiterService(): LoginRateLimiterService;
+
+  /**
+   * Get the password reset token service instance
+   */
+  getPasswordResetTokenService(): PasswordResetTokenService;
 }

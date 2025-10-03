@@ -5,6 +5,7 @@ export interface IOrganizationGateway {
   createOrganization(organization: { name: string }): Promise<Organization>;
   getByName(name: string): Promise<Organization>;
   getBySlug(slug: string): Promise<Organization>;
+  getUserOrganizations(): Promise<Organization[]>;
   inviteUsers(
     orgId: string,
     emails: string[],
@@ -19,4 +20,5 @@ export interface IOrganizationGateway {
     }[];
     skipped: { email: string; reason: string }[];
   }>;
+  excludeUser(orgId: string, userId: string): Promise<void>;
 }

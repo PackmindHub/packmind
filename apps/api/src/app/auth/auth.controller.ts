@@ -18,7 +18,6 @@ import {
   GenerateApiKeyResponse,
   GetCurrentApiKeyResponse,
   SelectOrganizationCommand,
-  SelectOrganizationResponse,
 } from './auth.service';
 import {
   SignUpUserCommand,
@@ -30,6 +29,8 @@ import {
   SignUpWithOrganizationResponse,
   CheckEmailAvailabilityCommand,
   CheckEmailAvailabilityResponse,
+  RequestPasswordResetCommand,
+  RequestPasswordResetResponse,
 } from '@packmind/shared';
 import { Public } from './auth.guard';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
@@ -198,7 +199,7 @@ export class AuthController {
     @Body() request: SelectOrganizationCommand,
     @Req() req: Request,
     @Res({ passthrough: true }) response: Response,
-  ): Promise<SelectOrganizationResponse> {
+  ) {
     this.logger.log('POST /auth/selectOrganization - Selecting organization', {
       organizationId: request.organizationId,
     });
@@ -235,7 +236,7 @@ export class AuthController {
         },
       );
 
-      return { message: result.message };
+      return {};
     } catch (error) {
       this.logger.error(
         'POST /auth/selectOrganization - Failed to select organization',
@@ -251,7 +252,10 @@ export class AuthController {
   @Public()
   @Get('me')
   @HttpCode(HttpStatus.OK)
-  async getMe(@Req() request: Request): Promise<GetMeResponse> {
+  async getMe(
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<GetMeResponse> {
     this.logger.log(
       'GET /auth/me - Getting current user and organization info',
     );
@@ -270,6 +274,7 @@ export class AuthController {
         this.logger.log('GET /auth/me - User not authenticated', {
           message: result.message,
         });
+        response.status(HttpStatus.UNAUTHORIZED);
       }
 
       return result;
@@ -277,6 +282,7 @@ export class AuthController {
       this.logger.error('GET /auth/me - Failed to get user info', {
         error: error.message,
       });
+      response.status(HttpStatus.UNAUTHORIZED);
       return {
         message: 'Failed to get user info',
         authenticated: false,
@@ -453,6 +459,143 @@ export class AuthController {
         'POST /auth/activate/:token - Failed to activate account',
         {
           token: this.maskToken(token),
+          error: error.message,
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Public()
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  async requestPasswordReset(
+    @Body() request: RequestPasswordResetCommand,
+  ): Promise<RequestPasswordResetResponse> {
+    this.logger.log('POST /auth/forgot-password - Requesting password reset', {
+      email: request.email,
+    });
+
+    try {
+      const result = await this.authService.requestPasswordReset(request);
+
+      this.logger.log(
+        'POST /auth/forgot-password - Password reset request completed',
+        {
+          email: request.email,
+          success: result.success,
+        },
+      );
+
+      return result;
+    } catch (error) {
+      this.logger.error(
+        'POST /auth/forgot-password - Failed to request password reset',
+        {
+          email: request.email,
+          error: error.message,
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Public()
+  @Get('validate-password-reset/:token')
+  @HttpCode(HttpStatus.OK)
+  async validatePasswordResetToken(
+    @Param('token') token: string,
+  ): Promise<{ email: string; isValid: boolean }> {
+    this.logger.log(
+      'GET /auth/validate-password-reset/:token - Validating password reset token',
+      {
+        token: this.maskToken(token),
+      },
+    );
+
+    try {
+      const result = await this.authService.validatePasswordResetToken({
+        token,
+      });
+
+      this.logger.log(
+        'GET /auth/validate-password-reset/:token - Password reset token validated',
+        {
+          token: this.maskToken(token),
+          isValid: result.isValid,
+          hasEmail: !!result.email,
+        },
+      );
+
+      return result;
+    } catch (error) {
+      this.logger.error(
+        'GET /auth/validate-password-reset/:token - Failed to validate password reset token',
+        {
+          token: this.maskToken(token),
+          error: error.message,
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Public()
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(
+    @Body() body: { token: string; password: string },
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<{
+    message: string;
+    user: {
+      id: string;
+      email: string;
+      isActive: boolean;
+    };
+  }> {
+    this.logger.log('POST /auth/reset-password - Resetting password', {
+      token: this.maskToken(body.token),
+    });
+
+    try {
+      const result = await this.authService.resetPassword({
+        token: body.token,
+        password: body.password,
+      });
+
+      if (result.success && result.authToken) {
+        // Get cookie security setting from Configuration
+        const cookieSecure = await Configuration.getConfig('COOKIE_SECURE');
+        const isSecure = cookieSecure === 'true';
+
+        // Set JWT token as httpOnly cookie for auto-login
+        response.cookie('auth_token', result.authToken, {
+          httpOnly: true,
+          secure: isSecure,
+          sameSite: 'strict',
+          maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
+          path: '/',
+        });
+      }
+
+      this.logger.log(
+        'POST /auth/reset-password - Password reset successfully',
+        {
+          userId: result.user.id,
+          email: result.user.email,
+        },
+      );
+
+      return {
+        message: 'Password reset successfully',
+        user: result.user,
+      };
+    } catch (error) {
+      this.logger.error(
+        'POST /auth/reset-password - Failed to reset password',
+        {
+          token: this.maskToken(body.token),
           error: error.message,
         },
       );

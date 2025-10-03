@@ -6,7 +6,12 @@
 
 /* Import Packmind color palette */
 @import '@packmind/assets/styles/colors.css';
+@import '@packmind/assets/styles/font.css';
 
+:root {
+  --global-font-body: 'Borna', sans-serif;
+  --ifm-heading-font-family: 'Borna', sans-serif;
+}
 /* Light mode theme (default) */
 :root,
 [data-theme='light'] {
@@ -534,4 +539,17 @@
 [data-theme='light'] .markdown dt,
 [data-theme='light'] .markdown dd {
   color: var(--Palette-Neutral-Beige800);
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-size: 16px;
+  font-family: 'Borna', sans-serif;
+}
+
+.navbar__logo img {
+  height: 70%;
+  margin-bottom: -10px;
 }

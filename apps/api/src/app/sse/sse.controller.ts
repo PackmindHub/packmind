@@ -28,9 +28,11 @@ export class SSEController {
     @Req() request: AuthenticatedRequest,
     @Res() response: Response,
   ): Promise<void> {
-    const connectionId = `${request.user.userId}_${Date.now()}`;
+    const connectionId = `${request.user.userId}`;
     const userId = request.user.userId;
-    const organizationId = request.organization.id;
+    const organizationId = request.organization
+      ? request.organization.id
+      : null;
 
     this.logger.info('New SSE connection request', {
       connectionId,

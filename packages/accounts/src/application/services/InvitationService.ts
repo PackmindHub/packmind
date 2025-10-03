@@ -9,7 +9,6 @@ import {
 import { Organization } from '../../domain/entities/Organization';
 import { User, UserId } from '../../domain/entities/User';
 import { IInvitationRepository } from '../../domain/repositories/IInvitationRepository';
-import { InvitationConfigurationError } from '../../domain/errors/InvitationConfigurationError';
 import { MailService, PackmindLogger, Configuration } from '@packmind/shared';
 
 const origin = 'InvitationService';
@@ -42,7 +41,7 @@ type SendInvitationEmailArgs = {
 };
 
 export class InvitationService {
-  private applicationUrl: string | null = null;
+  private static readonly DEFAULT_APP_WEB_URL = 'http://localhost:8081';
 
   constructor(
     private readonly invitationRepository: IInvitationRepository,
@@ -222,21 +221,15 @@ export class InvitationService {
   }
 
   private async getApplicationUrl(): Promise<string> {
-    if (this.applicationUrl) {
-      return this.applicationUrl;
+    const configValue = await Configuration.getConfig('APP_WEB_URL');
+    if (configValue) {
+      return configValue.endsWith('/') ? configValue.slice(0, -1) : configValue;
     }
-
-    const appUrl = await Configuration.getConfig('APP_WEB_URL');
-
-    if (!appUrl) {
-      this.logger.error('APP_WEB_URL is not configured');
-      throw new InvitationConfigurationError(
-        'Application URL is not configured. Unable to send invitation emails.',
-      );
-    }
-
-    this.applicationUrl = appUrl.endsWith('/') ? appUrl.slice(0, -1) : appUrl;
-    return this.applicationUrl;
+    this.logger.warn('Failed to get APP_WEB_URL value, using default', {
+      configValue,
+      default: InvitationService.DEFAULT_APP_WEB_URL,
+    });
+    return InvitationService.DEFAULT_APP_WEB_URL;
   }
 
   private buildInvitationUrl(token: InvitationToken, appUrl: string): string {

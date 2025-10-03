@@ -1,16 +1,21 @@
 import {
+  AbstractAdminUseCase,
+  AdminContext,
+  PackmindLogger,
+  UserProvider,
+  OrganizationProvider,
+} from '@packmind/shared';
+import {
   IListOrganizationUserStatusesUseCase,
+  InvitationStatus,
   ListOrganizationUserStatusesCommand,
   ListOrganizationUserStatusesResponse,
   UserStatus,
-  InvitationStatus,
 } from '../../../domain/useCases/IListOrganizationUserStatusesUseCase';
-import { PackmindLogger } from '@packmind/shared';
-import { DataSource } from 'typeorm';
-import { AbstractAdminUseCase } from '../abstractUseCases/AbstractAdminUseCase';
 import { User } from '../../../domain/entities/User';
 import { Invitation } from '../../../domain/entities/Invitation';
-import { IAccountsServices } from '../../IAccountsServices';
+import { UserService } from '../../services/UserService';
+import { InvitationService } from '../../services/InvitationService';
 
 const origin = 'ListOrganizationUserStatusesUseCase';
 
@@ -22,32 +27,25 @@ export class ListOrganizationUserStatusesUseCase
   implements IListOrganizationUserStatusesUseCase
 {
   constructor(
-    dataSource: DataSource,
+    userProvider: UserProvider,
+    organizationProvider: OrganizationProvider,
+    private readonly userService: UserService,
+    private readonly invitationService: InvitationService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(dataSource, logger);
+    super(userProvider, organizationProvider, logger);
     logger.info('ListOrganizationUserStatusesUseCase initialized');
   }
 
-  private get services(): IAccountsServices {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (this as any).accountsServices;
-  }
-
   async executeForAdmins(
-    command: ListOrganizationUserStatusesCommand,
+    command: ListOrganizationUserStatusesCommand & AdminContext,
   ): Promise<ListOrganizationUserStatusesResponse> {
-    const logger = new PackmindLogger(origin);
-    logger.info('Fetching user statuses for organization', {
+    this.logger.info('Fetching user statuses for organization', {
       organizationId: command.organizationId,
     });
 
-    // Access services from the parent AbstractAdminUseCase
-    const userService = this.services.getUserService();
-    const invitationService = this.services.getInvitationService();
-
     // Get all users and filter by organization
-    const allUsers = await userService.listUsers();
+    const allUsers = await this.userService.listUsers();
     const users = allUsers.filter((user) =>
       user.memberships?.some(
         (membership) => membership.organizationId === command.organizationId,
@@ -55,7 +53,7 @@ export class ListOrganizationUserStatusesUseCase
     );
 
     if (users.length === 0) {
-      logger.info('No users found in organization', {
+      this.logger.info('No users found in organization', {
         organizationId: command.organizationId,
       });
       return { userStatuses: [] };
@@ -63,7 +61,7 @@ export class ListOrganizationUserStatusesUseCase
 
     // Get all invitations for these users
     const userIds = users.map((user) => user.id);
-    const invitations = await invitationService.findByUserIds(userIds);
+    const invitations = await this.invitationService.findByUserIds(userIds);
 
     // Create a map of userId to their latest invitation
     const invitationsByUserId = new Map<string, Invitation>();
@@ -98,7 +96,7 @@ export class ListOrganizationUserStatusesUseCase
       };
     });
 
-    logger.info('User statuses fetched successfully', {
+    this.logger.info('User statuses fetched successfully', {
       organizationId: command.organizationId,
       userCount: userStatuses.length,
     });

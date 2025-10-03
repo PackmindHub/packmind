@@ -25,6 +25,38 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
     this.logger = new PackmindLogger(this.constructor.name);
   }
 
+  private formatMarkdownLink(
+    item: {
+      name: string;
+      summary?: string | null;
+      description?: string | null;
+    },
+    filePath: string,
+  ): string {
+    const link = `* [${item.name}](${filePath})`;
+
+    const summary = item.summary?.trim();
+    const description = item.description?.trim();
+
+    // No text available, return just the link
+    if (!summary && !description) {
+      return link;
+    }
+
+    // If summary exists, use it as-is (no truncation)
+    if (summary) {
+      return `${link}: ${summary}`;
+    }
+
+    // At this point, we know description exists (checked above)
+    // Fall back to description: extract first line and truncate if needed
+    const firstLine = description!.split('\n')[0].trim();
+    const truncated =
+      firstLine.length > 200 ? firstLine.substring(0, 200) + '...' : firstLine;
+
+    return `${link}: ${truncated}`;
+  }
+
   async deployRecipes(
     recipeVersions: RecipeVersion[],
     gitRepo: GitRepo,
@@ -46,9 +78,11 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
       commentMarker: 'Packmind recipes',
       target: target.path,
       recipesSection: recipeVersions
-        .map(
-          (recipeVersion) =>
-            `* [${recipeVersion.name}](${this.config.pathToPackmindFolder ?? ''}.packmind/recipes/${recipeVersion.slug}.md): ${recipeVersion.summary}`,
+        .map((recipeVersion) =>
+          this.formatMarkdownLink(
+            recipeVersion,
+            `${this.config.pathToPackmindFolder ?? ''}.packmind/recipes/${recipeVersion.slug}.md`,
+          ),
         )
         .join('\n'),
     });
@@ -90,9 +124,11 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
       currentContent: existingContent,
       commentMarker: 'Packmind standards',
       standardsSection: standardVersions
-        .map(
-          (standardVersion) =>
-            `* [${standardVersion.name}](${this.config.pathToPackmindFolder ?? ''}.packmind/standards/${standardVersion.slug}.md): ${standardVersion.summary}`,
+        .map((standardVersion) =>
+          this.formatMarkdownLink(
+            standardVersion,
+            `${this.config.pathToPackmindFolder ?? ''}.packmind/standards/${standardVersion.slug}.md`,
+          ),
         )
         .join('\n'),
     });

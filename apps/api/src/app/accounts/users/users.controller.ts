@@ -1,4 +1,12 @@
-import { Controller, Get, NotFoundException, Param, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  Req,
+  Patch,
+  Body,
+} from '@nestjs/common';
 
 import {
   ListOrganizationUserStatusesResponse,
@@ -7,7 +15,11 @@ import {
   UserId,
 } from '@packmind/accounts';
 import { UsersService } from './users.service';
-import { PackmindLogger } from '@packmind/shared';
+import {
+  PackmindLogger,
+  ChangeUserRoleResponse,
+  UserOrganizationRole,
+} from '@packmind/shared';
 import { AuthService } from '../../auth/auth.service';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
 
@@ -141,6 +153,52 @@ export class UsersController {
         error instanceof Error ? error.message : String(error);
       this.logger.error('GET /users/:id - Failed to fetch user', {
         userId: id,
+        error: errorMessage,
+      });
+      throw error;
+    }
+  }
+
+  @Patch(':id/role')
+  async changeUserRole(
+    @Param('id') targetUserId: UserId,
+    @Body('newRole') newRole: UserOrganizationRole,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<ChangeUserRoleResponse> {
+    this.logger.info('PATCH /users/:id/role - Changing user role', {
+      targetUserId,
+      newRole,
+      requesterId: request.user.userId,
+      organizationId: request.organization.id,
+    });
+
+    try {
+      const response = await this.usersService.changeUserRole(
+        request.user.userId,
+        request.organization.id,
+        targetUserId,
+        newRole,
+      );
+
+      this.logger.info(
+        'PATCH /users/:id/role - User role changed successfully',
+        {
+          targetUserId,
+          newRole,
+          requesterId: request.user.userId,
+          organizationId: request.organization.id,
+        },
+      );
+
+      return response;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('PATCH /users/:id/role - Failed to change user role', {
+        targetUserId,
+        newRole,
+        requesterId: request.user.userId,
+        organizationId: request.organization.id,
         error: errorMessage,
       });
       throw error;

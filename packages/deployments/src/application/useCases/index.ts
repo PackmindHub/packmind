@@ -17,6 +17,7 @@ import {
   UpdateTargetCommand,
   DeleteTargetCommand,
   DeleteTargetResponse,
+  GetTargetsByGitRepoCommand,
   GetTargetsByRepositoryCommand,
   GetTargetsByOrganizationCommand,
 } from '@packmind/shared';
@@ -39,6 +40,7 @@ import { ListDeploymentsByRecipeUseCase } from './ListDeploymentsByRecipeUseCase
 import { ListDeploymentsByStandardUseCase } from './ListDeploymentsByStandardUseCase';
 import { GetStandardDeploymentOverviewUseCase } from './GetStandardDeploymentOverviewUseCase';
 import { AddTargetUseCase } from './AddTargetUseCase';
+import { GetTargetsByGitRepoUseCase } from './GetTargetsByGitRepoUseCase';
 import { GetTargetsByRepositoryUseCase } from './GetTargetsByRepositoryUseCase';
 import { GetTargetsByOrganizationUseCase } from './GetTargetsByOrganizationUseCase';
 import { UpdateTargetUseCase } from './UpdateTargetUseCase';
@@ -173,11 +175,21 @@ export class DeploymentsUseCases implements IDeploymentPort {
     return useCase.execute(command);
   }
 
+  async getTargetsByGitRepo(
+    command: GetTargetsByGitRepoCommand,
+  ): Promise<Target[]> {
+    const useCase = new GetTargetsByGitRepoUseCase(
+      this.deploymentsServices.getTargetService(),
+    );
+    return useCase.execute(command);
+  }
+
   async getTargetsByRepository(
     command: GetTargetsByRepositoryCommand,
-  ): Promise<Target[]> {
+  ): Promise<TargetWithRepository[]> {
     const useCase = new GetTargetsByRepositoryUseCase(
       this.deploymentsServices.getTargetService(),
+      this.gitHexa,
     );
     return useCase.execute(command);
   }

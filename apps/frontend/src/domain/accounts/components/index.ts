@@ -1,7 +1,8 @@
 export { default as GoToOrganization } from './GoToOrganization';
 export { default as SignUpWithOrganizationForm } from './SignUpWithOrganizationForm';
 export { default as SignInForm } from './SignInForm';
-export { OrganizationUsersList } from './OrganizationUsersList';
+export { default as ForgotPasswordForm } from './ForgotPasswordForm';
+export { default as ResetPasswordForm } from './ResetPasswordForm';
 export { OrganizationHomePage } from './OrganizationHomePage';
 export { SettingsPage } from './SettingsPage';
 export { ApiKeyConfig } from './ApiKeyConfig';

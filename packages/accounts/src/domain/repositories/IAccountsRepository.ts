@@ -1,6 +1,8 @@
 import { IUserRepository } from './IUserRepository';
 import { IOrganizationRepository } from './IOrganizationRepository';
 import { IInvitationRepository } from './IInvitationRepository';
+import { IUserOrganizationMembershipRepository } from './IUserOrganizationMembershipRepository';
+import { IPasswordResetTokenRepository } from './IPasswordResetTokenRepository';
 
 /**
  * IAccountsRepository - Repository aggregator interface for the Accounts domain
@@ -24,4 +26,14 @@ export interface IAccountsRepository {
    * Get the invitation repository instance
    */
   getInvitationRepository(): IInvitationRepository;
+
+  /**
+   * Get the user-organization membership repository instance
+   */
+  getUserOrganizationMembershipRepository(): IUserOrganizationMembershipRepository;
+
+  /**
+   * Get the password reset token repository instance
+   */
+  getPasswordResetTokenRepository(): IPasswordResetTokenRepository;
 }

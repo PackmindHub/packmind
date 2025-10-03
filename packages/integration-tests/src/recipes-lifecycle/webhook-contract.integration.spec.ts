@@ -149,6 +149,9 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
       deploymentsHexa.setRecipesPort(recipesHexa);
       gitHexa.setDeploymentsAdapter(deploymentPort);
 
+      gitHexa.setUserProvider(accountsHexa.getUserProvider());
+      gitHexa.setOrganizationProvider(accountsHexa.getOrganizationProvider());
+
       // Create test data
       const signUpResult = await accountsHexa.signUpWithOrganization({
         organizationName: 'test organization',
@@ -159,15 +162,15 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
       organization = signUpResult.organization;
 
       // Create git provider and repository
-      const gitProvider = await gitHexa.addGitProvider(
-        {
-          organizationId: organization.id,
+      const gitProvider = await gitHexa.addGitProvider({
+        userId: user.id,
+        organizationId: organization.id,
+        gitProvider: {
           source: config.providerVendor,
           url: config.baseUrl,
           token: `test-${config.providerName.toLowerCase()}-token`,
         },
-        organization.id,
-      );
+      });
 
       gitRepo = await gitHexa.addGitRepo({
         userId: user.id,
@@ -320,7 +323,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
           const deploymentsHexa = registry.get(DeploymentsHexa);
           const deploymentUseCases = deploymentsHexa.getDeploymentsUseCases();
 
-          // Mock getTargetsByRepository to return a default root target
+          // Mock getTargetsByGitRepo to return a default root target
           const defaultTarget = {
             id: createTargetId('target-default'),
             name: 'Default',
@@ -328,7 +331,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
             gitRepoId: gitRepo.id,
           };
           jest
-            .spyOn(deploymentUseCases, 'getTargetsByRepository')
+            .spyOn(deploymentUseCases, 'getTargetsByGitRepo')
             .mockResolvedValue([defaultTarget]);
 
           const publishRecipesSpy = jest
@@ -814,9 +817,9 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
               },
             ]);
 
-          // Mock getTargetsByRepository to return both targets
+          // Mock getTargetsByGitRepo to return both targets
           jest
-            .spyOn(deploymentUseCases, 'getTargetsByRepository')
+            .spyOn(deploymentUseCases, 'getTargetsByGitRepo')
             .mockResolvedValue([jetbrainsTarget, vscodeTarget]);
 
           // Reset spy to track new deployment calls

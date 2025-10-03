@@ -23,6 +23,7 @@ export const pmButtonRecipe = defineRecipe({
         _disabled: {
           bg: '{colors.beige.900}',
           color: '{colors.beige.500}',
+          borderColor: '{colors.beige.1000}',
         },
       },
       tertiary: {

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router';
 import {
   PMHStack,
   PMButton,
@@ -8,10 +9,14 @@ import {
   PMIcon,
   PMBox,
 } from '@packmind/ui';
-import { AuthContextOrganization } from '../../accounts/hooks/useAuthContext';
-import { Organization, OrganizationId } from '@packmind/shared/types';
+import {
+  AuthContextOrganization,
+  useAuthContext,
+} from '../../accounts/hooks/useAuthContext';
 import { LuBuilding, LuCirclePlus } from 'react-icons/lu';
 import { NewOrganizationDialog } from './NewOrganizationDialog';
+import { useGetUserOrganizationsQuery } from '../../accounts/api/queries/AccountsQueries';
+import { UserId } from '@packmind/shared';
 
 interface ISidebarOrgaSelectorProps {
   currentOrganization: AuthContextOrganization;
@@ -21,19 +26,26 @@ export const SidebarOrgaSelector: React.FunctionComponent<
   ISidebarOrgaSelectorProps
 > = ({ currentOrganization }) => {
   const [createOrgaDialogOpen, setCreateOrgaDialogOpen] = React.useState(false);
+  const { user } = useAuthContext();
+  const navigate = useNavigate();
 
-  const mockedOrganizations: Organization[] = [
-    { id: '1' as OrganizationId, name: 'Organization 1', slug: 'org-1' },
-    { id: '2' as OrganizationId, name: 'Organization 2', slug: 'org-2' },
-  ];
+  const userId = (user?.id ?? '') as UserId;
+  const { data: organizations = [], isLoading } =
+    useGetUserOrganizationsQuery(userId);
+
+  // Filter out the current organization from the list
+  const availableOrganizations = organizations.filter(
+    (org) => org.id !== currentOrganization.id,
+  );
 
   const handleOrgaSelect = (orgaId: string) => {
-    console.log('Selected organization ID:', orgaId);
-    // Implement organization switch logic here
+    const selectedOrg = organizations.find((org) => org.id === orgaId);
+    if (!selectedOrg) return;
+
+    navigate(`/org/${selectedOrg.slug}`);
   };
 
   const handleOpenOrganizationCreation = () => {
-    console.log('Open organization creation modal');
     setCreateOrgaDialogOpen(true);
   };
 
@@ -66,16 +78,22 @@ export const SidebarOrgaSelector: React.FunctionComponent<
         <PMPortal>
           <PMMenu.Positioner>
             <PMMenu.Content>
-              {mockedOrganizations.map((org) => (
-                <PMMenu.Item
-                  key={org.id}
-                  value={org.id}
-                  onClick={() => handleOrgaSelect(org.id)}
-                  cursor={'pointer'}
-                >
-                  <PMText color="secondary">{org.name}</PMText>
-                </PMMenu.Item>
-              ))}
+              {isLoading ? (
+                <PMText padding={2} color="secondary">
+                  Loading organizations...
+                </PMText>
+              ) : (
+                availableOrganizations.map((org) => (
+                  <PMMenu.Item
+                    key={org.id}
+                    value={org.id}
+                    onClick={() => handleOrgaSelect(org.id)}
+                    cursor={'pointer'}
+                  >
+                    <PMText color="secondary">{org.name}</PMText>
+                  </PMMenu.Item>
+                ))
+              )}
               <PMMenu.Separator borderColor={'border.tertiary'} />
               <PMMenu.Item
                 value="new-organizattion"

@@ -27,6 +27,10 @@ export class OrganizationGatewayApi
     return this._api.get<Organization>(`${this._endpoint}/slug/${slug}`);
   }
 
+  async getUserOrganizations(): Promise<Organization[]> {
+    return this._api.get<Organization[]>(this._endpoint);
+  }
+
   async inviteUsers(
     orgId: string,
     emails: string[],
@@ -44,6 +48,12 @@ export class OrganizationGatewayApi
     return this._api.post(
       `${this._endpoint}/${encodeURIComponent(orgId)}/invite`,
       { emails, role },
+    );
+  }
+
+  async excludeUser(orgId: string, userId: string): Promise<void> {
+    return this._api.delete(
+      `${this._endpoint}/${encodeURIComponent(orgId)}/user/${encodeURIComponent(userId)}`,
     );
   }
 }

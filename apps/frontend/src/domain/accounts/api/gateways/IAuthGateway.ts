@@ -3,7 +3,6 @@ import {
   UserId,
   UserOrganizationMembership,
   UserOrganizationRole,
-  ISignUpUserUseCase,
   ISignUpWithOrganizationUseCase,
   ISignInUserUseCase,
   IGenerateApiKeyUseCase,
@@ -13,29 +12,38 @@ import {
   PublicGateway,
   ICheckEmailAvailabilityUseCase,
   IActivateUserAccountUseCase,
-  ActivateUserAccountCommand,
-  ActivateUserAccountResponse,
+  IRequestPasswordResetUseCase,
+  IResetPasswordUseCase,
+  IValidatePasswordResetTokenUseCase,
+  ValidatePasswordResetTokenResponse,
 } from '@packmind/shared';
 
 export interface SignOutResponse {
   message: string;
 }
 
-export interface MeResponse {
-  message: string;
-  authenticated: boolean;
-  user?: {
-    id: UserId;
-    email: string;
-    memberships: UserOrganizationMembership[];
-  };
-  organization?: {
-    id: OrganizationId;
-    name: string;
-    slug: string;
-    role: UserOrganizationRole;
-  };
-}
+export type MeResponse =
+  | {
+      message: string;
+      authenticated: false;
+      user?: never;
+      organization?: never;
+    }
+  | {
+      message: string;
+      authenticated: true;
+      user: {
+        id: UserId;
+        email: string;
+        memberships: UserOrganizationMembership[];
+      };
+      organization?: {
+        id: OrganizationId;
+        name: string;
+        slug: string;
+        role: UserOrganizationRole;
+      };
+    };
 
 export interface TokenResponse {
   access_token: string;
@@ -49,6 +57,8 @@ export interface ValidateInvitationResponse {
   isValid: boolean;
 }
 
+export type ValidatePasswordResetResponse = ValidatePasswordResetTokenResponse;
+
 export interface SelectOrganizationCommand {
   organizationId: OrganizationId;
 }
@@ -58,7 +68,6 @@ export interface SelectOrganizationResponse {
 }
 
 export interface IAuthGateway {
-  signUp: PublicGateway<ISignUpUserUseCase>;
   signUpWithOrganization: PublicGateway<ISignUpWithOrganizationUseCase>;
   signIn: PublicGateway<ISignInUserUseCase>;
   checkEmailAvailability: PublicGateway<ICheckEmailAvailabilityUseCase>;
@@ -70,6 +79,11 @@ export interface IAuthGateway {
   getCurrentApiKey: PublicGateway<IGetCurrentApiKeyUseCase>;
   validateInvitationToken(token: string): Promise<ValidateInvitationResponse>;
   activateUserAccount: PublicGateway<IActivateUserAccountUseCase>;
+  requestPasswordReset: PublicGateway<IRequestPasswordResetUseCase>;
+  validatePasswordResetToken(
+    token: string,
+  ): Promise<ValidatePasswordResetResponse>;
+  resetPassword: PublicGateway<IResetPasswordUseCase>;
   selectOrganization(
     request: SelectOrganizationCommand,
   ): Promise<SelectOrganizationResponse>;

@@ -62,7 +62,7 @@ export class ActivateUserAccountUseCase implements IActivateUserAccountUseCase {
           invitationId: invitation.id,
           userId: invitation.userId,
         });
-        throw new UserNotFoundError(invitation.userId as string);
+        throw new UserNotFoundError({ userId: String(invitation.userId) });
       }
 
       // 4. Check if user is already active (shouldn't happen but safety check)

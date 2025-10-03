@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  SignUpUserCommand,
   SignInUserCommand,
   GenerateApiKeyCommand,
   SignUpWithOrganizationCommand,
@@ -10,12 +9,14 @@ import {
   createOrganizationId,
   ActivateUserAccountCommand,
   UserId,
+  RequestPasswordResetCommand,
+  ResetPasswordCommand,
 } from '@packmind/shared/types';
 import { authGateway } from '../gateways';
+import { GET_ME_QUERY_KEY } from './UserQueries';
 
 type SignInRequest = SignInUserCommand;
 
-const SIGN_UP_MUTATION_KEY = 'signUp';
 const SIGN_UP_WITH_ORGANIZATION_MUTATION_KEY = 'signUpWithOrganization';
 const SIGN_IN_MUTATION_KEY = 'signIn';
 const SIGN_OUT_MUTATION_KEY = 'signOut';
@@ -27,26 +28,9 @@ const GET_CURRENT_API_KEY_QUERY_KEY = 'getCurrentApiKey';
 const CHECK_EMAIL_AVAILABILITY_MUTATION_KEY = 'checkEmailAvailability';
 const VALIDATE_INVITATION_QUERY_KEY = 'validateInvitation';
 const ACTIVATE_USER_ACCOUNT_MUTATION_KEY = 'activateUserAccount';
-
-export const useSignUpMutation = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationKey: [SIGN_UP_MUTATION_KEY],
-    mutationFn: async (request: SignUpUserCommand) => {
-      return authGateway.signUp(request);
-    },
-    retry: false, // Disable retries for sign-up mutations
-    onSuccess: (data) => {
-      console.log('User signed up successfully:', data);
-      // Invalidate authentication queries to refresh user state
-      queryClient.invalidateQueries({ queryKey: ['getMe'] });
-    },
-    onError: (error) => {
-      console.error('Error signing up user:', error);
-    },
-  });
-};
+const REQUEST_PASSWORD_RESET_MUTATION_KEY = 'requestPasswordReset';
+const RESET_PASSWORD_MUTATION_KEY = 'resetPassword';
+const VALIDATE_PASSWORD_RESET_TOKEN_QUERY_KEY = 'validatePasswordResetToken';
 
 export const useSignUpWithOrganizationMutation = () => {
   const queryClient = useQueryClient();
@@ -197,7 +181,7 @@ export const useActivateUserAccountMutation = () => {
     },
     onSuccess: (data) => {
       console.log('User account activated successfully:', data);
-      queryClient.invalidateQueries({ queryKey: ['getMe'] });
+      queryClient.invalidateQueries({ queryKey: [GET_ME_QUERY_KEY] });
       queryClient.invalidateQueries({
         queryKey: [VALIDATE_INVITATION_QUERY_KEY],
       });
@@ -207,6 +191,61 @@ export const useActivateUserAccountMutation = () => {
     },
   });
 };
+
+export const useRequestPasswordResetMutation = () => {
+  return useMutation({
+    mutationKey: [REQUEST_PASSWORD_RESET_MUTATION_KEY],
+    mutationFn: async (request: RequestPasswordResetCommand) => {
+      return authGateway.requestPasswordReset(request);
+    },
+    onSuccess: (data) => {
+      console.log('Password reset requested successfully:', data);
+    },
+    onError: (error) => {
+      console.error('Error requesting password reset:', error);
+    },
+  });
+};
+
+export const useValidatePasswordResetTokenQuery = (token: string) => {
+  return useQuery({
+    queryKey: [VALIDATE_PASSWORD_RESET_TOKEN_QUERY_KEY, token],
+    queryFn: () => authGateway.validatePasswordResetToken(token),
+    enabled: !!token,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  });
+};
+
+export const useResetPasswordMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: [RESET_PASSWORD_MUTATION_KEY],
+    mutationFn: async (request: ResetPasswordCommand) => {
+      return authGateway.resetPassword(request);
+    },
+    onSuccess: (data) => {
+      console.log('Password reset successfully:', data);
+      queryClient.invalidateQueries({ queryKey: [GET_ME_QUERY_KEY] });
+      queryClient.invalidateQueries({
+        queryKey: [VALIDATE_PASSWORD_RESET_TOKEN_QUERY_KEY],
+      });
+    },
+    onError: (error) => {
+      console.error('Error resetting password:', error);
+    },
+  });
+};
+
+export const getSelectOrganizationQueryOptions = (organizationId: string) => ({
+  queryKey: [SELECT_ORGANIZATION_MUTATION_KEY, organizationId],
+  queryFn: () =>
+    authGateway.selectOrganization({
+      organizationId: createOrganizationId(organizationId),
+    }),
+});
 
 export const useSelectOrganizationMutation = () => {
   const queryClient = useQueryClient();
@@ -219,9 +258,8 @@ export const useSelectOrganizationMutation = () => {
       });
     },
     onSuccess: (data) => {
-      console.log('Organization selected successfully:', data);
       // Invalidate authentication queries to refresh user state
-      queryClient.invalidateQueries({ queryKey: ['getMe'] });
+      queryClient.invalidateQueries({ queryKey: [GET_ME_QUERY_KEY] });
     },
     onError: (error) => {
       console.error('Error selecting organization:', error);

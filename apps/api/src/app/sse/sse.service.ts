@@ -249,7 +249,7 @@ export class SSEService implements OnModuleInit, OnModuleDestroy {
    * Create a unique key for a subscription
    */
   private createSubscriptionKey(eventType: string, params: string[]): string {
-    return `${eventType}:${params.join(',')}`;
+    return `${eventType}:${params.join(',')}`.toUpperCase();
   }
 
   /**

@@ -5,12 +5,40 @@ import {
   GitProviderVendors,
   createGitProviderId,
 } from '../../../domain/entities/GitProvider';
-import { createOrganizationId } from '@packmind/accounts';
+import {
+  UserProvider,
+  OrganizationProvider,
+  createOrganizationId,
+  createUserId,
+} from '@packmind/shared';
 import { gitProviderFactory } from '../../../../test';
+import { User, Organization } from '@packmind/shared/types';
+import { stubLogger } from '@packmind/shared/test';
 
 describe('AddGitProviderUseCase', () => {
   let useCase: AddGitProviderUseCase;
   let mockGitProviderService: jest.Mocked<GitProviderService>;
+  let userProvider: jest.Mocked<UserProvider>;
+  let organizationProvider: jest.Mocked<OrganizationProvider>;
+  const organizationId = createOrganizationId('org-123');
+  const adminUser: User = {
+    id: createUserId('user-123'),
+    email: 'admin@example.com',
+    passwordHash: null,
+    active: true,
+    memberships: [
+      {
+        userId: createUserId('user-123'),
+        organizationId,
+        role: 'admin',
+      },
+    ],
+  };
+  const organization: Organization = {
+    id: organizationId,
+    name: 'Test Org',
+    slug: 'test-org',
+  };
 
   beforeEach(() => {
     mockGitProviderService = {
@@ -19,7 +47,20 @@ describe('AddGitProviderUseCase', () => {
       jest.Mocked<GitProviderService>
     > as jest.Mocked<GitProviderService>;
 
-    useCase = new AddGitProviderUseCase(mockGitProviderService);
+    userProvider = {
+      getUserById: jest.fn().mockResolvedValue(adminUser),
+    } as jest.Mocked<UserProvider>;
+
+    organizationProvider = {
+      getOrganizationById: jest.fn().mockResolvedValue(organization),
+    } as jest.Mocked<OrganizationProvider>;
+
+    useCase = new AddGitProviderUseCase(
+      mockGitProviderService,
+      userProvider,
+      organizationProvider,
+      stubLogger(),
+    );
   });
 
   it('adds git provider with organization association', async () => {
@@ -29,7 +70,8 @@ describe('AddGitProviderUseCase', () => {
         url: 'https://github.com',
         token: 'test-token',
       },
-      organizationId: createOrganizationId('org-123'),
+      organizationId: organizationId,
+      userId: adminUser.id,
     };
 
     const expectedResult = gitProviderFactory({
@@ -47,25 +89,7 @@ describe('AddGitProviderUseCase', () => {
       ...input.gitProvider,
       organizationId: input.organizationId,
     });
-  });
-
-  describe('when organization ID is missing', () => {
-    it('throws error', async () => {
-      const input = {
-        gitProvider: {
-          source: GitProviderVendors.github,
-          url: 'https://github.com',
-          token: 'test-token',
-        },
-        organizationId: createOrganizationId(''),
-      };
-
-      await expect(useCase.execute(input)).rejects.toThrow(
-        'Organization ID is required to add a git provider',
-      );
-
-      expect(mockGitProviderService.addGitProvider).not.toHaveBeenCalled();
-    });
+    expect(userProvider.getUserById).toHaveBeenCalledWith(input.userId);
   });
 
   describe('when git provider token is missing', () => {
@@ -76,7 +100,8 @@ describe('AddGitProviderUseCase', () => {
           url: 'https://github.com',
           token: '',
         },
-        organizationId: createOrganizationId('org-123'),
+        organizationId: organizationId,
+        userId: adminUser.id,
       };
 
       await expect(useCase.execute(input)).rejects.toThrow(
@@ -95,7 +120,8 @@ describe('AddGitProviderUseCase', () => {
           url: 'https://github.com',
           token: 'test-token',
         },
-        organizationId: createOrganizationId('org-123'),
+        organizationId: organizationId,
+        userId: adminUser.id,
       };
 
       await expect(useCase.execute(input)).rejects.toThrow(

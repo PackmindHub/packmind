@@ -36,9 +36,9 @@ const PMPageSection = ({
 
   return (
     <Box
-      {...boxCustomProps}
-      backgroundColor={`{colors.background.${backgroundColor}}`}
       p={4}
+      backgroundColor={`{colors.background.${backgroundColor}}`}
+      {...boxCustomProps}
     >
       <HStack justify={'space-between'}>
         <PMHeading level={headingLevel} mb={2}>

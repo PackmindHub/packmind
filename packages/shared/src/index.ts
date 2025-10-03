@@ -18,6 +18,7 @@ export * from './security/EncryptionService';
 export * from './sse';
 export * from './types';
 export * from './mail';
+export * from './application';
 
 import localDataSource from './dataSources/local';
 export { localDataSource };

@@ -3,7 +3,7 @@ import { Text, TextProps } from '@chakra-ui/react';
 export interface PMTextProps extends TextProps {
   as?: 'span' | 'p' | 'div';
   variant?: 'body' | 'body-important' | 'small' | 'small-important';
-  color?: 'primary' | 'secondary' | 'error' | 'faded';
+  color?: 'primary' | 'secondary' | 'tertiary' | 'error' | 'faded';
   children: React.ReactNode;
 }
 

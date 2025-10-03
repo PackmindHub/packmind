@@ -19,7 +19,6 @@ export default function StandardDetailIndexRouteModule() {
   const standard = useLoaderData();
   const { organization } = useAuthContext();
 
-  // If org slug doesn't match, return null (redirect will happen in useEffect)
   if (!organization) {
     return null;
   }

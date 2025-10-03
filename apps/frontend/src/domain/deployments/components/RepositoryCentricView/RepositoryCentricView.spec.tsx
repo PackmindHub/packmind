@@ -581,6 +581,48 @@ describe('RepositoryCentricView', () => {
         ).not.toBeInTheDocument();
       });
 
+      it('hides up-to-date targets when filtering by outdated within same repository', () => {
+        const sharedRepo = gitRepoFactory({
+          owner: 'test-owner',
+          repo: 'test-repo',
+        });
+        const outdatedTarget = targetFactory({
+          id: createTargetId('target-1'),
+          name: 'Production',
+        });
+        const upToDateTarget = targetFactory({
+          id: createTargetId('target-2'),
+          name: 'Staging',
+        });
+
+        const recipeTargets = [
+          createTargetDeploymentStatus({
+            target: outdatedTarget,
+            gitRepo: sharedRepo,
+            hasOutdatedRecipes: true,
+          }),
+          createTargetDeploymentStatus({
+            target: upToDateTarget,
+            gitRepo: sharedRepo,
+            hasOutdatedRecipes: false,
+          }),
+        ];
+
+        renderWithProvider(
+          <RepositoryCentricView
+            recipeRepositories={[]}
+            recipeTargets={recipeTargets}
+            showOnlyOutdated={true}
+          />,
+        );
+
+        expect(
+          screen.getByText('test-owner/test-repo:main'),
+        ).toBeInTheDocument();
+        expect(screen.getByText('Production')).toBeInTheDocument();
+        expect(screen.queryByText('Staging')).not.toBeInTheDocument();
+      });
+
       it('shows empty state when no repositories match selected targets', () => {
         const target1 = targetFactory({
           id: createTargetId('target-1'),
@@ -731,7 +773,7 @@ describe('RepositoryCentricView', () => {
       ).toBeInTheDocument();
     });
 
-    it('displays empty state for no outdated repositories', () => {
+    it('displays empty state for no outdated targets', () => {
       const repositories = [
         createRepositoryDeploymentStatus({
           gitRepo: gitRepoFactory({ owner: 'test-owner', repo: 'test-repo' }),
@@ -746,10 +788,10 @@ describe('RepositoryCentricView', () => {
         />,
       );
 
-      expect(screen.getByText('No outdated repositories')).toBeInTheDocument();
+      expect(screen.getByText('No outdated targets')).toBeInTheDocument();
       expect(
         screen.getByText(
-          'All repositories have up-to-date recipes and standards deployed',
+          'All targets have up-to-date recipes and standards deployed',
         ),
       ).toBeInTheDocument();
     });

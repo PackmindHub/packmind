@@ -5,23 +5,27 @@ import {
   createOrganizationId,
   OrganizationId,
   UserId,
-  UserOrganizationMembership,
   UserOrganizationRole,
 } from '@packmind/accounts';
 import { JwtPayload } from './JwtPayload';
 
 describe('AuthService - getMe method', () => {
   let mockJwtService: JwtService;
-  let mockAccountsHexa: jest.Mocked<{ getOrganizationById: jest.Mock }>;
+  let mockAccountsHexa: jest.Mocked<{
+    getOrganizationById: jest.Mock;
+    getUserById: jest.Mock;
+  }>;
   let authService: {
     logger: { log: jest.Mock; warn: jest.Mock };
     jwtService: JwtService;
-    accountsHexa: jest.Mocked<{ getOrganizationById: jest.Mock }>;
+    accountsHexa: jest.Mocked<{
+      getOrganizationById: jest.Mock;
+      getUserById: jest.Mock;
+    }>;
     getMe: (accessToken?: string) => Promise<{
       user: {
         id: UserId;
         email: string;
-        memberships: UserOrganizationMembership[];
       };
       organization: {
         id: OrganizationId;
@@ -43,12 +47,6 @@ describe('AuthService - getMe method', () => {
       slug: 'test-organization',
       role: 'admin',
     },
-    memberships: [
-      {
-        organizationId: createOrganizationId('org-1'),
-        role: 'admin',
-      },
-    ],
     iat: Math.floor(Date.now() / 1000),
     exp: Math.floor(Date.now() / 1000) + 3600,
   };
@@ -60,6 +58,7 @@ describe('AuthService - getMe method', () => {
 
     mockAccountsHexa = {
       getOrganizationById: jest.fn(),
+      getUserById: jest.fn(),
     };
 
     // Create a minimal object with just the getMe method
@@ -85,33 +84,173 @@ describe('AuthService - getMe method', () => {
 
   describe('getMe', () => {
     describe('when valid token is provided', () => {
-      it('returns user payload', async () => {
-        mockJwtService.verify = jest.fn().mockReturnValue(mockPayload);
-
-        const result = await authService.getMe('valid-jwt-token');
-
-        expect(result).toEqual({
-          authenticated: true,
-          user: {
-            id: '1',
+      describe('when user has access to organization', () => {
+        it('returns user payload', async () => {
+          mockJwtService.verify = jest.fn().mockReturnValue(mockPayload);
+          mockAccountsHexa.getUserById.mockResolvedValue({
+            id: createUserId('1'),
             email: 'testuser@packmind.com',
             memberships: [
               {
-                userId: createUserId('1'),
                 organizationId: createOrganizationId('org-1'),
                 role: 'admin',
               },
             ],
-          },
-          organization: {
-            id: 'org-1',
+          });
+
+          mockAccountsHexa.getOrganizationById.mockResolvedValue({
+            id: createOrganizationId('org-1'),
             name: 'Test Organization',
             slug: 'test-organization',
-            role: 'admin',
-          },
+          });
+
+          const result = await authService.getMe('valid-jwt-token');
+
+          expect(result).toEqual({
+            authenticated: true,
+            user: {
+              id: '1',
+              email: 'testuser@packmind.com',
+            },
+            organization: {
+              id: 'org-1',
+              name: 'Test Organization',
+              slug: 'test-organization',
+              role: 'admin',
+            },
+          });
+          expect(mockJwtService.verify).toHaveBeenCalledWith('valid-jwt-token');
+          expect(mockAccountsHexa.getUserById).toHaveBeenCalledWith({
+            userId: createUserId('1'),
+          });
         });
-        expect(mockJwtService.verify).toHaveBeenCalledWith('valid-jwt-token');
-        expect(mockAccountsHexa.getOrganizationById).not.toHaveBeenCalled();
+      });
+
+      describe('when user does not have access to organization in token', () => {
+        it('returns unauthenticated', async () => {
+          mockJwtService.verify = jest.fn().mockReturnValue(mockPayload);
+          mockAccountsHexa.getUserById.mockResolvedValue({
+            id: createUserId('1'),
+            email: 'testuser@packmind.com',
+            memberships: [
+              {
+                organizationId: createOrganizationId('org-2'),
+                role: 'admin',
+              },
+            ],
+          });
+
+          const result = await authService.getMe('valid-jwt-token');
+
+          expect(result).toEqual({
+            message: 'User does not have access to the organization in token',
+            authenticated: false,
+          });
+          expect(mockJwtService.verify).toHaveBeenCalledWith('valid-jwt-token');
+          expect(mockAccountsHexa.getUserById).toHaveBeenCalledWith({
+            userId: createUserId('1'),
+          });
+          expect(authService.logger.warn).toHaveBeenCalledWith(
+            'User 1 does not have access to organization org-1',
+          );
+        });
+      });
+
+      describe('when user has no memberships', () => {
+        it('returns unauthenticated', async () => {
+          mockJwtService.verify = jest.fn().mockReturnValue(mockPayload);
+          mockAccountsHexa.getUserById.mockResolvedValue({
+            id: createUserId('1'),
+            email: 'testuser@packmind.com',
+            memberships: [],
+          });
+
+          const result = await authService.getMe('valid-jwt-token');
+
+          expect(result).toEqual({
+            message: 'User does not have access to the organization in token',
+            authenticated: false,
+          });
+        });
+      });
+
+      describe('when token has no organization', () => {
+        it('returns authenticated with user organizations', async () => {
+          const payloadWithoutOrg: JwtPayload = {
+            user: {
+              name: 'testuser@packmind.com',
+              userId: createUserId('1'),
+            },
+            organization: undefined,
+            iat: Math.floor(Date.now() / 1000),
+            exp: Math.floor(Date.now() / 1000) + 3600,
+          };
+
+          mockJwtService.verify = jest.fn().mockReturnValue(payloadWithoutOrg);
+          mockAccountsHexa.getUserById.mockResolvedValue({
+            id: createUserId('1'),
+            email: 'testuser@packmind.com',
+            memberships: [
+              {
+                organizationId: createOrganizationId('org-1'),
+                role: 'admin',
+              },
+              {
+                organizationId: createOrganizationId('org-2'),
+                role: 'member',
+              },
+            ],
+          });
+          mockAccountsHexa.getOrganizationById
+            .mockResolvedValueOnce({
+              id: createOrganizationId('org-1'),
+              name: 'Organization 1',
+              slug: 'org-1',
+            })
+            .mockResolvedValueOnce({
+              id: createOrganizationId('org-2'),
+              name: 'Organization 2',
+              slug: 'org-2',
+            });
+
+          const result = await authService.getMe('valid-jwt-token');
+
+          expect(result).toEqual({
+            user: {
+              id: '1',
+              email: 'testuser@packmind.com',
+            },
+            organizations: [
+              {
+                organization: {
+                  id: 'org-1',
+                  name: 'Organization 1',
+                  slug: 'org-1',
+                },
+                role: 'admin',
+              },
+              {
+                organization: {
+                  id: 'org-2',
+                  name: 'Organization 2',
+                  slug: 'org-2',
+                },
+                role: 'member',
+              },
+            ],
+            message:
+              'User is authenticated but has not selected an organization',
+            authenticated: true,
+          });
+          expect(mockJwtService.verify).toHaveBeenCalledWith('valid-jwt-token');
+          expect(mockAccountsHexa.getUserById).toHaveBeenCalledWith({
+            userId: createUserId('1'),
+          });
+          expect(mockAccountsHexa.getOrganizationById).toHaveBeenCalledTimes(2);
+          expect(authService.logger.log).toHaveBeenCalledWith(
+            'User 1 is authenticated but has not selected an organization',
+          );
+        });
       });
     });
 

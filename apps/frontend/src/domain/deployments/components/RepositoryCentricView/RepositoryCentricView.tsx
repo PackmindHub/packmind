@@ -184,13 +184,40 @@ export const RepositoryCentricView: React.FC<RepositoryCentricViewProps> = ({
         }
       }
 
-      // Apply outdated filter (outdated if has outdated recipes OR standards)
-      if (
-        showOnlyOutdated &&
-        !repository.hasOutdatedRecipes &&
-        !repository.hasOutdatedStandards
-      ) {
-        return false;
+      // Apply outdated filter (check if selected/visible targets are outdated)
+      if (showOnlyOutdated) {
+        // When using target-based data, check specific targets
+        if (shouldUseTargetData) {
+          const visibleRecipeTargets =
+            selectedTargetNames && selectedTargetNames.length > 0
+              ? repository.recipeTargets?.filter((t) =>
+                  selectedTargetNames.includes(t.target.name),
+                )
+              : repository.recipeTargets;
+
+          const visibleStandardTargets =
+            selectedTargetNames && selectedTargetNames.length > 0
+              ? repository.standardTargets?.filter((t) =>
+                  selectedTargetNames.includes(t.target.name),
+                )
+              : repository.standardTargets;
+
+          const hasOutdatedVisibleTargets =
+            visibleRecipeTargets?.some((t) => t.hasOutdatedRecipes) ||
+            visibleStandardTargets?.some((t) => t.hasOutdatedStandards);
+
+          if (!hasOutdatedVisibleTargets) {
+            return false;
+          }
+        } else {
+          // Fallback to legacy repository-based check
+          if (
+            !repository.hasOutdatedRecipes &&
+            !repository.hasOutdatedStandards
+          ) {
+            return false;
+          }
+        }
       }
 
       return true;
@@ -228,8 +255,8 @@ export const RepositoryCentricView: React.FC<RepositoryCentricViewProps> = ({
     if (showOnlyOutdated) {
       return (
         <PMEmptyState
-          title="No outdated repositories"
-          description="All repositories have up-to-date recipes and standards deployed"
+          title="No outdated targets"
+          description="All targets have up-to-date recipes and standards deployed"
         />
       );
     }
@@ -298,11 +325,7 @@ export const RepositoryCentricView: React.FC<RepositoryCentricViewProps> = ({
                   ]),
                 )
                   .filter((targetId) => {
-                    if (
-                      !selectedTargetNames ||
-                      selectedTargetNames.length === 0
-                    )
-                      return true;
+                    // Find recipe and standard deployments for this target
                     const recipeTarget = repository.recipeTargets?.find(
                       (t) => t.target.id === targetId,
                     );
@@ -311,9 +334,30 @@ export const RepositoryCentricView: React.FC<RepositoryCentricViewProps> = ({
                     );
                     const target =
                       recipeTarget?.target || standardTarget?.target;
-                    return (
-                      !!target && selectedTargetNames.includes(target.name)
-                    );
+
+                    // Filter by selected target names
+                    if (
+                      selectedTargetNames &&
+                      selectedTargetNames.length > 0 &&
+                      target &&
+                      !selectedTargetNames.includes(target.name)
+                    ) {
+                      return false;
+                    }
+
+                    // Filter by outdated status - skip targets that have no outdated items
+                    if (showOnlyOutdated) {
+                      const hasOutdatedRecipes =
+                        recipeTarget?.hasOutdatedRecipes || false;
+                      const hasOutdatedStandards =
+                        standardTarget?.hasOutdatedStandards || false;
+
+                      if (!hasOutdatedRecipes && !hasOutdatedStandards) {
+                        return false;
+                      }
+                    }
+
+                    return !!target;
                   })
                   .map((targetId) => {
                     // Find recipe and standard deployments for this target

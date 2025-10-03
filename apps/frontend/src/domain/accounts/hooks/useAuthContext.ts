@@ -24,6 +24,14 @@ export interface AuthContext {
   isLoading: boolean;
   user?: AuthContextUser;
   organization?: AuthContextOrganization;
+  organizations?: Array<{
+    organization: {
+      id: OrganizationId;
+      name: string;
+      slug: string;
+    };
+    role: UserOrganizationRole;
+  }>;
   error?: Error;
 }
 
@@ -41,6 +49,7 @@ export const useAuthContext = (): AuthContext => {
     isLoading,
     user: data?.user,
     organization: data?.organization,
+    organizations: data?.organizations,
     error: error as Error | undefined,
   };
 };

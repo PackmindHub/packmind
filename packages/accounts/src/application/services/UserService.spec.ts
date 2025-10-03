@@ -1,15 +1,20 @@
 import { UserService } from './UserService';
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
+import { IUserOrganizationMembershipRepository } from '../../domain/repositories/IUserOrganizationMembershipRepository';
 import {
   User,
   createUserId,
   UserOrganizationMembership,
 } from '../../domain/entities/User';
 import { createOrganizationId } from '../../domain/entities/Organization';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger, SSEEventPublisher } from '@packmind/shared';
 import { stubLogger } from '@packmind/shared/test';
 import { userFactory } from '../../../test';
-import { InvalidInvitationEmailError } from '../../domain/errors';
+import {
+  InvalidInvitationEmailError,
+  UserNotInOrganizationError,
+  UserCannotExcludeSelfError,
+} from '../../domain/errors';
 
 // Mock bcrypt
 jest.mock('bcrypt', () => ({
@@ -23,7 +28,9 @@ const mockCompare = jest.fn<Promise<boolean>, [string, string | null]>();
 describe('UserService', () => {
   let userService: UserService;
   let mockUserRepository: jest.Mocked<IUserRepository>;
+  let mockMembershipRepository: jest.Mocked<IUserOrganizationMembershipRepository>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
+  let publishUserContextChangeEventSpy: jest.SpyInstance;
 
   beforeEach(() => {
     mockUserRepository = {
@@ -36,6 +43,11 @@ describe('UserService', () => {
       restoreById: jest.fn(),
     } as unknown as jest.Mocked<IUserRepository>;
 
+    mockMembershipRepository = {
+      removeMembership: jest.fn(),
+      updateRole: jest.fn(),
+    } as unknown as jest.Mocked<IUserOrganizationMembershipRepository>;
+
     // Set up the mock implementations
     const bcrypt = jest.requireMock('bcrypt');
     bcrypt.hash = mockHash;
@@ -43,10 +55,19 @@ describe('UserService', () => {
 
     stubbedLogger = stubLogger();
 
-    userService = new UserService(mockUserRepository, stubbedLogger);
+    publishUserContextChangeEventSpy = jest
+      .spyOn(SSEEventPublisher, 'publishUserContextChangeEvent')
+      .mockResolvedValue();
+
+    userService = new UserService(
+      mockUserRepository,
+      mockMembershipRepository,
+      stubbedLogger,
+    );
   });
 
   afterEach(() => {
+    jest.restoreAllMocks();
     jest.clearAllMocks();
   });
 
@@ -154,6 +175,105 @@ describe('UserService', () => {
           expect.objectContaining(expectedMembership),
         ]);
       });
+    });
+  });
+
+  describe('.excludeUserFromOrganization', () => {
+    const organizationId = createOrganizationId('org-1');
+
+    const createAdminUser = (overrides?: Partial<User>) => {
+      const id = overrides?.id ?? createUserId('admin-user');
+      return userFactory({
+        id,
+        memberships: [
+          {
+            userId: id,
+            organizationId,
+            role: 'admin',
+          },
+        ],
+        ...overrides,
+      });
+    };
+
+    const createMemberUser = (overrides?: Partial<User>) => {
+      const id = overrides?.id ?? createUserId('member-user');
+      return userFactory({
+        id,
+        memberships: [
+          {
+            userId: id,
+            organizationId,
+            role: 'member',
+          },
+        ],
+        ...overrides,
+      });
+    };
+
+    it('removes membership if requester is admin and target is a member', async () => {
+      const adminUser = createAdminUser();
+      const targetUser = createMemberUser({ id: createUserId('target-user') });
+
+      mockMembershipRepository.removeMembership.mockResolvedValue(true);
+
+      await expect(
+        userService.excludeUserFromOrganization({
+          requestingUser: adminUser,
+          targetUser,
+          organizationId,
+        }),
+      ).resolves.toBeUndefined();
+
+      expect(mockMembershipRepository.removeMembership).toHaveBeenCalledWith(
+        targetUser.id,
+        organizationId,
+      );
+
+      expect(publishUserContextChangeEventSpy).toHaveBeenCalledWith(
+        String(targetUser.id),
+        String(organizationId),
+        'removed',
+        undefined,
+      );
+    });
+
+    it('throws if requester tries to exclude themselves', async () => {
+      const adminUser = createAdminUser();
+
+      await expect(
+        userService.excludeUserFromOrganization({
+          requestingUser: adminUser,
+          targetUser: adminUser,
+          organizationId,
+        }),
+      ).rejects.toBeInstanceOf(UserCannotExcludeSelfError);
+
+      expect(mockMembershipRepository.removeMembership).not.toHaveBeenCalled();
+      expect(publishUserContextChangeEventSpy).not.toHaveBeenCalled();
+    });
+
+    it('throws if membership removal fails due to missing membership', async () => {
+      const adminUser = createAdminUser();
+      const targetUser = createMemberUser({
+        id: createUserId('missing-membership-user'),
+      });
+
+      mockMembershipRepository.removeMembership.mockResolvedValue(false);
+
+      await expect(
+        userService.excludeUserFromOrganization({
+          requestingUser: adminUser,
+          targetUser,
+          organizationId,
+        }),
+      ).rejects.toBeInstanceOf(UserNotInOrganizationError);
+
+      expect(mockMembershipRepository.removeMembership).toHaveBeenCalledWith(
+        targetUser.id,
+        organizationId,
+      );
+      expect(publishUserContextChangeEventSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -575,6 +695,116 @@ describe('UserService', () => {
         expect(mockUserRepository.list).toHaveBeenCalled();
         expect(result).toEqual([]);
       });
+    });
+  });
+
+  describe('.changeUserRole', () => {
+    const userId = createUserId('123e4567-e89b-12d3-a456-426614174000');
+    const organizationId = createOrganizationId(
+      '123e4567-e89b-12d3-a456-426614174001',
+    );
+
+    it('changes user role successfully and returns true', async () => {
+      mockMembershipRepository.updateRole.mockResolvedValue(true);
+
+      const result = await userService.changeUserRole(
+        userId,
+        organizationId,
+        'admin',
+      );
+
+      expect(mockMembershipRepository.updateRole).toHaveBeenCalledWith(
+        userId,
+        organizationId,
+        'admin',
+      );
+      expect(result).toBe(true);
+      expect(publishUserContextChangeEventSpy).toHaveBeenCalledWith(
+        String(userId),
+        String(organizationId),
+        'role_changed',
+        'admin',
+      );
+    });
+
+    it('returns false if membership update fails', async () => {
+      mockMembershipRepository.updateRole.mockResolvedValue(false);
+
+      const result = await userService.changeUserRole(
+        userId,
+        organizationId,
+        'member',
+      );
+
+      expect(mockMembershipRepository.updateRole).toHaveBeenCalledWith(
+        userId,
+        organizationId,
+        'member',
+      );
+      expect(result).toBe(false);
+      expect(publishUserContextChangeEventSpy).not.toHaveBeenCalled();
+    });
+
+    it('changes role from admin to member', async () => {
+      mockMembershipRepository.updateRole.mockResolvedValue(true);
+
+      const result = await userService.changeUserRole(
+        userId,
+        organizationId,
+        'member',
+      );
+
+      expect(mockMembershipRepository.updateRole).toHaveBeenCalledWith(
+        userId,
+        organizationId,
+        'member',
+      );
+      expect(result).toBe(true);
+      expect(publishUserContextChangeEventSpy).toHaveBeenCalledWith(
+        String(userId),
+        String(organizationId),
+        'role_changed',
+        'member',
+      );
+    });
+
+    it('changes role from member to admin', async () => {
+      mockMembershipRepository.updateRole.mockResolvedValue(true);
+
+      const result = await userService.changeUserRole(
+        userId,
+        organizationId,
+        'admin',
+      );
+
+      expect(mockMembershipRepository.updateRole).toHaveBeenCalledWith(
+        userId,
+        organizationId,
+        'admin',
+      );
+      expect(result).toBe(true);
+      expect(publishUserContextChangeEventSpy).toHaveBeenCalledWith(
+        String(userId),
+        String(organizationId),
+        'role_changed',
+        'admin',
+      );
+    });
+
+    it('propagates repository errors', async () => {
+      const error = new Error('Database connection failed');
+      mockMembershipRepository.updateRole.mockRejectedValue(error);
+
+      await expect(
+        userService.changeUserRole(userId, organizationId, 'admin'),
+      ).rejects.toThrow('Database connection failed');
+
+      expect(mockMembershipRepository.updateRole).toHaveBeenCalledWith(
+        userId,
+        organizationId,
+        'admin',
+      );
+      expect(publishUserContextChangeEventSpy).not.toHaveBeenCalled();
     });
   });
 });

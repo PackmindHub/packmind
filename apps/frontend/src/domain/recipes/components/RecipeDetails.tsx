@@ -38,7 +38,7 @@ interface RecipeDetailsProps {
   orgName?: string;
 }
 
-export const RecipeDetails = ({ id, orgSlug, orgName }: RecipeDetailsProps) => {
+export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -209,7 +209,7 @@ export const RecipeDetails = ({ id, orgSlug, orgName }: RecipeDetailsProps) => {
                   <PMBox
                     border="solid 1px"
                     borderColor="border.primary"
-                    width={{ '2xl': '4xl', xsToXl: 'full' }}
+                    width={{ '2xl': '4xl', smToXl: 'full' }}
                   >
                     <MarkdownEditorProvider>
                       <MarkdownEditor defaultValue={recipe.content} readOnly />

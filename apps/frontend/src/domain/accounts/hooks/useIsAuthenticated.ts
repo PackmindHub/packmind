@@ -9,6 +9,7 @@ export function useIsAuthenticated() {
 
   return {
     isAuthenticated: data?.authenticated || false,
+    organization: data?.organization || null,
     isLoading,
     error,
   };

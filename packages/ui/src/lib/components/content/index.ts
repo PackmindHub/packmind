@@ -16,3 +16,5 @@ export { PMCloseButton } from './PMCloseButton/PMCloseButton';
 export { PMIcon } from './PMIcon/PMIcon';
 export { PMTwoColumnsLayout } from './PMTwoColumnsLayout/PMTwoColumnsLayout';
 export { PMImage } from './PMImage/PMImage';
+export { PMAccordion } from './PMAccordion/PMAccordion';
+export { PMStat } from './PMStat/PMStat';

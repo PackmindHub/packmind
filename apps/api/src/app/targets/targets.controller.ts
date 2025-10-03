@@ -33,25 +33,25 @@ export class TargetsController {
     this.logger.info('TargetsController initialized');
   }
 
-  @Get('repository/:gitRepoId')
-  async getTargetsByRepository(
+  @Get('git-repo/:gitRepoId')
+  async getTargetsByGitRepo(
     @Param('gitRepoId') gitRepoId: GitRepoId,
     @Req() request: AuthenticatedRequest,
   ): Promise<Target[]> {
     this.logger.info(
-      'GET /targets/repository/:gitRepoId - Fetching targets by repository ID',
+      'GET /targets/git-repo/:gitRepoId - Fetching targets by git repository ID (branch-specific)',
       {
         gitRepoId,
       },
     );
 
     try {
-      const targets = await this.targetsService.getTargetsByRepository(
+      const targets = await this.targetsService.getTargetsByGitRepo(
         this.authService.makePackmindCommand(request, { gitRepoId }),
       );
 
       this.logger.info(
-        'GET /targets/repository/:gitRepoId - Targets fetched successfully',
+        'GET /targets/git-repo/:gitRepoId - Targets fetched successfully',
         {
           gitRepoId,
           count: targets.length,
@@ -63,9 +63,53 @@ export class TargetsController {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(
-        'GET /targets/repository/:gitRepoId - Failed to fetch targets',
+        'GET /targets/git-repo/:gitRepoId - Failed to fetch targets',
         {
           gitRepoId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Get('repository/:owner/:repo')
+  async getTargetsByRepository(
+    @Param('owner') owner: string,
+    @Param('repo') repo: string,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<TargetWithRepository[]> {
+    this.logger.info(
+      'GET /targets/repository/:owner/:repo - Fetching targets by repository name (all branches)',
+      {
+        owner,
+        repo,
+      },
+    );
+
+    try {
+      const targets = await this.targetsService.getTargetsByRepository(
+        this.authService.makePackmindCommand(request, { owner, repo }),
+      );
+
+      this.logger.info(
+        'GET /targets/repository/:owner/:repo - Targets fetched successfully',
+        {
+          owner,
+          repo,
+          count: targets.length,
+        },
+      );
+
+      return targets;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /targets/repository/:owner/:repo - Failed to fetch targets',
+        {
+          owner,
+          repo,
           error: errorMessage,
         },
       );

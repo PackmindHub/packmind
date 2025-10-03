@@ -90,6 +90,7 @@ jobs:
         run: ./node_modules/.bin/nx test frontend
       - name: Build frontend (OSS)
         env:
+          NODE_ENV: production
           PACKMIND_EDITION: ${{ env.OSS_EDITION }}
         run: ./node_modules/.bin/nx build frontend
       - run: cp tsconfig.base.effective.json apps/frontend/build/client/.

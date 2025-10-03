@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Delete,
   Body,
   Param,
   Req,
@@ -14,11 +15,17 @@ import {
   OrganizationId,
   OrganizationSlugConflictError,
   OrganizationNotFoundError,
-  InviterNotFoundError,
   InvitationBatchEmptyError,
+  RemoveUserFromOrganizationResponse,
+  UserId,
+  RemoveUserFromOrganizationCommand,
 } from '@packmind/accounts';
 import { OrganizationsService } from './organizations.service';
-import { PackmindLogger, UserOrganizationRole } from '@packmind/shared';
+import {
+  PackmindLogger,
+  UserOrganizationRole,
+  UserNotFoundError,
+} from '@packmind/shared';
 import { Public } from '../../auth/auth.guard';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
 
@@ -34,17 +41,26 @@ export class OrganizationsController {
   }
 
   @Get()
-  async getOrganizations(): Promise<Organization[]> {
-    this.logger.info('GET /organizations - Fetching all organizations');
+  async getUserOrganizations(
+    @Req() request: AuthenticatedRequest,
+  ): Promise<Organization[]> {
+    const userId = request.user.userId;
+    this.logger.info('GET /organizations - Fetching user organizations', {
+      userId,
+    });
 
     try {
-      return await this.organizationsService.getOrganizations();
+      return await this.organizationsService.getUserOrganizations(userId);
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      this.logger.error('GET /organizations - Failed to fetch organizations', {
-        error: errorMessage,
-      });
+      this.logger.error(
+        'GET /organizations - Failed to fetch user organizations',
+        {
+          userId,
+          error: errorMessage,
+        },
+      );
       throw error;
     }
   }
@@ -148,10 +164,10 @@ export class OrganizationsController {
     }
   }
 
-  @Public()
   @Post()
   async createOrganization(
     @Body() body: { name: string },
+    @Req() request: AuthenticatedRequest,
   ): Promise<Organization> {
     this.logger.info('POST /organizations - Creating new organization', {
       organizationName: body.name,
@@ -163,6 +179,7 @@ export class OrganizationsController {
       }
 
       return await this.organizationsService.createOrganization(
+        request.user.userId,
         body.name.trim(),
       );
     } catch (error) {
@@ -224,7 +241,7 @@ export class OrganizationsController {
       if (error instanceof OrganizationNotFoundError) {
         throw new NotFoundException(error.message);
       }
-      if (error instanceof InviterNotFoundError) {
+      if (error instanceof UserNotFoundError) {
         throw new NotFoundException(error.message);
       }
       if (error instanceof InvitationBatchEmptyError) {
@@ -239,5 +256,29 @@ export class OrganizationsController {
 
       throw error;
     }
+  }
+
+  @Delete(':organizationId/user/:userId')
+  async removeUserFromOrganization(
+    @Param('organizationId') organizationId: OrganizationId,
+    @Param('userId') userId: UserId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<RemoveUserFromOrganizationResponse> {
+    this.logger.info(
+      'DELETE /organizations/:organizationId/user/:userId - Removing user from organization',
+      {
+        organizationId,
+        targetUserId: userId,
+        requestingUserId: request.user?.userId,
+      },
+    );
+
+    const command: RemoveUserFromOrganizationCommand = {
+      userId: request.user.userId,
+      organizationId,
+      targetUserId: userId,
+    };
+
+    return this.organizationsService.removeUserFromOrganization(command);
   }
 }

@@ -18,7 +18,7 @@ import {
   BadRequestException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import { Configuration } from '@packmind/shared';
 
 // Mock only Configuration, preserve other exports
@@ -465,6 +465,114 @@ describe('AuthController', () => {
       });
 
       expect(mockResponse.cookie).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getMe', () => {
+    const mockRequest = {
+      cookies: { auth_token: 'valid-token' },
+    } as Request;
+
+    const mockResponseWithStatus = {
+      status: jest.fn().mockReturnThis(),
+    } as unknown as Response;
+
+    it('returns authenticated user with organization', async () => {
+      const mockGetMeResponse = {
+        user: {
+          id: createUserId('1'),
+          email: 'test@example.com',
+        },
+        organization: {
+          id: createOrganizationId('org-1'),
+          name: 'Test Organization',
+          slug: 'test-org',
+          role: 'admin' as const,
+        },
+        authenticated: true,
+      };
+
+      mockAuthService.getMe.mockResolvedValue(mockGetMeResponse);
+
+      const result = await controller.getMe(
+        mockRequest,
+        mockResponseWithStatus,
+      );
+
+      expect(result).toEqual(mockGetMeResponse);
+      expect(mockAuthService.getMe).toHaveBeenCalledWith('valid-token');
+      expect(mockResponseWithStatus.status).not.toHaveBeenCalled();
+    });
+
+    describe('user is not authenticated', () => {
+      it('returns 401', async () => {
+        const mockGetMeResponse = {
+          message: 'No valid access token found',
+          authenticated: false,
+        };
+
+        mockAuthService.getMe.mockResolvedValue(mockGetMeResponse);
+
+        const result = await controller.getMe(
+          mockRequest,
+          mockResponseWithStatus,
+        );
+
+        expect(result).toEqual(mockGetMeResponse);
+        expect(mockAuthService.getMe).toHaveBeenCalledWith('valid-token');
+        expect(mockResponseWithStatus.status).toHaveBeenCalledWith(401);
+      });
+    });
+
+    it('returns authenticated user with organizations list', async () => {
+      const mockGetMeResponse = {
+        user: {
+          id: createUserId('1'),
+          email: 'test@example.com',
+        },
+        organizations: [
+          {
+            organization: {
+              id: createOrganizationId('org-1'),
+              name: 'Organization 1',
+              slug: 'org-1',
+            },
+            role: 'admin' as const,
+          },
+        ],
+        message: 'User is authenticated but has not selected an organization',
+        authenticated: true,
+      };
+
+      mockAuthService.getMe.mockResolvedValue(mockGetMeResponse);
+
+      const result = await controller.getMe(
+        mockRequest,
+        mockResponseWithStatus,
+      );
+
+      expect(result).toEqual(mockGetMeResponse);
+      expect(mockAuthService.getMe).toHaveBeenCalledWith('valid-token');
+      expect(mockResponseWithStatus.status).not.toHaveBeenCalled();
+    });
+
+    describe('service throws an error', () => {
+      it('returns 401', async () => {
+        mockAuthService.getMe.mockRejectedValue(new Error('Service error'));
+
+        const result = await controller.getMe(
+          mockRequest,
+          mockResponseWithStatus,
+        );
+
+        expect(result).toEqual({
+          message: 'Failed to get user info',
+          authenticated: false,
+          user: undefined,
+          organization: undefined,
+        });
+        expect(mockResponseWithStatus.status).toHaveBeenCalledWith(401);
+      });
     });
   });
 

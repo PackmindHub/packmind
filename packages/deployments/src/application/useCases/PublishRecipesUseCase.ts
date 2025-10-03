@@ -98,6 +98,9 @@ export class PublishRecipesUseCase implements IPublishRecipes {
       recipeVersions.push(recipeVersion);
     }
 
+    // Sort recipe versions alphabetically by name for deterministic ordering
+    recipeVersions.sort((a, b) => a.name.localeCompare(b.name));
+
     const deployments: RecipesDeployment[] = [];
 
     // Process each repository (with all its targets)
@@ -150,7 +153,7 @@ export class PublishRecipesUseCase implements IPublishRecipes {
         const allRecipeVersions = this.combineRecipeVersions(
           previousRecipeVersionsArray,
           recipeVersions,
-        );
+        ).sort((a, b) => a.name.localeCompare(b.name));
 
         this.logger.info('Combined recipe versions', {
           totalCount: allRecipeVersions.length,
@@ -192,19 +195,25 @@ Recipes updated:
 ${recipeVersions.map((rv) => `- ${rv.name} (${rv.slug}) v${rv.version}`).join('\n')}`;
 
         let gitCommit;
+        let deploymentStatus = DistributionStatus.success;
         try {
           gitCommit = await this.gitHexa.commitToGit(
             gitRepo,
             fileUpdates.createOrUpdate,
             commitMessage,
           );
+          this.logger.info('Committed changes', {
+            commitId: gitCommit.id,
+            commitSha: gitCommit.sha,
+            targetsCount: targets.length,
+          });
         } catch (error) {
           if (
             error instanceof Error &&
             error.message === 'NO_CHANGES_DETECTED'
           ) {
             this.logger.info(
-              'No changes detected, skipping deployment creation',
+              'No changes detected, creating no_changes deployment entries',
               {
                 repositoryId,
                 gitRepoId: gitRepo.id,
@@ -212,18 +221,15 @@ ${recipeVersions.map((rv) => `- ${rv.name} (${rv.slug}) v${rv.version}`).join('\
                 targetsCount: targets.length,
               },
             );
-            continue; // Skip to next repository
+            // Set status to no_changes and continue without git commit
+            deploymentStatus = DistributionStatus.no_changes;
+            gitCommit = undefined;
+          } else {
+            throw error; // Re-throw other errors
           }
-          throw error; // Re-throw other errors
         }
 
-        this.logger.info('Committed changes', {
-          commitId: gitCommit.id,
-          commitSha: gitCommit.sha,
-          targetsCount: targets.length,
-        });
-
-        // Create individual deployment entry for each target (sharing the same git commit)
+        // Create individual deployment entry for each target (sharing the same git commit or no_changes status)
         for (const target of targets) {
           const deployment: RecipesDeployment = {
             id: createRecipesDeploymentId(uuidv4()),
@@ -232,21 +238,21 @@ ${recipeVersions.map((rv) => `- ${rv.name} (${rv.slug}) v${rv.version}`).join('\
             authorId: command.userId as UserId,
             organizationId: command.organizationId as OrganizationId,
             // Single target model fields
-            gitCommit: gitCommit, // Shared across all targets in this repo
+            gitCommit: gitCommit, // Shared across all targets in this repo (undefined for no_changes)
             target: target, // Unique for each deployment
-            status: DistributionStatus.success,
+            status: deploymentStatus,
           };
 
           // Save the deployment to the database
           await this.recipesDeploymentRepository.add(deployment);
 
-          this.logger.info('Created successful deployment for target', {
+          this.logger.info('Created deployment for target', {
             deploymentId: deployment.id,
             targetId: target.id,
             targetName: target.name,
             intentedRecipeVersionsCount: deployment.recipeVersions.length,
-            status: DistributionStatus.success,
-            commitSha: gitCommit.sha,
+            status: deploymentStatus,
+            commitSha: gitCommit?.sha,
           });
 
           deployments.push(deployment);
@@ -283,12 +289,15 @@ ${recipeVersions.map((rv) => `- ${rv.name} (${rv.slug}) v${rv.version}`).join('\
       failedDeployments: deployments.filter(
         (d) => d.status === DistributionStatus.failure,
       ).length,
+      noChangesDeployments: deployments.filter(
+        (d) => d.status === DistributionStatus.no_changes,
+      ).length,
     });
 
     return deployments;
   }
 
-  private async saveRecipeDeploymentInFailure(
+  public async saveRecipeDeploymentInFailure(
     command: PublishRecipesCommand,
     target: Target,
     deployments: RecipesDeployment[],
@@ -310,6 +319,9 @@ ${recipeVersions.map((rv) => `- ${rv.name} (${rv.slug}) v${rv.version}`).join('\
           });
         }
       }
+
+      // Sort recipe versions alphabetically for consistency
+      recipeVersions.sort((a, b) => a.name.localeCompare(b.name));
 
       const failureDeployment: RecipesDeployment = {
         id: createRecipesDeploymentId(uuidv4()),
@@ -346,7 +358,7 @@ ${recipeVersions.map((rv) => `- ${rv.name} (${rv.slug}) v${rv.version}`).join('\
     }
   }
 
-  private collectUniqueRecipeVersions(
+  public collectUniqueRecipeVersions(
     deployments: RecipesDeployment[],
   ): RecipeVersion[] {
     const recipeVersionMap = new Map<string, RecipeVersion>();
@@ -364,7 +376,7 @@ ${recipeVersions.map((rv) => `- ${rv.name} (${rv.slug}) v${rv.version}`).join('\
     return Array.from(recipeVersionMap.values());
   }
 
-  private combineRecipeVersions(
+  public combineRecipeVersions(
     previousRecipeVersions: RecipeVersion[],
     newRecipeVersions: RecipeVersion[],
   ): RecipeVersion[] {
@@ -383,7 +395,7 @@ ${recipeVersions.map((rv) => `- ${rv.name} (${rv.slug}) v${rv.version}`).join('\
     return Array.from(recipeVersionsMap.values());
   }
 
-  private combineRecipes(
+  public combineRecipes(
     previousRecipes: Recipe[],
     newRecipes: Recipe[],
   ): Recipe[] {
@@ -406,7 +418,7 @@ ${recipeVersions.map((rv) => `- ${rv.name} (${rv.slug}) v${rv.version}`).join('\
    * Legacy method for backward compatibility with gitRepoIds
    * @deprecated Use execute() with targetIds instead
    */
-  private async executeWithRepositoryIds(
+  public async executeWithRepositoryIds(
     command: PublishRecipesCommand,
   ): Promise<RecipesDeployment[]> {
     if (!command.gitRepoIds || command.gitRepoIds.length === 0) {
@@ -452,6 +464,9 @@ ${recipeVersions.map((rv) => `- ${rv.name} (${rv.slug}) v${rv.version}`).join('\
       recipeVersions.push(recipeVersion);
     }
 
+    // Sort recipe versions alphabetically by name for deterministic ordering
+    recipeVersions.sort((a, b) => a.name.localeCompare(b.name));
+
     const deployments: RecipesDeployment[] = [];
 
     for (const gitRepo of gitRepos) {
@@ -486,7 +501,7 @@ ${recipeVersions.map((rv) => `- ${rv.name} (${rv.slug}) v${rv.version}`).join('\
         const allRecipeVersions = this.combineRecipeVersions(
           previousRecipeVersions,
           recipeVersions,
-        );
+        ).sort((a, b) => a.name.localeCompare(b.name));
 
         this.logger.info('Combined recipe versions', {
           totalCount: allRecipeVersions.length,

@@ -1,5 +1,18 @@
 # [Unreleased]
 
+# [1.2.0] - 2015-10-02
+
+## Added
+
+- Add admin/member role system (#187)
+- A user can create multiple organizations (#186)
+- A user can reset their password (#188)
+
+## Changed
+
+- Redesign organization dashboard (#216)
+- Harmonize standards/recipes pages (#136)
+
 # [1.1.1] - 2015-09-26
 
 ## Changed

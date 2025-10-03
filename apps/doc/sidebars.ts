@@ -14,7 +14,38 @@ import type { SidebarsConfig } from '@docusaurus/plugin-content-docs';
  */
 const sidebars: SidebarsConfig = {
   // Packmind documentation sidebar with organized structure
-  documentationSidebar: ['index'],
+  documentationSidebar: [
+    'index',
+    {
+      type: 'category',
+      label: 'Getting started',
+      items: [
+        'gs-install-cloud',
+        'gs-install-self-hosted',
+        'gs-mcp-server-setup',
+        'gs-create-standard',
+        'gs-create-recipe',
+        'gs-distribute',
+      ],
+      collapsed: false,
+    },
+    {
+      type: 'category',
+      label: 'Concepts',
+      items: ['standards-management', 'recipes-management', 'mcp-server'],
+      collapsed: false,
+    },
+    {
+      type: 'category',
+      label: 'Governance',
+      items: ['deployment', 'git-repository-connection', 'overview'],
+    },
+    {
+      type: 'category',
+      label: 'Administration',
+      items: ['manage-organizations'],
+    },
+  ],
 };
 
 export default sidebars;

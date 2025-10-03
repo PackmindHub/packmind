@@ -6,19 +6,13 @@ import { AutobreadCrumb } from '../../src/shared/components/navigation/Autobread
 import { RecipeId } from '@packmind/recipes';
 
 export default function RecipeDetailsIndexRouteModule() {
-  const { orgSlug, recipeId } = useParams<{
+  const { recipeId } = useParams<{
     orgSlug: string;
     recipeId: string;
   }>();
-  const { isAuthenticated, organization } = useAuthContext();
+  const { organization } = useAuthContext();
 
-  // If not authenticated, return null (redirect will happen in useEffect)
-  if (!isAuthenticated) {
-    return null;
-  }
-
-  // If org slug doesn't match, return null (redirect will happen in useEffect)
-  if (!organization || orgSlug !== organization.slug) {
+  if (!organization) {
     return null;
   }
 

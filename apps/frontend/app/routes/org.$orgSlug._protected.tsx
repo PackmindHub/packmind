@@ -1,10 +1,16 @@
-import { NavLink, Outlet, useLoaderData, redirect } from 'react-router';
-import { PMBox, PMHStack } from '@packmind/ui';
+import { NavLink, Outlet, redirect } from 'react-router';
+import { PMBox, PMHStack, pmToaster } from '@packmind/ui';
 import { SidebarNavigation } from '../../src/domain/organizations/components/SidebarNavigation';
 
 import type { LoaderFunctionArgs } from 'react-router';
 import { queryClient } from '../../src/shared/data/queryClient';
-import { getMeQueryOptions } from '../../src/domain/accounts/api/queries/UserQueries';
+import {
+  getMeQueryOptions,
+  useGetMeQuery,
+} from '../../src/domain/accounts/api/queries/UserQueries';
+import { getUserOrganizationsQueryOptions } from '../../src/domain/accounts/api/queries/AccountsQueries';
+import { getSelectOrganizationQueryOptions } from '../../src/domain/accounts/api/queries/AuthQueries';
+import { useAuthErrorHandler } from '../../src/domain/accounts/hooks/useAuthErrorHandler';
 
 export async function clientLoader({ params }: LoaderFunctionArgs) {
   try {
@@ -13,7 +19,26 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
       throw redirect('/sign-in');
     }
     if (me.organization?.slug && me.organization.slug !== params.orgSlug) {
-      throw redirect(`/org/${me.organization.slug}`);
+      const organizations = await queryClient.ensureQueryData(
+        getUserOrganizationsQueryOptions(),
+      );
+      const organization = organizations.find(
+        (org) => org.slug === params.orgSlug,
+      );
+      if (organization) {
+        await queryClient.ensureQueryData(
+          getSelectOrganizationQueryOptions(organization.id),
+        );
+        await queryClient.invalidateQueries();
+
+        return { me: await queryClient.ensureQueryData(getMeQueryOptions()) };
+      } else {
+        pmToaster.error({
+          title: 'Access denied',
+          description: `You don't have access to this organization. Redirecting to ${me.organization.name}.`,
+        });
+        throw redirect(`/org/${me.organization.slug}`);
+      }
     }
     return { me };
   } catch {
@@ -27,19 +52,21 @@ export const handle = {
     data,
   }: {
     params: { orgSlug: string };
-    data: { me: { organization: { name: string } } };
+    data: { me: { organization: { name: string; slug: string } } };
   }) => {
     return (
       <NavLink to={`/org/${params.orgSlug}`}>
-        {data.me.organization.name}
+        {data.me.organization?.name ?? ''}
       </NavLink>
     );
   },
 };
 
 export default function AuthenticatedLayout() {
-  const { me } = useLoaderData();
-  const organization = me.organization;
+  const { data: me } = useGetMeQuery();
+  useAuthErrorHandler();
+  if (!me) return null;
+
   return (
     <PMHStack
       h="100%"
@@ -48,7 +75,7 @@ export default function AuthenticatedLayout() {
       gap={0}
       overflow={'hidden'}
     >
-      <SidebarNavigation organization={organization} />
+      <SidebarNavigation organization={me.organization} />
       <PMBox flex={'1'} h="100%" overflow={'auto'}>
         <Outlet />
       </PMBox>

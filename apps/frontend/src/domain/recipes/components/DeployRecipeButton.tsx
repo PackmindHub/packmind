@@ -9,7 +9,7 @@ import {
 } from '@packmind/ui';
 import { RunDistribution } from '../../deployments/components/RunDistribution/RunDistribution';
 import { Recipe } from '@packmind/recipes/types';
-import { analyzeDeploymentResults } from '../../deployments/utils/deploymentNotificationUtils';
+import { createSeparateDeploymentNotifications } from '../../deployments/utils/deploymentNotificationUtils';
 export interface DeployRecipeButtonProps {
   label?: string;
   disabled?: boolean;
@@ -50,15 +50,19 @@ export const DeployRecipeButton: React.FC<DeployRecipeButtonProps> = ({
                     store.setOpen(false);
 
                     if (deploymentResults) {
-                      const notification = analyzeDeploymentResults(
-                        deploymentResults.recipesDeployments,
-                        deploymentResults.standardsDeployments,
-                      );
+                      const notifications =
+                        createSeparateDeploymentNotifications(
+                          deploymentResults.recipesDeployments,
+                          deploymentResults.standardsDeployments,
+                        );
 
-                      pmToaster.create({
-                        type: notification.type,
-                        title: notification.title,
-                        description: notification.description,
+                      // Create separate toaster for each status type
+                      notifications.forEach((notification) => {
+                        pmToaster.create({
+                          type: notification.type,
+                          title: notification.title,
+                          description: notification.description,
+                        });
                       });
                     } else {
                       // Fallback for backward compatibility

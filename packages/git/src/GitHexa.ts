@@ -13,12 +13,17 @@ import { GitCommit } from './domain/entities/GitCommit';
 import { OrganizationId, UserId } from '@packmind/accounts';
 import { AddGitRepoCommand } from './domain/useCases/IAddGitRepo';
 import { FindGitRepoByOwnerRepoAndBranchInOrganizationCommand } from './domain/useCases/IFindGitRepoByOwnerRepoAndBranchInOrganization';
-import { GetAvailableRemoteDirectoriesCommand } from '@packmind/shared';
+import {
+  UserProvider,
+  OrganizationProvider,
+  GetAvailableRemoteDirectoriesCommand,
+} from '@packmind/shared';
 import {
   CheckDirectoryExistenceCommand,
   CheckDirectoryExistenceResult,
 } from '@packmind/shared';
 import { IGitRepoFactory } from './domain/repositories/IGitRepoFactory';
+import { AddGitProviderCommand } from './application/useCases/addGitProvider/addGitProvider.usecase';
 
 const origin = 'GitHexa';
 
@@ -91,10 +96,9 @@ export class GitHexa extends BaseHexa<GitHexaOpts> {
    * Add a new git provider to an organization
    */
   public async addGitProvider(
-    gitProvider: Omit<GitProvider, 'id'>,
-    organizationId: OrganizationId,
+    command: AddGitProviderCommand,
   ): Promise<GitProvider> {
-    return this.hexa.useCases.addGitProvider(gitProvider, organizationId);
+    return this.hexa.useCases.addGitProvider(command);
   }
 
   /**
@@ -107,13 +111,34 @@ export class GitHexa extends BaseHexa<GitHexaOpts> {
   }
 
   /**
+   * Configure the admin user provider used for access validation
+   */
+  public setUserProvider(provider: UserProvider): void {
+    this.hexa.useCases.setUserProvider(provider);
+  }
+
+  /**
+   * Configure the organization provider used for access validation
+   */
+  public setOrganizationProvider(provider: OrganizationProvider): void {
+    this.hexa.useCases.setOrganizationProvider(provider);
+  }
+
+  /**
    * Update an existing git provider
    */
   public async updateGitProvider(
     id: GitProviderId,
     gitProvider: Partial<Omit<GitProvider, 'id'>>,
+    userId: UserId,
+    organizationId: OrganizationId,
   ): Promise<GitProvider> {
-    return this.hexa.useCases.updateGitProvider(id, gitProvider);
+    return this.hexa.useCases.updateGitProvider(
+      id,
+      gitProvider,
+      userId,
+      organizationId,
+    );
   }
 
   /**
@@ -122,8 +147,9 @@ export class GitHexa extends BaseHexa<GitHexaOpts> {
   public async deleteGitProvider(
     id: GitProviderId,
     userId: UserId,
+    organizationId: OrganizationId,
   ): Promise<void> {
-    return this.hexa.useCases.deleteGitProvider(id, userId);
+    return this.hexa.useCases.deleteGitProvider(id, userId, organizationId);
   }
 
   /**
@@ -230,9 +256,15 @@ export class GitHexa extends BaseHexa<GitHexaOpts> {
   public async deleteGitRepo(
     repositoryId: GitRepoId,
     userId: UserId,
+    organizationId: OrganizationId,
     providerId?: GitProviderId,
   ): Promise<void> {
-    return this.hexa.useCases.deleteGitRepo(repositoryId, userId, providerId);
+    return this.hexa.useCases.deleteGitRepo(
+      repositoryId,
+      userId,
+      organizationId,
+      providerId,
+    );
   }
 
   public async commitToGit(

@@ -1,26 +1,9 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router';
 import { PMHeading, PMVStack, PMBox, PMText, PMButton } from '@packmind/ui';
-import { useIsAuthenticated } from '../../src/domain/accounts/hooks/useIsAuthenticated';
+import { useNavigate } from 'react-router';
 import SignInForm from '../../src/domain/accounts/components/SignInForm';
 
 export default function SignInRoute() {
-  const { isAuthenticated, isLoading } = useIsAuthenticated();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      navigate('/');
-    }
-  }, [isAuthenticated, isLoading, navigate]);
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (isAuthenticated) {
-    return null;
-  }
 
   return (
     <PMVStack gap={6} align="stretch">

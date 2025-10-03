@@ -1,15 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { OrganizationsController } from './organizations.controller';
 import { OrganizationsService } from './organizations.service';
-import {
-  Organization,
-  createOrganizationId,
-  AccountsHexa,
-} from '@packmind/accounts';
-import { NotFoundException, BadRequestException } from '@nestjs/common';
-import { PackmindLogger } from '@packmind/shared';
+import { createOrganizationId, AccountsHexa } from '@packmind/accounts';
+import { NotFoundException } from '@nestjs/common';
+import { PackmindLogger, createUserId } from '@packmind/shared';
 import { stubLogger } from '@packmind/shared/test';
 import { organizationFactory } from '@packmind/accounts/test';
+import { AuthenticatedRequest } from '@packmind/shared-nest';
 
 describe('OrganizationsController', () => {
   let app: TestingModule;
@@ -18,11 +15,11 @@ describe('OrganizationsController', () => {
 
   beforeAll(async () => {
     const mockAccountsApp = {
-      listOrganizations: jest.fn(),
       getOrganizationById: jest.fn(),
       getOrganizationByName: jest.fn(),
       getOrganizationBySlug: jest.fn(),
       createOrganization: jest.fn(),
+      removeUserFromOrganization: jest.fn(),
     };
 
     app = await Test.createTestingModule({
@@ -44,28 +41,6 @@ describe('OrganizationsController', () => {
       OrganizationsController,
     );
     organizationsService = app.get<OrganizationsService>(OrganizationsService);
-  });
-
-  describe('getOrganizations', () => {
-    it('returns an array of organizations', async () => {
-      const result: Organization[] = [
-        organizationFactory({
-          id: createOrganizationId('1'),
-          name: 'Test Org 1',
-          slug: 'test-org-1',
-        }),
-        organizationFactory({
-          id: createOrganizationId('2'),
-          name: 'Test Org 2',
-          slug: 'test-org-2',
-        }),
-      ];
-      jest
-        .spyOn(organizationsService, 'getOrganizations')
-        .mockImplementation(async () => result);
-
-      expect(await organizationsController.getOrganizations()).toBe(result);
-    });
   });
 
   describe('getOrganizationById', () => {
@@ -132,31 +107,52 @@ describe('OrganizationsController', () => {
     });
   });
 
-  describe('createOrganization', () => {
-    it('creates an organization', async () => {
-      const organization = organizationFactory({
-        id: createOrganizationId('1'),
-        name: 'Test Org',
-        slug: 'test-org',
-      });
+  describe('getUserOrganizations', () => {
+    it('returns user organizations', async () => {
+      const userId = createUserId('user-1');
+      const organizations = [
+        organizationFactory({
+          id: createOrganizationId('1'),
+          name: 'Org 1',
+          slug: 'org-1',
+        }),
+        organizationFactory({
+          id: createOrganizationId('2'),
+          name: 'Org 2',
+          slug: 'org-2',
+        }),
+      ];
 
-      const createOrganizationSpy = jest
-        .spyOn(organizationsService, 'createOrganization')
-        .mockImplementation(async () => organization);
+      jest
+        .spyOn(organizationsService, 'getUserOrganizations')
+        .mockImplementation(async () => organizations);
 
-      const result = await organizationsController.createOrganization({
-        name: 'Test Org',
-      });
-      expect(createOrganizationSpy).toHaveBeenCalledWith('Test Org');
-      expect(result).toEqual(organization);
+      const mockRequest = {
+        user: {
+          userId,
+        },
+      } as Partial<AuthenticatedRequest> as AuthenticatedRequest;
+
+      expect(
+        await organizationsController.getUserOrganizations(mockRequest),
+      ).toBe(organizations);
     });
 
-    describe('when name is empty', () => {
-      it('throws BadRequestException', async () => {
-        await expect(
-          organizationsController.createOrganization({ name: '' }),
-        ).rejects.toThrow(BadRequestException);
-      });
+    it('returns empty array for user with no organizations', async () => {
+      const userId = createUserId('user-1');
+      jest
+        .spyOn(organizationsService, 'getUserOrganizations')
+        .mockImplementation(async () => []);
+
+      const mockRequest = {
+        user: {
+          userId,
+        },
+      } as Partial<AuthenticatedRequest> as AuthenticatedRequest;
+
+      expect(
+        await organizationsController.getUserOrganizations(mockRequest),
+      ).toEqual([]);
     });
   });
 });

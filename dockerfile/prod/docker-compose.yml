@@ -103,7 +103,7 @@ services:
     image: packmind/frontend:${PACKMIND_TAG:-latest}
     container_name: packmind-frontend
     ports:
-      - '${FRONTEND_PUBLIC_PORT:-8081}:80'
+      - '${FRONTEND_PUBLIC_PORT:-8081}:8080'
     depends_on:
       - api
       - mcp-server

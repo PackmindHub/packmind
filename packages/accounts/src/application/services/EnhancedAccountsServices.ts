@@ -4,6 +4,7 @@ import { OrganizationService } from './OrganizationService';
 import { InvitationService } from './InvitationService';
 import { ApiKeyService } from './ApiKeyService';
 import { LoginRateLimiterService } from './LoginRateLimiterService';
+import { PasswordResetTokenService } from './PasswordResetTokenService';
 import { IAccountsRepository } from '../../domain/repositories/IAccountsRepository';
 import { PackmindLogger, SmtpMailService } from '@packmind/shared';
 
@@ -16,6 +17,7 @@ export class EnhancedAccountsServices implements IAccountsServices {
   private readonly userService: UserService;
   private readonly organizationService: OrganizationService;
   private readonly invitationService: InvitationService;
+  private readonly passwordResetTokenService: PasswordResetTokenService;
   private readonly loginRateLimiterService: LoginRateLimiterService;
   private readonly apiKeyService?: ApiKeyService;
 
@@ -27,6 +29,7 @@ export class EnhancedAccountsServices implements IAccountsServices {
     // Initialize standard services
     this.userService = new UserService(
       this.accountsRepository.getUserRepository(),
+      this.accountsRepository.getUserOrganizationMembershipRepository(),
       this.logger,
     );
     this.organizationService = new OrganizationService(
@@ -35,6 +38,11 @@ export class EnhancedAccountsServices implements IAccountsServices {
     );
     this.invitationService = new InvitationService(
       this.accountsRepository.getInvitationRepository(),
+      new SmtpMailService(this.logger),
+      this.logger,
+    );
+    this.passwordResetTokenService = new PasswordResetTokenService(
+      this.accountsRepository.getPasswordResetTokenRepository(),
       new SmtpMailService(this.logger),
       this.logger,
     );
@@ -66,5 +74,9 @@ export class EnhancedAccountsServices implements IAccountsServices {
 
   getLoginRateLimiterService(): LoginRateLimiterService {
     return this.loginRateLimiterService;
+  }
+
+  getPasswordResetTokenService(): PasswordResetTokenService {
+    return this.passwordResetTokenService;
   }
 }

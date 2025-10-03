@@ -7,7 +7,6 @@ import {
   userFactory,
 } from '../../../test';
 import { Invitation } from '../../domain/entities/Invitation';
-import { InvitationConfigurationError } from '../../domain/errors';
 
 jest.mock('@packmind/shared', () => ({
   ...(jest.requireActual('@packmind/shared') as object),
@@ -85,27 +84,5 @@ describe('InvitationService', () => {
         userId: targetUser.id,
       },
     ]);
-  });
-
-  it('throws if application URL is not configured', async () => {
-    mockedConfiguration.getConfig.mockResolvedValueOnce(null);
-
-    const organization = organizationFactory();
-    const inviter = userFactory();
-    const user = userFactory();
-
-    await expect(
-      invitationService.createInvitations([
-        {
-          email: user.email,
-          user,
-          organization,
-          inviter,
-        },
-      ]),
-    ).rejects.toBeInstanceOf(InvitationConfigurationError);
-
-    expect(mockInvitationRepository.addMany).not.toHaveBeenCalled();
-    expect(mockMailService.sendEmail).not.toHaveBeenCalled();
   });
 });

@@ -43,9 +43,15 @@ export class SignInUserUseCase implements ISignInUserUseCase {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    // Check if user has any memberships
-    if (!user.memberships || user.memberships.length === 0) {
-      throw new UnauthorizedException('Invalid credentials');
+    // If user has no memberships, allow them to sign in to create an organization
+    if (user.memberships.length === 0) {
+      // Successful login - clear any previous failed attempts
+      await this.loginRateLimiterService.clearAttempts(command.email);
+
+      return {
+        user,
+        organizations: [],
+      };
     }
 
     // If user belongs to a single organization, return the same behavior

@@ -237,8 +237,8 @@ export const DeploymentsPage: React.FC = () => {
         <PMNativeSelect
           value={repositoryFilter}
           items={[
-            { label: 'All repositories', value: 'all' },
-            { label: 'Only outdated repositories', value: 'outdated' },
+            { label: 'All targets', value: 'all' },
+            { label: 'Only outdated targets', value: 'outdated' },
           ]}
           onChange={(e) =>
             setRepositoryFilter(e.target.value as RepositoryFilter)

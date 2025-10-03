@@ -1,11 +1,14 @@
 import React from 'react';
+import { useNavigate } from 'react-router';
 import {
   PMField,
   PMDialog,
   PMButton,
   PMCloseButton,
   PMInput,
+  pmToaster,
 } from '@packmind/ui';
+import { useCreateOrganizationMutation } from '../../accounts/api/queries/AccountsQueries';
 
 interface NewOrganizationDialogProps {
   open: boolean;
@@ -19,24 +22,63 @@ export const NewOrganizationDialog: React.FC<NewOrganizationDialogProps> = ({
   setOpen,
 }) => {
   const [newOrgaName, setNewOrgaName] = React.useState('');
+  const navigate = useNavigate();
+  const createOrganizationMutation = useCreateOrganizationMutation();
 
-  // should be a mutation
-  const handleOrganizationCreation = () => {
-    // redirect to new organization page after creation
-    setOpen(false);
+  const handleOrganizationCreation = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!newOrgaName.trim()) {
+      pmToaster.create({
+        title: 'Error',
+        description: 'Organization name is required',
+        type: 'error',
+      });
+      return;
+    }
+
+    try {
+      const organization = await createOrganizationMutation.mutateAsync({
+        name: newOrgaName.trim(),
+      });
+
+      pmToaster.create({
+        title: 'Success',
+        description: `Organization "${organization.name}" created successfully`,
+        type: 'success',
+      });
+
+      setNewOrgaName('');
+      setOpen(false);
+      navigate(`/org/${organization.slug}`);
+    } catch (error) {
+      pmToaster.create({
+        title: 'Error',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Failed to create organization',
+        type: 'error',
+      });
+    }
   };
 
   return (
     <PMDialog.Root
       open={open}
       onOpenChange={(details: { open: boolean }) => {
-        setOpen(details.open);
+        if (!createOrganizationMutation.isPending) {
+          setOpen(details.open);
+          if (!details.open) {
+            setNewOrgaName('');
+          }
+        }
       }}
       size={'lg'}
       scrollBehavior={'inside'}
       closeOnInteractOutside={false}
     >
-      <form>
+      <form onSubmit={handleOrganizationCreation}>
         <PMDialog.Backdrop />
         <PMDialog.Positioner>
           <PMDialog.Content>
@@ -57,19 +99,27 @@ export const NewOrganizationDialog: React.FC<NewOrganizationDialogProps> = ({
                   maxLength={ORG_NAME_MAX_LENGTH}
                   placeholder="Enter organization name"
                   required
+                  disabled={createOrganizationMutation.isPending}
                 />
               </PMField.Root>
             </PMDialog.Body>
             <PMDialog.Footer>
               <PMDialog.Trigger asChild>
-                <PMButton variant="tertiary">Close</PMButton>
+                <PMButton
+                  variant="tertiary"
+                  disabled={createOrganizationMutation.isPending}
+                >
+                  Close
+                </PMButton>
               </PMDialog.Trigger>
               <PMButton
                 variant="primary"
-                onClick={handleOrganizationCreation}
                 type="submit"
+                loading={createOrganizationMutation.isPending}
               >
-                Create
+                {createOrganizationMutation.isPending
+                  ? 'Creating...'
+                  : 'Create'}
               </PMButton>
             </PMDialog.Footer>
           </PMDialog.Content>

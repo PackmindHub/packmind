@@ -158,7 +158,6 @@ export default function SignUpWithOrganizationForm() {
             {
               email: email.trim(),
               password,
-              organizationId: response.organization.id,
             },
             {
               onSuccess: () => {

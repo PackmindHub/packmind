@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useMemo } from 'react';
 import { useSSEContext } from '../../../services/sse';
 
 interface UseSSESubscriptionOptions {
@@ -45,12 +45,27 @@ export function useSSESubscription({
   onEvent,
   enabled = true,
 }: UseSSESubscriptionOptions) {
-  const { subscribe, unsubscribe, addEventListener, removeEventListener } =
-    useSSEContext();
+  const {
+    subscribe,
+    unsubscribe,
+    addEventListener,
+    removeEventListener,
+    isConnected,
+  } = useSSEContext();
   const eventHandlerRef = useRef(onEvent);
 
   // Keep handler reference up to date
   eventHandlerRef.current = onEvent;
+
+  const serializedParams = useMemo(
+    () => JSON.stringify(params ?? []),
+    [params],
+  );
+
+  const normalizedParams = useMemo<string[]>(
+    () => JSON.parse(serializedParams) as string[],
+    [serializedParams],
+  );
 
   // Wrapped event handler to ensure we always use the latest version
   const wrappedHandler = useCallback((event: MessageEvent) => {
@@ -59,57 +74,106 @@ export function useSSESubscription({
 
   const subscribeToEvent = useCallback(async () => {
     try {
-      // Subscribe to the event via API
-      await subscribe(eventType, params);
-
-      // Add event listener for this specific event type
-      addEventListener(eventType, wrappedHandler);
-
-      console.log('SSE: Subscribed to event', { eventType, params });
+      await subscribe(eventType, normalizedParams);
     } catch (error) {
       console.error('SSE: Failed to subscribe to event', {
         eventType,
-        params,
+        params: normalizedParams,
         error,
       });
       throw error;
     }
-  }, [eventType, params, subscribe, addEventListener, wrappedHandler]);
+  }, [eventType, normalizedParams, subscribe]);
 
   const unsubscribeFromEvent = useCallback(async () => {
     try {
-      // Remove event listener first
-      removeEventListener(eventType, wrappedHandler);
-
-      // Unsubscribe from the event via API
-      await unsubscribe(eventType, params);
-
-      console.log('SSE: Unsubscribed from event', { eventType, params });
+      await unsubscribe(eventType, normalizedParams);
     } catch (error) {
       console.error('SSE: Failed to unsubscribe from event', {
         eventType,
-        params,
+        params: normalizedParams,
         error,
       });
       throw error;
     }
-  }, [eventType, params, unsubscribe, removeEventListener, wrappedHandler]);
+  }, [eventType, normalizedParams, unsubscribe]);
 
-  // Auto-subscribe/unsubscribe based on enabled flag
+  const isSubscribedRef = useRef(false);
+  const pendingSubscriptionRef = useRef(false);
+
+  // Ensure the event handler is registered for the lifetime of this hook while enabled
   useEffect(() => {
-    if (enabled) {
-      subscribeToEvent().catch((error) => {
-        console.error('SSE: Auto-subscription failed', error);
-      });
+    if (!enabled) {
+      return undefined;
     }
 
-    // Cleanup on unmount or when enabled changes
+    addEventListener(eventType, wrappedHandler);
+
     return () => {
-      unsubscribeFromEvent().catch((error) => {
-        console.error('SSE: Cleanup unsubscription failed', error);
-      });
+      removeEventListener(eventType, wrappedHandler);
     };
-  }, [enabled, subscribeToEvent, unsubscribeFromEvent]);
+  }, [
+    enabled,
+    addEventListener,
+    removeEventListener,
+    eventType,
+    wrappedHandler,
+  ]);
+
+  // Manage server-side subscription lifecycle based on connection state
+  useEffect(() => {
+    if (!enabled || !isConnected) {
+      return undefined;
+    }
+
+    let cancelled = false;
+    pendingSubscriptionRef.current = true;
+
+    subscribeToEvent()
+      .then(() => {
+        if (!cancelled) {
+          isSubscribedRef.current = true;
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          console.error('SSE: Auto-subscription failed', {
+            eventType,
+            params: normalizedParams,
+            error,
+          });
+        }
+      })
+      .finally(() => {
+        pendingSubscriptionRef.current = false;
+      });
+
+    return () => {
+      cancelled = true;
+
+      if (isSubscribedRef.current || pendingSubscriptionRef.current) {
+        unsubscribeFromEvent()
+          .catch((error) => {
+            console.error('SSE: Cleanup unsubscription failed', {
+              eventType,
+              params: normalizedParams,
+              error,
+            });
+          })
+          .finally(() => {
+            isSubscribedRef.current = false;
+            pendingSubscriptionRef.current = false;
+          });
+      }
+    };
+  }, [
+    enabled,
+    isConnected,
+    subscribeToEvent,
+    unsubscribeFromEvent,
+    eventType,
+    normalizedParams,
+  ]);
 
   return {
     /**

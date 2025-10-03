@@ -1,3 +1,5 @@
+import { UserOrganizationRole } from '../accounts/User';
+
 // Base SSE Event structure
 export interface SSEEvent<TData = unknown> {
   type: string;
@@ -13,7 +15,8 @@ export type SSEEventType =
   | 'CREATE'
   | 'UPDATE'
   | 'NOTIFICATION'
-  | 'PROGRAM_STATUS_CHANGE';
+  | 'PROGRAM_STATUS_CHANGE'
+  | 'USER_CONTEXT_CHANGE';
 
 // Hello World event for testing
 export interface HelloWorldEvent extends SSEEvent<{ message: string }> {
@@ -42,12 +45,25 @@ export interface ProgramStatusChangeEvent
   type: 'PROGRAM_STATUS_CHANGE';
 }
 
+export type UserContextChangeType = 'role_changed' | 'removed' | 'invited';
+
+export interface UserContextChangeEvent
+  extends SSEEvent<{
+    userId: string;
+    organizationId: string;
+    changeType: UserContextChangeType;
+    role?: UserOrganizationRole;
+  }> {
+  type: 'USER_CONTEXT_CHANGE';
+}
+
 // Union type of all possible SSE events
 export type AnySSEEvent =
   | HelloWorldEvent
   | DataChangeEvent
   | NotificationEvent
-  | ProgramStatusChangeEvent;
+  | ProgramStatusChangeEvent
+  | UserContextChangeEvent;
 
 // Event creation helpers
 export function createHelloWorldEvent(message: string): HelloWorldEvent {
@@ -87,6 +103,24 @@ export function createProgramStatusChangeEvent(
   return {
     type: 'PROGRAM_STATUS_CHANGE',
     data: { programId },
+    timestamp: new Date().toISOString(),
+  };
+}
+
+export function createUserContextChangeEvent(
+  userId: string,
+  organizationId: string,
+  changeType: UserContextChangeType,
+  role?: UserOrganizationRole,
+): UserContextChangeEvent {
+  return {
+    type: 'USER_CONTEXT_CHANGE',
+    data: {
+      userId,
+      organizationId,
+      changeType,
+      role,
+    },
     timestamp: new Date().toISOString(),
   };
 }

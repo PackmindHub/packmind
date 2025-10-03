@@ -5,6 +5,7 @@ import {
   IGetDeploymentOverview,
   IPublishRecipes,
   IPublishStandards,
+  IGetTargetsByGitRepoUseCase,
   IGetTargetsByRepositoryUseCase,
   IGetTargetsByOrganizationUseCase,
   IAddTargetUseCase,
@@ -57,12 +58,24 @@ export class DeploymentsGatewayApi
     return this._api.post(`${this._endpoint}/standards/publish`, command);
   };
 
-  getTargetsByRepository: Gateway<IGetTargetsByRepositoryUseCase> = async ({
+  getTargetsByGitRepo: Gateway<IGetTargetsByGitRepoUseCase> = async ({
     gitRepoId,
   }: {
     gitRepoId: GitRepoId;
   }) => {
-    return this._api.get(`/targets/repository/${gitRepoId}`);
+    return this._api.get(`/targets/git-repo/${gitRepoId}`);
+  };
+
+  getTargetsByRepository: Gateway<IGetTargetsByRepositoryUseCase> = async ({
+    owner,
+    repo,
+  }: {
+    owner: string;
+    repo: string;
+  }) => {
+    return this._api.get(
+      `/targets/repository/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`,
+    );
   };
 
   getTargetsByOrganization: Gateway<IGetTargetsByOrganizationUseCase> = async (

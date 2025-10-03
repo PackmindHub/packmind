@@ -135,13 +135,25 @@ export const useDeployStandardsMutation = () => {
   });
 };
 
-export const GET_TARGETS_BY_REPOSITORY_QUERY_KEY = 'targetsByRepository';
-export const useGetTargetsByRepositoryQuery = (gitRepoId: GitRepoId) => {
+export const GET_TARGETS_BY_GIT_REPO_QUERY_KEY = 'targetsByGitRepo';
+export const useGetTargetsByGitRepoQuery = (gitRepoId: GitRepoId) => {
   return useQuery({
-    queryKey: [GET_TARGETS_BY_REPOSITORY_QUERY_KEY, gitRepoId],
+    queryKey: [GET_TARGETS_BY_GIT_REPO_QUERY_KEY, gitRepoId],
     queryFn: () => {
-      return deploymentsGateways.getTargetsByRepository({ gitRepoId });
+      return deploymentsGateways.getTargetsByGitRepo({ gitRepoId });
     },
+    enabled: !!gitRepoId,
+  });
+};
+
+export const GET_TARGETS_BY_REPOSITORY_QUERY_KEY = 'targetsByRepository';
+export const useGetTargetsByRepositoryQuery = (owner: string, repo: string) => {
+  return useQuery({
+    queryKey: [GET_TARGETS_BY_REPOSITORY_QUERY_KEY, owner, repo],
+    queryFn: () => {
+      return deploymentsGateways.getTargetsByRepository({ owner, repo });
+    },
+    enabled: !!owner && !!repo,
   });
 };
 
