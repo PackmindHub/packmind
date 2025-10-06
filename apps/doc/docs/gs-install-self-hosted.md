@@ -14,11 +14,32 @@ chmod +x install.sh && \
 ./install.sh
 ```
 
+Once this command is executed, Packmind is now available at http://localhost:8081/, and you can start using it right away.
+
 Update later with `docker compose pull && docker compose up -d`.
 
 ## With Helm on Kubernetes
 
 Get started on the [Helm Chart GitHub repository](https://github.com/PackmindHub/packmind-ai-helm-chart) to deploy Packmind on Kubernetes.
+
+## Connect your LLM (Optional but important)
+
+Connecting a LLM offers a better experience when distributing your standards and recipes in your Git Repositories, while it's _not mandatory_ and you can use Packmind without this.
+
+_OpenAI_ is the only currently supported AI Provider.
+
+If you use Docker Compose, you'll have to update the `docker-compose.yml` file.
+
+```yaml
+x-openai-config: &openai-config
+  OPENAI_API_KEY: <YOUR_KEY>
+```
+
+Restart then with:
+
+```bash
+docker compose up -d
+```
 
 ## Configure deployment and environment variables
 
@@ -90,22 +111,3 @@ Rate Limiting:
 Monitoring & Debugging:
 
 - `PACKMIND_LOG_LEVEL` - Log level for Packmind logger (e.g., 'debug', 'info', 'warn', 'error')
-
-## Connect your LLM (Optional)
-
-Connecting a LLM offers a better experience when distributing your standards and recipes in your Git Repositories, while it's _not mandatory_ and you can use Packmind without this.
-
-_OpenAI_ is the only currently supported AI Provider.
-
-If you use Docker Compose, you'll have to update the `docker-compose.yml` file.
-
-```yaml
-x-openai-config: &openai-config
-  OPENAI_API_KEY: <YOUR_KEY>
-```
-
-Restart then with:
-
-```bash
-docker compose up -d
-```

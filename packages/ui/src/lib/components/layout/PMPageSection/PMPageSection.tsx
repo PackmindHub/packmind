@@ -21,18 +21,14 @@ const PMPageSection = ({
   boxProps,
   children,
 }: PMBoxProps) => {
-  let boxCustomProps = {};
-
-  if (variant === 'outline') {
-    boxCustomProps = {
-      padding: '4',
-      border: '1px solid',
-      borderColor: '{colors.border.primary}',
-      borderRadius: 'md',
-    };
-  }
-
-  boxCustomProps = { ...boxCustomProps, ...boxProps };
+  const boxCustomProps = {
+    padding: '4',
+    border: '1px solid',
+    borderColor:
+      variant === 'plain' ? 'transparent' : '{colors.border.secondary}',
+    borderRadius: 'md',
+    ...boxProps,
+  };
 
   return (
     <Box

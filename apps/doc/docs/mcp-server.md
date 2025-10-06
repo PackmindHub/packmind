@@ -6,6 +6,12 @@ Once you've configured your MCP server (see [MCP Server Setup](gs-mcp-server-set
 
 ## Available Tools
 
+### Onboarding Workflows
+
+**Tool:** `packmind_onboarding`
+
+Provides guided workflows for creating coding standards based on different information sources.
+
 ### Create Recipe
 
 **Tool:** `packmind_create_recipe`
@@ -67,9 +73,3 @@ Creates a new coding standard with multiple rules and code examples in a single 
 - `rules` (optional) - Array of rules, each containing:
   - `content` (required) - Rule description starting with a verb
   - `examples` (optional) - Array of code examples with `positive`, `negative`, and `language` fields
-
-### Onboarding Workflows
-
-**Tool:** `packmind_onboarding`
-
-Provides guided workflows for creating coding standards based on different information sources.

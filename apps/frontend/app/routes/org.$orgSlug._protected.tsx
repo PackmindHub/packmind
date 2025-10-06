@@ -46,22 +46,6 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
   }
 }
 
-export const handle = {
-  crumb: ({
-    params,
-    data,
-  }: {
-    params: { orgSlug: string };
-    data: { me: { organization: { name: string; slug: string } } };
-  }) => {
-    return (
-      <NavLink to={`/org/${params.orgSlug}`}>
-        {data.me.organization?.name ?? ''}
-      </NavLink>
-    );
-  },
-};
-
 export default function AuthenticatedLayout() {
   const { data: me } = useGetMeQuery();
   useAuthErrorHandler();
