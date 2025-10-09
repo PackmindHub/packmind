@@ -1,4 +1,5 @@
 import { TargetService } from './services/TargetService';
+import { RenderModeConfigurationService } from './services/RenderModeConfigurationService';
 
 /**
  * IDeploymentsServices - Service aggregator interface for the Deployments application layer
@@ -8,4 +9,5 @@ import { TargetService } from './services/TargetService';
  */
 export interface IDeploymentsServices {
   getTargetService(): TargetService;
+  getRenderModeConfigurationService(): RenderModeConfigurationService;
 }

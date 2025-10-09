@@ -11,6 +11,7 @@ import {
   PMAlert,
   PMAlertDialog,
   PMCheckbox,
+  PMEmptyState,
 } from '@packmind/ui';
 
 import {
@@ -23,6 +24,8 @@ import './StandardsList.styles.scss';
 import { StandardId } from '@packmind/standards/types';
 import { STANDARD_MESSAGES } from '../constants/messages';
 import { formatDistanceToNowStrict } from 'date-fns';
+import { GETTING_STARTED_CREATE_DIALOG } from '../../organizations/components/dashboard/GettingStartedWidget';
+import { GettingStartedLearnMoreDialog } from '../../organizations/components/dashboard/GettingStartedLearnMoreDialog';
 
 interface StandardsListProps {
   orgSlug?: string;
@@ -43,21 +46,20 @@ export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
     message: string;
   } | null>(null);
 
-  const handleSelectStandard = (standardId: StandardId, isChecked: boolean) => {
-    if (isChecked) {
-      setSelectedStandardIds((prev) => [...prev, standardId]);
-    } else {
-      setSelectedStandardIds((prev) => prev.filter((id) => id !== standardId));
-    }
+  const checkStandard = (standardId: StandardId) => {
+    setSelectedStandardIds((prev) => [...prev, standardId]);
   };
 
-  const handleSelectAll = (isChecked: boolean) => {
-    if (isChecked && standards) {
-      setSelectedStandardIds(standards.map((standard) => standard.id));
-    } else {
-      setSelectedStandardIds([]);
-    }
+  const uncheckStandard = (standardId: StandardId) => {
+    setSelectedStandardIds((prev) => prev.filter((id) => id !== standardId));
   };
+
+  const selectAll = () => {
+    if (!standards) return;
+    setSelectedStandardIds(standards.map((standard) => standard.id));
+  };
+
+  const clearAll = () => setSelectedStandardIds([]);
 
   const handleBatchDelete = async () => {
     if (selectedStandardIds.length === 0) return;
@@ -104,7 +106,12 @@ export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
           <PMCheckbox
             checked={selectedStandardIds.includes(standard.id)}
             onCheckedChange={(event) => {
-              handleSelectStandard(standard.id, event.checked === true);
+              const checked = event.checked === true;
+              if (checked) {
+                checkStandard(standard.id);
+              } else {
+                uncheckStandard(standard.id);
+              }
             }}
           />
         ),
@@ -144,7 +151,11 @@ export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
         <PMCheckbox
           checked={isAllSelected || false}
           onCheckedChange={() => {
-            handleSelectAll(!isAllSelected);
+            if (isAllSelected) {
+              clearAll();
+            } else {
+              selectAll();
+            }
           }}
           controlProps={{ borderColor: 'border.checkbox' }}
         />
@@ -229,7 +240,27 @@ export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
           />
         </PMBox>
       ) : (
-        <p>No standards found</p>
+        <PMEmptyState
+          backgroundColor={'background.primary'}
+          borderRadius={'md'}
+          width={'2xl'}
+          mx={'auto'}
+          title={'No standards yet'}
+        >
+          Standards align coding assistants and developers on your
+          organization's conventions and best practices.
+          <PMHStack>
+            <GettingStartedLearnMoreDialog
+              body={GETTING_STARTED_CREATE_DIALOG.body}
+              title={GETTING_STARTED_CREATE_DIALOG.title}
+              buttonLabel="Create from your code"
+              buttonSize="sm"
+            />
+            <Link to={`/org/${orgSlug}/standards/create`}>
+              <PMButton variant="secondary">Create from scratch</PMButton>
+            </Link>
+          </PMHStack>
+        </PMEmptyState>
       )}
     </div>
   );

@@ -273,8 +273,18 @@ describe('GitHub Copilot Deployment Integration', () => {
           "applyTo: '**/*.{js,ts}'",
         );
         expect(copilotStandardFile.content).toContain('---');
-        expect(copilotStandardFile.content).toContain(standard.name);
-        expect(copilotStandardFile.content).toContain(standard.description);
+        expect(copilotStandardFile.content).toContain(
+          'Test standard for GitHub Copilot deployment :',
+        );
+        expect(copilotStandardFile.content).toContain(
+          '* Use meaningful variable names in JavaScript',
+        );
+        expect(copilotStandardFile.content).toContain(
+          '* Write comprehensive tests for all functions',
+        );
+        expect(copilotStandardFile.content).toContain(
+          `Full standard is available here for further request: [${standard.name}](../../.packmind/standards/${standard.slug}.md)`,
+        );
       }
     });
 
@@ -319,6 +329,15 @@ describe('GitHub Copilot Deployment Integration', () => {
 
       // Should use ** when no scope
       expect(copilotStandardFile.content).toContain("applyTo: '**'");
+      expect(copilotStandardFile.content).toContain(
+        'Global standard for all files :',
+      );
+      expect(copilotStandardFile.content).toContain(
+        '* Always use consistent formatting',
+      );
+      expect(copilotStandardFile.content).toContain(
+        `Full standard is available here for further request: [${globalStandard.name}](../../.packmind/standards/${globalStandard.slug}.md)`,
+      );
     });
 
     it('combines recipes and standards deployments', async () => {
@@ -610,6 +629,11 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
         expect(frontendFile.content).toContain(
           "applyTo: '**/*.{ts,tsx,js,jsx}'",
         );
+        expect(frontendFile.content).toContain('Frontend standard :');
+        expect(frontendFile.content).toContain('* Use TypeScript');
+        expect(frontendFile.content).toContain(
+          `Full standard is available here for further request: [${standard1.name}](../../.packmind/standards/${standard1.slug}.md)`,
+        );
       }
 
       // Check second standard (no scope - uses **)
@@ -619,6 +643,11 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
       expect(backendFile).toBeDefined();
       if (backendFile) {
         expect(backendFile.content).toContain("applyTo: '**'");
+        expect(backendFile.content).toContain('Backend standard :');
+        expect(backendFile.content).toContain('* Use dependency injection');
+        expect(backendFile.content).toContain(
+          `Full standard is available here for further request: [${standard2.name}](../../.packmind/standards/${standard2.slug}.md)`,
+        );
       }
     });
   });

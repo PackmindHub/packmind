@@ -17,7 +17,8 @@ import {
 import { GitRepo, GitRepoId, GitProviderId } from '@packmind/git';
 import { FileUpdates } from '../../domain/entities/FileUpdates';
 import { OrganizationId, UserId } from '@packmind/accounts';
-import { Target, TargetId } from '@packmind/shared';
+import { PackmindLogger, Target, TargetId } from '@packmind/shared';
+import { stubLogger } from '@packmind/shared/test';
 
 // Create test helper functions
 const createTestRecipeId = (id: string): RecipeId => id as RecipeId;
@@ -88,10 +89,12 @@ describe('DeployerService', () => {
   let mockTarget: Target;
   let mockRecipeVersions: RecipeVersion[];
   let mockStandardVersions: StandardVersion[];
+  let mockLogger: PackmindLogger;
 
   beforeEach(() => {
+    mockLogger = stubLogger();
     registry = new MockRegistry();
-    service = new DeployerService(registry);
+    service = new DeployerService(registry, mockLogger);
 
     mockTarget = {
       id: createTestTargetId('test-target-id'),
@@ -184,23 +187,26 @@ describe('DeployerService', () => {
 
     it('aggregates deployments from multiple agents', async () => {
       const deployer1 = new MockDeployer({
-        createOrUpdate: [{ path: 'agent1.md', content: 'content1' }],
+        createOrUpdate: [{ path: 'recipe1.md', content: 'content 1' }],
         delete: [],
       });
 
-      // Second deployer would be used for different agent types in reality
+      const deployer2 = new MockDeployer({
+        createOrUpdate: [{ path: 'recipe2.md', content: 'content 2' }],
+        delete: [],
+      });
 
       registry.registerDeployer('packmind', deployer1);
-      // For this test, we'll treat packmind as if we can register multiple instances
-      // In reality, you'd have different agent types
+      registry.registerDeployer('junie', deployer2);
+
       const result = await service.aggregateRecipeDeployments(
         mockRecipeVersions,
         mockGitRepo,
         [mockTarget],
-        ['packmind'], // Single agent in this case
+        ['packmind', 'junie'],
       );
 
-      expect(result.createOrUpdate).toHaveLength(1);
+      expect(result.createOrUpdate).toHaveLength(2);
       expect(result.delete).toHaveLength(0);
     });
 

@@ -202,7 +202,7 @@ const DEFAULT_DIALOGS: Required<
               <PMText color="secondary">
                 Go to
                 <PMLink asChild variant="active" marginX={1}>
-                  <NavLink to="./targets" target="_blank">
+                  <NavLink to="./settings/targets" target="_blank">
                     Targets
                   </NavLink>
                 </PMLink>
@@ -282,6 +282,9 @@ const DEFAULT_DIALOGS: Required<
     ),
   },
 };
+
+// Export public constant to reuse the same "create" dialog content elsewhere (e.g., Standards empty state)
+export const GETTING_STARTED_CREATE_DIALOG = DEFAULT_DIALOGS.create;
 
 export const GettingStartedWidget: React.FC<GettingStartedWidgetProps> = ({
   dialogs,

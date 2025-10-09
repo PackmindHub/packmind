@@ -5,8 +5,8 @@ import { FileUpdates } from '../../../domain/entities/FileUpdates';
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
 import { PackmindLogger, Target } from '@packmind/shared';
 import { GenericRecipeSectionWriter } from '../genericSectionWriter/GenericRecipeSectionWriter';
+import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
 import { getTargetPrefixedPath } from '../utils/FileUtils';
-import { GenericStandardWriter } from '../genericSectionWriter/GenericStandardWriter';
 
 const origin = 'CursorDeployer';
 
@@ -194,19 +194,26 @@ ${packmindInstructions}`;
 
     let content: string;
 
+    const instructionContent =
+      GenericStandardSectionWriter.formatStandardContent({
+        standardVersion,
+        rules,
+        link: `../../../.packmind/standards/${standardVersion.slug}.md`,
+      });
+
     if (standardVersion.scope && standardVersion.scope.trim() !== '') {
       // When the scope is not null or empty
       content = `---
 globs: ${standardVersion.scope}
 alwaysApply: false
 ---
-${GenericStandardWriter.writeStandard(standardVersion, rules)}`;
+${instructionContent}`;
     } else {
       // When the scope is empty
       content = `---
 alwaysApply: true
 ---
-${GenericStandardWriter.writeStandard(standardVersion, rules)}`;
+${instructionContent}`;
     }
 
     const path = `.cursor/rules/packmind/standard-${standardVersion.slug}.mdc`;

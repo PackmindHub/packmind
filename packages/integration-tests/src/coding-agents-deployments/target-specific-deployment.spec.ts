@@ -307,7 +307,19 @@ class MyService {
       );
 
       expect(deployedFile.content).toContain(standard.name);
-      expect(deployedFile.content).toContain(standard.description);
+      expect(deployedFile.content).toContain('IDE code quality standards :');
+      expect(deployedFile.content).toContain(
+        '* Always use meaningful variable names',
+      );
+      expect(deployedFile.content).toContain(
+        '* Write unit tests for all public methods',
+      );
+      expect(deployedFile.content).toContain(
+        '* Follow consistent indentation (2 or 4 spaces)',
+      );
+      expect(deployedFile.content).toContain(
+        'Full standard is available here for further request: [IDE Code Quality Standards](../../../.packmind/standards/ide-code-quality-standards.md)',
+      );
     });
   });
 

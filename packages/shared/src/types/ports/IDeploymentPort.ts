@@ -20,6 +20,11 @@ import {
   GetTargetsByGitRepoCommand,
   GetTargetsByRepositoryCommand,
   GetTargetsByOrganizationCommand,
+  GetRenderModeConfigurationCommand,
+  GetRenderModeConfigurationResult,
+  CreateRenderModeConfigurationCommand,
+  UpdateRenderModeConfigurationCommand,
+  RenderModeConfiguration,
 } from '../deployments';
 
 export interface IDeploymentPort {
@@ -187,4 +192,34 @@ export interface IDeploymentPort {
   getTargetsByOrganization(
     command: GetTargetsByOrganizationCommand,
   ): Promise<TargetWithRepository[]>;
+
+  /**
+   * Retrieves render mode configuration for an organization
+   *
+   * @param command - Command containing organization context
+   * @returns Promise resolving to render mode configuration or null when none exists
+   */
+  getRenderModeConfiguration(
+    command: GetRenderModeConfigurationCommand,
+  ): Promise<GetRenderModeConfigurationResult>;
+
+  /**
+   * Creates render mode configuration for an organization using default values
+   * when none exists yet.
+   *
+   * Non-admins can trigger this as part of first-run distribution flow to ensure
+   * Packmind delivery stays enabled by default.
+   */
+  createRenderModeConfiguration(
+    command: CreateRenderModeConfigurationCommand,
+  ): Promise<RenderModeConfiguration>;
+
+  /**
+   * Updates render mode configuration for an organization.
+   *
+   * Admin-only entry point to customize which render modes are active.
+   */
+  updateRenderModeConfiguration(
+    command: UpdateRenderModeConfigurationCommand,
+  ): Promise<RenderModeConfiguration>;
 }

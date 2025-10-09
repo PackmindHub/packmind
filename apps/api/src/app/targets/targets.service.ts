@@ -12,12 +12,20 @@ import {
 } from '@packmind/shared';
 import { IDeploymentPort } from '@packmind/shared';
 import { DeploymentsHexa } from '@packmind/deployments';
+import { AccountsHexa } from '@packmind/accounts';
 
 @Injectable()
 export class TargetsService {
   private readonly deploymentAdapter: IDeploymentPort;
 
-  constructor(private readonly deploymentsHexa: DeploymentsHexa) {
+  constructor(
+    private readonly deploymentsHexa: DeploymentsHexa,
+    private readonly accountsHexa: AccountsHexa,
+  ) {
+    this.deploymentsHexa.setAccountProviders(
+      this.accountsHexa.getUserProvider(),
+      this.accountsHexa.getOrganizationProvider(),
+    );
     this.deploymentAdapter = this.deploymentsHexa.getDeploymentsUseCases();
   }
 

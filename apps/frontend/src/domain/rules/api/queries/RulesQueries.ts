@@ -2,6 +2,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { RuleExample, RuleExampleId } from '@packmind/standards/types';
 import { RuleId } from '@packmind/shared/types';
 import { rulesGateway } from '../gateways';
+import { GET_RULE_EXAMPLES_KEY } from '../queryKeys';
+import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
+import { STANDARDS_QUERY_SCOPE } from '../../../standards/api/queryKeys';
 
 export const useGetRuleExamplesQuery = (
   standardId: string,
@@ -9,7 +12,7 @@ export const useGetRuleExamplesQuery = (
   enabled = true,
 ) => {
   return useQuery({
-    queryKey: ['ruleExamples', standardId, ruleId],
+    queryKey: [...GET_RULE_EXAMPLES_KEY, standardId, ruleId],
     queryFn: () => rulesGateway.getRuleExamples(standardId, ruleId),
     enabled: enabled && !!standardId && !!ruleId,
   });
@@ -38,10 +41,14 @@ export const useCreateRuleExampleMutation = () => {
     onSuccess: async (newRuleExample: RuleExample, variables) => {
       // Invalidate rules queries to refresh the data
       await queryClient.invalidateQueries({
-        queryKey: ['rules', variables.standardId],
+        queryKey: [ORGANIZATION_QUERY_SCOPE, STANDARDS_QUERY_SCOPE],
       });
       await queryClient.invalidateQueries({
-        queryKey: ['ruleExamples', variables.standardId, variables.ruleId],
+        queryKey: [
+          ...GET_RULE_EXAMPLES_KEY,
+          variables.standardId,
+          variables.ruleId,
+        ],
       });
     },
   });
@@ -72,10 +79,14 @@ export const useUpdateRuleExampleMutation = () => {
     onSuccess: async (updatedRuleExample: RuleExample, variables) => {
       // Invalidate rules queries to refresh the data
       await queryClient.invalidateQueries({
-        queryKey: ['rules', variables.standardId],
+        queryKey: [ORGANIZATION_QUERY_SCOPE, STANDARDS_QUERY_SCOPE],
       });
       await queryClient.invalidateQueries({
-        queryKey: ['ruleExamples', variables.standardId, variables.ruleId],
+        queryKey: [
+          ...GET_RULE_EXAMPLES_KEY,
+          variables.standardId,
+          variables.ruleId,
+        ],
       });
     },
   });
@@ -100,10 +111,14 @@ export const useDeleteRuleExampleMutation = () => {
     onSuccess: async (_, variables) => {
       // Invalidate rules queries to refresh the data
       await queryClient.invalidateQueries({
-        queryKey: ['rules', variables.standardId],
+        queryKey: [ORGANIZATION_QUERY_SCOPE, STANDARDS_QUERY_SCOPE],
       });
       await queryClient.invalidateQueries({
-        queryKey: ['ruleExamples', variables.standardId, variables.ruleId],
+        queryKey: [
+          ...GET_RULE_EXAMPLES_KEY,
+          variables.standardId,
+          variables.ruleId,
+        ],
       });
     },
   });

@@ -20,6 +20,9 @@ import { UserContextChangeSubscription } from '../src/domain/accounts/components
 
 initSentry();
 
+// Export route error boundary
+export { RouteErrorBoundary as ErrorBoundary } from './components/RouteErrorBoundary';
+
 export const meta: MetaFunction = () => [
   {
     title: 'Packmind',

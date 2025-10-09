@@ -70,7 +70,9 @@ export class StandardSummaryService {
       });
 
       // Execute the AI prompt to generate the summary
-      const result = await this.aiService.executePrompt<string>(fullPrompt);
+      const result = await this.aiService.executePrompt<string>(fullPrompt, {
+        retryAttempts: 1, // Temporary while we put jobs in BG
+      });
 
       if (!result.success || !result.data) {
         this.logger.error('AI service failed to generate standard summary', {

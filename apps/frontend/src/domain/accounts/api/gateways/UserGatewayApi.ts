@@ -1,6 +1,6 @@
 import {
-  User,
   ListOrganizationUserStatusesResponse,
+  ListOrganizationUsersResponse,
   UserId,
 } from '@packmind/accounts/types';
 import { ChangeUserRoleResponse, UserOrganizationRole } from '@packmind/shared';
@@ -12,8 +12,10 @@ export class UserGatewayApi extends PackmindGateway implements IUserGateway {
     super('/users');
   }
 
-  async getUsersInMyOrganization(): Promise<User[]> {
-    return this._api.get<User[]>(`${this._endpoint}/organization`);
+  async getUsersInMyOrganization(): Promise<ListOrganizationUsersResponse> {
+    return this._api.get<ListOrganizationUsersResponse>(
+      `${this._endpoint}/organization`,
+    );
   }
 
   async getUserStatuses(): Promise<ListOrganizationUserStatusesResponse> {

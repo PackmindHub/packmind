@@ -153,4 +153,31 @@ export class UserRepository
       throw error;
     }
   }
+
+  async listByOrganization(organizationId: string): Promise<User[]> {
+    this.logger.info('Listing users by organization', { organizationId });
+
+    try {
+      const users = await this.repository
+        .createQueryBuilder('user')
+        .leftJoinAndSelect('user.memberships', 'memberships')
+        .leftJoinAndSelect('memberships.organization', 'organization')
+        .where('memberships.organizationId = :organizationId', {
+          organizationId,
+        })
+        .getMany();
+
+      this.logger.info('Users listed successfully by organization', {
+        organizationId,
+        count: users.length,
+      });
+      return users;
+    } catch (error) {
+      this.logger.error('Failed to list users by organization', {
+        organizationId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
 }

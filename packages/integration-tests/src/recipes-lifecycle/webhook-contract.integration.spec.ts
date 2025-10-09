@@ -350,6 +350,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
                 },
                 status: DistributionStatus.success,
                 organizationId: organization.id,
+                renderModes: [],
               },
             ]);
 
@@ -645,6 +646,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
               createdAt: new Date().toISOString(),
               authorId: user.id,
               organizationId: organization.id,
+              renderModes: [],
             },
           ]);
 
@@ -724,6 +726,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
               createdAt: new Date().toISOString(),
               authorId: user.id,
               organizationId: organization.id,
+              renderModes: [],
             },
           ]);
 
@@ -791,6 +794,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
                 createdAt: new Date().toISOString(),
                 authorId: user.id,
                 organizationId: organization.id,
+                renderModes: [],
               },
             ]);
 
@@ -814,6 +818,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
                 createdAt: new Date().toISOString(),
                 authorId: user.id,
                 organizationId: organization.id,
+                renderModes: [],
               },
             ]);
 
@@ -833,6 +838,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
               createdAt: new Date().toISOString(),
               authorId: createUserId('system'), // webhook deployments use system user
               organizationId: organization.id,
+              renderModes: [],
             },
           ]);
 

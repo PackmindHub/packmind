@@ -10,44 +10,48 @@ import {
   UpdateTargetCommand,
   DeleteTargetCommand,
   DeleteTargetResponse,
+  UpdateRenderModeConfigurationCommand,
 } from '@packmind/shared';
-
-export const LIST_RECIPE_DEPLOYMENTS_QUERY_KEY = 'recipeDeployments';
+import {
+  LIST_RECIPE_DEPLOYMENTS_KEY,
+  LIST_STANDARD_DEPLOYMENTS_KEY,
+  GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
+  GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
+  GET_TARGETS_BY_GIT_REPO_KEY,
+  GET_TARGETS_BY_REPOSITORY_KEY,
+  GET_TARGETS_BY_ORGANIZATION_KEY,
+  GET_RENDER_MODE_CONFIGURATION_KEY,
+} from '../queryKeys';
 export const useListRecipeDeploymentsQuery = (recipeId: RecipeId) => {
   return useQuery({
-    queryKey: [LIST_RECIPE_DEPLOYMENTS_QUERY_KEY, recipeId],
+    queryKey: [...LIST_RECIPE_DEPLOYMENTS_KEY, recipeId],
     queryFn: () => {
       return deploymentsGateways.listDeploymentsByRecipeId({ recipeId });
     },
   });
 };
 
-export const LIST_STANDARD_DEPLOYMENTS_QUERY_KEY = 'standardDeployments';
 export const useListStandardDeploymentsQuery = (standardId: StandardId) => {
   return useQuery({
-    queryKey: [LIST_STANDARD_DEPLOYMENTS_QUERY_KEY, standardId],
+    queryKey: [...LIST_STANDARD_DEPLOYMENTS_KEY, standardId],
     queryFn: () => {
       return deploymentsGateways.listDeploymentsByStandardId({ standardId });
     },
   });
 };
 
-export const GET_RECIPES_DEPLOYMENT_OVERVIEW_QUERY_KEY =
-  'recipeDeploymentOverview';
 export const useGetRecipesDeploymentOverviewQuery = () => {
   return useQuery({
-    queryKey: [GET_RECIPES_DEPLOYMENT_OVERVIEW_QUERY_KEY],
+    queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
     queryFn: () => {
       return deploymentsGateways.getRecipesDeploymentOverview({});
     },
   });
 };
 
-export const GET_STANDARDS_DEPLOYMENT_OVERVIEW_QUERY_KEY =
-  'standardsDeploymentOverview';
 export const useGetStandardsDeploymentOverviewQuery = () => {
   return useQuery({
-    queryKey: [GET_STANDARDS_DEPLOYMENT_OVERVIEW_QUERY_KEY],
+    queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
     queryFn: () => {
       return deploymentsGateways.getStandardsDeploymentOverview({});
     },
@@ -77,11 +81,11 @@ export const useDeployRecipesMutation = () => {
       // We need to invalidate queries, but we don't have recipeIds directly
       // For now, we'll invalidate all recipes queries
       await queryClient.invalidateQueries({
-        queryKey: [LIST_RECIPE_DEPLOYMENTS_QUERY_KEY],
+        queryKey: LIST_RECIPE_DEPLOYMENTS_KEY,
       });
 
       await queryClient.invalidateQueries({
-        queryKey: [GET_RECIPES_DEPLOYMENT_OVERVIEW_QUERY_KEY],
+        queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
       });
 
       // If we have specific recipe IDs in the future, we can invalidate them individually
@@ -118,10 +122,10 @@ export const useDeployStandardsMutation = () => {
       // We need to invalidate queries, but we don't have standardIds directly
       // For now, we'll invalidate all standards queries
       await queryClient.invalidateQueries({
-        queryKey: [LIST_STANDARD_DEPLOYMENTS_QUERY_KEY],
+        queryKey: LIST_STANDARD_DEPLOYMENTS_KEY,
       });
       await queryClient.invalidateQueries({
-        queryKey: [GET_STANDARDS_DEPLOYMENT_OVERVIEW_QUERY_KEY],
+        queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
       });
 
       // If we have specific standard IDs in the future, we can invalidate them individually
@@ -135,10 +139,9 @@ export const useDeployStandardsMutation = () => {
   });
 };
 
-export const GET_TARGETS_BY_GIT_REPO_QUERY_KEY = 'targetsByGitRepo';
 export const useGetTargetsByGitRepoQuery = (gitRepoId: GitRepoId) => {
   return useQuery({
-    queryKey: [GET_TARGETS_BY_GIT_REPO_QUERY_KEY, gitRepoId],
+    queryKey: [...GET_TARGETS_BY_GIT_REPO_KEY, gitRepoId],
     queryFn: () => {
       return deploymentsGateways.getTargetsByGitRepo({ gitRepoId });
     },
@@ -146,10 +149,9 @@ export const useGetTargetsByGitRepoQuery = (gitRepoId: GitRepoId) => {
   });
 };
 
-export const GET_TARGETS_BY_REPOSITORY_QUERY_KEY = 'targetsByRepository';
 export const useGetTargetsByRepositoryQuery = (owner: string, repo: string) => {
   return useQuery({
-    queryKey: [GET_TARGETS_BY_REPOSITORY_QUERY_KEY, owner, repo],
+    queryKey: [...GET_TARGETS_BY_REPOSITORY_KEY, owner, repo],
     queryFn: () => {
       return deploymentsGateways.getTargetsByRepository({ owner, repo });
     },
@@ -157,12 +159,11 @@ export const useGetTargetsByRepositoryQuery = (owner: string, repo: string) => {
   });
 };
 
-export const GET_TARGETS_BY_ORGANIZATION_QUERY_KEY = 'targetsByOrganization';
 export const useGetTargetsByOrganizationQuery = (
   organizationId: OrganizationId,
 ) => {
   return useQuery({
-    queryKey: [GET_TARGETS_BY_ORGANIZATION_QUERY_KEY, organizationId],
+    queryKey: [...GET_TARGETS_BY_ORGANIZATION_KEY, organizationId],
     queryFn: () => {
       return deploymentsGateways.getTargetsByOrganization({ organizationId });
     },
@@ -183,20 +184,20 @@ export const useAddTargetMutation = () => {
     onSuccess: async (newTarget) => {
       // Invalidate targets queries to refetch updated data
       await queryClient.invalidateQueries({
-        queryKey: [GET_TARGETS_BY_REPOSITORY_QUERY_KEY, newTarget.gitRepoId],
+        queryKey: [...GET_TARGETS_BY_REPOSITORY_KEY, newTarget.gitRepoId],
       });
 
       await queryClient.invalidateQueries({
-        queryKey: [GET_TARGETS_BY_ORGANIZATION_QUERY_KEY],
+        queryKey: GET_TARGETS_BY_ORGANIZATION_KEY,
       });
 
       // Also invalidate deployment overviews since targets affect deployments
       await queryClient.invalidateQueries({
-        queryKey: [GET_RECIPES_DEPLOYMENT_OVERVIEW_QUERY_KEY],
+        queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
       });
 
       await queryClient.invalidateQueries({
-        queryKey: [GET_STANDARDS_DEPLOYMENT_OVERVIEW_QUERY_KEY],
+        queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
       });
     },
     onError: (error) => {
@@ -219,23 +220,20 @@ export const useUpdateTargetMutation = () => {
     onSuccess: async (updatedTarget) => {
       // Invalidate targets queries to refetch updated data
       await queryClient.invalidateQueries({
-        queryKey: [
-          GET_TARGETS_BY_REPOSITORY_QUERY_KEY,
-          updatedTarget.gitRepoId,
-        ],
+        queryKey: [...GET_TARGETS_BY_REPOSITORY_KEY, updatedTarget.gitRepoId],
       });
 
       await queryClient.invalidateQueries({
-        queryKey: [GET_TARGETS_BY_ORGANIZATION_QUERY_KEY],
+        queryKey: GET_TARGETS_BY_ORGANIZATION_KEY,
       });
 
       // Also invalidate deployment overviews since targets affect deployments
       await queryClient.invalidateQueries({
-        queryKey: [GET_RECIPES_DEPLOYMENT_OVERVIEW_QUERY_KEY],
+        queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
       });
 
       await queryClient.invalidateQueries({
-        queryKey: [GET_STANDARDS_DEPLOYMENT_OVERVIEW_QUERY_KEY],
+        queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
       });
     },
     onError: (error) => {
@@ -259,26 +257,61 @@ export const useDeleteTargetMutation = () => {
       // We need to invalidate all target queries since we don't know which repository the deleted target belonged to
       // This is less efficient but ensures consistency
       await queryClient.invalidateQueries({
-        queryKey: [GET_TARGETS_BY_REPOSITORY_QUERY_KEY],
+        queryKey: GET_TARGETS_BY_REPOSITORY_KEY,
       });
 
       await queryClient.invalidateQueries({
-        queryKey: [GET_TARGETS_BY_ORGANIZATION_QUERY_KEY],
+        queryKey: GET_TARGETS_BY_ORGANIZATION_KEY,
       });
 
       // Also invalidate deployment overviews since targets affect deployments
       await queryClient.invalidateQueries({
-        queryKey: [GET_RECIPES_DEPLOYMENT_OVERVIEW_QUERY_KEY],
+        queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
       });
 
       await queryClient.invalidateQueries({
-        queryKey: [GET_STANDARDS_DEPLOYMENT_OVERVIEW_QUERY_KEY],
+        queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
       });
 
       console.log(`Target ${deletedCommand.targetId} deleted successfully`);
     },
     onError: (error) => {
       console.error('Error deleting target:', error);
+    },
+  });
+};
+
+export const useGetRenderModeConfigurationQuery = () => {
+  return useQuery({
+    queryKey: GET_RENDER_MODE_CONFIGURATION_KEY,
+    queryFn: () => {
+      return deploymentsGateways.getRenderModeConfiguration({});
+    },
+  });
+};
+
+export const UPDATE_RENDER_MODE_CONFIGURATION_MUTATION_KEY =
+  'updateRenderModeConfiguration';
+export const useUpdateRenderModeConfigurationMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: [UPDATE_RENDER_MODE_CONFIGURATION_MUTATION_KEY],
+    mutationFn: async (
+      command: Omit<
+        UpdateRenderModeConfigurationCommand,
+        'userId' | 'organizationId'
+      >,
+    ) => {
+      return deploymentsGateways.updateRenderModeConfiguration(command);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: GET_RENDER_MODE_CONFIGURATION_KEY,
+      });
+    },
+    onError: (error) => {
+      console.error('Error updating render mode configuration:', error);
     },
   });
 };

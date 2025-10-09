@@ -6,17 +6,20 @@ The distribution will commit instructions files that will be used by AI Agents (
 
 ## Supported AI Agents
 
+Packmind supports multiple AI coding assistants. Organization administrators can choose which agents to enable in **Settings** → **Distribution** → **Rendering**. See [Manage AI Agent Rendering](./manage-ai-agents.md) for details.
+
 Here is an overview of the supported agents:
 
 | AI Agent           | What It Does                 | File Location                     |
 | ------------------ | ---------------------------- | --------------------------------- |
-| **Cursor**         | Creates rules in YAML format | `.cursor/rules/`                  |
-| **GitHub Copilot** | Updates instructions file    | `.github/copilot-instructions.md` |
-| **Claude Code**    | Updates instructions file    | `CLAUDE.md`                       |
+| **Packmind**       | Internal renderer (required) | `.packmind/`                      |
 | **AGENTS.md**      | Updates instructions file    | `AGENTS.md`                       |
+| **GitHub Copilot** | Updates instructions file    | `.github/copilot-instructions.md` |
+| **Cursor**         | Creates rules in YAML format | `.cursor/rules/`                  |
+| **Claude Code**    | Updates instructions file    | `CLAUDE.md`                       |
 | **Junie**          | Updates guidelines file      | `.junie/guidelines.md`            |
 
-Files are also written in the `.packmind` folder to be reused by these agents.
+When you distribute standards or recipes, only the enabled agents will receive updates. The Packmind renderer is always active and creates files in the `.packmind/` directory that are used by other agents.
 
 :::tip Need support for a new AI agent?
 You can create an issue in our [repository](https://github.com/PackmindHub/packmind) to request support for additional AI coding assistants

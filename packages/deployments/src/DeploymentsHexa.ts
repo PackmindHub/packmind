@@ -13,6 +13,7 @@ import { RecipesHexa } from '@packmind/recipes';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { StandardsHexa } from '@packmind/standards';
 import { RecipesAdapter } from './adapters/RecipesAdapter';
+import { UserProvider, OrganizationProvider } from '@packmind/shared';
 
 const origin = 'DeploymentsHexa';
 
@@ -100,5 +101,16 @@ export class DeploymentsHexa extends BaseHexa {
 
   public getDeploymentsUseCases(): IDeploymentPort {
     return this.deploymentsUsecases;
+  }
+
+  public setAccountProviders(
+    userProvider: UserProvider,
+    organizationProvider: OrganizationProvider,
+  ): void {
+    (this.deploymentsUsecases as DeploymentsUseCases).setAccountProviders(
+      userProvider,
+      organizationProvider,
+    );
+    this.logger.info('Account providers set in DeploymentsHexa');
   }
 }

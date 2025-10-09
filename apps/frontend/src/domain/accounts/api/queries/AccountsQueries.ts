@@ -1,18 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { organizationGateway, userGateway } from '../gateways';
-import { GET_USER_STATUSES_QUERY_KEY } from './UserQueries';
+import {
+  GET_USER_ORGANIZATIONS_KEY,
+  GET_USER_STATUSES_KEY,
+} from '../queryKeys';
 import { UserId, UserOrganizationRole } from '@packmind/accounts/types';
 import { Organization } from '@packmind/shared';
 
 const CREATE_ORGANIZATION_MUTATION_KEY = 'createOrganization';
-export const GET_USER_ORGANIZATIONS_QUERY_KEY = 'getUserOrganizations';
-
 const INVITE_USERS_MUTATION_KEY = 'inviteUsers';
 const CHANGE_USER_ROLE_MUTATION_KEY = 'changeUserRole';
 const EXCLUDE_USER_MUTATION_KEY = 'excludeUser';
 
 export const getUserOrganizationsQueryOptions = () => ({
-  queryKey: [GET_USER_ORGANIZATIONS_QUERY_KEY],
+  queryKey: GET_USER_ORGANIZATIONS_KEY,
   queryFn: () => organizationGateway.getUserOrganizations(),
 });
 
@@ -30,7 +31,7 @@ export const useCreateOrganizationMutation = () => {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: [GET_USER_ORGANIZATIONS_QUERY_KEY],
+        queryKey: GET_USER_ORGANIZATIONS_KEY,
       });
     },
     onError: (error) => {
@@ -54,7 +55,7 @@ export const useInviteUsersMutation = () => {
     },
     onSuccess: async (data) => {
       await queryClient.invalidateQueries({
-        queryKey: [GET_USER_STATUSES_QUERY_KEY],
+        queryKey: GET_USER_STATUSES_KEY,
       });
     },
   });
@@ -74,7 +75,7 @@ export const useChangeUserRoleMutation = () => {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: [GET_USER_STATUSES_QUERY_KEY],
+        queryKey: GET_USER_STATUSES_KEY,
       });
     },
   });
@@ -91,7 +92,7 @@ export const useExcludeUserMutation = () => {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: [GET_USER_STATUSES_QUERY_KEY],
+        queryKey: GET_USER_STATUSES_KEY,
       });
     },
   });

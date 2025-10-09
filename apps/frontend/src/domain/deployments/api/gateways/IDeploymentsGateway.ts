@@ -12,6 +12,8 @@ import {
   IAddTargetUseCase,
   IUpdateTargetUseCase,
   IDeleteTargetUseCase,
+  IGetRenderModeConfigurationUseCase,
+  IUpdateRenderModeConfigurationUseCase,
 } from '@packmind/shared';
 
 export interface IDeploymentsGateway {
@@ -27,4 +29,6 @@ export interface IDeploymentsGateway {
   addTarget: Gateway<IAddTargetUseCase>;
   updateTarget: Gateway<IUpdateTargetUseCase>;
   deleteTarget: Gateway<IDeleteTargetUseCase>;
+  getRenderModeConfiguration: Gateway<IGetRenderModeConfigurationUseCase>;
+  updateRenderModeConfiguration: Gateway<IUpdateRenderModeConfigurationUseCase>;
 }

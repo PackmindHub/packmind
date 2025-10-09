@@ -4,6 +4,7 @@ import {
   PackmindLogger,
   UserProvider,
   OrganizationProvider,
+  Configuration,
 } from '@packmind/shared';
 import {
   IListOrganizationUserStatusesUseCase,
@@ -13,7 +14,10 @@ import {
   UserStatus,
 } from '../../../domain/useCases/IListOrganizationUserStatusesUseCase';
 import { User } from '../../../domain/entities/User';
-import { Invitation } from '../../../domain/entities/Invitation';
+import {
+  Invitation,
+  InvitationToken,
+} from '../../../domain/entities/Invitation';
 import { UserService } from '../../services/UserService';
 import { InvitationService } from '../../services/InvitationService';
 
@@ -26,6 +30,8 @@ export class ListOrganizationUserStatusesUseCase
   >
   implements IListOrganizationUserStatusesUseCase
 {
+  private static readonly DEFAULT_APP_WEB_URL = 'http://localhost:8081';
+
   constructor(
     userProvider: UserProvider,
     organizationProvider: OrganizationProvider,
@@ -77,6 +83,9 @@ export class ListOrganizationUserStatusesUseCase
       }
     });
 
+    // Get application URL for building invitation links
+    const appUrl = await this.getApplicationUrl();
+
     // Build user statuses
     const userStatuses: UserStatus[] = users.map((user) => {
       const membership = user.memberships?.find(
@@ -93,6 +102,10 @@ export class ListOrganizationUserStatusesUseCase
         isActive: user.active,
         invitationStatus,
         invitationExpirationDate: invitation?.expirationDate,
+        invitationLink:
+          invitationStatus === 'pending' && invitation
+            ? this.buildInvitationUrl(invitation.token, appUrl)
+            : undefined,
       };
     });
 
@@ -126,5 +139,22 @@ export class ListOrganizationUserStatusesUseCase
 
     // Invitation is still pending
     return 'pending';
+  }
+
+  private async getApplicationUrl(): Promise<string> {
+    const configValue = await Configuration.getConfig('APP_WEB_URL');
+    if (configValue) {
+      return configValue.endsWith('/') ? configValue.slice(0, -1) : configValue;
+    }
+    this.logger.warn('Failed to get APP_WEB_URL value, using default', {
+      configValue,
+      default: ListOrganizationUserStatusesUseCase.DEFAULT_APP_WEB_URL,
+    });
+    return ListOrganizationUserStatusesUseCase.DEFAULT_APP_WEB_URL;
+  }
+
+  private buildInvitationUrl(token: InvitationToken, appUrl: string): string {
+    const baseUrl = appUrl.endsWith('/') ? appUrl.slice(0, -1) : appUrl;
+    return `${baseUrl}/activate?token=${encodeURIComponent(token)}`;
   }
 }

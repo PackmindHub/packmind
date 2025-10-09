@@ -4,38 +4,40 @@ import { GitProviderId, GitRepoId } from '@packmind/git';
 import { AddRepositoryForm } from '../../types/GitProviderTypes';
 import { CheckDirectoryExistenceResult } from '@packmind/shared';
 import {
-  GET_GIT_PROVIDER_QUERY_KEY,
-  GET_GIT_PROVIDERS_QUERY_KEY,
-} from './GitProviderQueries';
+  GET_GIT_PROVIDER_BY_ID_KEY,
+  GET_GIT_PROVIDERS_KEY,
+  GET_GIT_REPOSITORIES_KEY,
+  GET_REPOSITORIES_BY_PROVIDER_KEY,
+  GET_AVAILABLE_REPOSITORIES_KEY,
+  GET_AVAILABLE_TARGETS_KEY,
+} from '../queryKeys';
 import {
-  GET_RECIPES_DEPLOYMENT_OVERVIEW_QUERY_KEY,
-  GET_STANDARDS_DEPLOYMENT_OVERVIEW_QUERY_KEY,
-} from '../../../deployments/api/queries/DeploymentsQueries';
+  GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
+  GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
+} from '../../../deployments/api/queryKeys';
 
-const GET_GIT_REPOS_QUERY_KEY = 'getGitRepos';
 export const useGetGitReposQuery = () => {
   return useQuery({
-    queryKey: [GET_GIT_REPOS_QUERY_KEY],
+    queryKey: GET_GIT_REPOSITORIES_KEY,
     queryFn: () => {
       return repositoryGateway.getRepositories();
     },
   });
 };
-const GET_REPOSITORIES_BY_PROVIDER_QUERY_KEY = 'repositoriesByProvider';
+
 export const useGetRepositoriesByProviderQuery = (
   providerId: GitProviderId,
 ) => {
   return useQuery({
-    queryKey: [GET_REPOSITORIES_BY_PROVIDER_QUERY_KEY, providerId],
+    queryKey: [...GET_REPOSITORIES_BY_PROVIDER_KEY, providerId],
     queryFn: () => gitProviderGateway.getRepositoriesByProvider(providerId),
     enabled: !!providerId,
   });
 };
 
-const GET_AVAILABLE_REPOSITORIES_QUERY_KEY = 'availableRepositories';
 export const useGetAvailableRepositoriesQuery = (providerId: GitProviderId) => {
   return useQuery({
-    queryKey: [GET_AVAILABLE_REPOSITORIES_QUERY_KEY, providerId],
+    queryKey: [...GET_AVAILABLE_REPOSITORIES_KEY, providerId],
     queryFn: () => gitProviderGateway.getAvailableRepositories(providerId),
     enabled: !!providerId,
   });
@@ -57,22 +59,22 @@ export const useAddRepositoryMutation = () => {
     },
     onSuccess: async (repo) => {
       await queryClient.invalidateQueries({
-        queryKey: [GET_REPOSITORIES_BY_PROVIDER_QUERY_KEY, repo.providerId],
+        queryKey: [...GET_REPOSITORIES_BY_PROVIDER_KEY, repo.providerId],
       });
       await queryClient.invalidateQueries({
-        queryKey: [GET_GIT_PROVIDER_QUERY_KEY, repo.providerId],
+        queryKey: [...GET_GIT_PROVIDER_BY_ID_KEY, repo.providerId],
       });
       await queryClient.invalidateQueries({
-        queryKey: [GET_GIT_PROVIDERS_QUERY_KEY],
+        queryKey: GET_GIT_PROVIDERS_KEY,
       });
       await queryClient.invalidateQueries({
-        queryKey: [GET_STANDARDS_DEPLOYMENT_OVERVIEW_QUERY_KEY],
+        queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
       });
       await queryClient.invalidateQueries({
-        queryKey: [GET_RECIPES_DEPLOYMENT_OVERVIEW_QUERY_KEY],
+        queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
       });
       await queryClient.invalidateQueries({
-        queryKey: [GET_GIT_REPOS_QUERY_KEY],
+        queryKey: GET_GIT_REPOSITORIES_KEY,
       });
     },
     onError: (error) => {
@@ -98,22 +100,22 @@ export const useRemoveRepositoryMutation = () => {
     },
     onSuccess: async (_, { providerId }) => {
       await queryClient.invalidateQueries({
-        queryKey: [GET_REPOSITORIES_BY_PROVIDER_QUERY_KEY, providerId],
+        queryKey: [...GET_REPOSITORIES_BY_PROVIDER_KEY, providerId],
       });
       await queryClient.invalidateQueries({
-        queryKey: [GET_GIT_PROVIDERS_QUERY_KEY],
+        queryKey: GET_GIT_PROVIDERS_KEY,
       });
       await queryClient.invalidateQueries({
-        queryKey: [GET_GIT_PROVIDER_QUERY_KEY, providerId],
+        queryKey: [...GET_GIT_PROVIDER_BY_ID_KEY, providerId],
       });
       await queryClient.invalidateQueries({
-        queryKey: [GET_STANDARDS_DEPLOYMENT_OVERVIEW_QUERY_KEY],
+        queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
       });
       await queryClient.invalidateQueries({
-        queryKey: [GET_RECIPES_DEPLOYMENT_OVERVIEW_QUERY_KEY],
+        queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
       });
       await queryClient.invalidateQueries({
-        queryKey: [GET_GIT_REPOS_QUERY_KEY],
+        queryKey: GET_GIT_REPOSITORIES_KEY,
       });
     },
     onError: (error) => {
@@ -123,14 +125,12 @@ export const useRemoveRepositoryMutation = () => {
 };
 
 // Available Targets Query
-const GET_AVAILABLE_TARGETS_QUERY_KEY = 'availableTargets';
-
 export const getAvailableTargetsOptions = (
   repositoryId: GitRepoId,
   path?: string,
   enabled = true,
 ) => ({
-  queryKey: [GET_AVAILABLE_TARGETS_QUERY_KEY, repositoryId, path],
+  queryKey: [...GET_AVAILABLE_TARGETS_KEY, repositoryId, path],
   queryFn: () =>
     gitProviderGateway.getAvailableRemoteDirectories(repositoryId, path),
   enabled: !!repositoryId && enabled,

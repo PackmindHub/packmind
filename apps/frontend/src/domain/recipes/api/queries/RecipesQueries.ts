@@ -2,23 +2,24 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { recipesGateway } from '../gateways';
 import { RecipeId } from '@packmind/recipes/types';
-import { GET_RECIPES_DEPLOYMENT_OVERVIEW_QUERY_KEY } from '../../../deployments/api/queries/DeploymentsQueries';
-
-const GET_RECIPES_QUERY_KEY = 'recipes';
+import { GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY } from '../../../deployments/api/queryKeys';
+import {
+  GET_RECIPES_KEY,
+  GET_RECIPE_BY_ID_KEY,
+  GET_RECIPE_VERSIONS_KEY,
+} from '../queryKeys';
 
 export const useGetRecipesQuery = () => {
   return useQuery({
-    queryKey: [GET_RECIPES_QUERY_KEY],
+    queryKey: GET_RECIPES_KEY,
     queryFn: () => {
       return recipesGateway.getRecipes();
     },
   });
 };
 
-const GET_RECIPE_BY_ID_QUERY_KEY = 'recipe';
-
 export const getRecipeByIdOptions = (id: RecipeId) => ({
-  queryKey: [GET_RECIPE_BY_ID_QUERY_KEY, id],
+  queryKey: [...GET_RECIPE_BY_ID_KEY, id],
   queryFn: () => {
     return recipesGateway.getRecipeById(id);
   },
@@ -48,18 +49,18 @@ export const useUpdateRecipeMutation = () => {
     onSuccess: async (updatedRecipe) => {
       // Invalidate the recipes list
       await queryClient.invalidateQueries({
-        queryKey: [GET_RECIPES_QUERY_KEY],
+        queryKey: GET_RECIPES_KEY,
       });
       // Invalidate the specific recipe
       await queryClient.invalidateQueries({
-        queryKey: [GET_RECIPE_BY_ID_QUERY_KEY, updatedRecipe.id],
+        queryKey: [...GET_RECIPE_BY_ID_KEY, updatedRecipe.id],
       });
       // Invalidate recipe versions
       await queryClient.invalidateQueries({
-        queryKey: [GET_RECIPE_VERSIONS_QUERY_KEY, updatedRecipe.id],
+        queryKey: [...GET_RECIPE_VERSIONS_KEY, updatedRecipe.id],
       });
       await queryClient.invalidateQueries({
-        queryKey: [GET_RECIPES_DEPLOYMENT_OVERVIEW_QUERY_KEY],
+        queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
       });
     },
     onError: async (error, variables, context) => {
@@ -71,11 +72,9 @@ export const useUpdateRecipeMutation = () => {
   });
 };
 
-const GET_RECIPE_VERSIONS_QUERY_KEY = 'recipeVersions';
-
 export const useGetRecipeVersionsQuery = (id: RecipeId) => {
   return useQuery({
-    queryKey: [GET_RECIPE_VERSIONS_QUERY_KEY, id],
+    queryKey: [...GET_RECIPE_VERSIONS_KEY, id],
     queryFn: () => {
       return recipesGateway.getVersionsById(id);
     },
@@ -95,10 +94,10 @@ export const useDeleteRecipeMutation = () => {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: [GET_RECIPES_QUERY_KEY],
+        queryKey: GET_RECIPES_KEY,
       });
       await queryClient.invalidateQueries({
-        queryKey: [GET_RECIPES_DEPLOYMENT_OVERVIEW_QUERY_KEY],
+        queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
       });
     },
     onError: async (error, variables, context) => {
@@ -122,10 +121,10 @@ export const useDeleteRecipesBatchMutation = () => {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: [GET_RECIPES_QUERY_KEY],
+        queryKey: GET_RECIPES_KEY,
       });
       await queryClient.invalidateQueries({
-        queryKey: [GET_RECIPES_DEPLOYMENT_OVERVIEW_QUERY_KEY],
+        queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
       });
     },
     onError: async (error, variables, context) => {

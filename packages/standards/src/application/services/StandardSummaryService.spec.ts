@@ -86,34 +86,33 @@ describe('StandardSummaryService', () => {
       });
 
       it('includes the standard name in the AI prompt', () => {
-        expect(mockAIService.executePrompt).toHaveBeenCalledWith(
-          expect.stringContaining('TypeScript Configuration Standard'),
+        const calledPrompt = mockAIService.executePrompt.mock.calls[0][0];
+        expect(calledPrompt).toContain(
+          '**Standard Name:** TypeScript Configuration Standard',
         );
       });
 
       it('includes the standard description in the AI prompt', () => {
-        expect(mockAIService.executePrompt).toHaveBeenCalledWith(
-          expect.stringContaining(
-            'Defines TypeScript compiler settings and project structure',
-          ),
+        const calledPrompt = mockAIService.executePrompt.mock.calls[0][0];
+        expect(calledPrompt).toContain(
+          '**Description:** Defines TypeScript compiler settings and project structure',
         );
       });
 
       it('includes the scope in the AI prompt', () => {
-        expect(mockAIService.executePrompt).toHaveBeenCalledWith(
-          expect.stringContaining('src/**/*.ts'),
-        );
+        const calledPrompt = mockAIService.executePrompt.mock.calls[0][0];
+        expect(calledPrompt).toContain('**Scope:** src/**/*.ts');
       });
 
       it('includes the first rule in the AI prompt', () => {
-        expect(mockAIService.executePrompt).toHaveBeenCalledWith(
-          expect.stringContaining('* Use strict mode in tsconfig.json'),
-        );
+        const calledPrompt = mockAIService.executePrompt.mock.calls[0][0];
+        expect(calledPrompt).toContain('* Use strict mode in tsconfig.json');
       });
 
       it('includes the second rule in the AI prompt', () => {
-        expect(mockAIService.executePrompt).toHaveBeenCalledWith(
-          expect.stringContaining('* Enable noImplicitAny compiler option'),
+        const calledPrompt = mockAIService.executePrompt.mock.calls[0][0];
+        expect(calledPrompt).toContain(
+          '* Enable noImplicitAny compiler option',
         );
       });
 
@@ -310,7 +309,7 @@ describe('StandardSummaryService', () => {
 
       it('uses "Global scope" as default scope in prompt', () => {
         const calledPrompt = mockAIService.executePrompt.mock.calls[0][0];
-        expect(calledPrompt).toContain('Global scope');
+        expect(calledPrompt).toContain('**Scope:** Global scope');
       });
     });
 
@@ -338,7 +337,7 @@ describe('StandardSummaryService', () => {
 
       it('includes "No specific rules defined" in prompt', () => {
         const calledPrompt = mockAIService.executePrompt.mock.calls[0][0];
-        expect(calledPrompt).toContain('No specific rules defined');
+        expect(calledPrompt).toContain('**Rules:**\nNo specific rules defined');
       });
     });
 

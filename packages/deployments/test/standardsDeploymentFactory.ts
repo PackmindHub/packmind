@@ -18,6 +18,7 @@ export const standardsDeploymentFactory: Factory<StandardsDeployment> = (
     target: targetFactory(),
     status: DistributionStatus.success,
     createdAt: new Date().toISOString(),
+    renderModes: [],
     ...deployment,
   };
 };

@@ -2,23 +2,27 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { standardsGateway } from '../gateways';
 import { RuleId, StandardId } from '@packmind/shared/types';
-import { GET_STANDARDS_DEPLOYMENT_OVERVIEW_QUERY_KEY } from '../../../deployments/api/queries/DeploymentsQueries';
-
-export const GET_STANDARDS_QUERY_KEY = 'standards';
+import { GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY } from '../../../deployments/api/queryKeys';
+import {
+  ORGANIZATION_QUERY_SCOPE,
+  STANDARDS_QUERY_SCOPE,
+  GET_STANDARDS_KEY,
+  GET_STANDARD_BY_ID_KEY,
+  GET_STANDARD_VERSIONS_KEY,
+  GET_RULES_BY_STANDARD_ID_KEY,
+} from '../queryKeys';
 
 export const useGetStandardsQuery = () => {
   return useQuery({
-    queryKey: [GET_STANDARDS_QUERY_KEY],
+    queryKey: GET_STANDARDS_KEY,
     queryFn: () => {
       return standardsGateway.getStandards();
     },
   });
 };
 
-const GET_STANDARD_BY_ID_QUERY_KEY = 'standard';
-
 export const getStandardByIdOptions = (id: StandardId) => ({
-  queryKey: [GET_STANDARD_BY_ID_QUERY_KEY, id],
+  queryKey: [...GET_STANDARD_BY_ID_KEY, id],
   queryFn: () => standardsGateway.getStandardById(id),
   enabled: !!id,
 });
@@ -44,11 +48,11 @@ export const useCreateStandardMutation = () => {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: [GET_STANDARDS_QUERY_KEY],
+        queryKey: GET_STANDARDS_KEY,
       });
 
       await queryClient.invalidateQueries({
-        queryKey: [GET_STANDARDS_DEPLOYMENT_OVERVIEW_QUERY_KEY],
+        queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
       });
     },
     onError: async (error, variables, context) => {
@@ -83,19 +87,19 @@ export const useUpdateStandardMutation = () => {
     },
     onSuccess: async (_, variables) => {
       await queryClient.invalidateQueries({
-        queryKey: [GET_STANDARDS_QUERY_KEY],
+        queryKey: GET_STANDARDS_KEY,
       });
       await queryClient.invalidateQueries({
-        queryKey: [GET_STANDARD_BY_ID_QUERY_KEY, variables.id],
+        queryKey: [...GET_STANDARD_BY_ID_KEY, variables.id],
       });
       await queryClient.invalidateQueries({
-        queryKey: [GET_STANDARD_VERSIONS_QUERY_KEY, variables.id],
+        queryKey: [...GET_STANDARD_VERSIONS_KEY, variables.id],
       });
       await queryClient.invalidateQueries({
-        queryKey: [GET_RULES_BY_STANDARD_ID_QUERY_KEY, variables.id],
+        queryKey: [...GET_RULES_BY_STANDARD_ID_KEY, variables.id],
       });
       await queryClient.invalidateQueries({
-        queryKey: [GET_STANDARDS_DEPLOYMENT_OVERVIEW_QUERY_KEY],
+        queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
       });
     },
     onError: async (error, variables, context) => {
@@ -107,11 +111,9 @@ export const useUpdateStandardMutation = () => {
   });
 };
 
-const GET_STANDARD_VERSIONS_QUERY_KEY = 'standardVersions';
-
 export const useGetStandardVersionsQuery = (id: StandardId) => {
   return useQuery({
-    queryKey: [GET_STANDARD_VERSIONS_QUERY_KEY, id],
+    queryKey: [...GET_STANDARD_VERSIONS_KEY, id],
     queryFn: () => {
       return standardsGateway.getVersionsById(id);
     },
@@ -119,10 +121,8 @@ export const useGetStandardVersionsQuery = (id: StandardId) => {
   });
 };
 
-const GET_RULES_BY_STANDARD_ID_QUERY_KEY = 'rulesByStandardId';
-
 export const getRulesByStandardIdOptions = (id: StandardId) => ({
-  queryKey: [GET_RULES_BY_STANDARD_ID_QUERY_KEY, id],
+  queryKey: [...GET_RULES_BY_STANDARD_ID_KEY, id],
   queryFn: () => standardsGateway.getRulesByStandardId(id),
   enabled: !!id,
 });
@@ -143,10 +143,10 @@ export const useDeleteStandardMutation = () => {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: [GET_STANDARDS_QUERY_KEY],
+        queryKey: GET_STANDARDS_KEY,
       });
       await queryClient.invalidateQueries({
-        queryKey: [GET_STANDARDS_DEPLOYMENT_OVERVIEW_QUERY_KEY],
+        queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
       });
     },
     onError: async (error, variables, context) => {
@@ -170,10 +170,10 @@ export const useDeleteStandardsBatchMutation = () => {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({
-        queryKey: [GET_STANDARDS_QUERY_KEY],
+        queryKey: GET_STANDARDS_KEY,
       });
       await queryClient.invalidateQueries({
-        queryKey: [GET_STANDARDS_DEPLOYMENT_OVERVIEW_QUERY_KEY],
+        queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
       });
     },
     onError: async (error, variables, context) => {

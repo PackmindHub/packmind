@@ -1,11 +1,19 @@
 import React, { useMemo } from 'react';
-import { LuCirclePlus, LuMail, LuUserCog, LuUserMinus } from 'react-icons/lu';
+import {
+  LuCirclePlus,
+  LuLink,
+  LuMail,
+  LuUserCog,
+  LuUserMinus,
+} from 'react-icons/lu';
 
 import {
   PMAlert,
   PMBadge,
   PMButton,
-  PMButtonGroup,
+  PMCopiable,
+  PMEllipsisMenu,
+  PMEllipsisMenuProps,
   PMEmptyState,
   PMHStack,
   PMIcon,
@@ -13,6 +21,8 @@ import {
   PMTable,
   PMTableColumn,
   PMTableRow,
+  PMText,
+  pmToaster,
   PMVStack,
 } from '@packmind/ui';
 import { OrganizationId, UserStatus } from '@packmind/accounts/types';
@@ -184,69 +194,96 @@ const UserActions: React.FunctionComponent<{
   onChangeRole: () => void;
   onExcludeUser: (userStatus: UserStatus) => void;
 }> = ({ organizationId, userStatus, onChangeRole, onExcludeUser }) => {
-  const { mutateAsync: inviteUsers, isPending } = useInviteUsersMutation();
+  const { mutateAsync: inviteUsers } = useInviteUsersMutation();
   const { user: currentUser, organization } = useAuthContext();
+
+  if (organization?.role !== 'admin') return null;
 
   // Don't show change role action for current user or if user is not admin
   const isCurrentUser = currentUser?.id === userStatus.userId;
-  const isCurrentUserAdmin = organization?.role === 'admin';
 
-  return (
-    <PMButtonGroup>
-      {!userStatus.isActive && (
-        <PMButton
-          variant={'secondary'}
-          size="sm"
-          title={'Resend invitation'}
-          loading={isPending}
-          onClick={() =>
-            inviteUsers({
-              orgId: organizationId,
-              emails: [userStatus.email],
-              role: userStatus.role,
-            })
-          }
-          children={
-            <PMIcon>
-              <LuMail />
-            </PMIcon>
-          }
-        />
-      )}
-      {userStatus.isActive && isCurrentUserAdmin && (
-        <>
-          <PMButton
-            variant={'secondary'}
-            size="sm"
-            title={
-              isCurrentUser ? 'Cannot change your own role' : 'Change user role'
-            }
-            onClick={onChangeRole}
-            disabled={isCurrentUser}
-            children={
-              <PMIcon>
-                <LuUserCog />
-              </PMIcon>
-            }
-          />
-          <PMButton
-            variant={'secondary'}
-            size="sm"
-            title={
-              isCurrentUser
-                ? 'Cannot remove yourself from organization'
-                : 'Remove user from organization'
-            }
-            onClick={() => onExcludeUser(userStatus)}
-            disabled={isCurrentUser}
-            children={
-              <PMIcon>
-                <LuUserMinus />
-              </PMIcon>
-            }
-          />
-        </>
-      )}
-    </PMButtonGroup>
-  );
+  async function onResendInvitation() {
+    await inviteUsers({
+      orgId: organizationId,
+      emails: [userStatus.email],
+      role: userStatus.role,
+    });
+  }
+
+  function onInvitationLinkCopied() {
+    pmToaster.create({
+      type: 'info',
+      title: 'The invitation link has been copied to your clipboard',
+    });
+  }
+
+  const menuOptions: PMEllipsisMenuProps = {
+    disabled: isCurrentUser,
+    actions: [],
+  };
+
+  if (userStatus.isActive) {
+    menuOptions.actions.push({
+      value: 'change-role',
+      content: (
+        <PMHStack gap={2}>
+          <PMIcon>
+            <LuUserCog />
+          </PMIcon>
+          <PMText color="secondary">Change role</PMText>
+        </PMHStack>
+      ),
+      onClick: onChangeRole,
+    });
+
+    menuOptions.actions.push({
+      value: 'remove-user',
+      content: (
+        <PMHStack gap={2}>
+          <PMIcon>
+            <LuUserMinus />
+          </PMIcon>
+          <PMText color="error">Remove user from organization</PMText>
+        </PMHStack>
+      ),
+      onClick: () => onExcludeUser(userStatus),
+    });
+  } else {
+    menuOptions.actions.push({
+      value: 'resend-invitation',
+      content: (
+        <PMHStack gap={2}>
+          <PMIcon>
+            <LuMail />
+          </PMIcon>
+          <PMText color="secondary">Resend invitation</PMText>
+        </PMHStack>
+      ),
+      onClick: onResendInvitation,
+    });
+
+    if (
+      userStatus.invitationStatus === 'pending' &&
+      userStatus.invitationLink
+    ) {
+      menuOptions.actions.push({
+        value: 'copy-invitation-link',
+        content: (
+          <PMCopiable.Root value={userStatus.invitationLink}>
+            <PMCopiable.Trigger asChild>
+              <PMHStack gap={2}>
+                <PMIcon>
+                  <LuLink />
+                </PMIcon>
+                <PMText color="secondary">Copy invitation link</PMText>
+              </PMHStack>
+            </PMCopiable.Trigger>
+          </PMCopiable.Root>
+        ),
+        onClick: onInvitationLinkCopied,
+      });
+    }
+  }
+
+  return <PMEllipsisMenu {...menuOptions} />;
 };

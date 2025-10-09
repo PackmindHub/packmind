@@ -43,7 +43,7 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Administration',
-      items: ['manage-organizations'],
+      items: ['manage-users', 'manage-ai-agents'],
     },
   ],
 };

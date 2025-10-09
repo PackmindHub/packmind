@@ -1,13 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { userGateway, authGateway } from '../gateways';
-
-export const GET_ME_QUERY_KEY = 'getMe';
-export const GET_USERS_IN_MY_ORGANIZATION_QUERY_KEY =
-  'getUsersInMyOrganization';
-export const GET_USER_STATUSES_QUERY_KEY = 'getUserStatuses';
+import {
+  GET_ME_KEY,
+  GET_USERS_IN_MY_ORGANIZATION_KEY,
+  GET_USER_STATUSES_KEY,
+} from '../queryKeys';
 
 export const getMeQueryOptions = () => ({
-  queryKey: [GET_ME_QUERY_KEY],
+  queryKey: GET_ME_KEY,
   queryFn: () => {
     return authGateway.getMe();
   },
@@ -21,9 +21,9 @@ export const useGetMeQuery = () => {
 
 export const useGetUsersInMyOrganizationQuery = () => {
   return useQuery({
-    queryKey: [GET_USERS_IN_MY_ORGANIZATION_QUERY_KEY],
+    queryKey: GET_USERS_IN_MY_ORGANIZATION_KEY,
     queryFn: () => {
-      return userGateway.getUsersInMyOrganization();
+      return userGateway.getUsersInMyOrganization({});
     },
     retry: false,
   });
@@ -31,7 +31,7 @@ export const useGetUsersInMyOrganizationQuery = () => {
 
 export const useGetUserStatusesQuery = () => {
   return useQuery({
-    queryKey: [GET_USER_STATUSES_QUERY_KEY],
+    queryKey: GET_USER_STATUSES_KEY,
     queryFn: () => {
       return userGateway.getUserStatuses();
     },

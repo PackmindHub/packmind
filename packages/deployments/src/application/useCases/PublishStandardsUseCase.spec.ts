@@ -1,9 +1,10 @@
 import { PublishStandardsUseCase } from './PublishStandardsUseCase';
 import { StandardsHexa } from '@packmind/standards';
 import { GitHexa } from '@packmind/git';
-import { CodingAgentHexa } from '@packmind/coding-agent';
+import { CodingAgentHexa, CodingAgents } from '@packmind/coding-agent';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
 import { TargetService } from '../services/TargetService';
+import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import {
   PublishStandardsCommand,
   DistributionStatus,
@@ -16,6 +17,8 @@ import {
   createGitCommitId,
   GitRepo,
   GitCommit,
+  DEFAULT_ACTIVE_RENDER_MODES,
+  RenderMode,
 } from '@packmind/shared';
 import { standardVersionFactory } from '@packmind/standards/test/standardVersionFactory';
 import { stubLogger } from '@packmind/shared/test';
@@ -30,10 +33,22 @@ describe('PublishStandardsUseCase', () => {
   let mockStandardsDeploymentRepository: jest.Mocked<IStandardsDeploymentRepository>;
   let mockTargetService: jest.Mocked<TargetService>;
   let mockLogger: ReturnType<typeof stubLogger>;
+  let mockRenderModeConfigurationService: jest.Mocked<RenderModeConfigurationService>;
 
   const userId = createUserId(uuidv4());
   const organizationId = createOrganizationId(uuidv4());
   const targetId = createTargetId(uuidv4());
+  const activeCodingAgents = [
+    CodingAgents.packmind,
+    CodingAgents.agents_md,
+    CodingAgents.claude,
+  ];
+
+  const activeRenderModes = [
+    RenderMode.PACKMIND,
+    RenderMode.AGENTS_MD,
+    RenderMode.GH_COPILOT,
+  ];
 
   beforeEach(() => {
     mockStandardsHexa = {
@@ -59,12 +74,25 @@ describe('PublishStandardsUseCase', () => {
 
     mockLogger = stubLogger();
 
+    mockRenderModeConfigurationService = {
+      resolveActiveCodingAgents: jest.fn(),
+      getActiveRenderModes: jest.fn(),
+      mapRenderModesToCodingAgents: jest.fn(),
+    } as unknown as jest.Mocked<RenderModeConfigurationService>;
+    mockRenderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue(
+      activeCodingAgents,
+    );
+    mockRenderModeConfigurationService.mapRenderModesToCodingAgents.mockReturnValue(
+      activeCodingAgents,
+    );
+
     useCase = new PublishStandardsUseCase(
       mockStandardsHexa,
       mockGitHexa,
       mockCodingAgentHexa,
       mockStandardsDeploymentRepository,
       mockTargetService,
+      mockRenderModeConfigurationService,
       mockLogger,
     );
   });
@@ -164,6 +192,22 @@ describe('PublishStandardsUseCase', () => {
       expect(result[0].standardVersions).toContainEqual(standardVersion);
     });
 
+    it('prepares deployment using resolved coding agents', async () => {
+      mockRenderModeConfigurationService.getActiveRenderModes.mockResolvedValueOnce(
+        activeRenderModes,
+      );
+
+      await useCase.execute(command);
+      expect(
+        mockRenderModeConfigurationService.mapRenderModesToCodingAgents,
+      ).toHaveBeenCalledWith(activeRenderModes);
+      expect(
+        mockCodingAgentHexa.prepareStandardsDeployment,
+      ).toHaveBeenCalledWith(
+        expect.objectContaining({ codingAgents: activeCodingAgents }),
+      );
+    });
+
     it('calls repository add with correct parameters', async () => {
       await useCase.execute(command);
 
@@ -174,6 +218,23 @@ describe('PublishStandardsUseCase', () => {
           target,
         }),
       );
+    });
+
+    describe('when configuration is missing', () => {
+      it('uses default render modes', async () => {
+        mockRenderModeConfigurationService.getActiveRenderModes.mockResolvedValueOnce(
+          DEFAULT_ACTIVE_RENDER_MODES,
+        );
+
+        await useCase.execute(command);
+
+        expect(
+          mockRenderModeConfigurationService.mapRenderModesToCodingAgents,
+        ).toHaveBeenCalledWith(DEFAULT_ACTIVE_RENDER_MODES);
+        expect(mockStandardsDeploymentRepository.add).toHaveBeenCalledWith(
+          expect.objectContaining({ renderModes: DEFAULT_ACTIVE_RENDER_MODES }),
+        );
+      });
     });
   });
 

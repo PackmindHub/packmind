@@ -69,6 +69,7 @@ describe('ListDeploymentsByStandardUseCase', () => {
           gitRepoId: createGitRepoId('repo-123'),
         },
         status: DistributionStatus.success,
+        renderModes: [],
       },
     ];
 
@@ -146,6 +147,7 @@ describe('ListDeploymentsByStandardUseCase', () => {
             gitRepoId: createGitRepoId('repo-123'),
           },
           status: DistributionStatus.success,
+          renderModes: [],
         },
         {
           id: createStandardsDeploymentId('deployment-2'),
@@ -171,6 +173,7 @@ describe('ListDeploymentsByStandardUseCase', () => {
             gitRepoId: createGitRepoId('repo-123'),
           },
           status: DistributionStatus.success,
+          renderModes: [],
         },
       ];
 

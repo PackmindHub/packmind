@@ -1,11 +1,14 @@
 import { PublishRecipesUseCase } from './PublishRecipesUseCase';
 import { GitHexa } from '@packmind/git';
-import { CodingAgentHexa } from '@packmind/coding-agent';
+import { CodingAgentHexa, CodingAgents } from '@packmind/coding-agent';
 import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
 import { TargetService } from '../services/TargetService';
+import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import {
   PublishRecipesCommand,
   DistributionStatus,
+  DEFAULT_ACTIVE_RENDER_MODES,
+  RenderMode,
   createRecipeVersionId,
   createTargetId,
   createUserId,
@@ -16,10 +19,12 @@ import {
   GitRepo,
   GitCommit,
   IRecipesPort,
+  PackmindLogger,
 } from '@packmind/shared';
 import { recipeVersionFactory } from '@packmind/recipes/test/recipeVersionFactory';
 import { targetFactory } from '../../../test/targetFactory';
 import { v4 as uuidv4 } from 'uuid';
+import { stubLogger } from '@packmind/shared/test';
 
 describe('PublishRecipesUseCase', () => {
   let useCase: PublishRecipesUseCase;
@@ -28,12 +33,26 @@ describe('PublishRecipesUseCase', () => {
   let mockCodingAgentHexa: jest.Mocked<CodingAgentHexa>;
   let mockRecipesDeploymentRepository: jest.Mocked<IRecipesDeploymentRepository>;
   let mockTargetService: jest.Mocked<TargetService>;
+  let mockRenderModeConfigurationService: jest.Mocked<RenderModeConfigurationService>;
+  let mockLogger: PackmindLogger;
 
   const userId = createUserId(uuidv4());
   const organizationId = createOrganizationId(uuidv4());
   const targetId = createTargetId(uuidv4());
+  const activeCodingAgents = [
+    CodingAgents.packmind,
+    CodingAgents.agents_md,
+    CodingAgents.copilot,
+  ];
+  const activeRenderModes = [
+    RenderMode.PACKMIND,
+    RenderMode.AGENTS_MD,
+    RenderMode.GH_COPILOT,
+  ];
 
   beforeEach(() => {
+    mockLogger = stubLogger();
+
     mockRecipesPort = {
       getRecipeVersionById: jest.fn(),
     } as unknown as jest.Mocked<IRecipesPort>;
@@ -55,12 +74,27 @@ describe('PublishRecipesUseCase', () => {
       getRepositoryByTargetId: jest.fn(),
     } as unknown as jest.Mocked<TargetService>;
 
+    mockRenderModeConfigurationService = {
+      resolveActiveCodingAgents: jest.fn(),
+      getActiveRenderModes: jest.fn(),
+      mapRenderModesToCodingAgents: jest.fn(),
+    } as unknown as jest.Mocked<RenderModeConfigurationService>;
+
+    mockRenderModeConfigurationService.getActiveRenderModes.mockResolvedValue(
+      activeRenderModes,
+    );
+    mockRenderModeConfigurationService.mapRenderModesToCodingAgents.mockReturnValue(
+      activeCodingAgents,
+    );
+
     useCase = new PublishRecipesUseCase(
       mockRecipesDeploymentRepository,
       mockGitHexa,
       mockRecipesPort,
       mockCodingAgentHexa,
       mockTargetService,
+      mockRenderModeConfigurationService,
+      mockLogger,
     );
   });
 
@@ -144,6 +178,38 @@ describe('PublishRecipesUseCase', () => {
       const result = await useCase.execute(command);
 
       expect(result[0].gitCommit).toEqual(gitCommit);
+    });
+
+    it('prepares deployment using coding agents mapped from render modes', async () => {
+      await useCase.execute(command);
+
+      expect(
+        mockRenderModeConfigurationService.getActiveRenderModes,
+      ).toHaveBeenCalledWith(organizationId);
+      expect(
+        mockRenderModeConfigurationService.mapRenderModesToCodingAgents,
+      ).toHaveBeenCalledWith(activeRenderModes);
+      expect(mockCodingAgentHexa.prepareRecipesDeployment).toHaveBeenCalledWith(
+        expect.objectContaining({ codingAgents: activeCodingAgents }),
+      );
+    });
+
+    describe('when configuration is missing', () => {
+      it('uses default render modes', async () => {
+        mockRenderModeConfigurationService.getActiveRenderModes.mockResolvedValueOnce(
+          DEFAULT_ACTIVE_RENDER_MODES,
+        );
+
+        const result = await useCase.execute(command);
+
+        expect(
+          mockRenderModeConfigurationService.mapRenderModesToCodingAgents,
+        ).toHaveBeenCalledWith(DEFAULT_ACTIVE_RENDER_MODES);
+        expect(result[0].renderModes).toEqual(DEFAULT_ACTIVE_RENDER_MODES);
+        expect(mockRecipesDeploymentRepository.add).toHaveBeenCalledWith(
+          expect.objectContaining({ renderModes: DEFAULT_ACTIVE_RENDER_MODES }),
+        );
+      });
     });
   });
 

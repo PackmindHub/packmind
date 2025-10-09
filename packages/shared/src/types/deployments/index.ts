@@ -1,5 +1,7 @@
 export * from './contracts';
 export * from './DistributionStatus';
+export * from './RenderMode';
+export * from './RenderModeConfiguration';
 export * from './StandardDeploymentOverview';
 export * from './RecipesDeployment';
 export * from './StandardsDeployment';

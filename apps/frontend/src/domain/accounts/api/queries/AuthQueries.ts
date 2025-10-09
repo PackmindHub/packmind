@@ -13,7 +13,14 @@ import {
   ResetPasswordCommand,
 } from '@packmind/shared/types';
 import { authGateway } from '../gateways';
-import { GET_ME_QUERY_KEY } from './UserQueries';
+import {
+  GET_ME_KEY,
+  GET_MCP_URL_KEY,
+  GET_CURRENT_API_KEY_KEY,
+  VALIDATE_INVITATION_KEY,
+  VALIDATE_PASSWORD_RESET_TOKEN_KEY,
+  SELECT_ORGANIZATION_KEY,
+} from '../queryKeys';
 
 type SignInRequest = SignInUserCommand;
 
@@ -22,15 +29,11 @@ const SIGN_IN_MUTATION_KEY = 'signIn';
 const SIGN_OUT_MUTATION_KEY = 'signOut';
 const SELECT_ORGANIZATION_MUTATION_KEY = 'selectOrganization';
 const GET_MCP_TOKEN_MUTATION_KEY = 'getMcpToken';
-const GET_MCP_URL_QUERY_KEY = 'getMcpURL';
 const GENERATE_API_KEY_MUTATION_KEY = 'generateApiKey';
-const GET_CURRENT_API_KEY_QUERY_KEY = 'getCurrentApiKey';
 const CHECK_EMAIL_AVAILABILITY_MUTATION_KEY = 'checkEmailAvailability';
-const VALIDATE_INVITATION_QUERY_KEY = 'validateInvitation';
 const ACTIVATE_USER_ACCOUNT_MUTATION_KEY = 'activateUserAccount';
 const REQUEST_PASSWORD_RESET_MUTATION_KEY = 'requestPasswordReset';
 const RESET_PASSWORD_MUTATION_KEY = 'resetPassword';
-const VALIDATE_PASSWORD_RESET_TOKEN_QUERY_KEY = 'validatePasswordResetToken';
 
 export const useSignUpWithOrganizationMutation = () => {
   const queryClient = useQueryClient();
@@ -44,7 +47,7 @@ export const useSignUpWithOrganizationMutation = () => {
     onSuccess: (data) => {
       console.log('User and organization created successfully:', data);
       // Invalidate authentication queries to refresh user state
-      queryClient.invalidateQueries({ queryKey: ['getMe'] });
+      queryClient.invalidateQueries({ queryKey: GET_ME_KEY });
     },
     onError: (error) => {
       console.error('Error signing up user with organization:', error);
@@ -63,7 +66,7 @@ export const useSignInMutation = () => {
     retry: false, // Disable retries for sign-in mutations
     onSuccess: (data) => {
       // Invalidate authentication queries to refresh user state
-      queryClient.invalidateQueries({ queryKey: ['getMe'] });
+      queryClient.invalidateQueries({ queryKey: GET_ME_KEY });
     },
     onError: (error) => {
       console.error('Error signing in user:', error);
@@ -82,7 +85,7 @@ export const useSignOutMutation = () => {
     onSuccess: (data) => {
       // Clear all queries to reset authentication state
       queryClient
-        .invalidateQueries({ queryKey: ['getMe'] })
+        .invalidateQueries({ queryKey: GET_ME_KEY })
         .then(() => queryClient.clear());
     },
     onError: (error) => {
@@ -108,7 +111,7 @@ export const useGetMcpTokenMutation = () => {
 
 export const useGetMcpURLQuery = () => {
   return useQuery({
-    queryKey: [GET_MCP_URL_QUERY_KEY],
+    queryKey: GET_MCP_URL_KEY,
     queryFn: () => authGateway.getMcpURL(),
     refetchOnMount: false,
     refetchOnWindowFocus: false,
@@ -117,7 +120,7 @@ export const useGetMcpURLQuery = () => {
 
 export const useGetCurrentApiKeyQuery = ({ userId }: { userId: UserId }) => {
   return useQuery({
-    queryKey: [GET_CURRENT_API_KEY_QUERY_KEY],
+    queryKey: GET_CURRENT_API_KEY_KEY,
     queryFn: () =>
       authGateway.getCurrentApiKey({
         userId,
@@ -139,7 +142,7 @@ export const useGenerateApiKeyMutation = () => {
       console.log('API key generated successfully:', data);
       // Invalidate current API key query to refresh the UI
       queryClient.invalidateQueries({
-        queryKey: [GET_CURRENT_API_KEY_QUERY_KEY],
+        queryKey: GET_CURRENT_API_KEY_KEY,
       });
     },
     onError: (error) => {
@@ -162,7 +165,7 @@ export const useCheckEmailAvailabilityMutation = () => {
 
 export const useValidateInvitationQuery = (token: string) => {
   return useQuery({
-    queryKey: [VALIDATE_INVITATION_QUERY_KEY, token],
+    queryKey: [...VALIDATE_INVITATION_KEY, token],
     queryFn: () => authGateway.validateInvitationToken(token),
     enabled: !!token,
     retry: false,
@@ -181,9 +184,9 @@ export const useActivateUserAccountMutation = () => {
     },
     onSuccess: (data) => {
       console.log('User account activated successfully:', data);
-      queryClient.invalidateQueries({ queryKey: [GET_ME_QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: GET_ME_KEY });
       queryClient.invalidateQueries({
-        queryKey: [VALIDATE_INVITATION_QUERY_KEY],
+        queryKey: VALIDATE_INVITATION_KEY,
       });
     },
     onError: (error) => {
@@ -209,7 +212,7 @@ export const useRequestPasswordResetMutation = () => {
 
 export const useValidatePasswordResetTokenQuery = (token: string) => {
   return useQuery({
-    queryKey: [VALIDATE_PASSWORD_RESET_TOKEN_QUERY_KEY, token],
+    queryKey: [...VALIDATE_PASSWORD_RESET_TOKEN_KEY, token],
     queryFn: () => authGateway.validatePasswordResetToken(token),
     enabled: !!token,
     retry: false,
@@ -228,9 +231,9 @@ export const useResetPasswordMutation = () => {
     },
     onSuccess: (data) => {
       console.log('Password reset successfully:', data);
-      queryClient.invalidateQueries({ queryKey: [GET_ME_QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: GET_ME_KEY });
       queryClient.invalidateQueries({
-        queryKey: [VALIDATE_PASSWORD_RESET_TOKEN_QUERY_KEY],
+        queryKey: VALIDATE_PASSWORD_RESET_TOKEN_KEY,
       });
     },
     onError: (error) => {
@@ -240,7 +243,7 @@ export const useResetPasswordMutation = () => {
 };
 
 export const getSelectOrganizationQueryOptions = (organizationId: string) => ({
-  queryKey: [SELECT_ORGANIZATION_MUTATION_KEY, organizationId],
+  queryKey: [...SELECT_ORGANIZATION_KEY, organizationId],
   queryFn: () =>
     authGateway.selectOrganization({
       organizationId: createOrganizationId(organizationId),
@@ -259,7 +262,7 @@ export const useSelectOrganizationMutation = () => {
     },
     onSuccess: (data) => {
       // Invalidate authentication queries to refresh user state
-      queryClient.invalidateQueries({ queryKey: [GET_ME_QUERY_KEY] });
+      queryClient.invalidateQueries({ queryKey: GET_ME_KEY });
     },
     onError: (error) => {
       console.error('Error selecting organization:', error);

@@ -6,7 +6,8 @@ set -euo pipefail
 # Instead of deleting everything and re-adding, this approach:
 # 1. Lists all files currently in the target repository (excluding .git and node_modules)
 # 2. Determines which files actually exist in the source repository (after applying whitelist)
-# 3. Removes only the files that no longer exist in the actual filtered source
+# 3. Applies protection rules to preserve certain files (like LICENSE) from deletion
+# 4. Removes only the files that no longer exist in the actual filtered source and are not protected
 #
 # Note: node_modules directories are automatically excluded as they contain generated dependencies.
 # This approach requires the PRIVATE_MAIN_SHA environment variable to be set.
@@ -138,9 +139,46 @@ sort "$actual_source_files_temp" -o "$actual_source_files_temp"
 
 echo "📋 Found $(wc -l < "$actual_source_files_temp" | tr -d ' ') files that should exist in target"
 
+# Define files that should never be deleted from the target repository
+# These files will be preserved even if they don't exist in the source
+PROTECTED_FILES=(
+  "LICENSE"
+)
+
 # Find files to remove (files in target that are NOT in actual source files)
 files_to_remove_temp=$(mktemp)
 comm -23 "$current_files_temp" "$actual_source_files_temp" > "$files_to_remove_temp"
+
+# Filter out protected files from the removal list
+files_to_remove_filtered_temp=$(mktemp)
+protected_files_found=()
+
+while IFS= read -r file_to_check; do
+  should_protect=false
+  for protected_file in "${PROTECTED_FILES[@]}"; do
+    if [ "$file_to_check" = "$protected_file" ]; then
+      should_protect=true
+      protected_files_found+=("$file_to_check")
+      break
+    fi
+  done
+  
+  if [ "$should_protect" = false ]; then
+    echo "$file_to_check" >> "$files_to_remove_filtered_temp"
+  fi
+done < "$files_to_remove_temp"
+
+# Inform about protected files
+if [ ${#protected_files_found[@]} -gt 0 ]; then
+  echo "🛡️  Protected files that will NOT be deleted:"
+  for protected_file in "${protected_files_found[@]}"; do
+    echo "  🔒 Protecting: $protected_file"
+  done
+  echo ""
+fi
+
+# Replace the original list with the filtered one
+mv "$files_to_remove_filtered_temp" "$files_to_remove_temp"
 
 files_to_remove_count=$(wc -l < "$files_to_remove_temp" | tr -d ' ')
 

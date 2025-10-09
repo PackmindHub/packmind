@@ -1,16 +1,6 @@
-import { NavLink } from 'react-router';
 import { PMPage } from '@packmind/ui';
 import { useAuthContext } from '../../src/domain/accounts/hooks';
 import { UsersPage } from '../../src/domain/accounts/components/UsersPage';
-import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
-
-export const handle = {
-  breadcrumb: ({ params }: { params: { orgSlug: string } }) => {
-    return (
-      <NavLink to={`/org/${params.orgSlug}/settings/users`}>Users</NavLink>
-    );
-  },
-};
 
 export default function SettingsUsersRouteModule() {
   const { organization } = useAuthContext();
@@ -20,11 +10,7 @@ export default function SettingsUsersRouteModule() {
   }
 
   return (
-    <PMPage
-      title="Users"
-      subtitle="Manage your organization users"
-      breadcrumbComponent={<AutobreadCrumb />}
-    >
+    <PMPage title="Users" subtitle="Manage your organization users">
       <UsersPage organizationId={organization.id} />
     </PMPage>
   );

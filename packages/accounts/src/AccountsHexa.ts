@@ -15,7 +15,6 @@ import {
   SignUpWithOrganizationCommand,
   SignInUserCommand,
   GetUserByIdCommand,
-  ListUsersCommand,
   ValidatePasswordCommand,
   CreateOrganizationCommand,
   GetOrganizationByIdCommand,
@@ -26,10 +25,11 @@ import {
   GetCurrentApiKeyCommand,
   CreateInvitationsCommand,
   CreateInvitationsResponse,
-  ListUsersResponse,
   SignUpWithOrganizationResponse,
   ListOrganizationUserStatusesCommand,
   ListOrganizationUserStatusesResponse,
+  ListOrganizationUsersCommand,
+  ListOrganizationUsersResponse,
   RemoveUserFromOrganizationCommand,
   RemoveUserFromOrganizationResponse,
   ListUserOrganizationsCommand,
@@ -160,14 +160,6 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts> {
   }
 
   /**
-   * List users (internal use only - not a public use case).
-   * @internal
-   */
-  async listUsers(command: ListUsersCommand): Promise<ListUsersResponse> {
-    return this.hexa.useCases.listUsers(command);
-  }
-
-  /**
    * Remove a user membership from an organization.
    */
   async removeUserFromOrganization(
@@ -261,6 +253,15 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts> {
     command: ListOrganizationUserStatusesCommand,
   ): Promise<ListOrganizationUserStatusesResponse> {
     return this.hexa.useCases.listOrganizationUserStatuses(command);
+  }
+
+  /**
+   * List organization users with email and role (member accessible).
+   */
+  async listOrganizationUsers(
+    command: ListOrganizationUsersCommand,
+  ): Promise<ListOrganizationUsersResponse> {
+    return this.hexa.useCases.listOrganizationUsers(command);
   }
 
   /**

@@ -10,7 +10,7 @@ import {
 
 import {
   ListOrganizationUserStatusesResponse,
-  ListUsersResponse,
+  ListOrganizationUsersResponse,
   User,
   UserId,
 } from '@packmind/accounts';
@@ -33,72 +33,6 @@ export class UsersController {
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('UsersController initialized');
-  }
-
-  @Get()
-  async getUsers(
-    @Req() request: AuthenticatedRequest,
-  ): Promise<ListUsersResponse> {
-    this.logger.info('GET /users - Fetching all users for organization', {
-      organizationId: request.organization.id,
-    });
-
-    try {
-      const response = await this.usersService.getUsers(
-        request.user.userId,
-        request.organization.id,
-      );
-      this.logger.info('GET /users - Users fetched successfully', {
-        userCount: response.users.length,
-        organizationId: request.organization.id,
-      });
-      return response;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error('GET /users - Failed to fetch users', {
-        error: errorMessage,
-      });
-      throw error;
-    }
-  }
-
-  @Get('organization')
-  async getUsersInMyOrganization(
-    @Req() request: AuthenticatedRequest,
-  ): Promise<ListUsersResponse['users']> {
-    this.logger.info(
-      'GET /users/organization - Fetching users in current organization',
-    );
-
-    try {
-      // Organization data is available in request from auth guard
-      const organization = request.organization;
-
-      const users = await this.usersService.getUsersByOrganizationId(
-        request.user.userId,
-        organization.id,
-      );
-
-      this.logger.info('GET /users/organization - Users fetched successfully', {
-        organizationId: organization.id,
-        organizationName: organization.name,
-        userCount: users.length,
-      });
-
-      return users;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /users/organization - Failed to fetch organization users',
-        {
-          organizationId: request.organization.id,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
   }
 
   @Get('statuses')
@@ -129,6 +63,40 @@ export class UsersController {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error('GET /users/statuses - Failed to fetch user statuses', {
+        error: errorMessage,
+        organizationId: request.organization.id,
+      });
+      throw error;
+    }
+  }
+
+  @Get('organization')
+  async getOrganizationUsers(
+    @Req() request: AuthenticatedRequest,
+  ): Promise<ListOrganizationUsersResponse> {
+    this.logger.info(
+      'GET /users/organization - Fetching users for organization',
+      {
+        organizationId: request.organization.id,
+      },
+    );
+
+    try {
+      const response = await this.usersService.getOrganizationUsers(
+        request.user.userId,
+        request.organization.id,
+      );
+
+      this.logger.info('GET /users/organization - Users fetched successfully', {
+        userCount: response.users.length,
+        organizationId: request.organization.id,
+      });
+
+      return response;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error('GET /users/organization - Failed to fetch users', {
         error: errorMessage,
         organizationId: request.organization.id,
       });

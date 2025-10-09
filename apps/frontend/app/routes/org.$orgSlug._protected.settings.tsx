@@ -4,16 +4,24 @@ import {
   Outlet,
   redirect,
   useNavigate,
+  useParams,
 } from 'react-router';
 import { queryClient } from '../../src/shared/data/queryClient';
 import {
   getMeQueryOptions,
   useGetMeQuery,
 } from '../../src/domain/accounts/api/queries/UserQueries';
-import { pmToaster } from '@packmind/ui';
+import {
+  PMFlex,
+  PMGrid,
+  PMHeading,
+  pmToaster,
+  PMVerticalNav,
+  PMVerticalNavSection,
+} from '@packmind/ui';
 import { useEffect } from 'react';
 import { MeResponse } from '@packmind/proprietary/frontend/domain/accounts/api/gateways/IAuthGateway';
-import * as toast from '@zag-js/toast';
+import { SidebarNavigationLink } from '../../src/domain/organizations/components/SidebarNavigation';
 
 type HasAccessResponse =
   | {
@@ -61,6 +69,7 @@ export const handle = {
 export default function SettingsIndexRouteModule() {
   const { data: me } = useGetMeQuery();
   const navigate = useNavigate();
+  const { orgSlug } = useParams();
 
   useEffect(() => {
     const hasAccessResponse = hasAccess(me);
@@ -70,5 +79,57 @@ export default function SettingsIndexRouteModule() {
     }
   }, [me, navigate]);
 
-  return <Outlet />;
+  return (
+    <PMGrid height={'full'} gridTemplateColumns={'fit-content(200px) 1fr'}>
+      <PMVerticalNav
+        logo={false}
+        headerNav={
+          <PMFlex height={'50px'} alignItems={'center'}>
+            <PMHeading level="h4" fontWeight={'bold'} color={'secondary'}>
+              Settings
+            </PMHeading>
+          </PMFlex>
+        }
+      >
+        <PMVerticalNavSection
+          navEntries={[
+            <SidebarNavigationLink
+              key="users"
+              url={`/org/${orgSlug}/settings/users`}
+              label="Users"
+              exact
+            />,
+          ]}
+        />
+
+        <PMVerticalNavSection
+          title="Distribution"
+          navEntries={[
+            <SidebarNavigationLink
+              key="git"
+              url={`/org/${orgSlug}/settings/git`}
+              label="Git"
+              exact
+            />,
+
+            <SidebarNavigationLink
+              key="rendering"
+              url={`/org/${orgSlug}/settings/distribution-rendering`}
+              label="Rendering"
+              exact
+            />,
+
+            <SidebarNavigationLink
+              key="targets"
+              url={`/org/${orgSlug}/settings/targets`}
+              label="Targets"
+              exact
+            />,
+          ]}
+        />
+      </PMVerticalNav>
+
+      <Outlet />
+    </PMGrid>
+  );
 }

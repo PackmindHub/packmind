@@ -61,6 +61,7 @@ describe('ListDeploymentsByRecipeUseCase', () => {
           status: DistributionStatus.success,
           authorId: 'author-123' as UserId,
           createdAt: new Date().toISOString(),
+          renderModes: [],
         },
       ];
 

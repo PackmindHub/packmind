@@ -13,7 +13,6 @@ import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipes
 import {
   CodingAgentHexa,
   PrepareRecipesDeploymentCommand,
-  CodingAgents,
 } from '@packmind/coding-agent';
 import { GitHexa } from '@packmind/git';
 import {
@@ -24,22 +23,21 @@ import {
 } from '@packmind/shared';
 import { PackmindLogger, UserId } from '@packmind/shared';
 import { TargetService } from '../services/TargetService';
-
-// import { GitRepo } from '@packmind/git';
+import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import { v4 as uuidv4 } from 'uuid';
 
-export class PublishRecipesUseCase implements IPublishRecipes {
-  private readonly logger: PackmindLogger;
+const origin = 'PublishRecipesUseCase';
 
+export class PublishRecipesUseCase implements IPublishRecipes {
   constructor(
     private readonly recipesDeploymentRepository: IRecipesDeploymentRepository,
     private readonly gitHexa: GitHexa,
     private readonly recipesPort: IRecipesPort,
     private readonly codingAgentHexa: CodingAgentHexa,
-    private readonly targetService: TargetService,
-  ) {
-    this.logger = new PackmindLogger('PublishRecipesUseCase');
-  }
+    public readonly targetService: TargetService,
+    public readonly renderModeConfigurationService: RenderModeConfigurationService,
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
+  ) {}
 
   async execute(command: PublishRecipesCommand): Promise<RecipesDeployment[]> {
     // Handle backward compatibility: if gitRepoIds is provided, convert to targets
@@ -62,6 +60,17 @@ export class PublishRecipesUseCase implements IPublishRecipes {
       recipeVersionIdsCount: command.recipeVersionIds.length,
       organizationId: command.organizationId,
     });
+
+    // Fetch organization's active render modes for deployment tracking
+    const activeRenderModes =
+      await this.renderModeConfigurationService.getActiveRenderModes(
+        command.organizationId as OrganizationId,
+      );
+
+    const codingAgents =
+      this.renderModeConfigurationService.mapRenderModesToCodingAgents(
+        activeRenderModes,
+      );
 
     // Group targets by repository
     const repositoryTargetsMap = new Map();
@@ -166,14 +175,7 @@ export class PublishRecipesUseCase implements IPublishRecipes {
           recipeVersions: allRecipeVersions,
           gitRepo,
           targets: targets,
-          codingAgents: [
-            CodingAgents.packmind,
-            CodingAgents.junie,
-            CodingAgents.claude,
-            CodingAgents.cursor,
-            CodingAgents.copilot,
-            CodingAgents.agents_md,
-          ], // Deploy to Packmind, Junie, Claude Code, Cursor, GitHub Copilot, and AGENTS.md
+          codingAgents,
         };
 
         const fileUpdates =
@@ -241,6 +243,7 @@ ${recipeVersions.map((rv) => `- ${rv.name} (${rv.slug}) v${rv.version}`).join('\
             gitCommit: gitCommit, // Shared across all targets in this repo (undefined for no_changes)
             target: target, // Unique for each deployment
             status: deploymentStatus,
+            renderModes: activeRenderModes,
           };
 
           // Save the deployment to the database
@@ -306,6 +309,12 @@ ${recipeVersions.map((rv) => `- ${rv.name} (${rv.slug}) v${rv.version}`).join('\
   ) {
     // Create failure deployment record
     try {
+      // Fetch organization's active render modes for deployment tracking
+      const activeRenderModes =
+        await this.renderModeConfigurationService.getActiveRenderModes(
+          command.organizationId as OrganizationId,
+        );
+
       // Get the recipe versions that were being deployed (for proper association)
       const recipeVersions = [];
       for (const recipeVersionId of command.recipeVersionIds) {
@@ -334,6 +343,7 @@ ${recipeVersions.map((rv) => `- ${rv.name} (${rv.slug}) v${rv.version}`).join('\
         target,
         status: DistributionStatus.failure,
         error,
+        renderModes: activeRenderModes,
       };
 
       await this.recipesDeploymentRepository.add(failureDeployment);
@@ -425,6 +435,12 @@ ${recipeVersions.map((rv) => `- ${rv.name} (${rv.slug}) v${rv.version}`).join('\
       throw new Error('gitRepoIds must be provided for legacy mode');
     }
 
+    // Fetch organization's active render modes for deployment tracking
+    const activeRenderModes =
+      await this.renderModeConfigurationService.getActiveRenderModes(
+        command.organizationId as OrganizationId,
+      );
+
     // Get targets for each repository and log targetIds
     const repositoryTargetsMap = new Map();
     for (const gitRepoId of command.gitRepoIds) {
@@ -468,6 +484,11 @@ ${recipeVersions.map((rv) => `- ${rv.name} (${rv.slug}) v${rv.version}`).join('\
     recipeVersions.sort((a, b) => a.name.localeCompare(b.name));
 
     const deployments: RecipesDeployment[] = [];
+
+    const codingAgents =
+      this.renderModeConfigurationService.mapRenderModesToCodingAgents(
+        activeRenderModes,
+      );
 
     for (const gitRepo of gitRepos) {
       const targets = repositoryTargetsMap.get(gitRepo.id) || [];
@@ -514,14 +535,7 @@ ${recipeVersions.map((rv) => `- ${rv.name} (${rv.slug}) v${rv.version}`).join('\
           recipeVersions: allRecipeVersions,
           gitRepo,
           targets,
-          codingAgents: [
-            CodingAgents.packmind,
-            CodingAgents.junie,
-            CodingAgents.claude,
-            CodingAgents.cursor,
-            CodingAgents.copilot,
-            CodingAgents.agents_md,
-          ], // Deploy to Packmind, Junie, Claude Code, Cursor, GitHub Copilot, and AGENTS.md
+          codingAgents,
         };
 
         const fileUpdates =
@@ -586,6 +600,7 @@ ${recipeVersions.map((rv) => `- ${rv.name} (${rv.slug}) v${rv.version}`).join('\
           createdAt: new Date().toISOString(),
           authorId: command.userId as UserId,
           organizationId: command.organizationId as OrganizationId,
+          renderModes: activeRenderModes,
         };
 
         // Save the deployment to the database

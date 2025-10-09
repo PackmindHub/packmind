@@ -1,31 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router';
-import {
-  PMHStack,
-  PMText,
-  PMVStack,
-  PMInput,
-  PMNativeSelect,
-  PMTabs,
-} from '@packmind/ui';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useSearchParams, useParams } from 'react-router';
+import { PMHStack, PMText, PMVStack, PMInput, PMTabs } from '@packmind/ui';
 import { RepositoryCentricView } from '../RepositoryCentricView';
-import { RecipeCentricView } from '../RecipeCentricView';
-import { StandardCentricView } from '../StandardCentricView';
+import { ArtifactsView } from '../ArtifactsView';
 import { TargetMultiSelect } from '../TargetMultiSelect';
+import { RepositoryMultiSelect } from '../RepositoryMultiSelect';
+import { StatusCombobox, type RepositoryStatus } from '../StatusCombobox';
 import {
   useGetRecipesDeploymentOverviewQuery,
   useGetStandardsDeploymentOverviewQuery,
 } from '../../api/queries/DeploymentsQueries';
-import { Target } from '@packmind/shared';
 import {
+  Target,
   TargetDeploymentStatus,
   TargetStandardDeploymentStatus,
 } from '@packmind/shared';
 
-type ViewMode = 'repositories' | 'recipes' | 'standards';
-type RepositoryFilter = 'all' | 'outdated';
-type RecipeFilter = 'all' | 'outdated' | 'undeployed';
-type StandardFilter = 'all' | 'outdated' | 'undeployed';
+type ViewMode = 'repositories' | 'artifacts';
 
 /**
  * Extracts unique targets from deployment data for filtering purposes
@@ -51,16 +42,17 @@ const extractAvailableTargets = (
   );
 };
 
+// StatusCombobox extracted to components/StatusCombobox
+
 export const DeploymentsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { orgSlug } = useParams() as { orgSlug?: string };
 
   // URL-synchronized state for viewMode
   const rawView = searchParams.get('view');
   const viewMode: ViewMode =
-    rawView === 'repositories' ||
-    rawView === 'recipes' ||
-    rawView === 'standards'
-      ? rawView
+    rawView === 'repositories' || rawView === 'artifacts'
+      ? (rawView as ViewMode)
       : 'repositories';
   const setViewMode = (newViewMode: ViewMode) => {
     setSearchParams((prev) => {
@@ -96,68 +88,65 @@ export const DeploymentsPage: React.FC = () => {
     setSearchTerm(urlSearchTerm);
   }, [urlSearchTerm]);
 
-  // URL-synchronized state for repositoryFilter
-  const rawRepoFilter = searchParams.get('repoFilter');
-  const repositoryFilter: RepositoryFilter =
-    rawRepoFilter === 'all' || rawRepoFilter === 'outdated'
-      ? rawRepoFilter
+  // URL-synchronized state for repository status filter
+  const rawRepoStatus = searchParams.get('repoStatus');
+  const repositoryStatus: RepositoryStatus =
+    rawRepoStatus === 'all' ||
+    rawRepoStatus === 'outdated' ||
+    rawRepoStatus === 'up-to-date'
+      ? (rawRepoStatus as RepositoryStatus)
       : 'all';
-  const setRepositoryFilter = (newRepositoryFilter: RepositoryFilter) => {
+  const setRepositoryStatus = (newStatus: RepositoryStatus) => {
     setSearchParams((prev) => {
       const newParams = new URLSearchParams(prev);
-      newParams.set('repoFilter', newRepositoryFilter);
+      newParams.set('repoStatus', newStatus);
       return newParams;
     });
   };
 
-  // URL-synchronized state for recipeFilter
-  const rawRecipeFilter = searchParams.get('recipeFilter');
-  const recipeFilter: RecipeFilter =
-    rawRecipeFilter === 'all' ||
-    rawRecipeFilter === 'outdated' ||
-    rawRecipeFilter === 'undeployed'
-      ? rawRecipeFilter
-      : 'all';
-  const setRecipeFilter = (newRecipeFilter: RecipeFilter) => {
-    setSearchParams((prev) => {
-      const newParams = new URLSearchParams(prev);
-      newParams.set('recipeFilter', newRecipeFilter);
-      return newParams;
-    });
-  };
-
-  // URL-synchronized state for standardFilter
-  const rawStandardFilter = searchParams.get('standardFilter');
-  const standardFilter: StandardFilter =
-    rawStandardFilter === 'all' ||
-    rawStandardFilter === 'outdated' ||
-    rawStandardFilter === 'undeployed'
-      ? rawStandardFilter
-      : 'all';
-  const setStandardFilter = (newStandardFilter: StandardFilter) => {
-    setSearchParams((prev) => {
-      const newParams = new URLSearchParams(prev);
-      newParams.set('standardFilter', newStandardFilter);
-      return newParams;
-    });
-  };
+  // Removed recipe/standard specific filters and views
 
   // URL-synchronized state for targetFilter (comma-separated target names)
   const rawTargetFilter = searchParams.get('targetFilter');
-  const selectedTargetNames: string[] = rawTargetFilter
-    ? rawTargetFilter.split(',')
-    : [];
-  const setSelectedTargetNames = (targetNames: string[]) => {
-    setSearchParams((prev) => {
-      const newParams = new URLSearchParams(prev);
-      if (targetNames.length > 0) {
-        newParams.set('targetFilter', targetNames.join(','));
-      } else {
-        newParams.delete('targetFilter');
-      }
-      return newParams;
-    });
-  };
+  const selectedTargetNames: string[] = useMemo(
+    () => (rawTargetFilter ? rawTargetFilter.split(',') : []),
+    [rawTargetFilter],
+  );
+
+  // URL-synchronized state for repository selection (comma-separated repo IDs)
+  const rawRepoIds = searchParams.get('repoIds');
+  const selectedRepoIds: string[] = useMemo(
+    () => (rawRepoIds ? rawRepoIds.split(',') : []),
+    [rawRepoIds],
+  );
+  const setSelectedRepoIds = useCallback(
+    (repoIds: string[]) => {
+      setSearchParams((prev) => {
+        const newParams = new URLSearchParams(prev);
+        if (repoIds.length > 0) {
+          newParams.set('repoIds', repoIds.join(','));
+        } else {
+          newParams.delete('repoIds');
+        }
+        return newParams;
+      });
+    },
+    [setSearchParams],
+  );
+  const setSelectedTargetNames = useCallback(
+    (targetNames: string[]) => {
+      setSearchParams((prev) => {
+        const newParams = new URLSearchParams(prev);
+        if (targetNames.length > 0) {
+          newParams.set('targetFilter', targetNames.join(','));
+        } else {
+          newParams.delete('targetFilter');
+        }
+        return newParams;
+      });
+    },
+    [setSearchParams],
+  );
 
   const {
     data: recipesData,
@@ -175,6 +164,41 @@ export const DeploymentsPage: React.FC = () => {
     recipesData?.targets,
     standardData?.targets,
   );
+
+  // Build available repositories list for combobox (from targets, since repository view is target-based)
+  const availableRepositories = useMemo(() => {
+    const map = new Map<
+      string,
+      { id: string; owner: string; repo: string; branch?: string | null }
+    >();
+    const add = (gitRepo?: {
+      id: string;
+      owner: string;
+      repo: string;
+      branch?: string | null;
+    }) => {
+      if (!gitRepo) return;
+      if (!map.has(gitRepo.id)) map.set(gitRepo.id, gitRepo);
+    };
+    recipesData?.targets?.forEach((t) => add(t.gitRepo));
+    standardData?.targets?.forEach((t) => add(t.gitRepo));
+    return Array.from(map.values()).sort((a, b) =>
+      (a.owner + '/' + a.repo).localeCompare(b.owner + '/' + b.repo),
+    );
+  }, [recipesData?.targets, standardData?.targets]);
+
+  // Cleanup invalid selectedRepoIds when data updates
+  useEffect(() => {
+    if (selectedRepoIds.length > 0 && availableRepositories.length > 0) {
+      const validIds = new Set(availableRepositories.map((r) => r.id));
+      const filtered = Array.from(
+        new Set(selectedRepoIds.filter((id) => validIds.has(id))),
+      );
+      if (filtered.length !== selectedRepoIds.length) {
+        setSelectedRepoIds(filtered);
+      }
+    }
+  }, [availableRepositories, selectedRepoIds, setSelectedRepoIds]);
 
   // Automatic cleanup of invalid target names when data updates
   useEffect(() => {
@@ -208,16 +232,15 @@ export const DeploymentsPage: React.FC = () => {
     return <PMText>No deployment data available</PMText>;
   }
 
+  let searchPlaceholder: string;
+  if (viewMode === 'repositories') searchPlaceholder = 'Search repositories...';
+  // recipes/standards views removed
+  else searchPlaceholder = 'Search artifacts...';
+
   const searchField = (
     <PMInput
       id="deployment-search"
-      placeholder={
-        viewMode === 'repositories'
-          ? 'Search repositories...'
-          : viewMode === 'recipes'
-            ? 'Search recipes...'
-            : 'Search standards...'
-      }
+      placeholder={searchPlaceholder}
       value={searchTerm}
       onChange={(e) => setSearchTerm(e.target.value)}
       width="300px"
@@ -227,22 +250,21 @@ export const DeploymentsPage: React.FC = () => {
   const renderRepositoriesView = () => (
     <PMVStack gap={4} marginTop={4} align={'stretch'}>
       <PMHStack gap={4}>
-        {searchField}
+        <RepositoryMultiSelect
+          availableRepositories={availableRepositories}
+          selectedRepoIds={selectedRepoIds}
+          onSelectionChange={setSelectedRepoIds}
+          placeholder="All repositories"
+        />
         <TargetMultiSelect
           availableTargets={availableTargets}
           selectedTargetNames={selectedTargetNames}
           onSelectionChange={setSelectedTargetNames}
-          placeholder="Filter by targets..."
+          placeholder="All targets"
         />
-        <PMNativeSelect
-          value={repositoryFilter}
-          items={[
-            { label: 'All targets', value: 'all' },
-            { label: 'Only outdated targets', value: 'outdated' },
-          ]}
-          onChange={(e) =>
-            setRepositoryFilter(e.target.value as RepositoryFilter)
-          }
+        <StatusCombobox
+          value={repositoryStatus}
+          onChange={setRepositoryStatus}
         />
       </PMHStack>
       <RepositoryCentricView
@@ -251,57 +273,32 @@ export const DeploymentsPage: React.FC = () => {
         recipeTargets={recipesData.targets}
         standardTargets={standardData?.targets}
         searchTerm={searchTerm}
-        showOnlyOutdated={repositoryFilter === 'outdated'}
+        artifactStatusFilter={repositoryStatus}
         selectedTargetNames={selectedTargetNames}
+        orgSlug={orgSlug}
+        selectedRepoIds={selectedRepoIds}
       />
     </PMVStack>
   );
 
-  const renderRecipesView = () => (
+  // Removed recipe and standard views
+
+  const renderArtifactsView = () => (
     <PMVStack gap={4} marginTop={4} align={'stretch'}>
       <PMHStack gap={4}>
         {searchField}
-        <PMNativeSelect
-          value={recipeFilter}
-          onChange={(e) => setRecipeFilter(e.target.value as RecipeFilter)}
-          items={[
-            { label: 'All recipes', value: 'all' },
-            { label: 'Outdated recipes', value: 'outdated' },
-            { label: 'Undeployed recipes', value: 'undeployed' },
-          ]}
+        <StatusCombobox
+          value={repositoryStatus}
+          onChange={setRepositoryStatus}
         />
       </PMHStack>
-      <RecipeCentricView
+      <ArtifactsView
         recipes={recipesData.recipes}
+        standards={standardData?.standards || []}
         searchTerm={searchTerm}
-        showOnlyOutdated={recipeFilter === 'outdated'}
-        showOnlyUndeployed={recipeFilter === 'undeployed'}
+        artifactStatusFilter={repositoryStatus}
+        orgSlug={orgSlug}
       />
-    </PMVStack>
-  );
-
-  const renderStandardView = () => (
-    <PMVStack gap={4} marginTop={4} align={'stretch'}>
-      <PMHStack gap={4}>
-        {searchField}
-        <PMNativeSelect
-          value={standardFilter}
-          onChange={(e) => setStandardFilter(e.target.value as StandardFilter)}
-          items={[
-            { label: 'All standards', value: 'all' },
-            { label: 'Outdated standards', value: 'outdated' },
-            { label: 'Undeployed standards', value: 'undeployed' },
-          ]}
-        />
-      </PMHStack>
-      {standardData && (
-        <StandardCentricView
-          standards={standardData.standards}
-          searchTerm={searchTerm}
-          showOnlyOutdated={standardFilter === 'outdated'}
-          showOnlyUndeployed={standardFilter === 'undeployed'}
-        />
-      )}
     </PMVStack>
   );
 
@@ -318,14 +315,9 @@ export const DeploymentsPage: React.FC = () => {
           content: renderRepositoriesView(),
         },
         {
-          value: 'recipes',
-          triggerLabel: 'Recipes',
-          content: renderRecipesView(),
-        },
-        {
-          value: 'standards',
-          triggerLabel: 'Standards',
-          content: renderStandardView(),
+          value: 'artifacts',
+          triggerLabel: 'Artifacts',
+          content: renderArtifactsView(),
         },
       ]}
     />

@@ -5,8 +5,8 @@ import { FileUpdates } from '../../../domain/entities/FileUpdates';
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
 import { PackmindLogger, Target } from '@packmind/shared';
 import { GenericRecipeSectionWriter } from '../genericSectionWriter/GenericRecipeSectionWriter';
+import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
 import { getTargetPrefixedPath } from '../utils/FileUtils';
-import { GenericStandardWriter } from '../genericSectionWriter/GenericStandardWriter';
 
 const origin = 'CopilotDeployer';
 
@@ -200,7 +200,11 @@ ${packmindInstructions}`;
     const content = `---
 applyTo: '${applyTo}'
 ---
-${GenericStandardWriter.writeStandard(standardVersion, rules)}`;
+${GenericStandardSectionWriter.formatStandardContent({
+  standardVersion,
+  rules,
+  link: `../../.packmind/standards/${standardVersion.slug}.md`,
+})}`;
 
     const path = `.github/instructions/packmind-${standardVersion.slug}.instructions.md`;
 

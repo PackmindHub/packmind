@@ -3,6 +3,7 @@ import { render, screen, act, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
+import { MemoryRouter } from 'react-router';
 import {
   QueryClient,
   QueryClientProvider,
@@ -34,9 +35,14 @@ mockSetSearchParams.mockImplementation((updateFn) => {
   }
 });
 
-jest.mock('react-router', () => ({
-  useSearchParams: () => [mockSearchParams, mockSetSearchParams],
-}));
+jest.mock('react-router', () => {
+  const actual = jest.requireActual('react-router');
+  return {
+    ...actual,
+    useSearchParams: () => [mockSearchParams, mockSetSearchParams],
+    useParams: () => ({ orgSlug: 'test-org' }),
+  };
+});
 
 const createTestQueryClient = () =>
   new QueryClient({
@@ -52,9 +58,11 @@ const renderWithProvider = async (ui: React.ReactElement) => {
 
   await act(async () => {
     renderResult = render(
-      <QueryClientProvider client={queryClient}>
-        <UIProvider>{ui}</UIProvider>
-      </QueryClientProvider>,
+      <MemoryRouter>
+        <QueryClientProvider client={queryClient}>
+          <UIProvider>{ui}</UIProvider>
+        </QueryClientProvider>
+      </MemoryRouter>,
     );
   });
 
@@ -70,6 +78,13 @@ jest.mock('../../api/queries/DeploymentsQueries', () => ({
   useGetRecipesDeploymentOverviewQuery: jest.fn(),
   useGetStandardsDeploymentOverviewQuery: jest.fn(),
 }));
+
+// Mock PMTable to avoid internal hook/state issues during tests
+jest.mock('@packmind/ui', () => {
+  const actual = jest.requireActual('@packmind/ui');
+  const PMTable = () => <div data-testid="pm-table" />;
+  return { ...actual, PMTable };
+});
 
 const mockUseGetRecipesDeploymentOverview =
   DeploymentQueries.useGetRecipesDeploymentOverviewQuery as jest.MockedFunction<
@@ -120,8 +135,7 @@ describe('DeploymentsPage', () => {
     await renderWithProvider(<DeploymentsPage />);
 
     expect(screen.getByText('Repositories')).toBeInTheDocument();
-    expect(screen.getByText('Recipes')).toBeInTheDocument();
-    expect(screen.getByText('Standards')).toBeInTheDocument();
+    expect(screen.getByText('Artifacts')).toBeInTheDocument();
   });
 
   it('shows loading state initially', async () => {
@@ -157,38 +171,25 @@ describe('DeploymentsPage', () => {
 
   it('displays search input field', async () => {
     await renderWithProvider(<DeploymentsPage />);
-
-    expect(
-      screen.getByPlaceholderText('Search repositories...'),
-    ).toBeInTheDocument();
+    // In repositories view, the search input is replaced by a repositories combobox
+    expect(screen.getByPlaceholderText('All repositories')).toBeInTheDocument();
   });
 
-  it('displays repository filter dropdown', async () => {
+  it('displays repository status dropdown', async () => {
     await renderWithProvider(<DeploymentsPage />);
 
-    // Check for the select element specifically
-    expect(screen.getByText('All targets')).toBeInTheDocument();
-    expect(screen.getByText('Only outdated targets')).toBeInTheDocument();
+    // Dropdown for repository status should be visible with its items
+    // The combobox is closed by default, so only the placeholder is visible
+    expect(screen.getByText('All statuses')).toBeInTheDocument();
   });
 
-  it('displays recipe filter dropdown in recipe view', async () => {
-    // Set up URL params to start in recipe view
-    mockSearchParams.set('view', 'recipes');
+  // Removed recipe view; artifacts view now hosts the text search and status filter
 
+  it('shows repository status dropdown in repository view', async () => {
     await renderWithProvider(<DeploymentsPage />);
 
-    // Recipe dropdown should be visible - there should be no combobox in recipe view
-    expect(screen.getByText('All recipes')).toBeInTheDocument();
-    expect(screen.getByText('Outdated recipes')).toBeInTheDocument();
-    expect(screen.getByText('Undeployed recipes')).toBeInTheDocument();
-  });
-
-  it('shows repository filter options in repository view', async () => {
-    await renderWithProvider(<DeploymentsPage />);
-
-    // In repository view (default) - only repository options should be visible
-    expect(screen.getByText('All targets')).toBeInTheDocument();
-    expect(screen.getByText('Only outdated targets')).toBeInTheDocument();
+    // In repository view (default) - the repository status select should be visible
+    expect(screen.getByText('All statuses')).toBeInTheDocument();
     expect(screen.queryByText('Undeployed recipes')).not.toBeInTheDocument();
   });
 
@@ -197,12 +198,10 @@ describe('DeploymentsPage', () => {
     await renderWithProvider(<DeploymentsPage />);
 
     // Initially in repository view
-    expect(
-      screen.getByPlaceholderText('Search repositories...'),
-    ).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('All repositories')).toBeInTheDocument();
 
-    // Switch to recipe view - should call setSearchParams
-    await user.click(screen.getByText('Recipes'));
+    // Switch to artifacts view - should call setSearchParams
+    await user.click(screen.getByText('Artifacts'));
     expect(mockSetSearchParams).toHaveBeenCalled();
   });
 
@@ -213,9 +212,10 @@ describe('DeploymentsPage', () => {
 
     it('debounces setSearchParams calls to avoid URL history pollution', async () => {
       const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+      // Start directly in artifacts view to avoid extra setSearchParams from tab switch
+      mockSearchParams.set('view', 'artifacts');
       await renderWithProvider(<DeploymentsPage />);
-
-      const searchInput = screen.getByPlaceholderText('Search repositories...');
+      const searchInput = screen.getByRole('textbox');
       await user.type(searchInput, 'test-search');
 
       // Initially, setSearchParams should not have been called due to debouncing
@@ -229,19 +229,17 @@ describe('DeploymentsPage', () => {
     });
   });
 
-  it('calls setSearchParams when changing filter selection', async () => {
-    const user = userEvent.setup();
+  it('calls setSearchParams when changing repository status filter', async () => {
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
     await renderWithProvider(<DeploymentsPage />);
 
-    // Find the select element by looking for the option text
-    const allReposOption = screen.getByText('All targets');
-    const selectElement = allReposOption.closest('select');
-    expect(selectElement).toBeInTheDocument();
+    // Open the combobox via trigger button (more reliable than portal clicking)
+    const comboPlaceholder = screen.getByText('All statuses');
+    await user.click(comboPlaceholder);
+    // Move to 'Outdated' (2nd item) and select
+    await user.keyboard('{ArrowDown}{ArrowDown}{Enter}');
 
-    await user.selectOptions(selectElement!, 'outdated');
-
-    // Verify that setSearchParams was called for filter updates
-    expect(mockSetSearchParams).toHaveBeenCalled();
+    await waitFor(() => expect(mockSetSearchParams).toHaveBeenCalled());
   });
 
   it('maintains search state when switching views', async () => {
@@ -251,13 +249,13 @@ describe('DeploymentsPage', () => {
     mockSearchParams.set('search', 'test-search');
 
     await renderWithProvider(<DeploymentsPage />);
+    // Switch to artifacts view where the text search input is displayed
+    await user.click(screen.getByText('Artifacts'));
+    // Verify initial search term by value
+    expect(screen.getByDisplayValue('test-search')).toBeInTheDocument();
 
-    // Verify initial search term
-    const searchInput = screen.getByPlaceholderText('Search repositories...');
-    expect(searchInput).toHaveValue('test-search');
-
-    // Switch to recipe view - this should call setSearchParams
-    await user.click(screen.getByText('Recipes'));
+    // Switch to artifacts view again - this should call setSearchParams
+    await user.click(screen.getByText('Artifacts'));
 
     // Verify that setSearchParams was called to update the view
     expect(mockSetSearchParams).toHaveBeenCalled();

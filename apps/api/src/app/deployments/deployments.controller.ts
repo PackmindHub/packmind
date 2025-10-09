@@ -9,6 +9,11 @@ import {
   PublishStandardsCommand,
   TargetId,
   DistributionStatus,
+  UpdateRenderModeConfigurationCommand,
+  RenderModeConfiguration,
+  RenderMode,
+  GetRenderModeConfigurationCommand,
+  GetRenderModeConfigurationResult,
 } from '@packmind/shared';
 import { DeploymentsService } from './deployments.service';
 import { PackmindLogger } from '@packmind/shared';
@@ -283,6 +288,85 @@ export class DeploymentsController {
         error instanceof Error ? error.message : String(error);
       this.logger.error(
         'POST /deployments/standards/publish - Failed to publish standards',
+        {
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Get('renderModeConfiguration')
+  async getRenderModeConfiguration(
+    @Req() request: AuthenticatedRequest,
+  ): Promise<GetRenderModeConfigurationResult> {
+    this.logger.info(
+      'GET /deployments/renderModeConfiguration - Fetching render mode configuration',
+    );
+
+    try {
+      const command: GetRenderModeConfigurationCommand =
+        this.authService.makePackmindCommand(request);
+
+      const result =
+        await this.deploymentsService.getRenderModeConfiguration(command);
+
+      this.logger.info(
+        'GET /deployments/renderModeConfiguration - Render mode configuration fetched successfully',
+        {
+          hasConfiguration: result.configuration !== null,
+          activeRenderModes: result.configuration?.activeRenderModes,
+        },
+      );
+
+      return result;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /deployments/renderModeConfiguration - Failed to fetch render mode configuration',
+        {
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Post('renderModeConfiguration')
+  async updateRenderModeConfiguration(
+    @Body() body: { activeRenderModes: RenderMode[] },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<RenderModeConfiguration> {
+    this.logger.info(
+      'POST /deployments/renderModeConfiguration - Updating render mode configuration',
+      {
+        requestedRenderModes: body.activeRenderModes,
+      },
+    );
+
+    try {
+      const command: UpdateRenderModeConfigurationCommand =
+        this.authService.makePackmindCommand(request, {
+          activeRenderModes: body.activeRenderModes,
+        });
+
+      const configuration =
+        await this.deploymentsService.updateRenderModeConfiguration(command);
+
+      this.logger.info(
+        'POST /deployments/renderModeConfiguration - Render mode configuration updated successfully',
+        {
+          activeRenderModes: configuration.activeRenderModes,
+        },
+      );
+
+      return configuration;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /deployments/renderModeConfiguration - Failed to update render mode configuration',
         {
           error: errorMessage,
         },

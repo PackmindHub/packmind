@@ -1,23 +1,15 @@
 import { CaptureRecipeUsecase } from './captureRecipe.usecase';
 import { RecipeService } from '../../services/RecipeService';
 import { RecipeVersionService } from '../../services/RecipeVersionService';
-import { Recipe, createRecipeId } from '../../../domain/entities/Recipe';
-import {
-  RecipeVersion,
-  createRecipeVersionId,
-} from '../../../domain/entities/RecipeVersion';
+import { createRecipeId } from '../../../domain/entities/Recipe';
+import { createRecipeVersionId } from '../../../domain/entities/RecipeVersion';
 import { recipeFactory } from '../../../../test/recipeFactory';
 import { recipeVersionFactory } from '../../../../test/recipeVersionFactory';
 import { v4 as uuidv4 } from 'uuid';
 import slug from 'slug';
-import { PackmindLogger, AiNotConfigured } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/shared';
 import { stubLogger } from '@packmind/shared/test';
-import {
-  createOrganizationId,
-  createUserId,
-  OrganizationId,
-  UserId,
-} from '@packmind/accounts';
+import { createOrganizationId, createUserId } from '@packmind/accounts';
 import { RecipeSummaryService } from '../../services/RecipeSummaryService';
 
 // Mock external dependencies
@@ -75,42 +67,225 @@ describe('CaptureRecipeUsecase', () => {
     jest.clearAllMocks();
   });
 
-  describe('captureRecipe', () => {
-    describe('when recipe creation succeeds', () => {
-      let inputData: {
-        name: string;
-        content: string;
-        organizationId: OrganizationId;
-        userId: UserId;
-      };
-      let createdRecipe: Recipe;
-      let createdRecipeVersion: RecipeVersion;
-      let result: Recipe;
+  describe('assembleRecipeContent', () => {
+    it('assembles content with all sections', () => {
+      const summary = 'Create user authentication flow';
+      const whenToUse = ['Adding login functionality', 'Implementing OAuth'];
+      const contextValidationCheckpoints = [
+        'User model exists',
+        'Database is configured',
+      ];
+      const steps = [
+        {
+          name: 'Setup Dependencies',
+          description: 'Install required packages',
+          codeSnippet: 'npm install passport',
+        },
+        {
+          name: 'Configure Routes',
+          description: 'Add authentication routes',
+        },
+      ];
 
-      beforeEach(async () => {
-        inputData = {
+      const result = captureRecipeUsecase.assembleRecipeContent(
+        summary,
+        whenToUse,
+        contextValidationCheckpoints,
+        steps,
+      );
+
+      expect(result).toContain('Create user authentication flow');
+      expect(result).toContain('## When to Use');
+      expect(result).toContain('- Adding login functionality');
+      expect(result).toContain('- Implementing OAuth');
+      expect(result).toContain('## Context Validation Checkpoints');
+      expect(result).toContain('* [ ] User model exists');
+      expect(result).toContain('* [ ] Database is configured');
+      expect(result).toContain('## Recipe Steps');
+      expect(result).toContain('### Step 1: Setup Dependencies');
+      expect(result).toContain('Install required packages');
+      expect(result).toContain('npm install passport');
+      expect(result).toContain('### Step 2: Configure Routes');
+      expect(result).toContain('Add authentication routes');
+    });
+
+    describe('when other sections are empty', () => {
+      it('assembles content with only summary', () => {
+        const summary = 'Simple recipe';
+        const whenToUse: string[] = [];
+        const contextValidationCheckpoints: string[] = [];
+        const steps: {
+          name: string;
+          description: string;
+          codeSnippet?: string;
+        }[] = [];
+
+        const result = captureRecipeUsecase.assembleRecipeContent(
+          summary,
+          whenToUse,
+          contextValidationCheckpoints,
+          steps,
+        );
+
+        expect(result).toBe('Simple recipe');
+        expect(result).not.toContain('## When to Use');
+        expect(result).not.toContain('## Context Validation Checkpoints');
+        expect(result).not.toContain('## Recipe Steps');
+      });
+    });
+
+    describe('when W-hen to Use section is empty', () => {
+      it('omits W-hen to Use section', () => {
+        const summary = 'Test recipe';
+        const whenToUse: string[] = [];
+        const contextValidationCheckpoints = ['Check prerequisites'];
+        const steps = [{ name: 'Step One', description: 'Do something' }];
+
+        const result = captureRecipeUsecase.assembleRecipeContent(
+          summary,
+          whenToUse,
+          contextValidationCheckpoints,
+          steps,
+        );
+
+        expect(result).toContain('Test recipe');
+        expect(result).not.toContain('## When to Use');
+        expect(result).toContain('## Context Validation Checkpoints');
+        expect(result).toContain('## Recipe Steps');
+      });
+    });
+
+    describe('when Context Validation Checkpoints section is empty', () => {
+      it('omits Context Validation Checkpoints section', () => {
+        const summary = 'Test recipe';
+        const whenToUse = ['Scenario one'];
+        const contextValidationCheckpoints: string[] = [];
+        const steps = [{ name: 'Step One', description: 'Do something' }];
+
+        const result = captureRecipeUsecase.assembleRecipeContent(
+          summary,
+          whenToUse,
+          contextValidationCheckpoints,
+          steps,
+        );
+
+        expect(result).toContain('Test recipe');
+        expect(result).toContain('## When to Use');
+        expect(result).not.toContain('## Context Validation Checkpoints');
+        expect(result).toContain('## Recipe Steps');
+      });
+    });
+
+    describe('when Recipe Steps section is empty', () => {
+      it('omits Recipe Steps section', () => {
+        const summary = 'Test recipe';
+        const whenToUse = ['Scenario one'];
+        const contextValidationCheckpoints = ['Check prerequisites'];
+        const steps: {
+          name: string;
+          description: string;
+          codeSnippet?: string;
+        }[] = [];
+
+        const result = captureRecipeUsecase.assembleRecipeContent(
+          summary,
+          whenToUse,
+          contextValidationCheckpoints,
+          steps,
+        );
+
+        expect(result).toContain('Test recipe');
+        expect(result).toContain('## When to Use');
+        expect(result).toContain('## Context Validation Checkpoints');
+        expect(result).not.toContain('## Recipe Steps');
+      });
+    });
+
+    it('formats steps without code snippets correctly', () => {
+      const summary = 'Test recipe';
+      const steps = [
+        {
+          name: 'First Step',
+          description: 'This is the description',
+        },
+        {
+          name: 'Second Step',
+          description: 'Another description',
+        },
+      ];
+
+      const result = captureRecipeUsecase.assembleRecipeContent(
+        summary,
+        [],
+        [],
+        steps,
+      );
+
+      expect(result).toContain('### Step 1: First Step');
+      expect(result).toContain('This is the description');
+      expect(result).toContain('### Step 2: Second Step');
+      expect(result).toContain('Another description');
+    });
+
+    it('formats steps with code snippets correctly', () => {
+      const summary = 'Test recipe';
+      const steps = [
+        {
+          name: 'Install Package',
+          description: 'Install the required package',
+          codeSnippet: '```bash\nnpm install express\n```',
+        },
+      ];
+
+      const result = captureRecipeUsecase.assembleRecipeContent(
+        summary,
+        [],
+        [],
+        steps,
+      );
+
+      expect(result).toContain('### Step 1: Install Package');
+      expect(result).toContain('Install the required package');
+      expect(result).toContain('```bash\nnpm install express\n```');
+    });
+  });
+
+  describe('execute', () => {
+    describe('when summary is provided', () => {
+      it('uses provided summary without calling recipeSummaryService', async () => {
+        const inputData = {
           name: 'Test Recipe',
-          content: 'Test recipe content',
-          organizationId: createOrganizationId(uuidv4()),
-          userId: createUserId(uuidv4()),
+          summary: 'Provided summary',
+          whenToUse: [],
+          contextValidationCheckpoints: [],
+          steps: [],
+          organizationId: uuidv4(),
+          userId: uuidv4(),
         };
 
-        createdRecipe = recipeFactory({
+        const expectedContent = captureRecipeUsecase.assembleRecipeContent(
+          inputData.summary,
+          inputData.whenToUse,
+          inputData.contextValidationCheckpoints,
+          inputData.steps,
+        );
+
+        const createdRecipe = recipeFactory({
           id: createRecipeId(uuidv4()),
           name: inputData.name,
           slug: 'test-recipe',
-          content: inputData.content,
+          content: expectedContent,
           version: 1,
         });
 
-        createdRecipeVersion = recipeVersionFactory({
+        const createdRecipeVersion = recipeVersionFactory({
           id: createRecipeVersionId(uuidv4()),
           recipeId: createdRecipe.id,
           name: inputData.name,
           slug: 'test-recipe',
-          content: inputData.content,
+          content: expectedContent,
           version: 1,
-          summary: 'AI-generated summary for test recipe',
+          summary: inputData.summary,
         });
 
         recipeService.addRecipe.mockResolvedValue(createdRecipe);
@@ -118,56 +293,447 @@ describe('CaptureRecipeUsecase', () => {
           createdRecipeVersion,
         );
 
-        result = await captureRecipeUsecase.execute(inputData);
+        await captureRecipeUsecase.execute(inputData);
+
+        expect(recipeSummaryService.createRecipeSummary).not.toHaveBeenCalled();
       });
 
-      it('generates the correct slug from the recipe name', () => {
-        expect(mockSlug).toHaveBeenCalledWith(inputData.name);
-      });
+      it('passes provided summary to RecipeVersionService', async () => {
+        const inputData = {
+          name: 'Test Recipe',
+          summary: 'Provided summary',
+          whenToUse: [],
+          contextValidationCheckpoints: [],
+          steps: [],
+          organizationId: uuidv4(),
+          userId: uuidv4(),
+        };
 
-      it('calls RecipeService.addRecipe with correct parameters', () => {
-        expect(recipeService.addRecipe).toHaveBeenCalledWith({
+        const createdRecipe = recipeFactory({
+          id: createRecipeId(uuidv4()),
           name: inputData.name,
           slug: 'test-recipe',
-          content: inputData.content,
+          content: inputData.summary,
           version: 1,
-          organizationId: inputData.organizationId,
-          userId: inputData.userId,
         });
-      });
 
-      it('calls RecipeVersionService.addRecipeVersion with correct parameters', () => {
+        const createdRecipeVersion = recipeVersionFactory({
+          id: createRecipeVersionId(uuidv4()),
+          recipeId: createdRecipe.id,
+          version: 1,
+        });
+
+        recipeService.addRecipe.mockResolvedValue(createdRecipe);
+        recipeVersionService.addRecipeVersion.mockResolvedValue(
+          createdRecipeVersion,
+        );
+
+        await captureRecipeUsecase.execute(inputData);
+
         expect(recipeVersionService.addRecipeVersion).toHaveBeenCalledWith({
           recipeId: createdRecipe.id,
           name: inputData.name,
           slug: 'test-recipe',
-          content: inputData.content,
+          content: inputData.summary,
           version: 1,
-          summary: 'AI-generated summary',
+          summary: inputData.summary,
           gitCommit: undefined,
-          userId: inputData.userId, // UI creation has user ID
+          userId: createUserId(inputData.userId),
+        });
+      });
+    });
+
+    describe('when summary is empty', () => {
+      it('calls recipeSummaryService to generate summary', async () => {
+        const inputData = {
+          name: 'Test Recipe',
+          summary: '',
+          whenToUse: [],
+          contextValidationCheckpoints: [],
+          steps: [],
+          organizationId: uuidv4(),
+          userId: uuidv4(),
+        };
+
+        const generatedSummary = 'AI-generated summary';
+        const createdRecipe = recipeFactory({
+          id: createRecipeId(uuidv4()),
+          name: inputData.name,
+          slug: 'test-recipe',
+          content: '',
+          version: 1,
+        });
+
+        const createdRecipeVersion = recipeVersionFactory({
+          id: createRecipeVersionId(uuidv4()),
+          recipeId: createdRecipe.id,
+          version: 1,
+        });
+
+        recipeService.addRecipe.mockResolvedValue(createdRecipe);
+        recipeVersionService.addRecipeVersion.mockResolvedValue(
+          createdRecipeVersion,
+        );
+        recipeSummaryService.createRecipeSummary.mockResolvedValue(
+          generatedSummary,
+        );
+
+        await captureRecipeUsecase.execute(inputData);
+
+        expect(recipeSummaryService.createRecipeSummary).toHaveBeenCalledWith({
+          recipeId: createdRecipe.id,
+          name: createdRecipe.name,
+          slug: createdRecipe.slug,
+          content: createdRecipe.content,
+          version: 1,
+          userId: createdRecipe.userId,
         });
       });
 
-      it('calls both services exactly once', () => {
-        expect(recipeService.addRecipe).toHaveBeenCalledTimes(1);
-        expect(recipeVersionService.addRecipeVersion).toHaveBeenCalledTimes(1);
+      it('uses generated summary in RecipeVersionService', async () => {
+        const inputData = {
+          name: 'Test Recipe',
+          summary: '',
+          whenToUse: [],
+          contextValidationCheckpoints: [],
+          steps: [],
+          organizationId: uuidv4(),
+          userId: uuidv4(),
+        };
+
+        const generatedSummary = 'AI-generated summary';
+        const createdRecipe = recipeFactory({
+          id: createRecipeId(uuidv4()),
+          name: inputData.name,
+          slug: 'test-recipe',
+          content: '',
+          version: 1,
+        });
+
+        const createdRecipeVersion = recipeVersionFactory({
+          id: createRecipeVersionId(uuidv4()),
+          recipeId: createdRecipe.id,
+          version: 1,
+        });
+
+        recipeService.addRecipe.mockResolvedValue(createdRecipe);
+        recipeVersionService.addRecipeVersion.mockResolvedValue(
+          createdRecipeVersion,
+        );
+        recipeSummaryService.createRecipeSummary.mockResolvedValue(
+          generatedSummary,
+        );
+
+        await captureRecipeUsecase.execute(inputData);
+
+        expect(recipeVersionService.addRecipeVersion).toHaveBeenCalledWith({
+          recipeId: createdRecipe.id,
+          name: inputData.name,
+          slug: 'test-recipe',
+          content: '',
+          version: 1,
+          summary: generatedSummary,
+          gitCommit: undefined,
+          userId: createUserId(inputData.userId),
+        });
+      });
+    });
+
+    describe('when summary is not provided', () => {
+      it('calls recipeSummaryService to generate summary', async () => {
+        const inputData = {
+          name: 'Test Recipe',
+          whenToUse: [],
+          contextValidationCheckpoints: [],
+          steps: [],
+          organizationId: uuidv4(),
+          userId: uuidv4(),
+        };
+
+        const generatedSummary = 'AI-generated summary';
+        const createdRecipe = recipeFactory({
+          id: createRecipeId(uuidv4()),
+          name: inputData.name,
+          slug: 'test-recipe',
+          content: '',
+          version: 1,
+        });
+
+        const createdRecipeVersion = recipeVersionFactory({
+          id: createRecipeVersionId(uuidv4()),
+          recipeId: createdRecipe.id,
+          version: 1,
+        });
+
+        recipeService.addRecipe.mockResolvedValue(createdRecipe);
+        recipeVersionService.addRecipeVersion.mockResolvedValue(
+          createdRecipeVersion,
+        );
+        recipeSummaryService.createRecipeSummary.mockResolvedValue(
+          generatedSummary,
+        );
+
+        await captureRecipeUsecase.execute(inputData);
+
+        expect(recipeSummaryService.createRecipeSummary).toHaveBeenCalledWith({
+          recipeId: createdRecipe.id,
+          name: createdRecipe.name,
+          slug: createdRecipe.slug,
+          content: createdRecipe.content,
+          version: 1,
+          userId: createdRecipe.userId,
+        });
+      });
+    });
+
+    describe('when summary generation fails with AiNotConfigured', () => {
+      it('logs warning and proceeds with null summary', async () => {
+        const inputData = {
+          name: 'Test Recipe',
+          summary: '',
+          whenToUse: [],
+          contextValidationCheckpoints: [],
+          steps: [],
+          organizationId: uuidv4(),
+          userId: uuidv4(),
+        };
+
+        const createdRecipe = recipeFactory({
+          id: createRecipeId(uuidv4()),
+          name: inputData.name,
+          slug: 'test-recipe',
+          content: '',
+          version: 1,
+        });
+
+        const createdRecipeVersion = recipeVersionFactory({
+          id: createRecipeVersionId(uuidv4()),
+          recipeId: createdRecipe.id,
+          version: 1,
+        });
+
+        recipeService.addRecipe.mockResolvedValue(createdRecipe);
+        recipeVersionService.addRecipeVersion.mockResolvedValue(
+          createdRecipeVersion,
+        );
+        recipeSummaryService.createRecipeSummary.mockRejectedValue(
+          new Error('AI service not configured'),
+        );
+
+        const result = await captureRecipeUsecase.execute(inputData);
+
+        expect(result).toEqual(createdRecipe);
       });
 
-      it('creates recipe before recipe version', () => {
+      describe('when AI service fails', () => {
+        it('passes null summary to RecipeVersionService', async () => {
+          const inputData = {
+            name: 'Test Recipe',
+            summary: '',
+            whenToUse: [],
+            contextValidationCheckpoints: [],
+            steps: [],
+            organizationId: uuidv4(),
+            userId: uuidv4(),
+          };
+
+          const createdRecipe = recipeFactory({
+            id: createRecipeId(uuidv4()),
+            name: inputData.name,
+            slug: 'test-recipe',
+            content: '',
+            version: 1,
+          });
+
+          const createdRecipeVersion = recipeVersionFactory({
+            id: createRecipeVersionId(uuidv4()),
+            recipeId: createdRecipe.id,
+            version: 1,
+          });
+
+          recipeService.addRecipe.mockResolvedValue(createdRecipe);
+          recipeVersionService.addRecipeVersion.mockResolvedValue(
+            createdRecipeVersion,
+          );
+          recipeSummaryService.createRecipeSummary.mockRejectedValue(
+            new Error('AI service not configured'),
+          );
+
+          await captureRecipeUsecase.execute(inputData);
+
+          expect(recipeVersionService.addRecipeVersion).toHaveBeenCalledWith({
+            recipeId: createdRecipe.id,
+            name: inputData.name,
+            slug: 'test-recipe',
+            content: '',
+            version: 1,
+            summary: null,
+            gitCommit: undefined,
+            userId: createUserId(inputData.userId),
+          });
+        });
+      });
+    });
+
+    describe('when recipe creation succeeds', () => {
+      it('generates correct slug from recipe name', async () => {
+        const inputData = {
+          name: 'Test Recipe',
+          summary: 'Test summary',
+          whenToUse: [],
+          contextValidationCheckpoints: [],
+          steps: [],
+          organizationId: uuidv4(),
+          userId: uuidv4(),
+        };
+
+        const createdRecipe = recipeFactory({
+          id: createRecipeId(uuidv4()),
+          name: inputData.name,
+          slug: 'test-recipe',
+          content: inputData.summary,
+          version: 1,
+        });
+
+        const createdRecipeVersion = recipeVersionFactory({
+          id: createRecipeVersionId(uuidv4()),
+          recipeId: createdRecipe.id,
+          version: 1,
+        });
+
+        recipeService.addRecipe.mockResolvedValue(createdRecipe);
+        recipeVersionService.addRecipeVersion.mockResolvedValue(
+          createdRecipeVersion,
+        );
+
+        await captureRecipeUsecase.execute(inputData);
+
+        expect(mockSlug).toHaveBeenCalledWith(inputData.name);
+      });
+
+      it('calls RecipeService.addRecipe with correct parameters', async () => {
+        const inputData = {
+          name: 'Test Recipe',
+          summary: 'Test summary',
+          whenToUse: [],
+          contextValidationCheckpoints: [],
+          steps: [],
+          organizationId: uuidv4(),
+          userId: uuidv4(),
+        };
+
+        const expectedContent = captureRecipeUsecase.assembleRecipeContent(
+          inputData.summary,
+          inputData.whenToUse,
+          inputData.contextValidationCheckpoints,
+          inputData.steps,
+        );
+
+        const createdRecipe = recipeFactory({
+          id: createRecipeId(uuidv4()),
+          name: inputData.name,
+          slug: 'test-recipe',
+          content: expectedContent,
+          version: 1,
+          organizationId: createOrganizationId(inputData.organizationId),
+          userId: createUserId(inputData.userId),
+        });
+
+        const createdRecipeVersion = recipeVersionFactory({
+          id: createRecipeVersionId(uuidv4()),
+          recipeId: createdRecipe.id,
+          version: 1,
+        });
+
+        recipeService.addRecipe.mockResolvedValue(createdRecipe);
+        recipeVersionService.addRecipeVersion.mockResolvedValue(
+          createdRecipeVersion,
+        );
+
+        await captureRecipeUsecase.execute(inputData);
+
+        expect(recipeService.addRecipe).toHaveBeenCalledWith({
+          name: inputData.name,
+          slug: 'test-recipe',
+          content: expectedContent,
+          version: 1,
+          organizationId: createOrganizationId(inputData.organizationId),
+          userId: createUserId(inputData.userId),
+          gitCommit: undefined,
+        });
+      });
+
+      it('creates recipe before recipe version', async () => {
+        const inputData = {
+          name: 'Test Recipe',
+          summary: 'Test summary',
+          whenToUse: [],
+          contextValidationCheckpoints: [],
+          steps: [],
+          organizationId: uuidv4(),
+          userId: uuidv4(),
+        };
+
+        const createdRecipe = recipeFactory({
+          id: createRecipeId(uuidv4()),
+          name: inputData.name,
+          slug: 'test-recipe',
+          content: inputData.summary,
+          version: 1,
+        });
+
+        const createdRecipeVersion = recipeVersionFactory({
+          id: createRecipeVersionId(uuidv4()),
+          recipeId: createdRecipe.id,
+          version: 1,
+        });
+
+        recipeService.addRecipe.mockResolvedValue(createdRecipe);
+        recipeVersionService.addRecipeVersion.mockResolvedValue(
+          createdRecipeVersion,
+        );
+
+        await captureRecipeUsecase.execute(inputData);
+
         const recipeCall = recipeService.addRecipe.mock.invocationCallOrder[0];
         const versionCall =
           recipeVersionService.addRecipeVersion.mock.invocationCallOrder[0];
         expect(recipeCall).toBeLessThan(versionCall);
       });
 
-      it('returns the created recipe', () => {
-        expect(result).toEqual(createdRecipe);
-      });
+      it('returns the created recipe', async () => {
+        const inputData = {
+          name: 'Test Recipe',
+          summary: 'Test summary',
+          whenToUse: [],
+          contextValidationCheckpoints: [],
+          steps: [],
+          organizationId: uuidv4(),
+          userId: uuidv4(),
+        };
 
-      it('includes summary in recipe version', () => {
-        expect(createdRecipeVersion.summary).toBeDefined();
-        expect(typeof createdRecipeVersion.summary).toBe('string');
+        const createdRecipe = recipeFactory({
+          id: createRecipeId(uuidv4()),
+          name: inputData.name,
+          slug: 'test-recipe',
+          content: inputData.summary,
+          version: 1,
+        });
+
+        const createdRecipeVersion = recipeVersionFactory({
+          id: createRecipeVersionId(uuidv4()),
+          recipeId: createdRecipe.id,
+          version: 1,
+        });
+
+        recipeService.addRecipe.mockResolvedValue(createdRecipe);
+        recipeVersionService.addRecipeVersion.mockResolvedValue(
+          createdRecipeVersion,
+        );
+
+        const result = await captureRecipeUsecase.execute(inputData);
+
+        expect(result).toEqual(createdRecipe);
       });
     });
 
@@ -175,15 +741,25 @@ describe('CaptureRecipeUsecase', () => {
       it('generates correct slug for recipe with spaces', async () => {
         const inputData = {
           name: 'My Complex Recipe Name',
-          content: 'Test content',
-          organizationId: createOrganizationId(uuidv4()),
-          userId: createUserId(uuidv4()),
+          summary: 'Test summary',
+          whenToUse: [],
+          contextValidationCheckpoints: [],
+          steps: [],
+          organizationId: uuidv4(),
+          userId: uuidv4(),
         };
+
+        const expectedContent = captureRecipeUsecase.assembleRecipeContent(
+          inputData.summary,
+          inputData.whenToUse,
+          inputData.contextValidationCheckpoints,
+          inputData.steps,
+        );
 
         const createdRecipe = recipeFactory({
           name: inputData.name,
           slug: 'my-complex-recipe-name',
-          content: inputData.content,
+          content: expectedContent,
         });
 
         const createdRecipeVersion = recipeVersionFactory({
@@ -199,30 +775,32 @@ describe('CaptureRecipeUsecase', () => {
         await captureRecipeUsecase.execute(inputData);
 
         expect(mockSlug).toHaveBeenCalledWith('My Complex Recipe Name');
-        expect(recipeService.addRecipe).toHaveBeenCalledWith({
-          name: inputData.name,
-          content: inputData.content,
-          slug: 'my-complex-recipe-name',
-          version: 1,
-          organizationId: inputData.organizationId,
-          userId: inputData.userId,
-        });
       });
 
       it('generates correct slug for recipe with special characters', async () => {
         const inputData = {
           name: 'Recipe with "Special" Characters!',
-          content: 'Test content',
-          organizationId: createOrganizationId(uuidv4()),
-          userId: createUserId(uuidv4()),
+          summary: 'Test summary',
+          whenToUse: [],
+          contextValidationCheckpoints: [],
+          steps: [],
+          organizationId: uuidv4(),
+          userId: uuidv4(),
         };
 
         mockSlug.mockReturnValue('recipe-with-special-characters');
 
+        const expectedContent = captureRecipeUsecase.assembleRecipeContent(
+          inputData.summary,
+          inputData.whenToUse,
+          inputData.contextValidationCheckpoints,
+          inputData.steps,
+        );
+
         const createdRecipe = recipeFactory({
           name: inputData.name,
           slug: 'recipe-with-special-characters',
-          content: inputData.content,
+          content: expectedContent,
         });
 
         const createdRecipeVersion = recipeVersionFactory({
@@ -240,226 +818,27 @@ describe('CaptureRecipeUsecase', () => {
         expect(mockSlug).toHaveBeenCalledWith(
           'Recipe with "Special" Characters!',
         );
-        expect(recipeService.addRecipe).toHaveBeenCalledWith({
-          name: inputData.name,
-          content: inputData.content,
-          slug: 'recipe-with-special-characters',
-          version: 1,
-          organizationId: inputData.organizationId,
-          userId: inputData.userId,
-        });
       });
     });
 
-    describe('when summary is provided', () => {
-      it('uses provided summary', async () => {
-        const providedSummary = 'This is a custom summary provided by the user';
+    describe('when recipe creation fails', () => {
+      it('throws error', async () => {
         const inputData = {
           name: 'Test Recipe',
-          content: 'Test content',
-          summary: providedSummary,
-          organizationId: createOrganizationId(uuidv4()),
-          userId: createUserId(uuidv4()),
+          summary: 'Test summary',
+          whenToUse: [],
+          contextValidationCheckpoints: [],
+          steps: [],
+          organizationId: uuidv4(),
+          userId: uuidv4(),
         };
 
-        const createdRecipe: Recipe = recipeFactory({
-          id: createRecipeId(uuidv4()),
-          name: inputData.name,
-          content: inputData.content,
-        });
-        const createdRecipeVersion: RecipeVersion = recipeVersionFactory({
-          id: createRecipeVersionId(uuidv4()),
-          recipeId: createdRecipe.id,
-        });
+        const error = new Error('Database connection failed');
+        recipeService.addRecipe.mockRejectedValue(error);
 
-        recipeService.addRecipe.mockResolvedValue(createdRecipe);
-        recipeVersionService.addRecipeVersion.mockResolvedValue(
-          createdRecipeVersion,
+        await expect(captureRecipeUsecase.execute(inputData)).rejects.toThrow(
+          'Database connection failed',
         );
-        mockSlug.mockReturnValue('test-recipe');
-
-        const result = await captureRecipeUsecase.execute(inputData);
-
-        expect(result).toEqual(createdRecipe);
-        expect(recipeSummaryService.createRecipeSummary).not.toHaveBeenCalled();
-        expect(recipeVersionService.addRecipeVersion).toHaveBeenCalledWith(
-          expect.objectContaining({
-            summary: providedSummary,
-          }),
-        );
-      });
-    });
-
-    describe('when summary is not provided', () => {
-      it('generates summary for null summary', async () => {
-        const inputData = {
-          name: 'Test Recipe',
-          content: 'Test content',
-          organizationId: createOrganizationId(uuidv4()),
-          userId: createUserId(uuidv4()),
-        };
-
-        const createdRecipe: Recipe = recipeFactory({
-          id: createRecipeId(uuidv4()),
-          name: inputData.name,
-          content: inputData.content,
-        });
-        const createdRecipeVersion: RecipeVersion = recipeVersionFactory({
-          id: createRecipeVersionId(uuidv4()),
-          recipeId: createdRecipe.id,
-        });
-
-        recipeService.addRecipe.mockResolvedValue(createdRecipe);
-        recipeVersionService.addRecipeVersion.mockResolvedValue(
-          createdRecipeVersion,
-        );
-        mockSlug.mockReturnValue('test-recipe');
-
-        const result = await captureRecipeUsecase.execute(inputData);
-
-        expect(result).toEqual(createdRecipe);
-        expect(recipeSummaryService.createRecipeSummary).toHaveBeenCalled();
-        expect(recipeVersionService.addRecipeVersion).toHaveBeenCalledWith(
-          expect.objectContaining({
-            summary: 'AI-generated summary',
-          }),
-        );
-      });
-
-      it('generates summary for empty string summary', async () => {
-        const inputData = {
-          name: 'Test Recipe',
-          content: 'Test content',
-          summary: '   ', // Empty/whitespace string
-          organizationId: createOrganizationId(uuidv4()),
-          userId: createUserId(uuidv4()),
-        };
-
-        const createdRecipe: Recipe = recipeFactory({
-          id: createRecipeId(uuidv4()),
-          name: inputData.name,
-          content: inputData.content,
-        });
-        const createdRecipeVersion: RecipeVersion = recipeVersionFactory({
-          id: createRecipeVersionId(uuidv4()),
-          recipeId: createdRecipe.id,
-        });
-
-        recipeService.addRecipe.mockResolvedValue(createdRecipe);
-        recipeVersionService.addRecipeVersion.mockResolvedValue(
-          createdRecipeVersion,
-        );
-        mockSlug.mockReturnValue('test-recipe');
-
-        const result = await captureRecipeUsecase.execute(inputData);
-
-        expect(result).toEqual(createdRecipe);
-        expect(recipeSummaryService.createRecipeSummary).toHaveBeenCalled();
-        expect(recipeVersionService.addRecipeVersion).toHaveBeenCalledWith(
-          expect.objectContaining({
-            summary: 'AI-generated summary',
-          }),
-        );
-      });
-
-      it('handles AI service not configured gracefully', async () => {
-        const inputData = {
-          name: 'Test Recipe',
-          content: 'Test content',
-          organizationId: createOrganizationId(uuidv4()),
-          userId: createUserId(uuidv4()),
-        };
-
-        const createdRecipe: Recipe = recipeFactory({
-          id: createRecipeId(uuidv4()),
-          name: inputData.name,
-          content: inputData.content,
-        });
-        const createdRecipeVersion: RecipeVersion = recipeVersionFactory({
-          id: createRecipeVersionId(uuidv4()),
-          recipeId: createdRecipe.id,
-        });
-
-        recipeService.addRecipe.mockResolvedValue(createdRecipe);
-        recipeVersionService.addRecipeVersion.mockResolvedValue(
-          createdRecipeVersion,
-        );
-        recipeSummaryService.createRecipeSummary.mockRejectedValue(
-          new AiNotConfigured(
-            'AI service not configured for recipe summary generation',
-          ),
-        );
-        mockSlug.mockReturnValue('test-recipe');
-
-        const result = await captureRecipeUsecase.execute(inputData);
-
-        expect(result).toEqual(createdRecipe);
-        expect(recipeVersionService.addRecipeVersion).toHaveBeenCalledWith(
-          expect.objectContaining({
-            summary: null, // Should be null when API key is missing
-          }),
-        );
-      });
-
-      it('handles summary generation failure gracefully', async () => {
-        const inputData = {
-          name: 'Test Recipe',
-          content: 'Test content',
-          organizationId: createOrganizationId(uuidv4()),
-          userId: createUserId(uuidv4()),
-        };
-
-        const createdRecipe: Recipe = recipeFactory({
-          id: createRecipeId(uuidv4()),
-          name: inputData.name,
-          content: inputData.content,
-        });
-        const createdRecipeVersion: RecipeVersion = recipeVersionFactory({
-          id: createRecipeVersionId(uuidv4()),
-          recipeId: createdRecipe.id,
-        });
-
-        recipeService.addRecipe.mockResolvedValue(createdRecipe);
-        recipeVersionService.addRecipeVersion.mockResolvedValue(
-          createdRecipeVersion,
-        );
-        recipeSummaryService.createRecipeSummary.mockRejectedValue(
-          new Error('Network connection failed'),
-        );
-        mockSlug.mockReturnValue('test-recipe');
-
-        const result = await captureRecipeUsecase.execute(inputData);
-
-        expect(result).toEqual(createdRecipe);
-        expect(recipeVersionService.addRecipeVersion).toHaveBeenCalledWith(
-          expect.objectContaining({
-            summary: null, // Should be null when generation fails
-          }),
-        );
-      });
-    });
-
-    it('throws error if recipe creation fails', async () => {
-      const inputData = {
-        name: 'Test Recipe',
-        content: 'Test content',
-        organizationId: createOrganizationId(uuidv4()),
-        userId: createUserId(uuidv4()),
-      };
-
-      const error = new Error('Database connection failed');
-      recipeService.addRecipe.mockRejectedValue(error);
-
-      await expect(captureRecipeUsecase.execute(inputData)).rejects.toThrow(
-        'Database connection failed',
-      );
-      expect(recipeService.addRecipe).toHaveBeenCalledWith({
-        name: inputData.name,
-        content: inputData.content,
-        slug: 'test-recipe',
-        version: 1,
-        organizationId: inputData.organizationId,
-        userId: inputData.userId,
       });
     });
   });

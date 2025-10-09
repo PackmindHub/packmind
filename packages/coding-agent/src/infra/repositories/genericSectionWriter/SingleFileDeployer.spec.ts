@@ -210,7 +210,11 @@ describe('SingleFileDeployer', () => {
       expect(content).not.toMatch(/:\s*null\n/);
 
       // Should use description as fallback (only first line)
-      expect(content).toContain(': This is the description');
+      expect(content).toContain('This is the description :');
+      expect(content).toContain('* No rules defined yet.');
+      expect(content).toContain(
+        'Full standard is available here for further request: [Standard Without Summary](.packmind/standards/standard-without-summary.md)',
+      );
     });
 
     it('truncates long descriptions (not summaries) to 200 characters', async () => {
@@ -240,7 +244,11 @@ describe('SingleFileDeployer', () => {
       const content = result.createOrUpdate[0].content;
 
       // Should truncate description at 200 characters and add ellipsis
-      expect(content).toContain(': ' + 'A'.repeat(200) + '...');
+      expect(content).toContain(`${'A'.repeat(200)}... :`);
+      expect(content).toContain('* No rules defined yet.');
+      expect(content).toContain(
+        'Full standard is available here for further request: [Standard With Long Description](.packmind/standards/standard-long-description.md)',
+      );
       expect(content).not.toContain('A'.repeat(250));
     });
 
@@ -271,7 +279,11 @@ describe('SingleFileDeployer', () => {
       const content = result.createOrUpdate[0].content;
 
       // Should NOT truncate summary even if long
-      expect(content).toContain(': ' + 'B'.repeat(250));
+      expect(content).toContain(`${'B'.repeat(250)} :`);
+      expect(content).toContain('* No rules defined yet.');
+      expect(content).toContain(
+        'Full standard is available here for further request: [Standard With Long Summary](.packmind/standards/standard-long-summary.md)',
+      );
       expect(content).not.toContain('...');
     });
 
@@ -303,7 +315,11 @@ describe('SingleFileDeployer', () => {
       const content = result.createOrUpdate[0].content;
 
       // Should only contain first line
-      expect(content).toContain(': First line of description');
+      expect(content).toContain('First line of description :');
+      expect(content).toContain('* No rules defined yet.');
+      expect(content).toContain(
+        'Full standard is available here for further request: [Standard With Multiline](.packmind/standards/standard-multiline.md)',
+      );
       expect(content).not.toContain('Second line');
       expect(content).not.toContain('Third line');
     });
@@ -338,12 +354,10 @@ describe('SingleFileDeployer', () => {
       expect(content).not.toMatch(/:\s*null\s*$/m);
       expect(content).not.toMatch(/:\s*null\n/);
 
-      // Should contain only the link without colon and description
+      expect(content).toContain('Summary unavailable :');
+      expect(content).toContain('* No rules defined yet.');
       expect(content).toContain(
-        '* [Standard Name Only](.packmind/standards/standard-name-only.md)',
-      );
-      expect(content).not.toMatch(
-        /Standard Name Only\].*:\s+Standard Name Only/,
+        'Full standard is available here for further request: [Standard Name Only](.packmind/standards/standard-name-only.md)',
       );
     });
 

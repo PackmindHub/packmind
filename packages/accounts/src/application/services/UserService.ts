@@ -208,6 +208,13 @@ export class UserService {
     return this.userRepository.list();
   }
 
+  async listUsersByOrganization(
+    organizationId: OrganizationId,
+  ): Promise<User[]> {
+    this.logger.info('Listing users by organization', { organizationId });
+    return this.userRepository.listByOrganization(organizationId);
+  }
+
   async excludeUserFromOrganization(
     params: ExcludeUserFromOrganizationParams,
   ): Promise<void> {

@@ -1,14 +1,6 @@
-import { NavLink } from 'react-router';
 import { PMPage } from '@packmind/ui';
 import { useAuthContext } from '../../src/domain/accounts/hooks';
 import { GitProvidersPage } from '../../src/domain/git/components';
-import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
-
-export const handle = {
-  crumb: ({ params }: { params: { orgSlug: string } }) => {
-    return <NavLink to={`/org/${params.orgSlug}/settings/git`}>Git</NavLink>;
-  },
-};
 
 export default function SettingsGitRouteModule() {
   const { organization } = useAuthContext();
@@ -18,11 +10,7 @@ export default function SettingsGitRouteModule() {
   }
 
   return (
-    <PMPage
-      title="Git"
-      subtitle="Manage your git providers and repositories"
-      breadcrumbComponent={<AutobreadCrumb />}
-    >
+    <PMPage title="Git" subtitle="Manage your git providers and repositories">
       <GitProvidersPage organizationId={organization.id} />
     </PMPage>
   );

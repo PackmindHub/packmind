@@ -1,27 +1,19 @@
-import { NavLink, useParams } from 'react-router';
+import { useParams } from 'react-router';
 import {
   PMPage,
   PMVStack,
   PMText,
-  PMSpinner,
   PMBox,
   PMEmptyState,
   PMButton,
   PMIcon,
 } from '@packmind/ui';
 import { useAuthContext } from '../../src/domain/accounts/hooks';
-import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
 import { useGetTargetsByOrganizationQuery } from '../../src/domain/deployments/api/queries/DeploymentsQueries';
 import { RepositoryTargetCard } from '../../src/domain/deployments/components/RepositoryTargetCard/RepositoryTargetCard';
 import { GitRepoId } from '@packmind/git';
 import { OrganizationId } from '@packmind/accounts';
 import { LuSettings, LuPlus } from 'react-icons/lu';
-
-export const handle = {
-  crumb: ({ params }: { params: { orgSlug: string } }) => {
-    return <NavLink to={`/org/${params.orgSlug}/targets`}>Targets</NavLink>;
-  },
-};
 
 export default function TargetsRouteModule() {
   const { orgSlug } = useParams();
@@ -41,7 +33,7 @@ export default function TargetsRouteModule() {
 
   if (isError) {
     return (
-      <PMPage title="Targets" breadcrumbComponent={<AutobreadCrumb />}>
+      <PMPage title="Targets">
         <PMBox py={8}>
           <PMText color="error">
             Error loading targets:{' '}
@@ -84,7 +76,7 @@ export default function TargetsRouteModule() {
   const repositories = Array.from(repositoryGroups.values());
 
   return (
-    <PMPage title="Targets" breadcrumbComponent={<AutobreadCrumb />}>
+    <PMPage title="Targets" subtitle="Manage your deployment targets">
       <PMVStack gap={6} align="stretch">
         {repositories.length === 0 ? (
           <PMEmptyState

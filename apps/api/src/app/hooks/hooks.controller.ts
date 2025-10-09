@@ -1,6 +1,6 @@
-import { Body, Controller, Headers, Post, Param } from '@nestjs/common';
+import { Body, Controller, Headers, Post, Param, Get } from '@nestjs/common';
 import { RecipesService } from '../recipes/recipes.service';
-import { PackmindLogger, Recipe } from '@packmind/shared';
+import { Configuration, PackmindLogger, Recipe } from '@packmind/shared';
 import { Public } from '../auth/auth.guard';
 import { OrganizationId, createOrganizationId } from '@packmind/accounts';
 
@@ -14,6 +14,24 @@ export class HooksController {
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('HooksController initialized');
+  }
+
+  @Get('')
+  async getHooks(@Param('orgId') orgId: string) {
+    const organizationId: OrganizationId = createOrganizationId(orgId);
+
+    this.logger.info('GET /:orgId/hooks - Listing available webhooks', {
+      organizationId,
+    });
+
+    const baseUrl = await Configuration.getConfigWithDefault(
+      'APP_WEB_URL',
+      'http://localhost:8081',
+    );
+    return {
+      github: `${baseUrl}/api/v0/${orgId}/hooks/github`,
+      gitlab: `${baseUrl}/api/v0/${orgId}/hooks/gitlab`,
+    };
   }
 
   @Post('github')

@@ -1,4 +1,8 @@
-import { PackmindLogger, HexaRegistry } from '@packmind/shared';
+import {
+  PackmindLogger,
+  HexaRegistry,
+  RenderModeConfiguration,
+} from '@packmind/shared';
 import { DataSource, Repository } from 'typeorm';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { GitHexa } from '@packmind/git';
@@ -6,6 +10,7 @@ import { StandardsHexa } from '@packmind/standards';
 import { RecipesDeploymentRepository } from './infra/repositories/RecipesDeploymentRepository';
 import { StandardsDeploymentRepository } from './infra/repositories/StandardsDeploymentRepository';
 import { TargetRepository } from './infra/repositories/TargetRepository';
+import { RenderModeConfigurationRepository } from './infra/repositories/RenderModeConfigurationRepository';
 import { IRecipesDeploymentRepository } from './domain/repositories/IRecipesDeploymentRepository';
 import { IStandardsDeploymentRepository } from './domain/repositories/IStandardsDeploymentRepository';
 import { ITargetRepository } from './domain/repositories/ITargetRepository';
@@ -17,12 +22,15 @@ import { StandardsDeployment } from './domain/entities/StandardsDeployment';
 import { Target } from '@packmind/shared';
 import { DeploymentsServices } from './application/services/DeploymentsServices';
 import { IDeploymentsServices } from './application/IDeploymentsServices';
+import { RenderModeConfigurationSchema } from './infra/schemas/RenderModeConfigurationSchema';
+import { IRenderModeConfigurationRepository } from './domain/repositories/IRenderModeConfigurationRepository';
 
 export class DeploymentsHexaFactory {
   public repositories: {
     recipesDeployment: IRecipesDeploymentRepository;
     standardsDeployment: IStandardsDeploymentRepository;
     target: ITargetRepository;
+    renderModeConfiguration: IRenderModeConfigurationRepository;
   };
 
   public services: {
@@ -53,6 +61,12 @@ export class DeploymentsHexaFactory {
         dataSource.getRepository(TargetSchema) as Repository<Target>,
         logger,
       ),
+      renderModeConfiguration: new RenderModeConfigurationRepository(
+        dataSource.getRepository(
+          RenderModeConfigurationSchema,
+        ) as Repository<RenderModeConfiguration>,
+        logger,
+      ),
     };
 
     // Get GitHexa from registry
@@ -67,6 +81,7 @@ export class DeploymentsHexaFactory {
       deployments: new DeploymentsServices(
         this.repositories.target,
         gitHexa,
+        this.repositories.renderModeConfiguration,
         logger,
       ),
     };

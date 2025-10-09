@@ -162,6 +162,7 @@ describe('ListOrganizationUserStatusesUseCase', () => {
       isActive: false,
       invitationStatus: 'pending',
       invitationExpirationDate: futureDate,
+      invitationLink: `http://localhost:8081/activate?token=${encodeURIComponent(invitation.token)}`,
     });
   });
 
@@ -299,6 +300,9 @@ describe('ListOrganizationUserStatusesUseCase', () => {
     expect(result.userStatuses).toHaveLength(1);
     expect(result.userStatuses[0].invitationStatus).toBe('pending');
     expect(result.userStatuses[0].invitationExpirationDate).toEqual(futureDate);
+    expect(result.userStatuses[0].invitationLink).toBe(
+      `http://localhost:8081/activate?token=${encodeURIComponent(newInvitation.token)}`,
+    );
   });
 
   it('throws error for non-admin users', async () => {

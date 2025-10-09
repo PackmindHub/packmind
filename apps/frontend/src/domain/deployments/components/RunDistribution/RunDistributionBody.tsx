@@ -13,9 +13,15 @@ import {
   PMHStack,
   PMBadge,
   PMNativeSelect,
+  PMLink,
+  PMIcon,
+  PMTooltip,
 } from '@packmind/ui';
 import { useRunDistribution } from './RunDistribution';
-import { TargetId } from '@packmind/shared';
+import { RenderMode, TargetId } from '@packmind/shared/types';
+import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
+import { useNavigate } from 'react-router';
+import { RxQuestionMarkCircled } from 'react-icons/rx';
 
 export const RunDistributionBodyImpl: React.FC = () => {
   const {
@@ -25,9 +31,34 @@ export const RunDistributionBodyImpl: React.FC = () => {
     selectedTargetIds,
     setSelectedTargetIds,
     deploymentError,
+    activeRenderModes,
+    organizationRole,
+    isRenderModeConfigurationMissing,
   } = useRunDistribution();
+  const renderModeLabels = React.useMemo(() => {
+    const labels: Record<RenderMode, string> = {
+      [RenderMode.PACKMIND]: 'Packmind',
+      [RenderMode.AGENTS_MD]: 'AGENTS.md',
+      [RenderMode.GH_COPILOT]: 'Github Copilot',
+      [RenderMode.CURSOR]: 'Cursor',
+      [RenderMode.CLAUDE]: 'Claude',
+      [RenderMode.JUNIE]: 'Junie',
+    };
+    return activeRenderModes.map((mode) => labels[mode] ?? mode).join(', ');
+  }, [activeRenderModes]);
 
+  const { organization } = useAuthContext();
   const [selectedRepo, setSelectedRepo] = React.useState<string>('');
+  const navigate = useNavigate();
+
+  function onConfigureRepos() {
+    if (!organization?.slug) return;
+    navigate(`/org/${organization.slug}/settings/git`);
+  }
+  function onOpenRenderingSettings() {
+    if (!organization?.slug) return;
+    navigate(`/org/${organization.slug}/settings/distribution-rendering`);
+  }
 
   const groupedTargets = React.useMemo(() => {
     return [...targetsList].reduce(
@@ -51,6 +82,7 @@ export const RunDistributionBodyImpl: React.FC = () => {
   );
 
   if (targetsLoading) return <PMSpinner />;
+
   if (targetsError)
     return (
       <PMAlert.Root status="error">
@@ -63,11 +95,14 @@ export const RunDistributionBodyImpl: React.FC = () => {
 
   if (targetsList.length === 0)
     return (
-      <PMEmptyState
-        title="No targets configured"
-        description="Configure deployment targets in your repositories to deploy recipes and standards"
-      />
+      <PMEmptyState title="No targets configured">
+        <PMLink onClick={onConfigureRepos}>
+          Configure your git repositories
+        </PMLink>
+      </PMEmptyState>
     );
+
+  const activeRenderModesText = `Active render modes: ${renderModeLabels}`;
 
   const sortedTargets = [...targetsList].sort((a, b) => {
     const ownerCompare = a.repository.owner.localeCompare(b.repository.owner);
@@ -90,6 +125,12 @@ export const RunDistributionBodyImpl: React.FC = () => {
       );
     }
   };
+
+  const isOrganizationAdmin = organizationRole === 'admin';
+  const shouldShowDefaultConfigTooltip =
+    !isOrganizationAdmin && isRenderModeConfigurationMissing;
+  const defaultConfigTooltipLabel =
+    'This organization uses the default rendering configuration. Contact your administrator to configure renderings.';
 
   return (
     <PMVStack gap={2} align={'stretch'} height="full">
@@ -167,6 +208,33 @@ export const RunDistributionBodyImpl: React.FC = () => {
           <PMAlert.Title>{deploymentError.message}</PMAlert.Title>
         </PMAlert.Root>
       )}
+      <PMVStack align="flex-start" gap={1}>
+        <PMHStack gap={1} align="center">
+          <PMText fontSize="sm" color="tertiary">
+            {activeRenderModesText}
+          </PMText>
+          {shouldShowDefaultConfigTooltip && (
+            <PMTooltip label={defaultConfigTooltipLabel} placement="top">
+              <PMIcon
+                as={RxQuestionMarkCircled}
+                color={'text.tertiary'}
+                boxSize={4}
+                cursor="help"
+              />
+            </PMTooltip>
+          )}
+        </PMHStack>
+        {isOrganizationAdmin && (
+          <PMLink
+            variant="underline"
+            fontSize="xs"
+            color="secondary"
+            onClick={onOpenRenderingSettings}
+          >
+            Configure
+          </PMLink>
+        )}
+      </PMVStack>
     </PMVStack>
   );
 };

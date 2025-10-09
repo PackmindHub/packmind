@@ -6,6 +6,7 @@ import {
   LogLevel,
   PackmindLogger,
   ProgrammingLanguage,
+  RecipeStep,
   RuleWithExamples,
   stringToProgrammingLanguage,
 } from '@packmind/shared';
@@ -16,6 +17,11 @@ import packmindOnboardingGitHistory from './prompts/packmind-onboarding-git-hist
 import packmindOnboardingDocumentation from './prompts/packmind-onboarding-documentation';
 import packmindOnboardingAiInstructions from './prompts/packmind-onboarding-ai-instructions';
 import packmindOnboardingWebResearch from './prompts/packmind-onboarding-web-research';
+import {
+  STANDARD_WORKFLOW_STEP_ORDER,
+  STANDARD_WORKFLOW_STEPS,
+  StandardWorkflowStep,
+} from './prompts/packmind-standard-workflow';
 
 interface UserContext {
   email: string;
@@ -35,6 +41,9 @@ const ONBOARDING_PROMPTS = {
   'ai-instructions': packmindOnboardingAiInstructions,
   'web-research': packmindOnboardingWebResearch,
 };
+
+const isStandardWorkflowStep = (value: string): value is StandardWorkflowStep =>
+  Object.prototype.hasOwnProperty.call(STANDARD_WORKFLOW_STEPS, value);
 
 export function createMCPServer(
   fastify: FastifyInstance,
@@ -74,6 +83,17 @@ export function createMCPServer(
   const standardsHexa = fastify.standardsHexa();
   logger.debug('Attempting to call fastify.deploymentsHexa()');
   const deploymentsHexa = fastify.deploymentsHexa();
+  const accountsHexa =
+    typeof fastify.accountsHexa === 'function'
+      ? fastify.accountsHexa()
+      : undefined;
+
+  if (accountsHexa) {
+    deploymentsHexa.setAccountProviders(
+      accountsHexa.getUserProvider(),
+      accountsHexa.getOrganizationProvider(),
+    );
+  }
   logger.debug('Attempting to call fastify.recipesUsageHexa()');
   const recipesUsageHexa = fastify.recipesUsageHexa();
 
@@ -116,36 +136,75 @@ export function createMCPServer(
     'Captures a reusable process or procedure as a structured Packmind recipe using available context, code, or reasoning.',
     {
       name: z.string().min(1).describe('The name of the recipe to create'),
-      content: z
-        .string()
-        .min(1)
-        .describe('A description of the recipe to create (in markdown format)'),
       summary: z
         .string()
         .min(1)
-        .optional()
         .describe(
           'A concise sentence describing the intent of this recipe (what it does) and its value (why it is useful) and when it is relevant to use it',
         ),
+      whenToUse: z
+        .array(z.string())
+        .describe(
+          'Array of scenarios when this recipe is applicable. Provide specific, actionable scenarios.',
+        ),
+      contextValidationCheckpoints: z
+        .array(z.string())
+        .describe(
+          'Array of checkpoints to ensure the context is clarified enough before implementing the recipe steps. Each checkpoint should be a question or validation point.',
+        ),
+      steps: z
+        .array(
+          z.object({
+            name: z
+              .string()
+              .min(1)
+              .describe(
+                'The name/title of the step (e.g., "Setup Dependencies")',
+              ),
+            description: z
+              .string()
+              .min(1)
+              .describe(
+                'A sentence describing the intent of the step and how to implement it [Markdown formatted]',
+              ),
+            codeSnippet: z
+              .string()
+              .optional()
+              .describe(
+                'Optional concise and minimal code snippet demonstrating the step. Keep it brief and focused. [Markdown formatted with ``` including the language]',
+              ),
+          }),
+        )
+        .describe(
+          'Array of atomic steps that make up the recipe implementation. Each step should be clear and actionable.',
+        ),
     },
-    async ({ name, content, summary }) => {
+    async ({
+      name,
+      summary,
+      whenToUse,
+      contextValidationCheckpoints,
+      steps,
+    }) => {
       if (!userContext) {
         throw new Error('User context is required to create recipes');
       }
 
       const recipe = await recipesHexa.captureRecipe({
         name,
-        content,
+        summary,
+        whenToUse,
+        contextValidationCheckpoints,
+        steps: steps as RecipeStep[],
         organizationId: createOrganizationId(userContext.organizationId),
         userId: createUserId(userContext.userId),
-        summary,
       });
 
       return {
         content: [
           {
             type: 'text',
-            text: `Recipe '${recipe.slug}' has been created successfully.`,
+            text: `Recipe '${recipe.name}' has been created successfully.`,
           },
         ],
       };
@@ -364,16 +423,54 @@ export function createMCPServer(
     },
   );
 
+  const standardWorkflowStepSchema = z
+    .enum(STANDARD_WORKFLOW_STEP_ORDER)
+    .describe(
+      'Identifier of the workflow step to retrieve guidance for. Leave empty to start at the first step.',
+    );
+
+  mcpServer.tool(
+    `${mcpToolPrefix}_create_standard_workflow`,
+    'Get step-by-step guidance for the Packmind standard creation workflow. Provide an optional step to retrieve a specific stage.',
+    {
+      step: standardWorkflowStepSchema.optional(),
+    },
+    async ({ step }) => {
+      const requestedStep = step ?? 'initial-request';
+
+      if (!isStandardWorkflowStep(requestedStep)) {
+        const availableSteps = Object.keys(STANDARD_WORKFLOW_STEPS).join(', ');
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Unknown workflow step '${requestedStep}'. Available steps: ${availableSteps}`,
+            },
+          ],
+        };
+      }
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: STANDARD_WORKFLOW_STEPS[requestedStep],
+          },
+        ],
+      };
+    },
+  );
+
   mcpServer.tool(
     `${mcpToolPrefix}_create_standard`,
-    'Create a new coding standard with multiple rules and optional examples in a single operation',
+    'Create a new coding standard with multiple rules and optional examples in a single operation. Do not call this tool directly—you need to first use the tool standard_creation_workflow',
     {
       name: z.string().min(1).describe('The name of the standard to create'),
       description: z
         .string()
         .min(1)
         .describe(
-          'A comprehensive description of the standard and its purpose (markdown format)',
+          'A description of the standard, one paragraph maximum, explaining the purpose, context, and when applicable. It sets the context for the rules in the standard. It must NOT contain code examples',
         ),
       summary: z
         .string()
@@ -389,7 +486,7 @@ export function createMCPServer(
               .string()
               .min(1)
               .describe(
-                'A descriptive name for the coding rule that explains its intention and how it should be used. It must start with a verb to give the intention.',
+                'A concise sentence for the coding rule that explains its intention and how it should be used. It must start with a verb to give the intention.',
               ),
             examples: z
               .array(

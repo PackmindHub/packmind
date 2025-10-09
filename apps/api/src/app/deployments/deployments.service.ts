@@ -10,15 +10,27 @@ import {
   RecipesDeployment,
   StandardsDeployment,
   StandardDeploymentOverview,
+  UpdateRenderModeConfigurationCommand,
+  RenderModeConfiguration,
+  GetRenderModeConfigurationCommand,
+  GetRenderModeConfigurationResult,
 } from '@packmind/shared';
 import { IDeploymentPort } from '@packmind/shared';
 import { DeploymentsHexa } from '@packmind/deployments';
+import { AccountsHexa } from '@packmind/accounts';
 
 @Injectable()
 export class DeploymentsService {
   private readonly deploymentAdapter: IDeploymentPort;
 
-  constructor(private readonly deploymentsHexa: DeploymentsHexa) {
+  constructor(
+    private readonly deploymentsHexa: DeploymentsHexa,
+    private readonly accountsHexa: AccountsHexa,
+  ) {
+    this.deploymentsHexa.setAccountProviders(
+      this.accountsHexa.getUserProvider(),
+      this.accountsHexa.getOrganizationProvider(),
+    );
     this.deploymentAdapter = this.deploymentsHexa.getDeploymentsUseCases();
   }
 
@@ -56,5 +68,17 @@ export class DeploymentsService {
     command: PublishStandardsCommand,
   ): Promise<StandardsDeployment[]> {
     return this.deploymentAdapter.publishStandards(command);
+  }
+
+  async getRenderModeConfiguration(
+    command: GetRenderModeConfigurationCommand,
+  ): Promise<GetRenderModeConfigurationResult> {
+    return this.deploymentAdapter.getRenderModeConfiguration(command);
+  }
+
+  async updateRenderModeConfiguration(
+    command: UpdateRenderModeConfigurationCommand,
+  ): Promise<RenderModeConfiguration> {
+    return this.deploymentAdapter.updateRenderModeConfiguration(command);
   }
 }

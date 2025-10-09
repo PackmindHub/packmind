@@ -11,6 +11,7 @@ export type UserStatus = {
   isActive: boolean;
   invitationStatus: InvitationStatus;
   invitationExpirationDate?: Date;
+  invitationLink?: string;
 };
 
 export type ListOrganizationUserStatusesCommand = {

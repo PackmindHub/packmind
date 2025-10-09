@@ -16,6 +16,7 @@ export const deploymentFactory: Factory<RecipesDeployment> = (
     target: targetFactory(),
     status: DistributionStatus.success,
     createdAt: new Date().toISOString(),
+    renderModes: [],
     ...deployment,
   };
 };

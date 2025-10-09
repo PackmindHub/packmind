@@ -3,6 +3,8 @@ import { TargetService } from './TargetService';
 import { ITargetRepository } from '../../domain/repositories/ITargetRepository';
 import { PackmindLogger } from '@packmind/shared';
 import { GitHexa } from '@packmind/git';
+import { RenderModeConfigurationService } from './RenderModeConfigurationService';
+import { IRenderModeConfigurationRepository } from '../../domain/repositories/IRenderModeConfigurationRepository';
 
 /**
  * DeploymentsServices - Service aggregator implementation for the Deployments application layer
@@ -13,10 +15,12 @@ import { GitHexa } from '@packmind/git';
  */
 export class DeploymentsServices implements IDeploymentsServices {
   private readonly targetService: TargetService;
+  private readonly renderModeConfigurationService: RenderModeConfigurationService;
 
   constructor(
     private readonly targetRepository: ITargetRepository,
     private readonly gitHexa: GitHexa,
+    private readonly renderModeConfigurationRepository: IRenderModeConfigurationRepository,
     private readonly logger: PackmindLogger,
   ) {
     // Initialize all services with their respective repositories
@@ -25,9 +29,17 @@ export class DeploymentsServices implements IDeploymentsServices {
       this.gitHexa,
       this.logger,
     );
+    this.renderModeConfigurationService = new RenderModeConfigurationService(
+      this.renderModeConfigurationRepository,
+      this.logger,
+    );
   }
 
   getTargetService(): TargetService {
     return this.targetService;
+  }
+
+  getRenderModeConfigurationService(): RenderModeConfigurationService {
+    return this.renderModeConfigurationService;
   }
 }

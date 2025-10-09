@@ -4,27 +4,26 @@ import { OrganizationId } from '@packmind/accounts/types';
 import { CreateGitProviderForm } from '../../types/GitProviderTypes';
 import { GitProviderId } from '@packmind/git/types';
 import {
-  GET_RECIPES_DEPLOYMENT_OVERVIEW_QUERY_KEY,
-  GET_STANDARDS_DEPLOYMENT_OVERVIEW_QUERY_KEY,
-} from '../../../deployments/api/queries/DeploymentsQueries';
-
-// Query Keys
-export const GET_GIT_PROVIDERS_QUERY_KEY = 'gitProviders';
+  GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
+  GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
+} from '../../../deployments/api/queryKeys';
+import {
+  GET_GIT_PROVIDERS_KEY,
+  GET_GIT_PROVIDER_BY_ID_KEY,
+} from '../queryKeys';
 
 // Git Provider Queries
 export const useGetGitProvidersQuery = (organizationId: OrganizationId) => {
   return useQuery({
-    queryKey: [GET_GIT_PROVIDERS_QUERY_KEY, organizationId],
+    queryKey: [...GET_GIT_PROVIDERS_KEY, organizationId],
     queryFn: () => gitProviderGateway.getGitProviders(organizationId),
     enabled: !!organizationId,
   });
 };
 
-export const GET_GIT_PROVIDER_QUERY_KEY = 'gitProvider';
-
 export const useGetGitProviderByIdQuery = (id: GitProviderId) => {
   return useQuery({
-    queryKey: [GET_GIT_PROVIDER_QUERY_KEY, id],
+    queryKey: [...GET_GIT_PROVIDER_BY_ID_KEY, id],
     queryFn: () => gitProviderGateway.getGitProviderById(id),
     enabled: !!id,
   });
@@ -46,7 +45,7 @@ export const useCreateGitProviderMutation = () => {
     },
     onSuccess: async (_, { organizationId }) => {
       await queryClient.invalidateQueries({
-        queryKey: [GET_GIT_PROVIDERS_QUERY_KEY, organizationId],
+        queryKey: [...GET_GIT_PROVIDERS_KEY, organizationId],
       });
     },
     onError: (error) => {
@@ -70,10 +69,10 @@ export const useUpdateGitProviderMutation = () => {
     },
     onSuccess: async (provider) => {
       await queryClient.invalidateQueries({
-        queryKey: [GET_GIT_PROVIDERS_QUERY_KEY, provider.organizationId],
+        queryKey: [...GET_GIT_PROVIDERS_KEY, provider.organizationId],
       });
       await queryClient.invalidateQueries({
-        queryKey: [GET_GIT_PROVIDER_QUERY_KEY, provider.id],
+        queryKey: [...GET_GIT_PROVIDER_BY_ID_KEY, provider.id],
       });
     },
     onError: (error) => {
@@ -97,13 +96,13 @@ export const useDeleteGitProviderMutation = () => {
     },
     onSuccess: async (_, { organizationId }) => {
       await queryClient.invalidateQueries({
-        queryKey: [GET_GIT_PROVIDERS_QUERY_KEY, organizationId],
+        queryKey: [...GET_GIT_PROVIDERS_KEY, organizationId],
       });
       await queryClient.invalidateQueries({
-        queryKey: [GET_STANDARDS_DEPLOYMENT_OVERVIEW_QUERY_KEY],
+        queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
       });
       await queryClient.invalidateQueries({
-        queryKey: [GET_RECIPES_DEPLOYMENT_OVERVIEW_QUERY_KEY],
+        queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
       });
     },
     onError: (error) => {

@@ -16,7 +16,7 @@ Provides guided workflows for creating coding standards based on different infor
 
 **Tool:** `packmind_create_recipe`
 
-Captures a reusable process or procedure as a structured Packmind recipe.
+Captures a reusable process or procedure as a structured Packmind recipe. Do not call this tool directly—first follow the Packmind recipe creation workflow, then invoke this tool only at its finalization step.
 
 **Parameters:**
 
@@ -59,16 +59,26 @@ Retrieves all coding standards created in your organization.
 
 **Parameters:** None
 
+### Standard Creation Workflow
+
+**Tool:** `packmind_create_standard_workflow`
+
+Returns step-by-step guidance the coding agent must follow to gather context, draft a temporary markdown standard, iterate with the user, and prepare for final submission. All content generation happens in the coding session; the MCP backend only supplies the workflow instructions.
+
+**Parameters:**
+
+- `step` (optional) - Workflow step identifier. Available values: `initial-request`, `context-precision`, `drafting`, `review`, `finalization`. Defaults to `initial-request` when omitted.
+
 ### Create Standard
 
 **Tool:** `packmind_create_standard`
 
-Creates a new coding standard with multiple rules and code examples in a single operation.
+Creates a new coding standard with multiple rules and code examples in a single operation. Only use this tool after completing every step of the standard creation workflow.
 
 **Parameters:**
 
 - `name` (required) - Name of the standard to create
-- `description` (required) - Comprehensive description in markdown format explaining the standard's purpose
+- `description` (required) - Comprehensive description in markdown format explaining the standard's purpose (no code examples)
 - `summary` (optional) - Concise sentence describing when to apply this standard
 - `rules` (optional) - Array of rules, each containing:
   - `content` (required) - Rule description starting with a verb

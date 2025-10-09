@@ -5,14 +5,30 @@ import {
   RecipesDeployment,
   StandardsDeployment,
   OrganizationId,
-} from '@packmind/shared';
+  RenderModeConfiguration,
+  UserOrganizationRole,
+  RenderMode,
+  DEFAULT_ACTIVE_RENDER_MODES,
+} from '@packmind/shared/types';
 import { useDeployRecipe, useDeployStandard } from '../../hooks';
 import { Recipe } from '@packmind/recipes/types';
-import { useGetTargetsByOrganizationQuery } from '../../api/queries/DeploymentsQueries';
+import {
+  useGetRenderModeConfigurationQuery,
+  useGetTargetsByOrganizationQuery,
+} from '../../api/queries/DeploymentsQueries';
 import { RunDistributionBodyImpl } from './RunDistributionBody';
 import { RunDistributionCTAImpl } from './RunDistributionCTA';
 import { Standard } from '@packmind/standards/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
+import {
+  PMBox,
+  PMHeading,
+  PMSpinner,
+  PMText,
+  PMVStack,
+  PMAlert,
+} from '@packmind/ui';
+import { RenderingSettings } from '../RenderingSettings/RenderingSettings';
 
 type RunDistributionCtxType = {
   targetsList: TargetWithRepository[];
@@ -24,6 +40,13 @@ type RunDistributionCtxType = {
   deploy: () => Promise<void>;
   deploymentError?: Error | null;
   canRunDistribution: boolean;
+  renderModeConfiguration: RenderModeConfiguration | null;
+  renderModeConfigurationLoading: boolean;
+  renderModeConfigurationError?: Error | null;
+  shouldShowRenderingSettings: boolean;
+  isRenderModeConfigurationMissing: boolean;
+  organizationRole?: UserOrganizationRole;
+  activeRenderModes: RenderMode[];
 };
 
 const RunDistributionCtx = createContext<RunDistributionCtxType | null>(null);
@@ -56,12 +79,31 @@ const RunDistributionComponent: React.FC<RunDistributionProps> = ({
   const [deploymentError, setDeploymentError] = useState<Error | null>(null);
   const { organization } = useAuthContext();
   const {
+    data: renderModeConfigurationResult,
+    isLoading: renderModeConfigurationLoading,
+    isError: renderModeConfigurationHasError,
+    error: renderModeConfigurationError,
+  } = useGetRenderModeConfigurationQuery();
+  const {
     data: targetsList = [],
     isLoading: targetsLoading,
     isError: targetsError,
   } = useGetTargetsByOrganizationQuery(
     organization?.id || ('' as OrganizationId),
   );
+
+  const renderModeConfiguration =
+    renderModeConfigurationResult?.configuration ?? null;
+  const isRenderModeConfigurationMissing =
+    !renderModeConfigurationLoading &&
+    !renderModeConfigurationHasError &&
+    !renderModeConfiguration;
+  const organizationRole = organization?.role;
+  const isOrganizationAdmin = organizationRole === 'admin';
+  const shouldShowRenderingSettings =
+    isOrganizationAdmin && isRenderModeConfigurationMissing;
+  const activeRenderModes =
+    renderModeConfiguration?.activeRenderModes ?? DEFAULT_ACTIVE_RENDER_MODES;
 
   const [selectedTargetIds, setSelectedTargetIds] = useState<TargetId[]>([]);
   const canRunDistribution =
@@ -119,6 +161,14 @@ const RunDistributionComponent: React.FC<RunDistributionProps> = ({
       deploy,
       deploymentError,
       canRunDistribution,
+      renderModeConfiguration,
+      renderModeConfigurationLoading,
+      renderModeConfigurationError:
+        (renderModeConfigurationError as Error | null | undefined) ?? null,
+      shouldShowRenderingSettings,
+      isRenderModeConfigurationMissing,
+      organizationRole,
+      activeRenderModes,
     }),
     [
       targetsList,
@@ -131,12 +181,45 @@ const RunDistributionComponent: React.FC<RunDistributionProps> = ({
       deploy,
       deploymentError,
       canRunDistribution,
+      renderModeConfiguration,
+      renderModeConfigurationLoading,
+      renderModeConfigurationError,
+      shouldShowRenderingSettings,
+      isRenderModeConfigurationMissing,
+      organizationRole,
+      activeRenderModes,
     ],
+  );
+
+  if (renderModeConfigurationLoading) {
+    return <PMSpinner />;
+  }
+
+  if (renderModeConfigurationHasError) {
+    return (
+      <PMAlert.Root status="error">
+        <PMAlert.Indicator />
+        <PMAlert.Title>
+          Failed to load render mode settings. Please try again later.
+        </PMAlert.Title>
+        {renderModeConfigurationError instanceof Error && (
+          <PMAlert.Description>
+            {renderModeConfigurationError.message}
+          </PMAlert.Description>
+        )}
+      </PMAlert.Root>
+    );
+  }
+
+  const content = shouldShowRenderingSettings ? (
+    <RenderingSettings>{children}</RenderingSettings>
+  ) : (
+    <>{children}</>
   );
 
   return (
     <RunDistributionCtx.Provider value={value}>
-      {children}
+      {content}
     </RunDistributionCtx.Provider>
   );
 };
@@ -147,5 +230,33 @@ export const RunDistribution =
     Cta: React.FC;
   };
 
-RunDistribution.Body = RunDistributionBodyImpl;
-RunDistribution.Cta = RunDistributionCTAImpl;
+const RunDistributionBody: React.FC = () => {
+  const { shouldShowRenderingSettings } = useRunDistribution();
+
+  if (shouldShowRenderingSettings) {
+    return (
+      <PMVStack gap={4} align="stretch">
+        <PMHeading level="h5">Configure render modes</PMHeading>
+        <PMBox>
+          <RenderingSettings.Body />
+        </PMBox>
+      </PMVStack>
+    );
+  }
+
+  return <RunDistributionBodyImpl />;
+};
+
+RunDistribution.Body = RunDistributionBody;
+
+const RunDistributionCta: React.FC = () => {
+  const { shouldShowRenderingSettings } = useRunDistribution();
+
+  if (shouldShowRenderingSettings) {
+    return <RenderingSettings.Cta />;
+  }
+
+  return <RunDistributionCTAImpl />;
+};
+
+RunDistribution.Cta = RunDistributionCta;

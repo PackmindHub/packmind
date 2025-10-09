@@ -20,6 +20,13 @@ import {
   GetTargetsByGitRepoCommand,
   GetTargetsByRepositoryCommand,
   GetTargetsByOrganizationCommand,
+  GetRenderModeConfigurationCommand,
+  GetRenderModeConfigurationResult,
+  CreateRenderModeConfigurationCommand,
+  UpdateRenderModeConfigurationCommand,
+  RenderModeConfiguration,
+  UserProvider,
+  OrganizationProvider,
 } from '@packmind/shared';
 import { FindDeployedStandardByRepositoryUseCase } from './FindDeployedStandardByRepositoryUseCase';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
@@ -45,6 +52,9 @@ import { GetTargetsByRepositoryUseCase } from './GetTargetsByRepositoryUseCase';
 import { GetTargetsByOrganizationUseCase } from './GetTargetsByOrganizationUseCase';
 import { UpdateTargetUseCase } from './UpdateTargetUseCase';
 import { DeleteTargetUseCase } from './DeleteTargetUseCase';
+import { GetRenderModeConfigurationUseCase } from './GetRenderModeConfigurationUseCase';
+import { CreateRenderModeConfigurationUseCase } from './CreateRenderModeConfigurationUseCase';
+import { UpdateRenderModeConfigurationUseCase } from './UpdateRenderModeConfigurationUseCase';
 
 export class DeploymentsUseCases implements IDeploymentPort {
   private readonly standardDeploymentRepository: IStandardsDeploymentRepository;
@@ -54,6 +64,8 @@ export class DeploymentsUseCases implements IDeploymentPort {
   private recipesPort?: IRecipesPort;
   private readonly codingAgentHexa: CodingAgentHexa;
   private readonly standardsHexa: StandardsHexa;
+  private userProvider?: UserProvider;
+  private organizationProvider?: OrganizationProvider;
 
   constructor(
     deploymentsHexa: DeploymentsHexaFactory,
@@ -81,6 +93,14 @@ export class DeploymentsUseCases implements IDeploymentPort {
     this.recipesPort = recipesPort;
   }
 
+  public setAccountProviders(
+    userProvider: UserProvider,
+    organizationProvider: OrganizationProvider,
+  ): void {
+    this.userProvider = userProvider;
+    this.organizationProvider = organizationProvider;
+  }
+
   listDeploymentsByRecipe(
     command: ListDeploymentsByRecipeCommand,
   ): Promise<RecipesDeployment[]> {
@@ -99,6 +119,7 @@ export class DeploymentsUseCases implements IDeploymentPort {
       this.codingAgentHexa,
       this.standardDeploymentRepository,
       this.deploymentsServices.getTargetService(),
+      this.deploymentsServices.getRenderModeConfigurationService(),
     );
     return useCase.execute(command);
   }
@@ -113,6 +134,7 @@ export class DeploymentsUseCases implements IDeploymentPort {
       this.recipesPort,
       this.codingAgentHexa,
       this.deploymentsServices.getTargetService(),
+      this.deploymentsServices.getRenderModeConfigurationService(),
     );
     return useCase.execute(command);
   }
@@ -216,6 +238,54 @@ export class DeploymentsUseCases implements IDeploymentPort {
   ): Promise<DeleteTargetResponse> {
     const useCase = new DeleteTargetUseCase(
       this.deploymentsServices.getTargetService(),
+    );
+    return useCase.execute(command);
+  }
+
+  async getRenderModeConfiguration(
+    command: GetRenderModeConfigurationCommand,
+  ): Promise<GetRenderModeConfigurationResult> {
+    if (!this.userProvider || !this.organizationProvider) {
+      throw new Error(
+        'Account providers not configured - cannot get render mode configuration',
+      );
+    }
+    const useCase = new GetRenderModeConfigurationUseCase(
+      this.deploymentsServices.getRenderModeConfigurationService(),
+      this.userProvider,
+      this.organizationProvider,
+    );
+    return useCase.execute(command);
+  }
+
+  async createRenderModeConfiguration(
+    command: CreateRenderModeConfigurationCommand,
+  ): Promise<RenderModeConfiguration> {
+    if (!this.userProvider || !this.organizationProvider) {
+      throw new Error(
+        'Account providers not configured - cannot create render mode configuration',
+      );
+    }
+    const useCase = new CreateRenderModeConfigurationUseCase(
+      this.deploymentsServices.getRenderModeConfigurationService(),
+      this.userProvider,
+      this.organizationProvider,
+    );
+    return useCase.execute(command);
+  }
+
+  async updateRenderModeConfiguration(
+    command: UpdateRenderModeConfigurationCommand,
+  ): Promise<RenderModeConfiguration> {
+    if (!this.userProvider || !this.organizationProvider) {
+      throw new Error(
+        'Account providers not configured - cannot update render mode configuration',
+      );
+    }
+    const useCase = new UpdateRenderModeConfigurationUseCase(
+      this.deploymentsServices.getRenderModeConfigurationService(),
+      this.userProvider,
+      this.organizationProvider,
     );
     return useCase.execute(command);
   }

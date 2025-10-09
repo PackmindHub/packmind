@@ -15,7 +15,7 @@ interface SidebarNavigationLinkProps {
   exact?: boolean;
 }
 
-function SidebarNavigationLink({
+export function SidebarNavigationLink({
   url,
   label,
   exact = false,
@@ -80,13 +80,6 @@ export const SidebarNavigation: React.FunctionComponent<
       <PMVerticalNavSection
         title="Deployments"
         navEntries={[
-          <SidebarNavigationLink
-            key="targets"
-            url={
-              organization ? `/org/${organization.slug}/targets` : '/targets'
-            }
-            label="Targets"
-          />,
           <SidebarNavigationLink
             key="overview"
             url={

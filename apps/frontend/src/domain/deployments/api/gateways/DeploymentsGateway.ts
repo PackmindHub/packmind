@@ -11,6 +11,8 @@ import {
   IAddTargetUseCase,
   IUpdateTargetUseCase,
   IDeleteTargetUseCase,
+  IGetRenderModeConfigurationUseCase,
+  IUpdateRenderModeConfigurationUseCase,
   StandardId,
   Gateway,
   GitRepoId,
@@ -96,4 +98,17 @@ export class DeploymentsGatewayApi
   deleteTarget: Gateway<IDeleteTargetUseCase> = async (command) => {
     return this._api.delete(`/targets/${command.targetId}`);
   };
+
+  getRenderModeConfiguration: Gateway<IGetRenderModeConfigurationUseCase> =
+    async () => {
+      return this._api.get(`${this._endpoint}/renderModeConfiguration`);
+    };
+
+  updateRenderModeConfiguration: Gateway<IUpdateRenderModeConfigurationUseCase> =
+    async (command) => {
+      return this._api.post(
+        `${this._endpoint}/renderModeConfiguration`,
+        command,
+      );
+    };
 }

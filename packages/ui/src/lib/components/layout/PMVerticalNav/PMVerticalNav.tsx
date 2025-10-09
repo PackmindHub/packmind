@@ -10,12 +10,14 @@ export interface IPMVerticalNavProps {
   children: React.ReactNode;
   headerNav?: React.ReactNode;
   footerNav?: React.ReactNode;
+  logo?: boolean;
 }
 
 export const PMVerticalNav: React.FC<IPMVerticalNavProps> = ({
   children,
   headerNav,
   footerNav,
+  logo = true,
 }) => {
   return (
     <PMVStack
@@ -37,7 +39,7 @@ export const PMVerticalNav: React.FC<IPMVerticalNavProps> = ({
         mb={4}
         width="100%"
       >
-        <PMImage src={logoPackmind} maxHeight={'20px'} />
+        {logo && <PMImage src={logoPackmind} maxHeight={'20px'} />}
       </PMBox>
       {headerNav && (
         <PMBox w={'100%'} paddingX={2}>

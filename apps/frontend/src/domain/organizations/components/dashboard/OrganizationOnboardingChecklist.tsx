@@ -65,7 +65,7 @@ export const OrganizationOnboardingChecklist: React.FC = () => {
   const { data: standards = [] } = useGetStandardsQuery();
   const { data: recipesOverview } = useGetRecipesDeploymentOverviewQuery();
   const { data: standardsOverview } = useGetStandardsDeploymentOverviewQuery();
-  const { data: members = [] } = useGetUsersInMyOrganizationQuery();
+  const { data: membersData } = useGetUsersInMyOrganizationQuery();
 
   const hasProvider = providers.length > 0;
   const hasRepository = repos.length > 0;
@@ -78,7 +78,7 @@ export const OrganizationOnboardingChecklist: React.FC = () => {
         (s) => s.targetDeployments.length > 0,
       ),
   );
-  const hasMultipleMembers = members.length > 1;
+  const hasMultipleMembers = (membersData?.users ?? []).length > 1;
 
   return (
     <PMPageSection

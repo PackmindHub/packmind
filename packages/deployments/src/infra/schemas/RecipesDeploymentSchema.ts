@@ -31,6 +31,12 @@ export const RecipesDeploymentSchema = new EntitySchema<
       type: 'text',
       nullable: true, // Can be null for successful deployments
     },
+    renderModes: {
+      name: 'render_modes',
+      type: 'json',
+      nullable: false,
+      default: '[]',
+    },
     ...uuidSchema,
     ...timestampsSchemas,
     ...softDeleteSchemas,

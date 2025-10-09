@@ -1,8 +1,7 @@
 import { useCallback } from 'react';
 import { queryClient } from '../../../shared/data/queryClient';
 import { useSSESubscription } from '../../sse';
-import { GET_ME_QUERY_KEY } from '../api/queries/UserQueries';
-import { GET_USER_ORGANIZATIONS_QUERY_KEY } from '../api/queries/AccountsQueries';
+import { GET_ME_KEY, GET_USER_ORGANIZATIONS_KEY } from '../api/queryKeys';
 
 export function UserContextChangeSubscription(): null {
   const handleUserContextChange = useCallback((event: MessageEvent) => {
@@ -12,9 +11,9 @@ export function UserContextChangeSubscription(): null {
 
     try {
       JSON.parse(event.data);
-      void queryClient.invalidateQueries({ queryKey: [GET_ME_QUERY_KEY] });
+      void queryClient.invalidateQueries({ queryKey: GET_ME_KEY });
       void queryClient.invalidateQueries({
-        queryKey: [GET_USER_ORGANIZATIONS_QUERY_KEY],
+        queryKey: GET_USER_ORGANIZATIONS_KEY,
       });
     } catch (error) {
       console.error('SSE: Failed to process user context change event', {

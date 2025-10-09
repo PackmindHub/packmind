@@ -11,9 +11,10 @@ import {
   PMBox,
   PMHeading,
   PMLink,
+  PMTooltip,
 } from '@packmind/ui';
 import { RecipesDeployment } from '@packmind/shared/src/types/deployments/RecipesDeployment';
-import { StandardsDeployment } from '@packmind/shared';
+import { RenderMode, StandardsDeployment } from '@packmind/shared/types';
 import { format } from 'date-fns';
 
 export type DeploymentType = 'recipe' | 'standard';
@@ -155,6 +156,12 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
   const columns: PMTableColumn[] = [
     { key: 'version', header: 'Version', width: '100px', align: 'center' },
     { key: 'target', header: 'Target', width: '200px', align: 'left' },
+    {
+      key: 'renderModes',
+      header: 'Rendered for',
+      width: '200px',
+      align: 'center',
+    },
     { key: 'commits', header: 'Git Commits', width: '18%' },
     { key: 'author', header: 'Author', width: '120px' },
     {
@@ -173,6 +180,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     target: getTargetInfo(
       deployment as RecipesDeployment | StandardsDeployment,
     ),
+    renderModes: <RenderModes renderModes={deployment.renderModes} />,
     commits: getCommitLinks(
       deployment as RecipesDeployment | StandardsDeployment,
     ),
@@ -194,4 +202,43 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
       />
     </PMPageSection>
   );
+};
+
+const RenderModes: React.FunctionComponent<{ renderModes: RenderMode[] }> = ({
+  renderModes,
+}) => {
+  const formatNames: Record<RenderMode, string> = {
+    [RenderMode.AGENTS_MD]: 'AGENTS.md',
+    [RenderMode.JUNIE]: 'Junie',
+    [RenderMode.GH_COPILOT]: 'Github Copilot',
+    [RenderMode.CLAUDE]: 'Claude',
+    [RenderMode.CURSOR]: 'Cursor',
+    [RenderMode.PACKMIND]: 'Packmind',
+  };
+  const formattedNames = renderModes.map(
+    (renderMode) => formatNames[renderMode],
+  );
+  const packmindLabel = formatNames[RenderMode.PACKMIND];
+  const reorderedNames = formattedNames.includes(packmindLabel)
+    ? [
+        ...formattedNames.filter((name) => name !== packmindLabel),
+        packmindLabel,
+      ]
+    : formattedNames;
+  const allNames = reorderedNames.join(', ');
+
+  if (reorderedNames.length > 2) {
+    const visibleNames = reorderedNames.slice(0, 2).join(', ');
+    const hiddenCount = reorderedNames.length - 2;
+    const suffix =
+      hiddenCount === 1 ? 'and 1 other' : `and ${hiddenCount} others`;
+
+    return (
+      <PMTooltip label={allNames} placement="top">
+        <PMText>{`${visibleNames}, ${suffix}`}</PMText>
+      </PMTooltip>
+    );
+  }
+
+  return allNames;
 };

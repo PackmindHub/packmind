@@ -1,5 +1,21 @@
 # [Unreleased]
 
+# [1.3.0] - 2015-10-09
+
+## Added
+
+- Rendering for AI Agents can be configured for each organization (#236)
+
+## Changed
+
+- The Overview layout has improved for better navigation (#263)
+
+## Fixed
+
+- Git repositories and target were not available in the web app until refreshed (#254)
+- Issue with Webhook URL has been fixed (#239)
+- Docker images are now available in Arm64 in addition to Amd64 (#225)
+
 # [1.2.1] - 2015-10-03
 
 ## Changed
@@ -77,6 +93,9 @@
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
-[Unreleased]: https://github.com/PackmindHub/packmind-monorepo/compare/release/1.0.1...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind-monorepo/compare/release/1.3.0...HEAD
+[1.3.0]: https://github.com/PackmindHub/packmind-monorepo/compare/release/1.2.1...release/1.3.0
+[1.2.1]: https://github.com/PackmindHub/packmind-monorepo/compare/release/1.2.0...release/1.2.1
+[1.2.0]: https://github.com/PackmindHub/packmind-monorepo/compare/release/1.0.1...release/1.2.1
 [1.0.1]: https://github.com/PackmindHub/packmind-monorepo/compare/release/1.0.0...release/1.0.1
 [1.0.0]: https://github.com/PackmindHub/packmind-monorepo/compare/1286712f81d6e2b8e18888ee8e23c5503a52c887...release/1.0.0

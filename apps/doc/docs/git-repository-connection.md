@@ -30,7 +30,7 @@ When you add a Git repository, Packmind automatically creates a default target w
 
 ## Deployment Targets
 
-Before distributing your standards and recipes, you can configure **Targets** in the **Targets** menu. A target defines a specific path within your Git repository where standards and recipes will be deployed.
+Before distributing your standards and recipes, you can configure targets in **Settings** → **Distribution** → **Targets**. A target defines a specific path within your Git repository where standards and recipes will be deployed.
 
 Targets are particularly useful in monorepo environments where you want to apply different standards to different parts of your codebase. For example:
 

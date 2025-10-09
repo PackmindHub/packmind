@@ -254,7 +254,12 @@ describe('Claude Deployment Integration', () => {
         expect(claudeFile.content).toContain(
           'Before starting your work, make sure to review the coding standards relevant to your current task',
         );
-        expect(claudeFile.content).toContain(standardVersions[0].name);
+        expect(claudeFile.content).toContain('Test standard for deployment :');
+        expect(claudeFile.content).toContain('* Use meaningful variable names');
+        expect(claudeFile.content).toContain('* Write comprehensive tests');
+        expect(claudeFile.content).toContain(
+          'Full standard is available here for further request: [Test Standard](.packmind/standards/test-standard.md)',
+        );
 
         // Should NOT contain recipes content yet
         expect(claudeFile.content).not.toContain('# Packmind Recipes');
@@ -370,7 +375,13 @@ All rules and guidelines defined in these standards are mandatory and must be fo
 
 Failure to follow these standards may lead to inconsistencies, errors, or rework. Treat them as the source of truth for how code should be written, structured, and maintained.
 
-* [Test Standard](.packmind/standards/test-standard.md): Test standard for deployment
+## Standard: Test Standard
+
+Test standard for deployment :
+* Use meaningful variable names
+* Write comprehensive tests
+
+Full standard is available here for further request: [Test Standard](.packmind/standards/test-standard.md)
 <!-- end: Packmind standards -->`;
 
     beforeEach(() => {
@@ -468,7 +479,13 @@ All rules and guidelines defined in these standards are mandatory and must be fo
 
 Failure to follow these standards may lead to inconsistencies, errors, or rework. Treat them as the source of truth for how code should be written, structured, and maintained.
 
-* [Test Standard](.packmind/standards/test-standard.md): Test standard for deployment
+## Standard: Test Standard
+
+Test standard for deployment :
+* Use meaningful variable names
+* Write comprehensive tests
+
+Full standard is available here for further request: [Test Standard](.packmind/standards/test-standard.md)
 <!-- end: Packmind standards -->`;
 
     beforeEach(() => {
@@ -531,6 +548,8 @@ Failure to follow these standards may lead to inconsistencies, errors, or rework
       expect(claudeFile.content).toContain(
         'Before starting your work, make sure to review the coding standards relevant to your current task',
       );
+      expect(claudeFile.content).toContain('* Use meaningful variable names');
+      expect(claudeFile.content).toContain('* Write comprehensive tests');
 
       // Should add recipe instructions
       expect(claudeFile.content).toContain('# Packmind Recipes');
@@ -692,7 +711,12 @@ User-defined instructions that should be preserved.`;
       expect(claudeFile.content).toContain(
         'Before starting your work, make sure to review the coding standards relevant to your current task',
       );
-      expect(claudeFile.content).toContain(standardVersions[0].name);
+      expect(claudeFile.content).toContain('Test standard for deployment :');
+      expect(claudeFile.content).toContain('* Use meaningful variable names');
+      expect(claudeFile.content).toContain('* Write comprehensive tests');
+      expect(claudeFile.content).toContain(
+        'Full standard is available here for further request: [Test Standard](.packmind/standards/test-standard.md)',
+      );
     });
   });
 

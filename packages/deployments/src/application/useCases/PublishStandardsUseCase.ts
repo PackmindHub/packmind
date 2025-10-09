@@ -10,7 +10,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { StandardsHexa } from '@packmind/standards';
 import { GitHexa } from '@packmind/git';
-import { CodingAgentHexa, CodingAgents } from '@packmind/coding-agent';
+import { CodingAgentHexa } from '@packmind/coding-agent';
 import { IPublishStandards, PublishStandardsCommand } from '@packmind/shared';
 import {
   StandardsDeployment,
@@ -19,6 +19,7 @@ import {
 import { PrepareStandardsDeploymentCommand } from '@packmind/coding-agent';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
 import { TargetService } from '../services/TargetService';
+import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 
 const origin = 'PublishStandardsUseCase';
 
@@ -29,6 +30,7 @@ export class PublishStandardsUseCase implements IPublishStandards {
     private readonly codingAgentHexa: CodingAgentHexa,
     private readonly standardsDeploymentRepository: IStandardsDeploymentRepository,
     private readonly targetService: TargetService,
+    private readonly renderModeConfigurationService: RenderModeConfigurationService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -40,6 +42,17 @@ export class PublishStandardsUseCase implements IPublishStandards {
       targetIdsCount: command.targetIds.length,
       organizationId: command.organizationId,
     });
+
+    // Fetch organization's active render modes for deployment tracking
+    const activeRenderModes =
+      await this.renderModeConfigurationService.getActiveRenderModes(
+        command.organizationId as OrganizationId,
+      );
+
+    const codingAgents =
+      this.renderModeConfigurationService.mapRenderModesToCodingAgents(
+        activeRenderModes,
+      );
 
     // Get repository for each target
     const targetRepositoryMap = new Map();
@@ -116,14 +129,7 @@ export class PublishStandardsUseCase implements IPublishStandards {
           standardVersions: allStandardVersions,
           gitRepo,
           targets: repositoryTargets,
-          codingAgents: [
-            CodingAgents.packmind,
-            CodingAgents.junie,
-            CodingAgents.claude,
-            CodingAgents.cursor,
-            CodingAgents.copilot,
-            CodingAgents.agents_md,
-          ], // Deploy to Packmind, Junie, Claude Code, Cursor, GitHub Copilot, and AGENTS.md
+          codingAgents,
         };
 
         const fileUpdates =
@@ -205,6 +211,7 @@ ${standardVersions.map((sv) => `- ${sv.name} (${sv.slug}) v${sv.version}`).join(
           gitCommit: gitCommit,
           target: target,
           status: deploymentStatus,
+          renderModes: activeRenderModes,
         };
 
         // Save the deployment to the database
@@ -302,6 +309,12 @@ ${standardVersions.map((sv) => `- ${sv.name} (${sv.slug}) v${sv.version}`).join(
   ) {
     // Create failure deployment record using clean model
     try {
+      // Fetch organization's active render modes for deployment tracking
+      const activeRenderModes =
+        await this.renderModeConfigurationService.getActiveRenderModes(
+          command.organizationId as OrganizationId,
+        );
+
       // If standardVersions is empty (fetch failed), try to fetch what was intended
       let versionsToRecord = standardVersions;
       if (standardVersions.length === 0) {
@@ -361,6 +374,7 @@ ${standardVersions.map((sv) => `- ${sv.name} (${sv.slug}) v${sv.version}`).join(
         target: target,
         status: DistributionStatus.failure,
         error: errorMessage,
+        renderModes: activeRenderModes,
       };
 
       await this.standardsDeploymentRepository.add(failureDeployment);

@@ -84,6 +84,14 @@ export class Configuration {
     }
   }
 
+  static async getConfigWithDefault(
+    key: string,
+    defaultValue: string,
+  ): Promise<string> {
+    const value = await Configuration.getConfig(key);
+    return value ?? defaultValue;
+  }
+
   static async getConfig(
     key: string,
     env: Record<string, string | undefined> = process.env,

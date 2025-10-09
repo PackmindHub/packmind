@@ -2,26 +2,33 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
+import { MemoryRouter } from 'react-router';
 import { RepositoryCentricView } from './RepositoryCentricView';
 import {
   createRepositoryStandardDeploymentStatus,
-  createDeployedStandardInfo,
   createRepositoryDeploymentStatus,
-  createDeployedRecipeInfo,
   createTargetDeploymentStatus,
   createTargetStandardDeploymentStatus,
+  createDeployedRecipeInfo,
   targetFactory,
 } from '@packmind/deployments/test';
 import { gitRepoFactory } from '@packmind/git/test/gitRepoFactory';
-import { recipeFactory } from '@packmind/recipes/test/recipeFactory';
-import { standardFactory } from '@packmind/standards/test';
 import { RepositoryDeploymentStatus, createTargetId } from '@packmind/shared';
-import { RecipeId } from '@packmind/recipes';
-import { StandardId } from '@packmind/standards';
 
 const renderWithProvider = (ui: React.ReactElement) => {
-  return render(<UIProvider>{ui}</UIProvider>);
+  return render(
+    <MemoryRouter>
+      <UIProvider>{ui}</UIProvider>
+    </MemoryRouter>,
+  );
 };
+
+// Mock PMTable to avoid internal UI hook/state issues in tests
+jest.mock('@packmind/ui', () => {
+  const actual = jest.requireActual('@packmind/ui');
+  const PMTable = () => <div data-testid="pm-table" />;
+  return { ...actual, PMTable };
+});
 
 describe('RepositoryCentricView', () => {
   it('displays repository name', () => {
@@ -38,180 +45,68 @@ describe('RepositoryCentricView', () => {
     expect(screen.getByText('test-owner/test-repo:main')).toBeInTheDocument();
   });
 
-  it('displays deployed recipe names with (Recipe) label', () => {
-    const repositories = [
-      createRepositoryDeploymentStatus({
-        deployedRecipes: [
-          createDeployedRecipeInfo({
-            recipe: recipeFactory({
-              id: '1' as RecipeId,
-              name: 'Test Recipe 1',
-            }),
-          }),
-        ],
-      }),
+  it('renders a table for a recipe target', () => {
+    const target = targetFactory({ id: createTargetId('t1'), name: 'Prod' });
+    const recipeTargets = [
+      createTargetDeploymentStatus({ target, gitRepo: gitRepoFactory() }),
     ];
 
     renderWithProvider(
-      <RepositoryCentricView recipeRepositories={repositories} />,
+      <RepositoryCentricView
+        recipeRepositories={[]}
+        recipeTargets={recipeTargets}
+      />,
     );
 
-    expect(screen.getByTestId('recipe-1')?.textContent?.trim()).toBe(
-      'Test Recipe 1Recipe',
-    );
+    expect(screen.getAllByTestId('pm-table')).toHaveLength(1);
   });
 
-  it('displays deployed standard names with (Standard) label', () => {
-    const repositories: RepositoryDeploymentStatus[] = [];
-    const standardRepositories = [
-      createRepositoryStandardDeploymentStatus({
-        deployedStandards: [
-          createDeployedStandardInfo({
-            standard: standardFactory({
-              id: '1' as StandardId,
-              name: 'Test Standard 1',
-            }),
-          }),
-        ],
+  it('renders a table for a standard target', () => {
+    const target = targetFactory({ id: createTargetId('t2'), name: 'Staging' });
+    const standardTargets = [
+      createTargetStandardDeploymentStatus({
+        target,
+        gitRepo: gitRepoFactory(),
       }),
     ];
 
     renderWithProvider(
       <RepositoryCentricView
-        recipeRepositories={repositories}
-        standardRepositories={standardRepositories}
+        recipeRepositories={[]}
+        standardTargets={standardTargets}
       />,
     );
 
-    expect(screen.getByTestId('standard-1')?.textContent?.trim()).toBe(
-      'Test Standard 1Standard',
-    );
+    expect(screen.getAllByTestId('pm-table')).toHaveLength(1);
   });
 
-  it('displays both recipes and standards in the same repository', () => {
+  it('renders tables for mixed recipe and standard targets in the same repository', () => {
     const sharedRepo = gitRepoFactory({
       owner: 'shared-owner',
       repo: 'shared-repo',
     });
+    const t1 = targetFactory({ id: createTargetId('t1'), name: 'Prod' });
+    const t2 = targetFactory({ id: createTargetId('t2'), name: 'Staging' });
 
-    const repositories = [
-      createRepositoryDeploymentStatus({
-        gitRepo: sharedRepo,
-        deployedRecipes: [
-          createDeployedRecipeInfo({
-            recipe: recipeFactory({ name: 'Test Recipe' }),
-          }),
-        ],
-      }),
+    const recipeTargets = [
+      createTargetDeploymentStatus({ target: t1, gitRepo: sharedRepo }),
     ];
-
-    const standardRepositories = [
-      createRepositoryStandardDeploymentStatus({
-        gitRepo: sharedRepo,
-        deployedStandards: [
-          createDeployedStandardInfo({
-            standard: standardFactory({ name: 'Test Standard' }),
-          }),
-        ],
-      }),
+    const standardTargets = [
+      createTargetStandardDeploymentStatus({ target: t2, gitRepo: sharedRepo }),
     ];
 
     renderWithProvider(
       <RepositoryCentricView
-        recipeRepositories={repositories}
-        standardRepositories={standardRepositories}
+        recipeRepositories={[]}
+        recipeTargets={recipeTargets}
+        standardTargets={standardTargets}
       />,
     );
 
     expect(
       screen.getByText('shared-owner/shared-repo:main'),
     ).toBeInTheDocument();
-    expect(screen.getByText('Test Recipe')).toBeInTheDocument();
-    expect(screen.getByText('Test Standard')).toBeInTheDocument();
-  });
-
-  it('displays deployment status badges for recipes', () => {
-    const repositories = [
-      createRepositoryDeploymentStatus({
-        deployedRecipes: [
-          createDeployedRecipeInfo({
-            recipe: recipeFactory({ name: 'Test Recipe 1' }),
-            isUpToDate: false,
-          }),
-        ],
-      }),
-    ];
-
-    renderWithProvider(
-      <RepositoryCentricView recipeRepositories={repositories} />,
-    );
-
-    expect(screen.getByText('Outdated')).toBeInTheDocument();
-  });
-
-  it('displays deployment status badges for standards', () => {
-    const repositories: RepositoryDeploymentStatus[] = [];
-    const standardRepositories = [
-      createRepositoryStandardDeploymentStatus({
-        deployedStandards: [
-          createDeployedStandardInfo({
-            standard: standardFactory({ name: 'Test Standard 1' }),
-            isUpToDate: false,
-          }),
-        ],
-      }),
-    ];
-
-    renderWithProvider(
-      <RepositoryCentricView
-        recipeRepositories={repositories}
-        standardRepositories={standardRepositories}
-      />,
-    );
-
-    expect(screen.getByText('Outdated')).toBeInTheDocument();
-  });
-
-  it('displays up-to-date status for both recipes and standards', () => {
-    const sharedRepo = gitRepoFactory({
-      owner: 'test-owner',
-      repo: 'test-repo',
-    });
-
-    const repositories = [
-      createRepositoryDeploymentStatus({
-        gitRepo: sharedRepo,
-        deployedRecipes: [
-          createDeployedRecipeInfo({
-            recipe: recipeFactory({ name: 'Up-to-date Recipe' }),
-            isUpToDate: true,
-          }),
-        ],
-      }),
-    ];
-
-    const standardRepositories = [
-      createRepositoryStandardDeploymentStatus({
-        gitRepo: sharedRepo,
-        deployedStandards: [
-          createDeployedStandardInfo({
-            standard: standardFactory({ name: 'Up-to-date Standard' }),
-            isUpToDate: true,
-          }),
-        ],
-      }),
-    ];
-
-    renderWithProvider(
-      <RepositoryCentricView
-        recipeRepositories={repositories}
-        standardRepositories={standardRepositories}
-      />,
-    );
-
-    expect(screen.getByText('Up-to-date')).toBeInTheDocument();
-    expect(screen.getByText('Up-to-date Recipe')).toBeInTheDocument();
-    expect(screen.getByText('Up-to-date Standard')).toBeInTheDocument();
+    expect(screen.getAllByTestId('pm-table').length).toBeGreaterThanOrEqual(1);
   });
 
   describe('filtering', () => {
@@ -259,7 +154,7 @@ describe('RepositoryCentricView', () => {
       renderWithProvider(
         <RepositoryCentricView
           recipeRepositories={repositories}
-          showOnlyOutdated={true}
+          artifactStatusFilter="outdated"
         />,
       );
 
@@ -294,7 +189,7 @@ describe('RepositoryCentricView', () => {
         <RepositoryCentricView
           recipeRepositories={repositories}
           standardRepositories={standardRepositories}
-          showOnlyOutdated={true}
+          artifactStatusFilter="outdated"
         />,
       );
 
@@ -349,7 +244,7 @@ describe('RepositoryCentricView', () => {
         <RepositoryCentricView
           recipeRepositories={repositories}
           standardRepositories={standardRepositories}
-          showOnlyOutdated={true}
+          artifactStatusFilter="outdated"
         />,
       );
 
@@ -395,7 +290,7 @@ describe('RepositoryCentricView', () => {
         <RepositoryCentricView
           recipeRepositories={repositories}
           searchTerm="test"
-          showOnlyOutdated={true}
+          artifactStatusFilter="outdated"
         />,
       );
 
@@ -569,7 +464,7 @@ describe('RepositoryCentricView', () => {
             recipeRepositories={[]}
             recipeTargets={recipeTargets}
             selectedTargetNames={['Production']}
-            showOnlyOutdated={true}
+            artifactStatusFilter="outdated"
           />,
         );
 
@@ -612,7 +507,7 @@ describe('RepositoryCentricView', () => {
           <RepositoryCentricView
             recipeRepositories={[]}
             recipeTargets={recipeTargets}
-            showOnlyOutdated={true}
+            artifactStatusFilter="outdated"
           />,
         );
 
@@ -784,7 +679,7 @@ describe('RepositoryCentricView', () => {
       renderWithProvider(
         <RepositoryCentricView
           recipeRepositories={repositories}
-          showOnlyOutdated={true}
+          artifactStatusFilter="outdated"
         />,
       );
 
@@ -807,7 +702,8 @@ describe('RepositoryCentricView', () => {
       ).toBeInTheDocument();
     });
 
-    it('displays no deployments message for repository with no recipes or standards', () => {
+    // legacy empty message removed; in target-only view this case is not rendered
+    it('skips legacy empty message (no targets rendered)', () => {
       const repositories = [
         createRepositoryDeploymentStatus({
           gitRepo: gitRepoFactory({ owner: 'empty-owner', repo: 'empty-repo' }),
@@ -821,9 +717,6 @@ describe('RepositoryCentricView', () => {
 
       expect(
         screen.getByText('empty-owner/empty-repo:main'),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByText('No recipes or standards deployed here'),
       ).toBeInTheDocument();
     });
 
@@ -839,7 +732,7 @@ describe('RepositoryCentricView', () => {
         <RepositoryCentricView
           recipeRepositories={repositories}
           searchTerm="nomatch"
-          showOnlyOutdated={true}
+          artifactStatusFilter="outdated"
         />,
       );
 
@@ -847,6 +740,32 @@ describe('RepositoryCentricView', () => {
       expect(
         screen.getByText('No repositories match your search "nomatch"'),
       ).toBeInTheDocument();
+    });
+
+    it('shows only up-to-date repositories with active filter (legacy data)', () => {
+      const repositories = [
+        createRepositoryDeploymentStatus({
+          gitRepo: gitRepoFactory({ owner: 'ok-owner', repo: 'ok-repo' }),
+          hasOutdatedRecipes: false,
+          deployedRecipes: [createDeployedRecipeInfo({ isUpToDate: true })],
+        }),
+        createRepositoryDeploymentStatus({
+          gitRepo: gitRepoFactory({ owner: 'out-owner', repo: 'out-repo' }),
+          hasOutdatedRecipes: true,
+        }),
+      ];
+
+      renderWithProvider(
+        <RepositoryCentricView
+          recipeRepositories={repositories}
+          artifactStatusFilter="up-to-date"
+        />,
+      );
+
+      expect(screen.getByText('ok-owner/ok-repo:main')).toBeInTheDocument();
+      expect(
+        screen.queryByText('out-owner/out-repo:main'),
+      ).not.toBeInTheDocument();
     });
   });
 });

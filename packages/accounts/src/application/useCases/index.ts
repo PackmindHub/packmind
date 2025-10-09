@@ -2,9 +2,9 @@ import { SignUpWithOrganizationUseCase } from './signUpWithOrganization/SignUpWi
 import { CheckEmailAvailabilityUseCase } from './checkEmailAvailability/CheckEmailAvailabilityUseCase';
 import { SignInUserUseCase } from './signInUser/SignInUserUseCase';
 import { GetUserByIdUseCase } from './getUserById/GetUserByIdUseCase';
-import { ListUsersUseCase } from './listUsers/ListUsersUseCase';
 import { RemoveUserFromOrganizationUseCase } from './removeUserFromOrganization/RemoveUserFromOrganizationUseCase';
 import { ListOrganizationUserStatusesUseCase } from './listOrganizationUserStatuses/ListOrganizationUserStatusesUseCase';
+import { ListOrganizationUsersUseCase } from './listOrganizationUsers/ListOrganizationUsersUseCase';
 import { ValidatePasswordUseCase } from './validatePasswordUseCase/ValidatePasswordUseCase';
 import { CreateOrganizationUseCase } from './createOrganization/CreateOrganizationUseCase';
 import { GetOrganizationByIdUseCase } from './getOrganizationById/GetOrganizationByIdUseCase';
@@ -28,8 +28,8 @@ import {
   ISignUpWithOrganizationUseCase,
   ISignInUserUseCase,
   IGetUserByIdUseCase,
-  IListUsersUseCase,
   IListOrganizationUserStatusesUseCase,
+  IListOrganizationUsersUseCase,
   IValidatePasswordUseCase,
   ICreateOrganizationUseCase,
   IGetOrganizationByIdUseCase,
@@ -46,9 +46,10 @@ import {
   SignUpWithOrganizationCommand,
   SignInUserCommand,
   GetUserByIdCommand,
-  ListUsersCommand,
   ListOrganizationUserStatusesCommand,
   ListOrganizationUserStatusesResponse,
+  ListOrganizationUsersCommand,
+  ListOrganizationUsersResponse,
   ValidatePasswordCommand,
   CreateOrganizationCommand,
   GetOrganizationByIdCommand,
@@ -93,9 +94,9 @@ export class AccountsUseCases {
   private readonly _signUpWithOrganization: ISignUpWithOrganizationUseCase;
   private readonly _signInUser: ISignInUserUseCase;
   private readonly _getUserById: IGetUserByIdUseCase;
-  private readonly _listUsers: IListUsersUseCase;
   private readonly _removeUserFromOrganization: IRemoveUserFromOrganizationUseCase;
   private readonly _listOrganizationUserStatuses: IListOrganizationUserStatusesUseCase;
+  private readonly _listOrganizationUsers: IListOrganizationUsersUseCase;
   private readonly _validatePassword: IValidatePasswordUseCase;
   private readonly _createOrganization: ICreateOrganizationUseCase;
   private readonly _getOrganizationById: IGetOrganizationByIdUseCase;
@@ -130,7 +131,6 @@ export class AccountsUseCases {
     this._getUserById = new GetUserByIdUseCase(
       accountsServices.getUserService(),
     );
-    this._listUsers = new ListUsersUseCase(accountsServices.getUserService());
     this._removeUserFromOrganization = new RemoveUserFromOrganizationUseCase(
       accountsServices.getUserService(),
       accountsServices.getOrganizationService(),
@@ -145,6 +145,12 @@ export class AccountsUseCases {
         accountsServices.getInvitationService(),
         this.logger,
       );
+    this._listOrganizationUsers = new ListOrganizationUsersUseCase(
+      accountsServices.getUserService(),
+      accountsServices.getOrganizationService(),
+      accountsServices.getUserService(),
+      this.logger,
+    );
     this._validatePassword = new ValidatePasswordUseCase(
       accountsServices.getUserService(),
     );
@@ -243,10 +249,6 @@ export class AccountsUseCases {
     return result.user;
   }
 
-  public async listUsers(command: ListUsersCommand) {
-    return await this._listUsers.execute(command);
-  }
-
   public async removeUserFromOrganization(
     command: RemoveUserFromOrganizationCommand,
   ): Promise<RemoveUserFromOrganizationResponse> {
@@ -257,6 +259,12 @@ export class AccountsUseCases {
     command: ListOrganizationUserStatusesCommand,
   ): Promise<ListOrganizationUserStatusesResponse> {
     return await this._listOrganizationUserStatuses.execute(command);
+  }
+
+  public async listOrganizationUsers(
+    command: ListOrganizationUsersCommand,
+  ): Promise<ListOrganizationUsersResponse> {
+    return await this._listOrganizationUsers.execute(command);
   }
 
   public async validatePassword(command: ValidatePasswordCommand) {

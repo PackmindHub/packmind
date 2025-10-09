@@ -11,3 +11,6 @@ export * from './IPublishRecipes';
 export * from './IPublishStandards';
 export * from './IListDeploymentsByRecipe';
 export * from './IListDeploymentsByStandard';
+export * from './IGetRenderModeConfigurationUseCase';
+export * from './ICreateRenderModeConfigurationUseCase';
+export * from './IUpdateRenderModeConfigurationUseCase';

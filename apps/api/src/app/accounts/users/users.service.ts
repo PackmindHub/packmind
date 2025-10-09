@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   AccountsHexa,
   ListOrganizationUserStatusesResponse,
-  ListUsersResponse,
+  ListOrganizationUsersResponse,
   OrganizationId,
   User,
   UserId,
@@ -17,23 +17,8 @@ import {
 export class UsersService {
   constructor(private readonly accountsHexa: AccountsHexa) {}
 
-  async getUsers(
-    userId: UserId,
-    organizationId: OrganizationId,
-  ): Promise<ListUsersResponse> {
-    return this.accountsHexa.listUsers({ userId, organizationId });
-  }
-
   async getUserById(id: UserId): Promise<User | null> {
     return this.accountsHexa.getUserById({ userId: id });
-  }
-
-  async getUsersByOrganizationId(
-    userId: UserId,
-    organizationId: OrganizationId,
-  ): Promise<ListUsersResponse['users']> {
-    const { users } = await this.getUsers(userId, organizationId);
-    return users;
   }
 
   async getUserStatuses(
@@ -41,6 +26,16 @@ export class UsersService {
     organizationId: OrganizationId,
   ): Promise<ListOrganizationUserStatusesResponse> {
     return this.accountsHexa.listOrganizationUserStatuses({
+      userId,
+      organizationId,
+    });
+  }
+
+  async getOrganizationUsers(
+    userId: UserId,
+    organizationId: OrganizationId,
+  ): Promise<ListOrganizationUsersResponse> {
+    return this.accountsHexa.listOrganizationUsers({
       userId,
       organizationId,
     });

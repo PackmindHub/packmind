@@ -23,9 +23,9 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
 
   const userMap = useMemo(() => {
     if (!users) return {};
-    const usersName = users.reduce(
+    const usersName = users.users.reduce(
       (map, user) => {
-        map[user.id] = user.email;
+        map[user.userId] = user.email;
         return map;
       },
       {} as Record<string, string>,

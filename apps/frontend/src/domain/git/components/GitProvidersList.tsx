@@ -16,6 +16,7 @@ import {
   PMMenu,
   PMPortal,
   PMIcon,
+  PMEllipsisMenu,
 } from '@packmind/ui';
 import { OrganizationId } from '@packmind/accounts/types';
 import {
@@ -105,44 +106,26 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
       url: provider.url,
       repositoryCount: provider.repos?.length || 0,
       actions: (
-        <PMHStack gap={2} justifyContent={'center'}>
-          <PMMenu.Root>
-            <PMMenu.Trigger asChild>
-              <PMButton variant="secondary" size="sm">
-                <PMIcon>
-                  <LuEllipsis />
-                </PMIcon>
-              </PMButton>
-            </PMMenu.Trigger>
-
-            <PMPortal>
-              <PMMenu.Positioner>
-                <PMMenu.Content>
-                  <PMMenu.Item
-                    value="edit"
-                    cursor={'pointer'}
-                    onClick={() => {
-                      setEditingProvider(provider);
-                      setOpenEditDialog(true);
-                    }}
-                  >
-                    <PMText color="secondary">Edit</PMText>
-                  </PMMenu.Item>
-                  <PMMenu.Item
-                    value="delete"
-                    cursor={'pointer'}
-                    onClick={() => {
-                      setProviderToDelete(provider);
-                      setDeleteDialogOpen(true);
-                    }}
-                  >
-                    <PMText color="error">Delete</PMText>
-                  </PMMenu.Item>
-                </PMMenu.Content>
-              </PMMenu.Positioner>
-            </PMPortal>
-          </PMMenu.Root>
-        </PMHStack>
+        <PMEllipsisMenu
+          actions={[
+            {
+              value: 'edit',
+              onClick: () => {
+                setEditingProvider(provider);
+                setOpenEditDialog(true);
+              },
+              content: <PMText color="secondary">Edit</PMText>,
+            },
+            {
+              value: 'delete',
+              onClick: () => {
+                setProviderToDelete(provider);
+                setDeleteDialogOpen(true);
+              },
+              content: <PMText color="error">Delete</PMText>,
+            },
+          ]}
+        />
       ),
     }));
   }, [providers]);

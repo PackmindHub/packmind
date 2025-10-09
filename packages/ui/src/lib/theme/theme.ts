@@ -8,6 +8,7 @@ import { pmLinkRecipe } from '../components/typography/PMLink.recipe';
 import { pmTabsRecipe } from '../components/navigation/PMTabs/PMTabs.recipe';
 import { pmComboboxRecipe } from '../components/form/PMCombobox/PMCombobox.recipe';
 import { pmToasterRecipe } from '../components/feedback/PMToaster/PMToaster.recipe';
+import { pmCheckboxCard } from '../components/form/PMCheckboxCard/PMCheckboxCard.recipe';
 export const packmindTheme = (preflight: boolean) =>
   defineConfig({
     preflight,
@@ -145,6 +146,7 @@ export const packmindTheme = (preflight: boolean) =>
         tabs: pmTabsRecipe,
         combobox: pmComboboxRecipe,
         toast: pmToasterRecipe,
+        checkboxCard: pmCheckboxCard,
       },
       semanticTokens: {
         colors: {
@@ -186,6 +188,7 @@ export const packmindTheme = (preflight: boolean) =>
             primary: { value: '{colors.beige.1000}' },
             secondary: { value: '{colors.beige.900}' },
             tertiary: { value: '{colors.beige.800}' },
+            faded: { value: '{colors.beige.700}' },
           },
           text: {
             primary: { value: '{colors.beige.0}' },

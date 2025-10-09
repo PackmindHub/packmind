@@ -34,27 +34,32 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
     filePath: string,
   ): string {
     const link = `* [${item.name}](${filePath})`;
+    const summaryOrDescription =
+      GenericStandardSectionWriter.extractSummaryOrDescription(item);
 
-    const summary = item.summary?.trim();
-    const description = item.description?.trim();
-
-    // No text available, return just the link
-    if (!summary && !description) {
+    if (!summaryOrDescription) {
       return link;
     }
 
-    // If summary exists, use it as-is (no truncation)
-    if (summary) {
-      return `${link}: ${summary}`;
-    }
+    return `${link}: ${summaryOrDescription}`;
+  }
 
-    // At this point, we know description exists (checked above)
-    // Fall back to description: extract first line and truncate if needed
-    const firstLine = description!.split('\n')[0].trim();
-    const truncated =
-      firstLine.length > 200 ? firstLine.substring(0, 200) + '...' : firstLine;
+  private async formatStandardContent(
+    standardVersion: StandardVersion,
+    filePath: string,
+  ): Promise<string> {
+    const rules =
+      standardVersion.rules ??
+      (await this.standardsHexa?.getRulesByStandardId?.(
+        standardVersion.standardId,
+      )) ??
+      [];
 
-    return `${link}: ${truncated}`;
+    return GenericStandardSectionWriter.formatStandardContent({
+      standardVersion,
+      rules,
+      link: filePath,
+    });
   }
 
   async deployRecipes(
@@ -120,17 +125,19 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
 
     const existingContent = await this.getExistingContent(gitRepo, target);
 
+    const standardsSection = await Promise.all(
+      standardVersions.map((standardVersion) =>
+        this.formatStandardContent(
+          standardVersion,
+          `${this.config.pathToPackmindFolder ?? ''}.packmind/standards/${standardVersion.slug}.md`,
+        ),
+      ),
+    );
+
     const updatedContent = GenericStandardSectionWriter.replace({
       currentContent: existingContent,
       commentMarker: 'Packmind standards',
-      standardsSection: standardVersions
-        .map((standardVersion) =>
-          this.formatMarkdownLink(
-            standardVersion,
-            `${this.config.pathToPackmindFolder ?? ''}.packmind/standards/${standardVersion.slug}.md`,
-          ),
-        )
-        .join('\n'),
+      standardsSection: standardsSection.join('\n\n'),
     });
 
     const fileUpdates: FileUpdates = {

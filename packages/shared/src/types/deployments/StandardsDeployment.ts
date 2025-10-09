@@ -4,6 +4,7 @@ import { OrganizationId, UserId } from '../accounts';
 import { Branded, brandedIdFactory } from '../brandedTypes';
 import { Target } from './Target';
 import { DistributionStatus } from './DistributionStatus';
+import { RenderMode } from './RenderMode';
 
 export type StandardsDeploymentId = Branded<'StandardDeploymentId'>;
 export const createStandardsDeploymentId =
@@ -20,4 +21,5 @@ export type StandardsDeployment = {
   target: Target; // Required - always present
   status: DistributionStatus; // Required - success or failure
   error?: string; // Optional - only present for failed deployments
+  renderModes: RenderMode[]; // Defaults to empty array
 };

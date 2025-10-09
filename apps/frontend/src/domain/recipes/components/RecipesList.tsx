@@ -11,6 +11,8 @@ import {
   PMAlert,
   PMAlertDialog,
   PMButtonGroup,
+  PMEmptyState,
+  PMHStack,
 } from '@packmind/ui';
 
 import {
@@ -23,6 +25,8 @@ import './RecipesList.styles.scss';
 import { RecipeId } from '@packmind/recipes/types';
 import { RECIPE_MESSAGES } from '../constants/messages';
 import { formatDistanceToNowStrict } from 'date-fns';
+import { GettingStartedLearnMoreDialog } from '../../organizations/components/dashboard/GettingStartedLearnMoreDialog';
+import { GETTING_STARTED_CREATE_DIALOG } from '../../organizations/components/dashboard/GettingStartedWidget';
 
 interface RecipesListProps {
   orgSlug: string;
@@ -215,7 +219,22 @@ export const RecipesList = ({ orgSlug }: RecipesListProps) => {
           />
         </PMBox>
       ) : (
-        <p>No recipes found</p>
+        <PMEmptyState
+          backgroundColor={'background.primary'}
+          borderRadius={'md'}
+          width={'2xl'}
+          mx={'auto'}
+          title={'No recipes yet'}
+        >
+          Recipes are a set of instructions that define how coding assistants
+          should help you write consistent code.
+          <GettingStartedLearnMoreDialog
+            body={GETTING_STARTED_CREATE_DIALOG.body}
+            title={GETTING_STARTED_CREATE_DIALOG.title}
+            buttonLabel="Create from your code"
+            buttonSize="sm"
+          />
+        </PMEmptyState>
       )}
     </div>
   );

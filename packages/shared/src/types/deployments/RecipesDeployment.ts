@@ -4,6 +4,7 @@ import { GitCommit } from '../git';
 import { OrganizationId, UserId } from '../accounts';
 import { Target } from './Target';
 import { DistributionStatus } from './DistributionStatus';
+import { RenderMode } from './RenderMode';
 
 export type RecipesDeploymentId = Branded<'RecipesDeploymentId'>;
 export const createRecipesDeploymentId =
@@ -19,4 +20,5 @@ export type RecipesDeployment = {
   target: Target; // Required - always present
   status: DistributionStatus; // Required - success or failure
   error?: string; // Optional - only present for failed deployments
+  renderModes: RenderMode[]; // Defaults to empty array
 };

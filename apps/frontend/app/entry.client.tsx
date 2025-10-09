@@ -10,18 +10,21 @@ import { hydrateRoot } from 'react-dom/client';
 import { UIProvider } from '@packmind/ui';
 import { QueryProvider } from '../src/providers/QueryProvider';
 import { SSEProvider } from '../src/services/sse';
+import { ErrorBoundary } from '../src/providers/ErrorBoundary';
 
 startTransition(() => {
   hydrateRoot(
     document,
     <StrictMode>
-      <QueryProvider>
-        <SSEProvider>
-          <UIProvider>
-            <HydratedRouter />
-          </UIProvider>
-        </SSEProvider>
-      </QueryProvider>
+      <ErrorBoundary level="app">
+        <QueryProvider>
+          <SSEProvider>
+            <UIProvider>
+              <HydratedRouter />
+            </UIProvider>
+          </SSEProvider>
+        </QueryProvider>
+      </ErrorBoundary>
     </StrictMode>,
   );
 });

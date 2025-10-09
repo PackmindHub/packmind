@@ -267,7 +267,18 @@ describe('Cursor Deployment Integration', () => {
         expect(cursorStandardFile.content).toContain('globs: **/*.{ts,tsx}');
         expect(cursorStandardFile.content).toContain('alwaysApply: false');
         expect(cursorStandardFile.content).toContain('---');
-        expect(cursorStandardFile.content).toContain(standard.name);
+        expect(cursorStandardFile.content).toContain(
+          'Test standard for Cursor deployment :',
+        );
+        expect(cursorStandardFile.content).toContain(
+          '* Use meaningful variable names in TypeScript',
+        );
+        expect(cursorStandardFile.content).toContain(
+          '* Write comprehensive tests for all components',
+        );
+        expect(cursorStandardFile.content).toContain(
+          `Full standard is available here for further request: [${standard.name}](../../../.packmind/standards/${standard.slug}.md)`,
+        );
       }
     });
 
@@ -313,6 +324,15 @@ describe('Cursor Deployment Integration', () => {
       // Should use alwaysApply: true when no scope
       expect(cursorStandardFile.content).toContain('alwaysApply: true');
       expect(cursorStandardFile.content).not.toContain('globs:');
+      expect(cursorStandardFile.content).toContain(
+        'Global standard for all files :',
+      );
+      expect(cursorStandardFile.content).toContain(
+        '* Always use consistent formatting',
+      );
+      expect(cursorStandardFile.content).toContain(
+        `Full standard is available here for further request: [${globalStandard.name}](../../../.packmind/standards/${globalStandard.slug}.md)`,
+      );
     });
 
     it('combines recipes and standards deployments', async () => {
@@ -601,6 +621,11 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
       if (frontendFile) {
         expect(frontendFile.content).toContain('globs: **/*.{ts,tsx,js,jsx}');
         expect(frontendFile.content).toContain('alwaysApply: false');
+        expect(frontendFile.content).toContain('Frontend standard :');
+        expect(frontendFile.content).toContain('* Use TypeScript');
+        expect(frontendFile.content).toContain(
+          `Full standard is available here for further request: [${standard1.name}](../../../.packmind/standards/${standard1.slug}.md)`,
+        );
       }
 
       // Check second standard (no scope)
@@ -611,6 +636,11 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
       if (backendFile) {
         expect(backendFile.content).not.toContain('globs:');
         expect(backendFile.content).toContain('alwaysApply: true');
+        expect(backendFile.content).toContain('Backend standard :');
+        expect(backendFile.content).toContain('* Use dependency injection');
+        expect(backendFile.content).toContain(
+          `Full standard is available here for further request: [${standard2.name}](../../../.packmind/standards/${standard2.slug}.md)`,
+        );
       }
     });
   });

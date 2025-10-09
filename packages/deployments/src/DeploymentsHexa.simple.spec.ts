@@ -142,6 +142,9 @@ describe('DeploymentsHexa - Simple Integration', () => {
           if (type === RecipesHexa) {
             return mockRecipesHexa;
           }
+          if (type === StandardsHexa) {
+            return mockStandardsHexa;
+          }
           return null; // GitHexa not found
         });
 
@@ -178,6 +181,21 @@ describe('DeploymentsHexa - Simple Integration', () => {
       });
 
       deploymentsHexa.destroy();
+    });
+  });
+
+  describe('setAccountProviders', () => {
+    it('accepts user and organization providers', () => {
+      const deploymentsHexa = new DeploymentsHexa(mockRegistry, {
+        logger: mockLogger,
+      });
+
+      expect(() =>
+        deploymentsHexa.setAccountProviders(
+          { getUserById: jest.fn() },
+          { getOrganizationById: jest.fn() },
+        ),
+      ).not.toThrow();
     });
   });
 });
