@@ -1,4 +1,5 @@
-import { NavLink, Outlet, redirect } from 'react-router';
+import { Outlet, redirect } from 'react-router';
+import { useEffect } from 'react';
 import { PMBox, PMHStack, pmToaster } from '@packmind/ui';
 import { SidebarNavigation } from '../../src/domain/organizations/components/SidebarNavigation';
 
@@ -12,27 +13,31 @@ import { getUserOrganizationsQueryOptions } from '../../src/domain/accounts/api/
 import { getSelectOrganizationQueryOptions } from '../../src/domain/accounts/api/queries/AuthQueries';
 import { useAuthErrorHandler } from '../../src/domain/accounts/hooks/useAuthErrorHandler';
 import { isPackmindError } from '../../src/services/api/errors/PackmindError';
+import {
+  initCrisp,
+  setCrispUserInfo,
+} from '@packmind/proprietary/frontend/services/vendors/CrispService';
 
 export async function clientLoader({ params }: LoaderFunctionArgs) {
   try {
-    const me = await queryClient.ensureQueryData(getMeQueryOptions());
+    const me = await queryClient.fetchQuery(getMeQueryOptions());
     if (!me.authenticated) {
       throw redirect('/sign-in');
     }
     if (me.organization?.slug && me.organization.slug !== params.orgSlug) {
-      const organizations = await queryClient.ensureQueryData(
+      const organizations = await queryClient.fetchQuery(
         getUserOrganizationsQueryOptions(),
       );
       const organization = organizations.find(
         (org) => org.slug === params.orgSlug,
       );
       if (organization) {
-        await queryClient.ensureQueryData(
+        await queryClient.fetchQuery(
           getSelectOrganizationQueryOptions(organization.id),
         );
         await queryClient.invalidateQueries();
 
-        return { me: await queryClient.ensureQueryData(getMeQueryOptions()) };
+        return { me: await queryClient.fetchQuery(getMeQueryOptions()) };
       } else {
         pmToaster.error({
           title: 'Access denied',
@@ -90,6 +95,13 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
 export default function AuthenticatedLayout() {
   const { data: me } = useGetMeQuery();
   useAuthErrorHandler();
+
+  useEffect(() => {
+    if (!me || me.authenticated !== true) return;
+    initCrisp();
+    setCrispUserInfo(me.user.email);
+  }, [me]);
+
   if (!me) return null;
 
   return (

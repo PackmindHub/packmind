@@ -43,6 +43,7 @@ const origin = 'RecipesHexa';
 export class RecipesHexa extends BaseHexa {
   private readonly hexa: RecipesHexaFactory;
   private _deploymentPort: IDeploymentPort | undefined | null = undefined;
+  private isInitialized = false;
 
   constructor(
     registry: HexaRegistry,
@@ -50,7 +51,7 @@ export class RecipesHexa extends BaseHexa {
   ) {
     super(registry, opts);
 
-    this.logger.info('Initializing RecipesHexa');
+    this.logger.info('Constructing RecipesHexa');
 
     try {
       // Get the DataSource from the registry
@@ -63,10 +64,38 @@ export class RecipesHexa extends BaseHexa {
       // DeploymentPort will be resolved lazily to avoid circular dependencies
       this.hexa = new RecipesHexaFactory(
         dataSource,
+        registry,
         gitHexa,
         undefined,
         this.logger,
       );
+      this.logger.info('RecipesHexa construction completed');
+    } catch (error) {
+      this.logger.error('Failed to construct RecipesHexa', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Async initialization phase - must be called after construction.
+   * This initializes delayed jobs and async dependencies.
+   */
+  public override async initialize(): Promise<void> {
+    if (this.isInitialized) {
+      this.logger.debug('RecipesHexa already initialized');
+      return;
+    }
+
+    this.logger.info('Initializing RecipesHexa (async phase)');
+
+    try {
+      // Set RecipesHexa reference in the factory to enable webhook use cases access to delayed jobs
+      this.hexa.setRecipesHexa(this);
+
+      await this.hexa.initialize();
+      this.isInitialized = true;
       this.logger.info('RecipesHexa initialized successfully');
     } catch (error) {
       this.logger.error('Failed to initialize RecipesHexa', {
@@ -77,12 +106,42 @@ export class RecipesHexa extends BaseHexa {
   }
 
   /**
-   * Set the deployment port after initialization to avoid circular dependencies
+   * Internal helper to ensure initialization before use case access
    */
-  public setDeploymentPort(deploymentPort: IDeploymentPort): void {
+  private ensureInitialized(): void {
+    if (!this.isInitialized) {
+      throw new Error(
+        'RecipesHexa not initialized. Call initialize() before using delayed jobs.',
+      );
+    }
+  }
+
+  /**
+   * Get the delayed jobs for accessing job queues
+   */
+  public getRecipesDelayedJobs() {
+    this.ensureInitialized();
+    return this.hexa.getRecipesDelayedJobs();
+  }
+
+  /**
+   * Set the deployment port after initialization to avoid circular dependencies
+   * This will trigger async initialization if not already initialized
+   */
+  public async setDeploymentPort(
+    deploymentPort: IDeploymentPort,
+  ): Promise<void> {
     this._deploymentPort = deploymentPort;
     // Update the use cases with the new deployment port
     this.hexa.updateDeploymentPort(deploymentPort);
+
+    // Initialize delayed jobs if not already initialized
+    if (!this.isInitialized) {
+      this.logger.info(
+        'Deployment port set, triggering RecipesHexa initialization',
+      );
+      await this.initialize();
+    }
   }
 
   /**
@@ -131,13 +190,14 @@ export class RecipesHexa extends BaseHexa {
   }
 
   /**
-   * Find a recipe by its slug
+   * Find a recipe by its slug within an organization
    */
   public async findRecipeBySlug(
     slug: string,
+    organizationId: OrganizationId,
     opts?: Pick<QueryOption, 'includeDeleted'>,
   ): Promise<Recipe | null> {
-    return this.hexa.useCases.findRecipeBySlug(slug, opts);
+    return this.hexa.useCases.findRecipeBySlug(slug, organizationId, opts);
   }
 
   /**

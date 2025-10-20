@@ -22,6 +22,7 @@ import {
 import { useEffect } from 'react';
 import { MeResponse } from '@packmind/proprietary/frontend/domain/accounts/api/gateways/IAuthGateway';
 import { SidebarNavigationLink } from '../../src/domain/organizations/components/SidebarNavigation';
+import { routes } from '../../src/shared/utils/routes';
 
 type HasAccessResponse =
   | {
@@ -62,7 +63,9 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
 
 export const handle = {
   crumb: ({ params }: { params: { orgSlug: string } }) => {
-    return <NavLink to={`/org/${params.orgSlug}/settings`}>Settings</NavLink>;
+    return (
+      <NavLink to={routes.org.toSettings(params.orgSlug)}>Settings</NavLink>
+    );
   },
 };
 
@@ -95,7 +98,7 @@ export default function SettingsIndexRouteModule() {
           navEntries={[
             <SidebarNavigationLink
               key="users"
-              url={`/org/${orgSlug}/settings/users`}
+              url={orgSlug ? routes.org.toSettingsUsers(orgSlug) : '#'}
               label="Users"
               exact
             />,
@@ -107,21 +110,21 @@ export default function SettingsIndexRouteModule() {
           navEntries={[
             <SidebarNavigationLink
               key="git"
-              url={`/org/${orgSlug}/settings/git`}
+              url={orgSlug ? routes.org.toSettingsGit(orgSlug) : '#'}
               label="Git"
               exact
             />,
 
             <SidebarNavigationLink
               key="rendering"
-              url={`/org/${orgSlug}/settings/distribution-rendering`}
+              url={orgSlug ? routes.org.toSettingsDistribution(orgSlug) : '#'}
               label="Rendering"
               exact
             />,
 
             <SidebarNavigationLink
               key="targets"
-              url={`/org/${orgSlug}/settings/targets`}
+              url={orgSlug ? routes.org.toSettingsTargets(orgSlug) : '#'}
               label="Targets"
               exact
             />,

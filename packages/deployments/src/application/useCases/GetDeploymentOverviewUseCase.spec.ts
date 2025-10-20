@@ -1,22 +1,17 @@
 import { GetDeploymentOverviewUseCase } from './GetDeploymentOverviewUseCase';
 import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
-import { RecipesHexa } from '@packmind/recipes';
+import { RecipesHexa, createRecipeVersionId } from '@packmind/recipes';
 import { GitHexa } from '@packmind/git';
 import { stubLogger } from '@packmind/shared/test';
-import {
-  createOrganizationId,
-  createUserId,
-  DistributionStatus,
-  createRecipeVersionId,
-} from '@packmind/shared';
-
+import { createOrganizationId, createUserId } from '@packmind/accounts';
 import { gitRepoFactory } from '@packmind/shared/test/factories/gitRepoFactory';
 import { recipeFactory } from '@packmind/recipes/test';
 import { recipeVersionFactory } from '@packmind/recipes/test';
 import {
   DeploymentOverview,
+  DistributionStatus,
   GetDeploymentOverviewCommand,
-} from '@packmind/shared';
+} from '@packmind/shared/types';
 import { deploymentFactory } from '../../../test/deploymentFactory';
 import { targetFactory } from '../../../test/targetFactory';
 import { GetTargetsByOrganizationUseCase } from './GetTargetsByOrganizationUseCase';

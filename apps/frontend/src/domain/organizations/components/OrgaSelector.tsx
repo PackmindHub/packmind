@@ -17,6 +17,7 @@ import { LuBuilding, LuCirclePlus } from 'react-icons/lu';
 import { NewOrganizationDialog } from './NewOrganizationDialog';
 import { useGetUserOrganizationsQuery } from '../../accounts/api/queries/AccountsQueries';
 import { UserId } from '@packmind/shared';
+import { routes } from '../../../shared/utils/routes';
 
 interface ISidebarOrgaSelectorProps {
   currentOrganization: AuthContextOrganization;
@@ -26,12 +27,10 @@ export const SidebarOrgaSelector: React.FunctionComponent<
   ISidebarOrgaSelectorProps
 > = ({ currentOrganization }) => {
   const [createOrgaDialogOpen, setCreateOrgaDialogOpen] = React.useState(false);
-  const { user } = useAuthContext();
   const navigate = useNavigate();
 
-  const userId = (user?.id ?? '') as UserId;
   const { data: organizations = [], isLoading } =
-    useGetUserOrganizationsQuery(userId);
+    useGetUserOrganizationsQuery();
 
   // Filter out the current organization from the list
   const availableOrganizations = organizations.filter(
@@ -42,7 +41,8 @@ export const SidebarOrgaSelector: React.FunctionComponent<
     const selectedOrg = organizations.find((org) => org.id === orgaId);
     if (!selectedOrg) return;
 
-    navigate(`/org/${selectedOrg.slug}`);
+    // Navigate to org dashboard (not space-scoped)
+    navigate(routes.org.toDashboard(selectedOrg.slug));
   };
 
   const handleOpenOrganizationCreation = () => {

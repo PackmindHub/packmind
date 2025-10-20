@@ -1,8 +1,16 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, useParams } from 'react-router';
-import { PMHStack, PMText, PMVStack, PMInput, PMTabs } from '@packmind/ui';
+import {
+  PMHStack,
+  PMText,
+  PMVStack,
+  PMInput,
+  PMTabs,
+  PMSegmentGroup,
+} from '@packmind/ui';
 import { RepositoryCentricView } from '../RepositoryCentricView';
 import { ArtifactsView } from '../ArtifactsView';
+import type { ArtifactTypeFilter } from '../ArtifactsView/ArtifactsView';
 import { TargetMultiSelect } from '../TargetMultiSelect';
 import { RepositoryMultiSelect } from '../RepositoryMultiSelect';
 import { StatusCombobox, type RepositoryStatus } from '../StatusCombobox';
@@ -57,7 +65,28 @@ export const DeploymentsPage: React.FC = () => {
   const setViewMode = (newViewMode: ViewMode) => {
     setSearchParams((prev) => {
       const newParams = new URLSearchParams(prev);
+      // Always set new view first
       newParams.set('view', newViewMode);
+
+      // Reset filters when switching views
+      // Common resets
+      newParams.delete('search'); // clear search box
+      newParams.set('repoStatus', 'all'); // reset status filter
+
+      if (newViewMode === 'repositories') {
+        // Clear artifacts-specific filters
+        newParams.delete('artType');
+        // Keep repository-centric filters but reset selections
+        newParams.delete('repoIds');
+        newParams.delete('targetFilter');
+      } else if (newViewMode === 'artifacts') {
+        // Clear repository-centric selections
+        newParams.delete('repoIds');
+        newParams.delete('targetFilter');
+        // Ensure artifact type is reset
+        newParams.set('artType', 'all');
+      }
+
       return newParams;
     });
   };
@@ -99,7 +128,11 @@ export const DeploymentsPage: React.FC = () => {
   const setRepositoryStatus = (newStatus: RepositoryStatus) => {
     setSearchParams((prev) => {
       const newParams = new URLSearchParams(prev);
-      newParams.set('repoStatus', newStatus);
+      if (newStatus === 'all') {
+        newParams.delete('repoStatus');
+      } else {
+        newParams.set('repoStatus', newStatus);
+      }
       return newParams;
     });
   };
@@ -159,10 +192,25 @@ export const DeploymentsPage: React.FC = () => {
     error: standardError,
   } = useGetStandardsDeploymentOverviewQuery();
 
+  // Filter targets by selected repositories (if any), then extract available targets
+  const filteredRecipeTargets = useMemo(() => {
+    const all = recipesData?.targets ?? [];
+    if (!selectedRepoIds.length) return all;
+    const selected = new Set(selectedRepoIds);
+    return all.filter((t) => t.gitRepo && selected.has(t.gitRepo.id));
+  }, [recipesData?.targets, selectedRepoIds]);
+
+  const filteredStandardTargets = useMemo(() => {
+    const all = standardData?.targets ?? [];
+    if (!selectedRepoIds.length) return all;
+    const selected = new Set(selectedRepoIds);
+    return all.filter((t) => t.gitRepo && selected.has(t.gitRepo.id));
+  }, [standardData?.targets, selectedRepoIds]);
+
   // Extract available targets for filtering (safe to call even when data is loading)
   const availableTargets = extractAvailableTargets(
-    recipesData?.targets,
-    standardData?.targets,
+    filteredRecipeTargets,
+    filteredStandardTargets,
   );
 
   // Build available repositories list for combobox (from targets, since repository view is target-based)
@@ -200,7 +248,7 @@ export const DeploymentsPage: React.FC = () => {
     }
   }, [availableRepositories, selectedRepoIds, setSelectedRepoIds]);
 
-  // Automatic cleanup of invalid target names when data updates
+  // Automatic cleanup of invalid target names when data or repo selection updates
   useEffect(() => {
     if (selectedTargetNames.length > 0 && availableTargets.length > 0) {
       const availableTargetNames = new Set(
@@ -257,6 +305,7 @@ export const DeploymentsPage: React.FC = () => {
           placeholder="All repositories"
         />
         <TargetMultiSelect
+          key={`tms-${availableTargets.map((t) => t.name).join('|')}`}
           availableTargets={availableTargets}
           selectedTargetNames={selectedTargetNames}
           onSelectionChange={setSelectedTargetNames}
@@ -283,6 +332,22 @@ export const DeploymentsPage: React.FC = () => {
 
   // Removed recipe and standard views
 
+  // URL-synchronized state for artifact type filter (artType)
+  const rawArtType = searchParams.get('artType');
+  const artifactTypeFilter: ArtifactTypeFilter =
+    rawArtType === 'all' ||
+    rawArtType === 'recipes' ||
+    rawArtType === 'standards'
+      ? (rawArtType as ArtifactTypeFilter)
+      : 'all';
+  const setArtifactTypeFilter = (newType: ArtifactTypeFilter) => {
+    setSearchParams((prev) => {
+      const newParams = new URLSearchParams(prev);
+      newParams.set('artType', newType);
+      return newParams;
+    });
+  };
+
   const renderArtifactsView = () => (
     <PMVStack gap={4} marginTop={4} align={'stretch'}>
       <PMHStack gap={4}>
@@ -291,6 +356,28 @@ export const DeploymentsPage: React.FC = () => {
           value={repositoryStatus}
           onChange={setRepositoryStatus}
         />
+        <PMSegmentGroup.Root
+          size="sm"
+          marginLeft={'auto'}
+          value={artifactTypeFilter}
+          onValueChange={(e) => {
+            if (
+              e.value === 'all' ||
+              e.value === 'recipes' ||
+              e.value === 'standards'
+            )
+              setArtifactTypeFilter(e.value as ArtifactTypeFilter);
+          }}
+        >
+          <PMSegmentGroup.Indicator />
+          <PMSegmentGroup.Items
+            items={[
+              { label: 'All', value: 'all' },
+              { label: 'Recipes', value: 'recipes' },
+              { label: 'Standards', value: 'standards' },
+            ]}
+          />
+        </PMSegmentGroup.Root>
       </PMHStack>
       <ArtifactsView
         recipes={recipesData.recipes}
@@ -298,6 +385,7 @@ export const DeploymentsPage: React.FC = () => {
         searchTerm={searchTerm}
         artifactStatusFilter={repositoryStatus}
         orgSlug={orgSlug}
+        artifactTypeFilter={artifactTypeFilter}
       />
     </PMVStack>
   );

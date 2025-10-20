@@ -75,7 +75,6 @@ Database Configuration:
 Application URLs & CORS:
 
 - `APP_WEB_URL` - Base URL of the web application, used for generating links in password reset and invitation emails
-- `PACKMIND_MCP_BASE_URL` - Base URL for the Packmind MCP (Model Context Protocol) server (should be `APP_WEB_URL/mcp` in most cases)
 - `CORS_ORIGINS` - Comma-separated list of allowed origins for CORS (Cross-Origin Resource Sharing) configuration
 
 Redis Configuration:

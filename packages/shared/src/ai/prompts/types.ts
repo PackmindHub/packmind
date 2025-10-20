@@ -8,6 +8,10 @@ export interface AIPromptResult<T = string> {
   error?: string;
   attempts: number;
   model: string;
+  tokensUsed?: {
+    input: number;
+    output: number;
+  };
 }
 
 /**
@@ -17,6 +21,7 @@ export interface AIPromptOptions {
   maxTokens?: number;
   temperature?: number;
   retryAttempts?: number;
+  responseFormat?: AI_RESPONSE_FORMAT;
 }
 
 /**
@@ -53,4 +58,32 @@ export class AIServiceError extends Error {
     super(message);
     this.name = 'AIServiceError';
   }
+}
+
+export enum AI_RESPONSE_FORMAT {
+  JSON_MODE,
+  PLAIN_TEXT,
+}
+
+export type TokensUsed = {
+  input: number;
+  output: number;
+  details?: TokensUsedByOperation[];
+};
+
+export type TokensUsedByOperation = {
+  operation?: string;
+  input: number;
+  output: number;
+};
+
+export type PromptConversation = {
+  role: PromptConversationRole;
+  message: string;
+};
+
+export enum PromptConversationRole {
+  USER = 'user',
+  SYSTEM = 'system',
+  ASSISTANT = 'assistant',
 }

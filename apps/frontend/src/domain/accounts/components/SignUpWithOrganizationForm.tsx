@@ -16,6 +16,7 @@ import {
 import { organizationGateway } from '../api/gateways';
 import { isPackmindConflictError } from '../../../services/api/errors/PackmindConflictError';
 import validator from 'validator';
+import { routes } from '../../../shared/utils/routes';
 
 export default function SignUpWithOrganizationForm() {
   const [organizationName, setOrganizationName] = useState('');
@@ -162,12 +163,12 @@ export default function SignUpWithOrganizationForm() {
             {
               onSuccess: () => {
                 // Redirect to organization dashboard after auto-login
-                navigate(`/org/${response.organization.slug}`);
+                navigate(routes.org.toDashboard(response.organization.slug));
               },
               onError: (error) => {
                 console.error('Auto-login failed after registration:', error);
                 // Fallback to sign-in page if auto-login fails
-                navigate(`/sign-in`);
+                navigate(routes.auth.toSignIn());
               },
             },
           );

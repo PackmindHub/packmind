@@ -3,14 +3,10 @@ import {
   StandardVersionService,
   CreateStandardVersionData,
 } from '../../services/StandardVersionService';
-import { StandardSummaryService } from '../../services/StandardSummaryService';
-import { Standard } from '../../../domain/entities/Standard';
-import { Rule, createRuleId } from '../../../domain/entities/Rule';
 import slug from 'slug';
-import { LogLevel, PackmindLogger, AiNotConfigured } from '@packmind/shared';
+import { LogLevel, PackmindLogger, StandardVersion } from '@packmind/shared';
 import { OrganizationId, UserId } from '@packmind/accounts';
-import { v4 as uuidv4 } from 'uuid';
-import { createStandardVersionId } from '../../../domain/entities/StandardVersion';
+import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSummaryDelayedJob';
 
 const origin = 'CreateStandardUsecase';
 
@@ -27,7 +23,7 @@ export class CreateStandardUsecase {
   constructor(
     private readonly standardService: StandardService,
     private readonly standardVersionService: StandardVersionService,
-    private readonly standardSummaryService: StandardSummaryService,
+    private readonly generateStandardSummaryDelayedJob: GenerateStandardSummaryDelayedJob,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.DEBUG,
@@ -97,16 +93,6 @@ export class CreateStandardUsecase {
         userId,
       });
 
-      const summary = await this.generateStandardVersionSummary(
-        standard,
-        name,
-        standardSlug,
-        description,
-        initialVersion,
-        scope,
-        rules,
-      );
-
       this.logger.info('Creating initial standard version with rules');
       const standardVersionData: CreateStandardVersionData = {
         standardId: standard.id,
@@ -116,7 +102,6 @@ export class CreateStandardUsecase {
         version: initialVersion,
         rules: rules.map((r) => ({ content: r.content, examples: [] })),
         scope,
-        summary,
         userId, // Track the user who created this through Web UI
       };
 
@@ -143,6 +128,13 @@ export class CreateStandardUsecase {
         rulesCount: rules.length,
       });
 
+      await this.generateStandardVersionSummary(
+        userId,
+        organizationId,
+        standardVersion,
+        rules,
+      );
+
       return standard;
     } catch (error) {
       this.logger.error('Failed to create standard', {
@@ -155,65 +147,17 @@ export class CreateStandardUsecase {
     }
   }
 
-  private async generateStandardVersionSummary(
-    standard: Standard,
-    name: string,
-    standardSlug: string,
-    description: string,
-    initialVersion: number,
-    scope: string | null,
+  public async generateStandardVersionSummary(
+    userId: UserId,
+    organizationId: OrganizationId,
+    standardVersion: StandardVersion,
     rules: Array<{ content: string }>,
   ) {
-    // Generate summary for the standard version
-    let summary: string | null = null;
-    try {
-      this.logger.info('Generating summary for standard version', {
-        rulesCount: rules.length,
-      });
-
-      // Convert rule data to Rule-like objects for summary generation
-      const ruleEntities: Rule[] = rules.map((rule) => ({
-        id: createRuleId(uuidv4()), // Temporary ID for summary generation
-        content: rule.content,
-        standardVersionId: createStandardVersionId(uuidv4()), // Temporary ID for summary generation
-      }));
-
-      summary = await this.standardSummaryService.createStandardSummary(
-        {
-          standardId: standard.id,
-          name,
-          slug: standardSlug,
-          description,
-          version: initialVersion,
-          summary: null,
-          scope,
-        },
-        ruleEntities,
-      );
-      this.logger.info('Summary generated successfully', {
-        summaryLength: summary.length,
-      });
-    } catch (summaryError) {
-      if (summaryError instanceof AiNotConfigured) {
-        this.logger.warn(
-          'AI service not configured - proceeding without summary',
-          {
-            error: summaryError.message,
-          },
-        );
-      } else {
-        const errorMessage =
-          summaryError instanceof Error
-            ? summaryError.message
-            : String(summaryError);
-        this.logger.error(
-          'Failed to generate summary, proceeding without summary',
-          {
-            error: errorMessage,
-          },
-        );
-      }
-    }
-    return summary;
+    await this.generateStandardSummaryDelayedJob.addJob({
+      userId,
+      organizationId,
+      standardVersion,
+      rules: rules.map((r) => ({ content: r.content, examples: [] })),
+    });
   }
 }

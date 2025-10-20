@@ -1,8 +1,13 @@
 import { Factory } from '@packmind/shared/test';
-import { createOrganizationId, createUserId } from '@packmind/accounts';
-import { DistributionStatus } from '@packmind/shared';
+import {} from '@packmind/accounts';
+import {
+  createOrganizationId,
+  createUserId,
+  createRecipesDeploymentId,
+  RecipesDeployment,
+  DistributionStatus,
+} from '@packmind/shared/types';
 import { v4 as uuidv4 } from 'uuid';
-import { createRecipesDeploymentId, RecipesDeployment } from '../src';
 import { targetFactory } from './targetFactory';
 
 export const deploymentFactory: Factory<RecipesDeployment> = (

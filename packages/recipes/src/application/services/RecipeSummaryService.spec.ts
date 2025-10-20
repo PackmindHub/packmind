@@ -14,6 +14,7 @@ import { recipeVersionFactory } from '../../../test/recipeVersionFactory';
 const mockAIService: jest.Mocked<AIService> = {
   isConfigured: jest.fn(),
   executePrompt: jest.fn(),
+  executePromptWithHistory: jest.fn(),
 };
 
 // Mock the OpenAIService constructor

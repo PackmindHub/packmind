@@ -46,7 +46,6 @@ describe('GenerateApiKeyUseCase', () => {
     it('generates API key successfully', async () => {
       const userId = createUserId('user-123');
       const organizationId = createOrganizationId('org-456');
-      const host = 'https://api.example.com';
 
       const testUser = userFactory({
         id: userId,
@@ -73,7 +72,6 @@ describe('GenerateApiKeyUseCase', () => {
       const command: GenerateApiKeyCommand = {
         userId,
         organizationId,
-        host,
       };
 
       mockUserService.getUserById.mockResolvedValue(testUser);
@@ -97,7 +95,7 @@ describe('GenerateApiKeyUseCase', () => {
         testUser,
         testOrganization,
         'admin',
-        host,
+        expect.any(String),
       );
       expect(mockApiKeyService.getApiKeyExpiration).toHaveBeenCalledWith(
         expectedApiKey,
@@ -110,7 +108,6 @@ describe('GenerateApiKeyUseCase', () => {
       const command: GenerateApiKeyCommand = {
         userId,
         organizationId,
-        host: 'https://api.example.com',
       };
 
       mockUserService.getUserById.mockResolvedValue(null);
@@ -127,7 +124,6 @@ describe('GenerateApiKeyUseCase', () => {
       const command: GenerateApiKeyCommand = {
         userId,
         organizationId,
-        host: 'https://api.example.com',
       };
 
       const testUser = userFactory({
@@ -161,7 +157,6 @@ describe('GenerateApiKeyUseCase', () => {
       const command: GenerateApiKeyCommand = {
         userId,
         organizationId,
-        host: 'https://api.example.com',
       };
 
       const testUser = userFactory({
@@ -190,7 +185,6 @@ describe('GenerateApiKeyUseCase', () => {
       const command: GenerateApiKeyCommand = {
         userId,
         organizationId,
-        host: 'https://api.example.com',
       };
 
       const testUser = userFactory({
@@ -230,7 +224,6 @@ describe('GenerateApiKeyUseCase', () => {
       const command: GenerateApiKeyCommand = {
         userId,
         organizationId,
-        host: 'https://api.example.com',
       };
 
       const error = new Error('Database connection failed');

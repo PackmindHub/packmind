@@ -2,10 +2,13 @@ import { NavLink } from 'react-router';
 import { PMPage, PMVStack } from '@packmind/ui';
 import { RecipeUsageAnalytics } from '@packmind/proprietary/frontend/domain/analytics/components/RecipeUsageAnalytics';
 import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
+import { routes } from '../../src/shared/utils/routes';
 
 export const handle = {
   crumb: ({ params }: { params: { orgSlug: string } }) => {
-    return <NavLink to={`/org/${params.orgSlug}/analytics`}>Analytics</NavLink>;
+    return (
+      <NavLink to={routes.org.toAnalytics(params.orgSlug)}>Analytics</NavLink>
+    );
   },
 };
 

@@ -22,6 +22,7 @@ import { RenderMode, TargetId } from '@packmind/shared/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useNavigate } from 'react-router';
 import { RxQuestionMarkCircled } from 'react-icons/rx';
+import { routes } from '../../../../shared/utils/routes';
 
 export const RunDistributionBodyImpl: React.FC = () => {
   const {
@@ -53,11 +54,11 @@ export const RunDistributionBodyImpl: React.FC = () => {
 
   function onConfigureRepos() {
     if (!organization?.slug) return;
-    navigate(`/org/${organization.slug}/settings/git`);
+    navigate(routes.org.toSettingsGit(organization.slug));
   }
   function onOpenRenderingSettings() {
     if (!organization?.slug) return;
-    navigate(`/org/${organization.slug}/settings/distribution-rendering`);
+    navigate(routes.org.toSettingsDistribution(organization.slug));
   }
 
   const groupedTargets = React.useMemo(() => {

@@ -7,6 +7,8 @@ import {
   AIServiceError,
   AIServiceErrorType,
   AIServiceErrorTypes,
+  PromptConversation,
+  PromptConversationRole,
 } from './types';
 import { AIService } from './AIService';
 
@@ -14,10 +16,9 @@ const origin = 'OpenAIService';
 
 export class OpenAIService implements AIService {
   private client: OpenAI | null = null;
-  private readonly defaultModel = 'gpt-4o-mini';
+  private readonly defaultModel = 'gpt-4o';
   private readonly maxRetries = 5;
-  private readonly defaultMaxTokens = 16000;
-  private readonly defaultTemperature = 0.5;
+  private readonly defaultTemperature = 0.7;
   private initialized = false;
 
   constructor(
@@ -133,7 +134,6 @@ export class OpenAIService implements AIService {
               content: prompt,
             },
           ],
-          max_tokens: options.maxTokens ?? this.defaultMaxTokens,
           temperature: options.temperature ?? this.defaultTemperature,
         });
 
@@ -171,6 +171,12 @@ export class OpenAIService implements AIService {
           data: parsedData,
           attempts: attempt,
           model: this.defaultModel,
+          tokensUsed: response.usage
+            ? {
+                input: response.usage.prompt_tokens,
+                output: response.usage.completion_tokens,
+              }
+            : undefined,
         };
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
@@ -212,6 +218,167 @@ export class OpenAIService implements AIService {
       attempts: maxRetries,
       model: this.defaultModel,
     };
+  }
+
+  /**
+   * Execute a prompt with conversation history
+   */
+  async executePromptWithHistory<T = string>(
+    conversationHistory: PromptConversation[],
+    options: AIPromptOptions = {},
+  ): Promise<AIPromptResult<T>> {
+    this.logger.info('Executing AI prompt with history', {
+      conversationLength: conversationHistory.length,
+      maxTokens: options.maxTokens,
+      temperature: options.temperature,
+    });
+
+    await this.initialize();
+
+    // Return graceful failure if no client is available (missing API key)
+    if (!this.client) {
+      this.logger.warn(
+        'OpenAI client not available - returning graceful failure',
+      );
+      return {
+        success: false,
+        data: null,
+        error: 'OpenAI API key not configured',
+        attempts: 1,
+        model: this.defaultModel,
+      };
+    }
+
+    const maxRetries = options.retryAttempts ?? this.maxRetries;
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        if (!this.client) {
+          throw new AIServiceError(
+            'OpenAI client not initialized',
+            AIServiceErrorTypes.API_ERROR,
+            attempt,
+          );
+        }
+
+        // Convert PromptConversation to OpenAI message format
+        const messages = conversationHistory.map((conv) => ({
+          role: this.mapRoleToOpenAI(conv.role),
+          content: conv.message,
+        }));
+
+        this.logger.info('Sending request to OpenAI with history', {
+          attempt,
+          model: this.defaultModel,
+          messageCount: messages.length,
+        });
+
+        const response = await this.client.chat.completions.create({
+          model: this.defaultModel,
+          messages,
+          temperature: options.temperature ?? this.defaultTemperature,
+        });
+
+        const content = response.choices[0]?.message?.content;
+
+        if (!content) {
+          throw new AIServiceError(
+            'Invalid response from OpenAI: no content returned',
+            AIServiceErrorTypes.INVALID_RESPONSE,
+            attempt,
+          );
+        }
+
+        this.logger.info('AI prompt with history executed successfully', {
+          attempt,
+          responseLength: content.length,
+          tokensUsed: response.usage?.total_tokens,
+        });
+
+        // Try to parse as JSON if T is not string, otherwise return as string
+        let parsedData: T;
+        try {
+          // If the generic type T is expected to be an object, try to parse JSON
+          parsedData =
+            typeof content === 'string' && content.trim().startsWith('{')
+              ? (JSON.parse(content) as T)
+              : (content as T);
+        } catch {
+          // If JSON parsing fails, return as string type
+          parsedData = content as T;
+        }
+
+        return {
+          success: true,
+          data: parsedData,
+          attempts: attempt,
+          model: this.defaultModel,
+          tokensUsed: response.usage
+            ? {
+                input: response.usage.prompt_tokens,
+                output: response.usage.completion_tokens,
+              }
+            : undefined,
+        };
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+
+        const errorType = this.classifyError(error);
+        const shouldRetry = this.shouldRetry(errorType, attempt, maxRetries);
+
+        this.logger.warn('AI prompt with history execution failed', {
+          attempt,
+          error: lastError.message,
+          errorType,
+          willRetry: shouldRetry,
+        });
+
+        if (!shouldRetry) {
+          break;
+        }
+
+        this.logger.debug('Retrying immediately', { attempt });
+      }
+    }
+
+    const finalError = new AIServiceError(
+      `AI prompt with history execution failed after ${maxRetries} attempts: ${lastError?.message}`,
+      AIServiceErrorTypes.MAX_RETRIES_EXCEEDED,
+      maxRetries,
+      lastError || undefined,
+    );
+
+    this.logger.error('AI prompt with history execution failed permanently', {
+      maxRetries,
+      finalError: finalError.message,
+    });
+
+    return {
+      success: false,
+      data: null,
+      error: finalError.message,
+      attempts: maxRetries,
+      model: this.defaultModel,
+    };
+  }
+
+  /**
+   * Map PromptConversationRole to OpenAI role format
+   */
+  private mapRoleToOpenAI(
+    role: PromptConversationRole,
+  ): 'user' | 'assistant' | 'system' {
+    switch (role) {
+      case PromptConversationRole.USER:
+        return 'user';
+      case PromptConversationRole.ASSISTANT:
+        return 'assistant';
+      case PromptConversationRole.SYSTEM:
+        return 'system';
+      default:
+        return 'user';
+    }
   }
 
   /**

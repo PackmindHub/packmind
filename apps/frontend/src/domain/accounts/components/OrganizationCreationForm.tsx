@@ -4,6 +4,7 @@ import { PMInput, PMButton, PMFormContainer, PMField } from '@packmind/ui';
 import { useSelectOrganizationMutation } from '../api/queries/AuthQueries';
 import { useCreateOrganizationMutation } from '../api/queries/AccountsQueries';
 import { isPackmindError } from '../../../services/api/errors/PackmindError';
+import { routes } from '../../../shared/utils/routes';
 
 export default function OrganizationCreationForm() {
   const [organizationName, setOrganizationName] = useState('');
@@ -38,7 +39,7 @@ export default function OrganizationCreationForm() {
             },
             {
               onSuccess: () => {
-                navigate(`/org/${organization.slug}`);
+                navigate(routes.org.toDashboard(organization.slug));
               },
             },
           );

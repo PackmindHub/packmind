@@ -3,14 +3,13 @@ import { gitProviderGateway } from '../gateways';
 import { OrganizationId } from '@packmind/accounts/types';
 import { CreateGitProviderForm } from '../../types/GitProviderTypes';
 import { GitProviderId } from '@packmind/git/types';
-import {
-  GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
-  GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
-} from '../../../deployments/api/queryKeys';
+import { DEPLOYMENTS_QUERY_SCOPE } from '../../../deployments/api/queryKeys';
 import {
   GET_GIT_PROVIDERS_KEY,
   GET_GIT_PROVIDER_BY_ID_KEY,
+  GIT_QUERY_SCOPE,
 } from '../queryKeys';
+import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
 
 // Git Provider Queries
 export const useGetGitProvidersQuery = (organizationId: OrganizationId) => {
@@ -94,15 +93,15 @@ export const useDeleteGitProviderMutation = () => {
     }) => {
       return gitProviderGateway.deleteGitProvider(id);
     },
-    onSuccess: async (_, { organizationId }) => {
+    onSuccess: async () => {
+      // All git data (provider deleted → repos deleted)
       await queryClient.invalidateQueries({
-        queryKey: [...GET_GIT_PROVIDERS_KEY, organizationId],
+        queryKey: [ORGANIZATION_QUERY_SCOPE, GIT_QUERY_SCOPE],
       });
+
+      // ALL deployments (provider → repos → targets cascade deleted)
       await queryClient.invalidateQueries({
-        queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
+        queryKey: [ORGANIZATION_QUERY_SCOPE, DEPLOYMENTS_QUERY_SCOPE],
       });
     },
     onError: (error) => {

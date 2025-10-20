@@ -76,6 +76,9 @@ export class HexaRegistry {
    * Initialize all registered hexas by instantiating them with the provided DataSource.
    * Hexas are created in registration order, so dependencies should be registered first.
    *
+   * NOTE: This is synchronous and only calls constructors. If any hexa has an async
+   * initialize() method, you must call initAsync() afterwards.
+   *
    * @param dataSource - The TypeORM DataSource that hexas will use for database operations
    * @throws Error if already initialized or if DataSource is not provided
    */
@@ -102,6 +105,28 @@ export class HexaRegistry {
       this.dataSource = null;
       this.hexas.clear();
       throw error;
+    }
+  }
+
+  /**
+   * Call async initialize() method on all hexas that have one.
+   * This should be called after init() if any hexas require async initialization.
+   *
+   * Hexas that have an initialize() method will have it called in registration order.
+   * Hexas without an initialize() method are silently skipped.
+   *
+   * @throws Error if init() has not been called first
+   */
+  public async initAsync(): Promise<void> {
+    if (!this.isInitialized) {
+      throw new Error('Registry not initialized. Call init() first.');
+    }
+
+    // Call initialize() on each hexa that has the method
+    for (const hexa of this.hexas.values()) {
+      if (hexa.initialize) {
+        await hexa.initialize();
+      }
     }
   }
 

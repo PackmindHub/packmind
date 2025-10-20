@@ -22,8 +22,15 @@ import {
   CheckDirectoryExistenceCommand,
   CheckDirectoryExistenceResult,
 } from '@packmind/shared';
+import { HandleWebHookCommand, HandleWebHookResult } from '@packmind/shared';
+import {
+  HandleWebHookWithoutContentCommand,
+  HandleWebHookWithoutContentResult,
+} from '@packmind/shared';
 import { IGitRepoFactory } from './domain/repositories/IGitRepoFactory';
 import { AddGitProviderCommand } from './application/useCases/addGitProvider/addGitProvider.usecase';
+import { FetchFileContentInput } from './domain/jobs/FetchFileContent';
+import { FetchFileContentCallback } from './application/jobs/FetchFileContentDelayedJob';
 
 const origin = 'GitHexa';
 
@@ -48,10 +55,11 @@ const BaseGitHexaOpts: GitHexaOpts = { logger: new PackmindLogger(origin) };
 
 export class GitHexa extends BaseHexa<GitHexaOpts> {
   private readonly hexa: GitHexaFactory;
+  private isInitialized = false;
 
   constructor(registry: HexaRegistry, opts?: Partial<GitHexaOpts>) {
     super(registry, { ...BaseGitHexaOpts, ...opts });
-    this.logger.info('Initializing GitHexa');
+    this.logger.info('Constructing GitHexa');
 
     try {
       // Get the DataSource from the registry
@@ -59,10 +67,34 @@ export class GitHexa extends BaseHexa<GitHexaOpts> {
       this.logger.debug('Retrieved DataSource from registry');
 
       // Initialize the hexagon with the shared DataSource
-      this.hexa = new GitHexaFactory(dataSource, {
+      this.hexa = new GitHexaFactory(dataSource, registry, {
         ...BaseGitHexaOpts,
         ...opts,
       });
+      this.logger.info('GitHexa construction completed');
+    } catch (error) {
+      this.logger.error('Failed to construct GitHexa', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Async initialization phase - must be called after construction.
+   * This initializes delayed jobs and async dependencies.
+   */
+  public override async initialize(): Promise<void> {
+    if (this.isInitialized) {
+      this.logger.debug('GitHexa already initialized');
+      return;
+    }
+
+    this.logger.info('Initializing GitHexa (async phase)');
+
+    try {
+      await this.hexa.initialize();
+      this.isInitialized = true;
       this.logger.info('GitHexa initialized successfully');
     } catch (error) {
       this.logger.error('Failed to initialize GitHexa', {
@@ -70,6 +102,25 @@ export class GitHexa extends BaseHexa<GitHexaOpts> {
       });
       throw error;
     }
+  }
+
+  /**
+   * Internal helper to ensure initialization before use case access
+   */
+  private ensureInitialized(): void {
+    if (!this.isInitialized) {
+      throw new Error(
+        'GitHexa not initialized. Call initialize() before using.',
+      );
+    }
+  }
+
+  /**
+   * Get the delayed jobs for accessing job queues
+   */
+  public getGitDelayedJobs() {
+    this.ensureInitialized();
+    return this.hexa.getGitDelayedJobs();
   }
 
   /**
@@ -279,11 +330,18 @@ export class GitHexa extends BaseHexa<GitHexaOpts> {
    * Handle webhook payload for a git repository
    */
   public async handleWebHook(
-    gitRepo: GitRepo,
-    payload: unknown,
-    fileMatcher: RegExp,
-  ): Promise<(GitCommit & { filePath: string; fileContent: string })[]> {
-    return this.hexa.useCases.handleWebHook(gitRepo, payload, fileMatcher);
+    command: HandleWebHookCommand,
+  ): Promise<HandleWebHookResult> {
+    return this.hexa.useCases.handleWebHook(command);
+  }
+
+  /**
+   * Handle webhook payload for a git repository without fetching file content
+   */
+  public async handleWebHookWithoutContent(
+    command: HandleWebHookWithoutContentCommand,
+  ): Promise<HandleWebHookWithoutContentResult> {
+    return this.hexa.useCases.handleWebHookWithoutContent(command);
   }
 
   public async addFileToGit(repo: GitRepo, path: string, content: string) {
@@ -305,5 +363,48 @@ export class GitHexa extends BaseHexa<GitHexaOpts> {
     command: CheckDirectoryExistenceCommand,
   ): Promise<CheckDirectoryExistenceResult> {
     return this.hexa.useCases.checkDirectoryExistence(command);
+  }
+
+  // ==================
+  // DELAYED JOBS
+  // ==================
+
+  /**
+   * Queue a job to fetch file content from a git repository.
+   * This is an asynchronous operation that will fetch the file content
+   * for multiple files at specific commits and return them when completed.
+   *
+   * Takes the output from handleWebHookWithoutContent and enriches it with file content,
+   * producing the same format as handleWebHook.
+   *
+   * @param input - The input parameters containing the array of files from handleWebHookWithoutContent
+   * @param onComplete - Optional callback to execute when the job completes successfully
+   * @returns The job ID that can be used to track the job status
+   *
+   * @example
+   * ```typescript
+   * const jobId = await gitHexa.addFetchFileContentJob(
+   *   {
+   *     organizationId: 'org-123',
+   *     gitRepoId: 'repo-456',
+   *     files: filesWithoutContent,
+   *   },
+   *   async (result) => {
+   *     console.log(`Fetched ${result.files.length} files`);
+   *     // Process the files with content...
+   *   }
+   * );
+   * ```
+   */
+  public async addFetchFileContentJob(
+    input: FetchFileContentInput,
+    onComplete?: FetchFileContentCallback,
+  ): Promise<string> {
+    this.ensureInitialized();
+    const delayedJobs = this.hexa.getGitDelayedJobs();
+    return delayedJobs.fetchFileContentDelayedJob.addJobWithCallback(
+      input,
+      onComplete,
+    );
   }
 }

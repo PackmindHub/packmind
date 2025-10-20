@@ -23,6 +23,7 @@ import { ResetPasswordUseCase } from './ResetPasswordUseCase';
 import { ValidatePasswordResetTokenUseCase } from './ValidatePasswordResetTokenUseCase';
 import { IAccountsServices } from '../IAccountsServices';
 import { PackmindLogger } from '@packmind/shared';
+import { ISpacesPort } from '@packmind/shared/types';
 
 import {
   ISignUpWithOrganizationUseCase,
@@ -118,10 +119,13 @@ export class AccountsUseCases {
   constructor(
     private readonly accountsServices: IAccountsServices,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
+    private readonly spacesPort?: ISpacesPort,
   ) {
     this._signUpWithOrganization = new SignUpWithOrganizationUseCase(
       accountsServices.getUserService(),
       accountsServices.getOrganizationService(),
+      this.logger,
+      this.spacesPort,
     );
     this._signInUser = new SignInUserUseCase(
       accountsServices.getUserService(),
@@ -157,6 +161,8 @@ export class AccountsUseCases {
     this._createOrganization = new CreateOrganizationUseCase(
       accountsServices.getOrganizationService(),
       accountsServices.getUserService(),
+      this.logger,
+      this.spacesPort,
     );
     this._getOrganizationById = new GetOrganizationByIdUseCase(
       accountsServices.getOrganizationService(),

@@ -44,6 +44,33 @@ describe('ListFiles', () => {
     });
   });
 
+  it('returns all files no extensions are provided', async () => {
+    await fs.mkdir(path.join(tempDir, 'subdir'));
+    await fs.writeFile(path.join(tempDir, 'file1.ts'), 'content1');
+    await fs.writeFile(path.join(tempDir, 'file2.js'), 'content2');
+    await fs.writeFile(path.join(tempDir, 'subdir', 'file3.json'), 'content3');
+
+    const result = await listFiles.listFilesInDirectory(tempDir, []);
+
+    expect(result).toHaveLength(3);
+    expect(result).toEqual(
+      expect.arrayContaining([
+        {
+          path: path.join(tempDir, 'file1.ts'),
+          content: 'content1',
+        },
+        {
+          path: path.join(tempDir, 'file2.js'),
+          content: 'content2',
+        },
+        {
+          path: path.join(tempDir, 'subdir', 'file3.json'),
+          content: 'content3',
+        },
+      ]),
+    );
+  });
+
   it('handles extensions with or without dots', async () => {
     await fs.writeFile(path.join(tempDir, 'file.ts'), 'typescript file');
     await fs.writeFile(path.join(tempDir, 'file.js'), 'javascript file');

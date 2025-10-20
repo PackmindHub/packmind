@@ -3,8 +3,10 @@ import { RuleExample, RuleExampleId } from '@packmind/standards/types';
 import { RuleId } from '@packmind/shared/types';
 import { rulesGateway } from '../gateways';
 import { GET_RULE_EXAMPLES_KEY } from '../queryKeys';
-import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
-import { STANDARDS_QUERY_SCOPE } from '../../../standards/api/queryKeys';
+import {
+  GET_STANDARD_BY_ID_KEY,
+  GET_RULES_BY_STANDARD_ID_KEY,
+} from '../../../standards/api/queryKeys';
 
 export const useGetRuleExamplesQuery = (
   standardId: string,
@@ -39,16 +41,23 @@ export const useCreateRuleExampleMutation = () => {
       );
     },
     onSuccess: async (newRuleExample: RuleExample, variables) => {
-      // Invalidate rules queries to refresh the data
-      await queryClient.invalidateQueries({
-        queryKey: [ORGANIZATION_QUERY_SCOPE, STANDARDS_QUERY_SCOPE],
-      });
+      // Only invalidate specific rule examples
       await queryClient.invalidateQueries({
         queryKey: [
           ...GET_RULE_EXAMPLES_KEY,
           variables.standardId,
           variables.ruleId,
         ],
+      });
+
+      // Only invalidate the specific standard (if examples are embedded)
+      await queryClient.invalidateQueries({
+        queryKey: [...GET_STANDARD_BY_ID_KEY, variables.standardId],
+      });
+
+      // Only invalidate rules for this standard
+      await queryClient.invalidateQueries({
+        queryKey: [...GET_RULES_BY_STANDARD_ID_KEY, variables.standardId],
       });
     },
   });
@@ -77,16 +86,23 @@ export const useUpdateRuleExampleMutation = () => {
       );
     },
     onSuccess: async (updatedRuleExample: RuleExample, variables) => {
-      // Invalidate rules queries to refresh the data
-      await queryClient.invalidateQueries({
-        queryKey: [ORGANIZATION_QUERY_SCOPE, STANDARDS_QUERY_SCOPE],
-      });
+      // Only invalidate specific rule examples
       await queryClient.invalidateQueries({
         queryKey: [
           ...GET_RULE_EXAMPLES_KEY,
           variables.standardId,
           variables.ruleId,
         ],
+      });
+
+      // Only invalidate the specific standard (if examples are embedded)
+      await queryClient.invalidateQueries({
+        queryKey: [...GET_STANDARD_BY_ID_KEY, variables.standardId],
+      });
+
+      // Only invalidate rules for this standard
+      await queryClient.invalidateQueries({
+        queryKey: [...GET_RULES_BY_STANDARD_ID_KEY, variables.standardId],
       });
     },
   });
@@ -109,16 +125,23 @@ export const useDeleteRuleExampleMutation = () => {
       );
     },
     onSuccess: async (_, variables) => {
-      // Invalidate rules queries to refresh the data
-      await queryClient.invalidateQueries({
-        queryKey: [ORGANIZATION_QUERY_SCOPE, STANDARDS_QUERY_SCOPE],
-      });
+      // Only invalidate specific rule examples
       await queryClient.invalidateQueries({
         queryKey: [
           ...GET_RULE_EXAMPLES_KEY,
           variables.standardId,
           variables.ruleId,
         ],
+      });
+
+      // Only invalidate the specific standard (if examples are embedded)
+      await queryClient.invalidateQueries({
+        queryKey: [...GET_STANDARD_BY_ID_KEY, variables.standardId],
+      });
+
+      // Only invalidate rules for this standard
+      await queryClient.invalidateQueries({
+        queryKey: [...GET_RULES_BY_STANDARD_ID_KEY, variables.standardId],
       });
     },
   });

@@ -5,8 +5,8 @@
         "apps/frontend/src/domain/editions/stubs/*"
       ],
       "@packmind/analytics": ["packages/editions/src/index.ts"],
-      "@packmind/jobs": ["packages/editions/src/index.ts"],
-      "@packmind/linter": ["packages/editions/src/index.ts"]
+      "@packmind/linter": ["packages/editions/src/index.ts"],
+      "@packmind/amplitude": ["packages/editions/src/index.ts"]
     }
   }
 }

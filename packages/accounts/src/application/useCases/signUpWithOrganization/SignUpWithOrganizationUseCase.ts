@@ -1,6 +1,7 @@
 import { UserService } from '../../services/UserService';
 import { OrganizationService } from '../../services/OrganizationService';
 import { PackmindLogger } from '@packmind/shared';
+import { ISpacesPort } from '@packmind/shared/types';
 import {
   ISignUpWithOrganizationUseCase,
   SignUpWithOrganizationCommand,
@@ -16,6 +17,7 @@ export class SignUpWithOrganizationUseCase
     private readonly userService: UserService,
     private readonly organizationService: OrganizationService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
+    private readonly spacesPort?: ISpacesPort,
   ) {
     this.logger.info('SignUpWithOrganizationUseCase initialized');
   }
@@ -65,6 +67,24 @@ export class SignUpWithOrganizationUseCase
       const organization = await this.organizationService.createOrganization(
         organizationName.trim(),
       );
+
+      // Create default "Global" space for the organization
+      if (this.spacesPort) {
+        this.logger.info('Creating default Global space for organization', {
+          organizationId: organization.id,
+        });
+        try {
+          await this.spacesPort.createSpace('Global', organization.id);
+          this.logger.info('Default Global space created successfully', {
+            organizationId: organization.id,
+          });
+        } catch (error) {
+          this.logger.error('Failed to create default Global space', {
+            organizationId: organization.id,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
 
       const user = await this.userService.createUser(
         email,

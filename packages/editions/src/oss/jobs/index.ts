@@ -1,1 +1,0 @@
-export { JobsHexa } from './JobsHexa';

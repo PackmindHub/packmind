@@ -16,6 +16,7 @@ import {
   Configuration,
   Cache,
 } from '@packmind/shared';
+import { enableAmplitudeProxy } from '@packmind/amplitude';
 
 const logger = new PackmindLogger('PackmindAPI', LogLevel.INFO);
 
@@ -118,6 +119,7 @@ async function bootstrap() {
 
     // Initialize global cache before starting the server
     await initializeCache();
+    enableAmplitudeProxy(app);
 
     const port = process.env.PORT || 3000;
     const host = process.env.HOST || 'localhost';

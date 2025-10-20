@@ -3,6 +3,7 @@ import { User, Organization } from '@packmind/accounts/types';
 import { RecipesHexa, recipesSchemas } from '@packmind/recipes';
 import { Recipe, RecipeVersion } from '@packmind/recipes/types';
 import { GitHexa, gitSchemas } from '@packmind/git';
+import { JobsHexa } from '@packmind/jobs';
 import { HexaRegistry } from '@packmind/shared';
 import { makeTestDatasource } from '@packmind/shared/test';
 import { CodingAgentHexa } from '@packmind/coding-agent';
@@ -56,6 +57,7 @@ describe('Recipe deployment', () => {
     registry = new HexaRegistry();
 
     // Register hexas before initialization
+    registry.register(JobsHexa);
     registry.register(GitHexa);
     registry.register(AccountsHexa);
     registry.register(RecipesHexa);
@@ -64,6 +66,7 @@ describe('Recipe deployment', () => {
 
     // Initialize the registry with the datasource
     registry.init(dataSource);
+    await registry.initAsync();
 
     // Get initialized hexas
     accountsHexa = registry.get(AccountsHexa);

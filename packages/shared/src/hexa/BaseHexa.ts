@@ -39,6 +39,16 @@ export abstract class BaseHexa<T extends BaseHexaOpts = BaseHexaOpts> {
   }
 
   /**
+   * Optional async initialization phase.
+   * Override this method if your hexa requires async initialization
+   * (e.g., setting up job queues, external connections, etc.).
+   *
+   * This will be called by HexaRegistry.initAsync() after all hexas
+   * have been constructed.
+   */
+  async initialize?(): Promise<void>;
+
+  /**
    * Clean up resources when the app is being destroyed.
    * This method should handle any cleanup logic like closing connections,
    * clearing caches, etc.

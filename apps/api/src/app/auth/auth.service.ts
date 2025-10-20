@@ -22,6 +22,7 @@ import {
   ResetPasswordResponse,
   ValidatePasswordResetTokenCommand,
   ValidatePasswordResetTokenResponse,
+  maskEmail,
 } from '@packmind/shared';
 import {
   SignUpWithOrganizationCommand,
@@ -105,7 +106,9 @@ export class AuthService {
   async signUp(
     signUpRequest: SignUpUserCommand,
   ): Promise<SignUpWithOrganizationResponse> {
-    this.logger.log(`Attempting to sign up user: ${signUpRequest.email}`);
+    this.logger.log('Attempting to sign up user', {
+      email: maskEmail(signUpRequest.email),
+    });
 
     try {
       if (!signUpRequest.organizationName) {
@@ -119,15 +122,15 @@ export class AuthService {
       };
 
       const result = await this.accountsHexa.signUpWithOrganization(command);
-      this.logger.log(
-        `User signed up with organization successfully: ${result.user.email}`,
-      );
+      this.logger.log('User signed up with organization successfully', {
+        email: maskEmail(result.user.email),
+      });
       return result;
     } catch (error) {
-      this.logger.error(
-        `Sign up failed for user: ${signUpRequest.email}`,
+      this.logger.error('Sign up failed for user', {
+        email: maskEmail(signUpRequest.email),
         error,
-      );
+      });
       throw error;
     }
   }
@@ -135,20 +138,23 @@ export class AuthService {
   async checkEmailAvailability(
     command: CheckEmailAvailabilityCommand,
   ): Promise<CheckEmailAvailabilityResponse> {
-    this.logger.log(`Checking email availability for: ${command.email}`);
+    this.logger.log('Checking email availability', {
+      email: maskEmail(command.email),
+    });
 
     try {
       const result = await this.accountsHexa.checkEmailAvailability(command);
 
-      this.logger.log(
-        `Email availability checked successfully: ${command.email} - Available: ${result.available}`,
-      );
+      this.logger.log('Email availability checked successfully', {
+        email: maskEmail(command.email),
+        available: result.available,
+      });
       return result;
     } catch (error) {
-      this.logger.error(
-        `Email availability check failed for: ${command.email}`,
+      this.logger.error('Email availability check failed', {
+        email: maskEmail(command.email),
         error,
-      );
+      });
       throw error;
     }
   }
@@ -156,7 +162,9 @@ export class AuthService {
   async signIn(
     signInRequest: SignInUserCommand,
   ): Promise<SignInUserResponse & { accessToken: string }> {
-    this.logger.log(`Attempting to sign in user: ${signInRequest.email}`);
+    this.logger.log('Attempting to sign in user', {
+      email: maskEmail(signInRequest.email),
+    });
 
     try {
       // Use the SignInUser use case
@@ -182,16 +190,16 @@ export class AuthService {
       // Generate access token
       const accessToken = this.jwtService.sign(payload);
 
-      this.logger.log(
-        `User signed in successfully: ${signInUserResponse.user.email}`,
-      );
+      this.logger.log('User signed in successfully', {
+        email: maskEmail(signInUserResponse.user.email),
+      });
 
       return { ...signInUserResponse, accessToken };
     } catch (error) {
-      this.logger.error(
-        `Sign in failed for user: ${signInRequest.email}`,
+      this.logger.error('Sign in failed for user', {
+        email: maskEmail(signInRequest.email),
         error,
-      );
+      });
       throw error;
     }
   }
@@ -211,7 +219,10 @@ export class AuthService {
       // Check if organization is present in the token
       if (!payload.organization) {
         this.logger.log(
-          `User ${payload.user.userId} is authenticated but has not selected an organization`,
+          'User is authenticated but has not selected an organization',
+          {
+            userId: payload.user.userId,
+          },
         );
 
         // Fetch user to get their organizations
@@ -257,9 +268,10 @@ export class AuthService {
       );
 
       if (!organizationMembership) {
-        this.logger.warn(
-          `User ${payload.user.userId} does not have access to organization ${payload.organization.id}`,
-        );
+        this.logger.warn('User does not have access to organization', {
+          userId: payload.user.userId,
+          organizationId: payload.organization.id,
+        });
         return {
           message: 'User does not have access to the organization in token',
           authenticated: false,
@@ -306,35 +318,34 @@ export class AuthService {
   /**
    * Generates a new API key for the authenticated user
    * @param req Authenticated request containing user and organization info
-   * @param host API host URL
    * @returns Generated API key and expiration info
    */
   async generateApiKey(
     req: AuthenticatedRequest,
-    host: string,
   ): Promise<GenerateApiKeyResponse> {
-    this.logger.log(`Generating API key for user ${req.user.userId}`);
+    this.logger.log('Generating API key for user', {
+      userId: req.user.userId,
+    });
 
     try {
       const command: GenerateApiKeyCommand = {
         userId: req.user.userId,
         organizationId: req.organization.id,
-        host,
       };
 
       const result = await this.accountsHexa.generateApiKey(command);
 
-      this.logger.log(
-        `API key generated successfully for user ${req.user.userId}`,
-      );
+      this.logger.log('API key generated successfully for user', {
+        userId: req.user.userId,
+      });
 
       return result;
     } catch (error) {
-      this.logger.error(
-        `Failed to generate API key for user ${req.user.userId}`,
+      this.logger.error('Failed to generate API key for user', {
+        userId: req.user.userId,
         error,
-      );
-      throw new Error(`Failed to generate API key: ${error.message}`);
+      });
+      throw new Error('Failed to generate API key: ' + error.message);
     }
   }
 
@@ -346,7 +357,9 @@ export class AuthService {
   async getCurrentApiKey(
     req: AuthenticatedRequest,
   ): Promise<GetCurrentApiKeyResponse> {
-    this.logger.log(`Getting current API key info for user ${req.user.userId}`);
+    this.logger.log('Getting current API key info for user', {
+      userId: req.user.userId,
+    });
 
     try {
       const command: GetCurrentApiKeyCommand = {
@@ -357,11 +370,11 @@ export class AuthService {
 
       return result;
     } catch (error) {
-      this.logger.error(
-        `Failed to get current API key for user ${req.user.userId}`,
+      this.logger.error('Failed to get current API key for user', {
+        userId: req.user.userId,
         error,
-      );
-      throw new Error(`Failed to get current API key: ${error.message}`);
+      });
+      throw new Error('Failed to get current API key: ' + error.message);
     }
   }
 
@@ -453,7 +466,7 @@ export class AuthService {
 
       this.logger.log('User account activated successfully', {
         userId: result.user.id,
-        email: result.user.email,
+        email: maskEmail(result.user.email),
       });
 
       return {
@@ -473,14 +486,16 @@ export class AuthService {
     if (token.length <= 8) {
       return '***';
     }
-    return `${token.slice(0, 4)}***${token.slice(-4)}`;
+    return token.slice(0, 4) + '***' + token.slice(-4);
   }
 
   async selectOrganization(
     accessToken: string,
     command: SelectOrganizationCommand,
   ): Promise<{ accessToken: string }> {
-    this.logger.log(`Selecting organization ${command.organizationId}`);
+    this.logger.log('Selecting organization', {
+      organizationId: command.organizationId,
+    });
 
     try {
       // Verify and decode the current JWT
@@ -524,18 +539,19 @@ export class AuthService {
       // Generate new access token
       const newAccessToken = this.jwtService.sign(newPayload);
 
-      this.logger.log(
-        `Organization ${command.organizationId} selected successfully for user ${payload.user.userId}`,
-      );
+      this.logger.log('Organization selected successfully for user', {
+        organizationId: command.organizationId,
+        userId: payload.user.userId,
+      });
 
       return {
         accessToken: newAccessToken,
       };
     } catch (error) {
-      this.logger.error(
-        `Failed to select organization ${command.organizationId}`,
+      this.logger.error('Failed to select organization', {
+        organizationId: command.organizationId,
         error,
-      );
+      });
       throw error;
     }
   }
@@ -547,21 +563,21 @@ export class AuthService {
     command: RequestPasswordResetCommand,
   ): Promise<RequestPasswordResetResponse> {
     this.logger.log('Attempting to request password reset', {
-      email: command.email,
+      email: maskEmail(command.email),
     });
 
     try {
       const result = await this.accountsHexa.requestPasswordReset(command);
 
       this.logger.log('Password reset request completed', {
-        email: command.email,
+        email: maskEmail(command.email),
         success: result.success,
       });
 
       return result;
     } catch (error) {
       this.logger.error('Failed to request password reset', {
-        email: command.email,
+        email: maskEmail(command.email),
         error: error.message,
       });
       throw error;
@@ -659,7 +675,7 @@ export class AuthService {
 
       this.logger.log('Password reset completed successfully', {
         userId: result.user.id,
-        email: result.user.email,
+        email: maskEmail(result.user.email),
       });
 
       return {

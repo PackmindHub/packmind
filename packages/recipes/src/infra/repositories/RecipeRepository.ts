@@ -33,23 +33,38 @@ export class RecipeRepository
     };
   }
 
-  async findBySlug(slug: string, opts?: QueryOption): Promise<Recipe | null> {
-    this.logger.info('Finding recipe by slug', { slug });
+  async findBySlug(
+    slug: string,
+    organizationId: OrganizationId,
+    opts?: QueryOption,
+  ): Promise<Recipe | null> {
+    this.logger.info('Finding recipe by slug and organization', {
+      slug,
+      organizationId,
+    });
 
     try {
       const recipe = await this.repository.findOne({
-        where: { slug },
+        where: { slug, organizationId },
         withDeleted: opts?.includeDeleted ?? false,
       });
       if (recipe) {
-        this.logger.info('Recipe found by slug', { slug, recipeId: recipe.id });
+        this.logger.info('Recipe found by slug and organization', {
+          slug,
+          organizationId,
+          recipeId: recipe.id,
+        });
       } else {
-        this.logger.warn('Recipe not found by slug', { slug });
+        this.logger.warn('Recipe not found by slug and organization', {
+          slug,
+          organizationId,
+        });
       }
       return recipe;
     } catch (error) {
-      this.logger.error('Failed to find recipe by slug', {
+      this.logger.error('Failed to find recipe by slug and organization', {
         slug,
+        organizationId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

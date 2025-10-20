@@ -4,14 +4,14 @@ import {
 } from './createStandard.usecase';
 import { StandardService } from '../../services/StandardService';
 import { StandardVersionService } from '../../services/StandardVersionService';
-import { StandardSummaryService } from '../../services/StandardSummaryService';
+import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSummaryDelayedJob';
 import { Standard, createStandardId } from '../../../domain/entities/Standard';
 import { StandardVersion } from '../../../domain/entities/StandardVersion';
 import { standardFactory } from '../../../../test/standardFactory';
 import { standardVersionFactory } from '../../../../test/standardVersionFactory';
 import { v4 as uuidv4 } from 'uuid';
 import slug from 'slug';
-import { PackmindLogger, AiNotConfigured } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/shared';
 import { stubLogger } from '@packmind/shared/test';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
 import { createStandardVersionId } from '../../../domain/entities/StandardVersion';
@@ -25,7 +25,7 @@ describe('CreateStandardUsecase', () => {
   let createStandardUsecase: CreateStandardUsecase;
   let standardService: jest.Mocked<StandardService>;
   let standardVersionService: jest.Mocked<StandardVersionService>;
-  let standardSummaryService: jest.Mocked<StandardSummaryService>;
+  let generateStandardSummaryDelayedJob: jest.Mocked<GenerateStandardSummaryDelayedJob>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
@@ -51,10 +51,10 @@ describe('CreateStandardUsecase', () => {
       prepareForGitPublishing: jest.fn(),
     } as unknown as jest.Mocked<StandardVersionService>;
 
-    // Mock StandardSummaryService
-    standardSummaryService = {
-      createStandardSummary: jest.fn(),
-    } as unknown as jest.Mocked<StandardSummaryService>;
+    // Mock GenerateStandardSummaryDelayedJob
+    generateStandardSummaryDelayedJob = {
+      addJob: jest.fn(),
+    } as unknown as jest.Mocked<GenerateStandardSummaryDelayedJob>;
 
     // Setup default mock implementations
     mockSlug.mockImplementation((input: string) =>
@@ -62,16 +62,14 @@ describe('CreateStandardUsecase', () => {
     );
 
     stubbedLogger = stubLogger();
-    standardSummaryService.createStandardSummary.mockResolvedValue(
-      'Generated summary for the standard',
-    );
+    generateStandardSummaryDelayedJob.addJob.mockResolvedValue('job-id-123');
 
     standardService.listStandardsByOrganization.mockResolvedValue([]);
 
     createStandardUsecase = new CreateStandardUsecase(
       standardService,
       standardVersionService,
-      standardSummaryService,
+      generateStandardSummaryDelayedJob,
       stubbedLogger,
     );
   });
@@ -142,7 +140,7 @@ describe('CreateStandardUsecase', () => {
         });
       });
 
-      it('calls StandardVersionService.addStandardVersion with correct parameters including summary', () => {
+      it('calls StandardVersionService.addStandardVersion with correct parameters', () => {
         expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
           expect.objectContaining({
             standardId: createdStandard.id,
@@ -151,8 +149,15 @@ describe('CreateStandardUsecase', () => {
             description: inputData.description,
             version: 1,
             scope: null,
-            summary: 'Generated summary for the standard',
             userId: inputData.userId,
+            rules: expect.arrayContaining([
+              expect.objectContaining({
+                content: 'Rule 1: Use proper naming conventions',
+              }),
+              expect.objectContaining({
+                content: 'Rule 2: Write comprehensive tests',
+              }),
+            ]),
           }),
         );
       });
@@ -185,37 +190,30 @@ describe('CreateStandardUsecase', () => {
         );
       });
 
-      it('calls StandardSummaryService.createStandardSummary with correct parameters', () => {
-        expect(
-          standardSummaryService.createStandardSummary,
-        ).toHaveBeenCalledWith(
+      it('queues standard summary generation job with correct parameters', () => {
+        expect(generateStandardSummaryDelayedJob.addJob).toHaveBeenCalledWith(
           expect.objectContaining({
-            standardId: createdStandard.id,
-            name: inputData.name,
-            slug: 'test-standard',
-            description: inputData.description,
-            version: 1,
-            summary: null,
-            scope: null,
+            userId: inputData.userId,
+            organizationId: inputData.organizationId,
+            standardVersion: expect.objectContaining({
+              standardId: createdStandard.id,
+              name: inputData.name,
+              slug: 'test-standard',
+              description: inputData.description,
+              version: 1,
+              summary: null,
+              scope: null,
+            }),
+            rules: expect.arrayContaining([
+              expect.objectContaining({
+                content: 'Rule 1: Use proper naming conventions',
+              }),
+              expect.objectContaining({
+                content: 'Rule 2: Write comprehensive tests',
+              }),
+            ]),
           }),
-          expect.arrayContaining([
-            expect.objectContaining({
-              content: 'Rule 1: Use proper naming conventions',
-            }),
-            expect.objectContaining({
-              content: 'Rule 2: Write comprehensive tests',
-            }),
-          ]),
         );
-      });
-
-      it('calls StandardSummaryService.createStandardSummary before creating standard version', () => {
-        const summaryCallOrder =
-          standardSummaryService.createStandardSummary.mock
-            .invocationCallOrder[0];
-        const versionCallOrder =
-          standardVersionService.addStandardVersion.mock.invocationCallOrder[0];
-        expect(summaryCallOrder).toBeLessThan(versionCallOrder);
       });
     });
 
@@ -518,65 +516,18 @@ describe('CreateStandardUsecase', () => {
           createdStandardVersion,
         );
 
-        // Mock summary generation to fail
-        standardSummaryService.createStandardSummary.mockRejectedValue(
-          new Error('AI service unavailable'),
-        );
-
         const result = await createStandardUsecase.createStandard(inputData);
 
         expect(result).toEqual(createdStandard);
-        expect(
-          standardSummaryService.createStandardSummary,
-        ).toHaveBeenCalledTimes(1);
-        expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
-          expect.objectContaining({
-            summary: null, // Should be null when generation fails
-          }),
-        );
-      });
-    });
-
-    describe('when OpenAI API key is not configured', () => {
-      it('logs warning instead of error and proceeds without summary', async () => {
-        const inputData: CreateStandardRequest = {
-          name: 'Test Standard',
-          description: 'Test description',
-          rules: [{ content: 'Test rule' }],
-          organizationId: createOrganizationId(uuidv4()),
-          userId: createUserId(uuidv4()),
-          scope: null,
-        };
-
-        const createdStandard = standardFactory();
-        const createdStandardVersion = standardVersionFactory();
-
-        standardService.addStandard.mockResolvedValue(createdStandard);
-        standardVersionService.addStandardVersion.mockResolvedValue(
-          createdStandardVersion,
-        );
-
-        // Mock summary generation to fail with missing API key
-        standardSummaryService.createStandardSummary.mockRejectedValue(
-          new AiNotConfigured(
-            'AI service not configured for standard summary generation',
-          ),
-        );
-
-        const result = await createStandardUsecase.createStandard(inputData);
-
-        expect(result).toEqual(createdStandard);
-        expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
-          expect.objectContaining({
-            summary: null, // Should be null when API key is missing
-          }),
+        expect(generateStandardSummaryDelayedJob.addJob).toHaveBeenCalledTimes(
+          1,
         );
       });
     });
 
     describe('with scope parameter', () => {
       describe('when scope is provided', () => {
-        it('passes scope to summary generation service', async () => {
+        it('passes scope to summary generation job', async () => {
           const inputData: CreateStandardRequest = {
             name: 'Scoped Standard',
             description: 'A standard with scope',
@@ -586,8 +537,11 @@ describe('CreateStandardUsecase', () => {
             scope: 'src/**/*.ts',
           };
 
-          const createdStandard = standardFactory();
-          const createdStandardVersion = standardVersionFactory();
+          const createdStandard = standardFactory({ scope: 'src/**/*.ts' });
+          const createdStandardVersion = standardVersionFactory({
+            standardId: createdStandard.id,
+            scope: 'src/**/*.ts',
+          });
 
           standardService.addStandard.mockResolvedValue(createdStandard);
           standardVersionService.addStandardVersion.mockResolvedValue(
@@ -596,13 +550,12 @@ describe('CreateStandardUsecase', () => {
 
           await createStandardUsecase.createStandard(inputData);
 
-          expect(
-            standardSummaryService.createStandardSummary,
-          ).toHaveBeenCalledWith(
+          expect(generateStandardSummaryDelayedJob.addJob).toHaveBeenCalledWith(
             expect.objectContaining({
-              scope: 'src/**/*.ts',
+              standardVersion: expect.objectContaining({
+                scope: 'src/**/*.ts',
+              }),
             }),
-            expect.any(Array),
           );
         });
       });
@@ -612,7 +565,7 @@ describe('CreateStandardUsecase', () => {
       let createStandardUsecase: CreateStandardUsecase;
       let standardService: jest.Mocked<StandardService>;
       let standardVersionService: jest.Mocked<StandardVersionService>;
-      let standardSummaryService: jest.Mocked<StandardSummaryService>;
+      let generateStandardSummaryDelayedJob: jest.Mocked<GenerateStandardSummaryDelayedJob>;
       let stubbedLogger: jest.Mocked<PackmindLogger>;
 
       beforeEach(() => {
@@ -636,13 +589,15 @@ describe('CreateStandardUsecase', () => {
           prepareForGitPublishing: jest.fn(),
         } as unknown as jest.Mocked<StandardVersionService>;
 
-        standardSummaryService = {
-          createStandardSummary: jest
-            .fn()
-            .mockResolvedValue('Generated summary'),
-        } as unknown as jest.Mocked<StandardSummaryService>;
+        generateStandardSummaryDelayedJob = {
+          addJob: jest.fn(),
+        } as unknown as jest.Mocked<GenerateStandardSummaryDelayedJob>;
 
         stubbedLogger = stubLogger();
+
+        generateStandardSummaryDelayedJob.addJob.mockResolvedValue(
+          'job-id-123',
+        );
 
         // Default slug mock: lowercased with hyphens
         (slug as jest.MockedFunction<typeof slug>).mockImplementation(
@@ -652,7 +607,7 @@ describe('CreateStandardUsecase', () => {
         createStandardUsecase = new CreateStandardUsecase(
           standardService,
           standardVersionService,
-          standardSummaryService,
+          generateStandardSummaryDelayedJob,
           stubbedLogger,
         );
       });

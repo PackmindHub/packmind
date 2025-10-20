@@ -82,5 +82,11 @@ export const RecipeSchema = new EntitySchema<
       name: 'idx_recipe_org_user',
       columns: ['organizationId', 'userId'],
     },
+    {
+      name: 'idx_recipe_slug',
+      columns: ['slug', 'organizationId'],
+      unique: true,
+      where: 'deleted_at IS NULL',
+    },
   ],
 });

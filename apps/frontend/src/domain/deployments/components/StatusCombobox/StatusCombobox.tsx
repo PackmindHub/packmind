@@ -43,7 +43,15 @@ export const StatusCombobox: React.FC<StatusComboboxProps> = ({
       openOnClick
       placeholder={placeholder}
       onInputValueChange={(e: { inputValue: string }) => filter(e.inputValue)}
-      onValueChange={(details: { value: string | string[] }) => {
+      onValueChange={(details: { value: string | string[] | undefined }) => {
+        // When cleared, treat it as 'all'
+        if (
+          !details.value ||
+          (Array.isArray(details.value) && details.value.length === 0)
+        ) {
+          onChange('all');
+          return;
+        }
         const next = Array.isArray(details.value)
           ? (details.value[0] as RepositoryStatus)
           : (details.value as RepositoryStatus);

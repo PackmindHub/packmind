@@ -11,6 +11,7 @@ export class Configuration {
   );
   private infisicalConfig?: InfisicalConfig;
   private initialized = false;
+  private initializationPromise: Promise<void> | null = null;
 
   static getInstance(logger?: PackmindLogger): Configuration {
     if (logger) {
@@ -25,8 +26,35 @@ export class Configuration {
   }
 
   private async initialize(env: Record<string, string | undefined>) {
-    if (this.initialized) return;
+    // If already initialized, return immediately
+    if (this.initialized) {
+      Configuration.logger.debug('Configuration already initialized, skipping');
+      return;
+    }
 
+    // If initialization is in progress, wait for it to complete
+    if (this.initializationPromise) {
+      Configuration.logger.debug(
+        'Configuration initialization already in progress, waiting for completion',
+      );
+      await this.initializationPromise;
+      return;
+    }
+
+    // Start initialization and store the promise
+    this.initializationPromise = this.performInitialization(env);
+
+    try {
+      await this.initializationPromise;
+    } finally {
+      // Clear the promise once initialization is complete (success or failure)
+      this.initializationPromise = null;
+    }
+  }
+
+  private async performInitialization(
+    env: Record<string, string | undefined>,
+  ): Promise<void> {
     Configuration.logger.info('Initializing Configuration');
 
     try {

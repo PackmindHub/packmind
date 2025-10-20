@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   PMCombobox,
   PMVStack,
@@ -38,15 +38,20 @@ export const TargetMultiSelect: React.FC<TargetMultiSelectProps> = ({
     value: name,
   }));
 
+  // Remount combobox when available targets set changes so internal collection resets
+  const itemsKey = useMemo(() => uniqueNames.join('|'), [uniqueNames]);
+
   const { collection, filter } = pmUseListCollection({
     initialItems: targetItems,
     filter: contains,
   });
 
-  const displayValue =
-    selectedTargetNames.length === 0
-      ? placeholder
-      : `${selectedTargetNames.length} target${selectedTargetNames.length === 1 ? '' : 's'} selected`;
+  let displayValue = placeholder;
+  if (selectedTargetNames.length > 0) {
+    const count = selectedTargetNames.length;
+    const plural = count === 1 ? '' : 's';
+    displayValue = `${count} target${plural} selected`;
+  }
 
   const handleValueChange = (details: ValueChangeDetails) => {
     onSelectionChange(details.value);
@@ -54,6 +59,7 @@ export const TargetMultiSelect: React.FC<TargetMultiSelectProps> = ({
 
   return (
     <PMCombobox.Root
+      key={itemsKey}
       collection={collection}
       onInputValueChange={(e: InputValueChangeDetails) => filter(e.inputValue)}
       onValueChange={handleValueChange}

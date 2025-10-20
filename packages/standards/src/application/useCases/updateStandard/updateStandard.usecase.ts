@@ -3,17 +3,15 @@ import {
   StandardVersionService,
   CreateStandardVersionData,
 } from '../../services/StandardVersionService';
-import { StandardSummaryService } from '../../services/StandardSummaryService';
 import { StandardId } from '../../../domain/entities/Standard';
-import { Rule, createRuleId, RuleId } from '../../../domain/entities/Rule';
+import { RuleId } from '../../../domain/entities/Rule';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
-import { RuleExample } from '@packmind/shared';
+import { RuleExample, StandardVersion } from '@packmind/shared';
 
-import { LogLevel, PackmindLogger, AiNotConfigured } from '@packmind/shared';
+import { LogLevel, PackmindLogger } from '@packmind/shared';
 import { OrganizationId, UserId } from '@packmind/accounts';
-import { v4 as uuidv4 } from 'uuid';
-import { createStandardVersionId } from '../../../domain/entities/StandardVersion';
+import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSummaryDelayedJob';
 
 const origin = 'UpdateStandardUsecase';
 
@@ -33,7 +31,7 @@ export class UpdateStandardUsecase {
     private readonly standardVersionService: StandardVersionService,
     private readonly ruleRepository: IRuleRepository,
     private readonly ruleExampleRepository: IRuleExampleRepository,
-    private readonly standardSummaryService: StandardSummaryService,
+    private readonly generateStandardSummaryDelayedJob: GenerateStandardSummaryDelayedJob,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.DEBUG,
@@ -142,59 +140,6 @@ export class UpdateStandardUsecase {
         },
       );
 
-      // Generate summary for the updated standard version
-      let summary: string | null = null;
-      try {
-        this.logger.debug('Generating summary for updated standard version', {
-          rulesCount: rules.length,
-        });
-
-        // Convert rule data to Rule-like objects for summary generation
-        const ruleEntities: Rule[] = rules.map((rule) => ({
-          id: createRuleId(uuidv4()), // Temporary ID for summary generation
-          content: rule.content,
-          standardVersionId: createStandardVersionId(uuidv4()), // Temporary ID for summary generation
-        }));
-
-        summary = await this.standardSummaryService.createStandardSummary(
-          {
-            standardId,
-            name,
-            slug: standardSlug,
-            description,
-            version: nextVersion,
-            summary: null,
-            scope,
-          },
-          ruleEntities,
-        );
-        this.logger.debug('Summary generated successfully for update', {
-          summaryLength: summary.length,
-        });
-      } catch (summaryError) {
-        if (summaryError instanceof AiNotConfigured) {
-          this.logger.warn(
-            'AI service not configured - proceeding without summary',
-            {
-              error: summaryError.message,
-            },
-          );
-        } else {
-          const errorMessage =
-            summaryError instanceof Error
-              ? summaryError.message
-              : String(summaryError);
-          this.logger.error(
-            'Failed to generate summary during update, proceeding without summary',
-            {
-              error: errorMessage,
-            },
-          );
-        }
-      }
-
-      // Build rules with copied examples for rules that persist
-      this.logger.debug('Preparing rules with examples for new version');
       const existingRulesById = new Map(existingRules.map((r) => [r.id, r]));
       const rulesWithExamples: Array<{
         content: string;
@@ -215,7 +160,6 @@ export class UpdateStandardUsecase {
       }
 
       // Create new standard version with updated rules
-      this.logger.debug('Creating new standard version with updated rules');
       const standardVersionData: CreateStandardVersionData = {
         standardId,
         name,
@@ -224,7 +168,6 @@ export class UpdateStandardUsecase {
         version: nextVersion,
         rules: rulesWithExamples,
         scope,
-        summary,
         userId, // Track the user who updated this through Web UI
       };
 
@@ -232,6 +175,13 @@ export class UpdateStandardUsecase {
         await this.standardVersionService.addStandardVersion(
           standardVersionData,
         );
+
+      await this.generateStandardSummary(
+        userId,
+        organizationId,
+        newStandardVersion,
+        rulesWithExamples,
+      );
 
       this.logger.info('Standard updated successfully', {
         standardId,
@@ -260,6 +210,20 @@ export class UpdateStandardUsecase {
       });
       throw error;
     }
+  }
+
+  public async generateStandardSummary(
+    userId: UserId,
+    organizationId: OrganizationId,
+    newStandardVersion: StandardVersion,
+    rulesWithExamples: Array<{ content: string; examples: RuleExample[] }>,
+  ) {
+    await this.generateStandardSummaryDelayedJob.addJob({
+      userId,
+      organizationId,
+      standardVersion: newStandardVersion,
+      rules: rulesWithExamples,
+    });
   }
 
   private hasContentChanged(

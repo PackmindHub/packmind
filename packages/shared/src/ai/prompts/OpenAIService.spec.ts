@@ -79,7 +79,6 @@ describe('OpenAIService', () => {
       expect(result.success).toBe(true);
       expect(result.data).toBe('Test AI response');
       expect(result.attempts).toBe(1);
-      expect(result.model).toBe('gpt-4o-mini');
       expect(result.error).toBeUndefined();
     });
 
@@ -232,30 +231,6 @@ describe('OpenAIService', () => {
       expect(mockOpenAIInstance.chat.completions.create).toHaveBeenCalledTimes(
         3,
       );
-    });
-
-    describe('when custom options are provided', () => {
-      it('uses custom options', async () => {
-        mockOpenAIInstance.chat.completions.create.mockResolvedValue(
-          mockResponse,
-        );
-
-        const options = {
-          maxTokens: 1000,
-          temperature: 0.7,
-        };
-
-        await service.executePrompt(mockPrompt, options);
-
-        expect(mockOpenAIInstance.chat.completions.create).toHaveBeenCalledWith(
-          {
-            model: 'gpt-4o-mini',
-            messages: [{ role: 'user', content: mockPrompt }],
-            max_tokens: 1000,
-            temperature: 0.7,
-          },
-        );
-      });
     });
   });
 

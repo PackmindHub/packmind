@@ -20,6 +20,8 @@ jest.mock('@packmind/shared', () => ({
     error: jest.fn(),
     debug: jest.fn(),
   })),
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  maskEmail: jest.fn((_email) => '***@***'),
 }));
 
 describe('LoginRateLimiterService', () => {

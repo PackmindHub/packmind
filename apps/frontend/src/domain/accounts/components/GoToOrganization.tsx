@@ -8,6 +8,7 @@ import {
   PMAlert,
 } from '@packmind/ui';
 import { organizationGateway } from '../api/gateways';
+import { routes } from '../../../shared/utils/routes';
 
 export default function GoToOrganization() {
   const [organizationName, setOrganizationName] = useState('');
@@ -31,7 +32,7 @@ export default function GoToOrganization() {
       await organizationGateway.getByName(organizationName.trim());
 
       // If we reach here, organization exists - redirect to sign-in using the slug
-      navigate(`/sign-in`);
+      navigate(routes.auth.toSignIn());
     } catch {
       // Organization doesn't exist
       setError('Organization not found. Please check the name and try again.');

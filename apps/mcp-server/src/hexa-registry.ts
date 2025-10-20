@@ -9,6 +9,7 @@ import { DeploymentsHexa } from '@packmind/deployments';
 import { HexaRegistry, PackmindLogger, LogLevel } from '@packmind/shared';
 import { RecipesUsageHexa } from '@packmind/analytics';
 import { CodingAgentHexa } from '@packmind/coding-agent';
+import { JobsHexa } from '@packmind/jobs';
 
 const logger = new PackmindLogger('HexaRegistryPlugin', LogLevel.INFO);
 
@@ -41,9 +42,13 @@ async function hexaRegistryPlugin(fastify: FastifyInstance) {
     logger.debug('HexaRegistry instance created');
 
     // Register domain hexas in dependency order
-    // AccountsHexa has no dependencies, GitHexa may depend on Accounts, RecipesHexa depends on Git, StandardsHexa depends on Git
+    // AccountsHexa has no dependencies, JobsHexa has no dependencies, GitHexa may depend on Accounts, RecipesHexa depends on Git, StandardsHexa depends on Git and Jobs
     registry.register(AccountsHexa);
     logger.debug('AccountsHexa registered');
+
+    registry.register(JobsHexa);
+    logger.debug('JobsHexa registered');
+
     registry.register(GitHexa);
     logger.debug('GitHexa registered');
     registry.register(RecipesHexa);
@@ -72,8 +77,13 @@ async function hexaRegistryPlugin(fastify: FastifyInstance) {
         );
       }
 
-      // Initialize the registry with the DataSource
+      // Initialize the registry with the DataSource (synchronous phase)
       registry.init(fastify.orm);
+      logger.debug('Synchronous initialization complete');
+
+      // Initialize async dependencies (e.g., job queues)
+      await registry.initAsync();
+      logger.debug('Async initialization complete');
 
       logger.info('HexaRegistry initialized successfully');
     });
@@ -94,6 +104,17 @@ async function hexaRegistryPlugin(fastify: FastifyInstance) {
       return registry.get(AccountsHexa);
     });
     logger.debug('accountsHexa decorator added');
+
+    fastify.decorate('jobsHexa', () => {
+      logger.debug('jobsHexa() called');
+      if (!registry.initialized) {
+        throw new Error(
+          'HexaRegistry not initialized yet. Ensure database connection is ready.',
+        );
+      }
+      return registry.get(JobsHexa);
+    });
+    logger.debug('jobsHexa decorator added');
 
     fastify.decorate('gitHexa', () => {
       logger.debug('gitHexa() called');
@@ -168,6 +189,7 @@ declare module 'fastify' {
   interface FastifyInstance {
     hexaRegistry: HexaRegistry;
     accountsHexa: () => AccountsHexa;
+    jobsHexa: () => JobsHexa;
     gitHexa: () => GitHexa;
     recipesHexa: () => RecipesHexa;
     recipesUsageHexa: () => RecipesUsageHexa;

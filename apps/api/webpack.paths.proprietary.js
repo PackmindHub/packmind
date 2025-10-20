@@ -14,6 +14,7 @@ module.exports = function getProprietaryWebpackPaths(__dirname) {
     '@packmind/analytics': join(__dirname, '../../packages/analytics/src'),
     '@packmind/jobs': join(__dirname, '../../packages/jobs/src'),
     '@packmind/linter': join(__dirname, '../../packages/linter/src'),
+    '@packmind/amplitude': join(__dirname, '../../packages/amplitude/src'),
     // Add other proprietary-specific overrides here as needed
   };
 };

@@ -28,7 +28,7 @@ describe('CaptureRecipeUsecase', () => {
     // Mock RecipeService
     recipeService = {
       addRecipe: jest.fn(),
-
+      listRecipesByOrganization: jest.fn(),
       getRecipeById: jest.fn(),
       findRecipeBySlug: jest.fn(),
       updateRecipe: jest.fn(),
@@ -54,6 +54,9 @@ describe('CaptureRecipeUsecase', () => {
     recipeSummaryService = {
       createRecipeSummary: jest.fn().mockResolvedValue('AI-generated summary'),
     } as unknown as jest.Mocked<RecipeSummaryService>;
+
+    // Default: no existing recipes (can be overridden in individual tests)
+    recipeService.listRecipesByOrganization.mockResolvedValue([]);
 
     captureRecipeUsecase = new CaptureRecipeUsecase(
       recipeService,
@@ -340,6 +343,61 @@ describe('CaptureRecipeUsecase', () => {
           gitCommit: undefined,
           userId: createUserId(inputData.userId),
         });
+      });
+
+      it('handles slug conflicts by appending counter', async () => {
+        const organizationId = createOrganizationId(uuidv4());
+        const userId = createUserId(uuidv4());
+        const inputData = {
+          name: 'Test Recipe',
+          summary: 'Test summary',
+          whenToUse: [],
+          contextValidationCheckpoints: [],
+          steps: [],
+          organizationId,
+          userId,
+        };
+
+        // Mock existing recipes with conflicting slugs
+        const existingRecipes = [
+          recipeFactory({ slug: 'test-recipe' }),
+          recipeFactory({ slug: 'test-recipe-1' }),
+        ];
+
+        const createdRecipe = recipeFactory({
+          id: createRecipeId(uuidv4()),
+          name: inputData.name,
+          slug: 'test-recipe-2', // Should be incremented
+          content: inputData.summary,
+          version: 1,
+          organizationId,
+          userId,
+        });
+
+        const createdRecipeVersion = recipeVersionFactory({
+          id: createRecipeVersionId(uuidv4()),
+          recipeId: createdRecipe.id,
+          name: inputData.name,
+          slug: 'test-recipe-2',
+          version: 1,
+        });
+
+        recipeService.listRecipesByOrganization.mockResolvedValue(
+          existingRecipes,
+        );
+        recipeService.addRecipe.mockResolvedValue(createdRecipe);
+        recipeVersionService.addRecipeVersion.mockResolvedValue(
+          createdRecipeVersion,
+        );
+
+        const result = await captureRecipeUsecase.execute(inputData);
+
+        expect(result).toEqual(createdRecipe);
+        expect(recipeService.addRecipe).toHaveBeenCalledWith(
+          expect.objectContaining({
+            slug: 'test-recipe-2',
+          }),
+        );
       });
     });
 

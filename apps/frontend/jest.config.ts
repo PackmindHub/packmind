@@ -4,12 +4,6 @@ import { pathsToModuleNameMapper } from 'ts-jest';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { compilerOptions } = require('../../tsconfig.base.effective.json');
 
-// Filter to only include @packmind/ modules
-const allPaths = compilerOptions.paths as Record<string, string[]>;
-const packmindPaths = Object.fromEntries(
-  Object.entries(allPaths).filter(([key]) => key.startsWith('@packmind/')),
-) as Record<string, string[]>;
-
 export default {
   preset: '../../jest.preset.ts',
   displayName: 'frontend',
@@ -32,7 +26,7 @@ export default {
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   coverageDirectory: '../../coverage/apps/frontend',
   moduleNameMapper: {
-    ...pathsToModuleNameMapper(packmindPaths, {
+    ...pathsToModuleNameMapper(compilerOptions.paths, {
       prefix: '<rootDir>/../../',
     }),
     '\\.(woff|woff2|eot|ttf|otf)$': 'identity-obj-proxy',

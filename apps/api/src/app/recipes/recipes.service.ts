@@ -21,7 +21,12 @@ export class RecipesService {
   ) {
     this.deploymentAdapter = this.deploymentHexa.getDeploymentsUseCases();
     // Set up bidirectional dependency to break circular reference
-    recipesHexa.setDeploymentPort(this.deploymentAdapter);
+    // Note: This is async but we don't await in constructor - initialization happens in background
+    recipesHexa.setDeploymentPort(this.deploymentAdapter).catch((error) => {
+      this.logger.error('Failed to initialize recipes with deployment port', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    });
     deploymentHexa.setRecipesPort(recipesHexa);
   }
 

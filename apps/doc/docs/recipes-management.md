@@ -13,15 +13,41 @@ Examples of recipes can be:
 
 ## Creating Recipes
 
-Recipes are created through the **MCP server**.
-As it's a suite of instructions and steps to follow, we recommend providing the better context to create a recipe:
+Recipes are created through the **MCP server** using a guided workflow that ensures they are well-structured and reusable.
 
-- When you've accomplished a series of tasks in a session with your AI Agent, and you ask to create a recipe based on what's you've done so far
-- A commit or a pull request reflects a recipe, and you can ask explicitly to your AI Agent to create a recipe by analyzing one or several commits or by providing a Pull Request URL.
+The AI agent will automatically follow the **recipe creation workflow** which:
 
-You can also provide several files as context and provide additional information to get better results. Here is an example of instructions:
+1. Identifies the development process you want to capture
+2. Structures it into clear, actionable steps with context validation checkpoints
+3. Defines specific "when to use" scenarios
+4. Adds optional code examples to demonstrate each step
 
-_"Synthetize the steps we followed to create a new use case and create a Packmind recipe based on this"_
+### Best Practices for Recipe Creation
+
+To get the best results, provide rich context to your AI agent:
+
+- **After completing a task**: When you've accomplished a series of tasks in a session with your AI Agent, ask it to create a recipe based on what you've done
+
+  _"Synthesize the steps we followed to create a new use case and create a Packmind recipe based on this"_
+
+- **From Git history**: A commit or pull request can reflect a recipe. Ask your agent to analyze commits or a Pull Request URL
+
+  _"Create a recipe by analyzing the changes in pull request #123"_
+
+- **From existing code**: Provide files as context to extract patterns
+
+  _"Create a recipe for adding a new API endpoint based on @routes/users.ts and @controllers/UserController.ts"_
+
+The workflow ensures your recipe includes:
+
+- Clear step-by-step instructions
+- Context validation checkpoints (questions to ask before starting)
+- Usage scenarios (when this recipe applies)
+- Optional code snippets for each step
+
+:::tip
+For detailed information about the recipe creation workflow and available MCP tools, see the [MCP Server reference](./mcp-server.md).
+:::
 
 ## Updating Recipes
 

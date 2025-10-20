@@ -77,7 +77,7 @@ describe('PackmindGateway', () => {
 
       // Verify API call was made correctly
       expect(mockFetch).toHaveBeenCalledWith(
-        `${mockHost}/api/v0/standards/list-detection-program`,
+        `${mockHost}/api/v0/list-detection-program`,
         {
           method: 'POST',
           headers: {

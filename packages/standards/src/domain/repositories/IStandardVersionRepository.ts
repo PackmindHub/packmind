@@ -1,4 +1,7 @@
-import { StandardVersion } from '../entities/StandardVersion';
+import {
+  StandardVersion,
+  StandardVersionId,
+} from '../entities/StandardVersion';
 import { StandardId } from '../entities/Standard';
 import { IRepository } from '@packmind/shared';
 
@@ -13,4 +16,8 @@ export interface IStandardVersionRepository
     standardId: StandardId,
     version: number,
   ): Promise<StandardVersion | null>;
+  updateSummary(
+    standardVersionId: StandardVersionId,
+    summary: string,
+  ): Promise<number | undefined>;
 }

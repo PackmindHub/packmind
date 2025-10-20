@@ -51,7 +51,28 @@ export class CaptureRecipeUsecase implements ICaptureRecipeUseCase {
     });
 
     try {
-      const recipeSlug = slug(name);
+      this.logger.info('Generating slug from recipe name', { name });
+      const baseSlug = slug(name);
+      this.logger.info('Base slug generated', { slug: baseSlug });
+
+      // Ensure slug is unique per organization. If it exists, append "-1", "-2", ... until unique
+      this.logger.info('Checking slug uniqueness within organization', {
+        baseSlug,
+        organizationId,
+      });
+      const existingRecipes =
+        await this.recipeService.listRecipesByOrganization(organizationId);
+      const existingSlugs = new Set(existingRecipes.map((r) => r.slug));
+
+      let recipeSlug = baseSlug;
+      if (existingSlugs.has(recipeSlug)) {
+        let counter = 1;
+        while (existingSlugs.has(`${baseSlug}-${counter}`)) {
+          counter++;
+        }
+        recipeSlug = `${baseSlug}-${counter}`;
+      }
+      this.logger.info('Resolved unique slug', { slug: recipeSlug });
 
       // Determine content: use new structured format if provided, otherwise use legacy content
       const content =

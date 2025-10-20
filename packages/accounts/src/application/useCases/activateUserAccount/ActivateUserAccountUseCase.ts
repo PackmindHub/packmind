@@ -3,7 +3,7 @@ import {
   ActivateUserAccountResponse,
   IActivateUserAccountUseCase,
 } from '@packmind/shared';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger, maskEmail } from '@packmind/shared';
 import { UserService } from '../../services/UserService';
 import { InvitationService } from '../../services/InvitationService';
 import {
@@ -69,7 +69,7 @@ export class ActivateUserAccountUseCase implements IActivateUserAccountUseCase {
       if (user.active) {
         this.logger.warn('User is already active', {
           userId: user.id,
-          email: user.email,
+          email: maskEmail(user.email),
         });
         // Still return success but don't generate new token
         return {
@@ -101,7 +101,7 @@ export class ActivateUserAccountUseCase implements IActivateUserAccountUseCase {
 
       this.logger.info('User account activated successfully', {
         userId: updatedUser.id,
-        email: updatedUser.email,
+        email: maskEmail(updatedUser.email),
       });
 
       return {

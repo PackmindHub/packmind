@@ -2,7 +2,6 @@ import {
   CanActivate,
   ExecutionContext,
   Injectable,
-  SetMetadata,
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
@@ -10,16 +9,14 @@ import { JwtService } from '@nestjs/jwt';
 import { Observable } from 'rxjs';
 import {
   ApiKeyService,
-  IJwtService,
   createOrganizationId,
   createUserId,
+  IJwtService,
 } from '@packmind/accounts';
 import { JwtPayload } from './JwtPayload';
 import { LogLevel, PackmindLogger } from '@packmind/shared';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
-
-export const IS_PUBLIC_KEY = 'isPublic';
-export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
+import { IS_PUBLIC_KEY } from '@packmind/shared-nest';
 
 // Lightweight adapter to reuse accounts ApiKeyService with Nest JwtService
 class JwtServiceAdapter implements IJwtService {

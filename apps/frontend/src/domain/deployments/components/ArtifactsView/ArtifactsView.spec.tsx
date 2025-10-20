@@ -111,6 +111,15 @@ jest.mock('@packmind/ui', () => {
   return { ...actual, PMTable };
 });
 
+// Mock useCurrentSpace hook
+jest.mock('../../../spaces/hooks/useCurrentSpace', () => ({
+  useCurrentSpace: () => ({
+    spaceId: 'space-id-1',
+    spaceSlug: 'test-space',
+    spaceName: 'Test Space',
+  }),
+}));
+
 // Mock RunDistribution to avoid react-query and heavy internals in tests
 jest.mock('../RunDistribution/RunDistribution', () => {
   type RDComponent = React.FC<{ children?: React.ReactNode }> & {
@@ -130,7 +139,7 @@ jest.mock('../RunDistribution/RunDistribution', () => {
 
 const renderView = (ui: React.ReactElement) =>
   render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={['/org/test-org/space/test-space']}>
       <UIProvider>{ui}</UIProvider>
     </MemoryRouter>,
   );
@@ -171,11 +180,11 @@ describe('ArtifactsView', () => {
     // Artifact headings are links
     expect(screen.getByRole('link', { name: 'Recipe Z' })).toHaveAttribute(
       'href',
-      '/org/org-x/recipes/r1',
+      '/org/org-x/space/test-space/recipes/r1',
     );
     expect(screen.getByRole('link', { name: 'Standard B' })).toHaveAttribute(
       'href',
-      '/org/org-x/standards/s1',
+      '/org/org-x/space/test-space/standards/s1',
     );
 
     // There should be one PMTable per artifact block
@@ -183,14 +192,23 @@ describe('ArtifactsView', () => {
     // 2 recipes + 1 standard = 3 tables
     expect(tables).toHaveLength(3);
 
-    // Check sorting by target names in first recipe table (Alpha before Prod)
-    const recipeZTable = tables[0];
-    const cells = within(recipeZTable).getAllByRole('cell');
-    // First column is repository, second is target name => assert order contains Alpha then Prod
+    // Trouve la table du recipe "Recipe Z" en détectant les lignes cibles Alpha/Prod
+    const recipeZTable = tables.find((t) => {
+      const cells = within(t).getAllByRole('cell');
+      const targetCells = cells.filter((_, idx) => idx % 5 === 1);
+      const texts = targetCells
+        .map((c) => within(c).queryByText(/Alpha|Prod/))
+        .filter((n): n is HTMLElement => !!n)
+        .map((n) => n.textContent);
+      return texts.includes('Alpha') && texts.includes('Prod');
+    });
+    expect(recipeZTable).toBeTruthy();
+
+    const cells = within(recipeZTable as HTMLElement).getAllByRole('cell');
     const targetCells = cells.filter((_, idx) => idx % 5 === 1); // name column index 1 based on TABLE_COLUMNS order
-    const targetText = targetCells.map(
-      (c) => within(c).getByText(/Alpha|Prod/).textContent,
-    );
+    const targetText = targetCells
+      .map((c) => within(c).queryByText(/Alpha|Prod/)?.textContent)
+      .filter((t): t is string => !!t);
     expect(targetText).toEqual(['Alpha', 'Prod']);
   });
 

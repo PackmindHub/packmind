@@ -3,7 +3,7 @@ import {
   ValidatePasswordResetTokenResponse,
   IValidatePasswordResetTokenUseCase,
 } from '@packmind/shared/src/types/accounts/contracts/IValidatePasswordResetTokenUseCase';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger, maskEmail } from '@packmind/shared';
 import { PasswordResetTokenService } from '../services/PasswordResetTokenService';
 import { UserService } from '../services/UserService';
 import { createPasswordResetToken } from '../../domain/entities/PasswordResetToken';
@@ -77,7 +77,7 @@ export class ValidatePasswordResetTokenUseCase
       if (!user.active) {
         this.logger.warn('Password reset token for inactive user', {
           userId: user.id,
-          email: this.maskEmail(user.email),
+          email: maskEmail(user.email),
         });
         return {
           email: '',
@@ -87,7 +87,7 @@ export class ValidatePasswordResetTokenUseCase
 
       this.logger.info('Password reset token validated successfully', {
         tokenId: passwordResetToken.id,
-        email: this.maskEmail(user.email),
+        email: maskEmail(user.email),
       });
 
       return {
@@ -114,14 +114,5 @@ export class ValidatePasswordResetTokenUseCase
       return '***';
     }
     return `${tokenStr.slice(0, 4)}***${tokenStr.slice(-4)}`;
-  }
-
-  private maskEmail(email: string): string {
-    const [localPart, domain] = email.split('@');
-    if (!domain) {
-      return '***';
-    }
-    const visible = localPart.slice(0, 2);
-    return `${visible}***@${domain}`;
   }
 }

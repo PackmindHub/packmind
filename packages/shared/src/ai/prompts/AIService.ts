@@ -1,4 +1,4 @@
-import { AIPromptResult, AIPromptOptions } from './types';
+import { AIPromptResult, AIPromptOptions, PromptConversation } from './types';
 
 /**
  * Interface for AI service implementations.
@@ -16,6 +16,18 @@ export interface AIService {
 
   executePrompt<T = string>(
     prompt: string,
+    options?: AIPromptOptions,
+  ): Promise<AIPromptResult<T>>;
+
+  /**
+   * Execute a prompt with conversation history
+   * @param prompt The user prompt to execute
+   * @param conversationHistory Array of previous conversation messages
+   * @param options Optional configuration for the prompt execution
+   * @returns Promise resolving to the AI response result
+   */
+  executePromptWithHistory<T = string>(
+    conversationHistory: PromptConversation[],
     options?: AIPromptOptions,
   ): Promise<AIPromptResult<T>>;
 }

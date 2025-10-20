@@ -12,7 +12,12 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { standardFactory } from '../../../test/standardFactory';
 import { PackmindLogger } from '@packmind/shared';
-import { createOrganizationId, createUserId, UserId } from '@packmind/accounts';
+import {
+  createOrganizationId,
+  createUserId,
+  UserId,
+  OrganizationId,
+} from '@packmind/accounts';
 import { stubLogger } from '@packmind/shared/test';
 
 describe('StandardService', () => {
@@ -130,20 +135,25 @@ describe('StandardService', () => {
   describe('findStandardBySlug', () => {
     describe('when the standard exists', () => {
       let slug: string;
+      let organizationId: OrganizationId;
       let standard: Standard;
       let result: Standard | null;
 
       beforeEach(async () => {
         slug = 'test-standard';
-        standard = standardFactory({ slug });
+        organizationId = createOrganizationId('org-123');
+        standard = standardFactory({ slug, organizationId });
 
         standardRepository.findBySlug = jest.fn().mockResolvedValue(standard);
 
-        result = await standardService.findStandardBySlug(slug);
+        result = await standardService.findStandardBySlug(slug, organizationId);
       });
 
-      it('calls repository with correct slug', () => {
-        expect(standardRepository.findBySlug).toHaveBeenCalledWith(slug);
+      it('calls repository with correct slug and organizationId', () => {
+        expect(standardRepository.findBySlug).toHaveBeenCalledWith(
+          slug,
+          organizationId,
+        );
       });
 
       it('returns the found standard', () => {
@@ -153,13 +163,18 @@ describe('StandardService', () => {
 
     describe('when the standard does not exist', () => {
       let nonExistentSlug: string;
+      let organizationId: OrganizationId;
       let result: Standard | null;
 
       beforeEach(async () => {
         nonExistentSlug = 'non-existent-standard';
+        organizationId = createOrganizationId('org-123');
         standardRepository.findBySlug = jest.fn().mockResolvedValue(null);
 
-        result = await standardService.findStandardBySlug(nonExistentSlug);
+        result = await standardService.findStandardBySlug(
+          nonExistentSlug,
+          organizationId,
+        );
       });
 
       it('returns null', () => {

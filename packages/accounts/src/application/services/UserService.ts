@@ -15,6 +15,7 @@ import {
   LogLevel,
   SSEEventPublisher,
   UserContextChangeType,
+  maskEmail,
 } from '@packmind/shared';
 import {
   InvalidInvitationEmailError,
@@ -47,7 +48,10 @@ export class UserService {
     password: string,
     organizationId: OrganizationId,
   ): Promise<User> {
-    this.logger.info('Creating user', { email, organizationId });
+    this.logger.info('Creating user', {
+      email: maskEmail(email),
+      organizationId,
+    });
 
     try {
       // Validate input
@@ -58,7 +62,7 @@ export class UserService {
       // Check if user already exists (case-insensitive)
       const existingUser = await this.getUserByEmailCaseInsensitive(email);
       if (existingUser) {
-        throw new Error(`Email '${email}' already exists`);
+        throw new Error(`Email '${maskEmail(email)}' already exists`);
       }
 
       // Hash password
@@ -84,13 +88,13 @@ export class UserService {
       const createdUser = await this.userRepository.add(user);
       this.logger.info('User created successfully', {
         userId: createdUser.id,
-        email,
+        email: maskEmail(email),
         organizationId,
       });
       return createdUser;
     } catch (error) {
       this.logger.error('Failed to create user', {
-        email,
+        email: maskEmail(email),
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
@@ -100,7 +104,7 @@ export class UserService {
   async createInactiveUser(email: string): Promise<User> {
     const normalizedEmail = email.trim().toLowerCase();
     this.logger.info('Creating inactive user for invitation', {
-      email: normalizedEmail,
+      email: maskEmail(normalizedEmail),
     });
 
     if (!normalizedEmail) {
@@ -111,7 +115,7 @@ export class UserService {
       await this.getUserByEmailCaseInsensitive(normalizedEmail);
     if (existingUser) {
       this.logger.info('Inactive user creation skipped - user already exists', {
-        email: normalizedEmail,
+        email: maskEmail(normalizedEmail),
       });
       return existingUser;
     }
@@ -127,7 +131,7 @@ export class UserService {
     const createdUser = await this.userRepository.add(newUser);
     this.logger.info('Inactive user created successfully', {
       userId: createdUser.id,
-      email: normalizedEmail,
+      email: maskEmail(normalizedEmail),
     });
     return createdUser;
   }
@@ -179,12 +183,14 @@ export class UserService {
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
-    this.logger.info('Getting user by email', { email });
+    this.logger.info('Getting user by email', { email: maskEmail(email) });
     return this.userRepository.findByEmail(email);
   }
 
   async getUserByEmailCaseInsensitive(email: string): Promise<User | null> {
-    this.logger.info('Getting user by email (case-insensitive)', { email });
+    this.logger.info('Getting user by email (case-insensitive)', {
+      email: maskEmail(email),
+    });
     return this.userRepository.findByEmailCaseInsensitive(email);
   }
 
@@ -257,7 +263,10 @@ export class UserService {
   }
 
   async updateUser(user: User): Promise<User> {
-    this.logger.info('Updating user', { userId: user.id, email: user.email });
+    this.logger.info('Updating user', {
+      userId: user.id,
+      email: maskEmail(user.email),
+    });
     return this.userRepository.add(user);
   }
 

@@ -31,6 +31,7 @@ import {
   DeleteRuleExampleCommand,
 } from '../../domain/useCases';
 import { IDeploymentPort } from '@packmind/shared';
+import { IStandardDelayedJobs } from '../../domain/jobs/IStandardDelayedJobs';
 
 const origin = 'StandardsUseCases';
 
@@ -59,12 +60,13 @@ export class StandardsUseCases {
     private readonly standardsRepositories: IStandardsRepositories,
     private readonly gitHexa: GitHexa,
     private deploymentsQueryAdapter: IDeploymentPort | undefined,
+    private standardDelayedJobs: IStandardDelayedJobs,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this._createStandard = new CreateStandardUsecase(
       standardsServices.getStandardService(),
       standardsServices.getStandardVersionService(),
-      standardsServices.getStandardSummaryService(),
+      standardDelayedJobs.standardSummaryDelayedJob,
       this.logger,
     );
     this._createStandardWithExamples = new CreateStandardWithExamplesUsecase(
@@ -79,7 +81,7 @@ export class StandardsUseCases {
       standardsServices.getStandardVersionService(),
       standardsRepositories.getRuleRepository(),
       standardsRepositories.getRuleExampleRepository(),
-      standardsServices.getStandardSummaryService(),
+      this.standardDelayedJobs.standardSummaryDelayedJob,
       this.logger,
     );
     this._addRuleToStandard = new AddRuleToStandardUsecase(
@@ -87,7 +89,7 @@ export class StandardsUseCases {
       standardsServices.getStandardVersionService(),
       standardsRepositories.getRuleRepository(),
       standardsRepositories.getRuleExampleRepository(),
-      standardsServices.getStandardSummaryService(),
+      this.standardDelayedJobs.standardSummaryDelayedJob,
       this.logger,
     );
     this._getStandardById = new GetStandardByIdUsecase(
@@ -280,8 +282,11 @@ export class StandardsUseCases {
     return this._getStandardById.getStandardById(id);
   }
 
-  public async findStandardBySlug(slug: string) {
-    return this._findStandardBySlug.findStandardBySlug(slug);
+  public async findStandardBySlug(
+    slug: string,
+    organizationId: OrganizationId,
+  ) {
+    return this._findStandardBySlug.findStandardBySlug(slug, organizationId);
   }
 
   public async listStandardVersions(standardId: StandardId) {

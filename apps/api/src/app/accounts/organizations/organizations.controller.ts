@@ -26,8 +26,8 @@ import {
   UserOrganizationRole,
   UserNotFoundError,
 } from '@packmind/shared';
-import { Public } from '../../auth/auth.guard';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
+import { Public } from '@packmind/shared-nest';
 
 const origin = 'OrganizationsController';
 

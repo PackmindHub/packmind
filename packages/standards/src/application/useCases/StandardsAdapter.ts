@@ -2,6 +2,7 @@ import {
   IStandardsPort,
   OrganizationId,
   Rule,
+  RuleExample,
   RuleId,
   Standard,
   StandardId,
@@ -41,5 +42,9 @@ export class StandardsAdapter implements IStandardsPort {
 
   listStandardsByOrganization(id: OrganizationId): Promise<Standard[]> {
     return this.services.getStandardService().listStandardsByOrganization(id);
+  }
+
+  getRuleCodeExamples(id: RuleId): Promise<RuleExample[]> {
+    return this.repositories.getRuleExampleRepository().findByRuleId(id);
   }
 }

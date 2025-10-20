@@ -12,7 +12,7 @@ import { PackmindServices } from './application/services/PackmindServices';
 import { IPackmindRepositories } from './domain/repositories/IPackmindRepositories';
 import { ListFiles } from './application/services/ListFiles';
 import { GitService } from './application/services/GitService';
-import { AstExecutorService } from './application/services/AstExecutorService';
+import { ExecuteLinterProgramsUseCase } from '@packmind/linter-execution';
 
 export class PackmindCliHexaFactory {
   public repositories: IPackmindRepositories;
@@ -35,11 +35,13 @@ export class PackmindCliHexaFactory {
     this.services = {
       listFiles: new ListFiles(),
       gitRemoteUrlService: new GitService(),
-      astExecutorService: new AstExecutorService(),
+      linterExecutionUseCase: new ExecuteLinterProgramsUseCase(),
     };
 
     this.useCases = {
-      executeSingleFileAst: new ExecuteSingleFileAstUseCase(),
+      executeSingleFileAst: new ExecuteSingleFileAstUseCase(
+        this.services.linterExecutionUseCase,
+      ),
       getGitRemoteUrl: new GetGitRemoteUrlUseCase(),
       listFilesInDirectoryUseCase: new ListFilesInDirectoryUseCase(),
       lintFilesInDirectory: new LintFilesInDirectoryUseCase(

@@ -6,10 +6,12 @@ import {
   UserProvider,
   OrganizationProvider,
 } from '@packmind/shared';
+import { ISpacesPort } from '@packmind/shared/types';
 import { AccountsHexaFactory } from './AccountsHexaFactory';
 import { User } from './domain/entities/User';
 import { Organization } from './domain/entities/Organization';
 import { ApiKeyService } from './application/services/ApiKeyService';
+import { SpacesHexa } from '@packmind/spaces';
 
 import {
   SignUpWithOrganizationCommand,
@@ -66,6 +68,7 @@ const origin = 'AccountsHexa';
  */
 export type AccountsHexaOpts = BaseHexaOpts & {
   apiKeyService?: ApiKeyService;
+  spacesPort?: ISpacesPort;
 };
 
 const baseAccountsHexaOpts = { logger: new PackmindLogger(origin) };
@@ -84,11 +87,27 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts> {
       const dataSource = registry.getDataSource();
       this.logger.debug('Retrieved DataSource from registry');
 
-      // Initialize the hexagon with the shared DataSource and optional API key service
+      // Get SpacesHexa adapter for ISpacesPort (lazy DI per DDD standard)
+      let spacesPort: ISpacesPort | undefined = opts?.spacesPort;
+      if (!spacesPort) {
+        try {
+          const spacesHexa = registry.get(SpacesHexa);
+          spacesPort = spacesHexa.getSpacesAdapter();
+          this.logger.debug('Retrieved SpacesAdapter from SpacesHexa');
+        } catch (error) {
+          this.logger.debug('SpacesHexa not available in registry', {
+            error: error instanceof Error ? error.message : String(error),
+          });
+          spacesPort = undefined;
+        }
+      }
+
+      // Initialize the hexagon with the shared DataSource and optional dependencies
       this.hexa = new AccountsHexaFactory(
         dataSource,
         this.logger,
         opts?.apiKeyService,
+        spacesPort,
       );
       this.logger.info('AccountsHexa initialized successfully');
     } catch (error) {

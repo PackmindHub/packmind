@@ -1,7 +1,7 @@
 services:
   nx-daemon:
     image: node:22.17.0-alpine3.21
-    container_name: packmind-nx-daemon
+    container_name: dev-packmind-nx-daemon
     working_dir: /packmind
     command: >
       sh -lc "
@@ -13,8 +13,8 @@ services:
       "
     volumes:
       - .:/packmind
-      - node_modules:/packmind/node_modules
-      - nx-sock:/nx-sock
+      - dev-node_modules:/packmind/node_modules
+      - dev-nx-sock:/nx-sock
     environment:
       NX_DAEMON: 'true'
       NX_DAEMON_SOCKET_DIR: /nx-sock
@@ -34,7 +34,7 @@ services:
 
   postgres:
     image: postgres:17-alpine
-    container_name: packmind-postgres
+    container_name: dev-packmind-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -42,7 +42,7 @@ services:
     ports:
       - '5432:5432'
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - dev-postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 5s
@@ -51,11 +51,11 @@ services:
 
   redis:
     image: redis:7.2.4
-    container_name: redis
+    container_name: dev-redis
     ports:
       - '6379:6379'
     volumes:
-      - redis-data:/data
+      - dev-redis-data:/data
     healthcheck:
       test: ['CMD', 'redis-cli', 'ping']
       interval: 5s
@@ -64,7 +64,7 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4:latest
-    container_name: packmind-pgadmin
+    container_name: dev-packmind-pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@pgadmin.com
       PGADMIN_DEFAULT_PASSWORD: password
@@ -72,30 +72,30 @@ services:
     ports:
       - '2345:80'
     volumes:
-      - pgadmin:/var/lib/pgadmin
+      - dev-pgadmin:/var/lib/pgadmin
     depends_on:
       - postgres
 
   install-dependencies:
     image: node:22.17.0-alpine3.21
-    container_name: packmind-install-deps
+    container_name: dev-packmind-install-deps
     working_dir: /packmind
     entrypoint:
       - sh
       - -c
       - |
-        apk add --no-cache python3 make g++ py3-setuptools && \
+        apk add --no-cache python3 git make g++ py3-setuptools && \
         ln -sf /usr/bin/python3 /usr/bin/python && \
         rm -rf node_modules/.cache && \
         npm install --unsafe-perm && \
         chmod -R +x node_modules/.bin 2>/dev/null || true
     volumes:
       - .:/packmind
-      - node_modules:/packmind/node_modules
+      - dev-node_modules:/packmind/node_modules
 
   run-migrations:
     image: node:22.17.0-alpine3.21
-    container_name: packmind-run-migrations
+    container_name: dev-packmind-run-migrations
     working_dir: /packmind
     entrypoint: >
       sh -lc '
@@ -116,7 +116,7 @@ services:
         fi
       '
     environment:
-      DATABASE_URL: postgres://postgres:postgres@packmind-postgres:5432/packmind
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/packmind
       NX_DAEMON: 'true'
       NX_DAEMON_SOCKET_DIR: /nx-sock
       NX_WATCHER: polling
@@ -126,10 +126,10 @@ services:
       PACKMIND_EDITION: ${PACKMIND_EDITION:-proprietary}
     volumes:
       - .:/packmind
-      - dist:/packmind/dist
-      - tmp:/packmind/tmp
-      - node_modules:/packmind/node_modules
-      - nx-sock:/nx-sock
+      - dev-dist:/packmind/dist
+      - dev-tmp:/packmind/tmp
+      - dev-node_modules:/packmind/node_modules
+      - dev-nx-sock:/nx-sock
     depends_on:
       nx-daemon:
         condition: service_healthy
@@ -140,7 +140,7 @@ services:
 
   frontend:
     image: node:22.17.0-alpine3.21
-    container_name: packmind-frontend
+    container_name: dev-packmind-frontend
     working_dir: /packmind
     ports:
       - '4200:4200'
@@ -159,7 +159,6 @@ services:
         fi
       '
     environment:
-      VITE_PACKMIND_API_BASE_URL: 'http://localhost:3000/api'
       NX_DAEMON: 'true'
       NX_DAEMON_SOCKET_DIR: /nx-sock
       NX_WATCHER: polling
@@ -167,13 +166,17 @@ services:
       NX_ISOLATE_PLUGINS: 'false'
       NX_PLUGIN_NO_TIMEOUTS: 'true'
       PACKMIND_EDITION: ${PACKMIND_EDITION:-proprietary}
+      API_HOSTNAME: 'backend'
+      API_PORT: 3000
+      MCP_HOSTNAME: 'mcp-server'
+      MCP_PORT: 3001
 
     volumes:
       - .:/packmind
-      - node_modules:/packmind/node_modules
-      - dist:/packmind/dist
-      - tmp:/packmind/tmp
-      - nx-sock:/nx-sock
+      - dev-node_modules:/packmind/node_modules
+      - dev-dist:/packmind/dist
+      - dev-tmp:/packmind/tmp
+      - dev-nx-sock:/nx-sock
     depends_on:
       nx-daemon:
         condition: service_healthy
@@ -182,13 +185,27 @@ services:
 
   backend:
     image: node:22.17.0-alpine3.21
-    container_name: packmind-backend
+    container_name: dev-packmind-backend
     working_dir: /packmind
-    ports:
-      - '3000:3000'
     entrypoint: >
       sh -lc '
         set -eu
+        apk update && \
+        apk add --no-cache \
+                bash \
+                curl \
+                wget \
+                ca-certificates \
+                nano \
+                libcurl \
+                build-base \
+                git \
+                python3 \
+                py3-pip \
+                python3-dev && \
+        if [ ! -d "$$JS_PLAYGROUND_PATH" ]; then \
+          cp -R packages/linter/js-playground $$JS_PLAYGROUND_PATH || true; \
+        fi && \
         node scripts/select-tsconfig.mjs;
         echo "[backend] NX_* env:"; env | grep -E "^NX_" || true
         echo "[backend] /nx-sock:"; ls -l /nx-sock || true
@@ -201,7 +218,8 @@ services:
         fi
       '
     environment:
-      DATABASE_URL: postgres://postgres:postgres@packmind-postgres:5432/packmind
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/packmind
+      REDIS_URI: redis://redis:6379
       COOKIE_SECURE: 'false'
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       NX_DAEMON: 'true'
@@ -214,13 +232,14 @@ services:
       CHOKIDAR_INTERVAL: '200'
       WATCHPACK_POLLING: 'true'
       PACKMIND_EDITION: ${PACKMIND_EDITION:-proprietary}
+      JS_PLAYGROUND_PATH: 'packages/linter/js-playground-local'
 
     volumes:
       - .:/packmind
-      - node_modules:/packmind/node_modules
-      - dist:/packmind/dist
-      - tmp:/packmind/tmp
-      - nx-sock:/nx-sock
+      - dev-node_modules:/packmind/node_modules
+      - dev-dist:/packmind/dist
+      - dev-tmp:/packmind/tmp
+      - dev-nx-sock:/nx-sock
     depends_on:
       nx-daemon:
         condition: service_healthy
@@ -231,10 +250,8 @@ services:
 
   mcp-server:
     image: node:22.17.0-alpine3.21
-    container_name: packmind-mcp-server
+    container_name: dev-packmind-mcp-server
     working_dir: /packmind
-    ports:
-      - '3001:3001'
     entrypoint: >
       sh -lc '
         set -eu
@@ -250,7 +267,8 @@ services:
         fi
       '
     environment:
-      DATABASE_URL: postgres://postgres:postgres@packmind-postgres:5432/packmind
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/packmind
+      REDIS_URI: redis://redis:6379
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       NX_DAEMON: 'true'
       NX_DAEMON_SOCKET_DIR: /nx-sock
@@ -262,10 +280,10 @@ services:
 
     volumes:
       - .:/packmind
-      - node_modules:/packmind/node_modules
-      - dist:/packmind/dist
-      - tmp:/packmind/tmp
-      - nx-sock:/nx-sock
+      - dev-node_modules:/packmind/node_modules
+      - dev-dist:/packmind/dist
+      - dev-tmp:/packmind/tmp
+      - dev-nx-sock:/nx-sock
     depends_on:
       nx-daemon:
         condition: service_healthy
@@ -273,10 +291,10 @@ services:
         condition: service_completed_successfully
 
 volumes:
-  nx-sock:
-  postgres-data:
-  redis-data:
-  pgadmin:
-  dist:
-  tmp:
-  node_modules:
+  dev-nx-sock:
+  dev-postgres-data:
+  dev-redis-data:
+  dev-pgadmin:
+  dev-dist:
+  dev-tmp:
+  dev-node_modules:

@@ -55,8 +55,7 @@ export function SSEProvider({ children }: SSEProviderProps) {
   // API functions for subscription management
   const subscribeToEvent = useCallback(
     async (eventType: string, params: string[] = []): Promise<void> => {
-      const baseUrl = getEnvVar('VITE_PACKMIND_API_BASE_URL');
-      const apiUrl = baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
+      const apiUrl = '/api';
       const response = await fetch(`${apiUrl}/v0/sse/subscribe`, {
         method: 'POST',
         headers: {
@@ -76,8 +75,7 @@ export function SSEProvider({ children }: SSEProviderProps) {
 
   const unsubscribeFromEvent = useCallback(
     async (eventType: string, params: string[] = []): Promise<void> => {
-      const baseUrl = getEnvVar('VITE_PACKMIND_API_BASE_URL');
-      const apiUrl = baseUrl.endsWith('/api') ? baseUrl : `${baseUrl}/api`;
+      const apiUrl = '/api';
       const response = await fetch(`${apiUrl}/v0/sse/unsubscribe`, {
         method: 'POST',
         headers: {
@@ -145,7 +143,7 @@ export function SSEProvider({ children }: SSEProviderProps) {
       return;
     }
 
-    const baseUrl = getEnvVar('VITE_PACKMIND_API_BASE_URL');
+    const baseUrl = getEnvVar('/api');
     const sseUrl = baseUrl.endsWith('/api')
       ? `${baseUrl}/v0/sse/stream`
       : `${baseUrl}/api/v0/sse/stream`;

@@ -153,7 +153,7 @@ describe('Configuration', () => {
   });
 
   describe('singleton behavior', () => {
-    it('only initializes once even with multiple calls', async () => {
+    it('only initializes once even with multiple sequential calls', async () => {
       process.env['CONFIGURATION'] = 'infisical';
       process.env['INFISICAL_CLIENT_ID'] = 'test-client-id';
       process.env['INFISICAL_CLIENT_SECRET'] = 'test-client-secret';
@@ -171,6 +171,35 @@ describe('Configuration', () => {
 
       await Configuration.getConfig('TEST_KEY_1');
       await Configuration.getConfig('TEST_KEY_2');
+
+      expect(MockedInfisicalConfig).toHaveBeenCalledTimes(1);
+      expect(mockInitClient).toHaveBeenCalledTimes(1);
+    });
+
+    it('only initializes once even with multiple concurrent calls', async () => {
+      process.env['CONFIGURATION'] = 'infisical';
+      process.env['INFISICAL_CLIENT_ID'] = 'test-client-id';
+      process.env['INFISICAL_CLIENT_SECRET'] = 'test-client-secret';
+      process.env['INFISICAL_ENV'] = 'test-env';
+      process.env['INFISICAL_PROJECT_ID'] = 'test-project-id';
+
+      const mockInitClient = jest.fn().mockResolvedValue(undefined);
+      const mockGetValue = jest.fn().mockResolvedValue('test-value');
+      MockedInfisicalConfig.mockImplementation(() => {
+        return {
+          initClient: mockInitClient,
+          getValue: mockGetValue,
+        } as Partial<InfisicalConfig> as InfisicalConfig;
+      });
+
+      // Simulate multiple concurrent calls to Configuration.getConfig
+      const promises = [
+        Configuration.getConfig('TEST_KEY_1'),
+        Configuration.getConfig('TEST_KEY_2'),
+        Configuration.getConfig('TEST_KEY_3'),
+      ];
+
+      await Promise.all(promises);
 
       expect(MockedInfisicalConfig).toHaveBeenCalledTimes(1);
       expect(mockInitClient).toHaveBeenCalledTimes(1);

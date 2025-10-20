@@ -10,6 +10,7 @@ export * from './database/migrationColumns';
 export * from './database/schemas';
 export * from './database/types';
 export * from './logger/PackmindLogger';
+export * from './logger/maskEmail';
 export * from './types/brandedTypes';
 export * from './config/config/Configuration';
 export * from './repositories/IRepository';
@@ -19,6 +20,7 @@ export * from './sse';
 export * from './types';
 export * from './mail';
 export * from './application';
+export * from './errors';
 
 import localDataSource from './dataSources/local';
 export { localDataSource };

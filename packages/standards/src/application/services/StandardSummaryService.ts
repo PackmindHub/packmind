@@ -1,9 +1,9 @@
 import { StandardVersion } from '../../domain/entities/StandardVersion';
-import { Rule } from '../../domain/entities/Rule';
 import {
   AIService,
   PackmindLogger,
   OpenAIService,
+  RuleExample,
   AiNotConfigured,
 } from '@packmind/shared';
 import { createStandardSummaryPrompt } from './prompts/create_standard_summary';
@@ -23,7 +23,10 @@ export class StandardSummaryService {
 
   public async createStandardSummary(
     standardVersionData: Omit<StandardVersion, 'id'>,
-    rules: Rule[] = [],
+    rules: Array<{
+      content: string;
+      examples: RuleExample[];
+    }>,
   ): Promise<string> {
     this.logger.info('Starting createStandardSummary process', {
       standardName: standardVersionData.name,

@@ -3,8 +3,13 @@ import { PackmindServices } from '../services/PackmindServices';
 import { IPackmindRepositories } from '../../domain/repositories/IPackmindRepositories';
 import { ListFiles } from '../services/ListFiles';
 import { GitService } from '../services/GitService';
-import { AstExecutorService } from '../services/AstExecutorService';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
+import {
+  ExecuteLinterProgramsCommand,
+  IExecuteLinterProgramsUseCase,
+  LinterExecutionViolation,
+  ProgrammingLanguage,
+} from '@packmind/shared';
 
 describe('LintFilesInDirectoryUseCase', () => {
   let useCase: LintFilesInDirectoryUseCase;
@@ -12,7 +17,7 @@ describe('LintFilesInDirectoryUseCase', () => {
   let mockRepositories: IPackmindRepositories;
   let mockListFiles: jest.Mocked<ListFiles>;
   let mockGitRemoteUrlService: jest.Mocked<GitService>;
-  let mockAstExecutorService: jest.Mocked<AstExecutorService>;
+  let mockLinterExecutionUseCase: jest.Mocked<IExecuteLinterProgramsUseCase>;
   let mockPackmindGateway: jest.Mocked<IPackmindGateway>;
 
   beforeEach(() => {
@@ -24,9 +29,19 @@ describe('LintFilesInDirectoryUseCase', () => {
       getGitRemoteUrl: jest.fn(),
     } as unknown as jest.Mocked<GitService>;
 
-    mockAstExecutorService = {
-      executeProgram: jest.fn(),
-    } as unknown as jest.Mocked<AstExecutorService>;
+    mockLinterExecutionUseCase = {
+      execute: jest.fn(async (command: ExecuteLinterProgramsCommand) => ({
+        file: command.filePath,
+        violations: command.programs.map<LinterExecutionViolation>(
+          (program) => ({
+            line: 1,
+            character: 0,
+            rule: program.ruleContent,
+            standard: program.standardSlug,
+          }),
+        ),
+      })),
+    } as unknown as jest.Mocked<IExecuteLinterProgramsUseCase>;
 
     mockPackmindGateway = {
       listExecutionPrograms: jest.fn(),
@@ -35,7 +50,7 @@ describe('LintFilesInDirectoryUseCase', () => {
     mockServices = {
       listFiles: mockListFiles,
       gitRemoteUrlService: mockGitRemoteUrlService,
-      astExecutorService: mockAstExecutorService,
+      linterExecutionUseCase: mockLinterExecutionUseCase,
     };
 
     mockRepositories = {
@@ -50,7 +65,6 @@ describe('LintFilesInDirectoryUseCase', () => {
   });
 
   it('executes complete linting flow with correct parameters', async () => {
-    // Setup mocks
     const mockFiles = [
       { path: '/project/src/file1.ts', content: 'interface User {}' },
       { path: '/project/src/file2.ts', content: 'interface IAdmin {}' },
@@ -71,6 +85,7 @@ describe('LintFilesInDirectoryUseCase', () => {
                   detectionProgram: {
                     mode: 'ast',
                     code: 'function checkSourceCode(ast) { return [1]; }',
+                    sourceCodeState: 'AST' as const,
                   },
                 },
               ],
@@ -85,19 +100,15 @@ describe('LintFilesInDirectoryUseCase', () => {
     mockPackmindGateway.listExecutionPrograms.mockResolvedValue(
       mockDetectionPrograms,
     );
-    mockAstExecutorService.executeProgram.mockResolvedValue([
-      { line: 1, character: 0 },
-    ]);
 
     const result = await useCase.execute({
       path: '/project',
     });
 
-    // Verify calls
     expect(mockListFiles.listFilesInDirectory).toHaveBeenCalledWith(
       '/project',
-      ['.ts'],
-      ['node_modules', 'dist'],
+      [],
+      ['node_modules', 'dist', '.min.', '.map.', '.git'],
     );
     expect(mockGitRemoteUrlService.getGitRemoteUrl).toHaveBeenCalledWith(
       '/project',
@@ -105,9 +116,16 @@ describe('LintFilesInDirectoryUseCase', () => {
     expect(mockPackmindGateway.listExecutionPrograms).toHaveBeenCalledWith({
       gitRemoteUrl,
     });
-    expect(mockAstExecutorService.executeProgram).toHaveBeenCalledTimes(2); // 2 files
+    expect(mockLinterExecutionUseCase.execute).toHaveBeenCalledTimes(2);
+    mockFiles.forEach((file) => {
+      expect(mockLinterExecutionUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          filePath: file.path,
+          language: ProgrammingLanguage.TYPESCRIPT,
+        }),
+      );
+    });
 
-    // Verify result structure
     expect(result.gitRemoteUrl).toBe(gitRemoteUrl);
     expect(result.violations).toHaveLength(2);
     expect(result.summary.totalFiles).toBe(2);
@@ -131,13 +149,14 @@ describe('LintFilesInDirectoryUseCase', () => {
       });
 
       expect(result.violations).toHaveLength(0);
+      expect(mockLinterExecutionUseCase.execute).not.toHaveBeenCalled();
       expect(result.summary.totalFiles).toBe(0);
       expect(result.summary.violatedFiles).toBe(0);
       expect(result.summary.totalViolations).toBe(0);
     });
   });
 
-  it('handles AST execution errors gracefully', async () => {
+  it('handles linter execution errors gracefully', async () => {
     const mockFiles = [
       { path: '/project/src/file1.ts', content: 'interface User {}' },
     ];
@@ -156,6 +175,7 @@ describe('LintFilesInDirectoryUseCase', () => {
                   detectionProgram: {
                     mode: 'ast',
                     code: 'invalid code',
+                    sourceCodeState: 'AST' as const,
                   },
                 },
               ],
@@ -172,7 +192,7 @@ describe('LintFilesInDirectoryUseCase', () => {
     mockPackmindGateway.listExecutionPrograms.mockResolvedValue(
       mockDetectionPrograms,
     );
-    mockAstExecutorService.executeProgram.mockRejectedValue(
+    mockLinterExecutionUseCase.execute.mockRejectedValue(
       new Error('AST parsing failed'),
     );
 
@@ -184,7 +204,7 @@ describe('LintFilesInDirectoryUseCase', () => {
 
     expect(result.violations).toHaveLength(0);
     expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Error executing program for file'),
+      expect.stringContaining('Error executing programs for file'),
     );
 
     consoleSpy.mockRestore();
@@ -205,7 +225,7 @@ describe('LintFilesInDirectoryUseCase', () => {
           {
             name: 'Test Files Standard',
             slug: 'test-files',
-            scope: ['**/*.spec.ts', '**/test/**/*.ts'], // Only apply to test files
+            scope: ['**/*.spec.ts', '**/test/**/*.ts'],
             rules: [
               {
                 content: 'Test specific rule',
@@ -215,6 +235,7 @@ describe('LintFilesInDirectoryUseCase', () => {
                     detectionProgram: {
                       mode: 'ast',
                       code: 'function checkSourceCode(ast) { return [1]; }',
+                      sourceCodeState: 'AST' as const,
                     },
                   },
                 ],
@@ -231,24 +252,16 @@ describe('LintFilesInDirectoryUseCase', () => {
       mockPackmindGateway.listExecutionPrograms.mockResolvedValue(
         mockDetectionPrograms,
       );
-      mockAstExecutorService.executeProgram.mockResolvedValue([
-        { line: 1, character: 0 },
-      ]);
 
       await useCase.execute({
         path: '/project',
       });
 
-      // Should only execute programs for files matching the scope patterns
-      // component.ts should be skipped, component.spec.ts and test/helpers.ts should be processed
-      expect(mockAstExecutorService.executeProgram).toHaveBeenCalledTimes(2);
-      expect(mockAstExecutorService.executeProgram).toHaveBeenCalledWith(
-        'function checkSourceCode(ast) { return [1]; }',
-        'interface TestInterface {}',
-      );
-      expect(mockAstExecutorService.executeProgram).toHaveBeenCalledWith(
-        'function checkSourceCode(ast) { return [1]; }',
-        'interface Helper {}',
+      expect(mockLinterExecutionUseCase.execute).toHaveBeenCalledTimes(2);
+      expect(mockLinterExecutionUseCase.execute).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          filePath: '/project/src/component.ts',
+        }),
       );
     });
   });
@@ -267,7 +280,7 @@ describe('LintFilesInDirectoryUseCase', () => {
           {
             name: 'Global Standard',
             slug: 'global',
-            scope: [], // Empty scope means apply to all files
+            scope: [],
             rules: [
               {
                 content: 'Global rule',
@@ -277,6 +290,7 @@ describe('LintFilesInDirectoryUseCase', () => {
                     detectionProgram: {
                       mode: 'ast',
                       code: 'function checkSourceCode(ast) { return [1]; }',
+                      sourceCodeState: 'AST' as const,
                     },
                   },
                 ],
@@ -293,16 +307,109 @@ describe('LintFilesInDirectoryUseCase', () => {
       mockPackmindGateway.listExecutionPrograms.mockResolvedValue(
         mockDetectionPrograms,
       );
-      mockAstExecutorService.executeProgram.mockResolvedValue([
-        { line: 1, character: 0 },
-      ]);
 
       await useCase.execute({
         path: '/project',
       });
 
-      // Should execute programs for all files when scope is empty
-      expect(mockAstExecutorService.executeProgram).toHaveBeenCalledTimes(2);
+      expect(mockLinterExecutionUseCase.execute).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  it('skips programs with unsupported languages', async () => {
+    const mockFiles = [
+      { path: '/project/src/file1.py', content: 'print("hello")' },
+    ];
+    const mockDetectionPrograms = {
+      standards: [
+        {
+          name: 'Python Standard',
+          slug: 'python-standard',
+          scope: [],
+          rules: [
+            {
+              content: 'Test rule',
+              activeDetectionPrograms: [
+                {
+                  language: 'unsupported-lang',
+                  detectionProgram: {
+                    mode: 'ast',
+                    code: 'function checkSourceCode() { return [1]; }',
+                    sourceCodeState: 'AST' as const,
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    mockListFiles.listFilesInDirectory.mockResolvedValue(mockFiles);
+    mockGitRemoteUrlService.getGitRemoteUrl.mockResolvedValue({
+      gitRemoteUrl: 'github.com/user/repo',
+    });
+    mockPackmindGateway.listExecutionPrograms.mockResolvedValue(
+      mockDetectionPrograms,
+    );
+
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+    await useCase.execute({
+      path: '/project',
+    });
+
+    expect(mockLinterExecutionUseCase.execute).not.toHaveBeenCalled();
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Unsupported programming language'),
+    );
+
+    consoleSpy.mockRestore();
+  });
+
+  describe('extractExtensionFromFile', () => {
+    it('extracts extension from simple filename', () => {
+      const result = useCase.extractExtensionFromFile('file.js');
+
+      expect(result).toBe('js');
+    });
+
+    it('extracts extension from path with forward slashes', () => {
+      const result = useCase.extractExtensionFromFile('src/file.js');
+
+      expect(result).toBe('js');
+    });
+
+    it('extracts extension from path with backward slashes', () => {
+      const result = useCase.extractExtensionFromFile('src\\file.js');
+
+      expect(result).toBe('js');
+    });
+
+    it('extracts extension from nested path', () => {
+      const result = useCase.extractExtensionFromFile(
+        'src/components/MyComponent.tsx',
+      );
+
+      expect(result).toBe('tsx');
+    });
+
+    it('returns empty string for file without extension', () => {
+      const result = useCase.extractExtensionFromFile('Dockerfile');
+
+      expect(result).toBe('');
+    });
+
+    it('returns empty string for file ending with dot', () => {
+      const result = useCase.extractExtensionFromFile('file.');
+
+      expect(result).toBe('');
+    });
+
+    it('extracts last extension from file with multiple dots', () => {
+      const result = useCase.extractExtensionFromFile('file.spec.ts');
+
+      expect(result).toBe('ts');
     });
   });
 });

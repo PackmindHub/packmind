@@ -13,6 +13,7 @@ import {
   StandardVersionId,
 } from '@packmind/standards/types';
 import { GitHexa, gitSchemas } from '@packmind/git';
+import { JobsHexa } from '@packmind/jobs';
 import { GitRepo, GitProviderVendors } from '@packmind/git/types';
 import {
   HexaRegistry,
@@ -76,6 +77,7 @@ describe('Cursor Deployment Integration', () => {
     registry = new HexaRegistry();
 
     // Register hexas before initialization
+    registry.register(JobsHexa);
     registry.register(GitHexa);
     registry.register(AccountsHexa);
     registry.register(RecipesHexa);
@@ -83,6 +85,7 @@ describe('Cursor Deployment Integration', () => {
 
     // Initialize the registry with the datasource
     registry.init(dataSource);
+    await registry.initAsync();
 
     // Get initialized hexas
     accountsHexa = registry.get(AccountsHexa);

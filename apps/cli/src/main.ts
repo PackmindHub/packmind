@@ -65,6 +65,7 @@ async function handleLint(args: string[]) {
     process.exit(1);
   }
 
+  const startedAt = Date.now();
   const packmindCliHexa = new PackmindCliHexa();
   const { violations } = await packmindCliHexa.lintFilesInDirectory({
     path,
@@ -74,6 +75,9 @@ async function handleLint(args: string[]) {
     ? new IDELintLogger()
     : new HumanReadableLogger();
   logger.logViolations(violations);
+
+  const durationSeconds = (Date.now() - startedAt) / 1000;
+  console.log(`Lint completed in ${durationSeconds.toFixed(2)}s`);
 
   if (violations.length > 0) {
     process.exit(1);

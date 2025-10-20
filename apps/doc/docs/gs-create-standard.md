@@ -26,9 +26,19 @@ You need to connect your MCP server to your IDE. See the setup guide: [Get start
 Analyze our codebase and create a Packmind standard about error handling.
 ```
 
-The agent will then call the `packmind_create_standard` MCP tool.
+### How it works
+
+The AI agent will automatically follow the **standard creation workflow** which guides it through:
+
+1. **Understanding your request** - The agent clarifies what standard you want to create and gathers appropriate context from your codebase
+2. **Drafting the standard** - The agent creates a draft with name, description, and rules, iterating with you for feedback
+3. **Finalization** - Once you're satisfied, the agent validates the standard and calls the `packmind_create_standard` MCP tool
 
 Your new standard will be available in the Packmind web app, in the **Standards** panel.
+
+:::tip
+The workflow ensures consistent, high-quality standards by guiding the AI through best practices. You can provide feedback at any step, and the agent will refine the standard before submitting it.
+:::
 
 ## Create a standard from the web app
 

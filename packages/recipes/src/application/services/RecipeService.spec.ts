@@ -8,7 +8,12 @@ import { Recipe, RecipeId, createRecipeId } from '../../domain/entities/Recipe';
 import { v4 as uuidv4 } from 'uuid';
 import { recipeFactory } from '../../../test/recipeFactory';
 import { PackmindLogger } from '@packmind/shared';
-import { createOrganizationId, createUserId, UserId } from '@packmind/accounts';
+import {
+  createOrganizationId,
+  createUserId,
+  UserId,
+  OrganizationId,
+} from '@packmind/accounts';
 import { stubLogger } from '@packmind/shared/test';
 
 describe('RecipeService', () => {
@@ -123,21 +128,24 @@ describe('RecipeService', () => {
   describe('findRecipeBySlug', () => {
     describe('when the recipe exists', () => {
       let slug: string;
+      let organizationId: OrganizationId;
       let recipe: Recipe;
       let result: Recipe | null;
 
       beforeEach(async () => {
         slug = 'test-recipe';
-        recipe = recipeFactory({ slug });
+        organizationId = createOrganizationId('org-123');
+        recipe = recipeFactory({ slug, organizationId });
 
         recipeRepository.findBySlug = jest.fn().mockResolvedValue(recipe);
 
-        result = await recipeService.findRecipeBySlug(slug);
+        result = await recipeService.findRecipeBySlug(slug, organizationId);
       });
 
-      it('calls repository with correct slug', () => {
+      it('calls repository with correct slug and organizationId', () => {
         expect(recipeRepository.findBySlug).toHaveBeenCalledWith(
           slug,
+          organizationId,
           undefined,
         );
       });
@@ -149,13 +157,18 @@ describe('RecipeService', () => {
 
     describe('when the recipe does not exist', () => {
       let nonExistentSlug: string;
+      let organizationId: OrganizationId;
       let result: Recipe | null;
 
       beforeEach(async () => {
         nonExistentSlug = 'non-existent-recipe';
+        organizationId = createOrganizationId('org-123');
         recipeRepository.findBySlug = jest.fn().mockResolvedValue(null);
 
-        result = await recipeService.findRecipeBySlug(nonExistentSlug);
+        result = await recipeService.findRecipeBySlug(
+          nonExistentSlug,
+          organizationId,
+        );
       });
 
       it('returns null', () => {

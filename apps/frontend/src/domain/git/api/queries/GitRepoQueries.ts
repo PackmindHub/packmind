@@ -4,17 +4,14 @@ import { GitProviderId, GitRepoId } from '@packmind/git';
 import { AddRepositoryForm } from '../../types/GitProviderTypes';
 import { CheckDirectoryExistenceResult } from '@packmind/shared';
 import {
-  GET_GIT_PROVIDER_BY_ID_KEY,
-  GET_GIT_PROVIDERS_KEY,
   GET_GIT_REPOSITORIES_KEY,
   GET_REPOSITORIES_BY_PROVIDER_KEY,
   GET_AVAILABLE_REPOSITORIES_KEY,
   GET_AVAILABLE_TARGETS_KEY,
+  GIT_QUERY_SCOPE,
 } from '../queryKeys';
-import {
-  GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
-  GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
-} from '../../../deployments/api/queryKeys';
+import { DEPLOYMENTS_QUERY_SCOPE } from '../../../deployments/api/queryKeys';
+import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
 
 export const useGetGitReposQuery = () => {
   return useQuery({
@@ -57,24 +54,15 @@ export const useAddRepositoryMutation = () => {
     }) => {
       return gitProviderGateway.addRepositoryToProvider(providerId, data);
     },
-    onSuccess: async (repo) => {
+    onSuccess: async () => {
+      // Simplify: All git data is interconnected
       await queryClient.invalidateQueries({
-        queryKey: [...GET_REPOSITORIES_BY_PROVIDER_KEY, repo.providerId],
+        queryKey: [ORGANIZATION_QUERY_SCOPE, GIT_QUERY_SCOPE],
       });
+
+      // Deployment overviews (new repo can have targets)
       await queryClient.invalidateQueries({
-        queryKey: [...GET_GIT_PROVIDER_BY_ID_KEY, repo.providerId],
-      });
-      await queryClient.invalidateQueries({
-        queryKey: GET_GIT_PROVIDERS_KEY,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: GET_GIT_REPOSITORIES_KEY,
+        queryKey: [ORGANIZATION_QUERY_SCOPE, DEPLOYMENTS_QUERY_SCOPE],
       });
     },
     onError: (error) => {
@@ -98,24 +86,15 @@ export const useRemoveRepositoryMutation = () => {
         repoId,
       );
     },
-    onSuccess: async (_, { providerId }) => {
+    onSuccess: async () => {
+      // Simplify: All git data is interconnected
       await queryClient.invalidateQueries({
-        queryKey: [...GET_REPOSITORIES_BY_PROVIDER_KEY, providerId],
+        queryKey: [ORGANIZATION_QUERY_SCOPE, GIT_QUERY_SCOPE],
       });
+
+      // Deployment overviews (removing repo deletes targets)
       await queryClient.invalidateQueries({
-        queryKey: GET_GIT_PROVIDERS_KEY,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: [...GET_GIT_PROVIDER_BY_ID_KEY, providerId],
-      });
-      await queryClient.invalidateQueries({
-        queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
-      });
-      await queryClient.invalidateQueries({
-        queryKey: GET_GIT_REPOSITORIES_KEY,
+        queryKey: [ORGANIZATION_QUERY_SCOPE, DEPLOYMENTS_QUERY_SCOPE],
       });
     },
     onError: (error) => {

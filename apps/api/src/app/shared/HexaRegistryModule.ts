@@ -83,8 +83,11 @@ export class HexaRegistryModule {
           registry.register(HexaClass);
         }
 
-        // Initialize the registry with the DataSource
+        // Initialize the registry with the DataSource (synchronous phase)
         registry.init(dataSource);
+
+        // Initialize async dependencies (e.g., job queues)
+        await registry.initAsync();
 
         return registry;
       },

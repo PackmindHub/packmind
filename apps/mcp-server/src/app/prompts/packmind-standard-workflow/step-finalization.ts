@@ -1,6 +1,6 @@
 const prompt = `# Step 5 · Finalization Prep
 
-The user approved the draft. Package the content so Packmind can register the new standard.
+The user approved the draft with rules and examples. Package the content so Packmind can register the new standard.
 
 ## Before Calling the Tool
 
@@ -17,17 +17,17 @@ The user approved the draft. Package the content so Packmind can register the ne
 When ready, call \`packmind_create_standard\` with:
 \`\`\`json
 {
-  "name": "…",
-  "description": "…",
-  "summary": "…",
+  "name": "...",
+  "description": "...",
+  "summary": ...",
   "rules": [
     {
-      "content": "…",
+      "content": "...",
       "examples": [
         {
-          "positive": "…",
-          "negative": "…",
-          "language": "typescript"
+          "positive": "...",
+          "negative": "...",
+          "language": "..."
         }
       ]
     }

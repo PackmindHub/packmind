@@ -151,7 +151,11 @@ describe('AuthService - getMe method', () => {
             userId: createUserId('1'),
           });
           expect(authService.logger.warn).toHaveBeenCalledWith(
-            'User 1 does not have access to organization org-1',
+            'User does not have access to organization',
+            {
+              userId: '1',
+              organizationId: 'org-1',
+            },
           );
         });
       });
@@ -248,7 +252,10 @@ describe('AuthService - getMe method', () => {
           });
           expect(mockAccountsHexa.getOrganizationById).toHaveBeenCalledTimes(2);
           expect(authService.logger.log).toHaveBeenCalledWith(
-            'User 1 is authenticated but has not selected an organization',
+            'User is authenticated but has not selected an organization',
+            {
+              userId: '1',
+            },
           );
         });
       });

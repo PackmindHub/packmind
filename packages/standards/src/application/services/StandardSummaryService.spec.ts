@@ -1,16 +1,15 @@
 import { StandardSummaryService } from './StandardSummaryService';
 import { StandardVersion } from '../../domain/entities/StandardVersion';
-import { Rule } from '../../domain/entities/Rule';
 import { createStandardId } from '../../domain/entities/Standard';
 import {
   AIService,
   PackmindLogger,
   OpenAIService,
   AiNotConfigured,
+  RuleExample,
 } from '@packmind/shared';
 import { stubLogger } from '@packmind/shared/test';
 import { standardVersionFactory } from '../../../test/standardVersionFactory';
-import { ruleFactory } from '../../../test/ruleFactory';
 
 import { v4 as uuidv4 } from 'uuid';
 
@@ -56,7 +55,7 @@ describe('StandardSummaryService', () => {
   describe('createStandardSummary', () => {
     describe('when AI service responds successfully', () => {
       let standardVersionData: Omit<StandardVersion, 'id'>;
-      let rules: Rule[];
+      let rules: Array<{ content: string; examples: RuleExample[] }>;
       let result: string;
 
       beforeEach(async () => {
@@ -68,8 +67,8 @@ describe('StandardSummaryService', () => {
         });
 
         rules = [
-          ruleFactory({ content: 'Use strict mode in tsconfig.json' }),
-          ruleFactory({ content: 'Enable noImplicitAny compiler option' }),
+          { content: 'Use strict mode in tsconfig.json', examples: [] },
+          { content: 'Enable noImplicitAny compiler option', examples: [] },
         ];
 
         mockAIService.executePrompt.mockResolvedValue({
@@ -138,7 +137,7 @@ describe('StandardSummaryService', () => {
 
     describe('quote removal from AI responses', () => {
       let standardVersionData: Omit<StandardVersion, 'id'>;
-      let rules: Rule[];
+      let rules: Array<{ content: string; examples: RuleExample[] }>;
 
       beforeEach(() => {
         standardVersionData = {
@@ -342,14 +341,14 @@ describe('StandardSummaryService', () => {
     });
 
     describe('when standard has multiple rules', () => {
-      let rules: Rule[];
+      let rules: Array<{ content: string; examples: RuleExample[] }>;
 
       beforeEach(async () => {
         const standardVersionData = standardVersionFactory();
         rules = [
-          ruleFactory({ content: 'First rule content' }),
-          ruleFactory({ content: 'Second rule content' }),
-          ruleFactory({ content: 'Third rule content' }),
+          { content: 'First rule content', examples: [] },
+          { content: 'Second rule content', examples: [] },
+          { content: 'Third rule content', examples: [] },
         ];
 
         mockAIService.executePrompt.mockResolvedValue({

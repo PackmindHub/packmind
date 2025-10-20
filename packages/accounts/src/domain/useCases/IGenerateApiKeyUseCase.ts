@@ -1,19 +1,18 @@
-import { IPublicUseCase } from '@packmind/shared';
+import { IUseCase, PackmindCommand, PackmindResult } from '@packmind/shared';
 import { UserId } from '../entities/User';
 import { OrganizationId } from '../entities/Organization';
 
-export type GenerateApiKeyCommand = {
+export type GenerateApiKeyCommand = PackmindCommand & {
   userId: UserId;
   organizationId: OrganizationId;
-  host: string;
 };
 
-export type GenerateApiKeyResponse = {
+export type GenerateApiKeyResponse = PackmindResult & {
   apiKey: string;
   expiresAt: Date;
 };
 
-export type IGenerateApiKeyUseCase = IPublicUseCase<
+export type IGenerateApiKeyUseCase = IUseCase<
   GenerateApiKeyCommand,
   GenerateApiKeyResponse
 >;

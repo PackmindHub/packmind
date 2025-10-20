@@ -7,7 +7,9 @@ import {
   GET_RECIPES_KEY,
   GET_RECIPE_BY_ID_KEY,
   GET_RECIPE_VERSIONS_KEY,
+  RECIPES_QUERY_SCOPE,
 } from '../queryKeys';
+import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
 
 export const useGetRecipesQuery = () => {
   return useQuery({
@@ -47,18 +49,18 @@ export const useUpdateRecipeMutation = () => {
       return recipesGateway.updateRecipe(id, updateData);
     },
     onSuccess: async (updatedRecipe) => {
-      // Invalidate the recipes list
-      await queryClient.invalidateQueries({
-        queryKey: GET_RECIPES_KEY,
-      });
-      // Invalidate the specific recipe
+      // Invalidate all queries for this specific recipe
+      // This includes: recipe by id, versions (all share the id prefix)
       await queryClient.invalidateQueries({
         queryKey: [...GET_RECIPE_BY_ID_KEY, updatedRecipe.id],
       });
-      // Invalidate recipe versions
+
+      // Invalidate the recipes list (name might have changed)
       await queryClient.invalidateQueries({
-        queryKey: [...GET_RECIPE_VERSIONS_KEY, updatedRecipe.id],
+        queryKey: GET_RECIPES_KEY,
       });
+
+      // Deployments overview (updated recipe version affects deployments)
       await queryClient.invalidateQueries({
         queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
       });
@@ -93,9 +95,12 @@ export const useDeleteRecipeMutation = () => {
       return recipesGateway.deleteRecipe({ recipeId });
     },
     onSuccess: async () => {
+      // Invalidate all recipes (recipe is gone, may have had cached details)
       await queryClient.invalidateQueries({
-        queryKey: GET_RECIPES_KEY,
+        queryKey: [ORGANIZATION_QUERY_SCOPE, RECIPES_QUERY_SCOPE],
       });
+
+      // Deployments orphaned (same as standards)
       await queryClient.invalidateQueries({
         queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
       });
@@ -120,9 +125,11 @@ export const useDeleteRecipesBatchMutation = () => {
       return recipesGateway.deleteRecipesBatch({ recipeIds });
     },
     onSuccess: async () => {
+      // Same as useDeleteRecipeMutation
       await queryClient.invalidateQueries({
-        queryKey: GET_RECIPES_KEY,
+        queryKey: [ORGANIZATION_QUERY_SCOPE, RECIPES_QUERY_SCOPE],
       });
+
       await queryClient.invalidateQueries({
         queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
       });

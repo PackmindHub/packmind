@@ -21,6 +21,7 @@ import {
 } from '@packmind/standards';
 import { GitHexa, gitSchemas, GitRepo, createGitRepoId } from '@packmind/git';
 import { DeploymentsHexa, deploymentsSchemas } from '@packmind/deployments';
+import { JobsHexa } from '@packmind/jobs';
 import {
   CodingAgentHexa,
   CodingAgentHexaFactory,
@@ -86,6 +87,7 @@ describe('Target-Specific Deployment Integration', () => {
     registry = new HexaRegistry();
 
     // Register hexas before initialization
+    registry.register(JobsHexa);
     registry.register(GitHexa);
     registry.register(AccountsHexa);
     registry.register(RecipesHexa);
@@ -95,6 +97,7 @@ describe('Target-Specific Deployment Integration', () => {
 
     // Initialize the registry with the datasource
     registry.init(dataSource);
+    await registry.initAsync();
 
     // Get initialized hexas
     accountsHexa = registry.get(AccountsHexa);

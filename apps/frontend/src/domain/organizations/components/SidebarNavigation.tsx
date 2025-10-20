@@ -1,9 +1,19 @@
 import React from 'react';
-import { PMVerticalNav, PMVerticalNavSection, PMLink } from '@packmind/ui';
-import { NavLink } from 'react-router';
+import {
+  PMVerticalNav,
+  PMVerticalNavSection,
+  PMLink,
+  PMIcon,
+  PMSeparator,
+} from '@packmind/ui';
+import { NavLink, useParams } from 'react-router';
 import { AuthContextOrganization } from '../../accounts/hooks/useAuthContext';
 import { SidebarAccountMenu } from '../../accounts/components/SidebarAccountMenu';
 import { SidebarOrgaSelector } from './OrgaSelector';
+import { SidebarHelpMenu } from './SidebarHelpMenu';
+import { LuHouse, LuSettings } from 'react-icons/lu';
+import { useGetSpacesQuery } from '../../spaces/api/queries/SpacesQueries';
+import { routes } from '../../../shared/utils/routes';
 
 interface ISidebarNavigationProps {
   organization: AuthContextOrganization | undefined;
@@ -13,13 +23,13 @@ interface SidebarNavigationLinkProps {
   url: string;
   label: string;
   exact?: boolean;
+  icon?: React.ReactNode;
 }
 
-export function SidebarNavigationLink({
-  url,
-  label,
-  exact = false,
-}: SidebarNavigationLinkProps): React.ReactElement {
+export function SidebarNavigationLink(
+  props: Readonly<SidebarNavigationLinkProps>,
+): React.ReactElement {
+  const { url, label, exact = false, icon } = props;
   return (
     <NavLink to={url} end={exact}>
       {({ isActive }) => (
@@ -28,6 +38,7 @@ export function SidebarNavigationLink({
           data-active={isActive ? 'true' : undefined}
           as="span"
         >
+          {icon && <PMIcon mr={2}>{icon}</PMIcon>}
           {label}
         </PMLink>
       )}
@@ -36,10 +47,31 @@ export function SidebarNavigationLink({
 }
 
 export const SidebarNavigation: React.FunctionComponent<
-  ISidebarNavigationProps
+  Readonly<ISidebarNavigationProps>
 > = ({ organization }) => {
+  const { spaceSlug } = useParams<{ spaceSlug?: string }>();
+  const { data: spaces } = useGetSpacesQuery();
+
+  // Use spaceSlug from URL if available, otherwise use first space from query
+  const currentSpaceSlug =
+    spaceSlug || (spaces && spaces.length > 0 ? spaces[0].slug : undefined);
+
   if (!organization) {
     return;
+  }
+
+  const orgSlug = organization.slug;
+
+  // Don't render space-scoped links if we don't have a space slug yet
+  if (!currentSpaceSlug) {
+    return (
+      <PMVerticalNav
+        headerNav={<SidebarOrgaSelector currentOrganization={organization} />}
+        footerNav={<SidebarAccountMenu />}
+      >
+        <PMVerticalNavSection navEntries={[]} />
+      </PMVerticalNav>
+    );
   }
   return (
     <PMVerticalNav
@@ -50,9 +82,10 @@ export const SidebarNavigation: React.FunctionComponent<
         navEntries={[
           <SidebarNavigationLink
             key="dashboard"
-            url={organization ? `/org/${organization.slug}/` : '/'}
+            url={routes.org.toDashboard(orgSlug)}
             label="Dashboard"
             exact
+            icon={<LuHouse />}
           />,
         ]}
       />
@@ -61,18 +94,12 @@ export const SidebarNavigation: React.FunctionComponent<
         navEntries={[
           <SidebarNavigationLink
             key="standards"
-            url={
-              organization
-                ? `/org/${organization.slug}/standards`
-                : '/standards'
-            }
+            url={routes.space.toStandards(orgSlug, currentSpaceSlug)}
             label="Standards"
           />,
           <SidebarNavigationLink
             key="recipes"
-            url={
-              organization ? `/org/${organization.slug}/recipes` : '/recipes'
-            }
+            url={routes.space.toRecipes(orgSlug, currentSpaceSlug)}
             label="Recipes"
           />,
         ]}
@@ -82,39 +109,32 @@ export const SidebarNavigation: React.FunctionComponent<
         navEntries={[
           <SidebarNavigationLink
             key="overview"
-            url={
-              organization
-                ? `/org/${organization.slug}/deployments`
-                : '/deployments'
-            }
+            url={routes.org.toDeployments(orgSlug)}
             label="Overview"
           />,
           <SidebarNavigationLink
             key="analytics"
-            url={
-              organization
-                ? `/org/${organization.slug}/analytics`
-                : '/analytics'
-            }
+            url={routes.org.toAnalytics(orgSlug)}
             label="Analytics"
           />,
         ]}
       />
-      {organization.role === 'admin' && (
-        <PMVerticalNavSection
-          navEntries={[
+      <PMSeparator borderColor={'border.tertiary'} />
+      {(() => {
+        const lastEntries: React.ReactElement[] = [];
+        if (organization.role === 'admin') {
+          lastEntries.push(
             <SidebarNavigationLink
               key="settings"
-              url={
-                organization
-                  ? `/org/${organization.slug}/settings`
-                  : '/settings'
-              }
+              url={routes.org.toSettings(orgSlug)}
               label="Settings"
+              icon={<LuSettings />}
             />,
-          ]}
-        />
-      )}
+          );
+        }
+        lastEntries.push(<SidebarHelpMenu key="help" />);
+        return <PMVerticalNavSection navEntries={lastEntries} />;
+      })()}
     </PMVerticalNav>
   );
 };

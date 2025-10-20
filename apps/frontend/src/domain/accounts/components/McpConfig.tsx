@@ -61,7 +61,7 @@ export const McpConfig: React.FunctionComponent = () => {
 
   const getClaudeCliCommand = () => {
     if (getMcpTokenMutation.data?.access_token) {
-      return `claude mcp add packmind ${url} --header "Authorization=Bearer ${getMcpTokenMutation.data.access_token}"`;
+      return `claude mcp add --transport http packmind ${url} --header "Authorization: Bearer ${getMcpTokenMutation.data.access_token}"`;
     }
     return '';
   };

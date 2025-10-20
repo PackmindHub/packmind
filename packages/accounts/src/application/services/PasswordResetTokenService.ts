@@ -8,7 +8,12 @@ import {
 } from '../../domain/entities/PasswordResetToken';
 import { User, UserId } from '../../domain/entities/User';
 import { IPasswordResetTokenRepository } from '../../domain/repositories/IPasswordResetTokenRepository';
-import { Configuration, MailService, PackmindLogger } from '@packmind/shared';
+import {
+  Configuration,
+  MailService,
+  PackmindLogger,
+  maskEmail,
+} from '@packmind/shared';
 
 const origin = 'PasswordResetTokenService';
 const PASSWORD_RESET_EXPIRATION_HOURS = 4;
@@ -45,7 +50,7 @@ export class PasswordResetTokenService {
     request: PasswordResetRequest,
   ): Promise<PasswordResetCreationRecord> {
     this.logger.info('Creating password reset token', {
-      email: this.maskEmail(request.email),
+      email: maskEmail(request.email),
       userId: request.user.id,
     });
 
@@ -142,7 +147,7 @@ export class PasswordResetTokenService {
     });
 
     this.logger.info('Sending password reset email', {
-      recipient: this.maskEmail(request.email),
+      recipient: maskEmail(request.email),
       tokenId: token.id,
     });
 
@@ -212,15 +217,6 @@ If you didn't request this password reset, you can safely ignore this email.`;
 
   private formatExpiration(expirationDate: Date): string {
     return expirationDate.toUTCString();
-  }
-
-  private maskEmail(email: string): string {
-    const [localPart, domain] = email.split('@');
-    if (!domain) {
-      return '***';
-    }
-    const visible = localPart.slice(0, 2);
-    return `${visible}***@${domain}`;
   }
 
   private maskToken(token: PasswordResetToken): string {

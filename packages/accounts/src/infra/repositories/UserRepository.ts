@@ -7,6 +7,7 @@ import {
   localDataSource,
   AbstractRepository,
   QueryOption,
+  maskEmail,
 } from '@packmind/shared';
 
 const origin = 'UserRepository';
@@ -45,7 +46,7 @@ export class UserRepository
       if (user) {
         this.logger.info('Found user by ID with memberships', {
           id: user.id,
-          email: user.email,
+          email: maskEmail(user.email),
         });
       } else {
         this.logger.warn('User not found by ID', { id });
@@ -64,7 +65,7 @@ export class UserRepository
   protected override loggableEntity(entity: User): Partial<User> {
     return {
       id: entity.id,
-      email: entity.email,
+      email: maskEmail(entity.email) as User['email'],
       active: entity.active,
       memberships: entity.memberships?.map((membership) => ({
         userId: membership.userId,
@@ -75,11 +76,11 @@ export class UserRepository
   }
 
   protected override makeDuplicationErrorMessage(user: User) {
-    return `Email '${user.email}' already exists`;
+    return `Email '${maskEmail(user.email)}' already exists`;
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    this.logger.info('Finding user by email', { email });
+    this.logger.info('Finding user by email', { email: maskEmail(email) });
 
     try {
       const user = await this.repository.findOne({
@@ -91,14 +92,14 @@ export class UserRepository
         },
       });
       this.logger.info('User found by email', {
-        email,
+        email: maskEmail(email),
         found: !!user,
         active: user?.active,
       });
       return user;
     } catch (error) {
       this.logger.error('Failed to find user by email', {
-        email,
+        email: maskEmail(email),
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
@@ -106,7 +107,9 @@ export class UserRepository
   }
 
   async findByEmailCaseInsensitive(email: string): Promise<User | null> {
-    this.logger.info('Finding user by email (case-insensitive)', { email });
+    this.logger.info('Finding user by email (case-insensitive)', {
+      email: maskEmail(email),
+    });
 
     try {
       const user = await this.repository
@@ -117,14 +120,14 @@ export class UserRepository
         .getOne();
 
       this.logger.info('User found by email (case-insensitive)', {
-        email,
+        email: maskEmail(email),
         found: !!user,
-        foundEmail: user?.email,
+        foundEmail: maskEmail(user?.email),
       });
       return user;
     } catch (error) {
       this.logger.error('Failed to find user by email (case-insensitive)', {
-        email,
+        email: maskEmail(email),
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

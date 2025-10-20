@@ -9,6 +9,7 @@ import { ListAvailableReposUseCase } from './listAvailableRepos/listAvailableRep
 import { CheckBranchExistsUseCase } from './checkBranchExists/checkBranchExists.usecase';
 import { CommitToGit } from './commitToGit/commitToGit.usecase';
 import { HandleWebHook } from './handleWebHook/handleWebHook.usecase';
+import { HandleWebHookWithoutContent } from './handleWebHookWithoutContent/handleWebHookWithoutContent.usecase';
 import { GetFileFromRepo } from './getFileFromRepo/getFileFromRepo.usecase';
 import { FindGitRepoByOwnerAndRepoUseCase } from './findGitRepoByOwnerAndRepo/findGitRepoByOwnerAndRepo.usecase';
 import { ListReposUseCase } from './listRepos/listRepos.usecase';
@@ -41,6 +42,11 @@ import {
   CheckDirectoryExistenceCommand,
   CheckDirectoryExistenceResult,
 } from '@packmind/shared';
+import { HandleWebHookCommand, HandleWebHookResult } from '@packmind/shared';
+import {
+  HandleWebHookWithoutContentCommand,
+  HandleWebHookWithoutContentResult,
+} from '@packmind/shared';
 const origin = 'GitUseCases';
 
 export class GitUseCases {
@@ -62,6 +68,7 @@ export class GitUseCases {
   private readonly _checkBranchExists: CheckBranchExistsUseCase;
   private readonly _commitToGit: CommitToGit;
   private readonly _handleWebHook: HandleWebHook;
+  private readonly _handleWebHookWithoutContent: HandleWebHookWithoutContent;
   private readonly _getFileFromRepo: GetFileFromRepo;
   private readonly _findGitRepoByOwnerAndRepo: FindGitRepoByOwnerAndRepoUseCase;
   private readonly _listRepos: ListReposUseCase;
@@ -98,7 +105,14 @@ export class GitUseCases {
     this._handleWebHook = new HandleWebHook(
       gitServices.getGitCommitService(),
       gitServices.getGitProviderService(),
+      gitServices.getGitRepoService(),
       gitServices.getGitRepoFactory(),
+      this.logger,
+    );
+    this._handleWebHookWithoutContent = new HandleWebHookWithoutContent(
+      gitServices.getGitCommitService(),
+      gitServices.getGitProviderService(),
+      gitServices.getGitRepoService(),
       this.logger,
     );
     this._getFileFromRepo = new GetFileFromRepo(
@@ -288,11 +302,15 @@ export class GitUseCases {
   }
 
   public async handleWebHook(
-    gitRepo: GitRepo,
-    payload: unknown,
-    fileMatcher: RegExp,
-  ): Promise<(GitCommit & { filePath: string; fileContent: string })[]> {
-    return this._handleWebHook.handleWebHook(gitRepo, payload, fileMatcher);
+    command: HandleWebHookCommand,
+  ): Promise<HandleWebHookResult> {
+    return this._handleWebHook.execute(command);
+  }
+
+  public async handleWebHookWithoutContent(
+    command: HandleWebHookWithoutContentCommand,
+  ): Promise<HandleWebHookWithoutContentResult> {
+    return this._handleWebHookWithoutContent.execute(command);
   }
 
   public async getFileFromRepo(

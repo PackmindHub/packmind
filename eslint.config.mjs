@@ -22,6 +22,8 @@ export default [
       '**/.react-router',
       '**/vitest.config.*.timestamp*',
       '**/.docusaurus',
+      '**/js-playground',
+      '**/js-playground-local',
     ],
   },
   {

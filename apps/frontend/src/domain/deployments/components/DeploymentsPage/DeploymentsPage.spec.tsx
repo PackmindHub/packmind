@@ -12,8 +12,10 @@ import {
 import { DeploymentsPage } from './DeploymentsPage';
 import * as DeploymentQueries from '../../api/queries/DeploymentsQueries';
 
-import { StandardDeploymentOverview } from '@packmind/deployments';
-import { DeploymentOverview } from '@packmind/shared';
+import {
+  DeploymentOverview,
+  StandardDeploymentOverview,
+} from '@packmind/shared/types';
 import {
   createDeploymentOverview,
   createStandardDeploymentOverview,

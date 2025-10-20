@@ -47,17 +47,6 @@ declare global {
   }
 }
 
-// Set up import.meta mock
-Object.defineProperty(global, 'import', {
-  value: {
-    meta: {
-      env: {
-        VITE_PACKMIND_API_BASE_URL: 'http://localhost:3003/api',
-      },
-    },
-  },
-});
-
 // Mock ResizeObserver for tests
 global.ResizeObserver = class ResizeObserver {
   constructor(cb: ResizeObserverCallback) {

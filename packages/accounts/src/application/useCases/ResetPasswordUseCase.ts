@@ -3,7 +3,7 @@ import {
   ResetPasswordResponse,
   IResetPasswordUseCase,
 } from '@packmind/shared/src/types/accounts/contracts/IResetPasswordUseCase';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger, maskEmail } from '@packmind/shared';
 import { UserService } from '../services/UserService';
 import { PasswordResetTokenService } from '../services/PasswordResetTokenService';
 import { LoginRateLimiterService } from '../services/LoginRateLimiterService';
@@ -73,7 +73,7 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
       if (!user.active) {
         this.logger.warn('Password reset attempted for inactive user', {
           userId: user.id,
-          email: user.email,
+          email: maskEmail(user.email),
         });
         throw new PasswordResetTokenNotFoundError(); // Generic error to prevent enumeration
       }
@@ -99,7 +99,7 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
 
       this.logger.info('Password reset completed successfully', {
         userId: updatedUser.id,
-        email: this.maskEmail(updatedUser.email),
+        email: maskEmail(updatedUser.email),
       });
 
       return {
@@ -125,14 +125,5 @@ export class ResetPasswordUseCase implements IResetPasswordUseCase {
       return '***';
     }
     return `${tokenStr.slice(0, 4)}***${tokenStr.slice(-4)}`;
-  }
-
-  private maskEmail(email: string): string {
-    const [localPart, domain] = email.split('@');
-    if (!domain) {
-      return '***';
-    }
-    const visible = localPart.slice(0, 2);
-    return `${visible}***@${domain}`;
   }
 }

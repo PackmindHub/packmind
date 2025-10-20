@@ -12,6 +12,7 @@
     "@packmind/recipes": "*",
     "@packmind/analytics": "*",
     "@packmind/git": "*",
+    "@packmind/jobs": "*",
     "@packmind/shared": "*",
     "typeorm": "^0.3.25",
     "@packmind/standards": "*",

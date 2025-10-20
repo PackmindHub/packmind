@@ -1,5 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { PMBox, PMHeading, PMVStack, PMEmptyState } from '@packmind/ui';
+import { DeploymentStatsSummary } from '../DeploymentStatsSummary/DeploymentStatsSummary';
 import {
   RepositoryStandardDeploymentStatus,
   DeployedStandardInfo,
@@ -238,6 +239,33 @@ const getVisibleTargets = (
   return { visibleRecipeTargets, visibleStandardTargets };
 };
 
+type ArtifactCounts = { upToDate: number; outdated: number };
+
+const computeArtifactCounts = (
+  recipeTargets?: TargetDeploymentStatus[],
+  standardTargets?: TargetStandardDeploymentStatus[],
+): ArtifactCounts => {
+  const counts: ArtifactCounts = { upToDate: 0, outdated: 0 };
+
+  (recipeTargets || []).forEach((t) => {
+    (t.deployedRecipes || []).forEach((r) => {
+      const isUp = (r as unknown as { isUpToDate?: boolean }).isUpToDate;
+      if (isUp === true) counts.upToDate += 1;
+      else if (isUp === false) counts.outdated += 1;
+    });
+  });
+
+  (standardTargets || []).forEach((t) => {
+    (t.deployedStandards || []).forEach((s) => {
+      const isUp = (s as unknown as { isUpToDate?: boolean }).isUpToDate;
+      if (isUp === true) counts.upToDate += 1;
+      else if (isUp === false) counts.outdated += 1;
+    });
+  });
+
+  return counts;
+};
+
 const hasVisibleStatusWithTargets = (
   repository: CombinedRepositoryDeploymentStatus,
   artifactStatusFilter: ArtifactStatusFilter,
@@ -367,24 +395,27 @@ export const RepositoryCentricView: React.FC<RepositoryCentricViewProps> = ({
     recipeRepositories,
     standardRepositories,
   ]);
+  const hasAnySelectedTargetDeployments = useCallback(
+    (repository: CombinedRepositoryDeploymentStatus) => {
+      if (!selectedTargetNames || selectedTargetNames.length === 0) return true;
+      return selectedTargetNames.some(
+        (targetName) =>
+          repository.recipeTargets?.some((t) => t.target.name === targetName) ||
+          repository.standardTargets?.some((t) => t.target.name === targetName),
+      );
+    },
+    [selectedTargetNames],
+  );
 
-  const hasAnySelectedTargetDeployments = (
-    repository: CombinedRepositoryDeploymentStatus,
-  ) => {
-    if (!selectedTargetNames || selectedTargetNames.length === 0) return true;
-    return selectedTargetNames.some(
-      (targetName) =>
-        repository.recipeTargets?.some((t) => t.target.name === targetName) ||
-        repository.standardTargets?.some((t) => t.target.name === targetName),
-    );
-  };
-
-  const matchesSearch = (repository: CombinedRepositoryDeploymentStatus) => {
-    if (!searchTerm) return true;
-    const fullName =
-      `${repository.gitRepo.owner}/${repository.gitRepo.repo}`.toLowerCase();
-    return fullName.includes(searchTerm.toLowerCase());
-  };
+  const matchesSearch = useCallback(
+    (repository: CombinedRepositoryDeploymentStatus) => {
+      if (!searchTerm) return true;
+      const fullName =
+        `${repository.gitRepo.owner}/${repository.gitRepo.repo}`.toLowerCase();
+      return fullName.includes(searchTerm.toLowerCase());
+    },
+    [searchTerm],
+  );
 
   const hasVisibleMatchingStatus = (
     repository: CombinedRepositoryDeploymentStatus,
@@ -406,6 +437,56 @@ export const RepositoryCentricView: React.FC<RepositoryCentricViewProps> = ({
       matchesSearch(repository) &&
       hasVisibleMatchingStatus(repository),
   );
+
+  const globalCounts = useMemo(() => {
+    const totals: ArtifactCounts = { upToDate: 0, outdated: 0 };
+
+    const add = (more: ArtifactCounts) => {
+      totals.upToDate += more.upToDate;
+      totals.outdated += more.outdated;
+    };
+
+    Array.from(combinedRepositories.values()).forEach((repository) => {
+      if (
+        (selectedRepoIds.length > 0 &&
+          !selectedRepoIds.includes(repository.gitRepo.id)) ||
+        !hasAnySelectedTargetDeployments(repository) ||
+        !matchesSearch(repository)
+      ) {
+        return;
+      }
+
+      if (shouldUseTargetData) {
+        const { visibleRecipeTargets, visibleStandardTargets } =
+          getVisibleTargets(repository, selectedTargetNames);
+        add(
+          computeArtifactCounts(visibleRecipeTargets, visibleStandardTargets),
+        );
+      } else {
+        const counts: ArtifactCounts = { upToDate: 0, outdated: 0 };
+        (repository.deployedRecipes || []).forEach((r) => {
+          const isUp = (r as unknown as { isUpToDate?: boolean }).isUpToDate;
+          if (isUp === true) counts.upToDate += 1;
+          else if (isUp === false) counts.outdated += 1;
+        });
+        (repository.deployedStandards || []).forEach((s) => {
+          const isUp = (s as unknown as { isUpToDate?: boolean }).isUpToDate;
+          if (isUp === true) counts.upToDate += 1;
+          else if (isUp === false) counts.outdated += 1;
+        });
+        add(counts);
+      }
+    });
+
+    return totals;
+  }, [
+    combinedRepositories,
+    selectedRepoIds,
+    selectedTargetNames,
+    shouldUseTargetData,
+    hasAnySelectedTargetDeployments,
+    matchesSearch,
+  ]);
 
   // Sort repositories: those with content first, then alphabetical by repo title
   const sortedRepositories = useMemo(() => {
@@ -442,7 +523,8 @@ export const RepositoryCentricView: React.FC<RepositoryCentricViewProps> = ({
   }
 
   return (
-    <PMVStack gap={2} align="stretch">
+    <PMVStack gap={4} align="stretch">
+      <DeploymentStatsSummary counts={globalCounts} />
       {sortedRepositories.map((repository) => {
         // Rendu uniquement basé sur les targets (legacy supprimé)
         const hasTargets =
@@ -453,23 +535,17 @@ export const RepositoryCentricView: React.FC<RepositoryCentricViewProps> = ({
           <PMVStack
             key={repository.gitRepo.id}
             align="stretch"
-            border={'solid 1px'}
-            borderColor={'border.primary'}
-            gap={0}
+            backgroundColor={'blue.1000'}
+            gap={4}
+            borderRadius={'lg'}
+            padding={6}
           >
-            <PMBox
-              borderBottom={'solid 1px'}
-              borderColor={'border.primary'}
-              padding={4}
-              backgroundColor={'background.primary'}
-            >
-              <PMHeading level="h6">
-                {repository.gitRepo.owner}/{repository.gitRepo.repo}:
-                {repository.gitRepo.branch}
-              </PMHeading>
-            </PMBox>
+            <PMHeading level="h5">
+              {repository.gitRepo.owner}/{repository.gitRepo.repo}:
+              {repository.gitRepo.branch}
+            </PMHeading>
 
-            <PMVStack align="stretch" width="full" padding={2}>
+            <PMVStack align="stretch" width="full">
               {hasTargets && (
                 // Target-based rendering via shared RepositoryTargetTable
                 <>

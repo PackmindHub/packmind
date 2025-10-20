@@ -25,6 +25,7 @@ import {
   SignInUserResponse,
   TooManyLoginAttemptsError,
 } from '@packmind/accounts';
+import { maskEmail } from '@packmind/shared';
 import {
   SignUpWithOrganizationResponse,
   CheckEmailAvailabilityCommand,
@@ -32,9 +33,9 @@ import {
   RequestPasswordResetCommand,
   RequestPasswordResetResponse,
 } from '@packmind/shared';
-import { Public } from './auth.guard';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
 import { Configuration } from '@packmind/shared';
+import { Public } from '@packmind/shared-nest';
 
 @Controller('auth')
 export class AuthController {
@@ -51,7 +52,7 @@ export class AuthController {
     @Body() signUpRequest: SignUpUserCommand,
   ): Promise<SignUpWithOrganizationResponse> {
     this.logger.log(`POST /auth/signup - Signing up user`, {
-      email: signUpRequest.email,
+      email: maskEmail(signUpRequest.email),
       organizationName: signUpRequest.organizationName,
       hasOrganizationId: !!signUpRequest.organizationId,
     });
@@ -63,7 +64,7 @@ export class AuthController {
         `POST /auth/signup - User signed up with organization successfully`,
         {
           userId: result.user.id,
-          email: result.user.email,
+          email: maskEmail(result.user.email),
           organizationId: result.organization.id,
           organizationName: result.organization.name,
         },
@@ -72,7 +73,7 @@ export class AuthController {
       return result;
     } catch (error) {
       this.logger.error(`POST /auth/signup - Failed to sign up user`, {
-        email: signUpRequest.email,
+        email: maskEmail(signUpRequest.email),
         error: error.message,
       });
       throw error;
@@ -88,7 +89,7 @@ export class AuthController {
     this.logger.log(
       `POST /auth/check-email-availability - Checking email availability`,
       {
-        email: request.email,
+        email: maskEmail(request.email),
       },
     );
 
@@ -98,7 +99,7 @@ export class AuthController {
       this.logger.log(
         `POST /auth/check-email-availability - Email availability checked successfully`,
         {
-          email: request.email,
+          email: maskEmail(request.email),
           available: result.available,
         },
       );
@@ -108,7 +109,7 @@ export class AuthController {
       this.logger.error(
         `POST /auth/check-email-availability - Failed to check email availability`,
         {
-          email: request.email,
+          email: maskEmail(request.email),
           error: error.message,
         },
       );
@@ -124,7 +125,7 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ): Promise<SignInUserResponse> {
     this.logger.log(`POST /auth/signin - Signing in user`, {
-      email: signInRequest.email,
+      email: maskEmail(signInRequest.email),
     });
 
     try {
@@ -152,13 +153,13 @@ export class AuthController {
 
       this.logger.log(`POST /auth/signin - User signed in successfully`, {
         userId: result.user.id,
-        email: result.user.email,
+        email: maskEmail(result.user.email),
       });
 
       return result;
     } catch (error) {
       this.logger.error(`POST /auth/signin - Failed to sign in user`, {
-        email: signInRequest.email,
+        email: maskEmail(signInRequest.email),
         error: error.message,
       });
 
@@ -267,7 +268,7 @@ export class AuthController {
       if (result.authenticated) {
         this.logger.log('GET /auth/me - User info retrieved successfully', {
           userId: result.user?.id,
-          email: result.user?.email,
+          email: result.user?.email ? maskEmail(result.user.email) : undefined,
           organizationName: result.organization?.name,
         });
       } else {
@@ -296,7 +297,6 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   async generateApiKey(
     @Req() request: AuthenticatedRequest,
-    @Body() body: { host?: string } = {},
   ): Promise<GenerateApiKeyResponse> {
     this.logger.log('POST /auth/api-key/generate - Generating API key', {
       userId: request.user.userId,
@@ -304,10 +304,7 @@ export class AuthController {
     });
 
     try {
-      // Use provided host or default to request host
-      const host = body.host || `${request.protocol}://${request.get('host')}`;
-
-      const result = await this.authService.generateApiKey(request, host);
+      const result = await this.authService.generateApiKey(request);
 
       this.logger.log(
         'POST /auth/api-key/generate - API key generated successfully',
@@ -446,7 +443,7 @@ export class AuthController {
         'POST /auth/activate/:token - Account activated successfully',
         {
           userId: result.user.id,
-          email: result.user.email,
+          email: maskEmail(result.user.email),
         },
       );
 
@@ -473,7 +470,7 @@ export class AuthController {
     @Body() request: RequestPasswordResetCommand,
   ): Promise<RequestPasswordResetResponse> {
     this.logger.log('POST /auth/forgot-password - Requesting password reset', {
-      email: request.email,
+      email: maskEmail(request.email),
     });
 
     try {
@@ -482,7 +479,7 @@ export class AuthController {
       this.logger.log(
         'POST /auth/forgot-password - Password reset request completed',
         {
-          email: request.email,
+          email: maskEmail(request.email),
           success: result.success,
         },
       );
@@ -492,7 +489,7 @@ export class AuthController {
       this.logger.error(
         'POST /auth/forgot-password - Failed to request password reset',
         {
-          email: request.email,
+          email: maskEmail(request.email),
           error: error.message,
         },
       );
@@ -583,7 +580,7 @@ export class AuthController {
         'POST /auth/reset-password - Password reset successfully',
         {
           userId: result.user.id,
-          email: result.user.email,
+          email: maskEmail(result.user.email),
         },
       );
 

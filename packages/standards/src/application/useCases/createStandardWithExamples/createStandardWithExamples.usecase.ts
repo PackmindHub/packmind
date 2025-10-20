@@ -5,7 +5,7 @@ import {
 } from '../../services/StandardVersionService';
 import { StandardSummaryService } from '../../services/StandardSummaryService';
 import { Standard } from '../../../domain/entities/Standard';
-import { Rule, createRuleId } from '../../../domain/entities/Rule';
+import { createRuleId } from '../../../domain/entities/Rule';
 import {
   RuleExample,
   createRuleExampleId,
@@ -20,7 +20,6 @@ import {
 } from '@packmind/shared';
 import { OrganizationId, UserId } from '@packmind/accounts';
 import { v4 as uuidv4 } from 'uuid';
-import { createStandardVersionId } from '../../../domain/entities/StandardVersion';
 
 const origin = 'CreateStandardWithExamplesUsecase';
 
@@ -126,7 +125,10 @@ export class CreateStandardWithExamplesUsecase {
           description,
           initialVersion,
           scope,
-          rules.map((r) => ({ content: r.content })),
+          processedRules.map((r) => ({
+            content: r.content,
+            examples: r.examples,
+          })),
         );
       } else {
         this.logger.info('Summary passed in input, will not be computed', {
@@ -271,7 +273,7 @@ export class CreateStandardWithExamplesUsecase {
     description: string,
     initialVersion: number,
     scope: string | null,
-    rules: Array<{ content: string }>,
+    rules: { content: string; examples: RuleExample[] }[],
   ) {
     // Generate summary for the standard version (reusing logic from CreateStandardUsecase)
     let summary: string | null = null;
@@ -279,13 +281,6 @@ export class CreateStandardWithExamplesUsecase {
       this.logger.info('Generating summary for standard version', {
         rulesCount: rules.length,
       });
-
-      // Convert rule data to Rule-like objects for summary generation
-      const ruleEntities: Rule[] = rules.map((rule) => ({
-        id: createRuleId(uuidv4()), // Temporary ID for summary generation
-        content: rule.content,
-        standardVersionId: createStandardVersionId(uuidv4()), // Temporary ID for summary generation
-      }));
 
       summary = await this.standardSummaryService.createStandardSummary(
         {
@@ -297,7 +292,7 @@ export class CreateStandardWithExamplesUsecase {
           summary: null,
           scope,
         },
-        ruleEntities,
+        rules,
       );
       this.logger.info('Summary generated successfully', {
         summaryLength: summary.length,

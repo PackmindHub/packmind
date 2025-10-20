@@ -9,7 +9,12 @@ import {
 import { Organization } from '../../domain/entities/Organization';
 import { User, UserId } from '../../domain/entities/User';
 import { IInvitationRepository } from '../../domain/repositories/IInvitationRepository';
-import { MailService, PackmindLogger, Configuration } from '@packmind/shared';
+import {
+  MailService,
+  PackmindLogger,
+  Configuration,
+  maskEmail,
+} from '@packmind/shared';
 
 const origin = 'InvitationService';
 const INVITATION_EXPIRATION_HOURS = 48;
@@ -139,7 +144,7 @@ export class InvitationService {
     request: InvitationCreationRequest,
   ): Promise<void> {
     this.logger.info('Resending invitation email', {
-      recipient: this.maskEmail(request.email),
+      recipient: maskEmail(request.email),
       invitationId: invitation.id,
     });
 
@@ -156,7 +161,7 @@ export class InvitationService {
   ): Promise<InvitationCreationRecord> {
     this.logger.info('Creating new invitation for existing user', {
       userId: request.user.id,
-      email: this.maskEmail(request.email),
+      email: maskEmail(request.email),
     });
 
     const invitation = this.buildInvitation(request.user.id);
@@ -207,7 +212,7 @@ export class InvitationService {
     });
 
     this.logger.info('Sending invitation email', {
-      recipient: this.maskEmail(request.email),
+      recipient: maskEmail(request.email),
       organizationId: request.organization.id,
       invitationId: invitation.id,
     });
@@ -280,15 +285,6 @@ If you weren't expecting this, you can safely ignore this email.`;
 
   private formatExpiration(expirationDate: Date): string {
     return expirationDate.toUTCString();
-  }
-
-  private maskEmail(email: string): string {
-    const [localPart, domain] = email.split('@');
-    if (!domain) {
-      return '***';
-    }
-    const visible = localPart.slice(0, 2);
-    return `${visible}***@${domain}`;
   }
 
   private maskToken(token: InvitationToken): string {

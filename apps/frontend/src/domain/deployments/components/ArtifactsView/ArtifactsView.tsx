@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo } from 'react';
+import { DeploymentStatsSummary } from '../DeploymentStatsSummary/DeploymentStatsSummary';
 import {
   PMBadge,
   PMBox,
@@ -26,6 +27,8 @@ import {
   RunDistribution,
   useRunDistribution,
 } from '../RunDistribution/RunDistribution';
+import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
+import { routes } from '../../../../shared/utils/routes';
 
 type ArtifactStatus = 'all' | 'outdated' | 'up-to-date';
 
@@ -35,6 +38,7 @@ type ArtifactsViewProps = {
   searchTerm?: string;
   artifactStatusFilter?: ArtifactStatus;
   orgSlug?: string;
+  artifactTypeFilter?: ArtifactTypeFilter;
 };
 
 // Top-level helpers (not nested) to respect lint rules
@@ -227,6 +231,7 @@ const buildRecipeBlocks = (
   artifactStatusFilter: ArtifactStatus,
   columns: PMTableColumn[],
   orgSlug?: string,
+  spaceSlug?: string,
 ) =>
   recipes
     .map((recipe) => {
@@ -270,31 +275,29 @@ const buildRecipeBlocks = (
         <PMVStack
           key={`recipe-${recipe.recipe.id}`}
           align="stretch"
-          border={'solid 1px'}
-          borderColor={'border.primary'}
-          gap={0}
+          backgroundColor={'blue.1000'}
+          gap={4}
+          borderRadius={'lg'}
+          padding={6}
         >
-          <PMBox
-            borderBottom={'solid 1px'}
-            borderColor={'border.primary'}
-            padding={4}
-            backgroundColor={'background.primary'}
-          >
-            <PMHeading level="h6">
-              {orgSlug ? (
-                <PMLink asChild>
-                  <Link to={`/org/${orgSlug}/recipes/${recipe.recipe.id}`}>
-                    {recipe.recipe.name}
-                  </Link>
-                </PMLink>
-              ) : (
-                recipe.recipe.name
-              )}
-            </PMHeading>
-          </PMBox>
-          <PMVStack align="stretch" width="full" padding={2} gap={2}>
-            <PMTable columns={columns} data={rows} size="sm" />
-          </PMVStack>
+          <PMHeading level="h3">
+            {orgSlug && spaceSlug ? (
+              <PMLink asChild color="text.primary">
+                <Link
+                  to={routes.space.toRecipe(
+                    orgSlug,
+                    spaceSlug,
+                    recipe.recipe.id,
+                  )}
+                >
+                  {recipe.recipe.name}
+                </Link>
+              </PMLink>
+            ) : (
+              recipe.recipe.name
+            )}
+          </PMHeading>
+          <PMTable columns={columns} data={rows} size="sm" />
         </PMVStack>
       );
     })
@@ -305,6 +308,7 @@ const buildStandardBlocks = (
   artifactStatusFilter: ArtifactStatus,
   columns: PMTableColumn[],
   orgSlug?: string,
+  spaceSlug?: string,
 ) =>
   standards
     .map((standard) => {
@@ -348,37 +352,35 @@ const buildStandardBlocks = (
         <PMVStack
           key={`standard-${standard.standard.id}`}
           align="stretch"
-          border={'solid 1px'}
-          borderColor={'border.primary'}
-          gap={0}
+          backgroundColor={'blue.1000'}
+          gap={4}
+          borderRadius={'lg'}
+          padding={6}
         >
-          <PMBox
-            borderBottom={'solid 1px'}
-            borderColor={'border.primary'}
-            padding={4}
-            backgroundColor={'background.primary'}
-          >
-            <PMHeading level="h6">
-              {orgSlug ? (
-                <PMLink asChild>
-                  <Link
-                    to={`/org/${orgSlug}/standards/${standard.standard.id}`}
-                  >
-                    {standard.standard.name}
-                  </Link>
-                </PMLink>
-              ) : (
-                standard.standard.name
-              )}
-            </PMHeading>
-          </PMBox>
-          <PMVStack align="stretch" width="full" padding={2} gap={2}>
-            <PMTable columns={columns} data={rows} size="sm" />
-          </PMVStack>
+          <PMHeading level="h3">
+            {orgSlug && spaceSlug ? (
+              <PMLink asChild color="text.primary">
+                <Link
+                  to={routes.space.toStandard(
+                    orgSlug,
+                    spaceSlug,
+                    standard.standard.id,
+                  )}
+                >
+                  {standard.standard.name}
+                </Link>
+              </PMLink>
+            ) : (
+              standard.standard.name
+            )}
+          </PMHeading>
+          <PMTable columns={columns} data={rows} size="sm" />
         </PMVStack>
       );
     })
     .filter((node): node is React.ReactElement => node !== null);
+
+export type ArtifactTypeFilter = 'all' | 'recipes' | 'standards';
 
 export const ArtifactsView: React.FC<ArtifactsViewProps> = ({
   recipes,
@@ -386,22 +388,30 @@ export const ArtifactsView: React.FC<ArtifactsViewProps> = ({
   searchTerm = '',
   artifactStatusFilter = 'all',
   orgSlug,
+  artifactTypeFilter = 'all',
 }) => {
+  const { spaceSlug } = useCurrentSpace();
   // Normalize search term once
   const normalizedSearch = searchTerm.trim().toLowerCase();
 
   // Filter artifacts by search on artifact name
   const filteredRecipes = useMemo(() => {
-    if (!normalizedSearch) return recipes;
-    return recipes.filter((r) =>
-      r.recipe.name.toLowerCase().includes(normalizedSearch),
-    );
+    const base = !normalizedSearch
+      ? recipes
+      : recipes.filter((r) =>
+          r.recipe.name.toLowerCase().includes(normalizedSearch),
+        );
+    return [...base].sort((a, b) => a.recipe.name.localeCompare(b.recipe.name));
   }, [recipes, normalizedSearch]);
 
   const filteredStandards = useMemo(() => {
-    if (!normalizedSearch) return standards;
-    return standards.filter((s) =>
-      s.standard.name.toLowerCase().includes(normalizedSearch),
+    const base = !normalizedSearch
+      ? standards
+      : standards.filter((s) =>
+          s.standard.name.toLowerCase().includes(normalizedSearch),
+        );
+    return [...base].sort((a, b) =>
+      a.standard.name.localeCompare(b.standard.name),
     );
   }, [standards, normalizedSearch]);
 
@@ -413,8 +423,9 @@ export const ArtifactsView: React.FC<ArtifactsViewProps> = ({
         artifactStatusFilter,
         TABLE_COLUMNS,
         orgSlug,
+        spaceSlug,
       ),
-    [filteredRecipes, artifactStatusFilter, orgSlug],
+    [filteredRecipes, artifactStatusFilter, orgSlug, spaceSlug],
   );
 
   const standardBlocks = useMemo(
@@ -424,38 +435,72 @@ export const ArtifactsView: React.FC<ArtifactsViewProps> = ({
         artifactStatusFilter,
         TABLE_COLUMNS,
         orgSlug,
+        spaceSlug,
       ),
-    [filteredStandards, artifactStatusFilter, orgSlug],
+    [filteredStandards, artifactStatusFilter, orgSlug, spaceSlug],
+  );
+
+  const visibleRecipes = useMemo(
+    () =>
+      artifactTypeFilter === 'all' || artifactTypeFilter === 'recipes'
+        ? filteredRecipes
+        : ([] as typeof filteredRecipes),
+    [artifactTypeFilter, filteredRecipes],
+  );
+  const visibleStandards = useMemo(
+    () =>
+      artifactTypeFilter === 'all' || artifactTypeFilter === 'standards'
+        ? filteredStandards
+        : ([] as typeof filteredStandards),
+    [artifactTypeFilter, filteredStandards],
   );
 
   const hasAnyArtifacts =
-    (filteredRecipes?.length || 0) + (filteredStandards?.length || 0) > 0;
+    (visibleRecipes?.length || 0) + (visibleStandards?.length || 0) > 0;
+  const globalCounts = useMemo(() => {
+    const totals = { upToDate: 0, outdated: 0 };
+    visibleRecipes.forEach((recipe) => {
+      (recipe.targetDeployments || []).forEach((td) => {
+        if (td.isUpToDate) totals.upToDate += 1;
+        else totals.outdated += 1;
+      });
+    });
+    visibleStandards.forEach((standard) => {
+      (standard.targetDeployments || []).forEach((td) => {
+        if (td.isUpToDate) totals.upToDate += 1;
+        else totals.outdated += 1;
+      });
+    });
+    return totals;
+  }, [visibleRecipes, visibleStandards]);
+
   const emptyState = getEmptyStateProps(hasAnyArtifacts, searchTerm);
-  if (emptyState) {
-    return (
-      <PMEmptyState
-        title={emptyState.title}
-        description={emptyState.description}
-      />
-    );
-  }
 
   // recipeBlocks and standardBlocks are memoized above
 
   return (
-    <PMVStack gap={6} align="stretch" marginTop={4}>
-      {recipeBlocks.length > 0 && (
-        <PMVStack gap={3} align="stretch">
-          <PMHeading level="h5">Recipes</PMHeading>
-          {recipeBlocks}
-        </PMVStack>
+    <PMVStack gap={4} align="stretch">
+      <DeploymentStatsSummary counts={globalCounts} />
+      {emptyState && (
+        <PMEmptyState
+          title={emptyState.title}
+          description={emptyState.description}
+        />
       )}
-      {standardBlocks.length > 0 && (
-        <PMVStack gap={3} align="stretch">
-          <PMHeading level="h5">Standards</PMHeading>
-          {standardBlocks}
-        </PMVStack>
-      )}
+      {(artifactTypeFilter === 'all' || artifactTypeFilter === 'recipes') &&
+        recipeBlocks.length > 0 && (
+          <PMVStack gap={3} align="stretch">
+            <PMHeading level="h5">Recipes</PMHeading>
+            {recipeBlocks}
+          </PMVStack>
+        )}
+      {(artifactTypeFilter === 'all' || artifactTypeFilter === 'standards') &&
+        standardBlocks.length > 0 && (
+          <PMVStack gap={3} align="stretch">
+            <PMHeading level="h5">Standards</PMHeading>
+            {standardBlocks}
+          </PMVStack>
+        )}
     </PMVStack>
   );
 };

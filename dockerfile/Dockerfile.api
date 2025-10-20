@@ -2,8 +2,21 @@ FROM node:22.17.1-alpine
 
 ENV NODE_ENV=production
 
-# Update OpenSSL to fix CVE-2025-9230
-RUN apk add --no-cache openssl=3.5.4-r0
+# Update OpenSSL and install required system dependencies
+RUN apk update && \
+    apk add --no-cache \
+        openssl=3.5.4-r0 \
+        bash \
+        curl \
+        wget \
+        ca-certificates \
+        nano \
+        libcurl \
+        build-base \
+        git \
+        python3 \
+        py3-pip \
+        python3-dev
 
 # Use the existing node user from the base image
 USER node
@@ -18,8 +31,17 @@ RUN npm install --omit=dev --ignore-scripts && npm cache clean --force
 COPY --chown=node:node dist/apps/api/main.js ./
 COPY --chown=node:node dist/packages/migrations-bundle ./migrations/
 
+# Copy base tree-sitter WASM files to /app/ directory for runtime initialization
+COPY --chown=node:node dist/apps/api/tree-sitter*.wasm ./
+COPY --chown=node:node dist/apps/api/web-tree-sitter*.wasm ./
+
 # Copy custom package.json for migrations with only external dependencies
 COPY --chown=node:node packages/migrations/docker-package.json ./migrations/package.json
+
+# Copy js-playground directory and installation script
+COPY --chown=node:node packages/linter/js-playground ./js-playground/
+
+ENV JS_PLAYGROUND_PATH=/app/js-playground
 
 # Install migration dependencies
 WORKDIR /app/migrations

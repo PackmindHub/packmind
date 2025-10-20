@@ -11,7 +11,9 @@
     "ts-jest": "^29.4.1",
     "@packmind/shared": "*",
     "@packmind/accounts": "*",
+    "@packmind/jobs": "*",
     "typeorm": "0.3.25",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "bullmq": "^5.58.2"
   }
 }

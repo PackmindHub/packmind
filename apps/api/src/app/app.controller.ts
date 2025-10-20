@@ -1,7 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
 import { PackmindLogger } from '@packmind/shared';
-import { Public } from './auth/auth.guard';
+import { Public } from '@packmind/shared-nest';
 
 const origin = 'AppController';
 

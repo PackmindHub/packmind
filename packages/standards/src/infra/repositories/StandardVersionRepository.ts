@@ -1,4 +1,7 @@
-import { StandardVersion } from '../../domain/entities/StandardVersion';
+import {
+  StandardVersion,
+  StandardVersionId,
+} from '../../domain/entities/StandardVersion';
 import { StandardId } from '../../domain/entities/Standard';
 import { IStandardVersionRepository } from '../../domain/repositories/IStandardVersionRepository';
 import { StandardVersionSchema } from '../schemas/StandardVersionSchema';
@@ -7,6 +10,7 @@ import {
   PackmindLogger,
   localDataSource,
   AbstractRepository,
+  getErrorMessage,
 } from '@packmind/shared';
 
 const origin = 'StandardVersionRepository';
@@ -47,7 +51,7 @@ export class StandardVersionRepository
       return versions;
     } catch (error) {
       this.logger.error('Failed to list standard versions from database', {
-        error: error instanceof Error ? error.message : String(error),
+        error: getErrorMessage(error),
       });
       throw error;
     }
@@ -72,7 +76,7 @@ export class StandardVersionRepository
     } catch (error) {
       this.logger.error('Failed to find standard versions by standard ID', {
         standardId,
-        error: error instanceof Error ? error.message : String(error),
+        error: getErrorMessage(error),
       });
       throw error;
     }
@@ -151,10 +155,25 @@ export class StandardVersionRepository
         {
           standardId,
           version,
-          error: error instanceof Error ? error.message : String(error),
+          error: getErrorMessage(error),
         },
       );
       throw error;
     }
+  }
+
+  async updateSummary(
+    standardVersionId: StandardVersionId,
+    summary: string,
+  ): Promise<number | undefined> {
+    const result = await this.repository.update(
+      {
+        id: standardVersionId,
+      },
+      {
+        summary,
+      },
+    );
+    return result.affected;
   }
 }

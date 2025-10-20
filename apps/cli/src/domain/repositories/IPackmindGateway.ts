@@ -16,6 +16,7 @@ export type ListDetectionProgramsResult = {
         detectionProgram: {
           mode: string;
           code: string;
+          sourceCodeState: 'AST' | 'RAW';
         };
       }[];
     }[];

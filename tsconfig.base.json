@@ -19,6 +19,7 @@
     "paths": {
       "@packmind/accounts": ["packages/accounts/src/index.ts"],
       "@packmind/accounts/types": ["packages/accounts/src/types/index.ts"],
+      "@packmind/amplitude": ["packages/amplitude/src/index.ts"],
       "@packmind/analytics/types": ["packages/analytics/src/types/index.ts"],
       "@packmind/assets": ["packages/assets/src/index.ts"],
       "@packmind/assets/*": ["packages/assets/src/*"],
@@ -38,19 +39,26 @@
       "@packmind/integration-tests": [
         "packages/integration-tests/src/index.ts"
       ],
+      "@packmind/jobs": ["packages/jobs/src/index.ts"],
+      "@packmind/linter-ast": ["packages/linter-ast/src/index.ts"],
+      "@packmind/linter-execution": ["packages/linter-execution/src/index.ts"],
       "@packmind/migrations": ["packages/migrations/src/index.ts"],
       "@packmind/recipes": ["packages/recipes/src/index.ts"],
       "@packmind/recipes/test": ["packages/recipes/test/index.ts"],
       "@packmind/recipes/types": ["packages/recipes/src/types/index.ts"],
       "@packmind/shared": ["packages/shared/src/index.ts"],
+      "@packmind/shared-nest": ["packages/shared-nest/src/index.ts"],
       "@packmind/shared/test": ["packages/shared/test/index.ts"],
       "@packmind/shared/types": ["packages/shared/src/types/index.ts"],
-      "@packmind/shared-nest": ["packages/shared-nest/src/index.ts"],
+      "@packmind/spaces": ["packages/spaces/src/index.ts"],
       "@packmind/standards": ["packages/standards/src/index.ts"],
       "@packmind/standards/types": ["packages/standards/src/types/index.ts"],
       "@packmind/ui": ["packages/ui/src/index.ts"],
       "features/analytics/RecipeUsageAnalytics": [
         "apps/frontend/src/domain/analytics/components/RecipeUsageAnalytics"
+      ],
+      "features/detection/ProgramEditor": [
+        "apps/frontend/src/domain/detection/components/ProgramEditor"
       ],
       "packmind-plugin": ["tools/packmind-plugin/src/index.ts"]
     }

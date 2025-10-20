@@ -71,36 +71,6 @@ export class RedisSSEClient {
   }
 
   /**
-   * Parse Redis port configuration (same logic as DelayedJobsFactory)
-   */
-  private parseRedisPort(portConfig: string | null): number {
-    const DEFAULT_REDIS_PORT = 6379;
-
-    if (!portConfig || typeof portConfig !== 'string') {
-      RedisSSEClient.logger.warn(
-        `Invalid Redis port configuration, using default port ${DEFAULT_REDIS_PORT}`,
-      );
-      return DEFAULT_REDIS_PORT;
-    }
-
-    const parsedPort = Number(portConfig.trim());
-
-    if (
-      isNaN(parsedPort) ||
-      !isFinite(parsedPort) ||
-      parsedPort <= 0 ||
-      parsedPort > 65535
-    ) {
-      RedisSSEClient.logger.warn(
-        `Invalid Redis port '${portConfig}', using default port ${DEFAULT_REDIS_PORT}`,
-      );
-      return DEFAULT_REDIS_PORT;
-    }
-
-    return Math.floor(parsedPort);
-  }
-
-  /**
    * Publish a message to a Redis channel
    */
   async publish(channel: string, message: string): Promise<number> {

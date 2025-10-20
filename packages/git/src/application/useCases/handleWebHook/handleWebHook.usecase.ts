@@ -1,5 +1,4 @@
 import { GitRepo } from '../../../domain/entities/GitRepo';
-import { GitCommit } from '../../../domain/entities/GitCommit';
 import {
   GitProviderVendors,
   GitProvider,
@@ -8,21 +7,35 @@ import { IGitRepo } from '../../../domain/repositories/IGitRepo';
 import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
 import { GitCommitService } from '../../services/GitCommitService';
 import { GitProviderService } from '../../GitProviderService';
-import { PackmindLogger } from '@packmind/shared';
+import { GitRepoService } from '../../GitRepoService';
+import {
+  HandleWebHookCommand,
+  HandleWebHookResult,
+  IHandleWebHookUseCase,
+  PackmindLogger,
+} from '@packmind/shared';
 
-export class HandleWebHook {
+export class HandleWebHook implements IHandleWebHookUseCase {
   constructor(
     private readonly gitCommitService: GitCommitService,
     private readonly gitProviderService: GitProviderService,
+    private readonly gitRepoService: GitRepoService,
     private readonly gitRepoFactory: IGitRepoFactory,
     private readonly logger: PackmindLogger,
   ) {}
 
-  public async handleWebHook(
-    gitRepo: GitRepo,
-    payload: unknown,
-    fileMatcher: RegExp,
-  ): Promise<(GitCommit & { filePath: string; fileContent: string })[]> {
+  public async execute(
+    command: HandleWebHookCommand,
+  ): Promise<HandleWebHookResult> {
+    const { gitRepoId, payload, fileMatcher } = command;
+
+    // Fetch the git repository by ID
+    const gitRepo = await this.gitRepoService.findGitRepoById(gitRepoId);
+
+    if (!gitRepo) {
+      throw new Error('Git repository not found');
+    }
+
     this.logger.info('Handling webhook for git repository', {
       owner: gitRepo.owner,
       repo: gitRepo.repo,
@@ -58,8 +71,7 @@ export class HandleWebHook {
     });
 
     // For each matching file, store the commit in the database and return the result
-    const results: (GitCommit & { filePath: string; fileContent: string })[] =
-      [];
+    const results: HandleWebHookResult = [];
 
     for (const file of matchingFiles) {
       // Extract commit information from the file data returned by handlePushHook
@@ -79,7 +91,7 @@ export class HandleWebHook {
 
       // Add to results with file information
       results.push({
-        ...storedCommit,
+        gitCommit: storedCommit,
         filePath: file.filepath,
         fileContent: file.fileContent,
       });

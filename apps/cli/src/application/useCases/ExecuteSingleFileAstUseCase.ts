@@ -3,20 +3,41 @@ import {
   ExecuteSingleFileAstUseCaseResult,
   IExecuteSingleFileAstUseCase,
 } from '../../domain/useCases/IExecuteSingleFileAstUseCase';
-import { AstExecutorService } from '../services/AstExecutorService';
+import { IExecuteLinterProgramsUseCase } from '@packmind/shared';
 
 export class ExecuteSingleFileAstUseCase
   implements IExecuteSingleFileAstUseCase
 {
+  private static readonly fallbackStandardSlug = 'adhoc-linter';
+  private static readonly fallbackRuleContent = 'adhoc-rule';
+
   constructor(
-    private readonly astExecutorService: AstExecutorService = new AstExecutorService(),
+    private readonly linterExecutionUseCase: IExecuteLinterProgramsUseCase,
   ) {}
 
   public async execute(
     command: ExecuteSingleFileAstUseCaseCommand,
   ): Promise<ExecuteSingleFileAstUseCaseResult> {
-    const { program, fileContent } = command;
+    const { program, fileContent, language } = command;
 
-    return this.astExecutorService.executeProgram(program, fileContent);
+    const result = await this.linterExecutionUseCase.execute({
+      filePath: 'cli-single-file',
+      fileContent,
+      language,
+      programs: [
+        {
+          code: program,
+          ruleContent: ExecuteSingleFileAstUseCase.fallbackRuleContent,
+          standardSlug: ExecuteSingleFileAstUseCase.fallbackStandardSlug,
+          sourceCodeState: 'AST',
+          language,
+        },
+      ],
+    });
+
+    return result.violations.map(({ line, character }) => ({
+      line,
+      character,
+    }));
   }
 }

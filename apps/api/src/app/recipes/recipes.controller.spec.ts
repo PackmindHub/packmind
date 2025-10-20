@@ -41,7 +41,7 @@ describe('RecipesController', () => {
       deleteRecipesBatch: jest.fn(),
       getUsageByOrganization: jest.fn(),
       listDeploymentsByRecipe: jest.fn(),
-      setDeploymentPort: jest.fn(),
+      setDeploymentPort: jest.fn().mockResolvedValue(undefined),
     };
 
     app = await Test.createTestingModule({

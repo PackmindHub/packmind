@@ -5,6 +5,8 @@ export * from './standards';
 export * from './accounts';
 export * from './deployments';
 export * from './recipes';
+export * from './spaces';
 export * from './ports';
 export * from './sse';
 export * from './languages';
+export * from './linter';

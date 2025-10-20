@@ -9,6 +9,7 @@ import {
   pmToaster,
 } from '@packmind/ui';
 import { useCreateOrganizationMutation } from '../../accounts/api/queries/AccountsQueries';
+import { routes } from '../../../shared/utils/routes';
 
 interface NewOrganizationDialogProps {
   open: boolean;
@@ -50,7 +51,13 @@ export const NewOrganizationDialog: React.FC<NewOrganizationDialogProps> = ({
 
       setNewOrgaName('');
       setOpen(false);
-      navigate(`/org/${organization.slug}`);
+
+      // Delay navigation to prevent error when navigating to new organization
+      await new Promise<void>((resolve) => {
+        setTimeout(resolve, 500);
+      });
+
+      navigate(routes.org.toDashboard(organization.slug));
     } catch (error) {
       pmToaster.create({
         title: 'Error',

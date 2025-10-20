@@ -1,4 +1,4 @@
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger, Configuration } from '@packmind/shared';
 import {
   IGenerateApiKeyUseCase,
   GenerateApiKeyCommand,
@@ -7,6 +7,8 @@ import {
 import { UserService } from '../../services/UserService';
 import { OrganizationService } from '../../services/OrganizationService';
 import { ApiKeyService } from '../../services/ApiKeyService';
+
+const DEFAULT_APP_WEB_URL = 'http://localhost:8081';
 
 export class GenerateApiKeyUseCase implements IGenerateApiKeyUseCase {
   constructor(
@@ -45,12 +47,15 @@ export class GenerateApiKeyUseCase implements IGenerateApiKeyUseCase {
         throw new Error('Organization not found');
       }
 
+      // Get host from configuration
+      const host = await this.getApplicationUrl();
+
       // Generate API key using the service
       const apiKey = this.apiKeyService.generateApiKey(
         user,
         organization,
         membership.role,
-        command.host,
+        host,
       );
       const expiresAt = this.apiKeyService.getApiKeyExpiration(apiKey);
 
@@ -74,5 +79,17 @@ export class GenerateApiKeyUseCase implements IGenerateApiKeyUseCase {
       });
       throw error;
     }
+  }
+
+  private async getApplicationUrl(): Promise<string> {
+    const configValue = await Configuration.getConfig('APP_WEB_URL');
+    if (configValue) {
+      return configValue.endsWith('/') ? configValue.slice(0, -1) : configValue;
+    }
+    this.logger.warn('Failed to get APP_WEB_URL value, using default', {
+      configValue,
+      default: DEFAULT_APP_WEB_URL,
+    });
+    return DEFAULT_APP_WEB_URL;
   }
 }

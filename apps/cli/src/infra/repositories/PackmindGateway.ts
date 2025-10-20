@@ -75,7 +75,7 @@ export class PackmindGateway implements IPackmindGateway {
       const { host } = decodedApiKey.payload;
 
       // Make API call to get detection programs
-      const url = `${host}/api/v0/standards/list-detection-program`;
+      const url = `${host}/api/v0/list-detection-program`;
       const payload = {
         gitRemoteUrl: params.gitRemoteUrl,
       };

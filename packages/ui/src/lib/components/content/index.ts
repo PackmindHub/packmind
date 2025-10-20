@@ -18,3 +18,10 @@ export { PMTwoColumnsLayout } from './PMTwoColumnsLayout/PMTwoColumnsLayout';
 export { PMImage } from './PMImage/PMImage';
 export { PMAccordion } from './PMAccordion/PMAccordion';
 export { PMStat } from './PMStat/PMStat';
+export {
+  PMFeatureFlag,
+  isFeatureFlagEnabled,
+  RULE_DETAILS_DETECTION_TAB_FEATURE_KEY,
+  DEFAULT_FEATURE_DOMAIN_MAP,
+} from './PMFeatureFlag/PMFeatureFlag';
+export type { IPMFeatureFlagProps } from './PMFeatureFlag/PMFeatureFlag';

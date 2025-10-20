@@ -95,9 +95,10 @@ describe('SignUpWithOrganizationForm', () => {
     createMockMutation<ReturnType<typeof useSignInMutation>>(overrides);
 
   const createEmailCheckMutation = (overrides = {}) =>
-    createMockMutation<ReturnType<typeof useCheckEmailAvailabilityMutation>>(
-      overrides,
-    );
+    createMockMutation<ReturnType<typeof useCheckEmailAvailabilityMutation>>({
+      mutateAsync: jest.fn().mockResolvedValue({ available: true }),
+      ...overrides,
+    });
 
   it('renders form with all required fields', () => {
     mockUseSignUpWithOrganizationMutation.mockReturnValue(

@@ -48,9 +48,15 @@ describe('RecipeRepository', () => {
 
   it('can store and retrieve multiple recipes by organization', async () => {
     const organizationId = createOrganizationId(uuidv4());
-    await recipeRepository.add(recipeFactory({ organizationId }));
-    await recipeRepository.add(recipeFactory({ organizationId }));
-    await recipeRepository.add(recipeFactory({ organizationId }));
+    await recipeRepository.add(
+      recipeFactory({ organizationId, slug: 'recipe-1' }),
+    );
+    await recipeRepository.add(
+      recipeFactory({ organizationId, slug: 'recipe-2' }),
+    );
+    await recipeRepository.add(
+      recipeFactory({ organizationId, slug: 'recipe-3' }),
+    );
 
     expect(
       await recipeRepository.findByOrganizationId(organizationId),
@@ -81,8 +87,10 @@ describe('RecipeRepository', () => {
       recipe = await recipeRepository.add(recipeFactory());
     });
 
-    it('can find a recipe by slug', async () => {
-      expect(await recipeRepository.findBySlug(recipe.slug)).toEqual(recipe);
+    it('can find a recipe by slug and organization', async () => {
+      expect(
+        await recipeRepository.findBySlug(recipe.slug, recipe.organizationId),
+      ).toEqual(recipe);
     });
 
     describe('when recipe has been deleted', () => {
@@ -91,22 +99,32 @@ describe('RecipeRepository', () => {
       });
 
       it('can not find a deleted recipe by slug', async () => {
-        expect(await recipeRepository.findBySlug(recipe.slug)).toBeNull();
+        expect(
+          await recipeRepository.findBySlug(recipe.slug, recipe.organizationId),
+        ).toBeNull();
       });
 
       it('can find a deleted recipe by slug if the includeDeleted flag is false', async () => {
         expect(
-          await recipeRepository.findBySlug(recipe.slug, {
-            includeDeleted: false,
-          }),
+          await recipeRepository.findBySlug(
+            recipe.slug,
+            recipe.organizationId,
+            {
+              includeDeleted: false,
+            },
+          ),
         ).toBeNull();
       });
 
       it('can find a deleted recipe by slug if the proper flag is provided', async () => {
         expect(
-          await recipeRepository.findBySlug(recipe.slug, {
-            includeDeleted: true,
-          }),
+          await recipeRepository.findBySlug(
+            recipe.slug,
+            recipe.organizationId,
+            {
+              includeDeleted: true,
+            },
+          ),
         ).toMatchObject({ id: recipe.id, name: recipe.name });
       });
     });

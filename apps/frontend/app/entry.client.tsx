@@ -11,6 +11,7 @@ import { UIProvider } from '@packmind/ui';
 import { QueryProvider } from '../src/providers/QueryProvider';
 import { SSEProvider } from '../src/services/sse';
 import { ErrorBoundary } from '../src/providers/ErrorBoundary';
+import { AnalyticsProvider } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 
 startTransition(() => {
   hydrateRoot(
@@ -19,9 +20,11 @@ startTransition(() => {
       <ErrorBoundary level="app">
         <QueryProvider>
           <SSEProvider>
-            <UIProvider>
-              <HydratedRouter />
-            </UIProvider>
+            <AnalyticsProvider>
+              <UIProvider>
+                <HydratedRouter />
+              </UIProvider>
+            </AnalyticsProvider>
           </SSEProvider>
         </QueryProvider>
       </ErrorBoundary>

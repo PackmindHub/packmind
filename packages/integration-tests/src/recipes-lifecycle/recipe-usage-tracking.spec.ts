@@ -15,6 +15,7 @@ import { makeTestDatasource } from '@packmind/shared/test';
 import { DataSource } from 'typeorm';
 import { RecipesUsageHexa, recipesUsageSchemas } from '@packmind/analytics';
 import { TargetSchema } from '@packmind/deployments';
+import { JobsHexa } from '@packmind/jobs';
 
 // Mock only Configuration from @packmind/shared
 jest.mock('@packmind/shared', () => {
@@ -60,6 +61,7 @@ describe('Recipe usage tracking', () => {
     registry = new HexaRegistry();
 
     // Register hexas before initialization
+    registry.register(JobsHexa);
     registry.register(GitHexa);
     registry.register(AccountsHexa);
     registry.register(RecipesHexa);
@@ -67,6 +69,7 @@ describe('Recipe usage tracking', () => {
 
     // Initialize the registry with the datasource
     registry.init(dataSource);
+    await registry.initAsync();
 
     // Get initialized hexas
     accountsHexa = registry.get(AccountsHexa);

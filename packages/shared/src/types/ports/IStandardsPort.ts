@@ -1,6 +1,7 @@
 import {
   Rule,
   RuleId,
+  RuleExample,
   Standard,
   StandardId,
   StandardVersion,
@@ -14,4 +15,5 @@ export interface IStandardsPort {
   getRule(id: RuleId): Promise<Rule | null>;
   getLatestRulesByStandardId(id: StandardId): Promise<Rule[]>;
   listStandardsByOrganization(id: OrganizationId): Promise<Standard[]>;
+  getRuleCodeExamples(id: RuleId): Promise<RuleExample[]>;
 }

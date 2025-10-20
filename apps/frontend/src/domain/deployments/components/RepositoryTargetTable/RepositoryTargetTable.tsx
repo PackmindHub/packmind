@@ -27,6 +27,8 @@ import {
   RunDistribution,
   useRunDistribution,
 } from '../RunDistribution/RunDistribution';
+import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
+import { routes } from '../../../../shared/utils/routes';
 
 export type RepositoryTargetTableProps = {
   orgSlug?: string;
@@ -37,15 +39,15 @@ export type RepositoryTargetTableProps = {
 };
 
 const TABLE_COLUMNS: PMTableColumn[] = [
-  { key: 'name', header: 'Name', width: '42%', grow: true },
+  { key: 'name', header: 'Name', grow: true },
   {
     key: 'version',
     header: 'Version (deployed → latest)',
-    width: '28%',
     align: 'center',
+    grow: true,
   },
-  { key: 'status', header: 'Status', width: '15%', align: 'center' },
-  { key: 'action', header: 'Action', width: '15%', align: 'center' },
+  { key: 'status', header: 'Status', align: 'center' },
+  { key: 'action', header: 'Action', align: 'center' },
 ];
 
 const getGapPalette = (gap: number): 'blue' | 'orange' | 'red' => {
@@ -129,6 +131,8 @@ export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
   standards,
   mode = 'all',
 }) => {
+  const { spaceSlug } = useCurrentSpace();
+
   const filterItems = <T extends { isUpToDate: boolean }>(items: T[]) => {
     if (mode === 'outdated') return items.filter((i) => !i.isUpToDate);
     if (mode === 'up-to-date') return items.filter((i) => i.isUpToDate);
@@ -198,9 +202,11 @@ export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
             <PMText variant="small" color="tertiary">
               Recipe
             </PMText>
-            {orgSlug ? (
+            {orgSlug && spaceSlug ? (
               <PMLink asChild>
-                <Link to={`/org/${orgSlug}/recipes/${d.recipe.id}`}>
+                <Link
+                  to={routes.space.toRecipe(orgSlug, spaceSlug, d.recipe.id)}
+                >
                   {d.recipe.name}
                 </Link>
               </PMLink>
@@ -277,9 +283,15 @@ export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
             <PMText variant="small" color="tertiary">
               Standard
             </PMText>
-            {orgSlug ? (
+            {orgSlug && spaceSlug ? (
               <PMLink asChild>
-                <Link to={`/org/${orgSlug}/standards/${d.standard.id}`}>
+                <Link
+                  to={routes.space.toStandard(
+                    orgSlug,
+                    spaceSlug,
+                    d.standard.id,
+                  )}
+                >
                   {d.standard.name}
                 </Link>
               </PMLink>

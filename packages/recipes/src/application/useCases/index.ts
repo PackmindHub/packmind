@@ -21,6 +21,7 @@ import {
 import { GitHexa } from '@packmind/git';
 import { OrganizationId, UserId } from '@packmind/accounts';
 import { RecipeId } from '@packmind/shared';
+import { RecipesHexa } from '../../RecipesHexa';
 
 import {
   DeleteRecipeCommand,
@@ -41,6 +42,7 @@ export class RecipeUseCases {
   private readonly _listRecipeVersions: ListRecipeVersionsUsecase;
   private readonly _getRecipeVersion: GetRecipeVersionUsecase;
   private readonly _deleteRecipesBatch: DeleteRecipesBatchUsecase;
+  private _recipesHexa: RecipesHexa | null = null;
 
   constructor(
     private readonly recipesServices: IRecipesServices,
@@ -56,16 +58,12 @@ export class RecipeUseCases {
     );
     this._updateRecipesFromGitHub = new UpdateRecipesFromGitHubUsecase(
       recipesServices.getRecipeService(),
-      recipesServices.getRecipeVersionService(),
       gitHexa,
-      recipesServices.getRecipeSummaryService(),
       this.deploymentPort,
     );
     this._updateRecipesFromGitLab = new UpdateRecipesFromGitLabUsecase(
       recipesServices.getRecipeService(),
-      recipesServices.getRecipeVersionService(),
       gitHexa,
-      recipesServices.getRecipeSummaryService(),
       this.deploymentPort,
     );
     this._updateRecipeFromUI = new UpdateRecipeFromUIUsecase(
@@ -138,9 +136,10 @@ export class RecipeUseCases {
 
   public findRecipeBySlug(
     slug: string,
+    organizationId: OrganizationId,
     opts?: Pick<QueryOption, 'includeDeleted'>,
   ) {
-    return this._findRecipeBySlug.findRecipeBySlug(slug, opts);
+    return this._findRecipeBySlug.findRecipeBySlug(slug, organizationId, opts);
   }
 
   public listRecipesByOrganization(organizationId: OrganizationId) {
@@ -168,17 +167,28 @@ export class RecipeUseCases {
     // Need to recreate the webhook use cases with the new deployment port
     this._updateRecipesFromGitHub = new UpdateRecipesFromGitHubUsecase(
       this.recipesServices.getRecipeService(),
-      this.recipesServices.getRecipeVersionService(),
       this.gitHexa,
-      this.recipesServices.getRecipeSummaryService(),
       deploymentPort,
     );
     this._updateRecipesFromGitLab = new UpdateRecipesFromGitLabUsecase(
       this.recipesServices.getRecipeService(),
-      this.recipesServices.getRecipeVersionService(),
       this.gitHexa,
-      this.recipesServices.getRecipeSummaryService(),
       deploymentPort,
     );
+
+    // Re-inject RecipesHexa if it was previously set
+    if (this._recipesHexa) {
+      this._updateRecipesFromGitHub.setRecipesHexa(this._recipesHexa);
+      this._updateRecipesFromGitLab.setRecipesHexa(this._recipesHexa);
+    }
+  }
+
+  /**
+   * Set RecipesHexa reference for webhook use cases to enable delayed job access
+   */
+  setRecipesHexa(recipesHexa: RecipesHexa): void {
+    this._recipesHexa = recipesHexa;
+    this._updateRecipesFromGitHub.setRecipesHexa(recipesHexa);
+    this._updateRecipesFromGitLab.setRecipesHexa(recipesHexa);
   }
 }

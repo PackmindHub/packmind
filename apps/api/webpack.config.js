@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 const { join, resolve } = require('path');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 const getOssWebpackPaths = require('./webpack.paths.oss');
 const getProprietaryWebpackPaths = require('./webpack.paths.proprietary');
 
@@ -33,7 +34,7 @@ module.exports = {
   },
 
   resolve: {
-    extensions: ['.ts', '.js'],
+    extensions: ['.ts', '.js', '.wasm'],
     alias: getWebpackPaths(__dirname),
   },
 
@@ -49,23 +50,58 @@ module.exports = {
         },
         exclude: /node_modules/,
       },
+      {
+        test: /\.wasm$/,
+        type: 'asset/resource',
+      },
     ],
+  },
+
+  experiments: {
+    asyncWebAssembly: true,
   },
 
   plugins: [
     new ForkTsCheckerWebpackPlugin({
       async: true,
-      typescript: { configFile: join(__dirname, 'tsconfig.app.json') },
+      typescript: {
+        configFile: join(__dirname, 'tsconfig.app.json'),
+        diagnosticOptions: {
+          semantic: true,
+          syntactic: true,
+        },
+      },
+      issue: {
+        // Exclude web-tree-sitter module not found errors since webpack handles them correctly
+        exclude: [
+          { file: '**/node_modules/**' },
+          { origin: 'typescript', code: 'TS2307', file: '**/*Parser.ts' },
+        ],
+      },
+    }),
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          // Copy all WASM files (including versioned tree-sitter files for PHP)
+          from: join(__dirname, '../../packages/linter-ast/res/*.wasm'),
+          to: join(__dirname, '../../dist/apps/api/[name][ext]'),
+        },
+      ],
     }),
   ],
 
   externals: ({ request }, callback) => {
-    // Bundle @packmind packages
+    // Bundle all @packmind packages (including linter-ast with tree-sitter dependencies)
     if (request?.startsWith('@packmind/')) {
       return callback();
     }
 
-    // Externalize npm packages (but not @packmind)
+    // Bundle web-tree-sitter (needed by linter-ast)
+    if (request === 'web-tree-sitter') {
+      return callback();
+    }
+
+    // Externalize npm packages (but not @packmind or web-tree-sitter)
     if (/^[a-z@][a-z.\-_0-9/]*$/i.test(request)) {
       return callback(null, 'commonjs ' + request);
     }

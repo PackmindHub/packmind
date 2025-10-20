@@ -14,15 +14,17 @@ register({
   },
 });
 
+/**
+ * Docker DataSource configuration for local development migrations.
+ * Uses environment variables and TypeScript migration files.
+ */
 export default new DataSource({
   type: 'postgres',
-  host: 'packmind-postgres',
-  port: 5432,
-  username: 'postgres',
-  password: 'postgres',
-  database: 'packmind',
+  url: process.env.DATABASE_URL,
   entities: [
     /*...*/
   ],
   migrations: ['src/migrations/*.ts'],
+  synchronize: false,
+  logging: process.env.NODE_ENV !== 'production',
 });

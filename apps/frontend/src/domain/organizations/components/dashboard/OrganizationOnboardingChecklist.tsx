@@ -23,6 +23,8 @@ import { useGetUsersInMyOrganizationQuery } from '../../../accounts/api/queries/
 import { InviteUsersDialog } from '../../../accounts/components';
 import { OrganizationId } from '@packmind/accounts/types';
 import { useGetStandardsQuery } from '../../../standards/api/queries/StandardsQueries';
+import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
+import { routes } from '../../../../shared/utils/routes';
 
 const ItemRow: React.FC<{
   done: boolean;
@@ -56,6 +58,7 @@ const ItemRow: React.FC<{
 export const OrganizationOnboardingChecklist: React.FC = () => {
   const { organization } = useAuthContext();
   const [inviteOpen, setInviteOpen] = React.useState(false);
+  const { spaceSlug } = useCurrentSpace();
 
   // Data sources for auto-checks
   const orgId: OrganizationId = organization?.id || ('' as OrganizationId);
@@ -100,7 +103,7 @@ export const OrganizationOnboardingChecklist: React.FC = () => {
               cta={
                 !hasProvider ? (
                   <PMButton asChild size="xs" variant="secondary">
-                    <NavLink to={`/org/${orgSlug}/settings/git`}>
+                    <NavLink to={routes.org.toSettingsGit(orgSlug)}>
                       Go to Git settings
                     </NavLink>
                   </PMButton>
@@ -121,7 +124,7 @@ export const OrganizationOnboardingChecklist: React.FC = () => {
               cta={
                 !hasRepository ? (
                   <PMButton asChild size="xs" variant="secondary">
-                    <NavLink to={`/org/${orgSlug}/settings/git`}>
+                    <NavLink to={routes.org.toSettingsGit(orgSlug)}>
                       Add repositories
                     </NavLink>
                   </PMButton>
@@ -140,9 +143,11 @@ export const OrganizationOnboardingChecklist: React.FC = () => {
                   : 'Start by creating a standard that describes a coding practice.'
               }
               cta={
-                !hasStandard ? (
+                !hasStandard && spaceSlug ? (
                   <PMButton asChild size="xs" variant="secondary">
-                    <NavLink to={`/org/${orgSlug}/standards/create`}>
+                    <NavLink
+                      to={routes.space.toCreateStandard(orgSlug, spaceSlug)}
+                    >
                       Create standard
                     </NavLink>
                   </PMButton>
@@ -163,7 +168,7 @@ export const OrganizationOnboardingChecklist: React.FC = () => {
               cta={
                 !hasAnyDeployment ? (
                   <PMButton asChild size="xs" variant="secondary">
-                    <NavLink to={`/org/${orgSlug}/deployments`}>
+                    <NavLink to={routes.org.toDeployments(orgSlug)}>
                       View deployments
                     </NavLink>
                   </PMButton>
@@ -205,7 +210,7 @@ export const OrganizationOnboardingChecklist: React.FC = () => {
               }
               cta={
                 <PMButton asChild size="xs" variant="secondary">
-                  <NavLink to={`/org/${orgSlug}/account-settings`}>
+                  <NavLink to={routes.org.toAccountSettings(orgSlug)}>
                     Open account settings
                   </NavLink>
                 </PMButton>

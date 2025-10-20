@@ -57,6 +57,7 @@ services:
     entrypoint: node main.js --host=0.0.0.0 --verbose
     environment:
       DATABASE_URL: postgres://postgres:postgres@packmind-prod-postgres:5432/packmind
+      REDIS_URI: ${REDIS_URI:-redis://localhost:6379}
     depends_on:
       install-mcp-server:
         condition: service_completed_successfully

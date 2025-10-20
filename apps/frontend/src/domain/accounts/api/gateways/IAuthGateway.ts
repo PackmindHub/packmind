@@ -10,6 +10,7 @@ import {
 } from '@packmind/accounts/types';
 import {
   PublicGateway,
+  Gateway,
   ICheckEmailAvailabilityUseCase,
   IActivateUserAccountUseCase,
   IRequestPasswordResetUseCase,
@@ -75,7 +76,7 @@ export interface IAuthGateway {
   getMe(): Promise<MeResponse>;
   getMcpToken(): Promise<TokenResponse>;
   getMcpURL(): Promise<{ url: string }>;
-  generateApiKey: PublicGateway<IGenerateApiKeyUseCase>;
+  generateApiKey: Gateway<IGenerateApiKeyUseCase>;
   getCurrentApiKey: PublicGateway<IGetCurrentApiKeyUseCase>;
   validateInvitationToken(token: string): Promise<ValidateInvitationResponse>;
   activateUserAccount: PublicGateway<IActivateUserAccountUseCase>;

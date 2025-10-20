@@ -9,6 +9,7 @@ import { pmTabsRecipe } from '../components/navigation/PMTabs/PMTabs.recipe';
 import { pmComboboxRecipe } from '../components/form/PMCombobox/PMCombobox.recipe';
 import { pmToasterRecipe } from '../components/feedback/PMToaster/PMToaster.recipe';
 import { pmCheckboxCard } from '../components/form/PMCheckboxCard/PMCheckboxCard.recipe';
+import { pmSegmentedControl } from '../components/form/PMSegmentedControl/PMSegmentedControl.recipe';
 export const packmindTheme = (preflight: boolean) =>
   defineConfig({
     preflight,
@@ -147,6 +148,7 @@ export const packmindTheme = (preflight: boolean) =>
         combobox: pmComboboxRecipe,
         toast: pmToasterRecipe,
         checkboxCard: pmCheckboxCard,
+        segmentGroup: pmSegmentedControl,
       },
       semanticTokens: {
         colors: {

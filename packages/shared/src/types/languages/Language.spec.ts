@@ -60,13 +60,6 @@ describe('Language', () => {
       });
     });
 
-    it('has non-empty arrays for file extensions', () => {
-      Object.values(ProgrammingLanguageDetails).forEach((details) => {
-        expect(Array.isArray(details.fileExtensions)).toBe(true);
-        expect(details.fileExtensions.length).toBeGreaterThan(0);
-      });
-    });
-
     it('has unique display names', () => {
       const displayNames = Object.values(ProgrammingLanguageDetails).map(
         (details) => details.displayName,

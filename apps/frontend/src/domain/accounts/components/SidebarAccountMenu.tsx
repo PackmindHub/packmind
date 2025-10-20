@@ -11,6 +11,8 @@ import { useSignOutMutation } from '../api/queries/AuthQueries';
 import { useNavigate } from 'react-router';
 import { useAuthContext } from '../hooks/useAuthContext';
 import { LuLogOut, LuSettings } from 'react-icons/lu';
+import { Analytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/analytics';
+import { routes } from '../../../shared/utils/routes';
 
 export const SidebarAccountMenu: React.FunctionComponent = () => {
   const signOutMutation = useSignOutMutation();
@@ -23,6 +25,11 @@ export const SidebarAccountMenu: React.FunctionComponent = () => {
 
     signOutMutation.mutate(undefined, {
       onSuccess: () => {
+        try {
+          Analytics.reset();
+        } catch {
+          // ignore analytics reset error
+        }
         navigate(redirectPath);
       },
       onError: (error) => {
@@ -35,8 +42,8 @@ export const SidebarAccountMenu: React.FunctionComponent = () => {
   const handleSettings = () => {
     const orgSlug = organization?.slug;
     const redirectPath = orgSlug
-      ? `/org/${orgSlug}/account-settings`
-      : '/sign-in';
+      ? routes.org.toAccountSettings(orgSlug)
+      : routes.auth.toSignIn();
 
     navigate(redirectPath);
   };

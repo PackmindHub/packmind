@@ -395,7 +395,7 @@ describe('UserService', () => {
             password,
             createOrganizationId(organizationId),
           ),
-        ).rejects.toThrow(`Email '${email}' already exists`);
+        ).rejects.toThrow(`Email '***@***' already exists`);
 
         expect(
           mockUserRepository.findByEmailCaseInsensitive,
@@ -422,7 +422,7 @@ describe('UserService', () => {
             password,
             createOrganizationId(organizationId),
           ),
-        ).rejects.toThrow(`Email '${email}' already exists`);
+        ).rejects.toThrow(`Email '***@***' already exists`);
 
         expect(
           mockUserRepository.findByEmailCaseInsensitive,

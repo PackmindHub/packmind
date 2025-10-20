@@ -13,15 +13,27 @@ import {
   targetFactory,
 } from '@packmind/deployments/test';
 import { gitRepoFactory } from '@packmind/git/test/gitRepoFactory';
-import { RepositoryDeploymentStatus, createTargetId } from '@packmind/shared';
+import {
+  RepositoryDeploymentStatus,
+  createTargetId,
+} from '@packmind/shared/types';
 
 const renderWithProvider = (ui: React.ReactElement) => {
   return render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={['/org/test-org/space/test-space']}>
       <UIProvider>{ui}</UIProvider>
     </MemoryRouter>,
   );
 };
+
+// Mock useCurrentSpace hook
+jest.mock('../../../spaces/hooks/useCurrentSpace', () => ({
+  useCurrentSpace: () => ({
+    spaceId: 'space-id-1',
+    spaceSlug: 'test-space',
+    spaceName: 'Test Space',
+  }),
+}));
 
 // Mock PMTable to avoid internal UI hook/state issues in tests
 jest.mock('@packmind/ui', () => {

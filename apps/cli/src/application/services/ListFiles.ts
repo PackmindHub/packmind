@@ -17,12 +17,14 @@ export class ListFiles {
     const normalizedExtensions = extensions.map((ext) =>
       ext.startsWith('.') ? ext : `.${ext}`,
     );
+    const includeAllExtensions = normalizedExtensions.length === 0;
 
     await this.findFilesRecursively(
       directoryPath,
       normalizedExtensions,
       excludes,
       results,
+      includeAllExtensions,
     );
 
     return results;
@@ -33,6 +35,7 @@ export class ListFiles {
     extensions: string[],
     excludes: string[],
     results: FileResult[],
+    includeAllExtensions: boolean,
   ): Promise<void> {
     try {
       const entries = await fs.readdir(directoryPath, { withFileTypes: true });
@@ -51,11 +54,12 @@ export class ListFiles {
             extensions,
             excludes,
             results,
+            includeAllExtensions,
           );
         } else if (entry.isFile()) {
           const fileExtension = path.extname(entry.name);
 
-          if (extensions.includes(fileExtension)) {
+          if (includeAllExtensions || extensions.includes(fileExtension)) {
             try {
               const content = await fs.readFile(fullPath, 'utf-8');
               results.push({

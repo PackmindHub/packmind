@@ -9,6 +9,7 @@
     "tslib": "^2.3.0",
     "@packmind/accounts": "*",
     "express": "^5.1.0",
-    "ts-jest": "^29.4.1"
+    "ts-jest": "^29.4.1",
+    "@nestjs/common": "^11.1.6"
   }
 }

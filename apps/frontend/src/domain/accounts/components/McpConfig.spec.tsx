@@ -186,7 +186,7 @@ describe('McpConfig', () => {
     };
 
     const expectedCliCommand =
-      'claude mcp add packmind https://mcp.packmind.com --header "Authorization=Bearer test-token-123"';
+      'claude mcp add --transport http packmind https://mcp.packmind.com --header "Authorization: Bearer test-token-123"';
 
     beforeEach(async () => {
       const mockMutation = createMockMutation({

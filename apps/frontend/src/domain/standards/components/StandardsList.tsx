@@ -26,12 +26,15 @@ import { STANDARD_MESSAGES } from '../constants/messages';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { GETTING_STARTED_CREATE_DIALOG } from '../../organizations/components/dashboard/GettingStartedWidget';
 import { GettingStartedLearnMoreDialog } from '../../organizations/components/dashboard/GettingStartedLearnMoreDialog';
+import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
+import { routes } from '../../../shared/utils/routes';
 
 interface StandardsListProps {
   orgSlug?: string;
 }
 
 export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
+  const { spaceSlug } = useCurrentSpace();
   const { data: standards, isLoading, isError } = useGetStandardsQuery();
   const deleteBatchMutation = useDeleteStandardsBatchMutation();
   const [tableData, setTableData] = React.useState<PMTableRow[]>([]);
@@ -119,9 +122,9 @@ export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
           <PMLink asChild>
             <Link
               to={
-                orgSlug
-                  ? `/org/${orgSlug}/standards/${standard.id}`
-                  : `/standards/${standard.id}`
+                orgSlug && spaceSlug
+                  ? routes.space.toStandard(orgSlug, spaceSlug, standard.id)
+                  : `#`
               }
             >
               {standard.name}
@@ -256,9 +259,13 @@ export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
               buttonLabel="Create from your code"
               buttonSize="sm"
             />
-            <Link to={`/org/${orgSlug}/standards/create`}>
-              <PMButton variant="secondary">Create from scratch</PMButton>
-            </Link>
+            {spaceSlug && (
+              <Link
+                to={routes.space.toCreateStandard(orgSlug || '', spaceSlug)}
+              >
+                <PMButton variant="secondary">Create from scratch</PMButton>
+              </Link>
+            )}
           </PMHStack>
         </PMEmptyState>
       )}

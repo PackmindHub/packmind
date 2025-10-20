@@ -88,8 +88,9 @@ export const StandardSchema = new EntitySchema<
     },
     {
       name: 'idx_standard_slug',
-      columns: ['slug'],
+      columns: ['slug', 'organizationId'],
       unique: true,
+      where: 'deleted_at IS NULL',
     },
   ],
 });

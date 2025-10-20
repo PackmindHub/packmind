@@ -14,10 +14,8 @@ x-database-url: &database-url
   DATABASE_URL: postgres://postgres:postgres@packmind-postgres:5432/packmind
 
 x-redis-config: &redis-config
-  REDIS_HOST: packmind-redis
-  REDIS_PORT: '6379'
-  # REDIS_USER: ""  # Optional - uncomment if Redis auth needed
-  # REDIS_PASSWORD: ""  # Optional - uncomment if Redis auth needed
+  REDIS_URI: ${REDIS_URI:-redis://packmind-redis:6379}
+  # For authenticated Redis, set REDIS_URI like: redis://username:password@packmind-redis:6379
 
 x-openai-config: &openai-config
   OPENAI_API_KEY: ${OPENAI_API_KEY:-} # Set via environment variable to enable calls to OpenAI
@@ -82,7 +80,6 @@ services:
     environment:
       <<: [*database-url, *redis-config, *openai-config]
       RATE_LIMIT_MAX_REQUESTS: 10000
-      PACKMIND_MCP_BASE_URL: http://localhost:8081/mcp
     secrets:
       - encryption_key
       - mcp_jwt_secret_key

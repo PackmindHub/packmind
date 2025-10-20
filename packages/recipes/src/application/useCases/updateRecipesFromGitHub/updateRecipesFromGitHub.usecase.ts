@@ -1,5 +1,4 @@
 import { RecipeService } from '../../services/RecipeService';
-import { RecipeVersionService } from '../../services/RecipeVersionService';
 import { GitHexa } from '@packmind/git';
 import {
   LogLevel,
@@ -9,7 +8,6 @@ import {
   IDeploymentPort,
 } from '@packmind/shared';
 import { createOrganizationId } from '@packmind/accounts';
-import { RecipeSummaryService } from '../../services/RecipeSummaryService';
 import {
   BaseUpdateRecipesFromWebhookUsecase,
   CommonRepoData,
@@ -33,20 +31,10 @@ export class UpdateRecipesFromGitHubUsecase
 {
   constructor(
     recipeService: RecipeService,
-    recipeVersionService: RecipeVersionService,
     gitHexa: GitHexa,
-    recipeSummaryService: RecipeSummaryService,
     deploymentPort?: IDeploymentPort,
   ) {
-    super(
-      recipeService,
-      recipeVersionService,
-      gitHexa,
-      recipeSummaryService,
-      origin,
-      deploymentPort,
-      LogLevel.INFO,
-    );
+    super(recipeService, gitHexa, origin, deploymentPort, LogLevel.INFO);
   }
 
   public async execute(

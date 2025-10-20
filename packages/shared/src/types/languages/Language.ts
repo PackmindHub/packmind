@@ -9,6 +9,7 @@ export enum ProgrammingLanguage {
   SCSS = 'SCSS',
   HTML = 'HTML',
   CSHARP = 'CSHARP',
+  GENERIC = 'GENERIC', // Fallback for all unsupported programming languages
   GO = 'GO',
   C = 'C',
   CPP = 'CPP',
@@ -21,10 +22,13 @@ export enum ProgrammingLanguage {
   XML = 'XML',
   BASH = 'BASH',
   MARKDOWN = 'MARKDOWN',
+  RUBY = 'RUBY',
   RUST = 'RUST',
   SAP_ABAP = 'SAP_ABAP',
   SAP_CDS = 'SAP_CDS',
   SAP_HANA_SQL = 'SAP_HANA_SQL',
+  SWIFT = 'SWIFT',
+  PROPERTIES = 'PROPERTIES',
 }
 
 export type ProgrammingLanguageInfo = {
@@ -36,6 +40,10 @@ export const ProgrammingLanguageDetails: Record<
   ProgrammingLanguage,
   ProgrammingLanguageInfo
 > = {
+  [ProgrammingLanguage.GENERIC]: {
+    displayName: 'Generic',
+    fileExtensions: [],
+  },
   [ProgrammingLanguage.JAVASCRIPT]: {
     displayName: 'JavaScript',
     fileExtensions: ['js'],
@@ -128,6 +136,10 @@ export const ProgrammingLanguageDetails: Record<
     displayName: 'Rust',
     fileExtensions: ['rs'],
   },
+  [ProgrammingLanguage.RUBY]: {
+    displayName: 'Ruby',
+    fileExtensions: ['rb'],
+  },
   [ProgrammingLanguage.SAP_ABAP]: {
     displayName: 'SAP ABAP',
     fileExtensions: ['abap', 'ab4'],
@@ -144,6 +156,14 @@ export const ProgrammingLanguageDetails: Record<
       'hdbview',
       'hdbcalculationview',
     ],
+  },
+  [ProgrammingLanguage.SWIFT]: {
+    displayName: 'Swift',
+    fileExtensions: ['swift'],
+  },
+  [ProgrammingLanguage.PROPERTIES]: {
+    displayName: 'Properties',
+    fileExtensions: ['properties'],
   },
 };
 

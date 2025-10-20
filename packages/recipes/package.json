@@ -5,17 +5,16 @@
   "type": "commonjs",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
-  "scripts": {
-    "test": "jest"
-  },
   "dependencies": {
     "tslib": "^2.3.0",
     "typeorm": "0.3.25",
     "@packmind/shared": "*",
     "@packmind/git": "*",
+    "@packmind/jobs": "*",
     "ts-jest": "^29.4.1",
     "@packmind/accounts": "*",
     "uuid": "^11.1.0",
-    "slug": "^11.0.0"
+    "slug": "^11.0.0",
+    "bullmq": "^5.58.2"
   }
 }

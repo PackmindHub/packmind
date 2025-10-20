@@ -125,11 +125,14 @@ describe('StandardRepository', () => {
     expect(foundStandard).toEqual(standard);
   });
 
-  it('can find a standard by slug', async () => {
+  it('can find a standard by slug and organization', async () => {
     const standard = standardFactory({ slug: 'unique-slug' });
     await standardRepository.add(standard);
 
-    const foundStandard = await standardRepository.findBySlug('unique-slug');
+    const foundStandard = await standardRepository.findBySlug(
+      'unique-slug',
+      standard.organizationId,
+    );
     expect(foundStandard).toMatchObject({
       id: standard.id,
       name: standard.name,
@@ -168,8 +171,11 @@ describe('StandardRepository', () => {
     });
 
     it('returns null for non-existent slug', async () => {
-      const foundStandard =
-        await standardRepository.findBySlug('non-existent-slug');
+      const organizationId = createOrganizationId(uuidv4());
+      const foundStandard = await standardRepository.findBySlug(
+        'non-existent-slug',
+        organizationId,
+      );
       expect(foundStandard).toBeNull();
     });
 

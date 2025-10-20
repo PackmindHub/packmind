@@ -7,6 +7,13 @@ import { PackmindServices } from '../services/PackmindServices';
 import { IPackmindRepositories } from '../../domain/repositories/IPackmindRepositories';
 import { LintViolation } from '../../domain/entities/LintViolation';
 import { minimatch } from 'minimatch';
+import {
+  ExecuteLinterProgramsCommand,
+  LinterExecutionProgram,
+  LinterExecutionViolation,
+  ProgrammingLanguage,
+  stringToProgrammingLanguage,
+} from '@packmind/shared';
 
 export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
   constructor(
@@ -29,11 +36,11 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
   ): Promise<LintFilesInDirectoryResult> {
     const { path } = command;
 
-    // Step 1: List TypeScript files in the directory (hardcoded extensions and excludes)
+    // Step 1: List files in the directory excluding ignored folders
     const files = await this.services.listFiles.listFilesInDirectory(
       path,
-      ['.ts'],
-      ['node_modules', 'dist'],
+      [],
+      ['node_modules', 'dist', '.min.', '.map.', '.git'],
     );
 
     // Step 2: Get Git remote URL
@@ -51,6 +58,10 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
 
     for (const file of files) {
       const fileViolations: LintViolation['violations'] = [];
+      const programsByLanguage = new Map<
+        ProgrammingLanguage,
+        LinterExecutionProgram[]
+      >();
 
       for (const standard of detectionPrograms.standards) {
         // Check if this file matches the standard's scope
@@ -58,37 +69,59 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
           continue; // Skip this standard if file doesn't match scope
         }
 
+        const fileExtension = this.extractExtensionFromFile(file.path);
+        const fileLanguage = this.resolveProgrammingLanguage(fileExtension);
+
         for (const rule of standard.rules) {
           for (const activeProgram of rule.activeDetectionPrograms) {
             try {
-              const results =
-                await this.services.astExecutorService.executeProgram(
-                  activeProgram.detectionProgram.code,
-                  file.content,
+              const programLanguage = this.resolveProgrammingLanguage(
+                activeProgram.language,
+              );
+
+              if (!programLanguage) {
+                console.error(
+                  `Unsupported language "${activeProgram.language}" for file ${file.path}`,
                 );
+                continue;
+              }
 
-              // Convert results to violations with rule and standard information
-              // Extract filename from rule content if it's a path
-              const ruleName = rule.content.includes('/')
-                ? rule.content.split('/').pop()?.replace('.js', '') ||
-                  rule.content
-                : rule.content;
+              const programsForLanguage =
+                programsByLanguage.get(programLanguage) ?? [];
 
-              const ruleViolations = results.map((result) => ({
-                line: result.line,
-                character: result.character,
-                rule: ruleName,
-                standard: standard.slug,
-              }));
+              programsForLanguage.push({
+                code: activeProgram.detectionProgram.code,
+                ruleContent: rule.content,
+                standardSlug: standard.slug,
+                sourceCodeState: activeProgram.detectionProgram.sourceCodeState,
+                language: fileLanguage,
+              });
 
-              fileViolations.push(...ruleViolations);
+              programsByLanguage.set(programLanguage, programsForLanguage);
             } catch (error) {
               // Log error but continue with other programs
               console.error(
-                `Error executing program for file ${file.path}: ${error}`,
+                `Error preparing program for file ${file.path}: ${error}`,
               );
             }
           }
+        }
+      }
+
+      for (const [language, programs] of programsByLanguage.entries()) {
+        try {
+          const result = await this.executeProgramsForFile({
+            filePath: file.path,
+            fileContent: file.content,
+            language,
+            programs,
+          });
+
+          fileViolations.push(...result);
+        } catch (error) {
+          console.error(
+            `Error executing programs for file ${file.path} (${language}): ${error}`,
+          );
         }
       }
 
@@ -120,5 +153,31 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
         standardsChecked,
       },
     };
+  }
+
+  private resolveProgrammingLanguage(
+    language: string,
+  ): ProgrammingLanguage | null {
+    try {
+      return stringToProgrammingLanguage(language);
+    } catch (error) {
+      console.error(`Unsupported programming language "${language}": ${error}`);
+      return null;
+    }
+  }
+
+  private async executeProgramsForFile(
+    command: ExecuteLinterProgramsCommand,
+  ): Promise<LinterExecutionViolation[]> {
+    const result = await this.services.linterExecutionUseCase.execute(command);
+    return result.violations;
+  }
+
+  public extractExtensionFromFile(filePath: string): string {
+    const lastDotIndex = filePath.lastIndexOf('.');
+    if (lastDotIndex === -1 || lastDotIndex === filePath.length - 1) {
+      return '';
+    }
+    return filePath.substring(lastDotIndex + 1);
   }
 }

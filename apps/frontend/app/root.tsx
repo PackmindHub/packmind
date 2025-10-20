@@ -7,7 +7,7 @@ import {
   type MetaFunction,
   type LinksFunction,
 } from 'react-router';
-import { initSentry } from '../src/services/api/SentryService';
+import { initSentry } from '../src/services/vendors/SentryService';
 import {
   PMHeading,
   PMSpinner,

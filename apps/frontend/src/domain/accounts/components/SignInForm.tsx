@@ -4,6 +4,7 @@ import { SignInUserResponse } from '@packmind/accounts/types';
 import SignInCredentialsForm from './SignInCredentialsForm';
 import OrganizationSelectionForm from './OrganizationSelectionForm';
 import OrganizationCreationForm from './OrganizationCreationForm';
+import { routes } from '../../../shared/utils/routes';
 
 export default function SignInForm() {
   const [signInResult, setSignInResult] = useState<SignInUserResponse | null>(
@@ -14,7 +15,7 @@ export default function SignInForm() {
   const handleSignInSuccess = (data: SignInUserResponse) => {
     // If user belongs to a single organization, redirect immediately
     if (data.organization) {
-      navigate(`/org/${data.organization.slug}`);
+      navigate(routes.org.toDashboard(data.organization.slug));
     } else if (data.organizations) {
       // Store the result to show organization selection
       setSignInResult(data);

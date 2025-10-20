@@ -4,7 +4,7 @@ import {
 } from './addRuleToStandard.usecase';
 import { StandardService } from '../../services/StandardService';
 import { StandardVersionService } from '../../services/StandardVersionService';
-import { StandardSummaryService } from '../../services/StandardSummaryService';
+import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSummaryDelayedJob';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { Standard, createStandardId } from '../../../domain/entities/Standard';
 import { StandardVersion } from '../../../domain/entities/StandardVersion';
@@ -28,7 +28,7 @@ describe('AddRuleToStandardUsecase', () => {
   let addRuleToStandardUsecase: AddRuleToStandardUsecase;
   let standardService: jest.Mocked<StandardService>;
   let standardVersionService: jest.Mocked<StandardVersionService>;
-  let standardSummaryService: jest.Mocked<StandardSummaryService>;
+  let generateStandardSummaryDelayedJob: jest.Mocked<GenerateStandardSummaryDelayedJob>;
   let ruleRepository: jest.Mocked<IRuleRepository>;
   let ruleExampleRepository: jest.Mocked<IRuleExampleRepository>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
@@ -62,10 +62,10 @@ describe('AddRuleToStandardUsecase', () => {
       prepareForGitPublishing: jest.fn(),
     } as unknown as jest.Mocked<StandardVersionService>;
 
-    // Mock StandardSummaryService
-    standardSummaryService = {
-      createStandardSummary: jest.fn(),
-    } as unknown as jest.Mocked<StandardSummaryService>;
+    // Mock GenerateStandardSummaryDelayedJob
+    generateStandardSummaryDelayedJob = {
+      addJob: jest.fn(),
+    } as unknown as jest.Mocked<GenerateStandardSummaryDelayedJob>;
 
     // Mock RuleRepository
     ruleRepository = {
@@ -88,16 +88,14 @@ describe('AddRuleToStandardUsecase', () => {
     stubbedLogger = stubLogger();
 
     // Setup default mock implementations
-    standardSummaryService.createStandardSummary.mockResolvedValue(
-      'Generated summary for the standard with the new rule',
-    );
+    generateStandardSummaryDelayedJob.addJob.mockResolvedValue('job-id-123');
 
     addRuleToStandardUsecase = new AddRuleToStandardUsecase(
       standardService,
       standardVersionService,
       ruleRepository,
       ruleExampleRepository,
-      standardSummaryService,
+      generateStandardSummaryDelayedJob,
       stubbedLogger,
     );
   });
@@ -192,9 +190,10 @@ describe('AddRuleToStandardUsecase', () => {
         result = await addRuleToStandardUsecase.addRuleToStandard(inputData);
       });
 
-      it('finds the standard by slug', () => {
+      it('finds the standard by slug and organization', () => {
         expect(standardService.findStandardBySlug).toHaveBeenCalledWith(
           inputData.standardSlug,
+          inputData.organizationId,
         );
       });
 
@@ -226,31 +225,32 @@ describe('AddRuleToStandardUsecase', () => {
         );
       });
 
-      it('generates summary for the new version', () => {
-        expect(
-          standardSummaryService.createStandardSummary,
-        ).toHaveBeenCalledWith(
-          {
-            standardId: existingStandard.id,
-            name: existingStandard.name,
-            slug: existingStandard.slug,
-            description: existingStandard.description,
-            version: 3,
-            summary: null,
-            scope: existingStandard.scope,
-          },
-          expect.arrayContaining([
-            expect.objectContaining({
-              content: 'Use assertive names for test cases',
+      it('queues summary generation job for the new version', () => {
+        expect(generateStandardSummaryDelayedJob.addJob).toHaveBeenCalledWith(
+          expect.objectContaining({
+            userId,
+            organizationId,
+            standardVersion: expect.objectContaining({
+              standardId: existingStandard.id,
+              name: existingStandard.name,
+              slug: existingStandard.slug,
+              description: existingStandard.description,
+              version: 3,
+              scope: existingStandard.scope,
             }),
-            expect.objectContaining({
-              content: 'Clean mocks after each test',
-            }),
-            expect.objectContaining({
-              content:
-                'Use descriptive test names that explain expected behavior',
-            }),
-          ]),
+            rules: expect.arrayContaining([
+              expect.objectContaining({
+                content: 'Use assertive names for test cases',
+              }),
+              expect.objectContaining({
+                content: 'Clean mocks after each test',
+              }),
+              expect.objectContaining({
+                content:
+                  'Use descriptive test names that explain expected behavior',
+              }),
+            ]),
+          }),
         );
       });
 
@@ -272,7 +272,6 @@ describe('AddRuleToStandardUsecase', () => {
               },
             ],
             scope: existingStandard.scope,
-            summary: 'Generated summary for the standard with the new rule',
             userId,
           }),
         );
@@ -280,57 +279,6 @@ describe('AddRuleToStandardUsecase', () => {
 
       it('returns the new standard version', () => {
         expect(result).toEqual(newStandardVersion);
-      });
-    });
-
-    describe('when summary generation fails', () => {
-      it('continues without summary and logs the error', async () => {
-        const inputData: AddRuleToStandardRequest = {
-          standardSlug: 'test-standard',
-          ruleContent: 'Test rule content',
-          organizationId,
-          userId,
-        };
-
-        const existingStandard = standardFactory({
-          organizationId,
-          slug: 'test-standard',
-          version: 1,
-        });
-
-        const latestVersion = standardVersionFactory({
-          standardId: existingStandard.id,
-          version: 1,
-        });
-
-        const existingRules = [ruleFactory()];
-        const updatedStandard = standardFactory({ version: 2 });
-        const newVersion = standardVersionFactory({ version: 2 });
-
-        standardService.findStandardBySlug.mockResolvedValue(existingStandard);
-        standardVersionService.getLatestStandardVersion.mockResolvedValue(
-          latestVersion,
-        );
-        ruleRepository.findByStandardVersionId.mockResolvedValue(existingRules);
-        standardService.updateStandard.mockResolvedValue(updatedStandard);
-
-        // Mock summary service to throw error
-        standardSummaryService.createStandardSummary.mockRejectedValue(
-          new Error('AI service unavailable'),
-        );
-
-        standardVersionService.addStandardVersion.mockResolvedValue(newVersion);
-
-        const result =
-          await addRuleToStandardUsecase.addRuleToStandard(inputData);
-
-        expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
-          expect.objectContaining({
-            summary: null, // Should be null when summary generation fails
-          }),
-        );
-
-        expect(result).toEqual(newVersion);
       });
     });
 
@@ -371,8 +319,6 @@ describe('AddRuleToStandardUsecase', () => {
       });
 
       it('throws error for standard belonging to different organization', async () => {
-        const differentOrganizationId = createOrganizationId(uuidv4());
-
         const inputData: AddRuleToStandardRequest = {
           standardSlug: 'test-standard',
           ruleContent: 'Test rule content',
@@ -380,12 +326,9 @@ describe('AddRuleToStandardUsecase', () => {
           userId,
         };
 
-        const existingStandard = standardFactory({
-          organizationId: differentOrganizationId, // Different organization
-          slug: 'test-standard',
-        });
-
-        standardService.findStandardBySlug.mockResolvedValue(existingStandard);
+        // When searching for a standard by slug with the wrong organizationId,
+        // the repository will return null because it filters by organizationId
+        standardService.findStandardBySlug.mockResolvedValue(null);
 
         await expect(
           addRuleToStandardUsecase.addRuleToStandard(inputData),

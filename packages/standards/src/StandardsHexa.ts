@@ -40,14 +40,15 @@ const origin = 'StandardsHexa';
  */
 export class StandardsHexa extends BaseHexa {
   private readonly hexa: StandardsHexaFactory;
-  private readonly standardsAdapter: IStandardsPort;
+  private standardsAdapter?: IStandardsPort;
+  private isInitialized = false;
 
   constructor(
     registry: HexaRegistry,
     opts: Partial<BaseHexaOpts> = { logger: new PackmindLogger(origin) },
   ) {
     super(registry, opts);
-    this.logger.info('Initializing StandardsHexa');
+    this.logger.info('Constructing StandardsHexa');
 
     try {
       // Get the DataSource from the registry
@@ -55,7 +56,6 @@ export class StandardsHexa extends BaseHexa {
       this.logger.debug('Retrieved DataSource from registry');
 
       const gitHexa = registry.get(GitHexa);
-
       // Initialize the hexagon with the shared DataSource
       this.hexa = new StandardsHexaFactory(
         dataSource,
@@ -63,8 +63,31 @@ export class StandardsHexa extends BaseHexa {
         registry,
         this.logger,
       );
+      this.logger.info('StandardsHexa construction completed');
+    } catch (error) {
+      this.logger.error('Failed to construct StandardsHexa', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
 
+  /**
+   * Async initialization phase - must be called after construction.
+   * This initializes delayed jobs and async dependencies.
+   */
+  public override async initialize(): Promise<void> {
+    if (this.isInitialized) {
+      this.logger.debug('StandardsHexa already initialized');
+      return;
+    }
+
+    this.logger.info('Initializing StandardsHexa (async phase)');
+
+    try {
+      await this.hexa.initialize();
       this.standardsAdapter = new StandardsAdapter(this.hexa);
+      this.isInitialized = true;
       this.logger.info('StandardsHexa initialized successfully');
     } catch (error) {
       this.logger.error('Failed to initialize StandardsHexa', {
@@ -75,7 +98,23 @@ export class StandardsHexa extends BaseHexa {
   }
 
   public getStandardsAdapter(): IStandardsPort {
+    if (!this.standardsAdapter) {
+      throw new Error(
+        'StandardsHexa not initialized. Call initialize() before using.',
+      );
+    }
     return this.standardsAdapter;
+  }
+
+  /**
+   * Internal helper to ensure initialization before use case access
+   */
+  private ensureInitialized(): void {
+    if (!this.isInitialized) {
+      throw new Error(
+        'StandardsHexa not initialized. Call initialize() before using.',
+      );
+    }
   }
 
   /**
@@ -109,6 +148,7 @@ export class StandardsHexa extends BaseHexa {
     userId: UserId;
     scope: string | null;
   }): Promise<Standard> {
+    this.ensureInitialized();
     return this.hexa.useCases.createStandard(params);
   }
 
@@ -124,6 +164,7 @@ export class StandardsHexa extends BaseHexa {
     userId: UserId;
     scope: string | null;
   }): Promise<Standard> {
+    this.ensureInitialized();
     return this.hexa.useCases.createStandardWithExamples(params);
   }
 
@@ -139,6 +180,7 @@ export class StandardsHexa extends BaseHexa {
     userId: UserId;
     scope: string | null;
   }): Promise<Standard> {
+    this.ensureInitialized();
     return this.hexa.useCases.updateStandard(params);
   }
 
@@ -151,6 +193,7 @@ export class StandardsHexa extends BaseHexa {
     organizationId: OrganizationId;
     userId: UserId;
   }): Promise<StandardVersion> {
+    this.ensureInitialized();
     return this.hexa.useCases.addRuleToStandard(params);
   }
 
@@ -160,6 +203,7 @@ export class StandardsHexa extends BaseHexa {
   public async createRuleExample(
     command: CreateRuleExampleCommand,
   ): Promise<RuleExample> {
+    this.ensureInitialized();
     return this.hexa.useCases.createRuleExample(command);
   }
 
@@ -169,6 +213,7 @@ export class StandardsHexa extends BaseHexa {
   public async getRuleExamples(
     command: GetRuleExamplesCommand,
   ): Promise<RuleExample[]> {
+    this.ensureInitialized();
     return this.hexa.useCases.getRuleExamples(command);
   }
 
@@ -178,6 +223,7 @@ export class StandardsHexa extends BaseHexa {
   public async updateRuleExample(
     command: UpdateRuleExampleCommand,
   ): Promise<RuleExample> {
+    this.ensureInitialized();
     return this.hexa.useCases.updateRuleExample(command);
   }
 
@@ -187,6 +233,7 @@ export class StandardsHexa extends BaseHexa {
   public async deleteRuleExample(
     command: DeleteRuleExampleCommand,
   ): Promise<void> {
+    this.ensureInitialized();
     return this.hexa.useCases.deleteRuleExample(command);
   }
 
@@ -194,14 +241,19 @@ export class StandardsHexa extends BaseHexa {
    * Get a standard by its ID
    */
   public async getStandardById(id: StandardId): Promise<Standard | null> {
+    this.ensureInitialized();
     return this.hexa.useCases.getStandardById(id);
   }
 
   /**
-   * Find a standard by its slug
+   * Find a standard by its slug within an organization
    */
-  public async findStandardBySlug(slug: string): Promise<Standard | null> {
-    return this.hexa.useCases.findStandardBySlug(slug);
+  public async findStandardBySlug(
+    slug: string,
+    organizationId: OrganizationId,
+  ): Promise<Standard | null> {
+    this.ensureInitialized();
+    return this.hexa.useCases.findStandardBySlug(slug, organizationId);
   }
 
   /**
@@ -210,6 +262,7 @@ export class StandardsHexa extends BaseHexa {
   public async listStandardsByOrganization(
     organizationId: OrganizationId,
   ): Promise<Standard[]> {
+    this.ensureInitialized();
     return this.hexa
       .getStandardsServices()
       .getStandardService()
@@ -226,6 +279,7 @@ export class StandardsHexa extends BaseHexa {
   public async listStandardVersions(
     standardId: StandardId,
   ): Promise<StandardVersion[]> {
+    this.ensureInitialized();
     return this.hexa.useCases.listStandardVersions(standardId);
   }
 
@@ -236,6 +290,7 @@ export class StandardsHexa extends BaseHexa {
     standardId: StandardId,
     version: number,
   ): Promise<StandardVersion | null> {
+    this.ensureInitialized();
     return this.hexa.useCases.getStandardVersion(standardId, version);
   }
 
@@ -243,6 +298,7 @@ export class StandardsHexa extends BaseHexa {
    * Get rules for a standard (from latest version)
    */
   public async getRulesByStandardId(standardId: StandardId): Promise<Rule[]> {
+    this.ensureInitialized();
     return this.hexa.useCases.getRulesByStandardId(standardId);
   }
 
@@ -252,6 +308,7 @@ export class StandardsHexa extends BaseHexa {
   public async getLatestStandardVersion(
     standardId: StandardId,
   ): Promise<StandardVersion | null> {
+    this.ensureInitialized();
     return this.hexa.useCases.getLatestStandardVersion(standardId);
   }
 
@@ -261,6 +318,7 @@ export class StandardsHexa extends BaseHexa {
   public async getStandardVersionById(
     versionId: StandardVersionId,
   ): Promise<StandardVersion | null> {
+    this.ensureInitialized();
     return this.hexa.useCases.getStandardVersionById(versionId);
   }
 
@@ -275,6 +333,7 @@ export class StandardsHexa extends BaseHexa {
     standardId: StandardId,
     userId: UserId,
   ): Promise<void> {
+    this.ensureInitialized();
     return this.hexa.useCases.deleteStandard(standardId, userId);
   }
 
@@ -285,6 +344,7 @@ export class StandardsHexa extends BaseHexa {
     standardIds: StandardId[],
     userId: UserId,
   ): Promise<void> {
+    this.ensureInitialized();
     return this.hexa.useCases.deleteStandardsBatch(standardIds, userId);
   }
 }

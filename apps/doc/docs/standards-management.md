@@ -28,19 +28,38 @@ Here is a basic example of standard:
 
 You can create a standard directly from your IDE using the MCP server. This is particularly useful when you want to extract coding rules from existing code files.
 
-Use commands like:
+The AI agent will automatically follow a **guided workflow** to ensure high-quality standards. Simply use natural language prompts like:
 
 _"Create a Packmind standard 'Unit tests with Jest' and extract coding rules by analyzing the file @test.spec.ts"_
 
+The agent will:
+
+1. Use the `packmind_create_standard_workflow` tool to get step-by-step guidance
+2. Gather context from your codebase and iterate with you on the draft
+3. Create the standard with rules and code examples using `packmind_create_standard`
+
 Rules are optional when creating a standard through MCP - you can create the standard first and add rules later.
+
+:::tip
+For detailed information about available MCP tools and workflows, see the [MCP Server reference](./mcp-server.md).
+:::
 
 ## Add Rule to an Existing Standard with MCP
 
 While working with your AI Agent, you often provide instructions regarding code guidelines and standards.
 
-To capitalize on it and not keep it locally, you can use one tool from the MCP like this:
+To capitalize on it and not keep it locally, you can use natural language to add rules to existing standards:
 
-_"Add a rule to our standards 'Back-end unit tests' that states that one single expect must be set for each test"_
+_"Add a rule to our standard 'Back-end unit tests' that states that one single expect must be set for each test"_
+
+The agent will:
+
+1. Use the `packmind_add_rule_to_standard_workflow` tool to get guidance
+2. Validate the rule content and ensure it fits the standard's context
+3. Add the rule (with optional code examples) using `packmind_add_rule_to_standard`
+4. Create a new version of the standard
+
+This creates a new version of the standard with the added rule, maintaining a complete version history.
 
 ## Create Standards Through UI
 

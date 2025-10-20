@@ -9,6 +9,7 @@ import {
 import { useSelectOrganizationMutation } from '../api/queries/AuthQueries';
 import { SignInUserResponse } from '@packmind/accounts/types';
 import { isPackmindError } from '../../../services/api/errors/PackmindError';
+import { routes } from '../../../shared/utils/routes';
 
 interface OrganizationSelectionFormProps {
   signInResult: SignInUserResponse;
@@ -47,7 +48,7 @@ export default function OrganizationSelectionForm({
       {
         onSuccess: () => {
           // Navigate to the selected organization
-          navigate(`/org/${selectedOrganizationSlug}`);
+          navigate(routes.org.toDashboard(selectedOrganizationSlug));
         },
         onError: (error) => {
           // Use the actual error message from the server when available

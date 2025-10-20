@@ -1,10 +1,14 @@
-import { BaseHexa, HexaRegistry } from '@packmind/shared';
 import {
-  GenerateProgramCommand,
-  GenerateProgramResponse,
-} from './GenerateProgramCommand';
+  BaseHexa,
+  HexaRegistry,
+  IDeploymentPort,
+  IStandardsPort,
+} from '@packmind/shared';
 
 export class LinterHexa extends BaseHexa {
+  private deploymentAdapter: IDeploymentPort | null = null;
+  private standardsAdapter: IStandardsPort | null = null;
+
   constructor(registry: HexaRegistry) {
     super(registry);
   }
@@ -13,13 +17,14 @@ export class LinterHexa extends BaseHexa {
     // Nothing to do here
   }
 
-  public async generateProgram(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    command: GenerateProgramCommand,
-  ): Promise<GenerateProgramResponse> {
-    return {
-      message: 'Unable to generate program',
-    };
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  public setDeploymentPort(deploymentPort: IDeploymentPort): void {
+    this.deploymentAdapter = deploymentPort;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  public setStandardAdapter(standardsPort: IStandardsPort): void {
+    this.standardsAdapter = standardsPort;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function

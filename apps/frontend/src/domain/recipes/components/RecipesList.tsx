@@ -27,12 +27,15 @@ import { RECIPE_MESSAGES } from '../constants/messages';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { GettingStartedLearnMoreDialog } from '../../organizations/components/dashboard/GettingStartedLearnMoreDialog';
 import { GETTING_STARTED_CREATE_DIALOG } from '../../organizations/components/dashboard/GettingStartedWidget';
+import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
+import { routes } from '../../../shared/utils/routes';
 
 interface RecipesListProps {
   orgSlug: string;
 }
 
 export const RecipesList = ({ orgSlug }: RecipesListProps) => {
+  const { spaceSlug } = useCurrentSpace();
   const { data: recipes, isLoading, isError } = useGetRecipesQuery();
   const deleteBatchMutation = useDeleteRecipesBatchMutation();
   const [tableData, setTableData] = React.useState<PMTableRow[]>([]);
@@ -109,7 +112,13 @@ export const RecipesList = ({ orgSlug }: RecipesListProps) => {
         ),
         name: (
           <PMLink asChild>
-            <Link to={`/org/${orgSlug}/recipes/${recipe.id}`}>
+            <Link
+              to={
+                spaceSlug
+                  ? routes.space.toRecipe(orgSlug, spaceSlug, recipe.id)
+                  : '#'
+              }
+            >
               {recipe.name}
             </Link>
           </PMLink>

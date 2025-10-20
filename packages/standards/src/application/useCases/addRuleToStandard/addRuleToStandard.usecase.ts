@@ -1,20 +1,11 @@
 import { StandardService } from '../../services/StandardService';
 import { StandardVersionService } from '../../services/StandardVersionService';
-import { StandardSummaryService } from '../../services/StandardSummaryService';
+import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSummaryDelayedJob';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { StandardVersion } from '../../../domain/entities/StandardVersion';
-import { Rule, createRuleId } from '../../../domain/entities/Rule';
 import { CreateStandardVersionData } from '../../services/StandardVersionService';
-import {
-  LogLevel,
-  PackmindLogger,
-  AiNotConfigured,
-  RuleExample,
-} from '@packmind/shared';
+import { LogLevel, PackmindLogger, RuleExample } from '@packmind/shared';
 import { OrganizationId, UserId } from '@packmind/accounts';
-import { v4 as uuidv4 } from 'uuid';
-
-import { createStandardVersionId } from '../../../domain/entities/StandardVersion';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 
 const origin = 'AddRuleToStandardUsecase';
@@ -32,7 +23,7 @@ export class AddRuleToStandardUsecase {
     private readonly standardVersionService: StandardVersionService,
     private readonly ruleRepository: IRuleRepository,
     private readonly ruleExampleRepository: IRuleExampleRepository,
-    private readonly standardSummaryService: StandardSummaryService,
+    private readonly generateStandardSummaryDelayedJob: GenerateStandardSummaryDelayedJob,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.DEBUG,
@@ -60,25 +51,15 @@ export class AddRuleToStandardUsecase {
 
     try {
       // Find the standard by slug within the organization
-      const existingStandard =
-        await this.standardService.findStandardBySlug(normalizedSlug);
+      const existingStandard = await this.standardService.findStandardBySlug(
+        normalizedSlug,
+        organizationId,
+      );
       if (!existingStandard) {
-        this.logger.error('Standard not found by slug', {
+        this.logger.error('Standard not found by slug and organization', {
           standardSlug,
           normalizedSlug,
-        });
-        throw new Error(
-          'Standard slug not found, please check current standards first',
-        );
-      }
-
-      // Verify the standard belongs to the same organization
-      if (existingStandard.organizationId !== organizationId) {
-        this.logger.error('Standard does not belong to the user organization', {
-          standardSlug,
-          normalizedSlug,
-          standardOrganizationId: existingStandard.organizationId,
-          userOrganizationId: organizationId,
+          organizationId,
         });
         throw new Error(
           'Standard slug not found, please check current standards first',
@@ -141,57 +122,6 @@ export class AddRuleToStandardUsecase {
         newRuleContent: ruleContent.substring(0, 50) + '...',
       });
 
-      // Generate summary for the new standard version
-      let summary: string | null = null;
-      try {
-        this.logger.debug('Generating summary for new standard version', {
-          rulesCount: allRules.length,
-        });
-
-        // Convert rule data to Rule-like objects for summary generation
-        const ruleEntities: Rule[] = allRules.map((rule) => ({
-          id: createRuleId(uuidv4()), // Temporary ID for summary generation
-          content: rule.content,
-          standardVersionId: createStandardVersionId(uuidv4()), // Temporary ID for summary generation
-        }));
-
-        summary = await this.standardSummaryService.createStandardSummary(
-          {
-            standardId: existingStandard.id,
-            name: existingStandard.name,
-            slug: existingStandard.slug,
-            description: existingStandard.description,
-            version: nextVersion,
-            summary: null,
-            scope: existingStandard.scope,
-          },
-          ruleEntities,
-        );
-        this.logger.debug('Summary generated successfully', {
-          summaryLength: summary.length,
-        });
-      } catch (summaryError) {
-        if (summaryError instanceof AiNotConfigured) {
-          this.logger.warn(
-            'AI service not configured - proceeding without summary',
-            {
-              error: summaryError.message,
-            },
-          );
-        } else {
-          const errorMessage =
-            summaryError instanceof Error
-              ? summaryError.message
-              : String(summaryError);
-          this.logger.error(
-            'Failed to generate summary, proceeding without summary',
-            {
-              error: errorMessage,
-            },
-          );
-        }
-      }
-
       // Create new standard version with existing rules + new rule
       this.logger.debug('Creating new standard version with additional rule');
       const standardVersionData: CreateStandardVersionData = {
@@ -202,7 +132,6 @@ export class AddRuleToStandardUsecase {
         version: nextVersion,
         rules: allRules,
         scope: existingStandard.scope,
-        summary,
         userId, // Track the user who added the rule
       };
 
@@ -227,6 +156,14 @@ export class AddRuleToStandardUsecase {
         organizationId,
         userId,
         totalRulesCount: allRules.length,
+      });
+
+      // Queue summary generation job
+      await this.generateStandardSummaryDelayedJob.addJob({
+        userId,
+        organizationId,
+        standardVersion: newStandardVersion,
+        rules: allRules,
       });
 
       return newStandardVersion;

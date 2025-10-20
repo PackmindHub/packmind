@@ -12,4 +12,8 @@ export abstract class PackmindGateway {
     this._api = api;
     this._endpoint = endpoint;
   }
+
+  protected getFullEndpoint(): string {
+    return `${this._api.baseApiUrl}${this._endpoint}`;
+  }
 }

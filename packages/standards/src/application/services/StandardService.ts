@@ -178,23 +178,40 @@ export class StandardService {
     }
   }
 
-  async findStandardBySlug(slug: string): Promise<Standard | null> {
-    this.logger.info('Finding standard by slug', { slug });
+  async findStandardBySlug(
+    slug: string,
+    organizationId: OrganizationId,
+  ): Promise<Standard | null> {
+    this.logger.info('Finding standard by slug and organization', {
+      slug,
+      organizationId,
+    });
 
     try {
-      const standard = await this.standardRepository.findBySlug(slug);
+      const standard = await this.standardRepository.findBySlug(
+        slug,
+        organizationId,
+      );
       if (standard) {
-        this.logger.info('Standard found by slug successfully', {
-          slug,
-          standardId: standard.id,
-        });
+        this.logger.info(
+          'Standard found by slug and organization successfully',
+          {
+            slug,
+            organizationId,
+            standardId: standard.id,
+          },
+        );
       } else {
-        this.logger.warn('Standard not found by slug', { slug });
+        this.logger.warn('Standard not found by slug and organization', {
+          slug,
+          organizationId,
+        });
       }
       return standard;
     } catch (error) {
-      this.logger.error('Failed to find standard by slug', {
+      this.logger.error('Failed to find standard by slug and organization', {
         slug,
+        organizationId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

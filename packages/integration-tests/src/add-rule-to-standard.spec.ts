@@ -3,27 +3,12 @@ import { User, Organization } from '@packmind/accounts/types';
 import { StandardsHexa, standardsSchemas } from '@packmind/standards';
 import { Standard, StandardVersion } from '@packmind/standards/types';
 import { GitHexa, gitSchemas } from '@packmind/git';
+import { JobsHexa } from '@packmind/jobs';
 import { HexaRegistry } from '@packmind/shared';
 import { makeTestDatasource } from '@packmind/shared/test';
 
 import { DataSource } from 'typeorm';
 import assert from 'assert';
-
-// Mock only Configuration from @packmind/shared
-jest.mock('@packmind/shared', () => {
-  const actual = jest.requireActual('@packmind/shared');
-  return {
-    ...actual,
-    Configuration: {
-      getConfig: jest.fn().mockImplementation((key: string) => {
-        if (key === 'ENCRYPTION_KEY') {
-          return Promise.resolve('random-encryption-key-for-testing');
-        }
-        return Promise.resolve(null);
-      }),
-    },
-  };
-});
 
 describe('Add rule to standard integration', () => {
   let accountsHexa: AccountsHexa;
@@ -49,12 +34,14 @@ describe('Add rule to standard integration', () => {
     registry = new HexaRegistry();
 
     // Register hexas before initialization
+    registry.register(JobsHexa);
     registry.register(GitHexa);
     registry.register(AccountsHexa);
     registry.register(StandardsHexa);
 
     // Initialize the registry with the datasource
     registry.init(dataSource);
+    await registry.initAsync();
 
     // Get initialized hexas
     accountsHexa = registry.get(AccountsHexa);

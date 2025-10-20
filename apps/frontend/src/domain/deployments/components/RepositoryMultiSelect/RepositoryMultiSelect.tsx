@@ -45,7 +45,7 @@ export const RepositoryMultiSelect: React.FC<RepositoryMultiSelectProps> = ({
   const displayValue = (() => {
     if (selectedRepoIds.length === 0) return placeholder;
     const suffix = selectedRepoIds.length === 1 ? 'y' : 'ies';
-    return `${selectedRepoIds.length} repository${suffix} selected`;
+    return `${selectedRepoIds.length} repositor${suffix} selected`;
   })();
 
   return (

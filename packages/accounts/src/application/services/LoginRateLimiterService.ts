@@ -1,6 +1,9 @@
-import { Cache } from '@packmind/shared';
-import { Configuration } from '@packmind/shared';
-import { PackmindLogger } from '@packmind/shared';
+import {
+  Cache,
+  Configuration,
+  PackmindLogger,
+  maskEmail,
+} from '@packmind/shared';
 import { TooManyLoginAttemptsError } from '../../domain/errors/TooManyLoginAttemptsError';
 
 const origin = 'LoginRateLimiterService';
@@ -131,7 +134,7 @@ export class LoginRateLimiterService {
         );
 
         this.logger.info('User login attempt blocked due to rate limiting', {
-          email,
+          email: maskEmail(email),
           attemptsCount: validAttempts.length,
           bannedUntil: bannedUntil.toISOString(),
         });
@@ -149,7 +152,7 @@ export class LoginRateLimiterService {
       }
 
       this.logger.error('Failed to check login rate limiting', {
-        email,
+        email: maskEmail(email),
         error: error instanceof Error ? error.message : String(error),
       });
       // On cache errors, allow login to continue (fail open)
@@ -177,12 +180,12 @@ export class LoginRateLimiterService {
       await this.cache.set(cacheKey, updatedAttempts, banTimeSeconds);
 
       this.logger.info('Recorded failed login attempt', {
-        email,
+        email: maskEmail(email),
         totalAttempts: updatedAttempts.length,
       });
     } catch (error) {
       this.logger.error('Failed to record failed login attempt', {
-        email,
+        email: maskEmail(email),
         error: error instanceof Error ? error.message : String(error),
       });
       // Don't throw on cache errors to avoid breaking login flow
@@ -198,10 +201,12 @@ export class LoginRateLimiterService {
     try {
       await this.cache.invalidate(cacheKey);
 
-      this.logger.info('Cleared login attempts for user', { email });
+      this.logger.info('Cleared login attempts for user', {
+        email: maskEmail(email),
+      });
     } catch (error) {
       this.logger.error('Failed to clear login attempts', {
-        email,
+        email: maskEmail(email),
         error: error instanceof Error ? error.message : String(error),
       });
       // Don't throw on cache errors

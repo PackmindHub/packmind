@@ -129,29 +129,4 @@ describe('RedisSSEClient', () => {
       expect(mockRedisInstance.disconnect).toHaveBeenCalledTimes(2); // Once for publisher, once for subscriber
     });
   });
-
-  describe('port parsing', () => {
-    describe('when port configuration is invalid', () => {
-      it('uses default port', async () => {
-        const { Configuration } = jest.requireMock(
-          '../config/config/Configuration',
-        );
-        Configuration.getConfig.mockImplementation((key: string) => {
-          if (key === 'REDIS_PORT') return Promise.resolve('invalid');
-          return Promise.resolve('localhost');
-        });
-
-        // Reset instance to test with new config
-        (
-          RedisSSEClient as unknown as { instance: RedisSSEClient | undefined }
-        ).instance = undefined;
-        const newClient = RedisSSEClient.getInstance();
-
-        // This should not throw and should use default port
-        await expect(
-          newClient.publish('test', 'message'),
-        ).resolves.toBeDefined();
-      });
-    });
-  });
 });

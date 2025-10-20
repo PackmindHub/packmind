@@ -4,7 +4,7 @@ import {
 } from './updateStandard.usecase';
 import { StandardService } from '../../services/StandardService';
 import { StandardVersionService } from '../../services/StandardVersionService';
-import { StandardSummaryService } from '../../services/StandardSummaryService';
+import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSummaryDelayedJob';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import {
@@ -38,7 +38,7 @@ describe('UpdateStandardUsecase', () => {
   let updateStandardUsecase: UpdateStandardUsecase;
   let standardService: jest.Mocked<StandardService>;
   let standardVersionService: jest.Mocked<StandardVersionService>;
-  let standardSummaryService: jest.Mocked<StandardSummaryService>;
+  let generateStandardSummaryDelayedJob: jest.Mocked<GenerateStandardSummaryDelayedJob>;
   let ruleRepository: jest.Mocked<IRuleRepository>;
   let ruleExampleRepository: jest.Mocked<IRuleExampleRepository>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
@@ -66,10 +66,10 @@ describe('UpdateStandardUsecase', () => {
       prepareForGitPublishing: jest.fn(),
     } as unknown as jest.Mocked<StandardVersionService>;
 
-    // Mock StandardSummaryService
-    standardSummaryService = {
-      createStandardSummary: jest.fn(),
-    } as unknown as jest.Mocked<StandardSummaryService>;
+    // Mock GenerateStandardSummaryDelayedJob
+    generateStandardSummaryDelayedJob = {
+      addJob: jest.fn(),
+    } as unknown as jest.Mocked<GenerateStandardSummaryDelayedJob>;
 
     // Mock RuleRepository
     ruleRepository = {
@@ -97,9 +97,7 @@ describe('UpdateStandardUsecase', () => {
 
     ruleExampleRepository.findByRuleId.mockResolvedValue([]);
 
-    standardSummaryService.createStandardSummary.mockResolvedValue(
-      'Generated summary for the standard',
-    );
+    generateStandardSummaryDelayedJob.addJob.mockResolvedValue('job-id-123');
 
     stubbedLogger = stubLogger();
 
@@ -108,9 +106,12 @@ describe('UpdateStandardUsecase', () => {
       standardVersionService,
       ruleRepository,
       ruleExampleRepository,
-      standardSummaryService,
+      generateStandardSummaryDelayedJob,
       stubbedLogger,
     );
+
+    // Spy on the generateStandardSummary method
+    jest.spyOn(updateStandardUsecase, 'generateStandardSummary');
   });
 
   afterEach(() => {
@@ -246,28 +247,21 @@ describe('UpdateStandardUsecase', () => {
         );
       });
 
-      it('generates summary for updated standard version', () => {
+      it('calls generateStandardSummary method for updated standard version', () => {
         expect(
-          standardSummaryService.createStandardSummary,
+          updateStandardUsecase.generateStandardSummary,
+        ).toHaveBeenCalledTimes(1);
+        expect(
+          updateStandardUsecase.generateStandardSummary,
         ).toHaveBeenCalledWith(
-          {
-            standardId,
-            name: inputData.name,
-            slug: 'original-standard-name', // Should preserve original slug
-            description: inputData.description,
-            version: 3,
-            summary: null,
-            scope: inputData.scope,
-          },
-          expect.arrayContaining([
-            expect.objectContaining({
-              content: 'Updated rule content',
-            }),
-          ]),
+          inputData.userId,
+          inputData.organizationId,
+          newStandardVersion,
+          [{ content: 'Updated rule content', examples: [] }],
         );
       });
 
-      it('creates new standard version with updated rules and summary', () => {
+      it('creates new standard version with updated rules', () => {
         expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
           expect.objectContaining({
             standardId,
@@ -276,7 +270,6 @@ describe('UpdateStandardUsecase', () => {
             description: inputData.description,
             version: 3,
             scope: null,
-            summary: 'Generated summary for the standard',
             userId: inputData.userId,
           }),
         );
@@ -372,9 +365,9 @@ describe('UpdateStandardUsecase', () => {
       });
 
       describe('when content is unchanged', () => {
-        it('does not generate summary', () => {
+        it('does not call generateStandardSummary method', () => {
           expect(
-            standardSummaryService.createStandardSummary,
+            updateStandardUsecase.generateStandardSummary,
           ).not.toHaveBeenCalled();
         });
       });
@@ -507,7 +500,6 @@ describe('UpdateStandardUsecase', () => {
             description: inputData.description,
             version: 2,
             scope: null,
-            summary: 'Generated summary for the standard',
             userId: inputData.userId,
           }),
         );
@@ -588,24 +580,7 @@ describe('UpdateStandardUsecase', () => {
           newStandardVersion,
         );
 
-        // Mock summary service to throw error
-        standardSummaryService.createStandardSummary.mockRejectedValue(
-          new Error('AI service unavailable'),
-        );
-
         await updateStandardUsecase.updateStandard(inputData);
-      });
-
-      describe('when summary generation fails', () => {
-        it('continues with null summary', () => {
-          expect(
-            standardVersionService.addStandardVersion,
-          ).toHaveBeenCalledWith(
-            expect.objectContaining({
-              summary: null,
-            }),
-          );
-        });
       });
 
       it('still updates the standard despite summary failure', () => {

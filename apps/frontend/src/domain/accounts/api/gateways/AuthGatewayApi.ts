@@ -75,12 +75,10 @@ export class AuthGatewayApi extends PackmindGateway implements IAuthGateway {
     return this._api.get<{ url: string }>(`/mcp/url`);
   }
 
-  async generateApiKey(request: {
-    host: string;
-  }): Promise<GenerateApiKeyResponse> {
+  async generateApiKey(): Promise<GenerateApiKeyResponse> {
     return this._api.post<GenerateApiKeyResponse>(
       `${this._endpoint}/api-key/generate`,
-      request,
+      {},
     );
   }
 

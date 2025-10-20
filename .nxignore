@@ -2,3 +2,5 @@
 /dist
 /tmp
 /.git
+/packages/linter/js-playground
+/packages/linter/js-playground-local

@@ -182,20 +182,18 @@ export const useAddTargetMutation = () => {
       return deploymentsGateways.addTarget(command);
     },
     onSuccess: async (newTarget) => {
-      // Invalidate targets queries to refetch updated data
+      // Invalidate all target queries (simpler)
       await queryClient.invalidateQueries({
-        queryKey: [...GET_TARGETS_BY_REPOSITORY_KEY, newTarget.gitRepoId],
+        queryKey: GET_TARGETS_BY_REPOSITORY_KEY,
       });
-
       await queryClient.invalidateQueries({
         queryKey: GET_TARGETS_BY_ORGANIZATION_KEY,
       });
 
-      // Also invalidate deployment overviews since targets affect deployments
+      // Invalidate all deployment overviews (new target available for both)
       await queryClient.invalidateQueries({
         queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
       });
-
       await queryClient.invalidateQueries({
         queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
       });
@@ -218,20 +216,17 @@ export const useUpdateTargetMutation = () => {
       return deploymentsGateways.updateTarget(command);
     },
     onSuccess: async (updatedTarget) => {
-      // Invalidate targets queries to refetch updated data
+      // Same as useAddTargetMutation
       await queryClient.invalidateQueries({
-        queryKey: [...GET_TARGETS_BY_REPOSITORY_KEY, updatedTarget.gitRepoId],
+        queryKey: GET_TARGETS_BY_REPOSITORY_KEY,
       });
-
       await queryClient.invalidateQueries({
         queryKey: GET_TARGETS_BY_ORGANIZATION_KEY,
       });
 
-      // Also invalidate deployment overviews since targets affect deployments
       await queryClient.invalidateQueries({
         queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
       });
-
       await queryClient.invalidateQueries({
         queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
       });
@@ -253,27 +248,22 @@ export const useDeleteTargetMutation = () => {
     ): Promise<DeleteTargetResponse> => {
       return deploymentsGateways.deleteTarget(command);
     },
-    onSuccess: async (_, deletedCommand) => {
-      // We need to invalidate all target queries since we don't know which repository the deleted target belonged to
-      // This is less efficient but ensures consistency
+    onSuccess: async () => {
+      // Current is correct - target deleted affects all target queries
+      // and deployment overviews
       await queryClient.invalidateQueries({
         queryKey: GET_TARGETS_BY_REPOSITORY_KEY,
       });
-
       await queryClient.invalidateQueries({
         queryKey: GET_TARGETS_BY_ORGANIZATION_KEY,
       });
 
-      // Also invalidate deployment overviews since targets affect deployments
       await queryClient.invalidateQueries({
         queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
       });
-
       await queryClient.invalidateQueries({
         queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
       });
-
-      console.log(`Target ${deletedCommand.targetId} deleted successfully`);
     },
     onError: (error) => {
       console.error('Error deleting target:', error);

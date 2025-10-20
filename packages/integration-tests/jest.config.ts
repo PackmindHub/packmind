@@ -7,6 +7,7 @@ export default {
   displayName: '@packmind/integration-tests',
   preset: '../../jest.preset.ts',
   testEnvironment: 'node',
+  setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
   transform: {
     '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },

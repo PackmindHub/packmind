@@ -1,8 +1,8 @@
 import { Body, Controller, Headers, Post, Param, Get } from '@nestjs/common';
 import { RecipesService } from '../recipes/recipes.service';
 import { Configuration, PackmindLogger, Recipe } from '@packmind/shared';
-import { Public } from '../auth/auth.guard';
 import { OrganizationId, createOrganizationId } from '@packmind/accounts';
+import { Public } from '@packmind/shared-nest';
 
 const origin = 'HooksController';
 

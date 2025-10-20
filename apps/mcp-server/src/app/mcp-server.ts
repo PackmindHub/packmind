@@ -22,6 +22,16 @@ import {
   STANDARD_WORKFLOW_STEPS,
   StandardWorkflowStep,
 } from './prompts/packmind-standard-workflow';
+import {
+  RECIPE_WORKFLOW_STEP_ORDER,
+  RECIPE_WORKFLOW_STEPS,
+  RecipeWorkflowStep,
+} from './prompts/packmind-recipe-workflow';
+import {
+  ADD_RULE_WORKFLOW_STEP_ORDER,
+  ADD_RULE_WORKFLOW_STEPS,
+  AddRuleWorkflowStep,
+} from './prompts/packmind-add-rule-workflow';
 
 interface UserContext {
   email: string;
@@ -44,6 +54,12 @@ const ONBOARDING_PROMPTS = {
 
 const isStandardWorkflowStep = (value: string): value is StandardWorkflowStep =>
   Object.prototype.hasOwnProperty.call(STANDARD_WORKFLOW_STEPS, value);
+
+const isRecipeWorkflowStep = (value: string): value is RecipeWorkflowStep =>
+  Object.prototype.hasOwnProperty.call(RECIPE_WORKFLOW_STEPS, value);
+
+const isAddRuleWorkflowStep = (value: string): value is AddRuleWorkflowStep =>
+  Object.prototype.hasOwnProperty.call(ADD_RULE_WORKFLOW_STEPS, value);
 
 export function createMCPServer(
   fastify: FastifyInstance,
@@ -133,7 +149,7 @@ export function createMCPServer(
 
   mcpServer.tool(
     `${mcpToolPrefix}_create_recipe`,
-    'Captures a reusable process or procedure as a structured Packmind recipe using available context, code, or reasoning.',
+    'Create a new reusable recipe as a structured Packmind recipe. Do not call this tool directly—you need to first use the tool recipe_creation_workflow',
     {
       name: z.string().min(1).describe('The name of the recipe to create'),
       summary: z
@@ -275,7 +291,7 @@ export function createMCPServer(
 
   mcpServer.tool(
     `${mcpToolPrefix}_add_rule_to_standard`,
-    'Add a new coding rule to an existing standard identified by its slug',
+    'Add a new coding rule to an existing standard identified by its slug. Do not call this tool directly—you need to first use the tool add_rule_to_standard_workflow',
     {
       standardSlug: z
         .string()
@@ -423,6 +439,62 @@ export function createMCPServer(
     },
   );
 
+  mcpServer.tool(
+    `${mcpToolPrefix}_list_recipes`,
+    'Get a list of current recipes in Packmind',
+    {},
+    async () => {
+      if (!userContext) {
+        throw new Error('User context is required to list recipes');
+      }
+
+      try {
+        const recipes = await recipesHexa.listRecipesByOrganization(
+          createOrganizationId(userContext.organizationId),
+        );
+
+        if (recipes.length === 0) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: 'No recipes found for your organization',
+              },
+            ],
+          };
+        }
+
+        // Sort alphabetically by slug and limit to 20 recipes
+        const sortedRecipes = recipes
+          .sort((a, b) => a.slug.localeCompare(b.slug))
+          .slice(0, 20);
+
+        // Format as bullet points: • slug: name
+        const formattedList = sortedRecipes
+          .map((recipe) => `• ${recipe.slug}: ${recipe.name}`)
+          .join('\n');
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: formattedList,
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Failed to list recipes: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        };
+      }
+    },
+  );
+
   const standardWorkflowStepSchema = z
     .enum(STANDARD_WORKFLOW_STEP_ORDER)
     .describe(
@@ -461,6 +533,44 @@ export function createMCPServer(
     },
   );
 
+  const recipeWorkflowStepSchema = z
+    .enum(RECIPE_WORKFLOW_STEP_ORDER)
+    .describe(
+      'Identifier of the workflow step to retrieve guidance for. Leave empty to start at the first step.',
+    );
+
+  mcpServer.tool(
+    `${mcpToolPrefix}_create_recipe_workflow`,
+    'Get step-by-step guidance for the Packmind recipe creation workflow. Provide an optional step to retrieve a specific stage.',
+    {
+      step: recipeWorkflowStepSchema.optional(),
+    },
+    async ({ step }) => {
+      const requestedStep = step ?? 'initial-request';
+
+      if (!isRecipeWorkflowStep(requestedStep)) {
+        const availableSteps = Object.keys(RECIPE_WORKFLOW_STEPS).join(', ');
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Unknown workflow step '${requestedStep}'. Available steps: ${availableSteps}`,
+            },
+          ],
+        };
+      }
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: RECIPE_WORKFLOW_STEPS[requestedStep],
+          },
+        ],
+      };
+    },
+  );
+
   mcpServer.tool(
     `${mcpToolPrefix}_create_standard`,
     'Create a new coding standard with multiple rules and optional examples in a single operation. Do not call this tool directly—you need to first use the tool standard_creation_workflow',
@@ -486,7 +596,7 @@ export function createMCPServer(
               .string()
               .min(1)
               .describe(
-                'A concise sentence for the coding rule that explains its intention and how it should be used. It must start with a verb to give the intention.',
+                'A concise sentence for the coding rule that explains its intent, and when and where it should be used. It must start with a verb.',
               ),
             examples: z
               .array(
@@ -585,6 +695,44 @@ export function createMCPServer(
           ],
         };
       }
+    },
+  );
+
+  const addRuleWorkflowStepSchema = z
+    .enum(ADD_RULE_WORKFLOW_STEP_ORDER)
+    .describe(
+      'Identifier of the workflow step to retrieve guidance for. Leave empty to start at the first step.',
+    );
+
+  mcpServer.tool(
+    `${mcpToolPrefix}_add_rule_to_standard_workflow`,
+    'Get step-by-step guidance for adding a new rule to an existing Packmind standard. Provide an optional step to retrieve a specific stage.',
+    {
+      step: addRuleWorkflowStepSchema.optional(),
+    },
+    async ({ step }) => {
+      const requestedStep = step ?? 'initial-request';
+
+      if (!isAddRuleWorkflowStep(requestedStep)) {
+        const availableSteps = Object.keys(ADD_RULE_WORKFLOW_STEPS).join(', ');
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Unknown workflow step '${requestedStep}'. Available steps: ${availableSteps}`,
+            },
+          ],
+        };
+      }
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: ADD_RULE_WORKFLOW_STEPS[requestedStep],
+          },
+        ],
+      };
     },
   );
 

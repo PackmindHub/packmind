@@ -1,4 +1,4 @@
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger, maskEmail } from '@packmind/shared';
 import { InvitationService } from '../../services/InvitationService';
 import { UserService } from '../../services/UserService';
 import { createInvitationToken } from '../../../domain/entities/Invitation';
@@ -85,7 +85,7 @@ export class ValidateInvitationTokenUseCase
       if (user.active) {
         this.logger.warn('User is already active (invitation already used)', {
           userId: user.id,
-          email: user.email,
+          email: maskEmail(user.email),
         });
         return {
           email: '',

@@ -1,11 +1,9 @@
 import { RecipeService } from '../../services/RecipeService';
-import { RecipeVersionService } from '../../services/RecipeVersionService';
 import { GitHexa } from '@packmind/git';
 import { Recipe } from '../../../domain/entities/Recipe';
 import { LogLevel, PackmindLogger, IDeploymentPort } from '@packmind/shared';
 import { OrganizationId, createUserId } from '@packmind/accounts';
-import { RecipeSummaryService } from '../../services/RecipeSummaryService';
-import { RecipeVersionId } from '../../../domain/entities/RecipeVersion';
+import { RecipesHexa } from '../../../RecipesHexa';
 
 export interface CommonRepoData {
   owner: string;
@@ -14,18 +12,24 @@ export interface CommonRepoData {
 
 export abstract class BaseUpdateRecipesFromWebhookUsecase {
   protected readonly logger: PackmindLogger;
+  protected recipesHexa: RecipesHexa | null = null;
 
   constructor(
     protected readonly recipeService: RecipeService,
-    protected readonly recipeVersionService: RecipeVersionService,
     protected readonly gitHexa: GitHexa,
-    protected readonly recipeSummaryService: RecipeSummaryService,
     origin: string,
     protected readonly deploymentPort?: IDeploymentPort,
     logLevel: LogLevel = LogLevel.INFO,
   ) {
     this.logger = new PackmindLogger(origin, logLevel);
     this.logger.info(`${origin} initialized`);
+  }
+
+  /**
+   * Set the RecipesHexa reference after initialization to avoid circular dependencies
+   */
+  public setRecipesHexa(recipesHexa: RecipesHexa): void {
+    this.recipesHexa = recipesHexa;
   }
 
   /**
@@ -45,6 +49,8 @@ export abstract class BaseUpdateRecipesFromWebhookUsecase {
 
   /**
    * Common webhook processing logic
+   * Returns list of recipes that match the webhook and are deployed to the repository
+   * Actual updates happen asynchronously via delayed jobs
    */
   protected async processWebhookPayload(
     repoData: CommonRepoData,
@@ -99,28 +105,33 @@ export abstract class BaseUpdateRecipesFromWebhookUsecase {
       repo: matchingRepo.repo,
     });
 
-    this.logger.debug('Handling webhook to get updated recipes');
-    const updatedRecipes = await this.gitHexa.handleWebHook(
-      matchingRepo,
+    // Use handleWebHookWithoutContent to get list of changed files
+    this.logger.debug('Handling webhook to get list of changed recipe files');
+    const recipesPaths = await this.gitHexa.handleWebHookWithoutContent({
+      organizationId,
+      gitRepoId: matchingRepo.id,
       payload,
-      /.packmind\/recipes\/.*\.md/,
-    );
-
-    this.logger.info(`Updated recipes retrieved from ${provider}`, {
-      count: updatedRecipes.length,
+      fileMatcher: /.packmind\/recipes\/.*\.md/,
     });
 
-    if (updatedRecipes.length === 0) {
-      this.logger.info('No recipes to update, returning empty array');
+    this.logger.info(`Recipe paths retrieved from ${provider}`, {
+      count: recipesPaths.length,
+    });
+
+    if (recipesPaths.length === 0) {
+      this.logger.info('No recipe paths to process, returning empty array');
       return [];
     }
 
-    const updatedRecipeEntities: Recipe[] = [];
-    const newRecipeVersionIds: RecipeVersionId[] = [];
-    const affectedTargetPaths = new Set<string>(); // Track unique target paths
+    // Filter recipes by deployment status and collect matching recipes
+    const matchingRecipes: Recipe[] = [];
+    const recipeDeploymentInfo: Record<
+      string,
+      { targetPath: string; isDeployedToTarget: boolean }
+    > = {};
 
-    for (const updatedRecipe of updatedRecipes) {
-      const { filePath, fileContent, ...gitCommit } = updatedRecipe;
+    for (const recipePath of recipesPaths) {
+      const { filePath } = recipePath;
 
       this.logger.debug('Processing recipe file', { filePath });
 
@@ -137,254 +148,203 @@ export abstract class BaseUpdateRecipesFromWebhookUsecase {
 
       // Check if recipe exists in database
       this.logger.debug('Checking if recipe exists in database', { slug });
-      const existingRecipe = await this.recipeService.findRecipeBySlug(slug);
+      const existingRecipe = await this.recipeService.findRecipeBySlug(
+        slug,
+        organizationId,
+      );
 
-      if (existingRecipe) {
-        this.logger.info('Recipe found, checking if deployed to target', {
+      if (!existingRecipe) {
+        this.logger.warn('Recipe not found in database, skipping', {
+          slug,
+          organizationId,
+        });
+        continue;
+      }
+
+      this.logger.info('Recipe found, checking if deployed to target', {
+        slug,
+        recipeId: existingRecipe.id,
+        targetPath,
+      });
+
+      // Check if recipe is deployed to this target in this repository
+      let isDeployedToTarget = true; // Default to true for backward compatibility
+
+      if (this.deploymentPort) {
+        try {
+          const deployments = await this.deploymentPort.listDeploymentsByRecipe(
+            {
+              recipeId: existingRecipe.id,
+              organizationId,
+              userId: createUserId('system'), // System user for webhook operations
+            },
+          );
+
+          // Check if any deployment includes this target path and this repository
+          isDeployedToTarget = deployments.some(
+            (deployment) =>
+              deployment.target?.gitRepoId === matchingRepo.id &&
+              deployment.target?.path === targetPath,
+          );
+
+          this.logger.debug('Target-specific deployment check result', {
+            slug,
+            targetPath,
+            isDeployedToTarget,
+            deploymentsFound: deployments.length,
+          });
+        } catch (deploymentError) {
+          this.logger.error('Failed to check recipe deployment status', {
+            slug,
+            targetPath,
+            error:
+              deploymentError instanceof Error
+                ? deploymentError.message
+                : String(deploymentError),
+          });
+          // Continue processing but assume not deployed to be safe
+          isDeployedToTarget = false;
+        }
+      } else {
+        this.logger.warn(
+          'Deployment port not available, allowing updates for backward compatibility',
+        );
+        isDeployedToTarget = false;
+      }
+
+      // Store deployment info for later job processing
+      recipeDeploymentInfo[slug] = { targetPath, isDeployedToTarget };
+
+      if (isDeployedToTarget) {
+        this.logger.info('Recipe is deployed to target, adding to match list', {
           slug,
           recipeId: existingRecipe.id,
           targetPath,
         });
-
-        // Check if recipe is deployed to this target in this repository
-        // Only enforce deployment checking for non-root targets (when targetPath is not '/')
-        let isDeployedToTarget = true; // Default to true for backward compatibility
-
-        if (this.deploymentPort) {
-          try {
-            const deployments =
-              await this.deploymentPort.listDeploymentsByRecipe({
-                recipeId: existingRecipe.id,
-                organizationId,
-                userId: createUserId('system'), // System user for webhook operations
-              });
-
-            // Check if any deployment includes this target path and this repository
-            isDeployedToTarget = deployments.some(
-              (deployment) =>
-                deployment.target?.gitRepoId === matchingRepo.id &&
-                deployment.target?.path === targetPath,
-            );
-
-            this.logger.debug('Target-specific deployment check result', {
-              slug,
-              targetPath,
-              isDeployedToTarget,
-              deploymentsFound: deployments.length,
-            });
-          } catch (deploymentError) {
-            this.logger.error('Failed to check recipe deployment status', {
-              slug,
-              targetPath,
-              error:
-                deploymentError instanceof Error
-                  ? deploymentError.message
-                  : String(deploymentError),
-            });
-            // Continue processing but assume not deployed to be safe for target-specific paths
-            isDeployedToTarget = false;
-          }
-        } else {
-          this.logger.warn(
-            'Deployment port not available, allowing updates for backward compatibility',
-          );
-          isDeployedToTarget = false;
-        }
-
-        if (!isDeployedToTarget) {
-          this.logger.info('Recipe not deployed to target, skipping update', {
-            slug,
-            targetPath,
-            repoId: matchingRepo.id,
-          });
-          continue; // Skip to next recipe
-        }
-
-        this.logger.info(
-          'Recipe is deployed to target, checking if content differs',
-          {
-            slug,
-            recipeId: existingRecipe.id,
-            targetPath,
-          },
-        );
-
-        // Compare content to see if update is needed
-        const contentHasChanged = existingRecipe.content !== fileContent;
-
-        if (contentHasChanged) {
-          this.logger.info('Content has changed, updating existing recipe', {
-            slug,
-            recipeId: existingRecipe.id,
-          });
-
-          // Business logic: Increment version number
-          const nextVersion = existingRecipe.version + 1;
-          this.logger.debug('Incrementing version number', {
-            currentVersion: existingRecipe.version,
-            nextVersion,
-          });
-
-          // Update the recipe entity
-          const updatedRecipe = await this.recipeService.updateRecipe(
-            existingRecipe.id,
-            {
-              name: existingRecipe.name,
-              slug: existingRecipe.slug,
-              content: fileContent,
-              version: nextVersion,
-              gitCommit,
-              organizationId: existingRecipe.organizationId,
-              userId: existingRecipe.userId,
-            },
-          );
-
-          // Create new recipe version
-          this.logger.debug('Creating new recipe version');
-
-          // Generate summary for the recipe version
-          let summary: string | null = null;
-          try {
-            this.logger.debug('Generating summary for recipe version update');
-            summary = await this.recipeSummaryService.createRecipeSummary({
-              recipeId: existingRecipe.id,
-              name: existingRecipe.name,
-              slug: existingRecipe.slug,
-              content: fileContent,
-              version: nextVersion,
-              summary: null,
-              gitCommit,
-              userId: null, // Git commits don't have a specific user
-            });
-            this.logger.debug('Summary generated successfully for update', {
-              summaryLength: summary.length,
-            });
-          } catch (summaryError) {
-            this.logger.error(
-              'Failed to generate summary during update, proceeding without summary',
-              {
-                error:
-                  summaryError instanceof Error
-                    ? summaryError.message
-                    : String(summaryError),
-              },
-            );
-          }
-
-          const newRecipeVersion =
-            await this.recipeVersionService.addRecipeVersion({
-              recipeId: existingRecipe.id,
-              name: existingRecipe.name,
-              slug: existingRecipe.slug,
-              content: fileContent,
-              version: nextVersion,
-              summary,
-              gitCommit,
-              userId: null, // Git commits don't have a specific user
-            });
-
-          updatedRecipeEntities.push(updatedRecipe);
-
-          // Collect new recipe version for batch deployment
-          if (newRecipeVersion) {
-            newRecipeVersionIds.push(newRecipeVersion.id);
-            // Track the target path this recipe was updated in
-            affectedTargetPaths.add(targetPath);
-          }
-
-          this.logger.info('Recipe updated successfully', {
-            slug,
-            recipeId: existingRecipe.id,
-            newVersion: nextVersion,
-            targetPath,
-          });
-        } else {
-          this.logger.info('Content is identical, skipping update', {
-            slug,
-            recipeId: existingRecipe.id,
-          });
-        }
+        matchingRecipes.push(existingRecipe);
       } else {
-        this.logger.warn('Recipe not found in database, skipping update', {
+        this.logger.info('Recipe not deployed to target, skipping', {
           slug,
+          targetPath,
+          repoId: matchingRepo.id,
         });
       }
     }
 
-    // Perform batch deployment for all new recipe versions
-    if (this.deploymentPort && newRecipeVersionIds.length > 0) {
-      try {
-        // Get all targets for this repository to find the ones matching affected paths
-        const allTargets = await this.deploymentPort.getTargetsByGitRepo({
-          gitRepoId: matchingRepo.id,
-          organizationId,
-          userId: createUserId('system'),
-        });
-
-        // Filter targets to only those that match the affected target paths
-        const targetIdsToDeployTo = allTargets
-          .filter((target) => affectedTargetPaths.has(target.path))
-          .map((target) => target.id);
-
-        if (targetIdsToDeployTo.length > 0) {
-          this.logger.info(
-            'Automatically deploying new recipe versions to specific targets',
-            {
-              recipeVersionCount: newRecipeVersionIds.length,
-              gitRepoId: matchingRepo.id,
-              affectedTargetPaths: Array.from(affectedTargetPaths),
-              targetIds: targetIdsToDeployTo,
-            },
-          );
-
-          await this.deploymentPort.publishRecipes({
-            organizationId: organizationId,
-            userId: createUserId('system'), // System user for webhook-triggered deployments
-            targetIds: targetIdsToDeployTo, // Use targetIds for target-specific deployment
-            recipeVersionIds: newRecipeVersionIds,
-          });
-
-          this.logger.info(
-            'Recipe versions deployed successfully to specific targets',
-            {
-              recipeVersionCount: newRecipeVersionIds.length,
-              targetCount: targetIdsToDeployTo.length,
-              gitRepoId: matchingRepo.id,
-            },
-          );
-        } else {
-          this.logger.warn(
-            'No matching targets found for affected paths, skipping deployment',
-            {
-              affectedTargetPaths: Array.from(affectedTargetPaths),
-              gitRepoId: matchingRepo.id,
-            },
-          );
-        }
-      } catch (deploymentError) {
-        this.logger.error('Failed to deploy recipe versions automatically', {
-          recipeVersionCount: newRecipeVersionIds.length,
-          gitRepoId: matchingRepo.id,
-          error:
-            deploymentError instanceof Error
-              ? deploymentError.message
-              : String(deploymentError),
-        });
-        // Continue execution even if deployment fails
-      }
-    } else if (!this.deploymentPort) {
-      this.logger.debug(
-        'Deployment port not available, skipping automatic deployment',
+    // If no matching recipes, return empty array
+    if (matchingRecipes.length === 0) {
+      this.logger.info(
+        'No matching deployed recipes found, returning empty array',
       );
+      return [];
+    }
+
+    this.logger.info(`Found ${matchingRecipes.length} deployed recipes`, {
+      count: matchingRecipes.length,
+    });
+
+    // Queue FetchFileContent job to fetch file content from git
+    this.logger.debug('Queueing FetchFileContent job', {
+      organizationId,
+      gitRepoId: matchingRepo.id,
+      filesCount: recipesPaths.length,
+    });
+
+    try {
+      await this.gitHexa.addFetchFileContentJob(
+        {
+          organizationId,
+          gitRepoId: matchingRepo.id,
+          files: recipesPaths,
+        },
+        async (fetchResult) => {
+          this.logger.info(
+            `FetchFileContent job completed, queueing UpdateRecipesAndGenerateSummaries job`,
+            {
+              filesWithContent: fetchResult.files.length,
+            },
+          );
+
+          // Queue UpdateRecipesAndGenerateSummaries job with the fetched content
+          const recipesHexa = this.recipesHexa;
+          if (!recipesHexa) {
+            this.logger.error('RecipesHexa not set, cannot queue update job');
+            return;
+          }
+
+          let recipesDelayedJobs;
+          try {
+            recipesDelayedJobs = recipesHexa.getRecipesDelayedJobs();
+          } catch (error) {
+            this.logger.error(
+              'Failed to get recipes delayed jobs, cannot queue update job',
+              {
+                error: error instanceof Error ? error.message : String(error),
+              },
+            );
+            return;
+          }
+
+          await recipesDelayedJobs.updateRecipesAndGenerateSummariesDelayedJob.addJobWithCallback(
+            {
+              organizationId,
+              gitRepoId: matchingRepo.id,
+              files: fetchResult.files,
+              recipeDeploymentInfo,
+            },
+            async (updateResult) => {
+              this.logger.info(
+                `UpdateRecipesAndGenerateSummaries job completed, queueing DeployRecipes job`,
+                {
+                  updatedRecipesCount: updateResult.recipeVersionIds.length,
+                },
+              );
+
+              // Queue DeployRecipes job to deploy the updated recipes
+              await recipesDelayedJobs.deployRecipesDelayedJob.addJobWithCallback(
+                {
+                  organizationId: updateResult.organizationId,
+                  gitRepoId: updateResult.gitRepoId,
+                  recipeVersionIds: updateResult.recipeVersionIds,
+                  affectedTargetPaths: updateResult.affectedTargetPaths,
+                },
+                async (deployResult) => {
+                  this.logger.info(`DeployRecipes job completed successfully`, {
+                    deployedVersionsCount: deployResult.deployedVersionsCount,
+                    targetCount: deployResult.targetCount,
+                  });
+                },
+              );
+            },
+          );
+        },
+      );
+
+      this.logger.info(
+        `FetchFileContent job queued successfully for ${provider}`,
+        {
+          matchingRecipesCount: matchingRecipes.length,
+        },
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to queue FetchFileContent job for ${provider}`,
+        {
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+        },
+      );
+      throw error;
     }
 
     this.logger.info(
-      `ProcessWebhookPayload process completed for ${provider}`,
+      `ProcessWebhookPayload completed for ${provider}, jobs queued`,
       {
-        updatedCount: updatedRecipeEntities.length,
-        deployedVersions: newRecipeVersionIds.length,
+        matchingRecipesCount: matchingRecipes.length,
       },
     );
-    return updatedRecipeEntities;
+
+    // Return the list of matching recipes (in their current state, before updates)
+    return matchingRecipes;
   }
 }

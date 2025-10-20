@@ -11,14 +11,16 @@ const API_VERSION = 'v0';
 export class ApiService {
   private readonly _axiosInstance: AxiosInstance;
   private readonly _version: string = API_VERSION;
+  private readonly _baseApiUrl: string;
 
   constructor(baseURL: string) {
     const baseUrlWithApi = baseURL.endsWith('/api')
       ? baseURL
       : `${baseURL}/api`;
 
+    this._baseApiUrl = this.getVersionedBaseUrl(baseUrlWithApi);
     this._axiosInstance = axios.create({
-      baseURL: this.getVersionedBaseUrl(baseUrlWithApi),
+      baseURL: this._baseApiUrl,
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json',
@@ -29,6 +31,10 @@ export class ApiService {
 
   private getVersionedBaseUrl(url: string): string {
     return `${url}/${this._version}`;
+  }
+
+  get baseApiUrl() {
+    return this._baseApiUrl;
   }
 
   async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {

@@ -2,6 +2,7 @@ import { DataSource } from 'typeorm';
 import { AccountsRepository } from './infra/repositories/AccountsRepository';
 import { AccountsUseCases } from './application/useCases';
 import { PackmindLogger } from '@packmind/shared';
+import { ISpacesPort } from '@packmind/shared/types';
 import { ApiKeyService } from './application/services/ApiKeyService';
 import { EnhancedAccountsServices } from './application/services/EnhancedAccountsServices';
 
@@ -26,6 +27,7 @@ export class AccountsHexaFactory {
     private readonly dataSource: DataSource,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
     private readonly apiKeyService?: ApiKeyService,
+    private readonly spacesPort?: ISpacesPort,
   ) {
     this.logger.info('Initializing AccountsHexa');
 
@@ -41,7 +43,11 @@ export class AccountsHexaFactory {
         this.apiKeyService,
       );
 
-      this.useCases = new AccountsUseCases(this.accountsServices, this.logger);
+      this.useCases = new AccountsUseCases(
+        this.accountsServices,
+        this.logger,
+        this.spacesPort,
+      );
       this.logger.debug(
         'Repository aggregator, service aggregator, and use cases created successfully',
       );

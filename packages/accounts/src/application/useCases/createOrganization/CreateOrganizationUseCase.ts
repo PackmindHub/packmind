@@ -1,6 +1,7 @@
 import { OrganizationService } from '../../services/OrganizationService';
 import { UserService } from '../../services/UserService';
 import { PackmindLogger } from '@packmind/shared';
+import { ISpacesPort } from '@packmind/shared/types';
 import {
   ICreateOrganizationUseCase,
   CreateOrganizationCommand,
@@ -14,6 +15,7 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
     private readonly organizationService: OrganizationService,
     private readonly userService: UserService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
+    private readonly spacesPort?: ISpacesPort,
   ) {
     this.logger.info('CreateOrganizationUseCase initialized');
   }
@@ -66,6 +68,24 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
         organization.id,
         'admin',
       );
+
+      // Create default "Global" space for the organization
+      if (this.spacesPort) {
+        this.logger.info('Creating default Global space for organization', {
+          organizationId: organization.id,
+        });
+        try {
+          await this.spacesPort.createSpace('Global', organization.id);
+          this.logger.info('Default Global space created successfully', {
+            organizationId: organization.id,
+          });
+        } catch (error) {
+          this.logger.error('Failed to create default Global space', {
+            organizationId: organization.id,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
 
       this.logger.info('Create organization use case executed successfully', {
         organizationId: organization.id,

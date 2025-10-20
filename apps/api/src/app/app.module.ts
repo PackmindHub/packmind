@@ -11,6 +11,7 @@ import { LogLevel, PackmindLogger } from '@packmind/shared';
 import { recipesSchemas, RecipesHexa } from '@packmind/recipes';
 import { accountsSchemas, AccountsHexa } from '@packmind/accounts';
 import { gitSchemas, GitHexa } from '@packmind/git';
+import { spacesSchemas, SpacesHexa } from '@packmind/spaces';
 import { standardsSchemas, StandardsHexa } from '@packmind/standards';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { deploymentsSchemas, DeploymentsHexa } from '@packmind/deployments';
@@ -20,6 +21,7 @@ import { AuthGuard } from './auth/auth.guard';
 import { GitModule } from './git/git.module';
 import { UsersModule } from './accounts/users/users.module';
 import { OrganizationsModule } from './accounts/organizations/organizations.module';
+import { SpacesModule } from './spaces/spaces.module';
 import { StandardsModule } from './standards/standards.module';
 import { McpModule } from './mcp/mcp.module';
 import { HexaRegistryModule } from './shared/HexaRegistryModule';
@@ -28,12 +30,13 @@ import { DeploymentsModule } from './deployments/deployments.module';
 import { TargetsModule } from './targets/targets.module';
 import { SSEModule } from './sse/sse.module';
 import { JobsHexa } from '@packmind/jobs';
-import { LinterHexa } from '@packmind/linter';
+import { LinterHexa, LinterModule, linterSchemas } from '@packmind/linter';
 import {
   RecipesUsageHexa,
   recipesUsageSchemas,
   AnalyticsModule,
 } from '@packmind/analytics';
+import { AmplitudeModule } from '@packmind/amplitude';
 
 const logger = new PackmindLogger('AppModule', LogLevel.INFO);
 
@@ -47,8 +50,10 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
         ...recipesUsageSchemas,
         ...gitSchemas,
         ...accountsSchemas,
+        ...spacesSchemas,
         ...standardsSchemas,
         ...deploymentsSchemas,
+        ...linterSchemas,
       ],
       logging: false,
       synchronize: false,
@@ -73,19 +78,21 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
     // AppRegistry integration - All domain apps (order matters for dependencies)
     HexaRegistryModule.register({
       hexas: [
+        SpacesHexa, // Must come before AccountsHexa (AccountsHexa depends on SpacesHexa)
         AccountsHexa,
+        JobsHexa,
         GitHexa,
         RecipesHexa,
         RecipesUsageHexa,
         StandardsHexa,
         CodingAgentHexa,
         DeploymentsHexa,
-        JobsHexa,
         LinterHexa,
       ],
     }),
     RecipesModule,
     StandardsModule,
+    SpacesModule,
     HooksModule,
     AuthModule,
     GitModule,
@@ -96,6 +103,8 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
     DeploymentsModule,
     TargetsModule,
     SSEModule,
+    AmplitudeModule,
+    LinterModule,
   ],
   controllers: [AppController, DeploymentsController],
   providers: [

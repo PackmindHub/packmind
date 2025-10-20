@@ -3,7 +3,7 @@ import {
   RequestPasswordResetResponse,
   IRequestPasswordResetUseCase,
 } from '@packmind/shared/src/types/accounts/contracts/IRequestPasswordResetUseCase';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger, maskEmail } from '@packmind/shared';
 import { UserService } from '../services/UserService';
 import {
   PasswordResetTokenService,
@@ -28,14 +28,14 @@ export class RequestPasswordResetUseCase
     command: RequestPasswordResetCommand,
   ): Promise<RequestPasswordResetResponse> {
     this.logger.info('Executing RequestPasswordResetUseCase', {
-      email: this.maskEmail(command.email),
+      email: maskEmail(command.email),
     });
 
     // Validate email format
     const trimmedEmail = command.email.trim();
     if (!trimmedEmail || !validator.isEmail(trimmedEmail)) {
       this.logger.warn('Invalid email format provided', {
-        email: this.maskEmail(command.email),
+        email: maskEmail(command.email),
       });
       // Return success to prevent email enumeration
       return {
@@ -53,7 +53,7 @@ export class RequestPasswordResetUseCase
 
     if (!user) {
       this.logger.info('Password reset requested for non-existent email', {
-        email: this.maskEmail(normalizedEmail),
+        email: maskEmail(normalizedEmail),
       });
       // Return success to prevent email enumeration, but don't send email
       return {
@@ -69,7 +69,7 @@ export class RequestPasswordResetUseCase
         'Password reset requested for inactive user (incomplete registration)',
         {
           userId: user.id,
-          email: this.maskEmail(normalizedEmail),
+          email: maskEmail(normalizedEmail),
         },
       );
       // Return success to prevent email enumeration, but don't send email
@@ -91,7 +91,7 @@ export class RequestPasswordResetUseCase
 
       this.logger.info('Password reset token created and email sent', {
         userId: user.id,
-        email: this.maskEmail(user.email),
+        email: maskEmail(user.email),
       });
 
       return {
@@ -102,7 +102,7 @@ export class RequestPasswordResetUseCase
     } catch (error) {
       this.logger.error('Failed to create password reset token', {
         userId: user.id,
-        email: this.maskEmail(user.email),
+        email: maskEmail(user.email),
         error: error instanceof Error ? error.message : String(error),
       });
 
@@ -114,14 +114,5 @@ export class RequestPasswordResetUseCase
           'If your email is registered, you will receive a password reset link shortly.',
       };
     }
-  }
-
-  private maskEmail(email: string): string {
-    const [localPart, domain] = email.split('@');
-    if (!domain) {
-      return '***';
-    }
-    const visible = localPart.slice(0, 2);
-    return `${visible}***@${domain}`;
   }
 }

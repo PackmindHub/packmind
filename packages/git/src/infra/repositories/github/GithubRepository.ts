@@ -2,32 +2,12 @@ import { IGitRepo } from '../../../domain/repositories/IGitRepo';
 import axios, { AxiosInstance } from 'axios';
 import { PackmindLogger, LogLevel } from '@packmind/shared';
 import { GitCommit } from '../../../domain/entities/GitCommit';
+import { GithubWebhookPushPayload } from '../../../domain/types/webhookPayloads';
 
 export interface GithubRepositoryOptions {
   owner: string;
   repo: string;
   branch?: string;
-}
-
-interface GithubWebhookPushPayload {
-  ref?: string;
-  repository?: {
-    name?: string;
-    owner?: {
-      name?: string;
-    };
-  };
-  commits?: Array<{
-    id?: string;
-    message?: string;
-    added?: string[];
-    modified?: string[];
-    removed?: string[];
-    author?: {
-      name?: string;
-      email?: string;
-    };
-  }>;
 }
 
 const origin = 'GithubRepository';

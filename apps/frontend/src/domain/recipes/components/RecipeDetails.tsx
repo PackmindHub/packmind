@@ -31,6 +31,8 @@ import {
   MarkdownEditor,
   MarkdownEditorProvider,
 } from '../../../shared/components/editor/MarkdownEditor';
+import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
+import { routes } from '../../../shared/utils/routes';
 
 interface RecipeDetailsProps {
   id: RecipeId;
@@ -40,6 +42,7 @@ interface RecipeDetailsProps {
 
 export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
   const navigate = useNavigate();
+  const { spaceSlug } = useCurrentSpace();
   const [isEditing, setIsEditing] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteAlert, setDeleteAlert] = useState<{
@@ -64,7 +67,9 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
       // Auto-dismiss success alert and navigate back after 2 seconds
       setTimeout(() => {
         setDeleteAlert(null);
-        navigate(orgSlug ? `/org/${orgSlug}/recipes` : '/recipes');
+        if (orgSlug && spaceSlug) {
+          navigate(routes.space.toRecipes(orgSlug, spaceSlug));
+        }
       }, 2000);
     } catch (error) {
       console.error('Failed to delete recipe:', error);

@@ -84,7 +84,7 @@ describe('UserRepository', () => {
       })(),
     getRepository: () => userRepository,
     duplicateFields: ['email'],
-    expectedErrorMessage: (user) => `Email '${user.email}' already exists`,
+    expectedErrorMessage: () => `Email '***@***' already exists`,
   });
 
   describe('.add', () => {

@@ -21,6 +21,7 @@ module.exports = function getBaseWebpackPaths(__dirname) {
     ),
     '@packmind/shared-nest': join(__dirname, '../../packages/shared-nest/src'),
     '@packmind/migrations': join(__dirname, '../../packages/migrations/src'),
+    '@packmind/spaces': join(__dirname, '../../packages/spaces/src'),
     '@packmind/git': join(__dirname, '../../packages/git/src'),
     '@packmind/git/types': join(__dirname, '../../packages/git/src/types'),
     '@packmind/packmind-ui': join(__dirname, '../../packages/packmind-ui/src'),
@@ -40,5 +41,10 @@ module.exports = function getBaseWebpackPaths(__dirname) {
     ),
     '@packmind/jobs': join(__dirname, '../../packages/jobs/src'),
     '@packmind/linter': join(__dirname, '../../packages/linter/src'),
+    '@packmind/linter-ast': join(__dirname, '../../packages/linter-ast/src'),
+    '@packmind/linter-execution': join(
+      __dirname,
+      '../../packages/linter-execution/src',
+    ),
   };
 };

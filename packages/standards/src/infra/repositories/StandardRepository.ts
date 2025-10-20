@@ -34,18 +34,27 @@ export class StandardRepository
     };
   }
 
-  async findBySlug(slug: string): Promise<Standard | null> {
-    this.logger.info('Finding standard with scope by slug', { slug });
+  async findBySlug(
+    slug: string,
+    organizationId: OrganizationId,
+  ): Promise<Standard | null> {
+    this.logger.info('Finding standard with scope by slug and organization', {
+      slug,
+      organizationId,
+    });
 
     try {
-      // First, find the standard by slug
+      // First, find the standard by slug and organizationId
       const standard = await this.repository.findOne({
-        where: { slug },
+        where: { slug, organizationId },
         relations: ['gitCommit'],
       });
 
       if (!standard) {
-        this.logger.warn('Standard not found by slug', { slug });
+        this.logger.warn('Standard not found by slug and organization', {
+          slug,
+          organizationId,
+        });
         return null;
       }
 
@@ -62,16 +71,21 @@ export class StandardRepository
         scope: latestVersion?.scope ?? standard.scope,
       };
 
-      this.logger.info('Standard with scope found by slug', {
+      this.logger.info('Standard with scope found by slug and organization', {
         slug,
+        organizationId,
         standardId: standard.id,
       });
       return standardWithScope;
     } catch (error) {
-      this.logger.error('Failed to find standard with scope by slug', {
-        slug,
-        error: error instanceof Error ? error.message : String(error),
-      });
+      this.logger.error(
+        'Failed to find standard with scope by slug and organization',
+        {
+          slug,
+          organizationId,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
       throw error;
     }
   }

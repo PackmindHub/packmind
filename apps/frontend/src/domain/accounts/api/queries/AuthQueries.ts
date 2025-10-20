@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   SignInUserCommand,
-  GenerateApiKeyCommand,
   SignUpWithOrganizationCommand,
 } from '@packmind/accounts/types';
 import {
@@ -11,6 +10,7 @@ import {
   UserId,
   RequestPasswordResetCommand,
   ResetPasswordCommand,
+  PackmindCommandBody,
 } from '@packmind/shared/types';
 import { authGateway } from '../gateways';
 import {
@@ -20,7 +20,10 @@ import {
   VALIDATE_INVITATION_KEY,
   VALIDATE_PASSWORD_RESET_TOKEN_KEY,
   SELECT_ORGANIZATION_KEY,
+  GET_USER_ORGANIZATIONS_KEY,
+  ACCOUNTS_QUERY_SCOPE,
 } from '../queryKeys';
+import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
 
 type SignInRequest = SignInUserCommand;
 
@@ -48,6 +51,11 @@ export const useSignUpWithOrganizationMutation = () => {
       console.log('User and organization created successfully:', data);
       // Invalidate authentication queries to refresh user state
       queryClient.invalidateQueries({ queryKey: GET_ME_KEY });
+
+      // New organization created - refresh org list
+      queryClient.invalidateQueries({
+        queryKey: GET_USER_ORGANIZATIONS_KEY,
+      });
     },
     onError: (error) => {
       console.error('Error signing up user with organization:', error);
@@ -135,8 +143,8 @@ export const useGenerateApiKeyMutation = () => {
 
   return useMutation({
     mutationKey: [GENERATE_API_KEY_MUTATION_KEY],
-    mutationFn: async (request: GenerateApiKeyCommand) => {
-      return authGateway.generateApiKey(request);
+    mutationFn: async (_: Record<string, never> = {}) => {
+      return authGateway.generateApiKey();
     },
     onSuccess: (data) => {
       console.log('API key generated successfully:', data);
@@ -184,9 +192,9 @@ export const useActivateUserAccountMutation = () => {
     },
     onSuccess: (data) => {
       console.log('User account activated successfully:', data);
-      queryClient.invalidateQueries({ queryKey: GET_ME_KEY });
+      // Simplify: Invalidate all auth queries
       queryClient.invalidateQueries({
-        queryKey: VALIDATE_INVITATION_KEY,
+        queryKey: [ORGANIZATION_QUERY_SCOPE, ACCOUNTS_QUERY_SCOPE],
       });
     },
     onError: (error) => {
@@ -231,9 +239,9 @@ export const useResetPasswordMutation = () => {
     },
     onSuccess: (data) => {
       console.log('Password reset successfully:', data);
-      queryClient.invalidateQueries({ queryKey: GET_ME_KEY });
+      // Simplify: Invalidate all auth queries
       queryClient.invalidateQueries({
-        queryKey: VALIDATE_PASSWORD_RESET_TOKEN_KEY,
+        queryKey: [ORGANIZATION_QUERY_SCOPE, ACCOUNTS_QUERY_SCOPE],
       });
     },
     onError: (error) => {
@@ -261,8 +269,10 @@ export const useSelectOrganizationMutation = () => {
       });
     },
     onSuccess: (data) => {
-      // Invalidate authentication queries to refresh user state
-      queryClient.invalidateQueries({ queryKey: GET_ME_KEY });
+      // Invalidate ALL organization-scoped data when switching organizations
+      queryClient.invalidateQueries({
+        queryKey: [ORGANIZATION_QUERY_SCOPE],
+      });
     },
     onError: (error) => {
       console.error('Error selecting organization:', error);

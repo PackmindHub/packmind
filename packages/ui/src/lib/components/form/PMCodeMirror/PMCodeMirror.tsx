@@ -19,6 +19,7 @@ import { css } from '@codemirror/lang-css';
 import { yaml } from '@codemirror/lang-yaml';
 import { shell } from '@codemirror/legacy-modes/mode/shell';
 import { ruby } from '@codemirror/legacy-modes/mode/ruby';
+import { swift } from '@codemirror/legacy-modes/mode/swift';
 import { StreamLanguage } from '@codemirror/language';
 // Note: Kotlin support would require: import { kotlin } from '@codemirror/lang-kotlin';
 
@@ -119,6 +120,9 @@ const getLanguageExtensions = (language?: string) => {
     case 'HANA_SQL':
       normalizedLanguage = 'SAP_HANA_SQL';
       break;
+    case 'SWIFT':
+      normalizedLanguage = 'SWIFT';
+      break;
   }
 
   switch (normalizedLanguage) {
@@ -179,6 +183,8 @@ const getLanguageExtensions = (language?: string) => {
     case 'SAP_HANA_SQL':
       // Using Ruby syntax highlighting as fallback for SAP HANA SQL
       return [StreamLanguage.define(ruby)];
+    case 'SWIFT':
+      return [StreamLanguage.define(swift)];
     default:
       return [];
   }
