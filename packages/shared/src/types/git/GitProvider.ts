@@ -19,6 +19,10 @@ export type GitProvider = {
   organizationId: OrganizationId;
   url: string | null;
   token: string | null;
+  // GitHub App authentication fields
+  appId?: string | null;
+  privateKey?: string | null;
+  installationId?: string | null;
   organization?: Organization;
   repos?: GitRepo[];
 };

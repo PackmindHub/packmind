@@ -25,20 +25,43 @@ export class GitProviderFactory implements IGitProviderFactory {
   }
 
   createGitProvider(provider: GitProvider): IGitProvider {
-    if (!provider.token) {
-      throw new Error('Git provider token not configured');
-    }
-
     switch (provider.source) {
-      case GitProviderVendors.github:
-        return new GithubProvider(provider.token);
+      case GitProviderVendors.github: {
+        // Check for GitHub App authentication
+        if (
+          provider.appId &&
+          provider.privateKey &&
+          provider.installationId
+        ) {
+          return new GithubProvider({
+            type: 'app',
+            appId: provider.appId,
+            privateKey: provider.privateKey,
+            installationId: provider.installationId,
+          });
+        }
 
-      case GitProviderVendors.gitlab:
+        // Fallback to token authentication
+        if (!provider.token) {
+          throw new Error(
+            'GitHub provider requires either token or GitHub App credentials (appId, privateKey, installationId)',
+          );
+        }
+
+        return new GithubProvider({ type: 'token', token: provider.token });
+      }
+
+      case GitProviderVendors.gitlab: {
+        if (!provider.token) {
+          throw new Error('GitLab provider token not configured');
+        }
+
         return new GitlabProvider(
           provider.token,
           this.logger,
           provider.url || undefined,
         );
+      }
 
       default:
         throw new Error(`Unsupported git provider source: ${provider.source}`);

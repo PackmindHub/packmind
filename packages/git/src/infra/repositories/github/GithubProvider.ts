@@ -2,24 +2,61 @@ import { IGitProvider } from '../../../domain/repositories/IGitProvider';
 import axios, { AxiosInstance } from 'axios';
 import { PackmindLogger } from '@packmind/shared';
 import { isNativeError } from 'util/types';
+import { createAppAuth } from '@octokit/auth-app';
 
 const origin = 'GithubProvider';
 
+export type GithubAuthConfig =
+  | {
+      type: 'token';
+      token: string;
+    }
+  | {
+      type: 'app';
+      appId: string;
+      privateKey: string;
+      installationId: string;
+    };
+
 export class GithubProvider implements IGitProvider {
   private readonly client: AxiosInstance;
+  private readonly authConfig: GithubAuthConfig;
 
   constructor(
-    private readonly token: string,
+    authConfig: GithubAuthConfig,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
+    this.authConfig = authConfig;
     this.client = axios.create({
       baseURL: 'https://api.github.com',
       headers: {
-        Authorization: `token ${token}`,
         'Content-Type': 'application/json',
         Accept: 'application/vnd.github.v3+json',
       },
     });
+
+    // Add interceptor to handle authentication
+    this.client.interceptors.request.use(async (config) => {
+      const token = await this.getAuthToken();
+      config.headers.Authorization = `token ${token}`;
+      return config;
+    });
+  }
+
+  private async getAuthToken(): Promise<string> {
+    if (this.authConfig.type === 'token') {
+      return this.authConfig.token;
+    }
+
+    // GitHub App authentication
+    const auth = createAppAuth({
+      appId: this.authConfig.appId,
+      privateKey: this.authConfig.privateKey,
+      installationId: this.authConfig.installationId,
+    });
+
+    const { token } = await auth({ type: 'installation' });
+    return token;
   }
 
   async listAvailableRepositories(): Promise<
