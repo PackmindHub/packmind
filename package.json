@@ -73,6 +73,7 @@
     "@types/validator": "^13.15.3",
     "@vitejs/plugin-react": "^4.2.0",
     "babel-jest": "^29.7.0",
+    "copy-webpack-plugin": "^11.0.0",
     "esbuild-loader": "^4.3.0",
     "eslint": "^9.8.0",
     "eslint-config-prettier": "^10.1.8",
@@ -110,7 +111,6 @@
     "vite-plugin-checker": "^0.10.3",
     "vite-plugin-dts": "~4.5.0",
     "vite-tsconfig-paths": "^5.1.4",
-    "copy-webpack-plugin": "^11.0.0",
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
@@ -142,6 +142,7 @@
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/platform-express": "^11.1.6",
     "@nestjs/typeorm": "^11.0.0",
+    "@octokit/auth-app": "^8.1.1",
     "@packmind/deployments": "^0.0.1",
     "@react-router/fs-routes": "^7.6.3",
     "@react-router/node": "^7.2.0",

@@ -1,10 +1,16 @@
 import axios from 'axios';
-import { GithubProvider } from './GithubProvider';
+import { GithubProvider, GithubAuthConfig } from './GithubProvider';
 import { PackmindLogger } from '@packmind/shared';
 import { stubLogger } from '@packmind/shared/test';
+import { createAppAuth } from '@octokit/auth-app';
 
 jest.mock('axios');
+jest.mock('@octokit/auth-app');
+
 const mockedAxios = axios as jest.Mocked<typeof axios>;
+const mockedCreateAppAuth = createAppAuth as jest.MockedFunction<
+  typeof createAppAuth
+>;
 
 describe('GithubProvider', () => {
   let githubProvider: GithubProvider;
@@ -17,16 +23,31 @@ describe('GithubProvider', () => {
 
     mockAxiosInstance = {
       get: jest.fn(),
+      interceptors: {
+        request: {
+          use: jest.fn((handler) => {
+            mockAxiosInstance._requestInterceptor = handler;
+            return 0;
+          }),
+        },
+      },
     };
 
     mockedAxios.create.mockReturnValue(mockAxiosInstance);
-
-    githubProvider = new GithubProvider('fake-token', mockLogger);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
   });
+
+  describe('with token authentication', () => {
+    beforeEach(() => {
+      const authConfig: GithubAuthConfig = {
+        type: 'token',
+        token: 'fake-token',
+      };
+      githubProvider = new GithubProvider(authConfig, mockLogger);
+    });
 
   describe('listAvailableRepositories', () => {
     describe('when API call succeeds', () => {
@@ -397,6 +418,101 @@ describe('GithubProvider', () => {
       ).rejects.toThrow(
         `Failed to check if branch exists for ${owner}/${repo}/${branch}, got error: String error`,
       );
+    });
+  });
+  });
+
+  describe('with GitHub App authentication', () => {
+    let mockAuth: jest.Mock;
+
+    beforeEach(() => {
+      mockAuth = jest.fn().mockResolvedValue({ token: 'app-installation-token' });
+      mockedCreateAppAuth.mockReturnValue(mockAuth);
+
+      const authConfig: GithubAuthConfig = {
+        type: 'app',
+        appId: '123456',
+        privateKey: '-----BEGIN RSA PRIVATE KEY-----\ntest\n-----END RSA PRIVATE KEY-----',
+        installationId: '789012',
+      };
+      githubProvider = new GithubProvider(authConfig, mockLogger);
+    });
+
+    describe('listAvailableRepositories', () => {
+      it('uses GitHub App token for authentication', async () => {
+        const mockResponse = {
+          data: [
+            {
+              name: 'test-repo',
+              owner: { login: 'test-owner' },
+              description: 'Test repository',
+              private: false,
+              default_branch: 'main',
+              language: 'TypeScript',
+              stargazers_count: 42,
+              permissions: {
+                pull: true,
+                push: true,
+                admin: false,
+              },
+            },
+          ],
+        };
+
+        mockAxiosInstance.get.mockResolvedValue(mockResponse);
+
+        const result = await githubProvider.listAvailableRepositories();
+
+        expect(mockedCreateAppAuth).toHaveBeenCalledWith({
+          appId: '123456',
+          privateKey: '-----BEGIN RSA PRIVATE KEY-----\ntest\n-----END RSA PRIVATE KEY-----',
+          installationId: '789012',
+        });
+
+        expect(mockAuth).toHaveBeenCalledWith({ type: 'installation' });
+
+        expect(result).toEqual([
+          {
+            name: 'test-repo',
+            owner: 'test-owner',
+            description: 'Test repository',
+            private: false,
+            defaultBranch: 'main',
+            language: 'TypeScript',
+            stars: 42,
+          },
+        ]);
+      });
+    });
+
+    describe('checkBranchExists', () => {
+      const owner = 'test-owner';
+      const repo = 'test-repo';
+      const branch = 'main';
+
+      it('uses GitHub App token for authentication', async () => {
+        const mockResponse = {
+          data: {
+            name: 'main',
+            commit: { sha: 'abc123' },
+            protected: false,
+          },
+        };
+
+        mockAxiosInstance.get.mockResolvedValue(mockResponse);
+
+        const result = await githubProvider.checkBranchExists(owner, repo, branch);
+
+        expect(mockedCreateAppAuth).toHaveBeenCalledWith({
+          appId: '123456',
+          privateKey: '-----BEGIN RSA PRIVATE KEY-----\ntest\n-----END RSA PRIVATE KEY-----',
+          installationId: '789012',
+        });
+
+        expect(mockAuth).toHaveBeenCalledWith({ type: 'installation' });
+
+        expect(result).toBe(true);
+      });
     });
   });
 });

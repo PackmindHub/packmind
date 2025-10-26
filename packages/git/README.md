@@ -32,15 +32,37 @@ This will create or update the file at the specified path in the repository.
 
 ### GitHub Provider
 
-The `GithubProvider` class implements the `IGitProvider` interface and provides functionality to interact with GitHub using a personal access token.
+The `GithubProvider` class implements the `IGitProvider` interface and provides functionality to interact with GitHub using either a personal access token or GitHub App authentication.
 
 #### Initialization
+
+##### With Personal Access Token
 
 ```typescript
 import { GithubProvider } from '@packmind/git';
 
 // Initialize with a GitHub token
-const githubProvider = new GithubProvider('your-github-token', logger);
+const githubProvider = new GithubProvider(
+  { type: 'token', token: 'your-github-token' },
+  logger
+);
+```
+
+##### With GitHub App Authentication
+
+```typescript
+import { GithubProvider } from '@packmind/git';
+
+// Initialize with GitHub App credentials
+const githubProvider = new GithubProvider(
+  {
+    type: 'app',
+    appId: 'your-app-id',
+    privateKey: '-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----',
+    installationId: 'your-installation-id',
+  },
+  logger
+);
 ```
 
 #### Listing Available Repositories
