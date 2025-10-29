@@ -1,40 +1,80 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { standardsGateway } from '../gateways';
-import { RuleId, StandardId } from '@packmind/shared/types';
+import {
+  RuleId,
+  StandardId,
+  SpaceId,
+  OrganizationId,
+} from '@packmind/shared/types';
 import { GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY } from '../../../deployments/api/queryKeys';
 import {
-  STANDARDS_QUERY_SCOPE,
-  GET_STANDARDS_KEY,
-  GET_STANDARD_BY_ID_KEY,
   GET_STANDARD_VERSIONS_KEY,
   GET_RULES_BY_STANDARD_ID_KEY,
+  getStandardsBySpaceKey,
+  getStandardByIdKey,
 } from '../queryKeys';
-import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
+import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
+import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
+import { GET_ONBOARDING_STATUS_KEY } from '../../../accounts/api/queryKeys';
+import { GET_STANDARD_RULES_DETECTION_STATUS_KEY } from '../../../detection/api/queryKeys';
 
 export const useGetStandardsQuery = () => {
+  const { spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
+
   return useQuery({
-    queryKey: GET_STANDARDS_KEY,
+    queryKey: getStandardsBySpaceKey(spaceId),
     queryFn: () => {
-      return standardsGateway.getStandards();
+      if (!spaceId) {
+        throw new Error('Space ID is required to fetch standards');
+      }
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to fetch standards');
+      }
+      return standardsGateway.getStandards({
+        spaceId,
+        organizationId: organization.id,
+      });
     },
+    enabled: !!spaceId && !!organization?.id,
   });
 };
 
-export const getStandardByIdOptions = (id: StandardId) => ({
-  queryKey: [...GET_STANDARD_BY_ID_KEY, id],
-  queryFn: () => standardsGateway.getStandardById(id),
-  enabled: !!id,
+export const getStandardByIdOptions = (
+  standardId: StandardId,
+  spaceId: SpaceId,
+  organizationId: OrganizationId,
+) => ({
+  queryKey: getStandardByIdKey(spaceId, standardId),
+  queryFn: () =>
+    standardsGateway.getStandardById({ standardId, spaceId, organizationId }),
+  enabled: !!standardId && !!spaceId && !!organizationId,
 });
 
 export const useGetStandardByIdQuery = (id: StandardId) => {
-  return useQuery(getStandardByIdOptions(id));
+  const { spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
+
+  return useQuery(
+    getStandardByIdOptions(
+      id,
+      spaceId as SpaceId,
+      organization?.id as OrganizationId,
+    ),
+  );
 };
 
 const CREATE_STANDARD_MUTATION_KEY = 'createStandard';
 
 export const useCreateStandardMutation = () => {
   const queryClient = useQueryClient();
+  const { spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
+
+  if (!spaceId || !organization) {
+    throw new Error('Missing space or organization');
+  }
 
   return useMutation({
     mutationKey: [CREATE_STANDARD_MUTATION_KEY],
@@ -44,17 +84,24 @@ export const useCreateStandardMutation = () => {
       rules: Array<{ content: string }>;
       scope?: string | null;
     }) => {
-      return standardsGateway.createStandard({ ...newStandard });
+      return standardsGateway.createStandard(
+        organization.id,
+        spaceId,
+        newStandard,
+      );
     },
     onSuccess: async () => {
       // Invalidate all standards queries
       await queryClient.invalidateQueries({
-        queryKey: [ORGANIZATION_QUERY_SCOPE, STANDARDS_QUERY_SCOPE],
+        queryKey: getStandardsBySpaceKey(spaceId),
       });
 
       // Deployments overview (new standard can be deployed)
       await queryClient.invalidateQueries({
         queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [GET_ONBOARDING_STATUS_KEY],
       });
     },
     onError: async (error, variables, context) => {
@@ -70,6 +117,12 @@ const UPDATE_STANDARD_MUTATION_KEY = 'updateStandard';
 
 export const useUpdateStandardMutation = () => {
   const queryClient = useQueryClient();
+  const { spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
+
+  if (!spaceId || !organization) {
+    throw new Error('Missing space or organization');
+  }
 
   return useMutation({
     mutationKey: [UPDATE_STANDARD_MUTATION_KEY],
@@ -85,13 +138,18 @@ export const useUpdateStandardMutation = () => {
         scope?: string | null;
       };
     }) => {
-      return standardsGateway.updateStandard(id, standard);
+      return standardsGateway.updateStandard(
+        organization.id,
+        spaceId,
+        id,
+        standard,
+      );
     },
     onSuccess: async (_, variables) => {
       // Invalidate all queries for this specific standard
       // This includes: standard by id, versions, rules (all share the id prefix)
       await queryClient.invalidateQueries({
-        queryKey: [...GET_STANDARD_BY_ID_KEY, variables.id],
+        queryKey: getStandardByIdKey(spaceId, variables.id),
       });
 
       // Invalidate the rules for this standard (rules may have been added/deleted)
@@ -99,9 +157,13 @@ export const useUpdateStandardMutation = () => {
         queryKey: [...GET_RULES_BY_STANDARD_ID_KEY, variables.id],
       });
 
+      await queryClient.invalidateQueries({
+        queryKey: [...GET_STANDARD_RULES_DETECTION_STATUS_KEY, variables.id],
+      });
+
       // Invalidate the standards list (name might have changed)
       await queryClient.invalidateQueries({
-        queryKey: GET_STANDARDS_KEY,
+        queryKey: getStandardsBySpaceKey(spaceId),
       });
 
       // Deployments overview (updated standard version affects deployments)
@@ -142,6 +204,7 @@ const DELETE_STANDARD_MUTATION_KEY = 'deleteStandard';
 
 export const useDeleteStandardMutation = () => {
   const queryClient = useQueryClient();
+  const { spaceId } = useCurrentSpace();
 
   return useMutation({
     mutationKey: [DELETE_STANDARD_MUTATION_KEY],
@@ -151,7 +214,7 @@ export const useDeleteStandardMutation = () => {
     onSuccess: async () => {
       // Invalidate all standards (standard is gone, may have had cached details)
       await queryClient.invalidateQueries({
-        queryKey: [ORGANIZATION_QUERY_SCOPE, STANDARDS_QUERY_SCOPE],
+        queryKey: getStandardsBySpaceKey(spaceId),
       });
 
       // Deployments orphaned (see domain-relationships-map.md)
@@ -172,6 +235,7 @@ const DELETE_STANDARDS_BATCH_MUTATION_KEY = 'deleteStandardsBatch';
 
 export const useDeleteStandardsBatchMutation = () => {
   const queryClient = useQueryClient();
+  const { spaceId } = useCurrentSpace();
 
   return useMutation({
     mutationKey: [DELETE_STANDARDS_BATCH_MUTATION_KEY],
@@ -181,7 +245,7 @@ export const useDeleteStandardsBatchMutation = () => {
     onSuccess: async () => {
       // Same as useDeleteStandardMutation
       await queryClient.invalidateQueries({
-        queryKey: [ORGANIZATION_QUERY_SCOPE, STANDARDS_QUERY_SCOPE],
+        queryKey: getStandardsBySpaceKey(spaceId),
       });
 
       await queryClient.invalidateQueries({

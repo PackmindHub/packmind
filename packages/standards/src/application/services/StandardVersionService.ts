@@ -1,19 +1,20 @@
 import { v4 as uuidv4 } from 'uuid';
 import { StandardId } from '../../domain/entities/Standard';
-import { Rule, createRuleId } from '../../domain/entities/Rule';
+import { Rule, createRuleId, RuleId } from '../../domain/entities/Rule';
 import { IStandardVersionRepository } from '../../domain/repositories/IStandardVersionRepository';
 import { IRuleRepository } from '../../domain/repositories/IRuleRepository';
 import {
   createRuleExampleId,
   PackmindLogger,
   RuleExample,
-} from '@packmind/shared';
-import { UserId } from '@packmind/accounts/types';
-import {
+  ILinterPort,
+  OrganizationId,
+  StandardVersion,
   createStandardVersionId,
   StandardVersionId,
-  StandardVersion,
-} from '../../domain/entities/StandardVersion';
+} from '@packmind/shared';
+import { UserId } from '@packmind/accounts/types';
+
 import { IRuleExampleRepository } from '../../domain/repositories/IRuleExampleRepository';
 
 const origin = 'StandardVersionService';
@@ -24,10 +25,15 @@ export type CreateStandardVersionData = {
   slug: string;
   description: string;
   version: number;
-  rules: Array<{ content: string; examples: RuleExample[] }>;
+  rules: Array<{
+    content: string;
+    examples: RuleExample[];
+    oldRuleId?: RuleId;
+  }>;
   scope: string | null;
   summary?: string | null;
   userId?: UserId | null; // User who created this version through Web UI, null for git commits
+  organizationId?: OrganizationId; // Organization context for copying detection programs
 };
 
 export class StandardVersionService {
@@ -35,9 +41,14 @@ export class StandardVersionService {
     private readonly standardVersionRepository: IStandardVersionRepository,
     private readonly ruleRepository: IRuleRepository,
     private readonly ruleExampleRepository: IRuleExampleRepository,
+    private _linterAdapter?: ILinterPort,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('StandardVersionService initialized');
+  }
+
+  set linterAdapter(value: ILinterPort) {
+    this._linterAdapter = value;
   }
 
   async addStandardVersion(
@@ -74,6 +85,8 @@ export class StandardVersionService {
         rulesCount: standardVersionData.rules.length,
       });
 
+      const ruleMapping = new Map<RuleId, RuleId>();
+
       for (const ruleData of standardVersionData.rules) {
         const rule: Rule = {
           id: createRuleId(uuidv4()),
@@ -81,6 +94,12 @@ export class StandardVersionService {
           standardVersionId: savedVersion.id,
         };
         const newRule = await this.ruleRepository.add(rule);
+
+        // Track old rule ID to new rule ID mapping for detection program copying
+        if (ruleData.oldRuleId) {
+          ruleMapping.set(ruleData.oldRuleId, newRule.id);
+        }
+
         for (const exampleData of ruleData.examples) {
           const example: RuleExample = {
             id: createRuleExampleId(uuidv4()),
@@ -91,6 +110,25 @@ export class StandardVersionService {
           };
           await this.ruleExampleRepository.add(example);
         }
+      }
+
+      // Copy detection programs if linter adapter is available and we have mappings
+      if (
+        this._linterAdapter &&
+        ruleMapping.size > 0 &&
+        standardVersionData.organizationId &&
+        standardVersionData.userId
+      ) {
+        await this.copyDetectionPrograms(
+          ruleMapping,
+          standardVersionData,
+          savedVersion,
+        );
+        await this.copyRuleDetectionAssessments(
+          ruleMapping,
+          standardVersionData,
+          savedVersion,
+        );
       }
 
       this.logger.info('Standard version and rules added successfully', {
@@ -105,6 +143,112 @@ export class StandardVersionService {
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
+    }
+  }
+
+  private async copyDetectionPrograms(
+    ruleMapping: Map<RuleId, RuleId>,
+    standardVersionData: CreateStandardVersionData,
+    savedVersion: StandardVersion,
+  ) {
+    try {
+      const linterAdapter = this._linterAdapter;
+      const organizationId = standardVersionData.organizationId;
+      const userId = standardVersionData.userId;
+
+      if (!linterAdapter || !organizationId || !userId) {
+        this.logger.warn(
+          'Skipping detection program copy - missing dependencies',
+          {
+            hasLinterAdapter: !!linterAdapter,
+            hasOrganizationId: !!organizationId,
+            hasUserId: !!userId,
+          },
+        );
+        return;
+      }
+
+      const copyResults = await Promise.all(
+        Array.from(ruleMapping.entries()).map(([oldRuleId, newRuleId]) =>
+          linterAdapter.copyDetectionProgramsToNewRule({
+            oldRuleId,
+            newRuleId,
+            organizationId,
+            userId,
+          }),
+        ),
+      );
+
+      const totalCopied = copyResults.reduce(
+        (sum, r) => sum + r.copiedProgramsCount,
+        0,
+      );
+
+      if (totalCopied > 0) {
+        this.logger.info('Detection programs copied successfully', {
+          totalCopied,
+          versionId: savedVersion.id,
+        });
+      }
+    } catch (error) {
+      this.logger.error('Failed to copy detection programs', {
+        versionId: savedVersion.id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      // Don't throw - we want the standard version creation to succeed even if detection program copying fails
+    }
+  }
+
+  private async copyRuleDetectionAssessments(
+    ruleMapping: Map<RuleId, RuleId>,
+    standardVersionData: CreateStandardVersionData,
+    savedVersion: StandardVersion,
+  ) {
+    try {
+      const linterAdapter = this._linterAdapter;
+      const organizationId = standardVersionData.organizationId;
+      const userId = standardVersionData.userId;
+
+      if (!linterAdapter || !organizationId || !userId) {
+        this.logger.warn(
+          'Skipping rule detection assessment copy - missing dependencies',
+          {
+            hasLinterAdapter: !!linterAdapter,
+            hasOrganizationId: !!organizationId,
+            hasUserId: !!userId,
+          },
+        );
+        return;
+      }
+
+      const assessmentCopyResults = await Promise.all(
+        Array.from(ruleMapping.entries()).map(([oldRuleId, newRuleId]) =>
+          linterAdapter.copyRuleDetectionAssessments({
+            oldRuleId,
+            newRuleId,
+            organizationId,
+            userId,
+          }),
+        ),
+      );
+
+      const totalAssessmentsCopied = assessmentCopyResults.reduce(
+        (sum, r) => sum + r.copiedAssessmentsCount,
+        0,
+      );
+
+      if (totalAssessmentsCopied > 0) {
+        this.logger.info('Rule detection assessments copied successfully', {
+          totalAssessmentsCopied,
+          versionId: savedVersion.id,
+        });
+      }
+    } catch (error) {
+      this.logger.error('Failed to copy rule detection assessments', {
+        versionId: savedVersion.id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      // Don't throw - we want the standard version creation to succeed even if assessment copying fails
     }
   }
 

@@ -6,6 +6,8 @@
       ],
       "@packmind/analytics": ["packages/editions/src/index.ts"],
       "@packmind/linter": ["packages/editions/src/index.ts"],
+      "@packmind/linter-ast": ["packages/editions/src/index.ts"],
+      "@packmind/linter-execution": ["packages/editions/src/index.ts"],
       "@packmind/amplitude": ["packages/editions/src/index.ts"]
     }
   }

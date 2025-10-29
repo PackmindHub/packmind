@@ -1,5 +1,6 @@
-import { OrganizationId, UserId } from '../accounts';
+import { UserId } from '../accounts';
 import { GitCommit } from '../git';
+import { SpaceId } from '../spaces';
 
 import { Branded, brandedIdFactory } from '../brandedTypes';
 
@@ -13,8 +14,8 @@ export type Standard = {
   description: string;
   version: number;
   gitCommit?: GitCommit;
-  organizationId: OrganizationId;
   userId: UserId; // The owner of the standard
   scope: string | null; // Scope from the latest StandardVersion
+  spaceId: SpaceId; // The space this standard belongs to
   updatedAt?: Date;
 };

@@ -36,9 +36,8 @@ export default function EditStandardRouteModule() {
   }>();
   const navigate = useNavigate();
 
-  const { data: standard, isError: standardError } = useGetStandardByIdQuery(
-    standardId as StandardId,
-  );
+  const { data: getStandardByIdResponse, isError: standardError } =
+    useGetStandardByIdQuery(standardId as StandardId);
 
   const handleSuccess = () => {
     if (orgSlug && spaceSlug && standardId) {
@@ -53,7 +52,11 @@ export default function EditStandardRouteModule() {
   };
 
   // If standard failed to load
-  if (standardError || !standard) {
+  if (
+    standardError ||
+    !getStandardByIdResponse ||
+    !getStandardByIdResponse.standard
+  ) {
     return (
       <PMPage
         title="Error"
@@ -71,14 +74,14 @@ export default function EditStandardRouteModule() {
 
   return (
     <PMPage
-      title={`Edit ${standard.name}`}
+      title={`Edit ${getStandardByIdResponse.standard.name}`}
       subtitle="Update standard details and rules"
       breadcrumbComponent={<AutobreadCrumb />}
     >
       <MarkdownEditorProvider>
         <StandardForm
           mode="edit"
-          standard={standard}
+          standard={getStandardByIdResponse.standard}
           onSuccess={handleSuccess}
           onCancel={handleCancel}
         />

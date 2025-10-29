@@ -40,13 +40,13 @@ export const RecipeSchema = new EntitySchema<
       type: 'uuid',
       nullable: true,
     },
-    organizationId: {
-      name: 'organization_id',
+    userId: {
+      name: 'user_id',
       type: 'uuid',
       nullable: false,
     },
-    userId: {
-      name: 'user_id',
+    spaceId: {
+      name: 'space_id',
       type: 'uuid',
       nullable: false,
     },
@@ -71,22 +71,8 @@ export const RecipeSchema = new EntitySchema<
   },
   indices: [
     {
-      name: 'idx_recipe_organization',
-      columns: ['organizationId'],
-    },
-    {
       name: 'idx_recipe_user',
       columns: ['userId'],
-    },
-    {
-      name: 'idx_recipe_org_user',
-      columns: ['organizationId', 'userId'],
-    },
-    {
-      name: 'idx_recipe_slug',
-      columns: ['slug', 'organizationId'],
-      unique: true,
-      where: 'deleted_at IS NULL',
     },
   ],
 });

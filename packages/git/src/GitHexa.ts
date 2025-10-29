@@ -12,7 +12,10 @@ import { GitRepo, GitRepoId } from './domain/entities/GitRepo';
 import { GitCommit } from './domain/entities/GitCommit';
 import { OrganizationId, UserId } from '@packmind/accounts';
 import { AddGitRepoCommand } from './domain/useCases/IAddGitRepo';
-import { FindGitRepoByOwnerRepoAndBranchInOrganizationCommand } from './domain/useCases/IFindGitRepoByOwnerRepoAndBranchInOrganization';
+import {
+  FindGitRepoByOwnerRepoAndBranchInOrganizationCommand,
+  FindGitRepoByOwnerRepoAndBranchInOrganizationResult,
+} from './domain/useCases/IFindGitRepoByOwnerRepoAndBranchInOrganization';
 import {
   UserProvider,
   OrganizationProvider,
@@ -128,6 +131,18 @@ export class GitHexa extends BaseHexa<GitHexaOpts> {
    */
   public setDeploymentsAdapter(adapter: IDeploymentPort): void {
     this.hexa.setDeploymentsAdapter(adapter);
+  }
+
+  /**
+   * Get the Git adapter for cross-domain access to git data.
+   * This adapter implements IGitPort and can be injected into other domains.
+   */
+  public getGitAdapter(): import('@packmind/shared').IGitPort {
+    return {
+      listProviders: (organizationId) => this.listProviders(organizationId),
+      getOrganizationRepositories: (organizationId) =>
+        this.getOrganizationRepositories(organizationId),
+    };
   }
 
   /**
@@ -270,7 +285,7 @@ export class GitHexa extends BaseHexa<GitHexaOpts> {
 
   public async findGitRepoByOwnerRepoAndBranchInOrganization(
     command: FindGitRepoByOwnerRepoAndBranchInOrganizationCommand,
-  ): Promise<GitRepo | null> {
+  ): Promise<FindGitRepoByOwnerRepoAndBranchInOrganizationResult> {
     return this.hexa.useCases.findGitRepoByOwnerRepoAndBranchInOrganization(
       command,
     );

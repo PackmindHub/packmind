@@ -12,6 +12,7 @@
     "@packmind/standards": "*",
     "@packmind/accounts": "*",
     "@packmind/shared": "*",
+    "@packmind/spaces": "*",
     "uuid": "^11.1.0"
   }
 }

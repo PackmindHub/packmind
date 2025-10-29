@@ -10,6 +10,9 @@ export interface AuthenticatedRequest extends Request {
     name: string;
     userId: UserId;
   };
+  /**
+   * @deprecated organization and its ID should be available through the API parameters.
+   */
   organization: {
     id: OrganizationId;
     name: string;

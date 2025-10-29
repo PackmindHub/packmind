@@ -40,11 +40,6 @@ export const StandardSchema = new EntitySchema<
       type: 'uuid',
       nullable: true,
     },
-    organizationId: {
-      name: 'organization_id',
-      type: 'uuid',
-      nullable: false,
-    },
     userId: {
       name: 'user_id',
       type: 'uuid',
@@ -53,6 +48,11 @@ export const StandardSchema = new EntitySchema<
     scope: {
       type: 'varchar',
       nullable: true,
+    },
+    spaceId: {
+      name: 'space_id',
+      type: 'uuid',
+      nullable: false,
     },
     ...uuidSchema,
     ...timestampsSchemas,
@@ -75,22 +75,8 @@ export const StandardSchema = new EntitySchema<
   },
   indices: [
     {
-      name: 'idx_standard_organization',
-      columns: ['organizationId'],
-    },
-    {
       name: 'idx_standard_user',
       columns: ['userId'],
-    },
-    {
-      name: 'idx_standard_org_user',
-      columns: ['organizationId', 'userId'],
-    },
-    {
-      name: 'idx_standard_slug',
-      columns: ['slug', 'organizationId'],
-      unique: true,
-      where: 'deleted_at IS NULL',
     },
   ],
 });

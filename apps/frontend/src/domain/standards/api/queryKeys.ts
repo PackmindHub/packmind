@@ -1,4 +1,6 @@
 import { ORGANIZATION_QUERY_SCOPE } from '../../organizations/api/queryKeys';
+import { SpaceId, StandardId } from '@packmind/shared';
+import { SPACES_SCOPE } from '../../spaces/api/queryKeys';
 
 export const STANDARDS_QUERY_SCOPE = 'standards';
 
@@ -9,18 +11,27 @@ export enum StandardQueryKeys {
   GET_RULES_BY_STANDARD_ID = 'get-rules-by-standard-id',
 }
 
-// Base query key arrays for reuse
-export const GET_STANDARDS_KEY = [
-  ORGANIZATION_QUERY_SCOPE,
-  STANDARDS_QUERY_SCOPE,
-  StandardQueryKeys.LIST,
-] as const;
+export function getStandardsBySpaceKey(spaceId: SpaceId | undefined) {
+  return [
+    ORGANIZATION_QUERY_SCOPE,
+    SPACES_SCOPE,
+    spaceId,
+    STANDARDS_QUERY_SCOPE,
+  ];
+}
 
-export const GET_STANDARD_BY_ID_KEY = [
-  ORGANIZATION_QUERY_SCOPE,
-  STANDARDS_QUERY_SCOPE,
-  StandardQueryKeys.GET_BY_ID,
-] as const;
+export function getStandardByIdKey(
+  spaceId: SpaceId | undefined,
+  standardId: StandardId,
+) {
+  return [
+    ORGANIZATION_QUERY_SCOPE,
+    SPACES_SCOPE,
+    spaceId,
+    StandardQueryKeys.GET_BY_ID,
+    standardId,
+  ];
+}
 
 export const GET_STANDARD_VERSIONS_KEY = [
   ORGANIZATION_QUERY_SCOPE,

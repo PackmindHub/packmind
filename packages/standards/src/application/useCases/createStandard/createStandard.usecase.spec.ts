@@ -1,7 +1,5 @@
-import {
-  CreateStandardUsecase,
-  CreateStandardRequest,
-} from './createStandard.usecase';
+import { CreateStandardUsecase } from './createStandard.usecase';
+import { CreateStandardCommand } from '@packmind/shared';
 import { StandardService } from '../../services/StandardService';
 import { StandardVersionService } from '../../services/StandardVersionService';
 import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSummaryDelayedJob';
@@ -14,6 +12,7 @@ import slug from 'slug';
 import { PackmindLogger } from '@packmind/shared';
 import { stubLogger } from '@packmind/shared/test';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
+import { createSpaceId } from '@packmind/spaces';
 import { createStandardVersionId } from '../../../domain/entities/StandardVersion';
 
 // Mock external dependencies
@@ -37,6 +36,7 @@ describe('CreateStandardUsecase', () => {
       updateStandard: jest.fn(),
       deleteStandard: jest.fn(),
       listStandardsByOrganization: jest.fn(),
+      listStandardsBySpace: jest.fn(),
       listStandardsByUser: jest.fn(),
       listStandardsByOrganizationAndUser: jest.fn(),
     } as unknown as jest.Mocked<StandardService>;
@@ -64,7 +64,7 @@ describe('CreateStandardUsecase', () => {
     stubbedLogger = stubLogger();
     generateStandardSummaryDelayedJob.addJob.mockResolvedValue('job-id-123');
 
-    standardService.listStandardsByOrganization.mockResolvedValue([]);
+    standardService.listStandardsBySpace.mockResolvedValue([]);
 
     createStandardUsecase = new CreateStandardUsecase(
       standardService,
@@ -80,7 +80,7 @@ describe('CreateStandardUsecase', () => {
 
   describe('createStandard', () => {
     describe('when standard creation succeeds', () => {
-      let inputData: CreateStandardRequest;
+      let inputData: CreateStandardCommand;
       let createdStandard: Standard;
       let createdStandardVersion: StandardVersion;
       let result: Standard;
@@ -93,8 +93,9 @@ describe('CreateStandardUsecase', () => {
             { content: 'Rule 1: Use proper naming conventions' },
             { content: 'Rule 2: Write comprehensive tests' },
           ],
-          organizationId: createOrganizationId(uuidv4()),
-          userId: createUserId(uuidv4()),
+          organizationId: createOrganizationId(uuidv4()).toString(),
+          userId: createUserId(uuidv4()).toString(),
+          spaceId: createSpaceId(uuidv4()).toString(),
           scope: null,
         };
 
@@ -120,7 +121,7 @@ describe('CreateStandardUsecase', () => {
           createdStandardVersion,
         );
 
-        result = await createStandardUsecase.createStandard(inputData);
+        result = await createStandardUsecase.execute(inputData);
       });
 
       it('generates the correct slug from the standard name', () => {
@@ -134,8 +135,8 @@ describe('CreateStandardUsecase', () => {
           description: inputData.description,
           version: 1,
           gitCommit: undefined,
-          organizationId: inputData.organizationId,
-          userId: inputData.userId,
+          userId: createUserId(inputData.userId),
+          spaceId: createSpaceId(inputData.spaceId),
           scope: null,
         });
       });
@@ -219,12 +220,13 @@ describe('CreateStandardUsecase', () => {
 
     describe('with different standard names and slug generation', () => {
       it('generates correct slug for standard with spaces', async () => {
-        const inputData: CreateStandardRequest = {
+        const inputData: CreateStandardCommand = {
           name: 'My Complex Standard Name',
           description: 'Test description',
           rules: [{ content: 'Test rule' }],
-          organizationId: createOrganizationId(uuidv4()),
-          userId: createUserId(uuidv4()),
+          organizationId: createOrganizationId(uuidv4()).toString(),
+          userId: createUserId(uuidv4()).toString(),
+          spaceId: createSpaceId(uuidv4()).toString(),
           scope: null,
         };
 
@@ -244,7 +246,7 @@ describe('CreateStandardUsecase', () => {
           createdStandardVersion,
         );
 
-        await createStandardUsecase.createStandard(inputData);
+        await createStandardUsecase.execute(inputData);
 
         expect(mockSlug).toHaveBeenCalledWith('My Complex Standard Name');
         expect(standardService.addStandard).toHaveBeenCalledWith({
@@ -253,19 +255,20 @@ describe('CreateStandardUsecase', () => {
           slug: 'my-complex-standard-name',
           version: 1,
           gitCommit: undefined,
-          organizationId: inputData.organizationId,
-          userId: inputData.userId,
+          userId: createUserId(inputData.userId),
+          spaceId: createSpaceId(inputData.spaceId),
           scope: null,
         });
       });
 
       it('generates correct slug for standard with special characters', async () => {
-        const inputData: CreateStandardRequest = {
+        const inputData: CreateStandardCommand = {
           name: 'Standard with "Special" Characters!',
           description: 'Test description',
           rules: [{ content: 'Test rule' }],
-          organizationId: createOrganizationId(uuidv4()),
-          userId: createUserId(uuidv4()),
+          organizationId: createOrganizationId(uuidv4()).toString(),
+          userId: createUserId(uuidv4()).toString(),
+          spaceId: createSpaceId(uuidv4()).toString(),
           scope: null,
         };
 
@@ -287,7 +290,7 @@ describe('CreateStandardUsecase', () => {
           createdStandardVersion,
         );
 
-        await createStandardUsecase.createStandard(inputData);
+        await createStandardUsecase.execute(inputData);
 
         expect(mockSlug).toHaveBeenCalledWith(
           'Standard with "Special" Characters!',
@@ -298,8 +301,8 @@ describe('CreateStandardUsecase', () => {
           slug: 'standard-with-special-characters',
           version: 1,
           gitCommit: undefined,
-          organizationId: inputData.organizationId,
-          userId: inputData.userId,
+          userId: createUserId(inputData.userId),
+          spaceId: createSpaceId(inputData.spaceId),
           scope: null,
         });
       });
@@ -307,12 +310,13 @@ describe('CreateStandardUsecase', () => {
 
     describe('with different rule configurations', () => {
       it('handles empty rules array', async () => {
-        const inputData: CreateStandardRequest = {
+        const inputData: CreateStandardCommand = {
           name: 'Standard Without Rules',
           description: 'A standard with no rules',
           rules: [],
-          organizationId: createOrganizationId(uuidv4()),
-          userId: createUserId(uuidv4()),
+          organizationId: createOrganizationId(uuidv4()).toString(),
+          userId: createUserId(uuidv4()).toString(),
+          spaceId: createSpaceId(uuidv4()).toString(),
           scope: null,
         };
 
@@ -324,7 +328,7 @@ describe('CreateStandardUsecase', () => {
           createdStandardVersion,
         );
 
-        await createStandardUsecase.createStandard(inputData);
+        await createStandardUsecase.execute(inputData);
 
         expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
           expect.objectContaining({ rules: [] }),
@@ -332,7 +336,7 @@ describe('CreateStandardUsecase', () => {
       });
 
       it('handles multiple rules', async () => {
-        const inputData: CreateStandardRequest = {
+        const inputData: CreateStandardCommand = {
           name: 'Multi-Rule Standard',
           description: 'A standard with multiple rules',
           rules: [
@@ -341,8 +345,9 @@ describe('CreateStandardUsecase', () => {
             { content: 'Rule 3: Use TypeScript' },
             { content: 'Rule 4: Document your code' },
           ],
-          organizationId: createOrganizationId(uuidv4()),
-          userId: createUserId(uuidv4()),
+          organizationId: createOrganizationId(uuidv4()).toString(),
+          userId: createUserId(uuidv4()).toString(),
+          spaceId: createSpaceId(uuidv4()).toString(),
           scope: null,
         };
 
@@ -354,7 +359,7 @@ describe('CreateStandardUsecase', () => {
           createdStandardVersion,
         );
 
-        await createStandardUsecase.createStandard(inputData);
+        await createStandardUsecase.execute(inputData);
 
         expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -372,12 +377,13 @@ describe('CreateStandardUsecase', () => {
     describe('with scope configuration', () => {
       describe('when scope is provided', () => {
         it('passes scope to StandardVersionService', async () => {
-          const inputData: CreateStandardRequest = {
+          const inputData: CreateStandardCommand = {
             name: 'Scoped Standard',
             description: 'A standard with specific scope',
             rules: [{ content: 'Test rule for TypeScript files' }],
-            organizationId: createOrganizationId(uuidv4()),
-            userId: createUserId(uuidv4()),
+            organizationId: createOrganizationId(uuidv4()).toString(),
+            userId: createUserId(uuidv4()).toString(),
+            spaceId: createSpaceId(uuidv4()).toString(),
             scope: '**/*.ts',
           };
 
@@ -389,7 +395,7 @@ describe('CreateStandardUsecase', () => {
             createdStandardVersion,
           );
 
-          await createStandardUsecase.createStandard(inputData);
+          await createStandardUsecase.execute(inputData);
 
           expect(
             standardVersionService.addStandardVersion,
@@ -403,12 +409,13 @@ describe('CreateStandardUsecase', () => {
 
       describe('when scope is not provided', () => {
         it('passes null scope to StandardVersionService', async () => {
-          const inputData: CreateStandardRequest = {
+          const inputData: CreateStandardCommand = {
             name: 'Unscoped Standard',
             description: 'A standard without specific scope',
             rules: [{ content: 'Test rule for all files' }],
-            organizationId: createOrganizationId(uuidv4()),
-            userId: createUserId(uuidv4()),
+            organizationId: createOrganizationId(uuidv4()).toString(),
+            userId: createUserId(uuidv4()).toString(),
+            spaceId: createSpaceId(uuidv4()).toString(),
             scope: null,
           };
 
@@ -420,7 +427,7 @@ describe('CreateStandardUsecase', () => {
             createdStandardVersion,
           );
 
-          await createStandardUsecase.createStandard(inputData);
+          await createStandardUsecase.execute(inputData);
 
           expect(
             standardVersionService.addStandardVersion,
@@ -435,21 +442,22 @@ describe('CreateStandardUsecase', () => {
 
     describe('when standard creation fails', () => {
       it('throws an error and logs the failure', async () => {
-        const inputData: CreateStandardRequest = {
+        const inputData: CreateStandardCommand = {
           name: 'Test Standard',
           description: 'Test description',
           rules: [{ content: 'Test rule' }],
-          organizationId: createOrganizationId(uuidv4()),
-          userId: createUserId(uuidv4()),
+          organizationId: createOrganizationId(uuidv4()).toString(),
+          userId: createUserId(uuidv4()).toString(),
+          spaceId: createSpaceId(uuidv4()).toString(),
           scope: null,
         };
 
         const error = new Error('Database connection failed');
         standardService.addStandard.mockRejectedValue(error);
 
-        await expect(
-          createStandardUsecase.createStandard(inputData),
-        ).rejects.toThrow('Database connection failed');
+        await expect(createStandardUsecase.execute(inputData)).rejects.toThrow(
+          'Database connection failed',
+        );
 
         expect(standardService.addStandard).toHaveBeenCalledWith({
           name: inputData.name,
@@ -457,8 +465,8 @@ describe('CreateStandardUsecase', () => {
           slug: 'test-standard',
           version: 1,
           gitCommit: undefined,
-          organizationId: inputData.organizationId,
-          userId: inputData.userId,
+          userId: createUserId(inputData.userId),
+          spaceId: createSpaceId(inputData.spaceId),
           scope: null,
         });
 
@@ -471,12 +479,13 @@ describe('CreateStandardUsecase', () => {
 
     describe('when standard version creation fails', () => {
       it('throws an error after standard creation', async () => {
-        const inputData: CreateStandardRequest = {
+        const inputData: CreateStandardCommand = {
           name: 'Test Standard',
           description: 'Test description',
           rules: [{ content: 'Test rule' }],
-          organizationId: createOrganizationId(uuidv4()),
-          userId: createUserId(uuidv4()),
+          organizationId: createOrganizationId(uuidv4()).toString(),
+          userId: createUserId(uuidv4()).toString(),
+          spaceId: createSpaceId(uuidv4()).toString(),
           scope: null,
         };
 
@@ -486,9 +495,9 @@ describe('CreateStandardUsecase', () => {
         const error = new Error('Rule creation failed');
         standardVersionService.addStandardVersion.mockRejectedValue(error);
 
-        await expect(
-          createStandardUsecase.createStandard(inputData),
-        ).rejects.toThrow('Rule creation failed');
+        await expect(createStandardUsecase.execute(inputData)).rejects.toThrow(
+          'Rule creation failed',
+        );
 
         expect(standardService.addStandard).toHaveBeenCalledTimes(1);
         expect(standardVersionService.addStandardVersion).toHaveBeenCalledTimes(
@@ -499,12 +508,13 @@ describe('CreateStandardUsecase', () => {
 
     describe('when summary generation fails', () => {
       it('proceeds with standard creation using null summary', async () => {
-        const inputData: CreateStandardRequest = {
+        const inputData: CreateStandardCommand = {
           name: 'Test Standard',
           description: 'Test description',
           rules: [{ content: 'Test rule' }],
-          organizationId: createOrganizationId(uuidv4()),
-          userId: createUserId(uuidv4()),
+          organizationId: createOrganizationId(uuidv4()).toString(),
+          userId: createUserId(uuidv4()).toString(),
+          spaceId: createSpaceId(uuidv4()).toString(),
           scope: null,
         };
 
@@ -516,7 +526,7 @@ describe('CreateStandardUsecase', () => {
           createdStandardVersion,
         );
 
-        const result = await createStandardUsecase.createStandard(inputData);
+        const result = await createStandardUsecase.execute(inputData);
 
         expect(result).toEqual(createdStandard);
         expect(generateStandardSummaryDelayedJob.addJob).toHaveBeenCalledTimes(
@@ -528,12 +538,13 @@ describe('CreateStandardUsecase', () => {
     describe('with scope parameter', () => {
       describe('when scope is provided', () => {
         it('passes scope to summary generation job', async () => {
-          const inputData: CreateStandardRequest = {
+          const inputData: CreateStandardCommand = {
             name: 'Scoped Standard',
             description: 'A standard with scope',
             rules: [{ content: 'Test rule for TypeScript files' }],
-            organizationId: createOrganizationId(uuidv4()),
-            userId: createUserId(uuidv4()),
+            organizationId: createOrganizationId(uuidv4()).toString(),
+            userId: createUserId(uuidv4()).toString(),
+            spaceId: createSpaceId(uuidv4()).toString(),
             scope: 'src/**/*.ts',
           };
 
@@ -548,7 +559,7 @@ describe('CreateStandardUsecase', () => {
             createdStandardVersion,
           );
 
-          await createStandardUsecase.createStandard(inputData);
+          await createStandardUsecase.execute(inputData);
 
           expect(generateStandardSummaryDelayedJob.addJob).toHaveBeenCalledWith(
             expect.objectContaining({
@@ -576,6 +587,7 @@ describe('CreateStandardUsecase', () => {
           updateStandard: jest.fn(),
           deleteStandard: jest.fn(),
           listStandardsByOrganization: jest.fn(),
+          listStandardsBySpace: jest.fn(),
           listStandardsByUser: jest.fn(),
           listStandardsByOrganizationAndUser: jest.fn(),
         } as unknown as jest.Mocked<StandardService>;
@@ -617,17 +629,18 @@ describe('CreateStandardUsecase', () => {
       });
 
       it('uses base slug if no existing standards conflict', async () => {
-        const inputData: CreateStandardRequest = {
+        const inputData: CreateStandardCommand = {
           name: 'Unique Name',
           description: 'Desc',
           rules: [{ content: 'R1' }],
-          organizationId: createOrganizationId(uuidv4()),
-          userId: createUserId(uuidv4()),
+          organizationId: createOrganizationId(uuidv4()).toString(),
+          userId: createUserId(uuidv4()).toString(),
+          spaceId: createSpaceId(uuidv4()).toString(),
           scope: null,
         };
 
         // No existing standards in the organization
-        standardService.listStandardsByOrganization.mockResolvedValue([]);
+        standardService.listStandardsBySpace.mockResolvedValue([]);
 
         const createdStandard = standardFactory({
           slug: 'unique-name',
@@ -648,11 +661,11 @@ describe('CreateStandardUsecase', () => {
           createdVersion,
         );
 
-        await createStandardUsecase.createStandard(inputData);
+        await createStandardUsecase.execute(inputData);
 
-        expect(
-          standardService.listStandardsByOrganization,
-        ).toHaveBeenCalledWith(inputData.organizationId);
+        expect(standardService.listStandardsBySpace).toHaveBeenCalledWith(
+          inputData.spaceId,
+        );
         expect(standardService.addStandard).toHaveBeenCalledWith(
           expect.objectContaining({ slug: 'unique-name' }),
         );
@@ -662,20 +675,19 @@ describe('CreateStandardUsecase', () => {
       });
 
       it('increments slug with -1 if base slug exists in organization', async () => {
-        const inputData: CreateStandardRequest = {
+        const inputData: CreateStandardCommand = {
           name: 'Test Standard', // base slug: test-standard
           description: 'Desc',
           rules: [{ content: 'R1' }],
-          organizationId: createOrganizationId(uuidv4()),
-          userId: createUserId(uuidv4()),
+          organizationId: createOrganizationId(uuidv4()).toString(),
+          userId: createUserId(uuidv4()).toString(),
+          spaceId: createSpaceId(uuidv4()).toString(),
           scope: null,
         };
 
         // Existing standard uses the base slug already
         const existingA = standardFactory({ slug: 'test-standard' });
-        standardService.listStandardsByOrganization.mockResolvedValue([
-          existingA,
-        ]);
+        standardService.listStandardsBySpace.mockResolvedValue([existingA]);
 
         const createdStandard = standardFactory({ slug: 'test-standard-1' });
         const createdVersion = standardVersionFactory({
@@ -687,7 +699,7 @@ describe('CreateStandardUsecase', () => {
           createdVersion,
         );
 
-        await createStandardUsecase.createStandard(inputData);
+        await createStandardUsecase.execute(inputData);
 
         expect(standardService.addStandard).toHaveBeenCalledWith(
           expect.objectContaining({ slug: 'test-standard-1' }),
@@ -698,19 +710,20 @@ describe('CreateStandardUsecase', () => {
       });
 
       it('increments slug with next available suffix if -1 is also taken', async () => {
-        const inputData: CreateStandardRequest = {
+        const inputData: CreateStandardCommand = {
           name: 'Test Standard', // base slug: test-standard
           description: 'Desc',
           rules: [{ content: 'R1' }],
-          organizationId: createOrganizationId(uuidv4()),
-          userId: createUserId(uuidv4()),
+          organizationId: createOrganizationId(uuidv4()).toString(),
+          userId: createUserId(uuidv4()).toString(),
+          spaceId: createSpaceId(uuidv4()).toString(),
           scope: null,
         };
 
         // Existing standards occupy base and -1
         const existingBase = standardFactory({ slug: 'test-standard' });
         const existingOne = standardFactory({ slug: 'test-standard-1' });
-        standardService.listStandardsByOrganization.mockResolvedValue([
+        standardService.listStandardsBySpace.mockResolvedValue([
           existingBase,
           existingOne,
         ]);
@@ -723,7 +736,7 @@ describe('CreateStandardUsecase', () => {
           createdVersion,
         );
 
-        await createStandardUsecase.createStandard(inputData);
+        await createStandardUsecase.execute(inputData);
 
         expect(standardService.addStandard).toHaveBeenCalledWith(
           expect.objectContaining({ slug: 'test-standard-2' }),

@@ -59,6 +59,37 @@ export class HexaRegistryModule {
   }
 
   /**
+   * Type guard to check if a hexa has setGitPort method
+   */
+  private static hasSetGitPort(
+    hexa: unknown,
+  ): hexa is { setGitPort: (port: unknown) => void } {
+    return hexa != null && typeof hexa === 'object' && 'setGitPort' in hexa;
+  }
+
+  /**
+   * Type guard to check if a hexa has setStandardsPort method
+   */
+  private static hasSetStandardsPort(
+    hexa: unknown,
+  ): hexa is { setStandardsPort: (port: unknown) => void } {
+    return (
+      hexa != null && typeof hexa === 'object' && 'setStandardsPort' in hexa
+    );
+  }
+
+  /**
+   * Type guard to check if a hexa has setDeploymentPort method
+   */
+  private static hasSetDeploymentPort(
+    hexa: unknown,
+  ): hexa is { setDeploymentPort: (port: unknown) => void } {
+    return (
+      hexa != null && typeof hexa === 'object' && 'setDeploymentPort' in hexa
+    );
+  }
+
+  /**
    * Create all providers needed for the HexaRegistry integration
    */
   private static createProviders(
@@ -89,6 +120,10 @@ export class HexaRegistryModule {
         // Initialize async dependencies (e.g., job queues)
         await registry.initAsync();
 
+        // Wire up cross-domain dependencies after all hexas are initialized
+        // This ensures AccountsHexa has access to Git, Standards, and Deployments ports
+        HexaRegistryModule.wireCrossDomainDependencies(registry);
+
         return registry;
       },
       inject: [DataSource],
@@ -106,6 +141,57 @@ export class HexaRegistryModule {
     }
 
     return providers;
+  }
+
+  /**
+   * Wire up cross-domain dependencies after all hexas are initialized.
+   * This method uses getByName to avoid circular dependency issues.
+   */
+  private static wireCrossDomainDependencies(registry: HexaRegistry): void {
+    // Get hexas by name to avoid import cycles
+    const accountsHexa = registry.getByName('AccountsHexa');
+    const gitHexa = registry.getByName('GitHexa');
+    const standardsHexa = registry.getByName('StandardsHexa');
+    const deploymentsHexa = registry.getByName('DeploymentsHexa');
+
+    // Inject ports into AccountsHexa for onboarding status use case
+    if (
+      HexaRegistryModule.hasSetGitPort(accountsHexa) &&
+      gitHexa &&
+      'getGitAdapter' in gitHexa
+    ) {
+      accountsHexa.setGitPort(
+        (
+          gitHexa as unknown as { getGitAdapter: () => unknown }
+        ).getGitAdapter(),
+      );
+    }
+
+    if (
+      HexaRegistryModule.hasSetStandardsPort(accountsHexa) &&
+      standardsHexa &&
+      'getStandardsAdapter' in standardsHexa
+    ) {
+      accountsHexa.setStandardsPort(
+        (
+          standardsHexa as unknown as { getStandardsAdapter: () => unknown }
+        ).getStandardsAdapter(),
+      );
+    }
+
+    if (
+      HexaRegistryModule.hasSetDeploymentPort(accountsHexa) &&
+      deploymentsHexa &&
+      'getDeploymentsUseCases' in deploymentsHexa
+    ) {
+      accountsHexa.setDeploymentPort(
+        (
+          deploymentsHexa as unknown as {
+            getDeploymentsUseCases: () => unknown;
+          }
+        ).getDeploymentsUseCases(),
+      );
+    }
   }
 
   /**

@@ -3,68 +3,112 @@ import {
   StandardVersionService,
   CreateStandardVersionData,
 } from '../../services/StandardVersionService';
-import { StandardId } from '../../../domain/entities/Standard';
-import { RuleId } from '../../../domain/entities/Rule';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
-import { RuleExample, StandardVersion } from '@packmind/shared';
-
-import { LogLevel, PackmindLogger } from '@packmind/shared';
-import { OrganizationId, UserId } from '@packmind/accounts';
+import {
+  AbstractMemberUseCase,
+  MemberContext,
+  PackmindLogger,
+  RuleExample,
+  StandardVersion,
+  UpdateStandardCommand,
+  UpdateStandardResponse,
+  IUpdateStandardUseCase,
+  UserProvider,
+  OrganizationProvider,
+  ISpacesPort,
+  RuleId,
+} from '@packmind/shared';
+import {
+  OrganizationId,
+  UserId,
+  createOrganizationId,
+  createUserId,
+} from '@packmind/accounts';
 import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSummaryDelayedJob';
 
 const origin = 'UpdateStandardUsecase';
 
-export type UpdateStandardRequest = {
-  standardId: StandardId;
-  name: string;
-  description: string;
-  rules: Array<{ id: RuleId; content: string }>;
-  organizationId: OrganizationId;
-  userId: UserId;
-  scope: string | null;
-};
-
-export class UpdateStandardUsecase {
+export class UpdateStandardUsecase
+  extends AbstractMemberUseCase<UpdateStandardCommand, UpdateStandardResponse>
+  implements IUpdateStandardUseCase
+{
   constructor(
+    userProvider: UserProvider,
+    organizationProvider: OrganizationProvider,
     private readonly standardService: StandardService,
     private readonly standardVersionService: StandardVersionService,
     private readonly ruleRepository: IRuleRepository,
     private readonly ruleExampleRepository: IRuleExampleRepository,
     private readonly generateStandardSummaryDelayedJob: GenerateStandardSummaryDelayedJob,
-    private readonly logger: PackmindLogger = new PackmindLogger(
-      origin,
-      LogLevel.DEBUG,
-    ),
+    private readonly spacesPort: ISpacesPort | null,
+    logger: PackmindLogger = new PackmindLogger(origin),
   ) {
+    super(userProvider, organizationProvider, logger);
     this.logger.info('UpdateStandardUsecase initialized');
   }
 
-  public async updateStandard({
-    standardId,
-    name,
-    description,
-    rules,
-    organizationId,
-    userId,
-    scope,
-  }: UpdateStandardRequest) {
+  async executeForMembers(
+    command: UpdateStandardCommand & MemberContext,
+  ): Promise<UpdateStandardResponse> {
+    const {
+      standardId,
+      name,
+      description,
+      rules,
+      organizationId,
+      userId,
+      scope,
+      spaceId,
+    } = command;
     this.logger.info('Starting updateStandard process', {
       standardId,
       name,
       organizationId,
       userId,
+      spaceId,
       rulesCount: rules.length,
       scope,
     });
 
     try {
+      // Validate that space belongs to organization
+      if (this.spacesPort) {
+        const space = await this.spacesPort.getSpaceById(spaceId);
+        if (!space) {
+          this.logger.error('Space not found', { spaceId });
+          throw new Error(`Space with id ${spaceId} not found`);
+        }
+        if (space.organizationId !== organizationId) {
+          this.logger.error('Space does not belong to organization', {
+            spaceId,
+            spaceOrganizationId: space.organizationId,
+            requestOrganizationId: organizationId,
+          });
+          throw new Error(
+            `Space ${spaceId} does not belong to organization ${organizationId}`,
+          );
+        }
+      }
+
       // Check if the standard exists
       const existingStandard =
         await this.standardService.getStandardById(standardId);
       if (!existingStandard) {
         this.logger.error('Standard not found for update', { standardId });
         throw new Error(`Standard with id ${standardId} not found`);
+      }
+
+      // Validate that standard belongs to the specified space
+      if (existingStandard.spaceId !== spaceId) {
+        this.logger.error('Standard does not belong to space', {
+          standardId,
+          standardSpaceId: existingStandard.spaceId,
+          requestSpaceId: spaceId,
+        });
+        throw new Error(
+          `Standard ${standardId} does not belong to space ${spaceId}`,
+        );
       }
 
       this.logger.debug('Found existing standard', {
@@ -103,7 +147,7 @@ export class UpdateStandardUsecase {
           standardId,
           name,
         });
-        return existingStandard;
+        return { standard: existingStandard };
       }
 
       this.logger.info('Content has changed, creating new version', {
@@ -126,6 +170,9 @@ export class UpdateStandardUsecase {
       });
 
       // Update the standard entity
+      const brandedUserId = createUserId(userId);
+      const brandedOrganizationId = createOrganizationId(organizationId);
+
       const updatedStandard = await this.standardService.updateStandard(
         standardId,
         {
@@ -134,8 +181,7 @@ export class UpdateStandardUsecase {
           slug: standardSlug,
           version: nextVersion,
           gitCommit: undefined,
-          organizationId,
-          userId,
+          userId: brandedUserId,
           scope,
         },
       );
@@ -144,6 +190,7 @@ export class UpdateStandardUsecase {
       const rulesWithExamples: Array<{
         content: string;
         examples: RuleExample[];
+        oldRuleId?: RuleId;
       }> = [];
       for (const r of rules) {
         const persisted = existingRulesById.get(r.id);
@@ -152,7 +199,11 @@ export class UpdateStandardUsecase {
           const examples = await this.ruleExampleRepository.findByRuleId(
             persisted.id,
           );
-          rulesWithExamples.push({ content: r.content, examples });
+          rulesWithExamples.push({
+            content: r.content,
+            examples,
+            oldRuleId: persisted.id,
+          });
         } else {
           // New rule or id not found: no examples to copy
           rulesWithExamples.push({ content: r.content, examples: [] });
@@ -168,7 +219,8 @@ export class UpdateStandardUsecase {
         version: nextVersion,
         rules: rulesWithExamples,
         scope,
-        userId, // Track the user who updated this through Web UI
+        userId: brandedUserId, // Track the user who updated this through Web UI
+        organizationId: brandedOrganizationId, // Pass organization context for detection program copying
       };
 
       const newStandardVersion =
@@ -177,8 +229,8 @@ export class UpdateStandardUsecase {
         );
 
       await this.generateStandardSummary(
-        userId,
-        organizationId,
+        brandedUserId,
+        brandedOrganizationId,
         newStandardVersion,
         rulesWithExamples,
       );
@@ -199,7 +251,7 @@ export class UpdateStandardUsecase {
         rulesCount: rules.length,
       });
 
-      return updatedStandard;
+      return { standard: updatedStandard };
     } catch (error) {
       this.logger.error('Failed to update standard', {
         standardId,

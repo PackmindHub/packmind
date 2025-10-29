@@ -12,6 +12,7 @@ export enum AccountQueryKeys {
   VALIDATE_INVITATION = 'validate-invitation',
   VALIDATE_PASSWORD_RESET_TOKEN = 'validate-password-reset-token',
   SELECT_ORGANIZATION = 'select-organization',
+  GET_ONBOARDING_STATUS = 'get-onboarding-status',
 }
 
 // Base query key arrays for reuse
@@ -67,4 +68,10 @@ export const SELECT_ORGANIZATION_KEY = [
   ORGANIZATION_QUERY_SCOPE,
   ACCOUNTS_QUERY_SCOPE,
   AccountQueryKeys.SELECT_ORGANIZATION,
+] as const;
+
+export const GET_ONBOARDING_STATUS_KEY = [
+  ORGANIZATION_QUERY_SCOPE,
+  ACCOUNTS_QUERY_SCOPE,
+  AccountQueryKeys.GET_ONBOARDING_STATUS,
 ] as const;

@@ -8,7 +8,9 @@ import { HexaRegistry } from '@packmind/shared';
 import { makeTestDatasource } from '@packmind/shared/test';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { StandardsHexa, standardsSchemas } from '@packmind/standards';
+import { SpacesHexa, spacesSchemas, Space } from '@packmind/spaces';
 import { DataSource } from 'typeorm';
+import assert from 'assert';
 
 // Mock only Configuration from @packmind/shared
 jest.mock('@packmind/shared', () => {
@@ -29,6 +31,7 @@ jest.mock('@packmind/shared', () => {
 describe('Recipe deployment', () => {
   let accountsHexa: AccountsHexa;
   let recipesHexa: RecipesHexa;
+  let spacesHexa: SpacesHexa;
   let registry: HexaRegistry;
   let dataSource: DataSource;
 
@@ -37,6 +40,7 @@ describe('Recipe deployment', () => {
   let recipeC: Recipe;
   let organization: Organization;
   let user: User;
+  let space: Space;
 
   let recipeVersionA: RecipeVersion;
   let recipeVersionB: RecipeVersion;
@@ -49,6 +53,7 @@ describe('Recipe deployment', () => {
       ...recipesSchemas,
       ...gitSchemas,
       ...standardsSchemas,
+      ...spacesSchemas,
     ]);
     await dataSource.initialize();
     await dataSource.synchronize();
@@ -57,8 +62,11 @@ describe('Recipe deployment', () => {
     registry = new HexaRegistry();
 
     // Register hexas before initialization
+    // NOTE: SpacesHexa must be registered before AccountsHexa
+    // because AccountsHexa needs SpacesPort to create default space during signup
     registry.register(JobsHexa);
     registry.register(GitHexa);
+    registry.register(SpacesHexa);
     registry.register(AccountsHexa);
     registry.register(RecipesHexa);
     registry.register(StandardsHexa);
@@ -71,6 +79,7 @@ describe('Recipe deployment', () => {
     // Get initialized hexas
     accountsHexa = registry.get(AccountsHexa);
     recipesHexa = registry.get(RecipesHexa);
+    spacesHexa = registry.get(SpacesHexa);
 
     // Create test data
     const signUpResult = await accountsHexa.signUpWithOrganization({
@@ -81,12 +90,21 @@ describe('Recipe deployment', () => {
     user = signUpResult.user;
     organization = signUpResult.organization;
 
+    // Get the default "Global" space created during signup
+    const spaces = await spacesHexa
+      .getSpacesAdapter()
+      .listSpacesByOrganization(organization.id);
+    const foundSpace = spaces.find((s) => s.name === 'Global');
+    assert(foundSpace, 'Default Global space should exist');
+    space = foundSpace;
+
     // Create three test recipes
     recipeA = await recipesHexa.captureRecipe({
       name: 'Recipe A',
       content: 'This is recipe A content',
       organizationId: organization.id,
       userId: user.id,
+      spaceId: space.id.toString(),
     });
 
     recipeB = await recipesHexa.captureRecipe({
@@ -94,6 +112,7 @@ describe('Recipe deployment', () => {
       content: 'This is recipe B content',
       organizationId: organization.id,
       userId: user.id,
+      spaceId: space.id.toString(),
     });
 
     recipeC = await recipesHexa.captureRecipe({
@@ -101,6 +120,7 @@ describe('Recipe deployment', () => {
       content: 'This is recipe C content',
       organizationId: organization.id,
       userId: user.id,
+      spaceId: space.id.toString(),
     });
 
     // Get the recipe versions that were created when capturing the recipes

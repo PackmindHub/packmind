@@ -1,5 +1,5 @@
 import { OrganizationId } from '../accounts';
-import { Space } from '../spaces';
+import { Space, SpaceId } from '../spaces';
 
 /**
  * Port interface for cross-domain access to Spaces functionality
@@ -26,4 +26,10 @@ export interface ISpacesPort {
     slug: string,
     organizationId: OrganizationId,
   ): Promise<Space | null>;
+
+  /**
+   * Get a space by its ID
+   * Returns null if the space doesn't exist
+   */
+  getSpaceById(spaceId: SpaceId): Promise<Space | null>;
 }

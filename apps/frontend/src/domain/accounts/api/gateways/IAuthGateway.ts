@@ -29,6 +29,7 @@ export type MeResponse =
       authenticated: false;
       user?: never;
       organization?: never;
+      organizations?: never;
     }
   | {
       message: string;
@@ -44,6 +45,14 @@ export type MeResponse =
         slug: string;
         role: UserOrganizationRole;
       };
+      organizations?: Array<{
+        organization: {
+          id: OrganizationId;
+          name: string;
+          slug: string;
+        };
+        role: UserOrganizationRole;
+      }>;
     };
 
 export interface TokenResponse {

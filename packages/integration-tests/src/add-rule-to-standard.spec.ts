@@ -4,6 +4,7 @@ import { StandardsHexa, standardsSchemas } from '@packmind/standards';
 import { Standard, StandardVersion } from '@packmind/standards/types';
 import { GitHexa, gitSchemas } from '@packmind/git';
 import { JobsHexa } from '@packmind/jobs';
+import { SpacesHexa, spacesSchemas, Space } from '@packmind/spaces';
 import { HexaRegistry } from '@packmind/shared';
 import { makeTestDatasource } from '@packmind/shared/test';
 
@@ -13,12 +14,14 @@ import assert from 'assert';
 describe('Add rule to standard integration', () => {
   let accountsHexa: AccountsHexa;
   let standardsHexa: StandardsHexa;
+  let spacesHexa: SpacesHexa;
   let registry: HexaRegistry;
   let dataSource: DataSource;
 
   let standard: Standard;
   let organization: Organization;
   let user: User;
+  let space: Space;
 
   beforeEach(async () => {
     // Create test datasource with all necessary schemas
@@ -26,6 +29,7 @@ describe('Add rule to standard integration', () => {
       ...accountsSchemas,
       ...standardsSchemas,
       ...gitSchemas,
+      ...spacesSchemas,
     ]);
     await dataSource.initialize();
     await dataSource.synchronize();
@@ -34,8 +38,11 @@ describe('Add rule to standard integration', () => {
     registry = new HexaRegistry();
 
     // Register hexas before initialization
+    // NOTE: SpacesHexa must be registered before AccountsHexa
+    // because AccountsHexa needs SpacesPort to create default space during signup
     registry.register(JobsHexa);
     registry.register(GitHexa);
+    registry.register(SpacesHexa);
     registry.register(AccountsHexa);
     registry.register(StandardsHexa);
 
@@ -46,6 +53,7 @@ describe('Add rule to standard integration', () => {
     // Get initialized hexas
     accountsHexa = registry.get(AccountsHexa);
     standardsHexa = registry.get(StandardsHexa);
+    spacesHexa = registry.get(SpacesHexa);
 
     // Create test data
     const signUpResult = await accountsHexa.signUpWithOrganization({
@@ -55,6 +63,14 @@ describe('Add rule to standard integration', () => {
     });
     user = signUpResult.user;
     organization = signUpResult.organization;
+
+    // Get the default "Global" space created during signup
+    const spaces = await spacesHexa
+      .getSpacesAdapter()
+      .listSpacesByOrganization(organization.id);
+    const foundSpace = spaces.find((s) => s.name === 'Global');
+    assert(foundSpace, 'Default Global space should exist');
+    space = foundSpace;
 
     // Create a standard to work with
     standard = await standardsHexa.createStandard({
@@ -67,6 +83,7 @@ describe('Add rule to standard integration', () => {
       organizationId: organization.id,
       userId: user.id,
       scope: 'typescript',
+      spaceId: space.id,
     });
   });
 
@@ -150,9 +167,14 @@ describe('Add rule to standard integration', () => {
     expect(ruleContents).toContain(newRuleContent);
 
     // Verify that the main standard record was updated with the new version number
-    const updatedStandard = await standardsHexa.getStandardById(standard.id);
+    const updatedStandard = await standardsHexa.getStandardById({
+      standardId: standard.id,
+      organizationId: organization.id,
+      spaceId: space.id,
+      userId: user.id,
+    });
     assert(updatedStandard);
-    expect(updatedStandard.version).toBe(initialVersion + 1);
+    expect(updatedStandard.standard.version).toBe(initialVersion + 1);
   });
 
   test('Multiple rules can be added sequentially', async () => {

@@ -5,20 +5,26 @@ import {
 } from '../../services/StandardVersionService';
 import { StandardSummaryService } from '../../services/StandardSummaryService';
 import { Standard } from '../../../domain/entities/Standard';
-import { createRuleId } from '../../../domain/entities/Rule';
+import { StandardVersionId } from '../../../domain/entities/StandardVersion';
+import { createRuleId, RuleId } from '../../../domain/entities/Rule';
 import {
   RuleExample,
   createRuleExampleId,
 } from '../../../domain/entities/RuleExample';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
+import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import slug from 'slug';
 import {
   LogLevel,
   PackmindLogger,
   AiNotConfigured,
   RuleWithExamples,
+  ILinterPort,
+  ProgrammingLanguage,
+  getErrorMessage,
 } from '@packmind/shared';
 import { OrganizationId, UserId } from '@packmind/accounts';
+import { SpaceId } from '@packmind/shared/types';
 import { v4 as uuidv4 } from 'uuid';
 
 const origin = 'CreateStandardWithExamplesUsecase';
@@ -31,6 +37,7 @@ export type CreateStandardWithExamplesRequest = {
   organizationId: OrganizationId;
   userId: UserId;
   scope: string | null;
+  spaceId: SpaceId;
 };
 
 export class CreateStandardWithExamplesUsecase {
@@ -39,12 +46,17 @@ export class CreateStandardWithExamplesUsecase {
     private readonly standardVersionService: StandardVersionService,
     private readonly standardSummaryService: StandardSummaryService,
     private readonly ruleExampleRepository: IRuleExampleRepository,
+    private readonly ruleRepository: IRuleRepository,
+    private readonly _linterAdapter?: ILinterPort,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.DEBUG,
     ),
   ) {
-    this.logger.info('CreateStandardWithExamplesUsecase initialized');
+    this.logger.info('CreateStandardWithExamplesUsecase initialized', {
+      hasLinterAdapter: !!_linterAdapter,
+      linterAdapterType: _linterAdapter ? typeof _linterAdapter : 'undefined',
+    });
   }
 
   public async createStandardWithExamples({
@@ -55,6 +67,7 @@ export class CreateStandardWithExamplesUsecase {
     organizationId,
     userId,
     scope,
+    spaceId,
   }: CreateStandardWithExamplesRequest) {
     this.logger.info('Starting createStandardWithExamples process', {
       name,
@@ -72,13 +85,14 @@ export class CreateStandardWithExamplesUsecase {
       const baseSlug = slug(name);
       this.logger.info('Base slug generated', { slug: baseSlug });
 
-      // Ensure slug is unique per organization. If it exists, append "-1", "-2", ... until unique
-      this.logger.info('Checking slug uniqueness within organization', {
+      // Ensure slug is unique per space. If it exists, append "-1", "-2", ... until unique
+      this.logger.info('Checking slug uniqueness within space', {
         baseSlug,
+        spaceId,
         organizationId,
       });
       const existingStandards =
-        await this.standardService.listStandardsByOrganization(organizationId);
+        await this.standardService.listStandardsBySpace(spaceId);
       const existingSlugs = new Set(existingStandards.map((s) => s.slug));
 
       let standardSlug = baseSlug;
@@ -101,9 +115,9 @@ export class CreateStandardWithExamplesUsecase {
         slug: standardSlug,
         version: initialVersion,
         gitCommit: undefined,
-        organizationId,
         userId,
         scope,
+        spaceId,
       });
       this.logger.info('Standard entity created successfully', {
         standardId: standard.id,
@@ -167,6 +181,13 @@ export class CreateStandardWithExamplesUsecase {
             0,
           ),
         },
+      );
+
+      // Validate detection programs for all rules with examples
+      await this.assessRulesDetections(
+        standardVersion.id,
+        organizationId,
+        userId,
       );
 
       this.logger.info(
@@ -319,5 +340,131 @@ export class CreateStandardWithExamplesUsecase {
       }
     }
     return summary;
+  }
+
+  private async assessRulesDetections(
+    standardVersionId: StandardVersionId,
+    organizationId: OrganizationId,
+    userId: UserId,
+  ): Promise<void> {
+    this.logger.info(
+      'Starting detection program validation for created rules',
+      {
+        standardVersionId,
+      },
+    );
+
+    // Query the created rules from the repository
+    const createdRules =
+      await this.ruleRepository.findByStandardVersionId(standardVersionId);
+
+    this.logger.debug('Retrieved created rules from repository', {
+      createdRulesCount: createdRules.length,
+    });
+
+    // Fetch examples for all rules in parallel
+    const rulesWithExamples = await Promise.all(
+      createdRules.map(async (rule) => {
+        const examples = await this.ruleExampleRepository.findByRuleId(rule.id);
+        return { rule, examples };
+      }),
+    );
+
+    // Build validation tasks for all rule-language pairs
+    const validationPromises: Promise<void>[] = [];
+
+    for (const { rule, examples } of rulesWithExamples) {
+      // Skip rules without examples
+      if (!examples || examples.length === 0) {
+        this.logger.debug('Skipping rule without examples', {
+          ruleId: rule.id,
+        });
+        continue;
+      }
+
+      // Collect unique languages from examples
+      const uniqueLanguages = new Set<ProgrammingLanguage>();
+      for (const example of examples) {
+        uniqueLanguages.add(example.lang);
+      }
+
+      this.logger.debug('Collected unique languages for rule', {
+        ruleId: rule.id,
+        languagesCount: uniqueLanguages.size,
+        languages: Array.from(uniqueLanguages),
+      });
+
+      // Create validation promises for each language
+      for (const language of uniqueLanguages) {
+        validationPromises.push(
+          this.validateDetectionProgramsForRuleAndLanguage(
+            rule.id,
+            language,
+            organizationId,
+            userId,
+          ),
+        );
+      }
+    }
+
+    this.logger.info('Running detection program validations in parallel', {
+      validationCount: validationPromises.length,
+    });
+
+    // Run all validations in parallel
+    const results = await Promise.allSettled(validationPromises);
+
+    // Log any failures
+    const failures = results.filter((r) => r.status === 'rejected');
+    if (failures.length > 0) {
+      this.logger.warn('Some detection program validations failed', {
+        totalValidations: results.length,
+        failedCount: failures.length,
+      });
+    } else {
+      this.logger.info('All detection program validations completed', {
+        totalValidations: results.length,
+      });
+    }
+  }
+
+  private async validateDetectionProgramsForRuleAndLanguage(
+    ruleId: RuleId,
+    language: ProgrammingLanguage,
+    organizationId: OrganizationId,
+    userId: UserId,
+  ): Promise<void> {
+    if (!this._linterAdapter) {
+      this.logger.warn(
+        'Linter adapter not available, skipping detection program validation',
+        { ruleId, language },
+      );
+      return;
+    }
+
+    this.logger.info('Validating detection programs for rule and language', {
+      ruleId,
+      language,
+    });
+
+    try {
+      await this._linterAdapter.updateRuleDetectionAssessmentAfterUpdate({
+        ruleId,
+        language,
+        organizationId,
+        userId,
+      });
+      this.logger.debug('Detection program validation triggered', {
+        ruleId,
+        language,
+      });
+    } catch (error) {
+      this.logger.error('Failed to update detection program status', {
+        ruleId,
+        language,
+        organizationId,
+        error: getErrorMessage(error),
+      });
+    }
   }
 }

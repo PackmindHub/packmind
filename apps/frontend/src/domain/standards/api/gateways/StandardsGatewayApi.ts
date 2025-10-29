@@ -4,7 +4,17 @@ import {
   StandardId,
   StandardVersionId,
   Rule,
-} from '@packmind/standards/types';
+  NewGateway,
+  IListStandardsBySpaceUseCase,
+  IGetStandardByIdUseCase,
+  SpaceId,
+  OrganizationId,
+  NewPackmindCommandBody,
+  ListStandardsBySpaceResponse,
+  ListStandardsBySpaceCommand,
+  GetStandardByIdCommand,
+  GetStandardByIdResponse,
+} from '@packmind/shared/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import { IStandardsGateway } from './IStandardsGateway';
 import { GitRepoId } from '@packmind/git/types';
@@ -25,24 +35,44 @@ export class StandardsGatewayApi
     return this._api.get<Rule[]>(`${this._endpoint}/${id}/rules`);
   }
 
-  async getStandards(): Promise<Standard[]> {
-    return this._api.get<Standard[]>(this._endpoint);
-  }
+  getStandards: NewGateway<IListStandardsBySpaceUseCase> = async ({
+    spaceId,
+    organizationId,
+  }: NewPackmindCommandBody<ListStandardsBySpaceCommand>) => {
+    return this._api.get<ListStandardsBySpaceResponse>(
+      `/organizations/${organizationId}/spaces/${spaceId}/standards`,
+    );
+  };
 
-  async getStandardById(id: StandardId): Promise<Standard> {
-    return this._api.get<Standard>(`${this._endpoint}/${id}`);
-  }
+  getStandardById: NewGateway<IGetStandardByIdUseCase> = async ({
+    standardId,
+    spaceId,
+    organizationId,
+  }: NewPackmindCommandBody<GetStandardByIdCommand>) => {
+    return this._api.get<GetStandardByIdResponse>(
+      `/organizations/${organizationId}/spaces/${spaceId}/standards/${standardId}`,
+    );
+  };
 
-  async createStandard(standard: {
-    name: string;
-    description: string;
-    rules: Array<{ content: string }>;
-    scope?: string | null;
-  }): Promise<Standard> {
-    return this._api.put<Standard>(this._endpoint, standard);
+  async createStandard(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    standard: {
+      name: string;
+      description: string;
+      rules: Array<{ content: string }>;
+      scope?: string | null;
+    },
+  ): Promise<Standard> {
+    return this._api.post<Standard>(
+      `/organizations/${organizationId}/spaces/${spaceId}/standards`,
+      standard,
+    );
   }
 
   async updateStandard(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
     id: StandardId,
     standard: {
       name: string;
@@ -51,7 +81,10 @@ export class StandardsGatewayApi
       scope?: string | null;
     },
   ): Promise<Standard> {
-    return this._api.post<Standard>(`${this._endpoint}/${id}`, standard);
+    return this._api.post<Standard>(
+      `/organizations/${organizationId}/spaces/${spaceId}/standards/${id}`,
+      standard,
+    );
   }
 
   async deployStandardsToGit(

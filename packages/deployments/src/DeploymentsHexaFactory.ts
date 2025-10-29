@@ -34,6 +34,7 @@ export class DeploymentsHexaFactory {
   };
 
   public services: {
+    // TODO: migrate with port/adapters
     git: GitHexa;
     deployments: IDeploymentsServices;
   };

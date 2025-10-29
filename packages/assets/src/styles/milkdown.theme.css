@@ -34,6 +34,10 @@
   font-size: 15px;
 }
 
+[data-milkdown-padding-variant='none'] .milkdown .ProseMirror {
+  padding: 0;
+}
+
 .milkdown .ProseMirror .milkdown-code-block {
   font-size: 0.8125rem;
   max-width: 800px;

@@ -1,6 +1,7 @@
 import { Crepe } from '@milkdown/crepe';
 import { Milkdown, MilkdownProvider, useEditor } from '@milkdown/react';
 import '@packmind/assets/milkdown.theme';
+import { PMBox } from '@packmind/ui';
 import React from 'react';
 import { ListenerManager } from '@milkdown/kit/plugin/listener';
 
@@ -8,12 +9,14 @@ interface IMarkdownEditorProps {
   defaultValue: string;
   onMarkdownChange?: (value: string) => void;
   readOnly?: boolean;
+  paddingVariant?: 'default' | 'none';
 }
 
 export const MarkdownEditor: React.FC<IMarkdownEditorProps> = ({
   defaultValue,
   onMarkdownChange,
   readOnly = false,
+  paddingVariant = 'default',
 }) => {
   useEditor((root) => {
     const crepe = new Crepe({
@@ -41,7 +44,11 @@ export const MarkdownEditor: React.FC<IMarkdownEditorProps> = ({
     return crepe;
   });
 
-  return <Milkdown />;
+  return (
+    <PMBox data-milkdown-padding-variant={paddingVariant}>
+      <Milkdown />
+    </PMBox>
+  );
 };
 
 export const MarkdownEditorProvider: React.FC<{

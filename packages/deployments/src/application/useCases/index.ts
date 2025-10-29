@@ -1,9 +1,12 @@
 import {
   FindDeployedStandardByRepositoryCommand,
   FindDeployedStandardByRepositoryResponse,
+  FindActiveStandardVersionsByTargetCommand,
+  FindActiveStandardVersionsByTargetResponse,
   GetStandardDeploymentOverviewCommand,
   IDeploymentPort,
   IRecipesPort,
+  ISpacesPort,
   ListDeploymentsByRecipeCommand,
   ListDeploymentsByStandardCommand,
   PublishRecipesCommand,
@@ -29,6 +32,7 @@ import {
   OrganizationProvider,
 } from '@packmind/shared';
 import { FindDeployedStandardByRepositoryUseCase } from './FindDeployedStandardByRepositoryUseCase';
+import { FindActiveStandardVersionsByTargetUseCase } from './FindActiveStandardVersionsByTargetUseCase';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
 import { DeploymentsHexaFactory } from '../../DeploymentsHexaFactory';
 import { IDeploymentsServices } from '../IDeploymentsServices';
@@ -64,6 +68,7 @@ export class DeploymentsUseCases implements IDeploymentPort {
   private recipesPort?: IRecipesPort;
   private readonly codingAgentHexa: CodingAgentHexa;
   private readonly standardsHexa: StandardsHexa;
+  private spacesPort!: ISpacesPort;
   private userProvider?: UserProvider;
   private organizationProvider?: OrganizationProvider;
 
@@ -91,6 +96,13 @@ export class DeploymentsUseCases implements IDeploymentPort {
    */
   public updateRecipesPort(recipesPort: IRecipesPort): void {
     this.recipesPort = recipesPort;
+  }
+
+  /**
+   * Update the spaces port for use cases that depend on it
+   */
+  public updateSpacesPort(spacesPort: ISpacesPort): void {
+    this.spacesPort = spacesPort;
   }
 
   public setAccountProviders(
@@ -148,12 +160,26 @@ export class DeploymentsUseCases implements IDeploymentPort {
     return useCase.execute(command);
   }
 
+  findActiveStandardVersionsByTarget(
+    command: FindActiveStandardVersionsByTargetCommand,
+  ): Promise<FindActiveStandardVersionsByTargetResponse> {
+    const useCase = new FindActiveStandardVersionsByTargetUseCase(
+      this.standardDeploymentRepository,
+    );
+    return useCase.execute(command);
+  }
+
   getDeploymentOverview(
     command: GetDeploymentOverviewCommand,
   ): Promise<DeploymentOverview> {
     if (!this.recipesPort) {
       throw new Error(
         'RecipesPort not available - cannot get deployment overview',
+      );
+    }
+    if (!this.spacesPort) {
+      throw new Error(
+        'SpacesPort not available - cannot get deployment overview',
       );
     }
     const getTargetsByOrganizationUseCase = new GetTargetsByOrganizationUseCase(
@@ -164,6 +190,7 @@ export class DeploymentsUseCases implements IDeploymentPort {
     const useCase = new GetDeploymentOverviewUseCase(
       this.recipesDeploymentRepository,
       this.recipesPort,
+      this.spacesPort,
       this.gitHexa,
       getTargetsByOrganizationUseCase,
     );
@@ -186,6 +213,7 @@ export class DeploymentsUseCases implements IDeploymentPort {
       this.standardDeploymentRepository,
       this.standardsHexa,
       this.gitHexa,
+      this.spacesPort,
     );
     return useCase.execute(command);
   }

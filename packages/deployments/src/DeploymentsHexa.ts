@@ -3,6 +3,7 @@ import {
   HexaRegistry,
   PackmindLogger,
   IRecipesPort,
+  ISpacesPort,
   BaseHexaOpts,
 } from '@packmind/shared';
 import { IDeploymentPort } from '@packmind/shared';
@@ -112,5 +113,12 @@ export class DeploymentsHexa extends BaseHexa {
       organizationProvider,
     );
     this.logger.info('Account providers set in DeploymentsHexa');
+  }
+
+  public setSpacesAdapter(spacesPort: ISpacesPort): void {
+    (this.deploymentsUsecases as DeploymentsUseCases).updateSpacesPort(
+      spacesPort,
+    );
+    this.logger.info('Spaces adapter set in DeploymentsHexa');
   }
 }

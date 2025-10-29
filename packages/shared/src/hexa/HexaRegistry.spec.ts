@@ -1,5 +1,4 @@
-import { HexaRegistry } from './HexaRegistry';
-import { BaseHexa } from './BaseHexa';
+import { HexaRegistry, BaseHexa } from './HexaRegistry';
 import { DataSource } from 'typeorm';
 
 // Mock implementation of BaseHexa for testing

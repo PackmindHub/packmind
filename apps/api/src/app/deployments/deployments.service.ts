@@ -18,6 +18,7 @@ import {
 import { IDeploymentPort } from '@packmind/shared';
 import { DeploymentsHexa } from '@packmind/deployments';
 import { AccountsHexa } from '@packmind/accounts';
+import { SpacesHexa } from '@packmind/spaces';
 
 @Injectable()
 export class DeploymentsService {
@@ -26,11 +27,17 @@ export class DeploymentsService {
   constructor(
     private readonly deploymentsHexa: DeploymentsHexa,
     private readonly accountsHexa: AccountsHexa,
+    private readonly spacesHexa: SpacesHexa,
   ) {
     this.deploymentsHexa.setAccountProviders(
       this.accountsHexa.getUserProvider(),
       this.accountsHexa.getOrganizationProvider(),
     );
+
+    // Set SpacesAdapter
+    const spacesAdapter = this.spacesHexa.getSpacesAdapter();
+    this.deploymentsHexa.setSpacesAdapter(spacesAdapter);
+
     this.deploymentAdapter = this.deploymentsHexa.getDeploymentsUseCases();
   }
 

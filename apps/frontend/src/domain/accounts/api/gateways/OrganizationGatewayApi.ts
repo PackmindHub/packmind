@@ -1,7 +1,10 @@
 import { Organization } from '@packmind/accounts/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import { IOrganizationGateway } from './IOrganizationGateway';
-import { UserOrganizationRole } from '@packmind/shared';
+import {
+  UserOrganizationRole,
+  OrganizationOnboardingStatus,
+} from '@packmind/shared';
 
 export class OrganizationGatewayApi
   extends PackmindGateway
@@ -54,6 +57,14 @@ export class OrganizationGatewayApi
   async excludeUser(orgId: string, userId: string): Promise<void> {
     return this._api.delete(
       `${this._endpoint}/${encodeURIComponent(orgId)}/user/${encodeURIComponent(userId)}`,
+    );
+  }
+
+  async getOnboardingStatus(
+    orgId: string,
+  ): Promise<OrganizationOnboardingStatus> {
+    return this._api.get<OrganizationOnboardingStatus>(
+      `${this._endpoint}/${encodeURIComponent(orgId)}/onboarding-status`,
     );
   }
 }

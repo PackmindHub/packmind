@@ -2,6 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { recipesGateway } from '../gateways';
 import { RecipeId } from '@packmind/recipes/types';
+import { OrganizationId } from '@packmind/accounts/types';
+import { SpaceId } from '@packmind/spaces';
 import { GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY } from '../../../deployments/api/queryKeys';
 import {
   GET_RECIPES_KEY,
@@ -10,26 +12,51 @@ import {
   RECIPES_QUERY_SCOPE,
 } from '../queryKeys';
 import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
+import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
+import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 
 export const useGetRecipesQuery = () => {
+  const { organization } = useAuthContext();
+  const { spaceId } = useCurrentSpace();
+
   return useQuery({
     queryKey: GET_RECIPES_KEY,
     queryFn: () => {
-      return recipesGateway.getRecipes();
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to fetch recipes');
+      }
+      if (!spaceId) {
+        throw new Error('Space ID is required to fetch recipes');
+      }
+      return recipesGateway.getRecipes(organization.id, spaceId);
     },
+    enabled: !!organization?.id && !!spaceId,
   });
 };
 
-export const getRecipeByIdOptions = (id: RecipeId) => ({
+export const getRecipeByIdOptions = (
+  organizationId: OrganizationId,
+  spaceId: SpaceId,
+  id: RecipeId,
+) => ({
   queryKey: [...GET_RECIPE_BY_ID_KEY, id],
   queryFn: () => {
-    return recipesGateway.getRecipeById(id);
+    return recipesGateway.getRecipeById(organizationId, spaceId, id);
   },
-  enabled: !!id, // Only run query if id is provided
+  enabled: !!organizationId && !!spaceId && !!id,
 });
 
 export const useGetRecipeByIdQuery = (id: RecipeId) => {
-  return useQuery(getRecipeByIdOptions(id));
+  const { organization } = useAuthContext();
+  const { spaceId } = useCurrentSpace();
+
+  return useQuery(
+    getRecipeByIdOptions(
+      organization?.id as OrganizationId,
+      spaceId as SpaceId,
+      id,
+    ),
+  );
 };
 
 const UPDATE_RECIPE_MUTATION_KEY = 'updateRecipe';
@@ -75,12 +102,19 @@ export const useUpdateRecipeMutation = () => {
 };
 
 export const useGetRecipeVersionsQuery = (id: RecipeId) => {
+  const { organization } = useAuthContext();
+  const { spaceId } = useCurrentSpace();
+
   return useQuery({
     queryKey: [...GET_RECIPE_VERSIONS_KEY, id],
     queryFn: () => {
-      return recipesGateway.getVersionsById(id);
+      return recipesGateway.getVersionsById(
+        organization?.id as OrganizationId,
+        spaceId as SpaceId,
+        id,
+      );
     },
-    enabled: !!id, // Only run query if id is provided
+    enabled: !!organization?.id && !!spaceId && !!id,
   });
 };
 

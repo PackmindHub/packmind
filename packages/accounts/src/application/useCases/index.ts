@@ -21,9 +21,15 @@ import { ChangeUserRoleUseCase } from './changeUserRole/ChangeUserRoleUseCase';
 import { RequestPasswordResetUseCase } from './RequestPasswordResetUseCase';
 import { ResetPasswordUseCase } from './ResetPasswordUseCase';
 import { ValidatePasswordResetTokenUseCase } from './ValidatePasswordResetTokenUseCase';
+import { GetOrganizationOnboardingStatusUseCase } from './getOrganizationOnboardingStatus/GetOrganizationOnboardingStatusUseCase';
 import { IAccountsServices } from '../IAccountsServices';
 import { PackmindLogger } from '@packmind/shared';
-import { ISpacesPort } from '@packmind/shared/types';
+import {
+  ISpacesPort,
+  IGitPort,
+  IStandardsPort,
+  IDeploymentPort,
+} from '@packmind/shared/types';
 
 import {
   ISignUpWithOrganizationUseCase,
@@ -81,6 +87,9 @@ import {
   IValidatePasswordResetTokenUseCase,
   ValidatePasswordResetTokenCommand,
   ValidatePasswordResetTokenResponse,
+  IGetOrganizationOnboardingStatusUseCase,
+  GetOrganizationOnboardingStatusCommand,
+  OrganizationOnboardingStatus,
 } from '@packmind/shared';
 import {
   IValidateInvitationTokenUseCase,
@@ -115,11 +124,15 @@ export class AccountsUseCases {
   private readonly _requestPasswordReset: IRequestPasswordResetUseCase;
   private readonly _resetPassword: IResetPasswordUseCase;
   private readonly _validatePasswordResetToken: IValidatePasswordResetTokenUseCase;
+  private _getOrganizationOnboardingStatus: IGetOrganizationOnboardingStatusUseCase;
 
   constructor(
     private readonly accountsServices: IAccountsServices,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
     private readonly spacesPort?: ISpacesPort,
+    private gitPort?: IGitPort,
+    private standardsPort?: IStandardsPort,
+    private deploymentPort?: IDeploymentPort,
   ) {
     this._signUpWithOrganization = new SignUpWithOrganizationUseCase(
       accountsServices.getUserService(),
@@ -222,6 +235,17 @@ export class AccountsUseCases {
       accountsServices.getUserService(),
       this.logger,
     );
+    this._getOrganizationOnboardingStatus =
+      new GetOrganizationOnboardingStatusUseCase(
+        accountsServices.getUserService(),
+        accountsServices.getOrganizationService(),
+        accountsServices.getUserService(),
+        this.gitPort ?? null,
+        this.standardsPort ?? null,
+        this.spacesPort ?? null,
+        this.deploymentPort ?? null,
+        this.logger,
+      );
 
     // API key use cases are optional since they require additional dependencies
     const apiKeyService = accountsServices.getApiKeyService?.();
@@ -373,5 +397,42 @@ export class AccountsUseCases {
     command: ValidatePasswordResetTokenCommand,
   ): Promise<ValidatePasswordResetTokenResponse> {
     return this._validatePasswordResetToken.execute(command);
+  }
+
+  public async getOrganizationOnboardingStatus(
+    command: GetOrganizationOnboardingStatusCommand,
+  ): Promise<OrganizationOnboardingStatus> {
+    return this._getOrganizationOnboardingStatus.execute(command);
+  }
+
+  // Port setters for lazy dependency injection
+  public setGitPort(gitPort: IGitPort): void {
+    this.gitPort = gitPort;
+    this.reinitializeOnboardingStatusUseCase();
+  }
+
+  public setStandardsPort(standardsPort: IStandardsPort): void {
+    this.standardsPort = standardsPort;
+    this.reinitializeOnboardingStatusUseCase();
+  }
+
+  public setDeploymentPort(deploymentPort: IDeploymentPort): void {
+    this.deploymentPort = deploymentPort;
+    this.reinitializeOnboardingStatusUseCase();
+  }
+
+  private reinitializeOnboardingStatusUseCase(): void {
+    this._getOrganizationOnboardingStatus =
+      new GetOrganizationOnboardingStatusUseCase(
+        this.accountsServices.getUserService(),
+        this.accountsServices.getOrganizationService(),
+        this.accountsServices.getUserService(),
+        this.gitPort ?? null,
+        this.standardsPort ?? null,
+        this.spacesPort ?? null,
+        this.deploymentPort ?? null,
+        this.logger,
+      );
+    this.logger.debug('GetOrganizationOnboardingStatusUseCase reinitialized');
   }
 }

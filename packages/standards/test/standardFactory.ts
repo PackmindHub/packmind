@@ -1,11 +1,7 @@
 import { Factory } from '@packmind/shared/test';
 import { v4 as uuidv4 } from 'uuid';
-import {
-  createOrganizationId,
-  createStandardId,
-  createUserId,
-  Standard,
-} from '@packmind/shared';
+import { createStandardId, createUserId, Standard } from '@packmind/shared';
+import { createSpaceId } from '@packmind/spaces';
 
 export const standardFactory: Factory<Standard> = (
   standard?: Partial<Standard>,
@@ -17,9 +13,9 @@ export const standardFactory: Factory<Standard> = (
     description: 'Test standard description',
     version: 1,
     gitCommit: undefined,
-    organizationId: createOrganizationId(uuidv4()),
     userId: createUserId(uuidv4()),
     scope: null,
+    spaceId: createSpaceId(uuidv4()),
     ...standard,
   };
 };

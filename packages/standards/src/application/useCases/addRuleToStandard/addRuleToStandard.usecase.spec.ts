@@ -96,6 +96,7 @@ describe('AddRuleToStandardUsecase', () => {
       ruleRepository,
       ruleExampleRepository,
       generateStandardSummaryDelayedJob,
+      undefined, // linterAdapter
       stubbedLogger,
     );
   });
@@ -119,8 +120,8 @@ describe('AddRuleToStandardUsecase', () => {
           standardSlug: 'frontend-testing',
           ruleContent:
             'Use descriptive test names that explain expected behavior',
-          organizationId,
           userId,
+          organizationId,
         };
 
         existingStandard = standardFactory({
@@ -129,7 +130,6 @@ describe('AddRuleToStandardUsecase', () => {
           slug: 'frontend-testing',
           description: 'Guidelines for React and Jest testing',
           version: 2,
-          organizationId,
           userId,
           scope: 'frontend',
         });
@@ -161,7 +161,6 @@ describe('AddRuleToStandardUsecase', () => {
           slug: existingStandard.slug,
           description: existingStandard.description,
           version: 3, // Incremented version
-          organizationId,
           userId,
           scope: existingStandard.scope,
         });
@@ -218,7 +217,6 @@ describe('AddRuleToStandardUsecase', () => {
             slug: existingStandard.slug,
             version: 3, // Incremented from 2 to 3
             gitCommit: undefined,
-            organizationId,
             userId,
             scope: existingStandard.scope,
           },
@@ -229,7 +227,6 @@ describe('AddRuleToStandardUsecase', () => {
         expect(generateStandardSummaryDelayedJob.addJob).toHaveBeenCalledWith(
           expect.objectContaining({
             userId,
-            organizationId,
             standardVersion: expect.objectContaining({
               standardId: existingStandard.id,
               name: existingStandard.name,
@@ -287,12 +284,12 @@ describe('AddRuleToStandardUsecase', () => {
         const inputData: AddRuleToStandardRequest = {
           standardSlug: 'test-standard',
           ruleContent: 'Test rule content',
-          organizationId,
           userId,
+          organizationId,
         };
 
         const existingStandard = standardFactory({
-          organizationId, // Same organization
+          // Same organization
           slug: 'test-standard',
         });
 
@@ -322,8 +319,8 @@ describe('AddRuleToStandardUsecase', () => {
         const inputData: AddRuleToStandardRequest = {
           standardSlug: 'test-standard',
           ruleContent: 'Test rule content',
-          organizationId,
           userId,
+          organizationId,
         };
 
         // When searching for a standard by slug with the wrong organizationId,
@@ -349,8 +346,8 @@ describe('AddRuleToStandardUsecase', () => {
           const inputData: AddRuleToStandardRequest = {
             standardSlug: 'non-existent-standard',
             ruleContent: 'Test rule content',
-            organizationId,
             userId,
+            organizationId,
           };
 
           standardService.findStandardBySlug.mockResolvedValue(null);
@@ -372,12 +369,11 @@ describe('AddRuleToStandardUsecase', () => {
           const inputData: AddRuleToStandardRequest = {
             standardSlug: 'test-standard',
             ruleContent: 'Test rule content',
-            organizationId,
             userId,
+            organizationId,
           };
 
           const existingStandard = standardFactory({
-            organizationId,
             slug: 'test-standard',
           });
 
@@ -400,12 +396,11 @@ describe('AddRuleToStandardUsecase', () => {
         const inputData: AddRuleToStandardRequest = {
           standardSlug: 'test-standard',
           ruleContent: 'Test rule content',
-          organizationId,
           userId,
+          organizationId,
         };
 
         const existingStandard = standardFactory({
-          organizationId,
           slug: 'test-standard',
           version: 1,
         });
@@ -437,12 +432,11 @@ describe('AddRuleToStandardUsecase', () => {
         const inputData: AddRuleToStandardRequest = {
           standardSlug: 'test-standard',
           ruleContent: 'New rule content',
-          organizationId,
           userId,
+          organizationId,
         };
 
         const existingStandard = standardFactory({
-          organizationId,
           slug: 'test-standard',
           version: 5, // Start from version 5
         });
@@ -492,12 +486,11 @@ describe('AddRuleToStandardUsecase', () => {
         const inputData: AddRuleToStandardRequest = {
           standardSlug: 'test-standard',
           ruleContent: 'New coding rule',
-          organizationId,
           userId,
+          organizationId,
         };
 
         const existingStandard = standardFactory({
-          organizationId,
           slug: 'test-standard',
         });
 
@@ -540,12 +533,11 @@ describe('AddRuleToStandardUsecase', () => {
         const inputData: AddRuleToStandardRequest = {
           standardSlug: 'test-standard',
           ruleContent: 'First rule for this standard',
-          organizationId,
           userId,
+          organizationId,
         };
 
         const existingStandard = standardFactory({
-          organizationId,
           slug: 'test-standard',
         });
 

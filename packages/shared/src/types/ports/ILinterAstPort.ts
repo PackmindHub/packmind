@@ -16,4 +16,9 @@ export interface ILinterAstPort {
   isLanguageSupported(language: ProgrammingLanguage): boolean;
 
   getAvailableLanguages(): ProgrammingLanguage[];
+
+  removeConsoleStatements(
+    sourceCode: string,
+    language: ProgrammingLanguage,
+  ): Promise<string>;
 }

@@ -34,7 +34,7 @@ export class PackmindCliHexaFactory {
 
     this.services = {
       listFiles: new ListFiles(),
-      gitRemoteUrlService: new GitService(),
+      gitRemoteUrlService: new GitService(this.logger),
       linterExecutionUseCase: new ExecuteLinterProgramsUseCase(),
     };
 
@@ -47,6 +47,7 @@ export class PackmindCliHexaFactory {
       lintFilesInDirectory: new LintFilesInDirectoryUseCase(
         this.services,
         this.repositories,
+        this.logger,
       ),
     };
   }

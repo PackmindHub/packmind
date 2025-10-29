@@ -14,6 +14,7 @@ import {
   UserId,
   OrganizationId,
 } from '@packmind/accounts';
+import { createSpaceId } from '@packmind/spaces';
 import { stubLogger } from '@packmind/shared/test';
 
 describe('RecipeService', () => {
@@ -31,6 +32,7 @@ describe('RecipeService', () => {
       findByOrganizationId: jest.fn(),
       findByUserId: jest.fn(),
       findByOrganizationAndUser: jest.fn(),
+      findBySpaceId: jest.fn(),
     };
 
     stubbedLogger = stubLogger();
@@ -53,8 +55,8 @@ describe('RecipeService', () => {
         slug: 'test-recipe',
         content: 'Test content',
         version: 1,
-        organizationId: createOrganizationId(uuidv4()),
         userId: createUserId(uuidv4()),
+        spaceId: createSpaceId(uuidv4()),
       };
 
       savedRecipe = {
@@ -135,7 +137,7 @@ describe('RecipeService', () => {
       beforeEach(async () => {
         slug = 'test-recipe';
         organizationId = createOrganizationId('org-123');
-        recipe = recipeFactory({ slug, organizationId });
+        recipe = recipeFactory({ slug });
 
         recipeRepository.findBySlug = jest.fn().mockResolvedValue(recipe);
 
@@ -194,13 +196,13 @@ describe('RecipeService', () => {
           slug: 'updated-recipe',
           content: 'Updated content',
           version: 2,
-          organizationId: createOrganizationId(uuidv4()),
           userId: createUserId(uuidv4()),
         };
 
         updatedRecipe = {
           id: recipeId,
           ...updateData,
+          spaceId: existingRecipe.spaceId,
         };
 
         recipeRepository.findById = jest.fn().mockResolvedValue(existingRecipe);
@@ -217,6 +219,7 @@ describe('RecipeService', () => {
         expect(recipeRepository.add).toHaveBeenCalledWith({
           id: recipeId,
           ...updateData,
+          spaceId: existingRecipe.spaceId,
         });
       });
 
@@ -236,7 +239,6 @@ describe('RecipeService', () => {
           slug: 'non-existent-recipe',
           content: 'This recipe does not exist',
           version: 1,
-          organizationId: createOrganizationId(uuidv4()),
           userId: createUserId(uuidv4()),
         };
 

@@ -33,6 +33,18 @@ module.exports = {
     clean: false,
   },
 
+  optimization: {
+    minimize: true,
+    minimizer: [
+      new (require('terser-webpack-plugin'))({
+        terserOptions: {
+          keep_classnames: true, // Preserve class names for NestJS DI
+          keep_fnames: true, // Preserve function names for decorators and reflection
+        },
+      }),
+    ],
+  },
+
   resolve: {
     extensions: ['.ts', '.js', '.wasm'],
     alias: getWebpackPaths(__dirname),

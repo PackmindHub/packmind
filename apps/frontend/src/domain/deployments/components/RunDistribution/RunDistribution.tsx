@@ -18,16 +18,9 @@ import {
 } from '../../api/queries/DeploymentsQueries';
 import { RunDistributionBodyImpl } from './RunDistributionBody';
 import { RunDistributionCTAImpl } from './RunDistributionCTA';
-import { Standard } from '@packmind/standards/types';
+import { Standard } from '@packmind/shared/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
-import {
-  PMBox,
-  PMHeading,
-  PMSpinner,
-  PMText,
-  PMVStack,
-  PMAlert,
-} from '@packmind/ui';
+import { PMBox, PMHeading, PMSpinner, PMVStack, PMAlert } from '@packmind/ui';
 import { RenderingSettings } from '../RenderingSettings/RenderingSettings';
 
 type RunDistributionCtxType = {
@@ -112,13 +105,20 @@ const RunDistributionComponent: React.FC<RunDistributionProps> = ({
     !isRecipesDeploying;
 
   const deploy = React.useCallback(async () => {
+    if (!organization) return;
+
     try {
       let recipesDeployments: RecipesDeployment[] = [];
       let standardsDeployments: StandardsDeployment[] = [];
 
       if (selectedRecipes.length > 0) {
         recipesDeployments = await deployRecipes(
-          { recipes: selectedRecipes },
+          {
+            recipes: selectedRecipes.map((recipe) => ({
+              ...recipe,
+              organizationId: organization.id,
+            })),
+          },
           selectedTargetIds,
         );
       }

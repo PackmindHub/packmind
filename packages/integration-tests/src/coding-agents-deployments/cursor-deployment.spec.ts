@@ -12,6 +12,7 @@ import {
   StandardVersion,
   StandardVersionId,
 } from '@packmind/standards/types';
+import { SpacesHexa, spacesSchemas, Space } from '@packmind/spaces';
 import { GitHexa, gitSchemas } from '@packmind/git';
 import { JobsHexa } from '@packmind/jobs';
 import { GitRepo, GitProviderVendors } from '@packmind/git/types';
@@ -29,6 +30,7 @@ import {
 } from '@packmind/coding-agent';
 
 import { DataSource } from 'typeorm';
+import { assert } from 'console';
 
 // Mock only Configuration from @packmind/shared
 jest.mock('@packmind/shared', () => {
@@ -50,6 +52,7 @@ describe('Cursor Deployment Integration', () => {
   let accountsHexa: AccountsHexa;
   let recipesHexa: RecipesHexa;
   let standardsHexa: StandardsHexa;
+  let spacesHexa: SpacesHexa;
   let gitHexa: GitHexa;
   let registry: HexaRegistry;
   let dataSource: DataSource;
@@ -60,6 +63,7 @@ describe('Cursor Deployment Integration', () => {
   let standard: Standard;
   let organization: Organization;
   let user: User;
+  let space: Space;
   let gitRepo: GitRepo;
 
   beforeEach(async () => {
@@ -68,6 +72,7 @@ describe('Cursor Deployment Integration', () => {
       ...accountsSchemas,
       ...recipesSchemas,
       ...standardsSchemas,
+      ...spacesSchemas,
       ...gitSchemas,
     ]);
     await dataSource.initialize();
@@ -77,8 +82,11 @@ describe('Cursor Deployment Integration', () => {
     registry = new HexaRegistry();
 
     // Register hexas before initialization
+    // NOTE: SpacesHexa must be registered before AccountsHexa
+    // because AccountsHexa needs SpacesPort to create default space during signup
     registry.register(JobsHexa);
     registry.register(GitHexa);
+    registry.register(SpacesHexa);
     registry.register(AccountsHexa);
     registry.register(RecipesHexa);
     registry.register(StandardsHexa);
@@ -91,6 +99,7 @@ describe('Cursor Deployment Integration', () => {
     accountsHexa = registry.get(AccountsHexa);
     recipesHexa = registry.get(RecipesHexa);
     standardsHexa = registry.get(StandardsHexa);
+    spacesHexa = registry.get(SpacesHexa);
     gitHexa = registry.get(GitHexa);
 
     // Initialize coding agent factory with the registry
@@ -115,12 +124,21 @@ describe('Cursor Deployment Integration', () => {
     user = signUpResult.user;
     organization = signUpResult.organization;
 
+    // Get the default "Global" space created during signup
+    const spaces = await spacesHexa
+      .getSpacesAdapter()
+      .listSpacesByOrganization(organization.id);
+    const foundSpace = spaces.find((s) => s.name === 'Global');
+    assert(foundSpace, 'Default Global space should exist');
+    space = foundSpace;
+
     // Create test recipe
     recipe = await recipesHexa.captureRecipe({
       name: 'Test Recipe for Cursor',
       content: 'This is test recipe content for Cursor deployment',
       organizationId: organization.id,
       userId: user.id,
+      spaceId: space.id.toString(),
     });
 
     // Create test standard
@@ -134,6 +152,7 @@ describe('Cursor Deployment Integration', () => {
       organizationId: organization.id,
       userId: user.id,
       scope: '**/*.{ts,tsx}',
+      spaceId: space.id,
     });
 
     // Create git provider and repository
@@ -294,6 +313,7 @@ describe('Cursor Deployment Integration', () => {
         organizationId: organization.id,
         userId: user.id,
         scope: '', // Empty scope
+        spaceId: space.id,
       });
 
       const standardVersions: StandardVersion[] = [
@@ -572,6 +592,7 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
         organizationId: organization.id,
         userId: user.id,
         scope: '**/*.{ts,tsx,js,jsx}',
+        spaceId: space.id,
       });
 
       const standard2 = await standardsHexa.createStandard({
@@ -581,6 +602,7 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
         organizationId: organization.id,
         userId: user.id,
         scope: '', // No scope - applies to all files
+        spaceId: space.id,
       });
 
       const standardVersions: StandardVersion[] = [

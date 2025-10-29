@@ -2,8 +2,12 @@ import {
   IPackmindGateway,
   ListDetectionPrograms,
   ListDetectionProgramsResult,
+  GetDraftDetectionProgramsForRule,
+  GetDraftDetectionProgramsForRuleResult,
+  GetActiveDetectionProgramsForRule,
+  GetActiveDetectionProgramsForRuleResult,
 } from '../../domain/repositories/IPackmindGateway';
-import { Gateway } from '@packmind/shared';
+import { Gateway, RuleId } from '@packmind/shared';
 interface ApiKeyPayload {
   host: string;
   jwt: string;
@@ -64,7 +68,7 @@ export class PackmindGateway implements IPackmindGateway {
   constructor(private readonly apiKey: string) {}
 
   public listExecutionPrograms: Gateway<ListDetectionPrograms> =
-    async (params: { gitRemoteUrl: string }) => {
+    async (params: { gitRemoteUrl: string; branches: string[] }) => {
       // Decode the API key to get host and JWT
       const decodedApiKey = decodeApiKey(this.apiKey);
 
@@ -78,6 +82,7 @@ export class PackmindGateway implements IPackmindGateway {
       const url = `${host}/api/v0/list-detection-program`;
       const payload = {
         gitRemoteUrl: params.gitRemoteUrl,
+        branches: params.branches,
       };
 
       try {
@@ -130,6 +135,236 @@ export class PackmindGateway implements IPackmindGateway {
 
         throw new Error(
           `Failed to fetch detection programs: Error: ${err?.message || JSON.stringify(error)}`,
+        );
+      }
+    };
+
+  public getDraftDetectionProgramsForRule: Gateway<GetDraftDetectionProgramsForRule> =
+    async (params: {
+      standardSlug: string;
+      ruleId: RuleId;
+      language?: string;
+    }) => {
+      // Decode the API key to get host and JWT
+      const decodedApiKey = decodeApiKey(this.apiKey);
+
+      if (!decodedApiKey.isValid) {
+        throw new Error(`Invalid API key: ${decodedApiKey.error}`);
+      }
+
+      const { host } = decodedApiKey.payload;
+
+      // Make API call to get draft detection programs
+      const url = `${host}/api/v0/list-draft-detection-program`;
+      const payload: {
+        standardSlug: string;
+        ruleId: RuleId;
+        language?: string;
+      } = {
+        standardSlug: params.standardSlug,
+        ruleId: params.ruleId,
+      };
+
+      if (params.language) {
+        payload.language = params.language;
+      }
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${this.apiKey}`,
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          let errorMsg = `API request failed: ${response.status} ${response.statusText}`;
+          try {
+            const errorBody = await response.json();
+            if (errorBody && errorBody.message) {
+              errorMsg = `${errorBody.message}`;
+            }
+          } catch {
+            // ignore if body is not json
+          }
+          throw new Error(errorMsg);
+        }
+
+        const result: {
+          programs: Array<{
+            id: string;
+            code: string;
+            language: string;
+            mode: string;
+            sourceCodeState: 'AST' | 'RAW';
+            ruleId: string;
+          }>;
+          ruleContent: string;
+        } = await response.json();
+
+        if (result.programs.length === 0) {
+          const languageMsg = params.language
+            ? ` for language ${params.language}`
+            : '';
+          throw new Error(
+            `No draft detection programs found for rule ${params.ruleId} in standard ${params.standardSlug}${languageMsg}`,
+          );
+        }
+
+        const transformedResult: GetDraftDetectionProgramsForRuleResult = {
+          programs: result.programs.map((program) => ({
+            language: program.language,
+            code: program.code,
+            mode: program.mode,
+            sourceCodeState: program.sourceCodeState,
+          })),
+          ruleContent: result.ruleContent,
+          standardSlug: params.standardSlug,
+        };
+
+        return transformedResult;
+      } catch (error: unknown) {
+        // Specific handling if the server is not accessible
+        const err = error as {
+          code?: string;
+          name?: string;
+          message?: string;
+          cause?: { code?: string };
+        };
+        const code = err?.code || err?.cause?.code;
+        if (
+          code === 'ECONNREFUSED' ||
+          code === 'ENOTFOUND' ||
+          err?.name === 'FetchError' ||
+          (typeof err?.message === 'string' &&
+            (err.message.includes('Failed to fetch') ||
+              err.message.includes('network') ||
+              err.message.includes('NetworkError')))
+        ) {
+          throw new Error(
+            `Packmind server is not accessible at ${host}. Please check your network connection or the server URL.`,
+          );
+        }
+
+        throw new Error(
+          `Failed to fetch draft detection programs: Error: ${err?.message || JSON.stringify(error)}`,
+        );
+      }
+    };
+
+  public getActiveDetectionProgramsForRule: Gateway<GetActiveDetectionProgramsForRule> =
+    async (params: {
+      standardSlug: string;
+      ruleId: RuleId;
+      language?: string;
+    }) => {
+      // Decode the API key to get host and JWT
+      const decodedApiKey = decodeApiKey(this.apiKey);
+
+      if (!decodedApiKey.isValid) {
+        throw new Error(`Invalid API key: ${decodedApiKey.error}`);
+      }
+
+      const { host } = decodedApiKey.payload;
+
+      // Make API call to get active detection programs
+      const url = `${host}/api/v0/list-active-detection-program`;
+      const payload: {
+        standardSlug: string;
+        ruleId: RuleId;
+        language?: string;
+      } = {
+        standardSlug: params.standardSlug,
+        ruleId: params.ruleId,
+      };
+
+      if (params.language) {
+        payload.language = params.language;
+      }
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${this.apiKey}`,
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          let errorMsg = `API request failed: ${response.status} ${response.statusText}`;
+          try {
+            const errorBody = await response.json();
+            if (errorBody && errorBody.message) {
+              errorMsg = `${errorBody.message}`;
+            }
+          } catch {
+            // ignore if body is not json
+          }
+          throw new Error(errorMsg);
+        }
+
+        const result: {
+          programs: Array<{
+            id: string;
+            code: string;
+            language: string;
+            mode: string;
+            sourceCodeState: 'AST' | 'RAW';
+            ruleId: string;
+          }>;
+          ruleContent: string;
+        } = await response.json();
+
+        if (result.programs.length === 0) {
+          const languageMsg = params.language
+            ? ` for language ${params.language}`
+            : '';
+          throw new Error(
+            `No active detection programs found for rule ${params.ruleId} in standard ${params.standardSlug}${languageMsg}`,
+          );
+        }
+
+        const transformedResult: GetActiveDetectionProgramsForRuleResult = {
+          programs: result.programs.map((program) => ({
+            language: program.language,
+            code: program.code,
+            mode: program.mode,
+            sourceCodeState: program.sourceCodeState,
+          })),
+          ruleContent: result.ruleContent,
+          standardSlug: params.standardSlug,
+        };
+
+        return transformedResult;
+      } catch (error: unknown) {
+        // Specific handling if the server is not accessible
+        const err = error as {
+          code?: string;
+          name?: string;
+          message?: string;
+          cause?: { code?: string };
+        };
+        const code = err?.code || err?.cause?.code;
+        if (
+          code === 'ECONNREFUSED' ||
+          code === 'ENOTFOUND' ||
+          err?.name === 'FetchError' ||
+          (typeof err?.message === 'string' &&
+            (err.message.includes('Failed to fetch') ||
+              err.message.includes('network') ||
+              err.message.includes('NetworkError')))
+        ) {
+          throw new Error(
+            `Packmind server is not accessible at ${host}. Please check your network connection or the server URL.`,
+          );
+        }
+
+        throw new Error(
+          `Failed to fetch active detection programs: Error: ${err?.message || JSON.stringify(error)}`,
         );
       }
     };

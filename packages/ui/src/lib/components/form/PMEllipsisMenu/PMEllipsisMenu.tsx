@@ -5,14 +5,16 @@ import { PMIcon } from '../../content/PMIcon/PMIcon';
 import { PMMenu } from '../PMMenu/PMMenu';
 import { PMPortal } from '../../layout/PMPortal/PMPortal';
 
+export type PMEllipsisMenuAction = {
+  value: string;
+  onClick: () => void | Promise<void>;
+  content: ReactNode;
+};
+
 export type PMEllipsisMenuProps = {
   title?: string;
   disabled?: boolean;
-  actions: {
-    value: string;
-    onClick: () => void | Promise<void>;
-    content: ReactNode;
-  }[];
+  actions: PMEllipsisMenuAction[];
 };
 
 export const PMEllipsisMenu: React.FC<PMEllipsisMenuProps> = ({

@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import {
-  Standard,
   StandardId,
   StandardsHexa,
   Rule,
@@ -21,10 +20,6 @@ export class RulesService {
 
   async getRulesByStandardId(standardId: StandardId): Promise<Rule[]> {
     return this.standardsHexa.getRulesByStandardId(standardId);
-  }
-
-  async getStandardById(standardId: StandardId): Promise<Standard | null> {
-    return this.standardsHexa.getStandardById(standardId);
   }
 
   async createRuleExample(

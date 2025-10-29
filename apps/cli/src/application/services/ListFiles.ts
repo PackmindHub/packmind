@@ -3,7 +3,6 @@ import * as path from 'path';
 
 export type FileResult = {
   path: string;
-  content: string;
 };
 
 export class ListFiles {
@@ -11,6 +10,7 @@ export class ListFiles {
     directoryPath: string,
     extensions: string[],
     excludes: string[] = [],
+    skipHidden = true,
   ): Promise<FileResult[]> {
     const results: FileResult[] = [];
 
@@ -25,6 +25,7 @@ export class ListFiles {
       excludes,
       results,
       includeAllExtensions,
+      skipHidden,
     );
 
     return results;
@@ -36,6 +37,7 @@ export class ListFiles {
     excludes: string[],
     results: FileResult[],
     includeAllExtensions: boolean,
+    skipHidden: boolean,
   ): Promise<void> {
     try {
       const entries = await fs.readdir(directoryPath, { withFileTypes: true });
@@ -48,6 +50,11 @@ export class ListFiles {
           continue;
         }
 
+        // Skip hidden files and directories if skipHidden is true
+        if (skipHidden && entry.name.startsWith('.')) {
+          continue;
+        }
+
         if (entry.isDirectory()) {
           await this.findFilesRecursively(
             fullPath,
@@ -55,20 +62,15 @@ export class ListFiles {
             excludes,
             results,
             includeAllExtensions,
+            skipHidden,
           );
         } else if (entry.isFile()) {
           const fileExtension = path.extname(entry.name);
 
           if (includeAllExtensions || extensions.includes(fileExtension)) {
-            try {
-              const content = await fs.readFile(fullPath, 'utf-8');
-              results.push({
-                path: fullPath,
-                content,
-              });
-            } catch (readError) {
-              console.error(`Error reading file ${fullPath}:`, readError);
-            }
+            results.push({
+              path: fullPath,
+            });
           }
         }
       }
@@ -119,5 +121,14 @@ export class ListFiles {
 
     const regex = new RegExp(regexPattern);
     return regex.test(filePath);
+  }
+
+  public async readFileContent(filePath: string): Promise<string> {
+    try {
+      return await fs.readFile(filePath, 'utf-8');
+    } catch (error) {
+      console.error(`Error reading file ${filePath}:`, error);
+      throw error;
+    }
   }
 }

@@ -44,7 +44,7 @@ describe('DeleteRuleExampleUsecase', () => {
 
     logger = stubLogger();
 
-    usecase = new DeleteRuleExampleUsecase(repositories, logger);
+    usecase = new DeleteRuleExampleUsecase(repositories, undefined, logger);
   });
 
   it('deletes a rule example successfully', async () => {

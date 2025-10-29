@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { deploymentsGateways } from '../gateways';
 import { RecipeId, RecipeVersionId } from '@packmind/recipes/types';
-import { StandardId, StandardVersionId } from '@packmind/standards/types';
+import { StandardId, StandardVersionId } from '@packmind/shared/types';
 import { GitRepoId } from '@packmind/git';
 import { OrganizationId } from '@packmind/accounts';
 import {
@@ -22,6 +22,7 @@ import {
   GET_TARGETS_BY_ORGANIZATION_KEY,
   GET_RENDER_MODE_CONFIGURATION_KEY,
 } from '../queryKeys';
+import { GET_ONBOARDING_STATUS_KEY } from '../../../accounts/api/queryKeys';
 export const useListRecipeDeploymentsQuery = (recipeId: RecipeId) => {
   return useQuery({
     queryKey: [...LIST_RECIPE_DEPLOYMENTS_KEY, recipeId],
@@ -88,6 +89,9 @@ export const useDeployRecipesMutation = () => {
         queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
       });
 
+      await queryClient.invalidateQueries({
+        queryKey: [GET_ONBOARDING_STATUS_KEY],
+      });
       // If we have specific recipe IDs in the future, we can invalidate them individually
     },
     onError: async (error, variables, context) => {
@@ -127,7 +131,9 @@ export const useDeployStandardsMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
       });
-
+      await queryClient.invalidateQueries({
+        queryKey: [GET_ONBOARDING_STATUS_KEY],
+      });
       // If we have specific standard IDs in the future, we can invalidate them individually
     },
     onError: async (error, variables, context) => {

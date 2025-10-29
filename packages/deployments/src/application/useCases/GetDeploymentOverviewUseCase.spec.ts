@@ -1,9 +1,10 @@
 import { GetDeploymentOverviewUseCase } from './GetDeploymentOverviewUseCase';
 import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
-import { RecipesHexa, createRecipeVersionId } from '@packmind/recipes';
+import { createRecipeVersionId } from '@packmind/recipes';
 import { GitHexa } from '@packmind/git';
 import { stubLogger } from '@packmind/shared/test';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
+import { createSpaceId } from '@packmind/shared';
 import { gitRepoFactory } from '@packmind/shared/test/factories/gitRepoFactory';
 import { recipeFactory } from '@packmind/recipes/test';
 import { recipeVersionFactory } from '@packmind/recipes/test';
@@ -11,6 +12,8 @@ import {
   DeploymentOverview,
   DistributionStatus,
   GetDeploymentOverviewCommand,
+  ISpacesPort,
+  IRecipesPort,
 } from '@packmind/shared/types';
 import { deploymentFactory } from '../../../test/deploymentFactory';
 import { targetFactory } from '../../../test/targetFactory';
@@ -19,7 +22,8 @@ import { GetTargetsByOrganizationUseCase } from './GetTargetsByOrganizationUseCa
 describe('GetDeploymentOverviewUseCase', () => {
   let useCase: GetDeploymentOverviewUseCase;
   let deploymentsRepository: jest.Mocked<IRecipesDeploymentRepository>;
-  let recipesHexa: jest.Mocked<RecipesHexa>;
+  let recipesPort: jest.Mocked<IRecipesPort>;
+  let spacesPort: jest.Mocked<ISpacesPort>;
   let gitHexa: jest.Mocked<GitHexa>;
   let getTargetsByOrganizationUseCase: jest.Mocked<GetTargetsByOrganizationUseCase>;
 
@@ -41,9 +45,18 @@ describe('GetDeploymentOverviewUseCase', () => {
       list: jest.fn(),
     } as unknown as jest.Mocked<IRecipesDeploymentRepository>;
 
-    recipesHexa = {
+    recipesPort = {
       listRecipesByOrganization: jest.fn(),
-    } as unknown as jest.Mocked<RecipesHexa>;
+      listRecipesBySpace: jest.fn(),
+      getRecipeVersionById: jest.fn(),
+    } as jest.Mocked<IRecipesPort>;
+
+    spacesPort = {
+      listSpacesByOrganization: jest.fn(),
+      createSpace: jest.fn(),
+      getSpaceBySlug: jest.fn(),
+      getSpaceById: jest.fn(),
+    } as jest.Mocked<ISpacesPort>;
 
     gitHexa = {
       getOrganizationRepositories: jest.fn(),
@@ -55,7 +68,8 @@ describe('GetDeploymentOverviewUseCase', () => {
 
     useCase = new GetDeploymentOverviewUseCase(
       deploymentsRepository,
-      recipesHexa,
+      recipesPort,
+      spacesPort,
       gitHexa,
       getTargetsByOrganizationUseCase,
       logger,
@@ -75,10 +89,19 @@ describe('GetDeploymentOverviewUseCase', () => {
       let result: DeploymentOverview;
 
       beforeEach(async () => {
+        const space = {
+          id: createSpaceId('space-1'),
+          name: 'Global',
+          slug: 'global',
+          organizationId,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
         deploymentsRepository.listByOrganizationIdWithStatus.mockResolvedValue(
           [],
         );
-        recipesHexa.listRecipesByOrganization.mockResolvedValue([]);
+        spacesPort.listSpacesByOrganization.mockResolvedValue([space]);
+        recipesPort.listRecipesBySpace.mockResolvedValue([]);
         gitHexa.getOrganizationRepositories.mockResolvedValue([]);
         getTargetsByOrganizationUseCase.execute.mockResolvedValue([]);
 
@@ -103,10 +126,14 @@ describe('GetDeploymentOverviewUseCase', () => {
         ).toHaveBeenCalledWith(organizationId, DistributionStatus.success);
       });
 
-      it('calls recipes hexa with organization id', () => {
-        expect(recipesHexa.listRecipesByOrganization).toHaveBeenCalledWith(
+      it('calls spaces port to get spaces', () => {
+        expect(spacesPort.listSpacesByOrganization).toHaveBeenCalledWith(
           organizationId,
         );
+      });
+
+      it('calls recipes port for each space', () => {
+        expect(recipesPort.listRecipesBySpace).toHaveBeenCalled();
       });
 
       it('calls git hexa with organization id', () => {
@@ -120,10 +147,19 @@ describe('GetDeploymentOverviewUseCase', () => {
       const mockGitRepo = gitRepoFactory();
 
       beforeEach(async () => {
+        const space = {
+          id: createSpaceId('space-1'),
+          name: 'Global',
+          slug: 'global',
+          organizationId,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
         deploymentsRepository.listByOrganizationIdWithStatus.mockResolvedValue(
           [],
         );
-        recipesHexa.listRecipesByOrganization.mockResolvedValue([]);
+        spacesPort.listSpacesByOrganization.mockResolvedValue([space]);
+        recipesPort.listRecipesBySpace.mockResolvedValue([]);
         gitHexa.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
         getTargetsByOrganizationUseCase.execute.mockResolvedValue([]);
 
@@ -144,16 +180,24 @@ describe('GetDeploymentOverviewUseCase', () => {
         slug: 'unused-recipe',
         content: 'Unused recipe content',
         version: 1,
-        organizationId,
       });
 
       let result: DeploymentOverview;
 
       beforeEach(async () => {
+        const space = {
+          id: createSpaceId('space-1'),
+          name: 'Global',
+          slug: 'global',
+          organizationId,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
         deploymentsRepository.listByOrganizationIdWithStatus.mockResolvedValue(
           [],
         );
-        recipesHexa.listRecipesByOrganization.mockResolvedValue([mockRecipe]);
+        spacesPort.listSpacesByOrganization.mockResolvedValue([space]);
+        recipesPort.listRecipesBySpace.mockResolvedValue([mockRecipe]);
         gitHexa.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
         getTargetsByOrganizationUseCase.execute.mockResolvedValue([]);
 
@@ -185,7 +229,6 @@ describe('GetDeploymentOverviewUseCase', () => {
         slug: 'test-recipe',
         content: 'Test recipe content',
         version: 2,
-        organizationId,
       });
 
       let result: DeploymentOverview;
@@ -204,10 +247,19 @@ describe('GetDeploymentOverviewUseCase', () => {
           recipeVersions: [mockRecipeVersion],
         });
 
+        const space = {
+          id: createSpaceId('space-1'),
+          name: 'Global',
+          slug: 'global',
+          organizationId,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
         deploymentsRepository.listByOrganizationIdWithStatus.mockResolvedValue([
           mockDeployment,
         ]);
-        recipesHexa.listRecipesByOrganization.mockResolvedValue([mockRecipe]);
+        spacesPort.listSpacesByOrganization.mockResolvedValue([space]);
+        recipesPort.listRecipesBySpace.mockResolvedValue([mockRecipe]);
         gitHexa.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
         getTargetsByOrganizationUseCase.execute.mockResolvedValue([
           {
@@ -267,7 +319,6 @@ describe('GetDeploymentOverviewUseCase', () => {
         name: 'Test Recipe',
         slug: 'test-recipe',
         version: 1,
-        organizationId,
       });
 
       let result: DeploymentOverview;
@@ -292,11 +343,20 @@ describe('GetDeploymentOverviewUseCase', () => {
           recipeVersions: [mockRecipeVersion],
         });
 
+        const space = {
+          id: createSpaceId('space-1'),
+          name: 'Global',
+          slug: 'global',
+          organizationId,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
         deploymentsRepository.listByOrganizationIdWithStatus.mockResolvedValue([
           mockDeployment1,
           mockDeployment2,
         ]);
-        recipesHexa.listRecipesByOrganization.mockResolvedValue([mockRecipe]);
+        spacesPort.listSpacesByOrganization.mockResolvedValue([space]);
+        recipesPort.listRecipesBySpace.mockResolvedValue([mockRecipe]);
         gitHexa.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
         getTargetsByOrganizationUseCase.execute.mockResolvedValue([
           {
@@ -342,7 +402,7 @@ describe('GetDeploymentOverviewUseCase', () => {
     describe('public helper methods', () => {
       const mockGitRepo = gitRepoFactory();
       const mockTarget = targetFactory({ gitRepoId: mockGitRepo.id });
-      const mockRecipe = recipeFactory({ organizationId });
+      const mockRecipe = recipeFactory();
 
       describe('getTargetDeploymentStatus', () => {
         it('groups deployments by target correctly', async () => {
@@ -415,7 +475,7 @@ describe('GetDeploymentOverviewUseCase', () => {
         });
 
         it('filters out deployments for other recipes', () => {
-          const otherRecipe = recipeFactory({ organizationId });
+          const otherRecipe = recipeFactory();
           const otherRecipeVersion = recipeVersionFactory({
             recipeId: otherRecipe.id,
             version: 1,

@@ -7,6 +7,9 @@ import { isPackmindError } from '../../../services/api/errors/PackmindError';
 /**
  * Hook to handle authentication errors (401) by redirecting to sign-in.
  * Must be used within a Router context (i.e., in route components).
+ *
+ * Uses AuthService indirectly through useAuthContext for auth state,
+ * and handles error-based redirects in React components.
  */
 export const useAuthErrorHandler = () => {
   const navigate = useNavigate();

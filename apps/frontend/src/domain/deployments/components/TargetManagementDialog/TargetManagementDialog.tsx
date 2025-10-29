@@ -385,7 +385,7 @@ export const TargetManagementDialog: React.FC<TargetManagementDialogProps> = ({
         confirmColorScheme="red"
         onConfirm={confirmDeleteTarget}
         open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
+        onOpenChange={(details) => setDeleteDialogOpen(details.open)}
         isLoading={deleteTargetMutation.isPending}
       />
     </>

@@ -4,20 +4,17 @@ import {
   createGitRepoId,
   createGitProviderId,
   StandardVersion,
-  Standard,
-  createStandardId,
   createStandardVersionId,
-  Recipe,
   RecipeVersion,
   createRecipeVersionId,
-  createRecipeId,
-  createOrganizationId,
   createUserId,
   Target,
   createTargetId,
 } from '@packmind/shared';
 import { v4 as uuidv4 } from 'uuid';
 import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
+import { recipeFactory } from '@packmind/recipes/test';
+import { standardFactory } from '@packmind/standards/test';
 
 describe('AgentsMDDeployer', () => {
   let deployer: AgentsMDDeployer;
@@ -50,15 +47,10 @@ describe('AgentsMDDeployer', () => {
 
   describe('deployRecipes', () => {
     it('creates AGENTS.md file with recipe instructions', async () => {
-      const recipe: Recipe = {
-        id: createRecipeId('recipe-1'),
+      const recipe = recipeFactory({
         name: 'Test Recipe',
         slug: 'test-recipe',
-        content: 'Original recipe content',
-        version: 1,
-        organizationId: createOrganizationId('org-1'),
-        userId: createUserId('user-1'),
-      };
+      });
 
       const recipeVersion: RecipeVersion = {
         id: createRecipeVersionId('recipe-version-1'),
@@ -103,25 +95,15 @@ describe('AgentsMDDeployer', () => {
     });
 
     it('includes multiple recipes in instructions', async () => {
-      const recipe1: Recipe = {
-        id: createRecipeId('recipe-1'),
+      const recipe1 = recipeFactory({
         name: 'Test Recipe 1',
         slug: 'test-recipe-1',
-        content: 'Recipe 1 content',
-        version: 1,
-        organizationId: createOrganizationId('org-1'),
-        userId: createUserId('user-1'),
-      };
+      });
 
-      const recipe2: Recipe = {
-        id: createRecipeId('recipe-2'),
+      const recipe2 = recipeFactory({
         name: 'Test Recipe 2',
         slug: 'test-recipe-2',
-        content: 'Recipe 2 content',
-        version: 1,
-        organizationId: createOrganizationId('org-1'),
-        userId: createUserId('user-1'),
-      };
+      });
 
       const recipeVersion1: RecipeVersion = {
         id: createRecipeVersionId('recipe-version-1'),
@@ -166,16 +148,11 @@ describe('AgentsMDDeployer', () => {
 
   describe('deployStandards', () => {
     it('creates AGENTS.md file with standards instructions', async () => {
-      const standard: Standard = {
-        id: createStandardId('standard-1'),
+      const standard = standardFactory({
         name: 'Test Standard',
         slug: 'test-standard',
-        description: 'Test standard description',
         scope: 'frontend',
-        version: 1,
-        organizationId: createOrganizationId('org-1'),
-        userId: createUserId('user-1'),
-      };
+      });
 
       const standardVersion: StandardVersion = {
         id: createStandardVersionId('standard-version-1'),
@@ -226,27 +203,17 @@ describe('AgentsMDDeployer', () => {
     });
 
     it('includes multiple standards in instructions', async () => {
-      const standard1: Standard = {
-        id: createStandardId('standard-1'),
+      const standard1 = standardFactory({
         name: 'Frontend Standard',
         slug: 'frontend-standard',
-        description: 'Frontend standard description',
         scope: 'frontend',
-        version: 1,
-        organizationId: createOrganizationId('org-1'),
-        userId: createUserId('user-1'),
-      };
+      });
 
-      const standard2: Standard = {
-        id: createStandardId('standard-2'),
+      const standard2 = standardFactory({
         name: 'Backend Standard',
         slug: 'backend-standard',
-        description: 'Backend standard description',
         scope: 'backend',
-        version: 1,
-        organizationId: createOrganizationId('org-1'),
-        userId: createUserId('user-1'),
-      };
+      });
 
       const standardVersion1: StandardVersion = {
         id: createStandardVersionId('standard-version-1'),
@@ -304,15 +271,10 @@ describe('AgentsMDDeployer', () => {
           .fn()
           .mockResolvedValue(existingContent);
 
-        const recipe: Recipe = {
-          id: createRecipeId('recipe-1'),
+        const recipe = recipeFactory({
           name: 'Test Recipe',
           slug: 'test-recipe',
-          content: 'Recipe content',
-          version: 1,
-          organizationId: createOrganizationId('org-1'),
-          userId: createUserId('user-1'),
-        };
+        });
 
         const recipeVersion: RecipeVersion = {
           id: createRecipeVersionId('recipe-version-1'),
@@ -355,15 +317,10 @@ Before writing, editing, or generating ANY code:
           .fn()
           .mockResolvedValue(existingContent);
 
-        const recipe: Recipe = {
-          id: createRecipeId('recipe-1'),
+        const recipe = recipeFactory({
           name: 'Test Recipe',
           slug: 'test-recipe',
-          content: 'Recipe content',
-          version: 1,
-          organizationId: createOrganizationId('org-1'),
-          userId: createUserId('user-1'),
-        };
+        });
 
         const recipeVersion: RecipeVersion = {
           id: createRecipeVersionId('recipe-version-1'),

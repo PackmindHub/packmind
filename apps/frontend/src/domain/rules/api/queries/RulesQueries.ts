@@ -1,12 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { RuleExample, RuleExampleId } from '@packmind/standards/types';
+import {
+  createStandardId,
+  RuleExample,
+  RuleExampleId,
+} from '@packmind/shared/types';
 import { RuleId } from '@packmind/shared/types';
 import { rulesGateway } from '../gateways';
 import { GET_RULE_EXAMPLES_KEY } from '../queryKeys';
 import {
-  GET_STANDARD_BY_ID_KEY,
+  GET_ACTIVE_DETECTION_PROGRAMS_KEY,
+  GET_ALL_DETECTION_PROGRAMS_KEY,
+} from '../../../detection/api/queryKeys';
+import {
   GET_RULES_BY_STANDARD_ID_KEY,
+  getStandardByIdKey,
 } from '../../../standards/api/queryKeys';
+import { useCurrentSpace } from '../../../spaces';
 
 export const useGetRuleExamplesQuery = (
   standardId: string,
@@ -22,6 +31,7 @@ export const useGetRuleExamplesQuery = (
 
 export const useCreateRuleExampleMutation = () => {
   const queryClient = useQueryClient();
+  const { spaceId } = useCurrentSpace();
 
   return useMutation({
     mutationKey: ['createRuleExample'],
@@ -42,29 +52,50 @@ export const useCreateRuleExampleMutation = () => {
     },
     onSuccess: async (newRuleExample: RuleExample, variables) => {
       // Only invalidate specific rule examples
-      await queryClient.invalidateQueries({
-        queryKey: [
-          ...GET_RULE_EXAMPLES_KEY,
-          variables.standardId,
-          variables.ruleId,
-        ],
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [
+            ...GET_RULE_EXAMPLES_KEY,
+            variables.standardId,
+            variables.ruleId,
+          ],
+        }),
 
-      // Only invalidate the specific standard (if examples are embedded)
-      await queryClient.invalidateQueries({
-        queryKey: [...GET_STANDARD_BY_ID_KEY, variables.standardId],
-      });
+        // Only invalidate the specific standard (if examples are embedded)
+        queryClient.invalidateQueries({
+          queryKey: getStandardByIdKey(
+            spaceId,
+            createStandardId(variables.standardId),
+          ),
+        }),
 
-      // Only invalidate rules for this standard
-      await queryClient.invalidateQueries({
-        queryKey: [...GET_RULES_BY_STANDARD_ID_KEY, variables.standardId],
-      });
+        // Only invalidate rules for this standard
+        queryClient.invalidateQueries({
+          queryKey: [...GET_RULES_BY_STANDARD_ID_KEY, variables.standardId],
+        }),
+
+        queryClient.invalidateQueries({
+          queryKey: [
+            ...GET_ACTIVE_DETECTION_PROGRAMS_KEY,
+            variables.standardId,
+            variables.ruleId,
+          ],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [
+            ...GET_ALL_DETECTION_PROGRAMS_KEY,
+            variables.standardId,
+            variables.ruleId,
+          ],
+        }),
+      ]);
     },
   });
 };
 
 export const useUpdateRuleExampleMutation = () => {
   const queryClient = useQueryClient();
+  const { spaceId } = useCurrentSpace();
 
   return useMutation({
     mutationKey: ['updateRuleExample'],
@@ -86,30 +117,45 @@ export const useUpdateRuleExampleMutation = () => {
       );
     },
     onSuccess: async (updatedRuleExample: RuleExample, variables) => {
-      // Only invalidate specific rule examples
-      await queryClient.invalidateQueries({
-        queryKey: [
-          ...GET_RULE_EXAMPLES_KEY,
-          variables.standardId,
-          variables.ruleId,
-        ],
-      });
-
-      // Only invalidate the specific standard (if examples are embedded)
-      await queryClient.invalidateQueries({
-        queryKey: [...GET_STANDARD_BY_ID_KEY, variables.standardId],
-      });
-
-      // Only invalidate rules for this standard
-      await queryClient.invalidateQueries({
-        queryKey: [...GET_RULES_BY_STANDARD_ID_KEY, variables.standardId],
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [
+            ...GET_RULE_EXAMPLES_KEY,
+            variables.standardId,
+            variables.ruleId,
+          ],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: getStandardByIdKey(
+            spaceId,
+            createStandardId(variables.standardId),
+          ),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [...GET_RULES_BY_STANDARD_ID_KEY, variables.standardId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [
+            ...GET_ACTIVE_DETECTION_PROGRAMS_KEY,
+            variables.standardId,
+            variables.ruleId,
+          ],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [
+            ...GET_ALL_DETECTION_PROGRAMS_KEY,
+            variables.standardId,
+            variables.ruleId,
+          ],
+        }),
+      ]);
     },
   });
 };
 
 export const useDeleteRuleExampleMutation = () => {
   const queryClient = useQueryClient();
+  const { spaceId } = useCurrentSpace();
 
   return useMutation({
     mutationKey: ['deleteRuleExample'],
@@ -125,24 +171,38 @@ export const useDeleteRuleExampleMutation = () => {
       );
     },
     onSuccess: async (_, variables) => {
-      // Only invalidate specific rule examples
-      await queryClient.invalidateQueries({
-        queryKey: [
-          ...GET_RULE_EXAMPLES_KEY,
-          variables.standardId,
-          variables.ruleId,
-        ],
-      });
-
-      // Only invalidate the specific standard (if examples are embedded)
-      await queryClient.invalidateQueries({
-        queryKey: [...GET_STANDARD_BY_ID_KEY, variables.standardId],
-      });
-
-      // Only invalidate rules for this standard
-      await queryClient.invalidateQueries({
-        queryKey: [...GET_RULES_BY_STANDARD_ID_KEY, variables.standardId],
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [
+            ...GET_RULE_EXAMPLES_KEY,
+            variables.standardId,
+            variables.ruleId,
+          ],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: getStandardByIdKey(
+            spaceId,
+            createStandardId(variables.standardId),
+          ),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [...GET_RULES_BY_STANDARD_ID_KEY, variables.standardId],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [
+            ...GET_ACTIVE_DETECTION_PROGRAMS_KEY,
+            variables.standardId,
+            variables.ruleId,
+          ],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [
+            ...GET_ALL_DETECTION_PROGRAMS_KEY,
+            variables.standardId,
+            variables.ruleId,
+          ],
+        }),
+      ]);
     },
   });
 };

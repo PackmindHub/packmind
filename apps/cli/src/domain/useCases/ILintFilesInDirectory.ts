@@ -1,8 +1,12 @@
-import { IPublicUseCase } from '@packmind/shared';
+import { IPublicUseCase, RuleId } from '@packmind/shared';
 import { LintViolation } from '../entities/LintViolation';
 
 export type LintFilesInDirectoryCommand = {
   path: string;
+  draftMode?: boolean;
+  standardSlug?: string;
+  ruleId?: RuleId;
+  language?: string;
 };
 
 export type LintFilesInDirectoryResult = {

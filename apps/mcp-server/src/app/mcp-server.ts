@@ -4,13 +4,17 @@ import { FastifyInstance } from 'fastify';
 import {
   getAllProgrammingLanguages,
   LogLevel,
+  OrganizationId,
   PackmindLogger,
   ProgrammingLanguage,
   RecipeStep,
   RuleWithExamples,
+  Space,
   stringToProgrammingLanguage,
 } from '@packmind/shared';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
+import { IAnalyticsPort } from '@packmind/shared/types';
+import { AnalyticsAdapter } from '@packmind/amplitude';
 import packmindOnboardingModeSelection from './prompts/packmind-onboarding-mode-selection';
 import packmindOnboardingCodebaseAnalysis from './prompts/packmind-onboarding-codebase-analysis';
 import packmindOnboardingGitHistory from './prompts/packmind-onboarding-git-history';
@@ -32,6 +36,7 @@ import {
   ADD_RULE_WORKFLOW_STEPS,
   AddRuleWorkflowStep,
 } from './prompts/packmind-add-rule-workflow';
+import { extractCodeFromMarkdown } from '@packmind/shared';
 
 interface UserContext {
   email: string;
@@ -61,6 +66,29 @@ const isRecipeWorkflowStep = (value: string): value is RecipeWorkflowStep =>
 const isAddRuleWorkflowStep = (value: string): value is AddRuleWorkflowStep =>
   Object.prototype.hasOwnProperty.call(ADD_RULE_WORKFLOW_STEPS, value);
 
+// Temporary: for now, we just deduce the space to use based on the organization
+async function getGlobalSpace(
+  fastify: FastifyInstance,
+  organizationId: OrganizationId,
+): Promise<Space> {
+  const spacesHexa = fastify.spacesHexa();
+  if (!spacesHexa) {
+    throw new Error('SpacesHexa not available');
+  }
+
+  const spaces = await spacesHexa
+    .getSpacesAdapter()
+    .listSpacesByOrganization(organizationId);
+
+  if (!spaces || spaces.length === 0) {
+    throw new Error(
+      'No spaces found in organization. Please create a space first before.',
+    );
+  }
+
+  return spaces[0];
+}
+
 export function createMCPServer(
   fastify: FastifyInstance,
   userContext?: UserContext,
@@ -78,8 +106,11 @@ export function createMCPServer(
   });
 
   logger.info('Create MCP server', {
-    user: userContext ? userContext.email : 'anonymous',
+    user: userContext ? userContext.userId : 'anonymous',
   });
+
+  // Initialize analytics adapter
+  const analyticsAdapter: IAnalyticsPort = new AnalyticsAdapter(logger);
 
   // Debug logging for fastify decorators
   logger.debug('Checking fastify decorators:', {
@@ -206,6 +237,16 @@ export function createMCPServer(
         throw new Error('User context is required to create recipes');
       }
 
+      const globalSpace = await getGlobalSpace(
+        fastify,
+        createOrganizationId(userContext.organizationId),
+      );
+      logger.info('Using global space for recipe creation', {
+        spaceId: globalSpace.id,
+        spaceName: globalSpace.name,
+        organizationId: userContext.organizationId,
+      });
+
       const recipe = await recipesHexa.captureRecipe({
         name,
         summary,
@@ -214,7 +255,16 @@ export function createMCPServer(
         steps: steps as RecipeStep[],
         organizationId: createOrganizationId(userContext.organizationId),
         userId: createUserId(userContext.userId),
+        spaceId: globalSpace.id,
       });
+
+      // Track analytics event
+      analyticsAdapter.trackEvent(
+        createUserId(userContext.userId),
+        createOrganizationId(userContext.organizationId),
+        'mcp_tool_call',
+        { tool: `${mcpToolPrefix}_create_recipe` },
+      );
 
       return {
         content: [
@@ -267,6 +317,14 @@ export function createMCPServer(
           gitRepo,
           target,
         });
+
+        // Track analytics event
+        analyticsAdapter.trackEvent(
+          createUserId(userContext.userId),
+          createOrganizationId(userContext.organizationId),
+          'mcp_tool_call',
+          { tool: `${mcpToolPrefix}_notify_recipe_usage` },
+        );
 
         return {
           content: [
@@ -352,8 +410,8 @@ export function createMCPServer(
           logger.info('Creating rule example');
           await standardsHexa.createRuleExample({
             ruleId: newRule[0].id,
-            positive: positiveExample || '',
-            negative: negativeExample || '',
+            positive: extractCodeFromMarkdown(positiveExample) || '',
+            negative: extractCodeFromMarkdown(negativeExample) || '',
             lang:
               stringToProgrammingLanguage(language) ||
               ProgrammingLanguage.JAVASCRIPT,
@@ -361,6 +419,14 @@ export function createMCPServer(
             userId: createUserId(userContext.userId),
           });
         }
+
+        // Track analytics event
+        analyticsAdapter.trackEvent(
+          createUserId(userContext.userId),
+          createOrganizationId(userContext.organizationId),
+          'mcp_tool_call',
+          { tool: `${mcpToolPrefix}_add_rule_to_standard` },
+        );
 
         return {
           content: [
@@ -393,9 +459,14 @@ export function createMCPServer(
       }
 
       try {
-        const standards = await standardsHexa.listStandardsByOrganization(
-          createOrganizationId(userContext.organizationId),
-        );
+        const organizationId = createOrganizationId(userContext.organizationId);
+        const globalSpace = await getGlobalSpace(fastify, organizationId);
+
+        const { standards } = await standardsHexa.listStandardsBySpace({
+          organizationId,
+          spaceId: globalSpace.id,
+          userId: createUserId(userContext.userId),
+        });
 
         if (standards.length === 0) {
           return {
@@ -417,6 +488,14 @@ export function createMCPServer(
         const formattedList = sortedStandards
           .map((standard) => `• ${standard.slug}: ${standard.name}`)
           .join('\n');
+
+        // Track analytics event
+        analyticsAdapter.trackEvent(
+          createUserId(userContext.userId),
+          createOrganizationId(userContext.organizationId),
+          'mcp_tool_call',
+          { tool: `${mcpToolPrefix}_list_standards` },
+        );
 
         return {
           content: [
@@ -449,9 +528,14 @@ export function createMCPServer(
       }
 
       try {
-        const recipes = await recipesHexa.listRecipesByOrganization(
-          createOrganizationId(userContext.organizationId),
-        );
+        const organizationId = createOrganizationId(userContext.organizationId);
+        const globalSpace = await getGlobalSpace(fastify, organizationId);
+
+        const recipes = await recipesHexa.listRecipesBySpace({
+          organizationId,
+          spaceId: globalSpace.id,
+          userId: createUserId(userContext.userId),
+        });
 
         if (recipes.length === 0) {
           return {
@@ -473,6 +557,14 @@ export function createMCPServer(
         const formattedList = sortedRecipes
           .map((recipe) => `• ${recipe.slug}: ${recipe.name}`)
           .join('\n');
+
+        // Track analytics event
+        analyticsAdapter.trackEvent(
+          createUserId(userContext.userId),
+          createOrganizationId(userContext.organizationId),
+          'mcp_tool_call',
+          { tool: `${mcpToolPrefix}_list_recipes` },
+        );
 
         return {
           content: [
@@ -522,6 +614,19 @@ export function createMCPServer(
         };
       }
 
+      // Track analytics event
+      if (userContext) {
+        analyticsAdapter.trackEvent(
+          createUserId(userContext.userId),
+          createOrganizationId(userContext.organizationId),
+          'mcp_tool_call',
+          {
+            tool: `${mcpToolPrefix}_create_standard_workflow`,
+            step: requestedStep,
+          },
+        );
+      }
+
       return {
         content: [
           {
@@ -558,6 +663,19 @@ export function createMCPServer(
             },
           ],
         };
+      }
+
+      // Track analytics event
+      if (userContext) {
+        analyticsAdapter.trackEvent(
+          createUserId(userContext.userId),
+          createOrganizationId(userContext.organizationId),
+          'mcp_tool_call',
+          {
+            tool: `${mcpToolPrefix}_create_recipe_workflow`,
+            step: requestedStep,
+          },
+        );
       }
 
       return {
@@ -654,8 +772,8 @@ export function createMCPServer(
                   return null;
                 }
                 return {
-                  positive: example.positive,
-                  negative: example.negative,
+                  positive: extractCodeFromMarkdown(example.positive),
+                  negative: extractCodeFromMarkdown(example.negative),
                   language: language,
                 };
               })
@@ -667,6 +785,16 @@ export function createMCPServer(
           return processedRule;
         });
 
+        const firstSpace = await getGlobalSpace(
+          fastify,
+          createOrganizationId(userContext.organizationId),
+        );
+        logger.info('Using first space for standard creation', {
+          spaceId: firstSpace.id,
+          spaceName: firstSpace.name,
+          organizationId: userContext.organizationId,
+        });
+
         const standard = await standardsHexa.createStandardWithExamples({
           name,
           description,
@@ -675,7 +803,16 @@ export function createMCPServer(
           organizationId: createOrganizationId(userContext.organizationId),
           userId: createUserId(userContext.userId),
           scope: null,
+          spaceId: firstSpace.id,
         });
+
+        // Track analytics event
+        analyticsAdapter.trackEvent(
+          createUserId(userContext.userId),
+          createOrganizationId(userContext.organizationId),
+          'mcp_tool_call',
+          { tool: `${mcpToolPrefix}_create_standard` },
+        );
 
         return {
           content: [
@@ -725,6 +862,19 @@ export function createMCPServer(
         };
       }
 
+      // Track analytics event
+      if (userContext) {
+        analyticsAdapter.trackEvent(
+          createUserId(userContext.userId),
+          createOrganizationId(userContext.organizationId),
+          'mcp_tool_call',
+          {
+            tool: `${mcpToolPrefix}_add_rule_to_standard_workflow`,
+            step: requestedStep,
+          },
+        );
+      }
+
       return {
         content: [
           {
@@ -750,7 +900,21 @@ export function createMCPServer(
     async ({ workflow }) => {
       try {
         // If no workflow specified, return mode selection
-        console.log('Onboarding tool called with workflow:', workflow);
+        logger.info(`Onboarding tool called with workflow: ${workflow}`);
+
+        // Track analytics event
+        if (userContext) {
+          analyticsAdapter.trackEvent(
+            createUserId(userContext.userId),
+            createOrganizationId(userContext.organizationId),
+            'mcp_tool_call',
+            {
+              tool: `${mcpToolPrefix}_onboarding`,
+              step: workflow || 'mode-selection',
+            },
+          );
+        }
+
         if (!workflow) {
           return {
             content: [

@@ -13,16 +13,8 @@ import {
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { NavLink } from 'react-router';
 import { LuCircleCheckBig, LuCircle } from 'react-icons/lu';
-import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
-import { useGetGitReposQuery } from '../../../git/api/queries/GitRepoQueries';
-import {
-  useGetRecipesDeploymentOverviewQuery,
-  useGetStandardsDeploymentOverviewQuery,
-} from '../../../deployments/api/queries/DeploymentsQueries';
-import { useGetUsersInMyOrganizationQuery } from '../../../accounts/api/queries/UserQueries';
 import { InviteUsersDialog } from '../../../accounts/components';
-import { OrganizationId } from '@packmind/accounts/types';
-import { useGetStandardsQuery } from '../../../standards/api/queries/StandardsQueries';
+import { useGetOnboardingStatusQuery } from '../../../accounts/api/queries/AccountsQueries';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { routes } from '../../../../shared/utils/routes';
 
@@ -60,28 +52,17 @@ export const OrganizationOnboardingChecklist: React.FC = () => {
   const [inviteOpen, setInviteOpen] = React.useState(false);
   const { spaceSlug } = useCurrentSpace();
 
-  // Data sources for auto-checks
-  const orgId: OrganizationId = organization?.id || ('' as OrganizationId);
+  const orgId = organization?.id || ('' as string);
   const orgSlug = organization?.slug || '';
-  const { data: providers = [] } = useGetGitProvidersQuery(orgId);
-  const { data: repos = [] } = useGetGitReposQuery();
-  const { data: standards = [] } = useGetStandardsQuery();
-  const { data: recipesOverview } = useGetRecipesDeploymentOverviewQuery();
-  const { data: standardsOverview } = useGetStandardsDeploymentOverviewQuery();
-  const { data: membersData } = useGetUsersInMyOrganizationQuery();
 
-  const hasProvider = providers.length > 0;
-  const hasRepository = repos.length > 0;
-  const hasStandard = standards.length > 0;
-  const hasAnyDeployment = Boolean(
-    (recipesOverview?.recipes ?? []).some(
-      (r) => r.targetDeployments.length > 0,
-    ) ||
-      (standardsOverview?.standards ?? []).some(
-        (s) => s.targetDeployments.length > 0,
-      ),
-  );
-  const hasMultipleMembers = (membersData?.users ?? []).length > 1;
+  // Fetch onboarding status from the new endpoint
+  const { data: onboardingStatus } = useGetOnboardingStatusQuery(orgId);
+
+  const hasProvider = onboardingStatus?.hasConnectedGitProvider ?? false;
+  const hasRepository = onboardingStatus?.hasConnectedGitRepo ?? false;
+  const hasStandard = onboardingStatus?.hasCreatedStandard ?? false;
+  const hasAnyDeployment = onboardingStatus?.hasDeployed ?? false;
+  const hasMultipleMembers = onboardingStatus?.hasInvitedColleague ?? false;
 
   return (
     <PMPageSection

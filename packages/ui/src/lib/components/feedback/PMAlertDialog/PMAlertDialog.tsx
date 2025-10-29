@@ -20,7 +20,7 @@ export type PMAlertDialogProps = {
   /** Whether the alert dialog is open (controlled mode) */
   open?: boolean;
   /** Callback function called when alert dialog state changes (controlled mode) */
-  onOpenChange?: (open: boolean) => void;
+  onOpenChange?: (details: { open: boolean }) => void;
   /** Whether the confirm action is loading */
   isLoading?: boolean;
 };
@@ -45,7 +45,7 @@ export const PMAlertDialog = ({
     // In controlled mode, we need to call onOpenChange to update parent state
     // In uncontrolled mode, Dialog.ActionTrigger handles the closing automatically
     if (isControlled) {
-      onOpenChange?.(false);
+      onOpenChange?.({ open: false });
     }
     // Note: In uncontrolled mode, Dialog.ActionTrigger will handle the closing
   };
@@ -59,7 +59,6 @@ export const PMAlertDialog = ({
       onOpenChange={isControlled ? onOpenChange : undefined}
       placement="center"
     >
-      {/* @ts-expect-error https://github.com/radix-ui/primitives/issues/2309#issuecomment-1916541133 */}
       {trigger && <Dialog.Trigger asChild>{trigger}</Dialog.Trigger>}
 
       <Portal>

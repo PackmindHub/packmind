@@ -8,6 +8,8 @@ import {
   UpdateRecipesFromGitLabCommand,
   IDeploymentPort,
   BaseHexaOpts,
+  GetRecipeByIdCommand,
+  ListRecipesBySpaceCommand,
 } from '@packmind/shared';
 import { RecipesHexaFactory } from './RecipesHexaFactory';
 import { Recipe, RecipeId } from './domain/entities/Recipe';
@@ -183,10 +185,22 @@ export class RecipesHexa extends BaseHexa {
   }
 
   /**
-   * Get a recipe by its ID
+   * Get a recipe by its ID (public API - with access control)
    */
-  public async getRecipeById(id: RecipeId): Promise<Recipe | null> {
-    return this.hexa.useCases.getRecipeById(id);
+  public async getRecipeById(
+    command: GetRecipeByIdCommand,
+  ): Promise<Recipe | null> {
+    this.ensureInitialized();
+    return this.hexa.useCases.getRecipeById(command);
+  }
+
+  /**
+   * Get a recipe by its ID (internal use - no access control)
+   * Used by UpdateRecipeFromUI and RecipeUsageAnalytics
+   */
+  public async getRecipeByIdInternal(id: RecipeId): Promise<Recipe | null> {
+    this.ensureInitialized();
+    return this.hexa.useCases.getRecipeByIdInternal(id);
   }
 
   /**
@@ -207,6 +221,16 @@ export class RecipesHexa extends BaseHexa {
     organizationId: OrganizationId,
   ): Promise<Recipe[]> {
     return this.hexa.useCases.listRecipesByOrganization(organizationId);
+  }
+
+  /**
+   * List recipes by space (public API - with access control)
+   */
+  public async listRecipesBySpace(
+    command: ListRecipesBySpaceCommand,
+  ): Promise<Recipe[]> {
+    this.ensureInitialized();
+    return this.hexa.useCases.listRecipesBySpace(command);
   }
 
   // ===========================

@@ -9,6 +9,7 @@ import { startTransition, StrictMode } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { UIProvider } from '@packmind/ui';
 import { QueryProvider } from '../src/providers/QueryProvider';
+import { AuthProvider } from '../src/providers/AuthProvider';
 import { SSEProvider } from '../src/services/sse';
 import { ErrorBoundary } from '../src/providers/ErrorBoundary';
 import { AnalyticsProvider } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
@@ -19,13 +20,15 @@ startTransition(() => {
     <StrictMode>
       <ErrorBoundary level="app">
         <QueryProvider>
-          <SSEProvider>
-            <AnalyticsProvider>
-              <UIProvider>
-                <HydratedRouter />
-              </UIProvider>
-            </AnalyticsProvider>
-          </SSEProvider>
+          <AuthProvider>
+            <SSEProvider>
+              <AnalyticsProvider>
+                <UIProvider>
+                  <HydratedRouter />
+                </UIProvider>
+              </AnalyticsProvider>
+            </SSEProvider>
+          </AuthProvider>
         </QueryProvider>
       </ErrorBoundary>
     </StrictMode>,

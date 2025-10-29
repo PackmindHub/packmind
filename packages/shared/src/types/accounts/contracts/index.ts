@@ -6,3 +6,4 @@ export * from './IRemoveUserFromOrganizationUseCase';
 export * from './IRequestPasswordResetUseCase';
 export * from './IResetPasswordUseCase';
 export * from './IValidatePasswordResetTokenUseCase';
+export * from './IGetOrganizationOnboardingStatus';

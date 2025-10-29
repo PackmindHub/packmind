@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
+import { RouterModule } from '@nestjs/core';
 import { APP_GUARD, Reflector } from '@nestjs/core';
 import { RecipesModule } from './recipes/recipes.module';
 import { AppController } from './app.controller';
@@ -20,7 +21,11 @@ import { AuthModule } from './auth/auth.module';
 import { AuthGuard } from './auth/auth.guard';
 import { GitModule } from './git/git.module';
 import { UsersModule } from './accounts/users/users.module';
-import { OrganizationsModule } from './accounts/organizations/organizations.module';
+import { OrganizationsModule as AccountsOrganizationsModule } from './accounts/organizations/organizations.module';
+import { OrganizationsModule } from './organizations/organizations.module';
+import { OrganizationsSpacesModule } from './organizations/spaces/spaces.module';
+import { OrganizationsSpacesRecipesModule } from './organizations/spaces/recipes/recipes.module';
+import { OrganizationsSpacesStandardsModule } from './organizations/spaces/standards/standards.module';
 import { SpacesModule } from './spaces/spaces.module';
 import { StandardsModule } from './standards/standards.module';
 import { McpModule } from './mcp/mcp.module';
@@ -84,10 +89,10 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
         GitHexa,
         RecipesHexa,
         RecipesUsageHexa,
+        LinterHexa, // Must come before StandardsHexa (StandardsHexa depends on LinterHexa)
         StandardsHexa,
         CodingAgentHexa,
         DeploymentsHexa,
-        LinterHexa,
       ],
     }),
     RecipesModule,
@@ -97,6 +102,7 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
     AuthModule,
     GitModule,
     UsersModule,
+    AccountsOrganizationsModule,
     OrganizationsModule,
     McpModule,
     AnalyticsModule,
@@ -105,6 +111,30 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
     SSEModule,
     AmplitudeModule,
     LinterModule,
+    // RouterModule configuration for organization-scoped routes
+    // This must come after OrganizationsModule and its child modules are imported
+    RouterModule.register([
+      {
+        path: 'organizations/:orgId',
+        module: OrganizationsModule,
+        children: [
+          {
+            path: 'spaces/:spaceId',
+            module: OrganizationsSpacesModule,
+            children: [
+              {
+                path: 'recipes',
+                module: OrganizationsSpacesRecipesModule,
+              },
+              {
+                path: 'standards',
+                module: OrganizationsSpacesStandardsModule,
+              },
+            ],
+          },
+        ],
+      },
+    ]),
   ],
   controllers: [AppController, DeploymentsController],
   providers: [

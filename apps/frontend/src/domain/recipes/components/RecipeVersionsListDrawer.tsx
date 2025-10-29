@@ -34,9 +34,9 @@ export const RecipeVersionsListDrawer: React.FC<
     version: version.version,
     name: version.name,
     description:
-      version.description && version.description.length > 100
-        ? `${version.description.substring(0, 100)}...`
-        : version.description || '-',
+      version.content && version.content.length > 100
+        ? `${version.content.substring(0, 100)}...`
+        : version.content || '-',
     source: version.gitCommit ? (
       <a
         href={version.gitCommit.url}

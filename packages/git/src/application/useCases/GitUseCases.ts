@@ -34,6 +34,7 @@ import { OrganizationId, UserId } from '@packmind/accounts';
 import { AddGitRepoCommand } from '../../domain/useCases/IAddGitRepo';
 import {
   FindGitRepoByOwnerRepoAndBranchInOrganizationCommand,
+  FindGitRepoByOwnerRepoAndBranchInOrganizationResult,
   IFindGitRepoByOwnerRepoAndBranchInOrganizationUseCase,
 } from '../../domain/useCases/IFindGitRepoByOwnerRepoAndBranchInOrganization';
 import { FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase } from './findGitRepoByOwnerRepoAndBranchInOrganization/findGitRepoByOwnerRepoAndBranchInOrganization.usecase';
@@ -381,7 +382,7 @@ export class GitUseCases {
 
   public async findGitRepoByOwnerRepoAndBranchInOrganization(
     command: FindGitRepoByOwnerRepoAndBranchInOrganizationCommand,
-  ): Promise<GitRepo | null> {
+  ): Promise<FindGitRepoByOwnerRepoAndBranchInOrganizationResult> {
     return this._findGitRepoByOwnerRepoAndBranchInOrganization.execute(command);
   }
 

@@ -1,1 +1,1 @@
-export { PMEllipsisMenu, type PMEllipsisMenuProps } from './PMEllipsisMenu';
+export * from './PMEllipsisMenu';

@@ -1,14 +1,28 @@
-import { RuleExample, PackmindLogger } from '@packmind/shared';
+import {
+  RuleExample,
+  PackmindLogger,
+  ILinterPort,
+  RuleId,
+  ProgrammingLanguage,
+} from '@packmind/shared';
 import { IStandardsRepositories } from '../../../domain/repositories/IStandardsRepositories';
 import {
   IUpdateRuleExample,
   UpdateRuleExampleCommand,
 } from '../../../domain/useCases/IUpdateRuleExample';
+import {
+  OrganizationId,
+  UserId,
+  createOrganizationId,
+  createUserId,
+} from '@packmind/accounts';
 
+const origin = 'UpdateRuleExampleUsecase';
 export class UpdateRuleExampleUsecase implements IUpdateRuleExample {
   constructor(
     private readonly _repositories: IStandardsRepositories,
-    private readonly _logger: PackmindLogger,
+    private readonly _linterAdapter?: ILinterPort,
+    private readonly _logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
   async execute(command: UpdateRuleExampleCommand): Promise<RuleExample> {
@@ -60,6 +74,46 @@ export class UpdateRuleExampleUsecase implements IUpdateRuleExample {
       updatedFields: Object.keys(updateData),
     });
 
+    // Validate detection program for the updated language
+    const languageToValidate = command.lang || existingExample.lang;
+    await this.assessOrUpdateRuleDetectionForLanguage(
+      existingExample.ruleId,
+      languageToValidate as ProgrammingLanguage,
+      createOrganizationId(command.organizationId),
+      createUserId(command.userId),
+    );
+
     return updatedExample;
+  }
+
+  public async assessOrUpdateRuleDetectionForLanguage(
+    ruleId: RuleId,
+    language: ProgrammingLanguage,
+    organizationId: OrganizationId,
+    userId: UserId,
+  ): Promise<void> {
+    if (!this._linterAdapter) {
+      return;
+    }
+
+    this._logger.info('Validating detection program for rule and language', {
+      ruleId,
+      language,
+    });
+
+    try {
+      await this._linterAdapter.updateRuleDetectionAssessmentAfterUpdate({
+        ruleId,
+        language,
+        organizationId,
+        userId,
+      });
+    } catch (error) {
+      this._logger.error('Failed to update detection program status', {
+        ruleId,
+        language,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
 }

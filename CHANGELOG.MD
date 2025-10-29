@@ -1,5 +1,17 @@
 # [Unreleased]
 
+# [1.3.1] - 2015-10-28
+
+## Changed
+
+- Improved the capture of Standards & Recipes through MCP, adding feedback loop and validation from the users (#265)
+- The navigation is now scoped to the space `global`, as we're working on the concept of spaces to organize Standards & Recipes (#291)
+- UI/UX of overview has been improved (#263)
+
+## Fixed
+
+- Ensure emails are not displayed in server logs (#270)
+
 # [1.3.0] - 2015-10-09
 
 ## Added

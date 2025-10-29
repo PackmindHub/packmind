@@ -3,7 +3,7 @@ import { useSSEContext } from '../../../services/sse';
 
 interface UseSSESubscriptionOptions {
   /**
-   * Event type to subscribe to (e.g., 'program_status')
+   * Event type to subscribe to (e.g., 'PROGRAM_STATUS_CHANGE')
    */
   eventType: string;
 
@@ -11,6 +11,12 @@ interface UseSSESubscriptionOptions {
    * Parameters for the subscription (e.g., ['programId'])
    */
   params?: string[];
+
+  /**
+   * Optional list of parameter sets to subscribe to for the same event type.
+   * When provided, `params` is ignored and subscriptions are created for each entry.
+   */
+  paramsList?: string[][];
 
   /**
    * Event handler to call when SSE event is received
@@ -30,7 +36,7 @@ interface UseSSESubscriptionOptions {
  * @example
  * ```tsx
  * const { subscribe, unsubscribe, isSubscribed } = useSSESubscription({
- *   eventType: 'program_status',
+ *   eventType: 'PROGRAM_STATUS_CHANGE',
  *   params: [programId],
  *   onEvent: (event) => {
  *     const data = JSON.parse(event.data);
@@ -42,6 +48,7 @@ interface UseSSESubscriptionOptions {
 export function useSSESubscription({
   eventType,
   params = [],
+  paramsList,
   onEvent,
   enabled = true,
 }: UseSSESubscriptionOptions) {
@@ -57,15 +64,66 @@ export function useSSESubscription({
   // Keep handler reference up to date
   eventHandlerRef.current = onEvent;
 
-  const serializedParams = useMemo(
-    () => JSON.stringify(params ?? []),
-    [params],
-  );
+  const serializedParams = useMemo(() => {
+    const normalized = Array.isArray(params)
+      ? params.map((param) =>
+          typeof param === 'string' ? param : String(param ?? ''),
+        )
+      : [];
+    return JSON.stringify(normalized);
+  }, [params]);
 
-  const normalizedParams = useMemo<string[]>(
-    () => JSON.parse(serializedParams) as string[],
-    [serializedParams],
-  );
+  const normalizedParams = useMemo<string[]>(() => {
+    return JSON.parse(serializedParams) as string[];
+  }, [serializedParams]);
+
+  const serializedParamsList = useMemo(() => {
+    if (!paramsList || paramsList.length === 0) {
+      return null;
+    }
+
+    const normalizedGroups: string[][] = [];
+    const seenKeys = new Set<string>();
+
+    for (const group of paramsList) {
+      if (!Array.isArray(group)) {
+        continue;
+      }
+
+      const normalizedGroup = group
+        .map((param) =>
+          typeof param === 'string' ? param : String(param ?? ''),
+        )
+        .filter((param) => param.length > 0);
+
+      if (!normalizedGroup.length) {
+        continue;
+      }
+
+      const key = normalizedGroup.join('::').toUpperCase();
+      if (seenKeys.has(key)) {
+        continue;
+      }
+      seenKeys.add(key);
+      normalizedGroups.push(normalizedGroup);
+    }
+
+    normalizedGroups.sort((first, second) =>
+      first.join(':').localeCompare(second.join(':'), undefined, {
+        sensitivity: 'base',
+      }),
+    );
+
+    return JSON.stringify(normalizedGroups);
+  }, [paramsList]);
+
+  const normalizedParamsList = useMemo<string[][]>(() => {
+    if (serializedParamsList === null) {
+      return [normalizedParams];
+    }
+
+    return JSON.parse(serializedParamsList) as string[][];
+  }, [normalizedParams, serializedParamsList]);
 
   // Wrapped event handler to ensure we always use the latest version
   const wrappedHandler = useCallback((event: MessageEvent) => {
@@ -73,30 +131,46 @@ export function useSSESubscription({
   }, []);
 
   const subscribeToEvent = useCallback(async () => {
+    if (!normalizedParamsList.length) {
+      return;
+    }
+
     try {
-      await subscribe(eventType, normalizedParams);
+      await Promise.all(
+        normalizedParamsList.map((paramGroup) =>
+          subscribe(eventType, paramGroup),
+        ),
+      );
     } catch (error) {
       console.error('SSE: Failed to subscribe to event', {
         eventType,
-        params: normalizedParams,
+        params: normalizedParamsList,
         error,
       });
       throw error;
     }
-  }, [eventType, normalizedParams, subscribe]);
+  }, [eventType, normalizedParamsList, subscribe]);
 
   const unsubscribeFromEvent = useCallback(async () => {
+    if (!normalizedParamsList.length) {
+      return;
+    }
+
     try {
-      await unsubscribe(eventType, normalizedParams);
+      await Promise.all(
+        normalizedParamsList.map((paramGroup) =>
+          unsubscribe(eventType, paramGroup),
+        ),
+      );
     } catch (error) {
       console.error('SSE: Failed to unsubscribe from event', {
         eventType,
-        params: normalizedParams,
+        params: normalizedParamsList,
         error,
       });
       throw error;
     }
-  }, [eventType, normalizedParams, unsubscribe]);
+  }, [eventType, normalizedParamsList, unsubscribe]);
 
   const isSubscribedRef = useRef(false);
   const pendingSubscriptionRef = useRef(false);
@@ -122,7 +196,7 @@ export function useSSESubscription({
 
   // Manage server-side subscription lifecycle based on connection state
   useEffect(() => {
-    if (!enabled || !isConnected) {
+    if (!enabled || !isConnected || !normalizedParamsList.length) {
       return undefined;
     }
 
@@ -139,7 +213,7 @@ export function useSSESubscription({
         if (!cancelled) {
           console.error('SSE: Auto-subscription failed', {
             eventType,
-            params: normalizedParams,
+            params: normalizedParamsList,
             error,
           });
         }
@@ -156,7 +230,7 @@ export function useSSESubscription({
           .catch((error) => {
             console.error('SSE: Cleanup unsubscription failed', {
               eventType,
-              params: normalizedParams,
+              params: normalizedParamsList,
               error,
             });
           })
@@ -172,7 +246,7 @@ export function useSSESubscription({
     subscribeToEvent,
     unsubscribeFromEvent,
     eventType,
-    normalizedParams,
+    normalizedParamsList,
   ]);
 
   return {

@@ -1,6 +1,7 @@
 export enum DetectionStatus {
   IN_PROGRESS = 'IN_PROGRESS',
-  SUCCESS = 'SUCCESS',
+  READY = 'READY',
   FAILURE = 'FAILURE',
   ERROR = 'ERROR',
+  TO_REVIEW = 'TO_REVIEW',
 }

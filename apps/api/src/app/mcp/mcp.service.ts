@@ -67,7 +67,6 @@ export class McpService {
         'MCP token generated successfully for authenticated user',
         {
           userId: user.id,
-          email: user.email,
         },
       );
 

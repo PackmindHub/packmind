@@ -144,7 +144,7 @@ export const useGenerateApiKeyMutation = () => {
   return useMutation({
     mutationKey: [GENERATE_API_KEY_MUTATION_KEY],
     mutationFn: async (_: Record<string, never> = {}) => {
-      return authGateway.generateApiKey();
+      return authGateway.generateApiKey({});
     },
     onSuccess: (data) => {
       console.log('API key generated successfully:', data);

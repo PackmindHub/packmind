@@ -8,6 +8,7 @@ import { PackmindLogger } from '../logger/PackmindLogger';
 import {
   AnySSEEvent,
   createProgramStatusChangeEvent,
+  createAssessmentStatusChangeEvent,
   createUserContextChangeEvent,
   type UserContextChangeType,
 } from '../types/sse/SSEEvent';
@@ -47,35 +48,83 @@ export class SSEEventPublisher {
    */
   static async publishProgramStatusEvent(
     programId: string,
+    ruleId: string,
+    language: string,
     userId?: string,
     organizationId?: string,
   ): Promise<void> {
     SSEEventPublisher.logger.info('Publishing program status change event', {
       programId,
+      ruleId,
+      language,
       userId,
       organizationId,
     });
 
     try {
       // Create minimal event payload - just programId for cache invalidation
-      const event = createProgramStatusChangeEvent(programId);
+      const event = createProgramStatusChangeEvent(ruleId, language);
 
       await SSEEventPublisher.publishEvent(
         'program_status_change',
-        [programId],
+        [ruleId, language],
         event,
         userId ? [userId] : undefined,
       );
 
       SSEEventPublisher.logger.debug(
         'Successfully published program status change event',
-        { programId },
+        { programId, ruleId, language },
       );
     } catch (error) {
       SSEEventPublisher.logger.error(
         'Failed to publish program status change event',
         {
           programId,
+          userId,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Publish an assessment status change event for cache invalidation
+   * This triggers React Query to refetch the assessment data
+   */
+  static async publishAssessmentStatusEvent(
+    ruleId: string,
+    language: string,
+    userId?: string,
+    organizationId?: string,
+  ): Promise<void> {
+    SSEEventPublisher.logger.info('Publishing assessment status change event', {
+      ruleId,
+      language,
+      userId,
+      organizationId,
+    });
+
+    try {
+      // Create event payload carrying identifiers needed for cache invalidation
+      const event = createAssessmentStatusChangeEvent(ruleId, language);
+
+      await SSEEventPublisher.publishEvent(
+        'assessment_status_change',
+        [ruleId, language],
+        event,
+        userId ? [userId] : undefined,
+      );
+
+      SSEEventPublisher.logger.debug(
+        'Successfully published assessment status change event',
+        { ruleId, language },
+      );
+    } catch (error) {
+      SSEEventPublisher.logger.error(
+        'Failed to publish assessment status change event',
+        {
           userId,
           error: error instanceof Error ? error.message : String(error),
         },

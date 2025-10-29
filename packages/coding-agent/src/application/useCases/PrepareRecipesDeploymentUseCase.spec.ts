@@ -1,16 +1,14 @@
 import { PrepareRecipesDeploymentUseCase } from './PrepareRecipesDeploymentUseCase';
-import { Recipe } from '@packmind/recipes';
 import { FileUpdates } from '../../domain/entities/FileUpdates';
 import { PrepareRecipesDeploymentCommand } from '../../domain/useCases/IPrepareRecipesDeploymentUseCase';
 import {
-  createRecipeId,
   createRecipeVersionId,
-  createOrganizationId,
   createUserId,
   createGitRepoId,
   createGitProviderId,
   createTargetId,
 } from '@packmind/shared';
+import { recipeFactory } from '@packmind/recipes/test';
 
 class MockCodingAgentServices {
   async prepareRecipesDeployment(): Promise<FileUpdates> {
@@ -36,15 +34,10 @@ describe('PrepareRecipesDeploymentUseCase', () => {
       mockServices as unknown as import('../services/CodingAgentServices').CodingAgentServices,
     );
 
-    const mockRecipe: Recipe = {
-      id: createRecipeId('recipe-1'),
+    const mockRecipe = recipeFactory({
       name: 'Test Recipe',
       slug: 'test-recipe',
-      content: 'Original recipe content',
-      version: 1,
-      organizationId: createOrganizationId('org-1'),
-      userId: createUserId('user-1'),
-    };
+    });
 
     mockCommand = {
       recipeVersions: [

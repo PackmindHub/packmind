@@ -1,4 +1,32 @@
 {
+  "name": "@packmind/scan",
+  "version": "0.1.0",
+  "description": "A command-line interface for Packmind linting and code quality checks",
+  "private": false,
+  "bin": {
+    "packmind-scan": "./main.js"
+  },
+  "main": "./main.js",
+  "files": [
+    "**/*"
+  ],
+  "keywords": [
+    "packmind",
+    "linting",
+    "code-quality",
+    "cli",
+    "static-analysis"
+  ],
+  "author": "Packmind",
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PackmindHub/packmind-monorepo.git",
+    "directory": "apps/cli"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  },
   "scripts": {
     "packmind-cli": "ts-node --project tsconfig.app.json src/main.ts"
   },

@@ -8,7 +8,6 @@ import {
 } from 'typeorm';
 import assert from 'assert';
 import { WithSoftDelete } from '../database/types';
-import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { BadRequestException } from '@nestjs/common';
 
 export abstract class AbstractRepository<Entity extends { id: string }>
@@ -139,7 +138,8 @@ export abstract class AbstractRepository<Entity extends { id: string }>
         await transaction.update(
           this.schema,
           { id },
-          this.makeUpdateQuery(deletedBy),
+          // @ts-expect-error TS2353
+          { deletedBy },
         );
       }
       result = await transaction.softDelete(this.schema, { id });
@@ -153,19 +153,16 @@ export abstract class AbstractRepository<Entity extends { id: string }>
     let result: UpdateResult | undefined = undefined;
 
     await this.repository.manager.transaction(async (transaction) => {
-      await transaction.update(this.schema, { id }, this.makeUpdateQuery(null));
+      await transaction.update(
+        this.schema,
+        { id },
+        // @ts-expect-error TS2353
+        { deletedBy: null },
+      );
       result = await transaction.restore(this.schema, { id });
     });
 
     assert(result);
     return result;
-  }
-
-  private makeUpdateQuery(
-    deletedBy: string | null,
-  ): QueryDeepPartialEntity<Entity> {
-    // That's ugly, but even when using WithSoftDelete<Entity>, typescript fails to properly compute
-    // the expected fields.
-    return { deletedBy } as unknown as QueryDeepPartialEntity<Entity>;
   }
 }

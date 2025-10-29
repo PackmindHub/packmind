@@ -53,7 +53,7 @@ describe('UpdateRuleExampleUsecase', () => {
 
     logger = stubLogger();
 
-    usecase = new UpdateRuleExampleUsecase(repositories, logger);
+    usecase = new UpdateRuleExampleUsecase(repositories, undefined, logger);
   });
 
   it('updates a rule example successfully', async () => {

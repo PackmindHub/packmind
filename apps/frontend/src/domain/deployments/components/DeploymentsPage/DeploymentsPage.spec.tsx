@@ -11,6 +11,7 @@ import {
 } from '@tanstack/react-query';
 import { DeploymentsPage } from './DeploymentsPage';
 import * as DeploymentQueries from '../../api/queries/DeploymentsQueries';
+import { AuthProvider } from '../../../../providers/AuthProvider';
 
 import {
   DeploymentOverview,
@@ -62,7 +63,9 @@ const renderWithProvider = async (ui: React.ReactElement) => {
     renderResult = render(
       <MemoryRouter>
         <QueryClientProvider client={queryClient}>
-          <UIProvider>{ui}</UIProvider>
+          <AuthProvider>
+            <UIProvider>{ui}</UIProvider>
+          </AuthProvider>
         </QueryClientProvider>
       </MemoryRouter>,
     );

@@ -11,6 +11,7 @@
     "@packmind/shared": "*",
     "@packmind/git": "*",
     "@packmind/jobs": "*",
+    "@packmind/spaces": "*",
     "ts-jest": "^29.4.1",
     "@packmind/accounts": "*",
     "uuid": "^11.1.0",

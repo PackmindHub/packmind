@@ -1,10 +1,12 @@
 import { useCallback } from 'react';
 import { recipesGateway } from '../../recipes/api/gateways';
 import { RecipeId, RecipeVersionId } from '@packmind/recipes/types';
-import { TargetId } from '@packmind/shared';
+import { OrganizationId, SpaceId, TargetId } from '@packmind/shared';
 import { useDeployRecipesMutation } from '../api/queries/DeploymentsQueries';
 
 interface DeployParams {
+  organizationId: OrganizationId;
+  spaceId: SpaceId;
   id: RecipeId;
   version: number;
   name?: string;
@@ -16,12 +18,18 @@ interface BatchDeployParams {
 
 // Helper function to get RecipeVersionId from recipeId and version
 const getRecipeVersionId = async (
+  organizationId: OrganizationId,
+  spaceId: SpaceId,
   recipeId: RecipeId,
   version: number,
 ): Promise<RecipeVersionId | null> => {
   try {
     // Get all versions for the recipe
-    const versions = await recipesGateway.getVersionsById(recipeId);
+    const versions = await recipesGateway.getVersionsById(
+      organizationId,
+      spaceId,
+      recipeId,
+    );
 
     // Find the version with the matching version number
     const recipeVersion = versions.find((v) => v.version === version);
@@ -44,6 +52,8 @@ export const useDeployRecipe = () => {
     async (params: DeployParams, targetIds: TargetId[]) => {
       // Get the RecipeVersionId for this recipe and version
       const recipeVersionId = await getRecipeVersionId(
+        params.organizationId,
+        params.spaceId,
         params.id,
         params.version,
       );
@@ -100,17 +110,19 @@ export const useDeployRecipe = () => {
 
           // Get RecipeVersionIds for all recipes in the batch
           const recipeVersionIdsPromises = batchParams.recipes.map(
-            async (recipe) => {
+            async (deployParams) => {
               const recipeVersionId = await getRecipeVersionId(
-                recipe.id,
-                recipe.version,
+                deployParams.organizationId,
+                deployParams.spaceId,
+                deployParams.id,
+                deployParams.version,
               );
               if (!recipeVersionId) {
                 console.warn(
-                  `Could not find version ${recipe.version} for recipe ${recipe.id}, skipping`,
+                  `Could not find version ${deployParams.version} for recipe ${deployParams.id}, skipping`,
                 );
               }
-              return { recipeVersionId, recipe };
+              return { recipeVersionId, recipe: deployParams };
             },
           );
 

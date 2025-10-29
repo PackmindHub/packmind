@@ -6,6 +6,7 @@ import {
   PackmindLogger,
   IDeploymentPort,
   HexaRegistry,
+  ISpacesPort,
 } from '@packmind/shared';
 import { GitHexa } from '@packmind/git';
 import { IRecipesRepositories } from './domain/repositories/IRecipesRepositories';
@@ -14,14 +15,17 @@ import { IRecipesDelayedJobs } from './domain/jobs/IRecipesDelayedJobs';
 import { UpdateRecipesAndGenerateSummariesJobFactory } from './infra/jobs/UpdateRecipesAndGenerateSummariesJobFactory';
 import { DeployRecipesJobFactory } from './infra/jobs/DeployRecipesJobFactory';
 import type { RecipesHexa } from './RecipesHexa';
+import { AccountsHexa } from '@packmind/accounts';
+import { SpacesHexa } from '@packmind/spaces';
 
 const origin = 'RecipesHexaFactory';
 
 export class RecipesHexaFactory {
   private readonly recipesRepositories: IRecipesRepositories;
   public readonly recipesServices: RecipesServices;
+  // TODO: migrate with port/adapters
   private readonly gitHexa: GitHexa;
-  public readonly useCases: RecipeUseCases;
+  public useCases!: RecipeUseCases; // Non-null assertion since initialize() will set it
   private recipesDelayedJobs: IRecipesDelayedJobs | null = null;
   private isInitialized = false;
   private recipesHexa: RecipesHexa | null = null;
@@ -51,14 +55,6 @@ export class RecipesHexaFactory {
       this.logger.debug('Storing GitHexa reference');
       this.gitHexa = gitHexa;
 
-      this.logger.debug('Creating RecipeUseCases');
-      this.useCases = new RecipeUseCases(
-        this.recipesServices,
-        this.gitHexa,
-        deploymentPort,
-        this.logger,
-      );
-
       this.logger.info('RecipesHexaFactory construction completed');
     } catch (error) {
       this.logger.error('Failed to construct RecipesHexaFactory', {
@@ -73,7 +69,10 @@ export class RecipesHexaFactory {
    */
   public setRecipesHexa(recipesHexa: RecipesHexa): void {
     this.recipesHexa = recipesHexa;
-    this.useCases.setRecipesHexa(recipesHexa);
+    // Only call setRecipesHexa on useCases if it has been initialized
+    if (this.useCases) {
+      this.useCases.setRecipesHexa(recipesHexa);
+    }
   }
 
   /**
@@ -89,8 +88,47 @@ export class RecipesHexaFactory {
     this.logger.info('Initializing RecipesHexaFactory (async phase)');
 
     try {
+      // Get AccountsHexa for user and organization providers
+      // TODO: migrate with port/adapters
+      const accountsHexa = this.registry.get(AccountsHexa);
+      if (!accountsHexa) {
+        throw new Error('AccountsHexa not found in registry');
+      }
+      const userProvider = accountsHexa.getUserProvider();
+      const organizationProvider = accountsHexa.getOrganizationProvider();
+
+      // Get spaces port for space validation
+      let spacesPort: ISpacesPort | null = null;
+      if (this.registry.isRegistered(SpacesHexa)) {
+        // TODO: migrate with port/adapters
+        const spacesHexa = this.registry.get(SpacesHexa);
+        spacesPort = spacesHexa.getSpacesAdapter();
+      } else {
+        this.logger.warn(
+          'SpacesHexa not found in registry - space validation will not be available',
+        );
+      }
+
+      // Create RecipeUseCases with providers
+      this.logger.debug('Creating RecipeUseCases');
+      this.useCases = new RecipeUseCases(
+        this.recipesServices,
+        this.gitHexa,
+        this.deploymentPort,
+        userProvider,
+        organizationProvider,
+        spacesPort,
+        this.logger,
+      );
+
+      // If recipesHexa was set before initialization, set it now on useCases
+      if (this.recipesHexa) {
+        this.useCases.setRecipesHexa(this.recipesHexa);
+      }
+
       if (this.deploymentPort) {
         this.logger.debug('Building recipes delayed jobs');
+        // TODO: migrate with port/adapters
         const jobsHexa = this.registry.get(JobsHexa);
         this.recipesDelayedJobs = await this.buildRecipesDelayedJobs(jobsHexa);
       } else {
@@ -184,6 +222,7 @@ export class RecipesHexaFactory {
     this.useCases.updateDeploymentPort(deploymentPort);
 
     // Build delayed jobs asynchronously
+    // TODO: migrate with port/adapters
     const jobsHexa = this.registry.get(JobsHexa);
     this.buildRecipesDelayedJobs(jobsHexa)
       .then((recipesDelayedJobs) => {

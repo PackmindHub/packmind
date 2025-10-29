@@ -16,6 +16,7 @@ export type SSEEventType =
   | 'UPDATE'
   | 'NOTIFICATION'
   | 'PROGRAM_STATUS_CHANGE'
+  | 'ASSESSMENT_STATUS_CHANGE'
   | 'USER_CONTEXT_CHANGE';
 
 // Hello World event for testing
@@ -41,8 +42,17 @@ export interface NotificationEvent
 
 // Program status change event for cache invalidation
 export interface ProgramStatusChangeEvent
-  extends SSEEvent<{ programId: string }> {
+  extends SSEEvent<{ ruleId: string; language: string }> {
   type: 'PROGRAM_STATUS_CHANGE';
+}
+
+// Assessment status change event for cache invalidation
+export interface AssessmentStatusChangeEvent
+  extends SSEEvent<{
+    ruleId: string;
+    language: string;
+  }> {
+  type: 'ASSESSMENT_STATUS_CHANGE';
 }
 
 export type UserContextChangeType = 'role_changed' | 'removed' | 'invited';
@@ -63,6 +73,7 @@ export type AnySSEEvent =
   | DataChangeEvent
   | NotificationEvent
   | ProgramStatusChangeEvent
+  | AssessmentStatusChangeEvent
   | UserContextChangeEvent;
 
 // Event creation helpers
@@ -98,11 +109,26 @@ export function createNotificationEvent(
 }
 
 export function createProgramStatusChangeEvent(
-  programId: string,
+  ruleId: string,
+  language: string,
 ): ProgramStatusChangeEvent {
   return {
     type: 'PROGRAM_STATUS_CHANGE',
-    data: { programId },
+    data: { ruleId, language },
+    timestamp: new Date().toISOString(),
+  };
+}
+
+export function createAssessmentStatusChangeEvent(
+  ruleId: string,
+  language: string,
+): AssessmentStatusChangeEvent {
+  return {
+    type: 'ASSESSMENT_STATUS_CHANGE',
+    data: {
+      ruleId,
+      language,
+    },
     timestamp: new Date().toISOString(),
   };
 }

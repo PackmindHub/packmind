@@ -1,8 +1,8 @@
 import {
   PackmindLogger,
-  LogLevel,
   WithTimestamps,
   IRecipesPort,
+  ISpacesPort,
 } from '@packmind/shared';
 import { GitHexa } from '@packmind/git';
 import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
@@ -20,6 +20,7 @@ import {
   RecipeVersion,
   RecipesDeployment,
   createRecipeVersionId,
+  createUserId,
   GitRepo,
   GitRepoId,
   DistributionStatus,
@@ -28,16 +29,16 @@ import {
 import assert from 'assert';
 import { GetTargetsByOrganizationUseCase } from './GetTargetsByOrganizationUseCase';
 
+const origin = 'GetDeploymentOverviewUseCase';
+
 export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
   constructor(
     private readonly deploymentsRepository: IRecipesDeploymentRepository,
     private readonly recipesPort: IRecipesPort,
+    private readonly spacesPort: ISpacesPort,
     private readonly gitHexa: GitHexa,
     private readonly getTargetsByOrganizationUseCase: GetTargetsByOrganizationUseCase,
-    private readonly logger: PackmindLogger = new PackmindLogger(
-      'GetDeploymentOverviewUseCase',
-      LogLevel.INFO,
-    ),
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('GetDeploymentOverviewUseCase initialized');
   }
@@ -49,15 +50,30 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
     this.logger.info('Fetching deployment overview', { organizationId });
 
     try {
+      // Get all spaces for the organization
+      const spaces =
+        await this.spacesPort.listSpacesByOrganization(organizationId);
+
       // Fetch all required data - only successful deployments for overview
-      const [deployments, recipes, gitRepos] = await Promise.all([
+      const [deployments, recipesPerSpace, gitRepos] = await Promise.all([
         this.deploymentsRepository.listByOrganizationIdWithStatus(
           organizationId,
           DistributionStatus.success,
         ),
-        this.recipesPort.listRecipesByOrganization(organizationId),
+        Promise.all(
+          spaces.map((space) =>
+            this.recipesPort.listRecipesBySpace(
+              space.id,
+              organizationId,
+              createUserId(command.userId),
+            ),
+          ),
+        ),
         this.gitHexa.getOrganizationRepositories(organizationId),
       ]);
+
+      // Flatten recipes from all spaces
+      const recipes = recipesPerSpace.flat();
 
       // Build a map of latest recipe versions per target (target-centric approach)
       const latestRecipeVersionsMap = new Map<

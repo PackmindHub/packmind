@@ -52,7 +52,6 @@ export const PMTooltip: React.FC<PMTooltipProps> = ({
         offset: { mainAxis: 8 },
       }}
     >
-      {/* @ts-expect-error https://github.com/chakra-ui/chakra-ui/issues/8619 */}
       <Tooltip.Trigger asChild>{children}</Tooltip.Trigger>
       <Tooltip.Positioner>
         <Tooltip.Content>

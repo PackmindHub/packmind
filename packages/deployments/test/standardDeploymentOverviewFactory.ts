@@ -11,25 +11,21 @@ import {
   TargetStandardDeploymentInfo,
   Standard,
   StandardVersion,
-  createOrganizationId,
-  createStandardId,
   createUserId,
   createStandardVersionId,
+  createStandardId,
 } from '@packmind/shared';
 import { targetFactory } from './targetFactory';
+import { standardFactory } from '@packmind/standards/test';
 
 // Mock standard and standard version for testing
-export const createMockStandard = (standard?: Partial<Standard>): Standard => ({
-  id: createStandardId('test-standard-id'),
-  name: 'Test Standard',
-  slug: 'test-standard',
-  version: 1,
-  description: 'Test standard description',
-  organizationId: createOrganizationId('test-org-id'),
-  userId: createUserId('test-user-id'),
-  scope: 'test-scope',
-  ...standard,
-});
+export const createMockStandard = (standard?: Partial<Standard>): Standard =>
+  standardFactory({
+    name: 'Test Standard',
+    slug: 'test-standard',
+    scope: 'test-scope',
+    ...standard,
+  });
 
 export const createMockStandardVersion = (
   standardVersion?: Partial<StandardVersion>,

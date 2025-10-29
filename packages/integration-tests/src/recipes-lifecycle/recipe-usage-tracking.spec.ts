@@ -16,6 +16,7 @@ import { DataSource } from 'typeorm';
 import { RecipesUsageHexa, recipesUsageSchemas } from '@packmind/analytics';
 import { TargetSchema } from '@packmind/deployments';
 import { JobsHexa } from '@packmind/jobs';
+import { SpacesHexa, spacesSchemas } from '@packmind/spaces';
 
 // Mock only Configuration from @packmind/shared
 jest.mock('@packmind/shared', () => {
@@ -37,6 +38,7 @@ describe('Recipe usage tracking', () => {
   let accountsHexa: AccountsHexa;
   let recipesHexa: RecipesHexa;
   let recipesUsageHexa: RecipesUsageHexa;
+  let spacesHexa: SpacesHexa;
   let gitHexa: GitHexa;
   let registry: HexaRegistry;
   let dataSource: DataSource;
@@ -52,6 +54,7 @@ describe('Recipe usage tracking', () => {
       ...recipesSchemas,
       ...recipesUsageSchemas,
       ...gitSchemas,
+      ...spacesSchemas,
       TargetSchema,
     ]);
     await dataSource.initialize();
@@ -61,6 +64,7 @@ describe('Recipe usage tracking', () => {
     registry = new HexaRegistry();
 
     // Register hexas before initialization
+    registry.register(SpacesHexa);
     registry.register(JobsHexa);
     registry.register(GitHexa);
     registry.register(AccountsHexa);
@@ -75,6 +79,7 @@ describe('Recipe usage tracking', () => {
     accountsHexa = registry.get(AccountsHexa);
     recipesHexa = registry.get(RecipesHexa);
     gitHexa = registry.get(GitHexa);
+    spacesHexa = registry.get(SpacesHexa);
 
     recipesUsageHexa = registry.get(RecipesUsageHexa);
     const mockDeploymentPort = {
@@ -95,10 +100,15 @@ describe('Recipe usage tracking', () => {
     user = signUpResult.user;
     organization = signUpResult.organization;
 
+    const spaces = await spacesHexa
+      .getSpacesAdapter()
+      .listSpacesByOrganization(organization.id);
+
     recipe = await recipesHexa.captureRecipe({
       name: 'My new recipe',
       content: 'Some content',
       organizationId: organization.id,
+      spaceId: spaces[0].id,
       userId: user.id,
     });
   });

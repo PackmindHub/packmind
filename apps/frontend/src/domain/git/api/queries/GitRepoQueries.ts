@@ -12,6 +12,7 @@ import {
 } from '../queryKeys';
 import { DEPLOYMENTS_QUERY_SCOPE } from '../../../deployments/api/queryKeys';
 import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
+import { GET_ONBOARDING_STATUS_KEY } from '../../../accounts/api/queryKeys';
 
 export const useGetGitReposQuery = () => {
   return useQuery({
@@ -63,6 +64,9 @@ export const useAddRepositoryMutation = () => {
       // Deployment overviews (new repo can have targets)
       await queryClient.invalidateQueries({
         queryKey: [ORGANIZATION_QUERY_SCOPE, DEPLOYMENTS_QUERY_SCOPE],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [GET_ONBOARDING_STATUS_KEY],
       });
     },
     onError: (error) => {

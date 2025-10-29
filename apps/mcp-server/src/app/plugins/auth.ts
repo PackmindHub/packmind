@@ -27,8 +27,6 @@ export default async function (
         try {
           const authHeader = request.headers.authorization;
 
-          console.log(request.headers);
-
           if (!authHeader) {
             logger.warn('Missing authorization header');
             return reply.status(401).send({

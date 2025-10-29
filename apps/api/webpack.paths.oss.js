@@ -12,8 +12,12 @@ module.exports = function getOssWebpackPaths(__dirname) {
     ...basePaths,
     // OSS version uses stubs from editions package
     '@packmind/analytics': join(__dirname, '../../packages/editions/src'),
-    '@packmind/jobs': join(__dirname, '../../packages/editions/src'),
     '@packmind/linter': join(__dirname, '../../packages/editions/src'),
+    '@packmind/linter-ast': join(__dirname, '../../packages/editions/src'),
+    '@packmind/linter-execution': join(
+      __dirname,
+      '../../packages/editions/src',
+    ),
     '@packmind/amplitude': join(__dirname, '../../packages/editions/src'),
     // Add other OSS-specific overrides here as needed
   };

@@ -4,8 +4,13 @@ import {
   HexaRegistry,
   IDeploymentPort,
   IStandardsPort,
+  ILinterPort,
   PackmindLogger,
-  RuleId,
+  ListStandardsBySpaceCommand,
+  GetStandardByIdCommand,
+  UpdateStandardCommand,
+  ListStandardsBySpaceResponse,
+  GetStandardByIdResponse,
 } from '@packmind/shared';
 import { StandardsHexaFactory } from './StandardsHexaFactory';
 import { Standard, StandardId } from './domain/entities/Standard';
@@ -13,6 +18,7 @@ import { StandardVersion } from './domain/entities/StandardVersion';
 import { Rule } from './domain/entities/Rule';
 import { RuleExample } from './domain/entities/RuleExample';
 import { OrganizationId, UserId } from '@packmind/accounts';
+import { SpaceId } from '@packmind/shared/types';
 import { GitHexa } from '@packmind/git';
 import { StandardVersionId } from './domain/entities';
 import {
@@ -56,12 +62,32 @@ export class StandardsHexa extends BaseHexa {
       this.logger.debug('Retrieved DataSource from registry');
 
       const gitHexa = registry.get(GitHexa);
+
+      // Get LinterHexa adapter for ILinterPort (lazy DI per DDD standard)
+      // Use getByName to avoid circular dependency at build time
+      let linterPort: ILinterPort | undefined;
+      try {
+        const linterHexa = registry.getByName<
+          BaseHexa & { getLinterAdapter: () => ILinterPort }
+        >('LinterHexa');
+        if (linterHexa && typeof linterHexa.getLinterAdapter === 'function') {
+          linterPort = linterHexa.getLinterAdapter();
+          this.logger.info('LinterAdapter retrieved from LinterHexa');
+        }
+      } catch (error) {
+        this.logger.warn('LinterHexa not available in registry', {
+          error: error instanceof Error ? error.message : String(error),
+        });
+        linterPort = undefined;
+      }
+
       // Initialize the hexagon with the shared DataSource
       this.hexa = new StandardsHexaFactory(
         dataSource,
         gitHexa,
         registry,
         this.logger,
+        linterPort,
       );
       this.logger.info('StandardsHexa construction completed');
     } catch (error) {
@@ -124,6 +150,10 @@ export class StandardsHexa extends BaseHexa {
     this.hexa.setDeploymentsQueryAdapter(adapter);
   }
 
+  public setLinterAdapter(adapter: ILinterPort): void {
+    this.hexa.setLinterAdapter(adapter);
+  }
+
   /**
    * Destroys the StandardsHexa and cleans up resources
    */
@@ -147,6 +177,7 @@ export class StandardsHexa extends BaseHexa {
     organizationId: OrganizationId;
     userId: UserId;
     scope: string | null;
+    spaceId: SpaceId | null;
   }): Promise<Standard> {
     this.ensureInitialized();
     return this.hexa.useCases.createStandard(params);
@@ -163,6 +194,7 @@ export class StandardsHexa extends BaseHexa {
     organizationId: OrganizationId;
     userId: UserId;
     scope: string | null;
+    spaceId: SpaceId | null;
   }): Promise<Standard> {
     this.ensureInitialized();
     return this.hexa.useCases.createStandardWithExamples(params);
@@ -171,17 +203,11 @@ export class StandardsHexa extends BaseHexa {
   /**
    * Update an existing standard with new content
    */
-  public async updateStandard(params: {
-    standardId: StandardId;
-    name: string;
-    description: string;
-    rules: Array<{ id: RuleId; content: string }>;
-    organizationId: OrganizationId;
-    userId: UserId;
-    scope: string | null;
-  }): Promise<Standard> {
+  public async updateStandard(
+    command: UpdateStandardCommand,
+  ): Promise<Standard> {
     this.ensureInitialized();
-    return this.hexa.useCases.updateStandard(params);
+    return this.hexa.useCases.updateStandard(command);
   }
 
   /**
@@ -240,9 +266,11 @@ export class StandardsHexa extends BaseHexa {
   /**
    * Get a standard by its ID
    */
-  public async getStandardById(id: StandardId): Promise<Standard | null> {
+  public async getStandardById(
+    command: GetStandardByIdCommand,
+  ): Promise<GetStandardByIdResponse> {
     this.ensureInitialized();
-    return this.hexa.useCases.getStandardById(id);
+    return this.hexa.useCases.getStandardById(command);
   }
 
   /**
@@ -257,7 +285,17 @@ export class StandardsHexa extends BaseHexa {
   }
 
   /**
-   * List all standards for an organization
+   * List all standards for a space (includes space standards + org standards without spaceId)
+   */
+  public async listStandardsBySpace(
+    command: ListStandardsBySpaceCommand,
+  ): Promise<ListStandardsBySpaceResponse> {
+    this.ensureInitialized();
+    return this.hexa.useCases.listStandardsBySpace(command);
+  }
+
+  /**
+   * List all standards for an organization (backward compatibility)
    */
   public async listStandardsByOrganization(
     organizationId: OrganizationId,

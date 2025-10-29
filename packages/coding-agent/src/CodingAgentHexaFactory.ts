@@ -27,6 +27,7 @@ export class CodingAgentHexaFactory {
       let gitHexa: GitHexa | undefined;
       if (this.registry) {
         try {
+          // TODO: migrate with port/adapters
           standardsHexa = this.registry.get(StandardsHexa) || undefined;
           if (standardsHexa) {
             this.logger.debug('StandardsHexa found in registry');
@@ -36,6 +37,7 @@ export class CodingAgentHexaFactory {
         }
 
         try {
+          // TODO: migrate with port/adapters
           gitHexa = this.registry.get(GitHexa) || undefined;
           if (gitHexa) {
             this.logger.debug('GitHexa found in registry');

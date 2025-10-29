@@ -1,5 +1,8 @@
 import { Organization } from '@packmind/accounts/types';
-import { UserOrganizationRole } from '@packmind/shared';
+import {
+  UserOrganizationRole,
+  OrganizationOnboardingStatus,
+} from '@packmind/shared';
 
 export interface IOrganizationGateway {
   createOrganization(organization: { name: string }): Promise<Organization>;
@@ -21,4 +24,5 @@ export interface IOrganizationGateway {
     skipped: { email: string; reason: string }[];
   }>;
   excludeUser(orgId: string, userId: string): Promise<void>;
+  getOnboardingStatus(orgId: string): Promise<OrganizationOnboardingStatus>;
 }

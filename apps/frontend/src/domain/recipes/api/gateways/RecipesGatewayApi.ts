@@ -5,6 +5,8 @@ import {
   IDeleteRecipeUseCase,
   IDeleteRecipesBatchUseCase,
 } from '@packmind/recipes/types';
+import { OrganizationId } from '@packmind/accounts/types';
+import { SpaceId } from '@packmind/spaces';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import { IRecipesGateway } from './IRecipesGateway';
 import { Gateway } from '@packmind/shared';
@@ -17,22 +19,44 @@ export class RecipesGatewayApi
     super('/recipes');
   }
 
-  getVersionsById(id: RecipeId): Promise<RecipeVersion[]> {
-    return this._api.get<RecipeVersion[]>(`${this._endpoint}/${id}/versions`);
+  getVersionsById(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    id: RecipeId,
+  ): Promise<RecipeVersion[]> {
+    return this._api.get<RecipeVersion[]>(
+      `/organizations/${organizationId}/spaces/${spaceId}/recipes/${id}/versions`,
+    );
   }
 
-  async getRecipes(): Promise<Recipe[]> {
-    return this._api.get<Recipe[]>(this._endpoint);
+  async getRecipes(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+  ): Promise<Recipe[]> {
+    return this._api.get<Recipe[]>(
+      `/organizations/${organizationId}/spaces/${spaceId}/recipes`,
+    );
   }
 
-  async getRecipeById(id: RecipeId): Promise<Recipe> {
-    return this._api.get<Recipe>(`${this._endpoint}/${id}`);
+  async getRecipeById(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    id: RecipeId,
+  ): Promise<Recipe> {
+    return this._api.get<Recipe>(
+      `/organizations/${organizationId}/spaces/${spaceId}/recipes/${id}`,
+    );
   }
 
   async createRecipe(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
     recipe: Omit<Recipe, 'id' | 'slug' | 'version'>,
   ): Promise<Recipe> {
-    return this._api.put<Recipe>(this._endpoint, recipe);
+    return this._api.post<Recipe>(
+      `/organizations/${organizationId}/spaces/${spaceId}/recipes`,
+      recipe,
+    );
   }
 
   async updateRecipe(

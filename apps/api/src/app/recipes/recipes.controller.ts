@@ -8,7 +8,6 @@ import {
   Param,
   Patch,
   Post,
-  Put,
   Req,
 } from '@nestjs/common';
 import {
@@ -35,99 +34,6 @@ export class RecipesController {
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('RecipesController initialized');
-  }
-
-  @Get()
-  async getRecipes(@Req() request: AuthenticatedRequest): Promise<Recipe[]> {
-    const organizationId = request.organization.id;
-    this.logger.info('GET /recipes - Fetching recipes for organization', {
-      organizationId,
-    });
-
-    try {
-      return await this.recipesService.getRecipesByOrganization(organizationId);
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error('GET /recipes - Failed to fetch recipes', {
-        organizationId,
-        error: errorMessage,
-      });
-      throw error;
-    }
-  }
-
-  @Get(':id')
-  async getRecipeById(@Param('id') id: RecipeId): Promise<Recipe> {
-    this.logger.info('GET /recipes/:id - Fetching recipe by ID', {
-      recipeId: id,
-    });
-
-    try {
-      const recipe = await this.recipesService.getRecipeById(id);
-      if (!recipe) {
-        this.logger.warn('GET /recipes/:id - Recipe not found', {
-          recipeId: id,
-        });
-        throw new NotFoundException(`Recipe with id ${id} not found`);
-      }
-      return recipe;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error('GET /recipes/:id - Failed to fetch recipe', {
-        recipeId: id,
-        error: errorMessage,
-      });
-      throw error;
-    }
-  }
-
-  @Put()
-  async addRecipe(
-    @Body()
-    recipe: Omit<
-      RecipeVersion,
-      'id' | 'recipeId' | 'version' | 'author' | 'gitSha' | 'gitRepo'
-    >,
-    @Req() request: AuthenticatedRequest,
-  ): Promise<Recipe> {
-    this.logger.info('PUT /recipes - Adding new recipe', {
-      recipeName: recipe.name,
-      userId: request.user?.userId,
-      organizationId: request.organization?.id,
-    });
-
-    try {
-      // Extract user and organization context from authenticated request
-      const organizationId = request.organization?.id;
-      const userId = request.user?.userId;
-
-      if (!organizationId || !userId) {
-        this.logger.error(
-          'PUT /recipes - Missing user or organization context',
-          {
-            userId,
-            organizationId,
-          },
-        );
-        throw new BadRequestException('User authentication required');
-      }
-
-      return await this.recipesService.addRecipe(
-        recipe,
-        organizationId,
-        userId,
-      );
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error('PUT /recipes - Failed to add recipe', {
-        recipeName: recipe.name,
-        error: errorMessage,
-      });
-      throw error;
-    }
   }
 
   @Patch(':id')

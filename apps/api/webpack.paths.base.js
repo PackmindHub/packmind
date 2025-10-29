@@ -40,11 +40,5 @@ module.exports = function getBaseWebpackPaths(__dirname) {
       '../../packages/coding-agent/src',
     ),
     '@packmind/jobs': join(__dirname, '../../packages/jobs/src'),
-    '@packmind/linter': join(__dirname, '../../packages/linter/src'),
-    '@packmind/linter-ast': join(__dirname, '../../packages/linter-ast/src'),
-    '@packmind/linter-execution': join(
-      __dirname,
-      '../../packages/linter-execution/src',
-    ),
   };
 };

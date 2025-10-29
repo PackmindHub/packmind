@@ -10,7 +10,11 @@ export type FindGitRepoByOwnerRepoAndBranchInOrganizationCommand =
     organizationId: OrganizationId;
   };
 
+export type FindGitRepoByOwnerRepoAndBranchInOrganizationResult = {
+  gitRepo: GitRepo | null;
+};
+
 export type IFindGitRepoByOwnerRepoAndBranchInOrganizationUseCase = IUseCase<
   FindGitRepoByOwnerRepoAndBranchInOrganizationCommand,
-  GitRepo | null
+  FindGitRepoByOwnerRepoAndBranchInOrganizationResult
 >;

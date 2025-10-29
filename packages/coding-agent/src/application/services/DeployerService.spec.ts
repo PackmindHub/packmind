@@ -8,16 +8,19 @@ import {
   Recipe,
   RecipeId,
 } from '@packmind/recipes';
+import { recipeFactory } from '@packmind/recipes/test';
 import {
   StandardVersion,
   StandardVersionId,
   Standard,
   StandardId,
 } from '@packmind/standards';
+import { standardFactory } from '@packmind/standards/test';
 import { GitRepo, GitRepoId, GitProviderId } from '@packmind/git';
 import { FileUpdates } from '../../domain/entities/FileUpdates';
-import { OrganizationId, UserId } from '@packmind/accounts';
+import { UserId } from '@packmind/accounts';
 import { PackmindLogger, Target, TargetId } from '@packmind/shared';
+import { createSpaceId } from '@packmind/spaces';
 import { stubLogger } from '@packmind/shared/test';
 
 // Create test helper functions
@@ -27,8 +30,6 @@ const createTestRecipeVersionId = (id: string): RecipeVersionId =>
 const createTestStandardId = (id: string): StandardId => id as StandardId;
 const createTestStandardVersionId = (id: string): StandardVersionId =>
   id as StandardVersionId;
-const createTestOrganizationId = (id: string): OrganizationId =>
-  id as OrganizationId;
 const createTestUserId = (id: string): UserId => id as UserId;
 const createTestGitRepoId = (id: string): GitRepoId => id as GitRepoId;
 const createTestGitProviderId = (id: string): GitProviderId =>
@@ -111,15 +112,15 @@ describe('DeployerService', () => {
       branch: 'main',
     };
 
-    const mockRecipe: Recipe = {
+    const mockRecipe: Recipe = recipeFactory({
       id: createTestRecipeId('recipe-1'),
       name: 'Test Recipe',
       slug: 'test-recipe',
       content: 'Original recipe content',
       version: 1,
-      organizationId: createTestOrganizationId('org-1'),
       userId: createTestUserId('user-1'),
-    };
+      spaceId: createSpaceId('space-1'),
+    });
 
     mockRecipeVersions = [
       {
@@ -134,16 +135,16 @@ describe('DeployerService', () => {
       },
     ];
 
-    const mockStandard: Standard = {
+    const mockStandard: Standard = standardFactory({
       id: createTestStandardId('standard-1'),
       name: 'Test Standard',
       slug: 'test-standard',
       description: 'Original standard description',
       version: 1,
-      organizationId: createTestOrganizationId('org-1'),
       userId: createTestUserId('user-1'),
       scope: 'backend',
-    };
+      spaceId: createSpaceId('space-1'),
+    });
 
     mockStandardVersions = [
       {

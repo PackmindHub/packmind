@@ -6,98 +6,111 @@ import {
 } from '../../../domain/entities/RuleExample';
 import { RuleId } from '../../../domain/entities/Rule';
 import {
-  LogLevel,
   PackmindLogger,
+  ILinterPort,
+  getErrorMessage,
   ProgrammingLanguage,
 } from '@packmind/shared';
+import { createOrganizationId, createUserId } from '@packmind/accounts';
 import { v4 as uuidv4 } from 'uuid';
+import {
+  CreateRuleExampleCommand,
+  ICreateRuleExample,
+} from '../../../domain/useCases/ICreateRuleExample';
 
 const origin = 'CreateRuleExampleUsecase';
 
-export type CreateRuleExampleRequest = {
-  ruleId: RuleId;
-  lang: ProgrammingLanguage;
-  positive: string;
-  negative: string;
-};
-
-export class CreateRuleExampleUsecase {
+export class CreateRuleExampleUsecase implements ICreateRuleExample {
   constructor(
-    private readonly ruleExampleRepository: IRuleExampleRepository,
-    private readonly ruleRepository: IRuleRepository,
-    private readonly logger: PackmindLogger = new PackmindLogger(
-      origin,
-      LogLevel.DEBUG,
-    ),
-  ) {
-    this.logger.info('CreateRuleExampleUsecase initialized');
-  }
+    private readonly _ruleExampleRepository: IRuleExampleRepository,
+    private readonly _ruleRepository: IRuleRepository,
+    private readonly _linterAdapter?: ILinterPort,
+    private readonly _logger: PackmindLogger = new PackmindLogger(origin),
+  ) {}
 
-  public async createRuleExample({
-    ruleId,
-    lang,
-    positive,
-    negative,
-  }: CreateRuleExampleRequest): Promise<RuleExample> {
-    this.logger.info('Starting createRuleExample process', {
+  async execute(command: CreateRuleExampleCommand): Promise<RuleExample> {
+    this._logger.info(`[${origin}] Execute command`);
+
+    const { ruleId, lang, positive, negative, organizationId, userId } =
+      command;
+
+    // Validate input parameters
+    if (!lang) {
+      throw new Error('Language is required and cannot be empty');
+    }
+
+    // Validate that the rule exists
+    const rule = await this._ruleRepository.findById(ruleId);
+    if (!rule) {
+      throw new Error(`Rule with id ${ruleId} not found`);
+    }
+
+    // Create the rule example entity
+    const ruleExample: RuleExample = {
+      id: createRuleExampleId(uuidv4()),
       ruleId,
-      lang,
-    });
+      lang: lang,
+      positive: positive || '',
+      negative: negative || '',
+    };
 
     try {
-      // Validate that the rule exists
-      const rule = await this.ruleRepository.findById(ruleId);
-      if (!rule) {
-        const error = new Error(`Rule with id ${ruleId} not found`);
-        this.logger.error('Rule not found', { ruleId });
-        throw error;
-      }
-
-      this.logger.debug('Rule found, creating rule example', {
-        ruleId,
-        ruleContent: rule.content.substring(0, 50) + '...',
-      });
-
-      // Validate input parameters
-      if (!lang) {
-        const error = new Error('Language is required and cannot be empty');
-        this.logger.error('Invalid language parameter', { lang });
-        throw error;
-      }
-
-      // Create the rule example entity
-      const ruleExample: RuleExample = {
-        id: createRuleExampleId(uuidv4()),
-        ruleId,
-        lang: lang,
-        positive: positive || '',
-        negative: negative || '',
-      };
-
-      this.logger.debug('Creating rule example entity', {
-        id: ruleExample.id,
-        ruleId: ruleExample.ruleId,
-        lang: ruleExample.lang,
-      });
-
       // Save the rule example
       const savedRuleExample =
-        await this.ruleExampleRepository.add(ruleExample);
+        await this._ruleExampleRepository.add(ruleExample);
 
-      this.logger.info('Rule example created successfully', {
-        id: savedRuleExample.id,
+      this._logger.info(`${origin}.execute completed`, {
+        ruleExampleId: savedRuleExample.id,
         ruleId: savedRuleExample.ruleId,
         lang: savedRuleExample.lang,
       });
 
+      // Validate detection programs for the current language
+      if (this._linterAdapter && organizationId && userId) {
+        await this.assessOrUpdateRuleDetectionForLanguage(
+          ruleId,
+          lang,
+          organizationId,
+          userId,
+        );
+      }
+
       return savedRuleExample;
     } catch (error) {
-      this.logger.error('Failed to create rule example', {
+      this._logger.error(`${origin}.execute failed`, {
         ruleId,
         lang,
-        error: error instanceof Error ? error.message : String(error),
+        error: getErrorMessage(error),
       });
       throw error;
+    }
+  }
+
+  private async assessOrUpdateRuleDetectionForLanguage(
+    ruleId: RuleId,
+    language: ProgrammingLanguage,
+    organizationId: string,
+    userId: string,
+  ): Promise<void> {
+    if (!this._linterAdapter) {
+      return;
+    }
+
+    try {
+      await this._linterAdapter.updateRuleDetectionAssessmentAfterUpdate({
+        ruleId,
+        language,
+        organizationId: createOrganizationId(organizationId),
+        userId: createUserId(userId),
+      });
+    } catch (error) {
+      this._logger.error('Failed to update detection program status', {
+        ruleId,
+        language,
+        organizationId,
+        error: getErrorMessage(error),
+      });
+      // Don't throw - we want rule example creation to succeed even if detection program update fails
     }
   }
 }

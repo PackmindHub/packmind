@@ -1,5 +1,5 @@
-import { BaseHexa } from './BaseHexa';
 import { DataSource } from 'typeorm';
+import { PackmindLogger } from '../logger/PackmindLogger';
 
 /**
  * Constructor type for BaseHexa subclasses.
@@ -155,6 +155,27 @@ export class HexaRegistry {
   }
 
   /**
+   * Get a registered and initialized hexa by its class name.
+   * Useful for avoiding circular dependencies when you can't import the class.
+   *
+   * @param className - The name of the hexa class (e.g., 'LinterHexa')
+   * @returns The hexa instance or undefined if not found
+   */
+  public getByName<T extends BaseHexa = BaseHexa>(
+    className: string,
+  ): T | undefined {
+    if (!this.isInitialized)
+      throw new Error('Registry not initialized. Call init() first.');
+
+    for (const [constructor, hexa] of this.hexas.entries()) {
+      if (constructor.name === className) {
+        return hexa as T;
+      }
+    }
+    return undefined;
+  }
+
+  /**
    * Get the DataSource used by this registry.
    *
    * @returns The DataSource instance
@@ -212,4 +233,53 @@ export class HexaRegistry {
     this.destroyAll();
     this.registrations.clear();
   }
+}
+
+/**
+ * Base class for all domain applications.
+ *
+ * This class serves as the foundation for domain-specific App classes that act as
+ * facades for their respective use cases. Each domain app should extend this class
+ * and implement the required lifecycle methods.
+ *
+ * The App classes hold the Hexa instance and serve as a clean facade for use cases,
+ * while the Hexa classes focus on dependency injection and service instantiation.
+ */
+
+export type BaseHexaOpts = { logger: PackmindLogger };
+
+export abstract class BaseHexa<T extends BaseHexaOpts = BaseHexaOpts> {
+  protected readonly logger: PackmindLogger;
+
+  /**
+   * Create the app with access to the app registry.
+   * Dependencies can be resolved immediately in the constructor, eliminating
+   * the need for nullable properties.
+   *
+   * @param registry - The app registry instance for accessing other apps
+   * @param opts - the options to create the Hexa
+   */
+  constructor(
+    protected readonly registry: HexaRegistry,
+    protected readonly opts?: Partial<T>,
+  ) {
+    this.logger = opts?.logger ?? new PackmindLogger('BaseHexa');
+  }
+
+  /**
+   * Optional async initialization phase.
+   * Override this method if your hexa requires async initialization
+   * (e.g., setting up job queues, external connections, etc.).
+   *
+   * This will be called by HexaRegistry.initAsync() after all hexas
+   * have been constructed.
+   */
+  async initialize?(): Promise<void>;
+
+  /**
+   * Clean up resources when the app is being destroyed.
+   * This method should handle any cleanup logic like closing connections,
+   * clearing caches, etc.
+   */
+  abstract destroy(): void;
 }

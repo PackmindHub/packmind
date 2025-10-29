@@ -64,6 +64,7 @@ export class GitHexaFactory {
     this.logger.info('Initializing GitHexaFactory (async phase)');
 
     try {
+      // TODO: migrate with port/adapters
       const jobsHexa = this.registry.get(JobsHexa);
       if (!jobsHexa) {
         throw new Error('JobsHexa not found in registry');

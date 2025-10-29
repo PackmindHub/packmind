@@ -4,24 +4,25 @@ import { DashboardKPI } from '../../organizations/components/dashboard/Dashboard
 import { OutdatedTargetsSection } from '../../organizations/components/dashboard/OutdatedTargetsSection';
 import { GettingStartedWidget } from '../../organizations/components/dashboard/GettingStartedWidget';
 import { OrganizationOnboardingChecklist } from '../../organizations/components/dashboard/OrganizationOnboardingChecklist';
-import { useGetStandardsQuery } from '../../standards/api/queries/StandardsQueries';
-import { useGetRecipesQuery } from '../../recipes/api/queries/RecipesQueries';
+import { useGetOnboardingStatusQuery } from '../api/queries/AccountsQueries';
+import { useAuthContext } from '../hooks/useAuthContext';
 
 export const OrganizationHomePage: React.FC = () => {
-  const { data: standards = [], isLoading: isStandardsLoading } =
-    useGetStandardsQuery();
-  const { data: recipes = [], isLoading: isRecipesLoading } =
-    useGetRecipesQuery();
+  const { organization } = useAuthContext();
 
-  const noContent =
-    !isStandardsLoading &&
-    !isRecipesLoading &&
-    standards.length === 0 &&
-    recipes.length === 0;
+  const orgId = organization?.id || ('' as string);
+  const { data: onboardingStatus } = useGetOnboardingStatusQuery(orgId);
+
+  const isOnboardingComplete =
+    onboardingStatus?.hasConnectedGitProvider &&
+    onboardingStatus?.hasConnectedGitRepo &&
+    onboardingStatus?.hasCreatedStandard &&
+    onboardingStatus?.hasDeployed &&
+    onboardingStatus?.hasInvitedColleague;
 
   return (
     <PMPage title={'👋 Welcome to your dashboard'} centeredHeader isFullWidth>
-      {noContent ? (
+      {!isOnboardingComplete ? (
         <PMBox width="xl" marginX="auto">
           <PMVStack gap={8} align="stretch">
             <GettingStartedWidget />

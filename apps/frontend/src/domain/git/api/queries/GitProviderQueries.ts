@@ -10,6 +10,7 @@ import {
   GIT_QUERY_SCOPE,
 } from '../queryKeys';
 import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
+import { GET_ONBOARDING_STATUS_KEY } from '../../../accounts/api/queryKeys';
 
 // Git Provider Queries
 export const useGetGitProvidersQuery = (organizationId: OrganizationId) => {
@@ -45,6 +46,9 @@ export const useCreateGitProviderMutation = () => {
     onSuccess: async (_, { organizationId }) => {
       await queryClient.invalidateQueries({
         queryKey: [...GET_GIT_PROVIDERS_KEY, organizationId],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [GET_ONBOARDING_STATUS_KEY],
       });
     },
     onError: (error) => {

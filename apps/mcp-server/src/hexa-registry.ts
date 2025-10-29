@@ -10,6 +10,8 @@ import { HexaRegistry, PackmindLogger, LogLevel } from '@packmind/shared';
 import { RecipesUsageHexa } from '@packmind/analytics';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { JobsHexa } from '@packmind/jobs';
+import { SpacesHexa } from '@packmind/spaces';
+import { LinterHexa, LinterAdapter } from '@packmind/linter';
 
 const logger = new PackmindLogger('HexaRegistryPlugin', LogLevel.INFO);
 
@@ -51,6 +53,10 @@ async function hexaRegistryPlugin(fastify: FastifyInstance) {
 
     registry.register(GitHexa);
     logger.debug('GitHexa registered');
+    registry.register(SpacesHexa);
+    logger.debug('SpacesHexa registered');
+    registry.register(LinterHexa);
+    logger.debug('LinterHexa registered');
     registry.register(RecipesHexa);
     logger.debug('RecipesHexa registered');
     registry.register(StandardsHexa);
@@ -84,6 +90,30 @@ async function hexaRegistryPlugin(fastify: FastifyInstance) {
       // Initialize async dependencies (e.g., job queues)
       await registry.initAsync();
       logger.debug('Async initialization complete');
+
+      // Set up bidirectional dependency between LinterHexa and StandardsHexa
+      try {
+        const linterHexa = registry.get(LinterHexa);
+        const standardsHexa = registry.get(StandardsHexa);
+
+        // Inject LinterAdapter into StandardsHexa
+        const linterUseCases = linterHexa.getLinterUsecases();
+        const linterAdapter = new LinterAdapter(linterUseCases);
+        standardsHexa.setLinterAdapter(linterAdapter);
+        logger.info('LinterAdapter injected into StandardsHexa');
+
+        // Inject StandardsAdapter into LinterHexa
+        const standardsAdapter = standardsHexa.getStandardsAdapter();
+        linterHexa.setStandardAdapter(standardsAdapter);
+        logger.info('StandardsAdapter injected into LinterHexa');
+      } catch (error) {
+        logger.warn(
+          'Failed to inject adapters between LinterHexa and StandardsHexa',
+          {
+            error: error instanceof Error ? error.message : String(error),
+          },
+        );
+      }
 
       logger.info('HexaRegistry initialized successfully');
     });
@@ -126,6 +156,17 @@ async function hexaRegistryPlugin(fastify: FastifyInstance) {
       return registry.get(GitHexa);
     });
     logger.debug('gitHexa decorator added');
+
+    fastify.decorate('spacesHexa', () => {
+      logger.debug('spacesHexa() called');
+      if (!registry.initialized) {
+        throw new Error(
+          'HexaRegistry not initialized yet. Ensure database connection is ready.',
+        );
+      }
+      return registry.get(SpacesHexa);
+    });
+    logger.debug('spacesHexa decorator added');
 
     fastify.decorate('recipesHexa', () => {
       logger.debug('recipesHexa() called');
@@ -191,6 +232,7 @@ declare module 'fastify' {
     accountsHexa: () => AccountsHexa;
     jobsHexa: () => JobsHexa;
     gitHexa: () => GitHexa;
+    spacesHexa: () => SpacesHexa;
     recipesHexa: () => RecipesHexa;
     recipesUsageHexa: () => RecipesUsageHexa;
     standardsHexa: () => StandardsHexa;

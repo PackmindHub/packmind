@@ -9,6 +9,7 @@ import {
   AbstractRepository,
 } from '@packmind/shared';
 import { OrganizationId, UserId } from '@packmind/accounts';
+import { SpaceId } from '@packmind/shared/types';
 import { StandardVersion } from '../../domain/entities/StandardVersion';
 
 const origin = 'StandardRepository';
@@ -44,11 +45,16 @@ export class StandardRepository
     });
 
     try {
-      // First, find the standard by slug and organizationId
-      const standard = await this.repository.findOne({
-        where: { slug, organizationId },
-        relations: ['gitCommit'],
-      });
+      // Query standards by slug across all spaces in the organization
+      // Join with spaces table to filter by organizationId
+      const standard = await this.repository
+        .createQueryBuilder('standard')
+        .innerJoin('spaces', 'space', 'standard.space_id = space.id')
+        .leftJoinAndSelect('standard.gitCommit', 'gitCommit')
+        .where('standard.slug = :slug', { slug })
+        .andWhere('space.organization_id = :organizationId', { organizationId })
+        .andWhere('standard.deleted_at IS NULL')
+        .getOne();
 
       if (!standard) {
         this.logger.warn('Standard not found by slug and organization', {
@@ -93,10 +99,18 @@ export class StandardRepository
   async findByOrganizationId(
     organizationId: OrganizationId,
   ): Promise<Standard[]> {
-    this.logger.info('Finding standards with scope by organization ID', {
-      organizationId,
-    });
+    this.logger.warn(
+      'findByOrganizationId is deprecated - standards are now space-scoped',
+      {
+        organizationId,
+      },
+    );
+    // Standards no longer have organizationId - they are space-scoped
+    // This method is deprecated and will return an empty array
+    return [];
 
+    // Old implementation (no longer works after organizationId column was dropped):
+    /*
     try {
       // First, get all standards for the organization
       const standards = await this.repository.find({
@@ -137,6 +151,51 @@ export class StandardRepository
       );
       throw error;
     }
+    */
+  }
+
+  async findBySpaceId(spaceId: SpaceId): Promise<Standard[]> {
+    this.logger.info('Finding standards with scope by space ID', {
+      spaceId,
+    });
+
+    try {
+      // First, get all standards for the space
+      const standards = await this.repository.find({
+        where: { spaceId },
+        relations: ['gitCommit'],
+      });
+
+      // For each standard, get the latest version to retrieve scope
+      const standardsWithScope = await Promise.all(
+        standards.map(async (standard) => {
+          // Get the latest version for this standard
+          const latestVersion = await this.repository.manager
+            .getRepository<StandardVersion>(StandardVersionSchema)
+            .findOne({
+              where: { standardId: standard.id },
+              order: { version: 'DESC' },
+            });
+
+          return {
+            ...standard,
+            scope: latestVersion?.scope ?? standard.scope,
+          };
+        }),
+      );
+
+      this.logger.info('Standards with scope found by space ID', {
+        spaceId,
+        count: standardsWithScope.length,
+      });
+      return standardsWithScope;
+    } catch (error) {
+      this.logger.error('Failed to find standards with scope by space ID', {
+        spaceId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   }
 
   async findByUserId(userId: UserId): Promise<Standard[]> {
@@ -162,11 +221,19 @@ export class StandardRepository
     organizationId: OrganizationId,
     userId: UserId,
   ): Promise<Standard[]> {
-    this.logger.info('Finding standards by organization and user ID', {
-      organizationId,
-      userId,
-    });
+    this.logger.warn(
+      'findByOrganizationAndUser is deprecated - standards are now space-scoped',
+      {
+        organizationId,
+        userId,
+      },
+    );
+    // Standards no longer have organizationId - they are space-scoped
+    // This method is deprecated and will return an empty array
+    return [];
 
+    // Old implementation (no longer works after organizationId column was dropped):
+    /*
     try {
       const standards = await this.repository.find({
         where: { organizationId, userId },
@@ -188,5 +255,6 @@ export class StandardRepository
       );
       throw error;
     }
+    */
   }
 }

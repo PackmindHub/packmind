@@ -1,10 +1,21 @@
-import { PackmindLogger, RuleId } from '@packmind/shared';
+import {
+  PackmindLogger,
+  UserProvider,
+  OrganizationProvider,
+  ListStandardsBySpaceCommand,
+  GetStandardByIdCommand,
+  UpdateStandardCommand,
+  ISpacesPort,
+  ILinterPort,
+  ListStandardsBySpaceResponse,
+  GetStandardByIdResponse,
+} from '@packmind/shared';
 import { CreateStandardUsecase } from './createStandard/createStandard.usecase';
 import { CreateStandardWithExamplesUsecase } from './createStandardWithExamples/createStandardWithExamples.usecase';
 import { UpdateStandardUsecase } from './updateStandard/updateStandard.usecase';
 import { AddRuleToStandardUsecase } from './addRuleToStandard/addRuleToStandard.usecase';
 import { GetStandardByIdUsecase } from './getStandardById/getStandardById.usecase';
-import { ListStandardsByOrganizationUsecase } from './listStandardsByOrganization/listStandardsByOrganization.usecase';
+import { ListStandardsBySpaceUsecase } from './listStandardsBySpace/listStandardsBySpace.usecase';
 import { ListStandardVersionsUsecase } from './listStandardVersions/listStandardVersions.usecase';
 import { GetRulesByStandardIdUsecase } from './getRulesByStandardId/getRulesByStandardId.usecase';
 import { FindStandardBySlugUsecase } from './findStandardBySlug/findStandardBySlug.usecase';
@@ -20,8 +31,9 @@ import { DeleteRuleExampleUsecase } from './deleteRuleExample/deleteRuleExample.
 import { IStandardsServices } from '../IStandardsServices';
 import { IStandardsRepositories } from '../../domain/repositories/IStandardsRepositories';
 import { OrganizationId, UserId } from '@packmind/accounts';
+import { SpaceId } from '@packmind/shared/types';
 import { GitHexa } from '@packmind/git';
-import { Standard, StandardId } from '../../domain/entities';
+import { StandardId } from '../../domain/entities';
 import { RuleExample } from '../../domain/entities';
 import { StandardVersionId } from '../../domain/entities';
 import {
@@ -37,12 +49,12 @@ const origin = 'StandardsUseCases';
 
 export class StandardsUseCases {
   private readonly _createStandard: CreateStandardUsecase;
-  private readonly _createStandardWithExamples: CreateStandardWithExamplesUsecase;
+  private _createStandardWithExamples: CreateStandardWithExamplesUsecase;
   private readonly _updateStandard: UpdateStandardUsecase;
-  private readonly _addRuleToStandard: AddRuleToStandardUsecase;
+  private _addRuleToStandard: AddRuleToStandardUsecase;
   private readonly _getStandardById: GetStandardByIdUsecase;
   private readonly _findStandardBySlug: FindStandardBySlugUsecase;
-  private readonly _listStandardsByOrganization: ListStandardsByOrganizationUsecase;
+  private readonly _listStandardsBySpace: ListStandardsBySpaceUsecase;
   private readonly _listStandardVersions: ListStandardVersionsUsecase;
   private readonly _getStandardVersion: GetStandardVersionUsecase;
   private readonly _getLatestStandardVersion: GetLatestStandardVersionUsecase;
@@ -50,10 +62,10 @@ export class StandardsUseCases {
   private readonly _getRulesByStandardId: GetRulesByStandardIdUsecase;
   private readonly _deleteStandard: DeleteStandardUsecase;
   private readonly _deleteStandardsBatch: DeleteStandardsBatchUsecase;
-  private readonly _createRuleExample: CreateRuleExampleUsecase;
+  private _createRuleExample: CreateRuleExampleUsecase;
   private readonly _getRuleExamples: GetRuleExamplesUsecase;
-  private readonly _updateRuleExample: UpdateRuleExampleUsecase;
-  private readonly _deleteRuleExample: DeleteRuleExampleUsecase;
+  private _updateRuleExample: UpdateRuleExampleUsecase;
+  private _deleteRuleExample: DeleteRuleExampleUsecase;
 
   constructor(
     private readonly standardsServices: IStandardsServices,
@@ -61,28 +73,34 @@ export class StandardsUseCases {
     private readonly gitHexa: GitHexa,
     private deploymentsQueryAdapter: IDeploymentPort | undefined,
     private standardDelayedJobs: IStandardDelayedJobs,
+    private readonly userProvider: UserProvider,
+    private readonly organizationProvider: OrganizationProvider,
+    private readonly spacesPort: ISpacesPort | null,
+    private linterAdapter: ILinterPort | undefined,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this._createStandard = new CreateStandardUsecase(
       standardsServices.getStandardService(),
       standardsServices.getStandardVersionService(),
       standardDelayedJobs.standardSummaryDelayedJob,
-      this.logger,
     );
     this._createStandardWithExamples = new CreateStandardWithExamplesUsecase(
       standardsServices.getStandardService(),
       standardsServices.getStandardVersionService(),
       standardsServices.getStandardSummaryService(),
       standardsRepositories.getRuleExampleRepository(),
-      this.logger,
+      standardsRepositories.getRuleRepository(),
+      this.linterAdapter,
     );
     this._updateStandard = new UpdateStandardUsecase(
+      userProvider,
+      organizationProvider,
       standardsServices.getStandardService(),
       standardsServices.getStandardVersionService(),
       standardsRepositories.getRuleRepository(),
       standardsRepositories.getRuleExampleRepository(),
       this.standardDelayedJobs.standardSummaryDelayedJob,
-      this.logger,
+      spacesPort,
     );
     this._addRuleToStandard = new AddRuleToStandardUsecase(
       standardsServices.getStandardService(),
@@ -90,65 +108,60 @@ export class StandardsUseCases {
       standardsRepositories.getRuleRepository(),
       standardsRepositories.getRuleExampleRepository(),
       this.standardDelayedJobs.standardSummaryDelayedJob,
-      this.logger,
+      this.linterAdapter,
     );
     this._getStandardById = new GetStandardByIdUsecase(
+      userProvider,
+      organizationProvider,
       standardsServices.getStandardService(),
-      this.logger,
+      spacesPort,
     );
     this._findStandardBySlug = new FindStandardBySlugUsecase(
       standardsServices.getStandardService(),
-      this.logger,
     );
-    this._listStandardsByOrganization = new ListStandardsByOrganizationUsecase(
+    this._listStandardsBySpace = new ListStandardsBySpaceUsecase(
+      userProvider,
+      organizationProvider,
       standardsServices.getStandardService(),
-      this.logger,
+      spacesPort,
     );
     this._listStandardVersions = new ListStandardVersionsUsecase(
       standardsServices.getStandardVersionService(),
-      this.logger,
     );
     this._getStandardVersion = new GetStandardVersionUsecase(
       standardsServices.getStandardVersionService(),
-      this.logger,
     );
     this._getLatestStandardVersion = new GetLatestStandardVersionUsecase(
       standardsServices.getStandardVersionService(),
-      this.logger,
     );
     this._getStandardVersionById = new GetStandardVersionByIdUsecase(
       standardsServices.getStandardVersionService(),
-      this.logger,
     );
     this._getRulesByStandardId = new GetRulesByStandardIdUsecase(
       standardsServices.getStandardVersionService(),
-      this.logger,
     );
     this._deleteStandard = new DeleteStandardUsecase(
       standardsServices.getStandardService(),
-      this.logger,
     );
     this._deleteStandardsBatch = new DeleteStandardsBatchUsecase(
       standardsServices.getStandardService(),
-      this.logger,
     );
     this._createRuleExample = new CreateRuleExampleUsecase(
       standardsRepositories.getRuleExampleRepository(),
       standardsRepositories.getRuleRepository(),
-      this.logger,
+      this.linterAdapter,
     );
     this._getRuleExamples = new GetRuleExamplesUsecase(
       standardsRepositories.getRuleExampleRepository(),
       standardsRepositories.getRuleRepository(),
-      this.logger,
     );
     this._updateRuleExample = new UpdateRuleExampleUsecase(
       standardsRepositories,
-      this.logger,
+      this.linterAdapter,
     );
     this._deleteRuleExample = new DeleteRuleExampleUsecase(
       standardsRepositories,
-      this.logger,
+      this.linterAdapter,
     );
 
     this.logger.info('StandardsUseCases initialized successfully');
@@ -170,6 +183,48 @@ export class StandardsUseCases {
     // );
   }
 
+  public setLinterAdapter(adapter: ILinterPort): void {
+    this.logger.info('Setting linter adapter in StandardsUseCases');
+    this.linterAdapter = adapter;
+
+    // Recreate use cases that depend on linter adapter
+    this._createStandardWithExamples = new CreateStandardWithExamplesUsecase(
+      this.standardsServices.getStandardService(),
+      this.standardsServices.getStandardVersionService(),
+      this.standardsServices.getStandardSummaryService(),
+      this.standardsRepositories.getRuleExampleRepository(),
+      this.standardsRepositories.getRuleRepository(),
+      adapter,
+    );
+
+    this._createRuleExample = new CreateRuleExampleUsecase(
+      this.standardsRepositories.getRuleExampleRepository(),
+      this.standardsRepositories.getRuleRepository(),
+      adapter,
+    );
+
+    this._updateRuleExample = new UpdateRuleExampleUsecase(
+      this.standardsRepositories,
+      adapter,
+    );
+
+    this._deleteRuleExample = new DeleteRuleExampleUsecase(
+      this.standardsRepositories,
+      adapter,
+    );
+
+    this._addRuleToStandard = new AddRuleToStandardUsecase(
+      this.standardsServices.getStandardService(),
+      this.standardsServices.getStandardVersionService(),
+      this.standardsRepositories.getRuleRepository(),
+      this.standardsRepositories.getRuleExampleRepository(),
+      this.standardDelayedJobs.standardSummaryDelayedJob,
+      adapter,
+    );
+
+    this.logger.info('Use cases recreated with linter adapter');
+  }
+
   // ===========================
   // CORE STANDARD MANAGEMENT
   // ===========================
@@ -184,8 +239,14 @@ export class StandardsUseCases {
     organizationId: OrganizationId;
     userId: UserId;
     scope: string | null;
+    spaceId: SpaceId | null;
   }) {
-    return this._createStandard.createStandard(params);
+    return this._createStandard.execute({
+      ...params,
+      organizationId: params.organizationId.toString(),
+      userId: params.userId.toString(),
+      spaceId: params.spaceId?.toString() || '',
+    });
   }
 
   /**
@@ -199,23 +260,25 @@ export class StandardsUseCases {
     organizationId: OrganizationId;
     userId: UserId;
     scope: string | null;
+    spaceId: SpaceId | null;
   }) {
-    return this._createStandardWithExamples.createStandardWithExamples(params);
+    if (!params.spaceId) {
+      throw new Error(
+        'SpaceId is required for creating standards with examples',
+      );
+    }
+    return this._createStandardWithExamples.createStandardWithExamples({
+      ...params,
+      spaceId: params.spaceId,
+    });
   }
 
   /**
    * Update an existing standard with new content
    */
-  public async updateStandard(params: {
-    standardId: StandardId;
-    name: string;
-    description: string;
-    rules: Array<{ id: RuleId; content: string }>;
-    organizationId: OrganizationId;
-    userId: UserId;
-    scope: string | null;
-  }) {
-    return this._updateStandard.updateStandard(params);
+  public async updateStandard(command: UpdateStandardCommand) {
+    const result = await this._updateStandard.execute(command);
+    return result.standard;
   }
 
   /**
@@ -236,7 +299,7 @@ export class StandardsUseCases {
   public async createRuleExample(
     command: CreateRuleExampleCommand,
   ): Promise<RuleExample> {
-    return this._createRuleExample.createRuleExample(command);
+    return this._createRuleExample.execute(command);
   }
 
   /**
@@ -270,16 +333,16 @@ export class StandardsUseCases {
   // READ OPERATIONS (Now delegating to proper use cases)
   // ===========================
 
-  public async listStandardsByOrganization(
-    organizationId: OrganizationId,
-  ): Promise<Standard[]> {
-    return this._listStandardsByOrganization.listStandardsByOrganization(
-      organizationId,
-    );
+  public async listStandardsBySpace(
+    command: ListStandardsBySpaceCommand,
+  ): Promise<ListStandardsBySpaceResponse> {
+    return this._listStandardsBySpace.execute(command);
   }
 
-  public async getStandardById(id: StandardId) {
-    return this._getStandardById.getStandardById(id);
+  public async getStandardById(
+    command: GetStandardByIdCommand,
+  ): Promise<GetStandardByIdResponse> {
+    return this._getStandardById.execute(command);
   }
 
   public async findStandardBySlug(

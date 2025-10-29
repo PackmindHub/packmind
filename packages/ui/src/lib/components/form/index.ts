@@ -10,5 +10,5 @@ export * from './PMCheckbox/PMCheckbox';
 export { PMCombobox } from './PMCombobox/PMCombobox';
 export * from './PMCheckboxCard/PMCheckboxCard';
 export * from './PMCheckboxGroup/PMCheckboxGroup';
-export { PMEllipsisMenu, type PMEllipsisMenuProps } from './PMEllipsisMenu';
+export * from './PMEllipsisMenu';
 export { PMSegmentGroup } from './PMSegmentedControl/PMSegmentedControl';

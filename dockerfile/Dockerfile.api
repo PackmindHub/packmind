@@ -7,16 +7,7 @@ RUN apk update && \
     apk add --no-cache \
         openssl=3.5.4-r0 \
         bash \
-        curl \
-        wget \
-        ca-certificates \
-        nano \
-        libcurl \
-        build-base \
-        git \
-        python3 \
-        py3-pip \
-        python3-dev
+        ca-certificates
 
 # Use the existing node user from the base image
 USER node
@@ -33,7 +24,6 @@ COPY --chown=node:node dist/packages/migrations-bundle ./migrations/
 
 # Copy base tree-sitter WASM files to /app/ directory for runtime initialization
 COPY --chown=node:node dist/apps/api/tree-sitter*.wasm ./
-COPY --chown=node:node dist/apps/api/web-tree-sitter*.wasm ./
 
 # Copy custom package.json for migrations with only external dependencies
 COPY --chown=node:node packages/migrations/docker-package.json ./migrations/package.json

@@ -1,8 +1,8 @@
 import {
   FindGitRepoByOwnerRepoAndBranchInOrganizationCommand,
+  FindGitRepoByOwnerRepoAndBranchInOrganizationResult,
   IFindGitRepoByOwnerRepoAndBranchInOrganizationUseCase,
 } from '../../../domain/useCases/IFindGitRepoByOwnerRepoAndBranchInOrganization';
-import { GitRepo } from '../../../domain/entities/GitRepo';
 import { GitRepoService } from '../../GitRepoService';
 
 export class FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase
@@ -12,7 +12,7 @@ export class FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase
 
   async execute(
     command: FindGitRepoByOwnerRepoAndBranchInOrganizationCommand,
-  ): Promise<GitRepo | null> {
+  ): Promise<FindGitRepoByOwnerRepoAndBranchInOrganizationResult> {
     const { owner, repo, branch, organizationId } = command;
 
     if (!owner || !repo || !branch || !organizationId) {
@@ -21,11 +21,13 @@ export class FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase
       );
     }
 
-    return this.gitRepoService.findGitRepoByOwnerRepoAndBranchInOrganization(
-      owner,
-      repo,
-      branch,
-      organizationId,
-    );
+    const gitRepo =
+      await this.gitRepoService.findGitRepoByOwnerRepoAndBranchInOrganization(
+        owner,
+        repo,
+        branch,
+        organizationId,
+      );
+    return { gitRepo };
   }
 }

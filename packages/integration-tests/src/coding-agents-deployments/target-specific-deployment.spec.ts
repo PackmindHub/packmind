@@ -1,4 +1,5 @@
 import { DataSource } from 'typeorm';
+import { assert } from 'console';
 import {
   AccountsHexa,
   accountsSchemas,
@@ -19,6 +20,7 @@ import {
   StandardVersion,
   StandardVersionId,
 } from '@packmind/standards';
+import { SpacesHexa, spacesSchemas, Space } from '@packmind/spaces';
 import { GitHexa, gitSchemas, GitRepo, createGitRepoId } from '@packmind/git';
 import { DeploymentsHexa, deploymentsSchemas } from '@packmind/deployments';
 import { JobsHexa } from '@packmind/jobs';
@@ -57,6 +59,7 @@ describe('Target-Specific Deployment Integration', () => {
   let accountsHexa: AccountsHexa;
   let recipesHexa: RecipesHexa;
   let standardsHexa: StandardsHexa;
+  let spacesHexa: SpacesHexa;
   let registry: HexaRegistry;
   let dataSource: DataSource;
   let codingAgentFactory: CodingAgentHexaFactory;
@@ -66,6 +69,7 @@ describe('Target-Specific Deployment Integration', () => {
   let standard: Standard;
   let organization: Organization;
   let user: User;
+  let space: Space;
   let gitRepo: GitRepo;
   let jetbrainsTarget: Target;
   let vscodeTarget: Target;
@@ -77,6 +81,7 @@ describe('Target-Specific Deployment Integration', () => {
       ...accountsSchemas,
       ...recipesSchemas,
       ...standardsSchemas,
+      ...spacesSchemas,
       ...gitSchemas,
       ...deploymentsSchemas,
     ]);
@@ -87,8 +92,11 @@ describe('Target-Specific Deployment Integration', () => {
     registry = new HexaRegistry();
 
     // Register hexas before initialization
+    // NOTE: SpacesHexa must be registered before AccountsHexa
+    // because AccountsHexa needs SpacesPort to create default space during signup
     registry.register(JobsHexa);
     registry.register(GitHexa);
+    registry.register(SpacesHexa);
     registry.register(AccountsHexa);
     registry.register(RecipesHexa);
     registry.register(StandardsHexa);
@@ -103,6 +111,7 @@ describe('Target-Specific Deployment Integration', () => {
     accountsHexa = registry.get(AccountsHexa);
     recipesHexa = registry.get(RecipesHexa);
     standardsHexa = registry.get(StandardsHexa);
+    spacesHexa = registry.get(SpacesHexa);
 
     // Initialize coding agent factory with the registry
     codingAgentFactory = new CodingAgentHexaFactory(registry);
@@ -116,6 +125,14 @@ describe('Target-Specific Deployment Integration', () => {
     });
     user = signUpResult.user;
     organization = signUpResult.organization;
+
+    // Get the default "Global" space created during signup
+    const spaces = await spacesHexa
+      .getSpacesAdapter()
+      .listSpacesByOrganization(organization.id);
+    const foundSpace = spaces.find((s) => s.name === 'Global');
+    assert(foundSpace, 'Default Global space should exist');
+    space = foundSpace;
 
     // Create test git repository (ide-plugins)
     gitRepo = {
@@ -152,6 +169,7 @@ class MyService {
 `,
       userId: user.id,
       organizationId: organization.id,
+      spaceId: space.id.toString(),
     });
 
     // Create test standard about code quality
@@ -167,6 +185,7 @@ class MyService {
       organizationId: organization.id,
       userId: user.id,
       scope: 'ide-plugins',
+      spaceId: space.id,
     });
 
     // Create targets for the repository
@@ -404,6 +423,7 @@ class MyService {
         organizationId: organization.id,
         userId: user.id,
         scope: 'universal',
+        spaceId: space.id,
       });
 
       const universalStandardVersions: StandardVersion[] = [
@@ -720,6 +740,7 @@ This recipe provides TDD best practices applicable to any IDE platform.
 `,
         userId: user.id,
         organizationId: organization.id,
+        spaceId: space.id.toString(),
       });
 
       const tddRecipeVersions: RecipeVersion[] = [

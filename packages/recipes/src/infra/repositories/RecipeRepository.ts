@@ -9,6 +9,7 @@ import {
   QueryOption,
 } from '@packmind/shared';
 import { OrganizationId, UserId } from '@packmind/accounts';
+import { SpaceId } from '@packmind/shared/types';
 
 const origin = 'RecipeRepository';
 
@@ -44,10 +45,23 @@ export class RecipeRepository
     });
 
     try {
-      const recipe = await this.repository.findOne({
-        where: { slug, organizationId },
-        withDeleted: opts?.includeDeleted ?? false,
-      });
+      // Query recipes by slug across all spaces in the organization
+      // Join with spaces table to filter by organizationId
+      let queryBuilder = this.repository
+        .createQueryBuilder('recipe')
+        .innerJoin('spaces', 'space', 'recipe.space_id = space.id')
+        .where('recipe.slug = :slug', { slug })
+        .andWhere('space.organization_id = :organizationId', {
+          organizationId,
+        });
+
+      // Include deleted recipes if requested
+      if (opts?.includeDeleted) {
+        queryBuilder = queryBuilder.withDeleted();
+      }
+
+      const recipe = await queryBuilder.getOne();
+
       if (recipe) {
         this.logger.info('Recipe found by slug and organization', {
           slug,
@@ -74,8 +88,18 @@ export class RecipeRepository
   async findByOrganizationId(
     organizationId: OrganizationId,
   ): Promise<Recipe[]> {
-    this.logger.info('Finding recipes by organization ID', { organizationId });
+    this.logger.warn(
+      'findByOrganizationId is deprecated - recipes are now space-scoped',
+      {
+        organizationId,
+      },
+    );
+    // Recipes no longer have organizationId - they are space-scoped
+    // This method is deprecated and will return an empty array
+    return [];
 
+    // Old implementation (no longer works after organizationId column was dropped):
+    /*
     try {
       const recipes = await this.repository.find({ where: { organizationId } });
       this.logger.info('Recipes found by organization ID', {
@@ -90,6 +114,7 @@ export class RecipeRepository
       });
       throw error;
     }
+    */
   }
 
   async findByUserId(userId: UserId): Promise<Recipe[]> {
@@ -115,11 +140,19 @@ export class RecipeRepository
     organizationId: OrganizationId,
     userId: UserId,
   ): Promise<Recipe[]> {
-    this.logger.info('Finding recipes by organization and user ID', {
-      organizationId,
-      userId,
-    });
+    this.logger.warn(
+      'findByOrganizationAndUser is deprecated - recipes are now space-scoped',
+      {
+        organizationId,
+        userId,
+      },
+    );
+    // Recipes no longer have organizationId - they are space-scoped
+    // This method is deprecated and will return an empty array
+    return [];
 
+    // Old implementation (no longer works after organizationId column was dropped):
+    /*
     try {
       const recipes = await this.repository.find({
         where: { organizationId, userId },
@@ -134,6 +167,32 @@ export class RecipeRepository
       this.logger.error('Failed to find recipes by organization and user ID', {
         organizationId,
         userId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+    */
+  }
+
+  async findBySpaceId(spaceId: SpaceId): Promise<Recipe[]> {
+    this.logger.info('Finding recipes by space ID', {
+      spaceId,
+    });
+
+    try {
+      const recipes = await this.repository.find({
+        where: { spaceId },
+        relations: ['gitCommit'],
+      });
+
+      this.logger.info('Recipes found by space ID', {
+        spaceId,
+        count: recipes.length,
+      });
+      return recipes;
+    } catch (error) {
+      this.logger.error('Failed to find recipes by space ID', {
+        spaceId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

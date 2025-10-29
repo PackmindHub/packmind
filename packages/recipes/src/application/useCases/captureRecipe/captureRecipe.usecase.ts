@@ -13,6 +13,7 @@ import {
 } from '@packmind/shared';
 import { RecipeSummaryService } from '../../services/RecipeSummaryService';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
+import { createSpaceId } from '@packmind/spaces';
 
 const origin = 'CaptureRecipeUsecase';
 
@@ -34,6 +35,7 @@ export class CaptureRecipeUsecase implements ICaptureRecipeUseCase {
   ): Promise<CaptureRecipeResponse> {
     const {
       name,
+      spaceId: spaceIdString,
       summary: providedSummary,
       whenToUse,
       contextValidationCheckpoints,
@@ -44,10 +46,12 @@ export class CaptureRecipeUsecase implements ICaptureRecipeUseCase {
     } = command;
     const organizationId = createOrganizationId(orgIdString);
     const userId = createUserId(userIdString);
+    const spaceId = createSpaceId(spaceIdString);
     this.logger.info('Starting captureRecipe process', {
       name,
       organizationId,
       userId,
+      spaceId,
     });
 
     try {
@@ -55,13 +59,14 @@ export class CaptureRecipeUsecase implements ICaptureRecipeUseCase {
       const baseSlug = slug(name);
       this.logger.info('Base slug generated', { slug: baseSlug });
 
-      // Ensure slug is unique per organization. If it exists, append "-1", "-2", ... until unique
-      this.logger.info('Checking slug uniqueness within organization', {
+      // Ensure slug is unique per space. If it exists, append "-1", "-2", ... until unique
+      this.logger.info('Checking slug uniqueness within space', {
         baseSlug,
+        spaceId,
         organizationId,
       });
       const existingRecipes =
-        await this.recipeService.listRecipesByOrganization(organizationId);
+        await this.recipeService.listRecipesBySpace(spaceId);
       const existingSlugs = new Set(existingRecipes.map((r) => r.slug));
 
       let recipeSlug = baseSlug;
@@ -93,14 +98,15 @@ export class CaptureRecipeUsecase implements ICaptureRecipeUseCase {
         slug: recipeSlug,
         version: initialVersion,
         gitCommit: undefined,
-        organizationId,
         userId,
+        spaceId,
       });
       this.logger.info('Recipe entity created successfully', {
         recipeId: recipe.id,
         name,
         organizationId,
         userId,
+        spaceId,
       });
 
       const summary = await this.computeSummary(
@@ -132,6 +138,7 @@ export class CaptureRecipeUsecase implements ICaptureRecipeUseCase {
         name,
         organizationId,
         userId,
+        spaceId,
       });
 
       return recipe;
@@ -140,6 +147,7 @@ export class CaptureRecipeUsecase implements ICaptureRecipeUseCase {
         name,
         organizationId,
         userId,
+        spaceId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

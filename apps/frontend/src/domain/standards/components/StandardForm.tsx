@@ -121,10 +121,6 @@ export const StandardForm: React.FC<StandardFormProps> = ({
 
     const validRules = rules.filter((rule) => rule.content.trim());
 
-    console.log(
-      validRules.map((rule) => ({ id: rule.id, content: rule.content.trim() })),
-    );
-
     const standardData = {
       name: name.trim(),
       description: description.trim(),

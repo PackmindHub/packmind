@@ -18,6 +18,11 @@ export type PackmindCommandBody<Command extends PackmindCommand> = Omit<
   'userId' | 'organizationId'
 >;
 
+export type NewPackmindCommandBody<Command extends PackmindCommand> = Omit<
+  Command,
+  'userId'
+>;
+
 export type PackmindResult = object;
 
 export interface IPublicUseCase<
@@ -47,6 +52,10 @@ type ResultType<U> = U extends IUseCase<any, infer R> ? R : never;
 
 export type Gateway<U extends IUseCase<any, any>> = (
   params: PackmindCommandBody<CommandType<U>>,
+) => Promise<ResultType<U>>;
+
+export type NewGateway<U extends IUseCase<any, any>> = (
+  params: NewPackmindCommandBody<CommandType<U>>,
 ) => Promise<ResultType<U>>;
 
 type PublicCommandType<U> = U extends IPublicUseCase<infer C, any> ? C : never;

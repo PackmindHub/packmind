@@ -31,7 +31,7 @@ export type PMConfirmationModalProps = {
   /** Whether the modal is open (controlled mode) */
   open?: boolean;
   /** Callback function called when modal state changes (controlled mode) */
-  onOpenChange?: (open: boolean) => void;
+  onOpenChange?: (details: { open: boolean }) => void;
   /** Whether the confirm action is loading */
   isLoading?: boolean;
 };
@@ -56,7 +56,6 @@ export const PMConfirmationModal = ({
 
   return (
     <DialogRoot open={open} onOpenChange={onOpenChange} placement="center">
-      {/* @ts-expect-error https://github.com/radix-ui/primitives/issues/2309#issuecomment-1916541133 */}
       <DialogTrigger asChild>{trigger}</DialogTrigger>
 
       <Portal>
@@ -69,7 +68,10 @@ export const PMConfirmationModal = ({
             <PMConfirmationModalBody>{message}</PMConfirmationModalBody>
 
             <PMConfirmationModalFooter>
-              <PMButton variant="outline" onClick={() => onOpenChange?.(false)}>
+              <PMButton
+                variant="outline"
+                onClick={() => onOpenChange?.({ open: false })}
+              >
                 {cancelText}
               </PMButton>
               <PMButton

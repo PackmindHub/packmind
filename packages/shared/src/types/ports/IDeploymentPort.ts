@@ -2,6 +2,8 @@ import {
   DeploymentOverview,
   FindDeployedStandardByRepositoryCommand,
   FindDeployedStandardByRepositoryResponse,
+  FindActiveStandardVersionsByTargetCommand,
+  FindActiveStandardVersionsByTargetResponse,
   GetDeploymentOverviewCommand,
   PublishRecipesCommand,
   PublishStandardsCommand,
@@ -31,6 +33,17 @@ export interface IDeploymentPort {
   findActiveStandardVersionsByRepository(
     command: FindDeployedStandardByRepositoryCommand,
   ): Promise<FindDeployedStandardByRepositoryResponse>;
+
+  /**
+   * Get all currently deployed standard versions for a specific target.
+   * This returns the latest deployed version of each unique standard.
+   *
+   * @param command - Command containing targetId and organizationId
+   * @returns Promise of array of StandardVersion
+   */
+  findActiveStandardVersionsByTarget(
+    command: FindActiveStandardVersionsByTargetCommand,
+  ): Promise<FindActiveStandardVersionsByTargetResponse>;
 
   /**
    * Gets deployment overview for an organization

@@ -12,8 +12,12 @@ module.exports = function getProprietaryWebpackPaths(__dirname) {
     ...basePaths,
     // Proprietary version uses the real analytics package
     '@packmind/analytics': join(__dirname, '../../packages/analytics/src'),
-    '@packmind/jobs': join(__dirname, '../../packages/jobs/src'),
     '@packmind/linter': join(__dirname, '../../packages/linter/src'),
+    '@packmind/linter-ast': join(__dirname, '../../packages/linter-ast/src'),
+    '@packmind/linter-execution': join(
+      __dirname,
+      '../../packages/linter-execution/src',
+    ),
     '@packmind/amplitude': join(__dirname, '../../packages/amplitude/src'),
     // Add other proprietary-specific overrides here as needed
   };

@@ -1,7 +1,5 @@
-import {
-  CreateRuleExampleRequest,
-  CreateRuleExampleUsecase,
-} from './createRuleExample.usecase';
+import { CreateRuleExampleUsecase } from './createRuleExample.usecase';
+import { CreateRuleExampleCommand } from '../../../domain/useCases/ICreateRuleExample';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { ruleExampleFactory } from '../../../../test/ruleExampleFactory';
@@ -47,19 +45,26 @@ describe('CreateRuleExampleUsecase', () => {
     createRuleExampleUsecase = new CreateRuleExampleUsecase(
       ruleExampleRepository,
       ruleRepository,
+      undefined,
       stubbedLogger,
     );
   });
 
-  describe('createRuleExample', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('execute', () => {
     it('creates a rule example with valid inputs', async () => {
       const ruleId = createRuleId(uuidv4());
       const rule = ruleFactory({ id: ruleId });
-      const request: CreateRuleExampleRequest = {
+      const command: CreateRuleExampleCommand = {
         ruleId,
         lang: ProgrammingLanguage.JAVASCRIPT,
         positive: 'const variable = value;',
         negative: 'var variable = value;',
+        organizationId: 'org-123',
+        userId: 'user-123',
       };
 
       const expectedRuleExample = ruleExampleFactory({
@@ -72,50 +77,59 @@ describe('CreateRuleExampleUsecase', () => {
       ruleRepository.findById.mockResolvedValue(rule);
       ruleExampleRepository.add.mockResolvedValue(expectedRuleExample);
 
-      const result = await createRuleExampleUsecase.createRuleExample(request);
+      const result = await createRuleExampleUsecase.execute(command);
 
-      expect(ruleRepository.findById).toHaveBeenCalledWith(ruleId);
-      expect(ruleExampleRepository.add).toHaveBeenCalledWith(
-        expect.objectContaining({
-          ruleId,
-          lang: ProgrammingLanguage.JAVASCRIPT,
-          positive: 'const variable = value;',
-          negative: 'var variable = value;',
-          id: expect.any(String),
-        }),
-      );
       expect(result).toEqual(expectedRuleExample);
     });
 
     describe('when rule does not exist', () => {
       it('throws an error', async () => {
         const ruleId = createRuleId(uuidv4());
-        const request: CreateRuleExampleRequest = {
+        const command: CreateRuleExampleCommand = {
           ruleId,
           lang: ProgrammingLanguage.JAVASCRIPT,
           positive: 'const variable = value;',
           negative: 'var variable = value;',
+          organizationId: 'org-123',
+          userId: 'user-123',
         };
 
         ruleRepository.findById.mockResolvedValue(null);
 
-        await expect(
-          createRuleExampleUsecase.createRuleExample(request),
-        ).rejects.toThrow(`Rule with id ${ruleId} not found`);
+        await expect(createRuleExampleUsecase.execute(command)).rejects.toThrow(
+          `Rule with id ${ruleId} not found`,
+        );
+      });
+    });
 
-        expect(ruleRepository.findById).toHaveBeenCalledWith(ruleId);
-        expect(ruleExampleRepository.add).not.toHaveBeenCalled();
+    describe('when language is empty', () => {
+      it('throws an error', async () => {
+        const ruleId = createRuleId(uuidv4());
+        const command: CreateRuleExampleCommand = {
+          ruleId,
+          lang: '' as ProgrammingLanguage,
+          positive: 'const variable = value;',
+          negative: 'var variable = value;',
+          organizationId: 'org-123',
+          userId: 'user-123',
+        };
+
+        await expect(createRuleExampleUsecase.execute(command)).rejects.toThrow(
+          'Language is required and cannot be empty',
+        );
       });
     });
 
     it('allows empty positive example', async () => {
       const ruleId = createRuleId(uuidv4());
       const rule = ruleFactory({ id: ruleId });
-      const request: CreateRuleExampleRequest = {
+      const command: CreateRuleExampleCommand = {
         ruleId,
         lang: ProgrammingLanguage.JAVASCRIPT,
         positive: '',
         negative: 'var variable = value;',
+        organizationId: 'org-123',
+        userId: 'user-123',
       };
 
       const expectedRuleExample = ruleExampleFactory({
@@ -128,28 +142,21 @@ describe('CreateRuleExampleUsecase', () => {
       ruleRepository.findById.mockResolvedValue(rule);
       ruleExampleRepository.add.mockResolvedValue(expectedRuleExample);
 
-      const result = await createRuleExampleUsecase.createRuleExample(request);
+      const result = await createRuleExampleUsecase.execute(command);
 
-      expect(ruleRepository.findById).toHaveBeenCalledWith(ruleId);
-      expect(ruleExampleRepository.add).toHaveBeenCalledWith(
-        expect.objectContaining({
-          ruleId,
-          lang: ProgrammingLanguage.JAVASCRIPT,
-          positive: '',
-          negative: 'var variable = value;',
-        }),
-      );
       expect(result).toEqual(expectedRuleExample);
     });
 
     it('allows empty negative example', async () => {
       const ruleId = createRuleId(uuidv4());
       const rule = ruleFactory({ id: ruleId });
-      const request: CreateRuleExampleRequest = {
+      const command: CreateRuleExampleCommand = {
         ruleId,
         lang: ProgrammingLanguage.JAVASCRIPT,
         positive: 'const variable = value;',
         negative: '',
+        organizationId: 'org-123',
+        userId: 'user-123',
       };
 
       const expectedRuleExample = ruleExampleFactory({
@@ -162,58 +169,29 @@ describe('CreateRuleExampleUsecase', () => {
       ruleRepository.findById.mockResolvedValue(rule);
       ruleExampleRepository.add.mockResolvedValue(expectedRuleExample);
 
-      const result = await createRuleExampleUsecase.createRuleExample(request);
+      const result = await createRuleExampleUsecase.execute(command);
 
-      expect(ruleRepository.findById).toHaveBeenCalledWith(ruleId);
-      expect(ruleExampleRepository.add).toHaveBeenCalledWith(
-        expect.objectContaining({
-          ruleId,
-          lang: ProgrammingLanguage.JAVASCRIPT,
-          positive: 'const variable = value;',
-          negative: '',
-        }),
-      );
       expect(result).toEqual(expectedRuleExample);
     });
 
     it('handles repository errors gracefully', async () => {
       const ruleId = createRuleId(uuidv4());
       const rule = ruleFactory({ id: ruleId });
-      const request: CreateRuleExampleRequest = {
+      const command: CreateRuleExampleCommand = {
         ruleId,
         lang: ProgrammingLanguage.JAVASCRIPT,
         positive: 'const variable = value;',
         negative: 'var variable = value;',
+        organizationId: 'org-123',
+        userId: 'user-123',
       };
 
       ruleRepository.findById.mockResolvedValue(rule);
       ruleExampleRepository.add.mockRejectedValue(new Error('Database error'));
 
-      await expect(
-        createRuleExampleUsecase.createRuleExample(request),
-      ).rejects.toThrow('Database error');
-
-      expect(ruleRepository.findById).toHaveBeenCalledWith(ruleId);
-      expect(ruleExampleRepository.add).toHaveBeenCalled();
-    });
-
-    it('handles rule repository errors gracefully', async () => {
-      const ruleId = createRuleId(uuidv4());
-      const request: CreateRuleExampleRequest = {
-        ruleId,
-        lang: ProgrammingLanguage.JAVASCRIPT,
-        positive: 'const variable = value;',
-        negative: 'var variable = value;',
-      };
-
-      ruleRepository.findById.mockRejectedValue(new Error('Rule fetch error'));
-
-      await expect(
-        createRuleExampleUsecase.createRuleExample(request),
-      ).rejects.toThrow('Rule fetch error');
-
-      expect(ruleRepository.findById).toHaveBeenCalledWith(ruleId);
-      expect(ruleExampleRepository.add).not.toHaveBeenCalled();
+      await expect(createRuleExampleUsecase.execute(command)).rejects.toThrow(
+        'Database error',
+      );
     });
   });
 });

@@ -21,11 +21,6 @@
             "input": "apps/cli/src/assets",
             "glob": "**/*",
             "output": "apps/cli/src/assets"
-          },
-          {
-            "input": "node_modules/tree-sitter-typescript",
-            "glob": "tree-sitter-typescript.wasm",
-            "output": "apps/cli/src/wasm"
           }
         ],
         "generatePackageJson": true,
@@ -60,44 +55,50 @@
         "minify": false,
         "main": "apps/cli/src/main.ts",
         "tsConfig": "apps/cli/tsconfig.app.json",
-        "assets": [
-          {
-            "input": "apps/cli/src/assets",
-            "glob": "**/*",
-            "output": "./assets"
-          },
-          {
-            "input": "node_modules/tree-sitter-typescript",
-            "glob": "tree-sitter-typescript.wasm",
-            "output": "./wasm"
-          }
-        ],
-        "generatePackageJson": true,
-        "esbuildOptions": {
-          "sourcemap": true,
-          "outExtension": {
-            ".js": ".js"
-          },
-          "banner": {
-            "js": "#!/usr/bin/env node"
-          }
-        }
+        "generatePackageJson": false,
+        "esbuildConfig": "apps/cli/esbuild.config.js"
       },
       "configurations": {
         "development": {},
         "production": {
-          "minify": true,
-          "esbuildOptions": {
-            "sourcemap": false,
-            "outExtension": {
-              ".js": ".js"
-            },
-            "banner": {
-              "js": "#!/usr/bin/env node"
-            }
-          }
+          "minify": true
         }
       }
+    },
+    "build-executable": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun run apps/cli/bun-build.ts"
+      },
+      "description": "Build standalone executable for current platform using Bun"
+    },
+    "build-executable-all": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun run apps/cli/bun-build.ts --target=all"
+      },
+      "description": "Build standalone executables for all platforms using Bun"
+    },
+    "build-executable-linux": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun run apps/cli/bun-build.ts --target=linux"
+      },
+      "description": "Build standalone executables for Linux (x64 + arm64) using Bun"
+    },
+    "build-executable-macos": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun run apps/cli/bun-build.ts --target=macos"
+      },
+      "description": "Build standalone executables for macOS (x64 + arm64) using Bun"
+    },
+    "build-executable-windows": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun run apps/cli/bun-build.ts --target=windows"
+      },
+      "description": "Build standalone executables for Windows (x64) using Bun"
     },
     "run": {
       "executor": "@nx/js:node",

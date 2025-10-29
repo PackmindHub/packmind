@@ -1,5 +1,6 @@
 import { Standard } from '../entities/Standard';
 import { OrganizationId, UserId } from '@packmind/accounts/types';
+import { SpaceId } from '@packmind/shared/types';
 import { IRepository } from '@packmind/shared';
 
 export interface IStandardRepository extends IRepository<Standard> {
@@ -8,6 +9,8 @@ export interface IStandardRepository extends IRepository<Standard> {
     organizationId: OrganizationId,
   ): Promise<Standard | null>;
   findByOrganizationId(organizationId: OrganizationId): Promise<Standard[]>;
+
+  findBySpaceId(spaceId: SpaceId): Promise<Standard[]>;
   findByUserId(userId: UserId): Promise<Standard[]>;
   findByOrganizationAndUser(
     organizationId: OrganizationId,

@@ -9,6 +9,7 @@
     "npm": "10.9.2"
   },
   "dependencies": {
+    "@amplitude/analytics-node": "^1.5.18",
     "@infisical/sdk": "^4.0.2",
     "@nestjs/common": "^11.1.6",
     "@nestjs/core": "^11.1.6",

@@ -3,6 +3,7 @@ import { PMAlert } from '@packmind/ui';
 interface ProgramEditorProps {
   standardId: string;
   ruleId: string;
+  detectionLanguages: string[];
 }
 
 export const ProgramEditor = (props: ProgramEditorProps) => {

@@ -38,7 +38,7 @@ export const PMToaster = () => {
     <Portal>
       <ChakraToasterTyped toaster={pmToaster} insetInline={{ mdDown: '4' }}>
         {(toast) => (
-          <Toast.Root width={{ md: 'sm' }} status={toast.type}>
+          <Toast.Root width={{ md: 'sm' }}>
             {toast.type === 'loading' ? (
               <Spinner size="sm" color="blue.solid" />
             ) : (

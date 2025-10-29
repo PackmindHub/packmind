@@ -18,6 +18,7 @@ import {
   UserId,
   OrganizationId,
 } from '@packmind/accounts';
+import { createSpaceId } from '@packmind/spaces';
 import { stubLogger } from '@packmind/shared/test';
 
 describe('StandardService', () => {
@@ -33,6 +34,7 @@ describe('StandardService', () => {
       deleteById: jest.fn(),
       restoreById: jest.fn(),
       findByOrganizationId: jest.fn(),
+      findBySpaceId: jest.fn(),
       findByUserId: jest.fn(),
       findByOrganizationAndUser: jest.fn(),
     };
@@ -58,9 +60,9 @@ describe('StandardService', () => {
         description: 'Test standard description',
         version: 1,
         gitCommit: undefined,
-        organizationId: createOrganizationId(uuidv4()),
         userId: createUserId(uuidv4()),
         scope: null,
+        spaceId: createSpaceId(uuidv4()),
       };
 
       savedStandard = {
@@ -142,7 +144,7 @@ describe('StandardService', () => {
       beforeEach(async () => {
         slug = 'test-standard';
         organizationId = createOrganizationId('org-123');
-        standard = standardFactory({ slug, organizationId });
+        standard = standardFactory({ slug });
 
         standardRepository.findBySlug = jest.fn().mockResolvedValue(standard);
 
@@ -201,7 +203,6 @@ describe('StandardService', () => {
           description: 'Updated standard description',
           version: 2,
           gitCommit: undefined,
-          organizationId: createOrganizationId(uuidv4()),
           userId: createUserId(uuidv4()),
           scope: null,
         };
@@ -210,6 +211,7 @@ describe('StandardService', () => {
           id: standardId,
           ...updateData,
           scope: null,
+          spaceId: createSpaceId('space-1'),
         };
 
         standardRepository.findById = jest
@@ -229,6 +231,7 @@ describe('StandardService', () => {
           id: standardId,
           ...updateData,
           scope: null,
+          spaceId: existingStandard.spaceId,
         });
       });
 
@@ -249,7 +252,6 @@ describe('StandardService', () => {
           description: 'This standard does not exist',
           version: 1,
           gitCommit: undefined,
-          organizationId: createOrganizationId(uuidv4()),
           userId: createUserId(uuidv4()),
           scope: null,
         };
@@ -330,10 +332,7 @@ describe('StandardService', () => {
   describe('listStandardsByOrganization', () => {
     it('returns standards for the specified organization', async () => {
       const organizationId = createOrganizationId(uuidv4());
-      const standards = [
-        standardFactory({ organizationId }),
-        standardFactory({ organizationId }),
-      ];
+      const standards = [standardFactory(), standardFactory()];
 
       standardRepository.findByOrganizationId = jest
         .fn()
@@ -345,6 +344,23 @@ describe('StandardService', () => {
       expect(standardRepository.findByOrganizationId).toHaveBeenCalledWith(
         organizationId,
       );
+      expect(result).toEqual(standards);
+    });
+  });
+
+  describe('listStandardsBySpace', () => {
+    it('returns standards for the specified space', async () => {
+      const spaceId = createSpaceId(uuidv4());
+      const standards = [
+        standardFactory({ spaceId }),
+        standardFactory({ spaceId }),
+      ];
+
+      standardRepository.findBySpaceId = jest.fn().mockResolvedValue(standards);
+
+      const result = await standardService.listStandardsBySpace(spaceId);
+
+      expect(standardRepository.findBySpaceId).toHaveBeenCalledWith(spaceId);
       expect(result).toEqual(standards);
     });
   });
@@ -371,8 +387,8 @@ describe('StandardService', () => {
       const organizationId = createOrganizationId(uuidv4());
       const userId = createUserId(uuidv4());
       const standards = [
-        standardFactory({ organizationId, userId }),
-        standardFactory({ organizationId, userId }),
+        standardFactory({ userId }),
+        standardFactory({ userId }),
       ];
 
       standardRepository.findByOrganizationAndUser = jest

@@ -59,8 +59,6 @@ Failure to follow these standards may lead to inconsistencies, errors, or rework
       return null;
     }
 
-    console.log(firstLine.length);
-
     if (firstLine.length > this.SUMMARY_MAX_LENGTH) {
       return `${firstLine.substring(0, this.SUMMARY_MAX_LENGTH)}...`;
     }

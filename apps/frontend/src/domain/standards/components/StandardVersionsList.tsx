@@ -16,11 +16,13 @@ interface StandardVersionsListProps {
   versions?: StandardVersion[];
   isLoading: boolean;
   orgSlug?: string;
+  linkLabel?: string;
 }
 
 export const StandardVersionsList: React.FC<StandardVersionsListProps> = ({
   versions,
   isLoading,
+  linkLabel = 'See History',
 }) => {
   if (isLoading) {
     return <PMText>Loading versions...</PMText>;
@@ -54,7 +56,7 @@ export const StandardVersionsList: React.FC<StandardVersionsListProps> = ({
     <PMDrawer.Root size="xl">
       <PMDrawer.Trigger asChild>
         <PMLink fontSize={'xs'} variant="underline">
-          See History
+          {linkLabel}
         </PMLink>
       </PMDrawer.Trigger>
       <PMPortal>

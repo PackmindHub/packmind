@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { RuleExampleItem } from './RuleExampleItem';
-import { RuleExample } from '@packmind/standards/types';
+import { ProgrammingLanguage, RuleExample } from '@packmind/shared/types';
 import { createRuleExampleId, createRuleId } from '@packmind/standards';
 
 const meta: Meta<typeof RuleExampleItem> = {
@@ -18,7 +18,7 @@ type Story = StoryObj<typeof meta>;
 const mockRuleExample: RuleExample = {
   id: createRuleExampleId('example-1'),
   ruleId: createRuleId('rule-1'),
-  lang: 'javascript',
+  lang: ProgrammingLanguage.JAVASCRIPT,
   positive: `// Use const for variables that won't be reassigned
 const userName = 'John Doe';
 const isActive = true;
@@ -36,7 +36,7 @@ var uab = 1000;`,
 const mockTypeScriptExample: RuleExample = {
   id: createRuleExampleId('example-2'),
   ruleId: createRuleId('rule-2'),
-  lang: 'typescript',
+  lang: ProgrammingLanguage.TYPESCRIPT,
   positive: `// Use explicit types for function parameters
 function calculateTotal(price: number, tax: number): number {
   return price + (price * tax);
@@ -64,24 +64,12 @@ interface User {
 export const Default: Story = {
   args: {
     example: mockRuleExample,
-    onEdit: (example) => {
-      console.log('Edit example:', example);
-    },
-    onRemove: (exampleId) => {
-      console.log('Remove example:', exampleId);
-    },
   },
 };
 
 export const TypeScriptExample: Story = {
   args: {
     example: mockTypeScriptExample,
-    onEdit: (example) => {
-      console.log('Edit example:', example);
-    },
-    onRemove: (exampleId) => {
-      console.log('Remove example:', exampleId);
-    },
   },
 };
 

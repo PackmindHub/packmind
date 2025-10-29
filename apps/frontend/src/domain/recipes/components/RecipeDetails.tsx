@@ -172,7 +172,7 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
             confirmColorScheme="red"
             onConfirm={handleDeleteRecipe}
             open={deleteModalOpen}
-            onOpenChange={setDeleteModalOpen}
+            onOpenChange={(details) => setDeleteModalOpen(details.open)}
             isLoading={deleteMutation.isPending}
           />
         </PMHStack>

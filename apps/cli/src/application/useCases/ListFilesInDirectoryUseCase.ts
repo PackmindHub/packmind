@@ -19,10 +19,26 @@ export class ListFilesInDirectoryUseCase {
   ): Promise<ListFilesInDirectoryUseCaseResult> {
     const { path: directoryPath, extensions, excludes = [] } = command;
 
-    return this.listFiles.listFilesInDirectory(
+    const files = await this.listFiles.listFilesInDirectory(
       directoryPath,
       extensions,
       excludes,
     );
+
+    const filesWithContent: ListFilesInDirectoryUseCaseResult = [];
+
+    for (const file of files) {
+      try {
+        const content = await this.listFiles.readFileContent(file.path);
+        filesWithContent.push({
+          path: file.path,
+          content,
+        });
+      } catch (error) {
+        console.error(`Error reading file ${file.path}:`, error);
+      }
+    }
+
+    return filesWithContent;
   }
 }

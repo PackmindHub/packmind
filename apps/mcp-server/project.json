@@ -23,7 +23,14 @@
         "bundle": true,
         "main": "apps/mcp-server/src/main.ts",
         "tsConfig": "apps/mcp-server/tsconfig.app.json",
-        "assets": ["apps/mcp-server/src/assets"],
+        "assets": [
+          "apps/mcp-server/src/assets",
+          {
+            "input": "packages/linter-ast/res",
+            "glob": "*.wasm",
+            "output": "."
+          }
+        ],
         "generatePackageJson": true,
         "esbuildOptions": {
           "sourcemap": true,

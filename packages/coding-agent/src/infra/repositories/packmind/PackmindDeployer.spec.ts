@@ -1,11 +1,13 @@
 import { PackmindDeployer } from './PackmindDeployer';
 import { RecipeVersion, Recipe } from '@packmind/recipes';
+import { recipeFactory } from '@packmind/recipes/test';
 import {
   StandardVersion,
   Standard,
   StandardsHexa,
   Rule,
 } from '@packmind/standards';
+import { standardFactory } from '@packmind/standards/test';
 import { GitRepo } from '@packmind/git';
 import {
   createGitRepoId,
@@ -14,12 +16,12 @@ import {
   createStandardVersionId,
   createRecipeVersionId,
   createRecipeId,
-  createOrganizationId,
   createUserId,
   Target,
   createTargetId,
   createRuleId,
 } from '@packmind/shared';
+import { createSpaceId } from '@packmind/spaces';
 
 describe('PackmindDeployer', () => {
   let deployer: PackmindDeployer;
@@ -51,15 +53,15 @@ describe('PackmindDeployer', () => {
 
   describe('deployRecipes', () => {
     it('deploys a single recipe with correct file structure', async () => {
-      const recipe: Recipe = {
+      const recipe: Recipe = recipeFactory({
         id: createRecipeId('recipe-1'),
         name: 'Test Recipe',
         slug: 'test-recipe',
         content: 'Original recipe content',
         version: 1,
-        organizationId: createOrganizationId('org-1'),
         userId: createUserId('user-1'),
-      };
+        spaceId: createSpaceId('space-1'),
+      });
 
       const recipeVersion: RecipeVersion = {
         id: createRecipeVersionId('recipe-version-1'),
@@ -101,25 +103,25 @@ describe('PackmindDeployer', () => {
     });
 
     it('deploys multiple recipes sorted alphabetically', async () => {
-      const zebraRecipe: Recipe = {
+      const zebraRecipe: Recipe = recipeFactory({
         id: createRecipeId('recipe-z'),
         name: 'Zebra Recipe',
         slug: 'zebra-recipe',
         content: 'Original zebra content',
         version: 1,
-        organizationId: createOrganizationId('org-1'),
         userId: createUserId('user-1'),
-      };
+        spaceId: createSpaceId('space-1'),
+      });
 
-      const appleRecipe: Recipe = {
+      const appleRecipe: Recipe = recipeFactory({
         id: createRecipeId('recipe-a'),
         name: 'Apple Recipe',
         slug: 'apple-recipe',
         content: 'Original apple content',
         version: 2,
-        organizationId: createOrganizationId('org-1'),
         userId: createUserId('user-1'),
-      };
+        spaceId: createSpaceId('space-1'),
+      });
 
       const recipeVersions: RecipeVersion[] = [
         {
@@ -175,16 +177,16 @@ describe('PackmindDeployer', () => {
 
   describe('deployStandards', () => {
     it('deploys a single standard with correct file structure', async () => {
-      const standard: Standard = {
+      const standard: Standard = standardFactory({
         id: createStandardId('standard-1'),
         name: 'Test Standard',
         slug: 'test-standard',
         description: 'Original standard description',
         version: 1,
-        organizationId: createOrganizationId('org-1'),
         userId: createUserId('user-1'),
+        spaceId: createSpaceId('space-1'),
         scope: 'backend',
-      };
+      });
 
       const standardVersion: StandardVersion = {
         id: createStandardVersionId('standard-version-1'),
@@ -242,16 +244,16 @@ describe('PackmindDeployer', () => {
     });
 
     it('includes rules in standard content', async () => {
-      const standard: Standard = {
+      const standard: Standard = standardFactory({
         id: createStandardId('standard-with-rules'),
         name: 'Standard With Rules',
         slug: 'standard-with-rules',
         description: 'Original standard with rules',
         version: 1,
-        organizationId: createOrganizationId('org-1'),
         userId: createUserId('user-1'),
+        spaceId: createSpaceId('space-1'),
         scope: 'backend',
-      };
+      });
 
       const standardVersion: StandardVersion = {
         id: createStandardVersionId('standard-version-with-rules'),
@@ -300,16 +302,16 @@ describe('PackmindDeployer', () => {
     });
 
     it('handles standard without scope', async () => {
-      const standard: Standard = {
+      const standard: Standard = standardFactory({
         id: createStandardId('standard-no-scope'),
         name: 'No Scope Standard',
         slug: 'no-scope-standard',
         description: 'Original description without scope',
         version: 1,
-        organizationId: createOrganizationId('org-1'),
         userId: createUserId('user-1'),
+        spaceId: createSpaceId('space-1'),
         scope: null,
-      };
+      });
 
       const standardVersion: StandardVersion = {
         id: createStandardVersionId('standard-version-no-scope'),
@@ -336,27 +338,27 @@ describe('PackmindDeployer', () => {
     });
 
     it('deploys multiple standards sorted alphabetically', async () => {
-      const zebraStandard: Standard = {
+      const zebraStandard: Standard = standardFactory({
         id: createStandardId('standard-z'),
         name: 'Zebra Standard',
         slug: 'zebra-standard',
         description: 'Original zebra description',
         version: 1,
-        organizationId: createOrganizationId('org-1'),
         userId: createUserId('user-1'),
+        spaceId: createSpaceId('space-1'),
         scope: null,
-      };
+      });
 
-      const appleStandard: Standard = {
+      const appleStandard: Standard = standardFactory({
         id: createStandardId('standard-a'),
         name: 'Apple Standard',
         slug: 'apple-standard',
         description: 'Original apple description',
         version: 2,
-        organizationId: createOrganizationId('org-1'),
         userId: createUserId('user-1'),
+        spaceId: createSpaceId('space-1'),
         scope: 'frontend',
-      };
+      });
 
       const standardVersions: StandardVersion[] = [
         {
@@ -434,16 +436,16 @@ describe('PackmindDeployer', () => {
 
       const deployerWithHexa = new PackmindDeployer(mockStandardsHexa);
 
-      const standard: Standard = {
+      const standard: Standard = standardFactory({
         id: createStandardId('standard-1'),
         name: 'Standard Without Rules',
         slug: 'standard-without-rules',
         description: 'Original standard description',
         version: 1,
-        organizationId: createOrganizationId('org-1'),
         userId: createUserId('user-1'),
+        spaceId: createSpaceId('space-1'),
         scope: 'backend',
-      };
+      });
 
       const standardVersion: StandardVersion = {
         id: createStandardVersionId('standard-version-1'),

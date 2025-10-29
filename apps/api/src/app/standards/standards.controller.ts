@@ -7,15 +7,13 @@ import {
   NotFoundException,
   Param,
   Post,
-  Put,
   Req,
 } from '@nestjs/common';
 import { StandardsService } from './standards.service';
-import { PackmindLogger, RuleId } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/shared';
 import { AuthService } from '../auth/auth.service';
 import { Request } from 'express';
 import type {
-  Standard,
   StandardId,
   StandardVersion,
   StandardVersionId,
@@ -25,7 +23,7 @@ import { AuthenticatedRequest } from '@packmind/shared-nest';
 
 const origin = 'StandardsController';
 
-@Controller('standards')
+@Controller()
 export class StandardsController {
   constructor(
     private readonly standardsService: StandardsService,
@@ -35,131 +33,7 @@ export class StandardsController {
     this.logger.info('StandardsController initialized');
   }
 
-  @Get()
-  async getStandards(
-    @Req() request: AuthenticatedRequest,
-  ): Promise<Standard[]> {
-    const organizationId = request.organization.id;
-    this.logger.info('GET /standards - Fetching standards for organization', {
-      organizationId,
-    });
-
-    try {
-      return await this.standardsService.getStandardsByOrganization(
-        organizationId,
-      );
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error('GET /standards - Failed to fetch standards', {
-        organizationId,
-        error: errorMessage,
-      });
-      throw error;
-    }
-  }
-
-  @Get(':id')
-  async getStandardById(@Param('id') id: StandardId): Promise<Standard> {
-    this.logger.info('GET /standards/:id - Fetching standard by ID', {
-      standardId: id,
-    });
-
-    try {
-      const standard = await this.standardsService.getStandardById(id);
-      if (!standard) {
-        this.logger.warn('GET /standards/:id - Standard not found', {
-          standardId: id,
-        });
-        throw new NotFoundException(`Standard with id ${id} not found`);
-      }
-      return standard;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error('GET /standards/:id - Failed to fetch standard', {
-        standardId: id,
-        error: errorMessage,
-      });
-      throw error;
-    }
-  }
-
-  @Put()
-  async createStandard(
-    @Body()
-    standard: {
-      name: string;
-      description: string;
-      rules: Array<{ content: string }>;
-      scope?: string | null;
-    },
-    @Req() request: AuthenticatedRequest,
-  ): Promise<Standard> {
-    this.logger.info('PUT /standards - Creating new standard', {
-      standardName: standard.name,
-      userId: request.user?.userId,
-      organizationId: request.organization?.id,
-    });
-
-    try {
-      // Extract user and organization context from authenticated request
-      const organizationId = request.organization?.id;
-      const userId = request.user?.userId;
-
-      if (!organizationId || !userId) {
-        this.logger.error(
-          'PUT /standards - Missing user or organization context',
-          {
-            userId,
-            organizationId,
-          },
-        );
-        throw new BadRequestException('User authentication required');
-      }
-
-      // Validate request body
-      if (!standard.name || typeof standard.name !== 'string') {
-        this.logger.error('PUT /standards - Standard name is required');
-        throw new BadRequestException('Standard name is required');
-      }
-
-      if (!standard.description || typeof standard.description !== 'string') {
-        this.logger.error('PUT /standards - Standard description is required');
-        throw new BadRequestException('Standard description is required');
-      }
-
-      if (!standard.rules || !Array.isArray(standard.rules)) {
-        this.logger.error('PUT /standards - Rules array is required');
-        throw new BadRequestException('Rules array is required');
-      }
-
-      // Validate each rule
-      for (let i = 0; i < standard.rules.length; i++) {
-        const rule = standard.rules[i];
-        if (!rule.content || typeof rule.content !== 'string') {
-          this.logger.error(`PUT /standards - Rule ${i} content is required`);
-          throw new BadRequestException(`Rule ${i} content is required`);
-        }
-      }
-
-      return await this.standardsService.createStandard(
-        standard,
-        organizationId,
-        userId,
-      );
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error('PUT /standards - Failed to create standard', {
-        standardName: standard.name,
-        error: errorMessage,
-      });
-      throw error;
-    }
-  }
-
-  @Post('/deploy')
+  @Post('standards/deploy')
   async deployStandardsToGit(
     @Body()
     body: {
@@ -235,90 +109,7 @@ export class StandardsController {
     }
   }
 
-  @Post(':id')
-  async updateStandard(
-    @Param('id') id: StandardId,
-    @Body()
-    standard: {
-      name: string;
-      description: string;
-      rules: Array<{ id: RuleId; content: string }>;
-      scope?: string | null;
-    },
-    @Req() request: AuthenticatedRequest,
-  ): Promise<Standard> {
-    this.logger.info('POST /standards/:id - Updating standard', {
-      standardId: id,
-      standardName: standard.name,
-      userId: request.user?.userId,
-      organizationId: request.organization?.id,
-    });
-
-    try {
-      // Extract user and organization context from authenticated request
-      const organizationId = request.organization?.id;
-      const userId = request.user?.userId;
-
-      if (!organizationId || !userId) {
-        this.logger.error(
-          'POST /standards/:id - Missing user or organization context',
-          {
-            standardId: id,
-            userId,
-            organizationId,
-          },
-        );
-        throw new BadRequestException('User authentication required');
-      }
-
-      // Validate request body
-      if (!standard.name || typeof standard.name !== 'string') {
-        this.logger.error('POST /standards/:id - Standard name is required');
-        throw new BadRequestException('Standard name is required');
-      }
-
-      if (!standard.description || typeof standard.description !== 'string') {
-        this.logger.error(
-          'POST /standards/:id - Standard description is required',
-        );
-        throw new BadRequestException('Standard description is required');
-      }
-
-      if (!standard.rules || !Array.isArray(standard.rules)) {
-        this.logger.error('POST /standards/:id - Rules array is required');
-        throw new BadRequestException('Rules array is required');
-      }
-
-      // Validate each rule
-      for (let i = 0; i < standard.rules.length; i++) {
-        const rule = standard.rules[i];
-        if (!rule.content || typeof rule.content !== 'string') {
-          this.logger.error(
-            `POST /standards/:id - Rule ${i} content is required`,
-          );
-          throw new BadRequestException(`Rule ${i} content is required`);
-        }
-      }
-
-      return await this.standardsService.updateStandard(
-        id,
-        standard,
-        organizationId,
-        userId,
-      );
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error('POST /standards/:id - Failed to update standard', {
-        standardId: id,
-        standardName: standard.name,
-        error: errorMessage,
-      });
-      throw error;
-    }
-  }
-
-  @Get(':id/versions')
+  @Get('standards/:id/versions')
   async getStandardVersionsById(
     @Param('id') id: StandardId,
   ): Promise<StandardVersion[]> {
@@ -351,7 +142,7 @@ export class StandardsController {
     }
   }
 
-  @Post(':versionId/deploy')
+  @Post('standards/:versionId/deploy')
   async deployStandardToGit(
     @Param('versionId') versionId: StandardVersionId,
     @Body() body: { targetId: TargetId },
@@ -420,7 +211,7 @@ export class StandardsController {
     }
   }
 
-  @Delete(':id')
+  @Delete('standards/:id')
   async deleteStandard(
     @Param('id') id: StandardId,
     @Req() request: AuthenticatedRequest,
@@ -448,7 +239,7 @@ export class StandardsController {
     }
   }
 
-  @Delete()
+  @Delete('standards')
   async deleteStandardsBatch(
     @Body() body: { standardIds: StandardId[] },
     @Req() request: AuthenticatedRequest,

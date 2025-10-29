@@ -9,5 +9,7 @@ Configuration.getConfig('SENTRY_DSN_API').then((sentryDSN) => {
       dsn: sentryDSN,
       environment: process.env.NODE_ENV || 'development',
     });
+  } else {
+    new PackmindLogger('Sentry').info('Sentry not initialized');
   }
 });

@@ -7,7 +7,12 @@ import {
   RecipeVersionId,
 } from '@packmind/recipes';
 import { OrganizationId, UserId } from '@packmind/accounts';
-import { IDeploymentPort, PackmindLogger, TargetId } from '@packmind/shared';
+import {
+  IDeploymentPort,
+  PackmindLogger,
+  SpaceId,
+  TargetId,
+} from '@packmind/shared';
 import { GitRepoId } from '@packmind/git';
 import { DeploymentsHexa } from '@packmind/deployments';
 
@@ -36,8 +41,30 @@ export class RecipesService {
     return this.recipesHexa.listRecipesByOrganization(organizationId);
   }
 
-  async getRecipeById(id: RecipeId): Promise<Recipe | null> {
-    return this.recipesHexa.getRecipeById(id);
+  async getRecipesBySpace(
+    spaceId: SpaceId,
+    organizationId: OrganizationId,
+    userId: UserId,
+  ): Promise<Recipe[]> {
+    return this.recipesHexa.listRecipesBySpace({
+      spaceId,
+      organizationId,
+      userId,
+    });
+  }
+
+  async getRecipeById(
+    id: RecipeId,
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    userId: UserId,
+  ): Promise<Recipe | null> {
+    return this.recipesHexa.getRecipeById({
+      recipeId: id,
+      organizationId,
+      spaceId,
+      userId,
+    });
   }
 
   async addRecipe(
@@ -47,11 +74,13 @@ export class RecipesService {
     >,
     organizationId: OrganizationId,
     userId: UserId,
+    spaceId: SpaceId,
   ): Promise<Recipe> {
     return this.recipesHexa.captureRecipe({
       ...recipe,
       organizationId,
       userId,
+      spaceId,
     });
   }
 

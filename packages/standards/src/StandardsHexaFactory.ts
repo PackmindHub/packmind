@@ -6,18 +6,23 @@ import {
   HexaRegistry,
   PackmindLogger,
   IDeploymentPort,
+  ILinterPort,
+  ISpacesPort,
 } from '@packmind/shared';
 import { GitHexa } from '@packmind/git';
+import { AccountsHexa } from '@packmind/accounts';
 import { IStandardDelayedJobs } from './domain/jobs/IStandardDelayedJobs';
 import { GenerateStandardSummaryJobFactory } from './infra/jobs/GenerateStandardSummaryJobFactory';
 import { JobsHexa } from '@packmind/jobs';
 import { IStandardsRepositories } from './domain/repositories/IStandardsRepositories';
+import { SpacesHexa } from '@packmind/spaces';
 
 const origin = 'StandardsHexa';
 
 export class StandardsHexaFactory {
   private readonly standardsRepositories: StandardsRepositories;
   private readonly standardsServices: StandardsServices;
+  // TODO: migrate with port/adapters
   private readonly gitHexa: GitHexa;
   public useCases!: StandardsUseCases; // Non-null assertion since initialize() will set it
   private readonly registry: HexaRegistry;
@@ -29,7 +34,7 @@ export class StandardsHexaFactory {
     gitHexa: GitHexa,
     registry: HexaRegistry,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
-    deploymentsQueryAdapter?: IDeploymentPort,
+    linterAdapter?: ILinterPort,
   ) {
     this.logger.info('Constructing StandardsHexaFactory');
 
@@ -39,16 +44,18 @@ export class StandardsHexaFactory {
       );
 
       this.standardsRepositories = new StandardsRepositories(dataSource);
+
+      // Create services with linter adapter
       this.standardsServices = new StandardsServices(
         this.standardsRepositories,
         this.logger,
+        linterAdapter,
       );
 
       this.logger.debug('Storing GitHexa reference');
       this.gitHexa = gitHexa;
 
       this.registry = registry;
-      this.deploymentsQueryAdapter = deploymentsQueryAdapter;
 
       this.logger.info('StandardsHexaFactory construction completed');
     } catch (error) {
@@ -82,6 +89,24 @@ export class StandardsHexaFactory {
         this.getStandardsRepositories(),
       );
 
+      const accountsHexa = this.registry.get(AccountsHexa);
+      if (!accountsHexa) {
+        throw new Error('AccountsHexa not found in registry');
+      }
+      const userProvider = accountsHexa.getUserProvider();
+      const organizationProvider = accountsHexa.getOrganizationProvider();
+
+      // Get spaces port for space validation
+      let spacesPort: ISpacesPort | null = null;
+      if (this.registry.isRegistered(SpacesHexa)) {
+        const spacesHexa = this.registry.get(SpacesHexa);
+        spacesPort = spacesHexa.getSpacesAdapter();
+      } else {
+        this.logger.warn(
+          'SpacesHexa not found in registry - space validation will not be available',
+        );
+      }
+
       this.logger.debug('Creating StandardsUseCases');
       this.useCases = new StandardsUseCases(
         this.standardsServices,
@@ -89,6 +114,10 @@ export class StandardsHexaFactory {
         this.gitHexa,
         this.deploymentsQueryAdapter,
         standardsDelayedJobs,
+        userProvider,
+        organizationProvider,
+        spacesPort,
+        undefined, // Linter adapter will be set later via setLinterAdapter()
         this.logger,
       );
 
@@ -138,11 +167,33 @@ export class StandardsHexaFactory {
     this.useCases?.setDeploymentsQueryAdapter(adapter);
   }
 
+  public setLinterAdapter(adapter: ILinterPort): void {
+    this.logger.info('Setting linter adapter');
+    // Update services with new adapter
+    this.standardsServices.setLinterAdapter(adapter);
+    // Reinitialize use cases if they exist
+    if (this.isInitialized) {
+      this.logger.warn('Reinitializing use cases after linter adapter set');
+      // We need to recreate use cases with the new linter adapter
+      // This is called after initialization, so we need to update the existing use cases
+      this.useCases.setLinterAdapter(adapter);
+    }
+  }
+
   getStandardsServices(): StandardsServices {
     return this.standardsServices;
   }
 
   getStandardsRepositories(): StandardsRepositories {
     return this.standardsRepositories;
+  }
+
+  getStandardsUseCases(): StandardsUseCases {
+    if (!this.isInitialized || !this.useCases) {
+      throw new Error(
+        'StandardsHexaFactory not initialized. Call initialize() before using.',
+      );
+    }
+    return this.useCases;
   }
 }

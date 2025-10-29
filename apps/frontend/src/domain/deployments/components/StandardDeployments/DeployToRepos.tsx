@@ -15,7 +15,7 @@ import {
 
 import { useGetGitReposQuery } from '../../../git/api/queries';
 import { GitRepoId } from '@packmind/git/types';
-import { Standard } from '@packmind/standards/types';
+import { Standard } from '@packmind/shared/types';
 
 export interface DeployToReposProps {
   disabled?: boolean;

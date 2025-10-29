@@ -4,22 +4,26 @@ import {
   CreateStandardVersionData,
 } from '../../services/StandardVersionService';
 import slug from 'slug';
-import { LogLevel, PackmindLogger, StandardVersion } from '@packmind/shared';
-import { OrganizationId, UserId } from '@packmind/accounts';
+import {
+  LogLevel,
+  PackmindLogger,
+  StandardVersion,
+  ICreateStandardUseCase,
+  CreateStandardCommand,
+  CreateStandardResponse,
+} from '@packmind/shared';
+import {
+  OrganizationId,
+  UserId,
+  createOrganizationId,
+  createUserId,
+} from '@packmind/accounts';
+import { createSpaceId } from '@packmind/spaces';
 import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSummaryDelayedJob';
 
 const origin = 'CreateStandardUsecase';
 
-export type CreateStandardRequest = {
-  name: string;
-  description: string;
-  rules: Array<{ content: string }>;
-  organizationId: OrganizationId;
-  userId: UserId;
-  scope: string | null;
-};
-
-export class CreateStandardUsecase {
+export class CreateStandardUsecase implements ICreateStandardUseCase {
   constructor(
     private readonly standardService: StandardService,
     private readonly standardVersionService: StandardVersionService,
@@ -32,18 +36,26 @@ export class CreateStandardUsecase {
     this.logger.info('CreateStandardUsecase initialized');
   }
 
-  public async createStandard({
-    name,
-    description,
-    rules,
-    organizationId,
-    userId,
-    scope,
-  }: CreateStandardRequest) {
+  public async execute(
+    command: CreateStandardCommand,
+  ): Promise<CreateStandardResponse> {
+    const {
+      name,
+      description,
+      rules,
+      scope,
+      spaceId: spaceIdString,
+      organizationId: orgIdString,
+      userId: userIdString,
+    } = command;
+    const organizationId = createOrganizationId(orgIdString);
+    const userId = createUserId(userIdString);
+    const spaceId = createSpaceId(spaceIdString);
     this.logger.info('Starting createStandard process', {
       name,
       organizationId,
       userId,
+      spaceId,
       rulesCount: rules.length,
       scope,
     });
@@ -53,13 +65,14 @@ export class CreateStandardUsecase {
       const baseSlug = slug(name);
       this.logger.info('Base slug generated', { slug: baseSlug });
 
-      // Ensure slug is unique per organization. If it exists, append "-1", "-2", ... until unique
-      this.logger.info('Checking slug uniqueness within organization', {
+      // Ensure slug is unique per space. If it exists, append "-1", "-2", ... until unique
+      this.logger.info('Checking slug uniqueness within space', {
         baseSlug,
+        spaceId,
         organizationId,
       });
       const existingStandards =
-        await this.standardService.listStandardsByOrganization(organizationId);
+        await this.standardService.listStandardsBySpace(spaceId);
       const existingSlugs = new Set(existingStandards.map((s) => s.slug));
 
       let standardSlug = baseSlug;
@@ -82,15 +95,16 @@ export class CreateStandardUsecase {
         slug: standardSlug,
         version: initialVersion,
         gitCommit: undefined,
-        organizationId,
         userId,
         scope,
+        spaceId,
       });
       this.logger.info('Standard entity created successfully', {
         standardId: standard.id,
         name,
         organizationId,
         userId,
+        spaceId,
       });
 
       this.logger.info('Creating initial standard version with rules');
@@ -125,6 +139,7 @@ export class CreateStandardUsecase {
         name,
         organizationId,
         userId,
+        spaceId,
         rulesCount: rules.length,
       });
 
@@ -141,6 +156,7 @@ export class CreateStandardUsecase {
         name,
         organizationId,
         userId,
+        spaceId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

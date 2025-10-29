@@ -32,10 +32,35 @@ export const routes = {
       `/org/${orgSlug}/space/${spaceSlug}/recipes`,
     toRecipe: (orgSlug: string, spaceSlug: string, recipeId: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/recipes/${recipeId}`,
+    toAgentBlueprints: (orgSlug: string, spaceSlug: string) =>
+      `/org/${orgSlug}/space/${spaceSlug}/agent-blueprints`,
+    toAgentBlueprint: (
+      orgSlug: string,
+      spaceSlug: string,
+      blueprintId: string,
+    ) => `/org/${orgSlug}/space/${spaceSlug}/agent-blueprints/${blueprintId}`,
     toStandards: (orgSlug: string, spaceSlug: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/standards`,
     toStandard: (orgSlug: string, spaceSlug: string, standardId: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/standards/${standardId}`,
+    toStandardSummary: (
+      orgSlug: string,
+      spaceSlug: string,
+      standardId: string,
+    ) => `/org/${orgSlug}/space/${spaceSlug}/standards/${standardId}/summary`,
+    toStandardDeployment: (
+      orgSlug: string,
+      spaceSlug: string,
+      standardId: string,
+    ) =>
+      `/org/${orgSlug}/space/${spaceSlug}/standards/${standardId}/deployment`,
+    toStandardRule: (
+      orgSlug: string,
+      spaceSlug: string,
+      standardId: string,
+      ruleId: string,
+    ) =>
+      `/org/${orgSlug}/space/${spaceSlug}/standards/${standardId}/rule/${ruleId}`,
     toStandardRules: (orgSlug: string, spaceSlug: string, standardId: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/standards/${standardId}/rules`,
     toStandardEdit: (orgSlug: string, spaceSlug: string, standardId: string) =>

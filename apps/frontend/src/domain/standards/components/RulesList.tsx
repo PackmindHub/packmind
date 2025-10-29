@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, useParams } from 'react-router';
-import { PMBox, PMVStack, PMText, PMHeading } from '@packmind/ui';
-import { Rule } from '@packmind/standards/types';
+import { PMBox, PMVStack, PMText, PMTooltip } from '@packmind/ui';
+import { Rule } from '@packmind/shared/types';
 import { routes } from '../../../shared/utils/routes';
 
 interface RulesListProps {
@@ -34,7 +34,7 @@ export const RulesList: React.FC<RulesListProps> = ({
 
   return (
     <PMVStack gap={2} align="stretch" w={'full'}>
-      {rules.map((rule, index) => (
+      {rules.map((rule) => (
         <NavLink
           key={rule.id}
           to={
@@ -46,10 +46,16 @@ export const RulesList: React.FC<RulesListProps> = ({
           style={{ textDecoration: 'none' }}
         >
           <PMBox p={4} bg="background.tertiary" w={'100%'}>
-            <PMHeading level="h6" color="faded">
-              #{index + 1}
-            </PMHeading>
-            <PMText color="primary">{rule.content}</PMText>
+            <PMTooltip label={rule.content} placement="top">
+              <PMText
+                color="primary"
+                overflow="hidden"
+                textOverflow="ellipsis"
+                whiteSpace="nowrap"
+              >
+                {rule.content}
+              </PMText>
+            </PMTooltip>
           </PMBox>
         </NavLink>
       ))}

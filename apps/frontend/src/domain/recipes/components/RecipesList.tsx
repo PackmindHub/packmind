@@ -22,13 +22,14 @@ import {
 
 import { DeployRecipeButton } from './DeployRecipeButton';
 import './RecipesList.styles.scss';
-import { RecipeId } from '@packmind/recipes/types';
+import { Recipe, RecipeId } from '@packmind/recipes/types';
 import { RECIPE_MESSAGES } from '../constants/messages';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { GettingStartedLearnMoreDialog } from '../../organizations/components/dashboard/GettingStartedLearnMoreDialog';
 import { GETTING_STARTED_CREATE_DIALOG } from '../../organizations/components/dashboard/GettingStartedWidget';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 import { routes } from '../../../shared/utils/routes';
+import { WithTimestamps } from '@packmind/shared';
 
 interface RecipesListProps {
   orgSlug: string;
@@ -125,9 +126,12 @@ export const RecipesList = ({ orgSlug }: RecipesListProps) => {
         ),
         updatedAt: (
           <>
-            {formatDistanceToNowStrict(recipe.updatedAt || new Date(), {
-              addSuffix: true,
-            })}
+            {formatDistanceToNowStrict(
+              (recipe as WithTimestamps<Recipe>).updatedAt || new Date(),
+              {
+                addSuffix: true,
+              },
+            )}
           </>
         ),
         version: recipe.version,
@@ -207,7 +211,7 @@ export const RecipesList = ({ orgSlug }: RecipesListProps) => {
               confirmColorScheme="red"
               onConfirm={handleBatchDelete}
               open={deleteDialogOpen}
-              onOpenChange={setDeleteDialogOpen}
+              onOpenChange={({ open }) => setDeleteDialogOpen(open)}
               isLoading={deleteBatchMutation.isPending}
             />
             <PMButton

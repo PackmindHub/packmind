@@ -18,10 +18,12 @@ import {
 } from '@packmind/shared';
 import { makeTestDatasource } from '@packmind/shared/test';
 import { StandardsHexa, standardsSchemas } from '@packmind/standards';
+import { SpacesHexa, spacesSchemas, Space } from '@packmind/spaces';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { DeploymentsHexa, deploymentsSchemas } from '@packmind/deployments';
 import { DataSource } from 'typeorm';
 import { createRecipesDeploymentId } from '@packmind/shared';
+import { assert } from 'console';
 
 jest.mock(
   '@packmind/git/src/infra/repositories/github/GithubRepository',
@@ -91,12 +93,14 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
   describe(`${config.providerName} Webhook Integration Test`, () => {
     let accountsHexa: AccountsHexa;
     let recipesHexa: RecipesHexa;
+    let spacesHexa: SpacesHexa;
     let gitHexa: GitHexa;
     let registry: HexaRegistry;
     let dataSource: DataSource;
 
     let recipe: Recipe;
     let organization: Organization;
+    let space: Space;
     let gitRepo: GitRepo;
     let user: User;
 
@@ -190,6 +194,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
       dataSource = await makeTestDatasource([
         ...accountsSchemas,
         ...recipesSchemas,
+        ...spacesSchemas,
         ...gitSchemas,
         ...standardsSchemas,
         ...deploymentsSchemas,
@@ -215,6 +220,9 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
         },
       });
 
+      // NOTE: SpacesHexa must be registered before AccountsHexa
+      // because AccountsHexa needs SpacesPort to create default space during signup
+      registry.register(SpacesHexa);
       registry.register(AccountsHexa);
       registry.register(StandardsHexa);
       registry.register(CodingAgentHexa);
@@ -228,6 +236,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
       // Get initialized hexas
       accountsHexa = registry.get(AccountsHexa);
       recipesHexa = registry.get(RecipesHexa);
+      spacesHexa = registry.get(SpacesHexa);
       gitHexa = registry.get(GitHexa);
 
       // Set up the deployment port after all hexas are initialized to avoid circular dependencies
@@ -252,6 +261,14 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
       });
       user = signUpResult.user;
       organization = signUpResult.organization;
+
+      // Get the default "Global" space created during signup
+      const spaces = await spacesHexa
+        .getSpacesAdapter()
+        .listSpacesByOrganization(organization.id);
+      const foundSpace = spaces.find((s) => s.name === 'Global');
+      assert(foundSpace, 'Default Global space should exist');
+      space = foundSpace;
 
       // Create git provider and repository
       const gitProvider = await gitHexa.addGitProvider({
@@ -279,6 +296,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
         content: `# Test Recipe\n\nInitial content for testing ${config.providerName} webhooks.`,
         organizationId: organization.id,
         userId: user.id,
+        spaceId: space.id.toString(),
       });
 
       // Mock git API calls to simulate successful deployment and webhook processing
@@ -538,6 +556,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
             content: '# Second Recipe\n\nInitial content for second recipe.',
             organizationId: organization.id,
             userId: user.id,
+            spaceId: space.id.toString(),
           });
           const deploymentsHexa = registry.get(DeploymentsHexa);
           const recipeVersions = await recipesHexa.listRecipeVersions(
@@ -689,6 +708,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
           content: `# Target Path Test Recipe\\n\\nInitial content for ${config.providerName} target path testing.`,
           organizationId: organization.id,
           userId: user.id,
+          spaceId: space.id.toString(),
         });
       });
 

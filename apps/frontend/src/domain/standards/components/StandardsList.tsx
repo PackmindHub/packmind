@@ -21,7 +21,7 @@ import {
 
 import { DeployStandardButton } from '../../deployments/components/StandardDeployments/DeployStandardButton';
 import './StandardsList.styles.scss';
-import { StandardId } from '@packmind/standards/types';
+import { StandardId } from '@packmind/shared/types';
 import { STANDARD_MESSAGES } from '../constants/messages';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { GETTING_STARTED_CREATE_DIALOG } from '../../organizations/components/dashboard/GettingStartedWidget';
@@ -35,7 +35,12 @@ interface StandardsListProps {
 
 export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
   const { spaceSlug } = useCurrentSpace();
-  const { data: standards, isLoading, isError } = useGetStandardsQuery();
+
+  const {
+    data: listStandardsResponse,
+    isLoading,
+    isError,
+  } = useGetStandardsQuery();
   const deleteBatchMutation = useDeleteStandardsBatchMutation();
   const [tableData, setTableData] = React.useState<PMTableRow[]>([]);
   const [selectedStandardIds, setSelectedStandardIds] = React.useState<
@@ -58,8 +63,10 @@ export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
   };
 
   const selectAll = () => {
-    if (!standards) return;
-    setSelectedStandardIds(standards.map((standard) => standard.id));
+    if (!listStandardsResponse) return;
+    setSelectedStandardIds(
+      listStandardsResponse.standards.map((standard) => standard.id),
+    );
   };
 
   const clearAll = () => setSelectedStandardIds([]);
@@ -94,16 +101,15 @@ export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
     }
   };
 
-  const selectedStandards =
-    standards?.filter((standard) =>
-      selectedStandardIds.includes(standard.id),
-    ) || [];
+  const selectedStandards = (listStandardsResponse?.standards ?? []).filter(
+    (standard) => selectedStandardIds.includes(standard.id),
+  );
 
   React.useEffect(() => {
-    if (!standards) return;
+    if (!listStandardsResponse) return;
 
     setTableData(
-      standards.map((standard) => ({
+      listStandardsResponse.standards.map((standard) => ({
         key: standard.id,
         select: (
           <PMCheckbox
@@ -141,10 +147,11 @@ export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
         version: standard.version,
       })),
     );
-  }, [standards, selectedStandardIds, orgSlug]);
+  }, [listStandardsResponse, selectedStandardIds, spaceSlug, orgSlug]);
 
   const isAllSelected =
-    standards && selectedStandardIds.length === standards.length;
+    listStandardsResponse &&
+    selectedStandardIds.length === listStandardsResponse.standards.length;
   const isSomeSelected = selectedStandardIds.length > 0;
 
   const columns: PMTableColumn[] = [
@@ -190,7 +197,7 @@ export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
 
       {isLoading && <p>Loading...</p>}
       {isError && <p>Error loading standards.</p>}
-      {standards?.length ? (
+      {(listStandardsResponse?.standards ?? []).length ? (
         <PMBox>
           <PMBox mb={2}>
             <PMHStack gap={2}>
@@ -220,7 +227,7 @@ export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
                 confirmColorScheme="red"
                 onConfirm={handleBatchDelete}
                 open={deleteModalOpen}
-                onOpenChange={setDeleteModalOpen}
+                onOpenChange={(details) => setDeleteModalOpen(details.open)}
                 isLoading={deleteBatchMutation.isPending}
               />
               <PMButton

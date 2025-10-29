@@ -191,7 +191,6 @@ export class UpdateRecipesAndGenerateSummariesDelayedJob extends AbstractAIDelay
         content: fileContent,
         version: nextVersion,
         gitCommit,
-        organizationId: existingRecipe.organizationId,
         userId: existingRecipe.userId,
       });
 

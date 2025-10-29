@@ -1,33 +1,96 @@
 import { StandardService } from '../../services/StandardService';
-import { Standard, StandardId } from '../../../domain/entities/Standard';
-import { LogLevel, PackmindLogger } from '@packmind/shared';
+import {
+  AbstractMemberUseCase,
+  MemberContext,
+  PackmindLogger,
+  UserProvider,
+  OrganizationProvider,
+  ISpacesPort,
+} from '@packmind/shared';
+import {
+  GetStandardByIdCommand,
+  GetStandardByIdResponse,
+  IGetStandardByIdUseCase,
+} from '@packmind/shared/types';
 
 const origin = 'GetStandardByIdUsecase';
 
-export class GetStandardByIdUsecase {
+export class GetStandardByIdUsecase
+  extends AbstractMemberUseCase<GetStandardByIdCommand, GetStandardByIdResponse>
+  implements IGetStandardByIdUseCase
+{
   constructor(
+    userProvider: UserProvider,
+    organizationProvider: OrganizationProvider,
     private readonly standardService: StandardService,
-    private readonly logger: PackmindLogger = new PackmindLogger(
-      origin,
-      LogLevel.DEBUG,
-    ),
+    private readonly spacesPort: ISpacesPort | null,
+    logger: PackmindLogger = new PackmindLogger(origin),
   ) {
+    super(userProvider, organizationProvider, logger);
     this.logger.info('GetStandardByIdUsecase initialized');
   }
 
-  public async getStandardById(id: StandardId): Promise<Standard | null> {
-    this.logger.info('Getting standard by ID', { id });
+  async executeForMembers(
+    command: GetStandardByIdCommand & MemberContext,
+  ): Promise<GetStandardByIdResponse> {
+    this.logger.info('Getting standard by ID', {
+      id: command.standardId,
+      spaceId: command.spaceId,
+    });
 
     try {
-      const standard = await this.standardService.getStandardById(id);
+      // Verify the space belongs to the organization
+      if (!this.spacesPort) {
+        this.logger.error('SpacesPort not available for space validation');
+        throw new Error('SpacesPort not available');
+      }
+
+      const space = await this.spacesPort.getSpaceById(command.spaceId);
+      if (!space) {
+        this.logger.warn('Space not found', { spaceId: command.spaceId });
+        throw new Error(`Space with id ${command.spaceId} not found`);
+      }
+
+      if (space.organizationId !== command.organizationId) {
+        this.logger.warn('Space does not belong to organization', {
+          spaceId: command.spaceId,
+          spaceOrganizationId: space.organizationId,
+          requestOrganizationId: command.organizationId,
+        });
+        throw new Error(
+          `Space ${command.spaceId} does not belong to organization ${command.organizationId}`,
+        );
+      }
+
+      const standard = await this.standardService.getStandardById(
+        command.standardId,
+      );
+
+      if (!standard) {
+        this.logger.info('Standard not found', { id: command.standardId });
+        return { standard: null };
+      }
+
+      // Verify the standard belongs to the space
+      // Standards are now always space-specific (spaceId is never null)
+      if (standard.spaceId !== command.spaceId) {
+        this.logger.warn('Standard does not belong to space', {
+          standardId: command.standardId,
+          standardSpaceId: standard.spaceId,
+          requestSpaceId: command.spaceId,
+        });
+        throw new Error(
+          `Standard ${command.standardId} does not belong to space ${command.spaceId}`,
+        );
+      }
+
       this.logger.info('Standard retrieved successfully', {
-        id,
-        found: !!standard,
+        id: command.standardId,
       });
-      return standard;
+      return { standard };
     } catch (error) {
       this.logger.error('Failed to get standard by ID', {
-        id,
+        id: command.standardId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

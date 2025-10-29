@@ -9,6 +9,7 @@ import { IStandardRepository } from '../../domain/repositories/IStandardReposito
 import { PackmindLogger } from '@packmind/shared';
 import { GitCommit } from '@packmind/git';
 import { OrganizationId, UserId } from '@packmind/accounts';
+import { SpaceId } from '@packmind/shared/types';
 
 const origin = 'StandardService';
 
@@ -18,9 +19,9 @@ export type CreateStandardData = {
   description: string;
   version: number;
   gitCommit?: GitCommit;
-  organizationId: OrganizationId;
   userId: UserId;
   scope: string | null;
+  spaceId: SpaceId; // Required space ID for space-specific standards
 };
 
 export type UpdateStandardData = {
@@ -29,7 +30,6 @@ export type UpdateStandardData = {
   description: string;
   version: number;
   gitCommit?: GitCommit;
-  organizationId: OrganizationId;
   userId: UserId;
   scope: string | null;
 };
@@ -46,7 +46,7 @@ export class StandardService {
     this.logger.info('Adding new standard', {
       name: standardData.name,
       slug: standardData.slug,
-      organizationId: standardData.organizationId,
+      spaceId: standardData.spaceId,
       userId: standardData.userId,
     });
 
@@ -97,6 +97,27 @@ export class StandardService {
     } catch (error) {
       this.logger.error('Failed to list standards with scope by organization', {
         organizationId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async listStandardsBySpace(spaceId: SpaceId): Promise<Standard[]> {
+    this.logger.info('Listing standards with scope by space', {
+      spaceId,
+    });
+
+    try {
+      const standards = await this.standardRepository.findBySpaceId(spaceId);
+      this.logger.info('Standards with scope retrieved by space successfully', {
+        spaceId,
+        count: standards.length,
+      });
+      return standards;
+    } catch (error) {
+      this.logger.error('Failed to list standards with scope by space', {
+        spaceId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
@@ -225,7 +246,6 @@ export class StandardService {
     this.logger.info('Updating standard', {
       standardId,
       name: standardData.name,
-      organizationId: standardData.organizationId,
       userId: standardData.userId,
     });
 
@@ -243,6 +263,7 @@ export class StandardService {
       const updatedStandard: Standard = {
         id: standardId,
         ...standardData,
+        spaceId: existingStandard.spaceId,
       };
 
       this.logger.debug('Updating standard in repository');

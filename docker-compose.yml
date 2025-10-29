@@ -193,16 +193,7 @@ services:
         apk update && \
         apk add --no-cache \
                 bash \
-                curl \
-                wget \
-                ca-certificates \
-                nano \
-                libcurl \
-                build-base \
-                git \
-                python3 \
-                py3-pip \
-                python3-dev && \
+                ca-certificates && \
         if [ ! -d "$$JS_PLAYGROUND_PATH" ]; then \
           cp -R packages/linter/js-playground $$JS_PLAYGROUND_PATH || true; \
         fi && \
@@ -258,6 +249,9 @@ services:
         node scripts/select-tsconfig.mjs;
         echo "[mcp] NX_* env:"; env | grep -E "^NX_" || true
         echo "[mcp] /nx-sock:"; ls -l /nx-sock || true
+        if [ ! -d "$$JS_PLAYGROUND_PATH" ]; then \
+          cp -R packages/linter/js-playground $$JS_PLAYGROUND_PATH || true; \
+        fi && \
         if npx nx daemon --status >/dev/null 2>&1; then
           echo "[mcp] Daemon OK -> WITH daemon"
           exec npx nx run mcp-server:serve:development --host=0.0.0.0 --verbose
@@ -277,7 +271,7 @@ services:
       NX_ISOLATE_PLUGINS: 'false'
       NX_PLUGIN_NO_TIMEOUTS: 'true'
       PACKMIND_EDITION: ${PACKMIND_EDITION:-proprietary}
-
+      JS_PLAYGROUND_PATH: 'packages/linter/js-playground-local'
     volumes:
       - .:/packmind
       - dev-node_modules:/packmind/node_modules

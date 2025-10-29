@@ -1,4 +1,4 @@
-import { RuleExample, RuleExampleId } from '@packmind/standards/types';
+import { RuleExample, RuleExampleId } from '@packmind/shared/types';
 import { RuleId } from '@packmind/shared/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import { IRulesGateway } from './IRulesGateway';

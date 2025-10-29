@@ -4,9 +4,15 @@ import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSu
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { StandardVersion } from '../../../domain/entities/StandardVersion';
 import { CreateStandardVersionData } from '../../services/StandardVersionService';
-import { LogLevel, PackmindLogger, RuleExample } from '@packmind/shared';
+import {
+  LogLevel,
+  PackmindLogger,
+  RuleExample,
+  ILinterPort,
+} from '@packmind/shared';
 import { OrganizationId, UserId } from '@packmind/accounts';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
+import { StandardVersionId } from '../../../domain/entities';
 
 const origin = 'AddRuleToStandardUsecase';
 
@@ -24,6 +30,7 @@ export class AddRuleToStandardUsecase {
     private readonly ruleRepository: IRuleRepository,
     private readonly ruleExampleRepository: IRuleExampleRepository,
     private readonly generateStandardSummaryDelayedJob: GenerateStandardSummaryDelayedJob,
+    private readonly linterAdapter?: ILinterPort,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.DEBUG,
@@ -99,7 +106,6 @@ export class AddRuleToStandardUsecase {
         slug: existingStandard.slug,
         version: nextVersion,
         gitCommit: undefined,
-        organizationId,
         userId,
         scope: existingStandard.scope,
       });
@@ -166,6 +172,13 @@ export class AddRuleToStandardUsecase {
         rules: allRules,
       });
 
+      // Validate detection programs for all rules and languages
+      await this.validateDetectionProgramsForStandardVersion(
+        newStandardVersion.id,
+        organizationId,
+        userId,
+      );
+
       return newStandardVersion;
     } catch (error) {
       this.logger.error('Failed to add rule to standard', {
@@ -175,6 +188,45 @@ export class AddRuleToStandardUsecase {
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
+    }
+  }
+
+  public async validateDetectionProgramsForStandardVersion(
+    standardVersionId: StandardVersionId,
+    organizationId: OrganizationId,
+    userId: UserId,
+  ): Promise<void> {
+    if (!this.linterAdapter) {
+      return;
+    }
+
+    this.logger.info('Validating detection programs for standard version', {
+      standardVersionId,
+    });
+
+    const rules =
+      await this.ruleRepository.findByStandardVersionId(standardVersionId);
+
+    for (const rule of rules) {
+      const examples = await this.ruleExampleRepository.findByRuleId(rule.id);
+      const languages = new Set(examples.map((ex) => ex.lang));
+
+      for (const language of languages) {
+        try {
+          await this.linterAdapter.updateRuleDetectionAssessmentAfterUpdate({
+            ruleId: rule.id,
+            language,
+            organizationId,
+            userId,
+          });
+        } catch (error) {
+          this.logger.error('Failed to update detection program status', {
+            ruleId: rule.id,
+            language,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
     }
   }
 }

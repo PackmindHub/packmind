@@ -102,7 +102,7 @@ describe('PMAlertDialog', () => {
     const cancelButton = screen.getByText('Cancel');
     cancelButton.click();
 
-    expect(onOpenChange).toHaveBeenCalledWith(false);
+    expect(onOpenChange).toHaveBeenCalledWith({ open: false });
   });
 
   it('does not call onOpenChange when cancel is clicked in uncontrolled mode', () => {

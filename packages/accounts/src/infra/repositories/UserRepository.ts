@@ -91,11 +91,6 @@ export class UserRepository
           },
         },
       });
-      this.logger.info('User found by email', {
-        email: maskEmail(email),
-        found: !!user,
-        active: user?.active,
-      });
       return user;
     } catch (error) {
       this.logger.error('Failed to find user by email', {

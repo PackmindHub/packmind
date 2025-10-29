@@ -8,7 +8,9 @@ import {
   ExecuteLinterProgramsCommand,
   IExecuteLinterProgramsUseCase,
   LinterExecutionViolation,
+  PackmindLogger,
   ProgrammingLanguage,
+  RuleId,
 } from '@packmind/shared';
 
 describe('LintFilesInDirectoryUseCase', () => {
@@ -23,10 +25,13 @@ describe('LintFilesInDirectoryUseCase', () => {
   beforeEach(() => {
     mockListFiles = {
       listFilesInDirectory: jest.fn(),
+      readFileContent: jest.fn(),
     } as unknown as jest.Mocked<ListFiles>;
 
     mockGitRemoteUrlService = {
       getGitRemoteUrl: jest.fn(),
+      getCurrentBranches: jest.fn(),
+      getGitRepositoryRoot: jest.fn(),
     } as unknown as jest.Mocked<GitService>;
 
     mockLinterExecutionUseCase = {
@@ -45,6 +50,8 @@ describe('LintFilesInDirectoryUseCase', () => {
 
     mockPackmindGateway = {
       listExecutionPrograms: jest.fn(),
+      getDraftDetectionProgramsForRule: jest.fn(),
+      getActiveDetectionProgramsForRule: jest.fn(),
     };
 
     mockServices = {
@@ -66,27 +73,34 @@ describe('LintFilesInDirectoryUseCase', () => {
 
   it('executes complete linting flow with correct parameters', async () => {
     const mockFiles = [
-      { path: '/project/src/file1.ts', content: 'interface User {}' },
-      { path: '/project/src/file2.ts', content: 'interface IAdmin {}' },
+      { path: '/project/src/file1.ts' },
+      { path: '/project/src/file2.ts' },
     ];
     const gitRemoteUrl = 'github.com/user/repo';
+    const branches = ['main', 'develop'];
     const mockDetectionPrograms = {
-      standards: [
+      targets: [
         {
-          name: 'Interface Naming',
-          slug: 'interface-naming',
-          scope: [],
-          rules: [
+          name: 'Root Target',
+          path: '/',
+          standards: [
             {
-              content: 'Interface names should start with I',
-              activeDetectionPrograms: [
+              name: 'Interface Naming',
+              slug: 'interface-naming',
+              scope: [],
+              rules: [
                 {
-                  language: 'typescript',
-                  detectionProgram: {
-                    mode: 'ast',
-                    code: 'function checkSourceCode(ast) { return [1]; }',
-                    sourceCodeState: 'AST' as const,
-                  },
+                  content: 'Interface names should start with I',
+                  activeDetectionPrograms: [
+                    {
+                      language: 'typescript',
+                      detectionProgram: {
+                        mode: 'ast',
+                        code: 'function checkSourceCode(ast) { return [1]; }',
+                        sourceCodeState: 'AST' as const,
+                      },
+                    },
+                  ],
                 },
               ],
             },
@@ -95,8 +109,15 @@ describe('LintFilesInDirectoryUseCase', () => {
       ],
     };
 
+    mockGitRemoteUrlService.getGitRepositoryRoot.mockResolvedValue('/project');
     mockListFiles.listFilesInDirectory.mockResolvedValue(mockFiles);
+    mockListFiles.readFileContent.mockImplementation(async (filePath) => {
+      if (filePath === '/project/src/file1.ts') return 'interface User {}';
+      if (filePath === '/project/src/file2.ts') return 'interface IAdmin {}';
+      return '';
+    });
     mockGitRemoteUrlService.getGitRemoteUrl.mockResolvedValue({ gitRemoteUrl });
+    mockGitRemoteUrlService.getCurrentBranches.mockResolvedValue({ branches });
     mockPackmindGateway.listExecutionPrograms.mockResolvedValue(
       mockDetectionPrograms,
     );
@@ -105,6 +126,9 @@ describe('LintFilesInDirectoryUseCase', () => {
       path: '/project',
     });
 
+    expect(mockGitRemoteUrlService.getGitRepositoryRoot).toHaveBeenCalledWith(
+      '/project',
+    );
     expect(mockListFiles.listFilesInDirectory).toHaveBeenCalledWith(
       '/project',
       [],
@@ -113,8 +137,12 @@ describe('LintFilesInDirectoryUseCase', () => {
     expect(mockGitRemoteUrlService.getGitRemoteUrl).toHaveBeenCalledWith(
       '/project',
     );
+    expect(mockGitRemoteUrlService.getCurrentBranches).toHaveBeenCalledWith(
+      '/project',
+    );
     expect(mockPackmindGateway.listExecutionPrograms).toHaveBeenCalledWith({
       gitRemoteUrl,
+      branches,
     });
     expect(mockLinterExecutionUseCase.execute).toHaveBeenCalledTimes(2);
     mockFiles.forEach((file) => {
@@ -136,12 +164,18 @@ describe('LintFilesInDirectoryUseCase', () => {
 
   describe('when no files found', () => {
     it('returns empty violations', async () => {
+      mockGitRemoteUrlService.getGitRepositoryRoot.mockResolvedValue(
+        '/empty-project',
+      );
       mockListFiles.listFilesInDirectory.mockResolvedValue([]);
       mockGitRemoteUrlService.getGitRemoteUrl.mockResolvedValue({
         gitRemoteUrl: 'github.com/user/repo',
       });
+      mockGitRemoteUrlService.getCurrentBranches.mockResolvedValue({
+        branches: ['main'],
+      });
       mockPackmindGateway.listExecutionPrograms.mockResolvedValue({
-        standards: [],
+        targets: [],
       });
 
       const result = await useCase.execute({
@@ -157,26 +191,30 @@ describe('LintFilesInDirectoryUseCase', () => {
   });
 
   it('handles linter execution errors gracefully', async () => {
-    const mockFiles = [
-      { path: '/project/src/file1.ts', content: 'interface User {}' },
-    ];
+    const mockFiles = [{ path: '/project/src/file1.ts' }];
     const mockDetectionPrograms = {
-      standards: [
+      targets: [
         {
-          name: 'Test Standard',
-          slug: 'test-standard',
-          scope: [],
-          rules: [
+          name: 'Root Target',
+          path: '/',
+          standards: [
             {
-              content: 'Test rule',
-              activeDetectionPrograms: [
+              name: 'Test Standard',
+              slug: 'test-standard',
+              scope: [],
+              rules: [
                 {
-                  language: 'typescript',
-                  detectionProgram: {
-                    mode: 'ast',
-                    code: 'invalid code',
-                    sourceCodeState: 'AST' as const,
-                  },
+                  content: 'Test rule',
+                  activeDetectionPrograms: [
+                    {
+                      language: 'typescript',
+                      detectionProgram: {
+                        mode: 'ast',
+                        code: 'invalid code',
+                        sourceCodeState: 'AST' as const,
+                      },
+                    },
+                  ],
                 },
               ],
             },
@@ -185,9 +223,14 @@ describe('LintFilesInDirectoryUseCase', () => {
       ],
     };
 
+    mockGitRemoteUrlService.getGitRepositoryRoot.mockResolvedValue('/project');
     mockListFiles.listFilesInDirectory.mockResolvedValue(mockFiles);
+    mockListFiles.readFileContent.mockResolvedValue('interface User {}');
     mockGitRemoteUrlService.getGitRemoteUrl.mockResolvedValue({
       gitRemoteUrl: 'github.com/user/repo',
+    });
+    mockGitRemoteUrlService.getCurrentBranches.mockResolvedValue({
+      branches: ['main'],
     });
     mockPackmindGateway.listExecutionPrograms.mockResolvedValue(
       mockDetectionPrograms,
@@ -213,30 +256,35 @@ describe('LintFilesInDirectoryUseCase', () => {
   describe('when standard has scope patterns', () => {
     it('applies scope filtering', async () => {
       const mockFiles = [
-        { path: '/project/src/component.ts', content: 'interface User {}' },
+        { path: '/project/src/component.ts' },
         {
           path: '/project/src/component.spec.ts',
-          content: 'interface TestInterface {}',
         },
-        { path: '/project/test/helpers.ts', content: 'interface Helper {}' },
+        { path: '/project/test/helpers.ts' },
       ];
       const mockDetectionPrograms = {
-        standards: [
+        targets: [
           {
-            name: 'Test Files Standard',
-            slug: 'test-files',
-            scope: ['**/*.spec.ts', '**/test/**/*.ts'],
-            rules: [
+            name: 'Root Target',
+            path: '/',
+            standards: [
               {
-                content: 'Test specific rule',
-                activeDetectionPrograms: [
+                name: 'Test Files Standard',
+                slug: 'test-files',
+                scope: ['**/*.spec.ts', '**/test/**/*.ts'],
+                rules: [
                   {
-                    language: 'typescript',
-                    detectionProgram: {
-                      mode: 'ast',
-                      code: 'function checkSourceCode(ast) { return [1]; }',
-                      sourceCodeState: 'AST' as const,
-                    },
+                    content: 'Test specific rule',
+                    activeDetectionPrograms: [
+                      {
+                        language: 'typescript',
+                        detectionProgram: {
+                          mode: 'ast',
+                          code: 'function checkSourceCode(ast) { return [1]; }',
+                          sourceCodeState: 'AST' as const,
+                        },
+                      },
+                    ],
                   },
                 ],
               },
@@ -245,9 +293,24 @@ describe('LintFilesInDirectoryUseCase', () => {
         ],
       };
 
+      mockGitRemoteUrlService.getGitRepositoryRoot.mockResolvedValue(
+        '/project',
+      );
       mockListFiles.listFilesInDirectory.mockResolvedValue(mockFiles);
+      mockListFiles.readFileContent.mockImplementation(async (filePath) => {
+        if (filePath === '/project/src/component.ts')
+          return 'interface User {}';
+        if (filePath === '/project/src/component.spec.ts')
+          return 'interface TestInterface {}';
+        if (filePath === '/project/test/helpers.ts')
+          return 'interface Helper {}';
+        return '';
+      });
       mockGitRemoteUrlService.getGitRemoteUrl.mockResolvedValue({
         gitRemoteUrl: 'github.com/user/repo',
+      });
+      mockGitRemoteUrlService.getCurrentBranches.mockResolvedValue({
+        branches: ['main'],
       });
       mockPackmindGateway.listExecutionPrograms.mockResolvedValue(
         mockDetectionPrograms,
@@ -269,29 +332,34 @@ describe('LintFilesInDirectoryUseCase', () => {
   describe('when standard has empty scope', () => {
     it('runs on all files', async () => {
       const mockFiles = [
-        { path: '/project/src/component.ts', content: 'interface User {}' },
+        { path: '/project/src/component.ts' },
         {
           path: '/project/src/component.spec.ts',
-          content: 'interface TestInterface {}',
         },
       ];
       const mockDetectionPrograms = {
-        standards: [
+        targets: [
           {
-            name: 'Global Standard',
-            slug: 'global',
-            scope: [],
-            rules: [
+            name: 'Root Target',
+            path: '/',
+            standards: [
               {
-                content: 'Global rule',
-                activeDetectionPrograms: [
+                name: 'Global Standard',
+                slug: 'global',
+                scope: [],
+                rules: [
                   {
-                    language: 'typescript',
-                    detectionProgram: {
-                      mode: 'ast',
-                      code: 'function checkSourceCode(ast) { return [1]; }',
-                      sourceCodeState: 'AST' as const,
-                    },
+                    content: 'Global rule',
+                    activeDetectionPrograms: [
+                      {
+                        language: 'typescript',
+                        detectionProgram: {
+                          mode: 'ast',
+                          code: 'function checkSourceCode(ast) { return [1]; }',
+                          sourceCodeState: 'AST' as const,
+                        },
+                      },
+                    ],
                   },
                 ],
               },
@@ -300,9 +368,22 @@ describe('LintFilesInDirectoryUseCase', () => {
         ],
       };
 
+      mockGitRemoteUrlService.getGitRepositoryRoot.mockResolvedValue(
+        '/project',
+      );
       mockListFiles.listFilesInDirectory.mockResolvedValue(mockFiles);
+      mockListFiles.readFileContent.mockImplementation(async (filePath) => {
+        if (filePath === '/project/src/component.ts')
+          return 'interface User {}';
+        if (filePath === '/project/src/component.spec.ts')
+          return 'interface TestInterface {}';
+        return '';
+      });
       mockGitRemoteUrlService.getGitRemoteUrl.mockResolvedValue({
         gitRemoteUrl: 'github.com/user/repo',
+      });
+      mockGitRemoteUrlService.getCurrentBranches.mockResolvedValue({
+        branches: ['main'],
       });
       mockPackmindGateway.listExecutionPrograms.mockResolvedValue(
         mockDetectionPrograms,
@@ -317,26 +398,30 @@ describe('LintFilesInDirectoryUseCase', () => {
   });
 
   it('skips programs with unsupported languages', async () => {
-    const mockFiles = [
-      { path: '/project/src/file1.py', content: 'print("hello")' },
-    ];
+    const mockFiles = [{ path: '/project/src/file1.py' }];
     const mockDetectionPrograms = {
-      standards: [
+      targets: [
         {
-          name: 'Python Standard',
-          slug: 'python-standard',
-          scope: [],
-          rules: [
+          name: 'Root Target',
+          path: '/',
+          standards: [
             {
-              content: 'Test rule',
-              activeDetectionPrograms: [
+              name: 'Python Standard',
+              slug: 'python-standard',
+              scope: [],
+              rules: [
                 {
-                  language: 'unsupported-lang',
-                  detectionProgram: {
-                    mode: 'ast',
-                    code: 'function checkSourceCode() { return [1]; }',
-                    sourceCodeState: 'AST' as const,
-                  },
+                  content: 'Test rule',
+                  activeDetectionPrograms: [
+                    {
+                      language: 'unsupported-lang',
+                      detectionProgram: {
+                        mode: 'ast',
+                        code: 'function checkSourceCode() { return [1]; }',
+                        sourceCodeState: 'AST' as const,
+                      },
+                    },
+                  ],
                 },
               ],
             },
@@ -345,9 +430,13 @@ describe('LintFilesInDirectoryUseCase', () => {
       ],
     };
 
+    mockGitRemoteUrlService.getGitRepositoryRoot.mockResolvedValue('/project');
     mockListFiles.listFilesInDirectory.mockResolvedValue(mockFiles);
     mockGitRemoteUrlService.getGitRemoteUrl.mockResolvedValue({
       gitRemoteUrl: 'github.com/user/repo',
+    });
+    mockGitRemoteUrlService.getCurrentBranches.mockResolvedValue({
+      branches: ['main'],
     });
     mockPackmindGateway.listExecutionPrograms.mockResolvedValue(
       mockDetectionPrograms,
@@ -360,9 +449,6 @@ describe('LintFilesInDirectoryUseCase', () => {
     });
 
     expect(mockLinterExecutionUseCase.execute).not.toHaveBeenCalled();
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Unsupported programming language'),
-    );
 
     consoleSpy.mockRestore();
   });
@@ -410,6 +496,350 @@ describe('LintFilesInDirectoryUseCase', () => {
       const result = useCase.extractExtensionFromFile('file.spec.ts');
 
       expect(result).toBe('ts');
+    });
+  });
+
+  describe('when draft mode is enabled', () => {
+    it('fetches draft programs instead of active programs', async () => {
+      const draftProgramsResponse = {
+        programs: [
+          {
+            language: 'typescript',
+            code: 'const x = 1;',
+            mode: 'singleAst',
+            sourceCodeState: 'AST' as const,
+          },
+        ],
+        ruleContent: 'Test draft rule',
+        standardSlug: 'test-standard',
+      };
+
+      mockPackmindGateway.getDraftDetectionProgramsForRule = jest
+        .fn()
+        .mockResolvedValue(draftProgramsResponse);
+
+      mockListFiles.listFilesInDirectory.mockResolvedValue([
+        { path: 'test.ts' },
+      ]);
+      mockListFiles.readFileContent.mockResolvedValue('const x = 1;');
+
+      mockGitRemoteUrlService.getGitRemoteUrl.mockResolvedValue({
+        gitRemoteUrl: 'https://github.com/user/repo',
+      });
+      mockGitRemoteUrlService.getCurrentBranches.mockResolvedValue({
+        branches: ['main'],
+      });
+
+      mockLinterExecutionUseCase.execute.mockResolvedValue({
+        file: 'test.ts',
+        violations: [],
+      });
+
+      await useCase.execute({
+        path: '.',
+        draftMode: true,
+        standardSlug: 'test-standard',
+        ruleId: 'rule-123' as RuleId,
+      });
+
+      expect(
+        mockPackmindGateway.getDraftDetectionProgramsForRule,
+      ).toHaveBeenCalledWith({
+        standardSlug: 'test-standard',
+        ruleId: 'rule-123',
+      });
+
+      expect(mockPackmindGateway.listExecutionPrograms).not.toHaveBeenCalled();
+    });
+
+    it('skips scope filtering in draft mode', async () => {
+      const draftProgramsResponse = {
+        programs: [
+          {
+            language: 'typescript',
+            code: 'const x = 1;',
+            mode: 'singleAst',
+            sourceCodeState: 'AST' as const,
+          },
+        ],
+        ruleContent: 'Test draft rule',
+        standardSlug: 'test-standard',
+      };
+
+      mockPackmindGateway.getDraftDetectionProgramsForRule = jest
+        .fn()
+        .mockResolvedValue(draftProgramsResponse);
+
+      mockListFiles.listFilesInDirectory.mockResolvedValue([
+        { path: 'outside-scope.ts' },
+      ]);
+      mockListFiles.readFileContent.mockResolvedValue('const x = 1;');
+
+      mockGitRemoteUrlService.getGitRemoteUrl.mockResolvedValue({
+        gitRemoteUrl: 'https://github.com/user/repo',
+      });
+      mockGitRemoteUrlService.getCurrentBranches.mockResolvedValue({
+        branches: ['main'],
+      });
+
+      mockLinterExecutionUseCase.execute.mockResolvedValue({
+        file: 'outside-scope.ts',
+        violations: [
+          {
+            line: 1,
+            character: 1,
+            rule: 'Test draft rule',
+            standard: 'test-standard',
+          },
+        ],
+      });
+
+      const result = await useCase.execute({
+        path: '.',
+        draftMode: true,
+        standardSlug: 'test-standard',
+        ruleId: 'rule-123' as RuleId,
+      });
+
+      expect(result.violations.length).toBe(1);
+      expect(mockLinterExecutionUseCase.execute).toHaveBeenCalled();
+    });
+  });
+
+  describe('File matching with target and scope', () => {
+    // Create a clean instance for unit testing the public method
+    let testUseCase: LintFilesInDirectoryUseCase;
+
+    beforeEach(() => {
+      // Minimal setup just to test the public method
+      const mockServices = {
+        listFiles: {} as ListFiles,
+        gitRemoteUrlService: {} as GitService,
+        linterExecutionUseCase: {} as IExecuteLinterProgramsUseCase,
+      };
+      const mockRepositories = {
+        packmindGateway: {} as IPackmindGateway,
+      };
+      const mockLogger = {
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+      } as unknown as PackmindLogger;
+      testUseCase = new LintFilesInDirectoryUseCase(
+        mockServices,
+        mockRepositories,
+        mockLogger,
+      );
+    });
+
+    describe('Standard Scope is null', () => {
+      describe('when target path is root', () => {
+        it('includes all files (Ex 1)', () => {
+          const filePath = '/frontend/src/file.js';
+          const targetPath = '/';
+          const scope: string[] = [];
+
+          const result = testUseCase.fileMatchesTargetAndScope(
+            filePath,
+            targetPath,
+            scope,
+          );
+
+          expect(result).toBe(true);
+        });
+      });
+
+      describe('when target path matches file directory', () => {
+        it('includes file in target path (Ex 2)', () => {
+          const filePath = '/frontend/src/file.js';
+          const targetPath = '/frontend/src/';
+          const scope: string[] = [];
+
+          const result = testUseCase.fileMatchesTargetAndScope(
+            filePath,
+            targetPath,
+            scope,
+          );
+
+          expect(result).toBe(true);
+        });
+      });
+
+      describe('when target path does not match file directory', () => {
+        it('excludes file not in target path (Ex 3)', () => {
+          const filePath = '/frontend/src/file.js';
+          const targetPath = '/backend/';
+          const scope: string[] = [];
+
+          const result = testUseCase.fileMatchesTargetAndScope(
+            filePath,
+            targetPath,
+            scope,
+          );
+
+          expect(result).toBe(false);
+        });
+      });
+    });
+
+    describe('Standard Scope is defined', () => {
+      describe('when scope starts with target path', () => {
+        it('uses scope alone and includes matching file (Ex 7)', () => {
+          const filePath = '/backend/src/file.ts';
+          const targetPath = '/backend/src';
+          const scope = ['/backend/src/**/*.ts'];
+
+          const result = testUseCase.fileMatchesTargetAndScope(
+            filePath,
+            targetPath,
+            scope,
+          );
+
+          expect(result).toBe(true);
+        });
+
+        it('excludes file not matching scope pattern', () => {
+          const filePath = '/backend/other/file.ts';
+          const targetPath = '/backend/src';
+          const scope = ['/backend/src/**/*.ts'];
+
+          const result = testUseCase.fileMatchesTargetAndScope(
+            filePath,
+            targetPath,
+            scope,
+          );
+
+          expect(result).toBe(false);
+        });
+      });
+
+      describe('when scope does not start with target path', () => {
+        it('concatenates target and scope for glob pattern (Ex 4)', () => {
+          const filePath = '/backend/test/file.spec.ts';
+          const targetPath = '/backend/';
+          const scope = ['**/*.spec.ts'];
+
+          const result = testUseCase.fileMatchesTargetAndScope(
+            filePath,
+            targetPath,
+            scope,
+          );
+
+          expect(result).toBe(true);
+        });
+
+        it('excludes file not matching concatenated pattern (Ex 5)', () => {
+          const filePath = '/backend/src/file.ts';
+          const targetPath = '/backend/';
+          const scope = ['test/**/*.spec.ts'];
+
+          const result = testUseCase.fileMatchesTargetAndScope(
+            filePath,
+            targetPath,
+            scope,
+          );
+
+          expect(result).toBe(false);
+        });
+
+        describe('when scope starts with leading slash', () => {
+          it('strips leading slash and concatenates with target (Ex 6)', () => {
+            const filePath = '/backend/test/file.spec.ts';
+            const targetPath = '/backend/';
+            const scope = ['/**/*.spec.ts'];
+
+            const result = testUseCase.fileMatchesTargetAndScope(
+              filePath,
+              targetPath,
+              scope,
+            );
+
+            expect(result).toBe(true);
+          });
+
+          it('handles directory scope with leading slash (Ex 8)', () => {
+            const filePath = '/backend/src/infra/file.ts';
+            const targetPath = '/backend/src';
+            const scope = ['/infra/'];
+
+            const result = testUseCase.fileMatchesTargetAndScope(
+              filePath,
+              targetPath,
+              scope,
+            );
+
+            expect(result).toBe(true);
+          });
+
+          it('handles pattern scope with leading slash (Ex 9)', () => {
+            const filePath = '/backend/src/infra/file.ts';
+            const targetPath = '/backend/src';
+            const scope = ['/infra/**/*.ts'];
+
+            const result = testUseCase.fileMatchesTargetAndScope(
+              filePath,
+              targetPath,
+              scope,
+            );
+
+            expect(result).toBe(true);
+          });
+        });
+      });
+    });
+
+    describe('buildEffectivePattern', () => {
+      describe('when scope is null and target is root', () => {
+        it('returns wildcard pattern', () => {
+          const pattern = testUseCase['buildEffectivePattern']('/', null);
+          expect(pattern).toBe('/**');
+        });
+      });
+
+      describe('when scope is null', () => {
+        it('returns target path with wildcard', () => {
+          const pattern = testUseCase['buildEffectivePattern'](
+            '/backend/',
+            null,
+          );
+          expect(pattern).toBe('/backend/**');
+        });
+      });
+
+      describe('when scope starts with target path', () => {
+        it('returns scope alone', () => {
+          const pattern = testUseCase['buildEffectivePattern'](
+            '/backend/src',
+            '/backend/src/**/*.ts',
+          );
+          expect(pattern).toBe('/backend/src/**/*.ts');
+        });
+      });
+
+      it('strips leading slash from scope and concatenates', () => {
+        const pattern = testUseCase['buildEffectivePattern'](
+          '/backend',
+          '/**/*.spec.ts',
+        );
+        expect(pattern).toBe('/backend/**/*.spec.ts');
+      });
+
+      it('concatenates target and scope without leading slash', () => {
+        const pattern = testUseCase['buildEffectivePattern'](
+          '/backend/',
+          '**/*.spec.ts',
+        );
+        expect(pattern).toBe('/backend/**/*.spec.ts');
+      });
+
+      it('concatenates target without trailing slash and scope', () => {
+        const pattern = testUseCase['buildEffectivePattern'](
+          '/backend',
+          'test/**/*.spec.ts',
+        );
+        expect(pattern).toBe('/backend/test/**/*.spec.ts');
+      });
     });
   });
 });

@@ -40,7 +40,7 @@ export class UpdateRecipeFromUIUsecase {
     });
 
     try {
-      // Get the existing recipe
+      // Get the existing recipe (internal - no access control needed here as this is already authorized)
       this.logger.debug('Fetching existing recipe', { recipeId });
       const existingRecipe = await this.recipeService.getRecipeById(recipeId);
 
@@ -65,7 +65,6 @@ export class UpdateRecipeFromUIUsecase {
           content: content.trim(),
           version: nextVersion,
           gitCommit: undefined, // No git commit for UI updates
-          organizationId: existingRecipe.organizationId,
           userId: existingRecipe.userId, // Keep original owner
         },
       );

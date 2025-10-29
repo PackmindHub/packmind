@@ -191,7 +191,7 @@ export const TargetForm: React.FC<TargetFormProps> = ({
             borderColor="red.fg"
             borderWidth="1px"
           >
-            <PMText color="text.error" fontSize="sm">
+            <PMText color="error" fontSize="sm">
               {errors.form}
             </PMText>
           </PMBox>
@@ -200,7 +200,7 @@ export const TargetForm: React.FC<TargetFormProps> = ({
         {/* Branch Selection - only show for add mode with multiple branches */}
         {mode === 'add' && availableBranches.length > 0 && (
           <PMVStack gap={2} align="stretch">
-            <PMText fontSize="sm" fontWeight="medium" color="text.primary">
+            <PMText fontSize="sm" fontWeight="medium" color="primary">
               Branch
             </PMText>
             <PMNativeSelect
@@ -215,7 +215,7 @@ export const TargetForm: React.FC<TargetFormProps> = ({
               size="sm"
             />
             {errors.branch && (
-              <PMText fontSize="xs" color="text.error">
+              <PMText fontSize="xs" color="error">
                 {errors.branch}
               </PMText>
             )}
@@ -223,7 +223,7 @@ export const TargetForm: React.FC<TargetFormProps> = ({
         )}
 
         <PMVStack gap={2} align="stretch">
-          <PMText fontSize="sm" fontWeight="medium" color="text.primary">
+          <PMText fontSize="sm" fontWeight="medium" color="primary">
             Target Name
           </PMText>
           <PMInput
@@ -234,14 +234,14 @@ export const TargetForm: React.FC<TargetFormProps> = ({
             size="sm"
           />
           {errors.name && (
-            <PMText fontSize="xs" color="text.error">
+            <PMText fontSize="xs" color="error">
               {errors.name}
             </PMText>
           )}
         </PMVStack>
 
         <PMVStack gap={2} align="stretch">
-          <PMText fontSize="sm" fontWeight="medium" color="text.primary">
+          <PMText fontSize="sm" fontWeight="medium" color="primary">
             Target Path
           </PMText>
           <PMInput
@@ -252,11 +252,11 @@ export const TargetForm: React.FC<TargetFormProps> = ({
             size="sm"
           />
           {errors.path ? (
-            <PMText fontSize="xs" color="text.error">
+            <PMText fontSize="xs" color="error">
               {errors.path}
             </PMText>
           ) : (
-            <PMText fontSize="xs" color="text.faded">
+            <PMText fontSize="xs" color="faded">
               Path must start and end with "/"
             </PMText>
           )}

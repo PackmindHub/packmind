@@ -84,6 +84,8 @@ jobs:
         env:
           PACKMIND_EDITION: ${{ env.OSS_EDITION }}
         run: npm run chakra:typegen
+      - name: Typechecks
+        run: npm run typecheck:frontend
       - name: Test Frontend (OSS)
         env:
           PACKMIND_EDITION: ${{ env.OSS_EDITION }}

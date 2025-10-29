@@ -20,7 +20,7 @@ import {
   PMVerticalNavSection,
 } from '@packmind/ui';
 import { useEffect } from 'react';
-import { MeResponse } from '@packmind/proprietary/frontend/domain/accounts/api/gateways/IAuthGateway';
+import { MeResponse } from '../../src/domain/accounts/api/gateways/IAuthGateway';
 import { SidebarNavigationLink } from '../../src/domain/organizations/components/SidebarNavigation';
 import { routes } from '../../src/shared/utils/routes';
 

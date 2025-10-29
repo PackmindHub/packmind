@@ -119,7 +119,7 @@ async function bootstrap() {
 
     // Initialize global cache before starting the server
     await initializeCache();
-    enableAmplitudeProxy(app);
+    await enableAmplitudeProxy(app);
 
     const port = process.env.PORT || 3000;
     const host = process.env.HOST || 'localhost';

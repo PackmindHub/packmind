@@ -1,0 +1,11 @@
+# Bun configuration for CLI compilation
+
+[install]
+# Optional optimizations
+optional = true
+dev = false
+
+# No external packages - embed everything in the executable
+[build]
+external = []
+

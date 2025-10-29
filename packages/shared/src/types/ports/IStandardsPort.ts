@@ -8,12 +8,24 @@ import {
   StandardVersionId,
 } from '../standards';
 import { OrganizationId } from '../accounts';
+import { SpaceId } from '../spaces';
 
 export interface IStandardsPort {
   getStandard(id: StandardId): Promise<Standard | null>;
   getStandardVersion(id: StandardVersionId): Promise<StandardVersion | null>;
   getRule(id: RuleId): Promise<Rule | null>;
   getLatestRulesByStandardId(id: StandardId): Promise<Rule[]>;
-  listStandardsByOrganization(id: OrganizationId): Promise<Standard[]>;
+  listStandardsBySpace(
+    spaceId: SpaceId,
+    organizationId: OrganizationId,
+    userId: string,
+  ): Promise<Standard[]>;
+  listStandardsByOrganization(
+    organizationId: OrganizationId,
+  ): Promise<Standard[]>;
   getRuleCodeExamples(id: RuleId): Promise<RuleExample[]>;
+  findStandardBySlug(
+    slug: string,
+    organizationId: OrganizationId,
+  ): Promise<Standard | null>;
 }

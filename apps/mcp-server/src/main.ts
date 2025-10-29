@@ -73,7 +73,7 @@ async function startServer() {
       pid: process.pid,
     });
 
-    console.log(`[ MCP Server ready ] http://${host}:${port}`);
+    logger.info(`[ MCP Server ready ] http://${host}:${port}`);
 
     // Graceful shutdown handling
     const gracefulShutdown = async (signal: string) => {

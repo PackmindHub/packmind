@@ -10,6 +10,7 @@ import slug from 'slug';
 import { PackmindLogger } from '@packmind/shared';
 import { stubLogger } from '@packmind/shared/test';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
+import { createSpaceId } from '@packmind/spaces';
 import { RecipeSummaryService } from '../../services/RecipeSummaryService';
 
 // Mock external dependencies
@@ -29,6 +30,7 @@ describe('CaptureRecipeUsecase', () => {
     recipeService = {
       addRecipe: jest.fn(),
       listRecipesByOrganization: jest.fn(),
+      listRecipesBySpace: jest.fn(),
       getRecipeById: jest.fn(),
       findRecipeBySlug: jest.fn(),
       updateRecipe: jest.fn(),
@@ -56,7 +58,7 @@ describe('CaptureRecipeUsecase', () => {
     } as unknown as jest.Mocked<RecipeSummaryService>;
 
     // Default: no existing recipes (can be overridden in individual tests)
-    recipeService.listRecipesByOrganization.mockResolvedValue([]);
+    recipeService.listRecipesBySpace.mockResolvedValue([]);
 
     captureRecipeUsecase = new CaptureRecipeUsecase(
       recipeService,
@@ -258,6 +260,7 @@ describe('CaptureRecipeUsecase', () => {
       it('uses provided summary without calling recipeSummaryService', async () => {
         const inputData = {
           name: 'Test Recipe',
+          spaceId: createSpaceId(uuidv4()),
           summary: 'Provided summary',
           whenToUse: [],
           contextValidationCheckpoints: [],
@@ -304,6 +307,7 @@ describe('CaptureRecipeUsecase', () => {
       it('passes provided summary to RecipeVersionService', async () => {
         const inputData = {
           name: 'Test Recipe',
+          spaceId: createSpaceId(uuidv4()),
           summary: 'Provided summary',
           whenToUse: [],
           contextValidationCheckpoints: [],
@@ -350,6 +354,7 @@ describe('CaptureRecipeUsecase', () => {
         const userId = createUserId(uuidv4());
         const inputData = {
           name: 'Test Recipe',
+          spaceId: createSpaceId(uuidv4()),
           summary: 'Test summary',
           whenToUse: [],
           contextValidationCheckpoints: [],
@@ -370,7 +375,6 @@ describe('CaptureRecipeUsecase', () => {
           slug: 'test-recipe-2', // Should be incremented
           content: inputData.summary,
           version: 1,
-          organizationId,
           userId,
         });
 
@@ -382,9 +386,7 @@ describe('CaptureRecipeUsecase', () => {
           version: 1,
         });
 
-        recipeService.listRecipesByOrganization.mockResolvedValue(
-          existingRecipes,
-        );
+        recipeService.listRecipesBySpace.mockResolvedValue(existingRecipes);
         recipeService.addRecipe.mockResolvedValue(createdRecipe);
         recipeVersionService.addRecipeVersion.mockResolvedValue(
           createdRecipeVersion,
@@ -405,6 +407,7 @@ describe('CaptureRecipeUsecase', () => {
       it('calls recipeSummaryService to generate summary', async () => {
         const inputData = {
           name: 'Test Recipe',
+          spaceId: createSpaceId(uuidv4()),
           summary: '',
           whenToUse: [],
           contextValidationCheckpoints: [],
@@ -451,6 +454,7 @@ describe('CaptureRecipeUsecase', () => {
       it('uses generated summary in RecipeVersionService', async () => {
         const inputData = {
           name: 'Test Recipe',
+          spaceId: createSpaceId(uuidv4()),
           summary: '',
           whenToUse: [],
           contextValidationCheckpoints: [],
@@ -501,6 +505,7 @@ describe('CaptureRecipeUsecase', () => {
       it('calls recipeSummaryService to generate summary', async () => {
         const inputData = {
           name: 'Test Recipe',
+          spaceId: createSpaceId(uuidv4()),
           whenToUse: [],
           contextValidationCheckpoints: [],
           steps: [],
@@ -548,6 +553,7 @@ describe('CaptureRecipeUsecase', () => {
       it('logs warning and proceeds with null summary', async () => {
         const inputData = {
           name: 'Test Recipe',
+          spaceId: createSpaceId(uuidv4()),
           summary: '',
           whenToUse: [],
           contextValidationCheckpoints: [],
@@ -587,6 +593,7 @@ describe('CaptureRecipeUsecase', () => {
         it('passes null summary to RecipeVersionService', async () => {
           const inputData = {
             name: 'Test Recipe',
+            spaceId: createSpaceId(uuidv4()),
             summary: '',
             whenToUse: [],
             contextValidationCheckpoints: [],
@@ -637,6 +644,7 @@ describe('CaptureRecipeUsecase', () => {
       it('generates correct slug from recipe name', async () => {
         const inputData = {
           name: 'Test Recipe',
+          spaceId: createSpaceId(uuidv4()),
           summary: 'Test summary',
           whenToUse: [],
           contextValidationCheckpoints: [],
@@ -672,6 +680,7 @@ describe('CaptureRecipeUsecase', () => {
       it('calls RecipeService.addRecipe with correct parameters', async () => {
         const inputData = {
           name: 'Test Recipe',
+          spaceId: createSpaceId(uuidv4()),
           summary: 'Test summary',
           whenToUse: [],
           contextValidationCheckpoints: [],
@@ -693,7 +702,6 @@ describe('CaptureRecipeUsecase', () => {
           slug: 'test-recipe',
           content: expectedContent,
           version: 1,
-          organizationId: createOrganizationId(inputData.organizationId),
           userId: createUserId(inputData.userId),
         });
 
@@ -715,8 +723,8 @@ describe('CaptureRecipeUsecase', () => {
           slug: 'test-recipe',
           content: expectedContent,
           version: 1,
-          organizationId: createOrganizationId(inputData.organizationId),
           userId: createUserId(inputData.userId),
+          spaceId: inputData.spaceId,
           gitCommit: undefined,
         });
       });
@@ -724,6 +732,7 @@ describe('CaptureRecipeUsecase', () => {
       it('creates recipe before recipe version', async () => {
         const inputData = {
           name: 'Test Recipe',
+          spaceId: createSpaceId(uuidv4()),
           summary: 'Test summary',
           whenToUse: [],
           contextValidationCheckpoints: [],
@@ -762,6 +771,7 @@ describe('CaptureRecipeUsecase', () => {
       it('returns the created recipe', async () => {
         const inputData = {
           name: 'Test Recipe',
+          spaceId: createSpaceId(uuidv4()),
           summary: 'Test summary',
           whenToUse: [],
           contextValidationCheckpoints: [],
@@ -799,6 +809,7 @@ describe('CaptureRecipeUsecase', () => {
       it('generates correct slug for recipe with spaces', async () => {
         const inputData = {
           name: 'My Complex Recipe Name',
+          spaceId: createSpaceId(uuidv4()),
           summary: 'Test summary',
           whenToUse: [],
           contextValidationCheckpoints: [],
@@ -838,6 +849,7 @@ describe('CaptureRecipeUsecase', () => {
       it('generates correct slug for recipe with special characters', async () => {
         const inputData = {
           name: 'Recipe with "Special" Characters!',
+          spaceId: createSpaceId(uuidv4()),
           summary: 'Test summary',
           whenToUse: [],
           contextValidationCheckpoints: [],
@@ -883,6 +895,7 @@ describe('CaptureRecipeUsecase', () => {
       it('throws error', async () => {
         const inputData = {
           name: 'Test Recipe',
+          spaceId: createSpaceId(uuidv4()),
           summary: 'Test summary',
           whenToUse: [],
           contextValidationCheckpoints: [],

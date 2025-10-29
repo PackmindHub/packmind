@@ -4,20 +4,17 @@ import {
   createGitRepoId,
   createGitProviderId,
   StandardVersion,
-  Standard,
-  createStandardId,
   createStandardVersionId,
-  Recipe,
   RecipeVersion,
   createRecipeVersionId,
-  createRecipeId,
-  createOrganizationId,
   createUserId,
   Target,
   createTargetId,
 } from '@packmind/shared';
 import { v4 as uuidv4 } from 'uuid';
 import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
+import { recipeFactory } from '@packmind/recipes/test';
+import { standardFactory } from '@packmind/standards/test';
 
 describe('JunieDeployer', () => {
   let deployer: JunieDeployer;
@@ -46,15 +43,10 @@ describe('JunieDeployer', () => {
 
   describe('deployRecipes', () => {
     it('creates Junie guidelines file with recipe instructions', async () => {
-      const recipe: Recipe = {
-        id: createRecipeId('recipe-1'),
+      const recipe = recipeFactory({
         name: 'Test Recipe',
         slug: 'test-recipe',
-        content: 'Original recipe content',
-        version: 1,
-        organizationId: createOrganizationId('org-1'),
-        userId: createUserId('user-1'),
-      };
+      });
 
       const recipeVersion: RecipeVersion = {
         id: createRecipeVersionId('recipe-version-1'),
@@ -101,25 +93,15 @@ describe('JunieDeployer', () => {
     });
 
     it('includes multiple recipes in instructions', async () => {
-      const recipe1: Recipe = {
-        id: createRecipeId('recipe-1'),
+      const recipe1 = recipeFactory({
         name: 'Recipe One',
         slug: 'recipe-one',
-        content: 'Recipe one content',
-        version: 1,
-        organizationId: createOrganizationId('org-1'),
-        userId: createUserId('user-1'),
-      };
+      });
 
-      const recipe2: Recipe = {
-        id: createRecipeId('recipe-2'),
+      const recipe2 = recipeFactory({
         name: 'Recipe Two',
         slug: 'recipe-two',
-        content: 'Recipe two content',
-        version: 1,
-        organizationId: createOrganizationId('org-1'),
-        userId: createUserId('user-1'),
-      };
+      });
 
       const recipeVersions: RecipeVersion[] = [
         {
@@ -159,16 +141,11 @@ describe('JunieDeployer', () => {
 
   describe('deployStandards', () => {
     it('creates Junie guidelines file with standards instructions', async () => {
-      const standard: Standard = {
-        id: createStandardId('standard-1'),
+      const standard = standardFactory({
         name: 'Test Standard',
         slug: 'test-standard',
-        description: 'Original standard description',
-        version: 1,
-        organizationId: createOrganizationId('org-1'),
-        userId: createUserId('user-1'),
         scope: 'backend',
-      };
+      });
 
       const standardVersion: StandardVersion = {
         id: createStandardVersionId('standard-version-1'),
@@ -236,16 +213,11 @@ describe('JunieDeployer', () => {
 
       const deployerWithHexa = new JunieDeployer(mockStandardsHexa);
 
-      const standard: Standard = {
-        id: createStandardId('standard-1'),
+      const standard = standardFactory({
         name: 'Standard Test',
         slug: 'standard-test',
-        description: 'Standard description',
-        version: 1,
-        organizationId: createOrganizationId('org-1'),
-        userId: createUserId('user-1'),
         scope: 'backend',
-      };
+      });
 
       const standardVersion: StandardVersion = {
         id: createStandardVersionId('standard-version-1'),
@@ -276,27 +248,17 @@ describe('JunieDeployer', () => {
     });
 
     it('includes multiple standards in instructions', async () => {
-      const standard1: Standard = {
-        id: createStandardId('standard-1'),
+      const standard1 = standardFactory({
         name: 'Standard One',
         slug: 'standard-one',
-        description: 'Standard one description',
-        version: 1,
-        organizationId: createOrganizationId('org-1'),
-        userId: createUserId('user-1'),
         scope: 'backend',
-      };
+      });
 
-      const standard2: Standard = {
-        id: createStandardId('standard-2'),
+      const standard2 = standardFactory({
         name: 'Standard Two',
         slug: 'standard-two',
-        description: 'Standard two description',
-        version: 1,
-        organizationId: createOrganizationId('org-1'),
-        userId: createUserId('user-1'),
         scope: 'frontend',
-      };
+      });
 
       const standardVersions: StandardVersion[] = [
         {

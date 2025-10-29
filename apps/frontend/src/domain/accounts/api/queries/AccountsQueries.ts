@@ -3,9 +3,9 @@ import { organizationGateway, userGateway } from '../gateways';
 import {
   GET_USER_ORGANIZATIONS_KEY,
   GET_USER_STATUSES_KEY,
+  GET_ONBOARDING_STATUS_KEY,
 } from '../queryKeys';
 import { UserId, UserOrganizationRole } from '@packmind/accounts/types';
-import { Organization } from '@packmind/shared';
 
 const CREATE_ORGANIZATION_MUTATION_KEY = 'createOrganization';
 const INVITE_USERS_MUTATION_KEY = 'inviteUsers';
@@ -57,6 +57,9 @@ export const useInviteUsersMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: GET_USER_STATUSES_KEY,
       });
+      await queryClient.invalidateQueries({
+        queryKey: [GET_ONBOARDING_STATUS_KEY],
+      });
     },
   });
 };
@@ -96,6 +99,15 @@ export const useExcludeUserMutation = () => {
       });
     },
   });
+};
+
+export const getOnboardingStatusQueryOptions = (orgId: string) => ({
+  queryKey: [GET_ONBOARDING_STATUS_KEY],
+  queryFn: () => organizationGateway.getOnboardingStatus(orgId),
+});
+
+export const useGetOnboardingStatusQuery = (orgId: string) => {
+  return useQuery(getOnboardingStatusQueryOptions(orgId));
 };
 
 // Re-export user queries

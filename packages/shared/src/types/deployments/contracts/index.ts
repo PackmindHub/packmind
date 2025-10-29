@@ -5,6 +5,7 @@ export * from './IGetTargetsByGitRepoUseCase';
 export * from './IGetTargetsByRepositoryUseCase';
 export * from './IGetTargetsByOrganizationUseCase';
 export * from './IFindDeployedStandardByRepository';
+export * from './IFindActiveStandardVersionsByTargetUseCase';
 export * from './IGetStandardDeploymentOverview';
 export * from './IGetDeploymentOverview';
 export * from './IPublishRecipes';

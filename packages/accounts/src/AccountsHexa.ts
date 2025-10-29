@@ -6,7 +6,12 @@ import {
   UserProvider,
   OrganizationProvider,
 } from '@packmind/shared';
-import { ISpacesPort } from '@packmind/shared/types';
+import {
+  ISpacesPort,
+  IGitPort,
+  IStandardsPort,
+  IDeploymentPort,
+} from '@packmind/shared/types';
 import { AccountsHexaFactory } from './AccountsHexaFactory';
 import { User } from './domain/entities/User';
 import { Organization } from './domain/entities/Organization';
@@ -50,6 +55,8 @@ import {
   ResetPasswordResponse,
   ValidatePasswordResetTokenCommand,
   ValidatePasswordResetTokenResponse,
+  GetOrganizationOnboardingStatusCommand,
+  OrganizationOnboardingStatus,
 } from '@packmind/shared';
 
 const origin = 'AccountsHexa';
@@ -357,5 +364,39 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts> {
     command: ResetPasswordCommand,
   ): Promise<ResetPasswordResponse> {
     return this.hexa.useCases.resetPassword(command);
+  }
+
+  /**
+   * Get the onboarding status for an organization.
+   */
+  async getOrganizationOnboardingStatus(
+    command: GetOrganizationOnboardingStatusCommand,
+  ): Promise<OrganizationOnboardingStatus> {
+    return this.hexa.useCases.getOrganizationOnboardingStatus(command);
+  }
+
+  // ========================================
+  // PORT SETTERS (for lazy dependency injection)
+  // ========================================
+
+  /**
+   * Set the Git port for cross-domain access to git data.
+   */
+  setGitPort(gitPort: IGitPort): void {
+    this.hexa.setGitPort(gitPort);
+  }
+
+  /**
+   * Set the Standards port for cross-domain access to standards data.
+   */
+  setStandardsPort(standardsPort: IStandardsPort): void {
+    this.hexa.setStandardsPort(standardsPort);
+  }
+
+  /**
+   * Set the Deployment port for cross-domain access to deployment data.
+   */
+  setDeploymentPort(deploymentPort: IDeploymentPort): void {
+    this.hexa.setDeploymentPort(deploymentPort);
   }
 }

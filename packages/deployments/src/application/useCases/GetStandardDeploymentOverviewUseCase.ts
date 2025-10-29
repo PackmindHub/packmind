@@ -1,4 +1,4 @@
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger, ISpacesPort } from '@packmind/shared';
 
 //TODO: remove and replace with an adapter pattern
 import { StandardsHexa } from '@packmind/standards';
@@ -36,6 +36,7 @@ export class GetStandardDeploymentOverviewUseCase
     private readonly standardsDeploymentRepository: IStandardsDeploymentRepository,
     private readonly standardsHexa: StandardsHexa,
     private readonly gitHexa: GitHexa,
+    private readonly spacesPort: ISpacesPort,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -54,15 +55,32 @@ export class GetStandardDeploymentOverviewUseCase
           DistributionStatus.success, // Filter only successful deployments for overview
         );
 
-      // Get all standards and git repos from the organization
-      const [standards, gitRepos] = await Promise.all([
-        this.standardsHexa.listStandardsByOrganization(
-          command.organizationId as OrganizationId,
+      // Get all spaces for the organization
+      const spaces = await this.spacesPort.listSpacesByOrganization(
+        command.organizationId as OrganizationId,
+      );
+
+      // Get all standards across all spaces and git repos
+      const [standardsPerSpace, gitRepos] = await Promise.all([
+        Promise.all(
+          spaces.map((space) =>
+            this.standardsHexa.listStandardsBySpace({
+              userId: command.userId,
+              organizationId: command.organizationId as OrganizationId,
+              spaceId: space.id,
+            }),
+          ),
         ),
         this.gitHexa.getOrganizationRepositories(
           command.organizationId as OrganizationId,
         ),
       ]);
+
+      // Flatten standards from all spaces
+      const standards = standardsPerSpace
+        .flat()
+        .map((response) => response.standards)
+        .flat();
 
       // Build the overview using the deployment data
       const overview = this.buildOverviewFromDeployments(

@@ -4,6 +4,7 @@ import * as fs from 'fs/promises';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { GitService } from './GitService';
+import { stubLogger } from '@packmind/shared/test/logger/stubLogger';
 
 const execAsync = promisify(exec);
 
@@ -12,7 +13,8 @@ describe('GitService', () => {
   let service: GitService;
 
   beforeEach(async () => {
-    service = new GitService();
+    const logger = stubLogger();
+    service = new GitService(logger);
     tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'git-test-'));
 
     // Initialize a git repository
@@ -25,6 +27,53 @@ describe('GitService', () => {
 
   afterEach(async () => {
     await fs.rm(tempDir, { recursive: true, force: true });
+  });
+
+  describe('getGitRepositoryRoot', () => {
+    describe('when path is at repository root', () => {
+      it('returns repository root path', async () => {
+        const result = await service.getGitRepositoryRoot(tempDir);
+        const resolvedTempDir = await fs.realpath(tempDir);
+
+        expect(result).toBe(resolvedTempDir);
+      });
+    });
+
+    describe('when path is a subdirectory', () => {
+      it('returns repository root path', async () => {
+        const subDir = path.join(tempDir, 'src', 'main', 'java');
+        await fs.mkdir(subDir, { recursive: true });
+        const resolvedTempDir = await fs.realpath(tempDir);
+
+        const result = await service.getGitRepositoryRoot(subDir);
+
+        expect(result).toBe(resolvedTempDir);
+      });
+    });
+
+    describe('when path is not in a git repository', () => {
+      it('throws error with descriptive message', async () => {
+        const nonGitDir = await fs.mkdtemp(path.join(os.tmpdir(), 'non-git-'));
+
+        try {
+          await expect(service.getGitRepositoryRoot(nonGitDir)).rejects.toThrow(
+            'Failed to get Git repository root',
+          );
+        } finally {
+          await fs.rm(nonGitDir, { recursive: true, force: true });
+        }
+      });
+    });
+
+    describe('when path does not exist', () => {
+      it('throws error', async () => {
+        const nonExistentPath = path.join(os.tmpdir(), 'non-existent-path-xyz');
+
+        await expect(
+          service.getGitRepositoryRoot(nonExistentPath),
+        ).rejects.toThrow('Failed to get Git repository root');
+      });
+    });
   });
 
   describe('when only one remote is available', () => {

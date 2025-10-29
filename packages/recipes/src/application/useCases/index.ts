@@ -6,6 +6,7 @@ import { DeleteRecipeUsecase } from './deleteRecipe/deleteRecipe.usecase';
 import { GetRecipeByIdUsecase } from './getRecipeById/getRecipeById.usecase';
 import { FindRecipeBySlugUsecase } from './findRecipeBySlug/findRecipeBySlug.usecase';
 import { ListRecipesByOrganizationUsecase } from './listRecipesByOrganization/listRecipesByOrganization.usecase';
+import { ListRecipesBySpaceUsecase } from './listRecipesBySpace/listRecipesBySpace.usecase';
 import { ListRecipeVersionsUsecase } from './listRecipeVersions/listRecipeVersions.usecase';
 import { GetRecipeVersionUsecase } from './getRecipeVersion/getRecipeVersion.usecase';
 import { DeleteRecipesBatchUsecase } from './deleteRecipesBatch/deleteRecipesBatch.usecase';
@@ -17,10 +18,18 @@ import {
   PackmindLogger,
   QueryOption,
   IDeploymentPort,
+  UserProvider,
+  OrganizationProvider,
+  ISpacesPort,
 } from '@packmind/shared';
 import { GitHexa } from '@packmind/git';
 import { OrganizationId, UserId } from '@packmind/accounts';
 import { RecipeId } from '@packmind/shared';
+import {
+  GetRecipeByIdCommand,
+  ListRecipesBySpaceCommand,
+} from '@packmind/shared/types';
+import { Recipe } from '../../domain/entities/Recipe';
 import { RecipesHexa } from '../../RecipesHexa';
 
 import {
@@ -39,6 +48,7 @@ export class RecipeUseCases {
   private readonly _getRecipeById: GetRecipeByIdUsecase;
   private readonly _findRecipeBySlug: FindRecipeBySlugUsecase;
   private readonly _listRecipesByOrganization: ListRecipesByOrganizationUsecase;
+  private readonly _listRecipesBySpace: ListRecipesBySpaceUsecase;
   private readonly _listRecipeVersions: ListRecipeVersionsUsecase;
   private readonly _getRecipeVersion: GetRecipeVersionUsecase;
   private readonly _deleteRecipesBatch: DeleteRecipesBatchUsecase;
@@ -47,7 +57,10 @@ export class RecipeUseCases {
   constructor(
     private readonly recipesServices: IRecipesServices,
     private readonly gitHexa: GitHexa,
-    private readonly deploymentPort?: IDeploymentPort,
+    private readonly deploymentPort: IDeploymentPort | undefined,
+    private readonly userProvider: UserProvider,
+    private readonly organizationProvider: OrganizationProvider,
+    private readonly spacesPort: ISpacesPort | null,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this._captureRecipe = new CaptureRecipeUsecase(
@@ -78,7 +91,10 @@ export class RecipeUseCases {
       this.logger,
     );
     this._getRecipeById = new GetRecipeByIdUsecase(
+      userProvider,
+      organizationProvider,
       recipesServices.getRecipeService(),
+      spacesPort,
       this.logger,
     );
     this._findRecipeBySlug = new FindRecipeBySlugUsecase(
@@ -87,6 +103,13 @@ export class RecipeUseCases {
     );
     this._listRecipesByOrganization = new ListRecipesByOrganizationUsecase(
       recipesServices.getRecipeService(),
+      this.logger,
+    );
+    this._listRecipesBySpace = new ListRecipesBySpaceUsecase(
+      userProvider,
+      organizationProvider,
+      recipesServices.getRecipeService(),
+      spacesPort,
       this.logger,
     );
     this._listRecipeVersions = new ListRecipeVersionsUsecase(
@@ -130,7 +153,21 @@ export class RecipeUseCases {
     return this._deleteRecipe.execute(command);
   }
 
-  public getRecipeById(id: RecipeId) {
+  /**
+   * Get recipe by ID with access control (public API)
+   */
+  public async getRecipeById(
+    command: GetRecipeByIdCommand,
+  ): Promise<Recipe | null> {
+    const result = await this._getRecipeById.execute(command);
+    return result.recipe;
+  }
+
+  /**
+   * Get recipe by ID without access control (internal use only)
+   * Used by UpdateRecipeFromUI and RecipeUsageAnalytics
+   */
+  public getRecipeByIdInternal(id: RecipeId) {
     return this._getRecipeById.getRecipeById(id);
   }
 
@@ -146,6 +183,16 @@ export class RecipeUseCases {
     return this._listRecipesByOrganization.listRecipesByOrganization(
       organizationId,
     );
+  }
+
+  /**
+   * List recipes by space with access control (public API)
+   */
+  public async listRecipesBySpace(
+    command: ListRecipesBySpaceCommand,
+  ): Promise<Recipe[]> {
+    const result = await this._listRecipesBySpace.execute(command);
+    return result.recipes;
   }
 
   public listRecipeVersions(recipeId: RecipeId) {

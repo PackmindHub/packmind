@@ -12,6 +12,7 @@
     "@packmind/git": "*",
     "@packmind/accounts": "*",
     "@packmind/jobs": "*",
+    "@packmind/spaces": "*",
     "bullmq": "^5.58.2",
     "slug": "^11.0.0",
     "ts-jest": "^29.4.1",

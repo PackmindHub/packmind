@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { standardsGateway } from '../../standards/api/gateways';
-import { StandardId, StandardVersionId } from '@packmind/standards/types';
+import { StandardId, StandardVersionId } from '@packmind/shared/types';
 import { TargetId } from '@packmind/shared';
 import { useDeployStandardsMutation } from '../api/queries/DeploymentsQueries';
 

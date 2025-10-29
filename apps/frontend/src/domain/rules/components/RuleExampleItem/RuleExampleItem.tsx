@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { RuleExample } from '@packmind/standards/types';
+import { RuleExample } from '@packmind/shared/types';
 import {
   RuleId,
   ProgrammingLanguage,

@@ -6,6 +6,7 @@ import { RecipeRepository } from '../../infra/repositories/RecipeRepository';
 import { PackmindLogger, QueryOption } from '@packmind/shared';
 import { GitCommit } from '@packmind/git';
 import { OrganizationId, UserId } from '@packmind/accounts';
+import { SpaceId } from '@packmind/shared/types';
 
 const origin = 'RecipeService';
 
@@ -15,8 +16,8 @@ export type CreateRecipeData = {
   content: string;
   version: number;
   gitCommit?: GitCommit;
-  organizationId: OrganizationId;
   userId: UserId;
+  spaceId: SpaceId;
 };
 
 export type UpdateRecipeData = {
@@ -25,7 +26,6 @@ export type UpdateRecipeData = {
   content: string;
   version: number;
   gitCommit?: GitCommit;
-  organizationId: OrganizationId;
   userId: UserId;
 };
 
@@ -41,7 +41,7 @@ export class RecipeService {
     this.logger.info('Adding new recipe', {
       name: recipeData.name,
       slug: recipeData.slug,
-      organizationId: recipeData.organizationId,
+      spaceId: recipeData.spaceId,
       userId: recipeData.userId,
     });
 
@@ -85,6 +85,27 @@ export class RecipeService {
     } catch (error) {
       this.logger.error('Failed to list recipes by organization', {
         organizationId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async listRecipesBySpace(spaceId: SpaceId): Promise<Recipe[]> {
+    this.logger.info('Listing recipes by space', {
+      spaceId,
+    });
+
+    try {
+      const recipes = await this.recipeRepository.findBySpaceId(spaceId);
+      this.logger.info('Recipes retrieved by space successfully', {
+        spaceId,
+        count: recipes.length,
+      });
+      return recipes;
+    } catch (error) {
+      this.logger.error('Failed to list recipes by space', {
+        spaceId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
@@ -212,7 +233,6 @@ export class RecipeService {
     this.logger.info('Updating recipe', {
       recipeId,
       name: recipeData.name,
-      organizationId: recipeData.organizationId,
       userId: recipeData.userId,
     });
 
@@ -226,6 +246,7 @@ export class RecipeService {
       const updatedRecipe: Recipe = {
         id: recipeId,
         ...recipeData,
+        spaceId: existingRecipe.spaceId,
       };
 
       const savedRecipe = await this.recipeRepository.add(updatedRecipe);
