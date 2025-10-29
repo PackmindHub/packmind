@@ -91,15 +91,20 @@ module.exports = {
         ],
       },
     }),
-    new CopyWebpackPlugin({
-      patterns: [
-        {
-          // Copy all WASM files (including versioned tree-sitter files for PHP)
-          from: join(__dirname, '../../packages/linter-ast/res/*.wasm'),
-          to: join(__dirname, '../../dist/apps/api/[name][ext]'),
-        },
-      ],
-    }),
+    // Only copy WASM files in enterprise mode (not in OSS mode)
+    ...(!isOssMode
+      ? [
+          new CopyWebpackPlugin({
+            patterns: [
+              {
+                // Copy all WASM files (including versioned tree-sitter files for PHP)
+                from: join(__dirname, '../../packages/linter-ast/res/*.wasm'),
+                to: join(__dirname, '../../dist/apps/api/[name][ext]'),
+              },
+            ],
+          }),
+        ]
+      : []),
   ],
 
   externals: ({ request }, callback) => {
