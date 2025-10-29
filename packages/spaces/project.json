@@ -1,0 +1,26 @@
+{
+  "name": "spaces",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/spaces/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit --project packages/spaces/tsconfig.lib.json"
+      }
+    },
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/spaces",
+        "tsConfig": "packages/spaces/tsconfig.lib.json",
+        "packageJson": "packages/spaces/package.json",
+        "main": "packages/spaces/src/index.ts",
+        "assets": ["packages/spaces/*.md"]
+      }
+    }
+  }
+}
