@@ -47,7 +47,6 @@ describe('AddRuleToStandardUsecase', () => {
       findStandardBySlug: jest.fn(),
       updateStandard: jest.fn(),
       deleteStandard: jest.fn(),
-      listStandardsByOrganization: jest.fn(),
       listStandardsByUser: jest.fn(),
       listStandardsByOrganizationAndUser: jest.fn(),
     } as unknown as jest.Mocked<StandardService>;

@@ -12,9 +12,12 @@ export const RULE_DETAILS_DETECTION_TAB_FEATURE_KEY =
 
 export const AGENT_BLUEPRINTS_NAV_FEATURE_KEY = 'agent-blueprints-nav';
 
+export const PACKAGES_NAV_FEATURE_KEY = 'packages-nav';
+
 export const DEFAULT_FEATURE_DOMAIN_MAP: Record<string, readonly string[]> = {
   [RULE_DETAILS_DETECTION_TAB_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
   [AGENT_BLUEPRINTS_NAV_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
+  [PACKAGES_NAV_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
 };
 
 const normalizeDomain = (domain: string): string =>

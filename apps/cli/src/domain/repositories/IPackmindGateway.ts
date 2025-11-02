@@ -48,6 +48,7 @@ export type GetDraftDetectionProgramsForRuleResult = {
   }[];
   ruleContent: string;
   standardSlug: string;
+  scope: string | null;
 };
 
 export type GetDraftDetectionProgramsForRule = IUseCase<
@@ -70,6 +71,7 @@ export type GetActiveDetectionProgramsForRuleResult = {
   }[];
   ruleContent: string;
   standardSlug: string;
+  scope: string | null;
 };
 
 export type GetActiveDetectionProgramsForRule = IUseCase<

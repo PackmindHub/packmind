@@ -1,22 +1,10 @@
-import { AccountsHexa, accountsSchemas } from '@packmind/accounts';
-import { User, Organization } from '@packmind/accounts/types';
-import { RecipesHexa, recipesSchemas } from '@packmind/recipes';
 import { Recipe } from '@packmind/recipes/types';
-import { GitHexa, gitSchemas } from '@packmind/git';
-import { GitRepo, GitProviderVendors } from '@packmind/git/types';
-import {
-  createOrganizationId,
-  createUserId,
-  HexaRegistry,
-  IDeploymentPort,
-} from '@packmind/shared';
-import { makeTestDatasource } from '@packmind/shared/test';
+import { GitRepo } from '@packmind/git/types';
 
 import { DataSource } from 'typeorm';
-import { RecipesUsageHexa, recipesUsageSchemas } from '@packmind/analytics';
-import { TargetSchema } from '@packmind/deployments';
-import { JobsHexa } from '@packmind/jobs';
-import { SpacesHexa, spacesSchemas } from '@packmind/spaces';
+import { TestApp } from '../helpers/TestApp';
+import { DataFactory } from '../helpers/DataFactory';
+import { makeIntegrationTestDataSource } from '../helpers/makeIntegrationTestDataSource';
 
 // Mock only Configuration from @packmind/shared
 jest.mock('@packmind/shared', () => {
@@ -35,81 +23,25 @@ jest.mock('@packmind/shared', () => {
 });
 
 describe('Recipe usage tracking', () => {
-  let accountsHexa: AccountsHexa;
-  let recipesHexa: RecipesHexa;
-  let recipesUsageHexa: RecipesUsageHexa;
-  let spacesHexa: SpacesHexa;
-  let gitHexa: GitHexa;
-  let registry: HexaRegistry;
   let dataSource: DataSource;
-
+  let testApp: TestApp;
+  let dataFactory: DataFactory;
   let recipe: Recipe;
-  let organization: Organization;
-  let user: User;
 
   beforeEach(async () => {
     // Create test datasource with all necessary schemas
-    dataSource = await makeTestDatasource([
-      ...accountsSchemas,
-      ...recipesSchemas,
-      ...recipesUsageSchemas,
-      ...gitSchemas,
-      ...spacesSchemas,
-      TargetSchema,
-    ]);
+    dataSource = await makeIntegrationTestDataSource();
     await dataSource.initialize();
     await dataSource.synchronize();
 
-    // Create HexaRegistry
-    registry = new HexaRegistry();
+    testApp = new TestApp(dataSource);
+    await testApp.initialize();
 
-    // Register hexas before initialization
-    registry.register(SpacesHexa);
-    registry.register(JobsHexa);
-    registry.register(GitHexa);
-    registry.register(AccountsHexa);
-    registry.register(RecipesHexa);
-    registry.register(RecipesUsageHexa);
+    dataFactory = new DataFactory(testApp);
 
-    // Initialize the registry with the datasource
-    registry.init(dataSource);
-    await registry.initAsync();
-
-    // Get initialized hexas
-    accountsHexa = registry.get(AccountsHexa);
-    recipesHexa = registry.get(RecipesHexa);
-    gitHexa = registry.get(GitHexa);
-    spacesHexa = registry.get(SpacesHexa);
-
-    recipesUsageHexa = registry.get(RecipesUsageHexa);
-    const mockDeploymentPort = {
-      addTarget: jest.fn(),
-    } as Partial<jest.Mocked<IDeploymentPort>> as jest.Mocked<IDeploymentPort>;
-
-    gitHexa.setDeploymentsAdapter(mockDeploymentPort);
-
-    gitHexa.setUserProvider(accountsHexa.getUserProvider());
-    gitHexa.setOrganizationProvider(accountsHexa.getOrganizationProvider());
-
-    // Create test data
-    const signUpResult = await accountsHexa.signUpWithOrganization({
-      organizationName: 'test organization',
-      email: 'toto@packmind.com',
-      password: 's3cret!@',
-    });
-    user = signUpResult.user;
-    organization = signUpResult.organization;
-
-    const spaces = await spacesHexa
-      .getSpacesAdapter()
-      .listSpacesByOrganization(organization.id);
-
-    recipe = await recipesHexa.captureRecipe({
+    recipe = await dataFactory.withRecipe({
       name: 'My new recipe',
       content: 'Some content',
-      organizationId: organization.id,
-      spaceId: spaces[0].id,
-      userId: user.id,
     });
   });
 
@@ -119,69 +51,46 @@ describe('Recipe usage tracking', () => {
 
   describe('when a git repository is provided', () => {
     let gitRepo: GitRepo;
-    let gitHexa: GitHexa;
 
     beforeEach(async () => {
-      gitHexa = registry.get(GitHexa);
-
-      const gitProvider = await gitHexa.addGitProvider({
-        userId: user.id,
-        organizationId: organization.id,
-        gitProvider: {
-          source: GitProviderVendors.github,
-          url: 'whatever',
-          token: 'some-token',
-        },
-      });
-
-      gitRepo = await gitHexa.addGitRepo({
-        userId: user.id,
-        organizationId: organization.id,
-        gitProviderId: gitProvider.id,
-        owner: 'some-company',
-        repo: 'some-repo',
-        branch: 'main',
-      });
+      gitRepo = (await dataFactory.withGitRepo()).gitRepo;
     });
 
     test('A recipe usage can be tracked', async () => {
-      const usage = await recipesUsageHexa.trackRecipeUsage({
+      const usage = await testApp.analyticsHexa.trackRecipeUsage({
         recipeSlugs: [recipe.slug],
         aiAgent: 'ZeAgent',
-        userId: createUserId(user.id),
-        organizationId: createOrganizationId(organization.id),
         gitRepo: `${gitRepo.owner}/${gitRepo.repo}`,
+        ...dataFactory.packmindCommand(),
       });
 
       expect(usage).toMatchObject([
         {
           recipeId: recipe.id,
           aiAgent: 'ZeAgent',
-          userId: user.id,
+          userId: dataFactory.user.id,
           gitRepoId: gitRepo.id,
         },
       ]);
     });
 
     test('A deleted recipe usage can be tracked', async () => {
-      await recipesHexa.deleteRecipe({
+      await testApp.recipesHexa.deleteRecipe({
         recipeId: recipe.id,
-        userId: user.id,
-        organizationId: organization.id,
+        ...dataFactory.packmindCommand(),
       });
-      const usage = await recipesUsageHexa.trackRecipeUsage({
+      const usage = await testApp.analyticsHexa.trackRecipeUsage({
         recipeSlugs: [recipe.slug],
         aiAgent: 'ZeAgent',
         gitRepo: `${gitRepo.owner}/${gitRepo.repo}`,
-        userId: createUserId(user.id),
-        organizationId: createOrganizationId(organization.id),
+        ...dataFactory.packmindCommand(),
       });
 
       expect(usage).toMatchObject([
         {
           recipeId: recipe.id,
           aiAgent: 'ZeAgent',
-          userId: user.id,
+          userId: dataFactory.user.id,
         },
       ]);
     });

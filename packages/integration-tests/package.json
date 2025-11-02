@@ -15,7 +15,7 @@
     "@packmind/jobs": "*",
     "@packmind/shared": "*",
     "@packmind/spaces": "*",
-    "typeorm": "^0.3.25",
+    "typeorm": "^0.3.26",
     "@packmind/standards": "*",
     "@packmind/coding-agent": "*",
     "@packmind/deployments": "*",

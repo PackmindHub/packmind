@@ -4,7 +4,7 @@ import {
   IGetUserByIdUseCase,
   GetUserByIdCommand,
   GetUserByIdResponse,
-} from '../../../domain/useCases/IGetUserByIdUseCase';
+} from '@packmind/shared';
 
 const origin = 'GetUserByIdUseCase';
 

@@ -512,6 +512,7 @@ describe('LintFilesInDirectoryUseCase', () => {
         ],
         ruleContent: 'Test draft rule',
         standardSlug: 'test-standard',
+        scope: null,
       };
 
       mockPackmindGateway.getDraftDetectionProgramsForRule = jest
@@ -564,6 +565,7 @@ describe('LintFilesInDirectoryUseCase', () => {
         ],
         ruleContent: 'Test draft rule',
         standardSlug: 'test-standard',
+        scope: null,
       };
 
       mockPackmindGateway.getDraftDetectionProgramsForRule = jest

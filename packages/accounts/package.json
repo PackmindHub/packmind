@@ -7,7 +7,7 @@
   "types": "./src/index.d.ts",
   "dependencies": {
     "tslib": "^2.3.0",
-    "typeorm": "^0.3.25",
+    "typeorm": "^0.3.26",
     "@packmind/shared": "*",
     "@packmind/spaces": "*",
     "uuid": "^11.1.0",

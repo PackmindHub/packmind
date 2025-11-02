@@ -8,7 +8,6 @@ import {
   PackmindLogger,
   ProgrammingLanguage,
   RuleWithExamples,
-  ILinterPort,
 } from '@packmind/shared';
 import { stubLogger } from '@packmind/shared/test';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
@@ -20,6 +19,7 @@ import { createStandardId } from '../../../domain/entities/Standard';
 import { createStandardVersionId } from '../../../domain/entities/StandardVersion';
 import { createRuleExampleId } from '../../../domain/entities/RuleExample';
 import { v4 as uuidv4 } from 'uuid';
+import type { ILinterPort } from '@packmind/shared';
 
 describe('CreateStandardWithExamplesUsecase', () => {
   let usecase: CreateStandardWithExamplesUsecase;
@@ -42,7 +42,6 @@ describe('CreateStandardWithExamplesUsecase', () => {
       findStandardBySlug: jest.fn(),
       updateStandard: jest.fn(),
       deleteStandard: jest.fn(),
-      listStandardsByOrganization: jest.fn(),
       listStandardsBySpace: jest.fn(),
       listStandardsByUser: jest.fn(),
       listStandardsByOrganizationAndUser: jest.fn(),

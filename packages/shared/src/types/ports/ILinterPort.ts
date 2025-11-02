@@ -1,46 +1,85 @@
-import { RuleId } from '../standards';
-import { OrganizationId, UserId } from '../accounts';
-import { ProgrammingLanguage } from '../languages/Language';
-import {
+import type {
+  ActiveDetectionProgram,
+  ActiveDetectionProgramId,
+  AssessRuleDetectionInput,
   ComputeRuleLanguageDetectionStatusCommand,
   ComputeRuleLanguageDetectionStatusResponse,
-} from '../linter/contracts';
-
-export interface CopyDetectionProgramsToNewRuleCommand {
-  oldRuleId: RuleId;
-  newRuleId: RuleId;
-  organizationId: OrganizationId;
-  userId: UserId;
-}
-
-export interface CopyDetectionProgramsToNewRuleResponse {
-  copiedProgramsCount: number;
-}
-
-export interface CopyRuleDetectionAssessmentsCommand {
-  oldRuleId: RuleId;
-  newRuleId: RuleId;
-  organizationId: OrganizationId;
-  userId: UserId;
-}
-
-export interface CopyRuleDetectionAssessmentsResponse {
-  copiedAssessmentsCount: number;
-}
-
-export interface UpdateRuleDetectionAssessmentAfterUpdateCommand {
-  ruleId: RuleId;
-  language: ProgrammingLanguage;
-  organizationId: OrganizationId;
-  userId: UserId;
-}
-
-export interface UpdateRuleDetectionAssessmentAfterUpdateResponse {
-  action: 'ASSESSMENT_STARTED' | 'STATUS_UPDATED';
-  message: string;
-}
+  CopyDetectionProgramsToNewRuleCommand,
+  CopyDetectionProgramsToNewRuleResponse,
+  CopyRuleDetectionAssessmentsCommand,
+  CopyRuleDetectionAssessmentsResponse,
+  CreateDetectionProgramCommand,
+  CreateNewDetectionProgramVersionCommand,
+  DetectionProgram,
+  GetActiveDetectionProgramCommand,
+  GetActiveDetectionProgramForRuleCommand,
+  GetActiveDetectionProgramForRuleResponse,
+  GetActiveDetectionProgramResponse,
+  GetAllDetectionProgramsByRuleCommand,
+  GetAllDetectionProgramsByRuleResponse,
+  GetDetectionProgramMetadataCommand,
+  GetDetectionProgramMetadataResponse,
+  GetDraftDetectionProgramForRuleCommand,
+  GetDraftDetectionProgramForRuleResponse,
+  GetRuleDetectionAssessmentCommand,
+  GetRuleDetectionAssessmentResponse,
+  GetStandardRulesDetectionStatusCommand,
+  GetStandardRulesDetectionStatusResponse,
+  ListDetectionProgramCommand,
+  ListDetectionProgramResponse,
+  RuleDetectionAssessment,
+  StartProgramGenerationCommand,
+  StartProgramGenerationResponse,
+  TestProgramExecutionCommand,
+  TestProgramExecutionResponse,
+  UpdateActiveDetectionProgramCommand,
+  UpdateDetectionProgramCommand,
+  UpdateDetectionProgramStatusCommand,
+  UpdateRuleDetectionStatusAfterUpdateCommand,
+  UpdateRuleDetectionStatusAfterUpdateResponse,
+} from '../linter';
 
 export interface ILinterPort {
+  createDetectionProgram(
+    command: CreateDetectionProgramCommand,
+  ): Promise<DetectionProgram>;
+
+  getActiveDetectionProgram(
+    command: GetActiveDetectionProgramCommand,
+  ): Promise<GetActiveDetectionProgramResponse>;
+
+  createNewDetectionProgramVersion(
+    command: CreateNewDetectionProgramVersionCommand,
+  ): Promise<DetectionProgram>;
+
+  listDetectionPrograms(
+    command: ListDetectionProgramCommand,
+  ): Promise<ListDetectionProgramResponse>;
+
+  updateDetectionProgram(
+    command: UpdateDetectionProgramCommand,
+  ): Promise<DetectionProgram>;
+
+  updateActiveDetectionProgram(
+    command: UpdateActiveDetectionProgramCommand,
+  ): Promise<ActiveDetectionProgram>;
+
+  getActiveDetectionProgramById(
+    activeDetectionProgramId: ActiveDetectionProgramId,
+  ): Promise<ActiveDetectionProgram | null>;
+
+  startGenerateProgram(
+    command: StartProgramGenerationCommand,
+  ): Promise<StartProgramGenerationResponse>;
+
+  getAllDetectionProgramsByRule(
+    command: GetAllDetectionProgramsByRuleCommand,
+  ): Promise<GetAllDetectionProgramsByRuleResponse>;
+
+  getDetectionProgramMetadata(
+    command: GetDetectionProgramMetadataCommand,
+  ): Promise<GetDetectionProgramMetadataResponse>;
+
   copyDetectionProgramsToNewRule(
     command: CopyDetectionProgramsToNewRuleCommand,
   ): Promise<CopyDetectionProgramsToNewRuleResponse>;
@@ -49,11 +88,39 @@ export interface ILinterPort {
     command: CopyRuleDetectionAssessmentsCommand,
   ): Promise<CopyRuleDetectionAssessmentsResponse>;
 
+  getDraftDetectionProgramForRule(
+    command: GetDraftDetectionProgramForRuleCommand,
+  ): Promise<GetDraftDetectionProgramForRuleResponse>;
+
+  getActiveDetectionProgramForRule(
+    command: GetActiveDetectionProgramForRuleCommand,
+  ): Promise<GetActiveDetectionProgramForRuleResponse>;
+
+  updateDetectionProgramStatus(
+    command: UpdateDetectionProgramStatusCommand,
+  ): Promise<UpdateRuleDetectionStatusAfterUpdateResponse>;
+
   updateRuleDetectionAssessmentAfterUpdate(
-    command: UpdateRuleDetectionAssessmentAfterUpdateCommand,
-  ): Promise<UpdateRuleDetectionAssessmentAfterUpdateResponse>;
+    command: UpdateRuleDetectionStatusAfterUpdateCommand,
+  ): Promise<UpdateRuleDetectionStatusAfterUpdateResponse>;
+
+  startRuleDetectionAssessment(
+    command: Omit<AssessRuleDetectionInput, 'assessmentId'>,
+  ): Promise<RuleDetectionAssessment>;
+
+  getRuleDetectionAssessment(
+    command: GetRuleDetectionAssessmentCommand,
+  ): Promise<GetRuleDetectionAssessmentResponse>;
 
   computeRuleLanguageDetectionStatus(
     command: ComputeRuleLanguageDetectionStatusCommand,
   ): Promise<ComputeRuleLanguageDetectionStatusResponse>;
+
+  getStandardRulesDetectionStatus(
+    command: GetStandardRulesDetectionStatusCommand,
+  ): Promise<GetStandardRulesDetectionStatusResponse>;
+
+  testProgramExecution(
+    command: TestProgramExecutionCommand,
+  ): Promise<TestProgramExecutionResponse>;
 }

@@ -37,7 +37,7 @@ import { SSEModule } from './sse/sse.module';
 import { JobsHexa } from '@packmind/jobs';
 import { LinterHexa, LinterModule, linterSchemas } from '@packmind/linter';
 import {
-  RecipesUsageHexa,
+  AnalyticsHexa,
   recipesUsageSchemas,
   AnalyticsModule,
 } from '@packmind/analytics';
@@ -88,7 +88,7 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
         JobsHexa,
         GitHexa,
         RecipesHexa,
-        RecipesUsageHexa,
+        AnalyticsHexa,
         LinterHexa, // Must come before StandardsHexa (StandardsHexa depends on LinterHexa)
         StandardsHexa,
         CodingAgentHexa,

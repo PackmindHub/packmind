@@ -34,7 +34,7 @@ const origin = 'GetDeploymentOverviewUseCase';
 export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
   constructor(
     private readonly deploymentsRepository: IRecipesDeploymentRepository,
-    private readonly recipesPort: IRecipesPort,
+    private readonly recipesPort: Partial<IRecipesPort>,
     private readonly spacesPort: ISpacesPort,
     private readonly gitHexa: GitHexa,
     private readonly getTargetsByOrganizationUseCase: GetTargetsByOrganizationUseCase,
@@ -62,11 +62,11 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
         ),
         Promise.all(
           spaces.map((space) =>
-            this.recipesPort.listRecipesBySpace(
-              space.id,
+            this.recipesPort.listRecipesBySpace!({
+              spaceId: space.id,
               organizationId,
-              createUserId(command.userId),
-            ),
+              userId: createUserId(command.userId),
+            }),
           ),
         ),
         this.gitHexa.getOrganizationRepositories(organizationId),

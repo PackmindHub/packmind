@@ -1,7 +1,7 @@
 import { RecipesServices } from './application/services/RecipesServices';
 import { RecipesRepositories } from './infra/repositories/RecipesRepositories';
 import { DataSource } from 'typeorm';
-import { RecipeUseCases } from './application/useCases';
+import { RecipesAdapter } from './application/adapter/RecipesAdapter';
 import {
   PackmindLogger,
   IDeploymentPort,
@@ -25,7 +25,7 @@ export class RecipesHexaFactory {
   public readonly recipesServices: RecipesServices;
   // TODO: migrate with port/adapters
   private readonly gitHexa: GitHexa;
-  public useCases!: RecipeUseCases; // Non-null assertion since initialize() will set it
+  public useCases!: RecipesAdapter; // Non-null assertion since initialize() will set it
   private recipesDelayedJobs: IRecipesDelayedJobs | null = null;
   private isInitialized = false;
   private recipesHexa: RecipesHexa | null = null;
@@ -109,9 +109,9 @@ export class RecipesHexaFactory {
         );
       }
 
-      // Create RecipeUseCases with providers
-      this.logger.debug('Creating RecipeUseCases');
-      this.useCases = new RecipeUseCases(
+      // Create RecipesAdapter with providers
+      this.logger.debug('Creating RecipesAdapter');
+      this.useCases = new RecipesAdapter(
         this.recipesServices,
         this.gitHexa,
         this.deploymentPort,

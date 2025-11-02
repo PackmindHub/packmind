@@ -1,7 +1,6 @@
 import {
   RuleExample,
   PackmindLogger,
-  ILinterPort,
   RuleId,
   ProgrammingLanguage,
 } from '@packmind/shared';
@@ -16,6 +15,7 @@ import {
   createOrganizationId,
   createUserId,
 } from '@packmind/accounts';
+import type { ILinterPort } from '@packmind/shared';
 
 const origin = 'UpdateRuleExampleUsecase';
 export class UpdateRuleExampleUsecase implements IUpdateRuleExample {

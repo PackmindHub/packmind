@@ -9,7 +9,7 @@ import {
 } from '@packmind/shared';
 import { RecipesHexa } from '@packmind/recipes';
 
-export class RecipesAdapter implements IRecipesPort {
+export class RecipesAdapter implements Partial<IRecipesPort> {
   constructor(private readonly recipesHexa: RecipesHexa) {}
 
   async listRecipesByOrganization(
@@ -18,17 +18,12 @@ export class RecipesAdapter implements IRecipesPort {
     return this.recipesHexa.listRecipesByOrganization(organizationId);
   }
 
-  async listRecipesBySpace(
-    spaceId: SpaceId,
-    organizationId: OrganizationId,
-    userId: UserId,
-  ): Promise<Recipe[]> {
-    const result = await this.recipesHexa.listRecipesBySpace({
-      userId,
-      organizationId,
-      spaceId,
-    });
-    return result;
+  async listRecipesBySpace(command: {
+    spaceId: SpaceId;
+    organizationId: OrganizationId;
+    userId: UserId;
+  }): Promise<Recipe[]> {
+    return this.recipesHexa.listRecipesBySpace(command);
   }
 
   async getRecipeVersionById(

@@ -4,9 +4,9 @@ import {
   IDeploymentPort,
   IStandardsPort,
   ILinterPort,
-  RuleLanguageDetectionStatus,
 } from '@packmind/shared';
 import { LinterUsecases } from './LinterUsecases';
+import { LinterAdapter } from './LinterAdapter';
 
 export class LinterHexa extends BaseHexa {
   private deploymentAdapter: IDeploymentPort | null = null;
@@ -17,34 +17,7 @@ export class LinterHexa extends BaseHexa {
     super(registry);
 
     // OSS edition: provide stub implementation of ILinterPort
-    this.linterAdapter = {
-      copyDetectionProgramsToNewRule: async () => {
-        this.logger.debug(
-          'copyDetectionProgramsToNewRule not available in OSS edition',
-        );
-        return { copiedProgramsCount: 0 };
-      },
-      copyRuleDetectionAssessments: async () => {
-        return { copiedAssessmentsCount: 0 };
-      },
-      updateRuleDetectionAssessmentAfterUpdate: async () => {
-        this.logger.debug(
-          'updateDetectionProgramStatus not available in OSS edition',
-        );
-        return {
-          message: '',
-          action: 'STATUS_UPDATED',
-        };
-      },
-      computeRuleLanguageDetectionStatus: async () => {
-        this.logger.debug(
-          'updateDetectionProgramStatus not available in OSS edition',
-        );
-        return {
-          status: RuleLanguageDetectionStatus.NONE,
-        };
-      },
-    };
+    this.linterAdapter = new LinterAdapter({});
   }
 
   public async initializeJobQueues(): Promise<void> {

@@ -2,7 +2,7 @@ import { PackmindLogger } from '@packmind/shared';
 import { stubLogger } from '@packmind/shared/test';
 import { GetCurrentApiKeyUseCase } from './GetCurrentApiKeyUseCase';
 import { createUserId } from '../../../domain/entities/User';
-import { GetCurrentApiKeyCommand } from '../../../domain/useCases/IGetCurrentApiKeyUseCase';
+import { GetCurrentApiKeyCommand } from '@packmind/shared';
 
 describe('GetCurrentApiKeyUseCase', () => {
   let getCurrentApiKeyUseCase: GetCurrentApiKeyUseCase;

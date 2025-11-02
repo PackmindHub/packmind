@@ -4,7 +4,7 @@ import {
   DeleteRecipesBatchCommand,
   DeleteRecipesBatchResponse,
   IDeleteRecipesBatchUseCase,
-} from '../../../domain/useCases/IDeleteRecipeUseCase';
+} from '@packmind/shared';
 
 const origin = 'DeleteRecipesBatchUsecase';
 
@@ -33,7 +33,8 @@ export class DeleteRecipesBatchUsecase implements IDeleteRecipesBatchUseCase {
       await Promise.all(
         recipeIds.map((recipeId) =>
           this.deleteRecipeUsecase.execute({
-            recipeId,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            recipeId: recipeId as any,
             userId,
             organizationId,
           }),

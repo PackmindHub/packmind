@@ -19,13 +19,13 @@ import {
   PackmindLogger,
   AiNotConfigured,
   RuleWithExamples,
-  ILinterPort,
   ProgrammingLanguage,
   getErrorMessage,
 } from '@packmind/shared';
 import { OrganizationId, UserId } from '@packmind/accounts';
 import { SpaceId } from '@packmind/shared/types';
 import { v4 as uuidv4 } from 'uuid';
+import type { ILinterPort } from '@packmind/shared';
 
 const origin = 'CreateStandardWithExamplesUsecase';
 

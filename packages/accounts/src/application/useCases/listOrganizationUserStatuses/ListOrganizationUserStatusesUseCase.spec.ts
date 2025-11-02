@@ -1,5 +1,5 @@
 import { ListOrganizationUserStatusesUseCase } from './ListOrganizationUserStatusesUseCase';
-import { ListOrganizationUserStatusesCommand } from '../../../domain/useCases/IListOrganizationUserStatusesUseCase';
+import { ListOrganizationUserStatusesCommand } from '@packmind/shared';
 import { stubLogger } from '@packmind/shared/test';
 import { createUserId } from '../../../domain/entities/User';
 import { createOrganizationId } from '../../../domain/entities/Organization';

@@ -6,7 +6,6 @@ import {
   createOrganizationId,
   OrganizationId,
   SignInUserCommand,
-  SignUpUserCommand,
   UserId,
   GenerateApiKeyCommand,
   GetCurrentApiKeyCommand,
@@ -104,7 +103,7 @@ export class AuthService {
   }
 
   async signUp(
-    signUpRequest: SignUpUserCommand,
+    signUpRequest: SignUpWithOrganizationCommand,
   ): Promise<SignUpWithOrganizationResponse> {
     this.logger.log('Attempting to sign up user', {
       email: maskEmail(signUpRequest.email),

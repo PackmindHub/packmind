@@ -1,24 +1,24 @@
 import {
   AbstractAdminUseCase,
   AdminContext,
-  PackmindCommand,
   PackmindLogger,
   OrganizationProvider,
   UserProvider,
+  AddGitProviderCommand,
+  IAddGitProviderUseCase,
 } from '@packmind/shared';
+
+// Re-export for backward compatibility
+export { AddGitProviderCommand };
 import { GitProvider } from '../../../domain/entities/GitProvider';
 import { GitProviderService } from '../../GitProviderService';
 
 const origin = 'AddGitProviderUseCase';
 
-export type AddGitProviderCommand = PackmindCommand & {
-  gitProvider: Omit<GitProvider, 'id' | 'organizationId'>;
-};
-
-export class AddGitProviderUseCase extends AbstractAdminUseCase<
-  AddGitProviderCommand,
-  GitProvider
-> {
+export class AddGitProviderUseCase
+  extends AbstractAdminUseCase<AddGitProviderCommand, GitProvider>
+  implements IAddGitProviderUseCase
+{
   constructor(
     private readonly gitProviderService: GitProviderService,
     userProvider: UserProvider,

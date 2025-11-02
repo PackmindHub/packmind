@@ -9,7 +9,7 @@
     "openai": "^5.11.0",
     "ts-jest": "^29.4.1",
     "tslib": "^2.3.0",
-    "typeorm": "0.3.25",
+    "typeorm": "0.3.26",
     "uuid": "^11.1.0",
     "winston": "^3.8.2",
     "@infisical/sdk": "^4.0.2",

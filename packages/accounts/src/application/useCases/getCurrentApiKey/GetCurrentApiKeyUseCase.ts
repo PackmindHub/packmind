@@ -3,7 +3,7 @@ import {
   IGetCurrentApiKeyUseCase,
   GetCurrentApiKeyCommand,
   GetCurrentApiKeyResponse,
-} from '../../../domain/useCases/IGetCurrentApiKeyUseCase';
+} from '@packmind/shared';
 
 export class GetCurrentApiKeyUseCase implements IGetCurrentApiKeyUseCase {
   constructor(private readonly logger: PackmindLogger) {}

@@ -13,6 +13,7 @@ import { SSEService } from './sse.service';
 import { PackmindLogger } from '@packmind/shared';
 import { SubscribeDto, UnsubscribeDto } from './dto/subscribe.dto';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
+import { randomUUID } from 'crypto';
 
 @Controller('sse')
 export class SSEController {
@@ -28,7 +29,7 @@ export class SSEController {
     @Req() request: AuthenticatedRequest,
     @Res() response: Response,
   ): Promise<void> {
-    const connectionId = `${request.user.userId}`;
+    const connectionId = `${request.user.userId}-${randomUUID()}`;
     const userId = request.user.userId;
     const organizationId = request.organization
       ? request.organization.id

@@ -2,9 +2,7 @@ import { IUseCase } from '../../UseCase';
 import { OrganizationId } from '../../accounts/Organization';
 import { UserId } from '../../accounts/User';
 import { LinterExecutionViolation } from './IExecuteLinterProgramsUseCase';
-import { Branded } from '../../brandedTypes';
-
-export type DetectionProgramId = Branded<'DetectionProgramId'>;
+import { DetectionProgramId } from '../DetectionProgram';
 
 export interface TestProgramExecutionCommand {
   organizationId: OrganizationId;

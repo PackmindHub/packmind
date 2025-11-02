@@ -4,7 +4,7 @@ import {
   IListUserOrganizationsUseCase,
   ListUserOrganizationsCommand,
   ListUserOrganizationsResponse,
-} from '../../../domain/useCases/IListUserOrganizationsUseCase';
+} from '@packmind/shared';
 import { Organization } from '../../../domain/entities/Organization';
 
 const origin = 'ListUserOrganizationsUseCase';

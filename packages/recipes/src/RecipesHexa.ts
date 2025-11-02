@@ -25,7 +25,7 @@ import {
   DeleteRecipeResponse,
   DeleteRecipesBatchCommand,
   DeleteRecipesBatchResponse,
-} from './domain/useCases/IDeleteRecipeUseCase';
+} from '@packmind/shared';
 
 const origin = 'RecipesHexa';
 
@@ -298,6 +298,7 @@ export class RecipesHexa extends BaseHexa {
     content: string;
     editorUserId: UserId;
   }): Promise<Recipe> {
-    return this.hexa.useCases.updateRecipeFromUI(params);
+    const result = await this.hexa.useCases.updateRecipeFromUI(params);
+    return result.recipe;
   }
 }

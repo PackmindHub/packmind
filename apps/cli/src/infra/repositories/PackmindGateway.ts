@@ -202,6 +202,7 @@ export class PackmindGateway implements IPackmindGateway {
             ruleId: string;
           }>;
           ruleContent: string;
+          scope: string | null;
         } = await response.json();
 
         if (result.programs.length === 0) {
@@ -222,6 +223,7 @@ export class PackmindGateway implements IPackmindGateway {
           })),
           ruleContent: result.ruleContent,
           standardSlug: params.standardSlug,
+          scope: result.scope,
         };
 
         return transformedResult;
@@ -317,6 +319,7 @@ export class PackmindGateway implements IPackmindGateway {
             ruleId: string;
           }>;
           ruleContent: string;
+          scope: string | null;
         } = await response.json();
 
         if (result.programs.length === 0) {
@@ -337,6 +340,7 @@ export class PackmindGateway implements IPackmindGateway {
           })),
           ruleContent: result.ruleContent,
           standardSlug: params.standardSlug,
+          scope: result.scope,
         };
 
         return transformedResult;

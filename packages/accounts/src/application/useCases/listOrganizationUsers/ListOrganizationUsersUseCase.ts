@@ -10,7 +10,7 @@ import {
   ListOrganizationUsersCommand,
   ListOrganizationUsersResponse,
   OrganizationUser,
-} from '../../../domain/useCases/IListOrganizationUsersUseCase';
+} from '@packmind/shared';
 import { UserService } from '../../services/UserService';
 
 const origin = 'ListOrganizationUsersUseCase';

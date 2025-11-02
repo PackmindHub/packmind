@@ -1,4 +1,4 @@
-import { Tabs, TabsRootProps } from '@chakra-ui/react';
+import { Box, Tabs, TabsRootProps } from '@chakra-ui/react';
 import { PMTabsTrigger } from './PMTabsTrigger';
 import { PMTabsContent } from './PMTabsContent';
 
@@ -11,6 +11,7 @@ type PMTabData = {
 interface PMTabsProps extends TabsRootProps {
   defaultValue: string;
   tabs: PMTabData[];
+  scrollableContent?: boolean;
 }
 
 export const PMTabs = ({ tabs, defaultValue, ...rest }: PMTabsProps) => {

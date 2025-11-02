@@ -4,7 +4,7 @@ import { OrganizationService } from '../../services/OrganizationService';
 import {
   GenerateUserTokenCommand,
   GenerateUserTokenResponse,
-} from '../../../domain/useCases/IGenerateUserTokenUseCase';
+} from '@packmind/shared';
 import {
   createUserId,
   User,

@@ -32,7 +32,7 @@ export class PublishRecipesUseCase implements IPublishRecipes {
   constructor(
     private readonly recipesDeploymentRepository: IRecipesDeploymentRepository,
     private readonly gitHexa: GitHexa,
-    private readonly recipesPort: IRecipesPort,
+    private readonly recipesPort: Partial<IRecipesPort>,
     private readonly codingAgentHexa: CodingAgentHexa,
     public readonly targetService: TargetService,
     public readonly renderModeConfigurationService: RenderModeConfigurationService,
@@ -100,7 +100,7 @@ export class PublishRecipesUseCase implements IPublishRecipes {
     const recipeVersions = [];
     for (const recipeVersionId of command.recipeVersionIds) {
       const recipeVersion =
-        await this.recipesPort.getRecipeVersionById(recipeVersionId);
+        await this.recipesPort.getRecipeVersionById!(recipeVersionId);
       if (!recipeVersion) {
         throw new Error(`Recipe version with ID ${recipeVersionId} not found`);
       }
@@ -319,7 +319,7 @@ ${recipeVersions.map((rv) => `- ${rv.name} (${rv.slug}) v${rv.version}`).join('\
       const recipeVersions = [];
       for (const recipeVersionId of command.recipeVersionIds) {
         const recipeVersion =
-          await this.recipesPort.getRecipeVersionById(recipeVersionId);
+          await this.recipesPort.getRecipeVersionById!(recipeVersionId);
         if (recipeVersion) {
           recipeVersions.push(recipeVersion);
         } else {
@@ -473,7 +473,7 @@ ${recipeVersions.map((rv) => `- ${rv.name} (${rv.slug}) v${rv.version}`).join('\
     const recipeVersions = [];
     for (const recipeVersionId of command.recipeVersionIds) {
       const recipeVersion =
-        await this.recipesPort.getRecipeVersionById(recipeVersionId);
+        await this.recipesPort.getRecipeVersionById!(recipeVersionId);
       if (!recipeVersion) {
         throw new Error(`Recipe version with ID ${recipeVersionId} not found`);
       }

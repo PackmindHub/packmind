@@ -13,7 +13,7 @@
         "platform": "node",
         "outputPath": "dist/apps/cli",
         "format": ["cjs"],
-        "bundle": false,
+        "bundle": true,
         "main": "apps/cli/src/main.ts",
         "tsConfig": "apps/cli/tsconfig.app.json",
         "assets": [
@@ -21,26 +21,33 @@
             "input": "apps/cli/src/assets",
             "glob": "**/*",
             "output": "apps/cli/src/assets"
+          },
+          {
+            "input": "packages/linter-ast/res",
+            "glob": "*.wasm",
+            "output": "."
           }
         ],
         "generatePackageJson": true,
-        "esbuildOptions": {
-          "sourcemap": true,
-          "outExtension": {
-            ".js": ".js"
-          }
-        }
+        "esbuildConfig": "apps/cli/esbuild-publish.config.js"
       },
       "configurations": {
         "development": {},
         "production": {
-          "esbuildOptions": {
-            "sourcemap": false,
-            "outExtension": {
-              ".js": ".js"
-            }
-          }
+          "esbuildConfig": "apps/cli/esbuild-publish.config.js"
         }
+      }
+    },
+    "build-publish": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "commands": [
+          "node apps/cli/scripts/clean-package-json.js",
+          "node apps/cli/scripts/create-stubs.js",
+          "node apps/cli/scripts/add-module-paths.js"
+        ],
+        "parallel": false
       }
     },
     "bundle": {

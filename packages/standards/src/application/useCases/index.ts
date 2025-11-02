@@ -6,7 +6,6 @@ import {
   GetStandardByIdCommand,
   UpdateStandardCommand,
   ISpacesPort,
-  ILinterPort,
   ListStandardsBySpaceResponse,
   GetStandardByIdResponse,
 } from '@packmind/shared';
@@ -43,6 +42,7 @@ import {
   DeleteRuleExampleCommand,
 } from '../../domain/useCases';
 import { IDeploymentPort } from '@packmind/shared';
+import type { ILinterPort } from '@packmind/shared';
 import { IStandardDelayedJobs } from '../../domain/jobs/IStandardDelayedJobs';
 
 const origin = 'StandardsUseCases';

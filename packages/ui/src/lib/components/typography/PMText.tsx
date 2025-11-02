@@ -1,9 +1,18 @@
 import { Text, TextProps } from '@chakra-ui/react';
 
+export type PMTextColors =
+  | 'primary'
+  | 'secondary'
+  | 'tertiary'
+  | 'error'
+  | 'faded'
+  | 'warning'
+  | 'success';
+
 export interface PMTextProps extends TextProps {
   as?: 'span' | 'p' | 'div';
   variant?: 'body' | 'body-important' | 'small' | 'small-important';
-  color?: 'primary' | 'secondary' | 'tertiary' | 'error' | 'faded';
+  color?: PMTextColors;
   children: React.ReactNode;
 }
 

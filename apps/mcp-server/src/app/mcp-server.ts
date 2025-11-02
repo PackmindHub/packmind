@@ -118,7 +118,7 @@ export function createMCPServer(
     hasAccountsHexa: typeof fastify.accountsHexa,
     hasGitHexa: typeof fastify.gitHexa,
     hasRecipesHexa: typeof fastify.recipesHexa,
-    hasRecipesUsageHexa: typeof fastify.recipesUsageHexa,
+    hasAnalyticsHexa: typeof fastify.analyticsHexa,
     hasStandardsHexa: typeof fastify.standardsHexa,
     fastifyKeys: Object.keys(fastify).filter((key) => key.includes('Hexa')),
   });
@@ -141,13 +141,13 @@ export function createMCPServer(
       accountsHexa.getOrganizationProvider(),
     );
   }
-  logger.debug('Attempting to call fastify.recipesUsageHexa()');
-  const recipesUsageHexa = fastify.recipesUsageHexa();
+  logger.debug('Attempting to call fastify.analyticsHexa()');
+  const analyticsHexa = fastify.analyticsHexa();
 
   // Set up deployment port injection for analytics
   logger.debug('Setting up deployment port injection for analytics');
   const deploymentPort = deploymentsHexa.getDeploymentsUseCases();
-  recipesUsageHexa.setDeploymentPort(deploymentPort);
+  analyticsHexa.setDeploymentPort(deploymentPort);
   logger.debug('Deployment port injection completed');
 
   mcpServer.tool(
@@ -309,7 +309,7 @@ export function createMCPServer(
       }
 
       try {
-        const usageRecords = await recipesUsageHexa.trackRecipeUsage({
+        const usageRecords = await analyticsHexa.trackRecipeUsage({
           recipeSlugs: recipesSlug,
           aiAgent,
           userId: userContext.userId,

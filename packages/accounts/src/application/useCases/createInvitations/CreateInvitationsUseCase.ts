@@ -5,7 +5,7 @@ import {
   InvitationCreationResult,
   InvitationSkipResult,
   DirectMembershipResult,
-} from '../../../domain/useCases/ICreateInvitationsUseCase';
+} from '@packmind/shared';
 import {
   AbstractAdminUseCase,
   AdminContext,

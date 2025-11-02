@@ -7,7 +7,6 @@ import {
 import { RuleId } from '../../../domain/entities/Rule';
 import {
   PackmindLogger,
-  ILinterPort,
   getErrorMessage,
   ProgrammingLanguage,
 } from '@packmind/shared';
@@ -17,6 +16,7 @@ import {
   CreateRuleExampleCommand,
   ICreateRuleExample,
 } from '../../../domain/useCases/ICreateRuleExample';
+import type { ILinterPort } from '@packmind/shared';
 
 const origin = 'CreateRuleExampleUsecase';
 

@@ -12,7 +12,7 @@ import {
   ListOrganizationUserStatusesCommand,
   ListOrganizationUserStatusesResponse,
   UserStatus,
-} from '../../../domain/useCases/IListOrganizationUserStatusesUseCase';
+} from '@packmind/shared';
 import { User } from '../../../domain/entities/User';
 import {
   Invitation,

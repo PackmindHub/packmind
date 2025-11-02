@@ -97,12 +97,35 @@ export class PublishStandardsUseCase implements IPublishStandards {
           count: previousStandardVersions.length,
         });
 
+        // Filter out deleted standards by checking if the parent standard still exists
+        const existingPreviousStandardVersions = await Promise.all(
+          previousStandardVersions.map(async (sv) => {
+            const standard = await this.standardsHexa
+              .getStandardsAdapter()
+              .getStandard(sv.standardId);
+            return standard ? sv : null;
+          }),
+        );
+
+        const filteredPreviousStandardVersions =
+          existingPreviousStandardVersions.filter(
+            (sv): sv is StandardVersion => sv !== null,
+          );
+
+        this.logger.info('Filtered out deleted standards', {
+          originalCount: previousStandardVersions.length,
+          filteredCount: filteredPreviousStandardVersions.length,
+          deletedCount:
+            previousStandardVersions.length -
+            filteredPreviousStandardVersions.length,
+        });
+
         // Combine current deployment with previous ones
         // Remove duplicates by standardId (keep the latest version)
         const standardVersionsMap = new Map();
 
-        // Add previous versions first
-        previousStandardVersions.forEach((sv) => {
+        // Add previous versions first (excluding deleted standards)
+        filteredPreviousStandardVersions.forEach((sv) => {
           standardVersionsMap.set(sv.standardId, sv);
         });
 
@@ -118,7 +141,7 @@ export class PublishStandardsUseCase implements IPublishStandards {
         this.logger.info('Combined standard versions', {
           totalCount: allStandardVersions.length,
           newCount: standardVersions.length,
-          previousCount: previousStandardVersions.length,
+          previousCount: filteredPreviousStandardVersions.length,
         });
 
         // We already have the target for this iteration

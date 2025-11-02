@@ -1,6 +1,7 @@
 export { AccountsHexa } from './AccountsHexa';
 export { AccountsHexaFactory } from './AccountsHexaFactory';
-export { AccountsUseCases } from './application/useCases';
+export { AccountsAdapter } from './application/adapter/AccountsAdapter';
+export * from './application/useCases';
 export { AccountsRepository } from './infra/repositories/AccountsRepository';
 export { InvitationRepository } from './infra/repositories/InvitationRepository';
 export { IAccountsServices } from './application/IAccountsServices';

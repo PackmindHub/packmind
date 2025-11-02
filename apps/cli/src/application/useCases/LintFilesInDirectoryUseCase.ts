@@ -178,7 +178,9 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
               {
                 name: standardSlug,
                 slug: standardSlug,
-                scope: [], // No scope filtering in draft mode
+                scope: draftProgramsResult.scope
+                  ? [draftProgramsResult.scope]
+                  : [],
                 rules: [
                   {
                     content: draftProgramsResult.ruleContent || 'Draft Rule',
@@ -220,7 +222,9 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
               {
                 name: standardSlug,
                 slug: standardSlug,
-                scope: [], // No scope filtering when targeting specific rule
+                scope: activeProgramsResult.scope
+                  ? [activeProgramsResult.scope]
+                  : [],
                 rules: [
                   {
                     content: activeProgramsResult.ruleContent || 'Active Rule',
@@ -300,9 +304,8 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
             `Checking standard: name="${standard.name}", scope=${JSON.stringify(standard.scope)}, rulesCount=${standard.rules.length}`,
           );
 
-          // Check if file matches target and scope (skip in draft mode)
+          // Check if file matches target and scope
           if (
-            !isDraftMode &&
             !this.fileMatchesTargetAndScope(
               normalizedFilePath,
               target.path,

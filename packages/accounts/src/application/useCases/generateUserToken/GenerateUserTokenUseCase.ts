@@ -4,7 +4,7 @@ import {
   GenerateUserTokenCommand,
   GenerateUserTokenResponse,
   IGenerateUserTokenUseCase,
-} from '../../../domain/useCases/IGenerateUserTokenUseCase';
+} from '@packmind/shared';
 
 export class GenerateUserTokenUseCase implements IGenerateUserTokenUseCase {
   constructor(

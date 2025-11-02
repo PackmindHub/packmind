@@ -138,11 +138,8 @@ export class GitHexa extends BaseHexa<GitHexaOpts> {
    * This adapter implements IGitPort and can be injected into other domains.
    */
   public getGitAdapter(): import('@packmind/shared').IGitPort {
-    return {
-      listProviders: (organizationId) => this.listProviders(organizationId),
-      getOrganizationRepositories: (organizationId) =>
-        this.getOrganizationRepositories(organizationId),
-    };
+    this.ensureInitialized();
+    return this.hexa.useCases;
   }
 
   /**

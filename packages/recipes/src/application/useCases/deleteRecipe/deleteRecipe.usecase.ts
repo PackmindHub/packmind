@@ -6,7 +6,7 @@ import {
   DeleteRecipeCommand,
   DeleteRecipeResponse,
   IDeleteRecipeUseCase,
-} from '../../../domain/useCases/IDeleteRecipeUseCase';
+} from '@packmind/shared';
 
 const origin = 'DeleteRecipeUsecase';
 

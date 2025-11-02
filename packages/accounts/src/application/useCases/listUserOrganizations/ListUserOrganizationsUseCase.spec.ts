@@ -5,7 +5,7 @@ import { createOrganizationId } from '../../../domain/entities/Organization';
 import { PackmindLogger } from '@packmind/shared';
 import { stubLogger } from '@packmind/shared/test';
 import { userFactory, organizationFactory } from '../../../../test';
-import { ListUserOrganizationsCommand } from '../../../domain/useCases/IListUserOrganizationsUseCase';
+import { ListUserOrganizationsCommand } from '@packmind/shared';
 
 describe('ListUserOrganizationsUseCase', () => {
   let listUserOrganizationsUseCase: ListUserOrganizationsUseCase;

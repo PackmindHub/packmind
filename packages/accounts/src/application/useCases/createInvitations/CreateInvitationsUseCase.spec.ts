@@ -10,7 +10,7 @@ import {
   createOrganizationId,
   Organization,
 } from '../../../domain/entities/Organization';
-import { CreateInvitationsCommand } from '../../../domain/useCases/ICreateInvitationsUseCase';
+import { CreateInvitationsCommand } from '@packmind/shared';
 import { InvitationBatchEmptyError } from '../../../domain/errors';
 import { UserNotFoundError } from '@packmind/shared';
 import { stubLogger } from '@packmind/shared/test';

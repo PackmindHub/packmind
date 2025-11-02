@@ -260,7 +260,10 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
                         gap={6}
                         items={[
                           { label: 'Path', value: defaultPath },
-                          { label: 'Scope', value: '**/*' },
+                          {
+                            label: 'Scope',
+                            value: <PMBox wordBreak="break-all">**/*</PMBox>,
+                          },
                         ]}
                       />
                     </PMBox>

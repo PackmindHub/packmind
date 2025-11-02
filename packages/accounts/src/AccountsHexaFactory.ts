@@ -1,6 +1,6 @@
 import { DataSource } from 'typeorm';
 import { AccountsRepository } from './infra/repositories/AccountsRepository';
-import { AccountsUseCases } from './application/useCases';
+import { AccountsAdapter } from './application/adapter/AccountsAdapter';
 import { PackmindLogger } from '@packmind/shared';
 import {
   ISpacesPort,
@@ -26,7 +26,7 @@ export class AccountsHexaFactory {
   private readonly accountsRepository: AccountsRepository;
   private readonly accountsServices: EnhancedAccountsServices;
 
-  public readonly useCases: AccountsUseCases;
+  public readonly useCases: AccountsAdapter;
 
   private gitPort?: IGitPort;
   private standardsPort?: IStandardsPort;
@@ -52,7 +52,7 @@ export class AccountsHexaFactory {
         this.apiKeyService,
       );
 
-      this.useCases = new AccountsUseCases(
+      this.useCases = new AccountsAdapter(
         this.accountsServices,
         this.logger,
         this.spacesPort,

@@ -12,7 +12,7 @@
     "@packmind/shared": "*",
     "@packmind/accounts": "*",
     "@packmind/jobs": "*",
-    "typeorm": "0.3.25",
+    "typeorm": "0.3.26",
     "uuid": "^11.1.0",
     "bullmq": "^5.58.2"
   }

@@ -3,7 +3,7 @@ import {
   IGenerateApiKeyUseCase,
   GenerateApiKeyCommand,
   GenerateApiKeyResponse,
-} from '../../../domain/useCases/IGenerateApiKeyUseCase';
+} from '@packmind/shared';
 import { UserService } from '../../services/UserService';
 import { OrganizationService } from '../../services/OrganizationService';
 import { ApiKeyService } from '../../services/ApiKeyService';

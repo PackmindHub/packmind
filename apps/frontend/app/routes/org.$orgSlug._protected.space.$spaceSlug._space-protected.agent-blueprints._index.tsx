@@ -12,7 +12,7 @@ export default function OrgAgentBlueprintsIndex() {
 
   return (
     <PMPage
-      title="Agent Blueprints"
+      title="Skills"
       subtitle="Create and manage your agent blueprints"
       breadcrumbComponent={<AutobreadCrumb />}
     >

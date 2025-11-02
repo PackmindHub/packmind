@@ -6,6 +6,7 @@ import {
   PMIcon,
   PMSeparator,
   AGENT_BLUEPRINTS_NAV_FEATURE_KEY,
+  PACKAGES_NAV_FEATURE_KEY,
   DEFAULT_FEATURE_DOMAIN_MAP,
   isFeatureFlagEnabled,
 } from '@packmind/ui';
@@ -67,6 +68,12 @@ export const SidebarNavigation: React.FunctionComponent<
     userEmail: user?.email,
   });
 
+  const isPackagesEnabled = isFeatureFlagEnabled({
+    featureKeys: [PACKAGES_NAV_FEATURE_KEY],
+    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
+    userEmail: user?.email,
+  });
+
   if (!organization) {
     return;
   }
@@ -121,7 +128,16 @@ export const SidebarNavigation: React.FunctionComponent<
                     orgSlug,
                     currentSpaceSlug,
                   )}
-                  label="Agent Blueprints"
+                  label="Skills"
+                />,
+              ]
+            : []),
+          ...(isPackagesEnabled
+            ? [
+                <SidebarNavigationLink
+                  key="packages"
+                  url={routes.space.toPackages(orgSlug, currentSpaceSlug)}
+                  label="Packages"
                 />,
               ]
             : []),

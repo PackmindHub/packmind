@@ -60,14 +60,6 @@ export class StandardsAdapter implements IStandardsPort {
     return getStandardByIdResponse.standards;
   }
 
-  listStandardsByOrganization(
-    organizationId: OrganizationId,
-  ): Promise<Standard[]> {
-    return this.services
-      .getStandardService()
-      .listStandardsByOrganization(organizationId);
-  }
-
   getRuleCodeExamples(id: RuleId): Promise<RuleExample[]> {
     return this.repositories.getRuleExampleRepository().findByRuleId(id);
   }

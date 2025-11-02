@@ -4,7 +4,7 @@ import {
   IGetOrganizationByIdUseCase,
   GetOrganizationByIdCommand,
   GetOrganizationByIdResponse,
-} from '../../../domain/useCases/IGetOrganizationByIdUseCase';
+} from '@packmind/shared';
 
 const origin = 'GetOrganizationByIdUseCase';
 

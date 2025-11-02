@@ -27,7 +27,6 @@ describe('ListStandardsBySpaceUsecase', () => {
   beforeEach(() => {
     standardService = {
       listStandardsBySpace: jest.fn(),
-      listStandardsByOrganization: jest.fn(),
     } as unknown as jest.Mocked<StandardService>;
 
     userProvider = {
@@ -61,7 +60,7 @@ describe('ListStandardsBySpaceUsecase', () => {
   });
 
   describe('when listing standards by space', () => {
-    it('returns standards from the space and organization-level standards without spaceId', async () => {
+    it('returns standards from the space', async () => {
       const userId = createUserId(uuidv4());
       const organizationId = createOrganizationId(uuidv4());
       const spaceId = createSpaceId(uuidv4());
@@ -96,25 +95,10 @@ describe('ListStandardsBySpaceUsecase', () => {
         standardFactory({ spaceId, slug: 'space-standard-2' }),
       ];
 
-      const organizationStandards = [
-        standardFactory({
-          spaceId: createSpaceId('space-1'),
-          slug: 'org-standard-1',
-        }),
-        standardFactory({
-          spaceId: createSpaceId('space-1'),
-          slug: 'org-standard-2',
-        }),
-        standardFactory({ spaceId, slug: 'space-standard-1' }), // This is a duplicate, should be filtered
-      ];
-
       userProvider.getUserById.mockResolvedValue(user);
       organizationProvider.getOrganizationById.mockResolvedValue(organization);
       spacesPort.getSpaceById.mockResolvedValue(space);
       standardService.listStandardsBySpace.mockResolvedValue(standardsInSpace);
-      standardService.listStandardsByOrganization.mockResolvedValue(
-        organizationStandards,
-      );
 
       const result = await usecase.execute(command);
 
@@ -125,140 +109,11 @@ describe('ListStandardsBySpaceUsecase', () => {
       expect(standardService.listStandardsBySpace).toHaveBeenCalledWith(
         spaceId,
       );
-      // listStandardsByOrganization is no longer called - standards are space-specific only
-      expect(
-        standardService.listStandardsByOrganization,
-      ).not.toHaveBeenCalled();
 
       expect(result.standards).toHaveLength(2);
       const slugs = result.standards.map((s) => s.slug);
       expect(slugs).toContain('space-standard-1');
       expect(slugs).toContain('space-standard-2');
-    });
-
-    it('filters out duplicates based on standard ID', async () => {
-      const userId = createUserId(uuidv4());
-      const organizationId = createOrganizationId(uuidv4());
-      const spaceId = createSpaceId(uuidv4());
-
-      const user: User = {
-        id: userId,
-        email: 'test@example.com',
-        passwordHash: 'hashed_password',
-        memberships: [{ organizationId, role: 'member', userId }],
-        active: true,
-      };
-      const organization: Organization = {
-        id: organizationId,
-        name: 'Test Org',
-        slug: 'test-org',
-      };
-      const space: Space = {
-        id: spaceId,
-        name: 'Test Space',
-        slug: 'test-space',
-        organizationId,
-      };
-
-      const command: ListStandardsBySpaceCommand = {
-        userId,
-        organizationId,
-        spaceId,
-      };
-
-      const sharedStandard = standardFactory({
-        spaceId,
-        slug: 'shared-standard',
-      });
-
-      const standardsInSpace = [
-        sharedStandard,
-        standardFactory({ spaceId, slug: 'space-standard' }),
-      ];
-
-      const organizationStandards = [
-        sharedStandard, // Duplicate
-        standardFactory({
-          spaceId: createSpaceId('space-1'),
-          slug: 'org-standard',
-        }),
-      ];
-
-      userProvider.getUserById.mockResolvedValue(user);
-      organizationProvider.getOrganizationById.mockResolvedValue(organization);
-      spacesPort.getSpaceById.mockResolvedValue(space);
-      standardService.listStandardsBySpace.mockResolvedValue(standardsInSpace);
-      standardService.listStandardsByOrganization.mockResolvedValue(
-        organizationStandards,
-      );
-
-      const result = await usecase.execute(command);
-
-      expect(result.standards).toHaveLength(2);
-      const standardIds = result.standards.map((s) => s.id);
-      expect(new Set(standardIds).size).toBe(2); // All IDs should be unique
-    });
-
-    it('only includes organization standards without spaceId', async () => {
-      const userId = createUserId(uuidv4());
-      const organizationId = createOrganizationId(uuidv4());
-      const spaceId = createSpaceId(uuidv4());
-      const otherSpaceId = createSpaceId(uuidv4());
-
-      const user: User = {
-        id: userId,
-        email: 'test@example.com',
-        passwordHash: 'hashed_password',
-        memberships: [{ organizationId, role: 'member', userId }],
-        active: true,
-      };
-      const organization: Organization = {
-        id: organizationId,
-        name: 'Test Org',
-        slug: 'test-org',
-      };
-      const space: Space = {
-        id: spaceId,
-        name: 'Test Space',
-        slug: 'test-space',
-        organizationId,
-      };
-
-      const command: ListStandardsBySpaceCommand = {
-        userId,
-        organizationId,
-        spaceId,
-      };
-
-      const standardsInSpace = [
-        standardFactory({ spaceId, slug: 'space-standard' }),
-      ];
-
-      const organizationStandards = [
-        standardFactory({
-          spaceId: createSpaceId('space-1'),
-          slug: 'org-standard-without-space',
-        }), // Should be included
-        standardFactory({
-          spaceId: otherSpaceId,
-          slug: 'other-space-standard',
-        }), // Should be excluded
-      ];
-
-      userProvider.getUserById.mockResolvedValue(user);
-      organizationProvider.getOrganizationById.mockResolvedValue(organization);
-      spacesPort.getSpaceById.mockResolvedValue(space);
-      standardService.listStandardsBySpace.mockResolvedValue(standardsInSpace);
-      standardService.listStandardsByOrganization.mockResolvedValue(
-        organizationStandards,
-      );
-
-      const result = await usecase.execute(command);
-
-      expect(result.standards).toHaveLength(1);
-      const slugs = result.standards.map((s) => s.slug);
-      expect(slugs).toContain('space-standard');
-      expect(slugs).not.toContain('other-space-standard');
     });
   });
 
@@ -297,7 +152,6 @@ describe('ListStandardsBySpaceUsecase', () => {
       organizationProvider.getOrganizationById.mockResolvedValue(organization);
       spacesPort.getSpaceById.mockResolvedValue(space);
       standardService.listStandardsBySpace.mockResolvedValue([]);
-      standardService.listStandardsByOrganization.mockResolvedValue([]);
 
       const result = await usecase.execute(command);
 

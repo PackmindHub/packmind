@@ -6,9 +6,9 @@ import {
   HexaRegistry,
   PackmindLogger,
   IDeploymentPort,
-  ILinterPort,
   ISpacesPort,
 } from '@packmind/shared';
+import type { ILinterPort } from '@packmind/shared';
 import { GitHexa } from '@packmind/git';
 import { AccountsHexa } from '@packmind/accounts';
 import { IStandardDelayedJobs } from './domain/jobs/IStandardDelayedJobs';

@@ -39,6 +39,8 @@ export const routes = {
       spaceSlug: string,
       blueprintId: string,
     ) => `/org/${orgSlug}/space/${spaceSlug}/agent-blueprints/${blueprintId}`,
+    toPackages: (orgSlug: string, spaceSlug: string) =>
+      `/org/${orgSlug}/space/${spaceSlug}/packages`,
     toStandards: (orgSlug: string, spaceSlug: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/standards`,
     toStandard: (orgSlug: string, spaceSlug: string, standardId: string) =>

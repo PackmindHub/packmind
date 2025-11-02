@@ -1,10 +1,8 @@
+import { Recipe, RecipeId, RecipeVersion } from '@packmind/recipes/types';
 import {
-  Recipe,
-  RecipeId,
-  RecipeVersion,
   IDeleteRecipeUseCase,
   IDeleteRecipesBatchUseCase,
-} from '@packmind/recipes/types';
+} from '@packmind/shared';
 import { OrganizationId } from '@packmind/accounts/types';
 import { SpaceId } from '@packmind/spaces';
 import { Gateway } from '@packmind/shared';

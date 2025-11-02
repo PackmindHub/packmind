@@ -1,1 +1,2 @@
-export * from './IDeleteRecipeUseCase';
+// Re-export types from shared for backward compatibility
+export * from '@packmind/shared';

@@ -3,8 +3,9 @@ import { StandardService } from './StandardService';
 import { StandardVersionService } from './StandardVersionService';
 import { StandardBookService } from './StandardBookService';
 import { IStandardsRepositories } from '../../domain/repositories/IStandardsRepositories';
-import { PackmindLogger, ILinterPort } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/shared';
 import { StandardSummaryService } from './StandardSummaryService';
+import type { ILinterPort } from '@packmind/shared';
 
 export class StandardsServices implements IStandardsServices {
   private readonly standardService: StandardService;

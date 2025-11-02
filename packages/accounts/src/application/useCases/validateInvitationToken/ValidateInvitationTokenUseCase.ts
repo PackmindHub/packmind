@@ -1,24 +1,15 @@
-import { PackmindLogger, maskEmail } from '@packmind/shared';
+import {
+  PackmindLogger,
+  maskEmail,
+  IValidateInvitationTokenUseCase,
+  ValidateInvitationTokenCommand,
+  ValidateInvitationTokenResponse,
+} from '@packmind/shared';
 import { InvitationService } from '../../services/InvitationService';
 import { UserService } from '../../services/UserService';
 import { createInvitationToken } from '../../../domain/entities/Invitation';
 
 const origin = 'ValidateInvitationTokenUseCase';
-
-export interface ValidateInvitationTokenCommand {
-  token: string;
-}
-
-export interface ValidateInvitationTokenResponse {
-  email: string;
-  isValid: boolean;
-}
-
-export interface IValidateInvitationTokenUseCase {
-  execute(
-    command: ValidateInvitationTokenCommand,
-  ): Promise<ValidateInvitationTokenResponse>;
-}
 
 export class ValidateInvitationTokenUseCase
   implements IValidateInvitationTokenUseCase

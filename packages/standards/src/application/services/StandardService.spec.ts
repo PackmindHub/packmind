@@ -329,25 +329,6 @@ describe('StandardService', () => {
     });
   });
 
-  describe('listStandardsByOrganization', () => {
-    it('returns standards for the specified organization', async () => {
-      const organizationId = createOrganizationId(uuidv4());
-      const standards = [standardFactory(), standardFactory()];
-
-      standardRepository.findByOrganizationId = jest
-        .fn()
-        .mockResolvedValue(standards);
-
-      const result =
-        await standardService.listStandardsByOrganization(organizationId);
-
-      expect(standardRepository.findByOrganizationId).toHaveBeenCalledWith(
-        organizationId,
-      );
-      expect(result).toEqual(standards);
-    });
-  });
-
   describe('listStandardsBySpace', () => {
     it('returns standards for the specified space', async () => {
       const spaceId = createSpaceId(uuidv4());

@@ -7,13 +7,13 @@ import {
   createRuleExampleId,
   PackmindLogger,
   RuleExample,
-  ILinterPort,
   OrganizationId,
   StandardVersion,
   createStandardVersionId,
   StandardVersionId,
 } from '@packmind/shared';
 import { UserId } from '@packmind/accounts/types';
+import type { ILinterPort } from '@packmind/shared';
 
 import { IRuleExampleRepository } from '../../domain/repositories/IRuleExampleRepository';
 

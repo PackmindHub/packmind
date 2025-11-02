@@ -7,11 +7,11 @@ import { RecipesHexa } from '@packmind/recipes';
 import { StandardsHexa } from '@packmind/standards';
 import { DeploymentsHexa } from '@packmind/deployments';
 import { HexaRegistry, PackmindLogger, LogLevel } from '@packmind/shared';
-import { RecipesUsageHexa } from '@packmind/analytics';
+import { AnalyticsHexa } from '@packmind/analytics';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { JobsHexa } from '@packmind/jobs';
 import { SpacesHexa } from '@packmind/spaces';
-import { LinterHexa, LinterAdapter } from '@packmind/linter';
+import { LinterHexa } from '@packmind/linter';
 
 const logger = new PackmindLogger('HexaRegistryPlugin', LogLevel.INFO);
 
@@ -68,8 +68,8 @@ async function hexaRegistryPlugin(fastify: FastifyInstance) {
 
     registry.register(DeploymentsHexa);
     logger.debug('DeploymentsHexa registered');
-    registry.register(RecipesUsageHexa);
-    logger.debug('RecipesUsageHexa registered');
+    registry.register(AnalyticsHexa);
+    logger.debug('AnalyticsHexa registered');
 
     logger.debug('Domain hexas registered successfully');
 
@@ -97,8 +97,7 @@ async function hexaRegistryPlugin(fastify: FastifyInstance) {
         const standardsHexa = registry.get(StandardsHexa);
 
         // Inject LinterAdapter into StandardsHexa
-        const linterUseCases = linterHexa.getLinterUsecases();
-        const linterAdapter = new LinterAdapter(linterUseCases);
+        const linterAdapter = linterHexa.getLinterAdapter();
         standardsHexa.setLinterAdapter(linterAdapter);
         logger.info('LinterAdapter injected into StandardsHexa');
 
@@ -201,16 +200,16 @@ async function hexaRegistryPlugin(fastify: FastifyInstance) {
     });
     logger.debug('deploymentsHexa decorator added');
 
-    fastify.decorate('recipesUsageHexa', () => {
-      logger.debug('recipesUsageHexa() called');
+    fastify.decorate('analyticsHexa', () => {
+      logger.debug('analyticsHexa() called');
       if (!registry.initialized) {
         throw new Error(
           'HexaRegistry not initialized yet. Ensure database connection is ready.',
         );
       }
-      return registry.get(RecipesUsageHexa);
+      return registry.get(AnalyticsHexa);
     });
-    logger.debug('recipesUsageHexa decorator added');
+    logger.debug('analyticsHexa decorator added');
   } catch (error) {
     logger.error('Failed to register HexaRegistry plugin', {
       error: error instanceof Error ? error.message : String(error),
@@ -234,7 +233,7 @@ declare module 'fastify' {
     gitHexa: () => GitHexa;
     spacesHexa: () => SpacesHexa;
     recipesHexa: () => RecipesHexa;
-    recipesUsageHexa: () => RecipesUsageHexa;
+    analyticsHexa: () => AnalyticsHexa;
     standardsHexa: () => StandardsHexa;
     deploymentsHexa: () => DeploymentsHexa;
   }

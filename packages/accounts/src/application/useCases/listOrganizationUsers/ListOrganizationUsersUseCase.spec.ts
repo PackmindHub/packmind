@@ -1,5 +1,5 @@
 import { ListOrganizationUsersUseCase } from './ListOrganizationUsersUseCase';
-import { ListOrganizationUsersCommand } from '../../../domain/useCases/IListOrganizationUsersUseCase';
+import { ListOrganizationUsersCommand } from '@packmind/shared';
 import { stubLogger } from '@packmind/shared/test';
 import {
   PackmindLogger,

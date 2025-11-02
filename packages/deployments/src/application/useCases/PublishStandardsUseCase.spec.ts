@@ -19,6 +19,7 @@ import {
   GitCommit,
   DEFAULT_ACTIVE_RENDER_MODES,
   RenderMode,
+  Standard,
 } from '@packmind/shared';
 import { standardVersionFactory } from '@packmind/standards/test/standardVersionFactory';
 import { stubLogger } from '@packmind/shared/test';
@@ -28,6 +29,9 @@ import { v4 as uuidv4 } from 'uuid';
 describe('PublishStandardsUseCase', () => {
   let useCase: PublishStandardsUseCase;
   let mockStandardsHexa: jest.Mocked<StandardsHexa>;
+  let mockStandardsAdapter: {
+    getStandard: jest.Mock;
+  };
   let mockGitHexa: jest.Mocked<GitHexa>;
   let mockCodingAgentHexa: jest.Mocked<CodingAgentHexa>;
   let mockStandardsDeploymentRepository: jest.Mocked<IStandardsDeploymentRepository>;
@@ -51,8 +55,13 @@ describe('PublishStandardsUseCase', () => {
   ];
 
   beforeEach(() => {
+    mockStandardsAdapter = {
+      getStandard: jest.fn(),
+    };
+
     mockStandardsHexa = {
       getStandardVersionById: jest.fn(),
+      getStandardsAdapter: jest.fn().mockReturnValue(mockStandardsAdapter),
     } as unknown as jest.Mocked<StandardsHexa>;
 
     mockGitHexa = {
@@ -560,6 +569,125 @@ describe('PublishStandardsUseCase', () => {
         'Mike Standard',
         'Zulu Standard',
       ]);
+    });
+  });
+
+  describe('when a previously deployed standard has been deleted', () => {
+    let command: PublishStandardsCommand;
+    let deletedStandardVersion: ReturnType<typeof standardVersionFactory>;
+    let activeStandardVersion: ReturnType<typeof standardVersionFactory>;
+    let target: ReturnType<typeof targetFactory>;
+    let gitRepo: GitRepo;
+
+    beforeEach(() => {
+      // Create first standard that will be deleted
+      deletedStandardVersion = standardVersionFactory({
+        id: createStandardVersionId(uuidv4()),
+        name: 'Deleted Standard',
+        slug: 'deleted-standard',
+        version: 1,
+      });
+
+      // Create second standard that is still active
+      activeStandardVersion = standardVersionFactory({
+        id: createStandardVersionId(uuidv4()),
+        name: 'Active Standard',
+        slug: 'active-standard',
+        version: 1,
+      });
+
+      gitRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'test-owner',
+        repo: 'test-repo',
+        branch: 'main',
+        providerId: createGitProviderId(uuidv4()),
+      };
+
+      target = targetFactory({
+        id: targetId,
+        gitRepoId: gitRepo.id,
+      });
+
+      const gitCommit = {
+        id: createGitCommitId(uuidv4()),
+        sha: 'abc123def456',
+        message: 'Test commit',
+        author: 'Test Author <test@example.com>',
+        url: 'https://github.com/test-owner/test-repo/commit/abc123def456',
+      };
+
+      // Command to deploy only the active standard
+      command = {
+        userId,
+        organizationId,
+        standardVersionIds: [activeStandardVersion.id],
+        targetIds: [targetId],
+      };
+
+      // Mock: active standard returns the version
+      mockStandardsHexa.getStandardVersionById.mockImplementation((id) => {
+        if (id === activeStandardVersion.id)
+          return Promise.resolve(activeStandardVersion);
+        return Promise.resolve(null);
+      });
+
+      // Mock: deleted standard's parent returns null, active standard's parent returns the standard
+      mockStandardsAdapter.getStandard.mockImplementation(
+        (id: string): Promise<Standard | null> => {
+          if (id === deletedStandardVersion.standardId)
+            return Promise.resolve(null);
+          if (id === activeStandardVersion.standardId)
+            return Promise.resolve({ id } as Standard);
+          return Promise.resolve(null);
+        },
+      );
+
+      mockTargetService.getRepositoryByTargetId.mockResolvedValue({
+        target,
+        repository: gitRepo,
+      });
+
+      // Simulate that the deleted standard was previously deployed
+      mockStandardsDeploymentRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [deletedStandardVersion],
+      );
+
+      mockCodingAgentHexa.prepareStandardsDeployment.mockResolvedValue({
+        createOrUpdate: [
+          {
+            path: '.packmind/standards/active-standard.md',
+            content: 'content',
+          },
+        ],
+        delete: [],
+      });
+
+      mockGitHexa.commitToGit.mockResolvedValue(gitCommit);
+    });
+
+    it('excludes deleted standard from deployment', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].status).toBe(DistributionStatus.success);
+
+      // Verify only the active standard is in the deployment
+      expect(result[0].standardVersions).toHaveLength(1);
+      expect(result[0].standardVersions[0].id).toBe(activeStandardVersion.id);
+      expect(result[0].standardVersions[0].slug).toBe('active-standard');
+    });
+
+    it('passes only active standards to prepareStandardsDeployment', async () => {
+      await useCase.execute(command);
+
+      expect(
+        mockCodingAgentHexa.prepareStandardsDeployment,
+      ).toHaveBeenCalledWith(
+        expect.objectContaining({
+          standardVersions: [activeStandardVersion],
+        }),
+      );
     });
   });
 });

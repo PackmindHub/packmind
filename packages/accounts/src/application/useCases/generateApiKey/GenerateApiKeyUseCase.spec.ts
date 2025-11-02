@@ -6,7 +6,7 @@ import { OrganizationService } from '../../services/OrganizationService';
 import { ApiKeyService } from '../../services/ApiKeyService';
 import { createUserId } from '../../../domain/entities/User';
 import { createOrganizationId } from '../../../domain/entities/Organization';
-import { GenerateApiKeyCommand } from '../../../domain/useCases/IGenerateApiKeyUseCase';
+import { GenerateApiKeyCommand } from '@packmind/shared';
 import { userFactory, organizationFactory } from '../../../../test';
 
 describe('GenerateApiKeyUseCase', () => {

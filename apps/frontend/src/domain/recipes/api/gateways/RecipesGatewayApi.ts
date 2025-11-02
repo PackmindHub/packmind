@@ -1,10 +1,8 @@
+import { Recipe, RecipeVersion, RecipeId } from '@packmind/recipes/types';
 import {
-  Recipe,
-  RecipeVersion,
-  RecipeId,
   IDeleteRecipeUseCase,
   IDeleteRecipesBatchUseCase,
-} from '@packmind/recipes/types';
+} from '@packmind/shared';
 import { OrganizationId } from '@packmind/accounts/types';
 import { SpaceId } from '@packmind/spaces';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
@@ -67,6 +65,7 @@ export class RecipesGatewayApi
   }
 
   deleteRecipe: Gateway<IDeleteRecipeUseCase> = async (command) => {
+    // Gateway type strips userId/organizationId from DeleteRecipeCommand
     return this._api.delete(`${this._endpoint}/${command.recipeId}`);
   };
   deleteRecipesBatch: Gateway<IDeleteRecipesBatchUseCase> = async (command) => {

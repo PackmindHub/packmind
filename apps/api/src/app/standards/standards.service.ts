@@ -9,16 +9,16 @@ import {
 import { OrganizationId, UserId } from '@packmind/accounts';
 import {
   IDeploymentPort,
-  ILinterPort,
   PackmindLogger,
   PublishStandardsCommand,
   StandardsDeployment,
   SpaceId,
   ListStandardsBySpaceResponse,
   GetStandardByIdResponse,
+  ILinterPort,
 } from '@packmind/shared';
 import { DeploymentsHexa } from '@packmind/deployments';
-import { LinterHexa, LinterAdapter } from '@packmind/linter';
+import { LinterHexa } from '@packmind/linter';
 
 @Injectable()
 export class StandardsService {
@@ -34,8 +34,7 @@ export class StandardsService {
     this.deploymentAdapter = this.deploymentHexa.getDeploymentsUseCases();
     this.standardsHexa.setDeploymentsQueryAdapter(this.deploymentAdapter);
 
-    const linterUseCases = this.linterHexa.getLinterUsecases();
-    this.linterAdapter = new LinterAdapter(linterUseCases);
+    this.linterAdapter = this.linterHexa.getLinterAdapter();
     this.standardsHexa.setLinterAdapter(this.linterAdapter);
 
     // Set up bidirectional dependency - LinterHexa needs StandardsAdapter
@@ -99,30 +98,15 @@ export class StandardsService {
     },
     organizationId: OrganizationId,
     userId: UserId,
-    spaceId?: SpaceId,
+    spaceId: SpaceId,
   ): Promise<Standard> {
-    // If spaceId not provided, fetch the existing standard to retrieve it
-    // This supports backward compatibility with flat endpoints
-    let resolvedSpaceId = spaceId;
-    if (!resolvedSpaceId) {
-      const standards =
-        await this.standardsHexa.listStandardsByOrganization(organizationId);
-      const existingStandard = standards.find((s) => s.id === standardId);
-
-      if (!existingStandard) {
-        throw new Error(`Standard with id ${standardId} not found`);
-      }
-
-      resolvedSpaceId = existingStandard.spaceId;
-    }
-
     return this.standardsHexa.updateStandard({
       standardId,
       ...standard,
       scope: standard.scope || null,
       organizationId,
       userId: userId.toString(),
-      spaceId: resolvedSpaceId,
+      spaceId,
     });
   }
 

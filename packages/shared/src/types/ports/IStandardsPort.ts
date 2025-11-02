@@ -20,9 +20,6 @@ export interface IStandardsPort {
     organizationId: OrganizationId,
     userId: string,
   ): Promise<Standard[]>;
-  listStandardsByOrganization(
-    organizationId: OrganizationId,
-  ): Promise<Standard[]>;
   getRuleCodeExamples(id: RuleId): Promise<RuleExample[]>;
   findStandardBySlug(
     slug: string,

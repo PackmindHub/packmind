@@ -4,7 +4,6 @@ import {
   HexaRegistry,
   IDeploymentPort,
   IStandardsPort,
-  ILinterPort,
   PackmindLogger,
   ListStandardsBySpaceCommand,
   GetStandardByIdCommand,
@@ -12,6 +11,7 @@ import {
   ListStandardsBySpaceResponse,
   GetStandardByIdResponse,
 } from '@packmind/shared';
+import type { ILinterPort } from '@packmind/shared';
 import { StandardsHexaFactory } from './StandardsHexaFactory';
 import { Standard, StandardId } from './domain/entities/Standard';
 import { StandardVersion } from './domain/entities/StandardVersion';
@@ -292,19 +292,6 @@ export class StandardsHexa extends BaseHexa {
   ): Promise<ListStandardsBySpaceResponse> {
     this.ensureInitialized();
     return this.hexa.useCases.listStandardsBySpace(command);
-  }
-
-  /**
-   * List all standards for an organization (backward compatibility)
-   */
-  public async listStandardsByOrganization(
-    organizationId: OrganizationId,
-  ): Promise<Standard[]> {
-    this.ensureInitialized();
-    return this.hexa
-      .getStandardsServices()
-      .getStandardService()
-      .listStandardsByOrganization(organizationId);
   }
 
   // ===========================

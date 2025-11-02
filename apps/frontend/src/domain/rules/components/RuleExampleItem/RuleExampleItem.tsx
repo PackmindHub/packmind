@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { RuleExample } from '@packmind/shared/types';
 import {
   RuleId,
@@ -10,6 +11,7 @@ import {
   useDeleteRuleExampleMutation,
 } from '../../api/queries';
 import { NewExample } from '../RuleExamplesManager/RuleExamplesManager';
+import { GET_STANDARD_RULES_DETECTION_STATUS_KEY } from '../../../detection/api/queryKeys';
 import {
   PMCodeMirror,
   PMText,
@@ -49,6 +51,7 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
   onSaveNew,
   onCancelNew,
 }) => {
+  const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(isNew);
   const [editValues, setEditValues] = useState({
     lang: example.lang,
@@ -123,10 +126,13 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
         setIsSaving(true);
         try {
           await onSaveNew(example as NewExample, editValues);
-          setIsSaving(false);
+          await queryClient.invalidateQueries({
+            queryKey: [...GET_STANDARD_RULES_DETECTION_STATUS_KEY, standardId],
+          });
           setIsEditing(false);
         } catch (error) {
           console.error('Failed to save new example:', error);
+        } finally {
           setIsSaving(false);
         }
       } else {
@@ -188,11 +194,23 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
       onCancelNew(example.id);
     } else {
       // Delete existing example from database
-      deleteMutation.mutate({
-        standardId,
-        ruleId,
-        exampleId: (example as RuleExample).id,
-      });
+      deleteMutation.mutate(
+        {
+          standardId,
+          ruleId,
+          exampleId: (example as RuleExample).id,
+        },
+        {
+          onSuccess: async () => {
+            await queryClient.invalidateQueries({
+              queryKey: [
+                ...GET_STANDARD_RULES_DETECTION_STATUS_KEY,
+                standardId,
+              ],
+            });
+          },
+        },
+      );
     }
   };
 

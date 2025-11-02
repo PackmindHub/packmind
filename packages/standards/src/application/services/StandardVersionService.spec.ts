@@ -9,7 +9,8 @@ import { createStandardId } from '../../domain/entities/Standard';
 import { v4 as uuidv4 } from 'uuid';
 import { standardVersionFactory } from '../../../test/standardVersionFactory';
 import { ruleFactory } from '../../../test/ruleFactory';
-import { ILinterPort, PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/shared';
+import type { ILinterPort } from '@packmind/shared';
 import { IRuleExampleRepository } from '../../domain/repositories/IRuleExampleRepository';
 import { stubLogger } from '@packmind/shared/test';
 import { createUserId } from '@packmind/accounts';
@@ -63,7 +64,7 @@ describe('StandardVersionService', () => {
       copyRuleDetectionAssessments: jest.fn(),
       updateRuleDetectionAssessmentAfterUpdate: jest.fn(),
       computeRuleLanguageDetectionStatus: jest.fn(),
-    } as jest.Mocked<ILinterPort>;
+    } as unknown as jest.Mocked<ILinterPort>;
 
     standardVersionService = new StandardVersionService(
       standardVersionRepository,

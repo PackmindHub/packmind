@@ -6,7 +6,7 @@ import {
   ICreateOrganizationUseCase,
   CreateOrganizationCommand,
   CreateOrganizationResponse,
-} from '../../../domain/useCases/ICreateOrganizationUseCase';
+} from '@packmind/shared';
 
 const origin = 'CreateOrganizationUseCase';
 

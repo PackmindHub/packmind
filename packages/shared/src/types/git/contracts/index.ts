@@ -2,3 +2,8 @@ export * from './IGetAvailableTargets';
 export * from './ICheckDirectoryExistenceUseCase';
 export * from './IHandleWebHookUseCase';
 export * from './IHandleWebHookWithoutContentUseCase';
+export * from './IAddGitRepoUseCase';
+export * from './IFindGitRepoByOwnerRepoAndBranchInOrganizationUseCase';
+export * from './IAddGitProviderUseCase';
+export * from './IListProvidersUseCase';
+export * from './IListAvailableReposUseCase';

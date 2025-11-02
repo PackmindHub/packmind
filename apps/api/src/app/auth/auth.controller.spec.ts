@@ -4,13 +4,13 @@ import { AuthService } from './auth.service';
 import {
   User,
   createOrganizationId,
-  SignUpUserCommand,
   SignInUserCommand,
   Organization,
 } from '@packmind/accounts';
 import {
   CheckEmailAvailabilityCommand,
   CheckEmailAvailabilityResponse,
+  SignUpWithOrganizationCommand,
 } from '@packmind/shared';
 import { createUserId } from '@packmind/accounts';
 import {
@@ -108,7 +108,7 @@ describe('AuthController', () => {
   });
 
   describe('signUp', () => {
-    const signUpRequest: SignUpUserCommand = {
+    const signUpRequest: SignUpWithOrganizationCommand = {
       email: 'testuser@packmind.com',
       password: 'password123',
       organizationName: 'Test Organization',

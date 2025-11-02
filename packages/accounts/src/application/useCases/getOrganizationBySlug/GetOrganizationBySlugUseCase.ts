@@ -4,7 +4,7 @@ import {
   IGetOrganizationBySlugUseCase,
   GetOrganizationBySlugCommand,
   GetOrganizationBySlugResponse,
-} from '../../../domain/useCases/IGetOrganizationBySlugUseCase';
+} from '@packmind/shared';
 
 const origin = 'GetOrganizationBySlugUseCase';
 

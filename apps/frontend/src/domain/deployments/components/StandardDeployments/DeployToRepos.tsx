@@ -94,7 +94,14 @@ export const DeployToRepos: React.FC<DeployToReposProps> = ({
             gap={6}
             items={[
               { label: 'Path', value: defaultPath },
-              { label: 'Scope', value: standard.scope || '**/*' },
+              {
+                label: 'Scope',
+                value: (
+                  <PMBox wordBreak="break-all">
+                    {standard.scope || '**/*'}
+                  </PMBox>
+                ),
+              },
             ]}
           />
         </PMBox>

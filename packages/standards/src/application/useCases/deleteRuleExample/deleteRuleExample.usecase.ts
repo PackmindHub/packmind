@@ -1,4 +1,4 @@
-import { PackmindLogger, ILinterPort } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/shared';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
 import { IStandardsRepositories } from '../../../domain/repositories/IStandardsRepositories';
 import {
@@ -7,6 +7,7 @@ import {
 } from '../../../domain/useCases/IDeleteRuleExample';
 import { RuleId } from '../../../domain/entities/Rule';
 import { ProgrammingLanguage } from '@packmind/shared';
+import type { ILinterPort } from '@packmind/shared';
 
 const origin = 'DeleteRuleExampleUsecase';
 

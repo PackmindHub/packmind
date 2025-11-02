@@ -1,17 +1,92 @@
-export * from './ISignUpUserCommand';
-export * from './ISignUpWithOrganizationUseCase';
-export * from './ISignInUserUseCase';
-export * from './IGetUserByIdUseCase';
-export * from './IValidatePasswordUseCase';
-export * from './ICreateOrganizationUseCase';
-export * from './IGetOrganizationByIdUseCase';
-export * from './IGetOrganizationByNameUseCase';
-export * from './IGetOrganizationBySlugUseCase';
-export * from './IGenerateUserTokenUseCase';
-export * from './IGenerateApiKeyUseCase';
-export * from './IGetCurrentApiKeyUseCase';
-export * from './ICreateInvitationsUseCase';
-export * from './IListOrganizationUserStatusesUseCase';
-export * from './IListOrganizationUsersUseCase';
-export * from './IRemoveUserFromOrganizationUseCase';
-export * from './IListUserOrganizationsUseCase';
+// All use case interfaces and types have been migrated to @packmind/shared
+// This file now re-exports them for backward compatibility
+
+// Re-export all accounts contracts from shared
+export type {
+  // SignUp & Auth
+  ISignUpWithOrganizationUseCase,
+  SignUpWithOrganizationCommand,
+  SignUpWithOrganizationResponse,
+  ISignInUserUseCase,
+  SignInUserCommand,
+  SignInUserResponse,
+  ICheckEmailAvailabilityUseCase,
+  CheckEmailAvailabilityCommand,
+  CheckEmailAvailabilityResponse,
+  IActivateUserAccountUseCase,
+  ActivateUserAccountCommand,
+  ActivateUserAccountResponse,
+  IValidatePasswordUseCase,
+  ValidatePasswordCommand,
+  ValidatePasswordResponse,
+
+  // Password Reset
+  IRequestPasswordResetUseCase,
+  RequestPasswordResetCommand,
+  RequestPasswordResetResponse,
+  IResetPasswordUseCase,
+  ResetPasswordCommand,
+  ResetPasswordResponse,
+  IValidatePasswordResetTokenUseCase,
+  ValidatePasswordResetTokenCommand,
+  ValidatePasswordResetTokenResponse,
+
+  // User Management
+  IGetUserByIdUseCase,
+  GetUserByIdCommand,
+  GetUserByIdResponse,
+  IChangeUserRoleUseCase,
+  ChangeUserRoleCommand,
+  ChangeUserRoleResponse,
+  IRemoveUserFromOrganizationUseCase,
+  RemoveUserFromOrganizationCommand,
+  RemoveUserFromOrganizationResponse,
+  IListUserOrganizationsUseCase,
+  ListUserOrganizationsCommand,
+  ListUserOrganizationsResponse,
+
+  // Organization Management
+  ICreateOrganizationUseCase,
+  CreateOrganizationCommand,
+  CreateOrganizationResponse,
+  IGetOrganizationByIdUseCase,
+  GetOrganizationByIdCommand,
+  GetOrganizationByIdResponse,
+  IGetOrganizationByNameUseCase,
+  GetOrganizationByNameCommand,
+  GetOrganizationByNameResponse,
+  IGetOrganizationBySlugUseCase,
+  GetOrganizationBySlugCommand,
+  GetOrganizationBySlugResponse,
+  IGetOrganizationOnboardingStatusUseCase,
+  GetOrganizationOnboardingStatusCommand,
+  OrganizationOnboardingStatus,
+  IListOrganizationUsersUseCase,
+  ListOrganizationUsersCommand,
+  ListOrganizationUsersResponse,
+  OrganizationUser,
+  IListOrganizationUserStatusesUseCase,
+  ListOrganizationUserStatusesCommand,
+  ListOrganizationUserStatusesResponse,
+  UserStatus,
+  InvitationStatus,
+
+  // Invitations
+  ICreateInvitationsUseCase,
+  CreateInvitationsCommand,
+  CreateInvitationsResponse,
+  IValidateInvitationTokenUseCase,
+  ValidateInvitationTokenCommand,
+  ValidateInvitationTokenResponse,
+
+  // API Keys & Tokens
+  IGenerateApiKeyUseCase,
+  GenerateApiKeyCommand,
+  GenerateApiKeyResponse,
+  IGenerateUserTokenUseCase,
+  GenerateUserTokenCommand,
+  GenerateUserTokenResponse,
+  IGetCurrentApiKeyUseCase,
+  GetCurrentApiKeyCommand,
+  GetCurrentApiKeyResponse,
+} from '@packmind/shared';

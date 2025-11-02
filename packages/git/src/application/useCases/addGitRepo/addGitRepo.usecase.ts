@@ -1,9 +1,6 @@
 import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
-import {
-  AddGitRepoCommand,
-  IAddGitRepoUseCase,
-} from '../../../domain/useCases/IAddGitRepo';
+import { AddGitRepoCommand, IAddGitRepoUseCase } from '@packmind/shared';
 import { GitRepo } from '../../../domain/entities/GitRepo';
 import {
   AbstractAdminUseCase,

@@ -8,7 +8,7 @@ import {
 } from '@packmind/shared';
 import { IDeploymentPort } from '@packmind/shared';
 import { DeploymentsHexaFactory } from './DeploymentsHexaFactory';
-import { DeploymentsUseCases } from './application/useCases/index';
+import { DeploymentsAdapter } from './application/adapter/DeploymentsAdapter';
 import { GitHexa } from '@packmind/git';
 import { RecipesHexa } from '@packmind/recipes';
 import { CodingAgentHexa } from '@packmind/coding-agent';
@@ -50,7 +50,7 @@ export class DeploymentsHexa extends BaseHexa {
 
       // RecipesHexa might not be available during initialization due to circular dependency
       // Using adapter pattern to decouple from RecipesHexa
-      let recipesPort: IRecipesPort | undefined;
+      let recipesPort: Partial<IRecipesPort> | undefined;
       try {
         const recipesHexa = registry.get(RecipesHexa);
         recipesPort = new RecipesAdapter(recipesHexa);
@@ -62,7 +62,7 @@ export class DeploymentsHexa extends BaseHexa {
       const codingAgentHexa = registry.get(CodingAgentHexa);
       const standardsHexa = registry.get(StandardsHexa);
 
-      this.deploymentsUsecases = new DeploymentsUseCases(
+      this.deploymentsUsecases = new DeploymentsAdapter(
         this.hexa,
         gitHexa,
         recipesPort,
@@ -85,7 +85,7 @@ export class DeploymentsHexa extends BaseHexa {
   public setRecipesPort(recipesHexa: RecipesHexa): void {
     const recipesPort = new RecipesAdapter(recipesHexa);
     // Update the use cases with the new recipes port
-    (this.deploymentsUsecases as DeploymentsUseCases).updateRecipesPort(
+    (this.deploymentsUsecases as DeploymentsAdapter).updateRecipesPort(
       recipesPort,
     );
     this.logger.info('RecipesPort updated in DeploymentsHexa');
@@ -108,7 +108,7 @@ export class DeploymentsHexa extends BaseHexa {
     userProvider: UserProvider,
     organizationProvider: OrganizationProvider,
   ): void {
-    (this.deploymentsUsecases as DeploymentsUseCases).setAccountProviders(
+    (this.deploymentsUsecases as DeploymentsAdapter).setAccountProviders(
       userProvider,
       organizationProvider,
     );
@@ -116,7 +116,7 @@ export class DeploymentsHexa extends BaseHexa {
   }
 
   public setSpacesAdapter(spacesPort: ISpacesPort): void {
-    (this.deploymentsUsecases as DeploymentsUseCases).updateSpacesPort(
+    (this.deploymentsUsecases as DeploymentsAdapter).updateSpacesPort(
       spacesPort,
     );
     this.logger.info('Spaces adapter set in DeploymentsHexa');

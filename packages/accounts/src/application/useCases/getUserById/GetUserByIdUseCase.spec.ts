@@ -4,7 +4,7 @@ import { createUserId } from '../../../domain/entities/User';
 import { PackmindLogger } from '@packmind/shared';
 import { stubLogger } from '@packmind/shared/test';
 import { userFactory } from '../../../../test';
-import { GetUserByIdCommand } from '../../../domain/useCases/IGetUserByIdUseCase';
+import { GetUserByIdCommand } from '@packmind/shared';
 
 describe('GetUserByIdUseCase', () => {
   let getUserByIdUseCase: GetUserByIdUseCase;

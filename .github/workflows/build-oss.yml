@@ -156,7 +156,7 @@ jobs:
       - name: Build CLI (OSS)
         env:
           PACKMIND_EDITION: ${{ env.OSS_EDITION }}
-        run: ./node_modules/.bin/nx build packmind-cli
+        run: ./node_modules/.bin/nx build-publish packmind-cli
       - name: Test CLI (OSS)
         env:
           PACKMIND_EDITION: ${{ env.OSS_EDITION }}

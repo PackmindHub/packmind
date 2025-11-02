@@ -20,13 +20,13 @@ import {
   SelectOrganizationCommand,
 } from './auth.service';
 import {
-  SignUpUserCommand,
   SignInUserCommand,
   SignInUserResponse,
   TooManyLoginAttemptsError,
 } from '@packmind/accounts';
 import { maskEmail } from '@packmind/shared';
 import {
+  SignUpWithOrganizationCommand,
   SignUpWithOrganizationResponse,
   CheckEmailAvailabilityCommand,
   CheckEmailAvailabilityResponse,
@@ -49,12 +49,11 @@ export class AuthController {
   @Post('signup')
   @HttpCode(HttpStatus.CREATED)
   async signUp(
-    @Body() signUpRequest: SignUpUserCommand,
+    @Body() signUpRequest: SignUpWithOrganizationCommand,
   ): Promise<SignUpWithOrganizationResponse> {
     this.logger.log(`POST /auth/signup - Signing up user`, {
       email: maskEmail(signUpRequest.email),
       organizationName: signUpRequest.organizationName,
-      hasOrganizationId: !!signUpRequest.organizationId,
     });
 
     try {

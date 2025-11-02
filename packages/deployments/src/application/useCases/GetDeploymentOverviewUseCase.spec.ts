@@ -22,7 +22,14 @@ import { GetTargetsByOrganizationUseCase } from './GetTargetsByOrganizationUseCa
 describe('GetDeploymentOverviewUseCase', () => {
   let useCase: GetDeploymentOverviewUseCase;
   let deploymentsRepository: jest.Mocked<IRecipesDeploymentRepository>;
-  let recipesPort: jest.Mocked<IRecipesPort>;
+  let recipesPort: jest.Mocked<
+    Pick<
+      IRecipesPort,
+      | 'listRecipesByOrganization'
+      | 'listRecipesBySpace'
+      | 'getRecipeVersionById'
+    >
+  >;
   let spacesPort: jest.Mocked<ISpacesPort>;
   let gitHexa: jest.Mocked<GitHexa>;
   let getTargetsByOrganizationUseCase: jest.Mocked<GetTargetsByOrganizationUseCase>;
@@ -49,7 +56,14 @@ describe('GetDeploymentOverviewUseCase', () => {
       listRecipesByOrganization: jest.fn(),
       listRecipesBySpace: jest.fn(),
       getRecipeVersionById: jest.fn(),
-    } as jest.Mocked<IRecipesPort>;
+    } as jest.Mocked<
+      Pick<
+        IRecipesPort,
+        | 'listRecipesByOrganization'
+        | 'listRecipesBySpace'
+        | 'getRecipeVersionById'
+      >
+    >;
 
     spacesPort = {
       listSpacesByOrganization: jest.fn(),

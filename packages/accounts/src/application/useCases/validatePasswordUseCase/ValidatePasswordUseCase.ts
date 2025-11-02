@@ -4,7 +4,7 @@ import {
   IValidatePasswordUseCase,
   ValidatePasswordCommand,
   ValidatePasswordResponse,
-} from '../../../domain/useCases/IValidatePasswordUseCase';
+} from '@packmind/shared';
 
 const origin = 'ValidatePasswordUseCase';
 

@@ -76,33 +76,6 @@ export class StandardService {
     }
   }
 
-  async listStandardsByOrganization(
-    organizationId: OrganizationId,
-  ): Promise<Standard[]> {
-    this.logger.info('Listing standards with scope by organization', {
-      organizationId,
-    });
-
-    try {
-      const standards =
-        await this.standardRepository.findByOrganizationId(organizationId);
-      this.logger.info(
-        'Standards with scope retrieved by organization successfully',
-        {
-          organizationId,
-          count: standards.length,
-        },
-      );
-      return standards;
-    } catch (error) {
-      this.logger.error('Failed to list standards with scope by organization', {
-        organizationId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }
-
   async listStandardsBySpace(spaceId: SpaceId): Promise<Standard[]> {
     this.logger.info('Listing standards with scope by space', {
       spaceId,

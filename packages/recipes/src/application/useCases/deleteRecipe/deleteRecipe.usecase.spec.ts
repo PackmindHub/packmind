@@ -11,7 +11,7 @@ import {
   createOrganizationId,
   OrganizationId,
 } from '@packmind/accounts';
-import { DeleteRecipeCommand } from '../../../domain/useCases/IDeleteRecipeUseCase';
+import { DeleteRecipeCommand } from '@packmind/shared';
 
 describe('DeleteRecipeUsecase', () => {
   let deleteRecipeUsecase: DeleteRecipeUsecase;
