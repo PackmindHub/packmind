@@ -17,7 +17,7 @@ Available here: [https://packmindhub.github.io/packmind](https://packmindhub.git
 
 Choose your preferred setup option:
 
-- **Cloud version**: Create an account at [https://app.packmind.ai](https://app.packmind.ai)
+- **Cloud version**: Create an account at [https://app.packmind.ai](https://app.packmind.ai/sign-up)
 - **Self-hosted**: Deploy on your own infrastructure using [Docker Compose or Kubernetes](https://packmindhub.github.io/packmind/gs-install-self-hosted)
 
 ## Connect MCP server
