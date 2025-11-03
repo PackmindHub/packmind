@@ -42,6 +42,11 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
+      label: 'Linter',
+      items: ['linter', 'cli'],
+    },
+    {
+      type: 'category',
       label: 'Administration',
       items: ['manage-users', 'manage-ai-agents'],
     },

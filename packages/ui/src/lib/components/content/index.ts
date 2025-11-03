@@ -22,8 +22,6 @@ export {
   PMFeatureFlag,
   isFeatureFlagEnabled,
   RULE_DETAILS_DETECTION_TAB_FEATURE_KEY,
-  AGENT_BLUEPRINTS_NAV_FEATURE_KEY,
-  PACKAGES_NAV_FEATURE_KEY,
   DEFAULT_FEATURE_DOMAIN_MAP,
 } from './PMFeatureFlag/PMFeatureFlag';
 export type { IPMFeatureFlagProps } from './PMFeatureFlag/PMFeatureFlag';

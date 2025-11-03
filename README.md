@@ -77,6 +77,8 @@ Add the repositories where you want to deploy your standards. Packmind automatic
 
 Your standards are now available in `.packmind` directory and your AI agent configuration files.
 
-# Contribute
+# :compass: Key Links
 
-_Coming soon_
+- [**Docs →**](https://packmindhub.github.io/packmind/)
+- [**Packmind Cloud →**](https://app.packmind.ai/sign-up)
+- [**Join the Slack Community →**](https://join.slack.com/t/promyze/shared_invite/zt-vf6asxsj-aH1RbzuoOR5DNFexeaATVQ)

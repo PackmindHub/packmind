@@ -32,15 +32,6 @@ export const routes = {
       `/org/${orgSlug}/space/${spaceSlug}/recipes`,
     toRecipe: (orgSlug: string, spaceSlug: string, recipeId: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/recipes/${recipeId}`,
-    toAgentBlueprints: (orgSlug: string, spaceSlug: string) =>
-      `/org/${orgSlug}/space/${spaceSlug}/agent-blueprints`,
-    toAgentBlueprint: (
-      orgSlug: string,
-      spaceSlug: string,
-      blueprintId: string,
-    ) => `/org/${orgSlug}/space/${spaceSlug}/agent-blueprints/${blueprintId}`,
-    toPackages: (orgSlug: string, spaceSlug: string) =>
-      `/org/${orgSlug}/space/${spaceSlug}/packages`,
     toStandards: (orgSlug: string, spaceSlug: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/standards`,
     toStandard: (orgSlug: string, spaceSlug: string, standardId: string) =>

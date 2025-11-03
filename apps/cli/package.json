@@ -1,6 +1,6 @@
 {
   "name": "@packmind/cli",
-  "version": "0.2.12",
+  "version": "0.3.0",
   "description": "A command-line interface for Packmind linting and code quality checks",
   "private": false,
   "bin": {
@@ -10,7 +10,8 @@
   "files": [
     "main.cjs",
     "*.wasm",
-    "stubs"
+    "stubs",
+    "CHANGELOG.MD"
   ],
   "keywords": [
     "packmind",
