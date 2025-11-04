@@ -15,13 +15,7 @@
 import { build } from 'bun';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import {
-  existsSync,
-  mkdirSync,
-  unlinkSync,
-  copyFileSync,
-  readdirSync,
-} from 'fs';
+import { existsSync, mkdirSync, unlinkSync } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -155,7 +149,20 @@ if (!existsSync(OUTPUT_DIR)) {
   mkdirSync(OUTPUT_DIR, { recursive: true });
 }
 
-console.log('🚀 Building Packmind CLI with Bun...');
+// Step 0: Embed WASM files before building
+console.log('🔧 Embedding WASM files...');
+const embedWasmScript = resolve(__dirname, 'scripts/embed-wasm-files.ts');
+const embedResult = await Bun.spawn(['bun', 'run', embedWasmScript], {
+  stdio: ['inherit', 'inherit', 'inherit'],
+});
+await embedResult.exited;
+
+if (embedResult.exitCode !== 0) {
+  console.error('❌ Failed to embed WASM files');
+  process.exit(1);
+}
+
+console.log('\n🚀 Building Packmind CLI with Bun...');
 console.log(`📦 Targets: ${targetsToBuild.map((t) => t.target).join(', ')}`);
 console.log('');
 
@@ -244,31 +251,6 @@ for (const targetConfig of targetsToBuild) {
   const success = await buildForTarget(targetConfig);
   results.push({ target: targetConfig.target, success });
 }
-
-// Copy WASM files once (shared across all targets)
-console.log('\n📋 Copying tree-sitter WASM files...');
-const wasmSourceDir = resolve(__dirname, '../../packages/linter-ast/res');
-const wasmTargetDir = resolve(OUTPUT_DIR, 'tree-sitter');
-
-if (!existsSync(wasmTargetDir)) {
-  mkdirSync(wasmTargetDir, { recursive: true });
-}
-
-const wasmFiles = readdirSync(wasmSourceDir).filter((f) => f.endsWith('.wasm'));
-let copiedCount = 0;
-for (const wasmFile of wasmFiles) {
-  try {
-    copyFileSync(
-      resolve(wasmSourceDir, wasmFile),
-      resolve(wasmTargetDir, wasmFile),
-    );
-    copiedCount++;
-  } catch {
-    console.warn(`⚠️  Failed to copy ${wasmFile}`);
-  }
-}
-
-console.log(`✅ Copied ${copiedCount} WASM files to ${wasmTargetDir}`);
 
 // Summary
 console.log('\n📊 Build Summary:');

@@ -5,7 +5,7 @@ import {
   ButtonGroupProps,
 } from '@chakra-ui/react';
 
-interface IPMButtonProps extends ButtonProps {
+export interface IPMButtonProps extends ButtonProps {
   variant?: 'primary' | 'secondary' | 'tertiary' | 'outline' | 'ghost';
   children: React.ReactNode;
 }

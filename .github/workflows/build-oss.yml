@@ -134,30 +134,3 @@ jobs:
         with:
           name: mcp-server-dist-oss-${{ github.run_number }}-${{ github.sha }}
           path: dist/apps/mcp-server/
-
-  build-cli:
-    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
-    strategy:
-      matrix:
-        node-version: ['${{ inputs.node-version }}']
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-      - run: npm ci
-      - name: Generate OSS tsconfig
-        env:
-          PACKMIND_EDITION: ${{ env.OSS_EDITION }}
-        run: node scripts/select-tsconfig.mjs
-      - name: Build CLI (OSS)
-        env:
-          PACKMIND_EDITION: ${{ env.OSS_EDITION }}
-        run: ./node_modules/.bin/nx build-publish packmind-cli
-      - name: Test CLI (OSS)
-        env:
-          PACKMIND_EDITION: ${{ env.OSS_EDITION }}
-        run: ./node_modules/.bin/nx test packmind-cli

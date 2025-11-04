@@ -15,6 +15,7 @@ import {
   ProgrammingLanguage,
   stringToProgrammingLanguage,
 } from '@packmind/shared';
+import * as path from 'path';
 
 const origin = 'LintFilesInDirectoryUseCase';
 
@@ -123,19 +124,41 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
   public async execute(
     command: LintFilesInDirectoryCommand,
   ): Promise<LintFilesInDirectoryResult> {
-    const { path, draftMode, standardSlug, ruleId, language } = command;
+    const {
+      path: userPath,
+      draftMode,
+      standardSlug,
+      ruleId,
+      language,
+    } = command;
 
     this.logger.debug(
-      `Starting linting: path="${path}", draftMode=${!!draftMode}, standardSlug="${standardSlug || 'N/A'}", ruleId="${ruleId || 'N/A'}", language="${language || 'N/A'}"`,
+      `Starting linting: path="${userPath}", draftMode=${!!draftMode}, standardSlug="${standardSlug || 'N/A'}", ruleId="${ruleId || 'N/A'}", language="${language || 'N/A'}"`,
     );
 
-    // Step 0: Resolve git repository root
+    // Step 0: Resolve git repository root and absolute path to lint
     const gitRepoRoot =
-      await this.services.gitRemoteUrlService.getGitRepositoryRoot(path);
+      await this.services.gitRemoteUrlService.getGitRepositoryRoot(userPath);
+
+    // Convert the user-provided path to an absolute path
+    const absoluteLintPath = path.isAbsolute(userPath)
+      ? userPath
+      : path.resolve(process.cwd(), userPath);
+
+    // Verify the path is within the git repository
+    if (!absoluteLintPath.startsWith(gitRepoRoot)) {
+      throw new Error(
+        `The path "${absoluteLintPath}" is not within the git repository at "${gitRepoRoot}"`,
+      );
+    }
+
+    this.logger.debug(
+      `Resolved paths: gitRoot="${gitRepoRoot}", lintPath="${absoluteLintPath}"`,
+    );
 
     // Step 1: List files in the directory excluding ignored folders
     const files = await this.services.listFiles.listFilesInDirectory(
-      gitRepoRoot,
+      absoluteLintPath,
       [],
       ['node_modules', 'dist', '.min.', '.map.', '.git'],
     );

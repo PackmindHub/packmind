@@ -188,6 +188,17 @@ describe('McpConfig', () => {
     const expectedCliCommand =
       'claude mcp add --transport http packmind https://mcp.packmind.com --header "Authorization: Bearer test-token-123"';
 
+    const expectedGithubCopilotJetBrainsConfig = {
+      'packmind-mcp-server': {
+        url: 'https://mcp.packmind.com',
+        requestInit: {
+          headers: {
+            Authorization: 'Bearer test-token-123',
+          },
+        },
+      },
+    };
+
     beforeEach(async () => {
       const mockMutation = createMockMutation({
         isSuccess: true,
@@ -222,9 +233,17 @@ describe('McpConfig', () => {
       expect(cliConfig.textContent).toBe(expectedCliCommand);
     });
 
+    it('displays GitHub Copilot JetBrains configuration JSON', () => {
+      const githubJetbrainsConfig = screen.getByTestId(
+        'mcp-config-github-jetbrains',
+      );
+      const config = JSON.parse(githubJetbrainsConfig.textContent ?? '{}');
+      expect(config).toEqual(expectedGithubCopilotJetBrainsConfig);
+    });
+
     it('displays copy buttons for all configurations', () => {
       const copyButtons = screen.getAllByLabelText('Copy to clipboard');
-      expect(copyButtons).toHaveLength(3);
+      expect(copyButtons).toHaveLength(4);
     });
   });
 });

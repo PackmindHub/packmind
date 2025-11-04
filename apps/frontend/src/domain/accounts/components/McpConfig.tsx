@@ -66,6 +66,23 @@ export const McpConfig: React.FunctionComponent = () => {
     return '';
   };
 
+  const getGithubCopilotJetBrainsConfig = () => {
+    if (getMcpTokenMutation.data?.access_token) {
+      const config = {
+        'packmind-mcp-server': {
+          url,
+          requestInit: {
+            headers: {
+              Authorization: `Bearer ${getMcpTokenMutation.data.access_token}`,
+            },
+          },
+        },
+      };
+      return JSON.stringify(config, null, 2);
+    }
+    return '';
+  };
+
   return (
     <PMPageSection title="MCP Access Token" variant="outline">
       <PMText as="p">
@@ -137,6 +154,18 @@ export const McpConfig: React.FunctionComponent = () => {
                     readOnly
                     rows={12}
                     data-testid="mcp-config-cli"
+                  />
+                ),
+              },
+              {
+                value: 'github-jetbrains',
+                triggerLabel: 'GitHub Copilot (JetBrains)',
+                content: (
+                  <CopiableTextarea
+                    value={getGithubCopilotJetBrainsConfig()}
+                    readOnly
+                    rows={12}
+                    data-testid="mcp-config-github-jetbrains"
                   />
                 ),
               },

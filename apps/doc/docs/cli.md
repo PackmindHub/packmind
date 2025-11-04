@@ -26,18 +26,6 @@ npm install -g @packmind/cli
 
 After installation, the `packmind-cli` command will be available globally.
 
-**Local Installation** (for project-specific version):
-
-```bash
-npm install --save-dev @packmind/cli
-```
-
-Then run via npm scripts in `package.json` or directly with npx:
-
-```bash
-npx packmind-cli lint .
-```
-
 **npx** (no installation required):
 
 ```bash
@@ -48,7 +36,7 @@ This runs the CLI directly without installing it, always using the latest versio
 
 #### Option 2: Standalone Executables
 
-Download the appropriate pre-built executable for your platform from the [GitHub Releases page](https://github.com/PackmindHub/packmind-monorepo/releases?q=CLI&expanded=true).
+Download the appropriate pre-built executable for your platform from the [GitHub Releases page](https://github.com/PackmindHub/packmind/releases?q=CLI&expanded=true).
 
 **Available platforms:**
 
@@ -75,7 +63,7 @@ sudo mv packmind-cli-*-{version} /usr/local/bin/packmind-cli
 :::tip Choosing an Installation Method
 
 - Use **npm global** if you want `packmind-cli` always available system-wide
-- Use **npm local** or **npx** for project-specific usage or testing
+- Use **npx** for project-specific usage or testing without installation
 - Use **standalone executables** if you don't have Node.js installed or need a specific binary for your environment
   :::
 
@@ -105,10 +93,6 @@ To make this permanent, add it to your shell configuration file (`~/.bashrc`, `~
 echo 'export PACKMIND_API_KEY_V3="your-api-key-here"' >> ~/.zshrc
 source ~/.zshrc
 ```
-
-:::tip Regenerating Your API Key
-If you need to regenerate your API key (e.g., if it expires or is compromised), simply generate a new one from the Settings page. The old key will stop working immediately.
-:::
 
 ## Using the Lint Command
 
@@ -140,37 +124,6 @@ packmind-cli lint src/
 packmind-cli lint /path/to/your/project
 ```
 
-### Test a Specific Rule
-
-Run detection for a single rule using the `--rule` option:
-
-```bash
-packmind-cli lint . --rule=@standard-slug/ruleId
-```
-
-The format is `@standard-slug/ruleId` where:
-
-- `standard-slug` is your standard's identifier
-- `ruleId` is the specific rule identifier
-
-**Example:**
-
-```bash
-packmind-cli lint . --rule=@backend-typescript/use-logger-info
-```
-
-### Test Draft Programs
-
-To test a draft detection program before activating it, use the `--draft` flag with the `--rule` option:
-
-```bash
-packmind-cli lint . --draft --rule=@standard-slug/ruleId
-```
-
-**Important**: The `--draft` flag requires the `--rule` option. You must specify which rule's draft program you want to test.
-
-For more information about testing draft programs, see [Testing Draft Programs](./linter.md#testing-draft-programs) in the Linter documentation.
-
 ### Output Formats
 
 Choose between human-readable and IDE-friendly output:
@@ -191,40 +144,6 @@ packmind-cli lint . --logger=ide
 - Summary of total violations found
 
 **IDE format** provides structured output that can be parsed by editors and CI/CD tools.
-
-### Debug Mode
-
-Enable detailed logging to troubleshoot issues:
-
-```bash
-packmind-cli lint . --debug
-```
-
-Debug mode shows:
-
-- Which detection programs are being loaded
-- Files being analyzed
-- Internal processing steps
-
-### Exit Codes
-
-The CLI uses standard exit codes:
-
-- **Exit 0**: No violations found (success)
-- **Exit 1**: Violations found or an error occurred
-
-This makes it easy to integrate with CI/CD pipelines:
-
-```bash
-# CI/CD script example
-packmind-cli lint .
-if [ $? -eq 0 ]; then
-  echo "Code quality check passed"
-else
-  echo "Code quality check failed"
-  exit 1
-fi
-```
 
 ## Related Documentation
 

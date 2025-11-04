@@ -519,8 +519,11 @@ describe('LintFilesInDirectoryUseCase', () => {
         .fn()
         .mockResolvedValue(draftProgramsResponse);
 
+      mockGitRemoteUrlService.getGitRepositoryRoot.mockResolvedValue(
+        '/project',
+      );
       mockListFiles.listFilesInDirectory.mockResolvedValue([
-        { path: 'test.ts' },
+        { path: '/project/test.ts' },
       ]);
       mockListFiles.readFileContent.mockResolvedValue('const x = 1;');
 
@@ -532,12 +535,12 @@ describe('LintFilesInDirectoryUseCase', () => {
       });
 
       mockLinterExecutionUseCase.execute.mockResolvedValue({
-        file: 'test.ts',
+        file: '/project/test.ts',
         violations: [],
       });
 
       await useCase.execute({
-        path: '.',
+        path: '/project',
         draftMode: true,
         standardSlug: 'test-standard',
         ruleId: 'rule-123' as RuleId,
@@ -572,8 +575,11 @@ describe('LintFilesInDirectoryUseCase', () => {
         .fn()
         .mockResolvedValue(draftProgramsResponse);
 
+      mockGitRemoteUrlService.getGitRepositoryRoot.mockResolvedValue(
+        '/project',
+      );
       mockListFiles.listFilesInDirectory.mockResolvedValue([
-        { path: 'outside-scope.ts' },
+        { path: '/project/outside-scope.ts' },
       ]);
       mockListFiles.readFileContent.mockResolvedValue('const x = 1;');
 
@@ -585,7 +591,7 @@ describe('LintFilesInDirectoryUseCase', () => {
       });
 
       mockLinterExecutionUseCase.execute.mockResolvedValue({
-        file: 'outside-scope.ts',
+        file: '/project/outside-scope.ts',
         violations: [
           {
             line: 1,
@@ -597,7 +603,7 @@ describe('LintFilesInDirectoryUseCase', () => {
       });
 
       const result = await useCase.execute({
-        path: '.',
+        path: '/project',
         draftMode: true,
         standardSlug: 'test-standard',
         ruleId: 'rule-123' as RuleId,
