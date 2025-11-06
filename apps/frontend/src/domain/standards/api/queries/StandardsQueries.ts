@@ -13,7 +13,7 @@ import {
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { GET_ONBOARDING_STATUS_KEY } from '../../../accounts/api/queryKeys';
-import { GET_STANDARD_RULES_DETECTION_STATUS_KEY } from '../../../detection/api/queryKeys';
+import { GET_STANDARD_RULES_DETECTION_STATUS_KEY } from '@packmind/proprietary/frontend/domain/detection/api/queryKeys';
 
 export const useGetStandardsQuery = () => {
   const { spaceId } = useCurrentSpace();

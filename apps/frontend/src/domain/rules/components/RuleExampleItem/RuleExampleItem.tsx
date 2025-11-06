@@ -10,7 +10,6 @@ import {
   useDeleteRuleExampleMutation,
 } from '../../api/queries';
 import { NewExample } from '../RuleExamplesManager/RuleExamplesManager';
-import { GET_STANDARD_RULES_DETECTION_STATUS_KEY } from '../../../detection/api/queryKeys';
 import {
   PMCodeMirror,
   PMText,
@@ -29,6 +28,7 @@ import {
   PMNativeSelect,
 } from '@packmind/ui';
 import { LuCircleCheckBig, LuCircleX } from 'react-icons/lu';
+import { GET_STANDARD_RULES_DETECTION_STATUS_KEY } from '@packmind/proprietary/frontend/domain/detection/api/queryKeys';
 
 interface RuleExampleItemProps {
   example: RuleExample | NewExample;
