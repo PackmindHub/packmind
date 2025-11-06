@@ -1,3 +1,4 @@
 npx pretty-quick --staged
+npm run typecheck:frontend
 nx affected:lint --parallel --uncommitted
 nx affected:test --parallel --passWithNoTests
