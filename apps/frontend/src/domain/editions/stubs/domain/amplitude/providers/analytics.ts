@@ -1,9 +1,38 @@
-import type {
-  AnalyticsEventMap,
-  AnalyticsEventName,
-  AnalyticsOptions,
-  UserProperties,
-} from '../../../../../amplitude/providers/types';
+export type AnalyticsEventMap = {
+  page_view: {
+    path: string;
+    routeId?: string;
+    orgSlug?: string;
+    title?: string;
+  };
+  user_signed_in: {
+    method: 'email' | 'github' | 'gitlab' | 'google' | 'sso';
+  };
+  artifact_updated: {
+    artifactType: 'recipe' | 'standard';
+    id: string;
+    from: number;
+    to: number;
+  };
+};
+
+export type AnalyticsEventName = keyof AnalyticsEventMap;
+
+export type AnalyticsOptions = {
+  apiKey?: string;
+  enabled?: boolean;
+  appVersion?: string;
+  environment?: string;
+  serverZone?: 'US' | 'EU';
+};
+
+export type UserProperties = Record<string, unknown> & {
+  orgId?: string;
+  orgSlug?: string;
+  orgName?: string;
+  plan?: string;
+  edition?: 'oss' | 'proprietary';
+};
 
 class NoopAnalyticsService {
   private enabled = false;
@@ -51,9 +80,3 @@ class NoopAnalyticsService {
 }
 
 export const Analytics = new NoopAnalyticsService();
-export type {
-  AnalyticsEventMap,
-  AnalyticsEventName,
-  AnalyticsOptions,
-  UserProperties,
-};

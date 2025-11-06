@@ -1,4 +1,5 @@
-import type { Standard } from '@packmind/types';
+import type { RuleDetectionStatusSummary, Standard } from '@packmind/types';
+import { useQuery } from '@tanstack/react-query';
 
 export type StandardEditionFeatures = {
   ruleLanguages: Record<string, string[]>;
@@ -9,3 +10,8 @@ export const useStandardEditionFeatures = (
 ): StandardEditionFeatures => ({
   ruleLanguages: {},
 });
+
+export const useGetStandardRulesDetectionStatusQuery = (standardId: string) => {
+  const data: RuleDetectionStatusSummary[] = [];
+  return { data };
+};

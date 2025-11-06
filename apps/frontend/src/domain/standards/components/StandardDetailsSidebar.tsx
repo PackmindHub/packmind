@@ -11,8 +11,8 @@ import { LuGitCommitVertical, LuHouse } from 'react-icons/lu';
 import type { Rule, Standard } from '@packmind/types';
 import { StandardDetailsNavEntry } from './StandardDetailsNavEntry';
 import { makeRuleNavKey, NavKey } from '../utils/standardNavigation';
-import { useGetStandardRulesDetectionStatusQuery } from '../../detection/api/queries/DetectionProgramQueries';
 import { RuleLanguageDetectionStatus } from '@packmind/types';
+import { useGetStandardRulesDetectionStatusQuery } from '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures';
 
 type StandardDetailsSidebarProps = {
   standard: Standard;
