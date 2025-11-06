@@ -41,6 +41,7 @@ export class DeleteRuleExampleUsecase implements IDeleteRuleExample {
 
     // Delete the rule example
     await ruleExampleRepository.deleteById(command.ruleExampleId);
+    console.log('test update file')
 
     this._logger.info('DeleteRuleExampleUsecase.execute completed', {
       ruleExampleId: command.ruleExampleId,
