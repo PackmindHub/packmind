@@ -8,7 +8,8 @@ import {
   normalizeRenderModes,
 } from '@packmind/types';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
-import { CodingAgent, CodingAgents } from '@packmind/coding-agent';
+import { CodingAgent } from '@packmind/types';
+import { CodingAgents } from '@packmind/coding-agent';
 import { IRenderModeConfigurationRepository } from '../../domain/repositories/IRenderModeConfigurationRepository';
 
 const origin = 'RenderModeConfigurationService';

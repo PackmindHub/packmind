@@ -7,12 +7,15 @@ import { v4 as uuidv4 } from 'uuid';
 import { StandardsHexa } from '@packmind/standards';
 import { GitHexa } from '@packmind/git';
 import { CodingAgentHexa } from '@packmind/coding-agent';
-import { IPublishStandards, PublishStandardsCommand } from '@packmind/types';
+import {
+  IPublishStandards,
+  PublishStandardsCommand,
+  PrepareStandardsDeploymentCommand,
+} from '@packmind/types';
 import {
   StandardsDeployment,
   createStandardsDeploymentId,
 } from '../../domain/entities/StandardsDeployment';
-import { PrepareStandardsDeploymentCommand } from '@packmind/coding-agent';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
 import { TargetService } from '../services/TargetService';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
@@ -145,6 +148,8 @@ export class PublishStandardsUseCase implements IPublishStandards {
 
         // Prepare the deployment using CodingAgentHexa
         const prepareCommand: PrepareStandardsDeploymentCommand = {
+          userId: command.userId,
+          organizationId: command.organizationId,
           standardVersions: allStandardVersions,
           gitRepo,
           targets: repositoryTargets,

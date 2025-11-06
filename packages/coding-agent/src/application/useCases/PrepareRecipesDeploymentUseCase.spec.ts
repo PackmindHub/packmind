@@ -1,6 +1,5 @@
 import { PrepareRecipesDeploymentUseCase } from './PrepareRecipesDeploymentUseCase';
-import { FileUpdates } from '../../domain/entities/FileUpdates';
-import { PrepareRecipesDeploymentCommand } from '../../domain/useCases/IPrepareRecipesDeploymentUseCase';
+import { FileUpdates, PrepareRecipesDeploymentCommand } from '@packmind/types';
 import { createUserId } from '@packmind/types';
 import {
   createRecipeVersionId,
@@ -40,6 +39,8 @@ describe('PrepareRecipesDeploymentUseCase', () => {
     });
 
     mockCommand = {
+      userId: createUserId('user-1'),
+      organizationId: 'org-1',
       recipeVersions: [
         {
           id: createRecipeVersionId('recipe-version-1'),

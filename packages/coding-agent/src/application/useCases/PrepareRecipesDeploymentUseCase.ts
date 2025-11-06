@@ -2,8 +2,8 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   IPrepareRecipesDeploymentUseCase,
   PrepareRecipesDeploymentCommand,
-} from '../../domain/useCases/IPrepareRecipesDeploymentUseCase';
-import { FileUpdates } from '../../domain/entities/FileUpdates';
+  PrepareRecipesDeploymentResponse,
+} from '@packmind/types';
 import { CodingAgentServices } from '../services/CodingAgentServices';
 
 const origin = 'PrepareRecipesDeploymentUseCase';
@@ -18,7 +18,7 @@ export class PrepareRecipesDeploymentUseCase
 
   async execute(
     command: PrepareRecipesDeploymentCommand,
-  ): Promise<FileUpdates> {
+  ): Promise<PrepareRecipesDeploymentResponse> {
     this.logger.info('Executing prepare recipes deployment use case', {
       recipesCount: command.recipeVersions.length,
       agentsCount: command.codingAgents.length,

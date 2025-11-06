@@ -1,16 +1,18 @@
 import { PackmindLogger } from '@packmind/logger';
-import { CodingAgentServices } from '../services/CodingAgentServices';
-import { PrepareRecipesDeploymentUseCase } from './PrepareRecipesDeploymentUseCase';
-import { PrepareStandardsDeploymentUseCase } from './PrepareStandardsDeploymentUseCase';
 import {
+  ICodingAgentPort,
   PrepareRecipesDeploymentCommand,
+  PrepareRecipesDeploymentResponse,
   PrepareStandardsDeploymentCommand,
-  FileUpdates,
+  PrepareStandardsDeploymentResponse,
 } from '@packmind/types';
+import { CodingAgentServices } from '../services/CodingAgentServices';
+import { PrepareRecipesDeploymentUseCase } from '../useCases/PrepareRecipesDeploymentUseCase';
+import { PrepareStandardsDeploymentUseCase } from '../useCases/PrepareStandardsDeploymentUseCase';
 
-const origin = 'CodingAgentUseCases';
+const origin = 'CodingAgentAdapter';
 
-export class CodingAgentUseCases {
+export class CodingAgentAdapter implements ICodingAgentPort {
   private readonly prepareRecipesDeploymentUseCase: PrepareRecipesDeploymentUseCase;
   private readonly prepareStandardsDeploymentUseCase: PrepareStandardsDeploymentUseCase;
 
@@ -18,7 +20,7 @@ export class CodingAgentUseCases {
     codingAgentServices: CodingAgentServices,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    this.logger.info('Initializing CodingAgentUseCases');
+    this.logger.info('Initializing CodingAgentAdapter');
 
     this.prepareRecipesDeploymentUseCase = new PrepareRecipesDeploymentUseCase(
       codingAgentServices,
@@ -28,18 +30,18 @@ export class CodingAgentUseCases {
     this.prepareStandardsDeploymentUseCase =
       new PrepareStandardsDeploymentUseCase(codingAgentServices, this.logger);
 
-    this.logger.info('CodingAgentUseCases initialized successfully');
+    this.logger.info('CodingAgentAdapter initialized successfully');
   }
 
   async prepareRecipesDeployment(
     command: PrepareRecipesDeploymentCommand,
-  ): Promise<FileUpdates> {
+  ): Promise<PrepareRecipesDeploymentResponse> {
     return this.prepareRecipesDeploymentUseCase.execute(command);
   }
 
   async prepareStandardsDeployment(
     command: PrepareStandardsDeploymentCommand,
-  ): Promise<FileUpdates> {
+  ): Promise<PrepareStandardsDeploymentResponse> {
     return this.prepareStandardsDeploymentUseCase.execute(command);
   }
 }

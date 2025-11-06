@@ -1,9 +1,12 @@
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
-import { FileUpdates } from './domain/entities/FileUpdates';
+import {
+  FileUpdates,
+  ICodingAgentPort,
+  PrepareRecipesDeploymentCommand,
+  PrepareStandardsDeploymentCommand,
+} from '@packmind/types';
 import { CodingAgentHexaFactory } from './CodingAgentHexaFactory';
-import { PrepareRecipesDeploymentCommand } from './domain/useCases/IPrepareRecipesDeploymentUseCase';
-import { PrepareStandardsDeploymentCommand } from './domain/useCases/IPrepareStandardsDeploymentUseCase';
 
 const origin = 'CodingAgentHexa';
 
@@ -60,6 +63,14 @@ export class CodingAgentHexa extends BaseHexa {
   }
 
   /**
+   * Get the CodingAgent adapter for cross-domain access
+   * Following DDD monorepo architecture standard
+   */
+  public getCodingAgentAdapter(): ICodingAgentPort {
+    return this.hexa.adapter;
+  }
+
+  /**
    * Prepares file updates for deploying recipes across specified coding agents
    *
    * @param command - Command containing recipes, git repo, and coding agents
@@ -76,7 +87,7 @@ export class CodingAgentHexa extends BaseHexa {
     });
 
     const fileUpdates =
-      await this.hexa.useCases.prepareRecipesDeployment(command);
+      await this.hexa.adapter.prepareRecipesDeployment(command);
 
     return fileUpdates;
   }
@@ -98,7 +109,7 @@ export class CodingAgentHexa extends BaseHexa {
     });
 
     const fileUpdates =
-      await this.hexa.useCases.prepareStandardsDeployment(command);
+      await this.hexa.adapter.prepareStandardsDeployment(command);
 
     return fileUpdates;
   }

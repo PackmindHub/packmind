@@ -17,7 +17,7 @@ import {
 } from '@packmind/standards';
 import { standardFactory } from '@packmind/standards/test';
 import { GitRepo, GitRepoId, GitProviderId } from '@packmind/git';
-import { FileUpdates } from '../../domain/entities/FileUpdates';
+import { FileUpdates } from '@packmind/types';
 import { UserId } from '@packmind/accounts';
 import { PackmindLogger } from '@packmind/logger';
 import { Target, TargetId } from '@packmind/types';

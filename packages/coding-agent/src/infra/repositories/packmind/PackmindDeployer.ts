@@ -1,7 +1,7 @@
 import { RecipeVersion } from '@packmind/recipes';
 import { GitRepo } from '@packmind/git';
 import { StandardVersion, StandardsHexa } from '@packmind/standards';
-import { FileUpdates } from '../../../domain/entities/FileUpdates';
+import { FileUpdates } from '@packmind/types';
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
 import { RecipesIndexService } from '../../../application/services/RecipesIndexService';
 import { StandardsIndexService } from '../../../application/services/StandardsIndexService';

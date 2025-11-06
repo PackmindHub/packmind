@@ -1,7 +1,7 @@
 import { CodingAgentDeployerRegistry } from './CodingAgentDeployerRegistry';
 import { CodingAgent } from '../../domain/CodingAgents';
 import { ICodingAgentDeployer } from '../../domain/repository/ICodingAgentDeployer';
-import { FileUpdates } from '../../domain/entities/FileUpdates';
+import { FileUpdates } from '@packmind/types';
 
 // Mock deployer for testing
 class MockDeployer implements ICodingAgentDeployer {

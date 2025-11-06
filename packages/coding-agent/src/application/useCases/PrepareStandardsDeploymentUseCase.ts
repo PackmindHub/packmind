@@ -2,8 +2,8 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   IPrepareStandardsDeploymentUseCase,
   PrepareStandardsDeploymentCommand,
-} from '../../domain/useCases/IPrepareStandardsDeploymentUseCase';
-import { FileUpdates } from '../../domain/entities/FileUpdates';
+  PrepareStandardsDeploymentResponse,
+} from '@packmind/types';
 import { CodingAgentServices } from '../services/CodingAgentServices';
 
 const origin = 'PrepareStandardsDeploymentUseCase';
@@ -18,7 +18,7 @@ export class PrepareStandardsDeploymentUseCase
 
   async execute(
     command: PrepareStandardsDeploymentCommand,
-  ): Promise<FileUpdates> {
+  ): Promise<PrepareStandardsDeploymentResponse> {
     this.logger.info('Executing prepare standards deployment use case', {
       standardsCount: command.standardVersions.length,
       agentsCount: command.codingAgents.length,

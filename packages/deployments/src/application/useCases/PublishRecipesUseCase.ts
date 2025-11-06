@@ -6,10 +6,8 @@ import {
   createRecipesDeploymentId,
 } from '../../domain/entities/RecipesDeployment';
 import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
-import {
-  CodingAgentHexa,
-  PrepareRecipesDeploymentCommand,
-} from '@packmind/coding-agent';
+import { CodingAgentHexa } from '@packmind/coding-agent';
+import { PrepareRecipesDeploymentCommand } from '@packmind/types';
 import { GitHexa } from '@packmind/git';
 import { OrganizationId } from '@packmind/types';
 import { DistributionStatus } from '@packmind/types';
@@ -166,6 +164,8 @@ export class PublishRecipesUseCase implements IPublishRecipes {
 
         // Prepare the deployment using CodingAgentHexa (includes all targets for this repo)
         const prepareCommand: PrepareRecipesDeploymentCommand = {
+          userId: command.userId,
+          organizationId: command.organizationId,
           recipeVersions: allRecipeVersions,
           gitRepo,
           targets: targets,
@@ -526,6 +526,8 @@ ${recipeVersions.map((rv) => `- ${rv.name} (${rv.slug}) v${rv.version}`).join('\
 
         // Prepare the deployment using CodingAgentHexa
         const prepareCommand: PrepareRecipesDeploymentCommand = {
+          userId: command.userId,
+          organizationId: command.organizationId,
           recipeVersions: allRecipeVersions,
           gitRepo,
           targets,

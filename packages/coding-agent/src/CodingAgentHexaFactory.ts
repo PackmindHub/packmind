@@ -5,7 +5,7 @@ import { GitHexa } from '@packmind/git';
 import { CodingAgentDeployerRegistry } from './infra/repositories/CodingAgentDeployerRegistry';
 import { DeployerService } from './application/services/DeployerService';
 import { CodingAgentServices } from './application/services/CodingAgentServices';
-import { CodingAgentUseCases } from './application/useCases/CodingAgentUseCases';
+import { CodingAgentAdapter } from './application/adapter/CodingAgentAdapter';
 import { ICodingAgentDeployerRegistry } from './domain/repository/ICodingAgentDeployerRegistry';
 
 const origin = 'CodingAgentHexaFactory';
@@ -14,7 +14,7 @@ export class CodingAgentHexaFactory {
   private readonly deployerRegistry: ICodingAgentDeployerRegistry;
   private readonly deployerService: DeployerService;
   private readonly codingAgentServices: CodingAgentServices;
-  public readonly useCases: CodingAgentUseCases;
+  public readonly adapter: CodingAgentAdapter;
 
   constructor(
     private readonly registry?: HexaRegistry,
@@ -66,8 +66,8 @@ export class CodingAgentHexaFactory {
         this.logger,
       );
 
-      this.logger.debug('Creating use cases');
-      this.useCases = new CodingAgentUseCases(
+      this.logger.debug('Creating adapter');
+      this.adapter = new CodingAgentAdapter(
         this.codingAgentServices,
         this.logger,
       );

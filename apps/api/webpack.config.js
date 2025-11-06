@@ -98,8 +98,12 @@ module.exports = {
             patterns: [
               {
                 // Copy all WASM files (including versioned tree-sitter files for PHP)
-                from: join(__dirname, '../../packages/linter-ast/res/*.wasm'),
-                to: join(__dirname, '../../dist/apps/api/[name][ext]'),
+                from: join(__dirname, '../../packages/linter-ast/res'),
+                to: join(__dirname, '../../dist/apps/api'),
+                globOptions: {
+                  ignore: ['**/*.ts', '**/*.js', '**/*.json'],
+                },
+                noErrorOnMissing: true, // Don't fail if WASM files don't exist
               },
             ],
           }),
