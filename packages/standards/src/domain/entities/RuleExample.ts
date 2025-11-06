@@ -2,4 +2,4 @@ export {
   RuleExample,
   RuleExampleId,
   createRuleExampleId,
-} from '@packmind/shared/types';
+} from '@packmind/types';

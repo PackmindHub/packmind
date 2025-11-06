@@ -4,7 +4,7 @@ import {
   DeleteRecipesBatchCommand,
   DeleteRecipesBatchResponse,
   IDeleteRecipesBatchUseCase,
-} from '@packmind/shared';
+} from '@packmind/types';
 
 const origin = 'DeleteRecipesBatchUsecase';
 

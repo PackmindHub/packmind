@@ -8,16 +8,16 @@ import {
   RenderModeConfiguration,
   RenderMode,
   DEFAULT_ACTIVE_RENDER_MODES,
-} from '@packmind/shared/types';
+} from '@packmind/types';
 import { useDeployRecipe, useDeployStandard } from '../../hooks';
-import { Recipe } from '@packmind/recipes/types';
+import { Recipe } from '@packmind/types';
 import {
   useGetRenderModeConfigurationQuery,
   useGetTargetsByOrganizationQuery,
 } from '../../api/queries/DeploymentsQueries';
 import { RunDistributionBodyImpl } from './RunDistributionBody';
 import { RunDistributionCTAImpl } from './RunDistributionCTA';
-import { Standard } from '@packmind/shared/types';
+import { Standard } from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { PMBox, PMHeading, PMSpinner, PMVStack, PMAlert } from '@packmind/ui';
 import { RenderingSettings } from '../RenderingSettings/RenderingSettings';

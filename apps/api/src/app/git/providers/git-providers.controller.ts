@@ -15,7 +15,7 @@ import { LogLevel, PackmindLogger } from '@packmind/logger';
 import {
   GitRepoAlreadyExistsError,
   GitProviderHasRepositoriesError,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { GitProvider, GitRepo, GitProviderId, GitRepoId } from '@packmind/git';
 import { AuthService } from '../../auth/auth.service';
 import { AuthenticatedRequest } from '@packmind/shared-nest';

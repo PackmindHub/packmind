@@ -8,12 +8,12 @@ import {
   GetActiveDetectionProgramsForRuleResult,
 } from '../../domain/repositories/IPackmindGateway';
 import {
+  RuleId,
   Gateway,
   IPullAllContentResponse,
   IPullAllContentUseCase,
   Organization,
 } from '@packmind/types';
-import { RuleId } from '@packmind/shared';
 interface ApiKeyPayload {
   host: string;
   jwt: string;

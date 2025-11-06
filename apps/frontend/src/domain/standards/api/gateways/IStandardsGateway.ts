@@ -8,8 +8,8 @@ import {
   IListStandardsBySpaceUseCase,
   IGetStandardByIdUseCase,
   SpaceId,
-} from '@packmind/shared/types';
-import { GitRepoId } from '@packmind/git/types';
+} from '@packmind/types';
+import { GitRepoId } from '@packmind/types';
 
 export interface IStandardsGateway {
   getStandards: NewGateway<IListStandardsBySpaceUseCase>;

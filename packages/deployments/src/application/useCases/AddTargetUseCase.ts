@@ -3,7 +3,7 @@ import {
   createTargetId,
   IAddTargetUseCase,
   AddTargetCommand,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { TargetService } from '../services/TargetService';
 import { v4 as uuidv4 } from 'uuid';
 

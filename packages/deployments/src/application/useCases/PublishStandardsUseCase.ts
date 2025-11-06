@@ -1,20 +1,17 @@
 import { PackmindLogger } from '@packmind/logger';
 import { OrganizationId, UserId } from '@packmind/types';
-import {
-  DistributionStatus,
-  Target,
-  GitRepo,
-  StandardVersion,
-} from '@packmind/shared';
+import { DistributionStatus, Target } from '@packmind/types';
+import { GitRepo } from '@packmind/git';
+import { StandardVersion } from '@packmind/standards';
 import { v4 as uuidv4 } from 'uuid';
 import { StandardsHexa } from '@packmind/standards';
 import { GitHexa } from '@packmind/git';
 import { CodingAgentHexa } from '@packmind/coding-agent';
-import { IPublishStandards, PublishStandardsCommand } from '@packmind/shared';
+import { IPublishStandards, PublishStandardsCommand } from '@packmind/types';
 import {
   StandardsDeployment,
   createStandardsDeploymentId,
-} from '@packmind/shared';
+} from '../../domain/entities/StandardsDeployment';
 import { PrepareStandardsDeploymentCommand } from '@packmind/coding-agent';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
 import { TargetService } from '../services/TargetService';

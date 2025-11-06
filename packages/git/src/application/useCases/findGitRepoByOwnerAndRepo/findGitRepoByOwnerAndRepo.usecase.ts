@@ -1,6 +1,6 @@
 import { GitRepo } from '../../../domain/entities/GitRepo';
 import { GitRepoService } from '../../GitRepoService';
-import { QueryOption } from '@packmind/shared';
+import { QueryOption } from '@packmind/types';
 
 export interface FindGitRepoByOwnerAndRepoUseCaseInput {
   owner: string;

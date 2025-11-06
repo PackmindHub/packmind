@@ -5,7 +5,7 @@ import { stubLogger } from '@packmind/test-utils';
 import {
   CreateRenderModeConfigurationCommand,
   RenderMode,
-} from '@packmind/shared';
+} from '@packmind/types';
 import {
   Organization,
   User,

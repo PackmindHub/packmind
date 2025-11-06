@@ -1,12 +1,6 @@
 import { TestApp } from './TestApp';
-import {
-  Recipe,
-  RecipeVersion,
-  RecipeVersionId,
-  Standard,
-  StandardVersion,
-  StandardVersionId,
-} from '@packmind/shared';
+import { Recipe, RecipeVersion, RecipeVersionId } from '@packmind/types';
+import { Standard, StandardVersion, StandardVersionId } from '@packmind/types';
 
 export class DataQuery {
   constructor(private readonly testApp: TestApp) {}

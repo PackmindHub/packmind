@@ -1,16 +1,15 @@
-import { OrganizationId } from '@packmind/types';
+import { OrganizationId, SpaceId } from '@packmind/types';
+import { IStandardsPort } from '@packmind/types';
 import {
-  IStandardsPort,
   Rule,
   RuleExample,
   RuleId,
-  SpaceId,
   Standard,
   StandardId,
   StandardVersion,
   StandardVersionId,
   ListStandardsBySpaceCommand,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { IStandardsRepositories } from '../../domain/repositories/IStandardsRepositories';
 import { StandardsServices } from '../services/StandardsServices';
 import { StandardsHexaFactory } from '../../StandardsHexaFactory';

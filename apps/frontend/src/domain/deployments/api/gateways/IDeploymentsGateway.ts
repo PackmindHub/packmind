@@ -14,7 +14,7 @@ import {
   IDeleteTargetUseCase,
   IGetRenderModeConfigurationUseCase,
   IUpdateRenderModeConfigurationUseCase,
-} from '@packmind/shared';
+} from '@packmind/types';
 
 export interface IDeploymentsGateway {
   listDeploymentsByRecipeId: Gateway<IListDeploymentsByRecipe>;

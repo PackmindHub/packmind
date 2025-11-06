@@ -15,16 +15,12 @@ import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampl
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import slug from 'slug';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import {
-  AiNotConfigured,
-  RuleWithExamples,
-  ProgrammingLanguage,
-  getErrorMessage,
-} from '@packmind/shared';
+import { AiNotConfigured, getErrorMessage } from '@packmind/shared';
+import { RuleWithExamples } from '@packmind/types';
 import { OrganizationId, UserId } from '@packmind/accounts';
-import { SpaceId } from '@packmind/shared/types';
+import { SpaceId, ProgrammingLanguage } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
-import type { ILinterPort } from '@packmind/shared';
+import type { ILinterPort } from '@packmind/types';
 
 const origin = 'CreateStandardWithExamplesUsecase';
 

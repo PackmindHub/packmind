@@ -2,7 +2,7 @@ import { RecipeVersion } from '@packmind/recipes';
 import { GitRepo } from '@packmind/git';
 import { StandardVersion } from '@packmind/standards';
 import { FileUpdates } from '../entities/FileUpdates';
-import { Target } from '@packmind/shared';
+import { Target } from '@packmind/types';
 
 export interface ICodingAgentDeployer {
   deployRecipes(

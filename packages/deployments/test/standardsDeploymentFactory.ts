@@ -1,10 +1,11 @@
 import { Factory } from '@packmind/test-utils';
-import { createOrganizationId, createUserId } from '@packmind/accounts';
 import {
   DistributionStatus,
   createStandardsDeploymentId,
   StandardsDeployment,
-} from '@packmind/shared';
+  createOrganizationId,
+  createUserId,
+} from '@packmind/types';
 import { targetFactory } from './targetFactory';
 
 export const standardsDeploymentFactory: Factory<StandardsDeployment> = (

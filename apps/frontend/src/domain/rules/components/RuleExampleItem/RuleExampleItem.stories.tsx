@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { RuleExampleItem } from './RuleExampleItem';
-import { ProgrammingLanguage, RuleExample } from '@packmind/shared/types';
-import { createRuleExampleId, createRuleId } from '@packmind/standards';
+import { ProgrammingLanguage } from '@packmind/types';
+import { RuleExample } from '@packmind/types';
+import { createRuleExampleId, createRuleId } from '@packmind/types';
 
 const meta: Meta<typeof RuleExampleItem> = {
   title: 'Rules/RuleExampleItem',

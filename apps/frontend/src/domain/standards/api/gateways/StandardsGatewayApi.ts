@@ -16,10 +16,10 @@ import {
   ListStandardsBySpaceCommand,
   GetStandardByIdCommand,
   GetStandardByIdResponse,
-} from '@packmind/shared/types';
+} from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import { IStandardsGateway } from './IStandardsGateway';
-import { GitRepoId } from '@packmind/git/types';
+import { GitRepoId } from '@packmind/types';
 
 export class StandardsGatewayApi
   extends PackmindGateway

@@ -1,4 +1,5 @@
-import { IRepository, QueryOption } from '@packmind/shared';
+import { IRepository } from '@packmind/shared';
+import { QueryOption } from '@packmind/types';
 import {
   Invitation,
   InvitationToken,

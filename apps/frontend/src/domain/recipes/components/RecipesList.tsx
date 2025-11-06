@@ -22,7 +22,7 @@ import {
 
 import { DeployRecipeButton } from './DeployRecipeButton';
 import './RecipesList.styles.scss';
-import { Recipe, RecipeId } from '@packmind/recipes/types';
+import { Recipe, RecipeId } from '@packmind/types';
 import { RECIPE_MESSAGES } from '../constants/messages';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { GettingStartedLearnMoreDialog } from '../../organizations/components/dashboard/GettingStartedLearnMoreDialog';
@@ -30,7 +30,7 @@ import { GETTING_STARTED_CREATE_DIALOG } from '../../organizations/components/da
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { routes } from '../../../shared/utils/routes';
-import { WithTimestamps } from '@packmind/shared';
+import { WithTimestamps } from '@packmind/types';
 
 interface RecipesListProps {
   orgSlug: string;

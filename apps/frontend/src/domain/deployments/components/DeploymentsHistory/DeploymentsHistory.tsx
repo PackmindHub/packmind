@@ -13,8 +13,11 @@ import {
   PMLink,
   PMTooltip,
 } from '@packmind/ui';
-import { RecipesDeployment } from '@packmind/shared/src/types/deployments/RecipesDeployment';
-import { RenderMode, StandardsDeployment } from '@packmind/shared/types';
+import {
+  RecipesDeployment,
+  RenderMode,
+  StandardsDeployment,
+} from '@packmind/types';
 import { format } from 'date-fns';
 
 export type DeploymentType = 'recipe' | 'standard';

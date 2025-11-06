@@ -6,8 +6,8 @@ import {
   RenderMode,
   RenderModeConfiguration,
   UpdateRenderModeConfigurationCommand,
-  OrganizationAdminRequiredError,
-} from '@packmind/shared';
+} from '@packmind/types';
+import { OrganizationAdminRequiredError } from '@packmind/shared';
 import {
   Organization,
   User,

@@ -1,4 +1,4 @@
-import { Recipe, RecipeId } from '@packmind/shared';
+import { Recipe, RecipeId } from '@packmind/types';
 import { NavLink, Outlet } from 'react-router';
 import { getRecipeByIdOptions } from '../../src/domain/recipes/api/queries/RecipesQueries';
 import { queryClient } from '../../src/shared/data/queryClient';

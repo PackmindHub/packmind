@@ -1,5 +1,4 @@
-import { RuleExample, RuleExampleId } from '@packmind/shared/types';
-import { RuleId } from '@packmind/shared/types';
+import { RuleExample, RuleExampleId, RuleId } from '@packmind/types';
 
 export interface IRulesGateway {
   createRuleExample(

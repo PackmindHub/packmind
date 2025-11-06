@@ -5,14 +5,12 @@ import {
   Target,
   TargetWithRepository,
   GetTargetsByOrganizationCommand,
-} from '@packmind/shared';
-import { stubLogger } from '@packmind/test-utils';
-import { createOrganizationId, createUserId } from '@packmind/types';
-import {
   createTargetId,
   createGitRepoId,
   createGitProviderId,
-} from '@packmind/shared';
+} from '@packmind/types';
+import { stubLogger } from '@packmind/test-utils';
+import { createOrganizationId, createUserId } from '@packmind/types';
 
 describe('GetTargetsByOrganizationUseCase', () => {
   let useCase: GetTargetsByOrganizationUseCase;

@@ -1,7 +1,7 @@
 import { Recipe } from '../entities/Recipe';
 import { OrganizationId, UserId } from '@packmind/accounts';
-import { IRepository, QueryOption } from '@packmind/shared';
-import { SpaceId } from '@packmind/shared/types';
+import { IRepository } from '@packmind/shared';
+import { QueryOption, SpaceId } from '@packmind/types';
 
 export interface IRecipeRepository extends IRepository<Recipe> {
   findBySlug(

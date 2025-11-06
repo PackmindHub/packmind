@@ -12,8 +12,7 @@ import {
 } from '@packmind/accounts';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { StandardsHexa } from '@packmind/standards';
-import { ISpacesPort, IRecipesPort } from '@packmind/shared';
-import { FileUpdates } from '@packmind/types';
+import { ISpacesPort, IRecipesPort, FileUpdates } from '@packmind/types';
 
 const createUserWithMembership = (
   userId: string,

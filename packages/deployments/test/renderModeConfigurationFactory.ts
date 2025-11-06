@@ -3,8 +3,8 @@ import {
   DEFAULT_ACTIVE_RENDER_MODES,
   RenderModeConfiguration,
   createRenderModeConfigurationId,
-} from '@packmind/shared';
-import { createOrganizationId } from '@packmind/accounts';
+  createOrganizationId,
+} from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 
 export const renderModeConfigurationFactory: Factory<

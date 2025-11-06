@@ -12,7 +12,6 @@ import {
   ResetPasswordCommand,
   PackmindCommandBody,
 } from '@packmind/types';
-import {} from '@packmind/shared/types';
 import { authGateway } from '../gateways';
 import {
   GET_ME_KEY,

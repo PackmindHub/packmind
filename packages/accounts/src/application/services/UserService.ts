@@ -11,7 +11,8 @@ import { IUserOrganizationMembershipRepository } from '../../domain/repositories
 import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import { PackmindLogger, LogLevel, maskEmail } from '@packmind/logger';
-import { SSEEventPublisher, UserContextChangeType } from '@packmind/shared';
+import { SSEEventPublisher } from '@packmind/shared';
+import { UserContextChangeType } from '@packmind/types';
 import {
   InvalidInvitationEmailError,
   UserNotInOrganizationError,

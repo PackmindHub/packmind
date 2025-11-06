@@ -2,7 +2,7 @@ import {
   CheckDirectoryExistenceCommand,
   CheckDirectoryExistenceResult,
   ICheckDirectoryExistenceUseCase,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { GitRepoService } from '../../GitRepoService';
 import { GitProviderService } from '../../GitProviderService';
 import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';

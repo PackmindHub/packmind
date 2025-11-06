@@ -2,4 +2,4 @@ export {
   StandardVersion,
   StandardVersionId,
   createStandardVersionId,
-} from '@packmind/shared/types';
+} from '@packmind/types';

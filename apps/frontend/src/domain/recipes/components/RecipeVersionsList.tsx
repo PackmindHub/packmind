@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { useGetRecipeVersionsQuery } from '../api/queries/RecipesQueries';
-import { RecipeId, RecipeVersion } from '@packmind/recipes/types';
+import { RecipeId, RecipeVersion } from '@packmind/types';
 import { PMBox } from '@packmind/ui';
 import { PMSpinner } from '@packmind/ui';
 import {

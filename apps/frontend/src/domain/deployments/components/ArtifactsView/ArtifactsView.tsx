@@ -22,7 +22,7 @@ import {
   RecipeDeploymentStatus,
   StandardDeploymentStatus,
   TargetId,
-} from '@packmind/shared/types';
+} from '@packmind/types';
 import {
   RunDistribution,
   useRunDistribution,

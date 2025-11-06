@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/coding-agent/src",
   "projectType": "library",
-  "tags": [],
+  "tags": ["env:node"],
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",

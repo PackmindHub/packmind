@@ -1,5 +1,5 @@
 import { OrganizationId } from '@packmind/types';
-import { GitProviderId, GitRepoId } from '@packmind/git/types';
+import { GitProviderId, GitRepoId } from '@packmind/types';
 
 // Available git provider types for UI
 export enum GitProviders {

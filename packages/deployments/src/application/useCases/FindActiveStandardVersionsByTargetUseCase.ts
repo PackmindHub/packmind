@@ -2,7 +2,7 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   FindActiveStandardVersionsByTargetCommand,
   IFindActiveStandardVersionsByTargetUseCase,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
 import { StandardVersion } from '@packmind/standards/types';
 

@@ -1,5 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
-import { StandardVersionId, getErrorMessage } from '@packmind/shared';
+import { getErrorMessage } from '@packmind/shared';
+import { StandardVersionId } from '@packmind/types';
 import { IStandardsRepositories } from '../../../domain/repositories/IStandardsRepositories';
 import {
   IUpdateStandardVersionSummary,

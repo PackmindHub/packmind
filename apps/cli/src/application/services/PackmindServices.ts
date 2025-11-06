@@ -1,6 +1,6 @@
 import { ListFiles } from './ListFiles';
 import { GitService } from './GitService';
-import { IExecuteLinterProgramsUseCase } from '@packmind/shared';
+import { IExecuteLinterProgramsUseCase } from '@packmind/types';
 
 export interface PackmindServices {
   listFiles: ListFiles;

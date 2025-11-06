@@ -6,7 +6,7 @@ import {
   IGitPort,
   IStandardsPort,
   IDeploymentPort,
-} from '@packmind/shared/types';
+} from '@packmind/types';
 import { AccountsHexaFactory } from './AccountsHexaFactory';
 import { User, Organization } from '@packmind/types';
 import { ApiKeyService } from './application/services/ApiKeyService';

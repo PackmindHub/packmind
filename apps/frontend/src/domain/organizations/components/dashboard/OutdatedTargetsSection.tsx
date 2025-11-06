@@ -21,7 +21,7 @@ import {
   GitRepo,
   DeployedRecipeTargetInfo,
   DeployedStandardTargetInfo,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { LuCircleCheckBig } from 'react-icons/lu';
 import { RepositoryTargetTable } from '../../../deployments/components/RepositoryTargetTable/RepositoryTargetTable';
 

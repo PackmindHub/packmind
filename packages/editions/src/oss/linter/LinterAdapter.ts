@@ -25,11 +25,9 @@ import {
   GetRuleDetectionAssessmentResponse,
   GetStandardRulesDetectionStatusCommand,
   GetStandardRulesDetectionStatusResponse,
-  ILinterPort,
   ListDetectionProgramCommand,
   ListDetectionProgramResponse,
   RuleDetectionAssessment,
-  RuleLanguageDetectionStatus,
   StartProgramGenerationCommand,
   StartProgramGenerationResponse,
   TestProgramExecutionCommand,
@@ -39,7 +37,9 @@ import {
   UpdateDetectionProgramStatusCommand,
   UpdateRuleDetectionAssessmentAfterUpdateResponse,
   UpdateRuleDetectionStatusAfterUpdateResponse,
-} from '@packmind/shared';
+  RuleLanguageDetectionStatus,
+} from '@packmind/types';
+import { ILinterPort } from '@packmind/types';
 import { LinterUsecases } from '.';
 
 export class LinterAdapter implements ILinterPort {

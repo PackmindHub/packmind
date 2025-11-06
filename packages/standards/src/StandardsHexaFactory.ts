@@ -3,8 +3,12 @@ import { StandardsRepositories } from './infra/repositories/StandardsRepositorie
 import { DataSource } from 'typeorm';
 import { StandardsUseCases } from './application/useCases';
 import { PackmindLogger } from '@packmind/logger';
-import { HexaRegistry, IDeploymentPort, ISpacesPort } from '@packmind/shared';
-import type { ILinterPort } from '@packmind/shared';
+import { HexaRegistry } from '@packmind/shared';
+import type {
+  IDeploymentPort,
+  ISpacesPort,
+  ILinterPort,
+} from '@packmind/types';
 import { GitHexa } from '@packmind/git';
 import { AccountsHexa } from '@packmind/accounts';
 import { IStandardDelayedJobs } from './domain/jobs/IStandardDelayedJobs';

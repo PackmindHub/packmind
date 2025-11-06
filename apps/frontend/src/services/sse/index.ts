@@ -7,4 +7,4 @@ export type {
   HelloWorldEvent,
   DataChangeEvent,
   NotificationEvent,
-} from '@packmind/shared';
+} from '@packmind/types';

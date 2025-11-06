@@ -30,7 +30,7 @@ import {
   IGitPort,
   IStandardsPort,
   IDeploymentPort,
-} from '@packmind/shared/types';
+} from '@packmind/types';
 
 import {
   ISignUpWithOrganizationUseCase,

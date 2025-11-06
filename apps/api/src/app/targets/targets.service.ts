@@ -9,8 +9,8 @@ import {
   UpdateTargetCommand,
   DeleteTargetCommand,
   DeleteTargetResponse,
-} from '@packmind/shared';
-import { IDeploymentPort } from '@packmind/shared';
+} from '@packmind/types';
+import { IDeploymentPort } from '@packmind/types';
 import { DeploymentsHexa } from '@packmind/deployments';
 import { AccountsHexa } from '@packmind/accounts';
 

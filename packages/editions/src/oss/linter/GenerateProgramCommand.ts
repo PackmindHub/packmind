@@ -1,5 +1,4 @@
-import { PackmindCommand } from '@packmind/types';
-import { Rule, Standard } from '@packmind/shared';
+import { PackmindCommand, Rule, Standard } from '@packmind/types';
 
 export interface GenerateProgramCommand extends PackmindCommand {
   standard: Standard;

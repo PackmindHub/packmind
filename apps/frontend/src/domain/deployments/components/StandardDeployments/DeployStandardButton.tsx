@@ -7,7 +7,7 @@ import {
   pmToaster,
 } from '@packmind/ui';
 import { RunDistribution } from '../RunDistribution/RunDistribution';
-import { Standard } from '@packmind/shared/types';
+import { Standard } from '@packmind/types';
 import { createSeparateDeploymentNotifications } from '../../utils/deploymentNotificationUtils';
 
 export interface DeployStandardButtonProps {

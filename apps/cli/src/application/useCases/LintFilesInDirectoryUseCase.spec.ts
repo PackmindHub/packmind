@@ -1,9 +1,3 @@
-import { LintFilesInDirectoryUseCase } from './LintFilesInDirectoryUseCase';
-import { PackmindServices } from '../services/PackmindServices';
-import { IPackmindRepositories } from '../../domain/repositories/IPackmindRepositories';
-import { ListFiles } from '../services/ListFiles';
-import { GitService } from '../services/GitService';
-import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { PackmindLogger } from '@packmind/logger';
 import {
   ExecuteLinterProgramsCommand,
@@ -11,8 +5,14 @@ import {
   LinterExecutionViolation,
   ProgrammingLanguage,
   RuleId,
-} from '@packmind/shared';
+} from '@packmind/types';
 import * as fs from 'fs/promises';
+import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
+import { IPackmindRepositories } from '../../domain/repositories/IPackmindRepositories';
+import { GitService } from '../services/GitService';
+import { ListFiles } from '../services/ListFiles';
+import { PackmindServices } from '../services/PackmindServices';
+import { LintFilesInDirectoryUseCase } from './LintFilesInDirectoryUseCase';
 
 jest.mock('fs/promises');
 

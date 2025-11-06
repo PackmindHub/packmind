@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { gitProviderGateway } from '../gateways';
 import { OrganizationId } from '@packmind/types';
 import { CreateGitProviderForm } from '../../types/GitProviderTypes';
-import { GitProviderId } from '@packmind/git/types';
+import { GitProviderId } from '@packmind/types';
 import { DEPLOYMENTS_QUERY_SCOPE } from '../../../deployments/api/queryKeys';
 import {
   GET_GIT_PROVIDERS_KEY,

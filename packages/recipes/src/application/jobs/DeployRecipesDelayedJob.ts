@@ -1,5 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
-import { getErrorMessage, IDeploymentPort } from '@packmind/shared';
+import { getErrorMessage } from '@packmind/shared';
+import { IDeploymentPort } from '@packmind/types';
 import {
   AbstractAIDelayedJob,
   IQueue,

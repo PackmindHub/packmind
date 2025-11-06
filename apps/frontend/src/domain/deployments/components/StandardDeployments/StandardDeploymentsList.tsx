@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useListStandardDeploymentsQuery } from '../../api/queries/DeploymentsQueries';
 import { DeploymentsHistory as GenericDeploymentsHistory } from '../DeploymentsHistory/DeploymentsHistory';
-import { StandardId } from '@packmind/shared';
+import { StandardId } from '@packmind/types';
 import { useGetUsersInMyOrganizationQuery } from '../../../accounts/api/queries/UserQueries';
 
 interface DeploymentsHistoryProps {

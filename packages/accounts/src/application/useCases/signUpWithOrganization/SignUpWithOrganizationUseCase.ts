@@ -1,7 +1,7 @@
 import { UserService } from '../../services/UserService';
 import { OrganizationService } from '../../services/OrganizationService';
 import { PackmindLogger } from '@packmind/logger';
-import { ISpacesPort } from '@packmind/shared/types';
+import { ISpacesPort } from '@packmind/types';
 import {
   ISignUpWithOrganizationUseCase,
   SignUpWithOrganizationCommand,

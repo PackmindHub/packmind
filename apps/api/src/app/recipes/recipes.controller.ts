@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { RecipeId, RecipeVersion, RecipeVersionId } from '@packmind/recipes';
 import { GitRepoId } from '@packmind/git';
-import { TargetId } from '@packmind/shared';
+import { TargetId } from '@packmind/types';
 import { SpaceId } from '@packmind/spaces';
 import { RecipesService } from './recipes.service';
 import { PackmindLogger } from '@packmind/logger';

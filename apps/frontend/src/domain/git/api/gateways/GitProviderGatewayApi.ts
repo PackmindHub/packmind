@@ -1,6 +1,6 @@
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import { IGitProviderGateway } from './IGitProviderGateway';
-import { GitProvider, GitProviderId, GitRepoId } from '@packmind/git/types';
+import { GitProvider, GitProviderId, GitRepoId } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 import {
   GitProviderUI,
@@ -9,7 +9,7 @@ import {
   AddRepositoryForm,
   AvailableRepository,
 } from '../../types/GitProviderTypes';
-import { CheckDirectoryExistenceResult } from '@packmind/shared';
+import { CheckDirectoryExistenceResult } from '@packmind/types';
 
 export class GitProviderGatewayApi
   extends PackmindGateway

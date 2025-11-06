@@ -2,7 +2,7 @@ import {
   GitRepoId,
   HandleWebHookWithoutContentResult,
   HandleWebHookResult,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { OrganizationId } from '@packmind/accounts';
 
 export interface FetchFileContentInput {

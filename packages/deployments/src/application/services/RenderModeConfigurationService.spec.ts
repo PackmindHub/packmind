@@ -7,7 +7,7 @@ import {
   DEFAULT_ACTIVE_RENDER_MODES,
   RenderMode,
   RenderModeConfiguration,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { CodingAgents } from '@packmind/coding-agent';
 import { renderModeConfigurationFactory } from '../../../test';
 

@@ -1,7 +1,10 @@
-import { GetAvailableRemoteDirectoriesCommand } from '@packmind/shared';
+import {
+  GetAvailableRemoteDirectoriesCommand,
+  createOrganizationId,
+  createUserId,
+} from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
 import { stubLogger } from '@packmind/test-utils';
-import { createOrganizationId, createUserId } from '@packmind/accounts';
 import { GitRepo, createGitRepoId } from '../../../domain/entities/GitRepo';
 import { createGitProviderId } from '../../../domain/entities/GitProvider';
 import { v4 as uuidv4 } from 'uuid';

@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useGetUsersInMyOrganizationQuery } from '../../../accounts/api/queries/UserQueries';
 import { useListRecipeDeploymentsQuery } from '../../api/queries/DeploymentsQueries';
-import { RecipeId } from '@packmind/shared';
+import { RecipeId } from '@packmind/types';
 import { DeploymentsHistory } from '../DeploymentsHistory/DeploymentsHistory';
 
 interface RecipeDeploymentsListProps {

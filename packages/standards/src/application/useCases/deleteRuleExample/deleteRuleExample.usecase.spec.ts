@@ -1,11 +1,11 @@
+import { OrganizationId, UserId } from '@packmind/accounts';
 import { PackmindLogger } from '@packmind/logger';
-import { RuleExampleId } from '@packmind/shared';
-import { UserId, OrganizationId } from '@packmind/accounts';
 import { stubLogger } from '@packmind/test-utils';
-import { DeleteRuleExampleUsecase } from './deleteRuleExample.usecase';
-import { IStandardsRepositories } from '../../../domain/repositories/IStandardsRepositories';
-import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
+import { RuleExampleId } from '@packmind/types';
 import { ruleExampleFactory } from '../../../../test';
+import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
+import { IStandardsRepositories } from '../../../domain/repositories/IStandardsRepositories';
+import { DeleteRuleExampleUsecase } from './deleteRuleExample.usecase';
 
 describe('DeleteRuleExampleUsecase', () => {
   let usecase: DeleteRuleExampleUsecase;

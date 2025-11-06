@@ -2,7 +2,7 @@ import {
   Target,
   IUpdateTargetUseCase,
   UpdateTargetCommand,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { TargetService } from '../services/TargetService';
 
 export class UpdateTargetUseCase implements IUpdateTargetUseCase {

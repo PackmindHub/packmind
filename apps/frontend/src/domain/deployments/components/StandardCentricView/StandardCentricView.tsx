@@ -9,11 +9,11 @@ import {
   PMHStack,
   PMIcon,
 } from '@packmind/ui';
-import { StandardDeploymentStatus } from '@packmind/deployments';
+import { StandardDeploymentStatus } from '@packmind/types';
 import {
   TargetStandardDeploymentInfo,
   RepositoryStandardDeploymentInfo,
-} from '@packmind/shared';
+} from '@packmind/types';
 import {
   DeploymentItem,
   DeploymentEntry,

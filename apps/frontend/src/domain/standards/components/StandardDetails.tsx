@@ -8,7 +8,7 @@ import {
   useDeleteStandardMutation,
 } from '../api/queries/StandardsQueries';
 
-import { Rule, Standard } from '@packmind/shared';
+import { Rule, Standard } from '@packmind/types';
 import { STANDARD_MESSAGES } from '../constants/messages';
 import { routes } from '../../../shared/utils/routes';
 import { StandardVersionHistoryHeader } from './StandardVersionHistoryHeader';

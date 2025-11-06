@@ -14,7 +14,7 @@ import {
   StandardVersion,
   createStandardVersionId,
   createStandardId,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { targetFactory } from './targetFactory';
 import { standardFactory } from '@packmind/standards/test';
 

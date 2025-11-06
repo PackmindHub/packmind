@@ -2,16 +2,13 @@ import { RecipeService } from '../../services/RecipeService';
 import { Recipe, RecipeId } from '../../../domain/entities/Recipe';
 import { PackmindLogger } from '@packmind/logger';
 import { UserProvider, OrganizationProvider } from '@packmind/types';
-import {
-  AbstractMemberUseCase,
-  MemberContext,
-  ISpacesPort,
-} from '@packmind/shared';
+import { AbstractMemberUseCase, MemberContext } from '@packmind/shared';
+import { ISpacesPort } from '@packmind/types';
 import {
   GetRecipeByIdCommand,
   GetRecipeByIdResponse,
   IGetRecipeByIdUseCase,
-} from '@packmind/shared/types';
+} from '@packmind/types';
 
 const origin = 'GetRecipeByIdUsecase';
 

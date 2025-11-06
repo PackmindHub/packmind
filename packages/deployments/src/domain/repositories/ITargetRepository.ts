@@ -1,4 +1,4 @@
-import { Target, TargetId, GitRepoId } from '@packmind/shared/types';
+import { Target, TargetId, GitRepoId } from '@packmind/types';
 import { IRepository } from '@packmind/shared';
 
 export interface ITargetRepository extends IRepository<Target> {

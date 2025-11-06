@@ -19,7 +19,8 @@ import { CheckDirectoryExistenceUseCase } from '../useCases/checkDirectoryExiste
 import { IGitServices } from '../IGitServices';
 import { PackmindLogger } from '@packmind/logger';
 import { UserProvider, OrganizationProvider } from '@packmind/types';
-import { QueryOption, IDeploymentPort, IGitPort } from '@packmind/shared';
+import { IDeploymentPort, IGitPort } from '@packmind/types';
+import { QueryOption } from '@packmind/types';
 import { GitProvider, GitProviderId } from '../../domain/entities/GitProvider';
 import { GitRepo, GitRepoId } from '../../domain/entities/GitRepo';
 import { GitCommit } from '../../domain/entities/GitCommit';
@@ -30,18 +31,15 @@ import {
   FindGitRepoByOwnerRepoAndBranchInOrganizationCommand,
   FindGitRepoByOwnerRepoAndBranchInOrganizationResult,
   IFindGitRepoByOwnerRepoAndBranchInOrganizationUseCase,
-} from '@packmind/shared';
-import { FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase } from '../useCases/findGitRepoByOwnerRepoAndBranchInOrganization/findGitRepoByOwnerRepoAndBranchInOrganization.usecase';
-import { GetAvailableRemoteDirectoriesCommand } from '@packmind/shared';
-import {
+  GetAvailableRemoteDirectoriesCommand,
   CheckDirectoryExistenceCommand,
   CheckDirectoryExistenceResult,
-} from '@packmind/shared';
-import { HandleWebHookCommand, HandleWebHookResult } from '@packmind/shared';
-import {
+  HandleWebHookCommand,
+  HandleWebHookResult,
   HandleWebHookWithoutContentCommand,
   HandleWebHookWithoutContentResult,
-} from '@packmind/shared';
+} from '@packmind/types';
+import { FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase } from '../useCases/findGitRepoByOwnerRepoAndBranchInOrganization/findGitRepoByOwnerRepoAndBranchInOrganization.usecase';
 const origin = 'GitAdapter';
 
 export class GitAdapter implements IGitPort {

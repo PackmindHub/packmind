@@ -1,5 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
-import { HexaRegistry, RenderModeConfiguration } from '@packmind/shared';
+import { HexaRegistry } from '@packmind/shared';
+import { RenderModeConfiguration } from '@packmind/types';
 import { DataSource, Repository } from 'typeorm';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { GitHexa } from '@packmind/git';
@@ -16,7 +17,7 @@ import { StandardsDeploymentSchema } from './infra/schemas/StandardsDeploymentSc
 import { TargetSchema } from './infra/schemas/TargetSchema';
 import { RecipesDeployment } from './domain/entities/RecipesDeployment';
 import { StandardsDeployment } from './domain/entities/StandardsDeployment';
-import { Target } from '@packmind/shared';
+import { Target } from '@packmind/types';
 import { DeploymentsServices } from './application/services/DeploymentsServices';
 import { IDeploymentsServices } from './application/IDeploymentsServices';
 import { RenderModeConfigurationSchema } from './infra/schemas/RenderModeConfigurationSchema';

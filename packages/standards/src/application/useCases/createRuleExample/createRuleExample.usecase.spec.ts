@@ -6,7 +6,7 @@ import { ruleExampleFactory } from '../../../../test/ruleExampleFactory';
 import { ruleFactory } from '../../../../test/ruleFactory';
 import { v4 as uuidv4 } from 'uuid';
 import { PackmindLogger } from '@packmind/logger';
-import { ProgrammingLanguage } from '@packmind/shared';
+import { ProgrammingLanguage } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 import { createRuleId } from '../../../domain/entities/Rule';
 

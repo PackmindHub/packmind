@@ -11,7 +11,7 @@ import {
   TargetDeploymentStatus,
   TargetDeploymentInfo,
   DeployedRecipeTargetInfo,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { targetFactory } from './targetFactory';
 
 export const createDeployedRecipeInfo = (

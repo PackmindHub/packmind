@@ -1,12 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
-import {
-  BaseHexa,
-  HexaRegistry,
-  IRecipesPort,
-  ISpacesPort,
-  BaseHexaOpts,
-} from '@packmind/shared';
-import { IDeploymentPort } from '@packmind/shared';
+import { BaseHexa, HexaRegistry, BaseHexaOpts } from '@packmind/shared';
+import { IRecipesPort, ISpacesPort, IDeploymentPort } from '@packmind/types';
 import { DeploymentsHexaFactory } from './DeploymentsHexaFactory';
 import { DeploymentsAdapter } from './application/adapter/DeploymentsAdapter';
 import { GitHexa } from '@packmind/git';

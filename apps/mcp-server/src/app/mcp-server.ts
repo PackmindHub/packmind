@@ -2,17 +2,19 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { FastifyInstance } from 'fastify';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { OrganizationId, IAnalyticsPort } from '@packmind/types';
 import {
+  OrganizationId,
+  IAnalyticsPort,
   getAllProgrammingLanguages,
   ProgrammingLanguage,
-  RecipeStep,
-  RuleWithExamples,
   Space,
   stringToProgrammingLanguage,
-} from '@packmind/shared';
+  RuleWithExamples,
+  RecipeStep,
+} from '@packmind/types';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
 import { AnalyticsAdapter } from '@packmind/amplitude';
+
 import packmindOnboardingModeSelection from './prompts/packmind-onboarding-mode-selection';
 import packmindOnboardingCodebaseAnalysis from './prompts/packmind-onboarding-codebase-analysis';
 import packmindOnboardingGitHistory from './prompts/packmind-onboarding-git-history';

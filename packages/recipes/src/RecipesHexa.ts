@@ -1,17 +1,15 @@
 import { PackmindLogger } from '@packmind/logger';
+import { BaseHexa, HexaRegistry, BaseHexaOpts } from '@packmind/shared';
+import { IDeploymentPort } from '@packmind/types';
 import {
-  BaseHexa,
-  HexaRegistry,
   QueryOption,
   CaptureRecipeCommand,
   UpdateRecipesFromGitHubCommand,
   UpdateRecipesFromGitLabCommand,
   UpdateRecipeFromUICommand,
-  IDeploymentPort,
-  BaseHexaOpts,
   GetRecipeByIdCommand,
   ListRecipesBySpaceCommand,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { RecipesHexaFactory } from './RecipesHexaFactory';
 import { Recipe, RecipeId } from './domain/entities/Recipe';
 import {
@@ -26,7 +24,7 @@ import {
   DeleteRecipeResponse,
   DeleteRecipesBatchCommand,
   DeleteRecipesBatchResponse,
-} from '@packmind/shared';
+} from '@packmind/types';
 
 const origin = 'RecipesHexa';
 

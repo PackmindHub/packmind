@@ -1,5 +1,6 @@
 import { OrganizationId } from '@packmind/accounts';
-import { IRepository, RenderModeConfiguration } from '@packmind/shared';
+import { IRepository } from '@packmind/shared';
+import { RenderModeConfiguration } from '@packmind/types';
 
 export interface IRenderModeConfigurationRepository
   extends IRepository<RenderModeConfiguration> {

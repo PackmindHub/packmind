@@ -17,7 +17,7 @@ import {
   RecipeDeploymentStatus,
   TargetDeploymentInfo,
   RepositoryDeploymentInfo,
-} from '@packmind/shared/types';
+} from '@packmind/types';
 import { LuCircleCheckBig, LuClockAlert } from 'react-icons/lu';
 
 interface RecipeCentricViewProps {

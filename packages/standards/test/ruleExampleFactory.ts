@@ -5,7 +5,7 @@ import {
 } from '../src/domain/entities/RuleExample';
 import { v4 as uuidv4 } from 'uuid';
 import { createRuleId } from '../src/domain/entities/Rule';
-import { ProgrammingLanguage } from '@packmind/shared/types';
+import { ProgrammingLanguage } from '@packmind/types';
 
 export const ruleExampleFactory: Factory<RuleExample> = (
   ruleExample?: Partial<RuleExample>,

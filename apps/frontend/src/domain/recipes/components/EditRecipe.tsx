@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { PMBox, PMVStack, PMHStack } from '@packmind/ui';
 import { PMButton, PMInput, PMTextArea, PMText } from '@packmind/ui';
 import { useUpdateRecipeMutation } from '../api/queries/RecipesQueries';
-import { Recipe } from '@packmind/recipes/types';
+import { Recipe } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
-import { SpaceId } from '@packmind/spaces';
+import { SpaceId } from '@packmind/types';
 
 interface EditRecipeProps {
   recipe: Recipe;

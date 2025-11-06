@@ -1,11 +1,9 @@
-import { Recipe, RecipeId, RecipeVersion } from '@packmind/recipes/types';
+import { Recipe, RecipeId, RecipeVersion } from '@packmind/types';
 import { NewGateway } from '@packmind/types';
-import {
-  IDeleteRecipesBatchUseCase,
-  IDeleteRecipeUseCase,
-} from '@packmind/shared';
+import { IDeleteRecipeUseCase } from '@packmind/types';
+import { IDeleteRecipesBatchUseCase } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
-import { SpaceId } from '@packmind/spaces';
+import { SpaceId } from '@packmind/types';
 
 export interface IRecipesGateway {
   getRecipes(

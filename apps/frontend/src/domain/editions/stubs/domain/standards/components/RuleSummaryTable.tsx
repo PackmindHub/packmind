@@ -7,7 +7,7 @@ import {
   PMText,
   PMLink,
 } from '@packmind/ui';
-import type { Rule } from '@packmind/shared';
+import type { Rule } from '@packmind/types';
 import { routes } from '../../../../../../shared/utils/routes';
 
 interface RuleSummaryTableProps {

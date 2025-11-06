@@ -8,8 +8,8 @@ import {
   PMVStack,
   PMNativeSelect,
 } from '@packmind/ui';
-import { GitRepoId } from '@packmind/git';
-import { Target } from '@packmind/shared';
+import { GitRepoId } from '@packmind/types';
+import { Target } from '@packmind/types';
 import {
   useAddTargetMutation,
   useUpdateTargetMutation,

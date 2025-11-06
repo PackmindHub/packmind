@@ -16,7 +16,7 @@ import {
   RuleId,
   GetStandardByIdResponse,
   ListStandardsBySpaceResponse,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
 import { StandardsService } from '../../../standards/standards.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';

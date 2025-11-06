@@ -1,23 +1,27 @@
 import { Gateway } from '@packmind/types';
+import { StandardId } from '@packmind/types';
+import { IUpdateTargetUseCase, IDeleteTargetUseCase } from '@packmind/types';
 import {
-  IListDeploymentsByRecipe,
-  IGetStandardDeploymentOverview,
-  IListDeploymentsByStandard,
+  IAddTargetUseCase,
+  IGetRenderModeConfigurationUseCase,
+  IUpdateRenderModeConfigurationUseCase,
+  GitRepoId,
+} from '@packmind/types';
+import {
   IGetDeploymentOverview,
   IPublishRecipes,
   IPublishStandards,
+  IListDeploymentsByRecipe,
+  IGetStandardDeploymentOverview,
+  IListDeploymentsByStandard,
   IGetTargetsByGitRepoUseCase,
   IGetTargetsByRepositoryUseCase,
   IGetTargetsByOrganizationUseCase,
-  IAddTargetUseCase,
-  IUpdateTargetUseCase,
-  IDeleteTargetUseCase,
-  IGetRenderModeConfigurationUseCase,
-  IUpdateRenderModeConfigurationUseCase,
-  StandardId,
-  GitRepoId,
-} from '@packmind/shared';
-import { OrganizationId } from '@packmind/accounts';
+  UpdateTargetCommand,
+  DeleteTargetCommand,
+  DeleteTargetResponse,
+} from '@packmind/types';
+import { OrganizationId } from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import { IDeploymentsGateway } from './IDeploymentsGateway';
 
@@ -92,11 +96,15 @@ export class DeploymentsGatewayApi
   };
 
   updateTarget: Gateway<IUpdateTargetUseCase> = async (command) => {
-    return this._api.put(`/targets/${command.targetId}`, command);
+    const cmd = command as UpdateTargetCommand;
+    return this._api.put(`/targets/${cmd.targetId}`, command);
   };
 
   deleteTarget: Gateway<IDeleteTargetUseCase> = async (command) => {
-    return this._api.delete(`/targets/${command.targetId}`);
+    const cmd = command as DeleteTargetCommand;
+    return this._api.delete(
+      `/targets/${cmd.targetId}`,
+    ) as Promise<DeleteTargetResponse>;
   };
 
   getRenderModeConfiguration: Gateway<IGetRenderModeConfigurationUseCase> =

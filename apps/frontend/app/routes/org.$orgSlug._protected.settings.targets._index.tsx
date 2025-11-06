@@ -11,8 +11,8 @@ import {
 import { useAuthContext } from '../../src/domain/accounts/hooks';
 import { useGetTargetsByOrganizationQuery } from '../../src/domain/deployments/api/queries/DeploymentsQueries';
 import { RepositoryTargetCard } from '../../src/domain/deployments/components/RepositoryTargetCard/RepositoryTargetCard';
-import { GitRepoId } from '@packmind/git';
-import { OrganizationId } from '@packmind/accounts';
+import { GitRepoId } from '@packmind/types';
+import { OrganizationId } from '@packmind/types';
 import { LuSettings, LuPlus } from 'react-icons/lu';
 
 export default function TargetsRouteModule() {

@@ -4,15 +4,15 @@ import { DeploymentStatsSummary } from '../DeploymentStatsSummary/DeploymentStat
 import {
   RepositoryStandardDeploymentStatus,
   DeployedStandardInfo,
-} from '@packmind/deployments';
-import { GitRepo } from '@packmind/git/types';
+} from '@packmind/types';
+import { GitRepo } from '@packmind/types';
 import {
   DeployedRecipeInfo,
   RepositoryDeploymentStatus,
   TargetDeploymentStatus,
   TargetStandardDeploymentStatus,
   TargetId,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { RepositoryTargetTable } from '../RepositoryTargetTable/RepositoryTargetTable';
 
 interface CombinedRepositoryDeploymentStatus {

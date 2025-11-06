@@ -2,7 +2,7 @@ import {
   Target,
   IGetTargetsByGitRepoUseCase,
   GetTargetsByGitRepoCommand,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { TargetService } from '../services/TargetService';
 

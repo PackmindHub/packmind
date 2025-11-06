@@ -1,0 +1,17 @@
+{
+  "name": "@packmind/test-utils",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "dependencies": {
+    "@packmind/logger": "*",
+    "pg-mem": "^3.0.5",
+    "tslib": "^2.3.0",
+    "typeorm": "0.3.26"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12"
+  }
+}

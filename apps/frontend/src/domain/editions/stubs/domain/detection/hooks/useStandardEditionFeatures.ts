@@ -1,4 +1,4 @@
-import type { Standard } from '@packmind/shared';
+import type { Standard } from '@packmind/types';
 
 export type StandardEditionFeatures = {
   ruleLanguages: Record<string, string[]>;

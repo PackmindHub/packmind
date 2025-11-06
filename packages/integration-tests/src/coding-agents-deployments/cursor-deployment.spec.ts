@@ -1,36 +1,35 @@
 import { AccountsHexa, accountsSchemas } from '@packmind/accounts';
-import { User, Organization } from '@packmind/types';
+import {
+  CodingAgentHexaFactory,
+  CursorDeployer,
+  DeployerService,
+} from '@packmind/coding-agent';
+import { GitHexa, gitSchemas } from '@packmind/git';
+import { JobsHexa } from '@packmind/jobs';
 import { RecipesHexa, recipesSchemas } from '@packmind/recipes';
 import {
   Recipe,
   RecipeVersion,
   RecipeVersionId,
 } from '@packmind/recipes/types';
+import { HexaRegistry } from '@packmind/shared';
+import { Space, SpacesHexa, spacesSchemas } from '@packmind/spaces';
 import { StandardsHexa, standardsSchemas } from '@packmind/standards';
+import { makeTestDatasource } from '@packmind/test-utils';
 import {
+  GitProviderVendors,
+  GitRepo,
+  IDeploymentPort,
+  Organization,
   Standard,
   StandardVersion,
   StandardVersionId,
-} from '@packmind/standards/types';
-import { SpacesHexa, spacesSchemas, Space } from '@packmind/spaces';
-import { GitHexa, gitSchemas } from '@packmind/git';
-import { JobsHexa } from '@packmind/jobs';
-import { GitRepo, GitProviderVendors } from '@packmind/git/types';
-import {
-  HexaRegistry,
-  IDeploymentPort,
   Target,
+  User,
   createTargetId,
-} from '@packmind/shared';
-import { makeTestDatasource } from '@packmind/test-utils';
-import {
-  CodingAgentHexaFactory,
-  DeployerService,
-  CursorDeployer,
-} from '@packmind/coding-agent';
-
-import { DataSource } from 'typeorm';
+} from '@packmind/types';
 import { assert } from 'console';
+import { DataSource } from 'typeorm';
 
 // Mock only Configuration from @packmind/shared
 jest.mock('@packmind/shared', () => {

@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { RuleExample } from '@packmind/shared/types';
+import { RuleExample, RuleId } from '@packmind/types';
 import {
-  RuleId,
   ProgrammingLanguage,
   getAllLanguagesSortedByDisplayName,
-} from '@packmind/shared/types';
+} from '@packmind/types';
 import {
   useUpdateRuleExampleMutation,
   useDeleteRuleExampleMutation,

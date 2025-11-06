@@ -7,7 +7,7 @@ import { GitProviderId } from '../domain/entities/GitProvider';
 import { IGitRepoRepository } from '../domain/repositories/IGitRepoRepository';
 import { OrganizationId, UserId } from '@packmind/accounts';
 import { v4 as uuidv4 } from 'uuid';
-import { QueryOption } from '@packmind/shared';
+import { QueryOption } from '@packmind/types';
 
 export class GitRepoService {
   constructor(private readonly gitRepoRepository: IGitRepoRepository) {}

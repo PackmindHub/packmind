@@ -12,9 +12,11 @@ import {
   ExecuteLinterProgramsCommand,
   LinterExecutionProgram,
   LinterExecutionViolation,
+} from '@packmind/types';
+import {
   ProgrammingLanguage,
   stringToProgrammingLanguage,
-} from '@packmind/shared';
+} from '@packmind/types';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { RuleId } from '@packmind/shared/types';
+import { RuleId } from '@packmind/types';
 import { PMVStack, PMText, PMSpinner, PMBox } from '@packmind/ui';
 import { RuleExampleItem } from '../RuleExampleItem';
 import { useGetRuleExamplesQuery } from '../../api/queries';

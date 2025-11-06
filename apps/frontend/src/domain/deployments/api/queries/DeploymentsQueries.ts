@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { deploymentsGateways } from '../gateways';
-import { RecipeId, RecipeVersionId } from '@packmind/recipes/types';
-import { StandardId, StandardVersionId } from '@packmind/shared/types';
-import { GitRepoId } from '@packmind/git';
-import { OrganizationId } from '@packmind/accounts';
+import { RecipeId, RecipeVersionId } from '@packmind/types';
+import { StandardId, StandardVersionId } from '@packmind/types';
+import { GitRepoId } from '@packmind/types';
+import { OrganizationId } from '@packmind/types';
 import {
   TargetId,
   AddTargetCommand,
@@ -11,7 +11,7 @@ import {
   DeleteTargetCommand,
   DeleteTargetResponse,
   UpdateRenderModeConfigurationCommand,
-} from '@packmind/shared';
+} from '@packmind/types';
 import {
   LIST_RECIPE_DEPLOYMENTS_KEY,
   LIST_STANDARD_DEPLOYMENTS_KEY,

@@ -1,11 +1,8 @@
 import { Repository } from 'typeorm';
 import { OrganizationId } from '@packmind/accounts';
 import { PackmindLogger } from '@packmind/logger';
-import {
-  AbstractRepository,
-  localDataSource,
-  RenderModeConfiguration,
-} from '@packmind/shared';
+import { AbstractRepository, localDataSource } from '@packmind/shared';
+import { RenderModeConfiguration } from '@packmind/types';
 import { IRenderModeConfigurationRepository } from '../../domain/repositories/IRenderModeConfigurationRepository';
 import { RenderModeConfigurationSchema } from '../schemas/RenderModeConfigurationSchema';
 

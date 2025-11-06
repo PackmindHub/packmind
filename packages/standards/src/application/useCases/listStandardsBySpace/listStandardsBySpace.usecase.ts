@@ -1,12 +1,11 @@
 import { UserProvider, OrganizationProvider } from '@packmind/types';
+import { AbstractMemberUseCase, MemberContext } from '@packmind/shared';
+import { ISpacesPort } from '@packmind/types';
 import {
-  AbstractMemberUseCase,
-  MemberContext,
   ListStandardsBySpaceCommand,
   ListStandardsBySpaceResponse,
   IListStandardsBySpaceUseCase,
-  ISpacesPort,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { StandardService } from '../../services/StandardService';
 

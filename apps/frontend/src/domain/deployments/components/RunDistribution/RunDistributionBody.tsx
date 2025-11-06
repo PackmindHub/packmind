@@ -18,7 +18,7 @@ import {
   PMTooltip,
 } from '@packmind/ui';
 import { useRunDistribution } from './RunDistribution';
-import { RenderMode, TargetId } from '@packmind/shared/types';
+import { RenderMode, TargetId } from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useNavigate } from 'react-router';
 import { RxQuestionMarkCircled } from 'react-icons/rx';

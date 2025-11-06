@@ -8,7 +8,7 @@ import {
   pmToaster,
 } from '@packmind/ui';
 import { RunDistribution } from '../../deployments/components/RunDistribution/RunDistribution';
-import { Recipe } from '@packmind/recipes/types';
+import { Recipe } from '@packmind/types';
 import { createSeparateDeploymentNotifications } from '../../deployments/utils/deploymentNotificationUtils';
 export interface DeployRecipeButtonProps {
   label?: string;

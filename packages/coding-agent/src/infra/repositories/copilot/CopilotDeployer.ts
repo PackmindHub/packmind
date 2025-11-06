@@ -4,7 +4,7 @@ import { StandardsHexa, StandardVersion } from '@packmind/standards';
 import { FileUpdates } from '../../../domain/entities/FileUpdates';
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
 import { PackmindLogger } from '@packmind/logger';
-import { Target } from '@packmind/shared';
+import { Target } from '@packmind/types';
 import { GenericRecipeSectionWriter } from '../genericSectionWriter/GenericRecipeSectionWriter';
 import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
 import { getTargetPrefixedPath } from '../utils/FileUtils';

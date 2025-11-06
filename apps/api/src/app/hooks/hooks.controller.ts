@@ -1,7 +1,8 @@
 import { Body, Controller, Headers, Post, Param, Get } from '@nestjs/common';
 import { RecipesService } from '../recipes/recipes.service';
 import { PackmindLogger } from '@packmind/logger';
-import { Configuration, Recipe } from '@packmind/shared';
+import { Configuration } from '@packmind/shared';
+import { Recipe } from '@packmind/types';
 import { OrganizationId, createOrganizationId } from '@packmind/accounts';
 import { Public } from '@packmind/shared-nest';
 

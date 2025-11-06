@@ -1,1 +1,1 @@
-export { Recipe, RecipeId, createRecipeId } from '@packmind/shared';
+export { Recipe, RecipeId, createRecipeId } from '@packmind/types';

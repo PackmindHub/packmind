@@ -10,8 +10,8 @@ import {
   PMEmptyState,
 } from '@packmind/ui';
 import { LuSettings, LuTarget } from 'react-icons/lu';
-import { TargetWithRepository, Target } from '@packmind/shared';
-import { GitRepoId } from '@packmind/git';
+import { TargetWithRepository, Target } from '@packmind/types';
+import { GitRepoId } from '@packmind/types';
 import { TargetBadge } from '../TargetBadge/TargetBadge';
 import { TargetManagementDialog } from '../TargetManagementDialog/TargetManagementDialog';
 

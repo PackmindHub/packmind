@@ -1,10 +1,9 @@
 import { OrganizationProvider, UserProvider } from '@packmind/types';
+import { AbstractMemberUseCase, MemberContext } from '@packmind/shared';
 import {
-  AbstractMemberUseCase,
   GetRenderModeConfigurationCommand,
   GetRenderModeConfigurationResult,
-  MemberContext,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 

@@ -2,9 +2,6 @@ export type {
   GitProviderVendor,
   GitProviderId,
   GitProvider,
-} from '@packmind/shared/types';
+} from '@packmind/types';
 
-export {
-  GitProviderVendors,
-  createGitProviderId,
-} from '@packmind/shared/types';
+export { GitProviderVendors, createGitProviderId } from '@packmind/types';

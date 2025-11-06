@@ -15,7 +15,7 @@ import {
   TargetWithRepository,
   TargetId,
   DeleteTargetResponse,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { TargetsService } from './targets.service';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthService } from '../auth/auth.service';

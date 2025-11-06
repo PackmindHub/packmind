@@ -13,10 +13,7 @@ import {
   targetFactory,
 } from '@packmind/deployments/test';
 import { gitRepoFactory } from '@packmind/git/test/gitRepoFactory';
-import {
-  RepositoryDeploymentStatus,
-  createTargetId,
-} from '@packmind/shared/types';
+import { RepositoryDeploymentStatus, createTargetId } from '@packmind/types';
 
 const renderWithProvider = (ui: React.ReactElement) => {
   return render(

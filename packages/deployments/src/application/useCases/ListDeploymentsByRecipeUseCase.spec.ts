@@ -12,7 +12,7 @@ import {
   DistributionStatus,
   createTargetId,
   GitRepoId,
-} from '@packmind/shared';
+} from '@packmind/types';
 
 describe('ListDeploymentsByRecipeUseCase', () => {
   let useCase: ListDeploymentsByRecipeUseCase;

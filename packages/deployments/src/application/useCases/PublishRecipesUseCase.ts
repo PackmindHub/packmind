@@ -1,10 +1,6 @@
-import {
-  IPublishRecipes,
-  PublishRecipesCommand,
-  IRecipesPort,
-  GitRepoId,
-  Target,
-} from '@packmind/shared';
+import { IPublishRecipes, PublishRecipesCommand } from '@packmind/types';
+import { IRecipesPort } from '@packmind/types';
+import { GitRepoId, Target } from '@packmind/types';
 import {
   RecipesDeployment,
   createRecipesDeploymentId,
@@ -16,7 +12,8 @@ import {
 } from '@packmind/coding-agent';
 import { GitHexa } from '@packmind/git';
 import { OrganizationId } from '@packmind/types';
-import { Recipe, RecipeVersion, DistributionStatus } from '@packmind/shared';
+import { DistributionStatus } from '@packmind/types';
+import { Recipe, RecipeVersion } from '@packmind/recipes';
 import { PackmindLogger } from '@packmind/logger';
 import { UserId } from '@packmind/types';
 import { TargetService } from '../services/TargetService';

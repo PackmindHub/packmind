@@ -1,1 +1,1 @@
-export { Standard, StandardId, createStandardId } from '@packmind/shared/types';
+export { Standard, StandardId, createStandardId } from '@packmind/types';

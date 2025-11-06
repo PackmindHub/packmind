@@ -2,10 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { GitHexa, GitProviderId, GitRepo, GitRepoId } from '@packmind/git';
 import { OrganizationId, UserId } from '@packmind/accounts';
 import { DeploymentsHexa } from '@packmind/deployments';
-import {
-  IDeploymentPort,
-  CheckDirectoryExistenceResult,
-} from '@packmind/shared';
+import { IDeploymentPort } from '@packmind/types';
+import { CheckDirectoryExistenceResult } from '@packmind/types';
 
 @Injectable()
 export class GitRepositoriesService {

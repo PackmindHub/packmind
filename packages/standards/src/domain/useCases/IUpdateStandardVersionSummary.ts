@@ -1,5 +1,5 @@
 import { PackmindCommand } from '@packmind/types';
-import { StandardVersionId } from '@packmind/shared';
+import { StandardVersionId } from '@packmind/types';
 import { IUseCase } from '@packmind/types';
 
 export interface UpdateStandardVersionSummaryCommand extends PackmindCommand {

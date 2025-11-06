@@ -1,13 +1,13 @@
 import { PackmindLogger } from '@packmind/logger';
 import { UserProvider, OrganizationProvider } from '@packmind/types';
+import { ISpacesPort } from '@packmind/types';
 import {
   ListStandardsBySpaceCommand,
   GetStandardByIdCommand,
   UpdateStandardCommand,
-  ISpacesPort,
   ListStandardsBySpaceResponse,
   GetStandardByIdResponse,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { CreateStandardUsecase } from './createStandard/createStandard.usecase';
 import { CreateStandardWithExamplesUsecase } from './createStandardWithExamples/createStandardWithExamples.usecase';
 import { UpdateStandardUsecase } from './updateStandard/updateStandard.usecase';
@@ -29,7 +29,7 @@ import { DeleteRuleExampleUsecase } from './deleteRuleExample/deleteRuleExample.
 import { IStandardsServices } from '../IStandardsServices';
 import { IStandardsRepositories } from '../../domain/repositories/IStandardsRepositories';
 import { OrganizationId, UserId } from '@packmind/accounts';
-import { SpaceId } from '@packmind/shared/types';
+import { SpaceId } from '@packmind/types';
 import { GitHexa } from '@packmind/git';
 import { StandardId } from '../../domain/entities';
 import { RuleExample } from '../../domain/entities';
@@ -40,8 +40,7 @@ import {
   UpdateRuleExampleCommand,
   DeleteRuleExampleCommand,
 } from '../../domain/useCases';
-import { IDeploymentPort } from '@packmind/shared';
-import type { ILinterPort } from '@packmind/shared';
+import { IDeploymentPort, ILinterPort } from '@packmind/types';
 import { IStandardDelayedJobs } from '../../domain/jobs/IStandardDelayedJobs';
 
 const origin = 'StandardsUseCases';
@@ -255,7 +254,7 @@ export class StandardsUseCases {
     name: string;
     description: string;
     summary: string | null;
-    rules: import('@packmind/shared').RuleWithExamples[];
+    rules: import('@packmind/types').RuleWithExamples[];
     organizationId: OrganizationId;
     userId: UserId;
     scope: string | null;

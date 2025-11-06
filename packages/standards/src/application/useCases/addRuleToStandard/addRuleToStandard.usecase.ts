@@ -5,11 +5,11 @@ import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { StandardVersion } from '../../../domain/entities/StandardVersion';
 import { CreateStandardVersionData } from '../../services/StandardVersionService';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { RuleExample } from '@packmind/shared';
+import { RuleExample } from '@packmind/types';
 import { OrganizationId, UserId } from '@packmind/accounts';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import { StandardVersionId } from '../../../domain/entities';
-import type { ILinterPort } from '@packmind/shared';
+import type { ILinterPort } from '@packmind/types';
 
 const origin = 'AddRuleToStandardUsecase';
 

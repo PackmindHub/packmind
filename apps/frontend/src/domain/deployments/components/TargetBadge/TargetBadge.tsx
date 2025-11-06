@@ -1,6 +1,6 @@
 import React from 'react';
 import { PMBadge, PMButton, PMHStack, PMIcon, PMTooltip } from '@packmind/ui';
-import { Target } from '@packmind/shared';
+import { Target } from '@packmind/types';
 import { LuPencil, LuX } from 'react-icons/lu';
 
 interface TargetBadgeProps {

@@ -21,7 +21,7 @@ import {
 
 import { DeployStandardButton } from '../../deployments/components/StandardDeployments/DeployStandardButton';
 import './StandardsList.styles.scss';
-import { StandardId } from '@packmind/shared/types';
+import { StandardId } from '@packmind/types';
 import { STANDARD_MESSAGES } from '../constants/messages';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { GETTING_STARTED_CREATE_DIALOG } from '../../organizations/components/dashboard/GettingStartedWidget';

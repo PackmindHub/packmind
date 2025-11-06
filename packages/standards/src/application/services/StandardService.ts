@@ -9,7 +9,7 @@ import { IStandardRepository } from '../../domain/repositories/IStandardReposito
 import { PackmindLogger } from '@packmind/logger';
 import { GitCommit } from '@packmind/git';
 import { OrganizationId, UserId } from '@packmind/accounts';
-import { SpaceId } from '@packmind/shared/types';
+import { SpaceId } from '@packmind/types';
 
 const origin = 'StandardService';
 

@@ -10,7 +10,7 @@ import {
   createRecipeVersionId,
   Target,
   createTargetId,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
 import { recipeFactory } from '@packmind/recipes/test';

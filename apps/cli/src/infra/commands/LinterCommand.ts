@@ -8,7 +8,7 @@ import {
   Type,
 } from 'cmd-ts';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { createRuleId, RuleId } from '@packmind/shared';
+import { createRuleId, RuleId } from '@packmind/types';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { IDELintLogger } from '../repositories/IDELintLogger';
 import { HumanReadableLogger } from '../repositories/HumanReadableLogger';

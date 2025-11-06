@@ -11,7 +11,7 @@ import {
   createAssessmentStatusChangeEvent,
   createUserContextChangeEvent,
   type UserContextChangeType,
-} from '../types/sse/SSEEvent';
+} from '@packmind/types';
 import { UserOrganizationRole } from '@packmind/types';
 
 const origin = 'SSEEventPublisher';

@@ -49,6 +49,7 @@
       "@packmind/recipes/types": ["packages/recipes/src/types/index.ts"],
       "@packmind/shared": ["packages/shared/src/index.ts"],
       "@packmind/shared-nest": ["packages/shared-nest/src/index.ts"],
+      "@packmind/shared/test": ["packages/shared/test/index.ts"],
       "@packmind/shared/types": ["packages/shared/src/types/index.ts"],
       "@packmind/spaces": ["packages/spaces/src/index.ts"],
       "@packmind/spaces/test": ["packages/spaces/test/index.ts"],

@@ -3,8 +3,8 @@ import {
   createStandardId,
   RuleExample,
   RuleExampleId,
-} from '@packmind/shared/types';
-import { RuleId } from '@packmind/shared/types';
+  RuleId,
+} from '@packmind/types';
 import { rulesGateway } from '../gateways';
 import { GET_RULE_EXAMPLES_KEY } from '../queryKeys';
 import {

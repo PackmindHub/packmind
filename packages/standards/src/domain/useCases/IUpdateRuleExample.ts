@@ -1,10 +1,9 @@
-import { PackmindCommand } from '@packmind/types';
 import {
-  RuleExampleId,
-  RuleExample,
+  PackmindCommand,
+  IUseCase,
   ProgrammingLanguage,
-} from '@packmind/shared';
-import { IUseCase } from '@packmind/types';
+} from '@packmind/types';
+import { RuleExampleId, RuleExample } from '@packmind/types';
 
 export interface UpdateRuleExampleCommand extends PackmindCommand {
   ruleExampleId: RuleExampleId;

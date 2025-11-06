@@ -8,7 +8,7 @@ import { ArtifactsView } from './ArtifactsView';
 import {
   RecipeDeploymentStatus,
   StandardDeploymentStatus,
-} from '@packmind/shared/types';
+} from '@packmind/types';
 
 // Provide lightweight realistic samples
 const makeRecipe = (

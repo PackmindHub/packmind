@@ -7,17 +7,16 @@ import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import { PackmindLogger } from '@packmind/logger';
 import { UserProvider, OrganizationProvider } from '@packmind/types';
+import { AbstractMemberUseCase, MemberContext } from '@packmind/shared';
+import { ISpacesPort } from '@packmind/types';
 import {
-  AbstractMemberUseCase,
-  MemberContext,
   RuleExample,
   StandardVersion,
   UpdateStandardCommand,
   UpdateStandardResponse,
   IUpdateStandardUseCase,
-  ISpacesPort,
   RuleId,
-} from '@packmind/shared';
+} from '@packmind/types';
 import {
   OrganizationId,
   UserId,

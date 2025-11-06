@@ -14,12 +14,12 @@ import {
   RenderMode,
   GetRenderModeConfigurationCommand,
   GetRenderModeConfigurationResult,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { DeploymentsService } from './deployments.service';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthService } from '../auth/auth.service';
 import { RecipeId } from '@packmind/recipes/types';
-import type { StandardId, StandardVersionId } from '@packmind/shared/types';
+import type { StandardId, StandardVersionId } from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
 
 const origin = 'DeploymentsController';

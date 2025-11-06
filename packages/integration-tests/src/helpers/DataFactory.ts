@@ -4,8 +4,6 @@ import {
   PackmindCommand,
   SignUpWithOrganizationCommand,
   User,
-} from '@packmind/types';
-import {
   GitProvider,
   GitRepo,
   Recipe,
@@ -13,7 +11,7 @@ import {
   Space,
   Standard,
   Target,
-} from '@packmind/shared';
+} from '@packmind/types';
 
 import { standardFactory } from '@packmind/standards/test';
 import { recipeFactory } from '@packmind/recipes/test';

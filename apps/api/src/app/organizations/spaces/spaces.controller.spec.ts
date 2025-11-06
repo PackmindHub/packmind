@@ -4,7 +4,7 @@ import { createSpaceId } from '@packmind/spaces';
 import { stubLogger } from '@packmind/test-utils';
 import { PackmindLogger } from '@packmind/logger';
 import { SpacesService } from '../../spaces/spaces.service';
-import { Space } from '@packmind/shared/types';
+import { Space } from '@packmind/types';
 
 describe('OrganizationsSpacesController', () => {
   let controller: OrganizationsSpacesController;

@@ -2,4 +2,4 @@ export {
   RecipeVersion,
   RecipeVersionId,
   createRecipeVersionId,
-} from '@packmind/shared';
+} from '@packmind/types';

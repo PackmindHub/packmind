@@ -204,7 +204,13 @@ export class OrganizationsSpacesRecipesController {
     @Param('orgId') organizationId: OrganizationId,
     @Param('spaceId') spaceId: SpaceId,
     @Param('id') id: RecipeId,
-    @Body() updateData: { name: string; content: string },
+    @Body()
+    updateData: {
+      name: string;
+      slug?: string;
+      content: string;
+      summary?: string;
+    },
     @Req() request: AuthenticatedRequest,
   ): Promise<Recipe> {
     const userId = request.user.userId;
@@ -226,8 +232,10 @@ export class OrganizationsSpacesRecipesController {
         spaceId,
         organizationId,
         updateData.name,
+        updateData.slug || '',
         updateData.content,
         userId,
+        updateData.summary,
       );
 
       this.logger.info(

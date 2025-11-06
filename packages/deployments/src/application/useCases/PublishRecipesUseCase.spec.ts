@@ -18,7 +18,7 @@ import {
   GitRepo,
   GitCommit,
   IRecipesPort,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { recipeVersionFactory } from '@packmind/recipes/test/recipeVersionFactory';
 import { targetFactory } from '../../../test/targetFactory';
@@ -349,7 +349,7 @@ describe('PublishRecipesUseCase', () => {
       };
 
       // Mock responses - order here doesn't matter as we're testing the sorting
-      mockRecipesPort.getRecipeVersionById.mockImplementation((id) => {
+      mockRecipesPort.getRecipeVersionById.mockImplementation((id: string) => {
         if (id === recipeVersionA.id) return Promise.resolve(recipeVersionA);
         if (id === recipeVersionM.id) return Promise.resolve(recipeVersionM);
         if (id === recipeVersionZ.id) return Promise.resolve(recipeVersionZ);

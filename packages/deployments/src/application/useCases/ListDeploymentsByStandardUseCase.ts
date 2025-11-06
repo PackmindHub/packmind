@@ -3,7 +3,7 @@ import {
   StandardsDeployment,
   IListDeploymentsByStandard,
   ListDeploymentsByStandardCommand,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
 
 const origin = 'ListDeploymentsByStandardUseCase';

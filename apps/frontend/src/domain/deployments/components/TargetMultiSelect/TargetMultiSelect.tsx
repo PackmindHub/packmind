@@ -6,7 +6,7 @@ import {
   pmUseFilter,
   pmUseListCollection,
 } from '@packmind/ui';
-import { Target } from '@packmind/shared';
+import { Target } from '@packmind/types';
 
 interface InputValueChangeDetails {
   inputValue: string;

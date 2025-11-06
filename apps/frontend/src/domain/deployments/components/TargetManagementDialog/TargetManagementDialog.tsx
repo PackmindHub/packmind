@@ -13,15 +13,15 @@ import {
   PMAlertDialog,
   PMFlex,
 } from '@packmind/ui';
-import { GitRepoId } from '@packmind/git';
-import { Target } from '@packmind/shared';
+import { GitRepoId } from '@packmind/types';
+import { Target } from '@packmind/types';
 import { LuSettings } from 'react-icons/lu';
 import {
   useGetTargetsByOrganizationQuery,
   useDeleteTargetMutation,
 } from '../../api/queries/DeploymentsQueries';
 import { useAuthContext } from '../../../accounts/hooks';
-import { OrganizationId } from '@packmind/accounts';
+import { OrganizationId } from '@packmind/types';
 import { TargetBadge } from '../TargetBadge/TargetBadge';
 import { TargetForm } from '../TargetForm/TargetForm';
 

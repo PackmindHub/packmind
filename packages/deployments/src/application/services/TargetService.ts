@@ -1,5 +1,5 @@
 import { PackmindLogger, LogLevel } from '@packmind/logger';
-import { Target, GitRepoId, TargetId } from '@packmind/shared';
+import { Target, GitRepoId, TargetId } from '@packmind/types';
 import { ITargetRepository } from '../../domain/repositories/ITargetRepository';
 import { GitHexa } from '@packmind/git';
 

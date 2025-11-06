@@ -2,7 +2,7 @@ import { RecipeVersion } from '@packmind/recipes';
 import { GitRepo } from '@packmind/git';
 import { FileUpdates } from '../entities/FileUpdates';
 import { CodingAgent } from '../CodingAgents';
-import { Target } from '@packmind/shared';
+import { Target } from '@packmind/types';
 
 export type PrepareRecipesDeploymentCommand = {
   recipeVersions: RecipeVersion[];

@@ -1,5 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
-import { ISpacesPort } from '@packmind/shared';
+import { ISpacesPort } from '@packmind/types';
 
 //TODO: remove and replace with an adapter pattern
 import { StandardsHexa } from '@packmind/standards';
@@ -9,13 +9,15 @@ import {
   StandardId,
   StandardVersion,
   createStandardVersionId,
+} from '@packmind/types';
+import {
   IGetStandardDeploymentOverview,
   GetStandardDeploymentOverviewCommand,
   DistributionStatus,
   TargetStandardDeploymentStatus,
   TargetStandardDeploymentInfo,
   DeployedStandardTargetInfo,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { GitHexa, GitRepo } from '@packmind/git';
 import { OrganizationId } from '@packmind/accounts';
 import { StandardsDeployment } from '../../domain/entities/StandardsDeployment';

@@ -1,23 +1,23 @@
-import {
-  StandardVersionService,
-  CreateStandardVersionData,
-} from './StandardVersionService';
-import { IStandardVersionRepository } from '../../domain/repositories/IStandardVersionRepository';
-import { IRuleRepository } from '../../domain/repositories/IRuleRepository';
-import { StandardVersion } from '../../domain/entities/StandardVersion';
-import { createStandardId } from '../../domain/entities/Standard';
-import { v4 as uuidv4 } from 'uuid';
-import { standardVersionFactory } from '../../../test/standardVersionFactory';
-import { ruleFactory } from '../../../test/ruleFactory';
-import { PackmindLogger } from '@packmind/logger';
-import type { ILinterPort } from '@packmind/shared';
-import { IRuleExampleRepository } from '../../domain/repositories/IRuleExampleRepository';
-import { stubLogger } from '@packmind/test-utils';
 import { createUserId } from '@packmind/accounts';
+import { PackmindLogger } from '@packmind/logger';
+import { stubLogger } from '@packmind/test-utils';
+import type { ILinterPort } from '@packmind/types';
+import { v4 as uuidv4 } from 'uuid';
+import { ruleFactory } from '../../../test/ruleFactory';
+import { standardVersionFactory } from '../../../test/standardVersionFactory';
+import { createStandardId } from '../../domain/entities/Standard';
 import {
   createStandardVersionId,
+  StandardVersion,
   StandardVersionId,
 } from '../../domain/entities/StandardVersion';
+import { IRuleExampleRepository } from '../../domain/repositories/IRuleExampleRepository';
+import { IRuleRepository } from '../../domain/repositories/IRuleRepository';
+import { IStandardVersionRepository } from '../../domain/repositories/IStandardVersionRepository';
+import {
+  CreateStandardVersionData,
+  StandardVersionService,
+} from './StandardVersionService';
 
 describe('StandardVersionService', () => {
   let standardVersionService: StandardVersionService;

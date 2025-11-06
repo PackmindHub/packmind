@@ -1,4 +1,4 @@
-import { Rule, StandardVersion } from '@packmind/shared';
+import { Rule, StandardVersion } from '@packmind/types';
 import { GenericSectionWriter } from './GenericSectionWriter';
 
 export type GenericStandardSectionWriterOpts = {

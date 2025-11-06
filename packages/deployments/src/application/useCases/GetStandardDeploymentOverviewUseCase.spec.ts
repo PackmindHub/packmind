@@ -13,7 +13,7 @@ import {
   ISpacesPort,
   Space,
   createSpaceId,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 import { gitRepoFactory } from '@packmind/git/test';
 import { GetStandardDeploymentOverviewUseCase } from './GetStandardDeploymentOverviewUseCase';

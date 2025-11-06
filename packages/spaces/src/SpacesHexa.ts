@@ -1,6 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, HexaRegistry, BaseHexaOpts } from '@packmind/shared';
-import { ISpacesPort } from '@packmind/shared/types';
+import { ISpacesPort } from '@packmind/types';
 import { SpacesHexaFactory } from './SpacesHexaFactory';
 import { SpacesAdapter } from './application/adapters/SpacesAdapter';
 

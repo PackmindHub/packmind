@@ -3,13 +3,13 @@ import { RecipeVersionService } from '../../services/RecipeVersionService';
 import slug from 'slug';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import {
-  AiNotConfigured,
   ICaptureRecipeUseCase,
   CaptureRecipeCommand,
   CaptureRecipeResponse,
   RecipeStep,
   Recipe,
-} from '@packmind/shared';
+} from '@packmind/types';
+import { AiNotConfigured } from '@packmind/shared';
 import { RecipeSummaryService } from '../../services/RecipeSummaryService';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
 import { createSpaceId } from '@packmind/spaces';

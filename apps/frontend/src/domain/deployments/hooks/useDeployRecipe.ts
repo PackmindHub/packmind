@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
 import { recipesGateway } from '../../recipes/api/gateways';
-import { RecipeId, RecipeVersionId } from '@packmind/recipes/types';
+import { RecipeId, RecipeVersionId } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
-import { SpaceId, TargetId } from '@packmind/shared';
+import { SpaceId, TargetId } from '@packmind/types';
 import { useDeployRecipesMutation } from '../api/queries/DeploymentsQueries';
 
 interface DeployParams {

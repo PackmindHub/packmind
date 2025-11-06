@@ -5,8 +5,8 @@ import {
   softDeleteSchemas,
   timestampsSchemas,
   uuidSchema,
-  RenderModeConfiguration,
 } from '@packmind/shared';
+import { RenderModeConfiguration } from '@packmind/types';
 
 export const RenderModeConfigurationSchema = new EntitySchema<
   WithSoftDelete<WithTimestamps<RenderModeConfiguration>>

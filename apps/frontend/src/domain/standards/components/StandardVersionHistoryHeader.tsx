@@ -1,5 +1,5 @@
 import { PMHStack, PMText } from '@packmind/ui';
-import { Standard, StandardVersion } from '@packmind/shared';
+import { Standard, StandardVersion } from '@packmind/types';
 import { formatDistanceToNowStrict } from 'date-fns';
 
 import { StandardVersionsList } from './StandardVersionsList';

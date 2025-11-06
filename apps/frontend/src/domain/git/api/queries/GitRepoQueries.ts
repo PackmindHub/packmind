@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { gitProviderGateway, repositoryGateway } from '../gateways';
-import { GitProviderId, GitRepoId } from '@packmind/git';
+import { GitProviderId, GitRepoId } from '@packmind/types';
 import { AddRepositoryForm } from '../../types/GitProviderTypes';
-import { CheckDirectoryExistenceResult } from '@packmind/shared';
+import { CheckDirectoryExistenceResult } from '@packmind/types';
 import {
   GET_GIT_REPOSITORIES_KEY,
   GET_REPOSITORIES_BY_PROVIDER_KEY,

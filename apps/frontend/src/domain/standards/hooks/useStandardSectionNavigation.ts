@@ -8,7 +8,7 @@ import {
   NavKey,
   makeRuleNavKey,
 } from '../utils/standardNavigation';
-import type { Rule } from '@packmind/shared';
+import type { Rule } from '@packmind/types';
 
 type UseStandardSectionNavigationArgs = {
   standardId: string;

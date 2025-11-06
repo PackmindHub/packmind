@@ -6,14 +6,15 @@ import {
 } from '../../../domain/entities/RuleExample';
 import { RuleId } from '../../../domain/entities/Rule';
 import { PackmindLogger } from '@packmind/logger';
-import { getErrorMessage, ProgrammingLanguage } from '@packmind/shared';
+import { getErrorMessage } from '@packmind/shared';
+import { ProgrammingLanguage } from '@packmind/types';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
 import { v4 as uuidv4 } from 'uuid';
 import {
   CreateRuleExampleCommand,
   ICreateRuleExample,
 } from '../../../domain/useCases/ICreateRuleExample';
-import type { ILinterPort } from '@packmind/shared';
+import type { ILinterPort } from '@packmind/types';
 
 const origin = 'CreateRuleExampleUsecase';
 

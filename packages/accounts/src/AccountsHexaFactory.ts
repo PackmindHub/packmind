@@ -7,7 +7,7 @@ import {
   IGitPort,
   IStandardsPort,
   IDeploymentPort,
-} from '@packmind/shared/types';
+} from '@packmind/types';
 import { ApiKeyService } from './application/services/ApiKeyService';
 import { EnhancedAccountsServices } from './application/services/EnhancedAccountsServices';
 

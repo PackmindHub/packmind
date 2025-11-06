@@ -6,7 +6,7 @@ import {
   RULE_DETAILS_DETECTION_TAB_FEATURE_KEY,
   isFeatureFlagEnabled,
 } from '@packmind/ui';
-import { Rule, StandardId } from '@packmind/shared/types';
+import { Rule, StandardId } from '@packmind/types';
 import { RuleExamplesManager } from './RuleExamplesManager';
 import { ProgramEditor } from '@packmind/proprietary/frontend/domain/detection/components/ProgramEditor';
 import { useAuthContext } from '../../accounts/hooks';

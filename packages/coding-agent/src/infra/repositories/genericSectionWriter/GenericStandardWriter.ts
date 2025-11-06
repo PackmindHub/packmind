@@ -1,4 +1,4 @@
-import { Rule, StandardVersion } from '@packmind/shared';
+import { Rule, StandardVersion } from '@packmind/types';
 
 export class GenericStandardWriter {
   public static writeStandard(
@@ -20,7 +20,7 @@ ${this.renderRules(rules)}
         : '';
 
       return `## Rules
-      
+
 ${rulesContent}`;
     }
 

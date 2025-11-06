@@ -1,5 +1,5 @@
+import { RuleId } from '@packmind/types';
 import { PackmindGateway } from './PackmindGateway';
-import { RuleId } from '@packmind/shared';
 
 // Mock fetch
 global.fetch = jest.fn();

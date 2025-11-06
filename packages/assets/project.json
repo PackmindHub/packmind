@@ -52,5 +52,5 @@
       }
     }
   },
-  "tags": []
+  "tags": ["env:shared"]
 }

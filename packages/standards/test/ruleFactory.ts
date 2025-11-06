@@ -1,6 +1,6 @@
 import { Factory } from '@packmind/test-utils';
 import { v4 as uuidv4 } from 'uuid';
-import { createRuleId, createStandardVersionId, Rule } from '@packmind/shared';
+import { createRuleId, createStandardVersionId, Rule } from '@packmind/types';
 
 export const ruleFactory: Factory<Rule> = (rule?: Partial<Rule>) => {
   return {

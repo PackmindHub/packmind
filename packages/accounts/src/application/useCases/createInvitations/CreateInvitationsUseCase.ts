@@ -2,12 +2,10 @@ import {
   CreateInvitationsCommand,
   CreateInvitationsResponse,
   ICreateInvitationsUseCase,
-} from '@packmind/types';
-import {
   InvitationCreationResult,
   InvitationSkipResult,
   DirectMembershipResult,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { UserProvider, OrganizationProvider } from '@packmind/types';
 import { AbstractAdminUseCase, AdminContext } from '@packmind/shared';

@@ -19,7 +19,7 @@ import {
   DEFAULT_ACTIVE_RENDER_MODES,
   RenderMode,
   Standard,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { standardVersionFactory } from '@packmind/standards/test/standardVersionFactory';
 import { stubLogger } from '@packmind/test-utils';
 import { targetFactory } from '../../../test/targetFactory';

@@ -1,10 +1,5 @@
-import {
-  BaseHexa,
-  HexaRegistry,
-  IDeploymentPort,
-  IStandardsPort,
-  ILinterPort,
-} from '@packmind/shared';
+import { BaseHexa, HexaRegistry } from '@packmind/shared';
+import { IDeploymentPort, IStandardsPort, ILinterPort } from '@packmind/types';
 import { LinterUsecases } from './LinterUsecases';
 import { LinterAdapter } from './LinterAdapter';
 

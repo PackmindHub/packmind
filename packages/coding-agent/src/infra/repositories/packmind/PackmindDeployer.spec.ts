@@ -20,7 +20,7 @@ import {
   Target,
   createTargetId,
   createRuleId,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { createSpaceId } from '@packmind/spaces';
 
 describe('PackmindDeployer', () => {

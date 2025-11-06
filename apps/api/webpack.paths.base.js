@@ -15,10 +15,6 @@ module.exports = function getBaseWebpackPaths(__dirname) {
       '../../packages/recipes/src/types',
     ),
     '@packmind/shared': join(__dirname, '../../packages/shared/src'),
-    '@packmind/shared/types': join(
-      __dirname,
-      '../../packages/shared/src/types',
-    ),
     '@packmind/shared-nest': join(__dirname, '../../packages/shared-nest/src'),
     '@packmind/types': join(__dirname, '../../packages/types/src'),
     '@packmind/migrations': join(__dirname, '../../packages/migrations/src'),

@@ -1,5 +1,5 @@
 import { CreateStandardUsecase } from './createStandard.usecase';
-import { CreateStandardCommand } from '@packmind/shared';
+import { CreateStandardCommand } from '@packmind/types';
 import { StandardService } from '../../services/StandardService';
 import { StandardVersionService } from '../../services/StandardVersionService';
 import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSummaryDelayedJob';

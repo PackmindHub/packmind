@@ -4,4 +4,4 @@ export {
   DeployedStandardInfo,
   StandardDeploymentStatus,
   RepositoryStandardDeploymentInfo,
-} from '@packmind/shared';
+} from '@packmind/types';

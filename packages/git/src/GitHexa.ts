@@ -1,11 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
-import {
-  BaseHexa,
-  HexaRegistry,
-  QueryOption,
-  IDeploymentPort,
-  BaseHexaOpts,
-} from '@packmind/shared';
+import { BaseHexa, HexaRegistry, BaseHexaOpts } from '@packmind/shared';
+import { IDeploymentPort, IGitPort } from '@packmind/types';
+import { QueryOption } from '@packmind/types';
 import { GitHexaFactory } from './GitHexaFactory';
 import { GitProvider, GitProviderId } from './domain/entities/GitProvider';
 import { GitRepo, GitRepoId } from './domain/entities/GitRepo';
@@ -17,16 +13,15 @@ import {
   FindGitRepoByOwnerRepoAndBranchInOrganizationResult,
 } from './domain/useCases/IFindGitRepoByOwnerRepoAndBranchInOrganization';
 import { UserProvider, OrganizationProvider } from '@packmind/types';
-import { GetAvailableRemoteDirectoriesCommand } from '@packmind/shared';
 import {
+  GetAvailableRemoteDirectoriesCommand,
   CheckDirectoryExistenceCommand,
   CheckDirectoryExistenceResult,
-} from '@packmind/shared';
-import { HandleWebHookCommand, HandleWebHookResult } from '@packmind/shared';
-import {
+  HandleWebHookCommand,
+  HandleWebHookResult,
   HandleWebHookWithoutContentCommand,
   HandleWebHookWithoutContentResult,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { IGitRepoFactory } from './domain/repositories/IGitRepoFactory';
 import { AddGitProviderCommand } from './application/useCases/addGitProvider/addGitProvider.usecase';
 import { FetchFileContentInput } from './domain/jobs/FetchFileContent';
@@ -134,7 +129,7 @@ export class GitHexa extends BaseHexa<GitHexaOpts> {
    * Get the Git adapter for cross-domain access to git data.
    * This adapter implements IGitPort and can be injected into other domains.
    */
-  public getGitAdapter(): import('@packmind/shared').IGitPort {
+  public getGitAdapter(): IGitPort {
     this.ensureInitialized();
     return this.hexa.useCases;
   }

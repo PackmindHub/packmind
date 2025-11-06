@@ -5,7 +5,7 @@ import {
   createStandardId,
   createStandardVersionId,
   StandardVersion,
-} from '@packmind/shared';
+} from '@packmind/types';
 
 export const standardVersionFactory: Factory<StandardVersion> = (
   standardVersion?: Partial<StandardVersion>,

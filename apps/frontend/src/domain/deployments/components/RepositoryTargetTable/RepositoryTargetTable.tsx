@@ -22,7 +22,7 @@ import {
   TargetId,
   DeployedRecipeTargetInfo,
   DeployedStandardTargetInfo,
-} from '@packmind/shared';
+} from '@packmind/types';
 import {
   RunDistribution,
   useRunDistribution,

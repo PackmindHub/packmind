@@ -1,4 +1,4 @@
-import { HandleWebHookResult, GitRepoId } from '@packmind/shared';
+import { HandleWebHookResult, GitRepoId } from '@packmind/types';
 import { OrganizationId } from '@packmind/accounts';
 import { RecipeVersionId } from '../entities/RecipeVersion';
 

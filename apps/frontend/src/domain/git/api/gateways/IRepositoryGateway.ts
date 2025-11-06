@@ -1,4 +1,4 @@
-import { GitRepoId } from '@packmind/git/types';
+import { GitRepoId } from '@packmind/types';
 
 export interface Repository {
   id: GitRepoId;

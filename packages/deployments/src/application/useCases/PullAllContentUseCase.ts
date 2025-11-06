@@ -4,13 +4,12 @@ import {
   IPullAllContentResponse,
   PackmindCommand,
   FileUpdates,
-} from '@packmind/types';
-import {
-  AbstractMemberUseCase,
-  MemberContext,
   ISpacesPort,
   IRecipesPort,
-} from '@packmind/shared';
+  Recipe,
+  RecipeVersion,
+} from '@packmind/types';
+import { AbstractMemberUseCase, MemberContext } from '@packmind/shared';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { CodingAgentHexa, CodingAgents } from '@packmind/coding-agent';
 import { StandardsHexa } from '@packmind/standards';
@@ -66,14 +65,16 @@ export class PullAllContentUseCase extends AbstractMemberUseCase<
       });
 
       // Get recipe versions for all recipes
-      const recipeVersionsPromises = recipes.map(async (recipe) => {
+      const recipeVersionsPromises = recipes.map(async (recipe: Recipe) => {
         const versions = await this.recipesPort.listRecipeVersions(recipe.id);
         // Return the latest version
-        return versions.sort((a, b) => b.version - a.version)[0];
+        return versions.sort(
+          (a: RecipeVersion, b: RecipeVersion) => b.version - a.version,
+        )[0];
       });
 
       const recipeVersions = (await Promise.all(recipeVersionsPromises)).filter(
-        (rv) => rv !== null,
+        (rv): rv is NonNullable<typeof rv> => rv !== null,
       );
 
       this.logger.info('Retrieved recipe versions', {

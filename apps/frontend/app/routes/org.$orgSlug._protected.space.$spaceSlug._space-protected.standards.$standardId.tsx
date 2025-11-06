@@ -4,7 +4,7 @@ import {
   getStandardByIdOptions,
   useGetStandardByIdQuery,
 } from '../../src/domain/standards/api/queries/StandardsQueries';
-import { Standard, StandardId } from '@packmind/standards';
+import { Standard, StandardId } from '@packmind/types';
 import { routes } from '../../src/shared/utils/routes';
 import { getSpaceBySlugQueryOptions } from '../../src/domain/spaces/api/queries/SpacesQueries';
 import { getMeQueryOptions } from '../../src/domain/accounts/api/queries/UserQueries';
@@ -12,7 +12,7 @@ import { useAuthContext } from '../../src/domain/accounts/hooks/useAuthContext';
 import { StandardDetails } from '../../src/domain/standards/components/StandardDetails';
 import { PMBox, PMPage } from '@packmind/ui';
 import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
-import { GetStandardByIdResponse } from '@packmind/shared';
+import { GetStandardByIdResponse } from '@packmind/types';
 
 export async function clientLoader({
   params,

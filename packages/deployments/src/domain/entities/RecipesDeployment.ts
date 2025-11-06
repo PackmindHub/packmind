@@ -2,4 +2,4 @@ export {
   RecipesDeployment,
   RecipesDeploymentId,
   createRecipesDeploymentId,
-} from '@packmind/shared';
+} from '@packmind/types';

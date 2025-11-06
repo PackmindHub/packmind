@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { standardsGateway } from '../gateways';
 import { OrganizationId } from '@packmind/types';
-import { RuleId, StandardId, SpaceId } from '@packmind/shared/types';
+import { RuleId, StandardId, SpaceId } from '@packmind/types';
 import { GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY } from '../../../deployments/api/queryKeys';
 import {
   GET_STANDARD_VERSIONS_KEY,

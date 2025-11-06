@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
 import { TargetMultiSelect } from './TargetMultiSelect';
-import { Target, createTargetId, createGitRepoId } from '@packmind/shared';
+import { Target, createTargetId, createGitRepoId } from '@packmind/types';
 
 const renderWithProvider = (ui: React.ReactElement) => {
   return render(<UIProvider>{ui}</UIProvider>);

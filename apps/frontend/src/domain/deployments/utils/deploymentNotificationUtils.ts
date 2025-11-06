@@ -4,7 +4,7 @@ import {
   DistributionStatus,
   Target,
   GitRepo,
-} from '@packmind/shared/types';
+} from '@packmind/types';
 
 // Extended target type that includes the joined gitRepo from TypeORM queries
 type TargetWithGitRepo = Target & {

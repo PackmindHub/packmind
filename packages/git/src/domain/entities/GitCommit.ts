@@ -1,5 +1,1 @@
-export {
-  GitCommit,
-  GitCommitId,
-  createGitCommitId,
-} from '@packmind/shared/types';
+export { GitCommit, GitCommitId, createGitCommitId } from '@packmind/types';

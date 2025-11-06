@@ -6,8 +6,8 @@ import {
   AddRepositoryForm,
   AvailableRepository,
 } from '../../types/GitProviderTypes';
-import { GitProviderId, GitRepoId } from '@packmind/git/types';
-import { CheckDirectoryExistenceResult } from '@packmind/shared';
+import { GitProviderId, GitRepoId } from '@packmind/types';
+import { CheckDirectoryExistenceResult } from '@packmind/types';
 
 export interface IGitProviderGateway {
   // Git Provider CRUD operations

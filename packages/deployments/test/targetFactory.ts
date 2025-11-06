@@ -1,6 +1,5 @@
 import { Factory } from '@packmind/test-utils';
-import { createTargetId, Target } from '@packmind/shared';
-import { createGitRepoId } from '@packmind/shared';
+import { createTargetId, Target, createGitRepoId } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 
 export const targetFactory: Factory<Target> = (target?: Partial<Target>) => {

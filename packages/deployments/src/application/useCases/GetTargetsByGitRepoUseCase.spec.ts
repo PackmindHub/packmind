@@ -1,9 +1,14 @@
 import { GetTargetsByGitRepoUseCase } from './GetTargetsByGitRepoUseCase';
 import { TargetService } from '../services/TargetService';
-import { Target, GetTargetsByGitRepoCommand } from '@packmind/shared';
+import {
+  createGitRepoId,
+  createOrganizationId,
+  createTargetId,
+  createUserId,
+  GetTargetsByGitRepoCommand,
+  Target,
+} from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
-import { createOrganizationId, createUserId } from '@packmind/types';
-import { createTargetId, createGitRepoId } from '@packmind/shared';
 
 describe('GetTargetsByGitRepoUseCase', () => {
   let useCase: GetTargetsByGitRepoUseCase;

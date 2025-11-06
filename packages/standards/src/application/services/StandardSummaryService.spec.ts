@@ -1,15 +1,11 @@
-import { StandardSummaryService } from './StandardSummaryService';
-import { StandardVersion } from '../../domain/entities/StandardVersion';
-import { createStandardId } from '../../domain/entities/Standard';
 import { PackmindLogger } from '@packmind/logger';
-import {
-  AIService,
-  OpenAIService,
-  AiNotConfigured,
-  RuleExample,
-} from '@packmind/shared';
+import { AiNotConfigured, AIService, OpenAIService } from '@packmind/shared';
 import { stubLogger } from '@packmind/test-utils';
+import { RuleExample } from '@packmind/types';
 import { standardVersionFactory } from '../../../test/standardVersionFactory';
+import { createStandardId } from '../../domain/entities/Standard';
+import { StandardVersion } from '../../domain/entities/StandardVersion';
+import { StandardSummaryService } from './StandardSummaryService';
 
 import { v4 as uuidv4 } from 'uuid';
 

@@ -5,8 +5,8 @@ import {
   IUpdateRecipesFromGitHubUseCase,
   UpdateRecipesFromGitHubCommand,
   UpdateRecipesFromGitHubResponse,
-  IDeploymentPort,
-} from '@packmind/shared';
+} from '@packmind/types';
+import { IDeploymentPort } from '@packmind/types';
 import { createOrganizationId } from '@packmind/accounts';
 import {
   BaseUpdateRecipesFromWebhookUsecase,

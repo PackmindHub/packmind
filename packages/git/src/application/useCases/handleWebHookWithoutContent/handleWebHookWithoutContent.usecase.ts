@@ -11,7 +11,7 @@ import {
   HandleWebHookWithoutContentCommand,
   HandleWebHookWithoutContentResult,
   IHandleWebHookWithoutContentUseCase,
-} from '@packmind/shared';
+} from '@packmind/types';
 import {
   GithubWebhookPushPayload,
   GitlabWebhookPushPayload,

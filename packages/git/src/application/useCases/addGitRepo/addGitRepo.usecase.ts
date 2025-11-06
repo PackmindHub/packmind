@@ -1,6 +1,6 @@
 import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
-import { AddGitRepoCommand, IAddGitRepoUseCase } from '@packmind/shared';
+import { AddGitRepoCommand, IAddGitRepoUseCase } from '@packmind/types';
 import { GitRepo } from '../../../domain/entities/GitRepo';
 import { PackmindLogger } from '@packmind/logger';
 import {
@@ -8,14 +8,13 @@ import {
   UserProvider,
   OrganizationProvider,
 } from '@packmind/types';
+import { AbstractAdminUseCase, AdminContext } from '@packmind/shared';
+import { IDeploymentPort } from '@packmind/types';
 import {
-  AbstractAdminUseCase,
-  AdminContext,
-  IDeploymentPort,
   GitRepoAlreadyExistsError,
   GitProviderNotFoundError,
   GitProviderOrganizationMismatchError,
-} from '@packmind/shared';
+} from '@packmind/types';
 
 const origin = 'AddGitRepoUseCase';
 

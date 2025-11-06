@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "apps/cli/src",
   "projectType": "application",
-  "tags": [],
+  "tags": ["env:node"],
   "targets": {
     "build": {
       "executor": "@nx/esbuild:esbuild",

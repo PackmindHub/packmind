@@ -10,7 +10,7 @@ import {
   PMPortal,
 } from '@packmind/ui';
 import { useGetRecipeVersionsQuery } from '../api/queries/RecipesQueries';
-import { RecipeId } from '@packmind/shared';
+import { RecipeId } from '@packmind/types';
 
 interface RecipeVersionsListDrawerProps {
   recipeId: RecipeId;

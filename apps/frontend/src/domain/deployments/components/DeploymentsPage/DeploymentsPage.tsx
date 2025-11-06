@@ -22,7 +22,7 @@ import {
   Target,
   TargetDeploymentStatus,
   TargetStandardDeploymentStatus,
-} from '@packmind/shared';
+} from '@packmind/types';
 
 type ViewMode = 'repositories' | 'artifacts';
 

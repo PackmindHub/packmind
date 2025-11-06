@@ -2,4 +2,4 @@ export {
   StandardsDeployment,
   StandardsDeploymentId,
   createStandardsDeploymentId,
-} from '@packmind/shared/types';
+} from '@packmind/types';

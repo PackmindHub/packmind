@@ -1,12 +1,11 @@
 import { UserProvider, OrganizationProvider } from '@packmind/types';
+import { AbstractMemberUseCase, MemberContext } from '@packmind/shared';
 import {
-  AbstractMemberUseCase,
-  MemberContext,
   IStandardsPort,
   IDeploymentPort,
   IGitPort,
   ISpacesPort,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import {
   IGetOrganizationOnboardingStatusUseCase,

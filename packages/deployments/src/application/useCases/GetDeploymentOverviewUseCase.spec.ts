@@ -4,7 +4,7 @@ import { createRecipeVersionId } from '@packmind/recipes';
 import { GitHexa } from '@packmind/git';
 import { stubLogger } from '@packmind/test-utils';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
-import { createSpaceId } from '@packmind/shared';
+import { createSpaceId } from '@packmind/types';
 import { gitRepoFactory } from '@packmind/git/test';
 import { recipeFactory } from '@packmind/recipes/test';
 import { recipeVersionFactory } from '@packmind/recipes/test';
@@ -12,9 +12,8 @@ import {
   DeploymentOverview,
   DistributionStatus,
   GetDeploymentOverviewCommand,
-  ISpacesPort,
-  IRecipesPort,
-} from '@packmind/shared/types';
+} from '@packmind/types';
+import { ISpacesPort, IRecipesPort } from '@packmind/types';
 import { deploymentFactory } from '../../../test/deploymentFactory';
 import { targetFactory } from '../../../test/targetFactory';
 import { GetTargetsByOrganizationUseCase } from './GetTargetsByOrganizationUseCase';

@@ -3,7 +3,7 @@ import {
   TargetWithRepository,
   IGetTargetsByOrganizationUseCase,
   GetTargetsByOrganizationCommand,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { OrganizationId } from '@packmind/accounts';
 import { TargetService } from '../services/TargetService';
 import { GitHexa } from '@packmind/git';

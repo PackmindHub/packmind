@@ -2,7 +2,7 @@ import {
   IDeleteTargetUseCase,
   DeleteTargetCommand,
   DeleteTargetResponse,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { TargetService } from '../services/TargetService';
 
 export class DeleteTargetUseCase implements IDeleteTargetUseCase {

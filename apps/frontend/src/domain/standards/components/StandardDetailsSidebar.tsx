@@ -8,11 +8,11 @@ import {
 } from '@packmind/ui';
 import { LuGitCommitVertical, LuHouse } from 'react-icons/lu';
 
-import type { Rule, Standard } from '@packmind/shared';
+import type { Rule, Standard } from '@packmind/types';
 import { StandardDetailsNavEntry } from './StandardDetailsNavEntry';
 import { makeRuleNavKey, NavKey } from '../utils/standardNavigation';
 import { useGetStandardRulesDetectionStatusQuery } from '../../detection/api/queries/DetectionProgramQueries';
-import { RuleLanguageDetectionStatus } from '@packmind/shared/types';
+import { RuleLanguageDetectionStatus } from '@packmind/types';
 
 type StandardDetailsSidebarProps = {
   standard: Standard;

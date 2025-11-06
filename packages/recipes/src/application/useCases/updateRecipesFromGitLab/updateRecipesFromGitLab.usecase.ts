@@ -1,12 +1,12 @@
 import { RecipeService } from '../../services/RecipeService';
 import { GitHexa } from '@packmind/git';
 import { LogLevel } from '@packmind/logger';
+import { IDeploymentPort } from '@packmind/types';
 import {
   IUpdateRecipesFromGitLabUseCase,
   UpdateRecipesFromGitLabCommand,
   UpdateRecipesFromGitLabResponse,
-  IDeploymentPort,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { createOrganizationId } from '@packmind/accounts';
 import {
   BaseUpdateRecipesFromWebhookUsecase,

@@ -3,7 +3,8 @@ import { RecipeService } from '../../services/RecipeService';
 import { RecipeVersionService } from '../../services/RecipeVersionService';
 import { RecipeSummaryService } from '../../services/RecipeSummaryService';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
-import { AiNotConfigured, SpaceId } from '@packmind/shared';
+import { AiNotConfigured } from '@packmind/shared';
+import { SpaceId } from '@packmind/types';
 import { UserId, OrganizationId } from '@packmind/types';
 
 const origin = 'UpdateRecipeFromUIUsecase';

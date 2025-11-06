@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { recipesGateway } from '../gateways';
-import { RecipeId } from '@packmind/recipes/types';
+import { RecipeId } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
-import { SpaceId } from '@packmind/spaces';
+import { SpaceId } from '@packmind/types';
 import { GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY } from '../../../deployments/api/queryKeys';
 import {
   GET_RECIPES_KEY,

@@ -6,7 +6,7 @@ import {
   RenderModeConfiguration,
   createRenderModeConfigurationId,
   normalizeRenderModes,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { CodingAgent, CodingAgents } from '@packmind/coding-agent';
 import { IRenderModeConfigurationRepository } from '../../domain/repositories/IRenderModeConfigurationRepository';

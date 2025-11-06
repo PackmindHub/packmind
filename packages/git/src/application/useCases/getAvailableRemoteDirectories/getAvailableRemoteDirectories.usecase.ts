@@ -2,7 +2,7 @@ import { GitProviderService } from '../../GitProviderService';
 import {
   GetAvailableRemoteDirectoriesCommand,
   IGetAvailableRemoteDirectoriesUseCase,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { Cache } from '@packmind/shared';
 

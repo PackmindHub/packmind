@@ -16,7 +16,7 @@ import { AuthProvider } from '../../../../providers/AuthProvider';
 import {
   DeploymentOverview,
   StandardDeploymentOverview,
-} from '@packmind/shared/types';
+} from '@packmind/types';
 import {
   createDeploymentOverview,
   createStandardDeploymentOverview,

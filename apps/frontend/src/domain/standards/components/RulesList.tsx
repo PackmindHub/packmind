@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink, useParams } from 'react-router';
 import { PMBox, PMVStack, PMText, PMTooltip } from '@packmind/ui';
-import { Rule } from '@packmind/shared/types';
+import { Rule } from '@packmind/types';
 import { routes } from '../../../shared/utils/routes';
 
 interface RulesListProps {

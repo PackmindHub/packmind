@@ -1,6 +1,8 @@
+import {
+  IExecuteLinterProgramsUseCase,
+  ProgrammingLanguage,
+} from '@packmind/types';
 import { ExecuteSingleFileAstUseCase } from './ExecuteSingleFileAstUseCase';
-import { ProgrammingLanguage } from '@packmind/shared';
-import { IExecuteLinterProgramsUseCase } from '@packmind/shared';
 
 describe('ExecuteSingleFileAstUseCase', () => {
   it('delegates execution to the linter execution use case', async () => {

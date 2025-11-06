@@ -14,7 +14,7 @@ import {
 } from '../api/queries/AuthQueries';
 import { CopiableTextarea } from '../../../shared/components/inputs';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
-import { UserId } from '@packmind/accounts';
+import { UserId } from '@packmind/types';
 
 export const ApiKeyConfig: React.FunctionComponent = () => {
   const { user, organization } = useAuthContext();

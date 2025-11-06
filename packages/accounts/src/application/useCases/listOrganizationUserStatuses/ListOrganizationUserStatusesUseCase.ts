@@ -10,8 +10,8 @@ import {
   ListOrganizationUserStatusesCommand,
   ListOrganizationUserStatusesResponse,
   UserStatus,
+  InvitationStatus,
 } from '@packmind/types';
-import { InvitationStatus } from '@packmind/shared';
 import { User } from '@packmind/types';
 import {
   Invitation,

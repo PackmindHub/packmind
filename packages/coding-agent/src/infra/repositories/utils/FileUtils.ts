@@ -1,4 +1,4 @@
-import { Target } from '@packmind/shared';
+import { Target } from '@packmind/types';
 
 export function getTargetPrefixedPath(
   filePath: string,

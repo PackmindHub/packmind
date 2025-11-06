@@ -1,5 +1,6 @@
 import { ORGANIZATION_QUERY_SCOPE } from '../../organizations/api/queryKeys';
-import { SpaceId, StandardId } from '@packmind/shared';
+import { SpaceId } from '@packmind/types';
+import { StandardId } from '@packmind/types';
 import { SPACES_SCOPE } from '../../spaces/api/queryKeys';
 
 export const STANDARDS_QUERY_SCOPE = 'standards';

@@ -4,7 +4,7 @@ import { RenderModeConfigurationRepository } from './RenderModeConfigurationRepo
 import { RenderModeConfigurationSchema } from '../schemas/RenderModeConfigurationSchema';
 import { makeTestDatasource, stubLogger } from '@packmind/test-utils';
 import { PackmindLogger } from '@packmind/logger';
-import { RenderMode, RenderModeConfiguration } from '@packmind/shared';
+import { RenderMode, RenderModeConfiguration } from '@packmind/types';
 import {
   Organization,
   OrganizationId,

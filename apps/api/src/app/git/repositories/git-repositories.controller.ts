@@ -13,7 +13,7 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
   CheckDirectoryExistenceResult,
   GitRepoAlreadyExistsError,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { GitRepo, GitProviderId, GitRepoId } from '@packmind/git';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
 

@@ -3,7 +3,7 @@ import {
   TargetWithRepository,
   IGetTargetsByRepositoryUseCase,
   GetTargetsByRepositoryCommand,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { TargetService } from '../services/TargetService';
 import { GitHexa } from '@packmind/git';

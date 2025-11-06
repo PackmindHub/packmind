@@ -1,1 +1,1 @@
-export { createGitRepoId, GitRepo, GitRepoId } from '@packmind/shared/types';
+export { createGitRepoId, GitRepo, GitRepoId } from '@packmind/types';

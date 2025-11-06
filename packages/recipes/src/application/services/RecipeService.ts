@@ -4,10 +4,10 @@ import { Recipe, RecipeId, createRecipeId } from '../../domain/entities/Recipe';
 import { IRecipeRepository } from '../../domain/repositories/IRecipeRepository';
 import { RecipeRepository } from '../../infra/repositories/RecipeRepository';
 import { PackmindLogger } from '@packmind/logger';
-import { QueryOption } from '@packmind/shared';
+import { QueryOption } from '@packmind/types';
 import { GitCommit } from '@packmind/git';
 import { OrganizationId, UserId } from '@packmind/accounts';
-import { SpaceId } from '@packmind/shared/types';
+import { SpaceId } from '@packmind/types';
 
 const origin = 'RecipeService';
 

@@ -8,8 +8,8 @@ import {
   EncryptionService,
   Configuration,
   AbstractRepository,
-  QueryOption,
 } from '@packmind/shared';
+import { QueryOption } from '@packmind/types';
 import { OrganizationId } from '@packmind/accounts';
 
 const origin = 'GitProviderRepository';

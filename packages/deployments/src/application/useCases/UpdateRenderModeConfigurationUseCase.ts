@@ -1,12 +1,11 @@
 import { OrganizationProvider, UserProvider } from '@packmind/types';
+import { AbstractAdminUseCase, AdminContext } from '@packmind/shared';
 import {
-  AbstractAdminUseCase,
-  AdminContext,
   IUpdateRenderModeConfigurationUseCase,
   RenderMode,
   RenderModeConfiguration,
   UpdateRenderModeConfigurationCommand,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 

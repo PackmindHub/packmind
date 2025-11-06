@@ -7,7 +7,7 @@ import {
   createGitRepoId,
   createGitProviderId,
   createTargetId,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { recipeFactory } from '@packmind/recipes/test';
 
 class MockCodingAgentServices {

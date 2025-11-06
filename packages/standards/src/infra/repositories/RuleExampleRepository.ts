@@ -3,11 +3,8 @@ import { IRuleExampleRepository } from '../../domain/repositories/IRuleExampleRe
 import { RuleExampleSchema } from '../schemas/RuleExampleSchema';
 import { Repository } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
-import {
-  localDataSource,
-  AbstractRepository,
-  RuleExampleId,
-} from '@packmind/shared';
+import { localDataSource, AbstractRepository } from '@packmind/shared';
+import { RuleExampleId } from '@packmind/types';
 import { RuleId } from '../../domain/entities/Rule';
 
 const origin = 'RuleExampleRepository';

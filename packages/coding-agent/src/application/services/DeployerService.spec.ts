@@ -20,7 +20,7 @@ import { GitRepo, GitRepoId, GitProviderId } from '@packmind/git';
 import { FileUpdates } from '../../domain/entities/FileUpdates';
 import { UserId } from '@packmind/accounts';
 import { PackmindLogger } from '@packmind/logger';
-import { Target, TargetId } from '@packmind/shared';
+import { Target, TargetId } from '@packmind/types';
 import { createSpaceId } from '@packmind/spaces';
 import { stubLogger } from '@packmind/test-utils';
 

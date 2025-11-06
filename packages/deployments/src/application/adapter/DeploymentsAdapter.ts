@@ -4,15 +4,15 @@ import {
   IPullAllContentResponse,
   PackmindCommand,
 } from '@packmind/types';
+import { IDeploymentPort, ISpacesPort } from '@packmind/types';
+import { IRecipesPort } from '@packmind/types';
+import { DeleteTargetResponse } from '@packmind/types';
 import {
   FindDeployedStandardByRepositoryCommand,
   FindDeployedStandardByRepositoryResponse,
   FindActiveStandardVersionsByTargetCommand,
   FindActiveStandardVersionsByTargetResponse,
   GetStandardDeploymentOverviewCommand,
-  IDeploymentPort,
-  IRecipesPort,
-  ISpacesPort,
   ListDeploymentsByRecipeCommand,
   ListDeploymentsByStandardCommand,
   PublishRecipesCommand,
@@ -25,7 +25,6 @@ import {
   AddTargetCommand,
   UpdateTargetCommand,
   DeleteTargetCommand,
-  DeleteTargetResponse,
   GetTargetsByGitRepoCommand,
   GetTargetsByRepositoryCommand,
   GetTargetsByOrganizationCommand,
@@ -34,7 +33,7 @@ import {
   CreateRenderModeConfigurationCommand,
   UpdateRenderModeConfigurationCommand,
   RenderModeConfiguration,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { FindDeployedStandardByRepositoryUseCase } from '../useCases/FindDeployedStandardByRepositoryUseCase';
 import { FindActiveStandardVersionsByTargetUseCase } from '../useCases/FindActiveStandardVersionsByTargetUseCase';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
@@ -43,7 +42,7 @@ import { IDeploymentsServices } from '../IDeploymentsServices';
 import {
   DeploymentOverview,
   GetDeploymentOverviewCommand,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { GetDeploymentOverviewUseCase } from '../useCases/GetDeploymentOverviewUseCase';
 import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
 import { GitHexa } from '@packmind/git';

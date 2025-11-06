@@ -6,7 +6,7 @@ import { Repository } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, AbstractRepository } from '@packmind/shared';
 import { OrganizationId, UserId } from '@packmind/accounts';
-import { SpaceId } from '@packmind/shared/types';
+import { SpaceId } from '@packmind/types';
 import { StandardVersion } from '../../domain/entities/StandardVersion';
 
 const origin = 'StandardRepository';

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { RuleId, ProgrammingLanguage } from '@packmind/shared/types';
+import { RuleId } from '@packmind/types';
+import { ProgrammingLanguage } from '@packmind/types';
 import { PMVStack, PMText, PMSpinner, PMBox, PMButton } from '@packmind/ui';
 import { RuleExampleItem } from '../RuleExampleItem';
 import {

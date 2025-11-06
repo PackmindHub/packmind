@@ -11,7 +11,7 @@ import {
   createTargetId,
   createGitRepoId,
   createGitProviderId,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { SingleFileDeployer, DeployerConfig } from './SingleFileDeployer';
 import { v4 as uuidv4 } from 'uuid';
 import { GitHexa } from '@packmind/git';

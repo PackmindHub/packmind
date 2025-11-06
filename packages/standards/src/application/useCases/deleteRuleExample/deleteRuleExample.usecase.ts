@@ -6,8 +6,8 @@ import {
   DeleteRuleExampleCommand,
 } from '../../../domain/useCases/IDeleteRuleExample';
 import { RuleId } from '../../../domain/entities/Rule';
-import { ProgrammingLanguage } from '@packmind/shared';
-import type { ILinterPort } from '@packmind/shared';
+import { ProgrammingLanguage } from '@packmind/types';
+import type { ILinterPort } from '@packmind/types';
 
 const origin = 'DeleteRuleExampleUsecase';
 

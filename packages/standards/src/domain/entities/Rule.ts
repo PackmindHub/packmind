@@ -1,1 +1,1 @@
-export { Rule, RuleId, createRuleId } from '@packmind/shared/types';
+export { Rule, RuleId, createRuleId } from '@packmind/types';

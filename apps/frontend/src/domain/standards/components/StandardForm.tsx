@@ -13,12 +13,7 @@ import {
   useUpdateStandardMutation,
   useGetRulesByStandardIdQuery,
 } from '../api/queries/StandardsQueries';
-import {
-  createRuleId,
-  RuleId,
-  Standard,
-  StandardId,
-} from '@packmind/shared/types';
+import { createRuleId, RuleId, Standard, StandardId } from '@packmind/types';
 import { STANDARD_MESSAGES } from '../constants/messages';
 import { MarkdownEditor } from '../../../shared/components/editor/MarkdownEditor';
 

@@ -12,10 +12,10 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   localDataSource,
   AbstractRepository,
-  QueryOption,
   Configuration,
   WithTimestamps,
 } from '@packmind/shared';
+import { QueryOption } from '@packmind/types';
 
 const origin = 'InvitationRepository';
 const encryptionErrorMessage = 'Failed to encrypt invitation token';

@@ -24,7 +24,7 @@ import {
   Space,
   createSpaceId,
   SpaceId,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,

@@ -4,7 +4,7 @@ import {
   createRecipesDeploymentId,
   RecipesDeployment,
   DistributionStatus,
-} from '@packmind/shared/types';
+} from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { targetFactory } from './targetFactory';
 

@@ -5,7 +5,7 @@ import {
   SignUpWithOrganizationResponse,
   GenerateApiKeyResponse,
   GetCurrentApiKeyResponse,
-} from '@packmind/accounts';
+} from '@packmind/types';
 import {
   CheckEmailAvailabilityCommand,
   CheckEmailAvailabilityResponse,

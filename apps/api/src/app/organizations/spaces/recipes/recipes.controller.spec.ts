@@ -346,8 +346,10 @@ describe('OrganizationsSpacesRecipesController', () => {
         spaceId,
         orgId,
         updateData.name,
+        '', // slug (empty string when not provided)
         updateData.content,
         userId,
+        undefined, // summary (undefined when not provided)
       );
     });
 

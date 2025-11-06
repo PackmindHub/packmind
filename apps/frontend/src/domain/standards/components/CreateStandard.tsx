@@ -1,6 +1,6 @@
 import { StandardForm } from './StandardForm';
 import { MarkdownEditorProvider } from '../../../shared/components/editor/MarkdownEditor';
-import { Standard } from '@packmind/standards';
+import { Standard } from '@packmind/types';
 import { useNavigate, useParams } from 'react-router';
 import { useNavigation } from '../../../shared/hooks/useNavigation';
 

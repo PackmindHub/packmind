@@ -3,11 +3,8 @@ import { User } from '@packmind/types';
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
 import { UserSchema } from '../schemas/UserSchema';
 import { PackmindLogger, maskEmail } from '@packmind/logger';
-import {
-  localDataSource,
-  AbstractRepository,
-  QueryOption,
-} from '@packmind/shared';
+import { localDataSource, AbstractRepository } from '@packmind/shared';
+import { QueryOption } from '@packmind/types';
 
 const origin = 'UserRepository';
 

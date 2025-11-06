@@ -1,16 +1,13 @@
 import { StandardService } from '../../services/StandardService';
 import { PackmindLogger } from '@packmind/logger';
 import { UserProvider, OrganizationProvider } from '@packmind/types';
-import {
-  AbstractMemberUseCase,
-  MemberContext,
-  ISpacesPort,
-} from '@packmind/shared';
+import { AbstractMemberUseCase, MemberContext } from '@packmind/shared';
+import { ISpacesPort } from '@packmind/types';
 import {
   GetStandardByIdCommand,
   GetStandardByIdResponse,
   IGetStandardByIdUseCase,
-} from '@packmind/shared/types';
+} from '@packmind/types';
 
 const origin = 'GetStandardByIdUsecase';
 

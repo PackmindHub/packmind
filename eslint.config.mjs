@@ -36,8 +36,47 @@ export default [
           allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$'],
           depConstraints: [
             {
-              sourceTag: '*',
+              sourceTag: 'env:node',
               onlyDependOnLibsWithTags: ['*'],
+            },
+            {
+              sourceTag: 'env:shared',
+              onlyDependOnLibsWithTags: ['env:shared', 'env:node'],
+            },
+            {
+              sourceTag: 'env:browser',
+              notDependOnLibsWithTags: ['env:node'],
+              onlyDependOnLibsWithTags: ['env:shared', 'env:browser'],
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['**/*.spec.ts', '**/*.spec.tsx', '**/*.test.ts', '**/*.test.tsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          enforceBuildableLibDependency: true,
+          allow: [
+            '^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$',
+            '^@packmind/(deployments|git|recipes|standards|linter|analytics|spaces)/test',
+          ],
+          depConstraints: [
+            {
+              sourceTag: 'env:node',
+              onlyDependOnLibsWithTags: ['*'],
+            },
+            {
+              sourceTag: 'env:shared',
+              onlyDependOnLibsWithTags: ['env:shared', 'env:node'],
+            },
+            {
+              sourceTag: 'env:browser',
+              notDependOnLibsWithTags: ['env:node'],
+              onlyDependOnLibsWithTags: ['env:shared', 'env:browser'],
             },
           ],
         },

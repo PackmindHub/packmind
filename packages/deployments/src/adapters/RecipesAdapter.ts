@@ -4,8 +4,8 @@ import {
   Recipe,
   RecipeVersion,
   RecipeVersionId,
-  SpaceId,
-} from '@packmind/shared';
+} from '@packmind/types';
+import { SpaceId } from '@packmind/types';
 import { RecipesHexa } from '@packmind/recipes';
 
 export class RecipesAdapter implements Partial<IRecipesPort> {

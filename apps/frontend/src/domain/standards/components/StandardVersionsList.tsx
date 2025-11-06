@@ -9,7 +9,7 @@ import {
   PMTableColumn,
   PMTableRow,
 } from '@packmind/ui';
-import { StandardId, StandardVersion } from '@packmind/shared';
+import { StandardId, StandardVersion } from '@packmind/types';
 
 interface StandardVersionsListProps {
   standardId: StandardId;

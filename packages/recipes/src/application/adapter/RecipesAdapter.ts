@@ -13,31 +13,25 @@ import { DeleteRecipesBatchUsecase } from '../useCases/deleteRecipesBatch/delete
 import { IRecipesServices } from '../IRecipesServices';
 import { PackmindLogger } from '@packmind/logger';
 import { UserProvider, OrganizationProvider } from '@packmind/types';
+import { IDeploymentPort, ISpacesPort } from '@packmind/types';
 import {
   CaptureRecipeCommand,
   UpdateRecipesFromGitHubCommand,
   UpdateRecipesFromGitLabCommand,
   QueryOption,
-  IDeploymentPort,
-  ISpacesPort,
-  IRecipesPort,
   UpdateRecipeFromUICommand,
   UpdateRecipeFromUIResponse,
-} from '@packmind/shared';
-import { GitHexa } from '@packmind/git';
-import { OrganizationId } from '@packmind/accounts';
-import { RecipeId } from '@packmind/shared';
-import {
   GetRecipeByIdCommand,
   ListRecipesBySpaceCommand,
-} from '@packmind/shared/types';
-import { Recipe } from '../../domain/entities/Recipe';
-import { RecipesHexa } from '../../RecipesHexa';
-
-import {
   DeleteRecipeCommand,
   DeleteRecipesBatchCommand,
-} from '@packmind/shared';
+  RecipeId,
+  IRecipesPort,
+} from '@packmind/types';
+import { GitHexa } from '@packmind/git';
+import { OrganizationId } from '@packmind/accounts';
+import { Recipe } from '../../domain/entities/Recipe';
+import { RecipesHexa } from '../../RecipesHexa';
 
 const origin = 'RecipesAdapter';
 
@@ -137,7 +131,14 @@ export class RecipesAdapter implements IRecipesPort {
   public async updateRecipeFromUI(
     command: UpdateRecipeFromUICommand,
   ): Promise<UpdateRecipeFromUIResponse> {
-    const recipe = await this._updateRecipeFromUI.updateRecipeFromUI(command);
+    const recipe = await this._updateRecipeFromUI.updateRecipeFromUI({
+      recipeId: command.recipeId,
+      spaceId: command.spaceId,
+      organizationId: command.organizationId,
+      name: command.name,
+      content: command.content,
+      editorUserId: command.userId,
+    });
     return { recipe };
   }
 

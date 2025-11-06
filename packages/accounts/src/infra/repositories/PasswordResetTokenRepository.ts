@@ -12,10 +12,10 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   localDataSource,
   AbstractRepository,
-  QueryOption,
   Configuration,
   WithTimestamps,
 } from '@packmind/shared';
+import { QueryOption } from '@packmind/types';
 
 const origin = 'PasswordResetTokenRepository';
 const encryptionErrorMessage = 'Failed to encrypt password reset token';

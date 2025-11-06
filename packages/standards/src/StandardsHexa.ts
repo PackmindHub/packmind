@@ -1,24 +1,22 @@
 import { PackmindLogger } from '@packmind/logger';
+import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/shared';
 import {
-  BaseHexa,
-  BaseHexaOpts,
-  HexaRegistry,
-  IDeploymentPort,
-  IStandardsPort,
   ListStandardsBySpaceCommand,
   GetStandardByIdCommand,
   UpdateStandardCommand,
   ListStandardsBySpaceResponse,
   GetStandardByIdResponse,
-} from '@packmind/shared';
-import type { ILinterPort } from '@packmind/shared';
+  IDeploymentPort,
+  IStandardsPort,
+  ILinterPort,
+} from '@packmind/types';
 import { StandardsHexaFactory } from './StandardsHexaFactory';
 import { Standard, StandardId } from './domain/entities/Standard';
 import { StandardVersion } from './domain/entities/StandardVersion';
 import { Rule } from './domain/entities/Rule';
 import { RuleExample } from './domain/entities/RuleExample';
 import { OrganizationId, UserId } from '@packmind/accounts';
-import { SpaceId } from '@packmind/shared/types';
+import { SpaceId } from '@packmind/types';
 import { GitHexa } from '@packmind/git';
 import { StandardVersionId } from './domain/entities';
 import {
@@ -190,7 +188,7 @@ export class StandardsHexa extends BaseHexa {
     name: string;
     description: string;
     summary: string | null;
-    rules: import('@packmind/shared').RuleWithExamples[];
+    rules: import('@packmind/types').RuleWithExamples[];
     organizationId: OrganizationId;
     userId: UserId;
     scope: string | null;

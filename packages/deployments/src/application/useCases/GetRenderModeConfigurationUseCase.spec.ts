@@ -6,7 +6,7 @@ import {
   GetRenderModeConfigurationCommand,
   RenderMode,
   RenderModeConfiguration,
-} from '@packmind/shared';
+} from '@packmind/types';
 import {
   Organization,
   OrganizationId,

@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { standardsGateway } from '../../standards/api/gateways';
-import { StandardId, StandardVersionId } from '@packmind/shared/types';
-import { TargetId } from '@packmind/shared';
+import { StandardId, StandardVersionId } from '@packmind/types';
+import { TargetId } from '@packmind/types';
 import { useDeployStandardsMutation } from '../api/queries/DeploymentsQueries';
 
 interface DeployParams {

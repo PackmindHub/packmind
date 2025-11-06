@@ -1,5 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
-import { WithTimestamps, IRecipesPort, ISpacesPort } from '@packmind/shared';
+import { WithTimestamps } from '@packmind/shared';
+import { ISpacesPort } from '@packmind/types';
+import { IRecipesPort } from '@packmind/types';
 import { GitHexa } from '@packmind/git';
 import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
 import { createUserId } from '@packmind/types';
@@ -12,16 +14,18 @@ import {
   TargetDeploymentStatus,
   TargetDeploymentInfo,
   DeployedRecipeTargetInfo,
+  RecipesDeployment,
+  DistributionStatus,
+  TargetWithRepository,
+  GitRepoId,
+} from '@packmind/types';
+import {
   Recipe,
   RecipeId,
   RecipeVersion,
-  RecipesDeployment,
   createRecipeVersionId,
-  GitRepo,
-  GitRepoId,
-  DistributionStatus,
-  TargetWithRepository,
-} from '@packmind/shared';
+} from '@packmind/recipes';
+import { GitRepo } from '@packmind/git';
 import assert from 'assert';
 import { GetTargetsByOrganizationUseCase } from './GetTargetsByOrganizationUseCase';
 

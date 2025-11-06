@@ -10,10 +10,10 @@ import {
   StandardVersion,
   createStandardVersionId,
   StandardVersionId,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { UserId } from '@packmind/types';
-import type { ILinterPort } from '@packmind/shared';
+import type { ILinterPort } from '@packmind/types';
 
 import { IRuleExampleRepository } from '../../domain/repositories/IRuleExampleRepository';
 

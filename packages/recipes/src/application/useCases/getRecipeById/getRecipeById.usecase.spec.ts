@@ -1,11 +1,16 @@
 import { GetRecipeByIdUsecase } from './getRecipeById.usecase';
 import { RecipeService } from '../../services/RecipeService';
 import { recipeFactory } from '../../../../test/recipeFactory';
-import { createOrganizationId, createUserId } from '@packmind/accounts';
-import { createSpaceId } from '@packmind/spaces';
-import { createRecipeId } from '@packmind/shared';
-import { UserProvider, OrganizationProvider } from '@packmind/types';
-import { ISpacesPort, Space } from '@packmind/shared';
+import {
+  ISpacesPort,
+  Space,
+  UserProvider,
+  OrganizationProvider,
+  createRecipeId,
+  createSpaceId,
+  createOrganizationId,
+  createUserId,
+} from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 
 describe('GetRecipeByIdUsecase', () => {

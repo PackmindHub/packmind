@@ -8,13 +8,12 @@ import {
   OrganizationProvider,
   createUserId,
 } from '@packmind/types';
+import { AbstractAdminUseCase, AdminContext } from '@packmind/shared';
 import {
-  AbstractAdminUseCase,
-  AdminContext,
   GitProviderNotFoundError,
   GitProviderHasRepositoriesError,
   GitProviderOrganizationMismatchError,
-} from '@packmind/shared';
+} from '@packmind/types';
 
 const origin = 'DeleteGitProviderUseCase';
 

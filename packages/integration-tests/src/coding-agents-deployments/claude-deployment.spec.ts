@@ -1,36 +1,36 @@
 import { AccountsHexa, accountsSchemas } from '@packmind/accounts';
-import { User, Organization } from '@packmind/types';
-import { RecipesHexa, recipesSchemas } from '@packmind/recipes';
 import {
-  Recipe,
-  RecipeVersion,
-  RecipeVersionId,
-} from '@packmind/recipes/types';
+  ClaudeDeployer,
+  CodingAgentHexaFactory,
+  DeployerService,
+} from '@packmind/coding-agent';
+import { GitHexa, gitSchemas } from '@packmind/git';
+import { JobsHexa } from '@packmind/jobs';
+import { RecipesHexa, recipesSchemas } from '@packmind/recipes';
+import { HexaRegistry } from '@packmind/shared';
+import { Space, SpacesHexa, spacesSchemas } from '@packmind/spaces';
 import { StandardsHexa, standardsSchemas } from '@packmind/standards';
 import {
   Standard,
   StandardVersion,
   StandardVersionId,
 } from '@packmind/standards/types';
-import { SpacesHexa, spacesSchemas, Space } from '@packmind/spaces';
-import { GitHexa, gitSchemas } from '@packmind/git';
-import { JobsHexa } from '@packmind/jobs';
-import { GitRepo, GitProviderVendors } from '@packmind/git/types';
-import {
-  HexaRegistry,
-  IDeploymentPort,
-  Target,
-  createTargetId,
-} from '@packmind/shared';
 import { makeTestDatasource } from '@packmind/test-utils';
 import {
-  CodingAgentHexaFactory,
-  DeployerService,
-  ClaudeDeployer,
-} from '@packmind/coding-agent';
+  GitProviderVendors,
+  GitRepo,
+  IDeploymentPort,
+  Organization,
+  Recipe,
+  RecipeVersion,
+  RecipeVersionId,
+  Target,
+  User,
+  createTargetId,
+} from '@packmind/types';
 
-import { DataSource } from 'typeorm';
 import { assert } from 'console';
+import { DataSource } from 'typeorm';
 
 // Mock only Configuration from @packmind/shared
 jest.mock('@packmind/shared', () => {

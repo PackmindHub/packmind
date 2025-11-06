@@ -1,4 +1,4 @@
-import { Rule, Standard } from '@packmind/standards';
+import { Rule, Standard } from '@packmind/types';
 import { PMVStack, PMLink, PMBox } from '@packmind/ui';
 import { RulesList } from './RulesList';
 import { NavLink } from 'react-router';

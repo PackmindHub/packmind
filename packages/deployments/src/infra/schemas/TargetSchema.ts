@@ -1,5 +1,6 @@
 import { EntitySchema } from 'typeorm';
-import { Target, GitRepo } from '@packmind/shared';
+import { Target } from '@packmind/types';
+import { GitRepo } from '@packmind/git';
 import {
   WithTimestamps,
   WithSoftDelete,

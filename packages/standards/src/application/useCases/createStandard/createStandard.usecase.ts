@@ -10,7 +10,7 @@ import {
   ICreateStandardUseCase,
   CreateStandardCommand,
   CreateStandardResponse,
-} from '@packmind/shared';
+} from '@packmind/types';
 import {
   OrganizationId,
   UserId,

@@ -1,4 +1,4 @@
-import { RuleExample, StandardVersion } from '@packmind/shared';
+import { RuleExample, StandardVersion } from '@packmind/types';
 import { OrganizationId, UserId } from '@packmind/accounts';
 
 export interface GenerateStandardSummaryInput {

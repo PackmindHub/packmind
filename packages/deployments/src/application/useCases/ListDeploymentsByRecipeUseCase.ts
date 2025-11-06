@@ -5,7 +5,7 @@ import { RecipesDeployment } from '../../domain/entities/RecipesDeployment';
 import {
   IListDeploymentsByRecipe,
   ListDeploymentsByRecipeCommand,
-} from '@packmind/shared';
+} from '@packmind/types';
 
 export class ListDeploymentsByRecipeUseCase
   implements IListDeploymentsByRecipe

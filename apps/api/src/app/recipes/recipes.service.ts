@@ -8,7 +8,8 @@ import {
 } from '@packmind/recipes';
 import { OrganizationId, UserId } from '@packmind/accounts';
 import { PackmindLogger } from '@packmind/logger';
-import { IDeploymentPort, SpaceId, TargetId } from '@packmind/shared';
+import { IDeploymentPort } from '@packmind/types';
+import { SpaceId, TargetId } from '@packmind/types';
 import { GitRepoId } from '@packmind/git';
 import { DeploymentsHexa } from '@packmind/deployments';
 
@@ -109,16 +110,20 @@ export class RecipesService {
     spaceId: SpaceId,
     organizationId: OrganizationId,
     name: string,
+    slug: string,
     content: string,
     editorUserId: UserId,
+    summary?: string,
   ): Promise<Recipe> {
     return this.recipesHexa.updateRecipeFromUI({
+      userId: editorUserId,
       recipeId,
       spaceId,
       organizationId,
       name,
+      slug,
       content,
-      editorUserId,
+      summary,
     });
   }
 

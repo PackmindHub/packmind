@@ -1,4 +1,4 @@
-import { GitRepoId } from '@packmind/shared';
+import { GitRepoId } from '@packmind/types';
 import { OrganizationId } from '@packmind/accounts';
 import { RecipeVersionId } from '../entities/RecipeVersion';
 

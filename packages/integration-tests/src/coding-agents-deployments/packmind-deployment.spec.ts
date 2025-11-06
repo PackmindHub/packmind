@@ -1,3 +1,5 @@
+import { GitCommitSchema } from '@packmind/git';
+import { gitCommitFactory } from '@packmind/git/test';
 import {
   GitCommit,
   Recipe,
@@ -7,15 +9,12 @@ import {
   Standard,
   StandardsDeployment,
   StandardVersionId,
-} from '@packmind/shared';
-
-import { GitCommitSchema } from '@packmind/git';
+} from '@packmind/types';
 import { DataSource } from 'typeorm';
-import { gitCommitFactory } from '@packmind/git/test';
-import { TestApp } from '../helpers/TestApp';
 import { DataFactory } from '../helpers/DataFactory';
 import { DataQuery } from '../helpers/DataQuery';
 import { makeIntegrationTestDataSource } from '../helpers/makeIntegrationTestDataSource';
+import { TestApp } from '../helpers/TestApp';
 
 describe('Packmind Deployment Spec', () => {
   let testApp: TestApp;

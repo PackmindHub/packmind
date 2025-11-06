@@ -1,7 +1,7 @@
 import { useMemo, type ComponentType } from 'react';
 import { PMIcon, PMText } from '@packmind/ui';
 import { getLanguageDisplayName } from '../../detection/components/DetectionCardUtils';
-import { RuleLanguageDetectionStatus } from '@packmind/shared/types';
+import { RuleLanguageDetectionStatus } from '@packmind/types';
 import { LuCircleCheck, LuCircleOff } from 'react-icons/lu';
 import { TiWarningOutline } from 'react-icons/ti';
 import { useGetStandardRulesDetectionStatusQuery } from '../../detection/api/queries/DetectionProgramQueries';

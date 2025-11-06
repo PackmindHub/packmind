@@ -8,15 +8,16 @@ import {
 } from '@packmind/standards';
 import { OrganizationId, UserId } from '@packmind/accounts';
 import { PackmindLogger } from '@packmind/logger';
+import { IDeploymentPort, ILinterPort } from '@packmind/types';
 import {
-  IDeploymentPort,
+  ListStandardsBySpaceResponse,
+  GetStandardByIdResponse,
+} from '@packmind/types';
+import {
   PublishStandardsCommand,
   StandardsDeployment,
   SpaceId,
-  ListStandardsBySpaceResponse,
-  GetStandardByIdResponse,
-  ILinterPort,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { DeploymentsHexa } from '@packmind/deployments';
 import { LinterHexa } from '@packmind/linter';
 

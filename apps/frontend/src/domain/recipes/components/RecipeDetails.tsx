@@ -26,7 +26,7 @@ import { DeployRecipeButton } from './DeployRecipeButton';
 import { EditRecipe } from './EditRecipe';
 import { AutobreadCrumb } from '../../../../src/shared/components/navigation/AutobreadCrumb';
 import { RECIPE_MESSAGES } from '../constants/messages';
-import { RecipeId } from '@packmind/shared';
+import { RecipeId } from '@packmind/types';
 import {
   MarkdownEditor,
   MarkdownEditorProvider,

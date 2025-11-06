@@ -13,7 +13,7 @@ import {
   HandleWebHookCommand,
   HandleWebHookResult,
   IHandleWebHookUseCase,
-} from '@packmind/shared';
+} from '@packmind/types';
 
 export class HandleWebHook implements IHandleWebHookUseCase {
   constructor(

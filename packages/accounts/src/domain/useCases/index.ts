@@ -1,7 +1,7 @@
-// All use case interfaces and types have been migrated to @packmind/shared
+// All use case interfaces and types have been migrated to @packmind/types
 // This file now re-exports them for backward compatibility
 
-// Re-export all accounts contracts from shared
+// Re-export all accounts contracts from @packmind/types
 export type {
   // SignUp & Auth
   ISignUpWithOrganizationUseCase,
@@ -69,7 +69,6 @@ export type {
   ListOrganizationUserStatusesCommand,
   ListOrganizationUserStatusesResponse,
   UserStatus,
-  InvitationStatus,
 
   // Invitations
   ICreateInvitationsUseCase,
@@ -89,4 +88,4 @@ export type {
   IGetCurrentApiKeyUseCase,
   GetCurrentApiKeyCommand,
   GetCurrentApiKeyResponse,
-} from '@packmind/shared';
+} from '@packmind/types';

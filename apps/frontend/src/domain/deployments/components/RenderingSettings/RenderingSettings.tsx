@@ -10,7 +10,7 @@ import {
   PMVStack,
   pmToaster,
 } from '@packmind/ui';
-import { RenderMode } from '@packmind/shared/types';
+import { RenderMode } from '@packmind/types';
 import {
   useGetRenderModeConfigurationQuery,
   useUpdateRenderModeConfigurationMutation,

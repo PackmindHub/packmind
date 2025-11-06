@@ -1,10 +1,8 @@
 import { GetOrganizationOnboardingStatusUseCase } from './GetOrganizationOnboardingStatusUseCase';
-import { GetOrganizationOnboardingStatusCommand } from '@packmind/types';
-import { stubLogger } from '@packmind/test-utils';
-import { PackmindLogger } from '@packmind/logger';
-import { UserProvider, OrganizationProvider } from '@packmind/types';
 import {
-  MemberContext,
+  GetOrganizationOnboardingStatusCommand,
+  UserProvider,
+  OrganizationProvider,
   IStandardsPort,
   ISpacesPort,
   IDeploymentPort,
@@ -16,7 +14,10 @@ import {
   RepositoryDeploymentStatus,
   RecipeDeploymentStatus,
   createSpaceId,
-} from '@packmind/shared';
+} from '@packmind/types';
+import { MemberContext } from '@packmind/shared';
+import { stubLogger } from '@packmind/test-utils';
+import { PackmindLogger } from '@packmind/logger';
 import { UserService } from '../../services/UserService';
 import { userFactory, organizationFactory } from '../../../../test';
 import { createUserId } from '@packmind/types';

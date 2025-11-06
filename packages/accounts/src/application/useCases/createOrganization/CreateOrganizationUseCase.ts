@@ -1,7 +1,7 @@
 import { OrganizationService } from '../../services/OrganizationService';
 import { UserService } from '../../services/UserService';
 import { PackmindLogger } from '@packmind/logger';
-import { ISpacesPort } from '@packmind/shared/types';
+import { ISpacesPort } from '@packmind/types';
 import {
   ICreateOrganizationUseCase,
   CreateOrganizationCommand,

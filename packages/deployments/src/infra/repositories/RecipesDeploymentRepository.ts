@@ -6,12 +6,8 @@ import { Repository } from 'typeorm';
 import { OrganizationId } from '@packmind/accounts';
 import { GitRepoId } from '@packmind/git';
 import { PackmindLogger } from '@packmind/logger';
-import {
-  localDataSource,
-  AbstractRepository,
-  TargetId,
-  DistributionStatus,
-} from '@packmind/shared';
+import { localDataSource, AbstractRepository } from '@packmind/shared';
+import { TargetId, DistributionStatus } from '@packmind/types';
 
 const origin = 'RecipesDeploymentRepository';
 

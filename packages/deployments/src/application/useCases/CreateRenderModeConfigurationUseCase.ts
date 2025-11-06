@@ -6,7 +6,7 @@ import {
   ICreateRenderModeConfigurationUseCase,
   RenderMode,
   RenderModeConfiguration,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 
 const origin = 'CreateRenderModeConfigurationUseCase';

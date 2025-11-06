@@ -3,7 +3,7 @@ import {
   ExecuteSingleFileAstUseCaseResult,
   IExecuteSingleFileAstUseCase,
 } from '../../domain/useCases/IExecuteSingleFileAstUseCase';
-import { IExecuteLinterProgramsUseCase } from '@packmind/shared';
+import { IExecuteLinterProgramsUseCase } from '@packmind/types';
 
 export class ExecuteSingleFileAstUseCase
   implements IExecuteSingleFileAstUseCase
