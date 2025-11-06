@@ -45,6 +45,9 @@ export class CreateRuleExampleUsecase implements ICreateRuleExample {
       throw new Error(`Rule with id ${ruleId} not found`);
     }
 
+
+    console.log('test update file')
+
     // Create the rule example entity
     const ruleExample: RuleExample = {
       id: createRuleExampleId(uuidv4()),
