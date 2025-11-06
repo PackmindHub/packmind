@@ -10,7 +10,6 @@
     "ts-jest": "^29.4.1",
     "@packmind/accounts": "*",
     "@packmind/recipes": "*",
-    "@packmind/analytics": "*",
     "@packmind/git": "*",
     "@packmind/jobs": "*",
     "@packmind/shared": "*",

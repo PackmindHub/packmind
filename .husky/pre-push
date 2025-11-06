@@ -1,0 +1,1 @@
+nx run-many -t test --tuiAutoExit --passWithNoTests

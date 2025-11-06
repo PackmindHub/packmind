@@ -1,0 +1,3 @@
+npx pretty-quick --staged
+nx affected:lint --parallel --uncommitted
+nx affected:test --parallel --passWithNoTests

@@ -149,7 +149,6 @@
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/platform-express": "^11.1.6",
     "@nestjs/typeorm": "^11.0.0",
-    "@packmind/deployments": "^0.0.1",
     "@react-router/fs-routes": "^7.6.3",
     "@react-router/node": "^7.2.0",
     "@react-router/serve": "^7.2.0",

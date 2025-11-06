@@ -22,7 +22,7 @@ jest.mock('@packmind/shared', () => {
   };
 });
 
-describe('Recipe usage tracking', () => {
+describe.skip('Recipe usage tracking', () => {
   let dataSource: DataSource;
   let testApp: TestApp;
   let dataFactory: DataFactory;

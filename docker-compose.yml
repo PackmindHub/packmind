@@ -22,7 +22,7 @@ services:
       NX_WATCHER_POLLING_INTERVAL: '1000'
       NX_ISOLATE_PLUGINS: 'false'
       NX_PLUGIN_NO_TIMEOUTS: 'true'
-      PACKMIND_EDITION: ${PACKMIND_EDITION:-proprietary}
+      PACKMIND_EDITION: ${PACKMIND_EDITION:-oss}
     healthcheck:
       test: ['CMD-SHELL', 'test -S /nx-sock/d.sock']
       interval: 2s
@@ -123,7 +123,7 @@ services:
       NX_WATCHER_POLLING_INTERVAL: '1000'
       NX_ISOLATE_PLUGINS: 'false'
       NX_PLUGIN_NO_TIMEOUTS: 'true'
-      PACKMIND_EDITION: ${PACKMIND_EDITION:-proprietary}
+      PACKMIND_EDITION: ${PACKMIND_EDITION:-oss}
     volumes:
       - .:/packmind
       - dev-dist:/packmind/dist
@@ -165,7 +165,7 @@ services:
       NX_WATCHER_POLLING_INTERVAL: '1000'
       NX_ISOLATE_PLUGINS: 'false'
       NX_PLUGIN_NO_TIMEOUTS: 'true'
-      PACKMIND_EDITION: ${PACKMIND_EDITION:-proprietary}
+      PACKMIND_EDITION: ${PACKMIND_EDITION:-oss}
       API_HOSTNAME: 'backend'
       API_PORT: 3000
       MCP_HOSTNAME: 'mcp-server'
@@ -224,7 +224,7 @@ services:
       CHOKIDAR_USEPOLLING: '1'
       CHOKIDAR_INTERVAL: '200'
       WATCHPACK_POLLING: 'true'
-      PACKMIND_EDITION: ${PACKMIND_EDITION:-proprietary}
+      PACKMIND_EDITION: ${PACKMIND_EDITION:-oss}
       JS_PLAYGROUND_PATH: 'packages/linter/js-playground-local'
 
     volumes:
@@ -274,7 +274,7 @@ services:
       NX_WATCHER_POLLING_INTERVAL: '1000'
       NX_ISOLATE_PLUGINS: 'false'
       NX_PLUGIN_NO_TIMEOUTS: 'true'
-      PACKMIND_EDITION: ${PACKMIND_EDITION:-proprietary}
+      PACKMIND_EDITION: ${PACKMIND_EDITION:-oss}
       JS_PLAYGROUND_PATH: 'packages/linter/js-playground-local'
     volumes:
       - .:/packmind
