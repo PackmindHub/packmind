@@ -8,14 +8,14 @@ import {
 import { rulesGateway } from '../gateways';
 import { GET_RULE_EXAMPLES_KEY } from '../queryKeys';
 import {
-  GET_ACTIVE_DETECTION_PROGRAMS_KEY,
-  GET_ALL_DETECTION_PROGRAMS_KEY,
-} from '../../../detection/api/queryKeys';
-import {
   GET_RULES_BY_STANDARD_ID_KEY,
   getStandardByIdKey,
 } from '../../../standards/api/queryKeys';
 import { useCurrentSpace } from '../../../spaces';
+import {
+  GET_ACTIVE_DETECTION_PROGRAMS_KEY,
+  GET_ALL_DETECTION_PROGRAMS_KEY,
+} from '@packmind/proprietary/frontend/domain/detection/api/queryKeys';
 
 export const useGetRuleExamplesQuery = (
   standardId: string,
