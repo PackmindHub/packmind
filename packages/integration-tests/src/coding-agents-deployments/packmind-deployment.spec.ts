@@ -80,7 +80,9 @@ describe('Packmind Deployment Spec', () => {
     beforeEach(async () => {
       commit = await createGitCommit();
       commitToGit = jest.fn().mockResolvedValue(commit);
-      testApp.gitHexa.commitToGit = commitToGit;
+      // Mock the adapter method instead of the hexa method
+      const gitAdapter = testApp.gitHexa.getGitAdapter();
+      jest.spyOn(gitAdapter, 'commitToGit').mockImplementation(commitToGit);
 
       await deployStandards([standard1]);
     });
@@ -171,7 +173,9 @@ describe('Packmind Deployment Spec', () => {
     beforeEach(async () => {
       commit = await createGitCommit();
       commitToGit = jest.fn().mockResolvedValue(commit);
-      testApp.gitHexa.commitToGit = commitToGit;
+      // Mock the adapter method instead of the hexa method
+      const gitAdapter = testApp.gitHexa.getGitAdapter();
+      jest.spyOn(gitAdapter, 'commitToGit').mockImplementation(commitToGit);
 
       await deployRecipes([recipe1]);
     });

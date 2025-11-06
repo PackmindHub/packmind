@@ -1,5 +1,5 @@
 import { RecipeService } from '../../services/RecipeService';
-import { GitHexa } from '@packmind/git';
+import { IGitPort } from '@packmind/types';
 import { LogLevel } from '@packmind/logger';
 import { IDeploymentPort } from '@packmind/types';
 import {
@@ -32,10 +32,10 @@ export class UpdateRecipesFromGitLabUsecase
 {
   constructor(
     recipeService: RecipeService,
-    gitHexa: GitHexa,
+    gitPort: IGitPort,
     deploymentPort?: IDeploymentPort,
   ) {
-    super(recipeService, gitHexa, origin, deploymentPort, LogLevel.INFO);
+    super(recipeService, gitPort, origin, deploymentPort, LogLevel.INFO);
   }
 
   public async execute(

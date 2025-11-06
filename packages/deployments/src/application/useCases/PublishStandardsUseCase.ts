@@ -4,9 +4,7 @@ import { DistributionStatus, Target } from '@packmind/types';
 import { GitRepo } from '@packmind/git';
 import { StandardVersion } from '@packmind/standards';
 import { v4 as uuidv4 } from 'uuid';
-import { StandardsHexa } from '@packmind/standards';
-import { GitHexa } from '@packmind/git';
-import { CodingAgentHexa } from '@packmind/coding-agent';
+import { IStandardsPort, ICodingAgentPort, IGitPort } from '@packmind/types';
 import {
   IPublishStandards,
   PublishStandardsCommand,
@@ -24,9 +22,9 @@ const origin = 'PublishStandardsUseCase';
 
 export class PublishStandardsUseCase implements IPublishStandards {
   constructor(
-    private readonly standardsHexa: StandardsHexa,
-    private readonly gitHexa: GitHexa,
-    private readonly codingAgentHexa: CodingAgentHexa,
+    private readonly standardsPort: IStandardsPort,
+    private readonly gitPort: IGitPort,
+    private readonly codingAgentPort: ICodingAgentPort,
     private readonly standardsDeploymentRepository: IStandardsDeploymentRepository,
     private readonly targetService: TargetService,
     private readonly renderModeConfigurationService: RenderModeConfigurationService,
@@ -99,9 +97,9 @@ export class PublishStandardsUseCase implements IPublishStandards {
         // Filter out deleted standards by checking if the parent standard still exists
         const existingPreviousStandardVersions = await Promise.all(
           previousStandardVersions.map(async (sv) => {
-            const standard = await this.standardsHexa
-              .getStandardsAdapter()
-              .getStandard(sv.standardId);
+            const standard = await this.standardsPort.getStandard(
+              sv.standardId,
+            );
             return standard ? sv : null;
           }),
         );
@@ -157,7 +155,7 @@ export class PublishStandardsUseCase implements IPublishStandards {
         };
 
         const fileUpdates =
-          await this.codingAgentHexa.prepareStandardsDeployment(prepareCommand);
+          await this.codingAgentPort.prepareStandardsDeployment(prepareCommand);
 
         this.logger.info('Prepared file updates', {
           createOrUpdateCount: fileUpdates.createOrUpdate.length,
@@ -176,7 +174,7 @@ ${standardVersions.map((sv) => `- ${sv.name} (${sv.slug}) v${sv.version}`).join(
         let gitCommit;
         let deploymentStatus = DistributionStatus.success;
         try {
-          gitCommit = await this.gitHexa.commitToGit(
+          gitCommit = await this.gitPort.commitToGit(
             gitRepo,
             fileUpdates.createOrUpdate,
             commitMessage,
@@ -295,7 +293,7 @@ ${standardVersions.map((sv) => `- ${sv.name} (${sv.slug}) v${sv.version}`).join(
     standardVersions = await Promise.all(
       command.standardVersionIds.map(async (standardVersionId) => {
         const standardVersion =
-          await this.standardsHexa.getStandardVersionById(standardVersionId);
+          await this.standardsPort.getStandardVersionById(standardVersionId);
         if (!standardVersion) {
           this.logger.error('Standard version not found', {
             standardVersionId,
@@ -353,7 +351,7 @@ ${standardVersions.map((sv) => `- ${sv.name} (${sv.slug}) v${sv.version}`).join(
           const fetchedVersions = await Promise.all(
             command.standardVersionIds.map(async (standardVersionId) => {
               const standardVersion =
-                await this.standardsHexa.getStandardVersionById(
+                await this.standardsPort.getStandardVersionById(
                   standardVersionId,
                 );
               return standardVersion;

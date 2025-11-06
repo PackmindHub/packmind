@@ -12,7 +12,7 @@ import {
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { CodingAgentHexa, CodingAgents } from '@packmind/coding-agent';
-import { StandardsHexa } from '@packmind/standards';
+import { IStandardsPort, ICodingAgentPort } from '@packmind/types';
 
 const origin = 'PullAllContentUseCase';
 
@@ -22,9 +22,10 @@ export class PullAllContentUseCase extends AbstractMemberUseCase<
 > {
   constructor(
     private readonly recipesPort: IRecipesPort,
-    private readonly standardsHexa: StandardsHexa,
+    private readonly standardsPort: IStandardsPort,
     private readonly spacesPort: ISpacesPort,
-    private readonly codingAgentHexa: CodingAgentHexa,
+    private readonly codingAgentPort: ICodingAgentPort,
+    private readonly codingAgentHexa: CodingAgentHexa, // Keep for getCodingAgentDeployerRegistry() - not in port
     userProvider: UserProvider,
     organizationProvider: OrganizationProvider,
     logger: PackmindLogger = new PackmindLogger(origin, LogLevel.INFO),
@@ -94,15 +95,13 @@ export class PullAllContentUseCase extends AbstractMemberUseCase<
       // Retrieve all standards across all spaces
       const allStandards = [];
       for (const space of spaces) {
-        const standardsResponse = await this.standardsHexa.listStandardsBySpace(
-          {
-            spaceId: space.id,
-            organizationId: command.organization.id,
-            userId: command.userId,
-          },
+        const standards = await this.standardsPort.listStandardsBySpace(
+          space.id,
+          command.organization.id,
+          command.userId,
         );
 
-        allStandards.push(...standardsResponse.standards);
+        allStandards.push(...standards);
       }
 
       this.logger.info('Retrieved standards from all spaces', {
@@ -112,7 +111,7 @@ export class PullAllContentUseCase extends AbstractMemberUseCase<
 
       // Get standard versions for all standards
       const standardVersionsPromises = allStandards.map(async (standard) => {
-        const versions = await this.standardsHexa.listStandardVersions(
+        const versions = await this.standardsPort.listStandardVersions(
           standard.id,
         );
         // Return the latest version

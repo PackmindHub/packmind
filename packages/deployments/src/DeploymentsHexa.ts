@@ -1,6 +1,11 @@
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, HexaRegistry, BaseHexaOpts } from '@packmind/node-utils';
-import { IRecipesPort, ISpacesPort, IDeploymentPort } from '@packmind/types';
+import {
+  IRecipesPort,
+  ISpacesPort,
+  IDeploymentPort,
+  IStandardsPort,
+} from '@packmind/types';
 import { DeploymentsHexaFactory } from './DeploymentsHexaFactory';
 import { DeploymentsAdapter } from './application/adapter/DeploymentsAdapter';
 import { GitHexa } from '@packmind/git';
@@ -54,14 +59,28 @@ export class DeploymentsHexa extends BaseHexa {
       }
 
       const codingAgentHexa = registry.get(CodingAgentHexa);
+      const codingAgentPort = codingAgentHexa.getCodingAgentAdapter();
       const standardsHexa = registry.get(StandardsHexa);
+      // StandardsHexa adapter might not be available yet (needs initialization)
+      // We'll get it lazily or set it later after initialization
+      let standardsPort: IStandardsPort | undefined;
+      try {
+        standardsPort = standardsHexa.getStandardsAdapter();
+      } catch {
+        // StandardsHexa not initialized yet - will be set later
+        this.logger.debug(
+          'StandardsHexa adapter not available yet, will be set after initialization',
+        );
+      }
+      const gitPort = gitHexa.getGitAdapter();
 
       this.deploymentsUsecases = new DeploymentsAdapter(
         this.hexa,
-        gitHexa,
+        gitPort,
         recipesPort,
-        codingAgentHexa,
-        standardsHexa,
+        codingAgentPort,
+        standardsPort,
+        codingAgentHexa, // Keep for getCodingAgentDeployerRegistry() - not in port
       );
 
       this.logger.info('DeploymentsHexa initialized successfully');
@@ -83,6 +102,18 @@ export class DeploymentsHexa extends BaseHexa {
       recipesPort,
     );
     this.logger.info('RecipesPort updated in DeploymentsHexa');
+  }
+
+  /**
+   * Set the standards port after initialization
+   */
+  public setStandardsPort(standardsHexa: StandardsHexa): void {
+    const standardsPort = standardsHexa.getStandardsAdapter();
+    // Update the use cases with the new standards port
+    (this.deploymentsUsecases as DeploymentsAdapter).updateStandardsPort(
+      standardsPort,
+    );
+    this.logger.info('StandardsPort updated in DeploymentsHexa');
   }
 
   /**

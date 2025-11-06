@@ -1,5 +1,4 @@
-import { StandardsHexa } from '@packmind/standards';
-import { GitHexa } from '@packmind/git';
+import { IStandardsPort, IGitPort } from '@packmind/types';
 import { OrganizationId, UserId } from '@packmind/types';
 import {
   createGitRepoId,
@@ -30,8 +29,8 @@ import {
 describe('GetStandardDeploymentOverviewUseCase', () => {
   let useCase: GetStandardDeploymentOverviewUseCase;
   let mockStandardsDeploymentRepository: jest.Mocked<IStandardsDeploymentRepository>;
-  let mockStandardsHexa: jest.Mocked<StandardsHexa>;
-  let mockGitHexa: jest.Mocked<GitHexa>;
+  let mockStandardsPort: jest.Mocked<IStandardsPort>;
+  let mockGitPort: jest.Mocked<IGitPort>;
   let mockSpacesPort: jest.Mocked<ISpacesPort>;
   const logger = stubLogger();
 
@@ -62,13 +61,13 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
       list: jest.fn(),
     } as unknown as jest.Mocked<IStandardsDeploymentRepository>;
 
-    mockStandardsHexa = {
+    mockStandardsPort = {
       listStandardsBySpace: jest.fn(),
-    } as unknown as jest.Mocked<StandardsHexa>;
+    } as unknown as jest.Mocked<IStandardsPort>;
 
-    mockGitHexa = {
+    mockGitPort = {
       getOrganizationRepositories: jest.fn(),
-    } as unknown as jest.Mocked<GitHexa>;
+    } as unknown as jest.Mocked<IGitPort>;
 
     mockSpacesPort = {
       listSpacesByOrganization: jest.fn(),
@@ -79,8 +78,8 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
 
     useCase = new GetStandardDeploymentOverviewUseCase(
       mockStandardsDeploymentRepository,
-      mockStandardsHexa,
-      mockGitHexa,
+      mockStandardsPort,
+      mockGitPort,
       mockSpacesPort,
       logger,
     );
@@ -107,10 +106,8 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
         mockDeployments,
       );
       mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
-      mockStandardsHexa.listStandardsBySpace.mockResolvedValue({
-        standards: mockStandards,
-      });
-      mockGitHexa.getOrganizationRepositories.mockResolvedValue(mockGitRepos);
+      mockStandardsPort.listStandardsBySpace.mockResolvedValue(mockStandards);
+      mockGitPort.getOrganizationRepositories.mockResolvedValue(mockGitRepos);
 
       const result = await useCase.execute(command);
 
@@ -121,12 +118,12 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
       expect(mockSpacesPort.listSpacesByOrganization).toHaveBeenCalledWith(
         organizationId,
       );
-      expect(mockStandardsHexa.listStandardsBySpace).toHaveBeenCalledWith({
-        userId,
+      expect(mockStandardsPort.listStandardsBySpace).toHaveBeenCalledWith(
+        mockSpace.id,
         organizationId,
-        spaceId: mockSpace.id,
-      });
-      expect(mockGitHexa.getOrganizationRepositories).toHaveBeenCalledWith(
+        userId,
+      );
+      expect(mockGitPort.getOrganizationRepositories).toHaveBeenCalledWith(
         organizationId,
       );
     });
@@ -205,10 +202,8 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
         mockDeployments,
       );
       mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
-      mockStandardsHexa.listStandardsBySpace.mockResolvedValue({
-        standards: mockStandards,
-      });
-      mockGitHexa.getOrganizationRepositories.mockResolvedValue(mockGitRepos);
+      mockStandardsPort.listStandardsBySpace.mockResolvedValue(mockStandards);
+      mockGitPort.getOrganizationRepositories.mockResolvedValue(mockGitRepos);
 
       const result = await useCase.execute(command);
 
@@ -260,10 +255,8 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
         [mockDeployment],
       );
       mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
-      mockStandardsHexa.listStandardsBySpace.mockResolvedValue({
-        standards: [mockStandard],
-      });
-      mockGitHexa.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
+      mockStandardsPort.listStandardsBySpace.mockResolvedValue([mockStandard]);
+      mockGitPort.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
 
       result = await useCase.execute(command);
     });
@@ -352,10 +345,8 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
         [mockDeployment1, mockDeployment2],
       );
       mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
-      mockStandardsHexa.listStandardsBySpace.mockResolvedValue({
-        standards: [mockStandard],
-      });
-      mockGitHexa.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
+      mockStandardsPort.listStandardsBySpace.mockResolvedValue([mockStandard]);
+      mockGitPort.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
 
       result = await useCase.execute(command);
     });
@@ -406,10 +397,8 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
         [],
       );
       mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
-      mockStandardsHexa.listStandardsBySpace.mockResolvedValue({
-        standards: [mockStandard],
-      });
-      mockGitHexa.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
+      mockStandardsPort.listStandardsBySpace.mockResolvedValue([mockStandard]);
+      mockGitPort.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
 
       result = await useCase.execute(command);
     });

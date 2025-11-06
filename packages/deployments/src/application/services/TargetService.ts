@@ -1,14 +1,13 @@
 import { PackmindLogger, LogLevel } from '@packmind/logger';
-import { Target, GitRepoId, TargetId } from '@packmind/types';
+import { Target, GitRepoId, TargetId, IGitPort } from '@packmind/types';
 import { ITargetRepository } from '../../domain/repositories/ITargetRepository';
-import { GitHexa } from '@packmind/git';
 
 const origin = 'TargetService';
 
 export class TargetService {
   constructor(
     private readonly targetRepository: ITargetRepository,
-    private readonly gitHexa: GitHexa,
+    private readonly gitPort: IGitPort,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.INFO,
@@ -78,7 +77,7 @@ export class TargetService {
         throw new Error(`Target with id ${targetId} not found`);
       }
 
-      const repository = await this.gitHexa.getRepositoryById(target.gitRepoId);
+      const repository = await this.gitPort.getRepositoryById(target.gitRepoId);
       if (!repository) {
         this.logger.error('Repository not found for target', {
           targetId,

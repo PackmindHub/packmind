@@ -32,6 +32,10 @@ export class StandardsAdapter implements IStandardsPort {
       .getLatestRulesByStandardId(id);
   }
 
+  getRulesByStandardId(id: StandardId): Promise<Rule[]> {
+    return this.useCases.getRulesByStandardId(id);
+  }
+
   getRule(id: RuleId): Promise<Rule | null> {
     return this.repositories.getRuleRepository().findById(id);
   }
@@ -42,6 +46,16 @@ export class StandardsAdapter implements IStandardsPort {
 
   getStandardVersion(id: StandardVersionId): Promise<StandardVersion | null> {
     return this.services.getStandardVersionService().getStandardVersionById(id);
+  }
+
+  getStandardVersionById(
+    versionId: StandardVersionId,
+  ): Promise<StandardVersion | null> {
+    return this.useCases.getStandardVersionById(versionId);
+  }
+
+  listStandardVersions(standardId: StandardId): Promise<StandardVersion[]> {
+    return this.useCases.listStandardVersions(standardId);
   }
 
   async listStandardsBySpace(

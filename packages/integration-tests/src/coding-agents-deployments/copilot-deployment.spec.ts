@@ -24,6 +24,8 @@ import {
 import { makeTestDatasource } from '@packmind/test-utils';
 import {
   IDeploymentPort,
+  IStandardsPort,
+  IGitPort,
   Organization,
   Target,
   User,
@@ -54,6 +56,8 @@ describe('GitHub Copilot Deployment Integration', () => {
   let standardsHexa: StandardsHexa;
   let spacesHexa: SpacesHexa;
   let gitHexa: GitHexa;
+  let standardsPort: IStandardsPort;
+  let gitPort: IGitPort;
   let registry: HexaRegistry;
   let dataSource: DataSource;
   let codingAgentFactory: CodingAgentHexaFactory;
@@ -114,6 +118,12 @@ describe('GitHub Copilot Deployment Integration', () => {
 
     gitHexa.setUserProvider(accountsHexa.getUserProvider());
     gitHexa.setOrganizationProvider(accountsHexa.getOrganizationProvider());
+
+    // Initialize hexas and get adapters
+    await standardsHexa.initialize();
+    await gitHexa.initialize();
+    standardsPort = standardsHexa.getStandardsAdapter();
+    gitPort = gitHexa.getGitAdapter();
 
     // Create test data
     const signUpResult = await accountsHexa.signUpWithOrganization({
@@ -192,7 +202,7 @@ describe('GitHub Copilot Deployment Integration', () => {
         gitRepoId: gitRepo.id,
       };
       // Mock GitHexa.getFileFromRepo to return null (file doesn't exist)
-      jest.spyOn(gitHexa, 'getFileFromRepo').mockResolvedValue(null);
+      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
     });
 
     afterEach(() => {
@@ -476,7 +486,7 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
         content: existingContent,
         sha: 'abc123',
       };
-      jest.spyOn(gitHexa, 'getFileFromRepo').mockResolvedValue(existingFile);
+      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(existingFile);
     });
 
     afterEach(() => {
@@ -514,18 +524,25 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
     let defaultTarget: Target;
     let copilotDeployer: CopilotDeployer;
 
-    beforeEach(() => {
+    beforeEach(async () => {
+      // Ensure hexas are initialized before getting adapters
+      await standardsHexa.initialize();
+      await gitHexa.initialize();
+
       defaultTarget = {
         id: createTargetId('default-target-id'),
         name: 'Default',
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      copilotDeployer = new CopilotDeployer(standardsHexa, gitHexa);
+
+      standardsPort = standardsHexa.getStandardsAdapter();
+      gitPort = gitHexa.getGitAdapter();
+      copilotDeployer = new CopilotDeployer(standardsPort, gitPort);
     });
 
     it('handles empty recipe list gracefully', async () => {
-      jest.spyOn(gitHexa, 'getFileFromRepo').mockResolvedValue(null);
+      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
       const fileUpdates = await copilotDeployer.deployRecipes(
         [],

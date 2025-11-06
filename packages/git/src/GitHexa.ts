@@ -128,9 +128,9 @@ export class GitHexa extends BaseHexa<GitHexaOpts> {
   /**
    * Get the Git adapter for cross-domain access to git data.
    * This adapter implements IGitPort and can be injected into other domains.
+   * The adapter is available immediately after construction (doesn't require initialization).
    */
   public getGitAdapter(): IGitPort {
-    this.ensureInitialized();
     return this.hexa.useCases;
   }
 

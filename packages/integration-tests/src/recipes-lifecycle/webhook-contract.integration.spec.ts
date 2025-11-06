@@ -102,15 +102,14 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mockGitCommit: any = null; // In test environment, gitCommit is null due to mocking constraints
 
-      // Mock handleWebHookWithoutContent to return list of changed files (without content)
-      jest
-        .spyOn(testApp.gitHexa, 'handleWebHookWithoutContent')
-        .mockResolvedValue(
-          files.map((f) => ({
-            filePath: f.filePath,
-            gitCommit: mockGitCommit,
-          })),
-        );
+      // Mock handleWebHookWithoutContent on the adapter to return list of changed files (without content)
+      const gitAdapter = testApp.gitHexa.getGitAdapter();
+      jest.spyOn(gitAdapter, 'handleWebHookWithoutContent').mockResolvedValue(
+        files.map((f) => ({
+          filePath: f.filePath,
+          gitCommit: mockGitCommit,
+        })),
+      );
 
       // Get the recipes delayed jobs to mock them
       const recipesDelayedJobs = testApp.recipesHexa.getRecipesDelayedJobs();
@@ -263,8 +262,11 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
         }
 
         beforeEach(async () => {
-          testApp.gitHexa.commitToGit = jest
-            .fn()
+          // Mock commitToGit on the adapter instead of GitHexa
+          // Store the adapter to ensure we're mocking the same instance
+          const gitAdapter = testApp.gitHexa.getGitAdapter();
+          jest
+            .spyOn(gitAdapter, 'commitToGit')
             .mockResolvedValue(await createGitCommit());
 
           await testApp.deploymentsHexa
@@ -435,6 +437,12 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
               name: 'Second Recipe',
               content: '# Second Recipe\n\nInitial content for second recipe.',
             });
+
+            // Ensure commitToGit mock is still active (re-apply to be safe)
+            const gitAdapter = testApp.gitHexa.getGitAdapter();
+            jest
+              .spyOn(gitAdapter, 'commitToGit')
+              .mockResolvedValue(await createGitCommit());
 
             await testApp.deploymentsHexa
               .getDeploymentsUseCases()

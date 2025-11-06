@@ -9,7 +9,6 @@ import type {
   ISpacesPort,
   ILinterPort,
 } from '@packmind/types';
-import { GitHexa } from '@packmind/git';
 import { AccountsHexa } from '@packmind/accounts';
 import { IStandardDelayedJobs } from './domain/jobs/IStandardDelayedJobs';
 import { GenerateStandardSummaryJobFactory } from './infra/jobs/GenerateStandardSummaryJobFactory';
@@ -22,16 +21,17 @@ const origin = 'StandardsHexa';
 export class StandardsHexaFactory {
   private readonly standardsRepositories: StandardsRepositories;
   private readonly standardsServices: StandardsServices;
-  // TODO: migrate with port/adapters
-  private readonly gitHexa: GitHexa;
   public useCases!: StandardsUseCases; // Non-null assertion since initialize() will set it
   private readonly registry: HexaRegistry;
   private deploymentsQueryAdapter?: IDeploymentPort;
   private isInitialized = false;
 
+  public getIsInitialized(): boolean {
+    return this.isInitialized;
+  }
+
   constructor(
     dataSource: DataSource,
-    gitHexa: GitHexa,
     registry: HexaRegistry,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
     linterAdapter?: ILinterPort,
@@ -51,9 +51,6 @@ export class StandardsHexaFactory {
         this.logger,
         linterAdapter,
       );
-
-      this.logger.debug('Storing GitHexa reference');
-      this.gitHexa = gitHexa;
 
       this.registry = registry;
 
@@ -111,7 +108,6 @@ export class StandardsHexaFactory {
       this.useCases = new StandardsUseCases(
         this.standardsServices,
         this.standardsRepositories,
-        this.gitHexa,
         this.deploymentsQueryAdapter,
         standardsDelayedJobs,
         userProvider,

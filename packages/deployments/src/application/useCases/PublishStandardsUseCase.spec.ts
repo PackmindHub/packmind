@@ -1,7 +1,6 @@
 import { PublishStandardsUseCase } from './PublishStandardsUseCase';
-import { StandardsHexa } from '@packmind/standards';
-import { GitHexa } from '@packmind/git';
-import { CodingAgentHexa, CodingAgents } from '@packmind/coding-agent';
+import { IStandardsPort, ICodingAgentPort, IGitPort } from '@packmind/types';
+import { CodingAgents } from '@packmind/coding-agent';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
 import { TargetService } from '../services/TargetService';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
@@ -27,12 +26,9 @@ import { v4 as uuidv4 } from 'uuid';
 
 describe('PublishStandardsUseCase', () => {
   let useCase: PublishStandardsUseCase;
-  let mockStandardsHexa: jest.Mocked<StandardsHexa>;
-  let mockStandardsAdapter: {
-    getStandard: jest.Mock;
-  };
-  let mockGitHexa: jest.Mocked<GitHexa>;
-  let mockCodingAgentHexa: jest.Mocked<CodingAgentHexa>;
+  let mockStandardsPort: jest.Mocked<IStandardsPort>;
+  let mockGitPort: jest.Mocked<IGitPort>;
+  let mockCodingAgentPort: jest.Mocked<ICodingAgentPort>;
   let mockStandardsDeploymentRepository: jest.Mocked<IStandardsDeploymentRepository>;
   let mockTargetService: jest.Mocked<TargetService>;
   let mockLogger: ReturnType<typeof stubLogger>;
@@ -54,22 +50,18 @@ describe('PublishStandardsUseCase', () => {
   ];
 
   beforeEach(() => {
-    mockStandardsAdapter = {
+    mockStandardsPort = {
       getStandard: jest.fn(),
-    };
-
-    mockStandardsHexa = {
       getStandardVersionById: jest.fn(),
-      getStandardsAdapter: jest.fn().mockReturnValue(mockStandardsAdapter),
-    } as unknown as jest.Mocked<StandardsHexa>;
+    } as unknown as jest.Mocked<IStandardsPort>;
 
-    mockGitHexa = {
+    mockGitPort = {
       commitToGit: jest.fn(),
-    } as unknown as jest.Mocked<GitHexa>;
+    } as unknown as jest.Mocked<IGitPort>;
 
-    mockCodingAgentHexa = {
+    mockCodingAgentPort = {
       prepareStandardsDeployment: jest.fn(),
-    } as unknown as jest.Mocked<CodingAgentHexa>;
+    } as unknown as jest.Mocked<ICodingAgentPort>;
 
     mockStandardsDeploymentRepository = {
       add: jest.fn(),
@@ -95,9 +87,9 @@ describe('PublishStandardsUseCase', () => {
     );
 
     useCase = new PublishStandardsUseCase(
-      mockStandardsHexa,
-      mockGitHexa,
-      mockCodingAgentHexa,
+      mockStandardsPort,
+      mockGitPort,
+      mockCodingAgentPort,
       mockStandardsDeploymentRepository,
       mockTargetService,
       mockRenderModeConfigurationService,
@@ -151,7 +143,7 @@ describe('PublishStandardsUseCase', () => {
         targetIds: [targetId],
       };
 
-      mockStandardsHexa.getStandardVersionById.mockResolvedValue(
+      mockStandardsPort.getStandardVersionById.mockResolvedValue(
         standardVersion,
       );
       mockTargetService.getRepositoryByTargetId.mockResolvedValue({
@@ -161,13 +153,13 @@ describe('PublishStandardsUseCase', () => {
       mockStandardsDeploymentRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
         [],
       );
-      mockCodingAgentHexa.prepareStandardsDeployment.mockResolvedValue({
+      mockCodingAgentPort.prepareStandardsDeployment.mockResolvedValue({
         createOrUpdate: [
           { path: '.packmind/standards/test-standard.md', content: 'content' },
         ],
         delete: [],
       });
-      mockGitHexa.commitToGit.mockResolvedValue(gitCommit);
+      mockGitPort.commitToGit.mockResolvedValue(gitCommit);
     });
 
     it('returns one deployment', async () => {
@@ -210,7 +202,7 @@ describe('PublishStandardsUseCase', () => {
         mockRenderModeConfigurationService.mapRenderModesToCodingAgents,
       ).toHaveBeenCalledWith(activeRenderModes);
       expect(
-        mockCodingAgentHexa.prepareStandardsDeployment,
+        mockCodingAgentPort.prepareStandardsDeployment,
       ).toHaveBeenCalledWith(
         expect.objectContaining({ codingAgents: activeCodingAgents }),
       );
@@ -280,7 +272,7 @@ describe('PublishStandardsUseCase', () => {
 
       const deploymentError = new Error('Git push failed');
 
-      mockStandardsHexa.getStandardVersionById.mockResolvedValue(
+      mockStandardsPort.getStandardVersionById.mockResolvedValue(
         standardVersion,
       );
       mockTargetService.getRepositoryByTargetId.mockResolvedValue({
@@ -290,13 +282,13 @@ describe('PublishStandardsUseCase', () => {
       mockStandardsDeploymentRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
         [],
       );
-      mockCodingAgentHexa.prepareStandardsDeployment.mockResolvedValue({
+      mockCodingAgentPort.prepareStandardsDeployment.mockResolvedValue({
         createOrUpdate: [
           { path: '.packmind/standards/test-standard.md', content: 'content' },
         ],
         delete: [],
       });
-      mockGitHexa.commitToGit.mockRejectedValue(deploymentError);
+      mockGitPort.commitToGit.mockRejectedValue(deploymentError);
     });
 
     it('returns one deployment', async () => {
@@ -376,7 +368,7 @@ describe('PublishStandardsUseCase', () => {
 
       const noChangesError = new Error('NO_CHANGES_DETECTED');
 
-      mockStandardsHexa.getStandardVersionById.mockResolvedValue(
+      mockStandardsPort.getStandardVersionById.mockResolvedValue(
         standardVersion,
       );
       mockTargetService.getRepositoryByTargetId.mockResolvedValue({
@@ -386,13 +378,13 @@ describe('PublishStandardsUseCase', () => {
       mockStandardsDeploymentRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
         [],
       );
-      mockCodingAgentHexa.prepareStandardsDeployment.mockResolvedValue({
+      mockCodingAgentPort.prepareStandardsDeployment.mockResolvedValue({
         createOrUpdate: [
           { path: '.packmind/standards/test-standard.md', content: 'content' },
         ],
         delete: [],
       });
-      mockGitHexa.commitToGit.mockRejectedValue(noChangesError);
+      mockGitPort.commitToGit.mockRejectedValue(noChangesError);
     });
 
     it('returns one deployment', async () => {
@@ -506,7 +498,7 @@ describe('PublishStandardsUseCase', () => {
       };
 
       // Mock responses - order here doesn't matter as we're testing the sorting
-      mockStandardsHexa.getStandardVersionById.mockImplementation((id) => {
+      mockStandardsPort.getStandardVersionById.mockImplementation((id) => {
         if (id === standardVersionA.id)
           return Promise.resolve(standardVersionA);
         if (id === standardVersionM.id)
@@ -523,7 +515,7 @@ describe('PublishStandardsUseCase', () => {
       mockStandardsDeploymentRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
         [],
       );
-      mockCodingAgentHexa.prepareStandardsDeployment.mockImplementation(
+      mockCodingAgentPort.prepareStandardsDeployment.mockImplementation(
         (cmd) => {
           // Verify that the standards passed to prepareStandardsDeployment are sorted alphabetically
           const sortedNames = cmd.standardVersions.map((sv) => sv.name);
@@ -552,7 +544,7 @@ describe('PublishStandardsUseCase', () => {
           });
         },
       );
-      mockGitHexa.commitToGit.mockResolvedValue(gitCommit);
+      mockGitPort.commitToGit.mockResolvedValue(gitCommit);
     });
 
     it('sorts standards alphabetically before sending to file deployer', async () => {
@@ -625,14 +617,14 @@ describe('PublishStandardsUseCase', () => {
       };
 
       // Mock: active standard returns the version
-      mockStandardsHexa.getStandardVersionById.mockImplementation((id) => {
+      mockStandardsPort.getStandardVersionById.mockImplementation((id) => {
         if (id === activeStandardVersion.id)
           return Promise.resolve(activeStandardVersion);
         return Promise.resolve(null);
       });
 
       // Mock: deleted standard's parent returns null, active standard's parent returns the standard
-      mockStandardsAdapter.getStandard.mockImplementation(
+      mockStandardsPort.getStandard.mockImplementation(
         (id: string): Promise<Standard | null> => {
           if (id === deletedStandardVersion.standardId)
             return Promise.resolve(null);
@@ -652,7 +644,7 @@ describe('PublishStandardsUseCase', () => {
         [deletedStandardVersion],
       );
 
-      mockCodingAgentHexa.prepareStandardsDeployment.mockResolvedValue({
+      mockCodingAgentPort.prepareStandardsDeployment.mockResolvedValue({
         createOrUpdate: [
           {
             path: '.packmind/standards/active-standard.md',
@@ -662,7 +654,7 @@ describe('PublishStandardsUseCase', () => {
         delete: [],
       });
 
-      mockGitHexa.commitToGit.mockResolvedValue(gitCommit);
+      mockGitPort.commitToGit.mockResolvedValue(gitCommit);
     });
 
     it('excludes deleted standard from deployment', async () => {
@@ -681,7 +673,7 @@ describe('PublishStandardsUseCase', () => {
       await useCase.execute(command);
 
       expect(
-        mockCodingAgentHexa.prepareStandardsDeployment,
+        mockCodingAgentPort.prepareStandardsDeployment,
       ).toHaveBeenCalledWith(
         expect.objectContaining({
           standardVersions: [activeStandardVersion],

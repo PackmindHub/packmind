@@ -6,9 +6,9 @@ import {
   createRecipesDeploymentId,
 } from '../../domain/entities/RecipesDeployment';
 import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
-import { CodingAgentHexa } from '@packmind/coding-agent';
+import { ICodingAgentPort } from '@packmind/types';
 import { PrepareRecipesDeploymentCommand } from '@packmind/types';
-import { GitHexa } from '@packmind/git';
+import { IGitPort } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 import { DistributionStatus } from '@packmind/types';
 import { Recipe, RecipeVersion } from '@packmind/recipes';
@@ -23,9 +23,9 @@ const origin = 'PublishRecipesUseCase';
 export class PublishRecipesUseCase implements IPublishRecipes {
   constructor(
     private readonly recipesDeploymentRepository: IRecipesDeploymentRepository,
-    private readonly gitHexa: GitHexa,
+    private readonly gitPort: IGitPort,
     private readonly recipesPort: Partial<IRecipesPort>,
-    private readonly codingAgentHexa: CodingAgentHexa,
+    private readonly codingAgentPort: ICodingAgentPort,
     public readonly targetService: TargetService,
     public readonly renderModeConfigurationService: RenderModeConfigurationService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
@@ -173,7 +173,7 @@ export class PublishRecipesUseCase implements IPublishRecipes {
         };
 
         const fileUpdates =
-          await this.codingAgentHexa.prepareRecipesDeployment(prepareCommand);
+          await this.codingAgentPort.prepareRecipesDeployment(prepareCommand);
 
         this.logger.info('Prepared file updates', {
           createOrUpdateCount: fileUpdates.createOrUpdate.length,
@@ -193,7 +193,7 @@ ${recipeVersions.map((rv) => `- ${rv.name} (${rv.slug}) v${rv.version}`).join('\
         let gitCommit;
         let deploymentStatus = DistributionStatus.success;
         try {
-          gitCommit = await this.gitHexa.commitToGit(
+          gitCommit = await this.gitPort.commitToGit(
             gitRepo,
             fileUpdates.createOrUpdate,
             commitMessage,
@@ -456,7 +456,7 @@ ${recipeVersions.map((rv) => `- ${rv.name} (${rv.slug}) v${rv.version}`).join('\
     // Fetch git repositories by their IDs
     const gitRepos = [];
     for (const gitRepoId of command.gitRepoIds) {
-      const gitRepo = await this.gitHexa.getRepositoryById(gitRepoId);
+      const gitRepo = await this.gitPort.getRepositoryById(gitRepoId);
       if (!gitRepo) {
         throw new Error(`Git repository with ID ${gitRepoId} not found`);
       }
@@ -535,7 +535,7 @@ ${recipeVersions.map((rv) => `- ${rv.name} (${rv.slug}) v${rv.version}`).join('\
         };
 
         const fileUpdates =
-          await this.codingAgentHexa.prepareRecipesDeployment(prepareCommand);
+          await this.codingAgentPort.prepareRecipesDeployment(prepareCommand);
 
         this.logger.info('Prepared file updates', {
           createOrUpdateCount: fileUpdates.createOrUpdate.length,
@@ -553,7 +553,7 @@ ${recipeVersions.map((rv) => `- ${rv.name} (${rv.slug}) v${rv.version}`).join('\
 
         let gitCommit;
         try {
-          gitCommit = await this.gitHexa.commitToGit(
+          gitCommit = await this.gitPort.commitToGit(
             gitRepo,
             fileUpdates.createOrUpdate,
             commitMessage,

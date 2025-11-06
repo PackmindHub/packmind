@@ -26,7 +26,7 @@ describe('DeploymentsHexa - Simple Integration', () => {
     } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
     // Create mock CodingAgentHexa
-    mockCodingAgentHexa = {
+    const mockCodingAgentAdapter = {
       prepareRecipesDeployment: jest.fn().mockResolvedValue({
         createOrUpdate: [
           {
@@ -41,11 +41,16 @@ describe('DeploymentsHexa - Simple Integration', () => {
         delete: [],
       }),
       prepareStandardsDeployment: jest.fn(),
+    } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+    mockCodingAgentHexa = {
+      getCodingAgentAdapter: jest.fn().mockReturnValue(mockCodingAgentAdapter),
+      getCodingAgentDeployerRegistry: jest.fn(),
       destroy: jest.fn(),
     } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
     // Create mock GitHexa
-    mockGitHexa = {
+    const mockGitAdapter = {
       commitToGit: jest.fn().mockResolvedValue({
         id: 'commit-123',
         sha: 'abc123def456789',
@@ -54,6 +59,10 @@ describe('DeploymentsHexa - Simple Integration', () => {
         url: 'https://github.com/test-org/test-repo/commit/abc123def456789',
       }),
       getRepositoryById: jest.fn(),
+    } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+    mockGitHexa = {
+      getGitAdapter: jest.fn().mockReturnValue(mockGitAdapter),
       destroy: jest.fn(),
     } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -65,8 +74,15 @@ describe('DeploymentsHexa - Simple Integration', () => {
     } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
     // Create mock StandardsHexa
-    mockStandardsHexa = {
+    const mockStandardsAdapter = {
       getStandardVersionById: jest.fn(),
+      listStandardsBySpace: jest.fn(),
+      getStandard: jest.fn(),
+      listStandardVersions: jest.fn(),
+    } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+    mockStandardsHexa = {
+      getStandardsAdapter: jest.fn().mockReturnValue(mockStandardsAdapter),
       destroy: jest.fn(),
     } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
 

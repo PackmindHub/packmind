@@ -30,7 +30,6 @@ import { IStandardsServices } from '../IStandardsServices';
 import { IStandardsRepositories } from '../../domain/repositories/IStandardsRepositories';
 import { OrganizationId, UserId } from '@packmind/accounts';
 import { SpaceId } from '@packmind/types';
-import { GitHexa } from '@packmind/git';
 import { StandardId } from '../../domain/entities';
 import { RuleExample } from '../../domain/entities';
 import { StandardVersionId } from '../../domain/entities';
@@ -68,7 +67,6 @@ export class StandardsUseCases {
   constructor(
     private readonly standardsServices: IStandardsServices,
     private readonly standardsRepositories: IStandardsRepositories,
-    private readonly gitHexa: GitHexa,
     private deploymentsQueryAdapter: IDeploymentPort | undefined,
     private standardDelayedJobs: IStandardDelayedJobs,
     private readonly userProvider: UserProvider,

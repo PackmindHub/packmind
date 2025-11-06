@@ -6,7 +6,7 @@ import {
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { TargetService } from '../services/TargetService';
-import { GitHexa } from '@packmind/git';
+import { IGitPort } from '@packmind/types';
 
 const origin = 'GetTargetsByRepositoryUseCase';
 
@@ -15,7 +15,7 @@ export class GetTargetsByRepositoryUseCase
 {
   constructor(
     private readonly targetService: TargetService,
-    private readonly gitHexa: GitHexa,
+    private readonly gitPort: IGitPort,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -32,7 +32,7 @@ export class GetTargetsByRepositoryUseCase
 
     try {
       // First, get all repositories for the organization
-      const repositories = await this.gitHexa.getOrganizationRepositories(
+      const repositories = await this.gitPort.getOrganizationRepositories(
         organizationId as OrganizationId,
       );
 

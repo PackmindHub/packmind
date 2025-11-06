@@ -2,6 +2,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { HexaRegistry } from '@packmind/node-utils';
 import { StandardsHexa } from '@packmind/standards';
 import { GitHexa } from '@packmind/git';
+import { IStandardsPort, IGitPort } from '@packmind/types';
 import { CodingAgentDeployerRegistry } from './infra/repositories/CodingAgentDeployerRegistry';
 import { DeployerService } from './application/services/DeployerService';
 import { CodingAgentServices } from './application/services/CodingAgentServices';
@@ -23,25 +24,25 @@ export class CodingAgentHexaFactory {
     this.logger.info('Initializing CodingAgentHexaFactory');
 
     try {
-      // Try to get StandardsHexa and GitHexa from registry if available
-      let standardsHexa: StandardsHexa | undefined;
-      let gitHexa: GitHexa | undefined;
+      // Try to get StandardsPort and GitPort from registry if available
+      let standardsPort: IStandardsPort | undefined;
+      let gitPort: IGitPort | undefined;
       if (this.registry) {
         try {
-          // TODO: migrate with port/adapters
-          standardsHexa = this.registry.get(StandardsHexa) || undefined;
+          const standardsHexa = this.registry.get(StandardsHexa);
           if (standardsHexa) {
-            this.logger.debug('StandardsHexa found in registry');
+            standardsPort = standardsHexa.getStandardsAdapter();
+            this.logger.debug('StandardsPort found in registry');
           }
         } catch {
           this.logger.debug('StandardsHexa not available in registry');
         }
 
         try {
-          // TODO: migrate with port/adapters
-          gitHexa = this.registry.get(GitHexa) || undefined;
+          const gitHexa = this.registry.get(GitHexa);
           if (gitHexa) {
-            this.logger.debug('GitHexa found in registry');
+            gitPort = gitHexa.getGitAdapter();
+            this.logger.debug('GitPort found in registry');
           }
         } catch {
           this.logger.debug('GitHexa not available in registry');
@@ -50,8 +51,8 @@ export class CodingAgentHexaFactory {
 
       this.logger.debug('Creating deployer registry');
       this.deployerRegistry = new CodingAgentDeployerRegistry(
-        standardsHexa,
-        gitHexa,
+        standardsPort,
+        gitPort,
       );
 
       this.logger.debug('Creating deployer service');

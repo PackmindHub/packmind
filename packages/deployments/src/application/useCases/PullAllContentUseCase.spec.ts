@@ -10,8 +10,8 @@ import {
   createOrganizationId,
   createUserId,
 } from '@packmind/accounts';
+import { IStandardsPort, ICodingAgentPort } from '@packmind/types';
 import { CodingAgentHexa } from '@packmind/coding-agent';
-import { StandardsHexa } from '@packmind/standards';
 import { ISpacesPort, IRecipesPort, FileUpdates } from '@packmind/types';
 
 const createUserWithMembership = (
@@ -34,8 +34,9 @@ const createUserWithMembership = (
 
 describe('PullAllContentUseCase', () => {
   let recipesPort: jest.Mocked<IRecipesPort>;
-  let standardsHexa: jest.Mocked<StandardsHexa>;
+  let standardsPort: jest.Mocked<IStandardsPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
+  let codingAgentPort: jest.Mocked<ICodingAgentPort>;
   let codingAgentHexa: jest.Mocked<CodingAgentHexa>;
   let userProvider: {
     getUserById: jest.Mock;
@@ -54,14 +55,19 @@ describe('PullAllContentUseCase', () => {
       listRecipeVersions: jest.fn(),
     } as unknown as jest.Mocked<IRecipesPort>;
 
-    standardsHexa = {
+    standardsPort = {
       listStandardsBySpace: jest.fn(),
       listStandardVersions: jest.fn(),
-    } as unknown as jest.Mocked<StandardsHexa>;
+    } as unknown as jest.Mocked<IStandardsPort>;
 
     spacesPort = {
       listSpacesByOrganization: jest.fn(),
     } as unknown as jest.Mocked<ISpacesPort>;
+
+    codingAgentPort = {
+      prepareRecipesDeployment: jest.fn(),
+      prepareStandardsDeployment: jest.fn(),
+    } as unknown as jest.Mocked<ICodingAgentPort>;
 
     const mockDeployer = {
       generateFileUpdatesForRecipes: jest.fn(),
@@ -102,8 +108,9 @@ describe('PullAllContentUseCase', () => {
 
     useCase = new PullAllContentUseCase(
       recipesPort,
-      standardsHexa,
+      standardsPort,
       spacesPort,
+      codingAgentPort,
       codingAgentHexa,
       userProvider,
       organizationProvider,

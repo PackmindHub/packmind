@@ -2,7 +2,7 @@ import { IDeploymentsServices } from '../IDeploymentsServices';
 import { TargetService } from './TargetService';
 import { ITargetRepository } from '../../domain/repositories/ITargetRepository';
 import { PackmindLogger } from '@packmind/logger';
-import { GitHexa } from '@packmind/git';
+import { IGitPort } from '@packmind/types';
 import { RenderModeConfigurationService } from './RenderModeConfigurationService';
 import { IRenderModeConfigurationRepository } from '../../domain/repositories/IRenderModeConfigurationRepository';
 
@@ -19,14 +19,14 @@ export class DeploymentsServices implements IDeploymentsServices {
 
   constructor(
     private readonly targetRepository: ITargetRepository,
-    private readonly gitHexa: GitHexa,
+    private readonly gitPort: IGitPort,
     private readonly renderModeConfigurationRepository: IRenderModeConfigurationRepository,
     private readonly logger: PackmindLogger,
   ) {
     // Initialize all services with their respective repositories
     this.targetService = new TargetService(
       this.targetRepository,
-      this.gitHexa,
+      this.gitPort,
       this.logger,
     );
     this.renderModeConfigurationService = new RenderModeConfigurationService(

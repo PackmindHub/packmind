@@ -1,7 +1,7 @@
 import { RecipeVersion } from '@packmind/recipes';
-import { GitRepo, GitHexa } from '@packmind/git';
-import { StandardsHexa, StandardVersion } from '@packmind/standards';
-import { FileUpdates } from '@packmind/types';
+import { GitRepo } from '@packmind/git';
+import { StandardVersion } from '@packmind/standards';
+import { FileUpdates, IStandardsPort, IGitPort } from '@packmind/types';
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
 import { PackmindLogger } from '@packmind/logger';
 import { Target } from '@packmind/types';
@@ -20,8 +20,8 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
   protected abstract readonly config: DeployerConfig;
 
   constructor(
-    protected readonly standardsHexa?: StandardsHexa,
-    protected readonly gitHexa?: GitHexa,
+    protected readonly standardsPort?: IStandardsPort,
+    protected readonly gitPort?: IGitPort,
   ) {
     this.logger = new PackmindLogger(this.constructor.name);
   }
@@ -51,7 +51,7 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
   ): Promise<string> {
     const rules =
       standardVersion.rules ??
-      (await this.standardsHexa?.getRulesByStandardId?.(
+      (await this.standardsPort?.getRulesByStandardId?.(
         standardVersion.standardId,
       )) ??
       [];
@@ -243,8 +243,8 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
     gitRepo: GitRepo,
     target: Target,
   ): Promise<string> {
-    if (!this.gitHexa) {
-      this.logger.debug('No GitHexa available, returning empty content');
+    if (!this.gitPort) {
+      this.logger.debug('No GitPort available, returning empty content');
       return '';
     }
 
@@ -253,7 +253,7 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
         this.config.filePath,
         target,
       );
-      const existingFile = await this.gitHexa.getFileFromRepo(
+      const existingFile = await this.gitPort.getFileFromRepo(
         gitRepo,
         targetPrefixedPath,
       );

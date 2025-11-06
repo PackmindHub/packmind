@@ -4,14 +4,13 @@ import { DataSource } from 'typeorm';
 import { RecipesAdapter } from './application/adapter/RecipesAdapter';
 import { PackmindLogger } from '@packmind/logger';
 import { HexaRegistry } from '@packmind/node-utils';
-import { IDeploymentPort, ISpacesPort } from '@packmind/types';
+import { IDeploymentPort, ISpacesPort, IGitPort } from '@packmind/types';
 import { GitHexa } from '@packmind/git';
 import { IRecipesRepositories } from './domain/repositories/IRecipesRepositories';
 import { JobsHexa } from '@packmind/jobs';
 import { IRecipesDelayedJobs } from './domain/jobs/IRecipesDelayedJobs';
 import { UpdateRecipesAndGenerateSummariesJobFactory } from './infra/jobs/UpdateRecipesAndGenerateSummariesJobFactory';
 import { DeployRecipesJobFactory } from './infra/jobs/DeployRecipesJobFactory';
-import type { RecipesHexa } from './RecipesHexa';
 import { AccountsHexa } from '@packmind/accounts';
 import { SpacesHexa } from '@packmind/spaces';
 
@@ -20,19 +19,23 @@ const origin = 'RecipesHexaFactory';
 export class RecipesHexaFactory {
   private readonly recipesRepositories: IRecipesRepositories;
   public readonly recipesServices: RecipesServices;
-  // TODO: migrate with port/adapters
-  private readonly gitHexa: GitHexa;
+  private readonly gitPort: IGitPort;
+  private readonly gitHexa?: GitHexa; // Keep for addFetchFileContentJob() - not in port
   public useCases!: RecipesAdapter; // Non-null assertion since initialize() will set it
   private recipesDelayedJobs: IRecipesDelayedJobs | null = null;
   private isInitialized = false;
-  private recipesHexa: RecipesHexa | null = null;
   private deploymentPort?: IDeploymentPort;
+
+  public getIsInitialized(): boolean {
+    return this.isInitialized;
+  }
 
   constructor(
     dataSource: DataSource,
     private readonly registry: HexaRegistry,
-    gitHexa: GitHexa,
+    gitPort: IGitPort,
     deploymentPort?: IDeploymentPort,
+    gitHexa?: GitHexa, // Keep for addFetchFileContentJob() - not in port
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.deploymentPort = deploymentPort;
@@ -49,7 +52,8 @@ export class RecipesHexaFactory {
         this.logger,
       );
 
-      this.logger.debug('Storing GitHexa reference');
+      this.logger.debug('Storing GitPort reference');
+      this.gitPort = gitPort;
       this.gitHexa = gitHexa;
 
       this.logger.info('RecipesHexaFactory construction completed');
@@ -62,13 +66,12 @@ export class RecipesHexaFactory {
   }
 
   /**
-   * Set RecipesHexa reference for webhook use cases to enable delayed job access
+   * Set recipes delayed jobs reference for webhook use cases to enable delayed job access
    */
-  public setRecipesHexa(recipesHexa: RecipesHexa): void {
-    this.recipesHexa = recipesHexa;
-    // Only call setRecipesHexa on useCases if it has been initialized
+  public setRecipesDelayedJobs(recipesDelayedJobs: IRecipesDelayedJobs): void {
+    // Only call setRecipesDelayedJobs on useCases if it has been initialized
     if (this.useCases) {
-      this.useCases.setRecipesHexa(recipesHexa);
+      this.useCases.setRecipesDelayedJobs(recipesDelayedJobs);
     }
   }
 
@@ -97,7 +100,6 @@ export class RecipesHexaFactory {
       // Get spaces port for space validation
       let spacesPort: ISpacesPort | null = null;
       if (this.registry.isRegistered(SpacesHexa)) {
-        // TODO: migrate with port/adapters
         const spacesHexa = this.registry.get(SpacesHexa);
         spacesPort = spacesHexa.getSpacesAdapter();
       } else {
@@ -110,24 +112,24 @@ export class RecipesHexaFactory {
       this.logger.debug('Creating RecipesAdapter');
       this.useCases = new RecipesAdapter(
         this.recipesServices,
-        this.gitHexa,
+        this.gitPort,
         this.deploymentPort,
         userProvider,
         organizationProvider,
         spacesPort,
         this.logger,
+        this.gitHexa,
       );
-
-      // If recipesHexa was set before initialization, set it now on useCases
-      if (this.recipesHexa) {
-        this.useCases.setRecipesHexa(this.recipesHexa);
-      }
 
       if (this.deploymentPort) {
         this.logger.debug('Building recipes delayed jobs');
         // TODO: migrate with port/adapters
         const jobsHexa = this.registry.get(JobsHexa);
         this.recipesDelayedJobs = await this.buildRecipesDelayedJobs(jobsHexa);
+        // Set delayed jobs on adapter if it's already initialized
+        if (this.useCases) {
+          this.useCases.setRecipesDelayedJobs(this.recipesDelayedJobs);
+        }
       } else {
         this.logger.warn(
           'Deployment port not available, skipping delayed jobs initialization',
@@ -212,26 +214,22 @@ export class RecipesHexaFactory {
   /**
    * Update the deployment port for webhook use cases
    */
-  updateDeploymentPort(deploymentPort: IDeploymentPort): void {
+  async updateDeploymentPort(deploymentPort: IDeploymentPort): Promise<void> {
     this.logger.info('Updating deployment port');
     // Store the deployment port first before building delayed jobs
     this.deploymentPort = deploymentPort;
     this.useCases.updateDeploymentPort(deploymentPort);
 
-    // Build delayed jobs asynchronously
+    // Build delayed jobs synchronously so they're available immediately
     // TODO: migrate with port/adapters
     const jobsHexa = this.registry.get(JobsHexa);
-    this.buildRecipesDelayedJobs(jobsHexa)
-      .then((recipesDelayedJobs) => {
-        this.recipesDelayedJobs = recipesDelayedJobs;
-        this.logger.info(
-          'Recipes delayed jobs initialized after deployment port update',
-        );
-      })
-      .catch((error) => {
-        this.logger.error('Failed to build recipes delayed jobs', {
-          error: error instanceof Error ? error.message : String(error),
-        });
-      });
+    this.recipesDelayedJobs = await this.buildRecipesDelayedJobs(jobsHexa);
+    // Set delayed jobs on adapter if it's already initialized
+    if (this.useCases) {
+      this.useCases.setRecipesDelayedJobs(this.recipesDelayedJobs);
+    }
+    this.logger.info(
+      'Recipes delayed jobs initialized after deployment port update',
+    );
   }
 }

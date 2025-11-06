@@ -24,6 +24,8 @@ import {
 import { makeTestDatasource } from '@packmind/test-utils';
 import {
   IDeploymentPort,
+  IStandardsPort,
+  IGitPort,
   Organization,
   Target,
   User,
@@ -53,6 +55,8 @@ describe('Junie Deployment Integration', () => {
   let standardsHexa: StandardsHexa;
   let spacesHexa: SpacesHexa;
   let gitHexa: GitHexa;
+  let standardsPort: IStandardsPort;
+  let gitPort: IGitPort;
   let registry: HexaRegistry;
   let dataSource: DataSource;
   let codingAgentFactory: CodingAgentHexaFactory;
@@ -113,6 +117,12 @@ describe('Junie Deployment Integration', () => {
 
     gitHexa.setUserProvider(accountsHexa.getUserProvider());
     gitHexa.setOrganizationProvider(accountsHexa.getOrganizationProvider());
+
+    // Initialize hexas and get adapters
+    await standardsHexa.initialize();
+    await gitHexa.initialize();
+    standardsPort = standardsHexa.getStandardsAdapter();
+    gitPort = gitHexa.getGitAdapter();
 
     // Create test data
     const signUpResult = await accountsHexa.signUpWithOrganization({
@@ -191,7 +201,7 @@ describe('Junie Deployment Integration', () => {
         gitRepoId: gitRepo.id,
       };
       // Mock GitHexa.getFileFromRepo to return null (file doesn't exist)
-      jest.spyOn(gitHexa, 'getFileFromRepo').mockResolvedValue(null);
+      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
     });
 
     afterEach(() => {
@@ -430,7 +440,7 @@ Full standard is available here for further request: [Test Standard](../.packmin
         content: existingContent,
         sha: 'abc123',
       };
-      jest.spyOn(gitHexa, 'getFileFromRepo').mockResolvedValue(existingFile);
+      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(existingFile);
     });
 
     afterEach(() => {
@@ -534,7 +544,7 @@ Full standard is available here for further request: [Test Standard](../.packmin
         content: partialContent,
         sha: 'def456',
       };
-      jest.spyOn(gitHexa, 'getFileFromRepo').mockResolvedValue(existingFile);
+      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(existingFile);
     });
 
     afterEach(() => {
@@ -671,7 +681,7 @@ User-defined instructions that should be preserved.`;
         content: partialContent,
         sha: 'ghi789',
       };
-      jest.spyOn(gitHexa, 'getFileFromRepo').mockResolvedValue(existingFile);
+      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(existingFile);
     });
 
     afterEach(() => {
@@ -768,18 +778,25 @@ User-defined instructions that should be preserved.`;
     let defaultTarget: Target;
     let junieDeployer: JunieDeployer;
 
-    beforeEach(() => {
+    beforeEach(async () => {
+      // Ensure hexas are initialized before getting adapters
+      await standardsHexa.initialize();
+      await gitHexa.initialize();
+
       defaultTarget = {
         id: createTargetId('default-target-id'),
         name: 'Default',
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      junieDeployer = new JunieDeployer(standardsHexa, gitHexa);
+
+      standardsPort = standardsHexa.getStandardsAdapter();
+      gitPort = gitHexa.getGitAdapter();
+      junieDeployer = new JunieDeployer(standardsPort, gitPort);
     });
 
     it('handles empty recipe list gracefully', async () => {
-      jest.spyOn(gitHexa, 'getFileFromRepo').mockResolvedValue(null);
+      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
       const fileUpdates = await junieDeployer.deployRecipes(
         [],
@@ -797,7 +814,7 @@ User-defined instructions that should be preserved.`;
     });
 
     it('handles empty standards list gracefully', async () => {
-      jest.spyOn(gitHexa, 'getFileFromRepo').mockResolvedValue(null);
+      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
       const fileUpdates = await junieDeployer.deployStandards(
         [],

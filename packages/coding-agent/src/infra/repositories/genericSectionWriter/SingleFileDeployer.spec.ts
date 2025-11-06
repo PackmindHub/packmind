@@ -14,8 +14,7 @@ import {
 } from '@packmind/types';
 import { SingleFileDeployer, DeployerConfig } from './SingleFileDeployer';
 import { v4 as uuidv4 } from 'uuid';
-import { GitHexa } from '@packmind/git';
-import { StandardsHexa } from '@packmind/standards';
+import { IStandardsPort, IGitPort } from '@packmind/types';
 
 // Create a concrete test implementation of the abstract SingleFileDeployer
 class TestSingleFileDeployer extends SingleFileDeployer {
@@ -27,19 +26,19 @@ class TestSingleFileDeployer extends SingleFileDeployer {
 
 describe('SingleFileDeployer', () => {
   let deployer: TestSingleFileDeployer;
-  let mockGitHexa: jest.Mocked<GitHexa>;
-  let mockStandardsHexa: jest.Mocked<StandardsHexa>;
+  let mockGitPort: jest.Mocked<IGitPort>;
+  let mockStandardsPort: jest.Mocked<IStandardsPort>;
   let mockGitRepo: GitRepo;
   let jetbrainsTarget: Target;
   let vscodeTarget: Target;
 
   beforeEach(() => {
-    mockGitHexa = {
+    mockGitPort = {
       getFileFromRepo: jest.fn(),
-    } as unknown as jest.Mocked<GitHexa>;
-    mockStandardsHexa = {} as unknown as jest.Mocked<StandardsHexa>;
+    } as unknown as jest.Mocked<IGitPort>;
+    mockStandardsPort = {} as unknown as jest.Mocked<IStandardsPort>;
 
-    deployer = new TestSingleFileDeployer(mockStandardsHexa, mockGitHexa);
+    deployer = new TestSingleFileDeployer(mockStandardsPort, mockGitPort);
 
     mockGitRepo = {
       id: createGitRepoId('test-repo-id'),
@@ -96,7 +95,7 @@ describe('SingleFileDeployer', () => {
         },
       ];
 
-      mockGitHexa.getFileFromRepo.mockResolvedValue(null);
+      mockGitPort.getFileFromRepo.mockResolvedValue(null);
 
       const result = await deployer.deployRecipes(
         recipeWithNullSummary,
@@ -121,7 +120,7 @@ describe('SingleFileDeployer', () => {
     });
 
     it('uses getTargetPrefixedPath for file path in recipe deployment', async () => {
-      mockGitHexa.getFileFromRepo.mockResolvedValue(null);
+      mockGitPort.getFileFromRepo.mockResolvedValue(null);
 
       const result = await deployer.deployRecipes(
         mockRecipeVersions,
@@ -133,7 +132,7 @@ describe('SingleFileDeployer', () => {
       expect(result.createOrUpdate[0].path).toBe('jetbrains/TEST_AGENT.md');
 
       // Verify gitHexa was called with the prefixed path
-      expect(mockGitHexa.getFileFromRepo).toHaveBeenCalledWith(
+      expect(mockGitPort.getFileFromRepo).toHaveBeenCalledWith(
         mockGitRepo,
         'jetbrains/TEST_AGENT.md',
       );
@@ -141,7 +140,7 @@ describe('SingleFileDeployer', () => {
 
     it('handles existing content correctly with target prefixing', async () => {
       const existingContent = 'Existing content in file';
-      mockGitHexa.getFileFromRepo.mockResolvedValue({
+      mockGitPort.getFileFromRepo.mockResolvedValue({
         sha: 'mock-sha-123',
         content: existingContent,
       });
@@ -157,7 +156,7 @@ describe('SingleFileDeployer', () => {
       expect(result.createOrUpdate[0].path).toBe('jetbrains/TEST_AGENT.md');
 
       // Verify the existing content was retrieved from the correct prefixed path
-      expect(mockGitHexa.getFileFromRepo).toHaveBeenCalledWith(
+      expect(mockGitPort.getFileFromRepo).toHaveBeenCalledWith(
         mockGitRepo,
         'jetbrains/TEST_AGENT.md',
       );
@@ -194,7 +193,7 @@ describe('SingleFileDeployer', () => {
         },
       ];
 
-      mockGitHexa.getFileFromRepo.mockResolvedValue(null);
+      mockGitPort.getFileFromRepo.mockResolvedValue(null);
 
       const result = await deployer.deployStandards(
         standardWithNullSummary,
@@ -232,7 +231,7 @@ describe('SingleFileDeployer', () => {
         },
       ];
 
-      mockGitHexa.getFileFromRepo.mockResolvedValue(null);
+      mockGitPort.getFileFromRepo.mockResolvedValue(null);
 
       const result = await deployer.deployStandards(
         standardWithLongDescription,
@@ -267,7 +266,7 @@ describe('SingleFileDeployer', () => {
         },
       ];
 
-      mockGitHexa.getFileFromRepo.mockResolvedValue(null);
+      mockGitPort.getFileFromRepo.mockResolvedValue(null);
 
       const result = await deployer.deployStandards(
         standardWithLongSummary,
@@ -303,7 +302,7 @@ describe('SingleFileDeployer', () => {
         },
       ];
 
-      mockGitHexa.getFileFromRepo.mockResolvedValue(null);
+      mockGitPort.getFileFromRepo.mockResolvedValue(null);
 
       const result = await deployer.deployStandards(
         standardWithMultilineDescription,
@@ -339,7 +338,7 @@ describe('SingleFileDeployer', () => {
         },
       ];
 
-      mockGitHexa.getFileFromRepo.mockResolvedValue(null);
+      mockGitPort.getFileFromRepo.mockResolvedValue(null);
 
       const result = await deployer.deployStandards(
         standardWithNullEverything,
@@ -362,7 +361,7 @@ describe('SingleFileDeployer', () => {
     });
 
     it('uses getTargetPrefixedPath for file path in standards deployment', async () => {
-      mockGitHexa.getFileFromRepo.mockResolvedValue(null);
+      mockGitPort.getFileFromRepo.mockResolvedValue(null);
 
       const result = await deployer.deployStandards(
         mockStandardVersions,
@@ -374,7 +373,7 @@ describe('SingleFileDeployer', () => {
       expect(result.createOrUpdate[0].path).toBe('vscode/TEST_AGENT.md');
 
       // Verify gitHexa was called with the prefixed path
-      expect(mockGitHexa.getFileFromRepo).toHaveBeenCalledWith(
+      expect(mockGitPort.getFileFromRepo).toHaveBeenCalledWith(
         mockGitRepo,
         'vscode/TEST_AGENT.md',
       );
@@ -384,7 +383,7 @@ describe('SingleFileDeployer', () => {
   describe('error handling in getExistingContent', () => {
     it('returns empty string on gitHexa error', async () => {
       const mockRecipeVersions: RecipeVersion[] = [];
-      mockGitHexa.getFileFromRepo.mockRejectedValue(new Error('Git error'));
+      mockGitPort.getFileFromRepo.mockRejectedValue(new Error('Git error'));
 
       const result = await deployer.deployRecipes(
         mockRecipeVersions,

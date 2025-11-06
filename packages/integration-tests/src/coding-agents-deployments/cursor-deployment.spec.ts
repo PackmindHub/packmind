@@ -20,6 +20,8 @@ import {
   GitProviderVendors,
   GitRepo,
   IDeploymentPort,
+  IStandardsPort,
+  IGitPort,
   Organization,
   Standard,
   StandardVersion,
@@ -52,6 +54,8 @@ describe('Cursor Deployment Integration', () => {
   let standardsHexa: StandardsHexa;
   let spacesHexa: SpacesHexa;
   let gitHexa: GitHexa;
+  let standardsPort: IStandardsPort;
+  let gitPort: IGitPort;
   let registry: HexaRegistry;
   let dataSource: DataSource;
   let codingAgentFactory: CodingAgentHexaFactory;
@@ -112,6 +116,12 @@ describe('Cursor Deployment Integration', () => {
 
     gitHexa.setUserProvider(accountsHexa.getUserProvider());
     gitHexa.setOrganizationProvider(accountsHexa.getOrganizationProvider());
+
+    // Initialize hexas and get adapters
+    await standardsHexa.initialize();
+    await gitHexa.initialize();
+    standardsPort = standardsHexa.getStandardsAdapter();
+    gitPort = gitHexa.getGitAdapter();
 
     // Create test data
     const signUpResult = await accountsHexa.signUpWithOrganization({
@@ -190,7 +200,8 @@ describe('Cursor Deployment Integration', () => {
         gitRepoId: gitRepo.id,
       };
       // Mock GitHexa.getFileFromRepo to return null (file doesn't exist)
-      jest.spyOn(gitHexa, 'getFileFromRepo').mockResolvedValue(null);
+      // Mock gitPort.getFileFromRepo (gitPort is initialized in main beforeEach)
+      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
     });
 
     afterEach(() => {
@@ -456,7 +467,12 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
 
 - [Test Recipe for Cursor](.packmind/recipes/test-recipe-for-cursor.md) : Test recipe for deployment`;
 
-    beforeEach(() => {
+    beforeEach(async () => {
+      // Ensure hexas are initialized before getting adapters
+      await standardsHexa.initialize();
+      await gitHexa.initialize();
+      const gitPort = gitHexa.getGitAdapter();
+
       // Create a default target for testing
       defaultTarget = {
         id: createTargetId('default-target-id'),
@@ -464,12 +480,12 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      // Mock GitHexa.getFileFromRepo to return existing content
+      // Mock gitPort.getFileFromRepo to return existing content
       const existingFile = {
         content: existingContent,
         sha: 'abc123',
       };
-      jest.spyOn(gitHexa, 'getFileFromRepo').mockResolvedValue(existingFile);
+      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(existingFile);
     });
 
     afterEach(() => {
@@ -507,18 +523,25 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
     let defaultTarget: Target;
     let cursorDeployer: CursorDeployer;
 
-    beforeEach(() => {
+    beforeEach(async () => {
+      // Ensure hexas are initialized before getting adapters
+      await standardsHexa.initialize();
+      await gitHexa.initialize();
+
       defaultTarget = {
         id: createTargetId('default-target-id'),
         name: 'Default',
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      cursorDeployer = new CursorDeployer(standardsHexa, gitHexa);
+      standardsPort = standardsHexa.getStandardsAdapter();
+      gitPort = gitHexa.getGitAdapter();
+      cursorDeployer = new CursorDeployer(standardsPort, gitPort);
     });
 
     it('handles empty recipe list gracefully', async () => {
-      jest.spyOn(gitHexa, 'getFileFromRepo').mockResolvedValue(null);
+      // Mock gitPort.getFileFromRepo (gitPort is initialized in main beforeEach)
+      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
       const fileUpdates = await cursorDeployer.deployRecipes(
         [],

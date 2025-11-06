@@ -20,6 +20,8 @@ import {
   GitProviderVendors,
   GitRepo,
   IDeploymentPort,
+  IStandardsPort,
+  IGitPort,
   Organization,
   Recipe,
   RecipeVersion,
@@ -53,6 +55,8 @@ describe('Claude Deployment Integration', () => {
   let standardsHexa: StandardsHexa;
   let spacesHexa: SpacesHexa;
   let gitHexa: GitHexa;
+  let standardsPort: IStandardsPort;
+  let gitPort: IGitPort;
   let registry: HexaRegistry;
   let dataSource: DataSource;
   let codingAgentFactory: CodingAgentHexaFactory;
@@ -113,6 +117,12 @@ describe('Claude Deployment Integration', () => {
 
     gitHexa.setUserProvider(accountsHexa.getUserProvider());
     gitHexa.setOrganizationProvider(accountsHexa.getOrganizationProvider());
+
+    // Initialize hexas and get adapters
+    await standardsHexa.initialize();
+    await gitHexa.initialize();
+    standardsPort = standardsHexa.getStandardsAdapter();
+    gitPort = gitHexa.getGitAdapter();
 
     // Create test data
     const signUpResult = await accountsHexa.signUpWithOrganization({
@@ -191,7 +201,7 @@ describe('Claude Deployment Integration', () => {
         gitRepoId: gitRepo.id,
       };
       // Mock GitHexa.getFileFromRepo to return null (file doesn't exist)
-      jest.spyOn(gitHexa, 'getFileFromRepo').mockResolvedValue(null);
+      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
     });
 
     afterEach(() => {
@@ -418,7 +428,7 @@ Full standard is available here for further request: [Test Standard](.packmind/s
         content: existingContent,
         sha: 'abc123',
       };
-      jest.spyOn(gitHexa, 'getFileFromRepo').mockResolvedValue(existingFile);
+      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(existingFile);
     });
 
     afterEach(() => {
@@ -522,7 +532,7 @@ Full standard is available here for further request: [Test Standard](.packmind/s
         content: partialContent,
         sha: 'def456',
       };
-      jest.spyOn(gitHexa, 'getFileFromRepo').mockResolvedValue(existingFile);
+      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(existingFile);
     });
 
     afterEach(() => {
@@ -654,7 +664,7 @@ User-defined instructions that should be preserved.`;
         content: partialContent,
         sha: 'ghi789',
       };
-      jest.spyOn(gitHexa, 'getFileFromRepo').mockResolvedValue(existingFile);
+      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(existingFile);
     });
 
     afterEach(() => {
@@ -752,11 +762,12 @@ User-defined instructions that should be preserved.`;
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      claudeDeployer = new ClaudeDeployer(standardsHexa, gitHexa);
+      // standardsPort and gitPort are already initialized in the main beforeEach
+      claudeDeployer = new ClaudeDeployer(standardsPort, gitPort);
     });
 
     it('handles empty recipe list gracefully', async () => {
-      jest.spyOn(gitHexa, 'getFileFromRepo').mockResolvedValue(null);
+      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
       const fileUpdates = await claudeDeployer.deployRecipes(
         [],
@@ -774,7 +785,7 @@ User-defined instructions that should be preserved.`;
     });
 
     it('handles empty standards list gracefully', async () => {
-      jest.spyOn(gitHexa, 'getFileFromRepo').mockResolvedValue(null);
+      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
 
       const fileUpdates = await claudeDeployer.deployStandards(
         [],

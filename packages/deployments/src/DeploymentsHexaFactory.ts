@@ -1,6 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import { HexaRegistry } from '@packmind/node-utils';
-import { RenderModeConfiguration } from '@packmind/types';
+import { RenderModeConfiguration, IGitPort } from '@packmind/types';
 import { DataSource, Repository } from 'typeorm';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { GitHexa } from '@packmind/git';
@@ -32,8 +32,7 @@ export class DeploymentsHexaFactory {
   };
 
   public services: {
-    // TODO: migrate with port/adapters
-    git: GitHexa;
+    git: IGitPort;
     deployments: IDeploymentsServices;
   };
 
@@ -68,18 +67,19 @@ export class DeploymentsHexaFactory {
       ),
     };
 
-    // Get GitHexa from registry
+    // Get GitPort from registry
     const gitHexa = registry.get(GitHexa);
     if (!gitHexa) {
       throw new Error('GitHexa not found in registry');
     }
+    const gitPort = gitHexa.getGitAdapter();
 
     // Initialize services
     this.services = {
-      git: gitHexa,
+      git: gitPort,
       deployments: new DeploymentsServices(
         this.repositories.target,
-        gitHexa,
+        gitPort,
         this.repositories.renderModeConfiguration,
         logger,
       ),

@@ -1,12 +1,8 @@
 import { PackmindDeployer } from './PackmindDeployer';
 import { RecipeVersion, Recipe } from '@packmind/recipes';
 import { recipeFactory } from '@packmind/recipes/test';
-import {
-  StandardVersion,
-  Standard,
-  StandardsHexa,
-  Rule,
-} from '@packmind/standards';
+import { StandardVersion, Standard, Rule } from '@packmind/standards';
+import { IStandardsPort } from '@packmind/types';
 import { standardFactory } from '@packmind/standards/test';
 import { GitRepo } from '@packmind/git';
 import { createUserId } from '@packmind/types';
@@ -27,13 +23,13 @@ describe('PackmindDeployer', () => {
   let deployer: PackmindDeployer;
   let mockGitRepo: GitRepo;
   let mockTarget: Target;
-  let mockStandardsHexa: jest.Mocked<StandardsHexa>;
+  let mockStandardsPort: jest.Mocked<IStandardsPort>;
 
   beforeEach(() => {
-    mockStandardsHexa = {
+    mockStandardsPort = {
       getRulesByStandardId: jest.fn(),
-    } as unknown as jest.Mocked<StandardsHexa>;
-    deployer = new PackmindDeployer(mockStandardsHexa);
+    } as unknown as jest.Mocked<IStandardsPort>;
+    deployer = new PackmindDeployer(mockStandardsPort);
 
     mockTarget = {
       id: createTargetId('test-target-id'),
@@ -207,7 +203,7 @@ describe('PackmindDeployer', () => {
           content: 'My super rule',
         },
       ];
-      mockStandardsHexa.getRulesByStandardId.mockResolvedValue(rules);
+      mockStandardsPort.getRulesByStandardId.mockResolvedValue(rules);
 
       const result = await deployer.deployStandards(
         [standardVersion],
@@ -417,9 +413,9 @@ describe('PackmindDeployer', () => {
       expect(indexFile.content).toContain('No standards available.');
     });
 
-    it('fetches rules from StandardsHexa if not provided', async () => {
-      // Mock StandardsHexa
-      const mockStandardsHexa = {
+    it('fetches rules from StandardsPort if not provided', async () => {
+      // Mock StandardsPort
+      const mockStandardsPort = {
         getRulesByStandardId: jest.fn().mockResolvedValue([
           {
             id: 'rule-1',
@@ -434,7 +430,7 @@ describe('PackmindDeployer', () => {
         ]),
       } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
-      const deployerWithHexa = new PackmindDeployer(mockStandardsHexa);
+      const deployerWithHexa = new PackmindDeployer(mockStandardsPort);
 
       const standard: Standard = standardFactory({
         id: createStandardId('standard-1'),
@@ -466,8 +462,8 @@ describe('PackmindDeployer', () => {
         mockTarget,
       );
 
-      // Verify StandardsHexa was called with the standardId
-      expect(mockStandardsHexa.getRulesByStandardId).toHaveBeenCalledWith(
+      // Verify StandardsPort was called with the standardId
+      expect(mockStandardsPort.getRulesByStandardId).toHaveBeenCalledWith(
         standard.id,
       );
 

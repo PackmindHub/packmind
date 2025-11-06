@@ -60,14 +60,16 @@ export class RecipesHexa extends BaseHexa {
       this.logger.debug('Retrieved DataSource from registry');
 
       const gitHexa = registry.get(GitHexa);
+      const gitPort = gitHexa.getGitAdapter();
 
       // Initialize the hexagon with the shared DataSource
       // DeploymentPort will be resolved lazily to avoid circular dependencies
       this.hexa = new RecipesHexaFactory(
         dataSource,
         registry,
-        gitHexa,
+        gitPort,
         undefined,
+        gitHexa, // Pass gitHexa for addFetchFileContentJob() - not in port
         this.logger,
       );
       this.logger.info('RecipesHexa construction completed');
@@ -92,10 +94,21 @@ export class RecipesHexa extends BaseHexa {
     this.logger.info('Initializing RecipesHexa (async phase)');
 
     try {
-      // Set RecipesHexa reference in the factory to enable webhook use cases access to delayed jobs
-      this.hexa.setRecipesHexa(this);
-
+      // Initialize the factory first
       await this.hexa.initialize();
+
+      // Set delayed jobs on adapter if available (they're only created if deployment port is set)
+      // Delayed jobs will be set later when deployment port is available via setDeploymentPort()
+      try {
+        const delayedJobs = this.getRecipesDelayedJobs();
+        this.hexa.useCases.setRecipesDelayedJobs(delayedJobs);
+      } catch {
+        // Delayed jobs not available yet (deployment port not set) - will be set later
+        this.logger.debug(
+          'Delayed jobs not available yet, will be set when deployment port is available',
+        );
+      }
+
       this.isInitialized = true;
       this.logger.info('RecipesHexa initialized successfully');
     } catch (error) {
@@ -121,7 +134,12 @@ export class RecipesHexa extends BaseHexa {
    * Get the delayed jobs for accessing job queues
    */
   public getRecipesDelayedJobs() {
-    this.ensureInitialized();
+    // Check if factory is initialized (delayed jobs are created during factory initialization)
+    if (!this.hexa.getIsInitialized()) {
+      throw new Error(
+        'RecipesHexaFactory not initialized. Call initialize() before using delayed jobs.',
+      );
+    }
     return this.hexa.getRecipesDelayedJobs();
   }
 
@@ -133,8 +151,8 @@ export class RecipesHexa extends BaseHexa {
     deploymentPort: IDeploymentPort,
   ): Promise<void> {
     this._deploymentPort = deploymentPort;
-    // Update the use cases with the new deployment port
-    this.hexa.updateDeploymentPort(deploymentPort);
+    // Update the use cases with the new deployment port (this will build delayed jobs)
+    await this.hexa.updateDeploymentPort(deploymentPort);
 
     // Initialize delayed jobs if not already initialized
     if (!this.isInitialized) {
@@ -142,6 +160,18 @@ export class RecipesHexa extends BaseHexa {
         'Deployment port set, triggering RecipesHexa initialization',
       );
       await this.initialize();
+    } else {
+      // If already initialized, delayed jobs are already set by updateDeploymentPort()
+      // Just ensure they're set on the adapter
+      try {
+        const delayedJobs = this.hexa.getRecipesDelayedJobs();
+        this.hexa.useCases.setRecipesDelayedJobs(delayedJobs);
+      } catch {
+        // Delayed jobs not available - updateDeploymentPort should have set them
+        this.logger.debug(
+          'Delayed jobs not available after deployment port update',
+        );
+      }
     }
   }
 

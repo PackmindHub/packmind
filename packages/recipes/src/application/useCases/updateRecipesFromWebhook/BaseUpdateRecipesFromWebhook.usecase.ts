@@ -1,10 +1,11 @@
 import { RecipeService } from '../../services/RecipeService';
+import { IGitPort } from '@packmind/types';
 import { GitHexa } from '@packmind/git';
 import { Recipe } from '../../../domain/entities/Recipe';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { IDeploymentPort } from '@packmind/types';
 import { OrganizationId, createUserId } from '@packmind/accounts';
-import { RecipesHexa } from '../../../RecipesHexa';
+import { IRecipesDelayedJobs } from '../../../domain/jobs/IRecipesDelayedJobs';
 
 export interface CommonRepoData {
   owner: string;
@@ -13,24 +14,25 @@ export interface CommonRepoData {
 
 export abstract class BaseUpdateRecipesFromWebhookUsecase {
   protected readonly logger: PackmindLogger;
-  protected recipesHexa: RecipesHexa | null = null;
+  protected recipesDelayedJobs: IRecipesDelayedJobs | null = null;
 
   constructor(
     protected readonly recipeService: RecipeService,
-    protected readonly gitHexa: GitHexa,
+    protected readonly gitPort: IGitPort,
     origin: string,
     protected readonly deploymentPort?: IDeploymentPort,
     logLevel: LogLevel = LogLevel.INFO,
+    protected readonly gitHexa?: GitHexa, // Keep for addFetchFileContentJob() - not in port
   ) {
     this.logger = new PackmindLogger(origin, logLevel);
     this.logger.info(`${origin} initialized`);
   }
 
   /**
-   * Set the RecipesHexa reference after initialization to avoid circular dependencies
+   * Set the recipes delayed jobs reference after initialization to avoid circular dependencies
    */
-  public setRecipesHexa(recipesHexa: RecipesHexa): void {
-    this.recipesHexa = recipesHexa;
+  public setRecipesDelayedJobs(recipesDelayedJobs: IRecipesDelayedJobs): void {
+    this.recipesDelayedJobs = recipesDelayedJobs;
   }
 
   /**
@@ -63,7 +65,7 @@ export abstract class BaseUpdateRecipesFromWebhookUsecase {
       organizationId,
     });
     const organizationRepos =
-      await this.gitHexa.getOrganizationRepositories(organizationId);
+      await this.gitPort.getOrganizationRepositories(organizationId);
 
     if (organizationRepos.length === 0) {
       this.logger.warn('No repositories found for organization', {
@@ -108,7 +110,7 @@ export abstract class BaseUpdateRecipesFromWebhookUsecase {
 
     // Use handleWebHookWithoutContent to get list of changed files
     this.logger.debug('Handling webhook to get list of changed recipe files');
-    const recipesPaths = await this.gitHexa.handleWebHookWithoutContent({
+    const recipesPaths = await this.gitPort.handleWebHookWithoutContent({
       organizationId,
       gitRepoId: matchingRepo.id,
       payload,
@@ -252,6 +254,11 @@ export abstract class BaseUpdateRecipesFromWebhookUsecase {
     });
 
     try {
+      if (!this.gitHexa) {
+        throw new Error(
+          'GitHexa not available - cannot add fetch file content job',
+        );
+      }
       await this.gitHexa.addFetchFileContentJob(
         {
           organizationId,
@@ -267,26 +274,14 @@ export abstract class BaseUpdateRecipesFromWebhookUsecase {
           );
 
           // Queue UpdateRecipesAndGenerateSummaries job with the fetched content
-          const recipesHexa = this.recipesHexa;
-          if (!recipesHexa) {
-            this.logger.error('RecipesHexa not set, cannot queue update job');
-            return;
-          }
-
-          let recipesDelayedJobs;
-          try {
-            recipesDelayedJobs = recipesHexa.getRecipesDelayedJobs();
-          } catch (error) {
+          if (!this.recipesDelayedJobs) {
             this.logger.error(
-              'Failed to get recipes delayed jobs, cannot queue update job',
-              {
-                error: error instanceof Error ? error.message : String(error),
-              },
+              'Recipes delayed jobs not set, cannot queue update job',
             );
             return;
           }
 
-          await recipesDelayedJobs.updateRecipesAndGenerateSummariesDelayedJob.addJobWithCallback(
+          await this.recipesDelayedJobs.updateRecipesAndGenerateSummariesDelayedJob.addJobWithCallback(
             {
               organizationId,
               gitRepoId: matchingRepo.id,
@@ -302,14 +297,23 @@ export abstract class BaseUpdateRecipesFromWebhookUsecase {
               );
 
               // Queue DeployRecipes job to deploy the updated recipes
-              await recipesDelayedJobs.deployRecipesDelayedJob.addJobWithCallback(
+              if (!this.recipesDelayedJobs) {
+                this.logger.error(
+                  'Recipes delayed jobs not set, cannot queue deploy job',
+                );
+                return;
+              }
+              await this.recipesDelayedJobs.deployRecipesDelayedJob.addJobWithCallback(
                 {
                   organizationId: updateResult.organizationId,
                   gitRepoId: updateResult.gitRepoId,
                   recipeVersionIds: updateResult.recipeVersionIds,
                   affectedTargetPaths: updateResult.affectedTargetPaths,
                 },
-                async (deployResult) => {
+                async (deployResult: {
+                  deployedVersionsCount: number;
+                  targetCount: number;
+                }) => {
                   this.logger.info(`DeployRecipes job completed successfully`, {
                     deployedVersionsCount: deployResult.deployedVersionsCount,
                     targetCount: deployResult.targetCount,

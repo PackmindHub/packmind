@@ -1,7 +1,7 @@
 import { RecipeVersion } from '@packmind/recipes';
-import { GitRepo, GitHexa } from '@packmind/git';
-import { StandardsHexa, StandardVersion } from '@packmind/standards';
-import { FileUpdates } from '@packmind/types';
+import { GitRepo } from '@packmind/git';
+import { StandardVersion } from '@packmind/standards';
+import { FileUpdates, IStandardsPort, IGitPort } from '@packmind/types';
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
 import { PackmindLogger } from '@packmind/logger';
 import { Target } from '@packmind/types';
@@ -17,8 +17,8 @@ export class CursorDeployer implements ICodingAgentDeployer {
   private readonly logger: PackmindLogger;
 
   constructor(
-    private readonly standardsHexa?: StandardsHexa,
-    private readonly gitHexa?: GitHexa,
+    private readonly standardsPort?: IStandardsPort,
+    private readonly gitPort?: IGitPort,
   ) {
     this.logger = new PackmindLogger(origin);
   }
@@ -176,7 +176,7 @@ ${packmindInstructions}`;
     gitRepo: GitRepo,
     target: Target,
   ): Promise<string> {
-    if (!this.gitHexa) {
+    if (!this.gitPort) {
       this.logger.debug('No GitHexa available, returning empty content');
       return '';
     }
@@ -186,7 +186,7 @@ ${packmindInstructions}`;
         CursorDeployer.RECIPES_INDEX_PATH,
         target,
       );
-      const existingFile = await this.gitHexa.getFileFromRepo(
+      const existingFile = await this.gitPort.getFileFromRepo(
         gitRepo,
         targetPrefixedPath,
       );
@@ -259,7 +259,7 @@ ${packmindInstructions}`;
       scope: standardVersion.scope,
     });
     const rules =
-      (await this.standardsHexa?.getRulesByStandardId(
+      (await this.standardsPort?.getRulesByStandardId(
         standardVersion.standardId,
       )) ?? [];
 

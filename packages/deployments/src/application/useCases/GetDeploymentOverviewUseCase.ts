@@ -2,7 +2,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { WithTimestamps } from '@packmind/node-utils';
 import { ISpacesPort } from '@packmind/types';
 import { IRecipesPort } from '@packmind/types';
-import { GitHexa } from '@packmind/git';
+import { IGitPort } from '@packmind/types';
 import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
 import { createUserId } from '@packmind/types';
 import {
@@ -36,7 +36,7 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
     private readonly deploymentsRepository: IRecipesDeploymentRepository,
     private readonly recipesPort: Partial<IRecipesPort>,
     private readonly spacesPort: ISpacesPort,
-    private readonly gitHexa: GitHexa,
+    private readonly gitPort: IGitPort,
     private readonly getTargetsByOrganizationUseCase: GetTargetsByOrganizationUseCase,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
@@ -69,7 +69,7 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
             }),
           ),
         ),
-        this.gitHexa.getOrganizationRepositories(organizationId),
+        this.gitPort.getOrganizationRepositories(organizationId),
       ]);
 
       // Flatten recipes from all spaces

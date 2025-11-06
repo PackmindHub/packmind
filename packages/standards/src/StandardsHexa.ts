@@ -17,7 +17,6 @@ import { Rule } from './domain/entities/Rule';
 import { RuleExample } from './domain/entities/RuleExample';
 import { OrganizationId, UserId } from '@packmind/accounts';
 import { SpaceId } from '@packmind/types';
-import { GitHexa } from '@packmind/git';
 import { StandardVersionId } from './domain/entities';
 import {
   CreateRuleExampleCommand,
@@ -59,8 +58,6 @@ export class StandardsHexa extends BaseHexa {
       const dataSource = registry.getDataSource();
       this.logger.debug('Retrieved DataSource from registry');
 
-      const gitHexa = registry.get(GitHexa);
-
       // Get LinterHexa adapter for ILinterPort (lazy DI per DDD standard)
       // Use getByName to avoid circular dependency at build time
       let linterPort: ILinterPort | undefined;
@@ -82,7 +79,6 @@ export class StandardsHexa extends BaseHexa {
       // Initialize the hexagon with the shared DataSource
       this.hexa = new StandardsHexaFactory(
         dataSource,
-        gitHexa,
         registry,
         this.logger,
         linterPort,
@@ -122,10 +118,17 @@ export class StandardsHexa extends BaseHexa {
   }
 
   public getStandardsAdapter(): IStandardsPort {
+    // Create adapter lazily if hexa factory is initialized but adapter not yet created
     if (!this.standardsAdapter) {
-      throw new Error(
-        'StandardsHexa not initialized. Call initialize() before using.',
-      );
+      // Check if useCases is available (created during initialization)
+      // If not, we can't create the adapter yet - it will be created after initialize()
+      if (!this.hexa.getIsInitialized() || !this.hexa.useCases) {
+        throw new Error(
+          'StandardsHexa not initialized. Call initialize() before using.',
+        );
+      }
+      // Hexa factory is initialized and useCases exists, create adapter now
+      this.standardsAdapter = new StandardsAdapter(this.hexa);
     }
     return this.standardsAdapter;
   }

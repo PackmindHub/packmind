@@ -41,6 +41,12 @@ export class GitHexaFactory {
       this.gitServices = new GitServices(this.gitRepositories, this.logger);
       this.registry = registry;
 
+      // Create adapter in constructor so it's available immediately
+      // (adapter doesn't need delayed jobs - those are only used by GitHexa methods)
+      this.logger.debug('Creating GitAdapter');
+      this.useCases = new GitAdapter(this.gitServices, this.logger);
+      this.logger.debug('GitAdapter created successfully');
+
       this.logger.info('GitHexaFactory construction completed');
     } catch (error) {
       this.logger.error('Failed to construct GitHexaFactory', {
@@ -70,11 +76,6 @@ export class GitHexaFactory {
 
       this.logger.debug('Building git delayed jobs');
       this.gitDelayedJobs = await this.buildGitDelayedJobs(jobsHexa);
-
-      // Initialize adapter
-      this.logger.debug('Creating GitAdapter');
-      this.useCases = new GitAdapter(this.gitServices, this.logger);
-      this.logger.debug('GitAdapter created successfully');
 
       this.isInitialized = true;
       this.logger.info('GitHexaFactory initialized successfully');

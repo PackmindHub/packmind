@@ -1,7 +1,7 @@
 import { RecipeVersion } from '@packmind/recipes';
 import { GitRepo } from '@packmind/git';
-import { StandardVersion, StandardsHexa } from '@packmind/standards';
-import { FileUpdates } from '@packmind/types';
+import { StandardVersion } from '@packmind/standards';
+import { FileUpdates, IStandardsPort } from '@packmind/types';
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
 import { RecipesIndexService } from '../../../application/services/RecipesIndexService';
 import { StandardsIndexService } from '../../../application/services/StandardsIndexService';
@@ -18,7 +18,7 @@ export class PackmindDeployer implements ICodingAgentDeployer {
   private readonly standardsIndexService: StandardsIndexService;
   private readonly logger: PackmindLogger;
 
-  constructor(private readonly standardsHexa?: StandardsHexa) {
+  constructor(private readonly standardsPort?: IStandardsPort) {
     this.recipesIndexService = new RecipesIndexService();
     this.standardsIndexService = new StandardsIndexService();
     this.logger = new PackmindLogger(origin);
@@ -86,7 +86,7 @@ export class PackmindDeployer implements ICodingAgentDeployer {
     for (const standardVersion of standardVersions) {
       const rules =
         standardVersion.rules ??
-        (await this.standardsHexa?.getRulesByStandardId(
+        (await this.standardsPort?.getRulesByStandardId(
           standardVersion.standardId,
         )) ??
         [];
@@ -173,7 +173,7 @@ export class PackmindDeployer implements ICodingAgentDeployer {
     for (const standardVersion of standardVersions) {
       const rules =
         standardVersion.rules ??
-        (await this.standardsHexa?.getRulesByStandardId(
+        (await this.standardsPort?.getRulesByStandardId(
           standardVersion.standardId,
         )) ??
         [];

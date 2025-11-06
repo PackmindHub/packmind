@@ -13,7 +13,9 @@ import { DeleteRecipesBatchUsecase } from '../useCases/deleteRecipesBatch/delete
 import { IRecipesServices } from '../IRecipesServices';
 import { PackmindLogger } from '@packmind/logger';
 import { UserProvider, OrganizationProvider } from '@packmind/types';
-import { IDeploymentPort, ISpacesPort } from '@packmind/types';
+import { IDeploymentPort, ISpacesPort, IGitPort } from '@packmind/types';
+import { IRecipesDelayedJobs } from '../../domain/jobs/IRecipesDelayedJobs';
+import { GitHexa } from '@packmind/git';
 import {
   CaptureRecipeCommand,
   UpdateRecipesFromGitHubCommand,
@@ -28,10 +30,8 @@ import {
   RecipeId,
   IRecipesPort,
 } from '@packmind/types';
-import { GitHexa } from '@packmind/git';
 import { OrganizationId } from '@packmind/accounts';
 import { Recipe } from '../../domain/entities/Recipe';
-import { RecipesHexa } from '../../RecipesHexa';
 
 const origin = 'RecipesAdapter';
 
@@ -48,16 +48,17 @@ export class RecipesAdapter implements IRecipesPort {
   private readonly _listRecipeVersions: ListRecipeVersionsUsecase;
   private readonly _getRecipeVersion: GetRecipeVersionUsecase;
   private readonly _deleteRecipesBatch: DeleteRecipesBatchUsecase;
-  private _recipesHexa: RecipesHexa | null = null;
+  private _recipesDelayedJobs: IRecipesDelayedJobs | null = null;
 
   constructor(
     private readonly recipesServices: IRecipesServices,
-    private readonly gitHexa: GitHexa,
+    private readonly gitPort: IGitPort,
     private readonly deploymentPort: IDeploymentPort | undefined,
     private readonly userProvider: UserProvider,
     private readonly organizationProvider: OrganizationProvider,
     private readonly spacesPort: ISpacesPort | null,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
+    private readonly gitHexa?: GitHexa, // Keep for addFetchFileContentJob() - not in port
   ) {
     this._captureRecipe = new CaptureRecipeUsecase(
       recipesServices.getRecipeService(),
@@ -67,14 +68,24 @@ export class RecipesAdapter implements IRecipesPort {
     );
     this._updateRecipesFromGitHub = new UpdateRecipesFromGitHubUsecase(
       recipesServices.getRecipeService(),
-      gitHexa,
+      gitPort,
       this.deploymentPort,
     );
+    // Set gitHexa for delayed jobs if available
+    if (this.gitHexa) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (this._updateRecipesFromGitHub as any).gitHexa = this.gitHexa;
+    }
     this._updateRecipesFromGitLab = new UpdateRecipesFromGitLabUsecase(
       recipesServices.getRecipeService(),
-      gitHexa,
+      gitPort,
       this.deploymentPort,
     );
+    // Set gitHexa for delayed jobs if available
+    if (this.gitHexa) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (this._updateRecipesFromGitLab as any).gitHexa = this.gitHexa;
+    }
     this._updateRecipeFromUI = new UpdateRecipeFromUIUsecase(
       recipesServices.getRecipeService(),
       recipesServices.getRecipeVersionService(),
@@ -221,28 +232,42 @@ export class RecipesAdapter implements IRecipesPort {
     // Need to recreate the webhook use cases with the new deployment port
     this._updateRecipesFromGitHub = new UpdateRecipesFromGitHubUsecase(
       this.recipesServices.getRecipeService(),
-      this.gitHexa,
+      this.gitPort,
       deploymentPort,
     );
+    // Set gitHexa for delayed jobs if available
+    if (this.gitHexa) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (this._updateRecipesFromGitHub as any).gitHexa = this.gitHexa;
+    }
     this._updateRecipesFromGitLab = new UpdateRecipesFromGitLabUsecase(
       this.recipesServices.getRecipeService(),
-      this.gitHexa,
+      this.gitPort,
       deploymentPort,
     );
+    // Set gitHexa for delayed jobs if available
+    if (this.gitHexa) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (this._updateRecipesFromGitLab as any).gitHexa = this.gitHexa;
+    }
 
-    // Re-inject RecipesHexa if it was previously set
-    if (this._recipesHexa) {
-      this._updateRecipesFromGitHub.setRecipesHexa(this._recipesHexa);
-      this._updateRecipesFromGitLab.setRecipesHexa(this._recipesHexa);
+    // Re-inject recipes delayed jobs if they were previously set
+    if (this._recipesDelayedJobs) {
+      this._updateRecipesFromGitHub.setRecipesDelayedJobs(
+        this._recipesDelayedJobs,
+      );
+      this._updateRecipesFromGitLab.setRecipesDelayedJobs(
+        this._recipesDelayedJobs,
+      );
     }
   }
 
   /**
-   * Set RecipesHexa reference for webhook use cases to enable delayed job access
+   * Set recipes delayed jobs reference for webhook use cases to enable delayed job access
    */
-  setRecipesHexa(recipesHexa: RecipesHexa): void {
-    this._recipesHexa = recipesHexa;
-    this._updateRecipesFromGitHub.setRecipesHexa(recipesHexa);
-    this._updateRecipesFromGitLab.setRecipesHexa(recipesHexa);
+  setRecipesDelayedJobs(recipesDelayedJobs: IRecipesDelayedJobs): void {
+    this._recipesDelayedJobs = recipesDelayedJobs;
+    this._updateRecipesFromGitHub.setRecipesDelayedJobs(recipesDelayedJobs);
+    this._updateRecipesFromGitLab.setRecipesDelayedJobs(recipesDelayedJobs);
   }
 }

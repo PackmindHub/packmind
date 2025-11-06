@@ -1,8 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import { ISpacesPort } from '@packmind/types';
 
-//TODO: remove and replace with an adapter pattern
-import { StandardsHexa } from '@packmind/standards';
+import { IStandardsPort } from '@packmind/types';
 
 import {
   Standard,
@@ -18,7 +17,8 @@ import {
   TargetStandardDeploymentInfo,
   DeployedStandardTargetInfo,
 } from '@packmind/types';
-import { GitHexa, GitRepo } from '@packmind/git';
+import { IGitPort } from '@packmind/types';
+import { GitRepo } from '@packmind/git';
 import { OrganizationId } from '@packmind/accounts';
 import { StandardsDeployment } from '../../domain/entities/StandardsDeployment';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
@@ -37,8 +37,8 @@ export class GetStandardDeploymentOverviewUseCase
 {
   constructor(
     private readonly standardsDeploymentRepository: IStandardsDeploymentRepository,
-    private readonly standardsHexa: StandardsHexa,
-    private readonly gitHexa: GitHexa,
+    private readonly standardsPort: IStandardsPort,
+    private readonly gitPort: IGitPort,
     private readonly spacesPort: ISpacesPort,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
@@ -67,23 +67,20 @@ export class GetStandardDeploymentOverviewUseCase
       const [standardsPerSpace, gitRepos] = await Promise.all([
         Promise.all(
           spaces.map((space) =>
-            this.standardsHexa.listStandardsBySpace({
-              userId: command.userId,
-              organizationId: command.organizationId as OrganizationId,
-              spaceId: space.id,
-            }),
+            this.standardsPort.listStandardsBySpace(
+              space.id,
+              command.organizationId as OrganizationId,
+              command.userId,
+            ),
           ),
         ),
-        this.gitHexa.getOrganizationRepositories(
+        this.gitPort.getOrganizationRepositories(
           command.organizationId as OrganizationId,
         ),
       ]);
 
       // Flatten standards from all spaces
-      const standards = standardsPerSpace
-        .flat()
-        .map((response) => response.standards)
-        .flat();
+      const standards = standardsPerSpace.flat();
 
       // Build the overview using the deployment data
       const overview = this.buildOverviewFromDeployments(

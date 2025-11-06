@@ -45,11 +45,11 @@ import {
 } from '@packmind/types';
 import { GetDeploymentOverviewUseCase } from '../useCases/GetDeploymentOverviewUseCase';
 import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
-import { GitHexa } from '@packmind/git';
+import { IGitPort } from '@packmind/types';
 import { PublishRecipesUseCase } from '../useCases/PublishRecipesUseCase';
+import { ICodingAgentPort, IStandardsPort } from '@packmind/types';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { PublishStandardsUseCase } from '../useCases/PublishStandardsUseCase';
-import { StandardsHexa } from '@packmind/standards';
 import { ListDeploymentsByRecipeUseCase } from '../useCases/ListDeploymentsByRecipeUseCase';
 import { ListDeploymentsByStandardUseCase } from '../useCases/ListDeploymentsByStandardUseCase';
 import { GetStandardDeploymentOverviewUseCase } from '../useCases/GetStandardDeploymentOverviewUseCase';
@@ -68,20 +68,22 @@ export class DeploymentsAdapter implements IDeploymentPort {
   private readonly standardDeploymentRepository: IStandardsDeploymentRepository;
   private readonly recipesDeploymentRepository: IRecipesDeploymentRepository;
   private readonly deploymentsServices: IDeploymentsServices;
-  private readonly gitHexa: GitHexa;
+  private readonly gitPort: IGitPort;
   private recipesPort?: Partial<IRecipesPort>;
-  private readonly codingAgentHexa: CodingAgentHexa;
-  private readonly standardsHexa: StandardsHexa;
+  private readonly codingAgentPort: ICodingAgentPort;
+  private standardsPort?: IStandardsPort; // Optional - may be set after initialization
+  private readonly codingAgentHexa: CodingAgentHexa; // Keep for getCodingAgentDeployerRegistry() - not in port
   private spacesPort!: ISpacesPort;
   private userProvider?: UserProvider;
   private organizationProvider?: OrganizationProvider;
 
   constructor(
     deploymentsHexa: DeploymentsHexaFactory,
-    gitHexa: GitHexa,
+    gitPort: IGitPort,
     recipesPort: Partial<IRecipesPort> | undefined,
-    codingAgentHexa: CodingAgentHexa,
-    standardsHexa: StandardsHexa,
+    codingAgentPort: ICodingAgentPort,
+    standardsPort: IStandardsPort | undefined,
+    codingAgentHexa: CodingAgentHexa, // Keep for getCodingAgentDeployerRegistry() - not in port
   ) {
     this.standardDeploymentRepository =
       deploymentsHexa.repositories.standardsDeployment;
@@ -89,10 +91,11 @@ export class DeploymentsAdapter implements IDeploymentPort {
       deploymentsHexa.repositories.recipesDeployment;
     this.deploymentsServices = deploymentsHexa.services.deployments;
 
-    this.gitHexa = gitHexa;
+    this.gitPort = gitPort;
     this.recipesPort = recipesPort; // Optional - using port pattern to avoid circular dependency
+    this.codingAgentPort = codingAgentPort;
+    this.standardsPort = standardsPort;
     this.codingAgentHexa = codingAgentHexa;
-    this.standardsHexa = standardsHexa;
   }
 
   /**
@@ -107,6 +110,13 @@ export class DeploymentsAdapter implements IDeploymentPort {
    */
   public updateSpacesPort(spacesPort: ISpacesPort): void {
     this.spacesPort = spacesPort;
+  }
+
+  /**
+   * Update the standards port for use cases that depend on it
+   */
+  public updateStandardsPort(standardsPort: IStandardsPort): void {
+    this.standardsPort = standardsPort;
   }
 
   public setAccountProviders(
@@ -129,10 +139,15 @@ export class DeploymentsAdapter implements IDeploymentPort {
   publishStandards(
     command: PublishStandardsCommand,
   ): Promise<StandardsDeployment[]> {
+    if (!this.standardsPort) {
+      throw new Error(
+        'StandardsPort not available - call setStandardsPort first',
+      );
+    }
     const useCase = new PublishStandardsUseCase(
-      this.standardsHexa,
-      this.gitHexa,
-      this.codingAgentHexa,
+      this.standardsPort,
+      this.gitPort,
+      this.codingAgentPort,
       this.standardDeploymentRepository,
       this.deploymentsServices.getTargetService(),
       this.deploymentsServices.getRenderModeConfigurationService(),
@@ -146,9 +161,9 @@ export class DeploymentsAdapter implements IDeploymentPort {
     }
     const useCase = new PublishRecipesUseCase(
       this.recipesDeploymentRepository,
-      this.gitHexa,
+      this.gitPort,
       this.recipesPort,
-      this.codingAgentHexa,
+      this.codingAgentPort,
       this.deploymentsServices.getTargetService(),
       this.deploymentsServices.getRenderModeConfigurationService(),
     );
@@ -188,14 +203,14 @@ export class DeploymentsAdapter implements IDeploymentPort {
     }
     const getTargetsByOrganizationUseCase = new GetTargetsByOrganizationUseCase(
       this.deploymentsServices.getTargetService(),
-      this.gitHexa,
+      this.gitPort,
     );
 
     const useCase = new GetDeploymentOverviewUseCase(
       this.recipesDeploymentRepository,
       this.recipesPort,
       this.spacesPort,
-      this.gitHexa,
+      this.gitPort,
       getTargetsByOrganizationUseCase,
     );
     return useCase.execute(command);
@@ -213,10 +228,15 @@ export class DeploymentsAdapter implements IDeploymentPort {
   getStandardDeploymentOverview(
     command: GetStandardDeploymentOverviewCommand,
   ): Promise<StandardDeploymentOverview> {
+    if (!this.standardsPort) {
+      throw new Error(
+        'StandardsPort not available - call setStandardsPort first',
+      );
+    }
     const useCase = new GetStandardDeploymentOverviewUseCase(
       this.standardDeploymentRepository,
-      this.standardsHexa,
-      this.gitHexa,
+      this.standardsPort,
+      this.gitPort,
       this.spacesPort,
     );
     return useCase.execute(command);
@@ -243,7 +263,7 @@ export class DeploymentsAdapter implements IDeploymentPort {
   ): Promise<TargetWithRepository[]> {
     const useCase = new GetTargetsByRepositoryUseCase(
       this.deploymentsServices.getTargetService(),
-      this.gitHexa,
+      this.gitPort,
     );
     return useCase.execute(command);
   }
@@ -253,7 +273,7 @@ export class DeploymentsAdapter implements IDeploymentPort {
   ): Promise<TargetWithRepository[]> {
     const useCase = new GetTargetsByOrganizationUseCase(
       this.deploymentsServices.getTargetService(),
-      this.gitHexa,
+      this.gitPort,
     );
     return useCase.execute(command);
   }
@@ -336,11 +356,18 @@ export class DeploymentsAdapter implements IDeploymentPort {
         'Account providers not configured - cannot pull all content',
       );
     }
+    if (!this.standardsPort) {
+      throw new Error(
+        'StandardsPort not available - call setStandardsPort first',
+      );
+    }
+    const standardsPort = this.standardsPort; // Store in local variable for type narrowing
 
     const useCase = new PullAllContentUseCase(
       this.recipesPort as IRecipesPort,
-      this.standardsHexa,
+      standardsPort,
       this.spacesPort,
+      this.codingAgentPort,
       this.codingAgentHexa,
       this.userProvider,
       this.organizationProvider,
