@@ -15,6 +15,9 @@ import { DataQuery } from '../helpers/DataQuery';
 import { makeIntegrationTestDataSource } from '../helpers/makeIntegrationTestDataSource';
 import { TestApp } from '../helpers/TestApp';
 
+// Increase timeout for integration tests to reduce flakiness
+jest.setTimeout(10000);
+
 jest.mock(
   '@packmind/git/src/infra/repositories/github/GithubRepository',
   () => {
