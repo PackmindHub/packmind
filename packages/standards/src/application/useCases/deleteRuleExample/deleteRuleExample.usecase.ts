@@ -27,6 +27,8 @@ export class DeleteRuleExampleUsecase implements IDeleteRuleExample {
       command.ruleExampleId,
     );
 
+    console.log('test update file')
+
     if (!existingExample) {
       throw new Error(
         `Rule example with id ${command.ruleExampleId} not found`,
