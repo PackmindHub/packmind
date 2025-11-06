@@ -1,7 +1,8 @@
 import { RecipeService } from '../../services/RecipeService';
 import { GitHexa } from '@packmind/git';
 import { Recipe } from '../../../domain/entities/Recipe';
-import { LogLevel, PackmindLogger, IDeploymentPort } from '@packmind/shared';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
+import { IDeploymentPort } from '@packmind/shared';
 import { OrganizationId, createUserId } from '@packmind/accounts';
 import { RecipesHexa } from '../../../RecipesHexa';
 

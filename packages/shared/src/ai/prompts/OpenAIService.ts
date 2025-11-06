@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 import { Configuration } from '../../config/config/Configuration';
-import { PackmindLogger, LogLevel } from '../../logger/PackmindLogger';
+import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
   AIPromptResult,
   AIPromptOptions,

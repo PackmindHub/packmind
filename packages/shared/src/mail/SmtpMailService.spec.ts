@@ -1,6 +1,6 @@
 import { SmtpMailService } from './SmtpMailService';
-import { PackmindLogger } from '../logger/PackmindLogger';
-import { stubLogger } from '../../test/logger/stubLogger';
+import { PackmindLogger } from '@packmind/logger';
+import { stubLogger } from '@packmind/test-utils';
 import { Configuration } from '../config/config/Configuration';
 import { SentMessageInfo } from 'nodemailer';
 

@@ -10,10 +10,11 @@ import {
   OrganizationProvider,
   createOrganizationId,
   createUserId,
-} from '@packmind/shared';
+  User,
+  Organization,
+} from '@packmind/types';
 import { gitProviderFactory } from '../../../../test';
-import { User, Organization } from '@packmind/shared/types';
-import { stubLogger } from '@packmind/shared/test';
+import { stubLogger } from '@packmind/test-utils';
 
 describe('AddGitProviderUseCase', () => {
   let useCase: AddGitProviderUseCase;

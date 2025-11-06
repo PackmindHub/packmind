@@ -1,4 +1,4 @@
-import { IUseCase, PackmindCommand } from '@packmind/shared';
+import { IUseCase, PackmindCommand } from '@packmind/types';
 import { RuleExample, RuleId } from '../entities';
 
 export type GetRuleExamplesCommand = PackmindCommand & {

@@ -3,7 +3,7 @@ import { PMText, PMVStack, PMField, PMBox, PMSpinner } from '@packmind/ui';
 import { CopiableTextarea } from '../../../shared/components/inputs';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { useGetGitWebhooksQuery } from '../../../domain/git/api/queries/GitQueries';
-import { OrganizationId } from '@packmind/shared';
+import { OrganizationId } from '@packmind/types';
 
 export const WebHookConfig: React.FunctionComponent<{
   providerVendor: string;

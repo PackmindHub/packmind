@@ -2,8 +2,8 @@ import {
   ValidatePasswordResetTokenCommand,
   ValidatePasswordResetTokenResponse,
   IValidatePasswordResetTokenUseCase,
-} from '@packmind/shared/src/types/accounts/contracts/IValidatePasswordResetTokenUseCase';
-import { PackmindLogger, maskEmail } from '@packmind/shared';
+} from '@packmind/types';
+import { PackmindLogger, maskEmail } from '@packmind/logger';
 import { PasswordResetTokenService } from '../services/PasswordResetTokenService';
 import { UserService } from '../services/UserService';
 import { createPasswordResetToken } from '../../domain/entities/PasswordResetToken';

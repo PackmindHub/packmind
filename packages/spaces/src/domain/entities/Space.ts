@@ -1,8 +1,5 @@
-import {
-  Branded,
-  brandedIdFactory,
-  OrganizationId,
-} from '@packmind/shared/types';
+import { Branded, brandedIdFactory, OrganizationId } from '@packmind/types';
+import {} from '@packmind/shared/types';
 
 export type Space = {
   id: SpaceId;

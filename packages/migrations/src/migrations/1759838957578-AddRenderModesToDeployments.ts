@@ -1,5 +1,5 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'AddRenderModesToDeployments1759838957578';
 

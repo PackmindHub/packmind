@@ -16,7 +16,7 @@ import { LuMail } from 'react-icons/lu';
 import validator from 'validator';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useInviteUsersMutation } from '../../../accounts/api/queries/AccountsQueries';
-import { UserOrganizationRole } from '@packmind/shared';
+import { UserOrganizationRole } from '@packmind/types';
 
 interface InviteUsersDialogProps {
   open: boolean;

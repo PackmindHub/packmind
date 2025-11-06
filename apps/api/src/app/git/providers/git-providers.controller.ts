@@ -11,9 +11,8 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { GitProvidersService } from './git-providers.service';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
 import {
-  LogLevel,
-  PackmindLogger,
   GitRepoAlreadyExistsError,
   GitProviderHasRepositoriesError,
 } from '@packmind/shared';

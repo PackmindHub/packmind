@@ -5,7 +5,7 @@ import { queryClient } from '../../src/shared/data/queryClient';
 import { routes } from '../../src/shared/utils/routes';
 import { getMeQueryOptions } from '../../src/domain/accounts/api/queries/UserQueries';
 import { getSpaceBySlugQueryOptions } from '../../src/domain/spaces/api/queries/SpacesQueries';
-import { OrganizationId } from '@packmind/accounts/types';
+import { OrganizationId } from '@packmind/types';
 
 export async function clientLoader({
   params,

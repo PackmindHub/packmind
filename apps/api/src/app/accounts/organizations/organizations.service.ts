@@ -6,7 +6,7 @@ import {
   RemoveUserFromOrganizationCommand,
   RemoveUserFromOrganizationResponse,
 } from '@packmind/accounts';
-import { UserId, UserOrganizationRole } from '@packmind/shared';
+import { UserId, UserOrganizationRole } from '@packmind/types';
 
 @Injectable()
 export class OrganizationsService {

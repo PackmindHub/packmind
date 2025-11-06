@@ -11,7 +11,7 @@ import {
   useSelectOrganizationMutation,
 } from '../api/queries/AuthQueries';
 import { useCreateOrganizationMutation } from '../api/queries/AccountsQueries';
-import { SignInUserResponse } from '@packmind/accounts/types';
+import { SignInUserResponse } from '@packmind/types';
 
 jest.mock('../api/queries/AuthQueries', () => ({
   useSignInMutation: jest.fn(),

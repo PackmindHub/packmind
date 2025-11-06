@@ -1,7 +1,7 @@
 import { IDeploymentsServices } from '../IDeploymentsServices';
 import { TargetService } from './TargetService';
 import { ITargetRepository } from '../../domain/repositories/ITargetRepository';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import { GitHexa } from '@packmind/git';
 import { RenderModeConfigurationService } from './RenderModeConfigurationService';
 import { IRenderModeConfigurationRepository } from '../../domain/repositories/IRenderModeConfigurationRepository';

@@ -1,8 +1,8 @@
-import { PackmindLogger } from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
+import { PackmindLogger } from '@packmind/logger';
+import { stubLogger } from '@packmind/test-utils';
 import { GetCurrentApiKeyUseCase } from './GetCurrentApiKeyUseCase';
-import { createUserId } from '../../../domain/entities/User';
-import { GetCurrentApiKeyCommand } from '@packmind/shared';
+import { createUserId } from '@packmind/types';
+import { GetCurrentApiKeyCommand } from '@packmind/types';
 
 describe('GetCurrentApiKeyUseCase', () => {
   let getCurrentApiKeyUseCase: GetCurrentApiKeyUseCase;

@@ -1,6 +1,6 @@
 import { RecipeService } from '../../services/RecipeService';
 import { RecipeVersionService } from '../../services/RecipeVersionService';
-import { LogLevel, PackmindLogger } from '@packmind/shared';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { UserId } from '@packmind/accounts';
 import {
   DeleteRecipeCommand,
@@ -25,15 +25,39 @@ export class DeleteRecipeUsecase implements IDeleteRecipeUseCase {
   public async execute(
     command: DeleteRecipeCommand,
   ): Promise<DeleteRecipeResponse> {
-    const { recipeId, userId, organizationId } = command;
+    const { recipeId, spaceId, userId, organizationId } = command;
     this.logger.info('Starting deleteRecipe process', {
       recipeId,
+      spaceId,
       userId,
       organizationId,
     });
 
     try {
-      // First, delete the recipe itself
+      // Get existing recipe to validate space ownership
+      this.logger.info('Fetching recipe to validate space ownership', {
+        recipeId,
+      });
+      const existingRecipe = await this.recipeService.getRecipeById(recipeId);
+
+      if (!existingRecipe) {
+        this.logger.error('Recipe not found', { recipeId });
+        throw new Error(`Recipe ${recipeId} not found`);
+      }
+
+      // Security validation: ensure recipe belongs to the specified space
+      if (existingRecipe.spaceId !== spaceId) {
+        this.logger.error('Recipe does not belong to specified space', {
+          recipeId,
+          recipeSpaceId: existingRecipe.spaceId,
+          requestedSpaceId: spaceId,
+        });
+        throw new Error(
+          `Recipe ${recipeId} does not belong to space ${spaceId}`,
+        );
+      }
+
+      // Delete the recipe itself
       this.logger.info('Deleting recipe', { recipeId });
       await this.recipeService.deleteRecipe(recipeId, userId as UserId);
 
@@ -49,6 +73,7 @@ export class DeleteRecipeUsecase implements IDeleteRecipeUseCase {
     } catch (error) {
       this.logger.error('Failed to delete recipe', {
         recipeId,
+        spaceId,
         userId,
         organizationId,
         error: error instanceof Error ? error.message : String(error),

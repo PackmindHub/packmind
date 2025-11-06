@@ -1,8 +1,8 @@
 import { Repository } from 'typeorm';
 import { OrganizationId } from '@packmind/accounts';
+import { PackmindLogger } from '@packmind/logger';
 import {
   AbstractRepository,
-  PackmindLogger,
   localDataSource,
   RenderModeConfiguration,
 } from '@packmind/shared';

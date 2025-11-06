@@ -1,4 +1,4 @@
-import { Organization } from '../entities/Organization';
+import { Organization } from '@packmind/types';
 import { IRepository } from '@packmind/shared';
 
 export interface IOrganizationRepository extends IRepository<Organization> {

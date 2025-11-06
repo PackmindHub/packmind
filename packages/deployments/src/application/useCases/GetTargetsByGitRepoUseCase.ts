@@ -2,8 +2,8 @@ import {
   Target,
   IGetTargetsByGitRepoUseCase,
   GetTargetsByGitRepoCommand,
-  PackmindLogger,
 } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import { TargetService } from '../services/TargetService';
 
 const origin = 'GetTargetsByGitRepoUseCase';

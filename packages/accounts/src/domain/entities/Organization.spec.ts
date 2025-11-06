@@ -1,4 +1,4 @@
-import { createOrganizationId } from './Organization';
+import { createOrganizationId } from '@packmind/types';
 import { organizationFactory } from '../../../test';
 
 describe('Organization', () => {

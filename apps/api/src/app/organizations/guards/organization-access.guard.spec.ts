@@ -6,7 +6,7 @@ import {
 import { OrganizationAccessGuard } from './organization-access.guard';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
-import { stubLogger } from '@packmind/shared/test';
+import { stubLogger } from '@packmind/test-utils';
 
 describe('OrganizationAccessGuard', () => {
   let guard: OrganizationAccessGuard;

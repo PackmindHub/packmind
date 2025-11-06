@@ -1,1 +1,1 @@
-export * from './src/types/brandedTypes';
+export * from '@packmind/types';

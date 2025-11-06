@@ -1,6 +1,6 @@
-import { PackmindCommand, PackmindResult } from '../types/UseCase';
-import { PackmindLogger } from '../logger/PackmindLogger';
-import { UserProvider, OrganizationProvider } from '../types/accounts/ports';
+import { PackmindCommand, PackmindResult } from '@packmind/types';
+import { PackmindLogger } from '@packmind/logger';
+import { UserProvider, OrganizationProvider } from '@packmind/types';
 import {
   UserAccessError,
   OrganizationAdminRequiredError,

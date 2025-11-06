@@ -1,4 +1,4 @@
-import { Factory } from '@packmind/shared/test';
+import { Factory } from '@packmind/test-utils';
 import { createTargetId, Target } from '@packmind/shared';
 import { createGitRepoId } from '@packmind/shared';
 import { v4 as uuidv4 } from 'uuid';

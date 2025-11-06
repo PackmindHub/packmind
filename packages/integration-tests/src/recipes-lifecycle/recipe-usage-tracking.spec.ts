@@ -77,6 +77,7 @@ describe('Recipe usage tracking', () => {
     test('A deleted recipe usage can be tracked', async () => {
       await testApp.recipesHexa.deleteRecipe({
         recipeId: recipe.id,
+        spaceId: recipe.spaceId,
         ...dataFactory.packmindCommand(),
       });
       const usage = await testApp.analyticsHexa.trackRecipeUsage({

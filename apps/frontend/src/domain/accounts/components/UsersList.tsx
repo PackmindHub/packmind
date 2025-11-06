@@ -25,7 +25,7 @@ import {
   pmToaster,
   PMVStack,
 } from '@packmind/ui';
-import { OrganizationId, UserStatus } from '@packmind/accounts/types';
+import { OrganizationId, UserStatus } from '@packmind/types';
 
 import { useGetUserStatusesQuery } from '../api/queries/UserQueries';
 import { useInviteUsersMutation } from '../api/queries/AccountsQueries';

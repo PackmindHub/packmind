@@ -1,9 +1,6 @@
-import {
-  Organization,
-  OrganizationId,
-} from '../../../domain/entities/Organization';
+import { Organization, OrganizationId } from '@packmind/types';
 import { OrganizationService } from '../../services/OrganizationService';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 
 export interface CreateOrganizationRequest {
   name: string;

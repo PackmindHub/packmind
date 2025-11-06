@@ -1,9 +1,9 @@
-import { Factory } from '@packmind/shared/test';
+import { Factory } from '@packmind/test-utils';
 import { v4 as uuidv4 } from 'uuid';
+import { createUserId } from '@packmind/types';
 import {
   createStandardId,
   createStandardVersionId,
-  createUserId,
   StandardVersion,
 } from '@packmind/shared';
 

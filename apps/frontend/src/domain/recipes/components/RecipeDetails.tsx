@@ -33,6 +33,7 @@ import {
 } from '../../../shared/components/editor/MarkdownEditor';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 import { routes } from '../../../shared/utils/routes';
+import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 
 interface RecipeDetailsProps {
   id: RecipeId;
@@ -42,7 +43,8 @@ interface RecipeDetailsProps {
 
 export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
   const navigate = useNavigate();
-  const { spaceSlug } = useCurrentSpace();
+  const { organization } = useAuthContext();
+  const { spaceSlug, spaceId } = useCurrentSpace();
   const [isEditing, setIsEditing] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteAlert, setDeleteAlert] = useState<{
@@ -54,10 +56,14 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
   const defaultPath = `.packmind/recipes/${recipe?.slug}.md`;
 
   const handleDeleteRecipe = async () => {
-    if (!recipe) return;
+    if (!recipe || !organization?.id || !spaceId) return;
 
     try {
-      await deleteMutation.mutateAsync(recipe.id);
+      await deleteMutation.mutateAsync({
+        organizationId: organization.id,
+        spaceId,
+        recipeId: recipe.id,
+      });
       setDeleteAlert({
         type: 'success',
         message: RECIPE_MESSAGES.success.deleted,
@@ -133,9 +139,28 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
 
   // Show edit form when in edit mode
   if (isEditing) {
+    if (!organization?.id || !spaceId) {
+      return (
+        <PMPage
+          title="Cannot Edit Recipe"
+          subtitle="Missing organization or space context"
+          breadcrumbComponent={<AutobreadCrumb />}
+        >
+          <PMAlert.Root status="error" width="lg" mb={4}>
+            <PMAlert.Indicator />
+            <PMAlert.Title>
+              Cannot edit recipe without organization and space context.
+            </PMAlert.Title>
+          </PMAlert.Root>
+        </PMPage>
+      );
+    }
+
     return (
       <EditRecipe
         recipe={recipe}
+        organizationId={organization.id}
+        spaceId={spaceId}
         onCancel={() => setIsEditing(false)}
         onSuccess={() => {
           setIsEditing(false);

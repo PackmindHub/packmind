@@ -7,7 +7,13 @@ import {
   GetActiveDetectionProgramsForRule,
   GetActiveDetectionProgramsForRuleResult,
 } from '../../domain/repositories/IPackmindGateway';
-import { Gateway, RuleId } from '@packmind/shared';
+import {
+  Gateway,
+  IPullAllContentResponse,
+  IPullAllContentUseCase,
+  Organization,
+} from '@packmind/types';
+import { RuleId } from '@packmind/shared';
 interface ApiKeyPayload {
   host: string;
   jwt: string;
@@ -17,6 +23,28 @@ interface DecodedApiKey {
   payload: ApiKeyPayload;
   isValid: boolean;
   error?: string;
+}
+
+interface JwtPayload {
+  organization: Organization;
+}
+
+function decodeJwt(jwt: string): JwtPayload | null {
+  try {
+    // JWT format: header.payload.signature
+    const parts = jwt.split('.');
+    if (parts.length !== 3) {
+      return null;
+    }
+
+    // Decode the payload (second part)
+    const payload = JSON.parse(
+      Buffer.from(parts[1], 'base64').toString('utf-8'),
+    );
+    return payload as JwtPayload;
+  } catch {
+    return null;
+  }
 }
 
 function decodeApiKey(apiKey: string): DecodedApiKey {
@@ -66,6 +94,80 @@ function decodeApiKey(apiKey: string): DecodedApiKey {
 
 export class PackmindGateway implements IPackmindGateway {
   constructor(private readonly apiKey: string) {}
+  public getPullData: Gateway<IPullAllContentUseCase> = async () => {
+    // Decode the API key to get host and JWT
+    const decodedApiKey = decodeApiKey(this.apiKey);
+
+    if (!decodedApiKey.isValid) {
+      throw new Error(`Invalid API key: ${decodedApiKey.error}`);
+    }
+
+    const { host, jwt } = decodedApiKey.payload;
+
+    // Decode JWT to extract organizationId
+    const jwtPayload = decodeJwt(jwt);
+
+    if (!jwtPayload?.organization?.id) {
+      throw new Error('Invalid JWT: missing organizationId');
+    }
+
+    const organizationId = jwtPayload.organization.id;
+
+    // Make API call to pull all content
+    const url = `${host}/api/v0/organizations/${organizationId}/pull`;
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+      });
+
+      if (!response.ok) {
+        let errorMsg = `API request failed: ${response.status} ${response.statusText}`;
+        try {
+          const errorBody = await response.json();
+          if (errorBody && errorBody.message) {
+            errorMsg = `${errorBody.message}`;
+          }
+        } catch {
+          // ignore if body is not json
+        }
+        throw new Error(errorMsg);
+      }
+
+      const result: IPullAllContentResponse = await response.json();
+      return result;
+    } catch (error: unknown) {
+      // Specific handling if the server is not accessible
+      const err = error as {
+        code?: string;
+        name?: string;
+        message?: string;
+        cause?: { code?: string };
+      };
+      const code = err?.code || err?.cause?.code;
+      if (
+        code === 'ECONNREFUSED' ||
+        code === 'ENOTFOUND' ||
+        err?.name === 'FetchError' ||
+        (typeof err?.message === 'string' &&
+          (err.message.includes('Failed to fetch') ||
+            err.message.includes('network') ||
+            err.message.includes('NetworkError')))
+      ) {
+        throw new Error(
+          `Packmind server is not accessible at ${host}. Please check your network connection or the server URL.`,
+        );
+      }
+
+      throw new Error(
+        `Failed to pull content: Error: ${err?.message || JSON.stringify(error)}`,
+      );
+    }
+  };
 
   public listExecutionPrograms: Gateway<ListDetectionPrograms> =
     async (params: { gitRemoteUrl: string; branches: string[] }) => {

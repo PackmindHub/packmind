@@ -1,6 +1,6 @@
 import { Recipe, RecipeId } from '../Recipe';
 import { RecipeVersion } from '../RecipeVersion';
-import { OrganizationId } from '../../accounts';
+import { OrganizationId } from '@packmind/types';
 import {
   CaptureRecipeCommand,
   UpdateRecipesFromGitHubCommand,

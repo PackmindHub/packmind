@@ -1,6 +1,6 @@
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 
 const execAsync = promisify(exec);
 

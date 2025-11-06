@@ -1,6 +1,7 @@
 import { RecipeService } from '../../services/RecipeService';
 import { Recipe } from '../../../domain/entities/Recipe';
-import { LogLevel, PackmindLogger, QueryOption } from '@packmind/shared';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
+import { QueryOption } from '@packmind/shared';
 import { OrganizationId } from '@packmind/accounts';
 
 const origin = 'FindRecipeBySlugUsecase';

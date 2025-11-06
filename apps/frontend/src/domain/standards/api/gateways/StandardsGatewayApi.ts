@@ -1,15 +1,17 @@
 import {
+  NewGateway,
+  OrganizationId,
+  NewPackmindCommandBody,
+} from '@packmind/types';
+import {
   Standard,
   StandardVersion,
   StandardId,
   StandardVersionId,
   Rule,
-  NewGateway,
   IListStandardsBySpaceUseCase,
   IGetStandardByIdUseCase,
   SpaceId,
-  OrganizationId,
-  NewPackmindCommandBody,
   ListStandardsBySpaceResponse,
   ListStandardsBySpaceCommand,
   GetStandardByIdCommand,

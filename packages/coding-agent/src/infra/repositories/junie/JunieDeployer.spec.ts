@@ -1,4 +1,5 @@
 import { JunieDeployer } from './JunieDeployer';
+import { createUserId } from '@packmind/types';
 import {
   GitRepo,
   createGitRepoId,
@@ -7,7 +8,6 @@ import {
   createStandardVersionId,
   RecipeVersion,
   createRecipeVersionId,
-  createUserId,
   Target,
   createTargetId,
 } from '@packmind/shared';

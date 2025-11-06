@@ -1,8 +1,8 @@
-import { UserId } from '../accounts';
+import { UserId } from '@packmind/types';
 import { GitCommit } from '../git';
 import { SpaceId } from '../spaces';
 
-import { Branded, brandedIdFactory } from '../brandedTypes';
+import { Branded, brandedIdFactory } from '@packmind/types';
 
 export type StandardId = Branded<'StandardId'>;
 export const createStandardId = brandedIdFactory<StandardId>();

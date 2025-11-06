@@ -1,4 +1,4 @@
-import { UserId, OrganizationId } from '@packmind/shared/types';
+import { UserId, OrganizationId } from '@packmind/types';
 
 export type AmplitudeNodeEvent = {
   userId: UserId;

@@ -9,10 +9,10 @@ import { createStandardId } from '../../domain/entities/Standard';
 import { v4 as uuidv4 } from 'uuid';
 import { standardVersionFactory } from '../../../test/standardVersionFactory';
 import { ruleFactory } from '../../../test/ruleFactory';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import type { ILinterPort } from '@packmind/shared';
 import { IRuleExampleRepository } from '../../domain/repositories/IRuleExampleRepository';
-import { stubLogger } from '@packmind/shared/test';
+import { stubLogger } from '@packmind/test-utils';
 import { createUserId } from '@packmind/accounts';
 import {
   createStandardVersionId,

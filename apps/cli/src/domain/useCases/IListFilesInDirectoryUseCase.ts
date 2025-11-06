@@ -1,4 +1,4 @@
-import { IPublicUseCase } from '@packmind/shared';
+import { IPublicUseCase } from '@packmind/types';
 import {
   ListFilesInDirectoryUseCaseCommand,
   ListFilesInDirectoryUseCaseResult,

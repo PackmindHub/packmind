@@ -7,15 +7,16 @@ import { PackmindServices } from '../services/PackmindServices';
 import { IPackmindRepositories } from '../../domain/repositories/IPackmindRepositories';
 import { LintViolation } from '../../domain/entities/LintViolation';
 import { minimatch } from 'minimatch';
+import { PackmindLogger } from '@packmind/logger';
 import {
   ExecuteLinterProgramsCommand,
   LinterExecutionProgram,
   LinterExecutionViolation,
-  PackmindLogger,
   ProgrammingLanguage,
   stringToProgrammingLanguage,
 } from '@packmind/shared';
 import * as path from 'path';
+import * as fs from 'fs/promises';
 
 const origin = 'LintFilesInDirectoryUseCase';
 
@@ -137,13 +138,38 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
     );
 
     // Step 0: Resolve git repository root and absolute path to lint
-    const gitRepoRoot =
-      await this.services.gitRemoteUrlService.getGitRepositoryRoot(userPath);
-
-    // Convert the user-provided path to an absolute path
-    const absoluteLintPath = path.isAbsolute(userPath)
+    // Convert the user-provided path to an absolute path first
+    const absoluteUserPath = path.isAbsolute(userPath)
       ? userPath
       : path.resolve(process.cwd(), userPath);
+
+    // Check if the path is a file or directory
+    let pathStats;
+    try {
+      pathStats = await fs.stat(absoluteUserPath);
+    } catch {
+      throw new Error(
+        `The path "${absoluteUserPath}" does not exist or cannot be accessed`,
+      );
+    }
+
+    const isFile = pathStats.isFile();
+
+    // If it's a file, use its directory for Git operations
+    const directoryForGitOps = isFile
+      ? path.dirname(absoluteUserPath)
+      : absoluteUserPath;
+
+    this.logger.debug(
+      `Path type: ${isFile ? 'file' : 'directory'}, gitOpsDir="${directoryForGitOps}"`,
+    );
+
+    const gitRepoRoot =
+      await this.services.gitRemoteUrlService.getGitRepositoryRoot(
+        directoryForGitOps,
+      );
+
+    const absoluteLintPath = absoluteUserPath;
 
     // Verify the path is within the git repository
     if (!absoluteLintPath.startsWith(gitRepoRoot)) {
@@ -156,12 +182,14 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
       `Resolved paths: gitRoot="${gitRepoRoot}", lintPath="${absoluteLintPath}"`,
     );
 
-    // Step 1: List files in the directory excluding ignored folders
-    const files = await this.services.listFiles.listFilesInDirectory(
-      absoluteLintPath,
-      [],
-      ['node_modules', 'dist', '.min.', '.map.', '.git'],
-    );
+    // Step 1: List files - if single file, use it directly; otherwise scan directory
+    const files = isFile
+      ? [{ path: absoluteLintPath }]
+      : await this.services.listFiles.listFilesInDirectory(
+          absoluteLintPath,
+          [],
+          ['node_modules', 'dist', '.min.', '.map.', '.git'],
+        );
 
     // Step 2: Get Git remote URL
     const { gitRemoteUrl } =

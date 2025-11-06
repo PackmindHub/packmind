@@ -1,5 +1,5 @@
 import { GitProvider, GitRepo } from '../git';
-import { OrganizationId } from '../accounts';
+import { OrganizationId } from '@packmind/types';
 
 export interface IGitPort {
   /**

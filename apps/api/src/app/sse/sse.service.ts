@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { PackmindLogger } from '@packmind/logger';
 import {
-  PackmindLogger,
   AnySSEEvent,
   createHelloWorldEvent,
   createDataChangeEvent,

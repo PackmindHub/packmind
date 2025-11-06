@@ -5,8 +5,8 @@ import { GitRepoSchema } from '../schemas/GitRepoSchema';
 import { GitProviderSchema } from '../schemas/GitProviderSchema';
 import { Repository } from 'typeorm';
 import { OrganizationId } from '@packmind/accounts';
+import { PackmindLogger } from '@packmind/logger';
 import {
-  PackmindLogger,
   localDataSource,
   AbstractRepository,
   QueryOption,

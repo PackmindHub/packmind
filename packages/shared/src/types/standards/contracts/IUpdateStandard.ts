@@ -1,7 +1,7 @@
-import { IUseCase } from '../../UseCase';
+import { IUseCase } from '@packmind/types';
 import { Standard, StandardId } from '../Standard';
 import { RuleId } from '../Rule';
-import { OrganizationId } from '../../accounts/Organization';
+import { OrganizationId } from '@packmind/types';
 import { SpaceId } from '../../spaces/Space';
 
 export type UpdateStandardCommand = {

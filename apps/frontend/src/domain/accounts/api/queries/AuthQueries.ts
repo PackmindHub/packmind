@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   SignInUserCommand,
   SignUpWithOrganizationCommand,
-} from '@packmind/accounts/types';
+} from '@packmind/types';
 import {
   CheckEmailAvailabilityCommand,
   createOrganizationId,
@@ -11,7 +11,8 @@ import {
   RequestPasswordResetCommand,
   ResetPasswordCommand,
   PackmindCommandBody,
-} from '@packmind/shared/types';
+} from '@packmind/types';
+import {} from '@packmind/shared/types';
 import { authGateway } from '../gateways';
 import {
   GET_ME_KEY,

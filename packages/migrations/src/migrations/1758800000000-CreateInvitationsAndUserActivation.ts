@@ -5,7 +5,7 @@ import {
   TableForeignKey,
   TableIndex,
 } from 'typeorm';
-import { PackmindLogger, LogLevel } from '@packmind/shared';
+import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
   timestampsMigrationColumns,
   uuidMigrationColumn,

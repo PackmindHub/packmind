@@ -2,13 +2,16 @@ import { RecipeId } from '../../../domain/entities/Recipe';
 import { RecipeService } from '../../services/RecipeService';
 import { RecipeVersionService } from '../../services/RecipeVersionService';
 import { RecipeSummaryService } from '../../services/RecipeSummaryService';
-import { PackmindLogger, LogLevel, AiNotConfigured } from '@packmind/shared';
-import { UserId } from '@packmind/accounts/types';
+import { PackmindLogger, LogLevel } from '@packmind/logger';
+import { AiNotConfigured, SpaceId } from '@packmind/shared';
+import { UserId, OrganizationId } from '@packmind/types';
 
 const origin = 'UpdateRecipeFromUIUsecase';
 
 export interface UpdateRecipeFromUIParams {
   recipeId: RecipeId;
+  spaceId: SpaceId;
+  organizationId: OrganizationId;
   name: string;
   content: string;
   editorUserId: UserId;
@@ -29,24 +32,40 @@ export class UpdateRecipeFromUIUsecase {
 
   public async updateRecipeFromUI({
     recipeId,
+    spaceId,
+    organizationId,
     name,
     content,
     editorUserId,
   }: UpdateRecipeFromUIParams) {
     this.logger.info('Starting updateRecipeFromUI process', {
       recipeId,
+      spaceId,
+      organizationId,
       name,
       editorUserId,
     });
 
     try {
-      // Get the existing recipe (internal - no access control needed here as this is already authorized)
+      // Get the existing recipe and validate it belongs to the specified space
       this.logger.debug('Fetching existing recipe', { recipeId });
       const existingRecipe = await this.recipeService.getRecipeById(recipeId);
 
       if (!existingRecipe) {
         this.logger.error('Recipe not found', { recipeId });
         throw new Error(`Recipe with id ${recipeId} not found`);
+      }
+
+      // Security validation: ensure recipe belongs to the specified space
+      if (existingRecipe.spaceId !== spaceId) {
+        this.logger.error('Recipe does not belong to specified space', {
+          recipeId,
+          recipeSpaceId: existingRecipe.spaceId,
+          requestedSpaceId: spaceId,
+        });
+        throw new Error(
+          `Recipe ${recipeId} does not belong to space ${spaceId}`,
+        );
       }
 
       // Business logic: Increment version number (same as Git flow)

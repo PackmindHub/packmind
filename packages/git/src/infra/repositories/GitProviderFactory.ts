@@ -4,7 +4,7 @@ import {
   GitProvider,
   GitProviderVendors,
 } from '../../domain/entities/GitProvider';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import { GithubProvider } from './github/GithubProvider';
 import { GitlabProvider } from './gitlab/GitlabProvider';
 

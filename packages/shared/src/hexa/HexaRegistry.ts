@@ -1,5 +1,5 @@
 import { DataSource } from 'typeorm';
-import { PackmindLogger } from '../logger/PackmindLogger';
+import { PackmindLogger } from '@packmind/logger';
 
 /**
  * Constructor type for BaseHexa subclasses.

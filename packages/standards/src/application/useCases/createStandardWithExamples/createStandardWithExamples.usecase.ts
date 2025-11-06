@@ -14,9 +14,8 @@ import {
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import slug from 'slug';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
 import {
-  LogLevel,
-  PackmindLogger,
   AiNotConfigured,
   RuleWithExamples,
   ProgrammingLanguage,

@@ -1,6 +1,6 @@
-import { PackmindCommand, IUseCase } from '../../UseCase';
+import { PackmindCommand, IUseCase } from '@packmind/types';
 import { GitProvider } from '../GitProvider';
-import { OrganizationId } from '../../accounts';
+import { OrganizationId } from '@packmind/types';
 
 export type ListProvidersCommand = PackmindCommand & {
   organizationId: OrganizationId;

@@ -1,13 +1,11 @@
 import { CreateOrganizationUseCase } from './CreateOrganizationUseCase';
 import { OrganizationService } from '../../services/OrganizationService';
 import { UserService } from '../../services/UserService';
-import { stubLogger } from '@packmind/shared/test';
-import { createUserId, PackmindLogger, UserId } from '@packmind/shared';
-import {
-  Organization,
-  createOrganizationId,
-} from '../../../domain/entities/Organization';
-import { User } from '../../../domain/entities/User';
+import { stubLogger } from '@packmind/test-utils';
+import { PackmindLogger } from '@packmind/logger';
+import { createUserId, UserId } from '@packmind/types';
+import { Organization, createOrganizationId } from '@packmind/types';
+import { User } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 
 describe('CreateOrganizationUseCase', () => {

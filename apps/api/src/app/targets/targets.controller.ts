@@ -17,7 +17,7 @@ import {
   DeleteTargetResponse,
 } from '@packmind/shared';
 import { TargetsService } from './targets.service';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import { AuthService } from '../auth/auth.service';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
 

@@ -10,8 +10,8 @@ import {
   createGitProviderId,
 } from '../domain/entities/GitProvider';
 import { createOrganizationId } from '@packmind/accounts';
-import { PackmindLogger } from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
+import { PackmindLogger } from '@packmind/logger';
+import { stubLogger } from '@packmind/test-utils';
 import { gitProviderFactory, gitlabProviderFactory } from '../../test';
 
 describe('GitProviderService', () => {

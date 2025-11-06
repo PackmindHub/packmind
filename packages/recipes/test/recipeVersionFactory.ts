@@ -1,4 +1,4 @@
-import { Factory, randomIn } from '@packmind/shared/test';
+import { Factory, randomIn } from '@packmind/test-utils';
 import {
   RecipeVersion,
   createRecipeVersionId,

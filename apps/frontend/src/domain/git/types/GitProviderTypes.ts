@@ -1,4 +1,4 @@
-import { OrganizationId } from '@packmind/accounts/types';
+import { OrganizationId } from '@packmind/types';
 import { GitProviderId, GitRepoId } from '@packmind/git/types';
 
 // Available git provider types for UI

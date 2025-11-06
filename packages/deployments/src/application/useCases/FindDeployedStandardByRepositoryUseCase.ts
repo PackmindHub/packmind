@@ -1,7 +1,7 @@
+import { PackmindLogger } from '@packmind/logger';
 import {
   FindDeployedStandardByRepositoryCommand,
   IFindDeployedStandardByRepositoryUseCase,
-  PackmindLogger,
 } from '@packmind/shared';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
 import { StandardVersion } from '@packmind/standards/types';

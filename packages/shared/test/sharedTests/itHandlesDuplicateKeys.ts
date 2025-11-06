@@ -1,4 +1,4 @@
-import { IRepository } from '../../src/repositories/IRepository';
+import { IRepository } from '@packmind/shared';
 
 type HandleDuplicateKeysTestOptions<Entity extends { id: string }> = {
   entityFactory: (overrides?: Partial<Entity>) => Entity;

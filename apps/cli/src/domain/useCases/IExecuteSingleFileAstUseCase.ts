@@ -1,4 +1,5 @@
-import { IPublicUseCase, ProgrammingLanguage } from '@packmind/shared';
+import { IPublicUseCase } from '@packmind/types';
+import { ProgrammingLanguage } from '@packmind/shared';
 
 export type ExecuteSingleFileAstUseCaseCommand = {
   program: string;

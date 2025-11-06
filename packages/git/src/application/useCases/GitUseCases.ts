@@ -20,13 +20,9 @@ import { UpdateGitProviderUseCase } from './updateGitProvider/updateGitProvider.
 import { GetAvailableRemoteDirectoriesUseCase } from './getAvailableRemoteDirectories/getAvailableRemoteDirectories.usecase';
 import { CheckDirectoryExistenceUseCase } from './checkDirectoryExistence/checkDirectoryExistence.usecase';
 import { IGitServices } from '../IGitServices';
-import {
-  PackmindLogger,
-  QueryOption,
-  IDeploymentPort,
-  UserProvider,
-  OrganizationProvider,
-} from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { UserProvider, OrganizationProvider } from '@packmind/types';
+import { QueryOption, IDeploymentPort } from '@packmind/shared';
 import { GitProvider, GitProviderId } from '../../domain/entities/GitProvider';
 import { GitRepo, GitRepoId } from '../../domain/entities/GitRepo';
 import { GitCommit } from '../../domain/entities/GitCommit';

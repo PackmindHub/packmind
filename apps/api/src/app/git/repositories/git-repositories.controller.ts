@@ -9,9 +9,8 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { GitRepositoriesService } from './git-repositories.service';
+import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
-  PackmindLogger,
-  LogLevel,
   CheckDirectoryExistenceResult,
   GitRepoAlreadyExistsError,
 } from '@packmind/shared';

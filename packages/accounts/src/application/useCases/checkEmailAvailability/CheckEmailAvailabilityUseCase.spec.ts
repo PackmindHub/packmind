@@ -1,8 +1,8 @@
 import { CheckEmailAvailabilityUseCase } from './CheckEmailAvailabilityUseCase';
 import { UserService } from '../../services/UserService';
 import { userFactory } from '../../../../test';
-import { createUserId } from '../../../domain/entities/User';
-import { CheckEmailAvailabilityCommand } from '@packmind/shared';
+import { createUserId } from '@packmind/types';
+import { CheckEmailAvailabilityCommand } from '@packmind/types';
 
 describe('CheckEmailAvailabilityUseCase', () => {
   let checkEmailAvailabilityUseCase: CheckEmailAvailabilityUseCase;

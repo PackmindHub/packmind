@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { PackmindLogger } from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
+import { PackmindLogger } from '@packmind/logger';
+import { stubLogger } from '@packmind/test-utils';
 
 describe('AppController', () => {
   let app: TestingModule;

@@ -8,11 +8,11 @@ import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
 import { GitCommitService } from '../../services/GitCommitService';
 import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
+import { PackmindLogger } from '@packmind/logger';
 import {
   HandleWebHookCommand,
   HandleWebHookResult,
   IHandleWebHookUseCase,
-  PackmindLogger,
 } from '@packmind/shared';
 
 export class HandleWebHook implements IHandleWebHookUseCase {

@@ -1,8 +1,8 @@
 import { ApiKeyPayload, DecodedApiKey } from '../../domain/entities/ApiKey';
-import { User, UserOrganizationRole } from '../../domain/entities/User';
-import { Organization } from '../../domain/entities/Organization';
+import { User, UserOrganizationRole } from '@packmind/types';
+import { Organization } from '@packmind/types';
 import { encodeApiKey, decodeApiKey } from '../../domain/utils/api-key.utils';
-import { PackmindLogger, LogLevel } from '@packmind/shared';
+import { PackmindLogger, LogLevel } from '@packmind/logger';
 
 const origin = 'ApiKeyService';
 

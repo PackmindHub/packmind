@@ -1,9 +1,5 @@
-import {
-  BaseHexa,
-  BaseHexaOpts,
-  HexaRegistry,
-  PackmindLogger,
-} from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/shared';
 import { FileUpdates } from './domain/entities/FileUpdates';
 import { CodingAgentHexaFactory } from './CodingAgentHexaFactory';
 import { PrepareRecipesDeploymentCommand } from './domain/useCases/IPrepareRecipesDeploymentUseCase';
@@ -54,6 +50,13 @@ export class CodingAgentHexa extends BaseHexa {
     this.logger.info('Destroying CodingAgentHexa');
     // Add any cleanup logic here if needed
     this.logger.info('CodingAgentHexa destroyed');
+  }
+
+  /**
+   * Gets the coding agent deployer registry for direct access to deployers
+   */
+  public getCodingAgentDeployerRegistry() {
+    return this.hexa.getDeployerRegistry();
   }
 
   /**

@@ -1,5 +1,5 @@
 import { RecipesDeployment } from '../RecipesDeployment';
-import { IUseCase, PackmindCommand } from '../../UseCase';
+import { IUseCase, PackmindCommand } from '@packmind/types';
 import { TargetId } from '../Target';
 import { GitRepoId } from '../../git';
 import { RecipeVersionId } from '../../recipes';

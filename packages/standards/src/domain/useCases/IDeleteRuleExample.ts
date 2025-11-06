@@ -1,4 +1,5 @@
-import { RuleExampleId, PackmindCommand } from '@packmind/shared';
+import { PackmindCommand } from '@packmind/types';
+import { RuleExampleId } from '@packmind/shared';
 
 export interface DeleteRuleExampleCommand extends PackmindCommand {
   ruleExampleId: RuleExampleId;

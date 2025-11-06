@@ -1,5 +1,5 @@
 import { Standard } from '../entities/Standard';
-import { OrganizationId, UserId } from '@packmind/accounts/types';
+import { OrganizationId, UserId } from '@packmind/types';
 import { SpaceId } from '@packmind/shared/types';
 import { IRepository } from '@packmind/shared';
 

@@ -1,11 +1,11 @@
 import { Recipe, RecipeId, RecipeVersion } from '@packmind/recipes/types';
+import { NewGateway } from '@packmind/types';
 import {
-  IDeleteRecipeUseCase,
   IDeleteRecipesBatchUseCase,
+  IDeleteRecipeUseCase,
 } from '@packmind/shared';
-import { OrganizationId } from '@packmind/accounts/types';
+import { OrganizationId } from '@packmind/types';
 import { SpaceId } from '@packmind/spaces';
-import { Gateway } from '@packmind/shared';
 
 export interface IRecipesGateway {
   getRecipes(
@@ -28,9 +28,11 @@ export interface IRecipesGateway {
     recipe: { name: string; content: string },
   ): Promise<Recipe>;
   updateRecipe(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
     id: RecipeId,
     updateData: { name: string; content: string },
   ): Promise<Recipe>;
-  deleteRecipe: Gateway<IDeleteRecipeUseCase>;
-  deleteRecipesBatch: Gateway<IDeleteRecipesBatchUseCase>;
+  deleteRecipe: NewGateway<IDeleteRecipeUseCase>;
+  deleteRecipesBatch: NewGateway<IDeleteRecipesBatchUseCase>;
 }

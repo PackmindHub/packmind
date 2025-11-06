@@ -1,5 +1,5 @@
 import { MigrationInterface, QueryRunner, TableForeignKey } from 'typeorm';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'AddGitRepoToRecipeUsage1752700000000';
 

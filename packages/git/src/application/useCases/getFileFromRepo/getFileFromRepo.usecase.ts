@@ -2,7 +2,7 @@ import { GitRepo } from '../../../domain/entities/GitRepo';
 import { GitProvider } from '../../../domain/entities/GitProvider';
 import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
 import { GitProviderService } from '../../GitProviderService';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 
 export class GetFileFromRepo {
   constructor(

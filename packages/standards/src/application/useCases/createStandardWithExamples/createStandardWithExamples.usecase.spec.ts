@@ -4,12 +4,9 @@ import { StandardVersionService } from '../../services/StandardVersionService';
 import { StandardSummaryService } from '../../services/StandardSummaryService';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
-import {
-  PackmindLogger,
-  ProgrammingLanguage,
-  RuleWithExamples,
-} from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
+import { PackmindLogger } from '@packmind/logger';
+import { ProgrammingLanguage, RuleWithExamples } from '@packmind/shared';
+import { stubLogger } from '@packmind/test-utils';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
 import { createSpaceId } from '@packmind/spaces';
 import { standardFactory } from '../../../../test/standardFactory';

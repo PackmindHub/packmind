@@ -1,13 +1,12 @@
 import { Repository } from 'typeorm';
-import { User } from '../../domain/entities/User';
+import { User } from '@packmind/types';
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
 import { UserSchema } from '../schemas/UserSchema';
+import { PackmindLogger, maskEmail } from '@packmind/logger';
 import {
-  PackmindLogger,
   localDataSource,
   AbstractRepository,
   QueryOption,
-  maskEmail,
 } from '@packmind/shared';
 
 const origin = 'UserRepository';

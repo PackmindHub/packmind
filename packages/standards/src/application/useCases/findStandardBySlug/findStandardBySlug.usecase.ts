@@ -1,6 +1,6 @@
 import { StandardService } from '../../services/StandardService';
 import { Standard } from '../../../domain/entities/Standard';
-import { LogLevel, PackmindLogger } from '@packmind/shared';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { OrganizationId } from '@packmind/accounts';
 
 const origin = 'FindStandardBySlugUsecase';

@@ -1,5 +1,5 @@
 import { IJobFactory, IJobQueue, queueFactory } from '@packmind/jobs';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import { FetchFileContentInput } from '../../domain/jobs/FetchFileContent';
 import { FetchFileContentDelayedJob } from '../../application/jobs/FetchFileContentDelayedJob';
 import { GitRepoService } from '../../application/GitRepoService';

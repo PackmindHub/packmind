@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   NotFoundException,
   Param,
+  Patch,
   Post,
   Req,
   UseGuards,
@@ -11,7 +13,7 @@ import {
 import { Recipe, RecipeId, RecipeVersion } from '@packmind/recipes';
 import { OrganizationId } from '@packmind/accounts';
 import { SpaceId } from '@packmind/spaces';
-import { PackmindLogger, LogLevel } from '@packmind/shared';
+import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
 import { RecipesService } from '../../../recipes/recipes.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
@@ -185,6 +187,128 @@ export class OrganizationsSpacesRecipesController {
           organizationId,
           spaceId,
           recipeName: recipe.name,
+          userId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Update a recipe within a space
+   * PATCH /organizations/:orgId/spaces/:spaceId/recipes/:id
+   */
+  @Patch(':id')
+  async updateRecipe(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('id') id: RecipeId,
+    @Body() updateData: { name: string; content: string },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<Recipe> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'PATCH /organizations/:orgId/spaces/:spaceId/recipes/:id - Updating recipe',
+      {
+        organizationId,
+        spaceId,
+        recipeId: id,
+        recipeName: updateData.name,
+        userId,
+      },
+    );
+
+    try {
+      const updatedRecipe = await this.recipesService.updateRecipeFromUI(
+        id,
+        spaceId,
+        organizationId,
+        updateData.name,
+        updateData.content,
+        userId,
+      );
+
+      this.logger.info(
+        'PATCH /organizations/:orgId/spaces/:spaceId/recipes/:id - Recipe updated successfully',
+        {
+          organizationId,
+          spaceId,
+          recipeId: id,
+          newVersion: updatedRecipe.version,
+          userId,
+        },
+      );
+
+      return updatedRecipe;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'PATCH /organizations/:orgId/spaces/:spaceId/recipes/:id - Failed to update recipe',
+        {
+          organizationId,
+          spaceId,
+          recipeId: id,
+          recipeName: updateData.name,
+          userId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a recipe within a space
+   * DELETE /organizations/:orgId/spaces/:spaceId/recipes/:id
+   */
+  @Delete(':id')
+  async deleteRecipe(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('id') id: RecipeId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<void> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'DELETE /organizations/:orgId/spaces/:spaceId/recipes/:id - Deleting recipe',
+      {
+        organizationId,
+        spaceId,
+        recipeId: id,
+        userId,
+      },
+    );
+
+    try {
+      await this.recipesService.deleteRecipe(
+        id,
+        spaceId,
+        organizationId,
+        userId,
+      );
+
+      this.logger.info(
+        'DELETE /organizations/:orgId/spaces/:spaceId/recipes/:id - Recipe deleted successfully',
+        {
+          organizationId,
+          spaceId,
+          recipeId: id,
+          userId,
+        },
+      );
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'DELETE /organizations/:orgId/spaces/:spaceId/recipes/:id - Failed to delete recipe',
+        {
+          organizationId,
+          spaceId,
+          recipeId: id,
           userId,
           error: errorMessage,
         },

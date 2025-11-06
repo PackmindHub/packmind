@@ -1,4 +1,5 @@
-import { PackmindLogger, HexaRegistry } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { HexaRegistry } from '@packmind/shared';
 import { DataSource } from 'typeorm';
 
 export class JobsHexaFactory {

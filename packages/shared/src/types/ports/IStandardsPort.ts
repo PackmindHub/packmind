@@ -7,7 +7,7 @@ import {
   StandardVersion,
   StandardVersionId,
 } from '../standards';
-import { OrganizationId } from '../accounts';
+import { OrganizationId } from '@packmind/types';
 import { SpaceId } from '../spaces';
 
 export interface IStandardsPort {

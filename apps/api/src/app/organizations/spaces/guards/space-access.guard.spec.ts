@@ -6,8 +6,8 @@ import {
 import { SpaceAccessGuard } from './space-access.guard';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
-import { stubLogger } from '@packmind/shared/test';
-import { PackmindLogger } from '@packmind/shared';
+import { stubLogger } from '@packmind/test-utils';
+import { PackmindLogger } from '@packmind/logger';
 
 describe('SpaceAccessGuard', () => {
   let guard: SpaceAccessGuard;

@@ -1,10 +1,10 @@
-import { Branded, brandedIdFactory } from '../brandedTypes';
-import { UserId } from '../accounts';
+import { UserId, RecipeId, createRecipeId } from '@packmind/types';
 import { GitCommit } from '../git';
 import { SpaceId } from '../spaces';
 
-export type RecipeId = Branded<'RecipeId'>;
-export const createRecipeId = brandedIdFactory<RecipeId>();
+// Re-export for backward compatibility
+export type { RecipeId };
+export { createRecipeId };
 
 export type Recipe = {
   id: RecipeId;

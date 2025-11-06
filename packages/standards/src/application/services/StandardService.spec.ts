@@ -11,7 +11,7 @@ import {
 } from '../../domain/entities/Standard';
 import { v4 as uuidv4 } from 'uuid';
 import { standardFactory } from '../../../test/standardFactory';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import {
   createOrganizationId,
   createUserId,
@@ -19,7 +19,7 @@ import {
   OrganizationId,
 } from '@packmind/accounts';
 import { createSpaceId } from '@packmind/spaces';
-import { stubLogger } from '@packmind/shared/test';
+import { stubLogger } from '@packmind/test-utils';
 
 describe('StandardService', () => {
   let standardService: StandardService;

@@ -3,16 +3,16 @@ import { StandardId } from '../../domain/entities/Standard';
 import { Rule, createRuleId, RuleId } from '../../domain/entities/Rule';
 import { IStandardVersionRepository } from '../../domain/repositories/IStandardVersionRepository';
 import { IRuleRepository } from '../../domain/repositories/IRuleRepository';
+import { OrganizationId } from '@packmind/types';
 import {
   createRuleExampleId,
-  PackmindLogger,
   RuleExample,
-  OrganizationId,
   StandardVersion,
   createStandardVersionId,
   StandardVersionId,
 } from '@packmind/shared';
-import { UserId } from '@packmind/accounts/types';
+import { PackmindLogger } from '@packmind/logger';
+import { UserId } from '@packmind/types';
 import type { ILinterPort } from '@packmind/shared';
 
 import { IRuleExampleRepository } from '../../domain/repositories/IRuleExampleRepository';

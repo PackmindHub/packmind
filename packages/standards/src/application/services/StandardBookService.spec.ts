@@ -1,8 +1,9 @@
 import { StandardBookService } from './StandardBookService';
 import { StandardVersion } from '../../domain/entities/StandardVersion';
 import { standardVersionFactory } from '../../../test/standardVersionFactory';
-import { PackmindLogger, WithTimestamps } from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
+import { PackmindLogger } from '@packmind/logger';
+import { WithTimestamps } from '@packmind/shared';
+import { stubLogger } from '@packmind/test-utils';
 import { v4 as uuidv4 } from 'uuid';
 import { createStandardId } from '../../domain/entities/Standard';
 

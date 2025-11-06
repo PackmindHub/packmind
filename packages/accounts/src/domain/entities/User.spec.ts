@@ -1,5 +1,5 @@
-import { createOrganizationId } from './Organization';
-import { createUserId } from './User';
+import { createOrganizationId } from '@packmind/types';
+import { createUserId } from '@packmind/types';
 import { userFactory } from '../../../test';
 
 describe('User', () => {

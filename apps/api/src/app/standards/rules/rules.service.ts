@@ -9,7 +9,7 @@ import {
   UpdateRuleExampleCommand,
   DeleteRuleExampleCommand,
 } from '@packmind/standards';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 
 @Injectable()
 export class RulesService {

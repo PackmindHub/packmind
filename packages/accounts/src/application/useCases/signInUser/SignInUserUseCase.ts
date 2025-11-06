@@ -2,7 +2,7 @@ import {
   ISignInUserUseCase,
   SignInUserCommand,
   SignInUserResponse,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { UserService } from '../../services/UserService';
 import { OrganizationService } from '../../services/OrganizationService';
 import { LoginRateLimiterService } from '../../services/LoginRateLimiterService';

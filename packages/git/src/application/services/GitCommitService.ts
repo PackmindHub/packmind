@@ -1,6 +1,6 @@
 import { GitCommit, GitCommitId } from '../../domain/entities/GitCommit';
 import { IGitCommitRepository } from '../../domain/repositories/IGitCommitRepository';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 
 export class GitCommitService {
   constructor(

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { GitRepositoriesController } from './git-repositories.controller';
 import { GitRepositoriesService } from './git-repositories.service';
-import { LogLevel, PackmindLogger } from '@packmind/shared';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
 
 @Module({
   controllers: [GitRepositoriesController],

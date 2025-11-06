@@ -1,10 +1,10 @@
 import { OrganizationService } from '../../services/OrganizationService';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import {
   IGetOrganizationByIdUseCase,
   GetOrganizationByIdCommand,
   GetOrganizationByIdResponse,
-} from '@packmind/shared';
+} from '@packmind/types';
 
 const origin = 'GetOrganizationByIdUseCase';
 

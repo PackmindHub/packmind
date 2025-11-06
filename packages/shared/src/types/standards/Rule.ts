@@ -1,4 +1,4 @@
-import { Branded, brandedIdFactory } from '../brandedTypes';
+import { Branded, brandedIdFactory } from '@packmind/types';
 import { StandardVersionId } from './StandardVersion';
 
 export type RuleId = Branded<'RuleId'>;

@@ -4,18 +4,15 @@ import {
   UserNotFoundError,
   UserNotInOrganizationError,
 } from './UserAccessErrors';
-import { PackmindCommand, PackmindResult } from '../types/UseCase';
+import { PackmindCommand, PackmindResult } from '@packmind/types';
 import {
   createUserId,
   User,
   UserOrganizationMembership,
-} from '../types/accounts/User';
-import {
-  createOrganizationId,
-  Organization,
-} from '../types/accounts/Organization';
-import { UserProvider, OrganizationProvider } from '../types/accounts/ports';
-import { stubLogger } from '../../test/logger/stubLogger';
+} from '@packmind/types';
+import { createOrganizationId, Organization } from '@packmind/types';
+import { UserProvider, OrganizationProvider } from '@packmind/types';
+import { stubLogger } from '@packmind/test-utils';
 
 type TestResult = PackmindResult & { success: boolean };
 

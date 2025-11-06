@@ -1,6 +1,6 @@
 import { GitlabRepository } from './GitlabRepository';
-import { PackmindLogger } from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
+import { PackmindLogger } from '@packmind/logger';
+import { stubLogger } from '@packmind/test-utils';
 import { GitlabRepositoryOptions } from './types';
 import axios, { AxiosInstance } from 'axios';
 

@@ -1,6 +1,7 @@
 import { CookbookService } from './CookbookService';
-import { PackmindLogger, WithTimestamps } from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
+import { PackmindLogger } from '@packmind/logger';
+import { WithTimestamps } from '@packmind/shared';
+import { stubLogger } from '@packmind/test-utils';
 import {
   RecipeVersion,
   createRecipeVersionId,

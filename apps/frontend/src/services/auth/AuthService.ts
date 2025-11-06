@@ -1,5 +1,5 @@
 import { QueryClient } from '@tanstack/react-query';
-import { Organization } from '@packmind/accounts/types';
+import { Organization } from '@packmind/types';
 import {
   getMeQueryOptions,
   getUserOrganizationsQueryOptions,

@@ -2,8 +2,8 @@ import { GitCommitService } from './GitCommitService';
 import { IGitCommitRepository } from '../../domain/repositories/IGitCommitRepository';
 import { createGitCommitId } from '../../domain/entities/GitCommit';
 import { gitCommitFactory } from '../../../test/gitCommitFactory';
-import { PackmindLogger } from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
+import { PackmindLogger } from '@packmind/logger';
+import { stubLogger } from '@packmind/test-utils';
 
 describe('GitCommitService', () => {
   let gitCommitService: GitCommitService;

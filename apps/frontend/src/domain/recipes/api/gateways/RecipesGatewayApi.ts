@@ -1,13 +1,13 @@
 import { Recipe, RecipeVersion, RecipeId } from '@packmind/recipes/types';
+import { NewGateway } from '@packmind/types';
 import {
-  IDeleteRecipeUseCase,
   IDeleteRecipesBatchUseCase,
+  IDeleteRecipeUseCase,
 } from '@packmind/shared';
-import { OrganizationId } from '@packmind/accounts/types';
+import { OrganizationId } from '@packmind/types';
 import { SpaceId } from '@packmind/spaces';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import { IRecipesGateway } from './IRecipesGateway';
-import { Gateway } from '@packmind/shared';
 
 export class RecipesGatewayApi
   extends PackmindGateway
@@ -58,17 +58,28 @@ export class RecipesGatewayApi
   }
 
   async updateRecipe(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
     id: RecipeId,
     updateData: { name: string; content: string },
   ): Promise<Recipe> {
-    return this._api.patch<Recipe>(`${this._endpoint}/${id}`, updateData);
+    return this._api.patch<Recipe>(
+      `/organizations/${organizationId}/spaces/${spaceId}/recipes/${id}`,
+      updateData,
+    );
   }
 
-  deleteRecipe: Gateway<IDeleteRecipeUseCase> = async (command) => {
-    // Gateway type strips userId/organizationId from DeleteRecipeCommand
-    return this._api.delete(`${this._endpoint}/${command.recipeId}`);
+  deleteRecipe: NewGateway<IDeleteRecipeUseCase> = async (command) => {
+    const { recipeId, spaceId, organizationId } = command;
+    return this._api.delete(
+      `/organizations/${organizationId}/spaces/${spaceId}/recipes/${recipeId}`,
+    );
   };
-  deleteRecipesBatch: Gateway<IDeleteRecipesBatchUseCase> = async (command) => {
+
+  deleteRecipesBatch: NewGateway<IDeleteRecipesBatchUseCase> = async (
+    command,
+  ) => {
+    const { spaceId } = command;
     return this._api.delete(this._endpoint, {
       data: command,
     });

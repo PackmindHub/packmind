@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify';
 import fp from 'fastify-plugin';
 import rateLimit from '@fastify/rate-limit';
 import { Configuration } from '@packmind/shared';
-import { PackmindLogger, LogLevel } from '@packmind/shared';
+import { PackmindLogger, LogLevel } from '@packmind/logger';
 
 /**
  * This plugin adds rate limiting to the MCP server using dynamic configuration

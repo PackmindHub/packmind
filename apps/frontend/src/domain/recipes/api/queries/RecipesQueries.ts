@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { recipesGateway } from '../gateways';
 import { RecipeId } from '@packmind/recipes/types';
-import { OrganizationId } from '@packmind/accounts/types';
+import { OrganizationId } from '@packmind/types';
 import { SpaceId } from '@packmind/spaces';
 import { GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY } from '../../../deployments/api/queryKeys';
 import {
@@ -67,13 +67,22 @@ export const useUpdateRecipeMutation = () => {
   return useMutation({
     mutationKey: [UPDATE_RECIPE_MUTATION_KEY],
     mutationFn: async ({
+      organizationId,
+      spaceId,
       id,
       updateData,
     }: {
+      organizationId: OrganizationId;
+      spaceId: SpaceId;
       id: RecipeId;
       updateData: { name: string; content: string };
     }) => {
-      return recipesGateway.updateRecipe(id, updateData);
+      return recipesGateway.updateRecipe(
+        organizationId,
+        spaceId,
+        id,
+        updateData,
+      );
     },
     onSuccess: async (updatedRecipe) => {
       // Invalidate all queries for this specific recipe
@@ -125,8 +134,12 @@ export const useDeleteRecipeMutation = () => {
 
   return useMutation({
     mutationKey: [DELETE_RECIPE_MUTATION_KEY],
-    mutationFn: async (recipeId: RecipeId) => {
-      return recipesGateway.deleteRecipe({ recipeId });
+    mutationFn: async (command: {
+      organizationId: OrganizationId;
+      spaceId: SpaceId;
+      recipeId: RecipeId;
+    }) => {
+      return recipesGateway.deleteRecipe(command);
     },
     onSuccess: async () => {
       // Invalidate all recipes (recipe is gone, may have had cached details)
@@ -155,8 +168,12 @@ export const useDeleteRecipesBatchMutation = () => {
 
   return useMutation({
     mutationKey: [DELETE_RECIPES_BATCH_MUTATION_KEY],
-    mutationFn: async (recipeIds: RecipeId[]) => {
-      return recipesGateway.deleteRecipesBatch({ recipeIds });
+    mutationFn: async (command: {
+      organizationId: OrganizationId;
+      spaceId: SpaceId;
+      recipeIds: RecipeId[];
+    }) => {
+      return recipesGateway.deleteRecipesBatch(command);
     },
     onSuccess: async () => {
       // Same as useDeleteRecipeMutation

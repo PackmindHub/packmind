@@ -7,11 +7,11 @@ import { GitRepoService } from '../../GitRepoService';
 import { GitProviderService } from '../../GitProviderService';
 import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
 import { IGitRepo } from '../../../domain/repositories/IGitRepo';
-import { stubLogger } from '@packmind/shared/test';
-import { PackmindLogger } from '@packmind/shared';
+import { stubLogger } from '@packmind/test-utils';
+import { PackmindLogger } from '@packmind/logger';
 import { gitRepoFactory, gitProviderFactory } from '../../../../test';
 import { createGitRepoId, createGitProviderId } from '../../../domain/entities';
-import { createOrganizationId, createUserId } from '@packmind/shared';
+import { createOrganizationId, createUserId } from '@packmind/types';
 
 describe('CheckDirectoryExistenceUseCase', () => {
   let useCase: CheckDirectoryExistenceUseCase;

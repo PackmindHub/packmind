@@ -1,6 +1,7 @@
 import { WorkerQueue } from './bullMQ/WorkerQueue';
 import { IQueue, QueueListeners } from '../domain/IQueue';
-import { PackmindLogger, Configuration } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { Configuration } from '@packmind/shared';
 
 const logger = new PackmindLogger('DelayedJobsFactory');
 

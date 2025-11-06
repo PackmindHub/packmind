@@ -4,9 +4,9 @@ import {
   createOrganizationId,
   Organization,
   OrganizationId,
-} from '../../domain/entities/Organization';
+} from '@packmind/types';
 import { IOrganizationRepository } from '../../domain/repositories/IOrganizationRepository';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import { OrganizationSlugConflictError } from '../../domain/errors';
 
 const origin = 'OrganizationService';

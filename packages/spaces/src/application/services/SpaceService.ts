@@ -1,8 +1,8 @@
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import { Space, SpaceId, createSpaceId } from '../../domain/entities/Space';
 import { ISpaceRepository } from '../../domain/repositories/ISpaceRepository';
 import { SpaceSlugConflictError } from '../../domain/errors/SpaceSlugConflictError';
-import { OrganizationId } from '@packmind/shared/types';
+import { OrganizationId } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import slug from 'slug';
 

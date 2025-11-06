@@ -3,8 +3,9 @@ import { OrganizationsController } from './organizations.controller';
 import { OrganizationsService } from './organizations.service';
 import { createOrganizationId, AccountsHexa } from '@packmind/accounts';
 import { NotFoundException } from '@nestjs/common';
-import { PackmindLogger, createUserId } from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
+import { PackmindLogger } from '@packmind/logger';
+import { createUserId } from '@packmind/types';
+import { stubLogger } from '@packmind/test-utils';
 import { organizationFactory } from '@packmind/accounts/test';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
 

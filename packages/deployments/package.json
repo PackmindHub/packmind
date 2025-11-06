@@ -9,12 +9,15 @@
     "tslib": "^2.3.0",
     "typeorm": "^0.3.26",
     "uuid": "^11.1.0",
-    "@packmind/shared": "*",
     "@packmind/accounts": "*",
-    "@packmind/git": "*",
-    "@packmind/recipes": "*",
-    "@packmind/standards": "*",
     "@packmind/coding-agent": "*",
-    "ts-jest": "^29.4.1"
+    "@packmind/git": "*",
+    "@packmind/logger": "*",
+    "@packmind/recipes": "*",
+    "@packmind/shared": "*",
+    "@packmind/types": "*",
+    "@packmind/standards": "*",
+    "ts-jest": "^29.4.1",
+    "@packmind/test-utils": "0.0.1"
   }
 }

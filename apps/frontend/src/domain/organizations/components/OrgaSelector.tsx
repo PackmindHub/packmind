@@ -16,7 +16,7 @@ import {
 import { LuBuilding, LuCirclePlus } from 'react-icons/lu';
 import { NewOrganizationDialog } from './NewOrganizationDialog';
 import { useGetUserOrganizationsQuery } from '../../accounts/api/queries/AccountsQueries';
-import { UserId } from '@packmind/shared';
+import { UserId } from '@packmind/types';
 import { routes } from '../../../shared/utils/routes';
 
 interface ISidebarOrgaSelectorProps {

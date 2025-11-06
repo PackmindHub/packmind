@@ -1,10 +1,10 @@
-import { OrganizationId } from '../../accounts/Organization';
-import { UserId } from '../../accounts/User';
+import { OrganizationId } from '@packmind/types';
+import { UserId } from '@packmind/types';
 import { StandardId } from '../../standards/Standard';
 import { RuleId } from '../../standards/Rule';
 import { ProgrammingLanguage } from '../../languages/Language';
 import { RuleLanguageDetectionStatus } from '../../standards/RuleLanguageDetectionStatus';
-import { IUseCase } from '../../UseCase';
+import { IUseCase } from '@packmind/types';
 
 export type GetStandardRulesDetectionStatusCommand = {
   organizationId: OrganizationId;

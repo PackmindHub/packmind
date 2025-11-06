@@ -1,4 +1,4 @@
-import { IUseCase, PackmindCommand } from '../../UseCase';
+import { IUseCase, PackmindCommand } from '@packmind/types';
 import { GitRepo } from '../GitRepo';
 
 export type GetAvailableRemoteDirectoriesCommand = PackmindCommand & {

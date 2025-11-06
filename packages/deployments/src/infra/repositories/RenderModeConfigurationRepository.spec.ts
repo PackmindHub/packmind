@@ -1,16 +1,10 @@
+import { itHandlesSoftDelete } from '@packmind/shared/test';
 import { DataSource, Repository } from 'typeorm';
 import { RenderModeConfigurationRepository } from './RenderModeConfigurationRepository';
 import { RenderModeConfigurationSchema } from '../schemas/RenderModeConfigurationSchema';
-import {
-  makeTestDatasource,
-  stubLogger,
-  itHandlesSoftDelete,
-} from '@packmind/shared/test';
-import {
-  PackmindLogger,
-  RenderMode,
-  RenderModeConfiguration,
-} from '@packmind/shared';
+import { makeTestDatasource, stubLogger } from '@packmind/test-utils';
+import { PackmindLogger } from '@packmind/logger';
+import { RenderMode, RenderModeConfiguration } from '@packmind/shared';
 import {
   Organization,
   OrganizationId,

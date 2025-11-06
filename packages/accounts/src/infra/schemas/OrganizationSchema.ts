@@ -1,5 +1,5 @@
 import { EntitySchema } from 'typeorm';
-import { Organization } from '../../domain/entities/Organization';
+import { Organization } from '@packmind/types';
 import {
   WithTimestamps,
   WithSoftDelete,

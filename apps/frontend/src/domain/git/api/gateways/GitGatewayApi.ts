@@ -1,5 +1,5 @@
 import { IGitGateway, WebHooksResponse } from './IGitGateway';
-import { OrganizationId } from '@packmind/shared';
+import { OrganizationId } from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 
 export class GitGatewayApi extends PackmindGateway implements IGitGateway {

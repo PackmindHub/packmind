@@ -1,12 +1,12 @@
-import { PackmindLogger } from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
+import { PackmindLogger } from '@packmind/logger';
+import { stubLogger } from '@packmind/test-utils';
 import { GenerateApiKeyUseCase } from './GenerateApiKeyUseCase';
 import { UserService } from '../../services/UserService';
 import { OrganizationService } from '../../services/OrganizationService';
 import { ApiKeyService } from '../../services/ApiKeyService';
-import { createUserId } from '../../../domain/entities/User';
-import { createOrganizationId } from '../../../domain/entities/Organization';
-import { GenerateApiKeyCommand } from '@packmind/shared';
+import { createUserId } from '@packmind/types';
+import { createOrganizationId } from '@packmind/types';
+import { GenerateApiKeyCommand } from '@packmind/types';
 import { userFactory, organizationFactory } from '../../../../test';
 
 describe('GenerateApiKeyUseCase', () => {

@@ -1,17 +1,19 @@
 import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
 import { GitProviderId } from '../../../domain/entities/GitProvider';
+import { PackmindLogger } from '@packmind/logger';
+import {
+  PackmindCommand,
+  UserProvider,
+  OrganizationProvider,
+  createUserId,
+} from '@packmind/types';
 import {
   AbstractAdminUseCase,
   AdminContext,
   GitProviderNotFoundError,
   GitProviderHasRepositoriesError,
   GitProviderOrganizationMismatchError,
-  PackmindLogger,
-  PackmindCommand,
-  UserProvider,
-  OrganizationProvider,
-  createUserId,
 } from '@packmind/shared';
 
 const origin = 'DeleteGitProviderUseCase';

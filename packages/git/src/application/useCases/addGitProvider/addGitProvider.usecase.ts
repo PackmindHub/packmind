@@ -1,9 +1,8 @@
+import { PackmindLogger } from '@packmind/logger';
+import { OrganizationProvider, UserProvider } from '@packmind/types';
 import {
   AbstractAdminUseCase,
   AdminContext,
-  PackmindLogger,
-  OrganizationProvider,
-  UserProvider,
   AddGitProviderCommand,
   IAddGitProviderUseCase,
 } from '@packmind/shared';

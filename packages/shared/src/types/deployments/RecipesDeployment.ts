@@ -1,7 +1,7 @@
-import { Branded, brandedIdFactory } from '../brandedTypes';
+import { Branded, brandedIdFactory } from '@packmind/types';
 import { RecipeVersion } from '../recipes';
 import { GitCommit } from '../git';
-import { OrganizationId, UserId } from '../accounts';
+import { OrganizationId, UserId } from '@packmind/types';
 import { Target } from './Target';
 import { DistributionStatus } from './DistributionStatus';
 import { RenderMode } from './RenderMode';

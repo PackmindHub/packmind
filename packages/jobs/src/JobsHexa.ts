@@ -1,9 +1,5 @@
-import {
-  BaseHexa,
-  BaseHexaOpts,
-  HexaRegistry,
-  PackmindLogger,
-} from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/shared';
 import { JobsHexaFactory } from './JobsHexaFactory';
 import { IJobRegistry } from './domain/IJobRegistry';
 import { IJobFactory } from './domain/IJobQueue';

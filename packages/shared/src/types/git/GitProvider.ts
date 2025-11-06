@@ -1,5 +1,5 @@
-import { Branded, brandedIdFactory } from '../brandedTypes';
-import { Organization, OrganizationId } from '../accounts';
+import { Branded, brandedIdFactory } from '@packmind/types';
+import { Organization, OrganizationId } from '@packmind/types';
 import { GitRepo } from './GitRepo';
 
 export type GitProviderVendor = 'github' | 'gitlab';

@@ -3,7 +3,7 @@ import { OrganizationsSpacesRecipesController } from './recipes.controller';
 import { RecipesModule } from '../../../recipes/recipes.module';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 import { SpaceAccessGuard } from '../guards/space-access.guard';
-import { PackmindLogger, LogLevel } from '@packmind/shared';
+import { PackmindLogger, LogLevel } from '@packmind/logger';
 
 /**
  * Module for space-scoped recipe routes within organizations

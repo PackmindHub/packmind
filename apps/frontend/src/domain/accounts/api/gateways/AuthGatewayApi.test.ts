@@ -1,8 +1,5 @@
 import { AuthGatewayApi } from './AuthGatewayApi';
-import {
-  createOrganizationId,
-  SignUpUserCommand,
-} from '@packmind/accounts/types';
+import { createOrganizationId, SignUpUserCommand } from '@packmind/types';
 
 // Mock the PackmindGateway
 const mockApiPost = jest.fn();

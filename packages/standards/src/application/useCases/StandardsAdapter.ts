@@ -1,6 +1,6 @@
+import { OrganizationId } from '@packmind/types';
 import {
   IStandardsPort,
-  OrganizationId,
   Rule,
   RuleExample,
   RuleId,

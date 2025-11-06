@@ -1,15 +1,15 @@
 import { SignUpWithOrganizationUseCase } from './SignUpWithOrganizationUseCase';
 import { UserService } from '../../services/UserService';
 import { OrganizationService } from '../../services/OrganizationService';
-import { createOrganizationId } from '../../../domain/entities/Organization';
-import { createUserId } from '../../../domain/entities/User';
-import { PackmindLogger } from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
+import { createOrganizationId } from '@packmind/types';
+import { createUserId } from '@packmind/types';
+import { PackmindLogger } from '@packmind/logger';
+import { stubLogger } from '@packmind/test-utils';
 import { userFactory, organizationFactory } from '../../../../test';
 import {
   SignUpWithOrganizationCommand,
   SignUpWithOrganizationResponse,
-} from '@packmind/shared';
+} from '@packmind/types';
 
 describe('SignUpWithOrganizationUseCase', () => {
   let signUpWithOrganizationUseCase: SignUpWithOrganizationUseCase;

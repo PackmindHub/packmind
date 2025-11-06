@@ -3,7 +3,7 @@ import { RecipeService } from './RecipeService';
 import { RecipeVersionService } from './RecipeVersionService';
 import { RecipeSummaryService } from './RecipeSummaryService';
 import { IRecipesRepositories } from '../../domain/repositories/IRecipesRepositories';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 
 export class RecipesServices implements IRecipesServices {
   private readonly recipeService: RecipeService;

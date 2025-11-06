@@ -1,4 +1,5 @@
-export * from './IAnalyticsPort';
+// IAnalyticsPort moved to @packmind/types
+// export * from './IAnalyticsPort';
 export * from './IDeploymentPort';
 export * from './IStandardsPort';
 export * from './ISpacesPort';

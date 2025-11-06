@@ -1,11 +1,8 @@
 import { GetOrganizationBySlugUseCase } from './GetOrganizationBySlugUseCase';
 import { OrganizationService } from '../../services/OrganizationService';
-import { stubLogger } from '@packmind/shared/test';
-import { PackmindLogger } from '@packmind/shared';
-import {
-  Organization,
-  createOrganizationId,
-} from '../../../domain/entities/Organization';
+import { stubLogger } from '@packmind/test-utils';
+import { PackmindLogger } from '@packmind/logger';
+import { Organization, createOrganizationId } from '@packmind/types';
 
 describe('GetOrganizationBySlugUseCase', () => {
   let getOrganizationBySlugUseCase: GetOrganizationBySlugUseCase;

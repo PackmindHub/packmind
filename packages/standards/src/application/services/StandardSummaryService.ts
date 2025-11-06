@@ -1,7 +1,7 @@
 import { StandardVersion } from '../../domain/entities/StandardVersion';
+import { PackmindLogger } from '@packmind/logger';
 import {
   AIService,
-  PackmindLogger,
   OpenAIService,
   RuleExample,
   AiNotConfigured,

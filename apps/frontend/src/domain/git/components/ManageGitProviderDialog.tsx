@@ -7,7 +7,7 @@ import {
   PMVStack,
   PMLink,
 } from '@packmind/ui';
-import { OrganizationId } from '@packmind/accounts/types';
+import { OrganizationId } from '@packmind/types';
 import { GitProviderConnection } from './ManageGitProvider/GitProviderConnection';
 import { GitProviderUI } from '../types/GitProviderTypes';
 import { WebHookConfig } from './WebHookConfig';

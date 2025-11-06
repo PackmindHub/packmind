@@ -7,12 +7,8 @@ import {
   RecipeVersionId,
 } from '@packmind/recipes';
 import { OrganizationId, UserId } from '@packmind/accounts';
-import {
-  IDeploymentPort,
-  PackmindLogger,
-  SpaceId,
-  TargetId,
-} from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { IDeploymentPort, SpaceId, TargetId } from '@packmind/shared';
 import { GitRepoId } from '@packmind/git';
 import { DeploymentsHexa } from '@packmind/deployments';
 
@@ -110,12 +106,16 @@ export class RecipesService {
 
   async updateRecipeFromUI(
     recipeId: RecipeId,
+    spaceId: SpaceId,
+    organizationId: OrganizationId,
     name: string,
     content: string,
     editorUserId: UserId,
   ): Promise<Recipe> {
     return this.recipesHexa.updateRecipeFromUI({
       recipeId,
+      spaceId,
+      organizationId,
       name,
       content,
       editorUserId,
@@ -173,11 +173,13 @@ export class RecipesService {
 
   async deleteRecipe(
     id: RecipeId,
-    userId: UserId,
+    spaceId: SpaceId,
     organizationId: OrganizationId,
+    userId: UserId,
   ): Promise<void> {
     await this.recipesHexa.deleteRecipe({
       recipeId: id,
+      spaceId,
       userId,
       organizationId,
     });
@@ -185,11 +187,13 @@ export class RecipesService {
 
   async deleteRecipesBatch(
     recipeIds: RecipeId[],
+    spaceId: SpaceId,
     userId: UserId,
     organizationId: OrganizationId,
   ): Promise<void> {
     await this.recipesHexa.deleteRecipesBatch({
       recipeIds,
+      spaceId,
       userId,
       organizationId,
     });

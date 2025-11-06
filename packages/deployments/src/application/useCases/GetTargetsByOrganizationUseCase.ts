@@ -1,8 +1,8 @@
+import { PackmindLogger } from '@packmind/logger';
 import {
   TargetWithRepository,
   IGetTargetsByOrganizationUseCase,
   GetTargetsByOrganizationCommand,
-  PackmindLogger,
 } from '@packmind/shared';
 import { OrganizationId } from '@packmind/accounts';
 import { TargetService } from '../services/TargetService';

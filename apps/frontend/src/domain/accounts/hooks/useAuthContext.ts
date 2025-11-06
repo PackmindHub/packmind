@@ -4,8 +4,8 @@ import {
   UserId,
   UserOrganizationMembership,
   UserOrganizationRole,
-} from '@packmind/accounts/types';
-import { Organization } from '@packmind/accounts/types';
+} from '@packmind/types';
+import { Organization } from '@packmind/types';
 import { useAuthService } from '../../../providers/AuthProvider';
 import type { OrganizationSwitchResult } from '../../../services/auth/AuthService';
 import { MeResponse } from '../api/gateways/IAuthGateway';

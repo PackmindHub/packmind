@@ -1,9 +1,9 @@
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import {
   IGetCurrentApiKeyUseCase,
   GetCurrentApiKeyCommand,
   GetCurrentApiKeyResponse,
-} from '@packmind/shared';
+} from '@packmind/types';
 
 export class GetCurrentApiKeyUseCase implements IGetCurrentApiKeyUseCase {
   constructor(private readonly logger: PackmindLogger) {}

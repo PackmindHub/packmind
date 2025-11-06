@@ -1,4 +1,4 @@
-import { Branded, brandedIdFactory } from '../brandedTypes';
+import { Branded, brandedIdFactory } from '@packmind/types';
 import { RuleId } from './Rule';
 import { ProgrammingLanguage } from '../languages/Language';
 

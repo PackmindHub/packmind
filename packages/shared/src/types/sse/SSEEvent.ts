@@ -1,4 +1,4 @@
-import { UserOrganizationRole } from '../accounts/User';
+import { UserOrganizationRole } from '@packmind/types';
 
 // Base SSE Event structure
 export interface SSEEvent<TData = unknown> {

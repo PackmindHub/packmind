@@ -1,4 +1,4 @@
-import { maskEmail } from '@packmind/shared';
+import { maskEmail } from '@packmind/logger';
 
 export class InvalidInvitationEmailError extends Error {
   constructor(email: string) {

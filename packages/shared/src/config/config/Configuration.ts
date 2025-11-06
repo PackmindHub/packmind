@@ -1,5 +1,5 @@
 import { InfisicalConfig } from '../infra/Infisical/InfisicalConfig';
-import { PackmindLogger, LogLevel } from '../../logger/PackmindLogger';
+import { PackmindLogger, LogLevel } from '@packmind/logger';
 
 const origin = 'Configuration';
 

@@ -6,20 +6,17 @@ import {
   InvitationCreationRecord,
   InvitationService,
 } from '../../services/InvitationService';
-import {
-  createOrganizationId,
-  Organization,
-} from '../../../domain/entities/Organization';
-import { CreateInvitationsCommand } from '@packmind/shared';
+import { createOrganizationId, Organization } from '@packmind/types';
+import { CreateInvitationsCommand } from '@packmind/types';
 import { InvitationBatchEmptyError } from '../../../domain/errors';
 import { UserNotFoundError } from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
+import { stubLogger } from '@packmind/test-utils';
 import {
   organizationFactory,
   userFactory,
   invitationFactory,
 } from '../../../../test';
-import { createUserId, User } from '../../../domain/entities/User';
+import { createUserId, User } from '@packmind/types';
 
 describe('CreateInvitationsUseCase', () => {
   let useCase: CreateInvitationsUseCase;

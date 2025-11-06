@@ -1,16 +1,12 @@
-import {
-  AbstractMemberUseCase,
-  MemberContext,
-  PackmindLogger,
-  UserProvider,
-  OrganizationProvider,
-} from '@packmind/shared';
+import { UserProvider, OrganizationProvider } from '@packmind/types';
+import { AbstractMemberUseCase, MemberContext } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import {
   IListOrganizationUsersUseCase,
   ListOrganizationUsersCommand,
   ListOrganizationUsersResponse,
   OrganizationUser,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { UserService } from '../../services/UserService';
 
 const origin = 'ListOrganizationUsersUseCase';

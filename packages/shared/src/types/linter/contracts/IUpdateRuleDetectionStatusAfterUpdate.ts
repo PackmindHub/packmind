@@ -1,8 +1,8 @@
-import { IUseCase } from '../../UseCase';
+import { IUseCase } from '@packmind/types';
 import { ProgrammingLanguage } from '../../languages/Language';
 import { RuleId } from '../../standards/Rule';
-import { OrganizationId } from '../../accounts/Organization';
-import { UserId } from '../../accounts/User';
+import { OrganizationId } from '@packmind/types';
+import { UserId } from '@packmind/types';
 
 export type UpdateRuleDetectionStatusAfterUpdateCommand = {
   ruleId: RuleId;

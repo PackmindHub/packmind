@@ -2,16 +2,13 @@ import { SignInUserUseCase } from './SignInUserUseCase';
 import { UserService } from '../../services/UserService';
 import { OrganizationService } from '../../services/OrganizationService';
 import { LoginRateLimiterService } from '../../services/LoginRateLimiterService';
-import { ISignInUserUseCase, SignInUserCommand } from '@packmind/shared';
+import { ISignInUserUseCase, SignInUserCommand } from '@packmind/types';
 import {
   createUserId,
   User,
   UserOrganizationMembership,
-} from '../../../domain/entities/User';
-import {
-  createOrganizationId,
-  Organization,
-} from '../../../domain/entities/Organization';
+} from '@packmind/types';
+import { createOrganizationId, Organization } from '@packmind/types';
 import { TooManyLoginAttemptsError } from '../../../domain/errors/TooManyLoginAttemptsError';
 import { UnauthorizedException } from '@nestjs/common';
 import { userFactory } from '../../../../test';

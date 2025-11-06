@@ -1,13 +1,15 @@
+import { itHandlesSoftDelete } from '@packmind/shared/test';
 import { RecipeRepository } from './RecipeRepository';
 import { RecipeSchema } from '../schemas/RecipeSchema';
 import { DataSource, Repository } from 'typeorm';
-import { itHandlesSoftDelete, makeTestDatasource } from '@packmind/shared/test';
+import { makeTestDatasource } from '@packmind/test-utils';
 import { recipeFactory } from '../../../test/recipeFactory';
 import { createRecipeId, Recipe } from '../../domain/entities/Recipe';
 import { RecipeVersionSchema } from '../schemas/RecipeVersionSchema';
 import { v4 as uuidv4 } from 'uuid';
-import { PackmindLogger, WithSoftDelete } from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
+import { PackmindLogger } from '@packmind/logger';
+import { WithSoftDelete } from '@packmind/shared';
+import { stubLogger } from '@packmind/test-utils';
 import { createOrganizationId } from '@packmind/accounts';
 import { GitCommitSchema } from '@packmind/git';
 import { SpaceSchema } from '@packmind/spaces';

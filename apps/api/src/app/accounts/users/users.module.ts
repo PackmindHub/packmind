@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { AuthModule } from '../../auth/auth.module';
-import { LogLevel, PackmindLogger } from '@packmind/shared';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
 
 @Module({
   imports: [AuthModule],

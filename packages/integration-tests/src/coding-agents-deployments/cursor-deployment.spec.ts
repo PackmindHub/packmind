@@ -1,5 +1,5 @@
 import { AccountsHexa, accountsSchemas } from '@packmind/accounts';
-import { User, Organization } from '@packmind/accounts/types';
+import { User, Organization } from '@packmind/types';
 import { RecipesHexa, recipesSchemas } from '@packmind/recipes';
 import {
   Recipe,
@@ -22,7 +22,7 @@ import {
   Target,
   createTargetId,
 } from '@packmind/shared';
-import { makeTestDatasource } from '@packmind/shared/test';
+import { makeTestDatasource } from '@packmind/test-utils';
 import {
   CodingAgentHexaFactory,
   DeployerService,

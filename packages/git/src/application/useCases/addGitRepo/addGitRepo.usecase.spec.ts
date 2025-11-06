@@ -11,19 +11,21 @@ import {
 import { GitRepo, createGitRepoId } from '../../../domain/entities/GitRepo';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
 import {
+  UserProvider,
+  OrganizationProvider,
+  User,
+  Organization,
+} from '@packmind/types';
+import {
   IDeploymentPort,
   Target,
   createTargetId,
   GitRepoAlreadyExistsError,
   GitProviderNotFoundError,
   GitProviderOrganizationMismatchError,
-  UserProvider,
-  OrganizationProvider,
-  User,
-  Organization,
   OrganizationAdminRequiredError,
 } from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
+import { stubLogger } from '@packmind/test-utils';
 import { v4 as uuidv4 } from 'uuid';
 
 describe('AddGitRepoUseCase', () => {

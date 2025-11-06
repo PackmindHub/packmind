@@ -1,5 +1,5 @@
-import { Branded, brandedIdFactory } from '@packmind/shared';
-import { UserId } from './User';
+import { Branded, brandedIdFactory } from '@packmind/types';
+import { UserId } from '@packmind/types';
 
 export type PasswordResetTokenId = Branded<'PasswordResetTokenId'>;
 export const createPasswordResetTokenId =

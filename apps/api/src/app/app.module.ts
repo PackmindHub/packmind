@@ -8,7 +8,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HooksModule } from './hooks/hooks.module';
 import { Configuration } from '@packmind/shared';
-import { LogLevel, PackmindLogger } from '@packmind/shared';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { recipesSchemas, RecipesHexa } from '@packmind/recipes';
 import { accountsSchemas, AccountsHexa } from '@packmind/accounts';
 import { gitSchemas, GitHexa } from '@packmind/git';
@@ -26,7 +26,6 @@ import { OrganizationsModule } from './organizations/organizations.module';
 import { OrganizationsSpacesModule } from './organizations/spaces/spaces.module';
 import { OrganizationsSpacesRecipesModule } from './organizations/spaces/recipes/recipes.module';
 import { OrganizationsSpacesStandardsModule } from './organizations/spaces/standards/standards.module';
-import { SpacesModule } from './spaces/spaces.module';
 import { StandardsModule } from './standards/standards.module';
 import { McpModule } from './mcp/mcp.module';
 import { HexaRegistryModule } from './shared/HexaRegistryModule';
@@ -97,7 +96,6 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
     }),
     RecipesModule,
     StandardsModule,
-    SpacesModule,
     HooksModule,
     AuthModule,
     GitModule,
@@ -119,15 +117,15 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
         module: OrganizationsModule,
         children: [
           {
-            path: 'spaces/:spaceId',
+            path: 'spaces',
             module: OrganizationsSpacesModule,
             children: [
               {
-                path: 'recipes',
+                path: ':spaceId/recipes',
                 module: OrganizationsSpacesRecipesModule,
               },
               {
-                path: 'standards',
+                path: ':spaceId/standards',
                 module: OrganizationsSpacesStandardsModule,
               },
             ],

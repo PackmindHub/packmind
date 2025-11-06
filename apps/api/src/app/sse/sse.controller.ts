@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { SSEService } from './sse.service';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import { SubscribeDto, UnsubscribeDto } from './dto/subscribe.dto';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
 import { randomUUID } from 'crypto';

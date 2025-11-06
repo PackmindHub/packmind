@@ -1,4 +1,4 @@
-import { OrganizationId } from '@packmind/shared';
+import { OrganizationId } from '@packmind/types';
 
 export type WebHooksResponse = {
   github: string;

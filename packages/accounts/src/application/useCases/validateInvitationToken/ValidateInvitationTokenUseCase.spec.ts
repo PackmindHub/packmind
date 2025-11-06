@@ -1,15 +1,15 @@
 import { ValidateInvitationTokenUseCase } from './ValidateInvitationTokenUseCase';
 import { InvitationService } from '../../services/InvitationService';
 import { UserService } from '../../services/UserService';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import {
   createInvitationId,
   createInvitationToken,
   Invitation,
 } from '../../../domain/entities/Invitation';
-import { createUserId, User } from '../../../domain/entities/User';
-import { createOrganizationId } from '../../../domain/entities/Organization';
-import { stubLogger } from '@packmind/shared/test';
+import { createUserId, User } from '@packmind/types';
+import { createOrganizationId } from '@packmind/types';
+import { stubLogger } from '@packmind/test-utils';
 
 describe('ValidateInvitationTokenUseCase', () => {
   let useCase: ValidateInvitationTokenUseCase;

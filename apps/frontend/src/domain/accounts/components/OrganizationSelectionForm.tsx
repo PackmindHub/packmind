@@ -7,7 +7,7 @@ import {
   PMNativeSelect,
 } from '@packmind/ui';
 import { useSelectOrganizationMutation } from '../api/queries/AuthQueries';
-import { SignInUserResponse } from '@packmind/accounts/types';
+import { SignInUserResponse } from '@packmind/types';
 import { isPackmindError } from '../../../services/api/errors/PackmindError';
 import { routes } from '../../../shared/utils/routes';
 

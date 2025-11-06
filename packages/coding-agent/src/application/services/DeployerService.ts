@@ -1,7 +1,8 @@
 import { RecipeVersion } from '@packmind/recipes';
 import { StandardVersion } from '@packmind/standards';
 import { GitRepo } from '@packmind/git';
-import { PackmindLogger, Target } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { Target } from '@packmind/shared';
 import { FileUpdates } from '../../domain/entities/FileUpdates';
 import { CodingAgent } from '../../domain/CodingAgents';
 import { ICodingAgentDeployerRegistry } from '../../domain/repository/ICodingAgentDeployerRegistry';

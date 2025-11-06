@@ -1,5 +1,5 @@
 import { Configuration } from '@packmind/shared';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import * as Sentry from '@sentry/nestjs';
 
 Configuration.getConfig('SENTRY_DSN_MCP').then((sentryDSN) => {

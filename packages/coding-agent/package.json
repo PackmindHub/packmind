@@ -7,12 +7,15 @@
   "types": "./src/index.d.ts",
   "dependencies": {
     "tslib": "^2.3.0",
-    "@packmind/recipes": "*",
-    "@packmind/git": "*",
-    "@packmind/standards": "*",
     "@packmind/accounts": "*",
+    "@packmind/git": "*",
+    "@packmind/logger": "*",
+    "@packmind/recipes": "*",
     "@packmind/shared": "*",
+    "@packmind/types": "*",
     "@packmind/spaces": "*",
-    "uuid": "^11.1.0"
+    "@packmind/standards": "*",
+    "uuid": "^11.1.0",
+    "@packmind/test-utils": "0.0.1"
   }
 }

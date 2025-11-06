@@ -1,9 +1,8 @@
 import { DataSource } from 'typeorm';
-import { User } from '../src/domain/entities/User';
+import { User, Organization } from '@packmind/types';
 import { UserSchema } from '../src/infra/schemas/UserSchema';
 
 import { userFactory } from './userFactory';
-import { Organization } from '../src/domain/entities/Organization';
 import { OrganizationSchema } from '../src/infra/schemas/index';
 import { organizationFactory } from './organizationFactory';
 import { invitationFactory } from './invitationFactory';

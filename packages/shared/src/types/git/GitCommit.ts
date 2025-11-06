@@ -1,4 +1,4 @@
-import { Branded, brandedIdFactory } from '../brandedTypes';
+import { Branded, brandedIdFactory } from '@packmind/types';
 
 export type GitCommitId = Branded<'GitCommitId'>;
 export const createGitCommitId = brandedIdFactory<GitCommitId>();

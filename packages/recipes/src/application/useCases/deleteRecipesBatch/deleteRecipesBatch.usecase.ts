@@ -1,5 +1,5 @@
 import { DeleteRecipeUsecase } from '../deleteRecipe/deleteRecipe.usecase';
-import { LogLevel, PackmindLogger } from '@packmind/shared';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
 import {
   DeleteRecipesBatchCommand,
   DeleteRecipesBatchResponse,
@@ -22,9 +22,10 @@ export class DeleteRecipesBatchUsecase implements IDeleteRecipesBatchUseCase {
   public async execute(
     command: DeleteRecipesBatchCommand,
   ): Promise<DeleteRecipesBatchResponse> {
-    const { recipeIds, userId, organizationId } = command;
+    const { recipeIds, spaceId, userId, organizationId } = command;
     this.logger.info('Deleting recipes batch', {
       count: recipeIds.length,
+      spaceId,
       userId,
       organizationId,
     });
@@ -35,6 +36,7 @@ export class DeleteRecipesBatchUsecase implements IDeleteRecipesBatchUseCase {
           this.deleteRecipeUsecase.execute({
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             recipeId: recipeId as any,
+            spaceId,
             userId,
             organizationId,
           }),
@@ -47,6 +49,7 @@ export class DeleteRecipesBatchUsecase implements IDeleteRecipesBatchUseCase {
     } catch (error) {
       this.logger.error('Failed to delete recipes batch', {
         count: recipeIds.length,
+        spaceId,
         userId,
         organizationId,
         error: error instanceof Error ? error.message : String(error),

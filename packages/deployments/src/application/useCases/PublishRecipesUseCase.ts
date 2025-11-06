@@ -15,13 +15,10 @@ import {
   PrepareRecipesDeploymentCommand,
 } from '@packmind/coding-agent';
 import { GitHexa } from '@packmind/git';
-import {
-  OrganizationId,
-  Recipe,
-  RecipeVersion,
-  DistributionStatus,
-} from '@packmind/shared';
-import { PackmindLogger, UserId } from '@packmind/shared';
+import { OrganizationId } from '@packmind/types';
+import { Recipe, RecipeVersion, DistributionStatus } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { UserId } from '@packmind/types';
 import { TargetService } from '../services/TargetService';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import { v4 as uuidv4 } from 'uuid';

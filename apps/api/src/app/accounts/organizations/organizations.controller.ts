@@ -21,11 +21,9 @@ import {
   RemoveUserFromOrganizationCommand,
 } from '@packmind/accounts';
 import { OrganizationsService } from './organizations.service';
-import {
-  PackmindLogger,
-  UserOrganizationRole,
-  UserNotFoundError,
-} from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { UserOrganizationRole } from '@packmind/types';
+import { UserNotFoundError } from '@packmind/shared';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
 import { Public } from '@packmind/shared-nest';
 

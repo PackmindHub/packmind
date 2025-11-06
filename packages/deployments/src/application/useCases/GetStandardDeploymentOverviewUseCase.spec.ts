@@ -1,12 +1,11 @@
 import { StandardsHexa } from '@packmind/standards';
 import { GitHexa } from '@packmind/git';
+import { OrganizationId, UserId } from '@packmind/types';
 import {
   createGitRepoId,
   createGitProviderId,
   Standard,
   GitRepo,
-  OrganizationId,
-  UserId,
   GetStandardDeploymentOverviewCommand,
   DistributionStatus,
   createStandardVersionId,
@@ -15,8 +14,8 @@ import {
   Space,
   createSpaceId,
 } from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
-import { gitRepoFactory } from '@packmind/shared/test/factories/gitRepoFactory';
+import { stubLogger } from '@packmind/test-utils';
+import { gitRepoFactory } from '@packmind/git/test';
 import { GetStandardDeploymentOverviewUseCase } from './GetStandardDeploymentOverviewUseCase';
 import { StandardsDeployment } from '../../domain/entities/StandardsDeployment';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';

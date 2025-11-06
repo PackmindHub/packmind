@@ -1,7 +1,7 @@
 import { GitCommit } from '../git';
 
-import { Branded, brandedIdFactory } from '../brandedTypes';
-import { UserId } from '../accounts';
+import { Branded, brandedIdFactory } from '@packmind/types';
+import { UserId } from '@packmind/types';
 
 import { RecipeId } from './Recipe';
 

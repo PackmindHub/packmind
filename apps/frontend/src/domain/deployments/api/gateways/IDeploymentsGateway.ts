@@ -1,5 +1,5 @@
+import { Gateway } from '@packmind/types';
 import {
-  Gateway,
   IGetDeploymentOverview,
   IGetStandardDeploymentOverview,
   IListDeploymentsByRecipe,

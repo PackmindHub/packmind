@@ -1,5 +1,5 @@
-import { IUseCase, PackmindCommand } from '../../UseCase';
-import { OrganizationId } from '../../accounts';
+import { IUseCase, PackmindCommand } from '@packmind/types';
+import { OrganizationId } from '@packmind/types';
 import { GitRepo } from '../../git';
 import { Recipe, RecipeVersion } from '../../recipes';
 import { Target } from '../..';

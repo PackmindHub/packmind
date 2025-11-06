@@ -1,8 +1,8 @@
 import { OrganizationService } from './OrganizationService';
 import { IOrganizationRepository } from '../../domain/repositories/IOrganizationRepository';
-import { createOrganizationId } from '../../domain/entities/Organization';
-import { PackmindLogger } from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
+import { createOrganizationId } from '@packmind/types';
+import { PackmindLogger } from '@packmind/logger';
+import { stubLogger } from '@packmind/test-utils';
 import { organizationFactory } from '../../../test';
 
 // Mock the slug package

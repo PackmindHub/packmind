@@ -1,10 +1,9 @@
 import { GetOrganizationOnboardingStatusUseCase } from './GetOrganizationOnboardingStatusUseCase';
-import { GetOrganizationOnboardingStatusCommand } from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
+import { GetOrganizationOnboardingStatusCommand } from '@packmind/types';
+import { stubLogger } from '@packmind/test-utils';
+import { PackmindLogger } from '@packmind/logger';
+import { UserProvider, OrganizationProvider } from '@packmind/types';
 import {
-  PackmindLogger,
-  UserProvider,
-  OrganizationProvider,
   MemberContext,
   IStandardsPort,
   ISpacesPort,
@@ -20,8 +19,8 @@ import {
 } from '@packmind/shared';
 import { UserService } from '../../services/UserService';
 import { userFactory, organizationFactory } from '../../../../test';
-import { createUserId } from '../../../domain/entities/User';
-import { createOrganizationId } from '../../../domain/entities/Organization';
+import { createUserId } from '@packmind/types';
+import { createOrganizationId } from '@packmind/types';
 
 describe('GetOrganizationOnboardingStatusUseCase', () => {
   let getOrganizationOnboardingStatusUseCase: GetOrganizationOnboardingStatusUseCase;

@@ -1,6 +1,6 @@
 import { GitProvider } from '../domain/entities/GitProvider';
 import { IGitProviderFactory } from '../domain/repositories/IGitProviderFactory';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 
 export interface ExternalRepository {
   name: string;

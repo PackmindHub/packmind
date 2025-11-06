@@ -30,6 +30,7 @@ const RENDER_MODE_TO_VALUE: Record<RenderMode, string> = {
   [RenderMode.CURSOR]: 'cursor',
   [RenderMode.CLAUDE]: 'claude',
   [RenderMode.JUNIE]: 'junie',
+  [RenderMode.GITLAB_DUO]: 'gitlab_duo',
 };
 
 const VALUE_TO_RENDER_MODE: Record<string, RenderMode> = {
@@ -39,6 +40,7 @@ const VALUE_TO_RENDER_MODE: Record<string, RenderMode> = {
   cursor: RenderMode.CURSOR,
   claude: RenderMode.CLAUDE,
   junie: RenderMode.JUNIE,
+  gitlab_duo: RenderMode.GITLAB_DUO,
 };
 
 const DEFAULT_FORMATS: RenderingItem[] = [
@@ -48,6 +50,7 @@ const DEFAULT_FORMATS: RenderingItem[] = [
   { value: 'cursor', name: 'Cursor', checked: false },
   { value: 'claude', name: 'Claude Code', checked: false },
   { value: 'junie', name: 'Junie', checked: false },
+  { value: 'gitlab_duo', name: 'Gitlab Duo', checked: false },
 ];
 
 type RenderingSettingsContextValue = {

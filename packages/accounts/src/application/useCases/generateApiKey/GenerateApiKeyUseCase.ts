@@ -1,9 +1,10 @@
-import { PackmindLogger, Configuration } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { Configuration } from '@packmind/shared';
 import {
   IGenerateApiKeyUseCase,
   GenerateApiKeyCommand,
   GenerateApiKeyResponse,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { UserService } from '../../services/UserService';
 import { OrganizationService } from '../../services/OrganizationService';
 import { ApiKeyService } from '../../services/ApiKeyService';

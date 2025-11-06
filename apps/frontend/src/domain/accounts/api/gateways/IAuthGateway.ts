@@ -7,7 +7,7 @@ import {
   ISignInUserUseCase,
   IGenerateApiKeyUseCase,
   IGetCurrentApiKeyUseCase,
-} from '@packmind/accounts/types';
+} from '@packmind/types';
 import {
   PublicGateway,
   Gateway,
@@ -17,7 +17,7 @@ import {
   IResetPasswordUseCase,
   IValidatePasswordResetTokenUseCase,
   ValidatePasswordResetTokenResponse,
-} from '@packmind/shared';
+} from '@packmind/types';
 
 export interface SignOutResponse {
   message: string;

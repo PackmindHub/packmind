@@ -4,7 +4,7 @@ import {
   RecipesDeployment,
   createRecipesDeploymentId,
 } from '../../domain/entities/RecipesDeployment';
-import { stubLogger } from '@packmind/shared/test';
+import { stubLogger } from '@packmind/test-utils';
 import { RecipeId } from '@packmind/recipes';
 import { OrganizationId, UserId } from '@packmind/accounts';
 import {

@@ -7,7 +7,7 @@ import { IRecipeRepository } from '../../domain/repositories/IRecipeRepository';
 import { Recipe, RecipeId, createRecipeId } from '../../domain/entities/Recipe';
 import { v4 as uuidv4 } from 'uuid';
 import { recipeFactory } from '../../../test/recipeFactory';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import {
   createOrganizationId,
   createUserId,
@@ -15,7 +15,7 @@ import {
   OrganizationId,
 } from '@packmind/accounts';
 import { createSpaceId } from '@packmind/spaces';
-import { stubLogger } from '@packmind/shared/test';
+import { stubLogger } from '@packmind/test-utils';
 
 describe('RecipeService', () => {
   let recipeService: RecipeService;

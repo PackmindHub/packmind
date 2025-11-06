@@ -6,7 +6,7 @@ import {
 import { GitRepoService } from '../../GitRepoService';
 import { GitProviderService } from '../../GitProviderService';
 import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'CheckDirectoryExistenceUseCase';
 

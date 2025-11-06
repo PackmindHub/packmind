@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { OrganizationsController } from './organizations.controller';
 import { OrganizationAccessGuard } from './guards/organization-access.guard';
 import { OrganizationsSpacesModule } from './spaces/spaces.module';
-import { PackmindLogger, LogLevel } from '@packmind/shared';
+import { PackmindLogger, LogLevel } from '@packmind/logger';
 
 /**
  * Root module for organization-scoped routes

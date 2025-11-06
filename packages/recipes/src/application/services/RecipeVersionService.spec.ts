@@ -4,11 +4,11 @@ import {
   RecipeVersion,
   createRecipeVersionId,
 } from '../../domain/entities/RecipeVersion';
-import { PackmindLogger } from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
+import { PackmindLogger } from '@packmind/logger';
+import { stubLogger } from '@packmind/test-utils';
 import { recipeVersionFactory } from '../../../test/recipeVersionFactory';
 import { createRecipeId } from '../../domain/entities/Recipe';
-import { createUserId } from '@packmind/accounts/types';
+import { createUserId } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 
 describe('RecipeVersionService', () => {

@@ -10,7 +10,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { StandardsService } from './standards.service';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import { AuthService } from '../auth/auth.service';
 import { Request } from 'express';
 import type {

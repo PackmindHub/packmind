@@ -1,10 +1,10 @@
 import { GetUserByIdUseCase } from './GetUserByIdUseCase';
 import { UserService } from '../../services/UserService';
-import { createUserId } from '../../../domain/entities/User';
-import { PackmindLogger } from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
+import { createUserId } from '@packmind/types';
+import { PackmindLogger } from '@packmind/logger';
+import { stubLogger } from '@packmind/test-utils';
 import { userFactory } from '../../../../test';
-import { GetUserByIdCommand } from '@packmind/shared';
+import { GetUserByIdCommand } from '@packmind/types';
 
 describe('GetUserByIdUseCase', () => {
   let getUserByIdUseCase: GetUserByIdUseCase;

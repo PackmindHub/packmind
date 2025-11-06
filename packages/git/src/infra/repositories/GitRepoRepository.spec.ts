@@ -2,12 +2,13 @@ import { GitRepoRepository } from './GitRepoRepository';
 import { GitRepoSchema } from '../schemas/GitRepoSchema';
 import { GitProviderSchema } from '../schemas/GitProviderSchema';
 import { DataSource, Repository } from 'typeorm';
-import { makeTestDatasource, itHandlesSoftDelete } from '@packmind/shared/test';
+import { makeTestDatasource } from '@packmind/test-utils';
+import { itHandlesSoftDelete } from '@packmind/shared/test';
 import { v4 as uuidv4 } from 'uuid';
 import { GitRepo } from '../../domain/entities/GitRepo';
 import { GitProvider } from '../../domain/entities/GitProvider';
-import { PackmindLogger } from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
+import { PackmindLogger } from '@packmind/logger';
+import { stubLogger } from '@packmind/test-utils';
 import { gitRepoFactory, gitProviderFactory } from '../../../test';
 import {
   createOrganizationId,

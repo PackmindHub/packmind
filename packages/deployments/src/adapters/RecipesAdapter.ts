@@ -1,11 +1,10 @@
+import { OrganizationId, UserId } from '@packmind/types';
 import {
   IRecipesPort,
   Recipe,
   RecipeVersion,
   RecipeVersionId,
-  OrganizationId,
   SpaceId,
-  UserId,
 } from '@packmind/shared';
 import { RecipesHexa } from '@packmind/recipes';
 

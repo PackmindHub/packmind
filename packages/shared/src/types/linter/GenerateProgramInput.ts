@@ -1,5 +1,5 @@
-import { OrganizationId } from '../accounts/Organization';
-import { UserId } from '../accounts/User';
+import { OrganizationId } from '@packmind/types';
+import { UserId } from '@packmind/types';
 import { ProgrammingLanguage } from '../languages/Language';
 import { Rule } from '../standards/Rule';
 import { DetectionProgramId } from './DetectionProgram';

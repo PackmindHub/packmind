@@ -1,4 +1,4 @@
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import { IExecuteSingleFileAstUseCase } from './domain/useCases/IExecuteSingleFileAstUseCase';
 import { IGetGitRemoteUrlUseCase } from './domain/useCases/IGetGitRemoteUrlUseCase';
 import { ExecuteSingleFileAstUseCase } from './application/useCases/ExecuteSingleFileAstUseCase';
@@ -13,6 +13,8 @@ import { IPackmindRepositories } from './domain/repositories/IPackmindRepositori
 import { ListFiles } from './application/services/ListFiles';
 import { GitService } from './application/services/GitService';
 import { ExecuteLinterProgramsUseCase } from '@packmind/linter-execution';
+import { IPullDataUseCase } from './domain/useCases/IPullDataUseCase';
+import { PullDataUseCase } from './application/useCases/PullDataUseCase';
 
 export class PackmindCliHexaFactory {
   public repositories: IPackmindRepositories;
@@ -23,6 +25,7 @@ export class PackmindCliHexaFactory {
     getGitRemoteUrl: IGetGitRemoteUrlUseCase;
     listFilesInDirectoryUseCase: IListFilesInDirectoryUseCase;
     lintFilesInDirectory: ILintFilesInDirectory;
+    pullData: IPullDataUseCase;
   };
 
   constructor(private readonly logger: PackmindLogger) {
@@ -49,6 +52,7 @@ export class PackmindCliHexaFactory {
         this.repositories,
         this.logger,
       ),
+      pullData: new PullDataUseCase(this.repositories.packmindGateway),
     };
   }
 }

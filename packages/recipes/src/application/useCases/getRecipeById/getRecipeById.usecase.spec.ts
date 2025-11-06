@@ -4,13 +4,9 @@ import { recipeFactory } from '../../../../test/recipeFactory';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
 import { createSpaceId } from '@packmind/spaces';
 import { createRecipeId } from '@packmind/shared';
-import {
-  UserProvider,
-  OrganizationProvider,
-  ISpacesPort,
-  Space,
-} from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
+import { UserProvider, OrganizationProvider } from '@packmind/types';
+import { ISpacesPort, Space } from '@packmind/shared';
+import { stubLogger } from '@packmind/test-utils';
 
 describe('GetRecipeByIdUsecase', () => {
   let usecase: GetRecipeByIdUsecase;

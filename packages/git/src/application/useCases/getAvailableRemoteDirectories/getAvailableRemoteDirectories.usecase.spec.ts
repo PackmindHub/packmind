@@ -1,6 +1,6 @@
 import { GetAvailableRemoteDirectoriesCommand } from '@packmind/shared';
 import { GitProviderService } from '../../GitProviderService';
-import { stubLogger } from '@packmind/shared/test';
+import { stubLogger } from '@packmind/test-utils';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
 import { GitRepo, createGitRepoId } from '../../../domain/entities/GitRepo';
 import { createGitProviderId } from '../../../domain/entities/GitProvider';

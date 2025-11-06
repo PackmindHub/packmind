@@ -5,14 +5,14 @@ import {
   RemoveUserFromOrganizationCommand,
   RemoveUserFromOrganizationResponse,
 } from '../../../domain/useCases';
-import { createUserId, User } from '../../../domain/entities/User';
-import { createOrganizationId } from '../../../domain/entities/Organization';
+import { createUserId, User } from '@packmind/types';
+import { createOrganizationId } from '@packmind/types';
 import {
   UserNotFoundError,
   UserCannotExcludeSelfError,
 } from '../../../domain/errors';
-import { stubLogger } from '@packmind/shared/test';
-import { PackmindLogger } from '@packmind/shared';
+import { stubLogger } from '@packmind/test-utils';
+import { PackmindLogger } from '@packmind/logger';
 import { organizationFactory, userFactory } from '../../../../test';
 
 jest.mock('../../services/UserService');

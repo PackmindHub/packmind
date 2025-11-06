@@ -1,19 +1,18 @@
+import { UserProvider, OrganizationProvider } from '@packmind/types';
 import {
   AbstractMemberUseCase,
   MemberContext,
-  PackmindLogger,
-  UserProvider,
-  OrganizationProvider,
   IStandardsPort,
   IDeploymentPort,
   IGitPort,
   ISpacesPort,
 } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import {
   IGetOrganizationOnboardingStatusUseCase,
   GetOrganizationOnboardingStatusCommand,
   OrganizationOnboardingStatus,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { UserService } from '../../services/UserService';
 
 const origin = 'GetOrganizationOnboardingStatusUseCase';

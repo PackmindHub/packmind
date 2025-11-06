@@ -4,7 +4,7 @@ import * as fs from 'fs/promises';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { GitService } from './GitService';
-import { stubLogger } from '@packmind/shared/test/logger/stubLogger';
+import { stubLogger } from '@packmind/test-utils';
 
 const execAsync = promisify(exec);
 

@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import { PackmindLogger, LogLevel } from '@packmind/shared';
+import { PackmindLogger, LogLevel } from '@packmind/logger';
 
 import { createMCPServer } from '../mcp-server';
 

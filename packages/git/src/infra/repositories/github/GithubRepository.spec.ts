@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { GithubRepository, GithubRepositoryOptions } from './GithubRepository';
-import { PackmindLogger } from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
+import { PackmindLogger } from '@packmind/logger';
+import { stubLogger } from '@packmind/test-utils';
 
 // Mock axios
 jest.mock('axios');

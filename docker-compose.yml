@@ -177,6 +177,8 @@ services:
       - dev-dist:/packmind/dist
       - dev-tmp:/packmind/tmp
       - dev-nx-sock:/nx-sock
+    healthcheck:
+      test: wget --spider http://127.0.0.1:4200/
     depends_on:
       nx-daemon:
         condition: service_healthy
@@ -231,6 +233,8 @@ services:
       - dev-dist:/packmind/dist
       - dev-tmp:/packmind/tmp
       - dev-nx-sock:/nx-sock
+    healthcheck:
+      test: wget --spider http://127.0.0.1:3000/api/v0
     depends_on:
       nx-daemon:
         condition: service_healthy
@@ -283,6 +287,30 @@ services:
         condition: service_healthy
       run-migrations:
         condition: service_completed_successfully
+
+  run-e2e-tests:
+    image: mcr.microsoft.com/playwright:v1.56.1-jammy
+    container_name: run-e2e-tests
+    profiles:
+      - e2e
+    volumes:
+      - .:/packmind
+      - dev-node_modules:/packmind/node_modules
+      - dev-dist:/packmind/dist
+      - dev-tmp:/packmind/tmp
+      - dev-nx-sock:/nx-sock
+      - ./dist/.playwright:/packmind/dist/.playwright
+    ports:
+      - '9323:9323'
+    working_dir: /packmind/apps/frontend-e2e
+    entrypoint: npm run e2e
+    environment:
+      BASE_URL: http://frontend:4200
+    depends_on:
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
 
 volumes:
   dev-nx-sock:

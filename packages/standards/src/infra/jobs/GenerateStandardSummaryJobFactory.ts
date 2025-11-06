@@ -1,5 +1,5 @@
 import { IJobFactory, IJobQueue, queueFactory } from '@packmind/jobs';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import { GenerateStandardSummaryInput } from '../../domain/jobs/GenerateStandardSummary';
 import { GenerateStandardSummaryDelayedJob } from '../../application/jobs/GenerateStandardSummaryDelayedJob';
 import { IStandardsRepositories } from '../../domain/repositories/IStandardsRepositories';

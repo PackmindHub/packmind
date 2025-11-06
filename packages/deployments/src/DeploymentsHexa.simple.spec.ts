@@ -1,5 +1,6 @@
 import { DeploymentsHexa } from './DeploymentsHexa';
-import { HexaRegistry, PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { HexaRegistry } from '@packmind/shared';
 import { DataSource } from 'typeorm';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { GitHexa } from '@packmind/git';

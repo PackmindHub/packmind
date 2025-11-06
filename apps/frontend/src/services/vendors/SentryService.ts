@@ -19,6 +19,15 @@ export function initSentry() {
       debug: isDev,
       // Only capture errors in production by default, but allow override
       beforeSend(event) {
+        // Filter out bot-generated errors from CefSharp crawlers (e.g., Microsoft Outlook SafeSearch)
+        const errorMessage = event.exception?.values?.[0]?.value;
+        if (
+          errorMessage &&
+          errorMessage.includes('Object Not Found Matching Id')
+        ) {
+          return null; // Don't send this error to Sentry
+        }
+
         // In development, log to console as well
         if (isDev) {
           console.error('Sentry Error:', event);

@@ -4,7 +4,7 @@ import {
   TableColumn,
   TableForeignKey,
 } from 'typeorm';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'AddSpaceIdToRecipes1761136181330';
 

@@ -1,17 +1,17 @@
-import { IUseCase, PackmindCommand, PackmindResult } from '../types/UseCase';
-import { PackmindLogger } from '../logger/PackmindLogger';
+import { IUseCase, PackmindCommand, PackmindResult } from '@packmind/types';
+import { PackmindLogger } from '@packmind/logger';
 import {
   createOrganizationId,
   Organization,
   OrganizationId,
-} from '../types/accounts/Organization';
+} from '@packmind/types';
 import {
   createUserId,
   User,
   UserId,
   UserOrganizationMembership,
-} from '../types/accounts/User';
-import { UserProvider, OrganizationProvider } from '../types/accounts/ports';
+} from '@packmind/types';
+import { UserProvider, OrganizationProvider } from '@packmind/types';
 import {
   UserAccessError,
   UserAccessErrorContext,

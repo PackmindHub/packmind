@@ -6,11 +6,11 @@ import {
 import { GitCommitService } from '../../services/GitCommitService';
 import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
+import { PackmindLogger } from '@packmind/logger';
 import {
   HandleWebHookWithoutContentCommand,
   HandleWebHookWithoutContentResult,
   IHandleWebHookWithoutContentUseCase,
-  PackmindLogger,
 } from '@packmind/shared';
 import {
   GithubWebhookPushPayload,

@@ -28,6 +28,7 @@ import {
   UpdateRenderModeConfigurationCommand,
   RenderModeConfiguration,
 } from '../deployments';
+import { IPullAllContentResponse, PackmindCommand } from '@packmind/types';
 
 export interface IDeploymentPort {
   findActiveStandardVersionsByRepository(
@@ -235,4 +236,16 @@ export interface IDeploymentPort {
   updateRenderModeConfiguration(
     command: UpdateRenderModeConfigurationCommand,
   ): Promise<RenderModeConfiguration>;
+
+  /**
+   * Pulls all content (recipes and standards) for an organization and generates
+   * file updates for all coding agents without requiring git repository context.
+   *
+   * This retrieves all recipes and standards across all organization spaces and
+   * generates file updates for multiple coding agents (Packmind, Claude, Cursor, Copilot).
+   *
+   * @param command - Command containing organization and user context
+   * @returns Promise resolving to file updates for all coding agents
+   */
+  pullAllContent(command: PackmindCommand): Promise<IPullAllContentResponse>;
 }

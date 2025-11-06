@@ -1,4 +1,4 @@
-import { Factory } from '@packmind/shared/test';
+import { Factory } from '@packmind/test-utils';
 import { Recipe, createRecipeId } from '../src/domain/entities/Recipe';
 import { createUserId } from '@packmind/accounts';
 import { createSpaceId } from '@packmind/spaces';

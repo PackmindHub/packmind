@@ -1,5 +1,5 @@
-import { Branded, brandedIdFactory } from '../brandedTypes';
-import { OrganizationId } from '../accounts';
+import { Branded, brandedIdFactory } from '@packmind/types';
+import { OrganizationId } from '@packmind/types';
 import { RenderMode, normalizeRenderModes } from './RenderMode';
 
 export type RenderModeConfigurationId = Branded<'RenderModeConfigurationId'>;

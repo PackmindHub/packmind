@@ -1,11 +1,11 @@
-import { Factory } from '@packmind/shared/test';
+import { Factory } from '@packmind/test-utils';
 import { v4 as uuidv4 } from 'uuid';
 import {
   Invitation,
   createInvitationId,
   createInvitationToken,
 } from '../src/domain/entities/Invitation';
-import { createUserId } from '../src/domain/entities/User';
+import { createUserId } from '@packmind/types';
 
 export const invitationFactory: Factory<Invitation> = (
   invitation?: Partial<Invitation>,

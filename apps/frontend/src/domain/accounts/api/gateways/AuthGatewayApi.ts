@@ -16,7 +16,7 @@ import {
   ResetPasswordCommand,
   ResetPasswordResponse,
   ValidatePasswordResetTokenResponse,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import {
   IAuthGateway,

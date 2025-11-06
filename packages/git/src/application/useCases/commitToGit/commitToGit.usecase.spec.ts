@@ -11,8 +11,8 @@ import {
 import { IGitRepo } from '../../../domain/repositories/IGitRepo';
 import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
 import { gitCommitFactory } from '../../../../test/gitCommitFactory';
-import { PackmindLogger } from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
+import { PackmindLogger } from '@packmind/logger';
+import { stubLogger } from '@packmind/test-utils';
 import { createOrganizationId } from '@packmind/accounts';
 
 describe('CommitToGit', () => {

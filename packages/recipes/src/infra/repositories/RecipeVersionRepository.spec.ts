@@ -1,8 +1,9 @@
+import { itHandlesSoftDelete } from '@packmind/shared/test';
 import { RecipeVersionRepository } from './RecipeVersionRepository';
 import { RecipeVersionSchema } from '../schemas/RecipeVersionSchema';
 import { RecipeSchema } from '../schemas/RecipeSchema';
 import { DataSource } from 'typeorm';
-import { makeTestDatasource, itHandlesSoftDelete } from '@packmind/shared/test';
+import { makeTestDatasource } from '@packmind/test-utils';
 import { recipeFactory } from '../../../test/recipeFactory';
 import { recipeVersionFactory } from '../../../test/recipeVersionFactory';
 import { RecipeRepository } from './RecipeRepository';
@@ -10,8 +11,8 @@ import { createRecipeId, Recipe } from '../../domain/entities/Recipe';
 import { RecipeVersion } from '../../domain/entities/RecipeVersion';
 
 import { v4 as uuidv4 } from 'uuid';
-import { PackmindLogger } from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
+import { PackmindLogger } from '@packmind/logger';
+import { stubLogger } from '@packmind/test-utils';
 import { createGitCommit, gitCommitFactory } from '@packmind/git/test';
 import { GitCommitSchema } from '@packmind/git';
 

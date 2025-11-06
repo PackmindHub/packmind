@@ -1,4 +1,4 @@
-import { IUseCase, PackmindCommand } from '../../UseCase';
+import { IUseCase, PackmindCommand } from '@packmind/types';
 import { ProgrammingLanguage } from '../../languages/Language';
 import { Rule } from '../../standards/Rule';
 import { AssessRuleDetectionOutput } from '../AssessRuleDetectionOutput';

@@ -1,9 +1,9 @@
 import { PrepareRecipesDeploymentUseCase } from './PrepareRecipesDeploymentUseCase';
 import { FileUpdates } from '../../domain/entities/FileUpdates';
 import { PrepareRecipesDeploymentCommand } from '../../domain/useCases/IPrepareRecipesDeploymentUseCase';
+import { createUserId } from '@packmind/types';
 import {
   createRecipeVersionId,
-  createUserId,
   createGitRepoId,
   createGitProviderId,
   createTargetId,

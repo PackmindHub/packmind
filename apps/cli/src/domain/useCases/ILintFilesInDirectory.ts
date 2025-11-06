@@ -1,4 +1,5 @@
-import { IPublicUseCase, RuleId } from '@packmind/shared';
+import { IPublicUseCase } from '@packmind/types';
+import { RuleId } from '@packmind/shared';
 import { LintViolation } from '../entities/LintViolation';
 
 export type LintFilesInDirectoryCommand = {

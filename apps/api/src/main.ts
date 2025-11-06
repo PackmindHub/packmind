@@ -10,12 +10,8 @@ import { Logger, VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app/app.module';
-import {
-  PackmindLogger,
-  LogLevel,
-  Configuration,
-  Cache,
-} from '@packmind/shared';
+import { PackmindLogger, LogLevel } from '@packmind/logger';
+import { Configuration, Cache } from '@packmind/shared';
 import { enableAmplitudeProxy } from '@packmind/amplitude';
 
 const logger = new PackmindLogger('PackmindAPI', LogLevel.INFO);

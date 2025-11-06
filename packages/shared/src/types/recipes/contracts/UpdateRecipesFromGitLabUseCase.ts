@@ -1,4 +1,4 @@
-import { ISystemUseCase, SystemPackmindCommand } from '../../UseCase';
+import { ISystemUseCase, SystemPackmindCommand } from '@packmind/types';
 import { Recipe } from '../Recipe';
 
 export type UpdateRecipesFromGitLabCommand = SystemPackmindCommand & {

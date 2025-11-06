@@ -4,9 +4,8 @@ import {
   CreateStandardVersionData,
 } from '../../services/StandardVersionService';
 import slug from 'slug';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
 import {
-  LogLevel,
-  PackmindLogger,
   StandardVersion,
   ICreateStandardUseCase,
   CreateStandardCommand,

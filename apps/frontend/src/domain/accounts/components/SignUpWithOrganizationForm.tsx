@@ -1,22 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import {
-  PMInput,
-  PMButton,
-  PMFormContainer,
-  PMField,
-  PMText,
   PMAlert,
+  PMButton,
+  PMField,
+  PMFormContainer,
+  PMInput,
+  PMText,
 } from '@packmind/ui';
 import {
-  useSignUpWithOrganizationMutation,
-  useSignInMutation,
   useCheckEmailAvailabilityMutation,
+  useSignInMutation,
+  useSignUpWithOrganizationMutation,
 } from '../api/queries';
 import { organizationGateway } from '../api/gateways';
 import { isPackmindConflictError } from '../../../services/api/errors/PackmindConflictError';
 import validator from 'validator';
 import { routes } from '../../../shared/utils/routes';
+import { SignUpWithOrganizationFormDataTestIds } from './SignUpWithOrganizationFormDataTestIds';
 
 export default function SignUpWithOrganizationForm() {
   const [organizationName, setOrganizationName] = useState('');
@@ -194,7 +195,10 @@ export default function SignUpWithOrganizationForm() {
   const PASSWORD_MAX_LENGTH = 128;
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form
+      onSubmit={handleSubmit}
+      data-testId={SignUpWithOrganizationFormDataTestIds.Component}
+    >
       <PMFormContainer maxWidth="full" spacing={4}>
         <PMField.Root required invalid={!!organizationNameError}>
           <PMField.Label>
@@ -219,6 +223,9 @@ export default function SignUpWithOrganizationForm() {
               signInMutation.isPending
             }
             maxLength={ORG_NAME_MAX_LENGTH}
+            data-testId={
+              SignUpWithOrganizationFormDataTestIds.OrganizationField
+            }
           />
           <PMField.ErrorText>{organizationNameError}</PMField.ErrorText>
         </PMField.Root>
@@ -247,6 +254,7 @@ export default function SignUpWithOrganizationForm() {
               signInMutation.isPending
             }
             maxLength={EMAIL_MAX_LENGTH}
+            data-testId={SignUpWithOrganizationFormDataTestIds.EmailField}
           />
           <PMField.ErrorText>
             {formErrors.email || emailError}
@@ -277,6 +285,7 @@ export default function SignUpWithOrganizationForm() {
               signInMutation.isPending
             }
             maxLength={PASSWORD_MAX_LENGTH}
+            data-testId={SignUpWithOrganizationFormDataTestIds.PasswordField}
           />
           <PMField.ErrorText>{formErrors.password}</PMField.ErrorText>
         </PMField.Root>
@@ -298,6 +307,9 @@ export default function SignUpWithOrganizationForm() {
               signInMutation.isPending
             }
             maxLength={PASSWORD_MAX_LENGTH}
+            data-testId={
+              SignUpWithOrganizationFormDataTestIds.ConfirmPasswordField
+            }
           />
           <PMField.ErrorText>{formErrors.confirmPassword}</PMField.ErrorText>
         </PMField.Root>
@@ -320,6 +332,7 @@ export default function SignUpWithOrganizationForm() {
             !!organizationNameError ||
             !!emailError
           }
+          data-testId={SignUpWithOrganizationFormDataTestIds.Submit}
         >
           {getButtonText()}
         </PMButton>

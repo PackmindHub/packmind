@@ -3,13 +3,15 @@ import {
   GitProviderId,
 } from '../../../domain/entities/GitProvider';
 import { GitProviderService } from '../../GitProviderService';
+import { PackmindLogger } from '@packmind/logger';
+import {
+  PackmindCommand,
+  UserProvider,
+  OrganizationProvider,
+} from '@packmind/types';
 import {
   AbstractAdminUseCase,
   AdminContext,
-  PackmindCommand,
-  PackmindLogger,
-  UserProvider,
-  OrganizationProvider,
   GitProviderNotFoundError,
   GitProviderOrganizationMismatchError,
 } from '@packmind/shared';

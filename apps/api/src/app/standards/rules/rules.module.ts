@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { RulesController } from './rules.controller';
 import { RulesService } from './rules.service';
 import { standardsSchemas } from '@packmind/standards';
-import { PackmindLogger, LogLevel } from '@packmind/shared';
+import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { AuthModule } from '../../auth/auth.module';
 
 @Module({

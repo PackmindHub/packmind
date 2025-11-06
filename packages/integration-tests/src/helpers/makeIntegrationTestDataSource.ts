@@ -1,5 +1,5 @@
 import { DataSource } from 'typeorm';
-import { makeTestDatasource } from '@packmind/shared/test';
+import { makeTestDatasource } from '@packmind/test-utils';
 import { accountsSchemas } from '@packmind/accounts';
 import { recipesSchemas } from '@packmind/recipes';
 import { standardsSchemas } from '@packmind/standards';

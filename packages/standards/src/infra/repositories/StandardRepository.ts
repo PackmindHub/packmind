@@ -3,11 +3,8 @@ import { IStandardRepository } from '../../domain/repositories/IStandardReposito
 import { StandardSchema } from '../schemas/StandardSchema';
 import { StandardVersionSchema } from '../schemas/StandardVersionSchema';
 import { Repository } from 'typeorm';
-import {
-  PackmindLogger,
-  localDataSource,
-  AbstractRepository,
-} from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { localDataSource, AbstractRepository } from '@packmind/shared';
 import { OrganizationId, UserId } from '@packmind/accounts';
 import { SpaceId } from '@packmind/shared/types';
 import { StandardVersion } from '../../domain/entities/StandardVersion';

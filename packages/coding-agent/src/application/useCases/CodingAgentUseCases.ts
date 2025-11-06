@@ -1,4 +1,4 @@
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import { CodingAgentServices } from '../services/CodingAgentServices';
 import { PrepareRecipesDeploymentUseCase } from './PrepareRecipesDeploymentUseCase';
 import { PrepareStandardsDeploymentUseCase } from './PrepareStandardsDeploymentUseCase';

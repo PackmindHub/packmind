@@ -2,12 +2,8 @@ import { StandardsServices } from './application/services/StandardsServices';
 import { StandardsRepositories } from './infra/repositories/StandardsRepositories';
 import { DataSource } from 'typeorm';
 import { StandardsUseCases } from './application/useCases';
-import {
-  HexaRegistry,
-  PackmindLogger,
-  IDeploymentPort,
-  ISpacesPort,
-} from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { HexaRegistry, IDeploymentPort, ISpacesPort } from '@packmind/shared';
 import type { ILinterPort } from '@packmind/shared';
 import { GitHexa } from '@packmind/git';
 import { AccountsHexa } from '@packmind/accounts';

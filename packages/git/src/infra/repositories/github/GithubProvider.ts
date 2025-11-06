@@ -1,6 +1,6 @@
 import { IGitProvider } from '../../../domain/repositories/IGitProvider';
 import axios, { AxiosInstance } from 'axios';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import { isNativeError } from 'util/types';
 
 const origin = 'GithubProvider';

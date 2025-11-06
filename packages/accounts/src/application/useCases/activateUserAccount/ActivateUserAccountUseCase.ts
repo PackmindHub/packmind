@@ -2,8 +2,8 @@ import {
   ActivateUserAccountCommand,
   ActivateUserAccountResponse,
   IActivateUserAccountUseCase,
-} from '@packmind/shared';
-import { PackmindLogger, maskEmail } from '@packmind/shared';
+} from '@packmind/types';
+import { PackmindLogger, maskEmail } from '@packmind/logger';
 import { UserService } from '../../services/UserService';
 import { InvitationService } from '../../services/InvitationService';
 import {

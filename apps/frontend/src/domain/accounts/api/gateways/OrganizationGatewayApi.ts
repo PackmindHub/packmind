@@ -1,10 +1,10 @@
-import { Organization } from '@packmind/accounts/types';
+import { Organization } from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import { IOrganizationGateway } from './IOrganizationGateway';
 import {
   UserOrganizationRole,
   OrganizationOnboardingStatus,
-} from '@packmind/shared';
+} from '@packmind/types';
 
 export class OrganizationGatewayApi
   extends PackmindGateway

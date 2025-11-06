@@ -6,15 +6,11 @@ import {
   createInvitationId,
   createInvitationToken,
 } from '../../domain/entities/Invitation';
-import { Organization } from '../../domain/entities/Organization';
-import { User, UserId } from '../../domain/entities/User';
+import { Organization } from '@packmind/types';
+import { User, UserId } from '@packmind/types';
 import { IInvitationRepository } from '../../domain/repositories/IInvitationRepository';
-import {
-  MailService,
-  PackmindLogger,
-  Configuration,
-  maskEmail,
-} from '@packmind/shared';
+import { PackmindLogger, maskEmail } from '@packmind/logger';
+import { MailService, Configuration } from '@packmind/shared';
 
 const origin = 'InvitationService';
 const INVITATION_EXPIRATION_HOURS = 48;

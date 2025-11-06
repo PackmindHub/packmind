@@ -4,7 +4,8 @@ import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSu
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { StandardVersion } from '../../../domain/entities/StandardVersion';
 import { CreateStandardVersionData } from '../../services/StandardVersionService';
-import { LogLevel, PackmindLogger, RuleExample } from '@packmind/shared';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
+import { RuleExample } from '@packmind/shared';
 import { OrganizationId, UserId } from '@packmind/accounts';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import { StandardVersionId } from '../../../domain/entities';

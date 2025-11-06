@@ -1,5 +1,5 @@
 import Redis, { RedisOptions } from 'ioredis';
-import { PackmindLogger, LogLevel } from '../logger/PackmindLogger';
+import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { Configuration } from '../config/config/Configuration';
 
 const origin = 'Cache';

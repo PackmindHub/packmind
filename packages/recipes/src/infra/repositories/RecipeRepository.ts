@@ -2,8 +2,8 @@ import { Recipe } from '../../domain/entities/Recipe';
 import { IRecipeRepository } from '../../domain/repositories/IRecipeRepository';
 import { RecipeSchema } from '../schemas/RecipeSchema';
 import { Repository } from 'typeorm';
+import { PackmindLogger } from '@packmind/logger';
 import {
-  PackmindLogger,
   localDataSource,
   AbstractRepository,
   QueryOption,

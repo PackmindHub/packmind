@@ -15,11 +15,8 @@ import {
   UserId,
 } from '@packmind/accounts';
 import { UsersService } from './users.service';
-import {
-  PackmindLogger,
-  ChangeUserRoleResponse,
-  UserOrganizationRole,
-} from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { ChangeUserRoleResponse, UserOrganizationRole } from '@packmind/types';
 import { AuthService } from '../../auth/auth.service';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
 

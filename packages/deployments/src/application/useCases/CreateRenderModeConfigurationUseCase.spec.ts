@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { CreateRenderModeConfigurationUseCase } from './CreateRenderModeConfigurationUseCase';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
-import { stubLogger } from '@packmind/shared/test';
+import { stubLogger } from '@packmind/test-utils';
 import {
   CreateRenderModeConfigurationCommand,
   RenderMode,

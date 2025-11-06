@@ -10,7 +10,7 @@ import {
 import { Standard } from '../../domain/entities/Standard';
 import { Rule } from '../../domain/entities/Rule';
 import { GitCommit, GitCommitId } from '@packmind/git';
-import { UserId } from '@packmind/accounts/types';
+import { UserId } from '@packmind/types';
 
 export const StandardVersionSchema = new EntitySchema<
   WithSoftDelete<

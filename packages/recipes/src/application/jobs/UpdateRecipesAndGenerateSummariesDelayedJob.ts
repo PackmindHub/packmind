@@ -1,4 +1,5 @@
-import { getErrorMessage, PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { getErrorMessage } from '@packmind/shared';
 import {
   AbstractAIDelayedJob,
   IQueue,

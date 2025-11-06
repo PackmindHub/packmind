@@ -20,6 +20,7 @@ module.exports = function getBaseWebpackPaths(__dirname) {
       '../../packages/shared/src/types',
     ),
     '@packmind/shared-nest': join(__dirname, '../../packages/shared-nest/src'),
+    '@packmind/types': join(__dirname, '../../packages/types/src'),
     '@packmind/migrations': join(__dirname, '../../packages/migrations/src'),
     '@packmind/spaces': join(__dirname, '../../packages/spaces/src'),
     '@packmind/git': join(__dirname, '../../packages/git/src'),
@@ -30,6 +31,7 @@ module.exports = function getBaseWebpackPaths(__dirname) {
       __dirname,
       '../../packages/standards/src/types',
     ),
+    '@packmind/test-utils': join(__dirname, '../../packages/test-utils/src'),
     '@packmind/deployments': join(__dirname, '../../packages/deployments/src'),
     '@packmind/deployments/types': join(
       __dirname,
@@ -40,5 +42,6 @@ module.exports = function getBaseWebpackPaths(__dirname) {
       '../../packages/coding-agent/src',
     ),
     '@packmind/jobs': join(__dirname, '../../packages/jobs/src'),
+    '@packmind/logger': join(__dirname, '../../packages/logger/src'),
   };
 };

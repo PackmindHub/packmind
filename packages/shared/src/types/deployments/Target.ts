@@ -1,8 +1,9 @@
-import { Branded, brandedIdFactory } from '../brandedTypes';
+import { TargetId, createTargetId } from '@packmind/types';
 import { GitRepo, GitRepoId } from '../git';
 
-export type TargetId = Branded<'TargetId'>;
-export const createTargetId = brandedIdFactory<TargetId>();
+// Re-export for backward compatibility
+export type { TargetId };
+export { createTargetId };
 
 export type Target = {
   id: TargetId;

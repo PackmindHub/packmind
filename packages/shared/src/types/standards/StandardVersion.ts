@@ -1,8 +1,8 @@
 import { Rule, StandardId } from './index';
-import { UserId } from '../accounts';
+import { UserId } from '@packmind/types';
 import { GitCommit } from '../git';
 
-import { Branded, brandedIdFactory } from '../brandedTypes';
+import { Branded, brandedIdFactory } from '@packmind/types';
 
 export type StandardVersionId = Branded<'StandardVersionId'>;
 export const createStandardVersionId = brandedIdFactory<StandardVersionId>();

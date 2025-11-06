@@ -1,8 +1,5 @@
-import { Factory } from '@packmind/shared/test';
-import {
-  createOrganizationId,
-  Organization,
-} from '../src/domain/entities/Organization';
+import { Factory } from '@packmind/test-utils';
+import { createOrganizationId, Organization } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 
 export const organizationFactory: Factory<Organization> = (

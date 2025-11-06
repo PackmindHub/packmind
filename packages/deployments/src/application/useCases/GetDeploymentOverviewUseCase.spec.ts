@@ -2,10 +2,10 @@ import { GetDeploymentOverviewUseCase } from './GetDeploymentOverviewUseCase';
 import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
 import { createRecipeVersionId } from '@packmind/recipes';
 import { GitHexa } from '@packmind/git';
-import { stubLogger } from '@packmind/shared/test';
+import { stubLogger } from '@packmind/test-utils';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
 import { createSpaceId } from '@packmind/shared';
-import { gitRepoFactory } from '@packmind/shared/test/factories/gitRepoFactory';
+import { gitRepoFactory } from '@packmind/git/test';
 import { recipeFactory } from '@packmind/recipes/test';
 import { recipeVersionFactory } from '@packmind/recipes/test';
 import {

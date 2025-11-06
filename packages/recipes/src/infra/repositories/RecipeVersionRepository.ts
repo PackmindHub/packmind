@@ -3,11 +3,8 @@ import { RecipeId } from '../../domain/entities/Recipe';
 import { IRecipeVersionRepository } from '../../domain/repositories/IRecipeVersionRepository';
 import { RecipeVersionSchema } from '../schemas/RecipeVersionSchema';
 import { Repository } from 'typeorm';
-import {
-  PackmindLogger,
-  localDataSource,
-  AbstractRepository,
-} from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { localDataSource, AbstractRepository } from '@packmind/shared';
 
 const origin = 'RecipeVersionRepository';
 

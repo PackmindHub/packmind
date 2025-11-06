@@ -12,7 +12,7 @@ import {
   PMNativeSelect,
   PMAlert,
 } from '@packmind/ui';
-import { OrganizationId } from '@packmind/accounts/types';
+import { OrganizationId } from '@packmind/types';
 import {
   useCreateGitProviderMutation,
   useUpdateGitProviderMutation,

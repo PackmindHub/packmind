@@ -4,19 +4,14 @@ import {
   UserId,
   UserOrganizationMembership,
   UserOrganizationRole,
-} from '../../domain/entities/User';
-import { OrganizationId } from '../../domain/entities/Organization';
+} from '@packmind/types';
+import { OrganizationId } from '@packmind/types';
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
 import { IUserOrganizationMembershipRepository } from '../../domain/repositories/IUserOrganizationMembershipRepository';
 import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
-import {
-  PackmindLogger,
-  LogLevel,
-  SSEEventPublisher,
-  UserContextChangeType,
-  maskEmail,
-} from '@packmind/shared';
+import { PackmindLogger, LogLevel, maskEmail } from '@packmind/logger';
+import { SSEEventPublisher, UserContextChangeType } from '@packmind/shared';
 import {
   InvalidInvitationEmailError,
   UserNotInOrganizationError,

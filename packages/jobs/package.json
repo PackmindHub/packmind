@@ -7,6 +7,7 @@
   "types": "./src/index.d.ts",
   "dependencies": {
     "tslib": "^2.3.0",
+    "@packmind/logger": "*",
     "@packmind/shared": "^0.0.1",
     "typeorm": "^0.3.26",
     "bullmq": "^5.0.0"

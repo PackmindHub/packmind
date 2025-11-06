@@ -2,7 +2,7 @@ import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampl
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { RuleExample } from '../../../domain/entities/RuleExample';
 import { RuleId } from '../../../domain/entities/Rule';
-import { LogLevel, PackmindLogger } from '@packmind/shared';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
 
 const origin = 'GetRuleExamplesUsecase';
 

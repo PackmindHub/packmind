@@ -1,4 +1,4 @@
-import { PackmindCommand, IUseCase } from '../../UseCase';
+import { PackmindCommand, IUseCase } from '@packmind/types';
 import { GitProviderId } from '../GitProvider';
 
 export type ListAvailableReposCommand = PackmindCommand & {

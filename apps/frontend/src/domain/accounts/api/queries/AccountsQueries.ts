@@ -5,7 +5,7 @@ import {
   GET_USER_STATUSES_KEY,
   GET_ONBOARDING_STATUS_KEY,
 } from '../queryKeys';
-import { UserId, UserOrganizationRole } from '@packmind/accounts/types';
+import { UserId, UserOrganizationRole } from '@packmind/types';
 
 const CREATE_ORGANIZATION_MUTATION_KEY = 'createOrganization';
 const INVITE_USERS_MUTATION_KEY = 'inviteUsers';

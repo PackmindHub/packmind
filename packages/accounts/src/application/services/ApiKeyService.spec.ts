@@ -1,10 +1,7 @@
 import { ApiKeyService, IJwtService } from './ApiKeyService';
-import { User, createUserId } from '../../domain/entities/User';
-import {
-  Organization,
-  createOrganizationId,
-} from '../../domain/entities/Organization';
-import { PackmindLogger, LogLevel } from '@packmind/shared';
+import { User, createUserId } from '@packmind/types';
+import { Organization, createOrganizationId } from '@packmind/types';
+import { PackmindLogger, LogLevel } from '@packmind/logger';
 
 // Mock JWT service
 class MockJwtService implements IJwtService {

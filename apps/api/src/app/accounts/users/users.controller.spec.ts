@@ -9,8 +9,8 @@ import {
 } from '@packmind/accounts';
 import { NotFoundException } from '@nestjs/common';
 import { AuthService } from '../../auth/auth.service';
-import { PackmindLogger } from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
+import { PackmindLogger } from '@packmind/logger';
+import { stubLogger } from '@packmind/test-utils';
 
 describe('UsersController', () => {
   let app: TestingModule;

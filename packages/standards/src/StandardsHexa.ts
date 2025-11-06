@@ -1,10 +1,10 @@
+import { PackmindLogger } from '@packmind/logger';
 import {
   BaseHexa,
   BaseHexaOpts,
   HexaRegistry,
   IDeploymentPort,
   IStandardsPort,
-  PackmindLogger,
   ListStandardsBySpaceCommand,
   GetStandardByIdCommand,
   UpdateStandardCommand,

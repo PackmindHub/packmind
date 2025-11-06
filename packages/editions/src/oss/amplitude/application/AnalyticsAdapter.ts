@@ -1,5 +1,5 @@
-import { PackmindLogger } from '@packmind/shared';
-import { IAnalyticsPort, OrganizationId, UserId } from '@packmind/shared/types';
+import { PackmindLogger } from '@packmind/logger';
+import { IAnalyticsPort, OrganizationId, UserId } from '@packmind/types';
 
 /**
  * OSS stub implementation of AnalyticsAdapter

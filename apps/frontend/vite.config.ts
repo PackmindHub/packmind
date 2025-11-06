@@ -36,6 +36,7 @@ export default defineConfig(() => {
     server: {
       port: 4200,
       host: 'localhost',
+      allowedHosts: ['frontend'],
       proxy,
     },
     preview: {

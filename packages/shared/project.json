@@ -20,18 +20,12 @@
         "packageJson": "packages/shared/package.json",
         "main": "packages/shared/src/index.ts",
         "assets": ["packages/shared/*.md"]
-      },
-      "lint": {
-        "executor": "@nx/linter:eslint",
-        "options": {
-          "lintFilePatterns": ["packages/shared/**/*.{ts,tsx}"],
-          "pluginsConfig": {
-            "@nx/dependency-checks": {
-              "ignoredDependencies": ["pg-mem"],
-              "allowDevDependencies": ["packages/shared/test/**"]
-            }
-          }
-        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["packages/shared/src/**/*.{ts,tsx}"]
       }
     }
   }

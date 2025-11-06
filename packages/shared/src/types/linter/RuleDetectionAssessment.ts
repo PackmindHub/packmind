@@ -1,4 +1,4 @@
-import { Branded, brandedIdFactory } from '../brandedTypes';
+import { Branded, brandedIdFactory } from '@packmind/types';
 import { ProgrammingLanguage } from '../languages/Language';
 import { RuleId } from '../standards/Rule';
 import { DetectionModeEnum } from './DetectionProgram';

@@ -1,9 +1,8 @@
 import { RecipeService } from '../../services/RecipeService';
 import { RecipeVersionService } from '../../services/RecipeVersionService';
 import slug from 'slug';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
 import {
-  LogLevel,
-  PackmindLogger,
   AiNotConfigured,
   ICaptureRecipeUseCase,
   CaptureRecipeCommand,

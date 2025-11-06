@@ -2,8 +2,8 @@ import {
   RequestPasswordResetCommand,
   RequestPasswordResetResponse,
   IRequestPasswordResetUseCase,
-} from '@packmind/shared/src/types/accounts/contracts/IRequestPasswordResetUseCase';
-import { PackmindLogger, maskEmail } from '@packmind/shared';
+} from '@packmind/types';
+import { PackmindLogger, maskEmail } from '@packmind/logger';
 import { UserService } from '../services/UserService';
 import {
   PasswordResetTokenService,

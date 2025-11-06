@@ -19,7 +19,8 @@ import {
   RuleExampleId,
 } from '@packmind/standards';
 import { RulesService } from './rules.service';
-import { PackmindLogger, stringToProgrammingLanguage } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { stringToProgrammingLanguage } from '@packmind/shared';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
 import { AuthService } from '../../auth/auth.service';
 import { StandardId, Rule, RuleId } from '@packmind/shared';

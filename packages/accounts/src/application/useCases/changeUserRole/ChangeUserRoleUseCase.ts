@@ -1,15 +1,14 @@
+import { PackmindLogger } from '@packmind/logger';
 import {
-  AbstractAdminUseCase,
-  AdminContext,
   ChangeUserRoleCommand,
   ChangeUserRoleResponse,
   IChangeUserRoleUseCase,
-  PackmindLogger,
   UserProvider,
   OrganizationProvider,
-} from '@packmind/shared';
-import { createUserId } from '../../../domain/entities/User';
-import { createOrganizationId } from '../../../domain/entities/Organization';
+} from '@packmind/types';
+import { AbstractAdminUseCase, AdminContext } from '@packmind/shared';
+import { createUserId } from '@packmind/types';
+import { createOrganizationId } from '@packmind/types';
 import {
   UserNotFoundError,
   UserNotInOrganizationError,

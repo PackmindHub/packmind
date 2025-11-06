@@ -1,10 +1,9 @@
+import { PackmindLogger, maskEmail } from '@packmind/logger';
 import {
-  PackmindLogger,
-  maskEmail,
   IValidateInvitationTokenUseCase,
   ValidateInvitationTokenCommand,
   ValidateInvitationTokenResponse,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { InvitationService } from '../../services/InvitationService';
 import { UserService } from '../../services/UserService';
 import { createInvitationToken } from '../../../domain/entities/Invitation';

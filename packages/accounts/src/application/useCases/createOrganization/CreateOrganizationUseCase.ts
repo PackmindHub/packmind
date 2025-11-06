@@ -1,12 +1,12 @@
 import { OrganizationService } from '../../services/OrganizationService';
 import { UserService } from '../../services/UserService';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import { ISpacesPort } from '@packmind/shared/types';
 import {
   ICreateOrganizationUseCase,
   CreateOrganizationCommand,
   CreateOrganizationResponse,
-} from '@packmind/shared';
+} from '@packmind/types';
 
 const origin = 'CreateOrganizationUseCase';
 

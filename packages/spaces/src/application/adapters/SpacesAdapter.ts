@@ -1,9 +1,5 @@
-import {
-  ISpacesPort,
-  OrganizationId,
-  Space,
-  SpaceId,
-} from '@packmind/shared/types';
+import { OrganizationId } from '@packmind/types';
+import { ISpacesPort, Space, SpaceId } from '@packmind/shared/types';
 import { SpacesHexaFactory } from '../../SpacesHexaFactory';
 
 /**

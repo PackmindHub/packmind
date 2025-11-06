@@ -1,18 +1,15 @@
+import {
+  itHandlesDuplicateKeys,
+  itHandlesSoftDelete,
+} from '@packmind/shared/test';
 import { DataSource } from 'typeorm';
 import { OrganizationRepository } from './OrganizationRepository';
-import {
-  createOrganizationId,
-  Organization,
-} from '../../domain/entities/Organization';
+import { createOrganizationId, Organization } from '@packmind/types';
 import { OrganizationSchema } from '../schemas/OrganizationSchema';
-import {
-  makeTestDatasource,
-  itHandlesSoftDelete,
-  itHandlesDuplicateKeys,
-} from '@packmind/shared/test';
+import { makeTestDatasource } from '@packmind/test-utils';
 import { organizationFactory } from '../../../test';
-import { PackmindLogger } from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
+import { PackmindLogger } from '@packmind/logger';
+import { stubLogger } from '@packmind/test-utils';
 
 describe('OrganizationRepository', () => {
   let dataSource: DataSource;

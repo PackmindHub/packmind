@@ -2,8 +2,8 @@ import {
   ListOrganizationUserStatusesResponse,
   ListOrganizationUsersResponse,
   UserId,
-} from '@packmind/accounts/types';
-import { ChangeUserRoleResponse, UserOrganizationRole } from '@packmind/shared';
+} from '@packmind/types';
+import { ChangeUserRoleResponse, UserOrganizationRole } from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import { IUserGateway } from './IUserGateway';
 

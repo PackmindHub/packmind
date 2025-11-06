@@ -1,10 +1,9 @@
 import { StandardService } from '../../services/StandardService';
+import { PackmindLogger } from '@packmind/logger';
+import { UserProvider, OrganizationProvider } from '@packmind/types';
 import {
   AbstractMemberUseCase,
   MemberContext,
-  PackmindLogger,
-  UserProvider,
-  OrganizationProvider,
   ISpacesPort,
 } from '@packmind/shared';
 import {

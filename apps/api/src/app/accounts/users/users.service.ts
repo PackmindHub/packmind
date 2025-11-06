@@ -11,7 +11,7 @@ import {
   ChangeUserRoleCommand,
   ChangeUserRoleResponse,
   UserOrganizationRole,
-} from '@packmind/shared';
+} from '@packmind/types';
 
 @Injectable()
 export class UsersService {

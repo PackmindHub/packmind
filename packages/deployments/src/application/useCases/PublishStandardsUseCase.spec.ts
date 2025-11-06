@@ -5,13 +5,12 @@ import { CodingAgentHexa, CodingAgents } from '@packmind/coding-agent';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
 import { TargetService } from '../services/TargetService';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
+import { createUserId, createOrganizationId } from '@packmind/types';
 import {
   PublishStandardsCommand,
   DistributionStatus,
   createStandardVersionId,
   createTargetId,
-  createUserId,
-  createOrganizationId,
   createGitRepoId,
   createGitProviderId,
   createGitCommitId,
@@ -22,7 +21,7 @@ import {
   Standard,
 } from '@packmind/shared';
 import { standardVersionFactory } from '@packmind/standards/test/standardVersionFactory';
-import { stubLogger } from '@packmind/shared/test';
+import { stubLogger } from '@packmind/test-utils';
 import { targetFactory } from '../../../test/targetFactory';
 import { v4 as uuidv4 } from 'uuid';
 

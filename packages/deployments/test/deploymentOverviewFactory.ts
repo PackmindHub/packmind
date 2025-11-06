@@ -1,4 +1,4 @@
-import { Factory } from '@packmind/shared/test';
+import { Factory } from '@packmind/test-utils';
 import { recipeFactory } from '@packmind/recipes/test/recipeFactory';
 import { recipeVersionFactory } from '@packmind/recipes/test/recipeVersionFactory';
 import { gitRepoFactory } from '@packmind/git/test/gitRepoFactory';

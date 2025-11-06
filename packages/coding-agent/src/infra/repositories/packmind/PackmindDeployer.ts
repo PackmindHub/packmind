@@ -5,7 +5,8 @@ import { FileUpdates } from '../../../domain/entities/FileUpdates';
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
 import { RecipesIndexService } from '../../../application/services/RecipesIndexService';
 import { StandardsIndexService } from '../../../application/services/StandardsIndexService';
-import { PackmindLogger, Target } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { Target } from '@packmind/shared';
 import { getTargetPrefixedPath } from '../utils/FileUtils';
 import { GenericStandardWriter } from '../genericSectionWriter/GenericStandardWriter';
 
@@ -117,6 +118,85 @@ export class PackmindDeployer implements ICodingAgentDeployer {
     );
     fileUpdates.createOrUpdate.push({
       path: indexTargetPrefixedPath,
+      content: standardsIndexContent,
+    });
+
+    return fileUpdates;
+  }
+
+  async generateFileUpdatesForRecipes(
+    recipeVersions: RecipeVersion[],
+  ): Promise<FileUpdates> {
+    this.logger.info('Generating file updates for recipes (Packmind)', {
+      recipesCount: recipeVersions.length,
+    });
+
+    const fileUpdates: FileUpdates = {
+      createOrUpdate: [],
+      delete: [],
+    };
+
+    // Deploy each recipe to its own file
+    for (const recipeVersion of recipeVersions) {
+      const recipeFilePath = `.packmind/recipes/${recipeVersion.slug}.md`;
+      fileUpdates.createOrUpdate.push({
+        path: recipeFilePath,
+        content: recipeVersion.content,
+      });
+    }
+
+    // Generate and deploy the recipes index
+    const recipesIndexContent =
+      this.recipesIndexService.buildRecipesIndex(recipeVersions);
+
+    fileUpdates.createOrUpdate.push({
+      path: PackmindDeployer.RECIPES_INDEX_PATH,
+      content: recipesIndexContent,
+    });
+
+    return fileUpdates;
+  }
+
+  async generateFileUpdatesForStandards(
+    standardVersions: StandardVersion[],
+  ): Promise<FileUpdates> {
+    this.logger.info('Generating file updates for standards (Packmind)', {
+      standardsCount: standardVersions.length,
+    });
+
+    const fileUpdates: FileUpdates = {
+      createOrUpdate: [],
+      delete: [],
+    };
+
+    // Deploy each standard to its own file
+    for (const standardVersion of standardVersions) {
+      const rules =
+        standardVersion.rules ??
+        (await this.standardsHexa?.getRulesByStandardId(
+          standardVersion.standardId,
+        )) ??
+        [];
+
+      const standardFilePath = `.packmind/standards/${standardVersion.slug}.md`;
+      fileUpdates.createOrUpdate.push({
+        path: standardFilePath,
+        content: GenericStandardWriter.writeStandard(standardVersion, rules),
+      });
+    }
+
+    // Generate and deploy the standards index
+    const standardsIndexContent =
+      this.standardsIndexService.buildStandardsIndex(
+        standardVersions.map((standardVersion) => ({
+          name: standardVersion.name,
+          slug: standardVersion.slug,
+          summary: standardVersion.summary,
+        })),
+      );
+
+    fileUpdates.createOrUpdate.push({
+      path: '.packmind/standards-index.md',
       content: standardsIndexContent,
     });
 

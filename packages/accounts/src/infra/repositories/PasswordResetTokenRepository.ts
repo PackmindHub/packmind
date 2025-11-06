@@ -5,11 +5,11 @@ import {
   PasswordResetToken,
   PasswordResetTokenId,
 } from '../../domain/entities/PasswordResetToken';
-import { UserId } from '../../domain/entities/User';
+import { UserId } from '@packmind/types';
 import { IPasswordResetTokenRepository } from '../../domain/repositories/IPasswordResetTokenRepository';
 import { PasswordResetTokenSchema } from '../schemas/PasswordResetTokenSchema';
+import { PackmindLogger } from '@packmind/logger';
 import {
-  PackmindLogger,
   localDataSource,
   AbstractRepository,
   QueryOption,

@@ -15,4 +15,10 @@ export interface ICodingAgentDeployer {
     gitRepo: GitRepo,
     target: Target,
   ): Promise<FileUpdates>;
+  generateFileUpdatesForRecipes(
+    recipeVersions: RecipeVersion[],
+  ): Promise<FileUpdates>;
+  generateFileUpdatesForStandards(
+    standardVersions: StandardVersion[],
+  ): Promise<FileUpdates>;
 }

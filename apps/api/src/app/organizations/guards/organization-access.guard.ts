@@ -5,7 +5,7 @@ import {
   ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
-import { PackmindLogger, LogLevel } from '@packmind/shared';
+import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
 import { createOrganizationId, OrganizationId } from '@packmind/accounts';
 

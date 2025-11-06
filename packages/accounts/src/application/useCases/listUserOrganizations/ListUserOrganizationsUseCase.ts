@@ -1,11 +1,11 @@
 import { UserService } from '../../services/UserService';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import {
   IListUserOrganizationsUseCase,
   ListUserOrganizationsCommand,
   ListUserOrganizationsResponse,
-} from '@packmind/shared';
-import { Organization } from '../../../domain/entities/Organization';
+} from '@packmind/types';
+import { Organization } from '@packmind/types';
 
 const origin = 'ListUserOrganizationsUseCase';
 

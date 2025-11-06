@@ -3,7 +3,7 @@ import { OrganizationsSpacesStandardsController } from './standards.controller';
 import { StandardsModule } from '../../../standards/standards.module';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 import { SpaceAccessGuard } from '../guards/space-access.guard';
-import { PackmindLogger, LogLevel } from '@packmind/shared';
+import { PackmindLogger, LogLevel } from '@packmind/logger';
 
 /**
  * Module for space-scoped standard routes within organizations

@@ -2,6 +2,8 @@ import { Module, DynamicModule, Provider, Global } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { HexaRegistry, BaseHexa } from '@packmind/shared';
+import { RecipesHexa } from '@packmind/recipes';
+import { DeploymentsHexa } from '@packmind/deployments';
 
 /**
  * Configuration interface for HexaRegistry integration with NestJS
@@ -152,7 +154,9 @@ export class HexaRegistryModule {
     const accountsHexa = registry.getByName('AccountsHexa');
     const gitHexa = registry.getByName('GitHexa');
     const standardsHexa = registry.getByName('StandardsHexa');
-    const deploymentsHexa = registry.getByName('DeploymentsHexa');
+    const deploymentsHexa: DeploymentsHexa =
+      registry.getByName('DeploymentsHexa');
+    const recipesHexa: RecipesHexa = registry.getByName('RecipesHexa');
 
     // Inject ports into AccountsHexa for onboarding status use case
     if (
@@ -191,6 +195,10 @@ export class HexaRegistryModule {
           }
         ).getDeploymentsUseCases(),
       );
+    }
+
+    if (deploymentsHexa && recipesHexa) {
+      deploymentsHexa.setRecipesPort(recipesHexa);
     }
   }
 

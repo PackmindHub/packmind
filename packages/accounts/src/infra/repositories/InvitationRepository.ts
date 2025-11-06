@@ -5,11 +5,11 @@ import {
   InvitationToken,
   InvitationId,
 } from '../../domain/entities/Invitation';
-import { UserId } from '../../domain/entities/User';
+import { UserId } from '@packmind/types';
 import { IInvitationRepository } from '../../domain/repositories/IInvitationRepository';
 import { InvitationSchema } from '../schemas/InvitationSchema';
+import { PackmindLogger } from '@packmind/logger';
 import {
-  PackmindLogger,
   localDataSource,
   AbstractRepository,
   QueryOption,

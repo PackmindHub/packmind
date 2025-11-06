@@ -1,5 +1,5 @@
 import { GitProvider } from '../entities/GitProvider';
-import { OrganizationId } from '@packmind/accounts/types';
+import { OrganizationId } from '@packmind/types';
 import { IRepository } from '@packmind/shared';
 
 export interface IGitProviderRepository extends IRepository<GitProvider> {

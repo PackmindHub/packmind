@@ -1,11 +1,11 @@
 import slug from 'slug';
 import { OrganizationService } from '../../services/OrganizationService';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import {
   IGetOrganizationByNameUseCase,
   GetOrganizationByNameCommand,
   GetOrganizationByNameResponse,
-} from '@packmind/shared';
+} from '@packmind/types';
 
 const origin = 'GetOrganizationByNameUseCase';
 

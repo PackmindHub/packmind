@@ -1,12 +1,12 @@
 import { AccountsHexa, accountsSchemas } from '@packmind/accounts';
-import { User, Organization } from '@packmind/accounts/types';
+import { User, Organization } from '@packmind/types';
 import { StandardsHexa, standardsSchemas } from '@packmind/standards';
 import { Standard, StandardVersion } from '@packmind/standards/types';
 import { GitHexa, gitSchemas } from '@packmind/git';
 import { JobsHexa } from '@packmind/jobs';
 import { SpacesHexa, spacesSchemas, Space } from '@packmind/spaces';
 import { HexaRegistry } from '@packmind/shared';
-import { makeTestDatasource } from '@packmind/shared/test';
+import { makeTestDatasource } from '@packmind/test-utils';
 
 import { DataSource } from 'typeorm';
 import assert from 'assert';

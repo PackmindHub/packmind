@@ -1,4 +1,4 @@
-import { OrganizationId } from '../accounts';
+import { OrganizationId } from '@packmind/types';
 import { Space, SpaceId } from '../spaces';
 
 /**

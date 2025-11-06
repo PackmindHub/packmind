@@ -1,7 +1,7 @@
+import { PackmindLogger } from '@packmind/logger';
 import {
   BaseHexa,
   HexaRegistry,
-  PackmindLogger,
   IRecipesPort,
   ISpacesPort,
   BaseHexaOpts,
@@ -14,7 +14,7 @@ import { RecipesHexa } from '@packmind/recipes';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { StandardsHexa } from '@packmind/standards';
 import { RecipesAdapter } from './adapters/RecipesAdapter';
-import { UserProvider, OrganizationProvider } from '@packmind/shared';
+import { UserProvider, OrganizationProvider } from '@packmind/types';
 
 const origin = 'DeploymentsHexa';
 

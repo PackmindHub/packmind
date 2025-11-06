@@ -1,7 +1,7 @@
 import { StandardVersionService } from '../../services/StandardVersionService';
 import { Rule } from '../../../domain/entities/Rule';
 import { StandardId } from '../../../domain/entities/Standard';
-import { LogLevel, PackmindLogger } from '@packmind/shared';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
 
 const origin = 'GetRulesByStandardIdUsecase';
 

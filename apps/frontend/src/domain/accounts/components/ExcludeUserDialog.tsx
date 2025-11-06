@@ -10,7 +10,7 @@ import {
   pmToaster,
 } from '@packmind/ui';
 import { LuUserMinus } from 'react-icons/lu';
-import { UserStatus, OrganizationId } from '@packmind/accounts/types';
+import { UserStatus, OrganizationId } from '@packmind/types';
 import { useExcludeUserMutation } from '../api/queries/AccountsQueries';
 
 interface ExcludeUserDialogProps {

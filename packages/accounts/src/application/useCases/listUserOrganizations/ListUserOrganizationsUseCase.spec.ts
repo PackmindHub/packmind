@@ -1,11 +1,11 @@
 import { ListUserOrganizationsUseCase } from './ListUserOrganizationsUseCase';
 import { UserService } from '../../services/UserService';
-import { createUserId } from '../../../domain/entities/User';
-import { createOrganizationId } from '../../../domain/entities/Organization';
-import { PackmindLogger } from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
+import { createUserId } from '@packmind/types';
+import { createOrganizationId } from '@packmind/types';
+import { PackmindLogger } from '@packmind/logger';
+import { stubLogger } from '@packmind/test-utils';
 import { userFactory, organizationFactory } from '../../../../test';
-import { ListUserOrganizationsCommand } from '@packmind/shared';
+import { ListUserOrganizationsCommand } from '@packmind/types';
 
 describe('ListUserOrganizationsUseCase', () => {
   let listUserOrganizationsUseCase: ListUserOrganizationsUseCase;

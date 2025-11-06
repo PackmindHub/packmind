@@ -23,9 +23,9 @@ import { ResetPasswordUseCase } from '../useCases/ResetPasswordUseCase';
 import { ValidatePasswordResetTokenUseCase } from '../useCases/ValidatePasswordResetTokenUseCase';
 import { GetOrganizationOnboardingStatusUseCase } from '../useCases/getOrganizationOnboardingStatus/GetOrganizationOnboardingStatusUseCase';
 import { IAccountsServices } from '../IAccountsServices';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { IAccountsPort } from '@packmind/types';
 import {
-  IAccountsPort,
   ISpacesPort,
   IGitPort,
   IStandardsPort,
@@ -95,7 +95,7 @@ import {
   IValidateInvitationTokenUseCase,
   ValidateInvitationTokenCommand,
   ValidateInvitationTokenResponse,
-} from '@packmind/shared';
+} from '@packmind/types';
 
 const origin = 'AccountsAdapter';
 

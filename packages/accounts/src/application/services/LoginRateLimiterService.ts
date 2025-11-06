@@ -1,9 +1,5 @@
-import {
-  Cache,
-  Configuration,
-  PackmindLogger,
-  maskEmail,
-} from '@packmind/shared';
+import { Cache, Configuration } from '@packmind/shared';
+import { PackmindLogger, maskEmail } from '@packmind/logger';
 import { TooManyLoginAttemptsError } from '../../domain/errors/TooManyLoginAttemptsError';
 
 const origin = 'LoginRateLimiterService';

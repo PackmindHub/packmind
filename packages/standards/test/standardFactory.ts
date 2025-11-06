@@ -1,6 +1,7 @@
-import { Factory } from '@packmind/shared/test';
+import { Factory } from '@packmind/test-utils';
 import { v4 as uuidv4 } from 'uuid';
-import { createStandardId, createUserId, Standard } from '@packmind/shared';
+import { createUserId } from '@packmind/types';
+import { createStandardId, Standard } from '@packmind/shared';
 import { createSpaceId } from '@packmind/spaces';
 
 export const standardFactory: Factory<Standard> = (

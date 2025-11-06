@@ -4,7 +4,7 @@ import {
   TableColumn,
   TableForeignKey,
 } from 'typeorm';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'AddSpaceIdToStandards1760700000000';
 

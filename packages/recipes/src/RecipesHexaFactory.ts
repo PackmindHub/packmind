@@ -2,12 +2,8 @@ import { RecipesServices } from './application/services/RecipesServices';
 import { RecipesRepositories } from './infra/repositories/RecipesRepositories';
 import { DataSource } from 'typeorm';
 import { RecipesAdapter } from './application/adapter/RecipesAdapter';
-import {
-  PackmindLogger,
-  IDeploymentPort,
-  HexaRegistry,
-  ISpacesPort,
-} from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { IDeploymentPort, HexaRegistry, ISpacesPort } from '@packmind/shared';
 import { GitHexa } from '@packmind/git';
 import { IRecipesRepositories } from './domain/repositories/IRecipesRepositories';
 import { JobsHexa } from '@packmind/jobs';

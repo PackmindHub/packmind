@@ -1,4 +1,4 @@
-import { IUseCase, PackmindCommand } from '../../UseCase';
+import { IUseCase, PackmindCommand } from '@packmind/types';
 import { DetectionModeEnum } from '../DetectionProgram';
 
 export type IListDetectionProgramUseCase = IUseCase<

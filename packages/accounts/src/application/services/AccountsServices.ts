@@ -5,7 +5,8 @@ import { InvitationService } from './InvitationService';
 import { LoginRateLimiterService } from './LoginRateLimiterService';
 import { PasswordResetTokenService } from './PasswordResetTokenService';
 import { IAccountsRepository } from '../../domain/repositories/IAccountsRepository';
-import { PackmindLogger, SmtpMailService } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { SmtpMailService } from '@packmind/shared';
 
 /**
  * AccountsServices - Service aggregator implementation for the Accounts application layer
@@ -29,7 +30,6 @@ export class AccountsServices implements IAccountsServices {
     this.userService = new UserService(
       this.accountsRepository.getUserRepository(),
       this.accountsRepository.getUserOrganizationMembershipRepository(),
-      this.logger,
     );
     this.organizationService = new OrganizationService(
       this.accountsRepository.getOrganizationRepository(),

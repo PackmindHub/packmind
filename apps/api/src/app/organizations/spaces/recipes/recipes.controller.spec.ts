@@ -2,13 +2,13 @@ import { OrganizationsSpacesRecipesController } from './recipes.controller';
 import { RecipesService } from '../../../recipes/recipes.service';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
 import { createSpaceId } from '@packmind/spaces';
-import { stubLogger } from '@packmind/shared/test';
+import { stubLogger } from '@packmind/test-utils';
 import {
   Recipe,
   createRecipeId,
   createRecipeVersionId,
 } from '@packmind/recipes';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import { NotFoundException } from '@nestjs/common';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
 
@@ -23,6 +23,8 @@ describe('OrganizationsSpacesRecipesController', () => {
       getRecipesBySpace: jest.fn(),
       getRecipeById: jest.fn(),
       getRecipeVersionsById: jest.fn(),
+      updateRecipeFromUI: jest.fn(),
+      deleteRecipe: jest.fn(),
     } as unknown as jest.Mocked<RecipesService>;
 
     logger = stubLogger();
@@ -293,6 +295,213 @@ describe('OrganizationsSpacesRecipesController', () => {
       await expect(
         controller.getRecipeVersionsById(orgId, spaceId, recipeId),
       ).rejects.toThrow('Database error');
+    });
+  });
+
+  describe('updateRecipe', () => {
+    it('updates recipe within space and returns updated recipe', async () => {
+      const orgId = createOrganizationId('org-123');
+      const spaceId = createSpaceId('space-456');
+      const recipeId = createRecipeId('recipe-1');
+      const userId = createUserId('user-1');
+      const updateData = {
+        name: 'Updated Recipe',
+        content: 'Updated content',
+      };
+      const mockUpdatedRecipe: Recipe = {
+        id: recipeId,
+        slug: 'test-recipe',
+        name: updateData.name,
+        content: updateData.content,
+        userId,
+        version: 2,
+        spaceId,
+      };
+      const request = {
+        organization: {
+          id: orgId,
+          name: 'Test Org',
+          slug: 'test-org',
+          role: 'admin',
+        },
+        user: {
+          userId,
+          name: 'Test User',
+        },
+      } as unknown as AuthenticatedRequest;
+
+      recipesService.updateRecipeFromUI.mockResolvedValue(mockUpdatedRecipe);
+
+      const result = await controller.updateRecipe(
+        orgId,
+        spaceId,
+        recipeId,
+        updateData,
+        request,
+      );
+
+      expect(result).toEqual(mockUpdatedRecipe);
+      expect(recipesService.updateRecipeFromUI).toHaveBeenCalledWith(
+        recipeId,
+        spaceId,
+        orgId,
+        updateData.name,
+        updateData.content,
+        userId,
+      );
+    });
+
+    it('propagates errors from service', async () => {
+      const orgId = createOrganizationId('org-123');
+      const spaceId = createSpaceId('space-456');
+      const recipeId = createRecipeId('recipe-1');
+      const userId = createUserId('user-1');
+      const updateData = {
+        name: 'Updated Recipe',
+        content: 'Updated content',
+      };
+      const request = {
+        organization: {
+          id: orgId,
+          name: 'Test Org',
+          slug: 'test-org',
+          role: 'admin',
+        },
+        user: {
+          userId,
+          name: 'Test User',
+        },
+      } as unknown as AuthenticatedRequest;
+      const error = new Error('Database error');
+
+      recipesService.updateRecipeFromUI.mockRejectedValue(error);
+
+      await expect(
+        controller.updateRecipe(orgId, spaceId, recipeId, updateData, request),
+      ).rejects.toThrow('Database error');
+    });
+
+    it('validates recipe belongs to specified space', async () => {
+      const orgId = createOrganizationId('org-123');
+      const spaceId = createSpaceId('space-456');
+      const recipeId = createRecipeId('recipe-1');
+      const userId = createUserId('user-1');
+      const updateData = {
+        name: 'Updated Recipe',
+        content: 'Updated content',
+      };
+      const request = {
+        organization: {
+          id: orgId,
+          name: 'Test Org',
+          slug: 'test-org',
+          role: 'admin',
+        },
+        user: {
+          userId,
+          name: 'Test User',
+        },
+      } as unknown as AuthenticatedRequest;
+      const error = new Error(
+        `Recipe ${recipeId} does not belong to space ${spaceId}`,
+      );
+
+      recipesService.updateRecipeFromUI.mockRejectedValue(error);
+
+      await expect(
+        controller.updateRecipe(orgId, spaceId, recipeId, updateData, request),
+      ).rejects.toThrow(
+        `Recipe ${recipeId} does not belong to space ${spaceId}`,
+      );
+    });
+  });
+
+  describe('deleteRecipe', () => {
+    it('deletes recipe within space and returns void', async () => {
+      const orgId = createOrganizationId('org-123');
+      const spaceId = createSpaceId('space-456');
+      const recipeId = createRecipeId('recipe-1');
+      const userId = createUserId('user-1');
+      const request = {
+        organization: {
+          id: orgId,
+          name: 'Test Org',
+          slug: 'test-org',
+          role: 'admin',
+        },
+        user: {
+          userId,
+          name: 'Test User',
+        },
+      } as unknown as AuthenticatedRequest;
+
+      recipesService.deleteRecipe.mockResolvedValue(undefined);
+
+      await controller.deleteRecipe(orgId, spaceId, recipeId, request);
+
+      expect(recipesService.deleteRecipe).toHaveBeenCalledWith(
+        recipeId,
+        spaceId,
+        orgId,
+        userId,
+      );
+    });
+
+    it('propagates errors from service', async () => {
+      const orgId = createOrganizationId('org-123');
+      const spaceId = createSpaceId('space-456');
+      const recipeId = createRecipeId('recipe-1');
+      const userId = createUserId('user-1');
+      const request = {
+        organization: {
+          id: orgId,
+          name: 'Test Org',
+          slug: 'test-org',
+          role: 'admin',
+        },
+        user: {
+          userId,
+          name: 'Test User',
+        },
+      } as unknown as AuthenticatedRequest;
+
+      recipesService.deleteRecipe.mockRejectedValue(
+        new Error('Database error'),
+      );
+
+      await expect(
+        controller.deleteRecipe(orgId, spaceId, recipeId, request),
+      ).rejects.toThrow('Database error');
+    });
+
+    it('validates recipe belongs to specified space', async () => {
+      const orgId = createOrganizationId('org-123');
+      const spaceId = createSpaceId('space-456');
+      const recipeId = createRecipeId('recipe-1');
+      const userId = createUserId('user-1');
+      const request = {
+        organization: {
+          id: orgId,
+          name: 'Test Org',
+          slug: 'test-org',
+          role: 'admin',
+        },
+        user: {
+          userId,
+          name: 'Test User',
+        },
+      } as unknown as AuthenticatedRequest;
+      const error = new Error(
+        `Recipe ${recipeId} does not belong to space ${spaceId}`,
+      );
+
+      recipesService.deleteRecipe.mockRejectedValue(error);
+
+      await expect(
+        controller.deleteRecipe(orgId, spaceId, recipeId, request),
+      ).rejects.toThrow(
+        `Recipe ${recipeId} does not belong to space ${spaceId}`,
+      );
     });
   });
 });

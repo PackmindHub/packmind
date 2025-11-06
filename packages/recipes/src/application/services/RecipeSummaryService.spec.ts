@@ -1,13 +1,9 @@
 import { RecipeSummaryService } from './RecipeSummaryService';
 import { RecipeVersion } from '../../domain/entities/RecipeVersion';
-import {
-  AIService,
-  AIPromptResult,
-  PackmindLogger,
-  AiNotConfigured,
-} from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { AIService, AIPromptResult, AiNotConfigured } from '@packmind/shared';
 import { createRecipeSummaryPrompt } from './cookbook/prompts/create_recipe_summary';
-import { stubLogger } from '@packmind/shared/test';
+import { stubLogger } from '@packmind/test-utils';
 import { recipeVersionFactory } from '../../../test/recipeVersionFactory';
 
 // Mock AIService

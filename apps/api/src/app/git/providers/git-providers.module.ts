@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { GitProvidersController } from './git-providers.controller';
 import { GitProvidersService } from './git-providers.service';
-import { PackmindLogger, LogLevel } from '@packmind/shared';
+import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { AuthModule } from '../../auth/auth.module';
 
 @Module({

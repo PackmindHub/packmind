@@ -1,4 +1,4 @@
-import { OrganizationId } from '@packmind/accounts/types';
+import { OrganizationId } from '@packmind/types';
 import {
   GitProviderUI,
   GitRepoUI,

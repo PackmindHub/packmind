@@ -1,8 +1,8 @@
-import { stubLogger } from '@packmind/shared/test';
+import { stubLogger } from '@packmind/test-utils';
 import { ChangeUserRoleUseCase } from './ChangeUserRoleUseCase';
-import { ChangeUserRoleCommand } from '@packmind/shared';
-import { createUserId } from '../../../domain/entities/User';
-import { createOrganizationId } from '../../../domain/entities/Organization';
+import { ChangeUserRoleCommand } from '@packmind/types';
+import { createUserId } from '@packmind/types';
+import { createOrganizationId } from '@packmind/types';
 import { organizationFactory, userFactory } from '../../../../test';
 import { v4 as uuidv4 } from 'uuid';
 import { UserService } from '../../services/UserService';

@@ -1,14 +1,13 @@
+import { NewGateway, OrganizationId } from '@packmind/types';
 import {
   Standard,
   StandardVersion,
   StandardId,
   StandardVersionId,
   Rule,
-  NewGateway,
   IListStandardsBySpaceUseCase,
   IGetStandardByIdUseCase,
   SpaceId,
-  OrganizationId,
 } from '@packmind/shared/types';
 import { GitRepoId } from '@packmind/git/types';
 

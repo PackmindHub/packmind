@@ -1,7 +1,7 @@
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import { IGitProviderGateway } from './IGitProviderGateway';
 import { GitProvider, GitProviderId, GitRepoId } from '@packmind/git/types';
-import { OrganizationId } from '@packmind/accounts/types';
+import { OrganizationId } from '@packmind/types';
 import {
   GitProviderUI,
   GitRepoUI,

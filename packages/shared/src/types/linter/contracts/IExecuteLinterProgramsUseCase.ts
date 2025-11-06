@@ -1,4 +1,4 @@
-import { IPublicUseCase } from '../../UseCase';
+import { IPublicUseCase } from '@packmind/types';
 import { ProgrammingLanguage } from '../../languages';
 
 export type LinterExecutionProgram = {

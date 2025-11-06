@@ -29,3 +29,7 @@ dockerfile/prod/secrets
 
 tsconfig.base.effective.json
 packages/linter/js-playground-local
+
+DECISIONS.md
+LEARNINGS.md
+test-results/

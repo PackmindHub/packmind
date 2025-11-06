@@ -1,5 +1,5 @@
-import { User } from '../entities/User';
-import { OrganizationId } from '../entities/Organization';
+import { User } from '@packmind/types';
+import { OrganizationId } from '@packmind/types';
 import { IRepository } from '@packmind/shared';
 
 export interface IUserRepository extends IRepository<User> {

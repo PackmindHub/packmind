@@ -1,4 +1,4 @@
-import { PackmindCommand, IUseCase } from '@packmind/shared';
+import { PackmindCommand, IUseCase } from '@packmind/types';
 import { GitRepo } from '../entities/GitRepo';
 import { GitProviderId } from '../entities/GitProvider';
 

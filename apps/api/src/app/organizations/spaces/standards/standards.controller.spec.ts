@@ -2,14 +2,14 @@ import { OrganizationsSpacesStandardsController } from './standards.controller';
 import { StandardsService } from '../../../standards/standards.service';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
 import { createSpaceId } from '@packmind/spaces';
-import { stubLogger } from '@packmind/shared/test';
+import { stubLogger } from '@packmind/test-utils';
 import {
   Standard,
   createStandardId,
   createRuleId,
   RuleId,
 } from '@packmind/standards';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
 import { BadRequestException } from '@nestjs/common';
 

@@ -1,6 +1,6 @@
 import { RecipeService } from '../../services/RecipeService';
 import { Recipe } from '../../../domain/entities/Recipe';
-import { LogLevel, PackmindLogger } from '@packmind/shared';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { OrganizationId } from '@packmind/accounts';
 
 const origin = 'ListRecipesByOrganizationUsecase';

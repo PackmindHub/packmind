@@ -2,9 +2,9 @@ import {
   ICheckEmailAvailabilityUseCase,
   CheckEmailAvailabilityCommand,
   CheckEmailAvailabilityResponse,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { UserService } from '../../services/UserService';
-import { PackmindLogger, LogLevel, maskEmail } from '@packmind/shared';
+import { PackmindLogger, LogLevel, maskEmail } from '@packmind/logger';
 
 const origin = 'CheckEmailAvailabilityUseCase';
 

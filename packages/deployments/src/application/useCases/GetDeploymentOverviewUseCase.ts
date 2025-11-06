@@ -1,11 +1,8 @@
-import {
-  PackmindLogger,
-  WithTimestamps,
-  IRecipesPort,
-  ISpacesPort,
-} from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { WithTimestamps, IRecipesPort, ISpacesPort } from '@packmind/shared';
 import { GitHexa } from '@packmind/git';
 import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
+import { createUserId } from '@packmind/types';
 import {
   DeploymentOverview,
   GetDeploymentOverviewCommand,
@@ -20,7 +17,6 @@ import {
   RecipeVersion,
   RecipesDeployment,
   createRecipeVersionId,
-  createUserId,
   GitRepo,
   GitRepoId,
   DistributionStatus,

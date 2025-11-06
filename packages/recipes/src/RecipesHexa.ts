@@ -1,11 +1,12 @@
+import { PackmindLogger } from '@packmind/logger';
 import {
   BaseHexa,
   HexaRegistry,
-  PackmindLogger,
   QueryOption,
   CaptureRecipeCommand,
   UpdateRecipesFromGitHubCommand,
   UpdateRecipesFromGitLabCommand,
+  UpdateRecipeFromUICommand,
   IDeploymentPort,
   BaseHexaOpts,
   GetRecipeByIdCommand,
@@ -17,7 +18,7 @@ import {
   RecipeVersion,
   RecipeVersionId,
 } from './domain/entities/RecipeVersion';
-import { OrganizationId, UserId } from '@packmind/accounts';
+import { OrganizationId } from '@packmind/accounts';
 import { GitHexa } from '@packmind/git';
 
 import {
@@ -292,13 +293,10 @@ export class RecipesHexa extends BaseHexa {
   /**
    * Update a recipe from UI with new content (creates new version)
    */
-  public async updateRecipeFromUI(params: {
-    recipeId: RecipeId;
-    name: string;
-    content: string;
-    editorUserId: UserId;
-  }): Promise<Recipe> {
-    const result = await this.hexa.useCases.updateRecipeFromUI(params);
+  public async updateRecipeFromUI(
+    command: UpdateRecipeFromUICommand,
+  ): Promise<Recipe> {
+    const result = await this.hexa.useCases.updateRecipeFromUI(command);
     return result.recipe;
   }
 }

@@ -24,7 +24,7 @@ import {
   SignInUserResponse,
   TooManyLoginAttemptsError,
 } from '@packmind/accounts';
-import { maskEmail } from '@packmind/shared';
+import { maskEmail } from '@packmind/logger';
 import {
   SignUpWithOrganizationCommand,
   SignUpWithOrganizationResponse,
@@ -32,7 +32,7 @@ import {
   CheckEmailAvailabilityResponse,
   RequestPasswordResetCommand,
   RequestPasswordResetResponse,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
 import { Configuration } from '@packmind/shared';
 import { Public } from '@packmind/shared-nest';

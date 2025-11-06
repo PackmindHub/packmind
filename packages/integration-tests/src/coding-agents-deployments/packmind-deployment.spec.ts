@@ -222,6 +222,7 @@ describe('Packmind Deployment Spec', () => {
         await testApp.recipesHexa.deleteRecipe({
           ...dataFactory.packmindCommand(),
           recipeId: recipe1.id,
+          spaceId: recipe1.spaceId,
         });
       });
 

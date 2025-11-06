@@ -3,13 +3,9 @@ import { RecipeService } from '../../services/RecipeService';
 import { recipeFactory } from '../../../../test/recipeFactory';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
 import { createSpaceId } from '@packmind/spaces';
-import {
-  UserProvider,
-  OrganizationProvider,
-  ISpacesPort,
-  Space,
-} from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
+import { UserProvider, OrganizationProvider } from '@packmind/types';
+import { ISpacesPort, Space } from '@packmind/shared';
+import { stubLogger } from '@packmind/test-utils';
 
 describe('ListRecipesBySpaceUsecase', () => {
   let usecase: ListRecipesBySpaceUsecase;

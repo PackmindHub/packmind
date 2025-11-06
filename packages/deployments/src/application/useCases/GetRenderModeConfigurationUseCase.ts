@@ -1,13 +1,11 @@
+import { OrganizationProvider, UserProvider } from '@packmind/types';
 import {
   AbstractMemberUseCase,
   GetRenderModeConfigurationCommand,
   GetRenderModeConfigurationResult,
-  LogLevel,
   MemberContext,
-  OrganizationProvider,
-  PackmindLogger,
-  UserProvider,
 } from '@packmind/shared';
+import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 
 const origin = 'GetRenderModeConfigurationUseCase';

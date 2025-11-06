@@ -5,11 +5,8 @@ import {
   createRuleExampleId,
 } from '../../../domain/entities/RuleExample';
 import { RuleId } from '../../../domain/entities/Rule';
-import {
-  PackmindLogger,
-  getErrorMessage,
-  ProgrammingLanguage,
-} from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { getErrorMessage, ProgrammingLanguage } from '@packmind/shared';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
 import { v4 as uuidv4 } from 'uuid';
 import {

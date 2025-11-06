@@ -1,4 +1,4 @@
-import { IUseCase, PackmindCommand } from '../../UseCase';
+import { IUseCase, PackmindCommand } from '@packmind/types';
 import { RenderModeConfiguration } from '../RenderModeConfiguration';
 
 export type GetRenderModeConfigurationCommand = PackmindCommand;

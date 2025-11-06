@@ -44,6 +44,7 @@ export const RunDistributionBodyImpl: React.FC = () => {
       [RenderMode.CURSOR]: 'Cursor',
       [RenderMode.CLAUDE]: 'Claude',
       [RenderMode.JUNIE]: 'Junie',
+      [RenderMode.GITLAB_DUO]: 'Gitlab Duo',
     };
     return activeRenderModes.map((mode) => labels[mode] ?? mode).join(', ');
   }, [activeRenderModes]);

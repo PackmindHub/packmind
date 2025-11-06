@@ -1,4 +1,4 @@
-import { OrganizationId } from '@packmind/shared/types';
+import { OrganizationId } from '@packmind/types';
 import { Space, SpaceId } from '../entities/Space';
 
 export interface ISpaceRepository {

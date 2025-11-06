@@ -6,7 +6,7 @@ import Fastify from 'fastify';
 import { app } from './app/app';
 import { registerDb } from './db';
 import { registerHexaRegistry } from './hexa-registry';
-import { PackmindLogger, LogLevel } from '@packmind/shared';
+import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { Configuration } from '@packmind/shared';
 
 const logger = new PackmindLogger('PackmindMCPServer', LogLevel.INFO);
@@ -48,8 +48,6 @@ async function startServer() {
       logger.info('Sentry is enabled, setting up error handler for Fastify');
       Sentry.setupFastifyErrorHandler(server);
     }
-
-    logger.debug('Fastify instance created', { host, port });
 
     // Register database
     registerDb(server);

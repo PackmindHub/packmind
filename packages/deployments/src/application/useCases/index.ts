@@ -14,6 +14,7 @@ export { ListDeploymentsByRecipeUseCase } from './ListDeploymentsByRecipeUseCase
 export { ListDeploymentsByStandardUseCase } from './ListDeploymentsByStandardUseCase';
 export { PublishRecipesUseCase } from './PublishRecipesUseCase';
 export { PublishStandardsUseCase } from './PublishStandardsUseCase';
+export { PullAllContentUseCase } from './PullAllContentUseCase';
 export { UpdateRenderModeConfigurationUseCase } from './UpdateRenderModeConfigurationUseCase';
 export { UpdateTargetUseCase } from './UpdateTargetUseCase';
 

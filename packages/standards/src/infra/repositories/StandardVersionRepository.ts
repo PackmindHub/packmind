@@ -6,8 +6,8 @@ import { StandardId } from '../../domain/entities/Standard';
 import { IStandardVersionRepository } from '../../domain/repositories/IStandardVersionRepository';
 import { StandardVersionSchema } from '../schemas/StandardVersionSchema';
 import { Repository } from 'typeorm';
+import { PackmindLogger } from '@packmind/logger';
 import {
-  PackmindLogger,
   localDataSource,
   AbstractRepository,
   getErrorMessage,

@@ -1,11 +1,6 @@
-import {
-  BaseHexa,
-  BaseHexaOpts,
-  HexaRegistry,
-  PackmindLogger,
-  UserProvider,
-  OrganizationProvider,
-} from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { UserProvider, OrganizationProvider } from '@packmind/types';
+import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/shared';
 import {
   ISpacesPort,
   IGitPort,
@@ -13,8 +8,7 @@ import {
   IDeploymentPort,
 } from '@packmind/shared/types';
 import { AccountsHexaFactory } from './AccountsHexaFactory';
-import { User } from './domain/entities/User';
-import { Organization } from './domain/entities/Organization';
+import { User, Organization } from '@packmind/types';
 import { ApiKeyService } from './application/services/ApiKeyService';
 import { SpacesHexa } from '@packmind/spaces';
 
@@ -57,7 +51,7 @@ import {
   ListOrganizationUsersResponse,
   ListUserOrganizationsCommand,
   ListUserOrganizationsResponse,
-} from '@packmind/shared';
+} from '@packmind/types';
 
 const origin = 'AccountsHexa';
 

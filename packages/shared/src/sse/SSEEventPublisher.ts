@@ -4,7 +4,7 @@ import {
   SSE_REDIS_CHANNELS,
   serializeSSERedisMessage,
 } from './types';
-import { PackmindLogger } from '../logger/PackmindLogger';
+import { PackmindLogger } from '@packmind/logger';
 import {
   AnySSEEvent,
   createProgramStatusChangeEvent,
@@ -12,7 +12,7 @@ import {
   createUserContextChangeEvent,
   type UserContextChangeType,
 } from '../types/sse/SSEEvent';
-import { UserOrganizationRole } from '../types/accounts/User';
+import { UserOrganizationRole } from '@packmind/types';
 
 const origin = 'SSEEventPublisher';
 

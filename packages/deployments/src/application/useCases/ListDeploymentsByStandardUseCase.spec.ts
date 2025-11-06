@@ -1,17 +1,16 @@
 import { ListDeploymentsByStandardUseCase } from './ListDeploymentsByStandardUseCase';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
+import { createOrganizationId, createUserId } from '@packmind/types';
 import {
   createStandardId,
   createStandardVersionId,
-  createOrganizationId,
-  createUserId,
   createGitRepoId,
   createStandardsDeploymentId,
   StandardsDeployment,
   createTargetId,
   DistributionStatus,
 } from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
+import { stubLogger } from '@packmind/test-utils';
 
 describe('ListDeploymentsByStandardUseCase', () => {
   let useCase: ListDeploymentsByStandardUseCase;

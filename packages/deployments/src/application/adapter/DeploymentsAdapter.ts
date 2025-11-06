@@ -1,4 +1,10 @@
 import {
+  UserProvider,
+  OrganizationProvider,
+  IPullAllContentResponse,
+  PackmindCommand,
+} from '@packmind/types';
+import {
   FindDeployedStandardByRepositoryCommand,
   FindDeployedStandardByRepositoryResponse,
   FindActiveStandardVersionsByTargetCommand,
@@ -28,8 +34,6 @@ import {
   CreateRenderModeConfigurationCommand,
   UpdateRenderModeConfigurationCommand,
   RenderModeConfiguration,
-  UserProvider,
-  OrganizationProvider,
 } from '@packmind/shared';
 import { FindDeployedStandardByRepositoryUseCase } from '../useCases/FindDeployedStandardByRepositoryUseCase';
 import { FindActiveStandardVersionsByTargetUseCase } from '../useCases/FindActiveStandardVersionsByTargetUseCase';
@@ -59,6 +63,7 @@ import { DeleteTargetUseCase } from '../useCases/DeleteTargetUseCase';
 import { GetRenderModeConfigurationUseCase } from '../useCases/GetRenderModeConfigurationUseCase';
 import { CreateRenderModeConfigurationUseCase } from '../useCases/CreateRenderModeConfigurationUseCase';
 import { UpdateRenderModeConfigurationUseCase } from '../useCases/UpdateRenderModeConfigurationUseCase';
+import { PullAllContentUseCase } from '../useCases/PullAllContentUseCase';
 
 export class DeploymentsAdapter implements IDeploymentPort {
   private readonly standardDeploymentRepository: IStandardsDeploymentRepository;
@@ -312,6 +317,32 @@ export class DeploymentsAdapter implements IDeploymentPort {
     }
     const useCase = new UpdateRenderModeConfigurationUseCase(
       this.deploymentsServices.getRenderModeConfigurationService(),
+      this.userProvider,
+      this.organizationProvider,
+    );
+    return useCase.execute(command);
+  }
+
+  async pullAllContent(
+    command: PackmindCommand,
+  ): Promise<IPullAllContentResponse> {
+    if (!this.recipesPort) {
+      throw new Error('RecipesPort not available - cannot pull all content');
+    }
+    if (!this.spacesPort) {
+      throw new Error('SpacesPort not available - cannot pull all content');
+    }
+    if (!this.userProvider || !this.organizationProvider) {
+      throw new Error(
+        'Account providers not configured - cannot pull all content',
+      );
+    }
+
+    const useCase = new PullAllContentUseCase(
+      this.recipesPort as IRecipesPort,
+      this.standardsHexa,
+      this.spacesPort,
+      this.codingAgentHexa,
       this.userProvider,
       this.organizationProvider,
     );

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { SSEController } from './sse.controller';
 import { SSEService } from './sse.service';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 
 @Module({
   controllers: [SSEController],

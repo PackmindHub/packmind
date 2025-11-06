@@ -18,7 +18,7 @@ import {
   PMIcon,
   PMEllipsisMenu,
 } from '@packmind/ui';
-import { OrganizationId } from '@packmind/accounts/types';
+import { OrganizationId } from '@packmind/types';
 import {
   useGetGitProvidersQuery,
   useDeleteGitProviderMutation,

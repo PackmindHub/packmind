@@ -1,7 +1,7 @@
 import { DataSource } from 'typeorm';
 import { AccountsRepository } from './infra/repositories/AccountsRepository';
 import { AccountsAdapter } from './application/adapter/AccountsAdapter';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import {
   ISpacesPort,
   IGitPort,

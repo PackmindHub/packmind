@@ -16,17 +16,16 @@ import { standardVersionFactory } from '../../../../test/standardVersionFactory'
 import { ruleFactory } from '../../../../test/ruleFactory';
 import { v4 as uuidv4 } from 'uuid';
 import slug from 'slug';
+import { PackmindLogger } from '@packmind/logger';
+import { UserProvider, OrganizationProvider } from '@packmind/types';
 import {
-  PackmindLogger,
   UpdateStandardCommand,
-  UserProvider,
-  OrganizationProvider,
   ISpacesPort,
   Space,
   createSpaceId,
   SpaceId,
 } from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
+import { stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createUserId,

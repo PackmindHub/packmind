@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { AccountsHexa, GenerateUserTokenCommand } from '@packmind/accounts';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import { TokenResponse } from '../auth/auth.service';
 
 @Injectable()

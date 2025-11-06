@@ -1,10 +1,10 @@
 import {
-  Branded,
   DetectionStatus,
   ProgrammingLanguage,
   RuleId,
   TokensUsed,
 } from '@packmind/shared';
+import { Branded } from '@packmind/types';
 
 export { LinterHexa } from './LinterHexa';
 export { LinterModule } from './nest-api/linter.module';

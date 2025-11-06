@@ -3,12 +3,12 @@ import {
   UserId,
   ListOrganizationUserStatusesResponse,
   IListOrganizationUsersUseCase,
-} from '@packmind/accounts/types';
+} from '@packmind/types';
 import {
   ChangeUserRoleResponse,
   UserOrganizationRole,
   Gateway,
-} from '@packmind/shared';
+} from '@packmind/types';
 
 export interface UserMeResponse {
   message: string;

@@ -28,6 +28,7 @@ import { formatDistanceToNowStrict } from 'date-fns';
 import { GettingStartedLearnMoreDialog } from '../../organizations/components/dashboard/GettingStartedLearnMoreDialog';
 import { GETTING_STARTED_CREATE_DIALOG } from '../../organizations/components/dashboard/GettingStartedWidget';
 import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
+import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { routes } from '../../../shared/utils/routes';
 import { WithTimestamps } from '@packmind/shared';
 
@@ -36,7 +37,8 @@ interface RecipesListProps {
 }
 
 export const RecipesList = ({ orgSlug }: RecipesListProps) => {
-  const { spaceSlug } = useCurrentSpace();
+  const { organization } = useAuthContext();
+  const { spaceSlug, spaceId } = useCurrentSpace();
   const { data: recipes, isLoading, isError } = useGetRecipesQuery();
   const deleteBatchMutation = useDeleteRecipesBatchMutation();
   const [tableData, setTableData] = React.useState<PMTableRow[]>([]);
@@ -68,11 +70,15 @@ export const RecipesList = ({ orgSlug }: RecipesListProps) => {
   };
 
   const handleBatchDelete = async () => {
-    if (!isSomeSelected) return;
+    if (!isSomeSelected || !organization?.id || !spaceId) return;
 
     try {
       const count = selectedRecipeIds.length;
-      await deleteBatchMutation.mutateAsync(selectedRecipeIds);
+      await deleteBatchMutation.mutateAsync({
+        organizationId: organization.id,
+        spaceId,
+        recipeIds: selectedRecipeIds,
+      });
       setSelectedRecipeIds([]);
       setDeleteAlert({
         type: 'success',
@@ -239,8 +245,9 @@ export const RecipesList = ({ orgSlug }: RecipesListProps) => {
           mx={'auto'}
           title={'No recipes yet'}
         >
-          Recipes are a set of instructions that define how coding assistants
-          should help you write consistent code.
+          Recipes are reusable prompts that help you speed up recurring dev
+          tasks — like creating a new React component or setting up tests — with
+          consistent results across your team.
           <GettingStartedLearnMoreDialog
             body={GETTING_STARTED_CREATE_DIALOG.body}
             title={GETTING_STARTED_CREATE_DIALOG.title}

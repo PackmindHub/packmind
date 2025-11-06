@@ -1,5 +1,6 @@
-import { Factory } from '@packmind/shared/test';
+import { Factory } from '@packmind/test-utils';
 import { gitRepoFactory } from '@packmind/git/test/gitRepoFactory';
+import { createUserId } from '@packmind/types';
 import {
   StandardDeploymentOverview,
   RepositoryStandardDeploymentStatus,
@@ -11,7 +12,6 @@ import {
   TargetStandardDeploymentInfo,
   Standard,
   StandardVersion,
-  createUserId,
   createStandardVersionId,
   createStandardId,
 } from '@packmind/shared';

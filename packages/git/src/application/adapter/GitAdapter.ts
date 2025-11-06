@@ -17,14 +17,9 @@ import { UpdateGitProviderUseCase } from '../useCases/updateGitProvider/updateGi
 import { GetAvailableRemoteDirectoriesUseCase } from '../useCases/getAvailableRemoteDirectories/getAvailableRemoteDirectories.usecase';
 import { CheckDirectoryExistenceUseCase } from '../useCases/checkDirectoryExistence/checkDirectoryExistence.usecase';
 import { IGitServices } from '../IGitServices';
-import {
-  PackmindLogger,
-  QueryOption,
-  IDeploymentPort,
-  UserProvider,
-  OrganizationProvider,
-  IGitPort,
-} from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { UserProvider, OrganizationProvider } from '@packmind/types';
+import { QueryOption, IDeploymentPort, IGitPort } from '@packmind/shared';
 import { GitProvider, GitProviderId } from '../../domain/entities/GitProvider';
 import { GitRepo, GitRepoId } from '../../domain/entities/GitRepo';
 import { GitCommit } from '../../domain/entities/GitCommit';

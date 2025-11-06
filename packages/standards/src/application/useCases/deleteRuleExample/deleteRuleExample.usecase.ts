@@ -1,4 +1,4 @@
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
 import { IStandardsRepositories } from '../../../domain/repositories/IStandardsRepositories';
 import {

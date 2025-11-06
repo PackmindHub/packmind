@@ -1,8 +1,5 @@
-import {
-  IUseCase,
-  PackmindCommand,
-  ProgrammingLanguage,
-} from '@packmind/shared';
+import { IUseCase, PackmindCommand } from '@packmind/types';
+import { ProgrammingLanguage } from '@packmind/shared';
 import { RuleExample, RuleId } from '../entities';
 
 export type CreateRuleExampleCommand = PackmindCommand & {

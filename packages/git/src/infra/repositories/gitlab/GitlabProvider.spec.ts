@@ -1,7 +1,7 @@
 import { GitlabProvider } from './GitlabProvider';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import { AxiosInstance } from 'axios';
-import { stubLogger } from '@packmind/shared/test';
+import { stubLogger } from '@packmind/test-utils';
 import axios from 'axios';
 
 // Mock axios

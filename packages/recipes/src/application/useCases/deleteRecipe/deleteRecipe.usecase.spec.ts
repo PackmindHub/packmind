@@ -1,16 +1,21 @@
 import { DeleteRecipeUsecase } from './deleteRecipe.usecase';
 import { RecipeService } from '../../services/RecipeService';
 import { RecipeVersionService } from '../../services/RecipeVersionService';
-import { createRecipeId, RecipeId } from '../../../domain/entities/Recipe';
+import {
+  createRecipeId,
+  RecipeId,
+  Recipe,
+} from '../../../domain/entities/Recipe';
 import { v4 as uuidv4 } from 'uuid';
-import { PackmindLogger } from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
+import { PackmindLogger } from '@packmind/logger';
+import { stubLogger } from '@packmind/test-utils';
 import {
   createUserId,
   UserId,
   createOrganizationId,
   OrganizationId,
 } from '@packmind/accounts';
+import { createSpaceId, SpaceId } from '@packmind/spaces';
 import { DeleteRecipeCommand } from '@packmind/shared';
 
 describe('DeleteRecipeUsecase', () => {
@@ -59,14 +64,27 @@ describe('DeleteRecipeUsecase', () => {
     let recipeId: RecipeId;
     let userId: UserId;
     let organizationId: OrganizationId;
+    let spaceId: SpaceId;
     let command: DeleteRecipeCommand;
+    let mockRecipe: Recipe;
 
     beforeEach(async () => {
       userId = createUserId(uuidv4());
       organizationId = createOrganizationId(uuidv4());
+      spaceId = createSpaceId(uuidv4());
       recipeId = createRecipeId(uuidv4());
+      mockRecipe = {
+        id: recipeId,
+        slug: 'test-recipe',
+        name: 'Test Recipe',
+        content: 'Test content',
+        userId,
+        version: 1,
+        spaceId,
+      };
       command = {
         recipeId,
+        spaceId,
         userId: userId,
         organizationId: organizationId,
       };
@@ -74,6 +92,7 @@ describe('DeleteRecipeUsecase', () => {
 
     describe('when recipe deletion succeeds', () => {
       beforeEach(async () => {
+        recipeService.getRecipeById.mockResolvedValue(mockRecipe);
         recipeVersionService.deleteRecipeVersionsForRecipe.mockResolvedValue();
         recipeService.deleteRecipe.mockResolvedValue();
 
@@ -117,13 +136,14 @@ describe('DeleteRecipeUsecase', () => {
       let error: Error;
 
       beforeEach(() => {
-        error = new Error('Recipe not found');
+        error = new Error('Recipe deletion failed');
+        recipeService.getRecipeById.mockResolvedValue(mockRecipe);
         recipeService.deleteRecipe.mockRejectedValue(error);
       });
 
       it('throws the error from RecipeService', async () => {
         await expect(deleteRecipeUsecase.execute(command)).rejects.toThrow(
-          'Recipe not found',
+          'Recipe deletion failed',
         );
       });
 
@@ -159,18 +179,17 @@ describe('DeleteRecipeUsecase', () => {
         nonExistentRecipeId = createRecipeId(uuidv4());
         nonExistentCommand = {
           recipeId: nonExistentRecipeId,
+          spaceId,
           userId: userId,
           organizationId: organizationId,
         };
-        recipeService.deleteRecipe.mockRejectedValue(
-          new Error(`Recipe with id ${nonExistentRecipeId} not found`),
-        );
+        recipeService.getRecipeById.mockResolvedValue(null);
       });
 
       it('throws an error with the correct message', async () => {
         await expect(
           deleteRecipeUsecase.execute(nonExistentCommand),
-        ).rejects.toThrow(`Recipe with id ${nonExistentRecipeId} not found`);
+        ).rejects.toThrow(`Recipe ${nonExistentRecipeId} not found`);
       });
     });
 
@@ -180,9 +199,11 @@ describe('DeleteRecipeUsecase', () => {
       beforeEach(() => {
         failingCommand = {
           recipeId,
+          spaceId,
           userId: userId,
           organizationId: organizationId,
         };
+        recipeService.getRecipeById.mockResolvedValue(mockRecipe);
         recipeService.deleteRecipe.mockRejectedValue(
           new Error('Database connection failed'),
         );

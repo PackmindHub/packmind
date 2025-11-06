@@ -1,7 +1,7 @@
+import { PackmindLogger } from '@packmind/logger';
 import {
   BaseHexa,
   HexaRegistry,
-  PackmindLogger,
   QueryOption,
   IDeploymentPort,
   BaseHexaOpts,
@@ -16,11 +16,8 @@ import {
   FindGitRepoByOwnerRepoAndBranchInOrganizationCommand,
   FindGitRepoByOwnerRepoAndBranchInOrganizationResult,
 } from './domain/useCases/IFindGitRepoByOwnerRepoAndBranchInOrganization';
-import {
-  UserProvider,
-  OrganizationProvider,
-  GetAvailableRemoteDirectoriesCommand,
-} from '@packmind/shared';
+import { UserProvider, OrganizationProvider } from '@packmind/types';
+import { GetAvailableRemoteDirectoriesCommand } from '@packmind/shared';
 import {
   CheckDirectoryExistenceCommand,
   CheckDirectoryExistenceResult,

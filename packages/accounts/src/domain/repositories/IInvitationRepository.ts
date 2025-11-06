@@ -4,7 +4,7 @@ import {
   InvitationToken,
   InvitationId,
 } from '../entities/Invitation';
-import { UserId } from '../entities/User';
+import { UserId } from '@packmind/types';
 
 /**
  * Invitation repository contract exposing persistence operations required by

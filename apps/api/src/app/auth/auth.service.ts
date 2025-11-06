@@ -12,6 +12,7 @@ import {
   SignInUserResponse,
   createUserId,
 } from '@packmind/accounts';
+import { maskEmail } from '@packmind/logger';
 import {
   ActivateUserAccountCommand,
   ActivateUserAccountResponse,
@@ -21,20 +22,16 @@ import {
   ResetPasswordResponse,
   ValidatePasswordResetTokenCommand,
   ValidatePasswordResetTokenResponse,
-  maskEmail,
-} from '@packmind/shared';
+} from '@packmind/types';
 import {
   SignUpWithOrganizationCommand,
   SignUpWithOrganizationResponse,
   CheckEmailAvailabilityCommand,
   CheckEmailAvailabilityResponse,
-} from '@packmind/shared';
+} from '@packmind/types';
 
-import {
-  PackmindCommand,
-  PackmindCommandBody,
-  PackmindLogger,
-} from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { PackmindCommand, PackmindCommandBody } from '@packmind/types';
 import { JwtPayload } from './JwtPayload';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
 

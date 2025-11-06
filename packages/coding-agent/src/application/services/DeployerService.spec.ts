@@ -19,9 +19,10 @@ import { standardFactory } from '@packmind/standards/test';
 import { GitRepo, GitRepoId, GitProviderId } from '@packmind/git';
 import { FileUpdates } from '../../domain/entities/FileUpdates';
 import { UserId } from '@packmind/accounts';
-import { PackmindLogger, Target, TargetId } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { Target, TargetId } from '@packmind/shared';
 import { createSpaceId } from '@packmind/spaces';
-import { stubLogger } from '@packmind/shared/test';
+import { stubLogger } from '@packmind/test-utils';
 
 // Create test helper functions
 const createTestRecipeId = (id: string): RecipeId => id as RecipeId;
@@ -61,6 +62,20 @@ class MockDeployer implements ICodingAgentDeployer {
     gitRepo: GitRepo,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     target: Target,
+  ): Promise<FileUpdates> {
+    return this.standardResult;
+  }
+
+  async generateFileUpdatesForRecipes(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    recipeVersions: RecipeVersion[],
+  ): Promise<FileUpdates> {
+    return this.recipeResult;
+  }
+
+  async generateFileUpdatesForStandards(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    standardVersions: StandardVersion[],
   ): Promise<FileUpdates> {
     return this.standardResult;
   }
@@ -275,6 +290,12 @@ describe('DeployerService', () => {
           throw new Error('Deployment failed');
         },
         async deployStandards(): Promise<FileUpdates> {
+          return { createOrUpdate: [], delete: [] };
+        },
+        async generateFileUpdatesForRecipes(): Promise<FileUpdates> {
+          return { createOrUpdate: [], delete: [] };
+        },
+        async generateFileUpdatesForStandards(): Promise<FileUpdates> {
           return { createOrUpdate: [], delete: [] };
         },
       };

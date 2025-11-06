@@ -1,10 +1,10 @@
 import { UserService } from '../../services/UserService';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import {
   IValidatePasswordUseCase,
   ValidatePasswordCommand,
   ValidatePasswordResponse,
-} from '@packmind/shared';
+} from '@packmind/types';
 
 const origin = 'ValidatePasswordUseCase';
 

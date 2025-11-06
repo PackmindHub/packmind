@@ -1,3 +1,4 @@
+import { Gateway } from '@packmind/types';
 import {
   IListDeploymentsByRecipe,
   IGetStandardDeploymentOverview,
@@ -14,7 +15,6 @@ import {
   IGetRenderModeConfigurationUseCase,
   IUpdateRenderModeConfigurationUseCase,
   StandardId,
-  Gateway,
   GitRepoId,
 } from '@packmind/shared';
 import { OrganizationId } from '@packmind/accounts';

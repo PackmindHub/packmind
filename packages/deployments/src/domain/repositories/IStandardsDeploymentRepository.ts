@@ -1,6 +1,6 @@
 import { StandardsDeployment } from '../entities/StandardsDeployment';
 import { StandardVersion } from '@packmind/standards/types';
-import { OrganizationId } from '@packmind/accounts/types';
+import { OrganizationId } from '@packmind/types';
 import { StandardId } from '@packmind/standards/types';
 import { GitRepoId } from '@packmind/git/types';
 import { TargetId, DistributionStatus } from '@packmind/shared';

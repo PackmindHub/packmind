@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { SignInUserResponse } from '@packmind/accounts/types';
+import { SignInUserResponse } from '@packmind/types';
 import SignInCredentialsForm from './SignInCredentialsForm';
 import OrganizationSelectionForm from './OrganizationSelectionForm';
 import OrganizationCreationForm from './OrganizationCreationForm';

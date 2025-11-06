@@ -2,11 +2,8 @@ import { Rule } from '../../domain/entities/Rule';
 import { IRuleRepository } from '../../domain/repositories/IRuleRepository';
 import { RuleSchema } from '../schemas/RuleSchema';
 import { Repository } from 'typeorm';
-import {
-  PackmindLogger,
-  localDataSource,
-  AbstractRepository,
-} from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { localDataSource, AbstractRepository } from '@packmind/shared';
 import { StandardVersionId } from '../../domain/entities/StandardVersion';
 
 const origin = 'RuleRepository';

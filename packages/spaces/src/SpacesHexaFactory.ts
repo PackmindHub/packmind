@@ -1,7 +1,7 @@
 import { DataSource } from 'typeorm';
 import { SpaceRepository } from './infra/repositories/SpaceRepository';
 import { SpaceService } from './application/services/SpaceService';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import { SpaceSchema } from './infra/schemas/SpaceSchema';
 
 const origin = 'SpacesHexaFactory';

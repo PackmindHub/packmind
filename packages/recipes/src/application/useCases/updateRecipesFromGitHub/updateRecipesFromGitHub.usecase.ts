@@ -1,7 +1,7 @@
 import { RecipeService } from '../../services/RecipeService';
 import { GitHexa } from '@packmind/git';
+import { LogLevel } from '@packmind/logger';
 import {
-  LogLevel,
   IUpdateRecipesFromGitHubUseCase,
   UpdateRecipesFromGitHubCommand,
   UpdateRecipesFromGitHubResponse,

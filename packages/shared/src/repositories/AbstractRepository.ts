@@ -1,4 +1,4 @@
-import { PackmindLogger } from '../logger/PackmindLogger';
+import { PackmindLogger } from '@packmind/logger';
 import { IRepository, QueryOption } from './IRepository';
 import {
   EntitySchema,

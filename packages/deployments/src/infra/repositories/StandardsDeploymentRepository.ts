@@ -4,8 +4,8 @@ import { StandardId } from '@packmind/standards/types';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
 import { StandardsDeploymentSchema } from '../schemas/StandardsDeploymentSchema';
 import { Repository } from 'typeorm';
+import { PackmindLogger } from '@packmind/logger';
 import {
-  PackmindLogger,
   localDataSource,
   AbstractRepository,
   TargetId,

@@ -1,6 +1,6 @@
-import { IUseCase } from '../../UseCase';
+import { IUseCase } from '@packmind/types';
 import { Recipe, RecipeId } from '../Recipe';
-import { OrganizationId } from '../../accounts/Organization';
+import { OrganizationId } from '@packmind/types';
 import { SpaceId } from '../../spaces/Space';
 
 export type GetRecipeByIdCommand = {

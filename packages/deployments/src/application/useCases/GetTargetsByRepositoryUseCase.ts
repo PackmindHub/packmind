@@ -1,10 +1,10 @@
+import { OrganizationId } from '@packmind/types';
 import {
   TargetWithRepository,
   IGetTargetsByRepositoryUseCase,
   GetTargetsByRepositoryCommand,
-  PackmindLogger,
-  OrganizationId,
 } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import { TargetService } from '../services/TargetService';
 import { GitHexa } from '@packmind/git';
 

@@ -1,5 +1,5 @@
 import { EntitySchema } from 'typeorm';
-import { UserOrganizationMembership } from '../../domain/entities/User';
+import { UserOrganizationMembership } from '@packmind/types';
 import { WithTimestamps, timestampsSchemas } from '@packmind/shared';
 
 export const UserOrganizationMembershipSchema = new EntitySchema<
@@ -29,7 +29,6 @@ export const UserOrganizationMembershipSchema = new EntitySchema<
     user: {
       type: 'many-to-one',
       target: 'User',
-      inverseSide: 'memberships',
       joinColumn: {
         name: 'user_id',
         referencedColumnName: 'id',

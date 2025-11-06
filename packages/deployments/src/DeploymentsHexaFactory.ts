@@ -1,8 +1,5 @@
-import {
-  PackmindLogger,
-  HexaRegistry,
-  RenderModeConfiguration,
-} from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { HexaRegistry, RenderModeConfiguration } from '@packmind/shared';
 import { DataSource, Repository } from 'typeorm';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { GitHexa } from '@packmind/git';

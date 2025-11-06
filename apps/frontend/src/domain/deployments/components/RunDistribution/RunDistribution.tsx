@@ -1,12 +1,11 @@
 import React, { createContext, useContext, useMemo, useState } from 'react';
+import { OrganizationId, UserOrganizationRole } from '@packmind/types';
 import {
   TargetId,
   TargetWithRepository,
   RecipesDeployment,
   StandardsDeployment,
-  OrganizationId,
   RenderModeConfiguration,
-  UserOrganizationRole,
   RenderMode,
   DEFAULT_ACTIVE_RENDER_MODES,
 } from '@packmind/shared/types';

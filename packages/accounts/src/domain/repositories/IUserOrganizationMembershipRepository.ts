@@ -1,5 +1,5 @@
-import { UserId, UserOrganizationRole } from '../entities/User';
-import { OrganizationId } from '../entities/Organization';
+import { UserId, UserOrganizationRole } from '@packmind/types';
+import { OrganizationId } from '@packmind/types';
 
 /**
  * Repository contract dedicated to user-organization membership relations.

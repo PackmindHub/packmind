@@ -1,5 +1,5 @@
 import { RecipesDeployment } from '../RecipesDeployment';
-import { IUseCase, PackmindCommand } from '../../UseCase';
+import { IUseCase, PackmindCommand } from '@packmind/types';
 import { RecipeId } from '../../recipes';
 
 export type ListDeploymentsByRecipeCommand = PackmindCommand & {

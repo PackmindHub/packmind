@@ -1,13 +1,8 @@
 import { AddTargetUseCase } from './AddTargetUseCase';
 import { AddTargetCommand } from '@packmind/shared';
 import { TargetService } from '../services/TargetService';
-import {
-  Target,
-  createTargetId,
-  createGitRepoId,
-  createUserId,
-  createOrganizationId,
-} from '@packmind/shared';
+import { createUserId, createOrganizationId } from '@packmind/types';
+import { Target, createTargetId, createGitRepoId } from '@packmind/shared';
 import { v4 as uuidv4 } from 'uuid';
 
 describe('AddTargetUseCase', () => {

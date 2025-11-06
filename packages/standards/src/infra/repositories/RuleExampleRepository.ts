@@ -2,8 +2,8 @@ import { RuleExample } from '../../domain/entities/RuleExample';
 import { IRuleExampleRepository } from '../../domain/repositories/IRuleExampleRepository';
 import { RuleExampleSchema } from '../schemas/RuleExampleSchema';
 import { Repository } from 'typeorm';
+import { PackmindLogger } from '@packmind/logger';
 import {
-  PackmindLogger,
   localDataSource,
   AbstractRepository,
   RuleExampleId,

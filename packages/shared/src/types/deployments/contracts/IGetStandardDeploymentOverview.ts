@@ -1,4 +1,4 @@
-import { IUseCase, PackmindCommand } from '../../UseCase';
+import { IUseCase, PackmindCommand } from '@packmind/types';
 import { StandardDeploymentOverview } from '../StandardDeploymentOverview';
 
 export type GetStandardDeploymentOverviewCommand = PackmindCommand;

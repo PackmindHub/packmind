@@ -4,16 +4,13 @@ import { OrganizationService } from '../../services/OrganizationService';
 import {
   GenerateUserTokenCommand,
   GenerateUserTokenResponse,
-} from '@packmind/shared';
+} from '@packmind/types';
 import {
   createUserId,
   User,
   UserOrganizationMembership,
-} from '../../../domain/entities/User';
-import {
-  createOrganizationId,
-  Organization,
-} from '../../../domain/entities/Organization';
+} from '@packmind/types';
+import { createOrganizationId, Organization } from '@packmind/types';
 import { userFactory } from '../../../../test';
 
 describe('GenerateUserTokenUseCase', () => {

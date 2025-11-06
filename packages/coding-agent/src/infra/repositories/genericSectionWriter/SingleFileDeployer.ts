@@ -3,7 +3,8 @@ import { GitRepo, GitHexa } from '@packmind/git';
 import { StandardsHexa, StandardVersion } from '@packmind/standards';
 import { FileUpdates } from '../../../domain/entities/FileUpdates';
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
-import { PackmindLogger, Target } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { Target } from '@packmind/shared';
 import { GenericRecipeSectionWriter } from './GenericRecipeSectionWriter';
 import { GenericStandardSectionWriter } from './GenericStandardSectionWriter';
 import { getTargetPrefixedPath } from '../utils/FileUtils';
@@ -155,6 +156,85 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
         content: updatedContent,
       });
     }
+
+    return fileUpdates;
+  }
+
+  async generateFileUpdatesForRecipes(
+    recipeVersions: RecipeVersion[],
+  ): Promise<FileUpdates> {
+    this.logger.info(
+      `Generating file updates for recipes (${this.config.agentName})`,
+      {
+        recipesCount: recipeVersions.length,
+      },
+    );
+
+    const fileUpdates: FileUpdates = {
+      createOrUpdate: [],
+      delete: [],
+    };
+
+    // Generate content without fetching existing content or using target prefixing
+    const updatedContent = GenericRecipeSectionWriter.replace({
+      agentName: this.config.agentName,
+      repoName: 'repository',
+      currentContent: '',
+      commentMarker: 'Packmind recipes',
+      target: '/',
+      recipesSection: recipeVersions
+        .map((recipeVersion) =>
+          this.formatMarkdownLink(
+            recipeVersion,
+            `${this.config.pathToPackmindFolder ?? ''}.packmind/recipes/${recipeVersion.slug}.md`,
+          ),
+        )
+        .join('\n'),
+    });
+
+    fileUpdates.createOrUpdate.push({
+      path: this.config.filePath,
+      content: updatedContent,
+    });
+
+    return fileUpdates;
+  }
+
+  async generateFileUpdatesForStandards(
+    standardVersions: StandardVersion[],
+  ): Promise<FileUpdates> {
+    this.logger.info(
+      `Generating file updates for standards (${this.config.agentName})`,
+      {
+        standardsCount: standardVersions.length,
+      },
+    );
+
+    const fileUpdates: FileUpdates = {
+      createOrUpdate: [],
+      delete: [],
+    };
+
+    // Generate content without fetching existing content or using target prefixing
+    const standardsSection = await Promise.all(
+      standardVersions.map((standardVersion) =>
+        this.formatStandardContent(
+          standardVersion,
+          `${this.config.pathToPackmindFolder ?? ''}.packmind/standards/${standardVersion.slug}.md`,
+        ),
+      ),
+    );
+
+    const updatedContent = GenericStandardSectionWriter.replace({
+      currentContent: '',
+      commentMarker: 'Packmind standards',
+      standardsSection: standardsSection.join('\n\n'),
+    });
+
+    fileUpdates.createOrUpdate.push({
+      path: this.config.filePath,
+      content: updatedContent,
+    });
 
     return fileUpdates;
   }

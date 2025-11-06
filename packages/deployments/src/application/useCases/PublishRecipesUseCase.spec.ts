@@ -4,6 +4,7 @@ import { CodingAgentHexa, CodingAgents } from '@packmind/coding-agent';
 import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
 import { TargetService } from '../services/TargetService';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
+import { createUserId, createOrganizationId } from '@packmind/types';
 import {
   PublishRecipesCommand,
   DistributionStatus,
@@ -11,20 +12,18 @@ import {
   RenderMode,
   createRecipeVersionId,
   createTargetId,
-  createUserId,
-  createOrganizationId,
   createGitRepoId,
   createGitProviderId,
   createGitCommitId,
   GitRepo,
   GitCommit,
   IRecipesPort,
-  PackmindLogger,
 } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import { recipeVersionFactory } from '@packmind/recipes/test/recipeVersionFactory';
 import { targetFactory } from '../../../test/targetFactory';
 import { v4 as uuidv4 } from 'uuid';
-import { stubLogger } from '@packmind/shared/test';
+import { stubLogger } from '@packmind/test-utils';
 
 describe('PublishRecipesUseCase', () => {
   let useCase: PublishRecipesUseCase;

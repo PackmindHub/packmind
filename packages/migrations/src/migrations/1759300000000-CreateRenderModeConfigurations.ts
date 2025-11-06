@@ -9,7 +9,7 @@ import {
   uuidMigrationColumn,
   softDeleteMigrationColumns,
 } from '@packmind/shared/src/database/migrationColumns';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'CreateRenderModeConfigurations1759300000000';
 

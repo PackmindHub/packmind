@@ -1,6 +1,6 @@
 import { EmailData, MailService } from './MailService';
 import { Configuration } from '..';
-import { PackmindLogger } from '..';
+import { PackmindLogger } from '@packmind/logger';
 import nodemailer from 'nodemailer';
 import SMTPPool from 'nodemailer/lib/smtp-pool';
 

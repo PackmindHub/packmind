@@ -3,7 +3,8 @@ import {
   GetAvailableRemoteDirectoriesCommand,
   IGetAvailableRemoteDirectoriesUseCase,
 } from '@packmind/shared';
-import { PackmindLogger, Cache } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { Cache } from '@packmind/shared';
 
 const origin = 'GetAvailableRemoteDirectoriesUseCase';
 

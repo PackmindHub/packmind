@@ -5,8 +5,8 @@ import { RecipesDeploymentSchema } from '../schemas/RecipesDeploymentSchema';
 import { Repository } from 'typeorm';
 import { OrganizationId } from '@packmind/accounts';
 import { GitRepoId } from '@packmind/git';
+import { PackmindLogger } from '@packmind/logger';
 import {
-  PackmindLogger,
   localDataSource,
   AbstractRepository,
   TargetId,

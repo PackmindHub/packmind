@@ -1,4 +1,4 @@
-import { Factory } from '@packmind/shared/test';
+import { Factory } from '@packmind/test-utils';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
 import {
   DistributionStatus,

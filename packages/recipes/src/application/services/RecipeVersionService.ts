@@ -7,7 +7,7 @@ import {
 import { RecipeId } from '../../domain/entities/Recipe';
 import { IRecipeVersionRepository } from '../../domain/repositories/IRecipeVersionRepository';
 import { RecipeVersionRepository } from '../../infra/repositories/RecipeVersionRepository';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'RecipeVersionService';
 

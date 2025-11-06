@@ -2,13 +2,12 @@ import { v4 as uuidv4 } from 'uuid';
 import { OrganizationId } from '@packmind/accounts';
 import {
   DEFAULT_ACTIVE_RENDER_MODES,
-  LogLevel,
-  PackmindLogger,
   RenderMode,
   RenderModeConfiguration,
   createRenderModeConfigurationId,
   normalizeRenderModes,
 } from '@packmind/shared';
+import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { CodingAgent, CodingAgents } from '@packmind/coding-agent';
 import { IRenderModeConfigurationRepository } from '../../domain/repositories/IRenderModeConfigurationRepository';
 
@@ -21,6 +20,7 @@ const renderModeToCodingAgent: Record<RenderMode, CodingAgent> = {
   [RenderMode.GH_COPILOT]: CodingAgents.copilot,
   [RenderMode.CLAUDE]: CodingAgents.claude,
   [RenderMode.CURSOR]: CodingAgents.cursor,
+  [RenderMode.GITLAB_DUO]: CodingAgents.gitlab_duo,
 };
 
 export class RenderModeConfigurationService {

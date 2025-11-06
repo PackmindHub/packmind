@@ -1,6 +1,7 @@
-import { PackmindLogger, RuleExampleId } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { RuleExampleId } from '@packmind/shared';
 import { UserId, OrganizationId } from '@packmind/accounts';
-import { stubLogger } from '@packmind/shared/test';
+import { stubLogger } from '@packmind/test-utils';
 import { DeleteRuleExampleUsecase } from './deleteRuleExample.usecase';
 import { IStandardsRepositories } from '../../../domain/repositories/IStandardsRepositories';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';

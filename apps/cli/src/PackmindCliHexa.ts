@@ -1,4 +1,4 @@
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import { PackmindCliHexaFactory } from './PackmindCliHexaFactory';
 import {
   GetGitRemoteUrlUseCaseCommand,
@@ -16,6 +16,10 @@ import {
   LintFilesInDirectoryCommand,
   LintFilesInDirectoryResult,
 } from './domain/useCases/ILintFilesInDirectory';
+import {
+  IPullDataCommand,
+  IPullDataResult,
+} from './domain/useCases/IPullDataUseCase';
 
 const origin = 'PackmindCliHexa';
 
@@ -68,5 +72,9 @@ export class PackmindCliHexa {
     command: LintFilesInDirectoryCommand,
   ): Promise<LintFilesInDirectoryResult> {
     return this.hexa.useCases.lintFilesInDirectory.execute(command);
+  }
+
+  public async pullData(command: IPullDataCommand): Promise<IPullDataResult> {
+    return this.hexa.useCases.pullData.execute(command);
   }
 }

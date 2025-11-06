@@ -1,8 +1,8 @@
 import { GetOrganizationByNameUseCase } from './GetOrganizationByNameUseCase';
 import { OrganizationService } from '../../services/OrganizationService';
-import { stubLogger } from '@packmind/shared/test';
+import { stubLogger } from '@packmind/test-utils';
 import { organizationFactory } from '../../../../test/organizationFactory';
-import { createOrganizationId } from '../../../domain/entities/Organization';
+import { createOrganizationId } from '@packmind/types';
 
 jest.mock('../../services/OrganizationService');
 

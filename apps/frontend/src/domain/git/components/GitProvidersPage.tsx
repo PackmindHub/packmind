@@ -1,5 +1,5 @@
 import React from 'react';
-import { OrganizationId } from '@packmind/accounts/types';
+import { OrganizationId } from '@packmind/types';
 import { GitProvidersList } from './GitProvidersList';
 
 interface GitProvidersPageProps {

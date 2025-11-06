@@ -7,12 +7,8 @@ import {
   string,
   Type,
 } from 'cmd-ts';
-import {
-  createRuleId,
-  LogLevel,
-  PackmindLogger,
-  RuleId,
-} from '@packmind/shared';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
+import { createRuleId, RuleId } from '@packmind/shared';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { IDELintLogger } from '../repositories/IDELintLogger';
 import { HumanReadableLogger } from '../repositories/HumanReadableLogger';
@@ -35,6 +31,7 @@ const Logger: Type<string, Loggers> = {
     );
   },
 };
+
 const RuleID: Type<string, { standardSlug: string; ruleId: RuleId }> = {
   from: async (input) => {
     const match = input.match(/^@([^/]+)\/(.+)$/);
@@ -49,6 +46,7 @@ const RuleID: Type<string, { standardSlug: string; ruleId: RuleId }> = {
     };
   },
 };
+
 export const lintCommand = command({
   name: 'lint',
   description: 'Lint code at the specified path',

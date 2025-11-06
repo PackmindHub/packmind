@@ -1,7 +1,7 @@
 import { OpenAIService } from './OpenAIService';
 import { AIServiceErrorTypes } from './types';
-import { PackmindLogger } from '../../logger/PackmindLogger';
-import { stubLogger } from '../../../test/logger/stubLogger';
+import { PackmindLogger } from '@packmind/logger';
+import { stubLogger } from '@packmind/test-utils';
 
 // Helper for accessing private methods in tests (test-only type assertion)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

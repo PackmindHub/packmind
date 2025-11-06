@@ -1,18 +1,18 @@
+import {
+  itHandlesDuplicateKeys,
+  itHandlesSoftDelete,
+} from '@packmind/shared/test';
 import { DataSource, Repository } from 'typeorm';
 import { UserRepository } from './UserRepository';
-import { createUserId, User } from '../../domain/entities/User';
-import { Organization } from '../../domain/entities/Organization';
+import { createUserId, User } from '@packmind/types';
+import { Organization } from '@packmind/types';
 import { UserSchema } from '../schemas/UserSchema';
 import { OrganizationSchema } from '../schemas/OrganizationSchema';
 import { UserOrganizationMembershipSchema } from '../schemas/UserOrganizationMembershipSchema';
-import {
-  makeTestDatasource,
-  itHandlesSoftDelete,
-  itHandlesDuplicateKeys,
-} from '@packmind/shared/test';
+import { makeTestDatasource } from '@packmind/test-utils';
 import { userFactory, organizationFactory } from '../../../test';
-import { PackmindLogger } from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
+import { PackmindLogger } from '@packmind/logger';
+import { stubLogger } from '@packmind/test-utils';
 
 describe('UserRepository', () => {
   let dataSource: DataSource;

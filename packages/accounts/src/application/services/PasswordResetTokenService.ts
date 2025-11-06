@@ -6,14 +6,10 @@ import {
   PasswordResetTokenEntity,
   PasswordResetTokenId,
 } from '../../domain/entities/PasswordResetToken';
-import { User, UserId } from '../../domain/entities/User';
+import { User, UserId } from '@packmind/types';
 import { IPasswordResetTokenRepository } from '../../domain/repositories/IPasswordResetTokenRepository';
-import {
-  Configuration,
-  MailService,
-  PackmindLogger,
-  maskEmail,
-} from '@packmind/shared';
+import { Configuration, MailService } from '@packmind/shared';
+import { PackmindLogger, maskEmail } from '@packmind/logger';
 
 const origin = 'PasswordResetTokenService';
 const PASSWORD_RESET_EXPIRATION_HOURS = 4;

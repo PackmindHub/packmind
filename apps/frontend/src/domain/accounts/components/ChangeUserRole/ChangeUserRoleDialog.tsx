@@ -12,8 +12,8 @@ import {
   PMText,
 } from '@packmind/ui';
 import { LuUserCog } from 'react-icons/lu';
-import { UserOrganizationRole } from '@packmind/shared';
-import { UserStatus } from '@packmind/accounts/types';
+import { UserOrganizationRole } from '@packmind/types';
+import { UserStatus } from '@packmind/types';
 import { useChangeUserRoleMutation } from '../../api/queries/AccountsQueries';
 
 interface ChangeUserRoleDialogProps {

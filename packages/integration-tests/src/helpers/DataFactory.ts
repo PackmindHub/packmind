@@ -1,16 +1,18 @@
 import { TestApp } from './TestApp';
 import {
-  GitProvider,
-  GitRepo,
   Organization,
   PackmindCommand,
+  SignUpWithOrganizationCommand,
+  User,
+} from '@packmind/types';
+import {
+  GitProvider,
+  GitRepo,
   Recipe,
   RenderMode,
-  SignUpWithOrganizationCommand,
   Space,
   Standard,
   Target,
-  User,
 } from '@packmind/shared';
 
 import { standardFactory } from '@packmind/standards/test';

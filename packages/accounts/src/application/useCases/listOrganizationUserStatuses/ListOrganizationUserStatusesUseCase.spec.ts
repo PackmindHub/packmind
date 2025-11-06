@@ -1,8 +1,8 @@
 import { ListOrganizationUserStatusesUseCase } from './ListOrganizationUserStatusesUseCase';
-import { ListOrganizationUserStatusesCommand } from '@packmind/shared';
-import { stubLogger } from '@packmind/shared/test';
-import { createUserId } from '../../../domain/entities/User';
-import { createOrganizationId } from '../../../domain/entities/Organization';
+import { ListOrganizationUserStatusesCommand } from '@packmind/types';
+import { stubLogger } from '@packmind/test-utils';
+import { createUserId } from '@packmind/types';
+import { createOrganizationId } from '@packmind/types';
 import { organizationFactory, userFactory } from '../../../../test';
 import { invitationFactory } from '../../../../test/invitationFactory';
 import { UserService } from '../../services/UserService';

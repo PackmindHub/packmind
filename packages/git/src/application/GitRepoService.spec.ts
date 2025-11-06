@@ -1,12 +1,11 @@
 import { GitRepoService } from './GitRepoService';
 import { IGitRepoRepository } from '../domain/repositories/IGitRepoRepository';
-import { GitRepo } from '@packmind/shared/types';
+import { createOrganizationId, createUserId } from '@packmind/types';
 import {
-  createOrganizationId,
-  createUserId,
+  GitRepo,
+  createGitRepoId,
   createGitProviderId,
 } from '@packmind/shared/types';
-import { createGitRepoId } from '../domain/entities/GitRepo';
 import { gitRepoFactory } from '../../test';
 
 describe('GitRepoService', () => {

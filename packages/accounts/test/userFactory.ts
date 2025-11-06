@@ -1,10 +1,10 @@
-import { Factory } from '@packmind/shared/test';
+import { Factory } from '@packmind/test-utils';
 import {
   User,
   createUserId,
   UserOrganizationMembership,
-} from '../src/domain/entities/User';
-import { createOrganizationId } from '../src/domain/entities/Organization';
+  createOrganizationId,
+} from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 
 export const userFactory: Factory<User> = (user?: Partial<User>) => {

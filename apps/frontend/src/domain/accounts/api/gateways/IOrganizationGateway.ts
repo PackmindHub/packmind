@@ -1,8 +1,8 @@
-import { Organization } from '@packmind/accounts/types';
+import { Organization } from '@packmind/types';
 import {
   UserOrganizationRole,
   OrganizationOnboardingStatus,
-} from '@packmind/shared';
+} from '@packmind/types';
 
 export interface IOrganizationGateway {
   createOrganization(organization: { name: string }): Promise<Organization>;

@@ -8,7 +8,7 @@ import {
 import { Observable } from 'rxjs';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
 import { SpaceId, createSpaceId } from '@packmind/spaces';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'SpaceAccessGuard';
 

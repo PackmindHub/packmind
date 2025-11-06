@@ -4,7 +4,7 @@ import {
   PasswordResetToken,
   PasswordResetTokenId,
 } from '../entities/PasswordResetToken';
-import { UserId } from '../entities/User';
+import { UserId } from '@packmind/types';
 
 /**
  * Password reset token repository contract exposing persistence operations required by

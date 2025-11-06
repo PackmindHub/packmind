@@ -1,4 +1,4 @@
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import { IJobRegistry } from '../domain/IJobRegistry';
 import { IJobFactory, IJobQueue } from '../domain/IJobQueue';
 

@@ -14,7 +14,7 @@ import {
   IJwtService,
 } from '@packmind/accounts';
 import { JwtPayload } from './JwtPayload';
-import { LogLevel, PackmindLogger } from '@packmind/shared';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
 import { IS_PUBLIC_KEY } from '@packmind/shared-nest';
 

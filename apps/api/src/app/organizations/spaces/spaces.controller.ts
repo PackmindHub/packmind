@@ -1,24 +1,24 @@
 import { Controller, Get, Param, UseGuards } from '@nestjs/common';
-import { PackmindLogger, LogLevel } from '@packmind/shared';
-import { SpaceId } from '@packmind/spaces';
+import { PackmindLogger, LogLevel } from '@packmind/logger';
+import { Space } from '@packmind/spaces';
 import { OrganizationId } from '@packmind/accounts';
 import { OrganizationAccessGuard } from '../guards/organization-access.guard';
-import { SpaceAccessGuard } from './guards/space-access.guard';
+import { SpacesService } from '../../spaces/spaces.service';
 
 const origin = 'OrganizationsSpacesController';
 
 /**
  * Controller for organization-scoped space routes
- * Actual path: /organizations/:orgId/spaces/:spaceId (inherited via RouterModule in AppModule)
+ * Actual path: /organizations/:orgId/spaces (inherited via RouterModule in AppModule)
  *
- * This controller serves as the entry point for space-scoped resources within an organization.
+ * This controller provides endpoints for managing spaces within an organization.
  * The path is configured in AppModule via RouterModule.
  * Nested modules (recipes, standards, etc.) are mounted as children in the RouterModule config.
  */
 @Controller()
-@UseGuards(OrganizationAccessGuard, SpaceAccessGuard)
 export class OrganizationsSpacesController {
   constructor(
+    private readonly spacesService: SpacesService,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.INFO,
@@ -28,27 +28,37 @@ export class OrganizationsSpacesController {
   }
 
   /**
-   * Health check endpoint for space-scoped routing
-   * GET /organizations/:orgId/spaces/:spaceId
+   * Get all spaces for an organization
+   * GET /organizations/:orgId/spaces
    */
   @Get()
-  async getSpaceInfo(
-    @Param('orgId') orgId: OrganizationId,
-    @Param('spaceId') spaceId: SpaceId,
-  ): Promise<{
-    message: string;
-    organizationId: OrganizationId;
-    spaceId: SpaceId;
-  }> {
-    this.logger.info('GET /organizations/:orgId/spaces/:spaceId - Space info', {
+  @UseGuards(OrganizationAccessGuard)
+  async listSpaces(@Param('orgId') orgId: OrganizationId): Promise<Space[]> {
+    this.logger.info('GET /organizations/:orgId/spaces - Listing spaces', {
       organizationId: orgId,
-      spaceId,
     });
 
-    return {
-      message: 'Space routing active',
-      organizationId: orgId,
-      spaceId,
-    };
+    return this.spacesService.listSpacesByOrganization(orgId);
+  }
+
+  /**
+   * Get a space by slug within an organization
+   * GET /organizations/:orgId/spaces/:slug
+   */
+  @Get(':slug')
+  @UseGuards(OrganizationAccessGuard)
+  async getSpaceBySlug(
+    @Param('orgId') orgId: OrganizationId,
+    @Param('slug') slug: string,
+  ): Promise<Space> {
+    this.logger.info(
+      'GET /organizations/:orgId/spaces/:slug - Getting space by slug',
+      {
+        organizationId: orgId,
+        slug,
+      },
+    );
+
+    return this.spacesService.getSpaceBySlug(slug, orgId);
   }
 }

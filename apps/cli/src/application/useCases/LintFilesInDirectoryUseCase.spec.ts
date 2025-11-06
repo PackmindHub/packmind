@@ -4,14 +4,17 @@ import { IPackmindRepositories } from '../../domain/repositories/IPackmindReposi
 import { ListFiles } from '../services/ListFiles';
 import { GitService } from '../services/GitService';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
+import { PackmindLogger } from '@packmind/logger';
 import {
   ExecuteLinterProgramsCommand,
   IExecuteLinterProgramsUseCase,
   LinterExecutionViolation,
-  PackmindLogger,
   ProgrammingLanguage,
   RuleId,
 } from '@packmind/shared';
+import * as fs from 'fs/promises';
+
+jest.mock('fs/promises');
 
 describe('LintFilesInDirectoryUseCase', () => {
   let useCase: LintFilesInDirectoryUseCase;
@@ -52,6 +55,7 @@ describe('LintFilesInDirectoryUseCase', () => {
       listExecutionPrograms: jest.fn(),
       getDraftDetectionProgramsForRule: jest.fn(),
       getActiveDetectionProgramsForRule: jest.fn(),
+      getPullData: jest.fn(),
     };
 
     mockServices = {
@@ -63,6 +67,12 @@ describe('LintFilesInDirectoryUseCase', () => {
     mockRepositories = {
       packmindGateway: mockPackmindGateway,
     };
+
+    // By default, mock fs.stat to return directory stats
+    (fs.stat as jest.Mock).mockResolvedValue({
+      isFile: () => false,
+      isDirectory: () => true,
+    });
 
     useCase = new LintFilesInDirectoryUseCase(mockServices, mockRepositories);
   });
@@ -187,6 +197,146 @@ describe('LintFilesInDirectoryUseCase', () => {
       expect(result.summary.totalFiles).toBe(0);
       expect(result.summary.violatedFiles).toBe(0);
       expect(result.summary.totalViolations).toBe(0);
+    });
+  });
+
+  describe('when path is a single file', () => {
+    it('lints only the specified file', async () => {
+      // Mock fs.stat to return file stats
+      (fs.stat as jest.Mock).mockResolvedValue({
+        isFile: () => true,
+        isDirectory: () => false,
+      });
+
+      const mockDetectionPrograms = {
+        targets: [
+          {
+            name: 'Root Target',
+            path: '/',
+            standards: [
+              {
+                name: 'Interface Naming',
+                slug: 'interface-naming',
+                scope: [],
+                rules: [
+                  {
+                    content: 'Interface names should start with I',
+                    activeDetectionPrograms: [
+                      {
+                        language: 'typescript',
+                        detectionProgram: {
+                          mode: 'ast',
+                          code: 'function checkSourceCode(ast) { return [1]; }',
+                          sourceCodeState: 'AST' as const,
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      mockGitRemoteUrlService.getGitRepositoryRoot.mockResolvedValue(
+        '/project',
+      );
+      mockListFiles.readFileContent.mockResolvedValue('interface User {}');
+      mockGitRemoteUrlService.getGitRemoteUrl.mockResolvedValue({
+        gitRemoteUrl: 'github.com/user/repo',
+      });
+      mockGitRemoteUrlService.getCurrentBranches.mockResolvedValue({
+        branches: ['main'],
+      });
+      mockPackmindGateway.listExecutionPrograms.mockResolvedValue(
+        mockDetectionPrograms,
+      );
+
+      const result = await useCase.execute({
+        path: '/project/src/user.ts',
+      });
+
+      // Should use directory for Git operations
+      expect(mockGitRemoteUrlService.getGitRepositoryRoot).toHaveBeenCalledWith(
+        '/project/src',
+      );
+
+      // Should not call listFilesInDirectory
+      expect(mockListFiles.listFilesInDirectory).not.toHaveBeenCalled();
+
+      // Should lint the single file
+      expect(mockLinterExecutionUseCase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          filePath: '/project/src/user.ts',
+          language: ProgrammingLanguage.TYPESCRIPT,
+        }),
+      );
+
+      expect(result.violations).toHaveLength(1);
+      expect(result.summary.totalFiles).toBe(1);
+      expect(result.summary.violatedFiles).toBe(1);
+    });
+
+    it('handles violations correctly for single file', async () => {
+      // Mock fs.stat to return file stats
+      (fs.stat as jest.Mock).mockResolvedValue({
+        isFile: () => true,
+        isDirectory: () => false,
+      });
+
+      const mockDetectionPrograms = {
+        targets: [
+          {
+            name: 'Root Target',
+            path: '/',
+            standards: [
+              {
+                name: 'Test Standard',
+                slug: 'test-standard',
+                scope: [],
+                rules: [
+                  {
+                    content: 'Test rule',
+                    activeDetectionPrograms: [
+                      {
+                        language: 'js',
+                        detectionProgram: {
+                          mode: 'ast',
+                          code: 'function check() { return [1]; }',
+                          sourceCodeState: 'AST' as const,
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      mockGitRemoteUrlService.getGitRepositoryRoot.mockResolvedValue(
+        '/project',
+      );
+      mockListFiles.readFileContent.mockResolvedValue('const x = 1;');
+      mockGitRemoteUrlService.getGitRemoteUrl.mockResolvedValue({
+        gitRemoteUrl: 'github.com/user/repo',
+      });
+      mockGitRemoteUrlService.getCurrentBranches.mockResolvedValue({
+        branches: ['main'],
+      });
+      mockPackmindGateway.listExecutionPrograms.mockResolvedValue(
+        mockDetectionPrograms,
+      );
+
+      const result = await useCase.execute({
+        path: '/project/index.js',
+      });
+
+      expect(result.violations).toHaveLength(1);
+      expect(result.violations[0].file).toBe('/project/index.js');
+      expect(result.violations[0].violations.length).toBeGreaterThan(0);
     });
   });
 

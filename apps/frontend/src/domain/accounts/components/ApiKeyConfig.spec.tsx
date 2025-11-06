@@ -13,7 +13,7 @@ import type {
   UserId,
   OrganizationId,
   UserOrganizationRole,
-} from '@packmind/accounts/types';
+} from '@packmind/types';
 
 // Mock the queries
 jest.mock('../api/queries/AuthQueries', () => ({

@@ -8,7 +8,7 @@ import {
   PMLink,
 } from '@packmind/ui';
 import { useSignInMutation } from '../api/queries/AuthQueries';
-import { SignInUserResponse } from '@packmind/accounts/types';
+import { SignInUserResponse } from '@packmind/types';
 import { isPackmindError } from '../../../services/api/errors/PackmindError';
 
 interface SignInCredentialsFormProps {

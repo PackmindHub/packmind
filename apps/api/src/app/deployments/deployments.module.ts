@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { DeploymentsController } from './deployments.controller';
 import { DeploymentsService } from './deployments.service';
-import { LogLevel, PackmindLogger } from '@packmind/shared';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({

@@ -1,4 +1,4 @@
-import { Factory } from '@packmind/shared/test';
+import { Factory } from '@packmind/test-utils';
 import {
   DEFAULT_ACTIVE_RENDER_MODES,
   RenderModeConfiguration,

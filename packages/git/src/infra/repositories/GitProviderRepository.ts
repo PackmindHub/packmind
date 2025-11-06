@@ -2,8 +2,8 @@ import { GitProvider, GitProviderId } from '../../domain/entities/GitProvider';
 import { IGitProviderRepository } from '../../domain/repositories/IGitProviderRepository';
 import { GitProviderSchema } from '../schemas/GitProviderSchema';
 import { Repository } from 'typeorm';
+import { PackmindLogger } from '@packmind/logger';
 import {
-  PackmindLogger,
   localDataSource,
   EncryptionService,
   Configuration,

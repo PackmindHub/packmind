@@ -1,16 +1,15 @@
+import { PackmindLogger } from '@packmind/logger';
 import {
-  AbstractAdminUseCase,
-  AdminContext,
   IRemoveUserFromOrganizationUseCase,
-  PackmindLogger,
   RemoveUserFromOrganizationCommand,
   RemoveUserFromOrganizationResponse,
   OrganizationProvider,
   UserProvider,
-} from '@packmind/shared';
+} from '@packmind/types';
+import { AbstractAdminUseCase, AdminContext } from '@packmind/shared';
 import { UserService } from '../../services/UserService';
-import { User, createUserId } from '../../../domain/entities/User';
-import { createOrganizationId } from '../../../domain/entities/Organization';
+import { User, createUserId } from '@packmind/types';
+import { createOrganizationId } from '@packmind/types';
 import {
   UserNotFoundError,
   UserCannotExcludeSelfError,

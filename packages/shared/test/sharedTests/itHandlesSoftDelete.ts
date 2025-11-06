@@ -1,5 +1,4 @@
-import { WithSoftDelete } from '../../src';
-import { IRepository } from '../../src/repositories/IRepository';
+import { WithSoftDelete, IRepository } from '@packmind/shared';
 
 type HandleSoftDeteTestOptions<Entity extends { id: string }> = {
   entityFactory: () => Entity;

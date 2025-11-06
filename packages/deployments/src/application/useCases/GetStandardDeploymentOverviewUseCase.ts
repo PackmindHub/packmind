@@ -1,4 +1,5 @@
-import { PackmindLogger, ISpacesPort } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { ISpacesPort } from '@packmind/shared';
 
 //TODO: remove and replace with an adapter pattern
 import { StandardsHexa } from '@packmind/standards';

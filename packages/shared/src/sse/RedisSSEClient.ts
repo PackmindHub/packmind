@@ -1,5 +1,6 @@
 import Redis from 'ioredis';
-import { PackmindLogger, Configuration } from '../index';
+import { PackmindLogger } from '@packmind/logger';
+import { Configuration } from '../index';
 
 const origin = 'RedisSSEClient';
 

@@ -1,4 +1,4 @@
-import { IUseCase, PackmindCommand } from '../../UseCase';
+import { IUseCase, PackmindCommand } from '@packmind/types';
 import { Rule } from '../../standards/Rule';
 
 export interface GenerateProgramCommand extends PackmindCommand {

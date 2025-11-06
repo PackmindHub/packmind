@@ -8,14 +8,17 @@
   "dependencies": {
     "tslib": "^2.3.0",
     "typeorm": "0.3.26",
-    "@packmind/shared": "*",
+    "@packmind/accounts": "*",
     "@packmind/git": "*",
     "@packmind/jobs": "*",
+    "@packmind/logger": "*",
+    "@packmind/shared": "*",
+    "@packmind/types": "*",
     "@packmind/spaces": "*",
     "ts-jest": "^29.4.1",
-    "@packmind/accounts": "*",
     "uuid": "^11.1.0",
     "slug": "^11.0.0",
-    "bullmq": "^5.58.2"
+    "bullmq": "^5.58.2",
+    "@packmind/test-utils": "0.0.1"
   }
 }

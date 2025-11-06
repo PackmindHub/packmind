@@ -14,11 +14,13 @@
     "@packmind/git": "*",
     "@packmind/jobs": "*",
     "@packmind/shared": "*",
+    "@packmind/types": "*",
     "@packmind/spaces": "*",
     "typeorm": "^0.3.26",
     "@packmind/standards": "*",
     "@packmind/coding-agent": "*",
     "@packmind/deployments": "*",
-    "uuid": "11.1.0"
+    "uuid": "11.1.0",
+    "@packmind/test-utils": "0.0.1"
   }
 }

@@ -9,7 +9,7 @@ import {
   timestampsMigrationColumns,
   uuidMigrationColumn,
 } from '@packmind/shared/src/database/migrationColumns';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'CreateStandards1753362828062';
 

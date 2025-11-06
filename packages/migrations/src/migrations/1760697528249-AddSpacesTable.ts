@@ -9,7 +9,7 @@ import {
   uuidMigrationColumn,
   softDeleteMigrationColumns,
 } from '@packmind/shared/src/database/migrationColumns';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import { v4 as uuidv4 } from 'uuid';
 
 const origin = 'AddSpacesTable1760697528249';

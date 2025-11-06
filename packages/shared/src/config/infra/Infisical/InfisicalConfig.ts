@@ -1,5 +1,5 @@
 import { InfisicalSDK } from '@infisical/sdk';
-import { PackmindLogger } from '../../../logger/PackmindLogger';
+import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'InfisicalConfig';
 

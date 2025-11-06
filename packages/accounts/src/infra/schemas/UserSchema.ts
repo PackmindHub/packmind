@@ -1,5 +1,5 @@
 import { EntitySchema } from 'typeorm';
-import { User } from '../../domain/entities/User';
+import { User } from '@packmind/types';
 import {
   WithTimestamps,
   WithSoftDelete,

@@ -1,7 +1,7 @@
 import { ActivateUserAccountUseCase } from './ActivateUserAccountUseCase';
 import { UserService } from '../../services/UserService';
 import { InvitationService } from '../../services/InvitationService';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import {
   InvitationNotFoundError,
   InvitationExpiredError,
@@ -12,9 +12,9 @@ import {
   createInvitationToken,
   Invitation,
 } from '../../../domain/entities/Invitation';
-import { createUserId, User } from '../../../domain/entities/User';
-import { createOrganizationId } from '../../../domain/entities/Organization';
-import { stubLogger } from '@packmind/shared/test';
+import { createUserId, User } from '@packmind/types';
+import { createOrganizationId } from '@packmind/types';
+import { stubLogger } from '@packmind/test-utils';
 
 describe('ActivateUserAccountUseCase', () => {
   let useCase: ActivateUserAccountUseCase;

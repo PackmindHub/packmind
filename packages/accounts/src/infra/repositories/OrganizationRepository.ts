@@ -1,12 +1,9 @@
 import { Repository } from 'typeorm';
-import { Organization } from '../../domain/entities/Organization';
+import { Organization } from '@packmind/types';
 import { IOrganizationRepository } from '../../domain/repositories/IOrganizationRepository';
 import { OrganizationSchema } from '../schemas/OrganizationSchema';
-import {
-  PackmindLogger,
-  localDataSource,
-  AbstractRepository,
-} from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { localDataSource, AbstractRepository } from '@packmind/shared';
 
 const origin = 'OrganizationRepository';
 

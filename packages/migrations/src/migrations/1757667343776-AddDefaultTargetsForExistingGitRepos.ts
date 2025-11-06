@@ -1,5 +1,5 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import { v4 as uuidv4 } from 'uuid';
 
 const origin = 'AddDefaultTargetsForExistingGitRepos1757667343776';

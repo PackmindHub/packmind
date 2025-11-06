@@ -3,7 +3,8 @@ import { GitRepo, GitHexa } from '@packmind/git';
 import { StandardsHexa, StandardVersion } from '@packmind/standards';
 import { FileUpdates } from '../../../domain/entities/FileUpdates';
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
-import { PackmindLogger, Target } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { Target } from '@packmind/shared';
 import { GenericRecipeSectionWriter } from '../genericSectionWriter/GenericRecipeSectionWriter';
 import { GenericStandardSectionWriter } from '../genericSectionWriter/GenericStandardSectionWriter';
 import { getTargetPrefixedPath } from '../utils/FileUtils';
@@ -96,6 +97,76 @@ export class CopilotDeployer implements ICodingAgentDeployer {
     }
 
     return fileUpdates;
+  }
+
+  async generateFileUpdatesForRecipes(
+    recipeVersions: RecipeVersion[],
+  ): Promise<FileUpdates> {
+    this.logger.info('Generating file updates for recipes (GitHub Copilot)', {
+      recipesCount: recipeVersions.length,
+    });
+
+    const fileUpdates: FileUpdates = {
+      createOrUpdate: [],
+      delete: [],
+    };
+
+    // Generate content without target prefixing
+    const content = this.generateRecipeContentSimple(recipeVersions);
+
+    fileUpdates.createOrUpdate.push({
+      path: CopilotDeployer.RECIPES_INDEX_PATH,
+      content,
+    });
+
+    return fileUpdates;
+  }
+
+  async generateFileUpdatesForStandards(
+    standardVersions: StandardVersion[],
+  ): Promise<FileUpdates> {
+    this.logger.info('Generating file updates for standards (GitHub Copilot)', {
+      standardsCount: standardVersions.length,
+    });
+
+    const fileUpdates: FileUpdates = {
+      createOrUpdate: [],
+      delete: [],
+    };
+
+    // Generate individual Copilot configuration files for each standard
+    for (const standardVersion of standardVersions) {
+      const configFile =
+        await this.generateCopilotConfigForStandard(standardVersion);
+      fileUpdates.createOrUpdate.push({
+        path: configFile.path,
+        content: configFile.content,
+      });
+    }
+
+    return fileUpdates;
+  }
+
+  /**
+   * Generate content with recipe instructions without target/repo context
+   */
+  private generateRecipeContentSimple(recipeVersions: RecipeVersion[]): string {
+    // Generate recipes list
+    const recipesSection = this.generateRecipesSection(recipeVersions);
+
+    const packmindInstructions =
+      GenericRecipeSectionWriter.generateRecipesSection({
+        agentName: 'GitHub Copilot',
+        repoName: 'repository',
+        recipesSection,
+        target: '/',
+      });
+
+    return `---
+applyTo: '**'
+---
+
+${packmindInstructions}`;
   }
 
   /**

@@ -1,14 +1,15 @@
 import { DataSource, Repository } from 'typeorm';
-import { makeTestDatasource, stubLogger } from '@packmind/shared/test';
+import { makeTestDatasource, stubLogger } from '@packmind/test-utils';
 import { OrganizationSchema } from '../schemas/OrganizationSchema';
 import { UserSchema } from '../schemas/UserSchema';
 import { UserOrganizationMembershipSchema } from '../schemas/UserOrganizationMembershipSchema';
 import { createOrganization, createUser } from '../../../test';
-import { createOrganizationId } from '../../domain/entities/Organization';
-import { createUserId } from '../../domain/entities/User';
-import { Organization } from '../../domain/entities/Organization';
-import { WithTimestamps, PackmindLogger } from '@packmind/shared';
-import { UserOrganizationMembership } from '../../domain/entities/User';
+import { createOrganizationId } from '@packmind/types';
+import { createUserId } from '@packmind/types';
+import { Organization } from '@packmind/types';
+import { PackmindLogger } from '@packmind/logger';
+import { WithTimestamps } from '@packmind/shared';
+import { UserOrganizationMembership } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { UserOrganizationMembershipRepository } from './UserOrganizationMembershipRepository';
 

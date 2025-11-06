@@ -35,7 +35,7 @@ import {
   createTargetId,
   createGitProviderId,
 } from '@packmind/shared';
-import { makeTestDatasource } from '@packmind/shared/test';
+import { makeTestDatasource } from '@packmind/test-utils';
 import { v4 as uuidv4 } from 'uuid';
 
 // Mock the Git provider adapter for file retrieval

@@ -4,12 +4,12 @@ export {
   createUserId,
   UserOrganizationMembership,
   UserOrganizationRole,
-} from './User';
+} from '@packmind/types';
 export {
   Organization,
   OrganizationId,
   createOrganizationId,
-} from './Organization';
+} from '@packmind/types';
 export { ApiKeyPayload, DecodedApiKey } from './ApiKey';
 export {
   Invitation,

@@ -16,7 +16,7 @@ import {
   GetRenderModeConfigurationResult,
 } from '@packmind/shared';
 import { DeploymentsService } from './deployments.service';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import { AuthService } from '../auth/auth.service';
 import { RecipeId } from '@packmind/recipes/types';
 import type { StandardId, StandardVersionId } from '@packmind/shared/types';

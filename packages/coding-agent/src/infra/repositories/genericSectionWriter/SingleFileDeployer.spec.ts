@@ -1,3 +1,4 @@
+import { createUserId } from '@packmind/types';
 import {
   createRecipeId,
   createRecipeVersionId,
@@ -8,7 +9,6 @@ import {
   GitRepo,
   Target,
   createTargetId,
-  createUserId,
   createGitRepoId,
   createGitProviderId,
 } from '@packmind/shared';

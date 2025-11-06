@@ -9,6 +9,7 @@ import {
 } from '@packmind/standards';
 import { standardFactory } from '@packmind/standards/test';
 import { GitRepo } from '@packmind/git';
+import { createUserId } from '@packmind/types';
 import {
   createGitRepoId,
   createGitProviderId,
@@ -16,7 +17,6 @@ import {
   createStandardVersionId,
   createRecipeVersionId,
   createRecipeId,
-  createUserId,
   Target,
   createTargetId,
   createRuleId,

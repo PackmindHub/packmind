@@ -1,7 +1,7 @@
 import { ValidatePasswordUseCase } from './ValidatePasswordUseCase';
 import { UserService } from '../../services/UserService';
-import { stubLogger } from '@packmind/shared/test';
-import { PackmindLogger } from '@packmind/shared';
+import { stubLogger } from '@packmind/test-utils';
+import { PackmindLogger } from '@packmind/logger';
 
 describe('ValidatePasswordUseCase', () => {
   let validatePasswordUseCase: ValidatePasswordUseCase;

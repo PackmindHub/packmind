@@ -3,15 +3,12 @@ import {
   UserOrganizationMembership,
   UserId,
   UserOrganizationRole,
-} from '../../domain/entities/User';
-import { OrganizationId } from '../../domain/entities/Organization';
+} from '@packmind/types';
+import { OrganizationId } from '@packmind/types';
 import { IUserOrganizationMembershipRepository } from '../../domain/repositories/IUserOrganizationMembershipRepository';
 import { UserOrganizationMembershipSchema } from '../schemas/UserOrganizationMembershipSchema';
-import {
-  PackmindLogger,
-  WithTimestamps,
-  localDataSource,
-} from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
+import { WithTimestamps, localDataSource } from '@packmind/shared';
 
 const origin = 'UserOrganizationMembershipRepository';
 

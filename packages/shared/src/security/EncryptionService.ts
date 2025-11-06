@@ -4,7 +4,7 @@ import {
   randomBytes,
   createHash,
 } from 'crypto';
-import { PackmindLogger, LogLevel } from '../logger/PackmindLogger';
+import { PackmindLogger, LogLevel } from '@packmind/logger';
 
 const origin = 'EncryptionService';
 

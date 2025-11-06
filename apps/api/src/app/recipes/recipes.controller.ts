@@ -6,20 +6,15 @@ import {
   Get,
   NotFoundException,
   Param,
-  Patch,
   Post,
   Req,
 } from '@nestjs/common';
-import {
-  Recipe,
-  RecipeId,
-  RecipeVersion,
-  RecipeVersionId,
-} from '@packmind/recipes';
+import { RecipeId, RecipeVersion, RecipeVersionId } from '@packmind/recipes';
 import { GitRepoId } from '@packmind/git';
 import { TargetId } from '@packmind/shared';
+import { SpaceId } from '@packmind/spaces';
 import { RecipesService } from './recipes.service';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
 import { AuthService } from '../auth/auth.service';
 import { Request } from 'express';
@@ -34,56 +29,6 @@ export class RecipesController {
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('RecipesController initialized');
-  }
-
-  @Patch(':id')
-  async updateRecipe(
-    @Param('id') id: RecipeId,
-    @Body() updateData: { name: string; content: string },
-    @Req() request: AuthenticatedRequest,
-  ): Promise<Recipe> {
-    this.logger.info('PATCH /recipes/:id - Updating recipe from UI', {
-      recipeId: id,
-      recipeName: updateData.name,
-      userId: request.user?.userId,
-    });
-
-    try {
-      // Extract user context from authenticated request
-      const editorUserId = request.user?.userId;
-
-      if (!editorUserId) {
-        this.logger.error('PATCH /recipes/:id - Missing user context', {
-          recipeId: id,
-          userId: editorUserId,
-        });
-        throw new BadRequestException('User authentication required');
-      }
-
-      const updatedRecipe = await this.recipesService.updateRecipeFromUI(
-        id,
-        updateData.name,
-        updateData.content,
-        editorUserId,
-      );
-
-      this.logger.info('PATCH /recipes/:id - Recipe updated successfully', {
-        recipeId: id,
-        newVersion: updatedRecipe.version,
-        userId: editorUserId,
-      });
-
-      return updatedRecipe;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error('PATCH /recipes/:id - Failed to update recipe', {
-        recipeId: id,
-        recipeName: updateData.name,
-        error: errorMessage,
-      });
-      throw error;
-    }
   }
 
   @Get(':id/versions')
@@ -261,38 +206,9 @@ export class RecipesController {
     }
   }
 
-  @Delete(':id')
-  async deleteRecipe(
-    @Param('id') id: RecipeId,
-    @Req() request: AuthenticatedRequest,
-  ): Promise<void> {
-    this.logger.info('DELETE /recipes/:id - Deleting recipe', {
-      recipeId: id,
-    });
-
-    try {
-      await this.recipesService.deleteRecipe(
-        id,
-        request.user.userId,
-        request.organization.id,
-      );
-      this.logger.info('DELETE /recipes/:id - Recipe deleted successfully', {
-        recipeId: id,
-      });
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error('DELETE /recipes/:id - Failed to delete recipe', {
-        recipeId: id,
-        error: errorMessage,
-      });
-      throw error;
-    }
-  }
-
   @Delete()
   async deleteRecipesBatch(
-    @Body() body: { recipeIds: RecipeId[] },
+    @Body() body: { recipeIds: RecipeId[]; spaceId: SpaceId },
     @Req() request: AuthenticatedRequest,
   ): Promise<void> {
     try {
@@ -304,13 +220,19 @@ export class RecipesController {
         throw new BadRequestException('recipeIds array cannot be empty');
       }
 
+      if (!body.spaceId) {
+        throw new BadRequestException('spaceId is required');
+      }
+
       this.logger.info('DELETE /recipes - Deleting recipes in batch', {
         recipeIds: body.recipeIds,
+        spaceId: body.spaceId,
         count: body.recipeIds.length,
       });
 
       await this.recipesService.deleteRecipesBatch(
         body.recipeIds,
+        body.spaceId,
         request.user.userId,
         request.organization.id,
       );
@@ -325,6 +247,7 @@ export class RecipesController {
         error instanceof Error ? error.message : String(error);
       this.logger.error('DELETE /recipes - Failed to delete recipes in batch', {
         recipeIds: body?.recipeIds || 'undefined',
+        spaceId: body?.spaceId,
         error: errorMessage,
       });
       throw error;

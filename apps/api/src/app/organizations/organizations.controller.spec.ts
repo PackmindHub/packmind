@@ -1,11 +1,13 @@
 import { OrganizationsController } from './organizations.controller';
 import { createOrganizationId, AccountsHexa } from '@packmind/accounts';
-import { stubLogger } from '@packmind/shared/test';
+import { stubLogger } from '@packmind/test-utils';
 import { AuthenticatedRequest } from '@packmind/shared-nest';
+import { DeploymentsHexa } from '@packmind/deployments';
 
 describe('OrganizationsController', () => {
   let controller: OrganizationsController;
   let mockAccountsHexa: jest.Mocked<AccountsHexa>;
+  let mockDeploymentsHexa: jest.Mocked<DeploymentsHexa>;
 
   beforeEach(() => {
     const logger = stubLogger();
@@ -13,7 +15,17 @@ describe('OrganizationsController', () => {
       getOrganizationOnboardingStatus: jest.fn(),
     } as unknown as jest.Mocked<AccountsHexa>;
 
-    controller = new OrganizationsController(mockAccountsHexa, logger);
+    mockDeploymentsHexa = {
+      getDeploymentsUseCases: jest.fn().mockReturnValue({
+        pullAllContent: jest.fn(),
+      }),
+    } as unknown as jest.Mocked<DeploymentsHexa>;
+
+    controller = new OrganizationsController(
+      mockAccountsHexa,
+      mockDeploymentsHexa,
+      logger,
+    );
   });
 
   afterEach(() => {

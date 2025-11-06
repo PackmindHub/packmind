@@ -1,8 +1,6 @@
-import { Factory } from '@packmind/shared/test';
-import {} from '@packmind/accounts';
+import { Factory } from '@packmind/test-utils';
+import { createOrganizationId, createUserId } from '@packmind/types';
 import {
-  createOrganizationId,
-  createUserId,
   createRecipesDeploymentId,
   RecipesDeployment,
   DistributionStatus,

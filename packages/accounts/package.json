@@ -8,14 +8,17 @@
   "dependencies": {
     "tslib": "^2.3.0",
     "typeorm": "^0.3.26",
+    "@packmind/logger": "*",
     "@packmind/shared": "*",
     "@packmind/spaces": "*",
+    "@packmind/types": "*",
     "uuid": "^11.1.0",
     "bcrypt": "^6.0.0",
     "ts-jest": "^29.4.1",
     "slug": "^11.0.0",
     "@nestjs/common": "^11.1.6",
-    "validator": "^13.15.15"
+    "validator": "^13.15.15",
+    "@packmind/test-utils": "0.0.1"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2"

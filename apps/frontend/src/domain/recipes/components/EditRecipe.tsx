@@ -3,15 +3,21 @@ import { PMBox, PMVStack, PMHStack } from '@packmind/ui';
 import { PMButton, PMInput, PMTextArea, PMText } from '@packmind/ui';
 import { useUpdateRecipeMutation } from '../api/queries/RecipesQueries';
 import { Recipe } from '@packmind/recipes/types';
+import { OrganizationId } from '@packmind/types';
+import { SpaceId } from '@packmind/spaces';
 
 interface EditRecipeProps {
   recipe: Recipe;
+  organizationId: OrganizationId;
+  spaceId: SpaceId;
   onCancel: () => void;
   onSuccess: () => void;
 }
 
 export const EditRecipe: React.FC<EditRecipeProps> = ({
   recipe,
+  organizationId,
+  spaceId,
   onCancel,
   onSuccess,
 }) => {
@@ -36,6 +42,8 @@ export const EditRecipe: React.FC<EditRecipeProps> = ({
 
     mutate(
       {
+        organizationId,
+        spaceId,
         id: recipe.id,
         updateData: {
           name: name.trim(),

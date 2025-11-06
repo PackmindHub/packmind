@@ -1,9 +1,5 @@
-import {
-  RuleExample,
-  PackmindLogger,
-  RuleId,
-  ProgrammingLanguage,
-} from '@packmind/shared';
+import { RuleExample, RuleId, ProgrammingLanguage } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import { IStandardsRepositories } from '../../../domain/repositories/IStandardsRepositories';
 import {
   IUpdateRuleExample,

@@ -1,4 +1,4 @@
-import { PackmindCommand } from '../types';
+import { PackmindCommand } from '@packmind/types';
 
 export type UserAccessErrorReason =
   | 'user_not_found'

@@ -9,6 +9,7 @@ import { CopilotDeployer } from './copilot/CopilotDeployer';
 import { AgentsMDDeployer } from './agentsmd/AgentsMDDeployer';
 import { StandardsHexa } from '@packmind/standards';
 import { GitHexa } from '@packmind/git';
+import { GitlabDuoDeployer } from './gitlabDuo/GitlabDuoDeployer';
 
 export class CodingAgentDeployerRegistry
   implements ICodingAgentDeployerRegistry
@@ -53,6 +54,8 @@ export class CodingAgentDeployerRegistry
         return new CopilotDeployer(this.standardsHexa, this.gitHexa);
       case 'agents_md':
         return new AgentsMDDeployer(this.standardsHexa, this.gitHexa);
+      case 'gitlab_duo':
+        return new GitlabDuoDeployer(this.standardsHexa, this.gitHexa);
       default:
         throw new Error(`Unknown coding agent: ${agent}`);
     }

@@ -1,6 +1,6 @@
-import { IUseCase } from '../../UseCase';
-import { OrganizationId } from '../../accounts/Organization';
-import { UserId } from '../../accounts/User';
+import { IUseCase } from '@packmind/types';
+import { OrganizationId } from '@packmind/types';
+import { UserId } from '@packmind/types';
 import { LinterExecutionViolation } from './IExecuteLinterProgramsUseCase';
 import { DetectionProgramId } from '../DetectionProgram';
 

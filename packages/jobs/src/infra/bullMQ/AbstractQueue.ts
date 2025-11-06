@@ -11,7 +11,7 @@ import {
   Runner,
   WorkerListeners,
 } from '../../domain/IQueue';
-import { PackmindLogger } from '@packmind/shared';
+import { PackmindLogger } from '@packmind/logger';
 import { PackmindSerializer } from '../../utils/PackmindSerializer';
 
 export abstract class AbstractQueue<Input, Output>

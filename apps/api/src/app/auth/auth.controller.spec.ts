@@ -11,7 +11,7 @@ import {
   CheckEmailAvailabilityCommand,
   CheckEmailAvailabilityResponse,
   SignUpWithOrganizationCommand,
-} from '@packmind/shared';
+} from '@packmind/types';
 import { createUserId } from '@packmind/accounts';
 import {
   ConflictException,

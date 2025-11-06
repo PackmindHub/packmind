@@ -22,5 +22,4 @@ export { UpdateGitProviderUseCase } from './updateGitProvider/updateGitProvider.
 export { GetAvailableRemoteDirectoriesUseCase } from './getAvailableRemoteDirectories/getAvailableRemoteDirectories.usecase';
 export { FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase } from './findGitRepoByOwnerRepoAndBranchInOrganization/findGitRepoByOwnerRepoAndBranchInOrganization.usecase';
 
-// Re-export all types from shared for backward compatibility
-export * from '@packmind/shared';
+// Note: Types are now in @packmind/git/types
