@@ -3,8 +3,8 @@ import { PMIcon, PMText } from '@packmind/ui';
 import { RuleLanguageDetectionStatus } from '@packmind/types';
 import { LuCircleCheck, LuCircleOff } from 'react-icons/lu';
 import { TiWarningOutline } from 'react-icons/ti';
-import { useGetStandardRulesDetectionStatusQuery } from '../../detection/api/queries/DetectionProgramQueries';
 import { getLanguageDisplayName } from '@packmind/proprietary/frontend/domain/detection/components/DetectionCardUtils';
+import { useGetStandardRulesDetectionStatusQuery } from '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures';
 
 interface RuleSummaryStatusProps {
   ruleId: string;

@@ -13,5 +13,5 @@ export const useStandardEditionFeatures = (
 
 export const useGetStandardRulesDetectionStatusQuery = (standardId: string) => {
   const data: RuleDetectionStatusSummary[] = [];
-  return { data };
+  return { data, isLoading: false, isError: false };
 };
