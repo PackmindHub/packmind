@@ -6,7 +6,7 @@ import {
 import { IGitCommitRepository } from '../../domain/repositories/IGitCommitRepository';
 import { GitCommitSchema } from '../schemas/GitCommitSchema';
 import { Repository } from 'typeorm';
-import { localDataSource } from '@packmind/shared';
+import { localDataSource } from '@packmind/node-utils';
 import { v4 as uuidv4 } from 'uuid';
 
 export class GitCommitRepository implements IGitCommitRepository {

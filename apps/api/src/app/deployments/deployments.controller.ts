@@ -20,7 +20,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { AuthService } from '../auth/auth.service';
 import { RecipeId } from '@packmind/recipes/types';
 import type { StandardId, StandardVersionId } from '@packmind/types';
-import { AuthenticatedRequest } from '@packmind/shared-nest';
+import { AuthenticatedRequest } from '@packmind/node-utils';
 
 const origin = 'DeploymentsController';
 

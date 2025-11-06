@@ -1,5 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
-import { WithTimestamps } from '@packmind/shared';
+import { WithTimestamps } from '@packmind/node-utils';
 import { ISpacesPort } from '@packmind/types';
 import { IRecipesPort } from '@packmind/types';
 import { GitHexa } from '@packmind/git';

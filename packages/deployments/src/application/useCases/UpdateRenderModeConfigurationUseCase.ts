@@ -1,5 +1,5 @@
 import { OrganizationProvider, UserProvider } from '@packmind/types';
-import { AbstractAdminUseCase, AdminContext } from '@packmind/shared';
+import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
 import {
   IUpdateRenderModeConfigurationUseCase,
   RenderMode,

@@ -14,7 +14,7 @@ import { Recipe, RecipeId, RecipeVersion } from '@packmind/recipes';
 import { OrganizationId } from '@packmind/accounts';
 import { SpaceId } from '@packmind/spaces';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
-import { AuthenticatedRequest } from '@packmind/shared-nest';
+import { AuthenticatedRequest } from '@packmind/node-utils';
 import { RecipesService } from '../../../recipes/recipes.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 import { SpaceAccessGuard } from '../guards/space-access.guard';

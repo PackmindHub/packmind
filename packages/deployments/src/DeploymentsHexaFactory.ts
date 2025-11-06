@@ -1,5 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
-import { HexaRegistry } from '@packmind/shared';
+import { HexaRegistry } from '@packmind/node-utils';
 import { RenderModeConfiguration } from '@packmind/types';
 import { DataSource, Repository } from 'typeorm';
 import { CodingAgentHexa } from '@packmind/coding-agent';

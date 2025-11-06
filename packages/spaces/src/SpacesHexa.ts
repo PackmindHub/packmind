@@ -1,5 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
-import { BaseHexa, HexaRegistry, BaseHexaOpts } from '@packmind/shared';
+import { BaseHexa, HexaRegistry, BaseHexaOpts } from '@packmind/node-utils';
 import { ISpacesPort } from '@packmind/types';
 import { SpacesHexaFactory } from './SpacesHexaFactory';
 import { SpacesAdapter } from './application/adapters/SpacesAdapter';

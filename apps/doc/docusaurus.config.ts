@@ -72,10 +72,7 @@ const config: Config = {
                   __dirname,
                   '../../packages/assets/src',
                 ),
-                '@packmind/shared': join(
-                  __dirname,
-                  '../../packages/shared/src',
-                ),
+                '@packmind/types': join(__dirname, '../../packages/types/src'),
               },
             },
           };

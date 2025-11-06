@@ -1,4 +1,4 @@
-import { BaseHexa, HexaRegistry } from '@packmind/shared';
+import { BaseHexa, HexaRegistry } from '@packmind/node-utils';
 import { IDeploymentPort } from '@packmind/types';
 
 export class AnalyticsHexa extends BaseHexa {

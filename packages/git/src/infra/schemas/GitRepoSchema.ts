@@ -6,7 +6,7 @@ import {
   uuidSchema,
   timestampsSchemas,
   softDeleteSchemas,
-} from '@packmind/shared';
+} from '@packmind/node-utils';
 import { GitProvider } from '../../domain/entities/GitProvider';
 
 export const GitRepoSchema = new EntitySchema<

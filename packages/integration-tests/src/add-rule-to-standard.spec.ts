@@ -5,7 +5,7 @@ import { Standard, StandardVersion } from '@packmind/standards/types';
 import { GitHexa, gitSchemas } from '@packmind/git';
 import { JobsHexa } from '@packmind/jobs';
 import { SpacesHexa, spacesSchemas, Space } from '@packmind/spaces';
-import { HexaRegistry } from '@packmind/shared';
+import { HexaRegistry } from '@packmind/node-utils';
 import { makeTestDatasource } from '@packmind/test-utils';
 
 import { DataSource } from 'typeorm';

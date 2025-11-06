@@ -1,7 +1,7 @@
 import { Module, DynamicModule, Provider, Global } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
-import { HexaRegistry, BaseHexa } from '@packmind/shared';
+import { HexaRegistry, BaseHexa } from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
 import { DeploymentsHexa } from '@packmind/deployments';
 

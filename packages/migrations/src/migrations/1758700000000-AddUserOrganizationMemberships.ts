@@ -5,7 +5,7 @@ import {
   TableForeignKey,
 } from 'typeorm';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
-import { timestampsMigrationColumns } from '@packmind/shared/src/database/migrationColumns';
+import { timestampsMigrationColumns } from '@packmind/node-utils';
 
 const origin = 'AddUserOrganizationMemberships1758700000000';
 

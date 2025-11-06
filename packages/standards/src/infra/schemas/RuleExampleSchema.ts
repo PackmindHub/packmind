@@ -6,7 +6,7 @@ import {
   uuidSchema,
   timestampsSchemas,
   softDeleteSchemas,
-} from '@packmind/shared';
+} from '@packmind/node-utils';
 import { Rule } from '../../domain/entities/Rule';
 
 export const RuleExampleSchema = new EntitySchema<

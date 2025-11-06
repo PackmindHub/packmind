@@ -1,5 +1,5 @@
 import { UserProvider, OrganizationProvider } from '@packmind/types';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/shared';
+import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
 import {
   IListOrganizationUsersUseCase,

@@ -7,7 +7,7 @@ import { RecipesHexa } from '@packmind/recipes';
 import { StandardsHexa } from '@packmind/standards';
 import { DeploymentsHexa } from '@packmind/deployments';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
-import { HexaRegistry } from '@packmind/shared';
+import { HexaRegistry } from '@packmind/node-utils';
 import { AnalyticsHexa } from '@packmind/analytics';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { JobsHexa } from '@packmind/jobs';

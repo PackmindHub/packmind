@@ -2,7 +2,7 @@ import { GitServices } from './application/GitServices';
 import { GitRepositories } from './infra/repositories/GitRepositories';
 import { DataSource } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
-import { HexaRegistry } from '@packmind/shared';
+import { HexaRegistry } from '@packmind/node-utils';
 import { IDeploymentPort } from '@packmind/types';
 
 // Adapter imports

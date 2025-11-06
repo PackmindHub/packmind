@@ -3,7 +3,7 @@ import { Space } from '../../domain/entities/Space';
 import { ISpaceRepository } from '../../domain/repositories/ISpaceRepository';
 import { SpaceSchema } from '../schemas/SpaceSchema';
 import { PackmindLogger } from '@packmind/logger';
-import { localDataSource, AbstractRepository } from '@packmind/shared';
+import { localDataSource, AbstractRepository } from '@packmind/node-utils';
 import { OrganizationId } from '@packmind/types';
 
 const origin = 'SpaceRepository';

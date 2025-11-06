@@ -1,5 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
-import { BaseHexa, HexaRegistry, BaseHexaOpts } from '@packmind/shared';
+import { BaseHexa, HexaRegistry, BaseHexaOpts } from '@packmind/node-utils';
 import { IDeploymentPort, IGitPort } from '@packmind/types';
 import { QueryOption } from '@packmind/types';
 import { GitHexaFactory } from './GitHexaFactory';

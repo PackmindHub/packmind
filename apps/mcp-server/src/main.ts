@@ -7,7 +7,7 @@ import { app } from './app/app';
 import { registerDb } from './db';
 import { registerHexaRegistry } from './hexa-registry';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
-import { Configuration } from '@packmind/shared';
+import { Configuration } from '@packmind/node-utils';
 
 const logger = new PackmindLogger('PackmindMCPServer', LogLevel.INFO);
 

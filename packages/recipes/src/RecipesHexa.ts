@@ -1,5 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
-import { BaseHexa, HexaRegistry, BaseHexaOpts } from '@packmind/shared';
+import { BaseHexa, HexaRegistry, BaseHexaOpts } from '@packmind/node-utils';
 import { IDeploymentPort } from '@packmind/types';
 import {
   QueryOption,

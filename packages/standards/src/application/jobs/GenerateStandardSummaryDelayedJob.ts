@@ -1,5 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
-import { getErrorMessage } from '@packmind/shared';
+import { getErrorMessage } from '@packmind/node-utils';
 import {
   AbstractAIDelayedJob,
   IQueue,

@@ -11,7 +11,7 @@ import {
   localDataSource,
   AbstractRepository,
   getErrorMessage,
-} from '@packmind/shared';
+} from '@packmind/node-utils';
 
 const origin = 'StandardVersionRepository';
 

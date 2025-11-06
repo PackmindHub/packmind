@@ -8,7 +8,7 @@ import { OrganizationId } from '@packmind/types';
 import { IUserOrganizationMembershipRepository } from '../../domain/repositories/IUserOrganizationMembershipRepository';
 import { UserOrganizationMembershipSchema } from '../schemas/UserOrganizationMembershipSchema';
 import { PackmindLogger } from '@packmind/logger';
-import { WithTimestamps, localDataSource } from '@packmind/shared';
+import { WithTimestamps, localDataSource } from '@packmind/node-utils';
 
 const origin = 'UserOrganizationMembershipRepository';
 

@@ -8,7 +8,7 @@ import {
   OrganizationProvider,
   createUserId,
 } from '@packmind/types';
-import { AbstractAdminUseCase, AdminContext } from '@packmind/shared';
+import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
 import {
   GitProviderNotFoundError,
   GitProviderHasRepositoriesError,

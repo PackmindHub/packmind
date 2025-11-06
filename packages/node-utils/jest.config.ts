@@ -4,14 +4,14 @@ import { pathsToModuleNameMapper } from 'ts-jest';
 import { compilerOptions } from '../../tsconfig.base.effective.json';
 
 export default {
-  displayName: '@packmind/shared',
+  displayName: '@packmind/node-utils',
   preset: '../../jest.preset.ts',
   testEnvironment: 'node',
   transform: {
     '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: '../../coverage/packages/shared',
+  coverageDirectory: '../../coverage/packages/node-utils',
   moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, {
     prefix: '<rootDir>/../../',
   }),

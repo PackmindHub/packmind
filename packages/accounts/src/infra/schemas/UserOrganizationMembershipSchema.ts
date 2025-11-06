@@ -1,6 +1,6 @@
 import { EntitySchema } from 'typeorm';
 import { UserOrganizationMembership } from '@packmind/types';
-import { WithTimestamps, timestampsSchemas } from '@packmind/shared';
+import { WithTimestamps, timestampsSchemas } from '@packmind/node-utils';
 
 export const UserOrganizationMembershipSchema = new EntitySchema<
   WithTimestamps<UserOrganizationMembership>

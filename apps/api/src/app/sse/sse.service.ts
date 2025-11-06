@@ -16,7 +16,7 @@ import {
   deserializeSSERedisMessage,
   createSSESubscriptionMessage,
   serializeSSERedisMessage,
-} from '@packmind/shared';
+} from '@packmind/node-utils';
 import { Response } from 'express';
 
 const origin = 'SSEService';

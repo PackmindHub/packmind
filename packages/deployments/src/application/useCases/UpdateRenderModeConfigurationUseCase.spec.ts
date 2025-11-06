@@ -1,13 +1,3 @@
-import { v4 as uuidv4 } from 'uuid';
-import { UpdateRenderModeConfigurationUseCase } from './UpdateRenderModeConfigurationUseCase';
-import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
-import { stubLogger } from '@packmind/test-utils';
-import {
-  RenderMode,
-  RenderModeConfiguration,
-  UpdateRenderModeConfigurationCommand,
-} from '@packmind/types';
-import { OrganizationAdminRequiredError } from '@packmind/shared';
 import {
   Organization,
   User,
@@ -15,7 +5,17 @@ import {
   createOrganizationId,
   createUserId,
 } from '@packmind/accounts';
+import { OrganizationAdminRequiredError } from '@packmind/node-utils';
+import { stubLogger } from '@packmind/test-utils';
+import {
+  RenderMode,
+  RenderModeConfiguration,
+  UpdateRenderModeConfigurationCommand,
+} from '@packmind/types';
+import { v4 as uuidv4 } from 'uuid';
 import { renderModeConfigurationFactory } from '../../../test';
+import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
+import { UpdateRenderModeConfigurationUseCase } from './UpdateRenderModeConfigurationUseCase';
 
 const createUserWithMembership = (
   userId: string,

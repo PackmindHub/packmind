@@ -9,7 +9,7 @@ import {
   UserProvider,
   OrganizationProvider,
 } from '@packmind/types';
-import { AbstractAdminUseCase, AdminContext } from '@packmind/shared';
+import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
 import {
   GitProviderNotFoundError,
   GitProviderOrganizationMismatchError,

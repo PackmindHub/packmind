@@ -16,10 +16,8 @@ import {
   UpdateRecipeFromUIResponse,
 } from '../contracts';
 
-// Define QueryOption locally to avoid circular dependency with shared
-export type QueryOption = {
-  includeDeleted?: boolean;
-};
+// QueryOption is now exported from @packmind/types/database/types
+import type { QueryOption } from '../../database/types';
 
 /**
  * Port interface for the Recipes domain.

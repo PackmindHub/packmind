@@ -21,7 +21,7 @@ import {
 import { RulesService } from './rules.service';
 import { PackmindLogger } from '@packmind/logger';
 import { stringToProgrammingLanguage } from '@packmind/types';
-import { AuthenticatedRequest } from '@packmind/shared-nest';
+import { AuthenticatedRequest } from '@packmind/node-utils';
 import { AuthService } from '../../auth/auth.service';
 import { StandardId, Rule, RuleId } from '@packmind/types';
 

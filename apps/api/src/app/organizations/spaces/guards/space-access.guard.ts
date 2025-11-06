@@ -6,7 +6,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { AuthenticatedRequest } from '@packmind/shared-nest';
+import { AuthenticatedRequest } from '@packmind/node-utils';
 import { SpaceId, createSpaceId } from '@packmind/spaces';
 import { PackmindLogger } from '@packmind/logger';
 

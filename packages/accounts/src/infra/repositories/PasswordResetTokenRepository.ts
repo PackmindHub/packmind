@@ -14,7 +14,7 @@ import {
   AbstractRepository,
   Configuration,
   WithTimestamps,
-} from '@packmind/shared';
+} from '@packmind/node-utils';
 import { QueryOption } from '@packmind/types';
 
 const origin = 'PasswordResetTokenRepository';

@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { OrganizationAccessGuard } from './organization-access.guard';
-import { AuthenticatedRequest } from '@packmind/shared-nest';
+import { AuthenticatedRequest } from '@packmind/node-utils';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
 import { stubLogger } from '@packmind/test-utils';
 

@@ -4,7 +4,7 @@ import {
   IGetAvailableRemoteDirectoriesUseCase,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
-import { Cache } from '@packmind/shared';
+import { Cache } from '@packmind/node-utils';
 
 const origin = 'GetAvailableRemoteDirectoriesUseCase';
 

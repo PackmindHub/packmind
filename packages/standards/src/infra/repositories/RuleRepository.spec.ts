@@ -1,21 +1,23 @@
-import { RuleRepository } from './RuleRepository';
-import { RuleSchema } from '../schemas/RuleSchema';
-import { DataSource, Repository } from 'typeorm';
-import { makeTestDatasource } from '@packmind/test-utils';
-import { itHandlesSoftDelete } from '@packmind/shared/test';
-import { ruleFactory } from '../../../test/ruleFactory';
-import { createRuleId, Rule } from '../../domain/entities/Rule';
-import { StandardVersionSchema } from '../schemas/StandardVersionSchema';
-import { StandardSchema } from '../schemas/StandardSchema';
-import { v4 as uuidv4 } from 'uuid';
+import { GitCommitSchema } from '@packmind/git';
 import { PackmindLogger } from '@packmind/logger';
-import { WithSoftDelete } from '@packmind/shared';
-import { stubLogger } from '@packmind/test-utils';
-import { StandardVersion } from '../../domain/entities/StandardVersion';
-import { Standard } from '../../domain/entities/Standard';
+import { WithSoftDelete } from '@packmind/node-utils';
+import {
+  itHandlesSoftDelete,
+  makeTestDatasource,
+  stubLogger,
+} from '@packmind/test-utils';
+import { DataSource, Repository } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
+import { ruleFactory } from '../../../test/ruleFactory';
 import { standardFactory } from '../../../test/standardFactory';
 import { standardVersionFactory } from '../../../test/standardVersionFactory';
-import { GitCommitSchema } from '@packmind/git';
+import { createRuleId, Rule } from '../../domain/entities/Rule';
+import { Standard } from '../../domain/entities/Standard';
+import { StandardVersion } from '../../domain/entities/StandardVersion';
+import { RuleSchema } from '../schemas/RuleSchema';
+import { StandardSchema } from '../schemas/StandardSchema';
+import { StandardVersionSchema } from '../schemas/StandardVersionSchema';
+import { RuleRepository } from './RuleRepository';
 
 describe('RuleRepository', () => {
   let datasource: DataSource;

@@ -6,7 +6,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
-import { AuthenticatedRequest } from '@packmind/shared-nest';
+import { AuthenticatedRequest } from '@packmind/node-utils';
 import { createOrganizationId, OrganizationId } from '@packmind/accounts';
 
 const origin = 'OrganizationAccessGuard';

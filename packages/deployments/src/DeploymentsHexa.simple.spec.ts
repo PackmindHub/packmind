@@ -1,11 +1,11 @@
-import { DeploymentsHexa } from './DeploymentsHexa';
-import { PackmindLogger } from '@packmind/logger';
-import { HexaRegistry } from '@packmind/shared';
-import { DataSource } from 'typeorm';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { GitHexa } from '@packmind/git';
+import { PackmindLogger } from '@packmind/logger';
+import { HexaRegistry } from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
 import { StandardsHexa } from '@packmind/standards';
+import { DataSource } from 'typeorm';
+import { DeploymentsHexa } from './DeploymentsHexa';
 
 describe('DeploymentsHexa - Simple Integration', () => {
   let mockRegistry: HexaRegistry;

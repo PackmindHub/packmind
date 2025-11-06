@@ -1,4 +1,4 @@
-import { itHandlesSoftDelete } from '@packmind/shared/test';
+import { itHandlesSoftDelete } from '@packmind/test-utils';
 import { RecipeRepository } from './RecipeRepository';
 import { RecipeSchema } from '../schemas/RecipeSchema';
 import { DataSource, Repository } from 'typeorm';
@@ -8,7 +8,7 @@ import { createRecipeId, Recipe } from '../../domain/entities/Recipe';
 import { RecipeVersionSchema } from '../schemas/RecipeVersionSchema';
 import { v4 as uuidv4 } from 'uuid';
 import { PackmindLogger } from '@packmind/logger';
-import { WithSoftDelete } from '@packmind/shared';
+import { WithSoftDelete } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 import { createOrganizationId } from '@packmind/accounts';
 import { GitCommitSchema } from '@packmind/git';

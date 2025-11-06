@@ -1,6 +1,10 @@
 import { StandardVersion } from '../../domain/entities/StandardVersion';
 import { PackmindLogger } from '@packmind/logger';
-import { AIService, OpenAIService, AiNotConfigured } from '@packmind/shared';
+import {
+  AIService,
+  OpenAIService,
+  AiNotConfigured,
+} from '@packmind/node-utils';
 import { RuleExample } from '@packmind/types';
 import { createStandardSummaryPrompt } from './prompts/create_standard_summary';
 

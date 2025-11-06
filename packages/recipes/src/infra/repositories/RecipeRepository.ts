@@ -3,7 +3,7 @@ import { IRecipeRepository } from '../../domain/repositories/IRecipeRepository';
 import { RecipeSchema } from '../schemas/RecipeSchema';
 import { Repository } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
-import { localDataSource, AbstractRepository } from '@packmind/shared';
+import { localDataSource, AbstractRepository } from '@packmind/node-utils';
 import { QueryOption } from '@packmind/types';
 import { OrganizationId, UserId } from '@packmind/accounts';
 import { SpaceId } from '@packmind/types';

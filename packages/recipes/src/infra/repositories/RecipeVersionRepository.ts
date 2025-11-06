@@ -4,7 +4,7 @@ import { IRecipeVersionRepository } from '../../domain/repositories/IRecipeVersi
 import { RecipeVersionSchema } from '../schemas/RecipeVersionSchema';
 import { Repository } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
-import { localDataSource, AbstractRepository } from '@packmind/shared';
+import { localDataSource, AbstractRepository } from '@packmind/node-utils';
 
 const origin = 'RecipeVersionRepository';
 

@@ -6,7 +6,7 @@ import {
   OrganizationProvider,
   UserProvider,
 } from '@packmind/types';
-import { AbstractAdminUseCase, AdminContext } from '@packmind/shared';
+import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
 import { UserService } from '../../services/UserService';
 import { User, createUserId } from '@packmind/types';
 import { createOrganizationId } from '@packmind/types';

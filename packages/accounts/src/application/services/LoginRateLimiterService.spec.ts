@@ -3,11 +3,10 @@ import {
   LoginAttempt,
 } from './LoginRateLimiterService';
 import { TooManyLoginAttemptsError } from '../../domain/errors/TooManyLoginAttemptsError';
-import { Cache } from '@packmind/shared';
-import { Configuration } from '@packmind/shared';
+import { Cache, Configuration } from '@packmind/node-utils';
 
 // Mock the dependencies
-jest.mock('@packmind/shared', () => ({
+jest.mock('@packmind/node-utils', () => ({
   Cache: {
     getInstance: jest.fn(),
   },

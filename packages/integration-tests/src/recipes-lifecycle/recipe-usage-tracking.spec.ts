@@ -6,9 +6,8 @@ import { TestApp } from '../helpers/TestApp';
 import { DataFactory } from '../helpers/DataFactory';
 import { makeIntegrationTestDataSource } from '../helpers/makeIntegrationTestDataSource';
 
-// Mock only Configuration from @packmind/shared
-jest.mock('@packmind/shared', () => {
-  const actual = jest.requireActual('@packmind/shared');
+jest.mock('@packmind/node-utils', () => {
+  const actual = jest.requireActual('@packmind/node-utils');
   return {
     ...actual,
     Configuration: {

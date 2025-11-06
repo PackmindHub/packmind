@@ -1,7 +1,11 @@
 import { RecipeSummaryService } from './RecipeSummaryService';
 import { RecipeVersion } from '../../domain/entities/RecipeVersion';
 import { PackmindLogger } from '@packmind/logger';
-import { AIService, AIPromptResult, AiNotConfigured } from '@packmind/shared';
+import {
+  AIService,
+  AIPromptResult,
+  AiNotConfigured,
+} from '@packmind/node-utils';
 import { createRecipeSummaryPrompt } from './cookbook/prompts/create_recipe_summary';
 import { stubLogger } from '@packmind/test-utils';
 import { recipeVersionFactory } from '../../../test/recipeVersionFactory';
@@ -14,8 +18,8 @@ const mockAIService: jest.Mocked<AIService> = {
 };
 
 // Mock the OpenAIService constructor
-jest.mock('@packmind/shared', () => ({
-  ...jest.requireActual('@packmind/shared'),
+jest.mock('@packmind/node-utils', () => ({
+  ...jest.requireActual('@packmind/node-utils'),
   OpenAIService: jest.fn(() => mockAIService),
 }));
 

@@ -1,5 +1,5 @@
 import { Target, TargetId, GitRepoId } from '@packmind/types';
-import { IRepository } from '@packmind/shared';
+import { IRepository } from '@packmind/types';
 
 export interface ITargetRepository extends IRepository<Target> {
   add(target: Target): Promise<Target>;

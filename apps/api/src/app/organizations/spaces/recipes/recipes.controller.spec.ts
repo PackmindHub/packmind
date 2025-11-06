@@ -10,7 +10,7 @@ import {
 } from '@packmind/recipes';
 import { PackmindLogger } from '@packmind/logger';
 import { NotFoundException } from '@nestjs/common';
-import { AuthenticatedRequest } from '@packmind/shared-nest';
+import { AuthenticatedRequest } from '@packmind/node-utils';
 
 describe('OrganizationsSpacesRecipesController', () => {
   let controller: OrganizationsSpacesRecipesController;

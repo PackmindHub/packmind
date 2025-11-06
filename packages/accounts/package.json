@@ -9,7 +9,7 @@
     "tslib": "^2.3.0",
     "typeorm": "^0.3.26",
     "@packmind/logger": "*",
-    "@packmind/shared": "*",
+    "@packmind/node-utils": "*",
     "@packmind/spaces": "*",
     "@packmind/types": "*",
     "uuid": "^11.1.0",

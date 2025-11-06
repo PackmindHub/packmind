@@ -6,7 +6,7 @@ import {
   uuidSchema,
   timestampsSchemas,
   softDeleteSchemas,
-} from '@packmind/shared';
+} from '@packmind/node-utils';
 
 export const UserSchema = new EntitySchema<
   WithSoftDelete<WithTimestamps<User>>

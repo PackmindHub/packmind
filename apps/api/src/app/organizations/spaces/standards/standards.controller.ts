@@ -17,7 +17,7 @@ import {
   GetStandardByIdResponse,
   ListStandardsBySpaceResponse,
 } from '@packmind/types';
-import { AuthenticatedRequest } from '@packmind/shared-nest';
+import { AuthenticatedRequest } from '@packmind/node-utils';
 import { StandardsService } from '../../../standards/standards.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 import { SpaceAccessGuard } from '../guards/space-access.guard';

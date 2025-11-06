@@ -5,7 +5,7 @@ import { IStandardsDeploymentRepository } from '../../domain/repositories/IStand
 import { StandardsDeploymentSchema } from '../schemas/StandardsDeploymentSchema';
 import { Repository } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
-import { localDataSource, AbstractRepository } from '@packmind/shared';
+import { localDataSource, AbstractRepository } from '@packmind/node-utils';
 import { TargetId, DistributionStatus } from '@packmind/types';
 import { OrganizationId } from '@packmind/accounts';
 import { GitRepoId } from '@packmind/git';

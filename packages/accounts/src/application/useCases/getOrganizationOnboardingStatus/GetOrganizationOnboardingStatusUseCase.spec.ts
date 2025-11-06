@@ -15,7 +15,7 @@ import {
   RecipeDeploymentStatus,
   createSpaceId,
 } from '@packmind/types';
-import { MemberContext } from '@packmind/shared';
+import { MemberContext } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import { PackmindLogger } from '@packmind/logger';
 import { UserService } from '../../services/UserService';

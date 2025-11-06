@@ -8,7 +8,7 @@ import {
 import {
   timestampsMigrationColumns,
   uuidMigrationColumn,
-} from '@packmind/shared/src/database/migrationColumns';
+} from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'CreateTargetsTable1757596420000';

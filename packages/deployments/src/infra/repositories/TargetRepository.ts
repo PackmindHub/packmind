@@ -1,7 +1,7 @@
 import { Repository } from 'typeorm';
 import { Target, TargetId, GitRepoId } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
-import { localDataSource, AbstractRepository } from '@packmind/shared';
+import { localDataSource, AbstractRepository } from '@packmind/node-utils';
 import { ITargetRepository } from '../../domain/repositories/ITargetRepository';
 import { TargetSchema } from '../schemas/TargetSchema';
 

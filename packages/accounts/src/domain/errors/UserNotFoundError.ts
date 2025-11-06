@@ -1,1 +1,1 @@
-export { UserNotFoundError } from '@packmind/shared';
+export { UserNotFoundError } from '@packmind/node-utils';

@@ -12,7 +12,7 @@
     "@packmind/git": "*",
     "@packmind/jobs": "*",
     "@packmind/logger": "*",
-    "@packmind/shared": "*",
+    "@packmind/node-utils": "*",
     "@packmind/types": "*",
     "@packmind/spaces": "*",
     "ts-jest": "^29.4.1",

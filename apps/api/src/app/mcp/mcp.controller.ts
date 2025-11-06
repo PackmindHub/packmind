@@ -10,8 +10,8 @@ import {
 } from '@nestjs/common';
 import { TokenResponse } from '../auth/auth.service';
 import { McpService } from './mcp.service';
-import { AuthenticatedRequest } from '@packmind/shared-nest';
-import { Configuration } from '@packmind/shared';
+import { AuthenticatedRequest } from '@packmind/node-utils';
+import { Configuration } from '@packmind/node-utils';
 
 @Controller('mcp')
 export class McpController {

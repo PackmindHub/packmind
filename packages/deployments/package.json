@@ -14,7 +14,7 @@
     "@packmind/git": "*",
     "@packmind/logger": "*",
     "@packmind/recipes": "*",
-    "@packmind/shared": "*",
+    "@packmind/node-utils": "*",
     "@packmind/types": "*",
     "@packmind/standards": "*",
     "ts-jest": "^29.4.1",

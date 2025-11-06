@@ -3,14 +3,14 @@ import { GitProviderSchema } from '../schemas/GitProviderSchema';
 import { GitRepoSchema } from '../schemas/GitRepoSchema';
 import { DataSource, Repository } from 'typeorm';
 import { makeTestDatasource } from '@packmind/test-utils';
-import { itHandlesSoftDelete } from '@packmind/shared/test';
+import { itHandlesSoftDelete } from '@packmind/test-utils';
 import { v4 as uuidv4 } from 'uuid';
 import {
   createGitProviderId,
   GitProvider,
 } from '../../domain/entities/GitProvider';
 import { PackmindLogger } from '@packmind/logger';
-import { Configuration } from '@packmind/shared';
+import { Configuration } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import { gitProviderFactory, gitlabProviderFactory } from '../../../test';
 import {
@@ -20,8 +20,8 @@ import {
 } from '@packmind/accounts';
 
 // Mock Configuration for encryption key
-jest.mock('@packmind/shared', () => ({
-  ...jest.requireActual('@packmind/shared'),
+jest.mock('@packmind/node-utils', () => ({
+  ...jest.requireActual('@packmind/node-utils'),
   Configuration: {
     getConfig: jest.fn(),
   },

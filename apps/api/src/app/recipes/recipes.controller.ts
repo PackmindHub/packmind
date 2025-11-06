@@ -15,7 +15,7 @@ import { TargetId } from '@packmind/types';
 import { SpaceId } from '@packmind/spaces';
 import { RecipesService } from './recipes.service';
 import { PackmindLogger } from '@packmind/logger';
-import { AuthenticatedRequest } from '@packmind/shared-nest';
+import { AuthenticatedRequest } from '@packmind/node-utils';
 import { AuthService } from '../auth/auth.service';
 import { Request } from 'express';
 

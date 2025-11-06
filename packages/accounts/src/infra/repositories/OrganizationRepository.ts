@@ -3,7 +3,7 @@ import { Organization } from '@packmind/types';
 import { IOrganizationRepository } from '../../domain/repositories/IOrganizationRepository';
 import { OrganizationSchema } from '../schemas/OrganizationSchema';
 import { PackmindLogger } from '@packmind/logger';
-import { localDataSource, AbstractRepository } from '@packmind/shared';
+import { localDataSource, AbstractRepository } from '@packmind/node-utils';
 
 const origin = 'OrganizationRepository';
 

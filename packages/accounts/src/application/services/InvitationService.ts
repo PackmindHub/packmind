@@ -10,7 +10,7 @@ import { Organization } from '@packmind/types';
 import { User, UserId } from '@packmind/types';
 import { IInvitationRepository } from '../../domain/repositories/IInvitationRepository';
 import { PackmindLogger, maskEmail } from '@packmind/logger';
-import { MailService, Configuration } from '@packmind/shared';
+import { MailService, Configuration } from '@packmind/node-utils';
 
 const origin = 'InvitationService';
 const INVITATION_EXPIRATION_HOURS = 48;

@@ -9,7 +9,7 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
   timestampsMigrationColumns,
   uuidMigrationColumn,
-} from '@packmind/shared/src/database/migrationColumns';
+} from '@packmind/node-utils';
 
 const origin = 'AddPasswordResetTokens1759240072004';
 

@@ -8,7 +8,7 @@
   "dependencies": {
     "tslib": "^2.3.0",
     "@packmind/logger": "*",
-    "@packmind/shared": "*",
+    "@packmind/node-utils": "*",
     "@packmind/types": "*",
     "@nestjs/common": "^11.1.6",
     "ts-jest": "^29.4.1"

@@ -3,7 +3,7 @@ import { ListOrganizationUsersCommand } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 import { PackmindLogger } from '@packmind/logger';
 import { UserProvider, OrganizationProvider } from '@packmind/types';
-import { MemberContext } from '@packmind/shared';
+import { MemberContext } from '@packmind/node-utils';
 import { UserService } from '../../services/UserService';
 import { userFactory, organizationFactory } from '../../../../test';
 import { createUserId } from '@packmind/types';

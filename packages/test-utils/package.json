@@ -7,6 +7,7 @@
   "types": "./src/index.d.ts",
   "dependencies": {
     "@packmind/logger": "*",
+    "@packmind/types": "*",
     "pg-mem": "^3.0.5",
     "tslib": "^2.3.0",
     "typeorm": "0.3.26"

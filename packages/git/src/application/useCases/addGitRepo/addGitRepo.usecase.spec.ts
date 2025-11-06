@@ -23,7 +23,7 @@ import {
   createOrganizationId,
   createUserId,
 } from '@packmind/types';
-import { OrganizationAdminRequiredError } from '@packmind/shared';
+import { OrganizationAdminRequiredError } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import { v4 as uuidv4 } from 'uuid';
 

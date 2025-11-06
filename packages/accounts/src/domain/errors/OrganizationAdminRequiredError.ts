@@ -1,1 +1,1 @@
-export { OrganizationAdminRequiredError } from '@packmind/shared';
+export { OrganizationAdminRequiredError } from '@packmind/node-utils';

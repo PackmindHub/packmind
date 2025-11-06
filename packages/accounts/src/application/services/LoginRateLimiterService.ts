@@ -1,4 +1,4 @@
-import { Cache, Configuration } from '@packmind/shared';
+import { Cache, Configuration } from '@packmind/node-utils';
 import { PackmindLogger, maskEmail } from '@packmind/logger';
 import { TooManyLoginAttemptsError } from '../../domain/errors/TooManyLoginAttemptsError';
 

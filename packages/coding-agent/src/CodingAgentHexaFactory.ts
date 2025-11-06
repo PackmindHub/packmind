@@ -1,5 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
-import { HexaRegistry } from '@packmind/shared';
+import { HexaRegistry } from '@packmind/node-utils';
 import { StandardsHexa } from '@packmind/standards';
 import { GitHexa } from '@packmind/git';
 import { CodingAgentDeployerRegistry } from './infra/repositories/CodingAgentDeployerRegistry';

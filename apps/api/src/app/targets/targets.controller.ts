@@ -19,7 +19,7 @@ import {
 import { TargetsService } from './targets.service';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthService } from '../auth/auth.service';
-import { AuthenticatedRequest } from '@packmind/shared-nest';
+import { AuthenticatedRequest } from '@packmind/node-utils';
 
 const origin = 'TargetsController';
 

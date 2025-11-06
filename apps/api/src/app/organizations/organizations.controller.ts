@@ -5,7 +5,7 @@ import {
   IPullAllContentResponse,
 } from '@packmind/types';
 import { AccountsHexa, OrganizationId } from '@packmind/accounts';
-import { AuthenticatedRequest } from '@packmind/shared-nest';
+import { AuthenticatedRequest } from '@packmind/node-utils';
 import { OrganizationAccessGuard } from './guards/organization-access.guard';
 import { DeploymentsHexa } from '@packmind/deployments';
 

@@ -1,7 +1,7 @@
 import { GitRepo } from '../entities/GitRepo';
 import { GitProviderId } from '../entities/GitProvider';
 import { OrganizationId } from '@packmind/types';
-import { IRepository } from '@packmind/shared';
+import { IRepository } from '@packmind/types';
 import { QueryOption } from '@packmind/types';
 
 export interface IGitRepoRepository extends IRepository<GitRepo> {

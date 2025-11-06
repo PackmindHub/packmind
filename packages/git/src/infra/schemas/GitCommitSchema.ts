@@ -4,7 +4,7 @@ import {
   WithTimestamps,
   uuidSchema,
   timestampsSchemas,
-} from '@packmind/shared';
+} from '@packmind/node-utils';
 
 export const GitCommitSchema = new EntitySchema<WithTimestamps<GitCommit>>({
   name: 'GitCommit',

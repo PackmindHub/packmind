@@ -10,7 +10,7 @@ import {
   RuleId,
 } from '@packmind/standards';
 import { PackmindLogger } from '@packmind/logger';
-import { AuthenticatedRequest } from '@packmind/shared-nest';
+import { AuthenticatedRequest } from '@packmind/node-utils';
 import { BadRequestException } from '@nestjs/common';
 
 describe('OrganizationsSpacesStandardsController', () => {

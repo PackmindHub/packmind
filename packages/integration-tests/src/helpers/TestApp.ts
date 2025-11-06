@@ -7,7 +7,7 @@ import { CodingAgentHexa } from '@packmind/coding-agent';
 import { JobsHexa } from '@packmind/jobs';
 import { DeploymentsHexa } from '@packmind/deployments';
 import { DataSource } from 'typeorm';
-import { HexaRegistry } from '@packmind/shared';
+import { HexaRegistry } from '@packmind/node-utils';
 import { AnalyticsHexa } from '@packmind/analytics';
 
 export class TestApp {

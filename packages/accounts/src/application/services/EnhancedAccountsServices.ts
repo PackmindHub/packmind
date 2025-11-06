@@ -7,7 +7,7 @@ import { LoginRateLimiterService } from './LoginRateLimiterService';
 import { PasswordResetTokenService } from './PasswordResetTokenService';
 import { IAccountsRepository } from '../../domain/repositories/IAccountsRepository';
 import { PackmindLogger } from '@packmind/logger';
-import { SmtpMailService } from '@packmind/shared';
+import { SmtpMailService } from '@packmind/node-utils';
 
 /**
  * Enhanced AccountsServices that can accept an optional API key service

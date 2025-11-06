@@ -1,4 +1,4 @@
-import { itHandlesSoftDelete } from '@packmind/shared/test';
+import { itHandlesSoftDelete } from '@packmind/test-utils';
 import { RecipeVersionRepository } from './RecipeVersionRepository';
 import { RecipeVersionSchema } from '../schemas/RecipeVersionSchema';
 import { RecipeSchema } from '../schemas/RecipeSchema';

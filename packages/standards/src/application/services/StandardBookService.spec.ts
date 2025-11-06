@@ -1,11 +1,11 @@
-import { StandardBookService } from './StandardBookService';
-import { StandardVersion } from '../../domain/entities/StandardVersion';
-import { standardVersionFactory } from '../../../test/standardVersionFactory';
 import { PackmindLogger } from '@packmind/logger';
-import { WithTimestamps } from '@packmind/shared';
+import { WithTimestamps } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import { v4 as uuidv4 } from 'uuid';
+import { standardVersionFactory } from '../../../test/standardVersionFactory';
 import { createStandardId } from '../../domain/entities/Standard';
+import { StandardVersion } from '../../domain/entities/StandardVersion';
+import { StandardBookService } from './StandardBookService';
 
 describe('StandardBookService', () => {
   let standardBookService: StandardBookService;

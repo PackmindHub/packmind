@@ -1,6 +1,6 @@
 import { GitProvider } from '../entities/GitProvider';
 import { OrganizationId } from '@packmind/types';
-import { IRepository } from '@packmind/shared';
+import { IRepository } from '@packmind/types';
 
 export interface IGitProviderRepository extends IRepository<GitProvider> {
   findByOrganizationId(organizationId: OrganizationId): Promise<GitProvider[]>;

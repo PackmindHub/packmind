@@ -3,7 +3,7 @@ import {
   WithTimestamps,
   timestampsSchemas,
   uuidSchema,
-} from '@packmind/shared';
+} from '@packmind/node-utils';
 import { Invitation } from '../../domain/entities/Invitation';
 
 export const InvitationSchema = new EntitySchema<WithTimestamps<Invitation>>({

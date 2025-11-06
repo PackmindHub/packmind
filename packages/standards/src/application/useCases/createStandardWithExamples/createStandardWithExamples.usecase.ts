@@ -15,7 +15,7 @@ import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampl
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import slug from 'slug';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { AiNotConfigured, getErrorMessage } from '@packmind/shared';
+import { AiNotConfigured, getErrorMessage } from '@packmind/node-utils';
 import { RuleWithExamples } from '@packmind/types';
 import { OrganizationId, UserId } from '@packmind/accounts';
 import { SpaceId, ProgrammingLanguage } from '@packmind/types';

@@ -8,7 +8,7 @@ import { createOrganizationId } from '@packmind/types';
 import { createUserId } from '@packmind/types';
 import { Organization } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
-import { WithTimestamps } from '@packmind/shared';
+import { WithTimestamps } from '@packmind/types';
 import { UserOrganizationMembership } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { UserOrganizationMembershipRepository } from './UserOrganizationMembershipRepository';

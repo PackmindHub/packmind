@@ -9,7 +9,7 @@ import {
 import { createOrganizationId, Organization } from '@packmind/types';
 import { CreateInvitationsCommand } from '@packmind/types';
 import { InvitationBatchEmptyError } from '../../../domain/errors';
-import { UserNotFoundError } from '@packmind/shared';
+import { UserNotFoundError } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   organizationFactory,

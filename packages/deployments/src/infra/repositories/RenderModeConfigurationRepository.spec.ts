@@ -1,4 +1,4 @@
-import { itHandlesSoftDelete } from '@packmind/shared/test';
+import { itHandlesSoftDelete } from '@packmind/test-utils';
 import { DataSource, Repository } from 'typeorm';
 import { RenderModeConfigurationRepository } from './RenderModeConfigurationRepository';
 import { RenderModeConfigurationSchema } from '../schemas/RenderModeConfigurationSchema';

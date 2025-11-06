@@ -1,4 +1,4 @@
-import { IRepository } from '@packmind/shared';
+import { IRepository } from '@packmind/types';
 import { QueryOption } from '@packmind/types';
 import {
   PasswordResetTokenEntity,

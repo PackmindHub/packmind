@@ -1,5 +1,5 @@
 import { StandardVersion } from '../../domain/entities/StandardVersion';
-import { WithTimestamps } from '@packmind/shared';
+import { WithTimestamps } from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'StandardBookService';

@@ -33,7 +33,7 @@ import {
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindCommand, PackmindCommandBody } from '@packmind/types';
 import { JwtPayload } from './JwtPayload';
-import { AuthenticatedRequest } from '@packmind/shared-nest';
+import { AuthenticatedRequest } from '@packmind/node-utils';
 
 export interface TokenRequestBody {
   grant_type: string;

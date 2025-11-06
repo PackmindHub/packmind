@@ -1,7 +1,7 @@
 import { OrganizationsController } from './organizations.controller';
 import { createOrganizationId, AccountsHexa } from '@packmind/accounts';
 import { stubLogger } from '@packmind/test-utils';
-import { AuthenticatedRequest } from '@packmind/shared-nest';
+import { AuthenticatedRequest } from '@packmind/node-utils';
 import { DeploymentsHexa } from '@packmind/deployments';
 
 describe('OrganizationsController', () => {

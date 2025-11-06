@@ -4,7 +4,7 @@ import { OrganizationId } from '@packmind/types';
 import { StandardId } from '@packmind/standards/types';
 import { GitRepoId } from '@packmind/git/types';
 import { TargetId, DistributionStatus } from '@packmind/types';
-import { IRepository } from '@packmind/shared';
+import { IRepository } from '@packmind/types';
 
 export interface IStandardsDeploymentRepository
   extends IRepository<StandardsDeployment> {

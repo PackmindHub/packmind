@@ -23,9 +23,9 @@ import {
 import { OrganizationsService } from './organizations.service';
 import { PackmindLogger } from '@packmind/logger';
 import { UserOrganizationRole } from '@packmind/types';
-import { UserNotFoundError } from '@packmind/shared';
-import { AuthenticatedRequest } from '@packmind/shared-nest';
-import { Public } from '@packmind/shared-nest';
+import { UserNotFoundError } from '@packmind/node-utils';
+import { AuthenticatedRequest } from '@packmind/node-utils';
+import { Public } from '@packmind/node-utils';
 
 const origin = 'OrganizationsController';
 

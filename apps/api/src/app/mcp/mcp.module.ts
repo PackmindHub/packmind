@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
-import { Configuration } from '@packmind/shared';
+import { Configuration } from '@packmind/node-utils';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { McpController } from './mcp.controller';
 import { McpService } from './mcp.service';

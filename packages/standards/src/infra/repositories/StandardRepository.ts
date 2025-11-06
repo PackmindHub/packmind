@@ -4,7 +4,7 @@ import { StandardSchema } from '../schemas/StandardSchema';
 import { StandardVersionSchema } from '../schemas/StandardVersionSchema';
 import { Repository } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
-import { localDataSource, AbstractRepository } from '@packmind/shared';
+import { localDataSource, AbstractRepository } from '@packmind/node-utils';
 import { OrganizationId, UserId } from '@packmind/accounts';
 import { SpaceId } from '@packmind/types';
 import { StandardVersion } from '../../domain/entities/StandardVersion';

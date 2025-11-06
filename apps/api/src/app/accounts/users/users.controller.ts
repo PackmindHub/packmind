@@ -18,7 +18,7 @@ import { UsersService } from './users.service';
 import { PackmindLogger } from '@packmind/logger';
 import { ChangeUserRoleResponse, UserOrganizationRole } from '@packmind/types';
 import { AuthService } from '../../auth/auth.service';
-import { AuthenticatedRequest } from '@packmind/shared-nest';
+import { AuthenticatedRequest } from '@packmind/node-utils';
 
 const origin = 'UsersController';
 

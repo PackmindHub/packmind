@@ -3,7 +3,7 @@ import { GitRepoSchema } from '../schemas/GitRepoSchema';
 import { GitProviderSchema } from '../schemas/GitProviderSchema';
 import { DataSource, Repository } from 'typeorm';
 import { makeTestDatasource } from '@packmind/test-utils';
-import { itHandlesSoftDelete } from '@packmind/shared/test';
+import { itHandlesSoftDelete } from '@packmind/test-utils';
 import { v4 as uuidv4 } from 'uuid';
 import { GitRepo } from '../../domain/entities/GitRepo';
 import { GitProvider } from '../../domain/entities/GitProvider';

@@ -1,5 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
-import { Configuration } from '@packmind/shared';
+import { Configuration } from '@packmind/node-utils';
 import {
   IGenerateApiKeyUseCase,
   GenerateApiKeyCommand,

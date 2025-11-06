@@ -1,6 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import { UserProvider, OrganizationProvider } from '@packmind/types';
-import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/shared';
+import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
 import {
   ISpacesPort,
   IGitPort,

@@ -1,5 +1,9 @@
 import { PackmindLogger } from '@packmind/logger';
-import { AiNotConfigured, AIService, OpenAIService } from '@packmind/shared';
+import {
+  AiNotConfigured,
+  AIService,
+  OpenAIService,
+} from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import { RuleExample } from '@packmind/types';
 import { standardVersionFactory } from '../../../test/standardVersionFactory';
@@ -10,8 +14,8 @@ import { StandardSummaryService } from './StandardSummaryService';
 import { v4 as uuidv4 } from 'uuid';
 
 // Mock OpenAIService
-jest.mock('@packmind/shared', () => ({
-  ...jest.requireActual('@packmind/shared'),
+jest.mock('@packmind/node-utils', () => ({
+  ...jest.requireActual('@packmind/node-utils'),
   OpenAIService: jest.fn(),
 }));
 

@@ -8,7 +8,7 @@ import {
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { UserProvider, OrganizationProvider } from '@packmind/types';
-import { AbstractAdminUseCase, AdminContext } from '@packmind/shared';
+import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
 import { UserService } from '../../services/UserService';
 import {
   InvitationCreationRequest,

@@ -1,0 +1,33 @@
+{
+  "name": "node-utils",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/node-utils/src",
+  "projectType": "library",
+  "tags": ["env:node"],
+  "implicitDependencies": [],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit --project packages/node-utils/tsconfig.lib.json"
+      }
+    },
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/node-utils",
+        "tsConfig": "packages/node-utils/tsconfig.lib.json",
+        "packageJson": "packages/node-utils/package.json",
+        "main": "packages/node-utils/src/index.ts",
+        "assets": ["packages/node-utils/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["packages/node-utils/src/**/*.{ts,tsx}"]
+      }
+    }
+  }
+}

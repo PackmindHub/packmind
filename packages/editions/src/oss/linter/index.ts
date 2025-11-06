@@ -1,4 +1,4 @@
-import { TokensUsed } from '@packmind/shared';
+import { TokensUsed } from '@packmind/node-utils';
 import {
   DetectionStatus,
   RuleId,

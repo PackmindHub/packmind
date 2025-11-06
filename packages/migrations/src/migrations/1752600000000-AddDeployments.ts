@@ -8,7 +8,7 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
   timestampsMigrationColumns,
   uuidMigrationColumn,
-} from '@packmind/shared/src/database/migrationColumns';
+} from '@packmind/node-utils';
 
 const origin = 'AddDeployments1752600000000';
 

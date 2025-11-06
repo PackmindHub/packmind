@@ -8,7 +8,7 @@ import {
   timestampsMigrationColumns,
   uuidMigrationColumn,
   softDeleteMigrationColumns,
-} from '@packmind/shared/src/database/migrationColumns';
+} from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'CreateRenderModeConfigurations1759300000000';

@@ -13,7 +13,7 @@ import {
   RecipeVersion,
   RecipeVersionId,
 } from '@packmind/recipes/types';
-import { HexaRegistry } from '@packmind/shared';
+import { HexaRegistry } from '@packmind/node-utils';
 import { Space, SpacesHexa, spacesSchemas } from '@packmind/spaces';
 import { StandardsHexa, standardsSchemas } from '@packmind/standards';
 import {
@@ -32,9 +32,8 @@ import {
 import { assert } from 'console';
 import { DataSource } from 'typeorm';
 
-// Mock only Configuration from @packmind/shared
-jest.mock('@packmind/shared', () => {
-  const actual = jest.requireActual('@packmind/shared');
+jest.mock('@packmind/node-utils', () => {
+  const actual = jest.requireActual('@packmind/node-utils');
   return {
     ...actual,
     Configuration: {

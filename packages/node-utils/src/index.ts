@@ -9,8 +9,7 @@ export * from './database/migrationColumns';
 export * from './database/schemas';
 export * from './database/types';
 export * from './config/config/Configuration';
-export type { IRepository } from './repositories/IRepository';
-// QueryOption is already exported from @packmind/types
+// IRepository and QueryOption are exported from @packmind/types
 export * from './repositories/AbstractRepository';
 export * from './security/EncryptionService';
 export * from './sse';
@@ -18,6 +17,7 @@ export * from './mail';
 export * from './application';
 export * from './errors';
 export * from './text';
+export * from './nest';
 
 import localDataSource from './dataSources/local';
 export { localDataSource };

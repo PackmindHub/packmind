@@ -1,5 +1,5 @@
 {
-  "name": "@packmind/shared",
+  "name": "@packmind/node-utils",
   "version": "0.0.1",
   "private": true,
   "type": "commonjs",
@@ -8,6 +8,7 @@
   "dependencies": {
     "@packmind/logger": "*",
     "@packmind/types": "*",
+    "express": "^5.1.0",
     "openai": "^5.11.0",
     "ts-jest": "^29.4.1",
     "tslib": "^2.3.0",

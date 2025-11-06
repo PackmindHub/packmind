@@ -1,6 +1,6 @@
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { UserProvider, OrganizationProvider } from '@packmind/types';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/shared';
+import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
   CreateRenderModeConfigurationCommand,
   ICreateRenderModeConfigurationUseCase,

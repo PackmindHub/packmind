@@ -33,9 +33,9 @@ import {
   RequestPasswordResetCommand,
   RequestPasswordResetResponse,
 } from '@packmind/types';
-import { AuthenticatedRequest } from '@packmind/shared-nest';
-import { Configuration } from '@packmind/shared';
-import { Public } from '@packmind/shared-nest';
+import { AuthenticatedRequest } from '@packmind/node-utils';
+import { Configuration } from '@packmind/node-utils';
+import { Public } from '@packmind/node-utils';
 
 @Controller('auth')
 export class AuthController {

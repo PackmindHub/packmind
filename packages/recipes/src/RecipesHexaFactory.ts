@@ -3,7 +3,7 @@ import { RecipesRepositories } from './infra/repositories/RecipesRepositories';
 import { DataSource } from 'typeorm';
 import { RecipesAdapter } from './application/adapter/RecipesAdapter';
 import { PackmindLogger } from '@packmind/logger';
-import { HexaRegistry } from '@packmind/shared';
+import { HexaRegistry } from '@packmind/node-utils';
 import { IDeploymentPort, ISpacesPort } from '@packmind/types';
 import { GitHexa } from '@packmind/git';
 import { IRecipesRepositories } from './domain/repositories/IRecipesRepositories';

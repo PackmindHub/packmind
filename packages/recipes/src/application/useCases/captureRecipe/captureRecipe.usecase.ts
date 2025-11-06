@@ -9,7 +9,7 @@ import {
   RecipeStep,
   Recipe,
 } from '@packmind/types';
-import { AiNotConfigured } from '@packmind/shared';
+import { AiNotConfigured } from '@packmind/node-utils';
 import { RecipeSummaryService } from '../../services/RecipeSummaryService';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
 import { createSpaceId } from '@packmind/spaces';

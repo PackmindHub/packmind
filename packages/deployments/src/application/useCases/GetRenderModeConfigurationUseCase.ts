@@ -1,5 +1,5 @@
 import { OrganizationProvider, UserProvider } from '@packmind/types';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/shared';
+import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
   GetRenderModeConfigurationCommand,
   GetRenderModeConfigurationResult,

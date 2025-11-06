@@ -8,7 +8,7 @@ import {
 } from '@packmind/types';
 import { createOrganizationId } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
-import { SSEEventPublisher } from '@packmind/shared';
+import { SSEEventPublisher } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import { userFactory } from '../../../test';
 import {

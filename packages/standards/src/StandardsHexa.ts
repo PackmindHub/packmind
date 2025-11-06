@@ -1,5 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
-import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/shared';
+import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
 import {
   ListStandardsBySpaceCommand,
   GetStandardByIdCommand,

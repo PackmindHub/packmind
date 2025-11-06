@@ -19,7 +19,7 @@ import type {
   StandardVersionId,
   TargetId,
 } from '@packmind/types';
-import { AuthenticatedRequest } from '@packmind/shared-nest';
+import { AuthenticatedRequest } from '@packmind/node-utils';
 
 const origin = 'StandardsController';
 

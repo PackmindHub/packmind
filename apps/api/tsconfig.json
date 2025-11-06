@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.base.effective.json",
   "files": [],
   "include": [],
-  "exclude": ["src/**/*.spec.ts"],
+  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"],
   "references": [
     {
       "path": "./tsconfig.app.json"

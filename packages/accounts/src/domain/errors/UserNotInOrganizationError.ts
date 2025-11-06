@@ -1,1 +1,1 @@
-export { UserNotInOrganizationError } from '@packmind/shared';
+export { UserNotInOrganizationError } from '@packmind/node-utils';

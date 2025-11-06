@@ -1,6 +1,10 @@
 import { RecipeVersion } from '../../domain/entities/RecipeVersion';
 import { PackmindLogger } from '@packmind/logger';
-import { AIService, OpenAIService, AiNotConfigured } from '@packmind/shared';
+import {
+  AIService,
+  OpenAIService,
+  AiNotConfigured,
+} from '@packmind/node-utils';
 import { createRecipeSummaryPrompt } from './cookbook/prompts/create_recipe_summary';
 
 const origin = 'RecipeSummaryService';

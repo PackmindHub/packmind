@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
-import { HexaRegistry } from '@packmind/shared';
+import { HexaRegistry } from '@packmind/node-utils';
 import { AccountsHexa } from '@packmind/accounts';
 import { ApiKeyServiceProvider } from '../shared/ApiKeyServiceProvider';
 import { HEXA_REGISTRY_TOKEN } from '../shared/HexaRegistryModule';

@@ -2,7 +2,7 @@ import { MigrationInterface, QueryRunner, Table } from 'typeorm';
 import {
   timestampsMigrationColumns,
   uuidMigrationColumn,
-} from '@packmind/shared/src/database/migrationColumns';
+} from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
 
 const origin = 'AddRecipes1751616237712';

@@ -15,7 +15,7 @@ import {
   GitRepoAlreadyExistsError,
 } from '@packmind/types';
 import { GitRepo, GitProviderId, GitRepoId } from '@packmind/git';
-import { AuthenticatedRequest } from '@packmind/shared-nest';
+import { AuthenticatedRequest } from '@packmind/node-utils';
 
 interface AddGitRepoDto {
   gitProviderId: GitProviderId;

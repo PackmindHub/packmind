@@ -7,7 +7,7 @@ import {
   uuidSchema,
   timestampsSchemas,
   softDeleteSchemas,
-} from '@packmind/shared';
+} from '@packmind/node-utils';
 
 export const TargetSchema = new EntitySchema<
   WithSoftDelete<WithTimestamps<Target & { gitRepo?: GitRepo }>>

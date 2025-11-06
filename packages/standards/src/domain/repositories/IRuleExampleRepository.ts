@@ -1,4 +1,4 @@
-import { IRepository } from '@packmind/shared';
+import { IRepository } from '@packmind/types';
 import { RuleExample } from '../entities/RuleExample';
 import { RuleId } from '../entities/Rule';
 

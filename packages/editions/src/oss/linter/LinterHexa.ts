@@ -1,4 +1,4 @@
-import { BaseHexa, HexaRegistry } from '@packmind/shared';
+import { BaseHexa, HexaRegistry } from '@packmind/node-utils';
 import { IDeploymentPort, IStandardsPort, ILinterPort } from '@packmind/types';
 import { LinterUsecases } from './LinterUsecases';
 import { LinterAdapter } from './LinterAdapter';

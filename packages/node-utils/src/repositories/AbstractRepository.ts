@@ -1,5 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
-import { IRepository, QueryOption } from './IRepository';
+import { IRepository, QueryOption, WithSoftDelete } from '@packmind/types';
 import {
   EntitySchema,
   FindOptionsWhere,
@@ -7,7 +7,6 @@ import {
   UpdateResult,
 } from 'typeorm';
 import assert from 'assert';
-import { WithSoftDelete } from '../database/types';
 import { BadRequestException } from '@nestjs/common';
 
 export abstract class AbstractRepository<Entity extends { id: string }>

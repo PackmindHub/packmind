@@ -14,13 +14,13 @@ function fixImports(filePath) {
 
   // Replace require("@packmind/shared/src/database/migrationColumns")
   content = content.replace(
-    /require\("@packmind\/shared\/src\/database\/migrationColumns"\)/g,
+    /require\("@packmind\/node-utils"\)/g,
     'require("../docker/migrationColumns")',
   );
 
   // Replace require("@packmind/shared") (for old logger references)
   content = content.replace(
-    /require\("@packmind\/shared"\)/g,
+    /require\("@packmind\/node-utils"\)/g,
     'require("../docker/DockerLogger")',
   );
 

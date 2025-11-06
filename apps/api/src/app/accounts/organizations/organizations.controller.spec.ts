@@ -7,7 +7,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { createUserId } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 import { organizationFactory } from '@packmind/accounts/test';
-import { AuthenticatedRequest } from '@packmind/shared-nest';
+import { AuthenticatedRequest } from '@packmind/node-utils';
 
 describe('OrganizationsController', () => {
   let app: TestingModule;

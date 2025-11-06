@@ -3,7 +3,7 @@ import {
   AbstractAdminUseCase,
   AdminContext,
   Configuration,
-} from '@packmind/shared';
+} from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
 import {
   IListOrganizationUserStatusesUseCase,

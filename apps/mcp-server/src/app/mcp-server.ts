@@ -36,7 +36,7 @@ import {
   ADD_RULE_WORKFLOW_STEPS,
   AddRuleWorkflowStep,
 } from './prompts/packmind-add-rule-workflow';
-import { extractCodeFromMarkdown } from '@packmind/shared';
+import { extractCodeFromMarkdown } from '@packmind/node-utils';
 
 interface UserContext {
   email: string;

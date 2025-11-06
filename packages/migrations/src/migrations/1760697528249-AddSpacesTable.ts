@@ -8,7 +8,7 @@ import {
   timestampsMigrationColumns,
   uuidMigrationColumn,
   softDeleteMigrationColumns,
-} from '@packmind/shared/src/database/migrationColumns';
+} from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
 import { v4 as uuidv4 } from 'uuid';
 

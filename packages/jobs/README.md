@@ -17,7 +17,7 @@ The package follows the hexagonal architecture pattern with:
 
 ```typescript
 import { JobsHexa, HelloWorldInput } from '@packmind/jobs';
-import { HexaRegistry } from '@packmind/shared';
+import { HexaRegistry } from '@packmind/node-utils';
 
 // Initialize with registry
 const registry = new HexaRegistry();

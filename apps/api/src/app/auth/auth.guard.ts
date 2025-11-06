@@ -15,8 +15,8 @@ import {
 } from '@packmind/accounts';
 import { JwtPayload } from './JwtPayload';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { AuthenticatedRequest } from '@packmind/shared-nest';
-import { IS_PUBLIC_KEY } from '@packmind/shared-nest';
+import { AuthenticatedRequest } from '@packmind/node-utils';
+import { IS_PUBLIC_KEY } from '@packmind/node-utils';
 
 // Lightweight adapter to reuse accounts ApiKeyService with Nest JwtService
 class JwtServiceAdapter implements IJwtService {

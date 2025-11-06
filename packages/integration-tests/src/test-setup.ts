@@ -19,9 +19,8 @@ jest.mock('@packmind/jobs', () => {
   };
 });
 
-// Mock only the Configuration class, not the entire @packmind/shared module
-jest.mock('@packmind/shared', () => {
-  const actual = jest.requireActual('@packmind/shared');
+jest.mock('@packmind/node-utils', () => {
+  const actual = jest.requireActual('@packmind/node-utils');
   return {
     ...actual,
     Configuration: {

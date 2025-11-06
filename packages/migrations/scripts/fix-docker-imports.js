@@ -12,15 +12,15 @@ function fixImports(filePath) {
 
   let content = fs.readFileSync(filePath, 'utf8');
 
-  // Replace @packmind/shared/src/database/migrationColumns imports
+  // Replace @packmind/node-utils imports
   content = content.replace(
-    /from '@packmind\/shared\/src\/database\/migrationColumns'/g,
+    /from '@packmind\/node-utils'/g,
     "from '../docker/migrationColumns'",
   );
 
   // Replace @packmind/shared imports (for old logger references)
   content = content.replace(
-    /from '@packmind\/shared'/g,
+    /from '@packmind\/logger'/g,
     "from '../docker/DockerLogger'",
   );
 

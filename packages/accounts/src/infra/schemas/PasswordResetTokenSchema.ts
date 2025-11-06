@@ -3,7 +3,7 @@ import {
   WithTimestamps,
   timestampsSchemas,
   uuidSchema,
-} from '@packmind/shared';
+} from '@packmind/node-utils';
 import { PasswordResetTokenEntity } from '../../domain/entities/PasswordResetToken';
 
 export const PasswordResetTokenSchema = new EntitySchema<

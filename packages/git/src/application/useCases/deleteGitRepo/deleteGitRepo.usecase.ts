@@ -9,7 +9,7 @@ import {
   OrganizationProvider,
   createUserId,
 } from '@packmind/types';
-import { AbstractAdminUseCase, AdminContext } from '@packmind/shared';
+import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
 import { GitProviderOrganizationMismatchError } from '@packmind/types';
 
 const origin = 'DeleteGitRepoUseCase';

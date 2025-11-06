@@ -19,4 +19,4 @@ export { UpdateRenderModeConfigurationUseCase } from './UpdateRenderModeConfigur
 export { UpdateTargetUseCase } from './UpdateTargetUseCase';
 
 // Re-export all types from shared for backward compatibility
-export * from '@packmind/shared';
+export * from '@packmind/node-utils';

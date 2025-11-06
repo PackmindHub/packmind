@@ -8,7 +8,7 @@ import {
   EncryptionService,
   Configuration,
   AbstractRepository,
-} from '@packmind/shared';
+} from '@packmind/node-utils';
 import { QueryOption } from '@packmind/types';
 import { OrganizationId } from '@packmind/accounts';
 

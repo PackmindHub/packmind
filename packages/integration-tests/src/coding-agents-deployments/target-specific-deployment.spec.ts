@@ -19,7 +19,7 @@ import {
   RecipesHexa,
   recipesSchemas,
 } from '@packmind/recipes';
-import { HexaRegistry } from '@packmind/shared';
+import { HexaRegistry } from '@packmind/node-utils';
 import { Space, SpacesHexa, spacesSchemas } from '@packmind/spaces';
 import {
   Standard,

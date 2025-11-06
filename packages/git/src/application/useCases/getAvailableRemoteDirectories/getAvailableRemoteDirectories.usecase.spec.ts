@@ -1,19 +1,19 @@
+import { Cache } from '@packmind/node-utils';
+import { stubLogger } from '@packmind/test-utils';
 import {
   GetAvailableRemoteDirectoriesCommand,
   createOrganizationId,
   createUserId,
 } from '@packmind/types';
-import { GitProviderService } from '../../GitProviderService';
-import { stubLogger } from '@packmind/test-utils';
-import { GitRepo, createGitRepoId } from '../../../domain/entities/GitRepo';
-import { createGitProviderId } from '../../../domain/entities/GitProvider';
 import { v4 as uuidv4 } from 'uuid';
-import { Cache } from '@packmind/shared';
+import { createGitProviderId } from '../../../domain/entities/GitProvider';
+import { GitRepo, createGitRepoId } from '../../../domain/entities/GitRepo';
+import { GitProviderService } from '../../GitProviderService';
 import { GetAvailableRemoteDirectoriesUseCase } from './getAvailableRemoteDirectories.usecase';
 
 // Mock Cache
-jest.mock('@packmind/shared', () => ({
-  ...jest.requireActual('@packmind/shared'),
+jest.mock('@packmind/node-utils', () => ({
+  ...jest.requireActual('@packmind/node-utils'),
   Cache: {
     getInstance: jest.fn(),
   },

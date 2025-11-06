@@ -1,7 +1,7 @@
 import {
   itHandlesDuplicateKeys,
   itHandlesSoftDelete,
-} from '@packmind/shared/test';
+} from '@packmind/test-utils';
 import { DataSource, Repository } from 'typeorm';
 import { UserRepository } from './UserRepository';
 import { createUserId, User } from '@packmind/types';

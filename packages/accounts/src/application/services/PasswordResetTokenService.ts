@@ -8,7 +8,7 @@ import {
 } from '../../domain/entities/PasswordResetToken';
 import { User, UserId } from '@packmind/types';
 import { IPasswordResetTokenRepository } from '../../domain/repositories/IPasswordResetTokenRepository';
-import { Configuration, MailService } from '@packmind/shared';
+import { Configuration, MailService } from '@packmind/node-utils';
 import { PackmindLogger, maskEmail } from '@packmind/logger';
 
 const origin = 'PasswordResetTokenService';

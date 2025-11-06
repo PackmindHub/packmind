@@ -9,7 +9,7 @@ import {
   Recipe,
   RecipeVersion,
 } from '@packmind/types';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/shared';
+import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { CodingAgentHexa, CodingAgents } from '@packmind/coding-agent';
 import { StandardsHexa } from '@packmind/standards';

@@ -6,7 +6,7 @@ import {
   uuidSchema,
   timestampsSchemas,
   softDeleteSchemas,
-} from '@packmind/shared';
+} from '@packmind/node-utils';
 import { Standard } from '../../domain/entities/Standard';
 import { Rule } from '../../domain/entities/Rule';
 import { GitCommit, GitCommitId } from '@packmind/git';

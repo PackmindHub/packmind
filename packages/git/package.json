@@ -12,7 +12,7 @@
     "@packmind/accounts": "*",
     "@packmind/jobs": "*",
     "@packmind/logger": "*",
-    "@packmind/shared": "*",
+    "@packmind/node-utils": "*",
     "@packmind/types": "*",
     "typeorm": "0.3.26",
     "uuid": "^11.1.0",

@@ -1,5 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
-import { Configuration } from '@packmind/shared';
+import { Configuration } from '@packmind/node-utils';
 import { IDelayedJob } from '../domain/IDelayedJob';
 import { IQueue, QueueListeners, WorkerListeners } from '../domain/IQueue';
 import { PackmindSerializer } from '../utils/PackmindSerializer';

@@ -7,7 +7,7 @@ import { RecipesModule } from './recipes/recipes.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HooksModule } from './hooks/hooks.module';
-import { Configuration } from '@packmind/shared';
+import { Configuration } from '@packmind/node-utils';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { recipesSchemas, RecipesHexa } from '@packmind/recipes';
 import { accountsSchemas, AccountsHexa } from '@packmind/accounts';

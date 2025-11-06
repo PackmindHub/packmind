@@ -11,7 +11,7 @@
     "@packmind/git": "*",
     "@packmind/logger": "*",
     "@packmind/recipes": "*",
-    "@packmind/shared": "*",
+    "@packmind/node-utils": "*",
     "@packmind/types": "*",
     "@packmind/spaces": "*",
     "@packmind/standards": "*",

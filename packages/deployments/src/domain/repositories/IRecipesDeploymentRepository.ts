@@ -3,7 +3,7 @@ import { OrganizationId } from '@packmind/types';
 import { RecipeId, RecipeVersion } from '@packmind/recipes/types';
 import { GitRepoId } from '@packmind/git/types';
 import { TargetId, DistributionStatus } from '@packmind/types';
-import { IRepository } from '@packmind/shared';
+import { IRepository } from '@packmind/types';
 
 export interface IRecipesDeploymentRepository
   extends IRepository<RecipesDeployment> {

@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import fp from 'fastify-plugin';
 import rateLimit from '@fastify/rate-limit';
-import { Configuration } from '@packmind/shared';
+import { Configuration } from '@packmind/node-utils';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 
 /**

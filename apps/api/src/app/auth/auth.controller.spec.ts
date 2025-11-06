@@ -19,11 +19,11 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Response, Request } from 'express';
-import { Configuration } from '@packmind/shared';
+import { Configuration } from '@packmind/node-utils';
 
 // Mock only Configuration, preserve other exports
-jest.mock('@packmind/shared', () => ({
-  ...jest.requireActual('@packmind/shared'),
+jest.mock('@packmind/node-utils', () => ({
+  ...jest.requireActual('@packmind/node-utils'),
   Configuration: {
     getConfig: jest.fn(),
   },

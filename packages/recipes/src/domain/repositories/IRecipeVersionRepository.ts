@@ -1,5 +1,5 @@
 import { RecipeVersion } from '../entities/RecipeVersion';
-import { IRepository } from '@packmind/shared';
+import { IRepository } from '@packmind/types';
 
 import { RecipeId } from '../entities/Recipe';
 

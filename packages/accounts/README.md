@@ -205,7 +205,7 @@ nx lint accounts
 - `bcrypt`: Password hashing
 - `uuid`: UUID generation
 - `typeorm`: Database ORM
-- `@packmind/shared`: Shared utilities and schemas
+- `@packmind/types`: Shared utilities and schemas
 
 ## Contributing
 

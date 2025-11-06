@@ -6,7 +6,7 @@ import {
   uuidSchema,
   timestampsSchemas,
   softDeleteSchemas,
-} from '@packmind/shared';
+} from '@packmind/node-utils';
 import { GitRepo } from '../../domain/entities/GitRepo';
 import { Organization } from '@packmind/accounts';
 

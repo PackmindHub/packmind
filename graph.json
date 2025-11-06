@@ -94,7 +94,7 @@
             }
           },
           "name": "@packmind/integration-tests",
-          "tags": ["npm:private"],
+          "tags": ["npm:private", "env:node"],
           "metadata": {
             "targetGroups": {},
             "js": {
@@ -105,114 +105,6 @@
           },
           "$schema": "../../node_modules/nx/schemas/project-schema.json",
           "sourceRoot": "packages/integration-tests/src",
-          "projectType": "library",
-          "implicitDependencies": []
-        }
-      },
-      "recipes-analytics": {
-        "name": "recipes-analytics",
-        "type": "lib",
-        "data": {
-          "root": "packages/recipes-analytics",
-          "targets": {
-            "lint": {
-              "cache": true,
-              "options": {
-                "cwd": "packages/recipes-analytics",
-                "command": "eslint ."
-              },
-              "inputs": [
-                "default",
-                "^default",
-                "{workspaceRoot}/eslint.config.mjs",
-                "{workspaceRoot}/packages/recipes-analytics/eslint.config.mjs",
-                "{workspaceRoot}/tools/eslint-rules/**/*",
-                {
-                  "externalDependencies": ["eslint"]
-                }
-              ],
-              "outputs": ["{options.outputFile}"],
-              "metadata": {
-                "technologies": ["eslint"],
-                "description": "Runs ESLint on project",
-                "help": {
-                  "command": "npx eslint --help",
-                  "example": {
-                    "options": {
-                      "max-warnings": 0
-                    }
-                  }
-                }
-              },
-              "executor": "nx:run-commands",
-              "configurations": {},
-              "parallelism": true
-            },
-            "test": {
-              "options": {
-                "cwd": "packages/recipes-analytics",
-                "env": {
-                  "TS_NODE_COMPILER_OPTIONS": "{\"moduleResolution\":\"node10\",\"module\":\"commonjs\",\"customConditions\":null}"
-                },
-                "command": "jest"
-              },
-              "metadata": {
-                "technologies": ["jest"],
-                "description": "Run Jest Tests",
-                "help": {
-                  "command": "npx jest --help",
-                  "example": {
-                    "options": {
-                      "coverage": true
-                    }
-                  }
-                }
-              },
-              "cache": true,
-              "inputs": [
-                "default",
-                "^default",
-                "{workspaceRoot}/jest.preset.ts",
-                {
-                  "externalDependencies": ["jest"]
-                }
-              ],
-              "outputs": [
-                "{workspaceRoot}/coverage/packages/recipes-analytics"
-              ],
-              "executor": "nx:run-commands",
-              "configurations": {},
-              "parallelism": true
-            },
-            "build": {
-              "executor": "@nx/js:tsc",
-              "outputs": ["{options.outputPath}"],
-              "options": {
-                "outputPath": "dist/packages/recipes-analytics",
-                "tsConfig": "packages/recipes-analytics/tsconfig.lib.json",
-                "packageJson": "packages/recipes-analytics/package.json",
-                "main": "packages/recipes-analytics/src/index.ts",
-                "assets": ["packages/recipes-analytics/*.md"]
-              },
-              "configurations": {},
-              "parallelism": true,
-              "cache": true,
-              "dependsOn": ["^build"],
-              "inputs": ["default", "^default"]
-            }
-          },
-          "name": "recipes-analytics",
-          "tags": ["npm:private"],
-          "metadata": {
-            "targetGroups": {},
-            "js": {
-              "packageName": "@packmind/recipes-analytics",
-              "packageMain": "./src/index.js",
-              "isInPackageManagerWorkspaces": true
-            }
-          },
-          "$schema": "../../node_modules/nx/schemas/project-schema.json",
-          "sourceRoot": "packages/recipes-analytics/src",
           "projectType": "library",
           "implicitDependencies": []
         }
@@ -307,7 +199,7 @@
             }
           },
           "name": "coding-agent",
-          "tags": ["npm:private"],
+          "tags": ["npm:private", "env:node"],
           "metadata": {
             "targetGroups": {},
             "js": {
@@ -540,7 +432,7 @@
             }
           },
           "name": "deployments",
-          "tags": ["npm:private"],
+          "tags": ["npm:private", "env:node"],
           "metadata": {
             "targetGroups": {},
             "js": {
@@ -646,7 +538,7 @@
             }
           },
           "name": "shared-nest",
-          "tags": ["npm:private"],
+          "tags": ["npm:private", "env:node"],
           "metadata": {
             "targetGroups": {},
             "js": {
@@ -758,6 +650,7 @@
               "executor": "@nx/esbuild:esbuild",
               "outputs": ["{options.outputPath}"],
               "defaultConfiguration": "production",
+              "dependsOn": ["^build"],
               "options": {
                 "platform": "node",
                 "outputPath": "dist/packages/migrations-bundle",
@@ -791,7 +684,6 @@
               },
               "parallelism": true,
               "cache": true,
-              "dependsOn": ["^build"],
               "inputs": ["default", "^default"]
             },
             "bundle-docker": {
@@ -799,7 +691,7 @@
               "dependsOn": ["bundle"],
               "options": {
                 "commands": [
-                  "node -e \"const fs=require('fs'),path=require('path');const BUNDLE_DIR='dist/packages/migrations-bundle';const MIGRATIONS_DIR=path.join(BUNDLE_DIR,'packages/migrations/src/migrations');function fixImports(filePath){if(!filePath.endsWith('.js'))return;let content=fs.readFileSync(filePath,'utf8');content=content.replace(/require\\(\\\"@packmind\\\\/shared\\\\/src\\\\/database\\\\/migrationColumns\\\"\\)/g,'require(\\\"../docker/migrationColumns\\\")');content=content.replace(/require\\(\\\"@packmind\\\\/shared\\\"\\)/g,'require(\\\"../docker/DockerLogger\\\")');content=content.replace(/new import_shared\\\\.PackmindLogger\\(/g,'new import_shared.DockerLogger(');content=content.replace(/PackmindLogger/g,'DockerLogger');fs.writeFileSync(filePath,content);}if(fs.existsSync(MIGRATIONS_DIR)){const files=fs.readdirSync(MIGRATIONS_DIR);files.forEach(file=>fixImports(path.join(MIGRATIONS_DIR,file)));console.log('✅ Fixed imports in',files.length,'migration files');}else{console.error('❌ Migrations directory not found:',MIGRATIONS_DIR);}\""
+                  "node packages/migrations/scripts/fix-docker-imports.mjs"
                 ],
                 "parallel": false
               },
@@ -818,7 +710,7 @@
             }
           },
           "name": "migrations",
-          "tags": ["npm:private"],
+          "tags": ["npm:private", "env:node"],
           "metadata": {
             "targetGroups": {
               "NPM Scripts": ["typeorm"]
@@ -831,6 +723,200 @@
           },
           "$schema": "../../node_modules/nx/schemas/project-schema.json",
           "sourceRoot": "packages/migrations/src",
+          "projectType": "library",
+          "implicitDependencies": []
+        }
+      },
+      "node-utils": {
+        "name": "node-utils",
+        "type": "lib",
+        "data": {
+          "root": "packages/node-utils",
+          "targets": {
+            "lint": {
+              "executor": "@nx/eslint:lint",
+              "options": {
+                "lintFilePatterns": ["packages/node-utils/src/**/*.{ts,tsx}"]
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test": {
+              "options": {
+                "cwd": "packages/node-utils",
+                "env": {
+                  "TS_NODE_COMPILER_OPTIONS": "{\"moduleResolution\":\"node10\",\"module\":\"commonjs\",\"customConditions\":null}"
+                },
+                "command": "jest"
+              },
+              "metadata": {
+                "technologies": ["jest"],
+                "description": "Run Jest Tests",
+                "help": {
+                  "command": "npx jest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "cache": true,
+              "inputs": [
+                "default",
+                "^default",
+                "{workspaceRoot}/jest.preset.ts",
+                {
+                  "externalDependencies": ["jest"]
+                }
+              ],
+              "outputs": ["{workspaceRoot}/coverage/packages/node-utils"],
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "typecheck": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "tsc --noEmit --project packages/node-utils/tsconfig.lib.json"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "build": {
+              "executor": "@nx/js:tsc",
+              "outputs": ["{options.outputPath}"],
+              "options": {
+                "outputPath": "dist/packages/node-utils",
+                "tsConfig": "packages/node-utils/tsconfig.lib.json",
+                "packageJson": "packages/node-utils/package.json",
+                "main": "packages/node-utils/src/index.ts",
+                "assets": ["packages/node-utils/*.md"]
+              },
+              "configurations": {},
+              "parallelism": true,
+              "cache": true,
+              "dependsOn": ["^build"],
+              "inputs": ["default", "^default"]
+            }
+          },
+          "name": "node-utils",
+          "tags": ["npm:private", "env:node"],
+          "metadata": {
+            "targetGroups": {},
+            "js": {
+              "packageName": "@packmind/node-utils",
+              "packageMain": "./src/index.js",
+              "isInPackageManagerWorkspaces": true
+            }
+          },
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "packages/node-utils/src",
+          "projectType": "library",
+          "implicitDependencies": []
+        }
+      },
+      "test-utils": {
+        "name": "test-utils",
+        "type": "lib",
+        "data": {
+          "root": "packages/test-utils",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "packages/test-utils",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "^default",
+                "{workspaceRoot}/eslint.config.mjs",
+                "{workspaceRoot}/packages/test-utils/eslint.config.mjs",
+                "{workspaceRoot}/tools/eslint-rules/**/*",
+                {
+                  "externalDependencies": ["eslint"]
+                }
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "npx eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test": {
+              "options": {
+                "cwd": "packages/test-utils",
+                "env": {
+                  "TS_NODE_COMPILER_OPTIONS": "{\"moduleResolution\":\"node10\",\"module\":\"commonjs\",\"customConditions\":null}"
+                },
+                "command": "jest"
+              },
+              "metadata": {
+                "technologies": ["jest"],
+                "description": "Run Jest Tests",
+                "help": {
+                  "command": "npx jest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "cache": true,
+              "inputs": [
+                "default",
+                "^default",
+                "{workspaceRoot}/jest.preset.js",
+                {
+                  "externalDependencies": ["jest"]
+                }
+              ],
+              "outputs": ["{workspaceRoot}/coverage/packages/test-utils"],
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "build": {
+              "executor": "@nx/js:tsc",
+              "outputs": ["{options.outputPath}"],
+              "options": {
+                "outputPath": "dist/packages/test-utils",
+                "main": "packages/test-utils/src/index.ts",
+                "tsConfig": "packages/test-utils/tsconfig.lib.json",
+                "assets": ["packages/test-utils/*.md"]
+              },
+              "configurations": {},
+              "parallelism": true,
+              "cache": true,
+              "dependsOn": ["^build"],
+              "inputs": ["default", "^default"]
+            }
+          },
+          "name": "test-utils",
+          "tags": ["npm:private", "type:util", "scope:test", "env:node"],
+          "metadata": {
+            "targetGroups": {},
+            "js": {
+              "packageName": "@packmind/test-utils",
+              "packageMain": "./src/index.js",
+              "isInPackageManagerWorkspaces": true
+            }
+          },
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "packages/test-utils/src",
           "projectType": "library",
           "implicitDependencies": []
         }
@@ -875,9 +961,12 @@
               "parallelism": true
             },
             "test": {
-              "executor": "nx:run-script",
               "options": {
-                "script": "test"
+                "cwd": "packages/standards",
+                "env": {
+                  "TS_NODE_COMPILER_OPTIONS": "{\"moduleResolution\":\"node10\",\"module\":\"commonjs\",\"customConditions\":null}"
+                },
+                "command": "jest"
               },
               "metadata": {
                 "technologies": ["jest"],
@@ -889,10 +978,19 @@
                       "coverage": true
                     }
                   }
-                },
-                "scriptContent": "jest",
-                "runCommand": "npm run test"
+                }
               },
+              "cache": true,
+              "inputs": [
+                "default",
+                "^default",
+                "{workspaceRoot}/jest.preset.ts",
+                {
+                  "externalDependencies": ["jest"]
+                }
+              ],
+              "outputs": ["{workspaceRoot}/coverage/packages/standards"],
+              "executor": "nx:run-commands",
               "configurations": {},
               "parallelism": true
             },
@@ -922,11 +1020,9 @@
             }
           },
           "name": "standards",
-          "tags": ["npm:private"],
+          "tags": ["npm:private", "env:node"],
           "metadata": {
-            "targetGroups": {
-              "NPM Scripts": ["test"]
-            },
+            "targetGroups": {},
             "js": {
               "packageName": "@packmind/standards",
               "packageMain": "./src/index.js",
@@ -1038,7 +1134,7 @@
             }
           },
           "name": "accounts",
-          "tags": ["npm:private"],
+          "tags": ["npm:private", "env:node"],
           "metadata": {
             "targetGroups": {},
             "js": {
@@ -1144,7 +1240,7 @@
             }
           },
           "name": "editions",
-          "tags": ["npm:private"],
+          "tags": ["npm:private", "env:shared"],
           "metadata": {
             "targetGroups": {},
             "js": {
@@ -1157,179 +1253,6 @@
           "sourceRoot": "packages/editions/src",
           "projectType": "library",
           "implicitDependencies": []
-        }
-      },
-      "frontend-e2e": {
-        "name": "frontend-e2e",
-        "type": "e2e",
-        "data": {
-          "root": "apps/frontend-e2e",
-          "targets": {
-            "lint": {
-              "cache": true,
-              "options": {
-                "cwd": "apps/frontend-e2e",
-                "command": "eslint ."
-              },
-              "inputs": [
-                "default",
-                "^default",
-                "{workspaceRoot}/eslint.config.mjs",
-                "{workspaceRoot}/apps/frontend-e2e/eslint.config.mjs",
-                "{workspaceRoot}/tools/eslint-rules/**/*",
-                {
-                  "externalDependencies": ["eslint"]
-                }
-              ],
-              "outputs": ["{options.outputFile}"],
-              "metadata": {
-                "technologies": ["eslint"],
-                "description": "Runs ESLint on project",
-                "help": {
-                  "command": "npx eslint --help",
-                  "example": {
-                    "options": {
-                      "max-warnings": 0
-                    }
-                  }
-                }
-              },
-              "executor": "nx:run-commands",
-              "configurations": {},
-              "parallelism": true
-            },
-            "e2e": {
-              "options": {
-                "cwd": "apps/frontend-e2e",
-                "command": "playwright test"
-              },
-              "metadata": {
-                "technologies": ["playwright"],
-                "description": "Runs Playwright Tests",
-                "help": {
-                  "command": "npx playwright test --help",
-                  "example": {
-                    "options": {
-                      "workers": 1
-                    }
-                  }
-                }
-              },
-              "dependsOn": [
-                {
-                  "projects": ["frontend"],
-                  "target": "dev"
-                }
-              ],
-              "cache": true,
-              "inputs": [
-                "default",
-                "^default",
-                {
-                  "externalDependencies": ["@playwright/test"]
-                }
-              ],
-              "outputs": [
-                "{workspaceRoot}/dist/.playwright/apps/frontend-e2e/test-output",
-                "{workspaceRoot}/dist/.playwright/apps/frontend-e2e/playwright-report"
-              ],
-              "executor": "nx:run-commands",
-              "configurations": {},
-              "parallelism": true
-            },
-            "e2e-ci--src/example.spec.ts": {
-              "options": {
-                "cwd": "apps/frontend-e2e",
-                "env": {
-                  "PLAYWRIGHT_HTML_OUTPUT_DIR": "../../dist/.playwright/apps/frontend-e2e/playwright-report/src-example-spec-ts",
-                  "PLAYWRIGHT_HTML_REPORT": "../../dist/.playwright/apps/frontend-e2e/playwright-report/src-example-spec-ts"
-                },
-                "command": "playwright test src/example.spec.ts --output=../../dist/.playwright/apps/frontend-e2e/test-output/src-example-spec-ts"
-              },
-              "metadata": {
-                "technologies": ["playwright"],
-                "description": "Runs Playwright Tests in src/example.spec.ts in CI",
-                "help": {
-                  "command": "npx playwright test --help",
-                  "example": {
-                    "options": {
-                      "workers": 1
-                    }
-                  }
-                }
-              },
-              "dependsOn": [
-                {
-                  "projects": ["frontend"],
-                  "target": "dev"
-                }
-              ],
-              "cache": true,
-              "inputs": [
-                "default",
-                "^default",
-                {
-                  "externalDependencies": ["@playwright/test"]
-                }
-              ],
-              "outputs": [
-                "{workspaceRoot}/dist/.playwright/apps/frontend-e2e/test-output/src-example-spec-ts",
-                "{workspaceRoot}/dist/.playwright/apps/frontend-e2e/playwright-report/src-example-spec-ts"
-              ],
-              "executor": "nx:run-commands",
-              "configurations": {},
-              "parallelism": true
-            },
-            "e2e-ci": {
-              "executor": "nx:noop",
-              "cache": true,
-              "inputs": [
-                "default",
-                "^default",
-                {
-                  "externalDependencies": ["@playwright/test"]
-                }
-              ],
-              "outputs": [
-                "{workspaceRoot}/dist/.playwright/apps/frontend-e2e/test-output",
-                "{workspaceRoot}/dist/.playwright/apps/frontend-e2e/playwright-report"
-              ],
-              "dependsOn": [
-                {
-                  "target": "e2e-ci--src/example.spec.ts",
-                  "projects": "self",
-                  "params": "forward"
-                }
-              ],
-              "metadata": {
-                "technologies": ["playwright"],
-                "description": "Runs Playwright Tests in CI",
-                "nonAtomizedTarget": "e2e",
-                "help": {
-                  "command": "npx playwright test --help",
-                  "example": {
-                    "options": {
-                      "workers": 1
-                    }
-                  }
-                }
-              },
-              "configurations": {},
-              "options": {},
-              "parallelism": true
-            }
-          },
-          "metadata": {
-            "targetGroups": {
-              "E2E (CI)": ["e2e-ci--src/example.spec.ts", "e2e-ci"]
-            }
-          },
-          "name": "frontend-e2e",
-          "$schema": "../../node_modules/nx/schemas/project-schema.json",
-          "projectType": "application",
-          "sourceRoot": "apps/frontend-e2e/src",
-          "tags": [],
-          "implicitDependencies": ["frontend"]
         }
       },
       "recipes": {
@@ -1372,9 +1295,12 @@
               "parallelism": true
             },
             "test": {
-              "executor": "nx:run-script",
               "options": {
-                "script": "test"
+                "cwd": "packages/recipes",
+                "env": {
+                  "TS_NODE_COMPILER_OPTIONS": "{\"moduleResolution\":\"node10\",\"module\":\"commonjs\",\"customConditions\":null}"
+                },
+                "command": "jest"
               },
               "metadata": {
                 "technologies": ["jest"],
@@ -1386,10 +1312,19 @@
                       "coverage": true
                     }
                   }
-                },
-                "scriptContent": "jest",
-                "runCommand": "npm run test"
+                }
               },
+              "cache": true,
+              "inputs": [
+                "default",
+                "^default",
+                "{workspaceRoot}/jest.preset.ts",
+                {
+                  "externalDependencies": ["jest"]
+                }
+              ],
+              "outputs": ["{workspaceRoot}/coverage/packages/recipes"],
+              "executor": "nx:run-commands",
               "configurations": {},
               "parallelism": true
             },
@@ -1419,11 +1354,9 @@
             }
           },
           "name": "recipes",
-          "tags": ["npm:private"],
+          "tags": ["npm:private", "env:node"],
           "metadata": {
-            "targetGroups": {
-              "NPM Scripts": ["test"]
-            },
+            "targetGroups": {},
             "js": {
               "packageName": "@packmind/recipes",
               "packageMain": "./src/index.js",
@@ -1534,7 +1467,7 @@
             }
           },
           "name": "assets",
-          "tags": ["npm:private"],
+          "tags": ["npm:private", "env:shared"],
           "metadata": {
             "targetGroups": {},
             "js": {
@@ -1549,23 +1482,23 @@
           "implicitDependencies": []
         }
       },
-      "linter": {
-        "name": "linter",
+      "logger": {
+        "name": "logger",
         "type": "lib",
         "data": {
-          "root": "packages/linter",
+          "root": "packages/logger",
           "targets": {
             "lint": {
               "cache": true,
               "options": {
-                "cwd": "packages/linter",
+                "cwd": "packages/logger",
                 "command": "eslint ."
               },
               "inputs": [
                 "default",
                 "^default",
                 "{workspaceRoot}/eslint.config.mjs",
-                "{workspaceRoot}/packages/linter/eslint.config.mjs",
+                "{workspaceRoot}/packages/logger/eslint.config.mjs",
                 "{workspaceRoot}/tools/eslint-rules/**/*",
                 {
                   "externalDependencies": ["eslint"]
@@ -1590,7 +1523,7 @@
             },
             "test": {
               "options": {
-                "cwd": "packages/linter",
+                "cwd": "packages/logger",
                 "env": {
                   "TS_NODE_COMPILER_OPTIONS": "{\"moduleResolution\":\"node10\",\"module\":\"commonjs\",\"customConditions\":null}"
                 },
@@ -1617,7 +1550,7 @@
                   "externalDependencies": ["jest"]
                 }
               ],
-              "outputs": ["{workspaceRoot}/coverage/packages/linter"],
+              "outputs": ["{workspaceRoot}/coverage/packages/logger"],
               "executor": "nx:run-commands",
               "configurations": {},
               "parallelism": true
@@ -1626,11 +1559,10 @@
               "executor": "@nx/js:tsc",
               "outputs": ["{options.outputPath}"],
               "options": {
-                "outputPath": "dist/packages/linter",
-                "tsConfig": "packages/linter/tsconfig.lib.json",
-                "packageJson": "packages/linter/package.json",
-                "main": "packages/linter/src/index.ts",
-                "assets": ["packages/linter/*.md"]
+                "outputPath": "dist/packages/logger",
+                "main": "packages/logger/src/index.ts",
+                "tsConfig": "packages/logger/tsconfig.lib.json",
+                "assets": ["packages/logger/*.md"]
               },
               "configurations": {},
               "parallelism": true,
@@ -1639,18 +1571,18 @@
               "inputs": ["default", "^default"]
             }
           },
-          "name": "linter",
-          "tags": ["npm:private"],
+          "name": "logger",
+          "tags": ["npm:private", "env:node"],
           "metadata": {
             "targetGroups": {},
             "js": {
-              "packageName": "linter",
+              "packageName": "@packmind/logger",
               "packageMain": "./src/index.js",
               "isInPackageManagerWorkspaces": true
             }
           },
           "$schema": "../../node_modules/nx/schemas/project-schema.json",
-          "sourceRoot": "packages/linter/src",
+          "sourceRoot": "packages/logger/src",
           "projectType": "library",
           "implicitDependencies": []
         }
@@ -1711,16 +1643,24 @@
                 "platform": "node",
                 "outputPath": "dist/apps/mcp-server",
                 "format": ["cjs"],
-                "bundle": false,
+                "bundle": true,
                 "main": "apps/mcp-server/src/main.ts",
                 "tsConfig": "apps/mcp-server/tsconfig.app.json",
-                "assets": ["apps/mcp-server/src/assets"],
+                "assets": [
+                  "apps/mcp-server/src/assets",
+                  {
+                    "input": "packages/linter-ast/res",
+                    "glob": "*.wasm",
+                    "output": "."
+                  }
+                ],
                 "generatePackageJson": true,
                 "esbuildOptions": {
                   "sourcemap": true,
                   "outExtension": {
                     ".js": ".js"
-                  }
+                  },
+                  "external": ["class-validator", "class-transformer"]
                 }
               },
               "configurations": {
@@ -1730,7 +1670,8 @@
                     "sourcemap": false,
                     "outExtension": {
                       ".js": ".js"
-                    }
+                    },
+                    "external": ["class-validator", "class-transformer"]
                   }
                 }
               },
@@ -1762,27 +1703,27 @@
           "$schema": "../../node_modules/nx/schemas/project-schema.json",
           "sourceRoot": "apps/mcp-server/src",
           "projectType": "application",
-          "tags": [],
+          "tags": ["env:node"],
           "implicitDependencies": []
         }
       },
-      "shared": {
-        "name": "shared",
+      "spaces": {
+        "name": "spaces",
         "type": "lib",
         "data": {
-          "root": "packages/shared",
+          "root": "packages/spaces",
           "targets": {
             "lint": {
               "cache": true,
               "options": {
-                "cwd": "packages/shared",
+                "cwd": "packages/spaces",
                 "command": "eslint ."
               },
               "inputs": [
                 "default",
                 "^default",
                 "{workspaceRoot}/eslint.config.mjs",
-                "{workspaceRoot}/packages/shared/eslint.config.mjs",
+                "{workspaceRoot}/packages/spaces/eslint.config.mjs",
                 "{workspaceRoot}/tools/eslint-rules/**/*",
                 {
                   "externalDependencies": ["eslint"]
@@ -1806,9 +1747,12 @@
               "parallelism": true
             },
             "test": {
-              "executor": "nx:run-script",
               "options": {
-                "script": "test"
+                "cwd": "packages/spaces",
+                "env": {
+                  "TS_NODE_COMPILER_OPTIONS": "{\"moduleResolution\":\"node10\",\"module\":\"commonjs\",\"customConditions\":null}"
+                },
+                "command": "jest"
               },
               "metadata": {
                 "technologies": ["jest"],
@@ -1820,17 +1764,26 @@
                       "coverage": true
                     }
                   }
-                },
-                "scriptContent": "jest",
-                "runCommand": "npm run test"
+                }
               },
+              "cache": true,
+              "inputs": [
+                "default",
+                "^default",
+                "{workspaceRoot}/jest.preset.ts",
+                {
+                  "externalDependencies": ["jest"]
+                }
+              ],
+              "outputs": ["{workspaceRoot}/coverage/packages/spaces"],
+              "executor": "nx:run-commands",
               "configurations": {},
               "parallelism": true
             },
             "typecheck": {
               "executor": "nx:run-commands",
               "options": {
-                "command": "tsc --noEmit --project packages/shared/tsconfig.lib.json"
+                "command": "tsc --noEmit --project packages/spaces/tsconfig.lib.json"
               },
               "configurations": {},
               "parallelism": true
@@ -1839,23 +1792,11 @@
               "executor": "@nx/js:tsc",
               "outputs": ["{options.outputPath}"],
               "options": {
-                "outputPath": "dist/packages/shared",
-                "tsConfig": "packages/shared/tsconfig.lib.json",
-                "packageJson": "packages/shared/package.json",
-                "main": "packages/shared/src/index.ts",
-                "assets": ["packages/shared/*.md"]
-              },
-              "lint": {
-                "executor": "@nx/linter:eslint",
-                "options": {
-                  "lintFilePatterns": ["packages/shared/**/*.{ts,tsx}"],
-                  "pluginsConfig": {
-                    "@nx/dependency-checks": {
-                      "ignoredDependencies": ["pg-mem"],
-                      "allowDevDependencies": ["packages/shared/test/**"]
-                    }
-                  }
-                }
+                "outputPath": "dist/packages/spaces",
+                "tsConfig": "packages/spaces/tsconfig.lib.json",
+                "packageJson": "packages/spaces/package.json",
+                "main": "packages/spaces/src/index.ts",
+                "assets": ["packages/spaces/*.md"]
               },
               "configurations": {},
               "parallelism": true,
@@ -1864,20 +1805,123 @@
               "inputs": ["default", "^default"]
             }
           },
-          "name": "shared",
-          "tags": ["npm:private"],
+          "name": "spaces",
+          "tags": ["npm:private", "env:node"],
           "metadata": {
-            "targetGroups": {
-              "NPM Scripts": ["test"]
-            },
+            "targetGroups": {},
             "js": {
-              "packageName": "@packmind/shared",
+              "packageName": "@packmind/spaces",
               "packageMain": "./src/index.js",
               "isInPackageManagerWorkspaces": true
             }
           },
           "$schema": "../../node_modules/nx/schemas/project-schema.json",
-          "sourceRoot": "packages/shared/src",
+          "sourceRoot": "packages/spaces/src",
+          "projectType": "library",
+          "implicitDependencies": []
+        }
+      },
+      "types": {
+        "name": "types",
+        "type": "lib",
+        "data": {
+          "root": "packages/types",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "packages/types",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "^default",
+                "{workspaceRoot}/eslint.config.mjs",
+                "{workspaceRoot}/packages/types/eslint.config.mjs",
+                "{workspaceRoot}/tools/eslint-rules/**/*",
+                {
+                  "externalDependencies": ["eslint"]
+                }
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "npx eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test": {
+              "options": {
+                "cwd": "packages/types",
+                "env": {
+                  "TS_NODE_COMPILER_OPTIONS": "{\"moduleResolution\":\"node10\",\"module\":\"commonjs\",\"customConditions\":null}"
+                },
+                "command": "jest"
+              },
+              "metadata": {
+                "technologies": ["jest"],
+                "description": "Run Jest Tests",
+                "help": {
+                  "command": "npx jest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "cache": true,
+              "inputs": [
+                "default",
+                "^default",
+                "{workspaceRoot}/jest.preset.js",
+                {
+                  "externalDependencies": ["jest"]
+                }
+              ],
+              "outputs": ["{workspaceRoot}/coverage/packages/types"],
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "build": {
+              "executor": "@nx/js:tsc",
+              "outputs": ["{options.outputPath}"],
+              "options": {
+                "outputPath": "dist/packages/types",
+                "main": "packages/types/src/index.ts",
+                "tsConfig": "packages/types/tsconfig.lib.json",
+                "assets": ["packages/types/*.md"]
+              },
+              "configurations": {},
+              "parallelism": true,
+              "cache": true,
+              "dependsOn": ["^build"],
+              "inputs": ["default", "^default"]
+            }
+          },
+          "name": "types",
+          "tags": ["npm:private", "env:shared"],
+          "metadata": {
+            "targetGroups": {},
+            "js": {
+              "packageName": "@packmind/types",
+              "packageMain": "./src/index.js",
+              "isInPackageManagerWorkspaces": true
+            }
+          },
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "packages/types/src",
           "projectType": "library",
           "implicitDependencies": []
         }
@@ -2003,6 +2047,13 @@
                 "jestConfig": "apps/frontend/jest.config.ts",
                 "passWithNoTests": true
               },
+              "cache": true,
+              "inputs": [
+                "default",
+                "^default",
+                "{workspaceRoot}/jest.preset.ts",
+                "{workspaceRoot}/tsconfig.base.effective.json"
+              ],
               "configurations": {},
               "parallelism": true
             },
@@ -2016,11 +2067,17 @@
             }
           },
           "projectType": "application",
-          "metadata": {},
+          "metadata": {
+            "targetGroups": {},
+            "js": {
+              "packageName": "frontend",
+              "isInPackageManagerWorkspaces": true
+            }
+          },
           "name": "frontend",
+          "tags": ["npm:private", "env:browser"],
           "$schema": "../../node_modules/nx/schemas/project-schema.json",
           "sourceRoot": "apps/frontend/src",
-          "tags": [],
           "implicitDependencies": []
         }
       },
@@ -2115,7 +2172,7 @@
             }
           },
           "name": "jobs",
-          "tags": ["npm:private"],
+          "tags": ["npm:private", "env:node"],
           "metadata": {
             "targetGroups": {},
             "js": {
@@ -2198,7 +2255,7 @@
                   "externalDependencies": ["jest"]
                 }
               ],
-              "outputs": ["{workspaceRoot}/coverage/packages/recipes"],
+              "outputs": ["{workspaceRoot}/coverage/packages/git"],
               "executor": "nx:run-commands",
               "configurations": {},
               "parallelism": true
@@ -2229,7 +2286,7 @@
             }
           },
           "name": "git",
-          "tags": ["npm:private"],
+          "tags": ["npm:private", "env:node"],
           "metadata": {
             "targetGroups": {},
             "js": {
@@ -2520,7 +2577,7 @@
             }
           },
           "name": "ui",
-          "tags": ["npm:public"],
+          "tags": ["npm:public", "env:browser"],
           "$schema": "../../node_modules/nx/schemas/project-schema.json",
           "sourceRoot": "packages/ui/src",
           "implicitDependencies": []
@@ -2730,7 +2787,162 @@
           "name": "api",
           "$schema": "../../node_modules/nx/schemas/project-schema.json",
           "sourceRoot": "apps/api/src",
-          "tags": [],
+          "tags": ["env:node"],
+          "implicitDependencies": []
+        }
+      },
+      "doc": {
+        "name": "doc",
+        "type": "app",
+        "data": {
+          "root": "apps/doc",
+          "targets": {
+            "lint": {
+              "executor": "@nx/eslint:lint",
+              "options": {},
+              "configurations": {},
+              "parallelism": true
+            },
+            "typecheck": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "typecheck"
+              },
+              "metadata": {
+                "scriptContent": "tsc",
+                "runCommand": "npm run typecheck"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "docusaurus": {
+              "executor": "nx:run-commands",
+              "options": {
+                "commands": [
+                  {
+                    "command": "docusaurus",
+                    "cwd": "apps/doc"
+                  }
+                ]
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "build": {
+              "executor": "nx:run-commands",
+              "outputs": ["{options.outputPath}"],
+              "options": {
+                "command": "docusaurus build --out-dir=../../dist/apps/doc",
+                "cwd": "apps/doc",
+                "inputs": [
+                  "{root}/docs/*.(md|mdx)",
+                  "{root}/docs/**/*.(md|mdx)"
+                ],
+                "outputs": ["apps/doc/build"],
+                "styles": ["apps/doc/src/css/custom.css"]
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "start": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "docusaurus start --port 4300",
+                "cwd": "apps/doc",
+                "styles": ["apps/doc/src/css/custom.css"]
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "swizzle": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "docusaurus swizzle",
+                "cwd": "apps/doc"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "clear": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "docusaurus clear",
+                "cwd": "apps/doc"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "serve": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "docusaurus serve --dir=../../dist/apps/doc",
+                "cwd": "apps/doc"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "deploy": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "docusaurus deploy",
+                "cwd": "apps/doc"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "deploy-gh-pages": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "docusaurus deploy",
+                "cwd": "apps/doc"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "write-translations": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "docusaurus write-translations",
+                "cwd": "apps/doc"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "write-heading-ids": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "docusaurus write-heading-ids",
+                "cwd": "apps/doc"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "version": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "docusaurus docs:version",
+                "cwd": "apps/doc",
+                "forwardAllArgs": true
+              },
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "name": "doc",
+          "tags": ["npm:private", "env:browser"],
+          "metadata": {
+            "targetGroups": {
+              "NPM Scripts": ["typecheck"]
+            },
+            "js": {
+              "packageName": "doc",
+              "isInPackageManagerWorkspaces": true
+            }
+          },
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "projectType": "application",
+          "sourceRoot": "apps/doc/src",
+          "private": true,
           "implicitDependencies": []
         }
       },
@@ -2835,7 +3047,7 @@
                 "platform": "node",
                 "outputPath": "dist/apps/cli",
                 "format": ["cjs"],
-                "bundle": false,
+                "bundle": true,
                 "main": "apps/cli/src/main.ts",
                 "tsConfig": "apps/cli/tsconfig.app.json",
                 "assets": [
@@ -2845,34 +3057,38 @@
                     "output": "apps/cli/src/assets"
                   },
                   {
-                    "input": "node_modules/tree-sitter-typescript",
-                    "glob": "tree-sitter-typescript.wasm",
-                    "output": "apps/cli/src/wasm"
+                    "input": "packages/linter-ast/res",
+                    "glob": "*.wasm",
+                    "output": "."
                   }
                 ],
                 "generatePackageJson": true,
-                "esbuildOptions": {
-                  "sourcemap": true,
-                  "outExtension": {
-                    ".js": ".js"
-                  }
-                }
+                "esbuildConfig": "apps/cli/esbuild-publish.config.js"
               },
               "configurations": {
                 "development": {},
                 "production": {
-                  "esbuildOptions": {
-                    "sourcemap": false,
-                    "outExtension": {
-                      ".js": ".js"
-                    }
-                  }
+                  "esbuildConfig": "apps/cli/esbuild-publish.config.js"
                 }
               },
               "parallelism": true,
               "cache": true,
               "dependsOn": ["^build"],
               "inputs": ["default", "^default"]
+            },
+            "build-publish": {
+              "executor": "nx:run-commands",
+              "dependsOn": ["build"],
+              "options": {
+                "commands": [
+                  "node apps/cli/scripts/clean-package-json.js",
+                  "node apps/cli/scripts/create-stubs.js",
+                  "node apps/cli/scripts/add-module-paths.js"
+                ],
+                "parallel": false
+              },
+              "configurations": {},
+              "parallelism": true
             },
             "bundle": {
               "executor": "@nx/esbuild:esbuild",
@@ -2886,48 +3102,64 @@
                 "minify": false,
                 "main": "apps/cli/src/main.ts",
                 "tsConfig": "apps/cli/tsconfig.app.json",
-                "assets": [
-                  {
-                    "input": "apps/cli/src/assets",
-                    "glob": "**/*",
-                    "output": "./assets"
-                  },
-                  {
-                    "input": "node_modules/tree-sitter-typescript",
-                    "glob": "tree-sitter-typescript.wasm",
-                    "output": "./wasm"
-                  }
-                ],
-                "generatePackageJson": true,
-                "esbuildOptions": {
-                  "sourcemap": true,
-                  "outExtension": {
-                    ".js": ".js"
-                  },
-                  "banner": {
-                    "js": "#!/usr/bin/env node"
-                  }
-                }
+                "generatePackageJson": false,
+                "esbuildConfig": "apps/cli/esbuild.config.js"
               },
               "configurations": {
                 "development": {},
                 "production": {
-                  "minify": true,
-                  "esbuildOptions": {
-                    "sourcemap": false,
-                    "outExtension": {
-                      ".js": ".js"
-                    },
-                    "banner": {
-                      "js": "#!/usr/bin/env node"
-                    }
-                  }
+                  "minify": true
                 }
               },
               "parallelism": true,
               "cache": true,
               "dependsOn": ["^build"],
               "inputs": ["default", "^default"]
+            },
+            "build-executable": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "bun run apps/cli/bun-build.ts"
+              },
+              "description": "Build standalone executable for current platform using Bun",
+              "configurations": {},
+              "parallelism": true
+            },
+            "build-executable-all": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "bun run apps/cli/bun-build.ts --target=all"
+              },
+              "description": "Build standalone executables for all platforms using Bun",
+              "configurations": {},
+              "parallelism": true
+            },
+            "build-executable-linux": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "bun run apps/cli/bun-build.ts --target=linux"
+              },
+              "description": "Build standalone executables for Linux (x64 + arm64) using Bun",
+              "configurations": {},
+              "parallelism": true
+            },
+            "build-executable-macos": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "bun run apps/cli/bun-build.ts --target=macos"
+              },
+              "description": "Build standalone executables for macOS (x64 + arm64) using Bun",
+              "configurations": {},
+              "parallelism": true
+            },
+            "build-executable-windows": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "bun run apps/cli/bun-build.ts --target=windows"
+              },
+              "description": "Build standalone executables for Windows (x64) using Bun",
+              "configurations": {},
+              "parallelism": true
             },
             "run": {
               "executor": "@nx/js:node",
@@ -2943,12 +3175,23 @@
             }
           },
           "name": "packmind-cli",
-          "tags": ["npm:public"],
+          "tags": [
+            "npm:public",
+            "npm:packmind",
+            "npm:linting",
+            "npm:code-quality",
+            "npm:cli",
+            "npm:static-analysis",
+            "env:node"
+          ],
           "metadata": {
             "targetGroups": {
               "NPM Scripts": ["packmind-cli"]
             },
+            "description": "A command-line interface for Packmind linting and code quality checks",
             "js": {
+              "packageName": "@packmind/cli",
+              "packageMain": "./main.cjs",
               "isInPackageManagerWorkspaces": true
             }
           },
@@ -2973,17 +3216,27 @@
         },
         {
           "source": "@packmind/integration-tests",
-          "target": "recipes-analytics",
-          "type": "static"
-        },
-        {
-          "source": "@packmind/integration-tests",
           "target": "git",
           "type": "static"
         },
         {
           "source": "@packmind/integration-tests",
-          "target": "shared",
+          "target": "jobs",
+          "type": "static"
+        },
+        {
+          "source": "@packmind/integration-tests",
+          "target": "node-utils",
+          "type": "static"
+        },
+        {
+          "source": "@packmind/integration-tests",
+          "target": "types",
+          "type": "static"
+        },
+        {
+          "source": "@packmind/integration-tests",
+          "target": "spaces",
           "type": "static"
         },
         {
@@ -2995,44 +3248,52 @@
           "source": "@packmind/integration-tests",
           "target": "coding-agent",
           "type": "static"
-        }
-      ],
-      "recipes-analytics": [
+        },
         {
-          "source": "recipes-analytics",
-          "target": "shared",
+          "source": "@packmind/integration-tests",
+          "target": "deployments",
           "type": "static"
         },
         {
-          "source": "recipes-analytics",
-          "target": "shared-nest",
-          "type": "static"
-        },
-        {
-          "source": "recipes-analytics",
-          "target": "git",
-          "type": "static"
-        },
-        {
-          "source": "recipes-analytics",
-          "target": "recipes",
-          "type": "static"
-        },
-        {
-          "source": "recipes-analytics",
-          "target": "accounts",
+          "source": "@packmind/integration-tests",
+          "target": "test-utils",
           "type": "static"
         }
       ],
       "coding-agent": [
         {
           "source": "coding-agent",
-          "target": "recipes",
+          "target": "accounts",
           "type": "static"
         },
         {
           "source": "coding-agent",
           "target": "git",
+          "type": "static"
+        },
+        {
+          "source": "coding-agent",
+          "target": "logger",
+          "type": "static"
+        },
+        {
+          "source": "coding-agent",
+          "target": "recipes",
+          "type": "static"
+        },
+        {
+          "source": "coding-agent",
+          "target": "node-utils",
+          "type": "static"
+        },
+        {
+          "source": "coding-agent",
+          "target": "types",
+          "type": "static"
+        },
+        {
+          "source": "coding-agent",
+          "target": "spaces",
           "type": "static"
         },
         {
@@ -3042,12 +3303,7 @@
         },
         {
           "source": "coding-agent",
-          "target": "accounts",
-          "type": "static"
-        },
-        {
-          "source": "coding-agent",
-          "target": "shared",
+          "target": "test-utils",
           "type": "static"
         }
       ],
@@ -3055,12 +3311,12 @@
       "deployments": [
         {
           "source": "deployments",
-          "target": "shared",
+          "target": "accounts",
           "type": "static"
         },
         {
           "source": "deployments",
-          "target": "accounts",
+          "target": "coding-agent",
           "type": "static"
         },
         {
@@ -3070,7 +3326,22 @@
         },
         {
           "source": "deployments",
+          "target": "logger",
+          "type": "static"
+        },
+        {
+          "source": "deployments",
           "target": "recipes",
+          "type": "static"
+        },
+        {
+          "source": "deployments",
+          "target": "node-utils",
+          "type": "static"
+        },
+        {
+          "source": "deployments",
+          "target": "types",
           "type": "static"
         },
         {
@@ -3080,7 +3351,7 @@
         },
         {
           "source": "deployments",
-          "target": "coding-agent",
+          "target": "test-utils",
           "type": "static"
         }
       ],
@@ -3094,14 +3365,53 @@
       "migrations": [
         {
           "source": "migrations",
-          "target": "shared",
+          "target": "logger",
+          "type": "static"
+        },
+        {
+          "source": "migrations",
+          "target": "node-utils",
+          "type": "static"
+        }
+      ],
+      "node-utils": [
+        {
+          "source": "node-utils",
+          "target": "logger",
+          "type": "static"
+        },
+        {
+          "source": "node-utils",
+          "target": "types",
+          "type": "static"
+        },
+        {
+          "source": "node-utils",
+          "target": "test-utils",
+          "type": "static"
+        }
+      ],
+      "test-utils": [
+        {
+          "source": "test-utils",
+          "target": "logger",
+          "type": "static"
+        },
+        {
+          "source": "test-utils",
+          "target": "node-utils",
+          "type": "static"
+        },
+        {
+          "source": "test-utils",
+          "target": "types",
           "type": "static"
         }
       ],
       "standards": [
         {
           "source": "standards",
-          "target": "shared",
+          "target": "accounts",
           "type": "static"
         },
         {
@@ -3111,35 +3421,83 @@
         },
         {
           "source": "standards",
-          "target": "accounts",
+          "target": "jobs",
+          "type": "static"
+        },
+        {
+          "source": "standards",
+          "target": "logger",
+          "type": "static"
+        },
+        {
+          "source": "standards",
+          "target": "node-utils",
+          "type": "static"
+        },
+        {
+          "source": "standards",
+          "target": "types",
+          "type": "static"
+        },
+        {
+          "source": "standards",
+          "target": "spaces",
+          "type": "static"
+        },
+        {
+          "source": "standards",
+          "target": "test-utils",
           "type": "static"
         }
       ],
       "accounts": [
         {
           "source": "accounts",
-          "target": "shared",
+          "target": "logger",
+          "type": "static"
+        },
+        {
+          "source": "accounts",
+          "target": "node-utils",
+          "type": "static"
+        },
+        {
+          "source": "accounts",
+          "target": "spaces",
+          "type": "static"
+        },
+        {
+          "source": "accounts",
+          "target": "types",
+          "type": "static"
+        },
+        {
+          "source": "accounts",
+          "target": "test-utils",
           "type": "static"
         }
       ],
       "editions": [
         {
           "source": "editions",
-          "target": "shared",
+          "target": "logger",
           "type": "static"
-        }
-      ],
-      "frontend-e2e": [
+        },
         {
-          "source": "frontend-e2e",
-          "target": "frontend",
-          "type": "implicit"
+          "source": "editions",
+          "target": "node-utils",
+          "type": "static"
+        },
+        {
+          "source": "editions",
+          "target": "types",
+          "type": "static"
         }
       ],
       "recipes": [
         {
           "source": "recipes",
-          "target": "shared",
+          "target": "accounts",
           "type": "static"
         },
         {
@@ -3149,37 +3507,46 @@
         },
         {
           "source": "recipes",
-          "target": "accounts",
-          "type": "static"
-        }
-      ],
-      "assets": [],
-      "linter": [
-        {
-          "source": "linter",
-          "target": "shared",
-          "type": "static"
-        },
-        {
-          "source": "linter",
           "target": "jobs",
           "type": "static"
         },
         {
-          "source": "linter",
-          "target": "standards",
+          "source": "recipes",
+          "target": "logger",
           "type": "static"
         },
         {
-          "source": "linter",
-          "target": "accounts",
+          "source": "recipes",
+          "target": "node-utils",
+          "type": "static"
+        },
+        {
+          "source": "recipes",
+          "target": "types",
+          "type": "static"
+        },
+        {
+          "source": "recipes",
+          "target": "spaces",
+          "type": "static"
+        },
+        {
+          "source": "recipes",
+          "target": "test-utils",
           "type": "static"
         }
       ],
+      "assets": [],
+      "logger": [],
       "mcp-server": [
         {
           "source": "mcp-server",
-          "target": "shared",
+          "target": "logger",
+          "type": "static"
+        },
+        {
+          "source": "mcp-server",
+          "target": "types",
           "type": "static"
         },
         {
@@ -3204,11 +3571,43 @@
         },
         {
           "source": "mcp-server",
-          "target": "recipes-analytics",
+          "target": "deployments",
+          "type": "static"
+        },
+        {
+          "source": "mcp-server",
+          "target": "spaces",
+          "type": "static"
+        },
+        {
+          "source": "mcp-server",
+          "target": "coding-agent",
+          "type": "static"
+        },
+        {
+          "source": "mcp-server",
+          "target": "jobs",
           "type": "static"
         }
       ],
-      "shared": [],
+      "spaces": [
+        {
+          "source": "spaces",
+          "target": "logger",
+          "type": "static"
+        },
+        {
+          "source": "spaces",
+          "target": "node-utils",
+          "type": "static"
+        },
+        {
+          "source": "spaces",
+          "target": "types",
+          "type": "static"
+        }
+      ],
+      "types": [],
       "frontend": [
         {
           "source": "frontend",
@@ -3217,27 +3616,12 @@
         },
         {
           "source": "frontend",
-          "target": "git",
+          "target": "assets",
           "type": "static"
         },
         {
           "source": "frontend",
-          "target": "recipes",
-          "type": "static"
-        },
-        {
-          "source": "frontend",
-          "target": "standards",
-          "type": "static"
-        },
-        {
-          "source": "frontend",
-          "target": "accounts",
-          "type": "static"
-        },
-        {
-          "source": "frontend",
-          "target": "shared",
+          "target": "types",
           "type": "static"
         },
         {
@@ -3247,26 +3631,61 @@
         },
         {
           "source": "frontend",
-          "target": "assets",
+          "target": "git",
+          "type": "static"
+        },
+        {
+          "source": "frontend",
+          "target": "recipes",
+          "type": "static"
+        },
+        {
+          "source": "frontend",
+          "target": "standards",
           "type": "static"
         }
       ],
       "jobs": [
         {
           "source": "jobs",
-          "target": "shared",
+          "target": "logger",
+          "type": "static"
+        },
+        {
+          "source": "jobs",
+          "target": "node-utils",
           "type": "static"
         }
       ],
       "git": [
         {
           "source": "git",
-          "target": "shared",
+          "target": "accounts",
           "type": "static"
         },
         {
           "source": "git",
-          "target": "accounts",
+          "target": "jobs",
+          "type": "static"
+        },
+        {
+          "source": "git",
+          "target": "logger",
+          "type": "static"
+        },
+        {
+          "source": "git",
+          "target": "node-utils",
+          "type": "static"
+        },
+        {
+          "source": "git",
+          "target": "types",
+          "type": "static"
+        },
+        {
+          "source": "git",
+          "target": "test-utils",
           "type": "static"
         }
       ],
@@ -3285,7 +3704,27 @@
         },
         {
           "source": "api",
-          "target": "shared",
+          "target": "logger",
+          "type": "static"
+        },
+        {
+          "source": "api",
+          "target": "types",
+          "type": "static"
+        },
+        {
+          "source": "api",
+          "target": "test-utils",
+          "type": "static"
+        },
+        {
+          "source": "api",
+          "target": "shared-nest",
+          "type": "static"
+        },
+        {
+          "source": "api",
+          "target": "node-utils",
           "type": "static"
         },
         {
@@ -3296,6 +3735,11 @@
         {
           "source": "api",
           "target": "git",
+          "type": "static"
+        },
+        {
+          "source": "api",
+          "target": "spaces",
           "type": "static"
         },
         {
@@ -3317,17 +3761,29 @@
           "source": "api",
           "target": "jobs",
           "type": "static"
-        },
+        }
+      ],
+      "doc": [
         {
-          "source": "api",
-          "target": "recipes-analytics",
+          "source": "doc",
+          "target": "ui",
           "type": "static"
         }
       ],
       "packmind-cli": [
         {
           "source": "packmind-cli",
-          "target": "shared",
+          "target": "logger",
+          "type": "static"
+        },
+        {
+          "source": "packmind-cli",
+          "target": "test-utils",
+          "type": "static"
+        },
+        {
+          "source": "packmind-cli",
+          "target": "types",
           "type": "static"
         }
       ]

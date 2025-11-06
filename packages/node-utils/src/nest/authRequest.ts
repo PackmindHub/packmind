@@ -1,9 +1,5 @@
 import { Request } from 'express';
-import {
-  OrganizationId,
-  UserId,
-  UserOrganizationRole,
-} from '@packmind/accounts';
+import { OrganizationId, UserId, UserOrganizationRole } from '@packmind/types';
 
 export interface AuthenticatedRequest extends Request {
   user: {

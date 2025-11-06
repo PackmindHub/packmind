@@ -11,7 +11,7 @@ import { OrganizationSchema } from '../schemas/OrganizationSchema';
 import { UserOrganizationMembershipSchema } from '../schemas/UserOrganizationMembershipSchema';
 import { makeTestDatasource, stubLogger } from '@packmind/test-utils';
 import { PackmindLogger } from '@packmind/logger';
-import { Configuration } from '@packmind/shared';
+import { Configuration } from '@packmind/node-utils';
 import { createOrganizationId, OrganizationId } from '@packmind/types';
 import {
   invitationFactory,
@@ -20,8 +20,8 @@ import {
 } from '../../../test';
 
 // Mock Configuration to prevent excessive logging
-jest.mock('@packmind/shared', () => ({
-  ...jest.requireActual('@packmind/shared'),
+jest.mock('@packmind/node-utils', () => ({
+  ...jest.requireActual('@packmind/node-utils'),
   Configuration: {
     getConfig: jest.fn(),
   },

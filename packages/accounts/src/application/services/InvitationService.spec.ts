@@ -1,6 +1,6 @@
 import { InvitationService } from './InvitationService';
 import { IInvitationRepository } from '../../domain/repositories/IInvitationRepository';
-import { MailService, Configuration } from '@packmind/shared';
+import { MailService, Configuration } from '@packmind/node-utils';
 import {
   invitationFactory,
   organizationFactory,
@@ -8,8 +8,8 @@ import {
 } from '../../../test';
 import { Invitation } from '../../domain/entities/Invitation';
 
-jest.mock('@packmind/shared', () => ({
-  ...(jest.requireActual('@packmind/shared') as object),
+jest.mock('@packmind/node-utils', () => ({
+  ...(jest.requireActual('@packmind/node-utils') as object),
   Configuration: {
     getConfig: jest.fn(),
   },

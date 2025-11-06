@@ -3,7 +3,7 @@ import {
   StandardVersionId,
 } from '../entities/StandardVersion';
 import { StandardId } from '../entities/Standard';
-import { IRepository } from '@packmind/shared';
+import { IRepository } from '@packmind/types';
 
 export interface IStandardVersionRepository
   extends IRepository<StandardVersion> {

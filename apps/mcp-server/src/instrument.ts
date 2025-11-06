@@ -1,4 +1,4 @@
-import { Configuration } from '@packmind/shared';
+import { Configuration } from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
 import * as Sentry from '@sentry/nestjs';
 

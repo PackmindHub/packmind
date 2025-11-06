@@ -3,7 +3,7 @@ import { StandardsRepositories } from './infra/repositories/StandardsRepositorie
 import { DataSource } from 'typeorm';
 import { StandardsUseCases } from './application/useCases';
 import { PackmindLogger } from '@packmind/logger';
-import { HexaRegistry } from '@packmind/shared';
+import { HexaRegistry } from '@packmind/node-utils';
 import type {
   IDeploymentPort,
   ISpacesPort,
