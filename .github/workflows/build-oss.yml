@@ -134,3 +134,30 @@ jobs:
         with:
           name: mcp-server-dist-oss-${{ github.run_number }}-${{ github.sha }}
           path: dist/apps/mcp-server/
+
+  build-packages:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    strategy:
+      matrix:
+        node-version: ['${{ inputs.node-version }}']
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - run: npm ci
+      - name: Generate Proprietary tsconfig
+        env:
+          PACKMIND_EDITION: ${{ env.OSS_EDITION }}
+        run: node scripts/select-tsconfig.mjs
+      - name: Build packages (Proprietary)
+        env:
+          PACKMIND_EDITION: ${{ env.OSS_EDITION }}
+        run: ./node_modules/.bin/nx run-many -t build -p packages/*
+      - name: Test packages (Proprietary)
+        env:
+          PACKMIND_EDITION: ${{ env.OSS_EDITION }}
+        run: ./node_modules/.bin/nx run-many -t test -p packages/* --passWithNoTests
