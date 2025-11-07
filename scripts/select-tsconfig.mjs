@@ -62,4 +62,10 @@ function main() {
   );
 }
 
-main();
+try {
+  main();
+} catch (error) {
+  console.error('[select-tsconfig] Fatal error:', error.message);
+  if (error.stack) console.error(error.stack);
+  process.exit(1);
+}

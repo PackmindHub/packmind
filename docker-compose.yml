@@ -8,7 +8,12 @@ services:
         set -eu;
         node scripts/select-tsconfig.mjs;
         mkdir -p /nx-sock && chmod 777 /nx-sock;
-        (npx nx daemon --start || true);
+        npx nx daemon --start;
+        for i in \$(seq 1 30); do
+          [ -S /nx-sock/d.sock ] && break;
+          [ \$i -eq 30 ] && exit 1;
+          sleep 1;
+        done;
         tail -f /dev/null
       "
     volumes:
