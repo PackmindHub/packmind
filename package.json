@@ -194,13 +194,5 @@
     "web-tree-sitter": "^0.25.0",
     "winston": "^3.17.0",
     "yaml": "^2.8.0"
-  },
-  "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "4.40.1"
-  },
-  "overrides": {
-    "vite": {
-      "rollup": "npm:@rollup/wasm-node"
-    }
   }
 }
