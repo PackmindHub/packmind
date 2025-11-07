@@ -1,6 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, HexaRegistry, BaseHexaOpts } from '@packmind/node-utils';
-import { IDeploymentPort } from '@packmind/types';
+import { IDeploymentPort, IRecipesPort } from '@packmind/types';
 import {
   QueryOption,
   CaptureRecipeCommand,
@@ -182,6 +182,16 @@ export class RecipesHexa extends BaseHexa {
     this.logger.info('Destroying RecipesHexa');
     // Add any cleanup logic here if needed
     this.logger.info('RecipesHexa destroyed');
+  }
+
+  /**
+   * Get the Recipes adapter for cross-domain access to recipes data.
+   * This adapter implements IRecipesPort and can be injected into other domains.
+   * The adapter is available after initialization.
+   */
+  public getRecipesAdapter(): IRecipesPort {
+    this.ensureInitialized();
+    return this.hexa.useCases;
   }
 
   // ===========================

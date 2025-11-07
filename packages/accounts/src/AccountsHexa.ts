@@ -6,6 +6,7 @@ import {
   IGitPort,
   IStandardsPort,
   IDeploymentPort,
+  IAccountsPort,
 } from '@packmind/types';
 import { AccountsHexaFactory } from './AccountsHexaFactory';
 import { User, Organization } from '@packmind/types';
@@ -123,6 +124,15 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts> {
     this.logger.info('Destroying AccountsHexa');
     // Add any cleanup logic here if needed
     this.logger.info('AccountsHexa destroyed');
+  }
+
+  /**
+   * Get the Accounts adapter for cross-domain access to accounts data.
+   * This adapter implements IAccountsPort and can be injected into other domains.
+   * The adapter is available immediately after construction.
+   */
+  public getAccountsAdapter(): IAccountsPort {
+    return this.hexa.useCases;
   }
 
   // ========================================

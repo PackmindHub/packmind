@@ -125,6 +125,19 @@ export class DeploymentsHexa extends BaseHexa {
     this.logger.info('DeploymentsHexa destroyed');
   }
 
+  /**
+   * Get the Deployments adapter for cross-domain access to deployments data.
+   * This adapter implements IDeploymentPort and can be injected into other domains.
+   * The adapter is available immediately after construction.
+   */
+  public getDeploymentsAdapter(): IDeploymentPort {
+    return this.deploymentsUsecases;
+  }
+
+  /**
+   * @deprecated Use getDeploymentsAdapter() instead for consistency with other hexas.
+   * This method is kept for backward compatibility.
+   */
   public getDeploymentsUseCases(): IDeploymentPort {
     return this.deploymentsUsecases;
   }
