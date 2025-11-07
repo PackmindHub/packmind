@@ -4,6 +4,8 @@ import { DataSource } from 'typeorm';
 import { HexaRegistry, BaseHexa } from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
 import { DeploymentsHexa } from '@packmind/deployments';
+import { StandardsHexa } from '@packmind/standards';
+import { AnalyticsHexa } from '@packmind/analytics';
 import {
   IAccountsPort,
   IDeploymentPort,
@@ -359,12 +361,13 @@ export class HexaRegistryModule {
     // Get hexas by name to avoid import cycles
     const accountsHexa = registry.getByName('AccountsHexa');
     const gitHexa = registry.getByName('GitHexa');
-    const standardsHexa = registry.getByName('StandardsHexa');
+    const standardsHexa: StandardsHexa = registry.getByName('StandardsHexa');
     const deploymentsHexa: DeploymentsHexa =
       registry.getByName('DeploymentsHexa');
     const recipesHexa: RecipesHexa = registry.getByName('RecipesHexa');
     const linterHexa = registry.getByName('LinterHexa');
     const spacesHexa = registry.getByName('SpacesHexa');
+    const analyticsHexa: AnalyticsHexa = registry.getByName('AnalyticsHexa');
 
     // ========================================
     // AccountsHexa dependencies
@@ -518,6 +521,16 @@ export class HexaRegistryModule {
       deploymentsHexa.setRecipesPort(recipesHexa);
     }
 
+    // Set standards port for DeploymentsHexa
+    if (
+      deploymentsHexa &&
+      standardsHexa &&
+      'setStandardsPort' in deploymentsHexa &&
+      'getStandardsAdapter' in standardsHexa
+    ) {
+      deploymentsHexa.setStandardsPort(standardsHexa);
+    }
+
     // ========================================
     // RecipesHexa dependencies
     // ========================================
@@ -623,6 +636,32 @@ export class HexaRegistryModule {
           setStandardAdapter: (adapter: IStandardsPort) => void;
         }
       ).setStandardAdapter(standardsAdapter);
+    }
+
+    // ========================================
+    // AnalyticsHexa dependencies
+    // ========================================
+    // Set deployment port for AnalyticsHexa
+    if (
+      analyticsHexa &&
+      deploymentsHexa &&
+      'setDeploymentPort' in analyticsHexa &&
+      ('getDeploymentsAdapter' in deploymentsHexa ||
+        'getDeploymentsUseCases' in deploymentsHexa)
+    ) {
+      const deploymentPort =
+        'getDeploymentsAdapter' in deploymentsHexa
+          ? (
+              deploymentsHexa as {
+                getDeploymentsAdapter: () => IDeploymentPort;
+              }
+            ).getDeploymentsAdapter()
+          : (
+              deploymentsHexa as {
+                getDeploymentsUseCases: () => IDeploymentPort;
+              }
+            ).getDeploymentsUseCases();
+      analyticsHexa.setDeploymentPort(deploymentPort);
     }
   }
 
