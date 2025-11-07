@@ -3,7 +3,24 @@ import { reactRouter } from '@react-router/dev/vite';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 import Checker from 'vite-plugin-checker';
+import path from 'path';
+
 export default defineConfig(() => {
+  // Determine edition mode
+  const isOssMode = process.env.PACKMIND_EDITION === 'oss';
+
+  // Configure resolve aliases based on edition
+  const resolveAliases = isOssMode
+    ? {
+        '@packmind/proprietary/frontend': path.resolve(
+          __dirname,
+          'src/domain/editions/stubs',
+        ),
+      }
+    : {
+        '@packmind/proprietary/frontend': path.resolve(__dirname, 'src'),
+      };
+
   const proxy: Record<
     string,
     { target: string; changeOrigin: boolean; ws?: boolean }
@@ -32,6 +49,9 @@ export default defineConfig(() => {
       __PACKMIND_EDITION__: JSON.stringify(
         process.env.PACKMIND_EDITION || 'proprietary',
       ),
+    },
+    resolve: {
+      alias: resolveAliases,
     },
     server: {
       port: 4200,
