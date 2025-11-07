@@ -1,7 +1,16 @@
+x-nx-env: &nx-env
+  NX_DAEMON: 'true'
+  NX_DAEMON_SOCKET_DIR: /nx-sock
+  NX_WATCHER: polling
+  NX_WATCHER_POLLING_INTERVAL: '1000'
+  NX_ISOLATE_PLUGINS: 'false'
+  NX_PLUGIN_NO_TIMEOUTS: 'true'
+  PACKMIND_EDITION: ${PACKMIND_EDITION:-oss}
+
 services:
   nx-daemon:
     image: node:22.17.0-alpine3.21
-    container_name: dev-packmind-nx-daemon
+    container_name: dev-${PACKMIND_EDITION:-oss}-packmind-nx-daemon
     working_dir: /packmind
     command: >
       sh -lc "
@@ -18,16 +27,10 @@ services:
       "
     volumes:
       - .:/packmind
-      - dev-node_modules:/packmind/node_modules
-      - dev-nx-sock:/nx-sock
+      - dev-${PACKMIND_EDITION:-oss}-node_modules:/packmind/node_modules
+      - dev-${PACKMIND_EDITION:-oss}-nx-sock:/nx-sock
     environment:
-      NX_DAEMON: 'true'
-      NX_DAEMON_SOCKET_DIR: /nx-sock
-      NX_WATCHER: polling
-      NX_WATCHER_POLLING_INTERVAL: '1000'
-      NX_ISOLATE_PLUGINS: 'false'
-      NX_PLUGIN_NO_TIMEOUTS: 'true'
-      PACKMIND_EDITION: ${PACKMIND_EDITION:-oss}
+      <<: *nx-env
     healthcheck:
       test: ['CMD-SHELL', 'test -S /nx-sock/d.sock']
       interval: 2s
@@ -39,7 +42,7 @@ services:
 
   postgres:
     image: postgres:17-alpine
-    container_name: dev-packmind-postgres
+    container_name: dev-${PACKMIND_EDITION:-oss}-packmind-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -47,7 +50,7 @@ services:
     ports:
       - '5432:5432'
     volumes:
-      - dev-postgres-data:/var/lib/postgresql/data
+      - dev-${PACKMIND_EDITION:-oss}-postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 5s
@@ -56,11 +59,11 @@ services:
 
   redis:
     image: redis:7.2.4
-    container_name: dev-redis
+    container_name: dev-${PACKMIND_EDITION:-oss}-redis
     ports:
       - '6379:6379'
     volumes:
-      - dev-redis-data:/data
+      - dev-${PACKMIND_EDITION:-oss}-redis-data:/data
     healthcheck:
       test: ['CMD', 'redis-cli', 'ping']
       interval: 5s
@@ -69,7 +72,7 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4:latest
-    container_name: dev-packmind-pgadmin
+    container_name: dev-${PACKMIND_EDITION:-oss}-packmind-pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@pgadmin.com
       PGADMIN_DEFAULT_PASSWORD: password
@@ -77,13 +80,13 @@ services:
     ports:
       - '2345:80'
     volumes:
-      - dev-pgadmin:/var/lib/pgadmin
+      - dev-${PACKMIND_EDITION:-oss}-pgadmin:/var/lib/pgadmin
     depends_on:
       - postgres
 
   install-dependencies:
     image: node:22.17.0-alpine3.21
-    container_name: dev-packmind-install-deps
+    container_name: dev-${PACKMIND_EDITION:-oss}-packmind-install-deps
     working_dir: /packmind
     entrypoint:
       - sh
@@ -96,11 +99,11 @@ services:
         chmod -R +x node_modules/.bin 2>/dev/null || true
     volumes:
       - .:/packmind
-      - dev-node_modules:/packmind/node_modules
+      - dev-${PACKMIND_EDITION:-oss}-node_modules:/packmind/node_modules
 
   run-migrations:
     image: node:22.17.0-alpine3.21
-    container_name: dev-packmind-run-migrations
+    container_name: dev-${PACKMIND_EDITION:-oss}-packmind-run-migrations
     working_dir: /packmind
     entrypoint: >
       sh -lc '
@@ -121,20 +124,14 @@ services:
         fi
       '
     environment:
+      <<: *nx-env
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/packmind
-      NX_DAEMON: 'true'
-      NX_DAEMON_SOCKET_DIR: /nx-sock
-      NX_WATCHER: polling
-      NX_WATCHER_POLLING_INTERVAL: '1000'
-      NX_ISOLATE_PLUGINS: 'false'
-      NX_PLUGIN_NO_TIMEOUTS: 'true'
-      PACKMIND_EDITION: ${PACKMIND_EDITION:-oss}
     volumes:
       - .:/packmind
-      - dev-dist:/packmind/dist
-      - dev-tmp:/packmind/tmp
-      - dev-node_modules:/packmind/node_modules
-      - dev-nx-sock:/nx-sock
+      - dev-${PACKMIND_EDITION:-oss}-dist:/packmind/dist
+      - dev-${PACKMIND_EDITION:-oss}-tmp:/packmind/tmp
+      - dev-${PACKMIND_EDITION:-oss}-node_modules:/packmind/node_modules
+      - dev-${PACKMIND_EDITION:-oss}-nx-sock:/nx-sock
     depends_on:
       nx-daemon:
         condition: service_healthy
@@ -145,7 +142,7 @@ services:
 
   frontend:
     image: node:22.17.0-alpine3.21
-    container_name: dev-packmind-frontend
+    container_name: dev-${PACKMIND_EDITION:-oss}-packmind-frontend
     working_dir: /packmind
     ports:
       - '4200:4200'
@@ -164,13 +161,7 @@ services:
         fi
       '
     environment:
-      NX_DAEMON: 'true'
-      NX_DAEMON_SOCKET_DIR: /nx-sock
-      NX_WATCHER: polling
-      NX_WATCHER_POLLING_INTERVAL: '1000'
-      NX_ISOLATE_PLUGINS: 'false'
-      NX_PLUGIN_NO_TIMEOUTS: 'true'
-      PACKMIND_EDITION: ${PACKMIND_EDITION:-oss}
+      <<: *nx-env
       API_HOSTNAME: 'backend'
       API_PORT: 3000
       MCP_HOSTNAME: 'mcp-server'
@@ -178,10 +169,10 @@ services:
 
     volumes:
       - .:/packmind
-      - dev-node_modules:/packmind/node_modules
-      - dev-dist:/packmind/dist
-      - dev-tmp:/packmind/tmp
-      - dev-nx-sock:/nx-sock
+      - dev-${PACKMIND_EDITION:-oss}-node_modules:/packmind/node_modules
+      - dev-${PACKMIND_EDITION:-oss}-dist:/packmind/dist
+      - dev-${PACKMIND_EDITION:-oss}-tmp:/packmind/tmp
+      - dev-${PACKMIND_EDITION:-oss}-nx-sock:/nx-sock
     healthcheck:
       test: wget --spider http://127.0.0.1:4200/
     depends_on:
@@ -192,7 +183,7 @@ services:
 
   backend:
     image: node:22.17.0-alpine3.21
-    container_name: dev-packmind-backend
+    container_name: dev-${PACKMIND_EDITION:-oss}-packmind-backend
     working_dir: /packmind
     entrypoint: >
       sh -lc '
@@ -216,28 +207,22 @@ services:
         fi
       '
     environment:
+      <<: *nx-env
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/packmind
       REDIS_URI: redis://redis:6379
       COOKIE_SECURE: 'false'
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      NX_DAEMON: 'true'
-      NX_DAEMON_SOCKET_DIR: /nx-sock
-      NX_WATCHER: polling
-      NX_WATCHER_POLLING_INTERVAL: '1000'
-      NX_ISOLATE_PLUGINS: 'false'
-      NX_PLUGIN_NO_TIMEOUTS: 'true'
       CHOKIDAR_USEPOLLING: '1'
       CHOKIDAR_INTERVAL: '200'
       WATCHPACK_POLLING: 'true'
-      PACKMIND_EDITION: ${PACKMIND_EDITION:-oss}
       JS_PLAYGROUND_PATH: 'packages/linter/js-playground-local'
 
     volumes:
       - .:/packmind
-      - dev-node_modules:/packmind/node_modules
-      - dev-dist:/packmind/dist
-      - dev-tmp:/packmind/tmp
-      - dev-nx-sock:/nx-sock
+      - dev-${PACKMIND_EDITION:-oss}-node_modules:/packmind/node_modules
+      - dev-${PACKMIND_EDITION:-oss}-dist:/packmind/dist
+      - dev-${PACKMIND_EDITION:-oss}-tmp:/packmind/tmp
+      - dev-${PACKMIND_EDITION:-oss}-nx-sock:/nx-sock
     healthcheck:
       test: wget --spider http://127.0.0.1:3000/api/v0
     depends_on:
@@ -250,7 +235,7 @@ services:
 
   mcp-server:
     image: node:22.17.0-alpine3.21
-    container_name: dev-packmind-mcp-server
+    container_name: dev-${PACKMIND_EDITION:-oss}-packmind-mcp-server
     working_dir: /packmind
     entrypoint: >
       sh -lc '
@@ -270,23 +255,17 @@ services:
         fi
       '
     environment:
+      <<: *nx-env
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/packmind
       REDIS_URI: redis://redis:6379
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      NX_DAEMON: 'true'
-      NX_DAEMON_SOCKET_DIR: /nx-sock
-      NX_WATCHER: polling
-      NX_WATCHER_POLLING_INTERVAL: '1000'
-      NX_ISOLATE_PLUGINS: 'false'
-      NX_PLUGIN_NO_TIMEOUTS: 'true'
-      PACKMIND_EDITION: ${PACKMIND_EDITION:-oss}
       JS_PLAYGROUND_PATH: 'packages/linter/js-playground-local'
     volumes:
       - .:/packmind
-      - dev-node_modules:/packmind/node_modules
-      - dev-dist:/packmind/dist
-      - dev-tmp:/packmind/tmp
-      - dev-nx-sock:/nx-sock
+      - dev-${PACKMIND_EDITION:-oss}-node_modules:/packmind/node_modules
+      - dev-${PACKMIND_EDITION:-oss}-dist:/packmind/dist
+      - dev-${PACKMIND_EDITION:-oss}-tmp:/packmind/tmp
+      - dev-${PACKMIND_EDITION:-oss}-nx-sock:/nx-sock
     depends_on:
       nx-daemon:
         condition: service_healthy
@@ -295,15 +274,15 @@ services:
 
   run-e2e-tests:
     image: mcr.microsoft.com/playwright:v1.56.1-jammy
-    container_name: run-e2e-tests
+    container_name: run-e2e-tests-${PACKMIND_EDITION:-oss}
     profiles:
       - e2e
     volumes:
       - .:/packmind
-      - dev-node_modules:/packmind/node_modules
-      - dev-dist:/packmind/dist
-      - dev-tmp:/packmind/tmp
-      - dev-nx-sock:/nx-sock
+      - dev-${PACKMIND_EDITION:-oss}-node_modules:/packmind/node_modules
+      - dev-${PACKMIND_EDITION:-oss}-dist:/packmind/dist
+      - dev-${PACKMIND_EDITION:-oss}-tmp:/packmind/tmp
+      - dev-${PACKMIND_EDITION:-oss}-nx-sock:/nx-sock
       - ./dist/.playwright:/packmind/dist/.playwright
     ports:
       - '9323:9323'
@@ -318,10 +297,20 @@ services:
         condition: service_healthy
 
 volumes:
-  dev-nx-sock:
-  dev-postgres-data:
-  dev-redis-data:
-  dev-pgadmin:
-  dev-dist:
-  dev-tmp:
-  dev-node_modules:
+  # OSS edition volumes
+  dev-oss-nx-sock:
+  dev-oss-postgres-data:
+  dev-oss-redis-data:
+  dev-oss-pgadmin:
+  dev-oss-dist:
+  dev-oss-tmp:
+  dev-oss-node_modules:
+
+  # Proprietary edition volumes
+  dev-proprietary-nx-sock:
+  dev-proprietary-postgres-data:
+  dev-proprietary-redis-data:
+  dev-proprietary-pgadmin:
+  dev-proprietary-dist:
+  dev-proprietary-tmp:
+  dev-proprietary-node_modules:
