@@ -406,15 +406,15 @@ export class HexaRegistryModule {
       const deploymentPort =
         'getDeploymentsAdapter' in deploymentsHexa
           ? (
-              deploymentsHexa as {
-                getDeploymentsAdapter: () => IDeploymentPort;
-              }
-            ).getDeploymentsAdapter()
+            deploymentsHexa as {
+              getDeploymentsAdapter: () => IDeploymentPort;
+            }
+          ).getDeploymentsAdapter()
           : (
-              deploymentsHexa as {
-                getDeploymentsUseCases: () => IDeploymentPort;
-              }
-            ).getDeploymentsUseCases();
+            deploymentsHexa as {
+              getDeploymentsUseCases: () => IDeploymentPort;
+            }
+          ).getDeploymentsUseCases();
       accountsHexa.setDeploymentPort(deploymentPort);
     }
 
@@ -464,15 +464,15 @@ export class HexaRegistryModule {
       const deploymentPort =
         'getDeploymentsAdapter' in deploymentsHexa
           ? (
-              deploymentsHexa as {
-                getDeploymentsAdapter: () => IDeploymentPort;
-              }
-            ).getDeploymentsAdapter()
+            deploymentsHexa as {
+              getDeploymentsAdapter: () => IDeploymentPort;
+            }
+          ).getDeploymentsAdapter()
           : (
-              deploymentsHexa as {
-                getDeploymentsUseCases: () => IDeploymentPort;
-              }
-            ).getDeploymentsUseCases();
+            deploymentsHexa as {
+              getDeploymentsUseCases: () => IDeploymentPort;
+            }
+          ).getDeploymentsUseCases();
       (
         gitHexa as {
           setDeploymentsAdapter: (adapter: IDeploymentPort) => void;
@@ -546,15 +546,15 @@ export class HexaRegistryModule {
       const deploymentPort =
         'getDeploymentsAdapter' in deploymentsHexa
           ? (
-              deploymentsHexa as {
-                getDeploymentsAdapter: () => IDeploymentPort;
-              }
-            ).getDeploymentsAdapter()
+            deploymentsHexa as {
+              getDeploymentsAdapter: () => IDeploymentPort;
+            }
+          ).getDeploymentsAdapter()
           : (
-              deploymentsHexa as {
-                getDeploymentsUseCases: () => IDeploymentPort;
-              }
-            ).getDeploymentsUseCases();
+            deploymentsHexa as {
+              getDeploymentsUseCases: () => IDeploymentPort;
+            }
+          ).getDeploymentsUseCases();
       // setDeploymentPort is async
       try {
         await (
@@ -585,15 +585,15 @@ export class HexaRegistryModule {
       const deploymentPort =
         'getDeploymentsAdapter' in deploymentsHexa
           ? (
-              deploymentsHexa as {
-                getDeploymentsAdapter: () => IDeploymentPort;
-              }
-            ).getDeploymentsAdapter()
+            deploymentsHexa as {
+              getDeploymentsAdapter: () => IDeploymentPort;
+            }
+          ).getDeploymentsAdapter()
           : (
-              deploymentsHexa as {
-                getDeploymentsUseCases: () => IDeploymentPort;
-              }
-            ).getDeploymentsUseCases();
+            deploymentsHexa as {
+              getDeploymentsUseCases: () => IDeploymentPort;
+            }
+          ).getDeploymentsUseCases();
       (
         standardsHexa as {
           setDeploymentsQueryAdapter: (adapter: IDeploymentPort) => void;
@@ -641,6 +641,19 @@ export class HexaRegistryModule {
     // ========================================
     // AnalyticsHexa dependencies
     // ========================================
+    // Set recipes port for AnalyticsHexa
+    if (
+      analyticsHexa &&
+      recipesHexa &&
+      'setRecipesPort' in analyticsHexa &&
+      'getRecipesAdapter' in recipesHexa
+    ) {
+      const recipesPort = (
+        recipesHexa as { getRecipesAdapter: () => IRecipesPort }
+      ).getRecipesAdapter();
+      analyticsHexa.setRecipesPort(recipesPort);
+    }
+
     // Set deployment port for AnalyticsHexa
     if (
       analyticsHexa &&
@@ -652,15 +665,15 @@ export class HexaRegistryModule {
       const deploymentPort =
         'getDeploymentsAdapter' in deploymentsHexa
           ? (
-              deploymentsHexa as {
-                getDeploymentsAdapter: () => IDeploymentPort;
-              }
-            ).getDeploymentsAdapter()
+            deploymentsHexa as {
+              getDeploymentsAdapter: () => IDeploymentPort;
+            }
+          ).getDeploymentsAdapter()
           : (
-              deploymentsHexa as {
-                getDeploymentsUseCases: () => IDeploymentPort;
-              }
-            ).getDeploymentsUseCases();
+            deploymentsHexa as {
+              getDeploymentsUseCases: () => IDeploymentPort;
+            }
+          ).getDeploymentsUseCases();
       analyticsHexa.setDeploymentPort(deploymentPort);
     }
   }

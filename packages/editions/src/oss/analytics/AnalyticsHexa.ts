@@ -1,5 +1,5 @@
 import { BaseHexa, HexaRegistry } from '@packmind/node-utils';
-import { IDeploymentPort } from '@packmind/types';
+import { IDeploymentPort, IRecipesPort } from '@packmind/types';
 
 export class AnalyticsHexa extends BaseHexa {
   constructor(registry: HexaRegistry) {
@@ -25,4 +25,7 @@ export class AnalyticsHexa extends BaseHexa {
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function,@typescript-eslint/no-unused-vars
   setDeploymentPort(deploymentPort: IDeploymentPort): void {}
+
+  // eslint-disable-next-line @typescript-eslint/no-empty-function,@typescript-eslint/no-unused-vars
+  setRecipesPort(recipesPort: IRecipesPort): void {}
 }
