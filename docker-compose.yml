@@ -27,8 +27,8 @@ services:
       "
     volumes:
       - .:/packmind
-      - dev-${PACKMIND_EDITION:-oss}-node_modules:/packmind/node_modules
-      - dev-${PACKMIND_EDITION:-oss}-nx-sock:/nx-sock
+      - dev-node_modules:/packmind/node_modules
+      - dev-nx-sock:/nx-sock
     environment:
       <<: *nx-env
     healthcheck:
@@ -50,7 +50,7 @@ services:
     ports:
       - '5432:5432'
     volumes:
-      - dev-${PACKMIND_EDITION:-oss}-postgres-data:/var/lib/postgresql/data
+      - dev-postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 5s
@@ -63,7 +63,7 @@ services:
     ports:
       - '6379:6379'
     volumes:
-      - dev-${PACKMIND_EDITION:-oss}-redis-data:/data
+      - dev-redis-data:/data
     healthcheck:
       test: ['CMD', 'redis-cli', 'ping']
       interval: 5s
@@ -80,7 +80,7 @@ services:
     ports:
       - '2345:80'
     volumes:
-      - dev-${PACKMIND_EDITION:-oss}-pgadmin:/var/lib/pgadmin
+      - dev-pgadmin:/var/lib/pgadmin
     depends_on:
       - postgres
 
@@ -99,7 +99,7 @@ services:
         chmod -R +x node_modules/.bin 2>/dev/null || true
     volumes:
       - .:/packmind
-      - dev-${PACKMIND_EDITION:-oss}-node_modules:/packmind/node_modules
+      - dev-node_modules:/packmind/node_modules
 
   run-migrations:
     image: node:22.17.0-alpine3.21
@@ -128,10 +128,10 @@ services:
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/packmind
     volumes:
       - .:/packmind
-      - dev-${PACKMIND_EDITION:-oss}-dist:/packmind/dist
-      - dev-${PACKMIND_EDITION:-oss}-tmp:/packmind/tmp
-      - dev-${PACKMIND_EDITION:-oss}-node_modules:/packmind/node_modules
-      - dev-${PACKMIND_EDITION:-oss}-nx-sock:/nx-sock
+      - dev-dist:/packmind/dist
+      - dev-tmp:/packmind/tmp
+      - dev-node_modules:/packmind/node_modules
+      - dev-nx-sock:/nx-sock
     depends_on:
       nx-daemon:
         condition: service_healthy
@@ -169,10 +169,10 @@ services:
 
     volumes:
       - .:/packmind
-      - dev-${PACKMIND_EDITION:-oss}-node_modules:/packmind/node_modules
-      - dev-${PACKMIND_EDITION:-oss}-dist:/packmind/dist
-      - dev-${PACKMIND_EDITION:-oss}-tmp:/packmind/tmp
-      - dev-${PACKMIND_EDITION:-oss}-nx-sock:/nx-sock
+      - dev-node_modules:/packmind/node_modules
+      - dev-dist:/packmind/dist
+      - dev-tmp:/packmind/tmp
+      - dev-nx-sock:/nx-sock
     healthcheck:
       test: wget --spider http://127.0.0.1:4200/
     depends_on:
@@ -219,10 +219,10 @@ services:
 
     volumes:
       - .:/packmind
-      - dev-${PACKMIND_EDITION:-oss}-node_modules:/packmind/node_modules
-      - dev-${PACKMIND_EDITION:-oss}-dist:/packmind/dist
-      - dev-${PACKMIND_EDITION:-oss}-tmp:/packmind/tmp
-      - dev-${PACKMIND_EDITION:-oss}-nx-sock:/nx-sock
+      - dev-node_modules:/packmind/node_modules
+      - dev-dist:/packmind/dist
+      - dev-tmp:/packmind/tmp
+      - dev-nx-sock:/nx-sock
     healthcheck:
       test: wget --spider http://127.0.0.1:3000/api/v0
     depends_on:
@@ -262,10 +262,10 @@ services:
       JS_PLAYGROUND_PATH: 'packages/linter/js-playground-local'
     volumes:
       - .:/packmind
-      - dev-${PACKMIND_EDITION:-oss}-node_modules:/packmind/node_modules
-      - dev-${PACKMIND_EDITION:-oss}-dist:/packmind/dist
-      - dev-${PACKMIND_EDITION:-oss}-tmp:/packmind/tmp
-      - dev-${PACKMIND_EDITION:-oss}-nx-sock:/nx-sock
+      - dev-node_modules:/packmind/node_modules
+      - dev-dist:/packmind/dist
+      - dev-tmp:/packmind/tmp
+      - dev-nx-sock:/nx-sock
     depends_on:
       nx-daemon:
         condition: service_healthy
@@ -279,10 +279,10 @@ services:
       - e2e
     volumes:
       - .:/packmind
-      - dev-${PACKMIND_EDITION:-oss}-node_modules:/packmind/node_modules
-      - dev-${PACKMIND_EDITION:-oss}-dist:/packmind/dist
-      - dev-${PACKMIND_EDITION:-oss}-tmp:/packmind/tmp
-      - dev-${PACKMIND_EDITION:-oss}-nx-sock:/nx-sock
+      - dev-node_modules:/packmind/node_modules
+      - dev-dist:/packmind/dist
+      - dev-tmp:/packmind/tmp
+      - dev-nx-sock:/nx-sock
       - ./dist/.playwright:/packmind/dist/.playwright
     ports:
       - '9323:9323'
@@ -297,20 +297,10 @@ services:
         condition: service_healthy
 
 volumes:
-  # OSS edition volumes
-  dev-oss-nx-sock:
-  dev-oss-postgres-data:
-  dev-oss-redis-data:
-  dev-oss-pgadmin:
-  dev-oss-dist:
-  dev-oss-tmp:
-  dev-oss-node_modules:
-
-  # Proprietary edition volumes
-  dev-proprietary-nx-sock:
-  dev-proprietary-postgres-data:
-  dev-proprietary-redis-data:
-  dev-proprietary-pgadmin:
-  dev-proprietary-dist:
-  dev-proprietary-tmp:
-  dev-proprietary-node_modules:
+  dev-nx-sock:
+  dev-postgres-data:
+  dev-redis-data:
+  dev-pgadmin:
+  dev-dist:
+  dev-tmp:
+  dev-node_modules:
