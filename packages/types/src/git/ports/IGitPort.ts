@@ -7,13 +7,18 @@ import { UserId } from '../../accounts/User';
 import {
   HandleWebHookWithoutContentCommand,
   HandleWebHookWithoutContentResult,
+  HandleWebHookCommand,
+  HandleWebHookResult,
   AddGitProviderCommand,
   AddGitRepoCommand,
   GetAvailableRemoteDirectoriesCommand,
   CheckDirectoryExistenceCommand,
   CheckDirectoryExistenceResult,
   ExternalRepository,
+  FindGitRepoByOwnerRepoAndBranchInOrganizationCommand,
+  FindGitRepoByOwnerRepoAndBranchInOrganizationResult,
 } from '../contracts';
+import type { QueryOption } from '../../database/types';
 
 export interface IGitPort {
   /**
@@ -69,6 +74,14 @@ export interface IGitPort {
     filePath: string,
     branch?: string,
   ): Promise<{ sha: string; content: string } | null>;
+
+  /**
+   * Handle webhook payload for a git repository with file content
+   *
+   * @param command - The webhook command
+   * @returns Promise of webhook result with file paths and content
+   */
+  handleWebHook(command: HandleWebHookCommand): Promise<HandleWebHookResult>;
 
   /**
    * Handle webhook payload for a git repository without fetching file content
@@ -197,4 +210,42 @@ export interface IGitPort {
    * @returns Promise of array of git repositories
    */
   listRepos(gitProviderId: GitProviderId): Promise<GitRepo[]>;
+
+  /**
+   * Add a single file to a git repository
+   *
+   * @param repo - The git repository
+   * @param path - The path where the file should be added
+   * @param content - The content of the file
+   * @returns Promise of git commit
+   */
+  addFileToGit(
+    repo: GitRepo,
+    path: string,
+    content: string,
+  ): Promise<GitCommit>;
+
+  /**
+   * Find a git repository by owner and repo name
+   *
+   * @param owner - The repository owner
+   * @param repo - The repository name
+   * @param opts - Optional query options (e.g., includeDeleted)
+   * @returns Promise of git repository or null if not found
+   */
+  findGitRepoByOwnerAndRepo(
+    owner: string,
+    repo: string,
+    opts?: Pick<QueryOption, 'includeDeleted'>,
+  ): Promise<GitRepo | null>;
+
+  /**
+   * Find a git repository by owner, repo name, and branch within an organization
+   *
+   * @param command - Command containing owner, repo, branch, and organization context
+   * @returns Promise of git repository result
+   */
+  findGitRepoByOwnerRepoAndBranchInOrganization(
+    command: FindGitRepoByOwnerRepoAndBranchInOrganizationCommand,
+  ): Promise<FindGitRepoByOwnerRepoAndBranchInOrganizationResult>;
 }

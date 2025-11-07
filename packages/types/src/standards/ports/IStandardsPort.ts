@@ -14,6 +14,9 @@ export interface IStandardsPort {
   getStandardVersionById(
     versionId: StandardVersionId,
   ): Promise<StandardVersion | null>;
+  getLatestStandardVersion(
+    standardId: StandardId,
+  ): Promise<StandardVersion | null>;
   listStandardVersions(standardId: StandardId): Promise<StandardVersion[]>;
   getRule(id: RuleId): Promise<Rule | null>;
   getLatestRulesByStandardId(id: StandardId): Promise<Rule[]>;

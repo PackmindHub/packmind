@@ -54,6 +54,12 @@ export class StandardsAdapter implements IStandardsPort {
     return this.useCases.getStandardVersionById(versionId);
   }
 
+  getLatestStandardVersion(
+    standardId: StandardId,
+  ): Promise<StandardVersion | null> {
+    return this.useCases.getLatestStandardVersion(standardId);
+  }
+
   listStandardVersions(standardId: StandardId): Promise<StandardVersion[]> {
     return this.useCases.listStandardVersions(standardId);
   }
