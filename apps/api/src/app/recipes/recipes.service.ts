@@ -2,40 +2,36 @@ import { Injectable } from '@nestjs/common';
 import {
   Recipe,
   RecipeId,
-  RecipesHexa,
   RecipeVersion,
   RecipeVersionId,
 } from '@packmind/recipes';
 import { OrganizationId, UserId } from '@packmind/accounts';
 import { PackmindLogger } from '@packmind/logger';
-import { IDeploymentPort } from '@packmind/types';
-import { SpaceId, TargetId } from '@packmind/types';
+import {
+  IDeploymentPort,
+  IRecipesPort,
+  SpaceId,
+  TargetId,
+} from '@packmind/types';
 import { GitRepoId } from '@packmind/git';
-import { DeploymentsHexa } from '@packmind/deployments';
+import {
+  InjectRecipesAdapter,
+  InjectDeploymentAdapter,
+} from '../shared/HexaInjection';
 
 @Injectable()
 export class RecipesService {
-  private readonly deploymentAdapter: IDeploymentPort;
   constructor(
-    private readonly recipesHexa: RecipesHexa,
-    private readonly deploymentHexa: DeploymentsHexa,
+    @InjectRecipesAdapter() private readonly recipesAdapter: IRecipesPort,
+    @InjectDeploymentAdapter()
+    private readonly deploymentAdapter: IDeploymentPort,
     private readonly logger: PackmindLogger,
-  ) {
-    this.deploymentAdapter = this.deploymentHexa.getDeploymentsUseCases();
-    // Set up bidirectional dependency to break circular reference
-    // Note: This is async but we don't await in constructor - initialization happens in background
-    recipesHexa.setDeploymentPort(this.deploymentAdapter).catch((error) => {
-      this.logger.error('Failed to initialize recipes with deployment port', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-    });
-    deploymentHexa.setRecipesPort(recipesHexa);
-  }
+  ) {}
 
   async getRecipesByOrganization(
     organizationId: OrganizationId,
   ): Promise<Recipe[]> {
-    return this.recipesHexa.listRecipesByOrganization(organizationId);
+    return this.recipesAdapter.listRecipesByOrganization(organizationId);
   }
 
   async getRecipesBySpace(
@@ -43,7 +39,7 @@ export class RecipesService {
     organizationId: OrganizationId,
     userId: UserId,
   ): Promise<Recipe[]> {
-    return this.recipesHexa.listRecipesBySpace({
+    return this.recipesAdapter.listRecipesBySpace({
       spaceId,
       organizationId,
       userId,
@@ -56,7 +52,7 @@ export class RecipesService {
     spaceId: SpaceId,
     userId: UserId,
   ): Promise<Recipe | null> {
-    return this.recipesHexa.getRecipeById({
+    return this.recipesAdapter.getRecipeById({
       recipeId: id,
       organizationId,
       spaceId,
@@ -73,7 +69,7 @@ export class RecipesService {
     userId: UserId,
     spaceId: SpaceId,
   ): Promise<Recipe> {
-    return this.recipesHexa.captureRecipe({
+    return this.recipesAdapter.captureRecipe({
       ...recipe,
       organizationId,
       userId,
@@ -86,7 +82,7 @@ export class RecipesService {
     organizationId: OrganizationId,
     headers: Record<string, string> = {},
   ) {
-    return this.recipesHexa.updateRecipesFromGitHub({
+    return this.recipesAdapter.updateRecipesFromGitHub({
       payload,
       organizationId,
       headers,
@@ -98,7 +94,7 @@ export class RecipesService {
     organizationId: OrganizationId,
     headers: Record<string, string> = {},
   ) {
-    return this.recipesHexa.updateRecipesFromGitLab({
+    return this.recipesAdapter.updateRecipesFromGitLab({
       payload,
       organizationId,
       headers,
@@ -115,7 +111,7 @@ export class RecipesService {
     editorUserId: UserId,
     summary?: string,
   ): Promise<Recipe> {
-    return this.recipesHexa.updateRecipeFromUI({
+    const result = await this.recipesAdapter.updateRecipeFromUI({
       userId: editorUserId,
       recipeId,
       spaceId,
@@ -125,10 +121,11 @@ export class RecipesService {
       content,
       summary,
     });
+    return result.recipe;
   }
 
   async getRecipeVersionsById(id: RecipeId): Promise<RecipeVersion[]> {
-    return this.recipesHexa.listRecipeVersions(id);
+    return this.recipesAdapter.listRecipeVersions(id);
   }
 
   async publishRecipeToGit(
@@ -182,7 +179,7 @@ export class RecipesService {
     organizationId: OrganizationId,
     userId: UserId,
   ): Promise<void> {
-    await this.recipesHexa.deleteRecipe({
+    await this.recipesAdapter.deleteRecipe({
       recipeId: id,
       spaceId,
       userId,
@@ -196,7 +193,7 @@ export class RecipesService {
     userId: UserId,
     organizationId: OrganizationId,
   ): Promise<void> {
-    await this.recipesHexa.deleteRecipesBatch({
+    await this.recipesAdapter.deleteRecipesBatch({
       recipeIds,
       spaceId,
       userId,

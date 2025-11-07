@@ -1,16 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
-import {
-  User,
-  createOrganizationId,
-  createUserId,
-  AccountsHexa,
-} from '@packmind/accounts';
+import { User, createOrganizationId, createUserId } from '@packmind/accounts';
 import { NotFoundException } from '@nestjs/common';
 import { AuthService } from '../../auth/auth.service';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
+import { IAccountsPort } from '@packmind/types';
+import { ACCOUNTS_ADAPTER_TOKEN } from '../../shared/HexaRegistryModule';
 
 describe('UsersController', () => {
   let app: TestingModule;
@@ -19,11 +16,9 @@ describe('UsersController', () => {
   let mockAuthService: { getMe: jest.Mock };
 
   beforeAll(async () => {
-    const mockAccountsApp = {
-      listUsers: jest.fn(),
+    const mockAccountsAdapter: Partial<IAccountsPort> = {
       getUserById: jest.fn(),
-      signUpUser: jest.fn(),
-      getOrganizationById: jest.fn(),
+      listOrganizationUsers: jest.fn(),
     };
 
     mockAuthService = {
@@ -35,8 +30,8 @@ describe('UsersController', () => {
       providers: [
         UsersService,
         {
-          provide: AccountsHexa,
-          useValue: mockAccountsApp,
+          provide: ACCOUNTS_ADAPTER_TOKEN,
+          useValue: mockAccountsAdapter,
         },
         {
           provide: AuthService,

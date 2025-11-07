@@ -1,11 +1,18 @@
-import { GitProvider } from '../GitProvider';
+import { GitProvider, GitProviderId } from '../GitProvider';
 import { GitRepo } from '../GitRepo';
 import { GitRepoId } from '../GitRepoId';
 import { GitCommit } from '../GitCommit';
 import { OrganizationId } from '../../accounts/Organization';
+import { UserId } from '../../accounts/User';
 import {
   HandleWebHookWithoutContentCommand,
   HandleWebHookWithoutContentResult,
+  AddGitProviderCommand,
+  AddGitRepoCommand,
+  GetAvailableRemoteDirectoriesCommand,
+  CheckDirectoryExistenceCommand,
+  CheckDirectoryExistenceResult,
+  ExternalRepository,
 } from '../contracts';
 
 export interface IGitPort {
@@ -72,4 +79,122 @@ export interface IGitPort {
   handleWebHookWithoutContent(
     command: HandleWebHookWithoutContentCommand,
   ): Promise<HandleWebHookWithoutContentResult>;
+
+  /**
+   * Add a new git provider for an organization
+   *
+   * @param command - Command containing git provider details and user/organization context
+   * @returns Promise of the created git provider
+   */
+  addGitProvider(command: AddGitProviderCommand): Promise<GitProvider>;
+
+  /**
+   * Add a new git repository to a provider
+   *
+   * @param command - Command containing repository details and user/organization context
+   * @returns Promise of the created git repository
+   */
+  addGitRepo(command: AddGitRepoCommand): Promise<GitRepo>;
+
+  /**
+   * Delete a git provider
+   *
+   * @param id - The git provider ID
+   * @param userId - The user ID performing the deletion
+   * @param organizationId - The organization ID
+   * @param force - Optional flag to force deletion even if repositories exist
+   * @returns Promise that resolves when deletion is complete
+   */
+  deleteGitProvider(
+    id: GitProviderId,
+    userId: UserId,
+    organizationId: OrganizationId,
+    force?: boolean,
+  ): Promise<void>;
+
+  /**
+   * Delete a git repository
+   *
+   * @param repositoryId - The repository ID
+   * @param userId - The user ID performing the deletion
+   * @param organizationId - The organization ID
+   * @param providerId - Optional provider ID for validation
+   * @returns Promise that resolves when deletion is complete
+   */
+  deleteGitRepo(
+    repositoryId: GitRepoId,
+    userId: UserId,
+    organizationId: OrganizationId,
+    providerId?: GitProviderId,
+  ): Promise<void>;
+
+  /**
+   * List available repositories from a git provider
+   *
+   * @param gitProviderId - The git provider ID
+   * @returns Promise of array of available repositories
+   */
+  listAvailableRepos(
+    gitProviderId: GitProviderId,
+  ): Promise<ExternalRepository[]>;
+
+  /**
+   * Check if a branch exists in a repository
+   *
+   * @param gitProviderId - The git provider ID
+   * @param owner - The repository owner
+   * @param repo - The repository name
+   * @param branch - The branch name to check
+   * @returns Promise of boolean indicating if branch exists
+   */
+  checkBranchExists(
+    gitProviderId: GitProviderId,
+    owner: string,
+    repo: string,
+    branch: string,
+  ): Promise<boolean>;
+
+  /**
+   * Update a git provider
+   *
+   * @param id - The git provider ID
+   * @param gitProvider - Partial git provider data to update
+   * @param userId - The user ID performing the update
+   * @param organizationId - The organization ID
+   * @returns Promise of the updated git provider
+   */
+  updateGitProvider(
+    id: GitProviderId,
+    gitProvider: Partial<Omit<GitProvider, 'id'>>,
+    userId: UserId,
+    organizationId: OrganizationId,
+  ): Promise<GitProvider>;
+
+  /**
+   * Get available remote directories in a repository
+   *
+   * @param command - Command containing repository details and path
+   * @returns Promise of array of directory paths
+   */
+  getAvailableRemoteDirectories(
+    command: GetAvailableRemoteDirectoriesCommand,
+  ): Promise<string[]>;
+
+  /**
+   * Check if a directory exists in a repository
+   *
+   * @param command - Command containing repository details and directory path
+   * @returns Promise of directory existence result
+   */
+  checkDirectoryExistence(
+    command: CheckDirectoryExistenceCommand,
+  ): Promise<CheckDirectoryExistenceResult>;
+
+  /**
+   * List all repositories for a git provider
+   *
+   * @param gitProviderId - The git provider ID
+   * @returns Promise of array of git repositories
+   */
+  listRepos(gitProviderId: GitProviderId): Promise<GitRepo[]>;
 }

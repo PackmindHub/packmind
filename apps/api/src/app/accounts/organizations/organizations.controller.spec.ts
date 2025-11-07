@@ -1,13 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { OrganizationsController } from './organizations.controller';
 import { OrganizationsService } from './organizations.service';
-import { createOrganizationId, AccountsHexa } from '@packmind/accounts';
+import { createOrganizationId } from '@packmind/accounts';
 import { NotFoundException } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
-import { createUserId } from '@packmind/types';
+import { createUserId, IAccountsPort } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 import { organizationFactory } from '@packmind/accounts/test';
 import { AuthenticatedRequest } from '@packmind/node-utils';
+import { ACCOUNTS_ADAPTER_TOKEN } from '../../shared/HexaRegistryModule';
 
 describe('OrganizationsController', () => {
   let app: TestingModule;
@@ -15,12 +16,14 @@ describe('OrganizationsController', () => {
   let organizationsService: OrganizationsService;
 
   beforeAll(async () => {
-    const mockAccountsApp = {
+    const mockAccountsAdapter: Partial<IAccountsPort> = {
       getOrganizationById: jest.fn(),
       getOrganizationByName: jest.fn(),
       getOrganizationBySlug: jest.fn(),
       createOrganization: jest.fn(),
       removeUserFromOrganization: jest.fn(),
+      listUserOrganizations: jest.fn(),
+      createInvitations: jest.fn(),
     };
 
     app = await Test.createTestingModule({
@@ -28,8 +31,8 @@ describe('OrganizationsController', () => {
       providers: [
         OrganizationsService,
         {
-          provide: AccountsHexa,
-          useValue: mockAccountsApp,
+          provide: ACCOUNTS_ADAPTER_TOKEN,
+          useValue: mockAccountsAdapter,
         },
         {
           provide: PackmindLogger,

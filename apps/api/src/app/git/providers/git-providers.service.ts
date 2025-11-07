@@ -4,23 +4,21 @@ import {
   GitRepo,
   GitProviderId,
   GitRepoId,
-  GitHexa,
   AddGitProviderCommand,
 } from '@packmind/git';
 import { AccountsHexa } from '@packmind/accounts';
 import { OrganizationId, UserId } from '@packmind/accounts';
+import { IGitPort } from '@packmind/types';
+import { InjectGitAdapter } from '../../shared/HexaInjection';
 
 @Injectable()
 export class GitProvidersService {
   constructor(
-    private readonly gitHexa: GitHexa,
+    @InjectGitAdapter() private readonly gitAdapter: IGitPort,
+    // Keep AccountsHexa for provider methods (getUserProvider, getOrganizationProvider)
+    // These are not part of the adapter interface
     private readonly accountsHexa: AccountsHexa,
-  ) {
-    this.gitHexa.setUserProvider(this.accountsHexa.getUserProvider());
-    this.gitHexa.setOrganizationProvider(
-      this.accountsHexa.getOrganizationProvider(),
-    );
-  }
+  ) {}
 
   async addGitProvider(
     userId: UserId,
@@ -33,7 +31,7 @@ export class GitProvidersService {
       gitProvider,
     };
 
-    return this.gitHexa.addGitProvider(command);
+    return this.gitAdapter.addGitProvider(command);
   }
 
   async addRepositoryToProvider(
@@ -53,15 +51,15 @@ export class GitProvidersService {
       branch,
     };
 
-    return await this.gitHexa.addGitRepo(command);
+    return await this.gitAdapter.addGitRepo(command);
   }
 
   async listProviders(organizationId: OrganizationId): Promise<GitProvider[]> {
-    return this.gitHexa.listProviders(organizationId);
+    return this.gitAdapter.listProviders(organizationId);
   }
 
   async getRepositories(organizationId: OrganizationId): Promise<GitRepo[]> {
-    return this.gitHexa.getOrganizationRepositories(organizationId);
+    return this.gitAdapter.getOrganizationRepositories(organizationId);
   }
 
   async listAvailableRepos(gitProviderId: GitProviderId): Promise<
@@ -75,7 +73,7 @@ export class GitProvidersService {
       stars: number;
     }[]
   > {
-    return this.gitHexa.listAvailableRepos(gitProviderId);
+    return this.gitAdapter.listAvailableRepos(gitProviderId);
   }
 
   async checkBranchExists(
@@ -85,7 +83,12 @@ export class GitProvidersService {
     repo: string,
     branch: string,
   ): Promise<boolean> {
-    return this.gitHexa.checkBranchExists(gitProviderId, owner, repo, branch);
+    return this.gitAdapter.checkBranchExists(
+      gitProviderId,
+      owner,
+      repo,
+      branch,
+    );
   }
 
   async updateGitProvider(
@@ -94,7 +97,7 @@ export class GitProvidersService {
     userId: UserId,
     organizationId: OrganizationId,
   ): Promise<GitProvider> {
-    return this.gitHexa.updateGitProvider(
+    return this.gitAdapter.updateGitProvider(
       id,
       gitProvider,
       userId,
@@ -107,7 +110,7 @@ export class GitProvidersService {
     userId: UserId,
     organizationId: OrganizationId,
   ): Promise<void> {
-    return this.gitHexa.deleteGitProvider(id, userId, organizationId);
+    return this.gitAdapter.deleteGitProvider(id, userId, organizationId);
   }
 
   async removeRepositoryFromProvider(
@@ -116,7 +119,7 @@ export class GitProvidersService {
     organizationId: OrganizationId,
     repositoryId: GitRepoId,
   ): Promise<void> {
-    return this.gitHexa.deleteGitRepo(
+    return this.gitAdapter.deleteGitRepo(
       repositoryId,
       userId,
       organizationId,

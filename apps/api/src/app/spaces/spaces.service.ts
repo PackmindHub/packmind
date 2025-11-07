@@ -1,25 +1,24 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { OrganizationId } from '@packmind/types';
+import { OrganizationId, ISpacesPort } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
-import { SpacesHexa, SpaceId } from '@packmind/spaces';
+import { SpaceId } from '@packmind/spaces';
+import { InjectSpacesAdapter } from '../shared/HexaInjection';
 
 @Injectable()
 export class SpacesService {
   constructor(
-    private readonly spacesHexa: SpacesHexa,
+    @InjectSpacesAdapter() private readonly spacesAdapter: ISpacesPort,
     private readonly logger: PackmindLogger,
   ) {}
 
   async listSpacesByOrganization(organizationId: OrganizationId) {
     this.logger.info('Listing spaces by organization', { organizationId });
-    const spacesAdapter = this.spacesHexa.getSpacesAdapter();
-    return spacesAdapter.listSpacesByOrganization(organizationId);
+    return this.spacesAdapter.listSpacesByOrganization(organizationId);
   }
 
   async getSpaceBySlug(slug: string, organizationId: OrganizationId) {
     this.logger.info('Getting space by slug', { slug, organizationId });
-    const spacesAdapter = this.spacesHexa.getSpacesAdapter();
-    const space = await spacesAdapter.getSpaceBySlug(slug, organizationId);
+    const space = await this.spacesAdapter.getSpaceBySlug(slug, organizationId);
 
     if (!space) {
       throw new NotFoundException(
@@ -32,8 +31,7 @@ export class SpacesService {
 
   async getSpaceById(spaceId: SpaceId) {
     this.logger.info('Getting space by ID', { spaceId });
-    const spacesAdapter = this.spacesHexa.getSpacesAdapter();
-    const space = await spacesAdapter.getSpaceById(spaceId);
+    const space = await this.spacesAdapter.getSpaceById(spaceId);
 
     if (!space) {
       throw new NotFoundException(`Space with ID '${spaceId}' not found`);

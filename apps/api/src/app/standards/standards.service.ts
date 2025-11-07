@@ -1,7 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { OrganizationId, UserId } from '@packmind/accounts';
-import { DeploymentsHexa } from '@packmind/deployments';
-import { LinterHexa } from '@packmind/linter';
 import { PackmindLogger } from '@packmind/logger';
 import {
   RuleId,
@@ -13,34 +11,21 @@ import {
 import {
   GetStandardByIdResponse,
   IDeploymentPort,
-  ILinterPort,
   ListStandardsBySpaceResponse,
   PublishStandardsCommand,
   SpaceId,
   StandardsDeployment,
 } from '@packmind/types';
+import { InjectDeploymentAdapter } from '../shared/HexaInjection';
 
 @Injectable()
 export class StandardsService {
-  private readonly deploymentAdapter: IDeploymentPort;
-  private readonly linterAdapter: ILinterPort;
-
   constructor(
-    private readonly deploymentHexa: DeploymentsHexa,
-    private readonly linterHexa: LinterHexa,
     private readonly standardsHexa: StandardsHexa,
+    @InjectDeploymentAdapter()
+    private readonly deploymentAdapter: IDeploymentPort,
     private readonly logger: PackmindLogger,
-  ) {
-    this.deploymentAdapter = this.deploymentHexa.getDeploymentsUseCases();
-    this.standardsHexa.setDeploymentsQueryAdapter(this.deploymentAdapter);
-
-    this.linterAdapter = this.linterHexa.getLinterAdapter();
-    this.standardsHexa.setLinterAdapter(this.linterAdapter);
-
-    // Set up bidirectional dependency - LinterHexa needs StandardsAdapter
-    const standardsAdapter = this.standardsHexa.getStandardsAdapter();
-    this.linterHexa.setStandardAdapter(standardsAdapter);
-  }
+  ) {}
 
   async getStandardsBySpace(
     spaceId: SpaceId,

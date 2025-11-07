@@ -1,29 +1,27 @@
 import { OrganizationsController } from './organizations.controller';
-import { createOrganizationId, AccountsHexa } from '@packmind/accounts';
+import { createOrganizationId } from '@packmind/accounts';
 import { stubLogger } from '@packmind/test-utils';
 import { AuthenticatedRequest } from '@packmind/node-utils';
-import { DeploymentsHexa } from '@packmind/deployments';
+import { IAccountsPort, IDeploymentPort } from '@packmind/types';
 
 describe('OrganizationsController', () => {
   let controller: OrganizationsController;
-  let mockAccountsHexa: jest.Mocked<AccountsHexa>;
-  let mockDeploymentsHexa: jest.Mocked<DeploymentsHexa>;
+  let mockAccountsAdapter: jest.Mocked<IAccountsPort>;
+  let mockDeploymentAdapter: jest.Mocked<IDeploymentPort>;
 
   beforeEach(() => {
     const logger = stubLogger();
-    mockAccountsHexa = {
+    mockAccountsAdapter = {
       getOrganizationOnboardingStatus: jest.fn(),
-    } as unknown as jest.Mocked<AccountsHexa>;
+    } as unknown as jest.Mocked<IAccountsPort>;
 
-    mockDeploymentsHexa = {
-      getDeploymentsUseCases: jest.fn().mockReturnValue({
-        pullAllContent: jest.fn(),
-      }),
-    } as unknown as jest.Mocked<DeploymentsHexa>;
+    mockDeploymentAdapter = {
+      pullAllContent: jest.fn(),
+    } as unknown as jest.Mocked<IDeploymentPort>;
 
     controller = new OrganizationsController(
-      mockAccountsHexa,
-      mockDeploymentsHexa,
+      mockAccountsAdapter,
+      mockDeploymentAdapter,
       logger,
     );
   });
@@ -69,7 +67,7 @@ describe('OrganizationsController', () => {
         hasInvitedColleague: true,
       };
 
-      mockAccountsHexa.getOrganizationOnboardingStatus.mockResolvedValue(
+      mockAccountsAdapter.getOrganizationOnboardingStatus.mockResolvedValue(
         mockStatus,
       );
 
@@ -77,7 +75,7 @@ describe('OrganizationsController', () => {
 
       expect(result).toEqual(mockStatus);
       expect(
-        mockAccountsHexa.getOrganizationOnboardingStatus,
+        mockAccountsAdapter.getOrganizationOnboardingStatus,
       ).toHaveBeenCalledWith({
         userId: 'user-123',
         organizationId: orgId,

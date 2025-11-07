@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import {
-  AccountsHexa,
   ListOrganizationUserStatusesResponse,
   ListOrganizationUsersResponse,
   OrganizationId,
@@ -11,21 +10,25 @@ import {
   ChangeUserRoleCommand,
   ChangeUserRoleResponse,
   UserOrganizationRole,
+  IAccountsPort,
 } from '@packmind/types';
+import { InjectAccountsAdapter } from '../../shared/HexaInjection';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly accountsHexa: AccountsHexa) {}
+  constructor(
+    @InjectAccountsAdapter() private readonly accountsAdapter: IAccountsPort,
+  ) {}
 
   async getUserById(id: UserId): Promise<User | null> {
-    return this.accountsHexa.getUserById({ userId: id });
+    return this.accountsAdapter.getUserById({ userId: id });
   }
 
   async getUserStatuses(
     userId: UserId,
     organizationId: OrganizationId,
   ): Promise<ListOrganizationUserStatusesResponse> {
-    return this.accountsHexa.listOrganizationUserStatuses({
+    return this.accountsAdapter.listOrganizationUserStatuses({
       userId,
       organizationId,
     });
@@ -35,7 +38,7 @@ export class UsersService {
     userId: UserId,
     organizationId: OrganizationId,
   ): Promise<ListOrganizationUsersResponse> {
-    return this.accountsHexa.listOrganizationUsers({
+    return this.accountsAdapter.listOrganizationUsers({
       userId,
       organizationId,
     });
@@ -53,6 +56,6 @@ export class UsersService {
       targetUserId,
       newRole,
     };
-    return this.accountsHexa.changeUserRole(command);
+    return this.accountsAdapter.changeUserRole(command);
   }
 }

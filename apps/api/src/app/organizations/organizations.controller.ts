@@ -3,11 +3,16 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
   OrganizationOnboardingStatus,
   IPullAllContentResponse,
+  IAccountsPort,
+  IDeploymentPort,
 } from '@packmind/types';
-import { AccountsHexa, OrganizationId } from '@packmind/accounts';
+import { OrganizationId } from '@packmind/accounts';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { OrganizationAccessGuard } from './guards/organization-access.guard';
-import { DeploymentsHexa } from '@packmind/deployments';
+import {
+  InjectAccountsAdapter,
+  InjectDeploymentAdapter,
+} from '../shared/HexaInjection';
 
 const origin = 'OrganizationsController';
 
@@ -23,8 +28,9 @@ const origin = 'OrganizationsController';
 @UseGuards(OrganizationAccessGuard)
 export class OrganizationsController {
   constructor(
-    private readonly accountsHexa: AccountsHexa,
-    private readonly deploymentsHexa: DeploymentsHexa,
+    @InjectAccountsAdapter() private readonly accountsAdapter: IAccountsPort,
+    @InjectDeploymentAdapter()
+    private readonly deploymentAdapter: IDeploymentPort,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.INFO,
@@ -71,7 +77,7 @@ export class OrganizationsController {
     );
 
     try {
-      return await this.accountsHexa.getOrganizationOnboardingStatus({
+      return await this.accountsAdapter.getOrganizationOnboardingStatus({
         userId,
         organizationId,
       });
@@ -110,12 +116,10 @@ export class OrganizationsController {
     );
 
     try {
-      return await this.deploymentsHexa
-        .getDeploymentsUseCases()
-        .pullAllContent({
-          userId,
-          organizationId,
-        });
+      return await this.deploymentAdapter.pullAllContent({
+        userId,
+        organizationId,
+      });
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);

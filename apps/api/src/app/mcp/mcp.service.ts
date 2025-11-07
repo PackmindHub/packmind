@@ -1,7 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { AccountsHexa, GenerateUserTokenCommand } from '@packmind/accounts';
+import { GenerateUserTokenCommand } from '@packmind/accounts';
 import { PackmindLogger } from '@packmind/logger';
+import { IAccountsPort } from '@packmind/types';
+import { InjectAccountsAdapter } from '../shared/HexaInjection';
 import { TokenResponse } from '../auth/auth.service';
 
 @Injectable()
@@ -9,7 +11,7 @@ export class McpService {
   private readonly logger = new Logger(McpService.name);
 
   constructor(
-    private readonly accountsHexa: AccountsHexa,
+    @InjectAccountsAdapter() private readonly accountsAdapter: IAccountsPort,
     private readonly jwtService: JwtService,
     private readonly packmindLogger: PackmindLogger,
   ) {
@@ -33,7 +35,7 @@ export class McpService {
     try {
       // Use the GenerateUserToken use case
       const { user, organization, role } =
-        await this.accountsHexa.generateUserToken(command);
+        await this.accountsAdapter.generateUserToken(command);
 
       // Create JWT payload with sub claim for compatibility with MCP server
       const payload = {

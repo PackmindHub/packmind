@@ -1,30 +1,36 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RecipesController } from './recipes.controller';
 import { RecipesService } from './recipes.service';
-import { RecipesHexa } from '@packmind/recipes';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import { AuthService } from '../auth/auth.service';
 import { JwtModule } from '@nestjs/jwt';
-import { DeploymentsHexa } from '@packmind/deployments';
+import { IRecipesPort, IDeploymentPort } from '@packmind/types';
+import {
+  RECIPES_ADAPTER_TOKEN,
+  DEPLOYMENT_ADAPTER_TOKEN,
+} from '../shared/HexaRegistryModule';
 
 describe('RecipesController', () => {
   let app: TestingModule;
   let recipesController: RecipesController;
 
   beforeAll(async () => {
-    const mockRecipesHexa = {
+    const mockRecipesAdapter: Partial<IRecipesPort> = {
       listRecipesByOrganization: jest.fn(),
       getRecipeById: jest.fn(),
       captureRecipe: jest.fn(),
-      updateRecipesFromGit: jest.fn(),
+      updateRecipesFromGitHub: jest.fn(),
+      updateRecipesFromGitLab: jest.fn(),
+      updateRecipeFromUI: jest.fn(),
       listRecipeVersions: jest.fn(),
-      publishRecipeToGit: jest.fn(),
       deleteRecipe: jest.fn(),
       deleteRecipesBatch: jest.fn(),
-      getUsageByOrganization: jest.fn(),
-      listDeploymentsByRecipe: jest.fn(),
-      setDeploymentPort: jest.fn().mockResolvedValue(undefined),
+      listRecipesBySpace: jest.fn(),
+    };
+
+    const mockDeploymentAdapter: Partial<IDeploymentPort> = {
+      publishRecipes: jest.fn(),
     };
 
     app = await Test.createTestingModule({
@@ -48,16 +54,12 @@ describe('RecipesController', () => {
           },
         },
         {
-          provide: RecipesHexa,
-          useValue: mockRecipesHexa,
+          provide: RECIPES_ADAPTER_TOKEN,
+          useValue: mockRecipesAdapter,
         },
         {
-          provide: DeploymentsHexa,
-          useValue: {
-            publishRecipes: jest.fn(),
-            getDeploymentsUseCases: jest.fn(),
-            setRecipesPort: jest.fn(),
-          },
+          provide: DEPLOYMENT_ADAPTER_TOKEN,
+          useValue: mockDeploymentAdapter,
         },
         {
           provide: PackmindLogger,

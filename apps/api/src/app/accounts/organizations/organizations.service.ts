@@ -1,37 +1,41 @@
 import { Injectable } from '@nestjs/common';
 import {
-  AccountsHexa,
   Organization,
   OrganizationId,
   RemoveUserFromOrganizationCommand,
   RemoveUserFromOrganizationResponse,
 } from '@packmind/accounts';
-import { UserId, UserOrganizationRole } from '@packmind/types';
+import { UserId, UserOrganizationRole, IAccountsPort } from '@packmind/types';
+import { InjectAccountsAdapter } from '../../shared/HexaInjection';
 
 @Injectable()
 export class OrganizationsService {
-  constructor(private readonly accountsHexa: AccountsHexa) {}
+  constructor(
+    @InjectAccountsAdapter() private readonly accountsAdapter: IAccountsPort,
+  ) {}
 
   async removeUserFromOrganization(
     command: RemoveUserFromOrganizationCommand,
   ): Promise<RemoveUserFromOrganizationResponse> {
-    return this.accountsHexa.removeUserFromOrganization(command);
+    return this.accountsAdapter.removeUserFromOrganization(command);
   }
 
   async getOrganizationById(id: OrganizationId): Promise<Organization | null> {
-    return this.accountsHexa.getOrganizationById({ organizationId: id });
+    return this.accountsAdapter.getOrganizationById({ organizationId: id });
   }
 
   async getOrganizationByName(name: string): Promise<Organization | null> {
-    return this.accountsHexa.getOrganizationByName({ name });
+    return this.accountsAdapter.getOrganizationByName({ name });
   }
 
   async getOrganizationBySlug(slug: string): Promise<Organization | null> {
-    return this.accountsHexa.getOrganizationBySlug({ slug });
+    return this.accountsAdapter.getOrganizationBySlug({ slug });
   }
 
   async getUserOrganizations(userId: UserId): Promise<Organization[]> {
-    const result = await this.accountsHexa.listUserOrganizations({ userId });
+    const result = await this.accountsAdapter.listUserOrganizations({
+      userId,
+    });
     return result.organizations;
   }
 
@@ -39,7 +43,7 @@ export class OrganizationsService {
     userId: UserId,
     name: string,
   ): Promise<Organization> {
-    return this.accountsHexa.createOrganization({ userId, name });
+    return this.accountsAdapter.createOrganization({ userId, name });
   }
 
   async inviteUsers(
@@ -49,7 +53,7 @@ export class OrganizationsService {
     role: UserOrganizationRole,
   ) {
     // Note: role is currently unused in the invitation flow
-    return this.accountsHexa.createInvitations({
+    return this.accountsAdapter.createInvitations({
       organizationId,
       userId,
       emails,

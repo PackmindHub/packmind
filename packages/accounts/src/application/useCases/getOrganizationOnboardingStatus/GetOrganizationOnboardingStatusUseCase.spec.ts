@@ -50,7 +50,7 @@ describe('GetOrganizationOnboardingStatusUseCase', () => {
     mockGitPort = {
       listProviders: jest.fn(),
       getOrganizationRepositories: jest.fn(),
-    } as jest.Mocked<IGitPort>;
+    } as unknown as jest.Mocked<IGitPort>;
 
     mockStandardsPort = {
       listStandardsBySpace: jest.fn(),

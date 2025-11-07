@@ -1,21 +1,23 @@
 import { Injectable } from '@nestjs/common';
-import { GitHexa, GitProviderId, GitRepo, GitRepoId } from '@packmind/git';
+import { GitProviderId, GitRepo, GitRepoId } from '@packmind/git';
 import { OrganizationId, UserId } from '@packmind/accounts';
-import { DeploymentsHexa } from '@packmind/deployments';
-import { IDeploymentPort } from '@packmind/types';
-import { CheckDirectoryExistenceResult } from '@packmind/types';
+import {
+  IDeploymentPort,
+  IGitPort,
+  CheckDirectoryExistenceResult,
+} from '@packmind/types';
+import {
+  InjectGitAdapter,
+  InjectDeploymentAdapter,
+} from '../../shared/HexaInjection';
 
 @Injectable()
 export class GitRepositoriesService {
-  private readonly deploymentAdapter: IDeploymentPort;
-
   constructor(
-    private readonly gitHexa: GitHexa,
-    private readonly deploymentHexa: DeploymentsHexa,
-  ) {
-    this.deploymentAdapter = this.deploymentHexa.getDeploymentsUseCases();
-    this.gitHexa.setDeploymentsAdapter(this.deploymentAdapter);
-  }
+    @InjectGitAdapter() private readonly gitAdapter: IGitPort,
+    @InjectDeploymentAdapter()
+    private readonly deploymentAdapter: IDeploymentPort,
+  ) {}
 
   async addRepositoryToProvider(
     userId: UserId,
@@ -34,23 +36,23 @@ export class GitRepositoriesService {
       branch,
     };
 
-    return await this.gitHexa.addGitRepo(command);
+    return await this.gitAdapter.addGitRepo(command);
   }
 
   async getRepositoriesByOrganization(
     organizationId: OrganizationId,
   ): Promise<GitRepo[]> {
-    return this.gitHexa.getOrganizationRepositories(organizationId);
+    return this.gitAdapter.getOrganizationRepositories(organizationId);
   }
 
   async getRepositoryById(repositoryId: GitRepoId): Promise<GitRepo | null> {
-    return this.gitHexa.getRepositoryById(repositoryId);
+    return this.gitAdapter.getRepositoryById(repositoryId);
   }
 
   async getRepositoriesByProvider(
     gitProviderId: GitProviderId,
   ): Promise<GitRepo[]> {
-    return this.gitHexa.listRepos(gitProviderId);
+    return this.gitAdapter.listRepos(gitProviderId);
   }
 
   async getAvailableRemoteDirectories(
@@ -60,7 +62,7 @@ export class GitRepositoriesService {
     path?: string,
   ): Promise<string[]> {
     // First, get the GitRepo by ID to ensure it exists and get all its details
-    const gitRepo = await this.gitHexa.getRepositoryById(repositoryId);
+    const gitRepo = await this.gitAdapter.getRepositoryById(repositoryId);
 
     if (!gitRepo) {
       throw new Error(`Repository with ID ${repositoryId} not found`);
@@ -74,7 +76,7 @@ export class GitRepositoriesService {
       path,
     };
 
-    return await this.gitHexa.getAvailableRemoteDirectories(command);
+    return await this.gitAdapter.getAvailableRemoteDirectories(command);
   }
 
   async checkDirectoryExistence(
@@ -93,6 +95,6 @@ export class GitRepositoriesService {
       branch,
     };
 
-    return await this.gitHexa.checkDirectoryExistence(command);
+    return await this.gitAdapter.checkDirectoryExistence(command);
   }
 }

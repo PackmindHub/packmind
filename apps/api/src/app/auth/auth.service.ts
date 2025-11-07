@@ -1,7 +1,6 @@
-import { Injectable, Logger, Inject } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import {
-  AccountsHexa,
   UserOrganizationRole,
   createOrganizationId,
   OrganizationId,
@@ -12,6 +11,8 @@ import {
   SignInUserResponse,
   createUserId,
 } from '@packmind/accounts';
+import { IAccountsPort } from '@packmind/types';
+import { InjectAccountsAdapter } from '../shared/HexaInjection';
 import { maskEmail } from '@packmind/logger';
 import {
   ActivateUserAccountCommand,
@@ -92,7 +93,7 @@ export class AuthService {
   private readonly logger = new Logger(AuthService.name);
 
   constructor(
-    @Inject('EnhancedAccountsHexa') private readonly accountsHexa: AccountsHexa,
+    @InjectAccountsAdapter() private readonly accountsAdapter: IAccountsPort,
     private readonly jwtService: JwtService,
     private readonly packmindLogger: PackmindLogger,
   ) {
@@ -117,7 +118,7 @@ export class AuthService {
         password: signUpRequest.password,
       };
 
-      const result = await this.accountsHexa.signUpWithOrganization(command);
+      const result = await this.accountsAdapter.signUpWithOrganization(command);
       this.logger.log('User signed up with organization successfully', {
         email: maskEmail(result.user.email),
       });
@@ -139,7 +140,7 @@ export class AuthService {
     });
 
     try {
-      const result = await this.accountsHexa.checkEmailAvailability(command);
+      const result = await this.accountsAdapter.checkEmailAvailability(command);
 
       this.logger.log('Email availability checked successfully', {
         email: maskEmail(command.email),
@@ -165,7 +166,7 @@ export class AuthService {
     try {
       // Use the SignInUser use case
       const signInUserResponse =
-        await this.accountsHexa.signInUser(signInRequest);
+        await this.accountsAdapter.signInUser(signInRequest);
 
       // Create JWT payload
       const payload = {
@@ -222,14 +223,14 @@ export class AuthService {
         );
 
         // Fetch user to get their organizations
-        const user = await this.accountsHexa.getUserById({
+        const user = await this.accountsAdapter.getUserById({
           userId: payload.user.userId,
         });
 
         // Fetch organization details for each membership
         const organizationsWithDetails = await Promise.all(
           user.memberships.map(async (membership) => {
-            const org = await this.accountsHexa.getOrganizationById({
+            const org = await this.accountsAdapter.getOrganizationById({
               organizationId: membership.organizationId,
             });
             return {
@@ -255,7 +256,7 @@ export class AuthService {
       }
 
       // Verify that the user has access to the organization in the token
-      const user = await this.accountsHexa.getUserById({
+      const user = await this.accountsAdapter.getUserById({
         userId: payload.user.userId,
       });
 
@@ -274,7 +275,7 @@ export class AuthService {
         } as GetMeResponse;
       }
 
-      const org = await this.accountsHexa.getOrganizationById({
+      const org = await this.accountsAdapter.getOrganizationById({
         organizationId: organizationMembership.organizationId,
       });
 
@@ -329,7 +330,7 @@ export class AuthService {
         organizationId: req.organization.id,
       };
 
-      const result = await this.accountsHexa.generateApiKey(command);
+      const result = await this.accountsAdapter.generateApiKey(command);
 
       this.logger.log('API key generated successfully for user', {
         userId: req.user.userId,
@@ -362,7 +363,7 @@ export class AuthService {
         userId: req.user.userId,
       };
 
-      const result = await this.accountsHexa.getCurrentApiKey(command);
+      const result = await this.accountsAdapter.getCurrentApiKey(command);
 
       return result;
     } catch (error) {
@@ -385,7 +386,7 @@ export class AuthService {
     });
 
     try {
-      const result = await this.accountsHexa.validateInvitationToken({
+      const result = await this.accountsAdapter.validateInvitationToken({
         token: request.token,
       });
 
@@ -422,20 +423,20 @@ export class AuthService {
         password: request.password,
       };
 
-      const result = await this.accountsHexa.activateUserAccount(command);
+      const result = await this.accountsAdapter.activateUserAccount(command);
 
       // Generate auth token for auto-login (same as signin flow)
       let authToken: string | undefined;
       if (result.success) {
         // Get the full user details for token generation
-        const user = await this.accountsHexa.getUserById({
+        const user = await this.accountsAdapter.getUserById({
           userId: createUserId(result.user.id),
         });
 
         if (user && user.memberships && user.memberships.length > 0) {
           // Get organization details for the first membership
           const membership = user.memberships[0];
-          const organization = await this.accountsHexa.getOrganizationById({
+          const organization = await this.accountsAdapter.getOrganizationById({
             organizationId: membership.organizationId,
           });
 
@@ -499,7 +500,7 @@ export class AuthService {
 
       // Get organization details from the user's memberships
       // We need to fetch the organization details since memberships only have id and role
-      const getUserResponse = await this.accountsHexa.getUserById({
+      const getUserResponse = await this.accountsAdapter.getUserById({
         userId: payload.user.userId,
       });
 
@@ -512,9 +513,10 @@ export class AuthService {
       }
 
       // Get the organization details
-      const organizationResponse = await this.accountsHexa.getOrganizationById({
-        organizationId: command.organizationId,
-      });
+      const organizationResponse =
+        await this.accountsAdapter.getOrganizationById({
+          organizationId: command.organizationId,
+        });
 
       if (!organizationResponse) {
         throw new Error('Organization not found');
@@ -563,7 +565,7 @@ export class AuthService {
     });
 
     try {
-      const result = await this.accountsHexa.requestPasswordReset(command);
+      const result = await this.accountsAdapter.requestPasswordReset(command);
 
       this.logger.log('Password reset request completed', {
         email: maskEmail(command.email),
@@ -596,7 +598,7 @@ export class AuthService {
       };
 
       const result =
-        await this.accountsHexa.validatePasswordResetToken(command);
+        await this.accountsAdapter.validatePasswordResetToken(command);
 
       this.logger.log('Password reset token validation completed', {
         token: this.maskToken(request.token),
@@ -631,20 +633,20 @@ export class AuthService {
         password: request.password,
       };
 
-      const result = await this.accountsHexa.resetPassword(command);
+      const result = await this.accountsAdapter.resetPassword(command);
 
       // Generate auth token for auto-login (same as signin flow)
       let authToken: string | undefined;
       if (result.success) {
         // Get the full user details for token generation
-        const user = await this.accountsHexa.getUserById({
+        const user = await this.accountsAdapter.getUserById({
           userId: createUserId(result.user.id),
         });
 
         if (user && user.memberships && user.memberships.length > 0) {
           // Get organization details for the first membership
           const membership = user.memberships[0];
-          const organization = await this.accountsHexa.getOrganizationById({
+          const organization = await this.accountsAdapter.getOrganizationById({
             organizationId: membership.organizationId,
           });
 

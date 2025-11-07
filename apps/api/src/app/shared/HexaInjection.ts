@@ -1,5 +1,15 @@
 import { Inject } from '@nestjs/common';
-import { HEXA_REGISTRY_TOKEN } from './HexaRegistryModule';
+import {
+  HEXA_REGISTRY_TOKEN,
+  ACCOUNTS_ADAPTER_TOKEN,
+  DEPLOYMENT_ADAPTER_TOKEN,
+  RECIPES_ADAPTER_TOKEN,
+  STANDARDS_ADAPTER_TOKEN,
+  GIT_ADAPTER_TOKEN,
+  SPACES_ADAPTER_TOKEN,
+  LINTER_ADAPTER_TOKEN,
+  CODING_AGENT_ADAPTER_TOKEN,
+} from './HexaRegistryModule';
 
 /**
  * Decorator to inject the HexaRegistry instance
@@ -36,3 +46,26 @@ export type HexaConstructor<T> = new (...args: any[]) => T;
 export function createHexaInjector<T>(HexaClass: HexaConstructor<T>) {
   return () => Inject(HexaClass);
 }
+
+/**
+ * Adapter injection decorators
+ * These decorators inject adapter interfaces (ports) instead of hexa classes.
+ *
+ * Usage:
+ * ```typescript
+ * @Injectable()
+ * export class SomeService {
+ *   constructor(@InjectAccountsAdapter() private readonly accountsAdapter: IAccountsPort) {}
+ * }
+ * ```
+ */
+
+export const InjectAccountsAdapter = () => Inject(ACCOUNTS_ADAPTER_TOKEN);
+export const InjectDeploymentAdapter = () => Inject(DEPLOYMENT_ADAPTER_TOKEN);
+export const InjectRecipesAdapter = () => Inject(RECIPES_ADAPTER_TOKEN);
+export const InjectStandardsAdapter = () => Inject(STANDARDS_ADAPTER_TOKEN);
+export const InjectGitAdapter = () => Inject(GIT_ADAPTER_TOKEN);
+export const InjectSpacesAdapter = () => Inject(SPACES_ADAPTER_TOKEN);
+export const InjectLinterAdapter = () => Inject(LINTER_ADAPTER_TOKEN);
+export const InjectCodingAgentAdapter = () =>
+  Inject(CODING_AGENT_ADAPTER_TOKEN);

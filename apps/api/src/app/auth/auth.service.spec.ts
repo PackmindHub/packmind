@@ -11,14 +11,14 @@ import { JwtPayload } from './JwtPayload';
 
 describe('AuthService - getMe method', () => {
   let mockJwtService: JwtService;
-  let mockAccountsHexa: jest.Mocked<{
+  let mockAccountsAdapter: jest.Mocked<{
     getOrganizationById: jest.Mock;
     getUserById: jest.Mock;
   }>;
   let authService: {
     logger: { log: jest.Mock; warn: jest.Mock };
     jwtService: JwtService;
-    accountsHexa: jest.Mocked<{
+    accountsAdapter: jest.Mocked<{
       getOrganizationById: jest.Mock;
       getUserById: jest.Mock;
     }>;
@@ -56,7 +56,7 @@ describe('AuthService - getMe method', () => {
       verify: jest.fn(),
     } as unknown as JwtService;
 
-    mockAccountsHexa = {
+    mockAccountsAdapter = {
       getOrganizationById: jest.fn(),
       getUserById: jest.fn(),
     };
@@ -68,7 +68,7 @@ describe('AuthService - getMe method', () => {
         warn: jest.fn(),
       },
       jwtService: mockJwtService,
-      accountsHexa: mockAccountsHexa,
+      accountsAdapter: mockAccountsAdapter,
     };
 
     // Bind the actual getMe method from AuthService prototype
@@ -87,7 +87,7 @@ describe('AuthService - getMe method', () => {
       describe('when user has access to organization', () => {
         it('returns user payload', async () => {
           mockJwtService.verify = jest.fn().mockReturnValue(mockPayload);
-          mockAccountsHexa.getUserById.mockResolvedValue({
+          mockAccountsAdapter.getUserById.mockResolvedValue({
             id: createUserId('1'),
             email: 'testuser@packmind.com',
             memberships: [
@@ -98,7 +98,7 @@ describe('AuthService - getMe method', () => {
             ],
           });
 
-          mockAccountsHexa.getOrganizationById.mockResolvedValue({
+          mockAccountsAdapter.getOrganizationById.mockResolvedValue({
             id: createOrganizationId('org-1'),
             name: 'Test Organization',
             slug: 'test-organization',
@@ -120,7 +120,7 @@ describe('AuthService - getMe method', () => {
             },
           });
           expect(mockJwtService.verify).toHaveBeenCalledWith('valid-jwt-token');
-          expect(mockAccountsHexa.getUserById).toHaveBeenCalledWith({
+          expect(mockAccountsAdapter.getUserById).toHaveBeenCalledWith({
             userId: createUserId('1'),
           });
         });
@@ -129,7 +129,7 @@ describe('AuthService - getMe method', () => {
       describe('when user does not have access to organization in token', () => {
         it('returns unauthenticated', async () => {
           mockJwtService.verify = jest.fn().mockReturnValue(mockPayload);
-          mockAccountsHexa.getUserById.mockResolvedValue({
+          mockAccountsAdapter.getUserById.mockResolvedValue({
             id: createUserId('1'),
             email: 'testuser@packmind.com',
             memberships: [
@@ -147,7 +147,7 @@ describe('AuthService - getMe method', () => {
             authenticated: false,
           });
           expect(mockJwtService.verify).toHaveBeenCalledWith('valid-jwt-token');
-          expect(mockAccountsHexa.getUserById).toHaveBeenCalledWith({
+          expect(mockAccountsAdapter.getUserById).toHaveBeenCalledWith({
             userId: createUserId('1'),
           });
           expect(authService.logger.warn).toHaveBeenCalledWith(
@@ -163,7 +163,7 @@ describe('AuthService - getMe method', () => {
       describe('when user has no memberships', () => {
         it('returns unauthenticated', async () => {
           mockJwtService.verify = jest.fn().mockReturnValue(mockPayload);
-          mockAccountsHexa.getUserById.mockResolvedValue({
+          mockAccountsAdapter.getUserById.mockResolvedValue({
             id: createUserId('1'),
             email: 'testuser@packmind.com',
             memberships: [],
@@ -191,7 +191,7 @@ describe('AuthService - getMe method', () => {
           };
 
           mockJwtService.verify = jest.fn().mockReturnValue(payloadWithoutOrg);
-          mockAccountsHexa.getUserById.mockResolvedValue({
+          mockAccountsAdapter.getUserById.mockResolvedValue({
             id: createUserId('1'),
             email: 'testuser@packmind.com',
             memberships: [
@@ -205,7 +205,7 @@ describe('AuthService - getMe method', () => {
               },
             ],
           });
-          mockAccountsHexa.getOrganizationById
+          mockAccountsAdapter.getOrganizationById
             .mockResolvedValueOnce({
               id: createOrganizationId('org-1'),
               name: 'Organization 1',
@@ -247,10 +247,12 @@ describe('AuthService - getMe method', () => {
             authenticated: true,
           });
           expect(mockJwtService.verify).toHaveBeenCalledWith('valid-jwt-token');
-          expect(mockAccountsHexa.getUserById).toHaveBeenCalledWith({
+          expect(mockAccountsAdapter.getUserById).toHaveBeenCalledWith({
             userId: createUserId('1'),
           });
-          expect(mockAccountsHexa.getOrganizationById).toHaveBeenCalledTimes(2);
+          expect(mockAccountsAdapter.getOrganizationById).toHaveBeenCalledTimes(
+            2,
+          );
           expect(authService.logger.log).toHaveBeenCalledWith(
             'User is authenticated but has not selected an organization',
             {
