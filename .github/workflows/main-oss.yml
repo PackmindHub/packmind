@@ -20,3 +20,12 @@ jobs:
     uses: ./.github/workflows/build-oss.yml
     with:
       node-version: 22.17.0
+
+  # Stage 2: Quality and Security Checks
+  quality:
+    needs: [ build-oss ]
+    uses: ./.github/workflows/quality.yml
+    with:
+      node-version: 22.17.0
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

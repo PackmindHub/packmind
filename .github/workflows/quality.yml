@@ -1,0 +1,59 @@
+name: Quality and Security Checks
+
+env:
+  ENTERPRISE_EDITION: proprietary
+  OSS_EDITION: oss
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        required: true
+        type: string
+        description: 'Node.js version to use'
+    secrets:
+      SONAR_TOKEN:
+        required: true
+        description: 'Token for SonarCloud code quality analysis'
+
+jobs:
+  code-quality:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    strategy:
+      matrix:
+        node-version: ["${{ inputs.node-version }}"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 10 # Shallow clones should be disabled for better SonarCloud analysis
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - run: npm ci
+      - name: Generate Proprietary tsconfig
+        env:
+          PACKMIND_EDITION: ${{ env.OSS_EDITION }}
+        run: node scripts/select-tsconfig.mjs
+      - name: Lint code (Proprietary)
+        env:
+          PACKMIND_EDITION: ${{ env.OSS_EDITION }}
+        run: ./node_modules/.bin/nx run-many -t lint --tuiAutoExit
+
+      - name: Check code formatting
+        run: npm run prettier:check
+
+      - name: Prepare SonarQube Cloud Scan
+        run: sonar-project.properties .
+
+      - name: SonarQube Cloud Scan
+        uses: SonarSource/sonarqube-scan-action@v6.0.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: SonarQube Quality Gate Check
+        uses: SonarSource/sonarqube-quality-gate-action@v1.2.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
