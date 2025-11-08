@@ -114,11 +114,13 @@ describe('Target-Specific Deployment Integration', () => {
     deployerService = codingAgentFactory.getDeployerService();
 
     // Create test data
-    const signUpResult = await accountsHexa.signUpWithOrganization({
-      organizationName: 'test organization',
-      email: 'testuser@packmind.com',
-      password: 's3cret!@',
-    });
+    const signUpResult = await accountsHexa
+      .getAdapter()
+      .signUpWithOrganization({
+        organizationName: 'test organization',
+        email: 'testuser@packmind.com',
+        password: 's3cret!@',
+      });
     user = signUpResult.user;
     organization = signUpResult.organization;
 
@@ -140,7 +142,7 @@ describe('Target-Specific Deployment Integration', () => {
     };
 
     // Create test recipe about JetBrains services
-    recipe = await recipesHexa.captureRecipe({
+    recipe = await recipesHexa.getAdapter().captureRecipe({
       name: 'Writing Good JetBrains Services',
       content: `# Writing Good JetBrains Services
 
@@ -169,7 +171,7 @@ class MyService {
     });
 
     // Create test standard about code quality
-    standard = await standardsHexa.createStandard({
+    standard = await standardsHexa.getAdapter().createStandard({
       name: 'IDE Code Quality Standards',
       description:
         'Standards for maintaining high code quality across IDE plugins',
@@ -408,19 +410,21 @@ class MyService {
   describe('Standards Publishing: Example Mapping Scenario 3: Standard distributed to multiple targets', () => {
     it('standard distributed to both jetbrains and vscode targets appears in both paths', async () => {
       // Create a universal standard that applies to both platforms
-      const universalStandard = await standardsHexa.createStandard({
-        name: 'Universal Testing Standards',
-        description: 'Testing standards applicable to any IDE platform',
-        rules: [
-          { content: 'Write comprehensive unit tests' },
-          { content: 'Use descriptive test names' },
-          { content: 'Mock external dependencies' },
-        ],
-        organizationId: organization.id,
-        userId: user.id,
-        scope: 'universal',
-        spaceId: space.id,
-      });
+      const universalStandard = await standardsHexa
+        .getAdapter()
+        .createStandard({
+          name: 'Universal Testing Standards',
+          description: 'Testing standards applicable to any IDE platform',
+          rules: [
+            { content: 'Write comprehensive unit tests' },
+            { content: 'Use descriptive test names' },
+            { content: 'Mock external dependencies' },
+          ],
+          organizationId: organization.id,
+          userId: user.id,
+          scope: 'universal',
+          spaceId: space.id,
+        });
 
       const universalStandardVersions: StandardVersion[] = [
         {
@@ -717,7 +721,7 @@ class MyService {
   describe('Example Mapping Scenario 3: Recipe distributed to multiple targets', () => {
     it('recipe distributed to both jetbrains and vscode targets appears in both paths', async () => {
       // Create a TDD recipe that applies to both platforms
-      const tddRecipe = await recipesHexa.captureRecipe({
+      const tddRecipe = await recipesHexa.getAdapter().captureRecipe({
         name: 'Test-Driven Development (TDD) Best Practices',
         content: `# Test-Driven Development (TDD) Best Practices
 

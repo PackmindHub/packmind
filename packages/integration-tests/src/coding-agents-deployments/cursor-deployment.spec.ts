@@ -124,11 +124,13 @@ describe('Cursor Deployment Integration', () => {
     gitPort = gitHexa.getAdapter();
 
     // Create test data
-    const signUpResult = await accountsHexa.signUpWithOrganization({
-      organizationName: 'test organization',
-      email: 'testuser@packmind.com',
-      password: 's3cret!@',
-    });
+    const signUpResult = await accountsHexa
+      .getAdapter()
+      .signUpWithOrganization({
+        organizationName: 'test organization',
+        email: 'testuser@packmind.com',
+        password: 's3cret!@',
+      });
     user = signUpResult.user;
     organization = signUpResult.organization;
 
@@ -141,7 +143,7 @@ describe('Cursor Deployment Integration', () => {
     space = foundSpace;
 
     // Create test recipe
-    recipe = await recipesHexa.captureRecipe({
+    recipe = await recipesHexa.getAdapter().captureRecipe({
       name: 'Test Recipe for Cursor',
       content: 'This is test recipe content for Cursor deployment',
       organizationId: organization.id,
@@ -150,7 +152,7 @@ describe('Cursor Deployment Integration', () => {
     });
 
     // Create test standard
-    standard = await standardsHexa.createStandard({
+    standard = await standardsHexa.getAdapter().createStandard({
       name: 'Test Standard for Cursor',
       description: 'A test standard for Cursor deployment',
       rules: [
@@ -164,7 +166,7 @@ describe('Cursor Deployment Integration', () => {
     });
 
     // Create git provider and repository
-    const gitProvider = await gitHexa.addGitProvider({
+    const gitProvider = await gitHexa.getAdapter().addGitProvider({
       userId: user.id,
       organizationId: organization.id,
       gitProvider: {
@@ -174,7 +176,7 @@ describe('Cursor Deployment Integration', () => {
       },
     });
 
-    gitRepo = await gitHexa.addGitRepo({
+    gitRepo = await gitHexa.getAdapter().addGitRepo({
       userId: user.id,
       organizationId: organization.id,
       gitProviderId: gitProvider.id,
@@ -315,7 +317,7 @@ describe('Cursor Deployment Integration', () => {
 
     it('handles standard without scope (alwaysApply: true)', async () => {
       // Create a standard without scope
-      const globalStandard = await standardsHexa.createStandard({
+      const globalStandard = await standardsHexa.getAdapter().createStandard({
         name: 'Global Standard',
         description: 'A global standard without scope',
         rules: [{ content: 'Always use consistent formatting' }],
@@ -574,7 +576,7 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
 
     it('handles GitHexa errors gracefully', async () => {
       jest
-        .spyOn(gitHexa, 'getFileFromRepo')
+        .spyOn(gitHexa.getAdapter(), 'getFileFromRepo')
         .mockRejectedValue(new Error('GitHub API error'));
 
       const recipeVersions: RecipeVersion[] = [
@@ -606,7 +608,7 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
     });
 
     it('generates multiple standard files correctly', async () => {
-      const standard1 = await standardsHexa.createStandard({
+      const standard1 = await standardsHexa.getAdapter().createStandard({
         name: 'Frontend Standard',
         description: 'Frontend coding standard',
         rules: [{ content: 'Use TypeScript' }],
@@ -616,7 +618,7 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
         spaceId: space.id,
       });
 
-      const standard2 = await standardsHexa.createStandard({
+      const standard2 = await standardsHexa.getAdapter().createStandard({
         name: 'Backend Standard',
         description: 'Backend coding standard',
         rules: [{ content: 'Use dependency injection' }],

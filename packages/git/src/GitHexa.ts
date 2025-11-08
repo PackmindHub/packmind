@@ -1,31 +1,11 @@
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, HexaRegistry, BaseHexaOpts } from '@packmind/node-utils';
 import { IDeploymentPort, IGitPort } from '@packmind/types';
-import { QueryOption } from '@packmind/types';
 import { GitHexaFactory } from './GitHexaFactory';
-import { GitProvider, GitProviderId } from './domain/entities/GitProvider';
-import { GitRepo, GitRepoId } from './domain/entities/GitRepo';
-import { GitCommit } from './domain/entities/GitCommit';
-import { OrganizationId, UserId } from '@packmind/accounts';
-import { AddGitRepoCommand } from './domain/useCases/IAddGitRepo';
-import {
-  FindGitRepoByOwnerRepoAndBranchInOrganizationCommand,
-  FindGitRepoByOwnerRepoAndBranchInOrganizationResult,
-} from './domain/useCases/IFindGitRepoByOwnerRepoAndBranchInOrganization';
 import { UserProvider, OrganizationProvider } from '@packmind/types';
-import {
-  GetAvailableRemoteDirectoriesCommand,
-  CheckDirectoryExistenceCommand,
-  CheckDirectoryExistenceResult,
-  HandleWebHookCommand,
-  HandleWebHookResult,
-  HandleWebHookWithoutContentCommand,
-  HandleWebHookWithoutContentResult,
-} from '@packmind/types';
-import { IGitRepoFactory } from './domain/repositories/IGitRepoFactory';
-import { AddGitProviderCommand } from './application/useCases/addGitProvider/addGitProvider.usecase';
 import { FetchFileContentInput } from './domain/jobs/FetchFileContent';
 import { FetchFileContentCallback } from './application/jobs/FetchFileContentDelayedJob';
+import { IGitRepoFactory } from './domain/repositories/IGitRepoFactory';
 
 const origin = 'GitHexa';
 
@@ -143,28 +123,6 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
     this.logger.info('GitHexa destroyed');
   }
 
-  // ======================
-  // GIT PROVIDER USE CASES
-  // ======================
-
-  /**
-   * Add a new git provider to an organization
-   */
-  public async addGitProvider(
-    command: AddGitProviderCommand,
-  ): Promise<GitProvider> {
-    return this.hexa.useCases.addGitProvider(command);
-  }
-
-  /**
-   * List all git providers for an organization
-   */
-  public async listProviders(
-    organizationId: OrganizationId,
-  ): Promise<GitProvider[]> {
-    return this.hexa.useCases.listProviders(organizationId);
-  }
-
   /**
    * Configure the admin user provider used for access validation
    */
@@ -177,196 +135,6 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
    */
   public setOrganizationProvider(provider: OrganizationProvider): void {
     this.hexa.useCases.setOrganizationProvider(provider);
-  }
-
-  /**
-   * Update an existing git provider
-   */
-  public async updateGitProvider(
-    id: GitProviderId,
-    gitProvider: Partial<Omit<GitProvider, 'id'>>,
-    userId: UserId,
-    organizationId: OrganizationId,
-  ): Promise<GitProvider> {
-    return this.hexa.useCases.updateGitProvider(
-      id,
-      gitProvider,
-      userId,
-      organizationId,
-    );
-  }
-
-  /**
-   * Delete a git provider
-   */
-  public async deleteGitProvider(
-    id: GitProviderId,
-    userId: UserId,
-    organizationId: OrganizationId,
-  ): Promise<void> {
-    return this.hexa.useCases.deleteGitProvider(id, userId, organizationId);
-  }
-
-  /**
-   * List available repositories from a git provider (external repositories)
-   */
-  public async listAvailableRepos(gitProviderId: GitProviderId): Promise<
-    {
-      name: string;
-      owner: string;
-      description?: string;
-      private: boolean;
-      defaultBranch: string;
-      language?: string;
-      stars: number;
-    }[]
-  > {
-    return this.hexa.useCases.listAvailableRepos(gitProviderId);
-  }
-
-  /**
-   * Check if a branch exists in a repository
-   */
-  public async checkBranchExists(
-    gitProviderId: GitProviderId,
-    owner: string,
-    repo: string,
-    branch: string,
-  ): Promise<boolean> {
-    return this.hexa.useCases.checkBranchExists(
-      gitProviderId,
-      owner,
-      repo,
-      branch,
-    );
-  }
-
-  /**
-   * Get available targets (directories) from a git repository
-   */
-  public async getAvailableRemoteDirectories(
-    command: GetAvailableRemoteDirectoriesCommand,
-  ): Promise<string[]> {
-    return this.hexa.useCases.getAvailableRemoteDirectories(command);
-  }
-
-  // ====================
-  // GIT REPO USE CASES
-  // ====================
-
-  /**
-   * Add a git repository to track
-   */
-  public async addGitRepo(command: AddGitRepoCommand): Promise<GitRepo> {
-    return this.hexa.useCases.addGitRepo(command);
-  }
-
-  /**
-   * Find a git repository by owner and repo name
-   */
-  public async findGitRepoByOwnerAndRepo(
-    owner: string,
-    repo: string,
-    opts?: Pick<QueryOption, 'includeDeleted'>,
-  ): Promise<GitRepo | null> {
-    return this.hexa.useCases.findGitRepoByOwnerAndRepo(owner, repo, opts);
-  }
-
-  public async findGitRepoByOwnerRepoAndBranchInOrganization(
-    command: FindGitRepoByOwnerRepoAndBranchInOrganizationCommand,
-  ): Promise<FindGitRepoByOwnerRepoAndBranchInOrganizationResult> {
-    return this.hexa.useCases.findGitRepoByOwnerRepoAndBranchInOrganization(
-      command,
-    );
-  }
-
-  /**
-   * List repositories associated with a git provider
-   */
-  public async listRepos(gitProviderId: GitProviderId): Promise<GitRepo[]> {
-    return this.hexa.useCases.listRepos(gitProviderId);
-  }
-
-  /**
-   * Get all repositories for an organization
-   */
-  public async getOrganizationRepositories(
-    organizationId: OrganizationId,
-  ): Promise<GitRepo[]> {
-    return this.hexa.useCases.getOrganizationRepositories(organizationId);
-  }
-
-  /**
-   * Get a repository by its ID
-   */
-  public async getRepositoryById(
-    repositoryId: GitRepoId,
-  ): Promise<GitRepo | null> {
-    return this.hexa.useCases.getRepositoryById(repositoryId);
-  }
-
-  /**
-   * Delete a git repository
-   */
-  public async deleteGitRepo(
-    repositoryId: GitRepoId,
-    userId: UserId,
-    organizationId: OrganizationId,
-    providerId?: GitProviderId,
-  ): Promise<void> {
-    return this.hexa.useCases.deleteGitRepo(
-      repositoryId,
-      userId,
-      organizationId,
-      providerId,
-    );
-  }
-
-  public async commitToGit(
-    repo: GitRepo,
-    files: { path: string; content: string }[],
-    commitMessage: string,
-  ): Promise<GitCommit> {
-    return this.hexa.useCases.commitToGit(repo, files, commitMessage);
-  }
-
-  /**
-   * Handle webhook payload for a git repository
-   */
-  public async handleWebHook(
-    command: HandleWebHookCommand,
-  ): Promise<HandleWebHookResult> {
-    return this.hexa.useCases.handleWebHook(command);
-  }
-
-  /**
-   * Handle webhook payload for a git repository without fetching file content
-   */
-  public async handleWebHookWithoutContent(
-    command: HandleWebHookWithoutContentCommand,
-  ): Promise<HandleWebHookWithoutContentResult> {
-    return this.hexa.useCases.handleWebHookWithoutContent(command);
-  }
-
-  public async addFileToGit(repo: GitRepo, path: string, content: string) {
-    return this.hexa.useCases.addFileToGit(repo, path, content);
-  }
-
-  public async getFileFromRepo(
-    gitRepo: GitRepo,
-    filePath: string,
-    branch?: string,
-  ): Promise<{ sha: string; content: string } | null> {
-    return this.hexa.useCases.getFileFromRepo(gitRepo, filePath, branch);
-  }
-
-  /**
-   * Check if a directory exists in a git repository
-   */
-  public async checkDirectoryExistence(
-    command: CheckDirectoryExistenceCommand,
-  ): Promise<CheckDirectoryExistenceResult> {
-    return this.hexa.useCases.checkDirectoryExistence(command);
   }
 
   // ==================

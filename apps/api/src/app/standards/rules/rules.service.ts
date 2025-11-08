@@ -19,28 +19,28 @@ export class RulesService {
   ) {}
 
   async getRulesByStandardId(standardId: StandardId): Promise<Rule[]> {
-    return this.standardsHexa.getRulesByStandardId(standardId);
+    return this.standardsHexa.getAdapter().getRulesByStandardId(standardId);
   }
 
   async createRuleExample(
     command: CreateRuleExampleCommand,
   ): Promise<RuleExample> {
-    return this.standardsHexa.createRuleExample(command);
+    return this.standardsHexa.getAdapter().createRuleExample(command);
   }
 
   async getRuleExamples(
     command: GetRuleExamplesCommand,
   ): Promise<RuleExample[]> {
-    return this.standardsHexa.getRuleExamples(command);
+    return this.standardsHexa.getAdapter().getRuleExamples(command);
   }
 
   async updateRuleExample(
     command: UpdateRuleExampleCommand,
   ): Promise<RuleExample> {
-    return this.standardsHexa.updateRuleExample(command);
+    return this.standardsHexa.getAdapter().updateRuleExample(command);
   }
 
   async deleteRuleExample(command: DeleteRuleExampleCommand): Promise<void> {
-    return this.standardsHexa.deleteRuleExample(command);
+    return this.standardsHexa.getAdapter().deleteRuleExample(command);
   }
 }

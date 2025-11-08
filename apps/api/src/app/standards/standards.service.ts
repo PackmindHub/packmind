@@ -32,11 +32,10 @@ export class StandardsService {
     organizationId: OrganizationId,
     userId: string,
   ): Promise<ListStandardsBySpaceResponse> {
-    return this.standardsHexa.listStandardsBySpace({
-      spaceId,
-      organizationId,
-      userId,
-    });
+    const standards = await this.standardsHexa
+      .getAdapter()
+      .listStandardsBySpace(spaceId, organizationId, userId);
+    return { standards };
   }
 
   async getStandardById(
@@ -45,7 +44,7 @@ export class StandardsService {
     spaceId: SpaceId,
     userId: UserId,
   ): Promise<GetStandardByIdResponse> {
-    return this.standardsHexa.getStandardById({
+    return this.standardsHexa.getAdapter().getStandardById({
       standardId: id,
       organizationId,
       spaceId,
@@ -64,7 +63,7 @@ export class StandardsService {
     userId: UserId,
     spaceId: SpaceId | null,
   ): Promise<Standard> {
-    return this.standardsHexa.createStandard({
+    return this.standardsHexa.getAdapter().createStandard({
       ...standard,
       scope: standard.scope || null,
       organizationId,
@@ -85,7 +84,7 @@ export class StandardsService {
     userId: UserId,
     spaceId: SpaceId,
   ): Promise<Standard> {
-    return this.standardsHexa.updateStandard({
+    return this.standardsHexa.getAdapter().updateStandard({
       standardId,
       ...standard,
       scope: standard.scope || null,
@@ -96,7 +95,7 @@ export class StandardsService {
   }
 
   async getStandardVersionsById(id: StandardId): Promise<StandardVersion[]> {
-    return this.standardsHexa.listStandardVersions(id);
+    return this.standardsHexa.getAdapter().listStandardVersions(id);
   }
 
   async deployStandardsToGit(
@@ -106,13 +105,15 @@ export class StandardsService {
   }
 
   async deleteStandard(id: StandardId, userId: UserId): Promise<void> {
-    return this.standardsHexa.deleteStandard(id, userId);
+    return this.standardsHexa.getAdapter().deleteStandard(id, userId);
   }
 
   async deleteStandardsBatch(
     standardIds: StandardId[],
     userId: UserId,
   ): Promise<void> {
-    return this.standardsHexa.deleteStandardsBatch(standardIds, userId);
+    return this.standardsHexa
+      .getAdapter()
+      .deleteStandardsBatch(standardIds, userId);
   }
 }

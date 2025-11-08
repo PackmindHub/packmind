@@ -1,4 +1,4 @@
-import { OrganizationId, SpaceId } from '@packmind/types';
+import { OrganizationId, SpaceId, UserId } from '@packmind/types';
 import { IStandardsPort } from '@packmind/types';
 import {
   Rule,
@@ -9,7 +9,15 @@ import {
   StandardVersion,
   StandardVersionId,
   ListStandardsBySpaceCommand,
+  UpdateStandardCommand,
+  GetStandardByIdResponse,
 } from '@packmind/types';
+import {
+  CreateRuleExampleCommand,
+  GetRuleExamplesCommand,
+  UpdateRuleExampleCommand,
+  DeleteRuleExampleCommand,
+} from '../../domain/useCases';
 import { IStandardsRepositories } from '../../domain/repositories/IStandardsRepositories';
 import { StandardsServices } from '../services/StandardsServices';
 import { StandardsHexaFactory } from '../../StandardsHexaFactory';
@@ -74,9 +82,8 @@ export class StandardsAdapter implements IStandardsPort {
       organizationId,
       spaceId,
     };
-    const getStandardByIdResponse =
-      await this.useCases.listStandardsBySpace(command);
-    return getStandardByIdResponse.standards;
+    const response = await this.useCases.listStandardsBySpace(command);
+    return response.standards;
   }
 
   getRuleCodeExamples(id: RuleId): Promise<RuleExample[]> {
@@ -90,5 +97,87 @@ export class StandardsAdapter implements IStandardsPort {
     return this.services
       .getStandardService()
       .findStandardBySlug(slug, organizationId);
+  }
+
+  // Additional methods not in IStandardsPort but needed for internal use
+  async createStandard(params: {
+    name: string;
+    description: string;
+    rules: Array<{ content: string }>;
+    organizationId: OrganizationId;
+    userId: UserId;
+    scope: string | null;
+    spaceId: SpaceId | null;
+  }): Promise<Standard> {
+    return this.useCases.createStandard(params);
+  }
+
+  async createStandardWithExamples(params: {
+    name: string;
+    description: string;
+    summary: string | null;
+    rules: import('@packmind/types').RuleWithExamples[];
+    organizationId: OrganizationId;
+    userId: UserId;
+    scope: string | null;
+    spaceId: SpaceId | null;
+  }): Promise<Standard> {
+    return this.useCases.createStandardWithExamples(params);
+  }
+
+  async addRuleToStandard(params: {
+    standardSlug: string;
+    ruleContent: string;
+    organizationId: OrganizationId;
+    userId: UserId;
+  }): Promise<StandardVersion> {
+    return this.useCases.addRuleToStandard(params);
+  }
+
+  async getStandardById(command: {
+    standardId: StandardId;
+    organizationId: OrganizationId;
+    spaceId: SpaceId;
+    userId: string;
+  }): Promise<GetStandardByIdResponse> {
+    // Use the getStandardById use case which includes access control
+    return this.useCases.getStandardById(command);
+  }
+
+  async deleteStandard(standardId: StandardId, userId: UserId): Promise<void> {
+    return this.useCases.deleteStandard(standardId, userId);
+  }
+
+  async updateStandard(command: UpdateStandardCommand): Promise<Standard> {
+    return this.useCases.updateStandard(command);
+  }
+
+  async deleteStandardsBatch(
+    standardIds: StandardId[],
+    userId: UserId,
+  ): Promise<void> {
+    return this.useCases.deleteStandardsBatch(standardIds, userId);
+  }
+
+  async createRuleExample(
+    command: CreateRuleExampleCommand,
+  ): Promise<RuleExample> {
+    return this.useCases.createRuleExample(command);
+  }
+
+  async getRuleExamples(
+    command: GetRuleExamplesCommand,
+  ): Promise<RuleExample[]> {
+    return this.useCases.getRuleExamples(command);
+  }
+
+  async updateRuleExample(
+    command: UpdateRuleExampleCommand,
+  ): Promise<RuleExample> {
+    return this.useCases.updateRuleExample(command);
+  }
+
+  async deleteRuleExample(command: DeleteRuleExampleCommand): Promise<void> {
+    return this.useCases.deleteRuleExample(command);
   }
 }

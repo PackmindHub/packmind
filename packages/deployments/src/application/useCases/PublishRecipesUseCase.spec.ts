@@ -1,6 +1,5 @@
 import { PublishRecipesUseCase } from './PublishRecipesUseCase';
-import { GitHexa } from '@packmind/git';
-import { CodingAgentHexa, CodingAgents } from '@packmind/coding-agent';
+import { CodingAgents } from '@packmind/coding-agent';
 import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
 import { TargetService } from '../services/TargetService';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
@@ -18,6 +17,8 @@ import {
   GitRepo,
   GitCommit,
   IRecipesPort,
+  ICodingAgentPort,
+  IGitPort,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { recipeVersionFactory } from '@packmind/recipes/test/recipeVersionFactory';
@@ -28,8 +29,8 @@ import { stubLogger } from '@packmind/test-utils';
 describe('PublishRecipesUseCase', () => {
   let useCase: PublishRecipesUseCase;
   let mockRecipesPort: jest.Mocked<IRecipesPort>;
-  let mockGitHexa: jest.Mocked<GitHexa>;
-  let mockCodingAgentHexa: jest.Mocked<CodingAgentHexa>;
+  let mockGitPort: jest.Mocked<IGitPort>;
+  let mockCodingAgentPort: jest.Mocked<ICodingAgentPort>;
   let mockRecipesDeploymentRepository: jest.Mocked<IRecipesDeploymentRepository>;
   let mockTargetService: jest.Mocked<TargetService>;
   let mockRenderModeConfigurationService: jest.Mocked<RenderModeConfigurationService>;
@@ -56,13 +57,14 @@ describe('PublishRecipesUseCase', () => {
       getRecipeVersionById: jest.fn(),
     } as unknown as jest.Mocked<IRecipesPort>;
 
-    mockGitHexa = {
+    mockGitPort = {
       commitToGit: jest.fn(),
-    } as unknown as jest.Mocked<GitHexa>;
+    } as unknown as jest.Mocked<IGitPort>;
 
-    mockCodingAgentHexa = {
+    mockCodingAgentPort = {
       prepareRecipesDeployment: jest.fn(),
-    } as unknown as jest.Mocked<CodingAgentHexa>;
+      prepareStandardsDeployment: jest.fn(),
+    } as unknown as jest.Mocked<ICodingAgentPort>;
 
     mockRecipesDeploymentRepository = {
       add: jest.fn(),
@@ -88,9 +90,9 @@ describe('PublishRecipesUseCase', () => {
 
     useCase = new PublishRecipesUseCase(
       mockRecipesDeploymentRepository,
-      mockGitHexa,
+      mockGitPort,
       mockRecipesPort,
-      mockCodingAgentHexa,
+      mockCodingAgentPort,
       mockTargetService,
       mockRenderModeConfigurationService,
       mockLogger,
@@ -152,13 +154,13 @@ describe('PublishRecipesUseCase', () => {
       mockRecipesDeploymentRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
       );
-      mockCodingAgentHexa.prepareRecipesDeployment.mockResolvedValue({
+      mockCodingAgentPort.prepareRecipesDeployment.mockResolvedValue({
         createOrUpdate: [
           { path: '.packmind/recipes/test-recipe.md', content: 'content' },
         ],
         delete: [],
       });
-      mockGitHexa.commitToGit.mockResolvedValue(gitCommit);
+      mockGitPort.commitToGit.mockResolvedValue(gitCommit);
     });
 
     it('returns one deployment', async () => {
@@ -188,7 +190,7 @@ describe('PublishRecipesUseCase', () => {
       expect(
         mockRenderModeConfigurationService.mapRenderModesToCodingAgents,
       ).toHaveBeenCalledWith(activeRenderModes);
-      expect(mockCodingAgentHexa.prepareRecipesDeployment).toHaveBeenCalledWith(
+      expect(mockCodingAgentPort.prepareRecipesDeployment).toHaveBeenCalledWith(
         expect.objectContaining({ codingAgents: activeCodingAgents }),
       );
     });
@@ -256,13 +258,13 @@ describe('PublishRecipesUseCase', () => {
       mockRecipesDeploymentRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
       );
-      mockCodingAgentHexa.prepareRecipesDeployment.mockResolvedValue({
+      mockCodingAgentPort.prepareRecipesDeployment.mockResolvedValue({
         createOrUpdate: [
           { path: '.packmind/recipes/test-recipe.md', content: 'content' },
         ],
         delete: [],
       });
-      mockGitHexa.commitToGit.mockRejectedValue(noChangesError);
+      mockGitPort.commitToGit.mockRejectedValue(noChangesError);
     });
 
     it('returns one deployment', async () => {
@@ -363,7 +365,7 @@ describe('PublishRecipesUseCase', () => {
       mockRecipesDeploymentRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
       );
-      mockCodingAgentHexa.prepareRecipesDeployment.mockImplementation((cmd) => {
+      mockCodingAgentPort.prepareRecipesDeployment.mockImplementation((cmd) => {
         // Verify that the recipes passed to prepareRecipesDeployment are sorted alphabetically
         const sortedNames = cmd.recipeVersions.map((rv) => rv.name);
         expect(sortedNames).toEqual([
@@ -381,7 +383,7 @@ describe('PublishRecipesUseCase', () => {
           delete: [],
         });
       });
-      mockGitHexa.commitToGit.mockResolvedValue(gitCommit);
+      mockGitPort.commitToGit.mockResolvedValue(gitCommit);
     });
 
     it('sorts recipes alphabetically before sending to file deployer', async () => {

@@ -31,8 +31,9 @@ export class DataFactory {
 
   async withUserAndOrganization(cmd?: Partial<SignUpWithOrganizationCommand>) {
     if (!this.user) {
-      const signUpWithOrganizationResponse =
-        await this.testApp.accountsHexa.signUpWithOrganization({
+      const signUpWithOrganizationResponse = await this.testApp.accountsHexa
+        .getAdapter()
+        .signUpWithOrganization({
           ...cmd,
           organizationName: 'test orga',
           email: 'someone@example.com',
@@ -70,13 +71,15 @@ export class DataFactory {
     if (!this.gitProvider) {
       await this.withUserAndOrganization();
 
-      this._gitProvider = await this.testApp.gitHexa.addGitProvider({
-        ...this.packmindCommand(),
-        gitProvider: gitProviderFactory({
-          organizationId: this.organization.id,
-          ...provider,
-        }),
-      });
+      this._gitProvider = await this.testApp.gitHexa
+        .getAdapter()
+        .addGitProvider({
+          ...this.packmindCommand(),
+          gitProvider: gitProviderFactory({
+            organizationId: this.organization.id,
+            ...provider,
+          }),
+        });
     }
 
     return { gitProvider: this.gitProvider };
@@ -89,7 +92,7 @@ export class DataFactory {
     if (!this.gitRepo) {
       await this.withGitProvider();
 
-      this._gitRepo = await this.testApp.gitHexa.addGitRepo({
+      this._gitRepo = await this.testApp.gitHexa.getAdapter().addGitRepo({
         ...this.packmindCommand(),
         gitProviderId: this.gitProvider.id,
         ...gitRepoFactory({ providerId: this.gitProvider.id, ...gitRepo }),
@@ -119,7 +122,7 @@ export class DataFactory {
       await this.withUserAndOrganization();
     }
 
-    return this.testApp.standardsHexa.createStandard({
+    return this.testApp.standardsHexa.getAdapter().createStandard({
       rules: [],
       organizationId: this.organization.id,
       ...standardFactory({ spaceId: this.space.id, ...standard }),
@@ -131,7 +134,7 @@ export class DataFactory {
       await this.withUserAndOrganization();
     }
 
-    return this.testApp.recipesHexa.captureRecipe({
+    return this.testApp.recipesHexa.getAdapter().captureRecipe({
       ...this.packmindCommand(),
       ...recipeFactory({ spaceId: this.space.id }),
       ...recipe,

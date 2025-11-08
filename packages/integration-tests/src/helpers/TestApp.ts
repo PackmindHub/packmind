@@ -62,7 +62,7 @@ export class TestApp {
     // Set standards port in deployments hexa after initialization
     this.deploymentsHexa.setStandardsPort(this.standardsHexa);
 
-    this.accountsHexa.setGitPort(this.gitHexa);
+    this.accountsHexa.setGitPort(this.gitHexa.getAdapter());
     this.accountsHexa.setStandardsPort(this.standardsHexa.getAdapter());
 
     this.deploymentsHexa.setAccountProviders(

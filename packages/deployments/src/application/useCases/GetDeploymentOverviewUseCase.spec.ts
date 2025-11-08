@@ -1,7 +1,6 @@
 import { GetDeploymentOverviewUseCase } from './GetDeploymentOverviewUseCase';
 import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
 import { createRecipeVersionId } from '@packmind/recipes';
-import { GitHexa } from '@packmind/git';
 import { stubLogger } from '@packmind/test-utils';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
 import { createSpaceId } from '@packmind/types';
@@ -12,6 +11,7 @@ import {
   DeploymentOverview,
   DistributionStatus,
   GetDeploymentOverviewCommand,
+  IGitPort,
 } from '@packmind/types';
 import { ISpacesPort, IRecipesPort } from '@packmind/types';
 import { deploymentFactory } from '../../../test/deploymentFactory';
@@ -30,7 +30,7 @@ describe('GetDeploymentOverviewUseCase', () => {
     >
   >;
   let spacesPort: jest.Mocked<ISpacesPort>;
-  let gitHexa: jest.Mocked<GitHexa>;
+  let gitPort: jest.Mocked<IGitPort>;
   let getTargetsByOrganizationUseCase: jest.Mocked<GetTargetsByOrganizationUseCase>;
 
   beforeEach(() => {
@@ -71,9 +71,9 @@ describe('GetDeploymentOverviewUseCase', () => {
       getSpaceById: jest.fn(),
     } as jest.Mocked<ISpacesPort>;
 
-    gitHexa = {
+    gitPort = {
       getOrganizationRepositories: jest.fn(),
-    } as unknown as jest.Mocked<GitHexa>;
+    } as unknown as jest.Mocked<IGitPort>;
 
     getTargetsByOrganizationUseCase = {
       execute: jest.fn(),
@@ -83,7 +83,7 @@ describe('GetDeploymentOverviewUseCase', () => {
       deploymentsRepository,
       recipesPort,
       spacesPort,
-      gitHexa,
+      gitPort,
       getTargetsByOrganizationUseCase,
       logger,
     );
@@ -115,7 +115,7 @@ describe('GetDeploymentOverviewUseCase', () => {
         );
         spacesPort.listSpacesByOrganization.mockResolvedValue([space]);
         recipesPort.listRecipesBySpace.mockResolvedValue([]);
-        gitHexa.getOrganizationRepositories.mockResolvedValue([]);
+        gitPort.getOrganizationRepositories.mockResolvedValue([]);
         getTargetsByOrganizationUseCase.execute.mockResolvedValue([]);
 
         result = await useCase.execute(command);
@@ -150,7 +150,7 @@ describe('GetDeploymentOverviewUseCase', () => {
       });
 
       it('calls git hexa with organization id', () => {
-        expect(gitHexa.getOrganizationRepositories).toHaveBeenCalledWith(
+        expect(gitPort.getOrganizationRepositories).toHaveBeenCalledWith(
           organizationId,
         );
       });
@@ -173,14 +173,14 @@ describe('GetDeploymentOverviewUseCase', () => {
         );
         spacesPort.listSpacesByOrganization.mockResolvedValue([space]);
         recipesPort.listRecipesBySpace.mockResolvedValue([]);
-        gitHexa.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
+        gitPort.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
         getTargetsByOrganizationUseCase.execute.mockResolvedValue([]);
 
         await useCase.execute(command);
       });
 
       it('calls git hexa to get organization repositories', () => {
-        expect(gitHexa.getOrganizationRepositories).toHaveBeenCalledWith(
+        expect(gitPort.getOrganizationRepositories).toHaveBeenCalledWith(
           organizationId,
         );
       });
@@ -211,7 +211,7 @@ describe('GetDeploymentOverviewUseCase', () => {
         );
         spacesPort.listSpacesByOrganization.mockResolvedValue([space]);
         recipesPort.listRecipesBySpace.mockResolvedValue([mockRecipe]);
-        gitHexa.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
+        gitPort.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
         getTargetsByOrganizationUseCase.execute.mockResolvedValue([]);
 
         result = await useCase.execute(command);
@@ -273,7 +273,7 @@ describe('GetDeploymentOverviewUseCase', () => {
         ]);
         spacesPort.listSpacesByOrganization.mockResolvedValue([space]);
         recipesPort.listRecipesBySpace.mockResolvedValue([mockRecipe]);
-        gitHexa.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
+        gitPort.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
         getTargetsByOrganizationUseCase.execute.mockResolvedValue([
           {
             ...mockTarget,
@@ -370,7 +370,7 @@ describe('GetDeploymentOverviewUseCase', () => {
         ]);
         spacesPort.listSpacesByOrganization.mockResolvedValue([space]);
         recipesPort.listRecipesBySpace.mockResolvedValue([mockRecipe]);
-        gitHexa.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
+        gitPort.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
         getTargetsByOrganizationUseCase.execute.mockResolvedValue([
           {
             ...mockTarget1,

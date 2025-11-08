@@ -1,11 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
-import {
-  FileUpdates,
-  ICodingAgentPort,
-  PrepareRecipesDeploymentCommand,
-  PrepareStandardsDeploymentCommand,
-} from '@packmind/types';
+import { ICodingAgentPort } from '@packmind/types';
 import { CodingAgentHexaFactory } from './CodingAgentHexaFactory';
 
 const origin = 'CodingAgentHexa';
@@ -68,49 +63,5 @@ export class CodingAgentHexa extends BaseHexa<BaseHexaOpts, ICodingAgentPort> {
    */
   public getAdapter(): ICodingAgentPort {
     return this.hexa.adapter;
-  }
-
-  /**
-   * Prepares file updates for deploying recipes across specified coding agents
-   *
-   * @param command - Command containing recipes, git repo, and coding agents
-   * @returns Promise of aggregated file updates for all agents
-   */
-  public async prepareRecipesDeployment(
-    command: PrepareRecipesDeploymentCommand,
-  ): Promise<FileUpdates> {
-    this.logger.info('Preparing recipes deployment', {
-      recipesCount: command.recipeVersions.length,
-      agentsCount: command.codingAgents.length,
-      agents: command.codingAgents,
-      gitRepoId: command.gitRepo.id,
-    });
-
-    const fileUpdates =
-      await this.hexa.adapter.prepareRecipesDeployment(command);
-
-    return fileUpdates;
-  }
-
-  /**
-   * Prepares file updates for deploying standards across specified coding agents
-   *
-   * @param command - Command containing standards, git repo, and coding agents
-   * @returns Promise of aggregated file updates for all agents
-   */
-  public async prepareStandardsDeployment(
-    command: PrepareStandardsDeploymentCommand,
-  ): Promise<FileUpdates> {
-    this.logger.info('Preparing standards deployment', {
-      standardsCount: command.standardVersions.length,
-      agentsCount: command.codingAgents.length,
-      agents: command.codingAgents,
-      gitRepoId: command.gitRepo.id,
-    });
-
-    const fileUpdates =
-      await this.hexa.adapter.prepareStandardsDeployment(command);
-
-    return fileUpdates;
   }
 }

@@ -14,7 +14,9 @@ export class RecipesAdapter implements Partial<IRecipesPort> {
   async listRecipesByOrganization(
     organizationId: OrganizationId,
   ): Promise<Recipe[]> {
-    return this.recipesHexa.listRecipesByOrganization(organizationId);
+    return this.recipesHexa
+      .getAdapter()
+      .listRecipesByOrganization(organizationId);
   }
 
   async listRecipesBySpace(command: {
@@ -22,12 +24,12 @@ export class RecipesAdapter implements Partial<IRecipesPort> {
     organizationId: OrganizationId;
     userId: UserId;
   }): Promise<Recipe[]> {
-    return this.recipesHexa.listRecipesBySpace(command);
+    return this.recipesHexa.getAdapter().listRecipesBySpace(command);
   }
 
   async getRecipeVersionById(
     id: RecipeVersionId,
   ): Promise<RecipeVersion | null> {
-    return this.recipesHexa.getRecipeVersionById(id);
+    return this.recipesHexa.getAdapter().getRecipeVersionById(id);
   }
 }

@@ -247,7 +247,7 @@ export function createMCPServer(
         organizationId: userContext.organizationId,
       });
 
-      const recipe = await recipesHexa.captureRecipe({
+      const recipe = await recipesHexa.getAdapter().captureRecipe({
         name,
         summary,
         whenToUse,
@@ -392,23 +392,25 @@ export function createMCPServer(
       }
 
       try {
-        const newStandardVersion = await standardsHexa.addRuleToStandard({
-          standardSlug: standardSlug.toLowerCase(),
-          ruleContent,
-          organizationId: createOrganizationId(userContext.organizationId),
-          userId: createUserId(userContext.userId),
-        });
+        const newStandardVersion = await standardsHexa
+          .getAdapter()
+          .addRuleToStandard({
+            standardSlug: standardSlug.toLowerCase(),
+            ruleContent,
+            organizationId: createOrganizationId(userContext.organizationId),
+            userId: createUserId(userContext.userId),
+          });
 
-        const rules = await standardsHexa.getRulesByStandardId(
-          newStandardVersion.standardId,
-        );
+        const rules = await standardsHexa
+          .getAdapter()
+          .getRulesByStandardId(newStandardVersion.standardId);
         const newRule = rules.filter((rule) => rule.content === ruleContent);
 
         const codeSnippetProvided =
           positiveExample?.length > 0 || negativeExample?.length > 0;
         if (newRule && codeSnippetProvided) {
           logger.info('Creating rule example');
-          await standardsHexa.createRuleExample({
+          await standardsHexa.getAdapter().createRuleExample({
             ruleId: newRule[0].id,
             positive: extractCodeFromMarkdown(positiveExample) || '',
             negative: extractCodeFromMarkdown(negativeExample) || '',
@@ -462,11 +464,13 @@ export function createMCPServer(
         const organizationId = createOrganizationId(userContext.organizationId);
         const globalSpace = await getGlobalSpace(fastify, organizationId);
 
-        const { standards } = await standardsHexa.listStandardsBySpace({
-          organizationId,
-          spaceId: globalSpace.id,
-          userId: createUserId(userContext.userId),
-        });
+        const standards = await standardsHexa
+          .getAdapter()
+          .listStandardsBySpace(
+            globalSpace.id,
+            organizationId,
+            userContext.userId,
+          );
 
         if (standards.length === 0) {
           return {
@@ -532,10 +536,9 @@ export function createMCPServer(
       try {
         const organizationId = createOrganizationId(userContext.organizationId);
 
-        const standard = await standardsHexa.findStandardBySlug(
-          slug,
-          organizationId,
-        );
+        const standard = await standardsHexa
+          .getAdapter()
+          .findStandardBySlug(slug, organizationId);
 
         if (!standard) {
           return {
@@ -549,7 +552,9 @@ export function createMCPServer(
         }
 
         // Get rules for this standard
-        const rules = await standardsHexa.getRulesByStandardId(standard.id);
+        const rules = await standardsHexa
+          .getAdapter()
+          .getRulesByStandardId(standard.id);
 
         // Build formatted content
         const contentParts = [
@@ -571,7 +576,7 @@ export function createMCPServer(
             contentParts.push(`### Rule: ${rule.content}`, ``);
 
             // Get examples for this rule
-            const examples = await standardsHexa.getRuleExamples({
+            const examples = await standardsHexa.getAdapter().getRuleExamples({
               ruleId: rule.id,
               userId: createUserId(userContext.userId),
               organizationId,
@@ -640,7 +645,7 @@ export function createMCPServer(
         const organizationId = createOrganizationId(userContext.organizationId);
         const globalSpace = await getGlobalSpace(fastify, organizationId);
 
-        const recipes = await recipesHexa.listRecipesBySpace({
+        const recipes = await recipesHexa.getAdapter().listRecipesBySpace({
           organizationId,
           spaceId: globalSpace.id,
           userId: createUserId(userContext.userId),
@@ -710,7 +715,9 @@ export function createMCPServer(
       try {
         const organizationId = createOrganizationId(userContext.organizationId);
 
-        const recipe = await recipesHexa.findRecipeBySlug(slug, organizationId);
+        const recipe = await recipesHexa
+          .getAdapter()
+          .findRecipeBySlug(slug, organizationId);
 
         if (!recipe) {
           return {
@@ -972,16 +979,18 @@ export function createMCPServer(
           organizationId: userContext.organizationId,
         });
 
-        const standard = await standardsHexa.createStandardWithExamples({
-          name,
-          description,
-          summary,
-          rules: processedRules,
-          organizationId: createOrganizationId(userContext.organizationId),
-          userId: createUserId(userContext.userId),
-          scope: null,
-          spaceId: firstSpace.id,
-        });
+        const standard = await standardsHexa
+          .getAdapter()
+          .createStandardWithExamples({
+            name,
+            description,
+            summary,
+            rules: processedRules,
+            organizationId: createOrganizationId(userContext.organizationId),
+            userId: createUserId(userContext.userId),
+            scope: null,
+            spaceId: firstSpace.id,
+          });
 
         // Track analytics event
         analyticsAdapter.trackEvent(

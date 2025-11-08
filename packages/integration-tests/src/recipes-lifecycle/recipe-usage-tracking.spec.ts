@@ -74,7 +74,7 @@ describe.skip('Recipe usage tracking', () => {
     });
 
     test('A deleted recipe usage can be tracked', async () => {
-      await testApp.recipesHexa.deleteRecipe({
+      await testApp.recipesHexa.getAdapter().deleteRecipe({
         recipeId: recipe.id,
         spaceId: recipe.spaceId,
         ...dataFactory.packmindCommand(),

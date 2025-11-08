@@ -230,11 +230,13 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
               ? 'updateRecipesFromGitHub'
               : 'updateRecipesFromGitLab';
 
-          matchingRecipes = await testApp.recipesHexa[updateMethod]({
-            payload: webhookPayload,
-            headers: config.headers,
-            ...dataFactory.packmindCommand(),
-          });
+          matchingRecipes = await testApp.recipesHexa
+            .getAdapter()
+            [updateMethod]({
+              payload: webhookPayload,
+              headers: config.headers,
+              ...dataFactory.packmindCommand(),
+            });
         });
 
         it('does not return matching recipes', () => {
@@ -243,9 +245,9 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
 
         it('does not create a new recipe version', async () => {
           // Verify that no new recipe version was created (recipe not deployed)
-          const allVersions = await testApp.recipesHexa.listRecipeVersions(
-            recipe.id,
-          );
+          const allVersions = await testApp.recipesHexa
+            .getAdapter()
+            .listRecipeVersions(recipe.id);
 
           expect(allVersions).toEqual([
             expect.objectContaining({
@@ -276,9 +278,9 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
           });
 
           // Verify initial state
-          const initialVersions = await testApp.recipesHexa.listRecipeVersions(
-            recipe.id,
-          );
+          const initialVersions = await testApp.recipesHexa
+            .getAdapter()
+            .listRecipeVersions(recipe.id);
           expect(initialVersions).toEqual([
             expect.objectContaining({
               version: 1,
@@ -306,11 +308,13 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
               config.providerName === 'GitHub'
                 ? 'updateRecipesFromGitHub'
                 : 'updateRecipesFromGitLab';
-            matchingRecipes = await testApp.recipesHexa[updateMethod]({
-              payload: webhookPayload,
-              headers: config.headers,
-              ...dataFactory.packmindCommand(),
-            });
+            matchingRecipes = await testApp.recipesHexa
+              .getAdapter()
+              [updateMethod]({
+                payload: webhookPayload,
+                headers: config.headers,
+                ...dataFactory.packmindCommand(),
+              });
           });
 
           it('returns the matching recipes', () => {
@@ -323,9 +327,9 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
 
           it('preserves existing recipe with identical webhook content', async () => {
             // Verify that no new recipe version was created (content was identical)
-            const allVersions = await testApp.recipesHexa.listRecipeVersions(
-              recipe.id,
-            );
+            const allVersions = await testApp.recipesHexa
+              .getAdapter()
+              .listRecipeVersions(recipe.id);
 
             expect(allVersions).toEqual([
               expect.objectContaining({
@@ -357,11 +361,13 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
                 ? 'updateRecipesFromGitHub'
                 : 'updateRecipesFromGitLab';
 
-            matchingRecipes = await testApp.recipesHexa[updateMethod]({
-              payload: webhookPayload,
-              headers: config.headers,
-              ...dataFactory.packmindCommand(),
-            });
+            matchingRecipes = await testApp.recipesHexa
+              .getAdapter()
+              [updateMethod]({
+                payload: webhookPayload,
+                headers: config.headers,
+                ...dataFactory.packmindCommand(),
+              });
           });
 
           it('returns the recipes matching the changes', () => {
@@ -374,9 +380,9 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
           });
 
           it('creates new recipe version after webhook receives updated content', async () => {
-            const allVersions = await testApp.recipesHexa.listRecipeVersions(
-              recipe.id,
-            );
+            const allVersions = await testApp.recipesHexa
+              .getAdapter()
+              .listRecipeVersions(recipe.id);
             expect(allVersions).toEqual([
               expect.objectContaining({
                 version: 2,
@@ -468,11 +474,13 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
                 ? 'updateRecipesFromGitHub'
                 : 'updateRecipesFromGitLab';
 
-            matchingRecipes = await testApp.recipesHexa[updateMethod]({
-              payload: webhookPayload,
-              headers: config.headers,
-              ...dataFactory.packmindCommand(),
-            });
+            matchingRecipes = await testApp.recipesHexa
+              .getAdapter()
+              [updateMethod]({
+                payload: webhookPayload,
+                headers: config.headers,
+                ...dataFactory.packmindCommand(),
+              });
           });
 
           it('returns all matching recipes', () => {
@@ -490,10 +498,12 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
 
           it('handles multiple recipe updates in single webhook', async () => {
             // Verify new versions were created for both recipes by the delayed job
-            const recipe1Versions =
-              await testApp.recipesHexa.listRecipeVersions(recipe.id);
-            const recipe2Versions =
-              await testApp.recipesHexa.listRecipeVersions(recipe2.id);
+            const recipe1Versions = await testApp.recipesHexa
+              .getAdapter()
+              .listRecipeVersions(recipe.id);
+            const recipe2Versions = await testApp.recipesHexa
+              .getAdapter()
+              .listRecipeVersions(recipe2.id);
 
             expect(recipe1Versions).toHaveLength(2);
             expect(recipe2Versions).toHaveLength(2);
@@ -523,11 +533,13 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
             config.providerName === 'GitHub'
               ? 'updateRecipesFromGitHub'
               : 'updateRecipesFromGitLab';
-          updatedRecipes = await testApp.recipesHexa[updateMethod]({
-            payload: webhookPayload,
-            headers: config.nonPushHeaders, // Use non-push headers
-            ...dataFactory.packmindCommand(),
-          });
+          updatedRecipes = await testApp.recipesHexa
+            .getAdapter()
+            [updateMethod]({
+              payload: webhookPayload,
+              headers: config.nonPushHeaders, // Use non-push headers
+              ...dataFactory.packmindCommand(),
+            });
         });
 
         it('does not return updated recipes', () => {
@@ -535,9 +547,9 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
         });
 
         it('does not create new versions of the recipes', async () => {
-          const allVersions = await testApp.recipesHexa.listRecipeVersions(
-            recipe.id,
-          );
+          const allVersions = await testApp.recipesHexa
+            .getAdapter()
+            .listRecipeVersions(recipe.id);
           expect(allVersions).toEqual([
             expect.objectContaining({
               version: 1,
@@ -566,11 +578,13 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
             config.providerName === 'GitHub'
               ? 'updateRecipesFromGitHub'
               : 'updateRecipesFromGitLab';
-          matchingRecipes = await testApp.recipesHexa[updateMethod]({
-            payload: webhookPayload,
-            headers: config.headers,
-            ...dataFactory.packmindCommand(),
-          });
+          matchingRecipes = await testApp.recipesHexa
+            .getAdapter()
+            [updateMethod]({
+              payload: webhookPayload,
+              headers: config.headers,
+              ...dataFactory.packmindCommand(),
+            });
         });
 
         it('does not return updated recipes', () => {
@@ -578,9 +592,9 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
         });
 
         it('does not create new versions of the recipe', async () => {
-          const allVersions = await testApp.recipesHexa.listRecipeVersions(
-            recipe.id,
-          );
+          const allVersions = await testApp.recipesHexa
+            .getAdapter()
+            .listRecipeVersions(recipe.id);
           expect(allVersions).toEqual([
             expect.objectContaining({
               version: 1,
@@ -603,9 +617,9 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
 
       it('creates new recipe version for recipe updated via target path', async () => {
         // Verify initial state
-        const initialVersions = await testApp.recipesHexa.listRecipeVersions(
-          recipe.id,
-        );
+        const initialVersions = await testApp.recipesHexa
+          .getAdapter()
+          .listRecipeVersions(recipe.id);
         expect(initialVersions).toHaveLength(1);
         expect(initialVersions[0].version).toBe(1);
 
@@ -650,11 +664,13 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
           config.providerName === 'GitHub'
             ? 'updateRecipesFromGitHub'
             : 'updateRecipesFromGitLab';
-        const matchingRecipes = await testApp.recipesHexa[updateMethod]({
-          payload: webhookPayload,
-          headers: config.headers,
-          ...dataFactory.packmindCommand(),
-        });
+        const matchingRecipes = await testApp.recipesHexa
+          .getAdapter()
+          [updateMethod]({
+            payload: webhookPayload,
+            headers: config.headers,
+            ...dataFactory.packmindCommand(),
+          });
 
         // Verify that matching recipe was returned (in current state, before update)
         expect(matchingRecipes).toHaveLength(1);
@@ -662,9 +678,9 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
         expect(matchingRecipes[0].version).toBe(1); // Still version 1 (current state)
 
         // Verify that new version was created by the delayed job
-        const allVersions = await testApp.recipesHexa.listRecipeVersions(
-          recipe.id,
-        );
+        const allVersions = await testApp.recipesHexa
+          .getAdapter()
+          .listRecipeVersions(recipe.id);
         expect(allVersions).toHaveLength(2);
 
         const newVersion = allVersions.find((v) => v.version === 2);
@@ -674,9 +690,9 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
 
       it('does not create new recipe version for recipe not deployed to target path', async () => {
         // Verify initial state
-        const initialVersions = await testApp.recipesHexa.listRecipeVersions(
-          recipe.id,
-        );
+        const initialVersions = await testApp.recipesHexa
+          .getAdapter()
+          .listRecipeVersions(recipe.id);
         expect(initialVersions).toHaveLength(1);
         expect(initialVersions[0].version).toBe(1);
 
@@ -722,19 +738,21 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
           config.providerName === 'GitHub'
             ? 'updateRecipesFromGitHub'
             : 'updateRecipesFromGitLab';
-        const matchingRecipes = await testApp.recipesHexa[updateMethod]({
-          payload: webhookPayload,
-          headers: config.headers,
-          ...dataFactory.packmindCommand(),
-        });
+        const matchingRecipes = await testApp.recipesHexa
+          .getAdapter()
+          [updateMethod]({
+            payload: webhookPayload,
+            headers: config.headers,
+            ...dataFactory.packmindCommand(),
+          });
 
         // Verify that no recipe was returned since it's not deployed to /visual-studio/ target
         expect(matchingRecipes).toHaveLength(0);
 
         // Verify that no new version was created
-        const allVersions = await testApp.recipesHexa.listRecipeVersions(
-          recipe.id,
-        );
+        const allVersions = await testApp.recipesHexa
+          .getAdapter()
+          .listRecipeVersions(recipe.id);
         expect(allVersions).toHaveLength(1);
         expect(allVersions[0].version).toBe(1);
       });
@@ -742,9 +760,9 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
       describe('when recipe is updated via target path', () => {
         it('deploys updated recipe version to specific target only', async () => {
           // Setup: Deploy recipe to multiple targets (/jetbrains/ and /vscode/)
-          const initialVersions = await testApp.recipesHexa.listRecipeVersions(
-            recipe.id,
-          );
+          const initialVersions = await testApp.recipesHexa
+            .getAdapter()
+            .listRecipeVersions(recipe.id);
 
           // Define the targets
           const jetbrainsTarget = {
@@ -841,20 +859,22 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
             config.providerName === 'GitHub'
               ? 'updateRecipesFromGitHub'
               : 'updateRecipesFromGitLab';
-          const matchingRecipes = await testApp.recipesHexa[updateMethod]({
-            payload: webhookPayload,
-            headers: config.headers,
-            ...dataFactory.packmindCommand(),
-          });
+          const matchingRecipes = await testApp.recipesHexa
+            .getAdapter()
+            [updateMethod]({
+              payload: webhookPayload,
+              headers: config.headers,
+              ...dataFactory.packmindCommand(),
+            });
 
           // Verify that matching recipe was returned (in current state, before update)
           expect(matchingRecipes).toHaveLength(1);
           expect(matchingRecipes[0].version).toBe(1); // Still version 1 (current state)
 
           // Verify that new version was created by the delayed job
-          const allVersions = await testApp.recipesHexa.listRecipeVersions(
-            recipe.id,
-          );
+          const allVersions = await testApp.recipesHexa
+            .getAdapter()
+            .listRecipeVersions(recipe.id);
           expect(allVersions).toHaveLength(2);
           const newVersion = allVersions.find((v) => v.version === 2);
           expect(newVersion).toBeDefined();

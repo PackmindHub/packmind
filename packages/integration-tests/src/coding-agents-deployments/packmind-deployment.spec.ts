@@ -128,10 +128,9 @@ describe('Packmind Deployment Spec', () => {
 
     describe('when a standard previously deployed has been deleted', () => {
       beforeEach(async () => {
-        await testApp.standardsHexa.deleteStandard(
-          standard1.id,
-          dataFactory.user.id,
-        );
+        await testApp.standardsHexa
+          .getAdapter()
+          .deleteStandard(standard1.id, dataFactory.user.id);
       });
 
       it('does not re-deploy the deleted standard', async () => {
@@ -222,7 +221,7 @@ describe('Packmind Deployment Spec', () => {
 
     describe('when a deployed recipe has been deleted', () => {
       beforeEach(async () => {
-        await testApp.recipesHexa.deleteRecipe({
+        await testApp.recipesHexa.getAdapter().deleteRecipe({
           ...dataFactory.packmindCommand(),
           recipeId: recipe1.id,
           spaceId: recipe1.spaceId,

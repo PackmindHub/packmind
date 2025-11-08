@@ -125,11 +125,13 @@ describe('Claude Deployment Integration', () => {
     gitPort = gitHexa.getAdapter();
 
     // Create test data
-    const signUpResult = await accountsHexa.signUpWithOrganization({
-      organizationName: 'test organization',
-      email: 'testuser@packmind.com',
-      password: 's3cret!@',
-    });
+    const signUpResult = await accountsHexa
+      .getAdapter()
+      .signUpWithOrganization({
+        organizationName: 'test organization',
+        email: 'testuser@packmind.com',
+        password: 's3cret!@',
+      });
     user = signUpResult.user;
     organization = signUpResult.organization;
 
@@ -142,7 +144,7 @@ describe('Claude Deployment Integration', () => {
     space = foundSpace;
 
     // Create test recipe
-    recipe = await recipesHexa.captureRecipe({
+    recipe = await recipesHexa.getAdapter().captureRecipe({
       name: 'Test Recipe',
       content: 'This is test recipe content for deployment',
       organizationId: organization.id,
@@ -151,7 +153,7 @@ describe('Claude Deployment Integration', () => {
     });
 
     // Create test standard
-    standard = await standardsHexa.createStandard({
+    standard = await standardsHexa.getAdapter().createStandard({
       name: 'Test Standard',
       description: 'A test standard for deployment',
       rules: [
@@ -165,7 +167,7 @@ describe('Claude Deployment Integration', () => {
     });
 
     // Create git provider and repository
-    const gitProvider = await gitHexa.addGitProvider({
+    const gitProvider = await gitHexa.getAdapter().addGitProvider({
       userId: user.id,
       organizationId: organization.id,
       gitProvider: {
@@ -175,7 +177,7 @@ describe('Claude Deployment Integration', () => {
       },
     });
 
-    gitRepo = await gitHexa.addGitRepo({
+    gitRepo = await gitHexa.getAdapter().addGitRepo({
       userId: user.id,
       organizationId: organization.id,
       gitProviderId: gitProvider.id,
@@ -803,7 +805,7 @@ User-defined instructions that should be preserved.`;
 
     it('handles GitHexa errors gracefully', async () => {
       jest
-        .spyOn(gitHexa, 'getFileFromRepo')
+        .spyOn(gitHexa.getAdapter(), 'getFileFromRepo')
         .mockRejectedValue(new Error('GitHub API error'));
 
       const recipeVersions: RecipeVersion[] = [

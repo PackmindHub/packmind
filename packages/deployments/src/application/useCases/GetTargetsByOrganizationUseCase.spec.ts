@@ -1,6 +1,5 @@
 import { GetTargetsByOrganizationUseCase } from './GetTargetsByOrganizationUseCase';
 import { TargetService } from '../services/TargetService';
-import { GitHexa } from '@packmind/git';
 import {
   Target,
   TargetWithRepository,
@@ -8,6 +7,7 @@ import {
   createTargetId,
   createGitRepoId,
   createGitProviderId,
+  IGitPort,
 } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 import { createOrganizationId, createUserId } from '@packmind/types';
@@ -15,7 +15,7 @@ import { createOrganizationId, createUserId } from '@packmind/types';
 describe('GetTargetsByOrganizationUseCase', () => {
   let useCase: GetTargetsByOrganizationUseCase;
   let mockTargetService: jest.Mocked<TargetService>;
-  let mockGitHexa: jest.Mocked<GitHexa>;
+  let mockGitPort: jest.Mocked<IGitPort>;
 
   beforeEach(() => {
     mockTargetService = {
@@ -23,13 +23,13 @@ describe('GetTargetsByOrganizationUseCase', () => {
       addTarget: jest.fn(),
     } as unknown as jest.Mocked<TargetService>;
 
-    mockGitHexa = {
+    mockGitPort = {
       getOrganizationRepositories: jest.fn(),
-    } as unknown as jest.Mocked<GitHexa>;
+    } as unknown as jest.Mocked<IGitPort>;
 
     useCase = new GetTargetsByOrganizationUseCase(
       mockTargetService,
-      mockGitHexa,
+      mockGitPort,
       stubLogger(),
     );
   });
@@ -82,7 +82,7 @@ describe('GetTargetsByOrganizationUseCase', () => {
         },
       ];
 
-      mockGitHexa.getOrganizationRepositories.mockResolvedValue(
+      mockGitPort.getOrganizationRepositories.mockResolvedValue(
         mockRepositories,
       );
       mockTargetService.getTargetsByGitRepoId
@@ -119,7 +119,7 @@ describe('GetTargetsByOrganizationUseCase', () => {
       ];
 
       expect(result).toEqual(expectedTargetsWithRepo);
-      expect(mockGitHexa.getOrganizationRepositories).toHaveBeenCalledWith(
+      expect(mockGitPort.getOrganizationRepositories).toHaveBeenCalledWith(
         mockCommand.organizationId,
       );
       expect(mockTargetService.getTargetsByGitRepoId).toHaveBeenCalledTimes(2);
@@ -133,12 +133,12 @@ describe('GetTargetsByOrganizationUseCase', () => {
 
     describe('when no repositories exist for organization', () => {
       it('returns empty array', async () => {
-        mockGitHexa.getOrganizationRepositories.mockResolvedValue([]);
+        mockGitPort.getOrganizationRepositories.mockResolvedValue([]);
 
         const result = await useCase.execute(mockCommand);
 
         expect(result).toEqual([]);
-        expect(mockGitHexa.getOrganizationRepositories).toHaveBeenCalledWith(
+        expect(mockGitPort.getOrganizationRepositories).toHaveBeenCalledWith(
           mockCommand.organizationId,
         );
         expect(mockTargetService.getTargetsByGitRepoId).not.toHaveBeenCalled();
@@ -157,7 +157,7 @@ describe('GetTargetsByOrganizationUseCase', () => {
           },
         ];
 
-        mockGitHexa.getOrganizationRepositories.mockResolvedValue(
+        mockGitPort.getOrganizationRepositories.mockResolvedValue(
           mockRepositories,
         );
         mockTargetService.getTargetsByGitRepoId.mockResolvedValue([]);
@@ -174,13 +174,13 @@ describe('GetTargetsByOrganizationUseCase', () => {
     describe('when git hexa errors occur', () => {
       it('re-throws the error', async () => {
         const error = new Error('Git service unavailable');
-        mockGitHexa.getOrganizationRepositories.mockRejectedValue(error);
+        mockGitPort.getOrganizationRepositories.mockRejectedValue(error);
 
         await expect(useCase.execute(mockCommand)).rejects.toThrow(
           'Git service unavailable',
         );
 
-        expect(mockGitHexa.getOrganizationRepositories).toHaveBeenCalledWith(
+        expect(mockGitPort.getOrganizationRepositories).toHaveBeenCalledWith(
           mockCommand.organizationId,
         );
       });
@@ -199,7 +199,7 @@ describe('GetTargetsByOrganizationUseCase', () => {
         ];
 
         const error = new Error('Database connection failed');
-        mockGitHexa.getOrganizationRepositories.mockResolvedValue(
+        mockGitPort.getOrganizationRepositories.mockResolvedValue(
           mockRepositories,
         );
         mockTargetService.getTargetsByGitRepoId.mockRejectedValue(error);

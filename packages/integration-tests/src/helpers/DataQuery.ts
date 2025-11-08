@@ -9,8 +9,9 @@ export class DataQuery {
     standard: Standard,
     version?: number,
   ): Promise<StandardVersion> {
-    const standardVersions =
-      await this.testApp.standardsHexa.listStandardVersions(standard.id);
+    const standardVersions = await this.testApp.standardsHexa
+      .getAdapter()
+      .listStandardVersions(standard.id);
     const expectedVersion = version ?? standard.version;
     for (const standardVersion of standardVersions) {
       if (standardVersion.version === expectedVersion) {
@@ -33,9 +34,9 @@ export class DataQuery {
     recipe: Recipe,
     version?: number,
   ): Promise<RecipeVersion> {
-    const recipeVersions = await this.testApp.recipesHexa.listRecipeVersions(
-      recipe.id,
-    );
+    const recipeVersions = await this.testApp.recipesHexa
+      .getAdapter()
+      .listRecipeVersions(recipe.id);
     const expectedVersion = version ?? recipe.version;
 
     console.log({ recipeVersions, expectedVersion });

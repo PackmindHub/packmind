@@ -1,29 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
-import {
-  ListStandardsBySpaceCommand,
-  GetStandardByIdCommand,
-  UpdateStandardCommand,
-  ListStandardsBySpaceResponse,
-  GetStandardByIdResponse,
-  IDeploymentPort,
-  IStandardsPort,
-  ILinterPort,
-} from '@packmind/types';
+import { IDeploymentPort, ILinterPort } from '@packmind/types';
 import { StandardsHexaFactory } from './StandardsHexaFactory';
-import { Standard, StandardId } from './domain/entities/Standard';
-import { StandardVersion } from './domain/entities/StandardVersion';
-import { Rule } from './domain/entities/Rule';
-import { RuleExample } from './domain/entities/RuleExample';
-import { OrganizationId, UserId } from '@packmind/accounts';
-import { SpaceId } from '@packmind/types';
-import { StandardVersionId } from './domain/entities';
-import {
-  CreateRuleExampleCommand,
-  GetRuleExamplesCommand,
-  UpdateRuleExampleCommand,
-  DeleteRuleExampleCommand,
-} from './domain/useCases';
 import { StandardsAdapter } from './application/useCases/StandardsAdapter';
 
 const origin = 'StandardsHexa';
@@ -41,9 +19,9 @@ const origin = 'StandardsHexa';
  * Uses the DataSource provided through the HexaRegistry for database operations.
  * Also integrates with GitHexa for git-related standards operations.
  */
-export class StandardsHexa extends BaseHexa<BaseHexaOpts, IStandardsPort> {
+export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
   private readonly hexa: StandardsHexaFactory;
-  private standardsAdapter?: IStandardsPort;
+  private standardsAdapter?: StandardsAdapter;
   private isInitialized = false;
 
   constructor(
@@ -116,7 +94,7 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, IStandardsPort> {
     }
   }
 
-  public getAdapter(): IStandardsPort {
+  public getAdapter(): StandardsAdapter {
     // Create adapter lazily if hexa factory is initialized but adapter not yet created
     if (!this.standardsAdapter) {
       // Check if useCases is available (created during initialization)
@@ -161,215 +139,5 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, IStandardsPort> {
     this.logger.info('Destroying StandardsHexa');
     // Add any cleanup logic here if needed
     this.logger.info('StandardsHexa destroyed');
-  }
-
-  // ===========================
-  // CORE STANDARD MANAGEMENT
-  // ===========================
-
-  /**
-   * Create a new standard with initial content
-   */
-  public async createStandard(params: {
-    name: string;
-    description: string;
-    rules: Array<{ content: string }>;
-    organizationId: OrganizationId;
-    userId: UserId;
-    scope: string | null;
-    spaceId: SpaceId | null;
-  }): Promise<Standard> {
-    this.ensureInitialized();
-    return this.hexa.useCases.createStandard(params);
-  }
-
-  /**
-   * Create a new standard with rules and examples in a single operation
-   */
-  public async createStandardWithExamples(params: {
-    name: string;
-    description: string;
-    summary: string | null;
-    rules: import('@packmind/types').RuleWithExamples[];
-    organizationId: OrganizationId;
-    userId: UserId;
-    scope: string | null;
-    spaceId: SpaceId | null;
-  }): Promise<Standard> {
-    this.ensureInitialized();
-    return this.hexa.useCases.createStandardWithExamples(params);
-  }
-
-  /**
-   * Update an existing standard with new content
-   */
-  public async updateStandard(
-    command: UpdateStandardCommand,
-  ): Promise<Standard> {
-    this.ensureInitialized();
-    return this.hexa.useCases.updateStandard(command);
-  }
-
-  /**
-   * Add a new rule to an existing standard
-   */
-  public async addRuleToStandard(params: {
-    standardSlug: string;
-    ruleContent: string;
-    organizationId: OrganizationId;
-    userId: UserId;
-  }): Promise<StandardVersion> {
-    this.ensureInitialized();
-    return this.hexa.useCases.addRuleToStandard(params);
-  }
-
-  /**
-   * Create a new example for a rule
-   */
-  public async createRuleExample(
-    command: CreateRuleExampleCommand,
-  ): Promise<RuleExample> {
-    this.ensureInitialized();
-    return this.hexa.useCases.createRuleExample(command);
-  }
-
-  /**
-   * Get all examples for a rule
-   */
-  public async getRuleExamples(
-    command: GetRuleExamplesCommand,
-  ): Promise<RuleExample[]> {
-    this.ensureInitialized();
-    return this.hexa.useCases.getRuleExamples(command);
-  }
-
-  /**
-   * Update an existing rule example
-   */
-  public async updateRuleExample(
-    command: UpdateRuleExampleCommand,
-  ): Promise<RuleExample> {
-    this.ensureInitialized();
-    return this.hexa.useCases.updateRuleExample(command);
-  }
-
-  /**
-   * Delete a rule example
-   */
-  public async deleteRuleExample(
-    command: DeleteRuleExampleCommand,
-  ): Promise<void> {
-    this.ensureInitialized();
-    return this.hexa.useCases.deleteRuleExample(command);
-  }
-
-  /**
-   * Get a standard by its ID
-   */
-  public async getStandardById(
-    command: GetStandardByIdCommand,
-  ): Promise<GetStandardByIdResponse> {
-    this.ensureInitialized();
-    return this.hexa.useCases.getStandardById(command);
-  }
-
-  /**
-   * Find a standard by its slug within an organization
-   */
-  public async findStandardBySlug(
-    slug: string,
-    organizationId: OrganizationId,
-  ): Promise<Standard | null> {
-    this.ensureInitialized();
-    return this.hexa.useCases.findStandardBySlug(slug, organizationId);
-  }
-
-  /**
-   * List all standards for a space (includes space standards + org standards without spaceId)
-   */
-  public async listStandardsBySpace(
-    command: ListStandardsBySpaceCommand,
-  ): Promise<ListStandardsBySpaceResponse> {
-    this.ensureInitialized();
-    return this.hexa.useCases.listStandardsBySpace(command);
-  }
-
-  // ===========================
-  // STANDARD VERSION MANAGEMENT
-  // ===========================
-
-  /**
-   * List all versions of a standard
-   */
-  public async listStandardVersions(
-    standardId: StandardId,
-  ): Promise<StandardVersion[]> {
-    this.ensureInitialized();
-    return this.hexa.useCases.listStandardVersions(standardId);
-  }
-
-  /**
-   * Get a specific version of a standard
-   */
-  public async getStandardVersion(
-    standardId: StandardId,
-    version: number,
-  ): Promise<StandardVersion | null> {
-    this.ensureInitialized();
-    return this.hexa.useCases.getStandardVersion(standardId, version);
-  }
-
-  /**
-   * Get rules for a standard (from latest version)
-   */
-  public async getRulesByStandardId(standardId: StandardId): Promise<Rule[]> {
-    this.ensureInitialized();
-    return this.hexa.useCases.getRulesByStandardId(standardId);
-  }
-
-  /**
-   * Get the latest version of a standard
-   */
-  public async getLatestStandardVersion(
-    standardId: StandardId,
-  ): Promise<StandardVersion | null> {
-    this.ensureInitialized();
-    return this.hexa.useCases.getLatestStandardVersion(standardId);
-  }
-
-  /**
-   * Get a standard version by its ID
-   */
-  public async getStandardVersionById(
-    versionId: StandardVersionId,
-  ): Promise<StandardVersion | null> {
-    this.ensureInitialized();
-    return this.hexa.useCases.getStandardVersionById(versionId);
-  }
-
-  // ===========================
-  // STANDARD DELETION
-  // ===========================
-
-  /**
-   * Delete a standard and all its versions
-   */
-  public async deleteStandard(
-    standardId: StandardId,
-    userId: UserId,
-  ): Promise<void> {
-    this.ensureInitialized();
-    return this.hexa.useCases.deleteStandard(standardId, userId);
-  }
-
-  /**
-   * Delete multiple standards in batch
-   */
-  public async deleteStandardsBatch(
-    standardIds: StandardId[],
-    userId: UserId,
-  ): Promise<void> {
-    this.ensureInitialized();
-    return this.hexa.useCases.deleteStandardsBatch(standardIds, userId);
   }
 }
