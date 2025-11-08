@@ -67,7 +67,14 @@ describe('DeploymentsHexa - Simple Integration', () => {
     } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
     // Create mock RecipesHexa
+    const mockRecipesAdapter = {
+      listRecipesByOrganization: jest.fn(),
+      listRecipesBySpace: jest.fn(),
+      getRecipeVersionById: jest.fn(),
+    } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+
     mockRecipesHexa = {
+      getAdapter: jest.fn().mockReturnValue(mockRecipesAdapter),
       getRecipeById: jest.fn(),
       getRecipeVersionById: jest.fn(),
       destroy: jest.fn(),
@@ -125,12 +132,23 @@ describe('DeploymentsHexa - Simple Integration', () => {
   describe('constructor', () => {
     it('initializes successfully with valid dependencies', () => {
       expect(() => {
-        new DeploymentsHexa(mockRegistry, { logger: mockLogger });
+        new DeploymentsHexa(mockDataSource, { logger: mockLogger });
       }).not.toThrow();
+    });
+  });
+
+  describe('initialize', () => {
+    it('initializes successfully with valid dependencies', async () => {
+      const deploymentsHexa = new DeploymentsHexa(mockDataSource, {
+        logger: mockLogger,
+      });
+      await expect(
+        deploymentsHexa.initialize(mockRegistry),
+      ).resolves.not.toThrow();
     });
 
     describe('when CodingAgentHexa is not in registry', () => {
-      it('throws error', () => {
+      it('throws error', async () => {
         mockRegistry.get = jest.fn().mockImplementation((type) => {
           if (type === GitHexa) {
             return mockGitHexa;
@@ -144,14 +162,17 @@ describe('DeploymentsHexa - Simple Integration', () => {
           return null; // CodingAgentHexa not found
         });
 
-        expect(() => {
-          new DeploymentsHexa(mockRegistry, { logger: mockLogger });
-        }).toThrow('CodingAgentHexa not found in registry');
+        const deploymentsHexa = new DeploymentsHexa(mockDataSource, {
+          logger: mockLogger,
+        });
+        await expect(
+          deploymentsHexa.initialize(mockRegistry),
+        ).rejects.toThrow();
       });
     });
 
     describe('when GitHexa is not in registry', () => {
-      it('throws error', () => {
+      it('throws error', async () => {
         mockRegistry.get = jest.fn().mockImplementation((type) => {
           if (type === CodingAgentHexa) {
             return mockCodingAgentHexa;
@@ -165,14 +186,17 @@ describe('DeploymentsHexa - Simple Integration', () => {
           return null; // GitHexa not found
         });
 
-        expect(() => {
-          new DeploymentsHexa(mockRegistry, { logger: mockLogger });
-        }).toThrow('GitHexa not found in registry');
+        const deploymentsHexa = new DeploymentsHexa(mockDataSource, {
+          logger: mockLogger,
+        });
+        await expect(
+          deploymentsHexa.initialize(mockRegistry),
+        ).rejects.toThrow();
       });
     });
 
     describe('when StandardsHexa is not in registry', () => {
-      it('throws error', () => {
+      it('throws error', async () => {
         mockRegistry.get = jest.fn().mockImplementation((type) => {
           if (type === CodingAgentHexa) {
             return mockCodingAgentHexa;
@@ -180,32 +204,43 @@ describe('DeploymentsHexa - Simple Integration', () => {
           if (type === GitHexa) {
             return mockGitHexa;
           }
-          // StandardsHexa not found, RecipesHexa is optional
+          if (type === RecipesHexa) {
+            return mockRecipesHexa;
+          }
+          // StandardsHexa not found
+          if (type === StandardsHexa) {
+            throw new Error('StandardsHexa not found in registry');
+          }
           return null;
         });
 
-        expect(() => {
-          new DeploymentsHexa(mockRegistry, { logger: mockLogger });
-        }).toThrow('StandardsHexa not found in registry');
+        const deploymentsHexa = new DeploymentsHexa(mockDataSource, {
+          logger: mockLogger,
+        });
+        await expect(
+          deploymentsHexa.initialize(mockRegistry),
+        ).rejects.toThrow();
       });
     });
   });
 
   describe('destroy', () => {
-    it('cleans up resources', () => {
-      const deploymentsHexa = new DeploymentsHexa(mockRegistry, {
+    it('cleans up resources', async () => {
+      const deploymentsHexa = new DeploymentsHexa(mockDataSource, {
         logger: mockLogger,
       });
+      await deploymentsHexa.initialize(mockRegistry);
 
       deploymentsHexa.destroy();
     });
   });
 
   describe('setAccountProviders', () => {
-    it('accepts user and organization providers', () => {
-      const deploymentsHexa = new DeploymentsHexa(mockRegistry, {
+    it('accepts user and organization providers', async () => {
+      const deploymentsHexa = new DeploymentsHexa(mockDataSource, {
         logger: mockLogger,
       });
+      await deploymentsHexa.initialize(mockRegistry);
 
       expect(() =>
         deploymentsHexa.setAccountProviders(

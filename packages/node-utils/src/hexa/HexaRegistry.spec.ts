@@ -5,8 +5,13 @@ import { DataSource } from 'typeorm';
 class TestHexa extends BaseHexa {
   public destroyCalled = false;
 
-  constructor(registry: HexaRegistry) {
-    super(registry);
+  constructor(dataSource: DataSource) {
+    super(dataSource);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async initialize(_registry: HexaRegistry): Promise<void> {
+    // No adapters needed
   }
 
   getAdapter(): void {
@@ -21,8 +26,13 @@ class TestHexa extends BaseHexa {
 class AnotherTestHexa extends BaseHexa {
   public destroyCalled = false;
 
-  constructor(registry: HexaRegistry) {
-    super(registry);
+  constructor(dataSource: DataSource) {
+    super(dataSource);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async initialize(_registry: HexaRegistry): Promise<void> {
+    // No adapters needed
   }
 
   getAdapter(): void {
@@ -40,8 +50,11 @@ class DependentHexa extends BaseHexa {
   public dependencyHexa: TestHexa | null = null;
   public dependencyError: Error | null = null;
 
-  constructor(registry: HexaRegistry) {
-    super(registry);
+  constructor(dataSource: DataSource) {
+    super(dataSource);
+  }
+
+  async initialize(registry: HexaRegistry): Promise<void> {
     try {
       this.dependencyHexa = registry.get(TestHexa);
     } catch (error) {
@@ -98,9 +111,9 @@ describe('HexaRegistry', () => {
     });
 
     describe('when registering after initialization', () => {
-      it('throws error', () => {
+      it('throws error', async () => {
         registry.register(TestHexa);
-        registry.init(mockDataSource);
+        await registry.init(mockDataSource);
 
         expect(() => registry.register(AnotherTestHexa)).toThrow(
           'Cannot register hexas after initialization',
@@ -110,45 +123,45 @@ describe('HexaRegistry', () => {
   });
 
   describe('init', () => {
-    it('initializes all registered hexas with DataSource', () => {
+    it('initializes all registered hexas with DataSource', async () => {
       registry.register(TestHexa);
       registry.register(AnotherTestHexa);
 
-      expect(() => registry.init(mockDataSource)).not.toThrow();
+      await expect(registry.init(mockDataSource)).resolves.not.toThrow();
       expect(registry.initialized).toBe(true);
     });
 
     describe('when called twice', () => {
-      it('throws error', () => {
+      it('throws error', async () => {
         registry.register(TestHexa);
-        registry.init(mockDataSource);
+        await registry.init(mockDataSource);
 
-        expect(() => registry.init(mockDataSource)).toThrow(
+        await expect(registry.init(mockDataSource)).rejects.toThrow(
           'Registry already initialized',
         );
       });
     });
 
-    it('works with no registered hexas', () => {
-      expect(() => registry.init(mockDataSource)).not.toThrow();
+    it('works with no registered hexas', async () => {
+      await expect(registry.init(mockDataSource)).resolves.not.toThrow();
       expect(registry.initialized).toBe(true);
     });
 
     describe('when DataSource is not provided', () => {
-      it('throws error', () => {
+      it('throws error', async () => {
         registry.register(TestHexa);
 
-        expect(() => registry.init(null as unknown as DataSource)).toThrow(
-          'DataSource is required for initialization',
-        );
+        await expect(
+          registry.init(null as unknown as DataSource),
+        ).rejects.toThrow('DataSource is required for initialization');
       });
     });
   });
 
   describe('get', () => {
-    it('returns initialized hexa successfully', () => {
+    it('returns initialized hexa successfully', async () => {
       registry.register(TestHexa);
-      registry.init(mockDataSource);
+      await registry.init(mockDataSource);
 
       const hexa = registry.get(TestHexa);
 
@@ -166,8 +179,8 @@ describe('HexaRegistry', () => {
     });
 
     describe('when getting unregistered hexa', () => {
-      it('throws error', () => {
-        registry.init(mockDataSource);
+      it('throws error', async () => {
+        await registry.init(mockDataSource);
 
         expect(() => registry.get(TestHexa)).toThrow(
           'Hexa TestHexa not registered',
@@ -177,8 +190,8 @@ describe('HexaRegistry', () => {
   });
 
   describe('getDataSource', () => {
-    it('returns the DataSource after initialization', () => {
-      registry.init(mockDataSource);
+    it('returns the DataSource after initialization', async () => {
+      await registry.init(mockDataSource);
 
       const dataSource = registry.getDataSource();
 
@@ -205,10 +218,10 @@ describe('HexaRegistry', () => {
   });
 
   describe('destroyAll', () => {
-    it('calls destroy on all initialized hexas', () => {
+    it('calls destroy on all initialized hexas', async () => {
       registry.register(TestHexa);
       registry.register(AnotherTestHexa);
-      registry.init(mockDataSource);
+      await registry.init(mockDataSource);
 
       const hexa1 = registry.get(TestHexa);
       const hexa2 = registry.get(AnotherTestHexa);
@@ -220,12 +233,12 @@ describe('HexaRegistry', () => {
       expect(registry.initialized).toBe(false);
     });
 
-    it('allows re-initialization after destroy', () => {
+    it('allows re-initialization after destroy', async () => {
       registry.register(TestHexa);
-      registry.init(mockDataSource);
+      await registry.init(mockDataSource);
       registry.destroyAll();
 
-      expect(() => registry.init(mockDataSource)).not.toThrow();
+      await expect(registry.init(mockDataSource)).resolves.not.toThrow();
       expect(registry.initialized).toBe(true);
     });
 
@@ -235,9 +248,9 @@ describe('HexaRegistry', () => {
   });
 
   describe('reset', () => {
-    it('clears all registrations and hexas', () => {
+    it('clears all registrations and hexas', async () => {
       registry.register(TestHexa);
-      registry.init(mockDataSource);
+      await registry.init(mockDataSource);
 
       registry.reset();
 
@@ -245,9 +258,9 @@ describe('HexaRegistry', () => {
       expect(registry.initialized).toBe(false);
     });
 
-    it('allows fresh registration after reset', () => {
+    it('allows fresh registration after reset', async () => {
       registry.register(TestHexa);
-      registry.init(mockDataSource);
+      await registry.init(mockDataSource);
       registry.reset();
 
       expect(() => registry.register(TestHexa)).not.toThrow();
@@ -256,10 +269,10 @@ describe('HexaRegistry', () => {
   });
 
   describe('cross-hexa dependencies', () => {
-    it('allows hexas to access other hexas during construction', () => {
+    it('allows hexas to access other hexas during initialization', async () => {
       registry.register(TestHexa);
       registry.register(DependentHexa);
-      registry.init(mockDataSource);
+      await registry.init(mockDataSource);
 
       const testHexa = registry.get(TestHexa);
       const dependentHexa = registry.get(DependentHexa);
@@ -268,10 +281,10 @@ describe('HexaRegistry', () => {
       expect(dependentHexa.dependencyError).toBeNull();
     });
 
-    it('allows hexas to use dependencies immediately after initialization', () => {
+    it('allows hexas to use dependencies immediately after initialization', async () => {
       registry.register(TestHexa);
       registry.register(DependentHexa);
-      registry.init(mockDataSource);
+      await registry.init(mockDataSource);
 
       const testHexa = registry.get(TestHexa);
       const dependentHexa = registry.get(DependentHexa);
@@ -283,9 +296,9 @@ describe('HexaRegistry', () => {
     });
 
     describe('when dependency is not registered', () => {
-      it('captures error during construction', () => {
+      it('captures error during initialization', async () => {
         registry.register(DependentHexa);
-        registry.init(mockDataSource);
+        await registry.init(mockDataSource);
 
         const dependentHexa = registry.get(DependentHexa);
 
@@ -297,25 +310,22 @@ describe('HexaRegistry', () => {
     });
 
     describe('when dependency is registered after dependent hexa', () => {
-      it('fails to find dependency due to registration order', () => {
+      it('finds dependency during initialization', async () => {
         registry.register(DependentHexa);
         registry.register(TestHexa);
-        registry.init(mockDataSource);
+        await registry.init(mockDataSource);
 
         const dependentHexa = registry.get(DependentHexa);
 
-        expect(dependentHexa.dependencyHexa).toBeNull();
-        expect(dependentHexa.dependencyError).toEqual(
-          new Error(
-            'Hexa TestHexa is registered but not yet instantiated. Ensure dependencies are registered in the correct order.',
-          ),
-        );
+        // Dependencies are resolved during initialize(), so order doesn't matter
+        expect(dependentHexa.dependencyHexa).toBeInstanceOf(TestHexa);
+        expect(dependentHexa.dependencyError).toBeNull();
       });
     });
   });
 
   describe('integration workflow', () => {
-    it('supports full deferred initialization workflow', () => {
+    it('supports full deferred initialization workflow', async () => {
       registry.register(TestHexa);
       registry.register(AnotherTestHexa);
 
@@ -323,7 +333,7 @@ describe('HexaRegistry', () => {
       expect(registry.isRegistered(AnotherTestHexa)).toBe(true);
       expect(registry.initialized).toBe(false);
 
-      registry.init(mockDataSource);
+      await registry.init(mockDataSource);
       expect(registry.initialized).toBe(true);
 
       const accountsHexa = registry.get(TestHexa);

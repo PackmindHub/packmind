@@ -1,3 +1,4 @@
+import { DataSource } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, HexaRegistry, BaseHexaOpts } from '@packmind/node-utils';
 import { IDeploymentPort, IRecipesPort } from '@packmind/types';
@@ -25,31 +26,17 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
   private isInitialized = false;
 
   constructor(
-    registry: HexaRegistry,
+    dataSource: DataSource,
     opts: Partial<BaseHexaOpts> = { logger: new PackmindLogger(origin) },
   ) {
-    super(registry, opts);
+    super(dataSource, opts);
 
     this.logger.info('Constructing RecipesHexa');
 
     try {
-      // Get the DataSource from the registry
-      const dataSource = registry.getDataSource();
-      this.logger.debug('Retrieved DataSource from registry');
-
-      const gitHexa = registry.get(GitHexa);
-      const gitPort = gitHexa.getAdapter();
-
-      // Initialize the hexagon with the shared DataSource
-      // DeploymentPort will be resolved lazily to avoid circular dependencies
-      this.hexa = new RecipesHexaFactory(
-        dataSource,
-        registry,
-        gitPort,
-        undefined,
-        gitHexa, // Pass gitHexa for addFetchFileContentJob() - not in port
-        this.logger,
-      );
+      // Initialize the hexagon factory with the DataSource
+      // Adapter retrieval will be done in initialize(registry)
+      this.hexa = new RecipesHexaFactory(this.dataSource, this.logger);
       this.logger.info('RecipesHexa construction completed');
     } catch (error) {
       this.logger.error('Failed to construct RecipesHexa', {
@@ -60,20 +47,31 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
   }
 
   /**
-   * Async initialization phase - must be called after construction.
-   * This initializes delayed jobs and async dependencies.
+   * Initialize the hexa with access to the registry for adapter retrieval.
+   * This also handles async initialization (delayed jobs, etc.).
    */
-  public override async initialize(): Promise<void> {
+  public async initialize(registry: HexaRegistry): Promise<void> {
     if (this.isInitialized) {
       this.logger.debug('RecipesHexa already initialized');
       return;
     }
 
-    this.logger.info('Initializing RecipesHexa (async phase)');
+    this.logger.info(
+      'Initializing RecipesHexa (adapter retrieval and async phase)',
+    );
 
     try {
-      // Initialize the factory first
-      await this.hexa.initialize();
+      // Get GitHexa and its adapter
+      const gitHexa = registry.get(GitHexa);
+      const gitPort = gitHexa.getAdapter();
+
+      // Initialize the factory with registry and adapters
+      await this.hexa.initialize(
+        registry,
+        gitPort,
+        gitHexa,
+        this._deploymentPort || undefined,
+      );
 
       // Set delayed jobs on adapter if available (they're only created if deployment port is set)
       // Delayed jobs will be set later when deployment port is available via setDeploymentPort()
@@ -126,18 +124,19 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
    * This will trigger async initialization if not already initialized
    */
   public async setDeploymentPort(
+    registry: HexaRegistry,
     deploymentPort: IDeploymentPort,
   ): Promise<void> {
     this._deploymentPort = deploymentPort;
     // Update the use cases with the new deployment port (this will build delayed jobs)
-    await this.hexa.updateDeploymentPort(deploymentPort);
+    await this.hexa.updateDeploymentPort(registry, deploymentPort);
 
     // Initialize delayed jobs if not already initialized
     if (!this.isInitialized) {
       this.logger.info(
         'Deployment port set, triggering RecipesHexa initialization',
       );
-      await this.initialize();
+      await this.initialize(registry);
     } else {
       // If already initialized, delayed jobs are already set by updateDeploymentPort()
       // Just ensure they're set on the adapter

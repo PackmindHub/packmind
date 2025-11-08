@@ -22,6 +22,7 @@ import {
   StandardVersionId,
 } from '@packmind/standards/types';
 import { makeTestDatasource } from '@packmind/test-utils';
+import { PackmindLogger } from '@packmind/logger';
 import {
   IDeploymentPort,
   IStandardsPort,
@@ -96,8 +97,7 @@ describe('GitHub Copilot Deployment Integration', () => {
     registry.register(StandardsHexa);
 
     // Initialize the registry with the datasource
-    registry.init(dataSource);
-    await registry.initAsync();
+    await registry.init(dataSource);
 
     // Get initialized hexas
     accountsHexa = registry.get(AccountsHexa);
@@ -106,8 +106,9 @@ describe('GitHub Copilot Deployment Integration', () => {
     spacesHexa = registry.get(SpacesHexa);
     gitHexa = registry.get(GitHexa);
 
-    // Initialize coding agent factory with the registry
-    codingAgentFactory = new CodingAgentHexaFactory(registry);
+    // Initialize coding agent factory with logger
+    codingAgentFactory = new CodingAgentHexaFactory(new PackmindLogger('test'));
+    codingAgentFactory.initialize(registry);
     deployerService = codingAgentFactory.getDeployerService();
 
     const mockDeploymentPort = {
@@ -119,9 +120,7 @@ describe('GitHub Copilot Deployment Integration', () => {
     gitHexa.setUserProvider(accountsHexa.getUserProvider());
     gitHexa.setOrganizationProvider(accountsHexa.getOrganizationProvider());
 
-    // Initialize hexas and get adapters
-    await standardsHexa.initialize();
-    await gitHexa.initialize();
+    // Hexas are already initialized by registry.init(), but get adapters
     standardsPort = standardsHexa.getAdapter();
     gitPort = gitHexa.getAdapter();
 
@@ -528,8 +527,7 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
 
     beforeEach(async () => {
       // Ensure hexas are initialized before getting adapters
-      await standardsHexa.initialize();
-      await gitHexa.initialize();
+      // Hexas are already initialized by registry.init()
 
       defaultTarget = {
         id: createTargetId('default-target-id'),

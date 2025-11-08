@@ -16,6 +16,7 @@ import {
   StandardVersionId,
 } from '@packmind/standards/types';
 import { makeTestDatasource } from '@packmind/test-utils';
+import { PackmindLogger } from '@packmind/logger';
 import {
   GitProviderVendors,
   GitRepo,
@@ -95,8 +96,7 @@ describe('Claude Deployment Integration', () => {
     registry.register(StandardsHexa);
 
     // Initialize the registry with the datasource
-    registry.init(dataSource);
-    await registry.initAsync();
+    await registry.init(dataSource);
 
     // Get initialized hexas
     accountsHexa = registry.get(AccountsHexa);
@@ -105,8 +105,9 @@ describe('Claude Deployment Integration', () => {
     spacesHexa = registry.get(SpacesHexa);
     gitHexa = registry.get(GitHexa);
 
-    // Initialize coding agent factory with the registry
-    codingAgentFactory = new CodingAgentHexaFactory(registry);
+    // Initialize coding agent factory with logger
+    codingAgentFactory = new CodingAgentHexaFactory(new PackmindLogger('test'));
+    codingAgentFactory.initialize(registry);
     deployerService = codingAgentFactory.getDeployerService();
 
     const mockDeploymentPort = {
@@ -118,9 +119,7 @@ describe('Claude Deployment Integration', () => {
     gitHexa.setUserProvider(accountsHexa.getUserProvider());
     gitHexa.setOrganizationProvider(accountsHexa.getOrganizationProvider());
 
-    // Initialize hexas and get adapters
-    await standardsHexa.initialize();
-    await gitHexa.initialize();
+    // Hexas are already initialized by registry.init(), but get adapters
     standardsPort = standardsHexa.getAdapter();
     gitPort = gitHexa.getAdapter();
 

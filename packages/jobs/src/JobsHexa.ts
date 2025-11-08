@@ -1,9 +1,10 @@
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
+import { DataSource } from 'typeorm';
 import { JobsHexaFactory } from './JobsHexaFactory';
-import { IJobRegistry } from './domain/IJobRegistry';
-import { IJobFactory } from './domain/IJobQueue';
 import { JobRegistry } from './application/JobRegistry';
+import { IJobFactory } from './domain/IJobQueue';
+import { IJobRegistry } from './domain/IJobRegistry';
 
 const origin = 'JobsHexa';
 
@@ -24,29 +25,36 @@ export class JobsHexa extends BaseHexa {
   private readonly jobRegistry: IJobRegistry;
 
   constructor(
-    registry: HexaRegistry,
+    dataSource: DataSource,
     opts: Partial<BaseHexaOpts> = { logger: new PackmindLogger(origin) },
   ) {
-    super(registry, opts);
-    this.logger.info('Initializing JobsHexa');
+    super(dataSource, opts);
+    this.logger.info('Constructing JobsHexa');
 
     try {
-      const dataSource = registry.getDataSource();
-      this.logger.debug('Retrieved DataSource from registry');
-
       // Initialize the hexagon factory
-      this.hexa = new JobsHexaFactory(this.logger, dataSource, registry);
+      this.hexa = new JobsHexaFactory(this.logger);
 
       // Initialize the job registry
       this.jobRegistry = new JobRegistry(this.logger);
 
-      this.logger.info('JobsHexa initialized successfully');
+      this.logger.info('JobsHexa construction completed');
     } catch (error) {
-      this.logger.error('Failed to initialize JobsHexa', {
+      this.logger.error('Failed to construct JobsHexa', {
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
     }
+  }
+
+  /**
+   * Initialize the hexa with access to the registry for adapter retrieval.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  public async initialize(_registry: HexaRegistry): Promise<void> {
+    this.logger.info('Initializing JobsHexa (adapter retrieval phase)');
+    // JobsHexa doesn't need any adapters from registry
+    this.logger.info('JobsHexa initialized successfully');
   }
 
   /**

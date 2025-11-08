@@ -46,9 +46,8 @@ describe('Add rule to standard integration', () => {
     registry.register(AccountsHexa);
     registry.register(StandardsHexa);
 
-    // Initialize the registry with the datasource
-    registry.init(dataSource);
-    await registry.initAsync();
+    // Initialize the registry with the datasource (now async)
+    await registry.init(dataSource);
 
     // Get initialized hexas
     accountsHexa = registry.get(AccountsHexa);

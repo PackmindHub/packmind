@@ -16,6 +16,7 @@ import { HexaRegistry } from '@packmind/node-utils';
 import { Space, SpacesHexa, spacesSchemas } from '@packmind/spaces';
 import { StandardsHexa, standardsSchemas } from '@packmind/standards';
 import { makeTestDatasource } from '@packmind/test-utils';
+import { PackmindLogger } from '@packmind/logger';
 import {
   GitProviderVendors,
   GitRepo,
@@ -94,8 +95,7 @@ describe('Cursor Deployment Integration', () => {
     registry.register(StandardsHexa);
 
     // Initialize the registry with the datasource
-    registry.init(dataSource);
-    await registry.initAsync();
+    await registry.init(dataSource);
 
     // Get initialized hexas
     accountsHexa = registry.get(AccountsHexa);
@@ -104,8 +104,9 @@ describe('Cursor Deployment Integration', () => {
     spacesHexa = registry.get(SpacesHexa);
     gitHexa = registry.get(GitHexa);
 
-    // Initialize coding agent factory with the registry
-    codingAgentFactory = new CodingAgentHexaFactory(registry);
+    // Initialize coding agent factory with logger
+    codingAgentFactory = new CodingAgentHexaFactory(new PackmindLogger('test'));
+    codingAgentFactory.initialize(registry);
     deployerService = codingAgentFactory.getDeployerService();
 
     const mockDeploymentPort = {
@@ -117,9 +118,7 @@ describe('Cursor Deployment Integration', () => {
     gitHexa.setUserProvider(accountsHexa.getUserProvider());
     gitHexa.setOrganizationProvider(accountsHexa.getOrganizationProvider());
 
-    // Initialize hexas and get adapters
-    await standardsHexa.initialize();
-    await gitHexa.initialize();
+    // Hexas are already initialized by registry.init(), but get adapters
     standardsPort = standardsHexa.getAdapter();
     gitPort = gitHexa.getAdapter();
 
@@ -470,9 +469,7 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
 - [Test Recipe for Cursor](.packmind/recipes/test-recipe-for-cursor.md) : Test recipe for deployment`;
 
     beforeEach(async () => {
-      // Ensure hexas are initialized before getting adapters
-      await standardsHexa.initialize();
-      await gitHexa.initialize();
+      // Hexas are already initialized by registry.init()
       const gitPort = gitHexa.getAdapter();
 
       // Create a default target for testing
@@ -526,10 +523,7 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
     let cursorDeployer: CursorDeployer;
 
     beforeEach(async () => {
-      // Ensure hexas are initialized before getting adapters
-      await standardsHexa.initialize();
-      await gitHexa.initialize();
-
+      // Hexas are already initialized by registry.init()
       defaultTarget = {
         id: createTargetId('default-target-id'),
         name: 'Default',

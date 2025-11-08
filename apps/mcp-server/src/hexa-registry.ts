@@ -84,13 +84,9 @@ async function hexaRegistryPlugin(fastify: FastifyInstance) {
         );
       }
 
-      // Initialize the registry with the DataSource (synchronous phase)
-      registry.init(fastify.orm);
-      logger.debug('Synchronous initialization complete');
-
-      // Initialize async dependencies (e.g., job queues)
-      await registry.initAsync();
-      logger.debug('Async initialization complete');
+      // Initialize the registry with the DataSource (this now includes async initialization)
+      await registry.init(fastify.orm);
+      logger.debug('Registry initialization complete');
 
       // Set up bidirectional dependency between LinterHexa and StandardsHexa
       try {

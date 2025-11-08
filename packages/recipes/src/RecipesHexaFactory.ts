@@ -19,8 +19,8 @@ const origin = 'RecipesHexaFactory';
 export class RecipesHexaFactory {
   private readonly recipesRepositories: IRecipesRepositories;
   public readonly recipesServices: RecipesServices;
-  private readonly gitPort: IGitPort;
-  private readonly gitHexa?: GitHexa; // Keep for addFetchFileContentJob() - not in port
+  private gitPort?: IGitPort;
+  private gitHexa?: GitHexa; // Keep for addFetchFileContentJob() - not in port
   public useCases!: RecipesAdapter; // Non-null assertion since initialize() will set it
   private recipesDelayedJobs: IRecipesDelayedJobs | null = null;
   private isInitialized = false;
@@ -32,13 +32,8 @@ export class RecipesHexaFactory {
 
   constructor(
     dataSource: DataSource,
-    private readonly registry: HexaRegistry,
-    gitPort: IGitPort,
-    deploymentPort?: IDeploymentPort,
-    gitHexa?: GitHexa, // Keep for addFetchFileContentJob() - not in port
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    this.deploymentPort = deploymentPort;
     this.logger.info('Constructing RecipesHexaFactory');
 
     try {
@@ -51,10 +46,6 @@ export class RecipesHexaFactory {
         this.recipesRepositories,
         this.logger,
       );
-
-      this.logger.debug('Storing GitPort reference');
-      this.gitPort = gitPort;
-      this.gitHexa = gitHexa;
 
       this.logger.info('RecipesHexaFactory construction completed');
     } catch (error) {
@@ -79,7 +70,12 @@ export class RecipesHexaFactory {
    * Async initialization phase - must be called after construction.
    * This initializes delayed jobs and async dependencies.
    */
-  public async initialize(): Promise<void> {
+  public async initialize(
+    registry: HexaRegistry,
+    gitPort: IGitPort,
+    gitHexa?: GitHexa,
+    deploymentPort?: IDeploymentPort,
+  ): Promise<void> {
     if (this.isInitialized) {
       this.logger.debug('RecipesHexaFactory already initialized');
       return;
@@ -88,9 +84,14 @@ export class RecipesHexaFactory {
     this.logger.info('Initializing RecipesHexaFactory (async phase)');
 
     try {
+      // Store git port and hexa references
+      this.gitPort = gitPort;
+      this.gitHexa = gitHexa;
+      this.deploymentPort = deploymentPort;
+
       // Get AccountsHexa for user and organization providers
       // TODO: migrate with port/adapters
-      const accountsHexa = this.registry.get(AccountsHexa);
+      const accountsHexa = registry.get(AccountsHexa);
       if (!accountsHexa) {
         throw new Error('AccountsHexa not found in registry');
       }
@@ -99,8 +100,8 @@ export class RecipesHexaFactory {
 
       // Get spaces port for space validation
       let spacesPort: ISpacesPort | null = null;
-      if (this.registry.isRegistered(SpacesHexa)) {
-        const spacesHexa = this.registry.get(SpacesHexa);
+      if (registry.isRegistered(SpacesHexa)) {
+        const spacesHexa = registry.get(SpacesHexa);
         spacesPort = spacesHexa.getAdapter();
       } else {
         this.logger.warn(
@@ -124,7 +125,7 @@ export class RecipesHexaFactory {
       if (this.deploymentPort) {
         this.logger.debug('Building recipes delayed jobs');
         // TODO: migrate with port/adapters
-        const jobsHexa = this.registry.get(JobsHexa);
+        const jobsHexa = registry.get(JobsHexa);
         this.recipesDelayedJobs = await this.buildRecipesDelayedJobs(jobsHexa);
         // Set delayed jobs on adapter if it's already initialized
         if (this.useCases) {
@@ -214,7 +215,10 @@ export class RecipesHexaFactory {
   /**
    * Update the deployment port for webhook use cases
    */
-  async updateDeploymentPort(deploymentPort: IDeploymentPort): Promise<void> {
+  async updateDeploymentPort(
+    registry: HexaRegistry,
+    deploymentPort: IDeploymentPort,
+  ): Promise<void> {
     this.logger.info('Updating deployment port');
     // Store the deployment port first before building delayed jobs
     this.deploymentPort = deploymentPort;
@@ -222,7 +226,7 @@ export class RecipesHexaFactory {
 
     // Build delayed jobs synchronously so they're available immediately
     // TODO: migrate with port/adapters
-    const jobsHexa = this.registry.get(JobsHexa);
+    const jobsHexa = registry.get(JobsHexa);
     this.recipesDelayedJobs = await this.buildRecipesDelayedJobs(jobsHexa);
     // Set delayed jobs on adapter if it's already initialized
     if (this.useCases) {

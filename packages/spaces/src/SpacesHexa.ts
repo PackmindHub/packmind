@@ -1,3 +1,4 @@
+import { DataSource } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, HexaRegistry, BaseHexaOpts } from '@packmind/node-utils';
 import { ISpacesPort } from '@packmind/types';
@@ -24,28 +25,34 @@ export class SpacesHexa extends BaseHexa<BaseHexaOpts, ISpacesPort> {
   private readonly spacesAdapter: SpacesAdapter;
 
   constructor(
-    registry: HexaRegistry,
+    dataSource: DataSource,
     opts: Partial<BaseHexaOpts> = { logger: new PackmindLogger(origin) },
   ) {
-    super(registry, opts);
-    this.logger.info('Initializing SpacesHexa');
+    super(dataSource, opts);
+    this.logger.info('Constructing SpacesHexa');
 
     try {
-      // Get the DataSource from the registry
-      const dataSource = registry.getDataSource();
-      this.logger.debug('Retrieved DataSource from registry');
-
       // Initialize the factory and adapter
-      this.hexa = new SpacesHexaFactory(dataSource, this.logger);
+      this.hexa = new SpacesHexaFactory(this.dataSource, this.logger);
       this.spacesAdapter = new SpacesAdapter(this.hexa);
 
-      this.logger.info('SpacesHexa initialized successfully');
+      this.logger.info('SpacesHexa construction completed');
     } catch (error) {
-      this.logger.error('Failed to initialize SpacesHexa', {
+      this.logger.error('Failed to construct SpacesHexa', {
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
     }
+  }
+
+  /**
+   * Initialize the hexa with access to the registry for adapter retrieval.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  public async initialize(_registry: HexaRegistry): Promise<void> {
+    this.logger.info('Initializing SpacesHexa (adapter retrieval phase)');
+    // SpacesHexa doesn't need any adapters from registry
+    this.logger.info('SpacesHexa initialized successfully');
   }
 
   destroy(): void {

@@ -11,6 +11,7 @@
     "@packmind/node-utils": "*",
     "@packmind/types": "*",
     "@nestjs/common": "^11.1.6",
-    "ts-jest": "^29.4.1"
+    "ts-jest": "^29.4.1",
+    "typeorm": "^0.3.26"
   }
 }

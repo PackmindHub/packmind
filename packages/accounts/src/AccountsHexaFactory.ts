@@ -32,12 +32,15 @@ export class AccountsHexaFactory {
   private standardsPort?: IStandardsPort;
   private deploymentPort?: IDeploymentPort;
 
+  private spacesPort?: ISpacesPort;
+
   constructor(
     private readonly dataSource: DataSource,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
     private readonly apiKeyService?: ApiKeyService,
-    private readonly spacesPort?: ISpacesPort,
+    spacesPort?: ISpacesPort,
   ) {
+    this.spacesPort = spacesPort;
     this.logger.info('Initializing AccountsHexa');
 
     try {
@@ -98,5 +101,14 @@ export class AccountsHexaFactory {
     this.deploymentPort = deploymentPort;
     this.useCases.setDeploymentPort(deploymentPort);
     this.logger.debug('Deployment port updated');
+  }
+
+  /**
+   * Set the Spaces port and reinitialize use cases that depend on it.
+   */
+  setSpacesPort(spacesPort: ISpacesPort): void {
+    this.spacesPort = spacesPort;
+    this.useCases.setSpacesPort(spacesPort);
+    this.logger.debug('Spaces port updated');
   }
 }

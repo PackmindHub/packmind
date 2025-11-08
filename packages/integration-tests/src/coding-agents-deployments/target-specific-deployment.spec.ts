@@ -29,6 +29,7 @@ import {
   standardsSchemas,
 } from '@packmind/standards';
 import { makeTestDatasource } from '@packmind/test-utils';
+import { PackmindLogger } from '@packmind/logger';
 import { Target, createGitProviderId, createTargetId } from '@packmind/types';
 import { assert } from 'console';
 import { DataSource } from 'typeorm';
@@ -100,8 +101,7 @@ describe('Target-Specific Deployment Integration', () => {
     registry.register(DeploymentsHexa);
 
     // Initialize the registry with the datasource
-    registry.init(dataSource);
-    await registry.initAsync();
+    await registry.init(dataSource);
 
     // Get initialized hexas
     accountsHexa = registry.get(AccountsHexa);
@@ -109,8 +109,9 @@ describe('Target-Specific Deployment Integration', () => {
     standardsHexa = registry.get(StandardsHexa);
     spacesHexa = registry.get(SpacesHexa);
 
-    // Initialize coding agent factory with the registry
-    codingAgentFactory = new CodingAgentHexaFactory(registry);
+    // Initialize coding agent factory with logger
+    codingAgentFactory = new CodingAgentHexaFactory(new PackmindLogger('test'));
+    codingAgentFactory.initialize(registry);
     deployerService = codingAgentFactory.getDeployerService();
 
     // Create test data

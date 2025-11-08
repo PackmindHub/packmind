@@ -12,6 +12,7 @@
     "@packmind/recipes": "*",
     "@packmind/git": "*",
     "@packmind/jobs": "*",
+    "@packmind/logger": "*",
     "@packmind/node-utils": "*",
     "@packmind/types": "*",
     "@packmind/spaces": "*",

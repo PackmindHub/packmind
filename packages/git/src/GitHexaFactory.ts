@@ -18,7 +18,6 @@ export class GitHexaFactory {
   private readonly gitRepositories: GitRepositories;
   private readonly gitServices: GitServices;
   private readonly logger: PackmindLogger;
-  private readonly registry: HexaRegistry;
   // Adapter
   public useCases!: GitAdapter;
   private gitDelayedJobs?: IGitDelayedJobs;
@@ -26,7 +25,6 @@ export class GitHexaFactory {
 
   constructor(
     private readonly dataSource: DataSource,
-    registry: HexaRegistry,
     private readonly opts: GitHexaOpts = { logger: new PackmindLogger(origin) },
   ) {
     this.logger = opts.logger;
@@ -39,7 +37,6 @@ export class GitHexaFactory {
 
       this.gitRepositories = new GitRepositories(this.dataSource, this.opts);
       this.gitServices = new GitServices(this.gitRepositories, this.logger);
-      this.registry = registry;
 
       // Create adapter in constructor so it's available immediately
       // (adapter doesn't need delayed jobs - those are only used by GitHexa methods)
@@ -59,7 +56,7 @@ export class GitHexaFactory {
   /**
    * Async initialization phase - must be called after construction
    */
-  public async initialize(): Promise<void> {
+  public async initialize(registry: HexaRegistry): Promise<void> {
     if (this.isInitialized) {
       this.logger.debug('GitHexaFactory already initialized');
       return;
@@ -69,7 +66,7 @@ export class GitHexaFactory {
 
     try {
       // TODO: migrate with port/adapters
-      const jobsHexa = this.registry.get(JobsHexa);
+      const jobsHexa = registry.get(JobsHexa);
       if (!jobsHexa) {
         throw new Error('JobsHexa not found in registry');
       }

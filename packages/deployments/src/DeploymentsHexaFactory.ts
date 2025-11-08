@@ -1,27 +1,22 @@
 import { PackmindLogger } from '@packmind/logger';
-import { HexaRegistry } from '@packmind/node-utils';
-import { RenderModeConfiguration, IGitPort } from '@packmind/types';
+import { IGitPort, RenderModeConfiguration, Target } from '@packmind/types';
 import { DataSource, Repository } from 'typeorm';
-import { CodingAgentHexa } from '@packmind/coding-agent';
-import { GitHexa } from '@packmind/git';
-import { StandardsHexa } from '@packmind/standards';
-import { RecipesDeploymentRepository } from './infra/repositories/RecipesDeploymentRepository';
-import { StandardsDeploymentRepository } from './infra/repositories/StandardsDeploymentRepository';
-import { TargetRepository } from './infra/repositories/TargetRepository';
-import { RenderModeConfigurationRepository } from './infra/repositories/RenderModeConfigurationRepository';
-import { IRecipesDeploymentRepository } from './domain/repositories/IRecipesDeploymentRepository';
-import { IStandardsDeploymentRepository } from './domain/repositories/IStandardsDeploymentRepository';
-import { ITargetRepository } from './domain/repositories/ITargetRepository';
-import { RecipesDeploymentSchema } from './infra/schemas/RecipesDeploymentSchema';
-import { StandardsDeploymentSchema } from './infra/schemas/StandardsDeploymentSchema';
-import { TargetSchema } from './infra/schemas/TargetSchema';
+import { IDeploymentsServices } from './application/IDeploymentsServices';
+import { DeploymentsServices } from './application/services/DeploymentsServices';
 import { RecipesDeployment } from './domain/entities/RecipesDeployment';
 import { StandardsDeployment } from './domain/entities/StandardsDeployment';
-import { Target } from '@packmind/types';
-import { DeploymentsServices } from './application/services/DeploymentsServices';
-import { IDeploymentsServices } from './application/IDeploymentsServices';
-import { RenderModeConfigurationSchema } from './infra/schemas/RenderModeConfigurationSchema';
+import { IRecipesDeploymentRepository } from './domain/repositories/IRecipesDeploymentRepository';
 import { IRenderModeConfigurationRepository } from './domain/repositories/IRenderModeConfigurationRepository';
+import { IStandardsDeploymentRepository } from './domain/repositories/IStandardsDeploymentRepository';
+import { ITargetRepository } from './domain/repositories/ITargetRepository';
+import { RecipesDeploymentRepository } from './infra/repositories/RecipesDeploymentRepository';
+import { RenderModeConfigurationRepository } from './infra/repositories/RenderModeConfigurationRepository';
+import { StandardsDeploymentRepository } from './infra/repositories/StandardsDeploymentRepository';
+import { TargetRepository } from './infra/repositories/TargetRepository';
+import { RecipesDeploymentSchema } from './infra/schemas/RecipesDeploymentSchema';
+import { RenderModeConfigurationSchema } from './infra/schemas/RenderModeConfigurationSchema';
+import { StandardsDeploymentSchema } from './infra/schemas/StandardsDeploymentSchema';
+import { TargetSchema } from './infra/schemas/TargetSchema';
 
 export class DeploymentsHexaFactory {
   public repositories: {
@@ -39,7 +34,7 @@ export class DeploymentsHexaFactory {
   constructor(
     logger: PackmindLogger,
     dataSource: DataSource,
-    registry: HexaRegistry,
+    gitPort: IGitPort,
   ) {
     // Initialize repositories with proper DataSource that has schemas registered
     this.repositories = {
@@ -67,13 +62,6 @@ export class DeploymentsHexaFactory {
       ),
     };
 
-    // Get GitPort from registry
-    const gitHexa = registry.get(GitHexa);
-    if (!gitHexa) {
-      throw new Error('GitHexa not found in registry');
-    }
-    const gitPort = gitHexa.getAdapter();
-
     // Initialize services
     this.services = {
       git: gitPort,
@@ -84,19 +72,5 @@ export class DeploymentsHexaFactory {
         logger,
       ),
     };
-
-    // RecipesHexa dependency removed - using port pattern to avoid circular dependency
-
-    // Get StandardsHexa from registry
-    const standardsHexa = registry.get(StandardsHexa);
-    if (!standardsHexa) {
-      throw new Error('StandardsHexa not found in registry');
-    }
-
-    // Get CodingAgentHexa from registry
-    const codingAgentHexa = registry.get(CodingAgentHexa);
-    if (!codingAgentHexa) {
-      throw new Error('CodingAgentHexa not found in registry');
-    }
   }
 }

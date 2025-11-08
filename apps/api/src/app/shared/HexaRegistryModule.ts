@@ -2,7 +2,7 @@ import { Module, DynamicModule, Provider, Global } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { DataSource } from 'typeorm';
-import { HexaRegistry, BaseHexa } from '@packmind/node-utils';
+import { HexaRegistry, BaseHexa, BaseHexaOpts } from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
 import { DeploymentsHexa } from '@packmind/deployments';
 import { StandardsHexa } from '@packmind/standards';
@@ -32,7 +32,9 @@ export interface HexaRegistryModuleOptions {
    * Order matters for instantiation - dependencies should come first
    * e.g., [AccountsHexa, GitHexa, RecipesHexa]
    */
-  hexas: Array<new (registry: HexaRegistry) => BaseHexa>;
+  hexas: Array<
+    new (dataSource: DataSource, opts?: Partial<BaseHexaOpts>) => BaseHexa
+  >;
 }
 
 /**
@@ -177,11 +179,8 @@ export class HexaRegistryModule {
           }
         }
 
-        // Initialize the registry with the DataSource (synchronous phase)
-        registry.init(dataSource);
-
-        // Initialize async dependencies (e.g., job queues)
-        await registry.initAsync();
+        // Initialize the registry with the DataSource (this now includes async initialization)
+        await registry.init(dataSource);
 
         // Wire up cross-domain dependencies after all hexas are initialized
         // This ensures AccountsHexa has access to Git, Standards, and Deployments ports
@@ -536,13 +535,16 @@ export class HexaRegistryModule {
       const deploymentPort = (
         deploymentsHexa as { getAdapter: () => IDeploymentPort }
       ).getAdapter();
-      // setDeploymentPort is async
+      // setDeploymentPort is async and requires registry
       try {
         await (
           recipesHexa as {
-            setDeploymentPort: (port: IDeploymentPort) => Promise<void>;
+            setDeploymentPort: (
+              registry: HexaRegistry,
+              port: IDeploymentPort,
+            ) => Promise<void>;
           }
-        ).setDeploymentPort(deploymentPort);
+        ).setDeploymentPort(registry, deploymentPort);
       } catch (error) {
         // Log error but don't fail initialization
         console.error(

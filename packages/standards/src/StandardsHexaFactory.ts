@@ -22,7 +22,6 @@ export class StandardsHexaFactory {
   private readonly standardsRepositories: StandardsRepositories;
   private readonly standardsServices: StandardsServices;
   public useCases!: StandardsUseCases; // Non-null assertion since initialize() will set it
-  private readonly registry: HexaRegistry;
   private deploymentsQueryAdapter?: IDeploymentPort;
   private isInitialized = false;
 
@@ -32,7 +31,6 @@ export class StandardsHexaFactory {
 
   constructor(
     dataSource: DataSource,
-    registry: HexaRegistry,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
     linterAdapter?: ILinterPort,
   ) {
@@ -52,8 +50,6 @@ export class StandardsHexaFactory {
         linterAdapter,
       );
 
-      this.registry = registry;
-
       this.logger.info('StandardsHexaFactory construction completed');
     } catch (error) {
       this.logger.error('Failed to construct StandardsHexaFactory', {
@@ -66,7 +62,7 @@ export class StandardsHexaFactory {
   /**
    * Async initialization phase - must be called after construction
    */
-  public async initialize(): Promise<void> {
+  public async initialize(registry: HexaRegistry): Promise<void> {
     if (this.isInitialized) {
       this.logger.debug('StandardsHexaFactory already initialized');
       return;
@@ -75,7 +71,7 @@ export class StandardsHexaFactory {
     this.logger.info('Initializing StandardsHexaFactory (async phase)');
 
     try {
-      const jobsHexa = this.registry.get(JobsHexa);
+      const jobsHexa = registry.get(JobsHexa);
       if (!jobsHexa) {
         throw new Error('JobsHexa not found in registry');
       }
@@ -86,7 +82,7 @@ export class StandardsHexaFactory {
         this.getStandardsRepositories(),
       );
 
-      const accountsHexa = this.registry.get(AccountsHexa);
+      const accountsHexa = registry.get(AccountsHexa);
       if (!accountsHexa) {
         throw new Error('AccountsHexa not found in registry');
       }
@@ -95,8 +91,8 @@ export class StandardsHexaFactory {
 
       // Get spaces port for space validation
       let spacesPort: ISpacesPort | null = null;
-      if (this.registry.isRegistered(SpacesHexa)) {
-        const spacesHexa = this.registry.get(SpacesHexa);
+      if (registry.isRegistered(SpacesHexa)) {
+        const spacesHexa = registry.get(SpacesHexa);
         spacesPort = spacesHexa.getAdapter();
       } else {
         this.logger.warn(

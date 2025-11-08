@@ -1,3 +1,4 @@
+import { DataSource } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { UserProvider, OrganizationProvider } from '@packmind/types';
 import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
@@ -38,37 +39,44 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts, IAccountsPort> {
   private userProvider?: UserProvider;
   private organizationProvider?: OrganizationProvider;
 
-  constructor(registry: HexaRegistry, opts?: Partial<AccountsHexaOpts>) {
-    super(registry, { ...baseAccountsHexaOpts, ...opts });
-    this.logger.info('Initializing AccountsHexa');
+  constructor(dataSource: DataSource, opts?: Partial<AccountsHexaOpts>) {
+    super(dataSource, { ...baseAccountsHexaOpts, ...opts });
+    this.logger.info('Constructing AccountsHexa');
 
     try {
-      // Get the DataSource from the registry
-      const dataSource = registry.getDataSource();
-      this.logger.debug('Retrieved DataSource from registry');
+      // Initialize the hexagon factory with the DataSource
+      // Adapter retrieval will be done in initialize(registry)
+      this.hexa = new AccountsHexaFactory(
+        this.dataSource,
+        this.logger,
+        opts?.apiKeyService,
+        opts?.spacesPort, // Use provided spacesPort if available
+      );
+      this.logger.info('AccountsHexa construction completed');
+    } catch (error) {
+      this.logger.error('Failed to construct AccountsHexa', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
 
-      // Get SpacesHexa adapter for ISpacesPort (lazy DI per DDD standard)
-      let spacesPort: ISpacesPort | undefined = opts?.spacesPort;
-      if (!spacesPort) {
+  async initialize(registry: HexaRegistry): Promise<void> {
+    this.logger.info('Initializing AccountsHexa (adapter retrieval phase)');
+
+    try {
+      if (!this.opts?.spacesPort) {
         try {
           const spacesHexa = registry.get(SpacesHexa);
-          spacesPort = spacesHexa.getAdapter();
+          const spacesPort = spacesHexa.getAdapter();
+          this.hexa.setSpacesPort(spacesPort);
           this.logger.debug('Retrieved SpacesAdapter from SpacesHexa');
         } catch (error) {
           this.logger.debug('SpacesHexa not available in registry', {
             error: error instanceof Error ? error.message : String(error),
           });
-          spacesPort = undefined;
         }
       }
-
-      // Initialize the hexagon with the shared DataSource and optional dependencies
-      this.hexa = new AccountsHexaFactory(
-        dataSource,
-        this.logger,
-        opts?.apiKeyService,
-        spacesPort,
-      );
       this.logger.info('AccountsHexa initialized successfully');
     } catch (error) {
       this.logger.error('Failed to initialize AccountsHexa', {

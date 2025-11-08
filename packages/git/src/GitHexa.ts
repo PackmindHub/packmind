@@ -1,3 +1,4 @@
+import { DataSource } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, HexaRegistry, BaseHexaOpts } from '@packmind/node-utils';
 import { IDeploymentPort, IGitPort } from '@packmind/types';
@@ -32,17 +33,14 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
   private readonly hexa: GitHexaFactory;
   private isInitialized = false;
 
-  constructor(registry: HexaRegistry, opts?: Partial<GitHexaOpts>) {
-    super(registry, { ...BaseGitHexaOpts, ...opts });
+  constructor(dataSource: DataSource, opts?: Partial<GitHexaOpts>) {
+    super(dataSource, { ...BaseGitHexaOpts, ...opts });
     this.logger.info('Constructing GitHexa');
 
     try {
-      // Get the DataSource from the registry
-      const dataSource = registry.getDataSource();
-      this.logger.debug('Retrieved DataSource from registry');
-
-      // Initialize the hexagon with the shared DataSource
-      this.hexa = new GitHexaFactory(dataSource, registry, {
+      // Initialize the hexagon factory with the DataSource
+      // Adapter retrieval will be done in initialize(registry)
+      this.hexa = new GitHexaFactory(this.dataSource, {
         ...BaseGitHexaOpts,
         ...opts,
       });
@@ -56,19 +54,21 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
   }
 
   /**
-   * Async initialization phase - must be called after construction.
-   * This initializes delayed jobs and async dependencies.
+   * Initialize the hexa with access to the registry for adapter retrieval.
+   * This also handles async initialization (delayed jobs, etc.).
    */
-  public override async initialize(): Promise<void> {
+  public async initialize(registry: HexaRegistry): Promise<void> {
     if (this.isInitialized) {
       this.logger.debug('GitHexa already initialized');
       return;
     }
 
-    this.logger.info('Initializing GitHexa (async phase)');
+    this.logger.info(
+      'Initializing GitHexa (adapter retrieval and async phase)',
+    );
 
     try {
-      await this.hexa.initialize();
+      await this.hexa.initialize(registry);
       this.isInitialized = true;
       this.logger.info('GitHexa initialized successfully');
     } catch (error) {

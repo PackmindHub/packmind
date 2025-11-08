@@ -11,53 +11,59 @@ import { HexaRegistry } from '@packmind/node-utils';
 import { AnalyticsHexa } from '@packmind/analytics';
 
 export class TestApp {
-  public readonly accountsHexa: AccountsHexa;
-  public readonly recipesHexa: RecipesHexa;
-  public readonly standardsHexa: StandardsHexa;
-  public readonly spacesHexa: SpacesHexa;
-  public readonly gitHexa: GitHexa;
-  public readonly codingAgentHexa: CodingAgentHexa;
-  public readonly jobsHexa: JobsHexa;
-  public readonly deploymentsHexa: DeploymentsHexa;
-  public readonly analyticsHexa: AnalyticsHexa;
+  public accountsHexa!: AccountsHexa;
+  public recipesHexa!: RecipesHexa;
+  public standardsHexa!: StandardsHexa;
+  public spacesHexa!: SpacesHexa;
+  public gitHexa!: GitHexa;
+  public codingAgentHexa!: CodingAgentHexa;
+  public jobsHexa!: JobsHexa;
+  public deploymentsHexa!: DeploymentsHexa;
+  public analyticsHexa!: AnalyticsHexa;
+
+  private registry: HexaRegistry;
+  private dataSource: DataSource;
 
   constructor(dataSource: DataSource) {
-    const registry = new HexaRegistry();
+    this.registry = new HexaRegistry();
+    this.dataSource = dataSource;
 
-    registry.register(SpacesHexa);
-    registry.register(AccountsHexa);
-    registry.register(JobsHexa);
-    registry.register(GitHexa);
-    registry.register(RecipesHexa);
-    registry.register(StandardsHexa);
-    registry.register(CodingAgentHexa);
-    registry.register(DeploymentsHexa);
-    registry.register(AnalyticsHexa);
-
-    registry.init(dataSource);
-
-    this.accountsHexa = registry.get(AccountsHexa);
-    this.recipesHexa = registry.get(RecipesHexa);
-    this.standardsHexa = registry.get(StandardsHexa);
-    this.spacesHexa = registry.get(SpacesHexa);
-    this.gitHexa = registry.get(GitHexa);
-    this.codingAgentHexa = registry.get(CodingAgentHexa);
-    this.jobsHexa = registry.get(JobsHexa);
-    this.deploymentsHexa = registry.get(DeploymentsHexa);
-    this.analyticsHexa = registry.get(AnalyticsHexa);
+    this.registry.register(SpacesHexa);
+    this.registry.register(AccountsHexa);
+    this.registry.register(JobsHexa);
+    this.registry.register(GitHexa);
+    this.registry.register(RecipesHexa);
+    this.registry.register(StandardsHexa);
+    this.registry.register(CodingAgentHexa);
+    this.registry.register(DeploymentsHexa);
+    this.registry.register(AnalyticsHexa);
   }
 
   public async initialize() {
-    await this.gitHexa.initialize();
+    // Initialize the registry (this now includes async initialization)
+    await this.registry.init(this.dataSource);
+
+    this.accountsHexa = this.registry.get(AccountsHexa);
+    this.recipesHexa = this.registry.get(RecipesHexa);
+    this.standardsHexa = this.registry.get(StandardsHexa);
+    this.spacesHexa = this.registry.get(SpacesHexa);
+    this.gitHexa = this.registry.get(GitHexa);
+    this.codingAgentHexa = this.registry.get(CodingAgentHexa);
+    this.jobsHexa = this.registry.get(JobsHexa);
+    this.deploymentsHexa = this.registry.get(DeploymentsHexa);
+    this.analyticsHexa = this.registry.get(AnalyticsHexa);
+
+    // Wire up cross-domain dependencies
     this.gitHexa.setUserProvider(this.accountsHexa.getUserProvider());
     this.gitHexa.setOrganizationProvider(
       this.accountsHexa.getOrganizationProvider(),
     );
     this.gitHexa.setDeploymentsAdapter(this.deploymentsHexa.getAdapter());
 
-    await this.recipesHexa.initialize();
-    await this.recipesHexa.setDeploymentPort(this.deploymentsHexa.getAdapter());
-    await this.standardsHexa.initialize();
+    await this.recipesHexa.setDeploymentPort(
+      this.registry,
+      this.deploymentsHexa.getAdapter(),
+    );
 
     // Set standards port in deployments hexa after initialization
     this.deploymentsHexa.setStandardsPort(this.standardsHexa);

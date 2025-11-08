@@ -1,18 +1,24 @@
-import { BaseHexa, HexaRegistry, BaseHexaOpts } from '@packmind/node-utils';
-import { IDeploymentPort, IStandardsPort, ILinterPort } from '@packmind/types';
-import { LinterUsecases } from './LinterUsecases';
+import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
+import { IDeploymentPort, ILinterPort, IStandardsPort } from '@packmind/types';
+import { DataSource } from 'typeorm';
 import { LinterAdapter } from './LinterAdapter';
+import { LinterUsecases } from './LinterUsecases';
 
 export class LinterHexa extends BaseHexa<BaseHexaOpts, ILinterPort> {
   private deploymentAdapter: IDeploymentPort | null = null;
   private standardsAdapter: IStandardsPort | null = null;
   private linterAdapter: ILinterPort;
 
-  constructor(registry: HexaRegistry) {
-    super(registry);
+  constructor(dataSource: DataSource) {
+    super(dataSource);
 
     // OSS edition: provide stub implementation of ILinterPort
     this.linterAdapter = new LinterAdapter({});
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async initialize(registry: HexaRegistry): Promise<void> {
+    // No adapters needed for OSS edition
   }
 
   public async initializeJobQueues(): Promise<void> {

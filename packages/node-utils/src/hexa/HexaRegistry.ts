@@ -8,7 +8,7 @@ type ExtractOpts<T extends BaseHexa> =
   T extends BaseHexa<infer X, unknown> ? X : never;
 
 type HexaConstructor<T extends BaseHexa> = new (
-  registry: HexaRegistry,
+  dataSource: DataSource,
   opts?: Partial<ExtractOpts<T>>,
 ) => T;
 
@@ -74,16 +74,14 @@ export class HexaRegistry {
   }
 
   /**
-   * Initialize all registered hexas by instantiating them with the provided DataSource.
+   * Initialize all registered hexas by instantiating them with the provided DataSource,
+   * then calling initialize(registry) on each hexa to set up adapters and async initialization.
    * Hexas are created in registration order, so dependencies should be registered first.
-   *
-   * NOTE: This is synchronous and only calls constructors. If any hexa has an async
-   * initialize() method, you must call initAsync() afterwards.
    *
    * @param dataSource - The TypeORM DataSource that hexas will use for database operations
    * @throws Error if already initialized or if DataSource is not provided
    */
-  public init(dataSource: DataSource): void {
+  public async init(dataSource: DataSource): Promise<void> {
     if (this.isInitialized) throw new Error('Registry already initialized');
     if (!dataSource)
       throw new Error('DataSource is required for initialization');
@@ -91,14 +89,22 @@ export class HexaRegistry {
     // Store the DataSource for hexas to access
     this.dataSource = dataSource;
 
-    // Mark as initialized before creating hexas so they can call get() during construction
+    // Mark as initialized before creating hexas so they can call get() during initialization
     this.isInitialized = true;
 
     try {
       // Instantiate all registered hexas in registration order
       for (const registration of this.registrations.values()) {
-        const instance = new registration.constructor(this, registration.opts);
+        const instance = new registration.constructor(
+          dataSource,
+          registration.opts,
+        );
         this.hexas.set(registration.constructor, instance);
+      }
+
+      // Initialize all hexas with registry access for adapter retrieval
+      for (const hexa of this.hexas.values()) {
+        await hexa.initialize(this);
       }
     } catch (error) {
       // If initialization fails, reset the state
@@ -110,25 +116,11 @@ export class HexaRegistry {
   }
 
   /**
-   * Call async initialize() method on all hexas that have one.
-   * This should be called after init() if any hexas require async initialization.
-   *
-   * Hexas that have an initialize() method will have it called in registration order.
-   * Hexas without an initialize() method are silently skipped.
-   *
-   * @throws Error if init() has not been called first
+   * @deprecated This method is no longer needed. Initialization is now handled in init().
+   * This method is kept for backward compatibility but does nothing.
    */
   public async initAsync(): Promise<void> {
-    if (!this.isInitialized) {
-      throw new Error('Registry not initialized. Call init() first.');
-    }
-
-    // Call initialize() on each hexa that has the method
-    for (const hexa of this.hexas.values()) {
-      if (hexa.initialize) {
-        await hexa.initialize();
-      }
-    }
+    // No-op: initialization is now handled in init()
   }
 
   /**
@@ -256,29 +248,29 @@ export abstract class BaseHexa<
   protected readonly logger: PackmindLogger;
 
   /**
-   * Create the app with access to the app registry.
-   * Dependencies can be resolved immediately in the constructor, eliminating
-   * the need for nullable properties.
+   * Create the hexa with DataSource for database operations.
+   * Factories should be created in the constructor using the DataSource.
+   * Adapter retrieval from registry should be done in initialize(registry).
    *
-   * @param registry - The app registry instance for accessing other apps
+   * @param dataSource - The TypeORM DataSource for database operations
    * @param opts - the options to create the Hexa
    */
   constructor(
-    protected readonly registry: HexaRegistry,
+    protected readonly dataSource: DataSource,
     protected readonly opts?: Partial<T>,
   ) {
     this.logger = opts?.logger ?? new PackmindLogger('BaseHexa');
   }
 
   /**
-   * Optional async initialization phase.
-   * Override this method if your hexa requires async initialization
+   * Initialize the hexa with access to the registry for adapter retrieval.
+   * This method is called after all hexas are constructed, allowing safe
+   * access to other hexas' adapters. It also handles any async initialization
    * (e.g., setting up job queues, external connections, etc.).
    *
-   * This will be called by HexaRegistry.initAsync() after all hexas
-   * have been constructed.
+   * @param registry - The hexa registry instance for accessing other hexas
    */
-  async initialize?(): Promise<void>;
+  abstract initialize(registry: HexaRegistry): Promise<void>;
 
   /**
    * Get the adapter for cross-domain access.

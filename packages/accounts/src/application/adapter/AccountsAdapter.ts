@@ -100,14 +100,14 @@ import {
 const origin = 'AccountsAdapter';
 
 export class AccountsAdapter implements IAccountsPort {
-  private readonly _signUpWithOrganization: ISignUpWithOrganizationUseCase;
+  private _signUpWithOrganization: ISignUpWithOrganizationUseCase;
   private readonly _signInUser: ISignInUserUseCase;
   private readonly _getUserById: IGetUserByIdUseCase;
   private readonly _removeUserFromOrganization: IRemoveUserFromOrganizationUseCase;
   private readonly _listOrganizationUserStatuses: IListOrganizationUserStatusesUseCase;
   private readonly _listOrganizationUsers: IListOrganizationUsersUseCase;
   private readonly _validatePassword: IValidatePasswordUseCase;
-  private readonly _createOrganization: ICreateOrganizationUseCase;
+  private _createOrganization: ICreateOrganizationUseCase;
   private readonly _getOrganizationById: IGetOrganizationByIdUseCase;
   private readonly _getOrganizationByName: IGetOrganizationByNameUseCase;
   private readonly _getOrganizationBySlug: IGetOrganizationBySlugUseCase;
@@ -125,14 +125,17 @@ export class AccountsAdapter implements IAccountsPort {
   private readonly _validatePasswordResetToken: IValidatePasswordResetTokenUseCase;
   private _getOrganizationOnboardingStatus: IGetOrganizationOnboardingStatusUseCase;
 
+  private spacesPort?: ISpacesPort;
+
   constructor(
     private readonly accountsServices: IAccountsServices,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
-    private readonly spacesPort?: ISpacesPort,
+    spacesPort?: ISpacesPort,
     private gitPort?: IGitPort,
     private standardsPort?: IStandardsPort,
     private deploymentPort?: IDeploymentPort,
   ) {
+    this.spacesPort = spacesPort;
     this._signUpWithOrganization = new SignUpWithOrganizationUseCase(
       accountsServices.getUserService(),
       accountsServices.getOrganizationService(),
@@ -418,6 +421,27 @@ export class AccountsAdapter implements IAccountsPort {
   public setDeploymentPort(deploymentPort: IDeploymentPort): void {
     this.deploymentPort = deploymentPort;
     this.reinitializeOnboardingStatusUseCase();
+  }
+
+  public setSpacesPort(spacesPort: ISpacesPort): void {
+    this.spacesPort = spacesPort;
+    // Recreate use cases that depend on spacesPort
+    this._signUpWithOrganization = new SignUpWithOrganizationUseCase(
+      this.accountsServices.getUserService(),
+      this.accountsServices.getOrganizationService(),
+      this.logger,
+      this.spacesPort,
+    );
+    this._createOrganization = new CreateOrganizationUseCase(
+      this.accountsServices.getOrganizationService(),
+      this.accountsServices.getUserService(),
+      this.logger,
+      this.spacesPort,
+    );
+    this.reinitializeOnboardingStatusUseCase();
+    this.logger.debug(
+      'SpacesPort updated and dependent use cases reinitialized',
+    );
   }
 
   private reinitializeOnboardingStatusUseCase(): void {

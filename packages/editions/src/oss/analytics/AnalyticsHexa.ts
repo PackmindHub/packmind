@@ -1,9 +1,15 @@
+import { DataSource } from 'typeorm';
 import { BaseHexa, HexaRegistry } from '@packmind/node-utils';
 import { IDeploymentPort, IRecipesPort } from '@packmind/types';
 
 export class AnalyticsHexa extends BaseHexa {
-  constructor(registry: HexaRegistry) {
-    super(registry);
+  constructor(dataSource: DataSource) {
+    super(dataSource);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async initialize(registry: HexaRegistry): Promise<void> {
+    // No adapters needed
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

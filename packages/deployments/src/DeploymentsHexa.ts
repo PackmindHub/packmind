@@ -1,3 +1,4 @@
+import { DataSource } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, HexaRegistry, BaseHexaOpts } from '@packmind/node-utils';
 import {
@@ -29,23 +30,43 @@ const origin = 'DeploymentsHexa';
  * - DeploymentsHexa: Serves as use case facade and integration point with other domains
  */
 export class DeploymentsHexa extends BaseHexa<BaseHexaOpts, IDeploymentPort> {
-  private readonly hexa: DeploymentsHexaFactory;
-  private readonly deploymentsUsecases: IDeploymentPort;
+  private hexa?: DeploymentsHexaFactory;
+  private deploymentsUsecases?: IDeploymentPort;
 
   constructor(
-    registry: HexaRegistry,
+    dataSource: DataSource,
     opts: Partial<BaseHexaOpts> = { logger: new PackmindLogger(origin) },
   ) {
-    super(registry, opts);
-    this.logger.info('Initializing DeploymentsHexa');
+    super(dataSource, opts);
+    this.logger.info('Constructing DeploymentsHexa');
 
     try {
-      const dataSource = registry.getDataSource();
+      // Factory and adapter will be created in initialize(registry)
+      this.logger.info('DeploymentsHexa construction completed');
+    } catch (error) {
+      this.logger.error('Failed to construct DeploymentsHexa', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Initialize the hexa with access to the registry for adapter retrieval.
+   */
+  public async initialize(registry: HexaRegistry): Promise<void> {
+    this.logger.info('Initializing DeploymentsHexa (adapter retrieval phase)');
+
+    try {
+      const gitHexa = registry.get(GitHexa);
+      const gitPort = gitHexa.getAdapter();
 
       // Initialize the hexagon factory
-      this.hexa = new DeploymentsHexaFactory(this.logger, dataSource, registry);
-
-      const gitHexa = registry.get(GitHexa);
+      this.hexa = new DeploymentsHexaFactory(
+        this.logger,
+        this.dataSource,
+        gitPort,
+      );
 
       // RecipesHexa might not be available during initialization due to circular dependency
       // Using adapter pattern to decouple from RecipesHexa
@@ -72,7 +93,6 @@ export class DeploymentsHexa extends BaseHexa<BaseHexaOpts, IDeploymentPort> {
           'StandardsHexa adapter not available yet, will be set after initialization',
         );
       }
-      const gitPort = gitHexa.getAdapter();
 
       this.deploymentsUsecases = new DeploymentsAdapter(
         this.hexa,
@@ -128,9 +148,14 @@ export class DeploymentsHexa extends BaseHexa<BaseHexaOpts, IDeploymentPort> {
   /**
    * Get the Deployments adapter for cross-domain access to deployments data.
    * This adapter implements IDeploymentPort and can be injected into other domains.
-   * The adapter is available immediately after construction.
+   * The adapter is available after initialization.
    */
   public getAdapter(): IDeploymentPort {
+    if (!this.deploymentsUsecases) {
+      throw new Error(
+        'DeploymentsHexa not initialized. Call initialize() before using.',
+      );
+    }
     return this.deploymentsUsecases;
   }
 
@@ -138,6 +163,11 @@ export class DeploymentsHexa extends BaseHexa<BaseHexaOpts, IDeploymentPort> {
     userProvider: UserProvider,
     organizationProvider: OrganizationProvider,
   ): void {
+    if (!this.deploymentsUsecases) {
+      throw new Error(
+        'DeploymentsHexa not initialized. Call initialize() before using.',
+      );
+    }
     (this.deploymentsUsecases as DeploymentsAdapter).setAccountProviders(
       userProvider,
       organizationProvider,
@@ -146,6 +176,11 @@ export class DeploymentsHexa extends BaseHexa<BaseHexaOpts, IDeploymentPort> {
   }
 
   public setSpacesAdapter(spacesPort: ISpacesPort): void {
+    if (!this.deploymentsUsecases) {
+      throw new Error(
+        'DeploymentsHexa not initialized. Call initialize() before using.',
+      );
+    }
     (this.deploymentsUsecases as DeploymentsAdapter).updateSpacesPort(
       spacesPort,
     );

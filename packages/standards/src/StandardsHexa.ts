@@ -1,3 +1,4 @@
+import { DataSource } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
 import { IDeploymentPort, ILinterPort } from '@packmind/types';
@@ -25,41 +26,16 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
   private isInitialized = false;
 
   constructor(
-    registry: HexaRegistry,
+    dataSource: DataSource,
     opts: Partial<BaseHexaOpts> = { logger: new PackmindLogger(origin) },
   ) {
-    super(registry, opts);
+    super(dataSource, opts);
     this.logger.info('Constructing StandardsHexa');
 
     try {
-      // Get the DataSource from the registry
-      const dataSource = registry.getDataSource();
-      this.logger.debug('Retrieved DataSource from registry');
-
-      // Get LinterHexa adapter for ILinterPort (lazy DI per DDD standard)
-      // Use getByName to avoid circular dependency at build time
-      let linterPort: ILinterPort | undefined;
-      try {
-        const linterHexa =
-          registry.getByName<BaseHexa<BaseHexaOpts, ILinterPort>>('LinterHexa');
-        if (linterHexa && typeof linterHexa.getAdapter === 'function') {
-          linterPort = linterHexa.getAdapter();
-          this.logger.info('LinterAdapter retrieved from LinterHexa');
-        }
-      } catch (error) {
-        this.logger.warn('LinterHexa not available in registry', {
-          error: error instanceof Error ? error.message : String(error),
-        });
-        linterPort = undefined;
-      }
-
-      // Initialize the hexagon with the shared DataSource
-      this.hexa = new StandardsHexaFactory(
-        dataSource,
-        registry,
-        this.logger,
-        linterPort,
-      );
+      // Initialize the hexagon factory with the DataSource
+      // Adapter retrieval will be done in initialize(registry)
+      this.hexa = new StandardsHexaFactory(this.dataSource, this.logger);
       this.logger.info('StandardsHexa construction completed');
     } catch (error) {
       this.logger.error('Failed to construct StandardsHexa', {
@@ -70,19 +46,40 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
   }
 
   /**
-   * Async initialization phase - must be called after construction.
-   * This initializes delayed jobs and async dependencies.
+   * Initialize the hexa with access to the registry for adapter retrieval.
+   * This also handles async initialization (delayed jobs, etc.).
    */
-  public override async initialize(): Promise<void> {
+  public async initialize(registry: HexaRegistry): Promise<void> {
     if (this.isInitialized) {
       this.logger.debug('StandardsHexa already initialized');
       return;
     }
 
-    this.logger.info('Initializing StandardsHexa (async phase)');
+    this.logger.info(
+      'Initializing StandardsHexa (adapter retrieval and async phase)',
+    );
 
     try {
-      await this.hexa.initialize();
+      // Get LinterHexa adapter for ILinterPort (lazy DI per DDD standard)
+      // Use getByName to avoid circular dependency at build time
+      let linterPort: ILinterPort | undefined;
+      try {
+        const linterHexa =
+          registry.getByName<BaseHexa<BaseHexaOpts, ILinterPort>>('LinterHexa');
+        if (linterHexa && typeof linterHexa.getAdapter === 'function') {
+          linterPort = linterHexa.getAdapter();
+          this.logger.info('LinterAdapter retrieved from LinterHexa');
+          // Set linter adapter on services
+          this.hexa.setLinterAdapter(linterPort);
+        }
+      } catch (error) {
+        this.logger.warn('LinterHexa not available in registry', {
+          error: error instanceof Error ? error.message : String(error),
+        });
+        linterPort = undefined;
+      }
+
+      await this.hexa.initialize(registry);
       this.standardsAdapter = new StandardsAdapter(this.hexa);
       this.isInitialized = true;
       this.logger.info('StandardsHexa initialized successfully');

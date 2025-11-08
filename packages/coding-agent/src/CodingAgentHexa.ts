@@ -1,3 +1,4 @@
+import { DataSource } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
 import { ICodingAgentPort } from '@packmind/types';
@@ -23,15 +24,33 @@ export class CodingAgentHexa extends BaseHexa<BaseHexaOpts, ICodingAgentPort> {
   private readonly hexa: CodingAgentHexaFactory;
 
   constructor(
-    registry: HexaRegistry,
+    dataSource: DataSource,
     opts: Partial<BaseHexaOpts> = { logger: new PackmindLogger(origin) },
   ) {
-    super(registry, opts);
-    this.logger.info('Initializing CodingAgentHexa');
+    super(dataSource, opts);
+    this.logger.info('Constructing CodingAgentHexa');
 
     try {
-      // Initialize the hexagon factory with registry for dependency injection
-      this.hexa = new CodingAgentHexaFactory(registry, this.logger);
+      // Initialize the hexagon factory
+      // Adapter retrieval will be done in initialize(registry)
+      this.hexa = new CodingAgentHexaFactory(this.logger);
+      this.logger.info('CodingAgentHexa construction completed');
+    } catch (error) {
+      this.logger.error('Failed to construct CodingAgentHexa', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Initialize the hexa with access to the registry for adapter retrieval.
+   */
+  public async initialize(registry: HexaRegistry): Promise<void> {
+    this.logger.info('Initializing CodingAgentHexa (adapter retrieval phase)');
+
+    try {
+      this.hexa.initialize(registry);
       this.logger.info('CodingAgentHexa initialized successfully');
     } catch (error) {
       this.logger.error('Failed to initialize CodingAgentHexa', {
