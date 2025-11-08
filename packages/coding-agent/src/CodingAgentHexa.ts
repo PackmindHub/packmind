@@ -24,7 +24,7 @@ const origin = 'CodingAgentHexa';
  * The class aggregates deployment logic from multiple coding agents and provides
  * unified file updates for git operations.
  */
-export class CodingAgentHexa extends BaseHexa {
+export class CodingAgentHexa extends BaseHexa<BaseHexaOpts, ICodingAgentPort> {
   private readonly hexa: CodingAgentHexaFactory;
 
   constructor(
@@ -66,7 +66,7 @@ export class CodingAgentHexa extends BaseHexa {
    * Get the CodingAgent adapter for cross-domain access
    * Following DDD monorepo architecture standard
    */
-  public getCodingAgentAdapter(): ICodingAgentPort {
+  public getAdapter(): ICodingAgentPort {
     return this.hexa.adapter;
   }
 

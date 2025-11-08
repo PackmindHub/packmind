@@ -1,9 +1,9 @@
-import { BaseHexa, HexaRegistry } from '@packmind/node-utils';
+import { BaseHexa, HexaRegistry, BaseHexaOpts } from '@packmind/node-utils';
 import { IDeploymentPort, IStandardsPort, ILinterPort } from '@packmind/types';
 import { LinterUsecases } from './LinterUsecases';
 import { LinterAdapter } from './LinterAdapter';
 
-export class LinterHexa extends BaseHexa {
+export class LinterHexa extends BaseHexa<BaseHexaOpts, ILinterPort> {
   private deploymentAdapter: IDeploymentPort | null = null;
   private standardsAdapter: IStandardsPort | null = null;
   private linterAdapter: ILinterPort;
@@ -27,7 +27,7 @@ export class LinterHexa extends BaseHexa {
     this.standardsAdapter = standardsPort;
   }
 
-  public getLinterAdapter(): ILinterPort {
+  public getAdapter(): ILinterPort {
     return this.linterAdapter;
   }
 

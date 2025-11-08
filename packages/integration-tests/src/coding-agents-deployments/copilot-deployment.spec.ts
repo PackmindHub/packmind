@@ -122,8 +122,8 @@ describe('GitHub Copilot Deployment Integration', () => {
     // Initialize hexas and get adapters
     await standardsHexa.initialize();
     await gitHexa.initialize();
-    standardsPort = standardsHexa.getStandardsAdapter();
-    gitPort = gitHexa.getGitAdapter();
+    standardsPort = standardsHexa.getAdapter();
+    gitPort = gitHexa.getAdapter();
 
     // Create test data
     const signUpResult = await accountsHexa.signUpWithOrganization({
@@ -136,7 +136,7 @@ describe('GitHub Copilot Deployment Integration', () => {
 
     // Get the default "Global" space created during signup
     const spaces = await spacesHexa
-      .getSpacesAdapter()
+      .getAdapter()
       .listSpacesByOrganization(organization.id);
     const foundSpace = spaces.find((s) => s.name === 'Global');
     assert(foundSpace, 'Default Global space should exist');
@@ -536,8 +536,8 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
         gitRepoId: gitRepo.id,
       };
 
-      standardsPort = standardsHexa.getStandardsAdapter();
-      gitPort = gitHexa.getGitAdapter();
+      standardsPort = standardsHexa.getAdapter();
+      gitPort = gitHexa.getAdapter();
       copilotDeployer = new CopilotDeployer(standardsPort, gitPort);
     });
 

@@ -43,7 +43,7 @@ export class DataFactory {
       this._organization = signUpWithOrganizationResponse.organization;
 
       const spaces = await this.testApp.spacesHexa
-        .getSpacesAdapter()
+        .getAdapter()
         .listSpacesByOrganization(this._organization.id);
 
       this._space = spaces[0];
@@ -96,7 +96,7 @@ export class DataFactory {
       });
 
       const targets = await this.testApp.deploymentsHexa
-        .getDeploymentsUseCases()
+        .getAdapter()
         .getTargetsByGitRepo({
           ...this.packmindCommand(),
           gitRepoId: this.gitRepo.id,
@@ -149,7 +149,7 @@ export class DataFactory {
     }
 
     return this.testApp.deploymentsHexa
-      .getDeploymentsUseCases()
+      .getAdapter()
       .updateRenderModeConfiguration({
         ...this.packmindCommand(),
         activeRenderModes,

@@ -41,7 +41,7 @@ const origin = 'RecipesHexa';
  * Uses the DataSource provided through the HexaRegistry for database operations.
  * Also integrates with GitHexa for git-related recipe operations.
  */
-export class RecipesHexa extends BaseHexa {
+export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
   private readonly hexa: RecipesHexaFactory;
   private _deploymentPort: IDeploymentPort | undefined | null = undefined;
   private isInitialized = false;
@@ -60,7 +60,7 @@ export class RecipesHexa extends BaseHexa {
       this.logger.debug('Retrieved DataSource from registry');
 
       const gitHexa = registry.get(GitHexa);
-      const gitPort = gitHexa.getGitAdapter();
+      const gitPort = gitHexa.getAdapter();
 
       // Initialize the hexagon with the shared DataSource
       // DeploymentPort will be resolved lazily to avoid circular dependencies
@@ -189,7 +189,7 @@ export class RecipesHexa extends BaseHexa {
    * This adapter implements IRecipesPort and can be injected into other domains.
    * The adapter is available after initialization.
    */
-  public getRecipesAdapter(): IRecipesPort {
+  public getAdapter(): IRecipesPort {
     this.ensureInitialized();
     return this.hexa.useCases;
   }

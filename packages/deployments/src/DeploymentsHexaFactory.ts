@@ -72,7 +72,7 @@ export class DeploymentsHexaFactory {
     if (!gitHexa) {
       throw new Error('GitHexa not found in registry');
     }
-    const gitPort = gitHexa.getGitAdapter();
+    const gitPort = gitHexa.getAdapter();
 
     // Initialize services
     this.services = {

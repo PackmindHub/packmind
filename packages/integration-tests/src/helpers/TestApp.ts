@@ -53,31 +53,23 @@ export class TestApp {
     this.gitHexa.setOrganizationProvider(
       this.accountsHexa.getOrganizationProvider(),
     );
-    this.gitHexa.setDeploymentsAdapter(
-      this.deploymentsHexa.getDeploymentsUseCases(),
-    );
+    this.gitHexa.setDeploymentsAdapter(this.deploymentsHexa.getAdapter());
 
     await this.recipesHexa.initialize();
-    await this.recipesHexa.setDeploymentPort(
-      this.deploymentsHexa.getDeploymentsUseCases(),
-    );
+    await this.recipesHexa.setDeploymentPort(this.deploymentsHexa.getAdapter());
     await this.standardsHexa.initialize();
 
     // Set standards port in deployments hexa after initialization
     this.deploymentsHexa.setStandardsPort(this.standardsHexa);
 
     this.accountsHexa.setGitPort(this.gitHexa);
-    this.accountsHexa.setStandardsPort(
-      this.standardsHexa.getStandardsAdapter(),
-    );
+    this.accountsHexa.setStandardsPort(this.standardsHexa.getAdapter());
 
     this.deploymentsHexa.setAccountProviders(
       this.accountsHexa.getUserProvider(),
       this.accountsHexa.getOrganizationProvider(),
     );
 
-    this.analyticsHexa.setDeploymentPort(
-      this.deploymentsHexa.getDeploymentsUseCases(),
-    );
+    this.analyticsHexa.setDeploymentPort(this.deploymentsHexa.getAdapter());
   }
 }

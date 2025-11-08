@@ -41,7 +41,7 @@ const origin = 'StandardsHexa';
  * Uses the DataSource provided through the HexaRegistry for database operations.
  * Also integrates with GitHexa for git-related standards operations.
  */
-export class StandardsHexa extends BaseHexa {
+export class StandardsHexa extends BaseHexa<BaseHexaOpts, IStandardsPort> {
   private readonly hexa: StandardsHexaFactory;
   private standardsAdapter?: IStandardsPort;
   private isInitialized = false;
@@ -62,11 +62,10 @@ export class StandardsHexa extends BaseHexa {
       // Use getByName to avoid circular dependency at build time
       let linterPort: ILinterPort | undefined;
       try {
-        const linterHexa = registry.getByName<
-          BaseHexa & { getLinterAdapter: () => ILinterPort }
-        >('LinterHexa');
-        if (linterHexa && typeof linterHexa.getLinterAdapter === 'function') {
-          linterPort = linterHexa.getLinterAdapter();
+        const linterHexa =
+          registry.getByName<BaseHexa<BaseHexaOpts, ILinterPort>>('LinterHexa');
+        if (linterHexa && typeof linterHexa.getAdapter === 'function') {
+          linterPort = linterHexa.getAdapter();
           this.logger.info('LinterAdapter retrieved from LinterHexa');
         }
       } catch (error) {
@@ -117,7 +116,7 @@ export class StandardsHexa extends BaseHexa {
     }
   }
 
-  public getStandardsAdapter(): IStandardsPort {
+  public getAdapter(): IStandardsPort {
     // Create adapter lazily if hexa factory is initialized but adapter not yet created
     if (!this.standardsAdapter) {
       // Check if useCases is available (created during initialization)

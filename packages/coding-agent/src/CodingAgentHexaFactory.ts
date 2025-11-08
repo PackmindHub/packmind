@@ -31,7 +31,7 @@ export class CodingAgentHexaFactory {
         try {
           const standardsHexa = this.registry.get(StandardsHexa);
           if (standardsHexa) {
-            standardsPort = standardsHexa.getStandardsAdapter();
+            standardsPort = standardsHexa.getAdapter();
             this.logger.debug('StandardsPort found in registry');
           }
         } catch {
@@ -41,7 +41,7 @@ export class CodingAgentHexaFactory {
         try {
           const gitHexa = this.registry.get(GitHexa);
           if (gitHexa) {
-            gitPort = gitHexa.getGitAdapter();
+            gitPort = gitHexa.getAdapter();
             this.logger.debug('GitPort found in registry');
           }
         } catch {

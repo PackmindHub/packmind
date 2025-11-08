@@ -28,4 +28,11 @@ export class AnalyticsHexa extends BaseHexa {
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function,@typescript-eslint/no-unused-vars
   setRecipesPort(recipesPort: IRecipesPort): void {}
+
+  /**
+   * AnalyticsHexa does not expose an adapter (no cross-domain port).
+   */
+  public getAdapter(): void {
+    return undefined;
+  }
 }

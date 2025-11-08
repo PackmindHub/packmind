@@ -120,8 +120,8 @@ describe('Cursor Deployment Integration', () => {
     // Initialize hexas and get adapters
     await standardsHexa.initialize();
     await gitHexa.initialize();
-    standardsPort = standardsHexa.getStandardsAdapter();
-    gitPort = gitHexa.getGitAdapter();
+    standardsPort = standardsHexa.getAdapter();
+    gitPort = gitHexa.getAdapter();
 
     // Create test data
     const signUpResult = await accountsHexa.signUpWithOrganization({
@@ -134,7 +134,7 @@ describe('Cursor Deployment Integration', () => {
 
     // Get the default "Global" space created during signup
     const spaces = await spacesHexa
-      .getSpacesAdapter()
+      .getAdapter()
       .listSpacesByOrganization(organization.id);
     const foundSpace = spaces.find((s) => s.name === 'Global');
     assert(foundSpace, 'Default Global space should exist');
@@ -471,7 +471,7 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
       // Ensure hexas are initialized before getting adapters
       await standardsHexa.initialize();
       await gitHexa.initialize();
-      const gitPort = gitHexa.getGitAdapter();
+      const gitPort = gitHexa.getAdapter();
 
       // Create a default target for testing
       defaultTarget = {
@@ -534,8 +534,8 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      standardsPort = standardsHexa.getStandardsAdapter();
-      gitPort = gitHexa.getGitAdapter();
+      standardsPort = standardsHexa.getAdapter();
+      gitPort = gitHexa.getAdapter();
       cursorDeployer = new CursorDeployer(standardsPort, gitPort);
     });
 

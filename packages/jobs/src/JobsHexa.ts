@@ -113,4 +113,11 @@ export class JobsHexa extends BaseHexa {
   public getAvailableQueues(): string[] {
     return this.jobRegistry.getRegisteredQueueNames();
   }
+
+  /**
+   * JobsHexa does not expose an adapter (no cross-domain port).
+   */
+  public getAdapter(): void {
+    return undefined;
+  }
 }

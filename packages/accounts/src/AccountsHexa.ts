@@ -75,7 +75,7 @@ export type AccountsHexaOpts = BaseHexaOpts & {
 
 const baseAccountsHexaOpts = { logger: new PackmindLogger(origin) };
 
-export class AccountsHexa extends BaseHexa<AccountsHexaOpts> {
+export class AccountsHexa extends BaseHexa<AccountsHexaOpts, IAccountsPort> {
   private readonly hexa: AccountsHexaFactory;
   private userProvider?: UserProvider;
   private organizationProvider?: OrganizationProvider;
@@ -94,7 +94,7 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts> {
       if (!spacesPort) {
         try {
           const spacesHexa = registry.get(SpacesHexa);
-          spacesPort = spacesHexa.getSpacesAdapter();
+          spacesPort = spacesHexa.getAdapter();
           this.logger.debug('Retrieved SpacesAdapter from SpacesHexa');
         } catch (error) {
           this.logger.debug('SpacesHexa not available in registry', {
@@ -131,7 +131,7 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts> {
    * This adapter implements IAccountsPort and can be injected into other domains.
    * The adapter is available immediately after construction.
    */
-  public getAccountsAdapter(): IAccountsPort {
+  public getAdapter(): IAccountsPort {
     return this.hexa.useCases;
   }
 

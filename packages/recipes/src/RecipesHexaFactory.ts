@@ -101,7 +101,7 @@ export class RecipesHexaFactory {
       let spacesPort: ISpacesPort | null = null;
       if (this.registry.isRegistered(SpacesHexa)) {
         const spacesHexa = this.registry.get(SpacesHexa);
-        spacesPort = spacesHexa.getSpacesAdapter();
+        spacesPort = spacesHexa.getAdapter();
       } else {
         this.logger.warn(
           'SpacesHexa not found in registry - space validation will not be available',

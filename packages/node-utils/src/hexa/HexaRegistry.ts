@@ -4,7 +4,8 @@ import { PackmindLogger } from '@packmind/logger';
 /**
  * Constructor type for BaseHexa subclasses.
  */
-type ExtractOpts<T extends BaseHexa> = T extends BaseHexa<infer X> ? X : never;
+type ExtractOpts<T extends BaseHexa> =
+  T extends BaseHexa<infer X, unknown> ? X : never;
 
 type HexaConstructor<T extends BaseHexa> = new (
   registry: HexaRegistry,
@@ -248,7 +249,10 @@ export class HexaRegistry {
 
 export type BaseHexaOpts = { logger: PackmindLogger };
 
-export abstract class BaseHexa<T extends BaseHexaOpts = BaseHexaOpts> {
+export abstract class BaseHexa<
+  T extends BaseHexaOpts = BaseHexaOpts,
+  TPort = void,
+> {
   protected readonly logger: PackmindLogger;
 
   /**
@@ -275,6 +279,14 @@ export abstract class BaseHexa<T extends BaseHexaOpts = BaseHexaOpts> {
    * have been constructed.
    */
   async initialize?(): Promise<void>;
+
+  /**
+   * Get the adapter for cross-domain access.
+   * Each hexa that exposes an adapter must implement this method.
+   *
+   * @returns The port adapter instance
+   */
+  abstract getAdapter(): TPort;
 
   /**
    * Clean up resources when the app is being destroyed.

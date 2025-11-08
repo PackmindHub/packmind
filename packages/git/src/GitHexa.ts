@@ -48,7 +48,7 @@ export type GitHexaOpts = BaseHexaOpts & {
 
 const BaseGitHexaOpts: GitHexaOpts = { logger: new PackmindLogger(origin) };
 
-export class GitHexa extends BaseHexa<GitHexaOpts> {
+export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
   private readonly hexa: GitHexaFactory;
   private isInitialized = false;
 
@@ -130,7 +130,7 @@ export class GitHexa extends BaseHexa<GitHexaOpts> {
    * This adapter implements IGitPort and can be injected into other domains.
    * The adapter is available immediately after construction (doesn't require initialization).
    */
-  public getGitAdapter(): IGitPort {
+  public getAdapter(): IGitPort {
     return this.hexa.useCases;
   }
 

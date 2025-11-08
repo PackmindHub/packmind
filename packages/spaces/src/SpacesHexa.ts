@@ -19,7 +19,7 @@ const origin = 'SpacesHexa';
  *
  * Uses the DataSource provided through the HexaRegistry for database operations.
  */
-export class SpacesHexa extends BaseHexa {
+export class SpacesHexa extends BaseHexa<BaseHexaOpts, ISpacesPort> {
   private readonly hexa: SpacesHexaFactory;
   private readonly spacesAdapter: SpacesAdapter;
 
@@ -58,7 +58,7 @@ export class SpacesHexa extends BaseHexa {
    * Get the Spaces adapter for cross-domain access
    * Following DDD monorepo architecture standard
    */
-  public getSpacesAdapter(): ISpacesPort {
+  public getAdapter(): ISpacesPort {
     return this.spacesAdapter;
   }
 }

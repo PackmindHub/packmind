@@ -9,6 +9,10 @@ class TestHexa extends BaseHexa {
     super(registry);
   }
 
+  getAdapter(): void {
+    return undefined;
+  }
+
   destroy(): void {
     this.destroyCalled = true;
   }
@@ -19,6 +23,10 @@ class AnotherTestHexa extends BaseHexa {
 
   constructor(registry: HexaRegistry) {
     super(registry);
+  }
+
+  getAdapter(): void {
+    return undefined;
   }
 
   destroy(): void {
@@ -39,6 +47,10 @@ class DependentHexa extends BaseHexa {
     } catch (error) {
       this.dependencyError = error as Error;
     }
+  }
+
+  getAdapter(): void {
+    return undefined;
   }
 
   destroy(): void {

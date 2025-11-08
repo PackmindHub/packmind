@@ -28,7 +28,7 @@ const origin = 'DeploymentsHexa';
  * - DeploymentsHexaFactory: Handles dependency injection and service instantiation
  * - DeploymentsHexa: Serves as use case facade and integration point with other domains
  */
-export class DeploymentsHexa extends BaseHexa {
+export class DeploymentsHexa extends BaseHexa<BaseHexaOpts, IDeploymentPort> {
   private readonly hexa: DeploymentsHexaFactory;
   private readonly deploymentsUsecases: IDeploymentPort;
 
@@ -59,20 +59,20 @@ export class DeploymentsHexa extends BaseHexa {
       }
 
       const codingAgentHexa = registry.get(CodingAgentHexa);
-      const codingAgentPort = codingAgentHexa.getCodingAgentAdapter();
+      const codingAgentPort = codingAgentHexa.getAdapter();
       const standardsHexa = registry.get(StandardsHexa);
       // StandardsHexa adapter might not be available yet (needs initialization)
       // We'll get it lazily or set it later after initialization
       let standardsPort: IStandardsPort | undefined;
       try {
-        standardsPort = standardsHexa.getStandardsAdapter();
+        standardsPort = standardsHexa.getAdapter();
       } catch {
         // StandardsHexa not initialized yet - will be set later
         this.logger.debug(
           'StandardsHexa adapter not available yet, will be set after initialization',
         );
       }
-      const gitPort = gitHexa.getGitAdapter();
+      const gitPort = gitHexa.getAdapter();
 
       this.deploymentsUsecases = new DeploymentsAdapter(
         this.hexa,
@@ -108,7 +108,7 @@ export class DeploymentsHexa extends BaseHexa {
    * Set the standards port after initialization
    */
   public setStandardsPort(standardsHexa: StandardsHexa): void {
-    const standardsPort = standardsHexa.getStandardsAdapter();
+    const standardsPort = standardsHexa.getAdapter();
     // Update the use cases with the new standards port
     (this.deploymentsUsecases as DeploymentsAdapter).updateStandardsPort(
       standardsPort,
@@ -130,15 +130,7 @@ export class DeploymentsHexa extends BaseHexa {
    * This adapter implements IDeploymentPort and can be injected into other domains.
    * The adapter is available immediately after construction.
    */
-  public getDeploymentsAdapter(): IDeploymentPort {
-    return this.deploymentsUsecases;
-  }
-
-  /**
-   * @deprecated Use getDeploymentsAdapter() instead for consistency with other hexas.
-   * This method is kept for backward compatibility.
-   */
-  public getDeploymentsUseCases(): IDeploymentPort {
+  public getAdapter(): IDeploymentPort {
     return this.deploymentsUsecases;
   }
 

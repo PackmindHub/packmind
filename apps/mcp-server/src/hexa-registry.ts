@@ -98,12 +98,12 @@ async function hexaRegistryPlugin(fastify: FastifyInstance) {
         const standardsHexa = registry.get(StandardsHexa);
 
         // Inject LinterAdapter into StandardsHexa
-        const linterAdapter = linterHexa.getLinterAdapter();
+        const linterAdapter = linterHexa.getAdapter();
         standardsHexa.setLinterAdapter(linterAdapter);
         logger.info('LinterAdapter injected into StandardsHexa');
 
         // Inject StandardsAdapter into LinterHexa
-        const standardsAdapter = standardsHexa.getStandardsAdapter();
+        const standardsAdapter = standardsHexa.getAdapter();
         linterHexa.setStandardAdapter(standardsAdapter);
         logger.info('StandardsAdapter injected into LinterHexa');
       } catch (error) {

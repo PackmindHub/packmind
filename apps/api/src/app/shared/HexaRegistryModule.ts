@@ -210,10 +210,10 @@ export class HexaRegistryModule {
       useFactory: (registry: HexaRegistry): IAccountsPort | null => {
         try {
           const accountsHexa = registry.getByName('AccountsHexa');
-          if (accountsHexa && 'getAccountsAdapter' in accountsHexa) {
+          if (accountsHexa && 'getAdapter' in accountsHexa) {
             return (
-              accountsHexa as { getAccountsAdapter: () => IAccountsPort }
-            ).getAccountsAdapter();
+              accountsHexa as unknown as { getAdapter: () => IAccountsPort }
+            ).getAdapter();
           }
         } catch {
           // AccountsHexa not available
@@ -229,23 +229,12 @@ export class HexaRegistryModule {
       useFactory: (registry: HexaRegistry): IDeploymentPort | null => {
         try {
           const deploymentsHexa = registry.getByName('DeploymentsHexa');
-          if (
-            deploymentsHexa &&
-            ('getDeploymentsAdapter' in deploymentsHexa ||
-              'getDeploymentsUseCases' in deploymentsHexa)
-          ) {
-            if ('getDeploymentsAdapter' in deploymentsHexa) {
-              return (
-                deploymentsHexa as {
-                  getDeploymentsAdapter: () => IDeploymentPort;
-                }
-              ).getDeploymentsAdapter();
-            }
+          if (deploymentsHexa && 'getAdapter' in deploymentsHexa) {
             return (
-              deploymentsHexa as {
-                getDeploymentsUseCases: () => IDeploymentPort;
+              deploymentsHexa as unknown as {
+                getAdapter: () => IDeploymentPort;
               }
-            ).getDeploymentsUseCases();
+            ).getAdapter();
           }
         } catch {
           // DeploymentsHexa not available
@@ -261,10 +250,10 @@ export class HexaRegistryModule {
       useFactory: (registry: HexaRegistry): IRecipesPort | null => {
         try {
           const recipesHexa = registry.getByName('RecipesHexa');
-          if (recipesHexa && 'getRecipesAdapter' in recipesHexa) {
+          if (recipesHexa && 'getAdapter' in recipesHexa) {
             return (
-              recipesHexa as { getRecipesAdapter: () => IRecipesPort }
-            ).getRecipesAdapter();
+              recipesHexa as unknown as { getAdapter: () => IRecipesPort }
+            ).getAdapter();
           }
         } catch {
           // RecipesHexa not available
@@ -280,10 +269,10 @@ export class HexaRegistryModule {
       useFactory: (registry: HexaRegistry): IStandardsPort | null => {
         try {
           const standardsHexa = registry.getByName('StandardsHexa');
-          if (standardsHexa && 'getStandardsAdapter' in standardsHexa) {
+          if (standardsHexa && 'getAdapter' in standardsHexa) {
             return (
-              standardsHexa as { getStandardsAdapter: () => IStandardsPort }
-            ).getStandardsAdapter();
+              standardsHexa as unknown as { getAdapter: () => IStandardsPort }
+            ).getAdapter();
           }
         } catch {
           // StandardsHexa not available
@@ -299,10 +288,10 @@ export class HexaRegistryModule {
       useFactory: (registry: HexaRegistry): IGitPort | null => {
         try {
           const gitHexa = registry.getByName('GitHexa');
-          if (gitHexa && 'getGitAdapter' in gitHexa) {
+          if (gitHexa && 'getAdapter' in gitHexa) {
             return (
-              gitHexa as { getGitAdapter: () => IGitPort }
-            ).getGitAdapter();
+              gitHexa as unknown as { getAdapter: () => IGitPort }
+            ).getAdapter();
           }
         } catch {
           // GitHexa not available
@@ -318,10 +307,10 @@ export class HexaRegistryModule {
       useFactory: (registry: HexaRegistry): ISpacesPort | null => {
         try {
           const spacesHexa = registry.getByName('SpacesHexa');
-          if (spacesHexa && 'getSpacesAdapter' in spacesHexa) {
+          if (spacesHexa && 'getAdapter' in spacesHexa) {
             return (
-              spacesHexa as { getSpacesAdapter: () => ISpacesPort }
-            ).getSpacesAdapter();
+              spacesHexa as unknown as { getAdapter: () => ISpacesPort }
+            ).getAdapter();
           }
         } catch {
           // SpacesHexa not available
@@ -337,10 +326,10 @@ export class HexaRegistryModule {
       useFactory: (registry: HexaRegistry): ILinterPort | null => {
         try {
           const linterHexa = registry.getByName('LinterHexa');
-          if (linterHexa && 'getLinterAdapter' in linterHexa) {
+          if (linterHexa && 'getAdapter' in linterHexa) {
             return (
-              linterHexa as { getLinterAdapter: () => ILinterPort }
-            ).getLinterAdapter();
+              linterHexa as unknown as { getAdapter: () => ILinterPort }
+            ).getAdapter();
           }
         } catch {
           // LinterHexa not available
@@ -356,12 +345,12 @@ export class HexaRegistryModule {
       useFactory: (registry: HexaRegistry): ICodingAgentPort | null => {
         try {
           const codingAgentHexa = registry.getByName('CodingAgentHexa');
-          if (codingAgentHexa && 'getCodingAgentAdapter' in codingAgentHexa) {
+          if (codingAgentHexa && 'getAdapter' in codingAgentHexa) {
             return (
-              codingAgentHexa as {
-                getCodingAgentAdapter: () => ICodingAgentPort;
+              codingAgentHexa as unknown as {
+                getAdapter: () => ICodingAgentPort;
               }
-            ).getCodingAgentAdapter();
+            ).getAdapter();
           }
         } catch {
           // CodingAgentHexa not available
@@ -400,45 +389,33 @@ export class HexaRegistryModule {
     if (
       HexaRegistryModule.hasSetGitPort(accountsHexa) &&
       gitHexa &&
-      'getGitAdapter' in gitHexa
+      'getAdapter' in gitHexa
     ) {
       accountsHexa.setGitPort(
-        (
-          gitHexa as unknown as { getGitAdapter: () => unknown }
-        ).getGitAdapter(),
+        (gitHexa as unknown as { getAdapter: () => unknown }).getAdapter(),
       );
     }
 
     if (
       HexaRegistryModule.hasSetStandardsPort(accountsHexa) &&
       standardsHexa &&
-      'getStandardsAdapter' in standardsHexa
+      'getAdapter' in standardsHexa
     ) {
       accountsHexa.setStandardsPort(
         (
-          standardsHexa as unknown as { getStandardsAdapter: () => unknown }
-        ).getStandardsAdapter(),
+          standardsHexa as unknown as { getAdapter: () => unknown }
+        ).getAdapter(),
       );
     }
 
     if (
       HexaRegistryModule.hasSetDeploymentPort(accountsHexa) &&
       deploymentsHexa &&
-      ('getDeploymentsAdapter' in deploymentsHexa ||
-        'getDeploymentsUseCases' in deploymentsHexa)
+      'getAdapter' in deploymentsHexa
     ) {
-      const deploymentPort =
-        'getDeploymentsAdapter' in deploymentsHexa
-          ? (
-              deploymentsHexa as {
-                getDeploymentsAdapter: () => IDeploymentPort;
-              }
-            ).getDeploymentsAdapter()
-          : (
-              deploymentsHexa as {
-                getDeploymentsUseCases: () => IDeploymentPort;
-              }
-            ).getDeploymentsUseCases();
+      const deploymentPort = (
+        deploymentsHexa as { getAdapter: () => IDeploymentPort }
+      ).getAdapter();
       accountsHexa.setDeploymentPort(deploymentPort);
     }
 
@@ -482,21 +459,11 @@ export class HexaRegistryModule {
       gitHexa &&
       deploymentsHexa &&
       'setDeploymentsAdapter' in gitHexa &&
-      ('getDeploymentsAdapter' in deploymentsHexa ||
-        'getDeploymentsUseCases' in deploymentsHexa)
+      'getAdapter' in deploymentsHexa
     ) {
-      const deploymentPort =
-        'getDeploymentsAdapter' in deploymentsHexa
-          ? (
-              deploymentsHexa as {
-                getDeploymentsAdapter: () => IDeploymentPort;
-              }
-            ).getDeploymentsAdapter()
-          : (
-              deploymentsHexa as {
-                getDeploymentsUseCases: () => IDeploymentPort;
-              }
-            ).getDeploymentsUseCases();
+      const deploymentPort = (
+        deploymentsHexa as { getAdapter: () => IDeploymentPort }
+      ).getAdapter();
       (
         gitHexa as {
           setDeploymentsAdapter: (adapter: IDeploymentPort) => void;
@@ -532,11 +499,11 @@ export class HexaRegistryModule {
       deploymentsHexa &&
       spacesHexa &&
       'setSpacesAdapter' in deploymentsHexa &&
-      'getSpacesAdapter' in spacesHexa
+      'getAdapter' in spacesHexa
     ) {
       const spacesAdapter = (
-        spacesHexa as { getSpacesAdapter: () => ISpacesPort }
-      ).getSpacesAdapter();
+        spacesHexa as unknown as { getAdapter: () => ISpacesPort }
+      ).getAdapter();
       deploymentsHexa.setSpacesAdapter(spacesAdapter);
     }
 
@@ -550,7 +517,7 @@ export class HexaRegistryModule {
       deploymentsHexa &&
       standardsHexa &&
       'setStandardsPort' in deploymentsHexa &&
-      'getStandardsAdapter' in standardsHexa
+      'getAdapter' in standardsHexa
     ) {
       deploymentsHexa.setStandardsPort(standardsHexa);
     }
@@ -564,21 +531,11 @@ export class HexaRegistryModule {
       recipesHexa &&
       deploymentsHexa &&
       'setDeploymentPort' in recipesHexa &&
-      ('getDeploymentsAdapter' in deploymentsHexa ||
-        'getDeploymentsUseCases' in deploymentsHexa)
+      'getAdapter' in deploymentsHexa
     ) {
-      const deploymentPort =
-        'getDeploymentsAdapter' in deploymentsHexa
-          ? (
-              deploymentsHexa as {
-                getDeploymentsAdapter: () => IDeploymentPort;
-              }
-            ).getDeploymentsAdapter()
-          : (
-              deploymentsHexa as {
-                getDeploymentsUseCases: () => IDeploymentPort;
-              }
-            ).getDeploymentsUseCases();
+      const deploymentPort = (
+        deploymentsHexa as { getAdapter: () => IDeploymentPort }
+      ).getAdapter();
       // setDeploymentPort is async
       try {
         await (
@@ -603,21 +560,11 @@ export class HexaRegistryModule {
       standardsHexa &&
       deploymentsHexa &&
       'setDeploymentsQueryAdapter' in standardsHexa &&
-      ('getDeploymentsAdapter' in deploymentsHexa ||
-        'getDeploymentsUseCases' in deploymentsHexa)
+      'getAdapter' in deploymentsHexa
     ) {
-      const deploymentPort =
-        'getDeploymentsAdapter' in deploymentsHexa
-          ? (
-              deploymentsHexa as {
-                getDeploymentsAdapter: () => IDeploymentPort;
-              }
-            ).getDeploymentsAdapter()
-          : (
-              deploymentsHexa as {
-                getDeploymentsUseCases: () => IDeploymentPort;
-              }
-            ).getDeploymentsUseCases();
+      const deploymentPort = (
+        deploymentsHexa as { getAdapter: () => IDeploymentPort }
+      ).getAdapter();
       (
         standardsHexa as {
           setDeploymentsQueryAdapter: (adapter: IDeploymentPort) => void;
@@ -630,11 +577,11 @@ export class HexaRegistryModule {
       standardsHexa &&
       linterHexa &&
       'setLinterAdapter' in standardsHexa &&
-      'getLinterAdapter' in linterHexa
+      'getAdapter' in linterHexa
     ) {
       const linterAdapter = (
-        linterHexa as { getLinterAdapter: () => ILinterPort }
-      ).getLinterAdapter();
+        linterHexa as unknown as { getAdapter: () => ILinterPort }
+      ).getAdapter();
       (
         standardsHexa as {
           setLinterAdapter: (adapter: ILinterPort) => void;
@@ -650,11 +597,11 @@ export class HexaRegistryModule {
       linterHexa &&
       standardsHexa &&
       'setStandardAdapter' in linterHexa &&
-      'getStandardsAdapter' in standardsHexa
+      'getAdapter' in standardsHexa
     ) {
       const standardsAdapter = (
-        standardsHexa as { getStandardsAdapter: () => IStandardsPort }
-      ).getStandardsAdapter();
+        standardsHexa as { getAdapter: () => IStandardsPort }
+      ).getAdapter();
       (
         linterHexa as {
           setStandardAdapter: (adapter: IStandardsPort) => void;
@@ -670,11 +617,11 @@ export class HexaRegistryModule {
       analyticsHexa &&
       recipesHexa &&
       'setRecipesPort' in analyticsHexa &&
-      'getRecipesAdapter' in recipesHexa
+      'getAdapter' in recipesHexa
     ) {
       const recipesPort = (
-        recipesHexa as { getRecipesAdapter: () => IRecipesPort }
-      ).getRecipesAdapter();
+        recipesHexa as { getAdapter: () => IRecipesPort }
+      ).getAdapter();
       analyticsHexa.setRecipesPort(recipesPort);
     }
 
@@ -683,21 +630,11 @@ export class HexaRegistryModule {
       analyticsHexa &&
       deploymentsHexa &&
       'setDeploymentPort' in analyticsHexa &&
-      ('getDeploymentsAdapter' in deploymentsHexa ||
-        'getDeploymentsUseCases' in deploymentsHexa)
+      'getAdapter' in deploymentsHexa
     ) {
-      const deploymentPort =
-        'getDeploymentsAdapter' in deploymentsHexa
-          ? (
-              deploymentsHexa as {
-                getDeploymentsAdapter: () => IDeploymentPort;
-              }
-            ).getDeploymentsAdapter()
-          : (
-              deploymentsHexa as {
-                getDeploymentsUseCases: () => IDeploymentPort;
-              }
-            ).getDeploymentsUseCases();
+      const deploymentPort = (
+        deploymentsHexa as { getAdapter: () => IDeploymentPort }
+      ).getAdapter();
       analyticsHexa.setDeploymentPort(deploymentPort);
     }
   }

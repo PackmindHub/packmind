@@ -124,7 +124,7 @@ describe('Target-Specific Deployment Integration', () => {
 
     // Get the default "Global" space created during signup
     const spaces = await spacesHexa
-      .getSpacesAdapter()
+      .getAdapter()
       .listSpacesByOrganization(organization.id);
     const foundSpace = spaces.find((s) => s.name === 'Global');
     assert(foundSpace, 'Default Global space should exist');

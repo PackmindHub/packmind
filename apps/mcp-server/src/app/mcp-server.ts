@@ -77,7 +77,7 @@ async function getGlobalSpace(
   }
 
   const spaces = await spacesHexa
-    .getSpacesAdapter()
+    .getAdapter()
     .listSpacesByOrganization(organizationId);
 
   if (!spaces || spaces.length === 0) {
@@ -146,7 +146,7 @@ export function createMCPServer(
 
   // Set up deployment port injection for analytics
   logger.debug('Setting up deployment port injection for analytics');
-  const deploymentPort = deploymentsHexa.getDeploymentsUseCases();
+  const deploymentPort = deploymentsHexa.getAdapter();
   analyticsHexa.setDeploymentPort(deploymentPort);
   logger.debug('Deployment port injection completed');
 

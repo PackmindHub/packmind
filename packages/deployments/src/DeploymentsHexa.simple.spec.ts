@@ -44,7 +44,7 @@ describe('DeploymentsHexa - Simple Integration', () => {
     } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
     mockCodingAgentHexa = {
-      getCodingAgentAdapter: jest.fn().mockReturnValue(mockCodingAgentAdapter),
+      getAdapter: jest.fn().mockReturnValue(mockCodingAgentAdapter),
       getCodingAgentDeployerRegistry: jest.fn(),
       destroy: jest.fn(),
     } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -62,7 +62,7 @@ describe('DeploymentsHexa - Simple Integration', () => {
     } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
     mockGitHexa = {
-      getGitAdapter: jest.fn().mockReturnValue(mockGitAdapter),
+      getAdapter: jest.fn().mockReturnValue(mockGitAdapter),
       destroy: jest.fn(),
     } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -82,7 +82,7 @@ describe('DeploymentsHexa - Simple Integration', () => {
     } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
     mockStandardsHexa = {
-      getStandardsAdapter: jest.fn().mockReturnValue(mockStandardsAdapter),
+      getAdapter: jest.fn().mockReturnValue(mockStandardsAdapter),
       destroy: jest.fn(),
     } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
 

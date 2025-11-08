@@ -70,7 +70,7 @@ describe('Packmind Deployment Spec', () => {
         standardVersionIds.push(await dataQuery.getStandardVersionId(standard));
       }
 
-      return testApp.deploymentsHexa.getDeploymentsUseCases().publishStandards({
+      return testApp.deploymentsHexa.getAdapter().publishStandards({
         ...dataFactory.packmindCommand(),
         targetIds: [dataFactory.target.id],
         standardVersionIds,
@@ -81,7 +81,7 @@ describe('Packmind Deployment Spec', () => {
       commit = await createGitCommit();
       commitToGit = jest.fn().mockResolvedValue(commit);
       // Mock the adapter method instead of the hexa method
-      const gitAdapter = testApp.gitHexa.getGitAdapter();
+      const gitAdapter = testApp.gitHexa.getAdapter();
       jest.spyOn(gitAdapter, 'commitToGit').mockImplementation(commitToGit);
 
       await deployStandards([standard1]);
@@ -163,7 +163,7 @@ describe('Packmind Deployment Spec', () => {
         recipeVersionIds.push(await dataQuery.getRecipeVersionId(recipe));
       }
 
-      return testApp.deploymentsHexa.getDeploymentsUseCases().publishRecipes({
+      return testApp.deploymentsHexa.getAdapter().publishRecipes({
         ...dataFactory.packmindCommand(),
         recipeVersionIds,
         targetIds: [dataFactory.target.id],
@@ -174,7 +174,7 @@ describe('Packmind Deployment Spec', () => {
       commit = await createGitCommit();
       commitToGit = jest.fn().mockResolvedValue(commit);
       // Mock the adapter method instead of the hexa method
-      const gitAdapter = testApp.gitHexa.getGitAdapter();
+      const gitAdapter = testApp.gitHexa.getAdapter();
       jest.spyOn(gitAdapter, 'commitToGit').mockImplementation(commitToGit);
 
       await deployRecipes([recipe1]);

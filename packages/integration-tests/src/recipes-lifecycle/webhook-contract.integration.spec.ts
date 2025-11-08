@@ -103,7 +103,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
       const mockGitCommit: any = null; // In test environment, gitCommit is null due to mocking constraints
 
       // Mock handleWebHookWithoutContent on the adapter to return list of changed files (without content)
-      const gitAdapter = testApp.gitHexa.getGitAdapter();
+      const gitAdapter = testApp.gitHexa.getAdapter();
       jest.spyOn(gitAdapter, 'handleWebHookWithoutContent').mockResolvedValue(
         files.map((f) => ({
           filePath: f.filePath,
@@ -264,18 +264,16 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
         beforeEach(async () => {
           // Mock commitToGit on the adapter instead of GitHexa
           // Store the adapter to ensure we're mocking the same instance
-          const gitAdapter = testApp.gitHexa.getGitAdapter();
+          const gitAdapter = testApp.gitHexa.getAdapter();
           jest
             .spyOn(gitAdapter, 'commitToGit')
             .mockResolvedValue(await createGitCommit());
 
-          await testApp.deploymentsHexa
-            .getDeploymentsUseCases()
-            .publishRecipes({
-              gitRepoIds: [gitRepo.id],
-              recipeVersionIds: [await dataQuery.getRecipeVersionId(recipe)],
-              ...dataFactory.packmindCommand(),
-            });
+          await testApp.deploymentsHexa.getAdapter().publishRecipes({
+            gitRepoIds: [gitRepo.id],
+            recipeVersionIds: [await dataQuery.getRecipeVersionId(recipe)],
+            ...dataFactory.packmindCommand(),
+          });
 
           // Verify initial state
           const initialVersions = await testApp.recipesHexa.listRecipeVersions(
@@ -393,7 +391,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
 
           it('automatically deploys new recipe version to source repository', async () => {
             const deployments = await testApp.deploymentsHexa
-              .getDeploymentsUseCases()
+              .getAdapter()
               .listDeploymentsByRecipe({
                 ...dataFactory.packmindCommand(),
                 recipeId: recipe.id,
@@ -439,18 +437,16 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
             });
 
             // Ensure commitToGit mock is still active (re-apply to be safe)
-            const gitAdapter = testApp.gitHexa.getGitAdapter();
+            const gitAdapter = testApp.gitHexa.getAdapter();
             jest
               .spyOn(gitAdapter, 'commitToGit')
               .mockResolvedValue(await createGitCommit());
 
-            await testApp.deploymentsHexa
-              .getDeploymentsUseCases()
-              .publishRecipes({
-                gitRepoIds: [gitRepo.id],
-                recipeVersionIds: [await dataQuery.getRecipeVersionId(recipe2)],
-                ...dataFactory.packmindCommand(),
-              });
+            await testApp.deploymentsHexa.getAdapter().publishRecipes({
+              gitRepoIds: [gitRepo.id],
+              recipeVersionIds: [await dataQuery.getRecipeVersionId(recipe2)],
+              ...dataFactory.packmindCommand(),
+            });
 
             mockWebhookWithAsyncJobs([
               {
@@ -625,7 +621,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
 
         jest
           .spyOn(
-            testApp.deploymentsHexa.getDeploymentsUseCases(),
+            testApp.deploymentsHexa.getAdapter(),
             'listDeploymentsByRecipe',
           )
           .mockResolvedValue([
@@ -697,7 +693,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
 
         jest
           .spyOn(
-            testApp.deploymentsHexa.getDeploymentsUseCases(),
+            testApp.deploymentsHexa.getAdapter(),
             'listDeploymentsByRecipe',
           )
           .mockResolvedValue([
@@ -766,10 +762,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
 
           // Create initial deployment to multiple targets
           const publishRecipesSpy = jest
-            .spyOn(
-              testApp.deploymentsHexa.getDeploymentsUseCases(),
-              'publishRecipes',
-            )
+            .spyOn(testApp.deploymentsHexa.getAdapter(), 'publishRecipes')
             .mockResolvedValueOnce([
               {
                 id: createRecipesDeploymentId('deployment-initial'),
@@ -784,18 +777,16 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
             ]);
 
           // Deploy recipe V1 to both targets initially
-          await testApp.deploymentsHexa
-            .getDeploymentsUseCases()
-            .publishRecipes({
-              gitRepoIds: [gitRepo.id],
-              recipeVersionIds: [initialVersions[0].id],
-              ...dataFactory.packmindCommand(),
-            });
+          await testApp.deploymentsHexa.getAdapter().publishRecipes({
+            gitRepoIds: [gitRepo.id],
+            recipeVersionIds: [initialVersions[0].id],
+            ...dataFactory.packmindCommand(),
+          });
 
           // Mock that recipe is deployed to both targets
           jest
             .spyOn(
-              testApp.deploymentsHexa.getDeploymentsUseCases(),
+              testApp.deploymentsHexa.getAdapter(),
               'listDeploymentsByRecipe',
             )
             .mockResolvedValue([
@@ -813,10 +804,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
 
           // Mock getTargetsByGitRepo to return both targets
           jest
-            .spyOn(
-              testApp.deploymentsHexa.getDeploymentsUseCases(),
-              'getTargetsByGitRepo',
-            )
+            .spyOn(testApp.deploymentsHexa.getAdapter(), 'getTargetsByGitRepo')
             .mockResolvedValue([jetbrainsTarget, vscodeTarget]);
 
           // Reset spy to track new deployment calls
