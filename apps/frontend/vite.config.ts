@@ -80,6 +80,42 @@ export default defineConfig(() => {
       commonjsOptions: {
         transformMixedEsModules: true,
       },
+      rollupOptions: {
+        output: {
+          manualChunks: (id) => {
+            // Group public authentication routes together
+            if (id.includes('app/routes/_public')) {
+              return 'routes-public-auth';
+            }
+
+            // Group organization analytics and deployments
+            if (
+              id.includes('app/routes/org.$orgSlug._protected.analytics') ||
+              id.includes('app/routes/org.$orgSlug._protected.deployments') ||
+              id.includes(
+                'app/routes/org.$orgSlug._protected.account-settings',
+              ) ||
+              id.includes('app/routes/org.$orgSlug._protected.error-demo')
+            ) {
+              return 'routes-org-analytics';
+            }
+
+            // Group organization settings routes
+            if (id.includes('app/routes/org.$orgSlug._protected.settings')) {
+              return 'routes-org-settings';
+            }
+
+            // Group organization artifacts (dashboard, recipes and standards)
+            if (
+              id.includes('app/routes/org.$orgSlug._protected._index') ||
+              id.includes('_space-protected.recipes') ||
+              id.includes('_space-protected.standards')
+            ) {
+              return 'routes-org-artifacts';
+            }
+          },
+        },
+      },
     },
     test: {
       watch: false,
