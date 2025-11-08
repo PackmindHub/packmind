@@ -1,4 +1,4 @@
-export { AccountsHexa } from './AccountsHexa';
+export { AccountsHexa, AccountsHexaOpts } from './AccountsHexa';
 export { AccountsHexaFactory } from './AccountsHexaFactory';
 export { AccountsAdapter } from './application/adapter/AccountsAdapter';
 export * from './application/useCases';

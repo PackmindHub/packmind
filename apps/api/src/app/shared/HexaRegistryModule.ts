@@ -1,11 +1,14 @@
 import { Module, DynamicModule, Provider, Global } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { JwtService } from '@nestjs/jwt';
 import { DataSource } from 'typeorm';
 import { HexaRegistry, BaseHexa } from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
 import { DeploymentsHexa } from '@packmind/deployments';
 import { StandardsHexa } from '@packmind/standards';
 import { AnalyticsHexa } from '@packmind/analytics';
+import { AccountsHexa, AccountsHexaOpts } from '@packmind/accounts';
+import { PackmindLogger } from '@packmind/logger';
 import {
   IAccountsPort,
   IDeploymentPort,
@@ -18,6 +21,7 @@ import {
   UserProvider,
   OrganizationProvider,
 } from '@packmind/types';
+import { ApiKeyServiceProvider } from './ApiKeyServiceProvider';
 
 /**
  * Configuration interface for HexaRegistry integration with NestJS
@@ -145,12 +149,32 @@ export class HexaRegistryModule {
     // Provide the HexaRegistry instance
     providers.push({
       provide: HEXA_REGISTRY_TOKEN,
-      useFactory: async (dataSource: DataSource): Promise<HexaRegistry> => {
+      useFactory: async (
+        dataSource: DataSource,
+        jwtService: JwtService,
+      ): Promise<HexaRegistry> => {
         const registry = new HexaRegistry();
 
         // Register all hexa types in the specified order
+        // For AccountsHexa, we need to pass the apiKeyService option
         for (const HexaClass of options.hexas) {
-          registry.register(HexaClass);
+          if (HexaClass === AccountsHexa) {
+            // Create ApiKeyService for AccountsHexa
+            const logger = new PackmindLogger('AccountsHexa');
+            const apiKeyServiceProvider = new ApiKeyServiceProvider();
+            const apiKeyService = apiKeyServiceProvider.createApiKeyService(
+              jwtService,
+              logger,
+            );
+
+            // Register AccountsHexa with apiKeyService option
+            // Cast to AccountsHexa to allow passing AccountsHexaOpts
+            registry.register(AccountsHexa, {
+              apiKeyService,
+            } as Partial<AccountsHexaOpts>);
+          } else {
+            registry.register(HexaClass);
+          }
         }
 
         // Initialize the registry with the DataSource (synchronous phase)
@@ -165,7 +189,7 @@ export class HexaRegistryModule {
 
         return registry;
       },
-      inject: [DataSource],
+      inject: [DataSource, JwtService],
     });
 
     // Provide individual domain hexas as injectable services by class reference
@@ -406,15 +430,15 @@ export class HexaRegistryModule {
       const deploymentPort =
         'getDeploymentsAdapter' in deploymentsHexa
           ? (
-            deploymentsHexa as {
-              getDeploymentsAdapter: () => IDeploymentPort;
-            }
-          ).getDeploymentsAdapter()
+              deploymentsHexa as {
+                getDeploymentsAdapter: () => IDeploymentPort;
+              }
+            ).getDeploymentsAdapter()
           : (
-            deploymentsHexa as {
-              getDeploymentsUseCases: () => IDeploymentPort;
-            }
-          ).getDeploymentsUseCases();
+              deploymentsHexa as {
+                getDeploymentsUseCases: () => IDeploymentPort;
+              }
+            ).getDeploymentsUseCases();
       accountsHexa.setDeploymentPort(deploymentPort);
     }
 
@@ -464,15 +488,15 @@ export class HexaRegistryModule {
       const deploymentPort =
         'getDeploymentsAdapter' in deploymentsHexa
           ? (
-            deploymentsHexa as {
-              getDeploymentsAdapter: () => IDeploymentPort;
-            }
-          ).getDeploymentsAdapter()
+              deploymentsHexa as {
+                getDeploymentsAdapter: () => IDeploymentPort;
+              }
+            ).getDeploymentsAdapter()
           : (
-            deploymentsHexa as {
-              getDeploymentsUseCases: () => IDeploymentPort;
-            }
-          ).getDeploymentsUseCases();
+              deploymentsHexa as {
+                getDeploymentsUseCases: () => IDeploymentPort;
+              }
+            ).getDeploymentsUseCases();
       (
         gitHexa as {
           setDeploymentsAdapter: (adapter: IDeploymentPort) => void;
@@ -546,15 +570,15 @@ export class HexaRegistryModule {
       const deploymentPort =
         'getDeploymentsAdapter' in deploymentsHexa
           ? (
-            deploymentsHexa as {
-              getDeploymentsAdapter: () => IDeploymentPort;
-            }
-          ).getDeploymentsAdapter()
+              deploymentsHexa as {
+                getDeploymentsAdapter: () => IDeploymentPort;
+              }
+            ).getDeploymentsAdapter()
           : (
-            deploymentsHexa as {
-              getDeploymentsUseCases: () => IDeploymentPort;
-            }
-          ).getDeploymentsUseCases();
+              deploymentsHexa as {
+                getDeploymentsUseCases: () => IDeploymentPort;
+              }
+            ).getDeploymentsUseCases();
       // setDeploymentPort is async
       try {
         await (
@@ -585,15 +609,15 @@ export class HexaRegistryModule {
       const deploymentPort =
         'getDeploymentsAdapter' in deploymentsHexa
           ? (
-            deploymentsHexa as {
-              getDeploymentsAdapter: () => IDeploymentPort;
-            }
-          ).getDeploymentsAdapter()
+              deploymentsHexa as {
+                getDeploymentsAdapter: () => IDeploymentPort;
+              }
+            ).getDeploymentsAdapter()
           : (
-            deploymentsHexa as {
-              getDeploymentsUseCases: () => IDeploymentPort;
-            }
-          ).getDeploymentsUseCases();
+              deploymentsHexa as {
+                getDeploymentsUseCases: () => IDeploymentPort;
+              }
+            ).getDeploymentsUseCases();
       (
         standardsHexa as {
           setDeploymentsQueryAdapter: (adapter: IDeploymentPort) => void;
@@ -665,15 +689,15 @@ export class HexaRegistryModule {
       const deploymentPort =
         'getDeploymentsAdapter' in deploymentsHexa
           ? (
-            deploymentsHexa as {
-              getDeploymentsAdapter: () => IDeploymentPort;
-            }
-          ).getDeploymentsAdapter()
+              deploymentsHexa as {
+                getDeploymentsAdapter: () => IDeploymentPort;
+              }
+            ).getDeploymentsAdapter()
           : (
-            deploymentsHexa as {
-              getDeploymentsUseCases: () => IDeploymentPort;
-            }
-          ).getDeploymentsUseCases();
+              deploymentsHexa as {
+                getDeploymentsUseCases: () => IDeploymentPort;
+              }
+            ).getDeploymentsUseCases();
       analyticsHexa.setDeploymentPort(deploymentPort);
     }
   }
