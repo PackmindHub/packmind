@@ -22,6 +22,8 @@ jobs:
     strategy:
       matrix:
         node-version: ["${{ inputs.node-version }}"]
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
     steps:
       - uses: actions/checkout@v4
@@ -47,10 +49,6 @@ jobs:
 
       - name: SonarQube Cloud Scan
         uses: SonarSource/sonarqube-scan-action@v6.0.0
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: SonarQube Quality Gate Check
         uses: SonarSource/sonarqube-quality-gate-action@v1.2.0
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
