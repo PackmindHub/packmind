@@ -19,6 +19,7 @@
     },
     "build": {
       "executor": "nx:run-commands",
+      "cache": true,
       "outputs": ["{options.outputPath}"],
       "options": {
         "command": "docusaurus build --out-dir=../../dist/apps/doc", // --out-dir specify the nx-workspace output directory
@@ -94,7 +95,8 @@
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint"
+      "executor": "@nx/eslint:lint",
+      "cache": true
     },
     "browserslist": {
       "production": [">0.5%", "not dead", "not op_mini all"],

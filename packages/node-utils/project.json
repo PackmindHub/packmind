@@ -25,6 +25,7 @@
     },
     "lint": {
       "executor": "@nx/eslint:lint",
+      "cache": true,
       "options": {
         "lintFilePatterns": ["packages/node-utils/src/**/*.{ts,tsx}"]
       }
