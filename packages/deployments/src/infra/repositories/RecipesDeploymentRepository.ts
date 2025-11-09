@@ -1,4 +1,4 @@
-import { RecipesDeployment } from '../../domain/entities/RecipesDeployment';
+import { RecipesDeployment } from '@packmind/types';
 import { RecipeId, RecipeVersion } from '@packmind/recipes/types';
 import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
 import { RecipesDeploymentSchema } from '../schemas/RecipesDeploymentSchema';

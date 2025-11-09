@@ -37,8 +37,7 @@ import {
 import { FindDeployedStandardByRepositoryUseCase } from '../useCases/FindDeployedStandardByRepositoryUseCase';
 import { FindActiveStandardVersionsByTargetUseCase } from '../useCases/FindActiveStandardVersionsByTargetUseCase';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
-import { DeploymentsHexaFactory } from '../../DeploymentsHexaFactory';
-import { IDeploymentsServices } from '../IDeploymentsServices';
+import { DeploymentsServices } from '../services/DeploymentsServices';
 import {
   DeploymentOverview,
   GetDeploymentOverviewCommand,
@@ -64,10 +63,18 @@ import { CreateRenderModeConfigurationUseCase } from '../useCases/CreateRenderMo
 import { UpdateRenderModeConfigurationUseCase } from '../useCases/UpdateRenderModeConfigurationUseCase';
 import { PullAllContentUseCase } from '../useCases/PullAllContentUseCase';
 
+// Import the type to avoid circular dependency
+type DeploymentsHexaType = {
+  repositories: {
+    getStandardsDeploymentRepository(): IStandardsDeploymentRepository;
+    getRecipesDeploymentRepository(): IRecipesDeploymentRepository;
+  };
+};
+
 export class DeploymentsAdapter implements IDeploymentPort {
   private readonly standardDeploymentRepository: IStandardsDeploymentRepository;
   private readonly recipesDeploymentRepository: IRecipesDeploymentRepository;
-  private deploymentsServices: IDeploymentsServices;
+  private deploymentsServices!: DeploymentsServices;
   private gitPort!: IGitPort;
   private recipesPort?: Partial<IRecipesPort>;
   private codingAgentPort!: ICodingAgentPort;
@@ -77,12 +84,11 @@ export class DeploymentsAdapter implements IDeploymentPort {
   private userProvider?: UserProvider;
   private organizationProvider?: OrganizationProvider;
 
-  constructor(deploymentsHexa: DeploymentsHexaFactory) {
+  constructor(deploymentsHexa: DeploymentsHexaType) {
     this.standardDeploymentRepository =
       deploymentsHexa.repositories.getStandardsDeploymentRepository();
     this.recipesDeploymentRepository =
       deploymentsHexa.repositories.getRecipesDeploymentRepository();
-    this.deploymentsServices = deploymentsHexa.services.deployments;
   }
 
   /**
@@ -93,9 +99,9 @@ export class DeploymentsAdapter implements IDeploymentPort {
   }
 
   /**
-   * Update the deployments services (called when factory is recreated with new gitPort)
+   * Update the deployments services (called when services are created with ports)
    */
-  public updateDeploymentsServices(services: IDeploymentsServices): void {
+  public updateDeploymentsServices(services: DeploymentsServices): void {
     this.deploymentsServices = services;
   }
 

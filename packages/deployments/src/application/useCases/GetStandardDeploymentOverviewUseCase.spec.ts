@@ -1,6 +1,8 @@
-import { IStandardsPort, IGitPort } from '@packmind/types';
-import { OrganizationId, UserId } from '@packmind/types';
 import {
+  IStandardsPort,
+  IGitPort,
+  OrganizationId,
+  UserId,
   createGitRepoId,
   createGitProviderId,
   Standard,
@@ -12,13 +14,13 @@ import {
   ISpacesPort,
   Space,
   createSpaceId,
+  StandardsDeployment,
+  StandardDeploymentOverview,
 } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 import { gitRepoFactory } from '@packmind/git/test';
 import { GetStandardDeploymentOverviewUseCase } from './GetStandardDeploymentOverviewUseCase';
-import { StandardsDeployment } from '../../domain/entities/StandardsDeployment';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
-import { StandardDeploymentOverview } from '../../domain/types/StandardDeploymentOverview';
 import { standardsDeploymentFactory } from '../../../test/standardsDeploymentFactory';
 import { targetFactory } from '../../../test/targetFactory';
 import {

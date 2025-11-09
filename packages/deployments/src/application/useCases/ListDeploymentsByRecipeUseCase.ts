@@ -1,11 +1,11 @@
 import { PackmindLogger, LogLevel } from '@packmind/logger';
-import { OrganizationId } from '@packmind/types';
-import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
-import { RecipesDeployment } from '../../domain/entities/RecipesDeployment';
 import {
+  OrganizationId,
+  RecipesDeployment,
   IListDeploymentsByRecipe,
   ListDeploymentsByRecipeCommand,
 } from '@packmind/types';
+import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
 
 export class ListDeploymentsByRecipeUseCase
   implements IListDeploymentsByRecipe

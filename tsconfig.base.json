@@ -29,9 +29,6 @@
       "@packmind/deployments": ["packages/deployments/src/index.ts"],
       "@packmind/deployments/test": ["packages/deployments/test/index.ts"],
       "@packmind/deployments/test/*": ["packages/deployments/test/*"],
-      "@packmind/deployments/types": [
-        "packages/deployments/src/types/index.ts"
-      ],
       "@packmind/editions": ["packages/editions/src/index.ts"],
       "@packmind/git": ["packages/git/src/index.ts"],
       "@packmind/integration-tests": [

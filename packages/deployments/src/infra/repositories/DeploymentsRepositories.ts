@@ -12,9 +12,12 @@ import { TargetSchema } from '../schemas/TargetSchema';
 import { RecipesDeploymentSchema } from '../schemas/RecipesDeploymentSchema';
 import { StandardsDeploymentSchema } from '../schemas/StandardsDeploymentSchema';
 import { RenderModeConfigurationSchema } from '../schemas/RenderModeConfigurationSchema';
-import { Target, RenderModeConfiguration } from '@packmind/types';
-import { RecipesDeployment } from '../../domain/entities/RecipesDeployment';
-import { StandardsDeployment } from '../../domain/entities/StandardsDeployment';
+import {
+  Target,
+  RenderModeConfiguration,
+  RecipesDeployment,
+  StandardsDeployment,
+} from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 
 /**

@@ -1,5 +1,5 @@
 import { EntitySchema } from 'typeorm';
-import { RecipesDeployment } from '../../domain/entities/RecipesDeployment';
+import { RecipesDeployment } from '@packmind/types';
 import {
   WithTimestamps,
   WithSoftDelete,

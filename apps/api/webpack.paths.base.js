@@ -23,10 +23,6 @@ module.exports = function getBaseWebpackPaths(__dirname) {
     ),
     '@packmind/test-utils': join(__dirname, '../../packages/test-utils/src'),
     '@packmind/deployments': join(__dirname, '../../packages/deployments/src'),
-    '@packmind/deployments/types': join(
-      __dirname,
-      '../../packages/deployments/src/types',
-    ),
     '@packmind/coding-agent': join(
       __dirname,
       '../../packages/coding-agent/src',

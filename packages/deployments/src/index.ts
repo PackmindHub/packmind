@@ -7,11 +7,8 @@
 
 // Re-export main hexa
 export * from './DeploymentsHexa';
-export * from './DeploymentsHexaFactory';
 
-// Re-export domain entities
-export * from './domain/entities/';
-export * from './domain/types/StandardDeploymentOverview';
+// Re-export schemas
 export * from './infra/schemas';
 
 /**

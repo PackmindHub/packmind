@@ -1,4 +1,4 @@
-import { RecipesDeployment } from '../entities/RecipesDeployment';
+import { RecipesDeployment } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 import { RecipeId, RecipeVersion } from '@packmind/recipes/types';
 import { GitRepoId } from '@packmind/git';

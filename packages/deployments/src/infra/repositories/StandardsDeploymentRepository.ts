@@ -1,4 +1,4 @@
-import { StandardsDeployment } from '../../domain/entities/StandardsDeployment';
+import { StandardsDeployment } from '@packmind/types';
 import { StandardVersion } from '@packmind/standards/types';
 import { StandardId } from '@packmind/standards/types';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';

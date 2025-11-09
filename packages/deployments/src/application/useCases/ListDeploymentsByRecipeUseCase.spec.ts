@@ -3,10 +3,11 @@ import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipes
 import {
   RecipesDeployment,
   createRecipesDeploymentId,
-} from '../../domain/entities/RecipesDeployment';
+  OrganizationId,
+  UserId,
+} from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 import { RecipeId } from '@packmind/recipes';
-import { OrganizationId, UserId } from '@packmind/types';
 import {
   ListDeploymentsByRecipeCommand,
   DistributionStatus,

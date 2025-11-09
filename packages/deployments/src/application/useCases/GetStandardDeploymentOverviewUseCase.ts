@@ -1,34 +1,28 @@
 import { PackmindLogger } from '@packmind/logger';
-import { ISpacesPort } from '@packmind/types';
-
-import { IStandardsPort } from '@packmind/types';
-
 import {
+  ISpacesPort,
+  IStandardsPort,
   Standard,
   StandardId,
   StandardVersion,
   createStandardVersionId,
-} from '@packmind/types';
-import {
   IGetStandardDeploymentOverview,
   GetStandardDeploymentOverviewCommand,
   DistributionStatus,
   TargetStandardDeploymentStatus,
   TargetStandardDeploymentInfo,
   DeployedStandardTargetInfo,
-} from '@packmind/types';
-import { IGitPort } from '@packmind/types';
-import { GitRepo } from '@packmind/git';
-import { OrganizationId } from '@packmind/types';
-import { StandardsDeployment } from '../../domain/entities/StandardsDeployment';
-import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
-import {
+  IGitPort,
+  OrganizationId,
+  StandardsDeployment,
   StandardDeploymentOverview,
   RepositoryStandardDeploymentStatus,
   StandardDeploymentStatus,
   DeployedStandardInfo,
   RepositoryStandardDeploymentInfo,
-} from '../../domain/types/StandardDeploymentOverview';
+} from '@packmind/types';
+import { GitRepo } from '@packmind/git';
+import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
 
 const origin = 'GetStandardDeploymentOverviewUseCase';
 

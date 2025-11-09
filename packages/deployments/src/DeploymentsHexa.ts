@@ -17,11 +17,14 @@ import {
   UserProvider,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
-import { DeploymentsHexaFactory } from './DeploymentsHexaFactory';
 import { RecipesAdapter } from './adapters/RecipesAdapter';
 import { DeploymentsAdapter } from './application/adapter/DeploymentsAdapter';
+import { DeploymentsServices } from './application/services/DeploymentsServices';
+import { DeploymentsRepositories } from './infra/repositories/DeploymentsRepositories';
 
 const origin = 'DeploymentsHexa';
+
+export type DeploymentsHexaOpts = BaseHexaOpts;
 
 /**
  * DeploymentsHexa - Facade for the Deployments domain following the Hexa pattern.
@@ -29,28 +32,31 @@ const origin = 'DeploymentsHexa';
  * This class serves as the main entry point for deployment functionality.
  * It handles the deployment of recipes and standards to git repositories
  * and tracks deployment history.
- *
- * The Hexa pattern separates concerns:
- * - DeploymentsHexaFactory: Handles dependency injection and service instantiation
- * - DeploymentsHexa: Serves as use case facade and integration point with other domains
  */
-export class DeploymentsHexa extends BaseHexa<BaseHexaOpts, IDeploymentPort> {
-  private hexa: DeploymentsHexaFactory;
-  private readonly deploymentsUsecases: IDeploymentPort;
+export class DeploymentsHexa extends BaseHexa<
+  DeploymentsHexaOpts,
+  IDeploymentPort
+> {
+  public readonly repositories: DeploymentsRepositories;
+  private services!: DeploymentsServices;
+  private readonly adapter: DeploymentsAdapter;
 
   constructor(
     dataSource: DataSource,
-    opts: Partial<BaseHexaOpts> = { logger: new PackmindLogger(origin) },
+    opts: Partial<DeploymentsHexaOpts> = { logger: new PackmindLogger(origin) },
   ) {
     super(dataSource, opts);
     this.logger.info('Constructing DeploymentsHexa');
 
     try {
-      // Create factory without gitPort (will be set during initialization)
-      this.hexa = new DeploymentsHexaFactory(this.logger, this.dataSource);
+      // Initialize repositories aggregator
+      this.repositories = new DeploymentsRepositories(
+        this.dataSource,
+        this.logger,
+      );
 
-      // Create adapter in constructor - ports will be set during initialize()
-      this.deploymentsUsecases = new DeploymentsAdapter(this.hexa);
+      // Create adapter in constructor - ports and services will be set during initialize()
+      this.adapter = new DeploymentsAdapter(this);
 
       this.logger.info('DeploymentsHexa construction completed');
     } catch (error) {
@@ -68,20 +74,19 @@ export class DeploymentsHexa extends BaseHexa<BaseHexaOpts, IDeploymentPort> {
     this.logger.info('Initializing DeploymentsHexa (adapter retrieval phase)');
 
     try {
-      // Using getAdapter to avoid circular dependency (GitHexa imports DeploymentsHexa)
+      // Retrieve ports from registry
       const gitPort = registry.getAdapter<IGitPort>(IGitPortName);
 
-      // Update factory with gitPort (recreate services with real gitPort)
-      this.hexa = new DeploymentsHexaFactory(
-        this.logger,
-        this.dataSource,
+      // Initialize services with retrieved ports
+      this.services = new DeploymentsServices(
+        this.repositories,
         gitPort,
+        this.logger,
       );
 
       // Set ports on adapter and update services reference
-      const adapter = this.deploymentsUsecases as DeploymentsAdapter;
-      adapter.setGitPort(gitPort);
-      adapter.updateDeploymentsServices(this.hexa.services.deployments);
+      this.adapter.setGitPort(gitPort);
+      this.adapter.updateDeploymentsServices(this.services);
 
       // RecipesHexa might not be available during initialization due to circular dependency
       // Using adapter pattern to decouple from RecipesHexa
@@ -89,7 +94,7 @@ export class DeploymentsHexa extends BaseHexa<BaseHexaOpts, IDeploymentPort> {
       try {
         const recipesHexa = registry.get(RecipesHexa);
         recipesPort = new RecipesAdapter(recipesHexa);
-        adapter.updateRecipesPort(recipesPort);
+        this.adapter.updateRecipesPort(recipesPort);
       } catch {
         // RecipesHexa will be resolved later when fully initialized
         this.logger.debug('RecipesHexa not available in registry');
@@ -97,8 +102,8 @@ export class DeploymentsHexa extends BaseHexa<BaseHexaOpts, IDeploymentPort> {
 
       const codingAgentHexa = registry.get(CodingAgentHexa);
       const codingAgentPort = codingAgentHexa.getAdapter();
-      adapter.setCodingAgentPort(codingAgentPort);
-      adapter.setCodingAgentHexa(codingAgentHexa);
+      this.adapter.setCodingAgentPort(codingAgentPort);
+      this.adapter.setCodingAgentHexa(codingAgentHexa);
 
       const standardsHexa = registry.get(StandardsHexa);
       // StandardsHexa adapter might not be available yet (needs initialization)
@@ -106,7 +111,7 @@ export class DeploymentsHexa extends BaseHexa<BaseHexaOpts, IDeploymentPort> {
       let standardsPort: IStandardsPort | undefined;
       try {
         standardsPort = standardsHexa.getAdapter();
-        adapter.updateStandardsPort(standardsPort);
+        this.adapter.updateStandardsPort(standardsPort);
       } catch {
         // StandardsHexa not initialized yet - will be set later
         this.logger.debug(
@@ -139,7 +144,7 @@ export class DeploymentsHexa extends BaseHexa<BaseHexaOpts, IDeploymentPort> {
 
       // Set standards port if available
       if (standardsPort) {
-        adapter.updateStandardsPort(standardsPort);
+        this.adapter.updateStandardsPort(standardsPort);
       }
 
       this.logger.info('DeploymentsHexa initialized successfully');
@@ -166,7 +171,7 @@ export class DeploymentsHexa extends BaseHexa<BaseHexaOpts, IDeploymentPort> {
    * The adapter is available immediately after construction.
    */
   public getAdapter(): IDeploymentPort {
-    return this.deploymentsUsecases;
+    return this.adapter;
   }
 
   /**
@@ -180,17 +185,12 @@ export class DeploymentsHexa extends BaseHexa<BaseHexaOpts, IDeploymentPort> {
     userProvider: UserProvider,
     organizationProvider: OrganizationProvider,
   ): void {
-    (this.deploymentsUsecases as DeploymentsAdapter).setAccountProviders(
-      userProvider,
-      organizationProvider,
-    );
+    this.adapter.setAccountProviders(userProvider, organizationProvider);
     this.logger.info('Account providers set in DeploymentsHexa');
   }
 
   public setSpacesAdapter(spacesPort: ISpacesPort): void {
-    (this.deploymentsUsecases as DeploymentsAdapter).updateSpacesPort(
-      spacesPort,
-    );
+    this.adapter.updateSpacesPort(spacesPort);
     this.logger.info('Spaces adapter set in DeploymentsHexa');
   }
 }

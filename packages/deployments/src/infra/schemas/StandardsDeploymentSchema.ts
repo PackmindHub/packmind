@@ -1,5 +1,5 @@
 import { EntitySchema } from 'typeorm';
-import { StandardsDeployment } from '../../domain/entities/StandardsDeployment';
+import { StandardsDeployment } from '@packmind/types';
 import {
   WithTimestamps,
   WithSoftDelete,

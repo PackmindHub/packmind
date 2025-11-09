@@ -1,4 +1,3 @@
-import { IDeploymentsServices } from '../IDeploymentsServices';
 import { TargetService } from './TargetService';
 import { PackmindLogger } from '@packmind/logger';
 import { IGitPort } from '@packmind/types';
@@ -6,13 +5,13 @@ import { RenderModeConfigurationService } from './RenderModeConfigurationService
 import { IDeploymentsRepositories } from '../../domain/repositories/IDeploymentsRepositories';
 
 /**
- * DeploymentsServices - Service aggregator implementation for the Deployments application layer
+ * DeploymentsServices - Service aggregator for the Deployments application layer
  *
  * This class serves as the main service access point, aggregating all
  * individual services. It handles the instantiation of services
  * using the repository aggregator and provides them through getter methods.
  */
-export class DeploymentsServices implements IDeploymentsServices {
+export class DeploymentsServices {
   private readonly targetService: TargetService;
   private readonly renderModeConfigurationService: RenderModeConfigurationService;
 

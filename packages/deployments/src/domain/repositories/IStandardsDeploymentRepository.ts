@@ -1,4 +1,4 @@
-import { StandardsDeployment } from '../entities/StandardsDeployment';
+import { StandardsDeployment } from '@packmind/types';
 import { StandardVersion } from '@packmind/standards/types';
 import { OrganizationId } from '@packmind/types';
 import { StandardId } from '@packmind/standards/types';
