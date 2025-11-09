@@ -1,11 +1,11 @@
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import {
+  createUserId,
   IDeploymentPort,
   IGitPort,
   OrganizationId,
-  createUserId,
+  Recipe,
 } from '@packmind/types';
-import { Recipe } from '../../../domain/entities/Recipe';
 import { IRecipesDelayedJobs } from '../../../domain/jobs/IRecipesDelayedJobs';
 import { RecipeService } from '../../services/RecipeService';
 

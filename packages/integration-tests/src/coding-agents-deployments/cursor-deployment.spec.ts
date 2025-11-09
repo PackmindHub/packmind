@@ -7,30 +7,27 @@ import {
 import { GitHexa, gitSchemas } from '@packmind/git';
 import { JobsHexa } from '@packmind/jobs';
 import { HexaRegistry } from '@packmind/node-utils';
-import {
-  Recipe,
-  RecipeVersion,
-  RecipeVersionId,
-  RecipesHexa,
-  recipesSchemas,
-} from '@packmind/recipes';
-import { Space } from '@packmind/types';
+import { RecipesHexa, recipesSchemas } from '@packmind/recipes';
 import { SpacesHexa, spacesSchemas } from '@packmind/spaces';
 import { StandardsHexa, standardsSchemas } from '@packmind/standards';
 import { makeTestDatasource } from '@packmind/test-utils';
 import {
+  createTargetId,
   GitProviderVendors,
   GitRepo,
   IDeploymentPort,
   IGitPort,
   IStandardsPort,
   Organization,
+  Recipe,
+  RecipeVersion,
+  RecipeVersionId,
+  Space,
   Standard,
   StandardVersion,
   StandardVersionId,
   Target,
   User,
-  createTargetId,
 } from '@packmind/types';
 import { assert } from 'console';
 import { DataSource } from 'typeorm';

@@ -12,13 +12,13 @@ import {
   ListRecipesBySpaceCommand,
   OrganizationId,
   QueryOption,
+  Recipe,
   RecipeId,
   UpdateRecipeFromUICommand,
   UpdateRecipeFromUIResponse,
   UpdateRecipesFromGitHubCommand,
   UpdateRecipesFromGitLabCommand,
 } from '@packmind/types';
-import { Recipe } from '../../domain/entities/Recipe';
 import { IRecipesDelayedJobs } from '../../domain/jobs/IRecipesDelayedJobs';
 import { RecipesServices } from '../services/RecipesServices';
 import { CaptureRecipeUsecase } from '../useCases/captureRecipe/captureRecipe.usecase';

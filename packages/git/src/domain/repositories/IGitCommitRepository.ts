@@ -1,4 +1,4 @@
-import { GitCommit, GitCommitId } from '../entities/GitCommit';
+import { GitCommit, GitCommitId } from '@packmind/types';
 
 export interface IGitCommitRepository {
   add(gitCommit: Omit<GitCommit, 'id'>): Promise<GitCommit>;

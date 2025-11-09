@@ -6,15 +6,16 @@ import {
   makeTestDatasource,
   stubLogger,
 } from '@packmind/test-utils';
+import {
+  createStandardId,
+  createStandardVersionId,
+  Standard,
+  StandardVersion,
+} from '@packmind/types';
 import { DataSource, Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { standardFactory } from '../../../test/standardFactory';
 import { standardVersionFactory } from '../../../test/standardVersionFactory';
-import { createStandardId, Standard } from '../../domain/entities/Standard';
-import {
-  createStandardVersionId,
-  StandardVersion,
-} from '../../domain/entities/StandardVersion';
 import { RuleSchema } from '../schemas/RuleSchema';
 import { StandardSchema } from '../schemas/StandardSchema';
 import { StandardVersionSchema } from '../schemas/StandardVersionSchema';

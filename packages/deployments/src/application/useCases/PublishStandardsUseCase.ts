@@ -12,9 +12,9 @@ import {
   PrepareStandardsDeploymentCommand,
   StandardsDeployment,
   createStandardsDeploymentId,
+  GitRepo,
+  StandardVersion,
 } from '@packmind/types';
-import { GitRepo } from '@packmind/git';
-import { StandardVersion } from '@packmind/standards';
 import { v4 as uuidv4 } from 'uuid';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
 import { TargetService } from '../services/TargetService';

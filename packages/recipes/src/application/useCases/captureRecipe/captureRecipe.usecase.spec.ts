@@ -2,6 +2,8 @@ import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
+  createRecipeId,
+  createRecipeVersionId,
   createSpaceId,
   createUserId,
 } from '@packmind/types';
@@ -9,8 +11,6 @@ import slug from 'slug';
 import { v4 as uuidv4 } from 'uuid';
 import { recipeFactory } from '../../../../test/recipeFactory';
 import { recipeVersionFactory } from '../../../../test/recipeVersionFactory';
-import { createRecipeId } from '../../../domain/entities/Recipe';
-import { createRecipeVersionId } from '../../../domain/entities/RecipeVersion';
 import { RecipeService } from '../../services/RecipeService';
 import { RecipeSummaryService } from '../../services/RecipeSummaryService';
 import { RecipeVersionService } from '../../services/RecipeVersionService';

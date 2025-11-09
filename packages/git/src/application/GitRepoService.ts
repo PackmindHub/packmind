@@ -1,9 +1,5 @@
-import {
-  GitRepo,
-  GitRepoId,
-  createGitRepoId,
-} from '../domain/entities/GitRepo';
-import { GitProviderId } from '../domain/entities/GitProvider';
+import { GitRepo, GitRepoId, createGitRepoId } from '@packmind/types';
+import { GitProviderId } from '@packmind/types';
 import { IGitRepoRepository } from '../domain/repositories/IGitRepoRepository';
 import { OrganizationId, UserId } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';

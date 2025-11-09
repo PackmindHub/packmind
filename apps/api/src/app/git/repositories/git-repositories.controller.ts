@@ -12,9 +12,11 @@ import { GitRepositoriesService } from './git-repositories.service';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
   CheckDirectoryExistenceResult,
+  GitProviderId,
+  GitRepo,
   GitRepoAlreadyExistsError,
+  GitRepoId,
 } from '@packmind/types';
-import { GitRepo, GitProviderId, GitRepoId } from '@packmind/git';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 
 interface AddGitRepoDto {

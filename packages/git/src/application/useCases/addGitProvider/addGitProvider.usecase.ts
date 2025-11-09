@@ -5,7 +5,7 @@ import { AddGitProviderCommand, IAddGitProviderUseCase } from '@packmind/types';
 
 // Re-export for backward compatibility
 export { AddGitProviderCommand };
-import { GitProvider } from '../../../domain/entities/GitProvider';
+import { GitProvider } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
 
 const origin = 'AddGitProviderUseCase';

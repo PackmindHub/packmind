@@ -1,5 +1,5 @@
 import { EntitySchema } from 'typeorm';
-import { GitProvider } from '../../domain/entities/GitProvider';
+import { GitProvider } from '@packmind/types';
 import {
   WithTimestamps,
   WithSoftDelete,
@@ -7,7 +7,7 @@ import {
   timestampsSchemas,
   softDeleteSchemas,
 } from '@packmind/node-utils';
-import { GitRepo } from '../../domain/entities/GitRepo';
+import { GitRepo } from '@packmind/types';
 import { Organization } from '@packmind/types';
 
 export const GitProviderSchema = new EntitySchema<

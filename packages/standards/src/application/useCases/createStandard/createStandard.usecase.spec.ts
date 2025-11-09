@@ -10,11 +10,8 @@ import slug from 'slug';
 import { v4 as uuidv4 } from 'uuid';
 import { standardFactory } from '../../../../test/standardFactory';
 import { standardVersionFactory } from '../../../../test/standardVersionFactory';
-import { Standard, createStandardId } from '../../../domain/entities/Standard';
-import {
-  StandardVersion,
-  createStandardVersionId,
-} from '../../../domain/entities/StandardVersion';
+import { Standard, createStandardId } from '@packmind/types';
+import { StandardVersion, createStandardVersionId } from '@packmind/types';
 import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSummaryDelayedJob';
 import { StandardService } from '../../services/StandardService';
 import { StandardVersionService } from '../../services/StandardVersionService';

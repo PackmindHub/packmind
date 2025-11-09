@@ -23,9 +23,9 @@ import { GitServices } from '../GitServices';
 import { PackmindLogger } from '@packmind/logger';
 import { IAccountsPort, IDeploymentPort } from '@packmind/types';
 import { QueryOption } from '@packmind/types';
-import { GitProvider, GitProviderId } from '../../domain/entities/GitProvider';
-import { GitRepo, GitRepoId } from '../../domain/entities/GitRepo';
-import { GitCommit } from '../../domain/entities/GitCommit';
+import { GitProvider, GitProviderId } from '@packmind/types';
+import { GitRepo, GitRepoId } from '@packmind/types';
+import { GitCommit } from '@packmind/types';
 import { OrganizationId, UserId } from '@packmind/types';
 import { AddGitRepoCommand } from '../../domain/useCases/IAddGitRepo';
 import {

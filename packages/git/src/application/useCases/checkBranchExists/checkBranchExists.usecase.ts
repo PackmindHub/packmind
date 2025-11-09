@@ -1,5 +1,5 @@
 import { GitProviderService } from '../../GitProviderService';
-import { GitProviderId } from '../../../domain/entities/GitProvider';
+import { GitProviderId } from '@packmind/types';
 
 export interface CheckBranchExistsUseCaseInput {
   gitProviderId: GitProviderId;

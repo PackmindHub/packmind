@@ -20,8 +20,8 @@ import {
   StandardDeploymentStatus,
   DeployedStandardInfo,
   RepositoryStandardDeploymentInfo,
+  GitRepo,
 } from '@packmind/types';
-import { GitRepo } from '@packmind/git';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
 
 const origin = 'GetStandardDeploymentOverviewUseCase';

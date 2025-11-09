@@ -1,9 +1,13 @@
-import { RecipesDeployment } from '@packmind/types';
-import { OrganizationId } from '@packmind/types';
-import { RecipeId, RecipeVersion } from '@packmind/recipes';
-import { GitRepoId } from '@packmind/git';
-import { TargetId, DistributionStatus } from '@packmind/types';
-import { IRepository } from '@packmind/types';
+import {
+  DistributionStatus,
+  GitRepoId,
+  IRepository,
+  OrganizationId,
+  RecipeId,
+  RecipesDeployment,
+  RecipeVersion,
+  TargetId,
+} from '@packmind/types';
 
 export interface IRecipesDeploymentRepository
   extends IRepository<RecipesDeployment> {

@@ -7,8 +7,8 @@ import {
   GitProviderId,
   createGitProviderId,
   GitProviderVendors,
-} from '../../../domain/entities/GitProvider';
-import { GitRepo, createGitRepoId } from '../../../domain/entities/GitRepo';
+} from '@packmind/types';
+import { GitRepo, createGitRepoId } from '@packmind/types';
 import {
   IAccountsPort,
   User,

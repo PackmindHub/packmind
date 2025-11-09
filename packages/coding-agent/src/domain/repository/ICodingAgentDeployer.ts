@@ -1,8 +1,10 @@
-import { RecipeVersion } from '@packmind/recipes';
-import { GitRepo } from '@packmind/git';
-import { StandardVersion } from '@packmind/standards';
+import {
+  GitRepo,
+  RecipeVersion,
+  StandardVersion,
+  Target,
+} from '@packmind/types';
 import { FileUpdates } from '../entities/FileUpdates';
-import { Target } from '@packmind/types';
 
 export interface ICodingAgentDeployer {
   deployRecipes(

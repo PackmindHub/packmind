@@ -4,7 +4,7 @@ import { DataSource } from 'typeorm';
 import { makeTestDatasource } from '@packmind/test-utils';
 import { gitCommitFactory } from '../../../test/gitCommitFactory';
 import { v4 as uuidv4 } from 'uuid';
-import { createGitCommitId } from '../../domain/entities/GitCommit';
+import { createGitCommitId } from '@packmind/types';
 
 describe('GitCommitRepository', () => {
   let datasource: DataSource;

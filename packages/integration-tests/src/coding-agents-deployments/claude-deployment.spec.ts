@@ -9,15 +9,10 @@ import { JobsHexa } from '@packmind/jobs';
 import { HexaRegistry } from '@packmind/node-utils';
 import { RecipesHexa, recipesSchemas } from '@packmind/recipes';
 import { SpacesHexa, spacesSchemas } from '@packmind/spaces';
-import {
-  Standard,
-  StandardVersion,
-  StandardVersionId,
-  StandardsHexa,
-  standardsSchemas,
-} from '@packmind/standards';
+import { StandardsHexa, standardsSchemas } from '@packmind/standards';
 import { makeTestDatasource } from '@packmind/test-utils';
 import {
+  createTargetId,
   GitProviderVendors,
   GitRepo,
   IDeploymentPort,
@@ -28,9 +23,11 @@ import {
   RecipeVersion,
   RecipeVersionId,
   Space,
+  Standard,
+  StandardVersion,
+  StandardVersionId,
   Target,
   User,
-  createTargetId,
 } from '@packmind/types';
 
 import { assert } from 'console';

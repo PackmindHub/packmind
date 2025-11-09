@@ -1,4 +1,4 @@
-import { GitProvider } from '../domain/entities/GitProvider';
+import { GitProvider } from '@packmind/types';
 import { IGitProviderFactory } from '../domain/repositories/IGitProviderFactory';
 import { PackmindLogger } from '@packmind/logger';
 

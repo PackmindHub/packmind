@@ -1,5 +1,5 @@
 import { EntitySchema } from 'typeorm';
-import { GitCommit } from '../../domain/entities/GitCommit';
+import { GitCommit } from '@packmind/types';
 import {
   WithTimestamps,
   uuidSchema,

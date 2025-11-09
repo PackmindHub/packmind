@@ -1,20 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { OrganizationId, UserId } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
-import {
-  RuleId,
-  Standard,
-  StandardId,
-  StandardsHexa,
-  StandardVersion,
-} from '@packmind/standards';
+import { StandardsHexa } from '@packmind/standards';
 import {
   GetStandardByIdResponse,
   IDeploymentPort,
   ListStandardsBySpaceResponse,
+  OrganizationId,
   PublishStandardsCommand,
+  RuleId,
   SpaceId,
+  Standard,
+  StandardId,
   StandardsDeployment,
+  StandardVersion,
+  UserId,
 } from '@packmind/types';
 import { InjectDeploymentAdapter } from '../shared/HexaInjection';
 

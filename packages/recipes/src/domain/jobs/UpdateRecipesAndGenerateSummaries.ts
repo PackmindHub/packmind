@@ -1,6 +1,9 @@
-import { HandleWebHookResult, GitRepoId } from '@packmind/types';
-import { OrganizationId } from '@packmind/types';
-import { RecipeVersionId } from '../entities/RecipeVersion';
+import {
+  GitRepoId,
+  HandleWebHookResult,
+  OrganizationId,
+  RecipeVersionId,
+} from '@packmind/types';
 
 export interface UpdateRecipesAndGenerateSummariesInput {
   organizationId: OrganizationId;

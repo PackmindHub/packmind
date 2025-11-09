@@ -6,8 +6,8 @@ import {
   createUserId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
-import { createGitProviderId } from '../../../domain/entities/GitProvider';
-import { GitRepo, createGitRepoId } from '../../../domain/entities/GitRepo';
+import { createGitProviderId } from '@packmind/types';
+import { GitRepo, createGitRepoId } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
 import { GetAvailableRemoteDirectoriesUseCase } from './getAvailableRemoteDirectories.usecase';
 

@@ -1,5 +1,5 @@
 import { PackmindCommand, IUseCase } from '@packmind/types';
-import { GitRepo } from '../entities/GitRepo';
+import { GitRepo } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 
 export type FindGitRepoByOwnerRepoAndBranchInOrganizationCommand =

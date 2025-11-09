@@ -1,17 +1,15 @@
 import { BadRequestException } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
-import {
-  createRuleId,
-  createStandardId,
-  RuleId,
-  Standard,
-} from '@packmind/standards';
 import { stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createSpaceId,
   createUserId,
+  createRuleId,
+  createStandardId,
+  RuleId,
+  Standard,
 } from '@packmind/types';
 import { StandardsService } from '../../../standards/standards.service';
 import { OrganizationsSpacesStandardsController } from './standards.controller';

@@ -1,7 +1,10 @@
-import { Standard } from '../entities/Standard';
-import { OrganizationId, UserId } from '@packmind/types';
-import { SpaceId } from '@packmind/types';
-import { IRepository } from '@packmind/types';
+import {
+  IRepository,
+  OrganizationId,
+  SpaceId,
+  Standard,
+  UserId,
+} from '@packmind/types';
 
 export interface IStandardRepository extends IRepository<Standard> {
   findBySlug(

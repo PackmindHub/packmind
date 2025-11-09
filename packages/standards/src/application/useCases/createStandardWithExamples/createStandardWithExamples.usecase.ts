@@ -4,13 +4,10 @@ import {
   CreateStandardVersionData,
 } from '../../services/StandardVersionService';
 import { StandardSummaryService } from '../../services/StandardSummaryService';
-import { Standard } from '../../../domain/entities/Standard';
-import { StandardVersionId } from '../../../domain/entities/StandardVersion';
-import { createRuleId, RuleId } from '../../../domain/entities/Rule';
-import {
-  RuleExample,
-  createRuleExampleId,
-} from '../../../domain/entities/RuleExample';
+import { Standard } from '@packmind/types';
+import { StandardVersionId } from '@packmind/types';
+import { createRuleId, RuleId } from '@packmind/types';
+import { RuleExample, createRuleExampleId } from '@packmind/types';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import slug from 'slug';

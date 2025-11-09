@@ -1,7 +1,4 @@
-import { GitRepo } from '@packmind/git';
-import { Recipe, RecipeVersion } from '@packmind/recipes';
 import { recipeFactory } from '@packmind/recipes/test';
-import { Rule, Standard, StandardVersion } from '@packmind/standards';
 import { standardFactory } from '@packmind/standards/test';
 import {
   createGitProviderId,
@@ -14,7 +11,13 @@ import {
   createStandardVersionId,
   createTargetId,
   createUserId,
+  GitRepo,
   IStandardsPort,
+  Recipe,
+  RecipeVersion,
+  Rule,
+  Standard,
+  StandardVersion,
   Target,
 } from '@packmind/types';
 import { PackmindDeployer } from './PackmindDeployer';

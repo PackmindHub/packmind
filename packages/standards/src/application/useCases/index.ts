@@ -29,9 +29,7 @@ import { StandardsServices } from '../services/StandardsServices';
 import { IStandardsRepositories } from '../../domain/repositories/IStandardsRepositories';
 import { OrganizationId, UserId } from '@packmind/types';
 import { SpaceId } from '@packmind/types';
-import { StandardId } from '../../domain/entities';
-import { RuleExample } from '../../domain/entities';
-import { StandardVersionId } from '../../domain/entities';
+import { StandardId, RuleExample, StandardVersionId } from '@packmind/types';
 import {
   CreateRuleExampleCommand,
   GetRuleExamplesCommand,

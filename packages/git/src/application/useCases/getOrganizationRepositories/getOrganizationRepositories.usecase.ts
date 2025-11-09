@@ -1,4 +1,4 @@
-import { GitRepo } from '../../../domain/entities/GitRepo';
+import { GitRepo } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 import { GitRepoService } from '../../GitRepoService';
 

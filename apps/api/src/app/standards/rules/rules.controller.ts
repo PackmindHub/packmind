@@ -10,20 +10,24 @@ import {
   Put,
   Req,
 } from '@nestjs/common';
+import { PackmindLogger } from '@packmind/logger';
+import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
   CreateRuleExampleCommand,
+  DeleteRuleExampleCommand,
   GetRuleExamplesCommand,
   UpdateRuleExampleCommand,
-  DeleteRuleExampleCommand,
+} from '@packmind/standards';
+import {
+  Rule,
   RuleExample,
   RuleExampleId,
-} from '@packmind/standards';
-import { RulesService } from './rules.service';
-import { PackmindLogger } from '@packmind/logger';
-import { stringToProgrammingLanguage } from '@packmind/types';
-import { AuthenticatedRequest } from '@packmind/node-utils';
+  RuleId,
+  StandardId,
+  stringToProgrammingLanguage,
+} from '@packmind/types';
 import { AuthService } from '../../auth/auth.service';
-import { StandardId, Rule, RuleId } from '@packmind/types';
+import { RulesService } from './rules.service';
 
 const origin = 'RulesController';
 

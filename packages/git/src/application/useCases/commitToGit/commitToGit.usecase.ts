@@ -1,6 +1,6 @@
-import { GitRepo } from '../../../domain/entities/GitRepo';
-import { GitCommit } from '../../../domain/entities/GitCommit';
-import { GitProvider } from '../../../domain/entities/GitProvider';
+import { GitRepo } from '@packmind/types';
+import { GitCommit } from '@packmind/types';
+import { GitProvider } from '@packmind/types';
 import { IGitRepo } from '../../../domain/repositories/IGitRepo';
 import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
 import { GitCommitService } from '../../services/GitCommitService';

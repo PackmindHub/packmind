@@ -1,7 +1,4 @@
-import {
-  GitProvider,
-  GitProviderId,
-} from '../../../domain/entities/GitProvider';
+import { GitProvider, GitProviderId } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindCommand, IAccountsPort } from '@packmind/types';

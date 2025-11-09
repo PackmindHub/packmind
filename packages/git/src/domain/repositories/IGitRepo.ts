@@ -1,4 +1,4 @@
-import { GitCommit } from '../entities/GitCommit';
+import { GitCommit } from '@packmind/types';
 
 export interface IGitRepo {
   commitFiles(

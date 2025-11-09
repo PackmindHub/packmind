@@ -1,6 +1,6 @@
 import { IGitRepo } from './IGitRepo';
-import { GitProvider } from '../entities/GitProvider';
-import { GitRepo } from '../entities/GitRepo';
+import { GitProvider } from '@packmind/types';
+import { GitRepo } from '@packmind/types';
 
 /**
  * IGitRepoFactory - Factory interface for creating IGitRepo instances

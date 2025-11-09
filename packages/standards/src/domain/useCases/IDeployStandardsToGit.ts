@@ -1,6 +1,9 @@
-import { GitRepoId } from '@packmind/git';
-import { OrganizationId, UserId } from '@packmind/types';
-import { StandardVersionId } from '../entities';
+import {
+  GitRepoId,
+  OrganizationId,
+  UserId,
+  StandardVersionId,
+} from '@packmind/types';
 
 export type DeployStandardsToGitCommand = {
   userId: UserId;

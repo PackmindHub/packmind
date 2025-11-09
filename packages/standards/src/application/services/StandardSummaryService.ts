@@ -1,4 +1,4 @@
-import { StandardVersion } from '../../domain/entities/StandardVersion';
+import { StandardVersion } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import {
   AIService,

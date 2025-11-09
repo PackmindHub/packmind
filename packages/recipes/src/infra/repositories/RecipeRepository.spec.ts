@@ -7,11 +7,15 @@ import {
   makeTestDatasource,
   stubLogger,
 } from '@packmind/test-utils';
-import { createOrganizationId, WithSoftDelete } from '@packmind/types';
+import {
+  createOrganizationId,
+  createRecipeId,
+  Recipe,
+  WithSoftDelete,
+} from '@packmind/types';
 import { DataSource, Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { recipeFactory } from '../../../test/recipeFactory';
-import { createRecipeId, Recipe } from '../../domain/entities/Recipe';
 import { IRecipeRepository } from '../../domain/repositories/IRecipeRepository';
 import { RecipeSchema } from '../schemas/RecipeSchema';
 import { RecipeVersionSchema } from '../schemas/RecipeVersionSchema';

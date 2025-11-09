@@ -1,14 +1,14 @@
 import { RecipeVersionService } from './RecipeVersionService';
 import { IRecipeVersionRepository } from '../../domain/repositories/IRecipeVersionRepository';
-import {
-  RecipeVersion,
-  createRecipeVersionId,
-} from '../../domain/entities/RecipeVersion';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import { recipeVersionFactory } from '../../../test/recipeVersionFactory';
-import { createRecipeId } from '../../domain/entities/Recipe';
-import { createUserId } from '@packmind/types';
+import {
+  createRecipeId,
+  createRecipeVersionId,
+  createUserId,
+  RecipeVersion,
+} from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 
 describe('RecipeVersionService', () => {

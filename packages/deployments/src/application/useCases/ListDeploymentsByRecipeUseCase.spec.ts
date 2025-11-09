@@ -1,19 +1,17 @@
-import { ListDeploymentsByRecipeUseCase } from './ListDeploymentsByRecipeUseCase';
-import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
+import { stubLogger } from '@packmind/test-utils';
 import {
-  RecipesDeployment,
   createRecipesDeploymentId,
+  createTargetId,
+  DistributionStatus,
+  GitRepoId,
+  ListDeploymentsByRecipeCommand,
   OrganizationId,
+  RecipeId,
+  RecipesDeployment,
   UserId,
 } from '@packmind/types';
-import { stubLogger } from '@packmind/test-utils';
-import { RecipeId } from '@packmind/recipes';
-import {
-  ListDeploymentsByRecipeCommand,
-  DistributionStatus,
-  createTargetId,
-  GitRepoId,
-} from '@packmind/types';
+import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
+import { ListDeploymentsByRecipeUseCase } from './ListDeploymentsByRecipeUseCase';
 
 describe('ListDeploymentsByRecipeUseCase', () => {
   let useCase: ListDeploymentsByRecipeUseCase;

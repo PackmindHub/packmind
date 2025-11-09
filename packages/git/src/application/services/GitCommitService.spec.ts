@@ -1,6 +1,6 @@
 import { GitCommitService } from './GitCommitService';
 import { IGitCommitRepository } from '../../domain/repositories/IGitCommitRepository';
-import { createGitCommitId } from '../../domain/entities/GitCommit';
+import { createGitCommitId } from '@packmind/types';
 import { gitCommitFactory } from '../../../test/gitCommitFactory';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';

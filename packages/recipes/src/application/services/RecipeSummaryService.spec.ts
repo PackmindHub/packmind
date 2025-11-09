@@ -1,5 +1,4 @@
 import { RecipeSummaryService } from './RecipeSummaryService';
-import { RecipeVersion } from '../../domain/entities/RecipeVersion';
 import { PackmindLogger } from '@packmind/logger';
 import {
   AIService,
@@ -9,6 +8,7 @@ import {
 import { createRecipeSummaryPrompt } from './cookbook/prompts/create_recipe_summary';
 import { stubLogger } from '@packmind/test-utils';
 import { recipeVersionFactory } from '../../../test/recipeVersionFactory';
+import { RecipeVersion } from '@packmind/types';
 
 // Mock AIService
 const mockAIService: jest.Mocked<AIService> = {

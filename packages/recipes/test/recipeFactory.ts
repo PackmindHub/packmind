@@ -1,7 +1,11 @@
 import { Factory } from '@packmind/test-utils';
-import { createSpaceId, createUserId } from '@packmind/types';
+import {
+  createSpaceId,
+  createUserId,
+  Recipe,
+  createRecipeId,
+} from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
-import { Recipe, createRecipeId } from '../src/domain/entities/Recipe';
 
 export const recipeFactory: Factory<Recipe> = (recipe?: Partial<Recipe>) => {
   return {

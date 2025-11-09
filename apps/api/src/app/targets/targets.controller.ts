@@ -8,13 +8,13 @@ import {
   Param,
   Req,
 } from '@nestjs/common';
-import { GitRepoId } from '@packmind/git';
-import { OrganizationId } from '@packmind/types';
 import {
-  Target,
-  TargetWithRepository,
-  TargetId,
   DeleteTargetResponse,
+  GitRepoId,
+  OrganizationId,
+  Target,
+  TargetId,
+  TargetWithRepository,
 } from '@packmind/types';
 import { TargetsService } from './targets.service';
 import { PackmindLogger } from '@packmind/logger';

@@ -13,7 +13,7 @@ import {
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { standardFactory } from '../../../../test/standardFactory';
-import { createStandardId } from '../../../domain/entities/Standard';
+import { createStandardId } from '@packmind/types';
 import { StandardService } from '../../services/StandardService';
 import { GetStandardByIdUsecase } from './getStandardById.usecase';
 

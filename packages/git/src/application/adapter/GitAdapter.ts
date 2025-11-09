@@ -21,9 +21,9 @@ import {
   QueryOption,
   UserId,
 } from '@packmind/types';
-import { GitCommit } from '../../domain/entities/GitCommit';
-import { GitProvider, GitProviderId } from '../../domain/entities/GitProvider';
-import { GitRepo, GitRepoId } from '../../domain/entities/GitRepo';
+import { GitCommit } from '@packmind/types';
+import { GitProvider, GitProviderId } from '@packmind/types';
+import { GitRepo, GitRepoId } from '@packmind/types';
 import { IGitDelayedJobs } from '../../domain/jobs/IGitDelayedJobs';
 import { GitServices } from '../GitServices';
 import { AddGitProviderUseCase } from '../useCases/addGitProvider/addGitProvider.usecase';

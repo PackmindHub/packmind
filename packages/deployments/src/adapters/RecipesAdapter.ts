@@ -1,12 +1,13 @@
-import { OrganizationId, UserId } from '@packmind/types';
+import { RecipesHexa } from '@packmind/recipes';
 import {
   IRecipesPort,
+  OrganizationId,
   Recipe,
   RecipeVersion,
   RecipeVersionId,
+  SpaceId,
+  UserId,
 } from '@packmind/types';
-import { SpaceId } from '@packmind/types';
-import { RecipesHexa } from '@packmind/recipes';
 
 export class RecipesAdapter implements Partial<IRecipesPort> {
   constructor(private readonly recipesHexa: RecipesHexa) {}

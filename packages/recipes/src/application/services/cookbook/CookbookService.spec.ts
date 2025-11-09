@@ -1,12 +1,12 @@
 import { CookbookService } from './CookbookService';
 import { PackmindLogger } from '@packmind/logger';
-import { WithTimestamps } from '@packmind/types';
-import { stubLogger } from '@packmind/test-utils';
 import {
-  RecipeVersion,
+  createRecipeId,
   createRecipeVersionId,
-} from '../../../domain/entities/RecipeVersion';
-import { createRecipeId } from '../../../domain/entities/Recipe';
+  RecipeVersion,
+  WithTimestamps,
+} from '@packmind/types';
+import { stubLogger } from '@packmind/test-utils';
 import { recipeVersionFactory } from '../../../../test/recipeVersionFactory';
 import { v4 as uuidv4 } from 'uuid';
 

@@ -1,15 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import {
-  StandardId,
-  StandardsHexa,
-  Rule,
-  RuleExample,
-  CreateRuleExampleCommand,
-  GetRuleExamplesCommand,
-  UpdateRuleExampleCommand,
-  DeleteRuleExampleCommand,
-} from '@packmind/standards';
 import { PackmindLogger } from '@packmind/logger';
+import {
+  CreateRuleExampleCommand,
+  DeleteRuleExampleCommand,
+  GetRuleExamplesCommand,
+  StandardsHexa,
+  UpdateRuleExampleCommand,
+} from '@packmind/standards';
+import { Rule, RuleExample, StandardId } from '@packmind/types';
 
 @Injectable()
 export class RulesService {

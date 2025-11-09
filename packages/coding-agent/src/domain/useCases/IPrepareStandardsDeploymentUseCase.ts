@@ -1,8 +1,6 @@
-import { StandardVersion } from '@packmind/standards';
-import { GitRepo } from '@packmind/git';
+import { GitRepo, StandardVersion, Target } from '@packmind/types';
 import { FileUpdates } from '../entities/FileUpdates';
 import { CodingAgent } from '../CodingAgents';
-import { Target } from '@packmind/types';
 
 export type PrepareStandardsDeploymentCommand = {
   standardVersions: StandardVersion[];

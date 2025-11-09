@@ -2,9 +2,9 @@ import { Factory, randomIn } from '@packmind/test-utils';
 import {
   RecipeVersion,
   createRecipeVersionId,
-} from '../src/domain/entities/RecipeVersion';
+  createRecipeId,
+} from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
-import { createRecipeId } from '../src/domain/entities/Recipe';
 
 export const recipeVersionFactory: Factory<RecipeVersion> = (
   recipeVersion?: Partial<RecipeVersion>,

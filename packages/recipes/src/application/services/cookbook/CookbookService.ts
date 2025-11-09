@@ -1,6 +1,6 @@
-import { RecipeVersion } from '../../../domain/entities/RecipeVersion';
 import { WithTimestamps } from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
+import { RecipeVersion } from '@packmind/types';
 
 const origin = 'CookbookService';
 

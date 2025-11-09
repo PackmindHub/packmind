@@ -1,6 +1,5 @@
 import { Factory } from '@packmind/test-utils';
-import { GitRepo } from '@packmind/types';
-import { createGitProviderId, createGitRepoId } from '../src/domain/entities';
+import { GitRepo, createGitProviderId, createGitRepoId } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 
 export const gitRepoFactory: Factory<GitRepo> = (

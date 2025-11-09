@@ -1,5 +1,5 @@
 import { Factory } from '@packmind/test-utils';
-import { GitCommit, createGitCommitId } from '../src/domain/entities/GitCommit';
+import { GitCommit, createGitCommitId } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 
 export const gitCommitFactory: Factory<GitCommit> = (

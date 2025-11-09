@@ -2,9 +2,9 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   FindActiveStandardVersionsByTargetCommand,
   IFindActiveStandardVersionsByTargetUseCase,
+  StandardVersion,
 } from '@packmind/types';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
-import { StandardVersion } from '@packmind/standards';
 
 const origin = 'FindActiveStandardVersionsByTargetUseCase';
 

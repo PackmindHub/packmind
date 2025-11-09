@@ -1,8 +1,13 @@
-import { StandardsDeployment, OrganizationId } from '@packmind/types';
-import { StandardVersion, StandardId } from '@packmind/standards';
-import { GitRepoId } from '@packmind/git';
-import { TargetId, DistributionStatus } from '@packmind/types';
-import { IRepository } from '@packmind/types';
+import {
+  DistributionStatus,
+  GitRepoId,
+  IRepository,
+  OrganizationId,
+  StandardId,
+  StandardsDeployment,
+  StandardVersion,
+  TargetId,
+} from '@packmind/types';
 
 export interface IStandardsDeploymentRepository
   extends IRepository<StandardsDeployment> {

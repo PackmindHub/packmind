@@ -1,8 +1,4 @@
-import {
-  GitCommit,
-  GitCommitId,
-  createGitCommitId,
-} from '../../domain/entities/GitCommit';
+import { GitCommit, GitCommitId, createGitCommitId } from '@packmind/types';
 import { IGitCommitRepository } from '../../domain/repositories/IGitCommitRepository';
 import { GitCommitSchema } from '../schemas/GitCommitSchema';
 import { Repository } from 'typeorm';

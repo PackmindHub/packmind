@@ -1,19 +1,18 @@
 import { Injectable } from '@nestjs/common';
+import { PackmindLogger } from '@packmind/logger';
 import {
+  GitRepoId,
+  IDeploymentPort,
+  IRecipesPort,
+  OrganizationId,
   Recipe,
   RecipeId,
   RecipeVersion,
   RecipeVersionId,
-} from '@packmind/recipes';
-import { OrganizationId, UserId } from '@packmind/types';
-import { PackmindLogger } from '@packmind/logger';
-import {
-  IDeploymentPort,
-  IRecipesPort,
   SpaceId,
   TargetId,
+  UserId,
 } from '@packmind/types';
-import { GitRepoId } from '@packmind/git';
 import {
   InjectRecipesAdapter,
   InjectDeploymentAdapter,

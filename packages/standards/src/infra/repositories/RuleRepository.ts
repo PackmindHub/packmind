@@ -1,10 +1,9 @@
-import { Rule } from '../../domain/entities/Rule';
 import { IRuleRepository } from '../../domain/repositories/IRuleRepository';
 import { RuleSchema } from '../schemas/RuleSchema';
 import { Repository } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, AbstractRepository } from '@packmind/node-utils';
-import { StandardVersionId } from '../../domain/entities/StandardVersion';
+import { Rule, StandardVersionId } from '@packmind/types';
 
 const origin = 'RuleRepository';
 

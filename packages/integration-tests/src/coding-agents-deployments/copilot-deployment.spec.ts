@@ -4,30 +4,23 @@ import {
   CopilotDeployer,
   DeployerService,
 } from '@packmind/coding-agent';
-import {
-  GitHexa,
-  GitProviderVendors,
-  GitRepo,
-  gitSchemas,
-} from '@packmind/git';
+import { GitHexa, gitSchemas } from '@packmind/git';
 import { JobsHexa } from '@packmind/jobs';
 import { HexaRegistry } from '@packmind/node-utils';
+import { RecipesHexa, recipesSchemas } from '@packmind/recipes';
+import { SpacesHexa, spacesSchemas } from '@packmind/spaces';
+import { StandardsHexa, standardsSchemas } from '@packmind/standards';
 import {
+  GitProviderVendors,
+  GitRepo,
   Recipe,
   RecipeVersion,
   RecipeVersionId,
-  RecipesHexa,
-  recipesSchemas,
-} from '@packmind/recipes';
-import { Space } from '@packmind/types';
-import { SpacesHexa, spacesSchemas } from '@packmind/spaces';
-import {
+  Space,
   Standard,
   StandardVersion,
   StandardVersionId,
-  StandardsHexa,
-  standardsSchemas,
-} from '@packmind/standards';
+} from '@packmind/types';
 import { makeTestDatasource } from '@packmind/test-utils';
 import {
   IDeploymentPort,

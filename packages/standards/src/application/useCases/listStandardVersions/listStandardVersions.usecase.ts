@@ -1,6 +1,6 @@
 import { StandardVersionService } from '../../services/StandardVersionService';
-import { StandardVersion } from '../../../domain/entities/StandardVersion';
-import { StandardId } from '../../../domain/entities/Standard';
+import { StandardVersion } from '@packmind/types';
+import { StandardId } from '@packmind/types';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 
 const origin = 'ListStandardVersionsUsecase';

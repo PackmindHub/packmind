@@ -1,5 +1,5 @@
-import { GitRepo } from '../entities/GitRepo';
-import { GitProviderId } from '../entities/GitProvider';
+import { GitRepo } from '@packmind/types';
+import { GitProviderId } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 import { IRepository } from '@packmind/types';
 import { QueryOption } from '@packmind/types';

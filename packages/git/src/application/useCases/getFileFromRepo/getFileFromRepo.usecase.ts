@@ -1,5 +1,5 @@
-import { GitRepo } from '../../../domain/entities/GitRepo';
-import { GitProvider } from '../../../domain/entities/GitProvider';
+import { GitRepo } from '@packmind/types';
+import { GitProvider } from '@packmind/types';
 import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
 import { GitProviderService } from '../../GitProviderService';
 import { PackmindLogger } from '@packmind/logger';

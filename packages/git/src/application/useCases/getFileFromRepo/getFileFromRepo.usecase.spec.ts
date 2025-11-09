@@ -2,11 +2,8 @@ import { GetFileFromRepo } from './getFileFromRepo.usecase';
 import { GitProviderService } from '../../GitProviderService';
 import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
 import { IGitRepo } from '../../../domain/repositories/IGitRepo';
-import { GitRepo } from '../../../domain/entities/GitRepo';
-import {
-  GitProvider,
-  GitProviderVendors,
-} from '../../../domain/entities/GitProvider';
+import { GitRepo } from '@packmind/types';
+import { GitProvider, GitProviderVendors } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 

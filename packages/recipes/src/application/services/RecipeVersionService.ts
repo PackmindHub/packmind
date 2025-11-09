@@ -1,13 +1,13 @@
 import { v4 as uuidv4 } from 'uuid';
-import {
-  RecipeVersion,
-  RecipeVersionId,
-  createRecipeVersionId,
-} from '../../domain/entities/RecipeVersion';
-import { RecipeId } from '../../domain/entities/Recipe';
 import { IRecipeVersionRepository } from '../../domain/repositories/IRecipeVersionRepository';
 import { RecipeVersionRepository } from '../../infra/repositories/RecipeVersionRepository';
 import { PackmindLogger } from '@packmind/logger';
+import {
+  createRecipeVersionId,
+  RecipeId,
+  RecipeVersion,
+  RecipeVersionId,
+} from '@packmind/types';
 
 const origin = 'RecipeVersionService';
 

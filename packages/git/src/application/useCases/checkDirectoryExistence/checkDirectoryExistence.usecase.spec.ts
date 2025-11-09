@@ -2,6 +2,10 @@ import { CheckDirectoryExistenceUseCase } from './checkDirectoryExistence.usecas
 import {
   CheckDirectoryExistenceCommand,
   CheckDirectoryExistenceResult,
+  createGitRepoId,
+  createGitProviderId,
+  createOrganizationId,
+  createUserId,
 } from '@packmind/types';
 import { GitRepoService } from '../../GitRepoService';
 import { GitProviderService } from '../../GitProviderService';
@@ -10,8 +14,6 @@ import { IGitRepo } from '../../../domain/repositories/IGitRepo';
 import { stubLogger } from '@packmind/test-utils';
 import { PackmindLogger } from '@packmind/logger';
 import { gitRepoFactory, gitProviderFactory } from '../../../../test';
-import { createGitRepoId, createGitProviderId } from '../../../domain/entities';
-import { createOrganizationId, createUserId } from '@packmind/types';
 
 describe('CheckDirectoryExistenceUseCase', () => {
   let useCase: CheckDirectoryExistenceUseCase;

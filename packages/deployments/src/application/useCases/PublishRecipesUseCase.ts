@@ -13,9 +13,8 @@ import {
   DistributionStatus,
 } from '@packmind/types';
 import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
-import { Recipe, RecipeVersion } from '@packmind/recipes';
 import { PackmindLogger } from '@packmind/logger';
-import { UserId } from '@packmind/types';
+import { Recipe, RecipeVersion, UserId } from '@packmind/types';
 import { TargetService } from '../services/TargetService';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import { v4 as uuidv4 } from 'uuid';

@@ -20,12 +20,12 @@ import {
   GitRepoId,
 } from '@packmind/types';
 import {
+  GitRepo,
   Recipe,
   RecipeId,
   RecipeVersion,
   createRecipeVersionId,
-} from '@packmind/recipes';
-import { GitRepo } from '@packmind/git';
+} from '@packmind/types';
 import assert from 'assert';
 import { GetTargetsByOrganizationUseCase } from './GetTargetsByOrganizationUseCase';
 

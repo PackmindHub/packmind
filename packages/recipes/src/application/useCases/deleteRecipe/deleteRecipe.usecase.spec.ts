@@ -2,19 +2,17 @@ import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
+  createRecipeId,
   createSpaceId,
   createUserId,
   DeleteRecipeCommand,
   OrganizationId,
+  Recipe,
+  RecipeId,
   SpaceId,
   UserId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
-import {
-  createRecipeId,
-  Recipe,
-  RecipeId,
-} from '../../../domain/entities/Recipe';
 import { RecipeService } from '../../services/RecipeService';
 import { RecipeVersionService } from '../../services/RecipeVersionService';
 import { DeleteRecipeUsecase } from './deleteRecipe.usecase';

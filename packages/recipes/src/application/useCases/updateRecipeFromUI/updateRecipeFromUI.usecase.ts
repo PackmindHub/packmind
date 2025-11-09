@@ -1,11 +1,9 @@
-import { RecipeId } from '../../../domain/entities/Recipe';
 import { RecipeService } from '../../services/RecipeService';
 import { RecipeVersionService } from '../../services/RecipeVersionService';
 import { RecipeSummaryService } from '../../services/RecipeSummaryService';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { AiNotConfigured } from '@packmind/node-utils';
-import { SpaceId } from '@packmind/types';
-import { UserId, OrganizationId } from '@packmind/types';
+import { OrganizationId, RecipeId, SpaceId, UserId } from '@packmind/types';
 
 const origin = 'UpdateRecipeFromUIUsecase';
 

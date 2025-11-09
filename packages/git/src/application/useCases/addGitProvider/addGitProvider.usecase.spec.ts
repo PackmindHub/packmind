@@ -4,7 +4,7 @@ import {
   GitProviderVendor,
   GitProviderVendors,
   createGitProviderId,
-} from '../../../domain/entities/GitProvider';
+} from '@packmind/types';
 import {
   IAccountsPort,
   createOrganizationId,

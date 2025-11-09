@@ -7,8 +7,7 @@ import { makeTestDatasource } from '@packmind/test-utils';
 import { recipeFactory } from '../../../test/recipeFactory';
 import { recipeVersionFactory } from '../../../test/recipeVersionFactory';
 import { RecipeRepository } from './RecipeRepository';
-import { createRecipeId, Recipe } from '../../domain/entities/Recipe';
-import { RecipeVersion } from '../../domain/entities/RecipeVersion';
+import { createRecipeId, Recipe, RecipeVersion } from '@packmind/types';
 
 import { v4 as uuidv4 } from 'uuid';
 import { PackmindLogger } from '@packmind/logger';

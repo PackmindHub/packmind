@@ -1,12 +1,15 @@
-import { RecipeVersion } from '@packmind/recipes';
-import { GitRepo } from '@packmind/git';
-import { StandardVersion } from '@packmind/standards';
-import { FileUpdates, IStandardsPort } from '@packmind/types';
+import { PackmindLogger } from '@packmind/logger';
+import {
+  FileUpdates,
+  GitRepo,
+  IStandardsPort,
+  RecipeVersion,
+  StandardVersion,
+  Target,
+} from '@packmind/types';
 import { ICodingAgentDeployer } from '../../../domain/repository/ICodingAgentDeployer';
 import { RecipesIndexService } from '../../../application/services/RecipesIndexService';
 import { StandardsIndexService } from '../../../application/services/StandardsIndexService';
-import { PackmindLogger } from '@packmind/logger';
-import { Target } from '@packmind/types';
 import { getTargetPrefixedPath } from '../utils/FileUtils';
 import { GenericStandardWriter } from '../genericSectionWriter/GenericStandardWriter';
 

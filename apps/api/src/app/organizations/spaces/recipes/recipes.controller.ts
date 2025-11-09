@@ -12,8 +12,13 @@ import {
 } from '@nestjs/common';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
-import { Recipe, RecipeId, RecipeVersion } from '@packmind/recipes';
-import { OrganizationId, SpaceId } from '@packmind/types';
+import {
+  OrganizationId,
+  Recipe,
+  RecipeId,
+  RecipeVersion,
+  SpaceId,
+} from '@packmind/types';
 import { RecipesService } from '../../../recipes/recipes.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 import { SpaceAccessGuard } from '../guards/space-access.guard';

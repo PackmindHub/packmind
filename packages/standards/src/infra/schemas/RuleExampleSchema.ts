@@ -1,5 +1,4 @@
 import { EntitySchema } from 'typeorm';
-import { RuleExample } from '../../domain/entities/RuleExample';
 import {
   WithTimestamps,
   WithSoftDelete,
@@ -7,7 +6,7 @@ import {
   timestampsSchemas,
   softDeleteSchemas,
 } from '@packmind/node-utils';
-import { Rule } from '../../domain/entities/Rule';
+import { Rule, RuleExample } from '@packmind/types';
 
 export const RuleExampleSchema = new EntitySchema<
   WithSoftDelete<

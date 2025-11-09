@@ -11,13 +11,14 @@ import {
 import {
   createOrganizationId,
   createSpaceId,
+  createStandardId,
   createUserId,
+  Standard,
 } from '@packmind/types';
 import { DataSource, Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { standardFactory } from '../../../test/standardFactory';
 import { standardVersionFactory } from '../../../test/standardVersionFactory';
-import { createStandardId, Standard } from '../../domain/entities/Standard';
 import { RuleSchema } from '../schemas/RuleSchema';
 import { StandardSchema } from '../schemas/StandardSchema';
 import { StandardVersionSchema } from '../schemas/StandardVersionSchema';

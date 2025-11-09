@@ -1,9 +1,9 @@
 import {
+  IRepository,
+  StandardId,
   StandardVersion,
   StandardVersionId,
-} from '../entities/StandardVersion';
-import { StandardId } from '../entities/Standard';
-import { IRepository } from '@packmind/types';
+} from '@packmind/types';
 
 export interface IStandardVersionRepository
   extends IRepository<StandardVersion> {

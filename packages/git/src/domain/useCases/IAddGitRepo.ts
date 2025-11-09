@@ -1,6 +1,6 @@
 import { PackmindCommand, IUseCase } from '@packmind/types';
-import { GitRepo } from '../entities/GitRepo';
-import { GitProviderId } from '../entities/GitProvider';
+import { GitRepo } from '@packmind/types';
+import { GitProviderId } from '@packmind/types';
 
 export type AddGitRepoCommand = PackmindCommand & {
   gitProviderId: GitProviderId;

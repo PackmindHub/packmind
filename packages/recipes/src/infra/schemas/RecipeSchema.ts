@@ -1,5 +1,4 @@
 import { EntitySchema } from 'typeorm';
-import { Recipe } from '../../domain/entities/Recipe';
 import {
   WithTimestamps,
   WithSoftDelete,
@@ -7,8 +6,7 @@ import {
   timestampsSchemas,
   softDeleteSchemas,
 } from '@packmind/node-utils';
-import { RecipeVersion } from '../../domain/entities/RecipeVersion';
-import { GitCommit, GitCommitId } from '@packmind/git';
+import { GitCommit, GitCommitId, Recipe, RecipeVersion } from '@packmind/types';
 
 export const RecipeSchema = new EntitySchema<
   WithSoftDelete<

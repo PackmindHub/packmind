@@ -10,13 +10,14 @@ import {
 } from '@nestjs/common';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
-import { Standard, StandardId } from '@packmind/standards';
 import {
   GetStandardByIdResponse,
   ListStandardsBySpaceResponse,
   OrganizationId,
   RuleId,
   SpaceId,
+  Standard,
+  StandardId,
 } from '@packmind/types';
 import { StandardsService } from '../../../standards/standards.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';

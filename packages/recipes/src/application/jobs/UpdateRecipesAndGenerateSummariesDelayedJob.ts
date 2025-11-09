@@ -14,7 +14,7 @@ import {
 import { RecipeService } from '../services/RecipeService';
 import { RecipeVersionService } from '../services/RecipeVersionService';
 import { RecipeSummaryService } from '../services/RecipeSummaryService';
-import { RecipeVersionId } from '../../domain/entities/RecipeVersion';
+import { RecipeVersionId } from '@packmind/types';
 
 const logOrigin = 'UpdateRecipesAndGenerateSummariesDelayedJob';
 

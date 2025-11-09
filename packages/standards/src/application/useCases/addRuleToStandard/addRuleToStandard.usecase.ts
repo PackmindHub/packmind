@@ -2,13 +2,12 @@ import { StandardService } from '../../services/StandardService';
 import { StandardVersionService } from '../../services/StandardVersionService';
 import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSummaryDelayedJob';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
-import { StandardVersion } from '../../../domain/entities/StandardVersion';
+import { StandardVersion } from '@packmind/types';
 import { CreateStandardVersionData } from '../../services/StandardVersionService';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { RuleExample } from '@packmind/types';
-import { OrganizationId, UserId } from '@packmind/types';
+import { OrganizationId, UserId, StandardVersionId } from '@packmind/types';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
-import { StandardVersionId } from '../../../domain/entities';
 import type { ILinterPort } from '@packmind/types';
 
 const origin = 'AddRuleToStandardUsecase';

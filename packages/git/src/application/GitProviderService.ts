@@ -5,8 +5,8 @@ import {
   GitProvider,
   GitProviderId,
   createGitProviderId,
-} from '../domain/entities/GitProvider';
-import { GitRepo } from '../domain/entities/GitRepo';
+} from '@packmind/types';
+import { GitRepo } from '@packmind/types';
 import { OrganizationId, UserId } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { v4 as uuidv4 } from 'uuid';

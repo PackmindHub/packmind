@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
-import { StandardId } from '../../domain/entities/Standard';
-import { Rule, createRuleId, RuleId } from '../../domain/entities/Rule';
+import { StandardId } from '@packmind/types';
+import { Rule, createRuleId, RuleId } from '@packmind/types';
 import { IStandardVersionRepository } from '../../domain/repositories/IStandardVersionRepository';
 import { IRuleRepository } from '../../domain/repositories/IRuleRepository';
 import { OrganizationId } from '@packmind/types';

@@ -1,6 +1,6 @@
 import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
-import { GitProviderId } from '../../../domain/entities/GitProvider';
+import { GitProviderId } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindCommand, IAccountsPort, createUserId } from '@packmind/types';
 import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';

@@ -1,8 +1,3 @@
-import {
-  StandardVersion,
-  StandardVersionId,
-} from '../../domain/entities/StandardVersion';
-import { StandardId } from '../../domain/entities/Standard';
 import { IStandardVersionRepository } from '../../domain/repositories/IStandardVersionRepository';
 import { StandardVersionSchema } from '../schemas/StandardVersionSchema';
 import { Repository } from 'typeorm';
@@ -12,6 +7,11 @@ import {
   AbstractRepository,
   getErrorMessage,
 } from '@packmind/node-utils';
+import {
+  StandardId,
+  StandardVersion,
+  StandardVersionId,
+} from '@packmind/types';
 
 const origin = 'StandardVersionRepository';
 

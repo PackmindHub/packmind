@@ -8,7 +8,7 @@ import {
   GitProviderVendor,
   GitProviderVendors,
   createGitProviderId,
-} from '../domain/entities/GitProvider';
+} from '@packmind/types';
 import { createOrganizationId } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';

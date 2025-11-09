@@ -1,4 +1,4 @@
-import { GitProvider } from '../../../domain/entities/GitProvider';
+import { GitProvider } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
 

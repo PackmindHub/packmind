@@ -1,4 +1,4 @@
-import { createStandardId } from './Standard';
+import { createStandardId } from '@packmind/types';
 
 describe('Standard', () => {
   it('creates a standard ID', () => {

@@ -1,7 +1,7 @@
 import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
 import { AddGitRepoCommand, IAddGitRepoUseCase } from '@packmind/types';
-import { GitRepo } from '../../../domain/entities/GitRepo';
+import { GitRepo } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { createUserId, IAccountsPort } from '@packmind/types';
 import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';

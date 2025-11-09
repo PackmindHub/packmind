@@ -6,14 +6,12 @@ import {
   makeTestDatasource,
   stubLogger,
 } from '@packmind/test-utils';
+import { createRuleId, Rule, Standard, StandardVersion } from '@packmind/types';
 import { DataSource, Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { ruleFactory } from '../../../test/ruleFactory';
 import { standardFactory } from '../../../test/standardFactory';
 import { standardVersionFactory } from '../../../test/standardVersionFactory';
-import { createRuleId, Rule } from '../../domain/entities/Rule';
-import { Standard } from '../../domain/entities/Standard';
-import { StandardVersion } from '../../domain/entities/StandardVersion';
 import { RuleSchema } from '../schemas/RuleSchema';
 import { StandardSchema } from '../schemas/StandardSchema';
 import { StandardVersionSchema } from '../schemas/StandardVersionSchema';

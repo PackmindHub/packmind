@@ -1,5 +1,4 @@
 export { RecipesHexa } from './RecipesHexa';
-export * from './domain/entities';
 export * from './domain/useCases';
 export * from './domain/jobs';
 export * from './infra/schemas';

@@ -2,14 +2,16 @@ import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
+  createRecipeId,
   createSpaceId,
   createUserId,
   OrganizationId,
+  Recipe,
+  RecipeId,
   UserId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { recipeFactory } from '../../../test/recipeFactory';
-import { createRecipeId, Recipe, RecipeId } from '../../domain/entities/Recipe';
 import { IRecipeRepository } from '../../domain/repositories/IRecipeRepository';
 import {
   CreateRecipeData,

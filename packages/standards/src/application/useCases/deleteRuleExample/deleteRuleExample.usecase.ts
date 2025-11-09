@@ -5,7 +5,7 @@ import {
   IDeleteRuleExample,
   DeleteRuleExampleCommand,
 } from '../../../domain/useCases/IDeleteRuleExample';
-import { RuleId } from '../../../domain/entities/Rule';
+import { RuleId } from '@packmind/types';
 import { ProgrammingLanguage } from '@packmind/types';
 import type { ILinterPort } from '@packmind/types';
 

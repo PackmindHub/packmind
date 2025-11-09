@@ -1,13 +1,13 @@
 import { CommitToGit } from './commitToGit.usecase';
 import { GitCommitService } from '../../services/GitCommitService';
 import { GitProviderService } from '../../GitProviderService';
-import { createGitRepoId, GitRepo } from '../../../domain/entities/GitRepo';
+import { createGitRepoId, GitRepo } from '@packmind/types';
 import {
   createGitProviderId,
   GitProvider,
   GitProviderVendor,
   GitProviderVendors,
-} from '../../../domain/entities/GitProvider';
+} from '@packmind/types';
 import { IGitRepo } from '../../../domain/repositories/IGitRepo';
 import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
 import { gitCommitFactory } from '../../../../test/gitCommitFactory';

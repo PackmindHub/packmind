@@ -1,10 +1,9 @@
-import { RecipeVersion } from '../../domain/entities/RecipeVersion';
-import { RecipeId } from '../../domain/entities/Recipe';
 import { IRecipeVersionRepository } from '../../domain/repositories/IRecipeVersionRepository';
 import { RecipeVersionSchema } from '../schemas/RecipeVersionSchema';
 import { Repository } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, AbstractRepository } from '@packmind/node-utils';
+import { RecipeId, RecipeVersion } from '@packmind/types';
 
 const origin = 'RecipeVersionRepository';
 

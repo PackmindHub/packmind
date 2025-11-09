@@ -1,5 +1,5 @@
 import { IGitProvider } from './IGitProvider';
-import { GitProvider } from '../entities/GitProvider';
+import { GitProvider } from '@packmind/types';
 
 /**
  * IGitProviderFactory - Factory interface for creating IGitProvider instances

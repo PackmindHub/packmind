@@ -1,5 +1,4 @@
 import { Controller, Get, Param, Post, Body, Req } from '@nestjs/common';
-import { RecipeVersionId } from '@packmind/recipes';
 import {
   DeploymentOverview,
   StandardsDeployment,
@@ -14,12 +13,14 @@ import {
   RenderMode,
   GetRenderModeConfigurationCommand,
   GetRenderModeConfigurationResult,
+  RecipeId,
+  RecipeVersionId,
+  StandardId,
+  StandardVersionId,
 } from '@packmind/types';
 import { DeploymentsService } from './deployments.service';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthService } from '../auth/auth.service';
-import { RecipeId } from '@packmind/recipes';
-import type { StandardId, StandardVersionId } from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 
 const origin = 'DeploymentsController';

@@ -9,11 +9,7 @@ import {
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { standardFactory } from '../../../test/standardFactory';
-import {
-  createStandardId,
-  Standard,
-  StandardId,
-} from '../../domain/entities/Standard';
+import { createStandardId, Standard, StandardId } from '@packmind/types';
 import { IStandardRepository } from '../../domain/repositories/IStandardRepository';
 import {
   CreateStandardData,

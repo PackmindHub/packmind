@@ -1,4 +1,4 @@
-import { GitRepo, GitRepoId } from '../../../domain/entities/GitRepo';
+import { GitRepo, GitRepoId } from '@packmind/types';
 import { GitRepoService } from '../../GitRepoService';
 
 export interface GetRepositoryByIdUseCaseInput {

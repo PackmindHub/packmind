@@ -5,10 +5,7 @@ import { DataSource, Repository } from 'typeorm';
 import { makeTestDatasource } from '@packmind/test-utils';
 import { itHandlesSoftDelete } from '@packmind/test-utils';
 import { v4 as uuidv4 } from 'uuid';
-import {
-  createGitProviderId,
-  GitProvider,
-} from '../../domain/entities/GitProvider';
+import { createGitProviderId, GitProvider } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { Configuration } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';

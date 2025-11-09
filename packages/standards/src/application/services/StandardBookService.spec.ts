@@ -3,8 +3,8 @@ import { WithTimestamps } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import { v4 as uuidv4 } from 'uuid';
 import { standardVersionFactory } from '../../../test/standardVersionFactory';
-import { createStandardId } from '../../domain/entities/Standard';
-import { StandardVersion } from '../../domain/entities/StandardVersion';
+import { createStandardId } from '@packmind/types';
+import { StandardVersion } from '@packmind/types';
 import { StandardBookService } from './StandardBookService';
 
 describe('StandardBookService', () => {

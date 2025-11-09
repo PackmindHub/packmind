@@ -1,5 +1,4 @@
 import { EntitySchema } from 'typeorm';
-import { StandardVersion } from '../../domain/entities/StandardVersion';
 import {
   WithTimestamps,
   WithSoftDelete,
@@ -7,10 +6,14 @@ import {
   timestampsSchemas,
   softDeleteSchemas,
 } from '@packmind/node-utils';
-import { Standard } from '../../domain/entities/Standard';
-import { Rule } from '../../domain/entities/Rule';
-import { GitCommit, GitCommitId } from '@packmind/git';
-import { UserId } from '@packmind/types';
+import {
+  GitCommit,
+  GitCommitId,
+  Rule,
+  Standard,
+  StandardVersion,
+  UserId,
+} from '@packmind/types';
 
 export const StandardVersionSchema = new EntitySchema<
   WithSoftDelete<

@@ -1,7 +1,7 @@
 import { IGitRepo } from '../../../domain/repositories/IGitRepo';
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import { PackmindLogger } from '@packmind/logger';
-import { GitCommit } from '../../../domain/entities/GitCommit';
+import { GitCommit } from '@packmind/types';
 import { GitlabRepositoryOptions } from './types';
 import { GitlabWebhookPushPayload } from '../../../domain/types/webhookPayloads';
 

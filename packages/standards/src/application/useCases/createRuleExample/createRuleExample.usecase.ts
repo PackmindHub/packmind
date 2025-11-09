@@ -1,10 +1,7 @@
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
-import {
-  RuleExample,
-  createRuleExampleId,
-} from '../../../domain/entities/RuleExample';
-import { RuleId } from '../../../domain/entities/Rule';
+import { RuleExample, createRuleExampleId } from '@packmind/types';
+import { RuleId } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { getErrorMessage } from '@packmind/node-utils';
 import { ProgrammingLanguage } from '@packmind/types';

@@ -1,11 +1,9 @@
-import { RuleExample } from '../../domain/entities/RuleExample';
 import { IRuleExampleRepository } from '../../domain/repositories/IRuleExampleRepository';
 import { RuleExampleSchema } from '../schemas/RuleExampleSchema';
 import { Repository } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, AbstractRepository } from '@packmind/node-utils';
-import { RuleExampleId } from '@packmind/types';
-import { RuleId } from '../../domain/entities/Rule';
+import { RuleExample, RuleExampleId, RuleId } from '@packmind/types';
 
 const origin = 'RuleExampleRepository';
 

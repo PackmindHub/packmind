@@ -1,16 +1,14 @@
 import { NotFoundException } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
-import {
-  Recipe,
-  createRecipeId,
-  createRecipeVersionId,
-} from '@packmind/recipes';
 import { stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createSpaceId,
   createUserId,
+  Recipe,
+  createRecipeId,
+  createRecipeVersionId,
 } from '@packmind/types';
 import { RecipesService } from '../../../recipes/recipes.service';
 import { OrganizationsSpacesRecipesController } from './recipes.controller';

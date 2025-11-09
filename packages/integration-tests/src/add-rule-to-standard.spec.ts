@@ -3,14 +3,15 @@ import { GitHexa, gitSchemas } from '@packmind/git';
 import { JobsHexa } from '@packmind/jobs';
 import { HexaRegistry } from '@packmind/node-utils';
 import { SpacesHexa, spacesSchemas } from '@packmind/spaces';
-import {
-  Standard,
-  StandardsHexa,
-  standardsSchemas,
-  StandardVersion,
-} from '@packmind/standards';
+import { StandardsHexa, standardsSchemas } from '@packmind/standards';
 import { makeTestDatasource } from '@packmind/test-utils';
-import { Organization, Space, User } from '@packmind/types';
+import {
+  Organization,
+  Space,
+  Standard,
+  StandardVersion,
+  User,
+} from '@packmind/types';
 
 import assert from 'assert';
 import { DataSource } from 'typeorm';

@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { PackmindLogger } from '@packmind/logger';
 import { ProgrammingLanguage } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
-import { createRuleId } from '../../../domain/entities/Rule';
+import { createRuleId } from '@packmind/types';
 
 describe('CreateRuleExampleUsecase', () => {
   let createRuleExampleUsecase: CreateRuleExampleUsecase;

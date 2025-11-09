@@ -6,9 +6,9 @@ import { StandardService } from '../../services/StandardService';
 import { StandardVersionService } from '../../services/StandardVersionService';
 import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSummaryDelayedJob';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
-import { Standard, createStandardId } from '../../../domain/entities/Standard';
-import { StandardVersion } from '../../../domain/entities/StandardVersion';
-import { Rule } from '../../../domain/entities/Rule';
+import { Standard, createStandardId } from '@packmind/types';
+import { StandardVersion } from '@packmind/types';
+import { Rule } from '@packmind/types';
 import { standardFactory } from '../../../../test/standardFactory';
 import { standardVersionFactory } from '../../../../test/standardVersionFactory';
 import { ruleFactory } from '../../../../test/ruleFactory';
@@ -21,7 +21,7 @@ import {
   OrganizationId,
   UserId,
 } from '@packmind/types';
-import { createStandardVersionId } from '../../../domain/entities/StandardVersion';
+import { createStandardVersionId } from '@packmind/types';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 
 describe('AddRuleToStandardUsecase', () => {

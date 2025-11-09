@@ -1,7 +1,4 @@
-import { RecipeVersion } from '../entities/RecipeVersion';
-import { IRepository } from '@packmind/types';
-
-import { RecipeId } from '../entities/Recipe';
+import { IRepository, RecipeId, RecipeVersion } from '@packmind/types';
 
 export interface IRecipeVersionRepository extends IRepository<RecipeVersion> {
   findByRecipeId(recipeId: RecipeId): Promise<RecipeVersion[]>;

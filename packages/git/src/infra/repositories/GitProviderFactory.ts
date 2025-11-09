@@ -1,9 +1,6 @@
 import { IGitProviderFactory } from '../../domain/repositories/IGitProviderFactory';
 import { IGitProvider } from '../../domain/repositories/IGitProvider';
-import {
-  GitProvider,
-  GitProviderVendors,
-} from '../../domain/entities/GitProvider';
+import { GitProvider, GitProviderVendors } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { GithubProvider } from './github/GithubProvider';
 import { GitlabProvider } from './gitlab/GitlabProvider';

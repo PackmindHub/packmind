@@ -1,10 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { GitProviderId, GitRepo, GitRepoId } from '@packmind/git';
-import { OrganizationId, UserId } from '@packmind/types';
 import {
+  CheckDirectoryExistenceResult,
+  GitProviderId,
+  GitRepo,
+  GitRepoId,
   IDeploymentPort,
   IGitPort,
-  CheckDirectoryExistenceResult,
+  OrganizationId,
+  UserId,
 } from '@packmind/types';
 import {
   InjectGitAdapter,

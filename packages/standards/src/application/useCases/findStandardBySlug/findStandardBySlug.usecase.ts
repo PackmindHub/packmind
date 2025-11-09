@@ -1,5 +1,5 @@
 import { StandardService } from '../../services/StandardService';
-import { Standard } from '../../../domain/entities/Standard';
+import { Standard } from '@packmind/types';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { OrganizationId } from '@packmind/types';
 

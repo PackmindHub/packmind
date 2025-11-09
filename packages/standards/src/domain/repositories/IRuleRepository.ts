@@ -1,6 +1,4 @@
-import { Rule } from '../entities/Rule';
-import { IRepository } from '@packmind/types';
-import { StandardVersionId } from '../entities/StandardVersion';
+import { IRepository, Rule, StandardVersionId } from '@packmind/types';
 
 export interface IRuleRepository extends IRepository<Rule> {
   findByStandardVersionId(

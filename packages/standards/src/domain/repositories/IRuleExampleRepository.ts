@@ -1,6 +1,4 @@
-import { IRepository } from '@packmind/types';
-import { RuleExample } from '../entities/RuleExample';
-import { RuleId } from '../entities/Rule';
+import { IRepository, RuleExample, RuleId } from '@packmind/types';
 
 export interface IRuleExampleRepository extends IRepository<RuleExample> {
   findByRuleId(ruleId: RuleId): Promise<RuleExample[]>;

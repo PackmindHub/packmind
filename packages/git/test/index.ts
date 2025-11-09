@@ -4,7 +4,7 @@ export * from './gitProviderFactory';
 export * from './gitRepoFactory';
 import { gitCommitFactory } from './gitCommitFactory';
 
-import { GitCommit } from '../src/domain/entities/GitCommit';
+import { GitCommit } from '@packmind/types';
 import { GitCommitSchema } from '../src/infra/schemas/GitCommitSchema';
 
 export { gitCommitFactory };

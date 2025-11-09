@@ -2,8 +2,9 @@ import {
   IUseCase,
   PackmindCommand,
   ProgrammingLanguage,
+  RuleExample,
+  RuleId,
 } from '@packmind/types';
-import { RuleExample, RuleId } from '../entities';
 
 export type CreateRuleExampleCommand = PackmindCommand & {
   ruleId: RuleId;

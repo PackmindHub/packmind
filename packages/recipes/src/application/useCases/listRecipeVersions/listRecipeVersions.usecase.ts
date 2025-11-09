@@ -1,8 +1,6 @@
 import { RecipeVersionService } from '../../services/RecipeVersionService';
-import { RecipeVersion } from '../../../domain/entities/RecipeVersion';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-
-import { RecipeId } from '../../../domain/entities/Recipe';
+import { RecipeId, RecipeVersion } from '@packmind/types';
 
 const origin = 'ListRecipeVersionsUsecase';
 

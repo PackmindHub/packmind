@@ -1,6 +1,4 @@
-import { GitRepoId } from '@packmind/types';
-import { OrganizationId } from '@packmind/types';
-import { RecipeVersionId } from '../entities/RecipeVersion';
+import { GitRepoId, OrganizationId, RecipeVersionId } from '@packmind/types';
 
 export interface DeployRecipesInput {
   organizationId: OrganizationId;

@@ -1,4 +1,4 @@
-import { GitCommit, GitCommitId } from '../../domain/entities/GitCommit';
+import { GitCommit, GitCommitId } from '@packmind/types';
 import { IGitCommitRepository } from '../../domain/repositories/IGitCommitRepository';
 import { PackmindLogger } from '@packmind/logger';
 
