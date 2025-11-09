@@ -16,7 +16,7 @@ import { GetRepositoryByIdUseCase } from '../useCases/getRepositoryById/getRepos
 import { UpdateGitProviderUseCase } from '../useCases/updateGitProvider/updateGitProvider.usecase';
 import { GetAvailableRemoteDirectoriesUseCase } from '../useCases/getAvailableRemoteDirectories/getAvailableRemoteDirectories.usecase';
 import { CheckDirectoryExistenceUseCase } from '../useCases/checkDirectoryExistence/checkDirectoryExistence.usecase';
-import { IGitServices } from '../IGitServices';
+import { GitServices } from '../GitServices';
 import { PackmindLogger } from '@packmind/logger';
 import { IAccountsPort, IDeploymentPort, IGitPort } from '@packmind/types';
 import { QueryOption } from '@packmind/types';
@@ -73,7 +73,7 @@ export class GitAdapter implements IGitPort {
   private deploymentsAdapter?: IDeploymentPort;
 
   constructor(
-    private readonly gitServices: IGitServices,
+    private readonly gitServices: GitServices,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this._addGitProvider = this.createAddGitProviderUseCase();

@@ -15,7 +15,6 @@ module.exports = function getBaseWebpackPaths(__dirname) {
     '@packmind/migrations': join(__dirname, '../../packages/migrations/src'),
     '@packmind/spaces': join(__dirname, '../../packages/spaces/src'),
     '@packmind/git': join(__dirname, '../../packages/git/src'),
-    '@packmind/git/types': join(__dirname, '../../packages/git/src/types'),
     '@packmind/packmind-ui': join(__dirname, '../../packages/packmind-ui/src'),
     '@packmind/standards': join(__dirname, '../../packages/standards/src'),
     '@packmind/standards/types': join(

@@ -1,5 +1,5 @@
 import { Recipe } from '@packmind/recipes/types';
-import { GitRepo } from '@packmind/git/types';
+import { GitRepo } from '@packmind/git';
 
 import { DataSource } from 'typeorm';
 import { TestApp } from '../helpers/TestApp';

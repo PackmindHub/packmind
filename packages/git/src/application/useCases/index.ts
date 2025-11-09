@@ -21,5 +21,3 @@ export { GetRepositoryByIdUseCase } from './getRepositoryById/getRepositoryById.
 export { UpdateGitProviderUseCase } from './updateGitProvider/updateGitProvider.usecase';
 export { GetAvailableRemoteDirectoriesUseCase } from './getAvailableRemoteDirectories/getAvailableRemoteDirectories.usecase';
 export { FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase } from './findGitRepoByOwnerRepoAndBranchInOrganization/findGitRepoByOwnerRepoAndBranchInOrganization.usecase';
-
-// Note: Types are now in @packmind/git/types

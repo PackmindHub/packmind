@@ -1,4 +1,3 @@
-import { IGitServices } from './IGitServices';
 import { GitProviderService } from './GitProviderService';
 import { GitRepoService } from './GitRepoService';
 import { GitCommitService } from './services/GitCommitService';
@@ -8,13 +7,13 @@ import { IGitProviderFactory } from '../domain/repositories/IGitProviderFactory'
 import { PackmindLogger } from '@packmind/logger';
 
 /**
- * GitServices - Service aggregator implementation for the Git application layer
+ * GitServices - Service aggregator for the Git application layer
  *
  * This class serves as the main service access point, aggregating all
  * individual services. It handles the instantiation of services
  * using the repository aggregator and provides them through getter methods.
  */
-export class GitServices implements IGitServices {
+export class GitServices {
   private readonly gitProviderService: GitProviderService;
   private readonly gitRepoService: GitRepoService;
   private readonly gitCommitService: GitCommitService;

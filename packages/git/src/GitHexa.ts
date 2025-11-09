@@ -12,21 +12,23 @@ import { DataSource } from 'typeorm';
 import { FetchFileContentCallback } from './application/jobs/FetchFileContentDelayedJob';
 import { FetchFileContentInput } from './domain/jobs/FetchFileContent';
 import { IGitRepoFactory } from './domain/repositories/IGitRepoFactory';
-import { GitHexaFactory } from './GitHexaFactory';
+import { GitRepositories } from './infra/repositories/GitRepositories';
+import { GitServices } from './application/GitServices';
+import { GitAdapter } from './application/adapter/GitAdapter';
+import { IGitDelayedJobs } from './domain/jobs/IGitDelayedJobs';
+import { FetchFileContentJobFactory } from './infra/jobs/FetchFileContentJobFactory';
+import { JobsHexa } from '@packmind/jobs';
 
 const origin = 'GitHexa';
 
 /**
- * GitHexa - Facade for the Git domain following the new Hexa pattern.
+ * GitHexa - Facade for the Git domain following the Hexa pattern.
  *
  * This class serves as the main entry point for git-related functionality.
- * It holds the GitHexa instance and exposes use cases as a clean facade.
+ * It holds the adapter and exposes use cases as a clean facade.
  *
- * The Hexa pattern separates concerns:
- * - GitHexaFactory: Handles dependency injection and service instantiation
- * - GitHexa: Serves as use case facade and integration point with other domains
- *
- * Uses the DataSource provided through the HexaRegistry for database operations.
+ * The constructor instantiates repositories, services, and the adapter.
+ * The initialize method retrieves ports from the registry and sets up delayed jobs.
  */
 
 export type GitHexaOpts = BaseHexaOpts & {
@@ -36,7 +38,10 @@ export type GitHexaOpts = BaseHexaOpts & {
 const BaseGitHexaOpts: GitHexaOpts = { logger: new PackmindLogger(origin) };
 
 export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
-  private readonly hexa: GitHexaFactory;
+  private readonly gitRepositories: GitRepositories;
+  private readonly gitServices: GitServices;
+  public readonly adapter: GitAdapter;
+  private gitDelayedJobs?: IGitDelayedJobs;
   private isInitialized = false;
 
   constructor(dataSource: DataSource, opts?: Partial<GitHexaOpts>) {
@@ -44,12 +49,23 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
     this.logger.info('Constructing GitHexa');
 
     try {
-      // Initialize the hexagon factory with the DataSource
-      // Adapter retrieval will be done in initialize(registry)
-      this.hexa = new GitHexaFactory(this.dataSource, {
-        ...BaseGitHexaOpts,
-        ...opts,
-      });
+      // Create repository and service aggregators with DataSource
+      this.logger.debug(
+        'Creating repository and service aggregators with DataSource',
+      );
+
+      this.gitRepositories = new GitRepositories(
+        this.dataSource,
+        this.opts as GitHexaOpts,
+      );
+      this.gitServices = new GitServices(this.gitRepositories, this.logger);
+
+      // Create adapter in constructor so it's available immediately
+      // (adapter doesn't need delayed jobs - those are only used by GitHexa methods)
+      this.logger.debug('Creating GitAdapter');
+      this.adapter = new GitAdapter(this.gitServices, this.logger);
+      this.logger.debug('GitAdapter created successfully');
+
       this.logger.info('GitHexa construction completed');
     } catch (error) {
       this.logger.error('Failed to construct GitHexa', {
@@ -95,7 +111,15 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
         this.logger.debug('DeploymentsHexa not available in registry');
       }
 
-      await this.hexa.initialize(registry);
+      // TODO: migrate with port/adapters
+      const jobsHexa = registry.get(JobsHexa);
+      if (!jobsHexa) {
+        throw new Error('JobsHexa not found in registry');
+      }
+
+      this.logger.debug('Building git delayed jobs');
+      this.gitDelayedJobs = await this.buildGitDelayedJobs(jobsHexa);
+
       this.isInitialized = true;
       this.logger.info('GitHexa initialized successfully');
     } catch (error) {
@@ -104,6 +128,34 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
       });
       throw error;
     }
+  }
+
+  private async buildGitDelayedJobs(
+    jobsHexa: JobsHexa,
+  ): Promise<IGitDelayedJobs> {
+    // Register our job queue with JobsHexa
+    const fetchFileContentJobFactory = new FetchFileContentJobFactory(
+      this.gitServices.getGitRepoService(),
+      this.gitServices.getGitProviderService(),
+      this.opts?.gitRepoFactory || this.gitRepositories.getGitRepoFactory(),
+      this.logger,
+    );
+
+    jobsHexa.registerJobQueue(
+      fetchFileContentJobFactory.getQueueName(),
+      fetchFileContentJobFactory,
+    );
+
+    await fetchFileContentJobFactory.createQueue();
+
+    if (!fetchFileContentJobFactory.delayedJob) {
+      throw new Error('DelayedJob not found for FetchFileContent');
+    }
+
+    this.logger.debug('Git delayed jobs built successfully');
+    return {
+      fetchFileContentDelayedJob: fetchFileContentJobFactory.delayedJob,
+    };
   }
 
   /**
@@ -122,14 +174,19 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
    */
   public getGitDelayedJobs() {
     this.ensureInitialized();
-    return this.hexa.getGitDelayedJobs();
+    if (!this.gitDelayedJobs) {
+      throw new Error(
+        'GitHexa not initialized. Call initialize() before using.',
+      );
+    }
+    return this.gitDelayedJobs;
   }
 
   /**
    * Set the deployments adapter for creating default targets
    */
   public setDeploymentsAdapter(adapter: IDeploymentPort): void {
-    this.hexa.setDeploymentsAdapter(adapter);
+    this.adapter.setDeploymentsAdapter(adapter);
   }
 
   /**
@@ -138,7 +195,7 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
    * The adapter is available immediately after construction (doesn't require initialization).
    */
   public getAdapter(): IGitPort {
-    return this.hexa.useCases;
+    return this.adapter;
   }
 
   /**
@@ -161,7 +218,7 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
    * Configure the accounts adapter used for access validation
    */
   public setAccountsAdapter(adapter: IAccountsPort): void {
-    this.hexa.useCases.setAccountsAdapter(adapter);
+    this.adapter.setAccountsAdapter(adapter);
   }
 
   // ==================
@@ -200,7 +257,7 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
     onComplete?: FetchFileContentCallback,
   ): Promise<string> {
     this.ensureInitialized();
-    const delayedJobs = this.hexa.getGitDelayedJobs();
+    const delayedJobs = this.getGitDelayedJobs();
     return delayedJobs.fetchFileContentDelayedJob.addJobWithCallback(
       input,
       onComplete,

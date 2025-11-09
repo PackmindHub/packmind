@@ -4,8 +4,12 @@ import {
   DeployerService,
   JunieDeployer,
 } from '@packmind/coding-agent';
-import { GitHexa, gitSchemas } from '@packmind/git';
-import { GitProviderVendors, GitRepo } from '@packmind/git/types';
+import {
+  GitHexa,
+  gitSchemas,
+  GitProviderVendors,
+  GitRepo,
+} from '@packmind/git';
 import { JobsHexa } from '@packmind/jobs';
 import { RecipesHexa, recipesSchemas } from '@packmind/recipes';
 import {
