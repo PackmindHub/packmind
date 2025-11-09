@@ -3,16 +3,16 @@ import { HexaRegistry } from '@packmind/node-utils';
 import { StandardsHexa } from '@packmind/standards';
 import { GitHexa } from '@packmind/git';
 import { IStandardsPort, IGitPort } from '@packmind/types';
-import { CodingAgentDeployerRegistry } from './infra/repositories/CodingAgentDeployerRegistry';
+import { CodingAgentRepositories } from './infra/repositories/CodingAgentRepositories';
 import { DeployerService } from './application/services/DeployerService';
 import { CodingAgentServices } from './application/services/CodingAgentServices';
 import { CodingAgentAdapter } from './application/adapter/CodingAgentAdapter';
-import { ICodingAgentDeployerRegistry } from './domain/repository/ICodingAgentDeployerRegistry';
+import { ICodingAgentRepositories } from './domain/repositories/ICodingAgentRepositories';
 
 const origin = 'CodingAgentHexaFactory';
 
 export class CodingAgentHexaFactory {
-  private deployerRegistry: ICodingAgentDeployerRegistry;
+  private codingAgentRepositories: ICodingAgentRepositories;
   private deployerService: DeployerService;
   private codingAgentServices: CodingAgentServices;
   public adapter: CodingAgentAdapter;
@@ -23,16 +23,16 @@ export class CodingAgentHexaFactory {
     this.logger.info('Constructing CodingAgentHexaFactory');
 
     try {
-      // Create deployer registry without ports initially (will be set in initialize)
-      this.logger.debug('Creating deployer registry');
-      this.deployerRegistry = new CodingAgentDeployerRegistry(
+      // Create repositories aggregator without ports initially (will be set in initialize)
+      this.logger.debug('Creating repositories aggregator');
+      this.codingAgentRepositories = new CodingAgentRepositories(
         undefined,
         undefined,
       );
 
       this.logger.debug('Creating deployer service');
       this.deployerService = new DeployerService(
-        this.deployerRegistry,
+        this.codingAgentRepositories,
         this.logger,
       );
 
@@ -89,14 +89,14 @@ export class CodingAgentHexaFactory {
         this.logger.debug('GitHexa not available in registry');
       }
 
-      // Recreate deployer registry with ports
-      this.deployerRegistry = new CodingAgentDeployerRegistry(
+      // Recreate repositories aggregator with ports
+      this.codingAgentRepositories = new CodingAgentRepositories(
         standardsPort,
         gitPort,
       );
-      // Recreate deployer service with new registry
+      // Recreate deployer service with new repositories
       this.deployerService = new DeployerService(
-        this.deployerRegistry,
+        this.codingAgentRepositories,
         this.logger,
       );
       // Recreate coding agent services with new deployer service
@@ -122,8 +122,8 @@ export class CodingAgentHexaFactory {
   /**
    * Get the deployer registry for manual registration of deployers
    */
-  getDeployerRegistry(): ICodingAgentDeployerRegistry {
-    return this.deployerRegistry;
+  getDeployerRegistry() {
+    return this.codingAgentRepositories.getDeployerRegistry();
   }
 
   /**

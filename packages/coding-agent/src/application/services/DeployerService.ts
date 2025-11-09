@@ -5,13 +5,13 @@ import { PackmindLogger } from '@packmind/logger';
 import { Target } from '@packmind/types';
 import { FileUpdates } from '@packmind/types';
 import { CodingAgent } from '../../domain/CodingAgents';
-import { ICodingAgentDeployerRegistry } from '../../domain/repository/ICodingAgentDeployerRegistry';
+import { ICodingAgentRepositories } from '../../domain/repositories/ICodingAgentRepositories';
 
 const origin = 'DeployerService';
 
 export class DeployerService {
   constructor(
-    private readonly deployerRegistry: ICodingAgentDeployerRegistry,
+    private readonly codingAgentRepositories: ICodingAgentRepositories,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -43,7 +43,9 @@ export class DeployerService {
             agent,
             targetId: target.id,
           });
-          const deployer = this.deployerRegistry.getDeployer(agent);
+          const deployer = this.codingAgentRepositories
+            .getDeployerRegistry()
+            .getDeployer(agent);
           const updates = await deployer.deployRecipes(
             recipeVersions,
             gitRepo,
@@ -107,7 +109,9 @@ export class DeployerService {
             agent,
             targetId: target.id,
           });
-          const deployer = this.deployerRegistry.getDeployer(agent);
+          const deployer = this.codingAgentRepositories
+            .getDeployerRegistry()
+            .getDeployer(agent);
           const updates = await deployer.deployStandards(
             standardVersions,
             gitRepo,

@@ -79,9 +79,9 @@ export class DeploymentsAdapter implements IDeploymentPort {
 
   constructor(deploymentsHexa: DeploymentsHexaFactory) {
     this.standardDeploymentRepository =
-      deploymentsHexa.repositories.standardsDeployment;
+      deploymentsHexa.repositories.getStandardsDeploymentRepository();
     this.recipesDeploymentRepository =
-      deploymentsHexa.repositories.recipesDeployment;
+      deploymentsHexa.repositories.getRecipesDeploymentRepository();
     this.deploymentsServices = deploymentsHexa.services.deployments;
   }
 

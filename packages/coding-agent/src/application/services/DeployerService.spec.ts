@@ -1,6 +1,7 @@
 import { DeployerService } from './DeployerService';
 import { ICodingAgentDeployerRegistry } from '../../domain/repository/ICodingAgentDeployerRegistry';
 import { ICodingAgentDeployer } from '../../domain/repository/ICodingAgentDeployer';
+import { ICodingAgentRepositories } from '../../domain/repositories/ICodingAgentRepositories';
 import { CodingAgent } from '../../domain/CodingAgents';
 import {
   RecipeVersion,
@@ -98,9 +99,19 @@ class MockRegistry implements ICodingAgentDeployerRegistry {
   }
 }
 
+// Mock repositories
+class MockRepositories implements ICodingAgentRepositories {
+  constructor(private readonly registry: MockRegistry) {}
+
+  getDeployerRegistry(): ICodingAgentDeployerRegistry {
+    return this.registry;
+  }
+}
+
 describe('DeployerService', () => {
   let service: DeployerService;
   let registry: MockRegistry;
+  let repositories: MockRepositories;
   let mockGitRepo: GitRepo;
   let mockTarget: Target;
   let mockRecipeVersions: RecipeVersion[];
@@ -110,7 +121,8 @@ describe('DeployerService', () => {
   beforeEach(() => {
     mockLogger = stubLogger();
     registry = new MockRegistry();
-    service = new DeployerService(registry, mockLogger);
+    repositories = new MockRepositories(registry);
+    service = new DeployerService(repositories, mockLogger);
 
     mockTarget = {
       id: createTestTargetId('test-target-id'),
