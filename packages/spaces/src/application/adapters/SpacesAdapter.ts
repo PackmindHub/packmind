@@ -1,14 +1,14 @@
 import { OrganizationId } from '@packmind/types';
 import { ISpacesPort } from '@packmind/types';
 import { Space, SpaceId } from '@packmind/types';
-import { SpacesHexaFactory } from '../../SpacesHexaFactory';
+import type { SpacesHexa } from '../../SpacesHexa';
 
 /**
  * SpacesAdapter - Implements the ISpacesPort interface for cross-domain access
  * Following the Port/Adapter pattern from DDD monorepo architecture standard
  */
 export class SpacesAdapter implements ISpacesPort {
-  constructor(private readonly hexa: SpacesHexaFactory) {}
+  constructor(private readonly hexa: SpacesHexa) {}
 
   async createSpace(
     name: string,

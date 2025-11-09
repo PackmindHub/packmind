@@ -13,4 +13,3 @@ export * from './application/adapters';
 
 // Hexa exports
 export { SpacesHexa } from './SpacesHexa';
-export { SpacesHexaFactory } from './SpacesHexaFactory';

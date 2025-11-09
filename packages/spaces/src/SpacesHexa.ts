@@ -2,8 +2,11 @@ import { DataSource } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, HexaRegistry, BaseHexaOpts } from '@packmind/node-utils';
 import { ISpacesPort, ISpacesPortName } from '@packmind/types';
-import { SpacesHexaFactory } from './SpacesHexaFactory';
 import { SpacesAdapter } from './application/adapters/SpacesAdapter';
+import { SpacesRepositories } from './infra/repositories/SpacesRepositories';
+import { SpacesServices } from './application/services/SpacesServices';
+import { SpaceService } from './application/services/SpaceService';
+import { ISpaceRepository } from './domain/repositories/ISpaceRepository';
 
 const origin = 'SpacesHexa';
 
@@ -13,15 +16,16 @@ const origin = 'SpacesHexa';
  * This class serves as the main entry point for spaces-related functionality.
  * It exposes the Spaces adapter for cross-domain access following DDD standards.
  *
- * The Hexa pattern separates concerns:
- * - SpacesHexaFactory: Handles dependency injection and service instantiation
- * - SpacesAdapter: Implements ISpacesPort for cross-domain access
- * - SpacesHexa: Serves as the main facade and integration point
+ * The Hexa pattern:
+ * - Constructor: Instantiates repositories, services, and adapter
+ * - initialize(): Retrieves and sets ports from registry
+ * - getAdapter(): Exposes the domain adapter for cross-domain access
  *
  * Uses the DataSource provided through the HexaRegistry for database operations.
  */
 export class SpacesHexa extends BaseHexa<BaseHexaOpts, ISpacesPort> {
-  private readonly hexa: SpacesHexaFactory;
+  private readonly spacesRepositories: SpacesRepositories;
+  private readonly spacesServices: SpacesServices;
   private readonly spacesAdapter: SpacesAdapter;
 
   constructor(
@@ -32,9 +36,18 @@ export class SpacesHexa extends BaseHexa<BaseHexaOpts, ISpacesPort> {
     this.logger.info('Constructing SpacesHexa');
 
     try {
-      // Initialize the factory and adapter
-      this.hexa = new SpacesHexaFactory(this.dataSource, this.logger);
-      this.spacesAdapter = new SpacesAdapter(this.hexa);
+      // Instantiate repositories and services
+      this.spacesRepositories = new SpacesRepositories(
+        this.dataSource,
+        this.logger,
+      );
+      this.spacesServices = new SpacesServices(
+        this.spacesRepositories,
+        this.logger,
+      );
+
+      // Instantiate adapter
+      this.spacesAdapter = new SpacesAdapter(this);
 
       this.logger.info('SpacesHexa construction completed');
     } catch (error) {
@@ -74,5 +87,19 @@ export class SpacesHexa extends BaseHexa<BaseHexaOpts, ISpacesPort> {
    */
   public getPortName(): string {
     return ISpacesPortName;
+  }
+
+  /**
+   * Get the space service instance
+   */
+  public getSpaceService(): SpaceService {
+    return this.spacesServices.getSpaceService();
+  }
+
+  /**
+   * Get the space repository instance
+   */
+  public getSpaceRepository(): ISpaceRepository {
+    return this.spacesRepositories.getSpaceRepository();
   }
 }
