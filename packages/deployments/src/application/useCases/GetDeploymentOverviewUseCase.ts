@@ -59,7 +59,6 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
         throw new Error('RecipesPort.listRecipesBySpace is not available');
       }
 
-      const listRecipesBySpace = this.recipesPort.listRecipesBySpace;
       const [deployments, recipesPerSpace, gitRepos] = await Promise.all([
         this.deploymentsRepository.listByOrganizationIdWithStatus(
           organizationId,
@@ -67,7 +66,7 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
         ),
         Promise.all(
           spaces.map((space) =>
-            listRecipesBySpace({
+            this.recipesPort.listRecipesBySpace!({
               spaceId: space.id,
               organizationId,
               userId: createUserId(command.userId),
