@@ -2,13 +2,7 @@ import { DataSource } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { UserProvider, OrganizationProvider } from '@packmind/types';
 import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
-import {
-  ISpacesPort,
-  IGitPort,
-  IStandardsPort,
-  IDeploymentPort,
-  IAccountsPort,
-} from '@packmind/types';
+import { ISpacesPort, IAccountsPort, IAccountsPortName } from '@packmind/types';
 import { AccountsHexaFactory } from './AccountsHexaFactory';
 import { ApiKeyService } from './application/services/ApiKeyService';
 import { SpacesHexa } from '@packmind/spaces';
@@ -69,7 +63,7 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts, IAccountsPort> {
         try {
           const spacesHexa = registry.get(SpacesHexa);
           const spacesPort = spacesHexa.getAdapter();
-          this.hexa.setSpacesPort(spacesPort);
+          this.hexa.useCases.setSpacesPort(spacesPort);
           this.logger.debug('Retrieved SpacesAdapter from SpacesHexa');
         } catch (error) {
           this.logger.debug('SpacesHexa not available in registry', {
@@ -102,6 +96,13 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts, IAccountsPort> {
   }
 
   /**
+   * Get the port name for this hexa.
+   */
+  public getPortName(): string {
+    return IAccountsPortName;
+  }
+
+  /**
    * Expose the user provider adapter for other hexagons
    */
   getUserProvider(): UserProvider {
@@ -126,30 +127,5 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts, IAccountsPort> {
     }
 
     return this.organizationProvider;
-  }
-
-  // ========================================
-  // PORT SETTERS (for lazy dependency injection)
-  // ========================================
-
-  /**
-   * Set the Git port for cross-domain access to git data.
-   */
-  setGitPort(gitPort: IGitPort): void {
-    this.hexa.setGitPort(gitPort);
-  }
-
-  /**
-   * Set the Standards port for cross-domain access to standards data.
-   */
-  setStandardsPort(standardsPort: IStandardsPort): void {
-    this.hexa.setStandardsPort(standardsPort);
-  }
-
-  /**
-   * Set the Deployment port for cross-domain access to deployment data.
-   */
-  setDeploymentPort(deploymentPort: IDeploymentPort): void {
-    this.hexa.setDeploymentPort(deploymentPort);
   }
 }

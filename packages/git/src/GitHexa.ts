@@ -1,12 +1,19 @@
-import { DataSource } from 'typeorm';
+import { AccountsHexa } from '@packmind/accounts';
 import { PackmindLogger } from '@packmind/logger';
-import { BaseHexa, HexaRegistry, BaseHexaOpts } from '@packmind/node-utils';
-import { IDeploymentPort, IGitPort } from '@packmind/types';
-import { GitHexaFactory } from './GitHexaFactory';
-import { UserProvider, OrganizationProvider } from '@packmind/types';
-import { FetchFileContentInput } from './domain/jobs/FetchFileContent';
+import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
+import {
+  IDeploymentPort,
+  IDeploymentPortName,
+  IGitPort,
+  IGitPortName,
+  OrganizationProvider,
+  UserProvider,
+} from '@packmind/types';
+import { DataSource } from 'typeorm';
 import { FetchFileContentCallback } from './application/jobs/FetchFileContentDelayedJob';
+import { FetchFileContentInput } from './domain/jobs/FetchFileContent';
 import { IGitRepoFactory } from './domain/repositories/IGitRepoFactory';
+import { GitHexaFactory } from './GitHexaFactory';
 
 const origin = 'GitHexa';
 
@@ -68,6 +75,29 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
     );
 
     try {
+      // Get AccountsHexa to retrieve user and organization providers
+      try {
+        const accountsHexa = registry.get(AccountsHexa);
+        const userProvider = accountsHexa.getUserProvider();
+        const organizationProvider = accountsHexa.getOrganizationProvider();
+        this.setUserProvider(userProvider);
+        this.setOrganizationProvider(organizationProvider);
+      } catch {
+        // AccountsHexa not available - optional dependency
+        this.logger.debug('AccountsHexa not available in registry');
+      }
+
+      // Get DeploymentsHexa to retrieve deployments adapter
+      // Using getAdapter to avoid circular dependency (DeploymentsHexa imports GitHexa)
+      try {
+        const deploymentPort =
+          registry.getAdapter<IDeploymentPort>(IDeploymentPortName);
+        this.setDeploymentsAdapter(deploymentPort);
+      } catch {
+        // DeploymentsHexa not available - optional dependency
+        this.logger.debug('DeploymentsHexa not available in registry');
+      }
+
       await this.hexa.initialize(registry);
       this.isInitialized = true;
       this.logger.info('GitHexa initialized successfully');
@@ -112,6 +142,13 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
    */
   public getAdapter(): IGitPort {
     return this.hexa.useCases;
+  }
+
+  /**
+   * Get the port name for this hexa.
+   */
+  public getPortName(): string {
+    return IGitPortName;
   }
 
   /**

@@ -5,6 +5,7 @@ export * from './ai/agents/AiAgentTypes';
 export * from './ai/errors/AiNotConfigured';
 export * from './cache/Cache';
 export * from './hexa/HexaRegistry';
+export * from './hexa/BaseHexa';
 export * from './database/migrationColumns';
 export * from './database/schemas';
 export * from './database/types';

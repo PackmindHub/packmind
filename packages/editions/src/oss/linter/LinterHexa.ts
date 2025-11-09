@@ -1,12 +1,10 @@
 import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
-import { IDeploymentPort, ILinterPort, IStandardsPort } from '@packmind/types';
+import { ILinterPort, ILinterPortName } from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { LinterAdapter } from './LinterAdapter';
 import { LinterUsecases } from './LinterUsecases';
 
 export class LinterHexa extends BaseHexa<BaseHexaOpts, ILinterPort> {
-  private deploymentAdapter: IDeploymentPort | null = null;
-  private standardsAdapter: IStandardsPort | null = null;
   private linterAdapter: ILinterPort;
 
   constructor(dataSource: DataSource) {
@@ -25,16 +23,15 @@ export class LinterHexa extends BaseHexa<BaseHexaOpts, ILinterPort> {
     // Nothing to do here
   }
 
-  public setDeploymentPort(deploymentPort: IDeploymentPort): void {
-    this.deploymentAdapter = deploymentPort;
-  }
-
-  public setStandardAdapter(standardsPort: IStandardsPort): void {
-    this.standardsAdapter = standardsPort;
-  }
-
   public getAdapter(): ILinterPort {
     return this.linterAdapter;
+  }
+
+  /**
+   * Get the port name for this hexa.
+   */
+  public getPortName(): string {
+    return ILinterPortName;
   }
 
   public getLinterUsecases(): LinterUsecases {

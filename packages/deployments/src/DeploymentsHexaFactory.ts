@@ -34,7 +34,7 @@ export class DeploymentsHexaFactory {
   constructor(
     logger: PackmindLogger,
     dataSource: DataSource,
-    gitPort: IGitPort,
+    gitPort?: IGitPort,
   ) {
     // Initialize repositories with proper DataSource that has schemas registered
     this.repositories = {
@@ -63,11 +63,14 @@ export class DeploymentsHexaFactory {
     };
 
     // Initialize services
+    // gitPort may be undefined during construction, will be set during initialization
+    // Create a temporary stub if gitPort is not provided
+    const tempGitPort = gitPort || ({} as IGitPort);
     this.services = {
-      git: gitPort,
+      git: tempGitPort,
       deployments: new DeploymentsServices(
         this.repositories.target,
-        gitPort,
+        tempGitPort,
         this.repositories.renderModeConfiguration,
         logger,
       ),

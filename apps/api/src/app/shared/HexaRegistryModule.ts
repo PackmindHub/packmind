@@ -1,26 +1,27 @@
-import { Module, DynamicModule, Provider, Global } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { DynamicModule, Global, Module, Provider } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { DataSource } from 'typeorm';
-import { HexaRegistry, BaseHexa, BaseHexaOpts } from '@packmind/node-utils';
-import { RecipesHexa } from '@packmind/recipes';
-import { DeploymentsHexa } from '@packmind/deployments';
-import { StandardsHexa } from '@packmind/standards';
-import { AnalyticsHexa } from '@packmind/analytics';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { AccountsHexa, AccountsHexaOpts } from '@packmind/accounts';
+import { CodingAgentHexa } from '@packmind/coding-agent';
+import { DeploymentsHexa } from '@packmind/deployments';
+import { GitHexa } from '@packmind/git';
+import { LinterHexa } from '@packmind/linter';
 import { PackmindLogger } from '@packmind/logger';
+import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
+import { RecipesHexa } from '@packmind/recipes';
+import { SpacesHexa } from '@packmind/spaces';
+import { StandardsHexa } from '@packmind/standards';
 import {
   IAccountsPort,
-  IDeploymentPort,
-  IRecipesPort,
-  IStandardsPort,
-  IGitPort,
-  ISpacesPort,
-  ILinterPort,
   ICodingAgentPort,
-  UserProvider,
-  OrganizationProvider,
+  IDeploymentPort,
+  IGitPort,
+  ILinterPort,
+  IRecipesPort,
+  ISpacesPort,
+  IStandardsPort,
 } from '@packmind/types';
+import { DataSource } from 'typeorm';
 import { ApiKeyServiceProvider } from './ApiKeyServiceProvider';
 
 /**
@@ -104,37 +105,6 @@ export class HexaRegistryModule {
   }
 
   /**
-   * Type guard to check if a hexa has setGitPort method
-   */
-  private static hasSetGitPort(
-    hexa: unknown,
-  ): hexa is { setGitPort: (port: unknown) => void } {
-    return hexa != null && typeof hexa === 'object' && 'setGitPort' in hexa;
-  }
-
-  /**
-   * Type guard to check if a hexa has setStandardsPort method
-   */
-  private static hasSetStandardsPort(
-    hexa: unknown,
-  ): hexa is { setStandardsPort: (port: unknown) => void } {
-    return (
-      hexa != null && typeof hexa === 'object' && 'setStandardsPort' in hexa
-    );
-  }
-
-  /**
-   * Type guard to check if a hexa has setDeploymentPort method
-   */
-  private static hasSetDeploymentPort(
-    hexa: unknown,
-  ): hexa is { setDeploymentPort: (port: unknown) => void } {
-    return (
-      hexa != null && typeof hexa === 'object' && 'setDeploymentPort' in hexa
-    );
-  }
-
-  /**
    * Create all providers needed for the HexaRegistry integration
    */
   private static createProviders(
@@ -182,10 +152,6 @@ export class HexaRegistryModule {
         // Initialize the registry with the DataSource (this now includes async initialization)
         await registry.init(dataSource);
 
-        // Wire up cross-domain dependencies after all hexas are initialized
-        // This ensures AccountsHexa has access to Git, Standards, and Deployments ports
-        await HexaRegistryModule.wireCrossDomainDependencies(registry);
-
         return registry;
       },
       inject: [DataSource, JwtService],
@@ -208,12 +174,8 @@ export class HexaRegistryModule {
       provide: ACCOUNTS_ADAPTER_TOKEN,
       useFactory: (registry: HexaRegistry): IAccountsPort | null => {
         try {
-          const accountsHexa = registry.getByName('AccountsHexa');
-          if (accountsHexa && 'getAdapter' in accountsHexa) {
-            return (
-              accountsHexa as unknown as { getAdapter: () => IAccountsPort }
-            ).getAdapter();
-          }
+          const accountsHexa = registry.get(AccountsHexa);
+          return accountsHexa.getAdapter();
         } catch {
           // AccountsHexa not available
         }
@@ -227,14 +189,8 @@ export class HexaRegistryModule {
       provide: DEPLOYMENT_ADAPTER_TOKEN,
       useFactory: (registry: HexaRegistry): IDeploymentPort | null => {
         try {
-          const deploymentsHexa = registry.getByName('DeploymentsHexa');
-          if (deploymentsHexa && 'getAdapter' in deploymentsHexa) {
-            return (
-              deploymentsHexa as unknown as {
-                getAdapter: () => IDeploymentPort;
-              }
-            ).getAdapter();
-          }
+          const deploymentsHexa = registry.get(DeploymentsHexa);
+          return deploymentsHexa.getAdapter();
         } catch {
           // DeploymentsHexa not available
         }
@@ -248,12 +204,8 @@ export class HexaRegistryModule {
       provide: RECIPES_ADAPTER_TOKEN,
       useFactory: (registry: HexaRegistry): IRecipesPort | null => {
         try {
-          const recipesHexa = registry.getByName('RecipesHexa');
-          if (recipesHexa && 'getAdapter' in recipesHexa) {
-            return (
-              recipesHexa as unknown as { getAdapter: () => IRecipesPort }
-            ).getAdapter();
-          }
+          const recipesHexa = registry.get(RecipesHexa);
+          return recipesHexa.getAdapter();
         } catch {
           // RecipesHexa not available
         }
@@ -267,12 +219,8 @@ export class HexaRegistryModule {
       provide: STANDARDS_ADAPTER_TOKEN,
       useFactory: (registry: HexaRegistry): IStandardsPort | null => {
         try {
-          const standardsHexa = registry.getByName('StandardsHexa');
-          if (standardsHexa && 'getAdapter' in standardsHexa) {
-            return (
-              standardsHexa as unknown as { getAdapter: () => IStandardsPort }
-            ).getAdapter();
-          }
+          const standardsHexa = registry.get(StandardsHexa);
+          return standardsHexa.getAdapter();
         } catch {
           // StandardsHexa not available
         }
@@ -286,12 +234,8 @@ export class HexaRegistryModule {
       provide: GIT_ADAPTER_TOKEN,
       useFactory: (registry: HexaRegistry): IGitPort | null => {
         try {
-          const gitHexa = registry.getByName('GitHexa');
-          if (gitHexa && 'getAdapter' in gitHexa) {
-            return (
-              gitHexa as unknown as { getAdapter: () => IGitPort }
-            ).getAdapter();
-          }
+          const gitHexa = registry.get(GitHexa);
+          return gitHexa.getAdapter();
         } catch {
           // GitHexa not available
         }
@@ -305,12 +249,8 @@ export class HexaRegistryModule {
       provide: SPACES_ADAPTER_TOKEN,
       useFactory: (registry: HexaRegistry): ISpacesPort | null => {
         try {
-          const spacesHexa = registry.getByName('SpacesHexa');
-          if (spacesHexa && 'getAdapter' in spacesHexa) {
-            return (
-              spacesHexa as unknown as { getAdapter: () => ISpacesPort }
-            ).getAdapter();
-          }
+          const spacesHexa = registry.get(SpacesHexa);
+          return spacesHexa.getAdapter();
         } catch {
           // SpacesHexa not available
         }
@@ -324,12 +264,8 @@ export class HexaRegistryModule {
       provide: LINTER_ADAPTER_TOKEN,
       useFactory: (registry: HexaRegistry): ILinterPort | null => {
         try {
-          const linterHexa = registry.getByName('LinterHexa');
-          if (linterHexa && 'getAdapter' in linterHexa) {
-            return (
-              linterHexa as unknown as { getAdapter: () => ILinterPort }
-            ).getAdapter();
-          }
+          const linterHexa = registry.get(LinterHexa);
+          return linterHexa.getAdapter();
         } catch {
           // LinterHexa not available
         }
@@ -343,14 +279,8 @@ export class HexaRegistryModule {
       provide: CODING_AGENT_ADAPTER_TOKEN,
       useFactory: (registry: HexaRegistry): ICodingAgentPort | null => {
         try {
-          const codingAgentHexa = registry.getByName('CodingAgentHexa');
-          if (codingAgentHexa && 'getAdapter' in codingAgentHexa) {
-            return (
-              codingAgentHexa as unknown as {
-                getAdapter: () => ICodingAgentPort;
-              }
-            ).getAdapter();
-          }
+          const codingAgentHexa = registry.get(CodingAgentHexa);
+          return codingAgentHexa.getAdapter();
         } catch {
           // CodingAgentHexa not available
         }
@@ -360,285 +290,6 @@ export class HexaRegistryModule {
     });
 
     return providers;
-  }
-
-  /**
-   * Wire up cross-domain dependencies after all hexas are initialized.
-   * This method uses getByName to avoid circular dependency issues.
-   * All cross-domain dependency setup is centralized here instead of in service constructors.
-   */
-  private static async wireCrossDomainDependencies(
-    registry: HexaRegistry,
-  ): Promise<void> {
-    // Get hexas by name to avoid import cycles
-    const accountsHexa = registry.getByName('AccountsHexa');
-    const gitHexa = registry.getByName('GitHexa');
-    const standardsHexa: StandardsHexa = registry.getByName('StandardsHexa');
-    const deploymentsHexa: DeploymentsHexa =
-      registry.getByName('DeploymentsHexa');
-    const recipesHexa: RecipesHexa = registry.getByName('RecipesHexa');
-    const linterHexa = registry.getByName('LinterHexa');
-    const spacesHexa = registry.getByName('SpacesHexa');
-    const analyticsHexa: AnalyticsHexa = registry.getByName('AnalyticsHexa');
-
-    // ========================================
-    // AccountsHexa dependencies
-    // ========================================
-    // Inject ports into AccountsHexa for onboarding status use case
-    if (
-      HexaRegistryModule.hasSetGitPort(accountsHexa) &&
-      gitHexa &&
-      'getAdapter' in gitHexa
-    ) {
-      accountsHexa.setGitPort(
-        (gitHexa as unknown as { getAdapter: () => unknown }).getAdapter(),
-      );
-    }
-
-    if (
-      HexaRegistryModule.hasSetStandardsPort(accountsHexa) &&
-      standardsHexa &&
-      'getAdapter' in standardsHexa
-    ) {
-      accountsHexa.setStandardsPort(
-        (
-          standardsHexa as unknown as { getAdapter: () => unknown }
-        ).getAdapter(),
-      );
-    }
-
-    if (
-      HexaRegistryModule.hasSetDeploymentPort(accountsHexa) &&
-      deploymentsHexa &&
-      'getAdapter' in deploymentsHexa
-    ) {
-      const deploymentPort = (
-        deploymentsHexa as { getAdapter: () => IDeploymentPort }
-      ).getAdapter();
-      accountsHexa.setDeploymentPort(deploymentPort);
-    }
-
-    // ========================================
-    // GitHexa dependencies
-    // ========================================
-    // Set user and organization providers for GitHexa
-    if (
-      gitHexa &&
-      accountsHexa &&
-      'setUserProvider' in gitHexa &&
-      'setOrganizationProvider' in gitHexa &&
-      'getUserProvider' in accountsHexa &&
-      'getOrganizationProvider' in accountsHexa
-    ) {
-      (
-        gitHexa as {
-          setUserProvider: (provider: UserProvider) => void;
-          setOrganizationProvider: (provider: OrganizationProvider) => void;
-        }
-      ).setUserProvider(
-        (
-          accountsHexa as { getUserProvider: () => UserProvider }
-        ).getUserProvider(),
-      );
-      (
-        gitHexa as {
-          setOrganizationProvider: (provider: OrganizationProvider) => void;
-        }
-      ).setOrganizationProvider(
-        (
-          accountsHexa as {
-            getOrganizationProvider: () => OrganizationProvider;
-          }
-        ).getOrganizationProvider(),
-      );
-    }
-
-    // Set deployments adapter for GitHexa
-    if (
-      gitHexa &&
-      deploymentsHexa &&
-      'setDeploymentsAdapter' in gitHexa &&
-      'getAdapter' in deploymentsHexa
-    ) {
-      const deploymentPort = (
-        deploymentsHexa as { getAdapter: () => IDeploymentPort }
-      ).getAdapter();
-      (
-        gitHexa as {
-          setDeploymentsAdapter: (adapter: IDeploymentPort) => void;
-        }
-      ).setDeploymentsAdapter(deploymentPort);
-    }
-
-    // ========================================
-    // DeploymentsHexa dependencies
-    // ========================================
-    // Set account providers for DeploymentsHexa
-    if (
-      deploymentsHexa &&
-      accountsHexa &&
-      'setAccountProviders' in deploymentsHexa &&
-      'getUserProvider' in accountsHexa &&
-      'getOrganizationProvider' in accountsHexa
-    ) {
-      deploymentsHexa.setAccountProviders(
-        (
-          accountsHexa as { getUserProvider: () => UserProvider }
-        ).getUserProvider(),
-        (
-          accountsHexa as {
-            getOrganizationProvider: () => OrganizationProvider;
-          }
-        ).getOrganizationProvider(),
-      );
-    }
-
-    // Set spaces adapter for DeploymentsHexa
-    if (
-      deploymentsHexa &&
-      spacesHexa &&
-      'setSpacesAdapter' in deploymentsHexa &&
-      'getAdapter' in spacesHexa
-    ) {
-      const spacesAdapter = (
-        spacesHexa as unknown as { getAdapter: () => ISpacesPort }
-      ).getAdapter();
-      deploymentsHexa.setSpacesAdapter(spacesAdapter);
-    }
-
-    // Set recipes port for DeploymentsHexa (bidirectional dependency)
-    if (deploymentsHexa && recipesHexa && 'setRecipesPort' in deploymentsHexa) {
-      deploymentsHexa.setRecipesPort(recipesHexa);
-    }
-
-    // Set standards port for DeploymentsHexa
-    if (
-      deploymentsHexa &&
-      standardsHexa &&
-      'setStandardsPort' in deploymentsHexa &&
-      'getAdapter' in standardsHexa
-    ) {
-      deploymentsHexa.setStandardsPort(standardsHexa);
-    }
-
-    // ========================================
-    // RecipesHexa dependencies
-    // ========================================
-    // Set deployment port for RecipesHexa (bidirectional dependency)
-    // Note: This is async but we handle it in the async initialization phase
-    if (
-      recipesHexa &&
-      deploymentsHexa &&
-      'setDeploymentPort' in recipesHexa &&
-      'getAdapter' in deploymentsHexa
-    ) {
-      const deploymentPort = (
-        deploymentsHexa as { getAdapter: () => IDeploymentPort }
-      ).getAdapter();
-      // setDeploymentPort is async and requires registry
-      try {
-        await (
-          recipesHexa as {
-            setDeploymentPort: (
-              registry: HexaRegistry,
-              port: IDeploymentPort,
-            ) => Promise<void>;
-          }
-        ).setDeploymentPort(registry, deploymentPort);
-      } catch (error) {
-        // Log error but don't fail initialization
-        console.error(
-          'Failed to set deployment port on RecipesHexa',
-          error instanceof Error ? error.message : String(error),
-        );
-      }
-    }
-
-    // ========================================
-    // StandardsHexa dependencies
-    // ========================================
-    // Set deployments query adapter for StandardsHexa
-    if (
-      standardsHexa &&
-      deploymentsHexa &&
-      'setDeploymentsQueryAdapter' in standardsHexa &&
-      'getAdapter' in deploymentsHexa
-    ) {
-      const deploymentPort = (
-        deploymentsHexa as { getAdapter: () => IDeploymentPort }
-      ).getAdapter();
-      (
-        standardsHexa as {
-          setDeploymentsQueryAdapter: (adapter: IDeploymentPort) => void;
-        }
-      ).setDeploymentsQueryAdapter(deploymentPort);
-    }
-
-    // Set linter adapter for StandardsHexa
-    if (
-      standardsHexa &&
-      linterHexa &&
-      'setLinterAdapter' in standardsHexa &&
-      'getAdapter' in linterHexa
-    ) {
-      const linterAdapter = (
-        linterHexa as unknown as { getAdapter: () => ILinterPort }
-      ).getAdapter();
-      (
-        standardsHexa as {
-          setLinterAdapter: (adapter: ILinterPort) => void;
-        }
-      ).setLinterAdapter(linterAdapter);
-    }
-
-    // ========================================
-    // LinterHexa dependencies
-    // ========================================
-    // Set standards adapter for LinterHexa (bidirectional dependency)
-    if (
-      linterHexa &&
-      standardsHexa &&
-      'setStandardAdapter' in linterHexa &&
-      'getAdapter' in standardsHexa
-    ) {
-      const standardsAdapter = (
-        standardsHexa as { getAdapter: () => IStandardsPort }
-      ).getAdapter();
-      (
-        linterHexa as {
-          setStandardAdapter: (adapter: IStandardsPort) => void;
-        }
-      ).setStandardAdapter(standardsAdapter);
-    }
-
-    // ========================================
-    // AnalyticsHexa dependencies
-    // ========================================
-    // Set recipes port for AnalyticsHexa
-    if (
-      analyticsHexa &&
-      recipesHexa &&
-      'setRecipesPort' in analyticsHexa &&
-      'getAdapter' in recipesHexa
-    ) {
-      const recipesPort = (
-        recipesHexa as { getAdapter: () => IRecipesPort }
-      ).getAdapter();
-      analyticsHexa.setRecipesPort(recipesPort);
-    }
-
-    // Set deployment port for AnalyticsHexa
-    if (
-      analyticsHexa &&
-      deploymentsHexa &&
-      'setDeploymentPort' in analyticsHexa &&
-      'getAdapter' in deploymentsHexa
-    ) {
-      const deploymentPort = (
-        deploymentsHexa as { getAdapter: () => IDeploymentPort }
-      ).getAdapter();
-      analyticsHexa.setDeploymentPort(deploymentPort);
-    }
   }
 
   /**

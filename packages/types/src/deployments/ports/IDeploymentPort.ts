@@ -1,35 +1,37 @@
+import { PackmindCommand } from '../../UseCase';
 import {
-  DeploymentOverview,
-  GetDeploymentOverviewCommand,
-  GetStandardDeploymentOverviewCommand,
-  FindDeployedStandardByRepositoryCommand,
-  FindDeployedStandardByRepositoryResponse,
-  FindActiveStandardVersionsByTargetCommand,
-  FindActiveStandardVersionsByTargetResponse,
-  PublishRecipesCommand,
-  PublishStandardsCommand,
-  ListDeploymentsByRecipeCommand,
-  ListDeploymentsByStandardCommand,
   AddTargetCommand,
-  UpdateTargetCommand,
+  CreateRenderModeConfigurationCommand,
   DeleteTargetCommand,
   DeleteTargetResponse,
-  GetTargetsByGitRepoCommand,
-  GetTargetsByRepositoryCommand,
-  GetTargetsByOrganizationCommand,
+  DeploymentOverview,
+  FindActiveStandardVersionsByTargetCommand,
+  FindActiveStandardVersionsByTargetResponse,
+  FindDeployedStandardByRepositoryCommand,
+  FindDeployedStandardByRepositoryResponse,
+  GetDeploymentOverviewCommand,
   GetRenderModeConfigurationCommand,
   GetRenderModeConfigurationResult,
-  CreateRenderModeConfigurationCommand,
-  UpdateRenderModeConfigurationCommand,
+  GetStandardDeploymentOverviewCommand,
+  GetTargetsByGitRepoCommand,
+  GetTargetsByOrganizationCommand,
+  GetTargetsByRepositoryCommand,
   IPullAllContentResponse,
+  ListDeploymentsByRecipeCommand,
+  ListDeploymentsByStandardCommand,
+  PublishRecipesCommand,
+  PublishStandardsCommand,
+  UpdateRenderModeConfigurationCommand,
+  UpdateTargetCommand,
 } from '../contracts';
 import { RecipesDeployment } from '../RecipesDeployment';
-import { StandardsDeployment } from '../StandardsDeployment';
+import { RenderModeConfiguration } from '../RenderModeConfiguration';
 import { StandardDeploymentOverview } from '../StandardDeploymentOverview';
+import { StandardsDeployment } from '../StandardsDeployment';
 import { Target } from '../Target';
 import { TargetWithRepository } from '../TargetWithRepository';
-import { RenderModeConfiguration } from '../RenderModeConfiguration';
-import { PackmindCommand } from '../../UseCase';
+
+export const IDeploymentPortName = 'IDeploymentPort' as const;
 
 export interface IDeploymentPort {
   findActiveStandardVersionsByRepository(

@@ -1,7 +1,7 @@
 import { DataSource } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, HexaRegistry, BaseHexaOpts } from '@packmind/node-utils';
-import { ISpacesPort } from '@packmind/types';
+import { ISpacesPort, ISpacesPortName } from '@packmind/types';
 import { SpacesHexaFactory } from './SpacesHexaFactory';
 import { SpacesAdapter } from './application/adapters/SpacesAdapter';
 
@@ -67,5 +67,12 @@ export class SpacesHexa extends BaseHexa<BaseHexaOpts, ISpacesPort> {
    */
   public getAdapter(): ISpacesPort {
     return this.spacesAdapter;
+  }
+
+  /**
+   * Get the port name for this hexa.
+   */
+  public getPortName(): string {
+    return ISpacesPortName;
   }
 }

@@ -4,6 +4,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { HexaRegistry } from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
 import { StandardsHexa } from '@packmind/standards';
+import { IGitPortName } from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { DeploymentsHexa } from './DeploymentsHexa';
 
@@ -124,6 +125,12 @@ describe('DeploymentsHexa - Simple Integration', () => {
         }
         return null;
       }),
+      getAdapter: jest.fn().mockImplementation((portName: string) => {
+        if (portName === IGitPortName) {
+          return mockGitHexa.getAdapter();
+        }
+        throw new Error(`No hexa found for port type: ${portName}`);
+      }),
       getDataSource: jest.fn().mockReturnValue(mockDataSource),
       register: jest.fn(),
     } as any; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -185,6 +192,14 @@ describe('DeploymentsHexa - Simple Integration', () => {
           }
           return null; // GitHexa not found
         });
+        mockRegistry.getAdapter = jest
+          .fn()
+          .mockImplementation((portName: string) => {
+            if (portName === IGitPortName) {
+              throw new Error(`No hexa found for port type: ${portName}`);
+            }
+            throw new Error(`No hexa found for port type: ${portName}`);
+          });
 
         const deploymentsHexa = new DeploymentsHexa(mockDataSource, {
           logger: mockLogger,

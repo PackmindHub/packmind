@@ -1,7 +1,13 @@
-import { DataSource } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
-import { IDeploymentPort, ILinterPort } from '@packmind/types';
+import {
+  IDeploymentPort,
+  IDeploymentPortName,
+  ILinterPort,
+  ILinterPortName,
+  IStandardsPortName,
+} from '@packmind/types';
+import { DataSource } from 'typeorm';
 import { StandardsHexaFactory } from './StandardsHexaFactory';
 import { StandardsAdapter } from './application/useCases/StandardsAdapter';
 
@@ -60,23 +66,27 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
     );
 
     try {
-      // Get LinterHexa adapter for ILinterPort (lazy DI per DDD standard)
-      // Use getByName to avoid circular dependency at build time
-      let linterPort: ILinterPort | undefined;
+      // Get LinterHexa adapter for ILinterPort
+      // Using getAdapter to avoid circular dependency
       try {
-        const linterHexa =
-          registry.getByName<BaseHexa<BaseHexaOpts, ILinterPort>>('LinterHexa');
-        if (linterHexa && typeof linterHexa.getAdapter === 'function') {
-          linterPort = linterHexa.getAdapter();
-          this.logger.info('LinterAdapter retrieved from LinterHexa');
-          // Set linter adapter on services
-          this.hexa.setLinterAdapter(linterPort);
-        }
-      } catch (error) {
-        this.logger.warn('LinterHexa not available in registry', {
-          error: error instanceof Error ? error.message : String(error),
-        });
-        linterPort = undefined;
+        const linterPort = registry.getAdapter<ILinterPort>(ILinterPortName);
+        this.logger.info('LinterAdapter retrieved from LinterHexa');
+        // Set linter adapter on services
+        this.hexa.setLinterAdapter(linterPort);
+      } catch {
+        // LinterHexa not available - optional dependency
+        this.logger.debug('LinterHexa not available in registry');
+      }
+
+      // Get DeploymentsHexa to retrieve deployments query adapter
+      // Using getAdapter to avoid circular dependency
+      try {
+        const deploymentPort =
+          registry.getAdapter<IDeploymentPort>(IDeploymentPortName);
+        this.setDeploymentsQueryAdapter(deploymentPort);
+      } catch {
+        // DeploymentsHexa not available - optional dependency
+        this.logger.debug('DeploymentsHexa not available in registry');
       }
 
       await this.hexa.initialize(registry);
@@ -105,6 +115,13 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
       this.standardsAdapter = new StandardsAdapter(this.hexa);
     }
     return this.standardsAdapter;
+  }
+
+  /**
+   * Get the port name for this hexa.
+   */
+  public getPortName(): string {
+    return IStandardsPortName;
   }
 
   /**

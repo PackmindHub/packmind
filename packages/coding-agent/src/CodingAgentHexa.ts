@@ -1,7 +1,7 @@
 import { DataSource } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
-import { ICodingAgentPort } from '@packmind/types';
+import { ICodingAgentPort, ICodingAgentPortName } from '@packmind/types';
 import { CodingAgentHexaFactory } from './CodingAgentHexaFactory';
 
 const origin = 'CodingAgentHexa';
@@ -82,5 +82,12 @@ export class CodingAgentHexa extends BaseHexa<BaseHexaOpts, ICodingAgentPort> {
    */
   public getAdapter(): ICodingAgentPort {
     return this.hexa.adapter;
+  }
+
+  /**
+   * Get the port name for this hexa.
+   */
+  public getPortName(): string {
+    return ICodingAgentPortName;
   }
 }

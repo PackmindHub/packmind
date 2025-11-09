@@ -1,12 +1,13 @@
-import { HexaRegistry, BaseHexa } from './HexaRegistry';
+import { HexaRegistry } from './HexaRegistry';
+import { BaseHexa, BaseHexaOpts } from './BaseHexa';
 import { DataSource } from 'typeorm';
 
 // Mock implementation of BaseHexa for testing
 class TestHexa extends BaseHexa {
   public destroyCalled = false;
 
-  constructor(dataSource: DataSource) {
-    super(dataSource);
+  constructor(dataSource: DataSource, opts?: Partial<BaseHexaOpts>) {
+    super(dataSource, opts);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -16,6 +17,10 @@ class TestHexa extends BaseHexa {
 
   getAdapter(): void {
     return undefined;
+  }
+
+  getPortName(): string {
+    throw new Error('TestHexa does not expose a port adapter');
   }
 
   destroy(): void {
@@ -26,8 +31,8 @@ class TestHexa extends BaseHexa {
 class AnotherTestHexa extends BaseHexa {
   public destroyCalled = false;
 
-  constructor(dataSource: DataSource) {
-    super(dataSource);
+  constructor(dataSource: DataSource, opts?: Partial<BaseHexaOpts>) {
+    super(dataSource, opts);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -37,6 +42,10 @@ class AnotherTestHexa extends BaseHexa {
 
   getAdapter(): void {
     return undefined;
+  }
+
+  getPortName(): string {
+    throw new Error('AnotherTestHexa does not expose a port adapter');
   }
 
   destroy(): void {
@@ -50,8 +59,8 @@ class DependentHexa extends BaseHexa {
   public dependencyHexa: TestHexa | null = null;
   public dependencyError: Error | null = null;
 
-  constructor(dataSource: DataSource) {
-    super(dataSource);
+  constructor(dataSource: DataSource, opts?: Partial<BaseHexaOpts>) {
+    super(dataSource, opts);
   }
 
   async initialize(registry: HexaRegistry): Promise<void> {
@@ -64,6 +73,10 @@ class DependentHexa extends BaseHexa {
 
   getAdapter(): void {
     return undefined;
+  }
+
+  getPortName(): string {
+    throw new Error('DependentHexa does not expose a port adapter');
   }
 
   destroy(): void {

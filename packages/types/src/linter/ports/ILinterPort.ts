@@ -1,3 +1,8 @@
+import {
+  ActiveDetectionProgram,
+  ActiveDetectionProgramId,
+} from '../ActiveDetectionProgram';
+import { AssessRuleDetectionInput } from '../AssessRuleDetectionInput';
 import type {
   ComputeRuleLanguageDetectionStatusCommand,
   ComputeRuleLanguageDetectionStatusResponse,
@@ -33,13 +38,10 @@ import type {
   UpdateRuleDetectionStatusAfterUpdateCommand,
   UpdateRuleDetectionStatusAfterUpdateResponse,
 } from '../contracts';
-import {
-  ActiveDetectionProgram,
-  ActiveDetectionProgramId,
-} from '../ActiveDetectionProgram';
 import { DetectionProgram } from '../DetectionProgram';
 import { RuleDetectionAssessment } from '../RuleDetectionAssessment';
-import { AssessRuleDetectionInput } from '../AssessRuleDetectionInput';
+
+export const ILinterPortName = 'ILinterPort' as const;
 
 export interface ILinterPort {
   createDetectionProgram(

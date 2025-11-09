@@ -67,34 +67,49 @@ import { PullAllContentUseCase } from '../useCases/PullAllContentUseCase';
 export class DeploymentsAdapter implements IDeploymentPort {
   private readonly standardDeploymentRepository: IStandardsDeploymentRepository;
   private readonly recipesDeploymentRepository: IRecipesDeploymentRepository;
-  private readonly deploymentsServices: IDeploymentsServices;
-  private readonly gitPort: IGitPort;
+  private deploymentsServices: IDeploymentsServices;
+  private gitPort!: IGitPort;
   private recipesPort?: Partial<IRecipesPort>;
-  private readonly codingAgentPort: ICodingAgentPort;
+  private codingAgentPort!: ICodingAgentPort;
   private standardsPort?: IStandardsPort; // Optional - may be set after initialization
-  private readonly codingAgentHexa: CodingAgentHexa; // Keep for getCodingAgentDeployerRegistry() - not in port
+  private codingAgentHexa!: CodingAgentHexa; // Keep for getCodingAgentDeployerRegistry() - not in port
   private spacesPort!: ISpacesPort;
   private userProvider?: UserProvider;
   private organizationProvider?: OrganizationProvider;
 
-  constructor(
-    deploymentsHexa: DeploymentsHexaFactory,
-    gitPort: IGitPort,
-    recipesPort: Partial<IRecipesPort> | undefined,
-    codingAgentPort: ICodingAgentPort,
-    standardsPort: IStandardsPort | undefined,
-    codingAgentHexa: CodingAgentHexa, // Keep for getCodingAgentDeployerRegistry() - not in port
-  ) {
+  constructor(deploymentsHexa: DeploymentsHexaFactory) {
     this.standardDeploymentRepository =
       deploymentsHexa.repositories.standardsDeployment;
     this.recipesDeploymentRepository =
       deploymentsHexa.repositories.recipesDeployment;
     this.deploymentsServices = deploymentsHexa.services.deployments;
+  }
 
+  /**
+   * Set the git port for use cases that depend on it
+   */
+  public setGitPort(gitPort: IGitPort): void {
     this.gitPort = gitPort;
-    this.recipesPort = recipesPort; // Optional - using port pattern to avoid circular dependency
+  }
+
+  /**
+   * Update the deployments services (called when factory is recreated with new gitPort)
+   */
+  public updateDeploymentsServices(services: IDeploymentsServices): void {
+    this.deploymentsServices = services;
+  }
+
+  /**
+   * Set the coding agent port for use cases that depend on it
+   */
+  public setCodingAgentPort(codingAgentPort: ICodingAgentPort): void {
     this.codingAgentPort = codingAgentPort;
-    this.standardsPort = standardsPort;
+  }
+
+  /**
+   * Set the coding agent hexa for use cases that depend on it
+   */
+  public setCodingAgentHexa(codingAgentHexa: CodingAgentHexa): void {
     this.codingAgentHexa = codingAgentHexa;
   }
 

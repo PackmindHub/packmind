@@ -1,24 +1,26 @@
-import { GitProvider, GitProviderId } from '../GitProvider';
-import { GitRepo } from '../GitRepo';
-import { GitRepoId } from '../GitRepoId';
-import { GitCommit } from '../GitCommit';
 import { OrganizationId } from '../../accounts/Organization';
 import { UserId } from '../../accounts/User';
+import type { QueryOption } from '../../database/types';
 import {
-  HandleWebHookWithoutContentCommand,
-  HandleWebHookWithoutContentResult,
-  HandleWebHookCommand,
-  HandleWebHookResult,
   AddGitProviderCommand,
   AddGitRepoCommand,
-  GetAvailableRemoteDirectoriesCommand,
   CheckDirectoryExistenceCommand,
   CheckDirectoryExistenceResult,
   ExternalRepository,
   FindGitRepoByOwnerRepoAndBranchInOrganizationCommand,
   FindGitRepoByOwnerRepoAndBranchInOrganizationResult,
+  GetAvailableRemoteDirectoriesCommand,
+  HandleWebHookCommand,
+  HandleWebHookResult,
+  HandleWebHookWithoutContentCommand,
+  HandleWebHookWithoutContentResult,
 } from '../contracts';
-import type { QueryOption } from '../../database/types';
+import { GitCommit } from '../GitCommit';
+import { GitProvider, GitProviderId } from '../GitProvider';
+import { GitRepo } from '../GitRepo';
+import { GitRepoId } from '../GitRepoId';
+
+export const IGitPortName = 'IGitPort' as const;
 
 export interface IGitPort {
   /**

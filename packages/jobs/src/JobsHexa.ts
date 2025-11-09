@@ -67,6 +67,14 @@ export class JobsHexa extends BaseHexa {
   }
 
   /**
+   * Get the port name for this hexa.
+   * JobsHexa does not expose a port adapter.
+   */
+  public getPortName(): string {
+    throw new Error('JobsHexa does not expose a port adapter');
+  }
+
+  /**
    * Register a job queue factory
    */
   public registerJobQueue<TInput>(

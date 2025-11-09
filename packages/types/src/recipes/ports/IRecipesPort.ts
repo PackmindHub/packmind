@@ -1,11 +1,6 @@
-import { Recipe } from '../Recipe';
-import { RecipeId } from '../RecipeId';
-import { RecipeVersion } from '../RecipeVersion';
 import { OrganizationId } from '../../accounts/Organization';
 import {
   CaptureRecipeCommand,
-  UpdateRecipesFromGitHubCommand,
-  UpdateRecipesFromGitLabCommand,
   DeleteRecipeCommand,
   DeleteRecipeResponse,
   DeleteRecipesBatchCommand,
@@ -14,10 +9,17 @@ import {
   ListRecipesBySpaceCommand,
   UpdateRecipeFromUICommand,
   UpdateRecipeFromUIResponse,
+  UpdateRecipesFromGitHubCommand,
+  UpdateRecipesFromGitLabCommand,
 } from '../contracts';
+import { Recipe } from '../Recipe';
+import { RecipeId } from '../RecipeId';
+import { RecipeVersion } from '../RecipeVersion';
 
 // QueryOption is now exported from @packmind/types/database/types
 import type { QueryOption } from '../../database/types';
+
+export const IRecipesPortName = 'IRecipesPort' as const;
 
 /**
  * Port interface for the Recipes domain.

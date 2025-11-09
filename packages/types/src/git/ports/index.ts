@@ -1,1 +1,2 @@
-export * from './IGitPort';
+export { IGitPortName } from './IGitPort';
+export type { IGitPort } from './IGitPort';

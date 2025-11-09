@@ -1,6 +1,5 @@
 import { DataSource } from 'typeorm';
 import { BaseHexa, HexaRegistry } from '@packmind/node-utils';
-import { IDeploymentPort, IRecipesPort } from '@packmind/types';
 
 export class AnalyticsHexa extends BaseHexa {
   constructor(dataSource: DataSource) {
@@ -29,16 +28,18 @@ export class AnalyticsHexa extends BaseHexa {
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   destroy(): void {}
 
-  // eslint-disable-next-line @typescript-eslint/no-empty-function,@typescript-eslint/no-unused-vars
-  setDeploymentPort(deploymentPort: IDeploymentPort): void {}
-
-  // eslint-disable-next-line @typescript-eslint/no-empty-function,@typescript-eslint/no-unused-vars
-  setRecipesPort(recipesPort: IRecipesPort): void {}
-
   /**
    * AnalyticsHexa does not expose an adapter (no cross-domain port).
    */
   public getAdapter(): void {
     return undefined;
+  }
+
+  /**
+   * Get the port name for this hexa.
+   * AnalyticsHexa does not expose a port adapter.
+   */
+  public getPortName(): string {
+    throw new Error('AnalyticsHexa does not expose a port adapter');
   }
 }

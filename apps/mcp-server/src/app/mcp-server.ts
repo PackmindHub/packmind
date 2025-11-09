@@ -144,11 +144,8 @@ export function createMCPServer(
   logger.debug('Attempting to call fastify.analyticsHexa()');
   const analyticsHexa = fastify.analyticsHexa();
 
-  // Set up deployment port injection for analytics
-  logger.debug('Setting up deployment port injection for analytics');
-  const deploymentPort = deploymentsHexa.getAdapter();
-  analyticsHexa.setDeploymentPort(deploymentPort);
-  logger.debug('Deployment port injection completed');
+  // Note: AnalyticsHexa in OSS edition doesn't use deployment port
+  // (it's a stub implementation that throws errors when methods are called)
 
   mcpServer.tool(
     `${mcpToolPrefix}_say_hello`,

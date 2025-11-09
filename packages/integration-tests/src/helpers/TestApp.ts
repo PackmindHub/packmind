@@ -1,14 +1,14 @@
 import { AccountsHexa } from '@packmind/accounts';
-import { RecipesHexa } from '@packmind/recipes';
-import { StandardsHexa } from '@packmind/standards';
-import { SpacesHexa } from '@packmind/spaces';
-import { GitHexa } from '@packmind/git';
-import { CodingAgentHexa } from '@packmind/coding-agent';
-import { JobsHexa } from '@packmind/jobs';
-import { DeploymentsHexa } from '@packmind/deployments';
-import { DataSource } from 'typeorm';
-import { HexaRegistry } from '@packmind/node-utils';
 import { AnalyticsHexa } from '@packmind/analytics';
+import { CodingAgentHexa } from '@packmind/coding-agent';
+import { DeploymentsHexa } from '@packmind/deployments';
+import { GitHexa } from '@packmind/git';
+import { JobsHexa } from '@packmind/jobs';
+import { HexaRegistry } from '@packmind/node-utils';
+import { RecipesHexa } from '@packmind/recipes';
+import { SpacesHexa } from '@packmind/spaces';
+import { StandardsHexa } from '@packmind/standards';
+import { DataSource } from 'typeorm';
 
 export class TestApp {
   public accountsHexa!: AccountsHexa;
@@ -52,30 +52,5 @@ export class TestApp {
     this.jobsHexa = this.registry.get(JobsHexa);
     this.deploymentsHexa = this.registry.get(DeploymentsHexa);
     this.analyticsHexa = this.registry.get(AnalyticsHexa);
-
-    // Wire up cross-domain dependencies
-    this.gitHexa.setUserProvider(this.accountsHexa.getUserProvider());
-    this.gitHexa.setOrganizationProvider(
-      this.accountsHexa.getOrganizationProvider(),
-    );
-    this.gitHexa.setDeploymentsAdapter(this.deploymentsHexa.getAdapter());
-
-    await this.recipesHexa.setDeploymentPort(
-      this.registry,
-      this.deploymentsHexa.getAdapter(),
-    );
-
-    // Set standards port in deployments hexa after initialization
-    this.deploymentsHexa.setStandardsPort(this.standardsHexa);
-
-    this.accountsHexa.setGitPort(this.gitHexa.getAdapter());
-    this.accountsHexa.setStandardsPort(this.standardsHexa.getAdapter());
-
-    this.deploymentsHexa.setAccountProviders(
-      this.accountsHexa.getUserProvider(),
-      this.accountsHexa.getOrganizationProvider(),
-    );
-
-    this.analyticsHexa.setDeploymentPort(this.deploymentsHexa.getAdapter());
   }
 }

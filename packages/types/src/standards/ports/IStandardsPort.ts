@@ -1,12 +1,14 @@
 import { OrganizationId } from '../../accounts/Organization';
 import { SpaceId } from '../../spaces/SpaceId';
 import { Rule } from '../Rule';
-import { RuleId } from '../RuleId';
 import { RuleExample } from '../RuleExample';
+import { RuleId } from '../RuleId';
 import { Standard } from '../Standard';
 import { StandardId } from '../StandardId';
 import { StandardVersion } from '../StandardVersion';
 import { StandardVersionId } from '../StandardVersionId';
+
+export const IStandardsPortName = 'IStandardsPort' as const;
 
 export interface IStandardsPort {
   getStandard(id: StandardId): Promise<Standard | null>;

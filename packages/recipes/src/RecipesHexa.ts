@@ -1,9 +1,13 @@
-import { DataSource } from 'typeorm';
-import { PackmindLogger } from '@packmind/logger';
-import { BaseHexa, HexaRegistry, BaseHexaOpts } from '@packmind/node-utils';
-import { IDeploymentPort, IRecipesPort } from '@packmind/types';
-import { RecipesHexaFactory } from './RecipesHexaFactory';
 import { GitHexa } from '@packmind/git';
+import { PackmindLogger } from '@packmind/logger';
+import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
+import {
+  IDeploymentPort,
+  IRecipesPort,
+  IRecipesPortName,
+} from '@packmind/types';
+import { DataSource } from 'typeorm';
+import { RecipesHexaFactory } from './RecipesHexaFactory';
 
 const origin = 'RecipesHexa';
 
@@ -121,7 +125,6 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
 
   /**
    * Set the deployment port after initialization to avoid circular dependencies
-   * This will trigger async initialization if not already initialized
    */
   public async setDeploymentPort(
     registry: HexaRegistry,
@@ -131,15 +134,9 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
     // Update the use cases with the new deployment port (this will build delayed jobs)
     await this.hexa.updateDeploymentPort(registry, deploymentPort);
 
-    // Initialize delayed jobs if not already initialized
-    if (!this.isInitialized) {
-      this.logger.info(
-        'Deployment port set, triggering RecipesHexa initialization',
-      );
-      await this.initialize(registry);
-    } else {
-      // If already initialized, delayed jobs are already set by updateDeploymentPort()
-      // Just ensure they're set on the adapter
+    // If already initialized, delayed jobs are already set by updateDeploymentPort()
+    // Just ensure they're set on the adapter
+    if (this.isInitialized) {
       try {
         const delayedJobs = this.hexa.getRecipesDelayedJobs();
         this.hexa.useCases.setRecipesDelayedJobs(delayedJobs);
@@ -169,5 +166,12 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
   public getAdapter(): IRecipesPort {
     this.ensureInitialized();
     return this.hexa.useCases;
+  }
+
+  /**
+   * Get the port name for this hexa.
+   */
+  public getPortName(): string {
+    return IRecipesPortName;
   }
 }

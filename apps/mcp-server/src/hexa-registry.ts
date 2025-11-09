@@ -1,18 +1,18 @@
-import 'reflect-metadata';
-import { FastifyInstance } from 'fastify';
-import fp from 'fastify-plugin';
 import { AccountsHexa } from '@packmind/accounts';
-import { GitHexa } from '@packmind/git';
-import { RecipesHexa } from '@packmind/recipes';
-import { StandardsHexa } from '@packmind/standards';
-import { DeploymentsHexa } from '@packmind/deployments';
-import { PackmindLogger, LogLevel } from '@packmind/logger';
-import { HexaRegistry } from '@packmind/node-utils';
 import { AnalyticsHexa } from '@packmind/analytics';
 import { CodingAgentHexa } from '@packmind/coding-agent';
+import { DeploymentsHexa } from '@packmind/deployments';
+import { GitHexa } from '@packmind/git';
 import { JobsHexa } from '@packmind/jobs';
-import { SpacesHexa } from '@packmind/spaces';
 import { LinterHexa } from '@packmind/linter';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
+import { HexaRegistry } from '@packmind/node-utils';
+import { RecipesHexa } from '@packmind/recipes';
+import { SpacesHexa } from '@packmind/spaces';
+import { StandardsHexa } from '@packmind/standards';
+import { FastifyInstance } from 'fastify';
+import fp from 'fastify-plugin';
+import 'reflect-metadata';
 
 const logger = new PackmindLogger('HexaRegistryPlugin', LogLevel.INFO);
 
@@ -87,30 +87,6 @@ async function hexaRegistryPlugin(fastify: FastifyInstance) {
       // Initialize the registry with the DataSource (this now includes async initialization)
       await registry.init(fastify.orm);
       logger.debug('Registry initialization complete');
-
-      // Set up bidirectional dependency between LinterHexa and StandardsHexa
-      try {
-        const linterHexa = registry.get(LinterHexa);
-        const standardsHexa = registry.get(StandardsHexa);
-
-        // Inject LinterAdapter into StandardsHexa
-        const linterAdapter = linterHexa.getAdapter();
-        standardsHexa.setLinterAdapter(linterAdapter);
-        logger.info('LinterAdapter injected into StandardsHexa');
-
-        // Inject StandardsAdapter into LinterHexa
-        const standardsAdapter = standardsHexa.getAdapter();
-        linterHexa.setStandardAdapter(standardsAdapter);
-        logger.info('StandardsAdapter injected into LinterHexa');
-      } catch (error) {
-        logger.warn(
-          'Failed to inject adapters between LinterHexa and StandardsHexa',
-          {
-            error: error instanceof Error ? error.message : String(error),
-          },
-        );
-      }
-
       logger.info('HexaRegistry initialized successfully');
     });
 

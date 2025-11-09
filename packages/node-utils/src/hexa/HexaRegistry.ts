@@ -1,5 +1,5 @@
 import { DataSource } from 'typeorm';
-import { PackmindLogger } from '@packmind/logger';
+import { BaseHexa } from './BaseHexa';
 
 /**
  * Constructor type for BaseHexa subclasses.
@@ -52,6 +52,7 @@ export class HexaRegistry {
     HexaRegistration
   >();
   private readonly hexas = new Map<HexaConstructor<BaseHexa>, BaseHexa>();
+  private readonly portToHexaMap = new Map<string, BaseHexa>();
   private isInitialized = false;
   private dataSource: DataSource | null = null;
 
@@ -102,15 +103,64 @@ export class HexaRegistry {
         this.hexas.set(registration.constructor, instance);
       }
 
+      // Build port-to-hexa map by getting port name from each hexa
+      // This must be done BEFORE initialization so hexas can use getAdapter() during initialize()
+      for (const [, hexa] of this.hexas.entries()) {
+        try {
+          const portName = hexa.getPortName();
+          if (portName) {
+            this.portToHexaMap.set(portName, hexa);
+          }
+        } catch {
+          // Hexa doesn't expose a port (getPortName throws an error)
+          // This is fine - not all hexas need to expose adapters
+          continue;
+        }
+      }
+
       // Initialize all hexas with registry access for adapter retrieval
       for (const hexa of this.hexas.values()) {
         await hexa.initialize(this);
+      }
+
+      // Post-initialization: Set deployment port on RecipesHexa if both are available
+      // This needs to happen after all hexas are initialized to avoid circular dependencies
+      try {
+        // Find RecipesHexa and DeploymentsHexa by iterating through registered hexas
+        let recipesHexa: BaseHexa | undefined;
+        let deploymentsHexa: BaseHexa | undefined;
+
+        for (const [constructor, hexa] of this.hexas.entries()) {
+          if (constructor.name === 'RecipesHexa') {
+            recipesHexa = hexa;
+          } else if (constructor.name === 'DeploymentsHexa') {
+            deploymentsHexa = hexa;
+          }
+        }
+
+        if (recipesHexa && deploymentsHexa) {
+          // Check if RecipesHexa has setDeploymentPort method (it's a special case for delayed jobs)
+          const recipesHexaWithMethod = recipesHexa as unknown as {
+            setDeploymentPort?: (
+              registry: HexaRegistry,
+              port: unknown,
+            ) => Promise<void>;
+          };
+          if (typeof recipesHexaWithMethod.setDeploymentPort === 'function') {
+            const deploymentPort = deploymentsHexa.getAdapter();
+            await recipesHexaWithMethod.setDeploymentPort(this, deploymentPort);
+          }
+        }
+      } catch {
+        // RecipesHexa or DeploymentsHexa not available - this is fine
+        // Some test setups might not have both hexas registered
       }
     } catch (error) {
       // If initialization fails, reset the state
       this.isInitialized = false;
       this.dataSource = null;
       this.hexas.clear();
+      this.portToHexaMap.clear();
       throw error;
     }
   }
@@ -149,7 +199,8 @@ export class HexaRegistry {
 
   /**
    * Get a registered and initialized hexa by its class name.
-   * Useful for avoiding circular dependencies when you can't import the class.
+   * Use this method only when direct imports would create circular dependencies.
+   * Prefer using get() with the constructor class when possible.
    *
    * @param className - The name of the hexa class (e.g., 'LinterHexa')
    * @returns The hexa instance or undefined if not found
@@ -166,6 +217,56 @@ export class HexaRegistry {
       }
     }
     return undefined;
+  }
+
+  /**
+   * Get an adapter by its port type.
+   * This method allows retrieving adapters without importing the hexa class,
+   * which helps avoid circular dependencies.
+   * The caller must specify the port type as a generic parameter and pass the port name constant.
+   *
+   * @template T - The port type (e.g., IGitPort, IDeploymentPort)
+   * @param portTypeName - The port name constant (e.g., IGitPortName from @packmind/types)
+   * @returns The adapter instance implementing the port type
+   * @throws Error if registry is not initialized or if no hexa provides the requested port type
+   *
+   * @example
+   * ```typescript
+   * import { IGitPortName } from '@packmind/types';
+   * import type { IGitPort } from '@packmind/types';
+   * const gitPort = registry.getAdapter<IGitPort>(IGitPortName);
+   * ```
+   */
+  public getAdapter<T>(portTypeName: string): T {
+    if (!this.isInitialized)
+      throw new Error('Registry not initialized. Call init() first.');
+
+    const hexa = this.portToHexaMap.get(portTypeName);
+    if (!hexa) {
+      throw new Error(
+        `No hexa found for port type: ${portTypeName}. Ensure the corresponding hexa is registered.`,
+      );
+    }
+
+    try {
+      const adapter = hexa.getAdapter();
+      return adapter as T;
+    } catch (error) {
+      // If the error indicates the hexa isn't initialized yet, provide a more helpful message
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      if (
+        errorMessage.includes('not initialized') ||
+        errorMessage.includes('not available')
+      ) {
+        throw new Error(
+          `Adapter for ${portTypeName} is not available yet. The hexa may not be initialized. Original error: ${errorMessage}`,
+        );
+      }
+      throw new Error(
+        `Failed to get adapter for ${portTypeName}: ${errorMessage}`,
+      );
+    }
   }
 
   /**
@@ -214,6 +315,7 @@ export class HexaRegistry {
       hexa.destroy();
     }
     this.hexas.clear();
+    this.portToHexaMap.clear();
     this.dataSource = null;
     this.isInitialized = false;
   }
@@ -226,64 +328,4 @@ export class HexaRegistry {
     this.destroyAll();
     this.registrations.clear();
   }
-}
-
-/**
- * Base class for all domain applications.
- *
- * This class serves as the foundation for domain-specific App classes that act as
- * facades for their respective use cases. Each domain app should extend this class
- * and implement the required lifecycle methods.
- *
- * The App classes hold the Hexa instance and serve as a clean facade for use cases,
- * while the Hexa classes focus on dependency injection and service instantiation.
- */
-
-export type BaseHexaOpts = { logger: PackmindLogger };
-
-export abstract class BaseHexa<
-  T extends BaseHexaOpts = BaseHexaOpts,
-  TPort = void,
-> {
-  protected readonly logger: PackmindLogger;
-
-  /**
-   * Create the hexa with DataSource for database operations.
-   * Factories should be created in the constructor using the DataSource.
-   * Adapter retrieval from registry should be done in initialize(registry).
-   *
-   * @param dataSource - The TypeORM DataSource for database operations
-   * @param opts - the options to create the Hexa
-   */
-  constructor(
-    protected readonly dataSource: DataSource,
-    protected readonly opts?: Partial<T>,
-  ) {
-    this.logger = opts?.logger ?? new PackmindLogger('BaseHexa');
-  }
-
-  /**
-   * Initialize the hexa with access to the registry for adapter retrieval.
-   * This method is called after all hexas are constructed, allowing safe
-   * access to other hexas' adapters. It also handles any async initialization
-   * (e.g., setting up job queues, external connections, etc.).
-   *
-   * @param registry - The hexa registry instance for accessing other hexas
-   */
-  abstract initialize(registry: HexaRegistry): Promise<void>;
-
-  /**
-   * Get the adapter for cross-domain access.
-   * Each hexa that exposes an adapter must implement this method.
-   *
-   * @returns The port adapter instance
-   */
-  abstract getAdapter(): TPort;
-
-  /**
-   * Clean up resources when the app is being destroyed.
-   * This method should handle any cleanup logic like closing connections,
-   * clearing caches, etc.
-   */
-  abstract destroy(): void;
 }

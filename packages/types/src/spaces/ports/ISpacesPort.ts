@@ -6,6 +6,8 @@ import { SpaceId } from '../SpaceId';
  * Port interface for cross-domain access to Spaces functionality
  * Following DDD monorepo architecture standard
  */
+export const ISpacesPortName = 'ISpacesPort' as const;
+
 export interface ISpacesPort {
   /**
    * Create a space for an organization
