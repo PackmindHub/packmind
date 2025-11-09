@@ -1,6 +1,5 @@
 import { DataSource } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
-import { UserProvider, OrganizationProvider } from '@packmind/types';
 import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
 import { ISpacesPort, IAccountsPort, IAccountsPortName } from '@packmind/types';
 import { AccountsHexaFactory } from './AccountsHexaFactory';
@@ -30,8 +29,6 @@ const baseAccountsHexaOpts = { logger: new PackmindLogger(origin) };
 
 export class AccountsHexa extends BaseHexa<AccountsHexaOpts, IAccountsPort> {
   private readonly hexa: AccountsHexaFactory;
-  private userProvider?: UserProvider;
-  private organizationProvider?: OrganizationProvider;
 
   constructor(dataSource: DataSource, opts?: Partial<AccountsHexaOpts>) {
     super(dataSource, { ...baseAccountsHexaOpts, ...opts });
@@ -100,32 +97,5 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts, IAccountsPort> {
    */
   public getPortName(): string {
     return IAccountsPortName;
-  }
-
-  /**
-   * Expose the user provider adapter for other hexagons
-   */
-  getUserProvider(): UserProvider {
-    if (!this.userProvider) {
-      this.userProvider = {
-        getUserById: (userId) => this.hexa.useCases.getUserById({ userId }),
-      };
-    }
-
-    return this.userProvider;
-  }
-
-  /**
-   * Expose the organization provider adapter for other hexagons
-   */
-  getOrganizationProvider(): OrganizationProvider {
-    if (!this.organizationProvider) {
-      this.organizationProvider = {
-        getOrganizationById: (organizationId) =>
-          this.hexa.useCases.getOrganizationById({ organizationId }),
-      };
-    }
-
-    return this.organizationProvider;
   }
 }

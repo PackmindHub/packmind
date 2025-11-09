@@ -2,12 +2,7 @@ import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
 import { GitProviderId } from '../../../domain/entities/GitProvider';
 import { PackmindLogger } from '@packmind/logger';
-import {
-  PackmindCommand,
-  UserProvider,
-  OrganizationProvider,
-  createUserId,
-} from '@packmind/types';
+import { PackmindCommand, IAccountsPort, createUserId } from '@packmind/types';
 import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
 import {
   GitProviderNotFoundError,
@@ -31,11 +26,10 @@ export class DeleteGitProviderUseCase extends AbstractAdminUseCase<
   constructor(
     private readonly gitProviderService: GitProviderService,
     private readonly gitRepoService: GitRepoService,
-    userProvider: UserProvider,
-    organizationProvider: OrganizationProvider,
+    accountsAdapter: IAccountsPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(userProvider, organizationProvider, logger);
+    super(accountsAdapter, accountsAdapter, logger);
   }
 
   protected async executeForAdmins(

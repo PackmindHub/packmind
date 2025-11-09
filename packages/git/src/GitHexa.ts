@@ -2,12 +2,11 @@ import { AccountsHexa } from '@packmind/accounts';
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
 import {
+  IAccountsPort,
   IDeploymentPort,
   IDeploymentPortName,
   IGitPort,
   IGitPortName,
-  OrganizationProvider,
-  UserProvider,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { FetchFileContentCallback } from './application/jobs/FetchFileContentDelayedJob';
@@ -75,13 +74,11 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
     );
 
     try {
-      // Get AccountsHexa to retrieve user and organization providers
+      // Get AccountsHexa adapter
       try {
         const accountsHexa = registry.get(AccountsHexa);
-        const userProvider = accountsHexa.getUserProvider();
-        const organizationProvider = accountsHexa.getOrganizationProvider();
-        this.setUserProvider(userProvider);
-        this.setOrganizationProvider(organizationProvider);
+        const accountsAdapter = accountsHexa.getAdapter();
+        this.setAccountsAdapter(accountsAdapter);
       } catch {
         // AccountsHexa not available - optional dependency
         this.logger.debug('AccountsHexa not available in registry');
@@ -161,17 +158,10 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
   }
 
   /**
-   * Configure the admin user provider used for access validation
+   * Configure the accounts adapter used for access validation
    */
-  public setUserProvider(provider: UserProvider): void {
-    this.hexa.useCases.setUserProvider(provider);
-  }
-
-  /**
-   * Configure the organization provider used for access validation
-   */
-  public setOrganizationProvider(provider: OrganizationProvider): void {
-    this.hexa.useCases.setOrganizationProvider(provider);
+  public setAccountsAdapter(adapter: IAccountsPort): void {
+    this.hexa.useCases.setAccountsAdapter(adapter);
   }
 
   // ==================

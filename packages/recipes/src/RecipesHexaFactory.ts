@@ -89,14 +89,12 @@ export class RecipesHexaFactory {
       this.gitHexa = gitHexa;
       this.deploymentPort = deploymentPort;
 
-      // Get AccountsHexa for user and organization providers
-      // TODO: migrate with port/adapters
+      // Get AccountsHexa adapter
       const accountsHexa = registry.get(AccountsHexa);
       if (!accountsHexa) {
         throw new Error('AccountsHexa not found in registry');
       }
-      const userProvider = accountsHexa.getUserProvider();
-      const organizationProvider = accountsHexa.getOrganizationProvider();
+      const accountsAdapter = accountsHexa.getAdapter();
 
       // Get spaces port for space validation
       let spacesPort: ISpacesPort | null = null;
@@ -109,14 +107,13 @@ export class RecipesHexaFactory {
         );
       }
 
-      // Create RecipesAdapter with providers
+      // Create RecipesAdapter with accounts adapter
       this.logger.debug('Creating RecipesAdapter');
       this.useCases = new RecipesAdapter(
         this.recipesServices,
         this.gitPort,
         this.deploymentPort,
-        userProvider,
-        organizationProvider,
+        accountsAdapter,
         spacesPort,
         this.logger,
         this.gitHexa,

@@ -3,13 +3,12 @@ import { PackmindLogger } from '@packmind/logger';
 import { createSpaceId } from '@packmind/spaces';
 import { stubLogger } from '@packmind/test-utils';
 import {
+  IAccountsPort,
   ISpacesPort,
   ListStandardsBySpaceCommand,
   Organization,
-  OrganizationProvider,
   Space,
   User,
-  UserProvider,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { standardFactory } from '../../../../test/standardFactory';
@@ -19,8 +18,7 @@ import { ListStandardsBySpaceUsecase } from './listStandardsBySpace.usecase';
 describe('ListStandardsBySpaceUsecase', () => {
   let usecase: ListStandardsBySpaceUsecase;
   let standardService: jest.Mocked<StandardService>;
-  let userProvider: jest.Mocked<UserProvider>;
-  let organizationProvider: jest.Mocked<OrganizationProvider>;
+  let accountsAdapter: jest.Mocked<IAccountsPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
@@ -29,13 +27,10 @@ describe('ListStandardsBySpaceUsecase', () => {
       listStandardsBySpace: jest.fn(),
     } as unknown as jest.Mocked<StandardService>;
 
-    userProvider = {
+    accountsAdapter = {
       getUserById: jest.fn(),
-    } as jest.Mocked<UserProvider>;
-
-    organizationProvider = {
       getOrganizationById: jest.fn(),
-    } as jest.Mocked<OrganizationProvider>;
+    } as unknown as jest.Mocked<IAccountsPort>;
 
     spacesPort = {
       getSpaceById: jest.fn(),
@@ -47,8 +42,7 @@ describe('ListStandardsBySpaceUsecase', () => {
     stubbedLogger = stubLogger();
 
     usecase = new ListStandardsBySpaceUsecase(
-      userProvider,
-      organizationProvider,
+      accountsAdapter,
       standardService,
       spacesPort,
       stubbedLogger,
@@ -95,15 +89,15 @@ describe('ListStandardsBySpaceUsecase', () => {
         standardFactory({ spaceId, slug: 'space-standard-2' }),
       ];
 
-      userProvider.getUserById.mockResolvedValue(user);
-      organizationProvider.getOrganizationById.mockResolvedValue(organization);
+      accountsAdapter.getUserById.mockResolvedValue(user);
+      accountsAdapter.getOrganizationById.mockResolvedValue(organization);
       spacesPort.getSpaceById.mockResolvedValue(space);
       standardService.listStandardsBySpace.mockResolvedValue(standardsInSpace);
 
       const result = await usecase.execute(command);
 
-      expect(userProvider.getUserById).toHaveBeenCalledWith(userId);
-      expect(organizationProvider.getOrganizationById).toHaveBeenCalledWith(
+      expect(accountsAdapter.getUserById).toHaveBeenCalledWith(userId);
+      expect(accountsAdapter.getOrganizationById).toHaveBeenCalledWith(
         organizationId,
       );
       expect(standardService.listStandardsBySpace).toHaveBeenCalledWith(
@@ -148,8 +142,8 @@ describe('ListStandardsBySpaceUsecase', () => {
         spaceId,
       };
 
-      userProvider.getUserById.mockResolvedValue(user);
-      organizationProvider.getOrganizationById.mockResolvedValue(organization);
+      accountsAdapter.getUserById.mockResolvedValue(user);
+      accountsAdapter.getOrganizationById.mockResolvedValue(organization);
       spacesPort.getSpaceById.mockResolvedValue(space);
       standardService.listStandardsBySpace.mockResolvedValue([]);
 
@@ -184,8 +178,8 @@ describe('ListStandardsBySpaceUsecase', () => {
         spaceId,
       };
 
-      userProvider.getUserById.mockResolvedValue(user);
-      organizationProvider.getOrganizationById.mockResolvedValue(organization);
+      accountsAdapter.getUserById.mockResolvedValue(user);
+      accountsAdapter.getOrganizationById.mockResolvedValue(organization);
       spacesPort.getSpaceById.mockResolvedValue(null);
 
       await expect(usecase.execute(command)).rejects.toThrow(
@@ -224,8 +218,8 @@ describe('ListStandardsBySpaceUsecase', () => {
         spaceId,
       };
 
-      userProvider.getUserById.mockResolvedValue(user);
-      organizationProvider.getOrganizationById.mockResolvedValue(organization);
+      accountsAdapter.getUserById.mockResolvedValue(user);
+      accountsAdapter.getOrganizationById.mockResolvedValue(organization);
       spacesPort.getSpaceById.mockResolvedValue(space);
 
       await expect(usecase.execute(command)).rejects.toThrow(

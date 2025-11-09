@@ -3,11 +3,7 @@ import { GitRepoService } from '../../GitRepoService';
 import { AddGitRepoCommand, IAddGitRepoUseCase } from '@packmind/types';
 import { GitRepo } from '../../../domain/entities/GitRepo';
 import { PackmindLogger } from '@packmind/logger';
-import {
-  createUserId,
-  UserProvider,
-  OrganizationProvider,
-} from '@packmind/types';
+import { createUserId, IAccountsPort } from '@packmind/types';
 import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
 import { IDeploymentPort } from '@packmind/types';
 import {
@@ -25,12 +21,11 @@ export class AddGitRepoUseCase
   constructor(
     private readonly gitProviderService: GitProviderService,
     private readonly gitRepoService: GitRepoService,
-    userProvider: UserProvider,
-    organizationProvider: OrganizationProvider,
+    accountsAdapter: IAccountsPort,
     private readonly deploymentsAdapter?: IDeploymentPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(userProvider, organizationProvider, logger);
+    super(accountsAdapter, accountsAdapter, logger);
   }
 
   protected async executeForAdmins(

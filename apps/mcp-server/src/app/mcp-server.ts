@@ -11,6 +11,8 @@ import {
   stringToProgrammingLanguage,
   RuleWithExamples,
   RecipeStep,
+  UserProvider,
+  OrganizationProvider,
 } from '@packmind/types';
 import { createOrganizationId, createUserId } from '@packmind/accounts';
 import { AnalyticsAdapter } from '@packmind/amplitude';
@@ -136,9 +138,10 @@ export function createMCPServer(
       : undefined;
 
   if (accountsHexa) {
+    const accountsAdapter = accountsHexa.getAdapter();
     deploymentsHexa.setAccountProviders(
-      accountsHexa.getUserProvider(),
-      accountsHexa.getOrganizationProvider(),
+      accountsAdapter as unknown as UserProvider,
+      accountsAdapter as unknown as OrganizationProvider,
     );
   }
   logger.debug('Attempting to call fastify.analyticsHexa()');

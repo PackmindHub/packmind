@@ -12,8 +12,12 @@ import { GetRecipeVersionUsecase } from '../useCases/getRecipeVersion/getRecipeV
 import { DeleteRecipesBatchUsecase } from '../useCases/deleteRecipesBatch/deleteRecipesBatch.usecase';
 import { IRecipesServices } from '../IRecipesServices';
 import { PackmindLogger } from '@packmind/logger';
-import { UserProvider, OrganizationProvider } from '@packmind/types';
-import { IDeploymentPort, ISpacesPort, IGitPort } from '@packmind/types';
+import {
+  IAccountsPort,
+  IDeploymentPort,
+  ISpacesPort,
+  IGitPort,
+} from '@packmind/types';
 import { IRecipesDelayedJobs } from '../../domain/jobs/IRecipesDelayedJobs';
 import { GitHexa } from '@packmind/git';
 import {
@@ -54,8 +58,7 @@ export class RecipesAdapter implements IRecipesPort {
     private readonly recipesServices: IRecipesServices,
     private readonly gitPort: IGitPort,
     private readonly deploymentPort: IDeploymentPort | undefined,
-    private readonly userProvider: UserProvider,
-    private readonly organizationProvider: OrganizationProvider,
+    private readonly accountsAdapter: IAccountsPort,
     private readonly spacesPort: ISpacesPort | null,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
     private readonly gitHexa?: GitHexa, // Keep for addFetchFileContentJob() - not in port
@@ -98,8 +101,7 @@ export class RecipesAdapter implements IRecipesPort {
       this.logger,
     );
     this._getRecipeById = new GetRecipeByIdUsecase(
-      userProvider,
-      organizationProvider,
+      accountsAdapter,
       recipesServices.getRecipeService(),
       spacesPort,
       this.logger,
@@ -113,8 +115,7 @@ export class RecipesAdapter implements IRecipesPort {
       this.logger,
     );
     this._listRecipesBySpace = new ListRecipesBySpaceUsecase(
-      userProvider,
-      organizationProvider,
+      accountsAdapter,
       recipesServices.getRecipeService(),
       spacesPort,
       this.logger,

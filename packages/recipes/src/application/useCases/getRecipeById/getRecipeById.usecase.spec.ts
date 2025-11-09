@@ -2,10 +2,9 @@ import { GetRecipeByIdUsecase } from './getRecipeById.usecase';
 import { RecipeService } from '../../services/RecipeService';
 import { recipeFactory } from '../../../../test/recipeFactory';
 import {
+  IAccountsPort,
   ISpacesPort,
   Space,
-  UserProvider,
-  OrganizationProvider,
   createRecipeId,
   createSpaceId,
   createOrganizationId,
@@ -16,8 +15,7 @@ import { stubLogger } from '@packmind/test-utils';
 describe('GetRecipeByIdUsecase', () => {
   let usecase: GetRecipeByIdUsecase;
   let recipeService: jest.Mocked<RecipeService>;
-  let userProvider: jest.Mocked<UserProvider>;
-  let organizationProvider: jest.Mocked<OrganizationProvider>;
+  let accountsAdapter: jest.Mocked<IAccountsPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
 
   beforeEach(() => {
@@ -25,21 +23,17 @@ describe('GetRecipeByIdUsecase', () => {
       getRecipeById: jest.fn(),
     } as unknown as jest.Mocked<RecipeService>;
 
-    userProvider = {
+    accountsAdapter = {
       getUserById: jest.fn(),
-    } as jest.Mocked<UserProvider>;
-
-    organizationProvider = {
       getOrganizationById: jest.fn(),
-    } as jest.Mocked<OrganizationProvider>;
+    } as unknown as jest.Mocked<IAccountsPort>;
 
     spacesPort = {
       getSpaceById: jest.fn(),
     } as unknown as jest.Mocked<ISpacesPort>;
 
     usecase = new GetRecipeByIdUsecase(
-      userProvider,
-      organizationProvider,
+      accountsAdapter,
       recipeService,
       spacesPort,
       stubLogger(),
@@ -86,8 +80,8 @@ describe('GetRecipeByIdUsecase', () => {
         spaceId: createSpaceId('space-1'),
       });
 
-      organizationProvider.getOrganizationById.mockResolvedValue(organization);
-      userProvider.getUserById.mockResolvedValue(user);
+      accountsAdapter.getOrganizationById.mockResolvedValue(organization);
+      accountsAdapter.getUserById.mockResolvedValue(user);
       spacesPort.getSpaceById.mockResolvedValue(space);
       recipeService.getRecipeById.mockResolvedValue(recipe);
 
@@ -98,10 +92,10 @@ describe('GetRecipeByIdUsecase', () => {
         recipeId,
       });
 
-      expect(organizationProvider.getOrganizationById).toHaveBeenCalledWith(
+      expect(accountsAdapter.getOrganizationById).toHaveBeenCalledWith(
         organizationId,
       );
-      expect(userProvider.getUserById).toHaveBeenCalledWith(userId);
+      expect(accountsAdapter.getUserById).toHaveBeenCalledWith(userId);
       expect(spacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
       expect(recipeService.getRecipeById).toHaveBeenCalledWith(recipeId);
 
@@ -139,8 +133,8 @@ describe('GetRecipeByIdUsecase', () => {
         organizationId,
       };
 
-      organizationProvider.getOrganizationById.mockResolvedValue(organization);
-      userProvider.getUserById.mockResolvedValue(user);
+      accountsAdapter.getOrganizationById.mockResolvedValue(organization);
+      accountsAdapter.getUserById.mockResolvedValue(user);
       spacesPort.getSpaceById.mockResolvedValue(space);
       recipeService.getRecipeById.mockResolvedValue(null);
 
@@ -162,7 +156,7 @@ describe('GetRecipeByIdUsecase', () => {
         const userId = createUserId('user-1');
         const recipeId = createRecipeId('recipe-1');
 
-        userProvider.getUserById.mockResolvedValue(null);
+        accountsAdapter.getUserById.mockResolvedValue(null);
 
         await expect(
           usecase.execute({
@@ -196,8 +190,8 @@ describe('GetRecipeByIdUsecase', () => {
           ],
         };
 
-        userProvider.getUserById.mockResolvedValue(user);
-        organizationProvider.getOrganizationById.mockResolvedValue(null);
+        accountsAdapter.getUserById.mockResolvedValue(user);
+        accountsAdapter.getOrganizationById.mockResolvedValue(null);
 
         await expect(
           usecase.execute({
@@ -236,10 +230,8 @@ describe('GetRecipeByIdUsecase', () => {
           ],
         };
 
-        organizationProvider.getOrganizationById.mockResolvedValue(
-          organization,
-        );
-        userProvider.getUserById.mockResolvedValue(user);
+        accountsAdapter.getOrganizationById.mockResolvedValue(organization);
+        accountsAdapter.getUserById.mockResolvedValue(user);
         spacesPort.getSpaceById.mockResolvedValue(null);
 
         await expect(
@@ -286,10 +278,8 @@ describe('GetRecipeByIdUsecase', () => {
           slug: 'test-space',
         };
 
-        organizationProvider.getOrganizationById.mockResolvedValue(
-          organization,
-        );
-        userProvider.getUserById.mockResolvedValue(user);
+        accountsAdapter.getOrganizationById.mockResolvedValue(organization);
+        accountsAdapter.getUserById.mockResolvedValue(user);
         spacesPort.getSpaceById.mockResolvedValue(space);
 
         await expect(
@@ -344,10 +334,8 @@ describe('GetRecipeByIdUsecase', () => {
           spaceId: differentSpaceId,
         });
 
-        organizationProvider.getOrganizationById.mockResolvedValue(
-          organization,
-        );
-        userProvider.getUserById.mockResolvedValue(user);
+        accountsAdapter.getOrganizationById.mockResolvedValue(organization);
+        accountsAdapter.getUserById.mockResolvedValue(user);
         spacesPort.getSpaceById.mockResolvedValue(space);
         recipeService.getRecipeById.mockResolvedValue(recipe);
 
@@ -401,10 +389,8 @@ describe('GetRecipeByIdUsecase', () => {
           spaceId: differentSpaceId,
         });
 
-        organizationProvider.getOrganizationById.mockResolvedValue(
-          organization,
-        );
-        userProvider.getUserById.mockResolvedValue(user);
+        accountsAdapter.getOrganizationById.mockResolvedValue(organization);
+        accountsAdapter.getUserById.mockResolvedValue(user);
         spacesPort.getSpaceById.mockResolvedValue(space);
         recipeService.getRecipeById.mockResolvedValue(recipe);
 
@@ -456,8 +442,8 @@ describe('GetRecipeByIdUsecase', () => {
         spaceId,
       });
 
-      organizationProvider.getOrganizationById.mockResolvedValue(organization);
-      userProvider.getUserById.mockResolvedValue(user);
+      accountsAdapter.getOrganizationById.mockResolvedValue(organization);
+      accountsAdapter.getUserById.mockResolvedValue(user);
       spacesPort.getSpaceById.mockResolvedValue(space);
       recipeService.getRecipeById.mockResolvedValue(recipe);
 
@@ -506,8 +492,8 @@ describe('GetRecipeByIdUsecase', () => {
         spaceId: createSpaceId('space-1'),
       });
 
-      organizationProvider.getOrganizationById.mockResolvedValue(organization);
-      userProvider.getUserById.mockResolvedValue(user);
+      accountsAdapter.getOrganizationById.mockResolvedValue(organization);
+      accountsAdapter.getUserById.mockResolvedValue(user);
       spacesPort.getSpaceById.mockResolvedValue(space);
       recipeService.getRecipeById.mockResolvedValue(recipe);
 
@@ -548,17 +534,14 @@ describe('GetRecipeByIdUsecase', () => {
         };
 
         const usecaseWithoutSpacesPort = new GetRecipeByIdUsecase(
-          userProvider,
-          organizationProvider,
+          accountsAdapter,
           recipeService,
           null,
           stubLogger(),
         );
 
-        organizationProvider.getOrganizationById.mockResolvedValue(
-          organization,
-        );
-        userProvider.getUserById.mockResolvedValue(user);
+        accountsAdapter.getOrganizationById.mockResolvedValue(organization);
+        accountsAdapter.getUserById.mockResolvedValue(user);
 
         await expect(
           usecaseWithoutSpacesPort.execute({

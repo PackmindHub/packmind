@@ -1,6 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
-import { UserProvider, OrganizationProvider } from '@packmind/types';
-import { ISpacesPort } from '@packmind/types';
+import { IAccountsPort, ISpacesPort } from '@packmind/types';
 import {
   ListStandardsBySpaceCommand,
   GetStandardByIdCommand,
@@ -69,8 +68,7 @@ export class StandardsUseCases {
     private readonly standardsRepositories: IStandardsRepositories,
     private deploymentsQueryAdapter: IDeploymentPort | undefined,
     private standardDelayedJobs: IStandardDelayedJobs,
-    private readonly userProvider: UserProvider,
-    private readonly organizationProvider: OrganizationProvider,
+    private readonly accountsAdapter: IAccountsPort,
     private readonly spacesPort: ISpacesPort | null,
     private linterAdapter: ILinterPort | undefined,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
@@ -89,8 +87,7 @@ export class StandardsUseCases {
       this.linterAdapter,
     );
     this._updateStandard = new UpdateStandardUsecase(
-      userProvider,
-      organizationProvider,
+      accountsAdapter,
       standardsServices.getStandardService(),
       standardsServices.getStandardVersionService(),
       standardsRepositories.getRuleRepository(),
@@ -107,8 +104,7 @@ export class StandardsUseCases {
       this.linterAdapter,
     );
     this._getStandardById = new GetStandardByIdUsecase(
-      userProvider,
-      organizationProvider,
+      accountsAdapter,
       standardsServices.getStandardService(),
       spacesPort,
     );
@@ -116,8 +112,7 @@ export class StandardsUseCases {
       standardsServices.getStandardService(),
     );
     this._listStandardsBySpace = new ListStandardsBySpaceUsecase(
-      userProvider,
-      organizationProvider,
+      accountsAdapter,
       standardsServices.getStandardService(),
       spacesPort,
     );

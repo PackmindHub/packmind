@@ -24,12 +24,18 @@ import { ValidatePasswordResetTokenUseCase } from '../useCases/ValidatePasswordR
 import { GetOrganizationOnboardingStatusUseCase } from '../useCases/getOrganizationOnboardingStatus/GetOrganizationOnboardingStatusUseCase';
 import { IAccountsServices } from '../IAccountsServices';
 import { PackmindLogger } from '@packmind/logger';
-import { IAccountsPort } from '@packmind/types';
 import {
+  IAccountsPort,
   ISpacesPort,
   IGitPort,
   IStandardsPort,
   IDeploymentPort,
+  UserId,
+  OrganizationId,
+  User,
+  Organization,
+  createUserId,
+  createOrganizationId,
 } from '@packmind/types';
 
 import {
@@ -276,7 +282,16 @@ export class AccountsAdapter implements IAccountsPort {
     return this._signInUser.execute(command);
   }
 
-  public async getUserById(command: GetUserByIdCommand) {
+  // Method overloads for getUserById
+  public async getUserById(command: GetUserByIdCommand): Promise<User | null>;
+  public async getUserById(userId: UserId): Promise<User | null>;
+  public async getUserById(
+    commandOrUserId: GetUserByIdCommand | UserId,
+  ): Promise<User | null> {
+    const command: GetUserByIdCommand =
+      typeof commandOrUserId === 'object' && commandOrUserId !== null
+        ? commandOrUserId
+        : { userId: createUserId(commandOrUserId as string) };
     const result = await this._getUserById.execute(command);
     return result.user;
   }
@@ -314,7 +329,25 @@ export class AccountsAdapter implements IAccountsPort {
     return result.organization;
   }
 
-  public async getOrganizationById(command: GetOrganizationByIdCommand) {
+  // Method overloads for getOrganizationById
+  public async getOrganizationById(
+    command: GetOrganizationByIdCommand,
+  ): Promise<Organization | null>;
+  public async getOrganizationById(
+    organizationId: OrganizationId,
+  ): Promise<Organization | null>;
+  public async getOrganizationById(
+    commandOrOrganizationId: GetOrganizationByIdCommand | OrganizationId,
+  ): Promise<Organization | null> {
+    const command: GetOrganizationByIdCommand =
+      typeof commandOrOrganizationId === 'object' &&
+      commandOrOrganizationId !== null
+        ? commandOrOrganizationId
+        : {
+            organizationId: createOrganizationId(
+              commandOrOrganizationId as string,
+            ),
+          };
     const result = await this._getOrganizationById.execute(command);
     return result.organization;
   }

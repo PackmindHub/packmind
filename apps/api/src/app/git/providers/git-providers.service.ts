@@ -15,8 +15,8 @@ import { InjectGitAdapter } from '../../shared/HexaInjection';
 export class GitProvidersService {
   constructor(
     @InjectGitAdapter() private readonly gitAdapter: IGitPort,
-    // Keep AccountsHexa for provider methods (getUserProvider, getOrganizationProvider)
-    // These are not part of the adapter interface
+    // AccountsHexa is kept for potential future use
+    // The adapter can be accessed via accountsHexa.getAdapter() if needed
     private readonly accountsHexa: AccountsHexa,
   ) {}
 

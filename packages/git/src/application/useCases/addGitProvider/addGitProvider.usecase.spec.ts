@@ -6,8 +6,7 @@ import {
   createGitProviderId,
 } from '../../../domain/entities/GitProvider';
 import {
-  UserProvider,
-  OrganizationProvider,
+  IAccountsPort,
   createOrganizationId,
   createUserId,
   User,
@@ -19,8 +18,7 @@ import { stubLogger } from '@packmind/test-utils';
 describe('AddGitProviderUseCase', () => {
   let useCase: AddGitProviderUseCase;
   let mockGitProviderService: jest.Mocked<GitProviderService>;
-  let userProvider: jest.Mocked<UserProvider>;
-  let organizationProvider: jest.Mocked<OrganizationProvider>;
+  let accountsAdapter: jest.Mocked<IAccountsPort>;
   const organizationId = createOrganizationId('org-123');
   const adminUser: User = {
     id: createUserId('user-123'),
@@ -48,18 +46,14 @@ describe('AddGitProviderUseCase', () => {
       jest.Mocked<GitProviderService>
     > as jest.Mocked<GitProviderService>;
 
-    userProvider = {
+    accountsAdapter = {
       getUserById: jest.fn().mockResolvedValue(adminUser),
-    } as jest.Mocked<UserProvider>;
-
-    organizationProvider = {
       getOrganizationById: jest.fn().mockResolvedValue(organization),
-    } as jest.Mocked<OrganizationProvider>;
+    } as unknown as jest.Mocked<IAccountsPort>;
 
     useCase = new AddGitProviderUseCase(
       mockGitProviderService,
-      userProvider,
-      organizationProvider,
+      accountsAdapter,
       stubLogger(),
     );
   });
@@ -90,7 +84,7 @@ describe('AddGitProviderUseCase', () => {
       ...input.gitProvider,
       organizationId: input.organizationId,
     });
-    expect(userProvider.getUserById).toHaveBeenCalledWith(input.userId);
+    expect(accountsAdapter.getUserById).toHaveBeenCalledWith(input.userId);
   });
 
   describe('when git provider token is missing', () => {

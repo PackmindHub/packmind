@@ -115,8 +115,8 @@ describe('Cursor Deployment Integration', () => {
 
     gitHexa.setDeploymentsAdapter(mockDeploymentPort);
 
-    gitHexa.setUserProvider(accountsHexa.getUserProvider());
-    gitHexa.setOrganizationProvider(accountsHexa.getOrganizationProvider());
+    const accountsAdapter = accountsHexa.getAdapter();
+    gitHexa.setAccountsAdapter(accountsAdapter);
 
     // Hexas are already initialized by registry.init(), but get adapters
     standardsPort = standardsHexa.getAdapter();

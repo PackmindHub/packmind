@@ -18,8 +18,7 @@ import { GetAvailableRemoteDirectoriesUseCase } from '../useCases/getAvailableRe
 import { CheckDirectoryExistenceUseCase } from '../useCases/checkDirectoryExistence/checkDirectoryExistence.usecase';
 import { IGitServices } from '../IGitServices';
 import { PackmindLogger } from '@packmind/logger';
-import { UserProvider, OrganizationProvider } from '@packmind/types';
-import { IDeploymentPort, IGitPort } from '@packmind/types';
+import { IAccountsPort, IDeploymentPort, IGitPort } from '@packmind/types';
 import { QueryOption } from '@packmind/types';
 import { GitProvider, GitProviderId } from '../../domain/entities/GitProvider';
 import { GitRepo, GitRepoId } from '../../domain/entities/GitRepo';
@@ -44,16 +43,14 @@ const origin = 'GitAdapter';
 
 export class GitAdapter implements IGitPort {
   private _addGitProvider: AddGitProviderUseCase;
-  private userProvider: UserProvider = {
+  private accountsAdapter: IAccountsPort = {
     async getUserById() {
-      throw new Error('User provider not configured for Git domain');
+      throw new Error('Accounts adapter not configured for Git domain');
     },
-  };
-  private organizationProvider: OrganizationProvider = {
     async getOrganizationById() {
-      throw new Error('Organization provider not configured for Git domain');
+      throw new Error('Accounts adapter not configured for Git domain');
     },
-  };
+  } as unknown as IAccountsPort;
   private _addGitRepo: AddGitRepoUseCase;
   private _deleteGitProvider: DeleteGitProviderUseCase;
   private _deleteGitRepo: DeleteGitRepoUseCase;
@@ -159,8 +156,7 @@ export class GitAdapter implements IGitPort {
   private createAddGitProviderUseCase(): AddGitProviderUseCase {
     return new AddGitProviderUseCase(
       this.gitServices.getGitProviderService(),
-      this.userProvider,
-      this.organizationProvider,
+      this.accountsAdapter,
       this.logger,
     );
   }
@@ -169,8 +165,7 @@ export class GitAdapter implements IGitPort {
     return new AddGitRepoUseCase(
       this.gitServices.getGitProviderService(),
       this.gitServices.getGitRepoService(),
-      this.userProvider,
-      this.organizationProvider,
+      this.accountsAdapter,
       this.deploymentsAdapter,
     );
   }
@@ -179,8 +174,7 @@ export class GitAdapter implements IGitPort {
     return new DeleteGitProviderUseCase(
       this.gitServices.getGitProviderService(),
       this.gitServices.getGitRepoService(),
-      this.userProvider,
-      this.organizationProvider,
+      this.accountsAdapter,
       this.logger,
     );
   }
@@ -189,8 +183,7 @@ export class GitAdapter implements IGitPort {
     return new DeleteGitRepoUseCase(
       this.gitServices.getGitProviderService(),
       this.gitServices.getGitRepoService(),
-      this.userProvider,
-      this.organizationProvider,
+      this.accountsAdapter,
       this.logger,
     );
   }
@@ -198,23 +191,13 @@ export class GitAdapter implements IGitPort {
   private createUpdateGitProviderUseCase(): UpdateGitProviderUseCase {
     return new UpdateGitProviderUseCase(
       this.gitServices.getGitProviderService(),
-      this.userProvider,
-      this.organizationProvider,
+      this.accountsAdapter,
       this.logger,
     );
   }
 
-  public setUserProvider(provider: UserProvider): void {
-    this.userProvider = provider;
-    this._addGitProvider = this.createAddGitProviderUseCase();
-    this._addGitRepo = this.createAddGitRepoUseCase();
-    this._deleteGitProvider = this.createDeleteGitProviderUseCase();
-    this._deleteGitRepo = this.createDeleteGitRepoUseCase();
-    this._updateGitProvider = this.createUpdateGitProviderUseCase();
-  }
-
-  public setOrganizationProvider(provider: OrganizationProvider): void {
-    this.organizationProvider = provider;
+  public setAccountsAdapter(adapter: IAccountsPort): void {
+    this.accountsAdapter = adapter;
     this._addGitProvider = this.createAddGitProviderUseCase();
     this._addGitRepo = this.createAddGitRepoUseCase();
     this._deleteGitProvider = this.createDeleteGitProviderUseCase();

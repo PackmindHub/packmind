@@ -114,12 +114,14 @@ export class DeploymentsHexa extends BaseHexa<BaseHexaOpts, IDeploymentPort> {
         );
       }
 
-      // Get AccountsHexa to retrieve user and organization providers
+      // Get AccountsHexa adapter for user and organization providers
       try {
         const accountsHexa = registry.get(AccountsHexa);
-        const userProvider = accountsHexa.getUserProvider();
-        const organizationProvider = accountsHexa.getOrganizationProvider();
-        this.setAccountProviders(userProvider, organizationProvider);
+        const accountsAdapter = accountsHexa.getAdapter();
+        this.setAccountProviders(
+          accountsAdapter as unknown as UserProvider,
+          accountsAdapter as unknown as OrganizationProvider,
+        );
       } catch {
         // AccountsHexa not available - optional dependency
         this.logger.debug('AccountsHexa not available in registry');

@@ -4,12 +4,11 @@ import { createSpaceId } from '@packmind/spaces';
 import { stubLogger } from '@packmind/test-utils';
 import {
   GetStandardByIdCommand,
+  IAccountsPort,
   ISpacesPort,
   Organization,
-  OrganizationProvider,
   Space,
   User,
-  UserProvider,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { standardFactory } from '../../../../test/standardFactory';
@@ -20,8 +19,7 @@ import { GetStandardByIdUsecase } from './getStandardById.usecase';
 describe('GetStandardByIdUsecase', () => {
   let usecase: GetStandardByIdUsecase;
   let standardService: jest.Mocked<StandardService>;
-  let userProvider: jest.Mocked<UserProvider>;
-  let organizationProvider: jest.Mocked<OrganizationProvider>;
+  let accountsAdapter: jest.Mocked<IAccountsPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
@@ -30,13 +28,10 @@ describe('GetStandardByIdUsecase', () => {
       getStandardById: jest.fn(),
     } as unknown as jest.Mocked<StandardService>;
 
-    userProvider = {
+    accountsAdapter = {
       getUserById: jest.fn(),
-    } as jest.Mocked<UserProvider>;
-
-    organizationProvider = {
       getOrganizationById: jest.fn(),
-    } as jest.Mocked<OrganizationProvider>;
+    } as unknown as jest.Mocked<IAccountsPort>;
 
     spacesPort = {
       getSpaceById: jest.fn(),
@@ -48,8 +43,7 @@ describe('GetStandardByIdUsecase', () => {
     stubbedLogger = stubLogger();
 
     usecase = new GetStandardByIdUsecase(
-      userProvider,
-      organizationProvider,
+      accountsAdapter,
       standardService,
       spacesPort,
       stubbedLogger,
@@ -99,15 +93,15 @@ describe('GetStandardByIdUsecase', () => {
         slug: 'test-standard',
       });
 
-      userProvider.getUserById.mockResolvedValue(user);
-      organizationProvider.getOrganizationById.mockResolvedValue(organization);
+      accountsAdapter.getUserById.mockResolvedValue(user);
+      accountsAdapter.getOrganizationById.mockResolvedValue(organization);
       spacesPort.getSpaceById.mockResolvedValue(space);
       standardService.getStandardById.mockResolvedValue(standard);
 
       const result = await usecase.execute(command);
 
-      expect(userProvider.getUserById).toHaveBeenCalledWith(userId);
-      expect(organizationProvider.getOrganizationById).toHaveBeenCalledWith(
+      expect(accountsAdapter.getUserById).toHaveBeenCalledWith(userId);
+      expect(accountsAdapter.getOrganizationById).toHaveBeenCalledWith(
         organizationId,
       );
       expect(spacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
@@ -148,8 +142,8 @@ describe('GetStandardByIdUsecase', () => {
         standardId,
       };
 
-      userProvider.getUserById.mockResolvedValue(user);
-      organizationProvider.getOrganizationById.mockResolvedValue(organization);
+      accountsAdapter.getUserById.mockResolvedValue(user);
+      accountsAdapter.getOrganizationById.mockResolvedValue(organization);
       spacesPort.getSpaceById.mockResolvedValue(space);
       standardService.getStandardById.mockResolvedValue(null);
 
@@ -198,8 +192,8 @@ describe('GetStandardByIdUsecase', () => {
         slug: 'test-standard',
       });
 
-      userProvider.getUserById.mockResolvedValue(user);
-      organizationProvider.getOrganizationById.mockResolvedValue(organization);
+      accountsAdapter.getUserById.mockResolvedValue(user);
+      accountsAdapter.getOrganizationById.mockResolvedValue(organization);
       spacesPort.getSpaceById.mockResolvedValue(space);
       standardService.getStandardById.mockResolvedValue(standard);
 
@@ -236,8 +230,8 @@ describe('GetStandardByIdUsecase', () => {
         standardId,
       };
 
-      userProvider.getUserById.mockResolvedValue(user);
-      organizationProvider.getOrganizationById.mockResolvedValue(organization);
+      accountsAdapter.getUserById.mockResolvedValue(user);
+      accountsAdapter.getOrganizationById.mockResolvedValue(organization);
       spacesPort.getSpaceById.mockResolvedValue(null);
 
       await expect(usecase.execute(command)).rejects.toThrow(
@@ -278,8 +272,8 @@ describe('GetStandardByIdUsecase', () => {
         standardId,
       };
 
-      userProvider.getUserById.mockResolvedValue(user);
-      organizationProvider.getOrganizationById.mockResolvedValue(organization);
+      accountsAdapter.getUserById.mockResolvedValue(user);
+      accountsAdapter.getOrganizationById.mockResolvedValue(organization);
       spacesPort.getSpaceById.mockResolvedValue(space);
 
       await expect(usecase.execute(command)).rejects.toThrow(
@@ -327,8 +321,8 @@ describe('GetStandardByIdUsecase', () => {
         slug: 'test-standard',
       });
 
-      userProvider.getUserById.mockResolvedValue(user);
-      organizationProvider.getOrganizationById.mockResolvedValue(organization);
+      accountsAdapter.getUserById.mockResolvedValue(user);
+      accountsAdapter.getOrganizationById.mockResolvedValue(organization);
       spacesPort.getSpaceById.mockResolvedValue(space);
       standardService.getStandardById.mockResolvedValue(standard);
 
@@ -376,8 +370,8 @@ describe('GetStandardByIdUsecase', () => {
         slug: 'test-standard',
       });
 
-      userProvider.getUserById.mockResolvedValue(user);
-      organizationProvider.getOrganizationById.mockResolvedValue(organization);
+      accountsAdapter.getUserById.mockResolvedValue(user);
+      accountsAdapter.getOrganizationById.mockResolvedValue(organization);
       spacesPort.getSpaceById.mockResolvedValue(space);
       standardService.getStandardById.mockResolvedValue(standard);
 
@@ -399,7 +393,7 @@ describe('GetStandardByIdUsecase', () => {
         standardId,
       };
 
-      userProvider.getUserById.mockResolvedValue(null);
+      accountsAdapter.getUserById.mockResolvedValue(null);
 
       await expect(usecase.execute(command)).rejects.toThrow(
         `User not found: ${userId}`,
@@ -427,8 +421,8 @@ describe('GetStandardByIdUsecase', () => {
         standardId,
       };
 
-      userProvider.getUserById.mockResolvedValue(user);
-      organizationProvider.getOrganizationById.mockResolvedValue(null);
+      accountsAdapter.getUserById.mockResolvedValue(user);
+      accountsAdapter.getOrganizationById.mockResolvedValue(null);
 
       await expect(usecase.execute(command)).rejects.toThrow(
         `Organization ${organizationId} not found`,
@@ -464,8 +458,8 @@ describe('GetStandardByIdUsecase', () => {
         standardId,
       };
 
-      userProvider.getUserById.mockResolvedValue(user);
-      organizationProvider.getOrganizationById.mockResolvedValue(organization);
+      accountsAdapter.getUserById.mockResolvedValue(user);
+      accountsAdapter.getOrganizationById.mockResolvedValue(organization);
 
       await expect(usecase.execute(command)).rejects.toThrow(
         `User ${userId} is not a member of organization ${organizationId}`,

@@ -17,7 +17,7 @@ import { ruleFactory } from '../../../../test/ruleFactory';
 import { v4 as uuidv4 } from 'uuid';
 import slug from 'slug';
 import { PackmindLogger } from '@packmind/logger';
-import { UserProvider, OrganizationProvider } from '@packmind/types';
+import { IAccountsPort } from '@packmind/types';
 import {
   UpdateStandardCommand,
   ISpacesPort,
@@ -49,8 +49,7 @@ describe('UpdateStandardUsecase', () => {
   let generateStandardSummaryDelayedJob: jest.Mocked<GenerateStandardSummaryDelayedJob>;
   let ruleRepository: jest.Mocked<IRuleRepository>;
   let ruleExampleRepository: jest.Mocked<IRuleExampleRepository>;
-  let userProvider: jest.Mocked<UserProvider>;
-  let organizationProvider: jest.Mocked<OrganizationProvider>;
+  let accountsAdapter: jest.Mocked<IAccountsPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
   let mockUser: User;
@@ -141,13 +140,10 @@ describe('UpdateStandardUsecase', () => {
       memberships: [mockMembership],
     };
 
-    userProvider = {
+    accountsAdapter = {
       getUserById: jest.fn().mockResolvedValue(mockUser),
-    } as unknown as jest.Mocked<UserProvider>;
-
-    organizationProvider = {
       getOrganizationById: jest.fn().mockResolvedValue(mockOrganization),
-    } as unknown as jest.Mocked<OrganizationProvider>;
+    } as unknown as jest.Mocked<IAccountsPort>;
 
     // Setup space mock
     mockSpace = {
@@ -166,8 +162,7 @@ describe('UpdateStandardUsecase', () => {
     } as unknown as jest.Mocked<ISpacesPort>;
 
     updateStandardUsecase = new UpdateStandardUsecase(
-      userProvider,
-      organizationProvider,
+      accountsAdapter,
       standardService,
       standardVersionService,
       ruleRepository,
@@ -198,8 +193,8 @@ describe('UpdateStandardUsecase', () => {
       spaceId = mockSpace.id; // Use the mock space ID
 
       // Update organization and user providers with the test IDs
-      userProvider.getUserById = jest.fn().mockResolvedValue(mockUser);
-      organizationProvider.getOrganizationById = jest.fn().mockResolvedValue({
+      accountsAdapter.getUserById = jest.fn().mockResolvedValue(mockUser);
+      accountsAdapter.getOrganizationById = jest.fn().mockResolvedValue({
         ...mockOrganization,
         id: organizationId,
       });

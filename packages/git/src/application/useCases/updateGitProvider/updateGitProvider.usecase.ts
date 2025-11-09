@@ -4,11 +4,7 @@ import {
 } from '../../../domain/entities/GitProvider';
 import { GitProviderService } from '../../GitProviderService';
 import { PackmindLogger } from '@packmind/logger';
-import {
-  PackmindCommand,
-  UserProvider,
-  OrganizationProvider,
-} from '@packmind/types';
+import { PackmindCommand, IAccountsPort } from '@packmind/types';
 import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
 import {
   GitProviderNotFoundError,
@@ -28,11 +24,10 @@ export class UpdateGitProviderUseCase extends AbstractAdminUseCase<
 > {
   constructor(
     private readonly gitProviderService: GitProviderService,
-    userProvider: UserProvider,
-    organizationProvider: OrganizationProvider,
+    accountsAdapter: IAccountsPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(userProvider, organizationProvider, logger);
+    super(accountsAdapter, accountsAdapter, logger);
   }
 
   protected async executeForAdmins(

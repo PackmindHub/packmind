@@ -86,8 +86,7 @@ export class StandardsHexaFactory {
       if (!accountsHexa) {
         throw new Error('AccountsHexa not found in registry');
       }
-      const userProvider = accountsHexa.getUserProvider();
-      const organizationProvider = accountsHexa.getOrganizationProvider();
+      const accountsAdapter = accountsHexa.getAdapter();
 
       // Get spaces port for space validation
       let spacesPort: ISpacesPort | null = null;
@@ -106,8 +105,7 @@ export class StandardsHexaFactory {
         this.standardsRepositories,
         this.deploymentsQueryAdapter,
         standardsDelayedJobs,
-        userProvider,
-        organizationProvider,
+        accountsAdapter,
         spacesPort,
         undefined, // Linter adapter will be set later via setLinterAdapter()
         this.logger,

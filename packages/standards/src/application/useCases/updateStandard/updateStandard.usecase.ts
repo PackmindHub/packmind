@@ -6,7 +6,7 @@ import {
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import { PackmindLogger } from '@packmind/logger';
-import { UserProvider, OrganizationProvider } from '@packmind/types';
+import { IAccountsPort } from '@packmind/types';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import { ISpacesPort } from '@packmind/types';
 import {
@@ -32,8 +32,7 @@ export class UpdateStandardUsecase
   implements IUpdateStandardUseCase
 {
   constructor(
-    userProvider: UserProvider,
-    organizationProvider: OrganizationProvider,
+    accountsAdapter: IAccountsPort,
     private readonly standardService: StandardService,
     private readonly standardVersionService: StandardVersionService,
     private readonly ruleRepository: IRuleRepository,
@@ -42,7 +41,7 @@ export class UpdateStandardUsecase
     private readonly spacesPort: ISpacesPort | null,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(userProvider, organizationProvider, logger);
+    super(accountsAdapter, accountsAdapter, logger);
     this.logger.info('UpdateStandardUsecase initialized');
   }
 

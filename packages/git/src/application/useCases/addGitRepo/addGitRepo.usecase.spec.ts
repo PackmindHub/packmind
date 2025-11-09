@@ -10,8 +10,7 @@ import {
 } from '../../../domain/entities/GitProvider';
 import { GitRepo, createGitRepoId } from '../../../domain/entities/GitRepo';
 import {
-  UserProvider,
-  OrganizationProvider,
+  IAccountsPort,
   User,
   Organization,
   IDeploymentPort,
@@ -32,8 +31,7 @@ describe('AddGitRepoUseCase', () => {
   let mockGitProviderService: jest.Mocked<GitProviderService>;
   let mockGitRepoService: jest.Mocked<GitRepoService>;
   let mockDeploymentPort: jest.Mocked<IDeploymentPort>;
-  let mockUserProvider: jest.Mocked<UserProvider>;
-  let mockOrganizationProvider: jest.Mocked<OrganizationProvider>;
+  let mockAccountsAdapter: jest.Mocked<IAccountsPort>;
 
   const organizationId = createOrganizationId(uuidv4());
   const userId = createUserId(uuidv4());
@@ -75,21 +73,15 @@ describe('AddGitRepoUseCase', () => {
       slug: 'test-org',
     };
 
-    mockUserProvider = {
+    mockAccountsAdapter = {
       getUserById: jest.fn().mockResolvedValue(adminUser),
-    } as Partial<jest.Mocked<UserProvider>> as jest.Mocked<UserProvider>;
-
-    mockOrganizationProvider = {
       getOrganizationById: jest.fn().mockResolvedValue(organization),
-    } as Partial<
-      jest.Mocked<OrganizationProvider>
-    > as jest.Mocked<OrganizationProvider>;
+    } as unknown as jest.Mocked<IAccountsPort>;
 
     useCase = new AddGitRepoUseCase(
       mockGitProviderService,
       mockGitRepoService,
-      mockUserProvider,
-      mockOrganizationProvider,
+      mockAccountsAdapter,
       mockDeploymentPort,
       stubLogger(),
     );
@@ -204,8 +196,7 @@ describe('AddGitRepoUseCase', () => {
       const useCaseWithDeployment = new AddGitRepoUseCase(
         mockGitProviderService,
         mockGitRepoService,
-        mockUserProvider,
-        mockOrganizationProvider,
+        mockAccountsAdapter,
         mockDeploymentPort,
         stubLogger(),
       );
@@ -291,7 +282,7 @@ describe('AddGitRepoUseCase', () => {
         ],
       };
 
-      mockUserProvider.getUserById.mockResolvedValueOnce(nonAdminUser);
+      mockAccountsAdapter.getUserById.mockResolvedValueOnce(nonAdminUser);
 
       await expect(useCase.execute(command)).rejects.toThrow(
         OrganizationAdminRequiredError,

@@ -26,6 +26,7 @@ import {
   ListUserOrganizationsCommand,
   ListUserOrganizationsResponse,
   Organization,
+  OrganizationId,
   OrganizationOnboardingStatus,
   RemoveUserFromOrganizationCommand,
   RemoveUserFromOrganizationResponse,
@@ -38,6 +39,7 @@ import {
   SignUpWithOrganizationCommand,
   SignUpWithOrganizationResponse,
   User,
+  UserId,
   ValidateInvitationTokenCommand,
   ValidateInvitationTokenResponse,
   ValidatePasswordCommand,
@@ -61,6 +63,7 @@ export interface IAccountsPort {
   signInUser(command: SignInUserCommand): Promise<SignInUserResponse>;
 
   getUserById(command: GetUserByIdCommand): Promise<User | null>;
+  getUserById(userId: UserId): Promise<User | null>;
 
   removeUserFromOrganization(
     command: RemoveUserFromOrganizationCommand,
@@ -85,6 +88,9 @@ export interface IAccountsPort {
 
   getOrganizationById(
     command: GetOrganizationByIdCommand,
+  ): Promise<Organization | null>;
+  getOrganizationById(
+    organizationId: OrganizationId,
   ): Promise<Organization | null>;
 
   getOrganizationByName(
