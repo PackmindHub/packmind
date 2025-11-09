@@ -1,4 +1,4 @@
-import { Recipe } from '@packmind/recipes/types';
+import { Recipe } from '@packmind/recipes';
 import { GitRepo } from '@packmind/git';
 
 import { DataSource } from 'typeorm';

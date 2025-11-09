@@ -1,5 +1,5 @@
 import { RecipesDeployment } from '@packmind/types';
-import { RecipeId, RecipeVersion } from '@packmind/recipes/types';
+import { RecipeId, RecipeVersion } from '@packmind/recipes';
 import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
 import { RecipesDeploymentSchema } from '../schemas/RecipesDeploymentSchema';
 import { Repository } from 'typeorm';

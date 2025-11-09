@@ -6,10 +6,6 @@ module.exports = function getBaseWebpackPaths(__dirname) {
   return {
     '@packmind/accounts': join(__dirname, '../../packages/accounts/src'),
     '@packmind/recipes': join(__dirname, '../../packages/recipes/src'),
-    '@packmind/recipes/types': join(
-      __dirname,
-      '../../packages/recipes/src/types',
-    ),
     '@packmind/node-utils': join(__dirname, '../../packages/node-utils/src'),
     '@packmind/types': join(__dirname, '../../packages/types/src'),
     '@packmind/migrations': join(__dirname, '../../packages/migrations/src'),

@@ -1,11 +1,10 @@
-import { IRecipesServices } from '../IRecipesServices';
 import { RecipeService } from './RecipeService';
 import { RecipeVersionService } from './RecipeVersionService';
 import { RecipeSummaryService } from './RecipeSummaryService';
 import { IRecipesRepositories } from '../../domain/repositories/IRecipesRepositories';
 import { PackmindLogger } from '@packmind/logger';
 
-export class RecipesServices implements IRecipesServices {
+export class RecipesServices {
   private readonly recipeService: RecipeService;
   private readonly recipeVersionService: RecipeVersionService;
   private readonly recipeSummaryService: RecipeSummaryService;

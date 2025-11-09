@@ -6,12 +6,13 @@ import {
 } from '@packmind/coding-agent';
 import { GitHexa, gitSchemas } from '@packmind/git';
 import { JobsHexa } from '@packmind/jobs';
-import { RecipesHexa, recipesSchemas } from '@packmind/recipes';
 import {
+  RecipesHexa,
+  recipesSchemas,
   Recipe,
   RecipeVersion,
   RecipeVersionId,
-} from '@packmind/recipes/types';
+} from '@packmind/recipes';
 import { HexaRegistry } from '@packmind/node-utils';
 import { Space, SpacesHexa, spacesSchemas } from '@packmind/spaces';
 import { StandardsHexa, standardsSchemas } from '@packmind/standards';

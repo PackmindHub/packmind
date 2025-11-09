@@ -18,7 +18,7 @@ import {
 import { DeploymentsService } from './deployments.service';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthService } from '../auth/auth.service';
-import { RecipeId } from '@packmind/recipes/types';
+import { RecipeId } from '@packmind/recipes';
 import type { StandardId, StandardVersionId } from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 

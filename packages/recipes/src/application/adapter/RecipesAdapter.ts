@@ -10,7 +10,7 @@ import { ListRecipesBySpaceUsecase } from '../useCases/listRecipesBySpace/listRe
 import { ListRecipeVersionsUsecase } from '../useCases/listRecipeVersions/listRecipeVersions.usecase';
 import { GetRecipeVersionUsecase } from '../useCases/getRecipeVersion/getRecipeVersion.usecase';
 import { DeleteRecipesBatchUsecase } from '../useCases/deleteRecipesBatch/deleteRecipesBatch.usecase';
-import { IRecipesServices } from '../IRecipesServices';
+import { RecipesServices } from '../services/RecipesServices';
 import { PackmindLogger } from '@packmind/logger';
 import {
   IAccountsPort,
@@ -55,7 +55,7 @@ export class RecipesAdapter implements IRecipesPort {
   private _recipesDelayedJobs: IRecipesDelayedJobs | null = null;
 
   constructor(
-    private readonly recipesServices: IRecipesServices,
+    private readonly recipesServices: RecipesServices,
     private readonly gitPort: IGitPort,
     private readonly deploymentPort: IDeploymentPort | undefined,
     private readonly accountsAdapter: IAccountsPort,

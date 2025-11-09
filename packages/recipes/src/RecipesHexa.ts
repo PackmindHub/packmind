@@ -5,28 +5,42 @@ import {
   IDeploymentPort,
   IRecipesPort,
   IRecipesPortName,
+  IGitPort,
+  IGitPortName,
+  IAccountsPort,
+  IAccountsPortName,
+  ISpacesPort,
+  ISpacesPortName,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
-import { RecipesHexaFactory } from './RecipesHexaFactory';
+import { RecipesRepositories } from './infra/repositories/RecipesRepositories';
+import { RecipesServices } from './application/services/RecipesServices';
+import { RecipesAdapter } from './application/adapter/RecipesAdapter';
+import { IRecipesDelayedJobs } from './domain/jobs/IRecipesDelayedJobs';
+import { UpdateRecipesAndGenerateSummariesJobFactory } from './infra/jobs/UpdateRecipesAndGenerateSummariesJobFactory';
+import { DeployRecipesJobFactory } from './infra/jobs/DeployRecipesJobFactory';
+import { JobsHexa } from '@packmind/jobs';
+import { AccountsHexa } from '@packmind/accounts';
+import { SpacesHexa } from '@packmind/spaces';
 
 const origin = 'RecipesHexa';
 
 /**
- * RecipesHexa - Facade for the Recipes domain following the new Hexa pattern.
+ * RecipesHexa - Facade for the Recipes domain following the Hexa pattern.
  *
  * This class serves as the main entry point for recipes-related functionality.
- * It holds the RecipesHexa instance and exposes use cases as a clean facade.
- *
- * The Hexa pattern separates concerns:
- * - RecipesHexaFactory: Handles dependency injection and service instantiation
- * - RecipesHexa: Serves as use case facade and integration point with other domains
- *
- * Uses the DataSource provided through the HexaRegistry for database operations.
- * Also integrates with GitHexa for git-related recipe operations.
+ * It exposes use cases through the adapter and manages the lifecycle of the domain.
  */
 export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
-  private readonly hexa: RecipesHexaFactory;
+  private readonly recipesRepositories: RecipesRepositories;
+  private readonly recipesServices: RecipesServices;
+  private adapter!: RecipesAdapter; // Non-null assertion since initialize() will set it
+  private gitPort?: IGitPort;
+  private gitHexa?: GitHexa;
+  private accountsPort?: IAccountsPort;
+  private spacesPort?: ISpacesPort | null;
   private _deploymentPort: IDeploymentPort | undefined | null = undefined;
+  private recipesDelayedJobs: IRecipesDelayedJobs | null = null;
   private isInitialized = false;
 
   constructor(
@@ -38,9 +52,17 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
     this.logger.info('Constructing RecipesHexa');
 
     try {
-      // Initialize the hexagon factory with the DataSource
-      // Adapter retrieval will be done in initialize(registry)
-      this.hexa = new RecipesHexaFactory(this.dataSource, this.logger);
+      this.logger.debug(
+        'Creating repository and service aggregators with DataSource',
+      );
+
+      // Instantiate repositories and services
+      this.recipesRepositories = new RecipesRepositories(dataSource);
+      this.recipesServices = new RecipesServices(
+        this.recipesRepositories,
+        this.logger,
+      );
+
       this.logger.info('RecipesHexa construction completed');
     } catch (error) {
       this.logger.error('Failed to construct RecipesHexa', {
@@ -67,25 +89,47 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
     try {
       // Get GitHexa and its adapter
       const gitHexa = registry.get(GitHexa);
-      const gitPort = gitHexa.getAdapter();
+      this.gitHexa = gitHexa;
+      this.gitPort = registry.getAdapter<IGitPort>(IGitPortName);
 
-      // Initialize the factory with registry and adapters
-      await this.hexa.initialize(
-        registry,
-        gitPort,
-        gitHexa,
+      // Get AccountsHexa adapter
+      const accountsHexa = registry.get(AccountsHexa);
+      if (!accountsHexa) {
+        throw new Error('AccountsHexa not found in registry');
+      }
+      this.accountsPort = registry.getAdapter<IAccountsPort>(IAccountsPortName);
+
+      // Get spaces port for space validation (optional)
+      if (registry.isRegistered(SpacesHexa)) {
+        this.spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
+      } else {
+        this.logger.warn(
+          'SpacesHexa not found in registry - space validation will not be available',
+        );
+        this.spacesPort = null;
+      }
+
+      // Create RecipesAdapter with all dependencies
+      this.logger.debug('Creating RecipesAdapter');
+      this.adapter = new RecipesAdapter(
+        this.recipesServices,
+        this.gitPort,
         this._deploymentPort || undefined,
+        this.accountsPort,
+        this.spacesPort,
+        this.logger,
+        this.gitHexa,
       );
 
-      // Set delayed jobs on adapter if available (they're only created if deployment port is set)
-      // Delayed jobs will be set later when deployment port is available via setDeploymentPort()
-      try {
-        const delayedJobs = this.getRecipesDelayedJobs();
-        this.hexa.useCases.setRecipesDelayedJobs(delayedJobs);
-      } catch {
-        // Delayed jobs not available yet (deployment port not set) - will be set later
-        this.logger.debug(
-          'Delayed jobs not available yet, will be set when deployment port is available',
+      // Build delayed jobs if deployment port is available
+      if (this._deploymentPort) {
+        this.logger.debug('Building recipes delayed jobs');
+        const jobsHexa = registry.get(JobsHexa);
+        this.recipesDelayedJobs = await this.buildRecipesDelayedJobs(jobsHexa);
+        this.adapter.setRecipesDelayedJobs(this.recipesDelayedJobs);
+      } else {
+        this.logger.warn(
+          'Deployment port not available, skipping delayed jobs initialization',
         );
       }
 
@@ -100,12 +144,65 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
   }
 
   /**
+   * Build and register all recipes delayed jobs
+   */
+  private async buildRecipesDelayedJobs(
+    jobsHexa: JobsHexa,
+  ): Promise<IRecipesDelayedJobs> {
+    this.logger.info('Building recipes delayed jobs');
+
+    if (!this._deploymentPort) {
+      throw new Error(
+        'Deployment port is required for delayed jobs initialization',
+      );
+    }
+
+    // Create UpdateRecipesAndGenerateSummaries job factory
+    const updateRecipesJobFactory =
+      new UpdateRecipesAndGenerateSummariesJobFactory(
+        this.recipesServices.getRecipeService(),
+        this.recipesServices.getRecipeVersionService(),
+        this.recipesServices.getRecipeSummaryService(),
+      );
+    await updateRecipesJobFactory.createQueue();
+
+    // Create DeployRecipes job factory
+    const deployRecipesJobFactory = new DeployRecipesJobFactory(
+      this._deploymentPort,
+    );
+    await deployRecipesJobFactory.createQueue();
+
+    // Register job factories with JobsHexa
+    this.logger.debug(
+      'Registering UpdateRecipesAndGenerateSummaries job queue',
+    );
+    jobsHexa.registerJobQueue(
+      updateRecipesJobFactory.getQueueName(),
+      updateRecipesJobFactory,
+    );
+
+    this.logger.debug('Registering DeployRecipes job queue');
+    jobsHexa.registerJobQueue(
+      deployRecipesJobFactory.getQueueName(),
+      deployRecipesJobFactory,
+    );
+
+    this.logger.info('Recipes delayed jobs built and registered successfully');
+
+    return {
+      updateRecipesAndGenerateSummariesDelayedJob:
+        updateRecipesJobFactory.getDelayedJob(),
+      deployRecipesDelayedJob: deployRecipesJobFactory.getDelayedJob(),
+    };
+  }
+
+  /**
    * Internal helper to ensure initialization before use case access
    */
   private ensureInitialized(): void {
     if (!this.isInitialized) {
       throw new Error(
-        'RecipesHexa not initialized. Call initialize() before using delayed jobs.',
+        'RecipesHexa not initialized. Call initialize() before using.',
       );
     }
   }
@@ -113,14 +210,15 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
   /**
    * Get the delayed jobs for accessing job queues
    */
-  public getRecipesDelayedJobs() {
-    // Check if factory is initialized (delayed jobs are created during factory initialization)
-    if (!this.hexa.getIsInitialized()) {
+  public getRecipesDelayedJobs(): IRecipesDelayedJobs {
+    this.ensureInitialized();
+
+    if (!this.recipesDelayedJobs) {
       throw new Error(
-        'RecipesHexaFactory not initialized. Call initialize() before using delayed jobs.',
+        'Recipes delayed jobs not initialized. Ensure deployment port is available.',
       );
     }
-    return this.hexa.getRecipesDelayedJobs();
+    return this.recipesDelayedJobs;
   }
 
   /**
@@ -131,21 +229,18 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
     deploymentPort: IDeploymentPort,
   ): Promise<void> {
     this._deploymentPort = deploymentPort;
-    // Update the use cases with the new deployment port (this will build delayed jobs)
-    await this.hexa.updateDeploymentPort(registry, deploymentPort);
 
-    // If already initialized, delayed jobs are already set by updateDeploymentPort()
-    // Just ensure they're set on the adapter
-    if (this.isInitialized) {
-      try {
-        const delayedJobs = this.hexa.getRecipesDelayedJobs();
-        this.hexa.useCases.setRecipesDelayedJobs(delayedJobs);
-      } catch {
-        // Delayed jobs not available - updateDeploymentPort should have set them
-        this.logger.debug(
-          'Delayed jobs not available after deployment port update',
-        );
-      }
+    // Update the adapter with the new deployment port
+    this.adapter.updateDeploymentPort(deploymentPort);
+
+    // Build delayed jobs if not already built
+    if (!this.recipesDelayedJobs) {
+      this.logger.debug(
+        'Building recipes delayed jobs after deployment port set',
+      );
+      const jobsHexa = registry.get(JobsHexa);
+      this.recipesDelayedJobs = await this.buildRecipesDelayedJobs(jobsHexa);
+      this.adapter.setRecipesDelayedJobs(this.recipesDelayedJobs);
     }
   }
 
@@ -165,7 +260,7 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
    */
   public getAdapter(): IRecipesPort {
     this.ensureInitialized();
-    return this.hexa.useCases;
+    return this.adapter;
   }
 
   /**
