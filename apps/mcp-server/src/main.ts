@@ -31,7 +31,7 @@ async function startServer() {
       logger,
     );
     if (!jwtSecret) {
-      process.env.JWT_SECRET = 'fallback-secret-for-development';
+      process.env.JWT_SECRET = 'mcp-fallback-secret-for-development';
       logger.warn(
         'MCP_JWT_SECRET_KEY not found in configuration, using fallback value. This is not secure for production.',
       );
