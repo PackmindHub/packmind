@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { OrganizationId } from '@packmind/accounts';
+import { OrganizationId } from '@packmind/types';
 import {
   DEFAULT_ACTIVE_RENDER_MODES,
   RenderMode,

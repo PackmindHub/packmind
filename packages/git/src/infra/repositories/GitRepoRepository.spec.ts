@@ -10,11 +10,8 @@ import { GitProvider } from '../../domain/entities/GitProvider';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import { gitRepoFactory, gitProviderFactory } from '../../../test';
-import {
-  createOrganizationId,
-  OrganizationSchema,
-  Organization,
-} from '@packmind/accounts';
+import { createOrganizationId, Organization } from '@packmind/types';
+import { OrganizationSchema } from '@packmind/accounts';
 
 describe('GitRepoRepository', () => {
   let datasource: DataSource;

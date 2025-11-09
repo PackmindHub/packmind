@@ -4,7 +4,7 @@ import {
   UserOrganizationMembership,
   createOrganizationId,
   createUserId,
-} from '@packmind/accounts';
+} from '@packmind/types';
 import { OrganizationAdminRequiredError } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {

@@ -1,7 +1,7 @@
 import { StandardService } from '../../services/StandardService';
 import { StandardId } from '../../../domain/entities/Standard';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { UserId } from '@packmind/accounts';
+import { UserId } from '@packmind/types';
 
 const origin = 'DeleteStandardsBatchUsecase';
 

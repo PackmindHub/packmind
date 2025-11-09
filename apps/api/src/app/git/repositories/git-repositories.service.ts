@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { GitProviderId, GitRepo, GitRepoId } from '@packmind/git';
-import { OrganizationId, UserId } from '@packmind/accounts';
+import { OrganizationId, UserId } from '@packmind/types';
 import {
   IDeploymentPort,
   IGitPort,

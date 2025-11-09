@@ -1,9 +1,5 @@
-import {
-  AccountsHexa,
-  Organization,
-  User,
-  accountsSchemas,
-} from '@packmind/accounts';
+import { AccountsHexa, accountsSchemas } from '@packmind/accounts';
+import { Organization, User } from '@packmind/types';
 import {
   CodingAgentHexa,
   CodingAgentHexaFactory,

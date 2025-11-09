@@ -11,7 +11,7 @@ import {
   UserId,
   createOrganizationId,
   createUserId,
-} from '@packmind/accounts';
+} from '@packmind/types';
 import type { ILinterPort } from '@packmind/types';
 
 const origin = 'UpdateRuleExampleUsecase';

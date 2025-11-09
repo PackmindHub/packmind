@@ -1,5 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
-import { createOrganizationId, createUserId } from '@packmind/accounts';
+import { createOrganizationId, createUserId } from '@packmind/types';
 import { IStandardsRepositories } from '../../../domain/repositories/IStandardsRepositories';
 import {
   IDeleteRuleExample,

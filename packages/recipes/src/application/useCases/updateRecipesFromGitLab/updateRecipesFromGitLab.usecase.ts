@@ -7,7 +7,7 @@ import {
   UpdateRecipesFromGitLabCommand,
   UpdateRecipesFromGitLabResponse,
 } from '@packmind/types';
-import { createOrganizationId } from '@packmind/accounts';
+import { createOrganizationId } from '@packmind/types';
 import {
   BaseUpdateRecipesFromWebhookUsecase,
   CommonRepoData,

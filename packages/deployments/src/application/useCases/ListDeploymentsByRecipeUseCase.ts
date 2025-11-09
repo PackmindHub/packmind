@@ -1,5 +1,5 @@
 import { PackmindLogger, LogLevel } from '@packmind/logger';
-import { OrganizationId } from '@packmind/accounts';
+import { OrganizationId } from '@packmind/types';
 import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
 import { RecipesDeployment } from '../../domain/entities/RecipesDeployment';
 import {

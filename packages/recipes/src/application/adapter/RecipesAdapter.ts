@@ -34,7 +34,7 @@ import {
   RecipeId,
   IRecipesPort,
 } from '@packmind/types';
-import { OrganizationId } from '@packmind/accounts';
+import { OrganizationId } from '@packmind/types';
 import { Recipe } from '../../domain/entities/Recipe';
 
 const origin = 'RecipesAdapter';

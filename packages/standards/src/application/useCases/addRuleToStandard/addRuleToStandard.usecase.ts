@@ -6,7 +6,7 @@ import { StandardVersion } from '../../../domain/entities/StandardVersion';
 import { CreateStandardVersionData } from '../../services/StandardVersionService';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { RuleExample } from '@packmind/types';
-import { OrganizationId, UserId } from '@packmind/accounts';
+import { OrganizationId, UserId } from '@packmind/types';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import { StandardVersionId } from '../../../domain/entities';
 import type { ILinterPort } from '@packmind/types';

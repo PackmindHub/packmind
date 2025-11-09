@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { RenderModeConfigurationService } from './RenderModeConfigurationService';
 import { IRenderModeConfigurationRepository } from '../../domain/repositories/IRenderModeConfigurationRepository';
 import { stubLogger } from '@packmind/test-utils';
-import { OrganizationId, createOrganizationId } from '@packmind/accounts';
+import { OrganizationId, createOrganizationId } from '@packmind/types';
 import {
   DEFAULT_ACTIVE_RENDER_MODES,
   RenderMode,

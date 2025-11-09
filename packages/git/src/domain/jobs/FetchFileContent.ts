@@ -3,7 +3,7 @@ import {
   HandleWebHookWithoutContentResult,
   HandleWebHookResult,
 } from '@packmind/types';
-import { OrganizationId } from '@packmind/accounts';
+import { OrganizationId } from '@packmind/types';
 
 export interface FetchFileContentInput {
   organizationId: OrganizationId;

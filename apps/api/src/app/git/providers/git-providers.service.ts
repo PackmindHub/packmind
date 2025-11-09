@@ -7,7 +7,7 @@ import {
   AddGitProviderCommand,
 } from '@packmind/git';
 import { AccountsHexa } from '@packmind/accounts';
-import { OrganizationId, UserId } from '@packmind/accounts';
+import { OrganizationId, UserId } from '@packmind/types';
 import { IGitPort } from '@packmind/types';
 import { InjectGitAdapter } from '../../shared/HexaInjection';
 

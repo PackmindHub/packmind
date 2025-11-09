@@ -4,17 +4,15 @@ import {
   UserOrganizationRole,
   createOrganizationId,
   OrganizationId,
-  SignInUserCommand,
   UserId,
+  createUserId,
+  IAccountsPort,
+} from '@packmind/types';
+import {
+  SignInUserCommand,
+  SignInUserResponse,
   GenerateApiKeyCommand,
   GetCurrentApiKeyCommand,
-  SignInUserResponse,
-  createUserId,
-} from '@packmind/accounts';
-import { IAccountsPort } from '@packmind/types';
-import { InjectAccountsAdapter } from '../shared/HexaInjection';
-import { maskEmail } from '@packmind/logger';
-import {
   ActivateUserAccountCommand,
   ActivateUserAccountResponse,
   RequestPasswordResetCommand,
@@ -23,13 +21,13 @@ import {
   ResetPasswordResponse,
   ValidatePasswordResetTokenCommand,
   ValidatePasswordResetTokenResponse,
-} from '@packmind/types';
-import {
   SignUpWithOrganizationCommand,
   SignUpWithOrganizationResponse,
   CheckEmailAvailabilityCommand,
   CheckEmailAvailabilityResponse,
-} from '@packmind/types';
+} from '@packmind/accounts';
+import { InjectAccountsAdapter } from '../shared/HexaInjection';
+import { maskEmail } from '@packmind/logger';
 
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindCommand, PackmindCommandBody } from '@packmind/types';

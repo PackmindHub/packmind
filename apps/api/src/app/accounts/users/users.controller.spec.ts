@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
-import { User, createOrganizationId, createUserId } from '@packmind/accounts';
+import { User, createOrganizationId, createUserId } from '@packmind/types';
 import { NotFoundException } from '@nestjs/common';
 import { AuthService } from '../../auth/auth.service';
 import { PackmindLogger } from '@packmind/logger';

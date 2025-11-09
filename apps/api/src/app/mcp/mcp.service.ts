@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { GenerateUserTokenCommand } from '@packmind/accounts';
+import { GenerateUserTokenCommand } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { IAccountsPort } from '@packmind/types';
 import { InjectAccountsAdapter } from '../shared/HexaInjection';

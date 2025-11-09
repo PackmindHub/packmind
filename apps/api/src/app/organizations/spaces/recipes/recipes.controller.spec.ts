@@ -1,6 +1,6 @@
 import { OrganizationsSpacesRecipesController } from './recipes.controller';
 import { RecipesService } from '../../../recipes/recipes.service';
-import { createOrganizationId, createUserId } from '@packmind/accounts';
+import { createOrganizationId, createUserId } from '@packmind/types';
 import { createSpaceId } from '@packmind/spaces';
 import { stubLogger } from '@packmind/test-utils';
 import {

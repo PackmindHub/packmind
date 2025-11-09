@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { PackmindLogger } from '@packmind/logger';
 import { WithSoftDelete } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
-import { createOrganizationId } from '@packmind/accounts';
+import { createOrganizationId } from '@packmind/types';
 import { GitCommitSchema } from '@packmind/git';
 import { SpaceSchema } from '@packmind/spaces';
 import { spaceFactory } from '@packmind/spaces/test';

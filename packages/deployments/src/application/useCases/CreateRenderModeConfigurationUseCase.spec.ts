@@ -12,7 +12,7 @@ import {
   UserOrganizationMembership,
   createOrganizationId,
   createUserId,
-} from '@packmind/accounts';
+} from '@packmind/types';
 import { renderModeConfigurationFactory } from '../../../test';
 
 const createMembership = (

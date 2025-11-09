@@ -1,4 +1,4 @@
-import { AccountsHexa, accountsSchemas } from '@packmind/accounts';
+import { accountsSchemas, AccountsHexa } from '@packmind/accounts';
 import {
   CodingAgentHexaFactory,
   DeployerService,

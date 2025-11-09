@@ -1,6 +1,6 @@
 import { Factory } from '@packmind/test-utils';
 import { Recipe, createRecipeId } from '../src/domain/entities/Recipe';
-import { createUserId } from '@packmind/accounts';
+import { createUserId } from '@packmind/types';
 import { createSpaceId } from '@packmind/spaces';
 import { v4 as uuidv4 } from 'uuid';
 

@@ -1,4 +1,4 @@
-import { OrganizationId } from '@packmind/accounts';
+import { OrganizationId } from '@packmind/types';
 import { IRepository } from '@packmind/types';
 import { RenderModeConfiguration } from '@packmind/types';
 

@@ -1,5 +1,5 @@
 import { GitProvider } from '../../../domain/entities/GitProvider';
-import { OrganizationId } from '@packmind/accounts';
+import { OrganizationId } from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
 
 export interface ListProvidersUseCaseInput {

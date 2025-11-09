@@ -13,7 +13,7 @@ import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
 import { gitCommitFactory } from '../../../../test/gitCommitFactory';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
-import { createOrganizationId } from '@packmind/accounts';
+import { createOrganizationId } from '@packmind/types';
 
 describe('CommitToGit', () => {
   let commitToGit: CommitToGit;

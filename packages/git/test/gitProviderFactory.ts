@@ -4,7 +4,7 @@ import {
   GitProviderVendors,
   createGitProviderId,
 } from '../src/domain/entities/GitProvider';
-import { createOrganizationId } from '@packmind/accounts';
+import { createOrganizationId } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 
 export const gitProviderFactory: Factory<GitProvider> = (

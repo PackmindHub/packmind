@@ -5,7 +5,7 @@ import {
 } from '../domain/entities/GitRepo';
 import { GitProviderId } from '../domain/entities/GitProvider';
 import { IGitRepoRepository } from '../domain/repositories/IGitRepoRepository';
-import { OrganizationId, UserId } from '@packmind/accounts';
+import { OrganizationId, UserId } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { QueryOption } from '@packmind/types';
 

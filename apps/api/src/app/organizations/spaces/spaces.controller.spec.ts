@@ -1,5 +1,5 @@
 import { OrganizationsSpacesController } from './spaces.controller';
-import { createOrganizationId } from '@packmind/accounts';
+import { createOrganizationId } from '@packmind/types';
 import { createSpaceId } from '@packmind/spaces';
 import { stubLogger } from '@packmind/test-utils';
 import { PackmindLogger } from '@packmind/logger';

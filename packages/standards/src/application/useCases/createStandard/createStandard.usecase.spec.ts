@@ -11,7 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 import slug from 'slug';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
-import { createOrganizationId, createUserId } from '@packmind/accounts';
+import { createOrganizationId, createUserId } from '@packmind/types';
 import { createSpaceId } from '@packmind/spaces';
 import { createStandardVersionId } from '../../../domain/entities/StandardVersion';
 

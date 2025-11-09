@@ -13,11 +13,8 @@ import { PackmindLogger } from '@packmind/logger';
 import { Configuration } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import { gitProviderFactory, gitlabProviderFactory } from '../../../test';
-import {
-  createOrganizationId,
-  OrganizationSchema,
-  Organization,
-} from '@packmind/accounts';
+import { createOrganizationId, Organization } from '@packmind/types';
+import { OrganizationSchema } from '@packmind/accounts';
 
 // Mock Configuration for encryption key
 jest.mock('@packmind/node-utils', () => ({

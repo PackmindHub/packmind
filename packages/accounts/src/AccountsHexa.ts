@@ -1,48 +1,62 @@
 import { DataSource } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
-import { ISpacesPort, IAccountsPort, IAccountsPortName } from '@packmind/types';
-import { AccountsHexaFactory } from './AccountsHexaFactory';
+import {
+  IAccountsPort,
+  IAccountsPortName,
+  ISpacesPort,
+  ISpacesPortName,
+} from '@packmind/types';
 import { ApiKeyService } from './application/services/ApiKeyService';
-import { SpacesHexa } from '@packmind/spaces';
+import { AccountsRepositories } from './infra/repositories/AccountsRepositories';
+import { AccountsAdapter } from './application/adapter/AccountsAdapter';
+import { EnhancedAccountsServices } from './application/services/EnhancedAccountsServices';
 
 const origin = 'AccountsHexa';
 
 /**
- * AccountsHexa - Facade for the Accounts domain following the new Hexa pattern.
+ * AccountsHexa - Facade for the Accounts domain following hexagonal architecture.
  *
  * This class serves as the main entry point for accounts-related functionality.
- * It holds the AccountsHexa instance and exposes use cases as a clean facade.
+ * It handles dependency injection and exposes use cases as a clean facade.
  *
- * The Hexa pattern separates concerns:
- * - AccountsHexaFactory: Handles dependency injection and service instantiation
- * - AccountsHexa: Serves as use case facade and integration point with other domains
+ * The constructor instantiates repositories, services, and the adapter.
+ * The initialize method retrieves and sets ports from the registry.
  *
  * Uses the DataSource provided through the HexaRegistry for database operations.
  */
 export type AccountsHexaOpts = BaseHexaOpts & {
   apiKeyService?: ApiKeyService;
-  spacesPort?: ISpacesPort;
 };
 
 const baseAccountsHexaOpts = { logger: new PackmindLogger(origin) };
 
 export class AccountsHexa extends BaseHexa<AccountsHexaOpts, IAccountsPort> {
-  private readonly hexa: AccountsHexaFactory;
+  private readonly accountsRepositories: AccountsRepositories;
+  private readonly accountsServices: EnhancedAccountsServices;
+  private readonly adapter: AccountsAdapter;
 
   constructor(dataSource: DataSource, opts?: Partial<AccountsHexaOpts>) {
     super(dataSource, { ...baseAccountsHexaOpts, ...opts });
     this.logger.info('Constructing AccountsHexa');
 
     try {
-      // Initialize the hexagon factory with the DataSource
-      // Adapter retrieval will be done in initialize(registry)
-      this.hexa = new AccountsHexaFactory(
-        this.dataSource,
+      this.logger.debug(
+        'Creating repository and service aggregators with DataSource',
+      );
+
+      this.accountsRepositories = new AccountsRepositories(this.dataSource);
+      this.accountsServices = new EnhancedAccountsServices(
+        this.accountsRepositories,
         this.logger,
         opts?.apiKeyService,
-        opts?.spacesPort, // Use provided spacesPort if available
       );
+
+      this.adapter = new AccountsAdapter(this.accountsServices, this.logger);
+      this.logger.debug(
+        'Repository aggregator, service aggregator, and adapter created successfully',
+      );
+
       this.logger.info('AccountsHexa construction completed');
     } catch (error) {
       this.logger.error('Failed to construct AccountsHexa', {
@@ -56,17 +70,14 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts, IAccountsPort> {
     this.logger.info('Initializing AccountsHexa (adapter retrieval phase)');
 
     try {
-      if (!this.opts?.spacesPort) {
-        try {
-          const spacesHexa = registry.get(SpacesHexa);
-          const spacesPort = spacesHexa.getAdapter();
-          this.hexa.useCases.setSpacesPort(spacesPort);
-          this.logger.debug('Retrieved SpacesAdapter from SpacesHexa');
-        } catch (error) {
-          this.logger.debug('SpacesHexa not available in registry', {
-            error: error instanceof Error ? error.message : String(error),
-          });
-        }
+      try {
+        const spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
+        this.adapter.setSpacesPort(spacesPort);
+        this.logger.debug('Retrieved SpacesAdapter from registry');
+      } catch (error) {
+        this.logger.debug('SpacesHexa not available in registry', {
+          error: error instanceof Error ? error.message : String(error),
+        });
       }
       this.logger.info('AccountsHexa initialized successfully');
     } catch (error) {
@@ -89,7 +100,7 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts, IAccountsPort> {
    * The adapter is available immediately after construction.
    */
   public getAdapter(): IAccountsPort {
-    return this.hexa.useCases;
+    return this.adapter;
   }
 
   /**

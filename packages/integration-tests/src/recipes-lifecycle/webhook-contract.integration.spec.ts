@@ -1,4 +1,4 @@
-import { createUserId } from '@packmind/accounts';
+import { createUserId } from '@packmind/types';
 import { GitCommitSchema } from '@packmind/git';
 import { gitCommitFactory } from '@packmind/git/test';
 import {

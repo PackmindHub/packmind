@@ -1,4 +1,4 @@
-import { createOrganizationId, createUserId } from '@packmind/accounts';
+import { createOrganizationId, createUserId } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { createSpaceId } from '@packmind/spaces';
 import { stubLogger } from '@packmind/test-utils';

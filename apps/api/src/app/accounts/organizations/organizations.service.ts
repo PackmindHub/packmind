@@ -2,10 +2,14 @@ import { Injectable } from '@nestjs/common';
 import {
   Organization,
   OrganizationId,
+  UserId,
+  UserOrganizationRole,
+  IAccountsPort,
+} from '@packmind/types';
+import {
   RemoveUserFromOrganizationCommand,
   RemoveUserFromOrganizationResponse,
 } from '@packmind/accounts';
-import { UserId, UserOrganizationRole, IAccountsPort } from '@packmind/types';
 import { InjectAccountsAdapter } from '../../shared/HexaInjection';
 
 @Injectable()

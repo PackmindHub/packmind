@@ -8,15 +8,14 @@ import {
   Body,
 } from '@nestjs/common';
 
+import { User, UserId, UserOrganizationRole } from '@packmind/types';
 import {
   ListOrganizationUserStatusesResponse,
   ListOrganizationUsersResponse,
-  User,
-  UserId,
+  ChangeUserRoleResponse,
 } from '@packmind/accounts';
 import { UsersService } from './users.service';
 import { PackmindLogger } from '@packmind/logger';
-import { ChangeUserRoleResponse, UserOrganizationRole } from '@packmind/types';
 import { AuthService } from '../../auth/auth.service';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 

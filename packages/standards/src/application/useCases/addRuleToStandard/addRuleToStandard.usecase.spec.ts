@@ -20,7 +20,7 @@ import {
   createUserId,
   OrganizationId,
   UserId,
-} from '@packmind/accounts';
+} from '@packmind/types';
 import { createStandardVersionId } from '../../../domain/entities/StandardVersion';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 

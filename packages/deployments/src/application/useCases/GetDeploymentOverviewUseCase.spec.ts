@@ -2,7 +2,7 @@ import { GetDeploymentOverviewUseCase } from './GetDeploymentOverviewUseCase';
 import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
 import { createRecipeVersionId } from '@packmind/recipes';
 import { stubLogger } from '@packmind/test-utils';
-import { createOrganizationId, createUserId } from '@packmind/accounts';
+import { createOrganizationId, createUserId } from '@packmind/types';
 import { createSpaceId } from '@packmind/types';
 import { gitRepoFactory } from '@packmind/git/test';
 import { recipeFactory } from '@packmind/recipes/test';

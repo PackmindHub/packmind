@@ -16,7 +16,7 @@ import {
   UserId,
   createOrganizationId,
   createUserId,
-} from '@packmind/accounts';
+} from '@packmind/types';
 import { createSpaceId } from '@packmind/spaces';
 import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSummaryDelayedJob';
 

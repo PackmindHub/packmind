@@ -9,7 +9,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { Standard, StandardId } from '@packmind/standards';
-import { OrganizationId } from '@packmind/accounts';
+import { OrganizationId } from '@packmind/types';
 import { SpaceId } from '@packmind/spaces';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {

@@ -7,7 +7,7 @@ import {
   UpdateRecipesFromGitHubResponse,
 } from '@packmind/types';
 import { IDeploymentPort } from '@packmind/types';
-import { createOrganizationId } from '@packmind/accounts';
+import { createOrganizationId } from '@packmind/types';
 import {
   BaseUpdateRecipesFromWebhookUsecase,
   CommonRepoData,

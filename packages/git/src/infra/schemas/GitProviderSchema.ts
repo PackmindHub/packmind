@@ -8,7 +8,7 @@ import {
   softDeleteSchemas,
 } from '@packmind/node-utils';
 import { GitRepo } from '../../domain/entities/GitRepo';
-import { Organization } from '@packmind/accounts';
+import { Organization } from '@packmind/types';
 
 export const GitProviderSchema = new EntitySchema<
   WithSoftDelete<

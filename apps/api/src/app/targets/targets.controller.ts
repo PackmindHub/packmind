@@ -9,7 +9,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { GitRepoId } from '@packmind/git';
-import { OrganizationId } from '@packmind/accounts';
+import { OrganizationId } from '@packmind/types';
 import {
   Target,
   TargetWithRepository,

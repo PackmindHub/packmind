@@ -1,107 +1,104 @@
-import { SignUpWithOrganizationUseCase } from '../useCases/signUpWithOrganization/SignUpWithOrganizationUseCase';
-import { CheckEmailAvailabilityUseCase } from '../useCases/checkEmailAvailability/CheckEmailAvailabilityUseCase';
-import { SignInUserUseCase } from '../useCases/signInUser/SignInUserUseCase';
-import { GetUserByIdUseCase } from '../useCases/getUserById/GetUserByIdUseCase';
-import { RemoveUserFromOrganizationUseCase } from '../useCases/removeUserFromOrganization/RemoveUserFromOrganizationUseCase';
-import { ListOrganizationUserStatusesUseCase } from '../useCases/listOrganizationUserStatuses/ListOrganizationUserStatusesUseCase';
-import { ListOrganizationUsersUseCase } from '../useCases/listOrganizationUsers/ListOrganizationUsersUseCase';
-import { ValidatePasswordUseCase } from '../useCases/validatePasswordUseCase/ValidatePasswordUseCase';
-import { CreateOrganizationUseCase } from '../useCases/createOrganization/CreateOrganizationUseCase';
-import { GetOrganizationByIdUseCase } from '../useCases/getOrganizationById/GetOrganizationByIdUseCase';
-import { GetOrganizationByNameUseCase } from '../useCases/getOrganizationByName/GetOrganizationByNameUseCase';
-import { GetOrganizationBySlugUseCase } from '../useCases/getOrganizationBySlug/GetOrganizationBySlugUseCase';
-import { CreateInvitationsUseCase } from '../useCases/createInvitations/CreateInvitationsUseCase';
-import { GenerateUserTokenUseCase } from '../useCases/generateUserToken/GenerateUserTokenUseCase';
-import { ListUserOrganizationsUseCase } from '../useCases/listUserOrganizations/ListUserOrganizationsUseCase';
-import { GenerateApiKeyUseCase } from '../useCases/generateApiKey/GenerateApiKeyUseCase';
-import { GetCurrentApiKeyUseCase } from '../useCases/getCurrentApiKey/GetCurrentApiKeyUseCase';
-import { ActivateUserAccountUseCase } from '../useCases/activateUserAccount/ActivateUserAccountUseCase';
-import { ValidateInvitationTokenUseCase } from '../useCases/validateInvitationToken/ValidateInvitationTokenUseCase';
-import { ChangeUserRoleUseCase } from '../useCases/changeUserRole/ChangeUserRoleUseCase';
+import { PackmindLogger } from '@packmind/logger';
+import {
+  ActivateUserAccountCommand,
+  ActivateUserAccountResponse,
+  ChangeUserRoleCommand,
+  ChangeUserRoleResponse,
+  CheckEmailAvailabilityCommand,
+  CreateInvitationsCommand,
+  CreateInvitationsResponse,
+  CreateOrganizationCommand,
+  GenerateApiKeyCommand,
+  GenerateUserTokenCommand,
+  GetCurrentApiKeyCommand,
+  GetOrganizationByIdCommand,
+  GetOrganizationByNameCommand,
+  GetOrganizationBySlugCommand,
+  GetOrganizationOnboardingStatusCommand,
+  GetUserByIdCommand,
+  IAccountsPort,
+  IActivateUserAccountUseCase,
+  IChangeUserRoleUseCase,
+  ICheckEmailAvailabilityUseCase,
+  ICreateInvitationsUseCase,
+  ICreateOrganizationUseCase,
+  IDeploymentPort,
+  IGenerateApiKeyUseCase,
+  IGenerateUserTokenUseCase,
+  IGetCurrentApiKeyUseCase,
+  IGetOrganizationByIdUseCase,
+  IGetOrganizationByNameUseCase,
+  IGetOrganizationBySlugUseCase,
+  IGetOrganizationOnboardingStatusUseCase,
+  IGetUserByIdUseCase,
+  IGitPort,
+  IListOrganizationUserStatusesUseCase,
+  IListOrganizationUsersUseCase,
+  IListUserOrganizationsUseCase,
+  IRequestPasswordResetUseCase,
+  IResetPasswordUseCase,
+  ISignInUserUseCase,
+  ISpacesPort,
+  IStandardsPort,
+  IValidateInvitationTokenUseCase,
+  IValidatePasswordResetTokenUseCase,
+  IValidatePasswordUseCase,
+  ListOrganizationUserStatusesCommand,
+  ListOrganizationUserStatusesResponse,
+  ListOrganizationUsersCommand,
+  ListOrganizationUsersResponse,
+  ListUserOrganizationsCommand,
+  ListUserOrganizationsResponse,
+  Organization,
+  OrganizationId,
+  OrganizationOnboardingStatus,
+  RequestPasswordResetCommand,
+  RequestPasswordResetResponse,
+  ResetPasswordCommand,
+  ResetPasswordResponse,
+  SignInUserCommand,
+  User,
+  UserId,
+  ValidateInvitationTokenCommand,
+  ValidateInvitationTokenResponse,
+  ValidatePasswordCommand,
+  ValidatePasswordResetTokenCommand,
+  ValidatePasswordResetTokenResponse,
+  createOrganizationId,
+  createUserId,
+} from '@packmind/types';
+import {
+  IRemoveUserFromOrganizationUseCase,
+  ISignUpWithOrganizationUseCase,
+  RemoveUserFromOrganizationCommand,
+  RemoveUserFromOrganizationResponse,
+  SignUpWithOrganizationCommand,
+} from '../../domain/useCases';
+import { EnhancedAccountsServices } from '../services/EnhancedAccountsServices';
 import { RequestPasswordResetUseCase } from '../useCases/RequestPasswordResetUseCase';
 import { ResetPasswordUseCase } from '../useCases/ResetPasswordUseCase';
 import { ValidatePasswordResetTokenUseCase } from '../useCases/ValidatePasswordResetTokenUseCase';
+import { ActivateUserAccountUseCase } from '../useCases/activateUserAccount/ActivateUserAccountUseCase';
+import { ChangeUserRoleUseCase } from '../useCases/changeUserRole/ChangeUserRoleUseCase';
+import { CheckEmailAvailabilityUseCase } from '../useCases/checkEmailAvailability/CheckEmailAvailabilityUseCase';
+import { CreateInvitationsUseCase } from '../useCases/createInvitations/CreateInvitationsUseCase';
+import { CreateOrganizationUseCase } from '../useCases/createOrganization/CreateOrganizationUseCase';
+import { GenerateApiKeyUseCase } from '../useCases/generateApiKey/GenerateApiKeyUseCase';
+import { GenerateUserTokenUseCase } from '../useCases/generateUserToken/GenerateUserTokenUseCase';
+import { GetCurrentApiKeyUseCase } from '../useCases/getCurrentApiKey/GetCurrentApiKeyUseCase';
+import { GetOrganizationByIdUseCase } from '../useCases/getOrganizationById/GetOrganizationByIdUseCase';
+import { GetOrganizationByNameUseCase } from '../useCases/getOrganizationByName/GetOrganizationByNameUseCase';
+import { GetOrganizationBySlugUseCase } from '../useCases/getOrganizationBySlug/GetOrganizationBySlugUseCase';
 import { GetOrganizationOnboardingStatusUseCase } from '../useCases/getOrganizationOnboardingStatus/GetOrganizationOnboardingStatusUseCase';
-import { IAccountsServices } from '../IAccountsServices';
-import { PackmindLogger } from '@packmind/logger';
-import {
-  IAccountsPort,
-  ISpacesPort,
-  IGitPort,
-  IStandardsPort,
-  IDeploymentPort,
-  UserId,
-  OrganizationId,
-  User,
-  Organization,
-  createUserId,
-  createOrganizationId,
-} from '@packmind/types';
-
-import {
-  ISignUpWithOrganizationUseCase,
-  IRemoveUserFromOrganizationUseCase,
-  SignUpWithOrganizationCommand,
-  RemoveUserFromOrganizationCommand,
-  RemoveUserFromOrganizationResponse,
-} from '../../domain/useCases';
-import {
-  ICheckEmailAvailabilityUseCase,
-  CheckEmailAvailabilityCommand,
-  IActivateUserAccountUseCase,
-  ActivateUserAccountCommand,
-  ActivateUserAccountResponse,
-  IChangeUserRoleUseCase,
-  ChangeUserRoleCommand,
-  ChangeUserRoleResponse,
-  IRequestPasswordResetUseCase,
-  RequestPasswordResetCommand,
-  RequestPasswordResetResponse,
-  IResetPasswordUseCase,
-  ResetPasswordCommand,
-  ResetPasswordResponse,
-  IValidatePasswordResetTokenUseCase,
-  ValidatePasswordResetTokenCommand,
-  ValidatePasswordResetTokenResponse,
-  IGetOrganizationOnboardingStatusUseCase,
-  GetOrganizationOnboardingStatusCommand,
-  OrganizationOnboardingStatus,
-  ICreateInvitationsUseCase,
-  CreateInvitationsCommand,
-  CreateInvitationsResponse,
-  ICreateOrganizationUseCase,
-  CreateOrganizationCommand,
-  IGenerateApiKeyUseCase,
-  GenerateApiKeyCommand,
-  IGenerateUserTokenUseCase,
-  GenerateUserTokenCommand,
-  IGetCurrentApiKeyUseCase,
-  GetCurrentApiKeyCommand,
-  IGetOrganizationByIdUseCase,
-  GetOrganizationByIdCommand,
-  IGetOrganizationByNameUseCase,
-  GetOrganizationByNameCommand,
-  IGetOrganizationBySlugUseCase,
-  GetOrganizationBySlugCommand,
-  IGetUserByIdUseCase,
-  GetUserByIdCommand,
-  ISignInUserUseCase,
-  SignInUserCommand,
-  IListOrganizationUserStatusesUseCase,
-  ListOrganizationUserStatusesCommand,
-  ListOrganizationUserStatusesResponse,
-  IListOrganizationUsersUseCase,
-  ListOrganizationUsersCommand,
-  ListOrganizationUsersResponse,
-  IValidatePasswordUseCase,
-  ValidatePasswordCommand,
-  IListUserOrganizationsUseCase,
-  ListUserOrganizationsCommand,
-  ListUserOrganizationsResponse,
-  IValidateInvitationTokenUseCase,
-  ValidateInvitationTokenCommand,
-  ValidateInvitationTokenResponse,
-} from '@packmind/types';
+import { GetUserByIdUseCase } from '../useCases/getUserById/GetUserByIdUseCase';
+import { ListOrganizationUserStatusesUseCase } from '../useCases/listOrganizationUserStatuses/ListOrganizationUserStatusesUseCase';
+import { ListOrganizationUsersUseCase } from '../useCases/listOrganizationUsers/ListOrganizationUsersUseCase';
+import { ListUserOrganizationsUseCase } from '../useCases/listUserOrganizations/ListUserOrganizationsUseCase';
+import { RemoveUserFromOrganizationUseCase } from '../useCases/removeUserFromOrganization/RemoveUserFromOrganizationUseCase';
+import { SignInUserUseCase } from '../useCases/signInUser/SignInUserUseCase';
+import { SignUpWithOrganizationUseCase } from '../useCases/signUpWithOrganization/SignUpWithOrganizationUseCase';
+import { ValidateInvitationTokenUseCase } from '../useCases/validateInvitationToken/ValidateInvitationTokenUseCase';
+import { ValidatePasswordUseCase } from '../useCases/validatePasswordUseCase/ValidatePasswordUseCase';
 
 const origin = 'AccountsAdapter';
 
@@ -134,7 +131,7 @@ export class AccountsAdapter implements IAccountsPort {
   private spacesPort?: ISpacesPort;
 
   constructor(
-    private readonly accountsServices: IAccountsServices,
+    private readonly accountsServices: EnhancedAccountsServices,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
     spacesPort?: ISpacesPort,
     private gitPort?: IGitPort,

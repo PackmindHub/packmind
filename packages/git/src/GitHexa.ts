@@ -1,4 +1,3 @@
-import { AccountsHexa } from '@packmind/accounts';
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
 import {
@@ -8,6 +7,7 @@ import {
   IGitPort,
   IGitPortName,
 } from '@packmind/types';
+import { AccountsHexa } from '@packmind/accounts';
 import { DataSource } from 'typeorm';
 import { FetchFileContentCallback } from './application/jobs/FetchFileContentDelayedJob';
 import { FetchFileContentInput } from './domain/jobs/FetchFileContent';

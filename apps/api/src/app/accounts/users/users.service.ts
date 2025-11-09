@@ -1,17 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import {
-  ListOrganizationUserStatusesResponse,
-  ListOrganizationUsersResponse,
   OrganizationId,
   User,
   UserId,
-} from '@packmind/accounts';
-import {
-  ChangeUserRoleCommand,
-  ChangeUserRoleResponse,
   UserOrganizationRole,
   IAccountsPort,
 } from '@packmind/types';
+import {
+  ListOrganizationUserStatusesResponse,
+  ListOrganizationUsersResponse,
+  ChangeUserRoleCommand,
+  ChangeUserRoleResponse,
+} from '@packmind/accounts';
 import { InjectAccountsAdapter } from '../../shared/HexaInjection';
 
 @Injectable()

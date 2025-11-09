@@ -1,4 +1,4 @@
-import { createOrganizationId, createUserId } from '@packmind/accounts';
+import { createOrganizationId, createUserId } from '@packmind/types';
 import { GitCommitSchema } from '@packmind/git';
 import { PackmindLogger } from '@packmind/logger';
 import { WithSoftDelete } from '@packmind/node-utils';

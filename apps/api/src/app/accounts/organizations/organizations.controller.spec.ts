@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { OrganizationsController } from './organizations.controller';
 import { OrganizationsService } from './organizations.service';
-import { createOrganizationId } from '@packmind/accounts';
+import { createOrganizationId } from '@packmind/types';
 import { NotFoundException } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
 import { createUserId, IAccountsPort } from '@packmind/types';

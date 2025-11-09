@@ -9,7 +9,7 @@ import {
   GitProviderVendors,
   createGitProviderId,
 } from '../domain/entities/GitProvider';
-import { createOrganizationId } from '@packmind/accounts';
+import { createOrganizationId } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import { gitProviderFactory, gitlabProviderFactory } from '../../test';

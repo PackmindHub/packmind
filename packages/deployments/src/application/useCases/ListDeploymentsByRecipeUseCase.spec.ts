@@ -6,7 +6,7 @@ import {
 } from '../../domain/entities/RecipesDeployment';
 import { stubLogger } from '@packmind/test-utils';
 import { RecipeId } from '@packmind/recipes';
-import { OrganizationId, UserId } from '@packmind/accounts';
+import { OrganizationId, UserId } from '@packmind/types';
 import {
   ListDeploymentsByRecipeCommand,
   DistributionStatus,

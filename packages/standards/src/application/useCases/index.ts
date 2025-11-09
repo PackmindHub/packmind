@@ -27,7 +27,7 @@ import { UpdateRuleExampleUsecase } from './updateRuleExample/updateRuleExample.
 import { DeleteRuleExampleUsecase } from './deleteRuleExample/deleteRuleExample.usecase';
 import { IStandardsServices } from '../IStandardsServices';
 import { IStandardsRepositories } from '../../domain/repositories/IStandardsRepositories';
-import { OrganizationId, UserId } from '@packmind/accounts';
+import { OrganizationId, UserId } from '@packmind/types';
 import { SpaceId } from '@packmind/types';
 import { StandardId } from '../../domain/entities';
 import { RuleExample } from '../../domain/entities';

@@ -5,10 +5,6 @@ const { join } = require('path');
 module.exports = function getBaseWebpackPaths(__dirname) {
   return {
     '@packmind/accounts': join(__dirname, '../../packages/accounts/src'),
-    '@packmind/accounts/types': join(
-      __dirname,
-      '../../packages/accounts/src/types',
-    ),
     '@packmind/recipes': join(__dirname, '../../packages/recipes/src'),
     '@packmind/recipes/types': join(
       __dirname,

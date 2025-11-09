@@ -12,7 +12,7 @@ import {
   DeployRecipesInput,
   DeployRecipesOutput,
 } from '../../domain/jobs/DeployRecipes';
-import { createUserId } from '@packmind/accounts';
+import { createUserId } from '@packmind/types';
 
 const logOrigin = 'DeployRecipesDelayedJob';
 

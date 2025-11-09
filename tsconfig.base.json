@@ -18,7 +18,6 @@
     "baseUrl": ".",
     "paths": {
       "@packmind/accounts": ["packages/accounts/src/index.ts"],
-      "@packmind/accounts/types": ["packages/accounts/src/types/index.ts"],
       "@packmind/amplitude": ["packages/amplitude/src/index.ts"],
       "@packmind/analytics/types": ["packages/analytics/src/types/index.ts"],
       "@packmind/assets": ["packages/assets/src/index.ts"],

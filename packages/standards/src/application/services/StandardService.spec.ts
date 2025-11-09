@@ -17,7 +17,7 @@ import {
   createUserId,
   UserId,
   OrganizationId,
-} from '@packmind/accounts';
+} from '@packmind/types';
 import { createSpaceId } from '@packmind/spaces';
 import { stubLogger } from '@packmind/test-utils';
 

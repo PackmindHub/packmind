@@ -4,15 +4,15 @@ import { AuthService } from './auth.service';
 import {
   User,
   createOrganizationId,
-  SignInUserCommand,
   Organization,
-} from '@packmind/accounts';
+  createUserId,
+} from '@packmind/types';
 import {
+  SignInUserCommand,
   CheckEmailAvailabilityCommand,
   CheckEmailAvailabilityResponse,
   SignUpWithOrganizationCommand,
-} from '@packmind/types';
-import { createUserId } from '@packmind/accounts';
+} from '@packmind/accounts';
 import {
   ConflictException,
   BadRequestException,

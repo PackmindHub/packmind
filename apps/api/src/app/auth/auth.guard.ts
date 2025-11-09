@@ -7,12 +7,8 @@ import {
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { Observable } from 'rxjs';
-import {
-  ApiKeyService,
-  createOrganizationId,
-  createUserId,
-  IJwtService,
-} from '@packmind/accounts';
+import { createOrganizationId, createUserId } from '@packmind/types';
+import { ApiKeyService, IJwtService } from '@packmind/accounts';
 import { JwtPayload } from './JwtPayload';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';

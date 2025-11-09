@@ -34,7 +34,7 @@ import {
   Organization,
   User,
   UserOrganizationMembership,
-} from '@packmind/accounts';
+} from '@packmind/types';
 import { createStandardVersionId } from '../../../domain/entities/StandardVersion';
 
 // Mock external dependencies

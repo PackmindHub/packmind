@@ -1,5 +1,5 @@
 import { OrganizationsController } from './organizations.controller';
-import { createOrganizationId } from '@packmind/accounts';
+import { createOrganizationId } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { IAccountsPort, IDeploymentPort } from '@packmind/types';

@@ -1,7 +1,7 @@
 import { RecipeService } from '../../services/RecipeService';
 import { RecipeVersionService } from '../../services/RecipeVersionService';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { UserId } from '@packmind/accounts';
+import { UserId } from '@packmind/types';
 import {
   DeleteRecipeCommand,
   DeleteRecipeResponse,

@@ -6,7 +6,7 @@ import { RecipeRepository } from '../../infra/repositories/RecipeRepository';
 import { PackmindLogger } from '@packmind/logger';
 import { QueryOption } from '@packmind/types';
 import { GitCommit } from '@packmind/git';
-import { OrganizationId, UserId } from '@packmind/accounts';
+import { OrganizationId, UserId } from '@packmind/types';
 import { SpaceId } from '@packmind/types';
 
 const origin = 'RecipeService';

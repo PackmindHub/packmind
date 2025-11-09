@@ -17,7 +17,7 @@ import slug from 'slug';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AiNotConfigured, getErrorMessage } from '@packmind/node-utils';
 import { RuleWithExamples } from '@packmind/types';
-import { OrganizationId, UserId } from '@packmind/accounts';
+import { OrganizationId, UserId } from '@packmind/types';
 import { SpaceId, ProgrammingLanguage } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import type { ILinterPort } from '@packmind/types';

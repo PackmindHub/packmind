@@ -1,5 +1,5 @@
 import { Recipe } from '../entities/Recipe';
-import { OrganizationId, UserId } from '@packmind/accounts';
+import { OrganizationId, UserId } from '@packmind/types';
 import { IRepository } from '@packmind/types';
 import { QueryOption, SpaceId } from '@packmind/types';
 

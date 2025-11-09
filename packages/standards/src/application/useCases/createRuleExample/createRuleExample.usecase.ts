@@ -8,7 +8,7 @@ import { RuleId } from '../../../domain/entities/Rule';
 import { PackmindLogger } from '@packmind/logger';
 import { getErrorMessage } from '@packmind/node-utils';
 import { ProgrammingLanguage } from '@packmind/types';
-import { createOrganizationId, createUserId } from '@packmind/accounts';
+import { createOrganizationId, createUserId } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import {
   CreateRuleExampleCommand,

@@ -7,7 +7,7 @@ import { Repository } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, AbstractRepository } from '@packmind/node-utils';
 import { TargetId, DistributionStatus } from '@packmind/types';
-import { OrganizationId } from '@packmind/accounts';
+import { OrganizationId } from '@packmind/types';
 import { GitRepoId } from '@packmind/git';
 
 const origin = 'StandardsDeploymentRepository';

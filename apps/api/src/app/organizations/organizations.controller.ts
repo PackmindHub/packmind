@@ -6,7 +6,7 @@ import {
   IAccountsPort,
   IDeploymentPort,
 } from '@packmind/types';
-import { OrganizationId } from '@packmind/accounts';
+import { OrganizationId } from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { OrganizationAccessGuard } from './guards/organization-access.guard';
 import {

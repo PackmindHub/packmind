@@ -14,7 +14,7 @@ import {
   UserProvider,
   OrganizationProvider,
 } from '@packmind/types';
-import { createOrganizationId, createUserId } from '@packmind/accounts';
+import { createOrganizationId, createUserId } from '@packmind/types';
 import { AnalyticsAdapter } from '@packmind/amplitude';
 
 import packmindOnboardingModeSelection from './prompts/packmind-onboarding-mode-selection';

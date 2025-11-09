@@ -1,11 +1,10 @@
-import { IAccountsServices } from '../IAccountsServices';
 import { UserService } from './UserService';
 import { OrganizationService } from './OrganizationService';
 import { InvitationService } from './InvitationService';
 import { ApiKeyService } from './ApiKeyService';
 import { LoginRateLimiterService } from './LoginRateLimiterService';
 import { PasswordResetTokenService } from './PasswordResetTokenService';
-import { IAccountsRepository } from '../../domain/repositories/IAccountsRepository';
+import { IAccountsRepositories } from '../../domain/repositories/IAccountsRepositories';
 import { PackmindLogger } from '@packmind/logger';
 import { SmtpMailService } from '@packmind/node-utils';
 
@@ -14,7 +13,7 @@ import { SmtpMailService } from '@packmind/node-utils';
  * This allows external systems (like the API layer) to provide the API key service
  * with their own dependencies (like JWT service)
  */
-export class EnhancedAccountsServices implements IAccountsServices {
+export class EnhancedAccountsServices {
   private readonly userService: UserService;
   private readonly organizationService: OrganizationService;
   private readonly invitationService: InvitationService;
@@ -23,26 +22,26 @@ export class EnhancedAccountsServices implements IAccountsServices {
   private readonly apiKeyService?: ApiKeyService;
 
   constructor(
-    private readonly accountsRepository: IAccountsRepository,
+    private readonly accountsRepositories: IAccountsRepositories,
     private readonly logger: PackmindLogger,
     apiKeyService?: ApiKeyService,
   ) {
     // Initialize standard services
     this.userService = new UserService(
-      this.accountsRepository.getUserRepository(),
-      this.accountsRepository.getUserOrganizationMembershipRepository(),
+      this.accountsRepositories.getUserRepository(),
+      this.accountsRepositories.getUserOrganizationMembershipRepository(),
     );
     this.organizationService = new OrganizationService(
-      this.accountsRepository.getOrganizationRepository(),
+      this.accountsRepositories.getOrganizationRepository(),
       this.logger,
     );
     this.invitationService = new InvitationService(
-      this.accountsRepository.getInvitationRepository(),
+      this.accountsRepositories.getInvitationRepository(),
       new SmtpMailService(this.logger),
       this.logger,
     );
     this.passwordResetTokenService = new PasswordResetTokenService(
-      this.accountsRepository.getPasswordResetTokenRepository(),
+      this.accountsRepositories.getPasswordResetTokenRepository(),
       new SmtpMailService(this.logger),
       this.logger,
     );

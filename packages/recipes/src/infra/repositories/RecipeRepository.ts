@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, AbstractRepository } from '@packmind/node-utils';
 import { QueryOption } from '@packmind/types';
-import { OrganizationId, UserId } from '@packmind/accounts';
+import { OrganizationId, UserId } from '@packmind/types';
 import { SpaceId } from '@packmind/types';
 
 const origin = 'RecipeRepository';

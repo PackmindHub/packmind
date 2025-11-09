@@ -1,8 +1,4 @@
-import {
-  OrganizationId,
-  UserId,
-  UserOrganizationRole,
-} from '@packmind/accounts';
+import { OrganizationId, UserId, UserOrganizationRole } from '@packmind/types';
 
 export interface JwtPayload {
   user: {

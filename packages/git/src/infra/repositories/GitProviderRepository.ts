@@ -10,7 +10,7 @@ import {
   AbstractRepository,
 } from '@packmind/node-utils';
 import { QueryOption } from '@packmind/types';
-import { OrganizationId } from '@packmind/accounts';
+import { OrganizationId } from '@packmind/types';
 
 const origin = 'GitProviderRepository';
 

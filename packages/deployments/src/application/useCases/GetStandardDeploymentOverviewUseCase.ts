@@ -19,7 +19,7 @@ import {
 } from '@packmind/types';
 import { IGitPort } from '@packmind/types';
 import { GitRepo } from '@packmind/git';
-import { OrganizationId } from '@packmind/accounts';
+import { OrganizationId } from '@packmind/types';
 import { StandardsDeployment } from '../../domain/entities/StandardsDeployment';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
 import {

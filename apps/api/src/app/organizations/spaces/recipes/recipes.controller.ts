@@ -11,7 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Recipe, RecipeId, RecipeVersion } from '@packmind/recipes';
-import { OrganizationId } from '@packmind/accounts';
+import { OrganizationId } from '@packmind/types';
 import { SpaceId } from '@packmind/spaces';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';

@@ -1,4 +1,4 @@
-import { createUserId } from '@packmind/accounts';
+import { createUserId } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import type { ILinterPort } from '@packmind/types';

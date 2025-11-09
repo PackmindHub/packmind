@@ -6,7 +6,7 @@ import {
   OrganizationId,
   UserId,
   UserOrganizationRole,
-} from '@packmind/accounts';
+} from '@packmind/types';
 import { JwtPayload } from './JwtPayload';
 
 describe('AuthService - getMe method', () => {

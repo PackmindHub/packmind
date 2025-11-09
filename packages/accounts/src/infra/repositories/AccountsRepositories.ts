@@ -1,5 +1,5 @@
 import { DataSource } from 'typeorm';
-import { IAccountsRepository } from '../../domain/repositories/IAccountsRepository';
+import { IAccountsRepositories } from '../../domain/repositories/IAccountsRepositories';
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
 import { IOrganizationRepository } from '../../domain/repositories/IOrganizationRepository';
 import { IInvitationRepository } from '../../domain/repositories/IInvitationRepository';
@@ -17,13 +17,13 @@ import { UserOrganizationMembershipRepository } from './UserOrganizationMembersh
 import { IUserOrganizationMembershipRepository } from '../../domain/repositories/IUserOrganizationMembershipRepository';
 
 /**
- * AccountsRepository - Repository aggregator implementation for the Accounts domain
+ * AccountsRepositories - Repository aggregator implementation for the Accounts domain
  *
  * This class serves as the main repository access point, aggregating all
  * individual repositories. It handles the instantiation of repositories
  * using the shared DataSource and provides them through getter methods.
  */
-export class AccountsRepository implements IAccountsRepository {
+export class AccountsRepositories implements IAccountsRepositories {
   private readonly userRepository: IUserRepository;
   private readonly organizationRepository: IOrganizationRepository;
   private readonly invitationRepository: IInvitationRepository;

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { OrganizationId, UserId } from '@packmind/accounts';
+import { OrganizationId, UserId } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import {
   RuleId,

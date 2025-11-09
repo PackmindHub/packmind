@@ -1,5 +1,5 @@
 import { GitRepo } from '../../../domain/entities/GitRepo';
-import { OrganizationId } from '@packmind/accounts';
+import { OrganizationId } from '@packmind/types';
 import { GitRepoService } from '../../GitRepoService';
 
 export interface GetOrganizationRepositoriesUseCaseInput {

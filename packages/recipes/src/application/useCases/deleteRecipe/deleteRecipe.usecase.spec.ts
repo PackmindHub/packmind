@@ -3,7 +3,7 @@ import {
   createUserId,
   OrganizationId,
   UserId,
-} from '@packmind/accounts';
+} from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { createSpaceId, SpaceId } from '@packmind/spaces';
 import { stubLogger } from '@packmind/test-utils';

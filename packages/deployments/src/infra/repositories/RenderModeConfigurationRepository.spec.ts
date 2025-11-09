@@ -8,9 +8,9 @@ import { RenderMode, RenderModeConfiguration } from '@packmind/types';
 import {
   Organization,
   OrganizationId,
-  OrganizationSchema,
   createOrganizationId,
-} from '@packmind/accounts';
+} from '@packmind/types';
+import { OrganizationSchema } from '@packmind/accounts';
 import { v4 as uuidv4 } from 'uuid';
 import { renderModeConfigurationFactory } from '../../../test';
 

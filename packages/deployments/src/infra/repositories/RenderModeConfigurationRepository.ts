@@ -1,5 +1,5 @@
 import { Repository } from 'typeorm';
-import { OrganizationId } from '@packmind/accounts';
+import { OrganizationId } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { AbstractRepository, localDataSource } from '@packmind/node-utils';
 import { RenderModeConfiguration } from '@packmind/types';

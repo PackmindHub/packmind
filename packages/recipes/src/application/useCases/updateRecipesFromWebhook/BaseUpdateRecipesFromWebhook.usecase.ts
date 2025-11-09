@@ -4,7 +4,7 @@ import { GitHexa } from '@packmind/git';
 import { Recipe } from '../../../domain/entities/Recipe';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { IDeploymentPort } from '@packmind/types';
-import { OrganizationId, createUserId } from '@packmind/accounts';
+import { OrganizationId, createUserId } from '@packmind/types';
 import { IRecipesDelayedJobs } from '../../../domain/jobs/IRecipesDelayedJobs';
 
 export interface CommonRepoData {

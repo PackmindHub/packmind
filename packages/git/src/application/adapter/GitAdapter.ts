@@ -23,7 +23,7 @@ import { QueryOption } from '@packmind/types';
 import { GitProvider, GitProviderId } from '../../domain/entities/GitProvider';
 import { GitRepo, GitRepoId } from '../../domain/entities/GitRepo';
 import { GitCommit } from '../../domain/entities/GitCommit';
-import { OrganizationId, UserId } from '@packmind/accounts';
+import { OrganizationId, UserId } from '@packmind/types';
 import {
   AddGitProviderCommand,
   AddGitRepoCommand,

@@ -9,7 +9,7 @@ import {
   UserOrganizationMembership,
   createOrganizationId,
   createUserId,
-} from '@packmind/accounts';
+} from '@packmind/types';
 import { IStandardsPort, ICodingAgentPort } from '@packmind/types';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { ISpacesPort, IRecipesPort, FileUpdates } from '@packmind/types';

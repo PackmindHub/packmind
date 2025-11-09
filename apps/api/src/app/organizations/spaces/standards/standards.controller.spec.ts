@@ -1,6 +1,6 @@
 import { OrganizationsSpacesStandardsController } from './standards.controller';
 import { StandardsService } from '../../../standards/standards.service';
-import { createOrganizationId, createUserId } from '@packmind/accounts';
+import { createOrganizationId, createUserId } from '@packmind/types';
 import { createSpaceId } from '@packmind/spaces';
 import { stubLogger } from '@packmind/test-utils';
 import {

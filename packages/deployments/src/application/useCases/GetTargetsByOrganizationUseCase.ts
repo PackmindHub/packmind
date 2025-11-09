@@ -4,7 +4,7 @@ import {
   IGetTargetsByOrganizationUseCase,
   GetTargetsByOrganizationCommand,
 } from '@packmind/types';
-import { OrganizationId } from '@packmind/accounts';
+import { OrganizationId } from '@packmind/types';
 import { TargetService } from '../services/TargetService';
 import { IGitPort } from '@packmind/types';
 

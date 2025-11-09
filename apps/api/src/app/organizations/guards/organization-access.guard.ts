@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
-import { createOrganizationId, OrganizationId } from '@packmind/accounts';
+import { createOrganizationId, OrganizationId } from '@packmind/types';
 
 const origin = 'OrganizationAccessGuard';
 

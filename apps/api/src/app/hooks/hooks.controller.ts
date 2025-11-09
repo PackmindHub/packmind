@@ -3,7 +3,7 @@ import { RecipesService } from '../recipes/recipes.service';
 import { PackmindLogger } from '@packmind/logger';
 import { Configuration } from '@packmind/node-utils';
 import { Recipe } from '@packmind/types';
-import { OrganizationId, createOrganizationId } from '@packmind/accounts';
+import { OrganizationId, createOrganizationId } from '@packmind/types';
 import { Public } from '@packmind/node-utils';
 
 const origin = 'HooksController';

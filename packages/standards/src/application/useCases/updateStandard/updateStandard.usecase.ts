@@ -22,7 +22,7 @@ import {
   UserId,
   createOrganizationId,
   createUserId,
-} from '@packmind/accounts';
+} from '@packmind/types';
 import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSummaryDelayedJob';
 
 const origin = 'UpdateStandardUsecase';

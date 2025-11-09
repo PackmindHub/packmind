@@ -19,7 +19,7 @@ import {
 import { standardFactory } from '@packmind/standards/test';
 import { GitRepo, GitRepoId, GitProviderId } from '@packmind/git';
 import { FileUpdates } from '@packmind/types';
-import { UserId } from '@packmind/accounts';
+import { UserId } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { Target, TargetId } from '@packmind/types';
 import { createSpaceId } from '@packmind/spaces';

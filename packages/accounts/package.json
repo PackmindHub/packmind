@@ -10,7 +10,6 @@
     "typeorm": "^0.3.26",
     "@packmind/logger": "*",
     "@packmind/node-utils": "*",
-    "@packmind/spaces": "*",
     "@packmind/types": "*",
     "uuid": "^11.1.0",
     "bcrypt": "^6.0.0",

@@ -11,7 +11,7 @@ import {
 } from '@packmind/types';
 import { AiNotConfigured } from '@packmind/node-utils';
 import { RecipeSummaryService } from '../../services/RecipeSummaryService';
-import { createOrganizationId, createUserId } from '@packmind/accounts';
+import { createOrganizationId, createUserId } from '@packmind/types';
 import { createSpaceId } from '@packmind/spaces';
 
 const origin = 'CaptureRecipeUsecase';

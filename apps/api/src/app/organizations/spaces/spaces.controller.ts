@@ -1,7 +1,7 @@
 import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { Space } from '@packmind/spaces';
-import { OrganizationId } from '@packmind/accounts';
+import { OrganizationId } from '@packmind/types';
 import { OrganizationAccessGuard } from '../guards/organization-access.guard';
 import { SpacesService } from '../../spaces/spaces.service';
 
