@@ -1,27 +1,37 @@
 import { DataSource } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
-import { ICodingAgentPort, ICodingAgentPortName } from '@packmind/types';
-import { CodingAgentHexaFactory } from './CodingAgentHexaFactory';
+import {
+  ICodingAgentPort,
+  ICodingAgentPortName,
+  IStandardsPort,
+  IStandardsPortName,
+  IGitPort,
+  IGitPortName,
+} from '@packmind/types';
+import { CodingAgentRepositories } from './infra/repositories/CodingAgentRepositories';
+import { DeployerService } from './application/services/DeployerService';
+import { CodingAgentServices } from './application/services/CodingAgentServices';
+import { CodingAgentAdapter } from './application/adapter/CodingAgentAdapter';
+import { ICodingAgentRepositories } from './domain/repositories/ICodingAgentRepositories';
 
 const origin = 'CodingAgentHexa';
 
 /**
- * CodingAgentHexa - Facade for the CodingAgent domain following the Hexa pattern.
+ * CodingAgentHexa - Hexagonal architecture facade for the CodingAgent domain.
  *
  * This class serves as the main entry point for coding agent deployment functionality.
  * It handles the preparation of file updates for deploying recipes and standards
- * across multiple coding agent platforms (like Packmind, etc.).
- *
- * The Hexa pattern separates concerns:
- * - CodingAgentHexaFactory: Handles dependency injection and service instantiation
- * - CodingAgentHexa: Serves as use case facade and integration point with other domains
+ * across multiple coding agent platforms (like Packmind, Claude, Cursor, etc.).
  *
  * The class aggregates deployment logic from multiple coding agents and provides
  * unified file updates for git operations.
  */
 export class CodingAgentHexa extends BaseHexa<BaseHexaOpts, ICodingAgentPort> {
-  private readonly hexa: CodingAgentHexaFactory;
+  private codingAgentRepositories: ICodingAgentRepositories;
+  private deployerService: DeployerService;
+  private codingAgentServices: CodingAgentServices;
+  private adapter: CodingAgentAdapter;
 
   constructor(
     dataSource: DataSource,
@@ -31,9 +41,26 @@ export class CodingAgentHexa extends BaseHexa<BaseHexaOpts, ICodingAgentPort> {
     this.logger.info('Constructing CodingAgentHexa');
 
     try {
-      // Initialize the hexagon factory
-      // Adapter retrieval will be done in initialize(registry)
-      this.hexa = new CodingAgentHexaFactory(this.logger);
+      // Instantiate repositories without ports (will be set in initialize)
+      this.codingAgentRepositories = new CodingAgentRepositories();
+
+      // Instantiate services
+      this.deployerService = new DeployerService(
+        this.codingAgentRepositories,
+        this.logger,
+      );
+
+      this.codingAgentServices = new CodingAgentServices(
+        this.deployerService,
+        this.logger,
+      );
+
+      // Instantiate adapter
+      this.adapter = new CodingAgentAdapter(
+        this.codingAgentServices,
+        this.logger,
+      );
+
       this.logger.info('CodingAgentHexa construction completed');
     } catch (error) {
       this.logger.error('Failed to construct CodingAgentHexa', {
@@ -44,13 +71,40 @@ export class CodingAgentHexa extends BaseHexa<BaseHexaOpts, ICodingAgentPort> {
   }
 
   /**
-   * Initialize the hexa with access to the registry for adapter retrieval.
+   * Initialize the hexa with access to the registry for port retrieval.
    */
   public async initialize(registry: HexaRegistry): Promise<void> {
-    this.logger.info('Initializing CodingAgentHexa (adapter retrieval phase)');
+    this.logger.info('Initializing CodingAgentHexa (port retrieval phase)');
 
     try {
-      this.hexa.initialize(registry);
+      // Retrieve ports from registry if available
+      const standardsPort =
+        registry.getAdapter<IStandardsPort>(IStandardsPortName);
+      const gitPort = registry.getAdapter<IGitPort>(IGitPortName);
+
+      // Recreate repositories with ports
+      this.codingAgentRepositories = new CodingAgentRepositories(
+        standardsPort,
+        gitPort,
+      );
+
+      // Recreate services with new repositories
+      this.deployerService = new DeployerService(
+        this.codingAgentRepositories,
+        this.logger,
+      );
+
+      this.codingAgentServices = new CodingAgentServices(
+        this.deployerService,
+        this.logger,
+      );
+
+      // Recreate adapter with new services
+      this.adapter = new CodingAgentAdapter(
+        this.codingAgentServices,
+        this.logger,
+      );
+
       this.logger.info('CodingAgentHexa initialized successfully');
     } catch (error) {
       this.logger.error('Failed to initialize CodingAgentHexa', {
@@ -73,7 +127,14 @@ export class CodingAgentHexa extends BaseHexa<BaseHexaOpts, ICodingAgentPort> {
    * Gets the coding agent deployer registry for direct access to deployers
    */
   public getCodingAgentDeployerRegistry() {
-    return this.hexa.getDeployerRegistry();
+    return this.codingAgentRepositories.getDeployerRegistry();
+  }
+
+  /**
+   * Get the deployer service for direct access to deployment operations
+   */
+  public getDeployerService(): DeployerService {
+    return this.deployerService;
   }
 
   /**
@@ -81,7 +142,7 @@ export class CodingAgentHexa extends BaseHexa<BaseHexaOpts, ICodingAgentPort> {
    * Following DDD monorepo architecture standard
    */
   public getAdapter(): ICodingAgentPort {
-    return this.hexa.adapter;
+    return this.adapter;
   }
 
   /**

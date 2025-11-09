@@ -1,6 +1,6 @@
 import { accountsSchemas, AccountsHexa } from '@packmind/accounts';
 import {
-  CodingAgentHexaFactory,
+  CodingAgentHexa,
   DeployerService,
   JunieDeployer,
 } from '@packmind/coding-agent';
@@ -27,7 +27,6 @@ import {
   StandardVersionId,
 } from '@packmind/standards';
 import { makeTestDatasource } from '@packmind/test-utils';
-import { PackmindLogger } from '@packmind/logger';
 import {
   IDeploymentPort,
   IStandardsPort,
@@ -65,7 +64,7 @@ describe('Junie Deployment Integration', () => {
   let gitPort: IGitPort;
   let registry: HexaRegistry;
   let dataSource: DataSource;
-  let codingAgentFactory: CodingAgentHexaFactory;
+  let codingAgentHexa: CodingAgentHexa;
   let deployerService: DeployerService;
 
   let recipe: Recipe;
@@ -99,6 +98,7 @@ describe('Junie Deployment Integration', () => {
     registry.register(AccountsHexa);
     registry.register(RecipesHexa);
     registry.register(StandardsHexa);
+    registry.register(CodingAgentHexa);
 
     // Initialize the registry with the datasource
     await registry.init(dataSource);
@@ -109,11 +109,10 @@ describe('Junie Deployment Integration', () => {
     standardsHexa = registry.get(StandardsHexa);
     spacesHexa = registry.get(SpacesHexa);
     gitHexa = registry.get(GitHexa);
+    codingAgentHexa = registry.get(CodingAgentHexa);
 
-    // Initialize coding agent factory with logger
-    codingAgentFactory = new CodingAgentHexaFactory(new PackmindLogger('test'));
-    codingAgentFactory.initialize(registry);
-    deployerService = codingAgentFactory.getDeployerService();
+    // Get deployer service from hexa
+    deployerService = codingAgentHexa.getDeployerService();
 
     const mockDeploymentPort = {
       addTarget: jest.fn(),

@@ -10,5 +10,4 @@ export * from './infra/repositories/claude/ClaudeDeployer';
 export * from './infra/repositories/cursor/CursorDeployer';
 export * from './infra/repositories/copilot/CopilotDeployer';
 export * from './infra/repositories/CodingAgentDeployerRegistry';
-export * from './CodingAgentHexaFactory';
 export * from './CodingAgentHexa';

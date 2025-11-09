@@ -1,6 +1,6 @@
 import { accountsSchemas, AccountsHexa } from '@packmind/accounts';
 import {
-  CodingAgentHexaFactory,
+  CodingAgentHexa,
   CursorDeployer,
   DeployerService,
 } from '@packmind/coding-agent';
@@ -17,7 +17,6 @@ import { HexaRegistry } from '@packmind/node-utils';
 import { Space, SpacesHexa, spacesSchemas } from '@packmind/spaces';
 import { StandardsHexa, standardsSchemas } from '@packmind/standards';
 import { makeTestDatasource } from '@packmind/test-utils';
-import { PackmindLogger } from '@packmind/logger';
 import {
   GitProviderVendors,
   GitRepo,
@@ -60,7 +59,7 @@ describe('Cursor Deployment Integration', () => {
   let gitPort: IGitPort;
   let registry: HexaRegistry;
   let dataSource: DataSource;
-  let codingAgentFactory: CodingAgentHexaFactory;
+  let codingAgentHexa: CodingAgentHexa;
   let deployerService: DeployerService;
 
   let recipe: Recipe;
@@ -94,6 +93,7 @@ describe('Cursor Deployment Integration', () => {
     registry.register(AccountsHexa);
     registry.register(RecipesHexa);
     registry.register(StandardsHexa);
+    registry.register(CodingAgentHexa);
 
     // Initialize the registry with the datasource
     await registry.init(dataSource);
@@ -104,11 +104,10 @@ describe('Cursor Deployment Integration', () => {
     standardsHexa = registry.get(StandardsHexa);
     spacesHexa = registry.get(SpacesHexa);
     gitHexa = registry.get(GitHexa);
+    codingAgentHexa = registry.get(CodingAgentHexa);
 
-    // Initialize coding agent factory with logger
-    codingAgentFactory = new CodingAgentHexaFactory(new PackmindLogger('test'));
-    codingAgentFactory.initialize(registry);
-    deployerService = codingAgentFactory.getDeployerService();
+    // Get deployer service from hexa
+    deployerService = codingAgentHexa.getDeployerService();
 
     const mockDeploymentPort = {
       addTarget: jest.fn(),

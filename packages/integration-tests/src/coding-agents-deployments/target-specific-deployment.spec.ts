@@ -1,10 +1,6 @@
 import { AccountsHexa, accountsSchemas } from '@packmind/accounts';
 import { Organization, User } from '@packmind/types';
-import {
-  CodingAgentHexa,
-  CodingAgentHexaFactory,
-  DeployerService,
-} from '@packmind/coding-agent';
+import { CodingAgentHexa, DeployerService } from '@packmind/coding-agent';
 import { DeploymentsHexa, deploymentsSchemas } from '@packmind/deployments';
 import { GitHexa, GitRepo, createGitRepoId, gitSchemas } from '@packmind/git';
 import { JobsHexa } from '@packmind/jobs';
@@ -25,7 +21,6 @@ import {
   standardsSchemas,
 } from '@packmind/standards';
 import { makeTestDatasource } from '@packmind/test-utils';
-import { PackmindLogger } from '@packmind/logger';
 import { Target, createGitProviderId, createTargetId } from '@packmind/types';
 import { assert } from 'console';
 import { DataSource } from 'typeorm';
@@ -55,7 +50,7 @@ describe('Target-Specific Deployment Integration', () => {
   let spacesHexa: SpacesHexa;
   let registry: HexaRegistry;
   let dataSource: DataSource;
-  let codingAgentFactory: CodingAgentHexaFactory;
+  let codingAgentHexa: CodingAgentHexa;
   let deployerService: DeployerService;
 
   let recipe: Recipe;
@@ -104,11 +99,10 @@ describe('Target-Specific Deployment Integration', () => {
     recipesHexa = registry.get(RecipesHexa);
     standardsHexa = registry.get(StandardsHexa);
     spacesHexa = registry.get(SpacesHexa);
+    codingAgentHexa = registry.get(CodingAgentHexa);
 
-    // Initialize coding agent factory with logger
-    codingAgentFactory = new CodingAgentHexaFactory(new PackmindLogger('test'));
-    codingAgentFactory.initialize(registry);
-    deployerService = codingAgentFactory.getDeployerService();
+    // Get deployer service from hexa
+    deployerService = codingAgentHexa.getDeployerService();
 
     // Create test data
     const signUpResult = await accountsHexa
