@@ -1,15 +1,14 @@
 // Domain exports
-export * from './domain/entities';
-export * from './domain/repositories';
 export * from './domain/errors';
+export * from './domain/repositories';
 
 // Infrastructure exports
-export * from './infra/schemas';
 export * from './infra/repositories';
+export * from './infra/schemas';
 
 // Application exports
-export * from './application/services';
 export * from './application/adapters';
+export * from './application/services';
 
 // Hexa exports
 export { SpacesHexa } from './SpacesHexa';

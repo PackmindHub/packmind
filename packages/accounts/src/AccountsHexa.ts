@@ -1,4 +1,3 @@
-import { DataSource } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
 import {
@@ -7,10 +6,11 @@ import {
   ISpacesPort,
   ISpacesPortName,
 } from '@packmind/types';
-import { ApiKeyService } from './application/services/ApiKeyService';
-import { AccountsRepositories } from './infra/repositories/AccountsRepositories';
+import { DataSource } from 'typeorm';
 import { AccountsAdapter } from './application/adapter/AccountsAdapter';
+import { ApiKeyService } from './application/services/ApiKeyService';
 import { EnhancedAccountsServices } from './application/services/EnhancedAccountsServices';
+import { AccountsRepositories } from './infra/repositories/AccountsRepositories';
 
 const origin = 'AccountsHexa';
 

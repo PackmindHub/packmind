@@ -4,7 +4,11 @@ import { PackmindLogger } from '@packmind/logger';
 import { HexaRegistry } from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
 import { StandardsHexa } from '@packmind/standards';
-import { IGitPortName } from '@packmind/types';
+import {
+  ICodingAgentPortName,
+  IGitPortName,
+  IStandardsPortName,
+} from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { DeploymentsHexa } from './DeploymentsHexa';
 
@@ -129,6 +133,9 @@ describe('DeploymentsHexa - Simple Integration', () => {
         if (portName === IGitPortName) {
           return mockGitHexa.getAdapter();
         }
+        if (portName === ICodingAgentPortName) {
+          return mockCodingAgentHexa.getAdapter();
+        }
         throw new Error(`No hexa found for port type: ${portName}`);
       }),
       getDataSource: jest.fn().mockReturnValue(mockDataSource),
@@ -168,6 +175,18 @@ describe('DeploymentsHexa - Simple Integration', () => {
           }
           return null; // CodingAgentHexa not found
         });
+
+        mockRegistry.getAdapter = jest
+          .fn()
+          .mockImplementation((portName: string) => {
+            if (portName === IGitPortName) {
+              return mockGitHexa.getAdapter();
+            }
+            if (portName === ICodingAgentPortName) {
+              throw new Error(`No hexa found for port type: ${portName}`);
+            }
+            throw new Error(`No hexa found for port type: ${portName}`);
+          });
 
         const deploymentsHexa = new DeploymentsHexa(mockDataSource, {
           logger: mockLogger,
@@ -211,7 +230,7 @@ describe('DeploymentsHexa - Simple Integration', () => {
     });
 
     describe('when StandardsHexa is not in registry', () => {
-      it('throws error', async () => {
+      it('initializes successfully (StandardsHexa is optional)', async () => {
         mockRegistry.get = jest.fn().mockImplementation((type) => {
           if (type === CodingAgentHexa) {
             return mockCodingAgentHexa;
@@ -224,17 +243,31 @@ describe('DeploymentsHexa - Simple Integration', () => {
           }
           // StandardsHexa not found
           if (type === StandardsHexa) {
-            throw new Error('StandardsHexa not found in registry');
+            return null;
           }
           return null;
         });
+        mockRegistry.getAdapter = jest
+          .fn()
+          .mockImplementation((portName: string) => {
+            if (portName === IGitPortName) {
+              return mockGitHexa.getAdapter();
+            }
+            if (portName === ICodingAgentPortName) {
+              return mockCodingAgentHexa.getAdapter();
+            }
+            if (portName === IStandardsPortName) {
+              throw new Error(`No hexa found for port type: ${portName}`);
+            }
+            throw new Error(`No hexa found for port type: ${portName}`);
+          });
 
         const deploymentsHexa = new DeploymentsHexa(mockDataSource, {
           logger: mockLogger,
         });
         await expect(
           deploymentsHexa.initialize(mockRegistry),
-        ).rejects.toThrow();
+        ).resolves.not.toThrow();
       });
     });
   });

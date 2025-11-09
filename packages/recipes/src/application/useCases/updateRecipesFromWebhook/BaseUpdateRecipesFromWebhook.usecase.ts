@@ -1,11 +1,13 @@
-import { RecipeService } from '../../services/RecipeService';
-import { IGitPort } from '@packmind/types';
-import { GitHexa } from '@packmind/git';
-import { Recipe } from '../../../domain/entities/Recipe';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { IDeploymentPort } from '@packmind/types';
-import { OrganizationId, createUserId } from '@packmind/types';
+import {
+  IDeploymentPort,
+  IGitPort,
+  OrganizationId,
+  createUserId,
+} from '@packmind/types';
+import { Recipe } from '../../../domain/entities/Recipe';
 import { IRecipesDelayedJobs } from '../../../domain/jobs/IRecipesDelayedJobs';
+import { RecipeService } from '../../services/RecipeService';
 
 export interface CommonRepoData {
   owner: string;
@@ -22,7 +24,6 @@ export abstract class BaseUpdateRecipesFromWebhookUsecase {
     origin: string,
     protected readonly deploymentPort?: IDeploymentPort,
     logLevel: LogLevel = LogLevel.INFO,
-    protected readonly gitHexa?: GitHexa, // Keep for addFetchFileContentJob() - not in port
   ) {
     this.logger = new PackmindLogger(origin, logLevel);
     this.logger.info(`${origin} initialized`);
@@ -254,12 +255,7 @@ export abstract class BaseUpdateRecipesFromWebhookUsecase {
     });
 
     try {
-      if (!this.gitHexa) {
-        throw new Error(
-          'GitHexa not available - cannot add fetch file content job',
-        );
-      }
-      await this.gitHexa.addFetchFileContentJob(
+      await this.gitPort.addFetchFileContentJob(
         {
           organizationId,
           gitRepoId: matchingRepo.id,

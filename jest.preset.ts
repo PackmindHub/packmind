@@ -28,4 +28,5 @@ export const nxPreset = {
     customExportConditions: ['node', 'require', 'default'],
   },
   testTimeout: 20000, // 20 seconds
+  passWithNoTests: true, // Allow packages without tests to pass
 };

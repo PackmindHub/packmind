@@ -1,19 +1,19 @@
-import { DataSource } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
 import {
   ICodingAgentPort,
   ICodingAgentPortName,
-  IStandardsPort,
-  IStandardsPortName,
   IGitPort,
   IGitPortName,
+  IStandardsPort,
+  IStandardsPortName,
 } from '@packmind/types';
-import { CodingAgentRepositories } from './infra/repositories/CodingAgentRepositories';
-import { DeployerService } from './application/services/DeployerService';
-import { CodingAgentServices } from './application/services/CodingAgentServices';
+import { DataSource } from 'typeorm';
 import { CodingAgentAdapter } from './application/adapter/CodingAgentAdapter';
+import { CodingAgentServices } from './application/services/CodingAgentServices';
+import { DeployerService } from './application/services/DeployerService';
 import { ICodingAgentRepositories } from './domain/repositories/ICodingAgentRepositories';
+import { CodingAgentRepositories } from './infra/repositories/CodingAgentRepositories';
 
 const origin = 'CodingAgentHexa';
 
@@ -58,6 +58,7 @@ export class CodingAgentHexa extends BaseHexa<BaseHexaOpts, ICodingAgentPort> {
       // Instantiate adapter
       this.adapter = new CodingAgentAdapter(
         this.codingAgentServices,
+        this.codingAgentRepositories,
         this.logger,
       );
 
@@ -102,6 +103,7 @@ export class CodingAgentHexa extends BaseHexa<BaseHexaOpts, ICodingAgentPort> {
       // Recreate adapter with new services
       this.adapter = new CodingAgentAdapter(
         this.codingAgentServices,
+        this.codingAgentRepositories,
         this.logger,
       );
 

@@ -1,41 +1,38 @@
+import { PackmindLogger } from '@packmind/logger';
+import {
+  CaptureRecipeCommand,
+  DeleteRecipeCommand,
+  DeleteRecipesBatchCommand,
+  GetRecipeByIdCommand,
+  IAccountsPort,
+  IDeploymentPort,
+  IGitPort,
+  IRecipesPort,
+  ISpacesPort,
+  ListRecipesBySpaceCommand,
+  OrganizationId,
+  QueryOption,
+  RecipeId,
+  UpdateRecipeFromUICommand,
+  UpdateRecipeFromUIResponse,
+  UpdateRecipesFromGitHubCommand,
+  UpdateRecipesFromGitLabCommand,
+} from '@packmind/types';
+import { Recipe } from '../../domain/entities/Recipe';
+import { IRecipesDelayedJobs } from '../../domain/jobs/IRecipesDelayedJobs';
+import { RecipesServices } from '../services/RecipesServices';
 import { CaptureRecipeUsecase } from '../useCases/captureRecipe/captureRecipe.usecase';
-import { UpdateRecipesFromGitHubUsecase } from '../useCases/updateRecipesFromGitHub/updateRecipesFromGitHub.usecase';
-import { UpdateRecipesFromGitLabUsecase } from '../useCases/updateRecipesFromGitLab/updateRecipesFromGitLab.usecase';
-import { UpdateRecipeFromUIUsecase } from '../useCases/updateRecipeFromUI/updateRecipeFromUI.usecase';
 import { DeleteRecipeUsecase } from '../useCases/deleteRecipe/deleteRecipe.usecase';
-import { GetRecipeByIdUsecase } from '../useCases/getRecipeById/getRecipeById.usecase';
+import { DeleteRecipesBatchUsecase } from '../useCases/deleteRecipesBatch/deleteRecipesBatch.usecase';
 import { FindRecipeBySlugUsecase } from '../useCases/findRecipeBySlug/findRecipeBySlug.usecase';
+import { GetRecipeByIdUsecase } from '../useCases/getRecipeById/getRecipeById.usecase';
+import { GetRecipeVersionUsecase } from '../useCases/getRecipeVersion/getRecipeVersion.usecase';
 import { ListRecipesByOrganizationUsecase } from '../useCases/listRecipesByOrganization/listRecipesByOrganization.usecase';
 import { ListRecipesBySpaceUsecase } from '../useCases/listRecipesBySpace/listRecipesBySpace.usecase';
 import { ListRecipeVersionsUsecase } from '../useCases/listRecipeVersions/listRecipeVersions.usecase';
-import { GetRecipeVersionUsecase } from '../useCases/getRecipeVersion/getRecipeVersion.usecase';
-import { DeleteRecipesBatchUsecase } from '../useCases/deleteRecipesBatch/deleteRecipesBatch.usecase';
-import { RecipesServices } from '../services/RecipesServices';
-import { PackmindLogger } from '@packmind/logger';
-import {
-  IAccountsPort,
-  IDeploymentPort,
-  ISpacesPort,
-  IGitPort,
-} from '@packmind/types';
-import { IRecipesDelayedJobs } from '../../domain/jobs/IRecipesDelayedJobs';
-import { GitHexa } from '@packmind/git';
-import {
-  CaptureRecipeCommand,
-  UpdateRecipesFromGitHubCommand,
-  UpdateRecipesFromGitLabCommand,
-  QueryOption,
-  UpdateRecipeFromUICommand,
-  UpdateRecipeFromUIResponse,
-  GetRecipeByIdCommand,
-  ListRecipesBySpaceCommand,
-  DeleteRecipeCommand,
-  DeleteRecipesBatchCommand,
-  RecipeId,
-  IRecipesPort,
-} from '@packmind/types';
-import { OrganizationId } from '@packmind/types';
-import { Recipe } from '../../domain/entities/Recipe';
+import { UpdateRecipeFromUIUsecase } from '../useCases/updateRecipeFromUI/updateRecipeFromUI.usecase';
+import { UpdateRecipesFromGitHubUsecase } from '../useCases/updateRecipesFromGitHub/updateRecipesFromGitHub.usecase';
+import { UpdateRecipesFromGitLabUsecase } from '../useCases/updateRecipesFromGitLab/updateRecipesFromGitLab.usecase';
 
 const origin = 'RecipesAdapter';
 
@@ -61,7 +58,6 @@ export class RecipesAdapter implements IRecipesPort {
     private readonly accountsAdapter: IAccountsPort,
     private readonly spacesPort: ISpacesPort | null,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
-    private readonly gitHexa?: GitHexa, // Keep for addFetchFileContentJob() - not in port
   ) {
     this._captureRecipe = new CaptureRecipeUsecase(
       recipesServices.getRecipeService(),
@@ -74,21 +70,11 @@ export class RecipesAdapter implements IRecipesPort {
       gitPort,
       this.deploymentPort,
     );
-    // Set gitHexa for delayed jobs if available
-    if (this.gitHexa) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (this._updateRecipesFromGitHub as any).gitHexa = this.gitHexa;
-    }
     this._updateRecipesFromGitLab = new UpdateRecipesFromGitLabUsecase(
       recipesServices.getRecipeService(),
       gitPort,
       this.deploymentPort,
     );
-    // Set gitHexa for delayed jobs if available
-    if (this.gitHexa) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (this._updateRecipesFromGitLab as any).gitHexa = this.gitHexa;
-    }
     this._updateRecipeFromUI = new UpdateRecipeFromUIUsecase(
       recipesServices.getRecipeService(),
       recipesServices.getRecipeVersionService(),
@@ -236,21 +222,11 @@ export class RecipesAdapter implements IRecipesPort {
       this.gitPort,
       deploymentPort,
     );
-    // Set gitHexa for delayed jobs if available
-    if (this.gitHexa) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (this._updateRecipesFromGitHub as any).gitHexa = this.gitHexa;
-    }
     this._updateRecipesFromGitLab = new UpdateRecipesFromGitLabUsecase(
       this.recipesServices.getRecipeService(),
       this.gitPort,
       deploymentPort,
     );
-    // Set gitHexa for delayed jobs if available
-    if (this.gitHexa) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (this._updateRecipesFromGitLab as any).gitHexa = this.gitHexa;
-    }
 
     // Re-inject recipes delayed jobs if they were previously set
     if (this._recipesDelayedJobs) {

@@ -1,6 +1,9 @@
+import { JobsHexa } from '@packmind/jobs';
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
 import {
+  IAccountsPort,
+  IAccountsPortName,
   IDeploymentPort,
   IDeploymentPortName,
   ILinterPort,
@@ -10,15 +13,13 @@ import {
   IStandardsPortName,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
-import { StandardsAdapter } from './application/useCases/StandardsAdapter';
 import { StandardsServices } from './application/services/StandardsServices';
-import { StandardsRepositories } from './infra/repositories/StandardsRepositories';
 import { StandardsUseCases } from './application/useCases';
-import { AccountsHexa } from '@packmind/accounts';
+import { StandardsAdapter } from './application/useCases/StandardsAdapter';
 import { IStandardDelayedJobs } from './domain/jobs/IStandardDelayedJobs';
-import { GenerateStandardSummaryJobFactory } from './infra/jobs/GenerateStandardSummaryJobFactory';
-import { JobsHexa } from '@packmind/jobs';
 import { IStandardsRepositories } from './domain/repositories/IStandardsRepositories';
+import { GenerateStandardSummaryJobFactory } from './infra/jobs/GenerateStandardSummaryJobFactory';
+import { StandardsRepositories } from './infra/repositories/StandardsRepositories';
 
 const origin = 'StandardsHexa';
 
@@ -102,7 +103,7 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
         this.logger.debug('DeploymentsHexa not available in registry');
       }
 
-      // Get JobsHexa (required)
+      // Get JobsHexa (required) for delayed job registration
       const jobsHexa = registry.get(JobsHexa);
       if (!jobsHexa) {
         throw new Error('JobsHexa not found in registry');
@@ -114,12 +115,9 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
         this.standardsRepositories,
       );
 
-      // Get AccountsHexa adapter (required)
-      const accountsHexa = registry.get(AccountsHexa);
-      if (!accountsHexa) {
-        throw new Error('AccountsHexa not found in registry');
-      }
-      const accountsAdapter = accountsHexa.getAdapter();
+      // Get Accounts port (required)
+      const accountsPort =
+        registry.getAdapter<IAccountsPort>(IAccountsPortName);
 
       // Get SpacesPort (optional dependency)
       let spacesPort: ISpacesPort | null = null;
@@ -138,7 +136,7 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
         this.standardsRepositories,
         this.deploymentsQueryAdapter,
         standardsDelayedJobs,
-        accountsAdapter,
+        accountsPort,
         spacesPort,
         this.standardsServices.getLinterAdapter(),
         this.logger,

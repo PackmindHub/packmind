@@ -7,6 +7,8 @@ import {
   CheckDirectoryExistenceCommand,
   CheckDirectoryExistenceResult,
   ExternalRepository,
+  FetchFileContentInput,
+  FetchFileContentOutput,
   FindGitRepoByOwnerRepoAndBranchInOrganizationCommand,
   FindGitRepoByOwnerRepoAndBranchInOrganizationResult,
   GetAvailableRemoteDirectoriesCommand,
@@ -250,4 +252,19 @@ export interface IGitPort {
   findGitRepoByOwnerRepoAndBranchInOrganization(
     command: FindGitRepoByOwnerRepoAndBranchInOrganizationCommand,
   ): Promise<FindGitRepoByOwnerRepoAndBranchInOrganizationResult>;
+
+  /**
+   * Queue a job to fetch file content from a git repository asynchronously
+   *
+   * Takes the output from handleWebHookWithoutContent and enriches it with file content,
+   * producing the same format as handleWebHook.
+   *
+   * @param input - Parameters containing repository ID and files from handleWebHookWithoutContent
+   * @param onComplete - Optional callback to execute when the job completes successfully
+   * @returns Job ID that can be used to track the job status
+   */
+  addFetchFileContentJob(
+    input: FetchFileContentInput,
+    onComplete?: (result: FetchFileContentOutput) => Promise<void> | void,
+  ): Promise<string>;
 }

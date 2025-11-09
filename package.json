@@ -9,8 +9,8 @@
   "scripts": {
     "e2e": "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=false npx playwright test --config apps/frontend-e2e/playwright.config.ts",
     "prepare": "husky",
-    "test": "nx run-many -t test --passWithNoTests",
-    "test:staged": "nx affected:test --parallel --passWithNoTests",
+    "test": "nx run-many -t test",
+    "test:staged": "nx affected:test --parallel",
     "lint": "nx run-many -t lint",
     "lint:staged": "nx affected:lint --parallel --uncommitted",
     "build": "nx run-many -t build",

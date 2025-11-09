@@ -1,14 +1,14 @@
 import {
+  BadRequestException,
   CanActivate,
   ExecutionContext,
-  Injectable,
-  BadRequestException,
   ForbiddenException,
+  Injectable,
 } from '@nestjs/common';
-import { Observable } from 'rxjs';
-import { AuthenticatedRequest } from '@packmind/node-utils';
-import { SpaceId, createSpaceId } from '@packmind/spaces';
 import { PackmindLogger } from '@packmind/logger';
+import { AuthenticatedRequest } from '@packmind/node-utils';
+import { SpaceId, createSpaceId } from '@packmind/types';
+import { Observable } from 'rxjs';
 
 const origin = 'SpaceAccessGuard';
 

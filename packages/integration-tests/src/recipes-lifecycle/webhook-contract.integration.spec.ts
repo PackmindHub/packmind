@@ -159,7 +159,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
 
       // Mock addFetchFileContentJob to immediately execute callback
       jest
-        .spyOn(testApp.gitHexa, 'addFetchFileContentJob')
+        .spyOn(gitAdapter, 'addFetchFileContentJob')
         .mockImplementation(async (input, callback) => {
           if (callback) {
             // Execute callback immediately with file content

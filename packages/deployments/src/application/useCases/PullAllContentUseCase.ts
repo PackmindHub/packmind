@@ -1,18 +1,19 @@
+import { CodingAgents, ICodingAgentDeployer } from '@packmind/coding-agent';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
+import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
-  OrganizationProvider,
-  UserProvider,
-  IPullAllContentResponse,
-  PackmindCommand,
   FileUpdates,
-  ISpacesPort,
+  ICodingAgentPort,
+  IPullAllContentResponse,
   IRecipesPort,
+  ISpacesPort,
+  IStandardsPort,
+  OrganizationProvider,
+  PackmindCommand,
   Recipe,
   RecipeVersion,
+  UserProvider,
 } from '@packmind/types';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
-import { PackmindLogger, LogLevel } from '@packmind/logger';
-import { CodingAgentHexa, CodingAgents } from '@packmind/coding-agent';
-import { IStandardsPort, ICodingAgentPort } from '@packmind/types';
 
 const origin = 'PullAllContentUseCase';
 
@@ -25,7 +26,6 @@ export class PullAllContentUseCase extends AbstractMemberUseCase<
     private readonly standardsPort: IStandardsPort,
     private readonly spacesPort: ISpacesPort,
     private readonly codingAgentPort: ICodingAgentPort,
-    private readonly codingAgentHexa: CodingAgentHexa, // Keep for getCodingAgentDeployerRegistry() - not in port
     userProvider: UserProvider,
     organizationProvider: OrganizationProvider,
     logger: PackmindLogger = new PackmindLogger(origin, LogLevel.INFO),
@@ -133,8 +133,7 @@ export class PullAllContentUseCase extends AbstractMemberUseCase<
       };
 
       // Get the deployer registry
-      const deployerRegistry =
-        this.codingAgentHexa.getCodingAgentDeployerRegistry();
+      const deployerRegistry = this.codingAgentPort.getDeployerRegistry();
 
       // For each coding agent, generate file updates
       for (const codingAgent of codingAgents) {
@@ -142,7 +141,9 @@ export class PullAllContentUseCase extends AbstractMemberUseCase<
           codingAgent,
         });
 
-        const deployer = deployerRegistry.getDeployer(codingAgent);
+        const deployer = deployerRegistry.getDeployer(
+          codingAgent,
+        ) as ICodingAgentDeployer;
 
         // Deploy recipes
         if (recipeVersions.length > 0) {

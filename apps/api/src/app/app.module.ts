@@ -1,46 +1,45 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { APP_GUARD, Reflector, RouterModule } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
-import { RouterModule } from '@nestjs/core';
-import { APP_GUARD, Reflector } from '@nestjs/core';
-import { RecipesModule } from './recipes/recipes.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { AccountsHexa, accountsSchemas } from '@packmind/accounts';
+import { CodingAgentHexa } from '@packmind/coding-agent';
+import { DeploymentsHexa, deploymentsSchemas } from '@packmind/deployments';
+import { GitHexa, gitSchemas } from '@packmind/git';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
+import { Configuration } from '@packmind/node-utils';
+import { RecipesHexa, recipesSchemas } from '@packmind/recipes';
+import { SpacesHexa, spacesSchemas } from '@packmind/spaces';
+import { StandardsHexa, standardsSchemas } from '@packmind/standards';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HooksModule } from './hooks/hooks.module';
-import { Configuration } from '@packmind/node-utils';
-import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { recipesSchemas, RecipesHexa } from '@packmind/recipes';
-import { accountsSchemas, AccountsHexa } from '@packmind/accounts';
-import { gitSchemas, GitHexa } from '@packmind/git';
-import { spacesSchemas, SpacesHexa } from '@packmind/spaces';
-import { standardsSchemas, StandardsHexa } from '@packmind/standards';
-import { CodingAgentHexa } from '@packmind/coding-agent';
-import { deploymentsSchemas, DeploymentsHexa } from '@packmind/deployments';
+import { RecipesModule } from './recipes/recipes.module';
 
-import { AuthModule } from './auth/auth.module';
-import { AuthGuard } from './auth/auth.guard';
-import { GitModule } from './git/git.module';
-import { UsersModule } from './accounts/users/users.module';
-import { OrganizationsModule as AccountsOrganizationsModule } from './accounts/organizations/organizations.module';
-import { OrganizationsModule } from './organizations/organizations.module';
-import { OrganizationsSpacesModule } from './organizations/spaces/spaces.module';
-import { OrganizationsSpacesRecipesModule } from './organizations/spaces/recipes/recipes.module';
-import { OrganizationsSpacesStandardsModule } from './organizations/spaces/standards/standards.module';
-import { StandardsModule } from './standards/standards.module';
-import { McpModule } from './mcp/mcp.module';
-import { HexaRegistryModule } from './shared/HexaRegistryModule';
-import { DeploymentsController } from './deployments/deployments.controller';
-import { DeploymentsModule } from './deployments/deployments.module';
-import { TargetsModule } from './targets/targets.module';
-import { SSEModule } from './sse/sse.module';
-import { JobsHexa } from '@packmind/jobs';
-import { LinterHexa, LinterModule, linterSchemas } from '@packmind/linter';
+import { AmplitudeModule } from '@packmind/amplitude';
 import {
   AnalyticsHexa,
-  recipesUsageSchemas,
   AnalyticsModule,
+  recipesUsageSchemas,
 } from '@packmind/analytics';
-import { AmplitudeModule } from '@packmind/amplitude';
+import { JobsHexa } from '@packmind/jobs';
+import { LinterHexa, LinterModule, linterSchemas } from '@packmind/linter';
+import { OrganizationsModule as AccountsOrganizationsModule } from './accounts/organizations/organizations.module';
+import { UsersModule } from './accounts/users/users.module';
+import { AuthGuard } from './auth/auth.guard';
+import { AuthModule } from './auth/auth.module';
+import { DeploymentsController } from './deployments/deployments.controller';
+import { DeploymentsModule } from './deployments/deployments.module';
+import { GitModule } from './git/git.module';
+import { McpModule } from './mcp/mcp.module';
+import { OrganizationsModule } from './organizations/organizations.module';
+import { OrganizationsSpacesRecipesModule } from './organizations/spaces/recipes/recipes.module';
+import { OrganizationsSpacesModule } from './organizations/spaces/spaces.module';
+import { OrganizationsSpacesStandardsModule } from './organizations/spaces/standards/standards.module';
+import { HexaRegistryModule } from './shared/HexaRegistryModule';
+import { SSEModule } from './sse/sse.module';
+import { StandardsModule } from './standards/standards.module';
+import { TargetsModule } from './targets/targets.module';
 
 const logger = new PackmindLogger('AppModule', LogLevel.INFO);
 

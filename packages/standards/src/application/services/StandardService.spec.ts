@@ -1,25 +1,25 @@
-import {
-  StandardService,
-  CreateStandardData,
-  UpdateStandardData,
-} from './StandardService';
-import { IStandardRepository } from '../../domain/repositories/IStandardRepository';
-import {
-  Standard,
-  StandardId,
-  createStandardId,
-} from '../../domain/entities/Standard';
-import { v4 as uuidv4 } from 'uuid';
-import { standardFactory } from '../../../test/standardFactory';
 import { PackmindLogger } from '@packmind/logger';
+import { stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
+  createSpaceId,
   createUserId,
-  UserId,
   OrganizationId,
+  UserId,
 } from '@packmind/types';
-import { createSpaceId } from '@packmind/spaces';
-import { stubLogger } from '@packmind/test-utils';
+import { v4 as uuidv4 } from 'uuid';
+import { standardFactory } from '../../../test/standardFactory';
+import {
+  createStandardId,
+  Standard,
+  StandardId,
+} from '../../domain/entities/Standard';
+import { IStandardRepository } from '../../domain/repositories/IStandardRepository';
+import {
+  CreateStandardData,
+  StandardService,
+  UpdateStandardData,
+} from './StandardService';
 
 describe('StandardService', () => {
   let standardService: StandardService;

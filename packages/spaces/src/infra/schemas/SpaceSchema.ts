@@ -1,12 +1,12 @@
-import { EntitySchema } from 'typeorm';
-import { Space } from '../../domain/entities/Space';
 import {
-  WithTimestamps,
   WithSoftDelete,
-  uuidSchema,
-  timestampsSchemas,
+  WithTimestamps,
   softDeleteSchemas,
+  timestampsSchemas,
+  uuidSchema,
 } from '@packmind/node-utils';
+import { Space } from '@packmind/types';
+import { EntitySchema } from 'typeorm';
 
 export const SpaceSchema = new EntitySchema<
   WithSoftDelete<WithTimestamps<Space>>

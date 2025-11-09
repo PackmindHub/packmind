@@ -1,9 +1,13 @@
-import { createOrganizationId, createUserId } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
-import { createSpaceId } from '@packmind/spaces';
 import { stubLogger } from '@packmind/test-utils';
 import type { ILinterPort } from '@packmind/types';
-import { ProgrammingLanguage, RuleWithExamples } from '@packmind/types';
+import {
+  createOrganizationId,
+  createSpaceId,
+  createUserId,
+  ProgrammingLanguage,
+  RuleWithExamples,
+} from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { ruleFactory } from '../../../../test/ruleFactory';
 import { standardFactory } from '../../../../test/standardFactory';

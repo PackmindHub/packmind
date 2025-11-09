@@ -1,67 +1,64 @@
 import {
-  UserProvider,
-  OrganizationProvider,
-  IPullAllContentResponse,
-  PackmindCommand,
-} from '@packmind/types';
-import { IDeploymentPort, ISpacesPort } from '@packmind/types';
-import { IRecipesPort } from '@packmind/types';
-import { DeleteTargetResponse } from '@packmind/types';
-import {
-  FindDeployedStandardByRepositoryCommand,
-  FindDeployedStandardByRepositoryResponse,
+  AddTargetCommand,
+  CreateRenderModeConfigurationCommand,
+  DeleteTargetCommand,
+  DeleteTargetResponse,
+  DeploymentOverview,
   FindActiveStandardVersionsByTargetCommand,
   FindActiveStandardVersionsByTargetResponse,
+  FindDeployedStandardByRepositoryCommand,
+  FindDeployedStandardByRepositoryResponse,
+  GetDeploymentOverviewCommand,
+  GetRenderModeConfigurationCommand,
+  GetRenderModeConfigurationResult,
   GetStandardDeploymentOverviewCommand,
+  GetTargetsByGitRepoCommand,
+  GetTargetsByOrganizationCommand,
+  GetTargetsByRepositoryCommand,
+  ICodingAgentPort,
+  IDeploymentPort,
+  IGitPort,
+  IPullAllContentResponse,
+  IRecipesPort,
+  ISpacesPort,
+  IStandardsPort,
   ListDeploymentsByRecipeCommand,
   ListDeploymentsByStandardCommand,
+  OrganizationProvider,
+  PackmindCommand,
   PublishRecipesCommand,
   PublishStandardsCommand,
   RecipesDeployment,
+  RenderModeConfiguration,
   StandardDeploymentOverview,
   StandardsDeployment,
   Target,
   TargetWithRepository,
-  AddTargetCommand,
-  UpdateTargetCommand,
-  DeleteTargetCommand,
-  GetTargetsByGitRepoCommand,
-  GetTargetsByRepositoryCommand,
-  GetTargetsByOrganizationCommand,
-  GetRenderModeConfigurationCommand,
-  GetRenderModeConfigurationResult,
-  CreateRenderModeConfigurationCommand,
   UpdateRenderModeConfigurationCommand,
-  RenderModeConfiguration,
+  UpdateTargetCommand,
+  UserProvider,
 } from '@packmind/types';
-import { FindDeployedStandardByRepositoryUseCase } from '../useCases/FindDeployedStandardByRepositoryUseCase';
-import { FindActiveStandardVersionsByTargetUseCase } from '../useCases/FindActiveStandardVersionsByTargetUseCase';
+import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
 import { DeploymentsServices } from '../services/DeploymentsServices';
-import {
-  DeploymentOverview,
-  GetDeploymentOverviewCommand,
-} from '@packmind/types';
+import { AddTargetUseCase } from '../useCases/AddTargetUseCase';
+import { CreateRenderModeConfigurationUseCase } from '../useCases/CreateRenderModeConfigurationUseCase';
+import { DeleteTargetUseCase } from '../useCases/DeleteTargetUseCase';
+import { FindActiveStandardVersionsByTargetUseCase } from '../useCases/FindActiveStandardVersionsByTargetUseCase';
+import { FindDeployedStandardByRepositoryUseCase } from '../useCases/FindDeployedStandardByRepositoryUseCase';
 import { GetDeploymentOverviewUseCase } from '../useCases/GetDeploymentOverviewUseCase';
-import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
-import { IGitPort } from '@packmind/types';
-import { PublishRecipesUseCase } from '../useCases/PublishRecipesUseCase';
-import { ICodingAgentPort, IStandardsPort } from '@packmind/types';
-import { CodingAgentHexa } from '@packmind/coding-agent';
-import { PublishStandardsUseCase } from '../useCases/PublishStandardsUseCase';
+import { GetRenderModeConfigurationUseCase } from '../useCases/GetRenderModeConfigurationUseCase';
+import { GetStandardDeploymentOverviewUseCase } from '../useCases/GetStandardDeploymentOverviewUseCase';
+import { GetTargetsByGitRepoUseCase } from '../useCases/GetTargetsByGitRepoUseCase';
+import { GetTargetsByOrganizationUseCase } from '../useCases/GetTargetsByOrganizationUseCase';
+import { GetTargetsByRepositoryUseCase } from '../useCases/GetTargetsByRepositoryUseCase';
 import { ListDeploymentsByRecipeUseCase } from '../useCases/ListDeploymentsByRecipeUseCase';
 import { ListDeploymentsByStandardUseCase } from '../useCases/ListDeploymentsByStandardUseCase';
-import { GetStandardDeploymentOverviewUseCase } from '../useCases/GetStandardDeploymentOverviewUseCase';
-import { AddTargetUseCase } from '../useCases/AddTargetUseCase';
-import { GetTargetsByGitRepoUseCase } from '../useCases/GetTargetsByGitRepoUseCase';
-import { GetTargetsByRepositoryUseCase } from '../useCases/GetTargetsByRepositoryUseCase';
-import { GetTargetsByOrganizationUseCase } from '../useCases/GetTargetsByOrganizationUseCase';
-import { UpdateTargetUseCase } from '../useCases/UpdateTargetUseCase';
-import { DeleteTargetUseCase } from '../useCases/DeleteTargetUseCase';
-import { GetRenderModeConfigurationUseCase } from '../useCases/GetRenderModeConfigurationUseCase';
-import { CreateRenderModeConfigurationUseCase } from '../useCases/CreateRenderModeConfigurationUseCase';
-import { UpdateRenderModeConfigurationUseCase } from '../useCases/UpdateRenderModeConfigurationUseCase';
+import { PublishRecipesUseCase } from '../useCases/PublishRecipesUseCase';
+import { PublishStandardsUseCase } from '../useCases/PublishStandardsUseCase';
 import { PullAllContentUseCase } from '../useCases/PullAllContentUseCase';
+import { UpdateRenderModeConfigurationUseCase } from '../useCases/UpdateRenderModeConfigurationUseCase';
+import { UpdateTargetUseCase } from '../useCases/UpdateTargetUseCase';
 
 // Import the type to avoid circular dependency
 type DeploymentsHexaType = {
@@ -79,7 +76,6 @@ export class DeploymentsAdapter implements IDeploymentPort {
   private recipesPort?: Partial<IRecipesPort>;
   private codingAgentPort!: ICodingAgentPort;
   private standardsPort?: IStandardsPort; // Optional - may be set after initialization
-  private codingAgentHexa!: CodingAgentHexa; // Keep for getCodingAgentDeployerRegistry() - not in port
   private spacesPort!: ISpacesPort;
   private userProvider?: UserProvider;
   private organizationProvider?: OrganizationProvider;
@@ -110,13 +106,6 @@ export class DeploymentsAdapter implements IDeploymentPort {
    */
   public setCodingAgentPort(codingAgentPort: ICodingAgentPort): void {
     this.codingAgentPort = codingAgentPort;
-  }
-
-  /**
-   * Set the coding agent hexa for use cases that depend on it
-   */
-  public setCodingAgentHexa(codingAgentHexa: CodingAgentHexa): void {
-    this.codingAgentHexa = codingAgentHexa;
   }
 
   /**
@@ -389,7 +378,6 @@ export class DeploymentsAdapter implements IDeploymentPort {
       standardsPort,
       this.spacesPort,
       this.codingAgentPort,
-      this.codingAgentHexa,
       this.userProvider,
       this.organizationProvider,
     );

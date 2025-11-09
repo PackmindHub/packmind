@@ -1,10 +1,9 @@
+import { PackmindLogger } from '@packmind/logger';
+import { AbstractRepository, localDataSource } from '@packmind/node-utils';
+import { OrganizationId, Space } from '@packmind/types';
 import { Repository } from 'typeorm';
-import { Space } from '../../domain/entities/Space';
 import { ISpaceRepository } from '../../domain/repositories/ISpaceRepository';
 import { SpaceSchema } from '../schemas/SpaceSchema';
-import { PackmindLogger } from '@packmind/logger';
-import { localDataSource, AbstractRepository } from '@packmind/node-utils';
-import { OrganizationId } from '@packmind/types';
 
 const origin = 'SpaceRepository';
 

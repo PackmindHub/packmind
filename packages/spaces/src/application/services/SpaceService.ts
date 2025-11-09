@@ -1,10 +1,9 @@
 import { PackmindLogger } from '@packmind/logger';
-import { Space, SpaceId, createSpaceId } from '../../domain/entities/Space';
-import { ISpaceRepository } from '../../domain/repositories/ISpaceRepository';
-import { SpaceSlugConflictError } from '../../domain/errors/SpaceSlugConflictError';
-import { OrganizationId } from '@packmind/types';
-import { v4 as uuidv4 } from 'uuid';
+import { OrganizationId, Space, SpaceId, createSpaceId } from '@packmind/types';
 import slug from 'slug';
+import { v4 as uuidv4 } from 'uuid';
+import { SpaceSlugConflictError } from '../../domain/errors/SpaceSlugConflictError';
+import { ISpaceRepository } from '../../domain/repositories/ISpaceRepository';
 
 const origin = 'SpaceService';
 

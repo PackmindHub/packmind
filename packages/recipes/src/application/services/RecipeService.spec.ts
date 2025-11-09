@@ -1,21 +1,21 @@
-import {
-  RecipeService,
-  CreateRecipeData,
-  UpdateRecipeData,
-} from './RecipeService';
-import { IRecipeRepository } from '../../domain/repositories/IRecipeRepository';
-import { Recipe, RecipeId, createRecipeId } from '../../domain/entities/Recipe';
-import { v4 as uuidv4 } from 'uuid';
-import { recipeFactory } from '../../../test/recipeFactory';
 import { PackmindLogger } from '@packmind/logger';
+import { stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
+  createSpaceId,
   createUserId,
-  UserId,
   OrganizationId,
+  UserId,
 } from '@packmind/types';
-import { createSpaceId } from '@packmind/spaces';
-import { stubLogger } from '@packmind/test-utils';
+import { v4 as uuidv4 } from 'uuid';
+import { recipeFactory } from '../../../test/recipeFactory';
+import { createRecipeId, Recipe, RecipeId } from '../../domain/entities/Recipe';
+import { IRecipeRepository } from '../../domain/repositories/IRecipeRepository';
+import {
+  CreateRecipeData,
+  RecipeService,
+  UpdateRecipeData,
+} from './RecipeService';
 
 describe('RecipeService', () => {
   let recipeService: RecipeService;

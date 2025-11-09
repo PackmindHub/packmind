@@ -1,19 +1,19 @@
-import { accountsSchemas, AccountsHexa } from '@packmind/accounts';
-import { User, Organization } from '@packmind/types';
-import {
-  StandardsHexa,
-  standardsSchemas,
-  Standard,
-  StandardVersion,
-} from '@packmind/standards';
+import { AccountsHexa, accountsSchemas } from '@packmind/accounts';
 import { GitHexa, gitSchemas } from '@packmind/git';
 import { JobsHexa } from '@packmind/jobs';
-import { SpacesHexa, spacesSchemas, Space } from '@packmind/spaces';
 import { HexaRegistry } from '@packmind/node-utils';
+import { SpacesHexa, spacesSchemas } from '@packmind/spaces';
+import {
+  Standard,
+  StandardsHexa,
+  standardsSchemas,
+  StandardVersion,
+} from '@packmind/standards';
 import { makeTestDatasource } from '@packmind/test-utils';
+import { Organization, Space, User } from '@packmind/types';
 
-import { DataSource } from 'typeorm';
 import assert from 'assert';
+import { DataSource } from 'typeorm';
 
 describe('Add rule to standard integration', () => {
   let accountsHexa: AccountsHexa;

@@ -1,18 +1,20 @@
-import { v4 as uuidv4 } from 'uuid';
-import { PullAllContentUseCase } from './PullAllContentUseCase';
 import { stubLogger } from '@packmind/test-utils';
-import { PackmindCommand } from '@packmind/types';
 import {
+  FileUpdates,
+  ICodingAgentPort,
+  IRecipesPort,
+  ISpacesPort,
+  IStandardsPort,
   Organization,
   OrganizationId,
+  PackmindCommand,
   User,
   UserOrganizationMembership,
   createOrganizationId,
   createUserId,
 } from '@packmind/types';
-import { IStandardsPort, ICodingAgentPort } from '@packmind/types';
-import { CodingAgentHexa } from '@packmind/coding-agent';
-import { ISpacesPort, IRecipesPort, FileUpdates } from '@packmind/types';
+import { v4 as uuidv4 } from 'uuid';
+import { PullAllContentUseCase } from './PullAllContentUseCase';
 
 const createUserWithMembership = (
   userId: string,
@@ -37,7 +39,6 @@ describe('PullAllContentUseCase', () => {
   let standardsPort: jest.Mocked<IStandardsPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
   let codingAgentPort: jest.Mocked<ICodingAgentPort>;
-  let codingAgentHexa: jest.Mocked<CodingAgentHexa>;
   let userProvider: {
     getUserById: jest.Mock;
   };
@@ -64,11 +65,6 @@ describe('PullAllContentUseCase', () => {
       listSpacesByOrganization: jest.fn(),
     } as unknown as jest.Mocked<ISpacesPort>;
 
-    codingAgentPort = {
-      prepareRecipesDeployment: jest.fn(),
-      prepareStandardsDeployment: jest.fn(),
-    } as unknown as jest.Mocked<ICodingAgentPort>;
-
     const mockDeployer = {
       generateFileUpdatesForRecipes: jest.fn(),
       generateFileUpdatesForStandards: jest.fn(),
@@ -78,9 +74,11 @@ describe('PullAllContentUseCase', () => {
       getDeployer: jest.fn().mockReturnValue(mockDeployer),
     };
 
-    codingAgentHexa = {
-      getCodingAgentDeployerRegistry: jest.fn().mockReturnValue(mockRegistry),
-    } as unknown as jest.Mocked<CodingAgentHexa>;
+    codingAgentPort = {
+      prepareRecipesDeployment: jest.fn(),
+      prepareStandardsDeployment: jest.fn(),
+      getDeployerRegistry: jest.fn().mockReturnValue(mockRegistry),
+    } as unknown as jest.Mocked<ICodingAgentPort>;
 
     userProvider = {
       getUserById: jest.fn(),
@@ -111,7 +109,6 @@ describe('PullAllContentUseCase', () => {
       standardsPort,
       spacesPort,
       codingAgentPort,
-      codingAgentHexa,
       userProvider,
       organizationProvider,
       stubLogger(),
@@ -139,9 +136,9 @@ describe('PullAllContentUseCase', () => {
         getDeployer: jest.fn().mockReturnValue(mockDeployer),
       };
 
-      (
-        codingAgentHexa.getCodingAgentDeployerRegistry as jest.Mock
-      ).mockReturnValue(mockRegistry);
+      (codingAgentPort.getDeployerRegistry as jest.Mock).mockReturnValue(
+        mockRegistry,
+      );
     });
 
     it('returns file updates from deployers', async () => {

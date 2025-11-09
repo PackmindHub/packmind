@@ -12,7 +12,6 @@
     "@packmind/recipes": "*",
     "@packmind/node-utils": "*",
     "@packmind/types": "*",
-    "@packmind/spaces": "*",
     "@packmind/standards": "*",
     "typeorm": "^0.3.26",
     "uuid": "^11.1.0",

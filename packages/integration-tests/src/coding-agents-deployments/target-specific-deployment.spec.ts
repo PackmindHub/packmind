@@ -12,7 +12,8 @@ import {
   recipesSchemas,
 } from '@packmind/recipes';
 import { HexaRegistry } from '@packmind/node-utils';
-import { Space, SpacesHexa, spacesSchemas } from '@packmind/spaces';
+import { Space } from '@packmind/types';
+import { SpacesHexa, spacesSchemas } from '@packmind/spaces';
 import {
   Standard,
   StandardVersion,

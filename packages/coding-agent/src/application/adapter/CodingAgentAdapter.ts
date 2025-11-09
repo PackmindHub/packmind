@@ -1,11 +1,13 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
+  ICodingAgentDeployerRegistry,
   ICodingAgentPort,
   PrepareRecipesDeploymentCommand,
   PrepareRecipesDeploymentResponse,
   PrepareStandardsDeploymentCommand,
   PrepareStandardsDeploymentResponse,
 } from '@packmind/types';
+import { ICodingAgentRepositories } from '../../domain/repositories/ICodingAgentRepositories';
 import { CodingAgentServices } from '../services/CodingAgentServices';
 import { PrepareRecipesDeploymentUseCase } from '../useCases/PrepareRecipesDeploymentUseCase';
 import { PrepareStandardsDeploymentUseCase } from '../useCases/PrepareStandardsDeploymentUseCase';
@@ -18,6 +20,7 @@ export class CodingAgentAdapter implements ICodingAgentPort {
 
   constructor(
     codingAgentServices: CodingAgentServices,
+    private readonly codingAgentRepositories: ICodingAgentRepositories,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('Initializing CodingAgentAdapter');
@@ -43,5 +46,9 @@ export class CodingAgentAdapter implements ICodingAgentPort {
     command: PrepareStandardsDeploymentCommand,
   ): Promise<PrepareStandardsDeploymentResponse> {
     return this.prepareStandardsDeploymentUseCase.execute(command);
+  }
+
+  getDeployerRegistry(): ICodingAgentDeployerRegistry {
+    return this.codingAgentRepositories.getDeployerRegistry();
   }
 }

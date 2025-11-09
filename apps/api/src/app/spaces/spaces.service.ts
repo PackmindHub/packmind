@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { OrganizationId, ISpacesPort } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
-import { SpaceId } from '@packmind/spaces';
+import { ISpacesPort, OrganizationId, SpaceId } from '@packmind/types';
 import { InjectSpacesAdapter } from '../shared/HexaInjection';
 
 @Injectable()

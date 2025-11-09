@@ -1,18 +1,19 @@
-import { RecipeService } from '../../services/RecipeService';
-import { RecipeVersionService } from '../../services/RecipeVersionService';
-import slug from 'slug';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
+import { AiNotConfigured } from '@packmind/node-utils';
 import {
-  ICaptureRecipeUseCase,
   CaptureRecipeCommand,
   CaptureRecipeResponse,
-  RecipeStep,
+  createOrganizationId,
+  createSpaceId,
+  createUserId,
+  ICaptureRecipeUseCase,
   Recipe,
+  RecipeStep,
 } from '@packmind/types';
-import { AiNotConfigured } from '@packmind/node-utils';
+import slug from 'slug';
+import { RecipeService } from '../../services/RecipeService';
 import { RecipeSummaryService } from '../../services/RecipeSummaryService';
-import { createOrganizationId, createUserId } from '@packmind/types';
-import { createSpaceId } from '@packmind/spaces';
+import { RecipeVersionService } from '../../services/RecipeVersionService';
 
 const origin = 'CaptureRecipeUsecase';
 

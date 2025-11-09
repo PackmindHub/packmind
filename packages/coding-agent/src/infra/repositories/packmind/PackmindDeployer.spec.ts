@@ -1,23 +1,23 @@
-import { PackmindDeployer } from './PackmindDeployer';
-import { RecipeVersion, Recipe } from '@packmind/recipes';
-import { recipeFactory } from '@packmind/recipes/test';
-import { StandardVersion, Standard, Rule } from '@packmind/standards';
-import { IStandardsPort } from '@packmind/types';
-import { standardFactory } from '@packmind/standards/test';
 import { GitRepo } from '@packmind/git';
-import { createUserId } from '@packmind/types';
+import { Recipe, RecipeVersion } from '@packmind/recipes';
+import { recipeFactory } from '@packmind/recipes/test';
+import { Rule, Standard, StandardVersion } from '@packmind/standards';
+import { standardFactory } from '@packmind/standards/test';
 import {
-  createGitRepoId,
   createGitProviderId,
+  createGitRepoId,
+  createRecipeId,
+  createRecipeVersionId,
+  createRuleId,
+  createSpaceId,
   createStandardId,
   createStandardVersionId,
-  createRecipeVersionId,
-  createRecipeId,
-  Target,
   createTargetId,
-  createRuleId,
+  createUserId,
+  IStandardsPort,
+  Target,
 } from '@packmind/types';
-import { createSpaceId } from '@packmind/spaces';
+import { PackmindDeployer } from './PackmindDeployer';
 
 describe('PackmindDeployer', () => {
   let deployer: PackmindDeployer;

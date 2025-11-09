@@ -1,29 +1,32 @@
-import { DeployerService } from './DeployerService';
-import { ICodingAgentDeployerRegistry } from '../../domain/repository/ICodingAgentDeployerRegistry';
-import { ICodingAgentDeployer } from '../../domain/repository/ICodingAgentDeployer';
-import { ICodingAgentRepositories } from '../../domain/repositories/ICodingAgentRepositories';
-import { CodingAgent } from '../../domain/CodingAgents';
+import { GitProviderId, GitRepo, GitRepoId } from '@packmind/git';
+import { PackmindLogger } from '@packmind/logger';
 import {
-  RecipeVersion,
-  RecipeVersionId,
   Recipe,
   RecipeId,
+  RecipeVersion,
+  RecipeVersionId,
 } from '@packmind/recipes';
 import { recipeFactory } from '@packmind/recipes/test';
 import {
-  StandardVersion,
-  StandardVersionId,
   Standard,
   StandardId,
+  StandardVersion,
+  StandardVersionId,
 } from '@packmind/standards';
 import { standardFactory } from '@packmind/standards/test';
-import { GitRepo, GitRepoId, GitProviderId } from '@packmind/git';
-import { FileUpdates } from '@packmind/types';
-import { UserId } from '@packmind/types';
-import { PackmindLogger } from '@packmind/logger';
-import { Target, TargetId } from '@packmind/types';
-import { createSpaceId } from '@packmind/spaces';
 import { stubLogger } from '@packmind/test-utils';
+import {
+  createSpaceId,
+  FileUpdates,
+  Target,
+  TargetId,
+  UserId,
+} from '@packmind/types';
+import { CodingAgent } from '../../domain/CodingAgents';
+import { ICodingAgentRepositories } from '../../domain/repositories/ICodingAgentRepositories';
+import { ICodingAgentDeployer } from '../../domain/repository/ICodingAgentDeployer';
+import { ICodingAgentDeployerRegistry } from '../../domain/repository/ICodingAgentDeployerRegistry';
+import { DeployerService } from './DeployerService';
 
 // Create test helper functions
 const createTestRecipeId = (id: string): RecipeId => id as RecipeId;

@@ -55,6 +55,11 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
         await this.spacesPort.listSpacesByOrganization(organizationId);
 
       // Fetch all required data - only successful deployments for overview
+      if (!this.recipesPort.listRecipesBySpace) {
+        throw new Error('RecipesPort.listRecipesBySpace is not available');
+      }
+
+      const listRecipesBySpace = this.recipesPort.listRecipesBySpace;
       const [deployments, recipesPerSpace, gitRepos] = await Promise.all([
         this.deploymentsRepository.listByOrganizationIdWithStatus(
           organizationId,
@@ -62,7 +67,7 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
         ),
         Promise.all(
           spaces.map((space) =>
-            this.recipesPort.listRecipesBySpace!({
+            listRecipesBySpace({
               spaceId: space.id,
               organizationId,
               userId: createUserId(command.userId),

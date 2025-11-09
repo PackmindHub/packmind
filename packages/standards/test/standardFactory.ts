@@ -1,8 +1,11 @@
 import { Factory } from '@packmind/test-utils';
 import { v4 as uuidv4 } from 'uuid';
-import { createUserId } from '@packmind/types';
-import { createStandardId, Standard } from '@packmind/types';
-import { createSpaceId } from '@packmind/spaces';
+import {
+  createUserId,
+  createStandardId,
+  Standard,
+  createSpaceId,
+} from '@packmind/types';
 
 export const standardFactory: Factory<Standard> = (
   standard?: Partial<Standard>,

@@ -1,27 +1,24 @@
-import { GitHexa } from '@packmind/git';
+import { JobsHexa } from '@packmind/jobs';
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
 import {
-  IDeploymentPort,
-  IRecipesPort,
-  IRecipesPortName,
-  IGitPort,
-  IGitPortName,
   IAccountsPort,
   IAccountsPortName,
+  IDeploymentPort,
+  IGitPort,
+  IGitPortName,
+  IRecipesPort,
+  IRecipesPortName,
   ISpacesPort,
   ISpacesPortName,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
-import { RecipesRepositories } from './infra/repositories/RecipesRepositories';
-import { RecipesServices } from './application/services/RecipesServices';
 import { RecipesAdapter } from './application/adapter/RecipesAdapter';
+import { RecipesServices } from './application/services/RecipesServices';
 import { IRecipesDelayedJobs } from './domain/jobs/IRecipesDelayedJobs';
-import { UpdateRecipesAndGenerateSummariesJobFactory } from './infra/jobs/UpdateRecipesAndGenerateSummariesJobFactory';
 import { DeployRecipesJobFactory } from './infra/jobs/DeployRecipesJobFactory';
-import { JobsHexa } from '@packmind/jobs';
-import { AccountsHexa } from '@packmind/accounts';
-import { SpacesHexa } from '@packmind/spaces';
+import { UpdateRecipesAndGenerateSummariesJobFactory } from './infra/jobs/UpdateRecipesAndGenerateSummariesJobFactory';
+import { RecipesRepositories } from './infra/repositories/RecipesRepositories';
 
 const origin = 'RecipesHexa';
 
@@ -36,7 +33,6 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
   private readonly recipesServices: RecipesServices;
   private adapter!: RecipesAdapter; // Non-null assertion since initialize() will set it
   private gitPort?: IGitPort;
-  private gitHexa?: GitHexa;
   private accountsPort?: IAccountsPort;
   private spacesPort?: ISpacesPort | null;
   private _deploymentPort: IDeploymentPort | undefined | null = undefined;
@@ -87,22 +83,16 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
     );
 
     try {
-      // Get GitHexa and its adapter
-      const gitHexa = registry.get(GitHexa);
-      this.gitHexa = gitHexa;
+      // Get Git port (required) for domain logic
       this.gitPort = registry.getAdapter<IGitPort>(IGitPortName);
 
-      // Get AccountsHexa adapter
-      const accountsHexa = registry.get(AccountsHexa);
-      if (!accountsHexa) {
-        throw new Error('AccountsHexa not found in registry');
-      }
+      // Get Accounts port (required)
       this.accountsPort = registry.getAdapter<IAccountsPort>(IAccountsPortName);
 
       // Get spaces port for space validation (optional)
-      if (registry.isRegistered(SpacesHexa)) {
+      try {
         this.spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
-      } else {
+      } catch {
         this.logger.warn(
           'SpacesHexa not found in registry - space validation will not be available',
         );
@@ -118,7 +108,6 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
         this.accountsPort,
         this.spacesPort,
         this.logger,
-        this.gitHexa,
       );
 
       // Build delayed jobs if deployment port is available

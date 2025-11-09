@@ -1,5 +1,4 @@
-import { OrganizationId } from '@packmind/types';
-import { Space, SpaceId } from '../entities/Space';
+import { OrganizationId, Space, SpaceId } from '@packmind/types';
 
 export interface ISpaceRepository {
   add(space: Space): Promise<Space>;

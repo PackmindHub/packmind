@@ -1,44 +1,50 @@
-import { AddGitProviderUseCase } from '../useCases/addGitProvider/addGitProvider.usecase';
-import { AddGitRepoUseCase } from '../useCases/addGitRepo/addGitRepo.usecase';
-import { DeleteGitProviderUseCase } from '../useCases/deleteGitProvider/deleteGitProvider.usecase';
-import { DeleteGitRepoUseCase } from '../useCases/deleteGitRepo/deleteGitRepo.usecase';
-import { ListAvailableReposUseCase } from '../useCases/listAvailableRepos/listAvailableRepos.usecase';
-import { CheckBranchExistsUseCase } from '../useCases/checkBranchExists/checkBranchExists.usecase';
-import { CommitToGit } from '../useCases/commitToGit/commitToGit.usecase';
-import { HandleWebHook } from '../useCases/handleWebHook/handleWebHook.usecase';
-import { HandleWebHookWithoutContent } from '../useCases/handleWebHookWithoutContent/handleWebHookWithoutContent.usecase';
-import { GetFileFromRepo } from '../useCases/getFileFromRepo/getFileFromRepo.usecase';
-import { FindGitRepoByOwnerAndRepoUseCase } from '../useCases/findGitRepoByOwnerAndRepo/findGitRepoByOwnerAndRepo.usecase';
-import { ListReposUseCase } from '../useCases/listRepos/listRepos.usecase';
-import { ListProvidersUseCase } from '../useCases/listProviders/listProviders.usecase';
-import { GetOrganizationRepositoriesUseCase } from '../useCases/getOrganizationRepositories/getOrganizationRepositories.usecase';
-import { GetRepositoryByIdUseCase } from '../useCases/getRepositoryById/getRepositoryById.usecase';
-import { UpdateGitProviderUseCase } from '../useCases/updateGitProvider/updateGitProvider.usecase';
-import { GetAvailableRemoteDirectoriesUseCase } from '../useCases/getAvailableRemoteDirectories/getAvailableRemoteDirectories.usecase';
-import { CheckDirectoryExistenceUseCase } from '../useCases/checkDirectoryExistence/checkDirectoryExistence.usecase';
-import { GitServices } from '../GitServices';
 import { PackmindLogger } from '@packmind/logger';
-import { IAccountsPort, IDeploymentPort, IGitPort } from '@packmind/types';
-import { QueryOption } from '@packmind/types';
-import { GitProvider, GitProviderId } from '../../domain/entities/GitProvider';
-import { GitRepo, GitRepoId } from '../../domain/entities/GitRepo';
-import { GitCommit } from '../../domain/entities/GitCommit';
-import { OrganizationId, UserId } from '@packmind/types';
 import {
   AddGitProviderCommand,
   AddGitRepoCommand,
-  FindGitRepoByOwnerRepoAndBranchInOrganizationCommand,
-  FindGitRepoByOwnerRepoAndBranchInOrganizationResult,
-  IFindGitRepoByOwnerRepoAndBranchInOrganizationUseCase,
-  GetAvailableRemoteDirectoriesCommand,
   CheckDirectoryExistenceCommand,
   CheckDirectoryExistenceResult,
+  FetchFileContentInput,
+  FetchFileContentOutput,
+  FindGitRepoByOwnerRepoAndBranchInOrganizationCommand,
+  FindGitRepoByOwnerRepoAndBranchInOrganizationResult,
+  GetAvailableRemoteDirectoriesCommand,
   HandleWebHookCommand,
   HandleWebHookResult,
   HandleWebHookWithoutContentCommand,
   HandleWebHookWithoutContentResult,
+  IAccountsPort,
+  IDeploymentPort,
+  IFindGitRepoByOwnerRepoAndBranchInOrganizationUseCase,
+  IGitPort,
+  OrganizationId,
+  QueryOption,
+  UserId,
 } from '@packmind/types';
+import { GitCommit } from '../../domain/entities/GitCommit';
+import { GitProvider, GitProviderId } from '../../domain/entities/GitProvider';
+import { GitRepo, GitRepoId } from '../../domain/entities/GitRepo';
+import { IGitDelayedJobs } from '../../domain/jobs/IGitDelayedJobs';
+import { GitServices } from '../GitServices';
+import { AddGitProviderUseCase } from '../useCases/addGitProvider/addGitProvider.usecase';
+import { AddGitRepoUseCase } from '../useCases/addGitRepo/addGitRepo.usecase';
+import { CheckBranchExistsUseCase } from '../useCases/checkBranchExists/checkBranchExists.usecase';
+import { CheckDirectoryExistenceUseCase } from '../useCases/checkDirectoryExistence/checkDirectoryExistence.usecase';
+import { CommitToGit } from '../useCases/commitToGit/commitToGit.usecase';
+import { DeleteGitProviderUseCase } from '../useCases/deleteGitProvider/deleteGitProvider.usecase';
+import { DeleteGitRepoUseCase } from '../useCases/deleteGitRepo/deleteGitRepo.usecase';
+import { FindGitRepoByOwnerAndRepoUseCase } from '../useCases/findGitRepoByOwnerAndRepo/findGitRepoByOwnerAndRepo.usecase';
 import { FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase } from '../useCases/findGitRepoByOwnerRepoAndBranchInOrganization/findGitRepoByOwnerRepoAndBranchInOrganization.usecase';
+import { GetAvailableRemoteDirectoriesUseCase } from '../useCases/getAvailableRemoteDirectories/getAvailableRemoteDirectories.usecase';
+import { GetFileFromRepo } from '../useCases/getFileFromRepo/getFileFromRepo.usecase';
+import { GetOrganizationRepositoriesUseCase } from '../useCases/getOrganizationRepositories/getOrganizationRepositories.usecase';
+import { GetRepositoryByIdUseCase } from '../useCases/getRepositoryById/getRepositoryById.usecase';
+import { HandleWebHook } from '../useCases/handleWebHook/handleWebHook.usecase';
+import { HandleWebHookWithoutContent } from '../useCases/handleWebHookWithoutContent/handleWebHookWithoutContent.usecase';
+import { ListAvailableReposUseCase } from '../useCases/listAvailableRepos/listAvailableRepos.usecase';
+import { ListProvidersUseCase } from '../useCases/listProviders/listProviders.usecase';
+import { ListReposUseCase } from '../useCases/listRepos/listRepos.usecase';
+import { UpdateGitProviderUseCase } from '../useCases/updateGitProvider/updateGitProvider.usecase';
 const origin = 'GitAdapter';
 
 export class GitAdapter implements IGitPort {
@@ -71,6 +77,7 @@ export class GitAdapter implements IGitPort {
   private readonly _checkDirectoryExistence: CheckDirectoryExistenceUseCase;
 
   private deploymentsAdapter?: IDeploymentPort;
+  private gitDelayedJobs?: IGitDelayedJobs;
 
   constructor(
     private readonly gitServices: GitServices,
@@ -151,6 +158,13 @@ export class GitAdapter implements IGitPort {
     this.deploymentsAdapter = adapter;
     // Recreate the AddGitRepoUseCase with the deployment adapter
     this._addGitRepo = this.createAddGitRepoUseCase();
+  }
+
+  /**
+   * Set the git delayed jobs for accessing job queues
+   */
+  public setGitDelayedJobs(delayedJobs: IGitDelayedJobs): void {
+    this.gitDelayedJobs = delayedJobs;
   }
 
   private createAddGitProviderUseCase(): AddGitProviderUseCase {
@@ -371,5 +385,18 @@ export class GitAdapter implements IGitPort {
     command: CheckDirectoryExistenceCommand,
   ): Promise<CheckDirectoryExistenceResult> {
     return this._checkDirectoryExistence.execute(command);
+  }
+
+  public async addFetchFileContentJob(
+    input: FetchFileContentInput,
+    onComplete?: (result: FetchFileContentOutput) => Promise<void> | void,
+  ): Promise<string> {
+    if (!this.gitDelayedJobs) {
+      throw new Error('Git delayed jobs not initialized');
+    }
+    return this.gitDelayedJobs.fetchFileContentDelayedJob.addJobWithCallback(
+      input,
+      onComplete,
+    );
   }
 }

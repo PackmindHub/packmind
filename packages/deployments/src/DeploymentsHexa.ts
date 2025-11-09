@@ -1,23 +1,24 @@
-import { AccountsHexa } from '@packmind/accounts';
-import { CodingAgentHexa } from '@packmind/coding-agent';
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
-import { RecipesHexa } from '@packmind/recipes';
-import { SpacesHexa } from '@packmind/spaces';
-import { StandardsHexa } from '@packmind/standards';
 import {
+  IAccountsPort,
+  IAccountsPortName,
+  ICodingAgentPort,
+  ICodingAgentPortName,
   IDeploymentPort,
   IDeploymentPortName,
   IGitPort,
   IGitPortName,
   IRecipesPort,
+  IRecipesPortName,
   ISpacesPort,
+  ISpacesPortName,
   IStandardsPort,
+  IStandardsPortName,
   OrganizationProvider,
   UserProvider,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
-import { RecipesAdapter } from './adapters/RecipesAdapter';
 import { DeploymentsAdapter } from './application/adapter/DeploymentsAdapter';
 import { DeploymentsServices } from './application/services/DeploymentsServices';
 import { DeploymentsRepositories } from './infra/repositories/DeploymentsRepositories';
@@ -88,29 +89,24 @@ export class DeploymentsHexa extends BaseHexa<
       this.adapter.setGitPort(gitPort);
       this.adapter.updateDeploymentsServices(this.services);
 
-      // RecipesHexa might not be available during initialization due to circular dependency
-      // Using adapter pattern to decouple from RecipesHexa
-      let recipesPort: Partial<IRecipesPort> | undefined;
+      // Get Recipes port (optional - might not be available due to circular dependency)
       try {
-        const recipesHexa = registry.get(RecipesHexa);
-        recipesPort = new RecipesAdapter(recipesHexa);
+        const recipesPort = registry.getAdapter<IRecipesPort>(IRecipesPortName);
         this.adapter.updateRecipesPort(recipesPort);
       } catch {
         // RecipesHexa will be resolved later when fully initialized
         this.logger.debug('RecipesHexa not available in registry');
       }
 
-      const codingAgentHexa = registry.get(CodingAgentHexa);
-      const codingAgentPort = codingAgentHexa.getAdapter();
+      // Get CodingAgent port (required)
+      const codingAgentPort =
+        registry.getAdapter<ICodingAgentPort>(ICodingAgentPortName);
       this.adapter.setCodingAgentPort(codingAgentPort);
-      this.adapter.setCodingAgentHexa(codingAgentHexa);
 
-      const standardsHexa = registry.get(StandardsHexa);
-      // StandardsHexa adapter might not be available yet (needs initialization)
-      // We'll get it lazily or set it later after initialization
-      let standardsPort: IStandardsPort | undefined;
+      // Get Standards port (optional)
       try {
-        standardsPort = standardsHexa.getAdapter();
+        const standardsPort =
+          registry.getAdapter<IStandardsPort>(IStandardsPortName);
         this.adapter.updateStandardsPort(standardsPort);
       } catch {
         // StandardsHexa not initialized yet - will be set later
@@ -119,32 +115,26 @@ export class DeploymentsHexa extends BaseHexa<
         );
       }
 
-      // Get AccountsHexa adapter for user and organization providers
+      // Get Accounts port for user and organization providers (optional)
       try {
-        const accountsHexa = registry.get(AccountsHexa);
-        const accountsAdapter = accountsHexa.getAdapter();
+        const accountsPort =
+          registry.getAdapter<IAccountsPort>(IAccountsPortName);
         this.setAccountProviders(
-          accountsAdapter as unknown as UserProvider,
-          accountsAdapter as unknown as OrganizationProvider,
+          accountsPort as unknown as UserProvider,
+          accountsPort as unknown as OrganizationProvider,
         );
       } catch {
         // AccountsHexa not available - optional dependency
         this.logger.debug('AccountsHexa not available in registry');
       }
 
-      // Get SpacesHexa to retrieve spaces adapter
+      // Get Spaces port (optional)
       try {
-        const spacesHexa = registry.get(SpacesHexa);
-        const spacesPort = spacesHexa.getAdapter();
+        const spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
         this.setSpacesAdapter(spacesPort);
       } catch {
         // SpacesHexa not available - optional dependency
         this.logger.debug('SpacesHexa not available in registry');
-      }
-
-      // Set standards port if available
-      if (standardsPort) {
-        this.adapter.updateStandardsPort(standardsPort);
       }
 
       this.logger.info('DeploymentsHexa initialized successfully');

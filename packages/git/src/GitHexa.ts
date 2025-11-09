@@ -1,23 +1,23 @@
+import { JobsHexa } from '@packmind/jobs';
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
 import {
   IAccountsPort,
+  IAccountsPortName,
   IDeploymentPort,
   IDeploymentPortName,
   IGitPort,
   IGitPortName,
 } from '@packmind/types';
-import { AccountsHexa } from '@packmind/accounts';
 import { DataSource } from 'typeorm';
-import { FetchFileContentCallback } from './application/jobs/FetchFileContentDelayedJob';
-import { FetchFileContentInput } from './domain/jobs/FetchFileContent';
-import { IGitRepoFactory } from './domain/repositories/IGitRepoFactory';
-import { GitRepositories } from './infra/repositories/GitRepositories';
 import { GitServices } from './application/GitServices';
 import { GitAdapter } from './application/adapter/GitAdapter';
+import { FetchFileContentCallback } from './application/jobs/FetchFileContentDelayedJob';
+import { FetchFileContentInput } from './domain/jobs/FetchFileContent';
 import { IGitDelayedJobs } from './domain/jobs/IGitDelayedJobs';
+import { IGitRepoFactory } from './domain/repositories/IGitRepoFactory';
 import { FetchFileContentJobFactory } from './infra/jobs/FetchFileContentJobFactory';
-import { JobsHexa } from '@packmind/jobs';
+import { GitRepositories } from './infra/repositories/GitRepositories';
 
 const origin = 'GitHexa';
 
@@ -90,17 +90,17 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
     );
 
     try {
-      // Get AccountsHexa adapter
+      // Get Accounts port (optional)
       try {
-        const accountsHexa = registry.get(AccountsHexa);
-        const accountsAdapter = accountsHexa.getAdapter();
-        this.setAccountsAdapter(accountsAdapter);
+        const accountsPort =
+          registry.getAdapter<IAccountsPort>(IAccountsPortName);
+        this.setAccountsAdapter(accountsPort);
       } catch {
         // AccountsHexa not available - optional dependency
         this.logger.debug('AccountsHexa not available in registry');
       }
 
-      // Get DeploymentsHexa to retrieve deployments adapter
+      // Get Deployments port (optional)
       // Using getAdapter to avoid circular dependency (DeploymentsHexa imports GitHexa)
       try {
         const deploymentPort =
@@ -111,7 +111,7 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
         this.logger.debug('DeploymentsHexa not available in registry');
       }
 
-      // TODO: migrate with port/adapters
+      // Get JobsHexa (required) for delayed job registration
       const jobsHexa = registry.get(JobsHexa);
       if (!jobsHexa) {
         throw new Error('JobsHexa not found in registry');
@@ -119,6 +119,9 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
 
       this.logger.debug('Building git delayed jobs');
       this.gitDelayedJobs = await this.buildGitDelayedJobs(jobsHexa);
+
+      // Pass delayed jobs to adapter so it can expose them through the port
+      this.adapter.setGitDelayedJobs(this.gitDelayedJobs);
 
       this.isInitialized = true;
       this.logger.info('GitHexa initialized successfully');
