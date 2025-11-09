@@ -1,6 +1,5 @@
 import { StandardsDeployment } from '@packmind/types';
-import { StandardVersion } from '@packmind/standards/types';
-import { StandardId } from '@packmind/standards/types';
+import { StandardVersion, StandardId } from '@packmind/standards';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
 import { StandardsDeploymentSchema } from '../schemas/StandardsDeploymentSchema';
 import { Repository } from 'typeorm';

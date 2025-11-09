@@ -20,7 +20,6 @@ import {
 } from '../../domain/useCases';
 import { IStandardsRepositories } from '../../domain/repositories/IStandardsRepositories';
 import { StandardsServices } from '../services/StandardsServices';
-import { StandardsHexaFactory } from '../../StandardsHexaFactory';
 import { StandardsUseCases } from './index';
 
 export class StandardsAdapter implements IStandardsPort {
@@ -28,7 +27,7 @@ export class StandardsAdapter implements IStandardsPort {
   private readonly repositories: IStandardsRepositories;
   private readonly useCases: StandardsUseCases;
 
-  constructor(hexa: StandardsHexaFactory) {
+  constructor(hexa: import('../../StandardsHexa').StandardsHexa) {
     this.services = hexa.getStandardsServices();
     this.repositories = hexa.getStandardsRepositories();
     this.useCases = hexa.getStandardsUseCases();

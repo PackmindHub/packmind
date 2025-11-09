@@ -1,7 +1,11 @@
 import { accountsSchemas, AccountsHexa } from '@packmind/accounts';
 import { User, Organization } from '@packmind/types';
-import { StandardsHexa, standardsSchemas } from '@packmind/standards';
-import { Standard, StandardVersion } from '@packmind/standards/types';
+import {
+  StandardsHexa,
+  standardsSchemas,
+  Standard,
+  StandardVersion,
+} from '@packmind/standards';
 import { GitHexa, gitSchemas } from '@packmind/git';
 import { JobsHexa } from '@packmind/jobs';
 import { SpacesHexa, spacesSchemas, Space } from '@packmind/spaces';

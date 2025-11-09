@@ -9,12 +9,13 @@ import { JobsHexa } from '@packmind/jobs';
 import { RecipesHexa, recipesSchemas } from '@packmind/recipes';
 import { HexaRegistry } from '@packmind/node-utils';
 import { Space, SpacesHexa, spacesSchemas } from '@packmind/spaces';
-import { StandardsHexa, standardsSchemas } from '@packmind/standards';
 import {
+  StandardsHexa,
+  standardsSchemas,
   Standard,
   StandardVersion,
   StandardVersionId,
-} from '@packmind/standards/types';
+} from '@packmind/standards';
 import { makeTestDatasource } from '@packmind/test-utils';
 import { PackmindLogger } from '@packmind/logger';
 import {

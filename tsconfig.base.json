@@ -45,7 +45,6 @@
       "@packmind/spaces": ["packages/spaces/src/index.ts"],
       "@packmind/spaces/test": ["packages/spaces/test/index.ts"],
       "@packmind/standards": ["packages/standards/src/index.ts"],
-      "@packmind/standards/types": ["packages/standards/src/types/index.ts"],
       "@packmind/types": ["packages/types/src/index.ts"],
       "@packmind/ui": ["packages/ui/src/index.ts"],
       "features/analytics/RecipeUsageAnalytics": [

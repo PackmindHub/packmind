@@ -1,7 +1,5 @@
-import { StandardsDeployment } from '@packmind/types';
-import { StandardVersion } from '@packmind/standards/types';
-import { OrganizationId } from '@packmind/types';
-import { StandardId } from '@packmind/standards/types';
+import { StandardsDeployment, OrganizationId } from '@packmind/types';
+import { StandardVersion, StandardId } from '@packmind/standards';
 import { GitRepoId } from '@packmind/git';
 import { TargetId, DistributionStatus } from '@packmind/types';
 import { IRepository } from '@packmind/types';

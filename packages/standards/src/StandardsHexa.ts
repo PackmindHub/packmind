@@ -5,30 +5,37 @@ import {
   IDeploymentPortName,
   ILinterPort,
   ILinterPortName,
+  ISpacesPort,
+  ISpacesPortName,
   IStandardsPortName,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
-import { StandardsHexaFactory } from './StandardsHexaFactory';
 import { StandardsAdapter } from './application/useCases/StandardsAdapter';
+import { StandardsServices } from './application/services/StandardsServices';
+import { StandardsRepositories } from './infra/repositories/StandardsRepositories';
+import { StandardsUseCases } from './application/useCases';
+import { AccountsHexa } from '@packmind/accounts';
+import { IStandardDelayedJobs } from './domain/jobs/IStandardDelayedJobs';
+import { GenerateStandardSummaryJobFactory } from './infra/jobs/GenerateStandardSummaryJobFactory';
+import { JobsHexa } from '@packmind/jobs';
+import { IStandardsRepositories } from './domain/repositories/IStandardsRepositories';
 
 const origin = 'StandardsHexa';
 
 /**
- * StandardsHexa - Facade for the Standards domain following the new Hexa pattern.
+ * StandardsHexa - Facade for the Standards domain following the Hexa pattern.
  *
  * This class serves as the main entry point for standards-related functionality.
- * It holds the StandardsHexaFactory instance and exposes use cases as a clean facade.
- *
- * The Hexa pattern separates concerns:
- * - StandardsHexaFactory: Handles dependency injection and service instantiation
- * - StandardsHexa: Serves as use case facade and integration point with other domains
+ * It manages dependency injection, service instantiation, and exposes the adapter.
  *
  * Uses the DataSource provided through the HexaRegistry for database operations.
- * Also integrates with GitHexa for git-related standards operations.
  */
 export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
-  private readonly hexa: StandardsHexaFactory;
+  private readonly standardsRepositories: StandardsRepositories;
+  private readonly standardsServices: StandardsServices;
+  private useCases!: StandardsUseCases;
   private standardsAdapter?: StandardsAdapter;
+  private deploymentsQueryAdapter?: IDeploymentPort;
   private isInitialized = false;
 
   constructor(
@@ -39,9 +46,19 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
     this.logger.info('Constructing StandardsHexa');
 
     try {
-      // Initialize the hexagon factory with the DataSource
-      // Adapter retrieval will be done in initialize(registry)
-      this.hexa = new StandardsHexaFactory(this.dataSource, this.logger);
+      this.logger.debug(
+        'Creating repository and service aggregators with DataSource',
+      );
+
+      // Instantiate repositories
+      this.standardsRepositories = new StandardsRepositories(this.dataSource);
+
+      // Instantiate services (linter adapter will be set later)
+      this.standardsServices = new StandardsServices(
+        this.standardsRepositories,
+        this.logger,
+      );
+
       this.logger.info('StandardsHexa construction completed');
     } catch (error) {
       this.logger.error('Failed to construct StandardsHexa', {
@@ -66,32 +83,73 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
     );
 
     try {
-      // Get LinterHexa adapter for ILinterPort
-      // Using getAdapter to avoid circular dependency
+      // Get LinterHexa adapter for ILinterPort (optional dependency)
       try {
         const linterPort = registry.getAdapter<ILinterPort>(ILinterPortName);
-        this.logger.info('LinterAdapter retrieved from LinterHexa');
-        // Set linter adapter on services
-        this.hexa.setLinterAdapter(linterPort);
+        this.logger.info('LinterAdapter retrieved from registry');
+        this.standardsServices.setLinterAdapter(linterPort);
       } catch {
-        // LinterHexa not available - optional dependency
         this.logger.debug('LinterHexa not available in registry');
       }
 
-      // Get DeploymentsHexa to retrieve deployments query adapter
-      // Using getAdapter to avoid circular dependency
+      // Get DeploymentsHexa adapter (optional dependency)
       try {
         const deploymentPort =
           registry.getAdapter<IDeploymentPort>(IDeploymentPortName);
-        this.setDeploymentsQueryAdapter(deploymentPort);
+        this.deploymentsQueryAdapter = deploymentPort;
+        this.logger.info('DeploymentAdapter retrieved from registry');
       } catch {
-        // DeploymentsHexa not available - optional dependency
         this.logger.debug('DeploymentsHexa not available in registry');
       }
 
-      await this.hexa.initialize(registry);
-      this.standardsAdapter = new StandardsAdapter(this.hexa);
+      // Get JobsHexa (required)
+      const jobsHexa = registry.get(JobsHexa);
+      if (!jobsHexa) {
+        throw new Error('JobsHexa not found in registry');
+      }
+
+      this.logger.debug('Building standards delayed jobs');
+      const standardsDelayedJobs = await this.buildStandardsDelayedJobs(
+        jobsHexa,
+        this.standardsRepositories,
+      );
+
+      // Get AccountsHexa adapter (required)
+      const accountsHexa = registry.get(AccountsHexa);
+      if (!accountsHexa) {
+        throw new Error('AccountsHexa not found in registry');
+      }
+      const accountsAdapter = accountsHexa.getAdapter();
+
+      // Get SpacesPort (optional dependency)
+      let spacesPort: ISpacesPort | null = null;
+      try {
+        spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
+        this.logger.info('SpacesAdapter retrieved from registry');
+      } catch {
+        this.logger.warn(
+          'SpacesHexa not found in registry - space validation will not be available',
+        );
+      }
+
+      this.logger.debug('Creating StandardsUseCases');
+      this.useCases = new StandardsUseCases(
+        this.standardsServices,
+        this.standardsRepositories,
+        this.deploymentsQueryAdapter,
+        standardsDelayedJobs,
+        accountsAdapter,
+        spacesPort,
+        this.standardsServices.getLinterAdapter(),
+        this.logger,
+      );
+
+      // Mark as initialized before creating adapter (adapter needs access to useCases)
       this.isInitialized = true;
+
+      // Create adapter
+      this.standardsAdapter = new StandardsAdapter(this);
+
       this.logger.info('StandardsHexa initialized successfully');
     } catch (error) {
       this.logger.error('Failed to initialize StandardsHexa', {
@@ -101,18 +159,41 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
     }
   }
 
+  private async buildStandardsDelayedJobs(
+    jobsHexa: JobsHexa,
+    standardRepositories: IStandardsRepositories,
+  ): Promise<IStandardDelayedJobs> {
+    // Register our job queue with JobsHexa
+    const jobStandardSummaryFactory = new GenerateStandardSummaryJobFactory(
+      this.logger,
+      standardRepositories,
+    );
+
+    jobsHexa.registerJobQueue(
+      jobStandardSummaryFactory.getQueueName(),
+      jobStandardSummaryFactory,
+    );
+
+    await jobStandardSummaryFactory.createQueue();
+
+    if (!jobStandardSummaryFactory.delayedJob) {
+      throw new Error('DelayedJob not found for StandardsHexa');
+    }
+
+    this.logger.debug('Standards delayed jobs built successfully');
+    return {
+      standardSummaryDelayedJob: jobStandardSummaryFactory.delayedJob,
+    };
+  }
+
   public getAdapter(): StandardsAdapter {
-    // Create adapter lazily if hexa factory is initialized but adapter not yet created
     if (!this.standardsAdapter) {
-      // Check if useCases is available (created during initialization)
-      // If not, we can't create the adapter yet - it will be created after initialize()
-      if (!this.hexa.getIsInitialized() || !this.hexa.useCases) {
+      if (!this.isInitialized || !this.useCases) {
         throw new Error(
           'StandardsHexa not initialized. Call initialize() before using.',
         );
       }
-      // Hexa factory is initialized and useCases exists, create adapter now
-      this.standardsAdapter = new StandardsAdapter(this.hexa);
+      this.standardsAdapter = new StandardsAdapter(this);
     }
     return this.standardsAdapter;
   }
@@ -125,25 +206,37 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
   }
 
   /**
-   * Internal helper to ensure initialization before use case access
+   * Set the deployments query adapter for accessing deployment data
    */
-  private ensureInitialized(): void {
-    if (!this.isInitialized) {
+  public setDeploymentsQueryAdapter(adapter: IDeploymentPort): void {
+    this.deploymentsQueryAdapter = adapter;
+    this.useCases?.setDeploymentsQueryAdapter(adapter);
+  }
+
+  public setLinterAdapter(adapter: ILinterPort): void {
+    this.logger.info('Setting linter adapter');
+    this.standardsServices.setLinterAdapter(adapter);
+    if (this.isInitialized) {
+      this.logger.warn('Reinitializing use cases after linter adapter set');
+      this.useCases.setLinterAdapter(adapter);
+    }
+  }
+
+  public getStandardsServices(): StandardsServices {
+    return this.standardsServices;
+  }
+
+  public getStandardsRepositories(): StandardsRepositories {
+    return this.standardsRepositories;
+  }
+
+  public getStandardsUseCases(): StandardsUseCases {
+    if (!this.isInitialized || !this.useCases) {
       throw new Error(
         'StandardsHexa not initialized. Call initialize() before using.',
       );
     }
-  }
-
-  /**
-   * Set the deployments query adapter for accessing deployment data
-   */
-  public setDeploymentsQueryAdapter(adapter: IDeploymentPort): void {
-    this.hexa.setDeploymentsQueryAdapter(adapter);
-  }
-
-  public setLinterAdapter(adapter: ILinterPort): void {
-    this.hexa.setLinterAdapter(adapter);
+    return this.useCases;
   }
 
   /**

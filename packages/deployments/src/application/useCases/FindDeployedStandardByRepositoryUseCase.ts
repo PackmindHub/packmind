@@ -4,7 +4,7 @@ import {
   IFindDeployedStandardByRepositoryUseCase,
 } from '@packmind/types';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
-import { StandardVersion } from '@packmind/standards/types';
+import { StandardVersion } from '@packmind/standards';
 
 const origin = 'FindDeployedStandardByRepositoryUseCase';
 

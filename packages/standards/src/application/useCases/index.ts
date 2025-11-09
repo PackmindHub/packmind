@@ -25,7 +25,7 @@ import { CreateRuleExampleUsecase } from './createRuleExample/createRuleExample.
 import { GetRuleExamplesUsecase } from './getRuleExamples/getRuleExamples.usecase';
 import { UpdateRuleExampleUsecase } from './updateRuleExample/updateRuleExample.usecase';
 import { DeleteRuleExampleUsecase } from './deleteRuleExample/deleteRuleExample.usecase';
-import { IStandardsServices } from '../IStandardsServices';
+import { StandardsServices } from '../services/StandardsServices';
 import { IStandardsRepositories } from '../../domain/repositories/IStandardsRepositories';
 import { OrganizationId, UserId } from '@packmind/types';
 import { SpaceId } from '@packmind/types';
@@ -64,7 +64,7 @@ export class StandardsUseCases {
   private _deleteRuleExample: DeleteRuleExampleUsecase;
 
   constructor(
-    private readonly standardsServices: IStandardsServices,
+    private readonly standardsServices: StandardsServices,
     private readonly standardsRepositories: IStandardsRepositories,
     private deploymentsQueryAdapter: IDeploymentPort | undefined,
     private standardDelayedJobs: IStandardDelayedJobs,

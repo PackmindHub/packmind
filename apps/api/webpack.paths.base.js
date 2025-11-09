@@ -13,10 +13,6 @@ module.exports = function getBaseWebpackPaths(__dirname) {
     '@packmind/git': join(__dirname, '../../packages/git/src'),
     '@packmind/packmind-ui': join(__dirname, '../../packages/packmind-ui/src'),
     '@packmind/standards': join(__dirname, '../../packages/standards/src'),
-    '@packmind/standards/types': join(
-      __dirname,
-      '../../packages/standards/src/types',
-    ),
     '@packmind/test-utils': join(__dirname, '../../packages/test-utils/src'),
     '@packmind/deployments': join(__dirname, '../../packages/deployments/src'),
     '@packmind/coding-agent': join(

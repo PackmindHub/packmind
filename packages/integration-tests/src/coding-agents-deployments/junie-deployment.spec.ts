@@ -25,7 +25,7 @@ import {
   Standard,
   StandardVersion,
   StandardVersionId,
-} from '@packmind/standards/types';
+} from '@packmind/standards';
 import { makeTestDatasource } from '@packmind/test-utils';
 import { PackmindLogger } from '@packmind/logger';
 import {
