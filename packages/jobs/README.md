@@ -6,8 +6,7 @@ This package provides a hexagonal architecture for job queue management using Bu
 
 The package follows the hexagonal architecture pattern with:
 
-- **JobsHexa**: Main facade for jobs-related functionality
-- **JobsHexaFactory**: Handles dependency injection and service instantiation
+- **JobsHexa**: Main facade for jobs-related functionality and service instantiation
 - **HelloWorldDelayedJob**: Example job implementation
 - **AbstractAIDelayedJob**: Base class for all delayed jobs
 

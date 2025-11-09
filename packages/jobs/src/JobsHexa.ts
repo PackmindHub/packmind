@@ -1,7 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
 import { DataSource } from 'typeorm';
-import { JobsHexaFactory } from './JobsHexaFactory';
 import { JobRegistry } from './application/JobRegistry';
 import { IJobFactory } from './domain/IJobQueue';
 import { IJobRegistry } from './domain/IJobRegistry';
@@ -14,14 +13,8 @@ const origin = 'JobsHexa';
  * This class serves as the main entry point for jobs-related functionality.
  * It provides a generic job registry system that allows other packages to register
  * their job implementations without creating circular dependencies.
- *
- * The Hexa pattern separates concerns:
- * - JobsHexaFactory: Handles dependency injection and service instantiation
- * - JobsHexa: Serves as use case facade and integration point with other domains
- * - JobRegistry: Manages registration and initialization of job queues
  */
 export class JobsHexa extends BaseHexa {
-  private readonly hexa: JobsHexaFactory;
   private readonly jobRegistry: IJobRegistry;
 
   constructor(
@@ -32,9 +25,6 @@ export class JobsHexa extends BaseHexa {
     this.logger.info('Constructing JobsHexa');
 
     try {
-      // Initialize the hexagon factory
-      this.hexa = new JobsHexaFactory(this.logger);
-
       // Initialize the job registry
       this.jobRegistry = new JobRegistry(this.logger);
 
