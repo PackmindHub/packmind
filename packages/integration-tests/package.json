@@ -15,7 +15,7 @@
     "@packmind/node-utils": "*",
     "@packmind/types": "*",
     "@packmind/spaces": "*",
-    "typeorm": "^0.3.26",
+    "typeorm": "0.3.27",
     "@packmind/standards": "*",
     "@packmind/coding-agent": "*",
     "@packmind/deployments": "*",
