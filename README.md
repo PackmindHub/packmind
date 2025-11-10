@@ -2,6 +2,9 @@
 
 ![License](https://img.shields.io/github/license/PackmindHub/packmind)
 ![Stars](https://img.shields.io/github/stars/PackmindHub/packmind)
+![Works with GitHub Copilot](https://img.shields.io/badge/works%20with-GitHub%20Copilot-blue?logo=githubcopilot&logoColor=white)
+![Supports Cursor](https://img.shields.io/badge/compatible%20with-Cursor-blueviolet?logo=cursor&logoColor=white)
+![Supports Claude Code](https://img.shields.io/badge/compatible%20with-Claude%20Code-purple?logo=anthropic&logoColor=white)
 
 **Create, scale, and govern your engineering playbook for AI coding assistants (Copilot, Cursor, Claude Code, Codex, Kiro…).**
 
