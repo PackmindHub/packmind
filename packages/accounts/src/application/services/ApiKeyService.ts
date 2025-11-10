@@ -1,8 +1,7 @@
+import { LogLevel, PackmindLogger } from '@packmind/logger';
+import { Organization, User, UserOrganizationRole } from '@packmind/types';
 import { ApiKeyPayload, DecodedApiKey } from '../../domain/entities/ApiKey';
-import { User, UserOrganizationRole } from '@packmind/types';
-import { Organization } from '@packmind/types';
-import { encodeApiKey, decodeApiKey } from '../../domain/utils/api-key.utils';
-import { PackmindLogger, LogLevel } from '@packmind/logger';
+import { decodeApiKey, encodeApiKey } from '../../domain/utils/api-key.utils';
 
 const origin = 'ApiKeyService';
 
@@ -76,7 +75,7 @@ function isValidJwtPayload(value: unknown): value is JwtPayload {
 export interface IJwtService {
   sign(
     payload: Record<string, unknown>,
-    options?: { expiresIn?: string },
+    options?: { expiresIn?: string | number },
   ): string;
   verify(token: string): Record<string, unknown>;
 }

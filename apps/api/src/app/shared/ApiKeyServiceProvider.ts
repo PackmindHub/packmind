@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { PackmindLogger } from '@packmind/logger';
 import { ApiKeyService, IJwtService } from '@packmind/accounts';
 
@@ -9,10 +9,7 @@ import { ApiKeyService, IJwtService } from '@packmind/accounts';
 class JwtServiceAdapter implements IJwtService {
   constructor(private readonly jwtService: JwtService) {}
 
-  sign(
-    payload: Record<string, unknown>,
-    options?: { expiresIn?: string },
-  ): string {
+  sign(payload: Record<string, unknown>, options?: JwtSignOptions): string {
     return this.jwtService.sign(payload, options);
   }
 
