@@ -48,15 +48,24 @@ export default async function (
           const token = parts[1];
 
           // Verify the token
-          const decoded = jwt.verify(token, options.jwtSecret, {
-            audience: options.audience,
-          });
+          // Only validate audience if it's explicitly set and non-empty
+          const verifyOptions: jwt.VerifyOptions = {};
+          if (options.audience && options.audience.trim() !== '') {
+            verifyOptions.audience = options.audience;
+          }
+
+          const decoded = jwt.verify(token, options.jwtSecret, verifyOptions);
 
           // Add the decoded token to the request for later use
           request.user = decoded;
 
           logger.debug('Token validated successfully', {
-            user: typeof decoded === 'object' ? decoded.sub : 'unknown',
+            user:
+              typeof decoded === 'object' &&
+              decoded !== null &&
+              'sub' in decoded
+                ? decoded.sub
+                : 'unknown',
           });
         } catch (error) {
           logger.warn('Token validation failed', {
