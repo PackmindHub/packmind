@@ -15,7 +15,7 @@ import {
   OrganizationProvider,
 } from '@packmind/types';
 import { createOrganizationId, createUserId } from '@packmind/types';
-import { AnalyticsAdapter } from '@packmind/amplitude';
+import { EventTrackingAdapter } from '@packmind/amplitude';
 
 import packmindOnboardingModeSelection from './prompts/packmind-onboarding-mode-selection';
 import packmindOnboardingCodebaseAnalysis from './prompts/packmind-onboarding-codebase-analysis';
@@ -112,7 +112,7 @@ export function createMCPServer(
   });
 
   // Initialize analytics adapter
-  const analyticsAdapter: IEventTrackingPort = new AnalyticsAdapter(logger);
+  const analyticsAdapter: IEventTrackingPort = new EventTrackingAdapter(logger);
 
   // Debug logging for fastify decorators
   logger.debug('Checking fastify decorators:', {

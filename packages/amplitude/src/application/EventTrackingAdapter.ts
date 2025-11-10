@@ -3,16 +3,16 @@ import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AmplitudeTrackEventService } from './AmplitudeTrackEventService';
 import { AmplitudeNodeEvent } from '../domain/entities/AmplitudeNodeEvent';
 
-const origin = 'AnalyticsAdapter';
+const origin = 'EventTrackingAdapter';
 
-export class AnalyticsAdapter implements IEventTrackingPort {
+export class EventTrackingAdapter implements IEventTrackingPort {
   private readonly logger: PackmindLogger;
   private readonly amplitudeService: AmplitudeTrackEventService;
 
   constructor(logger?: PackmindLogger) {
     this.logger = logger || new PackmindLogger(origin, LogLevel.INFO);
     this.amplitudeService = new AmplitudeTrackEventService(this.logger);
-    this.logger.info('AnalyticsAdapter (proprietary version) initialized');
+    this.logger.info('EventTrackingAdapter (proprietary version) initialized');
   }
 
   async trackEvent(
@@ -21,7 +21,7 @@ export class AnalyticsAdapter implements IEventTrackingPort {
     eventName: string,
     metadata?: Record<string, string | number>,
   ): Promise<void> {
-    this.logger.info('AnalyticsAdapter.trackEvent called (proprietary)', {
+    this.logger.info('EventTrackingAdapter.trackEvent called (proprietary)', {
       eventName,
       userId: userId.substring(0, 6) + '*',
     });
