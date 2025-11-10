@@ -1,5 +1,5 @@
-import { GitRepoId } from '@packmind/git/types';
 import {
+  GitRepoId,
   IRepository,
   OrganizationId,
   RecipeId,

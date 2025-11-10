@@ -1,11 +1,10 @@
-import { RecipeUsageService } from './RecipeUsageService';
-import { RecipeUsageAnalyticsService } from './RecipeUsageAnalyticsService';
 import { PackmindLogger } from '@packmind/logger';
-import { IRecipesUsageServices } from '../IRecipesUsageServices';
-import { IRecipesUsageRepositories } from '../../domain/repositories/IRecipesUsageRepositories';
 import { IRecipesPort } from '@packmind/types';
+import { IRecipesUsageRepositories } from '../../domain/repositories/IRecipesUsageRepositories';
+import { RecipeUsageAnalyticsService } from './RecipeUsageAnalyticsService';
+import { RecipeUsageService } from './RecipeUsageService';
 
-export class RecipesUsageServices implements IRecipesUsageServices {
+export class RecipesUsageServices {
   private readonly recipeUsageService: RecipeUsageService;
   private recipeUsageAnalyticsService: RecipeUsageAnalyticsService;
 

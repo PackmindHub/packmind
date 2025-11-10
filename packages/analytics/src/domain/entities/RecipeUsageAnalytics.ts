@@ -1,6 +1,4 @@
-import { GitRepoId } from '@packmind/git/types';
-import { OrganizationId } from '@packmind/types';
-import { RecipeId, TargetId } from '@packmind/types';
+import { GitRepoId, OrganizationId, RecipeId, TargetId } from '@packmind/types';
 
 export type TimePeriod = 'LAST_7_DAYS' | 'LAST_MONTH' | 'LAST_3_MONTHS';
 

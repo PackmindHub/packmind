@@ -1,5 +1,3 @@
-import { User } from '@packmind/accounts';
-import { GitRepo } from '@packmind/git';
 import {
   WithSoftDelete,
   WithTimestamps,
@@ -7,7 +5,7 @@ import {
   timestampsSchemas,
   uuidSchema,
 } from '@packmind/node-utils';
-import { Recipe, Target } from '@packmind/types';
+import { GitRepo, Recipe, Target, User } from '@packmind/types';
 import { EntitySchema } from 'typeorm';
 import { RecipeUsage } from '../../domain/entities/RecipeUsage';
 

@@ -1,178 +1,154 @@
-import { OrganizationId } from '@packmind/accounts';
-import { GitHexa, GitRepoId } from '@packmind/git';
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
-import { RecipeId, RecipesHexa } from '@packmind/recipes';
 import {
   IDeploymentPort,
+  IDeploymentPortName,
   IGitPort,
+  IGitPortName,
   IRecipesPort,
-  TargetId,
+  IRecipesPortName,
 } from '@packmind/types';
-import { AnalyticsHexaFactory } from './AnalyticsHexaFactory';
-import { RecipeUsage } from './domain/entities/RecipeUsage';
-import { TimePeriod } from './domain/entities/RecipeUsageAnalytics';
-import { TrackRecipeUsageCommand } from './domain/useCases/ITrackRecipeUsage';
+import { DataSource } from 'typeorm';
+import { RecipesUsageServices } from './application/services/RecipesUsageServices';
+import { RecipeUsageUseCases } from './application/useCases';
+import { RecipesUsageRepositories } from './infra/repositories/RecipesUsageRepositories';
 
 const origin = 'AnalyticsHexa';
 
 /**
- * AnalyticsHexa - Facade for the Analytics domain following the new Hexa pattern.
+ * AnalyticsHexa - Facade for the Analytics domain following hexagonal architecture.
  *
  * This class serves as the main entry point for analytics-related functionality.
- * It holds the AnalyticsHexaFactory instance and exposes use cases as a clean facade.
+ * It handles dependency injection and exposes use cases.
  *
- * The Hexa pattern separates concerns:
- * - AnalyticsHexaFactory: Handles dependency injection and service instantiation
- * - AnalyticsHexa: Serves as use case facade and integration point with other domains
+ * The constructor instantiates repositories, services, and use cases.
+ * The initialize method retrieves and sets ports from the registry.
  *
  * Uses the DataSource provided through the HexaRegistry for database operations.
- * Integrates with Git and Recipes domains through port adapters.
+ * Integrates with Git, Recipes, and Deployments domains through port adapters.
+ *
+ * Note: Analytics does not expose a port interface (second type parameter is void).
  */
-export class AnalyticsHexa extends BaseHexa {
-  private readonly hexa: AnalyticsHexaFactory;
-  private _deploymentPort: IDeploymentPort | undefined | null = undefined;
-  private readonly gitHexa: GitHexa;
-  private readonly recipesHexa: RecipesHexa;
+export type AnalyticsHexaOpts = BaseHexaOpts;
 
-  constructor(
-    registry: HexaRegistry,
-    opts: Partial<BaseHexaOpts> = { logger: new PackmindLogger(origin) },
-  ) {
-    super(registry, opts);
+const baseAnalyticsHexaOpts = { logger: new PackmindLogger(origin) };
 
-    this.logger.info(`Initializing ${origin}`);
+export class AnalyticsHexa extends BaseHexa<AnalyticsHexaOpts, void> {
+  private readonly recipesUsageRepositories: RecipesUsageRepositories;
+  private readonly recipesUsageServices: RecipesUsageServices;
+  public readonly useCases: RecipeUsageUseCases;
+
+  constructor(dataSource: DataSource, opts?: Partial<AnalyticsHexaOpts>) {
+    super(dataSource, { ...baseAnalyticsHexaOpts, ...opts });
+    this.logger.info('Constructing AnalyticsHexa');
 
     try {
-      // Get the DataSource from the registry
-      const dataSource = registry.getDataSource();
-      this.logger.debug('Retrieved DataSource from registry');
+      this.logger.debug(
+        'Creating repository and service aggregators with DataSource',
+      );
 
-      this.gitHexa = registry.get(GitHexa);
-      this.recipesHexa = registry.get(RecipesHexa);
+      // Instantiate repositories
+      this.recipesUsageRepositories = new RecipesUsageRepositories(
+        this.dataSource,
+      );
 
-      // Get adapters - RecipesHexa might not be initialized yet, so handle gracefully
-      let gitPort: IGitPort;
-      let recipesPort: IRecipesPort | undefined;
-
-      try {
-        gitPort = this.gitHexa.getGitAdapter();
-      } catch (error) {
-        this.logger.error(
-          `Failed to get Git adapter: ${error instanceof Error ? error.message : String(error)}`,
-        );
-        throw error;
-      }
-
-      try {
-        recipesPort = this.recipesHexa.getRecipesAdapter();
-      } catch {
-        // RecipesHexa not initialized yet - will be set later via setRecipesPort
-        this.logger.debug(
-          'RecipesHexa adapter not available yet, will be set after initialization',
-        );
-        recipesPort = undefined;
-      }
-
-      // Initialize the hexagon with the shared DataSource
-      // RecipesPort and DeploymentPort will be resolved lazily to avoid circular dependencies
-      this.hexa = new AnalyticsHexaFactory(
-        dataSource,
-        recipesPort,
-        gitPort,
+      // Instantiate services (without ports - they'll be set in initialize())
+      this.recipesUsageServices = new RecipesUsageServices(
+        this.recipesUsageRepositories,
+        undefined, // recipesPort will be set in initialize()
         this.logger,
       );
-      this.logger.info(`${origin} initialized successfully`);
+
+      // Instantiate use cases (without ports - they'll be set in initialize())
+      this.useCases = new RecipeUsageUseCases(
+        this.recipesUsageServices,
+        undefined, // recipesPort will be set in initialize()
+        undefined as unknown as IGitPort, // gitPort will be set in initialize() - use unknown cast for required param
+        undefined, // deploymentPort (optional) will be set in initialize()
+        this.logger,
+      );
+
+      this.logger.debug(
+        'Repository aggregator, service aggregator, and use cases created successfully',
+      );
+
+      this.logger.info('AnalyticsHexa construction completed');
     } catch (error) {
-      this.logger.error(`Failed to initialize ${origin}`, {
+      this.logger.error('Failed to construct AnalyticsHexa', {
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
     }
   }
 
-  /**
-   * Set the recipes port after initialization to avoid circular dependencies
-   */
-  public setRecipesPort(recipesPort: IRecipesPort): void {
-    this.hexa.setRecipesPort(recipesPort);
+  async initialize(registry: HexaRegistry): Promise<void> {
+    this.logger.info('Initializing AnalyticsHexa (adapter retrieval phase)');
+
+    try {
+      // Retrieve required ports from registry
+      const gitPort = registry.getAdapter<IGitPort>(IGitPortName);
+      this.logger.debug('Retrieved GitAdapter from registry');
+
+      // Retrieve optional ports from registry
+      let recipesPort: IRecipesPort | undefined;
+      try {
+        recipesPort = registry.getAdapter<IRecipesPort>(IRecipesPortName);
+        this.logger.debug('Retrieved RecipesAdapter from registry');
+      } catch (error) {
+        this.logger.debug('RecipesHexa not available in registry', {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+
+      let deploymentPort: IDeploymentPort | undefined;
+      try {
+        deploymentPort =
+          registry.getAdapter<IDeploymentPort>(IDeploymentPortName);
+        this.logger.debug('Retrieved DeploymentAdapter from registry');
+      } catch (error) {
+        this.logger.debug('DeploymentsHexa not available in registry', {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+
+      // Set ports on services and use cases
+      this.useCases.setGitPort(gitPort);
+
+      if (recipesPort) {
+        this.useCases.setRecipesPort(recipesPort);
+      }
+
+      if (deploymentPort) {
+        this.useCases.setDeploymentPort(deploymentPort);
+      }
+
+      this.logger.info('AnalyticsHexa initialized successfully');
+    } catch (error) {
+      this.logger.error('Failed to initialize AnalyticsHexa', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   }
 
-  /**
-   * Set the deployment port after initialization to avoid circular dependencies
-   */
-  public setDeploymentPort(deploymentPort: IDeploymentPort): void {
-    this._deploymentPort = deploymentPort;
-    // Update the use cases with the new deployment port
-    this.hexa.setDeploymentPort(deploymentPort);
-  }
-
-  /**
-   * Destroys the RecipesHexa and cleans up resources
-   */
-  public destroy(): void {
-    this.logger.info('Destroying RecipesHexa');
+  destroy(): void {
+    this.logger.info('Destroying AnalyticsHexa');
     // Add any cleanup logic here if needed
-    this.logger.info('RecipesHexa destroyed');
-  }
-
-  // ===========================
-  // USAGE ANALYTICS
-  // ===========================
-
-  /**
-   * Track recipe usage by AI agents
-   */
-  public async trackRecipeUsage(
-    command: TrackRecipeUsageCommand,
-  ): Promise<RecipeUsage[]> {
-    return this.hexa.useCases.trackRecipeUsage(command);
+    this.logger.info('AnalyticsHexa destroyed');
   }
 
   /**
-   * Get usage records for a specific recipe
+   * AnalyticsHexa does not expose an adapter.
+   * Analytics functionality is accessed through the NestJS module.
    */
-  public async getUsageByRecipeId(recipeId: RecipeId): Promise<RecipeUsage[]> {
-    return this.hexa.useCases.getUsageByRecipeId(recipeId);
+  public getAdapter(): void {
+    throw new Error('AnalyticsHexa does not expose an adapter');
   }
 
   /**
-   * Get all usage records for an organization
+   * AnalyticsHexa does not expose a port.
    */
-  public async getUsageByOrganization(
-    organizationId: OrganizationId,
-  ): Promise<RecipeUsage[]> {
-    return this.hexa.useCases.getUsageByOrganization(organizationId);
-  }
-
-  /**
-   * Get all usage records for a repository
-   */
-  public async getUsageByRepository(
-    repositoryId: GitRepoId,
-  ): Promise<RecipeUsage[]> {
-    return this.hexa.useCases.getUsageByRepository(repositoryId);
-  }
-
-  /**
-   * Get aggregated usage analytics for an organization or repository
-   */
-  public async getRecipeUsageAnalytics(params: {
-    organizationId?: OrganizationId;
-    repositoryId?: GitRepoId;
-    targetId?: TargetId;
-    timePeriod?: TimePeriod;
-  }) {
-    return this.hexa.useCases.getRecipeUsageAnalytics(params);
-  }
-
-  /**
-   * Get aggregated usage analytics for a target
-   */
-  public async getTargetUsageAnalytics(
-    targetId: TargetId,
-    timePeriod?: TimePeriod,
-  ) {
-    return this.hexa.useCases.getTargetUsageAnalytics(targetId, timePeriod);
+  public getPortName(): string {
+    throw new Error('AnalyticsHexa does not expose a port');
   }
 }

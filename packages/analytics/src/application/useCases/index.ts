@@ -1,24 +1,24 @@
-import { TrackRecipeUsageUsecase } from './trackRecipeUsage/trackRecipeUsage.usecase';
-import { GetUsageByOrganizationUsecase } from './getUsageByOrganization/getUsageByOrganization.usecase';
-import { GetUsageByRepositoryUsecase } from './getUsageByRepository/getUsageByRepository.usecase';
-import { GetUsageByTargetUsecase } from './getUsageByTarget/getUsageByTarget.usecase';
-import {
-  GetRecipeUsageAnalyticsUsecase,
-  GetRecipeUsageAnalyticsParams,
-} from './getRecipeUsageAnalytics/getRecipeUsageAnalytics.usecase';
-import { TimePeriod } from '../../domain/entities/RecipeUsageAnalytics';
 import { PackmindLogger } from '@packmind/logger';
 import {
+  GitRepoId,
   IDeploymentPort,
   IGitPort,
   IRecipesPort,
+  OrganizationId,
+  RecipeId,
   TargetId,
 } from '@packmind/types';
-import { GitRepoId } from '@packmind/git';
-import { OrganizationId } from '@packmind/accounts';
-import { RecipeId } from '@packmind/types';
-import { IRecipesUsageServices } from '../IRecipesUsageServices';
+import { TimePeriod } from '../../domain/entities/RecipeUsageAnalytics';
 import { TrackRecipeUsageCommand } from '../../domain/useCases/ITrackRecipeUsage';
+import { RecipesUsageServices } from '../services/RecipesUsageServices';
+import {
+  GetRecipeUsageAnalyticsParams,
+  GetRecipeUsageAnalyticsUsecase,
+} from './getRecipeUsageAnalytics/getRecipeUsageAnalytics.usecase';
+import { GetUsageByOrganizationUsecase } from './getUsageByOrganization/getUsageByOrganization.usecase';
+import { GetUsageByRepositoryUsecase } from './getUsageByRepository/getUsageByRepository.usecase';
+import { GetUsageByTargetUsecase } from './getUsageByTarget/getUsageByTarget.usecase';
+import { TrackRecipeUsageUsecase } from './trackRecipeUsage/trackRecipeUsage.usecase';
 
 const origin = 'RecipeUsageUseCases';
 
@@ -31,14 +31,14 @@ export class RecipeUsageUseCases {
   private deploymentPort?: IDeploymentPort;
 
   constructor(
-    private readonly recipesUsageServices: IRecipesUsageServices,
+    private readonly recipesUsageServices: RecipesUsageServices,
     private recipesPort: IRecipesPort | undefined,
-    private readonly gitPort: IGitPort,
+    private gitPort: IGitPort | undefined,
     deploymentPort?: IDeploymentPort,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.deploymentPort = deploymentPort;
-    if (this.recipesPort) {
+    if (this.recipesPort && this.gitPort) {
       this._trackRecipeUsage = new TrackRecipeUsageUsecase(
         this.recipesPort,
         recipesUsageServices.getRecipeUsageService(),
@@ -126,14 +126,16 @@ export class RecipeUsageUseCases {
     this.recipesPort = recipesPort;
     // Update the services with the new recipes port
     this.recipesUsageServices.setRecipesPort(recipesPort);
-    // Recreate use cases that depend on recipesPort
-    this._trackRecipeUsage = new TrackRecipeUsageUsecase(
-      this.recipesPort,
-      this.recipesUsageServices.getRecipeUsageService(),
-      this.gitPort,
-      this.deploymentPort,
-      this.logger,
-    );
+    // Recreate use cases that depend on recipesPort (only if gitPort is set)
+    if (this.gitPort) {
+      this._trackRecipeUsage = new TrackRecipeUsageUsecase(
+        this.recipesPort,
+        this.recipesUsageServices.getRecipeUsageService(),
+        this.gitPort,
+        this.deploymentPort,
+        this.logger,
+      );
+    }
     this._getRecipeUsageAnalytics = new GetRecipeUsageAnalyticsUsecase(
       this.recipesUsageServices.getRecipeUsageService(),
       this.recipesUsageServices.getRecipeUsageAnalyticsService(),
@@ -142,12 +144,29 @@ export class RecipeUsageUseCases {
   }
 
   /**
+   * Set the git port after initialization
+   */
+  public setGitPort(gitPort: IGitPort): void {
+    this.gitPort = gitPort;
+    // Recreate use cases that depend on gitPort if recipesPort is set
+    if (this.recipesPort && this.gitPort) {
+      this._trackRecipeUsage = new TrackRecipeUsageUsecase(
+        this.recipesPort,
+        this.recipesUsageServices.getRecipeUsageService(),
+        this.gitPort,
+        this.deploymentPort,
+        this.logger,
+      );
+    }
+  }
+
+  /**
    * Set the deployment port after initialization to avoid circular dependencies
    */
   public setDeploymentPort(deploymentPort: IDeploymentPort): void {
     this.deploymentPort = deploymentPort;
-    if (!this.recipesPort) {
-      // Port will be set when recipesPort is set
+    if (!this.recipesPort || !this.gitPort) {
+      // Ports will be set when recipesPort and gitPort are set
       return;
     }
     // Recreate the TrackRecipeUsageUsecase with the deployment port

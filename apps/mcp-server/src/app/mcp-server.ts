@@ -309,7 +309,7 @@ export function createMCPServer(
       }
 
       try {
-        const usageRecords = await analyticsHexa.trackRecipeUsage({
+        const usageRecords = await analyticsHexa.useCases.trackRecipeUsage({
           recipeSlugs: recipesSlug,
           aiAgent,
           userId: userContext.userId,

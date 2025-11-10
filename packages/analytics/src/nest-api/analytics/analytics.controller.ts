@@ -1,14 +1,13 @@
 import { Controller, Get, Query, Req } from '@nestjs/common';
-import { GitRepoId } from '@packmind/git';
-import { TargetId } from '@packmind/types';
-import { AnalyticsService } from './analytics.service';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
+import { GitRepoId, TargetId } from '@packmind/types';
 import {
   OrganizationUsageAnalytics,
   TargetUsageAnalytics,
   TimePeriod,
 } from '../../domain/entities';
+import { AnalyticsService } from './analytics.service';
 
 @Controller('analytics')
 export class AnalyticsController {

@@ -1,7 +1,7 @@
-import { RecipeUsageService } from '../../services/RecipeUsageService';
-import { RecipeUsage } from '../../../domain/entities/RecipeUsage';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { GitRepoId } from '@packmind/git';
+import { GitRepoId } from '@packmind/types';
+import { RecipeUsage } from '../../../domain/entities/RecipeUsage';
+import { RecipeUsageService } from '../../services/RecipeUsageService';
 
 const origin = 'GetUsageByRepositoryUsecase';
 

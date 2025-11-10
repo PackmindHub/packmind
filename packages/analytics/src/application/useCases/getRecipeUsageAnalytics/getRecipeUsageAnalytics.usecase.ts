@@ -1,5 +1,5 @@
-import { RecipeUsageService } from '../../services/RecipeUsageService';
-import { RecipeUsageAnalyticsService } from '../../services/RecipeUsageAnalyticsService';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
+import { GitRepoId, OrganizationId, TargetId } from '@packmind/types';
 import {
   OrganizationUsageAnalytics,
   RepositoryUsageAnalytics,
@@ -7,10 +7,8 @@ import {
   TimePeriod,
   TimePeriods,
 } from '../../../domain/entities/RecipeUsageAnalytics';
-import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { TargetId } from '@packmind/types';
-import { OrganizationId } from '@packmind/accounts';
-import { GitRepoId } from '@packmind/git';
+import { RecipeUsageAnalyticsService } from '../../services/RecipeUsageAnalyticsService';
+import { RecipeUsageService } from '../../services/RecipeUsageService';
 
 const origin = 'GetRecipeUsageAnalyticsUsecase';
 

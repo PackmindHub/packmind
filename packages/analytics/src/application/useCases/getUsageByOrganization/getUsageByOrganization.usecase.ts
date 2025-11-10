@@ -1,7 +1,7 @@
-import { RecipeUsageService } from '../../services/RecipeUsageService';
-import { RecipeUsage } from '../../../domain/entities/RecipeUsage';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { OrganizationId } from '@packmind/accounts';
+import { OrganizationId } from '@packmind/types';
+import { RecipeUsage } from '../../../domain/entities/RecipeUsage';
+import { RecipeUsageService } from '../../services/RecipeUsageService';
 
 const origin = 'GetUsageByOrganizationUsecase';
 

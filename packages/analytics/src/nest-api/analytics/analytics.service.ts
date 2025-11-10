@@ -1,16 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { GitRepoId } from '@packmind/git';
+import { DeploymentsHexa } from '@packmind/deployments';
 import { PackmindLogger } from '@packmind/logger';
-import { IDeploymentPort } from '@packmind/types';
-import { TargetId } from '@packmind/types';
-import { OrganizationId } from '@packmind/accounts';
+import {
+  GitRepoId,
+  IDeploymentPort,
+  OrganizationId,
+  TargetId,
+} from '@packmind/types';
+import { AnalyticsHexa } from '../../AnalyticsHexa';
 import {
   OrganizationUsageAnalytics,
   TargetUsageAnalytics,
   TimePeriod,
 } from '../../domain/entities';
-import { AnalyticsHexa } from '../../AnalyticsHexa';
-import { DeploymentsHexa } from '@packmind/deployments';
 
 const origin = 'AnalyticsService';
 
@@ -23,8 +25,7 @@ export class AnalyticsService {
     private readonly deploymentHexa: DeploymentsHexa,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    this.deploymentAdapter = this.deploymentHexa.getDeploymentsUseCases();
-    analyticsHexa.setDeploymentPort(this.deploymentAdapter);
+    this.deploymentAdapter = this.deploymentHexa.getAdapter();
     this.logger.info('AnalyticsService initialized');
   }
 
@@ -79,7 +80,7 @@ export class AnalyticsService {
     repositoryId?: GitRepoId;
     timePeriod?: TimePeriod;
   }): Promise<OrganizationUsageAnalytics> {
-    return this.analyticsHexa.getRecipeUsageAnalytics(
+    return this.analyticsHexa.useCases.getRecipeUsageAnalytics(
       params,
     ) as Promise<OrganizationUsageAnalytics>;
   }
@@ -93,7 +94,7 @@ export class AnalyticsService {
       timePeriod: params.timePeriod,
     });
 
-    return this.analyticsHexa.getRecipeUsageAnalytics({
+    return this.analyticsHexa.useCases.getRecipeUsageAnalytics({
       targetId: params.targetId,
       timePeriod: params.timePeriod,
     }) as Promise<TargetUsageAnalytics>;
