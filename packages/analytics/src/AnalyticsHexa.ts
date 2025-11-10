@@ -1,6 +1,8 @@
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
 import {
+  IAnalyticsPort,
+  IAnalyticsPortName,
   IDeploymentPort,
   IDeploymentPortName,
   IGitPort,
@@ -9,8 +11,8 @@ import {
   IRecipesPortName,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
+import { AnalyticsAdapter } from './application/adapter/AnalyticsAdapter';
 import { RecipesUsageServices } from './application/services/RecipesUsageServices';
-import { RecipeUsageUseCases } from './application/useCases';
 import { RecipesUsageRepositories } from './infra/repositories/RecipesUsageRepositories';
 
 const origin = 'AnalyticsHexa';
@@ -19,24 +21,24 @@ const origin = 'AnalyticsHexa';
  * AnalyticsHexa - Facade for the Analytics domain following hexagonal architecture.
  *
  * This class serves as the main entry point for analytics-related functionality.
- * It handles dependency injection and exposes use cases.
+ * It handles dependency injection and exposes the adapter through a port interface.
  *
- * The constructor instantiates repositories, services, and use cases.
+ * The constructor instantiates repositories, services, and the adapter.
  * The initialize method retrieves and sets ports from the registry.
  *
  * Uses the DataSource provided through the HexaRegistry for database operations.
  * Integrates with Git, Recipes, and Deployments domains through port adapters.
  *
- * Note: Analytics does not expose a port interface (second type parameter is void).
+ * Exposes IAnalyticsPort for cross-domain integration.
  */
 export type AnalyticsHexaOpts = BaseHexaOpts;
 
 const baseAnalyticsHexaOpts = { logger: new PackmindLogger(origin) };
 
-export class AnalyticsHexa extends BaseHexa<AnalyticsHexaOpts, void> {
+export class AnalyticsHexa extends BaseHexa<AnalyticsHexaOpts, IAnalyticsPort> {
   private readonly recipesUsageRepositories: RecipesUsageRepositories;
   private readonly recipesUsageServices: RecipesUsageServices;
-  public readonly useCases: RecipeUsageUseCases;
+  private readonly adapter: AnalyticsAdapter;
 
   constructor(dataSource: DataSource, opts?: Partial<AnalyticsHexaOpts>) {
     super(dataSource, { ...baseAnalyticsHexaOpts, ...opts });
@@ -58,8 +60,8 @@ export class AnalyticsHexa extends BaseHexa<AnalyticsHexaOpts, void> {
         this.logger,
       );
 
-      // Instantiate use cases (ports will be set in initialize())
-      this.useCases = new RecipeUsageUseCases(
+      // Instantiate adapter (ports will be set in initialize())
+      this.adapter = new AnalyticsAdapter(
         this.recipesUsageServices,
         this.logger,
       );
@@ -107,15 +109,15 @@ export class AnalyticsHexa extends BaseHexa<AnalyticsHexaOpts, void> {
         });
       }
 
-      // Set ports on services and use cases
-      this.useCases.setGitPort(gitPort);
+      // Set ports on adapter
+      this.adapter.setGitPort(gitPort);
 
       if (recipesPort) {
-        this.useCases.setRecipesPort(recipesPort);
+        this.adapter.setRecipesPort(recipesPort);
       }
 
       if (deploymentPort) {
-        this.useCases.setDeploymentPort(deploymentPort);
+        this.adapter.setDeploymentPort(deploymentPort);
       }
 
       this.logger.info('AnalyticsHexa initialized successfully');
@@ -134,17 +136,16 @@ export class AnalyticsHexa extends BaseHexa<AnalyticsHexaOpts, void> {
   }
 
   /**
-   * AnalyticsHexa does not expose an adapter.
-   * Analytics functionality is accessed through the NestJS module.
+   * Returns the AnalyticsAdapter for cross-domain integration.
    */
-  public getAdapter(): void {
-    throw new Error('AnalyticsHexa does not expose an adapter');
+  public getAdapter(): IAnalyticsPort {
+    return this.adapter;
   }
 
   /**
-   * AnalyticsHexa does not expose a port.
+   * Returns the port name for registry registration.
    */
   public getPortName(): string {
-    throw new Error('AnalyticsHexa does not expose a port');
+    return IAnalyticsPortName;
   }
 }

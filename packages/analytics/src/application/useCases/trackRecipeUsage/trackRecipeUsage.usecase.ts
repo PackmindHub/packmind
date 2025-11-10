@@ -7,16 +7,14 @@ import {
   IDeploymentPort,
   IGitPort,
   IRecipesPort,
+  ITrackRecipeUsageUseCase,
   OrganizationId,
   RecipeId,
   TargetId,
+  TrackRecipeUsageCommand,
   UserId,
 } from '@packmind/types';
 import { RecipeUsage } from '../../../domain/entities/RecipeUsage';
-import {
-  ITrackRecipeUsageUseCase,
-  TrackRecipeUsageCommand,
-} from '../../../domain/useCases/ITrackRecipeUsage';
 import {
   RecipeUsageService,
   TrackUsageData,

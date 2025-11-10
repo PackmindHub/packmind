@@ -80,9 +80,9 @@ export class AnalyticsService {
     repositoryId?: GitRepoId;
     timePeriod?: TimePeriod;
   }): Promise<OrganizationUsageAnalytics> {
-    return this.analyticsHexa.useCases.getRecipeUsageAnalytics(
-      params,
-    ) as Promise<OrganizationUsageAnalytics>;
+    return this.analyticsHexa
+      .getAdapter()
+      .getRecipeUsageAnalytics(params) as Promise<OrganizationUsageAnalytics>;
   }
 
   async getTargetUsageAnalytics(params: {
@@ -94,7 +94,7 @@ export class AnalyticsService {
       timePeriod: params.timePeriod,
     });
 
-    return this.analyticsHexa.useCases.getRecipeUsageAnalytics({
+    return this.analyticsHexa.getAdapter().getRecipeUsageAnalytics({
       targetId: params.targetId,
       timePeriod: params.timePeriod,
     }) as Promise<TargetUsageAnalytics>;

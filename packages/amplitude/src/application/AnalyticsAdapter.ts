@@ -1,11 +1,11 @@
-import { IAnalyticsPort, UserId, OrganizationId } from '@packmind/types';
+import { IEventTrackingPort, UserId, OrganizationId } from '@packmind/types';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AmplitudeTrackEventService } from './AmplitudeTrackEventService';
 import { AmplitudeNodeEvent } from '../domain/entities/AmplitudeNodeEvent';
 
 const origin = 'AnalyticsAdapter';
 
-export class AnalyticsAdapter implements IAnalyticsPort {
+export class AnalyticsAdapter implements IEventTrackingPort {
   private readonly logger: PackmindLogger;
   private readonly amplitudeService: AmplitudeTrackEventService;
 
