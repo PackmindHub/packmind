@@ -33,4 +33,5 @@ packages/linter/js-playground-local
 DECISIONS.md
 LEARNINGS.md
 test-results/
+.env
 compose.env
