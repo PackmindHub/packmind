@@ -115,7 +115,6 @@ jobs:
           VITE_SENTRY_ENVIRONMENT: production
           VITE_CRISP_WEBSITE_ID: ${{ secrets.VITE_CRISP_WEBSITE_ID }}
         run: ./node_modules/.bin/nx build frontend
-      - run: cp apps/frontend/cc/.htaccess apps/frontend/build/client/.
       - run: cp tsconfig.base.effective.json apps/frontend/build/client/.
 
       - name: Upload Frontend build artifacts
