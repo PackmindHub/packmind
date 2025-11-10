@@ -81,11 +81,11 @@ type LinterAdapterDependencies = {
     getRepositories(): ILinterRepositories;
     getLinterAstAdapter(): ILinterAstPort | null;
   };
-  gitPort: IGitPort;
-  linterDelayedJobs: ILinterDelayedJobs;
   executeLinterProgramsUseCase: IExecuteLinterProgramsUseCase;
-  userProvider: UserProvider;
-  organizationProvider: OrganizationProvider;
+  gitPort?: IGitPort;
+  linterDelayedJobs?: ILinterDelayedJobs;
+  userProvider?: UserProvider;
+  organizationProvider?: OrganizationProvider;
   standardsAdapter?: IStandardsPort;
   deploymentsAdapter?: IDeploymentPort;
   spacesAdapter?: ISpacesPort;
@@ -96,12 +96,12 @@ export class LinterAdapter implements ILinterPort {
   private readonly repositories: ILinterRepositories;
   private standardsAdapter?: IStandardsPort;
   private spacesAdapter?: ISpacesPort;
-  private readonly gitPort: IGitPort;
+  private gitPort?: IGitPort;
   private deploymentsAdapter?: IDeploymentPort;
-  private readonly linterDelayedJobs: ILinterDelayedJobs;
+  private linterDelayedJobs?: ILinterDelayedJobs;
   private readonly executeLinterProgramsUseCase: IExecuteLinterProgramsUseCase;
-  private readonly userProvider: UserProvider;
-  private readonly organizationProvider: OrganizationProvider;
+  private userProvider?: UserProvider;
+  private organizationProvider?: OrganizationProvider;
 
   constructor({
     hexaFactory,
@@ -136,6 +136,22 @@ export class LinterAdapter implements ILinterPort {
 
   setSpacesPort(spacesAdapter: ISpacesPort): void {
     this.spacesAdapter = spacesAdapter;
+  }
+
+  setGitPort(gitPort: IGitPort): void {
+    this.gitPort = gitPort;
+  }
+
+  setLinterDelayedJobs(linterDelayedJobs: ILinterDelayedJobs): void {
+    this.linterDelayedJobs = linterDelayedJobs;
+  }
+
+  setUserProvider(userProvider: UserProvider): void {
+    this.userProvider = userProvider;
+  }
+
+  setOrganizationProvider(organizationProvider: OrganizationProvider): void {
+    this.organizationProvider = organizationProvider;
   }
 
   async createDetectionProgram(
@@ -177,7 +193,7 @@ export class LinterAdapter implements ILinterPort {
       this.deploymentsAdapter,
       this.getStandardsAdapter(),
       this.spacesAdapter,
-      this.gitPort,
+      this.getGitPort(),
     );
     return usecase.execute(command);
   }
@@ -214,7 +230,7 @@ export class LinterAdapter implements ILinterPort {
     command: StartProgramGenerationCommand,
   ): Promise<StartProgramGenerationResponse> {
     const usecase = new StartGenerationProgramUseCase(
-      this.linterDelayedJobs.generateProgramDelayedJob,
+      this.getLinterDelayedJobs().generateProgramDelayedJob,
       this.getStandardsAdapter(),
       () => this,
     );
@@ -276,7 +292,7 @@ export class LinterAdapter implements ILinterPort {
   ): Promise<RuleDetectionAssessment> {
     const usecase = new StartRuleDetectionAssessmentUseCase(
       this.repositories,
-      this.linterDelayedJobs,
+      this.getLinterDelayedJobs(),
       this.getStandardsAdapter(),
     );
     return usecase.execute(command);
@@ -309,8 +325,8 @@ export class LinterAdapter implements ILinterPort {
   ): Promise<GetRuleDetectionAssessmentResponse> {
     const usecase = new GetRuleDetectionAssessmentUseCase(
       this.repositories,
-      this.userProvider,
-      this.organizationProvider,
+      this.getUserProvider(),
+      this.getOrganizationProvider(),
     );
     return usecase.execute(command);
   }
@@ -328,8 +344,8 @@ export class LinterAdapter implements ILinterPort {
     command: GetStandardRulesDetectionStatusCommand,
   ): Promise<GetStandardRulesDetectionStatusResponse> {
     const usecase = new GetStandardRulesDetectionStatusUseCase(
-      this.userProvider,
-      this.organizationProvider,
+      this.getUserProvider(),
+      this.getOrganizationProvider(),
       this.repositories,
       this.getStandardsAdapter(),
     );
@@ -353,5 +369,39 @@ export class LinterAdapter implements ILinterPort {
     }
 
     return this.standardsAdapter;
+  }
+
+  private getGitPort(): IGitPort {
+    if (!this.gitPort) {
+      throw new Error('Git port not configured for Linter adapter');
+    }
+
+    return this.gitPort;
+  }
+
+  private getLinterDelayedJobs(): ILinterDelayedJobs {
+    if (!this.linterDelayedJobs) {
+      throw new Error('Linter delayed jobs not configured for Linter adapter');
+    }
+
+    return this.linterDelayedJobs;
+  }
+
+  private getUserProvider(): UserProvider {
+    if (!this.userProvider) {
+      throw new Error('User provider not configured for Linter adapter');
+    }
+
+    return this.userProvider;
+  }
+
+  private getOrganizationProvider(): OrganizationProvider {
+    if (!this.organizationProvider) {
+      throw new Error(
+        'Organization provider not configured for Linter adapter',
+      );
+    }
+
+    return this.organizationProvider;
   }
 }

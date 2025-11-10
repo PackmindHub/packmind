@@ -48,7 +48,7 @@ const baseLinterHexaOpts = { logger: new PackmindLogger(origin) };
 export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
   private readonly linterRepositories: LinterRepositories;
   private readonly detectionProgramService: DetectionProgramService;
-  private adapter!: LinterAdapter; // Will be fully initialized in initialize()
+  private readonly adapter: LinterAdapter;
   private linterAstAdapter: ILinterAstPort | null = null;
   private linterDelayedJobs?: ILinterDelayedJobs;
 
@@ -70,10 +70,48 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
         this.logger,
       );
 
-      // Note: adapter will be created in initialize() after ports are available
-      // JobsHexa will be retrieved in initialize() for delayed job registration
+      // Initialize linter-ast adapter early
+      try {
+        this.linterAstAdapter = new LinterAstAdapter();
+        this.logger.info('LinterAstAdapter initialized successfully', {
+          adapter: this.linterAstAdapter ? 'present' : 'null',
+          availableLanguages:
+            this.linterAstAdapter?.getAvailableLanguages?.() || [],
+        });
+      } catch (error) {
+        this.logger.error(
+          'Failed to initialize LinterAstAdapter - will fall back to js-playground',
+          {
+            error: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
+          },
+        );
+      }
+
+      // Create adapter with minimal dependencies (ports will be set in initialize)
+      const hexaFactory: {
+        getDetectionProgramService(): DetectionProgramService;
+        getRepositories(): LinterRepositories;
+        getLinterAstAdapter(): ILinterAstPort | null;
+      } = {
+        getDetectionProgramService: () => this.detectionProgramService,
+        getRepositories: () => this.linterRepositories,
+        getLinterAstAdapter: () => this.linterAstAdapter,
+      };
+
+      // Create ExecuteLinterProgramsUseCase
+      const executeLinterProgramsUseCase = new ExecuteLinterProgramsUseCase(
+        this.linterAstAdapter || undefined,
+      );
+
+      // Create adapter in constructor (ports will be set in initialize)
+      this.adapter = new LinterAdapter({
+        hexaFactory,
+        executeLinterProgramsUseCase,
+      });
+
       this.logger.debug(
-        'Repository aggregator and service aggregator created successfully',
+        'Repository aggregator, service aggregator, and adapter created successfully',
       );
 
       this.logger.info('LinterHexa construction completed');
@@ -123,24 +161,6 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
         });
       }
 
-      // Initialize linter-ast adapter
-      try {
-        this.linterAstAdapter = new LinterAstAdapter();
-        this.logger.info('LinterAstAdapter initialized successfully', {
-          adapter: this.linterAstAdapter ? 'present' : 'null',
-          availableLanguages:
-            this.linterAstAdapter?.getAvailableLanguages?.() || [],
-        });
-      } catch (error) {
-        this.logger.error(
-          'Failed to initialize LinterAstAdapter - will fall back to js-playground',
-          {
-            error: error instanceof Error ? error.message : String(error),
-            stack: error instanceof Error ? error.stack : undefined,
-          },
-        );
-      }
-
       // Get JobsHexa (required) for delayed job registration
       const jobsHexa = registry.get(JobsHexa);
       if (!jobsHexa) {
@@ -153,11 +173,6 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
         jobsHexa,
         () => standardsPort,
         () => this.getAdapter(),
-      );
-
-      // Create ExecuteLinterProgramsUseCase
-      const executeLinterProgramsUseCase = new ExecuteLinterProgramsUseCase(
-        this.linterAstAdapter || undefined,
       );
 
       // Get IAccountsPort to create providers
@@ -174,28 +189,21 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
           accountsPort.getOrganizationById({ organizationId }),
       };
 
-      // Create adapter with all dependencies
-      const hexaFactory: {
-        getDetectionProgramService(): DetectionProgramService;
-        getRepositories(): typeof this.linterRepositories;
-        getLinterAstAdapter(): ILinterAstPort | null;
-      } = {
-        getDetectionProgramService: () => this.detectionProgramService,
-        getRepositories: () => this.linterRepositories,
-        getLinterAstAdapter: () => this.linterAstAdapter,
-      };
+      // Set ports on adapter using setter methods
+      this.logger.debug('Setting ports on LinterAdapter');
+      this.adapter.setGitPort(gitPort);
+      this.adapter.setStandardsPort(standardsPort);
+      this.adapter.setLinterDelayedJobs(this.linterDelayedJobs);
+      this.adapter.setUserProvider(userProvider);
+      this.adapter.setOrganizationProvider(organizationProvider);
 
-      this.adapter = new LinterAdapter({
-        hexaFactory,
-        gitPort,
-        linterDelayedJobs: this.linterDelayedJobs,
-        executeLinterProgramsUseCase,
-        userProvider,
-        organizationProvider,
-        standardsAdapter: standardsPort,
-        deploymentsAdapter: deploymentsPort,
-        spacesAdapter: spacesPort,
-      });
+      if (deploymentsPort) {
+        this.adapter.setDeploymentPort(deploymentsPort);
+      }
+
+      if (spacesPort) {
+        this.adapter.setSpacesPort(spacesPort);
+      }
 
       this.logger.info('LinterHexa initialized successfully');
 
@@ -287,14 +295,9 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
   /**
    * Get the Linter adapter for cross-domain access.
    * This adapter implements ILinterPort and can be injected into other domains.
-   * The adapter is available after initialize() is called.
+   * The adapter is created during construction, and ports are set during initialization.
    */
   public getAdapter(): ILinterPort {
-    if (!this.adapter) {
-      throw new Error(
-        'LinterAdapter not initialized. Call initialize() first.',
-      );
-    }
     return this.adapter;
   }
 
