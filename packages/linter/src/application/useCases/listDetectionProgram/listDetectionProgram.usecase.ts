@@ -5,9 +5,11 @@ import {
   OrganizationId,
   UserId,
   IGitPort,
+  Rule,
+  StandardVersion,
+  GitRepo,
+  GitRepoId,
 } from '@packmind/types';
-import { Rule, StandardVersion } from '@packmind/types';
-import { GitRepo, GitRepoId } from '@packmind/git';
 
 import {
   IListDetectionProgramUseCase,

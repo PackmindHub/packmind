@@ -72,6 +72,7 @@ describe('GetActiveDetectionProgramUseCase', () => {
       listStandardsBySpace: jest.fn(),
       getRuleCodeExamples: jest.fn(),
       findStandardBySlug: jest.fn(),
+      getLatestStandardVersion: jest.fn(),
     };
     standardsAdapter.getRuleCodeExamples.mockResolvedValue([]);
 

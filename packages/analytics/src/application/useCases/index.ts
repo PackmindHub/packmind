@@ -28,28 +28,20 @@ export class RecipeUsageUseCases {
   private readonly _getUsageByRepository: GetUsageByRepositoryUsecase;
   private readonly _getUsageByTarget: GetUsageByTargetUsecase;
   private _getRecipeUsageAnalytics: GetRecipeUsageAnalyticsUsecase;
+  private recipesPort?: IRecipesPort;
+  private gitPort?: IGitPort;
   private deploymentPort?: IDeploymentPort;
 
   constructor(
     private readonly recipesUsageServices: RecipesUsageServices,
-    private recipesPort: IRecipesPort | undefined,
-    private gitPort: IGitPort | undefined,
-    deploymentPort?: IDeploymentPort,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    this.deploymentPort = deploymentPort;
-    if (this.recipesPort && this.gitPort) {
-      this._trackRecipeUsage = new TrackRecipeUsageUsecase(
-        this.recipesPort,
-        recipesUsageServices.getRecipeUsageService(),
-        this.gitPort,
-        deploymentPort,
-        this.logger,
-      );
-    } else {
-      // Create a placeholder that will be replaced when port is set
-      this._trackRecipeUsage = null as unknown as TrackRecipeUsageUsecase;
-    }
+    // Placeholders that will be replaced when ports are set
+    this._trackRecipeUsage = null as unknown as TrackRecipeUsageUsecase;
+    this._getRecipeUsageAnalytics =
+      null as unknown as GetRecipeUsageAnalyticsUsecase;
+
+    // Use cases that don't depend on ports
     this._getUsageByOrganization = new GetUsageByOrganizationUsecase(
       recipesUsageServices.getRecipeUsageService(),
       this.logger,
@@ -62,17 +54,6 @@ export class RecipeUsageUseCases {
       recipesUsageServices.getRecipeUsageService(),
       this.logger,
     );
-    if (this.recipesPort) {
-      this._getRecipeUsageAnalytics = new GetRecipeUsageAnalyticsUsecase(
-        recipesUsageServices.getRecipeUsageService(),
-        recipesUsageServices.getRecipeUsageAnalyticsService(),
-        this.logger,
-      );
-    } else {
-      // Create a placeholder that will be replaced when port is set
-      this._getRecipeUsageAnalytics =
-        null as unknown as GetRecipeUsageAnalyticsUsecase;
-    }
     this.logger.info('RecipeUseCases initialized successfully');
   }
 

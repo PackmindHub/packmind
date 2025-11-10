@@ -94,6 +94,7 @@ describe('UpdateRuleDetectionStatusAfterUpdateUseCase', () => {
       listStandardsBySpace: jest.fn(),
       getRuleCodeExamples: jest.fn().mockResolvedValue([]),
       findStandardBySlug: jest.fn(),
+      getLatestStandardVersion: jest.fn(),
     };
 
     linterAdapter = {

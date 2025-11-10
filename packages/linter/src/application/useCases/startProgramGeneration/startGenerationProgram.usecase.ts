@@ -1,8 +1,12 @@
 import { PackmindLogger } from '@packmind/logger';
-import { ILinterPort, IStandardsPort } from '@packmind/types';
-import { DetectionStatus, Rule, RuleExample, RuleId } from '@packmind/types';
-import { ProgrammingLanguage } from '@packmind/types';
 import {
+  ILinterPort,
+  IStandardsPort,
+  DetectionStatus,
+  Rule,
+  RuleExample,
+  RuleId,
+  ProgrammingLanguage,
   ActiveDetectionProgram,
   DetectionModeEnum,
   DetectionProgram,
@@ -13,8 +17,9 @@ import {
   StartProgramGenerationCommand,
   StartProgramGenerationResponse,
   GenerateProgramInput,
+  createOrganizationId,
+  createUserId,
 } from '@packmind/types';
-import { createOrganizationId, createUserId } from '@packmind/accounts';
 import {
   NoExamplesForProgramGenerationError,
   NoValidLanguagesForProgramGenerationError,

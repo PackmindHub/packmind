@@ -70,6 +70,7 @@ describe('AssessRuleDetectionUseCase', () => {
         },
       ]),
       findStandardBySlug: jest.fn(),
+      getLatestStandardVersion: jest.fn(),
     };
 
     stubbedLogger = stubLogger();

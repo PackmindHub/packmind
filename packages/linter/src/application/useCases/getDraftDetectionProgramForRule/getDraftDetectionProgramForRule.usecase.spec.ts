@@ -42,6 +42,7 @@ describe('GetDraftDetectionProgramForRuleUseCase', () => {
       listStandardsBySpace: jest.fn(),
       getRuleCodeExamples: jest.fn(),
       findStandardBySlug: jest.fn(),
+      getLatestStandardVersion: jest.fn(),
     };
 
     stubbedLogger = stubLogger();

@@ -52,19 +52,15 @@ export class AnalyticsHexa extends BaseHexa<AnalyticsHexaOpts, void> {
         this.dataSource,
       );
 
-      // Instantiate services (without ports - they'll be set in initialize())
+      // Instantiate services (ports will be set in initialize())
       this.recipesUsageServices = new RecipesUsageServices(
         this.recipesUsageRepositories,
-        undefined, // recipesPort will be set in initialize()
         this.logger,
       );
 
-      // Instantiate use cases (without ports - they'll be set in initialize())
+      // Instantiate use cases (ports will be set in initialize())
       this.useCases = new RecipeUsageUseCases(
         this.recipesUsageServices,
-        undefined, // recipesPort will be set in initialize()
-        undefined as unknown as IGitPort, // gitPort will be set in initialize() - use unknown cast for required param
-        undefined, // deploymentPort (optional) will be set in initialize()
         this.logger,
       );
 

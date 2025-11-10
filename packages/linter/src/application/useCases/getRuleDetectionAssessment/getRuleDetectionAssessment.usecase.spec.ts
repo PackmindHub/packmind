@@ -1,4 +1,4 @@
-import { createOrganizationId, createUserId } from '@packmind/accounts';
+import { createOrganizationId, createUserId } from '@packmind/types';
 import {
   UserProvider,
   OrganizationProvider,

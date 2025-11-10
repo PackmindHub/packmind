@@ -1,60 +1,80 @@
-import { AccountsHexa } from '@packmind/accounts';
-import { GitHexa } from '@packmind/git';
 import { JobsHexa } from '@packmind/jobs';
 import { LinterAstAdapter } from '@packmind/linter-ast';
 import { ExecuteLinterProgramsUseCase } from '@packmind/linter-execution';
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
-import type {
+import {
+  IAccountsPort,
+  IAccountsPortName,
   IDeploymentPort,
+  IDeploymentPortName,
   IGitPort,
+  IGitPortName,
+  ILinterAstPort,
   ILinterPort,
+  ILinterPortName,
   ISpacesPort,
+  ISpacesPortName,
   IStandardsPort,
+  IStandardsPortName,
+  OrganizationProvider,
+  UserProvider,
 } from '@packmind/types';
+import { DataSource } from 'typeorm';
 import { LinterAdapter } from './application/LinterAdapter';
-import { LinterHexaFactory } from './LinterHexaFactory';
+import { DetectionProgramService } from './application/services/DetectionProgramService';
+import { ILinterDelayedJobs } from './domain/jobs/ILinterDelayedJobs';
+import { AssessRuleDetectionJobFactory } from './infra/AssessRuleDetectionJobFactory';
+import { GenerateProgramJobFactory } from './infra/GenerateProgramJobFactory';
+import { LinterRepositories } from './infra/repositories/LinterRepositories';
 
 const origin = 'LinterHexa';
 
 /**
- * LinterHexa - Facade for the Linter domain following the Hexa pattern.
+ * LinterHexa - Facade for the Linter domain following hexagonal architecture.
  *
- * This class serves as the main entry point for linter functionality.
+ * This class serves as the main entry point for linter-related functionality.
  * It handles the generation of detection programs for rules within standards.
  *
- * The Hexa pattern separates concerns:
- * - LinterHexaFactory: Handles dependency injection and service instantiation
- * - LinterHexa: Serves as use case facade and integration point with other domains
+ * The constructor instantiates repositories, services, and adapter (but not initialized).
+ * The initialize method retrieves ports from registry, initializes delayed jobs, and completes async setup.
+ *
+ * Note: JobsHexa can be referenced directly (infrastructure, no port exposed) - only for delayed job access.
  */
-export class LinterHexa extends BaseHexa {
-  private readonly hexa: LinterHexaFactory;
-  private linterAdapter?: LinterAdapter; // Will be set in initialize()
-  private readonly gitPort: IGitPort;
-  private standardsPort?: IStandardsPort;
-  private deploymentsPort?: IDeploymentPort;
-  private spacesPort?: ISpacesPort;
-  private isInitialized = false;
+export type LinterHexaOpts = BaseHexaOpts;
 
-  constructor(
-    registry: HexaRegistry,
-    opts: Partial<BaseHexaOpts> = { logger: new PackmindLogger(origin) },
-  ) {
-    super(registry, opts);
+const baseLinterHexaOpts = { logger: new PackmindLogger(origin) };
 
+export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
+  private readonly linterRepositories: LinterRepositories;
+  private readonly detectionProgramService: DetectionProgramService;
+  private adapter!: LinterAdapter; // Will be fully initialized in initialize()
+  private linterAstAdapter: ILinterAstPort | null = null;
+  private linterDelayedJobs?: ILinterDelayedJobs;
+
+  constructor(dataSource: DataSource, opts?: Partial<LinterHexaOpts>) {
+    super(dataSource, { ...baseLinterHexaOpts, ...opts });
     this.logger.info('Constructing LinterHexa');
 
     try {
-      const dataSource = registry.getDataSource();
+      this.logger.debug(
+        'Creating repository and service aggregators with DataSource',
+      );
 
-      const gitHexa = registry.get(GitHexa);
-      if (!gitHexa) {
-        throw new Error('GitHexa not found in registry');
-      }
-      this.gitPort = gitHexa.getGitAdapter();
+      // Instantiate repositories
+      this.linterRepositories = new LinterRepositories(this.dataSource);
 
-      // Initialize the hexagon factory
-      this.hexa = new LinterHexaFactory(dataSource, registry, this.logger);
+      // Instantiate services
+      this.detectionProgramService = new DetectionProgramService(
+        this.linterRepositories,
+        this.logger,
+      );
+
+      // Note: adapter will be created in initialize() after ports are available
+      // JobsHexa will be retrieved in initialize() for delayed job registration
+      this.logger.debug(
+        'Repository aggregator and service aggregator created successfully',
+      );
 
       this.logger.info('LinterHexa construction completed');
     } catch (error) {
@@ -66,25 +86,50 @@ export class LinterHexa extends BaseHexa {
   }
 
   /**
-   * Async initialization phase - must be called after construction.
-   * This initializes delayed jobs and async dependencies.
+   * Async initialization phase - retrieves ports and initializes delayed jobs.
+   * Called by HexaRegistry after all hexas are constructed.
    */
-  public override async initialize(): Promise<void> {
-    if (this.isInitialized) {
-      this.logger.debug('LinterHexa already initialized');
-      return;
-    }
-
-    this.logger.info('Initializing LinterHexa (async phase)');
+  async initialize(registry: HexaRegistry): Promise<void> {
+    this.logger.info('Initializing LinterHexa (adapter retrieval phase)');
 
     try {
+      // Retrieve required ports
+      const gitPort = registry.getAdapter<IGitPort>(IGitPortName);
+      this.logger.debug('Retrieved GitAdapter from registry');
+
+      const standardsPort =
+        registry.getAdapter<IStandardsPort>(IStandardsPortName);
+      this.logger.debug('Retrieved StandardsAdapter from registry');
+
+      // Retrieve optional ports
+      let deploymentsPort: IDeploymentPort | undefined;
+      try {
+        deploymentsPort =
+          registry.getAdapter<IDeploymentPort>(IDeploymentPortName);
+        this.logger.debug('Retrieved DeploymentsAdapter from registry');
+      } catch (error) {
+        this.logger.debug('DeploymentsHexa not available in registry', {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+
+      let spacesPort: ISpacesPort | undefined;
+      try {
+        spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
+        this.logger.debug('Retrieved SpacesAdapter from registry');
+      } catch (error) {
+        this.logger.debug('SpacesHexa not available in registry', {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+
       // Initialize linter-ast adapter
       try {
-        const linterAstAdapter = new LinterAstAdapter();
-        this.hexa.setLinterAstAdapter(linterAstAdapter);
+        this.linterAstAdapter = new LinterAstAdapter();
         this.logger.info('LinterAstAdapter initialized successfully', {
-          adapter: linterAstAdapter ? 'present' : 'null',
-          availableLanguages: linterAstAdapter?.getAvailableLanguages?.() || [],
+          adapter: this.linterAstAdapter ? 'present' : 'null',
+          availableLanguages:
+            this.linterAstAdapter?.getAvailableLanguages?.() || [],
         });
       } catch (error) {
         this.logger.error(
@@ -96,46 +141,66 @@ export class LinterHexa extends BaseHexa {
         );
       }
 
-      // Initialize the hexa factory with standards adapter getter
-      const linterDelayedJobs = await this.hexa.initialize(
-        () => this.getStandardsAdapter(),
-        () => this.getLinterAdapter(),
+      // Get JobsHexa (required) for delayed job registration
+      const jobsHexa = registry.get(JobsHexa);
+      if (!jobsHexa) {
+        throw new Error('JobsHexa not found in registry');
+      }
+
+      // Build delayed jobs
+      this.logger.debug('Building linter delayed jobs');
+      this.linterDelayedJobs = await this.buildLinterDelayedJobs(
+        jobsHexa,
+        () => standardsPort,
+        () => this.getAdapter(),
       );
 
       // Create ExecuteLinterProgramsUseCase
-      const linterAstAdapter = this.hexa.getLinterAstAdapter();
       const executeLinterProgramsUseCase = new ExecuteLinterProgramsUseCase(
-        linterAstAdapter || undefined,
+        this.linterAstAdapter || undefined,
       );
 
-      // Get providers from AccountsHexa
-      // TODO: migrate with port/adapters
-      const accountsHexa = this.registry.get(AccountsHexa);
-      if (!accountsHexa) {
-        throw new Error('AccountsHexa not found in registry');
-      }
+      // Get IAccountsPort to create providers
+      const accountsPort =
+        registry.getAdapter<IAccountsPort>(IAccountsPortName);
 
-      const userProvider = accountsHexa.getUserProvider();
-      const organizationProvider = accountsHexa.getOrganizationProvider();
+      // Create providers that delegate to accountsPort
+      const userProvider: UserProvider = {
+        getUserById: (userId) => accountsPort.getUserById({ userId }),
+      };
 
-      // Create linter adapter with real implementation
-      this.linterAdapter = new LinterAdapter({
-        hexaFactory: this.hexa,
-        gitPort: this.gitPort,
-        linterDelayedJobs,
+      const organizationProvider: OrganizationProvider = {
+        getOrganizationById: (organizationId) =>
+          accountsPort.getOrganizationById({ organizationId }),
+      };
+
+      // Create adapter with all dependencies
+      const hexaFactory: {
+        getDetectionProgramService(): DetectionProgramService;
+        getRepositories(): typeof this.linterRepositories;
+        getLinterAstAdapter(): ILinterAstPort | null;
+      } = {
+        getDetectionProgramService: () => this.detectionProgramService,
+        getRepositories: () => this.linterRepositories,
+        getLinterAstAdapter: () => this.linterAstAdapter,
+      };
+
+      this.adapter = new LinterAdapter({
+        hexaFactory,
+        gitPort,
+        linterDelayedJobs: this.linterDelayedJobs,
         executeLinterProgramsUseCase,
         userProvider,
         organizationProvider,
-        standardsAdapter: this.standardsPort,
-        deploymentsAdapter: this.deploymentsPort,
-        spacesAdapter: this.spacesPort,
+        standardsAdapter: standardsPort,
+        deploymentsAdapter: deploymentsPort,
+        spacesAdapter: spacesPort,
       });
 
-      this.isInitialized = true;
       this.logger.info('LinterHexa initialized successfully');
 
       // Start the job workers
-      await this.initializeJobQueues();
+      await this.initializeJobQueues(jobsHexa);
     } catch (error) {
       this.logger.error('Failed to initialize LinterHexa', {
         error: error instanceof Error ? error.message : String(error),
@@ -145,22 +210,65 @@ export class LinterHexa extends BaseHexa {
   }
 
   /**
+   * Build delayed jobs for linter operations
+   */
+  private async buildLinterDelayedJobs(
+    jobsHexa: JobsHexa,
+    getStandardsAdapter: () => IStandardsPort,
+    getLinterAdapter: () => ILinterPort,
+  ): Promise<ILinterDelayedJobs> {
+    // Register generate program job queue with JobsHexa
+    const generateProgramJobFactory = new GenerateProgramJobFactory(
+      this.logger,
+      this.linterRepositories,
+      getStandardsAdapter,
+      () => this.linterAstAdapter,
+    );
+
+    jobsHexa.registerJobQueue(
+      generateProgramJobFactory.getQueueName(),
+      generateProgramJobFactory,
+    );
+
+    await generateProgramJobFactory.createQueue();
+
+    if (!generateProgramJobFactory.delayedJob) {
+      throw new Error('DelayedJob not found for GenerateProgramJobFactory');
+    }
+
+    // Register assess rule detection job queue with JobsHexa
+    const assessRuleDetectionJobFactory = new AssessRuleDetectionJobFactory(
+      this.linterRepositories,
+      getStandardsAdapter,
+      getLinterAdapter,
+    );
+
+    jobsHexa.registerJobQueue(
+      assessRuleDetectionJobFactory.getQueueName(),
+      assessRuleDetectionJobFactory,
+    );
+
+    await assessRuleDetectionJobFactory.createQueue();
+
+    if (!assessRuleDetectionJobFactory.delayedJob) {
+      throw new Error('DelayedJob not found for AssessRuleDetectionJobFactory');
+    }
+
+    return {
+      generateProgramDelayedJob: generateProgramJobFactory.delayedJob,
+      assessRuleDetectionDelayedJob: assessRuleDetectionJobFactory.delayedJob,
+    };
+  }
+
+  /**
    * Initialize job queues - starts the workers for processing delayed jobs.
    * This is automatically called during the async initialization phase.
    */
-  public async initializeJobQueues(): Promise<void> {
+  private async initializeJobQueues(jobsHexa: JobsHexa): Promise<void> {
     this.logger.info('Initializing job queues for LinterHexa');
 
     try {
-      // Get JobsHexa from registry and initialize all queues
-      // TODO: migrate with port/adapters
-      const jobsHexa = this.registry.get(JobsHexa);
-      if (!jobsHexa) {
-        throw new Error('JobsHexa not found in registry');
-      }
-
       await jobsHexa.initJobQueues();
-
       this.logger.info('Job queues initialized successfully for LinterHexa');
     } catch (error) {
       this.logger.error('Failed to initialize job queues for LinterHexa', {
@@ -170,61 +278,31 @@ export class LinterHexa extends BaseHexa {
     }
   }
 
-  /**
-   * Internal helper to ensure initialization before use case access
-   */
-  private ensureInitialized(): void {
-    if (!this.isInitialized) {
-      throw new Error(
-        'LinterHexa not initialized. Call initialize() before using.',
-      );
-    }
-  }
-
-  /**
-   * Destroys the LinterHexa and cleans up resources
-   */
-  public destroy(): void {
+  destroy(): void {
     this.logger.info('Destroying LinterHexa');
     // Add any cleanup logic here if needed
     this.logger.info('LinterHexa destroyed');
   }
 
-  public getLinterAdapter(): ILinterPort {
-    this.ensureInitialized();
-    if (!this.linterAdapter) {
-      throw new Error('LinterAdapter not initialized');
-    }
-    return this.linterAdapter;
-  }
-
-  public setDeploymentPort(deploymentPort: IDeploymentPort): void {
-    this.deploymentsPort = deploymentPort;
-    if (this.linterAdapter) {
-      this.linterAdapter.setDeploymentPort(deploymentPort);
-    }
-  }
-
-  public setStandardAdapter(standardPort: IStandardsPort): void {
-    this.standardsPort = standardPort;
-    if (this.linterAdapter) {
-      this.linterAdapter.setStandardsPort(standardPort);
-    }
-  }
-
-  public setSpacesAdapter(spacesPort: ISpacesPort): void {
-    this.spacesPort = spacesPort;
-    if (this.linterAdapter) {
-      this.linterAdapter.setSpacesPort(spacesPort);
-    }
-  }
-
-  private getStandardsAdapter(): IStandardsPort {
-    if (!this.standardsPort) {
+  /**
+   * Get the Linter adapter for cross-domain access.
+   * This adapter implements ILinterPort and can be injected into other domains.
+   * The adapter is available after initialize() is called.
+   */
+  public getAdapter(): ILinterPort {
+    if (!this.adapter) {
       throw new Error(
-        'Standards adapter not configured for LinterHexa initialization',
+        'LinterAdapter not initialized. Call initialize() first.',
       );
     }
-    return this.standardsPort;
+    return this.adapter;
+  }
+
+  /**
+   * Get the port name constant for registry mapping.
+   * Used by HexaRegistry to build the port-to-hexa map.
+   */
+  public getPortName(): string {
+    return ILinterPortName;
   }
 }

@@ -136,7 +136,7 @@ export class LinterController {
 
       // Use LinterHexa to generate the program
       const response = await this.linterHexa
-        .getLinterAdapter()
+        .getAdapter()
         .startGenerateProgram(command);
 
       this.logger.info(

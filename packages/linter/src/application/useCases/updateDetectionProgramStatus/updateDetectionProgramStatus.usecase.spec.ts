@@ -118,6 +118,7 @@ describe('UpdateDetectionProgramStatusUseCase', () => {
       getLatestRulesByStandardId: jest.fn(),
       listStandardsBySpace: jest.fn(),
       findStandardBySlug: jest.fn(),
+      getLatestStandardVersion: jest.fn(),
     } as unknown as jest.Mocked<IStandardsPort>;
 
     executeLinterProgramsUseCase = {

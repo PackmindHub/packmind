@@ -19,7 +19,6 @@ import { GetRuleDetectionAssessmentUseCase } from './useCases/getRuleDetectionAs
 import { ComputeRuleLanguageDetectionStatusUseCase } from './useCases/computeRuleLanguageDetectionStatus/computeRuleLanguageDetectionStatus.usecase';
 import { GetStandardRulesDetectionStatusUseCase } from './useCases/getStandardRulesDetectionStatus/getStandardRulesDetectionStatus.usecase';
 import { TestProgramExecutionUseCase } from './useCases/testProgramExecutionUseCase/TestProgramExecutionUseCase';
-import { LinterHexaFactory } from '../LinterHexaFactory';
 import { ILinterRepositories } from '../domain/repositories/ILinterRepositories';
 import { ILinterDelayedJobs } from '../domain/jobs/ILinterDelayedJobs';
 import type {
@@ -74,8 +73,14 @@ import {
   GetRuleDetectionAssessmentResponse,
 } from '@packmind/types';
 
+import type { ILinterAstPort } from '@packmind/types';
+
 type LinterAdapterDependencies = {
-  hexaFactory: LinterHexaFactory;
+  hexaFactory: {
+    getDetectionProgramService(): DetectionProgramService;
+    getRepositories(): ILinterRepositories;
+    getLinterAstAdapter(): ILinterAstPort | null;
+  };
   gitPort: IGitPort;
   linterDelayedJobs: ILinterDelayedJobs;
   executeLinterProgramsUseCase: IExecuteLinterProgramsUseCase;

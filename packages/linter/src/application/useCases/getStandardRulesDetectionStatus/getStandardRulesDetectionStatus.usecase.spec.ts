@@ -1,4 +1,4 @@
-import { createOrganizationId, createUserId } from '@packmind/accounts';
+import { createOrganizationId, createUserId } from '@packmind/types';
 import {
   UserProvider,
   OrganizationProvider,
@@ -84,6 +84,7 @@ describe('GetStandardRulesDetectionStatusUseCase', () => {
       getRulesByStandardId: jest.fn(),
       listStandardsBySpace: jest.fn(),
       findStandardBySlug: jest.fn(),
+      getLatestStandardVersion: jest.fn(),
     } as jest.Mocked<IStandardsPort>;
 
     // Default mock for getLatestRulesByStandardId

@@ -50,19 +50,13 @@ export class LinterService {
     private readonly spacesHexa: SpacesHexa,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    this.deploymentAdapter = deploymentsHexa.getDeploymentsUseCases();
-
-    this.linterHexa.setDeploymentPort(this.deploymentAdapter);
-    const standardAdapter = standardsHexa.getStandardsAdapter();
-    this.linterHexa.setStandardAdapter(standardAdapter);
-
-    // Set SpacesAdapter
-    const spacesAdapter = spacesHexa.getSpacesAdapter();
-    this.linterHexa.setSpacesAdapter(spacesAdapter);
+    // Ports are now set automatically during LinterHexa.initialize()
+    // No need to set them manually here
+    this.deploymentAdapter = deploymentsHexa.getAdapter();
   }
 
   private get linterAdapter(): ILinterPort {
-    return this.linterHexa.getLinterAdapter();
+    return this.linterHexa.getAdapter();
   }
 
   async createDetectionProgram(
