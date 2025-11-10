@@ -35,7 +35,7 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
   private readonly standardsRepositories: StandardsRepositories;
   private readonly standardsServices: StandardsServices;
   private useCases!: StandardsUseCases;
-  private standardsAdapter?: StandardsAdapter;
+  private readonly standardsAdapter: StandardsAdapter;
   private deploymentsQueryAdapter?: IDeploymentPort;
   private isInitialized = false;
 
@@ -59,6 +59,11 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
         this.standardsRepositories,
         this.logger,
       );
+
+      // Create adapter in constructor - use cases will be created in initialize()
+      // The adapter accesses use cases via getStandardsUseCases() which checks initialization
+      this.logger.debug('Creating StandardsAdapter');
+      this.standardsAdapter = new StandardsAdapter(this);
 
       this.logger.info('StandardsHexa construction completed');
     } catch (error) {
@@ -142,12 +147,7 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
         this.logger,
       );
 
-      // Mark as initialized before creating adapter (adapter needs access to useCases)
       this.isInitialized = true;
-
-      // Create adapter
-      this.standardsAdapter = new StandardsAdapter(this);
-
       this.logger.info('StandardsHexa initialized successfully');
     } catch (error) {
       this.logger.error('Failed to initialize StandardsHexa', {
@@ -185,14 +185,6 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
   }
 
   public getAdapter(): StandardsAdapter {
-    if (!this.standardsAdapter) {
-      if (!this.isInitialized || !this.useCases) {
-        throw new Error(
-          'StandardsHexa not initialized. Call initialize() before using.',
-        );
-      }
-      this.standardsAdapter = new StandardsAdapter(this);
-    }
     return this.standardsAdapter;
   }
 

@@ -25,12 +25,19 @@ import { StandardsUseCases } from './index';
 export class StandardsAdapter implements IStandardsPort {
   private readonly services: StandardsServices;
   private readonly repositories: IStandardsRepositories;
-  private readonly useCases: StandardsUseCases;
+  private readonly hexa: import('../../StandardsHexa').StandardsHexa;
 
   constructor(hexa: import('../../StandardsHexa').StandardsHexa) {
+    this.hexa = hexa;
     this.services = hexa.getStandardsServices();
     this.repositories = hexa.getStandardsRepositories();
-    this.useCases = hexa.getStandardsUseCases();
+  }
+
+  /**
+   * Lazy-load use cases to avoid calling getStandardsUseCases() before initialization
+   */
+  private getUseCases(): StandardsUseCases {
+    return this.hexa.getStandardsUseCases();
   }
 
   getLatestRulesByStandardId(id: StandardId): Promise<Rule[]> {
@@ -40,7 +47,7 @@ export class StandardsAdapter implements IStandardsPort {
   }
 
   getRulesByStandardId(id: StandardId): Promise<Rule[]> {
-    return this.useCases.getRulesByStandardId(id);
+    return this.getUseCases().getRulesByStandardId(id);
   }
 
   getRule(id: RuleId): Promise<Rule | null> {
@@ -58,17 +65,17 @@ export class StandardsAdapter implements IStandardsPort {
   getStandardVersionById(
     versionId: StandardVersionId,
   ): Promise<StandardVersion | null> {
-    return this.useCases.getStandardVersionById(versionId);
+    return this.getUseCases().getStandardVersionById(versionId);
   }
 
   getLatestStandardVersion(
     standardId: StandardId,
   ): Promise<StandardVersion | null> {
-    return this.useCases.getLatestStandardVersion(standardId);
+    return this.getUseCases().getLatestStandardVersion(standardId);
   }
 
   listStandardVersions(standardId: StandardId): Promise<StandardVersion[]> {
-    return this.useCases.listStandardVersions(standardId);
+    return this.getUseCases().listStandardVersions(standardId);
   }
 
   async listStandardsBySpace(
@@ -81,7 +88,7 @@ export class StandardsAdapter implements IStandardsPort {
       organizationId,
       spaceId,
     };
-    const response = await this.useCases.listStandardsBySpace(command);
+    const response = await this.getUseCases().listStandardsBySpace(command);
     return response.standards;
   }
 
@@ -108,7 +115,7 @@ export class StandardsAdapter implements IStandardsPort {
     scope: string | null;
     spaceId: SpaceId | null;
   }): Promise<Standard> {
-    return this.useCases.createStandard(params);
+    return this.getUseCases().createStandard(params);
   }
 
   async createStandardWithExamples(params: {
@@ -121,7 +128,7 @@ export class StandardsAdapter implements IStandardsPort {
     scope: string | null;
     spaceId: SpaceId | null;
   }): Promise<Standard> {
-    return this.useCases.createStandardWithExamples(params);
+    return this.getUseCases().createStandardWithExamples(params);
   }
 
   async addRuleToStandard(params: {
@@ -130,7 +137,7 @@ export class StandardsAdapter implements IStandardsPort {
     organizationId: OrganizationId;
     userId: UserId;
   }): Promise<StandardVersion> {
-    return this.useCases.addRuleToStandard(params);
+    return this.getUseCases().addRuleToStandard(params);
   }
 
   async getStandardById(command: {
@@ -140,43 +147,43 @@ export class StandardsAdapter implements IStandardsPort {
     userId: string;
   }): Promise<GetStandardByIdResponse> {
     // Use the getStandardById use case which includes access control
-    return this.useCases.getStandardById(command);
+    return this.getUseCases().getStandardById(command);
   }
 
   async deleteStandard(standardId: StandardId, userId: UserId): Promise<void> {
-    return this.useCases.deleteStandard(standardId, userId);
+    return this.getUseCases().deleteStandard(standardId, userId);
   }
 
   async updateStandard(command: UpdateStandardCommand): Promise<Standard> {
-    return this.useCases.updateStandard(command);
+    return this.getUseCases().updateStandard(command);
   }
 
   async deleteStandardsBatch(
     standardIds: StandardId[],
     userId: UserId,
   ): Promise<void> {
-    return this.useCases.deleteStandardsBatch(standardIds, userId);
+    return this.getUseCases().deleteStandardsBatch(standardIds, userId);
   }
 
   async createRuleExample(
     command: CreateRuleExampleCommand,
   ): Promise<RuleExample> {
-    return this.useCases.createRuleExample(command);
+    return this.getUseCases().createRuleExample(command);
   }
 
   async getRuleExamples(
     command: GetRuleExamplesCommand,
   ): Promise<RuleExample[]> {
-    return this.useCases.getRuleExamples(command);
+    return this.getUseCases().getRuleExamples(command);
   }
 
   async updateRuleExample(
     command: UpdateRuleExampleCommand,
   ): Promise<RuleExample> {
-    return this.useCases.updateRuleExample(command);
+    return this.getUseCases().updateRuleExample(command);
   }
 
   async deleteRuleExample(command: DeleteRuleExampleCommand): Promise<void> {
-    return this.useCases.deleteRuleExample(command);
+    return this.getUseCases().deleteRuleExample(command);
   }
 }

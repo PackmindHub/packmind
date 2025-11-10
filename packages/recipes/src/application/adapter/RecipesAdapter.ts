@@ -42,10 +42,10 @@ export class RecipesAdapter implements IRecipesPort {
   private _updateRecipesFromGitLab: UpdateRecipesFromGitLabUsecase;
   private readonly _updateRecipeFromUI: UpdateRecipeFromUIUsecase;
   private readonly _deleteRecipe: DeleteRecipeUsecase;
-  private readonly _getRecipeById: GetRecipeByIdUsecase;
+  private _getRecipeById: GetRecipeByIdUsecase;
   private readonly _findRecipeBySlug: FindRecipeBySlugUsecase;
   private readonly _listRecipesByOrganization: ListRecipesByOrganizationUsecase;
-  private readonly _listRecipesBySpace: ListRecipesBySpaceUsecase;
+  private _listRecipesBySpace: ListRecipesBySpaceUsecase;
   private readonly _listRecipeVersions: ListRecipeVersionsUsecase;
   private readonly _getRecipeVersion: GetRecipeVersionUsecase;
   private readonly _deleteRecipesBatch: DeleteRecipesBatchUsecase;
@@ -53,10 +53,10 @@ export class RecipesAdapter implements IRecipesPort {
 
   constructor(
     private readonly recipesServices: RecipesServices,
-    private readonly gitPort: IGitPort,
-    private readonly deploymentPort: IDeploymentPort | undefined,
-    private readonly accountsAdapter: IAccountsPort,
-    private readonly spacesPort: ISpacesPort | null,
+    private gitPort: IGitPort | undefined,
+    private deploymentPort: IDeploymentPort | undefined,
+    private accountsAdapter: IAccountsPort | undefined,
+    private spacesPort: ISpacesPort | null,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this._captureRecipe = new CaptureRecipeUsecase(
@@ -65,14 +65,16 @@ export class RecipesAdapter implements IRecipesPort {
       recipesServices.getRecipeSummaryService(),
       this.logger,
     );
+    // Use cases will be created when dependencies are injected
+    // Temporarily create with undefined - will be recreated in setGitPort()
     this._updateRecipesFromGitHub = new UpdateRecipesFromGitHubUsecase(
       recipesServices.getRecipeService(),
-      gitPort,
+      gitPort as IGitPort,
       this.deploymentPort,
     );
     this._updateRecipesFromGitLab = new UpdateRecipesFromGitLabUsecase(
       recipesServices.getRecipeService(),
-      gitPort,
+      gitPort as IGitPort,
       this.deploymentPort,
     );
     this._updateRecipeFromUI = new UpdateRecipeFromUIUsecase(
@@ -86,8 +88,10 @@ export class RecipesAdapter implements IRecipesPort {
       recipesServices.getRecipeVersionService(),
       this.logger,
     );
+    // Use cases will be created when dependencies are injected
+    // Temporarily create with undefined - will be recreated in setAccountsAdapter()
     this._getRecipeById = new GetRecipeByIdUsecase(
-      accountsAdapter,
+      accountsAdapter as IAccountsPort,
       recipesServices.getRecipeService(),
       spacesPort,
       this.logger,
@@ -101,7 +105,7 @@ export class RecipesAdapter implements IRecipesPort {
       this.logger,
     );
     this._listRecipesBySpace = new ListRecipesBySpaceUsecase(
-      accountsAdapter,
+      accountsAdapter as IAccountsPort,
       recipesServices.getRecipeService(),
       spacesPort,
       this.logger,
@@ -216,17 +220,21 @@ export class RecipesAdapter implements IRecipesPort {
    * Update the deployment port for webhook use cases after initialization
    */
   updateDeploymentPort(deploymentPort: IDeploymentPort): void {
-    // Need to recreate the webhook use cases with the new deployment port
-    this._updateRecipesFromGitHub = new UpdateRecipesFromGitHubUsecase(
-      this.recipesServices.getRecipeService(),
-      this.gitPort,
-      deploymentPort,
-    );
-    this._updateRecipesFromGitLab = new UpdateRecipesFromGitLabUsecase(
-      this.recipesServices.getRecipeService(),
-      this.gitPort,
-      deploymentPort,
-    );
+    this.deploymentPort = deploymentPort;
+
+    // Only recreate use cases if gitPort is available
+    if (this.gitPort) {
+      this._updateRecipesFromGitHub = new UpdateRecipesFromGitHubUsecase(
+        this.recipesServices.getRecipeService(),
+        this.gitPort,
+        deploymentPort,
+      );
+      this._updateRecipesFromGitLab = new UpdateRecipesFromGitLabUsecase(
+        this.recipesServices.getRecipeService(),
+        this.gitPort,
+        deploymentPort,
+      );
+    }
 
     // Re-inject recipes delayed jobs if they were previously set
     if (this._recipesDelayedJobs) {
@@ -246,5 +254,81 @@ export class RecipesAdapter implements IRecipesPort {
     this._recipesDelayedJobs = recipesDelayedJobs;
     this._updateRecipesFromGitHub.setRecipesDelayedJobs(recipesDelayedJobs);
     this._updateRecipesFromGitLab.setRecipesDelayedJobs(recipesDelayedJobs);
+  }
+
+  /**
+   * Set the git port after construction
+   * Recreates use cases that depend on git port
+   */
+  setGitPort(gitPort: IGitPort): void {
+    this.gitPort = gitPort;
+
+    // Recreate use cases that depend on gitPort
+    this._updateRecipesFromGitHub = new UpdateRecipesFromGitHubUsecase(
+      this.recipesServices.getRecipeService(),
+      gitPort,
+      this.deploymentPort,
+    );
+    this._updateRecipesFromGitLab = new UpdateRecipesFromGitLabUsecase(
+      this.recipesServices.getRecipeService(),
+      gitPort,
+      this.deploymentPort,
+    );
+
+    // Re-inject delayed jobs if already set
+    if (this._recipesDelayedJobs) {
+      this._updateRecipesFromGitHub.setRecipesDelayedJobs(
+        this._recipesDelayedJobs,
+      );
+      this._updateRecipesFromGitLab.setRecipesDelayedJobs(
+        this._recipesDelayedJobs,
+      );
+    }
+  }
+
+  /**
+   * Set the accounts adapter after construction
+   * Recreates use cases that depend on accounts adapter
+   */
+  setAccountsAdapter(accountsAdapter: IAccountsPort): void {
+    this.accountsAdapter = accountsAdapter;
+
+    // Recreate use cases that depend on accountsAdapter
+    this._getRecipeById = new GetRecipeByIdUsecase(
+      accountsAdapter,
+      this.recipesServices.getRecipeService(),
+      this.spacesPort,
+      this.logger,
+    );
+    this._listRecipesBySpace = new ListRecipesBySpaceUsecase(
+      accountsAdapter,
+      this.recipesServices.getRecipeService(),
+      this.spacesPort,
+      this.logger,
+    );
+  }
+
+  /**
+   * Set the spaces port after construction
+   * Recreates use cases that depend on spaces port
+   */
+  setSpacesPort(spacesPort: ISpacesPort | null): void {
+    this.spacesPort = spacesPort;
+
+    // Recreate use cases that depend on spacesPort if accountsAdapter is available
+    if (this.accountsAdapter) {
+      this._getRecipeById = new GetRecipeByIdUsecase(
+        this.accountsAdapter,
+        this.recipesServices.getRecipeService(),
+        spacesPort,
+        this.logger,
+      );
+      this._listRecipesBySpace = new ListRecipesBySpaceUsecase(
+        this.accountsAdapter,
+        this.recipesServices.getRecipeService(),
+        spacesPort,
+        this.logger,
+      );
+    }
   }
 }
