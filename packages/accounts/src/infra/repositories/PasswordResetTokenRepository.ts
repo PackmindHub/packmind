@@ -270,11 +270,8 @@ export class PasswordResetTokenRepository
       return this.encryptionKey;
     }
 
-    const key = await Configuration.getConfig('ENCRYPTION_KEY');
-    if (!key) {
-      throw new Error('ENCRYPTION_KEY not found in configuration');
-    }
-
+    const key =
+      (await Configuration.getConfig('ENCRYPTION_KEY')) || 'ENCRYPTION_KEY';
     this.encryptionKey = createHash('sha256').update(key).digest();
     return this.encryptionKey;
   }

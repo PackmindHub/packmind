@@ -42,10 +42,8 @@ export class GitProviderRepository
    */
   private async getEncryptionService(): Promise<EncryptionService> {
     if (!this.encryptionService) {
-      const encryptionKey = await Configuration.getConfig('ENCRYPTION_KEY');
-      if (!encryptionKey) {
-        throw new Error('ENCRYPTION_KEY not found in configuration');
-      }
+      const encryptionKey =
+        (await Configuration.getConfig('ENCRYPTION_KEY')) || 'ENCRYPTION_KEY';
       this.encryptionService = new EncryptionService(encryptionKey);
     }
     return this.encryptionService;
