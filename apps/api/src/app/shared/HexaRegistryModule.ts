@@ -7,7 +7,12 @@ import { DeploymentsHexa } from '@packmind/deployments';
 import { GitHexa } from '@packmind/git';
 import { LinterHexa } from '@packmind/linter';
 import { PackmindLogger } from '@packmind/logger';
-import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
+import {
+  BaseHexa,
+  BaseHexaOpts,
+  HexaRegistry,
+  HexaPluginLoader,
+} from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
 import { SpacesHexa } from '@packmind/spaces';
 import { StandardsHexa } from '@packmind/standards';
@@ -23,6 +28,7 @@ import {
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { ApiKeyServiceProvider } from './ApiKeyServiceProvider';
+import { logger } from '@sentry/node';
 
 /**
  * Configuration interface for HexaRegistry integration with NestJS
@@ -126,6 +132,21 @@ export class HexaRegistryModule {
         jwtService: JwtService,
       ): Promise<HexaRegistry> => {
         const registry = new HexaRegistry();
+
+        // Load plugins first (before built-in hexas)
+        const pluginLogger = new PackmindLogger('HexaPluginLoader');
+        const pluginLoader = new HexaPluginLoader(pluginLogger);
+        const plugins = await pluginLoader.loadFromDirectory();
+        logger.info(`Found ${plugins.length} plugins`);
+        for (const plugin of plugins) {
+          if (plugin.hexaClass) {
+            const opts = plugin.manifest.backend?.opts;
+            registry.register(plugin.hexaClass, opts);
+            pluginLogger.info(
+              `Registered plugin Hexa: ${plugin.manifest.name}`,
+            );
+          }
+        }
 
         // Register all hexa types in the specified order
         // For AccountsHexa, we need to pass the apiKeyService option

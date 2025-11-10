@@ -6,7 +6,7 @@ import { GitHexa } from '@packmind/git';
 import { JobsHexa } from '@packmind/jobs';
 import { LinterHexa } from '@packmind/linter';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { HexaRegistry } from '@packmind/node-utils';
+import { HexaRegistry, HexaPluginLoader } from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
 import { SpacesHexa } from '@packmind/spaces';
 import { StandardsHexa } from '@packmind/standards';
@@ -43,6 +43,17 @@ async function hexaRegistryPlugin(fastify: FastifyInstance) {
     // Create the HexaRegistry instance
     const registry = new HexaRegistry();
     logger.debug('HexaRegistry instance created');
+
+    // Load plugins first (before built-in hexas)
+    const pluginLoader = new HexaPluginLoader(logger);
+    const plugins = await pluginLoader.loadFromDirectory();
+    for (const plugin of plugins) {
+      if (plugin.hexaClass) {
+        const opts = plugin.manifest.backend?.opts;
+        registry.register(plugin.hexaClass, opts);
+        logger.info(`Registered plugin Hexa: ${plugin.manifest.name}`);
+      }
+    }
 
     // Register domain hexas in dependency order
     // AccountsHexa has no dependencies, JobsHexa has no dependencies, GitHexa may depend on Accounts, RecipesHexa depends on Git, StandardsHexa depends on Git and Jobs
