@@ -48,9 +48,9 @@ Retrieves all coding standards created in your organization. Returns up to 20 st
 
 **Returns:** A formatted list showing `• slug: name` for each standard
 
-### Get Standard by Slug
+### Get Standard Details
 
-**Tool:** `packmind_get_standard_by_slug`
+**Tool:** `packmind_get_standard_details`
 
 Retrieves the full content of a specific standard including all its rules and code examples by its slug identifier.
 
@@ -144,9 +144,9 @@ Retrieves all recipes created in your organization. Returns up to 20 recipes sor
 
 **Returns:** A formatted list showing `• slug: name` for each recipe
 
-### Get Recipe by Slug
+### Get Recipe Details
 
-**Tool:** `packmind_get_recipe_by_slug`
+**Tool:** `packmind_get_recipe_details`
 
 Retrieves the full content of a specific recipe by its slug identifier.
 
