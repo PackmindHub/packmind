@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { DynamicModule, Module } from '@nestjs/common';
 import { APP_GUARD, Reflector, RouterModule } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -42,6 +42,15 @@ import { StandardsModule } from './standards/standards.module';
 import { TargetsModule } from './targets/targets.module';
 
 const logger = new PackmindLogger('AppModule', LogLevel.INFO);
+
+// Get plugin module imports from globalThis (set in main.ts after plugins are loaded)
+// This is evaluated when the module is imported, but globalThis should be set by then
+// if loadPluginModules() is called before NestFactory.create()
+const pluginModuleImports = (() => {
+  const pluginModule = (globalThis as { __pluginModule?: DynamicModule })
+    .__pluginModule;
+  return pluginModule ? [pluginModule] : [];
+})();
 
 @Module({
   imports: [
@@ -108,6 +117,7 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
     SSEModule,
     AmplitudeModule,
     LinterModule,
+    ...pluginModuleImports,
     // RouterModule configuration for organization-scoped routes
     // This must come after OrganizationsModule and its child modules are imported
     RouterModule.register([

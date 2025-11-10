@@ -2,6 +2,7 @@
 import { readdir, readFile, stat } from 'fs/promises';
 import { join, resolve } from 'path';
 import { createRequire } from 'module';
+import { Type } from '@nestjs/common';
 import { BaseHexa, BaseHexaOpts } from './BaseHexa';
 import { PackmindLogger } from '@packmind/logger';
 import { DataSource } from 'typeorm';
@@ -17,9 +18,10 @@ export interface PluginManifest {
   id: string;
   description?: string;
   backend?: {
-    hexaBundle: string;
-    hexaExport: string;
+    hexaBundle?: string;
+    hexaExport?: string;
     opts?: Partial<BaseHexaOpts>;
+    nestjsModule?: string; // Export name of NestJS module class in the bundle
   };
   frontend?: {
     bundle: string;
@@ -44,6 +46,8 @@ export interface LoadedPlugin {
     dataSource: DataSource,
     opts?: Partial<BaseHexaOpts>,
   ) => BaseHexa;
+  nestjsModule?: Type<unknown>; // NestJS module class
+  nestjsControllers?: Type<unknown>[]; // Controllers extracted from the module (for manual registration)
 }
 
 /**
@@ -120,29 +124,18 @@ export class HexaPluginLoader {
    * Load a single plugin from a directory.
    */
   private async loadPlugin(pluginDir: string): Promise<LoadedPlugin | null> {
-    this.logger.info(`Loading plugin from directory: ${pluginDir}`);
     const manifestPath = join(pluginDir, 'manifest.json');
-    this.logger.info(`Looking for manifest at: ${manifestPath}`);
 
     if (!(await this.fileExists(manifestPath))) {
       this.logger.warn(`No manifest.json found in ${pluginDir}`);
-      this.logger.info(`Listing directory contents of ${pluginDir}:`);
-      try {
-        const dirContents = await readdir(pluginDir);
-        this.logger.info(`Directory contents: ${dirContents.join(', ')}`);
-      } catch (err) {
-        this.logger.error(`Failed to list directory: ${err}`);
-      }
       return null;
     }
 
-    this.logger.info(`Found manifest.json at: ${manifestPath}`);
     // Read and parse manifest
     const manifestContent = await readFile(manifestPath, 'utf-8');
     let manifest: PluginManifest;
     try {
       manifest = JSON.parse(manifestContent);
-      this.logger.info(`Parsed manifest: ${JSON.stringify(manifest, null, 2)}`);
     } catch (error) {
       this.logger.error(`Failed to parse manifest.json: ${error}`);
       throw new Error(`Invalid manifest.json in ${pluginDir}: ${error}`);
@@ -161,7 +154,7 @@ export class HexaPluginLoader {
     };
 
     // Load backend Hexa if present
-    if (manifest.backend) {
+    if (manifest.backend?.hexaBundle && manifest.backend?.hexaExport) {
       this.logger.info(
         `Loading backend Hexa: bundle=${manifest.backend.hexaBundle}, export=${manifest.backend.hexaExport}`,
       );
@@ -173,8 +166,28 @@ export class HexaPluginLoader {
       this.logger.info(
         `Successfully loaded Hexa class: ${manifest.backend.hexaExport}`,
       );
-    } else {
-      this.logger.info(`No backend configuration in manifest`);
+    }
+
+    // Load NestJS module if present
+    if (manifest.backend?.nestjsModule) {
+      this.logger.info(
+        `Loading NestJS module: bundle=${manifest.backend.hexaBundle || 'hexaBundle'}, export=${manifest.backend.nestjsModule}`,
+      );
+      // Use the same bundle as hexaBundle, or require hexaBundle to be specified
+      const bundlePath = manifest.backend.hexaBundle;
+      if (!bundlePath) {
+        throw new Error(
+          `nestjsModule specified but hexaBundle is required in ${pluginDir}`,
+        );
+      }
+      loadedPlugin.nestjsModule = await this.loadNestJSModule(
+        pluginDir,
+        bundlePath,
+        manifest.backend.nestjsModule,
+      );
+      this.logger.info(
+        `Successfully loaded NestJS module: ${manifest.backend.nestjsModule}`,
+      );
     }
 
     return loadedPlugin;
@@ -190,58 +203,15 @@ export class HexaPluginLoader {
   ): Promise<
     new (dataSource: DataSource, opts?: Partial<BaseHexaOpts>) => BaseHexa
   > {
-    this.logger.info(`Loading Hexa class from bundle`);
-    this.logger.info(`  pluginDir: ${pluginDir}`);
-    this.logger.info(`  bundlePath (relative): ${bundlePath}`);
-    this.logger.info(`  exportName: ${exportName}`);
-
     const fullBundlePath = resolve(pluginDir, bundlePath);
-    this.logger.info(`  fullBundlePath (resolved): ${fullBundlePath}`);
 
-    // Check if pluginDir exists
-    const pluginDirExists = await this.directoryExists(pluginDir);
-    this.logger.info(`  pluginDir exists: ${pluginDirExists}`);
-
-    // List dist directory if it exists
-    const distDir = join(pluginDir, 'dist');
-    const distExists = await this.directoryExists(distDir);
-    this.logger.info(`  dist directory exists: ${distExists} (${distDir})`);
-    if (distExists) {
-      try {
-        const distContents = await readdir(distDir);
-        this.logger.info(
-          `  dist directory contents: ${distContents.join(', ')}`,
-        );
-      } catch (err) {
-        this.logger.warn(`  Failed to list dist directory: ${err}`);
-      }
-    }
-
-    // Check if bundle file exists
-    const bundleExists = await this.fileExists(fullBundlePath);
-    this.logger.info(`  Bundle file exists: ${bundleExists}`);
-
-    if (!bundleExists) {
-      // Try to find what files are in the plugin directory
-      this.logger.error(`Bundle file not found: ${fullBundlePath}`);
-      this.logger.info(`Attempting to list plugin directory to debug:`);
-      try {
-        const pluginContents = await readdir(pluginDir, { recursive: false });
-        this.logger.info(
-          `  Plugin directory contents: ${pluginContents.join(', ')}`,
-        );
-      } catch (err) {
-        this.logger.error(`  Failed to list plugin directory: ${err}`);
-      }
+    if (!(await this.fileExists(fullBundlePath))) {
       throw new Error(`Bundle file not found: ${fullBundlePath}`);
     }
-
-    this.logger.info(`Bundle file found, proceeding to load...`);
 
     // Load the bundle using require (CommonJS)
     // Dynamic require is necessary for plugin loading
     // This is intentional for runtime plugin loading
-    this.logger.info(`Requiring bundle from: ${fullBundlePath}`);
 
     // Use createRequire to create a native Node.js require function
     // This bypasses webpack's module system which doesn't support dynamic requires
@@ -258,7 +228,6 @@ export class HexaPluginLoader {
     const Module = require('module');
     const originalResolveFilename = Module._resolveFilename;
     const fs = require('fs');
-    const logger = this.logger; // Capture logger for use in patched function
 
     Module._resolveFilename = function (
       request: string,
@@ -273,8 +242,6 @@ export class HexaPluginLoader {
         const distIndex = join(distPath, 'src/index.js');
 
         if (fs.existsSync(distIndex)) {
-          logger.info(`Resolving ${request} from dist: ${distIndex}`);
-          // Resolve the dist path as if it were a file
           return originalResolveFilename.call(
             Module,
             distIndex,
@@ -297,12 +264,7 @@ export class HexaPluginLoader {
 
     let bundle;
     try {
-      this.logger.info(
-        `Using createRequire to load bundle (bypassing webpack module system)...`,
-      );
       bundle = nativeRequire(fullBundlePath);
-      this.logger.info(`Bundle loaded successfully using native require`);
-      this.logger.info(`Bundle exports: ${Object.keys(bundle).join(', ')}`);
     } catch (requireError) {
       this.logger.error(`Failed to require bundle: ${requireError}`);
 
@@ -330,7 +292,6 @@ export class HexaPluginLoader {
     }
 
     // Extract the Hexa class from the bundle
-    this.logger.info(`Looking for export: ${exportName}`);
     const HexaClass =
       bundle[exportName] || bundle.default?.[exportName] || bundle.default;
 
@@ -343,10 +304,7 @@ export class HexaPluginLoader {
       );
     }
 
-    this.logger.info(`Found Hexa class: ${HexaClass.name || 'unnamed'}`);
-
     // Validate that it's a class that extends BaseHexa
-    this.logger.info(`Validating Hexa class is a BaseHexa subclass...`);
     if (typeof HexaClass !== 'function') {
       this.logger.error(`Export "${exportName}" is not a class`);
       throw new Error(`Export "${exportName}" is not a class`);
@@ -373,6 +331,302 @@ export class HexaPluginLoader {
   }
 
   /**
+   * Load NestJS module class from a bundle file.
+   */
+  private async loadNestJSModule(
+    pluginDir: string,
+    bundlePath: string,
+    exportName: string,
+  ): Promise<Type<unknown>> {
+    const fullBundlePath = resolve(pluginDir, bundlePath);
+
+    if (!(await this.fileExists(fullBundlePath))) {
+      throw new Error(`Bundle file not found: ${fullBundlePath}`);
+    }
+
+    // Ensure reflect-metadata is available before loading the bundle
+    // This is needed for NestJS decorators to work properly
+    try {
+      require('reflect-metadata');
+    } catch {
+      // reflect-metadata might already be loaded, that's fine
+    }
+
+    // Use the same require mechanism as Hexa loading
+    const mainAppContext = resolve(process.cwd(), 'package.json');
+    const nativeRequire = createRequire(mainAppContext);
+
+    // Patch Module._resolveFilename to resolve @packmind packages from dist
+    const Module = require('module');
+    const originalResolveFilename = Module._resolveFilename;
+    const fs = require('fs');
+
+    Module._resolveFilename = function (
+      request: string,
+      parent: NodeModule,
+      isMain: boolean,
+      options?: { paths?: string[] },
+    ) {
+      if (request.startsWith('@packmind/')) {
+        const packageName = request.replace('@packmind/', '');
+        const distPath = resolve(process.cwd(), 'dist/packages', packageName);
+        const distIndex = join(distPath, 'src/index.js');
+
+        if (fs.existsSync(distIndex)) {
+          return originalResolveFilename.call(
+            Module,
+            distIndex,
+            parent,
+            isMain,
+            options,
+          );
+        }
+      }
+
+      return originalResolveFilename.call(
+        Module,
+        request,
+        parent,
+        isMain,
+        options,
+      );
+    };
+
+    let bundle;
+    try {
+      // Ensure reflect-metadata is available in the global scope before loading
+      // This is critical for decorator metadata to be stored correctly
+      if (typeof globalThis.Reflect === 'undefined') {
+        require('reflect-metadata');
+      }
+      bundle = nativeRequire(fullBundlePath);
+    } catch (requireError) {
+      this.logger.error(`Failed to require bundle: ${requireError}`);
+      throw new Error(
+        `Failed to load bundle from ${fullBundlePath}: ${requireError}`,
+      );
+    } finally {
+      Module._resolveFilename = originalResolveFilename;
+    }
+
+    // Extract the NestJS module class from the bundle
+    let NestJSModule =
+      bundle[exportName] || bundle.default?.[exportName] || bundle.default;
+
+    // Handle getter functions
+    if (typeof NestJSModule === 'function' && NestJSModule.length === 0) {
+      try {
+        NestJSModule = NestJSModule();
+      } catch {
+        // Not a getter, use as-is
+      }
+    }
+
+    if (!NestJSModule) {
+      this.logger.error(
+        `NestJS module "${exportName}" not found in bundle. Available exports: ${Object.keys(bundle).join(', ')}`,
+      );
+      throw new Error(
+        `NestJS module "${exportName}" not found in bundle. Available exports: ${Object.keys(bundle).join(', ')}`,
+      );
+    }
+
+    // Basic validation: check if it looks like a NestJS module (has decorators/metadata)
+    if (typeof NestJSModule !== 'function') {
+      this.logger.error(`Export "${exportName}" is not a class`);
+      throw new Error(`Export "${exportName}" is not a class`);
+    }
+
+    // Extract controllers from bundle for manual registration
+    const extractedControllers: Type<unknown>[] = [];
+    for (const [key, value] of Object.entries(bundle)) {
+      if (key === exportName) continue;
+
+      let controllerClass = value;
+      if (typeof value === 'function' && value.length === 0) {
+        try {
+          controllerClass = value();
+        } catch {
+          // Not a getter
+        }
+      }
+
+      if (typeof controllerClass === 'function' && key.includes('Controller')) {
+        const Reflect = globalThis.Reflect || require('reflect-metadata');
+        const path = Reflect.getMetadata('path', controllerClass);
+        if (path !== undefined || key.includes('Controller')) {
+          extractedControllers.push(controllerClass as Type<unknown>);
+        }
+      }
+    }
+
+    // Try to manually reconstruct metadata if it's not accessible
+    // This is needed because when esbuild bundles the code, decorator metadata
+    // might not be accessible when the module is loaded dynamically
+    try {
+      const Reflect = globalThis.Reflect || require('reflect-metadata');
+      const existingMetadata = Reflect.getMetadata(
+        'module:metadata',
+        NestJSModule,
+      );
+
+      if (!existingMetadata) {
+        this.logger.info(
+          `Module metadata not accessible, attempting to reconstruct...`,
+        );
+
+        // Try to find controllers in the bundle exports
+        // Look for classes that might be controllers (they should be exported)
+        // Note: Bundle exports might be getter functions, so we need to call them
+        const possibleControllers: Type<unknown>[] = [];
+        for (const [key, value] of Object.entries(bundle)) {
+          // Skip the module itself
+          if (key === exportName) {
+            continue;
+          }
+
+          // Handle getter functions (e.g., SamplePluginController: () => SamplePluginController)
+          let actualValue = value;
+          if (typeof value === 'function') {
+            // Try calling it as a getter function first
+            try {
+              const called = value();
+              if (called && typeof called === 'function') {
+                actualValue = called;
+              }
+            } catch {
+              // Not a getter, use as-is (it's the class itself)
+              actualValue = value;
+            }
+          }
+
+          // Skip non-class exports
+          if (
+            typeof actualValue !== 'function' ||
+            actualValue === null ||
+            actualValue === undefined
+          ) {
+            continue;
+          }
+
+          // Check if it has controller metadata or if the key suggests it's a controller
+          const controllerPath = Reflect.getMetadata('path', actualValue);
+          const isController =
+            controllerPath !== undefined || key.includes('Controller');
+
+          if (isController) {
+            possibleControllers.push(actualValue as Type<unknown>);
+            this.logger.info(
+              `Found possible controller: ${key} (${actualValue.name || 'unnamed'}), path: ${controllerPath || 'unknown'}`,
+            );
+          }
+        }
+
+        // If we found controllers, manually set the metadata
+        if (possibleControllers.length > 0) {
+          // Filter out any null/undefined controllers
+          const validControllers = possibleControllers.filter(
+            (c) => c !== null && c !== undefined && typeof c === 'function',
+          );
+
+          if (validControllers.length > 0) {
+            // Store controllers directly on the module as a property for debugging
+            // This helps ensure the reference persists
+            (
+              NestJSModule as Type<unknown> & {
+                __pluginControllers?: Type<unknown>[];
+              }
+            ).__pluginControllers = validControllers;
+
+            const moduleMetadata = {
+              controllers: validControllers,
+              providers: [],
+              exports: [],
+              imports: [],
+            };
+
+            // Use defineMetadata to set the metadata
+            // This is the key that NestJS uses to discover controllers
+            Reflect.defineMetadata(
+              'module:metadata',
+              moduleMetadata,
+              NestJSModule,
+            );
+
+            // Also try setting it with the NestJS-specific key
+            // NestJS might use a different metadata key internally
+            Reflect.defineMetadata(
+              'controllers',
+              validControllers,
+              NestJSModule,
+            );
+
+            this.logger.info(
+              `Manually set module metadata with ${validControllers.length} controller(s)`,
+            );
+            // Log controller details for debugging
+            for (const controller of validControllers) {
+              const path = Reflect.getMetadata('path', controller);
+              this.logger.info(
+                `  Controller: ${controller.name}, path: ${path || 'root'}, type: ${typeof controller}`,
+              );
+              // Verify controller has its own metadata
+              const controllerMethods = Reflect.getMetadata(
+                'routes',
+                controller,
+              );
+              this.logger.info(
+                `    Controller methods: ${controllerMethods ? controllerMethods.length : 0}`,
+              );
+            }
+
+            // Verify metadata was set correctly
+            const verifyMetadata = Reflect.getMetadata(
+              'module:metadata',
+              NestJSModule,
+            );
+            if (verifyMetadata?.controllers) {
+              const allValid = verifyMetadata.controllers.every(
+                (c: unknown) =>
+                  c !== null && c !== undefined && typeof c === 'function',
+              );
+              if (!allValid) {
+                this.logger.error(
+                  `Metadata verification failed: some controllers are invalid`,
+                );
+              } else {
+                this.logger.info(
+                  `Metadata verification passed: all controllers are valid`,
+                );
+              }
+            }
+          } else {
+            this.logger.warn(
+              `No valid controllers found after filtering (${possibleControllers.length} total, all invalid)`,
+            );
+          }
+        }
+      } else {
+        this.logger.info(`Module metadata is accessible`);
+      }
+    } catch (err) {
+      this.logger.warn(`Failed to reconstruct module metadata: ${err}`);
+      // Continue anyway - NestJS might still be able to process the module
+    }
+
+    // Store extracted controllers on the module for later use
+    if (extractedControllers.length > 0) {
+      (
+        NestJSModule as Type<unknown> & {
+          __extractedControllers?: Type<unknown>[];
+        }
+      ).__extractedControllers = extractedControllers;
+    }
+
+    return NestJSModule as Type<unknown>;
+  }
+
+  /**
    * Validate plugin manifest structure.
    */
   private validateManifest(manifest: PluginManifest, pluginDir: string): void {
@@ -387,14 +641,16 @@ export class HexaPluginLoader {
     }
 
     if (manifest.backend) {
-      if (!manifest.backend.hexaBundle) {
+      // If hexaExport is specified, hexaBundle is required
+      if (manifest.backend.hexaExport && !manifest.backend.hexaBundle) {
         throw new Error(
-          `Manifest backend missing "hexaBundle" field in ${pluginDir}`,
+          `Manifest backend has "hexaExport" but missing "hexaBundle" field in ${pluginDir}`,
         );
       }
-      if (!manifest.backend.hexaExport) {
+      // If nestjsModule is specified, hexaBundle is required (they share the same bundle)
+      if (manifest.backend.nestjsModule && !manifest.backend.hexaBundle) {
         throw new Error(
-          `Manifest backend missing "hexaExport" field in ${pluginDir}`,
+          `Manifest backend has "nestjsModule" but missing "hexaBundle" field in ${pluginDir}`,
         );
       }
     }
