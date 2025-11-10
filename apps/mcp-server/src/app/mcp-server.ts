@@ -523,7 +523,7 @@ export function createMCPServer(
   );
 
   mcpServer.tool(
-    `${mcpToolPrefix}_get_standard_by_slug`,
+    `${mcpToolPrefix}_get_standard_details`,
     'Get the full content of a standard including its rules and examples by its slug',
     {
       slug: z.string().min(1).describe('The slug of the standard to retrieve'),
@@ -608,7 +608,7 @@ export function createMCPServer(
           createUserId(userContext.userId),
           createOrganizationId(userContext.organizationId),
           'mcp_tool_call',
-          { tool: `${mcpToolPrefix}_get_standard_by_slug`, slug },
+          { tool: `${mcpToolPrefix}_get_standard_details`, slug },
         );
 
         return {
@@ -702,7 +702,7 @@ export function createMCPServer(
   );
 
   mcpServer.tool(
-    `${mcpToolPrefix}_get_recipe_by_slug`,
+    `${mcpToolPrefix}_get_recipe_details`,
     'Get the full content of a recipe by its slug',
     {
       slug: z.string().min(1).describe('The slug of the recipe to retrieve'),
@@ -747,7 +747,7 @@ export function createMCPServer(
           createUserId(userContext.userId),
           createOrganizationId(userContext.organizationId),
           'mcp_tool_call',
-          { tool: `${mcpToolPrefix}_get_recipe_by_slug`, slug },
+          { tool: `${mcpToolPrefix}_get_recipe_details`, slug },
         );
 
         return {
