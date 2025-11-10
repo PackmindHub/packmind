@@ -68,39 +68,39 @@ jobs:
         run: |
           TARGET_BRANCH="${{ vars.TARGET_BRANCH || github.event.repository.default_branch }}"
 
-          # Create a temporary branch from target to test merge
-          git checkout -B merge-test origin/$TARGET_BRANCH
+          # Create a temporary branch from target to test rebase
+          git checkout -B rebase-test origin/$TARGET_BRANCH
 
-          # Attempt merge and capture result without committing conflict markers
+          # Attempt rebase and capture result
           set +e  # Don't exit on error
-          git merge --no-commit --no-ff upstream/${{ vars.UPSTREAM_SOURCE_BRANCH || 'main' }}
-          MERGE_EXIT_CODE=$?
+          git rebase upstream/${{ vars.UPSTREAM_SOURCE_BRANCH || 'main' }}
+          REBASE_EXIT_CODE=$?
           set -e  # Re-enable exit on error
 
-          if [ $MERGE_EXIT_CODE -eq 0 ]; then
+          if [ $REBASE_EXIT_CODE -eq 0 ]; then
             echo "has_conflicts=false" >> $GITHUB_OUTPUT
-            echo "✓ Merge test completed without conflicts"
+            echo "✓ Rebase test completed without conflicts"
           else
             echo "has_conflicts=true" >> $GITHUB_OUTPUT
-            echo "⚠ Merge test detected conflicts"
+            echo "⚠ Rebase test detected conflicts"
           fi
 
-          # Always abort the test merge and delete the temp branch
-          git merge --abort || true
+          # Always abort the test rebase and delete the temp branch
+          git rebase --abort || true
           git checkout -B $TARGET_BRANCH origin/$TARGET_BRANCH
-          git branch -D merge-test || true
+          git branch -D rebase-test || true
 
-      - name: Merge directly without conflicts
+      - name: Rebase directly without conflicts
         if: steps.check_changes.outputs.has_changes == 'true' && steps.merge.outputs.has_conflicts == 'false'
         run: |
           TARGET_BRANCH="${{ vars.TARGET_BRANCH || github.event.repository.default_branch }}"
           # Switch back to target branch
           git checkout -B $TARGET_BRANCH origin/$TARGET_BRANCH
-          # Merge the sync branch (no conflicts were detected earlier)
-          git merge upstream/${{ vars.UPSTREAM_SOURCE_BRANCH || 'main' }} --no-edit
-          # Push to target branch
-          git push origin $TARGET_BRANCH
-          echo "✓ Successfully merged ${{ steps.check_changes.outputs.commit_count }} commits from upstream"
+          # Rebase onto upstream (no conflicts were detected earlier)
+          git rebase upstream/${{ vars.UPSTREAM_SOURCE_BRANCH || 'main' }}
+          # Push to target branch (force with lease for safety since rebase rewrites history)
+          git push --force-with-lease origin $TARGET_BRANCH
+          echo "✓ Successfully rebased ${{ steps.check_changes.outputs.commit_count }} commits from upstream"
 
       - name: Create and push upstream snapshot branch for PR
         if: steps.check_changes.outputs.has_changes == 'true' && steps.merge.outputs.has_conflicts == 'true'
@@ -139,7 +139,7 @@ jobs:
             gh pr create \
               --repo "$GITHUB_REPOSITORY" \
               --title "⚠️ Sync from upstream repository (conflicts to resolve)" \
-              --body "This PR proposes updating $TARGET_BRANCH with upstream changes from ${{ vars.UPSTREAM_SOURCE_BRANCH || 'main' }}.\n\n**Conflicts were detected** during a dry-run merge. The branch contains a clean snapshot of upstream to allow GitHub's conflict resolution UI without committing conflict markers to the codebase." \
+              --body "This PR proposes updating $TARGET_BRANCH with upstream changes from ${{ vars.UPSTREAM_SOURCE_BRANCH || 'main' }}.\n\n**Conflicts were detected** during a dry-run rebase. The branch contains a clean snapshot of upstream.\n\n## How to resolve conflicts\n\nTo maintain a clean linear history, please resolve conflicts using **rebase** (not merge):\n\n\`\`\`bash\n# Fetch latest changes\ngit fetch origin\n\n# Create a working branch\ngit checkout -b resolve-sync origin/$TARGET_BRANCH\n\n# Rebase onto the sync branch\ngit rebase origin/${{ steps.vars.outputs.sync_branch }}\n\n# Resolve conflicts as they appear\n# After resolving each conflict:\ngit add <resolved-files>\ngit rebase --continue\n\n# Once all conflicts are resolved, force push\ngit push --force-with-lease origin $TARGET_BRANCH\n\`\`\`\n\n⚠️ **Important**: Do NOT use merge or GitHub's web UI conflict resolution, as this will create merge commits." \
               --base $TARGET_BRANCH \
               --head ${{ steps.vars.outputs.sync_branch }}
             echo "✓ Created new PR for conflicts"
