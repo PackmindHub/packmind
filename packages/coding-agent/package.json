@@ -12,7 +12,7 @@
     "@packmind/node-utils": "*",
     "@packmind/types": "*",
     "@packmind/standards": "*",
-    "typeorm": "^0.3.26",
+    "typeorm": "0.3.27",
     "uuid": "^11.1.0",
     "@packmind/test-utils": "0.0.1"
   }

@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { Observable } from 'rxjs';
 import { createOrganizationId, createUserId } from '@packmind/types';
 import { ApiKeyService, IJwtService } from '@packmind/accounts';
@@ -17,7 +17,7 @@ import { IS_PUBLIC_KEY } from '@packmind/node-utils';
 // Lightweight adapter to reuse accounts ApiKeyService with Nest JwtService
 class JwtServiceAdapter implements IJwtService {
   constructor(private readonly jwtService: JwtService) {}
-  sign(payload: Record<string, unknown>, options?: { expiresIn?: string }) {
+  sign(payload: Record<string, unknown>, options?: JwtSignOptions) {
     return this.jwtService.sign(payload, options);
   }
   verify(token: string): Record<string, unknown> {

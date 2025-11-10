@@ -9,7 +9,7 @@
     "tslib": "^2.3.0",
     "@packmind/logger": "*",
     "@packmind/node-utils": "*",
-    "typeorm": "^0.3.26",
+    "typeorm": "0.3.27",
     "bullmq": "^5.0.0"
   }
 }

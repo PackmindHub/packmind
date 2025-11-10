@@ -18,7 +18,7 @@
     "@packmind/spaces": "*",
     "@packmind/standards": "*",
     "bullmq": "^5.23.6",
-    "typeorm": "0.3.26",
+    "typeorm": "0.3.27",
     "uuid": "^11.1.0",
     "@nestjs/common": "^11.1.6",
     "yaml": "2.8.0",
