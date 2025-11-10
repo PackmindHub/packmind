@@ -31,10 +31,7 @@ const origin = 'RecipesHexa';
 export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
   private readonly recipesRepositories: RecipesRepositories;
   private readonly recipesServices: RecipesServices;
-  private adapter!: RecipesAdapter; // Non-null assertion since initialize() will set it
-  private gitPort?: IGitPort;
-  private accountsPort?: IAccountsPort;
-  private spacesPort?: ISpacesPort | null;
+  private readonly adapter: RecipesAdapter;
   private _deploymentPort: IDeploymentPort | undefined | null = undefined;
   private recipesDelayedJobs: IRecipesDelayedJobs | null = null;
   private isInitialized = false;
@@ -56,6 +53,17 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
       this.recipesRepositories = new RecipesRepositories(dataSource);
       this.recipesServices = new RecipesServices(
         this.recipesRepositories,
+        this.logger,
+      );
+
+      // Create adapter in constructor - dependencies will be injected in initialize()
+      this.logger.debug('Creating RecipesAdapter');
+      this.adapter = new RecipesAdapter(
+        this.recipesServices,
+        undefined, // gitPort - will be set in initialize()
+        undefined, // deploymentPort - will be set in initialize()
+        undefined, // accountsPort - will be set in initialize()
+        null, // spacesPort - will be set in initialize()
         this.logger,
       );
 
@@ -84,31 +92,24 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
 
     try {
       // Get Git port (required) for domain logic
-      this.gitPort = registry.getAdapter<IGitPort>(IGitPortName);
+      const gitPort = registry.getAdapter<IGitPort>(IGitPortName);
+      this.adapter.setGitPort(gitPort);
 
       // Get Accounts port (required)
-      this.accountsPort = registry.getAdapter<IAccountsPort>(IAccountsPortName);
+      const accountsPort =
+        registry.getAdapter<IAccountsPort>(IAccountsPortName);
+      this.adapter.setAccountsAdapter(accountsPort);
 
       // Get spaces port for space validation (optional)
       try {
-        this.spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
+        const spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
+        this.adapter.setSpacesPort(spacesPort);
       } catch {
         this.logger.warn(
           'SpacesHexa not found in registry - space validation will not be available',
         );
-        this.spacesPort = null;
+        this.adapter.setSpacesPort(null);
       }
-
-      // Create RecipesAdapter with all dependencies
-      this.logger.debug('Creating RecipesAdapter');
-      this.adapter = new RecipesAdapter(
-        this.recipesServices,
-        this.gitPort,
-        this._deploymentPort || undefined,
-        this.accountsPort,
-        this.spacesPort,
-        this.logger,
-      );
 
       // Build delayed jobs if deployment port is available
       if (this._deploymentPort) {
@@ -245,10 +246,9 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
   /**
    * Get the Recipes adapter for cross-domain access to recipes data.
    * This adapter implements IRecipesPort and can be injected into other domains.
-   * The adapter is available after initialization.
+   * The adapter is available immediately after construction.
    */
   public getAdapter(): IRecipesPort {
-    this.ensureInitialized();
     return this.adapter;
   }
 

@@ -16,21 +16,16 @@ USER node
 WORKDIR /app
 
 # Copy package files with proper ownership
-COPY --chown=node:node dist/apps/mcp-server/package*.json ./
+COPY --chown=node:node dist/apps/mcp-server/package.json dist/apps/mcp-server/package-lock.json ./
 
 # Install production dependencies
-RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
+RUN npm install --omit=dev --ignore-scripts && npm cache clean --force
 
 # Copy the built application with proper ownership
 COPY --chown=node:node dist/apps/mcp-server/ ./
 
 # Copy base tree-sitter WASM files to /app/ directory for runtime initialization
 COPY --chown=node:node dist/apps/mcp-server/tree-sitter*.wasm ./
-
-# Copy js-playground directory
-COPY --chown=node:node packages/linter/js-playground ./js-playground/
-
-ENV JS_PLAYGROUND_PATH=/app/js-playground
 
 # Expose port
 EXPOSE 3001
