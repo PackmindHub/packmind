@@ -12,6 +12,8 @@ services:
     image: node:22.17.0-alpine3.21
     container_name: dev-${PACKMIND_EDITION:-oss}-packmind-nx-daemon
     working_dir: /packmind
+    env_file:
+      - compose.env
     command: >
       sh -lc "
         set -eu;
@@ -43,6 +45,8 @@ services:
   postgres:
     image: postgres:17-alpine
     container_name: dev-${PACKMIND_EDITION:-oss}-packmind-postgres
+    env_file:
+      - compose.env
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -60,6 +64,8 @@ services:
   redis:
     image: redis:7.2.4
     container_name: dev-${PACKMIND_EDITION:-oss}-redis
+    env_file:
+      - compose.env
     ports:
       - '6379:6379'
     volumes:
@@ -73,6 +79,8 @@ services:
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: dev-${PACKMIND_EDITION:-oss}-packmind-pgadmin
+    env_file:
+      - compose.env
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@pgadmin.com
       PGADMIN_DEFAULT_PASSWORD: password
@@ -88,6 +96,8 @@ services:
     image: node:22.17.0-alpine3.21
     container_name: dev-${PACKMIND_EDITION:-oss}-packmind-install-deps
     working_dir: /packmind
+    env_file:
+      - compose.env
     entrypoint:
       - sh
       - -c
@@ -105,6 +115,8 @@ services:
     image: node:22.17.0-alpine3.21
     container_name: dev-${PACKMIND_EDITION:-oss}-packmind-run-migrations
     working_dir: /packmind
+    env_file:
+      - compose.env
     entrypoint: >
       sh -lc '
         set -euo pipefail
@@ -144,6 +156,8 @@ services:
     image: node:22.17.0-alpine3.21
     container_name: dev-${PACKMIND_EDITION:-oss}-packmind-frontend
     working_dir: /packmind
+    env_file:
+      - compose.env
     ports:
       - '4200:4200'
     entrypoint: >
@@ -185,6 +199,8 @@ services:
     image: node:22.17.0-alpine3.21
     container_name: dev-${PACKMIND_EDITION:-oss}-packmind-backend
     working_dir: /packmind
+    env_file:
+      - compose.env
     entrypoint: >
       sh -lc '
         set -eu
@@ -238,6 +254,8 @@ services:
     image: node:22.17.0-alpine3.21
     container_name: dev-${PACKMIND_EDITION:-oss}-packmind-mcp-server
     working_dir: /packmind
+    env_file:
+      - compose.env
     entrypoint: >
       sh -lc '
         set -eu
@@ -278,6 +296,8 @@ services:
     container_name: run-e2e-tests-${PACKMIND_EDITION:-oss}
     profiles:
       - e2e
+    env_file:
+      - compose.env
     volumes:
       - .:/packmind
       - dev-node_modules:/packmind/node_modules
