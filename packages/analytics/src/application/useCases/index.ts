@@ -1,0 +1,162 @@
+import { TrackRecipeUsageUsecase } from './trackRecipeUsage/trackRecipeUsage.usecase';
+import { GetUsageByOrganizationUsecase } from './getUsageByOrganization/getUsageByOrganization.usecase';
+import { GetUsageByRepositoryUsecase } from './getUsageByRepository/getUsageByRepository.usecase';
+import { GetUsageByTargetUsecase } from './getUsageByTarget/getUsageByTarget.usecase';
+import {
+  GetRecipeUsageAnalyticsUsecase,
+  GetRecipeUsageAnalyticsParams,
+} from './getRecipeUsageAnalytics/getRecipeUsageAnalytics.usecase';
+import { TimePeriod } from '../../domain/entities/RecipeUsageAnalytics';
+import { PackmindLogger } from '@packmind/logger';
+import {
+  IDeploymentPort,
+  IGitPort,
+  IRecipesPort,
+  TargetId,
+} from '@packmind/types';
+import { GitRepoId } from '@packmind/git';
+import { OrganizationId } from '@packmind/accounts';
+import { RecipeId } from '@packmind/types';
+import { IRecipesUsageServices } from '../IRecipesUsageServices';
+import { TrackRecipeUsageCommand } from '../../domain/useCases/ITrackRecipeUsage';
+
+const origin = 'RecipeUsageUseCases';
+
+export class RecipeUsageUseCases {
+  private _trackRecipeUsage: TrackRecipeUsageUsecase;
+  private readonly _getUsageByOrganization: GetUsageByOrganizationUsecase;
+  private readonly _getUsageByRepository: GetUsageByRepositoryUsecase;
+  private readonly _getUsageByTarget: GetUsageByTargetUsecase;
+  private _getRecipeUsageAnalytics: GetRecipeUsageAnalyticsUsecase;
+  private deploymentPort?: IDeploymentPort;
+
+  constructor(
+    private readonly recipesUsageServices: IRecipesUsageServices,
+    private recipesPort: IRecipesPort | undefined,
+    private readonly gitPort: IGitPort,
+    deploymentPort?: IDeploymentPort,
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
+  ) {
+    this.deploymentPort = deploymentPort;
+    if (this.recipesPort) {
+      this._trackRecipeUsage = new TrackRecipeUsageUsecase(
+        this.recipesPort,
+        recipesUsageServices.getRecipeUsageService(),
+        this.gitPort,
+        deploymentPort,
+        this.logger,
+      );
+    } else {
+      // Create a placeholder that will be replaced when port is set
+      this._trackRecipeUsage = null as unknown as TrackRecipeUsageUsecase;
+    }
+    this._getUsageByOrganization = new GetUsageByOrganizationUsecase(
+      recipesUsageServices.getRecipeUsageService(),
+      this.logger,
+    );
+    this._getUsageByRepository = new GetUsageByRepositoryUsecase(
+      recipesUsageServices.getRecipeUsageService(),
+      this.logger,
+    );
+    this._getUsageByTarget = new GetUsageByTargetUsecase(
+      recipesUsageServices.getRecipeUsageService(),
+      this.logger,
+    );
+    if (this.recipesPort) {
+      this._getRecipeUsageAnalytics = new GetRecipeUsageAnalyticsUsecase(
+        recipesUsageServices.getRecipeUsageService(),
+        recipesUsageServices.getRecipeUsageAnalyticsService(),
+        this.logger,
+      );
+    } else {
+      // Create a placeholder that will be replaced when port is set
+      this._getRecipeUsageAnalytics =
+        null as unknown as GetRecipeUsageAnalyticsUsecase;
+    }
+    this.logger.info('RecipeUseCases initialized successfully');
+  }
+
+  public trackRecipeUsage(command: TrackRecipeUsageCommand) {
+    if (!this._trackRecipeUsage) {
+      throw new Error('RecipesPort not set. Call setRecipesPort() first.');
+    }
+    return this._trackRecipeUsage.execute(command);
+  }
+
+  public getUsageByRecipeId(recipeId: RecipeId) {
+    if (!this._trackRecipeUsage) {
+      throw new Error('RecipesPort not set. Call setRecipesPort() first.');
+    }
+    return this._trackRecipeUsage.getUsageByRecipeId(recipeId);
+  }
+
+  public getUsageByOrganization(organizationId: OrganizationId) {
+    return this._getUsageByOrganization.getUsageByOrganization(organizationId);
+  }
+
+  public getUsageByRepository(repositoryId: GitRepoId) {
+    return this._getUsageByRepository.getUsageByRepository(repositoryId);
+  }
+
+  public getUsageByTarget(targetId: TargetId) {
+    return this._getUsageByTarget.getUsageByTarget(targetId);
+  }
+
+  public getRecipeUsageAnalytics(params: GetRecipeUsageAnalyticsParams) {
+    if (!this._getRecipeUsageAnalytics) {
+      throw new Error('RecipesPort not set. Call setRecipesPort() first.');
+    }
+    return this._getRecipeUsageAnalytics.getRecipeUsageAnalytics(params);
+  }
+
+  public getTargetUsageAnalytics(targetId: TargetId, timePeriod?: TimePeriod) {
+    if (!this._getRecipeUsageAnalytics) {
+      throw new Error('RecipesPort not set. Call setRecipesPort() first.');
+    }
+    return this._getRecipeUsageAnalytics.getTargetUsageAnalytics(
+      targetId,
+      timePeriod,
+    );
+  }
+
+  /**
+   * Set the recipes port after initialization to avoid circular dependencies
+   */
+  public setRecipesPort(recipesPort: IRecipesPort): void {
+    this.recipesPort = recipesPort;
+    // Update the services with the new recipes port
+    this.recipesUsageServices.setRecipesPort(recipesPort);
+    // Recreate use cases that depend on recipesPort
+    this._trackRecipeUsage = new TrackRecipeUsageUsecase(
+      this.recipesPort,
+      this.recipesUsageServices.getRecipeUsageService(),
+      this.gitPort,
+      this.deploymentPort,
+      this.logger,
+    );
+    this._getRecipeUsageAnalytics = new GetRecipeUsageAnalyticsUsecase(
+      this.recipesUsageServices.getRecipeUsageService(),
+      this.recipesUsageServices.getRecipeUsageAnalyticsService(),
+      this.logger,
+    );
+  }
+
+  /**
+   * Set the deployment port after initialization to avoid circular dependencies
+   */
+  public setDeploymentPort(deploymentPort: IDeploymentPort): void {
+    this.deploymentPort = deploymentPort;
+    if (!this.recipesPort) {
+      // Port will be set when recipesPort is set
+      return;
+    }
+    // Recreate the TrackRecipeUsageUsecase with the deployment port
+    this._trackRecipeUsage = new TrackRecipeUsageUsecase(
+      this.recipesPort,
+      this.recipesUsageServices.getRecipeUsageService(),
+      this.gitPort,
+      deploymentPort,
+      this.logger,
+    );
+  }
+}

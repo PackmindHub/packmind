@@ -1,0 +1,28 @@
+{
+  "name": "@packmind/linter",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "dependencies": {
+    "tslib": "^2.3.0",
+    "@packmind/accounts": "*",
+    "@packmind/deployments": "*",
+    "@packmind/git": "*",
+    "@packmind/jobs": "*",
+    "@packmind/linter-ast": "*",
+    "@packmind/linter-execution": "*",
+    "@packmind/logger": "*",
+    "@packmind/types": "*",
+    "@packmind/node-utils": "*",
+    "@packmind/spaces": "*",
+    "@packmind/standards": "*",
+    "bullmq": "^5.23.6",
+    "typeorm": "0.3.26",
+    "uuid": "^11.1.0",
+    "@nestjs/common": "^11.1.6",
+    "yaml": "2.8.0",
+    "@packmind/test-utils": "0.0.1"
+  }
+}

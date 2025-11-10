@@ -1,0 +1,152 @@
+name: Sync from Upstream Public Repository
+
+on:
+  repository_dispatch:
+    types: [sync-repository]
+  workflow_dispatch:
+
+jobs:
+  sync-upstream:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout private repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.PACKMIND_PROPRIETARY_SYNC_PAT }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Set variables
+        id: vars
+        run: |
+          SYNC_BRANCH="oss-sync"
+          echo "sync_branch=${SYNC_BRANCH}" >> $GITHUB_OUTPUT
+
+      - name: Add upstream and fetch
+        run: |
+          git remote add upstream ${{ vars.UPSTREAM_REPO_URL }} || git remote set-url upstream ${{ vars.UPSTREAM_REPO_URL }}
+          git fetch upstream ${{ vars.UPSTREAM_SOURCE_BRANCH || 'main' }}
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          # Check if there are any commits to sync
+          COMMIT_COUNT=$(git rev-list --count HEAD..upstream/${{ vars.UPSTREAM_SOURCE_BRANCH || 'main' }})
+          echo "Commits to sync: $COMMIT_COUNT"
+          echo "commit_count=$COMMIT_COUNT" >> $GITHUB_OUTPUT
+
+          if [ "$COMMIT_COUNT" -eq 0 ]; then
+            echo "No commits to sync from upstream"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check if sync branch exists
+        id: check_branch
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          if git ls-remote --heads origin ${{ steps.vars.outputs.sync_branch }} | grep -q ${{ steps.vars.outputs.sync_branch }}; then
+            echo "branch_exists=true" >> $GITHUB_OUTPUT
+            echo "ℹ Branch ${{ steps.vars.outputs.sync_branch }} already exists - will update it"
+          else
+            echo "branch_exists=false" >> $GITHUB_OUTPUT
+            echo "✓ Branch ${{ steps.vars.outputs.sync_branch }} does not exist - will create it"
+          fi
+
+      - name: Detect conflicts without committing
+        id: merge
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          TARGET_BRANCH="${{ vars.TARGET_BRANCH || github.event.repository.default_branch }}"
+
+          # Create a temporary branch from target to test merge
+          git checkout -B merge-test origin/$TARGET_BRANCH
+
+          # Attempt merge and capture result without committing conflict markers
+          set +e  # Don't exit on error
+          git merge --no-commit --no-ff upstream/${{ vars.UPSTREAM_SOURCE_BRANCH || 'main' }}
+          MERGE_EXIT_CODE=$?
+          set -e  # Re-enable exit on error
+
+          if [ $MERGE_EXIT_CODE -eq 0 ]; then
+            echo "has_conflicts=false" >> $GITHUB_OUTPUT
+            echo "✓ Merge test completed without conflicts"
+          else
+            echo "has_conflicts=true" >> $GITHUB_OUTPUT
+            echo "⚠ Merge test detected conflicts"
+          fi
+
+          # Always abort the test merge and delete the temp branch
+          git merge --abort || true
+          git checkout -B $TARGET_BRANCH origin/$TARGET_BRANCH
+          git branch -D merge-test || true
+
+      - name: Merge directly without conflicts
+        if: steps.check_changes.outputs.has_changes == 'true' && steps.merge.outputs.has_conflicts == 'false'
+        run: |
+          TARGET_BRANCH="${{ vars.TARGET_BRANCH || github.event.repository.default_branch }}"
+          # Switch back to target branch
+          git checkout -B $TARGET_BRANCH origin/$TARGET_BRANCH
+          # Merge the sync branch (no conflicts were detected earlier)
+          git merge upstream/${{ vars.UPSTREAM_SOURCE_BRANCH || 'main' }} --no-edit
+          # Push to target branch
+          git push origin $TARGET_BRANCH
+          echo "✓ Successfully merged ${{ steps.check_changes.outputs.commit_count }} commits from upstream"
+
+      - name: Create and push upstream snapshot branch for PR
+        if: steps.check_changes.outputs.has_changes == 'true' && steps.merge.outputs.has_conflicts == 'true'
+        run: |
+          # Create sync branch from upstream to avoid committing conflict markers
+          git checkout -B ${{ steps.vars.outputs.sync_branch }} upstream/${{ vars.UPSTREAM_SOURCE_BRANCH || 'main' }}
+          # Push or update the branch on origin
+          git push --force-with-lease origin ${{ steps.vars.outputs.sync_branch }}
+          echo "✓ Pushed upstream snapshot branch ${{ steps.vars.outputs.sync_branch }}"
+
+      - name: Create or update Pull Request for conflicts
+        if: steps.check_changes.outputs.has_changes == 'true' && steps.merge.outputs.has_conflicts == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.PACKMIND_PROPRIETARY_SYNC_PAT }}
+        run: |
+          TARGET_BRANCH="${{ vars.TARGET_BRANCH || github.event.repository.default_branch }}"
+
+          # Ensure we have up-to-date refs for comparison
+          git fetch origin ${{ steps.vars.outputs.sync_branch }} $TARGET_BRANCH
+
+          # Verify there are commits ahead of base before attempting PR creation
+          AHEAD_COUNT=$(git rev-list --count origin/$TARGET_BRANCH..origin/${{ steps.vars.outputs.sync_branch }})
+          if [ "$AHEAD_COUNT" -eq 0 ]; then
+            echo "ℹ No commits between $TARGET_BRANCH and ${{ steps.vars.outputs.sync_branch }}; skipping PR creation."
+            exit 0
+          fi
+
+          # Check if PR already exists for this branch
+          EXISTING_PR=$(gh pr list --repo "$GITHUB_REPOSITORY" --head ${{ steps.vars.outputs.sync_branch }} --base $TARGET_BRANCH --json number --jq '.[0].number')
+
+          if [ -n "$EXISTING_PR" ]; then
+            # PR exists - branch update will automatically update it
+            echo "✓ Branch updated - PR #$EXISTING_PR will show the new changes"
+          else
+            # No PR exists - create one
+            gh pr create \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "⚠️ Sync from upstream repository (conflicts to resolve)" \
+              --body "This PR proposes updating $TARGET_BRANCH with upstream changes from ${{ vars.UPSTREAM_SOURCE_BRANCH || 'main' }}.\n\n**Conflicts were detected** during a dry-run merge. The branch contains a clean snapshot of upstream to allow GitHub's conflict resolution UI without committing conflict markers to the codebase." \
+              --base $TARGET_BRANCH \
+              --head ${{ steps.vars.outputs.sync_branch }}
+            echo "✓ Created new PR for conflicts"
+          fi
+
+      - name: Report no changes
+        if: steps.check_changes.outputs.has_changes == 'false'
+        run: |
+          echo "✓ Repository is already up to date with upstream"
+          echo "No commits to sync from upstream/${{ vars.UPSTREAM_SOURCE_BRANCH || 'main' }}"
