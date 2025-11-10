@@ -219,7 +219,7 @@ describe('GitProviderRepository', () => {
     });
   });
 
-  it('throws error for missing encryption key configuration', async () => {
+  it('uses default encryption key when configuration is missing', async () => {
     mockConfiguration.getConfig.mockResolvedValueOnce(null);
 
     const gitProvider = gitProviderFactory({
@@ -227,9 +227,17 @@ describe('GitProviderRepository', () => {
       token: 'some-token',
     });
 
-    await expect(gitProviderRepository.add(gitProvider)).rejects.toThrow(
-      'ENCRYPTION_KEY not found in configuration',
+    await gitProviderRepository.add(gitProvider);
+
+    const foundGitProvider = await gitProviderRepository.findById(
+      gitProvider.id,
     );
+    expect(foundGitProvider).toMatchObject({
+      id: gitProvider.id,
+      source: gitProvider.source,
+      organizationId: gitProvider.organizationId,
+      token: 'some-token', // Should be decrypted successfully using default key
+    });
   });
 
   it('can store and retrieve GitLab provider with encryption', async () => {
