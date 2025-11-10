@@ -12,8 +12,6 @@ services:
     image: node:22.17.0-alpine3.21
     container_name: dev-${PACKMIND_EDITION:-oss}-packmind-nx-daemon
     working_dir: /packmind
-    env_file:
-      - compose.env
     command: >
       sh -lc "
         set -eu;
@@ -45,14 +43,12 @@ services:
   postgres:
     image: postgres:17-alpine
     container_name: dev-${PACKMIND_EDITION:-oss}-packmind-postgres
-    env_file:
-      - compose.env
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: packmind
     ports:
-      - '5432:5432'
+      - '5433:5432'
     volumes:
       - dev-postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -64,10 +60,8 @@ services:
   redis:
     image: redis:7.2.4
     container_name: dev-${PACKMIND_EDITION:-oss}-redis
-    env_file:
-      - compose.env
     ports:
-      - '6379:6379'
+      - '6380:6379'
     volumes:
       - dev-redis-data:/data
     healthcheck:
@@ -79,14 +73,12 @@ services:
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: dev-${PACKMIND_EDITION:-oss}-packmind-pgadmin
-    env_file:
-      - compose.env
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@pgadmin.com
       PGADMIN_DEFAULT_PASSWORD: password
       PGADMIN_LISTEN_PORT: 80
     ports:
-      - '2345:80'
+      - '2346:80'
     volumes:
       - dev-pgadmin:/var/lib/pgadmin
     depends_on:
@@ -96,8 +88,6 @@ services:
     image: node:22.17.0-alpine3.21
     container_name: dev-${PACKMIND_EDITION:-oss}-packmind-install-deps
     working_dir: /packmind
-    env_file:
-      - compose.env
     entrypoint:
       - sh
       - -c
@@ -115,8 +105,6 @@ services:
     image: node:22.17.0-alpine3.21
     container_name: dev-${PACKMIND_EDITION:-oss}-packmind-run-migrations
     working_dir: /packmind
-    env_file:
-      - compose.env
     entrypoint: >
       sh -lc '
         set -euo pipefail
@@ -156,10 +144,8 @@ services:
     image: node:22.17.0-alpine3.21
     container_name: dev-${PACKMIND_EDITION:-oss}-packmind-frontend
     working_dir: /packmind
-    env_file:
-      - compose.env
     ports:
-      - '4200:4200'
+      - '4201:4200'
     entrypoint: >
       sh -lc '
         set -eu
@@ -199,8 +185,6 @@ services:
     image: node:22.17.0-alpine3.21
     container_name: dev-${PACKMIND_EDITION:-oss}-packmind-backend
     working_dir: /packmind
-    env_file:
-      - compose.env
     entrypoint: >
       sh -lc '
         set -eu
@@ -254,8 +238,6 @@ services:
     image: node:22.17.0-alpine3.21
     container_name: dev-${PACKMIND_EDITION:-oss}-packmind-mcp-server
     working_dir: /packmind
-    env_file:
-      - compose.env
     entrypoint: >
       sh -lc '
         set -eu
@@ -296,8 +278,6 @@ services:
     container_name: run-e2e-tests-${PACKMIND_EDITION:-oss}
     profiles:
       - e2e
-    env_file:
-      - compose.env
     volumes:
       - .:/packmind
       - dev-node_modules:/packmind/node_modules
@@ -306,7 +286,7 @@ services:
       - dev-nx-sock:/nx-sock
       - ./dist/.playwright:/packmind/dist/.playwright
     ports:
-      - '9323:9323'
+      - '9324:9323'
     working_dir: /packmind/apps/frontend-e2e
     entrypoint: npm run e2e
     environment:
