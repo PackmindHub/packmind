@@ -55,16 +55,20 @@ export class StandardsAdapter implements IStandardsPort {
   private readonly services: StandardsServices;
   private readonly repositories: IStandardsRepositories;
   private readonly logger: PackmindLogger;
-  private readonly standardDelayedJobs: IStandardDelayedJobs;
+  private standardDelayedJobs: IStandardDelayedJobs | undefined;
+  private accountsAdapter: IAccountsPort | undefined;
+  private spacesPort: ISpacesPort | null;
+  private linterAdapter: ILinterPort | undefined;
+  private deploymentsQueryAdapter: IDeploymentPort | undefined;
 
   // Use cases
-  private readonly _createStandard: CreateStandardUsecase;
+  private _createStandard: CreateStandardUsecase | undefined;
   private _createStandardWithExamples: CreateStandardWithExamplesUsecase;
-  private readonly _updateStandard: UpdateStandardUsecase;
+  private _updateStandard: UpdateStandardUsecase | undefined;
   private _addRuleToStandard: AddRuleToStandardUsecase;
-  private readonly _getStandardById: GetStandardByIdUsecase;
-  private readonly _findStandardBySlug: FindStandardBySlugUsecase;
-  private readonly _listStandardsBySpace: ListStandardsBySpaceUsecase;
+  private _getStandardById: GetStandardByIdUsecase | undefined;
+  private _findStandardBySlug: FindStandardBySlugUsecase | undefined;
+  private _listStandardsBySpace: ListStandardsBySpaceUsecase | undefined;
   private readonly _listStandardVersions: ListStandardVersionsUsecase;
   private readonly _getStandardVersion: GetStandardVersionUsecase;
   private readonly _getLatestStandardVersion: GetLatestStandardVersionUsecase;
@@ -80,68 +84,15 @@ export class StandardsAdapter implements IStandardsPort {
   constructor(
     services: StandardsServices,
     repositories: IStandardsRepositories,
-    standardDelayedJobs: IStandardDelayedJobs,
-    accountsAdapter: IAccountsPort,
-    spacesPort: ISpacesPort | null,
-    linterAdapter: ILinterPort | undefined,
-    deploymentsQueryAdapter: IDeploymentPort | undefined,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.services = services;
     this.repositories = repositories;
     this.logger = logger;
-    this.standardDelayedJobs = standardDelayedJobs;
+    this.spacesPort = null;
 
-    // Initialize all use cases
-    this._createStandard = new CreateStandardUsecase(
-      services.getStandardService(),
-      services.getStandardVersionService(),
-      standardDelayedJobs.standardSummaryDelayedJob,
-    );
-
-    this._createStandardWithExamples = new CreateStandardWithExamplesUsecase(
-      services.getStandardService(),
-      services.getStandardVersionService(),
-      services.getStandardSummaryService(),
-      repositories.getRuleExampleRepository(),
-      repositories.getRuleRepository(),
-      linterAdapter,
-    );
-
-    this._updateStandard = new UpdateStandardUsecase(
-      accountsAdapter,
-      services.getStandardService(),
-      services.getStandardVersionService(),
-      repositories.getRuleRepository(),
-      repositories.getRuleExampleRepository(),
-      standardDelayedJobs.standardSummaryDelayedJob,
-      spacesPort,
-    );
-
-    this._addRuleToStandard = new AddRuleToStandardUsecase(
-      services.getStandardService(),
-      services.getStandardVersionService(),
-      repositories.getRuleRepository(),
-      repositories.getRuleExampleRepository(),
-      standardDelayedJobs.standardSummaryDelayedJob,
-      linterAdapter,
-    );
-
-    this._getStandardById = new GetStandardByIdUsecase(
-      accountsAdapter,
-      services.getStandardService(),
-      spacesPort,
-    );
-
-    this._findStandardBySlug = new FindStandardBySlugUsecase(
-      services.getStandardService(),
-    );
-
-    this._listStandardsBySpace = new ListStandardsBySpaceUsecase(
-      accountsAdapter,
-      services.getStandardService(),
-      spacesPort,
-    );
+    // Initialize use cases that don't depend on external ports
+    // Use cases that depend on delayed jobs, accounts, spaces, or linter will be initialized in setters
 
     this._listStandardVersions = new ListStandardVersionsUsecase(
       services.getStandardVersionService(),
@@ -171,28 +122,157 @@ export class StandardsAdapter implements IStandardsPort {
       services.getStandardService(),
     );
 
-    this._createRuleExample = new CreateRuleExampleUsecase(
-      repositories.getRuleExampleRepository(),
-      repositories.getRuleRepository(),
-      linterAdapter,
-    );
-
     this._getRuleExamples = new GetRuleExamplesUsecase(
       repositories.getRuleExampleRepository(),
       repositories.getRuleRepository(),
     );
 
+    this._createRuleExample = new CreateRuleExampleUsecase(
+      repositories.getRuleExampleRepository(),
+      repositories.getRuleRepository(),
+      undefined,
+    );
+
     this._updateRuleExample = new UpdateRuleExampleUsecase(
       repositories,
-      linterAdapter,
+      undefined,
     );
 
     this._deleteRuleExample = new DeleteRuleExampleUsecase(
       repositories,
-      linterAdapter,
+      undefined,
     );
 
-    this.logger.info('StandardsAdapter initialized successfully');
+    this._createStandardWithExamples = new CreateStandardWithExamplesUsecase(
+      services.getStandardService(),
+      services.getStandardVersionService(),
+      services.getStandardSummaryService(),
+      repositories.getRuleExampleRepository(),
+      repositories.getRuleRepository(),
+      undefined,
+    );
+
+    // Note: _addRuleToStandard will be properly initialized in setDelayedJobs()
+    // This temporary initialization is a placeholder
+    this._addRuleToStandard = undefined as unknown as AddRuleToStandardUsecase;
+
+    this._findStandardBySlug = new FindStandardBySlugUsecase(
+      services.getStandardService(),
+    );
+
+    this.logger.info('StandardsAdapter constructed successfully');
+  }
+
+  /**
+   * Set the delayed jobs (for runtime wiring after initialization)
+   */
+  public setDelayedJobs(delayedJobs: IStandardDelayedJobs): void {
+    this.logger.info('Setting delayed jobs in StandardsAdapter');
+    this.standardDelayedJobs = delayedJobs;
+
+    // Initialize use cases that depend on delayed jobs
+    this._createStandard = new CreateStandardUsecase(
+      this.services.getStandardService(),
+      this.services.getStandardVersionService(),
+      delayedJobs.standardSummaryDelayedJob,
+    );
+
+    this._addRuleToStandard = new AddRuleToStandardUsecase(
+      this.services.getStandardService(),
+      this.services.getStandardVersionService(),
+      this.repositories.getRuleRepository(),
+      this.repositories.getRuleExampleRepository(),
+      delayedJobs.standardSummaryDelayedJob,
+      this.linterAdapter,
+    );
+
+    // Recreate update standard if accounts adapter is available
+    if (this.accountsAdapter) {
+      this._updateStandard = new UpdateStandardUsecase(
+        this.accountsAdapter,
+        this.services.getStandardService(),
+        this.services.getStandardVersionService(),
+        this.repositories.getRuleRepository(),
+        this.repositories.getRuleExampleRepository(),
+        delayedJobs.standardSummaryDelayedJob,
+        this.spacesPort,
+      );
+    }
+
+    this.logger.info('Use cases initialized with delayed jobs');
+  }
+
+  /**
+   * Set the accounts adapter (for runtime wiring after initialization)
+   */
+  public setAccountsAdapter(adapter: IAccountsPort): void {
+    this.logger.info('Setting accounts adapter in StandardsAdapter');
+    this.accountsAdapter = adapter;
+
+    // Initialize use cases that depend on accounts adapter
+    this._getStandardById = new GetStandardByIdUsecase(
+      adapter,
+      this.services.getStandardService(),
+      this.spacesPort,
+    );
+
+    this._listStandardsBySpace = new ListStandardsBySpaceUsecase(
+      adapter,
+      this.services.getStandardService(),
+      this.spacesPort,
+    );
+
+    // Recreate update standard if delayed jobs are available
+    if (this.standardDelayedJobs) {
+      this._updateStandard = new UpdateStandardUsecase(
+        adapter,
+        this.services.getStandardService(),
+        this.services.getStandardVersionService(),
+        this.repositories.getRuleRepository(),
+        this.repositories.getRuleExampleRepository(),
+        this.standardDelayedJobs.standardSummaryDelayedJob,
+        this.spacesPort,
+      );
+    }
+
+    this.logger.info('Use cases initialized with accounts adapter');
+  }
+
+  /**
+   * Set the spaces port (for runtime wiring after initialization)
+   */
+  public setSpacesPort(port: ISpacesPort | null): void {
+    this.logger.info('Setting spaces port in StandardsAdapter');
+    this.spacesPort = port;
+
+    // Recreate use cases that depend on spaces port
+    if (this.accountsAdapter) {
+      this._getStandardById = new GetStandardByIdUsecase(
+        this.accountsAdapter,
+        this.services.getStandardService(),
+        port,
+      );
+
+      this._listStandardsBySpace = new ListStandardsBySpaceUsecase(
+        this.accountsAdapter,
+        this.services.getStandardService(),
+        port,
+      );
+    }
+
+    if (this.accountsAdapter && this.standardDelayedJobs) {
+      this._updateStandard = new UpdateStandardUsecase(
+        this.accountsAdapter,
+        this.services.getStandardService(),
+        this.services.getStandardVersionService(),
+        this.repositories.getRuleRepository(),
+        this.repositories.getRuleExampleRepository(),
+        this.standardDelayedJobs.standardSummaryDelayedJob,
+        port,
+      );
+    }
+
+    this.logger.info('Use cases updated with spaces port');
   }
 
   /**
@@ -200,6 +280,7 @@ export class StandardsAdapter implements IStandardsPort {
    */
   public setLinterAdapter(adapter: ILinterPort): void {
     this.logger.info('Setting linter adapter in StandardsAdapter');
+    this.linterAdapter = adapter;
 
     // Recreate use cases that depend on linter adapter
     this._createStandardWithExamples = new CreateStandardWithExamplesUsecase(
@@ -227,16 +308,27 @@ export class StandardsAdapter implements IStandardsPort {
       adapter,
     );
 
-    this._addRuleToStandard = new AddRuleToStandardUsecase(
-      this.services.getStandardService(),
-      this.services.getStandardVersionService(),
-      this.repositories.getRuleRepository(),
-      this.repositories.getRuleExampleRepository(),
-      this.standardDelayedJobs.standardSummaryDelayedJob,
-      adapter,
-    );
+    if (this.standardDelayedJobs) {
+      this._addRuleToStandard = new AddRuleToStandardUsecase(
+        this.services.getStandardService(),
+        this.services.getStandardVersionService(),
+        this.repositories.getRuleRepository(),
+        this.repositories.getRuleExampleRepository(),
+        this.standardDelayedJobs.standardSummaryDelayedJob,
+        adapter,
+      );
+    }
 
     this.logger.info('Use cases recreated with linter adapter');
+  }
+
+  /**
+   * Set the deployment adapter (for runtime wiring after initialization)
+   */
+  public setDeploymentAdapter(adapter: IDeploymentPort): void {
+    this.logger.info('Setting deployment adapter in StandardsAdapter');
+    this.deploymentsQueryAdapter = adapter;
+    this.logger.info('Deployment adapter set successfully');
   }
 
   // ===========================
@@ -286,6 +378,11 @@ export class StandardsAdapter implements IStandardsPort {
     organizationId: OrganizationId,
     userId: string,
   ): Promise<Standard[]> {
+    if (!this._listStandardsBySpace) {
+      throw new Error(
+        'StandardsAdapter not fully initialized. Missing accounts adapter.',
+      );
+    }
     const command: ListStandardsBySpaceCommand = {
       userId,
       organizationId,
@@ -303,6 +400,9 @@ export class StandardsAdapter implements IStandardsPort {
     slug: string,
     organizationId: OrganizationId,
   ): Promise<Standard | null> {
+    if (!this._findStandardBySlug) {
+      throw new Error('StandardsAdapter not fully initialized.');
+    }
     return this._findStandardBySlug.findStandardBySlug(slug, organizationId);
   }
 
@@ -319,6 +419,11 @@ export class StandardsAdapter implements IStandardsPort {
     scope: string | null;
     spaceId: SpaceId | null;
   }): Promise<Standard> {
+    if (!this._createStandard) {
+      throw new Error(
+        'StandardsAdapter not fully initialized. Missing delayed jobs.',
+      );
+    }
     return this._createStandard.execute({
       ...params,
       organizationId: params.organizationId.toString(),
@@ -354,6 +459,11 @@ export class StandardsAdapter implements IStandardsPort {
     organizationId: OrganizationId;
     userId: UserId;
   }): Promise<StandardVersion> {
+    if (!this._addRuleToStandard) {
+      throw new Error(
+        'StandardsAdapter not fully initialized. Missing delayed jobs.',
+      );
+    }
     return this._addRuleToStandard.addRuleToStandard(params);
   }
 
@@ -363,6 +473,11 @@ export class StandardsAdapter implements IStandardsPort {
     spaceId: SpaceId;
     userId: string;
   }): Promise<GetStandardByIdResponse> {
+    if (!this._getStandardById) {
+      throw new Error(
+        'StandardsAdapter not fully initialized. Missing accounts adapter.',
+      );
+    }
     return this._getStandardById.execute(command);
   }
 
@@ -371,6 +486,11 @@ export class StandardsAdapter implements IStandardsPort {
   }
 
   async updateStandard(command: UpdateStandardCommand): Promise<Standard> {
+    if (!this._updateStandard) {
+      throw new Error(
+        'StandardsAdapter not fully initialized. Missing accounts adapter or delayed jobs.',
+      );
+    }
     const result = await this._updateStandard.execute(command);
     return result.standard;
   }
