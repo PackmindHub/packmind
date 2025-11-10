@@ -14,7 +14,6 @@ import {
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { StandardsServices } from './application/services/StandardsServices';
-import { StandardsUseCases } from './application/useCases';
 import { StandardsAdapter } from './application/useCases/StandardsAdapter';
 import { IStandardDelayedJobs } from './domain/jobs/IStandardDelayedJobs';
 import { IStandardsRepositories } from './domain/repositories/IStandardsRepositories';
@@ -32,12 +31,11 @@ const origin = 'StandardsHexa';
  * Uses the DataSource provided through the HexaRegistry for database operations.
  */
 export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
-  private readonly standardsRepositories: StandardsRepositories;
-  private readonly standardsServices: StandardsServices;
-  private useCases!: StandardsUseCases;
-  private readonly standardsAdapter: StandardsAdapter;
+  public readonly standardsRepositories: StandardsRepositories;
+  public readonly standardsServices: StandardsServices;
+  private standardsAdapter?: StandardsAdapter;
   private deploymentsQueryAdapter?: IDeploymentPort;
-  private isInitialized = false;
+  public isInitialized = false;
 
   constructor(
     dataSource: DataSource,
@@ -59,11 +57,6 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
         this.standardsRepositories,
         this.logger,
       );
-
-      // Create adapter in constructor - use cases will be created in initialize()
-      // The adapter accesses use cases via getStandardsUseCases() which checks initialization
-      this.logger.debug('Creating StandardsAdapter');
-      this.standardsAdapter = new StandardsAdapter(this);
 
       this.logger.info('StandardsHexa construction completed');
     } catch (error) {
@@ -90,8 +83,9 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
 
     try {
       // Get LinterHexa adapter for ILinterPort (optional dependency)
+      let linterPort: ILinterPort | undefined;
       try {
-        const linterPort = registry.getAdapter<ILinterPort>(ILinterPortName);
+        linterPort = registry.getAdapter<ILinterPort>(ILinterPortName);
         this.logger.info('LinterAdapter retrieved from registry');
         this.standardsServices.setLinterAdapter(linterPort);
       } catch {
@@ -135,15 +129,15 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
         );
       }
 
-      this.logger.debug('Creating StandardsUseCases');
-      this.useCases = new StandardsUseCases(
+      this.logger.debug('Creating StandardsAdapter');
+      this.standardsAdapter = new StandardsAdapter(
         this.standardsServices,
         this.standardsRepositories,
-        this.deploymentsQueryAdapter,
         standardsDelayedJobs,
         accountsPort,
         spacesPort,
-        this.standardsServices.getLinterAdapter(),
+        linterPort,
+        this.deploymentsQueryAdapter,
         this.logger,
       );
 
@@ -185,6 +179,11 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
   }
 
   public getAdapter(): StandardsAdapter {
+    if (!this.standardsAdapter) {
+      throw new Error(
+        'StandardsHexa not initialized. Call initialize() before using.',
+      );
+    }
     return this.standardsAdapter;
   }
 
@@ -193,40 +192,6 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
    */
   public getPortName(): string {
     return IStandardsPortName;
-  }
-
-  /**
-   * Set the deployments query adapter for accessing deployment data
-   */
-  public setDeploymentsQueryAdapter(adapter: IDeploymentPort): void {
-    this.deploymentsQueryAdapter = adapter;
-    this.useCases?.setDeploymentsQueryAdapter(adapter);
-  }
-
-  public setLinterAdapter(adapter: ILinterPort): void {
-    this.logger.info('Setting linter adapter');
-    this.standardsServices.setLinterAdapter(adapter);
-    if (this.isInitialized) {
-      this.logger.warn('Reinitializing use cases after linter adapter set');
-      this.useCases.setLinterAdapter(adapter);
-    }
-  }
-
-  public getStandardsServices(): StandardsServices {
-    return this.standardsServices;
-  }
-
-  public getStandardsRepositories(): StandardsRepositories {
-    return this.standardsRepositories;
-  }
-
-  public getStandardsUseCases(): StandardsUseCases {
-    if (!this.isInitialized || !this.useCases) {
-      throw new Error(
-        'StandardsHexa not initialized. Call initialize() before using.',
-      );
-    }
-    return this.useCases;
   }
 
   /**
