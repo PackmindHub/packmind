@@ -20,6 +20,7 @@ import {
   SelectOrganizationCommand,
 } from './auth.service';
 import { maskEmail } from '@packmind/logger';
+import { getErrorMessage } from '../shared/utils/error.utils';
 import {
   SignInUserCommand,
   SignInUserResponse,
@@ -71,7 +72,7 @@ export class AuthController {
     } catch (error) {
       this.logger.error(`POST /auth/signup - Failed to sign up user`, {
         email: maskEmail(signUpRequest.email),
-        error: error.message,
+        error: getErrorMessage(error),
       });
       throw error;
     }
@@ -107,7 +108,7 @@ export class AuthController {
         `POST /auth/check-email-availability - Failed to check email availability`,
         {
           email: maskEmail(request.email),
-          error: error.message,
+          error: getErrorMessage(error),
         },
       );
       throw error;
@@ -157,14 +158,14 @@ export class AuthController {
     } catch (error) {
       this.logger.error(`POST /auth/signin - Failed to sign in user`, {
         email: maskEmail(signInRequest.email),
-        error: error.message,
+        error: getErrorMessage(error),
       });
 
       // Handle rate limiting errors with 429 status
       if (error instanceof TooManyLoginAttemptsError) {
         throw new HttpException(
           {
-            message: error.message,
+            message: getErrorMessage(error),
             bannedUntil: error.bannedUntil.toISOString(),
           },
           HttpStatus.TOO_MANY_REQUESTS,
@@ -240,7 +241,7 @@ export class AuthController {
         'POST /auth/selectOrganization - Failed to select organization',
         {
           organizationId: request.organizationId,
-          error: error.message,
+          error: getErrorMessage(error),
         },
       );
       throw error;
@@ -278,15 +279,13 @@ export class AuthController {
       return result;
     } catch (error) {
       this.logger.error('GET /auth/me - Failed to get user info', {
-        error: error.message,
+        error: getErrorMessage(error),
       });
       response.status(HttpStatus.UNAUTHORIZED);
       return {
         message: 'Failed to get user info',
         authenticated: false,
-        user: undefined,
-        organization: undefined,
-      };
+      } as GetMeResponse;
     }
   }
 
@@ -317,7 +316,7 @@ export class AuthController {
         'POST /auth/api-key/generate - Failed to generate API key',
         {
           userId: request.user.userId,
-          error: error.message,
+          error: getErrorMessage(error),
         },
       );
       throw error;
@@ -351,7 +350,7 @@ export class AuthController {
         'GET /auth/api-key/current - Failed to get API key info',
         {
           userId: request.user.userId,
-          error: error.message,
+          error: getErrorMessage(error),
         },
       );
       throw error;
@@ -389,7 +388,7 @@ export class AuthController {
         'GET /auth/validate-invitation/:token - Failed to validate invitation token',
         {
           token: this.maskToken(token),
-          error: error.message,
+          error: getErrorMessage(error),
         },
       );
       throw error;
@@ -453,7 +452,7 @@ export class AuthController {
         'POST /auth/activate/:token - Failed to activate account',
         {
           token: this.maskToken(token),
-          error: error.message,
+          error: getErrorMessage(error),
         },
       );
       throw error;
@@ -487,7 +486,7 @@ export class AuthController {
         'POST /auth/forgot-password - Failed to request password reset',
         {
           email: maskEmail(request.email),
-          error: error.message,
+          error: getErrorMessage(error),
         },
       );
       throw error;
@@ -527,7 +526,7 @@ export class AuthController {
         'GET /auth/validate-password-reset/:token - Failed to validate password reset token',
         {
           token: this.maskToken(token),
-          error: error.message,
+          error: getErrorMessage(error),
         },
       );
       throw error;
@@ -590,7 +589,7 @@ export class AuthController {
         'POST /auth/reset-password - Failed to reset password',
         {
           token: this.maskToken(body.token),
-          error: error.message,
+          error: getErrorMessage(error),
         },
       );
       throw error;

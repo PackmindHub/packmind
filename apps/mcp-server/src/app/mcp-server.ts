@@ -162,7 +162,7 @@ export function createMCPServer(
           `Say hello called with requestInfo: ${JSON.stringify(extra.requestInfo)}`,
         );
       } catch (err) {
-        logger.error(err);
+        logger.error(err instanceof Error ? err.message : String(err));
       }
 
       const greeting = userContext ? `Hello ${userContext.email}` : 'Hello you';
@@ -407,15 +407,16 @@ export function createMCPServer(
         const newRule = rules.filter((rule) => rule.content === ruleContent);
 
         const codeSnippetProvided =
-          positiveExample?.length > 0 || negativeExample?.length > 0;
+          (positiveExample?.length ?? 0) > 0 ||
+          (negativeExample?.length ?? 0) > 0;
         if (newRule && codeSnippetProvided) {
           logger.info('Creating rule example');
           await standardsHexa.getAdapter().createRuleExample({
             ruleId: newRule[0].id,
-            positive: extractCodeFromMarkdown(positiveExample) || '',
-            negative: extractCodeFromMarkdown(negativeExample) || '',
+            positive: extractCodeFromMarkdown(positiveExample ?? '') || '',
+            negative: extractCodeFromMarkdown(negativeExample ?? '') || '',
             lang:
-              stringToProgrammingLanguage(language) ||
+              stringToProgrammingLanguage(language ?? '') ||
               ProgrammingLanguage.JAVASCRIPT,
             organizationId: createOrganizationId(userContext.organizationId),
             userId: createUserId(userContext.userId),
@@ -984,7 +985,7 @@ export function createMCPServer(
           .createStandardWithExamples({
             name,
             description,
-            summary,
+            summary: summary ?? null,
             rules: processedRules,
             organizationId: createOrganizationId(userContext.organizationId),
             userId: createUserId(userContext.userId),

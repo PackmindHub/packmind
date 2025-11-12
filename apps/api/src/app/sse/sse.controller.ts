@@ -67,7 +67,7 @@ export class SSEController {
       connectionId,
       response,
       userId, // Required now
-      organizationId,
+      organizationId ?? undefined,
     );
 
     this.logger.info('SSE connection established', {

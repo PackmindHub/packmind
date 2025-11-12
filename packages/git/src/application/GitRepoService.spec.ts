@@ -38,8 +38,12 @@ describe('GitRepoService', () => {
 
   describe('addGitRepo', () => {
     it('adds a git repository', async () => {
-      const newRepo = { ...mockGitRepo };
-      delete newRepo.id;
+      const newRepo: Omit<GitRepo, 'id'> = {
+        owner: mockGitRepo.owner,
+        repo: mockGitRepo.repo,
+        branch: mockGitRepo.branch,
+        providerId: mockGitRepo.providerId,
+      };
 
       mockGitRepoRepository.add.mockResolvedValue(mockGitRepo);
 

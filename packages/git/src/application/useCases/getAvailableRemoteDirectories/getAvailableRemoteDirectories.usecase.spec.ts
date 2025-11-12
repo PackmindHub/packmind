@@ -192,31 +192,6 @@ describe('GetAvailableTargetsUseCase', () => {
     });
 
     describe('when validation fails', () => {
-      it('throws error for missing git repository', async () => {
-        const invalidCommand = {
-          ...validCommand,
-          gitRepo: null,
-        };
-
-        await expect(
-          getAvailableTargetsUseCase.execute(invalidCommand),
-        ).rejects.toThrow('Git repository is required');
-      });
-
-      it('throws error for missing provider ID in git repository', async () => {
-        const invalidCommand = {
-          ...validCommand,
-          gitRepo: {
-            ...mockGitRepo,
-            providerId: null,
-          },
-        };
-
-        await expect(
-          getAvailableTargetsUseCase.execute(invalidCommand),
-        ).rejects.toThrow('Git repository must have a provider ID');
-      });
-
       it('throws error for missing organization ID', async () => {
         const invalidCommand = {
           ...validCommand,

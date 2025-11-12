@@ -30,7 +30,7 @@ import {
   User,
 } from '@packmind/types';
 
-import { assert } from 'console';
+import assert from 'assert';
 import { DataSource } from 'typeorm';
 
 jest.mock('@packmind/node-utils', () => {

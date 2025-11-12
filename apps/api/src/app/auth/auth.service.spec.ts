@@ -1,12 +1,6 @@
-import { AuthService } from './auth.service';
 import { JwtService } from '@nestjs/jwt';
-import {
-  createUserId,
-  createOrganizationId,
-  OrganizationId,
-  UserId,
-  UserOrganizationRole,
-} from '@packmind/types';
+import { createOrganizationId, createUserId } from '@packmind/types';
+import { AuthService, GetMeResponse } from './auth.service';
 import { JwtPayload } from './JwtPayload';
 
 describe('AuthService - getMe method', () => {
@@ -22,18 +16,7 @@ describe('AuthService - getMe method', () => {
       getOrganizationById: jest.Mock;
       getUserById: jest.Mock;
     }>;
-    getMe: (accessToken?: string) => Promise<{
-      user: {
-        id: UserId;
-        email: string;
-      };
-      organization: {
-        id: OrganizationId;
-        name: string;
-        slug: string;
-        role: UserOrganizationRole;
-      };
-    }>;
+    getMe: (accessToken?: string) => Promise<GetMeResponse>;
   };
 
   const mockPayload: JwtPayload = {
@@ -185,7 +168,7 @@ describe('AuthService - getMe method', () => {
               name: 'testuser@packmind.com',
               userId: createUserId('1'),
             },
-            organization: undefined,
+            organization: null,
             iat: Math.floor(Date.now() / 1000),
             exp: Math.floor(Date.now() / 1000) + 3600,
           };

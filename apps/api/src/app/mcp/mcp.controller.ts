@@ -11,6 +11,7 @@ import {
 import { TokenResponse } from '../auth/auth.service';
 import { McpService } from './mcp.service';
 import { AuthenticatedRequest } from '@packmind/node-utils';
+import { getErrorMessage } from '../shared/utils/error.utils';
 import { Configuration } from '@packmind/node-utils';
 
 @Controller('mcp')
@@ -61,7 +62,7 @@ export class McpController {
         'GET /mcp/token - Error generating token for authenticated user',
         {
           userId: request.user.userId,
-          error: error.message,
+          error: getErrorMessage(error),
         },
       );
 

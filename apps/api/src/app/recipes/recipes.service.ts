@@ -70,6 +70,7 @@ export class RecipesService {
   ): Promise<Recipe> {
     return this.recipesAdapter.captureRecipe({
       ...recipe,
+      summary: recipe.summary ?? undefined,
       organizationId,
       userId,
       spaceId,
