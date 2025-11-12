@@ -47,6 +47,10 @@ import {
   UpdateRuleDetectionHeuristicsCommand,
   DetectionModeEnum,
   SourceCodeState,
+  CopyDetectionHeuristicsCommand,
+  CopyDetectionHeuristicsResponse,
+  CopyLinterArtefactsResponse,
+  CopyLinterArtefactsCommand,
 } from '@packmind/types';
 import { ILinterPort } from '@packmind/types';
 
@@ -277,6 +281,20 @@ export class LinterAdapter implements ILinterPort {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     command: UpdateRuleDetectionHeuristicsCommand,
   ): Promise<UpdateRuleDetectionHeuristicsResponse> {
+    throw new Error('Method not implemented.');
+  }
+
+  copyDetectionHeuristics(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    command: CopyDetectionHeuristicsCommand,
+  ): Promise<CopyDetectionHeuristicsResponse> {
+    throw new Error('Method not implemented.');
+  }
+
+  copyLinterArtefacts(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    command: CopyLinterArtefactsCommand,
+  ): Promise<CopyLinterArtefactsResponse> {
     throw new Error('Method not implemented.');
   }
 }
