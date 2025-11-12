@@ -7,6 +7,7 @@ Standardize all domain adapters to use a consistent `IBaseAdapter` interface pat
 1. Adapters only declare ports they actually need
 2. **All declared ports are REQUIRED** - no optional (`?`) syntax
 3. Use cases receive guaranteed non-null ports - no null/undefined handling needed
+4. **HexaServices (like JobsService) should be treated like ports** - they can be passed to `initialize()` and checked in `isReady()`
 
 ## Per-Domain Transformation Steps
 
@@ -21,12 +22,16 @@ Apply this pattern to each of the 8 domains, one at a time, with a commit after 
 export class {Domain}Adapter implements IBaseAdapter<I{Domain}Port>, I{Domain}Port {
 ```
 
-#### 1.2 Declare only needed ports - NO null types
+#### 1.2 Declare only needed ports and services - NO null types
 ```typescript
 // Only declare ports this adapter actually uses
 // NO (| null) or (| undefined) - ports are set in initialize()
 private gitPort!: IGitPort;
 private accountsPort!: IAccountsPort;
+
+// HexaServices (like JobsService) are treated like ports
+private jobsService!: JobsService;
+private delayedJobs!: ISomeDelayedJobs; // Built from JobsService in initialize()
 
 // Don't declare ports you don't need at all
 ```
@@ -49,28 +54,37 @@ private _anotherUseCase!: AnotherUseCase;
 // No initialization in constructor
 ```
 
-#### 1.5 Add initialize() method - ALL PORTS REQUIRED
+#### 1.5 Add initialize() method - ALL PORTS AND SERVICES REQUIRED
 ```typescript
 /**
- * Initialize adapter with ports from registry.
- * All ports in signature are REQUIRED.
+ * Initialize adapter with ports and services from registry.
+ * All ports and services in signature are REQUIRED.
  */
 public initialize(ports: {
-  [IGitPortName]: IGitPort;              // Required
-  [IAccountsPortName]: IAccountsPort;    // Required
-  // Only list ports this adapter needs
-  // No optional (?) syntax - all are required
+  [IGitPortName]: IGitPort;              // Required port
+  [IAccountsPortName]: IAccountsPort;    // Required port
+  jobsService?: JobsService;             // Optional HexaService (if needed)
+  // Only list ports/services this adapter needs
+  // No optional (?) syntax for ports - all ports are required
+  // HexaServices can be optional if not all adapters need them
 }): void {
   // Step 1: Set all ports
   this.gitPort = ports[IGitPortName];
   this.accountsPort = ports[IAccountsPortName];
   
-  // Step 2: Validate all required ports are set
-  if (!this.isReady()) {
-    throw new Error('{Domain}Adapter: Required ports not provided');
+  // Step 2: Handle HexaServices if needed (e.g., JobsService for delayed jobs)
+  if (ports.jobsService) {
+    this.jobsService = ports.jobsService;
+    // Build delayed jobs from JobsService
+    this.delayedJobs = this.buildDelayedJobs(this.jobsService);
   }
   
-  // Step 3: Create all use cases with non-null ports
+  // Step 3: Validate all required ports/services are set
+  if (!this.isReady()) {
+    throw new Error('{Domain}Adapter: Required ports/services not provided');
+  }
+  
+  // Step 4: Create all use cases with non-null ports/services
   this._someUseCase = new SomeUseCase(
     this.services.getXxxService(),
     this.gitPort,
@@ -80,16 +94,36 @@ public initialize(ports: {
   this._anotherUseCase = new AnotherUseCase(
     this.services.getYyyService(),
     this.gitPort,
+    this.delayedJobs?.someJob, // Use delayed jobs if available
   );
+}
+
+/**
+ * Build delayed jobs from JobsService (if adapter needs delayed jobs).
+ * This method should be private and called from initialize().
+ */
+private buildDelayedJobs(jobsService: JobsService): ISomeDelayedJobs {
+  const jobFactory = new SomeJobFactory(this.logger, this.repositories);
+  jobsService.registerJobQueue(jobFactory.getQueueName(), jobFactory);
+  // ... setup and return delayed jobs
+  return { someJob: jobFactory.delayedJob };
 }
 ```
 
 #### 1.6 Add isReady() method
 ```typescript
 public isReady(): boolean {
-  // Check ALL declared ports are set (not undefined)
-  return this.gitPort !== undefined 
+  // Check ALL declared ports and required services are set (not undefined)
+  const portsReady = this.gitPort !== undefined 
     && this.accountsPort !== undefined;
+  
+  // If adapter needs delayed jobs, check them too
+  const servicesReady = this.delayedJobs !== undefined; // Only if needed
+  
+  return portsReady && servicesReady;
+  
+  // For adapters without service dependencies, just check ports:
+  // return this.gitPort !== undefined && this.accountsPort !== undefined;
 }
 ```
 
@@ -100,12 +134,16 @@ public getPort(): I{Domain}Port {
 }
 ```
 
-#### 1.8 Remove all individual port setters
+#### 1.8 Remove all individual port/service setters
 ```typescript
 // DELETE these methods entirely:
 public setGitPort(gitPort: IGitPort): void { ... }
 public setAccountsPort(port: IAccountsPort): void { ... }
 public updateRecipesPort(port: IRecipesPort): void { ... }
+public setDelayedJobs(delayedJobs: IDelayedJobs): void { ... }  // Move to initialize()
+
+// All dependencies (ports AND services) should be set via initialize() only
+// Delayed jobs building becomes an internal concern of the adapter
 ```
 
 #### 1.9 Clean up constructor
@@ -162,12 +200,16 @@ async initialize(registry: HexaRegistry): Promise<void> {
       // Only list ports the adapter needs
     };
     
-    // Initialize adapter once with all ports
-    // This will throw if any required port is missing
-    this.adapter.initialize(ports);
+    // If adapter needs HexaServices (like JobsService), add them to ports
+    const jobsService = registry.getService(JobsService);
+    if (jobsService) {
+      ports.jobsService = jobsService;
+    }
     
-    // Delayed jobs setup (if any) stays in Hexa
-    // ...
+    // Initialize adapter once with all ports and services
+    // This will throw if any required port/service is missing
+    // Delayed jobs are built internally by the adapter
+    this.adapter.initialize(ports);
     
     this.logger.info('{Domain}Hexa initialized successfully');
   } catch (error) {
@@ -180,6 +222,7 @@ async initialize(registry: HexaRegistry): Promise<void> {
 ```
 
 **No try/catch for ports** - if a port is needed, its absence should fail initialization.
+**Delayed jobs are now built inside the adapter** - Hexa just passes JobsService.
 
 #### 3.3 Update getAdapter()
 ```typescript
@@ -289,6 +332,12 @@ Apply this plan in this order (simplest → most complex):
 
 ## Special Cases per Domain
 
+### Standards (delayed jobs)
+- Adapter needs JobsService to build delayed jobs
+- Pass `jobsService` in `initialize()` ports parameter
+- Build delayed jobs internally in adapter via private `buildDelayedJobs()` method
+- Remove `setDelayedJobs()` public method
+
 ### Recipes (circular dependency)
 - Keep `RecipesHexa.setDeploymentPort()` method
 - Call `adapter.initialize()` twice with updated ports
@@ -297,9 +346,10 @@ Apply this plan in this order (simplest → most complex):
 - Constructor receives `deploymentsHexa` for repositories
 - Port dependencies in `initialize()`
 
-### Git (delayed jobs)
-- Delayed jobs stay in Hexa
-- Call `adapter.setGitDelayedJobs()` after `initialize()`
+### Git (delayed jobs - if applicable)
+- Similar to Standards - pass JobsService to adapter
+- Build delayed jobs internally in adapter
+- Remove any `setGitDelayedJobs()` public method
 
 ### Linter (OSS stub)
 - `initialize()` no-op
@@ -312,12 +362,16 @@ After completing each domain:
 - [ ] Only needed ports declared (all required, no optional `?`)
 - [ ] All port properties use `!:` definite assignment (no `| null` or `| undefined`)
 - [ ] Port names use `*Port` suffix
+- [ ] HexaServices (like JobsService) treated like ports if needed
+- [ ] Service properties use `!:` definite assignment (no `| null` or `| undefined`)
 - [ ] Use case properties use `!:` definite assignment
-- [ ] `initialize()` sets ports, checks `isReady()`, creates use cases
-- [ ] `isReady()` validates all ports are defined (not undefined)
-- [ ] No `set*Port()` methods remain
-- [ ] Use cases receive guaranteed non-null/non-undefined ports
-- [ ] Hexa calls `adapter.initialize(ports)` once
+- [ ] `initialize()` sets ports/services, checks `isReady()`, creates use cases
+- [ ] `isReady()` validates all ports and required services are defined (not undefined)
+- [ ] No `set*Port()` or `set*Service()` methods remain (all in `initialize()`)
+- [ ] Delayed jobs built internally in adapter (not in Hexa)
+- [ ] Use cases receive guaranteed non-null/non-undefined ports/services
+- [ ] Hexa calls `adapter.initialize(ports)` once with all dependencies
+- [ ] Hexa passes JobsService in ports if adapter needs it
 - [ ] Hexa doesn't use try/catch for required ports
 - [ ] Tests updated
 - [ ] `npm run quality-gate` passes
@@ -333,8 +387,8 @@ After all 8 domains are done:
 ## Progress Tracking
 
 - [x] Create IBaseAdapter interface (commit: 5da0918)
-- [x] Refactor SpacesAdapter (commit: latest)
-- [ ] Refactor StandardsAdapter
+- [x] Refactor SpacesAdapter (commit: b09af2c)
+- [x] Refactor StandardsAdapter (commit: pending)
 - [ ] Refactor CodingAgentAdapter
 - [ ] Refactor AccountsAdapter
 - [ ] Refactor GitAdapter

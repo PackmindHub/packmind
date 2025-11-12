@@ -1,4 +1,4 @@
-import { IBaseAdapter } from '@packmind/node-utils';
+import { IBaseAdapter, JobsService } from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
 import {
   IAccountsPort,
@@ -53,6 +53,7 @@ import { CreateRuleExampleUsecase } from './createRuleExample/createRuleExample.
 import { GetRuleExamplesUsecase } from './getRuleExamples/getRuleExamples.usecase';
 import { UpdateRuleExampleUsecase } from './updateRuleExample/updateRuleExample.usecase';
 import { DeleteRuleExampleUsecase } from './deleteRuleExample/deleteRuleExample.usecase';
+import { GenerateStandardSummaryJobFactory } from '../../infra/jobs/GenerateStandardSummaryJobFactory';
 
 const origin = 'StandardsAdapter';
 
@@ -103,17 +104,18 @@ export class StandardsAdapter
   }
 
   /**
-   * Initialize adapter with ports from registry.
+   * Initialize adapter with ports and services from registry.
    * All use cases are created here with non-null dependencies.
-   * Note: setDelayedJobs() must be called before initialize().
+   * Delayed jobs are built internally from JobsService.
    */
-  public initialize(ports: {
+  public async initialize(ports: {
     [IAccountsPortName]: IAccountsPort;
     [ISpacesPortName]: ISpacesPort;
     [ILinterPortName]: ILinterPort;
     [IDeploymentPortName]: IDeploymentPort;
-  }): void {
-    this.logger.info('Initializing StandardsAdapter with ports');
+    jobsService?: JobsService;
+  }): Promise<void> {
+    this.logger.info('Initializing StandardsAdapter with ports and services');
 
     // Step 1: Set all ports (all are required)
     this.accountsPort = ports[IAccountsPortName];
@@ -121,14 +123,19 @@ export class StandardsAdapter
     this.linterPort = ports[ILinterPortName];
     this.deploymentsPort = ports[IDeploymentPortName];
 
-    // Step 2: Validate required ports
+    // Step 2: Build delayed jobs from JobsService if provided
+    if (ports.jobsService) {
+      this.standardDelayedJobs = await this.buildDelayedJobs(ports.jobsService);
+    }
+
+    // Step 3: Validate required ports and services
     if (!this.isReady()) {
       throw new Error(
-        'StandardsAdapter: Required ports not provided. Ensure setDelayedJobs() is called before initialize().',
+        'StandardsAdapter: Required ports/services not provided. Ensure JobsService is passed to initialize().',
       );
     }
 
-    // Step 3: Create ALL use cases with non-null ports
+    // Step 4: Create ALL use cases with non-null ports
     // At this point, we know standardDelayedJobs is not null due to isReady() check
     // Use cases that don't depend on external ports
     this._listStandardVersions = new ListStandardVersionsUsecase(
@@ -239,7 +246,37 @@ export class StandardsAdapter
   }
 
   /**
-   * Check if adapter is ready (all required ports set).
+   * Build delayed jobs from JobsService.
+   * This is called internally during initialize().
+   */
+  private async buildDelayedJobs(
+    jobsService: JobsService,
+  ): Promise<IStandardDelayedJobs> {
+    this.logger.debug('Building standards delayed jobs');
+
+    const jobFactory = new GenerateStandardSummaryJobFactory(
+      this.logger,
+      this.repositories,
+    );
+
+    jobsService.registerJobQueue(jobFactory.getQueueName(), jobFactory);
+
+    await jobFactory.createQueue();
+
+    if (!jobFactory.delayedJob) {
+      throw new Error(
+        'StandardsAdapter: Failed to create delayed job for standard summary',
+      );
+    }
+
+    this.logger.debug('Standards delayed jobs built successfully');
+    return {
+      standardSummaryDelayedJob: jobFactory.delayedJob,
+    };
+  }
+
+  /**
+   * Check if adapter is ready (all required ports and services set).
    */
   public isReady(): boolean {
     return (
@@ -256,15 +293,6 @@ export class StandardsAdapter
    */
   public getPort(): IStandardsPort {
     return this as IStandardsPort;
-  }
-
-  /**
-   * Set delayed jobs - called by Hexa before initialize().
-   * This is a temporary method to maintain backward compatibility.
-   * @deprecated Use initialize() instead
-   */
-  public setDelayedJobs(delayedJobs: IStandardDelayedJobs): void {
-    this.standardDelayedJobs = delayedJobs;
   }
 
   // ===========================
