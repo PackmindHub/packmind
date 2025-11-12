@@ -41,7 +41,7 @@ export class CodingAgentHexa extends BaseHexa<BaseHexaOpts, ICodingAgentPort> {
     this.logger.info('Constructing CodingAgentHexa');
 
     try {
-      // Instantiate repositories without ports (will be set in initialize)
+      // Instantiate repositories without ports (will be recreated in initialize)
       this.codingAgentRepositories = new CodingAgentRepositories();
 
       // Instantiate services
@@ -55,12 +55,8 @@ export class CodingAgentHexa extends BaseHexa<BaseHexaOpts, ICodingAgentPort> {
         this.logger,
       );
 
-      // Instantiate adapter
-      this.adapter = new CodingAgentAdapter(
-        this.codingAgentServices,
-        this.codingAgentRepositories,
-        this.logger,
-      );
+      // Instantiate adapter without dependencies (will be set in initialize)
+      this.adapter = new CodingAgentAdapter(this.logger);
 
       this.logger.info('CodingAgentHexa construction completed');
     } catch (error) {
@@ -75,10 +71,10 @@ export class CodingAgentHexa extends BaseHexa<BaseHexaOpts, ICodingAgentPort> {
    * Initialize the hexa with access to the registry for port retrieval.
    */
   public async initialize(registry: HexaRegistry): Promise<void> {
-    this.logger.info('Initializing CodingAgentHexa (port retrieval phase)');
+    this.logger.info('Initializing CodingAgentHexa (adapter retrieval phase)');
 
     try {
-      // Retrieve ports from registry if available
+      // Get all required ports - let errors propagate
       const standardsPort =
         registry.getAdapter<IStandardsPort>(IStandardsPortName);
       const gitPort = registry.getAdapter<IGitPort>(IGitPortName);
@@ -100,12 +96,15 @@ export class CodingAgentHexa extends BaseHexa<BaseHexaOpts, ICodingAgentPort> {
         this.logger,
       );
 
-      // Recreate adapter with new services
-      this.adapter = new CodingAgentAdapter(
-        this.codingAgentServices,
-        this.codingAgentRepositories,
-        this.logger,
-      );
+      // Initialize adapter with ports, services, and repositories
+      this.adapter.initialize({
+        ports: {
+          [IStandardsPortName]: standardsPort,
+          [IGitPortName]: gitPort,
+        },
+        services: this.codingAgentServices,
+        repositories: this.codingAgentRepositories,
+      });
 
       this.logger.info('CodingAgentHexa initialized successfully');
     } catch (error) {
