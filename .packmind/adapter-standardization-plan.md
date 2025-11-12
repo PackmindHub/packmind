@@ -329,8 +329,8 @@ After all 8 domains are done:
 
 ## Progress Tracking
 
-- [x] Create IBaseAdapter interface
-- [ ] Refactor SpacesAdapter
+- [x] Create IBaseAdapter interface (commit: 5da0918)
+- [x] Refactor SpacesAdapter (commit: latest)
 - [ ] Refactor StandardsAdapter
 - [ ] Refactor CodingAgentAdapter
 - [ ] Refactor AccountsAdapter
