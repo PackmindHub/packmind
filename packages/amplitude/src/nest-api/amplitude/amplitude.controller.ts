@@ -20,8 +20,8 @@ export class AmplitudeController {
 
   @Get('config')
   async getConfig(): Promise<{
-    amplitudeKey: string | undefined;
-    amplitudeRegion: string | undefined;
+    amplitudeKey: string | null;
+    amplitudeRegion: string | null;
   }> {
     this.logger.info(
       'GET /amplitude/config - Fetching Amplitude configuration',

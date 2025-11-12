@@ -1,4 +1,4 @@
 export type AmplitudeConfig = {
-  amplitudeKey: string | undefined;
-  amplitudeRegion: string | undefined;
+  amplitudeKey: string | null;
+  amplitudeRegion: string | null;
 };

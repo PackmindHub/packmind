@@ -159,7 +159,7 @@ describe('ListDetectionProgramUseCase', () => {
         };
 
         mockGitPort.findGitRepoByOwnerRepoAndBranchInOrganization
-          .mockResolvedValueOnce(null)
+          .mockResolvedValueOnce({ gitRepo: null })
           .mockResolvedValueOnce({ gitRepo: mockGitRepo });
         mockDeploymentsAdapter.getTargetsByGitRepo.mockResolvedValue([]);
 
@@ -192,7 +192,7 @@ describe('ListDetectionProgramUseCase', () => {
         };
 
         mockGitPort.findGitRepoByOwnerRepoAndBranchInOrganization.mockResolvedValue(
-          null,
+          { gitRepo: null },
         );
         mockGitPort.getOrganizationRepositories.mockResolvedValue([
           mockGitRepo,
@@ -238,7 +238,7 @@ describe('ListDetectionProgramUseCase', () => {
         };
 
         mockGitPort.findGitRepoByOwnerRepoAndBranchInOrganization.mockResolvedValue(
-          null,
+          { gitRepo: null },
         );
         mockGitPort.getOrganizationRepositories.mockResolvedValue([
           newerRepo,
@@ -270,7 +270,7 @@ describe('ListDetectionProgramUseCase', () => {
     describe('when no repo found at all', () => {
       it('throws an error', async () => {
         mockGitPort.findGitRepoByOwnerRepoAndBranchInOrganization.mockResolvedValue(
-          null,
+          { gitRepo: null },
         );
         mockGitPort.getOrganizationRepositories.mockResolvedValue([]);
 

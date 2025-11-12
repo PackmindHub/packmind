@@ -1062,7 +1062,7 @@ describe('CreateDetectionProgramUseCase', () => {
           mode: DetectionModeEnum.REGEXP,
           organizationId,
           userId: createUserId(uuidv4()),
-        } as CreateDetectionProgramCommand;
+        } as unknown as CreateDetectionProgramCommand;
 
         await expect(
           createDetectionProgramUseCase.execute(commandWithoutLanguage),
