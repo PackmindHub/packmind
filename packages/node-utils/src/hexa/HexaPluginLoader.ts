@@ -17,11 +17,25 @@ export interface PluginManifest {
   version: string;
   id: string;
   description?: string;
+  // Legacy backend section (for backward compatibility)
   backend?: {
     hexaBundle?: string;
     hexaExport?: string;
     opts?: Partial<BaseHexaOpts>;
     nestjsModule?: string; // Export name of NestJS module class in the bundle
+  };
+  // New structure: separate sections for each target
+  hexa?: {
+    bundle: string;
+    export: string;
+    opts?: Partial<BaseHexaOpts>;
+  };
+  api?: {
+    bundle: string;
+    nestjsModule: string; // Export name of NestJS module class in the bundle
+  };
+  mcp?: {
+    bundle: string;
   };
   frontend?: {
     bundle: string;
@@ -153,40 +167,55 @@ export class HexaPluginLoader {
       pluginDir,
     };
 
-    // Load backend Hexa if present
-    if (manifest.backend?.hexaBundle && manifest.backend?.hexaExport) {
+    // Load Hexa if present (new structure or legacy backend)
+    const hexaConfig =
+      manifest.hexa ||
+      (manifest.backend?.hexaBundle && manifest.backend?.hexaExport
+        ? {
+            bundle: manifest.backend.hexaBundle,
+            export: manifest.backend.hexaExport,
+            opts: manifest.backend.opts,
+          }
+        : undefined);
+
+    if (hexaConfig) {
       this.logger.info(
-        `Loading backend Hexa: bundle=${manifest.backend.hexaBundle}, export=${manifest.backend.hexaExport}`,
+        `Loading Hexa: bundle=${hexaConfig.bundle}, export=${hexaConfig.export}`,
       );
       loadedPlugin.hexaClass = await this.loadHexaClass(
         pluginDir,
-        manifest.backend.hexaBundle,
-        manifest.backend.hexaExport,
+        hexaConfig.bundle,
+        hexaConfig.export,
       );
-      this.logger.info(
-        `Successfully loaded Hexa class: ${manifest.backend.hexaExport}`,
-      );
+      this.logger.info(`Successfully loaded Hexa class: ${hexaConfig.export}`);
     }
 
-    // Load NestJS module if present
-    if (manifest.backend?.nestjsModule) {
+    // Load NestJS module if present (new api section or legacy backend)
+    const apiConfig =
+      manifest.api ||
+      (manifest.backend?.nestjsModule
+        ? {
+            bundle: manifest.backend.hexaBundle!,
+            nestjsModule: manifest.backend.nestjsModule,
+          }
+        : undefined);
+
+    if (apiConfig) {
       this.logger.info(
-        `Loading NestJS module: bundle=${manifest.backend.hexaBundle || 'hexaBundle'}, export=${manifest.backend.nestjsModule}`,
+        `Loading NestJS module: bundle=${apiConfig.bundle}, export=${apiConfig.nestjsModule}`,
       );
-      // Use the same bundle as hexaBundle, or require hexaBundle to be specified
-      const bundlePath = manifest.backend.hexaBundle;
-      if (!bundlePath) {
+      if (!apiConfig.bundle) {
         throw new Error(
-          `nestjsModule specified but hexaBundle is required in ${pluginDir}`,
+          `api.nestjsModule specified but api.bundle is required in ${pluginDir}`,
         );
       }
       loadedPlugin.nestjsModule = await this.loadNestJSModule(
         pluginDir,
-        bundlePath,
-        manifest.backend.nestjsModule,
+        apiConfig.bundle,
+        apiConfig.nestjsModule,
       );
       this.logger.info(
-        `Successfully loaded NestJS module: ${manifest.backend.nestjsModule}`,
+        `Successfully loaded NestJS module: ${apiConfig.nestjsModule}`,
       );
     }
 
@@ -640,6 +669,7 @@ export class HexaPluginLoader {
       throw new Error(`Manifest missing "version" field in ${pluginDir}`);
     }
 
+    // Validate legacy backend structure
     if (manifest.backend) {
       // If hexaExport is specified, hexaBundle is required
       if (manifest.backend.hexaExport && !manifest.backend.hexaBundle) {
@@ -651,6 +681,43 @@ export class HexaPluginLoader {
       if (manifest.backend.nestjsModule && !manifest.backend.hexaBundle) {
         throw new Error(
           `Manifest backend has "nestjsModule" but missing "hexaBundle" field in ${pluginDir}`,
+        );
+      }
+    }
+
+    // Validate new hexa structure
+    if (manifest.hexa) {
+      if (!manifest.hexa.bundle) {
+        throw new Error(
+          `Manifest hexa section missing "bundle" field in ${pluginDir}`,
+        );
+      }
+      if (!manifest.hexa.export) {
+        throw new Error(
+          `Manifest hexa section missing "export" field in ${pluginDir}`,
+        );
+      }
+    }
+
+    // Validate new api structure
+    if (manifest.api) {
+      if (!manifest.api.bundle) {
+        throw new Error(
+          `Manifest api section missing "bundle" field in ${pluginDir}`,
+        );
+      }
+      if (!manifest.api.nestjsModule) {
+        throw new Error(
+          `Manifest api section missing "nestjsModule" field in ${pluginDir}`,
+        );
+      }
+    }
+
+    // Validate frontend structure
+    if (manifest.frontend) {
+      if (!manifest.frontend.bundle) {
+        throw new Error(
+          `Manifest frontend section missing "bundle" field in ${pluginDir}`,
         );
       }
     }

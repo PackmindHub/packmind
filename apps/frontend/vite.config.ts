@@ -4,6 +4,7 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 import Checker from 'vite-plugin-checker';
 import path from 'path';
+import { pluginRoutes } from './vite-plugin-plugin-routes';
 
 export default defineConfig(() => {
   // Determine edition mode
@@ -64,6 +65,7 @@ export default defineConfig(() => {
       host: 'localhost',
     },
     plugins: [
+      pluginRoutes(), // Load plugin routes at build time and write to routes.plugins.ts
       reactRouter(),
       nxViteTsPaths(),
       nxCopyAssetsPlugin(['*.md']),
