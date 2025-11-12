@@ -1,16 +1,18 @@
-import { GitProviderService } from '../../GitProviderService';
-import { GitRepoService } from '../../GitRepoService';
-import { AddGitRepoCommand, IAddGitRepoUseCase } from '@packmind/types';
-import { GitRepo } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
-import { createUserId, IAccountsPort } from '@packmind/types';
 import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
-import { IDeploymentPort } from '@packmind/types';
 import {
-  GitRepoAlreadyExistsError,
+  AddGitRepoCommand,
+  createUserId,
   GitProviderNotFoundError,
   GitProviderOrganizationMismatchError,
+  GitRepo,
+  GitRepoAlreadyExistsError,
+  IAccountsPort,
+  IAddGitRepoUseCase,
+  IDeploymentPort,
 } from '@packmind/types';
+import { GitProviderService } from '../../GitProviderService';
+import { GitRepoService } from '../../GitRepoService';
 
 const origin = 'AddGitRepoUseCase';
 
@@ -22,7 +24,7 @@ export class AddGitRepoUseCase
     private readonly gitProviderService: GitProviderService,
     private readonly gitRepoService: GitRepoService,
     accountsAdapter: IAccountsPort,
-    private readonly deploymentsAdapter?: IDeploymentPort,
+    private readonly deploymentsAdapter: IDeploymentPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsAdapter, accountsAdapter, logger);
@@ -33,11 +35,6 @@ export class AddGitRepoUseCase
   ): Promise<GitRepo> {
     const { organization, gitProviderId, owner, repo, branch, userId } =
       command;
-
-    // Check deployment port availability at the beginning
-    if (!this.deploymentsAdapter) {
-      throw new Error('DeploymentsAdapter is not available');
-    }
 
     // Business rule: gitProviderId is required
     if (!gitProviderId) {

@@ -1,4 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
+import { IBaseAdapter, JobsService } from '@packmind/node-utils';
 import {
   AddGitProviderCommand,
   AddGitRepoCommand,
@@ -9,22 +10,27 @@ import {
   FindGitRepoByOwnerRepoAndBranchInOrganizationCommand,
   FindGitRepoByOwnerRepoAndBranchInOrganizationResult,
   GetAvailableRemoteDirectoriesCommand,
+  GitCommit,
+  GitProvider,
+  GitProviderId,
+  GitRepo,
+  GitRepoId,
   HandleWebHookCommand,
   HandleWebHookResult,
   HandleWebHookWithoutContentCommand,
   HandleWebHookWithoutContentResult,
   IAccountsPort,
+  IAccountsPortName,
   IDeploymentPort,
+  IDeploymentPortName,
   IFindGitRepoByOwnerRepoAndBranchInOrganizationUseCase,
   IGitPort,
   OrganizationId,
   QueryOption,
   UserId,
 } from '@packmind/types';
-import { GitCommit } from '@packmind/types';
-import { GitProvider, GitProviderId } from '@packmind/types';
-import { GitRepo, GitRepoId } from '@packmind/types';
 import { IGitDelayedJobs } from '../../domain/jobs/IGitDelayedJobs';
+import { FetchFileContentJobFactory } from '../../infra/jobs/FetchFileContentJobFactory';
 import { GitServices } from '../GitServices';
 import { AddGitProviderUseCase } from '../useCases/addGitProvider/addGitProvider.usecase';
 import { AddGitRepoUseCase } from '../useCases/addGitRepo/addGitRepo.usecase';
@@ -45,179 +51,235 @@ import { ListAvailableReposUseCase } from '../useCases/listAvailableRepos/listAv
 import { ListProvidersUseCase } from '../useCases/listProviders/listProviders.usecase';
 import { ListReposUseCase } from '../useCases/listRepos/listRepos.usecase';
 import { UpdateGitProviderUseCase } from '../useCases/updateGitProvider/updateGitProvider.usecase';
+
 const origin = 'GitAdapter';
 
-export class GitAdapter implements IGitPort {
-  private _addGitProvider: AddGitProviderUseCase;
-  private accountsAdapter: IAccountsPort = {
-    async getUserById() {
-      throw new Error('Accounts adapter not configured for Git domain');
-    },
-    async getOrganizationById() {
-      throw new Error('Accounts adapter not configured for Git domain');
-    },
-  } as unknown as IAccountsPort;
-  private _addGitRepo: AddGitRepoUseCase;
-  private _deleteGitProvider: DeleteGitProviderUseCase;
-  private _deleteGitRepo: DeleteGitRepoUseCase;
-  private readonly _listAvailableRepos: ListAvailableReposUseCase;
-  private readonly _checkBranchExists: CheckBranchExistsUseCase;
-  private readonly _commitToGit: CommitToGit;
-  private readonly _handleWebHook: HandleWebHook;
-  private readonly _handleWebHookWithoutContent: HandleWebHookWithoutContent;
-  private readonly _getFileFromRepo: GetFileFromRepo;
-  private readonly _findGitRepoByOwnerAndRepo: FindGitRepoByOwnerAndRepoUseCase;
-  private readonly _listRepos: ListReposUseCase;
-  private readonly _listProviders: ListProvidersUseCase;
-  private readonly _getOrganizationRepositories: GetOrganizationRepositoriesUseCase;
-  private readonly _getRepositoryById: GetRepositoryByIdUseCase;
-  private _updateGitProvider: UpdateGitProviderUseCase;
-  private readonly _findGitRepoByOwnerRepoAndBranchInOrganization: IFindGitRepoByOwnerRepoAndBranchInOrganizationUseCase;
-  private readonly _getAvailableRemoteDirectories: GetAvailableRemoteDirectoriesUseCase;
-  private readonly _checkDirectoryExistence: CheckDirectoryExistenceUseCase;
+export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
+  private accountsPort!: IAccountsPort;
+  private deploymentsPort!: IDeploymentPort;
+  private gitDelayedJobs!: IGitDelayedJobs;
 
-  private deploymentsAdapter?: IDeploymentPort;
-  private gitDelayedJobs?: IGitDelayedJobs;
+  // Use cases - all initialized in initialize()
+  private _addGitProvider!: AddGitProviderUseCase;
+  private _addGitRepo!: AddGitRepoUseCase;
+  private _deleteGitProvider!: DeleteGitProviderUseCase;
+  private _deleteGitRepo!: DeleteGitRepoUseCase;
+  private _updateGitProvider!: UpdateGitProviderUseCase;
+  private _listAvailableRepos!: ListAvailableReposUseCase;
+  private _checkBranchExists!: CheckBranchExistsUseCase;
+  private _commitToGit!: CommitToGit;
+  private _handleWebHook!: HandleWebHook;
+  private _handleWebHookWithoutContent!: HandleWebHookWithoutContent;
+  private _getFileFromRepo!: GetFileFromRepo;
+  private _findGitRepoByOwnerAndRepo!: FindGitRepoByOwnerAndRepoUseCase;
+  private _listRepos!: ListReposUseCase;
+  private _listProviders!: ListProvidersUseCase;
+  private _getOrganizationRepositories!: GetOrganizationRepositoriesUseCase;
+  private _getRepositoryById!: GetRepositoryByIdUseCase;
+  private _findGitRepoByOwnerRepoAndBranchInOrganization!: IFindGitRepoByOwnerRepoAndBranchInOrganizationUseCase;
+  private _getAvailableRemoteDirectories!: GetAvailableRemoteDirectoriesUseCase;
+  private _checkDirectoryExistence!: CheckDirectoryExistenceUseCase;
 
   constructor(
     private readonly gitServices: GitServices,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    this._addGitProvider = this.createAddGitProviderUseCase();
-    this._addGitRepo = this.createAddGitRepoUseCase();
-    this._deleteGitProvider = this.createDeleteGitProviderUseCase();
-    this._deleteGitRepo = this.createDeleteGitRepoUseCase();
+    this.logger.info('GitAdapter constructed - awaiting initialization');
+  }
+
+  /**
+   * Initialize adapter with ports and services from registry.
+   * All ports are REQUIRED. JobsService is required for delayed jobs.
+   */
+  public async initialize(ports: {
+    [IAccountsPortName]: IAccountsPort;
+    [IDeploymentPortName]: IDeploymentPort;
+    jobsService?: JobsService;
+  }): Promise<void> {
+    this.logger.info('Initializing GitAdapter with ports and services');
+
+    // Step 1: Set all ports
+    this.accountsPort = ports[IAccountsPortName];
+    this.deploymentsPort = ports[IDeploymentPortName];
+
+    // Step 2: Build delayed jobs from JobsService if provided
+    if (ports.jobsService) {
+      this.gitDelayedJobs = await this.buildDelayedJobs(ports.jobsService);
+    }
+
+    // Step 3: Validate all required ports and services are set
+    if (!this.isReady()) {
+      throw new Error(
+        'GitAdapter: Required ports/services not provided. Ensure JobsService is passed to initialize().',
+      );
+    }
+
+    // Step 4: Create all use cases with non-null ports
+    // Use cases that depend on accountsPort
+    this._addGitProvider = new AddGitProviderUseCase(
+      this.gitServices.getGitProviderService(),
+      this.accountsPort,
+      this.logger,
+    );
+
+    this._addGitRepo = new AddGitRepoUseCase(
+      this.gitServices.getGitProviderService(),
+      this.gitServices.getGitRepoService(),
+      this.accountsPort,
+      this.deploymentsPort,
+    );
+
+    this._deleteGitProvider = new DeleteGitProviderUseCase(
+      this.gitServices.getGitProviderService(),
+      this.gitServices.getGitRepoService(),
+      this.accountsPort,
+      this.logger,
+    );
+
+    this._deleteGitRepo = new DeleteGitRepoUseCase(
+      this.gitServices.getGitProviderService(),
+      this.gitServices.getGitRepoService(),
+      this.accountsPort,
+      this.logger,
+    );
+
+    this._updateGitProvider = new UpdateGitProviderUseCase(
+      this.gitServices.getGitProviderService(),
+      this.accountsPort,
+      this.logger,
+    );
+
+    // Use cases that don't depend on external ports
     this._listAvailableRepos = new ListAvailableReposUseCase(
-      gitServices.getGitProviderService(),
+      this.gitServices.getGitProviderService(),
     );
+
     this._checkBranchExists = new CheckBranchExistsUseCase(
-      gitServices.getGitProviderService(),
+      this.gitServices.getGitProviderService(),
     );
+
     this._commitToGit = new CommitToGit(
-      gitServices.getGitCommitService(),
-      gitServices.getGitProviderService(),
-      gitServices.getGitRepoFactory(),
+      this.gitServices.getGitCommitService(),
+      this.gitServices.getGitProviderService(),
+      this.gitServices.getGitRepoFactory(),
       this.logger,
     );
+
     this._handleWebHook = new HandleWebHook(
-      gitServices.getGitCommitService(),
-      gitServices.getGitProviderService(),
-      gitServices.getGitRepoService(),
-      gitServices.getGitRepoFactory(),
+      this.gitServices.getGitCommitService(),
+      this.gitServices.getGitProviderService(),
+      this.gitServices.getGitRepoService(),
+      this.gitServices.getGitRepoFactory(),
       this.logger,
     );
+
     this._handleWebHookWithoutContent = new HandleWebHookWithoutContent(
-      gitServices.getGitCommitService(),
-      gitServices.getGitProviderService(),
-      gitServices.getGitRepoService(),
+      this.gitServices.getGitCommitService(),
+      this.gitServices.getGitProviderService(),
+      this.gitServices.getGitRepoService(),
       this.logger,
     );
+
     this._getFileFromRepo = new GetFileFromRepo(
-      gitServices.getGitProviderService(),
-      gitServices.getGitRepoFactory(),
+      this.gitServices.getGitProviderService(),
+      this.gitServices.getGitRepoFactory(),
       this.logger,
     );
+
     this._findGitRepoByOwnerAndRepo = new FindGitRepoByOwnerAndRepoUseCase(
-      gitServices.getGitRepoService(),
+      this.gitServices.getGitRepoService(),
     );
+
     this._listRepos = new ListReposUseCase(
-      gitServices.getGitProviderService(),
-      gitServices.getGitRepoService(),
+      this.gitServices.getGitProviderService(),
+      this.gitServices.getGitRepoService(),
     );
+
     this._listProviders = new ListProvidersUseCase(
-      gitServices.getGitProviderService(),
+      this.gitServices.getGitProviderService(),
     );
+
     this._getOrganizationRepositories = new GetOrganizationRepositoriesUseCase(
-      gitServices.getGitRepoService(),
+      this.gitServices.getGitRepoService(),
     );
+
     this._getRepositoryById = new GetRepositoryByIdUseCase(
-      gitServices.getGitRepoService(),
+      this.gitServices.getGitRepoService(),
     );
-    this._updateGitProvider = this.createUpdateGitProviderUseCase();
+
     this._findGitRepoByOwnerRepoAndBranchInOrganization =
       new FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase(
-        gitServices.getGitRepoService(),
+        this.gitServices.getGitRepoService(),
       );
+
     this._getAvailableRemoteDirectories =
       new GetAvailableRemoteDirectoriesUseCase(
-        gitServices.getGitProviderService(),
+        this.gitServices.getGitProviderService(),
       );
+
     this._checkDirectoryExistence = new CheckDirectoryExistenceUseCase(
-      gitServices.getGitRepoService(),
-      gitServices.getGitProviderService(),
-      gitServices.getGitRepoFactory(),
+      this.gitServices.getGitRepoService(),
+      this.gitServices.getGitProviderService(),
+      this.gitServices.getGitRepoFactory(),
     );
 
-    this.logger.info('GitAdapter initialized successfully');
+    this.logger.info('GitAdapter initialized successfully with all use cases');
   }
 
   /**
-   * Set the deployments adapter for creating default targets
+   * Build delayed jobs from JobsService.
+   * This is called internally during initialize().
    */
-  public setDeploymentsAdapter(adapter: IDeploymentPort): void {
-    this.deploymentsAdapter = adapter;
-    // Recreate the AddGitRepoUseCase with the deployment adapter
-    this._addGitRepo = this.createAddGitRepoUseCase();
+  private async buildDelayedJobs(
+    jobsService: JobsService,
+  ): Promise<IGitDelayedJobs> {
+    this.logger.debug('Building git delayed jobs');
+
+    const fetchFileContentJobFactory = new FetchFileContentJobFactory(
+      this.gitServices.getGitRepoService(),
+      this.gitServices.getGitProviderService(),
+      this.gitServices.getGitRepoFactory(),
+      this.logger,
+    );
+
+    jobsService.registerJobQueue(
+      fetchFileContentJobFactory.getQueueName(),
+      fetchFileContentJobFactory,
+    );
+
+    await fetchFileContentJobFactory.createQueue();
+
+    if (!fetchFileContentJobFactory.delayedJob) {
+      throw new Error('DelayedJob not found for FetchFileContent');
+    }
+
+    this.logger.debug('Git delayed jobs built successfully');
+    return {
+      fetchFileContentDelayedJob: fetchFileContentJobFactory.delayedJob,
+    };
   }
 
   /**
-   * Set the git delayed jobs for accessing job queues
+   * Check if adapter is ready (all required ports and services set).
    */
-  public setGitDelayedJobs(delayedJobs: IGitDelayedJobs): void {
-    this.gitDelayedJobs = delayedJobs;
-  }
-
-  private createAddGitProviderUseCase(): AddGitProviderUseCase {
-    return new AddGitProviderUseCase(
-      this.gitServices.getGitProviderService(),
-      this.accountsAdapter,
-      this.logger,
+  public isReady(): boolean {
+    return (
+      this.accountsPort !== undefined &&
+      this.deploymentsPort !== undefined &&
+      this.gitDelayedJobs !== undefined
     );
   }
 
-  private createAddGitRepoUseCase(): AddGitRepoUseCase {
-    return new AddGitRepoUseCase(
-      this.gitServices.getGitProviderService(),
-      this.gitServices.getGitRepoService(),
-      this.accountsAdapter,
-      this.deploymentsAdapter,
-    );
+  /**
+   * Get the port interface this adapter implements.
+   */
+  public getPort(): IGitPort {
+    return this as IGitPort;
   }
 
-  private createDeleteGitProviderUseCase(): DeleteGitProviderUseCase {
-    return new DeleteGitProviderUseCase(
-      this.gitServices.getGitProviderService(),
-      this.gitServices.getGitRepoService(),
-      this.accountsAdapter,
-      this.logger,
-    );
-  }
-
-  private createDeleteGitRepoUseCase(): DeleteGitRepoUseCase {
-    return new DeleteGitRepoUseCase(
-      this.gitServices.getGitProviderService(),
-      this.gitServices.getGitRepoService(),
-      this.accountsAdapter,
-      this.logger,
-    );
-  }
-
-  private createUpdateGitProviderUseCase(): UpdateGitProviderUseCase {
-    return new UpdateGitProviderUseCase(
-      this.gitServices.getGitProviderService(),
-      this.accountsAdapter,
-      this.logger,
-    );
-  }
-
-  public setAccountsAdapter(adapter: IAccountsPort): void {
-    this.accountsAdapter = adapter;
-    this._addGitProvider = this.createAddGitProviderUseCase();
-    this._addGitRepo = this.createAddGitRepoUseCase();
-    this._deleteGitProvider = this.createDeleteGitProviderUseCase();
-    this._deleteGitRepo = this.createDeleteGitRepoUseCase();
-    this._updateGitProvider = this.createUpdateGitProviderUseCase();
-  }
+  // ===========================
+  // IGitPort Implementation
+  // ===========================
 
   public addGitProvider(command: AddGitProviderCommand): Promise<GitProvider> {
     return this._addGitProvider.execute(command);
@@ -391,9 +453,6 @@ export class GitAdapter implements IGitPort {
     input: FetchFileContentInput,
     onComplete?: (result: FetchFileContentOutput) => Promise<void> | void,
   ): Promise<string> {
-    if (!this.gitDelayedJobs) {
-      throw new Error('Git delayed jobs not initialized');
-    }
     return this.gitDelayedJobs.fetchFileContentDelayedJob.addJobWithCallback(
       input,
       onComplete,

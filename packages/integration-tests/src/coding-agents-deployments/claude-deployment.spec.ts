@@ -1,5 +1,6 @@
 import { accountsSchemas } from '@packmind/accounts';
 import { ClaudeDeployer, DeployerService } from '@packmind/coding-agent';
+import { deploymentsSchemas } from '@packmind/deployments';
 import { gitSchemas } from '@packmind/git';
 import { recipesSchemas } from '@packmind/recipes';
 import { spacesSchemas } from '@packmind/spaces';
@@ -9,7 +10,6 @@ import {
   createTargetId,
   GitProviderVendors,
   GitRepo,
-  IDeploymentPort,
   IGitPort,
   IStandardsPort,
   Organization,
@@ -50,6 +50,7 @@ describe('Claude Deployment Integration', () => {
       ...standardsSchemas,
       ...spacesSchemas,
       ...gitSchemas,
+      ...deploymentsSchemas,
     ]);
     await dataSource.initialize();
     await dataSource.synchronize();
@@ -60,15 +61,6 @@ describe('Claude Deployment Integration', () => {
 
     // Get deployer service from hexa
     deployerService = testApp.codingAgentHexa.getDeployerService();
-
-    const mockDeploymentPort = {
-      addTarget: jest.fn(),
-    } as Partial<jest.Mocked<IDeploymentPort>> as jest.Mocked<IDeploymentPort>;
-
-    testApp.gitHexa.setDeploymentsAdapter(mockDeploymentPort);
-
-    const accountsAdapter = testApp.accountsHexa.getAdapter();
-    testApp.gitHexa.setAccountsAdapter(accountsAdapter);
 
     // Get adapters
     standardsPort = testApp.standardsHexa.getAdapter();
