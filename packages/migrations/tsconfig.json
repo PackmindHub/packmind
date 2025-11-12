@@ -3,6 +3,7 @@
   "compilerOptions": {
     "module": "commonjs",
     "baseUrl": "../../",
+    "strict": false,
     "paths": {
       "@packmind/git": ["packages/git/src/index.ts"],
       "@packmind/migrations": ["packages/migrations/src/index.ts"],
