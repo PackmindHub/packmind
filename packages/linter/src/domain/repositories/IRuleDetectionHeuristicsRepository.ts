@@ -13,6 +13,8 @@ export interface IRuleDetectionHeuristicsRepository {
     language: ProgrammingLanguage,
   ): Promise<DetectionHeuristics | null>;
 
+  getAllHeuristicsForRule(ruleId: RuleId): Promise<DetectionHeuristics[]>;
+
   updateHeuristics(
     id: DetectionHeuristicsId,
     heuristics: string,

@@ -1,6 +1,7 @@
 export * from './ComputeRuleLanguageDetectionStatusUseCase';
 export * from './GetStandardRulesDetectionStatusUseCase';
 export * from './IAssessRuleDetectionJob';
+export * from './ICopyDetectionHeuristics';
 export * from './ICopyDetectionProgramsToNewRule';
 export * from './ICopyRuleDetectionAssessments';
 export * from './ICreateDetectionHeuristics';

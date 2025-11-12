@@ -111,4 +111,27 @@ export class RuleDetectionHeuristicsCacheRepository
 
     return heuristics;
   }
+
+  async getAllHeuristicsForRule(
+    ruleId: RuleId,
+  ): Promise<DetectionHeuristics[]> {
+    this.logger.info('Getting all detection heuristics for rule', { ruleId });
+
+    const allHeuristics: DetectionHeuristics[] = [];
+    const languageValues = Object.values(ProgrammingLanguage);
+
+    for (const language of languageValues) {
+      const heuristics = await this.getHeuristicsForRule(ruleId, language);
+      if (heuristics) {
+        allHeuristics.push(heuristics);
+      }
+    }
+
+    this.logger.info('Retrieved detection heuristics for rule', {
+      ruleId,
+      count: allHeuristics.length,
+    });
+
+    return allHeuristics;
+  }
 }
