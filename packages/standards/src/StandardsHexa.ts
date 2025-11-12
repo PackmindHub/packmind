@@ -1,6 +1,10 @@
-import { JobsHexa } from '@packmind/jobs';
 import { PackmindLogger } from '@packmind/logger';
-import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
+import {
+  BaseHexa,
+  BaseHexaOpts,
+  HexaRegistry,
+  JobsService,
+} from '@packmind/node-utils';
 import {
   IAccountsPort,
   IAccountsPortName,
@@ -89,15 +93,15 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
     );
 
     try {
-      // Get JobsHexa (required) for delayed job registration
-      const jobsHexa = registry.get(JobsHexa);
-      if (!jobsHexa) {
-        throw new Error('JobsHexa not found in registry');
+      // Get JobsService (required) for delayed job registration
+      const jobsService = registry.getService(JobsService);
+      if (!jobsService) {
+        throw new Error('JobsService not found in registry');
       }
 
       this.logger.debug('Building standards delayed jobs');
       const standardsDelayedJobs = await this.buildStandardsDelayedJobs(
-        jobsHexa,
+        jobsService,
         this.standardsRepositories,
       );
 
@@ -152,16 +156,16 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
   }
 
   private async buildStandardsDelayedJobs(
-    jobsHexa: JobsHexa,
+    jobsService: JobsService,
     standardRepositories: IStandardsRepositories,
   ): Promise<IStandardDelayedJobs> {
-    // Register our job queue with JobsHexa
+    // Register our job queue with JobsService
     const jobStandardSummaryFactory = new GenerateStandardSummaryJobFactory(
       this.logger,
       standardRepositories,
     );
 
-    jobsHexa.registerJobQueue(
+    jobsService.registerJobQueue(
       jobStandardSummaryFactory.getQueueName(),
       jobStandardSummaryFactory,
     );

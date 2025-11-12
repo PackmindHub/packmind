@@ -1,9 +1,9 @@
 import { PackmindLogger } from '@packmind/logger';
-import { Configuration } from '@packmind/node-utils';
+import { Configuration } from '../../config/config/Configuration';
 import { IDelayedJob } from '../domain/IDelayedJob';
 import { IQueue, QueueListeners, WorkerListeners } from '../domain/IQueue';
-import { PackmindSerializer } from '../utils/PackmindSerializer';
 import { TokensUsed, TokensUsedByOperation } from '../domain/TokensUsed';
+import { PackmindSerializer } from '../utils/PackmindSerializer';
 
 export abstract class AbstractAIDelayedJob<Input, Output>
   implements IDelayedJob<Input, Output>

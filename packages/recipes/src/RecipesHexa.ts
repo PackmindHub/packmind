@@ -1,6 +1,10 @@
-import { JobsHexa } from '@packmind/jobs';
 import { PackmindLogger } from '@packmind/logger';
-import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
+import {
+  BaseHexa,
+  BaseHexaOpts,
+  HexaRegistry,
+  JobsService,
+} from '@packmind/node-utils';
 import {
   IAccountsPort,
   IAccountsPortName,
@@ -114,8 +118,9 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
       // Build delayed jobs if deployment port is available
       if (this._deploymentPort) {
         this.logger.debug('Building recipes delayed jobs');
-        const jobsHexa = registry.get(JobsHexa);
-        this.recipesDelayedJobs = await this.buildRecipesDelayedJobs(jobsHexa);
+        const jobsService = registry.getService(JobsService);
+        this.recipesDelayedJobs =
+          await this.buildRecipesDelayedJobs(jobsService);
         this.adapter.setRecipesDelayedJobs(this.recipesDelayedJobs);
       } else {
         this.logger.warn(
@@ -137,7 +142,7 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
    * Build and register all recipes delayed jobs
    */
   private async buildRecipesDelayedJobs(
-    jobsHexa: JobsHexa,
+    jobsService: JobsService,
   ): Promise<IRecipesDelayedJobs> {
     this.logger.info('Building recipes delayed jobs');
 
@@ -162,17 +167,17 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
     );
     await deployRecipesJobFactory.createQueue();
 
-    // Register job factories with JobsHexa
+    // Register job factories with JobsService
     this.logger.debug(
       'Registering UpdateRecipesAndGenerateSummaries job queue',
     );
-    jobsHexa.registerJobQueue(
+    jobsService.registerJobQueue(
       updateRecipesJobFactory.getQueueName(),
       updateRecipesJobFactory,
     );
 
     this.logger.debug('Registering DeployRecipes job queue');
-    jobsHexa.registerJobQueue(
+    jobsService.registerJobQueue(
       deployRecipesJobFactory.getQueueName(),
       deployRecipesJobFactory,
     );
@@ -228,8 +233,8 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
       this.logger.debug(
         'Building recipes delayed jobs after deployment port set',
       );
-      const jobsHexa = registry.get(JobsHexa);
-      this.recipesDelayedJobs = await this.buildRecipesDelayedJobs(jobsHexa);
+      const jobsService = registry.getService(JobsService);
+      this.recipesDelayedJobs = await this.buildRecipesDelayedJobs(jobsService);
       this.adapter.setRecipesDelayedJobs(this.recipesDelayedJobs);
     }
   }

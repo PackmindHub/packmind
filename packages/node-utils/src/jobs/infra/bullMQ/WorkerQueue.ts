@@ -1,5 +1,5 @@
 import { Job, Worker } from 'bullmq';
-import { Configuration } from '@packmind/node-utils';
+import { Configuration } from '../../../config/config/Configuration';
 import { Runner, WorkerListeners } from '../../domain/IQueue';
 import { AbstractQueue } from './AbstractQueue';
 

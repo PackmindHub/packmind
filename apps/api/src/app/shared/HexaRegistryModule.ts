@@ -7,7 +7,13 @@ import { DeploymentsHexa } from '@packmind/deployments';
 import { GitHexa } from '@packmind/git';
 import { LinterHexa } from '@packmind/linter';
 import { PackmindLogger } from '@packmind/logger';
-import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
+import {
+  BaseHexa,
+  BaseHexaOpts,
+  BaseService,
+  BaseServiceOpts,
+  HexaRegistry,
+} from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
 import { SpacesHexa } from '@packmind/spaces';
 import { StandardsHexa } from '@packmind/standards';
@@ -35,6 +41,14 @@ export interface HexaRegistryModuleOptions {
    */
   hexas: Array<
     new (dataSource: DataSource, opts?: Partial<BaseHexaOpts>) => BaseHexa
+  >;
+  /**
+   * Array of service constructor classes in dependency order
+   * Order matters for instantiation - dependencies should come first
+   * e.g., [JobsService]
+   */
+  services?: Array<
+    new (dataSource: DataSource, opts?: Partial<BaseServiceOpts>) => BaseService
   >;
 }
 
@@ -80,7 +94,7 @@ export const CODING_AGENT_ADAPTER_TOKEN = 'CODING_AGENT_ADAPTER';
 @Module({})
 export class HexaRegistryModule {
   /**
-   * Register the HexaRegistry module with domain hexas
+   * Register the HexaRegistry module with domain hexas and infrastructure services
    */
   static register(options: HexaRegistryModuleOptions): DynamicModule {
     const providers = HexaRegistryModule.createProviders(options);
@@ -92,6 +106,7 @@ export class HexaRegistryModule {
       exports: [
         HEXA_REGISTRY_TOKEN,
         ...options.hexas,
+        ...(options.services || []),
         ACCOUNTS_ADAPTER_TOKEN,
         DEPLOYMENT_ADAPTER_TOKEN,
         RECIPES_ADAPTER_TOKEN,
@@ -149,6 +164,13 @@ export class HexaRegistryModule {
           }
         }
 
+        // Register all service types in the specified order
+        if (options.services) {
+          for (const ServiceClass of options.services) {
+            registry.registerService(ServiceClass);
+          }
+        }
+
         // Initialize the registry with the DataSource (this now includes async initialization)
         await registry.init(dataSource);
 
@@ -166,6 +188,19 @@ export class HexaRegistryModule {
         },
         inject: [HEXA_REGISTRY_TOKEN],
       });
+    }
+
+    // Provide individual services as injectable services by class reference
+    if (options.services) {
+      for (const ServiceClass of options.services) {
+        providers.push({
+          provide: ServiceClass,
+          useFactory: (registry: HexaRegistry) => {
+            return registry.getService(ServiceClass);
+          },
+          inject: [HEXA_REGISTRY_TOKEN],
+        });
+      }
     }
 
     // Provide adapters as injectable services

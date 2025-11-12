@@ -1,4 +1,4 @@
-import { IJobFactory, IJobQueue, queueFactory } from '@packmind/jobs';
+import { IJobFactory, IJobQueue, queueFactory } from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
 import { GenerateStandardSummaryInput } from '../../domain/jobs/GenerateStandardSummary';
 import { GenerateStandardSummaryDelayedJob } from '../../application/jobs/GenerateStandardSummaryDelayedJob';

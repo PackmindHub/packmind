@@ -9,7 +9,6 @@
     "tslib": "^2.3.0",
     "typeorm": "0.3.27",
     "@packmind/git": "*",
-    "@packmind/jobs": "*",
     "@packmind/logger": "*",
     "@packmind/node-utils": "*",
     "@packmind/spaces": "*",

@@ -1,6 +1,10 @@
-import { JobsHexa } from '@packmind/jobs';
 import { PackmindLogger } from '@packmind/logger';
-import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
+import {
+  BaseHexa,
+  BaseHexaOpts,
+  HexaRegistry,
+  JobsService,
+} from '@packmind/node-utils';
 import {
   IAccountsPort,
   IAccountsPortName,
@@ -111,14 +115,14 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
         this.logger.debug('DeploymentsHexa not available in registry');
       }
 
-      // Get JobsHexa (required) for delayed job registration
-      const jobsHexa = registry.get(JobsHexa);
-      if (!jobsHexa) {
-        throw new Error('JobsHexa not found in registry');
+      // Get JobsService (required) for delayed job registration
+      const jobsService = registry.getService(JobsService);
+      if (!jobsService) {
+        throw new Error('JobsService not found in registry');
       }
 
       this.logger.debug('Building git delayed jobs');
-      this.gitDelayedJobs = await this.buildGitDelayedJobs(jobsHexa);
+      this.gitDelayedJobs = await this.buildGitDelayedJobs(jobsService);
 
       // Pass delayed jobs to adapter so it can expose them through the port
       this.adapter.setGitDelayedJobs(this.gitDelayedJobs);
@@ -134,9 +138,9 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
   }
 
   private async buildGitDelayedJobs(
-    jobsHexa: JobsHexa,
+    jobsService: JobsService,
   ): Promise<IGitDelayedJobs> {
-    // Register our job queue with JobsHexa
+    // Register our job queue with JobsService
     const fetchFileContentJobFactory = new FetchFileContentJobFactory(
       this.gitServices.getGitRepoService(),
       this.gitServices.getGitProviderService(),
@@ -144,7 +148,7 @@ export class GitHexa extends BaseHexa<GitHexaOpts, IGitPort> {
       this.logger,
     );
 
-    jobsHexa.registerJobQueue(
+    jobsService.registerJobQueue(
       fetchFileContentJobFactory.getQueueName(),
       fetchFileContentJobFactory,
     );

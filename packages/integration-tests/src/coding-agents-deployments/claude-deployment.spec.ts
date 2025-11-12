@@ -5,8 +5,7 @@ import {
   DeployerService,
 } from '@packmind/coding-agent';
 import { GitHexa, gitSchemas } from '@packmind/git';
-import { JobsHexa } from '@packmind/jobs';
-import { HexaRegistry } from '@packmind/node-utils';
+import { HexaRegistry, JobsService } from '@packmind/node-utils';
 import { RecipesHexa, recipesSchemas } from '@packmind/recipes';
 import { SpacesHexa, spacesSchemas } from '@packmind/spaces';
 import { StandardsHexa, standardsSchemas } from '@packmind/standards';
@@ -32,21 +31,6 @@ import {
 
 import assert from 'assert';
 import { DataSource } from 'typeorm';
-
-jest.mock('@packmind/node-utils', () => {
-  const actual = jest.requireActual('@packmind/node-utils');
-  return {
-    ...actual,
-    Configuration: {
-      getConfig: jest.fn().mockImplementation((key: string) => {
-        if (key === 'ENCRYPTION_KEY') {
-          return Promise.resolve('random-encryption-key-for-testing');
-        }
-        return Promise.resolve(null);
-      }),
-    },
-  };
-});
 
 describe('Claude Deployment Integration', () => {
   let accountsHexa: AccountsHexa;
@@ -86,7 +70,7 @@ describe('Claude Deployment Integration', () => {
     // Register hexas before initialization
     // NOTE: SpacesHexa must be registered before AccountsHexa
     // because AccountsHexa needs SpacesPort to create default space during signup
-    registry.register(JobsHexa);
+    registry.registerService(JobsService);
     registry.register(GitHexa);
     registry.register(SpacesHexa);
     registry.register(AccountsHexa);

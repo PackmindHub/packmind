@@ -5,7 +5,7 @@ import {
   IQueue,
   QueueListeners,
   WorkerListeners,
-} from '@packmind/jobs';
+} from '@packmind/node-utils';
 import { Job } from 'bullmq';
 import {
   UpdateRecipesAndGenerateSummariesInput,

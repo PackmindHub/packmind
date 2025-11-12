@@ -1,8 +1,8 @@
 // Global setup for integration tests to mock Redis connections
 
-// Mock the queueFactory function to avoid Redis connections
-jest.mock('@packmind/jobs', () => {
-  const actual = jest.requireActual('@packmind/jobs');
+// Mock the queueFactory and Configuration from @packmind/node-utils
+jest.mock('@packmind/node-utils', () => {
+  const actual = jest.requireActual('@packmind/node-utils');
 
   // Simple mock that implements the IQueue interface
   const createMockQueue = () => ({
@@ -16,13 +16,6 @@ jest.mock('@packmind/jobs', () => {
     queueFactory: jest
       .fn()
       .mockImplementation(() => Promise.resolve(createMockQueue())),
-  };
-});
-
-jest.mock('@packmind/node-utils', () => {
-  const actual = jest.requireActual('@packmind/node-utils');
-  return {
-    ...actual,
     Configuration: {
       getConfig: jest.fn().mockImplementation((key: string) => {
         if (key === 'ENCRYPTION_KEY') {

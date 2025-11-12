@@ -1,10 +1,10 @@
-import { IJobFactory, IJobQueue, queueFactory } from '@packmind/jobs';
 import { PackmindLogger } from '@packmind/logger';
-import { FetchFileContentInput } from '../../domain/jobs/FetchFileContent';
-import { FetchFileContentDelayedJob } from '../../application/jobs/FetchFileContentDelayedJob';
-import { GitRepoService } from '../../application/GitRepoService';
-import { GetFileFromRepo } from '../../application/useCases/getFileFromRepo/getFileFromRepo.usecase';
+import { IJobFactory, IJobQueue, queueFactory } from '@packmind/node-utils';
 import { GitProviderService } from '../../application/GitProviderService';
+import { GitRepoService } from '../../application/GitRepoService';
+import { FetchFileContentDelayedJob } from '../../application/jobs/FetchFileContentDelayedJob';
+import { GetFileFromRepo } from '../../application/useCases/getFileFromRepo/getFileFromRepo.usecase';
+import { FetchFileContentInput } from '../../domain/jobs/FetchFileContent';
 import { IGitRepoFactory } from '../../domain/repositories/IGitRepoFactory';
 
 const origin = 'FetchFileContentJobFactory';

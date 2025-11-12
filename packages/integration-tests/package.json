@@ -11,7 +11,6 @@
     "@packmind/accounts": "*",
     "@packmind/recipes": "*",
     "@packmind/git": "*",
-    "@packmind/jobs": "*",
     "@packmind/node-utils": "*",
     "@packmind/types": "*",
     "@packmind/spaces": "*",
@@ -20,6 +19,7 @@
     "@packmind/coding-agent": "*",
     "@packmind/deployments": "*",
     "uuid": "11.1.0",
-    "@packmind/test-utils": "0.0.1"
+    "@packmind/test-utils": "0.0.1",
+    "@packmind/editions": "0.0.1"
   }
 }
