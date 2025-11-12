@@ -1,7 +1,10 @@
 import { parseCodeOrJsonFromAIAnswer } from '../generateProgramUseCase/program/ProgramOutputUtils';
 import { generate_rule_assessment } from './prompts/generate_rule_assessment';
-import { DetectionProgramRuleInput } from '@packmind/types';
-import { AssessmentDetectionReadiness } from '../../../domain/entities/DetectionHeuristics';
+import {
+  DetectionProgramRuleInput,
+  AssessmentDetectionReadiness,
+  DetectionHeuristics,
+} from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import {
   AI_RESPONSE_FORMAT,
@@ -25,10 +28,12 @@ export class RuleDetectionAssessmentService extends AIRequestEmitter {
 
   public async runFeasibilityAssessment(
     detectionProgramRuleInput: DetectionProgramRuleInput,
+    existingHeuristics: DetectionHeuristics | null = null,
   ): Promise<AssessmentDetectionReadiness> {
     const prompt = this.buildPromptWithRule(
       generate_rule_assessment,
       detectionProgramRuleInput,
+      existingHeuristics,
     );
     const MAX_RETRY = 3;
     let i = 0;
@@ -93,9 +98,38 @@ export class RuleDetectionAssessmentService extends AIRequestEmitter {
     };
   }
 
-  private buildPromptWithRule(prompt: string, rule: DetectionProgramRuleInput) {
+  private buildPromptWithRule(
+    prompt: string,
+    rule: DetectionProgramRuleInput,
+    existingHeuristics: DetectionHeuristics | null,
+  ) {
     const ruleText = this.getRuleText(rule);
-    return prompt.replace('$CODING_RULE$', ruleText);
+    let updatedPrompt = prompt.replace('$CODING_RULE$', ruleText);
+
+    // Inject heuristics section if they exist and are not empty
+    if (existingHeuristics && existingHeuristics.heuristics.trim() !== '') {
+      const heuristicsSection = `
+## Detection Heuristics (if available)
+
+The following heuristics may help you assess the detectability of similar rules. Use them to inform your evaluation, but do not rely on them exclusively:
+
+"""
+${existingHeuristics.heuristics}
+"""
+`;
+      updatedPrompt = updatedPrompt.replace(
+        /## Detection Heuristics \(if available\)[\s\S]*?\$DETECTION_HEURISTICS\$[\s\S]*?"""\s*/,
+        heuristicsSection,
+      );
+    } else {
+      // Remove the entire heuristics section if not available
+      updatedPrompt = updatedPrompt.replace(
+        /## Detection Heuristics \(if available\)[\s\S]*?\$DETECTION_HEURISTICS\$[\s\S]*?"""\s*/,
+        '',
+      );
+    }
+
+    return updatedPrompt;
   }
 
   private getRuleText(rule: DetectionProgramRuleInput) {

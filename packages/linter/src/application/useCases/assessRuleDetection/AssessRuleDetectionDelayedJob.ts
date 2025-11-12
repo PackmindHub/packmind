@@ -63,6 +63,7 @@ export class AssessRuleDetectionDelayedJob extends AbstractAIDelayedJob<
     const useCase = new AssessRuleDetectionUseCase(
       this.linterRepositories,
       this.getStandardsAdapter(),
+      this.getLinterAdapter,
       this.logger,
     );
 

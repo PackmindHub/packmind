@@ -45,6 +45,10 @@ import {
   RuleDetectionStatusSummary,
   TestProgramExecutionCommand,
   LinterExecutionViolation,
+  DetectionHeuristicsId,
+  UpdateRuleDetectionHeuristicsCommand,
+  GetDetectionHeuristicsCommand,
+  DetectionHeuristics,
 } from '@packmind/types';
 import { LinterHexa } from '../../LinterHexa';
 import { LinterService } from './linter.service';
@@ -1414,6 +1418,168 @@ export class LinterController {
       ) {
         throw error;
       }
+      throw new BadRequestException(errorMessage);
+    }
+  }
+
+  @Put(
+    'standards/:standardId/rules/:ruleId/detection-heuristics/:detectionHeuristicsId',
+  )
+  async updateRuleDetectionHeuristics(
+    @Param('standardId') standardId: StandardId,
+    @Param('ruleId') ruleId: RuleId,
+    @Param('detectionHeuristicsId')
+    detectionHeuristicsId: DetectionHeuristicsId,
+    @Req() request: AuthenticatedRequest,
+    @Body() body: { heuristics: string },
+  ): Promise<DetectionHeuristics> {
+    const organizationId = request.organization.id;
+    const userId = request.user.userId;
+
+    this.logger.info('Updating rule detection heuristics', {
+      standardId,
+      ruleId,
+      detectionHeuristicsId,
+      organizationId,
+      userId,
+    });
+
+    try {
+      // Update the heuristics
+      const command: UpdateRuleDetectionHeuristicsCommand = {
+        userId,
+        organizationId,
+        detectionHeuristicsId,
+        heuristics: body.heuristics,
+      };
+
+      const response =
+        await this.linterService.updateRuleDetectionHeuristics(command);
+
+      this.logger.info('Rule detection heuristics updated successfully', {
+        detectionHeuristicsId,
+        ruleId,
+      });
+
+      return response.detectionHeuristics;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
+      this.logger.error('Failed to update rule detection heuristics', {
+        standardId,
+        ruleId,
+        detectionHeuristicsId,
+        organizationId,
+        userId,
+        error: errorMessage,
+      });
+
+      if (errorMessage.includes('not found')) {
+        throw new NotFoundException(errorMessage);
+      }
+
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException ||
+        error instanceof ForbiddenException
+      ) {
+        throw error;
+      }
+
+      throw new BadRequestException(errorMessage);
+    }
+  }
+
+  @Get('standards/:standardId/rules/:ruleId/detection-heuristics')
+  async getDetectionHeuristics(
+    @Param('standardId') standardId: StandardId,
+    @Param('ruleId') ruleId: RuleId,
+    @Query('language') languageParam: string,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<DetectionHeuristics | null> {
+    const organizationId = request.organization.id;
+    const userId = request.user.userId;
+
+    this.logger.info('Getting detection heuristics', {
+      standardId,
+      ruleId,
+      language: languageParam,
+      organizationId,
+      userId,
+    });
+
+    try {
+      // Parse and validate language parameter
+      if (!languageParam) {
+        throw new BadRequestException('Language query parameter is required');
+      }
+
+      let language: ProgrammingLanguage;
+      try {
+        language = stringToProgrammingLanguage(languageParam);
+      } catch (error) {
+        throw new BadRequestException(
+          `Invalid language: ${languageParam}. ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+
+      // Get the heuristics
+      const command: GetDetectionHeuristicsCommand = {
+        userId,
+        organizationId,
+        ruleId,
+        language,
+      };
+
+      const response = await this.linterService.getDetectionHeuristics(command);
+
+      if (response.detectionHeuristics) {
+        this.logger.info('Detection heuristics found', {
+          ruleId,
+          language,
+          detectionHeuristicsId: response.detectionHeuristics.id,
+        });
+        return response.detectionHeuristics;
+      }
+
+      // If heuristics don't exist, create them
+      this.logger.info('Detection heuristics not found, creating new', {
+        ruleId,
+        language,
+      });
+
+      const createResponse =
+        await this.linterService.createDetectionHeuristics(command);
+
+      this.logger.info('Detection heuristics created', {
+        ruleId,
+        language,
+        detectionHeuristicsId: createResponse.detectionHeuristics.id,
+      });
+
+      return createResponse.detectionHeuristics;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
+      this.logger.error('Failed to get detection heuristics', {
+        standardId,
+        ruleId,
+        language: languageParam,
+        organizationId,
+        userId,
+        error: errorMessage,
+      });
+
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException ||
+        error instanceof ForbiddenException
+      ) {
+        throw error;
+      }
+
       throw new BadRequestException(errorMessage);
     }
   }

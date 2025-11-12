@@ -1,0 +1,10 @@
+---
+globs: **/infra/repositories/*Repository.ts,**/infra/repositories/**/*Repository.ts,
+alwaysApply: false
+---
+## Standard: Back-end repositories SQL queries using TypeORM
+
+Utilize TypeORM's Repository or QueryBuilder methods for writing SQL queries in back-end repositories located in /infra/repositories/*Repository.ts to enhance type safety, ensure automatic parameterization, and improve maintainability of the codebase. :
+* Use TypeORM’s Repository or QueryBuilder methods (e.g., repository.findOne({ where: { id } })) instead of raw SQL strings to gain type safety, automatic parameterization, and maintainability.
+
+Full standard is available here for further request: [Back-end repositories SQL queries using TypeORM](../../../.packmind/standards/back-end-repositories-sql-queries-using-typeorm.md)

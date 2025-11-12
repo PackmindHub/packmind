@@ -33,6 +33,12 @@ import {
   GetActiveDetectionProgramForRuleResponse,
   GetRuleDetectionAssessmentCommand,
   GetRuleDetectionAssessmentResponse,
+  UpdateRuleDetectionHeuristicsCommand,
+  UpdateRuleDetectionHeuristicsResponse,
+  GetDetectionHeuristicsCommand,
+  GetDetectionHeuristicsResponse,
+  CreateDetectionHeuristicsCommand,
+  CreateDetectionHeuristicsResponse,
 } from '@packmind/types';
 import { DeploymentsHexa } from '@packmind/deployments';
 import { StandardsHexa } from '@packmind/standards';
@@ -143,5 +149,23 @@ export class LinterService {
     command: TestProgramExecutionCommand,
   ): Promise<TestProgramExecutionResponse> {
     return this.linterAdapter.testProgramExecution(command);
+  }
+
+  async updateRuleDetectionHeuristics(
+    command: UpdateRuleDetectionHeuristicsCommand,
+  ): Promise<UpdateRuleDetectionHeuristicsResponse> {
+    return this.linterAdapter.updateRuleDetectionHeuristics(command);
+  }
+
+  async getDetectionHeuristics(
+    command: GetDetectionHeuristicsCommand,
+  ): Promise<GetDetectionHeuristicsResponse> {
+    return this.linterAdapter.getDetectionHeuristics(command);
+  }
+
+  async createDetectionHeuristics(
+    command: CreateDetectionHeuristicsCommand,
+  ): Promise<CreateDetectionHeuristicsResponse> {
+    return this.linterAdapter.createDetectionHeuristics(command);
   }
 }

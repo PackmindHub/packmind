@@ -19,6 +19,9 @@ import { GetRuleDetectionAssessmentUseCase } from './useCases/getRuleDetectionAs
 import { ComputeRuleLanguageDetectionStatusUseCase } from './useCases/computeRuleLanguageDetectionStatus/computeRuleLanguageDetectionStatus.usecase';
 import { GetStandardRulesDetectionStatusUseCase } from './useCases/getStandardRulesDetectionStatus/getStandardRulesDetectionStatus.usecase';
 import { TestProgramExecutionUseCase } from './useCases/testProgramExecutionUseCase/TestProgramExecutionUseCase';
+import { UpdateRuleDetectionHeuristicsUseCase } from './useCases/updateRuleDetectionHeuristics/updateRuleDetectionHeuristics.usecase';
+import { GetDetectionHeuristicsUseCase } from './useCases/getDetectionHeuristics/getDetectionHeuristics.usecase';
+import { CreateDetectionHeuristicsUseCase } from './useCases/createDetectionHeuristics/createDetectionHeuristics.usecase';
 import { ILinterRepositories } from '../domain/repositories/ILinterRepositories';
 import { ILinterDelayedJobs } from '../domain/jobs/ILinterDelayedJobs';
 import type {
@@ -71,6 +74,12 @@ import {
   UpdateRuleDetectionStatusAfterUpdateCommand,
   GetRuleDetectionAssessmentCommand,
   GetRuleDetectionAssessmentResponse,
+  UpdateRuleDetectionHeuristicsCommand,
+  UpdateRuleDetectionHeuristicsResponse,
+  GetDetectionHeuristicsCommand,
+  GetDetectionHeuristicsResponse,
+  CreateDetectionHeuristicsCommand,
+  CreateDetectionHeuristicsResponse,
 } from '@packmind/types';
 
 import type { ILinterAstPort } from '@packmind/types';
@@ -360,6 +369,27 @@ export class LinterAdapter implements ILinterPort {
       this.executeLinterProgramsUseCase,
       this.standardsAdapter,
     );
+    return usecase.execute(command);
+  }
+
+  async updateRuleDetectionHeuristics(
+    command: UpdateRuleDetectionHeuristicsCommand,
+  ): Promise<UpdateRuleDetectionHeuristicsResponse> {
+    const usecase = new UpdateRuleDetectionHeuristicsUseCase(this.repositories);
+    return usecase.execute(command);
+  }
+
+  async getDetectionHeuristics(
+    command: GetDetectionHeuristicsCommand,
+  ): Promise<GetDetectionHeuristicsResponse> {
+    const usecase = new GetDetectionHeuristicsUseCase(this.repositories);
+    return usecase.execute(command);
+  }
+
+  async createDetectionHeuristics(
+    command: CreateDetectionHeuristicsCommand,
+  ): Promise<CreateDetectionHeuristicsResponse> {
+    const usecase = new CreateDetectionHeuristicsUseCase(this.repositories);
     return usecase.execute(command);
   }
 

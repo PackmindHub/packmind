@@ -23,5 +23,12 @@ export {
   ExecutionLog,
   ExecutionLogMetadata,
 } from '@packmind/types';
+export {
+  DetectionHeuristics,
+  DetectionHeuristicsId,
+  AssessmentDetectionReadiness,
+  RuleFeasibility,
+  createDetectionHeuristicsId,
+} from '@packmind/types';
 
 export { DetectionProgramRuleInput } from '@packmind/types';

@@ -50,6 +50,14 @@ or
 
 
 
+## Detection Heuristics (if available)
+
+The following heuristics may help you assess the detectability of similar rules. Use them to inform your evaluation, but do not rely on them exclusively:
+
+"""
+$DETECTION_HEURISTICS$
+"""
+
 ## Input
 
 Here is the coding rule:

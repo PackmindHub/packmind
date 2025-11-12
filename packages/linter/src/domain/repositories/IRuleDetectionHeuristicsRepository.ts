@@ -1,8 +1,24 @@
-import { RuleId } from '@packmind/types';
-import { DetectionHeuristics } from '../entities/DetectionHeuristics';
+import {
+  RuleId,
+  DetectionHeuristics,
+  ProgrammingLanguage,
+  DetectionHeuristicsId,
+} from '@packmind/types';
 
 export interface IRuleDetectionHeuristicsRepository {
   upsertHeuristics(heuristic: DetectionHeuristics): Promise<void>;
 
-  getHeuristicsForRule(ruleId: RuleId): Promise<DetectionHeuristics | null>;
+  getHeuristicsForRule(
+    ruleId: RuleId,
+    language: ProgrammingLanguage,
+  ): Promise<DetectionHeuristics | null>;
+
+  updateHeuristics(
+    id: DetectionHeuristicsId,
+    heuristics: string,
+  ): Promise<void>;
+
+  getHeuristicsById(
+    id: DetectionHeuristicsId,
+  ): Promise<DetectionHeuristics | null>;
 }
