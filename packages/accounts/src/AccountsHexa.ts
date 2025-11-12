@@ -76,47 +76,19 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts, IAccountsPort> {
     this.logger.info('Initializing AccountsHexa (adapter retrieval phase)');
 
     try {
-      try {
-        const spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
-        this.adapter.setSpacesPort(spacesPort);
-        this.logger.debug('Retrieved SpacesAdapter from registry');
-      } catch (error) {
-        this.logger.debug('SpacesHexa not available in registry', {
-          error: error instanceof Error ? error.message : String(error),
-        });
-      }
+      // Retrieve optional ports from registry
+      // Ports that are not available will simply be undefined
+      const ports: Record<string, unknown> = {
+        [ISpacesPortName]: registry.getAdapter<ISpacesPort>(ISpacesPortName),
+        [IGitPortName]: registry.getAdapter<IGitPort>(IGitPortName),
+        [IStandardsPortName]:
+          registry.getAdapter<IStandardsPort>(IStandardsPortName),
+        [IDeploymentPortName]:
+          registry.getAdapter<IDeploymentPort>(IDeploymentPortName),
+      };
 
-      try {
-        const gitPort = registry.getAdapter<IGitPort>(IGitPortName);
-        this.adapter.setGitPort(gitPort);
-        this.logger.debug('Retrieved GitAdapter from registry');
-      } catch (error) {
-        this.logger.debug('GitHexa not available in registry', {
-          error: error instanceof Error ? error.message : String(error),
-        });
-      }
-
-      try {
-        const standardsPort =
-          registry.getAdapter<IStandardsPort>(IStandardsPortName);
-        this.adapter.setStandardsPort(standardsPort);
-        this.logger.debug('Retrieved StandardsAdapter from registry');
-      } catch (error) {
-        this.logger.debug('StandardsHexa not available in registry', {
-          error: error instanceof Error ? error.message : String(error),
-        });
-      }
-
-      try {
-        const deploymentPort =
-          registry.getAdapter<IDeploymentPort>(IDeploymentPortName);
-        this.adapter.setDeploymentPort(deploymentPort);
-        this.logger.debug('Retrieved DeploymentAdapter from registry');
-      } catch (error) {
-        this.logger.debug('DeploymentHexa not available in registry', {
-          error: error instanceof Error ? error.message : String(error),
-        });
-      }
+      // Initialize adapter with all optional ports
+      this.adapter.initialize(ports);
 
       this.logger.info('AccountsHexa initialized successfully');
     } catch (error) {

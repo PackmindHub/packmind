@@ -1,44 +1,42 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { z } from 'zod';
-import { FastifyInstance } from 'fastify';
+import { AnalyticsAdapter } from '@packmind/amplitude';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
+import { extractCodeFromMarkdown } from '@packmind/node-utils';
 import {
-  OrganizationId,
-  IAnalyticsPort,
+  createOrganizationId,
+  createUserId,
   getAllProgrammingLanguages,
+  IAnalyticsPort,
+  OrganizationId,
   ProgrammingLanguage,
+  RecipeStep,
+  RuleWithExamples,
   Space,
   stringToProgrammingLanguage,
-  RuleWithExamples,
-  RecipeStep,
-  UserProvider,
-  OrganizationProvider,
 } from '@packmind/types';
-import { createOrganizationId, createUserId } from '@packmind/types';
-import { AnalyticsAdapter } from '@packmind/amplitude';
-
-import packmindOnboardingModeSelection from './prompts/packmind-onboarding-mode-selection';
-import packmindOnboardingCodebaseAnalysis from './prompts/packmind-onboarding-codebase-analysis';
-import packmindOnboardingGitHistory from './prompts/packmind-onboarding-git-history';
-import packmindOnboardingDocumentation from './prompts/packmind-onboarding-documentation';
-import packmindOnboardingAiInstructions from './prompts/packmind-onboarding-ai-instructions';
-import packmindOnboardingWebResearch from './prompts/packmind-onboarding-web-research';
+import { FastifyInstance } from 'fastify';
+import { z } from 'zod';
 import {
-  STANDARD_WORKFLOW_STEP_ORDER,
-  STANDARD_WORKFLOW_STEPS,
-  StandardWorkflowStep,
-} from './prompts/packmind-standard-workflow';
+  ADD_RULE_WORKFLOW_STEP_ORDER,
+  ADD_RULE_WORKFLOW_STEPS,
+  AddRuleWorkflowStep,
+} from './prompts/packmind-add-rule-workflow';
+import packmindOnboardingAiInstructions from './prompts/packmind-onboarding-ai-instructions';
+import packmindOnboardingCodebaseAnalysis from './prompts/packmind-onboarding-codebase-analysis';
+import packmindOnboardingDocumentation from './prompts/packmind-onboarding-documentation';
+import packmindOnboardingGitHistory from './prompts/packmind-onboarding-git-history';
+import packmindOnboardingModeSelection from './prompts/packmind-onboarding-mode-selection';
+import packmindOnboardingWebResearch from './prompts/packmind-onboarding-web-research';
 import {
   RECIPE_WORKFLOW_STEP_ORDER,
   RECIPE_WORKFLOW_STEPS,
   RecipeWorkflowStep,
 } from './prompts/packmind-recipe-workflow';
 import {
-  ADD_RULE_WORKFLOW_STEP_ORDER,
-  ADD_RULE_WORKFLOW_STEPS,
-  AddRuleWorkflowStep,
-} from './prompts/packmind-add-rule-workflow';
-import { extractCodeFromMarkdown } from '@packmind/node-utils';
+  STANDARD_WORKFLOW_STEP_ORDER,
+  STANDARD_WORKFLOW_STEPS,
+  StandardWorkflowStep,
+} from './prompts/packmind-standard-workflow';
 
 interface UserContext {
   email: string;
@@ -130,20 +128,9 @@ export function createMCPServer(
   const recipesHexa = fastify.recipesHexa();
   logger.debug('Attempting to call fastify.standardsHexa()');
   const standardsHexa = fastify.standardsHexa();
-  logger.debug('Attempting to call fastify.deploymentsHexa()');
-  const deploymentsHexa = fastify.deploymentsHexa();
-  const accountsHexa =
-    typeof fastify.accountsHexa === 'function'
-      ? fastify.accountsHexa()
-      : undefined;
 
-  if (accountsHexa) {
-    const accountsAdapter = accountsHexa.getAdapter();
-    deploymentsHexa.setAccountProviders(
-      accountsAdapter as unknown as UserProvider,
-      accountsAdapter as unknown as OrganizationProvider,
-    );
-  }
+  // Note: Account providers are now passed to DeploymentsAdapter through
+  // the registry during initialization, not via setter methods
   logger.debug('Attempting to call fastify.analyticsHexa()');
   const analyticsHexa = fastify.analyticsHexa();
 

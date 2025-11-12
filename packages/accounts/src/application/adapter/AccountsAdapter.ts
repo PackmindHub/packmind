@@ -1,3 +1,4 @@
+import { IBaseAdapter } from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
 import {
   ActivateUserAccountCommand,
@@ -23,6 +24,7 @@ import {
   ICreateInvitationsUseCase,
   ICreateOrganizationUseCase,
   IDeploymentPort,
+  IDeploymentPortName,
   IGenerateApiKeyUseCase,
   IGenerateUserTokenUseCase,
   IGetCurrentApiKeyUseCase,
@@ -32,6 +34,7 @@ import {
   IGetOrganizationOnboardingStatusUseCase,
   IGetUserByIdUseCase,
   IGitPort,
+  IGitPortName,
   IListOrganizationUserStatusesUseCase,
   IListOrganizationUsersUseCase,
   IListUserOrganizationsUseCase,
@@ -39,7 +42,9 @@ import {
   IResetPasswordUseCase,
   ISignInUserUseCase,
   ISpacesPort,
+  ISpacesPortName,
   IStandardsPort,
+  IStandardsPortName,
   IValidateInvitationTokenUseCase,
   IValidatePasswordResetTokenUseCase,
   IValidatePasswordUseCase,
@@ -102,149 +107,173 @@ import { ValidatePasswordUseCase } from '../useCases/validatePasswordUseCase/Val
 
 const origin = 'AccountsAdapter';
 
-export class AccountsAdapter implements IAccountsPort {
-  private _signUpWithOrganization: ISignUpWithOrganizationUseCase;
-  private readonly _signInUser: ISignInUserUseCase;
-  private readonly _getUserById: IGetUserByIdUseCase;
-  private readonly _removeUserFromOrganization: IRemoveUserFromOrganizationUseCase;
-  private readonly _listOrganizationUserStatuses: IListOrganizationUserStatusesUseCase;
-  private readonly _listOrganizationUsers: IListOrganizationUsersUseCase;
-  private readonly _validatePassword: IValidatePasswordUseCase;
-  private _createOrganization: ICreateOrganizationUseCase;
-  private readonly _getOrganizationById: IGetOrganizationByIdUseCase;
-  private readonly _getOrganizationByName: IGetOrganizationByNameUseCase;
-  private readonly _getOrganizationBySlug: IGetOrganizationBySlugUseCase;
-  private readonly _generateUserToken: IGenerateUserTokenUseCase;
-  private readonly _createInvitations: ICreateInvitationsUseCase;
-  private readonly _activateUserAccount: IActivateUserAccountUseCase;
-  private readonly _validateInvitationToken: IValidateInvitationTokenUseCase;
-  private readonly _generateApiKey?: IGenerateApiKeyUseCase;
-  private readonly _getCurrentApiKey?: IGetCurrentApiKeyUseCase;
-  private readonly _checkEmailAvailability: ICheckEmailAvailabilityUseCase;
-  private readonly _changeUserRole: IChangeUserRoleUseCase;
-  private readonly _listUserOrganizations: IListUserOrganizationsUseCase;
-  private readonly _requestPasswordReset: IRequestPasswordResetUseCase;
-  private readonly _resetPassword: IResetPasswordUseCase;
-  private readonly _validatePasswordResetToken: IValidatePasswordResetTokenUseCase;
-  private _getOrganizationOnboardingStatus: IGetOrganizationOnboardingStatusUseCase;
-
+export class AccountsAdapter
+  implements IBaseAdapter<IAccountsPort>, IAccountsPort
+{
+  // All ports are optional - adapter can function without any ports
   private spacesPort?: ISpacesPort;
+  private gitPort?: IGitPort;
+  private standardsPort?: IStandardsPort;
+  private deploymentPort?: IDeploymentPort;
+
+  // Use cases - initialized in initialize()
+  private _signUpWithOrganization!: ISignUpWithOrganizationUseCase;
+  private _signInUser!: ISignInUserUseCase;
+  private _getUserById!: IGetUserByIdUseCase;
+  private _removeUserFromOrganization!: IRemoveUserFromOrganizationUseCase;
+  private _listOrganizationUserStatuses!: IListOrganizationUserStatusesUseCase;
+  private _listOrganizationUsers!: IListOrganizationUsersUseCase;
+  private _validatePassword!: IValidatePasswordUseCase;
+  private _createOrganization!: ICreateOrganizationUseCase;
+  private _getOrganizationById!: IGetOrganizationByIdUseCase;
+  private _getOrganizationByName!: IGetOrganizationByNameUseCase;
+  private _getOrganizationBySlug!: IGetOrganizationBySlugUseCase;
+  private _generateUserToken!: IGenerateUserTokenUseCase;
+  private _createInvitations!: ICreateInvitationsUseCase;
+  private _activateUserAccount!: IActivateUserAccountUseCase;
+  private _validateInvitationToken!: IValidateInvitationTokenUseCase;
+  private _generateApiKey?: IGenerateApiKeyUseCase;
+  private _getCurrentApiKey?: IGetCurrentApiKeyUseCase;
+  private _checkEmailAvailability!: ICheckEmailAvailabilityUseCase;
+  private _changeUserRole!: IChangeUserRoleUseCase;
+  private _listUserOrganizations!: IListUserOrganizationsUseCase;
+  private _requestPasswordReset!: IRequestPasswordResetUseCase;
+  private _resetPassword!: IResetPasswordUseCase;
+  private _validatePasswordResetToken!: IValidatePasswordResetTokenUseCase;
+  private _getOrganizationOnboardingStatus!: IGetOrganizationOnboardingStatusUseCase;
 
   constructor(
     private readonly accountsServices: EnhancedAccountsServices,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
-    spacesPort?: ISpacesPort,
-    private gitPort?: IGitPort,
-    private standardsPort?: IStandardsPort,
-    private deploymentPort?: IDeploymentPort,
   ) {
-    this.spacesPort = spacesPort;
+    this.logger.info('AccountsAdapter constructed - awaiting initialization');
+  }
+
+  /**
+   * Initialize adapter with optional ports from registry.
+   * All ports are optional - adapter can function without any of them.
+   */
+  public initialize(ports: {
+    [ISpacesPortName]?: ISpacesPort;
+    [IGitPortName]?: IGitPort;
+    [IStandardsPortName]?: IStandardsPort;
+    [IDeploymentPortName]?: IDeploymentPort;
+  }): void {
+    this.logger.info('Initializing AccountsAdapter with optional ports');
+
+    // Set all optional ports
+    this.spacesPort = ports[ISpacesPortName];
+    this.gitPort = ports[IGitPortName];
+    this.standardsPort = ports[IStandardsPortName];
+    this.deploymentPort = ports[IDeploymentPortName];
+
+    // Create all use cases with ports
     this._signUpWithOrganization = new SignUpWithOrganizationUseCase(
-      accountsServices.getUserService(),
-      accountsServices.getOrganizationService(),
+      this.accountsServices.getUserService(),
+      this.accountsServices.getOrganizationService(),
       this.logger,
       this.spacesPort,
     );
     this._signInUser = new SignInUserUseCase(
-      accountsServices.getUserService(),
-      accountsServices.getOrganizationService(),
-      accountsServices.getLoginRateLimiterService(),
+      this.accountsServices.getUserService(),
+      this.accountsServices.getOrganizationService(),
+      this.accountsServices.getLoginRateLimiterService(),
     );
     this._getUserById = new GetUserByIdUseCase(
-      accountsServices.getUserService(),
+      this.accountsServices.getUserService(),
     );
     this._removeUserFromOrganization = new RemoveUserFromOrganizationUseCase(
-      accountsServices.getUserService(),
-      accountsServices.getOrganizationService(),
-      accountsServices.getUserService(),
+      this.accountsServices.getUserService(),
+      this.accountsServices.getOrganizationService(),
+      this.accountsServices.getUserService(),
       this.logger,
     );
     this._listOrganizationUserStatuses =
       new ListOrganizationUserStatusesUseCase(
-        accountsServices.getUserService(),
-        accountsServices.getOrganizationService(),
-        accountsServices.getUserService(),
-        accountsServices.getInvitationService(),
+        this.accountsServices.getUserService(),
+        this.accountsServices.getOrganizationService(),
+        this.accountsServices.getUserService(),
+        this.accountsServices.getInvitationService(),
         this.logger,
       );
     this._listOrganizationUsers = new ListOrganizationUsersUseCase(
-      accountsServices.getUserService(),
-      accountsServices.getOrganizationService(),
-      accountsServices.getUserService(),
+      this.accountsServices.getUserService(),
+      this.accountsServices.getOrganizationService(),
+      this.accountsServices.getUserService(),
       this.logger,
     );
     this._validatePassword = new ValidatePasswordUseCase(
-      accountsServices.getUserService(),
+      this.accountsServices.getUserService(),
     );
     this._createOrganization = new CreateOrganizationUseCase(
-      accountsServices.getOrganizationService(),
-      accountsServices.getUserService(),
+      this.accountsServices.getOrganizationService(),
+      this.accountsServices.getUserService(),
       this.logger,
       this.spacesPort,
     );
     this._getOrganizationById = new GetOrganizationByIdUseCase(
-      accountsServices.getOrganizationService(),
+      this.accountsServices.getOrganizationService(),
     );
     this._getOrganizationByName = new GetOrganizationByNameUseCase(
-      accountsServices.getOrganizationService(),
+      this.accountsServices.getOrganizationService(),
     );
     this._getOrganizationBySlug = new GetOrganizationBySlugUseCase(
-      accountsServices.getOrganizationService(),
+      this.accountsServices.getOrganizationService(),
     );
     this._generateUserToken = new GenerateUserTokenUseCase(
-      accountsServices.getUserService(),
-      accountsServices.getOrganizationService(),
+      this.accountsServices.getUserService(),
+      this.accountsServices.getOrganizationService(),
     );
     this._checkEmailAvailability = new CheckEmailAvailabilityUseCase(
-      accountsServices.getUserService(),
+      this.accountsServices.getUserService(),
     );
     this._listUserOrganizations = new ListUserOrganizationsUseCase(
-      accountsServices.getUserService(),
+      this.accountsServices.getUserService(),
     );
     this._createInvitations = new CreateInvitationsUseCase(
-      accountsServices.getUserService(),
-      accountsServices.getOrganizationService(),
-      accountsServices.getUserService(),
-      accountsServices.getInvitationService(),
+      this.accountsServices.getUserService(),
+      this.accountsServices.getOrganizationService(),
+      this.accountsServices.getUserService(),
+      this.accountsServices.getInvitationService(),
       this.logger,
     );
     this._activateUserAccount = new ActivateUserAccountUseCase(
-      accountsServices.getUserService(),
-      accountsServices.getInvitationService(),
+      this.accountsServices.getUserService(),
+      this.accountsServices.getInvitationService(),
       this.logger,
     );
     this._validateInvitationToken = new ValidateInvitationTokenUseCase(
-      accountsServices.getInvitationService(),
-      accountsServices.getUserService(),
+      this.accountsServices.getInvitationService(),
+      this.accountsServices.getUserService(),
       this.logger,
     );
     this._changeUserRole = new ChangeUserRoleUseCase(
-      accountsServices.getUserService(),
-      accountsServices.getOrganizationService(),
-      accountsServices.getUserService(),
+      this.accountsServices.getUserService(),
+      this.accountsServices.getOrganizationService(),
+      this.accountsServices.getUserService(),
       this.logger,
     );
     this._requestPasswordReset = new RequestPasswordResetUseCase(
-      accountsServices.getUserService(),
-      accountsServices.getPasswordResetTokenService(),
+      this.accountsServices.getUserService(),
+      this.accountsServices.getPasswordResetTokenService(),
       this.logger,
     );
     this._resetPassword = new ResetPasswordUseCase(
-      accountsServices.getUserService(),
-      accountsServices.getPasswordResetTokenService(),
-      accountsServices.getLoginRateLimiterService(),
+      this.accountsServices.getUserService(),
+      this.accountsServices.getPasswordResetTokenService(),
+      this.accountsServices.getLoginRateLimiterService(),
       this.logger,
     );
     this._validatePasswordResetToken = new ValidatePasswordResetTokenUseCase(
-      accountsServices.getPasswordResetTokenService(),
-      accountsServices.getUserService(),
+      this.accountsServices.getPasswordResetTokenService(),
+      this.accountsServices.getUserService(),
       this.logger,
     );
     this._getOrganizationOnboardingStatus =
       new GetOrganizationOnboardingStatusUseCase(
-        accountsServices.getUserService(),
-        accountsServices.getOrganizationService(),
-        accountsServices.getUserService(),
+        this.accountsServices.getUserService(),
+        this.accountsServices.getOrganizationService(),
+        this.accountsServices.getUserService(),
         this.gitPort ?? null,
         this.standardsPort ?? null,
         this.spacesPort ?? null,
@@ -253,11 +282,11 @@ export class AccountsAdapter implements IAccountsPort {
       );
 
     // API key use cases are optional since they require additional dependencies
-    const apiKeyService = accountsServices.getApiKeyService?.();
+    const apiKeyService = this.accountsServices.getApiKeyService?.();
     if (apiKeyService) {
       this._generateApiKey = new GenerateApiKeyUseCase(
-        accountsServices.getUserService(),
-        accountsServices.getOrganizationService(),
+        this.accountsServices.getUserService(),
+        this.accountsServices.getOrganizationService(),
         apiKeyService,
         this.logger,
       );
@@ -268,6 +297,21 @@ export class AccountsAdapter implements IAccountsPort {
     }
 
     this.logger.info('AccountsAdapter initialized successfully');
+  }
+
+  /**
+   * Check if adapter is ready.
+   * AccountsAdapter is always ready since all ports are optional.
+   */
+  public isReady(): boolean {
+    return true;
+  }
+
+  /**
+   * Get the port interface this adapter implements.
+   */
+  public getPort(): IAccountsPort {
+    return this as IAccountsPort;
   }
 
   // User-related use cases
@@ -435,57 +479,5 @@ export class AccountsAdapter implements IAccountsPort {
     command: GetOrganizationOnboardingStatusCommand,
   ): Promise<OrganizationOnboardingStatus> {
     return this._getOrganizationOnboardingStatus.execute(command);
-  }
-
-  // Port setters for lazy dependency injection
-  public setGitPort(gitPort: IGitPort): void {
-    this.gitPort = gitPort;
-    this.reinitializeOnboardingStatusUseCase();
-  }
-
-  public setStandardsPort(standardsPort: IStandardsPort): void {
-    this.standardsPort = standardsPort;
-    this.reinitializeOnboardingStatusUseCase();
-  }
-
-  public setDeploymentPort(deploymentPort: IDeploymentPort): void {
-    this.deploymentPort = deploymentPort;
-    this.reinitializeOnboardingStatusUseCase();
-  }
-
-  public setSpacesPort(spacesPort: ISpacesPort): void {
-    this.spacesPort = spacesPort;
-    // Recreate use cases that depend on spacesPort
-    this._signUpWithOrganization = new SignUpWithOrganizationUseCase(
-      this.accountsServices.getUserService(),
-      this.accountsServices.getOrganizationService(),
-      this.logger,
-      this.spacesPort,
-    );
-    this._createOrganization = new CreateOrganizationUseCase(
-      this.accountsServices.getOrganizationService(),
-      this.accountsServices.getUserService(),
-      this.logger,
-      this.spacesPort,
-    );
-    this.reinitializeOnboardingStatusUseCase();
-    this.logger.debug(
-      'SpacesPort updated and dependent use cases reinitialized',
-    );
-  }
-
-  private reinitializeOnboardingStatusUseCase(): void {
-    this._getOrganizationOnboardingStatus =
-      new GetOrganizationOnboardingStatusUseCase(
-        this.accountsServices.getUserService(),
-        this.accountsServices.getOrganizationService(),
-        this.accountsServices.getUserService(),
-        this.gitPort ?? null,
-        this.standardsPort ?? null,
-        this.spacesPort ?? null,
-        this.deploymentPort ?? null,
-        this.logger,
-      );
-    this.logger.debug('GetOrganizationOnboardingStatusUseCase reinitialized');
   }
 }
