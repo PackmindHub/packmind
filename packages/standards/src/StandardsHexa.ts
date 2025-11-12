@@ -19,9 +19,6 @@ import {
 import { DataSource } from 'typeorm';
 import { StandardsServices } from './application/services/StandardsServices';
 import { StandardsAdapter } from './application/useCases/StandardsAdapter';
-import { IStandardDelayedJobs } from './domain/jobs/IStandardDelayedJobs';
-import { IStandardsRepositories } from './domain/repositories/IStandardsRepositories';
-import { GenerateStandardSummaryJobFactory } from './infra/jobs/GenerateStandardSummaryJobFactory';
 import { StandardsRepositories } from './infra/repositories/StandardsRepositories';
 
 const origin = 'StandardsHexa';
@@ -80,7 +77,7 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
 
   /**
    * Initialize the hexa with access to the registry for adapter retrieval.
-   * This also handles async initialization (delayed jobs, etc.).
+   * Delayed jobs are now built internally by the adapter.
    */
   public async initialize(registry: HexaRegistry): Promise<void> {
     if (this.isInitialized) {
@@ -88,23 +85,9 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
       return;
     }
 
-    this.logger.info(
-      'Initializing StandardsHexa (adapter retrieval and async phase)',
-    );
+    this.logger.info('Initializing StandardsHexa (adapter retrieval phase)');
 
     try {
-      // Get JobsService (required) for delayed job registration
-      const jobsService = registry.getService(JobsService);
-      if (!jobsService) {
-        throw new Error('JobsService not found in registry');
-      }
-
-      this.logger.debug('Building standards delayed jobs');
-      const standardsDelayedJobs = await this.buildStandardsDelayedJobs(
-        jobsService,
-        this.standardsRepositories,
-      );
-
       // Get all required ports (let errors propagate if missing)
       const accountsPort =
         registry.getAdapter<IAccountsPort>(IAccountsPortName);
@@ -115,16 +98,23 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
 
       this.logger.info('All required ports retrieved from registry');
 
+      // Get JobsService (required) - adapter will build delayed jobs internally
+      const jobsService = registry.getService(JobsService);
+      if (!jobsService) {
+        throw new Error('JobsService not found in registry');
+      }
+
       // Set linter adapter on services for backward compatibility
       this.standardsServices.setLinterAdapter(linterPort);
 
-      // Set delayed jobs first, then initialize adapter with all ports
-      this.adapter.setDelayedJobs(standardsDelayedJobs);
-      this.adapter.initialize({
+      // Initialize adapter with all ports and services
+      // Delayed jobs are built internally by the adapter
+      await this.adapter.initialize({
         [IAccountsPortName]: accountsPort,
         [ISpacesPortName]: spacesPort,
         [ILinterPortName]: linterPort,
         [IDeploymentPortName]: deploymentsPort,
+        jobsService,
       });
 
       this.isInitialized = true;
@@ -135,33 +125,6 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
       });
       throw error;
     }
-  }
-
-  private async buildStandardsDelayedJobs(
-    jobsService: JobsService,
-    standardRepositories: IStandardsRepositories,
-  ): Promise<IStandardDelayedJobs> {
-    // Register our job queue with JobsService
-    const jobStandardSummaryFactory = new GenerateStandardSummaryJobFactory(
-      this.logger,
-      standardRepositories,
-    );
-
-    jobsService.registerJobQueue(
-      jobStandardSummaryFactory.getQueueName(),
-      jobStandardSummaryFactory,
-    );
-
-    await jobStandardSummaryFactory.createQueue();
-
-    if (!jobStandardSummaryFactory.delayedJob) {
-      throw new Error('DelayedJob not found for StandardsHexa');
-    }
-
-    this.logger.debug('Standards delayed jobs built successfully');
-    return {
-      standardSummaryDelayedJob: jobStandardSummaryFactory.delayedJob,
-    };
   }
 
   /**
