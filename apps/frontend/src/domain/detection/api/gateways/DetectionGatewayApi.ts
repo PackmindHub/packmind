@@ -4,6 +4,7 @@ import {
   DetectionProgramMetadata,
   LanguageDetectionPrograms,
   RuleDetectionAssessment,
+  DetectionHeuristics,
 } from '@packmind/types';
 import {
   RuleLanguageDetectionStatus,
@@ -145,6 +146,30 @@ export class DetectionGatewayApi
       `${this._endpoint}/${standardId}/rules/${ruleId}/detection-program/${detectionProgramId}/test`,
       {
         sandboxCode,
+      },
+    );
+  }
+
+  async getDetectionHeuristics(
+    standardId: string,
+    ruleId: string,
+    language: string,
+  ): Promise<DetectionHeuristics | null> {
+    return this._api.get<DetectionHeuristics | null>(
+      `${this._endpoint}/${standardId}/rules/${ruleId}/detection-heuristics?language=${language}`,
+    );
+  }
+
+  async updateDetectionHeuristics(
+    standardId: string,
+    ruleId: string,
+    detectionHeuristicsId: string,
+    heuristics: string,
+  ): Promise<DetectionHeuristics> {
+    return this._api.put<DetectionHeuristics>(
+      `${this._endpoint}/${standardId}/rules/${ruleId}/detection-heuristics/${detectionHeuristicsId}`,
+      {
+        heuristics,
       },
     );
   }

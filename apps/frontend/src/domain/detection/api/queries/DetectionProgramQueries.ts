@@ -7,6 +7,7 @@ import {
   GET_RULE_DETECTION_ASSESSMENT_KEY,
   GET_RULE_LANGUAGE_DETECTION_STATUS_KEY,
   GET_STANDARD_RULES_DETECTION_STATUS_KEY,
+  GET_DETECTION_HEURISTICS_KEY,
 } from '../queryKeys';
 
 export const UPDATE_DETECTION_PROGRAM_MUTATION_KEY = 'updateDetectionProgram';
@@ -14,6 +15,8 @@ export const GENERATE_PROGRAM_MUTATION_KEY = 'generateProgram';
 export const ACTIVATE_DETECTION_PROGRAM_MUTATION_KEY =
   'activateDetectionProgram';
 export const TEST_PROGRAM_EXECUTION_MUTATION_KEY = 'testProgramExecution';
+export const UPDATE_DETECTION_HEURISTICS_MUTATION_KEY =
+  'updateDetectionHeuristics';
 
 export const useSaveDetectionProgramMutation = () => {
   const queryClient = useQueryClient();
@@ -296,6 +299,61 @@ export const useTestProgramExecutionMutation = () => {
         detectionProgramId,
         sandboxCode,
       );
+    },
+  });
+};
+
+export const getDetectionHeuristicsQueryOptions = (
+  standardId: string,
+  ruleId: string,
+  language: string,
+) => ({
+  queryKey: [...GET_DETECTION_HEURISTICS_KEY, standardId, ruleId, language],
+  queryFn: () =>
+    detectionGateway.getDetectionHeuristics(standardId, ruleId, language),
+  enabled: !!standardId && !!ruleId && !!language,
+});
+
+export const useGetDetectionHeuristicsQuery = (
+  standardId: string,
+  ruleId: string,
+  language: string,
+) => {
+  return useQuery(
+    getDetectionHeuristicsQueryOptions(standardId, ruleId, language),
+  );
+};
+
+export const useUpdateDetectionHeuristicsMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: [UPDATE_DETECTION_HEURISTICS_MUTATION_KEY],
+    mutationFn: async ({
+      standardId,
+      ruleId,
+      detectionHeuristicsId,
+      heuristics,
+    }: {
+      standardId: string;
+      ruleId: string;
+      detectionHeuristicsId: string;
+      heuristics: string;
+    }) => {
+      return detectionGateway.updateDetectionHeuristics(
+        standardId,
+        ruleId,
+        detectionHeuristicsId,
+        heuristics,
+      );
+    },
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({
+        queryKey: [
+          ...GET_DETECTION_HEURISTICS_KEY,
+          variables.standardId,
+          variables.ruleId,
+        ],
+      });
     },
   });
 };

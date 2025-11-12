@@ -4,6 +4,7 @@ import {
   DetectionProgramMetadata,
   LanguageDetectionPrograms,
   RuleDetectionAssessment,
+  DetectionHeuristics,
 } from '@packmind/types';
 import {
   RuleLanguageDetectionStatus,
@@ -77,4 +78,17 @@ export interface IDetectionGateway {
   ): Promise<
     { line: number; character: number; rule: string; standard: string }[]
   >;
+
+  getDetectionHeuristics(
+    standardId: string,
+    ruleId: string,
+    language: string,
+  ): Promise<DetectionHeuristics | null>;
+
+  updateDetectionHeuristics(
+    standardId: string,
+    ruleId: string,
+    detectionHeuristicsId: string,
+    heuristics: string,
+  ): Promise<DetectionHeuristics>;
 }

@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useState } from 'react';
 import {
   IPMButtonProps,
   PMBox,
@@ -15,6 +15,7 @@ import { DetectionStatus } from '@packmind/types';
 import { useGetRuleDetectionAssessmentQuery } from '../api/queries/DetectionProgramQueries';
 import { ConfigurationCard, ConfigurationCardProps } from './ConfigurationCard';
 import { DraftCardData } from './DetectionDraftCard';
+import { DetectionAssessmentDrawer } from './DetectionAssessmentDrawer';
 import { RxQuestionMarkCircled } from 'react-icons/rx';
 
 export enum ActiveConfigurationState {
@@ -222,6 +223,8 @@ type ActiveConfigurationCardAssessmentProps = {
 const ActiveConfigurationCardAssessment: React.FC<
   ActiveConfigurationCardAssessmentProps
 > = ({ id, language, standardId, ruleId, isGenerating, onGenerateProgram }) => {
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
   const { data: assessment } = useGetRuleDetectionAssessmentQuery(
     standardId,
     ruleId,
@@ -250,22 +253,42 @@ const ActiveConfigurationCardAssessment: React.FC<
         </PMVStack>
       );
 
+      configurationCardProps.mainAction = (
+        <PMButton
+          size="sm"
+          variant="outline"
+          onClick={() => setIsDrawerOpen(true)}
+        >
+          View Details
+        </PMButton>
+      );
+
       return (
-        <ConfigurationCard {...configurationCardProps}>
-          <PMHStack>
-            <PMText color="faded" fontSize="sm">
-              This rule can not be automated.
-            </PMText>
-            <PMTooltip label={tooltipLabel} placement="top">
-              <PMIcon
-                as={RxQuestionMarkCircled}
-                color={'text.tertiary'}
-                boxSize={4}
-                cursor="help"
-              />
-            </PMTooltip>
-          </PMHStack>
-        </ConfigurationCard>
+        <>
+          <ConfigurationCard {...configurationCardProps}>
+            <PMHStack>
+              <PMText color="faded" fontSize="sm">
+                This rule can not be automated.
+              </PMText>
+              <PMTooltip label={tooltipLabel} placement="top">
+                <PMIcon
+                  as={RxQuestionMarkCircled}
+                  color={'text.tertiary'}
+                  boxSize={4}
+                  cursor="help"
+                />
+              </PMTooltip>
+            </PMHStack>
+          </ConfigurationCard>
+          <DetectionAssessmentDrawer
+            isOpen={isDrawerOpen}
+            onClose={() => setIsDrawerOpen(false)}
+            assessment={assessment}
+            standardId={standardId}
+            ruleId={ruleId}
+            language={language}
+          />
+        </>
       );
     }
 

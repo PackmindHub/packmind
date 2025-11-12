@@ -9,6 +9,7 @@ export enum DetectionQueryKeys {
   GET_RULE_DETECTION_ASSESSMENT = 'get-rule-detection-assessment',
   GET_RULE_LANGUAGE_DETECTION_STATUS = 'get-rule-language-detection-status',
   GET_STANDARD_RULES_DETECTION_STATUS = 'get-standard-rules-detection-status',
+  GET_DETECTION_HEURISTICS = 'get-detection-heuristics',
 }
 
 // Base query key arrays for reuse
@@ -46,4 +47,10 @@ export const GET_STANDARD_RULES_DETECTION_STATUS_KEY = [
   ORGANIZATION_QUERY_SCOPE,
   DETECTION_QUERY_SCOPE,
   DetectionQueryKeys.GET_STANDARD_RULES_DETECTION_STATUS,
+] as const;
+
+export const GET_DETECTION_HEURISTICS_KEY = [
+  ORGANIZATION_QUERY_SCOPE,
+  DETECTION_QUERY_SCOPE,
+  DetectionQueryKeys.GET_DETECTION_HEURISTICS,
 ] as const;
