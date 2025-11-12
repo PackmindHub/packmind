@@ -21,7 +21,8 @@
     "prettier:check": "prettier -c .",
     "prettier:write": "prettier -w .",
     "chakra:typegen": "npx --workspace=packages/ui @chakra-ui/cli typegen ./src/lib/theme/theme.ts",
-    "typecheck:frontend": "tsc --noEmit -p apps/frontend/tsconfig.app.json"
+    "typecheck:frontend": "tsc --noEmit -p apps/frontend/tsconfig.app.json",
+    "setup-plugin-dev": "node scripts/setup-plugin-dev.js"
   },
   "workspaces": [
     "packages/*",

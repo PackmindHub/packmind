@@ -9,10 +9,11 @@ import './instrument';
 import { Logger, VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
-import { AppModule } from './app/app.module';
+// Don't import AppModule here - import it after plugins are loaded
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { Configuration, Cache } from '@packmind/node-utils';
 import { enableAmplitudeProxy } from '@packmind/amplitude';
+import { loadPluginModules } from './app/shared/PluginModulesModule';
 
 const logger = new PackmindLogger('PackmindAPI', LogLevel.INFO);
 
@@ -82,6 +83,17 @@ async function bootstrap() {
       timestamp: new Date().toISOString(),
     });
 
+    // Load plugin modules before creating the NestJS app
+    logger.info('Loading plugin modules...');
+    const pluginModule = await loadPluginModules();
+    logger.info('Plugin modules loaded');
+
+    // Store the plugin module globally so AppModule can access it
+    // This is a workaround for the timing issue where AppModule is imported before plugins are loaded
+    (globalThis as { __pluginModule?: unknown }).__pluginModule = pluginModule;
+
+    // Import AppModule AFTER plugins are loaded so it can access globalThis.__pluginModule
+    const { AppModule } = await import('./app/app.module');
     const app = await NestFactory.create(AppModule);
 
     // Enable cookie parsing
