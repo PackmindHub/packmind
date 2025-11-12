@@ -96,8 +96,8 @@ jobs:
           TARGET_BRANCH="${{ vars.TARGET_BRANCH || github.event.repository.default_branch }}"
           # Switch back to target branch
           git checkout -B $TARGET_BRANCH origin/$TARGET_BRANCH
-          # Merge the sync branch (no conflicts were detected earlier)
-          git merge upstream/${{ vars.UPSTREAM_SOURCE_BRANCH || 'main' }} --no-edit
+          # Merge the sync branch (fast-forward only since no conflicts)
+          git merge upstream/${{ vars.UPSTREAM_SOURCE_BRANCH || 'main' }} --ff
           # Push to target branch
           git push origin $TARGET_BRANCH
           echo "✓ Successfully merged ${{ steps.check_changes.outputs.commit_count }} commits from upstream"
