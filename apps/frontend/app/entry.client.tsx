@@ -13,6 +13,7 @@ import { AuthProvider } from '../src/providers/AuthProvider';
 import { SSEProvider } from '../src/services/sse';
 import { ErrorBoundary } from '../src/providers/ErrorBoundary';
 import { AnalyticsProvider } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
+import { PluginProvider } from '../src/plugins/PluginProvider';
 
 startTransition(() => {
   hydrateRoot(
@@ -23,9 +24,11 @@ startTransition(() => {
           <AuthProvider>
             <SSEProvider>
               <AnalyticsProvider>
-                <UIProvider>
-                  <HydratedRouter />
-                </UIProvider>
+                <PluginProvider>
+                  <UIProvider>
+                    <HydratedRouter />
+                  </UIProvider>
+                </PluginProvider>
               </AnalyticsProvider>
             </SSEProvider>
           </AuthProvider>

@@ -13,3 +13,4 @@ export * from './linter';
 export * from './sse';
 export * from './ai/prompts/types';
 export * from './database/types';
+export * from './plugins';

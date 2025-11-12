@@ -14,6 +14,7 @@ import { SidebarHelpMenu } from './SidebarHelpMenu';
 import { LuHouse, LuSettings } from 'react-icons/lu';
 import { useGetSpacesQuery } from '../../spaces/api/queries/SpacesQueries';
 import { routes } from '../../../shared/utils/routes';
+import { usePlugins } from '../../../plugins/hooks/usePlugins';
 
 interface ISidebarNavigationProps {
   organization: AuthContextOrganization | undefined;
@@ -61,6 +62,7 @@ export const SidebarNavigation: React.FunctionComponent<
   }
 
   const orgSlug = organization.slug;
+  const { navItems } = usePlugins();
 
   // Don't render space-scoped links if we don't have a space slug yet
   if (!currentSpaceSlug) {
@@ -119,6 +121,19 @@ export const SidebarNavigation: React.FunctionComponent<
           />,
         ]}
       />
+      {navItems.length > 0 && (
+        <PMVerticalNavSection
+          navEntries={navItems.map((item) => (
+            <SidebarNavigationLink
+              key={item.path}
+              url={item.path.replace(':orgSlug', orgSlug)}
+              label={item.label}
+              icon={item.icon}
+              exact={item.exact}
+            />
+          ))}
+        />
+      )}
       <PMSeparator borderColor={'border.tertiary'} />
       {(() => {
         const lastEntries: React.ReactElement[] = [];

@@ -52,18 +52,115 @@ export default defineConfig(() => {
     },
     resolve: {
       alias: resolveAliases,
+      // Resolve external dependencies from plugin bundles to main app's node_modules
+      dedupe: ['react', 'react-dom', 'react-router', 'react-router-dom'],
+    },
+    optimizeDeps: {
+      // Include plugin bundle dependencies in optimization
+      include: ['react', 'react-dom', 'react-router', 'react-router-dom'],
     },
     server: {
       port: 4200,
       host: 'localhost',
       allowedHosts: ['frontend'],
       proxy,
+      fs: {
+        // Allow serving files from plugins directory and packages (for assets)
+        allow: ['..', '../../packages'],
+      },
     },
     preview: {
       port: 4200,
       host: 'localhost',
     },
     plugins: [
+      // Plugin to serve plugin bundles from plugins/ directory
+      // This MUST run BEFORE React Router to intercept /plugins/* requests
+      {
+        name: 'serve-plugins',
+        enforce: 'pre', // Run before other plugins
+        configureServer(server) {
+          const fs = require('fs');
+          // Add middleware that handles /plugins/* requests
+          server.middlewares.use('/plugins', (req, res, next) => {
+            // If the request has query parameters (like ?import), let Vite handle it
+            // Vite needs to process these to resolve external dependencies
+            if (req.url?.includes('?')) {
+              return next();
+            }
+
+            // For direct file requests without query params, serve the file
+            const urlPath = req.url || '';
+            const pluginsDir = path.resolve(__dirname, '../../plugins');
+            const filePath = path.join(pluginsDir, urlPath);
+            try {
+              if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+                const fileContent = fs.readFileSync(filePath);
+                const ext = path.extname(filePath);
+                const contentType =
+                  ext === '.mjs'
+                    ? 'application/javascript; charset=utf-8'
+                    : ext === '.json'
+                      ? 'application/json; charset=utf-8'
+                      : 'text/plain; charset=utf-8';
+                res.setHeader('Content-Type', contentType);
+                res.setHeader('Cache-Control', 'no-cache');
+                res.end(fileContent);
+                return; // Don't call next() - we handled the request
+              }
+            } catch (err) {
+              // Log error but continue to next middleware
+              console.warn(
+                '[serve-plugins] Error serving file:',
+                filePath,
+                err,
+              );
+            }
+            next();
+          });
+        },
+        // Configure Vite to process plugin bundles and resolve external dependencies
+        resolveId(id) {
+          if (id.startsWith('/plugins/')) {
+            // Resolve plugin bundle paths to actual file system paths
+            const pluginsDir = path.resolve(__dirname, '../../plugins');
+            const relativePath = id.replace('/plugins/', '');
+            const filePath = path.join(pluginsDir, relativePath);
+            try {
+              const fs = require('fs');
+              if (fs.existsSync(filePath)) {
+                return filePath;
+              }
+            } catch {
+              // Ignore errors
+            }
+          }
+          return null;
+        },
+        // Transform plugin bundles to resolve external dependencies
+        load(id) {
+          if (id.includes('/plugins/') && id.endsWith('.mjs')) {
+            // Read the bundle file
+            const fs = require('fs');
+            try {
+              const code = fs.readFileSync(id, 'utf-8');
+              // Transform bare module specifiers to use Vite's resolution
+              // This allows external dependencies like 'react-router' to be resolved
+              const transformedCode = code.replace(
+                /import\s+([^"']+)\s+from\s+["'](react-router|react|react-dom|@packmind\/ui|@packmind\/types)["']/g,
+                (match, imports, moduleName) => {
+                  // Keep the import but let Vite resolve it
+                  return match;
+                },
+              );
+              return transformedCode;
+            } catch {
+              return null;
+            }
+          }
+          return null;
+        },
+      },
       reactRouter(),
       nxViteTsPaths(),
       nxCopyAssetsPlugin(['*.md']),
