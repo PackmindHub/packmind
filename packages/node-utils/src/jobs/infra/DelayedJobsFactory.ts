@@ -1,7 +1,7 @@
-import { WorkerQueue } from './bullMQ/WorkerQueue';
-import { IQueue, QueueListeners } from '../domain/IQueue';
 import { PackmindLogger } from '@packmind/logger';
-import { Configuration } from '@packmind/node-utils';
+import { Configuration } from '../../config/config/Configuration';
+import { IQueue, QueueListeners } from '../domain/IQueue';
+import { WorkerQueue } from './bullMQ/WorkerQueue';
 
 const logger = new PackmindLogger('DelayedJobsFactory');
 

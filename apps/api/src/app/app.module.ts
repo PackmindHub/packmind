@@ -22,8 +22,8 @@ import {
   AnalyticsModule,
   recipesUsageSchemas,
 } from '@packmind/analytics';
-import { JobsHexa } from '@packmind/jobs';
 import { LinterHexa, LinterModule, linterSchemas } from '@packmind/linter';
+import { JobsService } from '@packmind/node-utils';
 import { OrganizationsModule as AccountsOrganizationsModule } from './accounts/organizations/organizations.module';
 import { UsersModule } from './accounts/users/users.module';
 import { AuthGuard } from './auth/auth.guard';
@@ -78,12 +78,11 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
         };
       },
     }),
-    // AppRegistry integration - All domain apps (order matters for dependencies)
+    // AppRegistry integration - All domain apps and infrastructure services (order matters for dependencies)
     HexaRegistryModule.register({
       hexas: [
         SpacesHexa, // Must come before AccountsHexa (AccountsHexa depends on SpacesHexa)
         AccountsHexa,
-        JobsHexa,
         GitHexa,
         RecipesHexa,
         AnalyticsHexa,
@@ -91,6 +90,9 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
         StandardsHexa,
         CodingAgentHexa,
         DeploymentsHexa,
+      ],
+      services: [
+        JobsService, // Infrastructure service for background jobs
       ],
     }),
     RecipesModule,

@@ -1,18 +1,18 @@
 import { PackmindLogger } from '@packmind/logger';
-import { getErrorMessage } from '@packmind/node-utils';
 import {
   AbstractAIDelayedJob,
+  getErrorMessage,
   IQueue,
   QueueListeners,
   WorkerListeners,
-} from '@packmind/jobs';
+} from '@packmind/node-utils';
 import { Job } from 'bullmq';
 import {
   FetchFileContentInput,
   FetchFileContentOutput,
 } from '../../domain/jobs/FetchFileContent';
-import { GetFileFromRepo } from '../useCases/getFileFromRepo/getFileFromRepo.usecase';
 import { GitRepoService } from '../GitRepoService';
+import { GetFileFromRepo } from '../useCases/getFileFromRepo/getFileFromRepo.usecase';
 
 const logOrigin = 'FetchFileContentDelayedJob';
 

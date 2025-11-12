@@ -1,4 +1,4 @@
-import { IJobFactory, IJobQueue, queueFactory } from '@packmind/jobs';
+import { IJobFactory, IJobQueue, queueFactory } from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
 import { IDeploymentPort } from '@packmind/types';
 import { DeployRecipesDelayedJob } from '../../application/jobs/DeployRecipesDelayedJob';

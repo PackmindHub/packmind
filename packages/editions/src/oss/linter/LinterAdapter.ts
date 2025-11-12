@@ -39,6 +39,12 @@ import {
   UpdateRuleDetectionAssessmentAfterUpdateResponse,
   UpdateRuleDetectionStatusAfterUpdateResponse,
   RuleLanguageDetectionStatus,
+  CreateDetectionHeuristicsCommand,
+  CreateDetectionHeuristicsResponse,
+  GetDetectionHeuristicsResponse,
+  GetDetectionHeuristicsCommand,
+  UpdateRuleDetectionHeuristicsResponse,
+  UpdateRuleDetectionHeuristicsCommand,
   DetectionModeEnum,
   SourceCodeState,
 } from '@packmind/types';
@@ -251,5 +257,26 @@ export class LinterAdapter implements ILinterPort {
     return {
       status: RuleLanguageDetectionStatus.NONE,
     };
+  }
+
+  createDetectionHeuristics(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    command: CreateDetectionHeuristicsCommand,
+  ): Promise<CreateDetectionHeuristicsResponse> {
+    throw new Error('Method not implemented.');
+  }
+
+  getDetectionHeuristics(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    command: GetDetectionHeuristicsCommand,
+  ): Promise<GetDetectionHeuristicsResponse> {
+    throw new Error('Method not implemented.');
+  }
+
+  updateRuleDetectionHeuristics(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    command: UpdateRuleDetectionHeuristicsCommand,
+  ): Promise<UpdateRuleDetectionHeuristicsResponse> {
+    throw new Error('Method not implemented.');
   }
 }

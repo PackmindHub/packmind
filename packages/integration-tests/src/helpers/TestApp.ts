@@ -3,8 +3,7 @@ import { AnalyticsHexa } from '@packmind/analytics';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { DeploymentsHexa } from '@packmind/deployments';
 import { GitHexa } from '@packmind/git';
-import { JobsHexa } from '@packmind/jobs';
-import { HexaRegistry } from '@packmind/node-utils';
+import { HexaRegistry, JobsService } from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
 import { SpacesHexa } from '@packmind/spaces';
 import { StandardsHexa } from '@packmind/standards';
@@ -17,7 +16,7 @@ export class TestApp {
   public spacesHexa!: SpacesHexa;
   public gitHexa!: GitHexa;
   public codingAgentHexa!: CodingAgentHexa;
-  public jobsHexa!: JobsHexa;
+  public jobsService!: JobsService;
   public deploymentsHexa!: DeploymentsHexa;
   public analyticsHexa!: AnalyticsHexa;
 
@@ -30,7 +29,7 @@ export class TestApp {
 
     this.registry.register(SpacesHexa);
     this.registry.register(AccountsHexa);
-    this.registry.register(JobsHexa);
+    this.registry.registerService(JobsService);
     this.registry.register(GitHexa);
     this.registry.register(RecipesHexa);
     this.registry.register(StandardsHexa);
@@ -49,7 +48,7 @@ export class TestApp {
     this.spacesHexa = this.registry.get(SpacesHexa);
     this.gitHexa = this.registry.get(GitHexa);
     this.codingAgentHexa = this.registry.get(CodingAgentHexa);
-    this.jobsHexa = this.registry.get(JobsHexa);
+    this.jobsService = this.registry.getService(JobsService);
     this.deploymentsHexa = this.registry.get(DeploymentsHexa);
     this.analyticsHexa = this.registry.get(AnalyticsHexa);
   }

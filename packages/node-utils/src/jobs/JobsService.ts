@@ -1,36 +1,38 @@
 import { PackmindLogger } from '@packmind/logger';
-import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
 import { DataSource } from 'typeorm';
+import { BaseService, BaseServiceOpts } from '../hexa/BaseService';
+import { HexaRegistry } from '../hexa/HexaRegistry';
 import { JobRegistry } from './application/JobRegistry';
 import { IJobFactory } from './domain/IJobQueue';
 import { IJobRegistry } from './domain/IJobRegistry';
 
-const origin = 'JobsHexa';
+const origin = 'JobsService';
 
 /**
- * JobsHexa - Facade for the Jobs domain following the Hexa pattern.
+ * JobsService - Infrastructure service for background job management.
  *
- * This class serves as the main entry point for jobs-related functionality.
- * It provides a generic job registry system that allows other packages to register
- * their job implementations without creating circular dependencies.
+ * This service provides a generic job registry system that allows other packages
+ * to register their job implementations without creating circular dependencies.
+ * Unlike domain hexas, this service is pure infrastructure and doesn't implement
+ * the port-adapter pattern.
  */
-export class JobsHexa extends BaseHexa {
+export class JobsService extends BaseService {
   private readonly jobRegistry: IJobRegistry;
 
   constructor(
     dataSource: DataSource,
-    opts: Partial<BaseHexaOpts> = { logger: new PackmindLogger(origin) },
+    opts: Partial<BaseServiceOpts> = { logger: new PackmindLogger(origin) },
   ) {
     super(dataSource, opts);
-    this.logger.info('Constructing JobsHexa');
+    this.logger.info('Constructing JobsService');
 
     try {
       // Initialize the job registry
       this.jobRegistry = new JobRegistry(this.logger);
 
-      this.logger.info('JobsHexa construction completed');
+      this.logger.info('JobsService construction completed');
     } catch (error) {
-      this.logger.error('Failed to construct JobsHexa', {
+      this.logger.error('Failed to construct JobsService', {
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
@@ -38,30 +40,22 @@ export class JobsHexa extends BaseHexa {
   }
 
   /**
-   * Initialize the hexa with access to the registry for adapter retrieval.
+   * Initialize the service with access to the registry.
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public async initialize(_registry: HexaRegistry): Promise<void> {
-    this.logger.info('Initializing JobsHexa (adapter retrieval phase)');
-    // JobsHexa doesn't need any adapters from registry
-    this.logger.info('JobsHexa initialized successfully');
+    this.logger.info('Initializing JobsService');
+    // JobsService doesn't need any adapters from registry
+    this.logger.info('JobsService initialized successfully');
   }
 
   /**
-   * Destroys the JobsHexa and cleans up resources
+   * Destroys the JobsService and cleans up resources
    */
   public destroy(): void {
-    this.logger.info('Destroying JobsHexa');
+    this.logger.info('Destroying JobsService');
     // Add any cleanup logic here if needed
-    this.logger.info('JobsHexa destroyed');
-  }
-
-  /**
-   * Get the port name for this hexa.
-   * JobsHexa does not expose a port adapter.
-   */
-  public getPortName(): string {
-    throw new Error('JobsHexa does not expose a port adapter');
+    this.logger.info('JobsService destroyed');
   }
 
   /**
@@ -118,12 +112,5 @@ export class JobsHexa extends BaseHexa {
    */
   public getAvailableQueues(): string[] {
     return this.jobRegistry.getRegisteredQueueNames();
-  }
-
-  /**
-   * JobsHexa does not expose an adapter (no cross-domain port).
-   */
-  public getAdapter(): void {
-    return undefined;
   }
 }

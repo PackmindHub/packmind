@@ -1,4 +1,4 @@
-import { JobsHexa } from '@packmind/jobs';
+import { JobsService } from '@packmind/node-utils';
 import { LinterAstAdapter } from '@packmind/linter-ast';
 import { ExecuteLinterProgramsUseCase } from '@packmind/linter-execution';
 import { PackmindLogger } from '@packmind/logger';
@@ -162,15 +162,15 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
       }
 
       // Get JobsHexa (required) for delayed job registration
-      const jobsHexa = registry.get(JobsHexa);
-      if (!jobsHexa) {
+      const jobsService = registry.getService(JobsService);
+      if (!jobsService) {
         throw new Error('JobsHexa not found in registry');
       }
 
       // Build delayed jobs
       this.logger.debug('Building linter delayed jobs');
       this.linterDelayedJobs = await this.buildLinterDelayedJobs(
-        jobsHexa,
+        jobsService,
         () => standardsPort,
         () => this.getAdapter(),
       );
@@ -208,7 +208,7 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
       this.logger.info('LinterHexa initialized successfully');
 
       // Start the job workers
-      await this.initializeJobQueues(jobsHexa);
+      await this.initializeJobQueues(jobsService);
     } catch (error) {
       this.logger.error('Failed to initialize LinterHexa', {
         error: error instanceof Error ? error.message : String(error),
@@ -221,11 +221,11 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
    * Build delayed jobs for linter operations
    */
   private async buildLinterDelayedJobs(
-    jobsHexa: JobsHexa,
+    jobsService: JobsService,
     getStandardsAdapter: () => IStandardsPort,
     getLinterAdapter: () => ILinterPort,
   ): Promise<ILinterDelayedJobs> {
-    // Register generate program job queue with JobsHexa
+    // Register generate program job queue with JobsService
     const generateProgramJobFactory = new GenerateProgramJobFactory(
       this.logger,
       this.linterRepositories,
@@ -233,7 +233,7 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
       () => this.linterAstAdapter,
     );
 
-    jobsHexa.registerJobQueue(
+    jobsService.registerJobQueue(
       generateProgramJobFactory.getQueueName(),
       generateProgramJobFactory,
     );
@@ -244,14 +244,14 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
       throw new Error('DelayedJob not found for GenerateProgramJobFactory');
     }
 
-    // Register assess rule detection job queue with JobsHexa
+    // Register assess rule detection job queue with JobsService
     const assessRuleDetectionJobFactory = new AssessRuleDetectionJobFactory(
       this.linterRepositories,
       getStandardsAdapter,
       getLinterAdapter,
     );
 
-    jobsHexa.registerJobQueue(
+    jobsService.registerJobQueue(
       assessRuleDetectionJobFactory.getQueueName(),
       assessRuleDetectionJobFactory,
     );
@@ -272,11 +272,11 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
    * Initialize job queues - starts the workers for processing delayed jobs.
    * This is automatically called during the async initialization phase.
    */
-  private async initializeJobQueues(jobsHexa: JobsHexa): Promise<void> {
+  private async initializeJobQueues(jobsService: JobsService): Promise<void> {
     this.logger.info('Initializing job queues for LinterHexa');
 
     try {
-      await jobsHexa.initJobQueues();
+      await jobsService.initJobQueues();
       this.logger.info('Job queues initialized successfully for LinterHexa');
     } catch (error) {
       this.logger.error('Failed to initialize job queues for LinterHexa', {

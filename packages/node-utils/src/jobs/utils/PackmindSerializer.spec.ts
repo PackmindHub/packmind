@@ -1,4 +1,4 @@
-import { PackmindSerializer } from '../../src/utils/PackmindSerializer';
+import { PackmindSerializer } from './PackmindSerializer';
 
 describe('PackmindSerializer', () => {
   const myData = {

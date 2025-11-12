@@ -12,7 +12,6 @@
     "@packmind/analytics": "*",
     "@packmind/recipes": "*",
     "@packmind/git": "*",
-    "@packmind/jobs": "*",
     "@packmind/node-utils": "*",
     "@packmind/types": "*",
     "@packmind/spaces": "*",

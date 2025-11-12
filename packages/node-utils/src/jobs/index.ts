@@ -1,5 +1,5 @@
-export { JobsHexa } from './JobsHexa';
 export { AbstractAIDelayedJob } from './application/AbstractAIDelayedJob';
+export { JobsService } from './JobsService';
 
 export { queueFactory } from './infra/DelayedJobsFactory';
 

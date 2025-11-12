@@ -7,7 +7,7 @@ import {
   IQueue,
   QueueListeners,
   WorkerListeners,
-} from '@packmind/jobs';
+} from '@packmind/node-utils';
 import { GenerateProgramInput } from '@packmind/types';
 import { GenerateProgramOutput } from '@packmind/types';
 import { Job } from 'bullmq';

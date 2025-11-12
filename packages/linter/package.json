@@ -9,7 +9,6 @@
     "tslib": "^2.3.0",
     "@packmind/deployments": "*",
     "@packmind/git": "*",
-    "@packmind/jobs": "*",
     "@packmind/linter-ast": "*",
     "@packmind/linter-execution": "*",
     "@packmind/logger": "*",

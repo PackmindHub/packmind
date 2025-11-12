@@ -2,13 +2,10 @@ import { AccountsHexa, accountsSchemas } from '@packmind/accounts';
 import { CodingAgentHexa, DeployerService } from '@packmind/coding-agent';
 import { DeploymentsHexa, deploymentsSchemas } from '@packmind/deployments';
 import { GitHexa, gitSchemas } from '@packmind/git';
-import { JobsHexa } from '@packmind/jobs';
-import { HexaRegistry } from '@packmind/node-utils';
-import { recipesSchemas } from '@packmind/recipes';
-import { RecipesHexa } from '@packmind/recipes';
+import { HexaRegistry, JobsService } from '@packmind/node-utils';
+import { RecipesHexa, recipesSchemas } from '@packmind/recipes';
 import { SpacesHexa, spacesSchemas } from '@packmind/spaces';
-import { standardsSchemas } from '@packmind/standards';
-import { StandardsHexa } from '@packmind/standards';
+import { StandardsHexa, standardsSchemas } from '@packmind/standards';
 import { makeTestDatasource } from '@packmind/test-utils';
 import {
   createGitProviderId,
@@ -86,7 +83,7 @@ describe('Target-Specific Deployment Integration', () => {
     // Register hexas before initialization
     // NOTE: SpacesHexa must be registered before AccountsHexa
     // because AccountsHexa needs SpacesPort to create default space during signup
-    registry.register(JobsHexa);
+    registry.registerService(JobsService);
     registry.register(GitHexa);
     registry.register(SpacesHexa);
     registry.register(AccountsHexa);

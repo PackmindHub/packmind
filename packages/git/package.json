@@ -10,7 +10,6 @@
     "axios": "^1.12.0",
     "ts-jest": "^29.4.1",
     "@packmind/accounts": "*",
-    "@packmind/jobs": "*",
     "@packmind/logger": "*",
     "@packmind/node-utils": "*",
     "@packmind/types": "*",

@@ -3,10 +3,9 @@ import { AnalyticsHexa } from '@packmind/analytics';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { DeploymentsHexa } from '@packmind/deployments';
 import { GitHexa } from '@packmind/git';
-import { JobsHexa } from '@packmind/jobs';
 import { LinterHexa } from '@packmind/linter';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { HexaRegistry } from '@packmind/node-utils';
+import { HexaRegistry, JobsService } from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
 import { SpacesHexa } from '@packmind/spaces';
 import { StandardsHexa } from '@packmind/standards';
@@ -45,12 +44,12 @@ async function hexaRegistryPlugin(fastify: FastifyInstance) {
     logger.debug('HexaRegistry instance created');
 
     // Register domain hexas in dependency order
-    // AccountsHexa has no dependencies, JobsHexa has no dependencies, GitHexa may depend on Accounts, RecipesHexa depends on Git, StandardsHexa depends on Git and Jobs
+    // AccountsHexa has no dependencies, JobsService has no dependencies, GitHexa may depend on Accounts, RecipesHexa depends on Git, StandardsHexa depends on Git and Jobs
     registry.register(AccountsHexa);
     logger.debug('AccountsHexa registered');
 
-    registry.register(JobsHexa);
-    logger.debug('JobsHexa registered');
+    registry.registerService(JobsService);
+    logger.debug('JobsService registered');
 
     registry.register(GitHexa);
     logger.debug('GitHexa registered');
@@ -107,16 +106,16 @@ async function hexaRegistryPlugin(fastify: FastifyInstance) {
     });
     logger.debug('accountsHexa decorator added');
 
-    fastify.decorate('jobsHexa', () => {
-      logger.debug('jobsHexa() called');
+    fastify.decorate('jobsService', () => {
+      logger.debug('jobsService() called');
       if (!registry.initialized) {
         throw new Error(
           'HexaRegistry not initialized yet. Ensure database connection is ready.',
         );
       }
-      return registry.get(JobsHexa);
+      return registry.getService(JobsService);
     });
-    logger.debug('jobsHexa decorator added');
+    logger.debug('jobsService decorator added');
 
     fastify.decorate('gitHexa', () => {
       logger.debug('gitHexa() called');
@@ -202,7 +201,7 @@ declare module 'fastify' {
   interface FastifyInstance {
     hexaRegistry: HexaRegistry;
     accountsHexa: () => AccountsHexa;
-    jobsHexa: () => JobsHexa;
+    jobsService: () => JobsService;
     gitHexa: () => GitHexa;
     spacesHexa: () => SpacesHexa;
     recipesHexa: () => RecipesHexa;
