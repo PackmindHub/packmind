@@ -1,48 +1,52 @@
-import {
-  AddGitProviderCommand,
-  AddGitProviderUseCase,
-} from './addGitProvider/addGitProvider.usecase';
-import { AddGitRepoUseCase } from './addGitRepo/addGitRepo.usecase';
-import { DeleteGitProviderUseCase } from './deleteGitProvider/deleteGitProvider.usecase';
-import { DeleteGitRepoUseCase } from './deleteGitRepo/deleteGitRepo.usecase';
-import { ListAvailableReposUseCase } from './listAvailableRepos/listAvailableRepos.usecase';
-import { CheckBranchExistsUseCase } from './checkBranchExists/checkBranchExists.usecase';
-import { CommitToGit } from './commitToGit/commitToGit.usecase';
-import { HandleWebHook } from './handleWebHook/handleWebHook.usecase';
-import { HandleWebHookWithoutContent } from './handleWebHookWithoutContent/handleWebHookWithoutContent.usecase';
-import { GetFileFromRepo } from './getFileFromRepo/getFileFromRepo.usecase';
-import { FindGitRepoByOwnerAndRepoUseCase } from './findGitRepoByOwnerAndRepo/findGitRepoByOwnerAndRepo.usecase';
-import { ListReposUseCase } from './listRepos/listRepos.usecase';
-import { ListProvidersUseCase } from './listProviders/listProviders.usecase';
-import { GetOrganizationRepositoriesUseCase } from './getOrganizationRepositories/getOrganizationRepositories.usecase';
-import { GetRepositoryByIdUseCase } from './getRepositoryById/getRepositoryById.usecase';
-import { UpdateGitProviderUseCase } from './updateGitProvider/updateGitProvider.usecase';
-import { GetAvailableRemoteDirectoriesUseCase } from './getAvailableRemoteDirectories/getAvailableRemoteDirectories.usecase';
-import { CheckDirectoryExistenceUseCase } from './checkDirectoryExistence/checkDirectoryExistence.usecase';
-import { GitServices } from '../GitServices';
 import { PackmindLogger } from '@packmind/logger';
-import { IAccountsPort, IDeploymentPort } from '@packmind/types';
-import { QueryOption } from '@packmind/types';
-import { GitProvider, GitProviderId } from '@packmind/types';
-import { GitRepo, GitRepoId } from '@packmind/types';
-import { GitCommit } from '@packmind/types';
-import { OrganizationId, UserId } from '@packmind/types';
+import {
+  CheckDirectoryExistenceCommand,
+  CheckDirectoryExistenceResult,
+  GetAvailableRemoteDirectoriesCommand,
+  GitCommit,
+  GitProvider,
+  GitProviderId,
+  GitRepo,
+  GitRepoId,
+  HandleWebHookCommand,
+  HandleWebHookResult,
+  HandleWebHookWithoutContentCommand,
+  HandleWebHookWithoutContentResult,
+  IAccountsPort,
+  IDeploymentPort,
+  OrganizationId,
+  QueryOption,
+  UserId,
+} from '@packmind/types';
 import { AddGitRepoCommand } from '../../domain/useCases/IAddGitRepo';
 import {
   FindGitRepoByOwnerRepoAndBranchInOrganizationCommand,
   FindGitRepoByOwnerRepoAndBranchInOrganizationResult,
   IFindGitRepoByOwnerRepoAndBranchInOrganizationUseCase,
 } from '../../domain/useCases/IFindGitRepoByOwnerRepoAndBranchInOrganization';
-import { FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase } from './findGitRepoByOwnerRepoAndBranchInOrganization/findGitRepoByOwnerRepoAndBranchInOrganization.usecase';
+import { GitServices } from '../GitServices';
 import {
-  GetAvailableRemoteDirectoriesCommand,
-  CheckDirectoryExistenceCommand,
-  CheckDirectoryExistenceResult,
-  HandleWebHookCommand,
-  HandleWebHookResult,
-  HandleWebHookWithoutContentCommand,
-  HandleWebHookWithoutContentResult,
-} from '@packmind/types';
+  AddGitProviderCommand,
+  AddGitProviderUseCase,
+} from './addGitProvider/addGitProvider.usecase';
+import { AddGitRepoUseCase } from './addGitRepo/addGitRepo.usecase';
+import { CheckBranchExistsUseCase } from './checkBranchExists/checkBranchExists.usecase';
+import { CheckDirectoryExistenceUseCase } from './checkDirectoryExistence/checkDirectoryExistence.usecase';
+import { CommitToGit } from './commitToGit/commitToGit.usecase';
+import { DeleteGitProviderUseCase } from './deleteGitProvider/deleteGitProvider.usecase';
+import { DeleteGitRepoUseCase } from './deleteGitRepo/deleteGitRepo.usecase';
+import { FindGitRepoByOwnerAndRepoUseCase } from './findGitRepoByOwnerAndRepo/findGitRepoByOwnerAndRepo.usecase';
+import { FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase } from './findGitRepoByOwnerRepoAndBranchInOrganization/findGitRepoByOwnerRepoAndBranchInOrganization.usecase';
+import { GetAvailableRemoteDirectoriesUseCase } from './getAvailableRemoteDirectories/getAvailableRemoteDirectories.usecase';
+import { GetFileFromRepo } from './getFileFromRepo/getFileFromRepo.usecase';
+import { GetOrganizationRepositoriesUseCase } from './getOrganizationRepositories/getOrganizationRepositories.usecase';
+import { GetRepositoryByIdUseCase } from './getRepositoryById/getRepositoryById.usecase';
+import { HandleWebHook } from './handleWebHook/handleWebHook.usecase';
+import { HandleWebHookWithoutContent } from './handleWebHookWithoutContent/handleWebHookWithoutContent.usecase';
+import { ListAvailableReposUseCase } from './listAvailableRepos/listAvailableRepos.usecase';
+import { ListProvidersUseCase } from './listProviders/listProviders.usecase';
+import { ListReposUseCase } from './listRepos/listRepos.usecase';
+import { UpdateGitProviderUseCase } from './updateGitProvider/updateGitProvider.usecase';
 const origin = 'GitUseCases';
 
 export class GitUseCases {
@@ -74,7 +78,11 @@ export class GitUseCases {
   private readonly _getAvailableRemoteDirectories: GetAvailableRemoteDirectoriesUseCase;
   private readonly _checkDirectoryExistence: CheckDirectoryExistenceUseCase;
 
-  private deploymentsAdapter?: IDeploymentPort;
+  private deploymentsAdapter: IDeploymentPort = {
+    async addTarget() {
+      throw new Error('Deployments adapter not configured for Git domain');
+    },
+  } as unknown as IDeploymentPort;
 
   constructor(
     private readonly gitServices: GitServices,
