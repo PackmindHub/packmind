@@ -1,8 +1,7 @@
-import { AccountsHexa, accountsSchemas } from '@packmind/accounts';
-import { GitHexa, gitSchemas } from '@packmind/git';
-import { HexaRegistry, JobsService } from '@packmind/node-utils';
-import { SpacesHexa, spacesSchemas } from '@packmind/spaces';
-import { StandardsHexa, standardsSchemas } from '@packmind/standards';
+import { accountsSchemas } from '@packmind/accounts';
+import { gitSchemas } from '@packmind/git';
+import { spacesSchemas } from '@packmind/spaces';
+import { standardsSchemas } from '@packmind/standards';
 import { makeTestDatasource } from '@packmind/test-utils';
 import {
   Organization,
@@ -14,12 +13,10 @@ import {
 
 import assert from 'assert';
 import { DataSource } from 'typeorm';
+import { TestApp } from './helpers/TestApp';
 
 describe('Add rule to standard integration', () => {
-  let accountsHexa: AccountsHexa;
-  let standardsHexa: StandardsHexa;
-  let spacesHexa: SpacesHexa;
-  let registry: HexaRegistry;
+  let testApp: TestApp;
   let dataSource: DataSource;
 
   let standard: Standard;
@@ -38,28 +35,12 @@ describe('Add rule to standard integration', () => {
     await dataSource.initialize();
     await dataSource.synchronize();
 
-    // Create HexaRegistry
-    registry = new HexaRegistry();
-
-    // Register hexas before initialization
-    // NOTE: SpacesHexa must be registered before AccountsHexa
-    // because AccountsHexa needs SpacesPort to create default space during signup
-    registry.registerService(JobsService);
-    registry.register(GitHexa);
-    registry.register(SpacesHexa);
-    registry.register(AccountsHexa);
-    registry.register(StandardsHexa);
-
-    // Initialize the registry with the datasource (now async)
-    await registry.init(dataSource);
-
-    // Get initialized hexas
-    accountsHexa = registry.get(AccountsHexa);
-    standardsHexa = registry.get(StandardsHexa);
-    spacesHexa = registry.get(SpacesHexa);
+    // Use TestApp which handles all hexa registration and initialization
+    testApp = new TestApp(dataSource);
+    await testApp.initialize();
 
     // Create test data
-    const signUpResult = await accountsHexa
+    const signUpResult = await testApp.accountsHexa
       .getAdapter()
       .signUpWithOrganization({
         organizationName: 'test organization',
@@ -70,7 +51,7 @@ describe('Add rule to standard integration', () => {
     organization = signUpResult.organization;
 
     // Get the default "Global" space created during signup
-    const spaces = await spacesHexa
+    const spaces = await testApp.spacesHexa
       .getAdapter()
       .listSpacesByOrganization(organization.id);
     const foundSpace = spaces.find((s) => s.name === 'Global');
@@ -78,7 +59,7 @@ describe('Add rule to standard integration', () => {
     space = foundSpace;
 
     // Create a standard to work with
-    standard = await standardsHexa.getAdapter().createStandard({
+    standard = await testApp.standardsHexa.getAdapter().createStandard({
       name: 'My Test Standard',
       description: 'A test standard for integration testing',
       rules: [
@@ -101,7 +82,7 @@ describe('Add rule to standard integration', () => {
       const nonExistentSlug = 'non-existent-standard';
 
       await expect(
-        standardsHexa.getAdapter().addRuleToStandard({
+        testApp.standardsHexa.getAdapter().addRuleToStandard({
           standardSlug: nonExistentSlug,
           ruleContent: 'Some new rule',
           organizationId: organization.id,
@@ -116,7 +97,7 @@ describe('Add rule to standard integration', () => {
   describe('when standard slug exists but belongs to different organization', () => {
     test('An error is thrown', async () => {
       // Create another organization and user
-      const otherSignUpResult = await accountsHexa
+      const otherSignUpResult = await testApp.accountsHexa
         .getAdapter()
         .signUpWithOrganization({
           organizationName: 'other organization',
@@ -127,7 +108,7 @@ describe('Add rule to standard integration', () => {
 
       // Try to add rule to standard from the first organization using the second organization's context
       await expect(
-        standardsHexa.getAdapter().addRuleToStandard({
+        testApp.standardsHexa.getAdapter().addRuleToStandard({
           standardSlug: standard.slug,
           ruleContent: 'Unauthorized rule',
           organizationId: otherSignUpResult.organization.id,
@@ -146,7 +127,7 @@ describe('Add rule to standard integration', () => {
     const initialVersion = standard.version;
 
     // Add the rule to the standard
-    const newStandardVersion: StandardVersion = await standardsHexa
+    const newStandardVersion: StandardVersion = await testApp.standardsHexa
       .getAdapter()
       .addRuleToStandard({
         standardSlug: standard.slug,
@@ -161,7 +142,7 @@ describe('Add rule to standard integration', () => {
     expect(newStandardVersion.userId).toBe(user.id);
 
     // Get the rules for the updated standard to verify the rule was added
-    const rules = await standardsHexa
+    const rules = await testApp.standardsHexa
       .getAdapter()
       .getRulesByStandardId(standard.id);
 
@@ -177,12 +158,14 @@ describe('Add rule to standard integration', () => {
     expect(ruleContents).toContain(newRuleContent);
 
     // Verify that the main standard record was updated with the new version number
-    const updatedStandard = await standardsHexa.getAdapter().getStandardById({
-      standardId: standard.id,
-      organizationId: organization.id,
-      spaceId: space.id,
-      userId: user.id,
-    });
+    const updatedStandard = await testApp.standardsHexa
+      .getAdapter()
+      .getStandardById({
+        standardId: standard.id,
+        organizationId: organization.id,
+        spaceId: space.id,
+        userId: user.id,
+      });
     assert(updatedStandard, 'Updated standard should exist');
     assert(updatedStandard.standard, 'Updated standard.standard should exist');
     expect(updatedStandard.standard.version).toBe(initialVersion + 1);
@@ -193,27 +176,31 @@ describe('Add rule to standard integration', () => {
     const secondRuleContent = 'Implement proper error handling';
 
     // Add first rule
-    const firstVersion = await standardsHexa.getAdapter().addRuleToStandard({
-      standardSlug: standard.slug,
-      ruleContent: firstRuleContent,
-      organizationId: organization.id,
-      userId: user.id,
-    });
+    const firstVersion = await testApp.standardsHexa
+      .getAdapter()
+      .addRuleToStandard({
+        standardSlug: standard.slug,
+        ruleContent: firstRuleContent,
+        organizationId: organization.id,
+        userId: user.id,
+      });
 
     expect(firstVersion.version).toBe(2); // Initial was 1
 
     // Add second rule
-    const secondVersion = await standardsHexa.getAdapter().addRuleToStandard({
-      standardSlug: standard.slug,
-      ruleContent: secondRuleContent,
-      organizationId: organization.id,
-      userId: user.id,
-    });
+    const secondVersion = await testApp.standardsHexa
+      .getAdapter()
+      .addRuleToStandard({
+        standardSlug: standard.slug,
+        ruleContent: secondRuleContent,
+        organizationId: organization.id,
+        userId: user.id,
+      });
 
     expect(secondVersion.version).toBe(3); // Incremented again
 
     // Verify final state by getting rules for the standard
-    const finalRules = await standardsHexa
+    const finalRules = await testApp.standardsHexa
       .getAdapter()
       .getRulesByStandardId(standard.id);
 
@@ -243,7 +230,7 @@ describe('Add rule to standard integration', () => {
     expect(mixedCaseSlug).not.toBe(standard.slug);
 
     // Add rule using mixed case slug - this should work and normalize the slug internally
-    const newStandardVersion = await standardsHexa
+    const newStandardVersion = await testApp.standardsHexa
       .getAdapter()
       .addRuleToStandard({
         standardSlug: mixedCaseSlug,
@@ -257,7 +244,7 @@ describe('Add rule to standard integration', () => {
     expect(newStandardVersion.standardId).toBe(standard.id);
 
     // Verify the rule was actually added to the standard
-    const rules = await standardsHexa
+    const rules = await testApp.standardsHexa
       .getAdapter()
       .getRulesByStandardId(standard.id);
     const ruleContents = rules.map((rule) => rule.content);
