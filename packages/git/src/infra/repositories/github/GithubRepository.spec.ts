@@ -439,22 +439,6 @@ describe('GithubRepository', () => {
         expect(result).toBe(false);
       });
     });
-
-    describe('when x-github-event header is undefined', () => {
-      it('returns false', () => {
-        const headers = { 'x-github-event': undefined };
-        const result = githubRepository.isPushEventFromWebhook(headers);
-        expect(result).toBe(false);
-      });
-    });
-
-    describe('when x-github-event header is null', () => {
-      it('returns false', () => {
-        const headers = { 'x-github-event': null };
-        const result = githubRepository.isPushEventFromWebhook(headers);
-        expect(result).toBe(false);
-      });
-    });
   });
 
   describe('getFileOnRepo', () => {

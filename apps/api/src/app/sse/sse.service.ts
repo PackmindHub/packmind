@@ -36,7 +36,7 @@ interface SSEConnection {
 @Injectable()
 export class SSEService implements OnModuleInit, OnModuleDestroy {
   private connections: Map<string, SSEConnection[]> = new Map(); // Map<userId, SSEConnection[]>
-  private redisClient: RedisSSEClient;
+  private redisClient!: RedisSSEClient;
 
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),

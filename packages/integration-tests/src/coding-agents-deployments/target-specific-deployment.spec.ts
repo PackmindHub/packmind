@@ -26,7 +26,7 @@ import {
   Target,
   User,
 } from '@packmind/types';
-import { assert } from 'console';
+import assert from 'assert';
 import { DataSource } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 

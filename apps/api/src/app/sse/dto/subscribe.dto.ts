@@ -1,9 +1,9 @@
-export class SubscribeDto {
+export interface SubscribeDto {
   eventType: string;
   params?: string[];
 }
 
-export class UnsubscribeDto {
+export interface UnsubscribeDto {
   eventType: string;
   params?: string[];
 }

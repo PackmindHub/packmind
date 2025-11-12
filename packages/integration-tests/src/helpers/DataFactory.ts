@@ -18,14 +18,14 @@ import { recipeFactory } from '@packmind/recipes/test';
 import { gitProviderFactory, gitRepoFactory } from '@packmind/git/test';
 
 export class DataFactory {
-  private _user: User;
-  private _organization: Organization;
-  private _space: Space;
+  private _user!: User;
+  private _organization!: Organization;
+  private _space!: Space;
 
-  private _gitProvider: GitProvider;
-  private _gitRepo: GitRepo;
+  private _gitProvider!: GitProvider;
+  private _gitRepo!: GitRepo;
 
-  private _target: Target;
+  private _target!: Target;
 
   constructor(private readonly testApp: TestApp) {}
 
@@ -89,7 +89,7 @@ export class DataFactory {
   }
 
   async withGitRepo(gitRepo?: Partial<GitRepo>) {
-    if (!this.gitRepo) {
+    if (!this._gitRepo) {
       await this.withGitProvider();
 
       this._gitRepo = await this.testApp.gitHexa.getAdapter().addGitRepo({
@@ -102,7 +102,7 @@ export class DataFactory {
         .getAdapter()
         .getTargetsByGitRepo({
           ...this.packmindCommand(),
-          gitRepoId: this.gitRepo.id,
+          gitRepoId: this._gitRepo.id,
         });
       this._target = targets[0];
     }

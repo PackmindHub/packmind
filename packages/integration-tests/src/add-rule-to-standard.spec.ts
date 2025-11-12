@@ -184,7 +184,8 @@ describe('Add rule to standard integration', () => {
       spaceId: space.id,
       userId: user.id,
     });
-    assert(updatedStandard);
+    assert(updatedStandard, 'Updated standard should exist');
+    assert(updatedStandard.standard, 'Updated standard.standard should exist');
     expect(updatedStandard.standard.version).toBe(initialVersion + 1);
   });
 

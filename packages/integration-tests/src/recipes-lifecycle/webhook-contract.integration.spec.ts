@@ -96,11 +96,13 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
      * This mocks handleWebHookWithoutContent, addFetchFileContentJob, and the delayed jobs
      * to execute synchronously in tests
      */
-    const mockWebhookWithAsyncJobs = (
+    const mockWebhookWithAsyncJobs = async (
       files: Array<{ filePath: string; fileContent: string }>,
     ) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const mockGitCommit: any = null; // In test environment, gitCommit is null due to mocking constraints
+      // Create a real GitCommit in the database for the test
+      const mockGitCommit = await dataSource
+        .getRepository(GitCommitSchema)
+        .save(gitCommitFactory());
 
       // Mock handleWebHookWithoutContent on the adapter to return list of changed files (without content)
       const gitAdapter = testApp.gitHexa.getAdapter();
@@ -169,7 +171,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
               files: files.map((f) => ({
                 filePath: f.filePath,
                 fileContent: f.fileContent,
-                gitCommit: null,
+                gitCommit: mockGitCommit,
               })),
             });
           }
@@ -214,7 +216,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
           // Mock webhook response with updated content
           const updatedContent = `# Test Recipe\n\nUpdated content from ${config.providerName} webhook.`;
 
-          mockWebhookWithAsyncJobs([
+          await mockWebhookWithAsyncJobs([
             {
               filePath: '.packmind/recipes/test-recipe.md',
               fileContent: updatedContent,
@@ -293,7 +295,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
           let matchingRecipes: Recipe[];
 
           beforeEach(async () => {
-            mockWebhookWithAsyncJobs([
+            await mockWebhookWithAsyncJobs([
               {
                 filePath: '.packmind/recipes/test-recipe.md',
                 fileContent: recipe.content,
@@ -345,7 +347,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
           let matchingRecipes: Recipe[];
 
           beforeEach(async () => {
-            mockWebhookWithAsyncJobs([
+            await mockWebhookWithAsyncJobs([
               {
                 filePath: '.packmind/recipes/test-recipe.md',
                 fileContent: updatedContent,
@@ -454,7 +456,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
               ...dataFactory.packmindCommand(),
             });
 
-            mockWebhookWithAsyncJobs([
+            await mockWebhookWithAsyncJobs([
               {
                 filePath: '.packmind/recipes/test-recipe.md',
                 fileContent: updatedContent1,
@@ -562,7 +564,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
         let matchingRecipes: Recipe[];
 
         beforeEach(async () => {
-          mockWebhookWithAsyncJobs([
+          await mockWebhookWithAsyncJobs([
             {
               filePath: '.packmind/recipes/nonexistent-recipe.md',
               fileContent:
@@ -626,7 +628,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
         // Mock webhook response with updated content in a target path
         const updatedContent = `# Target Path Test Recipe\\n\\nUpdated content in target path from ${config.providerName} webhook.`;
 
-        mockWebhookWithAsyncJobs([
+        await mockWebhookWithAsyncJobs([
           {
             filePath: '/jetbrains/.packmind/recipes/target-path-test-recipe.md',
             fileContent: updatedContent,
@@ -699,7 +701,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
         // Mock webhook response with updated content in a different target path
         const updatedContent = `# Target Path Test Recipe\\n\\nUpdated content in non-deployed target from ${config.providerName} webhook.`;
 
-        mockWebhookWithAsyncJobs([
+        await mockWebhookWithAsyncJobs([
           {
             filePath:
               '/visual-studio/.packmind/recipes/target-path-test-recipe.md',
@@ -843,7 +845,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
           // Mock webhook response with updated content in /jetbrains/ target path
           const updatedContent = `# Target Path Test Recipe\\n\\nUpdated content in /jetbrains/ target from ${config.providerName} webhook V2.`;
 
-          mockWebhookWithAsyncJobs([
+          await mockWebhookWithAsyncJobs([
             {
               filePath:
                 '/jetbrains/.packmind/recipes/target-path-test-recipe.md',

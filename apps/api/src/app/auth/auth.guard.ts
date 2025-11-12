@@ -59,6 +59,9 @@ export class AuthGuard implements CanActivate {
     if (token) {
       try {
         const payload = this.jwtService.verify<JwtPayload>(token);
+        if (!payload.organization) {
+          throw new UnauthorizedException('No organization in token');
+        }
         request.user = payload.user;
         request.organization = payload.organization;
         return true;

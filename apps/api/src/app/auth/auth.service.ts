@@ -28,6 +28,7 @@ import {
 } from '@packmind/accounts';
 import { InjectAccountsAdapter } from '../shared/HexaInjection';
 import { maskEmail } from '@packmind/logger';
+import { getErrorMessage } from '../shared/utils/error.utils';
 
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindCommand, PackmindCommandBody } from '@packmind/types';
@@ -225,12 +226,30 @@ export class AuthService {
           userId: payload.user.userId,
         });
 
+        if (!user) {
+          this.logger.warn('User not found', {
+            userId: payload.user.userId,
+          });
+          return {
+            message: 'User not found',
+            authenticated: false,
+          } as GetMeResponse;
+        }
+
         // Fetch organization details for each membership
         const organizationsWithDetails = await Promise.all(
           user.memberships.map(async (membership) => {
             const org = await this.accountsAdapter.getOrganizationById({
               organizationId: membership.organizationId,
             });
+
+            if (!org) {
+              this.logger.warn('Organization not found', {
+                organizationId: membership.organizationId,
+              });
+              return null;
+            }
+
             return {
               organization: {
                 id: org.id,
@@ -240,6 +259,8 @@ export class AuthService {
               role: membership.role,
             };
           }),
+        ).then((orgs) =>
+          orgs.filter((org): org is NonNullable<typeof org> => org !== null),
         );
 
         return {
@@ -253,19 +274,37 @@ export class AuthService {
         } as GetMeResponse;
       }
 
+      // At this point, payload.organization must exist (checked above)
+      if (!payload.organization) {
+        throw new Error('Organization not found in token after check');
+      }
+
+      // Store the non-null organization for TypeScript narrowing
+      const tokenOrganization = payload.organization;
+
       // Verify that the user has access to the organization in the token
       const user = await this.accountsAdapter.getUserById({
         userId: payload.user.userId,
       });
 
+      if (!user) {
+        this.logger.warn('User not found', {
+          userId: payload.user.userId,
+        });
+        return {
+          message: 'User not found',
+          authenticated: false,
+        } as GetMeResponse;
+      }
+
       const organizationMembership = user.memberships.find(
-        (membership) => membership.organizationId === payload.organization.id,
+        (membership) => membership.organizationId === tokenOrganization.id,
       );
 
       if (!organizationMembership) {
         this.logger.warn('User does not have access to organization', {
           userId: payload.user.userId,
-          organizationId: payload.organization.id,
+          organizationId: tokenOrganization.id,
         });
         return {
           message: 'User does not have access to the organization in token',
@@ -276,6 +315,16 @@ export class AuthService {
       const org = await this.accountsAdapter.getOrganizationById({
         organizationId: organizationMembership.organizationId,
       });
+
+      if (!org) {
+        this.logger.warn('Organization not found', {
+          organizationId: organizationMembership.organizationId,
+        });
+        return {
+          message: 'Organization not found',
+          authenticated: false,
+        } as GetMeResponse;
+      }
 
       return {
         user: {
@@ -340,7 +389,7 @@ export class AuthService {
         userId: req.user.userId,
         error,
       });
-      throw new Error('Failed to generate API key: ' + error.message);
+      throw new Error('Failed to generate API key: ' + getErrorMessage(error));
     }
   }
 
@@ -369,7 +418,9 @@ export class AuthService {
         userId: req.user.userId,
         error,
       });
-      throw new Error('Failed to get current API key: ' + error.message);
+      throw new Error(
+        'Failed to get current API key: ' + getErrorMessage(error),
+      );
     }
   }
 
@@ -398,7 +449,7 @@ export class AuthService {
     } catch (error) {
       this.logger.error('Failed to validate invitation token', {
         token: this.maskToken(request.token),
-        error: error.message,
+        error: getErrorMessage(error),
       });
       throw error;
     }
@@ -471,7 +522,7 @@ export class AuthService {
     } catch (error) {
       this.logger.error('Failed to activate user account', {
         token: this.maskToken(request.token),
-        error: error.message,
+        error: getErrorMessage(error),
       });
       throw error;
     }
@@ -501,6 +552,10 @@ export class AuthService {
       const getUserResponse = await this.accountsAdapter.getUserById({
         userId: payload.user.userId,
       });
+
+      if (!getUserResponse) {
+        throw new Error('User not found');
+      }
 
       const userMembership = getUserResponse.memberships.find(
         (m) => m.organizationId === command.organizationId,
@@ -574,7 +629,7 @@ export class AuthService {
     } catch (error) {
       this.logger.error('Failed to request password reset', {
         email: maskEmail(command.email),
-        error: error.message,
+        error: getErrorMessage(error),
       });
       throw error;
     }
@@ -608,7 +663,7 @@ export class AuthService {
     } catch (error) {
       this.logger.error('Failed to validate password reset token', {
         token: this.maskToken(request.token),
-        error: error.message,
+        error: getErrorMessage(error),
       });
       throw error;
     }
@@ -681,7 +736,7 @@ export class AuthService {
     } catch (error) {
       this.logger.error('Failed to reset password', {
         token: this.maskToken(request.token),
-        error: error.message,
+        error: getErrorMessage(error),
       });
       throw error;
     }

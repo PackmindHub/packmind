@@ -253,7 +253,10 @@ describe('GitProviderService', () => {
 
     describe('when git provider has no token', () => {
       it('throws error', async () => {
-        const providerWithoutToken = { ...mockGitProvider, token: undefined };
+        const providerWithoutToken = {
+          ...mockGitProvider,
+          token: null,
+        };
         mockGitProviderRepository.findById.mockResolvedValue(
           providerWithoutToken,
         );
@@ -468,7 +471,10 @@ describe('GitProviderService', () => {
 
     describe('when git provider has no token', () => {
       it('throws error', async () => {
-        const providerWithoutToken = { ...mockGitProvider, token: undefined };
+        const providerWithoutToken = {
+          ...mockGitProvider,
+          token: null,
+        };
         mockGitProviderRepository.findById.mockResolvedValue(
           providerWithoutToken,
         );
