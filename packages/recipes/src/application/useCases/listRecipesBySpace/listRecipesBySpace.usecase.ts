@@ -21,7 +21,7 @@ export class ListRecipesBySpaceUsecase
   constructor(
     accountsAdapter: IAccountsPort,
     private readonly recipeService: RecipeService,
-    private readonly spacesPort: ISpacesPort | null,
+    private readonly spacesPort: ISpacesPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsAdapter, accountsAdapter, logger);
@@ -38,11 +38,6 @@ export class ListRecipesBySpaceUsecase
 
     try {
       // Verify the space belongs to the organization
-      if (!this.spacesPort) {
-        this.logger.error('SpacesPort not available for space validation');
-        throw new Error('SpacesPort not available');
-      }
-
       const space = await this.spacesPort.getSpaceById(command.spaceId);
       if (!space) {
         this.logger.warn('Space not found', {
