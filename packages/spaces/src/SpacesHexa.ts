@@ -64,8 +64,18 @@ export class SpacesHexa extends BaseHexa<BaseHexaOpts, ISpacesPort> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public async initialize(_registry: HexaRegistry): Promise<void> {
     this.logger.info('Initializing SpacesHexa (adapter retrieval phase)');
-    // SpacesHexa doesn't need any adapters from registry
-    this.logger.info('SpacesHexa initialized successfully');
+
+    try {
+      // SpacesAdapter has no port dependencies, initialize with empty ports
+      this.spacesAdapter.initialize({});
+
+      this.logger.info('SpacesHexa initialized successfully');
+    } catch (error) {
+      this.logger.error('Failed to initialize SpacesHexa', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   }
 
   destroy(): void {
@@ -79,7 +89,7 @@ export class SpacesHexa extends BaseHexa<BaseHexaOpts, ISpacesPort> {
    * Following DDD monorepo architecture standard
    */
   public getAdapter(): ISpacesPort {
-    return this.spacesAdapter;
+    return this.spacesAdapter.getPort();
   }
 
   /**
