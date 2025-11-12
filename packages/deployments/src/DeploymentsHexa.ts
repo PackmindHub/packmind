@@ -75,67 +75,35 @@ export class DeploymentsHexa extends BaseHexa<
     this.logger.info('Initializing DeploymentsHexa (adapter retrieval phase)');
 
     try {
-      // Retrieve ports from registry
+      // Get all required ports - let errors propagate
       const gitPort = registry.getAdapter<IGitPort>(IGitPortName);
+      const recipesPort = registry.getAdapter<IRecipesPort>(IRecipesPortName);
+      const codingAgentPort =
+        registry.getAdapter<ICodingAgentPort>(ICodingAgentPortName);
+      const standardsPort =
+        registry.getAdapter<IStandardsPort>(IStandardsPortName);
+      const spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
+      const accountsPort =
+        registry.getAdapter<IAccountsPort>(IAccountsPortName);
 
-      // Initialize services with retrieved ports
+      // Initialize services with gitPort
       this.services = new DeploymentsServices(
         this.repositories,
         gitPort,
         this.logger,
       );
 
-      // Set ports on adapter and update services reference
-      this.adapter.setGitPort(gitPort);
-      this.adapter.updateDeploymentsServices(this.services);
-
-      // Get Recipes port (optional - might not be available due to circular dependency)
-      try {
-        const recipesPort = registry.getAdapter<IRecipesPort>(IRecipesPortName);
-        this.adapter.updateRecipesPort(recipesPort);
-      } catch {
-        // RecipesHexa will be resolved later when fully initialized
-        this.logger.debug('RecipesHexa not available in registry');
-      }
-
-      // Get CodingAgent port (required)
-      const codingAgentPort =
-        registry.getAdapter<ICodingAgentPort>(ICodingAgentPortName);
-      this.adapter.setCodingAgentPort(codingAgentPort);
-
-      // Get Standards port (optional)
-      try {
-        const standardsPort =
-          registry.getAdapter<IStandardsPort>(IStandardsPortName);
-        this.adapter.updateStandardsPort(standardsPort);
-      } catch {
-        // StandardsHexa not initialized yet - will be set later
-        this.logger.debug(
-          'StandardsHexa adapter not available yet, will be set after initialization',
-        );
-      }
-
-      // Get Accounts port for user and organization providers (optional)
-      try {
-        const accountsPort =
-          registry.getAdapter<IAccountsPort>(IAccountsPortName);
-        this.setAccountProviders(
-          accountsPort as unknown as UserProvider,
-          accountsPort as unknown as OrganizationProvider,
-        );
-      } catch {
-        // AccountsHexa not available - optional dependency
-        this.logger.debug('AccountsHexa not available in registry');
-      }
-
-      // Get Spaces port (optional)
-      try {
-        const spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
-        this.setSpacesAdapter(spacesPort);
-      } catch {
-        // SpacesHexa not available - optional dependency
-        this.logger.debug('SpacesHexa not available in registry');
-      }
+      // Initialize adapter once with all ports and services
+      this.adapter.initialize({
+        [IGitPortName]: gitPort,
+        [IRecipesPortName]: recipesPort,
+        [ICodingAgentPortName]: codingAgentPort,
+        [IStandardsPortName]: standardsPort,
+        [ISpacesPortName]: spacesPort,
+        deploymentsServices: this.services,
+        userProvider: accountsPort as unknown as UserProvider,
+        organizationProvider: accountsPort as unknown as OrganizationProvider,
+      });
 
       this.logger.info('DeploymentsHexa initialized successfully');
     } catch (error) {
@@ -158,10 +126,9 @@ export class DeploymentsHexa extends BaseHexa<
   /**
    * Get the Deployments adapter for cross-domain access to deployments data.
    * This adapter implements IDeploymentPort and can be injected into other domains.
-   * The adapter is available immediately after construction.
    */
   public getAdapter(): IDeploymentPort {
-    return this.adapter;
+    return this.adapter.getPort();
   }
 
   /**
@@ -169,18 +136,5 @@ export class DeploymentsHexa extends BaseHexa<
    */
   public getPortName(): string {
     return IDeploymentPortName;
-  }
-
-  public setAccountProviders(
-    userProvider: UserProvider,
-    organizationProvider: OrganizationProvider,
-  ): void {
-    this.adapter.setAccountProviders(userProvider, organizationProvider);
-    this.logger.info('Account providers set in DeploymentsHexa');
-  }
-
-  public setSpacesAdapter(spacesPort: ISpacesPort): void {
-    this.adapter.updateSpacesPort(spacesPort);
-    this.logger.info('Spaces adapter set in DeploymentsHexa');
   }
 }
