@@ -1,0 +1,20 @@
+{
+  "name": "linter-execution",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/linter-execution/src",
+  "projectType": "library",
+  "tags": ["env:node"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/linter-execution",
+        "tsConfig": "packages/linter-execution/tsconfig.lib.json",
+        "packageJson": "packages/linter-execution/package.json",
+        "main": "packages/linter-execution/src/index.ts",
+        "assets": ["packages/linter-execution/*.md"]
+      }
+    }
+  }
+}

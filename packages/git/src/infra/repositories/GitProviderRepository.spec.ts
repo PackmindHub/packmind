@@ -219,7 +219,7 @@ describe('GitProviderRepository', () => {
     });
   });
 
-  it('uses default encryption key when configuration is missing', async () => {
+  it('uses default encryption key if configuration is missing', async () => {
     mockConfiguration.getConfig.mockResolvedValueOnce(null);
 
     const gitProvider = gitProviderFactory({

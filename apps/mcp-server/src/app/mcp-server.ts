@@ -4,7 +4,7 @@ import { FastifyInstance } from 'fastify';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import {
   OrganizationId,
-  IAnalyticsPort,
+  IEventTrackingPort,
   getAllProgrammingLanguages,
   ProgrammingLanguage,
   Space,
@@ -15,7 +15,7 @@ import {
   OrganizationProvider,
 } from '@packmind/types';
 import { createOrganizationId, createUserId } from '@packmind/types';
-import { AnalyticsAdapter } from '@packmind/amplitude';
+import { EventTrackingAdapter } from '@packmind/amplitude';
 
 import packmindOnboardingModeSelection from './prompts/packmind-onboarding-mode-selection';
 import packmindOnboardingCodebaseAnalysis from './prompts/packmind-onboarding-codebase-analysis';
@@ -112,7 +112,7 @@ export function createMCPServer(
   });
 
   // Initialize analytics adapter
-  const analyticsAdapter: IAnalyticsPort = new AnalyticsAdapter(logger);
+  const analyticsAdapter: IEventTrackingPort = new EventTrackingAdapter(logger);
 
   // Debug logging for fastify decorators
   logger.debug('Checking fastify decorators:', {
@@ -309,7 +309,7 @@ export function createMCPServer(
       }
 
       try {
-        const usageRecords = await analyticsHexa.trackRecipeUsage({
+        const usageRecords = await analyticsHexa.getAdapter().trackRecipeUsage({
           recipeSlugs: recipesSlug,
           aiAgent,
           userId: userContext.userId,

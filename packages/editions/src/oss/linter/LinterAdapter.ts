@@ -28,6 +28,7 @@ import {
   ListDetectionProgramCommand,
   ListDetectionProgramResponse,
   RuleDetectionAssessment,
+  RuleDetectionAssessmentStatus,
   StartProgramGenerationCommand,
   StartProgramGenerationResponse,
   TestProgramExecutionCommand,
@@ -44,114 +45,181 @@ import {
   GetDetectionHeuristicsCommand,
   UpdateRuleDetectionHeuristicsResponse,
   UpdateRuleDetectionHeuristicsCommand,
+  DetectionModeEnum,
+  SourceCodeState,
 } from '@packmind/types';
 import { ILinterPort } from '@packmind/types';
-import { LinterUsecases } from '.';
 
+/**
+ * OSS stub implementation of LinterAdapter
+ * All methods return simple default values instead of throwing errors
+ */
 export class LinterAdapter implements ILinterPort {
-  constructor(private readonly linterUsecases: LinterUsecases) {}
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-empty-function
+  constructor(linterUsecases: Record<string, never>) {}
 
-  createDetectionProgram(
+  async createDetectionProgram(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     command: CreateDetectionProgramCommand,
   ): Promise<DetectionProgram> {
-    throw new Error('Method not implemented.');
+    return {
+      id: '' as unknown as DetectionProgram['id'],
+      code: '',
+      version: 0,
+      mode: DetectionModeEnum.REGEXP,
+      ruleId: '' as unknown as DetectionProgram['ruleId'],
+      language: 'typescript' as unknown as DetectionProgram['language'],
+      status: 'DRAFT' as unknown as DetectionProgram['status'],
+      sourceCodeState: 'NONE' as SourceCodeState,
+    };
   }
-  getActiveDetectionProgram(
+
+  async getActiveDetectionProgram(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     command: GetActiveDetectionProgramCommand,
   ): Promise<GetActiveDetectionProgramResponse> {
-    throw new Error('Method not implemented.');
+    return { programs: null };
   }
-  createNewDetectionProgramVersion(
+
+  async createNewDetectionProgramVersion(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     command: CreateNewDetectionProgramVersionCommand,
   ): Promise<DetectionProgram> {
-    throw new Error('Method not implemented.');
+    return {
+      id: '' as unknown as DetectionProgram['id'],
+      code: '',
+      version: 0,
+      mode: DetectionModeEnum.REGEXP,
+      ruleId: '' as unknown as DetectionProgram['ruleId'],
+      language: 'typescript' as unknown as DetectionProgram['language'],
+      status: 'DRAFT' as unknown as DetectionProgram['status'],
+      sourceCodeState: 'NONE' as SourceCodeState,
+    };
   }
-  listDetectionPrograms(
+
+  async listDetectionPrograms(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     command: ListDetectionProgramCommand,
   ): Promise<ListDetectionProgramResponse> {
-    throw new Error('Method not implemented.');
+    return { targets: [] };
   }
-  updateDetectionProgram(
+
+  async updateDetectionProgram(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     command: UpdateDetectionProgramCommand,
   ): Promise<DetectionProgram> {
-    throw new Error('Method not implemented.');
+    return {
+      id: '' as unknown as DetectionProgram['id'],
+      code: '',
+      version: 0,
+      mode: DetectionModeEnum.REGEXP,
+      ruleId: '' as unknown as DetectionProgram['ruleId'],
+      language: 'typescript' as unknown as DetectionProgram['language'],
+      status: 'DRAFT' as unknown as DetectionProgram['status'],
+      sourceCodeState: 'NONE' as SourceCodeState,
+    };
   }
-  updateActiveDetectionProgram(
+
+  async updateActiveDetectionProgram(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     command: UpdateActiveDetectionProgramCommand,
   ): Promise<ActiveDetectionProgram> {
-    throw new Error('Method not implemented.');
+    return {
+      id: '' as unknown as ActiveDetectionProgram['id'],
+      detectionProgramVersion: null,
+      ruleId: '' as unknown as ActiveDetectionProgram['ruleId'],
+      language: 'typescript' as unknown as ActiveDetectionProgram['language'],
+      detectionProgramDraftVersion: null,
+    };
   }
-  getActiveDetectionProgramById(
+
+  async getActiveDetectionProgramById(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     activeDetectionProgramId: ActiveDetectionProgramId,
   ): Promise<ActiveDetectionProgram | null> {
-    throw new Error('Method not implemented.');
+    return null;
   }
-  startGenerateProgram(
+
+  async startGenerateProgram(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     command: StartProgramGenerationCommand,
   ): Promise<StartProgramGenerationResponse> {
-    throw new Error('Method not implemented.');
+    return {
+      message: '',
+    };
   }
-  getAllDetectionProgramsByRule(
+
+  async getAllDetectionProgramsByRule(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     command: GetAllDetectionProgramsByRuleCommand,
   ): Promise<GetAllDetectionProgramsByRuleResponse> {
-    throw new Error('Method not implemented.');
+    return { programs: [] };
   }
-  getDetectionProgramMetadata(
+
+  async getDetectionProgramMetadata(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     command: GetDetectionProgramMetadataCommand,
   ): Promise<GetDetectionProgramMetadataResponse> {
-    throw new Error('Method not implemented.');
+    return { metadata: null };
   }
-  getDraftDetectionProgramForRule(
+
+  async getDraftDetectionProgramForRule(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     command: GetDraftDetectionProgramForRuleCommand,
   ): Promise<GetDraftDetectionProgramForRuleResponse> {
-    throw new Error('Method not implemented.');
+    return { programs: [], ruleContent: '', scope: null };
   }
-  getActiveDetectionProgramForRule(
+
+  async getActiveDetectionProgramForRule(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     command: GetActiveDetectionProgramForRuleCommand,
   ): Promise<GetActiveDetectionProgramForRuleResponse> {
-    throw new Error('Method not implemented.');
+    return { programs: [], ruleContent: '', scope: null };
   }
-  updateDetectionProgramStatus(
+
+  async updateDetectionProgramStatus(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     command: UpdateDetectionProgramStatusCommand,
   ): Promise<UpdateRuleDetectionStatusAfterUpdateResponse> {
-    throw new Error('Method not implemented.');
+    return {
+      action: 'STATUS_UPDATED',
+      message: '',
+    };
   }
-  startRuleDetectionAssessment(
+
+  async startRuleDetectionAssessment(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     command: Omit<AssessRuleDetectionInput, 'assessmentId'>,
   ): Promise<RuleDetectionAssessment> {
-    throw new Error('Method not implemented.');
+    return {
+      id: '' as unknown as RuleDetectionAssessment['id'],
+      ruleId: '' as unknown as RuleDetectionAssessment['ruleId'],
+      language: 'typescript' as unknown as RuleDetectionAssessment['language'],
+      detectionMode: DetectionModeEnum.REGEXP,
+      status: RuleDetectionAssessmentStatus.NOT_STARTED,
+      details: '',
+    };
   }
-  getRuleDetectionAssessment(
+
+  async getRuleDetectionAssessment(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     command: GetRuleDetectionAssessmentCommand,
   ): Promise<GetRuleDetectionAssessmentResponse> {
-    throw new Error('Method not implemented.');
+    return { assessment: null };
   }
-  getStandardRulesDetectionStatus(
+
+  async getStandardRulesDetectionStatus(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     command: GetStandardRulesDetectionStatusCommand,
   ): Promise<GetStandardRulesDetectionStatusResponse> {
-    throw new Error('Method not implemented.');
+    return { rules: [] };
   }
-  testProgramExecution(
+
+  async testProgramExecution(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     command: TestProgramExecutionCommand,
   ): Promise<TestProgramExecutionResponse> {
-    throw new Error('Method not implemented.');
+    return { violations: [] };
   }
 
   async copyDetectionProgramsToNewRule(

@@ -9,6 +9,7 @@ import { UserService } from '../../services/UserService';
 import { OrganizationService } from '../../services/OrganizationService';
 import { InvitationService } from '../../services/InvitationService';
 import { OrganizationAdminRequiredError } from '../../../domain/errors';
+import { Configuration } from '@packmind/node-utils';
 
 describe('ListOrganizationUserStatusesUseCase', () => {
   let useCase: ListOrganizationUserStatusesUseCase;
@@ -45,6 +46,11 @@ describe('ListOrganizationUserStatusesUseCase', () => {
 
     mockLogger = stubLogger();
 
+    // Mock Configuration.getConfig to return consistent test value
+    jest
+      .spyOn(Configuration, 'getConfig')
+      .mockResolvedValue('http://localhost:8081');
+
     const organization = organizationFactory({ id: organizationId });
     mockGetOrganizationById.mockResolvedValue(organization);
 
@@ -55,6 +61,10 @@ describe('ListOrganizationUserStatusesUseCase', () => {
       invitationService,
       mockLogger,
     );
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('returns empty array for organization with no users', async () => {
