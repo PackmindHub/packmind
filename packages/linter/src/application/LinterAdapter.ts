@@ -10,6 +10,8 @@ import { GetAllDetectionProgramsByRuleUseCase } from './useCases/getAllDetection
 import { GetDetectionProgramMetadataUseCase } from './useCases/getDetectionProgramMetadata/getDetectionProgramMetadata.usecase';
 import { CopyDetectionProgramsToNewRuleUseCase } from './useCases/copyDetectionProgramsToNewRule/copyDetectionProgramsToNewRule.usecase';
 import { CopyRuleDetectionAssessmentsUseCase } from './useCases/copyRuleDetectionAssessments/copyRuleDetectionAssessments.usecase';
+import { CopyDetectionHeuristicsUseCase } from './useCases/copyDetectionHeuristics/copyDetectionHeuristics.usecase';
+import { CopyLinterArtefactsUseCase } from './useCases/copyLinterArtefacts/copyLinterArtefacts.usecase';
 import { GetDraftDetectionProgramForRuleUseCase } from './useCases/getDraftDetectionProgramForRule/getDraftDetectionProgramForRule.usecase';
 import { GetActiveDetectionProgramForRuleUseCase } from './useCases/getActiveDetectionProgramForRule/getActiveDetectionProgramForRule.usecase';
 import { UpdateDetectionProgramStatusUseCase } from './useCases/updateDetectionProgramStatus/updateDetectionProgramStatus.usecase';
@@ -65,6 +67,10 @@ import {
   CopyDetectionProgramsToNewRuleResponse,
   CopyRuleDetectionAssessmentsCommand,
   CopyRuleDetectionAssessmentsResponse,
+  CopyDetectionHeuristicsCommand,
+  CopyDetectionHeuristicsResponse,
+  CopyLinterArtefactsCommand,
+  CopyLinterArtefactsResponse,
   GetDraftDetectionProgramForRuleCommand,
   GetDraftDetectionProgramForRuleResponse,
   GetActiveDetectionProgramForRuleCommand,
@@ -273,6 +279,20 @@ export class LinterAdapter implements ILinterPort {
     command: CopyRuleDetectionAssessmentsCommand,
   ): Promise<CopyRuleDetectionAssessmentsResponse> {
     const usecase = new CopyRuleDetectionAssessmentsUseCase(this.repositories);
+    return usecase.execute(command);
+  }
+
+  async copyDetectionHeuristics(
+    command: CopyDetectionHeuristicsCommand,
+  ): Promise<CopyDetectionHeuristicsResponse> {
+    const usecase = new CopyDetectionHeuristicsUseCase(this.repositories);
+    return usecase.execute(command);
+  }
+
+  async copyLinterArtefacts(
+    command: CopyLinterArtefactsCommand,
+  ): Promise<CopyLinterArtefactsResponse> {
+    const usecase = new CopyLinterArtefactsUseCase(this);
     return usecase.execute(command);
   }
 

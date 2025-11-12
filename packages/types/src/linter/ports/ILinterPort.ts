@@ -10,6 +10,10 @@ import type {
   CopyDetectionProgramsToNewRuleResponse,
   CopyRuleDetectionAssessmentsCommand,
   CopyRuleDetectionAssessmentsResponse,
+  CopyDetectionHeuristicsCommand,
+  CopyDetectionHeuristicsResponse,
+  CopyLinterArtefactsCommand,
+  CopyLinterArtefactsResponse,
   CreateDetectionProgramCommand,
   CreateNewDetectionProgramVersionCommand,
   GetActiveDetectionProgramCommand,
@@ -97,6 +101,14 @@ export interface ILinterPort {
   copyRuleDetectionAssessments(
     command: CopyRuleDetectionAssessmentsCommand,
   ): Promise<CopyRuleDetectionAssessmentsResponse>;
+
+  copyDetectionHeuristics(
+    command: CopyDetectionHeuristicsCommand,
+  ): Promise<CopyDetectionHeuristicsResponse>;
+
+  copyLinterArtefacts(
+    command: CopyLinterArtefactsCommand,
+  ): Promise<CopyLinterArtefactsResponse>;
 
   getDraftDetectionProgramForRule(
     command: GetDraftDetectionProgramForRuleCommand,
