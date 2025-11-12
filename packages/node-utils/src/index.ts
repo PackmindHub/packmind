@@ -1,3 +1,4 @@
+export * from './adapter/IBaseAdapter';
 export * from './ai/agents/AiAgentTypes';
 export * from './ai/errors/AiNotConfigured';
 export * from './ai/prompts/AIService';
