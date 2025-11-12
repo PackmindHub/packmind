@@ -4,8 +4,9 @@
  * Script to set up a plugin repository for development with Packmind.
  *
  * This script:
- * 1. Copies the plugin repository to plugins/ directory (instead of symlinking)
- * 2. Sets up a watch process to copy changes from plugin repo to plugins/ directory
+ * 1. Ensures core packages are built
+ * 2. Sets up core dependencies in the plugin repo (runs setup-core-deps)
+ * 3. Copies the plugin repository to plugins/ directory
  *
  * Usage:
  *   npm run setup-plugin-dev /path/to/plugin/repository
@@ -92,6 +93,81 @@ function copyRecursiveSync(src, dest) {
   }
 }
 
+function checkCorePackages() {
+  log('Checking core packages...');
+
+  const corePackages = ['node-utils', 'types', 'logger', 'ui'];
+  const missingPackages = [];
+
+  for (const pkg of corePackages) {
+    const distPath = path.join(
+      PLUGIN_ROOT,
+      'dist',
+      'packages',
+      pkg === 'ui' ? 'packmind-ui' : pkg,
+    );
+    if (!fs.existsSync(distPath)) {
+      missingPackages.push(pkg);
+    }
+  }
+
+  if (missingPackages.length > 0) {
+    log(`Building missing core packages: ${missingPackages.join(', ')}...`);
+    try {
+      for (const pkg of missingPackages) {
+        log(`Building ${pkg}...`);
+        execSync(`nx build ${pkg}`, {
+          cwd: PLUGIN_ROOT,
+          stdio: 'inherit',
+        });
+      }
+      log('✓ Core packages built');
+    } catch (err) {
+      error(`Failed to build core packages: ${err.message}`);
+    }
+  } else {
+    log('✓ All core packages are built');
+  }
+}
+
+function setupCoreDeps(pluginRepoPath) {
+  log('Setting up core dependencies in plugin repository...');
+
+  const setupScriptPath = path.join(
+    pluginRepoPath,
+    'scripts',
+    'setup-core-deps.js',
+  );
+
+  if (!fs.existsSync(setupScriptPath)) {
+    log(
+      '⚠ setup-core-deps.js not found in plugin repo, skipping core-deps setup',
+    );
+    log(
+      '  Make sure to run "npm run setup-core-deps" manually in the plugin repo',
+    );
+    return;
+  }
+
+  try {
+    // Set PACKMIND_MAIN_REPO environment variable so the script knows where the main repo is
+    const env = {
+      ...process.env,
+      PACKMIND_MAIN_REPO: PLUGIN_ROOT,
+    };
+
+    execSync('node scripts/setup-core-deps.js', {
+      cwd: pluginRepoPath,
+      env,
+      stdio: 'inherit',
+    });
+
+    log('✓ Core dependencies set up in plugin repository');
+  } catch (err) {
+    error(`Failed to set up core dependencies: ${err.message}`);
+  }
+}
+
 function copyPlugin(pluginRepoPath, pluginName) {
   const targetPath = path.join(PLUGINS_DIR, pluginName);
 
@@ -153,10 +229,19 @@ function main() {
   log('Setting up plugin for development...');
   log(`Plugin repository: ${resolvedPluginPath}`);
   log(`Plugins directory: ${PLUGINS_DIR}`);
+  log('');
 
+  // Step 1: Check and build core packages if needed
+  checkCorePackages();
+  log('');
+
+  // Step 2: Set up core dependencies in plugin repo
+  setupCoreDeps(resolvedPluginPath);
+  log('');
+
+  // Step 3: Copy plugin to plugins directory
   const pluginName = getPluginName(resolvedPluginPath);
   log(`Plugin name: ${pluginName}`);
-
   copyPlugin(resolvedPluginPath, pluginName);
 
   log('');

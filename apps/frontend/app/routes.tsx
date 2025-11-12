@@ -1,12 +1,20 @@
 import { type RouteConfig } from '@react-router/dev/routes';
 import { flatRoutes } from '@react-router/fs-routes';
+import { loadPluginRoutes } from '../src/plugins/loadPluginRoutes';
+import { mergeRoutes } from '../src/shared/utils/mergeRoutes';
 
 /**
- * flatRoutes() automatically scans app/routes/ directory and includes:
- * - File-based routes (manually created route files in app/routes/)
- * - Plugin routes (auto-generated with plugin- prefix by vite-plugin-plugin-routes.ts)
+ * Combines file-based routes with plugin routes.
  *
- * Plugin routes are generated with a plugin- prefix (e.g., plugin-org.$orgSlug.feature.tsx)
- * and are gitignored, keeping auto-generated files out of the source tree.
+ * - File-based routes: Automatically discovered from app/routes/ via flatRoutes()
+ * - Plugin routes: Loaded from plugin bundles via loadPluginRoutes()
+ *
+ * Plugin routes are merged with file-based routes using mergeRoutes(), which
+ * ensures plugin routes are properly nested under their parent layout routes
+ * (e.g., the protected layout for /org/:orgSlug/... routes).
  */
-export default flatRoutes() satisfies RouteConfig;
+export default (async function routes(): Promise<RouteConfig> {
+  const fileBasedRoutes = await flatRoutes();
+  const pluginRoutes = await loadPluginRoutes();
+  return mergeRoutes(fileBasedRoutes, pluginRoutes);
+})();
