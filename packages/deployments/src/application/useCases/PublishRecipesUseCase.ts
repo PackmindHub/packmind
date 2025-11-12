@@ -25,7 +25,7 @@ export class PublishRecipesUseCase implements IPublishRecipes {
   constructor(
     private readonly recipesDeploymentRepository: IRecipesDeploymentRepository,
     private readonly gitPort: IGitPort,
-    private readonly recipesPort: Partial<IRecipesPort>,
+    private readonly recipesPort: IRecipesPort,
     private readonly codingAgentPort: ICodingAgentPort,
     public readonly targetService: TargetService,
     public readonly renderModeConfigurationService: RenderModeConfigurationService,
@@ -90,10 +90,6 @@ export class PublishRecipesUseCase implements IPublishRecipes {
     }
 
     // Fetch recipe versions by their IDs
-    if (!this.recipesPort.getRecipeVersionById) {
-      throw new Error('RecipesPort.getRecipeVersionById is not available');
-    }
-
     const recipeVersions = [];
     for (const recipeVersionId of command.recipeVersionIds) {
       const recipeVersion =
@@ -317,10 +313,6 @@ ${recipeVersions.map((rv) => `- ${rv.name} (${rv.slug}) v${rv.version}`).join('\
       // Get the recipe versions that were being deployed (for proper association)
       const recipeVersions = [];
       for (const recipeVersionId of command.recipeVersionIds) {
-        if (!this.recipesPort.getRecipeVersionById) {
-          this.logger.warn('RecipesPort.getRecipeVersionById is not available');
-          continue;
-        }
         const recipeVersion =
           await this.recipesPort.getRecipeVersionById(recipeVersionId);
         if (recipeVersion) {
@@ -473,10 +465,6 @@ ${recipeVersions.map((rv) => `- ${rv.name} (${rv.slug}) v${rv.version}`).join('\
     }
 
     // Fetch recipe versions by their IDs
-    if (!this.recipesPort.getRecipeVersionById) {
-      throw new Error('RecipesPort.getRecipeVersionById is not available');
-    }
-
     const recipeVersions = [];
     for (const recipeVersionId of command.recipeVersionIds) {
       const recipeVersion =
