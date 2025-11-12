@@ -409,50 +409,5 @@ describe('ListRecipesBySpaceUsecase', () => {
         );
       });
     });
-
-    describe('when SpacesPort is not available', () => {
-      it('throws error', async () => {
-        const organizationId = createOrganizationId('org-1');
-        const spaceId = createSpaceId('space-1');
-        const userId = createUserId('user-1');
-
-        const organization = {
-          id: organizationId,
-          name: 'Test Org',
-          slug: 'test-org',
-        };
-        const user = {
-          id: userId,
-          email: 'test@example.com',
-          passwordHash: 'hash',
-          active: true,
-          memberships: [
-            {
-              userId,
-              organizationId,
-              role: 'member' as const,
-            },
-          ],
-        };
-
-        const usecaseWithoutSpacesPort = new ListRecipesBySpaceUsecase(
-          accountsAdapter,
-          recipeService,
-          null,
-          stubLogger(),
-        );
-
-        accountsAdapter.getOrganizationById.mockResolvedValue(organization);
-        accountsAdapter.getUserById.mockResolvedValue(user);
-
-        await expect(
-          usecaseWithoutSpacesPort.execute({
-            userId,
-            organizationId,
-            spaceId,
-          }),
-        ).rejects.toThrow('SpacesPort not available');
-      });
-    });
   });
 });

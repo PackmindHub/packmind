@@ -1,14 +1,19 @@
 import { PackmindLogger } from '@packmind/logger';
+import { IBaseAdapter } from '@packmind/node-utils';
 import {
   CaptureRecipeCommand,
   DeleteRecipeCommand,
   DeleteRecipesBatchCommand,
   GetRecipeByIdCommand,
   IAccountsPort,
+  IAccountsPortName,
   IDeploymentPort,
+  IDeploymentPortName,
   IGitPort,
+  IGitPortName,
   IRecipesPort,
   ISpacesPort,
+  ISpacesPortName,
   ListRecipesBySpaceCommand,
   OrganizationId,
   QueryOption,
@@ -36,94 +41,166 @@ import { UpdateRecipesFromGitLabUsecase } from '../useCases/updateRecipesFromGit
 
 const origin = 'RecipesAdapter';
 
-export class RecipesAdapter implements IRecipesPort {
-  private readonly _captureRecipe: CaptureRecipeUsecase;
-  private _updateRecipesFromGitHub: UpdateRecipesFromGitHubUsecase;
-  private _updateRecipesFromGitLab: UpdateRecipesFromGitLabUsecase;
-  private readonly _updateRecipeFromUI: UpdateRecipeFromUIUsecase;
-  private readonly _deleteRecipe: DeleteRecipeUsecase;
-  private _getRecipeById: GetRecipeByIdUsecase;
-  private readonly _findRecipeBySlug: FindRecipeBySlugUsecase;
-  private readonly _listRecipesByOrganization: ListRecipesByOrganizationUsecase;
-  private _listRecipesBySpace: ListRecipesBySpaceUsecase;
-  private readonly _listRecipeVersions: ListRecipeVersionsUsecase;
-  private readonly _getRecipeVersion: GetRecipeVersionUsecase;
-  private readonly _deleteRecipesBatch: DeleteRecipesBatchUsecase;
-  private _recipesDelayedJobs: IRecipesDelayedJobs | null = null;
+export class RecipesAdapter
+  implements IBaseAdapter<IRecipesPort>, IRecipesPort
+{
+  // Required ports - all set via initialize()
+  private gitPort!: IGitPort;
+  private deploymentPort!: IDeploymentPort;
+  private accountsPort!: IAccountsPort;
+  private spacesPort!: ISpacesPort;
+
+  // Delayed jobs - built internally from JobsService
+  private recipesDelayedJobs!: IRecipesDelayedJobs;
+
+  // Use cases - created in initialize()
+  private _captureRecipe!: CaptureRecipeUsecase;
+  private _updateRecipesFromGitHub!: UpdateRecipesFromGitHubUsecase;
+  private _updateRecipesFromGitLab!: UpdateRecipesFromGitLabUsecase;
+  private _updateRecipeFromUI!: UpdateRecipeFromUIUsecase;
+  private _deleteRecipe!: DeleteRecipeUsecase;
+  private _getRecipeById!: GetRecipeByIdUsecase;
+  private _findRecipeBySlug!: FindRecipeBySlugUsecase;
+  private _listRecipesByOrganization!: ListRecipesByOrganizationUsecase;
+  private _listRecipesBySpace!: ListRecipesBySpaceUsecase;
+  private _listRecipeVersions!: ListRecipeVersionsUsecase;
+  private _getRecipeVersion!: GetRecipeVersionUsecase;
+  private _deleteRecipesBatch!: DeleteRecipesBatchUsecase;
 
   constructor(
     private readonly recipesServices: RecipesServices,
-    private gitPort: IGitPort | undefined,
-    private deploymentPort: IDeploymentPort | undefined,
-    private accountsAdapter: IAccountsPort | undefined,
-    private spacesPort: ISpacesPort | null,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
+    this.logger.info('RecipesAdapter constructed - awaiting initialization');
+  }
+
+  /**
+   * Initialize adapter with ports and delayed jobs from registry.
+   * All ports and delayed jobs in signature are REQUIRED.
+   * Can be called multiple times (e.g., when deploymentPort is updated due to circular dependency).
+   */
+  public initialize(ports: {
+    [IGitPortName]: IGitPort;
+    [IDeploymentPortName]: IDeploymentPort;
+    [IAccountsPortName]: IAccountsPort;
+    [ISpacesPortName]: ISpacesPort;
+    recipesDelayedJobs: IRecipesDelayedJobs;
+  }): void {
+    this.logger.info('Initializing RecipesAdapter with ports and delayed jobs');
+
+    // Step 1: Set all ports and delayed jobs
+    this.gitPort = ports[IGitPortName];
+    this.deploymentPort = ports[IDeploymentPortName];
+    this.accountsPort = ports[IAccountsPortName];
+    this.spacesPort = ports[ISpacesPortName];
+    this.recipesDelayedJobs = ports.recipesDelayedJobs;
+
+    // Step 2: Validate all required ports/delayed jobs are set
+    if (!this.isReady()) {
+      throw new Error(
+        'RecipesAdapter: Required ports/delayed jobs not provided.',
+      );
+    }
+
+    // Step 4: Create all use cases with non-null ports/services
     this._captureRecipe = new CaptureRecipeUsecase(
-      recipesServices.getRecipeService(),
-      recipesServices.getRecipeVersionService(),
-      recipesServices.getRecipeSummaryService(),
+      this.recipesServices.getRecipeService(),
+      this.recipesServices.getRecipeVersionService(),
+      this.recipesServices.getRecipeSummaryService(),
       this.logger,
     );
-    // Use cases will be created when dependencies are injected
-    // Temporarily create with undefined - will be recreated in setGitPort()
+
     this._updateRecipesFromGitHub = new UpdateRecipesFromGitHubUsecase(
-      recipesServices.getRecipeService(),
-      gitPort as IGitPort,
+      this.recipesServices.getRecipeService(),
+      this.gitPort,
       this.deploymentPort,
     );
+    this._updateRecipesFromGitHub.setRecipesDelayedJobs(
+      this.recipesDelayedJobs,
+    );
+
     this._updateRecipesFromGitLab = new UpdateRecipesFromGitLabUsecase(
-      recipesServices.getRecipeService(),
-      gitPort as IGitPort,
+      this.recipesServices.getRecipeService(),
+      this.gitPort,
       this.deploymentPort,
     );
+    this._updateRecipesFromGitLab.setRecipesDelayedJobs(
+      this.recipesDelayedJobs,
+    );
+
     this._updateRecipeFromUI = new UpdateRecipeFromUIUsecase(
-      recipesServices.getRecipeService(),
-      recipesServices.getRecipeVersionService(),
-      recipesServices.getRecipeSummaryService(),
+      this.recipesServices.getRecipeService(),
+      this.recipesServices.getRecipeVersionService(),
+      this.recipesServices.getRecipeSummaryService(),
       this.logger,
     );
+
     this._deleteRecipe = new DeleteRecipeUsecase(
-      recipesServices.getRecipeService(),
-      recipesServices.getRecipeVersionService(),
+      this.recipesServices.getRecipeService(),
+      this.recipesServices.getRecipeVersionService(),
       this.logger,
     );
-    // Use cases will be created when dependencies are injected
-    // Temporarily create with undefined - will be recreated in setAccountsAdapter()
+
     this._getRecipeById = new GetRecipeByIdUsecase(
-      accountsAdapter as IAccountsPort,
-      recipesServices.getRecipeService(),
-      spacesPort,
+      this.accountsPort,
+      this.recipesServices.getRecipeService(),
+      this.spacesPort,
       this.logger,
     );
+
     this._findRecipeBySlug = new FindRecipeBySlugUsecase(
-      recipesServices.getRecipeService(),
+      this.recipesServices.getRecipeService(),
       this.logger,
     );
+
     this._listRecipesByOrganization = new ListRecipesByOrganizationUsecase(
-      recipesServices.getRecipeService(),
+      this.recipesServices.getRecipeService(),
       this.logger,
     );
+
     this._listRecipesBySpace = new ListRecipesBySpaceUsecase(
-      accountsAdapter as IAccountsPort,
-      recipesServices.getRecipeService(),
-      spacesPort,
+      this.accountsPort,
+      this.recipesServices.getRecipeService(),
+      this.spacesPort,
       this.logger,
     );
+
     this._listRecipeVersions = new ListRecipeVersionsUsecase(
-      recipesServices.getRecipeVersionService(),
+      this.recipesServices.getRecipeVersionService(),
       this.logger,
     );
+
     this._getRecipeVersion = new GetRecipeVersionUsecase(
-      recipesServices.getRecipeVersionService(),
+      this.recipesServices.getRecipeVersionService(),
       this.logger,
     );
+
     this._deleteRecipesBatch = new DeleteRecipesBatchUsecase(
       this._deleteRecipe,
       this.logger,
     );
 
     this.logger.info('RecipesAdapter initialized successfully');
+  }
+
+  /**
+   * Check if all required ports and delayed jobs are set.
+   */
+  public isReady(): boolean {
+    return (
+      this.gitPort !== undefined &&
+      this.deploymentPort !== undefined &&
+      this.accountsPort !== undefined &&
+      this.spacesPort !== undefined &&
+      this.recipesDelayedJobs !== undefined
+    );
+  }
+
+  /**
+   * Get the port interface this adapter implements.
+   */
+  public getPort(): IRecipesPort {
+    return this as IRecipesPort;
   }
 
   public captureRecipe(command: CaptureRecipeCommand) {
@@ -214,121 +291,5 @@ export class RecipesAdapter implements IRecipesPort {
     const recipeVersionService = this.recipesServices.getRecipeVersionService();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return recipeVersionService.getRecipeVersionById(id as any);
-  }
-
-  /**
-   * Update the deployment port for webhook use cases after initialization
-   */
-  updateDeploymentPort(deploymentPort: IDeploymentPort): void {
-    this.deploymentPort = deploymentPort;
-
-    // Only recreate use cases if gitPort is available
-    if (this.gitPort) {
-      this._updateRecipesFromGitHub = new UpdateRecipesFromGitHubUsecase(
-        this.recipesServices.getRecipeService(),
-        this.gitPort,
-        deploymentPort,
-      );
-      this._updateRecipesFromGitLab = new UpdateRecipesFromGitLabUsecase(
-        this.recipesServices.getRecipeService(),
-        this.gitPort,
-        deploymentPort,
-      );
-    }
-
-    // Re-inject recipes delayed jobs if they were previously set
-    if (this._recipesDelayedJobs) {
-      this._updateRecipesFromGitHub.setRecipesDelayedJobs(
-        this._recipesDelayedJobs,
-      );
-      this._updateRecipesFromGitLab.setRecipesDelayedJobs(
-        this._recipesDelayedJobs,
-      );
-    }
-  }
-
-  /**
-   * Set recipes delayed jobs reference for webhook use cases to enable delayed job access
-   */
-  setRecipesDelayedJobs(recipesDelayedJobs: IRecipesDelayedJobs): void {
-    this._recipesDelayedJobs = recipesDelayedJobs;
-    this._updateRecipesFromGitHub.setRecipesDelayedJobs(recipesDelayedJobs);
-    this._updateRecipesFromGitLab.setRecipesDelayedJobs(recipesDelayedJobs);
-  }
-
-  /**
-   * Set the git port after construction
-   * Recreates use cases that depend on git port
-   */
-  setGitPort(gitPort: IGitPort): void {
-    this.gitPort = gitPort;
-
-    // Recreate use cases that depend on gitPort
-    this._updateRecipesFromGitHub = new UpdateRecipesFromGitHubUsecase(
-      this.recipesServices.getRecipeService(),
-      gitPort,
-      this.deploymentPort,
-    );
-    this._updateRecipesFromGitLab = new UpdateRecipesFromGitLabUsecase(
-      this.recipesServices.getRecipeService(),
-      gitPort,
-      this.deploymentPort,
-    );
-
-    // Re-inject delayed jobs if already set
-    if (this._recipesDelayedJobs) {
-      this._updateRecipesFromGitHub.setRecipesDelayedJobs(
-        this._recipesDelayedJobs,
-      );
-      this._updateRecipesFromGitLab.setRecipesDelayedJobs(
-        this._recipesDelayedJobs,
-      );
-    }
-  }
-
-  /**
-   * Set the accounts adapter after construction
-   * Recreates use cases that depend on accounts adapter
-   */
-  setAccountsAdapter(accountsAdapter: IAccountsPort): void {
-    this.accountsAdapter = accountsAdapter;
-
-    // Recreate use cases that depend on accountsAdapter
-    this._getRecipeById = new GetRecipeByIdUsecase(
-      accountsAdapter,
-      this.recipesServices.getRecipeService(),
-      this.spacesPort,
-      this.logger,
-    );
-    this._listRecipesBySpace = new ListRecipesBySpaceUsecase(
-      accountsAdapter,
-      this.recipesServices.getRecipeService(),
-      this.spacesPort,
-      this.logger,
-    );
-  }
-
-  /**
-   * Set the spaces port after construction
-   * Recreates use cases that depend on spaces port
-   */
-  setSpacesPort(spacesPort: ISpacesPort | null): void {
-    this.spacesPort = spacesPort;
-
-    // Recreate use cases that depend on spacesPort if accountsAdapter is available
-    if (this.accountsAdapter) {
-      this._getRecipeById = new GetRecipeByIdUsecase(
-        this.accountsAdapter,
-        this.recipesServices.getRecipeService(),
-        spacesPort,
-        this.logger,
-      );
-      this._listRecipesBySpace = new ListRecipesBySpaceUsecase(
-        this.accountsAdapter,
-        this.recipesServices.getRecipeService(),
-        spacesPort,
-        this.logger,
-      );
-    }
   }
 }
