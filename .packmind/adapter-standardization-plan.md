@@ -3,7 +3,10 @@
 ## Overview
 Standardize all domain adapters to use a consistent `IBaseAdapter` interface pattern, replacing individual port setter methods with a single `initialize()` method and adding health check capability.
 
-**Key Principle**: Adapters only declare ports they actually need. All declared ports are required (no optional).
+**Key Principles**: 
+1. Adapters only declare ports they actually need
+2. **All declared ports are REQUIRED** - no optional (`?`) syntax
+3. Use cases receive guaranteed non-null ports - no null/undefined handling needed
 
 ## Per-Domain Transformation Steps
 
@@ -18,12 +21,12 @@ Apply this pattern to each of the 8 domains, one at a time, with a commit after 
 export class {Domain}Adapter implements IBaseAdapter<I{Domain}Port>, I{Domain}Port {
 ```
 
-#### 1.2 Declare only needed ports - all are required
+#### 1.2 Declare only needed ports - NO null types
 ```typescript
 // Only declare ports this adapter actually uses
-// NO optional (| null) - if declared, it's REQUIRED
-private gitPort: IGitPort | null = null;
-private accountsPort: IAccountsPort | null = null;
+// NO (| null) or (| undefined) - ports are set in initialize()
+private gitPort!: IGitPort;
+private accountsPort!: IAccountsPort;
 
 // Don't declare ports you don't need at all
 ```
@@ -84,9 +87,9 @@ public initialize(ports: {
 #### 1.6 Add isReady() method
 ```typescript
 public isReady(): boolean {
-  // Check ALL declared ports are non-null
-  return this.gitPort !== null 
-    && this.accountsPort !== null;
+  // Check ALL declared ports are set (not undefined)
+  return this.gitPort !== undefined 
+    && this.accountsPort !== undefined;
 }
 ```
 
@@ -306,14 +309,14 @@ Apply this plan in this order (simplest → most complex):
 
 After completing each domain:
 - [ ] Adapter implements `IBaseAdapter<I{Domain}Port>`
-- [ ] Only needed ports declared (all required, no optional)
-- [ ] All port properties use `| null` initialization
+- [ ] Only needed ports declared (all required, no optional `?`)
+- [ ] All port properties use `!:` definite assignment (no `| null` or `| undefined`)
 - [ ] Port names use `*Port` suffix
 - [ ] Use case properties use `!:` definite assignment
 - [ ] `initialize()` sets ports, checks `isReady()`, creates use cases
-- [ ] `isReady()` validates all ports non-null
+- [ ] `isReady()` validates all ports are defined (not undefined)
 - [ ] No `set*Port()` methods remain
-- [ ] Use cases receive non-null ports
+- [ ] Use cases receive guaranteed non-null/non-undefined ports
 - [ ] Hexa calls `adapter.initialize(ports)` once
 - [ ] Hexa doesn't use try/catch for required ports
 - [ ] Tests updated

@@ -105,45 +105,27 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
         this.standardsRepositories,
       );
 
-      // Set delayed jobs in adapter
-      this.adapter.setDelayedJobs(standardsDelayedJobs);
-
-      // Get Accounts port (required)
+      // Get all required ports (let errors propagate if missing)
       const accountsPort =
         registry.getAdapter<IAccountsPort>(IAccountsPortName);
-      this.adapter.setAccountsAdapter(accountsPort);
+      const spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
+      const linterPort = registry.getAdapter<ILinterPort>(ILinterPortName);
+      const deploymentsPort =
+        registry.getAdapter<IDeploymentPort>(IDeploymentPortName);
 
-      // Get SpacesPort (optional dependency)
-      try {
-        const spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
-        this.logger.info('SpacesAdapter retrieved from registry');
-        this.adapter.setSpacesPort(spacesPort);
-      } catch {
-        this.logger.warn(
-          'SpacesHexa not found in registry - space validation will not be available',
-        );
-        this.adapter.setSpacesPort(null);
-      }
+      this.logger.info('All required ports retrieved from registry');
 
-      // Get LinterHexa adapter for ILinterPort (optional dependency)
-      try {
-        const linterPort = registry.getAdapter<ILinterPort>(ILinterPortName);
-        this.logger.info('LinterAdapter retrieved from registry');
-        this.standardsServices.setLinterAdapter(linterPort);
-        this.adapter.setLinterAdapter(linterPort);
-      } catch {
-        this.logger.debug('LinterHexa not available in registry');
-      }
+      // Set linter adapter on services for backward compatibility
+      this.standardsServices.setLinterAdapter(linterPort);
 
-      // Get DeploymentsHexa adapter (optional dependency)
-      try {
-        const deploymentPort =
-          registry.getAdapter<IDeploymentPort>(IDeploymentPortName);
-        this.logger.info('DeploymentAdapter retrieved from registry');
-        this.adapter.setDeploymentAdapter(deploymentPort);
-      } catch {
-        this.logger.debug('DeploymentsHexa not available in registry');
-      }
+      // Set delayed jobs first, then initialize adapter with all ports
+      this.adapter.setDelayedJobs(standardsDelayedJobs);
+      this.adapter.initialize({
+        [IAccountsPortName]: accountsPort,
+        [ISpacesPortName]: spacesPort,
+        [ILinterPortName]: linterPort,
+        [IDeploymentPortName]: deploymentsPort,
+      });
 
       this.isInitialized = true;
       this.logger.info('StandardsHexa initialized successfully');
@@ -188,7 +170,7 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
    * The adapter is available immediately after construction.
    */
   public getAdapter(): StandardsAdapter {
-    return this.adapter;
+    return this.adapter.getPort() as StandardsAdapter;
   }
 
   /**

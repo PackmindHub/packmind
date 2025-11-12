@@ -1,11 +1,10 @@
-import { AccountsHexa, accountsSchemas } from '@packmind/accounts';
-import { CodingAgentHexa, DeployerService } from '@packmind/coding-agent';
-import { DeploymentsHexa, deploymentsSchemas } from '@packmind/deployments';
-import { GitHexa, gitSchemas } from '@packmind/git';
-import { HexaRegistry, JobsService } from '@packmind/node-utils';
-import { RecipesHexa, recipesSchemas } from '@packmind/recipes';
-import { SpacesHexa, spacesSchemas } from '@packmind/spaces';
-import { StandardsHexa, standardsSchemas } from '@packmind/standards';
+import { accountsSchemas } from '@packmind/accounts';
+import { DeployerService } from '@packmind/coding-agent';
+import { deploymentsSchemas } from '@packmind/deployments';
+import { gitSchemas } from '@packmind/git';
+import { recipesSchemas } from '@packmind/recipes';
+import { spacesSchemas } from '@packmind/spaces';
+import { standardsSchemas } from '@packmind/standards';
 import { makeTestDatasource } from '@packmind/test-utils';
 import {
   createGitProviderId,
@@ -26,6 +25,7 @@ import {
 import assert from 'assert';
 import { DataSource } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
+import { TestApp } from '../helpers/TestApp';
 
 // Mock the Git provider adapter for file retrieval
 jest.mock('@packmind/git', () => {
@@ -45,13 +45,8 @@ jest.mock('@packmind/git', () => {
 });
 
 describe('Target-Specific Deployment Integration', () => {
-  let accountsHexa: AccountsHexa;
-  let recipesHexa: RecipesHexa;
-  let standardsHexa: StandardsHexa;
-  let spacesHexa: SpacesHexa;
-  let registry: HexaRegistry;
+  let testApp: TestApp;
   let dataSource: DataSource;
-  let codingAgentHexa: CodingAgentHexa;
   let deployerService: DeployerService;
 
   let recipe: Recipe;
@@ -77,36 +72,15 @@ describe('Target-Specific Deployment Integration', () => {
     await dataSource.initialize();
     await dataSource.synchronize();
 
-    // Create HexaRegistry
-    registry = new HexaRegistry();
-
-    // Register hexas before initialization
-    // NOTE: SpacesHexa must be registered before AccountsHexa
-    // because AccountsHexa needs SpacesPort to create default space during signup
-    registry.registerService(JobsService);
-    registry.register(GitHexa);
-    registry.register(SpacesHexa);
-    registry.register(AccountsHexa);
-    registry.register(RecipesHexa);
-    registry.register(StandardsHexa);
-    registry.register(CodingAgentHexa);
-    registry.register(DeploymentsHexa);
-
-    // Initialize the registry with the datasource
-    await registry.init(dataSource);
-
-    // Get initialized hexas
-    accountsHexa = registry.get(AccountsHexa);
-    recipesHexa = registry.get(RecipesHexa);
-    standardsHexa = registry.get(StandardsHexa);
-    spacesHexa = registry.get(SpacesHexa);
-    codingAgentHexa = registry.get(CodingAgentHexa);
+    // Use TestApp which handles all hexa registration and initialization
+    testApp = new TestApp(dataSource);
+    await testApp.initialize();
 
     // Get deployer service from hexa
-    deployerService = codingAgentHexa.getDeployerService();
+    deployerService = testApp.codingAgentHexa.getDeployerService();
 
     // Create test data
-    const signUpResult = await accountsHexa
+    const signUpResult = await testApp.accountsHexa
       .getAdapter()
       .signUpWithOrganization({
         organizationName: 'test organization',
@@ -117,7 +91,7 @@ describe('Target-Specific Deployment Integration', () => {
     organization = signUpResult.organization;
 
     // Get the default "Global" space created during signup
-    const spaces = await spacesHexa
+    const spaces = await testApp.spacesHexa
       .getAdapter()
       .listSpacesByOrganization(organization.id);
     const foundSpace = spaces.find((s) => s.name === 'Global');
@@ -134,7 +108,7 @@ describe('Target-Specific Deployment Integration', () => {
     };
 
     // Create test recipe about JetBrains services
-    recipe = await recipesHexa.getAdapter().captureRecipe({
+    recipe = await testApp.recipesHexa.getAdapter().captureRecipe({
       name: 'Writing Good JetBrains Services',
       content: `# Writing Good JetBrains Services
 
@@ -163,7 +137,7 @@ class MyService {
     });
 
     // Create test standard about code quality
-    standard = await standardsHexa.getAdapter().createStandard({
+    standard = await testApp.standardsHexa.getAdapter().createStandard({
       name: 'IDE Code Quality Standards',
       description:
         'Standards for maintaining high code quality across IDE plugins',
@@ -402,7 +376,7 @@ class MyService {
   describe('Standards Publishing: Example Mapping Scenario 3: Standard distributed to multiple targets', () => {
     it('standard distributed to both jetbrains and vscode targets appears in both paths', async () => {
       // Create a universal standard that applies to both platforms
-      const universalStandard = await standardsHexa
+      const universalStandard = await testApp.standardsHexa
         .getAdapter()
         .createStandard({
           name: 'Universal Testing Standards',
@@ -713,7 +687,7 @@ class MyService {
   describe('Example Mapping Scenario 3: Recipe distributed to multiple targets', () => {
     it('recipe distributed to both jetbrains and vscode targets appears in both paths', async () => {
       // Create a TDD recipe that applies to both platforms
-      const tddRecipe = await recipesHexa.getAdapter().captureRecipe({
+      const tddRecipe = await testApp.recipesHexa.getAdapter().captureRecipe({
         name: 'Test-Driven Development (TDD) Best Practices',
         content: `# Test-Driven Development (TDD) Best Practices
 

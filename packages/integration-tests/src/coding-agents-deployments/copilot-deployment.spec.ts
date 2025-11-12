@@ -1,14 +1,9 @@
-import { AccountsHexa, accountsSchemas } from '@packmind/accounts';
-import {
-  CodingAgentHexa,
-  CopilotDeployer,
-  DeployerService,
-} from '@packmind/coding-agent';
-import { GitHexa, gitSchemas } from '@packmind/git';
-import { HexaRegistry, JobsService } from '@packmind/node-utils';
-import { RecipesHexa, recipesSchemas } from '@packmind/recipes';
-import { SpacesHexa, spacesSchemas } from '@packmind/spaces';
-import { StandardsHexa, standardsSchemas } from '@packmind/standards';
+import { accountsSchemas } from '@packmind/accounts';
+import { CopilotDeployer, DeployerService } from '@packmind/coding-agent';
+import { gitSchemas } from '@packmind/git';
+import { recipesSchemas } from '@packmind/recipes';
+import { spacesSchemas } from '@packmind/spaces';
+import { standardsSchemas } from '@packmind/standards';
 import { makeTestDatasource } from '@packmind/test-utils';
 import {
   GitProviderVendors,
@@ -31,18 +26,13 @@ import {
 
 import assert from 'assert';
 import { DataSource } from 'typeorm';
+import { TestApp } from '../helpers/TestApp';
 
 describe('GitHub Copilot Deployment Integration', () => {
-  let accountsHexa: AccountsHexa;
-  let recipesHexa: RecipesHexa;
-  let standardsHexa: StandardsHexa;
-  let spacesHexa: SpacesHexa;
-  let gitHexa: GitHexa;
+  let testApp: TestApp;
+  let dataSource: DataSource;
   let standardsPort: IStandardsPort;
   let gitPort: IGitPort;
-  let registry: HexaRegistry;
-  let dataSource: DataSource;
-  let codingAgentHexa: CodingAgentHexa;
   let deployerService: DeployerService;
 
   let recipe: Recipe;
@@ -64,49 +54,28 @@ describe('GitHub Copilot Deployment Integration', () => {
     await dataSource.initialize();
     await dataSource.synchronize();
 
-    // Create HexaRegistry
-    registry = new HexaRegistry();
-
-    // Register hexas before initialization
-    // NOTE: SpacesHexa must be registered before AccountsHexa
-    // because AccountsHexa needs SpacesPort to create default space during signup
-    registry.registerService(JobsService);
-    registry.register(GitHexa);
-    registry.register(SpacesHexa);
-    registry.register(AccountsHexa);
-    registry.register(RecipesHexa);
-    registry.register(StandardsHexa);
-    registry.register(CodingAgentHexa);
-
-    // Initialize the registry with the datasource
-    await registry.init(dataSource);
-
-    // Get initialized hexas
-    accountsHexa = registry.get(AccountsHexa);
-    recipesHexa = registry.get(RecipesHexa);
-    standardsHexa = registry.get(StandardsHexa);
-    spacesHexa = registry.get(SpacesHexa);
-    gitHexa = registry.get(GitHexa);
-    codingAgentHexa = registry.get(CodingAgentHexa);
+    // Use TestApp which handles all hexa registration and initialization
+    testApp = new TestApp(dataSource);
+    await testApp.initialize();
 
     // Get deployer service from hexa
-    deployerService = codingAgentHexa.getDeployerService();
+    deployerService = testApp.codingAgentHexa.getDeployerService();
 
     const mockDeploymentPort = {
       addTarget: jest.fn(),
     } as Partial<jest.Mocked<IDeploymentPort>> as jest.Mocked<IDeploymentPort>;
 
-    gitHexa.setDeploymentsAdapter(mockDeploymentPort);
+    testApp.gitHexa.setDeploymentsAdapter(mockDeploymentPort);
 
-    const accountsAdapter = accountsHexa.getAdapter();
-    gitHexa.setAccountsAdapter(accountsAdapter);
+    const accountsAdapter = testApp.accountsHexa.getAdapter();
+    testApp.gitHexa.setAccountsAdapter(accountsAdapter);
 
-    // Hexas are already initialized by registry.init(), but get adapters
-    standardsPort = standardsHexa.getAdapter();
-    gitPort = gitHexa.getAdapter();
+    // Get adapters
+    standardsPort = testApp.standardsHexa.getAdapter();
+    gitPort = testApp.gitHexa.getAdapter();
 
     // Create test data
-    const signUpResult = await accountsHexa
+    const signUpResult = await testApp.accountsHexa
       .getAdapter()
       .signUpWithOrganization({
         organizationName: 'test organization',
@@ -117,7 +86,7 @@ describe('GitHub Copilot Deployment Integration', () => {
     organization = signUpResult.organization;
 
     // Get the default "Global" space created during signup
-    const spaces = await spacesHexa
+    const spaces = await testApp.spacesHexa
       .getAdapter()
       .listSpacesByOrganization(organization.id);
     const foundSpace = spaces.find((s) => s.name === 'Global');
@@ -125,7 +94,7 @@ describe('GitHub Copilot Deployment Integration', () => {
     space = foundSpace;
 
     // Create test recipe
-    recipe = await recipesHexa.getAdapter().captureRecipe({
+    recipe = await testApp.recipesHexa.getAdapter().captureRecipe({
       name: 'Test Recipe for Copilot',
       content: 'This is test recipe content for GitHub Copilot deployment',
       organizationId: organization.id,
@@ -134,7 +103,7 @@ describe('GitHub Copilot Deployment Integration', () => {
     });
 
     // Create test standard
-    standard = await standardsHexa.getAdapter().createStandard({
+    standard = await testApp.standardsHexa.getAdapter().createStandard({
       name: 'Test Standard for Copilot',
       description: 'A test standard for GitHub Copilot deployment',
       rules: [
@@ -148,7 +117,7 @@ describe('GitHub Copilot Deployment Integration', () => {
     });
 
     // Create git provider and repository
-    const gitProvider = await gitHexa.getAdapter().addGitProvider({
+    const gitProvider = await testApp.gitHexa.getAdapter().addGitProvider({
       userId: user.id,
       organizationId: organization.id,
       gitProvider: {
@@ -158,7 +127,7 @@ describe('GitHub Copilot Deployment Integration', () => {
       },
     });
 
-    gitRepo = await gitHexa.getAdapter().addGitRepo({
+    gitRepo = await testApp.gitHexa.getAdapter().addGitRepo({
       userId: user.id,
       organizationId: organization.id,
       gitProviderId: gitProvider.id,
@@ -304,15 +273,17 @@ describe('GitHub Copilot Deployment Integration', () => {
 
     it('handles standard without scope (uses ** as default)', async () => {
       // Create a standard without scope
-      const globalStandard = await standardsHexa.getAdapter().createStandard({
-        name: 'Global Standard',
-        description: 'A global standard without scope',
-        rules: [{ content: 'Always use consistent formatting' }],
-        organizationId: organization.id,
-        userId: user.id,
-        scope: '', // Empty scope
-        spaceId: space.id,
-      });
+      const globalStandard = await testApp.standardsHexa
+        .getAdapter()
+        .createStandard({
+          name: 'Global Standard',
+          description: 'A global standard without scope',
+          rules: [{ content: 'Always use consistent formatting' }],
+          organizationId: organization.id,
+          userId: user.id,
+          scope: '', // Empty scope
+          spaceId: space.id,
+        });
 
       const standardVersions: StandardVersion[] = [
         {
@@ -508,7 +479,7 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
 
     beforeEach(async () => {
       // Ensure hexas are initialized before getting adapters
-      // Hexas are already initialized by registry.init()
+      // Hexas are already initialized by testApp.initialize()
 
       defaultTarget = {
         id: createTargetId('default-target-id'),
@@ -517,8 +488,8 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
         gitRepoId: gitRepo.id,
       };
 
-      standardsPort = standardsHexa.getAdapter();
-      gitPort = gitHexa.getAdapter();
+      standardsPort = testApp.standardsHexa.getAdapter();
+      gitPort = testApp.gitHexa.getAdapter();
       copilotDeployer = new CopilotDeployer(standardsPort, gitPort);
     });
 
@@ -558,7 +529,7 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
 
     it('handles GitHexa errors gracefully', async () => {
       jest
-        .spyOn(gitHexa.getAdapter(), 'getFileFromRepo')
+        .spyOn(testApp.gitHexa.getAdapter(), 'getFileFromRepo')
         .mockRejectedValue(new Error('GitHub API error'));
 
       const recipeVersions: RecipeVersion[] = [
@@ -590,25 +561,29 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
     });
 
     it('generates multiple standard files correctly', async () => {
-      const standard1 = await standardsHexa.getAdapter().createStandard({
-        name: 'Frontend Standard',
-        description: 'Frontend coding standard',
-        rules: [{ content: 'Use TypeScript' }],
-        organizationId: organization.id,
-        userId: user.id,
-        scope: '**/*.{ts,tsx,js,jsx}',
-        spaceId: space.id,
-      });
+      const standard1 = await testApp.standardsHexa
+        .getAdapter()
+        .createStandard({
+          name: 'Frontend Standard',
+          description: 'Frontend coding standard',
+          rules: [{ content: 'Use TypeScript' }],
+          organizationId: organization.id,
+          userId: user.id,
+          scope: '**/*.{ts,tsx,js,jsx}',
+          spaceId: space.id,
+        });
 
-      const standard2 = await standardsHexa.getAdapter().createStandard({
-        name: 'Backend Standard',
-        description: 'Backend coding standard',
-        rules: [{ content: 'Use dependency injection' }],
-        organizationId: organization.id,
-        userId: user.id,
-        scope: '', // No scope - uses **
-        spaceId: space.id,
-      });
+      const standard2 = await testApp.standardsHexa
+        .getAdapter()
+        .createStandard({
+          name: 'Backend Standard',
+          description: 'Backend coding standard',
+          rules: [{ content: 'Use dependency injection' }],
+          organizationId: organization.id,
+          userId: user.id,
+          scope: '', // No scope - uses **
+          spaceId: space.id,
+        });
 
       const standardVersions: StandardVersion[] = [
         {
