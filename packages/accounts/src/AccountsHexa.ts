@@ -3,8 +3,14 @@ import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
 import {
   IAccountsPort,
   IAccountsPortName,
+  IDeploymentPort,
+  IDeploymentPortName,
+  IGitPort,
+  IGitPortName,
   ISpacesPort,
   ISpacesPortName,
+  IStandardsPort,
+  IStandardsPortName,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { AccountsAdapter } from './application/adapter/AccountsAdapter';
@@ -79,6 +85,39 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts, IAccountsPort> {
           error: error instanceof Error ? error.message : String(error),
         });
       }
+
+      try {
+        const gitPort = registry.getAdapter<IGitPort>(IGitPortName);
+        this.adapter.setGitPort(gitPort);
+        this.logger.debug('Retrieved GitAdapter from registry');
+      } catch (error) {
+        this.logger.debug('GitHexa not available in registry', {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+
+      try {
+        const standardsPort =
+          registry.getAdapter<IStandardsPort>(IStandardsPortName);
+        this.adapter.setStandardsPort(standardsPort);
+        this.logger.debug('Retrieved StandardsAdapter from registry');
+      } catch (error) {
+        this.logger.debug('StandardsHexa not available in registry', {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+
+      try {
+        const deploymentPort =
+          registry.getAdapter<IDeploymentPort>(IDeploymentPortName);
+        this.adapter.setDeploymentPort(deploymentPort);
+        this.logger.debug('Retrieved DeploymentAdapter from registry');
+      } catch (error) {
+        this.logger.debug('DeploymentHexa not available in registry', {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+
       this.logger.info('AccountsHexa initialized successfully');
     } catch (error) {
       this.logger.error('Failed to initialize AccountsHexa', {
