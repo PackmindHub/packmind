@@ -5,6 +5,13 @@
   "projectType": "application",
   "tags": ["env:node"],
   "targets": {
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/mcp-server/jest.config.ts"
+      }
+    },
     "typecheck": {
       "executor": "nx:run-commands",
       "options": {
