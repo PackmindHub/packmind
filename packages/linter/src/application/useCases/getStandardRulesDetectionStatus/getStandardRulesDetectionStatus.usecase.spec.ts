@@ -1,20 +1,18 @@
-import { createOrganizationId, createUserId } from '@packmind/types';
 import {
-  UserProvider,
-  OrganizationProvider,
-  User,
-  Organization,
-} from '@packmind/types';
-import {
+  createOrganizationId,
+  createRuleExampleId,
   createRuleId,
   createStandardId,
   createStandardVersionId,
-  ProgrammingLanguage,
-  RuleLanguageDetectionStatus,
+  createUserId,
+  IAccountsPort,
   IStandardsPort,
+  Organization,
+  ProgrammingLanguage,
   Rule,
   RuleExample,
-  createRuleExampleId,
+  RuleLanguageDetectionStatus,
+  User,
 } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 import { GetStandardRulesDetectionStatusUseCase } from './getStandardRulesDetectionStatus.usecase';
@@ -26,8 +24,7 @@ describe('GetStandardRulesDetectionStatusUseCase', () => {
   let useCase: GetStandardRulesDetectionStatusUseCase;
   let mockLinterRepositories: jest.Mocked<ILinterRepositories>;
   let mockStandardsAdapter: jest.Mocked<IStandardsPort>;
-  let mockUserProvider: jest.Mocked<UserProvider>;
-  let mockOrganizationProvider: jest.Mocked<OrganizationProvider>;
+  let mockAccountsPort: jest.Mocked<IAccountsPort>;
   let mockRuleDetectionAssessmentRepository: jest.Mocked<IRuleDetectionAssessmentRepository>;
   let mockActiveDetectionProgramRepository: jest.Mocked<IActiveDetectionProgramRepository>;
 
@@ -90,13 +87,9 @@ describe('GetStandardRulesDetectionStatusUseCase', () => {
     // Default mock for getLatestRulesByStandardId
     mockStandardsAdapter.getLatestRulesByStandardId.mockResolvedValue([]);
 
-    mockUserProvider = {
+    mockAccountsPort = {
       getUserById: jest.fn(),
-    } as jest.Mocked<UserProvider>;
-
-    mockOrganizationProvider = {
-      getOrganizationById: jest.fn(),
-    } as jest.Mocked<OrganizationProvider>;
+    } as unknown as jest.Mocked<IAccountsPort>;
 
     const user: User = {
       id: mockUserId,
@@ -117,10 +110,8 @@ describe('GetStandardRulesDetectionStatusUseCase', () => {
       slug: 'test-org',
     };
 
-    mockUserProvider.getUserById.mockResolvedValue(user);
-    mockOrganizationProvider.getOrganizationById.mockResolvedValue(
-      organization,
-    );
+    mockAccountsPort.getUserById.mockResolvedValue(user);
+    mockAccountsPort.getOrganizationById.mockResolvedValue(organization);
 
     mockActiveDetectionProgramRepository.findByRuleIdWithPrograms.mockResolvedValue(
       [],
@@ -128,8 +119,7 @@ describe('GetStandardRulesDetectionStatusUseCase', () => {
     mockRuleDetectionAssessmentRepository.get.mockResolvedValue(null);
 
     useCase = new GetStandardRulesDetectionStatusUseCase(
-      mockUserProvider,
-      mockOrganizationProvider,
+      mockAccountsPort,
       mockLinterRepositories,
       mockStandardsAdapter,
       stubLogger(),

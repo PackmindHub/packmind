@@ -1,16 +1,16 @@
 import { PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
-import { IStandardsPort } from '@packmind/types';
-import { ProgrammingLanguage } from '@packmind/types';
 import {
   GetStandardRulesDetectionStatusCommand,
   GetStandardRulesDetectionStatusResponse,
+  IAccountsPort,
+  IStandardsPort,
+  ProgrammingLanguage,
   RuleDetectionStatusSummary,
   RuleLanguageStatus,
 } from '@packmind/types';
-import { ComputeRuleLanguageDetectionStatusUseCase } from '../computeRuleLanguageDetectionStatus/computeRuleLanguageDetectionStatus.usecase';
 import { ILinterRepositories } from '../../../domain/repositories/ILinterRepositories';
-import { UserProvider, OrganizationProvider } from '@packmind/types';
+import { ComputeRuleLanguageDetectionStatusUseCase } from '../computeRuleLanguageDetectionStatus/computeRuleLanguageDetectionStatus.usecase';
 
 const origin = 'GetStandardRulesDetectionStatusUseCase';
 
@@ -19,13 +19,12 @@ export class GetStandardRulesDetectionStatusUseCase extends AbstractMemberUseCas
   GetStandardRulesDetectionStatusResponse
 > {
   constructor(
-    userProvider: UserProvider,
-    organizationProvider: OrganizationProvider,
+    accountsPort: IAccountsPort,
     private readonly repositories: ILinterRepositories,
     private readonly standardsAdapter: IStandardsPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(userProvider, organizationProvider, logger);
+    super(accountsPort, logger);
   }
 
   protected async executeForMembers(

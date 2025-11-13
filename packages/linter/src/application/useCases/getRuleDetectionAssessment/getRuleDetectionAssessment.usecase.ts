@@ -1,9 +1,9 @@
 import { PackmindLogger } from '@packmind/logger';
-import { OrganizationProvider, UserProvider } from '@packmind/types';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
   GetRuleDetectionAssessmentCommand,
   GetRuleDetectionAssessmentResponse,
+  IAccountsPort,
   IGetRuleDetectionAssessment,
 } from '@packmind/types';
 import { ILinterRepositories } from '../../../domain/repositories/ILinterRepositories';
@@ -19,11 +19,10 @@ export class GetRuleDetectionAssessmentUseCase
 {
   constructor(
     private readonly linterRepositories: ILinterRepositories,
-    userProvider: UserProvider,
-    organizationProvider: OrganizationProvider,
+    accountsPort: IAccountsPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(userProvider, organizationProvider, logger);
+    super(accountsPort, logger);
   }
 
   protected async executeForMembers(

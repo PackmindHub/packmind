@@ -1,17 +1,15 @@
-import { createOrganizationId, createUserId } from '@packmind/types';
 import {
-  UserProvider,
-  OrganizationProvider,
-  User,
-  Organization,
-} from '@packmind/types';
-import {
+  createOrganizationId,
+  createRuleDetectionAssessmentId,
   createRuleId,
+  createUserId,
+  DetectionModeEnum,
+  IAccountsPort,
+  Organization,
   ProgrammingLanguage,
   RuleDetectionAssessment,
   RuleDetectionAssessmentStatus,
-  createRuleDetectionAssessmentId,
-  DetectionModeEnum,
+  User,
 } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 import { GetRuleDetectionAssessmentUseCase } from './getRuleDetectionAssessment.usecase';
@@ -22,8 +20,7 @@ describe('GetRuleDetectionAssessmentUseCase', () => {
   let useCase: GetRuleDetectionAssessmentUseCase;
   let mockLinterRepositories: jest.Mocked<ILinterRepositories>;
   let mockRuleDetectionAssessmentRepository: jest.Mocked<IRuleDetectionAssessmentRepository>;
-  let mockUserProvider: jest.Mocked<UserProvider>;
-  let mockOrganizationProvider: jest.Mocked<OrganizationProvider>;
+  let mockAccountsPort: jest.Mocked<IAccountsPort>;
 
   const mockRuleId = createRuleId('rule-123');
   const mockOrganizationId = createOrganizationId('org-123');
@@ -51,13 +48,10 @@ describe('GetRuleDetectionAssessmentUseCase', () => {
       getRuleDetectionHeuristicsRepository: jest.fn(),
     } as unknown as jest.Mocked<ILinterRepositories>;
 
-    mockUserProvider = {
+    mockAccountsPort = {
       getUserById: jest.fn(),
-    } as jest.Mocked<UserProvider>;
+    } as unknown as jest.Mocked<IAccountsPort>;
 
-    mockOrganizationProvider = {
-      getOrganizationById: jest.fn(),
-    } as jest.Mocked<OrganizationProvider>;
 
     // Setup default mocks for user and organization
     const user: User = {
@@ -79,15 +73,12 @@ describe('GetRuleDetectionAssessmentUseCase', () => {
       slug: 'test-org',
     };
 
-    mockUserProvider.getUserById.mockResolvedValue(user);
-    mockOrganizationProvider.getOrganizationById.mockResolvedValue(
-      organization,
-    );
+    mockAccountsPort.getUserById.mockResolvedValue(user);
+    mockAccountsPort.getOrganizationById.mockResolvedValue(organization);
 
     useCase = new GetRuleDetectionAssessmentUseCase(
       mockLinterRepositories,
-      mockUserProvider,
-      mockOrganizationProvider,
+      mockAccountsPort,
       stubLogger(),
     );
   });

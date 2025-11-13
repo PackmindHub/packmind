@@ -17,11 +17,9 @@ import {
   ISpacesPortName,
   IStandardsPort,
   IStandardsPortName,
-  OrganizationProvider,
-  UserProvider,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
-import { LinterAdapter } from './application/LinterAdapter';
+import { LinterAdapter } from './application/adapter/LinterAdapter';
 import { DetectionProgramService } from './application/services/DetectionProgramService';
 import { ILinterDelayedJobs } from './domain/jobs/ILinterDelayedJobs';
 import { AssessRuleDetectionJobFactory } from './infra/AssessRuleDetectionJobFactory';
@@ -50,7 +48,6 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
   private readonly detectionProgramService: DetectionProgramService;
   private readonly adapter: LinterAdapter;
   private linterAstAdapter: ILinterAstPort | null = null;
-  private linterDelayedJobs?: ILinterDelayedJobs;
 
   constructor(dataSource: DataSource, opts?: Partial<LinterHexaOpts>) {
     super(dataSource, { ...baseLinterHexaOpts, ...opts });
@@ -88,21 +85,19 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
         );
       }
 
-      // Create adapter with minimal dependencies (ports will be set in initialize)
-      const hexaFactory: {
-        getDetectionProgramService(): DetectionProgramService;
-        getRepositories(): LinterRepositories;
-        getLinterAstAdapter(): ILinterAstPort | null;
-      } = {
-        getDetectionProgramService: () => this.detectionProgramService,
-        getRepositories: () => this.linterRepositories,
-        getLinterAstAdapter: () => this.linterAstAdapter,
-      };
-
       // Create ExecuteLinterProgramsUseCase
       const executeLinterProgramsUseCase = new ExecuteLinterProgramsUseCase(
         this.linterAstAdapter || undefined,
       );
+
+      // Create adapter with minimal dependencies (ports will be set in initialize)
+      const hexaFactory: {
+        getDetectionProgramService(): DetectionProgramService;
+        getRepositories(): LinterRepositories;
+      } = {
+        getDetectionProgramService: () => this.detectionProgramService,
+        getRepositories: () => this.linterRepositories,
+      };
 
       // Create adapter in constructor (ports will be set in initialize)
       this.adapter = new LinterAdapter({
@@ -131,7 +126,7 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
     this.logger.info('Initializing LinterHexa (adapter retrieval phase)');
 
     try {
-      // Retrieve required ports
+      // Get all required ports - let errors propagate
       const gitPort = registry.getAdapter<IGitPort>(IGitPortName);
       this.logger.debug('Retrieved GitAdapter from registry');
 
@@ -139,7 +134,11 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
         registry.getAdapter<IStandardsPort>(IStandardsPortName);
       this.logger.debug('Retrieved StandardsAdapter from registry');
 
-      // Retrieve optional ports
+      const accountsPort =
+        registry.getAdapter<IAccountsPort>(IAccountsPortName);
+      this.logger.debug('Retrieved AccountsAdapter from registry');
+
+      // Get optional ports
       let deploymentsPort: IDeploymentPort | undefined;
       try {
         deploymentsPort =
@@ -169,41 +168,22 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
 
       // Build delayed jobs
       this.logger.debug('Building linter delayed jobs');
-      this.linterDelayedJobs = await this.buildLinterDelayedJobs(
+      const linterDelayedJobs = await this.buildLinterDelayedJobs(
         jobsService,
         () => standardsPort,
         () => this.getAdapter(),
       );
 
-      // Get IAccountsPort to create providers
-      const accountsPort =
-        registry.getAdapter<IAccountsPort>(IAccountsPortName);
-
-      // Create providers that delegate to accountsPort
-      const userProvider: UserProvider = {
-        getUserById: (userId) => accountsPort.getUserById({ userId }),
-      };
-
-      const organizationProvider: OrganizationProvider = {
-        getOrganizationById: (organizationId) =>
-          accountsPort.getOrganizationById({ organizationId }),
-      };
-
-      // Set ports on adapter using setter methods
-      this.logger.debug('Setting ports on LinterAdapter');
-      this.adapter.setGitPort(gitPort);
-      this.adapter.setStandardsPort(standardsPort);
-      this.adapter.setLinterDelayedJobs(this.linterDelayedJobs);
-      this.adapter.setUserProvider(userProvider);
-      this.adapter.setOrganizationProvider(organizationProvider);
-
-      if (deploymentsPort) {
-        this.adapter.setDeploymentPort(deploymentsPort);
-      }
-
-      if (spacesPort) {
-        this.adapter.setSpacesPort(spacesPort);
-      }
+      // Initialize adapter once with all ports and delayed jobs
+      this.logger.debug('Initializing LinterAdapter with all ports');
+      await this.adapter.initialize({
+        [IGitPortName]: gitPort,
+        [IStandardsPortName]: standardsPort,
+        [IAccountsPortName]: accountsPort,
+        [IDeploymentPortName]: deploymentsPort,
+        [ISpacesPortName]: spacesPort,
+        linterDelayedJobs,
+      });
 
       this.logger.info('LinterHexa initialized successfully');
 
@@ -298,7 +278,7 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
    * The adapter is created during construction, and ports are set during initialization.
    */
   public getAdapter(): ILinterPort {
-    return this.adapter;
+    return this.adapter.getPort();
   }
 
   /**
