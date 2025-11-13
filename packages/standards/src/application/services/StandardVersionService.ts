@@ -119,12 +119,7 @@ export class StandardVersionService {
         standardVersionData.organizationId &&
         standardVersionData.userId
       ) {
-        await this.copyDetectionPrograms(
-          ruleMapping,
-          standardVersionData,
-          savedVersion,
-        );
-        await this.copyRuleDetectionAssessments(
+        await this.copyLinterArtefacts(
           ruleMapping,
           standardVersionData,
           savedVersion,
@@ -146,7 +141,7 @@ export class StandardVersionService {
     }
   }
 
-  private async copyDetectionPrograms(
+  private async copyLinterArtefacts(
     ruleMapping: Map<RuleId, RuleId>,
     standardVersionData: CreateStandardVersionData,
     savedVersion: StandardVersion,
@@ -170,7 +165,7 @@ export class StandardVersionService {
 
       const copyResults = await Promise.all(
         Array.from(ruleMapping.entries()).map(([oldRuleId, newRuleId]) =>
-          linterAdapter.copyDetectionProgramsToNewRule({
+          linterAdapter.copyLinterArtefacts({
             oldRuleId,
             newRuleId,
             organizationId,
@@ -179,76 +174,37 @@ export class StandardVersionService {
         ),
       );
 
-      const totalCopied = copyResults.reduce(
+      const totalHeuristicsCopied = copyResults.reduce(
+        (sum, r) => sum + r.copiedHeuristicsCount,
+        0,
+      );
+      const totalAssessmentsCopied = copyResults.reduce(
+        (sum, r) => sum + r.copiedAssessmentsCount,
+        0,
+      );
+      const totalProgramsCopied = copyResults.reduce(
         (sum, r) => sum + r.copiedProgramsCount,
         0,
       );
 
-      if (totalCopied > 0) {
-        this.logger.info('Detection programs copied successfully', {
-          totalCopied,
+      if (
+        totalHeuristicsCopied > 0 ||
+        totalAssessmentsCopied > 0 ||
+        totalProgramsCopied > 0
+      ) {
+        this.logger.info('Linter artefacts copied successfully', {
+          totalHeuristicsCopied,
+          totalAssessmentsCopied,
+          totalProgramsCopied,
           versionId: savedVersion.id,
         });
       }
     } catch (error) {
-      this.logger.error('Failed to copy detection programs', {
+      this.logger.error('Failed to copy linter artefacts', {
         versionId: savedVersion.id,
         error: error instanceof Error ? error.message : String(error),
       });
       // Don't throw - we want the standard version creation to succeed even if detection program copying fails
-    }
-  }
-
-  private async copyRuleDetectionAssessments(
-    ruleMapping: Map<RuleId, RuleId>,
-    standardVersionData: CreateStandardVersionData,
-    savedVersion: StandardVersion,
-  ) {
-    try {
-      const linterAdapter = this._linterAdapter;
-      const organizationId = standardVersionData.organizationId;
-      const userId = standardVersionData.userId;
-
-      if (!linterAdapter || !organizationId || !userId) {
-        this.logger.warn(
-          'Skipping rule detection assessment copy - missing dependencies',
-          {
-            hasLinterAdapter: !!linterAdapter,
-            hasOrganizationId: !!organizationId,
-            hasUserId: !!userId,
-          },
-        );
-        return;
-      }
-
-      const assessmentCopyResults = await Promise.all(
-        Array.from(ruleMapping.entries()).map(([oldRuleId, newRuleId]) =>
-          linterAdapter.copyRuleDetectionAssessments({
-            oldRuleId,
-            newRuleId,
-            organizationId,
-            userId,
-          }),
-        ),
-      );
-
-      const totalAssessmentsCopied = assessmentCopyResults.reduce(
-        (sum, r) => sum + r.copiedAssessmentsCount,
-        0,
-      );
-
-      if (totalAssessmentsCopied > 0) {
-        this.logger.info('Rule detection assessments copied successfully', {
-          totalAssessmentsCopied,
-          versionId: savedVersion.id,
-        });
-      }
-    } catch (error) {
-      this.logger.error('Failed to copy rule detection assessments', {
-        versionId: savedVersion.id,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      // Don't throw - we want the standard version creation to succeed even if assessment copying fails
     }
   }
 

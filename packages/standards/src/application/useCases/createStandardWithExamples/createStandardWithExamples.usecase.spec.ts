@@ -91,8 +91,7 @@ describe('CreateStandardWithExamplesUsecase', () => {
     // Mock LinterAdapter
     linterAdapter = {
       updateRuleDetectionAssessmentAfterUpdate: jest.fn(),
-      copyDetectionProgramsToNewRule: jest.fn(),
-      copyRuleDetectionAssessments: jest.fn(),
+      copyLinterArtefacts: jest.fn(),
       computeRuleLanguageDetectionStatus: jest.fn(),
     } as unknown as jest.Mocked<ILinterPort>;
 

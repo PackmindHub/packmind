@@ -6,8 +6,12 @@ import { AssessRuleDetectionInput } from '../AssessRuleDetectionInput';
 import type {
   ComputeRuleLanguageDetectionStatusCommand,
   ComputeRuleLanguageDetectionStatusResponse,
+  CopyDetectionHeuristicsCommand,
+  CopyDetectionHeuristicsResponse,
   CopyDetectionProgramsToNewRuleCommand,
   CopyDetectionProgramsToNewRuleResponse,
+  CopyLinterArtefactsCommand,
+  CopyLinterArtefactsResponse,
   CopyRuleDetectionAssessmentsCommand,
   CopyRuleDetectionAssessmentsResponse,
   CreateDetectionProgramCommand,
@@ -91,6 +95,14 @@ export interface ILinterPort {
   copyRuleDetectionAssessments(
     command: CopyRuleDetectionAssessmentsCommand,
   ): Promise<CopyRuleDetectionAssessmentsResponse>;
+
+  copyDetectionHeuristics(
+    command: CopyDetectionHeuristicsCommand,
+  ): Promise<CopyDetectionHeuristicsResponse>;
+
+  copyLinterArtefacts(
+    command: CopyLinterArtefactsCommand,
+  ): Promise<CopyLinterArtefactsResponse>;
 
   getDraftDetectionProgramForRule(
     command: GetDraftDetectionProgramForRuleCommand,
