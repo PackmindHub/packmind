@@ -11,6 +11,7 @@ import {
   DeleteTargetCommand,
   DeleteTargetResponse,
   UpdateRenderModeConfigurationCommand,
+  CreatePackageCommand,
 } from '@packmind/types';
 import {
   LIST_RECIPE_DEPLOYMENTS_KEY,
@@ -325,6 +326,26 @@ export const useUpdateRenderModeConfigurationMutation = () => {
     },
     onError: (error) => {
       console.error('Error updating render mode configuration:', error);
+    },
+  });
+};
+
+export const CREATE_PACKAGE_MUTATION_KEY = 'createPackage';
+export const useCreatePackageMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: [CREATE_PACKAGE_MUTATION_KEY],
+    mutationFn: async (command: Omit<CreatePackageCommand, 'userId'>) => {
+      return deploymentsGateways.createPackage(command);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: LIST_PACKAGES_BY_SPACE_KEY,
+      });
+    },
+    onError: (error) => {
+      console.error('Error creating package:', error);
     },
   });
 };

@@ -1,6 +1,8 @@
 import { PackmindCommand } from '../../UseCase';
 import {
   AddTargetCommand,
+  CreatePackageCommand,
+  CreatePackageResponse,
   CreateRenderModeConfigurationCommand,
   DeleteTargetCommand,
   DeleteTargetResponse,
@@ -263,4 +265,16 @@ export interface IDeploymentPort {
   listPackagesBySpace(
     command: ListPackagesBySpaceCommand,
   ): Promise<ListPackagesBySpaceResponse>;
+
+  /**
+   * Creates a new package within a space
+   *
+   * A package is a collection of recipes and standards that belong to the same space.
+   * Only recipes and standards from the same space can be added to the package.
+   *
+   * @param command - Command containing package details including recipes and standards
+   * @returns Promise of the created package with its associated recipes and standards
+   * @throws Error if recipes or standards don't belong to the specified space
+   */
+  createPackage(command: CreatePackageCommand): Promise<CreatePackageResponse>;
 }

@@ -1,10 +1,21 @@
-import { Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
+  CreatePackageResponse,
   ListPackagesBySpaceResponse,
   OrganizationId,
+  RecipeId,
   SpaceId,
+  StandardId,
 } from '@packmind/types';
 import { DeploymentsService } from '../../../deployments/deployments.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
@@ -71,6 +82,62 @@ export class OrganizationsSpacesPackagesController {
         {
           organizationId,
           spaceId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Create a new package in a space within an organization
+   * POST /organizations/:orgId/spaces/:spaceId/packages
+   */
+  @Post()
+  async createPackage(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Req() request: AuthenticatedRequest,
+    @Body()
+    body: {
+      name: string;
+      slug: string;
+      description: string;
+      recipeIds: RecipeId[];
+      standardIds: StandardId[];
+    },
+  ): Promise<CreatePackageResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/packages - Creating package',
+      {
+        organizationId,
+        spaceId,
+        name: body.name,
+      },
+    );
+
+    try {
+      return await this.deploymentsService.createPackage({
+        userId,
+        organizationId,
+        spaceId,
+        name: body.name,
+        slug: body.slug,
+        description: body.description,
+        recipeIds: body.recipeIds,
+        standardIds: body.standardIds,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /organizations/:orgId/spaces/:spaceId/packages - Failed to create package',
+        {
+          organizationId,
+          spaceId,
+          name: body.name,
           error: errorMessage,
         },
       );

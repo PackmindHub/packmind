@@ -5,6 +5,7 @@ import {
   IListDeploymentsByRecipe,
   IListDeploymentsByStandard,
   IListPackagesBySpaceUseCase,
+  ICreatePackageUseCase,
   IPublishRecipes,
   IPublishStandards,
   IGetTargetsByGitRepoUseCase,
@@ -21,6 +22,7 @@ export interface IDeploymentsGateway {
   listDeploymentsByRecipeId: Gateway<IListDeploymentsByRecipe>;
   listDeploymentsByStandardId: Gateway<IListDeploymentsByStandard>;
   listPackagesBySpace: NewGateway<IListPackagesBySpaceUseCase>;
+  createPackage: NewGateway<ICreatePackageUseCase>;
   getRecipesDeploymentOverview: Gateway<IGetDeploymentOverview>;
   getStandardsDeploymentOverview: Gateway<IGetStandardDeploymentOverview>;
   publishRecipes: Gateway<IPublishRecipes>;

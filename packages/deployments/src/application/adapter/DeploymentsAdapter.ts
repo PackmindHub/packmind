@@ -1,6 +1,8 @@
 import { IBaseAdapter } from '@packmind/node-utils';
 import {
   AddTargetCommand,
+  CreatePackageCommand,
+  CreatePackageResponse,
   CreateRenderModeConfigurationCommand,
   DeleteTargetCommand,
   DeleteTargetResponse,
@@ -50,6 +52,7 @@ import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipes
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
 import { DeploymentsServices } from '../services/DeploymentsServices';
 import { AddTargetUseCase } from '../useCases/AddTargetUseCase';
+import { CreatePackageUsecase } from '../useCases/createPackage/createPackage.usecase';
 import { CreateRenderModeConfigurationUseCase } from '../useCases/CreateRenderModeConfigurationUseCase';
 import { DeleteTargetUseCase } from '../useCases/DeleteTargetUseCase';
 import { FindActiveStandardVersionsByTargetUseCase } from '../useCases/FindActiveStandardVersionsByTargetUseCase';
@@ -99,6 +102,7 @@ export class DeploymentsAdapter
   private _updateRenderModeConfigurationUseCase!: UpdateRenderModeConfigurationUseCase;
   private _pullAllContentUseCase!: PullAllContentUseCase;
   private _listPackagesBySpaceUseCase!: ListPackagesBySpaceUsecase;
+  private _createPackageUseCase!: CreatePackageUsecase;
 
   constructor(
     private readonly deploymentsServices: DeploymentsServices,
@@ -253,6 +257,14 @@ export class DeploymentsAdapter
       this.deploymentsServices.getRepositories(),
       this.spacesPort,
     );
+
+    this._createPackageUseCase = new CreatePackageUsecase(
+      this.accountsPort,
+      this.deploymentsServices.getRepositories(),
+      this.spacesPort,
+      this.recipesPort,
+      this.standardsPort,
+    );
   }
 
   public isReady(): boolean {
@@ -377,5 +389,11 @@ export class DeploymentsAdapter
     command: ListPackagesBySpaceCommand,
   ): Promise<ListPackagesBySpaceResponse> {
     return this._listPackagesBySpaceUseCase.execute(command);
+  }
+
+  async createPackage(
+    command: CreatePackageCommand,
+  ): Promise<CreatePackageResponse> {
+    return this._createPackageUseCase.execute(command);
   }
 }

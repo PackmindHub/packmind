@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
+  CreatePackageCommand,
+  CreatePackageResponse,
   DeploymentOverview,
   GetDeploymentOverviewCommand,
   GetStandardDeploymentOverviewCommand,
@@ -79,5 +81,11 @@ export class DeploymentsService {
     command: UpdateRenderModeConfigurationCommand,
   ): Promise<RenderModeConfiguration> {
     return this.deploymentAdapter.updateRenderModeConfiguration(command);
+  }
+
+  async createPackage(
+    command: CreatePackageCommand,
+  ): Promise<CreatePackageResponse> {
+    return this.deploymentAdapter.createPackage(command);
   }
 }

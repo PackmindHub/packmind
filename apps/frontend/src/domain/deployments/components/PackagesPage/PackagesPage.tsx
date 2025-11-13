@@ -6,7 +6,9 @@ import {
   PMBox,
   PMHStack,
   PMHeading,
+  PMButton,
 } from '@packmind/ui';
+import { useNavigate, useParams } from 'react-router';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useListPackagesBySpaceQuery } from '../../api/queries/DeploymentsQueries';
 
@@ -15,6 +17,8 @@ export interface PackagesPageProps {
 }
 
 export const PackagesPage: React.FC<PackagesPageProps> = ({ spaceSlug }) => {
+  const navigate = useNavigate();
+  const { orgSlug } = useParams() as { orgSlug: string };
   const { spaceId, space, isLoading: isLoadingSpace } = useCurrentSpace();
 
   const organizationId = space?.organizationId;
@@ -45,14 +49,34 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({ spaceSlug }) => {
 
   if (packages.length === 0) {
     return (
-      <PMBox p={4}>
-        <PMText colorPalette="gray">No packages found in this space.</PMText>
-      </PMBox>
+      <PMVStack align="stretch" gap={4}>
+        <PMBox>
+          <PMButton
+            onClick={() =>
+              navigate(`/org/${orgSlug}/space/${spaceSlug}/packages/new`)
+            }
+          >
+            Create Package
+          </PMButton>
+        </PMBox>
+        <PMBox p={4}>
+          <PMText colorPalette="gray">No packages found in this space.</PMText>
+        </PMBox>
+      </PMVStack>
     );
   }
 
   return (
     <PMVStack align="stretch" gap={4}>
+      <PMBox>
+        <PMButton
+          onClick={() =>
+            navigate(`/org/${orgSlug}/space/${spaceSlug}/packages/new`)
+          }
+        >
+          Create Package
+        </PMButton>
+      </PMBox>
       {packages.map((pkg) => (
         <PMBox
           key={pkg.id}
