@@ -49,6 +49,8 @@ import {
   CopyDetectionHeuristicsResponse,
   CopyLinterArtefactsCommand,
   CopyLinterArtefactsResponse,
+  DetectionModeEnum,
+  SourceCodeState,
 } from '@packmind/types';
 import { ILinterPort } from '@packmind/types';
 
