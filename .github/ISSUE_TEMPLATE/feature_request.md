@@ -16,3 +16,12 @@ labels: feature
 
 <!-- How would you like this feature to work? -->
 
+
+## Alternatives Considered
+
+<!-- What other approaches were considered? Why is the proposed solution preferred? -->
+
+## TODO
+
+- [ ] Documentation updated
+- [ ] Update changelog
