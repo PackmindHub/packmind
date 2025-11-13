@@ -7,20 +7,21 @@
     "npm": "10.9.2"
   },
   "scripts": {
+    "build": "nx run-many -t build",
+    "chakra:typegen": "npx --workspace=packages/ui @chakra-ui/cli typegen ./src/lib/theme/theme.ts",
     "e2e": "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=false npx playwright test --config apps/frontend-e2e/playwright.config.ts",
-    "prepare": "husky",
-    "test": "nx run-many -t test",
-    "test:staged": "nx affected:test --parallel",
+    "husky": "husky",
     "lint": "nx run-many -t lint",
     "lint:staged": "nx affected:lint --parallel --uncommitted",
-    "build": "nx run-many -t build",
     "packmind-cli": "npx packmind-cli scan \"**/*.ts,**.tsx\" --formatters=raw --errorIfResults=true --spaces=\"Packmind V3\"",
     "packmind-cli:staged": "npx packmind-cli scan --mode=onlyChanged --formatters=raw --errorIfResults=true --spaces=\"Packmind V3\"",
     "packmind-cli:v3:lint": "nx run packmind-cli:build --skip-nx-cache && node dist/apps/cli/main.js lint .",
-    "quality-gate": "npm run typecheck:frontend && npm run test:staged && npm run lint:staged && npm run build && npm run packmind-cli:staged",
+    "prepare": "npm run husky && npm run chakra:typegen",
     "prettier:check": "prettier -c .",
     "prettier:write": "prettier -w .",
-    "chakra:typegen": "npx --workspace=packages/ui @chakra-ui/cli typegen ./src/lib/theme/theme.ts",
+    "quality-gate": "npm run typecheck:frontend && npm run test:staged && npm run lint:staged && npm run build && npm run packmind-cli:staged",
+    "test": "nx run-many -t test",
+    "test:staged": "nx affected:test --parallel",
     "typecheck:frontend": "tsc --noEmit -p apps/frontend/tsconfig.app.json"
   },
   "workspaces": [
