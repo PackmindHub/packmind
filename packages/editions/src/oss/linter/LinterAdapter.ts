@@ -4,9 +4,6 @@ import {
   AssessRuleDetectionInput,
   ComputeRuleLanguageDetectionStatusCommand,
   ComputeRuleLanguageDetectionStatusResponse,
-  CopyDetectionProgramsToNewRuleCommand,
-  CopyDetectionProgramsToNewRuleResponse,
-  CopyRuleDetectionAssessmentsCommand,
   CopyRuleDetectionAssessmentsResponse,
   CreateDetectionProgramCommand,
   CreateNewDetectionProgramVersionCommand,
@@ -45,12 +42,13 @@ import {
   GetDetectionHeuristicsCommand,
   UpdateRuleDetectionHeuristicsResponse,
   UpdateRuleDetectionHeuristicsCommand,
-  DetectionModeEnum,
-  SourceCodeState,
+  CopyDetectionProgramsToNewRuleCommand,
+  CopyDetectionProgramsToNewRuleResponse,
+  CopyRuleDetectionAssessmentsCommand,
   CopyDetectionHeuristicsCommand,
   CopyDetectionHeuristicsResponse,
-  CopyLinterArtefactsResponse,
   CopyLinterArtefactsCommand,
+  CopyLinterArtefactsResponse,
 } from '@packmind/types';
 import { ILinterPort } from '@packmind/types';
 
@@ -284,11 +282,13 @@ export class LinterAdapter implements ILinterPort {
     throw new Error('Method not implemented.');
   }
 
-  copyDetectionHeuristics(
+  async copyDetectionHeuristics(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     command: CopyDetectionHeuristicsCommand,
   ): Promise<CopyDetectionHeuristicsResponse> {
-    throw new Error('Method not implemented.');
+    return {
+      copiedHeuristicsCount: 0,
+    };
   }
 
   copyLinterArtefacts(

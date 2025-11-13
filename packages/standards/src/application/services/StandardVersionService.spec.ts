@@ -60,8 +60,7 @@ describe('StandardVersionService', () => {
     } as unknown as IRuleExampleRepository;
 
     linterAdapter = {
-      copyDetectionProgramsToNewRule: jest.fn(),
-      copyRuleDetectionAssessments: jest.fn(),
+      copyLinterArtefacts: jest.fn(),
       updateRuleDetectionAssessmentAfterUpdate: jest.fn(),
       computeRuleLanguageDetectionStatus: jest.fn(),
     } as unknown as jest.Mocked<ILinterPort>;
