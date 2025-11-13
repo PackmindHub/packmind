@@ -6,12 +6,8 @@ import { AssessRuleDetectionInput } from '../AssessRuleDetectionInput';
 import type {
   ComputeRuleLanguageDetectionStatusCommand,
   ComputeRuleLanguageDetectionStatusResponse,
-  CopyDetectionHeuristicsCommand,
-  CopyDetectionHeuristicsResponse,
   CopyDetectionProgramsToNewRuleCommand,
   CopyDetectionProgramsToNewRuleResponse,
-  CopyLinterArtefactsCommand,
-  CopyLinterArtefactsResponse,
   CopyRuleDetectionAssessmentsCommand,
   CopyRuleDetectionAssessmentsResponse,
   CopyDetectionHeuristicsCommand,

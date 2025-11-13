@@ -70,7 +70,6 @@ export class AnalyticsAdapter implements IAnalyticsPort {
   async getTargetUsageAnalytics(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     targetId: TargetId,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     timePeriod?: TimePeriod,
   ): Promise<TargetUsageAnalytics> {
     return {

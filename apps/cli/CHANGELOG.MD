@@ -1,5 +1,11 @@
 # [Unreleased]
 
+# [0.3.4] - 2025-11-13
+
+## Fixed
+
+- Can now lint a file within a directory even though the CLI is not launched at the root of the local git repo.
+
 # [0.3.3] - 2025-11-03
 
 ## Fixed
