@@ -1431,7 +1431,14 @@ export class LinterController {
     @Param('detectionHeuristicsId')
     detectionHeuristicsId: DetectionHeuristicsId,
     @Req() request: AuthenticatedRequest,
-    @Body() body: { heuristics: string[] },
+    @Body()
+    body: {
+      heuristics: string[];
+      clarificationQuestion?: {
+        question: string;
+        answer: string;
+      };
+    },
   ): Promise<DetectionHeuristics> {
     const organizationId = request.organization.id;
     const userId = request.user.userId;
@@ -1451,6 +1458,7 @@ export class LinterController {
         organizationId,
         detectionHeuristicsId,
         heuristics: body.heuristics,
+        clarificationQuestion: body.clarificationQuestion,
       };
 
       const response =

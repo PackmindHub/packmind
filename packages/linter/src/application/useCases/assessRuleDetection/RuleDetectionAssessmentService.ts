@@ -69,9 +69,22 @@ export class RuleDetectionAssessmentService extends AIRequestEmitter {
           `Assessment result: ${JSON.stringify(assessment, null, 2)}`,
         );
 
+        // Log clarification question if present
+        if (assessment.clarificationQuestion) {
+          this._logger.info(
+            `Clarification Question: ${assessment.clarificationQuestion.question}`,
+          );
+          this._logger.info(
+            `Possible Answers: ${assessment.clarificationQuestion.answers.join(', ')}`,
+          );
+        }
+
         return {
           feasible: assessment.feasible || false,
           reason: assessment.reason || [],
+          ...(assessment.clarificationQuestion && {
+            clarificationQuestion: assessment.clarificationQuestion,
+          }),
         };
       } catch (error) {
         this._logger.error(

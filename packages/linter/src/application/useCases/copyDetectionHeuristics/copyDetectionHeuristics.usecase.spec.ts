@@ -23,6 +23,7 @@ describe('CopyDetectionHeuristicsUseCase', () => {
       getAllHeuristicsForRule: jest.fn(),
       updateHeuristics: jest.fn(),
       getHeuristicsById: jest.fn(),
+      appendHeuristic: jest.fn(),
     } as jest.Mocked<IRuleDetectionHeuristicsRepository>;
 
     repositories = {

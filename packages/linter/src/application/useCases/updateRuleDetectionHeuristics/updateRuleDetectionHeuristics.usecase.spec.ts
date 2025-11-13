@@ -13,10 +13,26 @@ import {
   ILinterPort,
   Rule,
   RuleDetectionAssessment,
+  UserProvider,
+  OrganizationProvider,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import { v4 as uuidv4 } from 'uuid';
+import { UpdateHeuristicsFollowingChatbotInputUseCase } from '../updateHeuristicsFollowingChatbotInput/updateHeuristicsFollowingChatbotInput.usecase';
+
+// Mock SSEEventPublisher
+jest.mock('@packmind/node-utils', () => ({
+  ...jest.requireActual('@packmind/node-utils'),
+  SSEEventPublisher: {
+    publishDetectionHeuristicsUpdatedEvent: jest.fn(),
+  },
+}));
+
+// Mock the UpdateHeuristicsFollowingChatbotInputUseCase
+jest.mock(
+  '../updateHeuristicsFollowingChatbotInput/updateHeuristicsFollowingChatbotInput.usecase',
+);
 
 describe('UpdateRuleDetectionHeuristicsUseCase', () => {
   let useCase: UpdateRuleDetectionHeuristicsUseCase;
@@ -25,7 +41,10 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
   let standardsAdapter: jest.Mocked<IStandardsPort>;
   let linterAdapter: jest.Mocked<ILinterPort>;
   let getLinterAdapter: jest.Mock<ILinterPort, []>;
+  let userProvider: jest.Mocked<UserProvider>;
+  let organizationProvider: jest.Mocked<OrganizationProvider>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
+  let mockChatbotUseCase: jest.Mocked<UpdateHeuristicsFollowingChatbotInputUseCase>;
 
   beforeEach(() => {
     heuristicsRepository = {
@@ -47,6 +66,7 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
 
     standardsAdapter = {
       getRule: jest.fn(),
+      getRuleCodeExamples: jest.fn(),
     } as unknown as jest.Mocked<IStandardsPort>;
 
     linterAdapter = {
@@ -55,12 +75,34 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
 
     getLinterAdapter = jest.fn().mockReturnValue(linterAdapter);
 
+    userProvider = {
+      getUserById: jest.fn(),
+    } as jest.Mocked<UserProvider>;
+
+    organizationProvider = {
+      getOrganizationById: jest.fn(),
+    } as jest.Mocked<OrganizationProvider>;
+
     stubbedLogger = stubLogger();
+
+    // Mock the chatbot use case
+    mockChatbotUseCase = {
+      execute: jest
+        .fn()
+        .mockResolvedValue({ newHeuristic: 'generated heuristic' }),
+    } as unknown as jest.Mocked<UpdateHeuristicsFollowingChatbotInputUseCase>;
+
+    (UpdateHeuristicsFollowingChatbotInputUseCase as jest.Mock).mockClear();
+    (
+      UpdateHeuristicsFollowingChatbotInputUseCase as jest.Mock
+    ).mockImplementation(() => mockChatbotUseCase);
 
     useCase = new UpdateRuleDetectionHeuristicsUseCase(
       linterRepositories,
       standardsAdapter,
       getLinterAdapter,
+      userProvider,
+      organizationProvider,
       stubbedLogger,
     );
   });
@@ -420,6 +462,121 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
 
     it('does not throw error', async () => {
       await expect(useCase.execute(command)).resolves.not.toThrow();
+    });
+  });
+
+  describe('when clarification question is provided', () => {
+    const heuristicsId = createDetectionHeuristicsId(uuidv4());
+    const ruleId = createRuleId(uuidv4());
+    const userId = createUserId(uuidv4());
+    const organizationId = createOrganizationId(uuidv4());
+    let existingHeuristics: DetectionHeuristics;
+    let updatedHeuristics: DetectionHeuristics;
+    let command: UpdateRuleDetectionHeuristicsCommand;
+    let mockRule: Rule;
+
+    beforeEach(() => {
+      existingHeuristics = {
+        id: heuristicsId,
+        ruleId,
+        language: ProgrammingLanguage.TYPESCRIPT,
+        heuristics: ['old heuristics'],
+      };
+
+      updatedHeuristics = {
+        ...existingHeuristics,
+        heuristics: ['old heuristics', 'generated heuristic'],
+      };
+
+      mockRule = {
+        id: ruleId,
+        content: 'Test rule content',
+      } as Rule;
+
+      heuristicsRepository.getHeuristicsById
+        .mockResolvedValueOnce(existingHeuristics)
+        .mockResolvedValueOnce(updatedHeuristics);
+      heuristicsRepository.updateHeuristics.mockResolvedValue();
+      standardsAdapter.getRule.mockResolvedValue(mockRule);
+      linterAdapter.startRuleDetectionAssessment.mockResolvedValue(
+        {} as RuleDetectionAssessment,
+      );
+
+      command = {
+        userId,
+        organizationId,
+        detectionHeuristicsId: heuristicsId,
+        heuristics: ['old heuristics'],
+        clarificationQuestion: {
+          question: 'What should we detect?',
+          answer: 'Variables declared with var',
+        },
+      };
+    });
+
+    it('skips clarification if question is empty', async () => {
+      command.clarificationQuestion = {
+        question: '',
+        answer: 'test',
+      };
+
+      await useCase.execute(command);
+
+      expect(mockChatbotUseCase.execute).not.toHaveBeenCalled();
+      expect(heuristicsRepository.updateHeuristics).toHaveBeenCalledWith(
+        heuristicsId,
+        ['old heuristics'],
+      );
+    });
+
+    it('skips clarification if answer is empty', async () => {
+      command.clarificationQuestion = {
+        question: 'test question',
+        answer: '',
+      };
+
+      await useCase.execute(command);
+
+      expect(mockChatbotUseCase.execute).not.toHaveBeenCalled();
+      expect(heuristicsRepository.updateHeuristics).toHaveBeenCalledWith(
+        heuristicsId,
+        ['old heuristics'],
+      );
+    });
+
+    it('appends generated heuristic to heuristics array', async () => {
+      await useCase.execute(command);
+
+      expect(heuristicsRepository.updateHeuristics).toHaveBeenCalledWith(
+        heuristicsId,
+        ['old heuristics', 'generated heuristic'],
+      );
+    });
+
+    it('returns updated heuristics with generated heuristic', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.detectionHeuristics).toEqual(updatedHeuristics);
+    });
+
+    it('skips appending if generated heuristic is empty', async () => {
+      // Mock empty heuristic generation
+      mockChatbotUseCase.execute.mockResolvedValueOnce({ newHeuristic: '' });
+
+      heuristicsRepository.getHeuristicsById
+        .mockReset()
+        .mockResolvedValueOnce(existingHeuristics)
+        .mockResolvedValueOnce({
+          ...existingHeuristics,
+          heuristics: ['old heuristics'],
+        });
+
+      await useCase.execute(command);
+
+      expect(heuristicsRepository.updateHeuristics).toHaveBeenCalledWith(
+        heuristicsId,
+        ['old heuristics'],
+      );
     });
   });
 });

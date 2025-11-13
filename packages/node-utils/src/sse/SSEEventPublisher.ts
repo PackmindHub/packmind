@@ -9,6 +9,7 @@ import {
   AnySSEEvent,
   createProgramStatusChangeEvent,
   createAssessmentStatusChangeEvent,
+  createDetectionHeuristicsUpdatedEvent,
   createUserContextChangeEvent,
   type UserContextChangeType,
 } from '@packmind/types';
@@ -125,6 +126,62 @@ export class SSEEventPublisher {
       SSEEventPublisher.logger.error(
         'Failed to publish assessment status change event',
         {
+          userId,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Publish a detection heuristics updated event for cache invalidation
+   * This triggers React Query to refetch the heuristics data
+   */
+  static async publishDetectionHeuristicsUpdatedEvent(
+    ruleId: string,
+    language: string,
+    detectionHeuristicsId: string,
+    userId?: string,
+    organizationId?: string,
+  ): Promise<void> {
+    SSEEventPublisher.logger.info(
+      'Publishing detection heuristics updated event',
+      {
+        ruleId,
+        language,
+        detectionHeuristicsId,
+        userId,
+        organizationId,
+      },
+    );
+
+    try {
+      // Create event payload carrying identifiers needed for cache invalidation
+      const event = createDetectionHeuristicsUpdatedEvent(
+        ruleId,
+        language,
+        detectionHeuristicsId,
+      );
+
+      await SSEEventPublisher.publishEvent(
+        'detection_heuristics_updated',
+        [ruleId, language, detectionHeuristicsId],
+        event,
+        userId ? [userId] : undefined,
+      );
+
+      SSEEventPublisher.logger.debug(
+        'Successfully published detection heuristics updated event',
+        { ruleId, language, detectionHeuristicsId },
+      );
+    } catch (error) {
+      SSEEventPublisher.logger.error(
+        'Failed to publish detection heuristics updated event',
+        {
+          ruleId,
+          language,
+          detectionHeuristicsId,
           userId,
           error: error instanceof Error ? error.message : String(error),
         },

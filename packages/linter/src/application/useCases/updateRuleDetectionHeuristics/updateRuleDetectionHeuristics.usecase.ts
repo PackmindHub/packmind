@@ -11,8 +11,13 @@ import {
   UserId,
   createUserId,
   createOrganizationId,
+  UpdateHeuristicsFollowingChatbotInputCommand,
+  UserProvider,
+  OrganizationProvider,
 } from '@packmind/types';
 import { ILinterRepositories } from '../../../domain/repositories/ILinterRepositories';
+import { SSEEventPublisher } from '@packmind/node-utils';
+import { UpdateHeuristicsFollowingChatbotInputUseCase } from '../updateHeuristicsFollowingChatbotInput/updateHeuristicsFollowingChatbotInput.usecase';
 
 const origin = 'UpdateRuleDetectionHeuristicsUseCase';
 
@@ -23,6 +28,8 @@ export class UpdateRuleDetectionHeuristicsUseCase
     private readonly linterRepositories: ILinterRepositories,
     private readonly standardsAdapter: IStandardsPort,
     private readonly getLinterAdapter: () => ILinterPort,
+    private readonly userProvider: UserProvider,
+    private readonly organizationProvider: OrganizationProvider,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -47,6 +54,49 @@ export class UpdateRuleDetectionHeuristicsUseCase
       throw new Error(errorMessage);
     }
 
+    // Check if clarification question is provided with valid values
+    if (
+      command.clarificationQuestion &&
+      command.clarificationQuestion.question?.trim() &&
+      command.clarificationQuestion.answer?.trim()
+    ) {
+      const { question, answer } = command.clarificationQuestion;
+
+      this.logger.info('Processing clarification question', {
+        detectionHeuristicsId: command.detectionHeuristicsId,
+      });
+
+      // Call updateHeuristicsFollowingChatbotInput to generate new heuristic
+      const chatbotUseCase = new UpdateHeuristicsFollowingChatbotInputUseCase(
+        this.userProvider,
+        this.organizationProvider,
+        this.linterRepositories,
+        this.standardsAdapter,
+      );
+
+      const chatbotCommand: UpdateHeuristicsFollowingChatbotInputCommand = {
+        detectionHeuristicsId: command.detectionHeuristicsId,
+        question,
+        answer,
+        userId: command.userId,
+        organizationId: command.organizationId,
+      };
+
+      const chatbotResponse = await chatbotUseCase.execute(chatbotCommand);
+
+      // Append the new heuristic to the command's heuristics array if not empty
+      if (chatbotResponse.newHeuristic?.trim()) {
+        command.heuristics = [
+          ...command.heuristics,
+          chatbotResponse.newHeuristic,
+        ];
+        this.logger.info('New heuristic generated and appended', {
+          detectionHeuristicsId: command.detectionHeuristicsId,
+          newHeuristic: chatbotResponse.newHeuristic,
+        });
+      }
+    }
+
     // Update heuristics
     await heuristicsRepo.updateHeuristics(
       command.detectionHeuristicsId,
@@ -65,6 +115,28 @@ export class UpdateRuleDetectionHeuristicsUseCase
     this.logger.info('Rule detection heuristics updated successfully', {
       detectionHeuristicsId: command.detectionHeuristicsId,
     });
+
+    // Publish SSE event after successful update
+    try {
+      await SSEEventPublisher.publishDetectionHeuristicsUpdatedEvent(
+        existingHeuristics.ruleId,
+        existingHeuristics.language,
+        command.detectionHeuristicsId,
+        command.userId,
+        command.organizationId,
+      );
+      this.logger.info('SSE event published for heuristics update', {
+        detectionHeuristicsId: command.detectionHeuristicsId,
+        ruleId: existingHeuristics.ruleId,
+        language: existingHeuristics.language,
+      });
+    } catch (sseError) {
+      this.logger.error('Failed to publish SSE event for heuristics update', {
+        detectionHeuristicsId: command.detectionHeuristicsId,
+        error: sseError instanceof Error ? sseError.message : String(sseError),
+      });
+      // Don't throw here - the main operation was successful
+    }
 
     // Trigger rule detection assessment after heuristics update
     await this.triggerRuleDetectionAssessment(
