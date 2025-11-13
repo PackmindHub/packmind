@@ -3,6 +3,14 @@ import {
   IUpdateRuleDetectionHeuristics,
   UpdateRuleDetectionHeuristicsCommand,
   UpdateRuleDetectionHeuristicsResponse,
+  IStandardsPort,
+  ILinterPort,
+  RuleId,
+  ProgrammingLanguage,
+  OrganizationId,
+  UserId,
+  createUserId,
+  createOrganizationId,
 } from '@packmind/types';
 import { ILinterRepositories } from '../../../domain/repositories/ILinterRepositories';
 
@@ -13,6 +21,8 @@ export class UpdateRuleDetectionHeuristicsUseCase
 {
   constructor(
     private readonly linterRepositories: ILinterRepositories,
+    private readonly standardsAdapter: IStandardsPort,
+    private readonly getLinterAdapter: () => ILinterPort,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -56,8 +66,59 @@ export class UpdateRuleDetectionHeuristicsUseCase
       detectionHeuristicsId: command.detectionHeuristicsId,
     });
 
+    // Trigger rule detection assessment after heuristics update
+    await this.triggerRuleDetectionAssessment(
+      existingHeuristics.ruleId,
+      existingHeuristics.language,
+      createOrganizationId(command.organizationId),
+      createUserId(command.userId),
+    );
+
     return {
       detectionHeuristics: updatedHeuristics,
     };
+  }
+
+  private async triggerRuleDetectionAssessment(
+    ruleId: RuleId,
+    language: ProgrammingLanguage,
+    organizationId: OrganizationId,
+    userId: UserId,
+  ): Promise<void> {
+    try {
+      this.logger.info('Triggering rule detection assessment', {
+        ruleId,
+        language,
+        organizationId,
+        userId,
+      });
+
+      // Fetch the full rule
+      const rule = await this.standardsAdapter.getRule(ruleId);
+      if (!rule) {
+        this.logger.error('Rule not found for assessment', { ruleId });
+        return;
+      }
+
+      // Start the assessment
+      await this.getLinterAdapter().startRuleDetectionAssessment({
+        rule,
+        organizationId,
+        userId,
+        language,
+      });
+
+      this.logger.info('Rule detection assessment triggered successfully', {
+        ruleId,
+        language,
+      });
+    } catch (error) {
+      // Log error but don't throw - heuristics update should still succeed
+      this.logger.error('Failed to trigger rule detection assessment', {
+        ruleId,
+        language,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
 }

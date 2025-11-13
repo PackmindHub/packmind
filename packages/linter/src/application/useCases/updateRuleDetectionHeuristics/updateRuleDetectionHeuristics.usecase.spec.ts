@@ -9,6 +9,10 @@ import {
   DetectionHeuristics,
   ProgrammingLanguage,
   UpdateRuleDetectionHeuristicsCommand,
+  IStandardsPort,
+  ILinterPort,
+  Rule,
+  RuleDetectionAssessment,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
@@ -18,6 +22,9 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
   let useCase: UpdateRuleDetectionHeuristicsUseCase;
   let heuristicsRepository: jest.Mocked<IRuleDetectionHeuristicsRepository>;
   let linterRepositories: jest.Mocked<ILinterRepositories>;
+  let standardsAdapter: jest.Mocked<IStandardsPort>;
+  let linterAdapter: jest.Mocked<ILinterPort>;
+  let getLinterAdapter: jest.Mock<ILinterPort, []>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
@@ -38,10 +45,22 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
       getDetectionProgramMetadataRepository: jest.fn(),
     } as unknown as jest.Mocked<ILinterRepositories>;
 
+    standardsAdapter = {
+      getRule: jest.fn(),
+    } as unknown as jest.Mocked<IStandardsPort>;
+
+    linterAdapter = {
+      startRuleDetectionAssessment: jest.fn(),
+    } as unknown as jest.Mocked<ILinterPort>;
+
+    getLinterAdapter = jest.fn().mockReturnValue(linterAdapter);
+
     stubbedLogger = stubLogger();
 
     useCase = new UpdateRuleDetectionHeuristicsUseCase(
       linterRepositories,
+      standardsAdapter,
+      getLinterAdapter,
       stubbedLogger,
     );
   });
@@ -53,9 +72,12 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
   describe('when updating heuristics successfully', () => {
     const heuristicsId = createDetectionHeuristicsId(uuidv4());
     const ruleId = createRuleId(uuidv4());
+    const userId = createUserId(uuidv4());
+    const organizationId = createOrganizationId(uuidv4());
     let existingHeuristics: DetectionHeuristics;
     let updatedHeuristics: DetectionHeuristics;
     let command: UpdateRuleDetectionHeuristicsCommand;
+    let mockRule: Rule;
 
     beforeEach(() => {
       existingHeuristics = {
@@ -70,14 +92,23 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
         heuristics: 'new heuristics',
       };
 
+      mockRule = {
+        id: ruleId,
+        content: 'Test rule content',
+      } as Rule;
+
       heuristicsRepository.getHeuristicsById
         .mockResolvedValueOnce(existingHeuristics)
         .mockResolvedValueOnce(updatedHeuristics);
       heuristicsRepository.updateHeuristics.mockResolvedValue();
+      standardsAdapter.getRule.mockResolvedValue(mockRule);
+      linterAdapter.startRuleDetectionAssessment.mockResolvedValue(
+        {} as RuleDetectionAssessment,
+      );
 
       command = {
-        userId: createUserId(uuidv4()),
-        organizationId: createOrganizationId(uuidv4()),
+        userId,
+        organizationId,
         detectionHeuristicsId: heuristicsId,
         heuristics: 'new heuristics',
       };
@@ -104,6 +135,23 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
       const result = await useCase.execute(command);
 
       expect(result.detectionHeuristics).toEqual(updatedHeuristics);
+    });
+
+    it('fetches the rule for assessment', async () => {
+      await useCase.execute(command);
+
+      expect(standardsAdapter.getRule).toHaveBeenCalledWith(ruleId);
+    });
+
+    it('triggers rule detection assessment with correct parameters', async () => {
+      await useCase.execute(command);
+
+      expect(linterAdapter.startRuleDetectionAssessment).toHaveBeenCalledWith({
+        rule: mockRule,
+        organizationId,
+        userId,
+        language: ProgrammingLanguage.TYPESCRIPT,
+      });
     });
   });
 
@@ -153,10 +201,19 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
         heuristics: '',
       };
 
+      const mockRule: Rule = {
+        id: ruleId,
+        content: 'Test rule content',
+      } as Rule;
+
       heuristicsRepository.getHeuristicsById
         .mockResolvedValueOnce(existingHeuristics)
         .mockResolvedValueOnce(updatedHeuristics);
       heuristicsRepository.updateHeuristics.mockResolvedValue();
+      standardsAdapter.getRule.mockResolvedValue(mockRule);
+      linterAdapter.startRuleDetectionAssessment.mockResolvedValue(
+        {} as RuleDetectionAssessment,
+      );
 
       const command: UpdateRuleDetectionHeuristicsCommand = {
         userId: createUserId(uuidv4()),
@@ -182,10 +239,19 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
         heuristics: 'old heuristics',
       };
 
+      const mockRule: Rule = {
+        id: ruleId,
+        content: 'Test rule content',
+      } as Rule;
+
       heuristicsRepository.getHeuristicsById
         .mockResolvedValueOnce(existingHeuristics)
         .mockResolvedValueOnce(null);
       heuristicsRepository.updateHeuristics.mockResolvedValue();
+      standardsAdapter.getRule.mockResolvedValue(mockRule);
+      linterAdapter.startRuleDetectionAssessment.mockResolvedValue(
+        {} as RuleDetectionAssessment,
+      );
 
       const command: UpdateRuleDetectionHeuristicsCommand = {
         userId: createUserId(uuidv4()),
@@ -206,6 +272,7 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
     let existingHeuristics: DetectionHeuristics;
     let updatedHeuristics: DetectionHeuristics;
     let command: UpdateRuleDetectionHeuristicsCommand;
+    let mockRule: Rule;
 
     beforeEach(() => {
       existingHeuristics = {
@@ -220,10 +287,19 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
         heuristics: 'new heuristics',
       };
 
+      mockRule = {
+        id: ruleId,
+        content: 'Test rule content',
+      } as Rule;
+
       heuristicsRepository.getHeuristicsById
         .mockResolvedValueOnce(existingHeuristics)
         .mockResolvedValueOnce(updatedHeuristics);
       heuristicsRepository.updateHeuristics.mockResolvedValue();
+      standardsAdapter.getRule.mockResolvedValue(mockRule);
+      linterAdapter.startRuleDetectionAssessment.mockResolvedValue(
+        {} as RuleDetectionAssessment,
+      );
 
       command = {
         userId: createUserId(uuidv4()),
@@ -243,6 +319,107 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
       const result = await useCase.execute(command);
 
       expect(result.detectionHeuristics.language).toBe(ProgrammingLanguage.GO);
+    });
+  });
+
+  describe('when rule not found for assessment', () => {
+    const heuristicsId = createDetectionHeuristicsId(uuidv4());
+    const ruleId = createRuleId(uuidv4());
+    let existingHeuristics: DetectionHeuristics;
+    let updatedHeuristics: DetectionHeuristics;
+    let command: UpdateRuleDetectionHeuristicsCommand;
+
+    beforeEach(() => {
+      existingHeuristics = {
+        id: heuristicsId,
+        ruleId,
+        language: ProgrammingLanguage.PYTHON,
+        heuristics: 'old heuristics',
+      };
+
+      updatedHeuristics = {
+        ...existingHeuristics,
+        heuristics: 'new heuristics',
+      };
+
+      heuristicsRepository.getHeuristicsById
+        .mockResolvedValueOnce(existingHeuristics)
+        .mockResolvedValueOnce(updatedHeuristics);
+      heuristicsRepository.updateHeuristics.mockResolvedValue();
+      standardsAdapter.getRule.mockResolvedValue(null);
+
+      command = {
+        userId: createUserId(uuidv4()),
+        organizationId: createOrganizationId(uuidv4()),
+        detectionHeuristicsId: heuristicsId,
+        heuristics: 'new heuristics',
+      };
+    });
+
+    it('returns updated heuristics despite missing rule', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.detectionHeuristics).toEqual(updatedHeuristics);
+    });
+
+    it('does not call startRuleDetectionAssessment', async () => {
+      await useCase.execute(command);
+
+      expect(linterAdapter.startRuleDetectionAssessment).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('when assessment fails', () => {
+    const heuristicsId = createDetectionHeuristicsId(uuidv4());
+    const ruleId = createRuleId(uuidv4());
+    let existingHeuristics: DetectionHeuristics;
+    let updatedHeuristics: DetectionHeuristics;
+    let command: UpdateRuleDetectionHeuristicsCommand;
+    let mockRule: Rule;
+
+    beforeEach(() => {
+      existingHeuristics = {
+        id: heuristicsId,
+        ruleId,
+        language: ProgrammingLanguage.JAVA,
+        heuristics: 'old heuristics',
+      };
+
+      updatedHeuristics = {
+        ...existingHeuristics,
+        heuristics: 'new heuristics',
+      };
+
+      mockRule = {
+        id: ruleId,
+        content: 'Test rule content',
+      } as Rule;
+
+      heuristicsRepository.getHeuristicsById
+        .mockResolvedValueOnce(existingHeuristics)
+        .mockResolvedValueOnce(updatedHeuristics);
+      heuristicsRepository.updateHeuristics.mockResolvedValue();
+      standardsAdapter.getRule.mockResolvedValue(mockRule);
+      linterAdapter.startRuleDetectionAssessment.mockRejectedValue(
+        new Error('Assessment service unavailable'),
+      );
+
+      command = {
+        userId: createUserId(uuidv4()),
+        organizationId: createOrganizationId(uuidv4()),
+        detectionHeuristicsId: heuristicsId,
+        heuristics: 'new heuristics',
+      };
+    });
+
+    it('returns updated heuristics despite assessment failure', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result.detectionHeuristics).toEqual(updatedHeuristics);
+    });
+
+    it('does not throw error', async () => {
+      await expect(useCase.execute(command)).resolves.not.toThrow();
     });
   });
 });

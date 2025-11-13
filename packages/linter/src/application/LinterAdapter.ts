@@ -395,7 +395,11 @@ export class LinterAdapter implements ILinterPort {
   async updateRuleDetectionHeuristics(
     command: UpdateRuleDetectionHeuristicsCommand,
   ): Promise<UpdateRuleDetectionHeuristicsResponse> {
-    const usecase = new UpdateRuleDetectionHeuristicsUseCase(this.repositories);
+    const usecase = new UpdateRuleDetectionHeuristicsUseCase(
+      this.repositories,
+      this.getStandardsAdapter(),
+      () => this,
+    );
     return usecase.execute(command);
   }
 
