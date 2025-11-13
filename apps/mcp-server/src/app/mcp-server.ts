@@ -22,10 +22,10 @@ import {
   AddRuleWorkflowStep,
 } from './prompts/packmind-add-rule-workflow';
 import packmindOnboardingAiInstructions from './prompts/packmind-onboarding-ai-instructions';
-import packmindOnboardingModeSelection from './prompts/packmind-onboarding-mode-selection';
 import packmindOnboardingCodebaseAnalysis from './prompts/packmind-onboarding-codebase-analysis';
 import packmindOnboardingDocumentation from './prompts/packmind-onboarding-documentation';
 import packmindOnboardingGitHistory from './prompts/packmind-onboarding-git-history';
+import packmindOnboardingModeSelection from './prompts/packmind-onboarding-mode-selection';
 import packmindOnboardingWebResearch from './prompts/packmind-onboarding-web-research';
 import {
   RECIPE_WORKFLOW_STEP_ORDER,

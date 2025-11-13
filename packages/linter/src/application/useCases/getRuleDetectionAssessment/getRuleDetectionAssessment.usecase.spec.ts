@@ -50,8 +50,8 @@ describe('GetRuleDetectionAssessmentUseCase', () => {
 
     mockAccountsPort = {
       getUserById: jest.fn(),
+      getOrganizationById: jest.fn(),
     } as unknown as jest.Mocked<IAccountsPort>;
-
 
     // Setup default mocks for user and organization
     const user: User = {

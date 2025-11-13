@@ -89,6 +89,7 @@ describe('GetStandardRulesDetectionStatusUseCase', () => {
 
     mockAccountsPort = {
       getUserById: jest.fn(),
+      getOrganizationById: jest.fn(),
     } as unknown as jest.Mocked<IAccountsPort>;
 
     const user: User = {
