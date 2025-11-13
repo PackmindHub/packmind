@@ -6,7 +6,11 @@ import {
 
 export type UpdateRuleDetectionHeuristicsCommand = PackmindCommand & {
   detectionHeuristicsId: DetectionHeuristicsId;
-  heuristics: string;
+  heuristics: string[];
+  clarificationQuestion?: {
+    question: string;
+    answer: string;
+  };
 };
 
 export type UpdateRuleDetectionHeuristicsResponse = {

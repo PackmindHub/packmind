@@ -6,14 +6,14 @@ import { AssessRuleDetectionInput } from '../AssessRuleDetectionInput';
 import type {
   ComputeRuleLanguageDetectionStatusCommand,
   ComputeRuleLanguageDetectionStatusResponse,
-  CopyDetectionHeuristicsCommand,
-  CopyDetectionHeuristicsResponse,
   CopyDetectionProgramsToNewRuleCommand,
   CopyDetectionProgramsToNewRuleResponse,
-  CopyLinterArtefactsCommand,
-  CopyLinterArtefactsResponse,
   CopyRuleDetectionAssessmentsCommand,
   CopyRuleDetectionAssessmentsResponse,
+  CopyDetectionHeuristicsCommand,
+  CopyDetectionHeuristicsResponse,
+  CopyLinterArtefactsCommand,
+  CopyLinterArtefactsResponse,
   CreateDetectionProgramCommand,
   CreateNewDetectionProgramVersionCommand,
   GetActiveDetectionProgramCommand,
@@ -39,8 +39,14 @@ import type {
   UpdateActiveDetectionProgramCommand,
   UpdateDetectionProgramCommand,
   UpdateDetectionProgramStatusCommand,
+  UpdateRuleDetectionHeuristicsCommand,
+  UpdateRuleDetectionHeuristicsResponse,
   UpdateRuleDetectionStatusAfterUpdateCommand,
   UpdateRuleDetectionStatusAfterUpdateResponse,
+  GetDetectionHeuristicsCommand,
+  GetDetectionHeuristicsResponse,
+  CreateDetectionHeuristicsCommand,
+  CreateDetectionHeuristicsResponse,
 } from '../contracts';
 import { DetectionProgram } from '../DetectionProgram';
 import { RuleDetectionAssessment } from '../RuleDetectionAssessment';
@@ -139,4 +145,16 @@ export interface ILinterPort {
   testProgramExecution(
     command: TestProgramExecutionCommand,
   ): Promise<TestProgramExecutionResponse>;
+
+  updateRuleDetectionHeuristics(
+    command: UpdateRuleDetectionHeuristicsCommand,
+  ): Promise<UpdateRuleDetectionHeuristicsResponse>;
+
+  getDetectionHeuristics(
+    command: GetDetectionHeuristicsCommand,
+  ): Promise<GetDetectionHeuristicsResponse>;
+
+  createDetectionHeuristics(
+    command: CreateDetectionHeuristicsCommand,
+  ): Promise<CreateDetectionHeuristicsResponse>;
 }

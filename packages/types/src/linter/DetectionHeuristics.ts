@@ -15,11 +15,15 @@ export enum RuleFeasibility {
 export type AssessmentDetectionReadiness = {
   feasible: boolean;
   reason: string[];
+  clarificationQuestion?: {
+    question: string;
+    answers: string[];
+  };
 };
 
 export type DetectionHeuristics = {
   id: DetectionHeuristicsId;
   ruleId: RuleId;
   language: ProgrammingLanguage;
-  heuristics: string;
+  heuristics: string[];
 };

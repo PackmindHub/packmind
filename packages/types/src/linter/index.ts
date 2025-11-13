@@ -1,6 +1,7 @@
 export * from './ActiveDetectionProgram';
 export * from './AssessRuleDetectionInput';
 export * from './AssessRuleDetectionOutput';
+export * from './DetectionHeuristics';
 export * from './DetectionProgram';
 export * from './DetectionProgramMetadata';
 export * from './DetectionProgramRuleInput';

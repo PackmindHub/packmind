@@ -8,7 +8,7 @@ export type DetectionProgramMetadata = {
   tokens: TokensUsed | null;
   logs: ExecutionLog[] | null;
   programDescription: string;
-  detectionHeuristics: string;
+  detectionHeuristics: string[];
 };
 
 export type ExecutionLog = {

@@ -17,6 +17,7 @@ export type SSEEventType =
   | 'NOTIFICATION'
   | 'PROGRAM_STATUS_CHANGE'
   | 'ASSESSMENT_STATUS_CHANGE'
+  | 'DETECTION_HEURISTICS_UPDATED'
   | 'USER_CONTEXT_CHANGE';
 
 // Hello World event for testing
@@ -55,6 +56,16 @@ export interface AssessmentStatusChangeEvent
   type: 'ASSESSMENT_STATUS_CHANGE';
 }
 
+// Detection heuristics updated event for cache invalidation
+export interface DetectionHeuristicsUpdatedEvent
+  extends SSEEvent<{
+    ruleId: string;
+    language: string;
+    detectionHeuristicsId: string;
+  }> {
+  type: 'DETECTION_HEURISTICS_UPDATED';
+}
+
 export type UserContextChangeType = 'role_changed' | 'removed' | 'invited';
 
 export interface UserContextChangeEvent
@@ -74,6 +85,7 @@ export type AnySSEEvent =
   | NotificationEvent
   | ProgramStatusChangeEvent
   | AssessmentStatusChangeEvent
+  | DetectionHeuristicsUpdatedEvent
   | UserContextChangeEvent;
 
 // Event creation helpers
@@ -128,6 +140,22 @@ export function createAssessmentStatusChangeEvent(
     data: {
       ruleId,
       language,
+    },
+    timestamp: new Date().toISOString(),
+  };
+}
+
+export function createDetectionHeuristicsUpdatedEvent(
+  ruleId: string,
+  language: string,
+  detectionHeuristicsId: string,
+): DetectionHeuristicsUpdatedEvent {
+  return {
+    type: 'DETECTION_HEURISTICS_UPDATED',
+    data: {
+      ruleId,
+      language,
+      detectionHeuristicsId,
     },
     timestamp: new Date().toISOString(),
   };

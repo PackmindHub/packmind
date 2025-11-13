@@ -225,10 +225,14 @@ export class LinterAdapter implements ILinterPort {
     };
   }
 
-  copyLinterArtefacts(
+  async copyLinterArtefacts(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     command: CopyLinterArtefactsCommand,
   ): Promise<CopyLinterArtefactsResponse> {
-    throw new Error('Method not implemented.');
+    return {
+      copiedHeuristicsCount: 0,
+      copiedAssessmentsCount: 0,
+      copiedProgramsCount: 0,
+    };
   }
 }

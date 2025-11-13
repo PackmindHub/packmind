@@ -26,4 +26,5 @@ export * from './IUpdateActiveDetectionProgram';
 export * from './IUpdateDetectionProgram';
 export * from './IUpdateDetectionProgramStatus';
 export * from './IUpdateRuleDetectionHeuristics';
+export * from './IUpdateHeuristicsFollowingChatbotInput';
 export * from './IUpdateRuleDetectionStatusAfterUpdate';

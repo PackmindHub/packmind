@@ -16,9 +16,8 @@ const origin = 'OpenAIService';
 
 export class OpenAIService implements AIService {
   private client: OpenAI | null = null;
-  private readonly defaultModel = 'gpt-4o';
+  private readonly defaultModel = 'gpt-5-mini';
   private readonly maxRetries = 5;
-  private readonly defaultTemperature = 0.7;
   private initialized = false;
 
   constructor(
@@ -88,7 +87,6 @@ export class OpenAIService implements AIService {
     this.logger.info('Executing AI prompt', {
       promptLength: prompt.length,
       maxTokens: options.maxTokens,
-      temperature: options.temperature,
     });
 
     await this.initialize();
@@ -134,7 +132,6 @@ export class OpenAIService implements AIService {
               content: prompt,
             },
           ],
-          temperature: options.temperature ?? this.defaultTemperature,
         });
 
         const content = response.choices[0]?.message?.content;
@@ -230,7 +227,6 @@ export class OpenAIService implements AIService {
     this.logger.info('Executing AI prompt with history', {
       conversationLength: conversationHistory.length,
       maxTokens: options.maxTokens,
-      temperature: options.temperature,
     });
 
     await this.initialize();
@@ -277,7 +273,6 @@ export class OpenAIService implements AIService {
         const response = await this.client.chat.completions.create({
           model: this.defaultModel,
           messages,
-          temperature: options.temperature ?? this.defaultTemperature,
         });
 
         const content = response.choices[0]?.message?.content;
