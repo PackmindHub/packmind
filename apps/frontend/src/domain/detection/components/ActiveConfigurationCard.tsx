@@ -236,8 +236,7 @@ const ActiveConfigurationCardAssessment: React.FC<
   );
 
   const { data: meData } = useGetMeQuery();
-  const userEmail =
-    meData?.authenticated === true ? meData.user.email : null;
+  const userEmail = meData?.authenticated === true ? meData.user.email : null;
 
   const configurationCardProps: ConfigurationCardProps = {
     id,
