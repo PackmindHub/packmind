@@ -314,22 +314,6 @@ describe('DetectionAssessmentDrawer', () => {
 
             expect(saveButton).not.toBeDisabled();
           });
-
-          it('changes Cancel button text when there are changes', async () => {
-            const user = userEvent.setup();
-            const textarea = screen.getByPlaceholderText(
-              'Enter detection heuristics...',
-            );
-            const cancelButton = screen.getByText('Close');
-
-            expect(cancelButton).toBeInTheDocument();
-
-            await user.clear(textarea);
-            await user.type(textarea, 'New heuristics');
-
-            expect(screen.getByText('Cancel')).toBeInTheDocument();
-            expect(screen.queryByText('Close')).not.toBeInTheDocument();
-          });
         });
 
         describe('when program generation is in error', () => {
@@ -539,52 +523,6 @@ describe('DetectionAssessmentDrawer', () => {
         });
       });
 
-      describe('when canceling changes', () => {
-        let onCloseSpy: ReturnType<typeof jest.fn>;
-
-        beforeEach(() => {
-          if (screen) {
-            screen.unmount();
-          }
-          assessment.status = RuleDetectionAssessmentStatus.FAILED;
-          onCloseSpy = jest.fn();
-          props.onClose = onCloseSpy;
-
-          screen = renderWithContext();
-        });
-
-        it('resets the textarea value and calls onClose', async () => {
-          const user = userEvent.setup();
-          const textarea = screen.getByPlaceholderText(
-            'Enter detection heuristics...',
-          );
-          const cancelButton = screen.getByText('Close');
-
-          await user.clear(textarea);
-          await user.type(textarea, 'Modified text');
-          await user.click(cancelButton);
-
-          expect(onCloseSpy).toHaveBeenCalled();
-        });
-
-        it('resets changes when canceling with unsaved changes', async () => {
-          const user = userEvent.setup();
-          const textareas = screen.getAllByPlaceholderText(
-            'Enter detection heuristics...',
-          );
-          const textarea = textareas[textareas.length - 1];
-
-          await user.clear(textarea);
-          await user.type(textarea, 'Modified text');
-
-          const cancelButtons = screen.getAllByText('Cancel');
-          const cancelButton = cancelButtons[cancelButtons.length - 1];
-          await user.click(cancelButton);
-
-          expect(onCloseSpy).toHaveBeenCalled();
-        });
-      });
-
       describe('when mutation is pending', () => {
         beforeEach(() => {
           if (screen) {
@@ -611,12 +549,6 @@ describe('DetectionAssessmentDrawer', () => {
           );
           const textarea = textareas[textareas.length - 1];
           expect(textarea).toBeDisabled();
-        });
-
-        it('disables the Cancel button', () => {
-          const cancelButtons = screen.getAllByText('Close');
-          const cancelButton = cancelButtons[cancelButtons.length - 1];
-          expect(cancelButton).toBeDisabled();
         });
       });
     });

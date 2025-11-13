@@ -65,7 +65,7 @@ export const DetectionAssessmentDrawer: React.FC<
   }, [assessment.status, activePrograms, language]);
 
   useEffect(() => {
-    if (detectionHeuristics) {
+    if (detectionHeuristics && detectionHeuristics.heuristics.length) {
       // Join array with newlines for display in textarea
       setHeuristicsText(detectionHeuristics.heuristics.join('\n'));
       setHasChanges(false);
@@ -118,14 +118,6 @@ export const DetectionAssessmentDrawer: React.FC<
     updateHeuristics,
   ]);
 
-  const handleCancel = useCallback(() => {
-    if (detectionHeuristics) {
-      setHeuristicsText(detectionHeuristics.heuristics.join('\n'));
-      setHasChanges(false);
-    }
-    onClose();
-  }, [detectionHeuristics, onClose]);
-
   return (
     <PMDrawer.Root
       open={isOpen}
@@ -175,29 +167,20 @@ export const DetectionAssessmentDrawer: React.FC<
                       disabled={!isEditable || updateHeuristics.isPending}
                     />
                   )}
+                  <PMHStack gap={2} justify="flex-end" width="full">
+                    {detectionHeuristics && isEditable && (
+                      <PMButton
+                        onClick={handleSave}
+                        disabled={!hasChanges || updateHeuristics.isPending}
+                        loading={updateHeuristics.isPending}
+                      >
+                        Save Changes
+                      </PMButton>
+                    )}
+                  </PMHStack>
                 </PMVStack>
               </PMVStack>
             </PMDrawer.Body>
-            <PMDrawer.Footer>
-              <PMHStack gap={2} justify="flex-end">
-                <PMButton
-                  variant="outline"
-                  onClick={handleCancel}
-                  disabled={updateHeuristics.isPending}
-                >
-                  {hasChanges ? 'Cancel' : 'Close'}
-                </PMButton>
-                {detectionHeuristics && isEditable && (
-                  <PMButton
-                    onClick={handleSave}
-                    disabled={!hasChanges || updateHeuristics.isPending}
-                    loading={updateHeuristics.isPending}
-                  >
-                    Save Changes
-                  </PMButton>
-                )}
-              </PMHStack>
-            </PMDrawer.Footer>
             <PMDrawer.CloseTrigger asChild>
               <PMCloseButton size="sm" />
             </PMDrawer.CloseTrigger>
