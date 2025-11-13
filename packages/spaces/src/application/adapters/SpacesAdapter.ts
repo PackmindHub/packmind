@@ -44,7 +44,7 @@ export class SpacesAdapter implements IBaseAdapter<ISpacesPort>, ISpacesPort {
    * SpacesAdapter has no port dependencies, so this is a no-op.
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public initialize(_ports: Record<string, unknown>): void {
+  public async initialize(_ports: Record<string, unknown>): Promise<void> {
     // No ports needed for SpacesAdapter
   }
 

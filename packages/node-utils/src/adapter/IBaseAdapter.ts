@@ -53,16 +53,17 @@ export interface IBaseAdapter<TPort = void> {
    * 1. Set all port properties from the ports parameter
    * 2. Validate all required ports are set using isReady()
    * 3. Create all use cases with non-null ports
+   * 4. Perform any async initialization (e.g., queue setup, external connections)
    *
    * @param ports - Record of port names to port instances
    * @throws Error if required ports are not provided
    *
    * @example
    * ```typescript
-   * public initialize(ports: {
+   * public async initialize(ports: {
    *   [IGitPortName]: IGitPort;           // Required
    *   [IAccountsPortName]: IAccountsPort; // Required
-   * }): void {
+   * }): Promise<void> {
    *   this.gitPort = ports[IGitPortName];
    *   this.accountsPort = ports[IAccountsPortName];
    *
@@ -71,10 +72,13 @@ export interface IBaseAdapter<TPort = void> {
    *   }
    *
    *   this._someUseCase = new SomeUseCase(this.services, this.gitPort!);
+   *
+   *   // Perform async initialization if needed
+   *   await this.setupQueues();
    * }
    * ```
    */
-  initialize(ports: Record<string, unknown>): void;
+  initialize(ports: Record<string, unknown>): Promise<void>;
 
   /**
    * Check if the adapter is ready to use.

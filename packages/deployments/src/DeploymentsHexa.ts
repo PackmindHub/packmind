@@ -92,7 +92,7 @@ export class DeploymentsHexa extends BaseHexa<
         registry.getAdapter<IAccountsPort>(IAccountsPortName);
 
       // Initialize adapter with all ports
-      this.adapter.initialize({
+      await this.adapter.initialize({
         [IGitPortName]: gitPort,
         [IRecipesPortName]: recipesPort,
         [ICodingAgentPortName]: codingAgentPort,

@@ -151,12 +151,12 @@ export class AccountsAdapter
    * Initialize adapter with optional ports from registry.
    * All ports are optional - adapter can function without any of them.
    */
-  public initialize(ports: {
+  public async initialize(ports: {
     [ISpacesPortName]: ISpacesPort;
     [IGitPortName]: IGitPort;
     [IStandardsPortName]: IStandardsPort;
     [IDeploymentPortName]: IDeploymentPort;
-  }): void {
+  }): Promise<void> {
     this.logger.info('Initializing AccountsAdapter with optional ports');
 
     // Set all optional ports

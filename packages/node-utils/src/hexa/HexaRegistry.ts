@@ -179,14 +179,14 @@ export class HexaRegistry {
         }
       }
 
-      // Initialize all hexas with registry access for adapter retrieval
-      for (const hexa of this.hexas.values()) {
-        await hexa.initialize(this);
-      }
-
       // Initialize all services with registry access
       for (const service of this.services.values()) {
         await service.initialize(this);
+      }
+
+      // Initialize all hexas with registry access for adapter retrieval
+      for (const hexa of this.hexas.values()) {
+        await hexa.initialize(this);
       }
 
       // Post-initialization: Set deployment port on RecipesHexa if both are available
