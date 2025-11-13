@@ -94,6 +94,7 @@ export const DetectionAssessmentDrawer: React.FC<
     <PMDrawer.Root
       open={isOpen}
       onOpenChange={({ open }) => !open && onClose()}
+      size="xl"
     >
       <PMPortal>
         <PMDrawer.Backdrop />
@@ -105,56 +106,51 @@ export const DetectionAssessmentDrawer: React.FC<
             <PMDrawer.Body>
               <PMVStack>
                 {assessment.details && (
-                  <PMBox>
+                  <PMVStack gap={2} align="flex-start">
                     <PMText color="tertiary">
                       Why this rule cannot be detected:
                     </PMText>
-                    <PMBox padding={3} borderRadius="md">
-                      <PMText>{assessment.details}</PMText>
+                    <PMBox
+                      borderRadius="md"
+                      borderWidth={1}
+                      borderColor="border.tertiary"
+                      p={3}
+                      rounded="md"
+                      mb={3}
+                      width="full"
+                    >
+                      <PMText whiteSpace="pre-wrap">
+                        {assessment.details}
+                      </PMText>
                     </PMBox>
-                  </PMBox>
+                  </PMVStack>
                 )}
 
-                <PMBox>
+                <PMVStack gap={2} align="flex-start" width="full">
                   <PMText>Detection Heuristics:</PMText>
                   {isLoadingHeuristics ? (
                     <PMText color="faded">Loading heuristics...</PMText>
-                  ) : detectionHeuristics ? (
+                  ) : (
                     <PMTextArea
-                      value={heuristicsText}
+                      value={heuristicsText ?? ''}
                       onChange={handleHeuristicsChange}
                       placeholder="Enter detection heuristics..."
                       rows={10}
                       disabled={updateHeuristics.isPending}
                     />
-                  ) : (
-                    <PMText color="faded">
-                      No heuristics available for this rule.
-                    </PMText>
                   )}
-                </PMBox>
+                  <PMHStack gap={2} justify="flex-end" width="full">
+                    <PMButton
+                      onClick={handleSave}
+                      disabled={!hasChanges || updateHeuristics.isPending}
+                      loading={updateHeuristics.isPending}
+                    >
+                      Save Changes
+                    </PMButton>
+                  </PMHStack>
+                </PMVStack>
               </PMVStack>
             </PMDrawer.Body>
-            <PMDrawer.Footer>
-              <PMHStack gap={2} justify="flex-end">
-                <PMButton
-                  variant="outline"
-                  onClick={handleCancel}
-                  disabled={updateHeuristics.isPending}
-                >
-                  {hasChanges ? 'Cancel' : 'Close'}
-                </PMButton>
-                {detectionHeuristics && (
-                  <PMButton
-                    onClick={handleSave}
-                    disabled={!hasChanges || updateHeuristics.isPending}
-                    loading={updateHeuristics.isPending}
-                  >
-                    Save Changes
-                  </PMButton>
-                )}
-              </PMHStack>
-            </PMDrawer.Footer>
             <PMDrawer.CloseTrigger asChild>
               <PMCloseButton size="sm" />
             </PMDrawer.CloseTrigger>
