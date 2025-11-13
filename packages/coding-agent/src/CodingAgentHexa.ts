@@ -56,7 +56,11 @@ export class CodingAgentHexa extends BaseHexa<BaseHexaOpts, ICodingAgentPort> {
       );
 
       // Instantiate adapter without dependencies (will be set in initialize)
-      this.adapter = new CodingAgentAdapter(this.logger);
+      this.adapter = new CodingAgentAdapter(
+        this.codingAgentRepositories,
+        this.codingAgentServices,
+        this.logger,
+      );
 
       this.logger.info('CodingAgentHexa construction completed');
     } catch (error) {
@@ -98,12 +102,8 @@ export class CodingAgentHexa extends BaseHexa<BaseHexaOpts, ICodingAgentPort> {
 
       // Initialize adapter with ports, services, and repositories
       this.adapter.initialize({
-        ports: {
-          [IStandardsPortName]: standardsPort,
-          [IGitPortName]: gitPort,
-        },
-        services: this.codingAgentServices,
-        repositories: this.codingAgentRepositories,
+        [IStandardsPortName]: standardsPort,
+        [IGitPortName]: gitPort,
       });
 
       this.logger.info('CodingAgentHexa initialized successfully');

@@ -38,7 +38,11 @@ describe('CodingAgentAdapter', () => {
       prepareStandardsDeployment: jest.fn(),
     } as unknown as CodingAgentServices;
 
-    adapter = new CodingAgentAdapter(mockLogger);
+    adapter = new CodingAgentAdapter(
+      mockRepositories,
+      mockServices,
+      mockLogger,
+    );
   });
 
   afterEach(() => {
@@ -52,12 +56,8 @@ describe('CodingAgentAdapter', () => {
 
     it('returns true when all required ports and services are set', () => {
       adapter.initialize({
-        ports: {
-          [IStandardsPortName]: mockStandardsPort,
-          [IGitPortName]: mockGitPort,
-        },
-        services: mockServices,
-        repositories: mockRepositories,
+        [IStandardsPortName]: mockStandardsPort,
+        [IGitPortName]: mockGitPort,
       });
 
       expect(adapter.isReady()).toBe(true);
@@ -68,41 +68,11 @@ describe('CodingAgentAdapter', () => {
     it('throws when required ports not provided', () => {
       expect(() => {
         adapter.initialize({
-          ports: {
-            [IStandardsPortName]: mockStandardsPort,
-            [IGitPortName]: undefined,
-          } as unknown as {
-            [IStandardsPortName]: IStandardsPort;
-            [IGitPortName]: IGitPort;
-          },
-          services: mockServices,
-          repositories: mockRepositories,
-        });
-      }).toThrow('CodingAgentAdapter: Required ports/services not provided');
-    });
-
-    it('throws when services not provided', () => {
-      expect(() => {
-        adapter.initialize({
-          ports: {
-            [IStandardsPortName]: mockStandardsPort,
-            [IGitPortName]: mockGitPort,
-          },
-          services: undefined as unknown as CodingAgentServices,
-          repositories: mockRepositories,
-        });
-      }).toThrow('CodingAgentAdapter: Required ports/services not provided');
-    });
-
-    it('throws when repositories not provided', () => {
-      expect(() => {
-        adapter.initialize({
-          ports: {
-            [IStandardsPortName]: mockStandardsPort,
-            [IGitPortName]: mockGitPort,
-          },
-          services: mockServices,
-          repositories: undefined as unknown as ICodingAgentRepositories,
+          [IStandardsPortName]: mockStandardsPort,
+          [IGitPortName]: undefined,
+        } as unknown as {
+          [IStandardsPortName]: IStandardsPort;
+          [IGitPortName]: IGitPort;
         });
       }).toThrow('CodingAgentAdapter: Required ports/services not provided');
     });
@@ -110,12 +80,8 @@ describe('CodingAgentAdapter', () => {
     it('creates use cases when all dependencies provided', () => {
       expect(() => {
         adapter.initialize({
-          ports: {
-            [IStandardsPortName]: mockStandardsPort,
-            [IGitPortName]: mockGitPort,
-          },
-          services: mockServices,
-          repositories: mockRepositories,
+          [IStandardsPortName]: mockStandardsPort,
+          [IGitPortName]: mockGitPort,
         });
       }).not.toThrow();
 
@@ -126,38 +92,11 @@ describe('CodingAgentAdapter', () => {
   describe('getPort', () => {
     it('returns the adapter as port interface', () => {
       adapter.initialize({
-        ports: {
-          [IStandardsPortName]: mockStandardsPort,
-          [IGitPortName]: mockGitPort,
-        },
-        services: mockServices,
-        repositories: mockRepositories,
+        [IStandardsPortName]: mockStandardsPort,
+        [IGitPortName]: mockGitPort,
       });
 
       expect(adapter.getPort()).toBe(adapter);
-    });
-  });
-
-  describe('getDeployerRegistry', () => {
-    it('returns deployer registry from repositories', () => {
-      const mockRegistry = { getDeployer: jest.fn() };
-      mockRepositories.getDeployerRegistry = jest
-        .fn()
-        .mockReturnValue(mockRegistry);
-
-      adapter.initialize({
-        ports: {
-          [IStandardsPortName]: mockStandardsPort,
-          [IGitPortName]: mockGitPort,
-        },
-        services: mockServices,
-        repositories: mockRepositories,
-      });
-
-      const result = adapter.getDeployerRegistry();
-
-      expect(result).toBe(mockRegistry);
-      expect(mockRepositories.getDeployerRegistry).toHaveBeenCalled();
     });
   });
 });

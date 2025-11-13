@@ -1,5 +1,5 @@
 import { PackmindLogger, LogLevel } from '@packmind/logger';
-import { Target, GitRepoId, TargetId, IGitPort } from '@packmind/types';
+import { Target, GitRepoId, TargetId } from '@packmind/types';
 import { ITargetRepository } from '../../domain/repositories/ITargetRepository';
 
 const origin = 'TargetService';
@@ -7,13 +7,41 @@ const origin = 'TargetService';
 export class TargetService {
   constructor(
     private readonly targetRepository: ITargetRepository,
-    private readonly gitPort: IGitPort,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.INFO,
     ),
   ) {
     this.logger.info('TargetService initialized');
+  }
+
+  async findById(targetId: TargetId): Promise<Target | null> {
+    this.logger.info('Finding target by ID', {
+      targetId,
+    });
+
+    try {
+      const target = await this.targetRepository.findById(targetId);
+
+      if (target) {
+        this.logger.info('Target found successfully', {
+          targetId,
+          name: target.name,
+        });
+      } else {
+        this.logger.info('Target not found', {
+          targetId,
+        });
+      }
+
+      return target;
+    } catch (error) {
+      this.logger.error('Failed to find target by ID', {
+        targetId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   }
 
   async getTargetsByGitRepoId(gitRepoId: GitRepoId): Promise<Target[]> {
@@ -59,44 +87,6 @@ export class TargetService {
       this.logger.error('Failed to add target', {
         targetId: target.id,
         name: target.name,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }
-
-  async getRepositoryByTargetId(targetId: TargetId) {
-    this.logger.info('Getting repository by target ID', {
-      targetId,
-    });
-
-    try {
-      const target = await this.targetRepository.findById(targetId);
-      if (!target) {
-        this.logger.error('Target not found', { targetId });
-        throw new Error(`Target with id ${targetId} not found`);
-      }
-
-      const repository = await this.gitPort.getRepositoryById(target.gitRepoId);
-      if (!repository) {
-        this.logger.error('Repository not found for target', {
-          targetId,
-          gitRepoId: target.gitRepoId,
-        });
-        throw new Error(`Repository with id ${target.gitRepoId} not found`);
-      }
-
-      this.logger.info('Repository found for target successfully', {
-        targetId,
-        repositoryId: repository.id,
-        owner: repository.owner,
-        repo: repository.repo,
-      });
-
-      return { target, repository };
-    } catch (error) {
-      this.logger.error('Failed to get repository by target ID', {
-        targetId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

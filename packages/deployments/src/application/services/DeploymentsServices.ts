@@ -1,6 +1,5 @@
 import { TargetService } from './TargetService';
 import { PackmindLogger } from '@packmind/logger';
-import { IGitPort } from '@packmind/types';
 import { RenderModeConfigurationService } from './RenderModeConfigurationService';
 import { IDeploymentsRepositories } from '../../domain/repositories/IDeploymentsRepositories';
 
@@ -17,13 +16,11 @@ export class DeploymentsServices {
 
   constructor(
     private readonly deploymentsRepositories: IDeploymentsRepositories,
-    private readonly gitPort: IGitPort,
     private readonly logger: PackmindLogger,
   ) {
     // Initialize all services with their respective repositories from the aggregator
     this.targetService = new TargetService(
       this.deploymentsRepositories.getTargetRepository(),
-      this.gitPort,
       this.logger,
     );
     this.renderModeConfigurationService = new RenderModeConfigurationService(

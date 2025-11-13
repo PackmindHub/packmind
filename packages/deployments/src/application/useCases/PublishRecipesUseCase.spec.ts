@@ -59,6 +59,7 @@ describe('PublishRecipesUseCase', () => {
 
     mockGitPort = {
       commitToGit: jest.fn(),
+      getRepositoryById: jest.fn(),
     } as unknown as jest.Mocked<IGitPort>;
 
     mockCodingAgentPort = {
@@ -72,7 +73,8 @@ describe('PublishRecipesUseCase', () => {
     } as unknown as jest.Mocked<IRecipesDeploymentRepository>;
 
     mockTargetService = {
-      getRepositoryByTargetId: jest.fn(),
+      findById: jest.fn(),
+      getTargetsByGitRepoId: jest.fn(),
     } as unknown as jest.Mocked<TargetService>;
 
     mockRenderModeConfigurationService = {
@@ -147,10 +149,8 @@ describe('PublishRecipesUseCase', () => {
       };
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
-      mockTargetService.getRepositoryByTargetId.mockResolvedValue({
-        target,
-        repository: gitRepo,
-      });
+      mockTargetService.findById.mockResolvedValue(target);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockRecipesDeploymentRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
       );
@@ -251,10 +251,8 @@ describe('PublishRecipesUseCase', () => {
       const noChangesError = new Error('NO_CHANGES_DETECTED');
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
-      mockTargetService.getRepositoryByTargetId.mockResolvedValue({
-        target,
-        repository: gitRepo,
-      });
+      mockTargetService.findById.mockResolvedValue(target);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockRecipesDeploymentRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
       );
@@ -358,10 +356,8 @@ describe('PublishRecipesUseCase', () => {
         return Promise.resolve(null);
       });
 
-      mockTargetService.getRepositoryByTargetId.mockResolvedValue({
-        target,
-        repository: gitRepo,
-      });
+      mockTargetService.findById.mockResolvedValue(target);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockRecipesDeploymentRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
       );

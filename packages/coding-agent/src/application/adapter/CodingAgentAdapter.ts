@@ -22,15 +22,15 @@ const origin = 'CodingAgentAdapter';
 export class CodingAgentAdapter
   implements IBaseAdapter<ICodingAgentPort>, ICodingAgentPort
 {
-  private standardsPort!: IStandardsPort;
-  private gitPort!: IGitPort;
-  private codingAgentServices!: CodingAgentServices;
-  private codingAgentRepositories!: ICodingAgentRepositories;
+  private standardsPort: IStandardsPort | null = null;
+  private gitPort: IGitPort | null = null;
 
   private _prepareRecipesDeploymentUseCase!: PrepareRecipesDeploymentUseCase;
   private _prepareStandardsDeploymentUseCase!: PrepareStandardsDeploymentUseCase;
 
   constructor(
+    private readonly codingAgentRepositories: ICodingAgentRepositories,
+    private readonly codingAgentServices: CodingAgentServices,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info(
@@ -43,24 +43,18 @@ export class CodingAgentAdapter
    * All ports in signature are REQUIRED.
    * Services are provided by Hexa after recreating with ports.
    */
-  public initialize(params: {
-    ports: {
-      [IStandardsPortName]: IStandardsPort;
-      [IGitPortName]: IGitPort;
-    };
-    services: CodingAgentServices;
-    repositories: ICodingAgentRepositories;
+  public initialize(ports: {
+    [IStandardsPortName]: IStandardsPort;
+    [IGitPortName]: IGitPort;
   }): void {
     this.logger.info('Initializing CodingAgentAdapter with ports and services');
 
     // Step 1: Set all ports
-    this.standardsPort = params.ports[IStandardsPortName];
-    this.gitPort = params.ports[IGitPortName];
-    this.codingAgentServices = params.services;
-    this.codingAgentRepositories = params.repositories;
+    this.standardsPort = ports[IStandardsPortName];
+    this.gitPort = ports[IGitPortName];
 
     // Step 2: Validate all required dependencies are set
-    if (!this.isReady()) {
+    if (!this.standardsPort || !this.gitPort) {
       throw new Error(
         'CodingAgentAdapter: Required ports/services not provided',
       );
@@ -86,10 +80,10 @@ export class CodingAgentAdapter
    */
   public isReady(): boolean {
     return (
-      this.standardsPort !== undefined &&
-      this.gitPort !== undefined &&
-      this.codingAgentServices !== undefined &&
-      this.codingAgentRepositories !== undefined
+      this.standardsPort != null &&
+      this.gitPort != null &&
+      this.codingAgentServices != null &&
+      this.codingAgentRepositories != null
     );
   }
 

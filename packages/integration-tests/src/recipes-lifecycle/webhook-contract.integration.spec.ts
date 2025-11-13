@@ -1,6 +1,12 @@
 import { GitCommitSchema } from '@packmind/git';
 import { gitCommitFactory } from '@packmind/git/test';
 import {
+  UpdateRecipesAndGenerateSummariesCallback,
+  UpdateRecipesAndGenerateSummariesInput,
+  DeployRecipesCallback,
+  DeployRecipesInput,
+} from '@packmind/recipes';
+import {
   createRecipesDeploymentId,
   createTargetId,
   createUserId,
@@ -114,7 +120,9 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
       );
 
       // Get the recipes delayed jobs to mock them
-      const recipesDelayedJobs = testApp.recipesHexa.getRecipesDelayedJobs();
+      const recipesDelayedJobs =
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (testApp.recipesHexa.getAdapter() as any).getRecipesDelayedJobs();
 
       // Mock UpdateRecipesAndGenerateSummaries delayed job to execute synchronously
       jest
@@ -122,7 +130,10 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
           recipesDelayedJobs.updateRecipesAndGenerateSummariesDelayedJob,
           'addJobWithCallback',
         )
-        .mockImplementation(async (input, callback) => {
+        .mockImplementation((async (
+          input: UpdateRecipesAndGenerateSummariesInput,
+          callback?: UpdateRecipesAndGenerateSummariesCallback,
+        ) => {
           // Execute the actual job logic synchronously
           const result =
             await recipesDelayedJobs.updateRecipesAndGenerateSummariesDelayedJob.runJob(
@@ -137,12 +148,16 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
           }
 
           return 'update-job-id';
-        });
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        }) as any);
 
       // Mock DeployRecipes delayed job to execute synchronously
       jest
         .spyOn(recipesDelayedJobs.deployRecipesDelayedJob, 'addJobWithCallback')
-        .mockImplementation(async (input, callback) => {
+        .mockImplementation((async (
+          input: DeployRecipesInput,
+          callback?: DeployRecipesCallback,
+        ) => {
           // Execute the actual job logic synchronously
           const result =
             await recipesDelayedJobs.deployRecipesDelayedJob.runJob(
@@ -157,7 +172,8 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
           }
 
           return 'deploy-job-id';
-        });
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        }) as any);
 
       // Mock addFetchFileContentJob to immediately execute callback
       jest

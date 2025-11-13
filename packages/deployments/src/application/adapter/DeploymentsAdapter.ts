@@ -66,29 +66,15 @@ import { PullAllContentUseCase } from '../useCases/PullAllContentUseCase';
 import { UpdateRenderModeConfigurationUseCase } from '../useCases/UpdateRenderModeConfigurationUseCase';
 import { UpdateTargetUseCase } from '../useCases/UpdateTargetUseCase';
 
-// Import the type to avoid circular dependency
-type DeploymentsHexaType = {
-  repositories: {
-    getStandardsDeploymentRepository(): IStandardsDeploymentRepository;
-    getRecipesDeploymentRepository(): IRecipesDeploymentRepository;
-  };
-};
-
 export class DeploymentsAdapter
   implements IBaseAdapter<IDeploymentPort>, IDeploymentPort
 {
-  private readonly standardDeploymentRepository: IStandardsDeploymentRepository;
-  private readonly recipesDeploymentRepository: IRecipesDeploymentRepository;
-
-  // All ports are REQUIRED - no optional syntax
-  // Use definite assignment (!) - initialized in initialize()
-  private deploymentsServices!: DeploymentsServices;
-  private gitPort!: IGitPort;
-  private recipesPort!: IRecipesPort;
-  private codingAgentPort!: ICodingAgentPort;
-  private standardsPort!: IStandardsPort;
-  private spacesPort!: ISpacesPort;
-  private accountsPort!: IAccountsPort;
+  private gitPort: IGitPort | null = null;
+  private recipesPort: IRecipesPort | null = null;
+  private codingAgentPort: ICodingAgentPort | null = null;
+  private standardsPort: IStandardsPort | null = null;
+  private spacesPort: ISpacesPort | null = null;
+  private accountsPort: IAccountsPort | null = null;
 
   // Use cases - initialized in initialize()
   private _listDeploymentsByRecipeUseCase!: ListDeploymentsByRecipeUseCase;
@@ -110,12 +96,11 @@ export class DeploymentsAdapter
   private _updateRenderModeConfigurationUseCase!: UpdateRenderModeConfigurationUseCase;
   private _pullAllContentUseCase!: PullAllContentUseCase;
 
-  constructor(deploymentsHexa: DeploymentsHexaType) {
-    this.standardDeploymentRepository =
-      deploymentsHexa.repositories.getStandardsDeploymentRepository();
-    this.recipesDeploymentRepository =
-      deploymentsHexa.repositories.getRecipesDeploymentRepository();
-  }
+  constructor(
+    private readonly deploymentsServices: DeploymentsServices,
+    private readonly standardDeploymentRepository: IStandardsDeploymentRepository,
+    private readonly recipesDeploymentRepository: IRecipesDeploymentRepository,
+  ) {}
 
   /**
    * Initialize adapter with ports and services from registry.
@@ -128,7 +113,6 @@ export class DeploymentsAdapter
     [IStandardsPortName]: IStandardsPort;
     [ISpacesPortName]: ISpacesPort;
     [IAccountsPortName]: IAccountsPort;
-    deploymentsServices: DeploymentsServices;
   }): void {
     // Step 1: Set all ports
     this.gitPort = ports[IGitPortName];
@@ -137,10 +121,17 @@ export class DeploymentsAdapter
     this.standardsPort = ports[IStandardsPortName];
     this.spacesPort = ports[ISpacesPortName];
     this.accountsPort = ports[IAccountsPortName];
-    this.deploymentsServices = ports.deploymentsServices;
 
     // Step 2: Validate all required ports are set
-    if (!this.isReady()) {
+    if (
+      !this.gitPort &&
+      !this.recipesPort &&
+      !this.codingAgentPort &&
+      !this.standardsPort &&
+      !this.spacesPort &&
+      !this.accountsPort &&
+      !this.deploymentsServices
+    ) {
       throw new Error('DeploymentsAdapter: Required ports not provided');
     }
 
@@ -256,13 +247,13 @@ export class DeploymentsAdapter
 
   public isReady(): boolean {
     return (
-      this.gitPort !== undefined &&
-      this.recipesPort !== undefined &&
-      this.codingAgentPort !== undefined &&
-      this.standardsPort !== undefined &&
-      this.spacesPort !== undefined &&
-      this.accountsPort !== undefined &&
-      this.deploymentsServices !== undefined
+      this.gitPort != null &&
+      this.recipesPort != null &&
+      this.codingAgentPort != null &&
+      this.standardsPort != null &&
+      this.spacesPort != null &&
+      this.accountsPort != null &&
+      this.deploymentsServices != null
     );
   }
 

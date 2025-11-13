@@ -110,13 +110,11 @@ const origin = 'AccountsAdapter';
 export class AccountsAdapter
   implements IBaseAdapter<IAccountsPort>, IAccountsPort
 {
-  // All ports are optional - adapter can function without any ports
-  private spacesPort?: ISpacesPort;
-  private gitPort?: IGitPort;
-  private standardsPort?: IStandardsPort;
-  private deploymentPort?: IDeploymentPort;
+  private spacesPort: ISpacesPort | null = null;
+  private gitPort: IGitPort | null = null;
+  private standardsPort: IStandardsPort | null = null;
+  private deploymentPort: IDeploymentPort | null = null;
 
-  // Use cases - initialized in initialize()
   private _signUpWithOrganization!: ISignUpWithOrganizationUseCase;
   private _signInUser!: ISignInUserUseCase;
   private _getUserById!: IGetUserByIdUseCase;
@@ -154,10 +152,10 @@ export class AccountsAdapter
    * All ports are optional - adapter can function without any of them.
    */
   public initialize(ports: {
-    [ISpacesPortName]?: ISpacesPort;
-    [IGitPortName]?: IGitPort;
-    [IStandardsPortName]?: IStandardsPort;
-    [IDeploymentPortName]?: IDeploymentPort;
+    [ISpacesPortName]: ISpacesPort;
+    [IGitPortName]: IGitPort;
+    [IStandardsPortName]: IStandardsPort;
+    [IDeploymentPortName]: IDeploymentPort;
   }): void {
     this.logger.info('Initializing AccountsAdapter with optional ports');
 
@@ -166,6 +164,15 @@ export class AccountsAdapter
     this.gitPort = ports[IGitPortName];
     this.standardsPort = ports[IStandardsPortName];
     this.deploymentPort = ports[IDeploymentPortName];
+
+    if (
+      !this.spacesPort ||
+      !this.gitPort ||
+      !this.standardsPort ||
+      !this.deploymentPort
+    ) {
+      throw new Error('Required ports are missing');
+    }
 
     // Create all use cases with ports
     this._signUpWithOrganization = new SignUpWithOrganizationUseCase(
@@ -298,14 +305,19 @@ export class AccountsAdapter
    * AccountsAdapter is always ready since all ports are optional.
    */
   public isReady(): boolean {
-    return true;
+    return (
+      this.gitPort !== null &&
+      this.spacesPort !== null &&
+      this.standardsPort !== null &&
+      this.deploymentPort !== null
+    );
   }
 
   /**
    * Get the port interface this adapter implements.
    */
   public getPort(): IAccountsPort {
-    return this as IAccountsPort;
+    return this;
   }
 
   // User-related use cases
