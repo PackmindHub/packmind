@@ -139,7 +139,7 @@ describe('DetectionAssessmentDrawer', () => {
 
     it('does not render the drawer content', () => {
       expect(
-        screen.queryByText('Detection Assessment Details'),
+        screen.queryByText('Rule detection assessment'),
       ).not.toBeInTheDocument();
     });
   });
@@ -168,9 +168,7 @@ describe('DetectionAssessmentDrawer', () => {
 
     it('renders the drawer title', () => {
       screen = renderWithContext();
-      expect(
-        screen.getByText('Detection Assessment Details'),
-      ).toBeInTheDocument();
+      expect(screen.getByText('Rule detection assessment')).toBeInTheDocument();
     });
 
     describe('when assessment has details', () => {

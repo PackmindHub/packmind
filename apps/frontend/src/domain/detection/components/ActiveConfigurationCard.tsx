@@ -4,7 +4,6 @@ import {
   PMBox,
   PMButton,
   PMEllipsisMenuAction,
-  PMFeatureFlag,
   PMHStack,
   PMIcon,
   PMText,
@@ -12,10 +11,14 @@ import {
   PMVStack,
   DETECTION_ASSESSMENT_DRAWER_FEATURE_KEY,
   DEFAULT_FEATURE_DOMAIN_MAP,
+  isFeatureFlagEnabled,
 } from '@packmind/ui';
 import { DetectionProgram } from '@packmind/types';
 import { DetectionStatus } from '@packmind/types';
-import { useGetRuleDetectionAssessmentQuery } from '../api/queries/DetectionProgramQueries';
+import {
+  useGetRuleDetectionAssessmentQuery,
+  useGetDetectionHeuristicsQuery,
+} from '../api/queries/DetectionProgramQueries';
 import { useGetMeQuery } from '../../accounts/api/queries/UserQueries';
 import { ConfigurationCard, ConfigurationCardProps } from './ConfigurationCard';
 import { DraftCardData } from './DetectionDraftCard';
@@ -64,11 +67,51 @@ export const ActiveConfigurationCard: React.FC<
   activatingDraftId,
   isActivatingDraft = false,
 }) => {
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  const { data: assessment } = useGetRuleDetectionAssessmentQuery(
+    standardId,
+    ruleId,
+    configuration.language,
+  );
+
+  const { data: detectionHeuristics } = useGetDetectionHeuristicsQuery(
+    standardId,
+    ruleId,
+    configuration.language,
+  );
+
+  const { data: meData } = useGetMeQuery();
+  const userEmail = meData?.authenticated === true ? meData.user.email : null;
+
+  const isAssessmentFeatureEnabled = isFeatureFlagEnabled({
+    featureKeys: [DETECTION_ASSESSMENT_DRAWER_FEATURE_KEY],
+    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
+    userEmail,
+  });
+
   const testProgramAction: PMEllipsisMenuAction = {
     value: 'test',
     content: 'Test program',
     onClick: () => onTestProgram(configuration),
   };
+
+  const assessmentAction: PMEllipsisMenuAction = {
+    value: 'assessment',
+    content: 'Assessment',
+    onClick: () => setIsDrawerOpen(true),
+  };
+
+  const addAssessmentAction = (menuActions: PMEllipsisMenuAction[]) => {
+    if (
+      isAssessmentFeatureEnabled &&
+      detectionHeuristics &&
+      detectionHeuristics.heuristics.length
+    ) {
+      menuActions.push(assessmentAction);
+    }
+  };
+
   const configurationCardProps: ConfigurationCardProps = {
     id: configuration.id,
     language: configuration.language,
@@ -78,21 +121,38 @@ export const ActiveConfigurationCard: React.FC<
   let configurationCardChildren: ReactNode | null = null;
   let mainButtonProps: IPMButtonProps | null | undefined;
 
+  addAssessmentAction(configurationCardProps.menuActions);
+
   switch (configuration.state) {
     case ActiveConfigurationState.NO_CONFIG:
       return (
-        <ActiveConfigurationCardAssessment
-          id={configuration.id}
-          ruleId={ruleId}
-          standardId={standardId}
-          language={configuration.language}
-          isGenerating={isGenerating}
-          onGenerateProgram={() =>
-            onGenerateProgram
-              ? onGenerateProgram(configuration.language)
-              : undefined
-          }
-        />
+        <>
+          <ActiveConfigurationCardAssessment
+            id={configuration.id}
+            ruleId={ruleId}
+            standardId={standardId}
+            language={configuration.language}
+            isGenerating={isGenerating}
+            onGenerateProgram={() =>
+              onGenerateProgram
+                ? onGenerateProgram(configuration.language)
+                : undefined
+            }
+            onOpenDrawer={() => setIsDrawerOpen(true)}
+            userEmail={userEmail}
+            isAssessmentFeatureEnabled={isAssessmentFeatureEnabled}
+          />
+          {assessment && isAssessmentFeatureEnabled && (
+            <DetectionAssessmentDrawer
+              isOpen={isDrawerOpen}
+              onClose={() => setIsDrawerOpen(false)}
+              assessment={assessment}
+              standardId={standardId}
+              ruleId={ruleId}
+              language={configuration.language}
+            />
+          )}
+        </>
       );
 
     case ActiveConfigurationState.IN_PROGRESS:
@@ -146,9 +206,21 @@ export const ActiveConfigurationCard: React.FC<
   }
 
   return (
-    <ConfigurationCard {...configurationCardProps}>
-      {configurationCardChildren}
-    </ConfigurationCard>
+    <>
+      <ConfigurationCard {...configurationCardProps}>
+        {configurationCardChildren}
+      </ConfigurationCard>
+      {assessment && isAssessmentFeatureEnabled && (
+        <DetectionAssessmentDrawer
+          isOpen={isDrawerOpen}
+          onClose={() => setIsDrawerOpen(false)}
+          assessment={assessment}
+          standardId={standardId}
+          ruleId={ruleId}
+          language={configuration.language}
+        />
+      )}
+    </>
   );
 };
 
@@ -223,20 +295,33 @@ type ActiveConfigurationCardAssessmentProps = {
   ruleId: string;
   isGenerating: boolean;
   onGenerateProgram: () => void;
+  onOpenDrawer: () => void;
+  userEmail: string | null;
+  isAssessmentFeatureEnabled: boolean;
 };
 const ActiveConfigurationCardAssessment: React.FC<
   ActiveConfigurationCardAssessmentProps
-> = ({ id, language, standardId, ruleId, isGenerating, onGenerateProgram }) => {
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-
+> = ({
+  id,
+  language,
+  standardId,
+  ruleId,
+  isGenerating,
+  onGenerateProgram,
+  onOpenDrawer,
+  isAssessmentFeatureEnabled,
+}) => {
   const { data: assessment } = useGetRuleDetectionAssessmentQuery(
     standardId,
     ruleId,
     language,
   );
 
-  const { data: meData } = useGetMeQuery();
-  const userEmail = meData?.authenticated === true ? meData.user.email : null;
+  const { data: detectionHeuristics } = useGetDetectionHeuristicsQuery(
+    standardId,
+    ruleId,
+    language,
+  );
 
   const configurationCardProps: ConfigurationCardProps = {
     id,
@@ -260,54 +345,30 @@ const ActiveConfigurationCardAssessment: React.FC<
         </PMVStack>
       );
 
-      configurationCardProps.mainAction = (
-        <PMFeatureFlag
-          featureKeys={[DETECTION_ASSESSMENT_DRAWER_FEATURE_KEY]}
-          featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
-          userEmail={userEmail}
-        >
-          <PMButton
-            size="sm"
-            variant="outline"
-            onClick={() => setIsDrawerOpen(true)}
-          >
-            View Details
+      if (isAssessmentFeatureEnabled && detectionHeuristics) {
+        configurationCardProps.mainAction = (
+          <PMButton size="sm" variant="outline" onClick={onOpenDrawer}>
+            Refine
           </PMButton>
-        </PMFeatureFlag>
-      );
+        );
+      }
 
       return (
-        <>
-          <ConfigurationCard {...configurationCardProps}>
-            <PMHStack>
-              <PMText color="faded" fontSize="sm">
-                This rule can not be automated.
-              </PMText>
-              <PMTooltip label={tooltipLabel} placement="top">
-                <PMIcon
-                  as={RxQuestionMarkCircled}
-                  color={'text.tertiary'}
-                  boxSize={4}
-                  cursor="help"
-                />
-              </PMTooltip>
-            </PMHStack>
-          </ConfigurationCard>
-          <PMFeatureFlag
-            featureKeys={[DETECTION_ASSESSMENT_DRAWER_FEATURE_KEY]}
-            featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
-            userEmail={userEmail}
-          >
-            <DetectionAssessmentDrawer
-              isOpen={isDrawerOpen}
-              onClose={() => setIsDrawerOpen(false)}
-              assessment={assessment}
-              standardId={standardId}
-              ruleId={ruleId}
-              language={language}
-            />
-          </PMFeatureFlag>
-        </>
+        <ConfigurationCard {...configurationCardProps}>
+          <PMHStack>
+            <PMText color="faded" fontSize="sm">
+              This rule can not be automated.
+            </PMText>
+            <PMTooltip label={tooltipLabel} placement="top">
+              <PMIcon
+                as={RxQuestionMarkCircled}
+                color={'text.tertiary'}
+                boxSize={4}
+                cursor="help"
+              />
+            </PMTooltip>
+          </PMHStack>
+        </ConfigurationCard>
       );
     }
 

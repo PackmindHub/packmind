@@ -65,7 +65,7 @@ export const DetectionAssessmentDrawer: React.FC<
   }, [assessment.status, activePrograms, language]);
 
   useEffect(() => {
-    if (detectionHeuristics && detectionHeuristics.heuristics.length) {
+    if (detectionHeuristics && Array.isArray(detectionHeuristics.heuristics)) {
       // Join array with newlines for display in textarea
       setHeuristicsText(detectionHeuristics.heuristics.join('\n'));
       setHasChanges(false);
@@ -129,7 +129,7 @@ export const DetectionAssessmentDrawer: React.FC<
         <PMDrawer.Positioner>
           <PMDrawer.Content>
             <PMDrawer.Header>
-              <PMDrawer.Title>Detection Assessment Details</PMDrawer.Title>
+              <PMDrawer.Title>Rule detection assessment</PMDrawer.Title>
             </PMDrawer.Header>
             <PMDrawer.Body>
               <PMVStack>
@@ -159,13 +159,16 @@ export const DetectionAssessmentDrawer: React.FC<
                   {isLoadingHeuristics ? (
                     <PMText color="faded">Loading heuristics...</PMText>
                   ) : (
-                    <PMTextArea
-                      value={heuristicsText ?? ''}
-                      onChange={handleHeuristicsChange}
-                      placeholder="Enter detection heuristics..."
-                      rows={10}
-                      disabled={!isEditable || updateHeuristics.isPending}
-                    />
+                    <>
+                      <PMTextArea
+                        value={heuristicsText ?? ''}
+                        onChange={handleHeuristicsChange}
+                        placeholder="Enter detection heuristics..."
+                        rows={10}
+                        disabled={!isEditable || updateHeuristics.isPending}
+                        maxLength={3000}
+                      />
+                    </>
                   )}
                   <PMHStack gap={2} justify="flex-end" width="full">
                     {detectionHeuristics && isEditable && (
