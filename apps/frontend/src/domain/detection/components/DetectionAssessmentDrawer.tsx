@@ -5,7 +5,9 @@ import {
   PMCloseButton,
   PMDrawer,
   PMHStack,
+  PMInput,
   PMPortal,
+  PMRadioGroup,
   PMText,
   PMTextArea,
   PMVStack,
@@ -30,11 +32,15 @@ interface DetectionAssessmentDrawerProps {
   language: string;
 }
 
+const OTHER_ANSWER_VALUE = '__OTHER__';
+
 export const DetectionAssessmentDrawer: React.FC<
   DetectionAssessmentDrawerProps
 > = ({ isOpen, onClose, assessment, standardId, ruleId, language }) => {
   const [heuristicsText, setHeuristicsText] = useState('');
   const [hasChanges, setHasChanges] = useState(false);
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [otherAnswerText, setOtherAnswerText] = useState('');
 
   const { data: detectionHeuristics, isLoading: isLoadingHeuristics } =
     useGetDetectionHeuristicsQuery(standardId, ruleId, language);
@@ -82,17 +88,66 @@ export const DetectionAssessmentDrawer: React.FC<
     [detectionHeuristics],
   );
 
+  const handleAnswerChange = useCallback((value: string | null) => {
+    setSelectedAnswer(value);
+    if (value !== OTHER_ANSWER_VALUE) {
+      setOtherAnswerText('');
+    }
+  }, []);
+
+  const handleOtherAnswerTextChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setOtherAnswerText(e.target.value);
+    },
+    [],
+  );
+
+  const isSaveDisabled = useCallback(() => {
+    if (updateHeuristics.isPending) {
+      return true;
+    }
+
+    const hasHeuristicsChanges = hasChanges;
+    const hasAnswerSelected = selectedAnswer !== null;
+
+    if (!hasHeuristicsChanges && !hasAnswerSelected) {
+      return true;
+    }
+
+    if (selectedAnswer === OTHER_ANSWER_VALUE && !otherAnswerText.trim()) {
+      return true;
+    }
+
+    return false;
+  }, [updateHeuristics.isPending, hasChanges, selectedAnswer, otherAnswerText]);
+
   const handleSave = useCallback(() => {
     if (!detectionHeuristics?.id) {
-      console.error('No detection heuristics ID available');
       return;
     }
 
-    // Split by newlines and filter out empty lines
     const heuristicsArray = heuristicsText
       .split('\n')
       .map((line) => line.trim())
       .filter((line) => line.length > 0);
+
+    let clarificationQuestion:
+      | { question: string; answer: string }
+      | undefined = undefined;
+
+    if (selectedAnswer !== null && assessment.clarificationQuestion) {
+      const answer =
+        selectedAnswer === OTHER_ANSWER_VALUE
+          ? otherAnswerText.trim()
+          : selectedAnswer;
+
+      if (answer) {
+        clarificationQuestion = {
+          question: assessment.clarificationQuestion,
+          answer,
+        };
+      }
+    }
 
     updateHeuristics.mutate(
       {
@@ -100,13 +155,13 @@ export const DetectionAssessmentDrawer: React.FC<
         ruleId,
         detectionHeuristicsId: detectionHeuristics.id,
         heuristics: heuristicsArray,
+        clarificationQuestion,
       },
       {
         onSuccess: () => {
           setHasChanges(false);
-        },
-        onError: (error) => {
-          console.error('Failed to update detection heuristics:', error);
+          setSelectedAnswer(null);
+          setOtherAnswerText('');
         },
       },
     );
@@ -116,6 +171,9 @@ export const DetectionAssessmentDrawer: React.FC<
     standardId,
     ruleId,
     updateHeuristics,
+    selectedAnswer,
+    otherAnswerText,
+    assessment.clarificationQuestion,
   ]);
 
   return (
@@ -168,13 +226,79 @@ export const DetectionAssessmentDrawer: React.FC<
                         disabled={!isEditable || updateHeuristics.isPending}
                         maxLength={3000}
                       />
+
+                      {assessment.clarificationQuestion &&
+                        assessment.clarificationAnswers &&
+                        isEditable && (
+                          <PMVStack
+                            gap={3}
+                            align="flex-start"
+                            width="full"
+                            mt={4}
+                          >
+                            <PMText fontWeight="medium">
+                              Clarification Question:
+                            </PMText>
+                            <PMBox
+                              borderRadius="md"
+                              borderWidth={1}
+                              borderColor="border.tertiary"
+                              p={3}
+                              width="full"
+                            >
+                              <PMText mb={3}>
+                                {assessment.clarificationQuestion}
+                              </PMText>
+                              <PMRadioGroup.Root
+                                value={selectedAnswer ?? undefined}
+                                onValueChange={(details) =>
+                                  handleAnswerChange(details.value)
+                                }
+                              >
+                                <PMVStack gap={2} align="flex-start">
+                                  {assessment.clarificationAnswers.map(
+                                    (answer) => (
+                                      <PMRadioGroup.Item
+                                        key={answer}
+                                        value={answer}
+                                      >
+                                        <PMRadioGroup.ItemHiddenInput />
+                                        <PMRadioGroup.ItemControl />
+                                        <PMRadioGroup.ItemText>
+                                          {answer}
+                                        </PMRadioGroup.ItemText>
+                                      </PMRadioGroup.Item>
+                                    ),
+                                  )}
+                                  <PMRadioGroup.Item value={OTHER_ANSWER_VALUE}>
+                                    <PMRadioGroup.ItemHiddenInput />
+                                    <PMRadioGroup.ItemControl />
+                                    <PMRadioGroup.ItemText>
+                                      Other
+                                    </PMRadioGroup.ItemText>
+                                  </PMRadioGroup.Item>
+                                </PMVStack>
+                              </PMRadioGroup.Root>
+                              {selectedAnswer === OTHER_ANSWER_VALUE && (
+                                <PMBox mt={2} ml={6}>
+                                  <PMInput
+                                    placeholder="Please specify..."
+                                    value={otherAnswerText}
+                                    onChange={handleOtherAnswerTextChange}
+                                    disabled={updateHeuristics.isPending}
+                                  />
+                                </PMBox>
+                              )}
+                            </PMBox>
+                          </PMVStack>
+                        )}
                     </>
                   )}
                   <PMHStack gap={2} justify="flex-end" width="full">
                     {detectionHeuristics && isEditable && (
                       <PMButton
                         onClick={handleSave}
-                        disabled={!hasChanges || updateHeuristics.isPending}
+                        disabled={isSaveDisabled()}
                         loading={updateHeuristics.isPending}
                       >
                         Save Changes
