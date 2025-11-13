@@ -1,0 +1,13 @@
+---
+globs: **/frontend/src/components/**/*.tsx
+alwaysApply: false
+---
+## Standard: Front-end UI and Design Systems
+
+Adopt consistent UI component usage by importing from '@packmind/ui' instead of '@chakra-ui' in React applications to ensure uniformity in design and maintainability across the front-end codebase. :
+* Never use vanilla HTML tags in frontend code, only @packmind/ui components
+* Prefer using the design token 'full' instead of the literal value '100%' for width or height in UI components.
+* Use components imported from '@packmind/ui' instead of '@chakra-ui' packages to keep a consistent UI abstraction, e.g.  `import { PMButton } from '@packmind/ui';
+* Use only semantic tokens to customize @packmind/ui components.
+
+Full standard is available here for further request: [Front-end UI and Design Systems](../../../.packmind/standards/front-end-ui-and-design-systems.md)

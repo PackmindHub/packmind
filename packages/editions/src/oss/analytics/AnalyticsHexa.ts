@@ -1,45 +1,37 @@
 import { DataSource } from 'typeorm';
-import { BaseHexa, HexaRegistry } from '@packmind/node-utils';
+import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
+import { IAnalyticsPort, IAnalyticsPortName } from '@packmind/types';
+import { AnalyticsAdapter } from './AnalyticsAdapter';
 
-export class AnalyticsHexa extends BaseHexa {
-  constructor(dataSource: DataSource) {
-    super(dataSource);
+export type AnalyticsHexaOpts = BaseHexaOpts;
+
+export class AnalyticsHexa extends BaseHexa<AnalyticsHexaOpts, IAnalyticsPort> {
+  private readonly adapter: AnalyticsAdapter;
+
+  constructor(dataSource: DataSource, opts?: Partial<AnalyticsHexaOpts>) {
+    super(dataSource, opts);
+    this.adapter = new AnalyticsAdapter();
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async initialize(registry: HexaRegistry): Promise<void> {
-    // No adapters needed
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public async trackRecipeUsage(command: {
-    recipeSlugs: string[];
-    aiAgent: string;
-    userId: string;
-    organizationId: string;
-    gitRepo?: string;
-    target?: string;
-  }): Promise<never[]> {
-    throw new Error(
-      'Tracking recipes usage is not available in your version of Packmind. Upgrade to benefit from this feature.',
-    );
+    // No adapters needed for OSS edition
   }
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   destroy(): void {}
 
   /**
-   * AnalyticsHexa does not expose an adapter (no cross-domain port).
+   * Returns the AnalyticsAdapter for cross-domain integration.
    */
-  public getAdapter(): void {
-    return undefined;
+  public getAdapter(): IAnalyticsPort {
+    return this.adapter;
   }
 
   /**
-   * Get the port name for this hexa.
-   * AnalyticsHexa does not expose a port adapter.
+   * Returns the port name for registry registration.
    */
   public getPortName(): string {
-    throw new Error('AnalyticsHexa does not expose a port adapter');
+    return IAnalyticsPortName;
   }
 }

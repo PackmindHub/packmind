@@ -2,3 +2,4 @@ npx pretty-quick --staged
 npm run typecheck:frontend
 nx affected:lint --parallel --uncommitted
 nx affected:test --parallel --passWithNoTests
+npx packmind-cli scan --spaces="Packmind V3" --formatters=console --errorIfResults=true --mode=onlyChanged --extensions=.ts,.tsx
