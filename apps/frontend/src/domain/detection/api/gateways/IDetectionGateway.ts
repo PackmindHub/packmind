@@ -89,6 +89,6 @@ export interface IDetectionGateway {
     standardId: string,
     ruleId: string,
     detectionHeuristicsId: string,
-    heuristics: string,
+    heuristics: string[],
   ): Promise<DetectionHeuristics>;
 }

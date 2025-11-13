@@ -107,14 +107,17 @@ export class RuleDetectionAssessmentService extends AIRequestEmitter {
     let updatedPrompt = prompt.replace('$CODING_RULE$', ruleText);
 
     // Inject heuristics section if they exist and are not empty
-    if (existingHeuristics && existingHeuristics.heuristics.trim() !== '') {
+    if (existingHeuristics && existingHeuristics.heuristics.length > 0) {
+      const formattedHeuristics = existingHeuristics.heuristics
+        .map((h) => `* ${h}`)
+        .join('\n');
       const heuristicsSection = `
 ## Detection Heuristics (if available)
 
 The following heuristics may help you assess the detectability of similar rules. Use them to inform your evaluation, but do not rely on them exclusively:
 
 """
-${existingHeuristics.heuristics}
+${formattedHeuristics}
 """
 `;
       updatedPrompt = updatedPrompt.replace(

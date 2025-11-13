@@ -148,7 +148,7 @@ describe('AssessRuleDetectionUseCase', () => {
           id: createDetectionHeuristicsId(uuidv4()),
           ruleId: rule.id,
           language: ProgrammingLanguage.TYPESCRIPT,
-          heuristics: '',
+          heuristics: [],
         },
       });
     });
@@ -269,7 +269,7 @@ describe('AssessRuleDetectionUseCase', () => {
           id: createDetectionHeuristicsId(uuidv4()),
           ruleId: rule.id,
           language: ProgrammingLanguage.TYPESCRIPT,
-          heuristics: '',
+          heuristics: [],
         },
       });
     });
@@ -349,7 +349,7 @@ describe('AssessRuleDetectionUseCase', () => {
         id: createDetectionHeuristicsId('existing-heuristics-id'),
         ruleId: rule.id,
         language: ProgrammingLanguage.TYPESCRIPT,
-        heuristics: 'existing heuristics',
+        heuristics: ['existing heuristics'],
       });
 
       const MockedService = RuleDetectionAssessmentService as jest.MockedClass<
@@ -405,7 +405,7 @@ describe('AssessRuleDetectionUseCase', () => {
           id: createDetectionHeuristicsId(uuidv4()),
           ruleId: rule.id,
           language: ProgrammingLanguage.TYPESCRIPT,
-          heuristics: '',
+          heuristics: [],
         },
       });
 

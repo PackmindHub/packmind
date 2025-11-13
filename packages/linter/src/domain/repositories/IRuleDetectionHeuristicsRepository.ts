@@ -17,7 +17,7 @@ export interface IRuleDetectionHeuristicsRepository {
 
   updateHeuristics(
     id: DetectionHeuristicsId,
-    heuristics: string,
+    heuristics: string[],
   ): Promise<void>;
 
   getHeuristicsById(

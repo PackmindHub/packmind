@@ -23,7 +23,7 @@ export class GenerateRuleHeuristics extends AIRequestEmitter {
 
   public async generateHeuristics(
     detectionProgramRuleInput: DetectionProgramRuleInput,
-  ): Promise<string> {
+  ): Promise<string[]> {
     const prompt = this.buildPrompt(detectionProgramRuleInput);
 
     const MAX_RETRY = 3;
@@ -44,11 +44,17 @@ export class GenerateRuleHeuristics extends AIRequestEmitter {
           throw new Error('No data provided by AI');
         }
 
+        // Split by newlines and filter out empty lines
+        const heuristicsArray = response.data
+          .split('\n')
+          .map((line) => line.trim())
+          .filter((line) => line.length > 0);
+
         this._logger.info(
           `Detection Heuristics for ruleId=${detectionProgramRuleInput.rule.id}:\n${response.data}`,
         );
 
-        return response.data;
+        return heuristicsArray;
       } catch (error) {
         this._logger.error(
           `[TaskId=${this._taskId}] Error when generating detection heuristics for ruleId=${detectionProgramRuleInput.rule.id} ${detectionProgramRuleInput.rule.content} - ${getErrorMessage(error)}`,

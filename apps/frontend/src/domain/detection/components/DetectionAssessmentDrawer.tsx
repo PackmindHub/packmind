@@ -38,7 +38,8 @@ export const DetectionAssessmentDrawer: React.FC<
 
   useEffect(() => {
     if (detectionHeuristics) {
-      setHeuristicsText(detectionHeuristics.heuristics);
+      // Join array with newlines for display in textarea
+      setHeuristicsText(detectionHeuristics.heuristics.join('\n'));
       setHasChanges(false);
     }
   }, [detectionHeuristics]);
@@ -47,7 +48,8 @@ export const DetectionAssessmentDrawer: React.FC<
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const newValue = e.target.value;
       setHeuristicsText(newValue);
-      setHasChanges(newValue !== (detectionHeuristics?.heuristics ?? ''));
+      const originalText = detectionHeuristics?.heuristics.join('\n') ?? '';
+      setHasChanges(newValue !== originalText);
     },
     [detectionHeuristics],
   );
@@ -58,12 +60,18 @@ export const DetectionAssessmentDrawer: React.FC<
       return;
     }
 
+    // Split by newlines and filter out empty lines
+    const heuristicsArray = heuristicsText
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+
     updateHeuristics.mutate(
       {
         standardId,
         ruleId,
         detectionHeuristicsId: detectionHeuristics.id,
-        heuristics: heuristicsText,
+        heuristics: heuristicsArray,
       },
       {
         onSuccess: () => {
@@ -84,7 +92,7 @@ export const DetectionAssessmentDrawer: React.FC<
 
   const handleCancel = useCallback(() => {
     if (detectionHeuristics) {
-      setHeuristicsText(detectionHeuristics.heuristics);
+      setHeuristicsText(detectionHeuristics.heuristics.join('\n'));
       setHasChanges(false);
     }
     onClose();

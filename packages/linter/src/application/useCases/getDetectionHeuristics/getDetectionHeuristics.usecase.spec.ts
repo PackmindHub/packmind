@@ -62,7 +62,7 @@ describe('GetDetectionHeuristicsUseCase', () => {
         id: heuristicsId,
         ruleId,
         language,
-        heuristics: 'Test heuristics content',
+        heuristics: ['Test heuristics content'],
       };
 
       heuristicsRepository.getHeuristicsForRule.mockResolvedValue(
@@ -143,14 +143,14 @@ describe('GetDetectionHeuristicsUseCase', () => {
         id: tsHeuristicsId,
         ruleId,
         language: ProgrammingLanguage.TYPESCRIPT,
-        heuristics: 'TypeScript heuristics',
+        heuristics: ['TypeScript heuristics'],
       };
 
       jsHeuristics = {
         id: jsHeuristicsId,
         ruleId,
         language: ProgrammingLanguage.JAVASCRIPT,
-        heuristics: 'JavaScript heuristics',
+        heuristics: ['JavaScript heuristics'],
       };
     });
 

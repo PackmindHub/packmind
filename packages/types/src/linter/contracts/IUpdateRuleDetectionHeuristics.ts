@@ -6,7 +6,7 @@ import {
 
 export type UpdateRuleDetectionHeuristicsCommand = PackmindCommand & {
   detectionHeuristicsId: DetectionHeuristicsId;
-  heuristics: string;
+  heuristics: string[];
 };
 
 export type UpdateRuleDetectionHeuristicsResponse = {

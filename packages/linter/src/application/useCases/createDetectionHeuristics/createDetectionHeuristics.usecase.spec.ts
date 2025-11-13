@@ -82,7 +82,7 @@ describe('CreateDetectionHeuristicsUseCase', () => {
         expect.objectContaining({
           ruleId,
           language,
-          heuristics: '',
+          heuristics: [],
         }),
       );
     });
@@ -104,7 +104,7 @@ describe('CreateDetectionHeuristicsUseCase', () => {
         expect.objectContaining({
           ruleId,
           language,
-          heuristics: '',
+          heuristics: [],
         }),
       );
     });
@@ -129,7 +129,7 @@ describe('CreateDetectionHeuristicsUseCase', () => {
         id: heuristicsId,
         ruleId,
         language,
-        heuristics: 'Existing heuristics content',
+        heuristics: ['Existing heuristics content'],
       };
 
       heuristicsRepository.getHeuristicsForRule.mockResolvedValue(
@@ -168,9 +168,9 @@ describe('CreateDetectionHeuristicsUseCase', () => {
     it('preserves existing heuristics content', async () => {
       const result = await useCase.execute(command);
 
-      expect(result.detectionHeuristics.heuristics).toBe(
+      expect(result.detectionHeuristics.heuristics).toEqual([
         'Existing heuristics content',
-      );
+      ]);
     });
   });
 

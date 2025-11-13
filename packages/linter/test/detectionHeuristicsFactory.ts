@@ -13,7 +13,7 @@ export const detectionHeuristicsFactory = (
     id: createDetectionHeuristicsId(uuidv4()),
     ruleId: createRuleId(uuidv4()),
     language: ProgrammingLanguage.TYPESCRIPT,
-    heuristics: 'Default heuristics content',
+    heuristics: ['Default heuristics content'],
     ...overrides,
   };
 };

@@ -1431,7 +1431,7 @@ export class LinterController {
     @Param('detectionHeuristicsId')
     detectionHeuristicsId: DetectionHeuristicsId,
     @Req() request: AuthenticatedRequest,
-    @Body() body: { heuristics: string },
+    @Body() body: { heuristics: string[] },
   ): Promise<DetectionHeuristics> {
     const organizationId = request.organization.id;
     const userId = request.user.userId;

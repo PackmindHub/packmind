@@ -84,12 +84,12 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
         id: heuristicsId,
         ruleId,
         language: ProgrammingLanguage.TYPESCRIPT,
-        heuristics: 'old heuristics',
+        heuristics: ['old heuristics'],
       };
 
       updatedHeuristics = {
         ...existingHeuristics,
-        heuristics: 'new heuristics',
+        heuristics: ['new heuristics'],
       };
 
       mockRule = {
@@ -110,7 +110,7 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
         userId,
         organizationId,
         detectionHeuristicsId: heuristicsId,
-        heuristics: 'new heuristics',
+        heuristics: ['new heuristics'],
       };
     });
 
@@ -127,7 +127,7 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
 
       expect(heuristicsRepository.updateHeuristics).toHaveBeenCalledWith(
         heuristicsId,
-        'new heuristics',
+        ['new heuristics'],
       );
     });
 
@@ -166,7 +166,7 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
         userId: createUserId(uuidv4()),
         organizationId: createOrganizationId(uuidv4()),
         detectionHeuristicsId: heuristicsId,
-        heuristics: 'new heuristics',
+        heuristics: ['new heuristics'],
       };
     });
 
@@ -193,12 +193,12 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
         id: heuristicsId,
         ruleId,
         language: ProgrammingLanguage.PYTHON,
-        heuristics: 'existing heuristics',
+        heuristics: ['existing heuristics'],
       };
 
       const updatedHeuristics: DetectionHeuristics = {
         ...existingHeuristics,
-        heuristics: '',
+        heuristics: [],
       };
 
       const mockRule: Rule = {
@@ -219,12 +219,12 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
         userId: createUserId(uuidv4()),
         organizationId: createOrganizationId(uuidv4()),
         detectionHeuristicsId: heuristicsId,
-        heuristics: '',
+        heuristics: [],
       };
 
       const result = await useCase.execute(command);
 
-      expect(result.detectionHeuristics.heuristics).toBe('');
+      expect(result.detectionHeuristics.heuristics).toEqual([]);
     });
   });
 
@@ -236,7 +236,7 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
         id: heuristicsId,
         ruleId,
         language: ProgrammingLanguage.JAVA,
-        heuristics: 'old heuristics',
+        heuristics: ['old heuristics'],
       };
 
       const mockRule: Rule = {
@@ -257,7 +257,7 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
         userId: createUserId(uuidv4()),
         organizationId: createOrganizationId(uuidv4()),
         detectionHeuristicsId: heuristicsId,
-        heuristics: 'new heuristics',
+        heuristics: ['new heuristics'],
       };
 
       await expect(useCase.execute(command)).rejects.toThrow(
@@ -279,12 +279,12 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
         id: heuristicsId,
         ruleId,
         language: ProgrammingLanguage.GO,
-        heuristics: 'old heuristics',
+        heuristics: ['old heuristics'],
       };
 
       updatedHeuristics = {
         ...existingHeuristics,
-        heuristics: 'new heuristics',
+        heuristics: ['new heuristics'],
       };
 
       mockRule = {
@@ -305,7 +305,7 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
         userId: createUserId(uuidv4()),
         organizationId: createOrganizationId(uuidv4()),
         detectionHeuristicsId: heuristicsId,
-        heuristics: 'new heuristics',
+        heuristics: ['new heuristics'],
       };
     });
 
@@ -334,12 +334,12 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
         id: heuristicsId,
         ruleId,
         language: ProgrammingLanguage.PYTHON,
-        heuristics: 'old heuristics',
+        heuristics: ['old heuristics'],
       };
 
       updatedHeuristics = {
         ...existingHeuristics,
-        heuristics: 'new heuristics',
+        heuristics: ['new heuristics'],
       };
 
       heuristicsRepository.getHeuristicsById
@@ -352,7 +352,7 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
         userId: createUserId(uuidv4()),
         organizationId: createOrganizationId(uuidv4()),
         detectionHeuristicsId: heuristicsId,
-        heuristics: 'new heuristics',
+        heuristics: ['new heuristics'],
       };
     });
 
@@ -382,12 +382,12 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
         id: heuristicsId,
         ruleId,
         language: ProgrammingLanguage.JAVA,
-        heuristics: 'old heuristics',
+        heuristics: ['old heuristics'],
       };
 
       updatedHeuristics = {
         ...existingHeuristics,
-        heuristics: 'new heuristics',
+        heuristics: ['new heuristics'],
       };
 
       mockRule = {
@@ -408,7 +408,7 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
         userId: createUserId(uuidv4()),
         organizationId: createOrganizationId(uuidv4()),
         detectionHeuristicsId: heuristicsId,
-        heuristics: 'new heuristics',
+        heuristics: ['new heuristics'],
       };
     });
 

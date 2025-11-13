@@ -41,12 +41,12 @@ describe('CopyDetectionHeuristicsUseCase', () => {
       const heuristic1 = detectionHeuristicsFactory({
         ruleId: oldRuleId,
         language: ProgrammingLanguage.TYPESCRIPT,
-        heuristics: 'TypeScript heuristics',
+        heuristics: ['TypeScript heuristics'],
       });
       const heuristic2 = detectionHeuristicsFactory({
         ruleId: oldRuleId,
         language: ProgrammingLanguage.PYTHON,
-        heuristics: 'Python heuristics',
+        heuristics: ['Python heuristics'],
       });
 
       heuristicsRepository.getAllHeuristicsForRule.mockResolvedValue([
@@ -69,12 +69,12 @@ describe('CopyDetectionHeuristicsUseCase', () => {
       const heuristic1 = detectionHeuristicsFactory({
         ruleId: oldRuleId,
         language: ProgrammingLanguage.TYPESCRIPT,
-        heuristics: 'TypeScript heuristics',
+        heuristics: ['TypeScript heuristics'],
       });
       const heuristic2 = detectionHeuristicsFactory({
         ruleId: oldRuleId,
         language: ProgrammingLanguage.PYTHON,
-        heuristics: 'Python heuristics',
+        heuristics: ['Python heuristics'],
       });
 
       heuristicsRepository.getAllHeuristicsForRule.mockResolvedValue([
@@ -97,12 +97,12 @@ describe('CopyDetectionHeuristicsUseCase', () => {
       const heuristic1 = detectionHeuristicsFactory({
         ruleId: oldRuleId,
         language: ProgrammingLanguage.TYPESCRIPT,
-        heuristics: 'TypeScript heuristics',
+        heuristics: ['TypeScript heuristics'],
       });
       const heuristic2 = detectionHeuristicsFactory({
         ruleId: oldRuleId,
         language: ProgrammingLanguage.PYTHON,
-        heuristics: 'Python heuristics',
+        heuristics: ['Python heuristics'],
       });
 
       heuristicsRepository.getAllHeuristicsForRule.mockResolvedValue([
@@ -127,12 +127,12 @@ describe('CopyDetectionHeuristicsUseCase', () => {
       const heuristic1 = detectionHeuristicsFactory({
         ruleId: oldRuleId,
         language: ProgrammingLanguage.TYPESCRIPT,
-        heuristics: 'TypeScript heuristics',
+        heuristics: ['TypeScript heuristics'],
       });
       const heuristic2 = detectionHeuristicsFactory({
         ruleId: oldRuleId,
         language: ProgrammingLanguage.PYTHON,
-        heuristics: 'Python heuristics',
+        heuristics: ['Python heuristics'],
       });
 
       heuristicsRepository.getAllHeuristicsForRule.mockResolvedValue([
@@ -157,12 +157,12 @@ describe('CopyDetectionHeuristicsUseCase', () => {
       const heuristic1 = detectionHeuristicsFactory({
         ruleId: oldRuleId,
         language: ProgrammingLanguage.TYPESCRIPT,
-        heuristics: 'TypeScript heuristics',
+        heuristics: ['TypeScript heuristics'],
       });
       const heuristic2 = detectionHeuristicsFactory({
         ruleId: oldRuleId,
         language: ProgrammingLanguage.PYTHON,
-        heuristics: 'Python heuristics',
+        heuristics: ['Python heuristics'],
       });
 
       heuristicsRepository.getAllHeuristicsForRule.mockResolvedValue([
@@ -189,12 +189,12 @@ describe('CopyDetectionHeuristicsUseCase', () => {
       const heuristic1 = detectionHeuristicsFactory({
         ruleId: oldRuleId,
         language: ProgrammingLanguage.TYPESCRIPT,
-        heuristics: 'TypeScript heuristics',
+        heuristics: ['TypeScript heuristics'],
       });
       const heuristic2 = detectionHeuristicsFactory({
         ruleId: oldRuleId,
         language: ProgrammingLanguage.PYTHON,
-        heuristics: 'Python heuristics',
+        heuristics: ['Python heuristics'],
       });
 
       heuristicsRepository.getAllHeuristicsForRule.mockResolvedValue([
@@ -212,19 +212,21 @@ describe('CopyDetectionHeuristicsUseCase', () => {
 
       const firstCopiedHeuristic =
         heuristicsRepository.upsertHeuristics.mock.calls[0][0];
-      expect(firstCopiedHeuristic.heuristics).toBe('TypeScript heuristics');
+      expect(firstCopiedHeuristic.heuristics).toEqual([
+        'TypeScript heuristics',
+      ]);
     });
 
     it('copies second heuristic with new ruleId', async () => {
       const heuristic1 = detectionHeuristicsFactory({
         ruleId: oldRuleId,
         language: ProgrammingLanguage.TYPESCRIPT,
-        heuristics: 'TypeScript heuristics',
+        heuristics: ['TypeScript heuristics'],
       });
       const heuristic2 = detectionHeuristicsFactory({
         ruleId: oldRuleId,
         language: ProgrammingLanguage.PYTHON,
-        heuristics: 'Python heuristics',
+        heuristics: ['Python heuristics'],
       });
 
       heuristicsRepository.getAllHeuristicsForRule.mockResolvedValue([
@@ -249,12 +251,12 @@ describe('CopyDetectionHeuristicsUseCase', () => {
       const heuristic1 = detectionHeuristicsFactory({
         ruleId: oldRuleId,
         language: ProgrammingLanguage.TYPESCRIPT,
-        heuristics: 'TypeScript heuristics',
+        heuristics: ['TypeScript heuristics'],
       });
       const heuristic2 = detectionHeuristicsFactory({
         ruleId: oldRuleId,
         language: ProgrammingLanguage.PYTHON,
-        heuristics: 'Python heuristics',
+        heuristics: ['Python heuristics'],
       });
 
       heuristicsRepository.getAllHeuristicsForRule.mockResolvedValue([
@@ -279,12 +281,12 @@ describe('CopyDetectionHeuristicsUseCase', () => {
       const heuristic1 = detectionHeuristicsFactory({
         ruleId: oldRuleId,
         language: ProgrammingLanguage.TYPESCRIPT,
-        heuristics: 'TypeScript heuristics',
+        heuristics: ['TypeScript heuristics'],
       });
       const heuristic2 = detectionHeuristicsFactory({
         ruleId: oldRuleId,
         language: ProgrammingLanguage.PYTHON,
-        heuristics: 'Python heuristics',
+        heuristics: ['Python heuristics'],
       });
 
       heuristicsRepository.getAllHeuristicsForRule.mockResolvedValue([
@@ -309,12 +311,12 @@ describe('CopyDetectionHeuristicsUseCase', () => {
       const heuristic1 = detectionHeuristicsFactory({
         ruleId: oldRuleId,
         language: ProgrammingLanguage.TYPESCRIPT,
-        heuristics: 'TypeScript heuristics',
+        heuristics: ['TypeScript heuristics'],
       });
       const heuristic2 = detectionHeuristicsFactory({
         ruleId: oldRuleId,
         language: ProgrammingLanguage.PYTHON,
-        heuristics: 'Python heuristics',
+        heuristics: ['Python heuristics'],
       });
 
       heuristicsRepository.getAllHeuristicsForRule.mockResolvedValue([
@@ -332,14 +334,14 @@ describe('CopyDetectionHeuristicsUseCase', () => {
 
       const secondCopiedHeuristic =
         heuristicsRepository.upsertHeuristics.mock.calls[1][0];
-      expect(secondCopiedHeuristic.heuristics).toBe('Python heuristics');
+      expect(secondCopiedHeuristic.heuristics).toEqual(['Python heuristics']);
     });
 
     it('preserves TypeScript language', async () => {
       const heuristic = detectionHeuristicsFactory({
         ruleId: oldRuleId,
         language: ProgrammingLanguage.TYPESCRIPT,
-        heuristics: 'TypeScript specific heuristics',
+        heuristics: ['TypeScript specific heuristics'],
       });
 
       heuristicsRepository.getAllHeuristicsForRule.mockResolvedValue([
@@ -363,7 +365,7 @@ describe('CopyDetectionHeuristicsUseCase', () => {
       const heuristic = detectionHeuristicsFactory({
         ruleId: oldRuleId,
         language: ProgrammingLanguage.TYPESCRIPT,
-        heuristics: 'TypeScript specific heuristics',
+        heuristics: ['TypeScript specific heuristics'],
       });
 
       heuristicsRepository.getAllHeuristicsForRule.mockResolvedValue([
@@ -380,14 +382,16 @@ describe('CopyDetectionHeuristicsUseCase', () => {
 
       const copiedHeuristic =
         heuristicsRepository.upsertHeuristics.mock.calls[0][0];
-      expect(copiedHeuristic.heuristics).toBe('TypeScript specific heuristics');
+      expect(copiedHeuristic.heuristics).toEqual([
+        'TypeScript specific heuristics',
+      ]);
     });
 
     it('preserves Python language', async () => {
       const heuristic = detectionHeuristicsFactory({
         ruleId: oldRuleId,
         language: ProgrammingLanguage.PYTHON,
-        heuristics: 'Python specific heuristics',
+        heuristics: ['Python specific heuristics'],
       });
 
       heuristicsRepository.getAllHeuristicsForRule.mockResolvedValue([
@@ -411,7 +415,7 @@ describe('CopyDetectionHeuristicsUseCase', () => {
       const heuristic = detectionHeuristicsFactory({
         ruleId: oldRuleId,
         language: ProgrammingLanguage.PYTHON,
-        heuristics: 'Python specific heuristics',
+        heuristics: ['Python specific heuristics'],
       });
 
       heuristicsRepository.getAllHeuristicsForRule.mockResolvedValue([
@@ -428,14 +432,16 @@ describe('CopyDetectionHeuristicsUseCase', () => {
 
       const copiedHeuristic =
         heuristicsRepository.upsertHeuristics.mock.calls[0][0];
-      expect(copiedHeuristic.heuristics).toBe('Python specific heuristics');
+      expect(copiedHeuristic.heuristics).toEqual([
+        'Python specific heuristics',
+      ]);
     });
 
     it('preserves Java language', async () => {
       const heuristic = detectionHeuristicsFactory({
         ruleId: oldRuleId,
         language: ProgrammingLanguage.JAVA,
-        heuristics: 'Java specific heuristics',
+        heuristics: ['Java specific heuristics'],
       });
 
       heuristicsRepository.getAllHeuristicsForRule.mockResolvedValue([
@@ -459,7 +465,7 @@ describe('CopyDetectionHeuristicsUseCase', () => {
       const heuristic = detectionHeuristicsFactory({
         ruleId: oldRuleId,
         language: ProgrammingLanguage.JAVA,
-        heuristics: 'Java specific heuristics',
+        heuristics: ['Java specific heuristics'],
       });
 
       heuristicsRepository.getAllHeuristicsForRule.mockResolvedValue([
@@ -476,14 +482,14 @@ describe('CopyDetectionHeuristicsUseCase', () => {
 
       const copiedHeuristic =
         heuristicsRepository.upsertHeuristics.mock.calls[0][0];
-      expect(copiedHeuristic.heuristics).toBe('Java specific heuristics');
+      expect(copiedHeuristic.heuristics).toEqual(['Java specific heuristics']);
     });
 
     it('preserves Rust language', async () => {
       const heuristic = detectionHeuristicsFactory({
         ruleId: oldRuleId,
         language: ProgrammingLanguage.RUST,
-        heuristics: 'Detailed Rust heuristics with specific rules',
+        heuristics: ['Detailed Rust heuristics with specific rules'],
       });
 
       heuristicsRepository.getAllHeuristicsForRule.mockResolvedValue([
@@ -507,7 +513,7 @@ describe('CopyDetectionHeuristicsUseCase', () => {
       const heuristic = detectionHeuristicsFactory({
         ruleId: oldRuleId,
         language: ProgrammingLanguage.RUST,
-        heuristics: 'Detailed Rust heuristics with specific rules',
+        heuristics: ['Detailed Rust heuristics with specific rules'],
       });
 
       heuristicsRepository.getAllHeuristicsForRule.mockResolvedValue([
@@ -524,9 +530,9 @@ describe('CopyDetectionHeuristicsUseCase', () => {
 
       const copiedHeuristic =
         heuristicsRepository.upsertHeuristics.mock.calls[0][0];
-      expect(copiedHeuristic.heuristics).toBe(
+      expect(copiedHeuristic.heuristics).toEqual([
         'Detailed Rust heuristics with specific rules',
-      );
+      ]);
     });
 
     it('returns correct count for multiple languages', async () => {
@@ -534,22 +540,22 @@ describe('CopyDetectionHeuristicsUseCase', () => {
         detectionHeuristicsFactory({
           ruleId: oldRuleId,
           language: ProgrammingLanguage.TYPESCRIPT,
-          heuristics: 'TS heuristics',
+          heuristics: ['TS heuristics'],
         }),
         detectionHeuristicsFactory({
           ruleId: oldRuleId,
           language: ProgrammingLanguage.PYTHON,
-          heuristics: 'Python heuristics',
+          heuristics: ['Python heuristics'],
         }),
         detectionHeuristicsFactory({
           ruleId: oldRuleId,
           language: ProgrammingLanguage.JAVA,
-          heuristics: 'Java heuristics',
+          heuristics: ['Java heuristics'],
         }),
         detectionHeuristicsFactory({
           ruleId: oldRuleId,
           language: ProgrammingLanguage.GO,
-          heuristics: 'Go heuristics',
+          heuristics: ['Go heuristics'],
         }),
       ];
 
@@ -573,22 +579,22 @@ describe('CopyDetectionHeuristicsUseCase', () => {
         detectionHeuristicsFactory({
           ruleId: oldRuleId,
           language: ProgrammingLanguage.TYPESCRIPT,
-          heuristics: 'TS heuristics',
+          heuristics: ['TS heuristics'],
         }),
         detectionHeuristicsFactory({
           ruleId: oldRuleId,
           language: ProgrammingLanguage.PYTHON,
-          heuristics: 'Python heuristics',
+          heuristics: ['Python heuristics'],
         }),
         detectionHeuristicsFactory({
           ruleId: oldRuleId,
           language: ProgrammingLanguage.JAVA,
-          heuristics: 'Java heuristics',
+          heuristics: ['Java heuristics'],
         }),
         detectionHeuristicsFactory({
           ruleId: oldRuleId,
           language: ProgrammingLanguage.GO,
-          heuristics: 'Go heuristics',
+          heuristics: ['Go heuristics'],
         }),
       ];
 
@@ -612,22 +618,22 @@ describe('CopyDetectionHeuristicsUseCase', () => {
         detectionHeuristicsFactory({
           ruleId: oldRuleId,
           language: ProgrammingLanguage.TYPESCRIPT,
-          heuristics: 'TS heuristics',
+          heuristics: ['TS heuristics'],
         }),
         detectionHeuristicsFactory({
           ruleId: oldRuleId,
           language: ProgrammingLanguage.PYTHON,
-          heuristics: 'Python heuristics',
+          heuristics: ['Python heuristics'],
         }),
         detectionHeuristicsFactory({
           ruleId: oldRuleId,
           language: ProgrammingLanguage.JAVA,
-          heuristics: 'Java heuristics',
+          heuristics: ['Java heuristics'],
         }),
         detectionHeuristicsFactory({
           ruleId: oldRuleId,
           language: ProgrammingLanguage.GO,
-          heuristics: 'Go heuristics',
+          heuristics: ['Go heuristics'],
         }),
       ];
 
@@ -655,22 +661,22 @@ describe('CopyDetectionHeuristicsUseCase', () => {
         detectionHeuristicsFactory({
           ruleId: oldRuleId,
           language: ProgrammingLanguage.TYPESCRIPT,
-          heuristics: 'TS heuristics',
+          heuristics: ['TS heuristics'],
         }),
         detectionHeuristicsFactory({
           ruleId: oldRuleId,
           language: ProgrammingLanguage.PYTHON,
-          heuristics: 'Python heuristics',
+          heuristics: ['Python heuristics'],
         }),
         detectionHeuristicsFactory({
           ruleId: oldRuleId,
           language: ProgrammingLanguage.JAVA,
-          heuristics: 'Java heuristics',
+          heuristics: ['Java heuristics'],
         }),
         detectionHeuristicsFactory({
           ruleId: oldRuleId,
           language: ProgrammingLanguage.GO,
-          heuristics: 'Go heuristics',
+          heuristics: ['Go heuristics'],
         }),
       ];
 
@@ -696,22 +702,22 @@ describe('CopyDetectionHeuristicsUseCase', () => {
         detectionHeuristicsFactory({
           ruleId: oldRuleId,
           language: ProgrammingLanguage.TYPESCRIPT,
-          heuristics: 'TS heuristics',
+          heuristics: ['TS heuristics'],
         }),
         detectionHeuristicsFactory({
           ruleId: oldRuleId,
           language: ProgrammingLanguage.PYTHON,
-          heuristics: 'Python heuristics',
+          heuristics: ['Python heuristics'],
         }),
         detectionHeuristicsFactory({
           ruleId: oldRuleId,
           language: ProgrammingLanguage.JAVA,
-          heuristics: 'Java heuristics',
+          heuristics: ['Java heuristics'],
         }),
         detectionHeuristicsFactory({
           ruleId: oldRuleId,
           language: ProgrammingLanguage.GO,
-          heuristics: 'Go heuristics',
+          heuristics: ['Go heuristics'],
         }),
       ];
 
@@ -737,22 +743,22 @@ describe('CopyDetectionHeuristicsUseCase', () => {
         detectionHeuristicsFactory({
           ruleId: oldRuleId,
           language: ProgrammingLanguage.TYPESCRIPT,
-          heuristics: 'TS heuristics',
+          heuristics: ['TS heuristics'],
         }),
         detectionHeuristicsFactory({
           ruleId: oldRuleId,
           language: ProgrammingLanguage.PYTHON,
-          heuristics: 'Python heuristics',
+          heuristics: ['Python heuristics'],
         }),
         detectionHeuristicsFactory({
           ruleId: oldRuleId,
           language: ProgrammingLanguage.JAVA,
-          heuristics: 'Java heuristics',
+          heuristics: ['Java heuristics'],
         }),
         detectionHeuristicsFactory({
           ruleId: oldRuleId,
           language: ProgrammingLanguage.GO,
-          heuristics: 'Go heuristics',
+          heuristics: ['Go heuristics'],
         }),
       ];
 

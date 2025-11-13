@@ -21,5 +21,5 @@ export type DetectionHeuristics = {
   id: DetectionHeuristicsId;
   ruleId: RuleId;
   language: ProgrammingLanguage;
-  heuristics: string;
+  heuristics: string[];
 };

@@ -337,7 +337,7 @@ export const useUpdateDetectionHeuristicsMutation = () => {
       standardId: string;
       ruleId: string;
       detectionHeuristicsId: string;
-      heuristics: string;
+      heuristics: string[];
     }) => {
       return detectionGateway.updateDetectionHeuristics(
         standardId,

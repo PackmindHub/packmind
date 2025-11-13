@@ -78,7 +78,7 @@ export class RuleDetectionHeuristicsCacheRepository
 
   async updateHeuristics(
     id: DetectionHeuristicsId,
-    heuristics: string,
+    heuristics: string[],
   ): Promise<void> {
     this.logger.info('Updating detection heuristics', { id });
 

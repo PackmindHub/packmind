@@ -146,12 +146,16 @@ export default class ASTGenerationStrategy extends AbstractGenerationStrategy {
         this._detectionProgramRuleInput,
         this._linterAstAdapter,
       );
+      const formattedHeuristics =
+        this._detectionProgramRuleInput.heuristics &&
+        this._detectionProgramRuleInput.heuristics.length > 0
+          ? this._detectionProgramRuleInput.heuristics
+              .map((h) => `* ${h}`)
+              .join('\n')
+          : '';
       return prompt
         .replace('$RULE_CONTENT$', this._detectionProgramRuleInput.rule.content)
-        .replace(
-          '$RULE_HEURISTICS$',
-          this._detectionProgramRuleInput.heuristics || '',
-        )
+        .replace('$RULE_HEURISTICS$', formattedHeuristics)
         .replace('$RULE_LANGUAGE$', this._detectionProgramRuleInput.language)
         .replace('$PROGRAM_EXTERNAL_LIBRARIES$', promptExternalLibraries)
         .replace(

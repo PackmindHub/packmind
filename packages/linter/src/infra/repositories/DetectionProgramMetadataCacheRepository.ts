@@ -112,7 +112,7 @@ export class DetectionProgramMetadataCacheRepository
         tokens: null,
         logs: [],
         programDescription: '',
-        detectionHeuristics: '',
+        detectionHeuristics: [],
       };
     }
 
@@ -157,7 +157,7 @@ export class DetectionProgramMetadataCacheRepository
         tokens: null,
         logs: [],
         programDescription: '',
-        detectionHeuristics: '',
+        detectionHeuristics: [],
       };
     }
 
@@ -199,7 +199,7 @@ export class DetectionProgramMetadataCacheRepository
         tokens: null,
         logs: [],
         programDescription: '',
-        detectionHeuristics: '',
+        detectionHeuristics: [],
       };
     }
 
@@ -216,7 +216,7 @@ export class DetectionProgramMetadataCacheRepository
   }
 
   async updateDetectionHeuristics(
-    detectionHeuristics: string,
+    detectionHeuristics: string[],
     detectionProgramId: DetectionProgramId,
   ): Promise<void> {
     this.logger.info(
@@ -244,7 +244,7 @@ export class DetectionProgramMetadataCacheRepository
         tokens: null,
         logs: [],
         programDescription: '',
-        detectionHeuristics: '',
+        detectionHeuristics: [],
       };
     }
 

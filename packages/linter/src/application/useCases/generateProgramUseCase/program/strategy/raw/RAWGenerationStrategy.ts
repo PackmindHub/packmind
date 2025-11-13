@@ -66,12 +66,16 @@ export default class RAWGenerationStrategy extends AbstractGenerationStrategy {
   }
 
   private buildPromptWithCode(): string {
+    const formattedHeuristics =
+      this._detectionProgramRuleInput.heuristics &&
+      this._detectionProgramRuleInput.heuristics.length > 0
+        ? this._detectionProgramRuleInput.heuristics
+            .map((h) => `* ${h}`)
+            .join('\n')
+        : '';
     return generate_program_code
       .replace('$RULE_CONTENT', this._detectionProgramRuleInput.rule.content)
-      .replace(
-        '$RULE_HEURISTICS$',
-        this._detectionProgramRuleInput.heuristics || '',
-      )
+      .replace('$RULE_HEURISTICS$', formattedHeuristics)
       .replace('$RULE_LANGUAGE$', this._detectionProgramRuleInput.language)
       .replace(
         '$RULE_BAD_EXAMPLES$',

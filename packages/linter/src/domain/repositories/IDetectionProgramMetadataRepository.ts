@@ -29,7 +29,7 @@ export interface IDetectionProgramMetadataRepository
   ): Promise<void>;
 
   updateDetectionHeuristics(
-    detectionHeuristics: string,
+    detectionHeuristics: string[],
     detectionProgramId: DetectionProgramId,
   ): Promise<void>;
 }

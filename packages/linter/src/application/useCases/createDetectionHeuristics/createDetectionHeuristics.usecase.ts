@@ -56,7 +56,7 @@ export class CreateDetectionHeuristicsUseCase
       id: createDetectionHeuristicsId(uuidv4()),
       ruleId: command.ruleId,
       language: command.language,
-      heuristics: '',
+      heuristics: [],
     };
 
     await heuristicsRepo.upsertHeuristics(newHeuristics);
