@@ -106,14 +106,14 @@ export class DeploymentsAdapter
    * Initialize adapter with ports and services from registry.
    * All ports and services in signature are REQUIRED.
    */
-  public initialize(ports: {
+  public async initialize(ports: {
     [IGitPortName]: IGitPort;
     [IRecipesPortName]: IRecipesPort;
     [ICodingAgentPortName]: ICodingAgentPort;
     [IStandardsPortName]: IStandardsPort;
     [ISpacesPortName]: ISpacesPort;
     [IAccountsPortName]: IAccountsPort;
-  }): void {
+  }): Promise<void> {
     // Step 1: Set all ports
     this.gitPort = ports[IGitPortName];
     this.recipesPort = ports[IRecipesPortName];

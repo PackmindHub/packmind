@@ -55,8 +55,8 @@ describe('AccountsAdapter', () => {
       expect(adapter.isReady()).toBe(false);
     });
 
-    it('returns true after initialization with all ports', () => {
-      adapter.initialize({
+    it('returns true after initialization with all ports', async () => {
+      await adapter.initialize({
         [ISpacesPortName]: mockSpacesPort,
         [IGitPortName]: mockGitPort,
         [IStandardsPortName]: mockStandardsPort,
@@ -67,8 +67,8 @@ describe('AccountsAdapter', () => {
   });
 
   describe('initialize', () => {
-    it('throw with no ports', () => {
-      expect(() => {
+    it('throw with no ports', async () => {
+      await expect(
         adapter.initialize(
           {} as {
             [ISpacesPortName]: ISpacesPort;
@@ -76,28 +76,28 @@ describe('AccountsAdapter', () => {
             [IStandardsPortName]: IStandardsPort;
             [IDeploymentPortName]: IDeploymentPort;
           },
-        );
-      }).toThrow();
+        ),
+      ).rejects.toThrow();
 
       expect(adapter.isReady()).toBe(true);
     });
-    it('initializes successfully with all ports', () => {
-      expect(() => {
+    it('initializes successfully with all ports', async () => {
+      await expect(
         adapter.initialize({
           [ISpacesPortName]: mockSpacesPort,
           [IGitPortName]: mockGitPort,
           [IStandardsPortName]: mockStandardsPort,
           [IDeploymentPortName]: mockDeploymentPort,
-        });
-      }).not.toThrow();
+        }),
+      ).resolves.not.toThrow();
 
       expect(adapter.isReady()).toBe(true);
     });
   });
 
   describe('getPort', () => {
-    it('returns the adapter as port interface', () => {
-      adapter.initialize({
+    it('returns the adapter as port interface', async () => {
+      await adapter.initialize({
         [ISpacesPortName]: mockSpacesPort,
         [IGitPortName]: mockGitPort,
         [IStandardsPortName]: mockStandardsPort,

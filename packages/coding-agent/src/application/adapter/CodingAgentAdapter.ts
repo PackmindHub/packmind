@@ -43,10 +43,10 @@ export class CodingAgentAdapter
    * All ports in signature are REQUIRED.
    * Services are provided by Hexa after recreating with ports.
    */
-  public initialize(ports: {
+  public async initialize(ports: {
     [IStandardsPortName]: IStandardsPort;
     [IGitPortName]: IGitPort;
-  }): void {
+  }): Promise<void> {
     this.logger.info('Initializing CodingAgentAdapter with ports and services');
 
     // Step 1: Set all ports

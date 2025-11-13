@@ -54,8 +54,8 @@ describe('CodingAgentAdapter', () => {
       expect(adapter.isReady()).toBe(false);
     });
 
-    it('returns true when all required ports and services are set', () => {
-      adapter.initialize({
+    it('returns true when all required ports and services are set', async () => {
+      await adapter.initialize({
         [IStandardsPortName]: mockStandardsPort,
         [IGitPortName]: mockGitPort,
       });
@@ -65,33 +65,35 @@ describe('CodingAgentAdapter', () => {
   });
 
   describe('initialize', () => {
-    it('throws when required ports not provided', () => {
-      expect(() => {
+    it('throws when required ports not provided', async () => {
+      await expect(
         adapter.initialize({
           [IStandardsPortName]: mockStandardsPort,
           [IGitPortName]: undefined,
         } as unknown as {
           [IStandardsPortName]: IStandardsPort;
           [IGitPortName]: IGitPort;
-        });
-      }).toThrow('CodingAgentAdapter: Required ports/services not provided');
+        }),
+      ).rejects.toThrow(
+        'CodingAgentAdapter: Required ports/services not provided',
+      );
     });
 
-    it('creates use cases when all dependencies provided', () => {
-      expect(() => {
+    it('creates use cases when all dependencies provided', async () => {
+      await expect(
         adapter.initialize({
           [IStandardsPortName]: mockStandardsPort,
           [IGitPortName]: mockGitPort,
-        });
-      }).not.toThrow();
+        }),
+      ).resolves.not.toThrow();
 
       expect(adapter.isReady()).toBe(true);
     });
   });
 
   describe('getPort', () => {
-    it('returns the adapter as port interface', () => {
-      adapter.initialize({
+    it('returns the adapter as port interface', async () => {
+      await adapter.initialize({
         [IStandardsPortName]: mockStandardsPort,
         [IGitPortName]: mockGitPort,
       });

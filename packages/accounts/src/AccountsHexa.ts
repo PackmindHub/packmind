@@ -76,7 +76,7 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts, IAccountsPort> {
     this.logger.info('Initializing AccountsHexa (adapter retrieval phase)');
 
     try {
-      this.adapter.initialize({
+      await this.adapter.initialize({
         [ISpacesPortName]: registry.getAdapter<ISpacesPort>(ISpacesPortName),
         [IGitPortName]: registry.getAdapter<IGitPort>(IGitPortName),
         [IStandardsPortName]:

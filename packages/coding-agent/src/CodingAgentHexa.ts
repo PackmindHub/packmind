@@ -101,7 +101,7 @@ export class CodingAgentHexa extends BaseHexa<BaseHexaOpts, ICodingAgentPort> {
       );
 
       // Initialize adapter with ports, services, and repositories
-      this.adapter.initialize({
+      await this.adapter.initialize({
         [IStandardsPortName]: standardsPort,
         [IGitPortName]: gitPort,
       });
