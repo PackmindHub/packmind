@@ -15,7 +15,6 @@
     "@packmind/logger": "*",
     "@packmind/node-utils": "*",
     "@packmind/recipes": "*",
-    "@packmind/spaces": "*",
     "@packmind/standards": "*",
     "@packmind/types": "*",
     "ts-jest": "^29.4.1",

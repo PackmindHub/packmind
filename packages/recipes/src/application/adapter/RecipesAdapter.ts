@@ -1,5 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
-import { IBaseAdapter } from '@packmind/node-utils';
+import { IBaseAdapter, JobsService } from '@packmind/node-utils';
 import {
   CaptureRecipeCommand,
   DeleteRecipeCommand,
@@ -25,6 +25,8 @@ import {
   UpdateRecipesFromGitLabCommand,
 } from '@packmind/types';
 import { IRecipesDelayedJobs } from '../../domain/jobs/IRecipesDelayedJobs';
+import { DeployRecipesJobFactory } from '../../infra/jobs/DeployRecipesJobFactory';
+import { UpdateRecipesAndGenerateSummariesJobFactory } from '../../infra/jobs/UpdateRecipesAndGenerateSummariesJobFactory';
 import { RecipesServices } from '../services/RecipesServices';
 import { CaptureRecipeUsecase } from '../useCases/captureRecipe/captureRecipe.usecase';
 import { DeleteRecipeUsecase } from '../useCases/deleteRecipe/deleteRecipe.usecase';
@@ -45,13 +47,13 @@ export class RecipesAdapter
   implements IBaseAdapter<IRecipesPort>, IRecipesPort
 {
   // Required ports - all set via initialize()
-  private gitPort!: IGitPort;
-  private deploymentPort!: IDeploymentPort;
-  private accountsPort!: IAccountsPort;
-  private spacesPort!: ISpacesPort;
+  private gitPort: IGitPort | null = null;
+  private deploymentPort: IDeploymentPort | null = null;
+  private accountsPort: IAccountsPort | null = null;
+  private spacesPort: ISpacesPort | null = null;
 
   // Delayed jobs - built internally from JobsService
-  private recipesDelayedJobs!: IRecipesDelayedJobs;
+  private recipesDelayedJobs: IRecipesDelayedJobs | null = null;
 
   // Use cases - created in initialize()
   private _captureRecipe!: CaptureRecipeUsecase;
@@ -75,25 +77,30 @@ export class RecipesAdapter
   }
 
   /**
-   * Initialize adapter with ports and delayed jobs from registry.
-   * All ports and delayed jobs in signature are REQUIRED.
+   * Initialize adapter with ports and JobsService from registry.
+   * All ports and JobsService in signature are REQUIRED.
    * Can be called multiple times (e.g., when deploymentPort is updated due to circular dependency).
    */
-  public initialize(ports: {
+  public async initialize(ports: {
     [IGitPortName]: IGitPort;
     [IDeploymentPortName]: IDeploymentPort;
     [IAccountsPortName]: IAccountsPort;
     [ISpacesPortName]: ISpacesPort;
-    recipesDelayedJobs: IRecipesDelayedJobs;
-  }): void {
-    this.logger.info('Initializing RecipesAdapter with ports and delayed jobs');
+    jobsService: JobsService;
+  }): Promise<void> {
+    this.logger.info('Initializing RecipesAdapter with ports and JobsService');
 
-    // Step 1: Set all ports and delayed jobs
+    // Step 1: Set all ports
     this.gitPort = ports[IGitPortName];
     this.deploymentPort = ports[IDeploymentPortName];
     this.accountsPort = ports[IAccountsPortName];
     this.spacesPort = ports[ISpacesPortName];
-    this.recipesDelayedJobs = ports.recipesDelayedJobs;
+
+    // Step 2: Build delayed jobs
+    this.recipesDelayedJobs = await this.buildDelayedJobs(
+      ports.jobsService,
+      this.deploymentPort,
+    );
 
     // Step 2: Validate all required ports/delayed jobs are set
     if (!this.isReady()) {
@@ -112,8 +119,8 @@ export class RecipesAdapter
 
     this._updateRecipesFromGitHub = new UpdateRecipesFromGitHubUsecase(
       this.recipesServices.getRecipeService(),
-      this.gitPort,
-      this.deploymentPort,
+      this.gitPort!,
+      this.deploymentPort!,
     );
     this._updateRecipesFromGitHub.setRecipesDelayedJobs(
       this.recipesDelayedJobs,
@@ -121,8 +128,8 @@ export class RecipesAdapter
 
     this._updateRecipesFromGitLab = new UpdateRecipesFromGitLabUsecase(
       this.recipesServices.getRecipeService(),
-      this.gitPort,
-      this.deploymentPort,
+      this.gitPort!,
+      this.deploymentPort!,
     );
     this._updateRecipesFromGitLab.setRecipesDelayedJobs(
       this.recipesDelayedJobs,
@@ -142,9 +149,9 @@ export class RecipesAdapter
     );
 
     this._getRecipeById = new GetRecipeByIdUsecase(
-      this.accountsPort,
+      this.accountsPort!,
       this.recipesServices.getRecipeService(),
-      this.spacesPort,
+      this.spacesPort!,
       this.logger,
     );
 
@@ -159,9 +166,9 @@ export class RecipesAdapter
     );
 
     this._listRecipesBySpace = new ListRecipesBySpaceUsecase(
-      this.accountsPort,
+      this.accountsPort!,
       this.recipesServices.getRecipeService(),
-      this.spacesPort,
+      this.spacesPort!,
       this.logger,
     );
 
@@ -184,15 +191,61 @@ export class RecipesAdapter
   }
 
   /**
+   * Build and register all recipes delayed jobs
+   */
+  private async buildDelayedJobs(
+    jobsService: JobsService,
+    deploymentPort: IDeploymentPort,
+  ): Promise<IRecipesDelayedJobs> {
+    this.logger.info('Building recipes delayed jobs');
+
+    // Create UpdateRecipesAndGenerateSummaries job factory
+    const updateRecipesJobFactory =
+      new UpdateRecipesAndGenerateSummariesJobFactory(
+        this.recipesServices.getRecipeService(),
+        this.recipesServices.getRecipeVersionService(),
+        this.recipesServices.getRecipeSummaryService(),
+      );
+    await updateRecipesJobFactory.createQueue();
+
+    // Create DeployRecipes job factory
+    const deployRecipesJobFactory = new DeployRecipesJobFactory(deploymentPort);
+    await deployRecipesJobFactory.createQueue();
+
+    // Register job factories with JobsService
+    this.logger.debug(
+      'Registering UpdateRecipesAndGenerateSummaries job queue',
+    );
+    jobsService.registerJobQueue(
+      updateRecipesJobFactory.getQueueName(),
+      updateRecipesJobFactory,
+    );
+
+    this.logger.debug('Registering DeployRecipes job queue');
+    jobsService.registerJobQueue(
+      deployRecipesJobFactory.getQueueName(),
+      deployRecipesJobFactory,
+    );
+
+    this.logger.info('Recipes delayed jobs built and registered successfully');
+
+    return {
+      updateRecipesAndGenerateSummariesDelayedJob:
+        updateRecipesJobFactory.getDelayedJob(),
+      deployRecipesDelayedJob: deployRecipesJobFactory.getDelayedJob(),
+    };
+  }
+
+  /**
    * Check if all required ports and delayed jobs are set.
    */
   public isReady(): boolean {
     return (
-      this.gitPort !== undefined &&
-      this.deploymentPort !== undefined &&
-      this.accountsPort !== undefined &&
-      this.spacesPort !== undefined &&
-      this.recipesDelayedJobs !== undefined
+      this.gitPort != null &&
+      this.deploymentPort != null &&
+      this.accountsPort != null &&
+      this.spacesPort != null &&
+      this.recipesDelayedJobs != null
     );
   }
 
@@ -201,6 +254,19 @@ export class RecipesAdapter
    */
   public getPort(): IRecipesPort {
     return this as IRecipesPort;
+  }
+
+  /**
+   * Get the delayed jobs for testing purposes.
+   * @internal This method is intended for testing only
+   */
+  public getRecipesDelayedJobs(): IRecipesDelayedJobs {
+    if (!this.recipesDelayedJobs) {
+      throw new Error(
+        'RecipesDelayedJobs not initialized. Call initialize() first.',
+      );
+    }
+    return this.recipesDelayedJobs;
   }
 
   public captureRecipe(command: CaptureRecipeCommand) {

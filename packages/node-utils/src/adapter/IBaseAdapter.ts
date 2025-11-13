@@ -27,12 +27,12 @@
  *     // Create use cases with non-null ports
  *     this._updateRecipesFromGitHub = new UpdateRecipesFromGitHubUsecase(
  *       this.services.getRecipeService(),
- *       this.gitPort,
+ *       this.gitPort!,
  *     );
  *   }
  *
  *   public isReady(): boolean {
- *     return this.gitPort !== null && this.accountsPort !== null;
+ *     return this.gitPort != null && this.accountsPort != null;
  *   }
  *
  *   public getPort(): IRecipesPort {
@@ -70,7 +70,7 @@ export interface IBaseAdapter<TPort = void> {
    *     throw new Error('RecipesAdapter: Required ports not provided');
    *   }
    *
-   *   this._someUseCase = new SomeUseCase(this.services, this.gitPort);
+   *   this._someUseCase = new SomeUseCase(this.services, this.gitPort!);
    * }
    * ```
    */
@@ -79,16 +79,16 @@ export interface IBaseAdapter<TPort = void> {
   /**
    * Check if the adapter is ready to use.
    *
-   * Returns true only if all required ports are properly set (non-null).
+   * Validates that all required ports are properly set (non-null).
    * This is used by initialize() to validate dependencies before creating
    * use cases, and can be used for health checks.
    *
-   * @returns true if all required ports are non-null, false otherwise
+   * @returns true if all required ports are set, false otherwise
    *
    * @example
    * ```typescript
    * public isReady(): boolean {
-   *   return this.gitPort !== null && this.accountsPort !== null;
+   *   return this.gitPort != null && this.accountsPort != null;
    * }
    * ```
    */

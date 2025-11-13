@@ -55,9 +55,9 @@ import { UpdateGitProviderUseCase } from '../useCases/updateGitProvider/updateGi
 const origin = 'GitAdapter';
 
 export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
-  private accountsPort!: IAccountsPort;
-  private deploymentsPort!: IDeploymentPort;
-  private gitDelayedJobs!: IGitDelayedJobs;
+  private accountsPort: IAccountsPort | null = null;
+  private deploymentsPort: IDeploymentPort | null = null;
+  private gitDelayedJobs: IGitDelayedJobs | null = null;
 
   // Use cases - all initialized in initialize()
   private _addGitProvider!: AddGitProviderUseCase;
@@ -98,17 +98,15 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
   }): Promise<void> {
     this.logger.info('Initializing GitAdapter with ports and services');
 
-    // Step 1: Set all ports
     this.accountsPort = ports[IAccountsPortName];
     this.deploymentsPort = ports[IDeploymentPortName];
 
-    // Step 2: Build delayed jobs from JobsService if provided
     if (ports.jobsService) {
       this.gitDelayedJobs = await this.buildDelayedJobs(ports.jobsService);
     }
 
     // Step 3: Validate all required ports and services are set
-    if (!this.isReady()) {
+    if (!this.accountsPort || !this.deploymentsPort || !this.gitDelayedJobs) {
       throw new Error(
         'GitAdapter: Required ports/services not provided. Ensure JobsService is passed to initialize().',
       );
@@ -264,9 +262,9 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
    */
   public isReady(): boolean {
     return (
-      this.accountsPort !== undefined &&
-      this.deploymentsPort !== undefined &&
-      this.gitDelayedJobs !== undefined
+      this.accountsPort != null &&
+      this.deploymentsPort != null &&
+      this.gitDelayedJobs != null
     );
   }
 
@@ -453,7 +451,7 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     input: FetchFileContentInput,
     onComplete?: (result: FetchFileContentOutput) => Promise<void> | void,
   ): Promise<string> {
-    return this.gitDelayedJobs.fetchFileContentDelayedJob.addJobWithCallback(
+    return this.gitDelayedJobs!.fetchFileContentDelayedJob.addJobWithCallback(
       input,
       onComplete,
     );

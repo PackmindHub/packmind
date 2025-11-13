@@ -76,19 +76,14 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts, IAccountsPort> {
     this.logger.info('Initializing AccountsHexa (adapter retrieval phase)');
 
     try {
-      // Retrieve optional ports from registry
-      // Ports that are not available will simply be undefined
-      const ports: Record<string, unknown> = {
+      this.adapter.initialize({
         [ISpacesPortName]: registry.getAdapter<ISpacesPort>(ISpacesPortName),
         [IGitPortName]: registry.getAdapter<IGitPort>(IGitPortName),
         [IStandardsPortName]:
           registry.getAdapter<IStandardsPort>(IStandardsPortName),
         [IDeploymentPortName]:
           registry.getAdapter<IDeploymentPort>(IDeploymentPortName),
-      };
-
-      // Initialize adapter with all optional ports
-      this.adapter.initialize(ports);
+      });
 
       this.logger.info('AccountsHexa initialized successfully');
     } catch (error) {

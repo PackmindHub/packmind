@@ -20,9 +20,6 @@ import {
 import { DataSource } from 'typeorm';
 import { RecipesAdapter } from './application/adapter/RecipesAdapter';
 import { RecipesServices } from './application/services/RecipesServices';
-import { IRecipesDelayedJobs } from './domain/jobs/IRecipesDelayedJobs';
-import { DeployRecipesJobFactory } from './infra/jobs/DeployRecipesJobFactory';
-import { UpdateRecipesAndGenerateSummariesJobFactory } from './infra/jobs/UpdateRecipesAndGenerateSummariesJobFactory';
 import { RecipesRepositories } from './infra/repositories/RecipesRepositories';
 
 const origin = 'RecipesHexa';
@@ -37,7 +34,6 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
   private readonly recipesRepositories: RecipesRepositories;
   private readonly recipesServices: RecipesServices;
   private readonly adapter: RecipesAdapter;
-  private recipesDelayedJobs: IRecipesDelayedJobs | null = null;
   private isInitialized = false;
 
   constructor(
@@ -109,21 +105,17 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
         deploymentPort = {} as IDeploymentPort;
       }
 
-      // Get JobsService and build delayed jobs in Hexa
+      // Get JobsService
       const jobsService = registry.getService(JobsService);
-      this.recipesDelayedJobs = await this.buildDelayedJobs(
-        jobsService,
-        deploymentPort,
-      );
 
       // Initialize adapter with all dependencies
-      // Pass the pre-built delayed jobs to the adapter
+      // The adapter will build and register delayed jobs internally
       await this.adapter.initialize({
         [IGitPortName]: gitPort,
         [IDeploymentPortName]: deploymentPort,
         [IAccountsPortName]: accountsPort,
         [ISpacesPortName]: spacesPort,
-        recipesDelayedJobs: this.recipesDelayedJobs,
+        jobsService,
       });
 
       this.isInitialized = true;
@@ -134,69 +126,6 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
       });
       throw error;
     }
-  }
-
-  /**
-   * Build and register all recipes delayed jobs
-   */
-  private async buildDelayedJobs(
-    jobsService: JobsService,
-    deploymentPort: IDeploymentPort,
-  ): Promise<IRecipesDelayedJobs> {
-    this.logger.info('Building recipes delayed jobs');
-
-    // Create UpdateRecipesAndGenerateSummaries job factory
-    const updateRecipesJobFactory =
-      new UpdateRecipesAndGenerateSummariesJobFactory(
-        this.recipesServices.getRecipeService(),
-        this.recipesServices.getRecipeVersionService(),
-        this.recipesServices.getRecipeSummaryService(),
-      );
-    await updateRecipesJobFactory.createQueue();
-
-    // Create DeployRecipes job factory
-    const deployRecipesJobFactory = new DeployRecipesJobFactory(deploymentPort);
-    await deployRecipesJobFactory.createQueue();
-
-    // Register job factories with JobsService
-    this.logger.debug(
-      'Registering UpdateRecipesAndGenerateSummaries job queue',
-    );
-    jobsService.registerJobQueue(
-      updateRecipesJobFactory.getQueueName(),
-      updateRecipesJobFactory,
-    );
-
-    this.logger.debug('Registering DeployRecipes job queue');
-    jobsService.registerJobQueue(
-      deployRecipesJobFactory.getQueueName(),
-      deployRecipesJobFactory,
-    );
-
-    this.logger.info('Recipes delayed jobs built and registered successfully');
-
-    return {
-      updateRecipesAndGenerateSummariesDelayedJob:
-        updateRecipesJobFactory.getDelayedJob(),
-      deployRecipesDelayedJob: deployRecipesJobFactory.getDelayedJob(),
-    };
-  }
-
-  /**
-   * Get the delayed jobs for accessing job queues
-   */
-  public getRecipesDelayedJobs(): IRecipesDelayedJobs {
-    if (!this.isInitialized) {
-      throw new Error(
-        'RecipesHexa not initialized. Call initialize() before using.',
-      );
-    }
-
-    if (!this.recipesDelayedJobs) {
-      throw new Error('Recipes delayed jobs not initialized.');
-    }
-
-    return this.recipesDelayedJobs;
   }
 
   /**
@@ -219,20 +148,17 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
         registry.getAdapter<IAccountsPort>(IAccountsPortName);
       const spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
 
-      // Get JobsService and rebuild delayed jobs with real deployment port
+      // Get JobsService
       const jobsService = registry.getService(JobsService);
-      this.recipesDelayedJobs = await this.buildDelayedJobs(
-        jobsService,
-        deploymentPort,
-      );
 
-      // Reinitialize adapter with updated ports and delayed jobs
+      // Reinitialize adapter with updated ports
+      // The adapter will rebuild delayed jobs with the real deployment port
       await this.adapter.initialize({
         [IGitPortName]: gitPort,
         [IDeploymentPortName]: deploymentPort,
         [IAccountsPortName]: accountsPort,
         [ISpacesPortName]: spacesPort,
-        recipesDelayedJobs: this.recipesDelayedJobs,
+        jobsService,
       });
 
       this.logger.info(

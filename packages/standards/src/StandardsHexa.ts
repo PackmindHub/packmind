@@ -18,7 +18,7 @@ import {
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { StandardsServices } from './application/services/StandardsServices';
-import { StandardsAdapter } from './application/useCases/StandardsAdapter';
+import { StandardsAdapter } from './application/adapter/StandardsAdapter';
 import { StandardsRepositories } from './infra/repositories/StandardsRepositories';
 
 const origin = 'StandardsHexa';

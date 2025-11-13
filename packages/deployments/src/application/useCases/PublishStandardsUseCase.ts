@@ -56,8 +56,16 @@ export class PublishStandardsUseCase implements IPublishStandards {
     // Get repository for each target
     const targetRepositoryMap = new Map();
     for (const targetId of command.targetIds) {
-      const { target, repository } =
-        await this.targetService.getRepositoryByTargetId(targetId);
+      const target = await this.targetService.findById(targetId);
+      if (!target) {
+        throw new Error(`Target with id ${targetId} not found`);
+      }
+
+      const repository = await this.gitPort.getRepositoryById(target.gitRepoId);
+      if (!repository) {
+        throw new Error(`Repository with id ${target.gitRepoId} not found`);
+      }
+
       targetRepositoryMap.set(targetId, { target, repository });
       this.logger.info('Repository found for target', {
         targetId,

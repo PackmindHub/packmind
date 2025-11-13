@@ -51,13 +51,8 @@ describe('AccountsAdapter', () => {
   });
 
   describe('isReady', () => {
-    it('returns true before initialization (all ports optional)', () => {
-      expect(adapter.isReady()).toBe(true);
-    });
-
-    it('returns true after initialization with no ports', () => {
-      adapter.initialize({});
-      expect(adapter.isReady()).toBe(true);
+    it('returns false before initialization (all ports optional)', () => {
+      expect(adapter.isReady()).toBe(false);
     });
 
     it('returns true after initialization with all ports', () => {
@@ -72,25 +67,20 @@ describe('AccountsAdapter', () => {
   });
 
   describe('initialize', () => {
-    it('initializes successfully with no ports', () => {
+    it('throw with no ports', () => {
       expect(() => {
-        adapter.initialize({});
-      }).not.toThrow();
+        adapter.initialize(
+          {} as {
+            [ISpacesPortName]: ISpacesPort;
+            [IGitPortName]: IGitPort;
+            [IStandardsPortName]: IStandardsPort;
+            [IDeploymentPortName]: IDeploymentPort;
+          },
+        );
+      }).toThrow();
 
       expect(adapter.isReady()).toBe(true);
     });
-
-    it('initializes successfully with some ports', () => {
-      expect(() => {
-        adapter.initialize({
-          [ISpacesPortName]: mockSpacesPort,
-          [IGitPortName]: mockGitPort,
-        });
-      }).not.toThrow();
-
-      expect(adapter.isReady()).toBe(true);
-    });
-
     it('initializes successfully with all ports', () => {
       expect(() => {
         adapter.initialize({
@@ -107,7 +97,12 @@ describe('AccountsAdapter', () => {
 
   describe('getPort', () => {
     it('returns the adapter as port interface', () => {
-      adapter.initialize({});
+      adapter.initialize({
+        [ISpacesPortName]: mockSpacesPort,
+        [IGitPortName]: mockGitPort,
+        [IStandardsPortName]: mockStandardsPort,
+        [IDeploymentPortName]: mockDeploymentPort,
+      });
       expect(adapter.getPort()).toBe(adapter);
     });
   });

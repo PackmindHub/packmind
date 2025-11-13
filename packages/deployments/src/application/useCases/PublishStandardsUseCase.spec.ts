@@ -57,6 +57,7 @@ describe('PublishStandardsUseCase', () => {
 
     mockGitPort = {
       commitToGit: jest.fn(),
+      getRepositoryById: jest.fn(),
     } as unknown as jest.Mocked<IGitPort>;
 
     mockCodingAgentPort = {
@@ -69,7 +70,7 @@ describe('PublishStandardsUseCase', () => {
     } as unknown as jest.Mocked<IStandardsDeploymentRepository>;
 
     mockTargetService = {
-      getRepositoryByTargetId: jest.fn(),
+      findById: jest.fn(),
     } as unknown as jest.Mocked<TargetService>;
 
     mockLogger = stubLogger();
@@ -146,10 +147,8 @@ describe('PublishStandardsUseCase', () => {
       mockStandardsPort.getStandardVersionById.mockResolvedValue(
         standardVersion,
       );
-      mockTargetService.getRepositoryByTargetId.mockResolvedValue({
-        target,
-        repository: gitRepo,
-      });
+      mockTargetService.findById.mockResolvedValue(target);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockStandardsDeploymentRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
         [],
       );
@@ -275,10 +274,8 @@ describe('PublishStandardsUseCase', () => {
       mockStandardsPort.getStandardVersionById.mockResolvedValue(
         standardVersion,
       );
-      mockTargetService.getRepositoryByTargetId.mockResolvedValue({
-        target,
-        repository: gitRepo,
-      });
+      mockTargetService.findById.mockResolvedValue(target);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockStandardsDeploymentRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
         [],
       );
@@ -371,10 +368,8 @@ describe('PublishStandardsUseCase', () => {
       mockStandardsPort.getStandardVersionById.mockResolvedValue(
         standardVersion,
       );
-      mockTargetService.getRepositoryByTargetId.mockResolvedValue({
-        target,
-        repository: gitRepo,
-      });
+      mockTargetService.findById.mockResolvedValue(target);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockStandardsDeploymentRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
         [],
       );
@@ -508,10 +503,8 @@ describe('PublishStandardsUseCase', () => {
         return Promise.resolve(null);
       });
 
-      mockTargetService.getRepositoryByTargetId.mockResolvedValue({
-        target,
-        repository: gitRepo,
-      });
+      mockTargetService.findById.mockResolvedValue(target);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
       mockStandardsDeploymentRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
         [],
       );
@@ -634,10 +627,8 @@ describe('PublishStandardsUseCase', () => {
         },
       );
 
-      mockTargetService.getRepositoryByTargetId.mockResolvedValue({
-        target,
-        repository: gitRepo,
-      });
+      mockTargetService.findById.mockResolvedValue(target);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
 
       // Simulate that the deleted standard was previously deployed
       mockStandardsDeploymentRepository.findActiveStandardVersionsByTarget.mockResolvedValue(

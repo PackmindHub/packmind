@@ -1,6 +1,7 @@
-import { IBaseAdapter, JobsService } from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
+import { IBaseAdapter, JobsService } from '@packmind/node-utils';
 import {
+  GetStandardByIdResponse,
   IAccountsPort,
   IAccountsPortName,
   IDeploymentPort,
@@ -9,65 +10,59 @@ import {
   ILinterPortName,
   ISpacesPort,
   ISpacesPortName,
+  IStandardsPort,
+  ListStandardsBySpaceCommand,
   OrganizationId,
-  SpaceId,
-  UserId,
-} from '@packmind/types';
-import { IStandardsPort } from '@packmind/types';
-import {
   Rule,
   RuleExample,
   RuleId,
+  SpaceId,
   Standard,
   StandardId,
   StandardVersion,
   StandardVersionId,
-  ListStandardsBySpaceCommand,
   UpdateStandardCommand,
-  GetStandardByIdResponse,
+  UserId,
 } from '@packmind/types';
+import { IStandardDelayedJobs } from '../../domain/jobs/IStandardDelayedJobs';
+import { IStandardsRepositories } from '../../domain/repositories/IStandardsRepositories';
 import {
   CreateRuleExampleCommand,
+  DeleteRuleExampleCommand,
   GetRuleExamplesCommand,
   UpdateRuleExampleCommand,
-  DeleteRuleExampleCommand,
 } from '../../domain/useCases';
-import { IStandardsRepositories } from '../../domain/repositories/IStandardsRepositories';
-import { IStandardDelayedJobs } from '../../domain/jobs/IStandardDelayedJobs';
-import { StandardsServices } from '../services/StandardsServices';
-import { CreateStandardUsecase } from './createStandard/createStandard.usecase';
-import { CreateStandardWithExamplesUsecase } from './createStandardWithExamples/createStandardWithExamples.usecase';
-import { UpdateStandardUsecase } from './updateStandard/updateStandard.usecase';
-import { AddRuleToStandardUsecase } from './addRuleToStandard/addRuleToStandard.usecase';
-import { GetStandardByIdUsecase } from './getStandardById/getStandardById.usecase';
-import { ListStandardsBySpaceUsecase } from './listStandardsBySpace/listStandardsBySpace.usecase';
-import { ListStandardVersionsUsecase } from './listStandardVersions/listStandardVersions.usecase';
-import { GetRulesByStandardIdUsecase } from './getRulesByStandardId/getRulesByStandardId.usecase';
-import { FindStandardBySlugUsecase } from './findStandardBySlug/findStandardBySlug.usecase';
-import { GetStandardVersionUsecase } from './getStandardVersion/getStandardVersion.usecase';
-import { GetLatestStandardVersionUsecase } from './getLatestStandardVersion/getLatestStandardVersion.usecase';
-import { GetStandardVersionByIdUsecase } from './getStandardVersionById/getStandardVersionById.usecase';
-import { DeleteStandardUsecase } from './deleteStandard/deleteStandard.usecase';
-import { DeleteStandardsBatchUsecase } from './deleteStandardsBatch/deleteStandardsBatch.usecase';
-import { CreateRuleExampleUsecase } from './createRuleExample/createRuleExample.usecase';
-import { GetRuleExamplesUsecase } from './getRuleExamples/getRuleExamples.usecase';
-import { UpdateRuleExampleUsecase } from './updateRuleExample/updateRuleExample.usecase';
-import { DeleteRuleExampleUsecase } from './deleteRuleExample/deleteRuleExample.usecase';
 import { GenerateStandardSummaryJobFactory } from '../../infra/jobs/GenerateStandardSummaryJobFactory';
+import { StandardsServices } from '../services/StandardsServices';
+import { AddRuleToStandardUsecase } from '../useCases/addRuleToStandard/addRuleToStandard.usecase';
+import { CreateRuleExampleUsecase } from '../useCases/createRuleExample/createRuleExample.usecase';
+import { CreateStandardUsecase } from '../useCases/createStandard/createStandard.usecase';
+import { CreateStandardWithExamplesUsecase } from '../useCases/createStandardWithExamples/createStandardWithExamples.usecase';
+import { DeleteRuleExampleUsecase } from '../useCases/deleteRuleExample/deleteRuleExample.usecase';
+import { DeleteStandardUsecase } from '../useCases/deleteStandard/deleteStandard.usecase';
+import { DeleteStandardsBatchUsecase } from '../useCases/deleteStandardsBatch/deleteStandardsBatch.usecase';
+import { FindStandardBySlugUsecase } from '../useCases/findStandardBySlug/findStandardBySlug.usecase';
+import { GetLatestStandardVersionUsecase } from '../useCases/getLatestStandardVersion/getLatestStandardVersion.usecase';
+import { GetRuleExamplesUsecase } from '../useCases/getRuleExamples/getRuleExamples.usecase';
+import { GetRulesByStandardIdUsecase } from '../useCases/getRulesByStandardId/getRulesByStandardId.usecase';
+import { GetStandardByIdUsecase } from '../useCases/getStandardById/getStandardById.usecase';
+import { GetStandardVersionUsecase } from '../useCases/getStandardVersion/getStandardVersion.usecase';
+import { GetStandardVersionByIdUsecase } from '../useCases/getStandardVersionById/getStandardVersionById.usecase';
+import { ListStandardsBySpaceUsecase } from '../useCases/listStandardsBySpace/listStandardsBySpace.usecase';
+import { ListStandardVersionsUsecase } from '../useCases/listStandardVersions/listStandardVersions.usecase';
+import { UpdateRuleExampleUsecase } from '../useCases/updateRuleExample/updateRuleExample.usecase';
+import { UpdateStandardUsecase } from '../useCases/updateStandard/updateStandard.usecase';
 
 const origin = 'StandardsAdapter';
 
 export class StandardsAdapter
   implements IBaseAdapter<IStandardsPort>, IStandardsPort
 {
-  private readonly services: StandardsServices;
-  private readonly repositories: IStandardsRepositories;
-  private readonly logger: PackmindLogger;
-  private standardDelayedJobs!: IStandardDelayedJobs;
-  private accountsPort!: IAccountsPort;
-  private spacesPort!: ISpacesPort;
-  private linterPort!: ILinterPort;
-  private deploymentsPort!: IDeploymentPort;
+  private standardDelayedJobs: IStandardDelayedJobs | null = null;
+  private accountsPort: IAccountsPort | null = null;
+  private spacesPort: ISpacesPort | null = null;
+  private linterPort: ILinterPort | null = null;
+  private deploymentsPort: IDeploymentPort | null = null;
 
   // Use cases - all initialized in initialize()
   private _createStandard!: CreateStandardUsecase;
@@ -90,14 +85,10 @@ export class StandardsAdapter
   private _deleteRuleExample!: DeleteRuleExampleUsecase;
 
   constructor(
-    services: StandardsServices,
-    repositories: IStandardsRepositories,
-    logger: PackmindLogger = new PackmindLogger(origin),
+    private readonly services: StandardsServices,
+    private readonly repositories: IStandardsRepositories,
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    this.services = services;
-    this.repositories = repositories;
-    this.logger = logger;
-
     this.logger.info(
       'StandardsAdapter constructed - awaiting initialization with ports',
     );
@@ -113,23 +104,24 @@ export class StandardsAdapter
     [ISpacesPortName]: ISpacesPort;
     [ILinterPortName]: ILinterPort;
     [IDeploymentPortName]: IDeploymentPort;
-    jobsService?: JobsService;
+    jobsService: JobsService;
   }): Promise<void> {
     this.logger.info('Initializing StandardsAdapter with ports and services');
 
-    // Step 1: Set all ports (all are required)
     this.accountsPort = ports[IAccountsPortName];
     this.spacesPort = ports[ISpacesPortName];
     this.linterPort = ports[ILinterPortName];
     this.deploymentsPort = ports[IDeploymentPortName];
 
-    // Step 2: Build delayed jobs from JobsService if provided
-    if (ports.jobsService) {
-      this.standardDelayedJobs = await this.buildDelayedJobs(ports.jobsService);
-    }
+    this.standardDelayedJobs = await this.buildDelayedJobs(ports.jobsService);
 
-    // Step 3: Validate required ports and services
-    if (!this.isReady()) {
+    if (
+      !this.accountsPort ||
+      !this.spacesPort ||
+      !this.linterPort ||
+      !this.deploymentsPort ||
+      !this.standardDelayedJobs
+    ) {
       throw new Error(
         'StandardsAdapter: Required ports/services not provided. Ensure JobsService is passed to initialize().',
       );
@@ -280,11 +272,11 @@ export class StandardsAdapter
    */
   public isReady(): boolean {
     return (
-      this.accountsPort !== undefined &&
-      this.spacesPort !== undefined &&
-      this.linterPort !== undefined &&
-      this.deploymentsPort !== undefined &&
-      this.standardDelayedJobs !== undefined
+      this.accountsPort != null &&
+      this.spacesPort != null &&
+      this.linterPort != null &&
+      this.deploymentsPort != null &&
+      this.standardDelayedJobs != null
     );
   }
 

@@ -36,8 +36,8 @@ export class DeploymentsHexa extends BaseHexa<
   DeploymentsHexaOpts,
   IDeploymentPort
 > {
-  public readonly repositories: DeploymentsRepositories;
-  private services!: DeploymentsServices;
+  private readonly repositories: DeploymentsRepositories;
+  private readonly services: DeploymentsServices;
   private readonly adapter: DeploymentsAdapter;
 
   constructor(
@@ -54,8 +54,15 @@ export class DeploymentsHexa extends BaseHexa<
         this.logger,
       );
 
-      // Create adapter in constructor - ports and services will be set during initialize()
-      this.adapter = new DeploymentsAdapter(this);
+      // Initialize services (no longer depends on GitPort)
+      this.services = new DeploymentsServices(this.repositories, this.logger);
+
+      // Create adapter in constructor - ports will be set during initialize()
+      this.adapter = new DeploymentsAdapter(
+        this.services,
+        this.repositories.getStandardsDeploymentRepository(),
+        this.repositories.getRecipesDeploymentRepository(),
+      );
 
       this.logger.info('DeploymentsHexa construction completed');
     } catch (error) {
@@ -84,14 +91,7 @@ export class DeploymentsHexa extends BaseHexa<
       const accountsPort =
         registry.getAdapter<IAccountsPort>(IAccountsPortName);
 
-      // Initialize services with gitPort
-      this.services = new DeploymentsServices(
-        this.repositories,
-        gitPort,
-        this.logger,
-      );
-
-      // Initialize adapter once with all ports and services
+      // Initialize adapter with all ports
       this.adapter.initialize({
         [IGitPortName]: gitPort,
         [IRecipesPortName]: recipesPort,
@@ -99,7 +99,6 @@ export class DeploymentsHexa extends BaseHexa<
         [IStandardsPortName]: standardsPort,
         [ISpacesPortName]: spacesPort,
         [IAccountsPortName]: accountsPort,
-        deploymentsServices: this.services,
       });
 
       this.logger.info('DeploymentsHexa initialized successfully');
