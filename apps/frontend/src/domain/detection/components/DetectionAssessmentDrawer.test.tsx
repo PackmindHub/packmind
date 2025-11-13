@@ -35,7 +35,7 @@ type UpdateDetectionHeuristicsMutationResult = UseMutationResult<
     standardId: string;
     ruleId: string;
     detectionHeuristicsId: string;
-    heuristics: string;
+    heuristics: string[];
   },
   unknown
 >;
@@ -69,7 +69,7 @@ describe('DetectionAssessmentDrawer', () => {
       id: createDetectionHeuristicsId('heuristics-id'),
       ruleId: createRuleId('rule-id'),
       language: ProgrammingLanguage.TYPESCRIPT,
-      heuristics: 'Initial heuristics text',
+      heuristics: ['Initial heuristics text'],
     };
 
     activePrograms = [];
@@ -242,10 +242,12 @@ describe('DetectionAssessmentDrawer', () => {
         screen = renderWithContext();
       });
 
-      it('shows no heuristics available message', () => {
-        expect(
-          screen.getByText('No heuristics available for this rule.'),
-        ).toBeInTheDocument();
+      it('shows empty textarea when heuristics are not available', () => {
+        const textarea = screen.getByPlaceholderText(
+          'Enter detection heuristics...',
+        );
+        expect(textarea).toBeInTheDocument();
+        expect(textarea).toHaveValue('');
       });
     });
 
@@ -262,7 +264,7 @@ describe('DetectionAssessmentDrawer', () => {
           'Enter detection heuristics...',
         );
         expect(textarea).toBeInTheDocument();
-        expect(textarea).toHaveValue(detectionHeuristics.heuristics);
+        expect(textarea).toHaveValue(detectionHeuristics.heuristics.join('\n'));
       });
 
       describe('when textarea should be editable', () => {
@@ -530,7 +532,7 @@ describe('DetectionAssessmentDrawer', () => {
               standardId: props.standardId,
               ruleId: props.ruleId,
               detectionHeuristicsId: detectionHeuristics.id,
-              heuristics: 'Updated heuristics',
+              heuristics: ['Updated heuristics'],
             },
             expect.any(Object),
           );
