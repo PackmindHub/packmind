@@ -4,15 +4,19 @@ import {
   PMBox,
   PMButton,
   PMEllipsisMenuAction,
+  PMFeatureFlag,
   PMHStack,
   PMIcon,
   PMText,
   PMTooltip,
   PMVStack,
+  DETECTION_ASSESSMENT_DRAWER_FEATURE_KEY,
+  DEFAULT_FEATURE_DOMAIN_MAP,
 } from '@packmind/ui';
 import { DetectionProgram } from '@packmind/types';
 import { DetectionStatus } from '@packmind/types';
 import { useGetRuleDetectionAssessmentQuery } from '../api/queries/DetectionProgramQueries';
+import { useGetMeQuery } from '../../accounts/api/queries/UserQueries';
 import { ConfigurationCard, ConfigurationCardProps } from './ConfigurationCard';
 import { DraftCardData } from './DetectionDraftCard';
 import { DetectionAssessmentDrawer } from './DetectionAssessmentDrawer';
@@ -231,6 +235,10 @@ const ActiveConfigurationCardAssessment: React.FC<
     language,
   );
 
+  const { data: meData } = useGetMeQuery();
+  const userEmail =
+    meData?.authenticated === true ? meData.user.email : null;
+
   const configurationCardProps: ConfigurationCardProps = {
     id,
     language,
@@ -254,13 +262,19 @@ const ActiveConfigurationCardAssessment: React.FC<
       );
 
       configurationCardProps.mainAction = (
-        <PMButton
-          size="sm"
-          variant="outline"
-          onClick={() => setIsDrawerOpen(true)}
+        <PMFeatureFlag
+          featureKeys={[DETECTION_ASSESSMENT_DRAWER_FEATURE_KEY]}
+          featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
+          userEmail={userEmail}
         >
-          View Details
-        </PMButton>
+          <PMButton
+            size="sm"
+            variant="outline"
+            onClick={() => setIsDrawerOpen(true)}
+          >
+            View Details
+          </PMButton>
+        </PMFeatureFlag>
       );
 
       return (
@@ -280,14 +294,20 @@ const ActiveConfigurationCardAssessment: React.FC<
               </PMTooltip>
             </PMHStack>
           </ConfigurationCard>
-          <DetectionAssessmentDrawer
-            isOpen={isDrawerOpen}
-            onClose={() => setIsDrawerOpen(false)}
-            assessment={assessment}
-            standardId={standardId}
-            ruleId={ruleId}
-            language={language}
-          />
+          <PMFeatureFlag
+            featureKeys={[DETECTION_ASSESSMENT_DRAWER_FEATURE_KEY]}
+            featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
+            userEmail={userEmail}
+          >
+            <DetectionAssessmentDrawer
+              isOpen={isDrawerOpen}
+              onClose={() => setIsDrawerOpen(false)}
+              assessment={assessment}
+              standardId={standardId}
+              ruleId={ruleId}
+              language={language}
+            />
+          </PMFeatureFlag>
         </>
       );
     }
