@@ -1,6 +1,6 @@
 # [Unreleased]
 
-# [1.3.1] - 2015-10-28
+# [1.3.1] - 2025-10-28
 
 ## Changed
 
@@ -12,7 +12,7 @@
 
 - Ensure emails are not displayed in server logs (#270)
 
-# [1.3.0] - 2015-10-09
+# [1.3.0] - 2025-10-09
 
 ## Added
 
@@ -28,13 +28,13 @@
 - Issue with Webhook URL has been fixed (#239)
 - Docker images are now available in Arm64 in addition to Amd64 (#225)
 
-# [1.2.1] - 2015-10-03
+# [1.2.1] - 2025-10-03
 
 ## Changed
 
 - Various UI/UX improvements
 
-# [1.2.0] - 2015-10-02
+# [1.2.0] - 2025-10-02
 
 ## Added
 
@@ -47,7 +47,7 @@
 - Redesign organization dashboard (#216)
 - Harmonize standards/recipes pages (#136)
 
-# [1.1.1] - 2015-09-26
+# [1.1.1] - 2025-09-26
 
 ## Changed
 
@@ -55,7 +55,7 @@
 - Multiple UI improvements
 - Add MCP tool to create first standards
 
-# [1.1.0] - 2015-09-22
+# [1.1.0] - 2025-09-22
 
 ## Added
 
@@ -71,7 +71,7 @@
 
 - Rendering of recipes index was not properly updated in some edge cases (#101)
 
-# [1.0.1] - 2015-09-11
+# [1.0.1] - 2025-09-11
 
 ## Added
 
@@ -90,7 +90,7 @@
 - A standard with the same name as a previously deleted one can now be deleted (#135)
 - Fix redirection after deleting a standard (#145)
 
-# [1.0.0] - 2015-09-05
+# [1.0.0] - 2025-09-05
 
 ## Added
 
@@ -105,9 +105,12 @@
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
-[Unreleased]: https://github.com/PackmindHub/packmind-monorepo/compare/release/1.3.0...HEAD
-[1.3.0]: https://github.com/PackmindHub/packmind-monorepo/compare/release/1.2.1...release/1.3.0
-[1.2.1]: https://github.com/PackmindHub/packmind-monorepo/compare/release/1.2.0...release/1.2.1
-[1.2.0]: https://github.com/PackmindHub/packmind-monorepo/compare/release/1.0.1...release/1.2.1
-[1.0.1]: https://github.com/PackmindHub/packmind-monorepo/compare/release/1.0.0...release/1.0.1
-[1.0.0]: https://github.com/PackmindHub/packmind-monorepo/compare/1286712f81d6e2b8e18888ee8e23c5503a52c887...release/1.0.0
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.3.0...HEAD
+[1.3.1]: https://github.com/PackmindHub/packmind/compare/release/1.3.0...release/1.3.1
+[1.3.0]: https://github.com/PackmindHub/packmind/compare/release/1.2.1...release/1.3.0
+[1.2.1]: https://github.com/PackmindHub/packmind/compare/release/1.2.0...release/1.2.1
+[1.2.0]: https://github.com/PackmindHub/packmind/compare/release/1.2.0...release/1.2.1
+[1.1.1]: https://github.com/PackmindHub/packmind/compare/release/1.1.0...release/1.2.0
+[1.1.0]: https://github.com/PackmindHub/packmind/compare/release/1.0.1...release/1.1.0
+[1.0.1]: https://github.com/PackmindHub/packmind/compare/release/1.0.0...release/1.0.1
+[1.0.0]: https://github.com/PackmindHub/packmind/compare/97dce6228693e6f477654dd0018cca583cc95e8c...release/1.0.0
