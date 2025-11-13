@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
   PMBox,
   PMButton,
@@ -10,10 +10,15 @@ import {
   PMTextArea,
   PMVStack,
 } from '@packmind/ui';
-import { RuleDetectionAssessment } from '@packmind/types';
+import {
+  RuleDetectionAssessment,
+  RuleDetectionAssessmentStatus,
+  DetectionStatus,
+} from '@packmind/types';
 import {
   useGetDetectionHeuristicsQuery,
   useUpdateDetectionHeuristicsMutation,
+  useGetActiveDetectionProgramsQuery,
 } from '../api/queries/DetectionProgramQueries';
 
 interface DetectionAssessmentDrawerProps {
@@ -34,7 +39,30 @@ export const DetectionAssessmentDrawer: React.FC<
   const { data: detectionHeuristics, isLoading: isLoadingHeuristics } =
     useGetDetectionHeuristicsQuery(standardId, ruleId, language);
 
+  const { data: activePrograms } = useGetActiveDetectionProgramsQuery(
+    standardId,
+    ruleId,
+  );
+
   const updateHeuristics = useUpdateDetectionHeuristicsMutation();
+
+  const isEditable = useMemo(() => {
+    // Check if assessment is in error
+    const isAssessmentInError =
+      assessment.status === RuleDetectionAssessmentStatus.FAILED;
+
+    // Check if program generation is in error
+    const programForLanguage = activePrograms?.find(
+      (program) =>
+        program.detectionProgram?.language === language ||
+        program.language === language,
+    );
+    const isProgramGenerationInError =
+      programForLanguage?.detectionProgram?.status === DetectionStatus.ERROR ||
+      programForLanguage?.detectionProgram?.status === DetectionStatus.FAILURE;
+
+    return isAssessmentInError || isProgramGenerationInError;
+  }, [assessment.status, activePrograms, language]);
 
   useEffect(() => {
     if (detectionHeuristics) {
@@ -144,21 +172,32 @@ export const DetectionAssessmentDrawer: React.FC<
                       onChange={handleHeuristicsChange}
                       placeholder="Enter detection heuristics..."
                       rows={10}
-                      disabled={updateHeuristics.isPending}
+                      disabled={!isEditable || updateHeuristics.isPending}
                     />
                   )}
-                  <PMHStack gap={2} justify="flex-end" width="full">
-                    <PMButton
-                      onClick={handleSave}
-                      disabled={!hasChanges || updateHeuristics.isPending}
-                      loading={updateHeuristics.isPending}
-                    >
-                      Save Changes
-                    </PMButton>
-                  </PMHStack>
                 </PMVStack>
               </PMVStack>
             </PMDrawer.Body>
+            <PMDrawer.Footer>
+              <PMHStack gap={2} justify="flex-end">
+                <PMButton
+                  variant="outline"
+                  onClick={handleCancel}
+                  disabled={updateHeuristics.isPending}
+                >
+                  {hasChanges ? 'Cancel' : 'Close'}
+                </PMButton>
+                {detectionHeuristics && isEditable && (
+                  <PMButton
+                    onClick={handleSave}
+                    disabled={!hasChanges || updateHeuristics.isPending}
+                    loading={updateHeuristics.isPending}
+                  >
+                    Save Changes
+                  </PMButton>
+                )}
+              </PMHStack>
+            </PMDrawer.Footer>
             <PMDrawer.CloseTrigger asChild>
               <PMCloseButton size="sm" />
             </PMDrawer.CloseTrigger>
