@@ -1,12 +1,15 @@
 import { PackmindLogger } from '@packmind/logger';
-import { IAccountsPort } from '@packmind/types';
 import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
-import { AddGitProviderCommand, IAddGitProviderUseCase } from '@packmind/types';
+import {
+  AddGitProviderCommand,
+  GitProvider,
+  IAccountsPort,
+  IAddGitProviderUseCase,
+} from '@packmind/types';
+import { GitProviderService } from '../../GitProviderService';
 
 // Re-export for backward compatibility
 export { AddGitProviderCommand };
-import { GitProvider } from '@packmind/types';
-import { GitProviderService } from '../../GitProviderService';
 
 const origin = 'AddGitProviderUseCase';
 
@@ -19,7 +22,7 @@ export class AddGitProviderUseCase
     accountsAdapter: IAccountsPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsAdapter, accountsAdapter, logger);
+    super(accountsAdapter, logger);
   }
 
   protected async executeForAdmins(

@@ -3,16 +3,15 @@ import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
   FileUpdates,
+  IAccountsPort,
   ICodingAgentPort,
   IPullAllContentResponse,
   IRecipesPort,
   ISpacesPort,
   IStandardsPort,
-  OrganizationProvider,
   PackmindCommand,
   Recipe,
   RecipeVersion,
-  UserProvider,
 } from '@packmind/types';
 
 const origin = 'PullAllContentUseCase';
@@ -26,11 +25,10 @@ export class PullAllContentUseCase extends AbstractMemberUseCase<
     private readonly standardsPort: IStandardsPort,
     private readonly spacesPort: ISpacesPort,
     private readonly codingAgentPort: ICodingAgentPort,
-    userProvider: UserProvider,
-    organizationProvider: OrganizationProvider,
+    accountsPort: IAccountsPort,
     logger: PackmindLogger = new PackmindLogger(origin, LogLevel.INFO),
   ) {
-    super(userProvider, organizationProvider, logger);
+    super(accountsPort, logger);
     this.logger.info('PullAllContentUseCase initialized');
   }
 

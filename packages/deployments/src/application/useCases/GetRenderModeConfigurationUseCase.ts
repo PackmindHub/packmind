@@ -1,10 +1,10 @@
-import { OrganizationProvider, UserProvider } from '@packmind/types';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
   GetRenderModeConfigurationCommand,
   GetRenderModeConfigurationResult,
+  IAccountsPort,
 } from '@packmind/types';
-import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 
 const origin = 'GetRenderModeConfigurationUseCase';
@@ -15,11 +15,10 @@ export class GetRenderModeConfigurationUseCase extends AbstractMemberUseCase<
 > {
   constructor(
     private readonly renderModeConfigurationService: RenderModeConfigurationService,
-    userProvider: UserProvider,
-    organizationProvider: OrganizationProvider,
+    accountsPort: IAccountsPort,
     logger: PackmindLogger = new PackmindLogger(origin, LogLevel.INFO),
   ) {
-    super(userProvider, organizationProvider, logger);
+    super(accountsPort, logger);
     this.logger.info('GetRenderModeConfigurationUseCase initialized');
   }
 

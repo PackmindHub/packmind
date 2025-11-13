@@ -16,6 +16,8 @@ import {
   GetTargetsByGitRepoCommand,
   GetTargetsByOrganizationCommand,
   GetTargetsByRepositoryCommand,
+  IAccountsPort,
+  IAccountsPortName,
   ICodingAgentPort,
   ICodingAgentPortName,
   IDeploymentPort,
@@ -30,7 +32,6 @@ import {
   IStandardsPortName,
   ListDeploymentsByRecipeCommand,
   ListDeploymentsByStandardCommand,
-  OrganizationProvider,
   PackmindCommand,
   PublishRecipesCommand,
   PublishStandardsCommand,
@@ -42,7 +43,6 @@ import {
   TargetWithRepository,
   UpdateRenderModeConfigurationCommand,
   UpdateTargetCommand,
-  UserProvider,
 } from '@packmind/types';
 import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
@@ -88,8 +88,7 @@ export class DeploymentsAdapter
   private codingAgentPort!: ICodingAgentPort;
   private standardsPort!: IStandardsPort;
   private spacesPort!: ISpacesPort;
-  private userProvider!: UserProvider;
-  private organizationProvider!: OrganizationProvider;
+  private accountsPort!: IAccountsPort;
 
   // Use cases - initialized in initialize()
   private _listDeploymentsByRecipeUseCase!: ListDeploymentsByRecipeUseCase;
@@ -128,9 +127,8 @@ export class DeploymentsAdapter
     [ICodingAgentPortName]: ICodingAgentPort;
     [IStandardsPortName]: IStandardsPort;
     [ISpacesPortName]: ISpacesPort;
+    [IAccountsPortName]: IAccountsPort;
     deploymentsServices: DeploymentsServices;
-    userProvider: UserProvider;
-    organizationProvider: OrganizationProvider;
   }): void {
     // Step 1: Set all ports
     this.gitPort = ports[IGitPortName];
@@ -138,9 +136,8 @@ export class DeploymentsAdapter
     this.codingAgentPort = ports[ICodingAgentPortName];
     this.standardsPort = ports[IStandardsPortName];
     this.spacesPort = ports[ISpacesPortName];
+    this.accountsPort = ports[IAccountsPortName];
     this.deploymentsServices = ports.deploymentsServices;
-    this.userProvider = ports.userProvider;
-    this.organizationProvider = ports.organizationProvider;
 
     // Step 2: Validate all required ports are set
     if (!this.isReady()) {
@@ -233,22 +230,19 @@ export class DeploymentsAdapter
     this._getRenderModeConfigurationUseCase =
       new GetRenderModeConfigurationUseCase(
         this.deploymentsServices.getRenderModeConfigurationService(),
-        this.userProvider,
-        this.organizationProvider,
+        this.accountsPort,
       );
 
     this._createRenderModeConfigurationUseCase =
       new CreateRenderModeConfigurationUseCase(
         this.deploymentsServices.getRenderModeConfigurationService(),
-        this.userProvider,
-        this.organizationProvider,
+        this.accountsPort,
       );
 
     this._updateRenderModeConfigurationUseCase =
       new UpdateRenderModeConfigurationUseCase(
         this.deploymentsServices.getRenderModeConfigurationService(),
-        this.userProvider,
-        this.organizationProvider,
+        this.accountsPort,
       );
 
     this._pullAllContentUseCase = new PullAllContentUseCase(
@@ -256,8 +250,7 @@ export class DeploymentsAdapter
       this.standardsPort,
       this.spacesPort,
       this.codingAgentPort,
-      this.userProvider,
-      this.organizationProvider,
+      this.accountsPort,
     );
   }
 
@@ -268,9 +261,8 @@ export class DeploymentsAdapter
       this.codingAgentPort !== undefined &&
       this.standardsPort !== undefined &&
       this.spacesPort !== undefined &&
-      this.deploymentsServices !== undefined &&
-      this.userProvider !== undefined &&
-      this.organizationProvider !== undefined
+      this.accountsPort !== undefined &&
+      this.deploymentsServices !== undefined
     );
   }
 

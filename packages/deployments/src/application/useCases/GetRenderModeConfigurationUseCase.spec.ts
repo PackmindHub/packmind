@@ -1,21 +1,20 @@
-import { v4 as uuidv4 } from 'uuid';
-import { GetRenderModeConfigurationUseCase } from './GetRenderModeConfigurationUseCase';
-import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import { stubLogger } from '@packmind/test-utils';
 import {
   GetRenderModeConfigurationCommand,
-  RenderMode,
-  RenderModeConfiguration,
-} from '@packmind/types';
-import {
+  IAccountsPort,
   Organization,
   OrganizationId,
+  RenderMode,
+  RenderModeConfiguration,
   User,
   UserOrganizationMembership,
   createOrganizationId,
   createUserId,
 } from '@packmind/types';
+import { v4 as uuidv4 } from 'uuid';
 import { renderModeConfigurationFactory } from '../../../test';
+import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
+import { GetRenderModeConfigurationUseCase } from './GetRenderModeConfigurationUseCase';
 
 const createUserWithMembership = (
   userId: string,
@@ -37,10 +36,8 @@ const createUserWithMembership = (
 
 describe('GetRenderModeConfigurationUseCase', () => {
   let service: jest.Mocked<RenderModeConfigurationService>;
-  let userProvider: {
+  let accountsPort: {
     getUserById: jest.Mock;
-  };
-  let organizationProvider: {
     getOrganizationById: jest.Mock;
   };
   let useCase: GetRenderModeConfigurationUseCase;
@@ -54,10 +51,8 @@ describe('GetRenderModeConfigurationUseCase', () => {
       upsertConfiguration: jest.fn(),
     } as unknown as jest.Mocked<RenderModeConfigurationService>;
 
-    userProvider = {
+    accountsPort = {
       getUserById: jest.fn(),
-    };
-    organizationProvider = {
       getOrganizationById: jest.fn(),
     };
 
@@ -73,15 +68,14 @@ describe('GetRenderModeConfigurationUseCase', () => {
       userId: uuidv4(),
     };
 
-    organizationProvider.getOrganizationById.mockResolvedValue(organization);
-    userProvider.getUserById.mockResolvedValue(
+    accountsPort.getOrganizationById.mockResolvedValue(organization);
+    accountsPort.getUserById.mockResolvedValue(
       createUserWithMembership(command.userId, organization, 'member'),
     );
 
     useCase = new GetRenderModeConfigurationUseCase(
       service,
-      userProvider,
-      organizationProvider,
+      accountsPort as unknown as IAccountsPort,
       stubLogger(),
     );
   });

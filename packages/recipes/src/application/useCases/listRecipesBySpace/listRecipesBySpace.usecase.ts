@@ -1,13 +1,13 @@
-import { RecipeService } from '../../services/RecipeService';
 import { PackmindLogger } from '@packmind/logger';
-import { IAccountsPort } from '@packmind/types';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
-import { ISpacesPort } from '@packmind/types';
 import {
+  IAccountsPort,
+  IListRecipesBySpaceUseCase,
+  ISpacesPort,
   ListRecipesBySpaceCommand,
   ListRecipesBySpaceResponse,
-  IListRecipesBySpaceUseCase,
 } from '@packmind/types';
+import { RecipeService } from '../../services/RecipeService';
 
 const origin = 'ListRecipesBySpaceUsecase';
 
@@ -24,7 +24,7 @@ export class ListRecipesBySpaceUsecase
     private readonly spacesPort: ISpacesPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsAdapter, accountsAdapter, logger);
+    super(accountsAdapter, logger);
     this.logger.info('ListRecipesBySpaceUsecase initialized');
   }
 

@@ -1,12 +1,14 @@
-import { GitProvider, GitProviderId } from '@packmind/types';
-import { GitProviderService } from '../../GitProviderService';
 import { PackmindLogger } from '@packmind/logger';
-import { PackmindCommand, IAccountsPort } from '@packmind/types';
 import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
 import {
+  GitProvider,
+  GitProviderId,
   GitProviderNotFoundError,
   GitProviderOrganizationMismatchError,
+  IAccountsPort,
+  PackmindCommand,
 } from '@packmind/types';
+import { GitProviderService } from '../../GitProviderService';
 
 const origin = 'UpdateGitProviderUseCase';
 
@@ -24,7 +26,7 @@ export class UpdateGitProviderUseCase extends AbstractAdminUseCase<
     accountsAdapter: IAccountsPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsAdapter, accountsAdapter, logger);
+    super(accountsAdapter, logger);
   }
 
   protected async executeForAdmins(

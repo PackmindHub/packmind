@@ -1,29 +1,27 @@
-import { ListOrganizationUsersUseCase } from './ListOrganizationUsersUseCase';
-import { ListOrganizationUsersCommand } from '@packmind/types';
-import { stubLogger } from '@packmind/test-utils';
 import { PackmindLogger } from '@packmind/logger';
-import { UserProvider, OrganizationProvider } from '@packmind/types';
 import { MemberContext } from '@packmind/node-utils';
+import { stubLogger } from '@packmind/test-utils';
+import {
+  createOrganizationId,
+  createUserId,
+  IAccountsPort,
+  ListOrganizationUsersCommand,
+} from '@packmind/types';
+import { organizationFactory, userFactory } from '../../../../test';
 import { UserService } from '../../services/UserService';
-import { userFactory, organizationFactory } from '../../../../test';
-import { createUserId } from '@packmind/types';
-import { createOrganizationId } from '@packmind/types';
+import { ListOrganizationUsersUseCase } from './ListOrganizationUsersUseCase';
 
 describe('ListOrganizationUsersUseCase', () => {
   let listOrganizationUsersUseCase: ListOrganizationUsersUseCase;
-  let mockUserProvider: jest.Mocked<UserProvider>;
-  let mockOrganizationProvider: jest.Mocked<OrganizationProvider>;
+  let mockAccountsPort: jest.Mocked<IAccountsPort>;
   let mockUserService: jest.Mocked<UserService>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
-    mockUserProvider = {
+    mockAccountsPort = {
       getUserById: jest.fn(),
-    } as unknown as jest.Mocked<UserProvider>;
-
-    mockOrganizationProvider = {
       getOrganizationById: jest.fn(),
-    } as unknown as jest.Mocked<OrganizationProvider>;
+    } as unknown as jest.Mocked<IAccountsPort>;
 
     mockUserService = {
       listUsersByOrganization: jest.fn(),
@@ -32,8 +30,7 @@ describe('ListOrganizationUsersUseCase', () => {
     stubbedLogger = stubLogger();
 
     listOrganizationUsersUseCase = new ListOrganizationUsersUseCase(
-      mockUserProvider,
-      mockOrganizationProvider,
+      mockAccountsPort,
       mockUserService,
       stubbedLogger,
     );

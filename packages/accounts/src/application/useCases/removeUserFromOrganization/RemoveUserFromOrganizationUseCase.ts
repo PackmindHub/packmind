@@ -1,19 +1,19 @@
 import { PackmindLogger } from '@packmind/logger';
+import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
 import {
+  IAccountsPort,
   IRemoveUserFromOrganizationUseCase,
   RemoveUserFromOrganizationCommand,
   RemoveUserFromOrganizationResponse,
-  OrganizationProvider,
-  UserProvider,
+  User,
+  createOrganizationId,
+  createUserId,
 } from '@packmind/types';
-import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
-import { UserService } from '../../services/UserService';
-import { User, createUserId } from '@packmind/types';
-import { createOrganizationId } from '@packmind/types';
 import {
-  UserNotFoundError,
   UserCannotExcludeSelfError,
+  UserNotFoundError,
 } from '../../../domain/errors';
+import { UserService } from '../../services/UserService';
 
 const origin = 'RemoveUserFromOrganizationUseCase';
 
@@ -25,12 +25,11 @@ export class RemoveUserFromOrganizationUseCase
   implements IRemoveUserFromOrganizationUseCase
 {
   constructor(
-    userProvider: UserProvider,
-    organizationProvider: OrganizationProvider,
+    accountsPort: IAccountsPort,
     readonly userService: UserService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(userProvider, organizationProvider, logger);
+    super(accountsPort, logger);
     this.logger.info('RemoveUserFromOrganizationUseCase initialized');
   }
 

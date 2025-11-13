@@ -1,24 +1,25 @@
+import { PackmindLogger } from '@packmind/logger';
+import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
 import {
   CreateInvitationsCommand,
   CreateInvitationsResponse,
+  DirectMembershipResult,
+  IAccountsPort,
   ICreateInvitationsUseCase,
   InvitationCreationResult,
   InvitationSkipResult,
-  DirectMembershipResult,
+  Organization,
+  User,
+  UserOrganizationRole,
 } from '@packmind/types';
-import { PackmindLogger } from '@packmind/logger';
-import { UserProvider, OrganizationProvider } from '@packmind/types';
-import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
-import { UserService } from '../../services/UserService';
+import validator from 'validator';
+import { InvitationBatchEmptyError } from '../../../domain/errors';
 import {
-  InvitationCreationRequest,
   InvitationCreationRecord,
+  InvitationCreationRequest,
   InvitationService,
 } from '../../services/InvitationService';
-import { Organization } from '@packmind/types';
-import { User, UserOrganizationRole } from '@packmind/types';
-import { InvitationBatchEmptyError } from '../../../domain/errors';
-import validator from 'validator';
+import { UserService } from '../../services/UserService';
 
 const origin = 'CreateInvitationsUseCase';
 
@@ -30,13 +31,12 @@ export class CreateInvitationsUseCase
   implements ICreateInvitationsUseCase
 {
   constructor(
-    userProvider: UserProvider,
-    organizationProvider: OrganizationProvider,
+    accountsPort: IAccountsPort,
     private readonly userService: UserService,
     private readonly invitationService: InvitationService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(userProvider, organizationProvider, logger);
+    super(accountsPort, logger);
     this.logger.info('CreateInvitationsUseCase initialized');
   }
 

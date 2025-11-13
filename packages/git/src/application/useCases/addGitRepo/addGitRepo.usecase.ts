@@ -27,7 +27,7 @@ export class AddGitRepoUseCase
     private readonly deploymentsAdapter: IDeploymentPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsAdapter, accountsAdapter, logger);
+    super(accountsAdapter, logger);
   }
 
   protected async executeForAdmins(

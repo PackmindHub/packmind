@@ -1,12 +1,12 @@
-import { IAccountsPort } from '@packmind/types';
+import { PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
-import { ISpacesPort } from '@packmind/types';
 import {
+  IAccountsPort,
+  IListStandardsBySpaceUseCase,
+  ISpacesPort,
   ListStandardsBySpaceCommand,
   ListStandardsBySpaceResponse,
-  IListStandardsBySpaceUseCase,
 } from '@packmind/types';
-import { PackmindLogger } from '@packmind/logger';
 import { StandardService } from '../../services/StandardService';
 
 const origin = 'ListStandardsBySpaceUsecase';
@@ -24,7 +24,7 @@ export class ListStandardsBySpaceUsecase
     private readonly spacesPort: ISpacesPort | null,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsAdapter, accountsAdapter, logger);
+    super(accountsAdapter, logger);
     logger.info('ListStandardsBySpaceUsecase initialized');
   }
 

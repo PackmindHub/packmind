@@ -1,19 +1,22 @@
-import { RemoveUserFromOrganizationUseCase } from './RemoveUserFromOrganizationUseCase';
-import { UserService } from '../../services/UserService';
-import { OrganizationService } from '../../services/OrganizationService';
+import { PackmindLogger } from '@packmind/logger';
+import { stubLogger } from '@packmind/test-utils';
+import {
+  createOrganizationId,
+  createUserId,
+  IAccountsPort,
+  User,
+} from '@packmind/types';
+import { organizationFactory, userFactory } from '../../../../test';
+import {
+  UserCannotExcludeSelfError,
+  UserNotFoundError,
+} from '../../../domain/errors';
 import {
   RemoveUserFromOrganizationCommand,
   RemoveUserFromOrganizationResponse,
 } from '../../../domain/useCases';
-import { createUserId, User } from '@packmind/types';
-import { createOrganizationId } from '@packmind/types';
-import {
-  UserNotFoundError,
-  UserCannotExcludeSelfError,
-} from '../../../domain/errors';
-import { stubLogger } from '@packmind/test-utils';
-import { PackmindLogger } from '@packmind/logger';
-import { organizationFactory, userFactory } from '../../../../test';
+import { UserService } from '../../services/UserService';
+import { RemoveUserFromOrganizationUseCase } from './RemoveUserFromOrganizationUseCase';
 
 jest.mock('../../services/UserService');
 jest.mock('../../services/OrganizationService');
@@ -24,7 +27,6 @@ describe('RemoveUserFromOrganizationUseCase', () => {
   const targetUserId = createUserId('target-user');
 
   let userService: jest.Mocked<UserService>;
-  let organizationService: jest.Mocked<OrganizationService>;
   let logger: jest.Mocked<PackmindLogger>;
   let useCase: RemoveUserFromOrganizationUseCase;
   let mockGetUserById: jest.Mock;
@@ -39,18 +41,19 @@ describe('RemoveUserFromOrganizationUseCase', () => {
       excludeUserFromOrganization: jest.fn(),
     } as unknown as jest.Mocked<UserService>;
 
-    organizationService = {
-      getOrganizationById: mockGetOrganizationById,
-    } as unknown as jest.Mocked<OrganizationService>;
-
     const organization = organizationFactory({ id: organizationId });
     mockGetUserById.mockResolvedValue(buildUser(requestingUserId));
     mockGetOrganizationById.mockResolvedValue(organization);
 
     logger = stubLogger();
+
+    const accountsPort = {
+      getUserById: mockGetUserById,
+      getOrganizationById: mockGetOrganizationById,
+    } as unknown as IAccountsPort;
+
     useCase = new RemoveUserFromOrganizationUseCase(
-      userService,
-      organizationService,
+      accountsPort,
       userService,
       logger,
     );

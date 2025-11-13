@@ -1,13 +1,13 @@
-import { StandardService } from '../../services/StandardService';
 import { PackmindLogger } from '@packmind/logger';
-import { IAccountsPort } from '@packmind/types';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
-import { ISpacesPort } from '@packmind/types';
 import {
   GetStandardByIdCommand,
   GetStandardByIdResponse,
+  IAccountsPort,
   IGetStandardByIdUseCase,
+  ISpacesPort,
 } from '@packmind/types';
+import { StandardService } from '../../services/StandardService';
 
 const origin = 'GetStandardByIdUsecase';
 
@@ -21,7 +21,7 @@ export class GetStandardByIdUsecase
     private readonly spacesPort: ISpacesPort | null,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsAdapter, accountsAdapter, logger);
+    super(accountsAdapter, logger);
     this.logger.info('GetStandardByIdUsecase initialized');
   }
 

@@ -1,6 +1,7 @@
 import { stubLogger } from '@packmind/test-utils';
 import {
   FileUpdates,
+  IAccountsPort,
   ICodingAgentPort,
   IRecipesPort,
   ISpacesPort,
@@ -39,12 +40,7 @@ describe('PullAllContentUseCase', () => {
   let standardsPort: jest.Mocked<IStandardsPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
   let codingAgentPort: jest.Mocked<ICodingAgentPort>;
-  let userProvider: {
-    getUserById: jest.Mock;
-  };
-  let organizationProvider: {
-    getOrganizationById: jest.Mock;
-  };
+  let accountsPort: jest.Mocked<IAccountsPort>;
   let useCase: PullAllContentUseCase;
   let command: PackmindCommand;
   let organizationId: OrganizationId;
@@ -80,12 +76,10 @@ describe('PullAllContentUseCase', () => {
       getDeployerRegistry: jest.fn().mockReturnValue(mockRegistry),
     } as unknown as jest.Mocked<ICodingAgentPort>;
 
-    userProvider = {
+    accountsPort = {
       getUserById: jest.fn(),
-    };
-    organizationProvider = {
       getOrganizationById: jest.fn(),
-    };
+    } as unknown as jest.Mocked<IAccountsPort>;
 
     organizationId = createOrganizationId(uuidv4());
     organization = {
@@ -99,8 +93,8 @@ describe('PullAllContentUseCase', () => {
       userId: uuidv4(),
     };
 
-    organizationProvider.getOrganizationById.mockResolvedValue(organization);
-    userProvider.getUserById.mockResolvedValue(
+    accountsPort.getOrganizationById.mockResolvedValue(organization);
+    accountsPort.getUserById.mockResolvedValue(
       createUserWithMembership(command.userId, organization, 'member'),
     );
 
@@ -109,8 +103,7 @@ describe('PullAllContentUseCase', () => {
       standardsPort,
       spacesPort,
       codingAgentPort,
-      userProvider,
-      organizationProvider,
+      accountsPort,
       stubLogger(),
     );
   });

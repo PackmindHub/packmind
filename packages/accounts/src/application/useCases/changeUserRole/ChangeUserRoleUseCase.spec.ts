@@ -1,16 +1,18 @@
 import { stubLogger } from '@packmind/test-utils';
-import { ChangeUserRoleUseCase } from './ChangeUserRoleUseCase';
-import { ChangeUserRoleCommand } from '@packmind/types';
-import { createUserId } from '@packmind/types';
-import { createOrganizationId } from '@packmind/types';
-import { organizationFactory, userFactory } from '../../../../test';
+import {
+  ChangeUserRoleCommand,
+  createOrganizationId,
+  createUserId,
+  IAccountsPort,
+} from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
-import { UserService } from '../../services/UserService';
-import { OrganizationService } from '../../services/OrganizationService';
+import { organizationFactory, userFactory } from '../../../../test';
 import {
   UserNotFoundError,
   UserNotInOrganizationError,
 } from '../../../domain/errors';
+import { UserService } from '../../services/UserService';
+import { ChangeUserRoleUseCase } from './ChangeUserRoleUseCase';
 
 describe('ChangeUserRoleUseCase', () => {
   let useCase: ChangeUserRoleUseCase;
@@ -19,7 +21,6 @@ describe('ChangeUserRoleUseCase', () => {
   let mockChangeUserRole: jest.Mock;
   let mockListUsers: jest.Mock;
   let userService: jest.Mocked<UserService>;
-  let organizationService: jest.Mocked<OrganizationService>;
   const mockLogger = stubLogger();
 
   const adminUserId = uuidv4();
@@ -32,27 +33,23 @@ describe('ChangeUserRoleUseCase', () => {
     mockChangeUserRole = jest.fn();
     mockListUsers = jest.fn();
 
+    const accountsPort = {
+      getUserById: mockGetUserById,
+      getOrganizationById: mockGetOrganizationById,
+    } as unknown as IAccountsPort;
+
     userService = {
       getUserById: mockGetUserById,
       changeUserRole: mockChangeUserRole,
       listUsers: mockListUsers,
     } as unknown as jest.Mocked<UserService>;
 
-    organizationService = {
-      getOrganizationById: mockGetOrganizationById,
-    } as unknown as jest.Mocked<OrganizationService>;
-
     const organization = organizationFactory({
       id: createOrganizationId(organizationId),
     });
     mockGetOrganizationById.mockResolvedValue(organization);
 
-    useCase = new ChangeUserRoleUseCase(
-      userService,
-      organizationService,
-      userService,
-      mockLogger,
-    );
+    useCase = new ChangeUserRoleUseCase(accountsPort, userService, mockLogger);
   });
 
   afterEach(() => {

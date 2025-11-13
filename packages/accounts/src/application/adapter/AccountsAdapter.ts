@@ -1,5 +1,5 @@
-import { IBaseAdapter } from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
+import { IBaseAdapter } from '@packmind/node-utils';
 import {
   ActivateUserAccountCommand,
   ActivateUserAccountResponse,
@@ -183,22 +183,19 @@ export class AccountsAdapter
       this.accountsServices.getUserService(),
     );
     this._removeUserFromOrganization = new RemoveUserFromOrganizationUseCase(
-      this.accountsServices.getUserService(),
-      this.accountsServices.getOrganizationService(),
+      this,
       this.accountsServices.getUserService(),
       this.logger,
     );
     this._listOrganizationUserStatuses =
       new ListOrganizationUserStatusesUseCase(
-        this.accountsServices.getUserService(),
-        this.accountsServices.getOrganizationService(),
+        this,
         this.accountsServices.getUserService(),
         this.accountsServices.getInvitationService(),
         this.logger,
       );
     this._listOrganizationUsers = new ListOrganizationUsersUseCase(
-      this.accountsServices.getUserService(),
-      this.accountsServices.getOrganizationService(),
+      this,
       this.accountsServices.getUserService(),
       this.logger,
     );
@@ -231,8 +228,7 @@ export class AccountsAdapter
       this.accountsServices.getUserService(),
     );
     this._createInvitations = new CreateInvitationsUseCase(
-      this.accountsServices.getUserService(),
-      this.accountsServices.getOrganizationService(),
+      this,
       this.accountsServices.getUserService(),
       this.accountsServices.getInvitationService(),
       this.logger,
@@ -248,8 +244,7 @@ export class AccountsAdapter
       this.logger,
     );
     this._changeUserRole = new ChangeUserRoleUseCase(
-      this.accountsServices.getUserService(),
-      this.accountsServices.getOrganizationService(),
+      this,
       this.accountsServices.getUserService(),
       this.logger,
     );
@@ -271,8 +266,7 @@ export class AccountsAdapter
     );
     this._getOrganizationOnboardingStatus =
       new GetOrganizationOnboardingStatusUseCase(
-        this.accountsServices.getUserService(),
-        this.accountsServices.getOrganizationService(),
+        this,
         this.accountsServices.getUserService(),
         this.gitPort ?? null,
         this.standardsPort ?? null,

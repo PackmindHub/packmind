@@ -1,12 +1,12 @@
-import { OrganizationProvider, UserProvider } from '@packmind/types';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
 import {
+  IAccountsPort,
   IUpdateRenderModeConfigurationUseCase,
   RenderMode,
   RenderModeConfiguration,
   UpdateRenderModeConfigurationCommand,
 } from '@packmind/types';
-import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 
 const origin = 'UpdateRenderModeConfigurationUseCase';
@@ -22,11 +22,10 @@ export class UpdateRenderModeConfigurationUseCase
 {
   constructor(
     private readonly renderModeConfigurationService: RenderModeConfigurationService,
-    userProvider: UserProvider,
-    organizationProvider: OrganizationProvider,
+    accountsPort: IAccountsPort,
     logger: PackmindLogger = new PackmindLogger(origin, LogLevel.INFO),
   ) {
-    super(userProvider, organizationProvider, logger);
+    super(accountsPort, logger);
     this.logger.info('UpdateRenderModeConfigurationUseCase initialized');
   }
 

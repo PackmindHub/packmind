@@ -1,21 +1,21 @@
-import { IUseCase, PackmindCommand, PackmindResult } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import {
   createOrganizationId,
+  createUserId,
+  IAccountsPort,
+  IUseCase,
   Organization,
   OrganizationId,
-} from '@packmind/types';
-import {
-  createUserId,
+  PackmindCommand,
+  PackmindResult,
   User,
   UserId,
   UserOrganizationMembership,
 } from '@packmind/types';
-import { UserProvider, OrganizationProvider } from '@packmind/types';
 import {
+  OrganizationContext,
   UserAccessError,
   UserAccessErrorContext,
-  OrganizationContext,
   UserNotFoundError,
   UserNotInOrganizationError,
 } from './UserAccessErrors';
@@ -33,17 +33,14 @@ export abstract class AbstractMemberUseCase<
   Result extends PackmindResult,
 > implements IUseCase<Command, Result>
 {
-  protected readonly userProvider: UserProvider;
-  protected readonly organizationProvider: OrganizationProvider;
+  protected readonly accountsPort: IAccountsPort;
   protected readonly logger: PackmindLogger;
 
   constructor(
-    userProvider: UserProvider,
-    organizationProvider: OrganizationProvider,
+    accountsPort: IAccountsPort,
     logger: PackmindLogger = new PackmindLogger(defaultOrigin),
   ) {
-    this.userProvider = userProvider;
-    this.organizationProvider = organizationProvider;
+    this.accountsPort = accountsPort;
     this.logger = logger;
   }
 
@@ -121,7 +118,7 @@ export abstract class AbstractMemberUseCase<
     organizationId: OrganizationId,
   ): Promise<Organization> {
     const organization =
-      await this.organizationProvider.getOrganizationById(organizationId);
+      await this.accountsPort.getOrganizationById(organizationId);
 
     if (!organization) {
       throw new Error(`Organization ${organizationId} not found`);
@@ -134,7 +131,7 @@ export abstract class AbstractMemberUseCase<
     userId: UserId,
     context: UserAccessErrorContext,
   ): Promise<User> {
-    const user = await this.userProvider.getUserById(userId);
+    const user = await this.accountsPort.getUserById(userId);
 
     if (!user) {
       throw new UserNotFoundError(context);

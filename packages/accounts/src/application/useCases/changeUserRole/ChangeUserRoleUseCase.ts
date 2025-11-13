@@ -1,14 +1,13 @@
 import { PackmindLogger } from '@packmind/logger';
+import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
 import {
   ChangeUserRoleCommand,
   ChangeUserRoleResponse,
+  createOrganizationId,
+  createUserId,
+  IAccountsPort,
   IChangeUserRoleUseCase,
-  UserProvider,
-  OrganizationProvider,
 } from '@packmind/types';
-import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
-import { createUserId } from '@packmind/types';
-import { createOrganizationId } from '@packmind/types';
 import {
   UserNotFoundError,
   UserNotInOrganizationError,
@@ -22,12 +21,11 @@ export class ChangeUserRoleUseCase
   implements IChangeUserRoleUseCase
 {
   constructor(
-    userProvider: UserProvider,
-    organizationProvider: OrganizationProvider,
+    accountsPort: IAccountsPort,
     private readonly userService: UserService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(userProvider, organizationProvider, logger);
+    super(accountsPort, logger);
     this.logger.info('ChangeUserRoleUseCase initialized');
   }
 

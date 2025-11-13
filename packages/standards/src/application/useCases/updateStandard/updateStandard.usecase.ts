@@ -1,29 +1,27 @@
-import { StandardService } from '../../services/StandardService';
-import {
-  StandardVersionService,
-  CreateStandardVersionData,
-} from '../../services/StandardVersionService';
-import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
-import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import { PackmindLogger } from '@packmind/logger';
-import { IAccountsPort } from '@packmind/types';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
-import { ISpacesPort } from '@packmind/types';
 import {
+  IAccountsPort,
+  ISpacesPort,
+  IUpdateStandardUseCase,
+  OrganizationId,
   RuleExample,
+  RuleId,
   StandardVersion,
   UpdateStandardCommand,
   UpdateStandardResponse,
-  IUpdateStandardUseCase,
-  RuleId,
-} from '@packmind/types';
-import {
-  OrganizationId,
   UserId,
   createOrganizationId,
   createUserId,
 } from '@packmind/types';
+import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
+import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSummaryDelayedJob';
+import { StandardService } from '../../services/StandardService';
+import {
+  CreateStandardVersionData,
+  StandardVersionService,
+} from '../../services/StandardVersionService';
 
 const origin = 'UpdateStandardUsecase';
 
@@ -41,7 +39,7 @@ export class UpdateStandardUsecase
     private readonly spacesPort: ISpacesPort | null,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsAdapter, accountsAdapter, logger);
+    super(accountsAdapter, logger);
     this.logger.info('UpdateStandardUsecase initialized');
   }
 
