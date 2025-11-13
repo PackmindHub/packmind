@@ -12,6 +12,7 @@ export * from './StandardsDeploymentId';
 export * from './StandardsDeployment';
 export * from './StandardDeploymentOverview';
 export * from './FileUpdates';
+export * from './Package';
 
 // Contracts
 export * from './contracts';
