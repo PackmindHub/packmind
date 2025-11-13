@@ -19,6 +19,8 @@ export const ruleDetectionAssessmentFactory: Factory<
     detectionMode: DetectionModeEnum.SINGLE_AST,
     status: RuleDetectionAssessmentStatus.NOT_STARTED,
     details: '',
+    clarificationQuestion: null,
+    clarificationAnswers: null,
     ...assessment,
   };
 };

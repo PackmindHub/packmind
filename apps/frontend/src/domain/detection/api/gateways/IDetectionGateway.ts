@@ -90,5 +90,9 @@ export interface IDetectionGateway {
     ruleId: string,
     detectionHeuristicsId: string,
     heuristics: string[],
+    clarificationQuestion?: {
+      question: string;
+      answer: string;
+    },
   ): Promise<DetectionHeuristics>;
 }

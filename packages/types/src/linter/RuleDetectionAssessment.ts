@@ -20,4 +20,6 @@ export type RuleDetectionAssessment = {
   detectionMode: DetectionModeEnum;
   status: RuleDetectionAssessmentStatus;
   details: string;
+  clarificationQuestion: string | null;
+  clarificationAnswers: string[] | null;
 };

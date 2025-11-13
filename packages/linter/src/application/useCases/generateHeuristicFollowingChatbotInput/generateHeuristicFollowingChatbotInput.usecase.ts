@@ -4,27 +4,25 @@ import {
   UpdateHeuristicsFollowingChatbotInputCommand,
   UpdateHeuristicsFollowingChatbotInputResponse,
   IStandardsPort,
-  UserProvider,
-  OrganizationProvider,
+  IAccountsPort,
 } from '@packmind/types';
 import { ILinterRepositories } from '../../../domain/repositories/ILinterRepositories';
 import { OpenAIService } from '@packmind/node-utils';
 import { HeuristicGenerationService } from './HeuristicGenerationService';
 
-const origin = 'UpdateHeuristicsFollowingChatbotInputUseCase';
+const origin = 'GenerateHeuristicFollowingChatbotInputUsecase';
 
-export class UpdateHeuristicsFollowingChatbotInputUseCase extends AbstractMemberUseCase<
+export class GenerateHeuristicFollowingChatbotInputUsecase extends AbstractMemberUseCase<
   UpdateHeuristicsFollowingChatbotInputCommand,
   UpdateHeuristicsFollowingChatbotInputResponse
 > {
   constructor(
-    userProvider: UserProvider,
-    organizationProvider: OrganizationProvider,
+    accountsPort: IAccountsPort,
     private readonly linterRepositories: ILinterRepositories,
     private readonly standardsAdapter: IStandardsPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(userProvider, organizationProvider, logger);
+    super(accountsPort, logger);
   }
 
   protected async executeForMembers(

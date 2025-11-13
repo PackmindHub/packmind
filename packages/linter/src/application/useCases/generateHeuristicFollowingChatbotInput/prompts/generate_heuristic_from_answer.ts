@@ -15,10 +15,10 @@ You will be provided with:
 Based on all this information, generate ONE concise heuristic (1 sentence, maximum 2 if absolutely necessary) that describes a specific code pattern to detect.
 
 **Requirements:**
-- Focus on concrete, AST-detectable patterns (e.g., specific function calls, variable declarations, import statements, class structures)
+- Focus on concrete, detectable code patterns (e.g., specific function calls, variable declarations, import statements, class structures)
 - Be precise and actionable - avoid vague descriptions
-- Use technical but beginner-friendly language
-- Reference specific code elements when possible
+- Use clear, accessible language - avoid technical jargon (like "AST", "tree", "node", etc.)
+- Reference specific code elements when possible (e.g., "methods", "classes", "functions" instead of "nodes" or "declarations")
 - The heuristic should complement the existing heuristics, not duplicate them
 
 **Output Format:**

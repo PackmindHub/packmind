@@ -1,4 +1,4 @@
-import { UpdateHeuristicsFollowingChatbotInputUseCase } from './updateHeuristicsFollowingChatbotInput.usecase';
+import { GenerateHeuristicFollowingChatbotInputUsecase } from './generateHeuristicFollowingChatbotInput.usecase';
 import { HeuristicGenerationService } from './HeuristicGenerationService';
 import { IRuleDetectionHeuristicsRepository } from '../../../domain/repositories/IRuleDetectionHeuristicsRepository';
 import { ILinterRepositories } from '../../../domain/repositories/ILinterRepositories';
@@ -14,8 +14,7 @@ import {
   IStandardsPort,
   Rule,
   RuleExample,
-  UserProvider,
-  OrganizationProvider,
+  IAccountsPort,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
@@ -34,12 +33,11 @@ jest.mock('@packmind/node-utils', () => ({
 jest.mock('./HeuristicGenerationService');
 
 describe('UpdateHeuristicsFollowingChatbotInputUseCase', () => {
-  let useCase: UpdateHeuristicsFollowingChatbotInputUseCase;
+  let useCase: GenerateHeuristicFollowingChatbotInputUsecase;
   let heuristicsRepository: jest.Mocked<IRuleDetectionHeuristicsRepository>;
   let linterRepositories: jest.Mocked<ILinterRepositories>;
   let standardsAdapter: jest.Mocked<IStandardsPort>;
-  let userProvider: jest.Mocked<UserProvider>;
-  let organizationProvider: jest.Mocked<OrganizationProvider>;
+  let accountsPort: jest.Mocked<IAccountsPort>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   const userId = createUserId(uuidv4());
@@ -69,21 +67,17 @@ describe('UpdateHeuristicsFollowingChatbotInputUseCase', () => {
       getRuleCodeExamples: jest.fn(),
     } as unknown as jest.Mocked<IStandardsPort>;
 
-    // Mock user provider to return a user with membership in ANY organization
+    // Mock accounts port to return a user with membership in ANY organization
     // This is necessary because different test blocks use different organization IDs
-    userProvider = {
+    accountsPort = {
       getUserById: jest.fn(),
-    } as jest.Mocked<UserProvider>;
-
-    organizationProvider = {
       getOrganizationById: jest.fn(),
-    } as jest.Mocked<OrganizationProvider>;
+    } as unknown as jest.Mocked<IAccountsPort>;
 
     stubbedLogger = stubLogger();
 
-    useCase = new UpdateHeuristicsFollowingChatbotInputUseCase(
-      userProvider,
-      organizationProvider,
+    useCase = new GenerateHeuristicFollowingChatbotInputUsecase(
+      accountsPort,
       linterRepositories,
       standardsAdapter,
       stubbedLogger,
@@ -104,7 +98,7 @@ describe('UpdateHeuristicsFollowingChatbotInputUseCase', () => {
 
     beforeEach(() => {
       // Setup user/organization mocks for this test block's IDs
-      userProvider.getUserById.mockResolvedValue({
+      accountsPort.getUserById.mockResolvedValue({
         id: userId,
         email: 'test@example.com',
         passwordHash: 'hashed',
@@ -118,7 +112,7 @@ describe('UpdateHeuristicsFollowingChatbotInputUseCase', () => {
         active: true,
       });
 
-      organizationProvider.getOrganizationById.mockResolvedValue({
+      accountsPort.getOrganizationById.mockResolvedValue({
         id: organizationId,
         name: 'Test Organization',
         slug: 'test-org',
@@ -279,7 +273,7 @@ describe('UpdateHeuristicsFollowingChatbotInputUseCase', () => {
       const testOrgId = createOrganizationId(uuidv4());
 
       // Setup user/organization mocks for this test's IDs
-      userProvider.getUserById.mockResolvedValue({
+      accountsPort.getUserById.mockResolvedValue({
         id: testUserId,
         email: 'test@example.com',
         passwordHash: 'hashed',
@@ -293,7 +287,7 @@ describe('UpdateHeuristicsFollowingChatbotInputUseCase', () => {
         active: true,
       });
 
-      organizationProvider.getOrganizationById.mockResolvedValue({
+      accountsPort.getOrganizationById.mockResolvedValue({
         id: testOrgId,
         name: 'Test Organization',
         slug: 'test-org',
@@ -323,7 +317,7 @@ describe('UpdateHeuristicsFollowingChatbotInputUseCase', () => {
       const testOrgId = createOrganizationId(uuidv4());
 
       // Setup user/organization mocks for this test's IDs
-      userProvider.getUserById.mockResolvedValue({
+      accountsPort.getUserById.mockResolvedValue({
         id: testUserId,
         email: 'test@example.com',
         passwordHash: 'hashed',
@@ -337,7 +331,7 @@ describe('UpdateHeuristicsFollowingChatbotInputUseCase', () => {
         active: true,
       });
 
-      organizationProvider.getOrganizationById.mockResolvedValue({
+      accountsPort.getOrganizationById.mockResolvedValue({
         id: testOrgId,
         name: 'Test Organization',
         slug: 'test-org',
@@ -377,7 +371,7 @@ describe('UpdateHeuristicsFollowingChatbotInputUseCase', () => {
 
     beforeEach(() => {
       // Setup user/organization mocks for this test block's IDs
-      userProvider.getUserById.mockResolvedValue({
+      accountsPort.getUserById.mockResolvedValue({
         id: userId,
         email: 'test@example.com',
         passwordHash: 'hashed',
@@ -391,7 +385,7 @@ describe('UpdateHeuristicsFollowingChatbotInputUseCase', () => {
         active: true,
       });
 
-      organizationProvider.getOrganizationById.mockResolvedValue({
+      accountsPort.getOrganizationById.mockResolvedValue({
         id: organizationId,
         name: 'Test Organization',
         slug: 'test-org',
@@ -496,7 +490,7 @@ describe('UpdateHeuristicsFollowingChatbotInputUseCase', () => {
       const organizationId = createOrganizationId(uuidv4());
 
       // Setup user/organization mocks for this test's IDs
-      userProvider.getUserById.mockResolvedValue({
+      accountsPort.getUserById.mockResolvedValue({
         id: userId,
         email: 'test@example.com',
         passwordHash: 'hashed',
@@ -510,7 +504,7 @@ describe('UpdateHeuristicsFollowingChatbotInputUseCase', () => {
         active: true,
       });
 
-      organizationProvider.getOrganizationById.mockResolvedValue({
+      accountsPort.getOrganizationById.mockResolvedValue({
         id: organizationId,
         name: 'Test Organization',
         slug: 'test-org',

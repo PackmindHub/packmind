@@ -12,3 +12,4 @@ export * from './PMCheckboxCard/PMCheckboxCard';
 export * from './PMCheckboxGroup/PMCheckboxGroup';
 export * from './PMEllipsisMenu';
 export { PMSegmentGroup } from './PMSegmentedControl/PMSegmentedControl';
+export * from './PMRadioGroup/PMRadioGroup';

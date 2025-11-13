@@ -242,6 +242,8 @@ describe('StartRuleDetectionAssessmentUseCase', () => {
         detectionMode: DetectionModeEnum.SINGLE_AST,
         status: RuleDetectionAssessmentStatus.SUCCESS,
         details: 'Previous assessment completed',
+        clarificationQuestion: null,
+        clarificationAnswers: [],
       };
 
       ruleDetectionAssessmentRepository.get.mockResolvedValue(

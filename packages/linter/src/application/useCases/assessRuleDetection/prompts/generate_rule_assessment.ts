@@ -65,9 +65,9 @@ or
 
 
 
-## Detection Heuristics (if available)
+## Detection Heuristics
 
-The following heuristics may help you assess the detectability of similar rules. Use them to inform your evaluation, but do not rely on them exclusively:
+**When present, these heuristics define the exact detection criteria for this rule.** If heuristics are provided below, evaluate the feasibility based on these specific patterns. The heuristics represent concrete, actionable detection logic that should be considered as part of the rule specification itself:
 
 """
 $DETECTION_HEURISTICS$

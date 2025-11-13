@@ -169,6 +169,10 @@ export class AssessRuleDetectionUseCase implements IAssessRuleDetectionJob {
       detectionMode: DetectionModeEnum.SINGLE_AST,
       status,
       details,
+      clarificationQuestion:
+        assessmentResult.clarificationQuestion?.question ?? null,
+      clarificationAnswers:
+        assessmentResult.clarificationQuestion?.answers ?? null,
     };
 
     await this.linterRepositories
@@ -179,6 +183,7 @@ export class AssessRuleDetectionUseCase implements IAssessRuleDetectionJob {
       jobId: command.jobId,
       assessmentId: assessment.id,
       status: assessment.status,
+      hasClarificationQuestion: !!assessmentResult.clarificationQuestion,
     });
 
     return assessment;

@@ -48,6 +48,20 @@ export const RuleDetectionAssessmentSchema = new EntitySchema<
       type: 'text',
       nullable: false,
     },
+    clarificationQuestion: {
+      name: 'clarification_question',
+      type: 'text',
+      nullable: true,
+    },
+    clarificationAnswers: {
+      name: 'clarification_answers',
+      type: 'text',
+      nullable: true,
+      transformer: {
+        to: (value: string[] | null) => (value ? JSON.stringify(value) : null),
+        from: (value: string | null) => (value ? JSON.parse(value) : null),
+      },
+    },
     ...uuidSchema,
     ...timestampsSchemas,
     ...softDeleteSchemas,

@@ -333,17 +333,23 @@ export const useUpdateDetectionHeuristicsMutation = () => {
       ruleId,
       detectionHeuristicsId,
       heuristics,
+      clarificationQuestion,
     }: {
       standardId: string;
       ruleId: string;
       detectionHeuristicsId: string;
       heuristics: string[];
+      clarificationQuestion?: {
+        question: string;
+        answer: string;
+      };
     }) => {
       return detectionGateway.updateDetectionHeuristics(
         standardId,
         ruleId,
         detectionHeuristicsId,
         heuristics,
+        clarificationQuestion,
       );
     },
     onSuccess: async (_, variables) => {

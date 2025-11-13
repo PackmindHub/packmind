@@ -421,4 +421,115 @@ describe('AssessRuleDetectionUseCase', () => {
       );
     });
   });
+
+  describe('clarification question handling', () => {
+    describe('when provided by assessment', () => {
+      it('stores clarification question and answers', async () => {
+        const rule = ruleFactory({
+          id: createRuleId(uuidv4()),
+          content: 'Use appropriate error handling',
+        });
+        const assessmentId = createRuleDetectionAssessmentId(uuidv4());
+        const command: AssessRuleDetectionJobCommand = {
+          rule,
+          jobId: 'job-clarification',
+          organizationId: createOrganizationId(uuidv4()),
+          userId: createUserId(uuidv4()),
+          language: ProgrammingLanguage.TYPESCRIPT,
+          assessmentId,
+        };
+
+        const MockedService =
+          RuleDetectionAssessmentService as jest.MockedClass<
+            typeof RuleDetectionAssessmentService
+          >;
+        MockedService.mockImplementation(
+          () =>
+            ({
+              runFeasibilityAssessment: jest.fn().mockResolvedValue({
+                feasible: false,
+                reason: ['Need more information about error handling approach'],
+                clarificationQuestion: {
+                  question: 'What type of error handling should be enforced?',
+                  answers: ['try-catch blocks', 'Promise rejection', 'Both'],
+                },
+              }),
+            }) as unknown as RuleDetectionAssessmentService,
+        );
+
+        linterAdapter.createDetectionHeuristics.mockResolvedValue({
+          detectionHeuristics: {
+            id: createDetectionHeuristicsId(uuidv4()),
+            ruleId: rule.id,
+            language: ProgrammingLanguage.TYPESCRIPT,
+            heuristics: [],
+          },
+        });
+
+        await assessRuleDetectionUseCase.execute(command);
+
+        expect(ruleDetectionAssessmentRepository.add).toHaveBeenCalledWith(
+          expect.objectContaining({
+            clarificationQuestion:
+              'What type of error handling should be enforced?',
+            clarificationAnswers: [
+              'try-catch blocks',
+              'Promise rejection',
+              'Both',
+            ],
+          }),
+        );
+      });
+    });
+
+    describe('when not provided', () => {
+      it('stores null for clarification fields', async () => {
+        const rule = ruleFactory({
+          id: createRuleId(uuidv4()),
+          content: 'Use const instead of var',
+        });
+        const assessmentId = createRuleDetectionAssessmentId(uuidv4());
+        const command: AssessRuleDetectionJobCommand = {
+          rule,
+          jobId: 'job-no-clarification',
+          organizationId: createOrganizationId(uuidv4()),
+          userId: createUserId(uuidv4()),
+          language: ProgrammingLanguage.TYPESCRIPT,
+          assessmentId,
+        };
+
+        const MockedService =
+          RuleDetectionAssessmentService as jest.MockedClass<
+            typeof RuleDetectionAssessmentService
+          >;
+        MockedService.mockImplementation(
+          () =>
+            ({
+              runFeasibilityAssessment: jest.fn().mockResolvedValue({
+                feasible: true,
+                reason: ['Detectable with AST'],
+              }),
+            }) as unknown as RuleDetectionAssessmentService,
+        );
+
+        linterAdapter.createDetectionHeuristics.mockResolvedValue({
+          detectionHeuristics: {
+            id: createDetectionHeuristicsId(uuidv4()),
+            ruleId: rule.id,
+            language: ProgrammingLanguage.TYPESCRIPT,
+            heuristics: [],
+          },
+        });
+
+        await assessRuleDetectionUseCase.execute(command);
+
+        expect(ruleDetectionAssessmentRepository.add).toHaveBeenCalledWith(
+          expect.objectContaining({
+            clarificationQuestion: null,
+            clarificationAnswers: null,
+          }),
+        );
+      });
+    });
+  });
 });

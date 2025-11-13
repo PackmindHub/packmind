@@ -319,6 +319,7 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
         this.repositories,
         this.standardsPort,
         () => this,
+        this.accountsPort,
       );
 
     this._getDetectionHeuristicsUseCase = new GetDetectionHeuristicsUseCase(

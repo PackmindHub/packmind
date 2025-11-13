@@ -59,8 +59,6 @@ export class RuleDetectionAssessmentService extends AIRequestEmitter {
             ? response.data
             : JSON.stringify(response.data);
 
-        console.log('responseData', responseData);
-
         const assessment: AssessmentDetectionReadiness = JSON.parse(
           parseCodeOrJsonFromAIAnswer(responseData),
         );
@@ -125,22 +123,22 @@ export class RuleDetectionAssessmentService extends AIRequestEmitter {
         .map((h) => `* ${h}`)
         .join('\n');
       const heuristicsSection = `
-## Detection Heuristics (if available)
+## Detection Heuristics
 
-The following heuristics may help you assess the detectability of similar rules. Use them to inform your evaluation, but do not rely on them exclusively:
+**When present, these heuristics define the exact detection criteria for this rule.** If heuristics are provided below, evaluate the feasibility based on these specific patterns. The heuristics represent concrete, actionable detection logic that should be considered as part of the rule specification itself:
 
 """
 ${formattedHeuristics}
 """
 `;
       updatedPrompt = updatedPrompt.replace(
-        /## Detection Heuristics \(if available\)[\s\S]*?\$DETECTION_HEURISTICS\$[\s\S]*?"""\s*/,
+        /## Detection Heuristics[\s\S]*?\$DETECTION_HEURISTICS\$[\s\S]*?"""\s*/,
         heuristicsSection,
       );
     } else {
       // Remove the entire heuristics section if not available
       updatedPrompt = updatedPrompt.replace(
-        /## Detection Heuristics \(if available\)[\s\S]*?\$DETECTION_HEURISTICS\$[\s\S]*?"""\s*/,
+        /## Detection Heuristics[\s\S]*?\$DETECTION_HEURISTICS\$[\s\S]*?"""\s*/,
         '',
       );
     }

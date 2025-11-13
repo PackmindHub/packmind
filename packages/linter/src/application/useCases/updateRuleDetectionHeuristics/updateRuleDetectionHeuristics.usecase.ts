@@ -12,12 +12,11 @@ import {
   createUserId,
   createOrganizationId,
   UpdateHeuristicsFollowingChatbotInputCommand,
-  UserProvider,
-  OrganizationProvider,
+  IAccountsPort,
 } from '@packmind/types';
 import { ILinterRepositories } from '../../../domain/repositories/ILinterRepositories';
 import { SSEEventPublisher } from '@packmind/node-utils';
-import { UpdateHeuristicsFollowingChatbotInputUseCase } from '../updateHeuristicsFollowingChatbotInput/updateHeuristicsFollowingChatbotInput.usecase';
+import { GenerateHeuristicFollowingChatbotInputUsecase } from '../generateHeuristicFollowingChatbotInput/generateHeuristicFollowingChatbotInput.usecase';
 
 const origin = 'UpdateRuleDetectionHeuristicsUseCase';
 
@@ -28,8 +27,7 @@ export class UpdateRuleDetectionHeuristicsUseCase
     private readonly linterRepositories: ILinterRepositories,
     private readonly standardsAdapter: IStandardsPort,
     private readonly getLinterAdapter: () => ILinterPort,
-    private readonly userProvider: UserProvider,
-    private readonly organizationProvider: OrganizationProvider,
+    private readonly accountsPort: IAccountsPort,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -67,11 +65,11 @@ export class UpdateRuleDetectionHeuristicsUseCase
       });
 
       // Call updateHeuristicsFollowingChatbotInput to generate new heuristic
-      const chatbotUseCase = new UpdateHeuristicsFollowingChatbotInputUseCase(
-        this.userProvider,
-        this.organizationProvider,
+      const chatbotUseCase = new GenerateHeuristicFollowingChatbotInputUsecase(
+        this.accountsPort,
         this.linterRepositories,
         this.standardsAdapter,
+        this.logger,
       );
 
       const chatbotCommand: UpdateHeuristicsFollowingChatbotInputCommand = {

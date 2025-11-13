@@ -165,11 +165,16 @@ export class DetectionGatewayApi
     ruleId: string,
     detectionHeuristicsId: string,
     heuristics: string[],
+    clarificationQuestion?: {
+      question: string;
+      answer: string;
+    },
   ): Promise<DetectionHeuristics> {
     return this._api.put<DetectionHeuristics>(
       `${this._endpoint}/${standardId}/rules/${ruleId}/detection-heuristics/${detectionHeuristicsId}`,
       {
         heuristics,
+        ...(clarificationQuestion && { clarificationQuestion }),
       },
     );
   }

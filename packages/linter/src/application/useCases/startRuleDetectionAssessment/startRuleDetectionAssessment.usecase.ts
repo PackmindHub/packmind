@@ -51,6 +51,8 @@ export class StartRuleDetectionAssessmentUseCase
           detectionMode: DetectionModeEnum.SINGLE_AST,
           status: RuleDetectionAssessmentStatus.NOT_STARTED,
           details: 'Assessment in progress...',
+          clarificationQuestion: null,
+          clarificationAnswers: null,
         };
 
         await this.linterRepositories
