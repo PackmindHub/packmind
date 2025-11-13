@@ -32,6 +32,8 @@ import {
   IStandardsPortName,
   ListDeploymentsByRecipeCommand,
   ListDeploymentsByStandardCommand,
+  ListPackagesBySpaceCommand,
+  ListPackagesBySpaceResponse,
   PackmindCommand,
   PublishRecipesCommand,
   PublishStandardsCommand,
@@ -60,6 +62,7 @@ import { GetTargetsByOrganizationUseCase } from '../useCases/GetTargetsByOrganiz
 import { GetTargetsByRepositoryUseCase } from '../useCases/GetTargetsByRepositoryUseCase';
 import { ListDeploymentsByRecipeUseCase } from '../useCases/ListDeploymentsByRecipeUseCase';
 import { ListDeploymentsByStandardUseCase } from '../useCases/ListDeploymentsByStandardUseCase';
+import { ListPackagesBySpaceUsecase } from '../useCases/listPackagesBySpace/listPackagesBySpace.usecase';
 import { PublishRecipesUseCase } from '../useCases/PublishRecipesUseCase';
 import { PublishStandardsUseCase } from '../useCases/PublishStandardsUseCase';
 import { PullAllContentUseCase } from '../useCases/PullAllContentUseCase';
@@ -95,6 +98,7 @@ export class DeploymentsAdapter
   private _createRenderModeConfigurationUseCase!: CreateRenderModeConfigurationUseCase;
   private _updateRenderModeConfigurationUseCase!: UpdateRenderModeConfigurationUseCase;
   private _pullAllContentUseCase!: PullAllContentUseCase;
+  private _listPackagesBySpaceUseCase!: ListPackagesBySpaceUsecase;
 
   constructor(
     private readonly deploymentsServices: DeploymentsServices,
@@ -243,6 +247,12 @@ export class DeploymentsAdapter
       this.codingAgentPort,
       this.accountsPort,
     );
+
+    this._listPackagesBySpaceUseCase = new ListPackagesBySpaceUsecase(
+      this.accountsPort,
+      this.deploymentsServices.getRepositories(),
+      this.spacesPort,
+    );
   }
 
   public isReady(): boolean {
@@ -361,5 +371,11 @@ export class DeploymentsAdapter
     command: PackmindCommand,
   ): Promise<IPullAllContentResponse> {
     return this._pullAllContentUseCase.execute(command);
+  }
+
+  async listPackagesBySpace(
+    command: ListPackagesBySpaceCommand,
+  ): Promise<ListPackagesBySpaceResponse> {
+    return this._listPackagesBySpaceUseCase.execute(command);
   }
 }

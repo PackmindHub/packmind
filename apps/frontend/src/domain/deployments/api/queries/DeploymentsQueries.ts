@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { deploymentsGateways } from '../gateways';
 import { RecipeId, RecipeVersionId } from '@packmind/types';
 import { StandardId, StandardVersionId } from '@packmind/types';
-import { GitRepoId } from '@packmind/types';
+import { GitRepoId, SpaceId } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 import {
   TargetId,
@@ -15,6 +15,7 @@ import {
 import {
   LIST_RECIPE_DEPLOYMENTS_KEY,
   LIST_STANDARD_DEPLOYMENTS_KEY,
+  LIST_PACKAGES_BY_SPACE_KEY,
   GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
   GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
   GET_TARGETS_BY_GIT_REPO_KEY,
@@ -38,6 +39,22 @@ export const useListStandardDeploymentsQuery = (standardId: StandardId) => {
     queryFn: () => {
       return deploymentsGateways.listDeploymentsByStandardId({ standardId });
     },
+  });
+};
+
+export const useListPackagesBySpaceQuery = (
+  spaceId: SpaceId | undefined,
+  organizationId: OrganizationId | undefined,
+) => {
+  return useQuery({
+    queryKey: [...LIST_PACKAGES_BY_SPACE_KEY, spaceId, organizationId],
+    queryFn: () => {
+      return deploymentsGateways.listPackagesBySpace({
+        spaceId: spaceId!,
+        organizationId: organizationId!,
+      });
+    },
+    enabled: !!spaceId && !!organizationId,
   });
 };
 

@@ -5,6 +5,8 @@ import {
   GetStandardDeploymentOverviewCommand,
   ListDeploymentsByRecipeCommand,
   ListDeploymentsByStandardCommand,
+  ListPackagesBySpaceCommand,
+  ListPackagesBySpaceResponse,
   PublishRecipesCommand,
   PublishStandardsCommand,
   RecipesDeployment,
@@ -35,6 +37,12 @@ export class DeploymentsService {
     command: ListDeploymentsByRecipeCommand,
   ): Promise<RecipesDeployment[]> {
     return this.deploymentAdapter.listDeploymentsByRecipe(command);
+  }
+
+  async listPackagesBySpace(
+    command: ListPackagesBySpaceCommand,
+  ): Promise<ListPackagesBySpaceResponse> {
+    return this.deploymentAdapter.listPackagesBySpace(command);
   }
 
   async getStandardDeploymentOverview(

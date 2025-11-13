@@ -29,6 +29,10 @@ export class DeploymentsServices {
     );
   }
 
+  getRepositories(): IDeploymentsRepositories {
+    return this.deploymentsRepositories;
+  }
+
   getTargetService(): TargetService {
     return this.targetService;
   }

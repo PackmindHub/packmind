@@ -19,6 +19,8 @@ import {
   IPullAllContentResponse,
   ListDeploymentsByRecipeCommand,
   ListDeploymentsByStandardCommand,
+  ListPackagesBySpaceCommand,
+  ListPackagesBySpaceResponse,
   PublishRecipesCommand,
   PublishStandardsCommand,
   UpdateRenderModeConfigurationCommand,
@@ -251,4 +253,14 @@ export interface IDeploymentPort {
    * @returns Promise resolving to file updates for all coding agents
    */
   pullAllContent(command: PackmindCommand): Promise<IPullAllContentResponse>;
+
+  /**
+   * Lists all packages in a specific space
+   *
+   * @param command - Command containing spaceId and organizationId
+   * @returns Promise of array of packages in the specified space
+   */
+  listPackagesBySpace(
+    command: ListPackagesBySpaceCommand,
+  ): Promise<ListPackagesBySpaceResponse>;
 }

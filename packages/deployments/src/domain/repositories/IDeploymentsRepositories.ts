@@ -2,6 +2,7 @@ import { ITargetRepository } from './ITargetRepository';
 import { IRecipesDeploymentRepository } from './IRecipesDeploymentRepository';
 import { IStandardsDeploymentRepository } from './IStandardsDeploymentRepository';
 import { IRenderModeConfigurationRepository } from './IRenderModeConfigurationRepository';
+import { IPackageRepository } from './IPackageRepository';
 
 /**
  * IDeploymentsRepositories - Repository aggregator interface for the Deployments domain
@@ -30,4 +31,9 @@ export interface IDeploymentsRepositories {
    * Get the render mode configuration repository instance
    */
   getRenderModeConfigurationRepository(): IRenderModeConfigurationRepository;
+
+  /**
+   * Get the package repository instance
+   */
+  getPackageRepository(): IPackageRepository;
 }

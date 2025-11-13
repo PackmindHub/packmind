@@ -5,6 +5,7 @@ export const DEPLOYMENTS_QUERY_SCOPE = 'deployments';
 export enum DeploymentQueryKeys {
   LIST_RECIPE_DEPLOYMENTS = 'list-recipe-deployments',
   LIST_STANDARD_DEPLOYMENTS = 'list-standard-deployments',
+  LIST_PACKAGES_BY_SPACE = 'list-packages-by-space',
   GET_RECIPES_DEPLOYMENT_OVERVIEW = 'get-recipes-deployment-overview',
   GET_STANDARDS_DEPLOYMENT_OVERVIEW = 'get-standards-deployment-overview',
   GET_TARGETS_BY_GIT_REPO = 'get-targets-by-git-repo',
@@ -24,6 +25,12 @@ export const LIST_STANDARD_DEPLOYMENTS_KEY = [
   ORGANIZATION_QUERY_SCOPE,
   DEPLOYMENTS_QUERY_SCOPE,
   DeploymentQueryKeys.LIST_STANDARD_DEPLOYMENTS,
+] as const;
+
+export const LIST_PACKAGES_BY_SPACE_KEY = [
+  ORGANIZATION_QUERY_SCOPE,
+  DEPLOYMENTS_QUERY_SCOPE,
+  DeploymentQueryKeys.LIST_PACKAGES_BY_SPACE,
 ] as const;
 
 export const GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY = [
