@@ -1,6 +1,7 @@
 import { TargetService } from './TargetService';
 import { PackmindLogger } from '@packmind/logger';
 import { RenderModeConfigurationService } from './RenderModeConfigurationService';
+import { PackageService } from './PackageService';
 import { IDeploymentsRepositories } from '../../domain/repositories/IDeploymentsRepositories';
 
 /**
@@ -13,6 +14,7 @@ import { IDeploymentsRepositories } from '../../domain/repositories/IDeployments
 export class DeploymentsServices {
   private readonly targetService: TargetService;
   private readonly renderModeConfigurationService: RenderModeConfigurationService;
+  private readonly packageService: PackageService;
 
   constructor(
     private readonly deploymentsRepositories: IDeploymentsRepositories,
@@ -27,6 +29,10 @@ export class DeploymentsServices {
       this.deploymentsRepositories.getRenderModeConfigurationRepository(),
       this.logger,
     );
+    this.packageService = new PackageService(
+      this.deploymentsRepositories.getPackageRepository(),
+      this.logger,
+    );
   }
 
   getRepositories(): IDeploymentsRepositories {
@@ -39,5 +45,9 @@ export class DeploymentsServices {
 
   getRenderModeConfigurationService(): RenderModeConfigurationService {
     return this.renderModeConfigurationService;
+  }
+
+  getPackageService(): PackageService {
+    return this.packageService;
   }
 }

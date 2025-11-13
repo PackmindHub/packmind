@@ -1,5 +1,11 @@
 import { Repository } from 'typeorm';
-import { Package, PackageId, SpaceId } from '@packmind/types';
+import {
+  Package,
+  PackageId,
+  RecipeId,
+  SpaceId,
+  StandardId,
+} from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, AbstractRepository } from '@packmind/node-utils';
 import { IPackageRepository } from '../../domain/repositories/IPackageRepository';
@@ -83,6 +89,81 @@ export class PackageRepository
     } catch (error) {
       this.logger.error('Failed to find package by ID', {
         packageId: id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async addRecipes(packageId: PackageId, recipeIds: RecipeId[]): Promise<void> {
+    if (recipeIds.length === 0) {
+      return;
+    }
+
+    this.logger.info('Adding recipes to package', {
+      packageId,
+      recipeCount: recipeIds.length,
+    });
+
+    try {
+      const values = recipeIds.map((recipeId) => ({
+        package_id: packageId,
+        recipe_id: recipeId,
+      }));
+
+      await this.repository
+        .createQueryBuilder()
+        .insert()
+        .into('package_recipes')
+        .values(values)
+        .execute();
+
+      this.logger.info('Recipes added to package successfully', {
+        packageId,
+        recipeCount: recipeIds.length,
+      });
+    } catch (error) {
+      this.logger.error('Failed to add recipes to package', {
+        packageId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async addStandards(
+    packageId: PackageId,
+    standardIds: StandardId[],
+  ): Promise<void> {
+    if (standardIds.length === 0) {
+      return;
+    }
+
+    this.logger.info('Adding standards to package', {
+      packageId,
+      standardCount: standardIds.length,
+    });
+
+    try {
+      const values = standardIds.map((standardId) => ({
+        package_id: packageId,
+        standard_id: standardId,
+      }));
+
+      await this.repository
+        .createQueryBuilder()
+        .insert()
+        .into('package_standards')
+        .values(values)
+        .execute();
+
+      this.logger.info('Standards added to package successfully', {
+        packageId,
+        standardCount: standardIds.length,
+      });
+    } catch (error) {
+      this.logger.error('Failed to add standards to package', {
+        packageId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

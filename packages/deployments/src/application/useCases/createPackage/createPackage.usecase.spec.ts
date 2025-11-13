@@ -20,15 +20,15 @@ import {
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import { packageFactory } from '../../../../test';
-import { IDeploymentsRepositories } from '../../../domain/repositories/IDeploymentsRepositories';
-import { IPackageRepository } from '../../../domain/repositories/IPackageRepository';
+import { DeploymentsServices } from '../../services/DeploymentsServices';
+import { PackageService } from '../../services/PackageService';
 import { v4 as uuidv4 } from 'uuid';
 
 describe('CreatePackageUsecase', () => {
   let useCase: CreatePackageUsecase;
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
-  let mockRepositories: jest.Mocked<IDeploymentsRepositories>;
-  let mockPackageRepository: jest.Mocked<IPackageRepository>;
+  let mockServices: jest.Mocked<DeploymentsServices>;
+  let mockPackageService: jest.Mocked<PackageService>;
   let mockSpacesPort: jest.Mocked<ISpacesPort>;
   let mockRecipesPort: jest.Mocked<IRecipesPort>;
   let mockStandardsPort: jest.Mocked<IStandardsPort>;
@@ -91,21 +91,18 @@ describe('CreatePackageUsecase', () => {
   });
 
   beforeEach(() => {
-    mockPackageRepository = {
-      add: jest.fn(),
+    mockPackageService = {
+      createPackage: jest.fn(),
       findById: jest.fn(),
-      findBySpaceId: jest.fn(),
-      deleteById: jest.fn(),
-      restoreById: jest.fn(),
-    } as unknown as jest.Mocked<IPackageRepository>;
+      getPackagesBySpaceId: jest.fn(),
+    } as unknown as jest.Mocked<PackageService>;
 
-    mockRepositories = {
-      getPackageRepository: jest.fn().mockReturnValue(mockPackageRepository),
-      getTargetRepository: jest.fn(),
-      getRecipesDeploymentRepository: jest.fn(),
-      getStandardsDeploymentRepository: jest.fn(),
-      getRenderModeConfigurationRepository: jest.fn(),
-    } as unknown as jest.Mocked<IDeploymentsRepositories>;
+    mockServices = {
+      getPackageService: jest.fn().mockReturnValue(mockPackageService),
+      getTargetService: jest.fn(),
+      getRenderModeConfigurationService: jest.fn(),
+      getRepositories: jest.fn(),
+    } as unknown as jest.Mocked<DeploymentsServices>;
 
     mockAccountsPort = {
       getUserById: jest.fn().mockResolvedValue(buildUser()),
@@ -133,7 +130,7 @@ describe('CreatePackageUsecase', () => {
 
     useCase = new CreatePackageUsecase(
       mockAccountsPort,
-      mockRepositories,
+      mockServices,
       mockSpacesPort,
       mockRecipesPort,
       mockStandardsPort,
@@ -172,7 +169,7 @@ describe('CreatePackageUsecase', () => {
           standards: [standardId1, standardId2],
         });
 
-        mockPackageRepository.add.mockResolvedValue(createdPackage);
+        mockPackageService.createPackage.mockResolvedValue(createdPackage);
 
         const command: CreatePackageCommand = {
           userId,
@@ -197,16 +194,16 @@ describe('CreatePackageUsecase', () => {
         );
         expect(mockStandardsPort.getStandard).toHaveBeenCalledWith(standardId1);
         expect(mockStandardsPort.getStandard).toHaveBeenCalledWith(standardId2);
-        expect(mockPackageRepository.add).toHaveBeenCalledWith(
+        expect(mockPackageService.createPackage).toHaveBeenCalledWith(
           expect.objectContaining({
             name: 'My Package',
             slug: 'my-package',
             description: 'Package description',
             spaceId,
             createdBy: userId,
-            recipes: [recipeId1, recipeId2],
-            standards: [standardId1, standardId2],
           }),
+          [recipeId1, recipeId2],
+          [standardId1, standardId2],
         );
       });
     });
@@ -229,7 +226,7 @@ describe('CreatePackageUsecase', () => {
           standards: [standardId1],
         });
 
-        mockPackageRepository.add.mockResolvedValue(createdPackage);
+        mockPackageService.createPackage.mockResolvedValue(createdPackage);
 
         const command: CreatePackageCommand = {
           userId,
@@ -270,7 +267,7 @@ describe('CreatePackageUsecase', () => {
           standards: [],
         });
 
-        mockPackageRepository.add.mockResolvedValue(createdPackage);
+        mockPackageService.createPackage.mockResolvedValue(createdPackage);
 
         const command: CreatePackageCommand = {
           userId,
@@ -309,7 +306,7 @@ describe('CreatePackageUsecase', () => {
           standards: [],
         });
 
-        mockPackageRepository.add.mockResolvedValue(createdPackage);
+        mockPackageService.createPackage.mockResolvedValue(createdPackage);
 
         const command: CreatePackageCommand = {
           userId,
@@ -350,7 +347,7 @@ describe('CreatePackageUsecase', () => {
         );
 
         expect(mockSpacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
-        expect(mockPackageRepository.add).not.toHaveBeenCalled();
+        expect(mockPackageService.createPackage).not.toHaveBeenCalled();
       });
     });
 
@@ -382,7 +379,7 @@ describe('CreatePackageUsecase', () => {
         );
 
         expect(mockSpacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
-        expect(mockPackageRepository.add).not.toHaveBeenCalled();
+        expect(mockPackageService.createPackage).not.toHaveBeenCalled();
       });
     });
 
@@ -412,7 +409,7 @@ describe('CreatePackageUsecase', () => {
         expect(mockRecipesPort.getRecipeByIdInternal).toHaveBeenCalledWith(
           recipeId1,
         );
-        expect(mockPackageRepository.add).not.toHaveBeenCalled();
+        expect(mockPackageService.createPackage).not.toHaveBeenCalled();
       });
     });
 
@@ -444,7 +441,7 @@ describe('CreatePackageUsecase', () => {
         expect(mockRecipesPort.getRecipeByIdInternal).toHaveBeenCalledWith(
           recipeId1,
         );
-        expect(mockPackageRepository.add).not.toHaveBeenCalled();
+        expect(mockPackageService.createPackage).not.toHaveBeenCalled();
       });
     });
 
@@ -472,7 +469,7 @@ describe('CreatePackageUsecase', () => {
 
         expect(mockSpacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
         expect(mockStandardsPort.getStandard).toHaveBeenCalledWith(standardId1);
-        expect(mockPackageRepository.add).not.toHaveBeenCalled();
+        expect(mockPackageService.createPackage).not.toHaveBeenCalled();
       });
     });
 
@@ -502,17 +499,17 @@ describe('CreatePackageUsecase', () => {
 
         expect(mockSpacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
         expect(mockStandardsPort.getStandard).toHaveBeenCalledWith(standardId1);
-        expect(mockPackageRepository.add).not.toHaveBeenCalled();
+        expect(mockPackageService.createPackage).not.toHaveBeenCalled();
       });
     });
 
-    describe('when repository add operation fails', () => {
-      it('throws the error from repository', async () => {
+    describe('when service createPackage operation fails', () => {
+      it('throws the error from service', async () => {
         const mockSpace = buildSpace();
         const error = new Error('Database connection failed');
 
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
-        mockPackageRepository.add.mockRejectedValue(error);
+        mockPackageService.createPackage.mockRejectedValue(error);
 
         const command: CreatePackageCommand = {
           userId,

@@ -4,23 +4,23 @@ import {
   CreatePackageCommand,
   CreatePackageResponse,
   IAccountsPort,
+  ICreatePackageUseCase,
   IRecipesPort,
   ISpacesPort,
   IStandardsPort,
-  Package,
   createPackageId,
   createUserId,
 } from '@packmind/types';
-import { IDeploymentsRepositories } from '../../../domain/repositories/IDeploymentsRepositories';
+import { DeploymentsServices } from '../../services/DeploymentsServices';
 import { v4 as uuidv4 } from 'uuid';
 
-export class CreatePackageUsecase extends AbstractMemberUseCase<
-  CreatePackageCommand,
-  CreatePackageResponse
-> {
+export class CreatePackageUsecase
+  extends AbstractMemberUseCase<CreatePackageCommand, CreatePackageResponse>
+  implements ICreatePackageUseCase
+{
   constructor(
     accountsPort: IAccountsPort,
-    private readonly repositories: IDeploymentsRepositories,
+    private readonly services: DeploymentsServices,
     private readonly spacesPort: ISpacesPort,
     private readonly recipesPort: IRecipesPort,
     private readonly standardsPort: IStandardsPort,
@@ -97,25 +97,25 @@ export class CreatePackageUsecase extends AbstractMemberUseCase<
       }
     }
 
-    // Create package
-    const newPackage: Package = {
-      id: createPackageId(uuidv4()),
-      name,
-      slug,
-      description,
-      spaceId,
-      createdBy: createUserId(userId),
-      recipes: recipeIds,
-      standards: standardIds,
-    };
-
-    const savedPackage = await this.repositories
-      .getPackageRepository()
-      .add(newPackage);
+    // Create package using the service
+    const savedPackage = await this.services.getPackageService().createPackage(
+      {
+        id: createPackageId(uuidv4()),
+        name,
+        slug,
+        description,
+        spaceId,
+        createdBy: createUserId(userId),
+      },
+      recipeIds,
+      standardIds,
+    );
 
     this.logger.info('Package created successfully', {
       packageId: savedPackage.id,
       name: savedPackage.name,
+      recipeCount: savedPackage.recipes?.length ?? 0,
+      standardCount: savedPackage.standards?.length ?? 0,
     });
 
     return { package: savedPackage };

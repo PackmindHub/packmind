@@ -254,13 +254,13 @@ export class DeploymentsAdapter
 
     this._listPackagesBySpaceUseCase = new ListPackagesBySpaceUsecase(
       this.accountsPort,
-      this.deploymentsServices.getRepositories(),
+      this.deploymentsServices,
       this.spacesPort,
     );
 
     this._createPackageUseCase = new CreatePackageUsecase(
       this.accountsPort,
-      this.deploymentsServices.getRepositories(),
+      this.deploymentsServices,
       this.spacesPort,
       this.recipesPort,
       this.standardsPort,

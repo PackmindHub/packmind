@@ -7,7 +7,7 @@ import {
   ListPackagesBySpaceCommand,
   ListPackagesBySpaceResponse,
 } from '@packmind/types';
-import { IDeploymentsRepositories } from '../../../domain/repositories/IDeploymentsRepositories';
+import { DeploymentsServices } from '../../services/DeploymentsServices';
 
 const origin = 'ListPackagesBySpaceUsecase';
 
@@ -20,7 +20,7 @@ export class ListPackagesBySpaceUsecase
 {
   constructor(
     accountsAdapter: IAccountsPort,
-    private readonly repositories: IDeploymentsRepositories,
+    private readonly services: DeploymentsServices,
     private readonly spacesPort: ISpacesPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
@@ -58,9 +58,9 @@ export class ListPackagesBySpaceUsecase
       }
 
       // Get packages in the specified space
-      const packages = await this.repositories
-        .getPackageRepository()
-        .findBySpaceId(command.spaceId);
+      const packages = await this.services
+        .getPackageService()
+        .getPackagesBySpaceId(command.spaceId);
 
       this.logger.info('Packages listed by space successfully', {
         spaceId: command.spaceId,

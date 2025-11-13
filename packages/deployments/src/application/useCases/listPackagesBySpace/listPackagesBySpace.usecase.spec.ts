@@ -11,15 +11,15 @@ import {
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import { packageFactory } from '../../../../test';
-import { IDeploymentsRepositories } from '../../../domain/repositories/IDeploymentsRepositories';
-import { IPackageRepository } from '../../../domain/repositories/IPackageRepository';
+import { DeploymentsServices } from '../../services/DeploymentsServices';
+import { PackageService } from '../../services/PackageService';
 import { v4 as uuidv4 } from 'uuid';
 
 describe('ListPackagesBySpaceUsecase', () => {
   let useCase: ListPackagesBySpaceUsecase;
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
-  let mockRepositories: jest.Mocked<IDeploymentsRepositories>;
-  let mockPackageRepository: jest.Mocked<IPackageRepository>;
+  let mockServices: jest.Mocked<DeploymentsServices>;
+  let mockPackageService: jest.Mocked<PackageService>;
   let mockSpacesPort: jest.Mocked<ISpacesPort>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
@@ -48,20 +48,18 @@ describe('ListPackagesBySpaceUsecase', () => {
   });
 
   beforeEach(() => {
-    mockPackageRepository = {
-      findBySpaceId: jest.fn(),
+    mockPackageService = {
+      getPackagesBySpaceId: jest.fn(),
       findById: jest.fn(),
-      save: jest.fn(),
-      delete: jest.fn(),
-    } as unknown as jest.Mocked<IPackageRepository>;
+      createPackage: jest.fn(),
+    } as unknown as jest.Mocked<PackageService>;
 
-    mockRepositories = {
-      getPackageRepository: jest.fn().mockReturnValue(mockPackageRepository),
-      getTargetRepository: jest.fn(),
-      getRecipesDeploymentRepository: jest.fn(),
-      getStandardsDeploymentRepository: jest.fn(),
-      getRenderModeConfigurationRepository: jest.fn(),
-    } as unknown as jest.Mocked<IDeploymentsRepositories>;
+    mockServices = {
+      getPackageService: jest.fn().mockReturnValue(mockPackageService),
+      getTargetService: jest.fn(),
+      getRenderModeConfigurationService: jest.fn(),
+      getRepositories: jest.fn(),
+    } as unknown as jest.Mocked<DeploymentsServices>;
 
     mockAccountsPort = {
       getUserById: jest.fn().mockResolvedValue(buildUser()),
@@ -81,7 +79,7 @@ describe('ListPackagesBySpaceUsecase', () => {
 
     useCase = new ListPackagesBySpaceUsecase(
       mockAccountsPort,
-      mockRepositories,
+      mockServices,
       mockSpacesPort,
       stubbedLogger,
     );
@@ -111,7 +109,7 @@ describe('ListPackagesBySpaceUsecase', () => {
         });
 
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
-        mockPackageRepository.findBySpaceId.mockResolvedValue([
+        mockPackageService.getPackagesBySpaceId.mockResolvedValue([
           package1,
           package2,
         ]);
@@ -126,7 +124,7 @@ describe('ListPackagesBySpaceUsecase', () => {
 
         expect(result).toEqual({ packages: [package1, package2] });
         expect(mockSpacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
-        expect(mockPackageRepository.findBySpaceId).toHaveBeenCalledWith(
+        expect(mockPackageService.getPackagesBySpaceId).toHaveBeenCalledWith(
           spaceId,
         );
       });
@@ -142,7 +140,7 @@ describe('ListPackagesBySpaceUsecase', () => {
         };
 
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
-        mockPackageRepository.findBySpaceId.mockResolvedValue([]);
+        mockPackageService.getPackagesBySpaceId.mockResolvedValue([]);
 
         const command: ListPackagesBySpaceCommand = {
           userId,
@@ -154,7 +152,7 @@ describe('ListPackagesBySpaceUsecase', () => {
 
         expect(result).toEqual({ packages: [] });
         expect(mockSpacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
-        expect(mockPackageRepository.findBySpaceId).toHaveBeenCalledWith(
+        expect(mockPackageService.getPackagesBySpaceId).toHaveBeenCalledWith(
           spaceId,
         );
       });
@@ -175,7 +173,7 @@ describe('ListPackagesBySpaceUsecase', () => {
         );
 
         expect(mockSpacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
-        expect(mockPackageRepository.findBySpaceId).not.toHaveBeenCalled();
+        expect(mockPackageService.getPackagesBySpaceId).not.toHaveBeenCalled();
       });
     });
 
@@ -202,12 +200,12 @@ describe('ListPackagesBySpaceUsecase', () => {
         );
 
         expect(mockSpacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
-        expect(mockPackageRepository.findBySpaceId).not.toHaveBeenCalled();
+        expect(mockPackageService.getPackagesBySpaceId).not.toHaveBeenCalled();
       });
     });
 
-    describe('when repository operations fail', () => {
-      it('throws the error from repository', async () => {
+    describe('when service operations fail', () => {
+      it('throws the error from service', async () => {
         const mockSpace: Space = {
           id: spaceId,
           slug: 'test-space',
@@ -217,7 +215,7 @@ describe('ListPackagesBySpaceUsecase', () => {
 
         const error = new Error('Database connection failed');
         mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
-        mockPackageRepository.findBySpaceId.mockRejectedValue(error);
+        mockPackageService.getPackagesBySpaceId.mockRejectedValue(error);
 
         const command: ListPackagesBySpaceCommand = {
           userId,
