@@ -15,8 +15,6 @@ import {
   ISpacesPortName,
   IStandardsPort,
   IStandardsPortName,
-  OrganizationProvider,
-  UserProvider,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { DeploymentsAdapter } from './application/adapter/DeploymentsAdapter';
@@ -100,9 +98,8 @@ export class DeploymentsHexa extends BaseHexa<
         [ICodingAgentPortName]: codingAgentPort,
         [IStandardsPortName]: standardsPort,
         [ISpacesPortName]: spacesPort,
+        [IAccountsPortName]: accountsPort,
         deploymentsServices: this.services,
-        userProvider: accountsPort as unknown as UserProvider,
-        organizationProvider: accountsPort as unknown as OrganizationProvider,
       });
 
       this.logger.info('DeploymentsHexa initialized successfully');

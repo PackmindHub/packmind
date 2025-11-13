@@ -1,17 +1,19 @@
+import { stubLogger } from '@packmind/test-utils';
+import {
+  createOrganizationId,
+  createUserId,
+  IAccountsPort,
+  Organization,
+  PackmindCommand,
+  PackmindResult,
+  User,
+  UserOrganizationMembership,
+} from '@packmind/types';
 import { AbstractMemberUseCase, MemberContext } from './AbstractMemberUseCase';
 import {
   UserNotFoundError,
   UserNotInOrganizationError,
 } from './UserAccessErrors';
-import { PackmindCommand, PackmindResult } from '@packmind/types';
-import {
-  createUserId,
-  User,
-  UserOrganizationMembership,
-} from '@packmind/types';
-import { createOrganizationId, Organization } from '@packmind/types';
-import { UserProvider, OrganizationProvider } from '@packmind/types';
-import { stubLogger } from '@packmind/test-utils';
 
 type TestResult = PackmindResult & { success: boolean };
 
@@ -20,14 +22,13 @@ class TestMemberUseCase extends AbstractMemberUseCase<
   TestResult
 > {
   constructor(
-    userProvider: UserProvider,
-    organizationProvider: OrganizationProvider,
+    accountsPort: IAccountsPort,
     logger: ReturnType<typeof stubLogger>,
     private readonly onExecute: (
       command: PackmindCommand & MemberContext,
     ) => Promise<TestResult>,
   ) {
-    super(userProvider, organizationProvider, logger);
+    super(accountsPort, logger);
   }
 
   protected executeForMembers(
@@ -95,17 +96,13 @@ describe('AbstractMemberUseCase', () => {
       .mockResolvedValue({ success: true });
     logger = stubLogger();
 
-    const userProvider: UserProvider = {
+    const accountsPort = {
       getUserById: mockGetUserById,
-    };
-
-    const organizationProvider: OrganizationProvider = {
       getOrganizationById: mockGetOrganizationById,
-    };
+    } as unknown as IAccountsPort;
 
     useCase = new TestMemberUseCase(
-      userProvider,
-      organizationProvider,
+      accountsPort,
       logger,
       mockExecuteForMembers,
     );

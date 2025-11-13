@@ -1,27 +1,32 @@
-import { CreateInvitationsUseCase } from './CreateInvitationsUseCase';
-import { UserService } from '../../services/UserService';
-import { OrganizationService } from '../../services/OrganizationService';
-import {
-  InvitationCreationRequest,
-  InvitationCreationRecord,
-  InvitationService,
-} from '../../services/InvitationService';
-import { createOrganizationId, Organization } from '@packmind/types';
-import { CreateInvitationsCommand } from '@packmind/types';
-import { InvitationBatchEmptyError } from '../../../domain/errors';
 import { UserNotFoundError } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
+  CreateInvitationsCommand,
+  createOrganizationId,
+  createUserId,
+  IAccountsPort,
+  Organization,
+  User,
+} from '@packmind/types';
+import {
+  invitationFactory,
   organizationFactory,
   userFactory,
-  invitationFactory,
 } from '../../../../test';
-import { createUserId, User } from '@packmind/types';
+import { InvitationBatchEmptyError } from '../../../domain/errors';
+import {
+  InvitationCreationRecord,
+  InvitationCreationRequest,
+  InvitationService,
+} from '../../services/InvitationService';
+import { UserService } from '../../services/UserService';
+import { CreateInvitationsUseCase } from './CreateInvitationsUseCase';
 
 describe('CreateInvitationsUseCase', () => {
   let useCase: CreateInvitationsUseCase;
+  let mockGetUserById: jest.Mock;
+  let mockGetOrganizationById: jest.Mock;
   let mockUserService: jest.Mocked<UserService>;
-  let mockOrganizationService: jest.Mocked<OrganizationService>;
   let mockInvitationService: jest.Mocked<InvitationService>;
   let organization: Organization;
   const organizationId = createOrganizationId('org-123');
@@ -38,8 +43,16 @@ describe('CreateInvitationsUseCase', () => {
   });
 
   beforeEach(() => {
+    mockGetUserById = jest.fn();
+    mockGetOrganizationById = jest.fn();
+
+    const accountsPort = {
+      getUserById: mockGetUserById,
+      getOrganizationById: mockGetOrganizationById,
+    } as unknown as IAccountsPort;
+
     mockUserService = {
-      getUserById: jest.fn(),
+      getUserById: mockGetUserById,
       getUserByEmail: jest.fn(),
       getUserByEmailCaseInsensitive: jest.fn(),
       createUser: jest.fn(),
@@ -49,14 +62,6 @@ describe('CreateInvitationsUseCase', () => {
       listUsers: jest.fn(),
       validatePassword: jest.fn(),
     } as unknown as jest.Mocked<UserService>;
-
-    mockOrganizationService = {
-      getOrganizationById: jest.fn(),
-      getOrganizationByName: jest.fn(),
-      getOrganizationBySlug: jest.fn(),
-      listOrganizations: jest.fn(),
-      createOrganization: jest.fn(),
-    } as unknown as jest.Mocked<OrganizationService>;
 
     mockInvitationService = {
       createInvitations: jest.fn(),
@@ -76,12 +81,11 @@ describe('CreateInvitationsUseCase', () => {
 
     organization = organizationFactory({ id: organizationId });
 
-    mockOrganizationService.getOrganizationById.mockResolvedValue(organization);
-    mockUserService.getUserById.mockResolvedValue(inviter);
+    mockGetOrganizationById.mockResolvedValue(organization);
+    mockGetUserById.mockResolvedValue(inviter);
 
     useCase = new CreateInvitationsUseCase(
-      mockUserService,
-      mockOrganizationService,
+      accountsPort,
       mockUserService,
       mockInvitationService,
       stubLogger(),
@@ -507,7 +511,7 @@ describe('CreateInvitationsUseCase', () => {
   });
 
   it('throws if organization is not found', async () => {
-    mockOrganizationService.getOrganizationById.mockResolvedValueOnce(null);
+    mockGetOrganizationById.mockResolvedValueOnce(null);
 
     const command: CreateInvitationsCommand = {
       organizationId: organizationId as string,
@@ -522,7 +526,7 @@ describe('CreateInvitationsUseCase', () => {
   });
 
   it('throws if inviter user is not found', async () => {
-    mockUserService.getUserById.mockResolvedValueOnce(null);
+    mockGetUserById.mockResolvedValueOnce(null);
 
     const command: CreateInvitationsCommand = {
       organizationId: organizationId as string,

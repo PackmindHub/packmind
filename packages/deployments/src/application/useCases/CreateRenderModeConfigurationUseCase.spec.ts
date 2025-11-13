@@ -1,19 +1,18 @@
-import { v4 as uuidv4 } from 'uuid';
-import { CreateRenderModeConfigurationUseCase } from './CreateRenderModeConfigurationUseCase';
-import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import { stubLogger } from '@packmind/test-utils';
 import {
   CreateRenderModeConfigurationCommand,
-  RenderMode,
-} from '@packmind/types';
-import {
+  IAccountsPort,
   Organization,
+  RenderMode,
   User,
   UserOrganizationMembership,
   createOrganizationId,
   createUserId,
 } from '@packmind/types';
+import { v4 as uuidv4 } from 'uuid';
 import { renderModeConfigurationFactory } from '../../../test';
+import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
+import { CreateRenderModeConfigurationUseCase } from './CreateRenderModeConfigurationUseCase';
 
 const createMembership = (
   userId: string,
@@ -38,8 +37,7 @@ const createUser = (
 
 describe('CreateRenderModeConfigurationUseCase', () => {
   let service: jest.Mocked<RenderModeConfigurationService>;
-  let userProvider: { getUserById: jest.Mock };
-  let organizationProvider: { getOrganizationById: jest.Mock };
+  let accountsPort: { getUserById: jest.Mock; getOrganizationById: jest.Mock };
   let useCase: CreateRenderModeConfigurationUseCase;
   let command: CreateRenderModeConfigurationCommand;
   let organization: Organization;
@@ -51,10 +49,8 @@ describe('CreateRenderModeConfigurationUseCase', () => {
       updateConfiguration: jest.fn(),
     } as unknown as jest.Mocked<RenderModeConfigurationService>;
 
-    userProvider = {
+    accountsPort = {
       getUserById: jest.fn(),
-    };
-    organizationProvider = {
       getOrganizationById: jest.fn(),
     };
 
@@ -70,12 +66,11 @@ describe('CreateRenderModeConfigurationUseCase', () => {
       activeRenderModes: [RenderMode.CLAUDE],
     };
 
-    organizationProvider.getOrganizationById.mockResolvedValue(organization);
+    accountsPort.getOrganizationById.mockResolvedValue(organization);
 
     useCase = new CreateRenderModeConfigurationUseCase(
       service,
-      userProvider,
-      organizationProvider,
+      accountsPort as unknown as IAccountsPort,
       stubLogger(),
     );
   });
@@ -88,7 +83,7 @@ describe('CreateRenderModeConfigurationUseCase', () => {
         'admin',
       );
       const user = createUser(command.userId, membership);
-      userProvider.getUserById.mockResolvedValue(user);
+      accountsPort.getUserById.mockResolvedValue(user);
 
       service.createConfiguration.mockResolvedValue(
         renderModeConfigurationFactory({
@@ -127,7 +122,7 @@ describe('CreateRenderModeConfigurationUseCase', () => {
         'member',
       );
       const user = createUser(command.userId, membership);
-      userProvider.getUserById.mockResolvedValue(user);
+      accountsPort.getUserById.mockResolvedValue(user);
 
       service.createConfiguration.mockResolvedValue(
         renderModeConfigurationFactory({ organizationId: organization.id }),

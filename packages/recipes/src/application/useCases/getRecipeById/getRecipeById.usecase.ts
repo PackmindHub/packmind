@@ -1,5 +1,5 @@
-import { RecipeService } from '../../services/RecipeService';
 import { PackmindLogger } from '@packmind/logger';
+import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
   GetRecipeByIdCommand,
   GetRecipeByIdResponse,
@@ -9,7 +9,7 @@ import {
   Recipe,
   RecipeId,
 } from '@packmind/types';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import { RecipeService } from '../../services/RecipeService';
 
 const origin = 'GetRecipeByIdUsecase';
 
@@ -23,7 +23,7 @@ export class GetRecipeByIdUsecase
     private readonly spacesPort: ISpacesPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsAdapter, accountsAdapter, logger);
+    super(accountsAdapter, logger);
     this.logger.info('GetRecipeByIdUsecase initialized');
   }
 

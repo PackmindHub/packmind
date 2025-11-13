@@ -1,7 +1,7 @@
-import { UserProvider, OrganizationProvider } from '@packmind/types';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
+import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
+  IAccountsPort,
   IListOrganizationUsersUseCase,
   ListOrganizationUsersCommand,
   ListOrganizationUsersResponse,
@@ -19,12 +19,11 @@ export class ListOrganizationUsersUseCase
   implements IListOrganizationUsersUseCase
 {
   constructor(
-    userProvider: UserProvider,
-    organizationProvider: OrganizationProvider,
+    accountsPort: IAccountsPort,
     private readonly userService: UserService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(userProvider, organizationProvider, logger);
+    super(accountsPort, logger);
     logger.info('ListOrganizationUsersUseCase initialized');
   }
 

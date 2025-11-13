@@ -1,14 +1,16 @@
-import { ListOrganizationUserStatusesUseCase } from './ListOrganizationUserStatusesUseCase';
-import { ListOrganizationUserStatusesCommand } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
-import { createUserId } from '@packmind/types';
-import { createOrganizationId } from '@packmind/types';
+import {
+  createOrganizationId,
+  createUserId,
+  IAccountsPort,
+  ListOrganizationUserStatusesCommand,
+} from '@packmind/types';
 import { organizationFactory, userFactory } from '../../../../test';
 import { invitationFactory } from '../../../../test/invitationFactory';
-import { UserService } from '../../services/UserService';
-import { OrganizationService } from '../../services/OrganizationService';
-import { InvitationService } from '../../services/InvitationService';
 import { OrganizationAdminRequiredError } from '../../../domain/errors';
+import { InvitationService } from '../../services/InvitationService';
+import { UserService } from '../../services/UserService';
+import { ListOrganizationUserStatusesUseCase } from './ListOrganizationUserStatusesUseCase';
 
 describe('ListOrganizationUserStatusesUseCase', () => {
   let useCase: ListOrganizationUserStatusesUseCase;
@@ -18,7 +20,6 @@ describe('ListOrganizationUserStatusesUseCase', () => {
   let mockListUsers: jest.Mock;
   let mockFindByUserIds: jest.Mock;
   let userService: jest.Mocked<UserService>;
-  let organizationService: jest.Mocked<OrganizationService>;
   let invitationService: jest.Mocked<InvitationService>;
 
   const adminUserId = createUserId('admin-user');
@@ -30,14 +31,15 @@ describe('ListOrganizationUserStatusesUseCase', () => {
     mockListUsers = jest.fn();
     mockFindByUserIds = jest.fn();
 
+    const accountsPort = {
+      getUserById: mockGetUserById,
+      getOrganizationById: mockGetOrganizationById,
+    } as unknown as IAccountsPort;
+
     userService = {
       getUserById: mockGetUserById,
       listUsers: mockListUsers,
     } as unknown as jest.Mocked<UserService>;
-
-    organizationService = {
-      getOrganizationById: mockGetOrganizationById,
-    } as unknown as jest.Mocked<OrganizationService>;
 
     invitationService = {
       findByUserIds: mockFindByUserIds,
@@ -49,8 +51,7 @@ describe('ListOrganizationUserStatusesUseCase', () => {
     mockGetOrganizationById.mockResolvedValue(organization);
 
     useCase = new ListOrganizationUserStatusesUseCase(
-      userService,
-      organizationService,
+      accountsPort,
       userService,
       invitationService,
       mockLogger,

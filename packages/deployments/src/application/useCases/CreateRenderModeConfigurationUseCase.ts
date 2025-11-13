@@ -1,8 +1,8 @@
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { UserProvider, OrganizationProvider } from '@packmind/types';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
   CreateRenderModeConfigurationCommand,
+  IAccountsPort,
   ICreateRenderModeConfigurationUseCase,
   RenderMode,
   RenderModeConfiguration,
@@ -20,11 +20,10 @@ export class CreateRenderModeConfigurationUseCase
 {
   constructor(
     public readonly renderModeConfigurationService: RenderModeConfigurationService,
-    userProvider: UserProvider,
-    organizationProvider: OrganizationProvider,
+    accountsPort: IAccountsPort,
     logger: PackmindLogger = new PackmindLogger(origin, LogLevel.INFO),
   ) {
-    super(userProvider, organizationProvider, logger);
+    super(accountsPort, logger);
     this.logger.info('CreateRenderModeConfigurationUseCase initialized');
   }
 

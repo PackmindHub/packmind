@@ -1,24 +1,24 @@
-import { UserProvider, OrganizationProvider } from '@packmind/types';
+import { PackmindLogger } from '@packmind/logger';
 import {
   AbstractAdminUseCase,
   AdminContext,
   Configuration,
 } from '@packmind/node-utils';
-import { PackmindLogger } from '@packmind/logger';
 import {
+  IAccountsPort,
   IListOrganizationUserStatusesUseCase,
+  InvitationStatus,
   ListOrganizationUserStatusesCommand,
   ListOrganizationUserStatusesResponse,
+  User,
   UserStatus,
-  InvitationStatus,
 } from '@packmind/types';
-import { User } from '@packmind/types';
 import {
   Invitation,
   InvitationToken,
 } from '../../../domain/entities/Invitation';
-import { UserService } from '../../services/UserService';
 import { InvitationService } from '../../services/InvitationService';
+import { UserService } from '../../services/UserService';
 
 const origin = 'ListOrganizationUserStatusesUseCase';
 
@@ -32,13 +32,12 @@ export class ListOrganizationUserStatusesUseCase
   private static readonly DEFAULT_APP_WEB_URL = 'http://localhost:8081';
 
   constructor(
-    userProvider: UserProvider,
-    organizationProvider: OrganizationProvider,
+    accountsPort: IAccountsPort,
     private readonly userService: UserService,
     private readonly invitationService: InvitationService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(userProvider, organizationProvider, logger);
+    super(accountsPort, logger);
     logger.info('ListOrganizationUserStatusesUseCase initialized');
   }
 

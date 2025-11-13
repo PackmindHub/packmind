@@ -1,11 +1,14 @@
-import { PackmindCommand, PackmindResult } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
-import { UserProvider, OrganizationProvider } from '@packmind/types';
 import {
-  UserAccessError,
-  OrganizationAdminRequiredError,
-} from './UserAccessErrors';
+  IAccountsPort,
+  PackmindCommand,
+  PackmindResult,
+} from '@packmind/types';
 import { AbstractMemberUseCase, MemberContext } from './AbstractMemberUseCase';
+import {
+  OrganizationAdminRequiredError,
+  UserAccessError,
+} from './UserAccessErrors';
 
 const defaultOrigin = 'AbstractAdminUseCase';
 
@@ -16,11 +19,10 @@ export abstract class AbstractAdminUseCase<
   Result extends PackmindResult,
 > extends AbstractMemberUseCase<Command, Result> {
   constructor(
-    userProvider: UserProvider,
-    organizationProvider: OrganizationProvider,
+    accountsPort: IAccountsPort,
     logger: PackmindLogger = new PackmindLogger(defaultOrigin),
   ) {
-    super(userProvider, organizationProvider, logger);
+    super(accountsPort, logger);
   }
 
   protected override executeForMembers(

@@ -1,16 +1,15 @@
+import { OrganizationAdminRequiredError } from '@packmind/node-utils';
+import { stubLogger } from '@packmind/test-utils';
 import {
+  IAccountsPort,
   Organization,
+  RenderMode,
+  RenderModeConfiguration,
+  UpdateRenderModeConfigurationCommand,
   User,
   UserOrganizationMembership,
   createOrganizationId,
   createUserId,
-} from '@packmind/types';
-import { OrganizationAdminRequiredError } from '@packmind/node-utils';
-import { stubLogger } from '@packmind/test-utils';
-import {
-  RenderMode,
-  RenderModeConfiguration,
-  UpdateRenderModeConfigurationCommand,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { renderModeConfigurationFactory } from '../../../test';
@@ -37,10 +36,8 @@ const createUserWithMembership = (
 
 describe('UpdateRenderModeConfigurationUseCase', () => {
   let service: jest.Mocked<RenderModeConfigurationService>;
-  let userProvider: {
+  let accountsPort: {
     getUserById: jest.Mock;
-  };
-  let organizationProvider: {
     getOrganizationById: jest.Mock;
   };
   let useCase: UpdateRenderModeConfigurationUseCase;
@@ -54,10 +51,8 @@ describe('UpdateRenderModeConfigurationUseCase', () => {
       updateConfiguration: jest.fn(),
     } as unknown as jest.Mocked<RenderModeConfigurationService>;
 
-    userProvider = {
+    accountsPort = {
       getUserById: jest.fn(),
-    };
-    organizationProvider = {
       getOrganizationById: jest.fn(),
     };
 
@@ -73,19 +68,18 @@ describe('UpdateRenderModeConfigurationUseCase', () => {
       activeRenderModes: [RenderMode.CLAUDE],
     };
 
-    organizationProvider.getOrganizationById.mockResolvedValue(organization);
+    accountsPort.getOrganizationById.mockResolvedValue(organization);
 
     useCase = new UpdateRenderModeConfigurationUseCase(
       service,
-      userProvider,
-      organizationProvider,
+      accountsPort as unknown as IAccountsPort,
       stubLogger(),
     );
   });
 
   describe('when user is admin', () => {
     beforeEach(() => {
-      userProvider.getUserById.mockResolvedValue(
+      accountsPort.getUserById.mockResolvedValue(
         createUserWithMembership(command.userId, organization, 'admin'),
       );
     });
@@ -167,7 +161,7 @@ describe('UpdateRenderModeConfigurationUseCase', () => {
 
   describe('when user is not admin', () => {
     beforeEach(() => {
-      userProvider.getUserById.mockResolvedValue(
+      accountsPort.getUserById.mockResolvedValue(
         createUserWithMembership(command.userId, organization, 'member'),
       );
     });

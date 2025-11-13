@@ -1,15 +1,13 @@
-import { UserProvider, OrganizationProvider } from '@packmind/types';
+import { PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
-  IStandardsPort,
+  GetOrganizationOnboardingStatusCommand,
+  IAccountsPort,
   IDeploymentPort,
+  IGetOrganizationOnboardingStatusUseCase,
   IGitPort,
   ISpacesPort,
-} from '@packmind/types';
-import { PackmindLogger } from '@packmind/logger';
-import {
-  IGetOrganizationOnboardingStatusUseCase,
-  GetOrganizationOnboardingStatusCommand,
+  IStandardsPort,
   OrganizationOnboardingStatus,
 } from '@packmind/types';
 import { UserService } from '../../services/UserService';
@@ -24,8 +22,7 @@ export class GetOrganizationOnboardingStatusUseCase
   implements IGetOrganizationOnboardingStatusUseCase
 {
   constructor(
-    userProvider: UserProvider,
-    organizationProvider: OrganizationProvider,
+    accountsPort: IAccountsPort,
     private readonly userService: UserService,
     private readonly gitPort: IGitPort | null,
     private readonly standardsPort: IStandardsPort | null,
@@ -33,7 +30,7 @@ export class GetOrganizationOnboardingStatusUseCase
     private readonly deploymentPort: IDeploymentPort | null,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(userProvider, organizationProvider, logger);
+    super(accountsPort, logger);
     logger.info('GetOrganizationOnboardingStatusUseCase initialized');
   }
 

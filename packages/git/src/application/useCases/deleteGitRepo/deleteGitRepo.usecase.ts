@@ -1,11 +1,15 @@
+import { PackmindLogger } from '@packmind/logger';
+import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
+import {
+  GitProviderId,
+  GitProviderOrganizationMismatchError,
+  GitRepoId,
+  IAccountsPort,
+  PackmindCommand,
+  createUserId,
+} from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
 import { GitRepoService } from '../../GitRepoService';
-import { GitProviderId } from '@packmind/types';
-import { GitRepoId } from '@packmind/types';
-import { PackmindLogger } from '@packmind/logger';
-import { PackmindCommand, IAccountsPort, createUserId } from '@packmind/types';
-import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
-import { GitProviderOrganizationMismatchError } from '@packmind/types';
 
 const origin = 'DeleteGitRepoUseCase';
 
@@ -26,7 +30,7 @@ export class DeleteGitRepoUseCase extends AbstractAdminUseCase<
     accountsAdapter: IAccountsPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(accountsAdapter, accountsAdapter, logger);
+    super(accountsAdapter, logger);
   }
 
   protected async executeForAdmins(
