@@ -68,14 +68,13 @@ export class DeploymentsGatewayApi
       spaceId,
       organizationId,
       name,
-      slug,
       description,
       recipeIds,
       standardIds,
     } = params;
     return this._api.post(
       `/organizations/${organizationId}/spaces/${spaceId}/packages`,
-      { name, slug, description, recipeIds, standardIds },
+      { name, description, recipeIds, standardIds },
     );
   };
 

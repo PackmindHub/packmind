@@ -13,6 +13,7 @@ import {
 } from '@packmind/types';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
 import { v4 as uuidv4 } from 'uuid';
+import slug from 'slug';
 
 export class CreatePackageUsecase
   extends AbstractMemberUseCase<CreatePackageCommand, CreatePackageResponse>
@@ -32,13 +33,12 @@ export class CreatePackageUsecase
   async executeForMembers(
     command: CreatePackageCommand & MemberContext,
   ): Promise<CreatePackageResponse> {
-    const { spaceId, name, slug, description, recipeIds, standardIds, userId } =
+    const { spaceId, name, description, recipeIds, standardIds, userId } =
       command;
 
     this.logger.info('Creating package', {
       spaceId,
       name,
-      slug,
       recipeCount: recipeIds.length,
       standardCount: standardIds.length,
     });
@@ -54,6 +54,31 @@ export class CreatePackageUsecase
         `Space ${spaceId} does not belong to organization ${command.organizationId}`,
       );
     }
+
+    // Generate unique slug from package name
+    this.logger.info('Generating slug from package name', { name });
+    const baseSlug = slug(name);
+    this.logger.info('Base slug generated', { slug: baseSlug });
+
+    // Ensure slug is unique per space. If it exists, append "-1", "-2", ... until unique
+    this.logger.info('Checking slug uniqueness within space', {
+      baseSlug,
+      spaceId,
+    });
+    const existingPackages = await this.services
+      .getPackageService()
+      .getPackagesBySpaceId(spaceId);
+    const existingSlugs = new Set(existingPackages.map((p) => p.slug));
+
+    let packageSlug = baseSlug;
+    if (existingSlugs.has(packageSlug)) {
+      let counter = 1;
+      while (existingSlugs.has(`${baseSlug}-${counter}`)) {
+        counter++;
+      }
+      packageSlug = `${baseSlug}-${counter}`;
+    }
+    this.logger.info('Resolved unique slug', { slug: packageSlug });
 
     // Validate all recipes belong to the space
     if (recipeIds.length > 0) {
@@ -102,7 +127,7 @@ export class CreatePackageUsecase
       {
         id: createPackageId(uuidv4()),
         name,
-        slug,
+        slug: packageSlug,
         description,
         spaceId,
         createdBy: createUserId(userId),

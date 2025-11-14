@@ -94,7 +94,7 @@ describe('CreatePackageUsecase', () => {
     mockPackageService = {
       createPackage: jest.fn(),
       findById: jest.fn(),
-      getPackagesBySpaceId: jest.fn(),
+      getPackagesBySpaceId: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<PackageService>;
 
     mockServices = {
@@ -176,7 +176,6 @@ describe('CreatePackageUsecase', () => {
           organizationId,
           spaceId,
           name: 'My Package',
-          slug: 'my-package',
           description: 'Package description',
           recipeIds: [recipeId1, recipeId2],
           standardIds: [standardId1, standardId2],
@@ -233,7 +232,6 @@ describe('CreatePackageUsecase', () => {
           organizationId,
           spaceId,
           name: 'My Package',
-          slug: 'my-package',
           description: 'Package description',
           recipeIds: [],
           standardIds: [standardId1],
@@ -274,7 +272,6 @@ describe('CreatePackageUsecase', () => {
           organizationId,
           spaceId,
           name: 'My Package',
-          slug: 'my-package',
           description: 'Package description',
           recipeIds: [recipeId1],
           standardIds: [],
@@ -313,7 +310,6 @@ describe('CreatePackageUsecase', () => {
           organizationId,
           spaceId,
           name: 'My Package',
-          slug: 'my-package',
           description: 'Package description',
           recipeIds: [],
           standardIds: [],
@@ -327,6 +323,114 @@ describe('CreatePackageUsecase', () => {
       });
     });
 
+    describe('when slug needs to be generated from name', () => {
+      it('generates slug from name', async () => {
+        const mockSpace = buildSpace();
+
+        mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
+
+        const createdPackage = packageFactory({
+          name: 'My Package',
+          slug: 'my-package',
+          description: 'Package description',
+          spaceId,
+          createdBy: userId,
+          recipes: [],
+          standards: [],
+        });
+
+        mockPackageService.createPackage.mockResolvedValue(createdPackage);
+
+        const command: CreatePackageCommand = {
+          userId,
+          organizationId,
+          spaceId,
+          name: 'My Package',
+          description: 'Package description',
+          recipeIds: [],
+          standardIds: [],
+        };
+
+        await useCase.execute(command);
+
+        expect(mockPackageService.getPackagesBySpaceId).toHaveBeenCalledWith(
+          spaceId,
+        );
+        expect(mockPackageService.createPackage).toHaveBeenCalledWith(
+          expect.objectContaining({
+            slug: 'my-package',
+          }),
+          [],
+          [],
+        );
+      });
+    });
+
+    describe('when slug already exists in space', () => {
+      it('appends counter to make slug unique', async () => {
+        const mockSpace = buildSpace();
+        const existingPackage1 = packageFactory({
+          name: 'My Package',
+          slug: 'my-package',
+          description: 'Existing package',
+          spaceId,
+          createdBy: userId,
+          recipes: [],
+          standards: [],
+        });
+        const existingPackage2 = packageFactory({
+          name: 'My Package',
+          slug: 'my-package-1',
+          description: 'Another existing package',
+          spaceId,
+          createdBy: userId,
+          recipes: [],
+          standards: [],
+        });
+
+        mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
+        mockPackageService.getPackagesBySpaceId.mockResolvedValue([
+          existingPackage1,
+          existingPackage2,
+        ]);
+
+        const createdPackage = packageFactory({
+          name: 'My Package',
+          slug: 'my-package-2',
+          description: 'Package description',
+          spaceId,
+          createdBy: userId,
+          recipes: [],
+          standards: [],
+        });
+
+        mockPackageService.createPackage.mockResolvedValue(createdPackage);
+
+        const command: CreatePackageCommand = {
+          userId,
+          organizationId,
+          spaceId,
+          name: 'My Package',
+          description: 'Package description',
+          recipeIds: [],
+          standardIds: [],
+        };
+
+        await useCase.execute(command);
+
+        expect(mockPackageService.getPackagesBySpaceId).toHaveBeenCalledWith(
+          spaceId,
+        );
+        expect(mockPackageService.createPackage).toHaveBeenCalledWith(
+          expect.objectContaining({
+            slug: 'my-package-2',
+          }),
+          [],
+          [],
+        );
+      });
+    });
+
     describe('when space does not exist', () => {
       it('throws error', async () => {
         mockSpacesPort.getSpaceById.mockResolvedValue(null);
@@ -336,7 +440,6 @@ describe('CreatePackageUsecase', () => {
           organizationId,
           spaceId,
           name: 'My Package',
-          slug: 'my-package',
           description: 'Package description',
           recipeIds: [],
           standardIds: [],
@@ -368,7 +471,6 @@ describe('CreatePackageUsecase', () => {
           organizationId,
           spaceId,
           name: 'My Package',
-          slug: 'my-package',
           description: 'Package description',
           recipeIds: [],
           standardIds: [],
@@ -395,7 +497,6 @@ describe('CreatePackageUsecase', () => {
           organizationId,
           spaceId,
           name: 'My Package',
-          slug: 'my-package',
           description: 'Package description',
           recipeIds: [recipeId1],
           standardIds: [],
@@ -427,7 +528,6 @@ describe('CreatePackageUsecase', () => {
           organizationId,
           spaceId,
           name: 'My Package',
-          slug: 'my-package',
           description: 'Package description',
           recipeIds: [recipeId1],
           standardIds: [],
@@ -457,7 +557,6 @@ describe('CreatePackageUsecase', () => {
           organizationId,
           spaceId,
           name: 'My Package',
-          slug: 'my-package',
           description: 'Package description',
           recipeIds: [],
           standardIds: [standardId1],
@@ -487,7 +586,6 @@ describe('CreatePackageUsecase', () => {
           organizationId,
           spaceId,
           name: 'My Package',
-          slug: 'my-package',
           description: 'Package description',
           recipeIds: [],
           standardIds: [standardId1],
@@ -516,7 +614,6 @@ describe('CreatePackageUsecase', () => {
           organizationId,
           spaceId,
           name: 'My Package',
-          slug: 'my-package',
           description: 'Package description',
           recipeIds: [],
           standardIds: [],
@@ -538,7 +635,6 @@ describe('CreatePackageUsecase', () => {
           organizationId,
           spaceId,
           name: 'My Package',
-          slug: 'my-package',
           description: 'Package description',
           recipeIds: [],
           standardIds: [],
@@ -563,7 +659,6 @@ describe('CreatePackageUsecase', () => {
           organizationId,
           spaceId,
           name: 'My Package',
-          slug: 'my-package',
           description: 'Package description',
           recipeIds: [recipeId1],
           standardIds: [],
@@ -588,7 +683,6 @@ describe('CreatePackageUsecase', () => {
           organizationId,
           spaceId,
           name: 'My Package',
-          slug: 'my-package',
           description: 'Package description',
           recipeIds: [],
           standardIds: [standardId1],
