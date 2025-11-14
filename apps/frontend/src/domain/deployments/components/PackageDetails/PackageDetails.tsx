@@ -410,45 +410,45 @@ export const PackageDetails = ({
       title={pkg.name}
       subtitle={pkg.description}
       breadcrumbComponent={<AutobreadCrumb />}
+      actions={
+        <PMHStack gap={3}>
+          <PMButton onClick={handleEdit}>Edit</PMButton>
+          <PMAlertDialog
+            trigger={
+              <PMButton variant="outline" colorPalette="red">
+                Delete
+              </PMButton>
+            }
+            title="Delete Package"
+            message={PACKAGE_MESSAGES.confirmation.deletePackage(pkg.name)}
+            confirmText="Delete"
+            cancelText="Cancel"
+            confirmColorScheme="red"
+            onConfirm={handleDelete}
+            open={deleteDialogOpen}
+            onOpenChange={({ open }) => setDeleteDialogOpen(open)}
+            isLoading={deletePackageMutation.isPending}
+          />
+        </PMHStack>
+      }
     >
       <PMVStack align="stretch" gap="6">
-        <PMHStack justify="space-between" align="center">
-          <PMBox>
-            <PMVStack align="stretch" gap="2">
-              <PMHStack gap="4">
-                <PMText fontWeight="semibold">Slug:</PMText>
-                <PMText>{pkg.slug}</PMText>
-              </PMHStack>
-              <PMHStack gap="4">
-                <PMText fontWeight="semibold">Recipes:</PMText>
-                <PMText>{recipeCount}</PMText>
-              </PMHStack>
-              <PMHStack gap="4">
-                <PMText fontWeight="semibold">Standards:</PMText>
-                <PMText>{standardCount}</PMText>
-              </PMHStack>
-            </PMVStack>
-          </PMBox>
-          <PMHStack gap={3}>
-            <PMButton onClick={handleEdit}>Edit</PMButton>
-            <PMAlertDialog
-              trigger={
-                <PMButton variant="outline" colorPalette="red">
-                  Delete
-                </PMButton>
-              }
-              title="Delete Package"
-              message={PACKAGE_MESSAGES.confirmation.deletePackage(pkg.name)}
-              confirmText="Delete"
-              cancelText="Cancel"
-              confirmColorScheme="red"
-              onConfirm={handleDelete}
-              open={deleteDialogOpen}
-              onOpenChange={({ open }) => setDeleteDialogOpen(open)}
-              isLoading={deletePackageMutation.isPending}
-            />
-          </PMHStack>
-        </PMHStack>
+        <PMBox>
+          <PMVStack align="stretch" gap="2">
+            <PMHStack gap="4">
+              <PMText fontWeight="semibold">Slug:</PMText>
+              <PMText>{pkg.slug}</PMText>
+            </PMHStack>
+            <PMHStack gap="4">
+              <PMText fontWeight="semibold">Recipes:</PMText>
+              <PMText>{recipeCount}</PMText>
+            </PMHStack>
+            <PMHStack gap="4">
+              <PMText fontWeight="semibold">Standards:</PMText>
+              <PMText>{standardCount}</PMText>
+            </PMHStack>
+          </PMVStack>
+        </PMBox>
 
         {recipeCount > 0 && (
           <PMBox>
