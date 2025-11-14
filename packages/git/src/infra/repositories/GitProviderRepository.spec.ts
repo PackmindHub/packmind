@@ -242,7 +242,6 @@ describe('GitProviderRepository', () => {
     });
   });
 
-
   it('can store and retrieve GitLab provider with encryption', async () => {
     const gitlabProvider = gitlabProviderFactory({
       organizationId: testOrganization.id,
