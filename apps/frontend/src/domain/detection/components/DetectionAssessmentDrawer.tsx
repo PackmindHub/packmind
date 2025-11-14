@@ -129,6 +129,22 @@ export const DetectionAssessmentDrawer: React.FC<
     return isAssessmentInError || isProgramGenerationInError;
   }, [assessment, activePrograms, language]);
 
+  const textareaRows = useMemo(() => {
+    const heuristicsLines = heuristicsText.split('\n').length;
+    const MIN_ROWS = 5;
+    const MAX_ROWS = 8;
+
+    if (heuristicsLines <= MIN_ROWS) {
+      return MIN_ROWS;
+    }
+
+    if (heuristicsLines > MIN_ROWS && heuristicsLines < MAX_ROWS) {
+      return heuristicsLines;
+    }
+
+    return MAX_ROWS;
+  }, [heuristicsText]);
+
   useEffect(() => {
     if (detectionHeuristics && Array.isArray(detectionHeuristics.heuristics)) {
       // Join array with newlines for display in textarea
@@ -321,7 +337,7 @@ export const DetectionAssessmentDrawer: React.FC<
                         value={heuristicsText ?? ''}
                         onChange={handleHeuristicsChange}
                         placeholder="Enter detection heuristics..."
-                        rows={10}
+                        rows={textareaRows}
                         disabled={!isEditable || updateHeuristics.isPending}
                         maxLength={3000}
                       />
