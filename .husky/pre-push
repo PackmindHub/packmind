@@ -1,1 +1,1 @@
-nx run-many -t test --tuiAutoExit --passWithNoTests
+NODE_OPTIONS='--max-old-space-size=4096' nx run-many -t test --tuiAutoExit --passWithNoTests
