@@ -2,6 +2,7 @@ import { Repository } from 'typeorm';
 import {
   Package,
   PackageId,
+  PackageWithArtefacts,
   RecipeId,
   SpaceId,
   StandardId,
@@ -89,6 +90,44 @@ export class PackageRepository
     } catch (error) {
       this.logger.error('Failed to find package by ID', {
         packageId: id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async findBySlugsWithArtefacts(
+    slugs: string[],
+  ): Promise<PackageWithArtefacts[]> {
+    if (slugs.length === 0) {
+      this.logger.info('No slugs provided to findBySlugsWithArtefacts');
+      return [];
+    }
+
+    this.logger.info('Finding packages by slugs with artefacts', {
+      slugs,
+      count: slugs.length,
+    });
+
+    try {
+      const packages = await this.repository
+        .createQueryBuilder('package')
+        .leftJoinAndSelect('package.recipes', 'recipes')
+        .leftJoinAndSelect('package.standards', 'standards')
+        .where('package.slug IN (:...slugs)', { slugs })
+        .orderBy('package.createdAt', 'DESC')
+        .getMany();
+
+      this.logger.info('Packages found by slugs successfully', {
+        requestedCount: slugs.length,
+        foundCount: packages.length,
+      });
+
+      // TypeORM loads full Recipe[] and Standard[] with leftJoinAndSelect
+      return packages as unknown as PackageWithArtefacts[];
+    } catch (error) {
+      this.logger.error('Failed to find packages by slugs', {
+        slugs,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

@@ -12,17 +12,19 @@ export class PullDataUseCase implements IPullDataUseCase {
 
   public async execute(command: IPullDataCommand): Promise<IPullDataResult> {
     const baseDirectory = command.baseDirectory || process.cwd();
+
     const result: IPullDataResult = {
       filesCreated: 0,
       filesUpdated: 0,
       filesDeleted: 0,
       errors: [],
     };
+    // Fetch data from the gateway
+    const response = await this.packmindGateway.getPullData({
+      packagesSlugs: command.packagesSlugs,
+    });
 
     try {
-      // Fetch data from the gateway
-      const response = await this.packmindGateway.getPullData({});
-
       // Process createOrUpdate files
       for (const file of response.fileUpdates.createOrUpdate) {
         try {

@@ -1,7 +1,7 @@
 import { SpaceId } from '../spaces';
 import { UserId } from '../accounts';
-import { RecipeId } from '../recipes';
-import { StandardId } from '../standards';
+import { Recipe, RecipeId } from '../recipes';
+import { Standard, StandardId } from '../standards';
 import { Branded, brandedIdFactory } from '../brandedTypes';
 
 export type PackageId = Branded<'PackageId'>;
@@ -16,4 +16,9 @@ export type Package = {
   createdBy: UserId;
   recipes: RecipeId[];
   standards: StandardId[];
+};
+
+export type PackageWithArtefacts = Omit<Package, 'recipes' | 'standards'> & {
+  recipes: Recipe[];
+  standards: Standard[];
 };
