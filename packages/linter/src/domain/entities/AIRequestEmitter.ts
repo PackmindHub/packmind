@@ -3,6 +3,7 @@ import {
   AI_RESPONSE_FORMAT,
   AIService,
   getErrorMessage,
+  LLMModelPerformance,
   PromptConversation,
   TokensUsedByOperation,
 } from '@packmind/node-utils';
@@ -24,6 +25,7 @@ export default abstract class AIRequestEmitter {
   public async callAiProvider(
     prompt: PromptConversation[],
     format: AI_RESPONSE_FORMAT,
+    performance: LLMModelPerformance = LLMModelPerformance.STANDARD,
   ) {
     const MAX_RETRY = 2;
     let i = 0;
@@ -33,6 +35,7 @@ export default abstract class AIRequestEmitter {
           prompt,
           {
             responseFormat: format,
+            performance,
           },
         );
         this._tokens.push({

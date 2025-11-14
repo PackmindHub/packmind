@@ -2,6 +2,7 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   AI_RESPONSE_FORMAT,
   AIService,
+  LLMModelPerformance,
   PromptConversationRole,
 } from '@packmind/node-utils';
 import { Rule, RuleExample } from '@packmind/types';
@@ -50,6 +51,7 @@ export class HeuristicGenerationService extends AIRequestEmitter {
             },
           ],
           AI_RESPONSE_FORMAT.PLAIN_TEXT,
+          LLMModelPerformance.FAST,
         );
 
         if (!response?.data) {

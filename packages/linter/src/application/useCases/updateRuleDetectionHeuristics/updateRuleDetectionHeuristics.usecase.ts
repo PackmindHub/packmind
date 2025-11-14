@@ -69,7 +69,6 @@ export class UpdateRuleDetectionHeuristicsUseCase
         this.accountsPort,
         this.linterRepositories,
         this.standardsAdapter,
-        this.logger,
       );
 
       const chatbotCommand: UpdateHeuristicsFollowingChatbotInputCommand = {
