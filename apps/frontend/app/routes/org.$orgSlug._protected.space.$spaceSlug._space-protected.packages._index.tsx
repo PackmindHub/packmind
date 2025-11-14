@@ -4,7 +4,10 @@ import { AutobreadCrumb } from '../../src/shared/components/navigation/Autobread
 import { PackagesPage } from '../../src/domain/deployments/components/PackagesPage';
 
 export default function PackagesRouteModule() {
-  const { spaceSlug } = useParams() as { spaceSlug: string };
+  const { spaceSlug, orgSlug } = useParams() as {
+    spaceSlug: string;
+    orgSlug: string;
+  };
 
   return (
     <PMPage
@@ -13,7 +16,7 @@ export default function PackagesRouteModule() {
       breadcrumbComponent={<AutobreadCrumb />}
     >
       <PMVStack align="stretch" gap={6}>
-        <PackagesPage spaceSlug={spaceSlug} />
+        <PackagesPage spaceSlug={spaceSlug} orgSlug={orgSlug} />
       </PMVStack>
     </PMPage>
   );

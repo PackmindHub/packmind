@@ -1,115 +1,101 @@
 import React from 'react';
+import { Link } from 'react-router';
 import {
-  PMVStack,
-  PMText,
-  PMSpinner,
   PMBox,
-  PMHStack,
-  PMHeading,
+  PMLink,
   PMButton,
+  PMTable,
+  PMTableColumn,
+  PMTableRow,
+  PMEmptyState,
+  PMHStack,
 } from '@packmind/ui';
-import { useNavigate, useParams } from 'react-router';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useListPackagesBySpaceQuery } from '../../api/queries/DeploymentsQueries';
 import { routes } from '../../../../shared/utils/routes';
 
 export interface PackagesPageProps {
   spaceSlug: string;
+  orgSlug: string;
 }
 
-export const PackagesPage: React.FC<PackagesPageProps> = ({ spaceSlug }) => {
-  const navigate = useNavigate();
-  const { orgSlug } = useParams() as { orgSlug: string };
+export const PackagesPage: React.FC<PackagesPageProps> = ({
+  spaceSlug,
+  orgSlug,
+}) => {
   const { spaceId, space, isLoading: isLoadingSpace } = useCurrentSpace();
-
   const organizationId = space?.organizationId;
 
   const {
     data: packagesResponse,
     isLoading: isLoadingPackages,
-    error,
+    isError,
   } = useListPackagesBySpaceQuery(spaceId, organizationId);
 
-  if (isLoadingSpace || isLoadingPackages) {
-    return (
-      <PMBox display="flex" justifyContent="center" alignItems="center" p={8}>
-        <PMSpinner size="lg" />
-      </PMBox>
-    );
-  }
+  const [tableData, setTableData] = React.useState<PMTableRow[]>([]);
 
-  if (error) {
-    return (
-      <PMBox p={4}>
-        <PMText color="error">Error loading packages: {String(error)}</PMText>
-      </PMBox>
-    );
-  }
+  React.useEffect(() => {
+    if (!packagesResponse) return;
 
-  const packages = packagesResponse?.packages || [];
-
-  if (packages.length === 0) {
-    return (
-      <PMVStack align="stretch" gap="4">
-        <PMBox>
-          <PMButton
-            onClick={() =>
-              navigate(`/org/${orgSlug}/space/${spaceSlug}/packages/new`)
-            }
-          >
-            Create Package
-          </PMButton>
-        </PMBox>
-        <PMBox p="4">
-          <PMText colorPalette="gray">No packages found in this space.</PMText>
-        </PMBox>
-      </PMVStack>
+    setTableData(
+      packagesResponse.packages.map((pkg) => ({
+        key: pkg.id,
+        name: (
+          <PMLink asChild>
+            <Link to={routes.space.toPackage(orgSlug, spaceSlug, pkg.id)}>
+              {pkg.name}
+            </Link>
+          </PMLink>
+        ),
+        description: <>{pkg.description || '-'}</>,
+        recipes: <>{pkg.recipes?.length || 0}</>,
+        standards: <>{pkg.standards?.length || 0}</>,
+      })),
     );
-  }
+  }, [packagesResponse, orgSlug, spaceSlug]);
+
+  const columns: PMTableColumn[] = [
+    { key: 'name', header: 'Name', width: '250px' },
+    { key: 'description', header: 'Description', grow: true },
+    { key: 'recipes', header: 'Recipes', width: '100px', align: 'center' },
+    { key: 'standards', header: 'Standards', width: '100px', align: 'center' },
+  ];
+
+  const isLoading = isLoadingSpace || isLoadingPackages;
 
   return (
-    <PMVStack align="stretch" gap="4">
-      <PMBox>
-        <PMButton
-          onClick={() =>
-            navigate(`/org/${orgSlug}/space/${spaceSlug}/packages/new`)
-          }
-        >
-          Create Package
-        </PMButton>
-      </PMBox>
-      {packages.map((pkg) => (
-        <PMBox
-          key={pkg.id}
-          p="4"
-          borderWidth="1px"
-          borderRadius="md"
-          borderColor="border.default"
-          cursor="pointer"
-          _hover={{ bg: 'gray.700' }}
-          onClick={() =>
-            navigate(routes.space.toPackage(orgSlug, spaceSlug, pkg.id))
-          }
-        >
-          <PMVStack align="stretch" gap="2">
-            <PMHStack justify="space-between">
-              <PMHeading size="md">{pkg.name}</PMHeading>
-              <PMText fontSize="sm" colorPalette="gray">
-                {pkg.slug}
-              </PMText>
-            </PMHStack>
-            <PMText>{pkg.description}</PMText>
-            <PMHStack gap="4">
-              <PMText fontSize="sm" colorPalette="gray">
-                {pkg.recipes?.length || 0} recipe(s)
-              </PMText>
-              <PMText fontSize="sm" colorPalette="gray">
-                {pkg.standards?.length || 0} standard(s)
-              </PMText>
-            </PMHStack>
-          </PMVStack>
+    <>
+      {isLoading && <p>Loading...</p>}
+      {isError && <p>Error loading packages.</p>}
+      {(packagesResponse?.packages ?? []).length ? (
+        <PMBox>
+          <PMTable
+            columns={columns}
+            data={tableData}
+            striped={true}
+            hoverable={true}
+            size="md"
+            variant="line"
+          />
         </PMBox>
-      ))}
-    </PMVStack>
+      ) : (
+        <PMEmptyState
+          backgroundColor={'background.primary'}
+          borderRadius={'md'}
+          width={'2xl'}
+          mx={'auto'}
+          title={'No packages yet'}
+        >
+          Packages are collections of standards and recipes that can be deployed
+          together to your repositories, ensuring consistent practices across
+          your projects.
+          <PMHStack>
+            <Link to={`/org/${orgSlug}/space/${spaceSlug}/packages/new`}>
+              <PMButton variant="secondary">Create Package</PMButton>
+            </Link>
+          </PMHStack>
+        </PMEmptyState>
+      )}
+    </>
   );
 };
