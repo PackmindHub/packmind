@@ -202,6 +202,8 @@ export class LinterAdapter implements ILinterPort {
       detectionMode: DetectionModeEnum.REGEXP,
       status: RuleDetectionAssessmentStatus.NOT_STARTED,
       details: '',
+      clarificationQuestion: '',
+      clarificationAnswers: [],
     };
   }
 
