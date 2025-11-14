@@ -22,5 +22,5 @@ export * from './IListPackagesBySpaceUseCase';
 export * from './IGetPackageSummaryUseCase';
 export * from './ICreatePackageUseCase';
 export * from './IGetPackageByIdUseCase';
-export * from './IDeletePackageUseCase';
 export * from './IUpdatePackageUseCase';
+export * from './IDeletePackagesBatchUseCase';
