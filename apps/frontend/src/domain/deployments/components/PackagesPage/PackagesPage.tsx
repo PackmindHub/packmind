@@ -11,6 +11,7 @@ import {
 import { useNavigate, useParams } from 'react-router';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useListPackagesBySpaceQuery } from '../../api/queries/DeploymentsQueries';
+import { routes } from '../../../../shared/utils/routes';
 
 export interface PackagesPageProps {
   spaceSlug: string;
@@ -49,7 +50,7 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({ spaceSlug }) => {
 
   if (packages.length === 0) {
     return (
-      <PMVStack align="stretch" gap={4}>
+      <PMVStack align="stretch" gap="4">
         <PMBox>
           <PMButton
             onClick={() =>
@@ -59,7 +60,7 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({ spaceSlug }) => {
             Create Package
           </PMButton>
         </PMBox>
-        <PMBox p={4}>
+        <PMBox p="4">
           <PMText colorPalette="gray">No packages found in this space.</PMText>
         </PMBox>
       </PMVStack>
@@ -67,7 +68,7 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({ spaceSlug }) => {
   }
 
   return (
-    <PMVStack align="stretch" gap={4}>
+    <PMVStack align="stretch" gap="4">
       <PMBox>
         <PMButton
           onClick={() =>
@@ -80,12 +81,17 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({ spaceSlug }) => {
       {packages.map((pkg) => (
         <PMBox
           key={pkg.id}
-          p={4}
+          p="4"
           borderWidth="1px"
           borderRadius="md"
           borderColor="border.default"
+          cursor="pointer"
+          _hover={{ bg: 'bg.muted' }}
+          onClick={() =>
+            navigate(routes.space.toPackage(orgSlug, spaceSlug, pkg.id))
+          }
         >
-          <PMVStack align="stretch" gap={2}>
+          <PMVStack align="stretch" gap="2">
             <PMHStack justify="space-between">
               <PMHeading size="md">{pkg.name}</PMHeading>
               <PMText fontSize="sm" colorPalette="gray">
@@ -93,7 +99,7 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({ spaceSlug }) => {
               </PMText>
             </PMHStack>
             <PMText>{pkg.description}</PMText>
-            <PMHStack gap={4}>
+            <PMHStack gap="4">
               <PMText fontSize="sm" colorPalette="gray">
                 {pkg.recipes?.length || 0} recipe(s)
               </PMText>

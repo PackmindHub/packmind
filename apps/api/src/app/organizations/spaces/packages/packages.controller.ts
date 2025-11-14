@@ -11,8 +11,10 @@ import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
   CreatePackageResponse,
+  GetPackageByIdResponse,
   ListPackagesBySpaceResponse,
   OrganizationId,
+  PackageId,
   RecipeId,
   SpaceId,
   StandardId,
@@ -82,6 +84,50 @@ export class OrganizationsSpacesPackagesController {
         {
           organizationId,
           spaceId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Get a specific package by ID
+   * GET /organizations/:orgId/spaces/:spaceId/packages/:packageId
+   */
+  @Get(':packageId')
+  async getPackageById(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('packageId') packageId: PackageId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<GetPackageByIdResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'GET /organizations/:orgId/spaces/:spaceId/packages/:packageId - Fetching package',
+      {
+        organizationId,
+        spaceId,
+        packageId,
+      },
+    );
+
+    try {
+      return await this.deploymentsService.getPackageById({
+        userId,
+        organizationId,
+        packageId,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/spaces/:spaceId/packages/:packageId - Failed to fetch package',
+        {
+          organizationId,
+          spaceId,
+          packageId,
           error: errorMessage,
         },
       );

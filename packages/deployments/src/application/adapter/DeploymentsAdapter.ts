@@ -12,6 +12,8 @@ import {
   FindDeployedStandardByRepositoryCommand,
   FindDeployedStandardByRepositoryResponse,
   GetDeploymentOverviewCommand,
+  GetPackageByIdCommand,
+  GetPackageByIdResponse,
   GetRenderModeConfigurationCommand,
   GetRenderModeConfigurationResult,
   GetStandardDeploymentOverviewCommand,
@@ -58,6 +60,7 @@ import { DeleteTargetUseCase } from '../useCases/DeleteTargetUseCase';
 import { FindActiveStandardVersionsByTargetUseCase } from '../useCases/FindActiveStandardVersionsByTargetUseCase';
 import { FindDeployedStandardByRepositoryUseCase } from '../useCases/FindDeployedStandardByRepositoryUseCase';
 import { GetDeploymentOverviewUseCase } from '../useCases/GetDeploymentOverviewUseCase';
+import { GetPackageByIdUsecase } from '../useCases/getPackageById/getPackageById.usecase';
 import { GetRenderModeConfigurationUseCase } from '../useCases/GetRenderModeConfigurationUseCase';
 import { GetStandardDeploymentOverviewUseCase } from '../useCases/GetStandardDeploymentOverviewUseCase';
 import { GetTargetsByGitRepoUseCase } from '../useCases/GetTargetsByGitRepoUseCase';
@@ -103,6 +106,7 @@ export class DeploymentsAdapter
   private _pullAllContentUseCase!: PullContentUseCase;
   private _listPackagesBySpaceUseCase!: ListPackagesBySpaceUsecase;
   private _createPackageUseCase!: CreatePackageUsecase;
+  private _getPackageByIdUseCase!: GetPackageByIdUsecase;
 
   constructor(
     private readonly deploymentsServices: DeploymentsServices,
@@ -265,6 +269,11 @@ export class DeploymentsAdapter
       this.recipesPort,
       this.standardsPort,
     );
+
+    this._getPackageByIdUseCase = new GetPackageByIdUsecase(
+      this.accountsPort,
+      this.deploymentsServices,
+    );
   }
 
   public isReady(): boolean {
@@ -395,5 +404,11 @@ export class DeploymentsAdapter
     command: CreatePackageCommand,
   ): Promise<CreatePackageResponse> {
     return this._createPackageUseCase.execute(command);
+  }
+
+  async getPackageById(
+    command: GetPackageByIdCommand,
+  ): Promise<GetPackageByIdResponse> {
+    return this._getPackageByIdUseCase.execute(command);
   }
 }
