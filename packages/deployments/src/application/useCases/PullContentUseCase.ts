@@ -12,6 +12,7 @@ import {
   RecipeVersion,
 } from '@packmind/types';
 import { PackageService } from '../services/PackageService';
+import { PackagesNotFoundError } from '../../domain/errors/PackagesNotFoundError';
 
 const origin = 'PullContentUseCase';
 
@@ -71,15 +72,20 @@ export class PullContentUseCase extends AbstractMemberUseCase<
           command.packagesSlugs,
         );
 
-      if (packages.length === 0) {
-        const error = new Error(
-          `No packages found with the provided slugs: ${command.packagesSlugs.join(', ')}. Please verify that the package slugs are correct and that they exist in your organization.`,
-        );
-        this.logger.error('Pull content failed: no matching packages found', {
-          packagesSlugs: command.packagesSlugs,
+      // Check if all requested slugs were found
+      const foundSlugs = packages.map((pkg) => pkg.slug);
+      const unknownSlugs = command.packagesSlugs.filter(
+        (slug) => !foundSlugs.includes(slug),
+      );
+
+      if (unknownSlugs.length > 0) {
+        this.logger.error('Pull content failed: unknown package slugs', {
+          unknownSlugs,
+          requestedSlugs: command.packagesSlugs,
+          foundSlugs,
           organizationId: command.organizationId,
         });
-        throw error;
+        throw new PackagesNotFoundError(unknownSlugs);
       }
 
       this.logger.info('Found packages with relations', {

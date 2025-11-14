@@ -1,4 +1,12 @@
-import { Controller, Get, Param, Query, Req, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
   OrganizationOnboardingStatus,
@@ -8,6 +16,7 @@ import {
 } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/node-utils';
+import { PackagesNotFoundError } from '@packmind/deployments';
 import { OrganizationAccessGuard } from './guards/organization-access.guard';
 import {
   InjectAccountsAdapter,
@@ -141,6 +150,11 @@ export class OrganizationsController {
           error: errorMessage,
         },
       );
+
+      if (error instanceof PackagesNotFoundError) {
+        throw new NotFoundException(error.message);
+      }
+
       throw error;
     }
   }

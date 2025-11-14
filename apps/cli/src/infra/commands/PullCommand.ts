@@ -59,23 +59,35 @@ export const pullCommand = command({
       console.error('\n❌ Failed to pull content:');
 
       if (error instanceof Error) {
-        console.error(`   ${error.message}`);
+        const errorObj = error as Error & { statusCode?: number };
 
-        // Check if it's an API error with additional details
-        const errorObj = error as Error & {
-          response?: { data?: { message?: string } };
-        };
-        if (errorObj.response?.data?.message) {
-          console.error(`\n   Details: ${errorObj.response.data.message}`);
+        // Handle 404 errors specifically (package not found)
+        if (errorObj.statusCode === 404) {
+          console.error(`   ${errorObj.message}`);
+          console.error(
+            '\n💡 Use `packmind-cli pull --list` to show available packages',
+          );
+        } else {
+          console.error(`   ${errorObj.message}`);
+
+          // Check if it's an API error with additional details
+          const apiErrorObj = error as Error & {
+            response?: { data?: { message?: string } };
+          };
+          if (apiErrorObj.response?.data?.message) {
+            console.error(`\n   Details: ${apiErrorObj.response.data.message}`);
+          }
+
+          console.error('\n💡 Troubleshooting tips:');
+          console.error('   - Verify that the package slugs are correct');
+          console.error(
+            '   - Check that the packages exist in your organization',
+          );
+          console.error('   - Ensure you have the correct API key configured');
         }
       } else {
         console.error(`   ${String(error)}`);
       }
-
-      console.error('\n💡 Troubleshooting tips:');
-      console.error('   - Verify that the package slugs are correct');
-      console.error('   - Check that the packages exist in your organization');
-      console.error('   - Ensure you have the correct API key configured');
 
       process.exit(1);
     }

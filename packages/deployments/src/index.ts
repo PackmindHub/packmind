@@ -11,6 +11,9 @@ export * from './DeploymentsHexa';
 // Re-export schemas
 export * from './infra/schemas';
 
+// Re-export domain errors
+export * from './domain/errors/PackagesNotFoundError';
+
 /**
  * Package version
  */

@@ -143,7 +143,9 @@ export class PackmindGateway implements IPackmindGateway {
         } catch {
           // ignore if body is not json
         }
-        throw new Error(errorMsg);
+        const error: Error & { statusCode?: number } = new Error(errorMsg);
+        error.statusCode = response.status;
+        throw error;
       }
 
       const result: IPullContentResponse = await response.json();

@@ -242,5 +242,57 @@ describe('PullContentUseCase', () => {
       expect(result.fileUpdates.createOrUpdate).toEqual([]);
       expect(result.fileUpdates.delete).toEqual([]);
     });
+
+    it('throws PackagesNotFoundError when package slugs do not match', async () => {
+      const commandWithMultipleSlugs = {
+        ...command,
+        packagesSlugs: ['test-package', 'unknown-package'],
+      };
+
+      const testPackage: PackageWithArtefacts = {
+        id: createPackageId('test-package-id'),
+        slug: 'test-package',
+        name: 'Test Package',
+        description: 'Test package description',
+        spaceId: createSpaceId('space-1'),
+        createdBy: createUserId('user-1'),
+        recipes: [],
+        standards: [],
+      };
+
+      packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+        testPackage,
+      ]);
+
+      await expect(useCase.execute(commandWithMultipleSlugs)).rejects.toThrow(
+        'Package "unknown-package" was not found',
+      );
+    });
+
+    it('throws PackagesNotFoundError when multiple package slugs do not match', async () => {
+      const commandWithMultipleSlugs = {
+        ...command,
+        packagesSlugs: ['test-package', 'unknown-1', 'unknown-2'],
+      };
+
+      const testPackage: PackageWithArtefacts = {
+        id: createPackageId('test-package-id'),
+        slug: 'test-package',
+        name: 'Test Package',
+        description: 'Test package description',
+        spaceId: createSpaceId('space-1'),
+        createdBy: createUserId('user-1'),
+        recipes: [],
+        standards: [],
+      };
+
+      packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+        testPackage,
+      ]);
+
+      await expect(useCase.execute(commandWithMultipleSlugs)).rejects.toThrow(
+        'Packages "unknown-1", "unknown-2" were not found',
+      );
+    });
   });
 });
