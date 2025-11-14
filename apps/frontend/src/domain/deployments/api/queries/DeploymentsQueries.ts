@@ -408,33 +408,6 @@ export const useUpdatePackageMutation = () => {
   });
 };
 
-export const DELETE_PACKAGE_MUTATION_KEY = 'deletePackage';
-export const useDeletePackageMutation = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationKey: [DELETE_PACKAGE_MUTATION_KEY],
-    mutationFn: async (command: {
-      organizationId: OrganizationId;
-      spaceId: SpaceId;
-      packageId: PackageId;
-    }) => {
-      return deploymentsGateways.deletePackage(command);
-    },
-    onSuccess: async (data, variables) => {
-      await queryClient.invalidateQueries({
-        queryKey: [...GET_PACKAGE_BY_ID_KEY, variables.packageId],
-      });
-      await queryClient.invalidateQueries({
-        queryKey: LIST_PACKAGES_BY_SPACE_KEY,
-      });
-    },
-    onError: (error) => {
-      console.error('Error deleting package:', error);
-    },
-  });
-};
-
 export const DELETE_PACKAGES_BATCH_MUTATION_KEY = 'deletePackagesBatch';
 export const useDeletePackagesBatchMutation = () => {
   const queryClient = useQueryClient();

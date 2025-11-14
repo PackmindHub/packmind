@@ -23,7 +23,7 @@ import { Link, useNavigate } from 'react-router';
 import {
   useGetPackageByIdQuery,
   useUpdatePackageMutation,
-  useDeletePackageMutation,
+  useDeletePackagesBatchMutation,
 } from '../../api/queries/DeploymentsQueries';
 import { AutobreadCrumb } from '../../../../shared/components/navigation/AutobreadCrumb';
 import {
@@ -87,7 +87,7 @@ export const PackageDetails = ({
     useGetStandardsQuery();
 
   const updatePackageMutation = useUpdatePackageMutation();
-  const deletePackageMutation = useDeletePackageMutation();
+  const deletePackageMutation = useDeletePackagesBatchMutation();
 
   const pkg = packageResponse?.package as PackageWithDetails | undefined;
   const recipes = pkg?.recipes || [];
@@ -174,7 +174,7 @@ export const PackageDetails = ({
 
     try {
       await deletePackageMutation.mutateAsync({
-        packageId: id,
+        packageIds: [id],
         spaceId,
         organizationId: organization.id,
       });

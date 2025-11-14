@@ -275,11 +275,11 @@ export class OrganizationsSpacesPackagesController {
     );
 
     try {
-      return await this.deploymentsService.deletePackage({
+      return await this.deploymentsService.deletePackagesBatch({
         userId,
         organizationId,
         spaceId,
-        packageId,
+        packageIds: [packageId],
       });
     } catch (error) {
       const errorMessage =
