@@ -6,6 +6,7 @@ import {
   RecipeId,
   SpaceId,
   StandardId,
+  UserId,
   OrganizationId,
 } from '@packmind/types';
 import { IPackageRepository } from '../../domain/repositories/IPackageRepository';
@@ -168,6 +169,61 @@ export class PackageService {
       this.logger.error('Failed to create package', {
         packageId: pkg.id,
         name: pkg.name,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async deletePackage(packageId: PackageId, deletedBy: UserId): Promise<void> {
+    this.logger.info('Deleting package', {
+      packageId,
+      deletedBy,
+    });
+
+    try {
+      await this.packageRepository.deleteById(packageId, deletedBy);
+
+      this.logger.info('Package deleted successfully', {
+        packageId,
+        deletedBy,
+      });
+    } catch (error) {
+      this.logger.error('Failed to delete package', {
+        packageId,
+        deletedBy,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async deletePackages(
+    packageIds: PackageId[],
+    deletedBy: UserId,
+  ): Promise<void> {
+    this.logger.info('Deleting multiple packages', {
+      packageIds,
+      count: packageIds.length,
+      deletedBy,
+    });
+
+    try {
+      await Promise.all(
+        packageIds.map((packageId) =>
+          this.packageRepository.deleteById(packageId, deletedBy),
+        ),
+      );
+
+      this.logger.info('Packages deleted successfully', {
+        count: packageIds.length,
+        deletedBy,
+      });
+    } catch (error) {
+      this.logger.error('Failed to delete packages', {
+        packageIds,
+        count: packageIds.length,
+        deletedBy,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
