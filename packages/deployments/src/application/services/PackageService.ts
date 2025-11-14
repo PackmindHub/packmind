@@ -146,4 +146,50 @@ export class PackageService {
       throw error;
     }
   }
+
+  async updatePackage(
+    packageId: PackageId,
+    name: string,
+    description: string,
+    recipeIds: RecipeId[],
+    standardIds: StandardId[],
+  ): Promise<Package> {
+    this.logger.info('Updating package', {
+      packageId,
+      name,
+      recipeCount: recipeIds.length,
+      standardCount: standardIds.length,
+    });
+
+    try {
+      await this.packageRepository.updatePackageDetails(
+        packageId,
+        name,
+        description,
+      );
+      await this.packageRepository.setRecipes(packageId, recipeIds);
+      await this.packageRepository.setStandards(packageId, standardIds);
+
+      const updatedPackage = await this.packageRepository.findById(packageId);
+      if (!updatedPackage) {
+        throw new Error('Failed to retrieve updated package');
+      }
+
+      this.logger.info('Package updated successfully', {
+        packageId: updatedPackage.id,
+        name: updatedPackage.name,
+        recipeCount: updatedPackage.recipes?.length ?? 0,
+        standardCount: updatedPackage.standards?.length ?? 0,
+      });
+
+      return updatedPackage;
+    } catch (error) {
+      this.logger.error('Failed to update package', {
+        packageId,
+        name,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
 }
