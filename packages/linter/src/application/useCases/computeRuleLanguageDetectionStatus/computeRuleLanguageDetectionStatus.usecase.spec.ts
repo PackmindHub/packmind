@@ -100,6 +100,8 @@ describe('ComputeRuleLanguageDetectionStatusUseCase', () => {
         detectionMode: DetectionModeEnum.SINGLE_AST,
         status: RuleDetectionAssessmentStatus.NOT_STARTED,
         details: '',
+        clarificationQuestion: '',
+        clarificationAnswers: [],
       };
       mockRuleDetectionAssessmentRepository.get.mockResolvedValue(assessment);
 
@@ -119,6 +121,8 @@ describe('ComputeRuleLanguageDetectionStatusUseCase', () => {
         detectionMode: DetectionModeEnum.SINGLE_AST,
         status: RuleDetectionAssessmentStatus.FAILED,
         details: 'Assessment failed',
+        clarificationQuestion: '',
+        clarificationAnswers: [],
       };
       mockRuleDetectionAssessmentRepository.get.mockResolvedValue(assessment);
 
@@ -138,6 +142,8 @@ describe('ComputeRuleLanguageDetectionStatusUseCase', () => {
         detectionMode: DetectionModeEnum.SINGLE_AST,
         status: RuleDetectionAssessmentStatus.SUCCESS,
         details: 'Assessment completed',
+        clarificationQuestion: '',
+        clarificationAnswers: [],
       };
       mockRuleDetectionAssessmentRepository.get.mockResolvedValue(assessment);
 
