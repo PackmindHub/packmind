@@ -86,7 +86,7 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({ spaceSlug }) => {
           borderRadius="md"
           borderColor="border.default"
           cursor="pointer"
-          _hover={{ bg: 'bg.muted' }}
+          _hover={{ bg: 'gray.700' }}
           onClick={() =>
             navigate(routes.space.toPackage(orgSlug, spaceSlug, pkg.id))
           }
