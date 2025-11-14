@@ -3,6 +3,7 @@ import { OrganizationsSpacesController } from './spaces.controller';
 import { SpaceAccessGuard } from './guards/space-access.guard';
 import { OrganizationsSpacesRecipesModule } from './recipes/recipes.module';
 import { OrganizationsSpacesStandardsModule } from './standards/standards.module';
+import { OrganizationsSpacesPackagesModule } from './packages/packages.module';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { SpacesService } from '../../spaces/spaces.service';
 
@@ -21,6 +22,7 @@ import { SpacesService } from '../../spaces/spaces.service';
  * - GET /organizations/:orgId/spaces/:slug (OrganizationsSpacesController - get space by slug)
  * - /organizations/:orgId/spaces/:spaceId/recipes (OrganizationsSpacesRecipesModule)
  * - /organizations/:orgId/spaces/:spaceId/standards (OrganizationsSpacesStandardsModule)
+ * - /organizations/:orgId/spaces/:spaceId/packages (OrganizationsSpacesPackagesModule)
  *
  * All routes are protected by OrganizationAccessGuard and optionally SpaceAccessGuard
  * which validate that the user has access to the organization and space.
@@ -29,6 +31,7 @@ import { SpacesService } from '../../spaces/spaces.service';
   imports: [
     OrganizationsSpacesRecipesModule,
     OrganizationsSpacesStandardsModule,
+    OrganizationsSpacesPackagesModule,
   ],
   controllers: [OrganizationsSpacesController],
   providers: [

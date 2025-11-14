@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import {
+  CreatePackageCommand,
+  CreatePackageResponse,
   DeploymentOverview,
   GetDeploymentOverviewCommand,
   GetStandardDeploymentOverviewCommand,
   ListDeploymentsByRecipeCommand,
   ListDeploymentsByStandardCommand,
+  ListPackagesBySpaceCommand,
+  ListPackagesBySpaceResponse,
   PublishRecipesCommand,
   PublishStandardsCommand,
   RecipesDeployment,
@@ -35,6 +39,12 @@ export class DeploymentsService {
     command: ListDeploymentsByRecipeCommand,
   ): Promise<RecipesDeployment[]> {
     return this.deploymentAdapter.listDeploymentsByRecipe(command);
+  }
+
+  async listPackagesBySpace(
+    command: ListPackagesBySpaceCommand,
+  ): Promise<ListPackagesBySpaceResponse> {
+    return this.deploymentAdapter.listPackagesBySpace(command);
   }
 
   async getStandardDeploymentOverview(
@@ -71,5 +81,11 @@ export class DeploymentsService {
     command: UpdateRenderModeConfigurationCommand,
   ): Promise<RenderModeConfiguration> {
     return this.deploymentAdapter.updateRenderModeConfiguration(command);
+  }
+
+  async createPackage(
+    command: CreatePackageCommand,
+  ): Promise<CreatePackageResponse> {
+    return this.deploymentAdapter.createPackage(command);
   }
 }

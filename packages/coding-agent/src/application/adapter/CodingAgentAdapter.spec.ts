@@ -50,44 +50,52 @@ describe('CodingAgentAdapter', () => {
   });
 
   describe('isReady', () => {
-    it('returns false when adapter not initialized', () => {
-      expect(adapter.isReady()).toBe(false);
+    describe('when adapter not initialized', () => {
+      it('returns false', () => {
+        expect(adapter.isReady()).toBe(false);
+      });
     });
 
-    it('returns true when all required ports and services are set', async () => {
-      await adapter.initialize({
-        [IStandardsPortName]: mockStandardsPort,
-        [IGitPortName]: mockGitPort,
-      });
+    describe('when all required ports and services are set', () => {
+      it('returns true', async () => {
+        await adapter.initialize({
+          [IStandardsPortName]: mockStandardsPort,
+          [IGitPortName]: mockGitPort,
+        });
 
-      expect(adapter.isReady()).toBe(true);
+        expect(adapter.isReady()).toBe(true);
+      });
     });
   });
 
   describe('initialize', () => {
-    it('throws when required ports not provided', async () => {
-      await expect(
-        adapter.initialize({
-          [IStandardsPortName]: mockStandardsPort,
-          [IGitPortName]: undefined,
-        } as unknown as {
-          [IStandardsPortName]: IStandardsPort;
-          [IGitPortName]: IGitPort;
-        }),
-      ).rejects.toThrow(
-        'CodingAgentAdapter: Required ports/services not provided',
-      );
+    describe('when required ports not provided', () => {
+      it('throws', async () => {
+        await expect(
+          adapter.initialize({
+            [IStandardsPortName]: mockStandardsPort,
+            [IGitPortName]: undefined,
+          } as unknown as {
+            [IStandardsPortName]: IStandardsPort;
+            [IGitPortName]: IGitPort;
+          }),
+        ).rejects.toThrow(
+          'CodingAgentAdapter: Required ports/services not provided',
+        );
+      });
     });
 
-    it('creates use cases when all dependencies provided', async () => {
-      await expect(
-        adapter.initialize({
-          [IStandardsPortName]: mockStandardsPort,
-          [IGitPortName]: mockGitPort,
-        }),
-      ).resolves.not.toThrow();
+    describe('when all dependencies provided', () => {
+      it('creates use cases', async () => {
+        await expect(
+          adapter.initialize({
+            [IStandardsPortName]: mockStandardsPort,
+            [IGitPortName]: mockGitPort,
+          }),
+        ).resolves.not.toThrow();
 
-      expect(adapter.isReady()).toBe(true);
+        expect(adapter.isReady()).toBe(true);
+      });
     });
   });
 

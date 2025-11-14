@@ -1,6 +1,8 @@
 import { IBaseAdapter } from '@packmind/node-utils';
 import {
   AddTargetCommand,
+  CreatePackageCommand,
+  CreatePackageResponse,
   CreateRenderModeConfigurationCommand,
   DeleteTargetCommand,
   DeleteTargetResponse,
@@ -32,6 +34,8 @@ import {
   IStandardsPortName,
   ListDeploymentsByRecipeCommand,
   ListDeploymentsByStandardCommand,
+  ListPackagesBySpaceCommand,
+  ListPackagesBySpaceResponse,
   PackmindCommand,
   PublishRecipesCommand,
   PublishStandardsCommand,
@@ -48,6 +52,7 @@ import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipes
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
 import { DeploymentsServices } from '../services/DeploymentsServices';
 import { AddTargetUseCase } from '../useCases/AddTargetUseCase';
+import { CreatePackageUsecase } from '../useCases/createPackage/createPackage.usecase';
 import { CreateRenderModeConfigurationUseCase } from '../useCases/CreateRenderModeConfigurationUseCase';
 import { DeleteTargetUseCase } from '../useCases/DeleteTargetUseCase';
 import { FindActiveStandardVersionsByTargetUseCase } from '../useCases/FindActiveStandardVersionsByTargetUseCase';
@@ -60,6 +65,7 @@ import { GetTargetsByOrganizationUseCase } from '../useCases/GetTargetsByOrganiz
 import { GetTargetsByRepositoryUseCase } from '../useCases/GetTargetsByRepositoryUseCase';
 import { ListDeploymentsByRecipeUseCase } from '../useCases/ListDeploymentsByRecipeUseCase';
 import { ListDeploymentsByStandardUseCase } from '../useCases/ListDeploymentsByStandardUseCase';
+import { ListPackagesBySpaceUsecase } from '../useCases/listPackagesBySpace/listPackagesBySpace.usecase';
 import { PublishRecipesUseCase } from '../useCases/PublishRecipesUseCase';
 import { PublishStandardsUseCase } from '../useCases/PublishStandardsUseCase';
 import { PullAllContentUseCase } from '../useCases/PullAllContentUseCase';
@@ -95,6 +101,8 @@ export class DeploymentsAdapter
   private _createRenderModeConfigurationUseCase!: CreateRenderModeConfigurationUseCase;
   private _updateRenderModeConfigurationUseCase!: UpdateRenderModeConfigurationUseCase;
   private _pullAllContentUseCase!: PullAllContentUseCase;
+  private _listPackagesBySpaceUseCase!: ListPackagesBySpaceUsecase;
+  private _createPackageUseCase!: CreatePackageUsecase;
 
   constructor(
     private readonly deploymentsServices: DeploymentsServices,
@@ -243,6 +251,20 @@ export class DeploymentsAdapter
       this.codingAgentPort,
       this.accountsPort,
     );
+
+    this._listPackagesBySpaceUseCase = new ListPackagesBySpaceUsecase(
+      this.accountsPort,
+      this.deploymentsServices,
+      this.spacesPort,
+    );
+
+    this._createPackageUseCase = new CreatePackageUsecase(
+      this.accountsPort,
+      this.deploymentsServices,
+      this.spacesPort,
+      this.recipesPort,
+      this.standardsPort,
+    );
   }
 
   public isReady(): boolean {
@@ -361,5 +383,17 @@ export class DeploymentsAdapter
     command: PackmindCommand,
   ): Promise<IPullAllContentResponse> {
     return this._pullAllContentUseCase.execute(command);
+  }
+
+  async listPackagesBySpace(
+    command: ListPackagesBySpaceCommand,
+  ): Promise<ListPackagesBySpaceResponse> {
+    return this._listPackagesBySpaceUseCase.execute(command);
+  }
+
+  async createPackage(
+    command: CreatePackageCommand,
+  ): Promise<CreatePackageResponse> {
+    return this._createPackageUseCase.execute(command);
   }
 }

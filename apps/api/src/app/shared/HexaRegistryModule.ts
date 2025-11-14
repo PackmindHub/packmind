@@ -1,7 +1,7 @@
 import { DynamicModule, Global, Module, Provider } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AccountsHexa, AccountsHexaOpts } from '@packmind/accounts';
+import { AccountsHexa } from '@packmind/accounts';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { DeploymentsHexa } from '@packmind/deployments';
 import { GitHexa } from '@packmind/git';
@@ -29,6 +29,7 @@ import {
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { ApiKeyServiceProvider } from './ApiKeyServiceProvider';
+import { initializePackmindApp } from './PackmindApp';
 
 /**
  * Configuration interface for HexaRegistry integration with NestJS
@@ -140,39 +141,18 @@ export class HexaRegistryModule {
         dataSource: DataSource,
         jwtService: JwtService,
       ): Promise<HexaRegistry> => {
-        const registry = new HexaRegistry();
+        // Create ApiKeyService for AccountsHexa
+        const logger = new PackmindLogger('AccountsHexa');
+        const apiKeyServiceProvider = new ApiKeyServiceProvider();
+        const apiKeyService = apiKeyServiceProvider.createApiKeyService(
+          jwtService,
+          logger,
+        );
 
-        // Register all hexa types in the specified order
-        // For AccountsHexa, we need to pass the apiKeyService option
-        for (const HexaClass of options.hexas) {
-          if (HexaClass === AccountsHexa) {
-            // Create ApiKeyService for AccountsHexa
-            const logger = new PackmindLogger('AccountsHexa');
-            const apiKeyServiceProvider = new ApiKeyServiceProvider();
-            const apiKeyService = apiKeyServiceProvider.createApiKeyService(
-              jwtService,
-              logger,
-            );
-
-            // Register AccountsHexa with apiKeyService option
-            // Cast to AccountsHexa to allow passing AccountsHexaOpts
-            registry.register(AccountsHexa, {
-              apiKeyService,
-            } as Partial<AccountsHexaOpts>);
-          } else {
-            registry.register(HexaClass);
-          }
-        }
-
-        // Register all service types in the specified order
-        if (options.services) {
-          for (const ServiceClass of options.services) {
-            registry.registerService(ServiceClass);
-          }
-        }
-
-        // Initialize the registry with the DataSource (this now includes async initialization)
-        await registry.init(dataSource);
+        // Initialize using the centralized PackmindApp configuration
+        const registry = await initializePackmindApp(dataSource, {
+          apiKeyService,
+        });
 
         return registry;
       },

@@ -16,3 +16,5 @@ export * from './IGetRenderModeConfigurationUseCase';
 export * from './ICreateRenderModeConfigurationUseCase';
 export * from './IUpdateRenderModeConfigurationUseCase';
 export * from './IPullAllContentUseCase';
+export * from './IListPackagesBySpaceUseCase';
+export * from './ICreatePackageUseCase';

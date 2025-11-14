@@ -1,5 +1,6 @@
 - When running commands, ensure you use the correct Node version (see .nvmrc at the project's root level)
 - When renaming or moving a file that is commited to git, use `git mv` instead of `mv`
+- ensure the env variable `PACKMIND_EDITION` is properly set to `oss`
 
 # Task splitting
 

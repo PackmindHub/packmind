@@ -128,6 +128,8 @@ export class OpenAIService implements AIService {
           );
         }
 
+        const model = this.getModel(options);
+
         this.logger.info('Sending request to OpenAI', {
           attempt,
           model,

@@ -1,5 +1,5 @@
-import { Gateway } from '@packmind/types';
-import { StandardId } from '@packmind/types';
+import { Gateway, NewGateway } from '@packmind/types';
+import { StandardId, SpaceId } from '@packmind/types';
 import { IUpdateTargetUseCase, IDeleteTargetUseCase } from '@packmind/types';
 import {
   IAddTargetUseCase,
@@ -14,6 +14,8 @@ import {
   IListDeploymentsByRecipe,
   IGetStandardDeploymentOverview,
   IListDeploymentsByStandard,
+  IListPackagesBySpaceUseCase,
+  ICreatePackageUseCase,
   IGetTargetsByGitRepoUseCase,
   IGetTargetsByRepositoryUseCase,
   IGetTargetsByOrganizationUseCase,
@@ -45,6 +47,34 @@ export class DeploymentsGatewayApi
     standardId: StandardId;
   }) => {
     return this._api.get(`${this._endpoint}/standard/${standardId}`);
+  };
+
+  listPackagesBySpace: NewGateway<IListPackagesBySpaceUseCase> = async ({
+    spaceId,
+    organizationId,
+  }: {
+    spaceId: SpaceId;
+    organizationId: OrganizationId;
+  }) => {
+    return this._api.get(
+      `/organizations/${organizationId}/spaces/${spaceId}/packages`,
+    );
+  };
+
+  createPackage: NewGateway<ICreatePackageUseCase> = async (params) => {
+    const {
+      spaceId,
+      organizationId,
+      name,
+      slug,
+      description,
+      recipeIds,
+      standardIds,
+    } = params;
+    return this._api.post(
+      `/organizations/${organizationId}/spaces/${spaceId}/packages`,
+      { name, slug, description, recipeIds, standardIds },
+    );
   };
 
   getRecipesDeploymentOverview: Gateway<IGetDeploymentOverview> = async () => {
