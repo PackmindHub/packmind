@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -12,6 +13,7 @@ import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
   CreatePackageResponse,
+  DeletePackagesBatchResponse,
   GetPackageByIdResponse,
   ListPackagesBySpaceResponse,
   UpdatePackageResponse,
@@ -243,6 +245,53 @@ export class OrganizationsSpacesPackagesController {
           spaceId,
           packageId,
           name: body.name,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Delete multiple packages in batch
+   * DELETE /organizations/:orgId/spaces/:spaceId/packages
+   */
+  @Delete()
+  async deletePackagesBatch(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Req() request: AuthenticatedRequest,
+    @Body() body: { packageIds: PackageId[] },
+  ): Promise<DeletePackagesBatchResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'DELETE /organizations/:orgId/spaces/:spaceId/packages - Deleting packages batch',
+      {
+        organizationId,
+        spaceId,
+        packageIds: body.packageIds,
+        count: body.packageIds.length,
+      },
+    );
+
+    try {
+      return await this.deploymentsService.deletePackagesBatch({
+        userId,
+        organizationId,
+        spaceId,
+        packageIds: body.packageIds,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'DELETE /organizations/:orgId/spaces/:spaceId/packages - Failed to delete packages batch',
+        {
+          organizationId,
+          spaceId,
+          packageIds: body.packageIds,
+          count: body.packageIds.length,
           error: errorMessage,
         },
       );

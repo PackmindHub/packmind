@@ -6,6 +6,8 @@ import {
   UpdatePackageCommand,
   UpdatePackageResponse,
   CreateRenderModeConfigurationCommand,
+  DeletePackagesBatchCommand,
+  DeletePackagesBatchResponse,
   DeleteTargetCommand,
   DeleteTargetResponse,
   DeploymentOverview,
@@ -64,6 +66,7 @@ import { AddTargetUseCase } from '../useCases/AddTargetUseCase';
 import { CreatePackageUsecase } from '../useCases/createPackage/createPackage.usecase';
 import { UpdatePackageUsecase } from '../useCases/updatePackage/updatePackage.usecase';
 import { CreateRenderModeConfigurationUseCase } from '../useCases/CreateRenderModeConfigurationUseCase';
+import { DeletePackagesBatchUsecase } from '../useCases/deletePackage/deletePackagesBatch.usecase';
 import { DeleteTargetUseCase } from '../useCases/DeleteTargetUseCase';
 import { FindActiveStandardVersionsByTargetUseCase } from '../useCases/FindActiveStandardVersionsByTargetUseCase';
 import { FindDeployedStandardByRepositoryUseCase } from '../useCases/FindDeployedStandardByRepositoryUseCase';
@@ -120,6 +123,7 @@ export class DeploymentsAdapter
   private _createPackageUseCase!: CreatePackageUsecase;
   private _updatePackageUseCase!: UpdatePackageUsecase;
   private _getPackageByIdUseCase!: GetPackageByIdUsecase;
+  private _deletePackagesBatchUseCase!: DeletePackagesBatchUsecase;
 
   constructor(
     private readonly deploymentsServices: DeploymentsServices,
@@ -315,6 +319,10 @@ export class DeploymentsAdapter
       this.accountsPort,
       this.deploymentsServices,
     );
+
+    this._deletePackagesBatchUseCase = new DeletePackagesBatchUsecase(
+      this.deploymentsServices.getPackageService(),
+    );
   }
 
   public isReady(): boolean {
@@ -469,5 +477,11 @@ export class DeploymentsAdapter
     command: GetPackageByIdCommand,
   ): Promise<GetPackageByIdResponse> {
     return this._getPackageByIdUseCase.execute(command);
+  }
+
+  async deletePackagesBatch(
+    command: DeletePackagesBatchCommand,
+  ): Promise<DeletePackagesBatchResponse> {
+    return this._deletePackagesBatchUseCase.execute(command);
   }
 }

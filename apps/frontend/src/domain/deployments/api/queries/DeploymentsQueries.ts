@@ -407,3 +407,27 @@ export const useUpdatePackageMutation = () => {
     },
   });
 };
+
+export const DELETE_PACKAGES_BATCH_MUTATION_KEY = 'deletePackagesBatch';
+export const useDeletePackagesBatchMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: [DELETE_PACKAGES_BATCH_MUTATION_KEY],
+    mutationFn: async (command: {
+      organizationId: OrganizationId;
+      spaceId: SpaceId;
+      packageIds: PackageId[];
+    }) => {
+      return deploymentsGateways.deletePackagesBatch(command);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: LIST_PACKAGES_BY_SPACE_KEY,
+      });
+    },
+    onError: (error) => {
+      console.error('Error deleting packages in batch:', error);
+    },
+  });
+};
