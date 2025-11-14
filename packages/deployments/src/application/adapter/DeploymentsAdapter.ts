@@ -193,15 +193,9 @@ export class DeploymentsAdapter
     );
 
     this._publishPackagesUseCase = new PublishPackagesUseCase(
-      this.packagesDeploymentRepository,
-      this.recipesDeploymentRepository,
-      this.standardDeploymentRepository,
       this.recipesPort,
       this.standardsPort,
-      this.gitPort,
-      this.codingAgentPort,
-      this.deploymentsServices.getTargetService(),
-      this.deploymentsServices.getRenderModeConfigurationService(),
+      this,
       this.deploymentsServices.getPackageService(),
     );
 
