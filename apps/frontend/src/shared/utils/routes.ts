@@ -34,6 +34,8 @@ export const routes = {
       `/org/${orgSlug}/space/${spaceSlug}/recipes/${recipeId}`,
     toStandards: (orgSlug: string, spaceSlug: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/standards`,
+    toPackages: (orgSlug: string, spaceSlug: string) =>
+      `/org/${orgSlug}/space/${spaceSlug}/packages`,
     toStandard: (orgSlug: string, spaceSlug: string, standardId: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/standards/${standardId}`,
     toStandardSummary: (
