@@ -8,6 +8,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { pullCommand } from './infra/commands/PullCommand';
 
+// Read version from package.json (bundled by esbuild)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { version: CLI_VERSION } = require('../package.json');
 
