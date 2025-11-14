@@ -331,6 +331,16 @@ const ActiveConfigurationCardAssessment: React.FC<
   };
 
   if (assessment) {
+    if (assessment.status === 'IN_PROGRESS') {
+      return (
+        <ConfigurationCard {...configurationCardProps}>
+          <PMText color="faded" fontSize="sm">
+            Assessment in progress
+          </PMText>
+        </ConfigurationCard>
+      );
+    }
+
     if (assessment.status === 'FAILED') {
       const tooltipLabel = (
         <PMVStack alignItems="flex-start" gap={2} width="full">

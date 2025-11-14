@@ -100,6 +100,8 @@ describe('ActivateConfigurationCard', () => {
           language: ProgrammingLanguage.TYPESCRIPT,
           ruleId: createRuleId(props.ruleId),
           status: RuleDetectionAssessmentStatus.NOT_STARTED,
+          clarificationAnswers: [],
+          clarificationQuestion: '',
         };
 
         jest
@@ -107,6 +109,26 @@ describe('ActivateConfigurationCard', () => {
           .mockReturnValue({ data: ruleDetectionAssessment } as Partial<
             UseQueryResult<RuleDetectionAssessment | null>
           > as UseQueryResult<RuleDetectionAssessment | null>);
+      });
+
+      describe('when assessment is in progress', () => {
+        beforeEach(() => {
+          ruleDetectionAssessment.status =
+            RuleDetectionAssessmentStatus.IN_PROGRESS;
+          ruleDetectionAssessment.details = 'Assessment in progress';
+
+          screen = renderWithContext();
+        });
+
+        it('shows an "Assessment in progress" message', () => {
+          expect(
+            screen.getByText('Assessment in progress'),
+          ).toBeInTheDocument();
+        });
+
+        it('does not show a configure button', () => {
+          expect(screen.queryByText('Configure')).not.toBeInTheDocument();
+        });
       });
 
       describe('when assessment has failed', () => {
