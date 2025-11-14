@@ -39,6 +39,8 @@ Be overly pessimistic in your assessment.
 
 * **Multi-file Analysis Limitation**: If the coding rule requires analyzing relationships across multiple files (such as Java inheritance trees where classes are typically split across multiple files), mark it as not feasible. In the reason array, include that "Packmind does not support yet static multi-file analysis."
 
+* **Example Contamination**: If the good examples (positive examples) contain the actual violation pattern within their code, mark the rule as not feasible. The detection algorithm analyzes code syntactically and cannot distinguish context, intent, or whether a pattern is shown for demonstration purposes versus being the actual recommended approach. This would cause the good examples to be incorrectly flagged as violations. For instance, if the rule is "Don't use console.log" and a good example shows both the bad pattern (console.log) and the good pattern (logger.info) side by side for comparison, the detector will flag the good example as a violation. Similarly, if a good example imports or references the forbidden pattern in any way, it will trigger false positives. In such cases, include in the reason array that "The good examples contain the violation pattern, which would cause false positives when validating the detection algorithm."
+
 * Each string in the 'reason' should explain why Packmind cannot support this detection in one file—do not propose modifications to the rule itself.
 
 ## Output (JSON Object)
