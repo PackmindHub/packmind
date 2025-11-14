@@ -19,6 +19,7 @@ export * from './IUpdateRenderModeConfigurationUseCase';
 export * from './IPullContentUseCase';
 export * from './IListPackagesUseCase';
 export * from './IListPackagesBySpaceUseCase';
+export * from './IGetPackageSummaryUseCase';
 export * from './ICreatePackageUseCase';
 export * from './IGetPackageByIdUseCase';
 export * from './IDeletePackageUseCase';

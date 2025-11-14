@@ -10,12 +10,15 @@ import {
 import {
   RuleId,
   Gateway,
+  PublicGateway,
   IPullContentResponse,
   IPullContentUseCase,
-  IListPackagesUseCase,
   ListPackagesResponse,
+  GetPackageSummaryResponse,
   Organization,
+  IGetPackageSummaryUseCase,
 } from '@packmind/types';
+import { IListPackagesUseCase } from '../../domain/useCases/IListPackagesUseCase';
 interface ApiKeyPayload {
   host: string;
   jwt: string;
@@ -181,7 +184,7 @@ export class PackmindGateway implements IPackmindGateway {
     }
   };
 
-  public listPackages: Gateway<IListPackagesUseCase> = async () => {
+  public listPackages: PublicGateway<IListPackagesUseCase> = async () => {
     // Decode the API key to get host and JWT
     const decodedApiKey = decodeApiKey(this.apiKey);
 
@@ -228,7 +231,7 @@ export class PackmindGateway implements IPackmindGateway {
       }
 
       const result: ListPackagesResponse = await response.json();
-      return result;
+      return result.packages;
     } catch (error: unknown) {
       // Specific handling if the server is not accessible
       const err = error as {
@@ -563,4 +566,83 @@ export class PackmindGateway implements IPackmindGateway {
         );
       }
     };
+
+  public getPackageSummary: PublicGateway<IGetPackageSummaryUseCase> = async ({
+    slug,
+  }) => {
+    // Decode the API key to get host and JWT
+    const decodedApiKey = decodeApiKey(this.apiKey);
+
+    if (!decodedApiKey.isValid) {
+      throw new Error(`Invalid API key: ${decodedApiKey.error}`);
+    }
+
+    const { host, jwt } = decodedApiKey.payload;
+
+    // Decode JWT to extract organizationId
+    const jwtPayload = decodeJwt(jwt);
+
+    if (!jwtPayload?.organization?.id) {
+      throw new Error('Invalid JWT: missing organizationId');
+    }
+
+    const organizationId = jwtPayload.organization.id;
+
+    // Make API call to get package summary
+    const url = `${host}/api/v0/organizations/${organizationId}/packages/${encodeURIComponent(slug)}`;
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+      });
+
+      if (!response.ok) {
+        let errorMsg = `API request failed: ${response.status} ${response.statusText}`;
+        try {
+          const errorBody = await response.json();
+          if (errorBody && errorBody.message) {
+            errorMsg = `${errorBody.message}`;
+          }
+        } catch {
+          // ignore if body is not json
+        }
+        const error: Error & { statusCode?: number } = new Error(errorMsg);
+        error.statusCode = response.status;
+        throw error;
+      }
+
+      const result: GetPackageSummaryResponse = await response.json();
+      return result;
+    } catch (error: unknown) {
+      // Specific handling if the server is not accessible
+      const err = error as {
+        code?: string;
+        name?: string;
+        message?: string;
+        cause?: { code?: string };
+      };
+      const code = err?.code || err?.cause?.code;
+      if (
+        code === 'ECONNREFUSED' ||
+        code === 'ENOTFOUND' ||
+        err?.name === 'FetchError' ||
+        (typeof err?.message === 'string' &&
+          (err.message.includes('Failed to fetch') ||
+            err.message.includes('network') ||
+            err.message.includes('NetworkError')))
+      ) {
+        throw new Error(
+          `Packmind server is not accessible at ${host}. Please check your network connection or the server URL.`,
+        );
+      }
+
+      throw new Error(
+        `Failed to get package '${slug}': Error: ${err?.message || JSON.stringify(error)}`,
+      );
+    }
+  };
 }

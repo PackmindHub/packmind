@@ -8,7 +8,6 @@ export class ListPackagesUseCase implements IListPackagesUseCase {
   constructor(private readonly packmindGateway: IPackmindGateway) {}
 
   public async execute(): Promise<IListPackagesResult> {
-    const response = await this.packmindGateway.listPackages({});
-    return response.packages;
+    return this.packmindGateway.listPackages({});
   }
 }

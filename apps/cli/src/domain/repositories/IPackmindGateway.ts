@@ -1,11 +1,13 @@
 import {
   Gateway,
+  PublicGateway,
   IUseCase,
   PackmindCommand,
   RuleId,
   IPullContentUseCase,
-  IListPackagesUseCase,
 } from '@packmind/types';
+import { IListPackagesUseCase } from '../useCases/IListPackagesUseCase';
+import { IGetPackageSummaryUseCase } from '../useCases/IGetPackageSummaryUseCase';
 
 // Waiting for the standards hexa to expose the use case
 export type ListDetectionProgramsCommand = PackmindCommand & {
@@ -91,5 +93,6 @@ export interface IPackmindGateway {
   getDraftDetectionProgramsForRule: Gateway<GetDraftDetectionProgramsForRule>;
   getActiveDetectionProgramsForRule: Gateway<GetActiveDetectionProgramsForRule>;
   getPullData: Gateway<IPullContentUseCase>;
-  listPackages: Gateway<IListPackagesUseCase>;
+  listPackages: PublicGateway<IListPackagesUseCase>;
+  getPackageSummary: PublicGateway<IGetPackageSummaryUseCase>;
 }

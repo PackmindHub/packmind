@@ -20,6 +20,8 @@ import {
   GetDeploymentOverviewCommand,
   GetPackageByIdCommand,
   GetPackageByIdResponse,
+  GetPackageSummaryCommand,
+  GetPackageSummaryResponse,
   GetRenderModeConfigurationCommand,
   GetRenderModeConfigurationResult,
   GetStandardDeploymentOverviewCommand,
@@ -84,6 +86,7 @@ import { ListDeploymentsByRecipeUseCase } from '../useCases/ListDeploymentsByRec
 import { ListDeploymentsByStandardUseCase } from '../useCases/ListDeploymentsByStandardUseCase';
 import { ListPackagesUsecase } from '../useCases/listPackages/listPackages.usecase';
 import { ListPackagesBySpaceUsecase } from '../useCases/listPackagesBySpace/listPackagesBySpace.usecase';
+import { GetPackageSummaryUsecase } from '../useCases/getPackageSummary/getPackageSummary.usecase';
 import { PublishPackagesUseCase } from '../useCases/PublishPackagesUseCase';
 import { PublishRecipesUseCase } from '../useCases/PublishRecipesUseCase';
 import { PublishStandardsUseCase } from '../useCases/PublishStandardsUseCase';
@@ -123,6 +126,7 @@ export class DeploymentsAdapter
   private _pullAllContentUseCase!: PullContentUseCase;
   private _listPackagesUseCase!: ListPackagesUsecase;
   private _listPackagesBySpaceUseCase!: ListPackagesBySpaceUsecase;
+  private _getPackageSummaryUseCase!: GetPackageSummaryUsecase;
   private _createPackageUseCase!: CreatePackageUsecase;
   private _updatePackageUseCase!: UpdatePackageUsecase;
   private _getPackageByIdUseCase!: GetPackageByIdUsecase;
@@ -303,6 +307,11 @@ export class DeploymentsAdapter
       this.deploymentsServices,
     );
 
+    this._getPackageSummaryUseCase = new GetPackageSummaryUsecase(
+      this.accountsPort,
+      this.deploymentsServices,
+    );
+
     this._createPackageUseCase = new CreatePackageUsecase(
       this.accountsPort,
       this.deploymentsServices,
@@ -467,6 +476,12 @@ export class DeploymentsAdapter
     command: ListPackagesCommand,
   ): Promise<ListPackagesResponse> {
     return this._listPackagesUseCase.execute(command);
+  }
+
+  async getPackageSummary(
+    command: GetPackageSummaryCommand,
+  ): Promise<GetPackageSummaryResponse> {
+    return this._getPackageSummaryUseCase.execute(command);
   }
 
   async createPackage(

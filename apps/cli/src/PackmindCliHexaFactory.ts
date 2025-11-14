@@ -17,6 +17,8 @@ import { IPullDataUseCase } from './domain/useCases/IPullDataUseCase';
 import { PullDataUseCase } from './application/useCases/PullDataUseCase';
 import { IListPackagesUseCase } from './domain/useCases/IListPackagesUseCase';
 import { ListPackagesUseCase } from './application/useCases/ListPackagesUseCase';
+import { IGetPackageSummaryUseCase } from './domain/useCases/IGetPackageSummaryUseCase';
+import { GetPackageSummaryUseCase } from './application/useCases/GetPackageSummaryUseCase';
 
 export class PackmindCliHexaFactory {
   public repositories: IPackmindRepositories;
@@ -29,6 +31,7 @@ export class PackmindCliHexaFactory {
     lintFilesInDirectory: ILintFilesInDirectory;
     pullData: IPullDataUseCase;
     listPackages: IListPackagesUseCase;
+    getPackageBySlug: IGetPackageSummaryUseCase;
   };
 
   constructor(private readonly logger: PackmindLogger) {
@@ -57,6 +60,9 @@ export class PackmindCliHexaFactory {
       ),
       pullData: new PullDataUseCase(this.repositories.packmindGateway),
       listPackages: new ListPackagesUseCase(this.repositories.packmindGateway),
+      getPackageBySlug: new GetPackageSummaryUseCase(
+        this.repositories.packmindGateway,
+      ),
     };
   }
 }

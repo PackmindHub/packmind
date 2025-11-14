@@ -19,6 +19,8 @@ import {
   GetDeploymentOverviewCommand,
   GetPackageByIdCommand,
   GetPackageByIdResponse,
+  GetPackageSummaryCommand,
+  GetPackageSummaryResponse,
   GetRenderModeConfigurationCommand,
   GetRenderModeConfigurationResult,
   GetStandardDeploymentOverviewCommand,
@@ -303,6 +305,15 @@ export interface IDeploymentPort {
    * @returns Promise of array of all packages in the organization
    */
   listPackages(command: ListPackagesCommand): Promise<ListPackagesResponse>;
+
+  /**
+   * Gets a summary of a single package by its slug
+   * @param command - Command containing organizationId and slug
+   * @returns Promise of package summary with summarized artifacts
+   */
+  getPackageSummary(
+    command: GetPackageSummaryCommand,
+  ): Promise<GetPackageSummaryResponse>;
 
   /**
    * Creates a new package within a space
