@@ -342,7 +342,9 @@ export const DetectionAssessmentDrawer: React.FC<
                                         value={answer}
                                       >
                                         <PMRadioGroup.ItemHiddenInput />
-                                        <PMRadioGroup.ItemControl />
+                                        <PMRadioGroup.ItemControl>
+                                          <PMRadioGroup.ItemIndicator />
+                                        </PMRadioGroup.ItemControl>
                                         <PMRadioGroup.ItemText>
                                           {answer}
                                         </PMRadioGroup.ItemText>
@@ -351,7 +353,9 @@ export const DetectionAssessmentDrawer: React.FC<
                                   )}
                                   <PMRadioGroup.Item value={OTHER_ANSWER_VALUE}>
                                     <PMRadioGroup.ItemHiddenInput />
-                                    <PMRadioGroup.ItemControl />
+                                    <PMRadioGroup.ItemControl>
+                                      <PMRadioGroup.ItemIndicator />
+                                    </PMRadioGroup.ItemControl>
                                     <PMRadioGroup.ItemText>
                                       Other
                                     </PMRadioGroup.ItemText>
