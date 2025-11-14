@@ -3,9 +3,11 @@ import {
   DeploymentOverview,
   StandardsDeployment,
   RecipesDeployment,
+  PackagesDeployment,
   StandardDeploymentOverview,
   PublishRecipesCommand,
   PublishStandardsCommand,
+  PublishPackagesCommand,
   TargetId,
   DistributionStatus,
   UpdateRenderModeConfigurationCommand,
@@ -17,6 +19,7 @@ import {
   RecipeVersionId,
   StandardId,
   StandardVersionId,
+  PackageId,
 } from '@packmind/types';
 import { DeploymentsService } from './deployments.service';
 import { PackmindLogger } from '@packmind/logger';
@@ -289,6 +292,58 @@ export class DeploymentsController {
         error instanceof Error ? error.message : String(error);
       this.logger.error(
         'POST /deployments/standards/publish - Failed to publish standards',
+        {
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Post('packages/publish')
+  async publishPackages(
+    @Body()
+    body: { targetIds: TargetId[]; packageIds: PackageId[] },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<PackagesDeployment[]> {
+    this.logger.info(
+      'POST /deployments/packages/publish - Publishing packages',
+      {
+        targetIdsCount: body.targetIds.length,
+        packageIdsCount: body.packageIds.length,
+      },
+    );
+
+    try {
+      const command: PublishPackagesCommand =
+        this.authService.makePackmindCommand(request, {
+          targetIds: body.targetIds,
+          packageIds: body.packageIds,
+        });
+
+      const deployments =
+        await this.deploymentsService.publishPackages(command);
+
+      this.logger.info(
+        'POST /deployments/packages/publish - Packages published successfully',
+        {
+          deploymentsCount: deployments.length,
+          deploymentIds: deployments.map((d) => d.id),
+          successfulDeployments: deployments.filter(
+            (d) => d.status === DistributionStatus.success,
+          ).length,
+          failedDeployments: deployments.filter(
+            (d) => d.status === DistributionStatus.failure,
+          ).length,
+        },
+      );
+
+      return deployments;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /deployments/packages/publish - Failed to publish packages',
         {
           error: errorMessage,
         },
