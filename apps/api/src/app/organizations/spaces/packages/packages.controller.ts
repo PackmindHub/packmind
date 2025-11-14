@@ -117,6 +117,7 @@ export class OrganizationsSpacesPackagesController {
       return await this.deploymentsService.getPackageById({
         userId,
         organizationId,
+        spaceId,
         packageId,
       });
     } catch (error) {

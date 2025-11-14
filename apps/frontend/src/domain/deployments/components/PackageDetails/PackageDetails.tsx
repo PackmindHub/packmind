@@ -2,19 +2,24 @@ import React from 'react';
 import {
   PMPage,
   PMText,
-  PMPageSection,
   PMBox,
   PMVStack,
   PMAlert,
   PMSpinner,
   PMHeading,
   PMHStack,
+  PMTable,
+  PMTableColumn,
+  PMTableRow,
+  PMLink,
 } from '@packmind/ui';
+import { Link } from 'react-router';
 import { useGetPackageByIdQuery } from '../../api/queries/DeploymentsQueries';
 import { AutobreadCrumb } from '../../../../shared/components/navigation/AutobreadCrumb';
 import { PackageId, Recipe, Standard } from '@packmind/types';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
+import { routes } from '../../../../shared/utils/routes';
 
 type PackageWithDetails = {
   id: PackageId;
@@ -31,7 +36,11 @@ interface PackageDetailsProps {
   spaceSlug: string;
 }
 
-export const PackageDetails = ({ id }: PackageDetailsProps) => {
+export const PackageDetails = ({
+  id,
+  orgSlug,
+  spaceSlug,
+}: PackageDetailsProps) => {
   const { organization } = useAuthContext();
   const { spaceId } = useCurrentSpace();
 
@@ -41,6 +50,69 @@ export const PackageDetails = ({ id }: PackageDetailsProps) => {
     isError,
     error,
   } = useGetPackageByIdQuery(id, spaceId, organization?.id);
+
+  const pkg = packageResponse?.package as PackageWithDetails | undefined;
+  const recipes = pkg?.recipes || [];
+  const standards = pkg?.standards || [];
+
+  const recipeTableData: PMTableRow[] = React.useMemo(
+    () =>
+      recipes.map((recipe) => {
+        const recipeData = typeof recipe === 'string' ? { id: recipe } : recipe;
+        const recipeName =
+          typeof recipe === 'string' ? recipe : (recipe as Recipe).name;
+        return {
+          key: recipeData.id,
+          name: (
+            <PMLink asChild>
+              <Link
+                to={routes.space.toRecipe(orgSlug, spaceSlug, recipeData.id)}
+              >
+                {recipeName}
+              </Link>
+            </PMLink>
+          ),
+        };
+      }),
+    [recipes, orgSlug, spaceSlug],
+  );
+
+  const standardTableData: PMTableRow[] = React.useMemo(
+    () =>
+      standards.map((standard) => {
+        const standardData =
+          typeof standard === 'string' ? { id: standard } : standard;
+        const standardName =
+          typeof standard === 'string' ? standard : (standard as Standard).name;
+        return {
+          key: standardData.id,
+          name: (
+            <PMLink asChild>
+              <Link
+                to={routes.space.toStandard(
+                  orgSlug,
+                  spaceSlug,
+                  standardData.id,
+                )}
+              >
+                {standardName}
+              </Link>
+            </PMLink>
+          ),
+        };
+      }),
+    [standards, orgSlug, spaceSlug],
+  );
+
+  const recipeColumns: PMTableColumn[] = React.useMemo(
+    () => [{ key: 'name', header: 'Recipe Name', grow: true }],
+    [],
+  );
+
+  const standardColumns: PMTableColumn[] = React.useMemo(
+    () => [{ key: 'name', header: 'Standard Name', grow: true }],
+    [],
+  );
 
   if (isLoading) {
     return (
@@ -78,7 +150,7 @@ export const PackageDetails = ({ id }: PackageDetailsProps) => {
     );
   }
 
-  if (!packageResponse?.package) {
+  if (!pkg) {
     return (
       <PMPage
         title="Package Not Found"
@@ -92,11 +164,6 @@ export const PackageDetails = ({ id }: PackageDetailsProps) => {
     );
   }
 
-  const pkg = packageResponse.package as PackageWithDetails;
-
-  const recipes = pkg.recipes || [];
-  const standards = pkg.standards || [];
-
   const recipeCount = recipes.length;
   const standardCount = standards.length;
 
@@ -107,81 +174,51 @@ export const PackageDetails = ({ id }: PackageDetailsProps) => {
       breadcrumbComponent={<AutobreadCrumb />}
     >
       <PMVStack align="stretch" gap="6">
-        <PMPageSection>
-          <PMVStack align="stretch" gap="4">
-            <PMBox>
-              <PMVStack align="stretch" gap="2">
-                <PMHStack gap="4">
-                  <PMText fontWeight="semibold">Slug:</PMText>
-                  <PMText>{pkg.slug}</PMText>
-                </PMHStack>
-                <PMHStack gap="4">
-                  <PMText fontWeight="semibold">Recipes:</PMText>
-                  <PMText>{recipeCount}</PMText>
-                </PMHStack>
-                <PMHStack gap="4">
-                  <PMText fontWeight="semibold">Standards:</PMText>
-                  <PMText>{standardCount}</PMText>
-                </PMHStack>
-              </PMVStack>
-            </PMBox>
+        <PMBox>
+          <PMVStack align="stretch" gap="2">
+            <PMHStack gap="4">
+              <PMText fontWeight="semibold">Slug:</PMText>
+              <PMText>{pkg.slug}</PMText>
+            </PMHStack>
+            <PMHStack gap="4">
+              <PMText fontWeight="semibold">Recipes:</PMText>
+              <PMText>{recipeCount}</PMText>
+            </PMHStack>
+            <PMHStack gap="4">
+              <PMText fontWeight="semibold">Standards:</PMText>
+              <PMText>{standardCount}</PMText>
+            </PMHStack>
           </PMVStack>
-        </PMPageSection>
+        </PMBox>
 
         {recipeCount > 0 && (
-          <PMPageSection>
-            <PMVStack align="stretch" gap="4">
-              <PMHeading size="lg">Recipes</PMHeading>
-              <PMBox>
-                {recipes.map((recipe) => {
-                  const recipeData =
-                    typeof recipe === 'string' ? { id: recipe } : recipe;
-                  return (
-                    <PMBox
-                      key={recipeData.id}
-                      p="2"
-                      borderBottomWidth="1px"
-                      borderColor="border.default"
-                    >
-                      <PMText>
-                        {typeof recipe === 'string'
-                          ? recipe
-                          : (recipe as Recipe).name}
-                      </PMText>
-                    </PMBox>
-                  );
-                })}
-              </PMBox>
-            </PMVStack>
-          </PMPageSection>
+          <PMBox>
+            <PMHeading size="lg" mb={4}>
+              Recipes ({recipeCount})
+            </PMHeading>
+            <PMTable
+              columns={recipeColumns}
+              data={recipeTableData}
+              striped={true}
+              hoverable={true}
+              variant="line"
+            />
+          </PMBox>
         )}
 
         {standardCount > 0 && (
-          <PMPageSection>
-            <PMVStack align="stretch" gap="4">
-              <PMHeading size="lg">Standards</PMHeading>
-              <PMBox>
-                {standards.map((standard) => {
-                  const standardData =
-                    typeof standard === 'string' ? { id: standard } : standard;
-                  return (
-                    <PMBox
-                      key={standardData.id}
-                      p="2"
-                      borderBottomWidth="1px"
-                      borderColor="border.default"
-                    >
-                      <PMText>
-                        {typeof standard === 'string'
-                          ? standard
-                          : (standard as Standard).name}
-                      </PMText>
-                    </PMBox>
-                  );
-                })}
-              </PMBox>
-            </PMVStack>
-          </PMPageSection>
+          <PMBox>
+            <PMHeading size="lg" mb={4}>
+              Standards ({standardCount})
+            </PMHeading>
+            <PMTable
+              columns={standardColumns}
+              data={standardTableData}
+              striped={true}
+              hoverable={true}
+              variant="line"
+            />
+          </PMBox>
         )}
       </PMVStack>
     </PMPage>
