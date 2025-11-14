@@ -42,14 +42,14 @@ export class StartRuleDetectionAssessmentUseCase
         .get(input.rule.id, input.language);
 
       if (!assessment) {
-        // Create new assessment entity with NOT_STARTED status
+        // Create new assessment entity with IN_PROGRESS status
         const assessmentId = createRuleDetectionAssessmentId(uuidv4());
         assessment = {
           id: assessmentId,
           ruleId: input.rule.id,
           language: input.language,
           detectionMode: DetectionModeEnum.SINGLE_AST,
-          status: RuleDetectionAssessmentStatus.NOT_STARTED,
+          status: RuleDetectionAssessmentStatus.IN_PROGRESS,
           details: 'Assessment in progress...',
           clarificationQuestion: null,
           clarificationAnswers: null,
@@ -59,14 +59,22 @@ export class StartRuleDetectionAssessmentUseCase
           .getRuleDetectionAssessmentRepository()
           .add(assessment);
 
-        this.logger.info('New assessment created with NOT_STARTED status', {
+        this.logger.info('New assessment created with IN_PROGRESS status', {
           assessmentId: assessment.id,
         });
       } else {
-        this.logger.info('Existing assessment found, reusing it', {
+        this.logger.info('Existing assessment found, updating to IN_PROGRESS', {
           assessmentId: assessment.id,
-          currentStatus: assessment.status,
+          previousStatus: assessment.status,
         });
+
+        // Update status to IN_PROGRESS when rerunning
+        assessment.status = RuleDetectionAssessmentStatus.IN_PROGRESS;
+        assessment.details = 'Assessment in progress...';
+
+        await this.linterRepositories
+          .getRuleDetectionAssessmentRepository()
+          .add(assessment);
       }
 
       // Enqueue job with assessment ID

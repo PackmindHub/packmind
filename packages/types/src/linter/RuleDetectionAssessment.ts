@@ -9,6 +9,7 @@ export const createRuleDetectionAssessmentId =
 
 export enum RuleDetectionAssessmentStatus {
   NOT_STARTED = 'NOT_STARTED',
+  IN_PROGRESS = 'IN_PROGRESS',
   SUCCESS = 'SUCCEEDED',
   FAILED = 'FAILED',
 }
