@@ -8,6 +8,7 @@ import {
   IListPackagesBySpaceUseCase,
   ICreatePackageUseCase,
   IUpdatePackageUseCase,
+  IDeletePackageUseCase,
   IDeletePackagesBatchUseCase,
   IPublishRecipes,
   IPublishStandards,
@@ -27,6 +28,7 @@ export interface IDeploymentsGateway {
   listPackagesBySpace: NewGateway<IListPackagesBySpaceUseCase>;
   createPackage: NewGateway<ICreatePackageUseCase>;
   updatePackage: NewGateway<IUpdatePackageUseCase>;
+  deletePackage: NewGateway<IDeletePackageUseCase>;
   deletePackagesBatch: NewGateway<IDeletePackagesBatchUseCase>;
   getPackageById: NewGateway<IGetPackageByIdUseCase>;
   getRecipesDeploymentOverview: Gateway<IGetDeploymentOverview>;

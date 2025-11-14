@@ -18,6 +18,7 @@ import {
   IListPackagesBySpaceUseCase,
   ICreatePackageUseCase,
   IUpdatePackageUseCase,
+  IDeletePackageUseCase,
   IDeletePackagesBatchUseCase,
   IGetTargetsByGitRepoUseCase,
   IGetTargetsByRepositoryUseCase,
@@ -93,6 +94,13 @@ export class DeploymentsGatewayApi
     return this._api.patch(
       `/organizations/${organizationId}/spaces/${spaceId}/packages/${packageId}`,
       { name, description, recipeIds, standardIds },
+    );
+  };
+
+  deletePackage: NewGateway<IDeletePackageUseCase> = async (params) => {
+    const { packageId, organizationId, spaceId } = params;
+    return this._api.delete(
+      `/organizations/${organizationId}/spaces/${spaceId}/packages/${packageId}`,
     );
   };
 

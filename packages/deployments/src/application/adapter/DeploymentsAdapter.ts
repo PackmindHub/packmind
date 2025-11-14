@@ -6,6 +6,8 @@ import {
   UpdatePackageCommand,
   UpdatePackageResponse,
   CreateRenderModeConfigurationCommand,
+  DeletePackageCommand,
+  DeletePackageResponse,
   DeletePackagesBatchCommand,
   DeletePackagesBatchResponse,
   DeleteTargetCommand,
@@ -66,6 +68,7 @@ import { AddTargetUseCase } from '../useCases/AddTargetUseCase';
 import { CreatePackageUsecase } from '../useCases/createPackage/createPackage.usecase';
 import { UpdatePackageUsecase } from '../useCases/updatePackage/updatePackage.usecase';
 import { CreateRenderModeConfigurationUseCase } from '../useCases/CreateRenderModeConfigurationUseCase';
+import { DeletePackageUsecase } from '../useCases/deletePackage/deletePackage.usecase';
 import { DeletePackagesBatchUsecase } from '../useCases/deletePackage/deletePackagesBatch.usecase';
 import { DeleteTargetUseCase } from '../useCases/DeleteTargetUseCase';
 import { FindActiveStandardVersionsByTargetUseCase } from '../useCases/FindActiveStandardVersionsByTargetUseCase';
@@ -123,6 +126,7 @@ export class DeploymentsAdapter
   private _createPackageUseCase!: CreatePackageUsecase;
   private _updatePackageUseCase!: UpdatePackageUsecase;
   private _getPackageByIdUseCase!: GetPackageByIdUsecase;
+  private _deletePackageUseCase!: DeletePackageUsecase;
   private _deletePackagesBatchUseCase!: DeletePackagesBatchUsecase;
 
   constructor(
@@ -320,6 +324,10 @@ export class DeploymentsAdapter
       this.deploymentsServices,
     );
 
+    this._deletePackageUseCase = new DeletePackageUsecase(
+      this.deploymentsServices.getPackageService(),
+    );
+
     this._deletePackagesBatchUseCase = new DeletePackagesBatchUsecase(
       this.deploymentsServices.getPackageService(),
     );
@@ -477,6 +485,12 @@ export class DeploymentsAdapter
     command: GetPackageByIdCommand,
   ): Promise<GetPackageByIdResponse> {
     return this._getPackageByIdUseCase.execute(command);
+  }
+
+  async deletePackage(
+    command: DeletePackageCommand,
+  ): Promise<DeletePackageResponse> {
+    return this._deletePackageUseCase.execute(command);
   }
 
   async deletePackagesBatch(

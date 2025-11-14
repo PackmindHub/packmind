@@ -4,6 +4,8 @@ import {
   CreatePackageResponse,
   UpdatePackageCommand,
   UpdatePackageResponse,
+  DeletePackageCommand,
+  DeletePackageResponse,
   DeletePackagesBatchCommand,
   DeletePackagesBatchResponse,
   DeploymentOverview,
@@ -113,6 +115,12 @@ export class DeploymentsService {
     command: GetPackageByIdCommand,
   ): Promise<GetPackageByIdResponse> {
     return this.deploymentAdapter.getPackageById(command);
+  }
+
+  async deletePackage(
+    command: DeletePackageCommand,
+  ): Promise<DeletePackageResponse> {
+    return this.deploymentAdapter.deletePackage(command);
   }
 
   async deletePackagesBatch(

@@ -17,11 +17,13 @@ import {
   PMInput,
   PMTextArea,
   PMCheckbox,
+  PMAlertDialog,
 } from '@packmind/ui';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import {
   useGetPackageByIdQuery,
   useUpdatePackageMutation,
+  useDeletePackageMutation,
 } from '../../api/queries/DeploymentsQueries';
 import { AutobreadCrumb } from '../../../../shared/components/navigation/AutobreadCrumb';
 import {
@@ -36,6 +38,7 @@ import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { routes } from '../../../../shared/utils/routes';
 import { useGetRecipesQuery } from '../../../recipes/api/queries/RecipesQueries';
 import { useGetStandardsQuery } from '../../../standards/api/queries/StandardsQueries';
+import { PACKAGE_MESSAGES } from '../../constants/messages';
 
 type PackageWithDetails = {
   id: PackageId;
@@ -57,6 +60,7 @@ export const PackageDetails = ({
   orgSlug,
   spaceSlug,
 }: PackageDetailsProps) => {
+  const navigate = useNavigate();
   const { organization } = useAuthContext();
   const { spaceId } = useCurrentSpace();
 
@@ -67,6 +71,7 @@ export const PackageDetails = ({
   const [selectedStandardIds, setSelectedStandardIds] = useState<StandardId[]>(
     [],
   );
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const {
     data: packageResponse,
@@ -82,6 +87,7 @@ export const PackageDetails = ({
     useGetStandardsQuery();
 
   const updatePackageMutation = useUpdatePackageMutation();
+  const deletePackageMutation = useDeletePackageMutation();
 
   const pkg = packageResponse?.package as PackageWithDetails | undefined;
   const recipes = pkg?.recipes || [];
@@ -158,6 +164,23 @@ export const PackageDetails = ({
       setIsEditMode(false);
     } catch (error) {
       console.error('Failed to update package:', error);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!spaceId || !organization?.id) {
+      return;
+    }
+
+    try {
+      await deletePackageMutation.mutateAsync({
+        packageId: id,
+        spaceId,
+        organizationId: organization.id,
+      });
+      navigate(routes.space.toPackages(orgSlug, spaceSlug));
+    } catch (error) {
+      console.error('Failed to delete package:', error);
     }
   };
 
@@ -406,7 +429,25 @@ export const PackageDetails = ({
               </PMHStack>
             </PMVStack>
           </PMBox>
-          <PMButton onClick={handleEdit}>Edit</PMButton>
+          <PMHStack gap={3}>
+            <PMButton onClick={handleEdit}>Edit</PMButton>
+            <PMAlertDialog
+              trigger={
+                <PMButton variant="outline" colorPalette="red">
+                  Delete
+                </PMButton>
+              }
+              title="Delete Package"
+              message={PACKAGE_MESSAGES.confirmation.deletePackage(pkg.name)}
+              confirmText="Delete"
+              cancelText="Cancel"
+              confirmColorScheme="red"
+              onConfirm={handleDelete}
+              open={deleteDialogOpen}
+              onOpenChange={({ open }) => setDeleteDialogOpen(open)}
+              isLoading={deletePackageMutation.isPending}
+            />
+          </PMHStack>
         </PMHStack>
 
         {recipeCount > 0 && (
