@@ -12,18 +12,43 @@ on:
         type: string
         description: 'Node.js version to use'
     secrets:
+      GITGUARDIAN_API_KEY:
+        required: true
+        description: 'API key for GitGuardian security scanning'
       SONAR_TOKEN:
         required: true
         description: 'Token for SonarCloud code quality analysis'
+      PACKMIND_API_KEY:
+        required: false
+        description: 'API key for Packmind CLI scanning'
+      PACKMIND_API_KEY_V3:
+        required: false
+        description: 'API key to run new packmind-cli'
 
 jobs:
+  gitguardian-scan:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    name: GitGuardian scan
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: GitGuardian scan
+        uses: GitGuardian/ggshield/actions/secret@v1.41.0
+        env:
+          GITHUB_PUSH_BEFORE_SHA: ${{ github.event.before }}
+          GITHUB_PUSH_BASE_SHA: ${{ github.event.base }}
+          GITHUB_PULL_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          GITHUB_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
+
   code-quality:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
     strategy:
       matrix:
         node-version: ["${{ inputs.node-version }}"]
-    env:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
     steps:
       - uses: actions/checkout@v4
@@ -37,18 +62,76 @@ jobs:
       - run: npm ci
       - name: Generate Proprietary tsconfig
         env:
-          PACKMIND_EDITION: ${{ env.OSS_EDITION }}
+          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
         run: node scripts/select-tsconfig.mjs
       - name: Lint code (Proprietary)
         env:
-          PACKMIND_EDITION: ${{ env.OSS_EDITION }}
+          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
         run: ./node_modules/.bin/nx run-many -t lint --tuiAutoExit
 
       - name: Check code formatting
         run: npm run prettier:check
 
+      - name: Prepare SonarQube Cloud Scan
+        run: cp private/sonar-project.properties .
+
       - name: SonarQube Cloud Scan
         uses: SonarSource/sonarqube-scan-action@v6.0.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: SonarQube Quality Gate Check
         uses: SonarSource/sonarqube-quality-gate-action@v1.2.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  #  packmind-v3:
+  #    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+  #    strategy:
+  #      matrix:
+  #        node-version: ["${{ inputs.node-version }}"]
+  #    name: Packmind V3 CLI scan
+  #
+  #    steps:
+  #      - name: Checkout
+  #        uses: actions/checkout@v4
+  #        with:
+  #          fetch-depth: 0
+  #      - name: Use Node.js ${{ matrix.node-version }}
+  #        uses: actions/setup-node@v4
+  #        with:
+  #          node-version: ${{ matrix.node-version }}
+  #          cache: 'npm'
+  #      - run: npm ci
+  #      - name: Generate Proprietary tsconfig
+  #        env:
+  #          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+  #        run: node scripts/select-tsconfig.mjs
+  #      - name: Run new packmind-cli (Proprietary)
+  #        run: npm run packmind-cli:v3:lint
+  #        env:
+  #          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+  #          PACKMIND_API_KEY_V3: ${{ secrets.PACKMIND_API_KEY_V3 }}
+
+  packmind:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    strategy:
+      matrix:
+        node-version: ["${{ inputs.node-version }}"]
+    name: Packmind CLI scan
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - run: npm install -g packmind-cli
+      - name: Run Packmind cli
+        run: packmind-cli scan "**/*.ts,**/*.tsx" --formatters=raw --errorIfResults=true --spaces="Packmind V3"
+        env:
+          PACKMIND_API_KEY: ${{ secrets.PACKMIND_API_KEY }}
