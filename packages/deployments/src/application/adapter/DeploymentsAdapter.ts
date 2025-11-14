@@ -38,6 +38,8 @@ import {
   ListDeploymentsByStandardCommand,
   ListPackagesBySpaceCommand,
   ListPackagesBySpaceResponse,
+  PackagesDeployment,
+  PublishPackagesCommand,
   PullContentCommand,
   PublishRecipesCommand,
   PublishStandardsCommand,
@@ -50,6 +52,7 @@ import {
   UpdateRenderModeConfigurationCommand,
   UpdateTargetCommand,
 } from '@packmind/types';
+import { IPackagesDeploymentRepository } from '../../domain/repositories/IPackagesDeploymentRepository';
 import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
 import { DeploymentsServices } from '../services/DeploymentsServices';
@@ -69,6 +72,7 @@ import { GetTargetsByRepositoryUseCase } from '../useCases/GetTargetsByRepositor
 import { ListDeploymentsByRecipeUseCase } from '../useCases/ListDeploymentsByRecipeUseCase';
 import { ListDeploymentsByStandardUseCase } from '../useCases/ListDeploymentsByStandardUseCase';
 import { ListPackagesBySpaceUsecase } from '../useCases/listPackagesBySpace/listPackagesBySpace.usecase';
+import { PublishPackagesUseCase } from '../useCases/PublishPackagesUseCase';
 import { PublishRecipesUseCase } from '../useCases/PublishRecipesUseCase';
 import { PublishStandardsUseCase } from '../useCases/PublishStandardsUseCase';
 import { PullContentUseCase } from '../useCases/PullContentUseCase';
@@ -89,6 +93,7 @@ export class DeploymentsAdapter
   private _listDeploymentsByRecipeUseCase!: ListDeploymentsByRecipeUseCase;
   private _publishStandardsUseCase!: PublishStandardsUseCase;
   private _publishRecipesUseCase!: PublishRecipesUseCase;
+  private _publishPackagesUseCase!: PublishPackagesUseCase;
   private _findDeployedStandardByRepositoryUseCase!: FindDeployedStandardByRepositoryUseCase;
   private _findActiveStandardVersionsByTargetUseCase!: FindActiveStandardVersionsByTargetUseCase;
   private _getDeploymentOverviewUseCase!: GetDeploymentOverviewUseCase;
@@ -112,6 +117,7 @@ export class DeploymentsAdapter
     private readonly deploymentsServices: DeploymentsServices,
     private readonly standardDeploymentRepository: IStandardsDeploymentRepository,
     private readonly recipesDeploymentRepository: IRecipesDeploymentRepository,
+    private readonly packagesDeploymentRepository: IPackagesDeploymentRepository,
   ) {}
 
   /**
@@ -168,6 +174,19 @@ export class DeploymentsAdapter
       this.codingAgentPort,
       this.deploymentsServices.getTargetService(),
       this.deploymentsServices.getRenderModeConfigurationService(),
+    );
+
+    this._publishPackagesUseCase = new PublishPackagesUseCase(
+      this.packagesDeploymentRepository,
+      this.recipesDeploymentRepository,
+      this.standardDeploymentRepository,
+      this.recipesPort,
+      this.standardsPort,
+      this.gitPort,
+      this.codingAgentPort,
+      this.deploymentsServices.getTargetService(),
+      this.deploymentsServices.getRenderModeConfigurationService(),
+      this.deploymentsServices.getPackageService(),
     );
 
     this._findDeployedStandardByRepositoryUseCase =
@@ -306,6 +325,12 @@ export class DeploymentsAdapter
 
   publishRecipes(command: PublishRecipesCommand): Promise<RecipesDeployment[]> {
     return this._publishRecipesUseCase.execute(command);
+  }
+
+  publishPackages(
+    command: PublishPackagesCommand,
+  ): Promise<PackagesDeployment[]> {
+    return this._publishPackagesUseCase.execute(command);
   }
 
   findActiveStandardVersionsByRepository(

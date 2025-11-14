@@ -13,8 +13,10 @@ import {
   ListPackagesBySpaceResponse,
   PublishRecipesCommand,
   PublishStandardsCommand,
+  PublishPackagesCommand,
   RecipesDeployment,
   StandardsDeployment,
+  PackagesDeployment,
   StandardDeploymentOverview,
   UpdateRenderModeConfigurationCommand,
   RenderModeConfiguration,
@@ -71,6 +73,12 @@ export class DeploymentsService {
     command: PublishStandardsCommand,
   ): Promise<StandardsDeployment[]> {
     return this.deploymentAdapter.publishStandards(command);
+  }
+
+  async publishPackages(
+    command: PublishPackagesCommand,
+  ): Promise<PackagesDeployment[]> {
+    return this.deploymentAdapter.publishPackages(command);
   }
 
   async getRenderModeConfiguration(

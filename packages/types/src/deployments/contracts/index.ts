@@ -10,6 +10,7 @@ export * from './IGetStandardDeploymentOverview';
 export * from './IGetDeploymentOverview';
 export * from './IPublishRecipes';
 export * from './IPublishStandards';
+export * from './IPublishPackages';
 export * from './IListDeploymentsByRecipe';
 export * from './IListDeploymentsByStandard';
 export * from './IGetRenderModeConfigurationUseCase';

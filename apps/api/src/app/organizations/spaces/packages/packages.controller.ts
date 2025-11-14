@@ -148,7 +148,6 @@ export class OrganizationsSpacesPackagesController {
     @Body()
     body: {
       name: string;
-      slug: string;
       description: string;
       recipeIds: RecipeId[];
       standardIds: StandardId[];
@@ -171,7 +170,6 @@ export class OrganizationsSpacesPackagesController {
         organizationId,
         spaceId,
         name: body.name,
-        slug: body.slug,
         description: body.description,
         recipeIds: body.recipeIds,
         standardIds: body.standardIds,
