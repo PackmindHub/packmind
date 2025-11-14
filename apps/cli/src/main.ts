@@ -7,6 +7,7 @@ import { config as dotenvConfig } from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
 import { pullCommand } from './infra/commands/PullCommand';
+import { CLI_VERSION } from './generated-version';
 
 /**
  * Find .env file by searching upwards from current directory
@@ -70,6 +71,13 @@ if (hasEmbeddedWasmFiles()) {
   }
 }
 
+// Check for --version or -v flag
+const args = process.argv.slice(2);
+if (args.includes('--version') || args.includes('-v')) {
+  console.log(`packmind-cli version ${CLI_VERSION}`);
+  process.exit(0);
+}
+
 const app = subcommands({
   name: 'packmind-cli',
   description: 'Packmind CLI tool',
@@ -79,7 +87,7 @@ const app = subcommands({
   },
 });
 
-run(app, process.argv.slice(2)).catch((error) => {
+run(app, args).catch((error) => {
   console.error(chalk.bgRed.bold('packmind-cli'), chalk.red(error.message));
   process.exit(1);
 });
