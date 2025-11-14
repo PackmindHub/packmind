@@ -14,6 +14,11 @@ export interface AIPromptResult<T = string> {
   };
 }
 
+export enum LLMModelPerformance {
+  FAST = 'FAST',
+  STANDARD = 'STANDARD',
+}
+
 /**
  * Configuration options for AI prompts
  */
@@ -22,7 +27,7 @@ export interface AIPromptOptions {
   temperature?: number;
   retryAttempts?: number;
   responseFormat?: AI_RESPONSE_FORMAT;
-  performance?: 'standard' | 'fast';
+  performance?: LLMModelPerformance;
 }
 
 /**

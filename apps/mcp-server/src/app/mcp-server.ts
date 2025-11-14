@@ -1,12 +1,12 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { AnalyticsAdapter } from '@packmind/amplitude';
+import { EventTrackingAdapter } from '@packmind/amplitude';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { extractCodeFromMarkdown } from '@packmind/node-utils';
 import {
   createOrganizationId,
   createUserId,
   getAllProgrammingLanguages,
-  IAnalyticsPort,
+  IEventTrackingPort,
   OrganizationId,
   ProgrammingLanguage,
   RecipeStep,
@@ -110,7 +110,7 @@ export function createMCPServer(
   });
 
   // Initialize analytics adapter
-  const analyticsAdapter: IAnalyticsPort = new AnalyticsAdapter(logger);
+  const analyticsAdapter: IEventTrackingPort = new EventTrackingAdapter(logger);
 
   // Debug logging for fastify decorators
   logger.debug('Checking fastify decorators:', {
@@ -296,7 +296,7 @@ export function createMCPServer(
       }
 
       try {
-        const usageRecords = await analyticsHexa.trackRecipeUsage({
+        const usageRecords = await analyticsHexa.getAdapter().trackRecipeUsage({
           recipeSlugs: recipesSlug,
           aiAgent,
           userId: userContext.userId,

@@ -219,26 +219,29 @@ describe('GitProviderRepository', () => {
     });
   });
 
-  it('uses default encryption key when configuration is missing', async () => {
-    mockConfiguration.getConfig.mockResolvedValueOnce(null);
+  describe('when configuration is missing', () => {
+    it('uses default encryption key', async () => {
+      mockConfiguration.getConfig.mockResolvedValueOnce(null);
 
-    const gitProvider = gitProviderFactory({
-      organizationId: testOrganization.id,
-      token: 'some-token',
-    });
+      const gitProvider = gitProviderFactory({
+        organizationId: testOrganization.id,
+        token: 'some-token',
+      });
 
-    await gitProviderRepository.add(gitProvider);
+      await gitProviderRepository.add(gitProvider);
 
-    const foundGitProvider = await gitProviderRepository.findById(
-      gitProvider.id,
-    );
-    expect(foundGitProvider).toMatchObject({
-      id: gitProvider.id,
-      source: gitProvider.source,
-      organizationId: gitProvider.organizationId,
-      token: 'some-token', // Should be decrypted successfully using default key
+      const foundGitProvider = await gitProviderRepository.findById(
+        gitProvider.id,
+      );
+      expect(foundGitProvider).toMatchObject({
+        id: gitProvider.id,
+        source: gitProvider.source,
+        organizationId: gitProvider.organizationId,
+        token: 'some-token', // Should be decrypted successfully using default key
+      });
     });
   });
+
 
   it('can store and retrieve GitLab provider with encryption', async () => {
     const gitlabProvider = gitlabProviderFactory({

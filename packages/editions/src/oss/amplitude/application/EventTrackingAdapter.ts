@@ -1,11 +1,11 @@
 import { PackmindLogger } from '@packmind/logger';
-import { IAnalyticsPort, OrganizationId, UserId } from '@packmind/types';
+import { IEventTrackingPort, OrganizationId, UserId } from '@packmind/types';
 
 /**
  * OSS stub implementation of AnalyticsAdapter
  * Wraps AmplitudeTrackEventService but does not perform actual tracking
  */
-export class AnalyticsAdapter implements IAnalyticsPort {
+export class EventTrackingAdapter implements IEventTrackingPort {
   constructor(
     private readonly logger = new PackmindLogger('AnalyticsAdapter'),
   ) {}
