@@ -32,6 +32,7 @@ import {
   Standard,
   RecipeId,
   StandardId,
+  Package,
 } from '@packmind/types';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
@@ -39,15 +40,7 @@ import { routes } from '../../../../shared/utils/routes';
 import { useGetRecipesQuery } from '../../../recipes/api/queries/RecipesQueries';
 import { useGetStandardsQuery } from '../../../standards/api/queries/StandardsQueries';
 import { PACKAGE_MESSAGES } from '../../constants/messages';
-
-type PackageWithDetails = {
-  id: PackageId;
-  name: string;
-  slug: string;
-  description: string;
-  recipes?: Recipe[] | string[];
-  standards?: Standard[] | string[];
-};
+import { DeployPackageButton } from '../PackageDeployments/DeployPackageButton';
 
 interface PackageDetailsProps {
   id: PackageId;
@@ -89,9 +82,9 @@ export const PackageDetails = ({
   const updatePackageMutation = useUpdatePackageMutation();
   const deletePackageMutation = useDeletePackagesBatchMutation();
 
-  const pkg = packageResponse?.package as PackageWithDetails | undefined;
-  const recipes = pkg?.recipes || [];
-  const standards = pkg?.standards || [];
+  const pkg = packageResponse?.package;
+  const recipeIds = pkg?.recipes || [];
+  const standardIds = pkg?.standards || [];
   const allRecipes = recipesResponse || [];
   const allStandards = standardsResponse?.standards || [];
 
@@ -99,16 +92,10 @@ export const PackageDetails = ({
     if (pkg && !isEditMode) {
       setEditName(pkg.name);
       setEditDescription(pkg.description);
-      const recipeIds = recipes.map((r) =>
-        typeof r === 'string' ? r : r.id,
-      ) as RecipeId[];
-      const standardIds = standards.map((s) =>
-        typeof s === 'string' ? s : s.id,
-      ) as StandardId[];
       setSelectedRecipeIds(recipeIds);
       setSelectedStandardIds(standardIds);
     }
-  }, [pkg, recipes, standards, isEditMode]);
+  }, [pkg, recipeIds, standardIds, isEditMode]);
 
   const handleRecipeToggle = (recipeId: RecipeId) => {
     setSelectedRecipeIds((prev) =>
@@ -134,12 +121,6 @@ export const PackageDetails = ({
     if (pkg) {
       setEditName(pkg.name);
       setEditDescription(pkg.description);
-      const recipeIds = recipes.map((r) =>
-        typeof r === 'string' ? r : r.id,
-      ) as RecipeId[];
-      const standardIds = standards.map((s) =>
-        typeof s === 'string' ? s : s.id,
-      ) as StandardId[];
       setSelectedRecipeIds(recipeIds);
       setSelectedStandardIds(standardIds);
     }
@@ -186,51 +167,40 @@ export const PackageDetails = ({
 
   const recipeTableData: PMTableRow[] = React.useMemo(
     () =>
-      recipes.map((recipe) => {
-        const recipeData = typeof recipe === 'string' ? { id: recipe } : recipe;
-        const recipeName =
-          typeof recipe === 'string' ? recipe : (recipe as Recipe).name;
+      recipeIds.map((recipeId) => {
+        const recipe = allRecipes.find((r) => r.id === recipeId);
         return {
-          key: recipeData.id,
+          key: recipeId,
           name: (
             <PMLink asChild>
-              <Link
-                to={routes.space.toRecipe(orgSlug, spaceSlug, recipeData.id)}
-              >
-                {recipeName}
+              <Link to={routes.space.toRecipe(orgSlug, spaceSlug, recipeId)}>
+                {recipe?.name || recipeId}
               </Link>
             </PMLink>
           ),
         };
       }),
-    [recipes, orgSlug, spaceSlug],
+    [recipeIds, allRecipes, orgSlug, spaceSlug],
   );
 
   const standardTableData: PMTableRow[] = React.useMemo(
     () =>
-      standards.map((standard) => {
-        const standardData =
-          typeof standard === 'string' ? { id: standard } : standard;
-        const standardName =
-          typeof standard === 'string' ? standard : (standard as Standard).name;
+      standardIds.map((standardId) => {
+        const standard = allStandards.find((s) => s.id === standardId);
         return {
-          key: standardData.id,
+          key: standardId,
           name: (
             <PMLink asChild>
               <Link
-                to={routes.space.toStandard(
-                  orgSlug,
-                  spaceSlug,
-                  standardData.id,
-                )}
+                to={routes.space.toStandard(orgSlug, spaceSlug, standardId)}
               >
-                {standardName}
+                {standard?.name || standardId}
               </Link>
             </PMLink>
           ),
         };
       }),
-    [standards, orgSlug, spaceSlug],
+    [standardIds, allStandards, orgSlug, spaceSlug],
   );
 
   const recipeColumns: PMTableColumn[] = React.useMemo(
@@ -293,8 +263,8 @@ export const PackageDetails = ({
     );
   }
 
-  const recipeCount = recipes.length;
-  const standardCount = standards.length;
+  const recipeCount = recipeIds.length;
+  const standardCount = standardIds.length;
 
   if (isEditMode) {
     return (
@@ -412,6 +382,11 @@ export const PackageDetails = ({
       breadcrumbComponent={<AutobreadCrumb />}
       actions={
         <PMHStack gap={3}>
+          <DeployPackageButton
+            label="Deploy"
+            size="md"
+            selectedPackages={[pkg]}
+          />
           <PMButton onClick={handleEdit}>Edit</PMButton>
           <PMAlertDialog
             trigger={
