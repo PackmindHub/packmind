@@ -22,6 +22,7 @@ export interface AIPromptOptions {
   temperature?: number;
   retryAttempts?: number;
   responseFormat?: AI_RESPONSE_FORMAT;
+  performance?: 'standard' | 'fast';
 }
 
 /**

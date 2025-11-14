@@ -17,6 +17,7 @@ const origin = 'OpenAIService';
 export class OpenAIService implements AIService {
   private client: OpenAI | null = null;
   private readonly defaultModel = 'gpt-5-mini';
+  private readonly defaultFastModel = 'gpt-5-nano';
   private readonly maxRetries = 5;
   private initialized = false;
 
@@ -118,14 +119,19 @@ export class OpenAIService implements AIService {
           );
         }
 
+        const model =
+          options.performance === 'fast'
+            ? this.defaultFastModel
+            : this.defaultModel;
+
         this.logger.info('Sending request to OpenAI', {
           attempt,
-          model: this.defaultModel,
+          model,
           promptLength: prompt.length,
         });
 
         const response = await this.client.chat.completions.create({
-          model: this.defaultModel,
+          model,
           messages: [
             {
               role: 'user',
