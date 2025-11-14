@@ -90,7 +90,7 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
           together to your repositories, ensuring consistent practices across
           your projects.
           <PMHStack>
-            <Link to={`/org/${orgSlug}/space/${spaceSlug}/packages/new`}>
+            <Link to={routes.space.toCreatePackage(orgSlug, spaceSlug)}>
               <PMButton variant="secondary">Create Package</PMButton>
             </Link>
           </PMHStack>
