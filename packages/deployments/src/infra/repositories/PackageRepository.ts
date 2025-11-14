@@ -6,6 +6,7 @@ import {
   RecipeId,
   SpaceId,
   StandardId,
+  OrganizationId,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, AbstractRepository } from '@packmind/node-utils';
@@ -60,6 +61,38 @@ export class PackageRepository
     } catch (error) {
       this.logger.error('Failed to find packages by space ID', {
         spaceId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async findByOrganizationId(
+    organizationId: OrganizationId,
+  ): Promise<Package[]> {
+    this.logger.info('Finding packages by organization ID', {
+      organizationId,
+    });
+
+    try {
+      const packages = await this.repository
+        .createQueryBuilder('package')
+        .leftJoinAndSelect('package.recipes', 'recipes')
+        .leftJoinAndSelect('package.standards', 'standards')
+        .innerJoin('spaces', 'space', 'package.spaceId = space.id')
+        .where('space.organizationId = :organizationId', { organizationId })
+        .orderBy('package.createdAt', 'DESC')
+        .getMany();
+
+      this.logger.info('Packages found by organization ID successfully', {
+        organizationId,
+        count: packages.length,
+      });
+
+      return packages;
+    } catch (error) {
+      this.logger.error('Failed to find packages by organization ID', {
+        organizationId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

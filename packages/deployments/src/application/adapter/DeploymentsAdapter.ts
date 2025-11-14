@@ -38,6 +38,8 @@ import {
   IStandardsPortName,
   ListDeploymentsByRecipeCommand,
   ListDeploymentsByStandardCommand,
+  ListPackagesCommand,
+  ListPackagesResponse,
   ListPackagesBySpaceCommand,
   ListPackagesBySpaceResponse,
   PackagesDeployment,
@@ -74,6 +76,7 @@ import { GetTargetsByOrganizationUseCase } from '../useCases/GetTargetsByOrganiz
 import { GetTargetsByRepositoryUseCase } from '../useCases/GetTargetsByRepositoryUseCase';
 import { ListDeploymentsByRecipeUseCase } from '../useCases/ListDeploymentsByRecipeUseCase';
 import { ListDeploymentsByStandardUseCase } from '../useCases/ListDeploymentsByStandardUseCase';
+import { ListPackagesUsecase } from '../useCases/listPackages/listPackages.usecase';
 import { ListPackagesBySpaceUsecase } from '../useCases/listPackagesBySpace/listPackagesBySpace.usecase';
 import { PublishPackagesUseCase } from '../useCases/PublishPackagesUseCase';
 import { PublishRecipesUseCase } from '../useCases/PublishRecipesUseCase';
@@ -112,6 +115,7 @@ export class DeploymentsAdapter
   private _createRenderModeConfigurationUseCase!: CreateRenderModeConfigurationUseCase;
   private _updateRenderModeConfigurationUseCase!: UpdateRenderModeConfigurationUseCase;
   private _pullAllContentUseCase!: PullContentUseCase;
+  private _listPackagesUseCase!: ListPackagesUsecase;
   private _listPackagesBySpaceUseCase!: ListPackagesBySpaceUsecase;
   private _createPackageUseCase!: CreatePackageUsecase;
   private _updatePackageUseCase!: UpdatePackageUsecase;
@@ -286,6 +290,11 @@ export class DeploymentsAdapter
       this.spacesPort,
     );
 
+    this._listPackagesUseCase = new ListPackagesUsecase(
+      this.accountsPort,
+      this.deploymentsServices,
+    );
+
     this._createPackageUseCase = new CreatePackageUsecase(
       this.accountsPort,
       this.deploymentsServices,
@@ -436,6 +445,12 @@ export class DeploymentsAdapter
     command: ListPackagesBySpaceCommand,
   ): Promise<ListPackagesBySpaceResponse> {
     return this._listPackagesBySpaceUseCase.execute(command);
+  }
+
+  async listPackages(
+    command: ListPackagesCommand,
+  ): Promise<ListPackagesResponse> {
+    return this._listPackagesUseCase.execute(command);
   }
 
   async createPackage(

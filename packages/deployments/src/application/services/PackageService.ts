@@ -6,6 +6,7 @@ import {
   RecipeId,
   SpaceId,
   StandardId,
+  OrganizationId,
 } from '@packmind/types';
 import { IPackageRepository } from '../../domain/repositories/IPackageRepository';
 
@@ -68,6 +69,32 @@ export class PackageService {
     } catch (error) {
       this.logger.error('Failed to get packages by space ID', {
         spaceId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async getPackagesByOrganizationId(
+    organizationId: OrganizationId,
+  ): Promise<Package[]> {
+    this.logger.info('Getting packages by organization ID', {
+      organizationId,
+    });
+
+    try {
+      const packages =
+        await this.packageRepository.findByOrganizationId(organizationId);
+
+      this.logger.info('Packages found by organization ID successfully', {
+        organizationId,
+        count: packages.length,
+      });
+
+      return packages;
+    } catch (error) {
+      this.logger.error('Failed to get packages by organization ID', {
+        organizationId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

@@ -24,6 +24,8 @@ import {
   IPullContentResponse,
   ListDeploymentsByRecipeCommand,
   ListDeploymentsByStandardCommand,
+  ListPackagesCommand,
+  ListPackagesResponse,
   ListPackagesBySpaceCommand,
   ListPackagesBySpaceResponse,
   PublishPackagesCommand,
@@ -289,6 +291,14 @@ export interface IDeploymentPort {
   listPackagesBySpace(
     command: ListPackagesBySpaceCommand,
   ): Promise<ListPackagesBySpaceResponse>;
+
+  /**
+   * Lists all packages for an organization
+   *
+   * @param command - Command containing organizationId
+   * @returns Promise of array of all packages in the organization
+   */
+  listPackages(command: ListPackagesCommand): Promise<ListPackagesResponse>;
 
   /**
    * Creates a new package within a space

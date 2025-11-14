@@ -12,6 +12,8 @@ import {
   Gateway,
   IPullContentResponse,
   IPullContentUseCase,
+  IListPackagesUseCase,
+  ListPackagesResponse,
   Organization,
 } from '@packmind/types';
 interface ApiKeyPayload {
@@ -175,6 +177,83 @@ export class PackmindGateway implements IPackmindGateway {
 
       throw new Error(
         `Failed to pull content: Error: ${err?.message || JSON.stringify(error)}`,
+      );
+    }
+  };
+
+  public listPackages: Gateway<IListPackagesUseCase> = async () => {
+    // Decode the API key to get host and JWT
+    const decodedApiKey = decodeApiKey(this.apiKey);
+
+    if (!decodedApiKey.isValid) {
+      throw new Error(`Invalid API key: ${decodedApiKey.error}`);
+    }
+
+    const { host, jwt } = decodedApiKey.payload;
+
+    // Decode JWT to extract organizationId
+    const jwtPayload = decodeJwt(jwt);
+
+    if (!jwtPayload?.organization?.id) {
+      throw new Error('Invalid JWT: missing organizationId');
+    }
+
+    const organizationId = jwtPayload.organization.id;
+
+    // Make API call to list packages
+    const url = `${host}/api/v0/organizations/${organizationId}/packages`;
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+      });
+
+      if (!response.ok) {
+        let errorMsg = `API request failed: ${response.status} ${response.statusText}`;
+        try {
+          const errorBody = await response.json();
+          if (errorBody && errorBody.message) {
+            errorMsg = `${errorBody.message}`;
+          }
+        } catch {
+          // ignore if body is not json
+        }
+        const error: Error & { statusCode?: number } = new Error(errorMsg);
+        error.statusCode = response.status;
+        throw error;
+      }
+
+      const result: ListPackagesResponse = await response.json();
+      return result;
+    } catch (error: unknown) {
+      // Specific handling if the server is not accessible
+      const err = error as {
+        code?: string;
+        name?: string;
+        message?: string;
+        cause?: { code?: string };
+      };
+      const code = err?.code || err?.cause?.code;
+      if (
+        code === 'ECONNREFUSED' ||
+        code === 'ENOTFOUND' ||
+        err?.name === 'FetchError' ||
+        (typeof err?.message === 'string' &&
+          (err.message.includes('Failed to fetch') ||
+            err.message.includes('network') ||
+            err.message.includes('NetworkError')))
+      ) {
+        throw new Error(
+          `Packmind server is not accessible at ${host}. Please check your network connection or the server URL.`,
+        );
+      }
+
+      throw new Error(
+        `Failed to list packages: Error: ${err?.message || JSON.stringify(error)}`,
       );
     }
   };
