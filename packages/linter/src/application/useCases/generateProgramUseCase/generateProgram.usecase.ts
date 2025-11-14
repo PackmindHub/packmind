@@ -47,6 +47,19 @@ export class GenerateProgramUseCase implements IGenerateProgramJob {
         filteredExamples: filteredExamples.length,
       });
 
+      // Fetch existing heuristics for this rule and language
+      const existingHeuristics = await this.linterRepositories
+        .getRuleDetectionHeuristicsRepository()
+        .getHeuristicsForRule(command.ruleId, command.language);
+
+      this.logger.info('Existing heuristics check', {
+        jobId: command.jobId,
+        ruleId: command.ruleId,
+        language: command.language,
+        heuristicsFound: !!existingHeuristics,
+        heuristicsCount: existingHeuristics?.heuristics.length || 0,
+      });
+
       // Ensure detection program exists before continuing
       const detectionProgram = await this.linterRepositories
         .getDetectionProgramRepository()
@@ -69,6 +82,7 @@ export class GenerateProgramUseCase implements IGenerateProgramJob {
         rule: command.rule,
         ruleExamples: filteredExamples,
         language: command.language,
+        heuristics: existingHeuristics?.heuristics,
       };
 
       this.logger.info('Starting program generation', {
@@ -90,8 +104,9 @@ export class GenerateProgramUseCase implements IGenerateProgramJob {
         ),
         this.linterAstAdapter,
       );
-      const program: Omit<DetectionProgram, 'version'> =
-        await generateRuleDetection.assessDetectionPractice();
+      const program: Omit<DetectionProgram, 'version'> & {
+        generatedHeuristics?: string[] | null;
+      } = await generateRuleDetection.assessDetectionPractice();
 
       this.logger.info('Program generation completed, returning output', {
         jobId: command.jobId,
@@ -107,6 +122,7 @@ export class GenerateProgramUseCase implements IGenerateProgramJob {
         mode: program.mode,
         sourceCodeState: program.sourceCodeState,
         activeDetectionProgramId: command.activeDetectionProgramId,
+        generatedHeuristics: program.generatedHeuristics ?? null,
       };
 
       this.logger.info('Job completed', {

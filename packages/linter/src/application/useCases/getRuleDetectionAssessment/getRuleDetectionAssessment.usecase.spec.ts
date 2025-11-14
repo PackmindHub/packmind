@@ -95,6 +95,8 @@ describe('GetRuleDetectionAssessmentUseCase', () => {
       detectionMode: DetectionModeEnum.SINGLE_AST,
       status: RuleDetectionAssessmentStatus.SUCCESS,
       details: 'Assessment completed successfully',
+      clarificationQuestion: '',
+      clarificationAnswers: [],
     };
 
     mockRuleDetectionAssessmentRepository.get.mockResolvedValue(mockAssessment);

@@ -75,28 +75,36 @@ export default abstract class AbstractRuleDetectionProgram extends AbstractRuleD
       `[${this._detectionProgramRule.rule.id}] === Start generateProgram`,
     );
 
-    // Generate detection heuristics before program generation
-    this._logger.info(
-      `[${this._detectionProgramRule.rule.id}] Generating detection heuristics`,
-    );
-    const generateHeuristics = new GenerateRuleHeuristics(
-      this._detectionProgramRule.rule.id,
-      this._aiService,
-      this._logger,
-    );
-    const heuristics = await generateHeuristics.generateHeuristics(
-      this._detectionProgramRule,
-    );
-
-    if (heuristics) {
-      this._detectionProgramRule.heuristics = heuristics;
-      await this._logsWriter.updateDetectionHeuristics(heuristics);
+    // Generate detection heuristics before program generation if they don't exist
+    let generatedHeuristics: string[] | null = null;
+    if (!this._detectionProgramRule.heuristics) {
       this._logger.info(
-        `[${this._detectionProgramRule.rule.id}] Detection heuristics generated and saved successfully`,
+        `[${this._detectionProgramRule.rule.id}] No existing heuristics found, generating new ones`,
       );
+      const generateHeuristics = new GenerateRuleHeuristics(
+        this._detectionProgramRule.rule.id,
+        this._aiService,
+        this._logger,
+      );
+      const heuristics = await generateHeuristics.generateHeuristics(
+        this._detectionProgramRule,
+      );
+
+      if (heuristics) {
+        this._detectionProgramRule.heuristics = heuristics;
+        generatedHeuristics = heuristics;
+        await this._logsWriter.updateDetectionHeuristics(heuristics);
+        this._logger.info(
+          `[${this._detectionProgramRule.rule.id}] Detection heuristics generated successfully`,
+        );
+      } else {
+        this._logger.warn(
+          `[${this._detectionProgramRule.rule.id}] No heuristics generated, continuing without them`,
+        );
+      }
     } else {
-      this._logger.warn(
-        `[${this._detectionProgramRule.rule.id}] No heuristics generated, continuing without them`,
+      this._logger.info(
+        `[${this._detectionProgramRule.rule.id}] Using existing heuristics (${this._detectionProgramRule.heuristics.length} items)`,
       );
     }
 
@@ -151,6 +159,7 @@ export default abstract class AbstractRuleDetectionProgram extends AbstractRuleD
       success,
       programDescription,
       sourceCodeState: programGenerationResult.sourceCodeState,
+      generatedHeuristics,
     };
   }
 

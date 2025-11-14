@@ -16,6 +16,7 @@ const origin = 'GenerateRuleDetection';
 
 export class GenerateRuleDetection {
   private readonly tokensUsed: TokensUsed[] = [];
+  private _generatedHeuristics: string[] | null = null;
 
   constructor(
     private readonly _taskId: string,
@@ -33,10 +34,11 @@ export class GenerateRuleDetection {
     private readonly _logger = new PackmindLogger(origin),
   ) {}
 
-  //TODO this method is obsolete as there is, at Jan 2025, no pre-analysis of the practice is done.
   //These are some stuff related to first work achieved in Q3 24, but were abandonned.
   public async assessDetectionPractice(): Promise<
-    Omit<DetectionProgram, 'version'>
+    Omit<DetectionProgram, 'version'> & {
+      generatedHeuristics?: string[] | null;
+    }
   > {
     await this._logsWriter.addLogsMessage(
       DetectionToolingLogWriter.MESSAGES.AI_AGENT_STRATEGY_ASSESSMENT,
@@ -45,6 +47,10 @@ export class GenerateRuleDetection {
     try {
       const detectionTechniqueGenerated =
         await this.getSyntacticDetectionTechnique();
+
+      // Store generated heuristics for later use
+      this._generatedHeuristics =
+        detectionTechniqueGenerated.generatedHeuristics ?? null;
 
       this._logger.info(
         `[${this._detectionProgramRuleInput.rule.id}] Detection Technique Generated over`,
@@ -95,13 +101,18 @@ export class GenerateRuleDetection {
         sourceCodeState: 'NONE',
         code: '',
         mode: DetectionModeEnum.SINGLE_AST,
+        generatedHeuristics: this._generatedHeuristics,
       };
     }
   }
 
   private async buildAndReturnSuccessfulSyntacticDetectionTooling(
     detectionTechniqueGenerated: DetectionTechniqueGenerated,
-  ): Promise<Omit<DetectionProgram, 'version'>> {
+  ): Promise<
+    Omit<DetectionProgram, 'version'> & {
+      generatedHeuristics?: string[] | null;
+    }
+  > {
     const cleanedProgram = await clearConsoleLogFromProgramOutput(
       detectionTechniqueGenerated.program ?? '',
       this._linterAstAdapter,
@@ -114,6 +125,7 @@ export class GenerateRuleDetection {
       language: this._detectionProgramRuleInput.language,
       mode: DetectionModeEnum.SINGLE_AST,
       code: cleanedProgram,
+      generatedHeuristics: this._generatedHeuristics,
       //programDescription: detectionTechniqueGenerated.programDescription,
       //logs: this._logsWriter.logs
     };
@@ -122,7 +134,9 @@ export class GenerateRuleDetection {
   private buildAndReturnNotSuccessfulSyntacticDetectionTooling(
     detectionTechnique: string,
     detectionTechniqueGenerated: DetectionTechniqueGenerated,
-  ): Omit<DetectionProgram, 'version'> {
+  ): Omit<DetectionProgram, 'version'> & {
+    generatedHeuristics?: string[] | null;
+  } {
     return {
       id: this._detectionProgramId,
       ruleId: this._detectionProgramRuleInput.rule.id,
@@ -131,6 +145,7 @@ export class GenerateRuleDetection {
       mode: DetectionModeEnum.SINGLE_AST,
       language: this._detectionProgramRuleInput.language,
       code: detectionTechniqueGenerated.program ?? '',
+      generatedHeuristics: this._generatedHeuristics,
       //programDescription: detectionTechniqueGenerated.programDescription,
       //logs: this._logsWriter.logs,
     };

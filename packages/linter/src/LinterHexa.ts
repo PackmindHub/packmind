@@ -211,6 +211,7 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
       this.linterRepositories,
       getStandardsAdapter,
       () => this.linterAstAdapter,
+      getLinterAdapter,
     );
 
     jobsService.registerJobQueue(

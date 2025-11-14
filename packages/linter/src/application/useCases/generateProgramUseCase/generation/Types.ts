@@ -18,6 +18,7 @@ export type DetectionTechniqueGenerated = {
   programDescription?: string;
   success: boolean;
   sourceCodeState: SourceCodeState;
+  generatedHeuristics?: string[] | null;
 };
 
 export enum DetectionMethodType {
@@ -41,6 +42,7 @@ export type ProgramGenerationStatus = {
   programDescription: string;
   success: boolean;
   sourceCodeState: SourceCodeState;
+  generatedHeuristics?: string[] | null;
 };
 
 export type ProgramGenerationResult = {

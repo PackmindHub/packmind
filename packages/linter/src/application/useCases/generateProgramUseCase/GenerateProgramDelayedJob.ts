@@ -1,6 +1,11 @@
 import { PackmindLogger } from '@packmind/logger';
 import { SSEEventPublisher } from '@packmind/node-utils';
-import { IStandardsPort, ILinterAstPort } from '@packmind/types';
+import {
+  IStandardsPort,
+  ILinterAstPort,
+  ILinterPort,
+  ProgrammingLanguage,
+} from '@packmind/types';
 import { DetectionStatus } from '@packmind/types';
 import {
   AbstractAIDelayedJob,
@@ -32,6 +37,7 @@ export class GenerateProgramDelayedJob extends AbstractAIDelayedJob<
     private readonly linterRepositories: ILinterRepositories,
     private readonly getStandardsAdapter: () => IStandardsPort,
     private readonly getLinterAstAdapter: () => ILinterAstPort | null,
+    private readonly getLinterAdapter: () => ILinterPort,
   ) {
     super(queueFactory, logger);
   }
@@ -112,6 +118,19 @@ export class GenerateProgramDelayedJob extends AbstractAIDelayedJob<
               status: result.status,
             },
           );
+
+          // Persist generated heuristics if any
+          if (
+            result.generatedHeuristics &&
+            result.generatedHeuristics.length > 0
+          ) {
+            await this.persistHeuristics(
+              job,
+              updatedDetectionProgram,
+              result,
+              input,
+            );
+          }
 
           // Publish SSE event for program completion
           await SSEEventPublisher.publishProgramStatusEvent(
@@ -251,6 +270,57 @@ export class GenerateProgramDelayedJob extends AbstractAIDelayedJob<
         }
       },
     };
+  }
+
+  private async persistHeuristics(
+    job: Job<GenerateProgramInput, GenerateProgramOutput, string>,
+    updatedDetectionProgram: DetectionProgram,
+    result: GenerateProgramOutput,
+    input: GenerateProgramInput,
+  ) {
+    // Type guard: we already checked that generatedHeuristics is a non-empty array
+    const heuristics = result.generatedHeuristics!;
+
+    this.logger.info(
+      `[${this.origin}] Persisting generated heuristics for job ${job.id}`,
+      {
+        ruleId: updatedDetectionProgram.ruleId,
+        language: result.language,
+        heuristicsCount: heuristics.length,
+      },
+    );
+
+    try {
+      const linterAdapter = this.getLinterAdapter();
+      await linterAdapter.createDetectionHeuristics({
+        ruleId: updatedDetectionProgram.ruleId,
+        language: result.language as ProgrammingLanguage,
+        heuristics: heuristics,
+        organizationId: input.organizationId,
+        userId: input.userId,
+      });
+
+      this.logger.info(
+        `[${this.origin}] Detection heuristics persisted successfully for job ${job.id}`,
+        {
+          ruleId: updatedDetectionProgram.ruleId,
+          language: result.language,
+        },
+      );
+    } catch (heuristicsError) {
+      this.logger.error(
+        `[${this.origin}] Failed to persist detection heuristics for job ${job.id}`,
+        {
+          error:
+            heuristicsError instanceof Error
+              ? heuristicsError.message
+              : String(heuristicsError),
+          ruleId: updatedDetectionProgram.ruleId,
+          language: result.language,
+        },
+      );
+      // Continue execution even if heuristics persistence fails
+    }
   }
 
   private async updateDetectionProgram(

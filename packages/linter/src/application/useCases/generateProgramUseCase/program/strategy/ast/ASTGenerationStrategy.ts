@@ -153,6 +153,7 @@ export default class ASTGenerationStrategy extends AbstractGenerationStrategy {
               .map((h) => `* ${h}`)
               .join('\n')
           : '';
+
       return prompt
         .replace('$RULE_CONTENT$', this._detectionProgramRuleInput.rule.content)
         .replace('$RULE_HEURISTICS$', formattedHeuristics)

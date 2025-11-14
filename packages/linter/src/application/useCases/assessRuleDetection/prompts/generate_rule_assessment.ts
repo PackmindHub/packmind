@@ -29,6 +29,8 @@ Be overly pessimistic in your assessment.
       - The question should focus on identifying concrete code patterns that can be analyzed within a single file.
       - Use beginner-friendly language: prefer terms like "source code element", "code pattern", "function call" instead of technical jargon like "AST node", "method_declaration node".
       - Provide 2-4 pre-defined answers (most impactful and relevant options).
+      - **CRITICAL**: Each answer must be directly actionable and complete. Never include placeholders like "N", "X", variables, or phrases like "I will supply" or "user-defined value". The user will select an answer via radio button and cannot provide additional input.
+      - Instead of "Flag classes with more than N methods (I will supply N)", provide concrete examples like: "Flag classes with more than 10 methods", "Flag classes with more than 20 methods", "Flag classes with more than 5 methods".
       - Structure: {"question": "string", "answers": ["answer1", "answer2", ...]}
 
 * **Multi-file Analysis Limitation**: If the coding rule requires analyzing relationships across multiple files (such as Java inheritance trees where classes are typically split across multiple files), mark it as not feasible. In the reason array, include that "Packmind does not support yet static multi-file analysis."
