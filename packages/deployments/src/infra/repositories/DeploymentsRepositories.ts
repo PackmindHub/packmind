@@ -3,16 +3,19 @@ import { IDeploymentsRepositories } from '../../domain/repositories/IDeployments
 import { ITargetRepository } from '../../domain/repositories/ITargetRepository';
 import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
+import { IPackagesDeploymentRepository } from '../../domain/repositories/IPackagesDeploymentRepository';
 import { IRenderModeConfigurationRepository } from '../../domain/repositories/IRenderModeConfigurationRepository';
 import { IPackageRepository } from '../../domain/repositories/IPackageRepository';
 import { TargetRepository } from './TargetRepository';
 import { RecipesDeploymentRepository } from './RecipesDeploymentRepository';
 import { StandardsDeploymentRepository } from './StandardsDeploymentRepository';
+import { PackagesDeploymentRepository } from './PackagesDeploymentRepository';
 import { RenderModeConfigurationRepository } from './RenderModeConfigurationRepository';
 import { PackageRepository } from './PackageRepository';
 import { TargetSchema } from '../schemas/TargetSchema';
 import { RecipesDeploymentSchema } from '../schemas/RecipesDeploymentSchema';
 import { StandardsDeploymentSchema } from '../schemas/StandardsDeploymentSchema';
+import { PackagesDeploymentSchema } from '../schemas/PackagesDeploymentSchema';
 import { RenderModeConfigurationSchema } from '../schemas/RenderModeConfigurationSchema';
 import { PackageSchema } from '../schemas/PackageSchema';
 import {
@@ -20,6 +23,7 @@ import {
   RenderModeConfiguration,
   RecipesDeployment,
   StandardsDeployment,
+  PackagesDeployment,
   Package,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
@@ -35,6 +39,7 @@ export class DeploymentsRepositories implements IDeploymentsRepositories {
   private readonly targetRepository: ITargetRepository;
   private readonly recipesDeploymentRepository: IRecipesDeploymentRepository;
   private readonly standardsDeploymentRepository: IStandardsDeploymentRepository;
+  private readonly packagesDeploymentRepository: IPackagesDeploymentRepository;
   private readonly renderModeConfigurationRepository: IRenderModeConfigurationRepository;
   private readonly packageRepository: IPackageRepository;
 
@@ -57,6 +62,12 @@ export class DeploymentsRepositories implements IDeploymentsRepositories {
       this.dataSource.getRepository(
         StandardsDeploymentSchema,
       ) as Repository<StandardsDeployment>,
+      this.logger,
+    );
+    this.packagesDeploymentRepository = new PackagesDeploymentRepository(
+      this.dataSource.getRepository(
+        PackagesDeploymentSchema,
+      ) as Repository<PackagesDeployment>,
       this.logger,
     );
     this.renderModeConfigurationRepository =
@@ -82,6 +93,10 @@ export class DeploymentsRepositories implements IDeploymentsRepositories {
 
   getStandardsDeploymentRepository(): IStandardsDeploymentRepository {
     return this.standardsDeploymentRepository;
+  }
+
+  getPackagesDeploymentRepository(): IPackagesDeploymentRepository {
+    return this.packagesDeploymentRepository;
   }
 
   getRenderModeConfigurationRepository(): IRenderModeConfigurationRepository {

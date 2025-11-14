@@ -10,6 +10,8 @@ export * from './RecipesDeploymentId';
 export * from './RecipesDeployment';
 export * from './StandardsDeploymentId';
 export * from './StandardsDeployment';
+export * from './PackagesDeploymentId';
+export * from './PackagesDeployment';
 export * from './StandardDeploymentOverview';
 export * from './FileUpdates';
 export * from './Package';

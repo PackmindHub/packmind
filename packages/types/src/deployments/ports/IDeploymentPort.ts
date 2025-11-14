@@ -24,12 +24,14 @@ import {
   ListDeploymentsByStandardCommand,
   ListPackagesBySpaceCommand,
   ListPackagesBySpaceResponse,
+  PublishPackagesCommand,
   PullContentCommand,
   PublishRecipesCommand,
   PublishStandardsCommand,
   UpdateRenderModeConfigurationCommand,
   UpdateTargetCommand,
 } from '../contracts';
+import { PackagesDeployment } from '../PackagesDeployment';
 import { RecipesDeployment } from '../RecipesDeployment';
 import { RenderModeConfiguration } from '../RenderModeConfiguration';
 import { StandardDeploymentOverview } from '../StandardDeploymentOverview';
@@ -102,6 +104,24 @@ export interface IDeploymentPort {
   publishStandards(
     command: PublishStandardsCommand,
   ): Promise<StandardsDeployment[]>;
+
+  /**
+   * Publishes packages to specified targets
+   *
+   * For each target:
+   * 1. Extracts recipes and standards from packages
+   * 2. Resolves to their latest versions
+   * 3. Combines with previously deployed versions
+   * 4. Prepares file updates for standards first, then recipes
+   * 5. Commits changes to the git repository
+   * 6. Creates individual PackagesDeployment entries per target
+   *
+   * @param command - Command containing target IDs and package IDs to deploy
+   * @returns Promise of created PackagesDeployment entries
+   */
+  publishPackages(
+    command: PublishPackagesCommand,
+  ): Promise<PackagesDeployment[]>;
 
   /**
    * Lists all deployments for a specific recipe
