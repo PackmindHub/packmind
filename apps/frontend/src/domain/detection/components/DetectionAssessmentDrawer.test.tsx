@@ -707,7 +707,7 @@ describe('DetectionAssessmentDrawer', () => {
         jest.clearAllMocks();
       });
 
-      describe('when status transitions to SUCCESS', () => {
+      describe('when status transitions to SUCCESS and drawer is open', () => {
         it('displays success toaster with correct message', () => {
           if (screen) {
             screen.unmount();
@@ -730,6 +730,31 @@ describe('DetectionAssessmentDrawer', () => {
             title: 'Assessment successful!',
             description: 'Program generation has started.',
           });
+        });
+      });
+
+      describe('when status transitions to SUCCESS and drawer is closed', () => {
+        it('does not display toaster', () => {
+          if (screen) {
+            screen.unmount();
+          }
+          props.isOpen = false;
+          assessment.status = RuleDetectionAssessmentStatus.IN_PROGRESS;
+          screen = renderWithContext();
+
+          jest.clearAllMocks();
+
+          // Simulate status change to SUCCESS while drawer is closed
+          assessment.status = RuleDetectionAssessmentStatus.SUCCESS;
+          screen.rerender(
+            <UIProvider>
+              <QueryClientProvider client={queryClient}>
+                <DetectionAssessmentDrawer {...props} />
+              </QueryClientProvider>
+            </UIProvider>,
+          );
+
+          expect(pmToaster.create).not.toHaveBeenCalled();
         });
       });
 

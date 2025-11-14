@@ -136,20 +136,20 @@ export const DetectionAssessmentDrawer: React.FC<
   }, [assessment.status]);
 
   useEffect(() => {
-    // Show success toaster when assessment transitions to SUCCESS
+    // Show success toaster when assessment transitions to SUCCESS and drawer is open
     const justChangedToSuccess =
       previousStatus !== null &&
       previousStatus !== RuleDetectionAssessmentStatus.SUCCESS &&
       assessment.status === RuleDetectionAssessmentStatus.SUCCESS;
 
-    if (justChangedToSuccess) {
+    if (justChangedToSuccess && isOpen) {
       pmToaster.create({
         type: 'success',
         title: 'Assessment successful!',
         description: 'Program generation has started.',
       });
     }
-  }, [previousStatus, assessment.status]);
+  }, [previousStatus, assessment.status, isOpen]);
 
   const handleOpenChange = useCallback(
     ({ open }: { open: boolean }) => {
