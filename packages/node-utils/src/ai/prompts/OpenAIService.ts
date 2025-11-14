@@ -18,7 +18,7 @@ const origin = 'OpenAIService';
 export class OpenAIService implements AIService {
   private client: OpenAI | null = null;
   private readonly defaultModel = 'gpt-5-mini';
-  private readonly defaultFastModel = 'gpt-5-nano';
+  private readonly defaultFastModel = 'gpt-4.1-mini';
   private readonly maxRetries = 5;
   private initialized = false;
 

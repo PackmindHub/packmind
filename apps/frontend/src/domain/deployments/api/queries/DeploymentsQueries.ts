@@ -3,7 +3,7 @@ import { deploymentsGateways } from '../gateways';
 import { RecipeId, RecipeVersionId } from '@packmind/types';
 import { StandardId, StandardVersionId } from '@packmind/types';
 import { GitRepoId, SpaceId } from '@packmind/types';
-import { OrganizationId } from '@packmind/types';
+import { OrganizationId, PackageId } from '@packmind/types';
 import {
   TargetId,
   AddTargetCommand,
@@ -17,6 +17,7 @@ import {
   LIST_RECIPE_DEPLOYMENTS_KEY,
   LIST_STANDARD_DEPLOYMENTS_KEY,
   LIST_PACKAGES_BY_SPACE_KEY,
+  GET_PACKAGE_BY_ID_KEY,
   GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
   GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
   GET_TARGETS_BY_GIT_REPO_KEY,
@@ -56,6 +57,39 @@ export const useListPackagesBySpaceQuery = (
       });
     },
     enabled: !!spaceId && !!organizationId,
+  });
+};
+
+export const getPackageByIdOptions = (
+  organizationId: OrganizationId,
+  spaceId: SpaceId,
+  packageId: PackageId,
+) => ({
+  queryKey: [...GET_PACKAGE_BY_ID_KEY, packageId, spaceId, organizationId],
+  queryFn: () => {
+    return deploymentsGateways.getPackageById({
+      packageId,
+      spaceId,
+      organizationId,
+    });
+  },
+});
+
+export const useGetPackageByIdQuery = (
+  packageId: PackageId | undefined,
+  spaceId: SpaceId | undefined,
+  organizationId: OrganizationId | undefined,
+) => {
+  return useQuery({
+    queryKey: [...GET_PACKAGE_BY_ID_KEY, packageId, spaceId, organizationId],
+    queryFn: () => {
+      return deploymentsGateways.getPackageById({
+        packageId: packageId!,
+        spaceId: spaceId!,
+        organizationId: organizationId!,
+      });
+    },
+    enabled: !!packageId && !!spaceId && !!organizationId,
   });
 };
 

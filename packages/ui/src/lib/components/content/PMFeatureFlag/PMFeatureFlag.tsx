@@ -10,11 +10,14 @@ export interface IPMFeatureFlagProps {
 export const RULE_DETAILS_DETECTION_TAB_FEATURE_KEY =
   'rule-details-detection-tab';
 
+export const PACKAGES_FEATURE_KEY = 'packages';
+
 export const DETECTION_ASSESSMENT_DRAWER_FEATURE_KEY =
   'detection-assessment-drawer';
 
 export const DEFAULT_FEATURE_DOMAIN_MAP: Record<string, readonly string[]> = {
   [RULE_DETAILS_DETECTION_TAB_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
+  [PACKAGES_FEATURE_KEY]: ['@packmind.com'],
   [DETECTION_ASSESSMENT_DRAWER_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
 };
 

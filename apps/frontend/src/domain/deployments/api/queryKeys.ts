@@ -6,6 +6,7 @@ export enum DeploymentQueryKeys {
   LIST_RECIPE_DEPLOYMENTS = 'list-recipe-deployments',
   LIST_STANDARD_DEPLOYMENTS = 'list-standard-deployments',
   LIST_PACKAGES_BY_SPACE = 'list-packages-by-space',
+  GET_PACKAGE_BY_ID = 'get-package-by-id',
   GET_RECIPES_DEPLOYMENT_OVERVIEW = 'get-recipes-deployment-overview',
   GET_STANDARDS_DEPLOYMENT_OVERVIEW = 'get-standards-deployment-overview',
   GET_TARGETS_BY_GIT_REPO = 'get-targets-by-git-repo',
@@ -67,4 +68,10 @@ export const GET_RENDER_MODE_CONFIGURATION_KEY = [
   ORGANIZATION_QUERY_SCOPE,
   DEPLOYMENTS_QUERY_SCOPE,
   DeploymentQueryKeys.GET_RENDER_MODE_CONFIGURATION,
+] as const;
+
+export const GET_PACKAGE_BY_ID_KEY = [
+  ORGANIZATION_QUERY_SCOPE,
+  DEPLOYMENTS_QUERY_SCOPE,
+  DeploymentQueryKeys.GET_PACKAGE_BY_ID,
 ] as const;

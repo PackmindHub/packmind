@@ -9,6 +9,7 @@ import {
 } from '@packmind/types';
 import {
   IGetDeploymentOverview,
+  IGetPackageByIdUseCase,
   IPublishRecipes,
   IPublishStandards,
   IListDeploymentsByRecipe,
@@ -22,6 +23,7 @@ import {
   UpdateTargetCommand,
   DeleteTargetCommand,
   DeleteTargetResponse,
+  PackageId,
 } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
@@ -66,14 +68,27 @@ export class DeploymentsGatewayApi
       spaceId,
       organizationId,
       name,
-      slug,
       description,
       recipeIds,
       standardIds,
     } = params;
     return this._api.post(
       `/organizations/${organizationId}/spaces/${spaceId}/packages`,
-      { name, slug, description, recipeIds, standardIds },
+      { name, description, recipeIds, standardIds },
+    );
+  };
+
+  getPackageById: NewGateway<IGetPackageByIdUseCase> = async ({
+    packageId,
+    organizationId,
+    spaceId,
+  }: {
+    packageId: PackageId;
+    organizationId: OrganizationId;
+    spaceId: SpaceId;
+  }) => {
+    return this._api.get(
+      `/organizations/${organizationId}/spaces/${spaceId}/packages/${packageId}`,
     );
   };
 

@@ -18,3 +18,4 @@ export * from './IUpdateRenderModeConfigurationUseCase';
 export * from './IPullContentUseCase';
 export * from './IListPackagesBySpaceUseCase';
 export * from './ICreatePackageUseCase';
+export * from './IGetPackageByIdUseCase';

@@ -1,6 +1,7 @@
 import { Gateway, NewGateway } from '@packmind/types';
 import {
   IGetDeploymentOverview,
+  IGetPackageByIdUseCase,
   IGetStandardDeploymentOverview,
   IListDeploymentsByRecipe,
   IListDeploymentsByStandard,
@@ -23,6 +24,7 @@ export interface IDeploymentsGateway {
   listDeploymentsByStandardId: Gateway<IListDeploymentsByStandard>;
   listPackagesBySpace: NewGateway<IListPackagesBySpaceUseCase>;
   createPackage: NewGateway<ICreatePackageUseCase>;
+  getPackageById: NewGateway<IGetPackageByIdUseCase>;
   getRecipesDeploymentOverview: Gateway<IGetDeploymentOverview>;
   getStandardsDeploymentOverview: Gateway<IGetStandardDeploymentOverview>;
   publishRecipes: Gateway<IPublishRecipes>;

@@ -11,6 +11,8 @@ import {
   FindDeployedStandardByRepositoryCommand,
   FindDeployedStandardByRepositoryResponse,
   GetDeploymentOverviewCommand,
+  GetPackageByIdCommand,
+  GetPackageByIdResponse,
   GetRenderModeConfigurationCommand,
   GetRenderModeConfigurationResult,
   GetStandardDeploymentOverviewCommand,
@@ -277,4 +279,15 @@ export interface IDeploymentPort {
    * @throws Error if recipes or standards don't belong to the specified space
    */
   createPackage(command: CreatePackageCommand): Promise<CreatePackageResponse>;
+
+  /**
+   * Gets a package by its ID
+   *
+   * @param command - Command containing packageId and organizationId
+   * @returns Promise of the package details
+   * @throws Error if package not found
+   */
+  getPackageById(
+    command: GetPackageByIdCommand,
+  ): Promise<GetPackageByIdResponse>;
 }

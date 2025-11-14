@@ -4,6 +4,8 @@ import {
   CreatePackageResponse,
   DeploymentOverview,
   GetDeploymentOverviewCommand,
+  GetPackageByIdCommand,
+  GetPackageByIdResponse,
   GetStandardDeploymentOverviewCommand,
   ListDeploymentsByRecipeCommand,
   ListDeploymentsByStandardCommand,
@@ -87,5 +89,11 @@ export class DeploymentsService {
     command: CreatePackageCommand,
   ): Promise<CreatePackageResponse> {
     return this.deploymentAdapter.createPackage(command);
+  }
+
+  async getPackageById(
+    command: GetPackageByIdCommand,
+  ): Promise<GetPackageByIdResponse> {
+    return this.deploymentAdapter.getPackageById(command);
   }
 }

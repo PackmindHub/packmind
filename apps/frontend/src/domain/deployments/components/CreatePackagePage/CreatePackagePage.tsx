@@ -46,7 +46,6 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
   const createPackageMutation = useCreatePackageMutation();
 
   const [name, setName] = useState('');
-  const [slug, setSlug] = useState('');
   const [description, setDescription] = useState('');
   const [selectedRecipeIds, setSelectedRecipeIds] = useState<RecipeId[]>([]);
   const [selectedStandardIds, setSelectedStandardIds] = useState<StandardId[]>(
@@ -81,7 +80,6 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
         spaceId,
         organizationId,
         name,
-        slug,
         description,
         recipeIds: selectedRecipeIds,
         standardIds: selectedStandardIds,
@@ -127,16 +125,6 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter package name"
-              required
-            />
-          </PMField.Root>
-
-          <PMField.Root>
-            <PMField.Label>Slug *</PMField.Label>
-            <PMInput
-              value={slug}
-              onChange={(e) => setSlug(e.target.value)}
-              placeholder="Enter package slug"
               required
             />
           </PMField.Root>
@@ -202,10 +190,7 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
             <PMButton
               type="submit"
               disabled={
-                createPackageMutation.isPending ||
-                !name ||
-                !slug ||
-                !description
+                createPackageMutation.isPending || !name || !description
               }
             >
               {createPackageMutation.isPending

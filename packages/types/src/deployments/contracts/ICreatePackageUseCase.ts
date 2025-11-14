@@ -7,7 +7,6 @@ import { StandardId } from '../../standards';
 export type CreatePackageCommand = PackmindCommand & {
   spaceId: SpaceId;
   name: string;
-  slug: string;
   description: string;
   recipeIds: RecipeId[];
   standardIds: StandardId[];
