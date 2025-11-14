@@ -16,8 +16,10 @@ import {
   createSpaceId,
   createUserId,
 } from '@packmind/types';
+import { CodingAgents } from '@packmind/coding-agent';
 import { v4 as uuidv4 } from 'uuid';
 import { PackageService } from '../services/PackageService';
+import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import { PullContentUseCase } from './PullContentUseCase';
 
 const createUserWithMembership = (
@@ -44,6 +46,7 @@ describe('PullContentUseCase', () => {
   let standardsPort: jest.Mocked<IStandardsPort>;
   let codingAgentPort: jest.Mocked<ICodingAgentPort>;
   let accountsPort: jest.Mocked<IAccountsPort>;
+  let renderModeConfigurationService: jest.Mocked<RenderModeConfigurationService>;
   let useCase: PullContentUseCase;
   let command: PullContentCommand;
   let organizationId: OrganizationId;
@@ -82,6 +85,15 @@ describe('PullContentUseCase', () => {
       getOrganizationById: jest.fn(),
     } as unknown as jest.Mocked<IAccountsPort>;
 
+    renderModeConfigurationService = {
+      resolveActiveCodingAgents: jest.fn(),
+    } as unknown as jest.Mocked<RenderModeConfigurationService>;
+
+    renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue([
+      CodingAgents.packmind,
+      CodingAgents.agents_md,
+    ]);
+
     organizationId = createOrganizationId(uuidv4());
     organization = {
       id: organizationId,
@@ -105,6 +117,7 @@ describe('PullContentUseCase', () => {
       recipesPort,
       standardsPort,
       codingAgentPort,
+      renderModeConfigurationService,
       accountsPort,
       stubLogger(),
     );

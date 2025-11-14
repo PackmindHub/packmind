@@ -272,6 +272,7 @@ export class DeploymentsAdapter
       this.recipesPort,
       this.standardsPort,
       this.codingAgentPort,
+      this.deploymentsServices.getRenderModeConfigurationService(),
       this.accountsPort,
     );
 

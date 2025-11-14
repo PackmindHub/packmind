@@ -1,4 +1,4 @@
-import { CodingAgents, ICodingAgentDeployer } from '@packmind/coding-agent';
+import { ICodingAgentDeployer } from '@packmind/coding-agent';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
@@ -13,6 +13,7 @@ import {
 } from '@packmind/types';
 import { PackageService } from '../services/PackageService';
 import { PackagesNotFoundError } from '../../domain/errors/PackagesNotFoundError';
+import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 
 const origin = 'PullContentUseCase';
 
@@ -25,6 +26,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
     private readonly recipesPort: IRecipesPort,
     private readonly standardsPort: IStandardsPort,
     private readonly codingAgentPort: ICodingAgentPort,
+    private readonly renderModeConfigurationService: RenderModeConfigurationService,
     accountsPort: IAccountsPort,
     logger: PackmindLogger = new PackmindLogger(origin, LogLevel.INFO),
   ) {
@@ -54,16 +56,15 @@ export class PullContentUseCase extends AbstractMemberUseCase<
     }
 
     try {
-      // Hardcoded list of deployers to use
-      const codingAgents = [
-        CodingAgents.packmind,
-        CodingAgents.claude,
-        CodingAgents.cursor,
-        CodingAgents.copilot,
-      ];
+      // Get active coding agents for the organization
+      const codingAgents =
+        await this.renderModeConfigurationService.resolveActiveCodingAgents(
+          command.organization.id,
+        );
 
-      this.logger.info('Using hardcoded list of coding agents', {
+      this.logger.info('Using organization render modes', {
         codingAgents,
+        organizationId: command.organizationId,
       });
 
       // Fetch packages by slugs with full Recipe[] and Standard[] artefacts
