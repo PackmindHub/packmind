@@ -87,15 +87,24 @@ export class ComputeRuleLanguageDetectionStatusUseCase
           return { status: RuleLanguageDetectionStatus.NONE };
         }
 
-        // Assessment SUCCESS → transitioning to program phase
+        if (assessment.status === RuleDetectionAssessmentStatus.IN_PROGRESS) {
+          return { status: RuleLanguageDetectionStatus.NONE };
+        }
+
+        if (assessment.status === RuleDetectionAssessmentStatus.SUCCESS) {
+          return { status: RuleLanguageDetectionStatus.WIP };
+        }
+
+        // Unexpected assessment status
         this.logger.info(
-          'Assessment succeeded but no programs yet, returning WIP status',
+          'Unexpected assessment status, returning NONE status',
           {
             ruleId: command.ruleId,
             language: command.language,
+            assessmentStatus: assessment.status,
           },
         );
-        return { status: RuleLanguageDetectionStatus.WIP };
+        return { status: RuleLanguageDetectionStatus.NONE };
       }
 
       // Has draft or active program but not READT → WIP

@@ -134,6 +134,27 @@ describe('ComputeRuleLanguageDetectionStatusUseCase', () => {
       expect(result.status).toBe(RuleLanguageDetectionStatus.NONE);
     });
 
+    it('returns NONE for IN_PROGRESS assessment', async () => {
+      const assessment: RuleDetectionAssessment = {
+        id: createRuleDetectionAssessmentId('assessment-1'),
+        ruleId: mockRuleId,
+        language,
+        detectionMode: DetectionModeEnum.SINGLE_AST,
+        status: RuleDetectionAssessmentStatus.IN_PROGRESS,
+        details: 'Assessment in progress',
+        clarificationQuestion: '',
+        clarificationAnswers: [],
+      };
+      mockRuleDetectionAssessmentRepository.get.mockResolvedValue(assessment);
+
+      const result = await useCase.execute({
+        ruleId: mockRuleId,
+        language,
+      });
+
+      expect(result.status).toBe(RuleLanguageDetectionStatus.NONE);
+    });
+
     it('returns WIP for SUCCESS assessment (transitioning to program phase)', async () => {
       const assessment: RuleDetectionAssessment = {
         id: createRuleDetectionAssessmentId('assessment-1'),
