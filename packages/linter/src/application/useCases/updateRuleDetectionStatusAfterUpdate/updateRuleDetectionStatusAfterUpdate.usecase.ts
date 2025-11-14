@@ -97,14 +97,41 @@ export class UpdateRuleDetectionStatusAfterUpdateUseCase
   private async startRuleDetectionAssessment(
     command: UpdateRuleDetectionStatusAfterUpdateCommand,
   ): Promise<UpdateRuleDetectionStatusAfterUpdateResponse> {
-    // No active program exists - start new assessment
+    // No active program exists - check if assessment already exists
     this.logger.info(
-      'No active detection program found, starting new assessment',
+      'No active detection program found, checking for existing assessment',
       {
         ruleId: command.ruleId,
         language: command.language,
       },
     );
+
+    // Step 3.1: Check if assessment already exists for this rule and language
+    const existingAssessment = await this.linterRepositories
+      .getRuleDetectionAssessmentRepository()
+      .get(command.ruleId, command.language);
+
+    if (existingAssessment) {
+      this.logger.info(
+        'Assessment already exists for this rule and language, no action taken',
+        {
+          ruleId: command.ruleId,
+          language: command.language,
+          assessmentId: existingAssessment.id,
+          assessmentStatus: existingAssessment.status,
+        },
+      );
+      return {
+        action: 'NO_ACTION',
+        message: 'Assessment already exists, no action taken',
+      };
+    }
+
+    // Step 3.2: No assessment exists - start new assessment
+    this.logger.info('No assessment found, starting new assessment', {
+      ruleId: command.ruleId,
+      language: command.language,
+    });
 
     const rule = await this.standardsAdapter.getRule(command.ruleId);
     if (!rule) {

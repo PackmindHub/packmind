@@ -59,8 +59,6 @@ Here is the coding rule description:
 $RULE_CONTENT$
 """
 
-This practice concerns source code written in $RULE_LANGUAGE$.
-
 Here are the detection heuristics:
 """
 $RULE_HEURISTICS$

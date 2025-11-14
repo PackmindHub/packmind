@@ -87,7 +87,8 @@ export default class ASTGenerationStrategy extends AbstractGenerationStrategy {
   private async generateInitialProgram(
     guidelinesInASTMode: string,
   ): Promise<string> {
-    const programGenerationPrompt = await this.createPromptToGenerateProgram();
+    const programGenerationPrompt =
+      await this.createPromptToGenerateProgram(guidelinesInASTMode);
 
     this._initialPrompt =
       await this.createPromptToGenerateProgramAndRemoveExamples(
@@ -132,10 +133,41 @@ export default class ASTGenerationStrategy extends AbstractGenerationStrategy {
     );
   }
 
-  private async createPromptToGenerateProgram() {
-    return this.updatePromptWithRuleInformationAndExamplesInJsonASTMode(
-      generate_program_for_ast_json,
-    );
+  private async createPromptToGenerateProgram(guidelinesInASTMode: string) {
+    const prompt = generate_program_for_ast_json;
+    try {
+      const promptExternalLibraries = await buildPromptForExternalLibraries(
+        this._detectionProgramRuleInput,
+        this._linterAstAdapter,
+      );
+
+      return prompt
+        .replace('$RULE_CONTENT$', this._detectionProgramRuleInput.rule.content)
+        .replace('$RULE_AST_GUIDELINES$', guidelinesInASTMode)
+        .replace('$RULE_LANGUAGE$', this._detectionProgramRuleInput.language)
+        .replace('$PROGRAM_EXTERNAL_LIBRARIES$', promptExternalLibraries)
+        .replace(
+          '$RULE_BAD_EXAMPLES$',
+          await this.getBadExamplesCodeInJSONMode(
+            this._detectionProgramRuleInput.ruleExamples,
+            this._detectionProgramRuleInput.language,
+          ),
+        )
+        .replace(
+          '$RULE_GOOD_EXAMPLES$',
+          await this.getGoodExamplesCodeInJSONMode(
+            this._detectionProgramRuleInput.ruleExamples,
+            this._detectionProgramRuleInput.language,
+          ),
+        );
+    } catch (error) {
+      this._logger.error('Failed to create prompt for program generation', {
+        ruleId: this._detectionProgramRuleInput.rule.id,
+        language: this._detectionProgramRuleInput.language,
+        error: getErrorMessage(error),
+      });
+      return prompt;
+    }
   }
 
   private async updatePromptWithRuleInformationAndExamplesInJsonASTMode(
@@ -173,7 +205,15 @@ export default class ASTGenerationStrategy extends AbstractGenerationStrategy {
             this._detectionProgramRuleInput.language,
           ),
         );
-    } catch {
+    } catch (error) {
+      this._logger.error(
+        'Failed to update prompt with rule information in AST mode',
+        {
+          ruleId: this._detectionProgramRuleInput.rule.id,
+          language: this._detectionProgramRuleInput.language,
+          error: getErrorMessage(error),
+        },
+      );
       return prompt;
     }
   }
@@ -187,6 +227,7 @@ export default class ASTGenerationStrategy extends AbstractGenerationStrategy {
         this._detectionProgramRuleInput,
         this._linterAstAdapter,
       );
+
       return prompt
         .replace('$RULE_CONTENT$', this._detectionProgramRuleInput.rule.content)
         .replace('$RULE_AST_GUIDELINES$', guidelinesInASTMode)
@@ -194,7 +235,12 @@ export default class ASTGenerationStrategy extends AbstractGenerationStrategy {
         .replace('$PROGRAM_EXTERNAL_LIBRARIES$', promptExternalLibraries)
         .replace('$RULE_BAD_EXAMPLES$', '') // We don't include source code examples here as they'll be introduced later in AST JSON mode if needed
         .replace('$RULE_GOOD_EXAMPLES$', ''); // Same
-    } catch {
+    } catch (error) {
+      this._logger.error('Failed to create prompt for program generation', {
+        ruleId: this._detectionProgramRuleInput.rule.id,
+        language: this._detectionProgramRuleInput.language,
+        error: getErrorMessage(error),
+      });
       return prompt;
     }
   }

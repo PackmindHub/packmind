@@ -12,6 +12,8 @@ import {
   DetectionProgram,
   DetectionModeEnum,
   createDetectionProgramId,
+  createRuleDetectionAssessmentId,
+  RuleDetectionAssessmentStatus,
 } from '@packmind/types';
 import { ruleFactory } from '@packmind/standards/test';
 import { stubLogger } from '@packmind/test-utils';
@@ -165,61 +167,113 @@ describe('UpdateRuleDetectionStatusAfterUpdateUseCase', () => {
     });
 
     describe('when no detection program exists', () => {
-      it('starts new assessment', async () => {
-        const rule = ruleFactory({
-          id: ruleId,
-          content: 'Use const instead of var',
-        });
-
-        activeDetectionProgramRepository.findByRuleIdAndLanguage.mockResolvedValue(
-          null,
-        );
-        detectionProgramRepository.findByRuleIdAndLanguage.mockResolvedValue(
-          null,
-        );
-        standardsAdapter.getRule.mockResolvedValue(rule);
-
-        const result = await useCase.execute({
-          ruleId,
-          organizationId,
-          userId,
-          language,
-        });
-
-        expect(result.action).toBe('ASSESSMENT_STARTED');
-        expect(result.message).toBe('New rule detection assessment started');
-        expect(linterAdapter.startRuleDetectionAssessment).toHaveBeenCalledWith(
-          {
-            rule,
-            organizationId,
-            userId,
+      describe('when assessment already exists', () => {
+        it('returns NO_ACTION', async () => {
+          const existingAssessment = {
+            id: createRuleDetectionAssessmentId(uuidv4()),
+            ruleId,
             language,
-          },
-        );
-      });
+            detectionMode: DetectionModeEnum.SINGLE_AST,
+            status: RuleDetectionAssessmentStatus.SUCCESS,
+            details: 'Assessment completed',
+            clarificationQuestion: null,
+            clarificationAnswers: null,
+          };
 
-      describe('when rule not found', () => {
-        it('throws error', async () => {
           activeDetectionProgramRepository.findByRuleIdAndLanguage.mockResolvedValue(
             null,
           );
           detectionProgramRepository.findByRuleIdAndLanguage.mockResolvedValue(
             null,
           );
-          standardsAdapter.getRule.mockResolvedValue(null);
+          ruleDetectionAssessmentRepository.get.mockResolvedValue(
+            existingAssessment,
+          );
 
-          await expect(
-            useCase.execute({
-              ruleId,
-              organizationId,
-              userId,
-              language,
-            }),
-          ).rejects.toThrow(`Rule not found: ${ruleId}`);
+          const result = await useCase.execute({
+            ruleId,
+            organizationId,
+            userId,
+            language,
+          });
 
+          expect(result.action).toBe('NO_ACTION');
+          expect(result.message).toBe(
+            'Assessment already exists, no action taken',
+          );
+          expect(ruleDetectionAssessmentRepository.get).toHaveBeenCalledWith(
+            ruleId,
+            language,
+          );
           expect(
             linterAdapter.startRuleDetectionAssessment,
           ).not.toHaveBeenCalled();
+        });
+      });
+
+      describe('when no assessment exists', () => {
+        it('starts new assessment', async () => {
+          const rule = ruleFactory({
+            id: ruleId,
+            content: 'Use const instead of var',
+          });
+
+          activeDetectionProgramRepository.findByRuleIdAndLanguage.mockResolvedValue(
+            null,
+          );
+          detectionProgramRepository.findByRuleIdAndLanguage.mockResolvedValue(
+            null,
+          );
+          ruleDetectionAssessmentRepository.get.mockResolvedValue(null);
+          standardsAdapter.getRule.mockResolvedValue(rule);
+
+          const result = await useCase.execute({
+            ruleId,
+            organizationId,
+            userId,
+            language,
+          });
+
+          expect(result.action).toBe('ASSESSMENT_STARTED');
+          expect(result.message).toBe('New rule detection assessment started');
+          expect(ruleDetectionAssessmentRepository.get).toHaveBeenCalledWith(
+            ruleId,
+            language,
+          );
+          expect(
+            linterAdapter.startRuleDetectionAssessment,
+          ).toHaveBeenCalledWith({
+            rule,
+            organizationId,
+            userId,
+            language,
+          });
+        });
+
+        describe('when rule not found', () => {
+          it('throws error', async () => {
+            activeDetectionProgramRepository.findByRuleIdAndLanguage.mockResolvedValue(
+              null,
+            );
+            detectionProgramRepository.findByRuleIdAndLanguage.mockResolvedValue(
+              null,
+            );
+            ruleDetectionAssessmentRepository.get.mockResolvedValue(null);
+            standardsAdapter.getRule.mockResolvedValue(null);
+
+            await expect(
+              useCase.execute({
+                ruleId,
+                organizationId,
+                userId,
+                language,
+              }),
+            ).rejects.toThrow(`Rule not found: ${ruleId}`);
+
+            expect(
+              linterAdapter.startRuleDetectionAssessment,
+            ).not.toHaveBeenCalled();
+          });
         });
       });
     });
