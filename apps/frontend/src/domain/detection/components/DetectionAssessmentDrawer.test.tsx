@@ -63,6 +63,9 @@ describe('DetectionAssessmentDrawer', () => {
       language: ProgrammingLanguage.TYPESCRIPT,
       ruleId: createRuleId('rule-id'),
       status: RuleDetectionAssessmentStatus.NOT_STARTED,
+      clarificationQuestion: '',
+      clarificationAnswers: [],
+      updatedAt: new Date('2025-01-01T12:00:00Z'),
     };
 
     detectionHeuristics = {
@@ -547,6 +550,148 @@ describe('DetectionAssessmentDrawer', () => {
           );
           const textarea = textareas[textareas.length - 1];
           expect(textarea).toBeDisabled();
+        });
+      });
+    });
+
+    describe('status badge display', () => {
+      describe('when status is FAILED', () => {
+        beforeEach(() => {
+          if (screen) {
+            screen.unmount();
+          }
+          assessment.status = RuleDetectionAssessmentStatus.FAILED;
+          screen = renderWithContext();
+        });
+
+        it('displays status badge with formatted FAILED status', () => {
+          expect(screen.getByText('Status: Failed')).toBeInTheDocument();
+        });
+      });
+
+      describe('when status is SUCCESS', () => {
+        beforeEach(() => {
+          if (screen) {
+            screen.unmount();
+          }
+          assessment.status = RuleDetectionAssessmentStatus.SUCCESS;
+          screen = renderWithContext();
+        });
+
+        it('displays status badge with formatted SUCCESS status', () => {
+          expect(screen.getByText('Status: Success')).toBeInTheDocument();
+        });
+      });
+
+      describe('when status is IN_PROGRESS', () => {
+        beforeEach(() => {
+          if (screen) {
+            screen.unmount();
+          }
+          assessment.status = RuleDetectionAssessmentStatus.IN_PROGRESS;
+          screen = renderWithContext();
+        });
+
+        it('displays status badge with formatted IN_PROGRESS status', () => {
+          expect(screen.getByText('Status: In Progress')).toBeInTheDocument();
+        });
+      });
+
+      describe('when status is NOT_STARTED', () => {
+        beforeEach(() => {
+          if (screen) {
+            screen.unmount();
+          }
+          assessment.status = RuleDetectionAssessmentStatus.NOT_STARTED;
+          screen = renderWithContext();
+        });
+
+        it('displays status badge with formatted NOT_STARTED status', () => {
+          expect(screen.getByText('Status: Not Started')).toBeInTheDocument();
+        });
+      });
+    });
+
+    describe('duration display', () => {
+      describe('when updatedAt is provided', () => {
+        beforeEach(() => {
+          if (screen) {
+            screen.unmount();
+          }
+          // Mock current time to be 2 hours after updatedAt
+          jest.useFakeTimers();
+          jest.setSystemTime(new Date('2025-01-01T14:00:00Z'));
+          assessment.updatedAt = new Date('2025-01-01T12:00:00Z');
+          screen = renderWithContext();
+        });
+
+        afterEach(() => {
+          jest.useRealTimers();
+        });
+
+        it('displays time since last update', () => {
+          expect(screen.getByText('2 hours ago')).toBeInTheDocument();
+        });
+      });
+
+      describe('when updatedAt is not provided', () => {
+        beforeEach(() => {
+          if (screen) {
+            screen.unmount();
+          }
+          delete (assessment as { updatedAt?: Date }).updatedAt;
+          screen = renderWithContext();
+        });
+
+        it('does not display duration', () => {
+          expect(screen.queryByText(/ago/)).not.toBeInTheDocument();
+        });
+      });
+    });
+
+    describe('auto-close prevention', () => {
+      let onCloseSpy: ReturnType<typeof jest.fn>;
+
+      beforeEach(() => {
+        onCloseSpy = jest.fn();
+        props.onClose = onCloseSpy;
+      });
+
+      describe('when status changes to SUCCESS', () => {
+        it('prevents auto-close when drawer attempts to close', () => {
+          if (screen) {
+            screen.unmount();
+          }
+          assessment.status = RuleDetectionAssessmentStatus.IN_PROGRESS;
+          screen = renderWithContext();
+
+          // Simulate status change to SUCCESS
+          assessment.status = RuleDetectionAssessmentStatus.SUCCESS;
+          screen.rerender(
+            <UIProvider>
+              <QueryClientProvider client={queryClient}>
+                <DetectionAssessmentDrawer {...props} />
+              </QueryClientProvider>
+            </UIProvider>,
+          );
+
+          expect(onCloseSpy).not.toHaveBeenCalled();
+        });
+      });
+
+      describe('when status is already SUCCESS', () => {
+        it('allows closing when drawer close is triggered', async () => {
+          if (screen) {
+            screen.unmount();
+          }
+          assessment.status = RuleDetectionAssessmentStatus.SUCCESS;
+          screen = renderWithContext();
+
+          const closeButton = screen.getByRole('button', { name: /close/i });
+          const user = userEvent.setup();
+          await user.click(closeButton);
+
+          expect(onCloseSpy).toHaveBeenCalled();
         });
       });
     });

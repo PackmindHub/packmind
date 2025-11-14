@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
+  PMBadge,
   PMBox,
   PMButton,
   PMCloseButton,
@@ -26,13 +27,61 @@ import {
 interface DetectionAssessmentDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  assessment: RuleDetectionAssessment;
+  assessment: RuleDetectionAssessment & { updatedAt?: Date };
   standardId: string;
   ruleId: string;
   language: string;
 }
 
 const OTHER_ANSWER_VALUE = '__OTHER__';
+
+const getStatusColor = (status: RuleDetectionAssessmentStatus): string => {
+  switch (status) {
+    case RuleDetectionAssessmentStatus.FAILED:
+      return 'red';
+    case RuleDetectionAssessmentStatus.SUCCESS:
+      return 'green';
+    case RuleDetectionAssessmentStatus.IN_PROGRESS:
+      return 'gray';
+    default:
+      return 'gray';
+  }
+};
+
+const formatAssessmentStatus = (
+  status: RuleDetectionAssessmentStatus,
+): string => {
+  switch (status) {
+    case RuleDetectionAssessmentStatus.FAILED:
+      return 'Failed';
+    case RuleDetectionAssessmentStatus.SUCCESS:
+      return 'Success';
+    case RuleDetectionAssessmentStatus.IN_PROGRESS:
+      return 'In Progress';
+    case RuleDetectionAssessmentStatus.NOT_STARTED:
+      return 'Not Started';
+    default:
+      return status;
+  }
+};
+
+const formatDuration = (updatedAt: Date): string => {
+  const now = new Date();
+  const diffInMs = now.getTime() - updatedAt.getTime();
+  const diffInMinutes = Math.floor(diffInMs / 60000);
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  const diffInDays = Math.floor(diffInHours / 24);
+
+  if (diffInDays > 0) {
+    return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+  } else if (diffInHours > 0) {
+    return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+  } else if (diffInMinutes > 0) {
+    return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
+  } else {
+    return 'Just now';
+  }
+};
 
 export const DetectionAssessmentDrawer: React.FC<
   DetectionAssessmentDrawerProps
@@ -41,6 +90,8 @@ export const DetectionAssessmentDrawer: React.FC<
   const [hasChanges, setHasChanges] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [otherAnswerText, setOtherAnswerText] = useState('');
+  const [previousStatus, setPreviousStatus] =
+    useState<RuleDetectionAssessmentStatus | null>(null);
 
   const { data: detectionHeuristics, isLoading: isLoadingHeuristics } =
     useGetDetectionHeuristicsQuery(standardId, ruleId, language);
@@ -77,6 +128,26 @@ export const DetectionAssessmentDrawer: React.FC<
       setHasChanges(false);
     }
   }, [detectionHeuristics]);
+
+  useEffect(() => {
+    // Track status changes
+    setPreviousStatus(assessment.status);
+  }, [assessment.status]);
+
+  const handleOpenChange = useCallback(
+    ({ open }: { open: boolean }) => {
+      // Prevent auto-close when status just changed to SUCCESS
+      const justChangedToSuccess =
+        previousStatus !== null &&
+        previousStatus !== RuleDetectionAssessmentStatus.SUCCESS &&
+        assessment.status === RuleDetectionAssessmentStatus.SUCCESS;
+
+      if (!open && !justChangedToSuccess) {
+        onClose();
+      }
+    },
+    [previousStatus, assessment.status, onClose],
+  );
 
   const handleHeuristicsChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -177,22 +248,30 @@ export const DetectionAssessmentDrawer: React.FC<
   ]);
 
   return (
-    <PMDrawer.Root
-      open={isOpen}
-      onOpenChange={({ open }) => !open && onClose()}
-      size="xl"
-    >
+    <PMDrawer.Root open={isOpen} onOpenChange={handleOpenChange} size="xl">
       <PMPortal>
         <PMDrawer.Backdrop />
         <PMDrawer.Positioner>
           <PMDrawer.Content>
             <PMDrawer.Header>
-              <PMDrawer.Title>Rule detection assessment</PMDrawer.Title>
+              <PMVStack align="flex-start" gap={2} width="full">
+                <PMHStack gap={3} align="center">
+                  <PMDrawer.Title>Rule detection assessment</PMDrawer.Title>
+                  <PMBadge colorPalette={getStatusColor(assessment.status)}>
+                    Status: {formatAssessmentStatus(assessment.status)}
+                  </PMBadge>
+                  {assessment.updatedAt && (
+                    <PMText fontSize="sm" color="tertiary">
+                      {formatDuration(new Date(assessment.updatedAt))}
+                    </PMText>
+                  )}
+                </PMHStack>
+              </PMVStack>
             </PMDrawer.Header>
             <PMDrawer.Body>
-              <PMVStack>
+              <PMVStack width="full">
                 {assessment.details && (
-                  <PMVStack gap={2} align="flex-start">
+                  <PMVStack width="full" gap={2} align="flex-start">
                     <PMText color="tertiary">
                       Why this rule cannot be detected:
                     </PMText>
