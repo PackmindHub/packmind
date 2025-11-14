@@ -5,6 +5,8 @@ import {
   UpdatePackageCommand,
   UpdatePackageResponse,
   CreateRenderModeConfigurationCommand,
+  DeletePackageCommand,
+  DeletePackageResponse,
   DeletePackagesBatchCommand,
   DeletePackagesBatchResponse,
   DeleteTargetCommand,
@@ -336,6 +338,17 @@ export interface IDeploymentPort {
   getPackageById(
     command: GetPackageByIdCommand,
   ): Promise<GetPackageByIdResponse>;
+
+  /**
+   * Deletes a single package
+   *
+   * Soft-deletes a package from a specific space.
+   *
+   * @param command - Command containing packageId and spaceId
+   * @returns Promise of deletion confirmation
+   * @throws Error if package not found or doesn't belong to the specified space
+   */
+  deletePackage(command: DeletePackageCommand): Promise<DeletePackageResponse>;
 
   /**
    * Deletes multiple packages in batch

@@ -253,6 +253,51 @@ export class OrganizationsSpacesPackagesController {
   }
 
   /**
+   * Delete a single package
+   * DELETE /organizations/:orgId/spaces/:spaceId/packages/:packageId
+   */
+  @Delete(':packageId')
+  async deletePackage(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('packageId') packageId: PackageId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<DeletePackagesBatchResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'DELETE /organizations/:orgId/spaces/:spaceId/packages/:packageId - Deleting package',
+      {
+        organizationId,
+        spaceId,
+        packageId,
+      },
+    );
+
+    try {
+      return await this.deploymentsService.deletePackage({
+        userId,
+        organizationId,
+        spaceId,
+        packageId,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'DELETE /organizations/:orgId/spaces/:spaceId/packages/:packageId - Failed to delete package',
+        {
+          organizationId,
+          spaceId,
+          packageId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
    * Delete multiple packages in batch
    * DELETE /organizations/:orgId/spaces/:spaceId/packages
    */
