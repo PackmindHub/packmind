@@ -7,7 +7,9 @@ import { config as dotenvConfig } from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
 import { pullCommand } from './infra/commands/PullCommand';
-import { CLI_VERSION } from './generated-version';
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { version: CLI_VERSION } = require('../package.json');
 
 /**
  * Find .env file by searching upwards from current directory
