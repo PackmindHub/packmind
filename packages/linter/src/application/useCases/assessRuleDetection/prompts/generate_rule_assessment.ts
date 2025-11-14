@@ -31,6 +31,10 @@ Be overly pessimistic in your assessment.
       - Provide 2-4 pre-defined answers (most impactful and relevant options).
       - **CRITICAL**: Each answer must be directly actionable and complete. Never include placeholders like "N", "X", variables, or phrases like "I will supply" or "user-defined value". The user will select an answer via radio button and cannot provide additional input.
       - Instead of "Flag classes with more than N methods (I will supply N)", provide concrete examples like: "Flag classes with more than 10 methods", "Flag classes with more than 20 methods", "Flag classes with more than 5 methods".
+      - **EXAMPLE CONSISTENCY**: When good examples (positive examples) and bad examples (negative examples) are provided below:
+          * The suggested answers MUST NOT contradict the good examples. If a good example demonstrates valid code, your suggested answers should not flag that same pattern as a violation.
+          * The suggested answers SHOULD align with and help detect the violations shown in the bad examples. Each answer should represent a specific detection strategy that would catch at least one of the bad examples.
+          * If the examples show specific patterns, use those patterns to inform your suggested answers rather than inventing unrelated detection strategies.
       - Structure: {"question": "string", "answers": ["answer1", "answer2", ...]}
 
 * **Multi-file Analysis Limitation**: If the coding rule requires analyzing relationships across multiple files (such as Java inheritance trees where classes are typically split across multiple files), mark it as not feasible. In the reason array, include that "Packmind does not support yet static multi-file analysis."
