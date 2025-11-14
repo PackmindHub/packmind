@@ -7,6 +7,7 @@ import {
   ActiveDetectionProgram,
   IStandardsPort,
   ILinterPort,
+  RuleDetectionAssessmentStatus,
 } from '@packmind/types';
 
 const origin = 'UpdateRuleDetectionStatusAfterUpdateUseCase';
@@ -112,25 +113,42 @@ export class UpdateRuleDetectionStatusAfterUpdateUseCase
       .get(command.ruleId, command.language);
 
     if (existingAssessment) {
-      this.logger.info(
-        'Assessment already exists for this rule and language, no action taken',
-        {
-          ruleId: command.ruleId,
-          language: command.language,
-          assessmentId: existingAssessment.id,
-          assessmentStatus: existingAssessment.status,
-        },
-      );
-      return {
-        action: 'NO_ACTION',
-        message: 'Assessment already exists, no action taken',
-      };
+      // If assessment has FAILED, restart it with updated examples
+      if (existingAssessment.status === RuleDetectionAssessmentStatus.FAILED) {
+        this.logger.info(
+          'Failed assessment found, restarting assessment with updated examples',
+          {
+            ruleId: command.ruleId,
+            language: command.language,
+            assessmentId: existingAssessment.id,
+            previousStatus: existingAssessment.status,
+          },
+        );
+        // Continue to step 3.2 to restart the assessment
+      } else {
+        // For non-FAILED statuses, no action needed
+        this.logger.info(
+          'Assessment already exists for this rule and language, no action taken',
+          {
+            ruleId: command.ruleId,
+            language: command.language,
+            assessmentId: existingAssessment.id,
+            assessmentStatus: existingAssessment.status,
+          },
+        );
+        return {
+          action: 'NO_ACTION',
+          message: 'Assessment already exists, no action taken',
+        };
+      }
     }
 
-    // Step 3.2: No assessment exists - start new assessment
-    this.logger.info('No assessment found, starting new assessment', {
+    // Step 3.2: No assessment exists or FAILED assessment - start/restart assessment
+    const action = existingAssessment ? 'Restarting' : 'Starting';
+    this.logger.info(`${action} rule detection assessment`, {
       ruleId: command.ruleId,
       language: command.language,
+      isRestart: !!existingAssessment,
     });
 
     const rule = await this.standardsAdapter.getRule(command.ruleId);
@@ -148,14 +166,20 @@ export class UpdateRuleDetectionStatusAfterUpdateUseCase
       language: command.language,
     });
 
-    this.logger.info('New rule detection assessment started successfully', {
+    const successMessage = existingAssessment
+      ? 'Failed assessment restarted successfully'
+      : 'New rule detection assessment started successfully';
+    this.logger.info(successMessage, {
       ruleId: command.ruleId,
       language: command.language,
+      isRestart: !!existingAssessment,
     });
 
     return {
       action: 'ASSESSMENT_STARTED',
-      message: 'New rule detection assessment started',
+      message: existingAssessment
+        ? 'Failed assessment restarted'
+        : 'New rule detection assessment started',
     };
   }
 }

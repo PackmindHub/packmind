@@ -168,7 +168,7 @@ describe('UpdateRuleDetectionStatusAfterUpdateUseCase', () => {
 
     describe('when no detection program exists', () => {
       describe('when assessment already exists', () => {
-        it('returns NO_ACTION', async () => {
+        it('returns NO_ACTION for non-FAILED assessment', async () => {
           const existingAssessment = {
             id: createRuleDetectionAssessmentId(uuidv4()),
             ruleId,
@@ -208,6 +208,59 @@ describe('UpdateRuleDetectionStatusAfterUpdateUseCase', () => {
           expect(
             linterAdapter.startRuleDetectionAssessment,
           ).not.toHaveBeenCalled();
+        });
+
+        describe('when FAILED assessment exists', () => {
+          it('restarts assessment', async () => {
+            const failedAssessment = {
+              id: createRuleDetectionAssessmentId(uuidv4()),
+              ruleId,
+              language,
+              detectionMode: DetectionModeEnum.SINGLE_AST,
+              status: RuleDetectionAssessmentStatus.FAILED,
+              details: 'Assessment failed: Not detectable',
+              clarificationQuestion: null,
+              clarificationAnswers: null,
+            };
+
+            const rule = ruleFactory({
+              id: ruleId,
+              content: 'Use const instead of var',
+            });
+
+            activeDetectionProgramRepository.findByRuleIdAndLanguage.mockResolvedValue(
+              null,
+            );
+            detectionProgramRepository.findByRuleIdAndLanguage.mockResolvedValue(
+              null,
+            );
+            ruleDetectionAssessmentRepository.get.mockResolvedValue(
+              failedAssessment,
+            );
+            standardsAdapter.getRule.mockResolvedValue(rule);
+
+            const result = await useCase.execute({
+              ruleId,
+              organizationId,
+              userId,
+              language,
+            });
+
+            expect(result.action).toBe('ASSESSMENT_STARTED');
+            expect(result.message).toBe('Failed assessment restarted');
+            expect(ruleDetectionAssessmentRepository.get).toHaveBeenCalledWith(
+              ruleId,
+              language,
+            );
+            expect(
+              linterAdapter.startRuleDetectionAssessment,
+            ).toHaveBeenCalledWith({
+              rule,
+              organizationId,
+              userId,
+              language,
+            });
+          });
         });
       });
 
