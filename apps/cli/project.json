@@ -5,10 +5,18 @@
   "projectType": "application",
   "tags": ["env:node"],
   "targets": {
+    "generate-version": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node apps/cli/scripts/generate-version.js"
+      },
+      "description": "Generate version module from package.json"
+    },
     "build": {
       "executor": "@nx/esbuild:esbuild",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
+      "dependsOn": ["generate-version"],
       "options": {
         "platform": "node",
         "outputPath": "dist/apps/cli",
