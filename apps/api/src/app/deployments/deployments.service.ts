@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import {
   CreatePackageCommand,
   CreatePackageResponse,
+  UpdatePackageCommand,
+  UpdatePackageResponse,
   DeploymentOverview,
   GetDeploymentOverviewCommand,
   GetPackageByIdCommand,
@@ -97,6 +99,12 @@ export class DeploymentsService {
     command: CreatePackageCommand,
   ): Promise<CreatePackageResponse> {
     return this.deploymentAdapter.createPackage(command);
+  }
+
+  async updatePackage(
+    command: UpdatePackageCommand,
+  ): Promise<UpdatePackageResponse> {
+    return this.deploymentAdapter.updatePackage(command);
   }
 
   async getPackageById(

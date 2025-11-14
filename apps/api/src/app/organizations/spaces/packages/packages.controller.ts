@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   Req,
   UseGuards,
@@ -13,6 +14,7 @@ import {
   CreatePackageResponse,
   GetPackageByIdResponse,
   ListPackagesBySpaceResponse,
+  UpdatePackageResponse,
   OrganizationId,
   PackageId,
   RecipeId,
@@ -182,6 +184,64 @@ export class OrganizationsSpacesPackagesController {
         {
           organizationId,
           spaceId,
+          name: body.name,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Update an existing package in a space within an organization
+   * PATCH /organizations/:orgId/spaces/:spaceId/packages/:packageId
+   */
+  @Patch(':packageId')
+  async updatePackage(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('packageId') packageId: PackageId,
+    @Req() request: AuthenticatedRequest,
+    @Body()
+    body: {
+      name: string;
+      description: string;
+      recipeIds: RecipeId[];
+      standardIds: StandardId[];
+    },
+  ): Promise<UpdatePackageResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'PATCH /organizations/:orgId/spaces/:spaceId/packages/:packageId - Updating package',
+      {
+        organizationId,
+        spaceId,
+        packageId,
+        name: body.name,
+      },
+    );
+
+    try {
+      return await this.deploymentsService.updatePackage({
+        userId,
+        organizationId,
+        spaceId,
+        packageId,
+        name: body.name,
+        description: body.description,
+        recipeIds: body.recipeIds,
+        standardIds: body.standardIds,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'PATCH /organizations/:orgId/spaces/:spaceId/packages/:packageId - Failed to update package',
+        {
+          organizationId,
+          spaceId,
+          packageId,
           name: body.name,
           error: errorMessage,
         },

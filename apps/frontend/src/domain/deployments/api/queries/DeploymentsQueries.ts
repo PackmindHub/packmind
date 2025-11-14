@@ -12,12 +12,14 @@ import {
   DeleteTargetResponse,
   UpdateRenderModeConfigurationCommand,
   CreatePackageCommand,
+  UpdatePackageCommand,
 } from '@packmind/types';
 import {
   LIST_RECIPE_DEPLOYMENTS_KEY,
   LIST_STANDARD_DEPLOYMENTS_KEY,
   LIST_PACKAGES_BY_SPACE_KEY,
   GET_PACKAGE_BY_ID_KEY,
+  UPDATE_PACKAGE_MUTATION_KEY,
   GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
   GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
   GET_TARGETS_BY_GIT_REPO_KEY,
@@ -380,6 +382,28 @@ export const useCreatePackageMutation = () => {
     },
     onError: (error) => {
       console.error('Error creating package:', error);
+    },
+  });
+};
+
+export const useUpdatePackageMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: UPDATE_PACKAGE_MUTATION_KEY,
+    mutationFn: async (command: Omit<UpdatePackageCommand, 'userId'>) => {
+      return deploymentsGateways.updatePackage(command);
+    },
+    onSuccess: async (data, variables) => {
+      await queryClient.invalidateQueries({
+        queryKey: [...GET_PACKAGE_BY_ID_KEY, variables.packageId],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: LIST_PACKAGES_BY_SPACE_KEY,
+      });
+    },
+    onError: (error) => {
+      console.error('Error updating package:', error);
     },
   });
 };

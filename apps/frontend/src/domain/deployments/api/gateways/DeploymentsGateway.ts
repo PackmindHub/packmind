@@ -17,6 +17,7 @@ import {
   IListDeploymentsByStandard,
   IListPackagesBySpaceUseCase,
   ICreatePackageUseCase,
+  IUpdatePackageUseCase,
   IGetTargetsByGitRepoUseCase,
   IGetTargetsByRepositoryUseCase,
   IGetTargetsByOrganizationUseCase,
@@ -74,6 +75,22 @@ export class DeploymentsGatewayApi
     } = params;
     return this._api.post(
       `/organizations/${organizationId}/spaces/${spaceId}/packages`,
+      { name, description, recipeIds, standardIds },
+    );
+  };
+
+  updatePackage: NewGateway<IUpdatePackageUseCase> = async (params) => {
+    const {
+      packageId,
+      organizationId,
+      spaceId,
+      name,
+      description,
+      recipeIds,
+      standardIds,
+    } = params;
+    return this._api.patch(
+      `/organizations/${organizationId}/spaces/${spaceId}/packages/${packageId}`,
       { name, description, recipeIds, standardIds },
     );
   };
