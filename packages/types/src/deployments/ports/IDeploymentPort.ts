@@ -2,6 +2,8 @@ import {
   AddTargetCommand,
   CreatePackageCommand,
   CreatePackageResponse,
+  UpdatePackageCommand,
+  UpdatePackageResponse,
   CreateRenderModeConfigurationCommand,
   DeleteTargetCommand,
   DeleteTargetResponse,
@@ -299,6 +301,18 @@ export interface IDeploymentPort {
    * @throws Error if recipes or standards don't belong to the specified space
    */
   createPackage(command: CreatePackageCommand): Promise<CreatePackageResponse>;
+
+  /**
+   * Updates an existing package
+   *
+   * Updates the package details (name, description) and its associated recipes and standards.
+   * Only recipes and standards from the same space as the package can be added.
+   *
+   * @param command - Command containing packageId and updated package details
+   * @returns Promise of the updated package with its associated recipes and standards
+   * @throws Error if package not found or recipes/standards don't belong to the package's space
+   */
+  updatePackage(command: UpdatePackageCommand): Promise<UpdatePackageResponse>;
 
   /**
    * Gets a package by its ID

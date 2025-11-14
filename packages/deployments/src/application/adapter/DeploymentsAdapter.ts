@@ -3,6 +3,8 @@ import {
   AddTargetCommand,
   CreatePackageCommand,
   CreatePackageResponse,
+  UpdatePackageCommand,
+  UpdatePackageResponse,
   CreateRenderModeConfigurationCommand,
   DeleteTargetCommand,
   DeleteTargetResponse,
@@ -58,6 +60,7 @@ import { IStandardsDeploymentRepository } from '../../domain/repositories/IStand
 import { DeploymentsServices } from '../services/DeploymentsServices';
 import { AddTargetUseCase } from '../useCases/AddTargetUseCase';
 import { CreatePackageUsecase } from '../useCases/createPackage/createPackage.usecase';
+import { UpdatePackageUsecase } from '../useCases/updatePackage/updatePackage.usecase';
 import { CreateRenderModeConfigurationUseCase } from '../useCases/CreateRenderModeConfigurationUseCase';
 import { DeleteTargetUseCase } from '../useCases/DeleteTargetUseCase';
 import { FindActiveStandardVersionsByTargetUseCase } from '../useCases/FindActiveStandardVersionsByTargetUseCase';
@@ -111,6 +114,7 @@ export class DeploymentsAdapter
   private _pullAllContentUseCase!: PullContentUseCase;
   private _listPackagesBySpaceUseCase!: ListPackagesBySpaceUsecase;
   private _createPackageUseCase!: CreatePackageUsecase;
+  private _updatePackageUseCase!: UpdatePackageUsecase;
   private _getPackageByIdUseCase!: GetPackageByIdUsecase;
 
   constructor(
@@ -290,6 +294,14 @@ export class DeploymentsAdapter
       this.standardsPort,
     );
 
+    this._updatePackageUseCase = new UpdatePackageUsecase(
+      this.accountsPort,
+      this.deploymentsServices,
+      this.spacesPort,
+      this.recipesPort,
+      this.standardsPort,
+    );
+
     this._getPackageByIdUseCase = new GetPackageByIdUsecase(
       this.accountsPort,
       this.deploymentsServices,
@@ -430,6 +442,12 @@ export class DeploymentsAdapter
     command: CreatePackageCommand,
   ): Promise<CreatePackageResponse> {
     return this._createPackageUseCase.execute(command);
+  }
+
+  async updatePackage(
+    command: UpdatePackageCommand,
+  ): Promise<UpdatePackageResponse> {
+    return this._updatePackageUseCase.execute(command);
   }
 
   async getPackageById(
