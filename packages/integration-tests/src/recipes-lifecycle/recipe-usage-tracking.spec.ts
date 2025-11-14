@@ -55,7 +55,7 @@ describe.skip('Recipe usage tracking', () => {
     });
 
     test('A recipe usage can be tracked', async () => {
-      const usage = await testApp.analyticsHexa.trackRecipeUsage({
+      const usage = await testApp.analyticsHexa.getAdapter().trackRecipeUsage({
         recipeSlugs: [recipe.slug],
         aiAgent: 'ZeAgent',
         gitRepo: `${gitRepo.owner}/${gitRepo.repo}`,
@@ -78,7 +78,7 @@ describe.skip('Recipe usage tracking', () => {
         spaceId: recipe.spaceId,
         ...dataFactory.packmindCommand(),
       });
-      const usage = await testApp.analyticsHexa.trackRecipeUsage({
+      const usage = await testApp.analyticsHexa.getAdapter().trackRecipeUsage({
         recipeSlugs: [recipe.slug],
         aiAgent: 'ZeAgent',
         gitRepo: `${gitRepo.owner}/${gitRepo.repo}`,
