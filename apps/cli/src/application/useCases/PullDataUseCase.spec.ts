@@ -1,0 +1,359 @@
+import { PullDataUseCase } from './PullDataUseCase';
+import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
+import * as fs from 'fs/promises';
+
+jest.mock('fs/promises');
+
+describe('PullDataUseCase', () => {
+  let useCase: PullDataUseCase;
+  let mockGateway: jest.Mocked<IPackmindGateway>;
+
+  beforeEach(() => {
+    mockGateway = {
+      getPullData: jest.fn(),
+      listExecutionPrograms: jest.fn(),
+      getDraftDetectionProgramsForRule: jest.fn(),
+      getActiveDetectionProgramsForRule: jest.fn(),
+    };
+
+    // Setup fs mocks using jest.Mock casting
+    (fs.mkdir as jest.Mock).mockResolvedValue(undefined);
+    (fs.writeFile as jest.Mock).mockResolvedValue(undefined);
+    (fs.appendFile as jest.Mock).mockResolvedValue(undefined);
+    (fs.readFile as jest.Mock).mockResolvedValue('');
+    (fs.access as jest.Mock).mockResolvedValue(undefined);
+    (fs.unlink as jest.Mock).mockResolvedValue(undefined);
+
+    useCase = new PullDataUseCase(mockGateway);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('when file does not exist', () => {
+    it('creates new file with content', async () => {
+      mockGateway.getPullData.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: 'CLAUDE.md',
+              content: '# New content',
+            },
+          ],
+          delete: [],
+        },
+      });
+
+      // File does not exist
+      (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
+
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(fs.writeFile).toHaveBeenCalledWith(
+        '/test/CLAUDE.md',
+        '# New content',
+        'utf-8',
+      );
+      expect(result.filesCreated).toBe(1);
+      expect(result.filesUpdated).toBe(0);
+    });
+  });
+
+  describe('when file exists without comment markers', () => {
+    it('replaces entire file content', async () => {
+      const newContent = '# Completely new content\n\nThis is new.';
+
+      mockGateway.getPullData.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: 'CLAUDE.md',
+              content: newContent,
+            },
+          ],
+          delete: [],
+        },
+      });
+
+      // File exists
+      (fs.access as jest.Mock).mockResolvedValue(undefined);
+
+      // Existing file content without comment markers
+      const existingContent = '# Old content\n\nThis is old content.';
+      (fs.readFile as jest.Mock).mockResolvedValue(existingContent);
+
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(fs.writeFile).toHaveBeenCalledWith(
+        '/test/CLAUDE.md',
+        newContent,
+        'utf-8',
+      );
+      expect(result.filesUpdated).toBe(1);
+      expect(result.filesCreated).toBe(0);
+    });
+  });
+
+  describe('when file exists with matching comment markers', () => {
+    it('replaces only the marked section', async () => {
+      const newSectionContent = '## New Recipe\n- Step 1\n- Step 2';
+      const contentWithMarkers = `<!-- start: Packmind recipes -->\n${newSectionContent}\n<!-- end: Packmind recipes -->`;
+
+      mockGateway.getPullData.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: 'CLAUDE.md',
+              content: contentWithMarkers,
+            },
+          ],
+          delete: [],
+        },
+      });
+
+      // File exists
+      (fs.access as jest.Mock).mockResolvedValue(undefined);
+
+      // Existing file with same markers but different content
+      const existingContent = `# Project Documentation
+
+Some introduction text.
+
+<!-- start: Packmind recipes -->
+## Old Recipe
+- Old step 1
+- Old step 2
+<!-- end: Packmind recipes -->
+
+Some footer text.`;
+
+      (fs.readFile as jest.Mock).mockResolvedValue(existingContent);
+
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      const expectedContent = `# Project Documentation
+
+Some introduction text.
+
+<!-- start: Packmind recipes -->
+${newSectionContent}
+<!-- end: Packmind recipes -->
+
+Some footer text.`;
+
+      expect(fs.writeFile).toHaveBeenCalledWith(
+        '/test/CLAUDE.md',
+        expectedContent,
+        'utf-8',
+      );
+      expect(result.filesUpdated).toBe(1);
+      expect(result.filesCreated).toBe(0);
+    });
+
+    it('handles multiple sections with different markers', async () => {
+      const newStandardsContent = '- Standard A\n- Standard B';
+      const contentWithMarkers = `<!-- start: Packmind standards -->\n${newStandardsContent}\n<!-- end: Packmind standards -->`;
+
+      mockGateway.getPullData.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: 'CLAUDE.md',
+              content: contentWithMarkers,
+            },
+          ],
+          delete: [],
+        },
+      });
+
+      // File exists
+      (fs.access as jest.Mock).mockResolvedValue(undefined);
+
+      // Existing file with multiple sections
+      const existingContent = `# Documentation
+
+<!-- start: Packmind recipes -->
+## Recipe content
+<!-- end: Packmind recipes -->
+
+<!-- start: Packmind standards -->
+- Old standard 1
+<!-- end: Packmind standards -->
+
+Footer text.`;
+
+      (fs.readFile as jest.Mock).mockResolvedValue(existingContent);
+
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      const expectedContent = `# Documentation
+
+<!-- start: Packmind recipes -->
+## Recipe content
+<!-- end: Packmind recipes -->
+
+<!-- start: Packmind standards -->
+${newStandardsContent}
+<!-- end: Packmind standards -->
+
+Footer text.`;
+
+      expect(fs.writeFile).toHaveBeenCalledWith(
+        '/test/CLAUDE.md',
+        expectedContent,
+        'utf-8',
+      );
+      expect(result.filesUpdated).toBe(1);
+    });
+  });
+
+  describe('when file exists but section does not exist yet', () => {
+    it('appends new section to existing file', async () => {
+      const newSectionContent = '## New Recipe\n- Step 1';
+      const contentWithMarkers = `<!-- start: Packmind recipes -->\n${newSectionContent}\n<!-- end: Packmind recipes -->`;
+
+      mockGateway.getPullData.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: 'CLAUDE.md',
+              content: contentWithMarkers,
+            },
+          ],
+          delete: [],
+        },
+      });
+
+      // File exists
+      (fs.access as jest.Mock).mockResolvedValue(undefined);
+
+      // Existing file without the recipes section
+      const existingContent = `# Project Documentation
+
+Some existing content here.
+
+<!-- start: Packmind standards -->
+- Standard content
+<!-- end: Packmind standards -->`;
+
+      (fs.readFile as jest.Mock).mockResolvedValue(existingContent);
+
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      const expectedContent = `# Project Documentation
+
+Some existing content here.
+
+<!-- start: Packmind standards -->
+- Standard content
+<!-- end: Packmind standards -->
+<!-- start: Packmind recipes -->
+${newSectionContent}
+<!-- end: Packmind recipes -->`;
+
+      expect(fs.writeFile).toHaveBeenCalledWith(
+        '/test/CLAUDE.md',
+        expectedContent,
+        'utf-8',
+      );
+      expect(result.filesUpdated).toBe(1);
+    });
+  });
+
+  describe('when processing delete operations', () => {
+    it('deletes existing file', async () => {
+      mockGateway.getPullData.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [],
+          delete: [
+            {
+              path: 'old-file.md',
+            },
+          ],
+        },
+      });
+
+      // File exists
+      (fs.access as jest.Mock).mockResolvedValue(undefined);
+
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(fs.unlink).toHaveBeenCalledWith('/test/old-file.md');
+      expect(result.filesDeleted).toBe(1);
+    });
+
+    it('does not error when file to delete does not exist', async () => {
+      mockGateway.getPullData.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [],
+          delete: [
+            {
+              path: 'non-existent.md',
+            },
+          ],
+        },
+      });
+
+      // File does not exist
+      (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
+
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(fs.unlink).not.toHaveBeenCalled();
+      expect(result.filesDeleted).toBe(0);
+      expect(result.errors).toEqual([]);
+    });
+  });
+
+  describe('error handling', () => {
+    it('captures errors when file operation fails', async () => {
+      mockGateway.getPullData.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [
+            {
+              path: 'CLAUDE.md',
+              content: 'content',
+            },
+          ],
+          delete: [],
+        },
+      });
+
+      (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
+      (fs.writeFile as jest.Mock).mockRejectedValue(
+        new Error('Permission denied'),
+      );
+
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0]).toContain('Failed to create/update CLAUDE.md');
+      expect(result.errors[0]).toContain('Permission denied');
+    });
+  });
+});

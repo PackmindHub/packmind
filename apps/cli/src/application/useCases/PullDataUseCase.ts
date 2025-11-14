@@ -77,8 +77,27 @@ export class PullDataUseCase implements IPullDataUseCase {
     const fileExists = await this.fileExists(fullPath);
 
     if (fileExists) {
-      // Append to existing file
-      await fs.appendFile(fullPath, content, 'utf-8');
+      // Read existing file content
+      const existingContent = await fs.readFile(fullPath, 'utf-8');
+
+      // Extract comment marker from new content (if present)
+      const commentMarker = this.extractCommentMarker(content);
+
+      let finalContent: string;
+
+      if (!commentMarker) {
+        // No comment markers: replace entire file content
+        finalContent = content;
+      } else {
+        // Has comment markers: intelligently merge with existing content
+        finalContent = this.mergeContentWithMarkers(
+          existingContent,
+          content,
+          commentMarker,
+        );
+      }
+
+      await fs.writeFile(fullPath, finalContent, 'utf-8');
       result.filesUpdated++;
     } else {
       // Create new file
@@ -110,5 +129,61 @@ export class PullDataUseCase implements IPullDataUseCase {
     } catch {
       return false;
     }
+  }
+
+  /**
+   * Extracts the comment marker from content if it's wrapped with HTML comments.
+   * E.g., "<!-- start: Packmind recipes -->" returns "Packmind recipes"
+   */
+  private extractCommentMarker(content: string): string | null {
+    const startMarkerPattern = /<!--\s*start:\s*([^-]+?)\s*-->/;
+    const match = content.match(startMarkerPattern);
+    return match ? match[1].trim() : null;
+  }
+
+  /**
+   * Merges new content with existing content using comment markers.
+   * If the section exists, replaces it; otherwise, appends it.
+   */
+  private mergeContentWithMarkers(
+    existingContent: string,
+    newContent: string,
+    commentMarker: string,
+  ): string {
+    const startMarker = `<!-- start: ${commentMarker} -->`;
+    const endMarker = `<!-- end: ${commentMarker} -->`;
+
+    // Extract the section content from newContent (content between markers)
+    const newSectionPattern = new RegExp(
+      `${this.escapeRegex(startMarker)}([\\s\\S]*?)${this.escapeRegex(endMarker)}`,
+    );
+    const newSectionMatch = newContent.match(newSectionPattern);
+    const newSectionContent = newSectionMatch
+      ? newSectionMatch[1].trim()
+      : newContent;
+
+    // Check if the section exists in existing content
+    const existingSectionPattern = new RegExp(
+      `${this.escapeRegex(startMarker)}[\\s\\S]*?${this.escapeRegex(endMarker)}`,
+      'g',
+    );
+
+    if (existingSectionPattern.test(existingContent)) {
+      // Replace existing section
+      return existingContent.replace(
+        existingSectionPattern,
+        `${startMarker}\n${newSectionContent}\n${endMarker}`,
+      );
+    } else {
+      // Append new section
+      return `${existingContent}\n${startMarker}\n${newSectionContent}\n${endMarker}`;
+    }
+  }
+
+  /**
+   * Escapes special regex characters in a string
+   */
+  private escapeRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 }
