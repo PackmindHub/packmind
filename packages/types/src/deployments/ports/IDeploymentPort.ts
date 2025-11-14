@@ -2,7 +2,11 @@ import {
   AddTargetCommand,
   CreatePackageCommand,
   CreatePackageResponse,
+  UpdatePackageCommand,
+  UpdatePackageResponse,
   CreateRenderModeConfigurationCommand,
+  DeletePackagesBatchCommand,
+  DeletePackagesBatchResponse,
   DeleteTargetCommand,
   DeleteTargetResponse,
   DeploymentOverview,
@@ -22,6 +26,8 @@ import {
   IPullContentResponse,
   ListDeploymentsByRecipeCommand,
   ListDeploymentsByStandardCommand,
+  ListPackagesCommand,
+  ListPackagesResponse,
   ListPackagesBySpaceCommand,
   ListPackagesBySpaceResponse,
   PublishPackagesCommand,
@@ -289,6 +295,14 @@ export interface IDeploymentPort {
   ): Promise<ListPackagesBySpaceResponse>;
 
   /**
+   * Lists all packages for an organization
+   *
+   * @param command - Command containing organizationId
+   * @returns Promise of array of all packages in the organization
+   */
+  listPackages(command: ListPackagesCommand): Promise<ListPackagesResponse>;
+
+  /**
    * Creates a new package within a space
    *
    * A package is a collection of recipes and standards that belong to the same space.
@@ -301,6 +315,18 @@ export interface IDeploymentPort {
   createPackage(command: CreatePackageCommand): Promise<CreatePackageResponse>;
 
   /**
+   * Updates an existing package
+   *
+   * Updates the package details (name, description) and its associated recipes and standards.
+   * Only recipes and standards from the same space as the package can be added.
+   *
+   * @param command - Command containing packageId and updated package details
+   * @returns Promise of the updated package with its associated recipes and standards
+   * @throws Error if package not found or recipes/standards don't belong to the package's space
+   */
+  updatePackage(command: UpdatePackageCommand): Promise<UpdatePackageResponse>;
+
+  /**
    * Gets a package by its ID
    *
    * @param command - Command containing packageId and organizationId
@@ -310,4 +336,17 @@ export interface IDeploymentPort {
   getPackageById(
     command: GetPackageByIdCommand,
   ): Promise<GetPackageByIdResponse>;
+
+  /**
+   * Deletes multiple packages in batch
+   *
+   * Soft-deletes multiple packages at once from a specific space.
+   *
+   * @param command - Command containing array of packageIds and spaceId
+   * @returns Promise of deletion confirmation
+   * @throws Error if any package not found or doesn't belong to the specified space
+   */
+  deletePackagesBatch(
+    command: DeletePackagesBatchCommand,
+  ): Promise<DeletePackagesBatchResponse>;
 }

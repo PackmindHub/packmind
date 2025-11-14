@@ -20,8 +20,9 @@
     "prettier:check": "prettier -c .",
     "prettier:write": "prettier -w .",
     "quality-gate": "npm run typecheck:frontend && npm run test:staged && npm run lint:staged && npm run build && npm run packmind-cli:staged",
-    "test": "nx run-many -t test",
-    "test:staged": "nx affected:test --parallel",
+    "test": "NODE_OPTIONS='--max-old-space-size=4096' nx run-many -t test",
+    "test:staged": "NODE_OPTIONS='--max-old-space-size=4096' nx affected:test --parallel=3",
+    "test:memory-profile": "./scripts/test-memory-profile.sh",
     "typecheck:frontend": "tsc --noEmit -p apps/frontend/tsconfig.app.json"
   },
   "workspaces": [

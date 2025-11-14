@@ -10,6 +10,7 @@ describe('PullDataUseCase', () => {
 
   beforeEach(() => {
     mockGateway = {
+      listPackages: jest.fn(),
       getPullData: jest.fn(),
       listExecutionPrograms: jest.fn(),
       getDraftDetectionProgramsForRule: jest.fn(),
@@ -301,59 +302,66 @@ ${newSectionContent}
       expect(result.filesDeleted).toBe(1);
     });
 
-    it('does not error when file to delete does not exist', async () => {
-      mockGateway.getPullData.mockResolvedValue({
-        fileUpdates: {
-          createOrUpdate: [],
-          delete: [
-            {
-              path: 'non-existent.md',
-            },
-          ],
-        },
+    describe('when file to delete does not exist', () => {
+      beforeEach(() => {
+        mockGateway.getPullData.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [],
+            delete: [
+              {
+                path: 'non-existent.md',
+              },
+            ],
+          },
+        });
+
+        (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
       });
 
-      // File does not exist
-      (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
+      it('does not throw error', async () => {
+        const result = await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
 
-      const result = await useCase.execute({
-        packagesSlugs: ['test-package'],
-        baseDirectory: '/test',
+        expect(fs.unlink).not.toHaveBeenCalled();
+        expect(result.filesDeleted).toBe(0);
+        expect(result.errors).toEqual([]);
       });
-
-      expect(fs.unlink).not.toHaveBeenCalled();
-      expect(result.filesDeleted).toBe(0);
-      expect(result.errors).toEqual([]);
     });
   });
 
   describe('error handling', () => {
-    it('captures errors when file operation fails', async () => {
-      mockGateway.getPullData.mockResolvedValue({
-        fileUpdates: {
-          createOrUpdate: [
-            {
-              path: 'CLAUDE.md',
-              content: 'content',
-            },
-          ],
-          delete: [],
-        },
+    describe('when file operation fails', () => {
+      beforeEach(() => {
+        mockGateway.getPullData.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: 'CLAUDE.md',
+                content: 'content',
+              },
+            ],
+            delete: [],
+          },
+        });
+
+        (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
+        (fs.writeFile as jest.Mock).mockRejectedValue(
+          new Error('Permission denied'),
+        );
       });
 
-      (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
-      (fs.writeFile as jest.Mock).mockRejectedValue(
-        new Error('Permission denied'),
-      );
+      it('captures errors', async () => {
+        const result = await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
 
-      const result = await useCase.execute({
-        packagesSlugs: ['test-package'],
-        baseDirectory: '/test',
+        expect(result.errors).toHaveLength(1);
+        expect(result.errors[0]).toContain('Failed to create/update CLAUDE.md');
+        expect(result.errors[0]).toContain('Permission denied');
       });
-
-      expect(result.errors).toHaveLength(1);
-      expect(result.errors[0]).toContain('Failed to create/update CLAUDE.md');
-      expect(result.errors[0]).toContain('Permission denied');
     });
   });
 });

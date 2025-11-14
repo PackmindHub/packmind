@@ -15,6 +15,8 @@ import { GitService } from './application/services/GitService';
 import { ExecuteLinterProgramsUseCase } from '@packmind/linter-execution';
 import { IPullDataUseCase } from './domain/useCases/IPullDataUseCase';
 import { PullDataUseCase } from './application/useCases/PullDataUseCase';
+import { IListPackagesUseCase } from './domain/useCases/IListPackagesUseCase';
+import { ListPackagesUseCase } from './application/useCases/ListPackagesUseCase';
 
 export class PackmindCliHexaFactory {
   public repositories: IPackmindRepositories;
@@ -26,6 +28,7 @@ export class PackmindCliHexaFactory {
     listFilesInDirectoryUseCase: IListFilesInDirectoryUseCase;
     lintFilesInDirectory: ILintFilesInDirectory;
     pullData: IPullDataUseCase;
+    listPackages: IListPackagesUseCase;
   };
 
   constructor(private readonly logger: PackmindLogger) {
@@ -53,6 +56,7 @@ export class PackmindCliHexaFactory {
         this.logger,
       ),
       pullData: new PullDataUseCase(this.repositories.packmindGateway),
+      listPackages: new ListPackagesUseCase(this.repositories.packmindGateway),
     };
   }
 }

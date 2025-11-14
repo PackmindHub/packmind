@@ -4,10 +4,14 @@ export const nxPreset = {
   resolver: '@nx/jest/plugins/resolver',
   moduleFileExtensions: ['ts', 'js', 'mjs', 'html'],
   coverageReporters: ['html'],
+  setupFilesAfterEnv: ['<rootDir>/../../jest.setup.ts'],
   transform: {
     '^.+\\.(ts|js|html)$': [
       'ts-jest',
-      { tsconfig: '<rootDir>/tsconfig.spec.json' },
+      {
+        tsconfig: '<rootDir>/tsconfig.spec.json',
+        isolatedModules: true, // Faster compilation, less memory
+      },
     ],
   },
   testEnvironment: 'jsdom',
@@ -29,4 +33,19 @@ export const nxPreset = {
   },
   testTimeout: 20000, // 20 seconds
   passWithNoTests: true, // Allow packages without tests to pass
+
+  // Memory optimizations
+  maxWorkers: '50%', // Limit parallel workers to 50% of CPU cores
+  workerIdleMemoryLimit: '512MB', // Kill workers using more than 512MB when idle
+
+  // Clear mocks and cache between tests
+  clearMocks: true,
+  resetMocks: true,
+  restoreMocks: true,
+
+  // Detect memory leaks
+  detectLeaks: false, // Can be enabled for debugging, but slows down tests significantly
+
+  // Force garbage collection between test files (requires --expose-gc flag)
+  // This is handled in the test script
 };

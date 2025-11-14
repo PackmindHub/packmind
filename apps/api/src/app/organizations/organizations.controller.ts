@@ -11,6 +11,7 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
   OrganizationOnboardingStatus,
   IPullContentResponse,
+  ListPackagesResponse,
   IAccountsPort,
   IDeploymentPort,
 } from '@packmind/types';
@@ -155,6 +156,45 @@ export class OrganizationsController {
         throw new NotFoundException(error.message);
       }
 
+      throw error;
+    }
+  }
+
+  /**
+   * List all packages for an organization
+   * GET /organizations/:orgId/packages
+   */
+  @Get('packages')
+  async listPackages(
+    @Param('orgId') organizationId: OrganizationId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<ListPackagesResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'GET /organizations/:orgId/packages - Listing all packages for organization',
+      {
+        organizationId,
+        userId,
+      },
+    );
+
+    try {
+      return await this.deploymentAdapter.listPackages({
+        userId,
+        organizationId,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/packages - Failed to list packages',
+        {
+          organizationId,
+          userId,
+          error: errorMessage,
+        },
+      );
       throw error;
     }
   }

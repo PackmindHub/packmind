@@ -6,6 +6,7 @@ import {
   RecipeId,
   SpaceId,
   StandardId,
+  OrganizationId,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, AbstractRepository } from '@packmind/node-utils';
@@ -60,6 +61,38 @@ export class PackageRepository
     } catch (error) {
       this.logger.error('Failed to find packages by space ID', {
         spaceId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async findByOrganizationId(
+    organizationId: OrganizationId,
+  ): Promise<Package[]> {
+    this.logger.info('Finding packages by organization ID', {
+      organizationId,
+    });
+
+    try {
+      const packages = await this.repository
+        .createQueryBuilder('package')
+        .leftJoinAndSelect('package.recipes', 'recipes')
+        .leftJoinAndSelect('package.standards', 'standards')
+        .innerJoin('spaces', 'space', 'package.spaceId = space.id')
+        .where('space.organizationId = :organizationId', { organizationId })
+        .orderBy('package.createdAt', 'DESC')
+        .getMany();
+
+      this.logger.info('Packages found by organization ID successfully', {
+        organizationId,
+        count: packages.length,
+      });
+
+      return packages;
+    } catch (error) {
+      this.logger.error('Failed to find packages by organization ID', {
+        organizationId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
@@ -202,6 +235,121 @@ export class PackageRepository
       });
     } catch (error) {
       this.logger.error('Failed to add standards to package', {
+        packageId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async updatePackageDetails(
+    packageId: PackageId,
+    name: string,
+    description: string,
+  ): Promise<void> {
+    this.logger.info('Updating package details', {
+      packageId,
+      name,
+    });
+
+    try {
+      await this.repository
+        .createQueryBuilder()
+        .update(PackageSchema)
+        .set({ name, description })
+        .where('id = :packageId', { packageId })
+        .execute();
+
+      this.logger.info('Package details updated successfully', {
+        packageId,
+      });
+    } catch (error) {
+      this.logger.error('Failed to update package details', {
+        packageId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async setRecipes(packageId: PackageId, recipeIds: RecipeId[]): Promise<void> {
+    this.logger.info('Setting recipes for package', {
+      packageId,
+      recipeCount: recipeIds.length,
+    });
+
+    try {
+      await this.repository
+        .createQueryBuilder()
+        .delete()
+        .from('package_recipes')
+        .where('package_id = :packageId', { packageId })
+        .execute();
+
+      if (recipeIds.length > 0) {
+        const values = recipeIds.map((recipeId) => ({
+          package_id: packageId,
+          recipe_id: recipeId,
+        }));
+
+        await this.repository
+          .createQueryBuilder()
+          .insert()
+          .into('package_recipes')
+          .values(values)
+          .execute();
+      }
+
+      this.logger.info('Recipes set for package successfully', {
+        packageId,
+        recipeCount: recipeIds.length,
+      });
+    } catch (error) {
+      this.logger.error('Failed to set recipes for package', {
+        packageId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async setStandards(
+    packageId: PackageId,
+    standardIds: StandardId[],
+  ): Promise<void> {
+    this.logger.info('Setting standards for package', {
+      packageId,
+      standardCount: standardIds.length,
+    });
+
+    try {
+      await this.repository
+        .createQueryBuilder()
+        .delete()
+        .from('package_standards')
+        .where('package_id = :packageId', { packageId })
+        .execute();
+
+      if (standardIds.length > 0) {
+        const values = standardIds.map((standardId) => ({
+          package_id: packageId,
+          standard_id: standardId,
+        }));
+
+        await this.repository
+          .createQueryBuilder()
+          .insert()
+          .into('package_standards')
+          .values(values)
+          .execute();
+      }
+
+      this.logger.info('Standards set for package successfully', {
+        packageId,
+        standardCount: standardIds.length,
+      });
+    } catch (error) {
+      this.logger.error('Failed to set standards for package', {
         packageId,
         error: error instanceof Error ? error.message : String(error),
       });

@@ -16,8 +16,10 @@ import {
   createSpaceId,
   createUserId,
 } from '@packmind/types';
+import { CodingAgents } from '@packmind/coding-agent';
 import { v4 as uuidv4 } from 'uuid';
 import { PackageService } from '../services/PackageService';
+import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import { PullContentUseCase } from './PullContentUseCase';
 
 const createUserWithMembership = (
@@ -44,6 +46,7 @@ describe('PullContentUseCase', () => {
   let standardsPort: jest.Mocked<IStandardsPort>;
   let codingAgentPort: jest.Mocked<ICodingAgentPort>;
   let accountsPort: jest.Mocked<IAccountsPort>;
+  let renderModeConfigurationService: jest.Mocked<RenderModeConfigurationService>;
   let useCase: PullContentUseCase;
   let command: PullContentCommand;
   let organizationId: OrganizationId;
@@ -82,6 +85,15 @@ describe('PullContentUseCase', () => {
       getOrganizationById: jest.fn(),
     } as unknown as jest.Mocked<IAccountsPort>;
 
+    renderModeConfigurationService = {
+      resolveActiveCodingAgents: jest.fn(),
+    } as unknown as jest.Mocked<RenderModeConfigurationService>;
+
+    renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue([
+      CodingAgents.packmind,
+      CodingAgents.agents_md,
+    ]);
+
     organizationId = createOrganizationId(uuidv4());
     organization = {
       id: organizationId,
@@ -105,6 +117,7 @@ describe('PullContentUseCase', () => {
       recipesPort,
       standardsPort,
       codingAgentPort,
+      renderModeConfigurationService,
       accountsPort,
       stubLogger(),
     );
@@ -243,56 +256,70 @@ describe('PullContentUseCase', () => {
       expect(result.fileUpdates.delete).toEqual([]);
     });
 
-    it('throws PackagesNotFoundError when package slugs do not match', async () => {
-      const commandWithMultipleSlugs = {
-        ...command,
-        packagesSlugs: ['test-package', 'unknown-package'],
-      };
+    describe('when package slugs do not match', () => {
+      let commandWithMultipleSlugs: PullContentCommand;
+      let testPackage: PackageWithArtefacts;
 
-      const testPackage: PackageWithArtefacts = {
-        id: createPackageId('test-package-id'),
-        slug: 'test-package',
-        name: 'Test Package',
-        description: 'Test package description',
-        spaceId: createSpaceId('space-1'),
-        createdBy: createUserId('user-1'),
-        recipes: [],
-        standards: [],
-      };
+      beforeEach(() => {
+        commandWithMultipleSlugs = {
+          ...command,
+          packagesSlugs: ['test-package', 'unknown-package'],
+        };
 
-      packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-        testPackage,
-      ]);
+        testPackage = {
+          id: createPackageId('test-package-id'),
+          slug: 'test-package',
+          name: 'Test Package',
+          description: 'Test package description',
+          spaceId: createSpaceId('space-1'),
+          createdBy: createUserId('user-1'),
+          recipes: [],
+          standards: [],
+        };
 
-      await expect(useCase.execute(commandWithMultipleSlugs)).rejects.toThrow(
-        'Package "unknown-package" was not found',
-      );
+        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+          testPackage,
+        ]);
+      });
+
+      it('throws PackagesNotFoundError', async () => {
+        await expect(useCase.execute(commandWithMultipleSlugs)).rejects.toThrow(
+          'Package "unknown-package" was not found',
+        );
+      });
     });
 
-    it('throws PackagesNotFoundError when multiple package slugs do not match', async () => {
-      const commandWithMultipleSlugs = {
-        ...command,
-        packagesSlugs: ['test-package', 'unknown-1', 'unknown-2'],
-      };
+    describe('when multiple package slugs do not match', () => {
+      let commandWithMultipleSlugs: PullContentCommand;
+      let testPackage: PackageWithArtefacts;
 
-      const testPackage: PackageWithArtefacts = {
-        id: createPackageId('test-package-id'),
-        slug: 'test-package',
-        name: 'Test Package',
-        description: 'Test package description',
-        spaceId: createSpaceId('space-1'),
-        createdBy: createUserId('user-1'),
-        recipes: [],
-        standards: [],
-      };
+      beforeEach(() => {
+        commandWithMultipleSlugs = {
+          ...command,
+          packagesSlugs: ['test-package', 'unknown-1', 'unknown-2'],
+        };
 
-      packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-        testPackage,
-      ]);
+        testPackage = {
+          id: createPackageId('test-package-id'),
+          slug: 'test-package',
+          name: 'Test Package',
+          description: 'Test package description',
+          spaceId: createSpaceId('space-1'),
+          createdBy: createUserId('user-1'),
+          recipes: [],
+          standards: [],
+        };
 
-      await expect(useCase.execute(commandWithMultipleSlugs)).rejects.toThrow(
-        'Packages "unknown-1", "unknown-2" were not found',
-      );
+        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+          testPackage,
+        ]);
+      });
+
+      it('throws PackagesNotFoundError', async () => {
+        await expect(useCase.execute(commandWithMultipleSlugs)).rejects.toThrow(
+          'Packages "unknown-1", "unknown-2" were not found',
+        );
+      });
     });
   });
 });

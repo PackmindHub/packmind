@@ -6,6 +6,8 @@ import {
   RecipeId,
   SpaceId,
   StandardId,
+  UserId,
+  OrganizationId,
 } from '@packmind/types';
 import { IPackageRepository } from '../../domain/repositories/IPackageRepository';
 
@@ -68,6 +70,32 @@ export class PackageService {
     } catch (error) {
       this.logger.error('Failed to get packages by space ID', {
         spaceId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async getPackagesByOrganizationId(
+    organizationId: OrganizationId,
+  ): Promise<Package[]> {
+    this.logger.info('Getting packages by organization ID', {
+      organizationId,
+    });
+
+    try {
+      const packages =
+        await this.packageRepository.findByOrganizationId(organizationId);
+
+      this.logger.info('Packages found by organization ID successfully', {
+        organizationId,
+        count: packages.length,
+      });
+
+      return packages;
+    } catch (error) {
+      this.logger.error('Failed to get packages by organization ID', {
+        organizationId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
@@ -141,6 +169,107 @@ export class PackageService {
       this.logger.error('Failed to create package', {
         packageId: pkg.id,
         name: pkg.name,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async deletePackage(packageId: PackageId, deletedBy: UserId): Promise<void> {
+    this.logger.info('Deleting package', {
+      packageId,
+      deletedBy,
+    });
+
+    try {
+      await this.packageRepository.deleteById(packageId, deletedBy);
+
+      this.logger.info('Package deleted successfully', {
+        packageId,
+        deletedBy,
+      });
+    } catch (error) {
+      this.logger.error('Failed to delete package', {
+        packageId,
+        deletedBy,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async deletePackages(
+    packageIds: PackageId[],
+    deletedBy: UserId,
+  ): Promise<void> {
+    this.logger.info('Deleting multiple packages', {
+      packageIds,
+      count: packageIds.length,
+      deletedBy,
+    });
+
+    try {
+      await Promise.all(
+        packageIds.map((packageId) =>
+          this.packageRepository.deleteById(packageId, deletedBy),
+        ),
+      );
+
+      this.logger.info('Packages deleted successfully', {
+        count: packageIds.length,
+        deletedBy,
+      });
+    } catch (error) {
+      this.logger.error('Failed to delete packages', {
+        packageIds,
+        count: packageIds.length,
+        deletedBy,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async updatePackage(
+    packageId: PackageId,
+    name: string,
+    description: string,
+    recipeIds: RecipeId[],
+    standardIds: StandardId[],
+  ): Promise<Package> {
+    this.logger.info('Updating package', {
+      packageId,
+      name,
+      recipeCount: recipeIds.length,
+      standardCount: standardIds.length,
+    });
+
+    try {
+      await this.packageRepository.updatePackageDetails(
+        packageId,
+        name,
+        description,
+      );
+      await this.packageRepository.setRecipes(packageId, recipeIds);
+      await this.packageRepository.setStandards(packageId, standardIds);
+
+      const updatedPackage = await this.packageRepository.findById(packageId);
+      if (!updatedPackage) {
+        throw new Error('Failed to retrieve updated package');
+      }
+
+      this.logger.info('Package updated successfully', {
+        packageId: updatedPackage.id,
+        name: updatedPackage.name,
+        recipeCount: updatedPackage.recipes?.length ?? 0,
+        standardCount: updatedPackage.standards?.length ?? 0,
+      });
+
+      return updatedPackage;
+    } catch (error) {
+      this.logger.error('Failed to update package', {
+        packageId,
+        name,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

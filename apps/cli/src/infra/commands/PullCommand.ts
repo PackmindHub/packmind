@@ -1,4 +1,4 @@
-import { command, restPositionals, string } from 'cmd-ts';
+import { command, restPositionals, string, flag } from 'cmd-ts';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 
@@ -7,6 +7,10 @@ export const pullCommand = command({
   description:
     'Pull recipes and standards from specified packages and save them to the current directory',
   args: {
+    list: flag({
+      long: 'list',
+      description: 'List available packages',
+    }),
     packagesSlugs: restPositionals({
       type: string,
       displayName: 'packages',
@@ -14,14 +18,47 @@ export const pullCommand = command({
         'Package slugs to pull content from (e.g., backend frontend)',
     }),
   },
-  handler: async ({ packagesSlugs }) => {
+  handler: async ({ list, packagesSlugs }) => {
+    // Initialize hexa and logger
+    const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
+    const packmindCliHexa = new PackmindCliHexa(packmindLogger);
+
+    // Handle --list flag
+    if (list) {
+      try {
+        console.log('Fetching available packages...\n');
+        const packages = await packmindCliHexa.listPackages({});
+
+        if (packages.length === 0) {
+          console.log('No packages found.');
+          process.exit(0);
+        }
+
+        console.log('Available packages:');
+        packages.forEach((pkg) => {
+          console.log(`  - ${pkg.slug}: ${pkg.description || pkg.name}`);
+        });
+        process.exit(0);
+      } catch (error) {
+        console.error('\n❌ Failed to list packages:');
+        if (error instanceof Error) {
+          console.error(`   ${error.message}`);
+        } else {
+          console.error(`   ${String(error)}`);
+        }
+        process.exit(1);
+      }
+    }
+
     // Show help if no package slugs provided
     if (packagesSlugs.length === 0) {
       console.log('Usage: packmind-cli pull <package-slug> [package-slug...]');
+      console.log('       packmind-cli pull --list');
       console.log('');
       console.log('Examples:');
       console.log('  packmind-cli pull backend');
       console.log('  packmind-cli pull backend frontend');
+      console.log('  packmind-cli pull --list  # Show available packages');
       console.log('');
       console.log('Pull recipes and standards from the specified packages.');
       process.exit(0);
@@ -30,10 +67,6 @@ export const pullCommand = command({
     console.log(
       `Pulling content from packages: ${packagesSlugs.join(', ')}...`,
     );
-
-    // Initialize hexa and logger
-    const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
-    const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
     try {
       // Execute the pull operation

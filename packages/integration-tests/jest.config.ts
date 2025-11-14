@@ -17,5 +17,5 @@ export default {
   moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, {
     prefix: '<rootDir>/../../',
   }),
-  testTimeout: 30000, // 30 seconds for integration tests (database setup can be slow)
+  testTimeout: 30000,
 };

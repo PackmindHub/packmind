@@ -2,6 +2,10 @@ import { Injectable } from '@nestjs/common';
 import {
   CreatePackageCommand,
   CreatePackageResponse,
+  UpdatePackageCommand,
+  UpdatePackageResponse,
+  DeletePackagesBatchCommand,
+  DeletePackagesBatchResponse,
   DeploymentOverview,
   GetDeploymentOverviewCommand,
   GetPackageByIdCommand,
@@ -99,9 +103,21 @@ export class DeploymentsService {
     return this.deploymentAdapter.createPackage(command);
   }
 
+  async updatePackage(
+    command: UpdatePackageCommand,
+  ): Promise<UpdatePackageResponse> {
+    return this.deploymentAdapter.updatePackage(command);
+  }
+
   async getPackageById(
     command: GetPackageByIdCommand,
   ): Promise<GetPackageByIdResponse> {
     return this.deploymentAdapter.getPackageById(command);
+  }
+
+  async deletePackagesBatch(
+    command: DeletePackagesBatchCommand,
+  ): Promise<DeletePackagesBatchResponse> {
+    return this.deploymentAdapter.deletePackagesBatch(command);
   }
 }

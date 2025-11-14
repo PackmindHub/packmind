@@ -3,7 +3,11 @@ import {
   AddTargetCommand,
   CreatePackageCommand,
   CreatePackageResponse,
+  UpdatePackageCommand,
+  UpdatePackageResponse,
   CreateRenderModeConfigurationCommand,
+  DeletePackagesBatchCommand,
+  DeletePackagesBatchResponse,
   DeleteTargetCommand,
   DeleteTargetResponse,
   DeploymentOverview,
@@ -36,6 +40,8 @@ import {
   IStandardsPortName,
   ListDeploymentsByRecipeCommand,
   ListDeploymentsByStandardCommand,
+  ListPackagesCommand,
+  ListPackagesResponse,
   ListPackagesBySpaceCommand,
   ListPackagesBySpaceResponse,
   PackagesDeployment,
@@ -58,7 +64,9 @@ import { IStandardsDeploymentRepository } from '../../domain/repositories/IStand
 import { DeploymentsServices } from '../services/DeploymentsServices';
 import { AddTargetUseCase } from '../useCases/AddTargetUseCase';
 import { CreatePackageUsecase } from '../useCases/createPackage/createPackage.usecase';
+import { UpdatePackageUsecase } from '../useCases/updatePackage/updatePackage.usecase';
 import { CreateRenderModeConfigurationUseCase } from '../useCases/CreateRenderModeConfigurationUseCase';
+import { DeletePackagesBatchUsecase } from '../useCases/deletePackage/deletePackagesBatch.usecase';
 import { DeleteTargetUseCase } from '../useCases/DeleteTargetUseCase';
 import { FindActiveStandardVersionsByTargetUseCase } from '../useCases/FindActiveStandardVersionsByTargetUseCase';
 import { FindDeployedStandardByRepositoryUseCase } from '../useCases/FindDeployedStandardByRepositoryUseCase';
@@ -71,6 +79,7 @@ import { GetTargetsByOrganizationUseCase } from '../useCases/GetTargetsByOrganiz
 import { GetTargetsByRepositoryUseCase } from '../useCases/GetTargetsByRepositoryUseCase';
 import { ListDeploymentsByRecipeUseCase } from '../useCases/ListDeploymentsByRecipeUseCase';
 import { ListDeploymentsByStandardUseCase } from '../useCases/ListDeploymentsByStandardUseCase';
+import { ListPackagesUsecase } from '../useCases/listPackages/listPackages.usecase';
 import { ListPackagesBySpaceUsecase } from '../useCases/listPackagesBySpace/listPackagesBySpace.usecase';
 import { PublishPackagesUseCase } from '../useCases/PublishPackagesUseCase';
 import { PublishRecipesUseCase } from '../useCases/PublishRecipesUseCase';
@@ -109,9 +118,12 @@ export class DeploymentsAdapter
   private _createRenderModeConfigurationUseCase!: CreateRenderModeConfigurationUseCase;
   private _updateRenderModeConfigurationUseCase!: UpdateRenderModeConfigurationUseCase;
   private _pullAllContentUseCase!: PullContentUseCase;
+  private _listPackagesUseCase!: ListPackagesUsecase;
   private _listPackagesBySpaceUseCase!: ListPackagesBySpaceUsecase;
   private _createPackageUseCase!: CreatePackageUsecase;
+  private _updatePackageUseCase!: UpdatePackageUsecase;
   private _getPackageByIdUseCase!: GetPackageByIdUsecase;
+  private _deletePackagesBatchUseCase!: DeletePackagesBatchUsecase;
 
   constructor(
     private readonly deploymentsServices: DeploymentsServices,
@@ -272,6 +284,7 @@ export class DeploymentsAdapter
       this.recipesPort,
       this.standardsPort,
       this.codingAgentPort,
+      this.deploymentsServices.getRenderModeConfigurationService(),
       this.accountsPort,
     );
 
@@ -279,6 +292,11 @@ export class DeploymentsAdapter
       this.accountsPort,
       this.deploymentsServices,
       this.spacesPort,
+    );
+
+    this._listPackagesUseCase = new ListPackagesUsecase(
+      this.accountsPort,
+      this.deploymentsServices,
     );
 
     this._createPackageUseCase = new CreatePackageUsecase(
@@ -289,9 +307,21 @@ export class DeploymentsAdapter
       this.standardsPort,
     );
 
+    this._updatePackageUseCase = new UpdatePackageUsecase(
+      this.accountsPort,
+      this.deploymentsServices,
+      this.spacesPort,
+      this.recipesPort,
+      this.standardsPort,
+    );
+
     this._getPackageByIdUseCase = new GetPackageByIdUsecase(
       this.accountsPort,
       this.deploymentsServices,
+    );
+
+    this._deletePackagesBatchUseCase = new DeletePackagesBatchUsecase(
+      this.deploymentsServices.getPackageService(),
     );
   }
 
@@ -425,15 +455,33 @@ export class DeploymentsAdapter
     return this._listPackagesBySpaceUseCase.execute(command);
   }
 
+  async listPackages(
+    command: ListPackagesCommand,
+  ): Promise<ListPackagesResponse> {
+    return this._listPackagesUseCase.execute(command);
+  }
+
   async createPackage(
     command: CreatePackageCommand,
   ): Promise<CreatePackageResponse> {
     return this._createPackageUseCase.execute(command);
   }
 
+  async updatePackage(
+    command: UpdatePackageCommand,
+  ): Promise<UpdatePackageResponse> {
+    return this._updatePackageUseCase.execute(command);
+  }
+
   async getPackageById(
     command: GetPackageByIdCommand,
   ): Promise<GetPackageByIdResponse> {
     return this._getPackageByIdUseCase.execute(command);
+  }
+
+  async deletePackagesBatch(
+    command: DeletePackagesBatchCommand,
+  ): Promise<DeletePackagesBatchResponse> {
+    return this._deletePackagesBatchUseCase.execute(command);
   }
 }

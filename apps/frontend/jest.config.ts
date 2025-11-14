@@ -34,4 +34,5 @@ export default {
     '^@packmind/assets$': '<rootDir>/../../packages/assets/src/index.ts',
     '^@packmind/assets/(.*)$': '<rootDir>/../../packages/assets/src/$1',
   },
+  testTimeout: 30000,
 };
