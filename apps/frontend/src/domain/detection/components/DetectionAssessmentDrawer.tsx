@@ -23,15 +23,15 @@ import {
   useGetDetectionHeuristicsQuery,
   useUpdateDetectionHeuristicsMutation,
   useGetActiveDetectionProgramsQuery,
+  useGetRuleDetectionAssessmentQuery,
 } from '../api/queries/DetectionProgramQueries';
 
 interface DetectionAssessmentDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  assessment: RuleDetectionAssessment & { updatedAt?: Date };
   standardId: string;
   ruleId: string;
-  language: string;
+  language: string | null;
 }
 
 const OTHER_ANSWER_VALUE = '__OTHER__';
@@ -86,7 +86,7 @@ const formatDuration = (updatedAt: Date): string => {
 
 export const DetectionAssessmentDrawer: React.FC<
   DetectionAssessmentDrawerProps
-> = ({ isOpen, onClose, assessment, standardId, ruleId, language }) => {
+> = ({ isOpen, onClose, standardId, ruleId, language }) => {
   const [heuristicsText, setHeuristicsText] = useState('');
   const [hasChanges, setHasChanges] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -94,8 +94,14 @@ export const DetectionAssessmentDrawer: React.FC<
   const [previousStatus, setPreviousStatus] =
     useState<RuleDetectionAssessmentStatus | null>(null);
 
+  const { data: assessment } = useGetRuleDetectionAssessmentQuery(
+    standardId,
+    ruleId,
+    language ?? '',
+  );
+
   const { data: detectionHeuristics, isLoading: isLoadingHeuristics } =
-    useGetDetectionHeuristicsQuery(standardId, ruleId, language);
+    useGetDetectionHeuristicsQuery(standardId, ruleId, language ?? '');
 
   const { data: activePrograms } = useGetActiveDetectionProgramsQuery(
     standardId,
@@ -105,6 +111,8 @@ export const DetectionAssessmentDrawer: React.FC<
   const updateHeuristics = useUpdateDetectionHeuristicsMutation();
 
   const isEditable = useMemo(() => {
+    if (!assessment) return false;
+
     // Check if assessment is in error
     const isAssessmentInError =
       assessment.status === RuleDetectionAssessmentStatus.FAILED;
@@ -120,7 +128,7 @@ export const DetectionAssessmentDrawer: React.FC<
       programForLanguage?.detectionProgram?.status === DetectionStatus.FAILURE;
 
     return isAssessmentInError || isProgramGenerationInError;
-  }, [assessment.status, activePrograms, language]);
+  }, [assessment, activePrograms, language]);
 
   useEffect(() => {
     if (detectionHeuristics && Array.isArray(detectionHeuristics.heuristics)) {
@@ -131,12 +139,8 @@ export const DetectionAssessmentDrawer: React.FC<
   }, [detectionHeuristics]);
 
   useEffect(() => {
-    // Track status changes
-    setPreviousStatus(assessment.status);
-  }, [assessment.status]);
+    if (!assessment) return;
 
-  useEffect(() => {
-    // Show success toaster when assessment transitions to SUCCESS and drawer is open
     const justChangedToSuccess =
       previousStatus !== null &&
       previousStatus !== RuleDetectionAssessmentStatus.SUCCESS &&
@@ -149,21 +153,17 @@ export const DetectionAssessmentDrawer: React.FC<
         description: 'Program generation has started.',
       });
     }
-  }, [previousStatus, assessment.status, isOpen]);
+
+    setPreviousStatus(assessment.status);
+  }, [assessment, isOpen, previousStatus]);
 
   const handleOpenChange = useCallback(
     ({ open }: { open: boolean }) => {
-      // Prevent auto-close when status just changed to SUCCESS
-      const justChangedToSuccess =
-        previousStatus !== null &&
-        previousStatus !== RuleDetectionAssessmentStatus.SUCCESS &&
-        assessment.status === RuleDetectionAssessmentStatus.SUCCESS;
-
-      if (!open && !justChangedToSuccess) {
+      if (!open) {
         onClose();
       }
     },
-    [previousStatus, assessment.status, onClose],
+    [onClose],
   );
 
   const handleHeuristicsChange = useCallback(
@@ -223,7 +223,7 @@ export const DetectionAssessmentDrawer: React.FC<
       | { question: string; answer: string }
       | undefined = undefined;
 
-    if (selectedAnswer !== null && assessment.clarificationQuestion) {
+    if (selectedAnswer !== null && assessment?.clarificationQuestion) {
       const answer =
         selectedAnswer === OTHER_ANSWER_VALUE
           ? otherAnswerText.trim()
@@ -261,8 +261,12 @@ export const DetectionAssessmentDrawer: React.FC<
     updateHeuristics,
     selectedAnswer,
     otherAnswerText,
-    assessment.clarificationQuestion,
+    assessment?.clarificationQuestion,
   ]);
+
+  if (!assessment) {
+    return null;
+  }
 
   return (
     <PMDrawer.Root open={isOpen} onOpenChange={handleOpenChange} size="xl">
@@ -277,11 +281,19 @@ export const DetectionAssessmentDrawer: React.FC<
                   <PMBadge colorPalette={getStatusColor(assessment.status)}>
                     Status: {formatAssessmentStatus(assessment.status)}
                   </PMBadge>
-                  {assessment.updatedAt && (
-                    <PMText fontSize="sm" color="tertiary">
-                      {formatDuration(new Date(assessment.updatedAt))}
-                    </PMText>
-                  )}
+                  {(() => {
+                    const assessmentWithUpdatedAt =
+                      assessment as RuleDetectionAssessment & {
+                        updatedAt?: Date;
+                      };
+                    return assessmentWithUpdatedAt.updatedAt ? (
+                      <PMText fontSize="sm" color="tertiary">
+                        {formatDuration(
+                          new Date(assessmentWithUpdatedAt.updatedAt),
+                        )}
+                      </PMText>
+                    ) : null;
+                  })()}
                 </PMHStack>
               </PMVStack>
             </PMDrawer.Header>

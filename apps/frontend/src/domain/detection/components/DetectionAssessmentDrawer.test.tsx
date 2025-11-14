@@ -51,10 +51,9 @@ describe('DetectionAssessmentDrawer', () => {
   let props: {
     isOpen: boolean;
     onClose: () => void;
-    assessment: RuleDetectionAssessment;
     standardId: string;
     ruleId: string;
-    language: string;
+    language: string | null;
   };
   let screen: RenderResult;
   let detectionHeuristics: DetectionHeuristics;
@@ -86,7 +85,6 @@ describe('DetectionAssessmentDrawer', () => {
     props = {
       isOpen: true,
       onClose: jest.fn(),
-      assessment,
       standardId: createStandardId('standard-id'),
       ruleId: createRuleId('rule-id'),
       language: ProgrammingLanguage.TYPESCRIPT,
@@ -125,6 +123,12 @@ describe('DetectionAssessmentDrawer', () => {
     beforeEach(() => {
       props.isOpen = false;
       jest
+        .spyOn(DetectionProgramQueries, 'useGetRuleDetectionAssessmentQuery')
+        .mockReturnValue({ data: assessment } as Partial<
+          UseQueryResult<RuleDetectionAssessment | null>
+        > as UseQueryResult<RuleDetectionAssessment | null>);
+
+      jest
         .spyOn(DetectionProgramQueries, 'useGetDetectionHeuristicsQuery')
         .mockReturnValue({ data: detectionHeuristics } as Partial<
           UseQueryResult<DetectionHeuristics | null>
@@ -155,6 +159,12 @@ describe('DetectionAssessmentDrawer', () => {
 
   describe('when drawer is open', () => {
     beforeEach(() => {
+      jest
+        .spyOn(DetectionProgramQueries, 'useGetRuleDetectionAssessmentQuery')
+        .mockReturnValue({ data: assessment } as Partial<
+          UseQueryResult<RuleDetectionAssessment | null>
+        > as UseQueryResult<RuleDetectionAssessment | null>);
+
       jest
         .spyOn(DetectionProgramQueries, 'useGetDetectionHeuristicsQuery')
         .mockReturnValue({ data: detectionHeuristics } as Partial<
@@ -713,10 +723,27 @@ describe('DetectionAssessmentDrawer', () => {
             screen.unmount();
           }
           assessment.status = RuleDetectionAssessmentStatus.IN_PROGRESS;
+
+          // Set up mock to return IN_PROGRESS first
+          const assessmentQuerySpy = jest
+            .spyOn(
+              DetectionProgramQueries,
+              'useGetRuleDetectionAssessmentQuery',
+            )
+            .mockReturnValueOnce({ data: { ...assessment } } as Partial<
+              UseQueryResult<RuleDetectionAssessment | null>
+            > as UseQueryResult<RuleDetectionAssessment | null>);
+
           screen = renderWithContext();
 
-          // Simulate status change to SUCCESS
+          // Simulate status change to SUCCESS by updating the mock
           assessment.status = RuleDetectionAssessmentStatus.SUCCESS;
+          assessmentQuerySpy.mockReturnValue({
+            data: { ...assessment },
+          } as Partial<
+            UseQueryResult<RuleDetectionAssessment | null>
+          > as UseQueryResult<RuleDetectionAssessment | null>);
+
           screen.rerender(
             <UIProvider>
               <QueryClientProvider client={queryClient}>

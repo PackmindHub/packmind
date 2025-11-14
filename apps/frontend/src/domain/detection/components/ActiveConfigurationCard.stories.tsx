@@ -81,6 +81,8 @@ const meta = {
     onTestProgram: () => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     onActivateDraft: () => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    onOpenAssessmentDrawer: () => {},
   },
   decorators: [],
 } satisfies Meta<typeof ActiveConfigurationCard>;

@@ -124,9 +124,7 @@ export class GetActiveDetectionProgramUseCase
     language: ProgrammingLanguage,
   ): LanguageDetectionPrograms {
     return {
-      id: createActiveDetectionProgramId(
-        `example-only-${String(ruleId)}-${language}`,
-      ),
+      id: createActiveDetectionProgramId(`${String(ruleId)}-${language}`),
       detectionProgramVersion: null,
       detectionProgramDraftVersion: null,
       ruleId,

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   PMAlert,
   PMEmptyState,
@@ -11,6 +11,7 @@ import {
   ActiveConfigurationCardData,
 } from './ActiveConfigurationCard';
 import { DraftCardData } from './DetectionDraftCard';
+import { DetectionAssessmentDrawer } from './DetectionAssessmentDrawer';
 
 const LoadingState = ({
   title,
@@ -65,6 +66,30 @@ export const ActiveConfigurationSection: React.FC<
   activatingDraftId,
   isActivatingDraft,
 }) => {
+  const [openDrawerLanguage, setOpenDrawerLanguage] = useState<string | null>(
+    null,
+  );
+
+  const handleOpenAssessmentDrawer = useCallback((language: string) => {
+    setOpenDrawerLanguage(language);
+  }, []);
+
+  const handleCloseDrawer = useCallback(() => {
+    setOpenDrawerLanguage(null);
+  }, []);
+
+  useEffect(() => {
+    if (openDrawerLanguage) {
+      const languageExists = configurations.some(
+        (c) => c.language === openDrawerLanguage,
+      );
+
+      if (!languageExists) {
+        setOpenDrawerLanguage(null);
+      }
+    }
+  }, [configurations, openDrawerLanguage]);
+
   if (isLoading) {
     return (
       <PMPageSection variant="outline">
@@ -99,23 +124,33 @@ export const ActiveConfigurationSection: React.FC<
   }
 
   return (
-    <PMPageSection variant="outline">
-      <PMFlex gap={4} wrap="wrap">
-        {configurations.map((config) => (
-          <ActiveConfigurationCard
-            key={config.id}
-            configuration={config}
-            onGenerateProgram={onGenerateProgram}
-            isGenerating={isGeneratingProgram}
-            standardId={standardId}
-            ruleId={ruleId}
-            onTestProgram={onTestProgram}
-            onActivateDraft={onActivateDraft}
-            activatingDraftId={activatingDraftId}
-            isActivatingDraft={isActivatingDraft}
-          />
-        ))}
-      </PMFlex>
-    </PMPageSection>
+    <>
+      <PMPageSection variant="outline">
+        <PMFlex gap={4} wrap="wrap">
+          {configurations.map((config) => (
+            <ActiveConfigurationCard
+              key={config.id}
+              configuration={config}
+              onGenerateProgram={onGenerateProgram}
+              isGenerating={isGeneratingProgram}
+              standardId={standardId}
+              ruleId={ruleId}
+              onTestProgram={onTestProgram}
+              onActivateDraft={onActivateDraft}
+              activatingDraftId={activatingDraftId}
+              isActivatingDraft={isActivatingDraft}
+              onOpenAssessmentDrawer={handleOpenAssessmentDrawer}
+            />
+          ))}
+        </PMFlex>
+      </PMPageSection>
+      <DetectionAssessmentDrawer
+        isOpen={openDrawerLanguage !== null}
+        onClose={handleCloseDrawer}
+        standardId={standardId}
+        ruleId={ruleId}
+        language={openDrawerLanguage}
+      />
+    </>
   );
 };

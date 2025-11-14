@@ -1,4 +1,4 @@
-import React, { ReactNode, useState } from 'react';
+import React, { ReactNode } from 'react';
 import {
   IPMButtonProps,
   PMBox,
@@ -22,7 +22,6 @@ import {
 import { useGetMeQuery } from '../../accounts/api/queries/UserQueries';
 import { ConfigurationCard, ConfigurationCardProps } from './ConfigurationCard';
 import { DraftCardData } from './DetectionDraftCard';
-import { DetectionAssessmentDrawer } from './DetectionAssessmentDrawer';
 import { RxQuestionMarkCircled } from 'react-icons/rx';
 
 export enum ActiveConfigurationState {
@@ -52,6 +51,7 @@ export type ActiveConfigurationCardProps = {
   onActivateDraft?: (draft: DraftCardData) => void;
   activatingDraftId?: string | null;
   isActivatingDraft?: boolean;
+  onOpenAssessmentDrawer: (language: string) => void;
 };
 
 export const ActiveConfigurationCard: React.FC<
@@ -66,21 +66,8 @@ export const ActiveConfigurationCard: React.FC<
   onActivateDraft,
   activatingDraftId,
   isActivatingDraft = false,
+  onOpenAssessmentDrawer,
 }) => {
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-
-  const { data: assessment } = useGetRuleDetectionAssessmentQuery(
-    standardId,
-    ruleId,
-    configuration.language,
-  );
-
-  const { data: detectionHeuristics } = useGetDetectionHeuristicsQuery(
-    standardId,
-    ruleId,
-    configuration.language,
-  );
-
   const { data: meData } = useGetMeQuery();
   const userEmail = meData?.authenticated === true ? meData.user.email : null;
 
@@ -99,15 +86,11 @@ export const ActiveConfigurationCard: React.FC<
   const assessmentAction: PMEllipsisMenuAction = {
     value: 'assessment',
     content: 'Assessment',
-    onClick: () => setIsDrawerOpen(true),
+    onClick: () => onOpenAssessmentDrawer(configuration.language),
   };
 
   const addAssessmentAction = (menuActions: PMEllipsisMenuAction[]) => {
-    if (
-      isAssessmentFeatureEnabled &&
-      detectionHeuristics &&
-      detectionHeuristics.heuristics.length
-    ) {
+    if (isAssessmentFeatureEnabled) {
       menuActions.push(assessmentAction);
     }
   };
@@ -120,40 +103,14 @@ export const ActiveConfigurationCard: React.FC<
   };
   let configurationCardChildren: ReactNode | null = null;
   let mainButtonProps: IPMButtonProps | null | undefined;
+  let renderNoConfigCard = false;
 
   addAssessmentAction(configurationCardProps.menuActions);
 
   switch (configuration.state) {
     case ActiveConfigurationState.NO_CONFIG:
-      return (
-        <>
-          <ActiveConfigurationCardAssessment
-            id={configuration.id}
-            ruleId={ruleId}
-            standardId={standardId}
-            language={configuration.language}
-            isGenerating={isGenerating}
-            onGenerateProgram={() =>
-              onGenerateProgram
-                ? onGenerateProgram(configuration.language)
-                : undefined
-            }
-            onOpenDrawer={() => setIsDrawerOpen(true)}
-            userEmail={userEmail}
-            isAssessmentFeatureEnabled={isAssessmentFeatureEnabled}
-          />
-          {assessment && isAssessmentFeatureEnabled && (
-            <DetectionAssessmentDrawer
-              isOpen={isDrawerOpen}
-              onClose={() => setIsDrawerOpen(false)}
-              assessment={assessment}
-              standardId={standardId}
-              ruleId={ruleId}
-              language={configuration.language}
-            />
-          )}
-        </>
-      );
+      renderNoConfigCard = true;
+      break;
 
     case ActiveConfigurationState.IN_PROGRESS:
       configurationCardChildren = (
@@ -207,18 +164,26 @@ export const ActiveConfigurationCard: React.FC<
 
   return (
     <>
-      <ConfigurationCard {...configurationCardProps}>
-        {configurationCardChildren}
-      </ConfigurationCard>
-      {assessment && isAssessmentFeatureEnabled && (
-        <DetectionAssessmentDrawer
-          isOpen={isDrawerOpen}
-          onClose={() => setIsDrawerOpen(false)}
-          assessment={assessment}
-          standardId={standardId}
+      {renderNoConfigCard ? (
+        <ActiveConfigurationCardAssessment
+          id={configuration.id}
           ruleId={ruleId}
+          standardId={standardId}
           language={configuration.language}
+          isGenerating={isGenerating}
+          onGenerateProgram={() =>
+            onGenerateProgram
+              ? onGenerateProgram(configuration.language)
+              : undefined
+          }
+          onOpenDrawer={() => onOpenAssessmentDrawer(configuration.language)}
+          userEmail={userEmail}
+          isAssessmentFeatureEnabled={isAssessmentFeatureEnabled}
         />
+      ) : (
+        <ConfigurationCard {...configurationCardProps}>
+          {configurationCardChildren}
+        </ConfigurationCard>
       )}
     </>
   );
