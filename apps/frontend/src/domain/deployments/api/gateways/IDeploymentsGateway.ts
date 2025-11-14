@@ -11,6 +11,7 @@ import {
   IDeletePackagesBatchUseCase,
   IPublishRecipes,
   IPublishStandards,
+  IPublishPackages,
   IGetTargetsByGitRepoUseCase,
   IGetTargetsByRepositoryUseCase,
   IGetTargetsByOrganizationUseCase,
@@ -33,6 +34,7 @@ export interface IDeploymentsGateway {
   getStandardsDeploymentOverview: Gateway<IGetStandardDeploymentOverview>;
   publishRecipes: Gateway<IPublishRecipes>;
   publishStandards: Gateway<IPublishStandards>;
+  publishPackages: Gateway<IPublishPackages>;
   getTargetsByGitRepo: Gateway<IGetTargetsByGitRepoUseCase>;
   getTargetsByRepository: Gateway<IGetTargetsByRepositoryUseCase>;
   getTargetsByOrganization: Gateway<IGetTargetsByOrganizationUseCase>;

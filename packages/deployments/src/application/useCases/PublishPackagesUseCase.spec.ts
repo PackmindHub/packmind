@@ -16,6 +16,8 @@ import {
   IRecipesPort,
   IStandardsPort,
   IDeploymentPort,
+  StandardsDeployment,
+  RecipesDeployment,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { recipeVersionFactory } from '@packmind/recipes/test/recipeVersionFactory';
@@ -118,10 +120,23 @@ describe('PublishPackagesUseCase', () => {
       mockDeploymentPort.publishStandards.mockResolvedValue([]);
     });
 
-    it('returns empty array', async () => {
+    it('returns deployments from published standards and recipes', async () => {
+      const mockStandardsDeployments = [{ id: 'std-deploy-1' }];
+      const mockRecipesDeployments = [{ id: 'recipe-deploy-1' }];
+
+      mockDeploymentPort.publishStandards.mockResolvedValue(
+        mockStandardsDeployments as unknown as StandardsDeployment[],
+      );
+      mockDeploymentPort.publishRecipes.mockResolvedValue(
+        mockRecipesDeployments as unknown as RecipesDeployment[],
+      );
+
       const result = await useCase.execute(command);
 
-      expect(result).toEqual([]);
+      expect(result).toEqual([
+        ...mockStandardsDeployments,
+        ...mockRecipesDeployments,
+      ]);
     });
 
     it('fetches package by ID', async () => {
@@ -277,6 +292,152 @@ describe('PublishPackagesUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         `Package with ID ${packageId} not found`,
       );
+    });
+  });
+
+  describe('when multiple packages share same standards and recipes', () => {
+    it('publishes each standard and recipe only once', async () => {
+      const sharedRecipeId = createRecipeId(uuidv4());
+      const sharedStandardId = createStandardId(uuidv4());
+      const uniqueRecipeId = createRecipeId(uuidv4());
+      const uniqueStandardId = createStandardId(uuidv4());
+
+      const package1Id = createPackageId(uuidv4());
+      const package2Id = createPackageId(uuidv4());
+
+      const package1 = packageFactory({
+        id: package1Id,
+        recipes: [sharedRecipeId, uniqueRecipeId],
+        standards: [sharedStandardId],
+      });
+
+      const package2 = packageFactory({
+        id: package2Id,
+        recipes: [sharedRecipeId],
+        standards: [sharedStandardId, uniqueStandardId],
+      });
+
+      const sharedRecipeVersion = recipeVersionFactory({
+        id: createRecipeVersionId(uuidv4()),
+        recipeId: sharedRecipeId,
+        version: 1,
+      });
+
+      const uniqueRecipeVersion = recipeVersionFactory({
+        id: createRecipeVersionId(uuidv4()),
+        recipeId: uniqueRecipeId,
+        version: 1,
+      });
+
+      const sharedStandardVersion = standardVersionFactory({
+        id: createStandardVersionId(uuidv4()),
+        standardId: sharedStandardId,
+        version: 1,
+      });
+
+      const uniqueStandardVersion = standardVersionFactory({
+        id: createStandardVersionId(uuidv4()),
+        standardId: uniqueStandardId,
+        version: 1,
+      });
+
+      mockPackageService.findById
+        .mockResolvedValueOnce(package1)
+        .mockResolvedValueOnce(package2);
+
+      mockRecipesPort.listRecipeVersions.mockImplementation(
+        async (recipeId) => {
+          if (recipeId === sharedRecipeId) {
+            return [sharedRecipeVersion];
+          }
+          if (recipeId === uniqueRecipeId) {
+            return [uniqueRecipeVersion];
+          }
+          return [];
+        },
+      );
+
+      mockStandardsPort.getLatestStandardVersion.mockImplementation(
+        async (standardId) => {
+          if (standardId === sharedStandardId) {
+            return sharedStandardVersion;
+          }
+          if (standardId === uniqueStandardId) {
+            return uniqueStandardVersion;
+          }
+          return null;
+        },
+      );
+
+      const mockStandardsDeployments = [{ id: 'std-deploy-1' }];
+      const mockRecipesDeployments = [{ id: 'recipe-deploy-1' }];
+
+      mockDeploymentPort.publishRecipes.mockResolvedValue(
+        mockRecipesDeployments as unknown as RecipesDeployment[],
+      );
+      mockDeploymentPort.publishStandards.mockResolvedValue(
+        mockStandardsDeployments as unknown as StandardsDeployment[],
+      );
+
+      const command: PublishPackagesCommand = {
+        userId,
+        organizationId,
+        packageIds: [package1Id, package2Id],
+        targetIds: [targetId],
+      };
+
+      const result = await useCase.execute(command);
+
+      expect(mockRecipesPort.listRecipeVersions).toHaveBeenCalledTimes(2);
+      expect(mockRecipesPort.listRecipeVersions).toHaveBeenCalledWith(
+        sharedRecipeId,
+      );
+      expect(mockRecipesPort.listRecipeVersions).toHaveBeenCalledWith(
+        uniqueRecipeId,
+      );
+
+      expect(mockStandardsPort.getLatestStandardVersion).toHaveBeenCalledTimes(
+        2,
+      );
+      expect(mockStandardsPort.getLatestStandardVersion).toHaveBeenCalledWith(
+        sharedStandardId,
+      );
+      expect(mockStandardsPort.getLatestStandardVersion).toHaveBeenCalledWith(
+        uniqueStandardId,
+      );
+
+      expect(mockDeploymentPort.publishRecipes).toHaveBeenCalledTimes(1);
+      expect(mockDeploymentPort.publishRecipes).toHaveBeenCalledWith({
+        userId,
+        organizationId,
+        recipeVersionIds: expect.arrayContaining([
+          sharedRecipeVersion.id,
+          uniqueRecipeVersion.id,
+        ]),
+        targetIds: [targetId],
+      });
+      expect(
+        mockDeploymentPort.publishRecipes.mock.calls[0][0].recipeVersionIds,
+      ).toHaveLength(2);
+
+      expect(mockDeploymentPort.publishStandards).toHaveBeenCalledTimes(1);
+      expect(mockDeploymentPort.publishStandards).toHaveBeenCalledWith({
+        userId,
+        organizationId,
+        standardVersionIds: expect.arrayContaining([
+          sharedStandardVersion.id,
+          uniqueStandardVersion.id,
+        ]),
+        targetIds: [targetId],
+      });
+      expect(
+        mockDeploymentPort.publishStandards.mock.calls[0][0].standardVersionIds,
+      ).toHaveLength(2);
+
+      expect(result).toEqual([
+        ...mockStandardsDeployments,
+        ...mockRecipesDeployments,
+      ]);
     });
   });
 });

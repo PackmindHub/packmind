@@ -22,6 +22,7 @@ import {
 } from '../../api/queries/DeploymentsQueries';
 import { routes } from '../../../../shared/utils/routes';
 import { PACKAGE_MESSAGES } from '../../constants/messages';
+import { DeployPackageButton } from '../PackageDeployments/DeployPackageButton';
 
 export interface PackagesPageProps {
   spaceSlug: string;
@@ -175,6 +176,13 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
           {isSomeSelected && (
             <PMBox mb={4}>
               <PMButtonGroup>
+                <DeployPackageButton
+                  selectedPackages={packages.filter((pkg) =>
+                    selectedPackageIds.includes(pkg.id),
+                  )}
+                  variant="primary"
+                  disabled={!isSomeSelected}
+                />
                 <PMAlertDialog
                   trigger={
                     <PMButton

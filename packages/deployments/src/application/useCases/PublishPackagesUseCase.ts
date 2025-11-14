@@ -90,29 +90,38 @@ export class PublishPackagesUseCase implements IPublishPackages {
       standardVersionsCount: standardVersionIds.length,
     });
 
+    const allDeployments: PackagesDeployment[] = [];
+
     // Publish standards if any
     if (standardVersionIds.length > 0) {
-      await this.deploymentPort.publishStandards({
+      const standardsDeployments = await this.deploymentPort.publishStandards({
         userId: command.userId,
         organizationId: command.organizationId,
         standardVersionIds,
         targetIds: command.targetIds,
       } as PublishStandardsCommand);
+      allDeployments.push(
+        ...(standardsDeployments as unknown as PackagesDeployment[]),
+      );
     }
 
     // Publish recipes if any
     if (recipeVersionIds.length > 0) {
-      await this.deploymentPort.publishRecipes({
+      const recipesDeployments = await this.deploymentPort.publishRecipes({
         userId: command.userId,
         organizationId: command.organizationId,
         recipeVersionIds,
         targetIds: command.targetIds,
       } as PublishRecipesCommand);
+      allDeployments.push(
+        ...(recipesDeployments as unknown as PackagesDeployment[]),
+      );
     }
 
-    this.logger.info('Successfully published packages');
+    this.logger.info('Successfully published packages', {
+      deploymentsCount: allDeployments.length,
+    });
 
-    // Packages are just a way to trigger existing mechanisms
-    return [];
+    return allDeployments;
   }
 }

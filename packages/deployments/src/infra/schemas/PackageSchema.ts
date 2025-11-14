@@ -40,36 +40,4 @@ export const PackageSchema = new EntitySchema<
     ...timestampsSchemas,
     ...softDeleteSchemas,
   },
-  relations: {
-    recipes: {
-      type: 'many-to-many',
-      target: 'Recipe',
-      joinTable: {
-        name: 'package_recipes',
-        joinColumn: {
-          name: 'package_id',
-          referencedColumnName: 'id',
-        },
-        inverseJoinColumn: {
-          name: 'recipe_id',
-          referencedColumnName: 'id',
-        },
-      },
-    },
-    standards: {
-      type: 'many-to-many',
-      target: 'Standard',
-      joinTable: {
-        name: 'package_standards',
-        joinColumn: {
-          name: 'package_id',
-          referencedColumnName: 'id',
-        },
-        inverseJoinColumn: {
-          name: 'standard_id',
-          referencedColumnName: 'id',
-        },
-      },
-    },
-  },
 });

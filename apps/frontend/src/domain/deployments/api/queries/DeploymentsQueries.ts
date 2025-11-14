@@ -199,6 +199,51 @@ export const useDeployStandardsMutation = () => {
   });
 };
 
+export const DEPLOY_PACKAGES_MUTATION_KEY = 'deployPackages';
+export const useDeployPackagesMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: [DEPLOY_PACKAGES_MUTATION_KEY],
+    mutationFn: async ({
+      packageIds,
+      targetIds,
+    }: {
+      packageIds: PackageId[];
+      targetIds: TargetId[];
+    }) => {
+      console.log('Deploying packages to targets...');
+      return deploymentsGateways.publishPackages({
+        packageIds,
+        targetIds,
+      });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: LIST_RECIPE_DEPLOYMENTS_KEY,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: LIST_STANDARD_DEPLOYMENTS_KEY,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [GET_ONBOARDING_STATUS_KEY],
+      });
+    },
+    onError: async (error, variables, context) => {
+      console.error('Error deploying packages to git');
+      console.log('error: ', error);
+      console.log('variables: ', variables);
+      console.log('context: ', context);
+    },
+  });
+};
+
 export const useGetTargetsByGitRepoQuery = (gitRepoId: GitRepoId) => {
   return useQuery({
     queryKey: [...GET_TARGETS_BY_GIT_REPO_KEY, gitRepoId],

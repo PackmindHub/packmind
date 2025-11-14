@@ -12,6 +12,7 @@ import {
   IGetPackageByIdUseCase,
   IPublishRecipes,
   IPublishStandards,
+  IPublishPackages,
   IListDeploymentsByRecipe,
   IGetStandardDeploymentOverview,
   IListDeploymentsByStandard,
@@ -135,6 +136,10 @@ export class DeploymentsGatewayApi
 
   publishStandards: Gateway<IPublishStandards> = async (command) => {
     return this._api.post(`${this._endpoint}/standards/publish`, command);
+  };
+
+  publishPackages: Gateway<IPublishPackages> = async (command) => {
+    return this._api.post(`${this._endpoint}/packages/publish`, command);
   };
 
   getTargetsByGitRepo: Gateway<IGetTargetsByGitRepoUseCase> = async ({
