@@ -10,8 +10,8 @@ import {
 import {
   RuleId,
   Gateway,
-  IPullAllContentResponse,
-  IPullAllContentUseCase,
+  IPullContentResponse,
+  IPullContentUseCase,
   Organization,
 } from '@packmind/types';
 interface ApiKeyPayload {
@@ -94,7 +94,7 @@ function decodeApiKey(apiKey: string): DecodedApiKey {
 
 export class PackmindGateway implements IPackmindGateway {
   constructor(private readonly apiKey: string) {}
-  public getPullData: Gateway<IPullAllContentUseCase> = async () => {
+  public getPullData: Gateway<IPullContentUseCase> = async (command) => {
     // Decode the API key to get host and JWT
     const decodedApiKey = decodeApiKey(this.apiKey);
 
@@ -113,8 +113,16 @@ export class PackmindGateway implements IPackmindGateway {
 
     const organizationId = jwtPayload.organization.id;
 
+    // Build query parameters for package slugs
+    const queryParams = new URLSearchParams();
+    if (command.packagesSlugs && command.packagesSlugs.length > 0) {
+      command.packagesSlugs.forEach((slug) => {
+        queryParams.append('packageSlug', slug);
+      });
+    }
+
     // Make API call to pull all content
-    const url = `${host}/api/v0/organizations/${organizationId}/pull`;
+    const url = `${host}/api/v0/organizations/${organizationId}/pull?${queryParams.toString()}`;
 
     try {
       const response = await fetch(url, {
@@ -138,7 +146,7 @@ export class PackmindGateway implements IPackmindGateway {
         throw new Error(errorMsg);
       }
 
-      const result: IPullAllContentResponse = await response.json();
+      const result: IPullContentResponse = await response.json();
       return result;
     } catch (error: unknown) {
       // Specific handling if the server is not accessible

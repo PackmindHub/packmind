@@ -1,8 +1,8 @@
-import { Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, Req, UseGuards } from '@nestjs/common';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
   OrganizationOnboardingStatus,
-  IPullAllContentResponse,
+  IPullContentResponse,
   IAccountsPort,
   IDeploymentPort,
 } from '@packmind/types';
@@ -98,20 +98,29 @@ export class OrganizationsController {
 
   /**
    * Pull all content (recipes and standards) for an organization
-   * GET /organizations/:orgId/pull
+   * GET /organizations/:orgId/pull?packageSlug=backend&packageSlug=frontend
    */
   @Get('pull')
   async pullAllContent(
     @Param('orgId') organizationId: OrganizationId,
     @Req() request: AuthenticatedRequest,
-  ): Promise<IPullAllContentResponse> {
+    @Query('packageSlug') packageSlug?: string | string[],
+  ): Promise<IPullContentResponse> {
     const userId = request.user.userId;
+
+    // Normalize packageSlug to array
+    const packagesSlugs = packageSlug
+      ? Array.isArray(packageSlug)
+        ? packageSlug
+        : [packageSlug]
+      : [];
 
     this.logger.info(
       'GET /organizations/:orgId/pull - Pulling all content for organization',
       {
         organizationId,
         userId,
+        packagesSlugs,
       },
     );
 
@@ -119,6 +128,7 @@ export class OrganizationsController {
       return await this.deploymentAdapter.pullAllContent({
         userId,
         organizationId,
+        packagesSlugs,
       });
     } catch (error) {
       const errorMessage =

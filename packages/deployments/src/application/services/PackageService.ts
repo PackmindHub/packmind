@@ -2,6 +2,7 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
   Package,
   PackageId,
+  PackageWithArtefacts,
   RecipeId,
   SpaceId,
   StandardId,
@@ -67,6 +68,33 @@ export class PackageService {
     } catch (error) {
       this.logger.error('Failed to get packages by space ID', {
         spaceId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async getPackagesBySlugsWithArtefacts(
+    slugs: string[],
+  ): Promise<PackageWithArtefacts[]> {
+    this.logger.info('Getting packages by slugs with artefacts', {
+      slugs,
+      count: slugs.length,
+    });
+
+    try {
+      const packages =
+        await this.packageRepository.findBySlugsWithArtefacts(slugs);
+
+      this.logger.info('Packages found by slugs with artefacts successfully', {
+        requestedCount: slugs.length,
+        foundCount: packages.length,
+      });
+
+      return packages;
+    } catch (error) {
+      this.logger.error('Failed to get packages by slugs with artefacts', {
+        slugs,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

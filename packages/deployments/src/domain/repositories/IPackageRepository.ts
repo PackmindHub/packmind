@@ -1,6 +1,7 @@
 import {
   Package,
   PackageId,
+  PackageWithArtefacts,
   RecipeId,
   SpaceId,
   StandardId,
@@ -10,6 +11,7 @@ import { IRepository } from '@packmind/types';
 export interface IPackageRepository extends IRepository<Package> {
   findBySpaceId(spaceId: SpaceId): Promise<Package[]>;
   findById(id: PackageId): Promise<Package | null>;
+  findBySlugsWithArtefacts(slugs: string[]): Promise<PackageWithArtefacts[]>;
   addRecipes(packageId: PackageId, recipeIds: RecipeId[]): Promise<void>;
   addStandards(packageId: PackageId, standardIds: StandardId[]): Promise<void>;
 }

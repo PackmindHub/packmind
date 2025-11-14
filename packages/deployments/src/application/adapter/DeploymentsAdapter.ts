@@ -25,7 +25,7 @@ import {
   IDeploymentPort,
   IGitPort,
   IGitPortName,
-  IPullAllContentResponse,
+  IPullContentResponse,
   IRecipesPort,
   IRecipesPortName,
   ISpacesPort,
@@ -36,7 +36,7 @@ import {
   ListDeploymentsByStandardCommand,
   ListPackagesBySpaceCommand,
   ListPackagesBySpaceResponse,
-  PackmindCommand,
+  PullContentCommand,
   PublishRecipesCommand,
   PublishStandardsCommand,
   RecipesDeployment,
@@ -68,7 +68,7 @@ import { ListDeploymentsByStandardUseCase } from '../useCases/ListDeploymentsByS
 import { ListPackagesBySpaceUsecase } from '../useCases/listPackagesBySpace/listPackagesBySpace.usecase';
 import { PublishRecipesUseCase } from '../useCases/PublishRecipesUseCase';
 import { PublishStandardsUseCase } from '../useCases/PublishStandardsUseCase';
-import { PullAllContentUseCase } from '../useCases/PullAllContentUseCase';
+import { PullContentUseCase } from '../useCases/PullContentUseCase';
 import { UpdateRenderModeConfigurationUseCase } from '../useCases/UpdateRenderModeConfigurationUseCase';
 import { UpdateTargetUseCase } from '../useCases/UpdateTargetUseCase';
 
@@ -100,7 +100,7 @@ export class DeploymentsAdapter
   private _getRenderModeConfigurationUseCase!: GetRenderModeConfigurationUseCase;
   private _createRenderModeConfigurationUseCase!: CreateRenderModeConfigurationUseCase;
   private _updateRenderModeConfigurationUseCase!: UpdateRenderModeConfigurationUseCase;
-  private _pullAllContentUseCase!: PullAllContentUseCase;
+  private _pullAllContentUseCase!: PullContentUseCase;
   private _listPackagesBySpaceUseCase!: ListPackagesBySpaceUsecase;
   private _createPackageUseCase!: CreatePackageUsecase;
 
@@ -244,10 +244,10 @@ export class DeploymentsAdapter
         this.accountsPort,
       );
 
-    this._pullAllContentUseCase = new PullAllContentUseCase(
+    this._pullAllContentUseCase = new PullContentUseCase(
+      this.deploymentsServices.getPackageService(),
       this.recipesPort,
       this.standardsPort,
-      this.spacesPort,
       this.codingAgentPort,
       this.accountsPort,
     );
@@ -380,8 +380,8 @@ export class DeploymentsAdapter
   }
 
   async pullAllContent(
-    command: PackmindCommand,
-  ): Promise<IPullAllContentResponse> {
+    command: PullContentCommand,
+  ): Promise<IPullContentResponse> {
     return this._pullAllContentUseCase.execute(command);
   }
 

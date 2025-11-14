@@ -5,43 +5,55 @@ import {
   FileUpdates,
   IAccountsPort,
   ICodingAgentPort,
-  IPullAllContentResponse,
+  IPullContentResponse,
   IRecipesPort,
-  ISpacesPort,
   IStandardsPort,
-  PackmindCommand,
-  Recipe,
+  PullContentCommand,
   RecipeVersion,
 } from '@packmind/types';
+import { PackageService } from '../services/PackageService';
 
-const origin = 'PullAllContentUseCase';
+const origin = 'PullContentUseCase';
 
-export class PullAllContentUseCase extends AbstractMemberUseCase<
-  PackmindCommand,
-  IPullAllContentResponse
+export class PullContentUseCase extends AbstractMemberUseCase<
+  PullContentCommand,
+  IPullContentResponse
 > {
   constructor(
+    private readonly packageService: PackageService,
     private readonly recipesPort: IRecipesPort,
     private readonly standardsPort: IStandardsPort,
-    private readonly spacesPort: ISpacesPort,
     private readonly codingAgentPort: ICodingAgentPort,
     accountsPort: IAccountsPort,
     logger: PackmindLogger = new PackmindLogger(origin, LogLevel.INFO),
   ) {
     super(accountsPort, logger);
-    this.logger.info('PullAllContentUseCase initialized');
+    this.logger.info('PullContentUseCase initialized');
   }
 
   protected async executeForMembers(
-    command: PackmindCommand & MemberContext,
-  ): Promise<IPullAllContentResponse> {
-    this.logger.info('Pulling all content for organization', {
+    command: PullContentCommand & MemberContext,
+  ): Promise<IPullContentResponse> {
+    this.logger.info('Pulling content for organization', {
       organizationId: command.organizationId,
       userId: command.userId,
+      packagesSlugs: command.packagesSlugs,
     });
 
+    // Validate that package slugs are provided
+    if (!command.packagesSlugs || command.packagesSlugs.length === 0) {
+      const error = new Error(
+        'No package slugs provided. Please specify at least one package slug.',
+      );
+      this.logger.error('Pull content failed: no package slugs provided', {
+        organizationId: command.organizationId,
+        userId: command.userId,
+      });
+      throw error;
+    }
+
     try {
-      // Hardcoded list of deployers to use (as per user's note)
+      // Hardcoded list of deployers to use
       const codingAgents = [
         CodingAgents.packmind,
         CodingAgents.claude,
@@ -53,23 +65,44 @@ export class PullAllContentUseCase extends AbstractMemberUseCase<
         codingAgents,
       });
 
-      // Retrieve all recipes for the organization
-      const recipes = await this.recipesPort.listRecipesByOrganization(
-        command.organization.id,
-      );
+      // Fetch packages by slugs with full Recipe[] and Standard[] artefacts
+      const packages =
+        await this.packageService.getPackagesBySlugsWithArtefacts(
+          command.packagesSlugs,
+        );
 
-      this.logger.info('Retrieved recipes', {
-        count: recipes.length,
-        organizationId: command.organizationId,
+      if (packages.length === 0) {
+        const error = new Error(
+          `No packages found with the provided slugs: ${command.packagesSlugs.join(', ')}. Please verify that the package slugs are correct and that they exist in your organization.`,
+        );
+        this.logger.error('Pull content failed: no matching packages found', {
+          packagesSlugs: command.packagesSlugs,
+          organizationId: command.organizationId,
+        });
+        throw error;
+      }
+
+      this.logger.info('Found packages with relations', {
+        count: packages.length,
+        packagesSlugs: packages.map((p) => p.slug),
       });
 
-      // Get recipe versions for all recipes
-      const recipeVersionsPromises = recipes.map(async (recipe: Recipe) => {
+      // Extract recipes and standards from packages
+      const recipes = packages.flatMap((pkg) => pkg.recipes);
+      const standards = packages.flatMap((pkg) => pkg.standards);
+
+      this.logger.info('Extracted content from packages', {
+        recipeCount: recipes.length,
+        standardCount: standards.length,
+      });
+
+      // Get recipe versions for recipes
+      const recipeVersionsPromises = recipes.map(async (recipe) => {
         const versions = await this.recipesPort.listRecipeVersions(recipe.id);
-        // Return the latest version
-        return versions.sort(
+        versions.sort(
           (a: RecipeVersion, b: RecipeVersion) => b.version - a.version,
-        )[0];
+        );
+        return versions[0];
       });
 
       const recipeVersions = (await Promise.all(recipeVersionsPromises)).filter(
@@ -80,40 +113,13 @@ export class PullAllContentUseCase extends AbstractMemberUseCase<
         count: recipeVersions.length,
       });
 
-      // Retrieve all spaces for the organization
-      const spaces = await this.spacesPort.listSpacesByOrganization(
-        command.organization.id,
-      );
-
-      this.logger.info('Retrieved spaces', {
-        count: spaces.length,
-        organizationId: command.organizationId,
-      });
-
-      // Retrieve all standards across all spaces
-      const allStandards = [];
-      for (const space of spaces) {
-        const standards = await this.standardsPort.listStandardsBySpace(
-          space.id,
-          command.organization.id,
-          command.userId,
-        );
-
-        allStandards.push(...standards);
-      }
-
-      this.logger.info('Retrieved standards from all spaces', {
-        count: allStandards.length,
-        organizationId: command.organizationId,
-      });
-
-      // Get standard versions for all standards
-      const standardVersionsPromises = allStandards.map(async (standard) => {
+      // Get standard versions for standards
+      const standardVersionsPromises = standards.map(async (standard) => {
         const versions = await this.standardsPort.listStandardVersions(
           standard.id,
         );
-        // Return the latest version
-        return versions.sort((a, b) => b.version - a.version)[0];
+        versions.sort((a, b) => b.version - a.version);
+        return versions[0];
       });
 
       const standardVersions = (
@@ -154,7 +160,6 @@ export class PullAllContentUseCase extends AbstractMemberUseCase<
             deleteCount: recipeFileUpdates.delete.length,
           });
 
-          // Merge recipe file updates
           this.mergeFileUpdates(mergedFileUpdates, recipeFileUpdates);
         }
 
@@ -169,12 +174,11 @@ export class PullAllContentUseCase extends AbstractMemberUseCase<
             deleteCount: standardFileUpdates.delete.length,
           });
 
-          // Merge standard file updates
           this.mergeFileUpdates(mergedFileUpdates, standardFileUpdates);
         }
       }
 
-      this.logger.info('Successfully pulled all content', {
+      this.logger.info('Successfully pulled content', {
         organizationId: command.organizationId,
         totalCreateOrUpdateCount: mergedFileUpdates.createOrUpdate.length,
         totalDeleteCount: mergedFileUpdates.delete.length,
@@ -182,7 +186,7 @@ export class PullAllContentUseCase extends AbstractMemberUseCase<
 
       return { fileUpdates: mergedFileUpdates };
     } catch (error) {
-      this.logger.error('Failed to pull all content', {
+      this.logger.error('Failed to pull content', {
         organizationId: command.organizationId,
         error: error instanceof Error ? error.message : String(error),
       });

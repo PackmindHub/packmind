@@ -3,7 +3,7 @@ import {
   IUseCase,
   PackmindCommand,
   RuleId,
-  IPullAllContentUseCase,
+  IPullContentUseCase,
 } from '@packmind/types';
 
 // Waiting for the standards hexa to expose the use case
@@ -89,5 +89,5 @@ export interface IPackmindGateway {
   listExecutionPrograms: Gateway<ListDetectionPrograms>;
   getDraftDetectionProgramsForRule: Gateway<GetDraftDetectionProgramsForRule>;
   getActiveDetectionProgramsForRule: Gateway<GetActiveDetectionProgramsForRule>;
-  getPullData: Gateway<IPullAllContentUseCase>;
+  getPullData: Gateway<IPullContentUseCase>;
 }

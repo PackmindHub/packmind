@@ -1,4 +1,3 @@
-import { PackmindCommand } from '../../UseCase';
 import {
   AddTargetCommand,
   CreatePackageCommand,
@@ -18,11 +17,12 @@ import {
   GetTargetsByGitRepoCommand,
   GetTargetsByOrganizationCommand,
   GetTargetsByRepositoryCommand,
-  IPullAllContentResponse,
+  IPullContentResponse,
   ListDeploymentsByRecipeCommand,
   ListDeploymentsByStandardCommand,
   ListPackagesBySpaceCommand,
   ListPackagesBySpaceResponse,
+  PullContentCommand,
   PublishRecipesCommand,
   PublishStandardsCommand,
   UpdateRenderModeConfigurationCommand,
@@ -254,7 +254,7 @@ export interface IDeploymentPort {
    * @param command - Command containing organization and user context
    * @returns Promise resolving to file updates for all coding agents
    */
-  pullAllContent(command: PackmindCommand): Promise<IPullAllContentResponse>;
+  pullAllContent(command: PullContentCommand): Promise<IPullContentResponse>;
 
   /**
    * Lists all packages in a specific space

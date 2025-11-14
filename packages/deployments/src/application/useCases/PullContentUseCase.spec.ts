@@ -4,18 +4,21 @@ import {
   IAccountsPort,
   ICodingAgentPort,
   IRecipesPort,
-  ISpacesPort,
   IStandardsPort,
   Organization,
   OrganizationId,
-  PackmindCommand,
+  PackageWithArtefacts,
+  PullContentCommand,
   User,
   UserOrganizationMembership,
   createOrganizationId,
+  createPackageId,
+  createSpaceId,
   createUserId,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
-import { PullAllContentUseCase } from './PullAllContentUseCase';
+import { PackageService } from '../services/PackageService';
+import { PullContentUseCase } from './PullContentUseCase';
 
 const createUserWithMembership = (
   userId: string,
@@ -35,31 +38,29 @@ const createUserWithMembership = (
   ],
 });
 
-describe('PullAllContentUseCase', () => {
+describe('PullContentUseCase', () => {
+  let packageService: jest.Mocked<PackageService>;
   let recipesPort: jest.Mocked<IRecipesPort>;
   let standardsPort: jest.Mocked<IStandardsPort>;
-  let spacesPort: jest.Mocked<ISpacesPort>;
   let codingAgentPort: jest.Mocked<ICodingAgentPort>;
   let accountsPort: jest.Mocked<IAccountsPort>;
-  let useCase: PullAllContentUseCase;
-  let command: PackmindCommand;
+  let useCase: PullContentUseCase;
+  let command: PullContentCommand;
   let organizationId: OrganizationId;
   let organization: Organization;
 
   beforeEach(() => {
+    packageService = {
+      getPackagesBySlugsWithArtefacts: jest.fn(),
+    } as unknown as jest.Mocked<PackageService>;
+
     recipesPort = {
-      listRecipesByOrganization: jest.fn(),
       listRecipeVersions: jest.fn(),
     } as unknown as jest.Mocked<IRecipesPort>;
 
     standardsPort = {
-      listStandardsBySpace: jest.fn(),
       listStandardVersions: jest.fn(),
     } as unknown as jest.Mocked<IStandardsPort>;
-
-    spacesPort = {
-      listSpacesByOrganization: jest.fn(),
-    } as unknown as jest.Mocked<ISpacesPort>;
 
     const mockDeployer = {
       generateFileUpdatesForRecipes: jest.fn(),
@@ -91,6 +92,7 @@ describe('PullAllContentUseCase', () => {
     command = {
       organizationId: organizationId as unknown as string,
       userId: uuidv4(),
+      packagesSlugs: ['test-package'],
     };
 
     accountsPort.getOrganizationById.mockResolvedValue(organization);
@@ -98,10 +100,10 @@ describe('PullAllContentUseCase', () => {
       createUserWithMembership(command.userId, organization, 'member'),
     );
 
-    useCase = new PullAllContentUseCase(
+    useCase = new PullContentUseCase(
+      packageService,
       recipesPort,
       standardsPort,
-      spacesPort,
       codingAgentPort,
       accountsPort,
       stubLogger(),
@@ -135,8 +137,23 @@ describe('PullAllContentUseCase', () => {
     });
 
     it('returns file updates from deployers', async () => {
-      recipesPort.listRecipesByOrganization.mockResolvedValue([]);
-      spacesPort.listSpacesByOrganization.mockResolvedValue([]);
+      const testPackage: PackageWithArtefacts = {
+        id: createPackageId('test-package-id'),
+        slug: 'test-package',
+        name: 'Test Package',
+        description: 'Test package description',
+        spaceId: createSpaceId('space-1'),
+        createdBy: createUserId('user-1'),
+        recipes: [],
+        standards: [],
+      };
+
+      packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+        testPackage,
+      ]);
+
+      recipesPort.listRecipeVersions.mockResolvedValue([]);
+      standardsPort.listStandardVersions.mockResolvedValue([]);
 
       mockDeployer.generateFileUpdatesForRecipes.mockResolvedValue({
         createOrUpdate: [{ path: 'test.md', content: 'test content' }],
@@ -157,8 +174,23 @@ describe('PullAllContentUseCase', () => {
     });
 
     it('merges file updates from recipes and standards', async () => {
-      recipesPort.listRecipesByOrganization.mockResolvedValue([]);
-      spacesPort.listSpacesByOrganization.mockResolvedValue([]);
+      const testPackage: PackageWithArtefacts = {
+        id: createPackageId('test-package-id'),
+        slug: 'test-package',
+        name: 'Test Package',
+        description: 'Test package description',
+        spaceId: createSpaceId('space-1'),
+        createdBy: createUserId('user-1'),
+        recipes: [],
+        standards: [],
+      };
+
+      packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+        testPackage,
+      ]);
+
+      recipesPort.listRecipeVersions.mockResolvedValue([]);
+      standardsPort.listStandardVersions.mockResolvedValue([]);
 
       mockDeployer.generateFileUpdatesForRecipes.mockResolvedValue({
         createOrUpdate: [{ path: 'recipe.md', content: 'recipe content' }],
@@ -172,16 +204,28 @@ describe('PullAllContentUseCase', () => {
 
       const result = await useCase.execute(command);
 
-      // Should have file updates from both recipes and standards
-      // Note: with 4 agents (packmind, claude, cursor, copilot) and empty recipe list,
-      // we won't have recipe file updates, but the structure should be valid
       expect(result.fileUpdates.createOrUpdate).toBeInstanceOf(Array);
       expect(result.fileUpdates.delete).toBeInstanceOf(Array);
     });
 
-    it('handles empty recipe lists', async () => {
-      recipesPort.listRecipesByOrganization.mockResolvedValue([]);
-      spacesPort.listSpacesByOrganization.mockResolvedValue([]);
+    it('handles empty recipe and standard lists', async () => {
+      const testPackage: PackageWithArtefacts = {
+        id: createPackageId('test-package-id'),
+        slug: 'test-package',
+        name: 'Test Package',
+        description: 'Test package description',
+        spaceId: createSpaceId('space-1'),
+        createdBy: createUserId('user-1'),
+        recipes: [],
+        standards: [],
+      };
+
+      packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+        testPackage,
+      ]);
+
+      recipesPort.listRecipeVersions.mockResolvedValue([]);
+      standardsPort.listStandardVersions.mockResolvedValue([]);
 
       mockDeployer.generateFileUpdatesForRecipes.mockResolvedValue({
         createOrUpdate: [],
