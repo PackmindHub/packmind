@@ -15,7 +15,6 @@ import {
   pmToaster,
 } from '@packmind/ui';
 import {
-  RuleDetectionAssessment,
   RuleDetectionAssessmentStatus,
   DetectionStatus,
 } from '@packmind/types';
@@ -281,19 +280,11 @@ export const DetectionAssessmentDrawer: React.FC<
                   <PMBadge colorPalette={getStatusColor(assessment.status)}>
                     Status: {formatAssessmentStatus(assessment.status)}
                   </PMBadge>
-                  {(() => {
-                    const assessmentWithUpdatedAt =
-                      assessment as RuleDetectionAssessment & {
-                        updatedAt?: Date;
-                      };
-                    return assessmentWithUpdatedAt.updatedAt ? (
-                      <PMText fontSize="sm" color="tertiary">
-                        {formatDuration(
-                          new Date(assessmentWithUpdatedAt.updatedAt),
-                        )}
-                      </PMText>
-                    ) : null;
-                  })()}
+                  {assessment.updatedAt && (
+                    <PMText fontSize="sm" color="tertiary">
+                      {formatDuration(new Date(assessment.updatedAt))}
+                    </PMText>
+                  )}
                 </PMHStack>
               </PMVStack>
             </PMDrawer.Header>

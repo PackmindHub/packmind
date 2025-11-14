@@ -23,4 +23,5 @@ export type RuleDetectionAssessment = {
   details: string;
   clarificationQuestion: string | null;
   clarificationAnswers: string[] | null;
+  updatedAt?: Date;
 };
