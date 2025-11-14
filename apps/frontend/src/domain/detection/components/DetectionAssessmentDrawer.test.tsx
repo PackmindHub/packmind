@@ -23,10 +23,16 @@ import {
   RuleDetectionAssessmentStatus,
 } from '@packmind/types';
 import React from 'react';
-import { UIProvider } from '@packmind/ui';
+import { UIProvider, pmToaster } from '@packmind/ui';
 import userEvent from '@testing-library/user-event';
 
 jest.mock('../api/queries/DetectionProgramQueries');
+jest.mock('@packmind/ui', () => ({
+  ...jest.requireActual('@packmind/ui'),
+  pmToaster: {
+    create: jest.fn(),
+  },
+}));
 
 type UpdateDetectionHeuristicsMutationResult = UseMutationResult<
   DetectionHeuristics,
@@ -692,6 +698,74 @@ describe('DetectionAssessmentDrawer', () => {
           await user.click(closeButton);
 
           expect(onCloseSpy).toHaveBeenCalled();
+        });
+      });
+    });
+
+    describe('success toaster notification', () => {
+      beforeEach(() => {
+        jest.clearAllMocks();
+      });
+
+      describe('when status transitions to SUCCESS', () => {
+        it('displays success toaster with correct message', () => {
+          if (screen) {
+            screen.unmount();
+          }
+          assessment.status = RuleDetectionAssessmentStatus.IN_PROGRESS;
+          screen = renderWithContext();
+
+          // Simulate status change to SUCCESS
+          assessment.status = RuleDetectionAssessmentStatus.SUCCESS;
+          screen.rerender(
+            <UIProvider>
+              <QueryClientProvider client={queryClient}>
+                <DetectionAssessmentDrawer {...props} />
+              </QueryClientProvider>
+            </UIProvider>,
+          );
+
+          expect(pmToaster.create).toHaveBeenCalledWith({
+            type: 'success',
+            title: 'Assessment successful!',
+            description: 'Program generation has started.',
+          });
+        });
+      });
+
+      describe('when status is already SUCCESS', () => {
+        it('does not display toaster on initial render', () => {
+          if (screen) {
+            screen.unmount();
+          }
+          assessment.status = RuleDetectionAssessmentStatus.SUCCESS;
+          screen = renderWithContext();
+
+          expect(pmToaster.create).not.toHaveBeenCalled();
+        });
+      });
+
+      describe('when status changes from SUCCESS to another status', () => {
+        it('does not display toaster', () => {
+          if (screen) {
+            screen.unmount();
+          }
+          assessment.status = RuleDetectionAssessmentStatus.SUCCESS;
+          screen = renderWithContext();
+
+          jest.clearAllMocks();
+
+          // Simulate status change from SUCCESS to FAILED
+          assessment.status = RuleDetectionAssessmentStatus.FAILED;
+          screen.rerender(
+            <UIProvider>
+              <QueryClientProvider client={queryClient}>
+                <DetectionAssessmentDrawer {...props} />
+              </QueryClientProvider>
+            </UIProvider>,
+          );
+
+          expect(pmToaster.create).not.toHaveBeenCalled();
         });
       });
     });

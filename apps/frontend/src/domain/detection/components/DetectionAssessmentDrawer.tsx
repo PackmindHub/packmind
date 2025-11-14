@@ -12,6 +12,7 @@ import {
   PMText,
   PMTextArea,
   PMVStack,
+  pmToaster,
 } from '@packmind/ui';
 import {
   RuleDetectionAssessment,
@@ -133,6 +134,22 @@ export const DetectionAssessmentDrawer: React.FC<
     // Track status changes
     setPreviousStatus(assessment.status);
   }, [assessment.status]);
+
+  useEffect(() => {
+    // Show success toaster when assessment transitions to SUCCESS
+    const justChangedToSuccess =
+      previousStatus !== null &&
+      previousStatus !== RuleDetectionAssessmentStatus.SUCCESS &&
+      assessment.status === RuleDetectionAssessmentStatus.SUCCESS;
+
+    if (justChangedToSuccess) {
+      pmToaster.create({
+        type: 'success',
+        title: 'Assessment successful!',
+        description: 'Program generation has started.',
+      });
+    }
+  }, [previousStatus, assessment.status]);
 
   const handleOpenChange = useCallback(
     ({ open }: { open: boolean }) => {
