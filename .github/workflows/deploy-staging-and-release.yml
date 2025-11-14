@@ -70,11 +70,11 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           PACKMIND_EDITION: proprietary
         run: cd packages/migrations && npm run typeorm migration:show -- --dataSource=datasourceMigrations.ts
-      # - name: Run migrations
-      #   env:
-      #     DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      #     PACKMIND_EDITION: proprietary
-      #   run: cd packages/migrations && npm run typeorm migration:run -- --dataSource=datasourceMigrations.ts
+      - name: Run migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          PACKMIND_EDITION: proprietary
+        run: cd packages/migrations && npm run typeorm migration:run -- --dataSource=datasourceMigrations.ts
 
   deploy-api:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
