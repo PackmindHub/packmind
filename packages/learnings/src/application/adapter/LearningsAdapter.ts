@@ -5,39 +5,46 @@ import {
   CaptureTopicResponse,
   ILearningsPort,
 } from '@packmind/types';
+import { LearningsServices } from '../services/LearningsServices';
+import { CaptureTopicUsecase } from '../useCases/captureTopic/captureTopic.usecase';
 
 const origin = 'LearningsAdapter';
 
 /**
  * LearningsAdapter - Main adapter for the Learnings domain.
  * Implements the hexagonal architecture adapter pattern.
- *
- * Phase 1: Basic structure with no use cases.
- * Use cases will be added in Phase 2.
  */
 export class LearningsAdapter
   implements IBaseAdapter<ILearningsPort>, ILearningsPort
 {
+  private captureTopicUsecase: CaptureTopicUsecase;
+
   constructor(
+    private readonly learningsServices: LearningsServices,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('LearningsAdapter constructed - awaiting initialization');
+
+    // Initialize use cases with services
+    this.logger.debug('Initializing use cases');
+    this.captureTopicUsecase = new CaptureTopicUsecase(
+      this.learningsServices.getTopicService(),
+      this.logger,
+    );
   }
 
   /**
    * Initialize adapter with ports from registry.
-   * Phase 1: Empty implementation.
-   * Phase 2: Will receive required ports (StandardsPort, RecipesPort, etc.)
+   * Future: Will receive required ports (StandardsPort, RecipesPort, etc.) when needed for distillation.
    */
   public async initialize(): Promise<void> {
     this.logger.info('Initializing LearningsAdapter');
-    // Phase 1: No ports or use cases to initialize yet
+    // No ports needed yet - distillation will need StandardsPort and RecipesPort in Phase 3
     this.logger.info('LearningsAdapter initialized successfully');
   }
 
   /**
    * Check if adapter is ready (all required dependencies initialized).
-   * Phase 1: Always ready (no dependencies yet).
    */
   public isReady(): boolean {
     return true;
@@ -52,14 +59,15 @@ export class LearningsAdapter
 
   /**
    * Capture a topic (technical decision).
-   * TODO: Implement in Phase 2 with actual use case.
    */
   public async captureTopic(
     command: CaptureTopicCommand,
   ): Promise<CaptureTopicResponse> {
-    this.logger.info('captureTopic called - not yet implemented', {
+    this.logger.info('captureTopic called', {
       title: command.title,
+      spaceId: command.spaceId,
     });
-    throw new Error('captureTopic not yet implemented');
+
+    return await this.captureTopicUsecase.execute(command);
   }
 }

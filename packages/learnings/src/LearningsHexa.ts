@@ -3,6 +3,8 @@ import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
 import { ILearningsPort, ILearningsPortName } from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { LearningsAdapter } from './application/adapter/LearningsAdapter';
+import { LearningsServices } from './application/services/LearningsServices';
+import { LearningsRepositories } from './infra/repositories/LearningsRepositories';
 
 const origin = 'LearningsHexa';
 
@@ -11,11 +13,10 @@ const origin = 'LearningsHexa';
  *
  * This class serves as the main entry point for learnings-related functionality.
  * It exposes use cases through the adapter and manages the lifecycle of the domain.
- *
- * Phase 1: Basic structure with no repositories or services yet.
- * These will be added in Phase 2 when we create the Topic entity and use cases.
  */
 export class LearningsHexa extends BaseHexa<BaseHexaOpts, ILearningsPort> {
+  private readonly learningsRepositories: LearningsRepositories;
+  private readonly learningsServices: LearningsServices;
   private readonly adapter: LearningsAdapter;
   private isInitialized = false;
 
@@ -28,12 +29,20 @@ export class LearningsHexa extends BaseHexa<BaseHexaOpts, ILearningsPort> {
     this.logger.info('Constructing LearningsHexa');
 
     try {
-      // Phase 1: No repositories or services needed yet
-      // These will be added in Phase 2
+      // Initialize repositories with datasource
+      this.logger.debug('Creating LearningsRepositories');
+      this.learningsRepositories = new LearningsRepositories(dataSource);
 
-      // Create adapter in constructor - dependencies will be injected in initialize()
+      // Initialize services with repositories
+      this.logger.debug('Creating LearningsServices');
+      this.learningsServices = new LearningsServices(
+        this.learningsRepositories,
+        this.logger,
+      );
+
+      // Create adapter with services
       this.logger.debug('Creating LearningsAdapter');
-      this.adapter = new LearningsAdapter(this.logger);
+      this.adapter = new LearningsAdapter(this.learningsServices, this.logger);
 
       this.logger.info('LearningsHexa construction completed');
     } catch (error) {

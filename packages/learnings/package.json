@@ -11,6 +11,8 @@
     "@packmind/logger": "*",
     "@packmind/node-utils": "*",
     "@packmind/types": "*",
+    "@packmind/test-utils": "*",
+    "uuid": "^11.0.3",
     "ts-jest": "^29.4.1"
   }
 }
