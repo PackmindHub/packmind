@@ -1,6 +1,10 @@
 import { PackmindLogger } from '@packmind/logger';
 import { IBaseAdapter } from '@packmind/node-utils';
-import { ILearningsPort } from '@packmind/types';
+import {
+  CaptureTopicCommand,
+  CaptureTopicResponse,
+  ILearningsPort,
+} from '@packmind/types';
 
 const origin = 'LearningsAdapter';
 
@@ -44,5 +48,18 @@ export class LearningsAdapter
    */
   public getPort(): ILearningsPort {
     return this as ILearningsPort;
+  }
+
+  /**
+   * Capture a topic (technical decision).
+   * TODO: Implement in Phase 2 with actual use case.
+   */
+  public async captureTopic(
+    command: CaptureTopicCommand,
+  ): Promise<CaptureTopicResponse> {
+    this.logger.info('captureTopic called - not yet implemented', {
+      title: command.title,
+    });
+    throw new Error('captureTopic not yet implemented');
   }
 }
