@@ -3,6 +3,7 @@ import { EventTrackingAdapter } from '@packmind/amplitude';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { extractCodeFromMarkdown } from '@packmind/node-utils';
 import {
+  CodeExample,
   createOrganizationId,
   createUserId,
   getAllProgrammingLanguages,
@@ -13,6 +14,7 @@ import {
   RuleWithExamples,
   Space,
   stringToProgrammingLanguage,
+  TopicCaptureContext,
 } from '@packmind/types';
 import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
@@ -136,6 +138,9 @@ export function createMCPServer(
 
   // Note: AnalyticsHexa in OSS edition doesn't use deployment port
   // (it's a stub implementation that throws errors when methods are called)
+
+  logger.debug('Attempting to call fastify.learningsHexa()');
+  const learningsHexa = fastify.learningsHexa();
 
   mcpServer.tool(
     `${mcpToolPrefix}_say_hello`,
@@ -1054,6 +1059,92 @@ export function createMCPServer(
           {
             type: 'text',
             text: ADD_RULE_WORKFLOW_STEPS[requestedStep],
+          },
+        ],
+      };
+    },
+  );
+
+  mcpServer.tool(
+    `${mcpToolPrefix}_capture_topic`,
+    'Capture a technical decision or learning as a topic for later distillation into standards or recipes.',
+    {
+      title: z
+        .string()
+        .min(1)
+        .describe(
+          'A concise title for the topic (e.g., "Error Handling Pattern")',
+        ),
+      content: z
+        .string()
+        .min(1)
+        .describe(
+          'Detailed explanation of the technical decision or learning, including context, rationale, and any important considerations [Markdown formatted]',
+        ),
+      codeExamples: z
+        .array(
+          z.object({
+            language: z
+              .string()
+              .min(1)
+              .describe(
+                'Programming language of the code example (e.g., "typescript", "python")',
+              ),
+            code: z
+              .string()
+              .min(1)
+              .describe('The code example demonstrating the topic'),
+            explanation: z
+              .string()
+              .optional()
+              .describe(
+                'Optional explanation of what the code example demonstrates',
+              ),
+          }),
+        )
+        .optional()
+        .describe(
+          'Optional array of code examples demonstrating the topic. Provide empty array if no examples.',
+        ),
+    },
+    async ({ title, content, codeExamples }) => {
+      if (!userContext) {
+        throw new Error('User context is required to capture topics');
+      }
+
+      const globalSpace = await getGlobalSpace(
+        fastify,
+        createOrganizationId(userContext.organizationId),
+      );
+      logger.info('Using global space for topic capture', {
+        spaceId: globalSpace.id,
+        spaceName: globalSpace.name,
+        organizationId: userContext.organizationId,
+      });
+
+      const topic = await learningsHexa.getAdapter().captureTopic({
+        title,
+        content,
+        codeExamples: (codeExamples || []) as CodeExample[],
+        captureContext: TopicCaptureContext.MCP_TOOL,
+        userId: userContext.userId,
+        spaceId: globalSpace.id,
+        organizationId: userContext.organizationId,
+      });
+
+      // Track analytics event
+      analyticsAdapter.trackEvent(
+        createUserId(userContext.userId),
+        createOrganizationId(userContext.organizationId),
+        'mcp_tool_call',
+        { tool: `${mcpToolPrefix}_capture_topic` },
+      );
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Topic '${topic.title}' has been captured successfully. It will be available for distillation into standards or recipes.`,
           },
         ],
       };
