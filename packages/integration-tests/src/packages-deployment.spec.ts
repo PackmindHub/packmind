@@ -258,4 +258,69 @@ describe('Package deployment integration', () => {
       expect(commitToGit).toHaveBeenCalled();
     });
   });
+
+  describe('Standard deployment with rules', () => {
+    it('deploys standard with rules correctly loaded', async () => {
+      // Create a standard with actual rules
+      const standardWithRules = await testApp.standardsHexa
+        .getAdapter()
+        .createStandard({
+          userId: dataFactory.user.id,
+          organizationId: dataFactory.organization.id,
+          spaceId: dataFactory.space.id,
+          name: 'Standard With Rules',
+          description: 'A standard that has rules',
+          scope: 'backend',
+          rules: [
+            { content: 'Always use TypeScript for type safety' },
+            { content: 'Write unit tests for all business logic' },
+          ],
+        });
+
+      const createResponse = await testApp.deploymentsHexa
+        .getAdapter()
+        .createPackage({
+          userId: dataFactory.user.id,
+          organizationId: dataFactory.organization.id,
+          spaceId: dataFactory.space.id,
+          name: 'Package With Rules',
+          description: 'Package containing standard with rules',
+          recipeIds: [],
+          standardIds: [standardWithRules.id],
+        });
+
+      const packageWithStandard = createResponse.package;
+
+      const result = await testApp.deploymentsHexa
+        .getAdapter()
+        .publishPackages({
+          ...dataFactory.packmindCommand(),
+          packageIds: [packageWithStandard.id],
+          targetIds: [dataFactory.target.id],
+        });
+
+      expect(result).toHaveLength(1);
+      expect(commitToGit).toHaveBeenCalled();
+
+      // Verify the committed files contain the rules
+      const commitCall = commitToGit.mock.calls[0];
+      const fileUpdates = commitCall[1] as Array<{
+        path: string;
+        content: string;
+      }>; // Second parameter is the file updates
+
+      // Find the standard file in the updates
+      const standardFile = fileUpdates.find((file) =>
+        file.path.includes('.packmind/standards/standard-with-rules.md'),
+      );
+
+      expect(standardFile).toBeDefined();
+      expect(standardFile?.content).toContain(
+        'Always use TypeScript for type safety',
+      );
+      expect(standardFile?.content).toContain(
+        'Write unit tests for all business logic',
+      );
+    });
+  });
 });
