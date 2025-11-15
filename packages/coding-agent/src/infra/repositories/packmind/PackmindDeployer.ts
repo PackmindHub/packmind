@@ -206,6 +206,72 @@ export class PackmindDeployer implements ICodingAgentDeployer {
     return fileUpdates;
   }
 
+  async deployArtifacts(
+    recipeVersions: RecipeVersion[],
+    standardVersions: StandardVersion[],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _existingContent: string,
+  ): Promise<FileUpdates> {
+    this.logger.info('Deploying artifacts (recipes + standards) for Packmind', {
+      recipesCount: recipeVersions.length,
+      standardsCount: standardVersions.length,
+    });
+
+    const fileUpdates: FileUpdates = {
+      createOrUpdate: [],
+      delete: [],
+    };
+
+    // Deploy each recipe to its own file
+    for (const recipeVersion of recipeVersions) {
+      const recipeFilePath = `.packmind/recipes/${recipeVersion.slug}.md`;
+      fileUpdates.createOrUpdate.push({
+        path: recipeFilePath,
+        content: recipeVersion.content,
+      });
+    }
+
+    // Generate and deploy the recipes index
+    const recipesIndexContent =
+      this.recipesIndexService.buildRecipesIndex(recipeVersions);
+    fileUpdates.createOrUpdate.push({
+      path: PackmindDeployer.RECIPES_INDEX_PATH,
+      content: recipesIndexContent,
+    });
+
+    // Deploy each standard to its own file
+    for (const standardVersion of standardVersions) {
+      const rules =
+        standardVersion.rules ??
+        (await this.standardsPort?.getRulesByStandardId(
+          standardVersion.standardId,
+        )) ??
+        [];
+
+      const standardFilePath = `.packmind/standards/${standardVersion.slug}.md`;
+      fileUpdates.createOrUpdate.push({
+        path: standardFilePath,
+        content: GenericStandardWriter.writeStandard(standardVersion, rules),
+      });
+    }
+
+    // Generate and deploy the standards index
+    const standardsIndexContent =
+      this.standardsIndexService.buildStandardsIndex(
+        standardVersions.map((standardVersion) => ({
+          name: standardVersion.name,
+          slug: standardVersion.slug,
+          summary: standardVersion.summary,
+        })),
+      );
+    fileUpdates.createOrUpdate.push({
+      path: '.packmind/standards-index.md',
+      content: standardsIndexContent,
+    });
+
+    return fileUpdates;
+  }
+
   private formatStandardVersionContent(
     standardVersion: StandardVersion,
   ): string {

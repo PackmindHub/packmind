@@ -151,6 +151,45 @@ export class CopilotDeployer implements ICodingAgentDeployer {
     return fileUpdates;
   }
 
+  async deployArtifacts(
+    recipeVersions: RecipeVersion[],
+    standardVersions: StandardVersion[],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _existingContent: string,
+  ): Promise<FileUpdates> {
+    this.logger.info(
+      'Deploying artifacts (recipes + standards) for GitHub Copilot',
+      {
+        recipesCount: recipeVersions.length,
+        standardsCount: standardVersions.length,
+      },
+    );
+
+    const fileUpdates: FileUpdates = {
+      createOrUpdate: [],
+      delete: [],
+    };
+
+    // Generate recipes index file
+    const recipesContent = this.generateRecipeContentSimple(recipeVersions);
+    fileUpdates.createOrUpdate.push({
+      path: CopilotDeployer.RECIPES_INDEX_PATH,
+      content: recipesContent,
+    });
+
+    // Generate individual Copilot configuration files for each standard
+    for (const standardVersion of standardVersions) {
+      const configFile =
+        await this.generateCopilotConfigForStandard(standardVersion);
+      fileUpdates.createOrUpdate.push({
+        path: configFile.path,
+        content: configFile.content,
+      });
+    }
+
+    return fileUpdates;
+  }
+
   /**
    * Generate content with recipe instructions without target/repo context
    */

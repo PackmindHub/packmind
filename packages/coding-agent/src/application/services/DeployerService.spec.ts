@@ -44,6 +44,7 @@ class MockDeployer implements ICodingAgentDeployer {
   constructor(
     private recipeResult: FileUpdates = { createOrUpdate: [], delete: [] },
     private standardResult: FileUpdates = { createOrUpdate: [], delete: [] },
+    private artifactsResult: FileUpdates = { createOrUpdate: [], delete: [] },
   ) {}
 
   async deployRecipes(
@@ -80,6 +81,17 @@ class MockDeployer implements ICodingAgentDeployer {
     standardVersions: StandardVersion[],
   ): Promise<FileUpdates> {
     return this.standardResult;
+  }
+
+  async deployArtifacts(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    recipeVersions: RecipeVersion[],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    standardVersions: StandardVersion[],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    existingContent: string,
+  ): Promise<FileUpdates> {
+    return this.artifactsResult;
   }
 }
 
@@ -311,6 +323,9 @@ describe('DeployerService', () => {
         async generateFileUpdatesForStandards(): Promise<FileUpdates> {
           return { createOrUpdate: [], delete: [] };
         },
+        async deployArtifacts(): Promise<FileUpdates> {
+          return { createOrUpdate: [], delete: [] };
+        },
       };
 
       registry.registerDeployer('packmind', errorDeployer);
@@ -364,6 +379,336 @@ describe('DeployerService', () => {
 
       expect(result.createOrUpdate).toHaveLength(0);
       expect(result.delete).toHaveLength(0);
+    });
+  });
+
+  describe('aggregateArtifactRendering', () => {
+    it('aggregates file updates from multiple coding agents', async () => {
+      const claudeDeployer = new MockDeployer(
+        { createOrUpdate: [], delete: [] },
+        { createOrUpdate: [], delete: [] },
+        {
+          createOrUpdate: [{ path: 'CLAUDE.md', content: 'claude content' }],
+          delete: [],
+        },
+      );
+
+      const cursorDeployer = new MockDeployer(
+        { createOrUpdate: [], delete: [] },
+        { createOrUpdate: [], delete: [] },
+        {
+          createOrUpdate: [{ path: '.cursorrules', content: 'cursor content' }],
+          delete: [],
+        },
+      );
+
+      registry.registerDeployer('claude', claudeDeployer);
+      registry.registerDeployer('cursor', cursorDeployer);
+
+      const existingFiles = new Map<string, string>();
+      existingFiles.set('CLAUDE.md', '');
+      existingFiles.set('.cursorrules', '');
+
+      const result = await service.aggregateArtifactRendering(
+        mockRecipeVersions,
+        mockStandardVersions,
+        ['claude', 'cursor'],
+        existingFiles,
+      );
+
+      expect(result.createOrUpdate).toHaveLength(2);
+      expect(result.createOrUpdate).toContainEqual({
+        path: 'CLAUDE.md',
+        content: 'claude content',
+      });
+      expect(result.createOrUpdate).toContainEqual({
+        path: '.cursorrules',
+        content: 'cursor content',
+      });
+    });
+
+    it('uses correct existing content for each agent', async () => {
+      const deployArtifactsSpy = jest.fn().mockResolvedValue({
+        createOrUpdate: [{ path: 'CLAUDE.md', content: 'new content' }],
+        delete: [],
+      });
+
+      const claudeDeployer = {
+        async deployRecipes(): Promise<FileUpdates> {
+          return { createOrUpdate: [], delete: [] };
+        },
+        async deployStandards(): Promise<FileUpdates> {
+          return { createOrUpdate: [], delete: [] };
+        },
+        async generateFileUpdatesForRecipes(): Promise<FileUpdates> {
+          return { createOrUpdate: [], delete: [] };
+        },
+        async generateFileUpdatesForStandards(): Promise<FileUpdates> {
+          return { createOrUpdate: [], delete: [] };
+        },
+        deployArtifacts: deployArtifactsSpy,
+      };
+
+      registry.registerDeployer('claude', claudeDeployer);
+
+      const existingFiles = new Map<string, string>();
+      existingFiles.set('CLAUDE.md', 'existing claude content');
+
+      await service.aggregateArtifactRendering(
+        mockRecipeVersions,
+        mockStandardVersions,
+        ['claude'],
+        existingFiles,
+      );
+
+      expect(deployArtifactsSpy).toHaveBeenCalledWith(
+        mockRecipeVersions,
+        mockStandardVersions,
+        'existing claude content',
+      );
+    });
+
+    it('merges file updates with later entries overriding earlier', async () => {
+      const deployer1 = new MockDeployer(
+        { createOrUpdate: [], delete: [] },
+        { createOrUpdate: [], delete: [] },
+        {
+          createOrUpdate: [
+            { path: 'AGENTS.md', content: 'first content' },
+            { path: 'file1.md', content: 'content1' },
+          ],
+          delete: [],
+        },
+      );
+
+      const deployer2 = new MockDeployer(
+        { createOrUpdate: [], delete: [] },
+        { createOrUpdate: [], delete: [] },
+        {
+          createOrUpdate: [
+            { path: 'AGENTS.md', content: 'second content' },
+            { path: 'file2.md', content: 'content2' },
+          ],
+          delete: [],
+        },
+      );
+
+      registry.registerDeployer('agents_md', deployer1);
+      registry.registerDeployer('claude', deployer2);
+
+      const existingFiles = new Map<string, string>();
+
+      const result = await service.aggregateArtifactRendering(
+        mockRecipeVersions,
+        mockStandardVersions,
+        ['agents_md', 'claude'],
+        existingFiles,
+      );
+
+      expect(result.createOrUpdate).toHaveLength(3);
+      const agentsMdFile = result.createOrUpdate.find(
+        (f) => f.path === 'AGENTS.md',
+      );
+      expect(agentsMdFile?.content).toBe('second content');
+    });
+
+    it('handles empty codingAgents array', async () => {
+      const existingFiles = new Map<string, string>();
+
+      const result = await service.aggregateArtifactRendering(
+        mockRecipeVersions,
+        mockStandardVersions,
+        [],
+        existingFiles,
+      );
+
+      expect(result.createOrUpdate).toHaveLength(0);
+      expect(result.delete).toHaveLength(0);
+    });
+
+    it('handles deployer returning empty FileUpdates', async () => {
+      const emptyDeployer = new MockDeployer(
+        { createOrUpdate: [], delete: [] },
+        { createOrUpdate: [], delete: [] },
+        { createOrUpdate: [], delete: [] },
+      );
+
+      registry.registerDeployer('claude', emptyDeployer);
+
+      const existingFiles = new Map<string, string>();
+
+      const result = await service.aggregateArtifactRendering(
+        mockRecipeVersions,
+        mockStandardVersions,
+        ['claude'],
+        existingFiles,
+      );
+
+      expect(result.createOrUpdate).toHaveLength(0);
+      expect(result.delete).toHaveLength(0);
+    });
+
+    it('deduplicates files from multiple agents updating same file', async () => {
+      const deployer1 = new MockDeployer(
+        { createOrUpdate: [], delete: [] },
+        { createOrUpdate: [], delete: [] },
+        {
+          createOrUpdate: [{ path: 'same.md', content: 'first' }],
+          delete: [],
+        },
+      );
+
+      const deployer2 = new MockDeployer(
+        { createOrUpdate: [], delete: [] },
+        { createOrUpdate: [], delete: [] },
+        {
+          createOrUpdate: [{ path: 'same.md', content: 'second' }],
+          delete: [],
+        },
+      );
+
+      registry.registerDeployer('claude', deployer1);
+      registry.registerDeployer('cursor', deployer2);
+
+      const existingFiles = new Map<string, string>();
+
+      const result = await service.aggregateArtifactRendering(
+        mockRecipeVersions,
+        mockStandardVersions,
+        ['claude', 'cursor'],
+        existingFiles,
+      );
+
+      expect(result.createOrUpdate).toHaveLength(1);
+      expect(result.createOrUpdate[0]).toEqual({
+        path: 'same.md',
+        content: 'second',
+      });
+    });
+
+    it('handles missing existing content for new files', async () => {
+      const deployArtifactsSpy = jest.fn().mockResolvedValue({
+        createOrUpdate: [{ path: 'CLAUDE.md', content: 'new file content' }],
+        delete: [],
+      });
+
+      const claudeDeployer = {
+        async deployRecipes(): Promise<FileUpdates> {
+          return { createOrUpdate: [], delete: [] };
+        },
+        async deployStandards(): Promise<FileUpdates> {
+          return { createOrUpdate: [], delete: [] };
+        },
+        async generateFileUpdatesForRecipes(): Promise<FileUpdates> {
+          return { createOrUpdate: [], delete: [] };
+        },
+        async generateFileUpdatesForStandards(): Promise<FileUpdates> {
+          return { createOrUpdate: [], delete: [] };
+        },
+        deployArtifacts: deployArtifactsSpy,
+      };
+
+      registry.registerDeployer('claude', claudeDeployer);
+
+      const existingFiles = new Map<string, string>();
+
+      await service.aggregateArtifactRendering(
+        mockRecipeVersions,
+        mockStandardVersions,
+        ['claude'],
+        existingFiles,
+      );
+
+      expect(deployArtifactsSpy).toHaveBeenCalledWith(
+        mockRecipeVersions,
+        mockStandardVersions,
+        '',
+      );
+    });
+
+    it('propagates deployer errors', async () => {
+      const errorDeployer = {
+        async deployRecipes(): Promise<FileUpdates> {
+          return { createOrUpdate: [], delete: [] };
+        },
+        async deployStandards(): Promise<FileUpdates> {
+          return { createOrUpdate: [], delete: [] };
+        },
+        async generateFileUpdatesForRecipes(): Promise<FileUpdates> {
+          return { createOrUpdate: [], delete: [] };
+        },
+        async generateFileUpdatesForStandards(): Promise<FileUpdates> {
+          return { createOrUpdate: [], delete: [] };
+        },
+        async deployArtifacts(): Promise<FileUpdates> {
+          throw new Error('Artifact deployment failed');
+        },
+      };
+
+      registry.registerDeployer('claude', errorDeployer);
+
+      const existingFiles = new Map<string, string>();
+
+      await expect(
+        service.aggregateArtifactRendering(
+          mockRecipeVersions,
+          mockStandardVersions,
+          ['claude'],
+          existingFiles,
+        ),
+      ).rejects.toThrow('Artifact deployment failed');
+    });
+
+    it('handles all supported coding agents', async () => {
+      const agents: CodingAgent[] = [
+        'claude',
+        'agents_md',
+        'cursor',
+        'copilot',
+        'junie',
+        'packmind',
+        'gitlab_duo',
+      ];
+
+      const expectedFiles = [
+        'CLAUDE.md',
+        'AGENTS.md',
+        '.cursorrules',
+        '.github/copilot-instructions.md',
+        '.junie.md',
+        '.packmind.md',
+        '.gitlab/duo_chat.yml',
+      ];
+
+      agents.forEach((agent, index) => {
+        const deployer = new MockDeployer(
+          { createOrUpdate: [], delete: [] },
+          { createOrUpdate: [], delete: [] },
+          {
+            createOrUpdate: [
+              { path: expectedFiles[index], content: `${agent} content` },
+            ],
+            delete: [],
+          },
+        );
+        registry.registerDeployer(agent, deployer);
+      });
+
+      const existingFiles = new Map<string, string>();
+
+      const result = await service.aggregateArtifactRendering(
+        mockRecipeVersions,
+        mockStandardVersions,
+        agents,
+        existingFiles,
+      );
+
+      expect(result.createOrUpdate).toHaveLength(7);
+      expectedFiles.forEach((file) => {
+        expect(
+          result.createOrUpdate.find((f) => f.path === file),
+        ).toBeDefined();
+      });
     });
   });
 });

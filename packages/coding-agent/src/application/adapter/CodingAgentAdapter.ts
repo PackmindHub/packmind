@@ -11,11 +11,14 @@ import {
   PrepareRecipesDeploymentResponse,
   PrepareStandardsDeploymentCommand,
   PrepareStandardsDeploymentResponse,
+  RenderArtifactsCommand,
+  RenderArtifactsResponse,
 } from '@packmind/types';
 import { ICodingAgentRepositories } from '../../domain/repositories/ICodingAgentRepositories';
 import { CodingAgentServices } from '../services/CodingAgentServices';
 import { PrepareRecipesDeploymentUseCase } from '../useCases/PrepareRecipesDeploymentUseCase';
 import { PrepareStandardsDeploymentUseCase } from '../useCases/PrepareStandardsDeploymentUseCase';
+import { RenderArtifactsUseCase } from '../useCases/RenderArtifactsUseCase';
 
 const origin = 'CodingAgentAdapter';
 
@@ -27,6 +30,7 @@ export class CodingAgentAdapter
 
   private _prepareRecipesDeploymentUseCase!: PrepareRecipesDeploymentUseCase;
   private _prepareStandardsDeploymentUseCase!: PrepareStandardsDeploymentUseCase;
+  private _renderArtifactsUseCase!: RenderArtifactsUseCase;
 
   constructor(
     private readonly codingAgentRepositories: ICodingAgentRepositories,
@@ -72,6 +76,11 @@ export class CodingAgentAdapter
         this.logger,
       );
 
+    this._renderArtifactsUseCase = new RenderArtifactsUseCase(
+      this.codingAgentServices,
+      this.logger,
+    );
+
     this.logger.info('CodingAgentAdapter initialized successfully');
   }
 
@@ -104,6 +113,12 @@ export class CodingAgentAdapter
     command: PrepareStandardsDeploymentCommand,
   ): Promise<PrepareStandardsDeploymentResponse> {
     return this._prepareStandardsDeploymentUseCase.execute(command);
+  }
+
+  async renderArtifacts(
+    command: RenderArtifactsCommand,
+  ): Promise<RenderArtifactsResponse> {
+    return this._renderArtifactsUseCase.execute(command);
   }
 
   getDeployerRegistry(): ICodingAgentDeployerRegistry {
