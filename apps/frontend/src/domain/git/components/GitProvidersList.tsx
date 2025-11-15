@@ -241,7 +241,7 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
         confirmColorScheme="red"
         onConfirm={confirmDeleteProvider}
         open={deleteDialogOpen}
-        onOpenChange={(open) => {
+        onOpenChange={({ open }) => {
           if (open) {
             setDeleteDialogOpen(true);
           } else {
