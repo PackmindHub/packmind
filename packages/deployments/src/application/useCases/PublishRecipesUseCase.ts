@@ -11,10 +11,18 @@ import {
   IGitPort,
   OrganizationId,
   DistributionStatus,
+  GitRepo,
+  CodingAgent,
+  FileUpdates,
 } from '@packmind/types';
 import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
 import { PackmindLogger } from '@packmind/logger';
-import { Recipe, RecipeVersion, UserId } from '@packmind/types';
+import {
+  Recipe,
+  RecipeVersion,
+  UserId,
+  StandardVersion,
+} from '@packmind/types';
 import { TargetService } from '../services/TargetService';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import { v4 as uuidv4 } from 'uuid';
@@ -630,5 +638,69 @@ ${recipeVersions.map((rv) => `- ${rv.name} (${rv.slug}) v${rv.version}`).join('\
     });
 
     return deployments;
+  }
+
+  /**
+   * Unified method using renderArtifacts for both recipes and standards
+   * This prepares file updates for a single target using the unified renderArtifacts method
+   * @private - will replace separate prepare methods in Phase 3
+   */
+  private async prepareArtifactsDeployment(
+    recipeVersions: RecipeVersion[],
+    standardVersions: StandardVersion[],
+    gitRepo: GitRepo,
+    target: Target,
+    codingAgents: CodingAgent[],
+  ): Promise<FileUpdates> {
+    const { fetchExistingFilesFromGit, applyTargetPrefixingToFileUpdates } =
+      await import('../utils/GitFileUtils');
+
+    this.logger.info(
+      'Preparing artifacts deployment (unified recipes + standards)',
+      {
+        recipesCount: recipeVersions.length,
+        standardsCount: standardVersions.length,
+        targetId: target.id,
+        targetPath: target.path,
+        agentsCount: codingAgents.length,
+        gitRepoId: gitRepo.id,
+      },
+    );
+
+    // Fetch existing content from git for each coding agent file
+    const existingFiles = await fetchExistingFilesFromGit(
+      this.gitPort,
+      gitRepo,
+      target,
+      codingAgents,
+      this.logger,
+    );
+
+    // Call renderArtifacts with both recipes and standards
+    const baseFileUpdates = await this.codingAgentPort.renderArtifacts({
+      userId: '' as UserId, // Not used by renderArtifacts
+      organizationId: '' as OrganizationId, // Not used by renderArtifacts
+      recipeVersions,
+      standardVersions,
+      codingAgents,
+      existingFiles,
+    });
+
+    // Apply target path prefixing to the base paths returned by renderArtifacts
+    const prefixedFileUpdates = applyTargetPrefixingToFileUpdates(
+      baseFileUpdates,
+      target,
+      this.logger,
+    );
+
+    this.logger.info('Artifacts deployment prepared successfully', {
+      filesCount:
+        prefixedFileUpdates.createOrUpdate.length +
+        prefixedFileUpdates.delete.length,
+      createOrUpdateCount: prefixedFileUpdates.createOrUpdate.length,
+      deleteCount: prefixedFileUpdates.delete.length,
+    });
+
+    return prefixedFileUpdates;
   }
 }
