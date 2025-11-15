@@ -173,48 +173,46 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
       )}
       {(packagesResponse?.packages ?? []).length ? (
         <PMBox>
-          {isSomeSelected && (
-            <PMBox mb={4}>
-              <PMButtonGroup>
-                <DeployPackageButton
-                  selectedPackages={packages.filter((pkg) =>
-                    selectedPackageIds.includes(pkg.id),
-                  )}
-                  variant="primary"
-                  disabled={!isSomeSelected}
-                />
-                <PMAlertDialog
-                  trigger={
-                    <PMButton
-                      variant="secondary"
-                      loading={deleteBatchMutation.isPending}
-                      disabled={!isSomeSelected}
-                    >
-                      {`Delete (${selectedPackageIds.length})`}
-                    </PMButton>
-                  }
-                  title="Delete Packages"
-                  message={PACKAGE_MESSAGES.confirmation.deleteBatchPackages(
-                    selectedPackageIds.length,
-                  )}
-                  confirmText="Delete"
-                  cancelText="Cancel"
-                  confirmColorScheme="red"
-                  onConfirm={handleBatchDelete}
-                  open={deleteDialogOpen}
-                  onOpenChange={({ open }) => setDeleteDialogOpen(open)}
-                  isLoading={deleteBatchMutation.isPending}
-                />
-                <PMButton
-                  variant="secondary"
-                  onClick={() => setSelectedPackageIds([])}
-                  disabled={!isSomeSelected}
-                >
-                  Clear Selection
-                </PMButton>
-              </PMButtonGroup>
-            </PMBox>
-          )}
+          <PMBox mb={4}>
+            <PMButtonGroup>
+              <DeployPackageButton
+                selectedPackages={packages.filter((pkg) =>
+                  selectedPackageIds.includes(pkg.id),
+                )}
+                variant="primary"
+                disabled={!isSomeSelected}
+              />
+              <PMAlertDialog
+                trigger={
+                  <PMButton
+                    variant="secondary"
+                    loading={deleteBatchMutation.isPending}
+                    disabled={!isSomeSelected}
+                  >
+                    {`Delete (${selectedPackageIds.length})`}
+                  </PMButton>
+                }
+                title="Delete Packages"
+                message={PACKAGE_MESSAGES.confirmation.deleteBatchPackages(
+                  selectedPackageIds.length,
+                )}
+                confirmText="Delete"
+                cancelText="Cancel"
+                confirmColorScheme="red"
+                onConfirm={handleBatchDelete}
+                open={deleteDialogOpen}
+                onOpenChange={({ open }) => setDeleteDialogOpen(open)}
+                isLoading={deleteBatchMutation.isPending}
+              />
+              <PMButton
+                variant="secondary"
+                onClick={() => setSelectedPackageIds([])}
+                disabled={!isSomeSelected}
+              >
+                Clear Selection
+              </PMButton>
+            </PMButtonGroup>
+          </PMBox>
           <PMTable
             columns={columns}
             data={tableData}
