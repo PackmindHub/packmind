@@ -151,6 +151,33 @@ export class PublishStandardsUseCase implements IPublishStandards {
           previousCount: filteredPreviousStandardVersions.length,
         });
 
+        // Load rules for all standard versions that don't have them populated
+        // This is critical for previously deployed standards which come from the database
+        // without their rules relation loaded
+        const standardVersionsWithRules = await Promise.all(
+          allStandardVersions.map(async (sv) => {
+            if (sv.rules === undefined || sv.rules === null) {
+              this.logger.debug('Loading rules for standard version', {
+                standardVersionId: sv.id,
+                standardId: sv.standardId,
+                slug: sv.slug,
+              });
+              const rules = await this.standardsPort.getRulesByStandardId(
+                sv.standardId,
+              );
+              return { ...sv, rules };
+            }
+            return sv;
+          }),
+        );
+
+        this.logger.info('Loaded rules for standard versions', {
+          totalCount: standardVersionsWithRules.length,
+          versionsWithRulesLoaded: standardVersionsWithRules.filter(
+            (sv) => sv.rules && sv.rules.length > 0,
+          ).length,
+        });
+
         // We already have the target for this iteration
         const repositoryTargets = [target];
 
@@ -158,7 +185,7 @@ export class PublishStandardsUseCase implements IPublishStandards {
         const prepareCommand: PrepareStandardsDeploymentCommand = {
           userId: command.userId,
           organizationId: command.organizationId,
-          standardVersions: allStandardVersions,
+          standardVersions: standardVersionsWithRules,
           gitRepo,
           targets: repositoryTargets,
           codingAgents,
@@ -176,7 +203,7 @@ export class PublishStandardsUseCase implements IPublishStandards {
         const commitMessage = `[PACKMIND] Update standards files
 
 - Updated ${standardVersions.length} standard(s)
-- Total standards in repository: ${allStandardVersions.length}
+- Total standards in repository: ${standardVersionsWithRules.length}
 
 Standards updated:
 ${standardVersions.map((sv) => `- ${sv.name} (${sv.slug}) v${sv.version}`).join('\n')}`;
@@ -202,7 +229,7 @@ ${standardVersions.map((sv) => `- ${sv.name} (${sv.slug}) v${sv.version}`).join(
               'No changes detected, creating no_changes deployment entry',
               {
                 gitRepoId: gitRepo.id,
-                standardVersionsCount: allStandardVersions.length,
+                standardVersionsCount: standardVersionsWithRules.length,
               },
             );
             // Set status to no_changes and continue without git commit
@@ -217,7 +244,7 @@ ${standardVersions.map((sv) => `- ${sv.name} (${sv.slug}) v${sv.version}`).join(
         // Individual deployments are now created per target instead of collecting in arrays
 
         // Merge standard versions (avoid duplicates by standardId, keep latest version)
-        for (const standardVersion of allStandardVersions) {
+        for (const standardVersion of standardVersionsWithRules) {
           const existingVersion = allStandardVersionsMap.get(
             standardVersion.standardId,
           );

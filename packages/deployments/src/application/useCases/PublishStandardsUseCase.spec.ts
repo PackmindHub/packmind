@@ -13,6 +13,7 @@ import {
   createGitRepoId,
   createGitProviderId,
   createGitCommitId,
+  createRuleId,
   GitRepo,
   GitCommit,
   DEFAULT_ACTIVE_RENDER_MODES,
@@ -53,6 +54,7 @@ describe('PublishStandardsUseCase', () => {
     mockStandardsPort = {
       getStandard: jest.fn(),
       getStandardVersionById: jest.fn(),
+      getRulesByStandardId: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<IStandardsPort>;
 
     mockGitPort = {
@@ -66,7 +68,7 @@ describe('PublishStandardsUseCase', () => {
 
     mockStandardsDeploymentRepository = {
       add: jest.fn(),
-      findActiveStandardVersionsByTarget: jest.fn(),
+      findActiveStandardVersionsByTarget: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<IStandardsDeploymentRepository>;
 
     mockTargetService = {
@@ -667,8 +669,196 @@ describe('PublishStandardsUseCase', () => {
         mockCodingAgentPort.prepareStandardsDeployment,
       ).toHaveBeenCalledWith(
         expect.objectContaining({
-          standardVersions: [activeStandardVersion],
+          standardVersions: [
+            expect.objectContaining({
+              id: activeStandardVersion.id,
+              slug: activeStandardVersion.slug,
+              name: activeStandardVersion.name,
+            }),
+          ],
         }),
+      );
+    });
+  });
+
+  describe('when deploying new standards with previously deployed standards', () => {
+    let command: PublishStandardsCommand;
+    let newStandardVersion: ReturnType<typeof standardVersionFactory>;
+    let previousStandardVersion: ReturnType<typeof standardVersionFactory>;
+    let target: ReturnType<typeof targetFactory>;
+    let gitRepo: GitRepo;
+
+    beforeEach(() => {
+      // Create a new standard being deployed
+      newStandardVersion = standardVersionFactory({
+        id: createStandardVersionId(uuidv4()),
+        name: 'New Standard',
+        slug: 'new-standard',
+        version: 1,
+        rules: [
+          {
+            id: createRuleId(uuidv4()),
+            content: 'New standard rule 1',
+            standardVersionId: createStandardVersionId(uuidv4()),
+          },
+          {
+            id: createRuleId(uuidv4()),
+            content: 'New standard rule 2',
+            standardVersionId: createStandardVersionId(uuidv4()),
+          },
+        ],
+      });
+
+      // Create a previously deployed standard (without rules populated, simulating DB retrieval)
+      previousStandardVersion = standardVersionFactory({
+        id: createStandardVersionId(uuidv4()),
+        name: 'Previous Standard',
+        slug: 'previous-standard',
+        version: 1,
+        // Rules are NOT populated when retrieved from deployment history
+        rules: undefined,
+      });
+
+      gitRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'test-owner',
+        repo: 'test-repo',
+        branch: 'main',
+        providerId: createGitProviderId(uuidv4()),
+      };
+
+      target = targetFactory({
+        id: targetId,
+        gitRepoId: gitRepo.id,
+      });
+
+      const gitCommit = {
+        id: createGitCommitId(uuidv4()),
+        sha: 'abc123def456',
+        message: 'Test commit',
+        author: 'Test Author <test@example.com>',
+        url: 'https://github.com/test-owner/test-repo/commit/abc123def456',
+      };
+
+      // Command to deploy only the new standard
+      command = {
+        userId,
+        organizationId,
+        standardVersionIds: [newStandardVersion.id],
+        targetIds: [targetId],
+      };
+
+      // Mock: new standard returns the version with rules
+      mockStandardsPort.getStandardVersionById.mockImplementation((id) => {
+        if (id === newStandardVersion.id)
+          return Promise.resolve(newStandardVersion);
+        return Promise.resolve(null);
+      });
+
+      // Mock: both standards exist (not deleted)
+      mockStandardsPort.getStandard.mockImplementation(
+        (id: string): Promise<Standard | null> => {
+          if (
+            id === newStandardVersion.standardId ||
+            id === previousStandardVersion.standardId
+          )
+            return Promise.resolve({ id } as Standard);
+          return Promise.resolve(null);
+        },
+      );
+
+      // Mock: get rules for previous standard when requested
+      mockStandardsPort.getRulesByStandardId = jest
+        .fn()
+        .mockImplementation((standardId: string) => {
+          if (standardId === previousStandardVersion.standardId) {
+            return Promise.resolve([
+              {
+                id: createRuleId(uuidv4()),
+                content: 'Previous standard rule 1',
+                standardVersionId: previousStandardVersion.id,
+              },
+              {
+                id: createRuleId(uuidv4()),
+                content: 'Previous standard rule 2',
+                standardVersionId: previousStandardVersion.id,
+              },
+            ]);
+          }
+          return Promise.resolve([]);
+        });
+
+      mockTargetService.findById.mockResolvedValue(target);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
+
+      // Simulate that the previous standard was deployed before
+      mockStandardsDeploymentRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [previousStandardVersion],
+      );
+
+      // Mock the prepareStandardsDeployment to capture what content is being deployed
+      mockCodingAgentPort.prepareStandardsDeployment.mockImplementation(() => {
+        // This is where we'll verify the bug: the previous standard file should contain rules
+        return Promise.resolve({
+          createOrUpdate: [
+            {
+              path: '.packmind/standards/new-standard.md',
+              content:
+                '# New Standard\n* New standard rule 1\n* New standard rule 2',
+            },
+            {
+              path: '.packmind/standards/previous-standard.md',
+              content:
+                '# Previous Standard\n* Previous standard rule 1\n* Previous standard rule 2',
+            },
+          ],
+          delete: [],
+        });
+      });
+
+      mockGitPort.commitToGit.mockResolvedValue(gitCommit);
+    });
+
+    it('includes both new and previous standards in deployment', async () => {
+      const result = await useCase.execute(command);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].status).toBe(DistributionStatus.success);
+
+      // Verify that prepareStandardsDeployment was called with both standards
+      expect(
+        mockCodingAgentPort.prepareStandardsDeployment,
+      ).toHaveBeenCalledWith(
+        expect.objectContaining({
+          standardVersions: expect.arrayContaining([
+            expect.objectContaining({ slug: 'new-standard' }),
+            expect.objectContaining({ slug: 'previous-standard' }),
+          ]),
+        }),
+      );
+    });
+
+    it('ensures previous standard has rules loaded before deployment', async () => {
+      await useCase.execute(command);
+
+      // Get the actual call arguments
+      const callArgs =
+        mockCodingAgentPort.prepareStandardsDeployment.mock.calls[0][0];
+      const standardVersions = callArgs.standardVersions;
+
+      // Find the previous standard in the call
+      const previousStandard = standardVersions.find(
+        (sv) => sv.slug === 'previous-standard',
+      );
+
+      expect(previousStandard).toBeDefined();
+
+      // This is the key assertion: the previous standard should have rules loaded
+      // Currently this WILL FAIL because rules are not loaded for previously deployed standards
+      expect(previousStandard?.rules).toBeDefined();
+      expect(previousStandard?.rules).toHaveLength(2);
+      expect(previousStandard?.rules?.[0]?.content).toBe(
+        'Previous standard rule 1',
       );
     });
   });
