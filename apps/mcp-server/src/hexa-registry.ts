@@ -2,6 +2,7 @@ import { AccountsHexa } from '@packmind/accounts';
 import { AnalyticsHexa } from '@packmind/analytics';
 import { DeploymentsHexa } from '@packmind/deployments';
 import { GitHexa } from '@packmind/git';
+import { LearningsHexa } from '@packmind/learnings';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { HexaRegistry, JobsService } from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
@@ -147,6 +148,17 @@ async function hexaRegistryPlugin(fastify: FastifyInstance) {
       return fastify.hexaRegistry.get(AnalyticsHexa);
     });
     logger.debug('analyticsHexa decorator added');
+
+    fastify.decorate('learningsHexa', () => {
+      logger.debug('learningsHexa() called');
+      if (!fastify.hexaRegistry || !fastify.hexaRegistry.initialized) {
+        throw new Error(
+          'HexaRegistry not initialized yet. Ensure database connection is ready.',
+        );
+      }
+      return fastify.hexaRegistry.get(LearningsHexa);
+    });
+    logger.debug('learningsHexa decorator added');
   } catch (error) {
     logger.error('Failed to register HexaRegistry plugin', {
       error: error instanceof Error ? error.message : String(error),
@@ -173,5 +185,6 @@ declare module 'fastify' {
     analyticsHexa: () => AnalyticsHexa;
     standardsHexa: () => StandardsHexa;
     deploymentsHexa: () => DeploymentsHexa;
+    learningsHexa: () => LearningsHexa;
   }
 }

@@ -1,0 +1,26 @@
+{
+  "name": "learnings",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/learnings/src",
+  "projectType": "library",
+  "tags": ["env:node"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit --project packages/learnings/tsconfig.lib.json"
+      }
+    },
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/learnings",
+        "tsConfig": "packages/learnings/tsconfig.lib.json",
+        "packageJson": "packages/learnings/package.json",
+        "main": "packages/learnings/src/index.ts",
+        "assets": ["packages/learnings/*.md"]
+      }
+    }
+  }
+}

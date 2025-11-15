@@ -35,6 +35,7 @@
       "@packmind/integration-tests": [
         "packages/integration-tests/src/index.ts"
       ],
+      "@packmind/learnings": ["packages/learnings/src/index.ts"],
       "@packmind/linter-ast": ["packages/linter-ast/src/index.ts"],
       "@packmind/linter-execution": ["packages/linter-execution/src/index.ts"],
       "@packmind/logger": ["packages/logger/src/index.ts"],

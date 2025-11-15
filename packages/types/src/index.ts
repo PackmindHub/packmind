@@ -7,6 +7,7 @@ export * from './coding-agent';
 export * from './recipes';
 export * from './deployments';
 export * from './git';
+export * from './learnings';
 export * from './spaces';
 export * from './standards';
 export * from './languages';

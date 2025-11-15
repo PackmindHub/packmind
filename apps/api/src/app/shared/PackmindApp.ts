@@ -7,6 +7,7 @@ import { AnalyticsHexa } from '@packmind/analytics';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { DeploymentsHexa } from '@packmind/deployments';
 import { GitHexa } from '@packmind/git';
+import { LearningsHexa } from '@packmind/learnings';
 import { LinterHexa } from '@packmind/linter';
 import {
   BaseHexa,
@@ -67,6 +68,7 @@ export function getPackmindAppDefinition(): PackmindAppDefinition {
       StandardsHexa,
       CodingAgentHexa,
       DeploymentsHexa,
+      LearningsHexa,
     ],
     services: [JobsService],
   };

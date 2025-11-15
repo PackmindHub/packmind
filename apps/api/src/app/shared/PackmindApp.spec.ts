@@ -4,6 +4,7 @@ import { AnalyticsHexa } from '@packmind/analytics';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { DeploymentsHexa } from '@packmind/deployments';
 import { GitHexa } from '@packmind/git';
+import { LearningsHexa } from '@packmind/learnings';
 import { LinterHexa } from '@packmind/linter';
 import { PackmindLogger } from '@packmind/logger';
 import { JobsService } from '@packmind/node-utils';
@@ -55,6 +56,7 @@ describe('PackmindApp API', () => {
         StandardsHexa,
         CodingAgentHexa,
         DeploymentsHexa,
+        LearningsHexa,
       ]);
     });
 
@@ -102,6 +104,7 @@ describe('PackmindApp API', () => {
       expect(registry.get(StandardsHexa)).toBeDefined();
       expect(registry.get(CodingAgentHexa)).toBeDefined();
       expect(registry.get(DeploymentsHexa)).toBeDefined();
+      expect(registry.get(LearningsHexa)).toBeDefined();
     });
 
     it('registers JobsService', async () => {

@@ -5,6 +5,7 @@ import { AccountsHexa } from '@packmind/accounts';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { DeploymentsHexa } from '@packmind/deployments';
 import { GitHexa } from '@packmind/git';
+import { LearningsHexa } from '@packmind/learnings';
 import { LinterHexa } from '@packmind/linter';
 import { PackmindLogger } from '@packmind/logger';
 import {
@@ -22,6 +23,7 @@ import {
   ICodingAgentPort,
   IDeploymentPort,
   IGitPort,
+  ILearningsPort,
   ILinterPort,
   IRecipesPort,
   ISpacesPort,
@@ -70,6 +72,7 @@ export const GIT_ADAPTER_TOKEN = 'GIT_ADAPTER';
 export const SPACES_ADAPTER_TOKEN = 'SPACES_ADAPTER';
 export const LINTER_ADAPTER_TOKEN = 'LINTER_ADAPTER';
 export const CODING_AGENT_ADAPTER_TOKEN = 'CODING_AGENT_ADAPTER';
+export const LEARNINGS_ADAPTER_TOKEN = 'LEARNINGS_ADAPTER';
 
 /**
  * NestJS Module for integrating HexaRegistry with dependency injection.
@@ -116,6 +119,7 @@ export class HexaRegistryModule {
         SPACES_ADAPTER_TOKEN,
         LINTER_ADAPTER_TOKEN,
         CODING_AGENT_ADAPTER_TOKEN,
+        LEARNINGS_ADAPTER_TOKEN,
       ],
     };
   }
@@ -298,6 +302,21 @@ export class HexaRegistryModule {
           return codingAgentHexa.getAdapter();
         } catch {
           // CodingAgentHexa not available
+        }
+        return null;
+      },
+      inject: [HEXA_REGISTRY_TOKEN],
+    });
+
+    // Learnings adapter
+    providers.push({
+      provide: LEARNINGS_ADAPTER_TOKEN,
+      useFactory: (registry: HexaRegistry): ILearningsPort | null => {
+        try {
+          const learningsHexa = registry.get(LearningsHexa);
+          return learningsHexa.getAdapter();
+        } catch {
+          // LearningsHexa not available
         }
         return null;
       },

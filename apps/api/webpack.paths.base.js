@@ -21,5 +21,6 @@ module.exports = function getBaseWebpackPaths(__dirname) {
     ),
     '@packmind/jobs': join(__dirname, '../../packages/jobs/src'),
     '@packmind/logger': join(__dirname, '../../packages/logger/src'),
+    '@packmind/learnings': join(__dirname, '../../packages/learnings/src'),
   };
 };
