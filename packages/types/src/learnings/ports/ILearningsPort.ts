@@ -2,6 +2,10 @@ import {
   CaptureTopicCommand,
   CaptureTopicResponse,
 } from '../contracts/CaptureTopicUseCase';
+import {
+  DistillTopicCommand,
+  DistillTopicResponse,
+} from '../contracts/DistillTopicUseCase';
 
 export const ILearningsPortName = 'ILearningsPort' as const;
 
@@ -11,4 +15,5 @@ export const ILearningsPortName = 'ILearningsPort' as const;
  */
 export interface ILearningsPort {
   captureTopic(command: CaptureTopicCommand): Promise<CaptureTopicResponse>;
+  distillTopic(command: DistillTopicCommand): Promise<DistillTopicResponse>;
 }

@@ -3,10 +3,17 @@ import { IBaseAdapter } from '@packmind/node-utils';
 import {
   CaptureTopicCommand,
   CaptureTopicResponse,
+  DistillTopicCommand,
+  DistillTopicResponse,
   ILearningsPort,
+  IRecipesPort,
+  IRecipesPortName,
+  IStandardsPort,
+  IStandardsPortName,
 } from '@packmind/types';
 import { LearningsServices } from '../services/LearningsServices';
 import { CaptureTopicUsecase } from '../useCases/captureTopic/captureTopic.usecase';
+import { DistillTopicUsecase } from '../useCases/distillTopic/distillTopic.usecase';
 
 const origin = 'LearningsAdapter';
 
@@ -18,6 +25,9 @@ export class LearningsAdapter
   implements IBaseAdapter<ILearningsPort>, ILearningsPort
 {
   private captureTopicUsecase: CaptureTopicUsecase;
+  private distillTopicUsecase: DistillTopicUsecase | null = null;
+  private standardsPort: IStandardsPort | null = null;
+  private recipesPort: IRecipesPort | null = null;
 
   constructor(
     private readonly learningsServices: LearningsServices,
@@ -25,8 +35,8 @@ export class LearningsAdapter
   ) {
     this.logger.info('LearningsAdapter constructed - awaiting initialization');
 
-    // Initialize use cases with services
-    this.logger.debug('Initializing use cases');
+    // Initialize capture use case (doesn't need ports)
+    this.logger.debug('Initializing captureTopic use case');
     this.captureTopicUsecase = new CaptureTopicUsecase(
       this.learningsServices.getTopicService(),
       this.logger,
@@ -35,11 +45,26 @@ export class LearningsAdapter
 
   /**
    * Initialize adapter with ports from registry.
-   * Future: Will receive required ports (StandardsPort, RecipesPort, etc.) when needed for distillation.
    */
-  public async initialize(): Promise<void> {
-    this.logger.info('Initializing LearningsAdapter');
-    // No ports needed yet - distillation will need StandardsPort and RecipesPort in Phase 3
+  public async initialize(ports: {
+    [IStandardsPortName]: IStandardsPort;
+    [IRecipesPortName]: IRecipesPort;
+  }): Promise<void> {
+    this.logger.info('Initializing LearningsAdapter with ports');
+
+    this.standardsPort = ports[IStandardsPortName];
+    this.recipesPort = ports[IRecipesPortName];
+
+    // Initialize distillTopic use case with ports
+    this.logger.debug('Initializing distillTopic use case');
+    this.distillTopicUsecase = new DistillTopicUsecase(
+      this.learningsServices.getTopicService(),
+      this.learningsServices.getKnowledgePatchService(),
+      this.standardsPort,
+      this.recipesPort,
+      this.logger,
+    );
+
     this.logger.info('LearningsAdapter initialized successfully');
   }
 
@@ -47,7 +72,11 @@ export class LearningsAdapter
    * Check if adapter is ready (all required dependencies initialized).
    */
   public isReady(): boolean {
-    return true;
+    return (
+      this.standardsPort !== null &&
+      this.recipesPort !== null &&
+      this.distillTopicUsecase !== null
+    );
   }
 
   /**
@@ -69,5 +98,25 @@ export class LearningsAdapter
     });
 
     return await this.captureTopicUsecase.execute(command);
+  }
+
+  /**
+   * Distill a topic into knowledge patches.
+   */
+  public async distillTopic(
+    command: DistillTopicCommand,
+  ): Promise<DistillTopicResponse> {
+    this.logger.info('distillTopic called', {
+      topicId: command.topicId,
+      userId: command.userId,
+    });
+
+    if (!this.distillTopicUsecase) {
+      throw new Error(
+        'LearningsAdapter not fully initialized. Call initialize() first.',
+      );
+    }
+
+    return await this.distillTopicUsecase.execute(command);
   }
 }

@@ -2,4 +2,8 @@ export * from './ports';
 export * from './Topic';
 export * from './TopicId';
 export * from './TopicCaptureContext';
+export * from './KnowledgePatch';
+export * from './KnowledgePatchId';
+export * from './KnowledgePatchStatus';
+export * from './KnowledgePatchType';
 export * from './contracts';

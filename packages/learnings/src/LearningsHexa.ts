@@ -1,6 +1,13 @@
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
-import { ILearningsPort, ILearningsPortName } from '@packmind/types';
+import {
+  ILearningsPort,
+  ILearningsPortName,
+  IRecipesPort,
+  IRecipesPortName,
+  IStandardsPort,
+  IStandardsPortName,
+} from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { LearningsAdapter } from './application/adapter/LearningsAdapter';
 import { LearningsServices } from './application/services/LearningsServices';
@@ -55,11 +62,8 @@ export class LearningsHexa extends BaseHexa<BaseHexaOpts, ILearningsPort> {
 
   /**
    * Initialize the hexa with access to the registry for adapter retrieval.
-   *
-   * Phase 1: No dependencies needed yet.
-   * Phase 2: Will retrieve StandardsPort, RecipesPort, etc. from registry.
+   * Retrieves StandardsPort and RecipesPort for topic distillation.
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public async initialize(registry: HexaRegistry): Promise<void> {
     if (this.isInitialized) {
       this.logger.debug('LearningsHexa already initialized');
@@ -69,9 +73,17 @@ export class LearningsHexa extends BaseHexa<BaseHexaOpts, ILearningsPort> {
     this.logger.info('Initializing LearningsHexa (adapter retrieval phase)');
 
     try {
-      // Phase 1: No ports or services needed yet
-      // Initialize adapter with empty dependencies
-      await this.adapter.initialize();
+      // Retrieve Standards and Recipes ports from registry
+      this.logger.debug('Retrieving Standards and Recipes ports from registry');
+      const standardsPort =
+        registry.getAdapter<IStandardsPort>(IStandardsPortName);
+      const recipesPort = registry.getAdapter<IRecipesPort>(IRecipesPortName);
+
+      // Initialize adapter with ports
+      await this.adapter.initialize({
+        IStandardsPort: standardsPort,
+        IRecipesPort: recipesPort,
+      });
 
       this.isInitialized = true;
       this.logger.info('LearningsHexa initialized successfully');
