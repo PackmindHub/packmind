@@ -39,8 +39,13 @@ export const KnowledgePatchSchema = new EntitySchema<
       type: 'jsonb',
       nullable: false,
     },
-    diffPreview: {
-      name: 'diff_preview',
+    diffOriginal: {
+      name: 'diff_original',
+      type: 'text',
+      nullable: false,
+    },
+    diffModified: {
+      name: 'diff_modified',
       type: 'text',
       nullable: false,
     },

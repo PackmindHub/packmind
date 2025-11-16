@@ -28,14 +28,16 @@ type StandardMatchResult = {
   targetRuleId: string | null;
   proposedContent: string;
   rationale: string;
-  diffPreview: string;
+  diffOriginal: string;
+  diffModified: string;
 };
 
 type RecipeMatchResult = {
   action: 'addSteps' | 'updateSteps' | 'noMatch';
   proposedContent: string;
   rationale: string;
-  diffPreview: string;
+  diffOriginal: string;
+  diffModified: string;
 };
 
 type NewArtifactResult = {
@@ -331,7 +333,8 @@ export class DistillationService {
           content: analysis.proposedContent,
           rationale: analysis.rationale,
         },
-        diffPreview: analysis.diffPreview,
+        diffOriginal: analysis.diffOriginal,
+        diffModified: analysis.diffModified,
       };
     } catch (error) {
       this.logger.error('Failed to analyze standard match', {
@@ -400,7 +403,8 @@ export class DistillationService {
           content: analysis.proposedContent,
           rationale: analysis.rationale,
         },
-        diffPreview: analysis.diffPreview,
+        diffOriginal: analysis.diffOriginal,
+        diffModified: analysis.diffModified,
       };
     } catch (error) {
       this.logger.error('Failed to analyze recipe match', {
@@ -444,6 +448,7 @@ export class DistillationService {
       const patches: CreateKnowledgePatchData[] = [];
 
       if (analysis.createStandard && analysis.standardProposal) {
+        const standardContent = `# ${analysis.standardProposal.name}\n\n${analysis.standardProposal.description}\n\n## Rules\n\n${analysis.standardProposal.rules.map((r) => `- ${r}`).join('\n')}`;
         patches.push({
           spaceId: topic.spaceId,
           topicId: topic.id,
@@ -455,11 +460,13 @@ export class DistillationService {
             scope: analysis.standardProposal.scope,
             rationale: analysis.rationale,
           },
-          diffPreview: `## New Standard: ${analysis.standardProposal.name}\n\n${analysis.standardProposal.description}`,
+          diffOriginal: '',
+          diffModified: standardContent,
         });
       }
 
       if (analysis.createRecipe && analysis.recipeProposal) {
+        const recipeContent = `# ${analysis.recipeProposal.name}\n\n${analysis.recipeProposal.description}\n\n${analysis.recipeProposal.content}`;
         patches.push({
           spaceId: topic.spaceId,
           topicId: topic.id,
@@ -470,7 +477,8 @@ export class DistillationService {
             content: analysis.recipeProposal.content,
             rationale: analysis.rationale,
           },
-          diffPreview: `## New Recipe: ${analysis.recipeProposal.name}\n\n${analysis.recipeProposal.content}`,
+          diffOriginal: '',
+          diffModified: recipeContent,
         });
       }
 

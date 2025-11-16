@@ -11,7 +11,8 @@ export type KnowledgePatch = {
   topicId: TopicId;
   patchType: KnowledgePatchType;
   proposedChanges: Record<string, unknown>;
-  diffPreview: string;
+  diffOriginal: string;
+  diffModified: string;
   status: KnowledgePatchStatus;
   reviewedBy: UserId | null;
   reviewedAt: Date | null;

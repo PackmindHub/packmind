@@ -105,8 +105,8 @@ export const KnowledgePatchDetails = ({
           Changes Preview
         </PMHeading>
         <PMDiffView
-          original=""
-          modified={patch.diffPreview}
+          original={patch.diffOriginal}
+          modified={patch.diffModified}
           language="markdown"
           height="400px"
         />

@@ -22,5 +22,6 @@ Return JSON format:
   "targetRuleId": "ruleId or null if addRule",
   "proposedContent": "the new or updated rule text",
   "rationale": "brief explanation of why this change is needed",
-  "diffPreview": "markdown formatted diff preview"
+  "diffOriginal": "the original rule content (empty string for addRule, current rule text for updateRule)",
+  "diffModified": "the proposed new rule content"
 }`;

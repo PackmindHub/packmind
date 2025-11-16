@@ -20,5 +20,6 @@ Return JSON format:
   "action": "addSteps" | "updateSteps" | "noMatch",
   "proposedContent": "the new or updated recipe content in markdown",
   "rationale": "brief explanation of why this change is needed",
-  "diffPreview": "markdown formatted diff preview"
+  "diffOriginal": "the original recipe content (current content for both addSteps and updateSteps)",
+  "diffModified": "the proposed new recipe content with additions/changes"
 }`;
