@@ -163,6 +163,7 @@ export const KnowledgePatchDetails = ({
             language="markdown"
             height="400px"
             showViewToggle={true}
+            wrapLines={true}
           />
         )}
       </PMBox>

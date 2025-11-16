@@ -75,6 +75,7 @@ export interface IPMDiffViewProps {
   highlightChanges?: boolean;
   readOnly?: boolean;
   showViewToggle?: boolean;
+  wrapLines?: boolean;
 }
 
 /**
@@ -243,6 +244,7 @@ export const PMDiffView = ({
   highlightChanges = true,
   readOnly = true,
   showViewToggle = false,
+  wrapLines = true,
 }: IPMDiffViewProps) => {
   const [viewMode, setViewMode] = useState<'split' | 'unified'>('split');
   const languageExtensions = getLanguageExtensions(language);
@@ -250,6 +252,7 @@ export const PMDiffView = ({
   const commonExtensions = [
     ...languageExtensions,
     EditorView.editable.of(!readOnly),
+    ...(wrapLines ? [EditorView.lineWrapping] : []),
   ];
 
   return (
