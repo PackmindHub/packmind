@@ -67,6 +67,17 @@ export class DistillationService {
     this.logger.info('DistillationService initialized');
   }
 
+  /**
+   * Parse AI response data - handles both string and already-parsed objects
+   * OpenAIService auto-parses JSON responses that start with '{'
+   */
+  private parseAIResponse<T>(data: unknown): T {
+    if (typeof data === 'string') {
+      return JSON.parse(data.trim()) as T;
+    }
+    return data as T;
+  }
+
   async distillTopic(
     topic: Topic,
     organizationId: OrganizationId,
@@ -194,7 +205,7 @@ export class DistillationService {
         return [];
       }
 
-      const candidateIds = JSON.parse(result.data.trim()) as string[];
+      const candidateIds = this.parseAIResponse<string[]>(result.data);
       return candidateIds;
     } catch (error) {
       this.logger.error('Failed to filter candidate standards', {
@@ -237,7 +248,7 @@ export class DistillationService {
         return [];
       }
 
-      const candidateIds = JSON.parse(result.data.trim()) as string[];
+      const candidateIds = this.parseAIResponse<string[]>(result.data);
       return candidateIds;
     } catch (error) {
       this.logger.error('Failed to filter candidate recipes', {
@@ -297,7 +308,7 @@ export class DistillationService {
         return null;
       }
 
-      const analysis = JSON.parse(result.data.trim()) as StandardMatchResult;
+      const analysis = this.parseAIResponse<StandardMatchResult>(result.data);
 
       if (analysis.action === 'noMatch') {
         this.logger.debug('No match for standard', { standardId });
@@ -372,7 +383,7 @@ export class DistillationService {
         return null;
       }
 
-      const analysis = JSON.parse(result.data.trim()) as RecipeMatchResult;
+      const analysis = this.parseAIResponse<RecipeMatchResult>(result.data);
 
       if (analysis.action === 'noMatch') {
         this.logger.debug('No match for recipe', { recipeId });
@@ -429,7 +440,7 @@ export class DistillationService {
         return [];
       }
 
-      const analysis = JSON.parse(result.data.trim()) as NewArtifactResult;
+      const analysis = this.parseAIResponse<NewArtifactResult>(result.data);
       const patches: CreateKnowledgePatchData[] = [];
 
       if (analysis.createStandard && analysis.standardProposal) {
