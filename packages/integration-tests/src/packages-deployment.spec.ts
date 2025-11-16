@@ -1,6 +1,13 @@
 import { GitCommitSchema } from '@packmind/git';
 import { gitCommitFactory } from '@packmind/git/test';
-import { GitCommit, Package, Recipe, Standard } from '@packmind/types';
+import {
+  GitCommit,
+  Package,
+  Recipe,
+  Standard,
+  RecipesDeployment,
+  StandardsDeployment,
+} from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { DataFactory } from './helpers/DataFactory';
 import { makeIntegrationTestDataSource } from './helpers/makeIntegrationTestDataSource';
@@ -151,9 +158,21 @@ describe('Package deployment integration', () => {
           targetIds: [dataFactory.target.id],
         });
 
-      expect(result).toHaveLength(1); // Only recipes deployment
-      expect(result[0]).toHaveProperty('target');
-      expect(result[0]).toHaveProperty('status');
+      // publishArtifacts creates both recipe and standard deployment records
+      expect(result).toHaveLength(2);
+
+      // Find the recipes deployment (the one with recipeVersions)
+      const recipesDeployment = result.find((d) => {
+        const deployment = d as unknown as RecipesDeployment;
+        return 'recipeVersions' in d && deployment.recipeVersions.length > 0;
+      });
+      expect(recipesDeployment).toBeDefined();
+      expect(recipesDeployment).toHaveProperty('target');
+      expect(recipesDeployment).toHaveProperty('status');
+
+      // Find the standards deployment (the one with empty standardVersions)
+      const standardsDeployment = result.find((d) => 'standardVersions' in d);
+      expect(standardsDeployment).toBeDefined();
       expect(commitToGit).toHaveBeenCalled();
 
       const getResponse = await testApp.deploymentsHexa
@@ -195,9 +214,23 @@ describe('Package deployment integration', () => {
           targetIds: [dataFactory.target.id],
         });
 
-      expect(result).toHaveLength(1); // Only standards deployment
-      expect(result[0]).toHaveProperty('target');
-      expect(result[0]).toHaveProperty('status');
+      // publishArtifacts creates both recipe and standard deployment records
+      expect(result).toHaveLength(2);
+
+      // Find the standards deployment (the one with standardVersions)
+      const standardsDeployment = result.find((d) => {
+        const deployment = d as unknown as StandardsDeployment;
+        return (
+          'standardVersions' in d && deployment.standardVersions.length > 0
+        );
+      });
+      expect(standardsDeployment).toBeDefined();
+      expect(standardsDeployment).toHaveProperty('target');
+      expect(standardsDeployment).toHaveProperty('status');
+
+      // Find the recipes deployment (the one with empty recipeVersions)
+      const recipesDeployment = result.find((d) => 'recipeVersions' in d);
+      expect(recipesDeployment).toBeDefined();
       expect(commitToGit).toHaveBeenCalled();
 
       const getResponse = await testApp.deploymentsHexa
@@ -299,7 +332,17 @@ describe('Package deployment integration', () => {
           targetIds: [dataFactory.target.id],
         });
 
-      expect(result).toHaveLength(1);
+      // publishArtifacts creates both recipe and standard deployment records
+      expect(result).toHaveLength(2);
+
+      // Find the standards deployment (the one with standardVersions)
+      const standardsDeployment = result.find((d) => {
+        const deployment = d as unknown as StandardsDeployment;
+        return (
+          'standardVersions' in d && deployment.standardVersions.length > 0
+        );
+      });
+      expect(standardsDeployment).toBeDefined();
       expect(commitToGit).toHaveBeenCalled();
 
       // Verify the committed files contain the rules

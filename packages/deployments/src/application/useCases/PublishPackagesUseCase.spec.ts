@@ -53,8 +53,7 @@ describe('PublishPackagesUseCase', () => {
     } as unknown as jest.Mocked<IStandardsPort>;
 
     mockDeploymentPort = {
-      publishRecipes: jest.fn(),
-      publishStandards: jest.fn(),
+      publishArtifacts: jest.fn(),
     } as unknown as jest.Mocked<IDeploymentPort>;
 
     mockPackageService = {
@@ -116,20 +115,22 @@ describe('PublishPackagesUseCase', () => {
       mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
         standardVersion,
       );
-      mockDeploymentPort.publishRecipes.mockResolvedValue([]);
-      mockDeploymentPort.publishStandards.mockResolvedValue([]);
+      mockDeploymentPort.publishArtifacts.mockResolvedValue({
+        recipeDeployments: [],
+        standardDeployments: [],
+      });
     });
 
-    it('returns deployments from published standards and recipes', async () => {
+    it('returns deployments from published artifacts', async () => {
       const mockStandardsDeployments = [{ id: 'std-deploy-1' }];
       const mockRecipesDeployments = [{ id: 'recipe-deploy-1' }];
 
-      mockDeploymentPort.publishStandards.mockResolvedValue(
-        mockStandardsDeployments as unknown as StandardsDeployment[],
-      );
-      mockDeploymentPort.publishRecipes.mockResolvedValue(
-        mockRecipesDeployments as unknown as RecipesDeployment[],
-      );
+      mockDeploymentPort.publishArtifacts.mockResolvedValue({
+        standardDeployments:
+          mockStandardsDeployments as unknown as StandardsDeployment[],
+        recipeDeployments:
+          mockRecipesDeployments as unknown as RecipesDeployment[],
+      });
 
       const result = await useCase.execute(command);
 
@@ -159,31 +160,21 @@ describe('PublishPackagesUseCase', () => {
       );
     });
 
-    it('calls publishStandards with correct command', async () => {
+    it('calls publishArtifacts with correct command', async () => {
       await useCase.execute(command);
 
-      expect(mockDeploymentPort.publishStandards).toHaveBeenCalledWith({
-        userId,
-        organizationId,
-        standardVersionIds: [standardVersion.id],
-        targetIds: [targetId],
-      });
-    });
-
-    it('calls publishRecipes with correct command', async () => {
-      await useCase.execute(command);
-
-      expect(mockDeploymentPort.publishRecipes).toHaveBeenCalledWith({
+      expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith({
         userId,
         organizationId,
         recipeVersionIds: [recipeVersion.id],
+        standardVersionIds: [standardVersion.id],
         targetIds: [targetId],
       });
     });
   });
 
   describe('when package contains only recipes', () => {
-    it('calls only publishRecipes', async () => {
+    it('calls publishArtifacts with empty standardVersionIds', async () => {
       const pkg = packageFactory({
         id: packageId,
         recipes: [recipeId],
@@ -197,7 +188,10 @@ describe('PublishPackagesUseCase', () => {
 
       mockPackageService.findById.mockResolvedValue(pkg);
       mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
-      mockDeploymentPort.publishRecipes.mockResolvedValue([]);
+      mockDeploymentPort.publishArtifacts.mockResolvedValue({
+        recipeDeployments: [],
+        standardDeployments: [],
+      });
 
       const command: PublishPackagesCommand = {
         userId,
@@ -209,13 +203,18 @@ describe('PublishPackagesUseCase', () => {
       await useCase.execute(command);
 
       expect(mockStandardsPort.getLatestStandardVersion).not.toHaveBeenCalled();
-      expect(mockDeploymentPort.publishStandards).not.toHaveBeenCalled();
-      expect(mockDeploymentPort.publishRecipes).toHaveBeenCalled();
+      expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith({
+        userId,
+        organizationId,
+        recipeVersionIds: [recipeVersion.id],
+        standardVersionIds: [],
+        targetIds: [targetId],
+      });
     });
   });
 
   describe('when package contains only standards', () => {
-    it('calls only publishStandards', async () => {
+    it('calls publishArtifacts with empty recipeVersionIds', async () => {
       const pkg = packageFactory({
         id: packageId,
         recipes: [],
@@ -231,7 +230,10 @@ describe('PublishPackagesUseCase', () => {
       mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
         standardVersion,
       );
-      mockDeploymentPort.publishStandards.mockResolvedValue([]);
+      mockDeploymentPort.publishArtifacts.mockResolvedValue({
+        recipeDeployments: [],
+        standardDeployments: [],
+      });
 
       const command: PublishPackagesCommand = {
         userId,
@@ -243,8 +245,13 @@ describe('PublishPackagesUseCase', () => {
       await useCase.execute(command);
 
       expect(mockRecipesPort.listRecipeVersions).not.toHaveBeenCalled();
-      expect(mockDeploymentPort.publishRecipes).not.toHaveBeenCalled();
-      expect(mockDeploymentPort.publishStandards).toHaveBeenCalled();
+      expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith({
+        userId,
+        organizationId,
+        recipeVersionIds: [],
+        standardVersionIds: [standardVersion.id],
+        targetIds: [targetId],
+      });
     });
   });
 
@@ -372,12 +379,12 @@ describe('PublishPackagesUseCase', () => {
       const mockStandardsDeployments = [{ id: 'std-deploy-1' }];
       const mockRecipesDeployments = [{ id: 'recipe-deploy-1' }];
 
-      mockDeploymentPort.publishRecipes.mockResolvedValue(
-        mockRecipesDeployments as unknown as RecipesDeployment[],
-      );
-      mockDeploymentPort.publishStandards.mockResolvedValue(
-        mockStandardsDeployments as unknown as StandardsDeployment[],
-      );
+      mockDeploymentPort.publishArtifacts.mockResolvedValue({
+        recipeDeployments:
+          mockRecipesDeployments as unknown as RecipesDeployment[],
+        standardDeployments:
+          mockStandardsDeployments as unknown as StandardsDeployment[],
+      });
 
       const command: PublishPackagesCommand = {
         userId,
@@ -406,24 +413,14 @@ describe('PublishPackagesUseCase', () => {
         uniqueStandardId,
       );
 
-      expect(mockDeploymentPort.publishRecipes).toHaveBeenCalledTimes(1);
-      expect(mockDeploymentPort.publishRecipes).toHaveBeenCalledWith({
+      expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledTimes(1);
+      expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith({
         userId,
         organizationId,
         recipeVersionIds: expect.arrayContaining([
           sharedRecipeVersion.id,
           uniqueRecipeVersion.id,
         ]),
-        targetIds: [targetId],
-      });
-      expect(
-        mockDeploymentPort.publishRecipes.mock.calls[0][0].recipeVersionIds,
-      ).toHaveLength(2);
-
-      expect(mockDeploymentPort.publishStandards).toHaveBeenCalledTimes(1);
-      expect(mockDeploymentPort.publishStandards).toHaveBeenCalledWith({
-        userId,
-        organizationId,
         standardVersionIds: expect.arrayContaining([
           sharedStandardVersion.id,
           uniqueStandardVersion.id,
@@ -431,7 +428,10 @@ describe('PublishPackagesUseCase', () => {
         targetIds: [targetId],
       });
       expect(
-        mockDeploymentPort.publishStandards.mock.calls[0][0].standardVersionIds,
+        mockDeploymentPort.publishArtifacts.mock.calls[0][0].recipeVersionIds,
+      ).toHaveLength(2);
+      expect(
+        mockDeploymentPort.publishArtifacts.mock.calls[0][0].standardVersionIds,
       ).toHaveLength(2);
 
       expect(result).toEqual([

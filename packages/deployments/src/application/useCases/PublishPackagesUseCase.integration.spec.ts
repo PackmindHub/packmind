@@ -49,8 +49,7 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
     } as unknown as jest.Mocked<IStandardsPort>;
 
     mockDeploymentPort = {
-      publishRecipes: jest.fn(),
-      publishStandards: jest.fn(),
+      publishArtifacts: jest.fn(),
     } as unknown as jest.Mocked<IDeploymentPort>;
 
     mockPackageService = {
@@ -111,12 +110,10 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
         Awaited<ReturnType<IStandardsPort['getLatestStandardVersion']>>
       >);
 
-      mockDeploymentPort.publishStandards.mockResolvedValue([
-        standardsDeployment as StandardsDeployment,
-      ]);
-      mockDeploymentPort.publishRecipes.mockResolvedValue([
-        recipesDeployment as RecipesDeployment,
-      ]);
+      mockDeploymentPort.publishArtifacts.mockResolvedValue({
+        standardDeployments: [standardsDeployment as StandardsDeployment],
+        recipeDeployments: [recipesDeployment as RecipesDeployment],
+      });
 
       const command: PublishPackagesCommand = {
         userId,
