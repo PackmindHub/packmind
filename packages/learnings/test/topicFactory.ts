@@ -5,6 +5,7 @@ import {
   Topic,
   createTopicId,
   TopicCaptureContext,
+  TopicStatus,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -18,6 +19,7 @@ export const topicFactory: Factory<Topic> = (topic?: Partial<Topic>) => {
     captureContext: TopicCaptureContext.MCP_TOOL,
     createdBy: createUserId(uuidv4()),
     spaceId: createSpaceId(uuidv4()),
+    status: TopicStatus.PENDING,
     createdAt: now,
     updatedAt: now,
     ...topic,

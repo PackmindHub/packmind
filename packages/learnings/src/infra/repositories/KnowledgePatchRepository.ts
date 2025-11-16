@@ -3,12 +3,7 @@ import { KnowledgePatchSchema } from '../schemas/KnowledgePatchSchema';
 import { Repository } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, AbstractRepository } from '@packmind/node-utils';
-import {
-  KnowledgePatch,
-  KnowledgePatchStatus,
-  SpaceId,
-  TopicId,
-} from '@packmind/types';
+import { KnowledgePatch, KnowledgePatchStatus, SpaceId } from '@packmind/types';
 
 const origin = 'KnowledgePatchRepository';
 
@@ -31,35 +26,10 @@ export class KnowledgePatchRepository
   ): Partial<KnowledgePatch> {
     return {
       id: entity.id,
-      topicId: entity.topicId,
       spaceId: entity.spaceId,
       patchType: entity.patchType,
       status: entity.status,
     };
-  }
-
-  async findByTopicId(topicId: TopicId): Promise<KnowledgePatch[]> {
-    this.logger.info('Finding knowledge patches by topic ID', { topicId });
-
-    try {
-      const patches = await this.repository
-        .createQueryBuilder('knowledge_patch')
-        .where('knowledge_patch.topic_id = :topicId', { topicId })
-        .orderBy('knowledge_patch.created_at', 'DESC')
-        .getMany();
-
-      this.logger.info('Knowledge patches found by topic ID', {
-        topicId,
-        count: patches.length,
-      });
-      return patches;
-    } catch (error) {
-      this.logger.error('Failed to find knowledge patches by topic ID', {
-        topicId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
   }
 
   async findBySpaceId(spaceId: SpaceId): Promise<KnowledgePatch[]> {

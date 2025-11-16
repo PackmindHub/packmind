@@ -9,6 +9,11 @@ export type CodeExample = {
   language: string;
 };
 
+export enum TopicStatus {
+  PENDING = 'PENDING',
+  DIGESTED = 'DIGESTED',
+}
+
 export type Topic = WithTimestamps<{
   id: TopicId;
   spaceId: SpaceId;
@@ -17,4 +22,5 @@ export type Topic = WithTimestamps<{
   codeExamples: CodeExample[];
   captureContext: TopicCaptureContext;
   createdBy: UserId;
+  status: TopicStatus;
 }>;

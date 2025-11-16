@@ -6,7 +6,10 @@ import {
   IStandardsPort,
   IRecipesPort,
   KnowledgePatch,
+  TopicStatus,
 } from '@packmind/types';
+import { ITopicKnowledgePatchRepository } from '../../../domain/repositories/ITopicKnowledgePatchRepository';
+import { ITopicRepository } from '../../../domain/repositories/ITopicRepository';
 import { DistillationService } from '../../services/DistillationService';
 import { KnowledgePatchService } from '../../services/KnowledgePatchService';
 import { TopicService } from '../../services/TopicService';
@@ -17,6 +20,8 @@ export class DistillTopicUsecase implements IDistillTopicUseCase {
   constructor(
     private readonly topicService: TopicService,
     private readonly knowledgePatchService: KnowledgePatchService,
+    private readonly topicRepository: ITopicRepository,
+    private readonly topicKnowledgePatchRepository: ITopicKnowledgePatchRepository,
     private readonly standardsPort: IStandardsPort,
     private readonly recipesPort: IRecipesPort,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
@@ -73,8 +78,28 @@ export class DistillTopicUsecase implements IDistillTopicUseCase {
           await this.knowledgePatchService.addKnowledgePatches(patchDataArray);
       }
 
-      // TODO: Soft-delete the topic if patches were created
-      // This would require adding a delete method to TopicService
+      // Link topic to created patches via junction table
+      if (patches.length > 0) {
+        this.logger.info('Linking topic to patches', {
+          topicId: command.topicId,
+          patchCount: patches.length,
+        });
+
+        await this.topicKnowledgePatchRepository.linkTopicToPatches(
+          command.topicId,
+          patches.map((p) => p.id),
+        );
+
+        // Mark topic as DIGESTED
+        this.logger.info('Marking topic as DIGESTED', {
+          topicId: command.topicId,
+        });
+
+        await this.topicRepository.updateStatus(
+          command.topicId,
+          TopicStatus.DIGESTED,
+        );
+      }
 
       this.logger.info('DistillTopic use case completed successfully', {
         topicId: command.topicId,

@@ -9,7 +9,6 @@ import {
   KnowledgePatchType,
   KnowledgePatchStatus,
   SpaceId,
-  TopicId,
   UserId,
 } from '@packmind/types';
 
@@ -17,7 +16,6 @@ const origin = 'KnowledgePatchService';
 
 export type CreateKnowledgePatchData = {
   spaceId: SpaceId;
-  topicId: TopicId;
   patchType: KnowledgePatchType;
   proposedChanges: Record<string, unknown>;
   diffOriginal: string;
@@ -36,7 +34,6 @@ export class KnowledgePatchService {
     patchData: CreateKnowledgePatchData,
   ): Promise<KnowledgePatch> {
     this.logger.info('Adding new knowledge patch', {
-      topicId: patchData.topicId,
       patchType: patchData.patchType,
       spaceId: patchData.spaceId,
     });
@@ -65,7 +62,6 @@ export class KnowledgePatchService {
       return savedPatch;
     } catch (error) {
       this.logger.error('Failed to add knowledge patch', {
-        topicId: patchData.topicId,
         patchType: patchData.patchType,
         error: error instanceof Error ? error.message : String(error),
       });
@@ -127,28 +123,6 @@ export class KnowledgePatchService {
     } catch (error) {
       this.logger.error('Failed to get knowledge patch by ID', {
         patchId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }
-
-  async listKnowledgePatchesByTopicId(
-    topicId: TopicId,
-  ): Promise<KnowledgePatch[]> {
-    this.logger.info('Listing knowledge patches by topic ID', { topicId });
-
-    try {
-      const patches =
-        await this.knowledgePatchRepository.findByTopicId(topicId);
-      this.logger.info('Knowledge patches found by topic ID', {
-        topicId,
-        count: patches.length,
-      });
-      return patches;
-    } catch (error) {
-      this.logger.error('Failed to list knowledge patches by topic ID', {
-        topicId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

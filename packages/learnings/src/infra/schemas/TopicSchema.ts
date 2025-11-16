@@ -6,7 +6,7 @@ import {
   timestampsSchemas,
   softDeleteSchemas,
 } from '@packmind/node-utils';
-import { Topic, TopicCaptureContext } from '@packmind/types';
+import { Topic, TopicCaptureContext, TopicStatus } from '@packmind/types';
 
 export const TopicSchema = new EntitySchema<
   WithSoftDelete<WithTimestamps<Topic>>
@@ -43,6 +43,12 @@ export const TopicSchema = new EntitySchema<
       name: 'space_id',
       type: 'uuid',
       nullable: false,
+    },
+    status: {
+      type: 'enum',
+      enum: TopicStatus,
+      nullable: false,
+      default: TopicStatus.PENDING,
     },
     ...uuidSchema,
     ...timestampsSchemas,

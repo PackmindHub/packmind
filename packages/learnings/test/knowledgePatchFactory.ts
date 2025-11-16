@@ -2,7 +2,6 @@ import { Factory } from '@packmind/test-utils';
 import {
   createKnowledgePatchId,
   createSpaceId,
-  createTopicId,
   KnowledgePatch,
   KnowledgePatchStatus,
   KnowledgePatchType,
@@ -16,14 +15,12 @@ export const knowledgePatchFactory: Factory<KnowledgePatch> = (
   return {
     id: createKnowledgePatchId(uuidv4()),
     spaceId: createSpaceId(uuidv4()),
-    topicId: createTopicId(uuidv4()),
     patchType: KnowledgePatchType.UPDATE_STANDARD,
     proposedChanges: {
       standardId: uuidv4(),
       action: 'addRule',
       content: 'Test rule content',
     },
-    diffPreview: '+ Test rule content',
     diffOriginal: 'Original standard content',
     diffModified: 'Original standard content\n+ Test rule content',
     status: KnowledgePatchStatus.PENDING_REVIEW,

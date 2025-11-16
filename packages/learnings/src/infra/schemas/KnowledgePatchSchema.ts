@@ -23,11 +23,6 @@ export const KnowledgePatchSchema = new EntitySchema<
       type: 'uuid',
       nullable: false,
     },
-    topicId: {
-      name: 'topic_id',
-      type: 'uuid',
-      nullable: false,
-    },
     patchType: {
       name: 'patch_type',
       type: 'enum',
@@ -75,10 +70,6 @@ export const KnowledgePatchSchema = new EntitySchema<
     ...softDeleteSchemas,
   },
   indices: [
-    {
-      name: 'idx_knowledge_patch_topic',
-      columns: ['topicId'],
-    },
     {
       name: 'idx_knowledge_patch_space',
       columns: ['spaceId'],
