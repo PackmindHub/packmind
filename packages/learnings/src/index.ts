@@ -1,3 +1,8 @@
+import { TopicSchema } from './infra/schemas/TopicSchema';
+
 export { LearningsHexa } from './LearningsHexa';
 export { LearningsAdapter } from './application/adapter/LearningsAdapter';
-// Domain use cases and schemas will be exported here in Phase 2
+export { TopicSchema };
+
+// Export schemas array for TypeORM DataSource registration
+export const learningsSchemas = [TopicSchema];
