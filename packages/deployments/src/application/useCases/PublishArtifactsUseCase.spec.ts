@@ -18,12 +18,14 @@ import {
   createGitRepoId,
   createGitProviderId,
   createGitCommitId,
+  createRuleId,
   GitRepo,
   GitCommit,
   IRecipesPort,
   IStandardsPort,
   ICodingAgentPort,
   IGitPort,
+  Rule,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { recipeVersionFactory } from '@packmind/recipes/test/recipeVersionFactory';
@@ -67,6 +69,7 @@ describe('PublishArtifactsUseCase', () => {
 
     mockStandardsPort = {
       getStandardVersionById: jest.fn(),
+      getRulesByStandardId: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<IStandardsPort>;
 
     mockGitPort = {
@@ -188,6 +191,12 @@ describe('PublishArtifactsUseCase', () => {
       mockStandardsDeploymentRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
         [],
       );
+      mockRenderModeConfigurationService.getActiveRenderModes.mockResolvedValue(
+        activeRenderModes,
+      );
+      mockRenderModeConfigurationService.mapRenderModesToCodingAgents.mockReturnValue(
+        activeCodingAgents,
+      );
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
         createOrUpdate: [
@@ -243,7 +252,12 @@ describe('PublishArtifactsUseCase', () => {
       expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
         expect.objectContaining({
           recipeVersions: [recipeVersion],
-          standardVersions: [standardVersion],
+          standardVersions: [
+            expect.objectContaining({
+              ...standardVersion,
+              rules: [],
+            }),
+          ],
           codingAgents: activeCodingAgents,
         }),
       );
@@ -1038,6 +1052,136 @@ describe('PublishArtifactsUseCase', () => {
       expect(result.standardDeployments[0].renderModes).toEqual(
         DEFAULT_ACTIVE_RENDER_MODES,
       );
+    });
+  });
+
+  describe('when deploying with previously deployed standards that lack rules', () => {
+    let command: PublishArtifactsCommand;
+    let newStandardVersion: ReturnType<typeof standardVersionFactory>;
+    let previousStandardVersion: ReturnType<typeof standardVersionFactory>;
+    let target: ReturnType<typeof targetFactory>;
+    let gitRepo: GitRepo;
+    let gitCommit: GitCommit;
+    const newStandardVersionId = createStandardVersionId(uuidv4());
+    const previousStandardVersionId = createStandardVersionId(uuidv4());
+    const mockRules: Rule[] = [
+      {
+        id: createRuleId(uuidv4()),
+        content: 'Test rule content',
+        standardVersionId: previousStandardVersionId,
+      },
+    ];
+
+    beforeEach(() => {
+      newStandardVersion = standardVersionFactory({
+        id: newStandardVersionId,
+        standardId: createStandardId('standard-new'),
+        name: 'New Standard',
+        slug: 'new-standard',
+        version: 1,
+        rules: mockRules,
+      });
+
+      // Previously deployed standard WITHOUT rules (simulating database fetch)
+      previousStandardVersion = standardVersionFactory({
+        id: previousStandardVersionId,
+        standardId: createStandardId('standard-old'),
+        name: 'Old Standard',
+        slug: 'old-standard',
+        version: 1,
+        rules: undefined, // Rules not populated from database
+      });
+
+      gitRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'test-owner',
+        repo: 'test-repo',
+        branch: 'main',
+        providerId: createGitProviderId(uuidv4()),
+      };
+
+      target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
+
+      gitCommit = {
+        id: createGitCommitId(uuidv4()),
+        sha: 'abc123',
+        message: 'Test',
+        author: 'Author',
+        url: 'https://example.com',
+      };
+
+      command = {
+        userId,
+        organizationId,
+        recipeVersionIds: [],
+        standardVersionIds: [newStandardVersion.id],
+        targetIds: [targetId],
+      };
+
+      mockStandardsPort.getStandardVersionById.mockResolvedValue(
+        newStandardVersion,
+      );
+      mockStandardsPort.getRulesByStandardId = jest
+        .fn()
+        .mockResolvedValue(mockRules);
+      mockTargetService.findById.mockResolvedValue(target);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
+      mockRecipesDeploymentRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      // Return previously deployed standard WITHOUT rules
+      mockStandardsDeploymentRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [previousStandardVersion],
+      );
+      mockGitPort.getFileFromRepo.mockResolvedValue(null);
+      mockCodingAgentPort.renderArtifacts.mockResolvedValue({
+        createOrUpdate: [
+          {
+            path: '.packmind/standards/new-standard.md',
+            content: 'standard content',
+          },
+        ],
+        delete: [],
+      });
+      mockGitPort.commitToGit.mockResolvedValue(gitCommit);
+    });
+
+    it('loads rules for previously deployed standards', async () => {
+      await useCase.execute(command);
+
+      expect(mockStandardsPort.getRulesByStandardId).toHaveBeenCalledWith(
+        previousStandardVersion.standardId,
+      );
+    });
+
+    it('passes standards with loaded rules to renderArtifacts', async () => {
+      await useCase.execute(command);
+
+      expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
+        expect.objectContaining({
+          standardVersions: expect.arrayContaining([
+            expect.objectContaining({
+              id: newStandardVersion.id,
+              rules: mockRules,
+            }),
+            expect.objectContaining({
+              id: previousStandardVersion.id,
+              rules: mockRules,
+            }),
+          ]),
+        }),
+      );
+    });
+
+    it('ensures all standards have rules before rendering', async () => {
+      await useCase.execute(command);
+
+      const renderCall = mockCodingAgentPort.renderArtifacts.mock.calls[0][0];
+      const standardsWithoutRules = renderCall.standardVersions.filter(
+        (sv: { rules?: unknown[] }) => !sv.rules || sv.rules.length === 0,
+      );
+
+      expect(standardsWithoutRules).toHaveLength(0);
     });
   });
 });

@@ -120,9 +120,29 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           standardVersions,
         );
 
+        // Load rules for all standard versions that don't have them populated
+        // This is critical for previously deployed standards which come from the database
+        // without their rules relation loaded
+        const standardVersionsWithRules = await Promise.all(
+          allStandardVersions.map(async (sv) => {
+            if (sv.rules === undefined || sv.rules === null) {
+              this.logger.debug('Loading rules for standard version', {
+                standardVersionId: sv.id,
+                standardId: sv.standardId,
+                slug: sv.slug,
+              });
+              const rules = await this.standardsPort.getRulesByStandardId(
+                sv.standardId,
+              );
+              return { ...sv, rules };
+            }
+            return sv;
+          }),
+        );
+
         this.logger.info('Combined artifact versions', {
           totalRecipes: allRecipeVersions.length,
-          totalStandards: allStandardVersions.length,
+          totalStandards: standardVersionsWithRules.length,
           newRecipes: recipeVersions.length,
           newStandards: standardVersions.length,
         });
@@ -132,7 +152,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           command.userId as UserId,
           command.organizationId as OrganizationId,
           allRecipeVersions,
-          allStandardVersions,
+          standardVersionsWithRules,
           gitRepo,
           targets,
           codingAgents,
@@ -143,7 +163,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           recipeVersions,
           standardVersions,
           allRecipeVersions,
-          allStandardVersions,
+          standardVersionsWithRules,
           targets,
         );
 

@@ -299,9 +299,11 @@ ${packmindInstructions}`;
       scope: standardVersion.scope,
     });
     const rules =
+      standardVersion.rules ??
       (await this.standardsPort?.getRulesByStandardId(
         standardVersion.standardId,
-      )) ?? [];
+      )) ??
+      [];
 
     let content: string;
 

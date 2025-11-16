@@ -30,6 +30,8 @@ import {
   ListPackagesBySpaceResponse,
   ListPackagesCommand,
   ListPackagesResponse,
+  PublishArtifactsCommand,
+  PublishArtifactsResponse,
   PublishPackagesCommand,
   PublishRecipesCommand,
   PublishStandardsCommand,
@@ -130,6 +132,24 @@ export interface IDeploymentPort {
   publishPackages(
     command: PublishPackagesCommand,
   ): Promise<PackagesDeployment[]>;
+
+  /**
+   * Publishes artifacts (recipes and standards) to specified targets in a unified operation
+   *
+   * For each repository:
+   * 1. Groups all targets by repository
+   * 2. Collects all previously deployed recipe and standard versions across all targets
+   * 3. Combines with new versions (deduplicates, keeps latest)
+   * 4. Calls renderArtifacts ONCE with both recipes and standards
+   * 5. Makes ONE atomic commit per repository
+   * 6. Creates both RecipesDeployment AND StandardsDeployment records for each target
+   *
+   * @param command - Command containing recipe version IDs, standard version IDs, and target IDs
+   * @returns Promise of PublishArtifactsResponse with both recipe and standard deployments
+   */
+  publishArtifacts(
+    command: PublishArtifactsCommand,
+  ): Promise<PublishArtifactsResponse>;
 
   /**
    * Lists all deployments for a specific recipe
