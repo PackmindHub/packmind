@@ -5,7 +5,7 @@ import path from 'node:path';
 const PACKMIND_EDITION = (
   process.env.PACKMIND_EDITION ||
   process.env.VITE_PACKMIND_EDITION ||
-  'private'
+  'oss'
 ).toLowerCase();
 
 const ROOT = process.cwd();
