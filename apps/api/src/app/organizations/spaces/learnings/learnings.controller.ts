@@ -15,6 +15,7 @@ import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
   AcceptKnowledgePatchResponse,
   GetKnowledgePatchResponse,
+  GetTopicsStatsResponse,
   KnowledgePatchId,
   KnowledgePatchStatus,
   ListKnowledgePatchesResponse,
@@ -230,6 +231,90 @@ export class OrganizationsSpacesLearningsController {
           spaceId,
           patchId,
           userId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Distill all pending topics in a space
+   * POST /organizations/:orgId/spaces/:spaceId/learnings/distill-all
+   */
+  @Post('distill-all')
+  async distillAllPendingTopics(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/learnings/distill-all - Distilling all pending topics',
+      {
+        organizationId,
+        spaceId,
+        userId,
+      },
+    );
+
+    try {
+      return await this.learningsAdapter.distillAllPendingTopics({
+        spaceId,
+        userId,
+        organizationId,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /organizations/:orgId/spaces/:spaceId/learnings/distill-all - Failed to distill topics',
+        {
+          organizationId,
+          spaceId,
+          userId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Get topics statistics for a space
+   * GET /organizations/:orgId/spaces/:spaceId/learnings/topics/stats
+   */
+  @Get('topics/stats')
+  async getTopicsStats(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<GetTopicsStatsResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'GET /organizations/:orgId/spaces/:spaceId/learnings/topics/stats - Fetching topics stats',
+      {
+        organizationId,
+        spaceId,
+      },
+    );
+
+    try {
+      return await this.learningsAdapter.getTopicsStats({
+        spaceId,
+        organizationId,
+        userId,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/spaces/:spaceId/learnings/topics/stats - Failed to fetch topics stats',
+        {
+          organizationId,
+          spaceId,
           error: errorMessage,
         },
       );

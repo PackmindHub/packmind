@@ -1,5 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
+import { JobsService } from '@packmind/node-utils';
 import {
   IRecipesPort,
   IRecipesPortName,
@@ -18,6 +19,7 @@ describe('LearningsAdapter', () => {
   let knowledgePatchService: jest.Mocked<KnowledgePatchService>;
   let mockStandardsPort: jest.Mocked<IStandardsPort>;
   let mockRecipesPort: jest.Mocked<IRecipesPort>;
+  let mockJobsService: jest.Mocked<JobsService>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
@@ -55,6 +57,11 @@ describe('LearningsAdapter', () => {
       listRecipesByOrganization: jest.fn(),
     } as unknown as jest.Mocked<IRecipesPort>;
 
+    mockJobsService = {
+      registerJobQueue: jest.fn(),
+      getJobQueue: jest.fn(),
+    } as unknown as jest.Mocked<JobsService>;
+
     stubbedLogger = stubLogger();
 
     adapter = new LearningsAdapter(learningsServices, stubbedLogger);
@@ -65,20 +72,22 @@ describe('LearningsAdapter', () => {
   });
 
   describe('initialize', () => {
-    it('initializes successfully with ports', async () => {
+    it('initializes successfully with ports and services', async () => {
       await adapter.initialize({
         [IStandardsPortName]: mockStandardsPort,
         [IRecipesPortName]: mockRecipesPort,
+        jobsService: mockJobsService,
       });
       expect(adapter.isReady()).toBe(true);
     });
   });
 
   describe('isReady', () => {
-    it('returns true after initialization with ports', async () => {
+    it('returns true after initialization with ports and services', async () => {
       await adapter.initialize({
         [IStandardsPortName]: mockStandardsPort,
         [IRecipesPortName]: mockRecipesPort,
+        jobsService: mockJobsService,
       });
       expect(adapter.isReady()).toBe(true);
     });

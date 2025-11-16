@@ -1,10 +1,16 @@
 import {
   AcceptKnowledgePatchCommand,
   AcceptKnowledgePatchResponse,
+  DistillAllPendingTopicsCommand,
+  DistillAllPendingTopicsResponse,
   GetKnowledgePatchCommand,
   GetKnowledgePatchResponse,
+  GetTopicsStatsCommand,
+  GetTopicsStatsResponse,
   IAcceptKnowledgePatchUseCase,
+  IDistillAllPendingTopicsUseCase,
   IGetKnowledgePatchUseCase,
+  IGetTopicsStatsUseCase,
   IListKnowledgePatchesUseCase,
   IRejectKnowledgePatchUseCase,
   ListKnowledgePatchesCommand,
@@ -67,6 +73,26 @@ export class LearningsGatewayApi
     return this._api.post<RejectKnowledgePatchResponse>(
       `/organizations/${organizationId}/spaces/${spaceId}/learnings/patches/${patchId}/reject`,
       { reviewNotes },
+    );
+  };
+
+  distillAllPendingTopics: NewGateway<IDistillAllPendingTopicsUseCase> =
+    async ({
+      organizationId,
+      spaceId,
+    }: NewPackmindCommandBody<DistillAllPendingTopicsCommand>) => {
+      return this._api.post<DistillAllPendingTopicsResponse>(
+        `/organizations/${organizationId}/spaces/${spaceId}/learnings/distill-all`,
+        {},
+      );
+    };
+
+  getTopicsStats: NewGateway<IGetTopicsStatsUseCase> = async ({
+    organizationId,
+    spaceId,
+  }: NewPackmindCommandBody<GetTopicsStatsCommand>) => {
+    return this._api.get<GetTopicsStatsResponse>(
+      `/organizations/${organizationId}/spaces/${spaceId}/learnings/topics/stats`,
     );
   };
 }

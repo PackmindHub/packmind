@@ -12,6 +12,7 @@ import {
   SpaceId,
   KnowledgePatchType,
   RecipeId,
+  StandardId,
 } from '@packmind/types';
 import { CreateKnowledgePatchData } from './KnowledgePatchService';
 import { filterStandardCandidatesPrompt } from './prompts/filterStandardCandidates.prompt';
@@ -103,11 +104,7 @@ export class DistillationService {
 
       // Step 2: Analyze each candidate standard
       for (const standardId of candidateStandardIds) {
-        const patch = await this.analyzeStandardMatch(
-          topic,
-          standardId,
-          organizationId,
-        );
+        const patch = await this.analyzeStandardMatch(topic, standardId);
         if (patch) {
           patches.push(patch);
         }
@@ -253,7 +250,6 @@ export class DistillationService {
   private async analyzeStandardMatch(
     topic: Topic,
     standardId: string,
-    organizationId: OrganizationId,
   ): Promise<CreateKnowledgePatchData | null> {
     this.logger.debug('Analyzing standard match', {
       topicId: topic.id,
@@ -261,9 +257,8 @@ export class DistillationService {
     });
 
     try {
-      const standard = await this.standardsPort.findStandardBySlug(
-        standardId,
-        organizationId,
+      const standard = await this.standardsPort.getStandard(
+        standardId as StandardId,
       );
       if (!standard) {
         this.logger.warn('Standard not found', { standardId });

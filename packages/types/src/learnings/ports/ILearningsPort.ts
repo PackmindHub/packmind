@@ -7,6 +7,14 @@ import {
   DistillTopicResponse,
 } from '../contracts/DistillTopicUseCase';
 import {
+  DistillAllPendingTopicsCommand,
+  DistillAllPendingTopicsResponse,
+} from '../contracts/DistillAllPendingTopicsUseCase';
+import {
+  GetTopicsStatsCommand,
+  GetTopicsStatsResponse,
+} from '../contracts/GetTopicsStatsUseCase';
+import {
   ListKnowledgePatchesCommand,
   ListKnowledgePatchesResponse,
 } from '../contracts/ListKnowledgePatchesUseCase';
@@ -32,6 +40,12 @@ export const ILearningsPortName = 'ILearningsPort' as const;
 export interface ILearningsPort {
   captureTopic(command: CaptureTopicCommand): Promise<CaptureTopicResponse>;
   distillTopic(command: DistillTopicCommand): Promise<DistillTopicResponse>;
+  distillAllPendingTopics(
+    command: DistillAllPendingTopicsCommand,
+  ): Promise<DistillAllPendingTopicsResponse>;
+  getTopicsStats(
+    command: GetTopicsStatsCommand,
+  ): Promise<GetTopicsStatsResponse>;
   listKnowledgePatches(
     command: ListKnowledgePatchesCommand,
   ): Promise<ListKnowledgePatchesResponse>;

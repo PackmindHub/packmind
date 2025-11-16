@@ -6,7 +6,6 @@ import {
   IStandardsPort,
   IRecipesPort,
   KnowledgePatch,
-  OrganizationId,
 } from '@packmind/types';
 import { DistillationService } from '../../services/DistillationService';
 import { KnowledgePatchService } from '../../services/KnowledgePatchService';
@@ -38,10 +37,6 @@ export class DistillTopicUsecase implements IDistillTopicUseCase {
         throw new Error(`Topic not found: ${command.topicId}`);
       }
 
-      // TODO: Get organizationId from context/space
-      // For now, using a placeholder - this should come from the space
-      const organizationId = 'temp-org-id' as OrganizationId;
-
       // Create distillation service
       const distillationService = new DistillationService(
         this.standardsPort,
@@ -52,7 +47,7 @@ export class DistillTopicUsecase implements IDistillTopicUseCase {
       // Distill the topic to generate patch proposals
       const patchDataArray = await distillationService.distillTopic(
         topic,
-        organizationId,
+        command.organizationId,
         command.userId,
       );
 

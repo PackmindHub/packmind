@@ -14,6 +14,7 @@
     "@packmind/node-utils": "*",
     "@packmind/types": "*",
     "@packmind/test-utils": "*",
+    "bullmq": "^5.29.3",
     "uuid": "^11.0.3",
     "ts-jest": "^29.4.1"
   }

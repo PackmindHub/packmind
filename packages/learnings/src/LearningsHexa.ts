@@ -1,5 +1,10 @@
 import { PackmindLogger } from '@packmind/logger';
-import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
+import {
+  BaseHexa,
+  BaseHexaOpts,
+  HexaRegistry,
+  JobsService,
+} from '@packmind/node-utils';
 import {
   ILearningsPort,
   ILearningsPortName,
@@ -79,10 +84,18 @@ export class LearningsHexa extends BaseHexa<BaseHexaOpts, ILearningsPort> {
         registry.getAdapter<IStandardsPort>(IStandardsPortName);
       const recipesPort = registry.getAdapter<IRecipesPort>(IRecipesPortName);
 
-      // Initialize adapter with ports
+      // Retrieve JobsService from registry
+      this.logger.debug('Retrieving JobsService from registry');
+      const jobsService = registry.getService(JobsService);
+      if (!jobsService) {
+        throw new Error('JobsService not found in registry');
+      }
+
+      // Initialize adapter with ports and services
       await this.adapter.initialize({
         IStandardsPort: standardsPort,
         IRecipesPort: recipesPort,
+        jobsService,
       });
 
       this.isInitialized = true;

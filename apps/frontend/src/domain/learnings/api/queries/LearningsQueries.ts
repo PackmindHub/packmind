@@ -53,6 +53,21 @@ export const useGetKnowledgePatchesBySpaceQuery = (
   );
 };
 
+export const useGetTopicsStatsQuery = () => {
+  const { spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
+
+  return useQuery({
+    queryKey: ['learnings', 'topics', 'stats', spaceId],
+    queryFn: () =>
+      learningsGateway.getTopicsStats({
+        spaceId: spaceId as SpaceId,
+        organizationId: organization!.id,
+      }),
+    enabled: !!spaceId && !!organization,
+  });
+};
+
 export const useGetKnowledgePatchByIdQuery = (patchId: KnowledgePatchId) => {
   const { spaceId } = useCurrentSpace();
   const { organization } = useAuthContext();
@@ -145,6 +160,33 @@ export const useRejectKnowledgePatchMutation = () => {
     },
     onError: async (error) => {
       console.error('Error rejecting knowledge patch', error);
+    },
+  });
+};
+
+const DISTILL_ALL_PENDING_TOPICS_MUTATION_KEY = 'distillAllPendingTopics';
+
+export const useDistillAllPendingTopicsMutation = () => {
+  const queryClient = useQueryClient();
+  const { spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationKey: [DISTILL_ALL_PENDING_TOPICS_MUTATION_KEY],
+    mutationFn: async () => {
+      return learningsGateway.distillAllPendingTopics({
+        spaceId: spaceId as SpaceId,
+        organizationId: organization!.id,
+      });
+    },
+    onSuccess: async () => {
+      // Invalidate the patches list to show new patches
+      await queryClient.invalidateQueries({
+        queryKey: getKnowledgePatchesBySpaceKey(spaceId),
+      });
+    },
+    onError: async (error) => {
+      console.error('Error distilling topics', error);
     },
   });
 };
