@@ -3,6 +3,7 @@ import { KnowledgePatchSchema } from './infra/schemas/KnowledgePatchSchema';
 
 export { LearningsHexa } from './LearningsHexa';
 export { LearningsAdapter } from './application/adapter/LearningsAdapter';
+export { LearningsModule } from './learnings.module';
 export { TopicSchema };
 export { KnowledgePatchSchema };
 

@@ -1,0 +1,236 @@
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import { ILearningsPort } from '@packmind/types';
+import { InjectLearningsAdapter } from '../../../shared/HexaInjection';
+import { LogLevel, PackmindLogger } from '@packmind/logger';
+import { AuthenticatedRequest } from '@packmind/node-utils';
+import {
+  AcceptKnowledgePatchResponse,
+  GetKnowledgePatchResponse,
+  KnowledgePatchId,
+  KnowledgePatchStatus,
+  ListKnowledgePatchesResponse,
+  OrganizationId,
+  RejectKnowledgePatchResponse,
+  SpaceId,
+} from '@packmind/types';
+import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
+import { SpaceAccessGuard } from '../guards/space-access.guard';
+
+const origin = 'OrganizationsSpacesLearningsController';
+
+/**
+ * Controller for space-scoped learnings routes within organizations
+ * Actual path: /organizations/:orgId/spaces/:spaceId/learnings (inherited via RouterModule in AppModule)
+ */
+@Controller()
+@UseGuards(OrganizationAccessGuard, SpaceAccessGuard)
+export class OrganizationsSpacesLearningsController {
+  constructor(
+    @InjectLearningsAdapter()
+    private readonly learningsAdapter: ILearningsPort,
+    private readonly logger: PackmindLogger = new PackmindLogger(
+      origin,
+      LogLevel.INFO,
+    ),
+  ) {
+    this.logger.info('OrganizationsSpacesLearningsController initialized');
+  }
+
+  /**
+   * Get all knowledge patches for a space, optionally filtered by status
+   * GET /organizations/:orgId/spaces/:spaceId/learnings/patches?status=pending_review
+   */
+  @Get('patches')
+  async listPatches(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Query('status') status: KnowledgePatchStatus | undefined,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<ListKnowledgePatchesResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'GET /organizations/:orgId/spaces/:spaceId/learnings/patches - Fetching patches',
+      {
+        organizationId,
+        spaceId,
+        status: status || 'all',
+      },
+    );
+
+    try {
+      return await this.learningsAdapter.listKnowledgePatches({
+        spaceId,
+        status,
+        organizationId,
+        userId,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/spaces/:spaceId/learnings/patches - Failed to fetch patches',
+        {
+          organizationId,
+          spaceId,
+          status,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Get a single knowledge patch by ID
+   * GET /organizations/:orgId/spaces/:spaceId/learnings/patches/:patchId
+   */
+  @Get('patches/:patchId')
+  async getPatch(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('patchId') patchId: KnowledgePatchId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<GetKnowledgePatchResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'GET /organizations/:orgId/spaces/:spaceId/learnings/patches/:patchId - Fetching patch',
+      {
+        organizationId,
+        spaceId,
+        patchId,
+      },
+    );
+
+    try {
+      return await this.learningsAdapter.getKnowledgePatch({
+        patchId,
+        organizationId,
+        userId,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/spaces/:spaceId/learnings/patches/:patchId - Failed to fetch patch',
+        {
+          organizationId,
+          spaceId,
+          patchId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Accept a knowledge patch
+   * POST /organizations/:orgId/spaces/:spaceId/learnings/patches/:patchId/accept
+   */
+  @Post('patches/:patchId/accept')
+  async acceptPatch(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('patchId') patchId: KnowledgePatchId,
+    @Body() body: { reviewNotes?: string },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<AcceptKnowledgePatchResponse> {
+    const userId = request.user.userId;
+    const { reviewNotes } = body;
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/learnings/patches/:patchId/accept - Accepting patch',
+      {
+        organizationId,
+        spaceId,
+        patchId,
+        userId,
+      },
+    );
+
+    try {
+      return await this.learningsAdapter.acceptKnowledgePatch({
+        patchId,
+        reviewedBy: userId,
+        reviewNotes,
+        organizationId,
+        userId,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /organizations/:orgId/spaces/:spaceId/learnings/patches/:patchId/accept - Failed to accept patch',
+        {
+          organizationId,
+          spaceId,
+          patchId,
+          userId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Reject a knowledge patch
+   * POST /organizations/:orgId/spaces/:spaceId/learnings/patches/:patchId/reject
+   */
+  @Post('patches/:patchId/reject')
+  async rejectPatch(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('patchId') patchId: KnowledgePatchId,
+    @Body() body: { reviewNotes: string },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<RejectKnowledgePatchResponse> {
+    const userId = request.user.userId;
+    const { reviewNotes } = body;
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/learnings/patches/:patchId/reject - Rejecting patch',
+      {
+        organizationId,
+        spaceId,
+        patchId,
+        userId,
+      },
+    );
+
+    try {
+      return await this.learningsAdapter.rejectKnowledgePatch({
+        patchId,
+        reviewedBy: userId,
+        reviewNotes,
+        organizationId,
+        userId,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /organizations/:orgId/spaces/:spaceId/learnings/patches/:patchId/reject - Failed to reject patch',
+        {
+          organizationId,
+          spaceId,
+          patchId,
+          userId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+}

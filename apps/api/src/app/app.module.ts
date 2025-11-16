@@ -11,6 +11,7 @@ import { Configuration } from '@packmind/node-utils';
 import { RecipesHexa, recipesSchemas } from '@packmind/recipes';
 import { SpacesHexa, spacesSchemas } from '@packmind/spaces';
 import { StandardsHexa, standardsSchemas } from '@packmind/standards';
+import { LearningsHexa, learningsSchemas } from '@packmind/learnings';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HooksModule } from './hooks/hooks.module';
@@ -37,6 +38,7 @@ import { OrganizationsSpacesRecipesModule } from './organizations/spaces/recipes
 import { OrganizationsSpacesModule } from './organizations/spaces/spaces.module';
 import { OrganizationsSpacesStandardsModule } from './organizations/spaces/standards/standards.module';
 import { OrganizationsSpacesPackagesModule } from './organizations/spaces/packages/packages.module';
+import { OrganizationsSpacesLearningsModule } from './organizations/spaces/learnings/learnings.module';
 import { HexaRegistryModule } from './shared/HexaRegistryModule';
 import { SSEModule } from './sse/sse.module';
 import { StandardsModule } from './standards/standards.module';
@@ -58,6 +60,7 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
         ...standardsSchemas,
         ...deploymentsSchemas,
         ...linterSchemas,
+        ...learningsSchemas,
       ],
       logging: false,
       synchronize: false,
@@ -89,6 +92,7 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
         AnalyticsHexa,
         LinterHexa, // Must come before StandardsHexa (StandardsHexa depends on LinterHexa)
         StandardsHexa,
+        LearningsHexa,
         CodingAgentHexa,
         DeploymentsHexa,
       ],
@@ -122,6 +126,10 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
             path: 'spaces',
             module: OrganizationsSpacesModule,
             children: [
+              {
+                path: ':spaceId/learnings',
+                module: OrganizationsSpacesLearningsModule,
+              },
               {
                 path: ':spaceId/recipes',
                 module: OrganizationsSpacesRecipesModule,

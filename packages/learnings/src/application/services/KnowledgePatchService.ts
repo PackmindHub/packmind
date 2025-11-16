@@ -266,8 +266,7 @@ export class KnowledgePatchService {
         reviewNotes: reviewNotes || null,
       };
 
-      const savedPatch =
-        await this.knowledgePatchRepository.update(updatedPatch);
+      const savedPatch = await this.knowledgePatchRepository.add(updatedPatch);
 
       this.logger.info('Knowledge patch status updated successfully', {
         patchId,
