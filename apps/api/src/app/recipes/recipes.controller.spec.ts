@@ -30,7 +30,7 @@ describe('RecipesController', () => {
     };
 
     const mockDeploymentAdapter: Partial<IDeploymentPort> = {
-      publishRecipes: jest.fn(),
+      publishArtifacts: jest.fn(),
     };
 
     app = await Test.createTestingModule({

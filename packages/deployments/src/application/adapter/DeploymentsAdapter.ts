@@ -51,8 +51,6 @@ import {
   PublishArtifactsResponse,
   PublishPackagesCommand,
   PullContentCommand,
-  PublishRecipesCommand,
-  PublishStandardsCommand,
   RecipesDeployment,
   RenderModeConfiguration,
   StandardDeploymentOverview,
@@ -88,8 +86,6 @@ import { ListPackagesBySpaceUsecase } from '../useCases/listPackagesBySpace/list
 import { GetPackageSummaryUsecase } from '../useCases/getPackageSummary/getPackageSummary.usecase';
 import { PublishArtifactsUseCase } from '../useCases/PublishArtifactsUseCase';
 import { PublishPackagesUseCase } from '../useCases/PublishPackagesUseCase';
-import { PublishRecipesUseCase } from '../useCases/PublishRecipesUseCase';
-import { PublishStandardsUseCase } from '../useCases/PublishStandardsUseCase';
 import { PullContentUseCase } from '../useCases/PullContentUseCase';
 import { UpdateRenderModeConfigurationUseCase } from '../useCases/UpdateRenderModeConfigurationUseCase';
 import { UpdateTargetUseCase } from '../useCases/UpdateTargetUseCase';
@@ -107,8 +103,6 @@ export class DeploymentsAdapter
   // Use cases - initialized in initialize()
   private _listDeploymentsByRecipeUseCase!: ListDeploymentsByRecipeUseCase;
   private _publishArtifactsUseCase!: PublishArtifactsUseCase;
-  private _publishStandardsUseCase!: PublishStandardsUseCase;
-  private _publishRecipesUseCase!: PublishRecipesUseCase;
   private _publishPackagesUseCase!: PublishPackagesUseCase;
   private _findDeployedStandardByRepositoryUseCase!: FindDeployedStandardByRepositoryUseCase;
   private _findActiveStandardVersionsByTargetUseCase!: FindActiveStandardVersionsByTargetUseCase;
@@ -185,24 +179,6 @@ export class DeploymentsAdapter
       this.codingAgentPort,
       this.recipesDeploymentRepository,
       this.standardDeploymentRepository,
-      this.deploymentsServices.getTargetService(),
-      this.deploymentsServices.getRenderModeConfigurationService(),
-    );
-
-    this._publishStandardsUseCase = new PublishStandardsUseCase(
-      this.standardsPort,
-      this.gitPort,
-      this.codingAgentPort,
-      this.standardDeploymentRepository,
-      this.deploymentsServices.getTargetService(),
-      this.deploymentsServices.getRenderModeConfigurationService(),
-    );
-
-    this._publishRecipesUseCase = new PublishRecipesUseCase(
-      this.recipesDeploymentRepository,
-      this.gitPort,
-      this.recipesPort,
-      this.codingAgentPort,
       this.deploymentsServices.getTargetService(),
       this.deploymentsServices.getRenderModeConfigurationService(),
     );
@@ -369,16 +345,6 @@ export class DeploymentsAdapter
     command: PublishArtifactsCommand,
   ): Promise<PublishArtifactsResponse> {
     return this._publishArtifactsUseCase.execute(command);
-  }
-
-  publishStandards(
-    command: PublishStandardsCommand,
-  ): Promise<StandardsDeployment[]> {
-    return this._publishStandardsUseCase.execute(command);
-  }
-
-  publishRecipes(command: PublishRecipesCommand): Promise<RecipesDeployment[]> {
-    return this._publishRecipesUseCase.execute(command);
   }
 
   publishPackages(

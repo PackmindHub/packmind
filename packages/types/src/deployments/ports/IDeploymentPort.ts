@@ -33,8 +33,6 @@ import {
   PublishArtifactsCommand,
   PublishArtifactsResponse,
   PublishPackagesCommand,
-  PublishRecipesCommand,
-  PublishStandardsCommand,
   PullContentCommand,
   UpdatePackageCommand,
   UpdatePackageResponse,
@@ -81,39 +79,6 @@ export interface IDeploymentPort {
   getDeploymentOverview(
     command: GetDeploymentOverviewCommand,
   ): Promise<DeploymentOverview>;
-
-  /**
-   * Publishes recipes to specified git repositories
-   *
-   * For each repository:
-   * 1. Finds the default target for the repository
-   * 2. Finds all previously deployed recipes for the repository
-   * 3. Combines them with new recipes
-   * 4. Prepares file updates using CodingAgentHexa
-   * 5. Commits changes to the git repository
-   * 6. Creates individual RecipesDeployment entry per target
-   *
-   * @param command - Command containing git repository IDs and recipes to deploy
-   * @returns Promise of created RecipesDeployment entries (one per repository's default target)
-   */
-  publishRecipes(command: PublishRecipesCommand): Promise<RecipesDeployment[]>;
-
-  /**
-   * Publishes standards to specified targets
-   *
-   * For each target:
-   * 1. Finds all previously deployed standards for the target's repository
-   * 2. Combines them with new standards
-   * 3. Prepares file updates using CodingAgentHexa
-   * 4. Commits changes to the git repository
-   * 5. Creates individual StandardsDeployment entries per target
-   *
-   * @param command - Command containing target IDs and standard versions to deploy
-   * @returns Promise of created StandardsDeployment entries
-   */
-  publishStandards(
-    command: PublishStandardsCommand,
-  ): Promise<StandardsDeployment[]>;
 
   /**
    * Publishes packages to specified targets
