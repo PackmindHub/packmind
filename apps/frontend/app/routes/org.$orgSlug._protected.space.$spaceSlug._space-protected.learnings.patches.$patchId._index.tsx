@@ -1,7 +1,8 @@
 import { useParams } from 'react-router';
-import { PMPage, PMBox, PMVStack } from '@packmind/ui';
+import { PMPage, PMBox } from '@packmind/ui';
 import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
 import { KnowledgePatchId } from '@packmind/types';
+import { KnowledgePatchDetails } from '../../src/domain/learnings/components/KnowledgePatchDetails';
 
 export default function LearningsPatchDetailsRouteModule() {
   const { patchId } = useParams<{
@@ -33,9 +34,7 @@ export default function LearningsPatchDetailsRouteModule() {
       subtitle="Review and manage this knowledge patch"
       breadcrumbComponent={<AutobreadCrumb />}
     >
-      <PMVStack align="stretch" gap={6}>
-        <PMBox>Patch details for: {patchId}</PMBox>
-      </PMVStack>
+      <KnowledgePatchDetails patchId={patchId as KnowledgePatchId} />
     </PMPage>
   );
 }
