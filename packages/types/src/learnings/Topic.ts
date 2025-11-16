@@ -2,13 +2,14 @@ import { UserId } from '../accounts/User';
 import { SpaceId } from '../spaces/SpaceId';
 import { TopicId } from './TopicId';
 import { TopicCaptureContext } from './TopicCaptureContext';
+import { WithTimestamps } from '../database/types';
 
 export type CodeExample = {
   code: string;
   language: string;
 };
 
-export type Topic = {
+export type Topic = WithTimestamps<{
   id: TopicId;
   spaceId: SpaceId;
   title: string;
@@ -16,4 +17,4 @@ export type Topic = {
   codeExamples: CodeExample[];
   captureContext: TopicCaptureContext;
   createdBy: UserId;
-};
+}>;
