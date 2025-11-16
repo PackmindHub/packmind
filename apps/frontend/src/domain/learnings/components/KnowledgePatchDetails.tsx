@@ -94,8 +94,8 @@ export const KnowledgePatchDetails = ({
 
   return (
     <PMVStack align="stretch" gap={6}>
-      {/* Status Badge */}
-      <PMBox>
+      {/* Status and Type Badges */}
+      <PMHStack gap={2}>
         <PMBadge
           colorScheme={
             patch.status === KnowledgePatchStatus.ACCEPTED
@@ -107,7 +107,8 @@ export const KnowledgePatchDetails = ({
         >
           {patch.status}
         </PMBadge>
-      </PMBox>
+        <PMBadge colorScheme="blue">{patch.patchType}</PMBadge>
+      </PMHStack>
 
       {/* Related Topics */}
       {topics.length > 0 && orgSlug && spaceSlug && (
@@ -130,14 +131,6 @@ export const KnowledgePatchDetails = ({
           </PMHStack>
         </PMBox>
       )}
-
-      {/* Patch Type */}
-      <PMBox p={4} borderWidth="1px" borderRadius="md">
-        <PMHeading size="sm" mb={2}>
-          Patch Type
-        </PMHeading>
-        <PMText>{patch.patchType}</PMText>
-      </PMBox>
 
       {/* Content Preview */}
       <PMBox p={4} borderWidth="1px" borderRadius="md">
