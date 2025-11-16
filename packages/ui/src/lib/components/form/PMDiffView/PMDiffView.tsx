@@ -1,7 +1,4 @@
-import { useEffect, useRef } from 'react';
-import { EditorView } from '@codemirror/view';
-import { EditorState } from '@codemirror/state';
-import { MergeView } from '@codemirror/merge';
+import CodeMirrorMerge from 'react-codemirror-merge';
 import { dracula } from '@uiw/codemirror-theme-dracula';
 import { javascript } from '@codemirror/lang-javascript';
 import { python } from '@codemirror/lang-python';
@@ -24,6 +21,10 @@ import { shell } from '@codemirror/legacy-modes/mode/shell';
 import { ruby } from '@codemirror/legacy-modes/mode/ruby';
 import { swift } from '@codemirror/legacy-modes/mode/swift';
 import { StreamLanguage } from '@codemirror/language';
+import { EditorView } from '@codemirror/view';
+
+const Original = CodeMirrorMerge.Original;
+const Modified = CodeMirrorMerge.Modified;
 
 export interface IPMDiffViewProps {
   original: string;
@@ -201,48 +202,15 @@ export const PMDiffView = ({
   highlightChanges = true,
   readOnly = true,
 }: IPMDiffViewProps) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const mergeViewRef = useRef<MergeView | null>(null);
+  const languageExtensions = getLanguageExtensions(language);
 
-  useEffect(() => {
-    if (!containerRef.current) return;
-
-    const languageExtensions = getLanguageExtensions(language);
-
-    const mergeView = new MergeView({
-      a: {
-        doc: original,
-        extensions: [
-          ...languageExtensions,
-          dracula,
-          EditorView.editable.of(!readOnly),
-          EditorState.readOnly.of(readOnly),
-        ],
-      },
-      b: {
-        doc: modified,
-        extensions: [
-          ...languageExtensions,
-          dracula,
-          EditorView.editable.of(!readOnly),
-          EditorState.readOnly.of(readOnly),
-        ],
-      },
-      parent: containerRef.current,
-      orientation: orientation,
-      highlightChanges: highlightChanges,
-    });
-
-    mergeViewRef.current = mergeView;
-
-    return () => {
-      mergeView.destroy();
-    };
-  }, [original, modified, language, orientation, highlightChanges, readOnly]);
+  const commonExtensions = [
+    ...languageExtensions,
+    EditorView.editable.of(!readOnly),
+  ];
 
   return (
     <div
-      ref={containerRef}
       style={{
         height,
         border: '1px solid transparent',
@@ -250,6 +218,15 @@ export const PMDiffView = ({
         fontSize: 'var(--pm-font-sizes-sm)',
         overflow: 'auto',
       }}
-    />
+    >
+      <CodeMirrorMerge
+        orientation={orientation}
+        highlightChanges={highlightChanges}
+        theme={dracula}
+      >
+        <Original value={original} extensions={commonExtensions} />
+        <Modified value={modified} extensions={commonExtensions} />
+      </CodeMirrorMerge>
+    </div>
   );
 };

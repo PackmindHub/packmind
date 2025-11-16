@@ -1,11 +1,15 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
-import { PackmindLogger, LogLevel } from '@packmind/node-utils';
+import { PackmindLogger, LogLevel } from '@packmind/logger';
+
+const origin = 'AddStatusToTopics1763320253873';
 
 export class AddStatusToTopics1763320253873 implements MigrationInterface {
-  private readonly logger = new PackmindLogger(
-    'AddStatusToTopics1763320253873',
-    LogLevel.DEBUG,
-  );
+  constructor(
+    private readonly logger: PackmindLogger = new PackmindLogger(
+      origin,
+      LogLevel.DEBUG,
+    ),
+  ) {}
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     this.logger.info('Starting migration: AddStatusToTopics');

@@ -20,7 +20,7 @@ export default {
     ],
   },
   transformIgnorePatterns: [
-    '/node_modules/(?!(slug|marked|@chakra-ui|@zag-js|framer-motion|lucide-react)).+\\.[tj]sx?$',
+    '/node_modules/(?!(slug|marked|@chakra-ui|@zag-js|framer-motion|lucide-react|react-codemirror-merge)).+\\.[tj]sx?$',
   ],
   testMatch: ['<rootDir>/src/**/*.(spec|test).[jt]s?(x)'],
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],

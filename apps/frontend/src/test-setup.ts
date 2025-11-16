@@ -157,5 +157,44 @@ if (typeof Element !== 'undefined') {
       // Mock implementation
     };
 }
+// Mock react-codemirror-merge to prevent module import issues in tests
+jest.mock('react-codemirror-merge', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const React = require('react');
+
+  const MockOriginal = React.forwardRef((props: unknown, ref: unknown) =>
+    React.createElement('div', {
+      ...(props as object),
+      ref,
+      'data-testid': 'codemirror-original',
+    }),
+  );
+
+  const MockModified = React.forwardRef((props: unknown, ref: unknown) =>
+    React.createElement('div', {
+      ...(props as object),
+      ref,
+      'data-testid': 'codemirror-modified',
+    }),
+  );
+
+  const MockCodeMirrorMerge = React.forwardRef(
+    (props: { children?: React.ReactNode }, ref: unknown) =>
+      React.createElement(
+        'div',
+        { ...(props as object), ref, 'data-testid': 'codemirror-merge' },
+        props.children,
+      ),
+  );
+
+  MockCodeMirrorMerge.Original = MockOriginal;
+  MockCodeMirrorMerge.Modified = MockModified;
+
+  return {
+    __esModule: true,
+    default: MockCodeMirrorMerge,
+  };
+});
+
 // Make this file a module
 export {};

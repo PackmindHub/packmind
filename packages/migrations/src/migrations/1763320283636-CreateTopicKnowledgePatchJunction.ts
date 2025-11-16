@@ -4,15 +4,19 @@ import {
   Table,
   TableForeignKey,
 } from 'typeorm';
-import { PackmindLogger, LogLevel } from '@packmind/node-utils';
+import { PackmindLogger, LogLevel } from '@packmind/logger';
+
+const origin = 'CreateTopicKnowledgePatchJunction1763320283636';
 
 export class CreateTopicKnowledgePatchJunction1763320283636
   implements MigrationInterface
 {
-  private readonly logger = new PackmindLogger(
-    'CreateTopicKnowledgePatchJunction1763320283636',
-    LogLevel.DEBUG,
-  );
+  constructor(
+    private readonly logger: PackmindLogger = new PackmindLogger(
+      origin,
+      LogLevel.DEBUG,
+    ),
+  ) {}
 
   private readonly junctionTable = new Table({
     name: 'topic_knowledge_patches',

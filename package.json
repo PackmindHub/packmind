@@ -135,6 +135,7 @@
     "@codemirror/lang-python": "^6.1.6",
     "@codemirror/lang-sass": "^6.0.2",
     "@codemirror/lang-sql": "^6.8.1",
+    "@codemirror/merge": "^6.11.2",
     "@docusaurus/core": "3.8.1",
     "@docusaurus/preset-classic": "3.8.1",
     "@fastify/autoload": "~6.0.3",
