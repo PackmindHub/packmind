@@ -5,8 +5,7 @@ import {
   Package,
   RecipeId,
   StandardId,
-  PublishRecipesCommand,
-  PublishStandardsCommand,
+  PublishArtifactsCommand,
   IRecipesPort,
   IStandardsPort,
   IDeploymentPort,
@@ -90,33 +89,21 @@ export class PublishPackagesUseCase implements IPublishPackages {
       standardVersionsCount: standardVersionIds.length,
     });
 
-    const allDeployments: PackagesDeployment[] = [];
-
-    // Publish standards if any
-    if (standardVersionIds.length > 0) {
-      const standardsDeployments = await this.deploymentPort.publishStandards({
-        userId: command.userId,
-        organizationId: command.organizationId,
-        standardVersionIds,
-        targetIds: command.targetIds,
-      } as PublishStandardsCommand);
-      allDeployments.push(
-        ...(standardsDeployments as unknown as PackagesDeployment[]),
-      );
-    }
-
-    // Publish recipes if any
-    if (recipeVersionIds.length > 0) {
-      const recipesDeployments = await this.deploymentPort.publishRecipes({
+    // Publish artifacts using the unified publishArtifacts use case
+    const { recipeDeployments, standardDeployments } =
+      await this.deploymentPort.publishArtifacts({
         userId: command.userId,
         organizationId: command.organizationId,
         recipeVersionIds,
+        standardVersionIds,
         targetIds: command.targetIds,
-      } as PublishRecipesCommand);
-      allDeployments.push(
-        ...(recipesDeployments as unknown as PackagesDeployment[]),
-      );
-    }
+      } as PublishArtifactsCommand);
+
+    // Combine deployments into a single array
+    const allDeployments: PackagesDeployment[] = [
+      ...(standardDeployments as unknown as PackagesDeployment[]),
+      ...(recipeDeployments as unknown as PackagesDeployment[]),
+    ];
 
     this.logger.info('Successfully published packages', {
       deploymentsCount: allDeployments.length,

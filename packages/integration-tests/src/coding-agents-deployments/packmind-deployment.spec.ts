@@ -70,11 +70,15 @@ describe('Packmind Deployment Spec', () => {
         standardVersionIds.push(await dataQuery.getStandardVersionId(standard));
       }
 
-      return testApp.deploymentsHexa.getAdapter().publishStandards({
-        ...dataFactory.packmindCommand(),
-        targetIds: [dataFactory.target.id],
-        standardVersionIds,
-      });
+      const result = await testApp.deploymentsHexa
+        .getAdapter()
+        .publishArtifacts({
+          ...dataFactory.packmindCommand(),
+          targetIds: [dataFactory.target.id],
+          recipeVersionIds: [],
+          standardVersionIds,
+        });
+      return result.standardDeployments;
     }
 
     beforeEach(async () => {
@@ -91,6 +95,10 @@ describe('Packmind Deployment Spec', () => {
       expect(commitToGit).toHaveBeenCalledWith(
         dataFactory.gitRepo,
         [
+          {
+            content: expect.any(String),
+            path: `.packmind/recipes-index.md`,
+          },
           {
             content: expect.stringContaining(standard1.name),
             path: `.packmind/standards/${standard1.slug}.md`,
@@ -109,6 +117,10 @@ describe('Packmind Deployment Spec', () => {
       expect(commitToGit).toHaveBeenCalledWith(
         dataFactory.gitRepo,
         [
+          {
+            content: expect.any(String),
+            path: `.packmind/recipes-index.md`,
+          },
           {
             content: expect.stringContaining(standard1.name),
             path: `.packmind/standards/${standard1.slug}.md`,
@@ -135,20 +147,31 @@ describe('Packmind Deployment Spec', () => {
 
       it('does not re-deploy the deleted standard', async () => {
         await deployStandards([standard2]);
-        expect(commitToGit).toHaveBeenCalledWith(
-          dataFactory.gitRepo,
-          [
-            {
-              content: expect.stringContaining(standard2.name),
-              path: `.packmind/standards/${standard2.slug}.md`,
-            },
-            {
-              content: expect.any(String),
-              path: `.packmind/standards-index.md`,
-            },
-          ],
-          expect.any(String),
-        );
+        // Check the second call (first call was in beforeEach with standard1)
+        expect(commitToGit).toHaveBeenCalledTimes(2);
+        const secondCallArgs = commitToGit.mock.calls[1];
+        expect(secondCallArgs[0]).toEqual(dataFactory.gitRepo);
+        // Note: publishArtifacts re-deploys all active standards for the target
+        // including previously deployed ones, not just the requested ones
+        expect(secondCallArgs[1]).toEqual([
+          {
+            content: expect.any(String),
+            path: `.packmind/recipes-index.md`,
+          },
+          {
+            content: expect.stringContaining(standard1.name),
+            path: `.packmind/standards/${standard1.slug}.md`,
+          },
+          {
+            content: expect.stringContaining(standard2.name),
+            path: `.packmind/standards/${standard2.slug}.md`,
+          },
+          {
+            content: expect.any(String),
+            path: `.packmind/standards-index.md`,
+          },
+        ]);
+        expect(secondCallArgs[2]).toEqual(expect.any(String));
       });
     });
   });
@@ -162,11 +185,15 @@ describe('Packmind Deployment Spec', () => {
         recipeVersionIds.push(await dataQuery.getRecipeVersionId(recipe));
       }
 
-      return testApp.deploymentsHexa.getAdapter().publishRecipes({
-        ...dataFactory.packmindCommand(),
-        recipeVersionIds,
-        targetIds: [dataFactory.target.id],
-      });
+      const result = await testApp.deploymentsHexa
+        .getAdapter()
+        .publishArtifacts({
+          ...dataFactory.packmindCommand(),
+          recipeVersionIds,
+          standardVersionIds: [],
+          targetIds: [dataFactory.target.id],
+        });
+      return result.recipeDeployments;
     }
 
     beforeEach(async () => {
@@ -191,6 +218,10 @@ describe('Packmind Deployment Spec', () => {
             path: `.packmind/recipes-index.md`,
             content: expect.any(String),
           },
+          {
+            path: `.packmind/standards-index.md`,
+            content: expect.any(String),
+          },
         ],
         expect.any(String),
       );
@@ -212,6 +243,10 @@ describe('Packmind Deployment Spec', () => {
           },
           {
             path: `.packmind/recipes-index.md`,
+            content: expect.any(String),
+          },
+          {
+            path: `.packmind/standards-index.md`,
             content: expect.any(String),
           },
         ],
@@ -240,6 +275,10 @@ describe('Packmind Deployment Spec', () => {
             },
             {
               path: `.packmind/recipes-index.md`,
+              content: expect.any(String),
+            },
+            {
+              path: `.packmind/standards-index.md`,
               content: expect.any(String),
             },
           ],

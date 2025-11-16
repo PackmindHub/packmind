@@ -719,13 +719,8 @@ User-defined instructions that should be preserved.`;
         defaultTarget,
       );
 
-      expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      expect(fileUpdates.createOrUpdate).toHaveLength(0);
       expect(fileUpdates.delete).toHaveLength(0);
-
-      const claudeFile = fileUpdates.createOrUpdate[0];
-      expect(claudeFile.path).toBe('CLAUDE.md');
-      expect(claudeFile.content).toContain('# Packmind Recipes');
-      expect(claudeFile.content).toContain('🚨 **MANDATORY STEP** 🚨');
     });
 
     it('handles empty standards list gracefully', async () => {
@@ -737,12 +732,8 @@ User-defined instructions that should be preserved.`;
         defaultTarget,
       );
 
-      expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      expect(fileUpdates.createOrUpdate).toHaveLength(0);
       expect(fileUpdates.delete).toHaveLength(0);
-
-      const claudeFile = fileUpdates.createOrUpdate[0];
-      expect(claudeFile.path).toBe('CLAUDE.md');
-      expect(claudeFile.content).not.toContain('# Packmind Standards');
     });
 
     it('handles GitHexa errors gracefully', async () => {

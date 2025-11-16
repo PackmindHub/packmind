@@ -57,8 +57,8 @@ export class CursorDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Only create file if content was updated
-    if (updatedContent !== existingContent) {
+    // Only create file if content is not empty and was updated
+    if (updatedContent !== '' && updatedContent !== existingContent) {
       const targetPrefixedPath = getTargetPrefixedPath(
         CursorDeployer.RECIPES_INDEX_PATH,
         target,
@@ -118,10 +118,13 @@ export class CursorDeployer implements ICodingAgentDeployer {
     // Generate content without target prefixing
     const content = this.generateRecipeContentSimple(recipeVersions);
 
-    fileUpdates.createOrUpdate.push({
-      path: CursorDeployer.RECIPES_INDEX_PATH,
-      content,
-    });
+    // Only add file if there is content
+    if (content !== '') {
+      fileUpdates.createOrUpdate.push({
+        path: CursorDeployer.RECIPES_INDEX_PATH,
+        content,
+      });
+    }
 
     return fileUpdates;
   }
@@ -151,12 +154,55 @@ export class CursorDeployer implements ICodingAgentDeployer {
     return fileUpdates;
   }
 
+  async deployArtifacts(
+    recipeVersions: RecipeVersion[],
+    standardVersions: StandardVersion[],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _existingContent: string,
+  ): Promise<FileUpdates> {
+    this.logger.info('Deploying artifacts (recipes + standards) for Cursor', {
+      recipesCount: recipeVersions.length,
+      standardsCount: standardVersions.length,
+    });
+
+    const fileUpdates: FileUpdates = {
+      createOrUpdate: [],
+      delete: [],
+    };
+
+    // Generate recipes index file only if there are recipes
+    const recipesContent = this.generateRecipeContentSimple(recipeVersions);
+    if (recipesContent !== '') {
+      fileUpdates.createOrUpdate.push({
+        path: CursorDeployer.RECIPES_INDEX_PATH,
+        content: recipesContent,
+      });
+    }
+
+    // Generate individual Cursor configuration files for each standard
+    for (const standardVersion of standardVersions) {
+      const configFile =
+        await this.generateCursorConfigForStandard(standardVersion);
+      fileUpdates.createOrUpdate.push({
+        path: configFile.path,
+        content: configFile.content,
+      });
+    }
+
+    return fileUpdates;
+  }
+
   /**
    * Generate content with recipe instructions without target/repo context
    */
   private generateRecipeContentSimple(recipeVersions: RecipeVersion[]): string {
     // Generate recipes list
     const recipesSection = this.generateRecipesSection(recipeVersions);
+
+    // If no recipes, return empty string to indicate no file should be created
+    if (recipesSection === '') {
+      return '';
+    }
 
     const packmindInstructions =
       GenericRecipeSectionWriter.generateRecipesSection({
@@ -218,6 +264,11 @@ ${packmindInstructions}`;
     // Generate recipes list
     const recipesSection = this.generateRecipesSection(recipeVersions);
 
+    // If no recipes, return empty string to indicate no file should be created
+    if (recipesSection === '') {
+      return '';
+    }
+
     const packmindInstructions =
       GenericRecipeSectionWriter.generateRecipesSection({
         agentName: 'Cursor',
@@ -238,7 +289,7 @@ ${packmindInstructions}`;
    */
   private generateRecipesSection(recipeVersions: RecipeVersion[]): string {
     if (recipeVersions.length === 0) {
-      return `No recipes are currently available for this repository.`;
+      return '';
     }
 
     return recipeVersions
@@ -263,9 +314,11 @@ ${packmindInstructions}`;
       scope: standardVersion.scope,
     });
     const rules =
+      standardVersion.rules ??
       (await this.standardsPort?.getRulesByStandardId(
         standardVersion.standardId,
-      )) ?? [];
+      )) ??
+      [];
 
     let content: string;
 

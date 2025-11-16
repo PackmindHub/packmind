@@ -30,9 +30,9 @@ import {
   ListPackagesBySpaceResponse,
   ListPackagesCommand,
   ListPackagesResponse,
+  PublishArtifactsCommand,
+  PublishArtifactsResponse,
   PublishPackagesCommand,
-  PublishRecipesCommand,
-  PublishStandardsCommand,
   PullContentCommand,
   UpdatePackageCommand,
   UpdatePackageResponse,
@@ -81,39 +81,6 @@ export interface IDeploymentPort {
   ): Promise<DeploymentOverview>;
 
   /**
-   * Publishes recipes to specified git repositories
-   *
-   * For each repository:
-   * 1. Finds the default target for the repository
-   * 2. Finds all previously deployed recipes for the repository
-   * 3. Combines them with new recipes
-   * 4. Prepares file updates using CodingAgentHexa
-   * 5. Commits changes to the git repository
-   * 6. Creates individual RecipesDeployment entry per target
-   *
-   * @param command - Command containing git repository IDs and recipes to deploy
-   * @returns Promise of created RecipesDeployment entries (one per repository's default target)
-   */
-  publishRecipes(command: PublishRecipesCommand): Promise<RecipesDeployment[]>;
-
-  /**
-   * Publishes standards to specified targets
-   *
-   * For each target:
-   * 1. Finds all previously deployed standards for the target's repository
-   * 2. Combines them with new standards
-   * 3. Prepares file updates using CodingAgentHexa
-   * 4. Commits changes to the git repository
-   * 5. Creates individual StandardsDeployment entries per target
-   *
-   * @param command - Command containing target IDs and standard versions to deploy
-   * @returns Promise of created StandardsDeployment entries
-   */
-  publishStandards(
-    command: PublishStandardsCommand,
-  ): Promise<StandardsDeployment[]>;
-
-  /**
    * Publishes packages to specified targets
    *
    * For each target:
@@ -130,6 +97,24 @@ export interface IDeploymentPort {
   publishPackages(
     command: PublishPackagesCommand,
   ): Promise<PackagesDeployment[]>;
+
+  /**
+   * Publishes artifacts (recipes and standards) to specified targets in a unified operation
+   *
+   * For each repository:
+   * 1. Groups all targets by repository
+   * 2. Collects all previously deployed recipe and standard versions across all targets
+   * 3. Combines with new versions (deduplicates, keeps latest)
+   * 4. Calls renderArtifacts ONCE with both recipes and standards
+   * 5. Makes ONE atomic commit per repository
+   * 6. Creates both RecipesDeployment AND StandardsDeployment records for each target
+   *
+   * @param command - Command containing recipe version IDs, standard version IDs, and target IDs
+   * @returns Promise of PublishArtifactsResponse with both recipe and standard deployments
+   */
+  publishArtifacts(
+    command: PublishArtifactsCommand,
+  ): Promise<PublishArtifactsResponse>;
 
   /**
    * Lists all deployments for a specific recipe

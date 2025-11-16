@@ -20,6 +20,10 @@ class MockDeployer implements ICodingAgentDeployer {
   async generateFileUpdatesForStandards(): Promise<FileUpdates> {
     return { createOrUpdate: [], delete: [] };
   }
+
+  async deployArtifacts(): Promise<FileUpdates> {
+    return { createOrUpdate: [], delete: [] };
+  }
 }
 
 describe('CodingAgentDeployerRegistry', () => {

@@ -85,13 +85,8 @@ describe('AgentsMDDeployer', () => {
     it('handles empty recipe list', async () => {
       const result = await deployer.deployRecipes([], mockGitRepo, mockTarget);
 
-      expect(result.createOrUpdate).toHaveLength(1);
+      expect(result.createOrUpdate).toHaveLength(0);
       expect(result.delete).toHaveLength(0);
-
-      const agentsMDFile = result.createOrUpdate[0];
-      expect(agentsMDFile.content).toContain('# Packmind Recipes');
-      expect(agentsMDFile.content).toContain('🚨 **MANDATORY STEP** 🚨');
-      expect(agentsMDFile.content).toContain('ALWAYS READ');
     });
 
     it('includes multiple recipes in instructions', async () => {
@@ -192,14 +187,8 @@ describe('AgentsMDDeployer', () => {
         mockTarget,
       );
 
-      expect(result.createOrUpdate).toHaveLength(1);
+      expect(result.createOrUpdate).toHaveLength(0);
       expect(result.delete).toHaveLength(0);
-
-      const agentsMDFile = result.createOrUpdate[0];
-      expect(agentsMDFile.content).not.toContain('# Packmind Standards');
-      expect(agentsMDFile.content).not.toContain(
-        GenericStandardSectionWriter.standardsIntroduction,
-      );
     });
 
     it('includes multiple standards in instructions', async () => {

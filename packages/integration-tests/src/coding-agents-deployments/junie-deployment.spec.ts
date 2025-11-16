@@ -746,13 +746,8 @@ User-defined instructions that should be preserved.`;
         defaultTarget,
       );
 
-      expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      expect(fileUpdates.createOrUpdate).toHaveLength(0);
       expect(fileUpdates.delete).toHaveLength(0);
-
-      const guidelinesFile = fileUpdates.createOrUpdate[0];
-      expect(guidelinesFile.path).toBe('.junie/guidelines.md');
-      expect(guidelinesFile.content).toContain('# Packmind Recipes');
-      expect(guidelinesFile.content).toContain('🚨 **MANDATORY STEP** 🚨');
     });
 
     it('handles empty standards list gracefully', async () => {
@@ -764,12 +759,8 @@ User-defined instructions that should be preserved.`;
         defaultTarget,
       );
 
-      expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      expect(fileUpdates.createOrUpdate).toHaveLength(0);
       expect(fileUpdates.delete).toHaveLength(0);
-
-      const guidelinesFile = fileUpdates.createOrUpdate[0];
-      expect(guidelinesFile.path).toBe('.junie/guidelines.md');
-      expect(guidelinesFile.content).not.toContain('# Packmind Standards');
     });
 
     it('handles GitHexa errors gracefully', async () => {
