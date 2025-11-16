@@ -150,8 +150,16 @@ export const KnowledgePatchDetails = ({
           </MarkdownEditorProvider>
         ) : (
           <PMDiffView
-            original={patch.diffOriginal}
-            modified={patch.diffModified}
+            original={
+              patch.diffOriginal.endsWith('\n')
+                ? patch.diffOriginal
+                : `${patch.diffOriginal}\n`
+            }
+            modified={
+              patch.diffModified.endsWith('\n')
+                ? patch.diffModified
+                : `${patch.diffModified}\n`
+            }
             language="markdown"
             height="400px"
             showViewToggle={true}
