@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import CodeMirrorMerge from 'react-codemirror-merge';
+import CodeMirror from '@uiw/react-codemirror';
 import { EditorView } from '@codemirror/view';
 import { javascript } from '@codemirror/lang-javascript';
 import { python } from '@codemirror/lang-python';
@@ -71,6 +73,7 @@ export interface IPMDiffViewProps {
   orientation?: 'a-b' | 'b-a';
   highlightChanges?: boolean;
   readOnly?: boolean;
+  showViewToggle?: boolean;
 }
 
 /**
@@ -238,7 +241,9 @@ export const PMDiffView = ({
   orientation = 'a-b',
   highlightChanges = true,
   readOnly = true,
+  showViewToggle = false,
 }: IPMDiffViewProps) => {
+  const [viewMode, setViewMode] = useState<'split' | 'unified'>('split');
   const languageExtensions = getLanguageExtensions(language);
 
   const commonExtensions = [
@@ -249,21 +254,94 @@ export const PMDiffView = ({
   return (
     <div
       style={{
-        height,
-        border: '1px solid transparent',
-        borderRadius: 'var(--chakra-radii-md)',
-        fontSize: 'var(--pm-font-sizes-sm)',
-        overflow: 'auto',
+        position: 'relative',
       }}
     >
-      <CodeMirrorMerge
-        orientation={orientation}
-        highlightChanges={highlightChanges}
-        theme={packmindDarkTheme}
+      {showViewToggle && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '8px',
+            right: '8px',
+            zIndex: 10,
+            display: 'flex',
+            gap: '4px',
+            backgroundColor: 'var(--pm-colors-background-secondary)',
+            borderRadius: 'var(--chakra-radii-md)',
+            padding: '4px',
+            border: '1px solid var(--pm-colors-border-secondary)',
+          }}
+        >
+          <button
+            onClick={() => setViewMode('split')}
+            style={{
+              padding: '4px 12px',
+              fontSize: 'var(--pm-font-sizes-sm)',
+              backgroundColor:
+                viewMode === 'split'
+                  ? 'var(--pm-colors-background-tertiary)'
+                  : 'transparent',
+              color: 'var(--pm-colors-text-primary)',
+              border: 'none',
+              borderRadius: 'var(--chakra-radii-sm)',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            Split
+          </button>
+          <button
+            onClick={() => setViewMode('unified')}
+            style={{
+              padding: '4px 12px',
+              fontSize: 'var(--pm-font-sizes-sm)',
+              backgroundColor:
+                viewMode === 'unified'
+                  ? 'var(--pm-colors-background-tertiary)'
+                  : 'transparent',
+              color: 'var(--pm-colors-text-primary)',
+              border: 'none',
+              borderRadius: 'var(--chakra-radii-sm)',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            Unified
+          </button>
+        </div>
+      )}
+      <div
+        style={{
+          height,
+          border: '1px solid transparent',
+          borderRadius: 'var(--chakra-radii-md)',
+          fontSize: 'var(--pm-font-sizes-sm)',
+          overflow: 'auto',
+        }}
       >
-        <Original value={original} extensions={commonExtensions} />
-        <Modified value={modified} extensions={commonExtensions} />
-      </CodeMirrorMerge>
+        {viewMode === 'split' ? (
+          <CodeMirrorMerge
+            orientation={orientation}
+            highlightChanges={highlightChanges}
+            theme={packmindDarkTheme}
+          >
+            <Original value={original} extensions={commonExtensions} />
+            <Modified value={modified} extensions={commonExtensions} />
+          </CodeMirrorMerge>
+        ) : (
+          <CodeMirror
+            value={modified}
+            extensions={commonExtensions}
+            theme={packmindDarkTheme}
+            editable={!readOnly}
+            basicSetup={{
+              lineNumbers: true,
+              foldGutter: true,
+              highlightActiveLine: true,
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 };

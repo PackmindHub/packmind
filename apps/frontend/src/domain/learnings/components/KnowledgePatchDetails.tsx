@@ -125,6 +125,7 @@ export const KnowledgePatchDetails = ({
             modified={patch.diffModified}
             language="markdown"
             height="400px"
+            showViewToggle={true}
           />
         )}
       </PMBox>
