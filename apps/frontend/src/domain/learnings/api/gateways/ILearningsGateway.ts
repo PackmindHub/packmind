@@ -1,10 +1,12 @@
 import {
   IAcceptKnowledgePatchUseCase,
+  IDistillAllPendingTopicsUseCase,
   IGetKnowledgePatchUseCase,
+  IGetTopicByIdUseCase,
   IGetTopicsStatsUseCase,
   IListKnowledgePatchesUseCase,
+  IListTopicsUseCase,
   IRejectKnowledgePatchUseCase,
-  IDistillAllPendingTopicsUseCase,
   NewGateway,
 } from '@packmind/types';
 
@@ -15,4 +17,6 @@ export interface ILearningsGateway {
   rejectKnowledgePatch: NewGateway<IRejectKnowledgePatchUseCase>;
   distillAllPendingTopics: NewGateway<IDistillAllPendingTopicsUseCase>;
   getTopicsStats: NewGateway<IGetTopicsStatsUseCase>;
+  listTopics: NewGateway<IListTopicsUseCase>;
+  getTopicById: NewGateway<IGetTopicByIdUseCase>;
 }

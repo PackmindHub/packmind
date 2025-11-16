@@ -5,16 +5,22 @@ import {
   DistillAllPendingTopicsResponse,
   GetKnowledgePatchCommand,
   GetKnowledgePatchResponse,
+  GetTopicByIdCommand,
+  GetTopicByIdResponse,
   GetTopicsStatsCommand,
   GetTopicsStatsResponse,
   IAcceptKnowledgePatchUseCase,
   IDistillAllPendingTopicsUseCase,
   IGetKnowledgePatchUseCase,
+  IGetTopicByIdUseCase,
   IGetTopicsStatsUseCase,
   IListKnowledgePatchesUseCase,
+  IListTopicsUseCase,
   IRejectKnowledgePatchUseCase,
   ListKnowledgePatchesCommand,
   ListKnowledgePatchesResponse,
+  ListTopicsCommand,
+  ListTopicsResponse,
   NewGateway,
   NewPackmindCommandBody,
   RejectKnowledgePatchCommand,
@@ -93,6 +99,25 @@ export class LearningsGatewayApi
   }: NewPackmindCommandBody<GetTopicsStatsCommand>) => {
     return this._api.get<GetTopicsStatsResponse>(
       `/organizations/${organizationId}/spaces/${spaceId}/learnings/topics/stats`,
+    );
+  };
+
+  listTopics: NewGateway<IListTopicsUseCase> = async ({
+    organizationId,
+    spaceId,
+  }: NewPackmindCommandBody<ListTopicsCommand>) => {
+    return this._api.get<ListTopicsResponse>(
+      `/organizations/${organizationId}/spaces/${spaceId}/learnings/topics`,
+    );
+  };
+
+  getTopicById: NewGateway<IGetTopicByIdUseCase> = async ({
+    organizationId,
+    spaceId,
+    topicId,
+  }: NewPackmindCommandBody<GetTopicByIdCommand>) => {
+    return this._api.get<GetTopicByIdResponse>(
+      `/organizations/${organizationId}/spaces/${spaceId}/learnings/topics/${topicId}`,
     );
   };
 }

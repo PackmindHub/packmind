@@ -5,6 +5,7 @@ import {
   KnowledgePatchStatus,
   OrganizationId,
   SpaceId,
+  TopicId,
 } from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
@@ -12,6 +13,8 @@ import { learningsGateway } from '../gateways';
 import {
   getKnowledgePatchByIdKey,
   getKnowledgePatchesBySpaceKey,
+  getTopicByIdKey,
+  getTopicsBySpaceKey,
 } from '../queryKeys';
 
 // Query Options - exportable for route loaders
@@ -35,6 +38,26 @@ export const getKnowledgePatchByIdOptions = (
   queryFn: () =>
     learningsGateway.getKnowledgePatch({ patchId, spaceId, organizationId }),
   enabled: !!patchId && !!spaceId && !!organizationId,
+});
+
+export const getTopicsBySpaceOptions = (
+  spaceId: SpaceId,
+  organizationId: OrganizationId,
+) => ({
+  queryKey: getTopicsBySpaceKey(spaceId),
+  queryFn: () => learningsGateway.listTopics({ spaceId, organizationId }),
+  enabled: !!spaceId && !!organizationId,
+});
+
+export const getTopicByIdOptions = (
+  topicId: TopicId,
+  spaceId: SpaceId,
+  organizationId: OrganizationId,
+) => ({
+  queryKey: getTopicByIdKey(spaceId, topicId),
+  queryFn: () =>
+    learningsGateway.getTopicById({ topicId, spaceId, organizationId }),
+  enabled: !!topicId && !!spaceId && !!organizationId,
 });
 
 // Query Hooks
@@ -75,6 +98,31 @@ export const useGetKnowledgePatchByIdQuery = (patchId: KnowledgePatchId) => {
   return useQuery(
     getKnowledgePatchByIdOptions(
       patchId,
+      spaceId as SpaceId,
+      organization?.id as OrganizationId,
+    ),
+  );
+};
+
+export const useTopicsQuery = () => {
+  const { spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
+
+  return useQuery(
+    getTopicsBySpaceOptions(
+      spaceId as SpaceId,
+      organization?.id as OrganizationId,
+    ),
+  );
+};
+
+export const useTopicQuery = (topicId: TopicId) => {
+  const { spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
+
+  return useQuery(
+    getTopicByIdOptions(
+      topicId,
       spaceId as SpaceId,
       organization?.id as OrganizationId,
     ),
