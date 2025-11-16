@@ -23,6 +23,7 @@ import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useNavigate } from 'react-router';
 import { RxQuestionMarkCircled } from 'react-icons/rx';
 import { routes } from '../../../../shared/utils/routes';
+import { CopiableTextField } from '../../../../shared/components/inputs/CopiableTextField';
 
 export const RunDistributionBodyImpl: React.FC = () => {
   const {
@@ -35,6 +36,7 @@ export const RunDistributionBodyImpl: React.FC = () => {
     activeRenderModes,
     organizationRole,
     isRenderModeConfigurationMissing,
+    selectedPackages,
   } = useRunDistribution();
   const renderModeLabels = React.useMemo(() => {
     const labels: Record<RenderMode, string> = {
@@ -61,6 +63,14 @@ export const RunDistributionBodyImpl: React.FC = () => {
     if (!organization?.slug) return;
     navigate(routes.org.toSettingsDistribution(organization.slug));
   }
+
+  const getCliCommand = React.useCallback(() => {
+    if (selectedPackages.length === 0) {
+      return 'packmind-cli pull';
+    }
+    const slugs = selectedPackages.map((pkg) => pkg.slug).join(' ');
+    return `packmind-cli pull ${slugs}`;
+  }, [selectedPackages]);
 
   const groupedTargets = React.useMemo(() => {
     return [...targetsList].reduce(
@@ -160,6 +170,14 @@ export const RunDistributionBodyImpl: React.FC = () => {
           size={'sm'}
         />
       </PMHStack>
+      {selectedPackages.length > 0 && (
+        <CopiableTextField
+          value={getCliCommand()}
+          readOnly
+          label="CLI Command"
+          data-testid="deployment-cli-command"
+        />
+      )}
       <PMBox maxHeight="lg" overflow={'auto'}>
         {Object.entries(groupedTargets)
           .filter(([repoKey]) => !selectedRepo || repoKey === selectedRepo)

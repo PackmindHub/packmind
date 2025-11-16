@@ -44,6 +44,7 @@ type RunDistributionCtxType = {
   isRenderModeConfigurationMissing: boolean;
   organizationRole?: UserOrganizationRole;
   activeRenderModes: RenderMode[];
+  selectedPackages: Package[];
 };
 
 const RunDistributionCtx = createContext<RunDistributionCtxType | null>(null);
@@ -210,6 +211,7 @@ const RunDistributionComponent: React.FC<RunDistributionProps> = ({
       isRenderModeConfigurationMissing,
       organizationRole,
       activeRenderModes,
+      selectedPackages,
     }),
     [
       targetsList,
@@ -230,6 +232,7 @@ const RunDistributionComponent: React.FC<RunDistributionProps> = ({
       isRenderModeConfigurationMissing,
       organizationRole,
       activeRenderModes,
+      selectedPackages,
     ],
   );
 
