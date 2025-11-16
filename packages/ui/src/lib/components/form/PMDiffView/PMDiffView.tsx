@@ -1,5 +1,5 @@
 import CodeMirrorMerge from 'react-codemirror-merge';
-import { dracula } from '@uiw/codemirror-theme-dracula';
+import { EditorView } from '@codemirror/view';
 import { javascript } from '@codemirror/lang-javascript';
 import { python } from '@codemirror/lang-python';
 import { cpp } from '@codemirror/lang-cpp';
@@ -21,10 +21,47 @@ import { shell } from '@codemirror/legacy-modes/mode/shell';
 import { ruby } from '@codemirror/legacy-modes/mode/ruby';
 import { swift } from '@codemirror/legacy-modes/mode/swift';
 import { StreamLanguage } from '@codemirror/language';
-import { EditorView } from '@codemirror/view';
 
 const Original = CodeMirrorMerge.Original;
 const Modified = CodeMirrorMerge.Modified;
+
+// Custom theme using Packmind semantic tokens for dark mode
+const packmindDarkTheme = EditorView.theme(
+  {
+    '&': {
+      color: 'var(--pm-colors-text-primary)',
+      backgroundColor: 'var(--pm-colors-background-primary)',
+    },
+    '.cm-content': {
+      caretColor: 'var(--pm-colors-text-primary)',
+    },
+    '.cm-cursor, .cm-dropCursor': {
+      borderLeftColor: 'var(--pm-colors-text-primary)',
+    },
+    '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection':
+      {
+        backgroundColor: 'var(--pm-colors-background-tertiary)',
+      },
+    '.cm-activeLine': {
+      backgroundColor: 'var(--pm-colors-background-secondary)',
+    },
+    '.cm-selectionMatch': {
+      backgroundColor: 'var(--pm-colors-background-tertiary)',
+    },
+    '.cm-gutters': {
+      backgroundColor: 'var(--pm-colors-background-secondary)',
+      color: 'var(--pm-colors-text-faded)',
+      border: 'none',
+    },
+    '.cm-activeLineGutter': {
+      backgroundColor: 'var(--pm-colors-background-tertiary)',
+    },
+    '.cm-lineNumbers .cm-gutterElement': {
+      color: 'var(--pm-colors-text-faded)',
+    },
+  },
+  { dark: true },
+);
 
 export interface IPMDiffViewProps {
   original: string;
@@ -222,7 +259,7 @@ export const PMDiffView = ({
       <CodeMirrorMerge
         orientation={orientation}
         highlightChanges={highlightChanges}
-        theme={dracula}
+        theme={packmindDarkTheme}
       >
         <Original value={original} extensions={commonExtensions} />
         <Modified value={modified} extensions={commonExtensions} />
