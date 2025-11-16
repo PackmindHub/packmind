@@ -510,23 +510,25 @@ Footer content.`;
       expect(content).not.toContain('Old standard content');
     });
 
-    it('returns empty arrays when content unchanged', async () => {
-      const content1 = await deployer.deployArtifacts(
-        mockRecipeVersions,
-        mockStandardVersions,
-        '',
-      );
+    describe('when content unchanged', () => {
+      it('returns empty arrays', async () => {
+        const content1 = await deployer.deployArtifacts(
+          mockRecipeVersions,
+          mockStandardVersions,
+          '',
+        );
 
-      const generatedContent = content1.createOrUpdate[0].content;
+        const generatedContent = content1.createOrUpdate[0].content;
 
-      const result = await deployer.deployArtifacts(
-        mockRecipeVersions,
-        mockStandardVersions,
-        generatedContent,
-      );
+        const result = await deployer.deployArtifacts(
+          mockRecipeVersions,
+          mockStandardVersions,
+          generatedContent,
+        );
 
-      expect(result.createOrUpdate).toHaveLength(0);
-      expect(result.delete).toHaveLength(0);
+        expect(result.createOrUpdate).toHaveLength(0);
+        expect(result.delete).toHaveLength(0);
+      });
     });
 
     it('handles empty recipe versions', async () => {
@@ -642,8 +644,9 @@ More custom content.`;
       expect(content).toContain('<!-- start: Packmind standards -->');
     });
 
-    it('removes recipe section when deploying empty recipes', async () => {
-      const existingContent = `# Configuration
+    describe('when deploying empty recipes', () => {
+      it('removes recipe section', async () => {
+        const existingContent = `# Configuration
 
 <!-- start: Packmind recipes -->
 Old recipes content
@@ -651,24 +654,26 @@ Old recipes content
 
 Custom content.`;
 
-      const result = await deployer.deployArtifacts(
-        [],
-        mockStandardVersions,
-        existingContent,
-      );
+        const result = await deployer.deployArtifacts(
+          [],
+          mockStandardVersions,
+          existingContent,
+        );
 
-      expect(result.createOrUpdate).toHaveLength(1);
-      const content = result.createOrUpdate[0].content;
+        expect(result.createOrUpdate).toHaveLength(1);
+        const content = result.createOrUpdate[0].content;
 
-      expect(content).toContain('# Configuration');
-      expect(content).toContain('Custom content.');
-      expect(content).not.toContain('<!-- start: Packmind recipes -->');
-      expect(content).not.toContain('Old recipes content');
-      expect(content).toContain('<!-- start: Packmind standards -->');
+        expect(content).toContain('# Configuration');
+        expect(content).toContain('Custom content.');
+        expect(content).not.toContain('<!-- start: Packmind recipes -->');
+        expect(content).not.toContain('Old recipes content');
+        expect(content).toContain('<!-- start: Packmind standards -->');
+      });
     });
 
-    it('removes standards section when deploying empty standards', async () => {
-      const existingContent = `# Configuration
+    describe('when deploying empty standards', () => {
+      it('removes standards section', async () => {
+        const existingContent = `# Configuration
 
 <!-- start: Packmind standards -->
 Old standards content
@@ -676,24 +681,26 @@ Old standards content
 
 Custom content.`;
 
-      const result = await deployer.deployArtifacts(
-        mockRecipeVersions,
-        [],
-        existingContent,
-      );
+        const result = await deployer.deployArtifacts(
+          mockRecipeVersions,
+          [],
+          existingContent,
+        );
 
-      expect(result.createOrUpdate).toHaveLength(1);
-      const content = result.createOrUpdate[0].content;
+        expect(result.createOrUpdate).toHaveLength(1);
+        const content = result.createOrUpdate[0].content;
 
-      expect(content).toContain('# Configuration');
-      expect(content).toContain('Custom content.');
-      expect(content).toContain('<!-- start: Packmind recipes -->');
-      expect(content).not.toContain('<!-- start: Packmind standards -->');
-      expect(content).not.toContain('Old standards content');
+        expect(content).toContain('# Configuration');
+        expect(content).toContain('Custom content.');
+        expect(content).toContain('<!-- start: Packmind recipes -->');
+        expect(content).not.toContain('<!-- start: Packmind standards -->');
+        expect(content).not.toContain('Old standards content');
+      });
     });
 
-    it('removes both sections when deploying empty arrays over existing content', async () => {
-      const existingContent = `# Configuration
+    describe('when deploying empty arrays over existing content', () => {
+      it('removes both sections', async () => {
+        const existingContent = `# Configuration
 
 <!-- start: Packmind recipes -->
 Old recipes
@@ -705,74 +712,83 @@ Old standards
 
 Custom content.`;
 
-      const result = await deployer.deployArtifacts([], [], existingContent);
+        const result = await deployer.deployArtifacts([], [], existingContent);
 
-      expect(result.createOrUpdate).toHaveLength(1);
-      const content = result.createOrUpdate[0].content;
+        expect(result.createOrUpdate).toHaveLength(1);
+        const content = result.createOrUpdate[0].content;
 
-      expect(content).toContain('# Configuration');
-      expect(content).toContain('Custom content.');
-      expect(content).not.toContain('<!-- start: Packmind recipes -->');
-      expect(content).not.toContain('<!-- start: Packmind standards -->');
-      expect(content).not.toContain('Old recipes');
-      expect(content).not.toContain('Old standards');
+        expect(content).toContain('# Configuration');
+        expect(content).toContain('Custom content.');
+        expect(content).not.toContain('<!-- start: Packmind recipes -->');
+        expect(content).not.toContain('<!-- start: Packmind standards -->');
+        expect(content).not.toContain('Old recipes');
+        expect(content).not.toContain('Old standards');
+      });
     });
 
-    it('fetches rules for standards when not present', async () => {
-      const mockRules = [
-        {
-          id: 'rule-1',
-          standardId: mockStandardVersions[0].standardId,
-          content: 'Test rule content',
-          order: 1,
-        },
-      ];
+    describe('when rules not present on standards', () => {
+      it('fetches rules for standards', async () => {
+        const mockRules = [
+          {
+            id: 'rule-1',
+            standardId: mockStandardVersions[0].standardId,
+            content: 'Test rule content',
+            order: 1,
+          },
+        ];
 
-      mockStandardsPort.getRulesByStandardId = jest
-        .fn()
-        .mockResolvedValue(mockRules);
+        mockStandardsPort.getRulesByStandardId = jest
+          .fn()
+          .mockResolvedValue(mockRules);
 
-      const standardWithoutRules = [
-        {
-          ...mockStandardVersions[0],
-          rules: undefined,
-        },
-      ];
+        const standardWithoutRules = [
+          {
+            ...mockStandardVersions[0],
+            rules: undefined,
+          },
+        ];
 
-      const result = await deployer.deployArtifacts(
-        [],
-        standardWithoutRules,
-        '',
-      );
+        const result = await deployer.deployArtifacts(
+          [],
+          standardWithoutRules,
+          '',
+        );
 
-      expect(mockStandardsPort.getRulesByStandardId).toHaveBeenCalledWith(
-        mockStandardVersions[0].standardId,
-      );
-      expect(result.createOrUpdate).toHaveLength(1);
-      expect(result.createOrUpdate[0].content).toContain('Test rule content');
+        expect(mockStandardsPort.getRulesByStandardId).toHaveBeenCalledWith(
+          mockStandardVersions[0].standardId,
+        );
+        expect(result.createOrUpdate).toHaveLength(1);
+        expect(result.createOrUpdate[0].content).toContain('Test rule content');
+      });
     });
 
-    it('uses existing rules when present on standard version', async () => {
-      mockStandardsPort.getRulesByStandardId = jest.fn();
+    describe('when rules present on standard version', () => {
+      it('uses existing rules', async () => {
+        mockStandardsPort.getRulesByStandardId = jest.fn();
 
-      const standardWithRules = [
-        {
-          ...mockStandardVersions[0],
-          rules: [
-            {
-              id: 'rule-1' as RuleId,
-              standardVersionId: mockStandardVersions[0].id,
-              content: 'Existing rule',
-            },
-          ],
-        },
-      ];
+        const standardWithRules = [
+          {
+            ...mockStandardVersions[0],
+            rules: [
+              {
+                id: 'rule-1' as RuleId,
+                standardVersionId: mockStandardVersions[0].id,
+                content: 'Existing rule',
+              },
+            ],
+          },
+        ];
 
-      const result = await deployer.deployArtifacts([], standardWithRules, '');
+        const result = await deployer.deployArtifacts(
+          [],
+          standardWithRules,
+          '',
+        );
 
-      expect(mockStandardsPort.getRulesByStandardId).not.toHaveBeenCalled();
-      expect(result.createOrUpdate).toHaveLength(1);
-      expect(result.createOrUpdate[0].content).toContain('Existing rule');
+        expect(mockStandardsPort.getRulesByStandardId).not.toHaveBeenCalled();
+        expect(result.createOrUpdate).toHaveLength(1);
+        expect(result.createOrUpdate[0].content).toContain('Existing rule');
+      });
     });
 
     it('handles null/undefined summaries gracefully', async () => {

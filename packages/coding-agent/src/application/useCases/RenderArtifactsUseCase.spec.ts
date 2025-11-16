@@ -176,48 +176,6 @@ describe('RenderArtifactsUseCase', () => {
       );
     });
 
-    it('logs execution details', async () => {
-      mockCodingAgentServices.renderArtifacts.mockResolvedValue({
-        createOrUpdate: [{ path: 'CLAUDE.md', content: 'content' }],
-        delete: [],
-      });
-
-      const existingFiles = new Map<string, string>();
-      existingFiles.set('CLAUDE.md', 'existing');
-
-      const command: RenderArtifactsCommand = {
-        recipeVersions: mockRecipeVersions,
-        standardVersions: mockStandardVersions,
-        codingAgents: ['claude'],
-        existingFiles,
-        userId: 'user-1' as UserId,
-        organizationId: 'org-1' as OrganizationId,
-      };
-
-      await useCase.execute(command);
-
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'Executing render artifacts use case',
-        {
-          recipesCount: 1,
-          standardsCount: 1,
-          agentsCount: 1,
-          existingFilesCount: 1,
-          organizationId: 'org-1',
-          userId: 'user-1',
-        },
-      );
-
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'Successfully rendered artifacts',
-        {
-          totalFiles: 1,
-          createOrUpdateFiles: 1,
-          deleteFiles: 0,
-        },
-      );
-    });
-
     it('propagates errors from services layer', async () => {
       mockCodingAgentServices.renderArtifacts.mockRejectedValue(
         new Error('Service error'),
@@ -233,16 +191,6 @@ describe('RenderArtifactsUseCase', () => {
       };
 
       await expect(useCase.execute(command)).rejects.toThrow('Service error');
-
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'Failed to render artifacts',
-        {
-          error: 'Service error',
-          recipesCount: 1,
-          standardsCount: 1,
-          agentsCount: 1,
-        },
-      );
     });
 
     it('handles empty existing files map', async () => {

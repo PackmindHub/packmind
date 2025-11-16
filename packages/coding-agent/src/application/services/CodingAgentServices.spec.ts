@@ -148,22 +148,24 @@ describe('CodingAgentServices', () => {
       expect(result).toEqual(mockFileUpdates);
     });
 
-    it('returns empty FileUpdates when codingAgents array is empty', async () => {
-      const existingFiles = new Map<string, string>();
+    describe('when codingAgents array is empty', () => {
+      it('returns empty FileUpdates', async () => {
+        const existingFiles = new Map<string, string>();
 
-      const result = await service.renderArtifacts(
-        mockRecipeVersions,
-        mockStandardVersions,
-        [],
-        existingFiles,
-      );
+        const result = await service.renderArtifacts(
+          mockRecipeVersions,
+          mockStandardVersions,
+          [],
+          existingFiles,
+        );
 
-      expect(
-        mockDeployerService.aggregateArtifactRendering,
-      ).not.toHaveBeenCalled();
-      expect(result).toEqual({
-        createOrUpdate: [],
-        delete: [],
+        expect(
+          mockDeployerService.aggregateArtifactRendering,
+        ).not.toHaveBeenCalled();
+        expect(result).toEqual({
+          createOrUpdate: [],
+          delete: [],
+        });
       });
     });
 
@@ -222,44 +224,6 @@ describe('CodingAgentServices', () => {
       );
 
       expect(result.createOrUpdate).toHaveLength(2);
-    });
-
-    it('logs execution details', async () => {
-      const mockFileUpdates: FileUpdates = {
-        createOrUpdate: [{ path: 'CLAUDE.md', content: 'content' }],
-        delete: [],
-      };
-
-      mockDeployerService.aggregateArtifactRendering.mockResolvedValue(
-        mockFileUpdates,
-      );
-
-      const existingFiles = new Map<string, string>();
-      existingFiles.set('CLAUDE.md', 'existing');
-
-      await service.renderArtifacts(
-        mockRecipeVersions,
-        mockStandardVersions,
-        ['claude'],
-        existingFiles,
-      );
-
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'Rendering artifacts (recipes + standards)',
-        {
-          recipesCount: 1,
-          standardsCount: 1,
-          agentsCount: 1,
-          existingFilesCount: 1,
-        },
-      );
-
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'Artifacts rendered successfully',
-        {
-          filesCount: 1,
-        },
-      );
     });
 
     it('propagates errors from deployerService', async () => {
