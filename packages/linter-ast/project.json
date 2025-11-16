@@ -1,0 +1,32 @@
+{
+  "name": "linter-ast",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/linter-ast/src",
+  "projectType": "library",
+  "tags": ["env:node"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/linter-ast",
+        "tsConfig": "packages/linter-ast/tsconfig.lib.json",
+        "packageJson": "packages/linter-ast/package.json",
+        "main": "packages/linter-ast/src/index.ts",
+        "assets": [
+          "packages/linter-ast/*.md",
+          "packages/linter-ast/res/**/*.wasm"
+        ]
+      }
+    },
+    "test": {
+      "command": "NODE_OPTIONS='--experimental-vm-modules' npx jest --config=packages/linter-ast/jest.config.ts --runInBand",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "configurations": {
+        "ci": {
+          "command": "NODE_OPTIONS='--experimental-vm-modules' npx jest --config=packages/linter-ast/jest.config.ts --runInBand --ci --coverage"
+        }
+      }
+    }
+  }
+}

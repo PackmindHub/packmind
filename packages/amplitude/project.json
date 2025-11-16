@@ -1,0 +1,20 @@
+{
+  "name": "amplitude",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/amplitude/src",
+  "projectType": "library",
+  "tags": ["env:node"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/amplitude",
+        "tsConfig": "packages/amplitude/tsconfig.lib.json",
+        "packageJson": "packages/amplitude/package.json",
+        "main": "packages/amplitude/src/index.ts",
+        "assets": ["packages/amplitude/*.md"]
+      }
+    }
+  }
+}

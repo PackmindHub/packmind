@@ -1,0 +1,24 @@
+{
+  "name": "@packmind/analytics",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "dependencies": {
+    "tslib": "^2.3.0",
+    "ts-jest": "^29.4.1",
+    "typeorm": "0.3.27",
+    "@nestjs/common": "^11.1.6",
+    "@packmind/accounts": "*",
+    "@packmind/deployments": "*",
+    "@packmind/git": "*",
+    "@packmind/logger": "*",
+    "@packmind/recipes": "*",
+    "@packmind/types": "*",
+    "@packmind/node-utils": "*",
+    "@packmind/spaces": "*",
+    "uuid": "^11.1.0",
+    "@packmind/test-utils": "0.0.1"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "analytics",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/analytics/src",
+  "projectType": "library",
+  "tags": ["env:node"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit --project packages/analytics/tsconfig.lib.json"
+      }
+    },
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/analytics",
+        "tsConfig": "packages/analytics/tsconfig.lib.json",
+        "packageJson": "packages/analytics/package.json",
+        "main": "packages/analytics/src/index.ts",
+        "assets": ["packages/analytics/*.md"]
+      }
+    }
+  }
+}
