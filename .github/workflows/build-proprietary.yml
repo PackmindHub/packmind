@@ -240,6 +240,11 @@ jobs:
           echo "Built executables (with embedded WASM files):"
           ls -lh dist/apps/cli-executables/
 
+      - name: Test executables
+        run: |
+          node dist/apps/cli/main.cjs --version
+          ./dist/apps/cli-executables/packmind-cli-linux-x64 --version
+
       - name: Upload CLI executables
         uses: actions/upload-artifact@v4
         with:
