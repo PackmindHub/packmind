@@ -2,6 +2,7 @@ import { useState } from 'react';
 import CodeMirrorMerge from 'react-codemirror-merge';
 import CodeMirror from '@uiw/react-codemirror';
 import { EditorView } from '@codemirror/view';
+import { unifiedMergeView } from '@codemirror/merge';
 import { javascript } from '@codemirror/lang-javascript';
 import { python } from '@codemirror/lang-python';
 import { cpp } from '@codemirror/lang-cpp';
@@ -331,7 +332,16 @@ export const PMDiffView = ({
         ) : (
           <CodeMirror
             value={modified}
-            extensions={commonExtensions}
+            extensions={[
+              ...commonExtensions,
+              unifiedMergeView({
+                original: original,
+                highlightChanges: highlightChanges,
+                gutter: true,
+                syntaxHighlightDeletions: true,
+                mergeControls: false,
+              }),
+            ]}
             theme={packmindDarkTheme}
             editable={!readOnly}
             basicSetup={{
