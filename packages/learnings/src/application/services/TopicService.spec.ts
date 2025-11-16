@@ -57,9 +57,12 @@ describe('TopicService', () => {
         spaceId: createSpaceId(uuidv4()),
       };
 
+      const now = new Date();
       savedTopic = {
         id: createTopicId(uuidv4()),
         ...topicData,
+        createdAt: now,
+        updatedAt: now,
       };
 
       topicRepository.add = jest.fn().mockResolvedValue(savedTopic);

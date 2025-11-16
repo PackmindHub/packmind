@@ -2,8 +2,12 @@ import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import { JobsService } from '@packmind/node-utils';
 import {
+  IAccountsPort,
+  IAccountsPortName,
   IRecipesPort,
   IRecipesPortName,
+  ISpacesPort,
+  ISpacesPortName,
   IStandardsPort,
   IStandardsPortName,
 } from '@packmind/types';
@@ -17,6 +21,8 @@ describe('LearningsAdapter', () => {
   let learningsServices: jest.Mocked<LearningsServices>;
   let topicService: jest.Mocked<TopicService>;
   let knowledgePatchService: jest.Mocked<KnowledgePatchService>;
+  let mockAccountsPort: jest.Mocked<IAccountsPort>;
+  let mockSpacesPort: jest.Mocked<ISpacesPort>;
   let mockStandardsPort: jest.Mocked<IStandardsPort>;
   let mockRecipesPort: jest.Mocked<IRecipesPort>;
   let mockJobsService: jest.Mocked<JobsService>;
@@ -47,6 +53,15 @@ describe('LearningsAdapter', () => {
       getPatchApplicationService: jest.fn().mockReturnValue(null),
     } as unknown as jest.Mocked<LearningsServices>;
 
+    mockAccountsPort = {
+      getUsersByOrganizationId: jest.fn(),
+    } as unknown as jest.Mocked<IAccountsPort>;
+
+    mockSpacesPort = {
+      getSpaceById: jest.fn(),
+      listSpacesByOrganization: jest.fn(),
+    } as unknown as jest.Mocked<ISpacesPort>;
+
     mockStandardsPort = {
       getStandard: jest.fn(),
       listStandardsBySpace: jest.fn(),
@@ -76,6 +91,8 @@ describe('LearningsAdapter', () => {
   describe('initialize', () => {
     it('initializes successfully with ports and services', async () => {
       await adapter.initialize({
+        [IAccountsPortName]: mockAccountsPort,
+        [ISpacesPortName]: mockSpacesPort,
         [IStandardsPortName]: mockStandardsPort,
         [IRecipesPortName]: mockRecipesPort,
         jobsService: mockJobsService,
@@ -87,6 +104,8 @@ describe('LearningsAdapter', () => {
   describe('isReady', () => {
     it('returns true after initialization with ports and services', async () => {
       await adapter.initialize({
+        [IAccountsPortName]: mockAccountsPort,
+        [ISpacesPortName]: mockSpacesPort,
         [IStandardsPortName]: mockStandardsPort,
         [IRecipesPortName]: mockRecipesPort,
         jobsService: mockJobsService,

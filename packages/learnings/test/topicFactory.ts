@@ -9,6 +9,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 
 export const topicFactory: Factory<Topic> = (topic?: Partial<Topic>) => {
+  const now = new Date();
   return {
     id: createTopicId(uuidv4()),
     title: 'Test Technical Decision',
@@ -17,6 +18,8 @@ export const topicFactory: Factory<Topic> = (topic?: Partial<Topic>) => {
     captureContext: TopicCaptureContext.MCP_TOOL,
     createdBy: createUserId(uuidv4()),
     spaceId: createSpaceId(uuidv4()),
+    createdAt: now,
+    updatedAt: now,
     ...topic,
   };
 };

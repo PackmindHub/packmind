@@ -73,20 +73,32 @@ describe('TopicRepository', () => {
       );
     });
 
-    it('returns empty array when no topics exist for space', async () => {
-      const spaceId = createSpaceId(uuidv4());
-      const topics = await topicRepository.findBySpaceId(spaceId);
-      expect(topics).toHaveLength(0);
+    describe('when no topics exist for space', () => {
+      it('returns empty array', async () => {
+        const spaceId = createSpaceId(uuidv4());
+        const topics = await topicRepository.findBySpaceId(spaceId);
+        expect(topics).toHaveLength(0);
+      });
     });
 
     it('orders topics by created date descending', async () => {
       const spaceId = createSpaceId(uuidv4());
-      const topic1 = topicFactory({ spaceId, title: 'Old Topic' });
-      const topic2 = topicFactory({ spaceId, title: 'New Topic' });
+      const oldDate = new Date('2024-01-01');
+      const newDate = new Date('2024-01-02');
+      const topic1 = topicFactory({
+        spaceId,
+        title: 'Old Topic',
+        createdAt: oldDate,
+        updatedAt: oldDate,
+      });
+      const topic2 = topicFactory({
+        spaceId,
+        title: 'New Topic',
+        createdAt: newDate,
+        updatedAt: newDate,
+      });
 
       await topicRepository.add(topic1);
-      // Wait a bit to ensure different timestamps
-      await new Promise((resolve) => setTimeout(resolve, 10));
       await topicRepository.add(topic2);
 
       const topics = await topicRepository.findBySpaceId(spaceId);

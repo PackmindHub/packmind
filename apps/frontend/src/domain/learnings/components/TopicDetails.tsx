@@ -22,14 +22,6 @@ interface TopicDetailsProps {
 export const TopicDetails = ({ topicId }: TopicDetailsProps) => {
   const { data, isLoading, isError } = useTopicQuery(topicId);
 
-  const handleDistillTopic = async () => {
-    // TODO: Implement distill single topic mutation
-    console.log('Distilling topic:', topicId);
-    alert(
-      'Distill single topic feature coming soon. Use "Distill All" for now.',
-    );
-  };
-
   if (isLoading) {
     return <PMBox>Loading topic details...</PMBox>;
   }
@@ -106,18 +98,6 @@ export const TopicDetails = ({ topicId }: TopicDetailsProps) => {
           </PMVStack>
         </PMBox>
       )}
-
-      {/* Actions */}
-      <PMBox p={4} borderWidth="1px" borderRadius="md">
-        <PMVStack align="stretch" gap={4}>
-          <PMHeading size="sm">Actions</PMHeading>
-          <PMBox>
-            <PMButton colorScheme="blue" onClick={handleDistillTopic}>
-              Distill Topic
-            </PMButton>
-          </PMBox>
-        </PMVStack>
-      </PMBox>
     </PMVStack>
   );
 };
