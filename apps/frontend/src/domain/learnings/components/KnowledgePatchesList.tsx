@@ -1,19 +1,26 @@
 import React from 'react';
+import { Link, useParams } from 'react-router';
 import {
   PMTable,
   PMTableColumn,
   PMTableRow,
   PMEmptyState,
   PMBox,
+  PMLink,
 } from '@packmind/ui';
 import { useGetKnowledgePatchesBySpaceQuery } from '../api/queries/LearningsQueries';
+import { routes } from '../../../shared/utils/routes';
 
 export const KnowledgePatchesList = () => {
+  const { orgSlug, spaceSlug } = useParams<{
+    orgSlug: string;
+    spaceSlug: string;
+  }>();
   const { data, isLoading, isError } = useGetKnowledgePatchesBySpaceQuery();
   const [tableData, setTableData] = React.useState<PMTableRow[]>([]);
 
   React.useEffect(() => {
-    if (!data) return;
+    if (!data || !orgSlug || !spaceSlug) return;
 
     setTableData(
       data.patches.map((patch) => ({
@@ -23,14 +30,24 @@ export const KnowledgePatchesList = () => {
         createdAt: (
           <PMBox>{new Date(patch.createdAt).toLocaleDateString()}</PMBox>
         ),
+        actions: (
+          <PMLink asChild>
+            <Link
+              to={routes.space.toLearningsPatch(orgSlug, spaceSlug, patch.id)}
+            >
+              View
+            </Link>
+          </PMLink>
+        ),
       })),
     );
-  }, [data]);
+  }, [data, orgSlug, spaceSlug]);
 
   const columns: PMTableColumn[] = [
     { key: 'type', header: 'Type', width: '200px' },
     { key: 'status', header: 'Status', width: '150px' },
     { key: 'createdAt', header: 'Created', width: '150px' },
+    { key: 'actions', header: '', width: '80px', align: 'right' },
   ];
 
   if (isLoading) {
