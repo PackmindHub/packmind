@@ -21,7 +21,5 @@ Return JSON format:
   "action": "addRule" | "updateRule" | "noMatch",
   "targetRuleId": "ruleId or null if addRule",
   "proposedContent": "the new or updated rule text",
-  "rationale": "brief explanation of why this change is needed",
-  "diffOriginal": "the original rule content (empty string for addRule, current rule text for updateRule)",
-  "diffModified": "the proposed new rule content"
+  "rationale": "brief explanation of why this change is needed"
 }`;

@@ -28,16 +28,12 @@ type StandardMatchResult = {
   targetRuleId: string | null;
   proposedContent: string;
   rationale: string;
-  diffOriginal: string;
-  diffModified: string;
 };
 
 type RecipeMatchResult = {
   action: 'addSteps' | 'updateSteps' | 'noMatch';
   proposedContent: string;
   rationale: string;
-  diffOriginal: string;
-  diffModified: string;
 };
 
 type NewArtifactResult = {
@@ -317,6 +313,45 @@ export class DistillationService {
         return null;
       }
 
+      // Build full standard document for diff view
+      const buildStandardDoc = (
+        rulesList: Array<{ id: string; content: string }>,
+        modifiedRuleId?: string,
+        modifiedContent?: string,
+        isAddRule?: boolean,
+      ) => {
+        let docRules = [...rulesList];
+
+        if (isAddRule && modifiedContent) {
+          // Add new rule at the end
+          docRules.push({ id: 'new', content: modifiedContent });
+        } else if (modifiedRuleId && modifiedContent) {
+          // Replace existing rule
+          docRules = docRules.map((r) =>
+            r.id === modifiedRuleId ? { ...r, content: modifiedContent } : r,
+          );
+        }
+
+        return `# ${standard.name}\n\n${standard.description}\n\n## Rules\n\n${docRules.map((r) => `- ${r.content}`).join('\n')}`;
+      };
+
+      const diffOriginal = buildStandardDoc(
+        rules.map((r) => ({ id: r.id, content: r.content })),
+      );
+      const diffModified =
+        analysis.action === 'addRule'
+          ? buildStandardDoc(
+              rules.map((r) => ({ id: r.id, content: r.content })),
+              undefined,
+              analysis.proposedContent,
+              true,
+            )
+          : buildStandardDoc(
+              rules.map((r) => ({ id: r.id, content: r.content })),
+              analysis.targetRuleId || '',
+              analysis.proposedContent,
+            );
+
       const patchType =
         analysis.action === 'addRule'
           ? KnowledgePatchType.UPDATE_STANDARD
@@ -333,8 +368,8 @@ export class DistillationService {
           content: analysis.proposedContent,
           rationale: analysis.rationale,
         },
-        diffOriginal: analysis.diffOriginal,
-        diffModified: analysis.diffModified,
+        diffOriginal,
+        diffModified,
       };
     } catch (error) {
       this.logger.error('Failed to analyze standard match', {
@@ -393,6 +428,10 @@ export class DistillationService {
         return null;
       }
 
+      // Build full recipe document for diff view
+      const diffOriginal = `# ${recipe.name}\n\n${recipe.content}`;
+      const diffModified = `# ${recipe.name}\n\n${analysis.proposedContent}`;
+
       return {
         spaceId: topic.spaceId,
         topicId: topic.id,
@@ -403,8 +442,8 @@ export class DistillationService {
           content: analysis.proposedContent,
           rationale: analysis.rationale,
         },
-        diffOriginal: analysis.diffOriginal,
-        diffModified: analysis.diffModified,
+        diffOriginal,
+        diffModified,
       };
     } catch (error) {
       this.logger.error('Failed to analyze recipe match', {
