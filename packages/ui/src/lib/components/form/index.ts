@@ -5,6 +5,7 @@ export type { FieldsetRootProps } from './PMFieldset/PMFieldset';
 export { PMIconButton, type IPMIconButtonProps } from './PMIconButton';
 export { PMInputGroup } from './PMInputGroup';
 export { PMCodeMirror, type IPMCodeMirrorProps } from './PMCodeMirror';
+export { PMDiffView, type IPMDiffViewProps } from './PMDiffView';
 export * from './PMButton/PMButton';
 export * from './PMCheckbox/PMCheckbox';
 export { PMCombobox } from './PMCombobox/PMCombobox';
