@@ -2,7 +2,7 @@ import { ITopicKnowledgePatchRepository } from '../../domain/repositories/ITopic
 import { TopicKnowledgePatchSchema } from '../schemas/TopicKnowledgePatchSchema';
 import { Repository } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
-import { localDataSource, AbstractRepository } from '@packmind/node-utils';
+import { localDataSource } from '@packmind/node-utils';
 import {
   TopicKnowledgePatch,
   TopicId,
@@ -12,31 +12,20 @@ import {
 const origin = 'TopicKnowledgePatchRepository';
 
 export class TopicKnowledgePatchRepository
-  extends AbstractRepository<TopicKnowledgePatch>
   implements ITopicKnowledgePatchRepository
 {
+  private readonly repository: Repository<TopicKnowledgePatch>;
+  private readonly logger: PackmindLogger;
+
   constructor(
     repository: Repository<TopicKnowledgePatch> = localDataSource.getRepository<TopicKnowledgePatch>(
       TopicKnowledgePatchSchema,
     ),
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
-    super(
-      'topic_knowledge_patch',
-      repository,
-      logger,
-      TopicKnowledgePatchSchema,
-    );
+    this.repository = repository;
+    this.logger = logger;
     this.logger.info('TopicKnowledgePatchRepository initialized');
-  }
-
-  protected override loggableEntity(
-    entity: TopicKnowledgePatch,
-  ): Partial<TopicKnowledgePatch> {
-    return {
-      topicId: entity.topicId,
-      knowledgePatchId: entity.knowledgePatchId,
-    };
   }
 
   async linkTopicToPatch(

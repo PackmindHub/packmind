@@ -10,6 +10,7 @@ import {
   UserId,
   TopicCaptureContext,
   CodeExample,
+  TopicStatus,
 } from '@packmind/types';
 
 const origin = 'TopicService';
@@ -45,6 +46,7 @@ export class TopicService {
       const topic: Topic = {
         id: topicId,
         ...topicData,
+        status: TopicStatus.PENDING,
         createdAt: now,
         updatedAt: now,
       };

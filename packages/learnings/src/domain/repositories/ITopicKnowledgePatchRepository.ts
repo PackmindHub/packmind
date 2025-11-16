@@ -1,12 +1,6 @@
-import {
-  IRepository,
-  TopicKnowledgePatch,
-  TopicId,
-  KnowledgePatchId,
-} from '@packmind/types';
+import { TopicId, KnowledgePatchId } from '@packmind/types';
 
-export interface ITopicKnowledgePatchRepository
-  extends IRepository<TopicKnowledgePatch> {
+export interface ITopicKnowledgePatchRepository {
   linkTopicToPatch(topicId: TopicId, patchId: KnowledgePatchId): Promise<void>;
   linkTopicToPatches(
     topicId: TopicId,

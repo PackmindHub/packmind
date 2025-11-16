@@ -24,26 +24,6 @@ export const TopicKnowledgePatchSchema = new EntitySchema<TopicKnowledgePatch>({
       default: () => 'CURRENT_TIMESTAMP',
     },
   },
-  relations: {
-    topic: {
-      type: 'many-to-one',
-      target: 'Topic',
-      joinColumn: {
-        name: 'topic_id',
-        referencedColumnName: 'id',
-      },
-      onDelete: 'CASCADE',
-    },
-    knowledgePatch: {
-      type: 'many-to-one',
-      target: 'KnowledgePatch',
-      joinColumn: {
-        name: 'knowledge_patch_id',
-        referencedColumnName: 'id',
-      },
-      onDelete: 'CASCADE',
-    },
-  },
   indices: [
     {
       name: 'idx_topic_knowledge_patch_topic',

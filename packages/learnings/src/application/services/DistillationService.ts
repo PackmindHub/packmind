@@ -82,14 +82,12 @@ export class DistillationService {
     userId: string,
   ): Promise<CreateKnowledgePatchData[]> {
     this.logger.info('Starting topic distillation', {
-      topicId: topic.id,
       topicTitle: topic.title,
     });
 
     const isConfigured = await this.aiService.isConfigured();
     if (!isConfigured) {
       this.logger.warn('AI service not configured - cannot distill topic', {
-        topicId: topic.id,
       });
       throw new AiNotConfigured(
         'AI service not configured for topic distillation',
@@ -148,14 +146,12 @@ export class DistillationService {
       }
 
       this.logger.info('Topic distillation completed', {
-        topicId: topic.id,
         patchesGenerated: patches.length,
       });
 
       return patches;
     } catch (error) {
       this.logger.error('Failed to distill topic', {
-        topicId: topic.id,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
@@ -261,7 +257,6 @@ export class DistillationService {
     standardId: string,
   ): Promise<CreateKnowledgePatchData | null> {
     this.logger.debug('Analyzing standard match', {
-      topicId: topic.id,
       standardId,
     });
 
@@ -359,7 +354,6 @@ export class DistillationService {
 
       return {
         spaceId: topic.spaceId,
-        topicId: topic.id,
         patchType,
         proposedChanges: {
           standardId: standard.id,
@@ -385,7 +379,6 @@ export class DistillationService {
     recipeId: string,
   ): Promise<CreateKnowledgePatchData | null> {
     this.logger.debug('Analyzing recipe match', {
-      topicId: topic.id,
       recipeId,
     });
 
@@ -434,7 +427,6 @@ export class DistillationService {
 
       return {
         spaceId: topic.spaceId,
-        topicId: topic.id,
         patchType: KnowledgePatchType.UPDATE_RECIPE,
         proposedChanges: {
           recipeId: recipe.id,
@@ -458,7 +450,6 @@ export class DistillationService {
     topic: Topic,
   ): Promise<CreateKnowledgePatchData[]> {
     this.logger.debug('Determining if new artifacts needed', {
-      topicId: topic.id,
     });
 
     try {
@@ -490,7 +481,6 @@ export class DistillationService {
         const standardContent = `# ${analysis.standardProposal.name}\n\n${analysis.standardProposal.description}\n\n## Rules\n\n${analysis.standardProposal.rules.map((r) => `- ${r}`).join('\n')}`;
         patches.push({
           spaceId: topic.spaceId,
-          topicId: topic.id,
           patchType: KnowledgePatchType.NEW_STANDARD,
           proposedChanges: {
             name: analysis.standardProposal.name,
@@ -508,7 +498,6 @@ export class DistillationService {
         const recipeContent = `# ${analysis.recipeProposal.name}\n\n${analysis.recipeProposal.description}\n\n${analysis.recipeProposal.content}`;
         patches.push({
           spaceId: topic.spaceId,
-          topicId: topic.id,
           patchType: KnowledgePatchType.NEW_RECIPE,
           proposedChanges: {
             name: analysis.recipeProposal.name,
@@ -522,7 +511,6 @@ export class DistillationService {
       }
 
       this.logger.info('Determined new artifacts', {
-        topicId: topic.id,
         newStandard: analysis.createStandard,
         newRecipe: analysis.createRecipe,
       });
@@ -530,7 +518,6 @@ export class DistillationService {
       return patches;
     } catch (error) {
       this.logger.error('Failed to determine new artifacts', {
-        topicId: topic.id,
         error: error instanceof Error ? error.message : String(error),
       });
       return [];

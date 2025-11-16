@@ -49,6 +49,21 @@ describe('LearningsAdapter', () => {
       getKnowledgePatchService: jest
         .fn()
         .mockReturnValue(knowledgePatchService),
+      getTopicRepository: jest.fn().mockReturnValue({
+        add: jest.fn(),
+        findById: jest.fn(),
+        deleteById: jest.fn(),
+        restoreById: jest.fn(),
+        findBySpaceId: jest.fn(),
+        updateStatus: jest.fn(),
+        findPendingDigestion: jest.fn(),
+      }),
+      getTopicKnowledgePatchRepository: jest.fn().mockReturnValue({
+        linkTopicToPatch: jest.fn(),
+        linkTopicToPatches: jest.fn(),
+        findPatchIdsByTopicId: jest.fn(),
+        findTopicIdsByPatchId: jest.fn(),
+      }),
       initializePatchApplicationService: jest.fn(),
       getPatchApplicationService: jest.fn().mockReturnValue(null),
     } as unknown as jest.Mocked<LearningsServices>;

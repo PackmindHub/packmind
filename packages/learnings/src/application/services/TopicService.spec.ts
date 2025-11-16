@@ -8,6 +8,7 @@ import {
   TopicId,
   SpaceId,
   TopicCaptureContext,
+  TopicStatus,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { topicFactory } from '../../../test/topicFactory';
@@ -26,6 +27,8 @@ describe('TopicService', () => {
       deleteById: jest.fn(),
       restoreById: jest.fn(),
       findBySpaceId: jest.fn(),
+      updateStatus: jest.fn(),
+      findPendingDigestion: jest.fn(),
     };
 
     stubbedLogger = stubLogger();
@@ -61,6 +64,7 @@ describe('TopicService', () => {
       savedTopic = {
         id: createTopicId(uuidv4()),
         ...topicData,
+        status: TopicStatus.PENDING,
         createdAt: now,
         updatedAt: now,
       };

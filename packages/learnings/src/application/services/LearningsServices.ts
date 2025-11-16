@@ -1,6 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import { IRecipesPort, IStandardsPort } from '@packmind/types';
 import { ILearningsRepositories } from '../../domain/repositories/ILearningsRepositories';
+import { ITopicRepository } from '../../domain/repositories/ITopicRepository';
 import { ITopicKnowledgePatchRepository } from '../../domain/repositories/ITopicKnowledgePatchRepository';
 import { KnowledgePatchService } from './KnowledgePatchService';
 import { PatchApplicationService } from './PatchApplicationService';
@@ -11,6 +12,7 @@ const origin = 'LearningsServices';
 export class LearningsServices {
   private readonly topicService: TopicService;
   private readonly knowledgePatchService: KnowledgePatchService;
+  private readonly topicRepository: ITopicRepository;
   private readonly topicKnowledgePatchRepository: ITopicKnowledgePatchRepository;
   private patchApplicationService: PatchApplicationService | null = null;
 
@@ -20,10 +22,9 @@ export class LearningsServices {
   ) {
     logger.info('Initializing LearningsServices');
 
-    this.topicService = new TopicService(
-      learningsRepositories.getTopicRepository(),
-      logger,
-    );
+    this.topicRepository = learningsRepositories.getTopicRepository();
+
+    this.topicService = new TopicService(this.topicRepository, logger);
 
     this.knowledgePatchService = new KnowledgePatchService(
       learningsRepositories.getKnowledgePatchRepository(),
@@ -52,6 +53,10 @@ export class LearningsServices {
 
   getKnowledgePatchService(): KnowledgePatchService {
     return this.knowledgePatchService;
+  }
+
+  getTopicRepository(): ITopicRepository {
+    return this.topicRepository;
   }
 
   getTopicKnowledgePatchRepository(): ITopicKnowledgePatchRepository {

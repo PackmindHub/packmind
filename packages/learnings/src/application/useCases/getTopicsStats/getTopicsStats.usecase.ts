@@ -3,6 +3,7 @@ import {
   GetTopicsStatsCommand,
   GetTopicsStatsResponse,
   IGetTopicsStatsUseCase,
+  TopicStatus,
 } from '@packmind/types';
 import { TopicService } from '../../services/TopicService';
 import { KnowledgePatchService } from '../../services/KnowledgePatchService';
@@ -31,17 +32,9 @@ export class GetTopicsStatsUsecase implements IGetTopicsStatsUseCase {
         command.spaceId,
       );
 
-      // Get all patches for the space
-      const patches = await this.knowledgePatchService.listPatchesBySpace(
-        command.spaceId,
-      );
-
-      // Get unique topic IDs that have patches
-      const processedTopicIds = new Set(patches.map((patch) => patch.topicId));
-
-      // Count pending topics (topics without any patches)
+      // Count pending topics (topics with status PENDING)
       const pendingTopics = topics.filter(
-        (topic) => !processedTopicIds.has(topic.id),
+        (topic) => topic.status === TopicStatus.PENDING,
       ).length;
 
       this.logger.info('Topics stats calculated', {

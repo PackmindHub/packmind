@@ -155,7 +155,7 @@ export class LearningsAdapter
     this.distillTopicUsecase = new DistillTopicUsecase(
       this.learningsServices.getTopicService(),
       this.learningsServices.getKnowledgePatchService(),
-      this.learningsServices.getTopicService()['topicRepository'],
+      this.learningsServices.getTopicRepository(),
       this.learningsServices.getTopicKnowledgePatchRepository(),
       this.standardsPort,
       this.recipesPort,
