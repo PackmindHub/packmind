@@ -83,13 +83,8 @@ describe('JunieDeployer', () => {
     it('handles empty recipe list', async () => {
       const result = await deployer.deployRecipes([], mockGitRepo, mockTarget);
 
-      expect(result.createOrUpdate).toHaveLength(1);
+      expect(result.createOrUpdate).toHaveLength(0);
       expect(result.delete).toHaveLength(0);
-
-      const guidelinesFile = result.createOrUpdate[0];
-      expect(guidelinesFile.content).toContain('# Packmind Recipes');
-      expect(guidelinesFile.content).toContain('🚨 **MANDATORY STEP** 🚨');
-      expect(guidelinesFile.content).toContain('ALWAYS READ');
     });
 
     it('includes multiple recipes in instructions', async () => {
@@ -184,14 +179,8 @@ describe('JunieDeployer', () => {
         mockTarget,
       );
 
-      expect(result.createOrUpdate).toHaveLength(1);
+      expect(result.createOrUpdate).toHaveLength(0);
       expect(result.delete).toHaveLength(0);
-
-      const guidelinesFile = result.createOrUpdate[0];
-      expect(guidelinesFile.content).not.toContain('# Packmind Standards');
-      expect(guidelinesFile.content).not.toContain(
-        GenericStandardSectionWriter.standardsIntroduction,
-      );
     });
 
     it('works with StandardsHexa dependency', async () => {

@@ -393,11 +393,9 @@ describe('SingleFileDeployer', () => {
       );
 
       // Should not throw error and should handle gracefully
-      // Even with empty recipes, the section writer will generate template content, so we expect 1 file
-      expect(result.createOrUpdate).toHaveLength(1);
+      // With empty recipes, no file updates should be generated
+      expect(result.createOrUpdate).toHaveLength(0);
       expect(result.delete).toHaveLength(0);
-      expect(result.createOrUpdate[0].path).toBe('jetbrains/TEST_AGENT.md');
-      expect(result.createOrUpdate[0].content).toContain('Packmind recipes');
     });
 
     it('handles missing gitHexa gracefully', async () => {
@@ -411,11 +409,9 @@ describe('SingleFileDeployer', () => {
       );
 
       // Should not throw error and should handle gracefully
-      // Even with empty recipes, the section writer will generate template content, so we expect 1 file
-      expect(result.createOrUpdate).toHaveLength(1);
+      // With empty recipes, no file updates should be generated
+      expect(result.createOrUpdate).toHaveLength(0);
       expect(result.delete).toHaveLength(0);
-      expect(result.createOrUpdate[0].path).toBe('jetbrains/TEST_AGENT.md');
-      expect(result.createOrUpdate[0].content).toContain('Packmind recipes');
     });
   });
 
@@ -543,7 +539,7 @@ Footer content.`;
       expect(result.createOrUpdate).toHaveLength(1);
       const content = result.createOrUpdate[0].content;
 
-      expect(content).toContain('<!-- start: Packmind recipes -->');
+      expect(content).not.toContain('<!-- start: Packmind recipes -->');
       expect(content).toContain('<!-- start: Packmind standards -->');
       expect(content).toContain('## Standard: Test Standard');
     });
@@ -555,7 +551,7 @@ Footer content.`;
       const content = result.createOrUpdate[0].content;
 
       expect(content).toContain('<!-- start: Packmind recipes -->');
-      expect(content).toContain('<!-- start: Packmind standards -->');
+      expect(content).not.toContain('<!-- start: Packmind standards -->');
       expect(content).toContain(
         '[Test Recipe](.packmind/recipes/test-recipe.md)',
       );
@@ -564,13 +560,7 @@ Footer content.`;
     it('handles both empty arrays', async () => {
       const result = await deployer.deployArtifacts([], [], '');
 
-      expect(result.createOrUpdate).toHaveLength(1);
-      const content = result.createOrUpdate[0].content;
-
-      expect(content).toContain('<!-- start: Packmind recipes -->');
-      expect(content).toContain('<!-- end: Packmind recipes -->');
-      expect(content).toContain('<!-- start: Packmind standards -->');
-      expect(content).toContain('<!-- end: Packmind standards -->');
+      expect(result.createOrUpdate).toHaveLength(0);
     });
 
     it('handles existing content with only recipe section', async () => {
@@ -650,6 +640,82 @@ More custom content.`;
       expect(content).toContain('More custom content.');
       expect(content).toContain('<!-- start: Packmind recipes -->');
       expect(content).toContain('<!-- start: Packmind standards -->');
+    });
+
+    it('removes recipe section when deploying empty recipes', async () => {
+      const existingContent = `# Configuration
+
+<!-- start: Packmind recipes -->
+Old recipes content
+<!-- end: Packmind recipes -->
+
+Custom content.`;
+
+      const result = await deployer.deployArtifacts(
+        [],
+        mockStandardVersions,
+        existingContent,
+      );
+
+      expect(result.createOrUpdate).toHaveLength(1);
+      const content = result.createOrUpdate[0].content;
+
+      expect(content).toContain('# Configuration');
+      expect(content).toContain('Custom content.');
+      expect(content).not.toContain('<!-- start: Packmind recipes -->');
+      expect(content).not.toContain('Old recipes content');
+      expect(content).toContain('<!-- start: Packmind standards -->');
+    });
+
+    it('removes standards section when deploying empty standards', async () => {
+      const existingContent = `# Configuration
+
+<!-- start: Packmind standards -->
+Old standards content
+<!-- end: Packmind standards -->
+
+Custom content.`;
+
+      const result = await deployer.deployArtifacts(
+        mockRecipeVersions,
+        [],
+        existingContent,
+      );
+
+      expect(result.createOrUpdate).toHaveLength(1);
+      const content = result.createOrUpdate[0].content;
+
+      expect(content).toContain('# Configuration');
+      expect(content).toContain('Custom content.');
+      expect(content).toContain('<!-- start: Packmind recipes -->');
+      expect(content).not.toContain('<!-- start: Packmind standards -->');
+      expect(content).not.toContain('Old standards content');
+    });
+
+    it('removes both sections when deploying empty arrays over existing content', async () => {
+      const existingContent = `# Configuration
+
+<!-- start: Packmind recipes -->
+Old recipes
+<!-- end: Packmind recipes -->
+
+<!-- start: Packmind standards -->
+Old standards
+<!-- end: Packmind standards -->
+
+Custom content.`;
+
+      const result = await deployer.deployArtifacts([], [], existingContent);
+
+      expect(result.createOrUpdate).toHaveLength(1);
+      const content = result.createOrUpdate[0].content;
+
+      expect(content).toContain('# Configuration');
+      expect(content).toContain('Custom content.');
+      expect(content).not.toContain('<!-- start: Packmind recipes -->');
+      expect(content).not.toContain('<!-- start: Packmind standards -->');
+      expect(content).not.toContain('Old recipes');
+      expect(content).not.toContain('Old standards');
     });
 
     it('fetches rules for standards when not present', async () => {

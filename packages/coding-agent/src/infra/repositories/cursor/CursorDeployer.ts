@@ -57,8 +57,8 @@ export class CursorDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Only create file if content was updated
-    if (updatedContent !== existingContent) {
+    // Only create file if content is not empty and was updated
+    if (updatedContent !== '' && updatedContent !== existingContent) {
       const targetPrefixedPath = getTargetPrefixedPath(
         CursorDeployer.RECIPES_INDEX_PATH,
         target,
@@ -118,10 +118,13 @@ export class CursorDeployer implements ICodingAgentDeployer {
     // Generate content without target prefixing
     const content = this.generateRecipeContentSimple(recipeVersions);
 
-    fileUpdates.createOrUpdate.push({
-      path: CursorDeployer.RECIPES_INDEX_PATH,
-      content,
-    });
+    // Only add file if there is content
+    if (content !== '') {
+      fileUpdates.createOrUpdate.push({
+        path: CursorDeployer.RECIPES_INDEX_PATH,
+        content,
+      });
+    }
 
     return fileUpdates;
   }
@@ -167,12 +170,14 @@ export class CursorDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Generate recipes index file
+    // Generate recipes index file only if there are recipes
     const recipesContent = this.generateRecipeContentSimple(recipeVersions);
-    fileUpdates.createOrUpdate.push({
-      path: CursorDeployer.RECIPES_INDEX_PATH,
-      content: recipesContent,
-    });
+    if (recipesContent !== '') {
+      fileUpdates.createOrUpdate.push({
+        path: CursorDeployer.RECIPES_INDEX_PATH,
+        content: recipesContent,
+      });
+    }
 
     // Generate individual Cursor configuration files for each standard
     for (const standardVersion of standardVersions) {
@@ -193,6 +198,11 @@ export class CursorDeployer implements ICodingAgentDeployer {
   private generateRecipeContentSimple(recipeVersions: RecipeVersion[]): string {
     // Generate recipes list
     const recipesSection = this.generateRecipesSection(recipeVersions);
+
+    // If no recipes, return empty string to indicate no file should be created
+    if (recipesSection === '') {
+      return '';
+    }
 
     const packmindInstructions =
       GenericRecipeSectionWriter.generateRecipesSection({
@@ -254,6 +264,11 @@ ${packmindInstructions}`;
     // Generate recipes list
     const recipesSection = this.generateRecipesSection(recipeVersions);
 
+    // If no recipes, return empty string to indicate no file should be created
+    if (recipesSection === '') {
+      return '';
+    }
+
     const packmindInstructions =
       GenericRecipeSectionWriter.generateRecipesSection({
         agentName: 'Cursor',
@@ -274,7 +289,7 @@ ${packmindInstructions}`;
    */
   private generateRecipesSection(recipeVersions: RecipeVersion[]): string {
     if (recipeVersions.length === 0) {
-      return `No recipes are currently available for this repository.`;
+      return '';
     }
 
     return recipeVersions

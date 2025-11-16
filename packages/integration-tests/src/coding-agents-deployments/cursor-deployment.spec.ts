@@ -490,16 +490,8 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
         defaultTarget,
       );
 
-      expect(fileUpdates.createOrUpdate).toHaveLength(1);
+      expect(fileUpdates.createOrUpdate).toHaveLength(0);
       expect(fileUpdates.delete).toHaveLength(0);
-
-      const cursorFile = fileUpdates.createOrUpdate[0];
-      expect(cursorFile.path).toBe('.cursor/rules/packmind/recipes-index.mdc');
-      expect(cursorFile.content).toContain('# Packmind Recipes');
-      expect(cursorFile.content).toContain('🚨 **MANDATORY STEP** 🚨');
-      expect(cursorFile.content).toContain(
-        'No recipes are currently available',
-      );
     });
 
     it('handles empty standards list gracefully', async () => {
