@@ -39,25 +39,38 @@ export class PackageRepository
   }
 
   async findBySpaceId(spaceId: SpaceId): Promise<Package[]> {
-    this.logger.info('Finding packages by space ID', {
-      spaceId,
-    });
+    this.logger.info('Finding packages by space ID', { spaceId });
 
     try {
-      const packages = await this.repository
+      const results = await this.repository
         .createQueryBuilder('package')
-        .leftJoinAndSelect('package.recipes', 'recipes')
-        .leftJoinAndSelect('package.standards', 'standards')
+        .select([
+          'package.id as id',
+          'package.name as name',
+          'package.slug as slug',
+          'package.description as description',
+          'package.spaceId as "spaceId"',
+          'package.createdBy as "createdBy"',
+          'package.createdAt as "createdAt"',
+          'package.updatedAt as "updatedAt"',
+          'package.deletedAt as "deletedAt"',
+          'package.deletedBy as "deletedBy"',
+          `COALESCE(array_agg(DISTINCT pr.recipe_id) FILTER (WHERE pr.recipe_id IS NOT NULL), '{}') as recipes`,
+          `COALESCE(array_agg(DISTINCT ps.standard_id) FILTER (WHERE ps.standard_id IS NOT NULL), '{}') as standards`,
+        ])
+        .leftJoin('package_recipes', 'pr', 'package.id = pr.package_id')
+        .leftJoin('package_standards', 'ps', 'package.id = ps.package_id')
         .where('package.spaceId = :spaceId', { spaceId })
+        .groupBy('package.id')
         .orderBy('package.createdAt', 'DESC')
-        .getMany();
+        .getRawMany();
 
       this.logger.info('Packages found by space ID successfully', {
         spaceId,
-        count: packages.length,
+        count: results.length,
       });
 
-      return packages;
+      return results;
     } catch (error) {
       this.logger.error('Failed to find packages by space ID', {
         spaceId,
@@ -75,21 +88,36 @@ export class PackageRepository
     });
 
     try {
-      const packages = await this.repository
+      const results = await this.repository
         .createQueryBuilder('package')
-        .leftJoinAndSelect('package.recipes', 'recipes')
-        .leftJoinAndSelect('package.standards', 'standards')
-        .innerJoin('spaces', 'space', 'package.spaceId = space.id')
-        .where('space.organizationId = :organizationId', { organizationId })
+        .select([
+          'package.id as id',
+          'package.name as name',
+          'package.slug as slug',
+          'package.description as description',
+          'package.spaceId as "spaceId"',
+          'package.createdBy as "createdBy"',
+          'package.createdAt as "createdAt"',
+          'package.updatedAt as "updatedAt"',
+          'package.deletedAt as "deletedAt"',
+          'package.deletedBy as "deletedBy"',
+          `COALESCE(array_agg(DISTINCT pr.recipe_id) FILTER (WHERE pr.recipe_id IS NOT NULL), '{}') as recipes`,
+          `COALESCE(array_agg(DISTINCT ps.standard_id) FILTER (WHERE ps.standard_id IS NOT NULL), '{}') as standards`,
+        ])
+        .innerJoin('spaces', 's', 'package.spaceId = s.id')
+        .leftJoin('package_recipes', 'pr', 'package.id = pr.package_id')
+        .leftJoin('package_standards', 'ps', 'package.id = ps.package_id')
+        .where('s.organizationId = :organizationId', { organizationId })
+        .groupBy('package.id')
         .orderBy('package.createdAt', 'DESC')
-        .getMany();
+        .getRawMany();
 
       this.logger.info('Packages found by organization ID successfully', {
         organizationId,
-        count: packages.length,
+        count: results.length,
       });
 
-      return packages;
+      return results;
     } catch (error) {
       this.logger.error('Failed to find packages by organization ID', {
         organizationId,
@@ -103,23 +131,35 @@ export class PackageRepository
     this.logger.info('Finding package by ID', { packageId: id });
 
     try {
-      const pkg = await this.repository
+      const results = await this.repository
         .createQueryBuilder('package')
-        .leftJoinAndSelect('package.recipes', 'recipes')
-        .leftJoinAndSelect('package.standards', 'standards')
+        .select([
+          'package.id as id',
+          'package.name as name',
+          'package.slug as slug',
+          'package.description as description',
+          'package.spaceId as "spaceId"',
+          'package.createdBy as "createdBy"',
+          'package.createdAt as "createdAt"',
+          'package.updatedAt as "updatedAt"',
+          'package.deletedAt as "deletedAt"',
+          'package.deletedBy as "deletedBy"',
+          `COALESCE(array_agg(DISTINCT pr.recipe_id) FILTER (WHERE pr.recipe_id IS NOT NULL), '{}') as recipes`,
+          `COALESCE(array_agg(DISTINCT ps.standard_id) FILTER (WHERE ps.standard_id IS NOT NULL), '{}') as standards`,
+        ])
+        .leftJoin('package_recipes', 'pr', 'package.id = pr.package_id')
+        .leftJoin('package_standards', 'ps', 'package.id = ps.package_id')
         .where('package.id = :id', { id })
-        .getOne();
+        .groupBy('package.id')
+        .getRawMany();
 
-      if (!pkg) {
+      if (results.length === 0) {
         this.logger.info('Package not found', { packageId: id });
         return null;
       }
 
-      this.logger.info('Package found by ID successfully', {
-        packageId: id,
-      });
-
-      return pkg;
+      this.logger.info('Package found by ID successfully', { packageId: id });
+      return results[0];
     } catch (error) {
       this.logger.error('Failed to find package by ID', {
         packageId: id,
@@ -145,19 +185,101 @@ export class PackageRepository
     try {
       const packages = await this.repository
         .createQueryBuilder('package')
-        .leftJoinAndSelect('package.recipes', 'recipes')
-        .leftJoinAndSelect('package.standards', 'standards')
         .where('package.slug IN (:...slugs)', { slugs })
         .orderBy('package.createdAt', 'DESC')
         .getMany();
 
+      if (packages.length === 0) {
+        return [];
+      }
+
+      const packageIds = packages.map((p) => p.id);
+
+      const recipeRelations = await this.repository.manager
+        .createQueryBuilder()
+        .select(['pr.package_id as package_id', 'pr.recipe_id as recipe_id'])
+        .from('package_recipes', 'pr')
+        .where('pr.package_id IN (:...packageIds)', { packageIds })
+        .getRawMany();
+
+      const standardRelations = await this.repository.manager
+        .createQueryBuilder()
+        .select([
+          'ps.package_id as package_id',
+          'ps.standard_id as standard_id',
+        ])
+        .from('package_standards', 'ps')
+        .where('ps.package_id IN (:...packageIds)', { packageIds })
+        .getRawMany();
+
+      const uniqueRecipeIds = [
+        ...new Set(recipeRelations.map((r) => r.recipe_id)),
+      ];
+      const uniqueStandardIds = [
+        ...new Set(standardRelations.map((s) => s.standard_id)),
+      ];
+
+      const recipes =
+        uniqueRecipeIds.length > 0
+          ? await this.repository.manager
+              .createQueryBuilder()
+              .select('recipe')
+              .from('recipes', 'recipe')
+              .where('recipe.id IN (:...recipeIds)', {
+                recipeIds: uniqueRecipeIds,
+              })
+              .getMany()
+          : [];
+
+      const standards =
+        uniqueStandardIds.length > 0
+          ? await this.repository.manager
+              .createQueryBuilder()
+              .select('standard')
+              .from('standards', 'standard')
+              .where('standard.id IN (:...standardIds)', {
+                standardIds: uniqueStandardIds,
+              })
+              .getMany()
+          : [];
+
+      const recipesMap = new Map(recipes.map((r) => [r['id'], r]));
+      const standardsMap = new Map(standards.map((s) => [s['id'], s]));
+
+      const recipesByPackage = recipeRelations.reduce(
+        (acc, rel) => {
+          if (!acc[rel.package_id]) acc[rel.package_id] = [];
+          const recipe = recipesMap.get(rel.recipe_id);
+          if (recipe) acc[rel.package_id].push(recipe);
+          return acc;
+        },
+        {} as Record<string, typeof recipes>,
+      );
+
+      const standardsByPackage = standardRelations.reduce(
+        (acc, rel) => {
+          if (!acc[rel.package_id]) acc[rel.package_id] = [];
+          const standard = standardsMap.get(rel.standard_id);
+          if (standard) acc[rel.package_id].push(standard);
+          return acc;
+        },
+        {} as Record<string, typeof standards>,
+      );
+
+      const packagesWithArtefacts: PackageWithArtefacts[] = packages.map(
+        (pkg) => ({
+          ...pkg,
+          recipes: recipesByPackage[pkg.id] || [],
+          standards: standardsByPackage[pkg.id] || [],
+        }),
+      );
+
       this.logger.info('Packages found by slugs successfully', {
         requestedCount: slugs.length,
-        foundCount: packages.length,
+        foundCount: packagesWithArtefacts.length,
       });
 
-      // TypeORM loads full Recipe[] and Standard[] with leftJoinAndSelect
-      return packages as unknown as PackageWithArtefacts[];
+      return packagesWithArtefacts;
     } catch (error) {
       this.logger.error('Failed to find packages by slugs', {
         slugs,

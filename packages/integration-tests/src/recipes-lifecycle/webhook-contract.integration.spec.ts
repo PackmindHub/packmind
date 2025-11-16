@@ -289,9 +289,10 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
             .spyOn(gitAdapter, 'commitToGit')
             .mockResolvedValue(await createGitCommit());
 
-          await testApp.deploymentsHexa.getAdapter().publishRecipes({
-            gitRepoIds: [gitRepo.id],
+          await testApp.deploymentsHexa.getAdapter().publishArtifacts({
+            targetIds: [dataFactory.target.id],
             recipeVersionIds: [await dataQuery.getRecipeVersionId(recipe)],
+            standardVersionIds: [],
             ...dataFactory.packmindCommand(),
           });
 
@@ -466,9 +467,10 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
               .spyOn(gitAdapter, 'commitToGit')
               .mockResolvedValue(await createGitCommit());
 
-            await testApp.deploymentsHexa.getAdapter().publishRecipes({
-              gitRepoIds: [gitRepo.id],
+            await testApp.deploymentsHexa.getAdapter().publishArtifacts({
+              targetIds: [dataFactory.target.id],
               recipeVersionIds: [await dataQuery.getRecipeVersionId(recipe2)],
+              standardVersionIds: [],
               ...dataFactory.packmindCommand(),
             });
 
@@ -797,25 +799,29 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
           };
 
           // Create initial deployment to multiple targets
-          const publishRecipesSpy = jest
-            .spyOn(testApp.deploymentsHexa.getAdapter(), 'publishRecipes')
-            .mockResolvedValueOnce([
-              {
-                id: createRecipesDeploymentId('deployment-initial'),
-                recipeVersions: [initialVersions[0]],
-                target: jetbrainsTarget,
-                status: DistributionStatus.success,
-                createdAt: new Date().toISOString(),
-                authorId: dataFactory.user.id,
-                organizationId: dataFactory.organization.id,
-                renderModes: [],
-              },
-            ]);
+          const publishArtifactsSpy = jest
+            .spyOn(testApp.deploymentsHexa.getAdapter(), 'publishArtifacts')
+            .mockResolvedValueOnce({
+              recipeDeployments: [
+                {
+                  id: createRecipesDeploymentId('deployment-initial'),
+                  recipeVersions: [initialVersions[0]],
+                  target: jetbrainsTarget,
+                  status: DistributionStatus.success,
+                  createdAt: new Date().toISOString(),
+                  authorId: dataFactory.user.id,
+                  organizationId: dataFactory.organization.id,
+                  renderModes: [],
+                },
+              ],
+              standardDeployments: [],
+            });
 
           // Deploy recipe V1 to both targets initially
-          await testApp.deploymentsHexa.getAdapter().publishRecipes({
-            gitRepoIds: [gitRepo.id],
+          await testApp.deploymentsHexa.getAdapter().publishArtifacts({
+            targetIds: [dataFactory.target.id],
             recipeVersionIds: [initialVersions[0].id],
+            standardVersionIds: [],
             ...dataFactory.packmindCommand(),
           });
 
@@ -844,19 +850,22 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
             .mockResolvedValue([jetbrainsTarget, vscodeTarget]);
 
           // Reset spy to track new deployment calls
-          publishRecipesSpy.mockReset();
-          publishRecipesSpy.mockResolvedValue([
-            {
-              id: createRecipesDeploymentId('deployment-target-specific'),
-              recipeVersions: [],
-              target: jetbrainsTarget,
-              status: DistributionStatus.failure,
-              createdAt: new Date().toISOString(),
-              authorId: createUserId('system'), // webhook deployments use system user
-              organizationId: dataFactory.organization.id,
-              renderModes: [],
-            },
-          ]);
+          publishArtifactsSpy.mockReset();
+          publishArtifactsSpy.mockResolvedValue({
+            recipeDeployments: [
+              {
+                id: createRecipesDeploymentId('deployment-target-specific'),
+                recipeVersions: [],
+                target: jetbrainsTarget,
+                status: DistributionStatus.failure,
+                createdAt: new Date().toISOString(),
+                authorId: createUserId('system'), // webhook deployments use system user
+                organizationId: dataFactory.organization.id,
+                renderModes: [],
+              },
+            ],
+            standardDeployments: [],
+          });
 
           // Mock webhook response with updated content in /jetbrains/ target path
           const updatedContent = `# Target Path Test Recipe\\n\\nUpdated content in /jetbrains/ target from ${config.providerName} webhook V2.`;
@@ -899,16 +908,16 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
           expect(newVersion?.content).toBe(updatedContent);
 
           // Verify that deployment was triggered automatically after recipe update
-          expect(publishRecipesSpy).toHaveBeenCalledTimes(1);
-          const deploymentCall = publishRecipesSpy.mock.calls[0][0];
+          expect(publishArtifactsSpy).toHaveBeenCalledTimes(1);
+          const deploymentCall = publishArtifactsSpy.mock.calls[0][0];
 
           // Desired implementation (should use targetIds for target-specific deployment):
           expect(deploymentCall.targetIds).toBeDefined();
           expect(deploymentCall.targetIds).toEqual([jetbrainsTarget.id]);
-          expect(deploymentCall.gitRepoIds).toBeUndefined();
 
           expect(deploymentCall.recipeVersionIds).toHaveLength(1);
           expect(deploymentCall.recipeVersionIds[0]).toBe(newVersion?.id);
+          expect(deploymentCall.standardVersionIds).toEqual([]);
           expect(deploymentCall.organizationId).toBe(
             dataFactory.organization.id,
           );

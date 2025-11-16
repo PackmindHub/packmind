@@ -199,6 +199,51 @@ export const useDeployStandardsMutation = () => {
   });
 };
 
+export const DEPLOY_PACKAGES_MUTATION_KEY = 'deployPackages';
+export const useDeployPackagesMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: [DEPLOY_PACKAGES_MUTATION_KEY],
+    mutationFn: async ({
+      packageIds,
+      targetIds,
+    }: {
+      packageIds: PackageId[];
+      targetIds: TargetId[];
+    }) => {
+      console.log('Deploying packages to targets...');
+      return deploymentsGateways.publishPackages({
+        packageIds,
+        targetIds,
+      });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: LIST_RECIPE_DEPLOYMENTS_KEY,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: LIST_STANDARD_DEPLOYMENTS_KEY,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: [GET_ONBOARDING_STATUS_KEY],
+      });
+    },
+    onError: async (error, variables, context) => {
+      console.error('Error deploying packages to git');
+      console.log('error: ', error);
+      console.log('variables: ', variables);
+      console.log('context: ', context);
+    },
+  });
+};
+
 export const useGetTargetsByGitRepoQuery = (gitRepoId: GitRepoId) => {
   return useQuery({
     queryKey: [...GET_TARGETS_BY_GIT_REPO_KEY, gitRepoId],
@@ -404,33 +449,6 @@ export const useUpdatePackageMutation = () => {
     },
     onError: (error) => {
       console.error('Error updating package:', error);
-    },
-  });
-};
-
-export const DELETE_PACKAGE_MUTATION_KEY = 'deletePackage';
-export const useDeletePackageMutation = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationKey: [DELETE_PACKAGE_MUTATION_KEY],
-    mutationFn: async (command: {
-      organizationId: OrganizationId;
-      spaceId: SpaceId;
-      packageId: PackageId;
-    }) => {
-      return deploymentsGateways.deletePackage(command);
-    },
-    onSuccess: async (data, variables) => {
-      await queryClient.invalidateQueries({
-        queryKey: [...GET_PACKAGE_BY_ID_KEY, variables.packageId],
-      });
-      await queryClient.invalidateQueries({
-        queryKey: LIST_PACKAGES_BY_SPACE_KEY,
-      });
-    },
-    onError: (error) => {
-      console.error('Error deleting package:', error);
     },
   });
 };

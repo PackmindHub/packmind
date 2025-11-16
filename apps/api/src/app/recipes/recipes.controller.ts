@@ -12,7 +12,6 @@ import {
 import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
-  GitRepoId,
   RecipeId,
   RecipeVersion,
   RecipeVersionId,
@@ -134,75 +133,6 @@ export class RecipesController {
         {
           recipeVersionIds: body.recipeVersionIds,
           targetIds: body.targetIds,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
-  }
-
-  @Post(':versionId/publish')
-  async publishRecipeToGit(
-    @Param('versionId') versionId: RecipeVersionId,
-    @Body() body: { repositoryId: GitRepoId },
-    @Req() request: Request,
-  ): Promise<void> {
-    this.logger.info(
-      'POST /recipes/:versionId/publish - Publishing recipe to Git',
-      {
-        recipeVersionId: versionId,
-        repositoryId: body.repositoryId,
-      },
-    );
-
-    try {
-      // Validate repository ID
-      if (!body.repositoryId) {
-        this.logger.error(
-          'POST /recipes/:versionId/publish - Repository ID is required',
-          {
-            recipeVersionId: versionId,
-          },
-        );
-        throw new BadRequestException('Repository ID is required');
-      }
-
-      const accessToken = request.cookies?.auth_token;
-      const me = await this.authService.getMe(accessToken);
-      if (!me.authenticated || !me.user || !me.organization) {
-        this.logger.error(
-          'POST /recipes/:versionId/publish - User not authenticated',
-          {
-            recipeVersionId: versionId,
-          },
-        );
-        throw new BadRequestException('User not authenticated');
-      }
-
-      await this.recipesService.publishRecipeToGit(
-        [versionId],
-        [body.repositoryId],
-        me.user.id,
-        me.organization.id,
-      );
-
-      this.logger.info(
-        'POST /recipes/:versionId/publish - Recipe published to Git successfully',
-        {
-          recipeVersionId: versionId,
-          repositoryId: body.repositoryId,
-          authorId: me.user.id,
-          organizationId: me.organization.id,
-        },
-      );
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'POST /recipes/:versionId/publish - Failed to publish recipe to Git',
-        {
-          recipeVersionId: versionId,
-          repositoryId: body.repositoryId,
           error: errorMessage,
         },
       );

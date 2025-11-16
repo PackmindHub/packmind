@@ -3,6 +3,8 @@ import {
   PrepareRecipesDeploymentResponse,
   PrepareStandardsDeploymentCommand,
   PrepareStandardsDeploymentResponse,
+  RenderArtifactsCommand,
+  RenderArtifactsResponse,
 } from '../contracts';
 import { ICodingAgentDeployerRegistry } from '../ICodingAgentDeployerRegistry';
 
@@ -16,6 +18,10 @@ export interface ICodingAgentPort {
   prepareStandardsDeployment(
     command: PrepareStandardsDeploymentCommand,
   ): Promise<PrepareStandardsDeploymentResponse>;
+
+  renderArtifacts(
+    command: RenderArtifactsCommand,
+  ): Promise<RenderArtifactsResponse>;
 
   /**
    * Get the deployer registry for direct access to coding agent deployers

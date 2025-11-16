@@ -13,6 +13,10 @@ export class GenericRecipeSectionWriter extends GenericSectionWriter<GenericReci
   protected generateSectionContent(
     opts: GenericRecipeSectionWriterOpts,
   ): string {
+    if (opts.recipesSection.trim() === '') {
+      return '';
+    }
+
     const content: string[] = [
       `# Packmind Recipes
 

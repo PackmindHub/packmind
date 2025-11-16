@@ -57,6 +57,7 @@ describe('LintFilesInDirectoryUseCase', () => {
       getActiveDetectionProgramsForRule: jest.fn(),
       getPullData: jest.fn(),
       listPackages: jest.fn(),
+      getPackageSummary: jest.fn(),
     };
 
     mockServices = {

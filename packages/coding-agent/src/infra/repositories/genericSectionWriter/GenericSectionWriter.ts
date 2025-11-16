@@ -19,6 +19,24 @@ export abstract class GenericSectionWriter<T extends object> {
     // Generate the new content using the abstract method
     const newContent = this.generateSectionContent(opts);
 
+    // If content is empty, remove existing section or return original content
+    if (newContent.trim() === '') {
+      const escapedStartMarker = startMarker.replace(
+        /[.*+?^${}()|[\]\\]/g,
+        '\\$&',
+      );
+      const escapedEndMarker = endMarker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const sectionPattern = new RegExp(
+        `${escapedStartMarker}[\\s\\S]*?${escapedEndMarker}\\n?`,
+        'g',
+      );
+
+      if (sectionPattern.test(opts.currentContent)) {
+        return opts.currentContent.replace(sectionPattern, '');
+      }
+      return opts.currentContent;
+    }
+
     // Create the regex pattern to find the existing section
     const escapedStartMarker = startMarker.replace(
       /[.*+?^${}()|[\]\\]/g,

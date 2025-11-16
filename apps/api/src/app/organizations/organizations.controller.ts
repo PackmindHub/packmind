@@ -12,6 +12,7 @@ import {
   OrganizationOnboardingStatus,
   IPullContentResponse,
   ListPackagesResponse,
+  GetPackageSummaryResponse,
   IAccountsPort,
   IDeploymentPort,
 } from '@packmind/types';
@@ -192,6 +193,49 @@ export class OrganizationsController {
         {
           organizationId,
           userId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Get a package summary by slug
+   * GET /organizations/:orgId/packages/:slug
+   */
+  @Get('packages/:slug')
+  async getPackageSummary(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('slug') slug: string,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<GetPackageSummaryResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'GET /organizations/:orgId/packages/:slug - Getting package summary',
+      {
+        organizationId,
+        userId,
+        slug,
+      },
+    );
+
+    try {
+      return await this.deploymentAdapter.getPackageSummary({
+        userId,
+        organizationId,
+        slug,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/packages/:slug - Failed to get package summary',
+        {
+          organizationId,
+          userId,
+          slug,
           error: errorMessage,
         },
       );

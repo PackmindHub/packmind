@@ -1,6 +1,7 @@
-import { command, restPositionals, string, flag } from 'cmd-ts';
+import { command, restPositionals, string, flag, option } from 'cmd-ts';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
+import { SummarizedArtifact } from '@packmind/types';
 
 export const pullCommand = command({
   name: 'pull',
@@ -11,6 +12,12 @@ export const pullCommand = command({
       long: 'list',
       description: 'List available packages',
     }),
+    show: option({
+      type: string,
+      long: 'show',
+      description: 'Show details of a specific package',
+      defaultValue: () => '',
+    }),
     packagesSlugs: restPositionals({
       type: string,
       displayName: 'packages',
@@ -18,7 +25,7 @@ export const pullCommand = command({
         'Package slugs to pull content from (e.g., backend frontend)',
     }),
   },
-  handler: async ({ list, packagesSlugs }) => {
+  handler: async ({ list, show, packagesSlugs }) => {
     // Initialize hexa and logger
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
@@ -41,6 +48,58 @@ export const pullCommand = command({
         process.exit(0);
       } catch (error) {
         console.error('\n❌ Failed to list packages:');
+        if (error instanceof Error) {
+          console.error(`   ${error.message}`);
+        } else {
+          console.error(`   ${String(error)}`);
+        }
+        process.exit(1);
+      }
+    }
+
+    // Handle --show option
+    if (show) {
+      try {
+        console.log(`Fetching package details for '${show}'...\n`);
+        const pkg = await packmindCliHexa.getPackageBySlug({ slug: show });
+
+        // Display package name and slug
+        console.log(`${pkg.name} (${pkg.slug}):\n`);
+
+        // Display description if available
+        if (pkg.description) {
+          console.log(`${pkg.description}\n`);
+        }
+
+        // Display standards
+        if (pkg.standards && pkg.standards.length > 0) {
+          console.log('Standards:');
+          pkg.standards.forEach((standard: SummarizedArtifact) => {
+            if (standard.summary) {
+              console.log(`  - ${standard.name}: ${standard.summary}`);
+            } else {
+              console.log(`  - ${standard.name}`);
+            }
+          });
+          console.log('');
+        }
+
+        // Display recipes
+        if (pkg.recipes && pkg.recipes.length > 0) {
+          console.log('Recipes:');
+          pkg.recipes.forEach((recipe: SummarizedArtifact) => {
+            if (recipe.summary) {
+              console.log(`  - ${recipe.name}: ${recipe.summary}`);
+            } else {
+              console.log(`  - ${recipe.name}`);
+            }
+          });
+          console.log('');
+        }
+
+        process.exit(0);
+      } catch (error) {
+        console.error('\n❌ Failed to fetch package details:');
         if (error instanceof Error) {
           console.error(`   ${error.message}`);
         } else {

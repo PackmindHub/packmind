@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
 import {
-  GitRepoId,
   IDeploymentPort,
   IRecipesPort,
   OrganizationId,
@@ -128,46 +127,24 @@ export class RecipesService {
     return this.recipesAdapter.listRecipeVersions(id);
   }
 
-  async publishRecipeToGit(
-    recipeVersionIds: RecipeVersionId[],
-    repositoryIds: GitRepoId[],
-    authorId: UserId,
-    organizationId: OrganizationId,
-  ) {
-    const deployments = await this.deploymentAdapter.publishRecipes({
-      userId: authorId,
-      organizationId,
-      recipeVersionIds,
-      gitRepoIds: repositoryIds,
-    });
-
-    return {
-      deploymentsCreated: true,
-      success: true,
-      commitsWithChangesCount: deployments.reduce(
-        (sum, deployment) => sum + (deployment.gitCommit ? 1 : 0),
-        0,
-      ),
-    };
-  }
-
   async publishRecipeToTargets(
     recipeVersionIds: RecipeVersionId[],
     targetIds: TargetId[],
     authorId: UserId,
     organizationId: OrganizationId,
   ) {
-    const deployments = await this.deploymentAdapter.publishRecipes({
+    const result = await this.deploymentAdapter.publishArtifacts({
       userId: authorId,
       organizationId,
       recipeVersionIds,
+      standardVersionIds: [],
       targetIds,
     });
 
     return {
       deploymentsCreated: true,
       success: true,
-      commitsWithChangesCount: deployments.filter(
+      commitsWithChangesCount: result.recipeDeployments.filter(
         (deployment) => deployment.gitCommit,
       ).length,
     };

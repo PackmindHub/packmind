@@ -4,8 +4,6 @@ import {
   CreatePackageResponse,
   UpdatePackageCommand,
   UpdatePackageResponse,
-  DeletePackageCommand,
-  DeletePackageResponse,
   DeletePackagesBatchCommand,
   DeletePackagesBatchResponse,
   DeploymentOverview,
@@ -17,6 +15,8 @@ import {
   ListDeploymentsByStandardCommand,
   ListPackagesBySpaceCommand,
   ListPackagesBySpaceResponse,
+  PublishArtifactsCommand,
+  PublishArtifactsResponse,
   PublishRecipesCommand,
   PublishStandardsCommand,
   PublishPackagesCommand,
@@ -72,13 +72,25 @@ export class DeploymentsService {
   async publishRecipes(
     command: PublishRecipesCommand,
   ): Promise<RecipesDeployment[]> {
-    return this.deploymentAdapter.publishRecipes(command);
+    const result: PublishArtifactsResponse =
+      await this.deploymentAdapter.publishArtifacts({
+        ...command,
+        recipeVersionIds: command.recipeVersionIds,
+        standardVersionIds: [],
+      } as PublishArtifactsCommand);
+    return result.recipeDeployments;
   }
 
   async publishStandards(
     command: PublishStandardsCommand,
   ): Promise<StandardsDeployment[]> {
-    return this.deploymentAdapter.publishStandards(command);
+    const result: PublishArtifactsResponse =
+      await this.deploymentAdapter.publishArtifacts({
+        ...command,
+        recipeVersionIds: [],
+        standardVersionIds: command.standardVersionIds,
+      } as PublishArtifactsCommand);
+    return result.standardDeployments;
   }
 
   async publishPackages(
@@ -115,12 +127,6 @@ export class DeploymentsService {
     command: GetPackageByIdCommand,
   ): Promise<GetPackageByIdResponse> {
     return this.deploymentAdapter.getPackageById(command);
-  }
-
-  async deletePackage(
-    command: DeletePackageCommand,
-  ): Promise<DeletePackageResponse> {
-    return this.deploymentAdapter.deletePackage(command);
   }
 
   async deletePackagesBatch(

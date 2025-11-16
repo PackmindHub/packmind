@@ -273,11 +273,17 @@ export class StandardVersionService {
       const standardVersion = await this.standardVersionRepository.findById(id);
 
       if (standardVersion) {
+        // Load rules to prevent deployment bugs where rules are missing
+        const rules = await this.getRulesByVersionId(id);
+
         this.logger.info('Standard version found by ID successfully', {
           versionId: id,
           standardId: standardVersion.standardId,
           version: standardVersion.version,
+          rulesCount: rules.length,
         });
+
+        return { ...standardVersion, rules };
       } else {
         this.logger.warn('Standard version not found by ID', { versionId: id });
       }

@@ -243,6 +243,67 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
     return fileUpdates;
   }
 
+  async deployArtifacts(
+    recipeVersions: RecipeVersion[],
+    standardVersions: StandardVersion[],
+    existingContent: string,
+  ): Promise<FileUpdates> {
+    this.logger.info(
+      `Deploying artifacts (recipes + standards) for ${this.config.agentName}`,
+      {
+        recipesCount: recipeVersions.length,
+        standardsCount: standardVersions.length,
+      },
+    );
+
+    let updatedContent = existingContent;
+
+    updatedContent = GenericRecipeSectionWriter.replace({
+      agentName: this.config.agentName,
+      repoName: 'repository',
+      currentContent: updatedContent,
+      commentMarker: 'Packmind recipes',
+      target: '/',
+      recipesSection: recipeVersions
+        .map((recipeVersion) =>
+          this.formatMarkdownLink(
+            recipeVersion,
+            `${this.config.pathToPackmindFolder ?? ''}.packmind/recipes/${recipeVersion.slug}.md`,
+          ),
+        )
+        .join('\n'),
+    });
+
+    const standardsSection = await Promise.all(
+      standardVersions.map((standardVersion) =>
+        this.formatStandardContent(
+          standardVersion,
+          `${this.config.pathToPackmindFolder ?? ''}.packmind/standards/${standardVersion.slug}.md`,
+        ),
+      ),
+    );
+
+    updatedContent = GenericStandardSectionWriter.replace({
+      currentContent: updatedContent,
+      commentMarker: 'Packmind standards',
+      standardsSection: standardsSection.join('\n\n'),
+    });
+
+    const fileUpdates: FileUpdates = {
+      createOrUpdate: [],
+      delete: [],
+    };
+
+    if (updatedContent !== existingContent) {
+      fileUpdates.createOrUpdate.push({
+        path: this.config.filePath,
+        content: updatedContent,
+      });
+    }
+
+    return fileUpdates;
+  }
+
   private async getExistingContent(
     gitRepo: GitRepo,
     target: Target,

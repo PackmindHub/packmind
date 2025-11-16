@@ -8,10 +8,10 @@ import {
   IListPackagesBySpaceUseCase,
   ICreatePackageUseCase,
   IUpdatePackageUseCase,
-  IDeletePackageUseCase,
   IDeletePackagesBatchUseCase,
   IPublishRecipes,
   IPublishStandards,
+  IPublishPackages,
   IGetTargetsByGitRepoUseCase,
   IGetTargetsByRepositoryUseCase,
   IGetTargetsByOrganizationUseCase,
@@ -28,13 +28,13 @@ export interface IDeploymentsGateway {
   listPackagesBySpace: NewGateway<IListPackagesBySpaceUseCase>;
   createPackage: NewGateway<ICreatePackageUseCase>;
   updatePackage: NewGateway<IUpdatePackageUseCase>;
-  deletePackage: NewGateway<IDeletePackageUseCase>;
   deletePackagesBatch: NewGateway<IDeletePackagesBatchUseCase>;
   getPackageById: NewGateway<IGetPackageByIdUseCase>;
   getRecipesDeploymentOverview: Gateway<IGetDeploymentOverview>;
   getStandardsDeploymentOverview: Gateway<IGetStandardDeploymentOverview>;
   publishRecipes: Gateway<IPublishRecipes>;
   publishStandards: Gateway<IPublishStandards>;
+  publishPackages: Gateway<IPublishPackages>;
   getTargetsByGitRepo: Gateway<IGetTargetsByGitRepoUseCase>;
   getTargetsByRepository: Gateway<IGetTargetsByRepositoryUseCase>;
   getTargetsByOrganization: Gateway<IGetTargetsByOrganizationUseCase>;

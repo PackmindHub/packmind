@@ -6,8 +6,6 @@ import {
   UpdatePackageCommand,
   UpdatePackageResponse,
   CreateRenderModeConfigurationCommand,
-  DeletePackageCommand,
-  DeletePackageResponse,
   DeletePackagesBatchCommand,
   DeletePackagesBatchResponse,
   DeleteTargetCommand,
@@ -20,6 +18,8 @@ import {
   GetDeploymentOverviewCommand,
   GetPackageByIdCommand,
   GetPackageByIdResponse,
+  GetPackageSummaryCommand,
+  GetPackageSummaryResponse,
   GetRenderModeConfigurationCommand,
   GetRenderModeConfigurationResult,
   GetStandardDeploymentOverviewCommand,
@@ -47,10 +47,10 @@ import {
   ListPackagesBySpaceCommand,
   ListPackagesBySpaceResponse,
   PackagesDeployment,
+  PublishArtifactsCommand,
+  PublishArtifactsResponse,
   PublishPackagesCommand,
   PullContentCommand,
-  PublishRecipesCommand,
-  PublishStandardsCommand,
   RecipesDeployment,
   RenderModeConfiguration,
   StandardDeploymentOverview,
@@ -68,7 +68,6 @@ import { AddTargetUseCase } from '../useCases/AddTargetUseCase';
 import { CreatePackageUsecase } from '../useCases/createPackage/createPackage.usecase';
 import { UpdatePackageUsecase } from '../useCases/updatePackage/updatePackage.usecase';
 import { CreateRenderModeConfigurationUseCase } from '../useCases/CreateRenderModeConfigurationUseCase';
-import { DeletePackageUsecase } from '../useCases/deletePackage/deletePackage.usecase';
 import { DeletePackagesBatchUsecase } from '../useCases/deletePackage/deletePackagesBatch.usecase';
 import { DeleteTargetUseCase } from '../useCases/DeleteTargetUseCase';
 import { FindActiveStandardVersionsByTargetUseCase } from '../useCases/FindActiveStandardVersionsByTargetUseCase';
@@ -84,9 +83,9 @@ import { ListDeploymentsByRecipeUseCase } from '../useCases/ListDeploymentsByRec
 import { ListDeploymentsByStandardUseCase } from '../useCases/ListDeploymentsByStandardUseCase';
 import { ListPackagesUsecase } from '../useCases/listPackages/listPackages.usecase';
 import { ListPackagesBySpaceUsecase } from '../useCases/listPackagesBySpace/listPackagesBySpace.usecase';
+import { GetPackageSummaryUsecase } from '../useCases/getPackageSummary/getPackageSummary.usecase';
+import { PublishArtifactsUseCase } from '../useCases/PublishArtifactsUseCase';
 import { PublishPackagesUseCase } from '../useCases/PublishPackagesUseCase';
-import { PublishRecipesUseCase } from '../useCases/PublishRecipesUseCase';
-import { PublishStandardsUseCase } from '../useCases/PublishStandardsUseCase';
 import { PullContentUseCase } from '../useCases/PullContentUseCase';
 import { UpdateRenderModeConfigurationUseCase } from '../useCases/UpdateRenderModeConfigurationUseCase';
 import { UpdateTargetUseCase } from '../useCases/UpdateTargetUseCase';
@@ -103,8 +102,7 @@ export class DeploymentsAdapter
 
   // Use cases - initialized in initialize()
   private _listDeploymentsByRecipeUseCase!: ListDeploymentsByRecipeUseCase;
-  private _publishStandardsUseCase!: PublishStandardsUseCase;
-  private _publishRecipesUseCase!: PublishRecipesUseCase;
+  private _publishArtifactsUseCase!: PublishArtifactsUseCase;
   private _publishPackagesUseCase!: PublishPackagesUseCase;
   private _findDeployedStandardByRepositoryUseCase!: FindDeployedStandardByRepositoryUseCase;
   private _findActiveStandardVersionsByTargetUseCase!: FindActiveStandardVersionsByTargetUseCase;
@@ -123,10 +121,10 @@ export class DeploymentsAdapter
   private _pullAllContentUseCase!: PullContentUseCase;
   private _listPackagesUseCase!: ListPackagesUsecase;
   private _listPackagesBySpaceUseCase!: ListPackagesBySpaceUsecase;
+  private _getPackageSummaryUseCase!: GetPackageSummaryUsecase;
   private _createPackageUseCase!: CreatePackageUsecase;
   private _updatePackageUseCase!: UpdatePackageUsecase;
   private _getPackageByIdUseCase!: GetPackageByIdUsecase;
-  private _deletePackageUseCase!: DeletePackageUsecase;
   private _deletePackagesBatchUseCase!: DeletePackagesBatchUsecase;
 
   constructor(
@@ -174,34 +172,21 @@ export class DeploymentsAdapter
       this.recipesDeploymentRepository,
     );
 
-    this._publishStandardsUseCase = new PublishStandardsUseCase(
+    this._publishArtifactsUseCase = new PublishArtifactsUseCase(
+      this.recipesPort,
       this.standardsPort,
       this.gitPort,
       this.codingAgentPort,
-      this.standardDeploymentRepository,
-      this.deploymentsServices.getTargetService(),
-      this.deploymentsServices.getRenderModeConfigurationService(),
-    );
-
-    this._publishRecipesUseCase = new PublishRecipesUseCase(
       this.recipesDeploymentRepository,
-      this.gitPort,
-      this.recipesPort,
-      this.codingAgentPort,
+      this.standardDeploymentRepository,
       this.deploymentsServices.getTargetService(),
       this.deploymentsServices.getRenderModeConfigurationService(),
     );
 
     this._publishPackagesUseCase = new PublishPackagesUseCase(
-      this.packagesDeploymentRepository,
-      this.recipesDeploymentRepository,
-      this.standardDeploymentRepository,
       this.recipesPort,
       this.standardsPort,
-      this.gitPort,
-      this.codingAgentPort,
-      this.deploymentsServices.getTargetService(),
-      this.deploymentsServices.getRenderModeConfigurationService(),
+      this,
       this.deploymentsServices.getPackageService(),
     );
 
@@ -303,6 +288,11 @@ export class DeploymentsAdapter
       this.deploymentsServices,
     );
 
+    this._getPackageSummaryUseCase = new GetPackageSummaryUsecase(
+      this.accountsPort,
+      this.deploymentsServices,
+    );
+
     this._createPackageUseCase = new CreatePackageUsecase(
       this.accountsPort,
       this.deploymentsServices,
@@ -322,10 +312,6 @@ export class DeploymentsAdapter
     this._getPackageByIdUseCase = new GetPackageByIdUsecase(
       this.accountsPort,
       this.deploymentsServices,
-    );
-
-    this._deletePackageUseCase = new DeletePackageUsecase(
-      this.deploymentsServices.getPackageService(),
     );
 
     this._deletePackagesBatchUseCase = new DeletePackagesBatchUsecase(
@@ -355,14 +341,10 @@ export class DeploymentsAdapter
     return this._listDeploymentsByRecipeUseCase.execute(command);
   }
 
-  publishStandards(
-    command: PublishStandardsCommand,
-  ): Promise<StandardsDeployment[]> {
-    return this._publishStandardsUseCase.execute(command);
-  }
-
-  publishRecipes(command: PublishRecipesCommand): Promise<RecipesDeployment[]> {
-    return this._publishRecipesUseCase.execute(command);
+  publishArtifacts(
+    command: PublishArtifactsCommand,
+  ): Promise<PublishArtifactsResponse> {
+    return this._publishArtifactsUseCase.execute(command);
   }
 
   publishPackages(
@@ -469,6 +451,12 @@ export class DeploymentsAdapter
     return this._listPackagesUseCase.execute(command);
   }
 
+  async getPackageSummary(
+    command: GetPackageSummaryCommand,
+  ): Promise<GetPackageSummaryResponse> {
+    return this._getPackageSummaryUseCase.execute(command);
+  }
+
   async createPackage(
     command: CreatePackageCommand,
   ): Promise<CreatePackageResponse> {
@@ -485,12 +473,6 @@ export class DeploymentsAdapter
     command: GetPackageByIdCommand,
   ): Promise<GetPackageByIdResponse> {
     return this._getPackageByIdUseCase.execute(command);
-  }
-
-  async deletePackage(
-    command: DeletePackageCommand,
-  ): Promise<DeletePackageResponse> {
-    return this._deletePackageUseCase.execute(command);
   }
 
   async deletePackagesBatch(

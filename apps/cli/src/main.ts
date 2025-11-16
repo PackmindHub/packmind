@@ -8,6 +8,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { pullCommand } from './infra/commands/PullCommand';
 
+// Read version from package.json (bundled by esbuild)
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { version: CLI_VERSION } = require('../package.json');
+
 /**
  * Find .env file by searching upwards from current directory
  * Stops at git repository root (where .git exists)
@@ -70,6 +74,13 @@ if (hasEmbeddedWasmFiles()) {
   }
 }
 
+// Check for --version or -v flag
+const args = process.argv.slice(2);
+if (args.includes('--version') || args.includes('-v')) {
+  console.log(`packmind-cli version ${CLI_VERSION}`);
+  process.exit(0);
+}
+
 const app = subcommands({
   name: 'packmind-cli',
   description: 'Packmind CLI tool',
@@ -79,7 +90,7 @@ const app = subcommands({
   },
 });
 
-run(app, process.argv.slice(2)).catch((error) => {
+run(app, args).catch((error) => {
   console.error(chalk.bgRed.bold('packmind-cli'), chalk.red(error.message));
   process.exit(1);
 });

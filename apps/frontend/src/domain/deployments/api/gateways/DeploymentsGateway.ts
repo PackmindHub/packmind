@@ -12,13 +12,13 @@ import {
   IGetPackageByIdUseCase,
   IPublishRecipes,
   IPublishStandards,
+  IPublishPackages,
   IListDeploymentsByRecipe,
   IGetStandardDeploymentOverview,
   IListDeploymentsByStandard,
   IListPackagesBySpaceUseCase,
   ICreatePackageUseCase,
   IUpdatePackageUseCase,
-  IDeletePackageUseCase,
   IDeletePackagesBatchUseCase,
   IGetTargetsByGitRepoUseCase,
   IGetTargetsByRepositoryUseCase,
@@ -97,13 +97,6 @@ export class DeploymentsGatewayApi
     );
   };
 
-  deletePackage: NewGateway<IDeletePackageUseCase> = async (params) => {
-    const { packageId, organizationId, spaceId } = params;
-    return this._api.delete(
-      `/organizations/${organizationId}/spaces/${spaceId}/packages/${packageId}`,
-    );
-  };
-
   deletePackagesBatch: NewGateway<IDeletePackagesBatchUseCase> = async (
     params,
   ) => {
@@ -143,6 +136,10 @@ export class DeploymentsGatewayApi
 
   publishStandards: Gateway<IPublishStandards> = async (command) => {
     return this._api.post(`${this._endpoint}/standards/publish`, command);
+  };
+
+  publishPackages: Gateway<IPublishPackages> = async (command) => {
+    return this._api.post(`${this._endpoint}/packages/publish`, command);
   };
 
   getTargetsByGitRepo: Gateway<IGetTargetsByGitRepoUseCase> = async ({

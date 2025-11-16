@@ -15,6 +15,7 @@ describe('PullDataUseCase', () => {
       listExecutionPrograms: jest.fn(),
       getDraftDetectionProgramsForRule: jest.fn(),
       getActiveDetectionProgramsForRule: jest.fn(),
+      getPackageSummary: jest.fn(),
     };
 
     // Setup fs mocks using jest.Mock casting

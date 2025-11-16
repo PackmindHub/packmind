@@ -8,8 +8,13 @@ import {
   RenderModeConfiguration,
   RenderMode,
   DEFAULT_ACTIVE_RENDER_MODES,
+  Package,
 } from '@packmind/types';
-import { useDeployRecipe, useDeployStandard } from '../../hooks';
+import {
+  useDeployRecipe,
+  useDeployStandard,
+  useDeployPackage,
+} from '../../hooks';
 import { Recipe } from '@packmind/types';
 import {
   useGetRenderModeConfigurationQuery,
@@ -52,6 +57,7 @@ export const useRunDistribution = () => {
 interface RunDistributionProps {
   selectedRecipes: Recipe[];
   selectedStandards: Standard[];
+  selectedPackages?: Package[];
   onDistributionComplete?: (deploymentResults?: {
     recipesDeployments: RecipesDeployment[];
     standardsDeployments: StandardsDeployment[];
@@ -62,12 +68,15 @@ interface RunDistributionProps {
 const RunDistributionComponent: React.FC<RunDistributionProps> = ({
   selectedRecipes,
   selectedStandards,
+  selectedPackages = [],
   onDistributionComplete,
   children,
 }) => {
   const { deployRecipes, isDeploying: isRecipesDeploying } = useDeployRecipe();
   const { deployStandards, isDeploying: isStandardsDeploying } =
     useDeployStandard();
+  const { deployPackages, isDeploying: isPackagesDeploying } =
+    useDeployPackage();
   const [deploymentError, setDeploymentError] = useState<Error | null>(null);
   const { organization } = useAuthContext();
   const {
@@ -99,19 +108,46 @@ const RunDistributionComponent: React.FC<RunDistributionProps> = ({
 
   const [selectedTargetIds, setSelectedTargetIds] = useState<TargetId[]>([]);
   const canRunDistribution =
-    (selectedRecipes.length > 0 || selectedStandards.length > 0) &&
+    (selectedRecipes.length > 0 ||
+      selectedStandards.length > 0 ||
+      selectedPackages.length > 0) &&
     selectedTargetIds.length > 0 &&
-    !isRecipesDeploying;
+    !isRecipesDeploying &&
+    !isPackagesDeploying;
 
   const deploy = React.useCallback(async () => {
     if (!organization) return;
 
     try {
-      let recipesDeployments: RecipesDeployment[] = [];
-      let standardsDeployments: StandardsDeployment[] = [];
+      const recipesDeployments: RecipesDeployment[] = [];
+      const standardsDeployments: StandardsDeployment[] = [];
+
+      if (selectedPackages.length > 0) {
+        const packageDeployments = await deployPackages(
+          {
+            packages: selectedPackages.map((pkg) => ({
+              id: pkg.id,
+              name: pkg.name,
+            })),
+          },
+          selectedTargetIds,
+        );
+
+        // Package deployments return both standards and recipes deployments
+        // We need to separate them based on their properties
+        packageDeployments.forEach((deployment) => {
+          if ('standardVersions' in deployment) {
+            standardsDeployments.push(
+              deployment as unknown as StandardsDeployment,
+            );
+          } else if ('recipeVersions' in deployment) {
+            recipesDeployments.push(deployment as unknown as RecipesDeployment);
+          }
+        });
+      }
 
       if (selectedRecipes.length > 0) {
-        recipesDeployments = await deployRecipes(
+        const recipeResults = await deployRecipes(
           {
             recipes: selectedRecipes.map((recipe) => ({
               ...recipe,
@@ -120,13 +156,15 @@ const RunDistributionComponent: React.FC<RunDistributionProps> = ({
           },
           selectedTargetIds,
         );
+        recipesDeployments.push(...recipeResults);
       }
 
       if (selectedStandards.length > 0) {
-        standardsDeployments = await deployStandards(
+        const standardResults = await deployStandards(
           { standards: selectedStandards },
           selectedTargetIds,
         );
+        standardsDeployments.push(...standardResults);
       }
       setDeploymentError(null);
       onDistributionComplete?.({ recipesDeployments, standardsDeployments });
@@ -143,10 +181,13 @@ const RunDistributionComponent: React.FC<RunDistributionProps> = ({
   }, [
     selectedRecipes,
     selectedStandards,
+    selectedPackages,
     onDistributionComplete,
     deployRecipes,
+    deployPackages,
     selectedTargetIds,
     deployStandards,
+    organization,
   ]);
 
   const value = useMemo<RunDistributionCtxType>(
@@ -156,7 +197,8 @@ const RunDistributionComponent: React.FC<RunDistributionProps> = ({
       targetsError,
       selectedTargetIds,
       setSelectedTargetIds,
-      isDeploying: isRecipesDeploying || isStandardsDeploying,
+      isDeploying:
+        isRecipesDeploying || isStandardsDeploying || isPackagesDeploying,
       deploy,
       deploymentError,
       canRunDistribution,
@@ -177,6 +219,7 @@ const RunDistributionComponent: React.FC<RunDistributionProps> = ({
       setSelectedTargetIds,
       isRecipesDeploying,
       isStandardsDeploying,
+      isPackagesDeploying,
       deploy,
       deploymentError,
       canRunDistribution,

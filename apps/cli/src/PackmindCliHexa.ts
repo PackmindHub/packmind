@@ -24,6 +24,10 @@ import {
   IListPackagesCommand,
   IListPackagesResult,
 } from './domain/useCases/IListPackagesUseCase';
+import {
+  IGetPackageSummaryCommand,
+  IGetPackageSummaryResult,
+} from './domain/useCases/IGetPackageSummaryUseCase';
 
 const origin = 'PackmindCliHexa';
 
@@ -86,5 +90,11 @@ export class PackmindCliHexa {
     command: IListPackagesCommand,
   ): Promise<IListPackagesResult> {
     return this.hexa.useCases.listPackages.execute(command);
+  }
+
+  public async getPackageBySlug(
+    command: IGetPackageSummaryCommand,
+  ): Promise<IGetPackageSummaryResult> {
+    return this.hexa.useCases.getPackageBySlug.execute(command);
   }
 }

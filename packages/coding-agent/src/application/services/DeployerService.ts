@@ -149,6 +149,84 @@ export class DeployerService {
     return merged;
   }
 
+  async aggregateArtifactRendering(
+    recipeVersions: RecipeVersion[],
+    standardVersions: StandardVersion[],
+    codingAgents: CodingAgent[],
+    existingFiles: Map<string, string>,
+  ): Promise<FileUpdates> {
+    this.logger.info('Aggregating artifact rendering', {
+      recipesCount: recipeVersions.length,
+      standardsCount: standardVersions.length,
+      agentsCount: codingAgents.length,
+      agents: codingAgents,
+      existingFilesCount: existingFiles.size,
+    });
+
+    const allUpdates: FileUpdates[] = [];
+
+    for (const agent of codingAgents) {
+      try {
+        this.logger.debug('Rendering artifacts for agent', { agent });
+
+        const deployer = this.codingAgentRepositories
+          .getDeployerRegistry()
+          .getDeployer(agent);
+
+        const filePath = this.getFilePathForAgent(agent);
+        const existingContent = existingFiles.get(filePath) ?? '';
+
+        this.logger.debug('Retrieved existing content for agent file', {
+          agent,
+          filePath,
+          hasExistingContent: existingContent.length > 0,
+        });
+
+        const updates = await deployer.deployArtifacts(
+          recipeVersions,
+          standardVersions,
+          existingContent,
+        );
+
+        allUpdates.push(updates);
+
+        this.logger.debug('Successfully rendered artifacts for agent', {
+          agent,
+          createOrUpdateCount: updates.createOrUpdate.length,
+          deleteCount: updates.delete.length,
+        });
+      } catch (error) {
+        this.logger.error('Failed to render artifacts for agent', {
+          agent,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        throw error;
+      }
+    }
+
+    const merged = this.mergeFileUpdates(allUpdates);
+    this.logger.info('Successfully aggregated artifact rendering', {
+      totalCreateOrUpdate: merged.createOrUpdate.length,
+      totalDelete: merged.delete.length,
+    });
+
+    return merged;
+  }
+
+  private getFilePathForAgent(agent: CodingAgent): string {
+    const agentToFile: Record<CodingAgent, string> = {
+      claude: 'CLAUDE.md',
+      agents_md: 'AGENTS.md',
+      cursor: '.cursorrules',
+      copilot: '.github/copilot-instructions.md',
+      junie: '.junie.md',
+      packmind: '.packmind.md',
+      gitlab_duo: '.gitlab/duo_chat.yml',
+    };
+
+    return agentToFile[agent];
+  }
+
   private mergeFileUpdates(updates: FileUpdates[]): FileUpdates {
     this.logger.debug('Merging file updates', {
       updatesCount: updates.length,

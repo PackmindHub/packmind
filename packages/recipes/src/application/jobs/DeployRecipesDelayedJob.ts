@@ -146,11 +146,12 @@ export class DeployRecipesDelayedJob extends AbstractAIDelayedJob<
         },
       );
 
-      await this.deploymentPort.publishRecipes({
+      await this.deploymentPort.publishArtifacts({
         organizationId: input.organizationId,
         userId: createUserId('system'), // System user for webhook-triggered deployments
         targetIds: targetIdsToDeployTo,
         recipeVersionIds: input.recipeVersionIds,
+        standardVersionIds: [],
       });
 
       this.logger.info(

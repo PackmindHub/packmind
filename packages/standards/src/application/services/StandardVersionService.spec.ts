@@ -271,6 +271,11 @@ describe('StandardVersionService', () => {
           .fn()
           .mockResolvedValue(version);
 
+        // Mock getRulesByVersionId to return empty rules array
+        ruleRepository.findByStandardVersionId = jest
+          .fn()
+          .mockResolvedValue([]);
+
         result = await standardVersionService.getStandardVersionById(versionId);
       });
 
@@ -280,8 +285,8 @@ describe('StandardVersionService', () => {
         );
       });
 
-      it('returns the found version', () => {
-        expect(result).toEqual(version);
+      it('returns the found version with rules', () => {
+        expect(result).toEqual({ ...version, rules: [] });
       });
     });
 

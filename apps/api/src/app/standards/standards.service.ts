@@ -100,7 +100,11 @@ export class StandardsService {
   async deployStandardsToGit(
     command: PublishStandardsCommand,
   ): Promise<StandardsDeployment[]> {
-    return this.deploymentAdapter.publishStandards(command);
+    const result = await this.deploymentAdapter.publishArtifacts({
+      ...command,
+      recipeVersionIds: [],
+    });
+    return result.standardDeployments;
   }
 
   async deleteStandard(id: StandardId, userId: UserId): Promise<void> {

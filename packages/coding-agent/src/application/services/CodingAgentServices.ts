@@ -102,4 +102,36 @@ export class CodingAgentServices {
 
     return result;
   }
+
+  async renderArtifacts(
+    recipeVersions: RecipeVersion[],
+    standardVersions: StandardVersion[],
+    codingAgents: CodingAgent[],
+    existingFiles: Map<string, string>,
+  ): Promise<FileUpdates> {
+    this.logger.info('Rendering artifacts (recipes + standards)', {
+      recipesCount: recipeVersions.length,
+      standardsCount: standardVersions.length,
+      agentsCount: codingAgents.length,
+      existingFilesCount: existingFiles.size,
+    });
+
+    if (codingAgents.length === 0) {
+      this.logger.warn('No coding agents specified for rendering');
+      return { createOrUpdate: [], delete: [] };
+    }
+
+    const result = await this.deployerService.aggregateArtifactRendering(
+      recipeVersions,
+      standardVersions,
+      codingAgents,
+      existingFiles,
+    );
+
+    this.logger.info('Artifacts rendered successfully', {
+      filesCount: result.createOrUpdate.length + result.delete.length,
+    });
+
+    return result;
+  }
 }
