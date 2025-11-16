@@ -1,12 +1,18 @@
-import { PMPage, PMVStack, PMButton, PMHStack, PMText } from '@packmind/ui';
+import { PMPage, PMVStack, PMButton, PMHStack, PMLink } from '@packmind/ui';
+import { Link, useParams } from 'react-router';
 import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
 import { KnowledgePatchesList } from '../../src/domain/learnings/components/KnowledgePatchesList';
 import {
   useGetTopicsStatsQuery,
   useDistillAllPendingTopicsMutation,
 } from '../../src/domain/learnings/api/queries/LearningsQueries';
+import { routes } from '../../src/shared/utils/routes';
 
 export default function LearningsIndexRouteModule() {
+  const { orgSlug, spaceSlug } = useParams<{
+    orgSlug: string;
+    spaceSlug: string;
+  }>();
   const { data: stats, isLoading: statsLoading } = useGetTopicsStatsQuery();
   const distillMutation = useDistillAllPendingTopicsMutation();
 
@@ -21,11 +27,14 @@ export default function LearningsIndexRouteModule() {
       breadcrumbComponent={<AutobreadCrumb />}
       actions={
         <PMHStack gap={4}>
-          {!statsLoading && stats && stats.pendingTopics > 0 && (
-            <PMText>
-              {stats.pendingTopics} topic{stats.pendingTopics !== 1 ? 's' : ''}{' '}
-              pending
-            </PMText>
+          {!statsLoading && stats && orgSlug && spaceSlug && (
+            <PMLink asChild>
+              <Link to={routes.space.toTopics(orgSlug, spaceSlug)}>
+                {stats.pendingTopics > 0
+                  ? `${stats.pendingTopics} topic${stats.pendingTopics !== 1 ? 's' : ''} pending`
+                  : 'View topics'}
+              </Link>
+            </PMLink>
           )}
           <PMButton
             onClick={handleDistillTopics}
