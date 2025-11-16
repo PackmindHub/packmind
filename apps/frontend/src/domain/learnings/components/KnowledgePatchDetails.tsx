@@ -10,7 +10,15 @@ import {
   PMAlert,
   PMDiffView,
 } from '@packmind/ui';
-import { KnowledgePatchId, KnowledgePatchStatus } from '@packmind/types';
+import {
+  KnowledgePatchId,
+  KnowledgePatchStatus,
+  KnowledgePatchType,
+} from '@packmind/types';
+import {
+  MarkdownEditor,
+  MarkdownEditorProvider,
+} from '../../../shared/components/editor/MarkdownEditor';
 import {
   useGetKnowledgePatchByIdQuery,
   useAcceptKnowledgePatchMutation,
@@ -73,6 +81,9 @@ export const KnowledgePatchDetails = ({
 
   const patch = data.patch;
   const isPending = patch.status === KnowledgePatchStatus.PENDING_REVIEW;
+  const isNewArtifact =
+    patch.patchType === KnowledgePatchType.NEW_STANDARD ||
+    patch.patchType === KnowledgePatchType.NEW_RECIPE;
 
   return (
     <PMVStack align="stretch" gap={6}>
@@ -99,17 +110,23 @@ export const KnowledgePatchDetails = ({
         <PMText>{patch.patchType}</PMText>
       </PMBox>
 
-      {/* Diff Preview */}
+      {/* Content Preview */}
       <PMBox p={4} borderWidth="1px" borderRadius="md">
         <PMHeading size="sm" mb={4}>
-          Changes Preview
+          {isNewArtifact ? 'Proposed Content' : 'Changes Preview'}
         </PMHeading>
-        <PMDiffView
-          original={patch.diffOriginal}
-          modified={patch.diffModified}
-          language="markdown"
-          height="400px"
-        />
+        {isNewArtifact ? (
+          <MarkdownEditorProvider>
+            <MarkdownEditor defaultValue={patch.diffModified} readOnly />
+          </MarkdownEditorProvider>
+        ) : (
+          <PMDiffView
+            original={patch.diffOriginal}
+            modified={patch.diffModified}
+            language="markdown"
+            height="400px"
+          />
+        )}
       </PMBox>
 
       {/* Review Notes (if reviewed) */}
