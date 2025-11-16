@@ -6,8 +6,10 @@ import {
   createUserId,
   IAcceptKnowledgePatchUseCase,
   KnowledgePatchStatus,
+  OrganizationId,
 } from '@packmind/types';
 import { KnowledgePatchService } from '../../services/KnowledgePatchService';
+import { PatchApplicationService } from '../../services/PatchApplicationService';
 
 const origin = 'AcceptKnowledgePatchUsecase';
 
@@ -16,12 +18,15 @@ export class AcceptKnowledgePatchUsecase
 {
   constructor(
     private readonly knowledgePatchService: KnowledgePatchService,
+    private readonly patchApplicationService: PatchApplicationService | null = null,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.INFO,
     ),
   ) {
-    this.logger.info('AcceptKnowledgePatchUsecase initialized');
+    this.logger.info('AcceptKnowledgePatchUsecase initialized', {
+      hasPatchApplicationService: !!patchApplicationService,
+    });
   }
 
   public async execute(
@@ -59,9 +64,36 @@ export class AcceptKnowledgePatchUsecase
         );
       }
 
-      // TODO: Apply the patch to standards/recipes
-      // This will be implemented when we have the proper integration with standards/recipes domains
-      const applied = false;
+      // Apply the patch to standards/recipes if service is available
+      let applied = false;
+      if (this.patchApplicationService) {
+        try {
+          this.logger.info('Applying knowledge patch to standards/recipes', {
+            patchId,
+          });
+          applied = await this.patchApplicationService.applyPatch(
+            patch,
+            command.organizationId as OrganizationId,
+            reviewedByString,
+          );
+          this.logger.info('Knowledge patch applied successfully', {
+            patchId,
+            applied,
+          });
+        } catch (error) {
+          this.logger.error('Failed to apply knowledge patch', {
+            patchId,
+            error: error instanceof Error ? error.message : String(error),
+          });
+          // Continue with acceptance even if application fails
+          // The patch will be marked as accepted but not applied
+        }
+      } else {
+        this.logger.warn(
+          'PatchApplicationService not available - patch will be accepted but not applied',
+          { patchId },
+        );
+      }
 
       const updatedPatch = await this.knowledgePatchService.updatePatchStatus(
         patchId,

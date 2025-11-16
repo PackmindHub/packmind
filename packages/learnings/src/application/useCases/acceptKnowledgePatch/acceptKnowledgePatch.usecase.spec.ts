@@ -27,6 +27,7 @@ describe('AcceptKnowledgePatchUsecase', () => {
 
     acceptKnowledgePatchUsecase = new AcceptKnowledgePatchUsecase(
       knowledgePatchService,
+      null, // patchApplicationService not needed for basic tests
       stubbedLogger,
     );
   });

@@ -11,6 +11,7 @@ import { StandardVersionId } from '../StandardVersionId';
 export const IStandardsPortName = 'IStandardsPort' as const;
 
 export interface IStandardsPort {
+  // Read methods
   getStandard(id: StandardId): Promise<Standard | null>;
   getStandardVersion(id: StandardVersionId): Promise<StandardVersion | null>;
   getStandardVersionById(
@@ -33,4 +34,20 @@ export interface IStandardsPort {
     slug: string,
     organizationId: OrganizationId,
   ): Promise<Standard | null>;
+
+  // Write methods for knowledge patch application
+  addRuleToStandard(params: {
+    standardSlug: string;
+    ruleContent: string;
+    organizationId: OrganizationId;
+    userId: string;
+  }): Promise<StandardVersion>;
+
+  updateStandardRules(params: {
+    standardId: StandardId;
+    ruleId: RuleId;
+    newRuleContent: string;
+    organizationId: OrganizationId;
+    userId: string;
+  }): Promise<StandardVersion>;
 }

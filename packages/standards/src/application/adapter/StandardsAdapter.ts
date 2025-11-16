@@ -35,6 +35,7 @@ import {
 import { GenerateStandardSummaryJobFactory } from '../../infra/jobs/GenerateStandardSummaryJobFactory';
 import { StandardsServices } from '../services/StandardsServices';
 import { AddRuleToStandardUsecase } from '../useCases/addRuleToStandard/addRuleToStandard.usecase';
+import { UpdateRuleInStandardUsecase } from '../useCases/updateRuleInStandard/updateRuleInStandard.usecase';
 import { CreateRuleExampleUsecase } from '../useCases/createRuleExample/createRuleExample.usecase';
 import { CreateStandardUsecase } from '../useCases/createStandard/createStandard.usecase';
 import { CreateStandardWithExamplesUsecase } from '../useCases/createStandardWithExamples/createStandardWithExamples.usecase';
@@ -69,6 +70,7 @@ export class StandardsAdapter
   private _createStandardWithExamples!: CreateStandardWithExamplesUsecase;
   private _updateStandard!: UpdateStandardUsecase;
   private _addRuleToStandard!: AddRuleToStandardUsecase;
+  private _updateRuleInStandard!: UpdateRuleInStandardUsecase;
   private _getStandardById!: GetStandardByIdUsecase;
   private _findStandardBySlug!: FindStandardBySlugUsecase;
   private _listStandardsBySpace!: ListStandardsBySpaceUsecase;
@@ -198,6 +200,15 @@ export class StandardsAdapter
     );
 
     this._addRuleToStandard = new AddRuleToStandardUsecase(
+      this.services.getStandardService(),
+      this.services.getStandardVersionService(),
+      this.repositories.getRuleRepository(),
+      this.repositories.getRuleExampleRepository(),
+      this.standardDelayedJobs.standardSummaryDelayedJob,
+      this.linterPort,
+    );
+
+    this._updateRuleInStandard = new UpdateRuleInStandardUsecase(
       this.services.getStandardService(),
       this.services.getStandardVersionService(),
       this.repositories.getRuleRepository(),
@@ -400,9 +411,25 @@ export class StandardsAdapter
     standardSlug: string;
     ruleContent: string;
     organizationId: OrganizationId;
-    userId: UserId;
+    userId: string;
   }): Promise<StandardVersion> {
-    return this._addRuleToStandard.addRuleToStandard(params);
+    return this._addRuleToStandard.addRuleToStandard({
+      ...params,
+      userId: params.userId as UserId,
+    });
+  }
+
+  async updateStandardRules(params: {
+    standardId: StandardId;
+    ruleId: RuleId;
+    newRuleContent: string;
+    organizationId: OrganizationId;
+    userId: string;
+  }): Promise<StandardVersion> {
+    return this._updateRuleInStandard.updateRuleInStandard({
+      ...params,
+      userId: params.userId as UserId,
+    });
   }
 
   async getStandardById(command: {

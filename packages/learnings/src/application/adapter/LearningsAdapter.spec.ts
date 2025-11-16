@@ -43,6 +43,8 @@ describe('LearningsAdapter', () => {
       getKnowledgePatchService: jest
         .fn()
         .mockReturnValue(knowledgePatchService),
+      initializePatchApplicationService: jest.fn(),
+      getPatchApplicationService: jest.fn().mockReturnValue(null),
     } as unknown as jest.Mocked<LearningsServices>;
 
     mockStandardsPort = {

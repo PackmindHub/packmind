@@ -87,6 +87,7 @@ export class LearningsAdapter
 
     this.acceptKnowledgePatchUsecase = new AcceptKnowledgePatchUsecase(
       knowledgePatchService,
+      null, // patchApplicationService - will be re-initialized after ports are available
       this.logger,
     );
 
@@ -119,6 +120,13 @@ export class LearningsAdapter
       throw new Error('LearningsAdapter: Required ports not provided.');
     }
 
+    // Initialize patch application service with ports
+    this.logger.debug('Initializing patch application service');
+    this.learningsServices.initializePatchApplicationService(
+      this.standardsPort,
+      this.recipesPort,
+    );
+
     // Initialize distillTopic use case with ports first (needed by delayed job)
     this.logger.debug('Initializing distillTopic use case');
     this.distillTopicUsecase = new DistillTopicUsecase(
@@ -144,6 +152,20 @@ export class LearningsAdapter
       this.learningsDelayedJobs.distillAllPendingTopicsDelayedJob,
       this.logger,
     );
+
+    // Re-initialize accept patch use case with patch application service
+    this.logger.debug(
+      'Re-initializing acceptKnowledgePatch use case with patch application service',
+    );
+    const patchApplicationService =
+      this.learningsServices.getPatchApplicationService();
+    if (patchApplicationService) {
+      this.acceptKnowledgePatchUsecase = new AcceptKnowledgePatchUsecase(
+        this.learningsServices.getKnowledgePatchService(),
+        patchApplicationService,
+        this.logger,
+      );
+    }
 
     this.logger.info('LearningsAdapter initialized successfully');
   }

@@ -1,6 +1,8 @@
 import { PackmindLogger } from '@packmind/logger';
+import { IRecipesPort, IStandardsPort } from '@packmind/types';
 import { ILearningsRepositories } from '../../domain/repositories/ILearningsRepositories';
 import { KnowledgePatchService } from './KnowledgePatchService';
+import { PatchApplicationService } from './PatchApplicationService';
 import { TopicService } from './TopicService';
 
 const origin = 'LearningsServices';
@@ -8,6 +10,7 @@ const origin = 'LearningsServices';
 export class LearningsServices {
   private readonly topicService: TopicService;
   private readonly knowledgePatchService: KnowledgePatchService;
+  private patchApplicationService: PatchApplicationService | null = null;
 
   constructor(
     learningsRepositories: ILearningsRepositories,
@@ -28,11 +31,25 @@ export class LearningsServices {
     logger.info('LearningsServices initialized successfully');
   }
 
+  initializePatchApplicationService(
+    standardsPort: IStandardsPort | null,
+    recipesPort: IRecipesPort | null,
+  ): void {
+    this.patchApplicationService = new PatchApplicationService(
+      standardsPort,
+      recipesPort,
+    );
+  }
+
   getTopicService(): TopicService {
     return this.topicService;
   }
 
   getKnowledgePatchService(): KnowledgePatchService {
     return this.knowledgePatchService;
+  }
+
+  getPatchApplicationService(): PatchApplicationService | null {
+    return this.patchApplicationService;
   }
 }
