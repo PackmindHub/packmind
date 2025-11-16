@@ -88,6 +88,7 @@ export class LearningsAdapter
     this.logger.debug('Initializing patch management use cases');
     const knowledgePatchService =
       this.learningsServices.getKnowledgePatchService();
+    const topicService = this.learningsServices.getTopicService();
 
     this.listKnowledgePatchesUsecase = new ListKnowledgePatchesUsecase(
       knowledgePatchService,
@@ -96,6 +97,7 @@ export class LearningsAdapter
 
     this.getKnowledgePatchUsecase = new GetKnowledgePatchUsecase(
       knowledgePatchService,
+      topicService,
       this.logger,
     );
 

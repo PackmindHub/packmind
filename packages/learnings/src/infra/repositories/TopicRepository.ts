@@ -3,7 +3,13 @@ import { TopicSchema } from '../schemas/TopicSchema';
 import { Repository } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
 import { localDataSource, AbstractRepository } from '@packmind/node-utils';
-import { Topic, SpaceId, TopicId, TopicStatus } from '@packmind/types';
+import {
+  Topic,
+  SpaceId,
+  TopicId,
+  TopicStatus,
+  KnowledgePatchId,
+} from '@packmind/types';
 
 const origin = 'TopicRepository';
 
@@ -94,6 +100,31 @@ export class TopicRepository
     } catch (error) {
       this.logger.error('Failed to find pending digestion topics', {
         spaceId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async findByKnowledgePatchId(patchId: KnowledgePatchId): Promise<Topic[]> {
+    this.logger.info('Finding topics by knowledge patch ID', { patchId });
+
+    try {
+      const topics = await this.repository
+        .createQueryBuilder('topic')
+        .innerJoin('topic_knowledge_patches', 'tkp', 'tkp.topic_id = topic.id')
+        .where('tkp.knowledge_patch_id = :patchId', { patchId })
+        .orderBy('topic.created_at', 'DESC')
+        .getMany();
+
+      this.logger.info('Topics found by knowledge patch ID', {
+        patchId,
+        count: topics.length,
+      });
+      return topics;
+    } catch (error) {
+      this.logger.error('Failed to find topics by knowledge patch ID', {
+        patchId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

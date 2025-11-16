@@ -1,4 +1,5 @@
 import React from 'react';
+import { useParams, Link } from 'react-router';
 import {
   PMBox,
   PMVStack,
@@ -24,6 +25,7 @@ import {
   useAcceptKnowledgePatchMutation,
   useRejectKnowledgePatchMutation,
 } from '../api/queries/LearningsQueries';
+import { routes } from '../../../shared/utils/routes';
 
 interface KnowledgePatchDetailsProps {
   patchId: KnowledgePatchId;
@@ -32,6 +34,10 @@ interface KnowledgePatchDetailsProps {
 export const KnowledgePatchDetails = ({
   patchId,
 }: KnowledgePatchDetailsProps) => {
+  const { orgSlug, spaceSlug } = useParams<{
+    orgSlug: string;
+    spaceSlug: string;
+  }>();
   const { data, isLoading, isError } = useGetKnowledgePatchByIdQuery(patchId);
   const acceptMutation = useAcceptKnowledgePatchMutation();
   const rejectMutation = useRejectKnowledgePatchMutation();
@@ -80,6 +86,7 @@ export const KnowledgePatchDetails = ({
   }
 
   const patch = data.patch;
+  const topics = data.topics || [];
   const isPending = patch.status === KnowledgePatchStatus.PENDING_REVIEW;
   const isNewArtifact =
     patch.patchType === KnowledgePatchType.NEW_STANDARD ||
@@ -101,6 +108,28 @@ export const KnowledgePatchDetails = ({
           {patch.status}
         </PMBadge>
       </PMBox>
+
+      {/* Related Topics */}
+      {topics.length > 0 && orgSlug && spaceSlug && (
+        <PMBox p={4} borderWidth="1px" borderRadius="md">
+          <PMHeading size="sm" mb={3}>
+            Related Topics
+          </PMHeading>
+          <PMHStack gap={2} flexWrap="wrap">
+            {topics.map((topic) => (
+              <Link
+                key={topic.id}
+                to={routes.space.toTopic(orgSlug, spaceSlug, topic.id)}
+                style={{ textDecoration: 'none' }}
+              >
+                <PMBadge colorScheme="blue" size="lg" cursor="pointer">
+                  {topic.title}
+                </PMBadge>
+              </Link>
+            ))}
+          </PMHStack>
+        </PMBox>
+      )}
 
       {/* Patch Type */}
       <PMBox p={4} borderWidth="1px" borderRadius="md">

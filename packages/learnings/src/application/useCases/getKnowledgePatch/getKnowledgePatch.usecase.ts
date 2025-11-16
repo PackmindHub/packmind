@@ -6,12 +6,14 @@ import {
   IGetKnowledgePatchUseCase,
 } from '@packmind/types';
 import { KnowledgePatchService } from '../../services/KnowledgePatchService';
+import { TopicService } from '../../services/TopicService';
 
 const origin = 'GetKnowledgePatchUsecase';
 
 export class GetKnowledgePatchUsecase implements IGetKnowledgePatchUseCase {
   constructor(
     private readonly knowledgePatchService: KnowledgePatchService,
+    private readonly topicService: TopicService = new TopicService(),
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.INFO,
@@ -36,9 +38,18 @@ export class GetKnowledgePatchUsecase implements IGetKnowledgePatchUseCase {
         throw new Error(`Knowledge patch with id ${patchId} not found`);
       }
 
-      this.logger.info('Knowledge patch retrieved successfully', { patchId });
+      this.logger.info('Fetching related topics for knowledge patch', {
+        patchId,
+      });
+      const topics =
+        await this.topicService.getTopicsByKnowledgePatchId(patchId);
 
-      return { patch };
+      this.logger.info('Knowledge patch retrieved successfully', {
+        patchId,
+        topicsCount: topics.length,
+      });
+
+      return { patch, topics };
     } catch (error) {
       this.logger.error('Failed to get knowledge patch', {
         patchId,

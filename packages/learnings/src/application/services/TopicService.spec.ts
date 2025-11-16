@@ -29,6 +29,7 @@ describe('TopicService', () => {
       findBySpaceId: jest.fn(),
       updateStatus: jest.fn(),
       findPendingDigestion: jest.fn(),
+      findByKnowledgePatchId: jest.fn(),
     };
 
     stubbedLogger = stubLogger();

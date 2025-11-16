@@ -8,11 +8,13 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { knowledgePatchFactory } from '../../../../test/knowledgePatchFactory';
 import { KnowledgePatchService } from '../../services/KnowledgePatchService';
+import { TopicService } from '../../services/TopicService';
 import { GetKnowledgePatchUsecase } from './getKnowledgePatch.usecase';
 
 describe('GetKnowledgePatchUsecase', () => {
   let getKnowledgePatchUsecase: GetKnowledgePatchUsecase;
   let knowledgePatchService: jest.Mocked<KnowledgePatchService>;
+  let topicService: jest.Mocked<TopicService>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
@@ -20,10 +22,15 @@ describe('GetKnowledgePatchUsecase', () => {
       getPatchById: jest.fn(),
     } as unknown as jest.Mocked<KnowledgePatchService>;
 
+    topicService = {
+      getTopicsByKnowledgePatchId: jest.fn(),
+    } as unknown as jest.Mocked<TopicService>;
+
     stubbedLogger = stubLogger();
 
     getKnowledgePatchUsecase = new GetKnowledgePatchUsecase(
       knowledgePatchService,
+      topicService,
       stubbedLogger,
     );
   });
@@ -46,17 +53,22 @@ describe('GetKnowledgePatchUsecase', () => {
       };
     });
 
-    it('returns the patch', async () => {
+    it('returns the patch and topics', async () => {
       const patch = knowledgePatchFactory({
         id: patchId,
       });
 
       knowledgePatchService.getPatchById.mockResolvedValue(patch);
+      topicService.getTopicsByKnowledgePatchId.mockResolvedValue([]);
 
       const result = await getKnowledgePatchUsecase.execute(command);
 
       expect(knowledgePatchService.getPatchById).toHaveBeenCalledWith(patchId);
+      expect(topicService.getTopicsByKnowledgePatchId).toHaveBeenCalledWith(
+        patchId,
+      );
       expect(result.patch).toEqual(patch);
+      expect(result.topics).toEqual([]);
     });
 
     describe('when patch not found', () => {

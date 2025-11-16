@@ -11,6 +11,7 @@ import {
   TopicCaptureContext,
   CodeExample,
   TopicStatus,
+  KnowledgePatchId,
 } from '@packmind/types';
 
 const origin = 'TopicService';
@@ -102,6 +103,27 @@ export class TopicService {
     } catch (error) {
       this.logger.error('Failed to list topics by space ID', {
         spaceId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async getTopicsByKnowledgePatchId(
+    patchId: KnowledgePatchId,
+  ): Promise<Topic[]> {
+    this.logger.info('Getting topics by knowledge patch ID', { patchId });
+
+    try {
+      const topics = await this.topicRepository.findByKnowledgePatchId(patchId);
+      this.logger.info('Topics found by knowledge patch ID', {
+        patchId,
+        count: topics.length,
+      });
+      return topics;
+    } catch (error) {
+      this.logger.error('Failed to get topics by knowledge patch ID', {
+        patchId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
