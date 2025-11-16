@@ -3,6 +3,7 @@
 ## Added
 
 - Add `pull` command to get standards and recipes from a package. #3
+
 # [0.3.4] - 2025-11-13
 
 ## Fixed
