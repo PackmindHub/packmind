@@ -37,6 +37,50 @@ The RAG Lab will serve as:
 6. **Database**: PostgreSQL + pgvector extension
 7. **Version Strategy**: Only embed latest versions of artifacts
 
+### Testing Strategy
+
+**Challenge**: pg-mem (in-memory PostgreSQL emulator used for unit tests) does not support the pgvector extension (native C extension).
+
+**Pragmatic Solution**: Accept test/production type difference and use appropriate testing strategies:
+
+**Unit Tests (with pg-mem)**:
+
+- TypeORM schemas use `type: String` for embedding column (pg-mem compatible)
+- Store embeddings as JSON strings: `JSON.stringify(embedding)`
+- Parse when reading: `JSON.parse(storedValue)`
+- Test basic CRUD operations (save/retrieve embeddings)
+- Skip pgvector-specific operations (similarity search)
+
+**Integration Tests (with real PostgreSQL + pgvector)**:
+
+- Use actual PostgreSQL database with pgvector extension enabled
+- Test similarity search with real `vector(1536)` type
+- Test ivfflat indexing and performance
+- Validate threshold filtering and dot product operations
+- Required for Unit 3 repository layer testing
+
+**Why This Approach**:
+
+- ✅ Maintains clean domain model (embedding as part of version entity)
+- ✅ No JOIN overhead in production queries
+- ✅ Follows existing integration test patterns in codebase
+- ✅ Realistic testing with actual pgvector for critical operations
+- ✅ Minimal complexity - no architectural compromises
+
+**Production Behavior**:
+
+- Migrations create actual `vector(1536)` columns
+- pgvector extension handles similarity search efficiently
+- ivfflat indexes provide optimized approximate nearest neighbor search
+
+**Type Mapping**:
+
+- **Database (production)**: `vector(1536)` (pgvector type)
+- **Database (pg-mem tests)**: `text` (from TypeORM String type)
+- **TypeORM Schema**: `type: String, nullable: true`
+- **TypeScript Types**: `embedding?: number[]`
+- **Application Logic**: Works with `number[]` arrays
+
 ---
 
 ## Implementation Phases
@@ -56,11 +100,23 @@ The RAG Lab will serve as:
 
 **Migration Pattern**: Follow Packmind recipe with TypeORM CLI and PackmindLogger
 
+**Testing Considerations**:
+
+- Migrations only run in production/development (not in unit tests)
+- Unit tests use `datasource.synchronize()` which generates schema from TypeORM entities
+- TypeORM schemas use `type: String` to maintain pg-mem compatibility
+- Production databases use actual `vector(1536)` type from migrations
+- Similarity search testing deferred to Unit 3 (requires real PostgreSQL + pgvector)
+
 **Deliverables**:
 
-- Two migration files with proper logging and rollback
-- Updated schemas with `embedding?: number[]`
-- Updated types
+- Three migration files with proper logging and rollback:
+  - Enable pgvector extension
+  - Add embedding column to standard_versions with ivfflat index
+  - Add embedding column to recipe_versions with ivfflat index
+- Updated schemas with `embedding: { type: String, nullable: true }`
+- Updated types with `embedding?: number[]`
+- Docker Compose updated to use `pgvector/pgvector:pg17` image
 
 ---
 
@@ -125,17 +181,38 @@ The RAG Lab will serve as:
    - `findSimilarByEmbedding(embedding, spaceId?, threshold?)`
    - `findLatestVersionsWhereEmbeddingIsNull(spaceId?): Promise<RecipeVersion[]>`
 
-**Integration Tests**:
+**Unit Tests (with pg-mem)**:
 
-- Test similarity search with actual vectors in test database
-- Verify threshold filtering
-- Test empty results
-- Verify latest-version-only logic for backfill queries
+- Test `updateEmbedding()` - store embeddings as JSON strings
+- Test `findLatestVersionsWhereEmbeddingIsNull()` - verify latest-version-only logic
+- Mock embedding data with test fixtures
+- Skip `findSimilarByEmbedding()` (requires pgvector)
+
+**Integration Tests (with real PostgreSQL + pgvector)**:
+
+**Setup Requirements**:
+
+- PostgreSQL database with pgvector extension enabled
+- Docker container: `pgvector/pgvector:pg17`
+- Run migrations to create vector columns and indexes
+- Test data with real embedding vectors
+
+**Test Coverage**:
+
+- `findSimilarByEmbedding()` with actual vector similarity search
+- Verify pgvector `<#>` operator (negative dot product) works correctly
+- Test threshold filtering (0.6, 0.7, 0.8)
+- Test results ordering by similarity descending
+- Test empty results when no matches above threshold
+- Test space filtering (spaceId parameter)
+- Verify ivfflat index performance with 100+ vectors
 
 **Deliverables**:
 
 - Repository methods for both domains
-- Integration tests
+- Unit tests for basic CRUD operations (pg-mem compatible)
+- Integration test suite for similarity search (real PostgreSQL + pgvector)
+- Integration test database setup documentation
 
 ---
 
@@ -438,13 +515,15 @@ The RAG Lab will serve as:
 
 ## Risk Mitigation
 
-| Risk                  | Mitigation                                  | Fallback                         |
-| --------------------- | ------------------------------------------- | -------------------------------- |
-| OpenAI rate limits    | Exponential backoff, batch processing       | Queue-based processing           |
-| Low embedding quality | Validate with RAG Lab before production use | Adjust text extraction           |
-| Database performance  | pgvector indexes, monitor queries           | Dedicated vector DB              |
-| Cost overruns         | Set API quotas, monitor daily               | Cache embeddings                 |
-| Version explosion     | Only embed latest versions                  | Periodic cleanup of old versions |
+| Risk                            | Mitigation                                                   | Fallback                                           |
+| ------------------------------- | ------------------------------------------------------------ | -------------------------------------------------- |
+| OpenAI rate limits              | Exponential backoff, batch processing                        | Queue-based processing                             |
+| Low embedding quality           | Validate with RAG Lab before production use                  | Adjust text extraction                             |
+| Database performance            | pgvector indexes, monitor queries                            | Dedicated vector DB                                |
+| Cost overruns                   | Set API quotas, monitor daily                                | Cache embeddings                                   |
+| Version explosion               | Only embed latest versions                                   | Periodic cleanup of old versions                   |
+| Test/production type mismatch   | Integration tests with real PostgreSQL                       | Accept limitation, focus on production correctness |
+| pg-mem pgvector incompatibility | Unit tests for CRUD, integration tests for similarity search | Document limitation, skip vector ops in unit tests |
 
 ---
 
