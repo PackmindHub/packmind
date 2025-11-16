@@ -33,9 +33,9 @@ export const routes = {
     toLearningsPatch: (orgSlug: string, spaceSlug: string, patchId: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/learnings/patches/${patchId}`,
     toTopics: (orgSlug: string, spaceSlug: string) =>
-      `/org/${orgSlug}/space/${spaceSlug}/topics`,
+      `/org/${orgSlug}/space/${spaceSlug}/learnings/topics`,
     toTopic: (orgSlug: string, spaceSlug: string, topicId: string) =>
-      `/org/${orgSlug}/space/${spaceSlug}/topics/${topicId}`,
+      `/org/${orgSlug}/space/${spaceSlug}/learnings/topics/${topicId}`,
     toRecipes: (orgSlug: string, spaceSlug: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/recipes`,
     toRecipe: (orgSlug: string, spaceSlug: string, recipeId: string) =>

@@ -9,6 +9,7 @@ import {
   PMTableRow,
 } from '@packmind/ui';
 import { useTopicsQuery } from '../api/queries/LearningsQueries';
+import { useGetUsersInMyOrganizationQuery } from '../../accounts/api/queries/UserQueries';
 import { routes } from '../../../shared/utils/routes';
 
 export const TopicsList = () => {
@@ -17,32 +18,43 @@ export const TopicsList = () => {
     spaceSlug: string;
   }>();
   const { data, isLoading, isError } = useTopicsQuery();
+  const { data: usersData } = useGetUsersInMyOrganizationQuery();
   const [tableData, setTableData] = React.useState<PMTableRow[]>([]);
 
   React.useEffect(() => {
     if (!data || !orgSlug || !spaceSlug) return;
 
-    setTableData(
-      data.topics.map((topic) => ({
-        key: topic.id,
-        title: (
-          <PMLink asChild>
-            <Link to={routes.space.toTopic(orgSlug, spaceSlug, topic.id)}>
-              {topic.title}
-            </Link>
-          </PMLink>
-        ),
-        createdAt: (
-          <PMBox>
-            {topic.createdAt
-              ? new Date(topic.createdAt).toLocaleDateString()
-              : 'N/A'}
-          </PMBox>
-        ),
-        createdBy: <PMBox>{topic.createdBy}</PMBox>,
-      })),
+    // Create a map of userId to user for quick lookup
+    const userMap = new Map(
+      usersData?.users?.map((user) => [user.userId, user]) || [],
     );
-  }, [data, orgSlug, spaceSlug]);
+
+    setTableData(
+      data.topics.map((topic) => {
+        const user = userMap.get(topic.createdBy);
+        const displayName = user ? user.email : topic.createdBy;
+
+        return {
+          key: topic.id,
+          title: (
+            <PMLink asChild>
+              <Link to={routes.space.toTopic(orgSlug, spaceSlug, topic.id)}>
+                {topic.title}
+              </Link>
+            </PMLink>
+          ),
+          createdAt: (
+            <PMBox>
+              {topic.createdAt
+                ? new Date(topic.createdAt).toLocaleDateString()
+                : 'N/A'}
+            </PMBox>
+          ),
+          createdBy: <PMBox>{displayName}</PMBox>,
+        };
+      }),
+    );
+  }, [data, orgSlug, spaceSlug, usersData]);
 
   const columns: PMTableColumn[] = [
     { key: 'title', header: 'Title' },
