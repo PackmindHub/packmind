@@ -42,6 +42,7 @@ export class KnowledgePatchService {
 
     try {
       const patchId = createKnowledgePatchId(uuidv4());
+      const now = new Date();
 
       const patch: KnowledgePatch = {
         id: patchId,
@@ -50,6 +51,8 @@ export class KnowledgePatchService {
         reviewedBy: null,
         reviewedAt: null,
         reviewNotes: null,
+        createdAt: now,
+        updatedAt: now,
       };
 
       const savedPatch = await this.knowledgePatchRepository.add(patch);
@@ -77,6 +80,7 @@ export class KnowledgePatchService {
     });
 
     try {
+      const now = new Date();
       const patches: KnowledgePatch[] = patchDataArray.map((patchData) => ({
         id: createKnowledgePatchId(uuidv4()),
         ...patchData,
@@ -84,6 +88,8 @@ export class KnowledgePatchService {
         reviewedBy: null,
         reviewedAt: null,
         reviewNotes: null,
+        createdAt: now,
+        updatedAt: now,
       }));
 
       const savedPatches =

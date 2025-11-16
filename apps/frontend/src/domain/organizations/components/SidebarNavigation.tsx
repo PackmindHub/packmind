@@ -100,6 +100,11 @@ export const SidebarNavigation: React.FunctionComponent<
         title="Knowledge base"
         navEntries={[
           <SidebarNavigationLink
+            key="learnings"
+            url={routes.space.toLearnings(orgSlug, currentSpaceSlug)}
+            label="Learnings"
+          />,
+          <SidebarNavigationLink
             key="standards"
             url={routes.space.toStandards(orgSlug, currentSpaceSlug)}
             label="Standards"

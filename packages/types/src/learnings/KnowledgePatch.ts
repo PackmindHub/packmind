@@ -16,4 +16,6 @@ export type KnowledgePatch = {
   reviewedBy: UserId | null;
   reviewedAt: Date | null;
   reviewNotes: string | null;
+  createdAt: Date;
+  updatedAt: Date;
 };

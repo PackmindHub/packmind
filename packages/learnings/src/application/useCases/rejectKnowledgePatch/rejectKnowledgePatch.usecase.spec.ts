@@ -2,6 +2,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import {
   createKnowledgePatchId,
+  createSpaceId,
   createUserId,
   KnowledgePatchStatus,
   RejectKnowledgePatchCommand,
@@ -45,6 +46,7 @@ describe('RejectKnowledgePatchUsecase', () => {
 
       command = {
         patchId: patchId,
+        spaceId: createSpaceId('space-123'),
         reviewedBy: reviewedBy,
         reviewNotes: 'Does not align with current architecture',
         organizationId: 'org-123',

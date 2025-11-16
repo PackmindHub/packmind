@@ -2,6 +2,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 import {
   createKnowledgePatchId,
+  createSpaceId,
   GetKnowledgePatchCommand,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -39,12 +40,13 @@ describe('GetKnowledgePatchUsecase', () => {
       patchId = createKnowledgePatchId(uuidv4());
       command = {
         patchId: patchId,
+        spaceId: createSpaceId('space-123'),
         organizationId: 'org-123',
         userId: 'user-123',
       };
     });
 
-    it('returns the patch when found', async () => {
+    it('returns the patch', async () => {
       const patch = knowledgePatchFactory({
         id: patchId,
       });

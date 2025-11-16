@@ -28,6 +28,10 @@ export const routes = {
    * Space-scoped routes (includes space slug)
    */
   space: {
+    toLearnings: (orgSlug: string, spaceSlug: string) =>
+      `/org/${orgSlug}/space/${spaceSlug}/learnings`,
+    toLearningsPatch: (orgSlug: string, spaceSlug: string, patchId: string) =>
+      `/org/${orgSlug}/space/${spaceSlug}/learnings/patches/${patchId}`,
     toRecipes: (orgSlug: string, spaceSlug: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/recipes`,
     toRecipe: (orgSlug: string, spaceSlug: string, recipeId: string) =>

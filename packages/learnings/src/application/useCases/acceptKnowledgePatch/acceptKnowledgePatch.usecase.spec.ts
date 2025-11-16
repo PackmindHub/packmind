@@ -3,6 +3,7 @@ import { stubLogger } from '@packmind/test-utils';
 import {
   AcceptKnowledgePatchCommand,
   createKnowledgePatchId,
+  createSpaceId,
   createUserId,
   KnowledgePatchStatus,
 } from '@packmind/types';
@@ -45,6 +46,7 @@ describe('AcceptKnowledgePatchUsecase', () => {
 
       command = {
         patchId: patchId,
+        spaceId: createSpaceId('space-123'),
         reviewedBy: reviewedBy,
         organizationId: 'org-123',
         userId: 'user-123',

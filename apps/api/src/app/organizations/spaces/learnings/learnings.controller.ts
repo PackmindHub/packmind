@@ -115,6 +115,7 @@ export class OrganizationsSpacesLearningsController {
     try {
       return await this.learningsAdapter.getKnowledgePatch({
         patchId,
+        spaceId,
         organizationId,
         userId,
       });
@@ -162,6 +163,7 @@ export class OrganizationsSpacesLearningsController {
     try {
       return await this.learningsAdapter.acceptKnowledgePatch({
         patchId,
+        spaceId,
         reviewedBy: userId,
         reviewNotes,
         organizationId,
@@ -212,6 +214,7 @@ export class OrganizationsSpacesLearningsController {
     try {
       return await this.learningsAdapter.rejectKnowledgePatch({
         patchId,
+        spaceId,
         reviewedBy: userId,
         reviewNotes,
         organizationId,
