@@ -15,6 +15,8 @@ const mockAIService: jest.Mocked<AIService> = {
   isConfigured: jest.fn(),
   executePrompt: jest.fn(),
   executePromptWithHistory: jest.fn(),
+  generateEmbedding: jest.fn(),
+  generateEmbeddings: jest.fn(),
 };
 
 // Mock the OpenAIService constructor

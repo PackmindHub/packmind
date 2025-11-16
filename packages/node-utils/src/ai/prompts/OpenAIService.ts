@@ -440,4 +440,194 @@ export class OpenAIService implements AIService {
       AIServiceErrorTypes.API_ERROR,
     ].includes(errorType);
   }
+
+  /**
+   * Generate embedding vector for a single text using text-embedding-3-small model
+   */
+  async generateEmbedding(text: string): Promise<number[]> {
+    this.logger.info('Generating embedding', {
+      textLength: text.length,
+    });
+
+    await this.initialize();
+
+    // Return empty array if no client is available (missing API key)
+    if (!this.client) {
+      this.logger.warn(
+        'OpenAI client not available - cannot generate embedding',
+      );
+      return [];
+    }
+
+    const maxRetries = this.maxRetries;
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        if (!this.client) {
+          throw new AIServiceError(
+            'OpenAI client not initialized',
+            AIServiceErrorTypes.API_ERROR,
+            attempt,
+          );
+        }
+
+        this.logger.info('Sending embedding request to OpenAI', {
+          attempt,
+          model: 'text-embedding-3-small',
+        });
+
+        const response = await this.client.embeddings.create({
+          input: text,
+          model: 'text-embedding-3-small',
+        });
+
+        const embedding = response.data[0]?.embedding;
+
+        if (!embedding) {
+          throw new AIServiceError(
+            'Invalid response from OpenAI: no embedding returned',
+            AIServiceErrorTypes.INVALID_RESPONSE,
+            attempt,
+          );
+        }
+
+        this.logger.info('Embedding generated successfully', {
+          attempt,
+          dimensions: embedding.length,
+          tokensUsed: response.usage?.total_tokens,
+        });
+
+        return embedding;
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+
+        const errorType = this.classifyError(error);
+        const shouldRetry = this.shouldRetry(errorType, attempt, maxRetries);
+
+        this.logger.warn('Embedding generation failed', {
+          attempt,
+          error: lastError.message,
+          errorType,
+          willRetry: shouldRetry,
+        });
+
+        if (!shouldRetry) {
+          break;
+        }
+
+        this.logger.debug('Retrying immediately', { attempt });
+      }
+    }
+
+    const finalError = new AIServiceError(
+      `Embedding generation failed after ${maxRetries} attempts: ${lastError?.message}`,
+      AIServiceErrorTypes.MAX_RETRIES_EXCEEDED,
+      maxRetries,
+      lastError || undefined,
+    );
+
+    this.logger.error('Embedding generation failed permanently', {
+      maxRetries,
+      finalError: finalError.message,
+    });
+
+    throw finalError;
+  }
+
+  /**
+   * Generate embedding vectors for multiple texts in batch using text-embedding-3-small model
+   */
+  async generateEmbeddings(texts: string[]): Promise<number[][]> {
+    this.logger.info('Generating embeddings in batch', {
+      count: texts.length,
+    });
+
+    await this.initialize();
+
+    // Return empty arrays if no client is available (missing API key)
+    if (!this.client) {
+      this.logger.warn(
+        'OpenAI client not available - cannot generate embeddings',
+      );
+      return texts.map(() => []);
+    }
+
+    const maxRetries = this.maxRetries;
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        if (!this.client) {
+          throw new AIServiceError(
+            'OpenAI client not initialized',
+            AIServiceErrorTypes.API_ERROR,
+            attempt,
+          );
+        }
+
+        this.logger.info('Sending batch embedding request to OpenAI', {
+          attempt,
+          model: 'text-embedding-3-small',
+          count: texts.length,
+        });
+
+        const response = await this.client.embeddings.create({
+          input: texts,
+          model: 'text-embedding-3-small',
+        });
+
+        const embeddings = response.data.map((item) => item.embedding);
+
+        if (embeddings.length !== texts.length) {
+          throw new AIServiceError(
+            `Invalid response from OpenAI: expected ${texts.length} embeddings, got ${embeddings.length}`,
+            AIServiceErrorTypes.INVALID_RESPONSE,
+            attempt,
+          );
+        }
+
+        this.logger.info('Embeddings generated successfully', {
+          attempt,
+          count: embeddings.length,
+          dimensions: embeddings[0]?.length,
+          tokensUsed: response.usage?.total_tokens,
+        });
+
+        return embeddings;
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+
+        const errorType = this.classifyError(error);
+        const shouldRetry = this.shouldRetry(errorType, attempt, maxRetries);
+
+        this.logger.warn('Batch embedding generation failed', {
+          attempt,
+          error: lastError.message,
+          errorType,
+          willRetry: shouldRetry,
+        });
+
+        if (!shouldRetry) {
+          break;
+        }
+
+        this.logger.debug('Retrying immediately', { attempt });
+      }
+    }
+
+    const finalError = new AIServiceError(
+      `Batch embedding generation failed after ${maxRetries} attempts: ${lastError?.message}`,
+      AIServiceErrorTypes.MAX_RETRIES_EXCEEDED,
+      maxRetries,
+      lastError || undefined,
+    );
+
+    this.logger.error('Batch embedding generation failed permanently', {
+      maxRetries,
+      finalError: finalError.message,
+    });
+
+    throw finalError;
+  }
 }

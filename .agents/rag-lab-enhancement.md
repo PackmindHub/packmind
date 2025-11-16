@@ -120,40 +120,68 @@ The RAG Lab will serve as:
 
 ---
 
-### Unit 2: Embedding Service
+### Unit 2: Embedding Service ✅ COMPLETED
 
 **Goal**: Create reusable OpenAI embedding service
 
-**Tasks**:
+**Actual Implementation**:
 
-1. Create `OpenAIEmbeddingService.ts` in `packages/node-utils/src/ai/embeddings/`
-   - `generateEmbedding(text: string): Promise<number[]>`
-   - `generateEmbeddings(texts: string[]): Promise<number[][]>` (batch support)
-   - Model: text-embedding-3-small
-   - Retry logic with exponential backoff (match OpenAIService pattern)
-   - Error handling and logging
+1. ✅ Extended existing `OpenAIService.ts` in `packages/node-utils/src/ai/prompts/`
+   - Added `generateEmbedding(text: string): Promise<number[]>`
+   - Added `generateEmbeddings(texts: string[]): Promise<number[][]>` (batch support)
+   - Model: text-embedding-3-small (1536 dimensions)
+   - Retry logic with immediate retries (matches existing OpenAIService pattern - NO exponential backoff)
+   - Full error handling and logging
    - Token usage tracking
+   - Graceful handling when API key missing (returns empty arrays)
 
-2. Create `EmbeddingService.ts` interface (provider-agnostic)
+2. ✅ Updated `AIService.ts` interface (provider-agnostic)
+   - Added embedding method signatures to existing interface
+   - Maintains consistency with prompt execution methods
 
-3. Create `TextExtractor.ts` utility
+3. ✅ Created `TextExtractor.ts` in `packages/learnings/src/application/services/`
    - `extractStandardText(version: StandardVersion): string`
+     - Combines: name + description + rules content
    - `extractRecipeText(version: RecipeVersion): string`
-   - Pattern: Combine title + description + content (markdown stripped)
+     - Combines: name + content
+   - Comprehensive markdown stripping utility:
+     - Removes code blocks, inline code, images, links
+     - Removes headers, bold, italic, blockquotes, lists
+     - Normalizes whitespace
+   - All text cleaned before embedding for optimal semantic search
 
-4. Write unit tests
-   - Mock OpenAI API responses
-   - Test error handling, retries, batch processing
-   - Validate embedding dimensions (1536)
+4. ✅ Comprehensive unit tests
+   - `OpenAIService.spec.ts`: 12 new tests for embedding methods
+     - Mock OpenAI API responses
+     - Test error handling, retries (rate limit, network, auth)
+     - Test batch processing
+     - Validate embedding dimensions (1536)
+     - Test graceful API key missing handling
+   - `TextExtractor.spec.ts`: 18 tests
+     - Test standard and recipe text extraction
+     - Test markdown stripping for all formatting types
+     - Test whitespace normalization
+     - Test edge cases (empty content, no rules, etc.)
 
-5. Export from `@packmind/node-utils`
+5. ✅ Updated test mocks in dependent packages
+   - Fixed `RecipeSummaryService.spec.ts` mock
+   - Fixed `StandardSummaryService.spec.ts` mock
+   - Added `@packmind/recipes` dependency to learnings package
 
 **Deliverables**:
 
-- OpenAIEmbeddingService with retry logic
-- EmbeddingService interface
-- TextExtractor utility
-- Unit tests
+- ✅ OpenAIService extended with embedding methods (NOT separate service - reuses existing infrastructure)
+- ✅ AIService interface updated
+- ✅ TextExtractor utility in learnings package
+- ✅ Unit tests (131 passed in node-utils, 66 passed in learnings)
+- ✅ All lint and test stages passing
+
+**Key Decisions**:
+
+- **Extended existing OpenAIService** instead of creating separate service to avoid duplication
+- **Immediate retry logic** (not exponential backoff) to match existing OpenAIService pattern
+- **TextExtractor in learnings package** (domain-specific) rather than node-utils (generic utilities)
+- **Comprehensive markdown stripping** ensures clean text for embeddings
 
 ---
 

@@ -30,4 +30,18 @@ export interface AIService {
     conversationHistory: PromptConversation[],
     options?: AIPromptOptions,
   ): Promise<AIPromptResult<T>>;
+
+  /**
+   * Generate embedding vector for a single text
+   * @param text The text to generate embedding for
+   * @returns Promise resolving to embedding vector (1536 dimensions for text-embedding-3-small)
+   */
+  generateEmbedding(text: string): Promise<number[]>;
+
+  /**
+   * Generate embedding vectors for multiple texts in batch
+   * @param texts Array of texts to generate embeddings for
+   * @returns Promise resolving to array of embedding vectors
+   */
+  generateEmbeddings(texts: string[]): Promise<number[][]>;
 }

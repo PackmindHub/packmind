@@ -27,6 +27,10 @@ describe('OpenAIService', () => {
         create: jest.MockedFunction<any>;
       };
     };
+    embeddings: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      create: jest.MockedFunction<any>;
+    };
   };
 
   beforeEach(() => {
@@ -39,6 +43,9 @@ describe('OpenAIService', () => {
         completions: {
           create: jest.fn(),
         },
+      },
+      embeddings: {
+        create: jest.fn(),
       },
     };
 
@@ -300,6 +307,156 @@ describe('OpenAIService', () => {
         );
         expect(shouldRetry).toBe(false);
       });
+    });
+  });
+
+  describe('generateEmbedding', () => {
+    const mockText = 'Test text for embedding';
+    const mockEmbedding = new Array(1536).fill(0).map((_, i) => i * 0.001);
+    const mockEmbeddingResponse = {
+      data: [{ embedding: mockEmbedding }],
+      usage: { total_tokens: 10 },
+    };
+
+    it('generates embedding successfully and returns 1536-dimension vector', async () => {
+      mockOpenAIInstance.embeddings.create.mockResolvedValue(
+        mockEmbeddingResponse,
+      );
+
+      const result = await service.generateEmbedding(mockText);
+
+      expect(result).toEqual(mockEmbedding);
+      expect(result.length).toBe(1536);
+      expect(mockOpenAIInstance.embeddings.create).toHaveBeenCalledWith({
+        input: mockText,
+        model: 'text-embedding-3-small',
+      });
+    });
+
+    it('returns empty array when API key is missing', async () => {
+      MockedConfiguration.getConfig.mockResolvedValue(null);
+
+      const result = await service.generateEmbedding(mockText);
+
+      expect(result).toEqual([]);
+      expect(mockOpenAIInstance.embeddings.create).not.toHaveBeenCalled();
+    });
+
+    it('retries on rate limit errors immediately', async () => {
+      const rateLimitError = new Error('Rate limit exceeded (429)');
+
+      mockOpenAIInstance.embeddings.create
+        .mockRejectedValueOnce(rateLimitError)
+        .mockRejectedValueOnce(rateLimitError)
+        .mockResolvedValue(mockEmbeddingResponse);
+
+      const result = await service.generateEmbedding(mockText);
+
+      expect(result).toEqual(mockEmbedding);
+      expect(mockOpenAIInstance.embeddings.create).toHaveBeenCalledTimes(3);
+    });
+
+    it('stops retrying on authentication errors', async () => {
+      const authError = new Error('Unauthorized (401)');
+      mockOpenAIInstance.embeddings.create.mockRejectedValue(authError);
+
+      await expect(service.generateEmbedding(mockText)).rejects.toThrow(
+        'failed after 5 attempts',
+      );
+      expect(mockOpenAIInstance.embeddings.create).toHaveBeenCalledTimes(1);
+    });
+
+    it('throws error after maximum retry attempts on network errors', async () => {
+      const networkError = new Error('Network timeout');
+      mockOpenAIInstance.embeddings.create.mockRejectedValue(networkError);
+
+      await expect(service.generateEmbedding(mockText)).rejects.toThrow(
+        'failed after 5 attempts',
+      );
+      expect(mockOpenAIInstance.embeddings.create).toHaveBeenCalledTimes(5);
+    });
+
+    it('throws error when response has no embedding', async () => {
+      mockOpenAIInstance.embeddings.create.mockResolvedValue({
+        data: [],
+        usage: { total_tokens: 0 },
+      });
+
+      await expect(service.generateEmbedding(mockText)).rejects.toThrow(
+        'Invalid response from OpenAI: no embedding returned',
+      );
+    });
+  });
+
+  describe('generateEmbeddings', () => {
+    const mockTexts = ['Text 1', 'Text 2', 'Text 3'];
+    const mockEmbedding1 = new Array(1536).fill(0).map((_, i) => i * 0.001);
+    const mockEmbedding2 = new Array(1536).fill(0).map((_, i) => i * 0.002);
+    const mockEmbedding3 = new Array(1536).fill(0).map((_, i) => i * 0.003);
+    const mockBatchResponse = {
+      data: [
+        { embedding: mockEmbedding1 },
+        { embedding: mockEmbedding2 },
+        { embedding: mockEmbedding3 },
+      ],
+      usage: { total_tokens: 30 },
+    };
+
+    it('generates batch embeddings successfully', async () => {
+      mockOpenAIInstance.embeddings.create.mockResolvedValue(mockBatchResponse);
+
+      const result = await service.generateEmbeddings(mockTexts);
+
+      expect(result).toEqual([mockEmbedding1, mockEmbedding2, mockEmbedding3]);
+      expect(result.length).toBe(3);
+      expect(result[0].length).toBe(1536);
+      expect(mockOpenAIInstance.embeddings.create).toHaveBeenCalledWith({
+        input: mockTexts,
+        model: 'text-embedding-3-small',
+      });
+    });
+
+    it('returns array of empty arrays when API key is missing', async () => {
+      MockedConfiguration.getConfig.mockResolvedValue(null);
+
+      const result = await service.generateEmbeddings(mockTexts);
+
+      expect(result).toEqual([[], [], []]);
+      expect(mockOpenAIInstance.embeddings.create).not.toHaveBeenCalled();
+    });
+
+    it('retries on network errors immediately', async () => {
+      const networkError = new Error('Network error');
+
+      mockOpenAIInstance.embeddings.create
+        .mockRejectedValueOnce(networkError)
+        .mockResolvedValue(mockBatchResponse);
+
+      const result = await service.generateEmbeddings(mockTexts);
+
+      expect(result).toEqual([mockEmbedding1, mockEmbedding2, mockEmbedding3]);
+      expect(mockOpenAIInstance.embeddings.create).toHaveBeenCalledTimes(2);
+    });
+
+    it('throws error when response count does not match input count', async () => {
+      mockOpenAIInstance.embeddings.create.mockResolvedValue({
+        data: [{ embedding: mockEmbedding1 }], // Only 1 embedding for 3 texts
+        usage: { total_tokens: 10 },
+      });
+
+      await expect(service.generateEmbeddings(mockTexts)).rejects.toThrow(
+        'expected 3 embeddings, got 1',
+      );
+    });
+
+    it('throws error after maximum retry attempts', async () => {
+      const apiError = new Error('API error');
+      mockOpenAIInstance.embeddings.create.mockRejectedValue(apiError);
+
+      await expect(service.generateEmbeddings(mockTexts)).rejects.toThrow(
+        'failed after 5 attempts',
+      );
+      expect(mockOpenAIInstance.embeddings.create).toHaveBeenCalledTimes(5);
     });
   });
 });

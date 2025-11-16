@@ -33,6 +33,9 @@ describe('StandardSummaryService', () => {
     mockAIService = {
       isConfigured: jest.fn(),
       executePrompt: jest.fn(),
+      executePromptWithHistory: jest.fn(),
+      generateEmbedding: jest.fn(),
+      generateEmbeddings: jest.fn(),
     } as unknown as jest.Mocked<AIService>;
 
     // Mock OpenAIService constructor to return our mock

@@ -15,6 +15,7 @@
     "@packmind/types": "*",
     "@packmind/test-utils": "*",
     "@packmind/standards": "*",
+    "@packmind/recipes": "*",
     "bullmq": "^5.29.3",
     "uuid": "^11.0.3",
     "ts-jest": "^29.4.1"
