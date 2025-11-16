@@ -10,6 +10,10 @@ import {
 } from '@packmind/ui';
 import { CodeExample, TopicId } from '@packmind/types';
 import { useTopicQuery } from '../api/queries/LearningsQueries';
+import {
+  MarkdownEditor,
+  MarkdownEditorProvider,
+} from '../../../shared/components/editor/MarkdownEditor';
 
 interface TopicDetailsProps {
   topicId: TopicId;
@@ -74,7 +78,9 @@ export const TopicDetails = ({ topicId }: TopicDetailsProps) => {
         <PMHeading size="sm" mb={4}>
           Content
         </PMHeading>
-        <PMText whiteSpace="pre-wrap">{topic.content}</PMText>
+        <MarkdownEditorProvider>
+          <MarkdownEditor defaultValue={topic.content} readOnly />
+        </MarkdownEditorProvider>
       </PMBox>
 
       {/* Code Examples */}
