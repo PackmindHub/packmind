@@ -40,10 +40,13 @@ export class TopicService {
 
     try {
       const topicId = createTopicId(uuidv4());
+      const now = new Date();
 
       const topic: Topic = {
         id: topicId,
         ...topicData,
+        createdAt: now,
+        updatedAt: now,
       };
 
       const savedTopic = await this.topicRepository.add(topic);
