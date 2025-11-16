@@ -6,10 +6,14 @@ import {
   JobsService,
 } from '@packmind/node-utils';
 import {
+  IAccountsPort,
+  IAccountsPortName,
   ILearningsPort,
   ILearningsPortName,
   IRecipesPort,
   IRecipesPortName,
+  ISpacesPort,
+  ISpacesPortName,
   IStandardsPort,
   IStandardsPortName,
 } from '@packmind/types';
@@ -67,7 +71,7 @@ export class LearningsHexa extends BaseHexa<BaseHexaOpts, ILearningsPort> {
 
   /**
    * Initialize the hexa with access to the registry for adapter retrieval.
-   * Retrieves StandardsPort and RecipesPort for topic distillation.
+   * Retrieves AccountsPort, SpacesPort, StandardsPort and RecipesPort for topic management and distillation.
    */
   public async initialize(registry: HexaRegistry): Promise<void> {
     if (this.isInitialized) {
@@ -78,8 +82,13 @@ export class LearningsHexa extends BaseHexa<BaseHexaOpts, ILearningsPort> {
     this.logger.info('Initializing LearningsHexa (adapter retrieval phase)');
 
     try {
-      // Retrieve Standards and Recipes ports from registry
-      this.logger.debug('Retrieving Standards and Recipes ports from registry');
+      // Retrieve required ports from registry
+      this.logger.debug(
+        'Retrieving Accounts, Spaces, Standards and Recipes ports from registry',
+      );
+      const accountsPort =
+        registry.getAdapter<IAccountsPort>(IAccountsPortName);
+      const spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
       const standardsPort =
         registry.getAdapter<IStandardsPort>(IStandardsPortName);
       const recipesPort = registry.getAdapter<IRecipesPort>(IRecipesPortName);
@@ -93,6 +102,8 @@ export class LearningsHexa extends BaseHexa<BaseHexaOpts, ILearningsPort> {
 
       // Initialize adapter with ports and services
       await this.adapter.initialize({
+        IAccountsPort: accountsPort,
+        ISpacesPort: spacesPort,
         IStandardsPort: standardsPort,
         IRecipesPort: recipesPort,
         jobsService,

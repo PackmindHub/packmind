@@ -15,13 +15,16 @@ import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
   AcceptKnowledgePatchResponse,
   GetKnowledgePatchResponse,
+  GetTopicByIdResponse,
   GetTopicsStatsResponse,
   KnowledgePatchId,
   KnowledgePatchStatus,
   ListKnowledgePatchesResponse,
+  ListTopicsResponse,
   OrganizationId,
   RejectKnowledgePatchResponse,
   SpaceId,
+  TopicId,
 } from '@packmind/types';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 import { SpaceAccessGuard } from '../guards/space-access.guard';
@@ -315,6 +318,92 @@ export class OrganizationsSpacesLearningsController {
         {
           organizationId,
           spaceId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Get all topics for a space
+   * GET /organizations/:orgId/spaces/:spaceId/learnings/topics
+   */
+  @Get('topics')
+  async listTopics(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<ListTopicsResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'GET /organizations/:orgId/spaces/:spaceId/learnings/topics - Fetching topics',
+      {
+        organizationId,
+        spaceId,
+      },
+    );
+
+    try {
+      return await this.learningsAdapter.listTopics({
+        spaceId,
+        organizationId,
+        userId,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/spaces/:spaceId/learnings/topics - Failed to fetch topics',
+        {
+          organizationId,
+          spaceId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Get a single topic by ID
+   * GET /organizations/:orgId/spaces/:spaceId/learnings/topics/:topicId
+   */
+  @Get('topics/:topicId')
+  async getTopic(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('topicId') topicId: TopicId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<GetTopicByIdResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'GET /organizations/:orgId/spaces/:spaceId/learnings/topics/:topicId - Fetching topic',
+      {
+        organizationId,
+        spaceId,
+        topicId,
+      },
+    );
+
+    try {
+      return await this.learningsAdapter.getTopicById({
+        topicId,
+        spaceId,
+        organizationId,
+        userId,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/spaces/:spaceId/learnings/topics/:topicId - Failed to fetch topic',
+        {
+          organizationId,
+          spaceId,
+          topicId,
           error: errorMessage,
         },
       );

@@ -11,15 +11,23 @@ import {
   DistillAllPendingTopicsResponse,
   GetKnowledgePatchCommand,
   GetKnowledgePatchResponse,
+  GetTopicByIdCommand,
+  GetTopicByIdResponse,
   GetTopicsStatsCommand,
   GetTopicsStatsResponse,
+  IAccountsPort,
+  IAccountsPortName,
   ILearningsPort,
   IRecipesPort,
   IRecipesPortName,
+  ISpacesPort,
+  ISpacesPortName,
   IStandardsPort,
   IStandardsPortName,
   ListKnowledgePatchesCommand,
   ListKnowledgePatchesResponse,
+  ListTopicsCommand,
+  ListTopicsResponse,
   RejectKnowledgePatchCommand,
   RejectKnowledgePatchResponse,
 } from '@packmind/types';
@@ -28,6 +36,8 @@ import { CaptureTopicUsecase } from '../useCases/captureTopic/captureTopic.useca
 import { DistillTopicUsecase } from '../useCases/distillTopic/distillTopic.usecase';
 import { DistillAllPendingTopicsUsecase } from '../useCases/distillAllPendingTopics/distillAllPendingTopics.usecase';
 import { GetTopicsStatsUsecase } from '../useCases/getTopicsStats/getTopicsStats.usecase';
+import { GetTopicByIdUsecase } from '../useCases/getTopicById/getTopicById.usecase';
+import { ListTopicsUsecase } from '../useCases/listTopics/listTopics.usecase';
 import { ListKnowledgePatchesUsecase } from '../useCases/listKnowledgePatches/listKnowledgePatches.usecase';
 import { GetKnowledgePatchUsecase } from '../useCases/getKnowledgePatch/getKnowledgePatch.usecase';
 import { AcceptKnowledgePatchUsecase } from '../useCases/acceptKnowledgePatch/acceptKnowledgePatch.usecase';
@@ -49,10 +59,14 @@ export class LearningsAdapter
   private distillAllPendingTopicsUsecase: DistillAllPendingTopicsUsecase | null =
     null;
   private getTopicsStatsUsecase: GetTopicsStatsUsecase;
+  private listTopicsUsecase: ListTopicsUsecase | null = null;
+  private getTopicByIdUsecase: GetTopicByIdUsecase | null = null;
   private listKnowledgePatchesUsecase: ListKnowledgePatchesUsecase;
   private getKnowledgePatchUsecase: GetKnowledgePatchUsecase;
   private acceptKnowledgePatchUsecase: AcceptKnowledgePatchUsecase;
   private rejectKnowledgePatchUsecase: RejectKnowledgePatchUsecase;
+  private accountsPort: IAccountsPort | null = null;
+  private spacesPort: ISpacesPort | null = null;
   private standardsPort: IStandardsPort | null = null;
   private recipesPort: IRecipesPort | null = null;
   private learningsDelayedJobs: ILearningsDelayedJobs | null = null;
@@ -107,16 +121,25 @@ export class LearningsAdapter
    * Initialize adapter with ports and services from registry.
    */
   public async initialize(ports: {
+    [IAccountsPortName]: IAccountsPort;
+    [ISpacesPortName]: ISpacesPort;
     [IStandardsPortName]: IStandardsPort;
     [IRecipesPortName]: IRecipesPort;
     jobsService: JobsService;
   }): Promise<void> {
     this.logger.info('Initializing LearningsAdapter with ports and services');
 
+    this.accountsPort = ports[IAccountsPortName];
+    this.spacesPort = ports[ISpacesPortName];
     this.standardsPort = ports[IStandardsPortName];
     this.recipesPort = ports[IRecipesPortName];
 
-    if (!this.standardsPort || !this.recipesPort) {
+    if (
+      !this.accountsPort ||
+      !this.spacesPort ||
+      !this.standardsPort ||
+      !this.recipesPort
+    ) {
       throw new Error('LearningsAdapter: Required ports not provided.');
     }
 
@@ -134,6 +157,23 @@ export class LearningsAdapter
       this.learningsServices.getKnowledgePatchService(),
       this.standardsPort,
       this.recipesPort,
+      this.logger,
+    );
+
+    // Initialize topic list and get use cases
+    this.logger.debug('Initializing listTopics use case');
+    this.listTopicsUsecase = new ListTopicsUsecase(
+      this.accountsPort,
+      this.learningsServices.getTopicService(),
+      this.spacesPort,
+      this.logger,
+    );
+
+    this.logger.debug('Initializing getTopicById use case');
+    this.getTopicByIdUsecase = new GetTopicByIdUsecase(
+      this.accountsPort,
+      this.learningsServices.getTopicService(),
+      this.spacesPort,
       this.logger,
     );
 
@@ -175,10 +215,14 @@ export class LearningsAdapter
    */
   public isReady(): boolean {
     return (
+      this.accountsPort !== null &&
+      this.spacesPort !== null &&
       this.standardsPort !== null &&
       this.recipesPort !== null &&
       this.distillTopicUsecase !== null &&
       this.distillAllPendingTopicsUsecase !== null &&
+      this.listTopicsUsecase !== null &&
+      this.getTopicByIdUsecase !== null &&
       this.learningsDelayedJobs !== null
     );
   }
@@ -347,5 +391,44 @@ export class LearningsAdapter
     });
 
     return await this.getTopicsStatsUsecase.execute(command);
+  }
+
+  /**
+   * List topics by space.
+   */
+  public async listTopics(
+    command: ListTopicsCommand,
+  ): Promise<ListTopicsResponse> {
+    this.logger.info('listTopics called', {
+      spaceId: command.spaceId,
+    });
+
+    if (!this.listTopicsUsecase) {
+      throw new Error(
+        'LearningsAdapter not fully initialized. Call initialize() first.',
+      );
+    }
+
+    return await this.listTopicsUsecase.execute(command);
+  }
+
+  /**
+   * Get a single topic by ID.
+   */
+  public async getTopicById(
+    command: GetTopicByIdCommand,
+  ): Promise<GetTopicByIdResponse> {
+    this.logger.info('getTopicById called', {
+      topicId: command.topicId,
+      spaceId: command.spaceId,
+    });
+
+    if (!this.getTopicByIdUsecase) {
+      throw new Error(
+        'LearningsAdapter not fully initialized. Call initialize() first.',
+      );
+    }
+
+    return await this.getTopicByIdUsecase.execute(command);
   }
 }
