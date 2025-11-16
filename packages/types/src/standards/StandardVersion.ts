@@ -16,4 +16,5 @@ export type StandardVersion = {
   userId?: UserId | null; // User who created this version through Web UI, null for git commits
   scope: string | null;
   rules?: Rule[];
+  embedding?: number[];
 };

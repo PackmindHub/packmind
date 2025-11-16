@@ -51,6 +51,10 @@ export const RecipeVersionSchema = new EntitySchema<
       type: 'uuid',
       nullable: true, // null for git commits, UserId for UI updates
     },
+    embedding: {
+      type: String,
+      nullable: true,
+    },
     ...uuidSchema,
     ...timestampsSchemas,
     ...softDeleteSchemas,

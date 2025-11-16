@@ -64,6 +64,10 @@ export const StandardVersionSchema = new EntitySchema<
       type: 'varchar',
       nullable: true,
     },
+    embedding: {
+      type: String,
+      nullable: true,
+    },
     ...uuidSchema,
     ...timestampsSchemas,
     ...softDeleteSchemas,

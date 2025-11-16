@@ -16,4 +16,5 @@ export type RecipeVersion = {
   summary?: string | null;
   gitCommit?: GitCommit;
   userId: UserId | null; // null for git commits, UserId for UI updates
+  embedding?: number[];
 };

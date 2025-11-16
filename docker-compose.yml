@@ -41,7 +41,7 @@ services:
         condition: service_completed_successfully
 
   postgres:
-    image: postgres:17-alpine
+    image: pgvector/pgvector:pg17
     container_name: dev-${PACKMIND_EDITION:-oss}-packmind-postgres
     environment:
       POSTGRES_USER: postgres
