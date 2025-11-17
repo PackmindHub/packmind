@@ -128,7 +128,7 @@ describe('DetectionProgramMetadataRepository', () => {
     });
   });
 
-  it('returns null when metadata not found by detection program id', async () => {
+  it('returns null for non-existent detection program id', async () => {
     const nonExistentId = createDetectionProgramId(uuidv4());
 
     const foundMetadata =
@@ -159,7 +159,7 @@ describe('DetectionProgramMetadataRepository', () => {
       });
     });
 
-    it('creates metadata automatically when not found', async () => {
+    it('creates metadata automatically for new detection program', async () => {
       const rule = await createRuleWithHierarchy();
       const detectionProgram = detectionProgramFactory({ ruleId: rule.id });
       await detectionProgramRepo.save(detectionProgram);
@@ -202,7 +202,7 @@ describe('DetectionProgramMetadataRepository', () => {
       expect(foundMetadata?.programDescription).toBe('Updated description');
     });
 
-    it('creates metadata automatically when not found', async () => {
+    it('creates metadata automatically for new detection program', async () => {
       const rule = await createRuleWithHierarchy();
       const detectionProgram = detectionProgramFactory({ ruleId: rule.id });
       await detectionProgramRepo.save(detectionProgram);
@@ -242,7 +242,7 @@ describe('DetectionProgramMetadataRepository', () => {
       expect(foundMetadata?.tokens).toEqual(tokens);
     });
 
-    it('creates metadata automatically when not found', async () => {
+    it('creates metadata automatically for new detection program', async () => {
       const rule = await createRuleWithHierarchy();
       const detectionProgram = detectionProgramFactory({ ruleId: rule.id });
       await detectionProgramRepo.save(detectionProgram);

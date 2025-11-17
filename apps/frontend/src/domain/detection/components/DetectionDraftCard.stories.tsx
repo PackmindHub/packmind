@@ -22,6 +22,8 @@ const meta = {
     onTestDraft: () => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     onRetryDraft: () => {},
+    standardId: 'standard-123',
+    ruleId: 'rule-456',
   },
 } satisfies Meta<typeof DetectionDraftCard>;
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   PMButton,
   PMEllipsisMenuAction,
@@ -8,6 +8,7 @@ import {
 import { DetectionProgram } from '@packmind/types';
 import { DetectionStatus } from '@packmind/types';
 import { ConfigurationCard } from './ConfigurationCard';
+import { ExecutionLogsDrawer } from './ExecutionLogsDrawer';
 
 const DRAFT_BADGE = {
   label: 'Draft',
@@ -58,6 +59,8 @@ interface DraftCardProps {
   onTestDraft: (draft: DraftCardData) => void;
   onRetryDraft?: (draft: DraftCardData) => void;
   isGenerating?: boolean;
+  standardId: string;
+  ruleId: string;
 }
 
 export const DetectionDraftCard: React.FC<DraftCardProps> = ({
@@ -67,7 +70,10 @@ export const DetectionDraftCard: React.FC<DraftCardProps> = ({
   onTestDraft,
   onRetryDraft,
   isGenerating = false,
+  standardId,
+  ruleId,
 }) => {
+  const [isLogsDrawerOpen, setIsLogsDrawerOpen] = useState(false);
   const normalizedStatus = normalizeStatus(draft.status);
   const statusContent = STATUS_CONTENT[normalizedStatus];
   const menuActions = buildMenuActions({
@@ -75,6 +81,7 @@ export const DetectionDraftCard: React.FC<DraftCardProps> = ({
     normalizedStatus,
     onMakeActive,
     onTestDraft,
+    onViewLogs: () => setIsLogsDrawerOpen(true),
   });
   const mainAction = buildMainAction({
     draft,
@@ -85,22 +92,33 @@ export const DetectionDraftCard: React.FC<DraftCardProps> = ({
   });
 
   return (
-    <ConfigurationCard
-      id={draft.id}
-      language={draft.language}
-      badge={DRAFT_BADGE}
-      menuActions={menuActions}
-      mainAction={mainAction}
-      actionsDisabled={isActivating}
-    >
-      <PMText fontSize="sm">
-        Status:{' '}
-        <PMText color={statusContent.color}>{statusContent.label}</PMText>{' '}
-      </PMText>
-      <PMText color="faded" fontSize="sm">
-        Version {draft.version ?? '—'}
-      </PMText>
-    </ConfigurationCard>
+    <>
+      <ConfigurationCard
+        id={draft.id}
+        language={draft.language}
+        badge={DRAFT_BADGE}
+        menuActions={menuActions}
+        mainAction={mainAction}
+        actionsDisabled={isActivating}
+      >
+        <PMText fontSize="sm">
+          Status:{' '}
+          <PMText color={statusContent.color}>
+            {statusContent.label}
+          </PMText>{' '}
+        </PMText>
+        <PMText color="faded" fontSize="sm">
+          Version {draft.version ?? '—'}
+        </PMText>
+      </ConfigurationCard>
+      <ExecutionLogsDrawer
+        isOpen={isLogsDrawerOpen}
+        onClose={() => setIsLogsDrawerOpen(false)}
+        standardId={standardId}
+        ruleId={ruleId}
+        detectionProgramId={draft.draftProgram.id}
+      />
+    </>
   );
 };
 
@@ -123,11 +141,13 @@ function buildMenuActions({
   normalizedStatus,
   onMakeActive,
   onTestDraft,
+  onViewLogs,
 }: {
   draft: DraftCardData;
   normalizedStatus: NormalizedStatus;
   onMakeActive: (draft: DraftCardData) => void;
   onTestDraft: (draft: DraftCardData) => void;
+  onViewLogs: () => void;
 }): PMEllipsisMenuAction[] {
   const actions: PMEllipsisMenuAction[] = [];
 
@@ -146,6 +166,12 @@ function buildMenuActions({
       onClick: () => onTestDraft(draft),
     });
   }
+
+  actions.push({
+    value: 'view-logs',
+    content: <PMText color="secondary">Logs</PMText>,
+    onClick: onViewLogs,
+  });
 
   return actions;
 }

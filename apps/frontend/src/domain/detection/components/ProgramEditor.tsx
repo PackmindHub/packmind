@@ -370,6 +370,8 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
         onTestDraft={handleTestDraft}
         onRetryDraft={handleRetryDraftGeneration}
         isGeneratingProgram={generateProgram.isPending}
+        standardId={standardId}
+        ruleId={ruleId}
       />
       <PMDialog.Root
         open={isTestModalOpen}

@@ -1,30 +1,14 @@
-import { ExecutionLog, ExecutionLogMetadata } from '@packmind/types';
+import {
+  ExecutionLog,
+  ExecutionLogMetadata,
+  DETECTION_LOG_MESSAGES,
+} from '@packmind/types';
 import { IDetectionProgramMetadataRepository } from '../../../../domain/repositories/IDetectionProgramMetadataRepository';
 import { DetectionProgramId } from '@packmind/types';
 import { TokensUsed } from '@packmind/types';
 
 export default class DetectionToolingLogWriter {
-  public static readonly MESSAGES: { [key: string]: string } = {
-    AI_AGENT_STRATEGY_ASSESSMENT: 'AI_AGENT_STRATEGY_ASSESSMENT',
-    AI_AGENT_RESULT_NOT_GOOD_WILL_RESTART:
-      'AI_AGENT_RESULT_NOT_GOOD_WILL_RESTART',
-    AI_AGENT_RESULT_SUCCESS: 'AI_AGENT_RESULT_SUCCESS',
-    AI_AGENT_CRASH_RESTART: 'AI_AGENT_CRASH_RESTART',
-
-    AI_AGENT_PROGRAM_GENERATION_STARTED: 'AI_AGENT_PROGRAM_GENERATION_STARTED',
-    AI_AGENT_NEW_PROGRAM_UNDER_TEST: 'AI_AGENT_NEW_PROGRAM_UNDER_TEST',
-    AI_AGENT_PROGRAM_DEBUGGING: 'AI_AGENT_PROGRAM_DEBUGGING',
-    AI_AGENT_PROGRAM_SUCCESSFUL: 'AI_AGENT_PROGRAM_SUCCESSFUL',
-    AI_AGENT_PROGRAM_TEST_AGAINST_EXAMPLES:
-      'AI_AGENT_PROGRAM_TEST_AGAINST_EXAMPLES',
-    AI_AGENT_PROGRAM_CHECK_POSITIVE_EXAMPLES:
-      'AI_AGENT_PROGRAM_CHECK_POSITIVE_EXAMPLES',
-
-    AI_AGENT_RUN_TEST: 'AI_AGENT_RUN_TEST',
-    AI_AGENT_RUN_TEST_NO_NAME: 'AI_AGENT_RUN_TEST_NO_NAME',
-
-    AI_AGENT_TIMEOUT: 'AI_AGENT_TIMEOUT',
-  };
+  public static readonly MESSAGES = DETECTION_LOG_MESSAGES;
 
   private _logs: ExecutionLog[] = [];
 

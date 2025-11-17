@@ -42,6 +42,8 @@ interface DraftsSectionProps {
   onTestDraft: (draft: DraftCardData) => void;
   onRetryDraft: (draft: DraftCardData) => void;
   isGeneratingProgram: boolean;
+  standardId: string;
+  ruleId: string;
 }
 
 export const DraftsSection: React.FC<DraftsSectionProps> = ({
@@ -54,6 +56,8 @@ export const DraftsSection: React.FC<DraftsSectionProps> = ({
   onTestDraft,
   onRetryDraft,
   isGeneratingProgram,
+  standardId,
+  ruleId,
 }) => {
   if (isLoading) {
     return (
@@ -93,6 +97,8 @@ export const DraftsSection: React.FC<DraftsSectionProps> = ({
             onTestDraft={onTestDraft}
             onRetryDraft={onRetryDraft}
             isGenerating={isGeneratingProgram}
+            standardId={standardId}
+            ruleId={ruleId}
           />
         ))}
       </PMFlex>
