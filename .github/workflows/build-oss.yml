@@ -127,6 +127,10 @@ jobs:
         env:
           PACKMIND_EDITION: ${{ env.OSS_EDITION }}
         run: ./node_modules/.bin/nx build mcp-server
+      - name: Test MCP Server (OSS)
+        env:
+          PACKMIND_EDITION: ${{ env.OSS_EDITION }}
+        run: ./node_modules/.bin/nx test mcp-server
       - run: cp tsconfig.base.effective.json dist/apps/mcp-server/.
 
       - name: Upload MCP-Server OSS build artifacts
