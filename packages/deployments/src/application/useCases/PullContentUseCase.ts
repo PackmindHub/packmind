@@ -156,33 +156,20 @@ export class PullContentUseCase extends AbstractMemberUseCase<
           codingAgent,
         ) as ICodingAgentDeployer;
 
-        // Deploy recipes
-        if (recipeVersions.length > 0) {
-          const recipeFileUpdates =
-            await deployer.generateFileUpdatesForRecipes(recipeVersions);
+        // Deploy both recipes and standards together using deployArtifacts
+        // This ensures both sections are included in the same file
+        const artifactFileUpdates = await deployer.deployArtifacts(
+          recipeVersions,
+          standardVersions,
+        );
 
-          this.logger.info('Generated recipe file updates', {
-            codingAgent,
-            createOrUpdateCount: recipeFileUpdates.createOrUpdate.length,
-            deleteCount: recipeFileUpdates.delete.length,
-          });
+        this.logger.info('Generated artifact file updates', {
+          codingAgent,
+          createOrUpdateCount: artifactFileUpdates.createOrUpdate.length,
+          deleteCount: artifactFileUpdates.delete.length,
+        });
 
-          this.mergeFileUpdates(mergedFileUpdates, recipeFileUpdates);
-        }
-
-        // Deploy standards
-        if (standardVersions.length > 0) {
-          const standardFileUpdates =
-            await deployer.generateFileUpdatesForStandards(standardVersions);
-
-          this.logger.info('Generated standard file updates', {
-            codingAgent,
-            createOrUpdateCount: standardFileUpdates.createOrUpdate.length,
-            deleteCount: standardFileUpdates.delete.length,
-          });
-
-          this.mergeFileUpdates(mergedFileUpdates, standardFileUpdates);
-        }
+        this.mergeFileUpdates(mergedFileUpdates, artifactFileUpdates);
       }
 
       this.logger.info('Successfully pulled content', {
