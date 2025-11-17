@@ -30,6 +30,12 @@ import {
   ListTopicsResponse,
   RejectKnowledgePatchCommand,
   RejectKnowledgePatchResponse,
+  SearchArtifactsBySemanticsCommand,
+  SearchArtifactsBySemanticsResponse,
+  GetEmbeddingHealthCommand,
+  GetEmbeddingHealthResponse,
+  TriggerEmbeddingBackfillCommand,
+  TriggerEmbeddingBackfillResponse,
   StandardVersionId,
   RecipeVersionId,
 } from '@packmind/types';
@@ -45,6 +51,9 @@ import { ListKnowledgePatchesUsecase } from '../useCases/listKnowledgePatches/li
 import { GetKnowledgePatchUsecase } from '../useCases/getKnowledgePatch/getKnowledgePatch.usecase';
 import { AcceptKnowledgePatchUsecase } from '../useCases/acceptKnowledgePatch/acceptKnowledgePatch.usecase';
 import { RejectKnowledgePatchUsecase } from '../useCases/rejectKnowledgePatch/rejectKnowledgePatch.usecase';
+import { SearchArtifactsBySemanticsUsecase } from '../useCases/searchArtifactsBySemantics/searchArtifactsBySemantics.usecase';
+import { GetEmbeddingHealthUsecase } from '../useCases/getEmbeddingHealth/getEmbeddingHealth.usecase';
+import { TriggerEmbeddingBackfillUsecase } from '../useCases/triggerEmbeddingBackfill/triggerEmbeddingBackfill.usecase';
 import { ILearningsDelayedJobs } from '../../domain/jobs/ILearningsDelayedJobs';
 import { DistillTopicsJobFactory } from '../../infra/jobs/DistillTopicsJobFactory';
 import { GenerateStandardEmbeddingJobFactory } from '../../infra/jobs/GenerateStandardEmbeddingJobFactory';
@@ -71,6 +80,11 @@ export class LearningsAdapter
   private getKnowledgePatchUsecase: GetKnowledgePatchUsecase;
   private acceptKnowledgePatchUsecase: AcceptKnowledgePatchUsecase;
   private rejectKnowledgePatchUsecase: RejectKnowledgePatchUsecase;
+  private searchArtifactsBySemanticsUsecase: SearchArtifactsBySemanticsUsecase | null =
+    null;
+  private getEmbeddingHealthUsecase: GetEmbeddingHealthUsecase | null = null;
+  private triggerEmbeddingBackfillUsecase: TriggerEmbeddingBackfillUsecase | null =
+    null;
   private accountsPort: IAccountsPort | null = null;
   private spacesPort: ISpacesPort | null = null;
   private standardsPort: IStandardsPort | null = null;
@@ -232,6 +246,35 @@ export class LearningsAdapter
         this.logger,
       );
     }
+
+    // Initialize RAG Lab use cases
+    this.logger.debug('Initializing searchArtifactsBySemantics use case');
+    this.searchArtifactsBySemanticsUsecase =
+      new SearchArtifactsBySemanticsUsecase(
+        this.accountsPort,
+        this.learningsServices.getEmbeddingOrchestrationService(),
+        this.spacesPort,
+        this.logger,
+      );
+
+    this.logger.debug('Initializing getEmbeddingHealth use case');
+    this.getEmbeddingHealthUsecase = new GetEmbeddingHealthUsecase(
+      this.accountsPort,
+      this.learningsServices.getEmbeddingOrchestrationService(),
+      this.spacesPort,
+      this.standardsPort,
+      this.recipesPort,
+      this.logger,
+    );
+
+    this.logger.debug('Initializing triggerEmbeddingBackfill use case');
+    this.triggerEmbeddingBackfillUsecase = new TriggerEmbeddingBackfillUsecase(
+      this.accountsPort,
+      this.learningsServices.getEmbeddingOrchestrationService(),
+      this.spacesPort,
+      this,
+      this.logger,
+    );
 
     this.logger.info('LearningsAdapter initialized successfully');
   }
@@ -506,6 +549,55 @@ export class LearningsAdapter
   /**
    * Enqueue standard embedding generation job.
    */
+  public async searchArtifactsBySemantics(
+    command: SearchArtifactsBySemanticsCommand,
+  ): Promise<SearchArtifactsBySemanticsResponse> {
+    this.logger.info('searchArtifactsBySemantics called', {
+      spaceId: command.spaceId,
+      queryTextLength: command.queryText.length,
+    });
+
+    if (!this.searchArtifactsBySemanticsUsecase) {
+      throw new Error(
+        'LearningsAdapter not fully initialized. Call initialize() first.',
+      );
+    }
+
+    return await this.searchArtifactsBySemanticsUsecase.execute(command);
+  }
+
+  public async getEmbeddingHealth(
+    command: GetEmbeddingHealthCommand,
+  ): Promise<GetEmbeddingHealthResponse> {
+    this.logger.info('getEmbeddingHealth called', {
+      spaceId: command.spaceId,
+    });
+
+    if (!this.getEmbeddingHealthUsecase) {
+      throw new Error(
+        'LearningsAdapter not fully initialized. Call initialize() first.',
+      );
+    }
+
+    return await this.getEmbeddingHealthUsecase.execute(command);
+  }
+
+  public async triggerEmbeddingBackfill(
+    command: TriggerEmbeddingBackfillCommand,
+  ): Promise<TriggerEmbeddingBackfillResponse> {
+    this.logger.info('triggerEmbeddingBackfill called', {
+      spaceId: command.spaceId,
+    });
+
+    if (!this.triggerEmbeddingBackfillUsecase) {
+      throw new Error(
+        'LearningsAdapter not fully initialized. Call initialize() first.',
+      );
+    }
+
+    return await this.triggerEmbeddingBackfillUsecase.execute(command);
+  }
+
   public async enqueueStandardEmbeddingGeneration(
     versionId: StandardVersionId,
   ): Promise<void> {

@@ -33,4 +33,5 @@ export interface IStandardVersionRepository
   findLatestVersionsWhereEmbeddingIsNull(
     spaceId?: SpaceId,
   ): Promise<StandardVersion[]>;
+  findAllLatestVersions(spaceId?: SpaceId): Promise<StandardVersion[]>;
 }

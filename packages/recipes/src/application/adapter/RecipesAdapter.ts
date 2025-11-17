@@ -388,6 +388,13 @@ export class RecipesAdapter
     return recipeVersionRepo.findLatestVersionsWhereEmbeddingIsNull(spaceId);
   }
 
+  async findAllLatestRecipeVersions(
+    spaceId?: SpaceId,
+  ): Promise<RecipeVersion[]> {
+    const recipeVersionRepo = this.recipesServices.getRecipeVersionRepository();
+    return recipeVersionRepo.findAllLatestVersions(spaceId);
+  }
+
   async findSimilarRecipesByEmbedding(
     embedding: number[],
     spaceId?: SpaceId,

@@ -38,6 +38,18 @@ import {
   RejectKnowledgePatchCommand,
   RejectKnowledgePatchResponse,
 } from '../contracts/RejectKnowledgePatchUseCase';
+import {
+  SearchArtifactsBySemanticsCommand,
+  SearchArtifactsBySemanticsResponse,
+} from '../contracts/SearchArtifactsBySemanticsUseCase';
+import {
+  GetEmbeddingHealthCommand,
+  GetEmbeddingHealthResponse,
+} from '../contracts/GetEmbeddingHealthUseCase';
+import {
+  TriggerEmbeddingBackfillCommand,
+  TriggerEmbeddingBackfillResponse,
+} from '../contracts/TriggerEmbeddingBackfillUseCase';
 import { StandardVersionId } from '../../standards/StandardVersionId';
 import { RecipeVersionId } from '../../recipes/RecipeVersion';
 
@@ -70,6 +82,15 @@ export interface ILearningsPort {
   rejectKnowledgePatch(
     command: RejectKnowledgePatchCommand,
   ): Promise<RejectKnowledgePatchResponse>;
+  searchArtifactsBySemantics(
+    command: SearchArtifactsBySemanticsCommand,
+  ): Promise<SearchArtifactsBySemanticsResponse>;
+  getEmbeddingHealth(
+    command: GetEmbeddingHealthCommand,
+  ): Promise<GetEmbeddingHealthResponse>;
+  triggerEmbeddingBackfill(
+    command: TriggerEmbeddingBackfillCommand,
+  ): Promise<TriggerEmbeddingBackfillResponse>;
 
   // Embedding job enqueueing methods
   enqueueStandardEmbeddingGeneration(

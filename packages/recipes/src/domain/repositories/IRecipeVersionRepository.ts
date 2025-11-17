@@ -25,4 +25,5 @@ export interface IRecipeVersionRepository extends IRepository<RecipeVersion> {
   findLatestVersionsWhereEmbeddingIsNull(
     spaceId?: SpaceId,
   ): Promise<RecipeVersion[]>;
+  findAllLatestVersions(spaceId?: SpaceId): Promise<RecipeVersion[]>;
 }

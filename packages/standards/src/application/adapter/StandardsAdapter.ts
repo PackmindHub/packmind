@@ -507,6 +507,14 @@ export class StandardsAdapter
       .findLatestVersionsWhereEmbeddingIsNull(spaceId);
   }
 
+  async findAllLatestStandardVersions(
+    spaceId?: SpaceId,
+  ): Promise<StandardVersion[]> {
+    return this.repositories
+      .getStandardVersionRepository()
+      .findAllLatestVersions(spaceId);
+  }
+
   async findSimilarStandardsByEmbedding(
     embedding: number[],
     spaceId?: SpaceId,

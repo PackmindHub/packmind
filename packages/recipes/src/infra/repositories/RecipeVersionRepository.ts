@@ -301,4 +301,53 @@ export class RecipeVersionRepository
       throw error;
     }
   }
+
+  async findAllLatestVersions(spaceId?: SpaceId): Promise<RecipeVersion[]> {
+    this.logger.info('Finding all latest recipe versions', { spaceId });
+
+    try {
+      // Get all versions, optionally filtered by space
+      let allVersionsQuery =
+        this.repository.createQueryBuilder('recipe_version');
+
+      if (spaceId) {
+        allVersionsQuery = allVersionsQuery
+          .innerJoin(
+            'recipes',
+            'recipe',
+            'recipe_version.recipe_id = recipe.id',
+          )
+          .andWhere('recipe.space_id = :spaceId', { spaceId });
+      }
+
+      const allVersions = await allVersionsQuery.getMany();
+
+      // Group by recipe_id and find the latest version for each
+      const latestVersionsMap = new Map<string, RecipeVersion>();
+
+      for (const version of allVersions) {
+        const recipeId = version.recipeId;
+        const existing = latestVersionsMap.get(recipeId);
+
+        if (!existing || version.version > existing.version) {
+          latestVersionsMap.set(recipeId, version);
+        }
+      }
+
+      const results = Array.from(latestVersionsMap.values());
+
+      this.logger.info('All latest recipe versions found', {
+        count: results.length,
+        spaceId,
+      });
+
+      return results;
+    } catch (error) {
+      this.logger.error('Failed to find all latest recipe versions', {
+        spaceId,
+        error: getErrorMessage(error),
+      });
+      throw error;
+    }
+  }
 }

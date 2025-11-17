@@ -59,6 +59,7 @@ export interface IStandardsPort {
   findLatestStandardVersionsWithoutEmbedding(
     spaceId?: SpaceId,
   ): Promise<StandardVersion[]>;
+  findAllLatestStandardVersions(spaceId?: SpaceId): Promise<StandardVersion[]>;
   findSimilarStandardsByEmbedding(
     embedding: number[],
     spaceId?: SpaceId,

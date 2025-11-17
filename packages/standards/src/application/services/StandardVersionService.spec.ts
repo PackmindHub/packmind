@@ -41,6 +41,7 @@ describe('StandardVersionService', () => {
       updateEmbedding: jest.fn(),
       findSimilarByEmbedding: jest.fn(),
       findLatestVersionsWhereEmbeddingIsNull: jest.fn(),
+      findAllLatestVersions: jest.fn(),
     };
 
     ruleRepository = {

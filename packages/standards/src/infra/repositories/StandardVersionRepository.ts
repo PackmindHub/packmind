@@ -323,4 +323,53 @@ export class StandardVersionRepository
       throw error;
     }
   }
+
+  async findAllLatestVersions(spaceId?: SpaceId): Promise<StandardVersion[]> {
+    this.logger.info('Finding all latest standard versions', { spaceId });
+
+    try {
+      // Get all versions, optionally filtered by space
+      let allVersionsQuery =
+        this.repository.createQueryBuilder('standard_version');
+
+      if (spaceId) {
+        allVersionsQuery = allVersionsQuery
+          .innerJoin(
+            'standards',
+            'standard',
+            'standard_version.standard_id = standard.id',
+          )
+          .andWhere('standard.space_id = :spaceId', { spaceId });
+      }
+
+      const allVersions = await allVersionsQuery.getMany();
+
+      // Group by standard_id and find the latest version for each
+      const latestVersionsMap = new Map<string, StandardVersion>();
+
+      for (const version of allVersions) {
+        const standardId = version.standardId;
+        const existing = latestVersionsMap.get(standardId);
+
+        if (!existing || version.version > existing.version) {
+          latestVersionsMap.set(standardId, version);
+        }
+      }
+
+      const results = Array.from(latestVersionsMap.values());
+
+      this.logger.info('All latest standard versions found', {
+        count: results.length,
+        spaceId,
+      });
+
+      return results;
+    } catch (error) {
+      this.logger.error('Failed to find all latest standard versions', {
+        spaceId,
+        error: getErrorMessage(error),
+      });
+      throw error;
+    }
+  }
 }

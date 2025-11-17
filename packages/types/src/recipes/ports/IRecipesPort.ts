@@ -145,6 +145,11 @@ export interface IRecipesPort {
   ): Promise<RecipeVersion[]>;
 
   /**
+   * Find all latest recipe versions
+   */
+  findAllLatestRecipeVersions(spaceId?: SpaceId): Promise<RecipeVersion[]>;
+
+  /**
    * Find similar recipes by embedding vector
    */
   findSimilarRecipesByEmbedding(
