@@ -1,6 +1,5 @@
-import { IGitPort, GitRepo, Target } from '@packmind/types';
+import { IGitPort, GitRepo, Target, CodingAgent } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
-import { CodingAgent } from '@packmind/types';
 
 const origin = 'GitFileUtils';
 
