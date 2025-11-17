@@ -265,6 +265,7 @@ export const PackageDetails = ({
 
   const recipeCount = recipeIds.length;
   const standardCount = standardIds.length;
+  const isPackageEmpty = recipeCount === 0 && standardCount === 0;
 
   if (isEditMode) {
     return (
@@ -386,6 +387,7 @@ export const PackageDetails = ({
             label="Deploy"
             size="md"
             selectedPackages={[pkg]}
+            disabled={isPackageEmpty}
           />
           <PMButton onClick={handleEdit}>Edit</PMButton>
           <PMAlertDialog
