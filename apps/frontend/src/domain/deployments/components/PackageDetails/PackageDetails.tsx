@@ -85,8 +85,12 @@ export const PackageDetails = ({
   const pkg = packageResponse?.package;
   const recipeIds = pkg?.recipes || [];
   const standardIds = pkg?.standards || [];
-  const allRecipes = recipesResponse || [];
-  const allStandards = standardsResponse?.standards || [];
+  const allRecipes = (recipesResponse || []).sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
+  const allStandards = (standardsResponse?.standards || []).sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
 
   useEffect(() => {
     if (pkg && !isEditMode) {
