@@ -1,5 +1,5 @@
-import { DistillAllPendingTopicsDelayedJob } from '../../application/jobs/DistillAllPendingTopicsDelayedJob';
+import { DistillTopicsDelayedJob } from '../../application/jobs/DistillTopicsDelayedJob';
 
 export interface ILearningsDelayedJobs {
-  distillAllPendingTopicsDelayedJob: DistillAllPendingTopicsDelayedJob;
+  distillTopicsDelayedJob: DistillTopicsDelayedJob;
 }

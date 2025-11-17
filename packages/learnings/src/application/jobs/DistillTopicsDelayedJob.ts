@@ -8,27 +8,23 @@ import {
 } from '@packmind/node-utils';
 import { Job } from 'bullmq';
 import {
-  DistillAllPendingTopicsInput,
-  DistillAllPendingTopicsOutput,
-} from '../../domain/jobs/DistillAllPendingTopics';
-import { TopicService } from '../services/TopicService';
+  DistillTopicsInput,
+  DistillTopicsOutput,
+} from '../../domain/jobs/DistillTopics';
 import { DistillTopicUsecase } from '../useCases/distillTopic/distillTopic.usecase';
 
-const logOrigin = 'DistillAllPendingTopicsDelayedJob';
+const logOrigin = 'DistillTopicsDelayedJob';
 
-export class DistillAllPendingTopicsDelayedJob extends AbstractAIDelayedJob<
-  DistillAllPendingTopicsInput,
-  DistillAllPendingTopicsOutput
+export class DistillTopicsDelayedJob extends AbstractAIDelayedJob<
+  DistillTopicsInput,
+  DistillTopicsOutput
 > {
   readonly origin = logOrigin;
 
   constructor(
     queueFactory: (
       queueListeners: Partial<QueueListeners>,
-    ) => Promise<
-      IQueue<DistillAllPendingTopicsInput, DistillAllPendingTopicsOutput>
-    >,
-    private readonly topicService: TopicService,
+    ) => Promise<IQueue<DistillTopicsInput, DistillTopicsOutput>>,
     private readonly distillTopicUsecase: DistillTopicUsecase,
     logger: PackmindLogger = new PackmindLogger(logOrigin),
   ) {
@@ -43,25 +39,18 @@ export class DistillAllPendingTopicsDelayedJob extends AbstractAIDelayedJob<
 
   async runJob(
     jobId: string,
-    input: DistillAllPendingTopicsInput,
+    input: DistillTopicsInput,
     controller: AbortController,
-  ): Promise<DistillAllPendingTopicsOutput> {
+  ): Promise<DistillTopicsOutput> {
     this.logger.info(
-      `[${this.origin}] Processing job ${jobId} for space: ${input.spaceId}`,
-    );
-
-    // Get all topics for the space
-    const topics = await this.topicService.listTopicsBySpaceId(input.spaceId);
-
-    this.logger.info(
-      `[${this.origin}] Found ${topics.length} topics to process`,
+      `[${this.origin}] Processing job ${jobId} for ${input.topicIds.length} topics`,
     );
 
     let processedCount = 0;
     let failedCount = 0;
 
     // Process topics sequentially (no parallel execution)
-    for (const topic of topics) {
+    for (const topicId of input.topicIds) {
       // Check if job was cancelled
       if (controller.signal.aborted) {
         this.logger.warn(
@@ -71,22 +60,22 @@ export class DistillAllPendingTopicsDelayedJob extends AbstractAIDelayedJob<
       }
 
       try {
-        this.logger.info(`[${this.origin}] Processing topic ${topic.id}`);
+        this.logger.info(`[${this.origin}] Processing topic ${topicId}`);
 
         await this.distillTopicUsecase.execute({
-          topicId: topic.id,
+          topicId,
           userId: input.userId,
           organizationId: input.organizationId,
         });
 
         processedCount++;
         this.logger.info(
-          `[${this.origin}] Successfully processed topic ${topic.id}`,
+          `[${this.origin}] Successfully processed topic ${topicId}`,
         );
       } catch (error) {
         failedCount++;
         this.logger.error(
-          `[${this.origin}] Failed to process topic ${topic.id}`,
+          `[${this.origin}] Failed to process topic ${topicId}`,
           {
             error: getErrorMessage(error),
           },
@@ -100,36 +89,32 @@ export class DistillAllPendingTopicsDelayedJob extends AbstractAIDelayedJob<
     );
 
     return {
-      spaceId: input.spaceId,
+      topicIds: input.topicIds,
       processedCount,
       failedCount,
     };
   }
 
-  getJobName(input: DistillAllPendingTopicsInput): string {
-    return `distill-all-pending-topics-${input.spaceId}-${Date.now()}`;
+  getJobName(input: DistillTopicsInput): string {
+    return `distill-topics-${input.topicIds.join('-')}-${Date.now()}`;
   }
 
-  jobStartedInfo(input: DistillAllPendingTopicsInput): string {
-    return `spaceId: ${input.spaceId}`;
+  jobStartedInfo(input: DistillTopicsInput): string {
+    return `topicIds: ${input.topicIds.join(', ')} (${input.topicIds.length} topics)`;
   }
 
   getWorkerListener(): Partial<
-    WorkerListeners<DistillAllPendingTopicsInput, DistillAllPendingTopicsOutput>
+    WorkerListeners<DistillTopicsInput, DistillTopicsOutput>
   > {
     return {
       completed: async (
-        job: Job<
-          DistillAllPendingTopicsInput,
-          DistillAllPendingTopicsOutput,
-          string
-        >,
-        result: DistillAllPendingTopicsOutput,
+        job: Job<DistillTopicsInput, DistillTopicsOutput, string>,
+        result: DistillTopicsOutput,
       ) => {
         this.logger.info(
           `[${this.origin}] Job ${job.id} completed successfully`,
           {
-            spaceId: result.spaceId,
+            topicCount: result.topicIds.length,
             processedCount: result.processedCount,
             failedCount: result.failedCount,
           },

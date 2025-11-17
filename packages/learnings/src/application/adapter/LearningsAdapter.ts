@@ -34,6 +34,7 @@ import {
 import { LearningsServices } from '../services/LearningsServices';
 import { CaptureTopicUsecase } from '../useCases/captureTopic/captureTopic.usecase';
 import { DistillTopicUsecase } from '../useCases/distillTopic/distillTopic.usecase';
+import { QueueDistillTopicsUsecase } from '../useCases/queueDistillTopics/queueDistillTopics.usecase';
 import { DistillAllPendingTopicsUsecase } from '../useCases/distillAllPendingTopics/distillAllPendingTopics.usecase';
 import { GetTopicsStatsUsecase } from '../useCases/getTopicsStats/getTopicsStats.usecase';
 import { GetTopicByIdUsecase } from '../useCases/getTopicById/getTopicById.usecase';
@@ -43,7 +44,7 @@ import { GetKnowledgePatchUsecase } from '../useCases/getKnowledgePatch/getKnowl
 import { AcceptKnowledgePatchUsecase } from '../useCases/acceptKnowledgePatch/acceptKnowledgePatch.usecase';
 import { RejectKnowledgePatchUsecase } from '../useCases/rejectKnowledgePatch/rejectKnowledgePatch.usecase';
 import { ILearningsDelayedJobs } from '../../domain/jobs/ILearningsDelayedJobs';
-import { DistillAllPendingTopicsJobFactory } from '../../infra/jobs/DistillAllPendingTopicsJobFactory';
+import { DistillTopicsJobFactory } from '../../infra/jobs/DistillTopicsJobFactory';
 
 const origin = 'LearningsAdapter';
 
@@ -55,7 +56,8 @@ export class LearningsAdapter
   implements IBaseAdapter<ILearningsPort>, ILearningsPort
 {
   private captureTopicUsecase: CaptureTopicUsecase;
-  private distillTopicUsecase: DistillTopicUsecase | null = null;
+  private distillTopicWorkerUsecase: DistillTopicUsecase | null = null;
+  private queueDistillTopicsUsecase: QueueDistillTopicsUsecase | null = null;
   private distillAllPendingTopicsUsecase: DistillAllPendingTopicsUsecase | null =
     null;
   private getTopicsStatsUsecase: GetTopicsStatsUsecase;
@@ -152,9 +154,9 @@ export class LearningsAdapter
       this.recipesPort,
     );
 
-    // Initialize distillTopic use case with ports first (needed by delayed job)
-    this.logger.debug('Initializing distillTopic use case');
-    this.distillTopicUsecase = new DistillTopicUsecase(
+    // Initialize distillTopic worker use case with ports first (needed by delayed job)
+    this.logger.debug('Initializing distillTopic worker use case');
+    this.distillTopicWorkerUsecase = new DistillTopicUsecase(
       this.learningsServices.getTopicService(),
       this.learningsServices.getKnowledgePatchService(),
       this.learningsServices.getTopicRepository(),
@@ -190,10 +192,18 @@ export class LearningsAdapter
       );
     }
 
+    // Initialize queue-based distillTopic use case with delayed job
+    this.logger.debug('Initializing queueDistillTopics use case');
+    this.queueDistillTopicsUsecase = new QueueDistillTopicsUsecase(
+      this.learningsDelayedJobs.distillTopicsDelayedJob,
+      this.logger,
+    );
+
     // Initialize distillAllPendingTopics use case with delayed job
     this.logger.debug('Initializing distillAllPendingTopics use case');
     this.distillAllPendingTopicsUsecase = new DistillAllPendingTopicsUsecase(
-      this.learningsDelayedJobs.distillAllPendingTopicsDelayedJob,
+      this.learningsDelayedJobs.distillTopicsDelayedJob,
+      this.learningsServices.getTopicService(),
       this.logger,
     );
 
@@ -223,7 +233,8 @@ export class LearningsAdapter
       this.spacesPort !== null &&
       this.standardsPort !== null &&
       this.recipesPort !== null &&
-      this.distillTopicUsecase !== null &&
+      this.distillTopicWorkerUsecase !== null &&
+      this.queueDistillTopicsUsecase !== null &&
       this.distillAllPendingTopicsUsecase !== null &&
       this.listTopicsUsecase !== null &&
       this.getTopicByIdUsecase !== null &&
@@ -239,16 +250,15 @@ export class LearningsAdapter
   ): Promise<ILearningsDelayedJobs> {
     this.logger.debug('Building learnings delayed jobs');
 
-    if (!this.distillTopicUsecase) {
+    if (!this.distillTopicWorkerUsecase) {
       throw new Error(
-        'LearningsAdapter: distillTopicUsecase must be initialized before building delayed jobs',
+        'LearningsAdapter: distillTopicWorkerUsecase must be initialized before building delayed jobs',
       );
     }
 
-    const jobFactory = new DistillAllPendingTopicsJobFactory(
+    const jobFactory = new DistillTopicsJobFactory(
       this.logger,
-      this.learningsServices.getTopicService(),
-      this.distillTopicUsecase,
+      this.distillTopicWorkerUsecase,
     );
 
     jobsService.registerJobQueue(jobFactory.getQueueName(), jobFactory);
@@ -264,7 +274,7 @@ export class LearningsAdapter
     this.logger.info('Learnings delayed jobs built successfully');
 
     return {
-      distillAllPendingTopicsDelayedJob: jobFactory.delayedJob,
+      distillTopicsDelayedJob: jobFactory.delayedJob,
     };
   }
 
@@ -290,7 +300,7 @@ export class LearningsAdapter
   }
 
   /**
-   * Distill a topic into knowledge patches.
+   * Distill a topic into knowledge patches (queues a background job).
    */
   public async distillTopic(
     command: DistillTopicCommand,
@@ -300,13 +310,13 @@ export class LearningsAdapter
       userId: command.userId,
     });
 
-    if (!this.distillTopicUsecase) {
+    if (!this.queueDistillTopicsUsecase) {
       throw new Error(
         'LearningsAdapter not fully initialized. Call initialize() first.',
       );
     }
 
-    return await this.distillTopicUsecase.execute(command);
+    return await this.queueDistillTopicsUsecase.execute(command);
   }
 
   /**
