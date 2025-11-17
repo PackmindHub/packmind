@@ -65,13 +65,6 @@ export default class DetectionToolingLogWriter {
     );
   }
 
-  public async updateDetectionHeuristics(detectionHeuristics: string[]) {
-    await this._programDetectionMetadataRepository.updateDetectionHeuristics(
-      detectionHeuristics,
-      this._detectionProgramId,
-    );
-  }
-
   get logs(): ExecutionLog[] {
     return this._logs;
   }

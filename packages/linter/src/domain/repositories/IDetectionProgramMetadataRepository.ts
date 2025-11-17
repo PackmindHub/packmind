@@ -27,9 +27,4 @@ export interface IDetectionProgramMetadataRepository
     tokens: TokensUsed,
     detectionProgramId: DetectionProgramId,
   ): Promise<void>;
-
-  updateDetectionHeuristics(
-    detectionHeuristics: string[],
-    detectionProgramId: DetectionProgramId,
-  ): Promise<void>;
 }

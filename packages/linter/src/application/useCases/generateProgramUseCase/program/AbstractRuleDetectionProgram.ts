@@ -100,7 +100,6 @@ export default abstract class AbstractRuleDetectionProgram extends AbstractRuleD
       if (heuristics) {
         this._detectionProgramRule.heuristics = heuristics;
         generatedHeuristics = heuristics;
-        await this._logsWriter.updateDetectionHeuristics(heuristics);
         this._logger.info(
           `[${this._detectionProgramRule.rule.id}] Detection heuristics generated successfully`,
         );

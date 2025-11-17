@@ -112,13 +112,12 @@ export class DetectionProgramMetadataCacheRepository
         tokens: null,
         logs: [],
         programDescription: '',
-        detectionHeuristics: [],
       };
     }
 
     const updatedMetadata: DetectionProgramMetadata = {
       ...metadata,
-      logs: metadata.logs ? [...metadata.logs, log] : [log],
+      logs: metadata?.logs ? [...metadata.logs, log] : [log],
     };
 
     await this.cache.set(
@@ -157,7 +156,6 @@ export class DetectionProgramMetadataCacheRepository
         tokens: null,
         logs: [],
         programDescription: '',
-        detectionHeuristics: [],
       };
     }
 
@@ -199,58 +197,12 @@ export class DetectionProgramMetadataCacheRepository
         tokens: null,
         logs: [],
         programDescription: '',
-        detectionHeuristics: [],
       };
     }
 
     const updatedMetadata: DetectionProgramMetadata = {
       ...metadata,
       tokens,
-    };
-
-    await this.cache.set(
-      cacheKey,
-      updatedMetadata,
-      DetectionProgramMetadataCacheRepository.CACHE_EXPIRATION_SECONDS,
-    );
-  }
-
-  async updateDetectionHeuristics(
-    detectionHeuristics: string[],
-    detectionProgramId: DetectionProgramId,
-  ): Promise<void> {
-    this.logger.info(
-      'Updating detection heuristics in detection program metadata',
-      {
-        detectionProgramId,
-      },
-    );
-
-    const cacheKey = this.getCacheKey(detectionProgramId);
-    let metadata = await this.cache.get<DetectionProgramMetadata>(cacheKey);
-
-    if (!metadata) {
-      this.logger.info(
-        'Detection program metadata not found, creating new entry',
-        {
-          detectionProgramId,
-        },
-      );
-
-      metadata = {
-        id: detectionProgramId,
-        detectionProgramId,
-        taskId: '',
-        tokens: null,
-        logs: [],
-        programDescription: '',
-        detectionHeuristics: [],
-      };
-    }
-
-    const updatedMetadata: DetectionProgramMetadata = {
-      ...metadata,
-      detectionHeuristics,
     };
 
     await this.cache.set(

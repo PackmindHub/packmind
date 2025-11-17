@@ -8,12 +8,14 @@ import { DetectionProgramRepository } from './DetectionProgramRepository';
 import { DetectionProgramSchema } from '../schemas/DetectionProgramSchema';
 import { IDetectionProgramMetadataRepository } from '../../domain/repositories/IDetectionProgramMetadataRepository';
 import { IRuleDetectionHeuristicsRepository } from '../../domain/repositories/IRuleDetectionHeuristicsRepository';
-import { DetectionProgramMetadataCacheRepository } from './DetectionProgramMetadataCacheRepository';
 import { RuleDetectionHeuristicsRepository } from './RuleDetectionHeuristicsRepository';
 import { IRuleDetectionAssessmentRepository } from '../../domain/repositories/IRuleDetectionAssessmentRepository';
 import { RuleDetectionAssessmentRepository } from './RuleDetectionAssessmentRepository';
 import { RuleDetectionAssessmentSchema } from '../schemas/RuleDetectionAssessmentSchema';
 import { DetectionHeuristicsSchema } from '../schemas/DetectionHeuristicsSchema';
+import { DetectionProgramMetadataRepository } from './DetectionProgramMetadataRepository';
+import { DetectionProgramMetadataSchema } from '../schemas/DetectionProgramMetadataSchema';
+import { ExecutionLogSchema } from '../schemas/ExecutionLogSchema';
 
 export class LinterRepositories implements ILinterRepositories {
   private readonly activeDetectionProgramRepository: IActiveDetectionProgramRepository;
@@ -31,7 +33,10 @@ export class LinterRepositories implements ILinterRepositories {
       this.dataSource.getRepository(DetectionProgramSchema),
     );
     this.detectionProgramMetadataRepository =
-      new DetectionProgramMetadataCacheRepository();
+      new DetectionProgramMetadataRepository(
+        this.dataSource.getRepository(DetectionProgramMetadataSchema),
+        this.dataSource.getRepository(ExecutionLogSchema),
+      );
     this.ruleDetectionHeuristicsRepository =
       new RuleDetectionHeuristicsRepository(
         this.dataSource.getRepository(DetectionHeuristicsSchema),
