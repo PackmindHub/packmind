@@ -22,6 +22,7 @@ import {
   StandardVersionId,
   CodingAgent,
   RenderMode,
+  FileUpdates,
 } from '@packmind/types';
 import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
@@ -286,11 +287,8 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     gitRepo: GitRepo,
     targets: Target[],
     codingAgents: CodingAgent[],
-  ): Promise<Map<string, import('@packmind/types').FileUpdates>> {
-    const fileUpdatesPerTarget = new Map<
-      string,
-      import('@packmind/types').FileUpdates
-    >();
+  ): Promise<Map<string, FileUpdates>> {
+    const fileUpdatesPerTarget = new Map<string, FileUpdates>();
 
     for (const target of targets) {
       // Fetch existing files from git

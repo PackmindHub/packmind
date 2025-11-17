@@ -26,6 +26,5 @@ export interface ICodingAgentDeployer {
   deployArtifacts(
     recipeVersions: RecipeVersion[],
     standardVersions: StandardVersion[],
-    existingContent: string,
   ): Promise<FileUpdates>;
 }

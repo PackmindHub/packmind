@@ -74,12 +74,13 @@ describe('AgentsMDDeployer', () => {
 
       const agentsMDFile = result.createOrUpdate[0];
       expect(agentsMDFile.path).toBe('AGENTS.md');
-      expect(agentsMDFile.content).toContain('# Packmind Recipes');
-      expect(agentsMDFile.content).toContain('🚨 **MANDATORY STEP** 🚨');
-      expect(agentsMDFile.content).toContain('ALWAYS READ');
-      expect(agentsMDFile.content).toContain(recipe.name);
-      expect(agentsMDFile.content).toContain('aiAgent: "AGENTS.md"');
-      expect(agentsMDFile.content).toContain('gitRepo: "test-owner/test-repo"');
+      const sectionContent = agentsMDFile.sections![0].content;
+      expect(sectionContent).toContain('# Packmind Recipes');
+      expect(sectionContent).toContain('🚨 **MANDATORY STEP** 🚨');
+      expect(sectionContent).toContain('ALWAYS READ');
+      expect(sectionContent).toContain(recipe.name);
+      expect(sectionContent).toContain('aiAgent: "AGENTS.md"');
+      expect(sectionContent).toContain('gitRepo: "test-owner/test-repo"');
     });
 
     it('handles empty recipe list', async () => {
@@ -133,11 +134,12 @@ describe('AgentsMDDeployer', () => {
 
       const agentsMDFile = result.createOrUpdate[0];
       expect(agentsMDFile.path).toBe('AGENTS.md');
-      expect(agentsMDFile.content).toContain('# Packmind Recipes');
-      expect(agentsMDFile.content).toContain('🚨 **MANDATORY STEP** 🚨');
-      expect(agentsMDFile.content).toContain(recipeVersion1.name);
-      expect(agentsMDFile.content).toContain(recipeVersion2.name);
-      expect(agentsMDFile.content).toContain('aiAgent: "AGENTS.md"');
+      const sectionContent = agentsMDFile.sections![0].content;
+      expect(sectionContent).toContain('# Packmind Recipes');
+      expect(sectionContent).toContain('🚨 **MANDATORY STEP** 🚨');
+      expect(sectionContent).toContain(recipeVersion1.name);
+      expect(sectionContent).toContain(recipeVersion2.name);
+      expect(sectionContent).toContain('aiAgent: "AGENTS.md"');
     });
   });
 
@@ -173,11 +175,12 @@ describe('AgentsMDDeployer', () => {
 
       const agentsMDFile = result.createOrUpdate[0];
       expect(agentsMDFile.path).toBe('AGENTS.md');
-      expect(agentsMDFile.content).toContain('# Packmind Standards');
-      expect(agentsMDFile.content).toContain(
+      const sectionContent = agentsMDFile.sections![0].content;
+      expect(sectionContent).toContain('# Packmind Standards');
+      expect(sectionContent).toContain(
         GenericStandardSectionWriter.standardsIntroduction,
       );
-      expect(agentsMDFile.content).toContain(standardVersion.name);
+      expect(sectionContent).toContain(standardVersion.name);
     });
 
     it('handles empty standards list', async () => {
@@ -241,104 +244,11 @@ describe('AgentsMDDeployer', () => {
 
       const agentsMDFile = result.createOrUpdate[0];
       expect(agentsMDFile.path).toBe('AGENTS.md');
-      expect(agentsMDFile.content).toContain('# Packmind Standards');
-      expect(agentsMDFile.content).toContain(
+      const sectionContent = agentsMDFile.sections![0].content;
+      expect(sectionContent).toContain('# Packmind Standards');
+      expect(sectionContent).toContain(
         GenericStandardSectionWriter.standardsIntroduction,
       );
-    });
-  });
-
-  describe('content preservation', () => {
-    describe('when adding recipe instructions', () => {
-      it('preserves existing content', async () => {
-        const existingContent = 'Existing content in AGENTS.md file';
-
-        // Mock the getExistingContent method to return existing content
-        const deployer = new AgentsMDDeployer();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (deployer as any).getExistingContent = jest
-          .fn()
-          .mockResolvedValue(existingContent);
-
-        const recipe = recipeFactory({
-          name: 'Test Recipe',
-          slug: 'test-recipe',
-        });
-
-        const recipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: 'Recipe instructions',
-          version: 1,
-          summary: 'Recipe summary',
-          userId: createUserId('user-1'),
-        };
-
-        const result = await deployer.deployRecipes(
-          [recipeVersion],
-          mockGitRepo,
-          mockTarget,
-        );
-
-        expect(result.createOrUpdate).toHaveLength(1);
-        const agentsMDFile = result.createOrUpdate[0];
-        expect(agentsMDFile.content).toContain(existingContent);
-        expect(agentsMDFile.content).toContain('# Packmind Recipes');
-      });
-    });
-
-    describe('when recipe instructions are already present', () => {
-      it('does not duplicate recipe instructions', async () => {
-        const existingContent = `# Packmind Recipes
-
-🚨 **MANDATORY STEP** 🚨
-
-Before writing, editing, or generating ANY code:
-
-**ALWAYS READ**: @.packmind/recipes-index.md to see what recipes are available`;
-
-        // Mock the getExistingContent method to return content with existing instructions
-        const deployer = new AgentsMDDeployer();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (deployer as any).getExistingContent = jest
-          .fn()
-          .mockResolvedValue(existingContent);
-
-        const recipe = recipeFactory({
-          name: 'Test Recipe',
-          slug: 'test-recipe',
-        });
-
-        const recipeVersion: RecipeVersion = {
-          id: createRecipeVersionId('recipe-version-1'),
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: 'Recipe instructions',
-          version: 1,
-          summary: 'Recipe summary',
-          userId: createUserId('user-1'),
-        };
-
-        const result = await deployer.deployRecipes(
-          [recipeVersion],
-          mockGitRepo,
-          mockTarget,
-        );
-
-        // Should create update with properly formatted content using comment markers
-        expect(result.createOrUpdate).toHaveLength(1);
-        expect(result.delete).toHaveLength(0);
-        expect(result.createOrUpdate[0].path).toBe('AGENTS.md'); // root target should have no prefix
-        expect(result.createOrUpdate[0].content).toContain(
-          '<!-- start: Packmind recipes -->',
-        );
-        expect(result.createOrUpdate[0].content).toContain(
-          '<!-- end: Packmind recipes -->',
-        );
-      });
     });
   });
 });

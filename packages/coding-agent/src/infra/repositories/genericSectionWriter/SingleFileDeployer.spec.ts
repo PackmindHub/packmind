@@ -105,24 +105,22 @@ describe('SingleFileDeployer', () => {
       );
 
       expect(result.createOrUpdate).toHaveLength(1);
-      const content = result.createOrUpdate[0].content;
+      const sectionContent = result.createOrUpdate[0].sections![0].content;
 
       // Should not contain the string "null" as a value
-      expect(content).not.toMatch(/:\s*null\s*$/m);
-      expect(content).not.toMatch(/:\s*null\n/);
+      expect(sectionContent).not.toMatch(/:\s*null\s*$/m);
+      expect(sectionContent).not.toMatch(/:\s*null\n/);
 
       // Should contain only the link without colon and description
-      expect(content).toContain(
+      expect(sectionContent).toContain(
         '* [Recipe Without Summary](.packmind/recipes/recipe-without-summary.md)',
       );
-      expect(content).not.toMatch(
+      expect(sectionContent).not.toMatch(
         /Recipe Without Summary\].*:\s+Recipe Without Summary/,
       );
     });
 
     it('uses getTargetPrefixedPath for file path in recipe deployment', async () => {
-      mockGitPort.getFileFromRepo.mockResolvedValue(null);
-
       const result = await deployer.deployRecipes(
         mockRecipeVersions,
         mockGitRepo,
@@ -131,36 +129,6 @@ describe('SingleFileDeployer', () => {
 
       expect(result.createOrUpdate).toHaveLength(1);
       expect(result.createOrUpdate[0].path).toBe('jetbrains/TEST_AGENT.md');
-
-      // Verify gitHexa was called with the prefixed path
-      expect(mockGitPort.getFileFromRepo).toHaveBeenCalledWith(
-        mockGitRepo,
-        'jetbrains/TEST_AGENT.md',
-      );
-    });
-
-    it('handles existing content correctly with target prefixing', async () => {
-      const existingContent = 'Existing content in file';
-      mockGitPort.getFileFromRepo.mockResolvedValue({
-        sha: 'mock-sha-123',
-        content: existingContent,
-      });
-
-      const result = await deployer.deployRecipes(
-        mockRecipeVersions,
-        mockGitRepo,
-        jetbrainsTarget,
-      );
-
-      // Should create update since content will be different after section writer processes it
-      expect(result.createOrUpdate).toHaveLength(1);
-      expect(result.createOrUpdate[0].path).toBe('jetbrains/TEST_AGENT.md');
-
-      // Verify the existing content was retrieved from the correct prefixed path
-      expect(mockGitPort.getFileFromRepo).toHaveBeenCalledWith(
-        mockGitRepo,
-        'jetbrains/TEST_AGENT.md',
-      );
     });
   });
 
@@ -203,16 +171,16 @@ describe('SingleFileDeployer', () => {
       );
 
       expect(result.createOrUpdate).toHaveLength(1);
-      const content = result.createOrUpdate[0].content;
+      const sectionContent = result.createOrUpdate[0].sections![0].content;
 
       // Should not contain the string "null" as a value
-      expect(content).not.toMatch(/:\s*null\s*$/m);
-      expect(content).not.toMatch(/:\s*null\n/);
+      expect(sectionContent).not.toMatch(/:\s*null\s*$/m);
+      expect(sectionContent).not.toMatch(/:\s*null\n/);
 
       // Should use description as fallback (only first line)
-      expect(content).toContain('This is the description :');
-      expect(content).toContain('* No rules defined yet.');
-      expect(content).toContain(
+      expect(sectionContent).toContain('This is the description :');
+      expect(sectionContent).toContain('* No rules defined yet.');
+      expect(sectionContent).toContain(
         'Full standard is available here for further request: [Standard Without Summary](.packmind/standards/standard-without-summary.md)',
       );
     });
@@ -241,15 +209,15 @@ describe('SingleFileDeployer', () => {
       );
 
       expect(result.createOrUpdate).toHaveLength(1);
-      const content = result.createOrUpdate[0].content;
+      const sectionContent = result.createOrUpdate[0].sections![0].content;
 
       // Should truncate description at 200 characters and add ellipsis
-      expect(content).toContain(`${'A'.repeat(200)}... :`);
-      expect(content).toContain('* No rules defined yet.');
-      expect(content).toContain(
+      expect(sectionContent).toContain(`${'A'.repeat(200)}... :`);
+      expect(sectionContent).toContain('* No rules defined yet.');
+      expect(sectionContent).toContain(
         'Full standard is available here for further request: [Standard With Long Description](.packmind/standards/standard-long-description.md)',
       );
-      expect(content).not.toContain('A'.repeat(250));
+      expect(sectionContent).not.toContain('A'.repeat(250));
     });
 
     it('does not truncate long summaries', async () => {
@@ -276,15 +244,15 @@ describe('SingleFileDeployer', () => {
       );
 
       expect(result.createOrUpdate).toHaveLength(1);
-      const content = result.createOrUpdate[0].content;
+      const sectionContent = result.createOrUpdate[0].sections![0].content;
 
       // Should NOT truncate summary even if long
-      expect(content).toContain(`${'B'.repeat(250)} :`);
-      expect(content).toContain('* No rules defined yet.');
-      expect(content).toContain(
+      expect(sectionContent).toContain(`${'B'.repeat(250)} :`);
+      expect(sectionContent).toContain('* No rules defined yet.');
+      expect(sectionContent).toContain(
         'Full standard is available here for further request: [Standard With Long Summary](.packmind/standards/standard-long-summary.md)',
       );
-      expect(content).not.toContain('...');
+      expect(sectionContent).not.toContain('...');
     });
 
     it('only uses first line of multiline descriptions', async () => {
@@ -312,16 +280,16 @@ describe('SingleFileDeployer', () => {
       );
 
       expect(result.createOrUpdate).toHaveLength(1);
-      const content = result.createOrUpdate[0].content;
+      const sectionContent = result.createOrUpdate[0].sections![0].content;
 
       // Should only contain first line
-      expect(content).toContain('First line of description :');
-      expect(content).toContain('* No rules defined yet.');
-      expect(content).toContain(
+      expect(sectionContent).toContain('First line of description :');
+      expect(sectionContent).toContain('* No rules defined yet.');
+      expect(sectionContent).toContain(
         'Full standard is available here for further request: [Standard With Multiline](.packmind/standards/standard-multiline.md)',
       );
-      expect(content).not.toContain('Second line');
-      expect(content).not.toContain('Third line');
+      expect(sectionContent).not.toContain('Second line');
+      expect(sectionContent).not.toContain('Third line');
     });
 
     it('never outputs "null" for standard with both null summary and description', async () => {
@@ -348,22 +316,20 @@ describe('SingleFileDeployer', () => {
       );
 
       expect(result.createOrUpdate).toHaveLength(1);
-      const content = result.createOrUpdate[0].content;
+      const sectionContent = result.createOrUpdate[0].sections![0].content;
 
       // Should not contain the string "null" as a value
-      expect(content).not.toMatch(/:\s*null\s*$/m);
-      expect(content).not.toMatch(/:\s*null\n/);
+      expect(sectionContent).not.toMatch(/:\s*null\s*$/m);
+      expect(sectionContent).not.toMatch(/:\s*null\n/);
 
-      expect(content).toContain('Summary unavailable :');
-      expect(content).toContain('* No rules defined yet.');
-      expect(content).toContain(
+      expect(sectionContent).toContain('Summary unavailable :');
+      expect(sectionContent).toContain('* No rules defined yet.');
+      expect(sectionContent).toContain(
         'Full standard is available here for further request: [Standard Name Only](.packmind/standards/standard-name-only.md)',
       );
     });
 
     it('uses getTargetPrefixedPath for file path in standards deployment', async () => {
-      mockGitPort.getFileFromRepo.mockResolvedValue(null);
-
       const result = await deployer.deployStandards(
         mockStandardVersions,
         mockGitRepo,
@@ -372,12 +338,6 @@ describe('SingleFileDeployer', () => {
 
       expect(result.createOrUpdate).toHaveLength(1);
       expect(result.createOrUpdate[0].path).toBe('vscode/TEST_AGENT.md');
-
-      // Verify gitHexa was called with the prefixed path
-      expect(mockGitPort.getFileFromRepo).toHaveBeenCalledWith(
-        mockGitRepo,
-        'vscode/TEST_AGENT.md',
-      );
     });
   });
 
@@ -443,31 +403,37 @@ describe('SingleFileDeployer', () => {
       },
     ];
 
-    it('generates file with both recipe and standard sections', async () => {
+    it('generates sections for both recipes and standards', async () => {
       const result = await deployer.deployArtifacts(
         mockRecipeVersions,
         mockStandardVersions,
-        '',
       );
 
       expect(result.createOrUpdate).toHaveLength(1);
-      const content = result.createOrUpdate[0].content;
+      const file = result.createOrUpdate[0];
 
-      expect(content).toContain('<!-- start: Packmind recipes -->');
-      expect(content).toContain('<!-- end: Packmind recipes -->');
-      expect(content).toContain('<!-- start: Packmind standards -->');
-      expect(content).toContain('<!-- end: Packmind standards -->');
-      expect(content).toContain(
+      expect(file.path).toBe('TEST_AGENT.md');
+      expect(file.sections).toHaveLength(2);
+
+      const recipesSection = file.sections!.find(
+        (s) => s.key === 'Packmind recipes',
+      );
+      expect(recipesSection).toBeDefined();
+      expect(recipesSection!.content).toContain(
         '[Test Recipe](.packmind/recipes/test-recipe.md)',
       );
-      expect(content).toContain('## Standard: Test Standard');
+
+      const standardsSection = file.sections!.find(
+        (s) => s.key === 'Packmind standards',
+      );
+      expect(standardsSection).toBeDefined();
+      expect(standardsSection!.content).toContain('## Standard: Test Standard');
     });
 
     it('returns base file path without target prefixing', async () => {
       const result = await deployer.deployArtifacts(
         mockRecipeVersions,
         mockStandardVersions,
-        '',
       );
 
       expect(result.createOrUpdate).toHaveLength(1);
@@ -476,254 +442,35 @@ describe('SingleFileDeployer', () => {
       expect(result.createOrUpdate[0].path).not.toContain('vscode');
     });
 
-    it('preserves existing content outside markers', async () => {
-      const existingContent = `# My Custom Configuration
-
-This is my custom setup.
-
-<!-- start: Packmind recipes -->
-Old recipe content
-<!-- end: Packmind recipes -->
-
-Some text between sections.
-
-<!-- start: Packmind standards -->
-Old standard content
-<!-- end: Packmind standards -->
-
-Footer content.`;
-
-      const result = await deployer.deployArtifacts(
-        mockRecipeVersions,
-        mockStandardVersions,
-        existingContent,
-      );
+    it('generates only standards section when recipes are empty', async () => {
+      const result = await deployer.deployArtifacts([], mockStandardVersions);
 
       expect(result.createOrUpdate).toHaveLength(1);
-      const content = result.createOrUpdate[0].content;
+      const file = result.createOrUpdate[0];
 
-      expect(content).toContain('# My Custom Configuration');
-      expect(content).toContain('This is my custom setup.');
-      expect(content).toContain('Some text between sections.');
-      expect(content).toContain('Footer content.');
-      expect(content).not.toContain('Old recipe content');
-      expect(content).not.toContain('Old standard content');
+      expect(file.sections).toHaveLength(1);
+      expect(file.sections![0].key).toBe('Packmind standards');
+      expect(file.sections![0].content).toContain('## Standard: Test Standard');
     });
 
-    describe('when content unchanged', () => {
-      it('returns empty arrays', async () => {
-        const content1 = await deployer.deployArtifacts(
-          mockRecipeVersions,
-          mockStandardVersions,
-          '',
-        );
-
-        const generatedContent = content1.createOrUpdate[0].content;
-
-        const result = await deployer.deployArtifacts(
-          mockRecipeVersions,
-          mockStandardVersions,
-          generatedContent,
-        );
-
-        expect(result.createOrUpdate).toHaveLength(0);
-        expect(result.delete).toHaveLength(0);
-      });
-    });
-
-    it('handles empty recipe versions', async () => {
-      const result = await deployer.deployArtifacts(
-        [],
-        mockStandardVersions,
-        '',
-      );
+    it('generates only recipes section when standards are empty', async () => {
+      const result = await deployer.deployArtifacts(mockRecipeVersions, []);
 
       expect(result.createOrUpdate).toHaveLength(1);
-      const content = result.createOrUpdate[0].content;
+      const file = result.createOrUpdate[0];
 
-      expect(content).not.toContain('<!-- start: Packmind recipes -->');
-      expect(content).toContain('<!-- start: Packmind standards -->');
-      expect(content).toContain('## Standard: Test Standard');
-    });
-
-    it('handles empty standard versions', async () => {
-      const result = await deployer.deployArtifacts(mockRecipeVersions, [], '');
-
-      expect(result.createOrUpdate).toHaveLength(1);
-      const content = result.createOrUpdate[0].content;
-
-      expect(content).toContain('<!-- start: Packmind recipes -->');
-      expect(content).not.toContain('<!-- start: Packmind standards -->');
-      expect(content).toContain(
+      expect(file.sections).toHaveLength(1);
+      expect(file.sections![0].key).toBe('Packmind recipes');
+      expect(file.sections![0].content).toContain(
         '[Test Recipe](.packmind/recipes/test-recipe.md)',
       );
     });
 
-    it('handles both empty arrays', async () => {
-      const result = await deployer.deployArtifacts([], [], '');
+    it('returns empty array when both recipes and standards are empty', async () => {
+      const result = await deployer.deployArtifacts([], []);
 
       expect(result.createOrUpdate).toHaveLength(0);
-    });
-
-    it('handles existing content with only recipe section', async () => {
-      const existingContent = `# Configuration
-
-<!-- start: Packmind recipes -->
-Old recipes
-<!-- end: Packmind recipes -->
-
-Custom content.`;
-
-      const result = await deployer.deployArtifacts(
-        mockRecipeVersions,
-        mockStandardVersions,
-        existingContent,
-      );
-
-      expect(result.createOrUpdate).toHaveLength(1);
-      const content = result.createOrUpdate[0].content;
-
-      expect(content).toContain('# Configuration');
-      expect(content).toContain('Custom content.');
-      expect(content).toContain('<!-- start: Packmind recipes -->');
-      expect(content).toContain('<!-- start: Packmind standards -->');
-      expect(content).toContain(
-        '[Test Recipe](.packmind/recipes/test-recipe.md)',
-      );
-      expect(content).toContain('## Standard: Test Standard');
-    });
-
-    it('handles existing content with only standard section', async () => {
-      const existingContent = `# Configuration
-
-<!-- start: Packmind standards -->
-Old standards
-<!-- end: Packmind standards -->
-
-Custom content.`;
-
-      const result = await deployer.deployArtifacts(
-        mockRecipeVersions,
-        mockStandardVersions,
-        existingContent,
-      );
-
-      expect(result.createOrUpdate).toHaveLength(1);
-      const content = result.createOrUpdate[0].content;
-
-      expect(content).toContain('# Configuration');
-      expect(content).toContain('Custom content.');
-      expect(content).toContain('<!-- start: Packmind recipes -->');
-      expect(content).toContain('<!-- start: Packmind standards -->');
-      expect(content).toContain(
-        '[Test Recipe](.packmind/recipes/test-recipe.md)',
-      );
-      expect(content).toContain('## Standard: Test Standard');
-    });
-
-    it('handles existing content with neither section', async () => {
-      const existingContent = `# My Configuration
-
-Custom setup here.
-
-More custom content.`;
-
-      const result = await deployer.deployArtifacts(
-        mockRecipeVersions,
-        mockStandardVersions,
-        existingContent,
-      );
-
-      expect(result.createOrUpdate).toHaveLength(1);
-      const content = result.createOrUpdate[0].content;
-
-      expect(content).toContain('# My Configuration');
-      expect(content).toContain('Custom setup here.');
-      expect(content).toContain('More custom content.');
-      expect(content).toContain('<!-- start: Packmind recipes -->');
-      expect(content).toContain('<!-- start: Packmind standards -->');
-    });
-
-    describe('when deploying empty recipes', () => {
-      it('removes recipe section', async () => {
-        const existingContent = `# Configuration
-
-<!-- start: Packmind recipes -->
-Old recipes content
-<!-- end: Packmind recipes -->
-
-Custom content.`;
-
-        const result = await deployer.deployArtifacts(
-          [],
-          mockStandardVersions,
-          existingContent,
-        );
-
-        expect(result.createOrUpdate).toHaveLength(1);
-        const content = result.createOrUpdate[0].content;
-
-        expect(content).toContain('# Configuration');
-        expect(content).toContain('Custom content.');
-        expect(content).not.toContain('<!-- start: Packmind recipes -->');
-        expect(content).not.toContain('Old recipes content');
-        expect(content).toContain('<!-- start: Packmind standards -->');
-      });
-    });
-
-    describe('when deploying empty standards', () => {
-      it('removes standards section', async () => {
-        const existingContent = `# Configuration
-
-<!-- start: Packmind standards -->
-Old standards content
-<!-- end: Packmind standards -->
-
-Custom content.`;
-
-        const result = await deployer.deployArtifacts(
-          mockRecipeVersions,
-          [],
-          existingContent,
-        );
-
-        expect(result.createOrUpdate).toHaveLength(1);
-        const content = result.createOrUpdate[0].content;
-
-        expect(content).toContain('# Configuration');
-        expect(content).toContain('Custom content.');
-        expect(content).toContain('<!-- start: Packmind recipes -->');
-        expect(content).not.toContain('<!-- start: Packmind standards -->');
-        expect(content).not.toContain('Old standards content');
-      });
-    });
-
-    describe('when deploying empty arrays over existing content', () => {
-      it('removes both sections', async () => {
-        const existingContent = `# Configuration
-
-<!-- start: Packmind recipes -->
-Old recipes
-<!-- end: Packmind recipes -->
-
-<!-- start: Packmind standards -->
-Old standards
-<!-- end: Packmind standards -->
-
-Custom content.`;
-
-        const result = await deployer.deployArtifacts([], [], existingContent);
-
-        expect(result.createOrUpdate).toHaveLength(1);
-        const content = result.createOrUpdate[0].content;
-
-        expect(content).toContain('# Configuration');
-        expect(content).toContain('Custom content.');
-        expect(content).not.toContain('<!-- start: Packmind recipes -->');
-        expect(content).not.toContain('<!-- start: Packmind standards -->');
-        expect(content).not.toContain('Old recipes');
-        expect(content).not.toContain('Old standards');
-      });
+      expect(result.delete).toHaveLength(0);
     });
 
     describe('when rules not present on standards', () => {
@@ -748,17 +495,14 @@ Custom content.`;
           },
         ];
 
-        const result = await deployer.deployArtifacts(
-          [],
-          standardWithoutRules,
-          '',
-        );
+        const result = await deployer.deployArtifacts([], standardWithoutRules);
 
         expect(mockStandardsPort.getRulesByStandardId).toHaveBeenCalledWith(
           mockStandardVersions[0].standardId,
         );
         expect(result.createOrUpdate).toHaveLength(1);
-        expect(result.createOrUpdate[0].content).toContain('Test rule content');
+        const file = result.createOrUpdate[0];
+        expect(file.sections![0].content).toContain('Test rule content');
       });
     });
 
@@ -779,15 +523,12 @@ Custom content.`;
           },
         ];
 
-        const result = await deployer.deployArtifacts(
-          [],
-          standardWithRules,
-          '',
-        );
+        const result = await deployer.deployArtifacts([], standardWithRules);
 
         expect(mockStandardsPort.getRulesByStandardId).not.toHaveBeenCalled();
         expect(result.createOrUpdate).toHaveLength(1);
-        expect(result.createOrUpdate[0].content).toContain('Existing rule');
+        const file = result.createOrUpdate[0];
+        expect(file.sections![0].content).toContain('Existing rule');
       });
     });
 
@@ -809,14 +550,21 @@ Custom content.`;
       const result = await deployer.deployArtifacts(
         recipeWithNullSummary,
         standardWithNullSummary,
-        '',
       );
 
       expect(result.createOrUpdate).toHaveLength(1);
-      const content = result.createOrUpdate[0].content;
+      const file = result.createOrUpdate[0];
+      const recipesSection = file.sections!.find(
+        (s) => s.key === 'Packmind recipes',
+      );
+      const standardsSection = file.sections!.find(
+        (s) => s.key === 'Packmind standards',
+      );
 
-      expect(content).not.toMatch(/:\s*null\s*$/m);
-      expect(content).not.toMatch(/:\s*null\n/);
+      expect(recipesSection!.content).not.toMatch(/:\s*null\s*$/m);
+      expect(recipesSection!.content).not.toMatch(/:\s*null\n/);
+      expect(standardsSection!.content).not.toMatch(/:\s*null\s*$/m);
+      expect(standardsSection!.content).not.toMatch(/:\s*null\n/);
     });
   });
 });
