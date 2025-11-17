@@ -7,7 +7,10 @@ import {
   PMTable,
   PMTableColumn,
   PMTableRow,
+  PMTabs,
+  PMBadge,
 } from '@packmind/ui';
+import { TopicStatus } from '@packmind/types';
 import { useTopicsQuery } from '../api/queries/LearningsQueries';
 import { useGetUsersInMyOrganizationQuery } from '../../accounts/api/queries/UserQueries';
 import { routes } from '../../../shared/utils/routes';
@@ -20,9 +23,18 @@ export const TopicsList = () => {
   const { data, isLoading, isError } = useTopicsQuery();
   const { data: usersData } = useGetUsersInMyOrganizationQuery();
   const [tableData, setTableData] = React.useState<PMTableRow[]>([]);
+  const [selectedStatus, setSelectedStatus] = React.useState<string>(
+    TopicStatus.PENDING,
+  );
 
   React.useEffect(() => {
     if (!data || !orgSlug || !spaceSlug) return;
+
+    // Filter topics by status
+    const filteredTopics =
+      selectedStatus === 'all'
+        ? data.topics
+        : data.topics.filter((topic) => topic.status === selectedStatus);
 
     // Create a map of userId to user for quick lookup
     const userMap = new Map(
@@ -30,7 +42,7 @@ export const TopicsList = () => {
     );
 
     setTableData(
-      data.topics.map((topic) => {
+      filteredTopics.map((topic) => {
         const user = userMap.get(topic.createdBy);
         const displayName = user ? user.email : topic.createdBy;
 
@@ -43,6 +55,15 @@ export const TopicsList = () => {
               </Link>
             </PMLink>
           ),
+          status: (
+            <PMBadge
+              colorScheme={
+                topic.status === TopicStatus.DIGESTED ? 'green' : 'yellow'
+              }
+            >
+              {topic.status}
+            </PMBadge>
+          ),
           createdAt: (
             <PMBox>
               {topic.createdAt
@@ -54,10 +75,11 @@ export const TopicsList = () => {
         };
       }),
     );
-  }, [data, orgSlug, spaceSlug, usersData]);
+  }, [data, orgSlug, spaceSlug, usersData, selectedStatus]);
 
   const columns: PMTableColumn[] = [
     { key: 'title', header: 'Title' },
+    { key: 'status', header: 'Status', width: '120px' },
     { key: 'createdAt', header: 'Created At', width: '150px' },
     { key: 'createdBy', header: 'Created By', width: '200px' },
   ];
@@ -86,5 +108,60 @@ export const TopicsList = () => {
     );
   }
 
-  return <PMTable columns={columns} data={tableData} />;
+  const getTableContent = () => {
+    if (tableData.length === 0) {
+      const emptyMessages = {
+        [TopicStatus.PENDING]: {
+          title: 'No pending topics',
+          description: 'No topics are waiting to be distilled',
+        },
+        [TopicStatus.DIGESTED]: {
+          title: 'No distilled topics',
+          description: 'No topics have been distilled yet',
+        },
+        all: {
+          title: 'No topics yet',
+          description:
+            'Topics will appear here when your team captures learnings',
+        },
+      };
+
+      const message =
+        emptyMessages[selectedStatus as keyof typeof emptyMessages] ||
+        emptyMessages.all;
+      return (
+        <PMEmptyState title={message.title} description={message.description} />
+      );
+    }
+    return <PMTable columns={columns} data={tableData} />;
+  };
+
+  const tabs = [
+    {
+      value: TopicStatus.PENDING,
+      triggerLabel: 'Pending',
+      content: getTableContent(),
+    },
+    {
+      value: TopicStatus.DIGESTED,
+      triggerLabel: 'Distilled',
+      content: getTableContent(),
+    },
+    {
+      value: 'all',
+      triggerLabel: 'All',
+      content: getTableContent(),
+    },
+  ];
+
+  return (
+    <PMBox>
+      <PMTabs
+        defaultValue={selectedStatus}
+        value={selectedStatus}
+        onValueChange={(details) => setSelectedStatus(details.value)}
+        tabs={tabs}
+      />
+    </PMBox>
+  );
 };
