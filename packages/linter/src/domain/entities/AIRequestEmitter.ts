@@ -1,9 +1,9 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
   AI_RESPONSE_FORMAT,
+  AIPromptOptions,
   AIService,
   getErrorMessage,
-  LLMModelPerformance,
   PromptConversation,
   TokensUsedByOperation,
 } from '@packmind/node-utils';
@@ -24,19 +24,22 @@ export default abstract class AIRequestEmitter {
 
   public async callAiProvider(
     prompt: PromptConversation[],
-    format: AI_RESPONSE_FORMAT,
-    performance: LLMModelPerformance = LLMModelPerformance.STANDARD,
+    options: AIPromptOptions = {},
   ) {
     const MAX_RETRY = 2;
     let i = 0;
+
+    // Set default responseFormat to PLAIN_TEXT if not specified
+    const optionsWithDefaults: AIPromptOptions = {
+      responseFormat: AI_RESPONSE_FORMAT.PLAIN_TEXT,
+      ...options,
+    };
+
     while (i <= MAX_RETRY) {
       try {
         const response = await this.getAiService().executePromptWithHistory(
           prompt,
-          {
-            responseFormat: format,
-            performance,
-          },
+          optionsWithDefaults,
         );
         this._tokens.push({
           input: response.tokensUsed?.input || 0,

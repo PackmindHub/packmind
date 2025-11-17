@@ -3,6 +3,7 @@ import {
   AI_RESPONSE_FORMAT,
   AIService,
   LLMModelPerformance,
+  OpenAIServiceTier,
   PromptConversationRole,
 } from '@packmind/node-utils';
 import { Rule, RuleExample } from '@packmind/types';
@@ -50,8 +51,11 @@ export class HeuristicGenerationService extends AIRequestEmitter {
               message: prompt,
             },
           ],
-          AI_RESPONSE_FORMAT.PLAIN_TEXT,
-          LLMModelPerformance.FAST,
+          {
+            responseFormat: AI_RESPONSE_FORMAT.PLAIN_TEXT,
+            performance: LLMModelPerformance.FAST,
+            service_tier: OpenAIServiceTier.PRIORITY, // Will have no impact if not OpenAI. This is for optimizing response time for the ChatBot experience.
+          },
         );
 
         if (!response?.data) {

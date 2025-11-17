@@ -9,6 +9,7 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   AI_RESPONSE_FORMAT,
   AIService,
+  OpenAIServiceTier,
   PromptConversationRole,
 } from '@packmind/node-utils';
 import AIRequestEmitter from '../../../domain/entities/AIRequestEmitter';
@@ -46,7 +47,10 @@ export class RuleDetectionAssessmentService extends AIRequestEmitter {
               message: prompt,
             },
           ],
-          AI_RESPONSE_FORMAT.JSON_MODE,
+          {
+            responseFormat: AI_RESPONSE_FORMAT.JSON_MODE,
+            service_tier: OpenAIServiceTier.PRIORITY, // Will have no impact if not OpenAI. This is for optimizing response time for the ChatBot experience when assessment is refreshed in realtime
+          },
         );
 
         if (!response?.data) {

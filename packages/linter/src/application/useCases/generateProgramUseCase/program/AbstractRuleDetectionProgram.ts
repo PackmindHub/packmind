@@ -32,6 +32,7 @@ import {
   PromptConversationRole,
   TokensUsed,
   getErrorMessage,
+  AIPromptOptions,
 } from '@packmind/node-utils';
 import { ILinterAstPort } from '@packmind/types';
 import {
@@ -473,16 +474,19 @@ export default abstract class AbstractRuleDetectionProgram extends AbstractRuleD
     };
   }
 
-  private async callAiProvider(prompt: PromptConversation[]) {
+  private async callAiProvider(
+    prompt: PromptConversation[],
+    options: AIPromptOptions = {
+      responseFormat: AI_RESPONSE_FORMAT.PLAIN_TEXT,
+    },
+  ) {
     const MAX_RETRY = 2;
     let i = 0;
     while (i <= MAX_RETRY) {
       try {
         const response = await this._aiService.executePromptWithHistory(
           prompt,
-          {
-            responseFormat: AI_RESPONSE_FORMAT.PLAIN_TEXT,
-          },
+          options,
         );
         if (response.tokensUsed) {
           this._tokensUsed.push(response.tokensUsed);
@@ -637,7 +641,7 @@ ${this.getPromptToIndicateTruePositives(result)}`;
         output,
         result,
       );
-    const responseDiag = await this.callAiProvider(debuggingConversation);
+    const responseDiag = await this.callAiProvider(debuggingConversation, {});
     this._logger.debug(`[${this._detectionProgramRule.rule.id}] === Diag`);
     return {
       answer: responseDiag.data,

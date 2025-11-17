@@ -37,7 +37,9 @@ export class GenerateRuleHeuristics extends AIRequestEmitter {
               message: prompt,
             },
           ],
-          AI_RESPONSE_FORMAT.PLAIN_TEXT,
+          {
+            responseFormat: AI_RESPONSE_FORMAT.PLAIN_TEXT,
+          },
         );
 
         if (!response?.data) {
