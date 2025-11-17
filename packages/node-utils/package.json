@@ -9,7 +9,7 @@
     "@packmind/logger": "*",
     "@packmind/types": "*",
     "express": "^5.1.0",
-    "openai": "^5.11.0",
+    "openai": "^6.9.0",
     "ts-jest": "^29.4.1",
     "tslib": "^2.3.0",
     "typeorm": "0.3.27",
