@@ -2,6 +2,8 @@ import { PackmindLogger } from '@packmind/logger';
 import { IBaseAdapter, JobsService } from '@packmind/node-utils';
 import {
   CaptureRecipeCommand,
+  CaptureRecipeWithPackagesCommand,
+  CaptureRecipeWithPackagesResponse,
   DeleteRecipeCommand,
   DeleteRecipesBatchCommand,
   GetRecipeByIdCommand,
@@ -29,6 +31,7 @@ import { DeployRecipesJobFactory } from '../../infra/jobs/DeployRecipesJobFactor
 import { UpdateRecipesAndGenerateSummariesJobFactory } from '../../infra/jobs/UpdateRecipesAndGenerateSummariesJobFactory';
 import { RecipesServices } from '../services/RecipesServices';
 import { CaptureRecipeUsecase } from '../useCases/captureRecipe/captureRecipe.usecase';
+import { CaptureRecipeWithPackagesUsecase } from '../useCases/captureRecipeWithPackages/captureRecipeWithPackages.usecase';
 import { DeleteRecipeUsecase } from '../useCases/deleteRecipe/deleteRecipe.usecase';
 import { DeleteRecipesBatchUsecase } from '../useCases/deleteRecipesBatch/deleteRecipesBatch.usecase';
 import { FindRecipeBySlugUsecase } from '../useCases/findRecipeBySlug/findRecipeBySlug.usecase';
@@ -57,6 +60,7 @@ export class RecipesAdapter
 
   // Use cases - created in initialize()
   private _captureRecipe!: CaptureRecipeUsecase;
+  private _captureRecipeWithPackages!: CaptureRecipeWithPackagesUsecase;
   private _updateRecipesFromGitHub!: UpdateRecipesFromGitHubUsecase;
   private _updateRecipesFromGitLab!: UpdateRecipesFromGitLabUsecase;
   private _updateRecipeFromUI!: UpdateRecipeFromUIUsecase;
@@ -114,6 +118,14 @@ export class RecipesAdapter
       this.recipesServices.getRecipeService(),
       this.recipesServices.getRecipeVersionService(),
       this.recipesServices.getRecipeSummaryService(),
+      this.logger,
+    );
+
+    this._captureRecipeWithPackages = new CaptureRecipeWithPackagesUsecase(
+      this.accountsPort!,
+      this._captureRecipe,
+      this.deploymentPort!,
+      this.spacesPort!,
       this.logger,
     );
 
@@ -271,6 +283,12 @@ export class RecipesAdapter
 
   public captureRecipe(command: CaptureRecipeCommand) {
     return this._captureRecipe.execute(command);
+  }
+
+  public async captureRecipeWithPackages(
+    command: CaptureRecipeWithPackagesCommand,
+  ): Promise<CaptureRecipeWithPackagesResponse> {
+    return this._captureRecipeWithPackages.execute(command);
   }
 
   public async updateRecipeFromUI(

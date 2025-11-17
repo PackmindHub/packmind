@@ -62,6 +62,12 @@ export function registerCreateRecipeTool(
         .describe(
           'Array of atomic steps that make up the recipe implementation. Each step should be clear and actionable.',
         ),
+      packageSlugs: z
+        .array(z.string())
+        .optional()
+        .describe(
+          'Optional array of package slugs to add this recipe to after creation',
+        ),
     },
     async ({
       name,
@@ -69,6 +75,7 @@ export function registerCreateRecipeTool(
       whenToUse,
       contextValidationCheckpoints,
       steps,
+      packageSlugs,
     }) => {
       if (!userContext) {
         throw new Error('User context is required to create recipes');
@@ -86,6 +93,41 @@ export function registerCreateRecipeTool(
         organizationId: userContext.organizationId,
       });
 
+      // If packageSlugs provided, use captureRecipeWithPackages
+      if (packageSlugs && packageSlugs.length > 0) {
+        const { recipe } = await recipesHexa
+          .getAdapter()
+          .captureRecipeWithPackages({
+            name,
+            summary,
+            whenToUse,
+            contextValidationCheckpoints,
+            steps: steps as RecipeStep[],
+            packageSlugs,
+            organizationId: userContext.organizationId,
+            userId: userContext.userId,
+            spaceId: globalSpace.id,
+          });
+
+        // Track analytics event
+        analyticsAdapter.trackEvent(
+          createUserId(userContext.userId),
+          createOrganizationId(userContext.organizationId),
+          'mcp_tool_call',
+          { tool: `${mcpToolPrefix}_create_recipe` },
+        );
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Recipe '${recipe.name}' has been created successfully and added to ${packageSlugs.length} package(s).`,
+            },
+          ],
+        };
+      }
+
+      // Otherwise use regular captureRecipe
       const recipe = await recipesHexa.getAdapter().captureRecipe({
         name,
         summary,
