@@ -8,6 +8,9 @@ import {
   IListKnowledgePatchesUseCase,
   IListTopicsUseCase,
   IRejectKnowledgePatchUseCase,
+  ISearchArtifactsBySemanticsUseCase,
+  IGetEmbeddingHealthUseCase,
+  ITriggerEmbeddingBackfillUseCase,
   NewGateway,
 } from '@packmind/types';
 
@@ -21,4 +24,7 @@ export interface ILearningsGateway {
   getTopicsStats: NewGateway<IGetTopicsStatsUseCase>;
   listTopics: NewGateway<IListTopicsUseCase>;
   getTopicById: NewGateway<IGetTopicByIdUseCase>;
+  searchArtifactsBySemantics: NewGateway<ISearchArtifactsBySemanticsUseCase>;
+  getEmbeddingHealth: NewGateway<IGetEmbeddingHealthUseCase>;
+  triggerEmbeddingBackfill: NewGateway<ITriggerEmbeddingBackfillUseCase>;
 }

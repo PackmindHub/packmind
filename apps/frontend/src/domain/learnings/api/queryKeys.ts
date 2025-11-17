@@ -14,6 +14,8 @@ export enum LearningsQueryKeys {
   GET_PATCH_BY_ID = 'get-patch-by-id',
   LIST_TOPICS = 'list-topics',
   GET_TOPIC_BY_ID = 'get-topic-by-id',
+  SEARCH_ARTIFACTS = 'search-artifacts',
+  EMBEDDING_HEALTH = 'embedding-health',
 }
 
 export function getKnowledgePatchesBySpaceKey(
@@ -66,5 +68,32 @@ export function getTopicByIdKey(
     LEARNINGS_QUERY_SCOPE,
     LearningsQueryKeys.GET_TOPIC_BY_ID,
     topicId,
+  ];
+}
+
+export function getSearchArtifactsKey(
+  spaceId: SpaceId | undefined,
+  queryText: string,
+  threshold?: number,
+) {
+  const baseKey = [
+    ORGANIZATION_QUERY_SCOPE,
+    SPACES_SCOPE,
+    spaceId,
+    LEARNINGS_QUERY_SCOPE,
+    LearningsQueryKeys.SEARCH_ARTIFACTS,
+    queryText,
+  ];
+
+  return threshold !== undefined ? [...baseKey, threshold] : baseKey;
+}
+
+export function getEmbeddingHealthKey(spaceId: SpaceId | undefined) {
+  return [
+    ORGANIZATION_QUERY_SCOPE,
+    SPACES_SCOPE,
+    spaceId,
+    LEARNINGS_QUERY_SCOPE,
+    LearningsQueryKeys.EMBEDDING_HEALTH,
   ];
 }

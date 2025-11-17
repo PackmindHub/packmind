@@ -20,10 +20,19 @@ import {
   IListKnowledgePatchesUseCase,
   IListTopicsUseCase,
   IRejectKnowledgePatchUseCase,
+  ISearchArtifactsBySemanticsUseCase,
+  IGetEmbeddingHealthUseCase,
+  ITriggerEmbeddingBackfillUseCase,
   ListKnowledgePatchesCommand,
   ListKnowledgePatchesResponse,
   ListTopicsCommand,
   ListTopicsResponse,
+  SearchArtifactsBySemanticsCommand,
+  SearchArtifactsBySemanticsResponse,
+  GetEmbeddingHealthCommand,
+  GetEmbeddingHealthResponse,
+  TriggerEmbeddingBackfillCommand,
+  TriggerEmbeddingBackfillResponse,
   NewGateway,
   NewPackmindCommandBody,
   RejectKnowledgePatchCommand,
@@ -136,4 +145,42 @@ export class LearningsGatewayApi
       `/organizations/${organizationId}/spaces/${spaceId}/learnings/topics/${topicId}`,
     );
   };
+
+  searchArtifactsBySemantics: NewGateway<ISearchArtifactsBySemanticsUseCase> =
+    async ({
+      organizationId,
+      spaceId,
+      queryText,
+      threshold,
+    }: NewPackmindCommandBody<SearchArtifactsBySemanticsCommand>) => {
+      const queryParams = new URLSearchParams();
+      queryParams.append('queryText', queryText);
+      if (threshold !== undefined) {
+        queryParams.append('threshold', threshold.toString());
+      }
+
+      return this._api.get<SearchArtifactsBySemanticsResponse>(
+        `/organizations/${organizationId}/spaces/${spaceId}/learnings/rag-lab/search?${queryParams}`,
+      );
+    };
+
+  getEmbeddingHealth: NewGateway<IGetEmbeddingHealthUseCase> = async ({
+    organizationId,
+    spaceId,
+  }: NewPackmindCommandBody<GetEmbeddingHealthCommand>) => {
+    return this._api.get<GetEmbeddingHealthResponse>(
+      `/organizations/${organizationId}/spaces/${spaceId}/learnings/rag-lab/health`,
+    );
+  };
+
+  triggerEmbeddingBackfill: NewGateway<ITriggerEmbeddingBackfillUseCase> =
+    async ({
+      organizationId,
+      spaceId,
+    }: NewPackmindCommandBody<TriggerEmbeddingBackfillCommand>) => {
+      return this._api.post<TriggerEmbeddingBackfillResponse>(
+        `/organizations/${organizationId}/spaces/${spaceId}/learnings/rag-lab/backfill`,
+        {},
+      );
+    };
 }

@@ -16,6 +16,8 @@ import {
   getKnowledgePatchesBySpaceKey,
   getTopicByIdKey,
   getTopicsBySpaceKey,
+  getSearchArtifactsKey,
+  getEmbeddingHealthKey,
 } from '../queryKeys';
 
 // Query Options - exportable for route loaders
@@ -59,6 +61,33 @@ export const getTopicByIdOptions = (
   queryFn: () =>
     learningsGateway.getTopicById({ topicId, spaceId, organizationId }),
   enabled: !!topicId && !!spaceId && !!organizationId,
+});
+
+export const getSearchArtifactsBySemanticsOptions = (
+  queryText: string,
+  spaceId: SpaceId,
+  organizationId: OrganizationId,
+  threshold?: number,
+) => ({
+  queryKey: getSearchArtifactsKey(spaceId, queryText, threshold),
+  queryFn: () =>
+    learningsGateway.searchArtifactsBySemantics({
+      spaceId,
+      organizationId,
+      queryText,
+      threshold,
+    }),
+  enabled: !!queryText && !!spaceId && !!organizationId,
+});
+
+export const getEmbeddingHealthOptions = (
+  spaceId: SpaceId,
+  organizationId: OrganizationId,
+) => ({
+  queryKey: getEmbeddingHealthKey(spaceId),
+  queryFn: () =>
+    learningsGateway.getEmbeddingHealth({ spaceId, organizationId }),
+  enabled: !!spaceId && !!organizationId,
 });
 
 // Query Hooks
@@ -124,6 +153,35 @@ export const useTopicQuery = (topicId: TopicId) => {
   return useQuery(
     getTopicByIdOptions(
       topicId,
+      spaceId as SpaceId,
+      organization?.id as OrganizationId,
+    ),
+  );
+};
+
+export const useSearchArtifactsBySemanticsQuery = (
+  queryText: string,
+  threshold?: number,
+) => {
+  const { spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
+
+  return useQuery(
+    getSearchArtifactsBySemanticsOptions(
+      queryText,
+      spaceId as SpaceId,
+      organization?.id as OrganizationId,
+      threshold,
+    ),
+  );
+};
+
+export const useEmbeddingHealthQuery = () => {
+  const { spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
+
+  return useQuery(
+    getEmbeddingHealthOptions(
       spaceId as SpaceId,
       organization?.id as OrganizationId,
     ),
@@ -275,6 +333,33 @@ export const useDistillTopicMutation = () => {
     },
     onError: async (error) => {
       console.error('Error distilling topic', error);
+    },
+  });
+};
+
+const TRIGGER_EMBEDDING_BACKFILL_MUTATION_KEY = 'triggerEmbeddingBackfill';
+
+export const useTriggerEmbeddingBackfillMutation = () => {
+  const queryClient = useQueryClient();
+  const { spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationKey: [TRIGGER_EMBEDDING_BACKFILL_MUTATION_KEY],
+    mutationFn: async () => {
+      return learningsGateway.triggerEmbeddingBackfill({
+        spaceId: spaceId as SpaceId,
+        organizationId: organization!.id,
+      });
+    },
+    onSuccess: async () => {
+      // Invalidate the embedding health query to show updated stats
+      await queryClient.invalidateQueries({
+        queryKey: getEmbeddingHealthKey(spaceId),
+      });
+    },
+    onError: async (error) => {
+      console.error('Error triggering embedding backfill', error);
     },
   });
 };
