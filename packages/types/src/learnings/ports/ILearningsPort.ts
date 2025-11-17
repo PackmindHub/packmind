@@ -38,6 +38,8 @@ import {
   RejectKnowledgePatchCommand,
   RejectKnowledgePatchResponse,
 } from '../contracts/RejectKnowledgePatchUseCase';
+import { StandardVersionId } from '../../standards/StandardVersionId';
+import { RecipeVersionId } from '../../recipes/RecipeVersion';
 
 export const ILearningsPortName = 'ILearningsPort' as const;
 
@@ -68,4 +70,10 @@ export interface ILearningsPort {
   rejectKnowledgePatch(
     command: RejectKnowledgePatchCommand,
   ): Promise<RejectKnowledgePatchResponse>;
+
+  // Embedding job enqueueing methods
+  enqueueStandardEmbeddingGeneration(
+    versionId: StandardVersionId,
+  ): Promise<void>;
+  enqueueRecipeEmbeddingGeneration(versionId: RecipeVersionId): Promise<void>;
 }

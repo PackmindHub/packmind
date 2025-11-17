@@ -30,6 +30,8 @@ import {
   ListTopicsResponse,
   RejectKnowledgePatchCommand,
   RejectKnowledgePatchResponse,
+  StandardVersionId,
+  RecipeVersionId,
 } from '@packmind/types';
 import { LearningsServices } from '../services/LearningsServices';
 import { CaptureTopicUsecase } from '../useCases/captureTopic/captureTopic.usecase';
@@ -45,6 +47,8 @@ import { AcceptKnowledgePatchUsecase } from '../useCases/acceptKnowledgePatch/ac
 import { RejectKnowledgePatchUsecase } from '../useCases/rejectKnowledgePatch/rejectKnowledgePatch.usecase';
 import { ILearningsDelayedJobs } from '../../domain/jobs/ILearningsDelayedJobs';
 import { DistillTopicsJobFactory } from '../../infra/jobs/DistillTopicsJobFactory';
+import { GenerateStandardEmbeddingJobFactory } from '../../infra/jobs/GenerateStandardEmbeddingJobFactory';
+import { GenerateRecipeEmbeddingJobFactory } from '../../infra/jobs/GenerateRecipeEmbeddingJobFactory';
 
 const origin = 'LearningsAdapter';
 
@@ -269,13 +273,56 @@ export class LearningsAdapter
       this.distillTopicWorkerUsecase,
     );
 
-    jobsService.registerJobQueue(jobFactory.getQueueName(), jobFactory);
+    jobsService.registerJobQueue(
+      distillTopicsFactory.getQueueName(),
+      distillTopicsFactory,
+    );
 
-    await jobFactory.createQueue();
+    await distillTopicsFactory.createQueue();
 
-    if (!jobFactory.delayedJob) {
+    if (!distillTopicsFactory.delayedJob) {
       throw new Error(
         'LearningsAdapter: Failed to create delayed job for distilling topics',
+      );
+    }
+
+    // Build embedding jobs
+    const embeddingService =
+      this.learningsServices.getEmbeddingOrchestrationService();
+
+    const standardEmbeddingFactory = new GenerateStandardEmbeddingJobFactory(
+      this.logger,
+      embeddingService,
+    );
+
+    jobsService.registerJobQueue(
+      standardEmbeddingFactory.getQueueName(),
+      standardEmbeddingFactory,
+    );
+
+    await standardEmbeddingFactory.createQueue();
+
+    if (!standardEmbeddingFactory.delayedJob) {
+      throw new Error(
+        'LearningsAdapter: Failed to create delayed job for standard embedding generation',
+      );
+    }
+
+    const recipeEmbeddingFactory = new GenerateRecipeEmbeddingJobFactory(
+      this.logger,
+      embeddingService,
+    );
+
+    jobsService.registerJobQueue(
+      recipeEmbeddingFactory.getQueueName(),
+      recipeEmbeddingFactory,
+    );
+
+    await recipeEmbeddingFactory.createQueue();
+
+    if (!recipeEmbeddingFactory.delayedJob) {
+      throw new Error(
+        'LearningsAdapter: Failed to create delayed job for recipe embedding generation',
       );
     }
 
@@ -283,6 +330,8 @@ export class LearningsAdapter
 
     return {
       distillTopicsDelayedJob: jobFactory.delayedJob,
+      generateStandardEmbeddingDelayedJob: standardEmbeddingFactory.delayedJob,
+      generateRecipeEmbeddingDelayedJob: recipeEmbeddingFactory.delayedJob,
     };
   }
 
@@ -452,5 +501,51 @@ export class LearningsAdapter
     }
 
     return await this.getTopicByIdUsecase.execute(command);
+  }
+
+  /**
+   * Enqueue standard embedding generation job.
+   */
+  public async enqueueStandardEmbeddingGeneration(
+    versionId: StandardVersionId,
+  ): Promise<void> {
+    this.logger.info('enqueueStandardEmbeddingGeneration called', {
+      versionId,
+    });
+
+    if (!this.learningsDelayedJobs?.generateStandardEmbeddingDelayedJob) {
+      throw new Error(
+        'LearningsAdapter not fully initialized. Call initialize() first.',
+      );
+    }
+
+    await this.learningsDelayedJobs.generateStandardEmbeddingDelayedJob.addJob({
+      versionId,
+    });
+
+    this.logger.info('Enqueued standard embedding generation', { versionId });
+  }
+
+  /**
+   * Enqueue recipe embedding generation job.
+   */
+  public async enqueueRecipeEmbeddingGeneration(
+    versionId: RecipeVersionId,
+  ): Promise<void> {
+    this.logger.info('enqueueRecipeEmbeddingGeneration called', {
+      versionId,
+    });
+
+    if (!this.learningsDelayedJobs?.generateRecipeEmbeddingDelayedJob) {
+      throw new Error(
+        'LearningsAdapter not fully initialized. Call initialize() first.',
+      );
+    }
+
+    await this.learningsDelayedJobs.generateRecipeEmbeddingDelayedJob.addJob({
+      versionId,
+    });
+
+    this.logger.info('Enqueued recipe embedding generation', { versionId });
   }
 }

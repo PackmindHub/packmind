@@ -2,6 +2,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
   IAccountsPort,
+  ILearningsPort,
   ISpacesPort,
   IUpdateStandardUseCase,
   OrganizationId,
@@ -37,6 +38,7 @@ export class UpdateStandardUsecase
     private readonly ruleExampleRepository: IRuleExampleRepository,
     private readonly generateStandardSummaryDelayedJob: GenerateStandardSummaryDelayedJob,
     private readonly spacesPort: ISpacesPort | null,
+    private readonly learningsPort: ILearningsPort | null,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsAdapter, logger);
@@ -229,6 +231,29 @@ export class UpdateStandardUsecase
         newStandardVersion,
         rulesWithExamples,
       );
+
+      // Enqueue embedding generation job (graceful degradation if learningsPort unavailable)
+      if (this.learningsPort) {
+        this.logger.info('Enqueueing standard embedding generation job', {
+          versionId: newStandardVersion.id,
+        });
+        try {
+          await this.learningsPort.enqueueStandardEmbeddingGeneration(
+            newStandardVersion.id,
+          );
+        } catch (error) {
+          this.logger.error('Failed to enqueue embedding generation job', {
+            versionId: newStandardVersion.id,
+            error: error instanceof Error ? error.message : String(error),
+          });
+          // Don't fail the standard update if embedding job fails to enqueue
+        }
+      } else {
+        this.logger.debug(
+          'Learnings port not available, skipping embedding generation',
+          { versionId: newStandardVersion.id },
+        );
+      }
 
       this.logger.info('Standard updated successfully', {
         standardId,

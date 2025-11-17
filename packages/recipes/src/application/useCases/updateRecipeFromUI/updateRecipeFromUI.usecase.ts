@@ -3,7 +3,13 @@ import { RecipeVersionService } from '../../services/RecipeVersionService';
 import { RecipeSummaryService } from '../../services/RecipeSummaryService';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { AiNotConfigured } from '@packmind/node-utils';
-import { OrganizationId, RecipeId, SpaceId, UserId } from '@packmind/types';
+import {
+  ILearningsPort,
+  OrganizationId,
+  RecipeId,
+  SpaceId,
+  UserId,
+} from '@packmind/types';
 
 const origin = 'UpdateRecipeFromUIUsecase';
 
@@ -21,6 +27,7 @@ export class UpdateRecipeFromUIUsecase {
     private readonly recipeService: RecipeService,
     private readonly recipeVersionService: RecipeVersionService,
     private readonly recipeSummaryService: RecipeSummaryService,
+    private readonly learningsPort: ILearningsPort | null,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.DEBUG,
@@ -140,6 +147,29 @@ export class UpdateRecipeFromUIUsecase {
           userId: editorUserId, // Use editor's ID for the version
         },
       );
+
+      // Enqueue embedding generation job (graceful degradation if learningsPort unavailable)
+      if (this.learningsPort) {
+        this.logger.info('Enqueueing recipe embedding generation job', {
+          versionId: newRecipeVersion.id,
+        });
+        try {
+          await this.learningsPort.enqueueRecipeEmbeddingGeneration(
+            newRecipeVersion.id,
+          );
+        } catch (error) {
+          this.logger.error('Failed to enqueue embedding generation job', {
+            versionId: newRecipeVersion.id,
+            error: error instanceof Error ? error.message : String(error),
+          });
+          // Don't fail the recipe update if embedding job fails to enqueue
+        }
+      } else {
+        this.logger.debug(
+          'Learnings port not available, skipping embedding generation',
+          { versionId: newRecipeVersion.id },
+        );
+      }
 
       this.logger.info('Recipe updated successfully from UI', {
         recipeId,

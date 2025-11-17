@@ -165,6 +165,7 @@ describe('UpdateStandardUsecase', () => {
       ruleExampleRepository,
       generateStandardSummaryDelayedJob,
       spacesPort,
+      null, // learningsPort
       stubbedLogger,
     );
 

@@ -11,6 +11,8 @@ import {
   IDeploymentPortName,
   IGitPort,
   IGitPortName,
+  ILearningsPort,
+  ILearningsPortName,
   IRecipesPort,
   ISpacesPort,
   ISpacesPortName,
@@ -54,6 +56,7 @@ export class RecipesAdapter
   private deploymentPort: IDeploymentPort | null = null;
   private accountsPort: IAccountsPort | null = null;
   private spacesPort: ISpacesPort | null = null;
+  private learningsPort: ILearningsPort | null = null;
 
   // Delayed jobs - built internally from JobsService
   private recipesDelayedJobs: IRecipesDelayedJobs | null = null;
@@ -89,6 +92,7 @@ export class RecipesAdapter
     [IDeploymentPortName]: IDeploymentPort;
     [IAccountsPortName]: IAccountsPort;
     [ISpacesPortName]: ISpacesPort;
+    [ILearningsPortName]?: ILearningsPort;
     jobsService: JobsService;
   }): Promise<void> {
     this.logger.info('Initializing RecipesAdapter with ports and JobsService');
@@ -98,6 +102,7 @@ export class RecipesAdapter
     this.deploymentPort = ports[IDeploymentPortName];
     this.accountsPort = ports[IAccountsPortName];
     this.spacesPort = ports[ISpacesPortName];
+    this.learningsPort = ports[ILearningsPortName] ?? null;
 
     // Step 2: Build delayed jobs
     this.recipesDelayedJobs = await this.buildDelayedJobs(
@@ -117,6 +122,7 @@ export class RecipesAdapter
       this.recipesServices.getRecipeService(),
       this.recipesServices.getRecipeVersionService(),
       this.recipesServices.getRecipeSummaryService(),
+      this.learningsPort,
       this.logger,
     );
 
@@ -142,6 +148,7 @@ export class RecipesAdapter
       this.recipesServices.getRecipeService(),
       this.recipesServices.getRecipeVersionService(),
       this.recipesServices.getRecipeSummaryService(),
+      this.learningsPort,
       this.logger,
     );
 

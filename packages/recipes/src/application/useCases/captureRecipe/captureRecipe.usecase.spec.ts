@@ -67,6 +67,7 @@ describe('CaptureRecipeUsecase', () => {
       recipeService,
       recipeVersionService,
       recipeSummaryService,
+      null, // learningsPort
       stubbedLogger,
     );
   });

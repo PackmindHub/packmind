@@ -71,6 +71,7 @@ describe('CreateStandardUsecase', () => {
       standardService,
       standardVersionService,
       generateStandardSummaryDelayedJob,
+      null, // learningsPort
       stubbedLogger,
     );
   });
@@ -620,6 +621,7 @@ describe('CreateStandardUsecase', () => {
           standardService,
           standardVersionService,
           generateStandardSummaryDelayedJob,
+          null, // learningsPort
           stubbedLogger,
         );
       });

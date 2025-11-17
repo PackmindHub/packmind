@@ -6,6 +6,8 @@ import {
   IAccountsPortName,
   IDeploymentPort,
   IDeploymentPortName,
+  ILearningsPort,
+  ILearningsPortName,
   ILinterPort,
   ILinterPortName,
   ISpacesPort,
@@ -64,6 +66,7 @@ export class StandardsAdapter
   private spacesPort: ISpacesPort | null = null;
   private linterPort: ILinterPort | null = null;
   private deploymentsPort: IDeploymentPort | null = null;
+  private learningsPort: ILearningsPort | null = null;
 
   // Use cases - all initialized in initialize()
   private _createStandard!: CreateStandardUsecase;
@@ -106,6 +109,7 @@ export class StandardsAdapter
     [ISpacesPortName]: ISpacesPort;
     [ILinterPortName]: ILinterPort;
     [IDeploymentPortName]: IDeploymentPort;
+    [ILearningsPortName]?: ILearningsPort;
     jobsService: JobsService;
   }): Promise<void> {
     this.logger.info('Initializing StandardsAdapter with ports and services');
@@ -114,6 +118,7 @@ export class StandardsAdapter
     this.spacesPort = ports[ISpacesPortName];
     this.linterPort = ports[ILinterPortName];
     this.deploymentsPort = ports[IDeploymentPortName];
+    this.learningsPort = ports[ILearningsPortName] ?? null;
 
     this.standardDelayedJobs = await this.buildDelayedJobs(ports.jobsService);
 
@@ -187,6 +192,7 @@ export class StandardsAdapter
       this.services.getStandardService(),
       this.services.getStandardVersionService(),
       this.standardDelayedJobs.standardSummaryDelayedJob,
+      this.learningsPort,
     );
 
     this._updateStandard = new UpdateStandardUsecase(
@@ -197,6 +203,7 @@ export class StandardsAdapter
       this.repositories.getRuleExampleRepository(),
       this.standardDelayedJobs.standardSummaryDelayedJob,
       this.spacesPort,
+      this.learningsPort,
     );
 
     this._addRuleToStandard = new AddRuleToStandardUsecase(

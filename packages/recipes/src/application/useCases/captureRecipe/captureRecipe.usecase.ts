@@ -7,6 +7,7 @@ import {
   createSpaceId,
   createUserId,
   ICaptureRecipeUseCase,
+  ILearningsPort,
   Recipe,
   RecipeStep,
 } from '@packmind/types';
@@ -22,6 +23,7 @@ export class CaptureRecipeUsecase implements ICaptureRecipeUseCase {
     private readonly recipeService: RecipeService,
     private readonly recipeVersionService: RecipeVersionService,
     private readonly recipeSummaryService: RecipeSummaryService,
+    private readonly learningsPort: ILearningsPort | null,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.INFO,
@@ -131,6 +133,29 @@ export class CaptureRecipeUsecase implements ICaptureRecipeUseCase {
         version: initialVersion,
         hasSummary: !!recipeVersion.summary,
       });
+
+      // Enqueue embedding generation job (graceful degradation if learningsPort unavailable)
+      if (this.learningsPort) {
+        this.logger.info('Enqueueing recipe embedding generation job', {
+          versionId: recipeVersion.id,
+        });
+        try {
+          await this.learningsPort.enqueueRecipeEmbeddingGeneration(
+            recipeVersion.id,
+          );
+        } catch (error) {
+          this.logger.error('Failed to enqueue embedding generation job', {
+            versionId: recipeVersion.id,
+            error: error instanceof Error ? error.message : String(error),
+          });
+          // Don't fail the recipe creation if embedding job fails to enqueue
+        }
+      } else {
+        this.logger.debug(
+          'Learnings port not available, skipping embedding generation',
+          { versionId: recipeVersion.id },
+        );
+      }
 
       this.logger.info('CaptureRecipe process completed successfully', {
         recipeId: recipe.id,

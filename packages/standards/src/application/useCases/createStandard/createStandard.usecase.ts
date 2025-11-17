@@ -3,6 +3,7 @@ import {
   CreateStandardCommand,
   CreateStandardResponse,
   ICreateStandardUseCase,
+  ILearningsPort,
   OrganizationId,
   StandardVersion,
   UserId,
@@ -25,6 +26,7 @@ export class CreateStandardUsecase implements ICreateStandardUseCase {
     private readonly standardService: StandardService,
     private readonly standardVersionService: StandardVersionService,
     private readonly generateStandardSummaryDelayedJob: GenerateStandardSummaryDelayedJob,
+    private readonly learningsPort: ILearningsPort | null,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.DEBUG,
@@ -146,6 +148,29 @@ export class CreateStandardUsecase implements ICreateStandardUseCase {
         standardVersion,
         rules,
       );
+
+      // Enqueue embedding generation job (graceful degradation if learningsPort unavailable)
+      if (this.learningsPort) {
+        this.logger.info('Enqueueing standard embedding generation job', {
+          versionId: standardVersion.id,
+        });
+        try {
+          await this.learningsPort.enqueueStandardEmbeddingGeneration(
+            standardVersion.id,
+          );
+        } catch (error) {
+          this.logger.error('Failed to enqueue embedding generation job', {
+            versionId: standardVersion.id,
+            error: error instanceof Error ? error.message : String(error),
+          });
+          // Don't fail the standard creation if embedding job fails to enqueue
+        }
+      } else {
+        this.logger.debug(
+          'Learnings port not available, skipping embedding generation',
+          { versionId: standardVersion.id },
+        );
+      }
 
       return standard;
     } catch (error) {
