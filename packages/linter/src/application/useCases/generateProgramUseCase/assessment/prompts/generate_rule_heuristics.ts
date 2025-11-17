@@ -18,7 +18,7 @@ You must create clear, actionable detection heuristics that explain why the codi
 * Study the code examples when provided: positive examples (correct usage) and negative examples (violations) to identify patterns.
 * Create comprehensive detection heuristics as bullet points using declarative phrasing ("must be considered," "must be identified," etc.).
 * Focus on describing the logical detection criteria without mentioning specific technical implementation details.
-* Avoid mentioning "the detector" or similar; use direct statements about what must be done.
+* Avoid mentioning "the detector" or similar; use "Packmind instead"
 * Each heuristic should be precise and unambiguous about what constitutes a violation.
 
 

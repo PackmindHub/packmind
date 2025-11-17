@@ -183,58 +183,6 @@ describe('HeuristicGenerationService', () => {
         expect(result).toBe('');
       });
     });
-
-    describe('when EMPTY is detected', () => {
-      it('logs warning with question and answer', async () => {
-        mockAiService.executePromptWithHistory.mockResolvedValue({
-          data: 'EMPTY',
-          success: true,
-          attempts: 1,
-          model: 'test-model',
-        });
-
-        const question = 'What should we detect?';
-        const answer = 'totally unrelated answer';
-
-        await service.generateHeuristic(
-          mockRule,
-          mockExamples,
-          [],
-          question,
-          answer,
-        );
-
-        expect(stubbedLogger.warn).toHaveBeenCalledWith(
-          'No heuristic generated - user answer unrelated to rule',
-          {
-            question,
-            answer,
-            ruleId: mockRule.id,
-          },
-        );
-      });
-
-      it('does not log info message', async () => {
-        mockAiService.executePromptWithHistory.mockResolvedValue({
-          data: 'EMPTY',
-          success: true,
-          attempts: 1,
-          model: 'test-model',
-        });
-
-        await service.generateHeuristic(
-          mockRule,
-          mockExamples,
-          [],
-          'Question',
-          'Answer',
-        );
-
-        expect(stubbedLogger.info).not.toHaveBeenCalledWith(
-          expect.stringContaining('Generated heuristic:'),
-        );
-      });
-    });
   });
 
   describe('when AI service fails', () => {

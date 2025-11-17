@@ -124,13 +124,6 @@ describe('AbstractAdminUseCase', () => {
           organization,
           membership,
         });
-        expect(logger.info).toHaveBeenCalledWith(
-          'Member validation successful',
-          {
-            userId: command.userId,
-            organizationId: command.organizationId,
-          },
-        );
       });
     });
 

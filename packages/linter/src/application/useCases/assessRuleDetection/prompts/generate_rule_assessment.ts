@@ -22,15 +22,17 @@ Be overly pessimistic in your assessment.
   * "reason": 
       - If "feasible" is true, set "reason" to an empty array
       - If "feasible" is false, set "reason" to an array of bullet-point strings. Each string should explain, in user-friendly terms, why Packmind cannot support this detection yet—avoid mentioning ASTs or static analysis directly.
+      - **Never mention "the detector" in reasons. Use "Packmind" instead.** For example, say "Packmind cannot detect this pattern" not "The detector cannot detect this pattern".
       - Include only the top 1-3 most critical reasons that make the rule undetectable. Skip minor or medium-importance issues.
       - Keep each reason concise and non-redundant. Avoid repeating the same concept in different words.
   * "clarificationQuestion": (only when "feasible" is false)
       - When the rule is not feasible, generate a clarification question that will help gather actionable information to make the rule detectable.
       - The question should focus on identifying concrete code patterns that can be analyzed within a single file.
       - Use beginner-friendly language: prefer terms like "source code element", "code pattern", "function call" instead of technical jargon like "AST node", "method_declaration node".
+      - **Never mention "the detector" in questions or answers. Use "Packmind" instead.** For example, say "Which patterns should Packmind flag?" not "Which patterns should the detector flag?"
       - Provide 2-4 pre-defined answers (most impactful and relevant options).
       - **CRITICAL**: Each answer must be directly actionable and complete. Never include placeholders like "N", "X", variables, or phrases like "I will supply" or "user-defined value". The user will select an answer via radio button and cannot provide additional input.
-      - Instead of "Flag classes with more than N methods (I will supply N)", provide concrete examples like: "Flag classes with more than 10 methods", "Flag classes with more than 20 methods", "Flag classes with more than 5 methods".
+      - Instead of "Flag classes with more than N methods (I will supply N)", provide concrete examples like: "Classes with more than 10 methods", "Classes with more than 20 methods", "Classes with more than 5 methods".
       - **EXAMPLE CONSISTENCY**: When good examples (positive examples) and bad examples (negative examples) are provided below:
           * The suggested answers MUST NOT contradict the good examples. If a good example demonstrates valid code, your suggested answers should not flag that same pattern as a violation.
           * The suggested answers SHOULD align with and help detect the violations shown in the bad examples. Each answer should represent a specific detection strategy that would catch at least one of the bad examples.
