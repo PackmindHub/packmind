@@ -8,6 +8,7 @@ import { standardsSchemas } from '@packmind/standards';
 import { makeTestDatasource } from '@packmind/test-utils';
 import {
   createTargetId,
+  FileModification,
   GitProviderVendors,
   GitRepo,
   IGitPort,
@@ -182,15 +183,16 @@ describe('Claude Deployment Integration', () => {
 
       expect(claudeFile).toBeDefined();
       if (claudeFile) {
-        expect(claudeFile.content).toContain('# Packmind Recipes');
-        expect(claudeFile.content).toContain('🚨 **MANDATORY STEP** 🚨');
-        expect(claudeFile.content).toContain('ALWAYS READ');
-        expect(claudeFile.content).toContain(recipeVersions[0].name);
-        expect(claudeFile.content).toContain('aiAgent: "Claude Code"');
-        expect(claudeFile.content).toContain('gitRepo: "test-owner/test-repo"');
+        const sectionContent = claudeFile.sections![0].content;
+        expect(sectionContent).toContain('# Packmind Recipes');
+        expect(sectionContent).toContain('🚨 **MANDATORY STEP** 🚨');
+        expect(sectionContent).toContain('ALWAYS READ');
+        expect(sectionContent).toContain(recipeVersions[0].name);
+        expect(sectionContent).toContain('aiAgent: "Claude Code"');
+        expect(sectionContent).toContain('gitRepo: "test-owner/test-repo"');
 
         // Should NOT contain standards content yet
-        expect(claudeFile.content).not.toContain('## Packmind Standards');
+        expect(sectionContent).not.toContain('## Packmind Standards');
       }
     });
 
@@ -225,19 +227,20 @@ describe('Claude Deployment Integration', () => {
 
       expect(claudeFile).toBeDefined();
       if (claudeFile) {
-        expect(claudeFile.content).toContain('# Packmind Standards');
-        expect(claudeFile.content).toContain(
+        const sectionContent = claudeFile.sections![0].content;
+        expect(sectionContent).toContain('# Packmind Standards');
+        expect(sectionContent).toContain(
           'Before starting your work, make sure to review the coding standards relevant to your current task',
         );
-        expect(claudeFile.content).toContain('Test standard for deployment :');
-        expect(claudeFile.content).toContain('* Use meaningful variable names');
-        expect(claudeFile.content).toContain('* Write comprehensive tests');
-        expect(claudeFile.content).toContain(
+        expect(sectionContent).toContain('Test standard for deployment :');
+        expect(sectionContent).toContain('* Use meaningful variable names');
+        expect(sectionContent).toContain('* Write comprehensive tests');
+        expect(sectionContent).toContain(
           'Full standard is available here for further request: [Test Standard](.packmind/standards/test-standard.md)',
         );
 
         // Should NOT contain recipes content yet
-        expect(claudeFile.content).not.toContain('# Packmind Recipes');
+        expect(sectionContent).not.toContain('# Packmind Recipes');
       }
     });
 
@@ -288,11 +291,11 @@ describe('Claude Deployment Integration', () => {
 
       // Simulate the file merging that DeployerService does
       const allUpdates = [recipeUpdates, standardsUpdates];
-      const pathMap = new Map<string, string>();
+      const pathMap = new Map<string, FileModification>();
 
       for (const update of allUpdates) {
         for (const file of update.createOrUpdate) {
-          pathMap.set(file.path, file.content);
+          pathMap.set(file.path, file);
         }
       }
 
@@ -302,166 +305,21 @@ describe('Claude Deployment Integration', () => {
       expect(pathMap.has('CLAUDE.md')).toBe(true);
 
       // The final content should be from the standards deployment (last one wins)
-      const finalContent = pathMap.get('CLAUDE.md');
-      expect(finalContent).toBeDefined();
-      if (finalContent) {
-        expect(finalContent).toContain('# Packmind Standards');
+      const finalFile = pathMap.get('CLAUDE.md');
+      expect(finalFile).toBeDefined();
+      if (finalFile && finalFile.sections) {
+        const sectionContent = finalFile.sections[0].content;
+        expect(sectionContent).toContain('# Packmind Standards');
       }
     });
   });
 
-  describe('when CLAUDE.md already exists with complete instructions', () => {
-    let defaultTarget: Target;
-    const existingContent = `<!-- start: Packmind recipes -->
-# Packmind Recipes
-
-🚨 **MANDATORY STEP** 🚨
-
-Before writing, editing, or generating ANY code:
-
-**ALWAYS READ**: the available recipes below to see what recipes are available
-
-## Recipe Usage Rules:
-- **MANDATORY**: Always check the recipes list first
-- **CONDITIONAL**: Only read/use individual recipes if they are relevant to your task
-- **OPTIONAL**: If no recipes are relevant, proceed without using any
-
-## Recipe Usage Tracking:
-When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you MUST call the 'packmind_notify_recipe_usage' MCP tool with:
-* Recipe slugs array (e.g., ["recipe-name"] from "recipe-name.md")
-* aiAgent: "Claude Code"
-* gitRepo: "test-owner/test-repo"
-* target: "/"
-
-**Remember: Always check the recipes list first, but only use recipes that actually apply to your specific task.**\`
-
-## Available recipes
-
-* [Test Recipe](.packmind/recipes/test-recipe.md): Test recipe for deployment
-<!-- end: Packmind recipes -->
-<!-- start: Packmind standards -->
-# Packmind Standards
-
-Before starting your work, make sure to review the coding standards relevant to your current task.
-
-Always consult the sections that apply to the technology, framework, or type of contribution you are working on.
-
-All rules and guidelines defined in these standards are mandatory and must be followed consistently.
-
-Failure to follow these standards may lead to inconsistencies, errors, or rework. Treat them as the source of truth for how code should be written, structured, and maintained.
-
-## Standard: Test Standard
-
-Test standard for deployment :
-* Use meaningful variable names
-* Write comprehensive tests
-
-Full standard is available here for further request: [Test Standard](.packmind/standards/test-standard.md)
-<!-- end: Packmind standards -->`;
-
-    beforeEach(() => {
-      // Create a default target for testing
-      defaultTarget = {
-        id: createTargetId('default-target-id'),
-        name: 'Default',
-        path: '/',
-        gitRepoId: gitRepo.id,
-      };
-      // Mock GitHexa.getFileFromRepo to return existing content
-      const existingFile = {
-        content: existingContent,
-        sha: 'abc123',
-      };
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(existingFile);
-    });
-
-    afterEach(() => {
-      jest.restoreAllMocks();
-    });
-
-    it('does not modify CLAUDE.md with existing recipe instructions', async () => {
-      const recipeVersions: RecipeVersion[] = [
-        {
-          id: 'recipe-version-1' as RecipeVersionId,
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: recipe.content,
-          version: recipe.version,
-          summary: 'Test recipe for deployment',
-          userId: user.id,
-        },
-      ];
-
-      const fileUpdates = await deployerService.aggregateRecipeDeployments(
-        recipeVersions,
-        gitRepo,
-        [defaultTarget],
-        ['claude'],
-      );
-
-      // No files should be updated since instructions already exist
-      expect(fileUpdates.createOrUpdate).toHaveLength(0);
-      expect(fileUpdates.delete).toHaveLength(0);
-    });
-
-    it('does not modify CLAUDE.md with existing standards instructions', async () => {
-      const standardVersions: StandardVersion[] = [
-        {
-          id: 'standard-version-1' as StandardVersionId,
-          standardId: standard.id,
-          name: standard.name,
-          slug: standard.slug,
-          description: standard.description,
-          version: standard.version,
-          summary: 'Test standard for deployment',
-          userId: user.id,
-          scope: standard.scope,
-        },
-      ];
-
-      const fileUpdates = await deployerService.aggregateStandardsDeployments(
-        standardVersions,
-        gitRepo,
-        [defaultTarget],
-        ['claude'],
-      );
-
-      // No files should be updated since instructions already exist
-      expect(fileUpdates.createOrUpdate).toHaveLength(0);
-      expect(fileUpdates.delete).toHaveLength(0);
-    });
-  });
+  // NOTE: In the new section-based architecture, deployers ALWAYS generate sections.
+  // They don't check for existing content - that's handled by the merge layer.
+  // Tests for content preservation belong in merge layer tests (commitToGit.usecase.spec.ts or PullDataUseCase.spec.ts)
 
   describe('when CLAUDE.md exists but is missing recipe instructions', () => {
     let defaultTarget: Target;
-    const partialContent = `# Some User Instructions
-
-This is user-defined content that should be preserved.
-
-## User Section
-
-More user content here.
-
-<!-- start: Packmind standards -->
-# Packmind Standards
-
-Before starting your work, make sure to review the coding standards relevant to your current task.
-
-Always consult the sections that apply to the technology, framework, or type of contribution you are working on.
-
-All rules and guidelines defined in these standards are mandatory and must be followed consistently.
-
-Failure to follow these standards may lead to inconsistencies, errors, or rework. Treat them as the source of truth for how code should be written, structured, and maintained.
-
-## Standard: Test Standard
-
-Test standard for deployment :
-* Use meaningful variable names
-* Write comprehensive tests
-
-Full standard is available here for further request: [Test Standard](.packmind/standards/test-standard.md)
-<!-- end: Packmind standards -->`;
 
     beforeEach(() => {
       // Create a default target for testing
@@ -471,19 +329,15 @@ Full standard is available here for further request: [Test Standard](.packmind/s
         path: '/',
         gitRepoId: gitRepo.id,
       };
-      // Mock GitHexa.getFileFromRepo to return partial content (missing recipe instructions)
-      const existingFile = {
-        content: partialContent,
-        sha: 'def456',
-      };
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(existingFile);
+      // Mock GitHexa.getFileFromRepo to return null (new architecture doesn't check existing content)
+      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(null);
     });
 
     afterEach(() => {
       jest.restoreAllMocks();
     });
 
-    it('adds recipe instructions while preserving existing content', async () => {
+    it('generates recipe section content', async () => {
       const recipeVersions: RecipeVersion[] = [
         {
           id: 'recipe-version-1' as RecipeVersionId,
@@ -510,138 +364,20 @@ Full standard is available here for further request: [Test Standard](.packmind/s
       const claudeFile = fileUpdates.createOrUpdate[0];
       expect(claudeFile.path).toBe('CLAUDE.md');
 
-      // Should preserve existing user content
-      expect(claudeFile.content).toContain('# Some User Instructions');
-      expect(claudeFile.content).toContain(
-        'This is user-defined content that should be preserved.',
-      );
-      expect(claudeFile.content).toContain('## User Section');
-      expect(claudeFile.content).toContain('More user content here.');
+      const sectionContent = claudeFile.sections![0].content;
 
-      // Should preserve existing standards instructions
-      expect(claudeFile.content).toContain('# Packmind Standards');
-      expect(claudeFile.content).toContain(
-        'Before starting your work, make sure to review the coding standards relevant to your current task',
-      );
-      expect(claudeFile.content).toContain('* Use meaningful variable names');
-      expect(claudeFile.content).toContain('* Write comprehensive tests');
+      // Should generate recipe section with Packmind content only
+      expect(sectionContent).toContain('# Packmind Recipes');
+      expect(sectionContent).toContain('🚨 **MANDATORY STEP** 🚨');
+      expect(sectionContent).toContain('aiAgent: "Claude Code"');
+      expect(sectionContent).toContain('gitRepo: "test-owner/test-repo"');
 
-      // Should add recipe instructions
-      expect(claudeFile.content).toContain('# Packmind Recipes');
-      expect(claudeFile.content).toContain('🚨 **MANDATORY STEP** 🚨');
-      expect(claudeFile.content).toContain('aiAgent: "Claude Code"');
-      expect(claudeFile.content).toContain('gitRepo: "test-owner/test-repo"');
+      // Should NOT contain user content (that's preserved by merge layer)
+      expect(sectionContent).not.toContain('# Some User Instructions');
+      expect(sectionContent).not.toContain('# Packmind Standards');
     });
 
-    it('does not add standards instructions for existing configuration', async () => {
-      const standardVersions: StandardVersion[] = [
-        {
-          id: 'standard-version-1' as StandardVersionId,
-          standardId: standard.id,
-          name: standard.name,
-          slug: standard.slug,
-          description: standard.description,
-          version: standard.version,
-          summary: 'Test standard for deployment',
-          userId: user.id,
-          scope: standard.scope,
-        },
-      ];
-
-      const fileUpdates = await deployerService.aggregateStandardsDeployments(
-        standardVersions,
-        gitRepo,
-        [defaultTarget],
-        ['claude'],
-      );
-
-      // No files should be updated since standards instructions already exist
-      expect(fileUpdates.createOrUpdate).toHaveLength(0);
-      expect(fileUpdates.delete).toHaveLength(0);
-    });
-  });
-
-  describe('when CLAUDE.md exists but is missing standards instructions', () => {
-    let defaultTarget: Target;
-    const partialContent = `<!-- start: Packmind recipes -->
-# Packmind Recipes
-
-🚨 **MANDATORY STEP** 🚨
-
-Before writing, editing, or generating ANY code:
-
-**ALWAYS READ**: the available recipes below to see what recipes are available
-
-## Recipe Usage Rules:
-- **MANDATORY**: Always check the recipes list first
-- **CONDITIONAL**: Only read/use individual recipes if they are relevant to your task
-- **OPTIONAL**: If no recipes are relevant, proceed without using any
-
-## Recipe Usage Tracking:
-When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you MUST call the 'packmind_notify_recipe_usage' MCP tool with:
-* Recipe slugs array (e.g., ["recipe-name"] from "recipe-name.md")
-* aiAgent: "Claude Code"
-* gitRepo: "test-owner/test-repo"
-* target: "/"
-
-**Remember: Always check the recipes list first, but only use recipes that actually apply to your specific task.**\`
-
-## Available recipes
-
-* [Test Recipe](.packmind/recipes/test-recipe.md): Test recipe for deployment
-<!-- end: Packmind recipes -->
-
-# Some User Content
-
-User-defined instructions that should be preserved.`;
-
-    beforeEach(() => {
-      // Create a default target for testing
-      defaultTarget = {
-        id: createTargetId('default-target-id'),
-        name: 'Default',
-        path: '/',
-        gitRepoId: gitRepo.id,
-      };
-      // Mock GitHexa.getFileFromRepo to return partial content (missing standards instructions)
-      const existingFile = {
-        content: partialContent,
-        sha: 'ghi789',
-      };
-      jest.spyOn(gitPort, 'getFileFromRepo').mockResolvedValue(existingFile);
-    });
-
-    afterEach(() => {
-      jest.restoreAllMocks();
-    });
-
-    it('does not add recipe instructions for existing configuration', async () => {
-      const recipeVersions: RecipeVersion[] = [
-        {
-          id: 'recipe-version-1' as RecipeVersionId,
-          recipeId: recipe.id,
-          name: recipe.name,
-          slug: recipe.slug,
-          content: recipe.content,
-          version: recipe.version,
-          summary: 'Test recipe for deployment',
-          userId: user.id,
-        },
-      ];
-
-      const fileUpdates = await deployerService.aggregateRecipeDeployments(
-        recipeVersions,
-        gitRepo,
-        [defaultTarget],
-        ['claude'],
-      );
-
-      // No files should be updated since recipe instructions already exist
-      expect(fileUpdates.createOrUpdate).toHaveLength(0);
-      expect(fileUpdates.delete).toHaveLength(0);
-    });
-
-    it('adds standards instructions while preserving existing content', async () => {
+    it('generates standards section content', async () => {
       const standardVersions: StandardVersion[] = [
         {
           id: 'standard-version-1' as StandardVersionId,
@@ -669,29 +405,19 @@ User-defined instructions that should be preserved.`;
       const claudeFile = fileUpdates.createOrUpdate[0];
       expect(claudeFile.path).toBe('CLAUDE.md');
 
-      // Should preserve existing recipe instructions
-      expect(claudeFile.content).toContain('# Packmind Recipes');
-      expect(claudeFile.content).toContain('🚨 **MANDATORY STEP** 🚨');
-      expect(claudeFile.content).toContain('aiAgent: "Claude Code"');
-      expect(claudeFile.content).toContain('gitRepo: "test-owner/test-repo"');
+      const sectionContent = claudeFile.sections![0].content;
 
-      // Should preserve existing user content
-      expect(claudeFile.content).toContain('# Some User Content');
-      expect(claudeFile.content).toContain(
-        'User-defined instructions that should be preserved.',
-      );
-
-      // Should add standards instructions
-      expect(claudeFile.content).toContain('# Packmind Standards');
-      expect(claudeFile.content).toContain(
+      // Should generate standards section with Packmind content only
+      expect(sectionContent).toContain('# Packmind Standards');
+      expect(sectionContent).toContain(
         'Before starting your work, make sure to review the coding standards relevant to your current task',
       );
-      expect(claudeFile.content).toContain('Test standard for deployment :');
-      expect(claudeFile.content).toContain('* Use meaningful variable names');
-      expect(claudeFile.content).toContain('* Write comprehensive tests');
-      expect(claudeFile.content).toContain(
-        'Full standard is available here for further request: [Test Standard](.packmind/standards/test-standard.md)',
-      );
+      expect(sectionContent).toContain('* Use meaningful variable names');
+      expect(sectionContent).toContain('* Write comprehensive tests');
+
+      // Should NOT contain user content (that's preserved by merge layer)
+      expect(sectionContent).not.toContain('# Some User Instructions');
+      expect(sectionContent).not.toContain('# Packmind Recipes');
     });
   });
 
@@ -765,8 +491,9 @@ User-defined instructions that should be preserved.`;
       expect(fileUpdates.delete).toHaveLength(0);
 
       const claudeFile = fileUpdates.createOrUpdate[0];
-      expect(claudeFile.content).toContain('# Packmind Recipes');
-      expect(claudeFile.content).toContain('🚨 **MANDATORY STEP** 🚨');
+      const sectionContent = claudeFile.sections![0].content;
+      expect(sectionContent).toContain('# Packmind Recipes');
+      expect(sectionContent).toContain('🚨 **MANDATORY STEP** 🚨');
     });
   });
 });

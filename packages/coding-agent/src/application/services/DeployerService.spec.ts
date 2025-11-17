@@ -88,8 +88,6 @@ class MockDeployer implements ICodingAgentDeployer {
     recipeVersions: RecipeVersion[],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     standardVersions: StandardVersion[],
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    existingContent: string,
   ): Promise<FileUpdates> {
     return this.artifactsResult;
   }
@@ -464,7 +462,6 @@ describe('DeployerService', () => {
       expect(deployArtifactsSpy).toHaveBeenCalledWith(
         mockRecipeVersions,
         mockStandardVersions,
-        'existing claude content',
       );
     });
 
@@ -622,7 +619,6 @@ describe('DeployerService', () => {
       expect(deployArtifactsSpy).toHaveBeenCalledWith(
         mockRecipeVersions,
         mockStandardVersions,
-        '',
       );
     });
 

@@ -1,11 +1,15 @@
-import { GitRepo } from '@packmind/types';
-import { GitCommit } from '@packmind/types';
-import { GitProvider } from '@packmind/types';
+import {
+  GitRepo,
+  FileModification,
+  GitCommit,
+  GitProvider,
+} from '@packmind/types';
 import { IGitRepo } from '../../../domain/repositories/IGitRepo';
 import { IGitRepoFactory } from '../../../domain/repositories/IGitRepoFactory';
 import { GitCommitService } from '../../services/GitCommitService';
 import { GitProviderService } from '../../GitProviderService';
 import { PackmindLogger } from '@packmind/logger';
+import { mergeSectionsIntoFileContent } from '@packmind/node-utils';
 
 export class CommitToGit {
   constructor(
@@ -17,7 +21,7 @@ export class CommitToGit {
 
   public async commitToGit(
     repo: GitRepo,
-    files: { path: string; content: string }[],
+    files: FileModification[],
     commitMessage: string,
   ): Promise<GitCommit> {
     this.logger.info('Committing multiple files to git repository', {
@@ -48,8 +52,43 @@ export class CommitToGit {
     // Create IGitRepo instance based on provider
     const gitRepoInstance = this.createGitRepoInstance(repo, provider);
 
+    // Process files to handle section-based updates
+    const processedFiles: { path: string; content: string }[] = [];
+
+    for (const file of files) {
+      if (file.content !== undefined) {
+        // File has full content, use it directly
+        processedFiles.push({ path: file.path, content: file.content });
+      } else if (file.sections !== undefined) {
+        // File has sections, fetch existing content and merge
+        this.logger.debug('Processing file with sections', {
+          path: file.path,
+          sectionsCount: file.sections.length,
+        });
+
+        const existingFile = await gitRepoInstance.getFileOnRepo(
+          file.path,
+          repo.branch,
+        );
+
+        const existingContent = existingFile
+          ? Buffer.from(existingFile.content, 'base64').toString('utf-8')
+          : '';
+
+        const mergedContent = mergeSectionsIntoFileContent(
+          existingContent,
+          file.sections,
+        );
+
+        processedFiles.push({ path: file.path, content: mergedContent });
+      }
+    }
+
     // Commit files to git repository and get commit data
-    const commitData = await gitRepoInstance.commitFiles(files, commitMessage);
+    const commitData = await gitRepoInstance.commitFiles(
+      processedFiles,
+      commitMessage,
+    );
 
     // Check if no changes were detected (GitLab returns 'no-changes' as sha)
     if (commitData.sha === 'no-changes') {

@@ -256,8 +256,9 @@ class MyService {
       const deployedFile = standardUpdates.createOrUpdate[0];
       expect(deployedFile.path).toBe('jetbrains/CLAUDE.md');
       // Claude deployer creates a general template for standards, not specific standard content
-      expect(deployedFile.content).toContain('Packmind Standards');
-      expect(deployedFile.content).toContain(standard.name);
+      expect(deployedFile.sections).toBeDefined();
+      expect(deployedFile.sections![0].content).toContain('Packmind Standards');
+      expect(deployedFile.sections![0].content).toContain(standard.name);
     });
 
     it('deploys standard to jetbrains path for Cursor agent', async () => {
@@ -585,8 +586,11 @@ class MyService {
       const deployedFile = recipeUpdates.createOrUpdate[0];
       expect(deployedFile.path).toBe('jetbrains/CLAUDE.md');
       // Claude deployer creates a general recipe template, not specific recipe content
-      expect(deployedFile.content).toContain('Packmind Recipes');
-      expect(deployedFile.content).toContain(recipeVersions[0].name);
+      expect(deployedFile.sections).toBeDefined();
+      expect(deployedFile.sections![0].content).toContain('Packmind Recipes');
+      expect(deployedFile.sections![0].content).toContain(
+        recipeVersions[0].name,
+      );
     });
 
     it('deploys recipe to jetbrains path for Cursor agent', async () => {

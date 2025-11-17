@@ -1,5 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
+  FileModification,
   FileUpdates,
   GitRepo,
   RecipeVersion,
@@ -185,7 +186,6 @@ export class DeployerService {
         const updates = await deployer.deployArtifacts(
           recipeVersions,
           standardVersions,
-          existingContent,
         );
 
         allUpdates.push(updates);
@@ -237,22 +237,17 @@ export class DeployerService {
       delete: [],
     };
 
-    const pathMap = new Map<string, string>();
+    const pathMap = new Map<string, FileModification>();
 
     // Merge createOrUpdate - later entries override earlier ones for same path
     for (const update of updates) {
       for (const file of update.createOrUpdate) {
-        pathMap.set(file.path, file.content);
+        pathMap.set(file.path, file);
       }
     }
 
     // Convert map back to array
-    merged.createOrUpdate = Array.from(pathMap.entries()).map(
-      ([path, content]) => ({
-        path,
-        content,
-      }),
-    );
+    merged.createOrUpdate = Array.from(pathMap.values());
 
     // Merge delete operations - deduplicate paths
     const deleteSet = new Set<string>();

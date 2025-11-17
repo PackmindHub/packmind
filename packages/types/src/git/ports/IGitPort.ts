@@ -21,6 +21,7 @@ import { GitCommit } from '../GitCommit';
 import { GitProvider, GitProviderId } from '../GitProvider';
 import { GitRepo } from '../GitRepo';
 import { GitRepoId } from '../GitRepoId';
+import { FileModification } from '../../deployments/FileUpdates';
 
 export const IGitPortName = 'IGitPort' as const;
 
@@ -55,13 +56,13 @@ export interface IGitPort {
    * Commit files to a git repository
    *
    * @param repo - The git repository
-   * @param files - Array of files to commit with path and content
+   * @param files - Array of file modifications to commit (can contain full content or sections)
    * @param commitMessage - The commit message
    * @returns Promise of git commit
    */
   commitToGit(
     repo: GitRepo,
-    files: { path: string; content: string }[],
+    files: FileModification[],
     commitMessage: string,
   ): Promise<GitCommit>;
 

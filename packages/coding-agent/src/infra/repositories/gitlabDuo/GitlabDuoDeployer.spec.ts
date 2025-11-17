@@ -70,14 +70,13 @@ describe('GitlabDuoDeployer', () => {
 
       const guidelinesFile = result.createOrUpdate[0];
       expect(guidelinesFile.path).toBe('.gitlab/duo/chat-rules.md');
-      expect(guidelinesFile.content).toContain('# Packmind Recipes');
-      expect(guidelinesFile.content).toContain('🚨 **MANDATORY STEP** 🚨');
-      expect(guidelinesFile.content).toContain('ALWAYS READ');
-      expect(guidelinesFile.content).toContain(recipe.name);
-      expect(guidelinesFile.content).toContain('aiAgent: "Gitlab Duo"');
-      expect(guidelinesFile.content).toContain(
-        'gitRepo: "test-owner/test-repo"',
-      );
+      const sectionContent = guidelinesFile.sections![0].content;
+      expect(sectionContent).toContain('# Packmind Recipes');
+      expect(sectionContent).toContain('🚨 **MANDATORY STEP** 🚨');
+      expect(sectionContent).toContain('ALWAYS READ');
+      expect(sectionContent).toContain(recipe.name);
+      expect(sectionContent).toContain('aiAgent: "Gitlab Duo"');
+      expect(sectionContent).toContain('gitRepo: "test-owner/test-repo"');
     });
 
     it('handles empty recipe list', async () => {
@@ -128,9 +127,10 @@ describe('GitlabDuoDeployer', () => {
       );
 
       const guidelinesFile = result.createOrUpdate[0];
-      expect(guidelinesFile.content).toContain('# Packmind Recipes');
-      expect(guidelinesFile.content).toContain('🚨 **MANDATORY STEP** 🚨');
-      expect(guidelinesFile.content).toContain('ALWAYS READ');
+      const sectionContent = guidelinesFile.sections![0].content;
+      expect(sectionContent).toContain('# Packmind Recipes');
+      expect(sectionContent).toContain('🚨 **MANDATORY STEP** 🚨');
+      expect(sectionContent).toContain('ALWAYS READ');
     });
   });
 
@@ -165,11 +165,12 @@ describe('GitlabDuoDeployer', () => {
 
       const guidelinesFile = result.createOrUpdate[0];
       expect(guidelinesFile.path).toBe('.gitlab/duo/chat-rules.md');
-      expect(guidelinesFile.content).toContain('# Packmind Standards');
-      expect(guidelinesFile.content).toContain(
+      const sectionContent = guidelinesFile.sections![0].content;
+      expect(sectionContent).toContain('# Packmind Standards');
+      expect(sectionContent).toContain(
         GenericStandardSectionWriter.standardsIntroduction,
       );
-      expect(guidelinesFile.content).toContain(standardVersion.name);
+      expect(sectionContent).toContain(standardVersion.name);
     });
 
     it('handles empty standards list', async () => {
@@ -230,8 +231,9 @@ describe('GitlabDuoDeployer', () => {
       const guidelinesFile = result.createOrUpdate[0];
       expect(guidelinesFile).toBeDefined();
       expect(guidelinesFile.path).toBe('.gitlab/duo/chat-rules.md');
-      expect(guidelinesFile.content).toContain('# Packmind Standards');
-      expect(guidelinesFile.content).toContain(
+      const sectionContent = guidelinesFile.sections![0].content;
+      expect(sectionContent).toContain('# Packmind Standards');
+      expect(sectionContent).toContain(
         GenericStandardSectionWriter.standardsIntroduction,
       );
     });
@@ -281,8 +283,9 @@ describe('GitlabDuoDeployer', () => {
       );
 
       const guidelinesFile = result.createOrUpdate[0];
-      expect(guidelinesFile.content).toContain('# Packmind Standards');
-      expect(guidelinesFile.content).toContain(
+      const sectionContent = guidelinesFile.sections![0].content;
+      expect(sectionContent).toContain('# Packmind Standards');
+      expect(sectionContent).toContain(
         GenericStandardSectionWriter.standardsIntroduction,
       );
     });

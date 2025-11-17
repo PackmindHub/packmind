@@ -68,6 +68,7 @@ describe('PullContentUseCase', () => {
     const mockDeployer = {
       generateFileUpdatesForRecipes: jest.fn(),
       generateFileUpdatesForStandards: jest.fn(),
+      deployArtifacts: jest.fn(),
     };
 
     const mockRegistry = {
@@ -129,6 +130,7 @@ describe('PullContentUseCase', () => {
     let mockDeployer: {
       generateFileUpdatesForRecipes: jest.Mock;
       generateFileUpdatesForStandards: jest.Mock;
+      deployArtifacts: jest.Mock;
     };
     let mockRegistry: {
       getDeployer: jest.Mock;
@@ -138,6 +140,7 @@ describe('PullContentUseCase', () => {
       mockDeployer = {
         generateFileUpdatesForRecipes: jest.fn(),
         generateFileUpdatesForStandards: jest.fn(),
+        deployArtifacts: jest.fn(),
       };
 
       mockRegistry = {
@@ -168,13 +171,8 @@ describe('PullContentUseCase', () => {
       recipesPort.listRecipeVersions.mockResolvedValue([]);
       standardsPort.listStandardVersions.mockResolvedValue([]);
 
-      mockDeployer.generateFileUpdatesForRecipes.mockResolvedValue({
+      mockDeployer.deployArtifacts.mockResolvedValue({
         createOrUpdate: [{ path: 'test.md', content: 'test content' }],
-        delete: [],
-      } as FileUpdates);
-
-      mockDeployer.generateFileUpdatesForStandards.mockResolvedValue({
-        createOrUpdate: [],
         delete: [],
       } as FileUpdates);
 
@@ -205,13 +203,11 @@ describe('PullContentUseCase', () => {
       recipesPort.listRecipeVersions.mockResolvedValue([]);
       standardsPort.listStandardVersions.mockResolvedValue([]);
 
-      mockDeployer.generateFileUpdatesForRecipes.mockResolvedValue({
-        createOrUpdate: [{ path: 'recipe.md', content: 'recipe content' }],
-        delete: [],
-      } as FileUpdates);
-
-      mockDeployer.generateFileUpdatesForStandards.mockResolvedValue({
-        createOrUpdate: [{ path: 'standard.md', content: 'standard content' }],
+      mockDeployer.deployArtifacts.mockResolvedValue({
+        createOrUpdate: [
+          { path: 'recipe.md', content: 'recipe content' },
+          { path: 'standard.md', content: 'standard content' },
+        ],
         delete: [],
       } as FileUpdates);
 
@@ -240,12 +236,7 @@ describe('PullContentUseCase', () => {
       recipesPort.listRecipeVersions.mockResolvedValue([]);
       standardsPort.listStandardVersions.mockResolvedValue([]);
 
-      mockDeployer.generateFileUpdatesForRecipes.mockResolvedValue({
-        createOrUpdate: [],
-        delete: [],
-      } as FileUpdates);
-
-      mockDeployer.generateFileUpdatesForStandards.mockResolvedValue({
+      mockDeployer.deployArtifacts.mockResolvedValue({
         createOrUpdate: [],
         delete: [],
       } as FileUpdates);
