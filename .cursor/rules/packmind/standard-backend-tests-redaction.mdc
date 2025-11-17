@@ -1,33 +1,7 @@
-- When running commands, ensure you use the correct Node version (see .nvmrc at the project's root level)
-- When renaming or moving a file that is commited to git, use `git mv` instead of `mv`
-- ensure the env variable `PACKMIND_EDITION` is properly set to `oss`
-
-# Task splitting
-
-- For any task you perform, you MUST split it into multiple into sub-tasks which have a logical increment (eg: new endpoint, new component, new use case etc). When a task is done, run all the validation steps (lint, test, packmind etc) and ask me for validation of the work you did.
-- Each sub task MUST have its own commit.
-- Before commiting anything, you must ensure that `npm run quality-gate` does not raise any issue.
-
-# Commiting
-
-- When referencing an issue (example #123), DO NOT write "Close" or "Fix", as this closes the issue which has not been validated by other developers.
-- Before proposing to commit, ALWAYS run `npm run quality-gate` and fix the issues found
-- NEVER use the `--no-verify` argument when commiting
-- After commiting, ALWAYS ensure that the commit was successful.
-- NEVER run a commit message without asking for permission first to allow user to review the commit
-- ALWAYS ensure which GitHub issue is worked on, do not assume it based on previous commit.
-
-<!-- start: Packmind standards -->
-# Packmind Standards
-
-Before starting your work, make sure to review the coding standards relevant to your current task.
-
-Always consult the sections that apply to the technology, framework, or type of contribution you are working on.
-
-All rules and guidelines defined in these standards are mandatory and must be followed consistently.
-
-Failure to follow these standards may lead to inconsistencies, errors, or rework. Treat them as the source of truth for how code should be written, structured, and maintained.
-
+---
+globs: **/*.spec.ts
+alwaysApply: false
+---
 ## Standard: Backend Tests Redaction
 
 Enforce backend test conventions for .spec.ts files in the Packmind monorepo using Jest with TypeScript/Node.js by favoring behavioral assertions over implementation checks, organizing context in describe('when…') blocks with verb-first it names, preferring expect(...).toEqual for deep array equality and one expect per test, using afterEach(() => jest.clearAllMocks()) and afterEach(() => datasource.destroy()) to prevent inter-test pollution and clean the test database (TypeORM DataSource or equivalent), and using stubLogger() for typed PackmindLogger stubs to ensure readable, reliable, maintainable unit, integration and service tests when writing or refactoring backend tests :
@@ -44,6 +18,4 @@ Enforce backend test conventions for .spec.ts files in the Packmind monorepo usi
 * Use stubLogger() in Jest tests to get a fully typed PackmindLogger stub instead of manually creating a jest.Mocked<PackmindLogger> object with jest.fn() methods
 * Use stubLogger() in your Jest tests to get a fully typed PackmindLogger stub instead of manually creating a jest.Mocked<PackmindLogger> object with jest.fn() methods
 
-Full standard is available here for further request: [Backend Tests Redaction](.packmind/standards/backend-tests-redaction.md)
-<!-- end: Packmind standards -->
-
+Full standard is available here for further request: [Backend Tests Redaction](../../../.packmind/standards/backend-tests-redaction.md)
