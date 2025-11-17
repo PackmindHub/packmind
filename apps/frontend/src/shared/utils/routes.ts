@@ -36,6 +36,8 @@ export const routes = {
       `/org/${orgSlug}/space/${spaceSlug}/learnings/topics`,
     toTopic: (orgSlug: string, spaceSlug: string, topicId: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/learnings/topics/${topicId}`,
+    toRagLab: (orgSlug: string, spaceSlug: string) =>
+      `/org/${orgSlug}/space/${spaceSlug}/learnings/rag-lab`,
     toRecipes: (orgSlug: string, spaceSlug: string) =>
       `/org/${orgSlug}/space/${spaceSlug}/recipes`,
     toRecipe: (orgSlug: string, spaceSlug: string, recipeId: string) =>

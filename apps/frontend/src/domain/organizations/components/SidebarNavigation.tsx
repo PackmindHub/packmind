@@ -105,6 +105,11 @@ export const SidebarNavigation: React.FunctionComponent<
             label="Learnings"
           />,
           <SidebarNavigationLink
+            key="rag-lab"
+            url={routes.space.toRagLab(orgSlug, currentSpaceSlug)}
+            label="RAG Lab"
+          />,
+          <SidebarNavigationLink
             key="standards"
             url={routes.space.toStandards(orgSlug, currentSpaceSlug)}
             label="Standards"
