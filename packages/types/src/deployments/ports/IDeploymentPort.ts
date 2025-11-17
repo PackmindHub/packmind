@@ -1,4 +1,6 @@
 import {
+  AddArtefactsToPackageCommand,
+  AddArtefactsToPackageResponse,
   AddTargetCommand,
   CreatePackageCommand,
   CreatePackageResponse,
@@ -345,4 +347,19 @@ export interface IDeploymentPort {
   deletePackagesBatch(
     command: DeletePackagesBatchCommand,
   ): Promise<DeletePackagesBatchResponse>;
+
+  /**
+   * Adds artefacts (recipes and/or standards) to an existing package
+   *
+   * Adds new recipes and standards to a package. Artefacts already in the package
+   * are filtered out (idempotent operation). Only artefacts from the same space
+   * as the package can be added.
+   *
+   * @param command - Command containing packageId and arrays of recipeIds and standardIds to add
+   * @returns Promise of the updated package with its associated recipes and standards
+   * @throws Error if package not found or artefacts don't belong to the package's space
+   */
+  addArtefactsToPackage(
+    command: AddArtefactsToPackageCommand,
+  ): Promise<AddArtefactsToPackageResponse>;
 }

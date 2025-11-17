@@ -4,6 +4,7 @@ import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { IEventTrackingPort } from '@packmind/types';
 import { FastifyInstance } from 'fastify';
 import {
+  registerAddStandardToPackagesTool,
   registerCreateRecipeTool,
   registerNotifyRecipeUsageTool,
   registerAddRuleToStandardTool,
@@ -67,6 +68,7 @@ export function createMCPServer(
   };
 
   // Register all tools
+  registerAddStandardToPackagesTool(toolDependencies, mcpServer);
   registerCreateRecipeTool(toolDependencies, mcpServer);
   registerNotifyRecipeUsageTool(toolDependencies, mcpServer);
   registerAddRuleToStandardTool(toolDependencies, mcpServer);
