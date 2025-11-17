@@ -171,39 +171,45 @@ export const PackageDetails = ({
 
   const recipeTableData: PMTableRow[] = React.useMemo(
     () =>
-      recipeIds.map((recipeId) => {
-        const recipe = allRecipes.find((r) => r.id === recipeId);
-        return {
-          key: recipeId,
-          name: (
-            <PMLink asChild>
-              <Link to={routes.space.toRecipe(orgSlug, spaceSlug, recipeId)}>
-                {recipe?.name || recipeId}
-              </Link>
-            </PMLink>
-          ),
-        };
-      }),
+      recipeIds
+        .map((recipeId) => {
+          const recipe = allRecipes.find((r) => r.id === recipeId);
+          return {
+            key: recipeId,
+            name: (
+              <PMLink asChild>
+                <Link to={routes.space.toRecipe(orgSlug, spaceSlug, recipeId)}>
+                  {recipe?.name || recipeId}
+                </Link>
+              </PMLink>
+            ),
+            sortName: recipe?.name || recipeId,
+          };
+        })
+        .sort((a, b) => a.sortName.localeCompare(b.sortName)),
     [recipeIds, allRecipes, orgSlug, spaceSlug],
   );
 
   const standardTableData: PMTableRow[] = React.useMemo(
     () =>
-      standardIds.map((standardId) => {
-        const standard = allStandards.find((s) => s.id === standardId);
-        return {
-          key: standardId,
-          name: (
-            <PMLink asChild>
-              <Link
-                to={routes.space.toStandard(orgSlug, spaceSlug, standardId)}
-              >
-                {standard?.name || standardId}
-              </Link>
-            </PMLink>
-          ),
-        };
-      }),
+      standardIds
+        .map((standardId) => {
+          const standard = allStandards.find((s) => s.id === standardId);
+          return {
+            key: standardId,
+            name: (
+              <PMLink asChild>
+                <Link
+                  to={routes.space.toStandard(orgSlug, spaceSlug, standardId)}
+                >
+                  {standard?.name || standardId}
+                </Link>
+              </PMLink>
+            ),
+            sortName: standard?.name || standardId,
+          };
+        })
+        .sort((a, b) => a.sortName.localeCompare(b.sortName)),
     [standardIds, allStandards, orgSlug, spaceSlug],
   );
 
