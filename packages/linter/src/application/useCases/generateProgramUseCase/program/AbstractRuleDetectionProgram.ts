@@ -67,6 +67,13 @@ export default abstract class AbstractRuleDetectionProgram extends AbstractRuleD
     super(_detectionProgramRule, _aiService, _logsWriter);
   }
 
+  public shouldGenerateHeuristics(): boolean {
+    return (
+      !this._detectionProgramRule.heuristics ||
+      this._detectionProgramRule.heuristics.length === 0
+    );
+  }
+
   public async generateProgram(): Promise<ProgramGenerationStatus> {
     await this._logsWriter.addLogsMessage(
       DetectionToolingLogWriter.MESSAGES.AI_AGENT_PROGRAM_GENERATION_STARTED,
@@ -78,14 +85,13 @@ export default abstract class AbstractRuleDetectionProgram extends AbstractRuleD
 
     // Generate detection heuristics before program generation if they don't exist
     let generatedHeuristics: string[] | null = null;
-    if (!this._detectionProgramRule.heuristics) {
+    if (this.shouldGenerateHeuristics()) {
       this._logger.info(
         `[${this._detectionProgramRule.rule.id}] No existing heuristics found, generating new ones`,
       );
       const generateHeuristics = new GenerateRuleHeuristics(
         this._detectionProgramRule.rule.id,
         this._aiService,
-        this._logger,
       );
       const heuristics = await generateHeuristics.generateHeuristics(
         this._detectionProgramRule,
@@ -105,7 +111,7 @@ export default abstract class AbstractRuleDetectionProgram extends AbstractRuleD
       }
     } else {
       this._logger.info(
-        `[${this._detectionProgramRule.rule.id}] Using existing heuristics (${this._detectionProgramRule.heuristics.length} items)`,
+        `[${this._detectionProgramRule.rule.id}] Using existing heuristics (${this._detectionProgramRule.heuristics?.length ?? 0} items)`,
       );
     }
 

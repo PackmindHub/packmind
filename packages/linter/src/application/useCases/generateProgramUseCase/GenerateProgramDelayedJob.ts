@@ -279,34 +279,95 @@ export class GenerateProgramDelayedJob extends AbstractAIDelayedJob<
     input: GenerateProgramInput,
   ) {
     // Type guard: we already checked that generatedHeuristics is a non-empty array
-    const heuristics = result.generatedHeuristics!;
+    const generatedHeuristics = result.generatedHeuristics!;
 
     this.logger.info(
       `[${this.origin}] Persisting generated heuristics for job ${job.id}`,
       {
         ruleId: updatedDetectionProgram.ruleId,
         language: result.language,
-        heuristicsCount: heuristics.length,
+        heuristicsCount: generatedHeuristics.length,
       },
     );
 
     try {
       const linterAdapter = this.getLinterAdapter();
-      await linterAdapter.createDetectionHeuristics({
-        ruleId: updatedDetectionProgram.ruleId,
-        language: result.language as ProgrammingLanguage,
-        heuristics: heuristics,
-        organizationId: input.organizationId,
-        userId: input.userId,
-      });
+      const heuristicsRepo =
+        this.linterRepositories.getRuleDetectionHeuristicsRepository();
 
-      this.logger.info(
-        `[${this.origin}] Detection heuristics persisted successfully for job ${job.id}`,
-        {
-          ruleId: updatedDetectionProgram.ruleId,
-          language: result.language,
-        },
+      // Fetch existing heuristics from database
+      const existingHeuristics = await heuristicsRepo.getHeuristicsForRule(
+        updatedDetectionProgram.ruleId,
+        result.language as ProgrammingLanguage,
       );
+
+      if (!existingHeuristics) {
+        // No existing heuristics, create new ones
+        this.logger.info(
+          `[${this.origin}] No existing heuristics found, creating new for job ${job.id}`,
+          {
+            ruleId: updatedDetectionProgram.ruleId,
+            language: result.language,
+          },
+        );
+
+        await linterAdapter.createDetectionHeuristics({
+          ruleId: updatedDetectionProgram.ruleId,
+          language: result.language as ProgrammingLanguage,
+          heuristics: generatedHeuristics,
+          organizationId: input.organizationId,
+          userId: input.userId,
+        });
+
+        this.logger.info(
+          `[${this.origin}] Detection heuristics created successfully for job ${job.id}`,
+          {
+            ruleId: updatedDetectionProgram.ruleId,
+            language: result.language,
+          },
+        );
+      } else {
+        // Existing heuristics found, compare and update if different
+        if (
+          this.areHeuristicsDifferent(
+            existingHeuristics.heuristics,
+            generatedHeuristics,
+          )
+        ) {
+          this.logger.info(
+            `[${this.origin}] Heuristics differ from database, updating for job ${job.id}`,
+            {
+              ruleId: updatedDetectionProgram.ruleId,
+              language: result.language,
+              existingCount: existingHeuristics.heuristics.length,
+              generatedCount: generatedHeuristics.length,
+            },
+          );
+
+          await linterAdapter.updateRuleDetectionHeuristics({
+            detectionHeuristicsId: existingHeuristics.id,
+            heuristics: generatedHeuristics,
+            organizationId: input.organizationId,
+            userId: input.userId,
+          });
+
+          this.logger.info(
+            `[${this.origin}] Detection heuristics updated successfully for job ${job.id}`,
+            {
+              ruleId: updatedDetectionProgram.ruleId,
+              language: result.language,
+            },
+          );
+        } else {
+          this.logger.info(
+            `[${this.origin}] Heuristics unchanged, skipping update for job ${job.id}`,
+            {
+              ruleId: updatedDetectionProgram.ruleId,
+              language: result.language,
+            },
+          );
+        }
+      }
     } catch (heuristicsError) {
       this.logger.error(
         `[${this.origin}] Failed to persist detection heuristics for job ${job.id}`,
@@ -321,6 +382,25 @@ export class GenerateProgramDelayedJob extends AbstractAIDelayedJob<
       );
       // Continue execution even if heuristics persistence fails
     }
+  }
+
+  private areHeuristicsDifferent(
+    existing: string[],
+    generated: string[],
+  ): boolean {
+    // Compare length first
+    if (existing.length !== generated.length) {
+      return true;
+    }
+
+    // Compare content (order matters)
+    for (let i = 0; i < existing.length; i++) {
+      if (existing[i] !== generated[i]) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   private async updateDetectionProgram(
