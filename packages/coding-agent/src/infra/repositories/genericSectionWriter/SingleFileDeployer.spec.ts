@@ -442,35 +442,43 @@ describe('SingleFileDeployer', () => {
       expect(result.createOrUpdate[0].path).not.toContain('vscode');
     });
 
-    it('generates only standards section when recipes are empty', async () => {
-      const result = await deployer.deployArtifacts([], mockStandardVersions);
+    describe('when recipes are empty', () => {
+      it('generates only standards section', async () => {
+        const result = await deployer.deployArtifacts([], mockStandardVersions);
 
-      expect(result.createOrUpdate).toHaveLength(1);
-      const file = result.createOrUpdate[0];
+        expect(result.createOrUpdate).toHaveLength(1);
+        const file = result.createOrUpdate[0];
 
-      expect(file.sections).toHaveLength(1);
-      expect(file.sections![0].key).toBe('Packmind standards');
-      expect(file.sections![0].content).toContain('## Standard: Test Standard');
+        expect(file.sections).toHaveLength(1);
+        expect(file.sections![0].key).toBe('Packmind standards');
+        expect(file.sections![0].content).toContain(
+          '## Standard: Test Standard',
+        );
+      });
     });
 
-    it('generates only recipes section when standards are empty', async () => {
-      const result = await deployer.deployArtifacts(mockRecipeVersions, []);
+    describe('when standards are empty', () => {
+      it('generates only recipes section', async () => {
+        const result = await deployer.deployArtifacts(mockRecipeVersions, []);
 
-      expect(result.createOrUpdate).toHaveLength(1);
-      const file = result.createOrUpdate[0];
+        expect(result.createOrUpdate).toHaveLength(1);
+        const file = result.createOrUpdate[0];
 
-      expect(file.sections).toHaveLength(1);
-      expect(file.sections![0].key).toBe('Packmind recipes');
-      expect(file.sections![0].content).toContain(
-        '[Test Recipe](.packmind/recipes/test-recipe.md)',
-      );
+        expect(file.sections).toHaveLength(1);
+        expect(file.sections![0].key).toBe('Packmind recipes');
+        expect(file.sections![0].content).toContain(
+          '[Test Recipe](.packmind/recipes/test-recipe.md)',
+        );
+      });
     });
 
-    it('returns empty array when both recipes and standards are empty', async () => {
-      const result = await deployer.deployArtifacts([], []);
+    describe('when both recipes and standards are empty', () => {
+      it('returns empty array', async () => {
+        const result = await deployer.deployArtifacts([], []);
 
-      expect(result.createOrUpdate).toHaveLength(0);
-      expect(result.delete).toHaveLength(0);
+        expect(result.createOrUpdate).toHaveLength(0);
+        expect(result.delete).toHaveLength(0);
+      });
     });
 
     describe('when rules not present on standards', () => {
