@@ -1,5 +1,6 @@
 import {
   IRepository,
+  SpaceId,
   StandardId,
   StandardVersion,
   StandardVersionId,
@@ -20,4 +21,16 @@ export interface IStandardVersionRepository
     standardVersionId: StandardVersionId,
     summary: string,
   ): Promise<number | undefined>;
+  updateEmbedding(
+    standardVersionId: StandardVersionId,
+    embedding: number[],
+  ): Promise<void>;
+  findSimilarByEmbedding(
+    embedding: number[],
+    spaceId?: SpaceId,
+    threshold?: number,
+  ): Promise<Array<StandardVersion & { similarity: number }>>;
+  findLatestVersionsWhereEmbeddingIsNull(
+    spaceId?: SpaceId,
+  ): Promise<StandardVersion[]>;
 }

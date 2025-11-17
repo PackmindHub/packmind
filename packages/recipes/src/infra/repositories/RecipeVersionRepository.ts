@@ -2,8 +2,17 @@ import { IRecipeVersionRepository } from '../../domain/repositories/IRecipeVersi
 import { RecipeVersionSchema } from '../schemas/RecipeVersionSchema';
 import { Repository } from 'typeorm';
 import { PackmindLogger } from '@packmind/logger';
-import { localDataSource, AbstractRepository } from '@packmind/node-utils';
-import { RecipeId, RecipeVersion } from '@packmind/types';
+import {
+  localDataSource,
+  AbstractRepository,
+  getErrorMessage,
+} from '@packmind/node-utils';
+import {
+  RecipeId,
+  RecipeVersion,
+  RecipeVersionId,
+  SpaceId,
+} from '@packmind/types';
 
 const origin = 'RecipeVersionRepository';
 
@@ -141,6 +150,152 @@ export class RecipeVersionRepository
           recipeId,
           version,
           error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      throw error;
+    }
+  }
+
+  async updateEmbedding(
+    recipeVersionId: RecipeVersionId,
+    embedding: number[],
+  ): Promise<void> {
+    this.logger.info('Updating embedding for recipe version', {
+      recipeVersionId,
+      embeddingDimensions: embedding.length,
+    });
+
+    try {
+      const result = await this.repository.update(
+        { id: recipeVersionId },
+        { embedding },
+      );
+
+      if (result.affected === 0) {
+        const errorMessage = `No recipe version found with id ${recipeVersionId}`;
+        this.logger.error('Failed to update embedding - version not found', {
+          recipeVersionId,
+        });
+        throw new Error(errorMessage);
+      }
+
+      this.logger.info('Embedding updated successfully', {
+        recipeVersionId,
+      });
+    } catch (error) {
+      this.logger.error('Failed to update embedding', {
+        recipeVersionId,
+        error: getErrorMessage(error),
+      });
+      throw error;
+    }
+  }
+
+  async findSimilarByEmbedding(
+    embedding: number[],
+    spaceId?: SpaceId,
+    threshold = 0.7,
+  ): Promise<Array<RecipeVersion & { similarity: number }>> {
+    this.logger.info('Finding similar recipe versions by embedding', {
+      embeddingDimensions: embedding.length,
+      spaceId,
+      threshold,
+    });
+
+    try {
+      const embeddingString = `[${embedding.join(',')}]`;
+
+      let query = this.repository
+        .createQueryBuilder('recipe_version')
+        .select('recipe_version.*')
+        .addSelect(
+          `(recipe_version.embedding <#> '${embeddingString}'::vector) * -1`,
+          'similarity',
+        )
+        .where('recipe_version.embedding IS NOT NULL')
+        .andWhere(
+          `(recipe_version.embedding <#> '${embeddingString}'::vector) * -1 >= :threshold`,
+          { threshold },
+        );
+
+      if (spaceId) {
+        query = query
+          .innerJoin(
+            'recipes',
+            'recipe',
+            'recipe_version.recipe_id = recipe.id',
+          )
+          .andWhere('recipe.space_id = :spaceId', { spaceId });
+      }
+
+      const results = await query.orderBy('similarity', 'DESC').getRawMany();
+
+      this.logger.info('Similar recipe versions found', {
+        count: results.length,
+        spaceId,
+      });
+
+      return results;
+    } catch (error) {
+      this.logger.error('Failed to find similar recipe versions', {
+        spaceId,
+        error: getErrorMessage(error),
+      });
+      throw error;
+    }
+  }
+
+  async findLatestVersionsWhereEmbeddingIsNull(
+    spaceId?: SpaceId,
+  ): Promise<RecipeVersion[]> {
+    this.logger.info('Finding latest recipe versions without embeddings', {
+      spaceId,
+    });
+
+    try {
+      // Get all versions without embeddings
+      let allVersionsQuery = this.repository
+        .createQueryBuilder('recipe_version')
+        .where('recipe_version.embedding IS NULL');
+
+      if (spaceId) {
+        allVersionsQuery = allVersionsQuery
+          .innerJoin(
+            'recipes',
+            'recipe',
+            'recipe_version.recipe_id = recipe.id',
+          )
+          .andWhere('recipe.space_id = :spaceId', { spaceId });
+      }
+
+      const versionsWithoutEmbeddings = await allVersionsQuery.getMany();
+
+      // Group by recipe_id and find the latest version for each
+      const latestVersionsMap = new Map<string, RecipeVersion>();
+
+      for (const version of versionsWithoutEmbeddings) {
+        const recipeId = version.recipeId;
+        const existing = latestVersionsMap.get(recipeId);
+
+        if (!existing || version.version > existing.version) {
+          latestVersionsMap.set(recipeId, version);
+        }
+      }
+
+      const results = Array.from(latestVersionsMap.values());
+
+      this.logger.info('Latest recipe versions without embeddings found', {
+        count: results.length,
+        spaceId,
+      });
+
+      return results;
+    } catch (error) {
+      this.logger.error(
+        'Failed to find latest recipe versions without embeddings',
+        {
+          spaceId,
+          error: getErrorMessage(error),
         },
       );
       throw error;

@@ -185,62 +185,86 @@ The RAG Lab will serve as:
 
 ---
 
-### Unit 3: Repository Layer
+### Unit 3: Repository Layer ✅ COMPLETED
 
 **Goal**: Add embedding storage and similarity search to repositories
 
-**Tasks**:
+**Actual Implementation**:
 
-**StandardVersionRepository**:
+**1. ✅ Extended IStandardVersionRepository Interface**
 
-1. Add `updateEmbedding(versionId, embedding): Promise<void>`
-2. Add `findSimilarByEmbedding(embedding, spaceId?, threshold?): Promise<Array<StandardVersion & { similarity }>>`
-   - Query: Use pgvector `<#>` operator (negative dot product)
-   - Filter by threshold: `(embedding <#> $1) * -1 >= threshold`
-   - Return ALL results above threshold (no LIMIT)
-3. Add `findLatestVersionsWhereEmbeddingIsNull(spaceId?): Promise<StandardVersion[]>`
-   - **Critical**: Only return latest version for each standard that lacks embedding
-   - Group by standard_id, get MAX(version_number) where embedding IS NULL
+- Added `updateEmbedding(versionId, embedding): Promise<void>`
+- Added `findSimilarByEmbedding(embedding, spaceId?, threshold?): Promise<Array<StandardVersion & { similarity }>>`
+- Added `findLatestVersionsWhereEmbeddingIsNull(spaceId?): Promise<StandardVersion[]>`
 
-**RecipeVersionRepository**:
+**2. ✅ Implemented Methods in StandardVersionRepository**
 
-1. Same methods as StandardVersionRepository
-   - `updateEmbedding(versionId, embedding): Promise<void>`
-   - `findSimilarByEmbedding(embedding, spaceId?, threshold?)`
-   - `findLatestVersionsWhereEmbeddingIsNull(spaceId?): Promise<RecipeVersion[]>`
+- `updateEmbedding()`: Uses `repository.update()` with native vector storage (number[])
+  - Throws error if version not found
+  - Logs embedding dimensions and success/failure
+- `findSimilarByEmbedding()`: Uses QueryBuilder with pgvector `<#>` operator
+  - Default threshold: 0.7
+  - Filters: `embedding IS NOT NULL` and `similarity >= threshold`
+  - Optional space filtering via JOIN with standards table
+  - Orders by similarity DESC
+- `findLatestVersionsWhereEmbeddingIsNull()`:
+  - Fetches all versions without embeddings
+  - Groups by standardId in-memory (pg-mem compatible)
+  - Returns only latest version for each standard
 
-**Unit Tests (with pg-mem)**:
+**3. ✅ Extended IRecipeVersionRepository Interface**
 
-- Test `updateEmbedding()` - store embeddings as JSON strings
-- Test `findLatestVersionsWhereEmbeddingIsNull()` - verify latest-version-only logic
-- Mock embedding data with test fixtures
-- Skip `findSimilarByEmbedding()` (requires pgvector)
+- Same three methods as IStandardVersionRepository
+- Adjusted types for RecipeVersionId and RecipeVersion
 
-**Integration Tests (with real PostgreSQL + pgvector)**:
+**4. ✅ Implemented Methods in RecipeVersionRepository**
 
-**Setup Requirements**:
+- Mirrored StandardVersionRepository implementation
+- Uses `recipes` table for space filtering (JOIN on recipe_id)
 
-- PostgreSQL database with pgvector extension enabled
-- Docker container: `pgvector/pgvector:pg17`
-- Run migrations to create vector columns and indexes
-- Test data with real embedding vectors
+**5. ✅ Added Unit Tests (pg-mem compatible)**
 
-**Test Coverage**:
+- **StandardVersionRepository.spec.ts**: 5 new tests
+  - Returns only latest versions without embeddings
+  - Excludes latest versions that have embeddings
+  - Returns multiple latest versions from different standards
+  - Excludes older versions even without embeddings
+  - Returns empty array when all latest versions have embeddings
+  - Skipped `updateEmbedding()` test (requires pgvector)
+  - Skipped `findSimilarByEmbedding()` test (requires pgvector)
 
-- `findSimilarByEmbedding()` with actual vector similarity search
-- Verify pgvector `<#>` operator (negative dot product) works correctly
-- Test threshold filtering (0.6, 0.7, 0.8)
-- Test results ordering by similarity descending
-- Test empty results when no matches above threshold
-- Test space filtering (spaceId parameter)
-- Verify ivfflat index performance with 100+ vectors
+- **RecipeVersionRepository.spec.ts**: 5 new tests
+  - Same coverage as StandardVersionRepository
+  - Skipped vector-dependent tests
+
+**6. ✅ Updated Service Mocks**
+
+- Fixed `StandardVersionService.spec.ts` to include new repository methods
 
 **Deliverables**:
 
-- Repository methods for both domains
-- Unit tests for basic CRUD operations (pg-mem compatible)
-- Integration test suite for similarity search (real PostgreSQL + pgvector)
-- Integration test database setup documentation
+- ✅ Repository interfaces extended for both domains
+- ✅ Repository implementations with native vector storage
+- ✅ Unit tests for `findLatestVersionsWhereEmbeddingIsNull()` (10 tests total)
+- ✅ All lint and test checks passing
+- ⏭️ Integration tests for `updateEmbedding()` and `findSimilarByEmbedding()` deferred to Unit 8
+
+**Key Decisions**:
+
+- **Native Vector Storage**: Embeddings stored as `number[]` directly, PostgreSQL handles vector type conversion
+- **pg-mem Compatibility**: Used in-memory grouping instead of SQL subqueries for latest version logic
+- **Deferred Vector Tests**: Vector-dependent tests deferred to integration tests (Unit 8) - pg-mem doesn't support pgvector
+- **Space Filtering**: Implemented via JOINs with parent tables (standards/recipes)
+- **Default Threshold**: 0.7 for similarity search (cosine similarity scale 0-1)
+
+**Integration Tests (Deferred to Unit 8)**:
+
+- Test `updateEmbedding()` with real PostgreSQL + pgvector
+- Test `findSimilarByEmbedding()` with actual vector operations
+- Verify pgvector `<#>` operator works correctly
+- Test threshold filtering and result ordering
+- Test space filtering with real data
+- Verify ivfflat index performance
 
 ---
 

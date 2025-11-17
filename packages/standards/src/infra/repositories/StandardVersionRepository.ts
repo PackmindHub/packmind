@@ -8,6 +8,7 @@ import {
   getErrorMessage,
 } from '@packmind/node-utils';
 import {
+  SpaceId,
   StandardId,
   StandardVersion,
   StandardVersionId,
@@ -175,5 +176,151 @@ export class StandardVersionRepository
       },
     );
     return result.affected;
+  }
+
+  async updateEmbedding(
+    standardVersionId: StandardVersionId,
+    embedding: number[],
+  ): Promise<void> {
+    this.logger.info('Updating embedding for standard version', {
+      standardVersionId,
+      embeddingDimensions: embedding.length,
+    });
+
+    try {
+      const result = await this.repository.update(
+        { id: standardVersionId },
+        { embedding },
+      );
+
+      if (result.affected === 0) {
+        const errorMessage = `No standard version found with id ${standardVersionId}`;
+        this.logger.error('Failed to update embedding - version not found', {
+          standardVersionId,
+        });
+        throw new Error(errorMessage);
+      }
+
+      this.logger.info('Embedding updated successfully', {
+        standardVersionId,
+      });
+    } catch (error) {
+      this.logger.error('Failed to update embedding', {
+        standardVersionId,
+        error: getErrorMessage(error),
+      });
+      throw error;
+    }
+  }
+
+  async findSimilarByEmbedding(
+    embedding: number[],
+    spaceId?: SpaceId,
+    threshold = 0.7,
+  ): Promise<Array<StandardVersion & { similarity: number }>> {
+    this.logger.info('Finding similar standard versions by embedding', {
+      embeddingDimensions: embedding.length,
+      spaceId,
+      threshold,
+    });
+
+    try {
+      const embeddingString = `[${embedding.join(',')}]`;
+
+      let query = this.repository
+        .createQueryBuilder('standard_version')
+        .select('standard_version.*')
+        .addSelect(
+          `(standard_version.embedding <#> '${embeddingString}'::vector) * -1`,
+          'similarity',
+        )
+        .where('standard_version.embedding IS NOT NULL')
+        .andWhere(
+          `(standard_version.embedding <#> '${embeddingString}'::vector) * -1 >= :threshold`,
+          { threshold },
+        );
+
+      if (spaceId) {
+        query = query
+          .innerJoin(
+            'standards',
+            'standard',
+            'standard_version.standard_id = standard.id',
+          )
+          .andWhere('standard.space_id = :spaceId', { spaceId });
+      }
+
+      const results = await query.orderBy('similarity', 'DESC').getRawMany();
+
+      this.logger.info('Similar standard versions found', {
+        count: results.length,
+        spaceId,
+      });
+
+      return results;
+    } catch (error) {
+      this.logger.error('Failed to find similar standard versions', {
+        spaceId,
+        error: getErrorMessage(error),
+      });
+      throw error;
+    }
+  }
+
+  async findLatestVersionsWhereEmbeddingIsNull(
+    spaceId?: SpaceId,
+  ): Promise<StandardVersion[]> {
+    this.logger.info('Finding latest standard versions without embeddings', {
+      spaceId,
+    });
+
+    try {
+      // Get all versions without embeddings
+      let allVersionsQuery = this.repository
+        .createQueryBuilder('standard_version')
+        .where('standard_version.embedding IS NULL');
+
+      if (spaceId) {
+        allVersionsQuery = allVersionsQuery
+          .innerJoin(
+            'standards',
+            'standard',
+            'standard_version.standard_id = standard.id',
+          )
+          .andWhere('standard.space_id = :spaceId', { spaceId });
+      }
+
+      const versionsWithoutEmbeddings = await allVersionsQuery.getMany();
+
+      // Group by standard_id and find the latest version for each
+      const latestVersionsMap = new Map<string, StandardVersion>();
+
+      for (const version of versionsWithoutEmbeddings) {
+        const standardId = version.standardId;
+        const existing = latestVersionsMap.get(standardId);
+
+        if (!existing || version.version > existing.version) {
+          latestVersionsMap.set(standardId, version);
+        }
+      }
+
+      const results = Array.from(latestVersionsMap.values());
+
+      this.logger.info('Latest standard versions without embeddings found', {
+        count: results.length,
+        spaceId,
+      });
+
+      return results;
+    } catch (error) {
+      this.logger.error(
+        'Failed to find latest standard versions without embeddings',
+        {
+          spaceId,
+          error: getErrorMessage(error),
+        },
+      );
+      throw error;
+    }
   }
 }

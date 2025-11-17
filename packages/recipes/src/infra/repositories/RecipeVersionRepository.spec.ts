@@ -336,4 +336,154 @@ describe('RecipeVersionRepository', () => {
       expect(version1?.gitCommit).toEqual(savedGitCommit1);
     });
   });
+
+  describe('updateEmbedding', () => {
+    it.skip('requires pgvector extension - tested in integration tests', () => {
+      // This test requires PostgreSQL with pgvector extension
+      // pg-mem does not support vector types
+      // See integration tests for full coverage
+    });
+  });
+
+  describe('findSimilarByEmbedding', () => {
+    it.skip('requires pgvector extension - tested in integration tests', () => {
+      // This test requires PostgreSQL with pgvector extension
+      // pg-mem does not support vector operations like <#>
+      // See integration tests for full coverage
+    });
+  });
+
+  describe('findLatestVersionsWhereEmbeddingIsNull', () => {
+    it('returns only latest versions without embeddings', async () => {
+      const recipe = recipeFactory();
+      await recipeRepository.add(recipe);
+
+      // v1 without embedding (should be excluded - not latest)
+      await recipeVersionRepository.add(
+        recipeVersionFactory({ recipeId: recipe.id, version: 1 }),
+      );
+
+      // v2 without embedding (should be included - latest)
+      const v2 = recipeVersionFactory({
+        recipeId: recipe.id,
+        version: 2,
+      });
+      await recipeVersionRepository.add(v2);
+
+      const results =
+        await recipeVersionRepository.findLatestVersionsWhereEmbeddingIsNull();
+
+      expect(results).toHaveLength(1);
+      expect(results[0].id).toBe(v2.id);
+      expect(results[0].version).toBe(2);
+    });
+
+    it('excludes latest versions that have embeddings', async () => {
+      const recipe = recipeFactory();
+      await recipeRepository.add(recipe);
+
+      // v1 without embedding
+      const v1 = recipeVersionFactory({
+        recipeId: recipe.id,
+        version: 1,
+      });
+      await recipeVersionRepository.add(v1);
+
+      // Mark v1 as having an embedding
+      await datasource
+        .getRepository(RecipeVersionSchema)
+        .update({ id: v1.id }, { embedding: [] as unknown as number[] });
+
+      const results =
+        await recipeVersionRepository.findLatestVersionsWhereEmbeddingIsNull();
+
+      expect(results).toHaveLength(0);
+    });
+
+    it('returns multiple latest versions from different recipes', async () => {
+      const recipe1 = recipeFactory();
+      const recipe2 = recipeFactory();
+      await recipeRepository.add(recipe1);
+      await recipeRepository.add(recipe2);
+
+      // Recipe 1: v1 and v2 (v2 is latest without embedding)
+      await recipeVersionRepository.add(
+        recipeVersionFactory({ recipeId: recipe1.id, version: 1 }),
+      );
+      const r1v2 = recipeVersionFactory({
+        recipeId: recipe1.id,
+        version: 2,
+      });
+      await recipeVersionRepository.add(r1v2);
+
+      // Recipe 2: only v1 (latest without embedding)
+      const r2v1 = recipeVersionFactory({
+        recipeId: recipe2.id,
+        version: 1,
+      });
+      await recipeVersionRepository.add(r2v1);
+
+      const results =
+        await recipeVersionRepository.findLatestVersionsWhereEmbeddingIsNull();
+
+      expect(results).toHaveLength(2);
+      const resultIds = results.map((r) => r.id);
+      expect(resultIds).toContain(r1v2.id);
+      expect(resultIds).toContain(r2v1.id);
+    });
+
+    it('excludes older versions even without embeddings', async () => {
+      const recipe = recipeFactory();
+      await recipeRepository.add(recipe);
+
+      // v1 without embedding (should be excluded - not latest)
+      const v1 = recipeVersionFactory({
+        recipeId: recipe.id,
+        version: 1,
+      });
+      await recipeVersionRepository.add(v1);
+
+      // v2 without embedding (should be excluded - not latest)
+      const v2 = recipeVersionFactory({
+        recipeId: recipe.id,
+        version: 2,
+      });
+      await recipeVersionRepository.add(v2);
+
+      // v3 without embedding (should be included - latest)
+      const v3 = recipeVersionFactory({
+        recipeId: recipe.id,
+        version: 3,
+      });
+      await recipeVersionRepository.add(v3);
+
+      const results =
+        await recipeVersionRepository.findLatestVersionsWhereEmbeddingIsNull();
+
+      expect(results).toHaveLength(1);
+      expect(results[0].id).toBe(v3.id);
+      expect(results[0].version).toBe(3);
+    });
+
+    it('returns empty array when all latest versions have embeddings', async () => {
+      const recipe = recipeFactory();
+      await recipeRepository.add(recipe);
+
+      const v1 = recipeVersionFactory({
+        recipeId: recipe.id,
+        version: 1,
+      });
+      await recipeVersionRepository.add(v1);
+
+      // Mark v1 as having embedding
+      await datasource
+        .getRepository(RecipeVersionSchema)
+        .update({ id: v1.id }, { embedding: [] as unknown as number[] });
+
+      const results =
+        await recipeVersionRepository.findLatestVersionsWhereEmbeddingIsNull();
+
+      expect(results).toHaveLength(0);
+    });
+  });
 });

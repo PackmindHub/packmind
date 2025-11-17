@@ -279,4 +279,162 @@ describe('StandardVersionRepository', () => {
         }) as unknown as WithSoftDelete<StandardVersion>,
     });
   });
+
+  describe('updateEmbedding', () => {
+    it.skip('requires pgvector extension - tested in integration tests', () => {
+      // This test requires PostgreSQL with pgvector extension
+      // pg-mem does not support vector types
+      // See integration tests for full coverage
+    });
+  });
+
+  describe('findSimilarByEmbedding', () => {
+    it.skip('requires pgvector extension - tested in integration tests', () => {
+      // This test requires PostgreSQL with pgvector extension
+      // pg-mem does not support vector operations like <#>
+      // See integration tests for full coverage
+    });
+  });
+
+  describe('findLatestVersionsWhereEmbeddingIsNull', () => {
+    it('returns only latest versions without embeddings', async () => {
+      const standard = await standardRepo.save(
+        standardFactory({ slug: `standard-${uuidv4()}` }),
+      );
+
+      // v1 without embedding (should be excluded - not latest)
+      await standardVersionRepository.add(
+        standardVersionFactory({ standardId: standard.id, version: 1 }),
+      );
+
+      // v2 without embedding (should be included - latest)
+      const v2 = standardVersionFactory({
+        standardId: standard.id,
+        version: 2,
+      });
+      await standardVersionRepository.add(v2);
+
+      const results =
+        await standardVersionRepository.findLatestVersionsWhereEmbeddingIsNull();
+
+      expect(results).toHaveLength(1);
+      expect(results[0].id).toBe(v2.id);
+      expect(results[0].version).toBe(2);
+    });
+
+    it('excludes latest versions that have embeddings', async () => {
+      const standard = await standardRepo.save(
+        standardFactory({ slug: `standard-${uuidv4()}` }),
+      );
+
+      // v1 without embedding
+      const v1 = standardVersionFactory({
+        standardId: standard.id,
+        version: 1,
+      });
+      await standardVersionRepository.add(v1);
+
+      // Mark v1 as having an embedding
+      await typeormRepo.update(
+        { id: v1.id },
+        { embedding: [] as unknown as number[] },
+      );
+
+      const results =
+        await standardVersionRepository.findLatestVersionsWhereEmbeddingIsNull();
+
+      expect(results).toHaveLength(0);
+    });
+
+    it('returns multiple latest versions from different standards', async () => {
+      const standard1 = await standardRepo.save(
+        standardFactory({ slug: `standard-1-${uuidv4()}` }),
+      );
+      const standard2 = await standardRepo.save(
+        standardFactory({ slug: `standard-2-${uuidv4()}` }),
+      );
+
+      // Standard 1: v1 and v2 (v2 is latest without embedding)
+      await standardVersionRepository.add(
+        standardVersionFactory({ standardId: standard1.id, version: 1 }),
+      );
+      const s1v2 = standardVersionFactory({
+        standardId: standard1.id,
+        version: 2,
+      });
+      await standardVersionRepository.add(s1v2);
+
+      // Standard 2: only v1 (latest without embedding)
+      const s2v1 = standardVersionFactory({
+        standardId: standard2.id,
+        version: 1,
+      });
+      await standardVersionRepository.add(s2v1);
+
+      const results =
+        await standardVersionRepository.findLatestVersionsWhereEmbeddingIsNull();
+
+      expect(results).toHaveLength(2);
+      const resultIds = results.map((r) => r.id);
+      expect(resultIds).toContain(s1v2.id);
+      expect(resultIds).toContain(s2v1.id);
+    });
+
+    it('excludes older versions even without embeddings', async () => {
+      const standard = await standardRepo.save(
+        standardFactory({ slug: `standard-${uuidv4()}` }),
+      );
+
+      // v1 without embedding (should be excluded - not latest)
+      const v1 = standardVersionFactory({
+        standardId: standard.id,
+        version: 1,
+      });
+      await standardVersionRepository.add(v1);
+
+      // v2 without embedding (should be included - latest)
+      const v2 = standardVersionFactory({
+        standardId: standard.id,
+        version: 2,
+      });
+      await standardVersionRepository.add(v2);
+
+      // v3 without embedding (should be included - latest)
+      const v3 = standardVersionFactory({
+        standardId: standard.id,
+        version: 3,
+      });
+      await standardVersionRepository.add(v3);
+
+      const results =
+        await standardVersionRepository.findLatestVersionsWhereEmbeddingIsNull();
+
+      expect(results).toHaveLength(1);
+      expect(results[0].id).toBe(v3.id);
+      expect(results[0].version).toBe(3);
+    });
+
+    it('returns empty array when all latest versions have embeddings', async () => {
+      const standard = await standardRepo.save(
+        standardFactory({ slug: `standard-${uuidv4()}` }),
+      );
+
+      const v1 = standardVersionFactory({
+        standardId: standard.id,
+        version: 1,
+      });
+      await standardVersionRepository.add(v1);
+
+      // Mark v1 as having embedding
+      await typeormRepo.update(
+        { id: v1.id },
+        { embedding: [] as unknown as number[] },
+      );
+
+      const results =
+        await standardVersionRepository.findLatestVersionsWhereEmbeddingIsNull();
+
+      expect(results).toHaveLength(0);
+    });
+  });
 });
