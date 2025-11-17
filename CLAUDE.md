@@ -51,8 +51,17 @@ Enforce backend test conventions for .spec.ts files in the Packmind monorepo usi
 * Use expect(actualArray).toEqual(expectedArray) for deep array equality in Jest tests instead of manual length and index checks
 * Use one expect per test case for better clarity and easier debugging; group related tests in describe blocks with shared setup in beforeEach
 * Use stubLogger() in Jest tests to get a fully typed PackmindLogger stub instead of manually creating a jest.Mocked<PackmindLogger> object with jest.fn() methods
-* Use stubLogger() in your Jest tests to get a fully typed PackmindLogger stub instead of manually creating a jest.Mocked<PackmindLogger> object with jest.fn() methods
 
 Full standard is available here for further request: [Backend Tests Redaction](.packmind/standards/backend-tests-redaction.md)
+
+## Standard: Front-end UI and Design Systems
+
+Adopt guidelines for using Chakra UI v3 through the @packmind/ui design system in React applications to ensure consistent UI implementation and visual consistency, applying this standard when building or modifying any frontend components. :
+* Never use vanilla HTML tags (div, span, button, input, etc.) in frontend component code; always use corresponding @packmind/ui components (PMBox, PMText, PMButton, PMInput, etc.) to ensure consistent styling and theming.
+* Prefer using the design token 'full' instead of the literal value '100%' for width or height properties in UI components to maintain consistency with the design system.
+* Use components imported from '@packmind/ui' instead of '@chakra-ui' packages to maintain a consistent UI abstraction layer, e.g., import { PMButton } from '@packmind/ui'; not import { Button } from '@chakra-ui/react';
+* Use only semantic tokens to customize @packmind/ui components, such as colorPalette for color schemes, background.primary/secondary/tertiary for backgrounds, text.primary/secondary/tertiary for text colors, and border.primary/secondary/tertiary for borders, rather than hardcoded color values.
+
+Full standard is available here for further request: [Front-end UI and Design Systems](.packmind/standards/front-end-ui-and-design-systems.md)
 <!-- end: Packmind standards -->
 

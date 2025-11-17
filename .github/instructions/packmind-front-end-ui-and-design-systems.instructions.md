@@ -1,6 +1,5 @@
 ---
-globs: apps/frontend/**/*.tsx
-alwaysApply: false
+applyTo: 'apps/frontend/**/*.tsx'
 ---
 ## Standard: Front-end UI and Design Systems
 
@@ -10,4 +9,4 @@ Adopt guidelines for using Chakra UI v3 through the @packmind/ui design system i
 * Use components imported from '@packmind/ui' instead of '@chakra-ui' packages to maintain a consistent UI abstraction layer, e.g., import { PMButton } from '@packmind/ui'; not import { Button } from '@chakra-ui/react';
 * Use only semantic tokens to customize @packmind/ui components, such as colorPalette for color schemes, background.primary/secondary/tertiary for backgrounds, text.primary/secondary/tertiary for text colors, and border.primary/secondary/tertiary for borders, rather than hardcoded color values.
 
-Full standard is available here for further request: [Front-end UI and Design Systems](../../../.packmind/standards/front-end-ui-and-design-systems.md)
+Full standard is available here for further request: [Front-end UI and Design Systems](../../.packmind/standards/front-end-ui-and-design-systems.md)
