@@ -6,8 +6,8 @@ const getOssWebpackPaths = require('./webpack.paths.oss');
 const getProprietaryWebpackPaths = require('./webpack.paths.proprietary');
 
 // Determine which paths to use based on PACKMIND_EDITION environment variable
-// Default is 'enterprise' if not 'oss'
-const isOssMode = process.env.PACKMIND_EDITION === 'oss';
+// Default is 'oss' if not 'proprietary'
+const isOssMode = process.env.PACKMIND_EDITION !== 'proprietary';
 const getWebpackPaths = isOssMode
   ? getOssWebpackPaths
   : getProprietaryWebpackPaths;

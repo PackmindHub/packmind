@@ -6,8 +6,8 @@ import Checker from 'vite-plugin-checker';
 import path from 'path';
 
 export default defineConfig(() => {
-  // Determine edition mode
-  const isOssMode = process.env.PACKMIND_EDITION === 'oss';
+  // Determine edition mode (defaults to OSS if not explicitly set to 'proprietary')
+  const isOssMode = process.env.PACKMIND_EDITION !== 'proprietary';
 
   // Configure resolve aliases based on edition
   const resolveAliases = isOssMode
@@ -47,7 +47,7 @@ export default defineConfig(() => {
     assetsInclude: ['**/*.svg', '**/*.png'],
     define: {
       __PACKMIND_EDITION__: JSON.stringify(
-        process.env.PACKMIND_EDITION || 'proprietary',
+        process.env.PACKMIND_EDITION || 'oss',
       ),
     },
     resolve: {

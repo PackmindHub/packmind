@@ -15,6 +15,8 @@ import { DeploymentsServices } from '../../services/DeploymentsServices';
 import { v4 as uuidv4 } from 'uuid';
 import slug from 'slug';
 
+const origin = 'CreatePackageUsecase';
+
 export class CreatePackageUsecase
   extends AbstractMemberUseCase<CreatePackageCommand, CreatePackageResponse>
   implements ICreatePackageUseCase
@@ -25,9 +27,10 @@ export class CreatePackageUsecase
     private readonly spacesPort: ISpacesPort,
     private readonly recipesPort: IRecipesPort,
     private readonly standardsPort: IStandardsPort,
-    logger?: PackmindLogger,
+    logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
+    this.logger.info('CreatePackageUsecase initialized');
   }
 
   async executeForMembers(
