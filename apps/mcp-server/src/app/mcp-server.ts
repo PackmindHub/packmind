@@ -759,6 +759,166 @@ export function createMCPServer(
     },
   );
 
+  mcpServer.tool(
+    `${mcpToolPrefix}_list_packages`,
+    'Get a list of all available packages in Packmind. Packages are collections of recipes and standards that can be pulled together.',
+    {},
+    async () => {
+      if (!userContext) {
+        throw new Error('User context is required to list packages');
+      }
+
+      try {
+        const organizationId = createOrganizationId(userContext.organizationId);
+        const deploymentsHexa = fastify.deploymentsHexa();
+
+        if (!deploymentsHexa) {
+          throw new Error('DeploymentsHexa not available');
+        }
+
+        const response = await deploymentsHexa.getAdapter().listPackages({
+          userId: userContext.userId,
+          organizationId,
+        });
+
+        if (response.packages.length === 0) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: 'No packages found for your organization',
+              },
+            ],
+          };
+        }
+
+        // Sort alphabetically by slug
+        const sortedPackages = response.packages.sort((a, b) =>
+          a.slug.localeCompare(b.slug),
+        );
+
+        // Format as bullet points: • slug: description
+        const formattedList = sortedPackages
+          .map((pkg) => `• ${pkg.slug}: ${pkg.description || pkg.name}`)
+          .join('\n');
+
+        // Track analytics event
+        analyticsAdapter.trackEvent(
+          createUserId(userContext.userId),
+          createOrganizationId(userContext.organizationId),
+          'mcp_tool_call',
+          { tool: `${mcpToolPrefix}_list_packages` },
+        );
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: formattedList,
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Failed to list packages: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        };
+      }
+    },
+  );
+
+  mcpServer.tool(
+    `${mcpToolPrefix}_show_package`,
+    'Get detailed information about a specific package including its recipes and standards',
+    {
+      slug: z.string().min(1).describe('The slug of the package to retrieve'),
+    },
+    async ({ slug }) => {
+      if (!userContext) {
+        throw new Error('User context is required to show package details');
+      }
+
+      try {
+        const organizationId = createOrganizationId(userContext.organizationId);
+        const deploymentsHexa = fastify.deploymentsHexa();
+
+        if (!deploymentsHexa) {
+          throw new Error('DeploymentsHexa not available');
+        }
+
+        const pkg = await deploymentsHexa.getAdapter().getPackageSummary({
+          userId: userContext.userId,
+          organizationId,
+          slug,
+        });
+
+        // Build formatted content
+        const contentParts = [
+          `# ${pkg.name} (${pkg.slug})`,
+          ``,
+          pkg.description,
+          ``,
+        ];
+
+        if (pkg.standards && pkg.standards.length > 0) {
+          contentParts.push(`## Standards`, ``);
+          for (const standard of pkg.standards) {
+            if (standard.summary) {
+              contentParts.push(`• ${standard.name}: ${standard.summary}`);
+            } else {
+              contentParts.push(`• ${standard.name}`);
+            }
+          }
+          contentParts.push(``);
+        }
+
+        if (pkg.recipes && pkg.recipes.length > 0) {
+          contentParts.push(`## Recipes`, ``);
+          for (const recipe of pkg.recipes) {
+            if (recipe.summary) {
+              contentParts.push(`• ${recipe.name}: ${recipe.summary}`);
+            } else {
+              contentParts.push(`• ${recipe.name}`);
+            }
+          }
+          contentParts.push(``);
+        }
+
+        const formattedContent = contentParts.join('\n');
+
+        // Track analytics event
+        analyticsAdapter.trackEvent(
+          createUserId(userContext.userId),
+          createOrganizationId(userContext.organizationId),
+          'mcp_tool_call',
+          { tool: `${mcpToolPrefix}_show_package`, slug },
+        );
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: formattedContent,
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Failed to get package details: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+        };
+      }
+    },
+  );
+
   const standardWorkflowStepSchema = z
     .enum(STANDARD_WORKFLOW_STEP_ORDER)
     .describe(
