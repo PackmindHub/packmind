@@ -110,8 +110,12 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
     );
   }
 
-  const recipes = recipesResponse || [];
-  const standards = standardsResponse?.standards || [];
+  const recipes = (recipesResponse || []).sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
+  const standards = (standardsResponse?.standards || []).sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
 
   return (
     <PMBox p={6} maxW="800px" mx="auto">

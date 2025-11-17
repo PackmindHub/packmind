@@ -12,6 +12,7 @@ import {
   PMAlert,
   PMGrid,
   PMGridItem,
+  pmToaster,
 } from '@packmind/ui';
 import {
   useGetAvailableRepositoriesQuery,
@@ -23,6 +24,7 @@ import {
   AddRepositoryForm,
 } from '../../types/GitProviderTypes';
 import { extractErrorMessage } from '../../utils/errorUtils';
+import { GIT_MESSAGES } from '../../constants/messages';
 
 interface RepositorySelectorProps {
   provider: GitProviderUI;
@@ -74,10 +76,27 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
       branch: selectedBranch,
     };
 
-    addRepositoryMutation.mutate({
-      providerId: provider.id,
-      data: formData,
-    });
+    addRepositoryMutation.mutate(
+      {
+        providerId: provider.id,
+        data: formData,
+      },
+      {
+        onSuccess: () => {
+          pmToaster.create({
+            type: 'success',
+            title: 'Success',
+            description: GIT_MESSAGES.success.repositoryAdded,
+          });
+
+          // Reset form state
+          setSelectedRepo(null);
+          setSearchTerm('');
+          setBranchOption('default');
+          setCustomBranch('');
+        },
+      },
+    );
   };
 
   const handleRepoSelect = (repo: AvailableRepository) => {
