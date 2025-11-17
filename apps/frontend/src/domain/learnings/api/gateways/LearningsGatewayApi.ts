@@ -3,6 +3,8 @@ import {
   AcceptKnowledgePatchResponse,
   DistillAllPendingTopicsCommand,
   DistillAllPendingTopicsResponse,
+  DistillTopicCommand,
+  DistillTopicResponse,
   GetKnowledgePatchCommand,
   GetKnowledgePatchResponse,
   GetTopicByIdCommand,
@@ -11,6 +13,7 @@ import {
   GetTopicsStatsResponse,
   IAcceptKnowledgePatchUseCase,
   IDistillAllPendingTopicsUseCase,
+  IDistillTopicUseCase,
   IGetKnowledgePatchUseCase,
   IGetTopicByIdUseCase,
   IGetTopicsStatsUseCase,
@@ -25,6 +28,7 @@ import {
   NewPackmindCommandBody,
   RejectKnowledgePatchCommand,
   RejectKnowledgePatchResponse,
+  SpaceId,
 } from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import { ILearningsGateway } from './ILearningsGateway';
@@ -92,6 +96,18 @@ export class LearningsGatewayApi
         {},
       );
     };
+
+  distillTopic: NewGateway<IDistillTopicUseCase> = async (
+    command: NewPackmindCommandBody<DistillTopicCommand> & {
+      spaceId?: SpaceId;
+    },
+  ) => {
+    const { organizationId, topicId, spaceId } = command;
+    return this._api.post<DistillTopicResponse>(
+      `/organizations/${organizationId}/spaces/${spaceId}/learnings/topics/${topicId}/distill`,
+      {},
+    );
+  };
 
   getTopicsStats: NewGateway<IGetTopicsStatsUseCase> = async ({
     organizationId,

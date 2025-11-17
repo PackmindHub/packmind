@@ -14,6 +14,7 @@ import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
   AcceptKnowledgePatchResponse,
+  DistillTopicResponse,
   GetKnowledgePatchResponse,
   GetTopicByIdResponse,
   GetTopicsStatsResponse,
@@ -404,6 +405,52 @@ export class OrganizationsSpacesLearningsController {
           organizationId,
           spaceId,
           topicId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Distill a single topic
+   * POST /organizations/:orgId/spaces/:spaceId/learnings/topics/:topicId/distill
+   */
+  @Post('topics/:topicId/distill')
+  async distillTopic(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('topicId') topicId: TopicId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<DistillTopicResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/learnings/topics/:topicId/distill - Distilling topic',
+      {
+        organizationId,
+        spaceId,
+        topicId,
+        userId,
+      },
+    );
+
+    try {
+      return await this.learningsAdapter.distillTopic({
+        topicId,
+        userId,
+        organizationId,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /organizations/:orgId/spaces/:spaceId/learnings/topics/:topicId/distill - Failed to distill topic',
+        {
+          organizationId,
+          spaceId,
+          topicId,
+          userId,
           error: errorMessage,
         },
       );

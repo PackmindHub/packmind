@@ -3,6 +3,7 @@ import { PMPage, PMBox, PMButton } from '@packmind/ui';
 import { TopicDetails } from '../../src/domain/learnings/components/TopicDetails';
 import { AutobreadCrumb } from '../../src/shared/components/navigation/AutobreadCrumb';
 import { TopicId } from '@packmind/types';
+import { useDistillTopicMutation } from '../../src/domain/learnings/api/queries/LearningsQueries';
 
 export default function TopicDetailsIndexRouteModule() {
   const { topicId } = useParams<{
@@ -11,12 +12,12 @@ export default function TopicDetailsIndexRouteModule() {
     topicId: string;
   }>();
 
+  const distillMutation = useDistillTopicMutation();
+
   const handleDistillTopic = () => {
-    // TODO: Implement distill single topic mutation
-    console.log('Distilling topic:', topicId);
-    alert(
-      'Distill single topic feature coming soon. Use "Distill All" for now.',
-    );
+    if (!topicId) return;
+
+    distillMutation.mutate({ topicId: topicId as TopicId });
   };
 
   if (!topicId) {
@@ -40,7 +41,11 @@ export default function TopicDetailsIndexRouteModule() {
       title="Topic Details"
       breadcrumbComponent={<AutobreadCrumb />}
       actions={
-        <PMButton colorScheme="blue" onClick={handleDistillTopic}>
+        <PMButton
+          colorScheme="blue"
+          onClick={handleDistillTopic}
+          loading={distillMutation.isPending}
+        >
           Distill Topic
         </PMButton>
       }

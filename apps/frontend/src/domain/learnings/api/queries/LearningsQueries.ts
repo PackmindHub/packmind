@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  KnowledgePatch,
+  DistillTopicCommand,
   KnowledgePatchId,
   KnowledgePatchStatus,
+  NewPackmindCommandBody,
   OrganizationId,
   SpaceId,
   TopicId,
@@ -235,6 +236,45 @@ export const useDistillAllPendingTopicsMutation = () => {
     },
     onError: async (error) => {
       console.error('Error distilling topics', error);
+    },
+  });
+};
+
+const DISTILL_TOPIC_MUTATION_KEY = 'distillTopic';
+
+export const useDistillTopicMutation = () => {
+  const queryClient = useQueryClient();
+  const { spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationKey: [DISTILL_TOPIC_MUTATION_KEY],
+    mutationFn: async ({ topicId }: { topicId: TopicId }) => {
+      // spaceId is needed for the URL but not part of the command type
+      return learningsGateway.distillTopic({
+        topicId,
+        organizationId: organization!.id,
+        spaceId: spaceId as SpaceId,
+      } as NewPackmindCommandBody<DistillTopicCommand> & { spaceId: SpaceId });
+    },
+    onSuccess: async (result) => {
+      // Invalidate the topic details
+      await queryClient.invalidateQueries({
+        queryKey: getTopicByIdKey(spaceId, result.topicId),
+      });
+
+      // Invalidate the topics list
+      await queryClient.invalidateQueries({
+        queryKey: getTopicsBySpaceKey(spaceId),
+      });
+
+      // Invalidate the patches list to show new patches
+      await queryClient.invalidateQueries({
+        queryKey: getKnowledgePatchesBySpaceKey(spaceId),
+      });
+    },
+    onError: async (error) => {
+      console.error('Error distilling topic', error);
     },
   });
 };
