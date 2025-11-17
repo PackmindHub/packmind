@@ -1067,19 +1067,19 @@ export function createMCPServer(
 
   mcpServer.tool(
     `${mcpToolPrefix}_capture_topic`,
-    'Capture a technical decision or learning as a topic for later distillation into standards or recipes.',
+    'Capture a small, focused coding pattern or learning. Each topic should be atomic and specific - call this tool multiple times to capture multiple distinct learnings rather than combining them into one large topic.',
     {
       title: z
         .string()
         .min(1)
         .describe(
-          'A concise title for the topic (e.g., "Error Handling Pattern")',
+          'A specific, focused title describing one coding pattern or practice (e.g., "Use const for immutable variables", "Prefer find over filter[0]")',
         ),
       content: z
         .string()
         .min(1)
         .describe(
-          'Detailed explanation of the technical decision or learning, including context, rationale, and any important considerations [Markdown formatted]',
+          'Brief explanation of the learning, including context and rationale. Keep it succinct and focused on this specific pattern. [Markdown formatted]',
         ),
       codeExamples: z
         .array(
@@ -1093,18 +1093,14 @@ export function createMCPServer(
             code: z
               .string()
               .min(1)
-              .describe('The code example demonstrating the topic'),
-            explanation: z
-              .string()
-              .optional()
               .describe(
-                'Optional explanation of what the code example demonstrates',
+                'A small, focused code example demonstrating this specific pattern',
               ),
           }),
         )
         .optional()
         .describe(
-          'Optional array of code examples demonstrating the topic. Provide empty array if no examples.',
+          'Optional array of code examples. Each example should be small and focused on demonstrating this specific learning.',
         ),
     },
     async ({ title, content, codeExamples }) => {
@@ -1144,7 +1140,7 @@ export function createMCPServer(
         content: [
           {
             type: 'text',
-            text: `Topic '${topic.title}' has been captured successfully. It will be available for distillation into standards or recipes.`,
+            text: `Topic '${topic.title}' captured successfully. Feel free to capture additional small, focused learnings by calling this tool again for each distinct pattern or practice you identify.`,
           },
         ],
       };
