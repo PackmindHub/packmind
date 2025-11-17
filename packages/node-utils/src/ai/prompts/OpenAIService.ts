@@ -93,7 +93,7 @@ export class OpenAIService implements AIService {
       return tier as serviceTierTypes;
     }
 
-    return 'default';
+    return 'auto';
   }
 
   /**
