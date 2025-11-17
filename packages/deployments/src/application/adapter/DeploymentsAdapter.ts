@@ -1,5 +1,7 @@
 import { IBaseAdapter } from '@packmind/node-utils';
 import {
+  AddArtefactsToPackageCommand,
+  AddArtefactsToPackageResponse,
   AddTargetCommand,
   CreatePackageCommand,
   CreatePackageResponse,
@@ -64,6 +66,7 @@ import { IPackagesDeploymentRepository } from '../../domain/repositories/IPackag
 import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
 import { DeploymentsServices } from '../services/DeploymentsServices';
+import { AddArtefactsToPackageUsecase } from '../useCases/addArtefactsToPackage/addArtefactsToPackage.usecase';
 import { AddTargetUseCase } from '../useCases/AddTargetUseCase';
 import { CreatePackageUsecase } from '../useCases/createPackage/createPackage.usecase';
 import { UpdatePackageUsecase } from '../useCases/updatePackage/updatePackage.usecase';
@@ -126,6 +129,7 @@ export class DeploymentsAdapter
   private _updatePackageUseCase!: UpdatePackageUsecase;
   private _getPackageByIdUseCase!: GetPackageByIdUsecase;
   private _deletePackagesBatchUseCase!: DeletePackagesBatchUsecase;
+  private _addArtefactsToPackageUseCase!: AddArtefactsToPackageUsecase;
 
   constructor(
     private readonly deploymentsServices: DeploymentsServices,
@@ -317,6 +321,14 @@ export class DeploymentsAdapter
     this._deletePackagesBatchUseCase = new DeletePackagesBatchUsecase(
       this.deploymentsServices.getPackageService(),
     );
+
+    this._addArtefactsToPackageUseCase = new AddArtefactsToPackageUsecase(
+      this.accountsPort,
+      this.deploymentsServices,
+      this.spacesPort,
+      this.recipesPort,
+      this.standardsPort,
+    );
   }
 
   public isReady(): boolean {
@@ -479,5 +491,11 @@ export class DeploymentsAdapter
     command: DeletePackagesBatchCommand,
   ): Promise<DeletePackagesBatchResponse> {
     return this._deletePackagesBatchUseCase.execute(command);
+  }
+
+  async addArtefactsToPackage(
+    command: AddArtefactsToPackageCommand,
+  ): Promise<AddArtefactsToPackageResponse> {
+    return this._addArtefactsToPackageUseCase.execute(command);
   }
 }

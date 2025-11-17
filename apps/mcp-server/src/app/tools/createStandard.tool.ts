@@ -73,8 +73,14 @@ export function registerCreateStandardTool(
         )
         .optional()
         .describe('Array of rules with optional examples for the standard'),
+      packageSlugs: z
+        .array(z.string())
+        .optional()
+        .describe(
+          'Optional array of package slugs to add this standard to after creation',
+        ),
     },
-    async ({ name, description, summary, rules = [] }) => {
+    async ({ name, description, summary, rules = [], packageSlugs }) => {
       if (!userContext) {
         throw new Error('User context is required to create standards');
       }
@@ -128,15 +134,16 @@ export function registerCreateStandardTool(
 
         const standard = await standardsHexa
           .getAdapter()
-          .createStandardWithExamples({
+          .createStandardWithPackages({
             name,
             description,
-            summary: summary ?? null,
+            summary,
             rules: processedRules,
             organizationId: createOrganizationId(userContext.organizationId),
             userId: createUserId(userContext.userId),
             scope: null,
             spaceId: firstSpace.id,
+            packageSlugs,
           });
 
         // Track analytics event

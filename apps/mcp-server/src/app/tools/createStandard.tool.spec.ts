@@ -29,6 +29,7 @@ describe('createStandard.tool', () => {
   let userContext: UserContext;
   let mockStandardsAdapter: jest.Mocked<{
     createStandardWithExamples: jest.Mock;
+    createStandardWithPackages: jest.Mock;
   }>;
   let mockLogger: ReturnType<typeof stubLogger>;
   let toolHandler: (params: {
@@ -61,6 +62,7 @@ describe('createStandard.tool', () => {
 
     mockStandardsAdapter = {
       createStandardWithExamples: jest.fn(),
+      createStandardWithPackages: jest.fn(),
     };
 
     mockFastify = {
@@ -136,7 +138,7 @@ describe('createStandard.tool', () => {
         name: 'Test Standard',
       };
 
-      mockStandardsAdapter.createStandardWithExamples.mockResolvedValue(
+      mockStandardsAdapter.createStandardWithPackages.mockResolvedValue(
         mockStandard,
       );
 
@@ -175,7 +177,7 @@ describe('createStandard.tool', () => {
       });
 
       expect(
-        mockStandardsAdapter.createStandardWithExamples,
+        mockStandardsAdapter.createStandardWithPackages,
       ).toHaveBeenCalledWith({
         name: 'Test Standard',
         description: 'A comprehensive test standard',
@@ -206,6 +208,7 @@ describe('createStandard.tool', () => {
         userId: 'user-123',
         scope: null,
         spaceId: 'space-123',
+        packageSlugs: undefined,
       });
 
       expect(result).toEqual({
@@ -224,7 +227,7 @@ describe('createStandard.tool', () => {
         name: 'Empty Standard',
       };
 
-      mockStandardsAdapter.createStandardWithExamples.mockResolvedValue(
+      mockStandardsAdapter.createStandardWithPackages.mockResolvedValue(
         mockStandard,
       );
 
@@ -240,16 +243,17 @@ describe('createStandard.tool', () => {
       });
 
       expect(
-        mockStandardsAdapter.createStandardWithExamples,
+        mockStandardsAdapter.createStandardWithPackages,
       ).toHaveBeenCalledWith({
         name: 'Empty Standard',
         description: 'A standard without rules',
-        summary: null,
+        summary: undefined,
         rules: [],
         organizationId: 'org-123',
         userId: 'user-123',
         scope: null,
         spaceId: 'space-123',
+        packageSlugs: undefined,
       });
 
       expect(result).toEqual({
@@ -268,7 +272,7 @@ describe('createStandard.tool', () => {
         name: 'No Summary Standard',
       };
 
-      mockStandardsAdapter.createStandardWithExamples.mockResolvedValue(
+      mockStandardsAdapter.createStandardWithPackages.mockResolvedValue(
         mockStandard,
       );
 
@@ -289,10 +293,10 @@ describe('createStandard.tool', () => {
       });
 
       expect(
-        mockStandardsAdapter.createStandardWithExamples,
+        mockStandardsAdapter.createStandardWithPackages,
       ).toHaveBeenCalledWith(
         expect.objectContaining({
-          summary: null,
+          summary: undefined,
         }),
       );
 
@@ -343,7 +347,7 @@ describe('createStandard.tool', () => {
         });
 
         expect(
-          mockStandardsAdapter.createStandardWithExamples,
+          mockStandardsAdapter.createStandardWithPackages,
         ).not.toHaveBeenCalled();
       });
     });
@@ -356,7 +360,7 @@ describe('createStandard.tool', () => {
         name: 'Markdown Test Standard',
       };
 
-      mockStandardsAdapter.createStandardWithExamples.mockResolvedValue(
+      mockStandardsAdapter.createStandardWithPackages.mockResolvedValue(
         mockStandard,
       );
 
@@ -395,7 +399,7 @@ describe('createStandard.tool', () => {
       );
 
       expect(
-        mockStandardsAdapter.createStandardWithExamples,
+        mockStandardsAdapter.createStandardWithPackages,
       ).toHaveBeenCalledWith(
         expect.objectContaining({
           rules: [
@@ -422,7 +426,7 @@ describe('createStandard.tool', () => {
         name: 'Analytics Test Standard',
       };
 
-      mockStandardsAdapter.createStandardWithExamples.mockResolvedValue(
+      mockStandardsAdapter.createStandardWithPackages.mockResolvedValue(
         mockStandard,
       );
 
@@ -464,7 +468,7 @@ describe('createStandard.tool', () => {
 
     describe('when adapter throws error', () => {
       it('returns error message', async () => {
-        mockStandardsAdapter.createStandardWithExamples.mockRejectedValue(
+        mockStandardsAdapter.createStandardWithPackages.mockRejectedValue(
           new Error('Database connection failed'),
         );
 
@@ -492,7 +496,7 @@ describe('createStandard.tool', () => {
 
     describe('when adapter throws non-Error object', () => {
       it('returns error message', async () => {
-        mockStandardsAdapter.createStandardWithExamples.mockRejectedValue(
+        mockStandardsAdapter.createStandardWithPackages.mockRejectedValue(
           'String error',
         );
 
@@ -526,7 +530,7 @@ describe('createStandard.tool', () => {
         name: 'Space Test Standard',
       };
 
-      mockStandardsAdapter.createStandardWithExamples.mockResolvedValue(
+      mockStandardsAdapter.createStandardWithPackages.mockResolvedValue(
         mockStandard,
       );
 
@@ -551,7 +555,7 @@ describe('createStandard.tool', () => {
       expect(utils.getGlobalSpace).toHaveBeenCalledWith(mockFastify, 'org-123');
 
       expect(
-        mockStandardsAdapter.createStandardWithExamples,
+        mockStandardsAdapter.createStandardWithPackages,
       ).toHaveBeenCalledWith(
         expect.objectContaining({
           spaceId: 'custom-space-456',

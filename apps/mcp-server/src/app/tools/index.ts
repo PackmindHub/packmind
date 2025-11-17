@@ -1,3 +1,5 @@
+export { registerAddRecipeToPackagesTool } from './addRecipeToPackages.tool';
+export { registerAddStandardToPackagesTool } from './addStandardToPackages.tool';
 export { registerCreateRecipeTool } from './createRecipe.tool';
 export { registerNotifyRecipeUsageTool } from './notifyRecipeUsage.tool';
 export { registerAddRuleToStandardTool } from './addRuleToStandard.tool';
