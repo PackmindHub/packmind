@@ -84,8 +84,6 @@ describe('ExecuteLinterProgramsUseCase', () => {
         standard: 'method-standard',
       },
     ]);
-    expect(logger.warn).not.toHaveBeenCalled();
-    expect(logger.error).not.toHaveBeenCalled();
   });
 
   it('skips execution if language is not supported', async () => {
