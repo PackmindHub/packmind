@@ -35,3 +35,4 @@ LEARNINGS.md
 test-results/
 .env
 compose.env
+.mcp.json
