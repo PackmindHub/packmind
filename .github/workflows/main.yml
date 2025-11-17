@@ -36,6 +36,7 @@ jobs:
     uses: ./.github/workflows/quality.yml
     with:
       node-version: 22.17.0
+      cli-executables-artifact: ${{ needs.build-proprietary.outputs.cli-executables-artifact }}
     secrets:
       GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
