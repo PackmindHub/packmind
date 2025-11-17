@@ -66,6 +66,15 @@ All rules and guidelines defined in these standards are mandatory and must be fo
 
 Failure to follow these standards may lead to inconsistencies, errors, or rework. Treat them as the source of truth for how code should be written, structured, and maintained.
 
+## Standard: Back-end repositories SQL queries using TypeORM
+
+Implement SQL query guidelines using TypeORM's QueryBuilder in back-end repositories under /infra/repositories/*Repository.ts to enhance type safety, prevent SQL injection, and improve code maintainability when writing database queries, including lookups, joins, and handling soft-deleted entities. :
+* Handle soft-deleted entities properly using withDeleted() or includeDeleted options. Always respect the QueryOption parameter when provided, and only include deleted entities when explicitly requested.
+* Use IN clause with array parameterization for filtering by multiple values. Always pass arrays as spread parameters using :...paramName syntax to ensure proper parameterization.
+* Use TypeORM's QueryBuilder with parameterized queries instead of raw SQL strings. Always pass parameters as objects to where(), andWhere(), and other query methods to prevent SQL injection and ensure type safety.
+
+Full standard is available here for further request: [Back-end repositories SQL queries using TypeORM](.packmind/standards/back-end-repositories-sql-queries-using-typeorm.md)
+
 ## Standard: Backend Tests Redaction
 
 Enforce backend test conventions for .spec.ts files in the Packmind monorepo using Jest with TypeScript/Node.js by favoring behavioral assertions over implementation checks, organizing context in describe('when…') blocks with verb-first it names, preferring expect(...).toEqual for deep array equality and one expect per test, using afterEach(() => jest.clearAllMocks()) and afterEach(() => datasource.destroy()) to prevent inter-test pollution and clean the test database (TypeORM DataSource or equivalent), and using stubLogger() for typed PackmindLogger stubs to ensure readable, reliable, maintainable unit, integration and service tests when writing or refactoring backend tests :

@@ -1,6 +1,5 @@
 ---
-globs: **/infra/repositories/*.ts
-alwaysApply: false
+applyTo: '**/infra/repositories/*.ts'
 ---
 ## Standard: Back-end repositories SQL queries using TypeORM
 
@@ -9,4 +8,4 @@ Implement SQL query guidelines using TypeORM's QueryBuilder in back-end reposito
 * Use IN clause with array parameterization for filtering by multiple values. Always pass arrays as spread parameters using :...paramName syntax to ensure proper parameterization.
 * Use TypeORM's QueryBuilder with parameterized queries instead of raw SQL strings. Always pass parameters as objects to where(), andWhere(), and other query methods to prevent SQL injection and ensure type safety.
 
-Full standard is available here for further request: [Back-end repositories SQL queries using TypeORM](../../../.packmind/standards/back-end-repositories-sql-queries-using-typeorm.md)
+Full standard is available here for further request: [Back-end repositories SQL queries using TypeORM](../../.packmind/standards/back-end-repositories-sql-queries-using-typeorm.md)
