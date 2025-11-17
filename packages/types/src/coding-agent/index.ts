@@ -3,4 +3,5 @@ export * from './ICodingAgentDeployerRegistry';
 export * from './ports';
 
 // Re-export CodingAgent type for convenience
-export type { CodingAgent } from './contracts/IPrepareRecipesDeploymentUseCase';
+
+export { CodingAgent } from './CodingAgent';

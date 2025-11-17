@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { OrganizationId } from '@packmind/types';
+import { CodingAgent, OrganizationId } from '@packmind/types';
 import {
   DEFAULT_ACTIVE_RENDER_MODES,
   RenderMode,
@@ -8,7 +8,6 @@ import {
   normalizeRenderModes,
 } from '@packmind/types';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
-import { CodingAgent } from '@packmind/types';
 import { CodingAgents } from '@packmind/coding-agent';
 import { IRenderModeConfigurationRepository } from '../../domain/repositories/IRenderModeConfigurationRepository';
 

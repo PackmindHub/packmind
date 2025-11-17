@@ -2,7 +2,8 @@ import { IUseCase, PackmindCommand } from '../../UseCase';
 import { RecipeVersion } from '../../recipes';
 import { StandardVersion } from '../../standards';
 import { FileUpdates } from '../../deployments';
-import { CodingAgent } from './IPrepareRecipesDeploymentUseCase';
+
+import { CodingAgent } from '../CodingAgent';
 
 export type RenderArtifactsCommand = PackmindCommand & {
   recipeVersions: RecipeVersion[];

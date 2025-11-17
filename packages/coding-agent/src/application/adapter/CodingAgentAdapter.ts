@@ -7,17 +7,11 @@ import {
   IGitPortName,
   IStandardsPort,
   IStandardsPortName,
-  PrepareRecipesDeploymentCommand,
-  PrepareRecipesDeploymentResponse,
-  PrepareStandardsDeploymentCommand,
-  PrepareStandardsDeploymentResponse,
   RenderArtifactsCommand,
   RenderArtifactsResponse,
 } from '@packmind/types';
 import { ICodingAgentRepositories } from '../../domain/repositories/ICodingAgentRepositories';
 import { CodingAgentServices } from '../services/CodingAgentServices';
-import { PrepareRecipesDeploymentUseCase } from '../useCases/PrepareRecipesDeploymentUseCase';
-import { PrepareStandardsDeploymentUseCase } from '../useCases/PrepareStandardsDeploymentUseCase';
 import { RenderArtifactsUseCase } from '../useCases/RenderArtifactsUseCase';
 
 const origin = 'CodingAgentAdapter';
@@ -28,8 +22,6 @@ export class CodingAgentAdapter
   private standardsPort: IStandardsPort | null = null;
   private gitPort: IGitPort | null = null;
 
-  private _prepareRecipesDeploymentUseCase!: PrepareRecipesDeploymentUseCase;
-  private _prepareStandardsDeploymentUseCase!: PrepareStandardsDeploymentUseCase;
   private _renderArtifactsUseCase!: RenderArtifactsUseCase;
 
   constructor(
@@ -64,18 +56,6 @@ export class CodingAgentAdapter
       );
     }
 
-    // Step 3: Create all use cases with non-null dependencies
-    this._prepareRecipesDeploymentUseCase = new PrepareRecipesDeploymentUseCase(
-      this.codingAgentServices,
-      this.logger,
-    );
-
-    this._prepareStandardsDeploymentUseCase =
-      new PrepareStandardsDeploymentUseCase(
-        this.codingAgentServices,
-        this.logger,
-      );
-
     this._renderArtifactsUseCase = new RenderArtifactsUseCase(
       this.codingAgentServices,
       this.logger,
@@ -101,18 +81,6 @@ export class CodingAgentAdapter
    */
   public getPort(): ICodingAgentPort {
     return this as ICodingAgentPort;
-  }
-
-  async prepareRecipesDeployment(
-    command: PrepareRecipesDeploymentCommand,
-  ): Promise<PrepareRecipesDeploymentResponse> {
-    return this._prepareRecipesDeploymentUseCase.execute(command);
-  }
-
-  async prepareStandardsDeployment(
-    command: PrepareStandardsDeploymentCommand,
-  ): Promise<PrepareStandardsDeploymentResponse> {
-    return this._prepareStandardsDeploymentUseCase.execute(command);
   }
 
   async renderArtifacts(

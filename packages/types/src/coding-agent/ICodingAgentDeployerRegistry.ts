@@ -1,4 +1,4 @@
-import { CodingAgent } from './contracts/IPrepareRecipesDeploymentUseCase';
+import { CodingAgent } from './CodingAgent';
 
 /**
  * Type for coding agent deployer (implementation details)
