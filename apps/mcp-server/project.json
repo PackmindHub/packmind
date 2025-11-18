@@ -10,7 +10,8 @@
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
         "jestConfig": "apps/mcp-server/jest.config.ts"
-      }
+      },
+      "cache": true
     },
     "typecheck": {
       "executor": "nx:run-commands",
