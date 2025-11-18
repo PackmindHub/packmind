@@ -57,59 +57,63 @@ export class Configuration {
   ): Promise<void> {
     Configuration.logger.info('Initializing Configuration');
 
-    try {
-      const configurationMode = env['CONFIGURATION']?.toLowerCase();
-      Configuration.logger.debug('Configuration mode detected', {
-        mode: configurationMode,
-      });
+    const configurationMode = env['CONFIGURATION']?.toLowerCase();
+    Configuration.logger.debug('Configuration mode detected', {
+      mode: configurationMode,
+    });
 
-      if (configurationMode === 'infisical') {
-        Configuration.logger.info('Initializing Infisical configuration');
+    if (configurationMode === 'infisical') {
+      Configuration.logger.info('Initializing Infisical configuration');
 
-        // Initialize InfisicalConfig with required parameters
-        const clientId = env['INFISICAL_CLIENT_ID'];
-        const clientSecret = env['INFISICAL_CLIENT_SECRET'];
-        const infisicalEnv = env['INFISICAL_ENV'];
-        const projectId = env['INFISICAL_PROJECT_ID'];
+      // Initialize InfisicalConfig with required parameters
+      const clientId = env['INFISICAL_CLIENT_ID'];
+      const clientSecret = env['INFISICAL_CLIENT_SECRET'];
+      const infisicalEnv = env['INFISICAL_ENV'];
+      const projectId = env['INFISICAL_PROJECT_ID'];
 
-        if (!clientId || !clientSecret || !infisicalEnv || !projectId) {
-          Configuration.logger.error('Infisical configuration is incomplete', {
+      if (!clientId || !clientSecret || !infisicalEnv || !projectId) {
+        Configuration.logger.error(
+          'Infisical configuration is incomplete, falling back to environment variables only',
+          {
             hasClientId: !!clientId,
             hasClientSecret: !!clientSecret,
             hasInfisicalEnv: !!infisicalEnv,
             hasProjectId: !!projectId,
-          });
-          throw new Error(
-            'Infisical configuration is incomplete. Please set INFISICAL_CLIENT_ID, INFISICAL_CLIENT_SECRET, INFISICAL_ENV, and INFISICAL_PROJECT_ID environment variables.',
-          );
-        }
-
-        this.infisicalConfig = new InfisicalConfig(
-          clientId,
-          clientSecret,
-          infisicalEnv,
-          projectId,
+          },
         );
-
-        Configuration.logger.debug('Initializing Infisical client');
-        await this.infisicalConfig.initClient();
-        Configuration.logger.info(
-          'Infisical configuration initialized successfully',
-        );
+        this.infisicalConfig = undefined;
       } else {
-        Configuration.logger.info(
-          'Using environment variables only (no Infisical)',
-        );
-      }
+        try {
+          this.infisicalConfig = new InfisicalConfig(
+            clientId,
+            clientSecret,
+            infisicalEnv,
+            projectId,
+          );
 
-      this.initialized = true;
-      Configuration.logger.info('Configuration initialization completed');
-    } catch (error) {
-      Configuration.logger.error('Failed to initialize Configuration', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+          Configuration.logger.debug('Initializing Infisical client');
+          await this.infisicalConfig.initClient();
+          Configuration.logger.info(
+            'Infisical configuration initialized successfully',
+          );
+        } catch (error) {
+          Configuration.logger.error(
+            'Failed to initialize Infisical, falling back to environment variables only',
+            {
+              error: error instanceof Error ? error.message : String(error),
+            },
+          );
+          this.infisicalConfig = undefined;
+        }
+      }
+    } else {
+      Configuration.logger.info(
+        'Using environment variables only (no Infisical)',
+      );
     }
+
+    this.initialized = true;
+    Configuration.logger.info('Configuration initialization completed');
   }
 
   static async getConfigWithDefault(
@@ -150,12 +154,26 @@ export class Configuration {
           'Checking Infisical for configuration value',
           { key },
         );
-        const infisicalValue = await instance.infisicalConfig.getValue(key);
-        if (infisicalValue) {
-          Configuration.logger.debug('Configuration value found in Infisical', {
-            key,
-          });
-          return infisicalValue;
+        try {
+          const infisicalValue = await instance.infisicalConfig.getValue(key);
+          if (infisicalValue) {
+            Configuration.logger.debug(
+              'Configuration value found in Infisical',
+              {
+                key,
+              },
+            );
+            return infisicalValue;
+          }
+        } catch (error) {
+          Configuration.logger.error(
+            'Failed to retrieve value from Infisical, value not available',
+            {
+              key,
+              error: error instanceof Error ? error.message : String(error),
+            },
+          );
+          // Fall through to return null
         }
       }
 
