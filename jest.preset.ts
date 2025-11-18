@@ -35,8 +35,11 @@ export const nxPreset = {
   passWithNoTests: true, // Allow packages without tests to pass
 
   // Memory optimizations
-  maxWorkers: '50%', // Limit parallel workers to 50% of CPU cores
+  maxWorkers: '20%', // Limit parallel workers to 1
   workerIdleMemoryLimit: '512MB', // Kill workers using more than 512MB when idle
+
+  // Force worker cleanup to prevent memory leaks
+  forceExit: true, // Force exit after tests complete (prevents hanging workers)
 
   // Clear mocks and cache between tests
   clearMocks: true,
@@ -45,6 +48,7 @@ export const nxPreset = {
 
   // Detect memory leaks
   detectLeaks: false, // Can be enabled for debugging, but slows down tests significantly
+  detectOpenHandles: false, // Can enable to find leaking handles, but adds overhead
 
   // Force garbage collection between test files (requires --expose-gc flag)
   // This is handled in the test script

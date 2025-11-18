@@ -1,4 +1,4 @@
 npx pretty-quick --staged
 npm run typecheck:frontend
 nx affected:lint --parallel --uncommitted
-NODE_OPTIONS='--max-old-space-size=4096' nx affected:test --parallel=3 --passWithNoTests
+NODE_OPTIONS='--max-old-space-size=4096' nx affected:test --parallel=1 --passWithNoTests
