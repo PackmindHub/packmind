@@ -61,6 +61,7 @@ export class PackageRepository
         .leftJoin('package_recipes', 'pr', 'package.id = pr.package_id')
         .leftJoin('package_standards', 'ps', 'package.id = ps.package_id')
         .where('package.spaceId = :spaceId', { spaceId })
+        .andWhere('package.deletedAt IS NULL')
         .groupBy('package.id')
         .orderBy('package.createdAt', 'DESC')
         .getRawMany();
@@ -108,6 +109,7 @@ export class PackageRepository
         .leftJoin('package_recipes', 'pr', 'package.id = pr.package_id')
         .leftJoin('package_standards', 'ps', 'package.id = ps.package_id')
         .where('s.organizationId = :organizationId', { organizationId })
+        .andWhere('package.deletedAt IS NULL')
         .groupBy('package.id')
         .orderBy('package.createdAt', 'DESC')
         .getRawMany();

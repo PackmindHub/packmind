@@ -157,13 +157,14 @@ export const PackageDetails = ({
       setIsEditMode(false);
     } catch (error) {
       console.error('Failed to update package:', error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'An error occurred while updating the package';
       pmToaster.create({
         type: 'error',
         title: 'Failed to update package',
-        description:
-          error instanceof Error
-            ? error.message
-            : 'An error occurred while updating the package',
+        description: errorMessage,
       });
     }
   };
