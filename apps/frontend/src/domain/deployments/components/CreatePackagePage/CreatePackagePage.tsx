@@ -159,11 +159,11 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
           </PMField.Root>
 
           <PMBox>
-            <PMText fontWeight="medium" mb={3}>
+            <PMText fontWeight="medium" mb={3} display="block">
               Recipes
             </PMText>
             {recipes.length === 0 ? (
-              <PMText colorPalette="gray" fontSize="sm">
+              <PMText colorPalette="gray" fontSize="sm" display="block">
                 No recipes available in this space
               </PMText>
             ) : (
@@ -182,11 +182,11 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
           </PMBox>
 
           <PMBox>
-            <PMText fontWeight="medium" mb={3}>
+            <PMText fontWeight="medium" mb={3} display="block">
               Standards
             </PMText>
             {standards.length === 0 ? (
-              <PMText colorPalette="gray" fontSize="sm">
+              <PMText colorPalette="gray" fontSize="sm" display="block">
                 No standards available in this space
               </PMText>
             ) : (
