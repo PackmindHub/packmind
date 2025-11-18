@@ -134,12 +134,11 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
           </PMField.Root>
 
           <PMField.Root>
-            <PMField.Label>Description *</PMField.Label>
+            <PMField.Label>Description</PMField.Label>
             <PMTextArea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Enter package description"
-              required
               rows={4}
             />
           </PMField.Root>
@@ -193,9 +192,7 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
           <PMBox display="flex" gap={4}>
             <PMButton
               type="submit"
-              disabled={
-                createPackageMutation.isPending || !name || !description
-              }
+              disabled={createPackageMutation.isPending || !name}
             >
               {createPackageMutation.isPending
                 ? 'Creating...'

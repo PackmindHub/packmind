@@ -296,12 +296,11 @@ export const PackageDetails = ({
           </PMField.Root>
 
           <PMField.Root>
-            <PMField.Label>Description *</PMField.Label>
+            <PMField.Label>Description</PMField.Label>
             <PMTextArea
               value={editDescription}
               onChange={(e) => setEditDescription(e.target.value)}
               placeholder="Enter package description"
-              required
               rows={4}
             />
           </PMField.Root>
@@ -359,9 +358,7 @@ export const PackageDetails = ({
           <PMHStack gap={3}>
             <PMButton
               onClick={handleSave}
-              disabled={
-                updatePackageMutation.isPending || !editName || !editDescription
-              }
+              disabled={updatePackageMutation.isPending || !editName}
             >
               {updatePackageMutation.isPending ? 'Saving...' : 'Save'}
             </PMButton>
