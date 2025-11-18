@@ -8,6 +8,9 @@ import {
   PMHeading,
   PMDialog,
   PMCodeMirror,
+  DETECTION_ACCORDION_VIEW_FEATURE_KEY,
+  DEFAULT_FEATURE_DOMAIN_MAP,
+  isFeatureFlagEnabled,
 } from '@packmind/ui';
 import { LanguageDetectionPrograms } from '@packmind/types';
 import {
@@ -35,6 +38,8 @@ import {
 import { ActiveConfigurationSection } from './ActiveConfigurationSection';
 import { useGetStandardByIdQuery } from '../../standards/api/queries/StandardsQueries';
 import { CopiableTextField } from '../../../shared/components/inputs/CopiableTextField';
+import { DetectionProgramAccordion } from './DetectionProgramAccordion';
+import { useGetMeQuery } from '../../accounts/api/queries/UserQueries';
 
 interface ProgramEditorProps {
   standardId: string;
@@ -78,6 +83,15 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
   detectionLanguages = [],
 }) => {
   const queryClient = useQueryClient();
+  const { data: meData } = useGetMeQuery();
+  const userEmail = meData?.authenticated === true ? meData.user.email : null;
+
+  const isAccordionViewEnabled = isFeatureFlagEnabled({
+    featureKeys: [DETECTION_ACCORDION_VIEW_FEATURE_KEY],
+    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
+    userEmail,
+  });
+
   const [activatingDraftId, setActivatingDraftId] = useState<string | null>(
     null,
   );
@@ -345,7 +359,26 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
   }, [selectedProgramForTest]);
 
   return (
-    <PMVStack alignItems="stretch" gap={6}>
+    <PMVStack alignItems="stretch" gap={6} width="full">
+      {isAccordionViewEnabled && (
+        <DetectionProgramAccordion
+          standardId={standardId}
+          ruleId={ruleId}
+          detectionLanguages={detectionLanguages}
+          activeConfigurations={activeConfigurations}
+          draftPrograms={draftPrograms}
+          isLoadingActivePrograms={isLoadingActivePrograms}
+          isActiveProgramsError={isActiveProgramsError}
+          onGenerateProgram={handleGenerateProgram}
+          isGeneratingProgram={generateProgram.isPending}
+          onTestProgram={handleTestDraft}
+          onActivateDraft={handleMakeDraftActive}
+          activatingDraftId={activatingDraftId}
+          isActivatingDraft={activateDraft.isPending}
+          onRetryDraft={handleRetryDraftGeneration}
+        />
+      )}
+
       <ActiveConfigurationSection
         configurations={activeConfigurations}
         isLoading={isLoadingActivePrograms}
