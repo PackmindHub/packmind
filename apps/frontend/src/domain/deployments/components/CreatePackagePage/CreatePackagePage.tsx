@@ -10,6 +10,7 @@ import {
   PMCheckbox,
   PMText,
   PMSpinner,
+  pmToaster,
 } from '@packmind/ui';
 import { useNavigate } from 'react-router';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
@@ -85,9 +86,23 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
         standardIds: selectedStandardIds,
       });
 
+      pmToaster.create({
+        type: 'success',
+        title: 'Package created successfully',
+        description: `"${name}" has been created`,
+      });
+
       navigate(`/org/${organizationSlug}/space/${spaceSlug}/packages`);
     } catch (error) {
       console.error('Failed to create package:', error);
+      pmToaster.create({
+        type: 'error',
+        title: 'Failed to create package',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'An error occurred while creating the package',
+      });
     }
   };
 

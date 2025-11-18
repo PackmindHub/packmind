@@ -18,6 +18,7 @@ import {
   PMTextArea,
   PMCheckbox,
   PMAlertDialog,
+  pmToaster,
 } from '@packmind/ui';
 import { Link, useNavigate } from 'react-router';
 import {
@@ -146,9 +147,24 @@ export const PackageDetails = ({
         recipeIds: selectedRecipeIds,
         standardIds: selectedStandardIds,
       });
+
+      pmToaster.create({
+        type: 'success',
+        title: 'Package updated successfully',
+        description: `"${editName}" has been updated`,
+      });
+
       setIsEditMode(false);
     } catch (error) {
       console.error('Failed to update package:', error);
+      pmToaster.create({
+        type: 'error',
+        title: 'Failed to update package',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'An error occurred while updating the package',
+      });
     }
   };
 
