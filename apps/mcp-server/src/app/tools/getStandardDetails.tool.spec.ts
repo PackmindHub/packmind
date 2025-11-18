@@ -11,7 +11,7 @@ describe('getStandardDetails.tool', () => {
   let mockFastify: jest.Mocked<{ standardsHexa: () => unknown }>;
   let userContext: UserContext;
   let toolHandler: (params: {
-    slug: string;
+    standardSlug: string;
   }) => Promise<{ content: { type: string; text: string }[] }>;
 
   beforeEach(() => {
@@ -100,7 +100,7 @@ describe('getStandardDetails.tool', () => {
 
     registerGetStandardDetailsTool(dependencies, mcpServer);
 
-    const result = await toolHandler({ slug: 'test-standard' });
+    const result = await toolHandler({ standardSlug: 'test-standard' });
 
     expect(result.content[0].text).toContain('# Test Standard');
     expect(result.content[0].text).toContain('**Slug:** test-standard');
@@ -171,7 +171,7 @@ describe('getStandardDetails.tool', () => {
 
     registerGetStandardDetailsTool(dependencies, mcpServer);
 
-    const result = await toolHandler({ slug: 'multi-rule-standard' });
+    const result = await toolHandler({ standardSlug: 'multi-rule-standard' });
 
     expect(result.content[0].text).toContain(
       '### Rule: Use const for constants',
@@ -198,7 +198,7 @@ describe('getStandardDetails.tool', () => {
 
       registerGetStandardDetailsTool(dependencies, mcpServer);
 
-      const result = await toolHandler({ slug: 'non-existent' });
+      const result = await toolHandler({ standardSlug: 'non-existent' });
 
       expect(result).toEqual({
         content: [
@@ -232,13 +232,13 @@ describe('getStandardDetails.tool', () => {
 
     registerGetStandardDetailsTool(dependencies, mcpServer);
 
-    await toolHandler({ slug: 'analytics-test' });
+    await toolHandler({ standardSlug: 'analytics-test' });
 
     expect(mockAnalyticsAdapter.trackEvent).toHaveBeenCalledWith(
       'user-123',
       'org-123',
       'mcp_tool_call',
-      { tool: 'packmind_get_standard_details', slug: 'analytics-test' },
+      { tool: 'packmind_get_standard_details', standardSlug: 'analytics-test' },
     );
   });
 
@@ -248,9 +248,9 @@ describe('getStandardDetails.tool', () => {
 
       registerGetStandardDetailsTool(dependencies, mcpServer);
 
-      await expect(toolHandler({ slug: 'test-standard' })).rejects.toThrow(
-        'User context is required to get standard by slug',
-      );
+      await expect(
+        toolHandler({ standardSlug: 'test-standard' }),
+      ).rejects.toThrow('User context is required to get standard by slug');
     });
   });
 
@@ -270,7 +270,7 @@ describe('getStandardDetails.tool', () => {
 
       registerGetStandardDetailsTool(dependencies, mcpServer);
 
-      const result = await toolHandler({ slug: 'test-standard' });
+      const result = await toolHandler({ standardSlug: 'test-standard' });
 
       expect(result).toEqual({
         content: [
@@ -304,7 +304,7 @@ describe('getStandardDetails.tool', () => {
 
     registerGetStandardDetailsTool(dependencies, mcpServer);
 
-    const result = await toolHandler({ slug: 'no-rules-standard' });
+    const result = await toolHandler({ standardSlug: 'no-rules-standard' });
 
     expect(result.content[0].text).toContain('# No Rules Standard');
     expect(result.content[0].text).toContain('**Slug:** no-rules-standard');

@@ -14,9 +14,12 @@ export function registerGetRecipeDetailsTool(
     `${mcpToolPrefix}_get_recipe_details`,
     'Get the full content of a recipe by its slug',
     {
-      slug: z.string().min(1).describe('The slug of the recipe to retrieve'),
+      recipeSlug: z
+        .string()
+        .min(1)
+        .describe('The slug of the recipe to retrieve'),
     },
-    async ({ slug }) => {
+    async ({ recipeSlug }) => {
       if (!userContext) {
         throw new Error('User context is required to get recipe by slug');
       }
@@ -28,14 +31,14 @@ export function registerGetRecipeDetailsTool(
 
         const recipe = await recipesHexa
           .getAdapter()
-          .findRecipeBySlug(slug, organizationId);
+          .findRecipeBySlug(recipeSlug, organizationId);
 
         if (!recipe) {
           return {
             content: [
               {
                 type: 'text',
-                text: `Recipe with slug '${slug}' not found in your organization`,
+                text: `Recipe with slug '${recipeSlug}' not found in your organization`,
               },
             ],
           };
@@ -58,7 +61,7 @@ export function registerGetRecipeDetailsTool(
           createUserId(userContext.userId),
           createOrganizationId(userContext.organizationId),
           'mcp_tool_call',
-          { tool: `${mcpToolPrefix}_get_recipe_details`, slug },
+          { tool: `${mcpToolPrefix}_get_recipe_details`, recipeSlug },
         );
 
         return {

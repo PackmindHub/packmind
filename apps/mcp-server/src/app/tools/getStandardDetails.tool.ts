@@ -14,9 +14,12 @@ export function registerGetStandardDetailsTool(
     `${mcpToolPrefix}_get_standard_details`,
     'Get the full content of a standard including its rules and examples by its slug',
     {
-      slug: z.string().min(1).describe('The slug of the standard to retrieve'),
+      standardSlug: z
+        .string()
+        .min(1)
+        .describe('The slug of the standard to retrieve'),
     },
-    async ({ slug }) => {
+    async ({ standardSlug }) => {
       if (!userContext) {
         throw new Error('User context is required to get standard by slug');
       }
@@ -28,14 +31,14 @@ export function registerGetStandardDetailsTool(
 
         const standard = await standardsHexa
           .getAdapter()
-          .findStandardBySlug(slug, organizationId);
+          .findStandardBySlug(standardSlug, organizationId);
 
         if (!standard) {
           return {
             content: [
               {
                 type: 'text',
-                text: `Standard with slug '${slug}' not found in your organization`,
+                text: `Standard with slug '${standardSlug}' not found in your organization`,
               },
             ],
           };
@@ -98,7 +101,7 @@ export function registerGetStandardDetailsTool(
           createUserId(userContext.userId),
           createOrganizationId(userContext.organizationId),
           'mcp_tool_call',
-          { tool: `${mcpToolPrefix}_get_standard_details`, slug },
+          { tool: `${mcpToolPrefix}_get_standard_details`, standardSlug },
         );
 
         return {

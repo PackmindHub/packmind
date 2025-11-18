@@ -235,7 +235,7 @@ describe('packages.tools', () => {
 
   describe('showPackage', () => {
     let toolHandler: (params: {
-      slug: string;
+      packageSlug: string;
     }) => Promise<{ content: { type: string; text: string }[] }>;
 
     beforeEach(() => {
@@ -282,7 +282,7 @@ describe('packages.tools', () => {
 
       registerShowPackageTool(dependencies, mcpServer);
 
-      const result = await toolHandler({ slug: 'test-pkg' });
+      const result = await toolHandler({ packageSlug: 'test-pkg' });
 
       expect(result.content[0].text).toContain('# Test Package');
       expect(result.content[0].text).toContain('A test package');
@@ -312,7 +312,7 @@ describe('packages.tools', () => {
 
         registerShowPackageTool(dependencies, mcpServer);
 
-        const result = await toolHandler({ slug: 'empty-pkg' });
+        const result = await toolHandler({ packageSlug: 'empty-pkg' });
 
         // Empty sections should not be displayed
         expect(result.content[0].text).toContain('# Empty Package');
@@ -339,13 +339,13 @@ describe('packages.tools', () => {
 
       registerShowPackageTool(dependencies, mcpServer);
 
-      await toolHandler({ slug: 'test-pkg' });
+      await toolHandler({ packageSlug: 'test-pkg' });
 
       expect(mockAnalyticsAdapter.trackEvent).toHaveBeenCalledWith(
         'user-123',
         'org-123',
         'mcp_tool_call',
-        { tool: 'packmind_get_package_details', slug: 'test-pkg' },
+        { tool: 'packmind_get_package_details', packageSlug: 'test-pkg' },
       );
     });
 
@@ -355,7 +355,7 @@ describe('packages.tools', () => {
 
         registerShowPackageTool(dependencies, mcpServer);
 
-        await expect(toolHandler({ slug: 'test-pkg' })).rejects.toThrow(
+        await expect(toolHandler({ packageSlug: 'test-pkg' })).rejects.toThrow(
           'User context is required to show package details',
         );
       });
@@ -367,7 +367,7 @@ describe('packages.tools', () => {
 
         registerShowPackageTool(dependencies, mcpServer);
 
-        const result = await toolHandler({ slug: 'test-pkg' });
+        const result = await toolHandler({ packageSlug: 'test-pkg' });
 
         expect(result).toEqual({
           content: [
@@ -394,7 +394,7 @@ describe('packages.tools', () => {
 
         registerShowPackageTool(dependencies, mcpServer);
 
-        const result = await toolHandler({ slug: 'test-pkg' });
+        const result = await toolHandler({ packageSlug: 'test-pkg' });
 
         expect(result).toEqual({
           content: [

@@ -11,7 +11,7 @@ describe('getRecipeDetails.tool', () => {
   let mockFastify: jest.Mocked<{ recipesHexa: () => unknown }>;
   let userContext: UserContext;
   let toolHandler: (params: {
-    slug: string;
+    recipeSlug: string;
   }) => Promise<{ content: { type: string; text: string }[] }>;
 
   beforeEach(() => {
@@ -82,7 +82,7 @@ describe('getRecipeDetails.tool', () => {
 
     registerGetRecipeDetailsTool(dependencies, mcpServer);
 
-    const result = await toolHandler({ slug: 'test-recipe' });
+    const result = await toolHandler({ recipeSlug: 'test-recipe' });
 
     expect(result.content[0].text).toContain('# Test Recipe');
     expect(result.content[0].text).toContain('**Slug:** test-recipe');
@@ -103,7 +103,7 @@ describe('getRecipeDetails.tool', () => {
 
       registerGetRecipeDetailsTool(dependencies, mcpServer);
 
-      const result = await toolHandler({ slug: 'non-existent' });
+      const result = await toolHandler({ recipeSlug: 'non-existent' });
 
       expect(result).toEqual({
         content: [
@@ -134,13 +134,13 @@ describe('getRecipeDetails.tool', () => {
 
     registerGetRecipeDetailsTool(dependencies, mcpServer);
 
-    await toolHandler({ slug: 'test-recipe' });
+    await toolHandler({ recipeSlug: 'test-recipe' });
 
     expect(mockAnalyticsAdapter.trackEvent).toHaveBeenCalledWith(
       'user-123',
       'org-123',
       'mcp_tool_call',
-      { tool: 'packmind_get_recipe_details', slug: 'test-recipe' },
+      { tool: 'packmind_get_recipe_details', recipeSlug: 'test-recipe' },
     );
   });
 
@@ -150,7 +150,7 @@ describe('getRecipeDetails.tool', () => {
 
       registerGetRecipeDetailsTool(dependencies, mcpServer);
 
-      await expect(toolHandler({ slug: 'test-recipe' })).rejects.toThrow(
+      await expect(toolHandler({ recipeSlug: 'test-recipe' })).rejects.toThrow(
         'User context is required to get recipe by slug',
       );
     });
@@ -170,7 +170,7 @@ describe('getRecipeDetails.tool', () => {
 
       registerGetRecipeDetailsTool(dependencies, mcpServer);
 
-      const result = await toolHandler({ slug: 'test-recipe' });
+      const result = await toolHandler({ recipeSlug: 'test-recipe' });
 
       expect(result).toEqual({
         content: [
@@ -201,7 +201,7 @@ describe('getRecipeDetails.tool', () => {
 
     registerGetRecipeDetailsTool(dependencies, mcpServer);
 
-    const result = await toolHandler({ slug: 'empty-recipe' });
+    const result = await toolHandler({ recipeSlug: 'empty-recipe' });
 
     expect(result.content[0].text).toContain('# Empty Recipe');
     expect(result.content[0].text).toContain('**Slug:** empty-recipe');
