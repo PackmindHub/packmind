@@ -65,7 +65,7 @@ describe('Configuration', () => {
     });
 
     describe('when INFISICAL_CLIENT_ID is missing', () => {
-      it('falls back to process.env when available', async () => {
+      it('falls back to process.env', async () => {
         process.env['INFISICAL_CLIENT_SECRET'] = 'test-secret';
         process.env['INFISICAL_ENV'] = 'test-env';
         process.env['INFISICAL_PROJECT_ID'] = 'test-project';
@@ -78,7 +78,7 @@ describe('Configuration', () => {
         expect(MockedInfisicalConfig).not.toHaveBeenCalled();
       });
 
-      it('returns null when key not in process.env', async () => {
+      it('returns null if key not in process.env', async () => {
         process.env['INFISICAL_CLIENT_SECRET'] = 'test-secret';
         process.env['INFISICAL_ENV'] = 'test-env';
         process.env['INFISICAL_PROJECT_ID'] = 'test-project';
@@ -92,7 +92,7 @@ describe('Configuration', () => {
     });
 
     describe('when INFISICAL_CLIENT_SECRET is missing', () => {
-      it('falls back to process.env when available', async () => {
+      it('falls back to process.env', async () => {
         process.env['INFISICAL_CLIENT_ID'] = 'test-id';
         process.env['INFISICAL_ENV'] = 'test-env';
         process.env['INFISICAL_PROJECT_ID'] = 'test-project';
@@ -107,7 +107,7 @@ describe('Configuration', () => {
     });
 
     describe('when INFISICAL_ENV is missing', () => {
-      it('falls back to process.env when available', async () => {
+      it('falls back to process.env', async () => {
         process.env['INFISICAL_CLIENT_ID'] = 'test-id';
         process.env['INFISICAL_CLIENT_SECRET'] = 'test-secret';
         process.env['INFISICAL_PROJECT_ID'] = 'test-project';
@@ -122,7 +122,7 @@ describe('Configuration', () => {
     });
 
     describe('when INFISICAL_PROJECT_ID is missing', () => {
-      it('falls back to process.env when available', async () => {
+      it('falls back to process.env', async () => {
         process.env['INFISICAL_CLIENT_ID'] = 'test-id';
         process.env['INFISICAL_CLIENT_SECRET'] = 'test-secret';
         process.env['INFISICAL_ENV'] = 'test-env';
@@ -224,7 +224,7 @@ describe('Configuration', () => {
 
   describe('fallback behavior', () => {
     describe('when Infisical initialization fails', () => {
-      it('falls back to process.env when available', async () => {
+      it('falls back to process.env', async () => {
         process.env['CONFIGURATION'] = 'infisical';
         process.env['INFISICAL_CLIENT_ID'] = 'test-client-id';
         process.env['INFISICAL_CLIENT_SECRET'] = 'test-client-secret';
@@ -248,7 +248,7 @@ describe('Configuration', () => {
         expect(mockInitClient).toHaveBeenCalled();
       });
 
-      it('returns null when process.env does not have the key', async () => {
+      it('returns null if process.env does not have the key', async () => {
         process.env['CONFIGURATION'] = 'infisical';
         process.env['INFISICAL_CLIENT_ID'] = 'test-client-id';
         process.env['INFISICAL_CLIENT_SECRET'] = 'test-client-secret';
@@ -272,7 +272,7 @@ describe('Configuration', () => {
     });
 
     describe('when Infisical getValue fails at runtime', () => {
-      it('returns null when getValue throws an error', async () => {
+      it('returns null if getValue throws an error', async () => {
         process.env['CONFIGURATION'] = 'infisical';
         process.env['INFISICAL_CLIENT_ID'] = 'test-client-id';
         process.env['INFISICAL_CLIENT_SECRET'] = 'test-client-secret';
@@ -296,7 +296,7 @@ describe('Configuration', () => {
         expect(mockGetValue).toHaveBeenCalledWith('TEST_KEY');
       });
 
-      it('returns process.env value when present and getValue fails', async () => {
+      it('returns process.env value if present and getValue fails', async () => {
         process.env['CONFIGURATION'] = 'infisical';
         process.env['INFISICAL_CLIENT_ID'] = 'test-client-id';
         process.env['INFISICAL_CLIENT_SECRET'] = 'test-client-secret';
