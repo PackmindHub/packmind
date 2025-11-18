@@ -478,4 +478,35 @@ export class StandardsAdapter
   async deleteRuleExample(command: DeleteRuleExampleCommand): Promise<void> {
     return this._deleteRuleExample.execute(command);
   }
+
+  // ===========================
+  // Embedding Methods
+  // ===========================
+
+  async updateStandardVersionEmbedding(
+    versionId: StandardVersionId,
+    embedding: number[],
+  ): Promise<void> {
+    return this.repositories
+      .getStandardVersionRepository()
+      .updateEmbedding(versionId, embedding);
+  }
+
+  async findLatestStandardVersionsWithoutEmbedding(
+    spaceId?: SpaceId,
+  ): Promise<StandardVersion[]> {
+    return this.repositories
+      .getStandardVersionRepository()
+      .findLatestVersionsWhereEmbeddingIsNull(spaceId);
+  }
+
+  async findSimilarStandardsByEmbedding(
+    embedding: number[],
+    spaceId?: SpaceId,
+    threshold?: number,
+  ): Promise<Array<StandardVersion & { similarity: number }>> {
+    return this.repositories
+      .getStandardVersionRepository()
+      .findSimilarByEmbedding(embedding, spaceId, threshold);
+  }
 }

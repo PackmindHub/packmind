@@ -34,4 +34,8 @@ export class RecipesServices {
   getRecipeSummaryService(): RecipeSummaryService {
     return this.recipeSummaryService;
   }
+
+  getRecipeVersionRepository() {
+    return this.recipesRepositories.getRecipeVersionRepository();
+  }
 }

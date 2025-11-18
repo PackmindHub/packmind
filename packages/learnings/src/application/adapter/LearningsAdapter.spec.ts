@@ -66,6 +66,8 @@ describe('LearningsAdapter', () => {
       }),
       initializePatchApplicationService: jest.fn(),
       getPatchApplicationService: jest.fn().mockReturnValue(null),
+      initializeEmbeddingOrchestrationService: jest.fn(),
+      getEmbeddingOrchestrationService: jest.fn(),
     } as unknown as jest.Mocked<LearningsServices>;
 
     mockAccountsPort = {

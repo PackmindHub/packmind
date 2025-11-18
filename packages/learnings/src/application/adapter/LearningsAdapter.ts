@@ -166,6 +166,14 @@ export class LearningsAdapter
       this.logger,
     );
 
+    // Initialize embedding orchestration service with ports
+    this.logger.debug('Initializing embedding orchestration service');
+    this.learningsServices.initializeEmbeddingOrchestrationService(
+      this.standardsPort,
+      this.recipesPort,
+      this.logger,
+    );
+
     // Initialize topic list and get use cases
     this.logger.debug('Initializing listTopics use case');
     this.listTopicsUsecase = new ListTopicsUsecase(

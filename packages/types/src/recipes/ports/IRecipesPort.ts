@@ -14,7 +14,8 @@ import {
 } from '../contracts';
 import { Recipe } from '../Recipe';
 import { RecipeId } from '../RecipeId';
-import { RecipeVersion } from '../RecipeVersion';
+import { RecipeVersion, RecipeVersionId } from '../RecipeVersion';
+import { SpaceId } from '../../spaces/SpaceId';
 
 // QueryOption is now exported from @packmind/types/database/types
 import type { QueryOption } from '../../database/types';
@@ -123,4 +124,32 @@ export interface IRecipesPort {
   updateRecipeFromUI(
     command: UpdateRecipeFromUICommand,
   ): Promise<UpdateRecipeFromUIResponse>;
+
+  // ===========================
+  // EMBEDDING METHODS
+  // ===========================
+
+  /**
+   * Update embedding for a recipe version
+   */
+  updateRecipeVersionEmbedding(
+    versionId: RecipeVersionId,
+    embedding: number[],
+  ): Promise<void>;
+
+  /**
+   * Find latest recipe versions without embeddings
+   */
+  findLatestRecipeVersionsWithoutEmbedding(
+    spaceId?: SpaceId,
+  ): Promise<RecipeVersion[]>;
+
+  /**
+   * Find similar recipes by embedding vector
+   */
+  findSimilarRecipesByEmbedding(
+    embedding: number[],
+    spaceId?: SpaceId,
+    threshold?: number,
+  ): Promise<Array<RecipeVersion & { similarity: number }>>;
 }

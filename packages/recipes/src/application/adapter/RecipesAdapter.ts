@@ -19,6 +19,9 @@ import {
   QueryOption,
   Recipe,
   RecipeId,
+  RecipeVersion,
+  RecipeVersionId,
+  SpaceId,
   UpdateRecipeFromUICommand,
   UpdateRecipeFromUIResponse,
   UpdateRecipesFromGitHubCommand,
@@ -357,5 +360,37 @@ export class RecipesAdapter
     const recipeVersionService = this.recipesServices.getRecipeVersionService();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return recipeVersionService.getRecipeVersionById(id as any);
+  }
+
+  // ===========================
+  // EMBEDDING METHODS
+  // ===========================
+
+  async updateRecipeVersionEmbedding(
+    versionId: RecipeVersionId,
+    embedding: number[],
+  ): Promise<void> {
+    const recipeVersionRepo = this.recipesServices.getRecipeVersionRepository();
+    return recipeVersionRepo.updateEmbedding(versionId, embedding);
+  }
+
+  async findLatestRecipeVersionsWithoutEmbedding(
+    spaceId?: SpaceId,
+  ): Promise<RecipeVersion[]> {
+    const recipeVersionRepo = this.recipesServices.getRecipeVersionRepository();
+    return recipeVersionRepo.findLatestVersionsWhereEmbeddingIsNull(spaceId);
+  }
+
+  async findSimilarRecipesByEmbedding(
+    embedding: number[],
+    spaceId?: SpaceId,
+    threshold?: number,
+  ): Promise<Array<RecipeVersion & { similarity: number }>> {
+    const recipeVersionRepo = this.recipesServices.getRecipeVersionRepository();
+    return recipeVersionRepo.findSimilarByEmbedding(
+      embedding,
+      spaceId,
+      threshold,
+    );
   }
 }

@@ -3,6 +3,7 @@ import { IRecipesPort, IStandardsPort } from '@packmind/types';
 import { ILearningsRepositories } from '../../domain/repositories/ILearningsRepositories';
 import { ITopicRepository } from '../../domain/repositories/ITopicRepository';
 import { ITopicKnowledgePatchRepository } from '../../domain/repositories/ITopicKnowledgePatchRepository';
+import { EmbeddingOrchestrationService } from './EmbeddingOrchestrationService';
 import { KnowledgePatchService } from './KnowledgePatchService';
 import { PatchApplicationService } from './PatchApplicationService';
 import { TopicService } from './TopicService';
@@ -15,6 +16,8 @@ export class LearningsServices {
   private readonly topicRepository: ITopicRepository;
   private readonly topicKnowledgePatchRepository: ITopicKnowledgePatchRepository;
   private patchApplicationService: PatchApplicationService | null = null;
+  private embeddingOrchestrationService: EmbeddingOrchestrationService | null =
+    null;
 
   constructor(
     learningsRepositories: ILearningsRepositories,
@@ -47,6 +50,18 @@ export class LearningsServices {
     );
   }
 
+  initializeEmbeddingOrchestrationService(
+    standardsPort: IStandardsPort,
+    recipesPort: IRecipesPort,
+    logger: PackmindLogger = new PackmindLogger(origin),
+  ): void {
+    this.embeddingOrchestrationService = new EmbeddingOrchestrationService(
+      standardsPort,
+      recipesPort,
+      logger,
+    );
+  }
+
   getTopicService(): TopicService {
     return this.topicService;
   }
@@ -65,5 +80,14 @@ export class LearningsServices {
 
   getPatchApplicationService(): PatchApplicationService | null {
     return this.patchApplicationService;
+  }
+
+  getEmbeddingOrchestrationService(): EmbeddingOrchestrationService {
+    if (!this.embeddingOrchestrationService) {
+      throw new Error(
+        'EmbeddingOrchestrationService not initialized. Call initializeEmbeddingOrchestrationService() first.',
+      );
+    }
+    return this.embeddingOrchestrationService;
   }
 }

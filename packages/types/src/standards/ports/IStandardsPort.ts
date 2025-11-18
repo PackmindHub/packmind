@@ -50,4 +50,18 @@ export interface IStandardsPort {
     organizationId: OrganizationId;
     userId: string;
   }): Promise<StandardVersion>;
+
+  // Embedding methods
+  updateStandardVersionEmbedding(
+    versionId: StandardVersionId,
+    embedding: number[],
+  ): Promise<void>;
+  findLatestStandardVersionsWithoutEmbedding(
+    spaceId?: SpaceId,
+  ): Promise<StandardVersion[]>;
+  findSimilarStandardsByEmbedding(
+    embedding: number[],
+    spaceId?: SpaceId,
+    threshold?: number,
+  ): Promise<Array<StandardVersion & { similarity: number }>>;
 }
