@@ -311,7 +311,7 @@ export class LearningsAdapter
       );
     }
 
-    const jobFactory = new DistillTopicsJobFactory(
+    const distillTopicsFactory = new DistillTopicsJobFactory(
       this.logger,
       this.distillTopicWorkerUsecase,
     );
@@ -372,7 +372,7 @@ export class LearningsAdapter
     this.logger.info('Learnings delayed jobs built successfully');
 
     return {
-      distillTopicsDelayedJob: jobFactory.delayedJob,
+      distillTopicsDelayedJob: distillTopicsFactory.delayedJob,
       generateStandardEmbeddingDelayedJob: standardEmbeddingFactory.delayedJob,
       generateRecipeEmbeddingDelayedJob: recipeEmbeddingFactory.delayedJob,
     };
