@@ -1,0 +1,257 @@
+name: Build and Test Proprietary
+
+env:
+  ENTERPRISE_EDITION: proprietary
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        required: true
+        type: string
+        description: 'Node.js version to use'
+    secrets:
+      VITE_SENTRY_FRONTEND_DSN:
+        required: false
+        description: 'Sentry DSN for frontend monitoring'
+      VITE_CRISP_WEBSITE_ID:
+        required: false
+        description: 'Crisp Website ID for chat support'
+    outputs:
+      api-artifact-proprietary:
+        description: 'API proprietary build artifact name'
+        value: ${{ jobs.build-api-proprietary.outputs.artifact-name }}
+      frontend-artifact-proprietary:
+        description: 'Frontend proprietary build artifact name'
+        value: ${{ jobs.build-frontend-proprietary.outputs.artifact-name }}
+      mcp-server-artifact-proprietary:
+        description: 'MCP Server proprietary build artifact name'
+        value: ${{ jobs.build-mcp-server-proprietary.outputs.artifact-name }}
+      cli-artifact-proprietary:
+        description: 'CLI proprietary build artifact name'
+        value: ${{ jobs.build-cli.outputs.artifact-name }}
+      cli-version:
+        description: 'CLI version'
+        value: ${{ jobs.build-cli.outputs.version }}
+      cli-executables-artifact:
+        description: 'CLI executables artifact name'
+        value: ${{ jobs.build-cli.outputs.cli-executables-artifact }}
+
+jobs:
+  build-api-proprietary:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    outputs:
+      artifact-name: api-dist-proprietary-${{ github.run_number }}-${{ github.sha }}
+    strategy:
+      matrix:
+        node-version: ['${{ inputs.node-version }}']
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - run: npm ci
+      - name: Generate Proprietary tsconfig
+        env:
+          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+        run: node scripts/select-tsconfig.mjs
+      - name: Build API (Proprietary)
+        env:
+          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+        run: ./node_modules/.bin/nx build api
+      - name: Test API (Proprietary)
+        env:
+          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+        run: ./node_modules/.bin/nx test api
+      - run: cp apps/api/docker-package.json dist/apps/api/.
+      - run: cp package.json dist/apps/api/.
+      - run: cp package-lock.json dist/apps/api/.
+      - run: cp tsconfig.base.effective.json dist/apps/api/.
+
+      - name: Upload API build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-dist-proprietary-${{ github.run_number }}-${{ github.sha }}
+          path: dist/apps/api/
+
+  build-frontend-proprietary:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    outputs:
+      artifact-name: frontend-dist-proprietary-${{ github.run_number }}-${{ github.sha }}
+    strategy:
+      matrix:
+        node-version: ['${{ inputs.node-version }}']
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - run: npm ci
+      - name: Generate Proprietary tsconfig
+        env:
+          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+        run: node scripts/select-tsconfig.mjs
+      - name: Generate Chakra types (Proprietary)
+        env:
+          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+        run: npm run chakra:typegen
+      - name: Typechecks
+        run: npm run typecheck:frontend
+      - name: Test Frontend (Proprietary)
+        env:
+          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+        run: ./node_modules/.bin/nx test frontend
+      - name: Build frontend with Sentry DSN & Crisp (Proprietary)
+        env:
+          NODE_ENV: production
+          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+          VITE_SENTRY_FRONTEND_DSN: ${{ secrets.VITE_SENTRY_FRONTEND_DSN }}
+          VITE_SENTRY_ENVIRONMENT: production
+          VITE_CRISP_WEBSITE_ID: ${{ secrets.VITE_CRISP_WEBSITE_ID }}
+        run: ./node_modules/.bin/nx build frontend
+      - run: cp tsconfig.base.effective.json apps/frontend/build/client/.
+
+      - name: Upload Frontend build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist-proprietary-${{ github.run_number }}-${{ github.sha }}
+          path: apps/frontend/build/client
+
+  build-mcp-server-proprietary:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    outputs:
+      artifact-name: mcp-server-dist-proprietary-${{ github.run_number }}-${{ github.sha }}
+    strategy:
+      matrix:
+        node-version: ['${{ inputs.node-version }}']
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - run: npm ci
+      - name: Generate Proprietary tsconfig
+        env:
+          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+        run: node scripts/select-tsconfig.mjs
+      - name: Build MCP Server (Proprietary)
+        env:
+          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+        run: ./node_modules/.bin/nx build mcp-server
+      - run: cp tsconfig.base.effective.json dist/apps/mcp-server/.
+
+      - name: Upload MCP-Server build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mcp-server-dist-proprietary-${{ github.run_number }}-${{ github.sha }}
+          path: dist/apps/mcp-server/
+
+  build-packages:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    strategy:
+      matrix:
+        node-version: ['${{ inputs.node-version }}']
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - run: npm ci
+      - name: Generate Proprietary tsconfig
+        env:
+          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+        run: node scripts/select-tsconfig.mjs
+      - name: Build packages (Proprietary)
+        env:
+          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+        run: ./node_modules/.bin/nx run-many -t build -p packages/*
+      - name: Test packages (Proprietary)
+        env:
+          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+        run: ./node_modules/.bin/nx run-many -t test -p packages/* --passWithNoTests
+
+  build-cli:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    outputs:
+      artifact-name: cli-dist-proprietary-${{ github.run_number }}-${{ github.sha }}
+      cli-executables-artifact: cli-executables-${{ steps.get-version.outputs.version }}
+      version: ${{ steps.get-version.outputs.version }}
+    strategy:
+      matrix:
+        node-version: ['${{ inputs.node-version }}']
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      
+      - name: Get package version
+        id: get-version
+        run: echo "version=$(node -p "require('./apps/cli/package.json').version")" >> $GITHUB_OUTPUT
+      
+      - run: npm ci
+      - name: Generate Proprietary tsconfig
+        env:
+          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+        run: node scripts/select-tsconfig.mjs
+      - name: Build CLI (Proprietary)
+        env:
+          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+        run: ./node_modules/.bin/nx build-publish packmind-cli
+      - name: Test CLI (Proprietary)
+        env:
+          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+        run: ./node_modules/.bin/nx test packmind-cli
+
+      - name: Upload CLI build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-dist-proprietary-${{ github.run_number }}-${{ github.sha }}
+          path: dist/apps/cli/
+      
+      - name: Build CLI executables for all platforms
+        run: |
+          echo "📦 Building CLI executables with embedded WASM files..."
+          bun --version
+          bun run apps/cli/bun-build.ts --target=all
+
+      - name: List built executables
+        run: |
+          echo "Built executables (with embedded WASM files):"
+          ls -lh dist/apps/cli-executables/
+
+      - name: Test executables
+        run: |
+          node dist/apps/cli/main.cjs --version
+          ./dist/apps/cli-executables/packmind-cli-linux-x64 --version
+
+      - name: Upload CLI executables
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-executables-${{ steps.get-version.outputs.version }}
+          path: |
+            dist/apps/cli-executables/packmind-cli-linux-x64
+            dist/apps/cli-executables/packmind-cli-linux-arm64
+            dist/apps/cli-executables/packmind-cli-macos-arm64
+            dist/apps/cli-executables/packmind-cli-windows-x64.exe
+          retention-days: 30

@@ -1,0 +1,213 @@
+name: Deploy Staging and Cloud Release
+
+on:
+  workflow_call:
+    inputs:
+      api-artifact:
+        description: 'API proprietary artifact name'
+        required: true
+        type: string
+      frontend-artifact:
+        description: 'Frontend proprietary artifact name'
+        required: true
+        type: string
+      mcp-server-artifact:
+        description: 'MCP Server proprietary artifact name'
+        required: true
+        type: string
+      node-version:
+        required: true
+        type: string
+        description: 'Node.js version to use'
+      helm-charts-repository:
+        description: 'Helm charts repository to update'
+        required: true
+        type: string
+    secrets:
+      CC_SSH_PRIVATE_KEY:
+        required: true
+      CC_URL_API:
+        required: true
+      CC_URL_FRONT:
+        required: true
+      CC_URL_MCP_SERVER:
+        required: true
+      DATABASE_URL:
+        required: true
+      DOCKERHUB_USERNAME:
+        required: true
+        description: 'Docker Hub username'
+      DOCKERHUB_TOKEN:
+        required: true
+        description: 'Docker Hub access token'
+      HELM_CHARTS_PAT:
+        required: true
+        description: 'Personal Access Token for Helm Charts repository'
+
+jobs:
+  migrate-database:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+
+    strategy:
+      matrix:
+        node-version: ["${{ inputs.node-version }}"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - run: npm ci
+      - name: Generate proprietary tsconfig for migrations
+        env:
+          PACKMIND_EDITION: proprietary
+        run: node scripts/select-tsconfig.mjs
+      - name: Show migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          PACKMIND_EDITION: proprietary
+        run: cd packages/migrations && npm run typeorm migration:show -- --dataSource=datasourceMigrations.ts
+      - name: Run migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          PACKMIND_EDITION: proprietary
+        run: cd packages/migrations && npm run typeorm migration:run -- --dataSource=datasourceMigrations.ts
+
+  deploy-api:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Deploy to CleverCloud
+        uses: ./.github/actions/deploy-to-clevercloud
+        with:
+          artifact-name: ${{ inputs.api-artifact }}
+          artifact-path: api/dist
+          source-path: api/dist
+          app-name: packmind-api
+          ssh-private-key: ${{ secrets.CC_SSH_PRIVATE_KEY }}
+          git-url: ${{ secrets.CC_URL_API }}
+
+  deploy-frontend:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Deploy to CleverCloud
+        uses: ./.github/actions/deploy-to-clevercloud
+        with:
+          artifact-name: ${{ inputs.frontend-artifact }}
+          artifact-path: frontend/dist
+          source-path: frontend/dist
+          app-name: packmind-frontend
+          ssh-private-key: ${{ secrets.CC_SSH_PRIVATE_KEY }}
+          git-url: ${{ secrets.CC_URL_FRONT }}
+
+  deploy-mcp-server:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Deploy to CleverCloud
+        uses: ./.github/actions/deploy-to-clevercloud
+        with:
+          artifact-name: ${{ inputs.mcp-server-artifact }}
+          artifact-path: mcp-server/dist
+          source-path: mcp-server/dist
+          app-name: packmind-mcp-server
+          ssh-private-key: ${{ secrets.CC_SSH_PRIVATE_KEY }}
+          git-url: ${{ secrets.CC_URL_MCP_SERVER }}
+
+  update-helm-charts:
+    needs: [deploy-api, deploy-frontend, deploy-mcp-server]
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    
+    steps:
+      - name: Checkout Main Repository
+        uses: actions/checkout@v4
+        
+      - name: Checkout Helm Charts Repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.helm-charts-repository }}
+          token: ${{ secrets.HELM_CHARTS_PAT }}
+          path: helm-charts
+      
+      - name: Install yq
+        uses: mikefarah/yq@v4.47.2
+      
+      - name: Update  values.yaml with yq (main branch)
+        if: github.ref == 'refs/heads/main'
+        working-directory: helm-charts
+        env:
+          PROD_CLOUD_VALUES: "packmind-internal-values/values-prod-cloud.yaml"
+          STAGING_CLOUD_VALUES: "packmind-internal-values/values-staging-cloud.yaml"
+          STAGING_ONPREM_VALUES: "packmind-internal-values/values-staging-onprem-oss.yaml"
+          IMAGE_TAG: "${{ github.sha }}"
+        run: |
+          # Update prod cloud values
+          yq eval '.api.image.tag = env(IMAGE_TAG)' -i $PROD_CLOUD_VALUES
+          yq eval '.frontend.image.tag = env(IMAGE_TAG)' -i $PROD_CLOUD_VALUES
+          yq eval '.mcpServer.image.tag = env(IMAGE_TAG)' -i $PROD_CLOUD_VALUES
+          
+          # Update staging cloud values
+          yq eval '.api.image.tag = env(IMAGE_TAG)' -i $STAGING_CLOUD_VALUES
+          yq eval '.frontend.image.tag = env(IMAGE_TAG)' -i $STAGING_CLOUD_VALUES
+          yq eval '.mcpServer.image.tag = env(IMAGE_TAG)' -i $STAGING_CLOUD_VALUES
+
+          # Update staging on-premise values
+          yq eval '.api.image.tag = env(IMAGE_TAG)' -i $STAGING_ONPREM_VALUES
+          yq eval '.frontend.image.tag = env(IMAGE_TAG)' -i $STAGING_ONPREM_VALUES
+          yq eval '.mcpServer.image.tag = env(IMAGE_TAG)' -i $STAGING_ONPREM_VALUES
+
+      - name: Get package version (release tags)
+        if: startsWith(github.ref, 'refs/tags/release/')
+        id: get-version
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Update values.yaml with yq (release tags)
+        if: startsWith(github.ref, 'refs/tags/release/')
+        working-directory: helm-charts
+        env:
+          RELEASE_ONPREM_VALUES: "packmind-internal-values/values-release-onprem-oss.yaml"
+          IMAGE_TAG: "${{ steps.get-version.outputs.version }}"
+        run: |
+          # Update release on-premise values only
+          yq eval '.api.image.tag = env(IMAGE_TAG)' -i $RELEASE_ONPREM_VALUES
+          yq eval '.frontend.image.tag = env(IMAGE_TAG)' -i $RELEASE_ONPREM_VALUES
+          yq eval '.mcpServer.image.tag = env(IMAGE_TAG)' -i $RELEASE_ONPREM_VALUES
+
+      - name: Commit and Push Changes (main branch)
+        if: github.ref == 'refs/heads/main'
+        working-directory: helm-charts
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add packmind-internal-values/
+          git commit -m "[k8s-values] - update with commit ${{ github.sha }}"
+          git push
+
+      - name: Commit and Push Changes (release tags)
+        if: startsWith(github.ref, 'refs/tags/release/')
+        working-directory: helm-charts
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add packmind-internal-values/values-release-onprem-oss.yaml
+          git commit -m "[k8s-values] - update release values with version v${{ steps.get-version.outputs.version }}"
+          git push
