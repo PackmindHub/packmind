@@ -294,6 +294,40 @@ describe('packages.tools', () => {
       expect(result.content[0].text).toContain('• Standard 2: Summary 2');
     });
 
+    describe('when standards have no summary', () => {
+      it('displays only standard name without summary', async () => {
+        const mockAdapter = {
+          getPackageSummary: jest.fn().mockResolvedValue({
+            name: 'Test Package',
+            slug: 'test-pkg',
+            description: 'A test package',
+            recipes: [],
+            standards: [
+              { name: 'Standard With Summary', summary: 'This has a summary' },
+              { name: 'Standard Without Summary', summary: undefined },
+            ],
+          }),
+        };
+
+        mockFastify.deploymentsHexa.mockReturnValue({
+          getAdapter: () => mockAdapter,
+        });
+
+        registerShowPackageTool(dependencies, mcpServer);
+
+        const result = await toolHandler({ packageSlug: 'test-pkg' });
+
+        expect(result.content[0].text).toContain(
+          '• Standard With Summary: This has a summary',
+        );
+        expect(result.content[0].text).toContain('• Standard Without Summary');
+        // Ensure no colon appears for standards without summary
+        expect(result.content[0].text).not.toContain(
+          '• Standard Without Summary:',
+        );
+      });
+    });
+
     describe('when packages with no recipes or standards', () => {
       it('handles empty sections', async () => {
         const mockAdapter = {
