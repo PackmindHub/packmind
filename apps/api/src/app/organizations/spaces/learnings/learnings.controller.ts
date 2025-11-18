@@ -15,6 +15,7 @@ import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
   AcceptKnowledgePatchResponse,
   DistillTopicResponse,
+  GetEmbeddingHealthResponse,
   GetKnowledgePatchResponse,
   GetTopicByIdResponse,
   GetTopicsStatsResponse,
@@ -24,8 +25,10 @@ import {
   ListTopicsResponse,
   OrganizationId,
   RejectKnowledgePatchResponse,
+  SearchArtifactsBySemanticsResponse,
   SpaceId,
   TopicId,
+  TriggerEmbeddingBackfillResponse,
 } from '@packmind/types';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 import { SpaceAccessGuard } from '../guards/space-access.guard';
@@ -450,6 +453,139 @@ export class OrganizationsSpacesLearningsController {
           organizationId,
           spaceId,
           topicId,
+          userId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Search artifacts by semantic similarity
+   * GET /organizations/:orgId/spaces/:spaceId/learnings/rag-lab/search?queryText=...&threshold=...
+   */
+  @Get('rag-lab/search')
+  async searchArtifactsBySemantics(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Query('queryText') queryText: string,
+    @Query('threshold') threshold: string | undefined,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<SearchArtifactsBySemanticsResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'GET /organizations/:orgId/spaces/:spaceId/learnings/rag-lab/search - Searching artifacts',
+      {
+        organizationId,
+        spaceId,
+        queryText,
+        threshold,
+      },
+    );
+
+    try {
+      return await this.learningsAdapter.searchArtifactsBySemantics({
+        queryText,
+        threshold: threshold ? parseFloat(threshold) : undefined,
+        spaceId,
+        organizationId,
+        userId,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/spaces/:spaceId/learnings/rag-lab/search - Failed to search artifacts',
+        {
+          organizationId,
+          spaceId,
+          queryText,
+          threshold,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Get embedding health status
+   * GET /organizations/:orgId/spaces/:spaceId/learnings/rag-lab/health
+   */
+  @Get('rag-lab/health')
+  async getEmbeddingHealth(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<GetEmbeddingHealthResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'GET /organizations/:orgId/spaces/:spaceId/learnings/rag-lab/health - Fetching embedding health',
+      {
+        organizationId,
+        spaceId,
+      },
+    );
+
+    try {
+      return await this.learningsAdapter.getEmbeddingHealth({
+        spaceId,
+        organizationId,
+        userId,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/spaces/:spaceId/learnings/rag-lab/health - Failed to fetch embedding health',
+        {
+          organizationId,
+          spaceId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Trigger embedding backfill for missing embeddings
+   * POST /organizations/:orgId/spaces/:spaceId/learnings/rag-lab/backfill
+   */
+  @Post('rag-lab/backfill')
+  async triggerEmbeddingBackfill(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<TriggerEmbeddingBackfillResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/learnings/rag-lab/backfill - Triggering embedding backfill',
+      {
+        organizationId,
+        spaceId,
+        userId,
+      },
+    );
+
+    try {
+      return await this.learningsAdapter.triggerEmbeddingBackfill({
+        spaceId,
+        organizationId,
+        userId,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /organizations/:orgId/spaces/:spaceId/learnings/rag-lab/backfill - Failed to trigger embedding backfill',
+        {
+          organizationId,
+          spaceId,
           userId,
           error: errorMessage,
         },
