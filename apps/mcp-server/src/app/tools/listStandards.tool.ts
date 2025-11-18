@@ -12,7 +12,7 @@ export function registerListStandardsTool(
 
   mcpServer.tool(
     `${mcpToolPrefix}_list_standards`,
-    'Get a list of current standards in Packmind',
+    'Get a list of current standards in Packmind.',
     {},
     async () => {
       if (!userContext) {

@@ -19,7 +19,7 @@ export function registerAddRuleToStandardTool(
 
   mcpServer.tool(
     `${mcpToolPrefix}_add_rule_to_standard`,
-    'Add a new coding rule to an existing standard identified by its slug. Do not call this tool directly—you need to first use the tool packmind_add_rule_to_standard_workflow',
+    'Add a new coding rule to an existing standard identified by its slug. Do not call this tool directly—you need to first use the tool packmind_add_rule_to_standard_workflow.',
     {
       standardSlug: z
         .string()

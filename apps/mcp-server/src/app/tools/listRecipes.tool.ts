@@ -12,7 +12,7 @@ export function registerListRecipesTool(
 
   mcpServer.tool(
     `${mcpToolPrefix}_list_recipes`,
-    'Get a list of current recipes in Packmind',
+    'Get a list of current recipes in Packmind.',
     {},
     async () => {
       if (!userContext) {

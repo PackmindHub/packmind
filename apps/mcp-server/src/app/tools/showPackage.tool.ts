@@ -12,7 +12,7 @@ export function registerShowPackageTool(
 
   mcpServer.tool(
     `${mcpToolPrefix}_get_package_details`,
-    'Get detailed information about a specific package including its recipes and standards',
+    'Get detailed information about a specific package including its recipes and standards.',
     {
       packageSlug: z
         .string()

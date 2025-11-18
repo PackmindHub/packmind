@@ -12,7 +12,7 @@ export function registerAddRecipeToPackagesTool(
 
   mcpServer.tool(
     `${mcpToolPrefix}_add_recipe_to_packages`,
-    'Add an existing recipe to one or more packages',
+    'Add an existing recipe to one or more packages.',
     {
       recipeSlug: z
         .string()

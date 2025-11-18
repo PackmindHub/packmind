@@ -58,7 +58,7 @@ describe('getStandardDetails.tool', () => {
 
     expect(mcpServer.tool).toHaveBeenCalledWith(
       'packmind_get_standard_details',
-      'Get the full content of a standard including its rules and examples by its slug',
+      'Get the full content of a standard including its rules and examples by its slug.',
       expect.any(Object),
       expect.any(Function),
     );

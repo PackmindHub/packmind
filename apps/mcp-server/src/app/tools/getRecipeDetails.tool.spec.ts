@@ -58,7 +58,7 @@ describe('getRecipeDetails.tool', () => {
 
     expect(mcpServer.tool).toHaveBeenCalledWith(
       'packmind_get_recipe_details',
-      'Get the full content of a recipe by its slug',
+      'Get the full content of a recipe by its slug.',
       expect.any(Object),
       expect.any(Function),
     );

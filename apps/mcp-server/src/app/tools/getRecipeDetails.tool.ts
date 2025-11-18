@@ -12,7 +12,7 @@ export function registerGetRecipeDetailsTool(
 
   mcpServer.tool(
     `${mcpToolPrefix}_get_recipe_details`,
-    'Get the full content of a recipe by its slug',
+    'Get the full content of a recipe by its slug.',
     {
       recipeSlug: z
         .string()

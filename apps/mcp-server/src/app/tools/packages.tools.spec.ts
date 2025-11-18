@@ -253,7 +253,7 @@ describe('packages.tools', () => {
 
       expect(mcpServer.tool).toHaveBeenCalledWith(
         'packmind_get_package_details',
-        'Get detailed information about a specific package including its recipes and standards',
+        'Get detailed information about a specific package including its recipes and standards.',
         expect.any(Object),
         expect.any(Function),
       );

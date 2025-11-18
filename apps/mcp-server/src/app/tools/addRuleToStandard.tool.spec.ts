@@ -79,7 +79,7 @@ describe('addRuleToStandard.tool', () => {
 
       expect(mcpServer.tool).toHaveBeenCalledWith(
         'packmind_add_rule_to_standard',
-        'Add a new coding rule to an existing standard identified by its slug. Do not call this tool directly—you need to first use the tool packmind_add_rule_to_standard_workflow',
+        'Add a new coding rule to an existing standard identified by its slug. Do not call this tool directly—you need to first use the tool packmind_add_rule_to_standard_workflow.',
         expect.any(Object),
         expect.any(Function),
       );

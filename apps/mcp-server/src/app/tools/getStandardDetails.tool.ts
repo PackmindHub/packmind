@@ -12,7 +12,7 @@ export function registerGetStandardDetailsTool(
 
   mcpServer.tool(
     `${mcpToolPrefix}_get_standard_details`,
-    'Get the full content of a standard including its rules and examples by its slug',
+    'Get the full content of a standard including its rules and examples by its slug.',
     {
       standardSlug: z
         .string()

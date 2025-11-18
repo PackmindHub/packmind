@@ -100,7 +100,7 @@ describe('createRecipe.tool', () => {
 
       expect(mcpServer.tool).toHaveBeenCalledWith(
         'packmind_create_recipe',
-        'Create a new reusable recipe as a structured Packmind recipe. Do not call this tool directly—you need to first use the tool packmind_create_recipe_workflow',
+        'Create a new reusable recipe as a structured Packmind recipe. Do not call this tool directly—you need to first use the tool packmind_create_recipe_workflow.',
         expect.any(Object),
         expect.any(Function),
       );
