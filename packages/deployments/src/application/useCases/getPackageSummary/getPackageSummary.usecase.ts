@@ -46,7 +46,7 @@ export class GetPackageSummaryUsecase
 
     const standards: SummarizedArtifact[] = pkg.standards.map((standard) => ({
       name: standard.name,
-      summary: standard.description || undefined,
+      summary: standard.summary || undefined,
     }));
 
     return {
