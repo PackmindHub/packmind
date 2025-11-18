@@ -4,11 +4,11 @@ import {
   PMBox,
   PMButton,
   PMHStack,
+  PMGrid,
   PMInput,
   PMRadioGroup,
   PMSpinner,
   PMText,
-  PMTextArea,
   PMVStack,
   PMIcon,
 } from '@packmind/ui';
@@ -23,6 +23,7 @@ import {
   useGetActiveDetectionProgramsQuery,
   useGetRuleDetectionAssessmentQuery,
 } from '../api/queries/DetectionProgramQueries';
+import { HeuristicsEditor } from './HeuristicsEditor';
 
 interface DetectabilitySectionProps {
   standardId: string;
@@ -111,7 +112,6 @@ export const DetectabilitySection: React.FC<DetectabilitySectionProps> = ({
   defaultOpen,
 }) => {
   const [heuristicsText, setHeuristicsText] = useState('');
-  const [hasChanges, setHasChanges] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [otherAnswerText, setOtherAnswerText] = useState('');
 
@@ -169,21 +169,10 @@ export const DetectabilitySection: React.FC<DetectabilitySectionProps> = ({
 
   useEffect(() => {
     if (detectionHeuristics && Array.isArray(detectionHeuristics.heuristics)) {
-      // Join array with newlines for display in textarea
+      // Join array with newlines for display
       setHeuristicsText(detectionHeuristics.heuristics.join('\n'));
-      setHasChanges(false);
     }
   }, [detectionHeuristics]);
-
-  const handleHeuristicsChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      const newValue = e.target.value;
-      setHeuristicsText(newValue);
-      const originalText = detectionHeuristics?.heuristics.join('\n') ?? '';
-      setHasChanges(newValue !== originalText);
-    },
-    [detectionHeuristics],
-  );
 
   const handleAnswerChange = useCallback((value: string | null) => {
     setSelectedAnswer(value);
@@ -216,6 +205,27 @@ export const DetectabilitySection: React.FC<DetectabilitySectionProps> = ({
 
     return false;
   }, [updateHeuristics.isPending, selectedAnswer, otherAnswerText]);
+
+  const handleHeuristicsSubmit = useCallback(
+    (text: string) => {
+      if (!detectionHeuristics?.id) {
+        return;
+      }
+
+      const heuristicsArray = text
+        .split('\n')
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0);
+
+      updateHeuristics.mutate({
+        standardId,
+        ruleId,
+        detectionHeuristicsId: detectionHeuristics.id,
+        heuristics: heuristicsArray,
+      });
+    },
+    [detectionHeuristics, standardId, ruleId, updateHeuristics],
+  );
 
   const handleSendAnswer = useCallback(() => {
     if (!detectionHeuristics?.id) {
@@ -255,7 +265,6 @@ export const DetectabilitySection: React.FC<DetectabilitySectionProps> = ({
       },
       {
         onSuccess: () => {
-          setHasChanges(false);
           setSelectedAnswer(null);
           setOtherAnswerText('');
         },
@@ -299,7 +308,9 @@ export const DetectabilitySection: React.FC<DetectabilitySectionProps> = ({
               textAlign="left"
               width="full"
             >
-              <PMText whiteSpace="pre-wrap">{assessment.details}</PMText>
+              <PMText whiteSpace="pre-wrap" width="full">
+                {assessment.details}
+              </PMText>
               {assessment.updatedAt && (
                 <PMText
                   fontSize="sm"
@@ -317,7 +328,19 @@ export const DetectabilitySection: React.FC<DetectabilitySectionProps> = ({
 
         <PMVStack width="full" gap={2} align="flex-start">
           <PMText color="tertiary">How to detect it?</PMText>
-          <PMHStack gap={4} align="flex-start" width="full">
+          {/** Use grid to guarantee equal heights between columns */}
+          <PMGrid
+            gap={4}
+            alignItems="stretch"
+            width="full"
+            gridTemplateColumns={
+              assessment.clarificationQuestion &&
+              assessment.clarificationAnswers &&
+              isEditable
+                ? '1fr 1fr'
+                : '1fr'
+            }
+          >
             {assessment.clarificationQuestion &&
               assessment.clarificationAnswers &&
               isEditable && (
@@ -326,47 +349,51 @@ export const DetectabilitySection: React.FC<DetectabilitySectionProps> = ({
                   borderWidth={1}
                   borderColor="border.tertiary"
                   p={3}
-                  width="50%"
+                  width="full"
+                  height="full"
                   gap={3}
+                  justifyContent="space-between"
                 >
-                  <PMText mb={3}>{assessment.clarificationQuestion}</PMText>
-                  <PMRadioGroup.Root
-                    value={selectedAnswer ?? undefined}
-                    onValueChange={(details) =>
-                      handleAnswerChange(details.value)
-                    }
-                  >
-                    <PMVStack gap={2} align="flex-start">
-                      {assessment.clarificationAnswers.map((answer) => (
-                        <PMRadioGroup.Item key={answer} value={answer}>
+                  <PMVStack gap={3} width="full">
+                    <PMText mb={3}>{assessment.clarificationQuestion}</PMText>
+                    <PMRadioGroup.Root
+                      value={selectedAnswer ?? undefined}
+                      onValueChange={(details) =>
+                        handleAnswerChange(details.value)
+                      }
+                    >
+                      <PMVStack gap={2} align="flex-start">
+                        {assessment.clarificationAnswers.map((answer) => (
+                          <PMRadioGroup.Item key={answer} value={answer}>
+                            <PMRadioGroup.ItemHiddenInput />
+                            <PMRadioGroup.ItemControl>
+                              <PMRadioGroup.ItemIndicator />
+                            </PMRadioGroup.ItemControl>
+                            <PMRadioGroup.ItemText>
+                              {answer}
+                            </PMRadioGroup.ItemText>
+                          </PMRadioGroup.Item>
+                        ))}
+                        <PMRadioGroup.Item value={OTHER_ANSWER_VALUE}>
                           <PMRadioGroup.ItemHiddenInput />
                           <PMRadioGroup.ItemControl>
                             <PMRadioGroup.ItemIndicator />
                           </PMRadioGroup.ItemControl>
-                          <PMRadioGroup.ItemText>
-                            {answer}
-                          </PMRadioGroup.ItemText>
+                          <PMRadioGroup.ItemText>Other</PMRadioGroup.ItemText>
                         </PMRadioGroup.Item>
-                      ))}
-                      <PMRadioGroup.Item value={OTHER_ANSWER_VALUE}>
-                        <PMRadioGroup.ItemHiddenInput />
-                        <PMRadioGroup.ItemControl>
-                          <PMRadioGroup.ItemIndicator />
-                        </PMRadioGroup.ItemControl>
-                        <PMRadioGroup.ItemText>Other</PMRadioGroup.ItemText>
-                      </PMRadioGroup.Item>
-                    </PMVStack>
-                  </PMRadioGroup.Root>
-                  {selectedAnswer === OTHER_ANSWER_VALUE && (
-                    <PMBox mt={2} ml={6}>
-                      <PMInput
-                        placeholder="Please specify..."
-                        value={otherAnswerText}
-                        onChange={handleOtherAnswerTextChange}
-                        disabled={updateHeuristics.isPending}
-                      />
-                    </PMBox>
-                  )}
+                      </PMVStack>
+                    </PMRadioGroup.Root>
+                    {selectedAnswer === OTHER_ANSWER_VALUE && (
+                      <PMBox mt={2} ml={6}>
+                        <PMInput
+                          placeholder="Please specify..."
+                          value={otherAnswerText}
+                          onChange={handleOtherAnswerTextChange}
+                          disabled={updateHeuristics.isPending}
+                        />
+                      </PMBox>
+                    )}
+                  </PMVStack>
                   <PMHStack gap={2} justify="flex-end" width="full">
                     {detectionHeuristics && (
                       <PMButton
@@ -385,31 +412,21 @@ export const DetectabilitySection: React.FC<DetectabilitySectionProps> = ({
                 </PMVStack>
               )}
 
-            <PMVStack
-              gap={2}
-              align="flex-start"
-              width={
-                assessment.clarificationQuestion &&
-                assessment.clarificationAnswers &&
-                isEditable
-                  ? '50%'
-                  : 'full'
-              }
-            >
+            <PMBox width="full" height="full">
               {isLoadingHeuristics ? (
                 <PMText color="faded">Loading heuristics...</PMText>
               ) : (
-                <PMTextArea
+                <HeuristicsEditor
                   value={heuristicsText ?? ''}
-                  onChange={handleHeuristicsChange}
-                  placeholder="Enter detection heuristics..."
-                  rows={textareaRows}
-                  disabled={!isEditable || updateHeuristics.isPending}
+                  onSubmit={handleHeuristicsSubmit}
+                  isLoading={updateHeuristics.isPending}
+                  isEditable={isEditable}
                   maxLength={3000}
+                  rows={textareaRows}
                 />
               )}
-            </PMVStack>
-          </PMHStack>
+            </PMBox>
+          </PMGrid>
         </PMVStack>
       </PMVStack>
     </AccordionSection>
