@@ -116,7 +116,7 @@ describe('tools.integration', () => {
         'packmind_list_recipes',
         'packmind_get_recipe_details',
         'packmind_list_packages',
-        'packmind_show_package',
+        'packmind_get_package_details',
         'packmind_create_standard_workflow',
         'packmind_create_recipe_workflow',
         'packmind_create_standard',
@@ -226,7 +226,7 @@ describe('tools.integration', () => {
         registeredTools.get('packmind_list_packages')?.handler,
       );
       expect(registeredTools.get('packmind_list_packages')?.handler).not.toBe(
-        registeredTools.get('packmind_show_package')?.handler,
+        registeredTools.get('packmind_get_package_details')?.handler,
       );
     });
 

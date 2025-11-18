@@ -11,7 +11,7 @@ export function registerShowPackageTool(
     dependencies;
 
   mcpServer.tool(
-    `${mcpToolPrefix}_show_package`,
+    `${mcpToolPrefix}_get_package_details`,
     'Get detailed information about a specific package including its recipes and standards',
     {
       slug: z.string().min(1).describe('The slug of the package to retrieve'),
@@ -74,7 +74,7 @@ export function registerShowPackageTool(
           createUserId(userContext.userId),
           createOrganizationId(userContext.organizationId),
           'mcp_tool_call',
-          { tool: `${mcpToolPrefix}_show_package`, slug },
+          { tool: `${mcpToolPrefix}_get_package_details`, slug },
         );
 
         return {
