@@ -11,12 +11,15 @@ export function registerShowPackageTool(
     dependencies;
 
   mcpServer.tool(
-    `${mcpToolPrefix}_show_package`,
-    'Get detailed information about a specific package including its recipes and standards',
+    `${mcpToolPrefix}_get_package_details`,
+    'Get detailed information about a specific package including its recipes and standards.',
     {
-      slug: z.string().min(1).describe('The slug of the package to retrieve'),
+      packageSlug: z
+        .string()
+        .min(1)
+        .describe('The slug of the package to retrieve'),
     },
-    async ({ slug }) => {
+    async ({ packageSlug }) => {
       if (!userContext) {
         throw new Error('User context is required to show package details');
       }
@@ -32,7 +35,7 @@ export function registerShowPackageTool(
         const pkg = await deploymentsHexa.getAdapter().getPackageSummary({
           userId: userContext.userId,
           organizationId,
-          slug,
+          slug: packageSlug,
         });
 
         // Build formatted content
@@ -74,7 +77,7 @@ export function registerShowPackageTool(
           createUserId(userContext.userId),
           createOrganizationId(userContext.organizationId),
           'mcp_tool_call',
-          { tool: `${mcpToolPrefix}_show_package`, slug },
+          { tool: `${mcpToolPrefix}_get_package_details`, packageSlug },
         );
 
         return {

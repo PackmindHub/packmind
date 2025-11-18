@@ -17,7 +17,7 @@ Now that you have the context, create a draft of the rule and iterate with the u
    - **Negative Example**: Show what to avoid
      - Demonstrate the anti-pattern
      - Make it clear why this is problematic
-   
+
 3. **Present the draft**:
    - Show the rule content clearly
    - If examples exist, display both positive and negative examples
@@ -36,7 +36,7 @@ Now that you have the context, create a draft of the rule and iterate with the u
 
 ## Next Step
 
-Once the user approves the draft, call \`packmind_add_rule_workflow\` with:
+Once the user approves the draft, call \`packmind_add_rule_to_standard_workflow\` with:
 \`\`\`json
 { "step": "finalization" }
 \`\`\`

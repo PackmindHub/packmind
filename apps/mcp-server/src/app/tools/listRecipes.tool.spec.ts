@@ -63,7 +63,7 @@ describe('listRecipes.tool', () => {
 
     expect(mcpServer.tool).toHaveBeenCalledWith(
       'packmind_list_recipes',
-      'Get a list of current recipes in Packmind',
+      'Get a list of current recipes in Packmind.',
       {},
       expect.any(Function),
     );

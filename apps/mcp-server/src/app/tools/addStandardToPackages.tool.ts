@@ -12,7 +12,7 @@ export function registerAddStandardToPackagesTool(
 
   mcpServer.tool(
     `${mcpToolPrefix}_add_standard_to_packages`,
-    'Add an existing standard to one or more packages',
+    'Add an existing standard to one or more packages.',
     {
       standardSlug: z
         .string()

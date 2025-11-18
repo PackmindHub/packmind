@@ -63,7 +63,7 @@ describe('listStandards.tool', () => {
 
     expect(mcpServer.tool).toHaveBeenCalledWith(
       'packmind_list_standards',
-      'Get a list of current standards in Packmind',
+      'Get a list of current standards in Packmind.',
       {},
       expect.any(Function),
     );

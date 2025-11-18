@@ -56,7 +56,7 @@ Retrieves the full content of a specific standard including all its rules and co
 
 **Parameters:**
 
-- `slug` (required) - The slug identifier of the standard
+- `standardSlug` (required) - The slug identifier of the standard
 
 **Returns:** Complete standard details including description, rules, and code examples
 
@@ -152,7 +152,7 @@ Retrieves the full content of a specific recipe by its slug identifier.
 
 **Parameters:**
 
-- `slug` (required) - The slug identifier of the recipe
+- `recipeSlug` (required) - The slug identifier of the recipe
 
 **Returns:** Complete recipe details including name, slug, version, and full markdown content
 

@@ -24,7 +24,7 @@ Ask focused questions only when information is missing. Keep it simple:
 
 ## Next Step
 
-Once you have the essential context (target standard, rule intent, and source), call \`packmind_add_rule_workflow\` with:
+Once you have the essential context (target standard, rule intent, and source), call \`packmind_add_rule_to_standard_workflow\` with:
 \`\`\`json
 { "step": "drafting" }
 \`\`\`
