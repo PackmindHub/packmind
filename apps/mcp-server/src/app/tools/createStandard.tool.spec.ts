@@ -125,7 +125,7 @@ describe('createStandard.tool', () => {
 
     expect(mcpServer.tool).toHaveBeenCalledWith(
       'packmind_create_standard',
-      'Create a new coding standard with multiple rules and optional examples in a single operation. Do not call this tool directly—you need to first use the tool standard_creation_workflow',
+      'Create a new coding standard with multiple rules and optional examples in a single operation. Do not call this tool directly—you need to first use the tool packmind_create_standard_workflow',
       expect.any(Object),
       expect.any(Function),
     );

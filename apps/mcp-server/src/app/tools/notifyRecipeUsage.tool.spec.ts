@@ -48,7 +48,7 @@ describe('notifyRecipeUsage.tool', () => {
 
   describe('notifyRecipeUsage', () => {
     let toolHandler: (params: {
-      recipesSlug: string[];
+      recipeSlugs: string[];
       aiAgent: string;
       gitRepo?: string;
       target?: string;
@@ -75,7 +75,7 @@ describe('notifyRecipeUsage.tool', () => {
       );
     });
 
-    it('tracks recipe usage with recipesSlug, aiAgent, gitRepo, target', async () => {
+    it('tracks recipe usage with recipeSlugs, aiAgent, gitRepo, target', async () => {
       const mockUsageRecords = [
         { id: 'usage-1', recipeSlug: 'recipe-a', aiAgent: 'Claude Code' },
       ];
@@ -90,7 +90,7 @@ describe('notifyRecipeUsage.tool', () => {
       registerNotifyRecipeUsageTool(dependencies, mcpServer);
 
       const result = await toolHandler({
-        recipesSlug: ['recipe-a'],
+        recipeSlugs: ['recipe-a'],
         aiAgent: 'Claude Code',
         gitRepo: 'owner/repo',
         target: '/src/',
@@ -130,7 +130,7 @@ describe('notifyRecipeUsage.tool', () => {
       registerNotifyRecipeUsageTool(dependencies, mcpServer);
 
       const result = await toolHandler({
-        recipesSlug: ['recipe-b'],
+        recipeSlugs: ['recipe-b'],
         aiAgent: 'GitHub Copilot',
       });
 
@@ -170,7 +170,7 @@ describe('notifyRecipeUsage.tool', () => {
       registerNotifyRecipeUsageTool(dependencies, mcpServer);
 
       const result = await toolHandler({
-        recipesSlug: ['recipe-a', 'recipe-b', 'recipe-c'],
+        recipeSlugs: ['recipe-a', 'recipe-b', 'recipe-c'],
         aiAgent: 'Cursor',
         gitRepo: 'myorg/myrepo',
         target: '/',
@@ -210,7 +210,7 @@ describe('notifyRecipeUsage.tool', () => {
       registerNotifyRecipeUsageTool(dependencies, mcpServer);
 
       await toolHandler({
-        recipesSlug: ['recipe-a'],
+        recipeSlugs: ['recipe-a'],
         aiAgent: 'Claude Code',
       });
 
@@ -230,7 +230,7 @@ describe('notifyRecipeUsage.tool', () => {
 
         await expect(
           toolHandler({
-            recipesSlug: ['recipe-a'],
+            recipeSlugs: ['recipe-a'],
             aiAgent: 'Claude Code',
           }),
         ).rejects.toThrow('User context is required to track recipe usage');
@@ -252,7 +252,7 @@ describe('notifyRecipeUsage.tool', () => {
         registerNotifyRecipeUsageTool(dependencies, mcpServer);
 
         const result = await toolHandler({
-          recipesSlug: ['recipe-a'],
+          recipeSlugs: ['recipe-a'],
           aiAgent: 'Claude Code',
         });
 

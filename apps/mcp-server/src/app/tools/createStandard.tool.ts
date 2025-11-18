@@ -20,7 +20,7 @@ export function registerCreateStandardTool(
 
   mcpServer.tool(
     `${mcpToolPrefix}_create_standard`,
-    'Create a new coding standard with multiple rules and optional examples in a single operation. Do not call this tool directly—you need to first use the tool standard_creation_workflow',
+    'Create a new coding standard with multiple rules and optional examples in a single operation. Do not call this tool directly—you need to first use the tool packmind_create_standard_workflow',
     {
       name: z.string().min(1).describe('The name of the standard to create'),
       description: z

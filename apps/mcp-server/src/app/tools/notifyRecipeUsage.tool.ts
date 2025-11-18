@@ -14,7 +14,7 @@ export function registerNotifyRecipeUsageTool(
     `${mcpToolPrefix}_notify_recipe_usage`,
     'Notify a reusable coding recipe deployed with Packmind has been used by an AI Agent such as GitHub Copilot, Claude Code or Cursor.',
     {
-      recipesSlug: z
+      recipeSlugs: z
         .array(z.string())
         .min(1)
         .describe('The slugs of the recipes that were used'),
@@ -36,7 +36,7 @@ export function registerNotifyRecipeUsageTool(
           'The path where the recipes are distributed (ex: /, /src/frontend/, /src/backend/)',
         ),
     },
-    async ({ recipesSlug, aiAgent, gitRepo, target }) => {
+    async ({ recipeSlugs, aiAgent, gitRepo, target }) => {
       if (!userContext) {
         throw new Error('User context is required to track recipe usage');
       }
@@ -45,7 +45,7 @@ export function registerNotifyRecipeUsageTool(
 
       try {
         const usageRecords = await analyticsHexa.getAdapter().trackRecipeUsage({
-          recipeSlugs: recipesSlug,
+          recipeSlugs: recipeSlugs,
           aiAgent,
           userId: userContext.userId,
           organizationId: userContext.organizationId,

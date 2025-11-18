@@ -17,7 +17,7 @@ export function registerCreateRecipeTool(
 
   mcpServer.tool(
     `${mcpToolPrefix}_create_recipe`,
-    'Create a new reusable recipe as a structured Packmind recipe. Do not call this tool directly—you need to first use the tool recipe_creation_workflow',
+    'Create a new reusable recipe as a structured Packmind recipe. Do not call this tool directly—you need to first use the tool packmind_create_recipe_workflow',
     {
       name: z.string().min(1).describe('The name of the recipe to create'),
       summary: z
