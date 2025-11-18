@@ -44,6 +44,7 @@ describe('EmbeddingOrchestrationService', () => {
       findStandardBySlug: jest.fn(),
       addRuleToStandard: jest.fn(),
       updateStandardRules: jest.fn(),
+      findAllLatestStandardVersions: jest.fn(),
     } as jest.Mocked<IStandardsPort>;
 
     mockRecipesPort = {
@@ -64,6 +65,7 @@ describe('EmbeddingOrchestrationService', () => {
       updateRecipesFromGitHub: jest.fn(),
       updateRecipesFromGitLab: jest.fn(),
       updateRecipeFromUI: jest.fn(),
+      findAllLatestRecipeVersions: jest.fn(),
     } as jest.Mocked<IRecipesPort>;
 
     stubbedLogger = stubLogger();

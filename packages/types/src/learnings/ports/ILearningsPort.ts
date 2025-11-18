@@ -50,6 +50,12 @@ import {
   TriggerEmbeddingBackfillCommand,
   TriggerEmbeddingBackfillResponse,
 } from '../contracts/TriggerEmbeddingBackfillUseCase';
+import {
+  GetRagLabConfigurationCommand,
+  GetRagLabConfigurationResult,
+} from '../contracts/IGetRagLabConfigurationUseCase';
+import { UpdateRagLabConfigurationCommand } from '../contracts/IUpdateRagLabConfigurationUseCase';
+import { RagLabConfiguration } from '../RagLabConfiguration';
 import { StandardVersionId } from '../../standards/StandardVersionId';
 import { RecipeVersionId } from '../../recipes/RecipeVersion';
 
@@ -91,6 +97,12 @@ export interface ILearningsPort {
   triggerEmbeddingBackfill(
     command: TriggerEmbeddingBackfillCommand,
   ): Promise<TriggerEmbeddingBackfillResponse>;
+  getRagLabConfiguration(
+    command: GetRagLabConfigurationCommand,
+  ): Promise<GetRagLabConfigurationResult>;
+  updateRagLabConfiguration(
+    command: UpdateRagLabConfigurationCommand,
+  ): Promise<RagLabConfiguration>;
 
   // Embedding job enqueueing methods
   enqueueStandardEmbeddingGeneration(

@@ -38,6 +38,10 @@ import {
   TriggerEmbeddingBackfillResponse,
   StandardVersionId,
   RecipeVersionId,
+  GetRagLabConfigurationCommand,
+  GetRagLabConfigurationResult,
+  UpdateRagLabConfigurationCommand,
+  RagLabConfiguration,
 } from '@packmind/types';
 import { LearningsServices } from '../services/LearningsServices';
 import { CaptureTopicUsecase } from '../useCases/captureTopic/captureTopic.usecase';
@@ -639,5 +643,35 @@ export class LearningsAdapter
     });
 
     this.logger.info('Enqueued recipe embedding generation', { versionId });
+  }
+
+  /**
+   * Get RAG Lab configuration for an organization.
+   * TODO: Implement when repository and use case are created.
+   */
+  public async getRagLabConfiguration(
+    command: GetRagLabConfigurationCommand,
+  ): Promise<GetRagLabConfigurationResult> {
+    this.logger.info('getRagLabConfiguration called', {
+      organizationId: command.organizationId,
+      userId: command.userId,
+    });
+
+    throw new Error('getRagLabConfiguration not yet implemented');
+  }
+
+  /**
+   * Update RAG Lab configuration for an organization.
+   * TODO: Implement when repository and use case are created.
+   */
+  public async updateRagLabConfiguration(
+    command: UpdateRagLabConfigurationCommand,
+  ): Promise<RagLabConfiguration> {
+    this.logger.info('updateRagLabConfiguration called', {
+      organizationId: command.organizationId,
+      userId: command.userId,
+    });
+
+    throw new Error('updateRagLabConfiguration not yet implemented');
   }
 }

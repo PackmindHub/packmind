@@ -11,3 +11,5 @@ export * from './RejectKnowledgePatchUseCase';
 export * from './SearchArtifactsBySemanticsUseCase';
 export * from './GetEmbeddingHealthUseCase';
 export * from './TriggerEmbeddingBackfillUseCase';
+export * from './IGetRagLabConfigurationUseCase';
+export * from './IUpdateRagLabConfigurationUseCase';

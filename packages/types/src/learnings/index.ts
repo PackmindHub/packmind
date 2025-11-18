@@ -7,4 +7,6 @@ export * from './KnowledgePatch';
 export * from './KnowledgePatchId';
 export * from './KnowledgePatchStatus';
 export * from './KnowledgePatchType';
+export * from './RagLabConfiguration';
+export * from './RagLabConfigurationId';
 export * from './contracts';
