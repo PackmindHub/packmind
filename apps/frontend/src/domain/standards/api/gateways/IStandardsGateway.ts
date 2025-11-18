@@ -15,7 +15,11 @@ export interface IStandardsGateway {
   getStandards: NewGateway<IListStandardsBySpaceUseCase>;
   getStandardById: NewGateway<IGetStandardByIdUseCase>;
   getVersionsById(id: StandardId): Promise<StandardVersion[]>;
-  getRulesByStandardId(id: StandardId): Promise<Rule[]>;
+  getRulesByStandardId(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    standardId: StandardId,
+  ): Promise<Rule[]>;
   deployStandardsToGit(
     standardVersionIds: StandardVersionId[],
     repositoryIds: GitRepoId[],
