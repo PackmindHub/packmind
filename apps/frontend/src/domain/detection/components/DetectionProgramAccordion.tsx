@@ -103,7 +103,7 @@ const AccordionSection: React.FC<AccordionSectionProps> = ({
 }) => {
   return (
     <PMAccordion.Root
-      defaultValue={defaultOpen ? [value] : []}
+      defaultValue={defaultOpen && !disabled ? [value] : []}
       collapsible
       backgroundColor={disabled ? 'background.tertiary' : 'background.primary'}
       p="2"
@@ -112,10 +112,15 @@ const AccordionSection: React.FC<AccordionSectionProps> = ({
       disabled={disabled}
     >
       <PMAccordion.Item value={value} disabled={disabled}>
-        <PMAccordion.ItemTrigger cursor={disabled ? 'not-allowed' : 'pointer'}>
+        <PMAccordion.ItemTrigger
+          cursor={disabled ? 'not-allowed' : 'pointer'}
+          disabled={disabled}
+        >
           {triggerContent}
         </PMAccordion.ItemTrigger>
-        <PMAccordion.ItemContent>{children}</PMAccordion.ItemContent>
+        {!disabled && (
+          <PMAccordion.ItemContent>{children}</PMAccordion.ItemContent>
+        )}
       </PMAccordion.Item>
     </PMAccordion.Root>
   );
@@ -183,7 +188,9 @@ export const DetectionProgramAccordion: React.FC<
       {/* Program Accordion */}
       <AccordionSection
         value="program"
-        defaultOpen={defaultAccordionValue.includes('program')}
+        defaultOpen={
+          !isProgramDisabled && defaultAccordionValue.includes('program')
+        }
         disabled={isProgramDisabled}
         triggerContent={
           <PMHStack gap={3} align="center" width="full">
