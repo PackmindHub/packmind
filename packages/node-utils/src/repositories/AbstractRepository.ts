@@ -119,7 +119,8 @@ export abstract class AbstractRepository<Entity extends { id: string }>
 
   protected abstract loggableEntity(entity: Entity): Partial<Entity>;
   protected makeDuplicationErrorMessage(entity: Entity): string {
-    return `Duplication error found when saving: ${JSON.stringify(entity)}`;
+    const loggableFields = this.loggableEntity(entity);
+    return `Duplication error found when saving ${this.entityName}: ${JSON.stringify(loggableFields)}`;
   }
 
   private handleDuplicateKeyError(entity: Entity): Error {
