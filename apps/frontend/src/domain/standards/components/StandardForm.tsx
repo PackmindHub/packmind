@@ -13,9 +13,18 @@ import {
   useUpdateStandardMutation,
   useGetRulesByStandardIdQuery,
 } from '../api/queries/StandardsQueries';
-import { createRuleId, RuleId, Standard, StandardId } from '@packmind/types';
+import {
+  createRuleId,
+  RuleId,
+  Standard,
+  StandardId,
+  OrganizationId,
+  SpaceId,
+} from '@packmind/types';
 import { STANDARD_MESSAGES } from '../constants/messages';
 import { MarkdownEditor } from '../../../shared/components/editor/MarkdownEditor';
+import { useAuthContext } from '../../accounts/hooks/useAuthContext';
+import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 
 interface Rule {
   content: string;
@@ -36,6 +45,8 @@ export const StandardForm: React.FC<StandardFormProps> = ({
   onCancel,
   onSuccess,
 }) => {
+  const { organization } = useAuthContext();
+  const { spaceId } = useCurrentSpace();
   const [name, setName] = useState(standard?.name || '');
   const [description, setDescription] = useState(standard?.description || '');
   const [rules, setRules] = useState<Rule[]>([
@@ -56,7 +67,11 @@ export const StandardForm: React.FC<StandardFormProps> = ({
     data: fetchedRules,
     isLoading: rulesLoading,
     isError: rulesError,
-  } = useGetRulesByStandardIdQuery(standard?.id || ('' as StandardId));
+  } = useGetRulesByStandardIdQuery(
+    organization?.id as OrganizationId,
+    spaceId as SpaceId,
+    standard?.id || ('' as StandardId),
+  );
 
   const isPending = createMutation.isPending || updateMutation.isPending;
 

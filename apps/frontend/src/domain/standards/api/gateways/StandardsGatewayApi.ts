@@ -33,8 +33,14 @@ export class StandardsGatewayApi
     return this._api.get<StandardVersion[]>(`${this._endpoint}/${id}/versions`);
   }
 
-  getRulesByStandardId(id: StandardId): Promise<Rule[]> {
-    return this._api.get<Rule[]>(`${this._endpoint}/${id}/rules`);
+  getRulesByStandardId(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    standardId: StandardId,
+  ): Promise<Rule[]> {
+    return this._api.get<Rule[]>(
+      `/organizations/${organizationId}/spaces/${spaceId}/standards/${standardId}/rules`,
+    );
   }
 
   getStandards: NewGateway<IListStandardsBySpaceUseCase> = async ({

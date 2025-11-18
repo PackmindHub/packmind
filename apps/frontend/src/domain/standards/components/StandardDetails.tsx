@@ -8,7 +8,7 @@ import {
   useDeleteStandardMutation,
 } from '../api/queries/StandardsQueries';
 
-import { Rule, Standard } from '@packmind/types';
+import { Rule, Standard, OrganizationId, SpaceId } from '@packmind/types';
 import { STANDARD_MESSAGES } from '../constants/messages';
 import { routes } from '../../../shared/utils/routes';
 import { StandardVersionHistoryHeader } from './StandardVersionHistoryHeader';
@@ -16,6 +16,8 @@ import { StandardDetailsSidebar } from './StandardDetailsSidebar';
 import { useStandardSectionNavigation } from '../hooks/useStandardSectionNavigation';
 import { RuleActions, SummaryActions } from './StandardDetailsActions';
 import { useStandardEditionFeatures } from '@packmind/proprietary/frontend/domain/detection/hooks/useStandardEditionFeatures';
+import { useAuthContext } from '../../accounts/hooks/useAuthContext';
+import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 
 interface StandardDetailsProps {
   standard: Standard;
@@ -37,6 +39,8 @@ export const StandardDetails = ({
 }: StandardDetailsProps) => {
   const navigate = useNavigate();
   const { spaceSlug } = useParams<{ spaceSlug?: string }>();
+  const { organization } = useAuthContext();
+  const { spaceId } = useCurrentSpace();
   const defaultPath = `.packmind/standards/${standard.slug}.md`;
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteAlert, setDeleteAlert] = useState<{
@@ -58,7 +62,11 @@ export const StandardDetails = ({
     data: rules,
     isLoading: rulesLoading,
     isError: rulesError,
-  } = useGetRulesByStandardIdQuery(standard.id);
+  } = useGetRulesByStandardIdQuery(
+    organization?.id as OrganizationId,
+    spaceId as SpaceId,
+    standard.id,
+  );
 
   const { ruleLanguages } = useStandardEditionFeatures(standard.id);
 
