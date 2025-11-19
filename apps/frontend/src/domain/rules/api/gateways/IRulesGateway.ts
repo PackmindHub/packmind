@@ -1,4 +1,11 @@
-import { RuleExample, RuleExampleId, RuleId } from '@packmind/types';
+import {
+  OrganizationId,
+  RuleExample,
+  RuleExampleId,
+  RuleId,
+  SpaceId,
+  StandardId,
+} from '@packmind/types';
 
 export interface IRulesGateway {
   createRuleExample(
@@ -11,7 +18,12 @@ export interface IRulesGateway {
     },
   ): Promise<RuleExample>;
 
-  getRuleExamples(standardId: string, ruleId: RuleId): Promise<RuleExample[]>;
+  getRuleExamples(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    standardId: StandardId,
+    ruleId: RuleId,
+  ): Promise<RuleExample[]>;
 
   updateRuleExample(
     standardId: string,

@@ -17,6 +17,7 @@ export default function StandardDetailSummaryRouteModule() {
         <PMHeading level="h3">Description</PMHeading>
         <MarkdownEditorProvider>
           <MarkdownEditor
+            key={standard.id}
             defaultValue={standard.description}
             readOnly
             paddingVariant="none"

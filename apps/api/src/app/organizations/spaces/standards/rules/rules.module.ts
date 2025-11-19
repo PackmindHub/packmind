@@ -5,6 +5,7 @@ import { StandardsModule } from '../../../../standards/standards.module';
 import { OrganizationAccessGuard } from '../../../guards/organization-access.guard';
 import { SpaceAccessGuard } from '../../guards/space-access.guard';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
+import { AuthModule } from '../../../../auth/auth.module';
 
 /**
  * Module for rules routes within space-scoped standards in organizations
@@ -17,7 +18,7 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
  * Both OrganizationAccessGuard and SpaceAccessGuard are provided to ensure proper access validation.
  */
 @Module({
-  imports: [RulesModule, StandardsModule],
+  imports: [RulesModule, StandardsModule, AuthModule],
   controllers: [OrganizationsSpacesStandardsRulesController],
   providers: [
     OrganizationAccessGuard,
