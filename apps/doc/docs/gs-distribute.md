@@ -1,4 +1,4 @@
-# Make standards and recipes available to your coding assistant
+# Distribute standards and recipes
 
 This guide shows you how to pull your **Standards** and **Recipes** locally using the Packmind CLI, making them available to your AI coding assistant.
 

@@ -45,7 +45,7 @@ Start packmind onboarding
 Your AI agent will guide you through creating your first coding standard interactively.
 Go in Packmind to see the final results.
 
-## Use your coding standards
+## Distribute standards and recipes
 
 Make your standards available to your AI coding assistant:
 
