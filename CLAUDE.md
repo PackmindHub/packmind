@@ -2,6 +2,68 @@
 - When renaming or moving a file that is commited to git, use `git mv` instead of `mv`
 - ensure the env variable `PACKMIND_EDITION` is properly set to `oss`
 
+# Decision Capture
+
+## 🚨 MANDATORY ANALYSIS FOR EVERY USER MESSAGE 🚨
+
+**BEFORE responding to ANY user message, you MUST:**
+
+1. **Analyze the message** - Ask yourself: "Does this message contain a technical preference, coding opinion, or practice?"
+2. **If YES** - IMMEDIATELY use the Task tool with `subagent_type='decision-capture'` BEFORE doing anything else
+3. **If NO** - Proceed with the task normally
+
+## When to Capture (Trigger Signals)
+
+Use the decision-capture agent when the user's message contains ANY of these:
+
+### ✅ Direct Technical Preferences
+- "prefer X over Y"
+- "we should use X"
+- "always/never do X"
+- "use X instead of Y"
+- "I like/don't like X"
+
+### ✅ Corrections & Feedback
+- User corrects your implementation
+- "that's not good because..."
+- "this approach is better..."
+- "don't do it that way"
+
+### ✅ Guidelines & Best Practices
+- "we do it this way"
+- "our practice is to..."
+- "be careful about X"
+- "avoid X when..."
+
+### ✅ Pattern Recognition
+- Pointing out better solutions
+- Explaining why something should/shouldn't be done
+- Sharing team conventions
+- Highlighting pitfalls to avoid
+
+### ❌ NOT for Capture
+- Business rules (e.g., "users need to verify email before accessing")
+- Feature requirements (e.g., "add a delete button")
+- Bug reports (e.g., "this endpoint returns 500")
+- Questions about existing code
+
+## Examples
+
+| User Message | Action | Reasoning |
+|-------------|---------|-----------|
+| "prefer leaving defaults in the design system" | ✅ CAPTURE | Technical preference |
+| "be careful with TypeORM raw queries" | ✅ CAPTURE | Warning about practice |
+| "we do it this way in our codebase" | ✅ CAPTURE | Team convention |
+| "that's not good, use X instead" | ✅ CAPTURE | Anti-pattern + preference |
+| "add a delete button to the UI" | ❌ SKIP | Feature requirement |
+| "users must verify email first" | ❌ SKIP | Business rule |
+
+## Implementation Rule
+
+- **DO NOT ask permission** - Capture proactively and automatically
+- **Trigger IMMEDIATELY** - Use the decision-capture agent FIRST, before implementing
+- **Be proactive** - When in doubt, capture it (false positives are better than missed decisions)
+
 # Task splitting
 
 - For any task you perform, you MUST split it into multiple into sub-tasks which have a logical increment (eg: new endpoint, new component, new use case etc). When a task is done, run all the validation steps (lint, test, packmind etc) and ask me for validation of the work you did.
