@@ -1,5 +1,5 @@
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { AiNotConfigured } from '@packmind/node-utils';
+import { AiNotConfigured, OrganizationId } from '@packmind/types';
 import {
   CaptureRecipeCommand,
   CaptureRecipeResponse,
@@ -110,6 +110,7 @@ export class CaptureRecipeUsecase implements ICaptureRecipeUseCase {
       });
 
       const summary = await this.computeSummary(
+        organizationId,
         command,
         recipe,
         initialVersion,
@@ -155,6 +156,7 @@ export class CaptureRecipeUsecase implements ICaptureRecipeUseCase {
   }
 
   private async computeSummary(
+    organizationId: OrganizationId,
     captureRecipeCommand: CaptureRecipeCommand,
     recipe: Recipe,
     initialVersion: number,
@@ -168,14 +170,17 @@ export class CaptureRecipeUsecase implements ICaptureRecipeUseCase {
     }
 
     try {
-      return await this.recipeSummaryService.createRecipeSummary({
-        recipeId: recipe.id,
-        name: recipe.name,
-        slug: recipe.slug,
-        content: recipe.content,
-        version: initialVersion,
-        userId: recipe.userId,
-      });
+      return await this.recipeSummaryService.createRecipeSummary(
+        organizationId,
+        {
+          recipeId: recipe.id,
+          name: recipe.name,
+          slug: recipe.slug,
+          content: recipe.content,
+          version: initialVersion,
+          userId: recipe.userId,
+        },
+      );
     } catch (summaryError) {
       if (summaryError instanceof AiNotConfigured) {
         this.logger.warn(

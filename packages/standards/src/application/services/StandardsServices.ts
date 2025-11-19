@@ -4,18 +4,19 @@ import { StandardBookService } from './StandardBookService';
 import { IStandardsRepositories } from '../../domain/repositories/IStandardsRepositories';
 import { PackmindLogger } from '@packmind/logger';
 import { StandardSummaryService } from './StandardSummaryService';
-import type { ILinterPort } from '@packmind/types';
+import type { ILinterPort, ILlmPort } from '@packmind/types';
 
 export class StandardsServices {
   private readonly standardService: StandardService;
   private readonly standardVersionService: StandardVersionService;
   private readonly standardBookService: StandardBookService;
-  private readonly standardSummaryService: StandardSummaryService;
+  private standardSummaryService: StandardSummaryService;
 
   constructor(
     private readonly standardsRepositories: IStandardsRepositories,
     private readonly logger: PackmindLogger,
     private linterAdapter?: ILinterPort,
+    private llmPort?: ILlmPort,
   ) {
     this.standardService = new StandardService(
       this.standardsRepositories.getStandardRepository(),
@@ -28,7 +29,11 @@ export class StandardsServices {
       // Don't pass logger - let StandardVersionService create its own with correct origin
     );
     this.standardBookService = new StandardBookService();
-    this.standardSummaryService = new StandardSummaryService();
+    // StandardSummaryService created with llmPort (may be undefined initially)
+    this.standardSummaryService = new StandardSummaryService(
+      this.logger,
+      this.llmPort,
+    );
   }
 
   getStandardService(): StandardService {
@@ -54,5 +59,14 @@ export class StandardsServices {
   setLinterAdapter(adapter: ILinterPort): void {
     this.linterAdapter = adapter;
     this.standardVersionService.linterAdapter = adapter;
+  }
+
+  setLlmPort(port: ILlmPort): void {
+    this.llmPort = port;
+    // Recreate StandardSummaryService with the llmPort
+    this.standardSummaryService = new StandardSummaryService(
+      this.logger,
+      this.llmPort,
+    );
   }
 }

@@ -2,7 +2,7 @@ import { RecipeService } from '../../services/RecipeService';
 import { RecipeVersionService } from '../../services/RecipeVersionService';
 import { RecipeSummaryService } from '../../services/RecipeSummaryService';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
-import { AiNotConfigured } from '@packmind/node-utils';
+import { AiNotConfigured } from '@packmind/types';
 import { OrganizationId, RecipeId, SpaceId, UserId } from '@packmind/types';
 
 const origin = 'UpdateRecipeFromUIUsecase';
@@ -91,16 +91,19 @@ export class UpdateRecipeFromUIUsecase {
       let summary: string | null = null;
       try {
         this.logger.debug('Generating summary for recipe version');
-        summary = await this.recipeSummaryService.createRecipeSummary({
-          recipeId: existingRecipe.id,
-          name: name.trim(),
-          slug: existingRecipe.slug,
-          content: content.trim(),
-          version: nextVersion,
-          summary: null,
-          gitCommit: undefined,
-          userId: editorUserId,
-        });
+        summary = await this.recipeSummaryService.createRecipeSummary(
+          organizationId,
+          {
+            recipeId: existingRecipe.id,
+            name: name.trim(),
+            slug: existingRecipe.slug,
+            content: content.trim(),
+            version: nextVersion,
+            summary: null,
+            gitCommit: undefined,
+            userId: editorUserId,
+          },
+        );
         this.logger.debug('Summary generated successfully', {
           summaryLength: summary?.length || 0,
         });

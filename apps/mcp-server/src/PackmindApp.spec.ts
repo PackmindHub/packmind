@@ -4,6 +4,7 @@ import { CodingAgentHexa } from '@packmind/coding-agent';
 import { DeploymentsHexa } from '@packmind/deployments';
 import { GitHexa } from '@packmind/git';
 import { LinterHexa } from '@packmind/linter';
+import { LlmHexa } from '@packmind/llm';
 import { JobsService } from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
 import { SpacesHexa } from '@packmind/spaces';
@@ -38,6 +39,7 @@ describe('PackmindApp MCP Server', () => {
 
       expect(definition.hexas).toEqual([
         AccountsHexa,
+        LlmHexa,
         GitHexa,
         SpacesHexa,
         LinterHexa,

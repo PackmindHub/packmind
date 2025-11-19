@@ -5,6 +5,7 @@ import { CodingAgentHexa } from '@packmind/coding-agent';
 import { DeploymentsHexa } from '@packmind/deployments';
 import { GitHexa } from '@packmind/git';
 import { LinterHexa } from '@packmind/linter';
+import { LlmHexa } from '@packmind/llm';
 import { PackmindLogger } from '@packmind/logger';
 import { JobsService } from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
@@ -48,6 +49,7 @@ describe('PackmindApp API', () => {
       expect(definition.hexas).toEqual([
         SpacesHexa,
         AccountsHexa,
+        LlmHexa,
         GitHexa,
         RecipesHexa,
         AnalyticsHexa,

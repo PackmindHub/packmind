@@ -12,8 +12,8 @@ import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampl
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import slug from 'slug';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { AiNotConfigured, getErrorMessage } from '@packmind/node-utils';
-import { RuleWithExamples } from '@packmind/types';
+import { getErrorMessage } from '@packmind/node-utils';
+import { RuleWithExamples, AiNotConfigured } from '@packmind/types';
 import { OrganizationId, UserId } from '@packmind/types';
 import { SpaceId, ProgrammingLanguage } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
@@ -125,6 +125,7 @@ export class CreateStandardWithExamplesUsecase {
       let finalSummary: string | null = summary || null;
       if (!summary || summary.trim() === '') {
         finalSummary = await this.generateStandardVersionSummary(
+          organizationId,
           standard,
           name,
           standardSlug,
@@ -280,6 +281,7 @@ export class CreateStandardWithExamplesUsecase {
   }
 
   private async generateStandardVersionSummary(
+    organizationId: OrganizationId,
     standard: Standard,
     name: string,
     standardSlug: string,
@@ -296,6 +298,7 @@ export class CreateStandardWithExamplesUsecase {
       });
 
       summary = await this.standardSummaryService.createStandardSummary(
+        organizationId,
         {
           standardId: standard.id,
           name,

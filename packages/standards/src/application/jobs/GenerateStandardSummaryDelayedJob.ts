@@ -29,6 +29,7 @@ export class GenerateStandardSummaryDelayedJob extends AbstractAIDelayedJob<
       IQueue<GenerateStandardSummaryInput, GenerateStandardSummaryOutput>
     >,
     private readonly _updateStandardVersionSummaryUsecase: UpdateStandardVersionSummaryUsecase,
+    private readonly _standardSummaryService: StandardSummaryService,
     logger: PackmindLogger = new PackmindLogger(logOrigin),
   ) {
     super(queueFactory, logger);
@@ -49,9 +50,11 @@ export class GenerateStandardSummaryDelayedJob extends AbstractAIDelayedJob<
       `[${this.origin}] Processing job ${jobId} with input standard: ${input.standardVersion.standardId}`,
     );
 
-    const summary = await new StandardSummaryService(
-      this.logger,
-    ).createStandardSummary(input.standardVersion, input.rules);
+    const summary = await this._standardSummaryService.createStandardSummary(
+      input.organizationId,
+      input.standardVersion,
+      input.rules,
+    );
     return {
       organizationId: input.organizationId,
       userId: input.userId,

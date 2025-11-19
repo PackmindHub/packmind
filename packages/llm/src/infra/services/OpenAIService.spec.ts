@@ -1,5 +1,5 @@
 import { OpenAIService } from './OpenAIService';
-import { AIServiceErrorTypes } from './types';
+import { AIServiceErrorTypes } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
 
@@ -9,10 +9,15 @@ const getPrivateAccess = (service: OpenAIService) => service as any;
 
 // Mock OpenAI
 jest.mock('openai');
-jest.mock('../../config/config/Configuration');
+jest.mock('@packmind/node-utils', () => ({
+  ...jest.requireActual('@packmind/node-utils'),
+  Configuration: {
+    getConfig: jest.fn(),
+  },
+}));
 
 import OpenAI from 'openai';
-import { Configuration } from '../../config/config/Configuration';
+import { Configuration } from '@packmind/node-utils';
 
 const MockedOpenAI = jest.mocked(OpenAI);
 const MockedConfiguration = jest.mocked(Configuration);

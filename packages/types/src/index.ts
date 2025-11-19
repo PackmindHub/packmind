@@ -11,6 +11,6 @@ export * from './spaces';
 export * from './standards';
 export * from './languages';
 export * from './linter';
+export * from './llm';
 export * from './sse';
-export * from './ai/prompts/types';
 export * from './database/types';

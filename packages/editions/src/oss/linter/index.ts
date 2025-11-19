@@ -1,9 +1,9 @@
-import { TokensUsed } from '@packmind/node-utils';
 import {
   DetectionStatus,
   RuleId,
   Branded,
   ProgrammingLanguage,
+  TokensUsed,
 } from '@packmind/types';
 
 export { LinterHexa } from './LinterHexa';

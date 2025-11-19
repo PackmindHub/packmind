@@ -12,6 +12,8 @@ import {
   IDeploymentPortName,
   ILinterPort,
   ILinterPortName,
+  ILlmPort,
+  ILlmPortName,
   ISpacesPort,
   ISpacesPortName,
   IStandardsPortName,
@@ -95,6 +97,7 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
       const linterPort = registry.getAdapter<ILinterPort>(ILinterPortName);
       const deploymentsPort =
         registry.getAdapter<IDeploymentPort>(IDeploymentPortName);
+      const llmPort = registry.getAdapter<ILlmPort>(ILlmPortName);
 
       this.logger.info('All required ports retrieved from registry');
 
@@ -104,8 +107,9 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
         throw new Error('JobsService not found in registry');
       }
 
-      // Set linter adapter on services for backward compatibility
+      // Set adapters on services for backward compatibility
       this.standardsServices.setLinterAdapter(linterPort);
+      this.standardsServices.setLlmPort(llmPort);
 
       // Initialize adapter with all ports and services
       // Delayed jobs are built internally by the adapter
@@ -114,6 +118,7 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
         [ISpacesPortName]: spacesPort,
         [ILinterPortName]: linterPort,
         [IDeploymentPortName]: deploymentsPort,
+        [ILlmPortName]: llmPort,
         jobsService,
       });
 

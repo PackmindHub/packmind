@@ -12,6 +12,8 @@ import {
   IDeploymentPortName,
   IGitPort,
   IGitPortName,
+  ILlmPort,
+  ILlmPortName,
   IRecipesPort,
   IRecipesPortName,
   ISpacesPort,
@@ -90,6 +92,7 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
       const accountsPort =
         registry.getAdapter<IAccountsPort>(IAccountsPortName);
       const spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
+      const llmPort = registry.getAdapter<ILlmPort>(ILlmPortName);
 
       // Get deployment port - this will be updated later via setDeploymentPort()
       // due to circular dependency with DeploymentsHexa
@@ -108,6 +111,9 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
       // Get JobsService
       const jobsService = registry.getService(JobsService);
 
+      // Set llmPort on services
+      this.recipesServices.setLlmPort(llmPort);
+
       // Initialize adapter with all dependencies
       // The adapter will build and register delayed jobs internally
       await this.adapter.initialize({
@@ -115,6 +121,7 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
         [IDeploymentPortName]: deploymentPort,
         [IAccountsPortName]: accountsPort,
         [ISpacesPortName]: spacesPort,
+        [ILlmPortName]: llmPort,
         jobsService,
       });
 
@@ -147,6 +154,7 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
       const accountsPort =
         registry.getAdapter<IAccountsPort>(IAccountsPortName);
       const spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
+      const llmPort = registry.getAdapter<ILlmPort>(ILlmPortName);
 
       // Get JobsService
       const jobsService = registry.getService(JobsService);
@@ -158,6 +166,7 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
         [IDeploymentPortName]: deploymentPort,
         [IAccountsPortName]: accountsPort,
         [ISpacesPortName]: spacesPort,
+        [ILlmPortName]: llmPort,
         jobsService,
       });
 
