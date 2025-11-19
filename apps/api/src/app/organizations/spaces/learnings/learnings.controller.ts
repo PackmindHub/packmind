@@ -1,6 +1,8 @@
 import {
+  BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -14,6 +16,7 @@ import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
   AcceptKnowledgePatchResponse,
+  BatchRejectKnowledgePatchesResponse,
   DistillTopicResponse,
   GetEmbeddingHealthResponse,
   GetKnowledgePatchResponse,
@@ -238,6 +241,76 @@ export class OrganizationsSpacesLearningsController {
           spaceId,
           patchId,
           userId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Batch reject knowledge patches
+   * DELETE /organizations/:orgId/spaces/:spaceId/learnings/patches
+   */
+  @Delete('patches')
+  async batchRejectPatches(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Body() body: { patchIds: KnowledgePatchId[]; reviewNotes: string },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<BatchRejectKnowledgePatchesResponse> {
+    const userId = request.user.userId;
+    const { patchIds, reviewNotes } = body;
+
+    try {
+      if (!patchIds || !Array.isArray(patchIds)) {
+        throw new BadRequestException('patchIds must be an array');
+      }
+
+      if (patchIds.length === 0) {
+        throw new BadRequestException('patchIds array cannot be empty');
+      }
+
+      if (!reviewNotes || reviewNotes.trim() === '') {
+        throw new BadRequestException('reviewNotes is required');
+      }
+
+      this.logger.info(
+        'DELETE /organizations/:orgId/spaces/:spaceId/learnings/patches - Batch rejecting patches',
+        {
+          organizationId,
+          spaceId,
+          count: patchIds.length,
+          userId,
+        },
+      );
+
+      const result = await this.learningsAdapter.batchRejectKnowledgePatches({
+        patchIds,
+        spaceId,
+        reviewedBy: userId,
+        reviewNotes,
+        organizationId,
+        userId,
+      });
+
+      this.logger.info(
+        'DELETE /organizations/:orgId/spaces/:spaceId/learnings/patches - Patches batch rejected successfully',
+        {
+          count: patchIds.length,
+        },
+      );
+
+      return result;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'DELETE /organizations/:orgId/spaces/:spaceId/learnings/patches - Failed to batch reject patches',
+        {
+          organizationId,
+          spaceId,
+          patchIds: body?.patchIds || 'undefined',
           error: errorMessage,
         },
       );
@@ -472,7 +545,8 @@ export class OrganizationsSpacesLearningsController {
     @Query('queryText') queryText: string,
     @Query('threshold') threshold: string | undefined,
     @Query('maxResults') maxResults: string | undefined,
-    @Query('resultTypes') resultTypes: 'standards' | 'recipes' | 'both' | undefined,
+    @Query('resultTypes')
+    resultTypes: 'standards' | 'recipes' | 'both' | undefined,
     @Req() request: AuthenticatedRequest,
   ): Promise<SearchArtifactsBySemanticsResponse> {
     const userId = request.user.userId;

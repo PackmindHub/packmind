@@ -3,6 +3,8 @@ import { IBaseAdapter, JobsService } from '@packmind/node-utils';
 import {
   AcceptKnowledgePatchCommand,
   AcceptKnowledgePatchResponse,
+  BatchRejectKnowledgePatchesCommand,
+  BatchRejectKnowledgePatchesResponse,
   CaptureTopicCommand,
   CaptureTopicResponse,
   DistillTopicCommand,
@@ -57,6 +59,7 @@ import { ListKnowledgePatchesUsecase } from '../useCases/listKnowledgePatches/li
 import { GetKnowledgePatchUsecase } from '../useCases/getKnowledgePatch/getKnowledgePatch.usecase';
 import { AcceptKnowledgePatchUsecase } from '../useCases/acceptKnowledgePatch/acceptKnowledgePatch.usecase';
 import { RejectKnowledgePatchUsecase } from '../useCases/rejectKnowledgePatch/rejectKnowledgePatch.usecase';
+import { BatchRejectKnowledgePatchesUsecase } from '../useCases/batchRejectKnowledgePatches/batchRejectKnowledgePatches.usecase';
 import { SearchArtifactsBySemanticsUsecase } from '../useCases/searchArtifactsBySemantics/searchArtifactsBySemantics.usecase';
 import { GetEmbeddingHealthUsecase } from '../useCases/getEmbeddingHealth/getEmbeddingHealth.usecase';
 import { TriggerEmbeddingBackfillUsecase } from '../useCases/triggerEmbeddingBackfill/triggerEmbeddingBackfill.usecase';
@@ -89,6 +92,7 @@ export class LearningsAdapter
   private getKnowledgePatchUsecase: GetKnowledgePatchUsecase;
   private acceptKnowledgePatchUsecase: AcceptKnowledgePatchUsecase;
   private rejectKnowledgePatchUsecase: RejectKnowledgePatchUsecase;
+  private batchRejectKnowledgePatchesUsecase: BatchRejectKnowledgePatchesUsecase;
   private searchArtifactsBySemanticsUsecase: SearchArtifactsBySemanticsUsecase | null =
     null;
   private getEmbeddingHealthUsecase: GetEmbeddingHealthUsecase | null = null;
@@ -144,6 +148,12 @@ export class LearningsAdapter
       knowledgePatchService,
       this.logger,
     );
+
+    this.batchRejectKnowledgePatchesUsecase =
+      new BatchRejectKnowledgePatchesUsecase(
+        this.rejectKnowledgePatchUsecase,
+        this.logger,
+      );
 
     this.getTopicsStatsUsecase = new GetTopicsStatsUsecase(
       this.learningsServices.getTopicService(),
@@ -512,6 +522,20 @@ export class LearningsAdapter
     });
 
     return await this.rejectKnowledgePatchUsecase.execute(command);
+  }
+
+  /**
+   * Batch reject multiple knowledge patches.
+   */
+  public async batchRejectKnowledgePatches(
+    command: BatchRejectKnowledgePatchesCommand,
+  ): Promise<BatchRejectKnowledgePatchesResponse> {
+    this.logger.info('batchRejectKnowledgePatches called', {
+      count: command.patchIds.length,
+      reviewedBy: command.reviewedBy,
+    });
+
+    return await this.batchRejectKnowledgePatchesUsecase.execute(command);
   }
 
   /**

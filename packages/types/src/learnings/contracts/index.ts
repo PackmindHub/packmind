@@ -8,6 +8,7 @@ export * from './ListKnowledgePatchesUseCase';
 export * from './GetKnowledgePatchUseCase';
 export * from './AcceptKnowledgePatchUseCase';
 export * from './RejectKnowledgePatchUseCase';
+export * from './BatchRejectKnowledgePatchesUseCase';
 export * from './SearchArtifactsBySemanticsUseCase';
 export * from './GetEmbeddingHealthUseCase';
 export * from './TriggerEmbeddingBackfillUseCase';

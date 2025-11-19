@@ -39,6 +39,10 @@ import {
   RejectKnowledgePatchResponse,
 } from '../contracts/RejectKnowledgePatchUseCase';
 import {
+  BatchRejectKnowledgePatchesCommand,
+  BatchRejectKnowledgePatchesResponse,
+} from '../contracts/BatchRejectKnowledgePatchesUseCase';
+import {
   SearchArtifactsBySemanticsCommand,
   SearchArtifactsBySemanticsResponse,
 } from '../contracts/SearchArtifactsBySemanticsUseCase';
@@ -92,6 +96,9 @@ export interface ILearningsPort {
   rejectKnowledgePatch(
     command: RejectKnowledgePatchCommand,
   ): Promise<RejectKnowledgePatchResponse>;
+  batchRejectKnowledgePatches(
+    command: BatchRejectKnowledgePatchesCommand,
+  ): Promise<BatchRejectKnowledgePatchesResponse>;
   searchArtifactsBySemantics(
     command: SearchArtifactsBySemanticsCommand,
   ): Promise<SearchArtifactsBySemanticsResponse>;
