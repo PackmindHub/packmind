@@ -3,6 +3,7 @@ import { IRecipesPort, IStandardsPort } from '@packmind/types';
 import { ILearningsRepositories } from '../../domain/repositories/ILearningsRepositories';
 import { ITopicRepository } from '../../domain/repositories/ITopicRepository';
 import { ITopicKnowledgePatchRepository } from '../../domain/repositories/ITopicKnowledgePatchRepository';
+import { IRagLabConfigurationRepository } from '../../domain/repositories/IRagLabConfigurationRepository';
 import { EmbeddingOrchestrationService } from './EmbeddingOrchestrationService';
 import { KnowledgePatchService } from './KnowledgePatchService';
 import { PatchApplicationService } from './PatchApplicationService';
@@ -15,6 +16,7 @@ export class LearningsServices {
   private readonly knowledgePatchService: KnowledgePatchService;
   private readonly topicRepository: ITopicRepository;
   private readonly topicKnowledgePatchRepository: ITopicKnowledgePatchRepository;
+  private readonly ragLabConfigurationRepository: IRagLabConfigurationRepository;
   private patchApplicationService: PatchApplicationService | null = null;
   private embeddingOrchestrationService: EmbeddingOrchestrationService | null =
     null;
@@ -36,6 +38,9 @@ export class LearningsServices {
 
     this.topicKnowledgePatchRepository =
       learningsRepositories.getTopicKnowledgePatchRepository();
+
+    this.ragLabConfigurationRepository =
+      learningsRepositories.getRagLabConfigurationRepository();
 
     logger.info('LearningsServices initialized successfully');
   }
@@ -89,5 +94,9 @@ export class LearningsServices {
       );
     }
     return this.embeddingOrchestrationService;
+  }
+
+  getRagLabConfigurationRepository(): IRagLabConfigurationRepository {
+    return this.ragLabConfigurationRepository;
   }
 }

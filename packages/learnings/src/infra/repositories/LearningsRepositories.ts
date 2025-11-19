@@ -3,17 +3,21 @@ import { ILearningsRepositories } from '../../domain/repositories/ILearningsRepo
 import { IKnowledgePatchRepository } from '../../domain/repositories/IKnowledgePatchRepository';
 import { ITopicRepository } from '../../domain/repositories/ITopicRepository';
 import { ITopicKnowledgePatchRepository } from '../../domain/repositories/ITopicKnowledgePatchRepository';
+import { IRagLabConfigurationRepository } from '../../domain/repositories/IRagLabConfigurationRepository';
 import { KnowledgePatchSchema } from '../schemas/KnowledgePatchSchema';
 import { TopicSchema } from '../schemas/TopicSchema';
 import { TopicKnowledgePatchSchema } from '../schemas/TopicKnowledgePatchSchema';
+import { RagLabConfigurationSchema } from '../schemas/RagLabConfigurationSchema';
 import { KnowledgePatchRepository } from './KnowledgePatchRepository';
 import { TopicRepository } from './TopicRepository';
 import { TopicKnowledgePatchRepository } from './TopicKnowledgePatchRepository';
+import { RagLabConfigurationRepository } from './RagLabConfigurationRepository';
 
 export class LearningsRepositories implements ILearningsRepositories {
   private readonly topicRepository: ITopicRepository;
   private readonly knowledgePatchRepository: IKnowledgePatchRepository;
   private readonly topicKnowledgePatchRepository: ITopicKnowledgePatchRepository;
+  private readonly ragLabConfigurationRepository: IRagLabConfigurationRepository;
 
   constructor(private readonly dataSource: DataSource) {
     this.topicRepository = new TopicRepository(
@@ -24,6 +28,9 @@ export class LearningsRepositories implements ILearningsRepositories {
     );
     this.topicKnowledgePatchRepository = new TopicKnowledgePatchRepository(
       this.dataSource.getRepository(TopicKnowledgePatchSchema),
+    );
+    this.ragLabConfigurationRepository = new RagLabConfigurationRepository(
+      this.dataSource.getRepository(RagLabConfigurationSchema),
     );
   }
 
@@ -37,5 +44,9 @@ export class LearningsRepositories implements ILearningsRepositories {
 
   getTopicKnowledgePatchRepository(): ITopicKnowledgePatchRepository {
     return this.topicKnowledgePatchRepository;
+  }
+
+  getRagLabConfigurationRepository(): IRagLabConfigurationRepository {
+    return this.ragLabConfigurationRepository;
   }
 }
