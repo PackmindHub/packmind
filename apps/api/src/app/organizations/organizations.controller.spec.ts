@@ -2,12 +2,17 @@ import { OrganizationsController } from './organizations.controller';
 import { createOrganizationId } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 import { AuthenticatedRequest } from '@packmind/node-utils';
-import { IAccountsPort, IDeploymentPort } from '@packmind/types';
+import {
+  IAccountsPort,
+  IDeploymentPort,
+  ILearningsPort,
+} from '@packmind/types';
 
 describe('OrganizationsController', () => {
   let controller: OrganizationsController;
   let mockAccountsAdapter: jest.Mocked<IAccountsPort>;
   let mockDeploymentAdapter: jest.Mocked<IDeploymentPort>;
+  let mockLearningsAdapter: jest.Mocked<ILearningsPort>;
 
   beforeEach(() => {
     const logger = stubLogger();
@@ -19,9 +24,16 @@ describe('OrganizationsController', () => {
       pullAllContent: jest.fn(),
     } as unknown as jest.Mocked<IDeploymentPort>;
 
+    mockLearningsAdapter = {
+      getRagLabConfiguration: jest.fn(),
+      updateRagLabConfiguration: jest.fn(),
+      triggerFullReembedding: jest.fn(),
+    } as unknown as jest.Mocked<ILearningsPort>;
+
     controller = new OrganizationsController(
       mockAccountsAdapter,
       mockDeploymentAdapter,
+      mockLearningsAdapter,
       logger,
     );
   });

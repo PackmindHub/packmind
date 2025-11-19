@@ -19,9 +19,9 @@ import {
   IAccountsPort,
   IDeploymentPort,
   ILearningsPort,
-  GetRagLabConfigurationResponse,
+  GetRagLabConfigurationResult,
   UpdateRagLabConfigurationCommand,
-  UpdateRagLabConfigurationResponse,
+  RagLabConfiguration,
   TriggerFullReembeddingResponse,
 } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
@@ -262,7 +262,7 @@ export class OrganizationsController {
   async getRagLabConfiguration(
     @Param('orgId') organizationId: OrganizationId,
     @Req() request: AuthenticatedRequest,
-  ): Promise<GetRagLabConfigurationResponse> {
+  ): Promise<GetRagLabConfigurationResult> {
     const userId = request.user.userId;
 
     this.logger.info(
@@ -302,7 +302,7 @@ export class OrganizationsController {
     @Param('orgId') organizationId: OrganizationId,
     @Body() body: UpdateRagLabConfigurationCommand,
     @Req() request: AuthenticatedRequest,
-  ): Promise<UpdateRagLabConfigurationResponse> {
+  ): Promise<RagLabConfiguration> {
     const userId = request.user.userId;
 
     this.logger.info(
