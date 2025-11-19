@@ -123,6 +123,9 @@
     "vite-tsconfig-paths": "^5.1.4",
     "webpack-cli": "^5.1.4"
   },
+  "resolutions": {
+    "typeorm/glob": "^10.5.0"
+  },
   "dependencies": {
     "@amplitude/analytics-browser": "^2.25.4",
     "@amplitude/analytics-node": "^1.5.18",

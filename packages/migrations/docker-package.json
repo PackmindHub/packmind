@@ -4,6 +4,9 @@
   "private": true,
   "type": "commonjs",
   "main": "./packages/migrations/src/runMigrationsDocker.js",
+  "resolutions": {
+    "typeorm/glob": "^10.5.0"
+  },
   "dependencies": {
     "typeorm": "^0.3.25",
     "tsconfig-paths": "^4.2.0"
