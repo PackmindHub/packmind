@@ -58,6 +58,8 @@ import { RejectKnowledgePatchUsecase } from '../useCases/rejectKnowledgePatch/re
 import { SearchArtifactsBySemanticsUsecase } from '../useCases/searchArtifactsBySemantics/searchArtifactsBySemantics.usecase';
 import { GetEmbeddingHealthUsecase } from '../useCases/getEmbeddingHealth/getEmbeddingHealth.usecase';
 import { TriggerEmbeddingBackfillUsecase } from '../useCases/triggerEmbeddingBackfill/triggerEmbeddingBackfill.usecase';
+import { GetRagLabConfigurationUseCase } from '../useCases/getRagLabConfiguration/GetRagLabConfigurationUseCase';
+import { UpdateRagLabConfigurationUseCase } from '../useCases/updateRagLabConfiguration/UpdateRagLabConfigurationUseCase';
 import { ILearningsDelayedJobs } from '../../domain/jobs/ILearningsDelayedJobs';
 import { DistillTopicsJobFactory } from '../../infra/jobs/DistillTopicsJobFactory';
 import { GenerateStandardEmbeddingJobFactory } from '../../infra/jobs/GenerateStandardEmbeddingJobFactory';
@@ -89,6 +91,8 @@ export class LearningsAdapter
   private getEmbeddingHealthUsecase: GetEmbeddingHealthUsecase | null = null;
   private triggerEmbeddingBackfillUsecase: TriggerEmbeddingBackfillUsecase | null =
     null;
+  private getRagLabConfigurationUseCase: GetRagLabConfigurationUseCase;
+  private updateRagLabConfigurationUseCase: UpdateRagLabConfigurationUseCase;
   private accountsPort: IAccountsPort | null = null;
   private spacesPort: ISpacesPort | null = null;
   private standardsPort: IStandardsPort | null = null;
@@ -141,6 +145,22 @@ export class LearningsAdapter
       knowledgePatchService,
       this.logger,
     );
+
+    // Initialize RAG Lab configuration use cases
+    this.logger.debug('Initializing RAG Lab configuration use cases');
+    const ragLabConfigurationRepository =
+      this.learningsServices.getRagLabConfigurationRepository();
+
+    this.getRagLabConfigurationUseCase = new GetRagLabConfigurationUseCase(
+      ragLabConfigurationRepository,
+      this.logger,
+    );
+
+    this.updateRagLabConfigurationUseCase =
+      new UpdateRagLabConfigurationUseCase(
+        ragLabConfigurationRepository,
+        this.logger,
+      );
   }
 
   /**
@@ -647,31 +667,19 @@ export class LearningsAdapter
 
   /**
    * Get RAG Lab configuration for an organization.
-   * TODO: Implement when repository and use case are created.
    */
   public async getRagLabConfiguration(
     command: GetRagLabConfigurationCommand,
   ): Promise<GetRagLabConfigurationResult> {
-    this.logger.info('getRagLabConfiguration called', {
-      organizationId: command.organizationId,
-      userId: command.userId,
-    });
-
-    throw new Error('getRagLabConfiguration not yet implemented');
+    return this.getRagLabConfigurationUseCase.execute(command);
   }
 
   /**
    * Update RAG Lab configuration for an organization.
-   * TODO: Implement when repository and use case are created.
    */
   public async updateRagLabConfiguration(
     command: UpdateRagLabConfigurationCommand,
   ): Promise<RagLabConfiguration> {
-    this.logger.info('updateRagLabConfiguration called', {
-      organizationId: command.organizationId,
-      userId: command.userId,
-    });
-
-    throw new Error('updateRagLabConfiguration not yet implemented');
+    return this.updateRagLabConfigurationUseCase.execute(command);
   }
 }

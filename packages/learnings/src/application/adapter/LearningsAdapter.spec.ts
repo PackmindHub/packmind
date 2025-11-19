@@ -64,6 +64,13 @@ describe('LearningsAdapter', () => {
         findPatchIdsByTopicId: jest.fn(),
         findTopicIdsByPatchId: jest.fn(),
       }),
+      getRagLabConfigurationRepository: jest.fn().mockReturnValue({
+        add: jest.fn(),
+        findById: jest.fn(),
+        deleteById: jest.fn(),
+        restoreById: jest.fn(),
+        findByOrganizationId: jest.fn(),
+      }),
       initializePatchApplicationService: jest.fn(),
       getPatchApplicationService: jest.fn().mockReturnValue(null),
       initializeEmbeddingOrchestrationService: jest.fn(),
