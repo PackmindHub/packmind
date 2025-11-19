@@ -45,6 +45,7 @@ interface ProgramEditorProps {
   standardId: string;
   ruleId: string;
   detectionLanguages?: string[];
+  selectedLanguage: string;
 }
 
 export function computeActiveConfigurationState(
@@ -81,6 +82,7 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
   standardId,
   ruleId,
   detectionLanguages = [],
+  selectedLanguage,
 }) => {
   const queryClient = useQueryClient();
   const { data: meData } = useGetMeQuery();
@@ -133,25 +135,31 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
       return [];
     }
 
-    return normalizedPrograms.map((program) => {
-      const detectionProgram = program.detectionProgram ?? null;
-      const draftProgram = program.draftDetectionProgram ?? null;
-      const state = computeActiveConfigurationState(
-        program,
-        detectionProgram,
-        draftProgram,
-      );
+    return normalizedPrograms
+      .filter((program) => {
+        const detectionProgram = program.detectionProgram ?? null;
+        const lang = detectionProgram?.language ?? program.language;
+        return lang === selectedLanguage;
+      })
+      .map((program) => {
+        const detectionProgram = program.detectionProgram ?? null;
+        const draftProgram = program.draftDetectionProgram ?? null;
+        const state = computeActiveConfigurationState(
+          program,
+          detectionProgram,
+          draftProgram,
+        );
 
-      return {
-        id: program.id,
-        language: detectionProgram?.language ?? program.language,
-        detectionProgram,
-        draftProgram,
-        state,
-        isExampleOnly: program.isExampleOnly ?? false,
-      };
-    });
-  }, [normalizedPrograms]);
+        return {
+          id: program.id,
+          language: detectionProgram?.language ?? program.language,
+          detectionProgram,
+          draftProgram,
+          state,
+          isExampleOnly: program.isExampleOnly ?? false,
+        };
+      });
+  }, [normalizedPrograms, selectedLanguage]);
 
   const draftPrograms = useMemo<DraftCardData[]>(() => {
     if (!normalizedPrograms.length) {
@@ -164,11 +172,16 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
       }
 
       const draftProgram = program.draftDetectionProgram;
+      const lang = draftProgram.language ?? program.language;
+
+      if (lang !== selectedLanguage) {
+        return [];
+      }
 
       return [
         {
           id: `${program.id}-draft-${draftProgram.id}`,
-          language: draftProgram.language ?? program.language,
+          language: lang,
           activeDetectionProgramId: program.id,
           draftProgram,
           status: draftProgram.status,
@@ -177,7 +190,7 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
         },
       ];
     });
-  }, [normalizedPrograms]);
+  }, [normalizedPrograms, selectedLanguage]);
 
   const handleGenerateProgram = useCallback(
     (language?: string) => {
