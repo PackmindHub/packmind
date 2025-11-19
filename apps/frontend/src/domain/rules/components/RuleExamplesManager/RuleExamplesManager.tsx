@@ -11,6 +11,7 @@ import {
 interface RuleExamplesManagerProps {
   standardId: string;
   ruleId: RuleId;
+  selectedLanguage: string;
 }
 
 export interface NewExample {
@@ -24,6 +25,7 @@ export interface NewExample {
 export const RuleExamplesManager: React.FC<RuleExamplesManagerProps> = ({
   standardId,
   ruleId,
+  selectedLanguage,
 }) => {
   const [newExamples, setNewExamples] = useState<NewExample[]>([]);
   const createRuleExampleMutation = useCreateRuleExampleMutation();
@@ -38,7 +40,7 @@ export const RuleExamplesManager: React.FC<RuleExamplesManagerProps> = ({
   const handleCreateNewExample = () => {
     const newExample: NewExample = {
       id: `new-${Date.now()}-${Math.random()}`,
-      lang: ProgrammingLanguage.JAVASCRIPT,
+      lang: selectedLanguage as ProgrammingLanguage,
       positive: '',
       negative: '',
       isNew: true,
@@ -100,8 +102,17 @@ export const RuleExamplesManager: React.FC<RuleExamplesManagerProps> = ({
     );
   }
 
+  const filteredExistingExamples = existingExamples?.filter(
+    (ex) => ex.lang === selectedLanguage,
+  );
+
+  const filteredNewExamples = newExamples.filter(
+    (ex) => ex.lang === selectedLanguage,
+  );
+
   const hasExamples =
-    (existingExamples && existingExamples.length > 0) || newExamples.length > 0;
+    (filteredExistingExamples && filteredExistingExamples.length > 0) ||
+    filteredNewExamples.length > 0;
 
   return (
     <PMVStack alignItems={'stretch'} gap="4" width={'full'}>
@@ -126,7 +137,7 @@ export const RuleExamplesManager: React.FC<RuleExamplesManagerProps> = ({
       ) : (
         <PMVStack gap={4} align="stretch" width="100%">
           {/* Render new examples first (in edit mode) */}
-          {newExamples.map((example) => (
+          {filteredNewExamples.map((example) => (
             <RuleExampleItem
               key={example.id}
               example={example}
@@ -139,7 +150,7 @@ export const RuleExamplesManager: React.FC<RuleExamplesManagerProps> = ({
           ))}
 
           {/* Render existing examples (newest first) */}
-          {existingExamples
+          {filteredExistingExamples
             ?.slice()
             .reverse()
             .map((example) => (

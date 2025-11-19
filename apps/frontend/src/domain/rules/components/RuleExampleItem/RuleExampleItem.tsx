@@ -25,7 +25,6 @@ import {
   PMIcon,
   PMGrid,
   PMGridItem,
-  PMNativeSelect,
 } from '@packmind/ui';
 import { LuCircleCheckBig, LuCircleX } from 'react-icons/lu';
 import { GET_STANDARD_RULES_DETECTION_STATUS_KEY } from '@packmind/proprietary/frontend/domain/detection/api/queryKeys';
@@ -98,12 +97,8 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
     return Object.keys(errors).length === 0;
   };
 
-  // Get sorted languages for the dropdown
+  // Get sorted languages for display
   const sortedLanguages = getAllLanguagesSortedByDisplayName();
-  const languageOptions = sortedLanguages.map(({ language, info }) => ({
-    value: language,
-    label: info.displayName,
-  }));
 
   const handleEditToggle = async () => {
     if (isEditing) {
@@ -232,24 +227,10 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
       <PMFlex justify="space-between" align="center" mb={4}>
         <PMHStack>
           <PMText>Language:</PMText>
-          {isEditing && isNew ? (
-            <PMNativeSelect
-              value={editValues.lang}
-              onChange={(e) =>
-                setEditValues((prev) => ({
-                  ...prev,
-                  lang: e.target.value as ProgrammingLanguage,
-                }))
-              }
-              items={languageOptions}
-              size="sm"
-            />
-          ) : (
-            <PMBadge colorPalette={'blue'} size={'lg'}>
-              {sortedLanguages.find(({ language }) => language === example.lang)
-                ?.info.displayName || example.lang}
-            </PMBadge>
-          )}
+          <PMBadge colorPalette={'blue'} size={'lg'}>
+            {sortedLanguages.find(({ language }) => language === example.lang)
+              ?.info.displayName || example.lang}
+          </PMBadge>
         </PMHStack>
         {isEditing ? (
           <PMButtonGroup size="sm">
