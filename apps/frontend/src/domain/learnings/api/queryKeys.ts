@@ -1,6 +1,8 @@
 import {
   KnowledgePatchId,
   KnowledgePatchStatus,
+  OrganizationId,
+  ResultType,
   SpaceId,
   TopicId,
 } from '@packmind/types';
@@ -16,6 +18,7 @@ export enum LearningsQueryKeys {
   GET_TOPIC_BY_ID = 'get-topic-by-id',
   SEARCH_ARTIFACTS = 'search-artifacts',
   EMBEDDING_HEALTH = 'embedding-health',
+  RAG_LAB_CONFIGURATION = 'rag-lab-configuration',
 }
 
 export function getKnowledgePatchesBySpaceKey(
@@ -75,8 +78,10 @@ export function getSearchArtifactsKey(
   spaceId: SpaceId | undefined,
   queryText: string,
   threshold?: number,
-) {
-  const baseKey = [
+  maxResults?: number,
+  resultTypes?: ResultType,
+): Array<string | SpaceId | number | undefined> {
+  const baseKey: Array<string | SpaceId | number | undefined> = [
     ORGANIZATION_QUERY_SCOPE,
     SPACES_SCOPE,
     spaceId,
@@ -85,7 +90,18 @@ export function getSearchArtifactsKey(
     queryText,
   ];
 
-  return threshold !== undefined ? [...baseKey, threshold] : baseKey;
+  const keyParts: Array<string | SpaceId | number | undefined> = [...baseKey];
+  if (threshold !== undefined) {
+    keyParts.push(threshold);
+  }
+  if (maxResults !== undefined) {
+    keyParts.push(maxResults);
+  }
+  if (resultTypes !== undefined) {
+    keyParts.push(resultTypes);
+  }
+
+  return keyParts;
 }
 
 export function getEmbeddingHealthKey(spaceId: SpaceId | undefined) {
@@ -95,5 +111,16 @@ export function getEmbeddingHealthKey(spaceId: SpaceId | undefined) {
     spaceId,
     LEARNINGS_QUERY_SCOPE,
     LearningsQueryKeys.EMBEDDING_HEALTH,
+  ];
+}
+
+export function getRagLabConfigurationKey(
+  organizationId: OrganizationId | undefined,
+) {
+  return [
+    ORGANIZATION_QUERY_SCOPE,
+    organizationId,
+    LEARNINGS_QUERY_SCOPE,
+    LearningsQueryKeys.RAG_LAB_CONFIGURATION,
   ];
 }

@@ -23,6 +23,9 @@ import {
   ISearchArtifactsBySemanticsUseCase,
   IGetEmbeddingHealthUseCase,
   ITriggerEmbeddingBackfillUseCase,
+  IGetRagLabConfigurationUseCase,
+  IUpdateRagLabConfigurationUseCase,
+  ITriggerFullReembeddingUseCase,
   ListKnowledgePatchesCommand,
   ListKnowledgePatchesResponse,
   ListTopicsCommand,
@@ -33,6 +36,12 @@ import {
   GetEmbeddingHealthResponse,
   TriggerEmbeddingBackfillCommand,
   TriggerEmbeddingBackfillResponse,
+  GetRagLabConfigurationCommand,
+  GetRagLabConfigurationResult,
+  UpdateRagLabConfigurationCommand,
+  RagLabConfiguration,
+  TriggerFullReembeddingCommand,
+  TriggerFullReembeddingResponse,
   NewGateway,
   NewPackmindCommandBody,
   RejectKnowledgePatchCommand,
@@ -152,11 +161,19 @@ export class LearningsGatewayApi
       spaceId,
       queryText,
       threshold,
+      maxResults,
+      resultTypes,
     }: NewPackmindCommandBody<SearchArtifactsBySemanticsCommand>) => {
       const queryParams = new URLSearchParams();
       queryParams.append('queryText', queryText);
       if (threshold !== undefined) {
         queryParams.append('threshold', threshold.toString());
+      }
+      if (maxResults !== undefined) {
+        queryParams.append('maxResults', maxResults.toString());
+      }
+      if (resultTypes !== undefined) {
+        queryParams.append('resultTypes', resultTypes);
       }
 
       return this._api.get<SearchArtifactsBySemanticsResponse>(
@@ -183,4 +200,40 @@ export class LearningsGatewayApi
         {},
       );
     };
+
+  getRagLabConfiguration: NewGateway<IGetRagLabConfigurationUseCase> = async ({
+    organizationId,
+  }: NewPackmindCommandBody<GetRagLabConfigurationCommand>) => {
+    return this._api.get<GetRagLabConfigurationResult>(
+      `/organizations/${organizationId}/rag-lab/configuration`,
+    );
+  };
+
+  updateRagLabConfiguration: NewGateway<IUpdateRagLabConfigurationUseCase> =
+    async ({
+      organizationId,
+      embeddingModel,
+      embeddingDimensions,
+      includeCodeBlocks,
+      maxTextLength,
+    }: NewPackmindCommandBody<UpdateRagLabConfigurationCommand>) => {
+      return this._api.put<RagLabConfiguration>(
+        `/organizations/${organizationId}/rag-lab/configuration`,
+        {
+          embeddingModel,
+          embeddingDimensions,
+          includeCodeBlocks,
+          maxTextLength,
+        },
+      );
+    };
+
+  triggerFullReembedding: NewGateway<ITriggerFullReembeddingUseCase> = async ({
+    organizationId,
+  }: NewPackmindCommandBody<TriggerFullReembeddingCommand>) => {
+    return this._api.post<TriggerFullReembeddingResponse>(
+      `/organizations/${organizationId}/rag-lab/trigger-full-reembedding`,
+      {},
+    );
+  };
 }

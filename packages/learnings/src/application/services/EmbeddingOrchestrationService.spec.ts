@@ -14,6 +14,7 @@ import {
   createSpaceId,
   createRuleId,
   createOrganizationId,
+  createUserId,
 } from '@packmind/types';
 import { standardVersionFactory } from '@packmind/standards/test';
 import { recipeVersionFactory } from '@packmind/recipes/test';
@@ -76,6 +77,8 @@ describe('EmbeddingOrchestrationService', () => {
     mockSpacesPort = {
       getSpaceById: jest.fn(),
       listSpacesByOrganization: jest.fn(),
+      createSpace: jest.fn(),
+      getSpaceBySlug: jest.fn(),
     } as jest.Mocked<ISpacesPort>;
 
     mockRagLabConfigurationRepository = {
@@ -140,7 +143,7 @@ describe('EmbeddingOrchestrationService', () => {
         slug: 'test-standard',
         description: 'Test description',
         version: 1,
-        userId: 'user-id',
+        userId: createUserId('user-id'),
         scope: null,
         spaceId,
       };
@@ -213,7 +216,7 @@ describe('EmbeddingOrchestrationService', () => {
         slug: 'test-standard',
         description: 'Test description',
         version: 1,
-        userId: 'user-id',
+        userId: createUserId('user-id'),
         scope: null,
         spaceId,
       };
@@ -261,7 +264,7 @@ describe('EmbeddingOrchestrationService', () => {
         slug: 'test-standard',
         description: 'Test description',
         version: 1,
-        userId: 'user-id',
+        userId: createUserId('user-id'),
         scope: null,
         spaceId,
       };
@@ -317,7 +320,7 @@ describe('EmbeddingOrchestrationService', () => {
         slug: 'test-recipe',
         content: 'Test content',
         version: 1,
-        userId: 'user-id',
+        userId: createUserId('user-id'),
         spaceId,
       };
 
@@ -392,7 +395,7 @@ describe('EmbeddingOrchestrationService', () => {
         slug: 'test-recipe',
         content: 'Test content',
         version: 1,
-        userId: 'user-id',
+        userId: createUserId('user-id'),
         spaceId,
       };
 
@@ -439,7 +442,7 @@ describe('EmbeddingOrchestrationService', () => {
         slug: 'test-recipe',
         content: 'Test content',
         version: 1,
-        userId: 'user-id',
+        userId: createUserId('user-id'),
         spaceId,
       };
 

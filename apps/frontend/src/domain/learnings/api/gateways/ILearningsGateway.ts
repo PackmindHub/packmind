@@ -11,6 +11,9 @@ import {
   ISearchArtifactsBySemanticsUseCase,
   IGetEmbeddingHealthUseCase,
   ITriggerEmbeddingBackfillUseCase,
+  IGetRagLabConfigurationUseCase,
+  IUpdateRagLabConfigurationUseCase,
+  ITriggerFullReembeddingUseCase,
   NewGateway,
 } from '@packmind/types';
 
@@ -27,4 +30,7 @@ export interface ILearningsGateway {
   searchArtifactsBySemantics: NewGateway<ISearchArtifactsBySemanticsUseCase>;
   getEmbeddingHealth: NewGateway<IGetEmbeddingHealthUseCase>;
   triggerEmbeddingBackfill: NewGateway<ITriggerEmbeddingBackfillUseCase>;
+  getRagLabConfiguration: NewGateway<IGetRagLabConfigurationUseCase>;
+  updateRagLabConfiguration: NewGateway<IUpdateRagLabConfigurationUseCase>;
+  triggerFullReembedding: NewGateway<ITriggerFullReembeddingUseCase>;
 }

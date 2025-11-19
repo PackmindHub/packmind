@@ -5,6 +5,7 @@ import {
   KnowledgePatchStatus,
   NewPackmindCommandBody,
   OrganizationId,
+  ResultType,
   SpaceId,
   TopicId,
 } from '@packmind/types';
@@ -18,6 +19,7 @@ import {
   getTopicsBySpaceKey,
   getSearchArtifactsKey,
   getEmbeddingHealthKey,
+  getRagLabConfigurationKey,
 } from '../queryKeys';
 
 // Query Options - exportable for route loaders
@@ -68,14 +70,24 @@ export const getSearchArtifactsBySemanticsOptions = (
   spaceId: SpaceId,
   organizationId: OrganizationId,
   threshold?: number,
+  maxResults?: number,
+  resultTypes?: ResultType,
 ) => ({
-  queryKey: getSearchArtifactsKey(spaceId, queryText, threshold),
+  queryKey: getSearchArtifactsKey(
+    spaceId,
+    queryText,
+    threshold,
+    maxResults,
+    resultTypes,
+  ),
   queryFn: () =>
     learningsGateway.searchArtifactsBySemantics({
       spaceId,
       organizationId,
       queryText,
       threshold,
+      maxResults,
+      resultTypes,
     }),
   enabled: !!queryText && !!spaceId && !!organizationId,
 });
@@ -88,6 +100,14 @@ export const getEmbeddingHealthOptions = (
   queryFn: () =>
     learningsGateway.getEmbeddingHealth({ spaceId, organizationId }),
   enabled: !!spaceId && !!organizationId,
+});
+
+export const getRagLabConfigurationOptions = (
+  organizationId: OrganizationId,
+) => ({
+  queryKey: getRagLabConfigurationKey(organizationId),
+  queryFn: () => learningsGateway.getRagLabConfiguration({ organizationId }),
+  enabled: !!organizationId,
 });
 
 // Query Hooks
@@ -162,6 +182,8 @@ export const useTopicQuery = (topicId: TopicId) => {
 export const useSearchArtifactsBySemanticsQuery = (
   queryText: string,
   threshold?: number,
+  maxResults?: number,
+  resultTypes?: ResultType,
 ) => {
   const { spaceId } = useCurrentSpace();
   const { organization } = useAuthContext();
@@ -172,6 +194,8 @@ export const useSearchArtifactsBySemanticsQuery = (
       spaceId as SpaceId,
       organization?.id as OrganizationId,
       threshold,
+      maxResults,
+      resultTypes,
     ),
   );
 };
@@ -185,6 +209,14 @@ export const useEmbeddingHealthQuery = () => {
       spaceId as SpaceId,
       organization?.id as OrganizationId,
     ),
+  );
+};
+
+export const useGetRagLabConfigurationQuery = () => {
+  const { organization } = useAuthContext();
+
+  return useQuery(
+    getRagLabConfigurationOptions(organization?.id as OrganizationId),
   );
 };
 
@@ -360,6 +392,71 @@ export const useTriggerEmbeddingBackfillMutation = () => {
     },
     onError: async (error) => {
       console.error('Error triggering embedding backfill', error);
+    },
+  });
+};
+
+const UPDATE_RAG_LAB_CONFIGURATION_MUTATION_KEY = 'updateRagLabConfiguration';
+
+export const useUpdateRagLabConfigurationMutation = () => {
+  const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationKey: [UPDATE_RAG_LAB_CONFIGURATION_MUTATION_KEY],
+    mutationFn: async ({
+      embeddingModel,
+      embeddingDimensions,
+      includeCodeBlocks,
+      maxTextLength,
+    }: {
+      embeddingModel: string;
+      embeddingDimensions: number;
+      includeCodeBlocks: boolean;
+      maxTextLength: number | null;
+    }) => {
+      return learningsGateway.updateRagLabConfiguration({
+        organizationId: organization!.id,
+        embeddingModel,
+        embeddingDimensions,
+        includeCodeBlocks,
+        maxTextLength,
+      });
+    },
+    onSuccess: async () => {
+      // Invalidate the RAG Lab configuration query to show updated settings
+      await queryClient.invalidateQueries({
+        queryKey: getRagLabConfigurationKey(organization?.id),
+      });
+    },
+    onError: async (error) => {
+      console.error('Error updating RAG Lab configuration', error);
+    },
+  });
+};
+
+const TRIGGER_FULL_REEMBEDDING_MUTATION_KEY = 'triggerFullReembedding';
+
+export const useTriggerFullReembeddingMutation = () => {
+  const queryClient = useQueryClient();
+  const { spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationKey: [TRIGGER_FULL_REEMBEDDING_MUTATION_KEY],
+    mutationFn: async () => {
+      return learningsGateway.triggerFullReembedding({
+        organizationId: organization!.id,
+      });
+    },
+    onSuccess: async () => {
+      // Invalidate the embedding health query to show updated stats
+      await queryClient.invalidateQueries({
+        queryKey: getEmbeddingHealthKey(spaceId),
+      });
+    },
+    onError: async (error) => {
+      console.error('Error triggering full reembedding', error);
     },
   });
 };
