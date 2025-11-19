@@ -23,9 +23,10 @@ export const pmTimelineRecipe = defineSlotRecipe({
     },
     item: {
       display: 'flex',
-      position: 'relative',
       alignItems: 'flex-start',
-      pb: '6',
+      gap: '4',
+      pb: '8',
+      position: 'static',
       _last: {
         pb: '0',
       },
@@ -35,7 +36,8 @@ export const pmTimelineRecipe = defineSlotRecipe({
       flexDirection: 'column',
       alignItems: 'center',
       flexShrink: 0,
-      mr: '4',
+      mt: '0.5',
+      position: 'static',
     },
     indicator: {
       display: 'flex',
@@ -45,21 +47,24 @@ export const pmTimelineRecipe = defineSlotRecipe({
       height: '4',
       borderRadius: 'full',
       borderWidth: '2px',
-      zIndex: 1,
+      zIndex: 'auto',
+      flexShrink: 0,
+      position: 'static',
     },
     connector: {
       width: '2px',
       bg: '{colors.border.secondary}',
       flex: 1,
-      my: '1',
+      mt: '2',
+      position: 'static',
     },
     content: {
       display: 'flex',
       flexDirection: 'column',
       gap: '1.5',
-      pt: '0.5',
       minW: 0,
       flex: 1,
+      position: 'static',
     },
     title: {
       textStyle: 'sm',
@@ -109,6 +114,8 @@ export const pmTimelineRecipe = defineSlotRecipe({
         timestamp: { textStyle: '2xs' },
         indicator: { width: '3', height: '3', fontSize: 'xs' },
         content: { gap: '1' },
+        separator: { mt: '0' },
+        item: { gap: '3', pb: '6' },
       },
       md: {
         title: { textStyle: 'sm' },
@@ -116,6 +123,8 @@ export const pmTimelineRecipe = defineSlotRecipe({
         timestamp: { textStyle: 'xs' },
         indicator: { width: '4', height: '4', fontSize: 'sm' },
         content: { gap: '1.5' },
+        separator: { mt: '0.5' },
+        item: { gap: '4', pb: '8' },
       },
       lg: {
         title: { textStyle: 'md' },
@@ -123,6 +132,8 @@ export const pmTimelineRecipe = defineSlotRecipe({
         timestamp: { textStyle: 'sm' },
         indicator: { width: '5', height: '5', fontSize: 'md' },
         content: { gap: '2' },
+        separator: { mt: '1' },
+        item: { gap: '5', pb: '10' },
       },
     },
     colorPalette: {

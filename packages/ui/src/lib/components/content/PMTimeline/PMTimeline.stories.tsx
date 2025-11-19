@@ -14,8 +14,8 @@ import {
   LuCheck,
   LuClock,
   LuRocket,
-  LuAlertCircle,
   LuInfo,
+  LuCircleAlert,
 } from 'react-icons/lu';
 
 const meta: Meta<typeof PMTimeline> = {
@@ -366,72 +366,145 @@ export const Sizes: Story = {
 
 export const WithStatusColors: Story = {
   render: () => (
-    <div style={{ width: '100%', maxWidth: '600px' }}>
-      <PMTimeline>
-        <PMTimelineItem colorPalette="success">
-          <PMTimelineSeparator>
-            <PMTimelineIndicator />
-            <PMTimelineConnector />
-          </PMTimelineSeparator>
-          <PMTimelineContent>
-            <PMTimelineTitle>Tests Passed</PMTimelineTitle>
-            <PMTimelineDescription>
-              All unit tests and integration tests completed successfully
-            </PMTimelineDescription>
-          </PMTimelineContent>
-        </PMTimelineItem>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '32px',
+        width: '100%',
+        maxWidth: '600px',
+      }}
+    >
+      <div>
+        <h3
+          style={{
+            marginBottom: '16px',
+            fontSize: '14px',
+            fontWeight: '600',
+            color: 'var(--pm-colors-text-primary)',
+          }}
+        >
+          Success
+        </h3>
+        <PMTimeline colorPalette="success">
+          <PMTimelineItem>
+            <PMTimelineSeparator>
+              <PMTimelineIndicator />
+            </PMTimelineSeparator>
+            <PMTimelineContent>
+              <PMTimelineTitle>Tests Passed</PMTimelineTitle>
+              <PMTimelineDescription>
+                All unit tests and integration tests completed successfully
+              </PMTimelineDescription>
+            </PMTimelineContent>
+          </PMTimelineItem>
+        </PMTimeline>
+      </div>
 
-        <PMTimelineItem colorPalette="info">
-          <PMTimelineSeparator>
-            <PMTimelineIndicator />
-            <PMTimelineConnector />
-          </PMTimelineSeparator>
-          <PMTimelineContent>
-            <PMTimelineTitle>Code Review</PMTimelineTitle>
-            <PMTimelineDescription>
-              Pull request is awaiting review from team members
-            </PMTimelineDescription>
-          </PMTimelineContent>
-        </PMTimelineItem>
+      <div>
+        <h3
+          style={{
+            marginBottom: '16px',
+            fontSize: '14px',
+            fontWeight: '600',
+            color: 'var(--pm-colors-text-primary)',
+          }}
+        >
+          Info
+        </h3>
+        <PMTimeline colorPalette="info">
+          <PMTimelineItem>
+            <PMTimelineSeparator>
+              <PMTimelineIndicator />
+            </PMTimelineSeparator>
+            <PMTimelineContent>
+              <PMTimelineTitle>Code Review</PMTimelineTitle>
+              <PMTimelineDescription>
+                Pull request is awaiting review from team members
+              </PMTimelineDescription>
+            </PMTimelineContent>
+          </PMTimelineItem>
+        </PMTimeline>
+      </div>
 
-        <PMTimelineItem colorPalette="warning">
-          <PMTimelineSeparator>
-            <PMTimelineIndicator />
-            <PMTimelineConnector />
-          </PMTimelineSeparator>
-          <PMTimelineContent>
-            <PMTimelineTitle>Performance Warning</PMTimelineTitle>
-            <PMTimelineDescription>
-              Build time increased by 15%, optimization recommended
-            </PMTimelineDescription>
-          </PMTimelineContent>
-        </PMTimelineItem>
+      <div>
+        <h3
+          style={{
+            marginBottom: '16px',
+            fontSize: '14px',
+            fontWeight: '600',
+            color: 'var(--pm-colors-text-primary)',
+          }}
+        >
+          Warning
+        </h3>
+        <PMTimeline colorPalette="warning">
+          <PMTimelineItem>
+            <PMTimelineSeparator>
+              <PMTimelineIndicator />
+            </PMTimelineSeparator>
+            <PMTimelineContent>
+              <PMTimelineTitle>Performance Warning</PMTimelineTitle>
+              <PMTimelineDescription>
+                Build time increased by 15%, optimization recommended
+              </PMTimelineDescription>
+            </PMTimelineContent>
+          </PMTimelineItem>
+        </PMTimeline>
+      </div>
 
-        <PMTimelineItem colorPalette="error">
-          <PMTimelineSeparator>
-            <PMTimelineIndicator />
-            <PMTimelineConnector />
-          </PMTimelineSeparator>
-          <PMTimelineContent>
-            <PMTimelineTitle>Deployment Failed</PMTimelineTitle>
-            <PMTimelineDescription>
-              Production deployment failed due to missing environment variables
-            </PMTimelineDescription>
-          </PMTimelineContent>
-        </PMTimelineItem>
+      <div>
+        <h3
+          style={{
+            marginBottom: '16px',
+            fontSize: '14px',
+            fontWeight: '600',
+            color: 'var(--pm-colors-text-primary)',
+          }}
+        >
+          Error
+        </h3>
+        <PMTimeline colorPalette="error">
+          <PMTimelineItem>
+            <PMTimelineSeparator>
+              <PMTimelineIndicator />
+            </PMTimelineSeparator>
+            <PMTimelineContent>
+              <PMTimelineTitle>Deployment Failed</PMTimelineTitle>
+              <PMTimelineDescription>
+                Production deployment failed due to missing environment
+                variables
+              </PMTimelineDescription>
+            </PMTimelineContent>
+          </PMTimelineItem>
+        </PMTimeline>
+      </div>
 
-        <PMTimelineItem colorPalette="neutral">
-          <PMTimelineSeparator>
-            <PMTimelineIndicator />
-          </PMTimelineSeparator>
-          <PMTimelineContent>
-            <PMTimelineTitle>Log Entry</PMTimelineTitle>
-            <PMTimelineDescription>
-              System checkpoint saved at 14:30 UTC
-            </PMTimelineDescription>
-          </PMTimelineContent>
-        </PMTimelineItem>
-      </PMTimeline>
+      <div>
+        <h3
+          style={{
+            marginBottom: '16px',
+            fontSize: '14px',
+            fontWeight: '600',
+            color: 'var(--pm-colors-text-primary)',
+          }}
+        >
+          Neutral
+        </h3>
+        <PMTimeline colorPalette="neutral">
+          <PMTimelineItem>
+            <PMTimelineSeparator>
+              <PMTimelineIndicator />
+            </PMTimelineSeparator>
+            <PMTimelineContent>
+              <PMTimelineTitle>Log Entry</PMTimelineTitle>
+              <PMTimelineDescription>
+                System checkpoint saved at 14:30 UTC
+              </PMTimelineDescription>
+            </PMTimelineContent>
+          </PMTimelineItem>
+        </PMTimeline>
+      </div>
     </div>
   ),
 };
@@ -439,8 +512,8 @@ export const WithStatusColors: Story = {
 export const WithIcons: Story = {
   render: () => (
     <div style={{ width: '100%', maxWidth: '600px' }}>
-      <PMTimeline>
-        <PMTimelineItem colorPalette="success">
+      <PMTimeline colorPalette="success">
+        <PMTimelineItem>
           <PMTimelineSeparator>
             <PMTimelineIndicator icon={<LuCheck />} />
             <PMTimelineConnector />
@@ -453,7 +526,7 @@ export const WithIcons: Story = {
           </PMTimelineContent>
         </PMTimelineItem>
 
-        <PMTimelineItem colorPalette="info">
+        <PMTimelineItem>
           <PMTimelineSeparator>
             <PMTimelineIndicator icon={<LuInfo />} />
             <PMTimelineConnector />
@@ -466,9 +539,9 @@ export const WithIcons: Story = {
           </PMTimelineContent>
         </PMTimelineItem>
 
-        <PMTimelineItem colorPalette="warning">
+        <PMTimelineItem>
           <PMTimelineSeparator>
-            <PMTimelineIndicator icon={<LuAlertCircle />} />
+            <PMTimelineIndicator icon={<LuCircleAlert />} />
             <PMTimelineConnector />
           </PMTimelineSeparator>
           <PMTimelineContent>
@@ -479,7 +552,7 @@ export const WithIcons: Story = {
           </PMTimelineContent>
         </PMTimelineItem>
 
-        <PMTimelineItem colorPalette="primary">
+        <PMTimelineItem>
           <PMTimelineSeparator>
             <PMTimelineIndicator icon={<LuRocket />} />
           </PMTimelineSeparator>
@@ -547,8 +620,8 @@ export const WithTimestamps: Story = {
 export const CompleteExample: Story = {
   render: () => (
     <div style={{ width: '100%', maxWidth: '600px' }}>
-      <PMTimeline variant="outline" size="lg">
-        <PMTimelineItem colorPalette="success">
+      <PMTimeline variant="outline" size="lg" colorPalette="primary">
+        <PMTimelineItem>
           <PMTimelineSeparator>
             <PMTimelineIndicator icon={<LuCheck />} />
             <PMTimelineConnector />
@@ -563,7 +636,7 @@ export const CompleteExample: Story = {
           </PMTimelineContent>
         </PMTimelineItem>
 
-        <PMTimelineItem colorPalette="info">
+        <PMTimelineItem>
           <PMTimelineSeparator>
             <PMTimelineIndicator icon={<LuInfo />} />
             <PMTimelineConnector />
@@ -578,9 +651,9 @@ export const CompleteExample: Story = {
           </PMTimelineContent>
         </PMTimelineItem>
 
-        <PMTimelineItem colorPalette="warning">
+        <PMTimelineItem>
           <PMTimelineSeparator>
-            <PMTimelineIndicator icon={<LuAlertCircle />} />
+            <PMTimelineIndicator icon={<LuCircleAlert />} />
             <PMTimelineConnector />
           </PMTimelineSeparator>
           <PMTimelineContent>
@@ -593,7 +666,7 @@ export const CompleteExample: Story = {
           </PMTimelineContent>
         </PMTimelineItem>
 
-        <PMTimelineItem colorPalette="primary">
+        <PMTimelineItem>
           <PMTimelineSeparator>
             <PMTimelineIndicator icon={<LuRocket />} />
           </PMTimelineSeparator>
