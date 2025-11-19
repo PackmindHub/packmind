@@ -206,3 +206,83 @@ Records when a deployed recipe is used by an AI agent. This tracks adoption and 
 - `target` (optional) - Path where recipes are distributed (e.g., "/", "/src/frontend/", "/src/backend/")
 
 **Usage:** This tool is typically called automatically when AI agents apply deployed recipes from your `.packmind/recipes/` directory.
+
+---
+
+## Packages Tools
+
+### List Packages
+
+**Tool:** `packmind_list_packages`
+
+Retrieves all packages created in your organization. Packages are collections of recipes and standards that can be deployed together.
+
+**Parameters:** None
+
+**Returns:** A formatted list showing package slugs and their descriptions
+
+**Usage Example:**
+
+```plaintext
+"List all available Packmind packages"
+```
+
+### Get Package Details
+
+**Tool:** `packmind_get_package_details`
+
+Retrieves the full content of a specific package including all its recipes and standards.
+
+**Parameters:**
+
+- `packageSlug` (required) - The slug identifier of the package
+
+**Returns:** Complete package details including:
+
+- Package name, slug, and description
+- List of all recipes in the package with their summaries
+- List of all standards in the package with their summaries
+
+**Usage Example:**
+
+```plaintext
+"Show me the details of the frontend-react package"
+```
+
+### Add Recipe to Packages
+
+**Tool:** `packmind_add_recipe_to_packages`
+
+Adds an existing recipe to one or more packages.
+
+**Parameters:**
+
+- `recipeSlug` (required) - The slug of the recipe to add
+- `packageSlugs` (required) - Array of package slugs to add the recipe to
+
+**Usage Example:**
+
+```plaintext
+"Add the component-testing recipe to the frontend-react and frontend-vue packages"
+```
+
+### Add Standard to Packages
+
+**Tool:** `packmind_add_standard_to_packages`
+
+Adds an existing standard to one or more packages.
+
+**Parameters:**
+
+- `standardSlug` (required) - The slug of the standard to add
+- `packageSlugs` (required) - Array of package slugs to add the standard to
+
+**Usage Example:**
+
+```plaintext
+"Add the typescript-naming standard to the backend-api and shared-utils packages"
+```
+
+:::tip
+When creating new recipes or standards using `packmind_create_recipe` or `packmind_create_standard`, you can include the optional `packageSlugs` parameter to automatically add them to packages during creation.
+:::

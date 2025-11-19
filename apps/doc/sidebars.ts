@@ -32,7 +32,12 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Concepts',
-      items: ['standards-management', 'recipes-management', 'mcp-server'],
+      items: [
+        'standards-management',
+        'recipes-management',
+        'packages-management',
+        'mcp-server',
+      ],
       collapsed: false,
     },
     {

@@ -145,7 +145,76 @@ packmind-cli lint . --logger=ide
 
 **IDE format** provides structured output that can be parsed by editors and CI/CD tools.
 
+## Using the Pull Command
+
+The `pull` command allows you to download recipes and standards from packages and save them locally to your current directory. This is useful for working with Packmind content offline or integrating it into your local development workflow.
+
+### List Available Packages
+
+See all packages available in your organization:
+
+```bash
+packmind-cli pull --list
+```
+
+This displays a list of all packages with their slugs and descriptions.
+
+### View Package Details
+
+Get detailed information about a specific package:
+
+```bash
+packmind-cli pull --show <package-slug>
+```
+
+This shows:
+
+- Package name and description
+- All standards in the package with their summaries
+- All recipes in the package with their summaries
+
+**Example:**
+
+```bash
+packmind-cli pull --show frontend-react
+```
+
+### Pull Package Content
+
+Download recipes and standards from one or more packages:
+
+```bash
+# Pull from a single package
+packmind-cli pull backend
+
+# Pull from multiple packages
+packmind-cli pull backend frontend shared
+```
+
+This command:
+
+- Extracts all recipes and standards from the specified packages
+- Saves them to the current directory
+- Updates AI agent configuration files
+- Reports the number of files created, updated, and deleted
+
+**Example output:**
+
+```
+Pulling content from packages: backend, frontend...
+
+✅ Pull completed successfully!
+   Files created: 12
+   Files updated: 3
+   Files deleted: 0
+```
+
+:::tip
+Use `packmind-cli pull --list` first to discover available packages in your organization, then use `--show` to inspect package contents before pulling.
+:::
+
 ## Related Documentation
 
 - [Linter: Automated Detection](./linter.md): Learn about how detection programs work
 - [Standards Management](./standards-management.md): Create rules and add code examples
+- [Packages Management](./packages-management.md): Learn about organizing recipes and standards into packages

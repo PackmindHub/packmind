@@ -35,3 +35,29 @@ This can be achieved on the page that lists standards and recipes, or in the ded
 When deploying, you must choose one or several targets where your standards and recipes will be applied. This allows you to customize which parts of your repositories receive specific guidelines.
 
 This distribution creates a single commit for each target repository.
+
+## Deploying Packages
+
+Instead of deploying individual recipes and standards, you can organize them into **Packages** and deploy them as a single unit.
+
+A package is a curated collection of recipes and standards grouped together (e.g., "Frontend React Standards", "Backend API Guidelines"). When you deploy a package:
+
+- All recipes and standards in the package are deployed together
+- The latest version of each item is used
+- A single commit contains all the package content
+- You can deploy multiple packages at once to the same target
+
+To deploy packages:
+
+1. Navigate to the **Packages** section
+2. Select the package(s) you want to deploy
+3. Click **Deploy** and choose your target repositories
+4. Confirm the deployment
+
+This approach is useful when you want to:
+
+- Deploy related guidelines together
+- Maintain consistent sets of standards across projects
+- Organize guidelines by technology, team, or project structure
+
+For more information on creating and managing packages, see [Packages Management](./packages-management.md).
