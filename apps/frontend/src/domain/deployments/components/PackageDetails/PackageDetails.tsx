@@ -337,6 +337,7 @@ export const PackageDetails = ({
     [],
   );
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { contains } = pmUseFilter({ sensitivity: 'base' });
 
@@ -394,6 +395,12 @@ export const PackageDetails = ({
       return;
     }
 
+    if (updatePackageMutation.isPending || isSubmitting) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
     try {
       await updatePackageMutation.mutateAsync({
         packageId: id,
@@ -412,6 +419,7 @@ export const PackageDetails = ({
       });
 
       setIsEditMode(false);
+      setIsSubmitting(false);
     } catch (error) {
       console.error('Failed to update package:', error);
       const errorMessage =
@@ -423,6 +431,7 @@ export const PackageDetails = ({
         title: 'Failed to update package',
         description: errorMessage,
       });
+      setIsSubmitting(false);
     }
   };
 
@@ -588,7 +597,7 @@ export const PackageDetails = ({
   const standardCount = standardIds.length;
   const isPackageEmpty = recipeCount === 0 && standardCount === 0;
 
-  const isPending = updatePackageMutation.isPending;
+  const isPending = updatePackageMutation.isPending || isSubmitting;
   const isFormValid = editName.trim();
 
   if (isEditMode) {
