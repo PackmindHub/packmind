@@ -11,6 +11,7 @@ import { pmToasterRecipe } from '../components/feedback/PMToaster/PMToaster.reci
 import { pmCheckboxCard } from '../components/form/PMCheckboxCard/PMCheckboxCard.recipe';
 import { pmSegmentedControl } from '../components/form/PMSegmentedControl/PMSegmentedControl.recipe';
 import { pmRadioGroup } from '../components/form/PMRadioGroup/PMRadioGroup.recipe';
+import { pmSelectRecipe } from '../components/form/PMSelect/PMSelect.recipe';
 export const packmindTheme = (preflight: boolean) =>
   defineConfig({
     preflight,
@@ -151,6 +152,7 @@ export const packmindTheme = (preflight: boolean) =>
         checkboxCard: pmCheckboxCard,
         segmentGroup: pmSegmentedControl,
         radioGroup: pmRadioGroup,
+        select: pmSelectRecipe,
       },
       semanticTokens: {
         colors: {

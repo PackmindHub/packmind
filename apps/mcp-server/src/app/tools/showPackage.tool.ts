@@ -61,11 +61,7 @@ export function registerShowPackageTool(
         if (pkg.recipes && pkg.recipes.length > 0) {
           contentParts.push(`## Recipes`, ``);
           for (const recipe of pkg.recipes) {
-            if (recipe.summary) {
-              contentParts.push(`• ${recipe.name}: ${recipe.summary}`);
-            } else {
-              contentParts.push(`• ${recipe.name}`);
-            }
+            contentParts.push(`• ${recipe.name}`);
           }
           contentParts.push(``);
         }

@@ -310,6 +310,7 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
   const [selectedStandardIds, setSelectedStandardIds] = useState<StandardId[]>(
     [],
   );
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { contains } = pmUseFilter({ sensitivity: 'base' });
 
@@ -326,6 +327,12 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
     if (!spaceId || !organizationId) {
       return;
     }
+
+    if (createPackageMutation.isPending || isSubmitting) {
+      return;
+    }
+
+    setIsSubmitting(true);
 
     try {
       await createPackageMutation.mutateAsync({
@@ -355,6 +362,7 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
         title: 'Failed to create package',
         description: errorMessage,
       });
+      setIsSubmitting(false);
     }
   };
 
@@ -377,7 +385,7 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
     );
   }
 
-  const isPending = createPackageMutation.isPending;
+  const isPending = createPackageMutation.isPending || isSubmitting;
   const isFormValid = name.trim();
 
   return (
