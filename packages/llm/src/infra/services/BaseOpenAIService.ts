@@ -1,6 +1,5 @@
-import Anthropic from '@anthropic-ai/sdk';
-import { Configuration } from '@packmind/node-utils';
-import { LogLevel, PackmindLogger } from '@packmind/logger';
+import OpenAI from 'openai';
+import { PackmindLogger } from '@packmind/logger';
 import {
   AIPromptOptions,
   AIPromptResult,
@@ -12,87 +11,62 @@ import {
   PromptConversationRole,
   AIService,
 } from '@packmind/types';
-import {
-  AnthropicServiceConfig,
-  LLMProvider,
-} from '../../types/LLMServiceConfig';
-import { DEFAULT_ANTHROPIC_MODELS } from '../../constants/defaultModels';
 
-const origin = 'AnthropicService';
+type serviceTierTypes = 'auto' | 'default' | 'flex' | 'scale' | 'priority';
 
-export class AnthropicService implements AIService {
-  private client: Anthropic | null = null;
-  private readonly defaultModel: string;
-  private readonly defaultFastModel: string;
-  private readonly maxRetries = 5;
-  private initialized = false;
+/**
+ * Abstract base class for OpenAI and OpenAI-compatible services.
+ * Provides shared logic for executing prompts, retry mechanisms, and error handling.
+ */
+export abstract class BaseOpenAIService implements AIService {
+  protected client: OpenAI | null = null;
+  protected readonly maxRetries = 5;
+  protected initialized = false;
+
+  /**
+   * Abstract properties that must be defined by subclasses
+   */
+  protected abstract readonly defaultModel: string;
+  protected abstract readonly defaultFastModel: string;
 
   constructor(
-    config: AnthropicServiceConfig = { provider: LLMProvider.ANTHROPIC },
-    private readonly logger: PackmindLogger = new PackmindLogger(
-      origin,
-      LogLevel.INFO,
-    ),
+    protected readonly logger: PackmindLogger,
+    protected readonly serviceName: string,
   ) {
-    this.defaultModel = config.model || DEFAULT_ANTHROPIC_MODELS.model;
-    this.defaultFastModel =
-      config.fastestModel || DEFAULT_ANTHROPIC_MODELS.fastestModel;
-    this.logger.info('AnthropicService initialized');
+    this.logger.info(`${this.serviceName} initialized`);
   }
 
   /**
-   * Check if the Anthropic service is properly configured and ready to use
+   * Check if the service is properly configured and ready to use.
+   * Must be implemented by subclasses with their specific configuration checks.
    */
-  async isConfigured(): Promise<boolean> {
-    try {
-      const apiKey = await Configuration.getConfig('ANTHROPIC_API_KEY');
-      return !!apiKey;
-    } catch (error) {
-      this.logger.debug('Failed to check Anthropic configuration', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      return false;
-    }
-  }
+  abstract isConfigured(): Promise<boolean>;
 
   /**
-   * Initialize the Anthropic client with API key from configuration
+   * Initialize the OpenAI client with service-specific configuration.
+   * Must be implemented by subclasses with their specific initialization logic.
    */
-  private async initialize(): Promise<void> {
-    if (this.initialized) return;
+  protected abstract initialize(): Promise<void>;
 
-    this.logger.info('Initializing Anthropic client');
-
-    try {
-      const apiKey = await Configuration.getConfig('ANTHROPIC_API_KEY');
-
-      if (!apiKey) {
-        this.logger.warn(
-          'Anthropic API key not found in configuration - AI features will be disabled',
-        );
-        this.initialized = true; // Mark as initialized but without client
-        return;
-      }
-
-      this.client = new Anthropic({
-        apiKey,
-        timeout: 60 * 1000, // 1 minute timeout in milliseconds
-      });
-
-      this.initialized = true;
-      this.logger.info('Anthropic client initialized successfully');
-    } catch (error) {
-      this.logger.error('Failed to initialize Anthropic client', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }
-
-  private getModel(options: AIPromptOptions) {
+  /**
+   * Get the appropriate model based on performance options
+   */
+  protected getModel(options: AIPromptOptions): string {
     return options.performance === LLMModelPerformance.FAST
       ? this.defaultFastModel
       : this.defaultModel;
+  }
+
+  /**
+   * Get the service tier from options
+   */
+  protected getServiceTier(options: AIPromptOptions): serviceTierTypes {
+    if (options.service_tier) {
+      const tier = options.service_tier.toLowerCase();
+      return tier as serviceTierTypes;
+    }
+
+    return 'auto';
   }
 
   /**
@@ -104,6 +78,7 @@ export class AnthropicService implements AIService {
   ): Promise<AIPromptResult<T>> {
     this.logger.info('Executing AI prompt', {
       promptLength: prompt.length,
+      maxTokens: options.maxTokens,
     });
 
     await this.initialize();
@@ -113,12 +88,12 @@ export class AnthropicService implements AIService {
     // Return graceful failure if no client is available (missing API key)
     if (!this.client) {
       this.logger.warn(
-        'Anthropic client not available - returning graceful failure',
+        `${this.serviceName} client not available - returning graceful failure`,
       );
       return {
         success: false,
         data: null,
-        error: 'Anthropic API key not configured',
+        error: `${this.serviceName} not configured`,
         attempts: 1,
         model,
       };
@@ -131,56 +106,47 @@ export class AnthropicService implements AIService {
       try {
         if (!this.client) {
           throw new AIServiceError(
-            'Anthropic client not initialized',
+            `${this.serviceName} client not initialized`,
             AIServiceErrorTypes.API_ERROR,
             attempt,
           );
         }
 
         const model = this.getModel(options);
+        const serviceTier = this.getServiceTier(options);
 
-        this.logger.info('Sending request to Anthropic', {
+        this.logger.info(`Sending request to ${this.serviceName}`, {
           attempt,
           model,
+          service_tier: serviceTier,
           promptLength: prompt.length,
         });
 
-        const messageParams: Anthropic.MessageCreateParamsNonStreaming = {
+        const response = await this.client.chat.completions.create({
           model,
-          max_tokens: options.maxTokens ?? 64000,
+          service_tier: serviceTier,
           messages: [
             {
               role: 'user',
               content: prompt,
             },
           ],
-        };
+        });
 
-        if (options.temperature !== undefined) {
-          messageParams.temperature = options.temperature;
-        }
+        const content = response.choices[0]?.message?.content;
 
-        const response = await this.client.messages.create(messageParams);
-
-        const textContent = response.content.find(
-          (block) => block.type === 'text',
-        );
-
-        if (!textContent || textContent.type !== 'text') {
+        if (!content) {
           throw new AIServiceError(
-            'Invalid response from Anthropic: no text content returned',
+            `Invalid response from ${this.serviceName}: no content returned`,
             AIServiceErrorTypes.INVALID_RESPONSE,
             attempt,
           );
         }
 
-        const content = textContent.text;
-
         this.logger.info('AI prompt executed successfully', {
           attempt,
           responseLength: content.length,
-          tokensUsed:
-            response.usage.input_tokens + response.usage.output_tokens,
+          tokensUsed: response.usage?.total_tokens,
         });
 
         // Try to parse as JSON if T is not string, otherwise return as string
@@ -201,10 +167,12 @@ export class AnthropicService implements AIService {
           data: parsedData,
           attempts: attempt,
           model,
-          tokensUsed: {
-            input: response.usage.input_tokens,
-            output: response.usage.output_tokens,
-          },
+          tokensUsed: response.usage
+            ? {
+                input: response.usage.prompt_tokens,
+                output: response.usage.completion_tokens,
+              }
+            : undefined,
         };
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
@@ -257,6 +225,7 @@ export class AnthropicService implements AIService {
   ): Promise<AIPromptResult<T>> {
     this.logger.info('Executing AI prompt with history', {
       conversationLength: conversationHistory.length,
+      maxTokens: options.maxTokens,
     });
 
     await this.initialize();
@@ -266,12 +235,12 @@ export class AnthropicService implements AIService {
     // Return graceful failure if no client is available (missing API key)
     if (!this.client) {
       this.logger.warn(
-        'Anthropic client not available - returning graceful failure',
+        `${this.serviceName} client not available - returning graceful failure`,
       );
       return {
         success: false,
         data: null,
-        error: 'Anthropic API key not configured',
+        error: `${this.serviceName} not configured`,
         attempts: 1,
         model,
       };
@@ -284,55 +253,50 @@ export class AnthropicService implements AIService {
       try {
         if (!this.client) {
           throw new AIServiceError(
-            'Anthropic client not initialized',
+            `${this.serviceName} client not initialized`,
             AIServiceErrorTypes.API_ERROR,
             attempt,
           );
         }
 
-        // Convert PromptConversation to Anthropic message format
+        const serviceTier = this.getServiceTier(options);
+
+        // Convert PromptConversation to OpenAI message format
         const messages = conversationHistory.map((conv) => ({
-          role: this.mapRoleToAnthropic(conv.role),
+          role: this.mapRoleToOpenAI(conv.role),
           content: conv.message,
         }));
 
-        this.logger.info('Sending request to Anthropic with history', {
-          attempt,
-          model,
-          messageCount: messages.length,
-        });
-
-        const messageParams: Anthropic.MessageCreateParamsNonStreaming = {
-          model,
-          max_tokens: options.maxTokens ?? 64000,
-          messages,
-        };
-
-        if (options.temperature !== undefined) {
-          messageParams.temperature = options.temperature;
-        }
-
-        const response = await this.client.messages.create(messageParams);
-
-        const textContent = response.content.find(
-          (block) => block.type === 'text',
+        this.logger.info(
+          `Sending request to ${this.serviceName} with history`,
+          {
+            attempt,
+            model,
+            service_tier: serviceTier,
+            messageCount: messages.length,
+          },
         );
 
-        if (!textContent || textContent.type !== 'text') {
+        const response = await this.client.chat.completions.create({
+          model,
+          service_tier: serviceTier,
+          messages,
+        });
+
+        const content = response.choices[0]?.message?.content;
+
+        if (!content) {
           throw new AIServiceError(
-            'Invalid response from Anthropic: no text content returned',
+            `Invalid response from ${this.serviceName}: no content returned`,
             AIServiceErrorTypes.INVALID_RESPONSE,
             attempt,
           );
         }
 
-        const content = textContent.text;
-
         this.logger.info('AI prompt with history executed successfully', {
           attempt,
           responseLength: content.length,
-          tokensUsed:
-            response.usage.input_tokens + response.usage.output_tokens,
+          tokensUsed: response.usage?.total_tokens,
         });
 
         // Try to parse as JSON if T is not string, otherwise return as string
@@ -353,10 +317,12 @@ export class AnthropicService implements AIService {
           data: parsedData,
           attempts: attempt,
           model,
-          tokensUsed: {
-            input: response.usage.input_tokens,
-            output: response.usage.output_tokens,
-          },
+          tokensUsed: response.usage
+            ? {
+                input: response.usage.prompt_tokens,
+                output: response.usage.completion_tokens,
+              }
+            : undefined,
         };
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
@@ -401,19 +367,18 @@ export class AnthropicService implements AIService {
   }
 
   /**
-   * Map PromptConversationRole to Anthropic role format
+   * Map PromptConversationRole to OpenAI role format
    */
-  private mapRoleToAnthropic(
+  protected mapRoleToOpenAI(
     role: PromptConversationRole,
-  ): 'user' | 'assistant' {
+  ): 'user' | 'assistant' | 'system' {
     switch (role) {
       case PromptConversationRole.USER:
         return 'user';
       case PromptConversationRole.ASSISTANT:
         return 'assistant';
       case PromptConversationRole.SYSTEM:
-        // Anthropic handles system messages differently, map to user for now
-        return 'user';
+        return 'system';
       default:
         return 'user';
     }
@@ -422,7 +387,7 @@ export class AnthropicService implements AIService {
   /**
    * Classify error type for retry logic
    */
-  private classifyError(error: unknown): AIServiceErrorType {
+  protected classifyError(error: unknown): AIServiceErrorType {
     if (error instanceof AIServiceError) {
       return error.type;
     }
@@ -448,7 +413,7 @@ export class AnthropicService implements AIService {
   /**
    * Determine if we should retry based on error type and attempt number
    */
-  private shouldRetry(
+  protected shouldRetry(
     errorType: AIServiceErrorType,
     attempt: number,
     maxRetries: number,

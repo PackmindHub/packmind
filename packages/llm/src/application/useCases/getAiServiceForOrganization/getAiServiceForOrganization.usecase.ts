@@ -18,7 +18,7 @@ export class GetAiServiceForOrganizationUseCase
   async execute(
     command: GetAiServiceForOrganizationCommand,
   ): Promise<GetAiServiceForOrganizationResponse> {
-    // For now, always return a new OpenAIService instance without logger
+    // For now, always return a new OpenAIService instance with default config
     // Future: Will retrieve organization-specific LLM configuration
     this.logger.info('Getting AI service for organization', {
       organizationId: command.organizationId.toString(),
