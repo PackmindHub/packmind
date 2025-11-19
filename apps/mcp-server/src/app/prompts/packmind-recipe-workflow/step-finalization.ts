@@ -20,22 +20,24 @@ The user approved the draft. Package the content so Packmind can register the ne
 3. Ensure the steps still align with the TL;DR agreed earlier.
 4. Keep the draft handy until the recipe is created; remove or archive it afterward.
 
-## Package Selection (Optional)
+## Package Selection
 
-After extracting the recipe content, you MAY suggest adding this recipe to relevant packages:
+After extracting the recipe content, determine if this recipe should be added to any packages:
 
 1. Call \`packmind_list_packages\` to see available packages
 2. Analyze the recipe's scope and topic (e.g., "frontend", "backend", "testing", "TypeScript", etc.)
-3. Suggest 2-3 relevant packages based on keyword matching between:
-   - Recipe name/summary/steps
-   - Package names/descriptions
-4. Ask the user: "Would you like to add this recipe to any packages? Here are some suggestions based on the recipe's topic: [suggestions]. You can also choose from all available packages: [list]"
-5. If user selects packages, include their slugs in the \`packageSlugs\` parameter
+3. **If matching packages are found:**
+   - Suggest 2-3 relevant packages based on keyword matching between:
+     - Recipe name/summary/steps
+     - Package names/descriptions
+   - Ask the user: "Would you like to add this recipe to any packages? Here are some suggestions based on the recipe's topic: [suggestions]. You can also choose from all available packages: [list]"
+4. **If packages exist but none match well:**
+   - Ask the user: "Would you like to add this recipe to any of the existing packages? Available packages: [list]"
+5. **If no packages exist at all:**
+   - Skip package selection entirely (no need to prompt the user)
+6. If user selects packages, include their slugs in the \`packageSlugs\` parameter
 
-**Note:** Package selection is optional. You can skip this step if:
-- No packages are available
-- The recipe doesn't clearly match any existing packages
-- The user prefers to add it to packages later
+**Note:** The user can always add the recipe to packages later using the \`packmind_add_recipe_to_packages\` tool.
 
 ## Final Call
 
