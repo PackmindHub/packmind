@@ -4,32 +4,38 @@ import {
   AIService,
   AIPromptResult,
   AiNotConfigured,
-} from '@packmind/node-utils';
+  ILlmPort,
+  RecipeVersion,
+  createOrganizationId,
+} from '@packmind/types';
 import { createRecipeSummaryPrompt } from './cookbook/prompts/create_recipe_summary';
 import { stubLogger } from '@packmind/test-utils';
 import { recipeVersionFactory } from '../../../test/recipeVersionFactory';
-import { RecipeVersion } from '@packmind/types';
-
-// Mock AIService
-const mockAIService: jest.Mocked<AIService> = {
-  isConfigured: jest.fn(),
-  executePrompt: jest.fn(),
-  executePromptWithHistory: jest.fn(),
-};
-
-// Mock the OpenAIService constructor
-jest.mock('@packmind/node-utils', () => ({
-  ...jest.requireActual('@packmind/node-utils'),
-  OpenAIService: jest.fn(() => mockAIService),
-}));
+import { v4 as uuidv4 } from 'uuid';
 
 describe('RecipeSummaryService', () => {
   let recipeSummaryService: RecipeSummaryService;
   let mockLogger: jest.Mocked<PackmindLogger>;
+  let mockAIService: jest.Mocked<AIService>;
+  let mockLlmPort: jest.Mocked<ILlmPort>;
+  const testOrganizationId = createOrganizationId(uuidv4());
 
   beforeEach(() => {
     mockLogger = stubLogger();
-    recipeSummaryService = new RecipeSummaryService(mockLogger);
+
+    // Mock AIService instance
+    mockAIService = {
+      isConfigured: jest.fn(),
+      executePrompt: jest.fn(),
+      executePromptWithHistory: jest.fn(),
+    } as unknown as jest.Mocked<AIService>;
+
+    // Mock ILlmPort
+    mockLlmPort = {
+      getLlmForOrganization: jest.fn().mockResolvedValue(mockAIService),
+    } as jest.Mocked<ILlmPort>;
+
+    recipeSummaryService = new RecipeSummaryService(mockLogger, mockLlmPort);
     // Default: AI service is configured unless specified otherwise
     mockAIService.isConfigured.mockResolvedValue(true);
   });
@@ -58,6 +64,7 @@ describe('RecipeSummaryService', () => {
         mockAIService.executePrompt.mockResolvedValue(mockResult);
 
         const result = await recipeSummaryService.createRecipeSummary(
+          testOrganizationId,
           mockRecipeVersionData,
         );
 
@@ -73,7 +80,10 @@ describe('RecipeSummaryService', () => {
         mockAIService.isConfigured.mockResolvedValue(false);
 
         await expect(
-          recipeSummaryService.createRecipeSummary(mockRecipeVersionData),
+          recipeSummaryService.createRecipeSummary(
+            testOrganizationId,
+            mockRecipeVersionData,
+          ),
         ).rejects.toThrow(AiNotConfigured);
 
         expect(mockAIService.isConfigured).toHaveBeenCalledTimes(1);
@@ -94,7 +104,10 @@ describe('RecipeSummaryService', () => {
         mockAIService.executePrompt.mockResolvedValue(mockResult);
 
         await expect(
-          recipeSummaryService.createRecipeSummary(mockRecipeVersionData),
+          recipeSummaryService.createRecipeSummary(
+            testOrganizationId,
+            mockRecipeVersionData,
+          ),
         ).rejects.toThrow('Failed to generate recipe summary: Network error');
       });
     });
@@ -105,7 +118,10 @@ describe('RecipeSummaryService', () => {
         mockAIService.executePrompt.mockRejectedValue(error);
 
         await expect(
-          recipeSummaryService.createRecipeSummary(mockRecipeVersionData),
+          recipeSummaryService.createRecipeSummary(
+            testOrganizationId,
+            mockRecipeVersionData,
+          ),
         ).rejects.toThrow('Connection timeout');
       });
     });

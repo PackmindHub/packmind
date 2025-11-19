@@ -2,50 +2,47 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   AiNotConfigured,
   AIService,
-  OpenAIService,
-} from '@packmind/node-utils';
+  ILlmPort,
+  RuleExample,
+  StandardVersion,
+  createStandardId,
+  createOrganizationId,
+} from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
-import { RuleExample } from '@packmind/types';
 import { standardVersionFactory } from '../../../test/standardVersionFactory';
-import { createStandardId } from '@packmind/types';
-import { StandardVersion } from '@packmind/types';
 import { StandardSummaryService } from './StandardSummaryService';
 
 import { v4 as uuidv4 } from 'uuid';
 
-// Mock OpenAIService
-jest.mock('@packmind/node-utils', () => ({
-  ...jest.requireActual('@packmind/node-utils'),
-  OpenAIService: jest.fn(),
-}));
-
-const MockedOpenAIService = OpenAIService as jest.MockedClass<
-  typeof OpenAIService
->;
-
 describe('StandardSummaryService', () => {
   let standardSummaryService: StandardSummaryService;
   let mockAIService: jest.Mocked<AIService>;
+  let mockLlmPort: jest.Mocked<ILlmPort>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
+  const testOrganizationId = createOrganizationId(uuidv4());
 
   beforeEach(() => {
     // Mock AIService instance
     mockAIService = {
       isConfigured: jest.fn(),
       executePrompt: jest.fn(),
+      executePromptWithHistory: jest.fn(),
     } as unknown as jest.Mocked<AIService>;
 
-    // Mock OpenAIService constructor to return our mock
-    MockedOpenAIService.mockImplementation(
-      () => mockAIService as unknown as OpenAIService,
-    );
+    // Mock ILlmPort
+    mockLlmPort = {
+      getLlmForOrganization: jest.fn().mockResolvedValue(mockAIService),
+    } as jest.Mocked<ILlmPort>;
 
     stubbedLogger = stubLogger();
 
     // Default: AI service is configured unless specified otherwise
     mockAIService.isConfigured.mockResolvedValue(true);
 
-    standardSummaryService = new StandardSummaryService(stubbedLogger);
+    standardSummaryService = new StandardSummaryService(
+      stubbedLogger,
+      mockLlmPort,
+    );
   });
 
   afterEach(() => {
@@ -79,6 +76,7 @@ describe('StandardSummaryService', () => {
         });
 
         result = await standardSummaryService.createStandardSummary(
+          testOrganizationId,
           standardVersionData,
           rules,
         );
@@ -161,6 +159,7 @@ describe('StandardSummaryService', () => {
         });
 
         const result = await standardSummaryService.createStandardSummary(
+          testOrganizationId,
           standardVersionData,
           rules,
         );
@@ -180,6 +179,7 @@ describe('StandardSummaryService', () => {
           });
 
           const result = await standardSummaryService.createStandardSummary(
+            testOrganizationId,
             standardVersionData,
             rules,
           );
@@ -200,6 +200,7 @@ describe('StandardSummaryService', () => {
           });
 
           const result = await standardSummaryService.createStandardSummary(
+            testOrganizationId,
             standardVersionData,
             rules,
           );
@@ -220,6 +221,7 @@ describe('StandardSummaryService', () => {
           });
 
           const result = await standardSummaryService.createStandardSummary(
+            testOrganizationId,
             standardVersionData,
             rules,
           );
@@ -239,6 +241,7 @@ describe('StandardSummaryService', () => {
         });
 
         const result = await standardSummaryService.createStandardSummary(
+          testOrganizationId,
           standardVersionData,
           rules,
         );
@@ -257,6 +260,7 @@ describe('StandardSummaryService', () => {
         });
 
         const result = await standardSummaryService.createStandardSummary(
+          testOrganizationId,
           standardVersionData,
           rules,
         );
@@ -275,6 +279,7 @@ describe('StandardSummaryService', () => {
         });
 
         const result = await standardSummaryService.createStandardSummary(
+          testOrganizationId,
           standardVersionData,
           rules,
         );
@@ -301,6 +306,7 @@ describe('StandardSummaryService', () => {
         });
 
         await standardSummaryService.createStandardSummary(
+          testOrganizationId,
           standardVersionData,
           [],
         );
@@ -329,6 +335,7 @@ describe('StandardSummaryService', () => {
         });
 
         await standardSummaryService.createStandardSummary(
+          testOrganizationId,
           standardVersionData,
           [],
         );
@@ -359,6 +366,7 @@ describe('StandardSummaryService', () => {
         });
 
         await standardSummaryService.createStandardSummary(
+          testOrganizationId,
           standardVersionData,
           rules,
         );
@@ -391,7 +399,11 @@ describe('StandardSummaryService', () => {
 
       it('throws error with AI service error message', async () => {
         await expect(
-          standardSummaryService.createStandardSummary(standardVersionData, []),
+          standardSummaryService.createStandardSummary(
+            testOrganizationId,
+            standardVersionData,
+            [],
+          ),
         ).rejects.toThrow(
           'Failed to generate standard summary: API rate limit exceeded',
         );
@@ -411,7 +423,11 @@ describe('StandardSummaryService', () => {
 
       it('throws AiNotConfigured error without calling executePrompt', async () => {
         await expect(
-          standardSummaryService.createStandardSummary(standardVersionData, []),
+          standardSummaryService.createStandardSummary(
+            testOrganizationId,
+            standardVersionData,
+            [],
+          ),
         ).rejects.toThrow(AiNotConfigured);
 
         expect(mockAIService.isConfigured).toHaveBeenCalledTimes(1);
@@ -437,7 +453,11 @@ describe('StandardSummaryService', () => {
 
       it('throws error for missing data', async () => {
         await expect(
-          standardSummaryService.createStandardSummary(standardVersionData, []),
+          standardSummaryService.createStandardSummary(
+            testOrganizationId,
+            standardVersionData,
+            [],
+          ),
         ).rejects.toThrow(
           'Failed to generate standard summary: Unknown AI service error',
         );
@@ -459,7 +479,11 @@ describe('StandardSummaryService', () => {
 
       it('propagates the underlying error', async () => {
         await expect(
-          standardSummaryService.createStandardSummary(standardVersionData, []),
+          standardSummaryService.createStandardSummary(
+            testOrganizationId,
+            standardVersionData,
+            [],
+          ),
         ).rejects.toThrow('Network connection failed');
       });
     });
@@ -477,7 +501,11 @@ describe('StandardSummaryService', () => {
 
       it('handles non-Error exceptions', async () => {
         await expect(
-          standardSummaryService.createStandardSummary(standardVersionData, []),
+          standardSummaryService.createStandardSummary(
+            testOrganizationId,
+            standardVersionData,
+            [],
+          ),
         ).rejects.toBe('String error message');
       });
     });

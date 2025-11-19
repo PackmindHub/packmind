@@ -1,27 +1,35 @@
-import { StandardVersion } from '@packmind/types';
-import { PackmindLogger } from '@packmind/logger';
 import {
+  StandardVersion,
+  OrganizationId,
+  ILlmPort,
   AIService,
-  OpenAIService,
   AiNotConfigured,
-} from '@packmind/node-utils';
-import { RuleExample } from '@packmind/types';
+  RuleExample,
+} from '@packmind/types';
+import { PackmindLogger } from '@packmind/logger';
 import { createStandardSummaryPrompt } from './prompts/create_standard_summary';
 
 const origin = 'StandardSummaryService';
 
 export class StandardSummaryService {
-  private readonly aiService: AIService;
-
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
-  ) {
-    // Instantiate AIService directly inside the service for now
-    // Later this will be injected when we have a clean AI adapter
-    this.aiService = new OpenAIService();
+    private readonly llmPort?: ILlmPort,
+  ) {}
+
+  private async getAIService(
+    organizationId: OrganizationId,
+  ): Promise<AIService> {
+    if (!this.llmPort) {
+      throw new AiNotConfigured(
+        'LLM port not configured for StandardSummaryService',
+      );
+    }
+    return await this.llmPort.getLlmForOrganization(organizationId);
   }
 
   public async createStandardSummary(
+    organizationId: OrganizationId,
     standardVersionData: Omit<StandardVersion, 'id'>,
     rules: Array<{
       content: string;
@@ -29,14 +37,18 @@ export class StandardSummaryService {
     }>,
   ): Promise<string> {
     this.logger.info('Starting createStandardSummary process', {
+      organizationId: organizationId.toString(),
       standardName: standardVersionData.name,
       version: standardVersionData.version,
       rulesCount: rules.length,
       scope: standardVersionData.scope,
     });
 
+    // Get AI service for the organization
+    const aiService = await this.getAIService(organizationId);
+
     // Check if AI service is configured before proceeding
-    const isConfigured = await this.aiService.isConfigured();
+    const isConfigured = await aiService.isConfigured();
     if (!isConfigured) {
       this.logger.warn(
         'AI service not configured - skipping standard summary generation',
@@ -73,7 +85,7 @@ export class StandardSummaryService {
       });
 
       // Execute the AI prompt to generate the summary
-      const result = await this.aiService.executePrompt<string>(fullPrompt, {
+      const result = await aiService.executePrompt<string>(fullPrompt, {
         retryAttempts: 1, // Temporary while we put jobs in BG
       });
 

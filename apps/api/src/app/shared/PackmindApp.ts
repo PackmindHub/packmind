@@ -9,6 +9,7 @@ import { DeploymentsHexa } from '@packmind/deployments';
 import { AmplitudeHexa } from '@packmind/amplitude';
 import { GitHexa } from '@packmind/git';
 import { LinterHexa } from '@packmind/linter';
+import { LlmHexa } from '@packmind/llm';
 import {
   BaseHexa,
   BaseHexaOpts,
@@ -62,6 +63,7 @@ export function getPackmindAppDefinition(): PackmindAppDefinition {
       SpacesHexa, // Must come before AccountsHexa (AccountsHexa depends on SpacesHexa)
       AccountsHexa,
       AmplitudeHexa,
+      LlmHexa,
       GitHexa,
       RecipesHexa,
       AnalyticsHexa,

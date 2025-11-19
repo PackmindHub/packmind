@@ -39,12 +39,13 @@
       "@packmind/linter-execution": ["packages/linter-execution/src/index.ts"],
       "@packmind/logger": ["packages/logger/src/index.ts"],
       "@packmind/migrations": ["packages/migrations/src/index.ts"],
+      "@packmind/node-utils": ["packages/node-utils/src/index.ts"],
       "@packmind/recipes": ["packages/recipes/src/index.ts"],
       "@packmind/recipes/test": ["packages/recipes/test/index.ts"],
-      "@packmind/node-utils": ["packages/node-utils/src/index.ts"],
       "@packmind/spaces": ["packages/spaces/src/index.ts"],
       "@packmind/spaces/test": ["packages/spaces/test/index.ts"],
       "@packmind/standards": ["packages/standards/src/index.ts"],
+      "@packmind/test-utils": ["packages/test-utils/src/index.ts"],
       "@packmind/types": ["packages/types/src/index.ts"],
       "@packmind/ui": ["packages/ui/src/index.ts"],
       "features/analytics/RecipeUsageAnalytics": [
@@ -53,8 +54,8 @@
       "features/detection/ProgramEditor": [
         "apps/frontend/src/domain/detection/components/ProgramEditor"
       ],
-      "packmind-plugin": ["tools/packmind-plugin/src/index.ts"],
-      "@packmind/test-utils": ["packages/test-utils/src/index.ts"]
+      "@packmind/llm": ["packages/llm/src/index.ts"],
+      "packmind-plugin": ["tools/packmind-plugin/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

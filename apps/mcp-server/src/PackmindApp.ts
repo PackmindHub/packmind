@@ -5,6 +5,7 @@ import { DeploymentsHexa } from '@packmind/deployments';
 import { AmplitudeHexa } from '@packmind/amplitude';
 import { GitHexa } from '@packmind/git';
 import { LinterHexa } from '@packmind/linter';
+import { LlmHexa } from '@packmind/llm';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import {
   BaseHexa,
@@ -53,6 +54,7 @@ export function getPackmindAppDefinition(): PackmindAppDefinition {
     hexas: [
       AccountsHexa,
       AmplitudeHexa,
+      LlmHexa,
       GitHexa,
       SpacesHexa,
       LinterHexa,

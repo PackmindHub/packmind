@@ -1,35 +1,47 @@
 import { PackmindLogger } from '@packmind/logger';
-import {
-  AIService,
-  OpenAIService,
-  AiNotConfigured,
-} from '@packmind/node-utils';
 import { createRecipeSummaryPrompt } from './cookbook/prompts/create_recipe_summary';
-import { RecipeVersion } from '@packmind/types';
+import {
+  RecipeVersion,
+  OrganizationId,
+  ILlmPort,
+  AIService,
+  AiNotConfigured,
+} from '@packmind/types';
 
 const origin = 'RecipeSummaryService';
 
 export class RecipeSummaryService {
-  private readonly aiService: AIService;
-
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
-  ) {
-    // Instantiate AIService directly inside the service for now
-    // Later this will be injected when we have a clean AI adapter
-    this.aiService = new OpenAIService();
+    private readonly llmPort?: ILlmPort,
+  ) {}
+
+  private async getAIService(
+    organizationId: OrganizationId,
+  ): Promise<AIService> {
+    if (!this.llmPort) {
+      throw new AiNotConfigured(
+        'LLM port not configured for RecipeSummaryService',
+      );
+    }
+    return await this.llmPort.getLlmForOrganization(organizationId);
   }
 
   public async createRecipeSummary(
+    organizationId: OrganizationId,
     recipeVersionData: Omit<RecipeVersion, 'id'>,
   ): Promise<string> {
     this.logger.info('Starting createRecipeSummary process', {
+      organizationId: organizationId.toString(),
       recipeName: recipeVersionData.name,
       version: recipeVersionData.version,
     });
 
+    // Get AI service for the organization
+    const aiService = await this.getAIService(organizationId);
+
     // Check if AI service is configured before proceeding
-    const isConfigured = await this.aiService.isConfigured();
+    const isConfigured = await aiService.isConfigured();
     if (!isConfigured) {
       this.logger.warn(
         'AI service not configured - skipping recipe summary generation',
@@ -53,7 +65,7 @@ export class RecipeSummaryService {
       });
 
       // Execute the AI prompt to generate the summary
-      const result = await this.aiService.executePrompt<string>(fullPrompt);
+      const result = await aiService.executePrompt<string>(fullPrompt);
 
       if (!result.success || !result.data) {
         this.logger.error('AI service failed to generate recipe summary', {

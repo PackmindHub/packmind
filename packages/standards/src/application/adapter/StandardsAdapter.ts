@@ -10,6 +10,8 @@ import {
   IEventTrackingPortName,
   ILinterPort,
   ILinterPortName,
+  ILlmPort,
+  ILlmPortName,
   ISpacesPort,
   ISpacesPortName,
   IStandardsPort,
@@ -67,6 +69,7 @@ export class StandardsAdapter
   private linterPort: ILinterPort | null = null;
   private deploymentsPort: IDeploymentPort | null = null;
   private eventTrackingPort: IEventTrackingPort | null = null;
+  private llmPort: ILlmPort | null = null;
 
   // Use cases - all initialized in initialize()
   private _createStandard!: CreateStandardUsecase;
@@ -110,6 +113,7 @@ export class StandardsAdapter
     [ILinterPortName]: ILinterPort;
     [IDeploymentPortName]: IDeploymentPort;
     [IEventTrackingPortName]: IEventTrackingPort;
+    [ILlmPortName]: ILlmPort;
     jobsService: JobsService;
   }): Promise<void> {
     this.logger.info('Initializing StandardsAdapter with ports and services');
@@ -119,8 +123,14 @@ export class StandardsAdapter
     this.linterPort = ports[ILinterPortName];
     this.deploymentsPort = ports[IDeploymentPortName];
     this.eventTrackingPort = ports[IEventTrackingPortName];
+    this.llmPort = ports[ILlmPortName];
 
     this.standardDelayedJobs = await this.buildDelayedJobs(ports.jobsService);
+
+    // Set llmPort to services
+    if (this.llmPort) {
+      this.services.setLlmPort(this.llmPort);
+    }
 
     if (
       !this.accountsPort ||
@@ -128,6 +138,7 @@ export class StandardsAdapter
       !this.linterPort ||
       !this.deploymentsPort ||
       !this.eventTrackingPort ||
+      !this.llmPort ||
       !this.standardDelayedJobs
     ) {
       throw new Error(
@@ -268,6 +279,7 @@ export class StandardsAdapter
     const jobFactory = new GenerateStandardSummaryJobFactory(
       this.logger,
       this.repositories,
+      this.services.getStandardSummaryService(),
     );
 
     jobsService.registerJobQueue(jobFactory.getQueueName(), jobFactory);
