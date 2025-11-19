@@ -1,8 +1,11 @@
 import {
+  Body,
   Controller,
   Get,
   NotFoundException,
   Param,
+  Post,
+  Put,
   Query,
   Req,
   UseGuards,
@@ -15,6 +18,11 @@ import {
   GetPackageSummaryResponse,
   IAccountsPort,
   IDeploymentPort,
+  ILearningsPort,
+  GetRagLabConfigurationResponse,
+  UpdateRagLabConfigurationCommand,
+  UpdateRagLabConfigurationResponse,
+  TriggerFullReembeddingResponse,
 } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/node-utils';
@@ -23,6 +31,7 @@ import { OrganizationAccessGuard } from './guards/organization-access.guard';
 import {
   InjectAccountsAdapter,
   InjectDeploymentAdapter,
+  InjectLearningsAdapter,
 } from '../shared/HexaInjection';
 
 const origin = 'OrganizationsController';
@@ -42,6 +51,8 @@ export class OrganizationsController {
     @InjectAccountsAdapter() private readonly accountsAdapter: IAccountsPort,
     @InjectDeploymentAdapter()
     private readonly deploymentAdapter: IDeploymentPort,
+    @InjectLearningsAdapter()
+    private readonly learningsAdapter: ILearningsPort,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.INFO,
@@ -236,6 +247,127 @@ export class OrganizationsController {
           organizationId,
           userId,
           slug,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Get RAG Lab configuration for an organization
+   * GET /organizations/:orgId/rag-lab/configuration
+   */
+  @Get('rag-lab/configuration')
+  async getRagLabConfiguration(
+    @Param('orgId') organizationId: OrganizationId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<GetRagLabConfigurationResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'GET /organizations/:orgId/rag-lab/configuration - Fetching RAG Lab configuration',
+      {
+        organizationId,
+        userId,
+      },
+    );
+
+    try {
+      return await this.learningsAdapter.getRagLabConfiguration({
+        organizationId,
+        userId,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/rag-lab/configuration - Failed to fetch RAG Lab configuration',
+        {
+          organizationId,
+          userId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Update RAG Lab configuration for an organization
+   * PUT /organizations/:orgId/rag-lab/configuration
+   */
+  @Put('rag-lab/configuration')
+  async updateRagLabConfiguration(
+    @Param('orgId') organizationId: OrganizationId,
+    @Body() body: UpdateRagLabConfigurationCommand,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<UpdateRagLabConfigurationResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'PUT /organizations/:orgId/rag-lab/configuration - Updating RAG Lab configuration',
+      {
+        organizationId,
+        userId,
+        embeddingModel: body.embeddingModel,
+        embeddingDimensions: body.embeddingDimensions,
+      },
+    );
+
+    try {
+      return await this.learningsAdapter.updateRagLabConfiguration({
+        ...body,
+        organizationId,
+        userId,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'PUT /organizations/:orgId/rag-lab/configuration - Failed to update RAG Lab configuration',
+        {
+          organizationId,
+          userId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Trigger full reembedding for all artifacts in the organization
+   * POST /organizations/:orgId/rag-lab/trigger-full-reembedding
+   */
+  @Post('rag-lab/trigger-full-reembedding')
+  async triggerFullReembedding(
+    @Param('orgId') organizationId: OrganizationId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<TriggerFullReembeddingResponse> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'POST /organizations/:orgId/rag-lab/trigger-full-reembedding - Triggering full reembedding',
+      {
+        organizationId,
+        userId,
+      },
+    );
+
+    try {
+      return await this.learningsAdapter.triggerFullReembedding({
+        organizationId,
+        userId,
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /organizations/:orgId/rag-lab/trigger-full-reembedding - Failed to trigger full reembedding',
+        {
+          organizationId,
+          userId,
           error: errorMessage,
         },
       );
