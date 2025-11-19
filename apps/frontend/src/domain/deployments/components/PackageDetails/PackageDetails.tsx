@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   PMPage,
   PMText,
@@ -14,10 +14,20 @@ import {
   PMLink,
   PMButton,
   PMField,
+  PMFieldset,
   PMInput,
-  PMTextArea,
-  PMCheckbox,
   PMAlertDialog,
+  pmToaster,
+  PMMarkdownViewer,
+  PMCombobox,
+  PMPortal,
+  pmUseFilter,
+  pmUseListCollection,
+  PMBadge,
+  PMCloseButton,
+  PMDataList,
+  PMPopover,
+  PMCopiable,
 } from '@packmind/ui';
 import { Link, useNavigate } from 'react-router';
 import {
@@ -32,7 +42,6 @@ import {
   Standard,
   RecipeId,
   StandardId,
-  Package,
 } from '@packmind/types';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
@@ -41,12 +50,278 @@ import { useGetRecipesQuery } from '../../../recipes/api/queries/RecipesQueries'
 import { useGetStandardsQuery } from '../../../standards/api/queries/StandardsQueries';
 import { PACKAGE_MESSAGES } from '../../constants/messages';
 import { DeployPackageButton } from '../PackageDeployments/DeployPackageButton';
+import {
+  MarkdownEditor,
+  MarkdownEditorProvider,
+} from '../../../../shared/components/editor/MarkdownEditor';
 
 interface PackageDetailsProps {
   id: PackageId;
   orgSlug: string;
   spaceSlug: string;
 }
+
+interface PackageEditFormContentProps {
+  allRecipes: Recipe[];
+  allStandards: Standard[];
+  selectedRecipeIds: RecipeId[];
+  selectedStandardIds: StandardId[];
+  setSelectedRecipeIds: (ids: RecipeId[]) => void;
+  setSelectedStandardIds: (ids: StandardId[]) => void;
+  isPending: boolean;
+  isLoadingRecipes: boolean;
+  isLoadingStandards: boolean;
+}
+
+const PackageEditFormContent = ({
+  allRecipes,
+  allStandards,
+  selectedRecipeIds,
+  selectedStandardIds,
+  setSelectedRecipeIds,
+  setSelectedStandardIds,
+  isPending,
+  isLoadingRecipes,
+  isLoadingStandards,
+}: PackageEditFormContentProps) => {
+  const { contains } = pmUseFilter({ sensitivity: 'base' });
+
+  const recipeItems = allRecipes.map((recipe: Recipe) => ({
+    label: recipe.name,
+    value: recipe.id,
+  }));
+
+  const standardItems = allStandards.map((standard: Standard) => ({
+    label: standard.name,
+    value: standard.id,
+  }));
+
+  const { collection: recipeCollection, filter: filterRecipes } =
+    pmUseListCollection({
+      initialItems: recipeItems,
+      filter: contains,
+    });
+
+  const { collection: standardCollection, filter: filterStandards } =
+    pmUseListCollection({
+      initialItems: standardItems,
+      filter: contains,
+    });
+
+  const recipeDisplayValue =
+    selectedRecipeIds.length === 0
+      ? 'Select recipes...'
+      : `${selectedRecipeIds.length} recipe(s) selected`;
+
+  const standardDisplayValue =
+    selectedStandardIds.length === 0
+      ? 'Select standards...'
+      : `${selectedStandardIds.length} standard(s) selected`;
+
+  return (
+    <PMHStack align="flex-start" gap={4} width="full">
+      <PMField.Root flex={1} width="full">
+        <PMField.Label>Standards</PMField.Label>
+        {isLoadingStandards || allStandards.length === 0 ? (
+          isLoadingStandards ? (
+            <PMSpinner size="sm" />
+          ) : (
+            <PMText colorPalette="gray" fontSize="sm" display="block">
+              No standards available in this space
+            </PMText>
+          )
+        ) : (
+          <PMVStack gap={2} width="full" align="flex-start">
+            <PMCombobox.Root
+              collection={standardCollection}
+              onInputValueChange={(e: { inputValue: string }) =>
+                filterStandards(e.inputValue)
+              }
+              onValueChange={(details: { value: string[] }) =>
+                setSelectedStandardIds(details.value as StandardId[])
+              }
+              value={selectedStandardIds}
+              multiple
+              openOnClick
+              placeholder={standardDisplayValue}
+              width="full"
+              disabled={isPending}
+            >
+              <PMCombobox.Control>
+                <PMVStack gap={0} width="full">
+                  <PMCombobox.Input />
+                  <PMCombobox.IndicatorGroup>
+                    <PMCombobox.ClearTrigger />
+                    <PMCombobox.Trigger />
+                  </PMCombobox.IndicatorGroup>
+                </PMVStack>
+              </PMCombobox.Control>
+
+              <PMPortal>
+                <PMCombobox.Positioner>
+                  <PMCombobox.Content>
+                    <PMCombobox.Empty>No standards found</PMCombobox.Empty>
+                    {standardCollection.items.map((item) => (
+                      <PMCombobox.Item item={item} key={item.value}>
+                        <PMCombobox.ItemText>{item.label}</PMCombobox.ItemText>
+                        <PMCombobox.ItemIndicator />
+                      </PMCombobox.Item>
+                    ))}
+                  </PMCombobox.Content>
+                </PMCombobox.Positioner>
+              </PMPortal>
+            </PMCombobox.Root>
+
+            {selectedStandardIds.length > 0 && (
+              <PMHStack gap={2} flexWrap="wrap" width="full">
+                {selectedStandardIds
+                  .map((standardId) => {
+                    const standard = allStandards.find(
+                      (s) => s.id === standardId,
+                    );
+                    return standard
+                      ? { id: standardId, name: standard.name }
+                      : null;
+                  })
+                  .filter(
+                    (item): item is { id: StandardId; name: string } =>
+                      item !== null,
+                  )
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map(({ id, name }) => (
+                    <PMBadge
+                      key={id}
+                      variant="subtle"
+                      maxW="300px"
+                      display="inline-flex"
+                      alignItems="center"
+                    >
+                      <PMText truncate flex="1" minW="0" title={name}>
+                        {name}
+                      </PMText>
+                      <PMCloseButton
+                        size="xs"
+                        ml={1}
+                        flexShrink={0}
+                        onClick={() =>
+                          setSelectedStandardIds(
+                            selectedStandardIds.filter(
+                              (standardId) => standardId !== id,
+                            ),
+                          )
+                        }
+                        disabled={isPending}
+                      />
+                    </PMBadge>
+                  ))}
+              </PMHStack>
+            )}
+          </PMVStack>
+        )}
+        <PMField.HelperText />
+        <PMField.ErrorText />
+      </PMField.Root>
+
+      <PMField.Root flex={1} width="full">
+        <PMField.Label>Recipes</PMField.Label>
+        {isLoadingRecipes || allRecipes.length === 0 ? (
+          isLoadingRecipes ? (
+            <PMSpinner size="sm" />
+          ) : (
+            <PMText colorPalette="gray" fontSize="sm" display="block">
+              No recipes available in this space
+            </PMText>
+          )
+        ) : (
+          <PMVStack gap={2} width="full" align="flex-start">
+            <PMCombobox.Root
+              collection={recipeCollection}
+              onInputValueChange={(e: { inputValue: string }) =>
+                filterRecipes(e.inputValue)
+              }
+              onValueChange={(details: { value: string[] }) =>
+                setSelectedRecipeIds(details.value as RecipeId[])
+              }
+              value={selectedRecipeIds}
+              multiple
+              openOnClick
+              placeholder={recipeDisplayValue}
+              width="full"
+              disabled={isPending}
+            >
+              <PMCombobox.Control>
+                <PMVStack gap={0} width="full">
+                  <PMCombobox.Input />
+                  <PMCombobox.IndicatorGroup>
+                    <PMCombobox.ClearTrigger />
+                    <PMCombobox.Trigger />
+                  </PMCombobox.IndicatorGroup>
+                </PMVStack>
+              </PMCombobox.Control>
+
+              <PMPortal>
+                <PMCombobox.Positioner>
+                  <PMCombobox.Content>
+                    <PMCombobox.Empty>No recipes found</PMCombobox.Empty>
+                    {recipeCollection.items.map((item) => (
+                      <PMCombobox.Item item={item} key={item.value}>
+                        <PMCombobox.ItemText>{item.label}</PMCombobox.ItemText>
+                        <PMCombobox.ItemIndicator />
+                      </PMCombobox.Item>
+                    ))}
+                  </PMCombobox.Content>
+                </PMCombobox.Positioner>
+              </PMPortal>
+            </PMCombobox.Root>
+
+            {selectedRecipeIds.length > 0 && (
+              <PMHStack gap={2} flexWrap="wrap" width="full">
+                {selectedRecipeIds
+                  .map((recipeId) => {
+                    const recipe = allRecipes.find((r) => r.id === recipeId);
+                    return recipe ? { id: recipeId, name: recipe.name } : null;
+                  })
+                  .filter(
+                    (item): item is { id: RecipeId; name: string } =>
+                      item !== null,
+                  )
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map(({ id, name }) => (
+                    <PMBadge
+                      key={id}
+                      variant="subtle"
+                      maxW="300px"
+                      display="inline-flex"
+                      alignItems="center"
+                    >
+                      <PMText truncate flex="1" minW="0" title={name}>
+                        {name}
+                      </PMText>
+                      <PMCloseButton
+                        size="xs"
+                        ml={1}
+                        flexShrink={0}
+                        onClick={() =>
+                          setSelectedRecipeIds(
+                            selectedRecipeIds.filter(
+                              (recipeId) => recipeId !== id,
+                            ),
+                          )
+                        }
+                        disabled={isPending}
+                      />
+                    </PMBadge>
+                  ))}
+              </PMHStack>
+            )}
+          </PMVStack>
+        )}
+        <PMField.HelperText />
+        <PMField.ErrorText />
+      </PMField.Root>
+    </PMHStack>
+  );
+};
 
 export const PackageDetails = ({
   id,
@@ -65,6 +340,9 @@ export const PackageDetails = ({
     [],
   );
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { contains } = pmUseFilter({ sensitivity: 'base' });
 
   const {
     data: packageResponse,
@@ -85,33 +363,21 @@ export const PackageDetails = ({
   const pkg = packageResponse?.package;
   const recipeIds = pkg?.recipes || [];
   const standardIds = pkg?.standards || [];
-  const allRecipes = recipesResponse || [];
-  const allStandards = standardsResponse?.standards || [];
+  const allRecipes = (recipesResponse || []).sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
+  const allStandards = (standardsResponse?.standards || []).sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
 
   useEffect(() => {
-    if (pkg && !isEditMode) {
+    if (pkg) {
       setEditName(pkg.name);
       setEditDescription(pkg.description);
       setSelectedRecipeIds(recipeIds);
       setSelectedStandardIds(standardIds);
     }
-  }, [pkg, recipeIds, standardIds, isEditMode]);
-
-  const handleRecipeToggle = (recipeId: RecipeId) => {
-    setSelectedRecipeIds((prev) =>
-      prev.includes(recipeId)
-        ? prev.filter((id) => id !== recipeId)
-        : [...prev, recipeId],
-    );
-  };
-
-  const handleStandardToggle = (standardId: StandardId) => {
-    setSelectedStandardIds((prev) =>
-      prev.includes(standardId)
-        ? prev.filter((id) => id !== standardId)
-        : [...prev, standardId],
-    );
-  };
+  }, [pkg, recipeIds, standardIds]);
 
   const handleEdit = () => {
     setIsEditMode(true);
@@ -132,6 +398,12 @@ export const PackageDetails = ({
       return;
     }
 
+    if (updatePackageMutation.isPending || isSubmitting) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
     try {
       await updatePackageMutation.mutateAsync({
         packageId: id,
@@ -142,9 +414,27 @@ export const PackageDetails = ({
         recipeIds: selectedRecipeIds,
         standardIds: selectedStandardIds,
       });
+
+      pmToaster.create({
+        type: 'success',
+        title: 'Package updated successfully',
+        description: `"${editName}" has been updated`,
+      });
+
       setIsEditMode(false);
+      setIsSubmitting(false);
     } catch (error) {
       console.error('Failed to update package:', error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'An error occurred while updating the package';
+      pmToaster.create({
+        type: 'error',
+        title: 'Failed to update package',
+        description: errorMessage,
+      });
+      setIsSubmitting(false);
     }
   };
 
@@ -165,51 +455,94 @@ export const PackageDetails = ({
     }
   };
 
+  // Don't create collections until data is loaded
+  const recipeItems = !isLoadingRecipes
+    ? allRecipes.map((recipe: Recipe) => ({
+        label: recipe.name,
+        value: recipe.id,
+      }))
+    : [];
+
+  const standardItems = !isLoadingStandards
+    ? allStandards.map((standard: Standard) => ({
+        label: standard.name,
+        value: standard.id,
+      }))
+    : [];
+
+  const { collection: recipeCollection, filter: filterRecipes } =
+    pmUseListCollection({
+      initialItems: recipeItems,
+      filter: contains,
+    });
+
+  const { collection: standardCollection, filter: filterStandards } =
+    pmUseListCollection({
+      initialItems: standardItems,
+      filter: contains,
+    });
+
+  const recipeDisplayValue =
+    selectedRecipeIds.length === 0
+      ? 'Select recipes...'
+      : `${selectedRecipeIds.length} recipe(s) selected`;
+
+  const standardDisplayValue =
+    selectedStandardIds.length === 0
+      ? 'Select standards...'
+      : `${selectedStandardIds.length} standard(s) selected`;
+
   const recipeTableData: PMTableRow[] = React.useMemo(
     () =>
-      recipeIds.map((recipeId) => {
-        const recipe = allRecipes.find((r) => r.id === recipeId);
-        return {
-          key: recipeId,
-          name: (
-            <PMLink asChild>
-              <Link to={routes.space.toRecipe(orgSlug, spaceSlug, recipeId)}>
-                {recipe?.name || recipeId}
-              </Link>
-            </PMLink>
-          ),
-        };
-      }),
+      recipeIds
+        .map((recipeId) => {
+          const recipe = allRecipes.find((r) => r.id === recipeId);
+          return {
+            key: recipeId,
+            name: (
+              <PMLink asChild>
+                <Link to={routes.space.toRecipe(orgSlug, spaceSlug, recipeId)}>
+                  {recipe?.name || recipeId}
+                </Link>
+              </PMLink>
+            ),
+            sortName: recipe?.name || recipeId,
+          };
+        })
+        .sort((a, b) => a.sortName.localeCompare(b.sortName)),
     [recipeIds, allRecipes, orgSlug, spaceSlug],
   );
 
   const standardTableData: PMTableRow[] = React.useMemo(
     () =>
-      standardIds.map((standardId) => {
-        const standard = allStandards.find((s) => s.id === standardId);
-        return {
-          key: standardId,
-          name: (
-            <PMLink asChild>
-              <Link
-                to={routes.space.toStandard(orgSlug, spaceSlug, standardId)}
-              >
-                {standard?.name || standardId}
-              </Link>
-            </PMLink>
-          ),
-        };
-      }),
+      standardIds
+        .map((standardId) => {
+          const standard = allStandards.find((s) => s.id === standardId);
+          return {
+            key: standardId,
+            name: (
+              <PMLink asChild>
+                <Link
+                  to={routes.space.toStandard(orgSlug, spaceSlug, standardId)}
+                >
+                  {standard?.name || standardId}
+                </Link>
+              </PMLink>
+            ),
+            sortName: standard?.name || standardId,
+          };
+        })
+        .sort((a, b) => a.sortName.localeCompare(b.sortName)),
     [standardIds, allStandards, orgSlug, spaceSlug],
   );
 
   const recipeColumns: PMTableColumn[] = React.useMemo(
-    () => [{ key: 'name', header: 'Recipe Name', grow: true }],
+    () => [{ key: 'name', header: 'Name', grow: true }],
     [],
   );
 
   const standardColumns: PMTableColumn[] = React.useMemo(
-    () => [{ key: 'name', header: 'Standard Name', grow: true }],
+    () => [{ key: 'name', header: 'Name', grow: true }],
     [],
   );
 
@@ -265,120 +598,165 @@ export const PackageDetails = ({
 
   const recipeCount = recipeIds.length;
   const standardCount = standardIds.length;
+  const isPackageEmpty = recipeCount === 0 && standardCount === 0;
+
+  const isPending = updatePackageMutation.isPending || isSubmitting;
+  const isFormValid = editName.trim();
 
   if (isEditMode) {
+    if (isLoadingRecipes || isLoadingStandards) {
+      return (
+        <PMPage
+          title="Edit Package"
+          subtitle="Loading..."
+          breadcrumbComponent={<AutobreadCrumb />}
+        >
+          <PMBox
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            minH="200px"
+          >
+            <PMSpinner size="lg" mr={2} />
+            <PMText ml={2}>Loading recipes and standards...</PMText>
+          </PMBox>
+        </PMPage>
+      );
+    }
+
     return (
       <PMPage
         title="Edit Package"
         subtitle="Update package details, recipes, and standards"
         breadcrumbComponent={<AutobreadCrumb />}
       >
-        <PMVStack align="stretch" gap="6" maxW="800px">
-          <PMField.Root>
-            <PMField.Label>Name *</PMField.Label>
-            <PMInput
-              value={editName}
-              onChange={(e) => setEditName(e.target.value)}
-              placeholder="Enter package name"
-              required
-            />
-          </PMField.Root>
+        <MarkdownEditorProvider>
+          <PMBox
+            as="form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSave();
+            }}
+          >
+            <PMVStack gap={10} alignItems="flex-start">
+              <PMFieldset.Root>
+                <PMFieldset.Legend>
+                  <PMHeading level="h3">Package Information</PMHeading>
+                </PMFieldset.Legend>
+                <PMFieldset.Content
+                  border="solid 1px"
+                  borderColor="border.primary"
+                  p={4}
+                >
+                  <PMField.Root required>
+                    <PMField.Label>
+                      Name
+                      <PMField.RequiredIndicator />
+                    </PMField.Label>
+                    <PMInput
+                      placeholder="Enter package name"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      disabled={isPending}
+                    />
+                    <PMField.HelperText />
+                    <PMField.ErrorText />
+                  </PMField.Root>
 
-          <PMField.Root>
-            <PMField.Label>Description *</PMField.Label>
-            <PMTextArea
-              value={editDescription}
-              onChange={(e) => setEditDescription(e.target.value)}
-              placeholder="Enter package description"
-              required
-              rows={4}
-            />
-          </PMField.Root>
+                  <PMField.Root maxW="100%">
+                    <PMField.Label>Description</PMField.Label>
+                    <PMBox width="100%">
+                      <MarkdownEditor
+                        defaultValue={editDescription}
+                        onMarkdownChange={(value: string): void => {
+                          setEditDescription(value);
+                        }}
+                      />
+                    </PMBox>
+                    <PMField.HelperText />
+                    <PMField.ErrorText />
+                  </PMField.Root>
+                </PMFieldset.Content>
+              </PMFieldset.Root>
 
-          <PMBox>
-            <PMText fontWeight="medium" mb={3}>
-              Recipes
-            </PMText>
-            {isLoadingRecipes ? (
-              <PMSpinner size="sm" />
-            ) : allRecipes.length === 0 ? (
-              <PMText colorPalette="gray" fontSize="sm">
-                No recipes available in this space
-              </PMText>
-            ) : (
-              <PMVStack align="stretch" gap={2}>
-                {allRecipes.map((recipe: Recipe) => (
-                  <PMCheckbox
-                    key={recipe.id}
-                    checked={selectedRecipeIds.includes(recipe.id)}
-                    onCheckedChange={() => handleRecipeToggle(recipe.id)}
-                  >
-                    {recipe.name}
-                  </PMCheckbox>
-                ))}
-              </PMVStack>
+              <PMFieldset.Root>
+                <PMFieldset.Legend>
+                  <PMHeading level="h3">Content Selection</PMHeading>
+                </PMFieldset.Legend>
+                <PMFieldset.HelperText>
+                  Select the recipes and standards to include in this package.
+                </PMFieldset.HelperText>
+                <PMFieldset.Content
+                  border="solid 1px"
+                  borderColor="border.primary"
+                  p={4}
+                >
+                  {isLoadingRecipes || isLoadingStandards ? null : (
+                    <PackageEditFormContent
+                      key={`loaded-${allRecipes.length}-${allStandards.length}`}
+                      allRecipes={allRecipes}
+                      allStandards={allStandards}
+                      selectedRecipeIds={selectedRecipeIds}
+                      selectedStandardIds={selectedStandardIds}
+                      setSelectedRecipeIds={setSelectedRecipeIds}
+                      setSelectedStandardIds={setSelectedStandardIds}
+                      isPending={isPending}
+                      isLoadingRecipes={isLoadingRecipes}
+                      isLoadingStandards={isLoadingStandards}
+                    />
+                  )}
+                </PMFieldset.Content>
+              </PMFieldset.Root>
+            </PMVStack>
+
+            <PMHStack
+              marginTop={6}
+              border="solid 1px"
+              borderColor="border.primary"
+              paddingY={4}
+              justifyContent="center"
+              backgroundColor="background.secondary"
+              position="sticky"
+              bottom={0}
+            >
+              <PMButton
+                type="submit"
+                variant="primary"
+                disabled={!isFormValid || isPending}
+                loading={isPending}
+                size="lg"
+              >
+                {isPending ? 'Saving...' : 'Save'}
+              </PMButton>
+              <PMButton
+                variant="secondary"
+                onClick={handleCancel}
+                type="button"
+                disabled={isPending}
+                size="lg"
+              >
+                Cancel
+              </PMButton>
+            </PMHStack>
+
+            {updatePackageMutation.isError && (
+              <PMAlert.Root status="error">
+                <PMAlert.Indicator />
+                <PMAlert.Title>Failed to update package</PMAlert.Title>
+                <PMText>Please try again.</PMText>
+              </PMAlert.Root>
             )}
           </PMBox>
-
-          <PMBox>
-            <PMText fontWeight="medium" mb={3}>
-              Standards
-            </PMText>
-            {isLoadingStandards ? (
-              <PMSpinner size="sm" />
-            ) : allStandards.length === 0 ? (
-              <PMText colorPalette="gray" fontSize="sm">
-                No standards available in this space
-              </PMText>
-            ) : (
-              <PMVStack align="stretch" gap={2}>
-                {allStandards.map((standard: Standard) => (
-                  <PMCheckbox
-                    key={standard.id}
-                    checked={selectedStandardIds.includes(standard.id)}
-                    onCheckedChange={() => handleStandardToggle(standard.id)}
-                  >
-                    {standard.name}
-                  </PMCheckbox>
-                ))}
-              </PMVStack>
-            )}
-          </PMBox>
-
-          <PMHStack gap={3}>
-            <PMButton
-              onClick={handleSave}
-              disabled={
-                updatePackageMutation.isPending || !editName || !editDescription
-              }
-            >
-              {updatePackageMutation.isPending ? 'Saving...' : 'Save'}
-            </PMButton>
-            <PMButton
-              variant="outline"
-              onClick={handleCancel}
-              disabled={updatePackageMutation.isPending}
-            >
-              Cancel
-            </PMButton>
-          </PMHStack>
-
-          {updatePackageMutation.isError && (
-            <PMAlert.Root status="error">
-              <PMAlert.Indicator />
-              <PMAlert.Title>Failed to update package</PMAlert.Title>
-              <PMText>Please try again.</PMText>
-            </PMAlert.Root>
-          )}
-        </PMVStack>
+        </MarkdownEditorProvider>
       </PMPage>
     );
   }
 
+  const pullCommand = `packmind pull ${pkg.slug}`;
+
   return (
     <PMPage
       title={pkg.name}
-      subtitle={pkg.description}
       breadcrumbComponent={<AutobreadCrumb />}
       actions={
         <PMHStack gap={3}>
@@ -386,11 +764,14 @@ export const PackageDetails = ({
             label="Deploy"
             size="md"
             selectedPackages={[pkg]}
+            disabled={isPackageEmpty}
           />
-          <PMButton onClick={handleEdit}>Edit</PMButton>
+          <PMButton variant="tertiary" onClick={handleEdit}>
+            Edit
+          </PMButton>
           <PMAlertDialog
             trigger={
-              <PMButton variant="outline" colorPalette="red">
+              <PMButton variant="tertiary" colorPalette="red">
                 Delete
               </PMButton>
             }
@@ -408,51 +789,112 @@ export const PackageDetails = ({
       }
     >
       <PMVStack align="stretch" gap="6">
-        <PMBox>
-          <PMVStack align="stretch" gap="2">
-            <PMHStack gap="4">
-              <PMText fontWeight="semibold">Slug:</PMText>
-              <PMText>{pkg.slug}</PMText>
-            </PMHStack>
-            <PMHStack gap="4">
-              <PMText fontWeight="semibold">Recipes:</PMText>
-              <PMText>{recipeCount}</PMText>
-            </PMHStack>
-            <PMHStack gap="4">
-              <PMText fontWeight="semibold">Standards:</PMText>
-              <PMText>{standardCount}</PMText>
-            </PMHStack>
-          </PMVStack>
-        </PMBox>
-
-        {recipeCount > 0 && (
+        <PMDataList
+          size="md"
+          orientation="horizontal"
+          items={[
+            {
+              label: 'Slug',
+              value: (
+                <PMHStack gap={2}>
+                  <PMText>{pkg.slug}</PMText>
+                  <PMPopover.Root positioning={{ placement: 'bottom-start' }}>
+                    <PMPopover.Trigger asChild>
+                      <PMButton variant="ghost" size="xs">
+                        Pull package
+                      </PMButton>
+                    </PMPopover.Trigger>
+                    <PMPopover.Positioner>
+                      <PMPopover.Content>
+                        <PMPopover.Arrow>
+                          <PMPopover.ArrowTip />
+                        </PMPopover.Arrow>
+                        <PMPopover.Body>
+                          <PMPopover.Title>Pull this package</PMPopover.Title>
+                          <PMText
+                            variant="small"
+                            mb={2}
+                            as="p"
+                            color="secondary"
+                          >
+                            Use this command to pull the package with the
+                            Packmind CLI:
+                          </PMText>
+                          <PMCopiable.Root value={pullCommand}>
+                            <PMBox
+                              position="relative"
+                              bg="background.secondary"
+                              p={3}
+                              borderRadius="md"
+                              border="1px solid"
+                              borderColor="border.primary"
+                            >
+                              <PMText fontFamily="mono" fontSize="sm">
+                                {pullCommand}
+                              </PMText>
+                              <PMCopiable.Trigger asChild>
+                                <PMButton
+                                  position="absolute"
+                                  top={2}
+                                  right={2}
+                                  size="xs"
+                                  variant="ghost"
+                                >
+                                  <PMCopiable.Indicator>
+                                    Copy
+                                  </PMCopiable.Indicator>
+                                </PMButton>
+                              </PMCopiable.Trigger>
+                            </PMBox>
+                          </PMCopiable.Root>
+                        </PMPopover.Body>
+                        <PMPopover.CloseTrigger />
+                      </PMPopover.Content>
+                    </PMPopover.Positioner>
+                  </PMPopover.Root>
+                </PMHStack>
+              ),
+            },
+          ]}
+        />
+        {pkg.description && (
           <PMBox>
-            <PMHeading size="lg" mb={4}>
-              Recipes ({recipeCount})
-            </PMHeading>
-            <PMTable
-              columns={recipeColumns}
-              data={recipeTableData}
-              striped={true}
-              hoverable={true}
-              variant="line"
-            />
+            <PMMarkdownViewer content={pkg.description} />
           </PMBox>
         )}
 
-        {standardCount > 0 && (
-          <PMBox>
-            <PMHeading size="lg" mb={4}>
-              Standards ({standardCount})
-            </PMHeading>
-            <PMTable
-              columns={standardColumns}
-              data={standardTableData}
-              striped={true}
-              hoverable={true}
-              variant="line"
-            />
-          </PMBox>
+        {(recipeCount > 0 || standardCount > 0) && (
+          <PMHStack align="flex-start" gap={6} width="full">
+            {standardCount > 0 && (
+              <PMBox flex={1} width="full">
+                <PMHeading size="lg" mb={4}>
+                  Standards ({standardCount})
+                </PMHeading>
+                <PMTable
+                  columns={standardColumns}
+                  data={standardTableData}
+                  striped={true}
+                  hoverable={true}
+                  variant="line"
+                />
+              </PMBox>
+            )}
+
+            {recipeCount > 0 && (
+              <PMBox flex={1} width="full">
+                <PMHeading size="lg" mb={4}>
+                  Recipes ({recipeCount})
+                </PMHeading>
+                <PMTable
+                  columns={recipeColumns}
+                  data={recipeTableData}
+                  striped={true}
+                  hoverable={true}
+                  variant="line"
+                />
+              </PMBox>
+            )}
+          </PMHStack>
         )}
       </PMVStack>
     </PMPage>

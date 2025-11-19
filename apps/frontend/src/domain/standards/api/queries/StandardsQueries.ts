@@ -150,7 +150,12 @@ export const useUpdateStandardMutation = () => {
 
       // Invalidate the rules for this standard (rules may have been added/deleted)
       await queryClient.invalidateQueries({
-        queryKey: [...GET_RULES_BY_STANDARD_ID_KEY, variables.id],
+        queryKey: [
+          ...GET_RULES_BY_STANDARD_ID_KEY,
+          organization.id,
+          spaceId,
+          variables.id,
+        ],
       });
 
       await queryClient.invalidateQueries({
@@ -186,14 +191,30 @@ export const useGetStandardVersionsQuery = (id: StandardId) => {
   });
 };
 
-export const getRulesByStandardIdOptions = (id: StandardId) => ({
-  queryKey: [...GET_RULES_BY_STANDARD_ID_KEY, id],
-  queryFn: () => standardsGateway.getRulesByStandardId(id),
-  enabled: !!id,
+export const getRulesByStandardIdOptions = (
+  organizationId: OrganizationId,
+  spaceId: SpaceId,
+  standardId: StandardId,
+) => ({
+  queryKey: [
+    ...GET_RULES_BY_STANDARD_ID_KEY,
+    organizationId,
+    spaceId,
+    standardId,
+  ],
+  queryFn: () =>
+    standardsGateway.getRulesByStandardId(organizationId, spaceId, standardId),
+  enabled: !!organizationId && !!spaceId && !!standardId,
 });
 
-export const useGetRulesByStandardIdQuery = (id: StandardId) => {
-  return useQuery(getRulesByStandardIdOptions(id));
+export const useGetRulesByStandardIdQuery = (
+  organizationId: OrganizationId,
+  spaceId: SpaceId,
+  standardId: StandardId,
+) => {
+  return useQuery(
+    getRulesByStandardIdOptions(organizationId, spaceId, standardId),
+  );
 };
 
 const DELETE_STANDARD_MUTATION_KEY = 'deleteStandard';

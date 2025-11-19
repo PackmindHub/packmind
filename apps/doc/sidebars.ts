@@ -20,9 +20,9 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Getting started',
       items: [
+        'gs-mcp-server-setup',
         'gs-install-cloud',
         'gs-install-self-hosted',
-        'gs-mcp-server-setup',
         'gs-create-standard',
         'gs-create-recipe',
         'gs-distribute',
@@ -32,7 +32,17 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Concepts',
-      items: ['standards-management', 'recipes-management', 'mcp-server'],
+      items: [
+        'standards-management',
+        'recipes-management',
+        'packages-management',
+      ],
+      collapsed: false,
+    },
+    {
+      type: 'category',
+      label: 'Tools & Integrations',
+      items: ['mcp-server', 'cli'],
       collapsed: false,
     },
     {
@@ -43,7 +53,7 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Linter',
-      items: ['linter', 'cli'],
+      items: ['linter'],
     },
     {
       type: 'category',

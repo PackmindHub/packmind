@@ -209,8 +209,6 @@ export class PackmindDeployer implements ICodingAgentDeployer {
   async deployArtifacts(
     recipeVersions: RecipeVersion[],
     standardVersions: StandardVersion[],
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _existingContent: string,
   ): Promise<FileUpdates> {
     this.logger.info('Deploying artifacts (recipes + standards) for Packmind', {
       recipesCount: recipeVersions.length,

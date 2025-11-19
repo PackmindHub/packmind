@@ -11,6 +11,8 @@ import {
 } from '@packmind/types';
 import { DeploymentsServices } from '../../services/DeploymentsServices';
 
+const origin = 'UpdatePackageUsecase';
+
 export class UpdatePackageUsecase
   extends AbstractMemberUseCase<UpdatePackageCommand, UpdatePackageResponse>
   implements IUpdatePackageUseCase
@@ -21,9 +23,10 @@ export class UpdatePackageUsecase
     private readonly spacesPort: ISpacesPort,
     private readonly recipesPort: IRecipesPort,
     private readonly standardsPort: IStandardsPort,
-    logger?: PackmindLogger,
+    logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
+    this.logger.info('UpdatePackageUsecase initialized');
   }
 
   async executeForMembers(

@@ -6,10 +6,13 @@ import { pmButtonRecipe } from '../components/form/PMButton/PMButton.recipe';
 import { pmMenuRecipe } from '../components/form/PMMenu/PMMenu.recipe';
 import { pmLinkRecipe } from '../components/typography/PMLink.recipe';
 import { pmTabsRecipe } from '../components/navigation/PMTabs/PMTabs.recipe';
+import { pmTimelineRecipe } from '../components/content/PMTimeline/PMTimeline.recipe';
 import { pmComboboxRecipe } from '../components/form/PMCombobox/PMCombobox.recipe';
 import { pmToasterRecipe } from '../components/feedback/PMToaster/PMToaster.recipe';
 import { pmCheckboxCard } from '../components/form/PMCheckboxCard/PMCheckboxCard.recipe';
 import { pmSegmentedControl } from '../components/form/PMSegmentedControl/PMSegmentedControl.recipe';
+import { pmRadioGroup } from '../components/form/PMRadioGroup/PMRadioGroup.recipe';
+import { pmSelectRecipe } from '../components/form/PMSelect/PMSelect.recipe';
 export const packmindTheme = (preflight: boolean) =>
   defineConfig({
     preflight,
@@ -145,10 +148,13 @@ export const packmindTheme = (preflight: boolean) =>
         table: pmTableRecipe,
         menu: pmMenuRecipe,
         tabs: pmTabsRecipe,
+        timeline: pmTimelineRecipe,
         combobox: pmComboboxRecipe,
         toast: pmToasterRecipe,
         checkboxCard: pmCheckboxCard,
         segmentGroup: pmSegmentedControl,
+        radioGroup: pmRadioGroup,
+        select: pmSelectRecipe,
       },
       semanticTokens: {
         colors: {

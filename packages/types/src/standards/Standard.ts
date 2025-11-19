@@ -8,6 +8,7 @@ export type Standard = {
   name: string;
   slug: string;
   description: string;
+  summary?: string; // Summary from the latest StandardVersion
   version: number;
   gitCommit?: GitCommit;
   userId: UserId; // The owner of the standard

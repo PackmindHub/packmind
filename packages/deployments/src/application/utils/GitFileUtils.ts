@@ -1,6 +1,5 @@
-import { IGitPort, GitRepo, Target } from '@packmind/types';
+import { IGitPort, GitRepo, Target, CodingAgent } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
-import { CodingAgent } from '@packmind/types';
 
 const origin = 'GitFileUtils';
 
@@ -126,8 +125,8 @@ export function applyTargetPrefixingToFileUpdates(
 
   const prefixed: import('@packmind/types').FileUpdates = {
     createOrUpdate: fileUpdates.createOrUpdate.map((file) => ({
+      ...file,
       path: getTargetPrefixedPath(file.path, target),
-      content: file.content,
     })),
     delete: fileUpdates.delete.map((file) => ({
       path: getTargetPrefixedPath(file.path, target),

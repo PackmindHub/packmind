@@ -1,22 +1,15 @@
 # CLI: Command-Line Interface
 
-:::info Enterprise Feature
-This functionality is only available in the **Enterprise** version of Packmind.
-:::
-
 ## Overview
 
-The Packmind CLI allows you to run detection programs against your codebase from the command line. This is useful for testing draft detection programs, verifying active programs, and integrating linting into your development workflow or CI/CD pipelines.
+The Packmind CLI provides two main commands:
 
-:::info Git Repository Required
-The CLI must be run from within a Git repository. Packmind identifies your repository and applies detection programs from standards that have been deployed to it. See [Deployment](./deployment.md) to learn how to deploy standards to your repositories.
-:::
+- **`pull`** - Download packages locally
+- **`lint`** - Run detection programs (Enterprise only)
 
-## Get Started
+## Installation
 
-### Installation Methods
-
-#### Option 1: `npm` Package
+### Option 1: npm Package
 
 **Global Installation**:
 
@@ -29,12 +22,12 @@ After installation, the `packmind-cli` command will be available globally.
 **npx** (no installation required):
 
 ```bash
-npx @packmind/cli lint .
+npx @packmind/cli pull --list
 ```
 
 This runs the CLI directly without installing it, always using the latest version.
 
-#### Option 2: Standalone Executables
+### Option 2: Standalone Executables
 
 Download the appropriate pre-built executable for your platform from the [GitHub Releases page](https://github.com/PackmindHub/packmind/releases?q=CLI&expanded=true).
 
@@ -94,11 +87,57 @@ echo 'export PACKMIND_API_KEY_V3="your-api-key-here"' >> ~/.zshrc
 source ~/.zshrc
 ```
 
-## Using the Lint Command
+## Pull Command
+
+Download recipes and standards from packages to your local machine.
+
+### List Available Packages
+
+```bash
+packmind-cli pull --list
+```
+
+### View Package Details
+
+```bash
+packmind-cli pull --show <package-slug>
+```
+
+### Pull Packages
+
+```bash
+packmind-cli pull <package-slug> [additional-package-slugs...]
+```
+
+**Example:**
+
+```bash
+packmind-cli pull backend frontend
+```
+
+This downloads all recipes and standards from the specified packages and creates the appropriate files for your AI coding assistant.
+
+:::tip AI Agent Rendering
+The files created by the pull command depend on which AI agents are enabled in your organization settings. The CLI respects your organization's configured agents and creates instruction files accordingly (e.g., `AGENTS.md`, `.cursor/rules/`, `.github/copilot-instructions.md`).
+
+The `.packmind/` directory is always created regardless of your configuration.
+
+To configure which agents are enabled, see [Manage AI Agent Rendering](./manage-ai-agents.md).
+:::
+
+## Lint Command
+
+:::info Enterprise Feature
+The lint command is only available in the **Enterprise** edition.
+:::
+
+:::info Git Repository Required
+The lint command must be run from within a Git repository. Packmind identifies your repository and applies detection programs from standards that have been deployed to it. See [Deployment](./deployment.md) to learn how to deploy standards to your repositories.
+:::
+
+Run detection programs against your codebase from the command line. This is useful for testing draft detection programs, verifying active programs, and integrating linting into your development workflow or CI/CD pipelines.
 
 ### Basic Usage
-
-Run the linter on your codebase:
 
 ```bash
 packmind-cli lint .
@@ -117,10 +156,10 @@ This command:
 Lint a specific directory or file:
 
 ```bash
-# Lint a specific directory
 packmind-cli lint src/
+```
 
-# Lint from a different location
+```bash
 packmind-cli lint /path/to/your/project
 ```
 
@@ -129,14 +168,10 @@ packmind-cli lint /path/to/your/project
 Choose between human-readable and IDE-friendly output:
 
 ```bash
-# Human-readable output (default)
-packmind-cli lint .
-
-# IDE-friendly output (for integration with editors)
 packmind-cli lint . --logger=ide
 ```
 
-**Human-readable format** shows:
+**Human-readable format** (default) shows:
 
 - File paths with violations
 - Line and character positions
@@ -147,5 +182,6 @@ packmind-cli lint . --logger=ide
 
 ## Related Documentation
 
+- [Packages Management](./packages-management.md): Learn about organizing recipes and standards into packages
 - [Linter: Automated Detection](./linter.md): Learn about how detection programs work
 - [Standards Management](./standards-management.md): Create rules and add code examples

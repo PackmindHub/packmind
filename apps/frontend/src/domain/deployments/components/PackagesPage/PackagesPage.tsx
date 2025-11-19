@@ -59,6 +59,12 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
   const isAllSelected =
     packages.length > 0 && selectedPackageIds.length === packages.length;
 
+  const selectedNonEmptyPackages = packages.filter(
+    (pkg) =>
+      selectedPackageIds.includes(pkg.id) &&
+      (pkg.recipes.length > 0 || pkg.standards.length > 0),
+  );
+
   const handleSelectPackage = (packageId: PackageId, isChecked: boolean) => {
     if (isChecked) {
       setSelectedPackageIds((prev) =>
@@ -129,9 +135,8 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
             </Link>
           </PMLink>
         ),
-        description: <>{pkg.description || '-'}</>,
-        recipes: <>{pkg.recipes?.length || 0}</>,
-        standards: <>{pkg.standards?.length || 0}</>,
+        recipes: pkg.recipes?.length || 0,
+        standards: pkg.standards?.length || 0,
       })),
     );
   }, [packagesResponse, orgSlug, spaceSlug, selectedPackageIds]);
@@ -149,8 +154,7 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
       width: '50px',
       align: 'center',
     },
-    { key: 'name', header: 'Name', width: '250px' },
-    { key: 'description', header: 'Description', grow: true },
+    { key: 'name', header: 'Name', grow: true },
     { key: 'recipes', header: 'Recipes', width: '100px', align: 'center' },
     { key: 'standards', header: 'Standards', width: '100px', align: 'center' },
   ];
@@ -176,16 +180,14 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
           <PMBox mb={4}>
             <PMButtonGroup>
               <DeployPackageButton
-                selectedPackages={packages.filter((pkg) =>
-                  selectedPackageIds.includes(pkg.id),
-                )}
+                selectedPackages={selectedNonEmptyPackages}
                 variant="primary"
-                disabled={!isSomeSelected}
+                disabled={selectedNonEmptyPackages.length === 0}
               />
               <PMAlertDialog
                 trigger={
                   <PMButton
-                    variant="secondary"
+                    variant="tertiary"
                     loading={deleteBatchMutation.isPending}
                     disabled={!isSomeSelected}
                   >

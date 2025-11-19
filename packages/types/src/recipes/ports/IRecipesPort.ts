@@ -1,6 +1,8 @@
 import { OrganizationId } from '../../accounts/Organization';
 import {
   CaptureRecipeCommand,
+  CaptureRecipeWithPackagesCommand,
+  CaptureRecipeWithPackagesResponse,
   DeleteRecipeCommand,
   DeleteRecipeResponse,
   DeleteRecipesBatchCommand,
@@ -35,6 +37,13 @@ export interface IRecipesPort {
    * Capture a new recipe with initial content
    */
   captureRecipe(command: CaptureRecipeCommand): Promise<Recipe>;
+
+  /**
+   * Capture a new recipe and add it to packages in a single operation
+   */
+  captureRecipeWithPackages(
+    command: CaptureRecipeWithPackagesCommand,
+  ): Promise<CaptureRecipeWithPackagesResponse>;
 
   /**
    * Delete a recipe and all its versions

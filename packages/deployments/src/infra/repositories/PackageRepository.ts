@@ -61,6 +61,7 @@ export class PackageRepository
         .leftJoin('package_recipes', 'pr', 'package.id = pr.package_id')
         .leftJoin('package_standards', 'ps', 'package.id = ps.package_id')
         .where('package.spaceId = :spaceId', { spaceId })
+        .andWhere('package.deletedAt IS NULL')
         .groupBy('package.id')
         .orderBy('package.createdAt', 'DESC')
         .getRawMany();
@@ -108,6 +109,7 @@ export class PackageRepository
         .leftJoin('package_recipes', 'pr', 'package.id = pr.package_id')
         .leftJoin('package_standards', 'ps', 'package.id = ps.package_id')
         .where('s.organizationId = :organizationId', { organizationId })
+        .andWhere('package.deletedAt IS NULL')
         .groupBy('package.id')
         .orderBy('package.createdAt', 'DESC')
         .getRawMany();
@@ -235,12 +237,50 @@ export class PackageRepository
         uniqueStandardIds.length > 0
           ? await this.repository.manager
               .createQueryBuilder()
-              .select('standard')
+              .select([
+                'standard.id',
+                'standard.name',
+                'standard.slug',
+                'standard.description',
+                'standard.version',
+                'standard.git_commit_id',
+                'standard.user_id',
+                'standard.scope',
+                'standard.space_id',
+                'standard.created_at',
+                'standard.updated_at',
+                'standard.deleted_at',
+                'standard.deleted_by',
+                'sv.summary',
+              ])
               .from('standards', 'standard')
+              .leftJoin(
+                'standard_versions',
+                'sv',
+                'standard.id = sv.standard_id AND standard.version = sv.version',
+              )
               .where('standard.id IN (:...standardIds)', {
                 standardIds: uniqueStandardIds,
               })
-              .getMany()
+              .getRawMany()
+              .then((rows) =>
+                rows.map((row) => ({
+                  id: row.standard_id,
+                  name: row.standard_name,
+                  slug: row.standard_slug,
+                  description: row.standard_description,
+                  version: row.standard_version,
+                  gitCommitId: row.standard_git_commit_id,
+                  userId: row.standard_user_id,
+                  scope: row.standard_scope,
+                  spaceId: row.standard_space_id,
+                  createdAt: row.standard_created_at,
+                  updatedAt: row.standard_updated_at,
+                  deletedAt: row.standard_deleted_at,
+                  deletedBy: row.standard_deleted_by,
+                  summary: row.sv_summary || undefined,
+                })),
+              )
           : [];
 
       const recipesMap = new Map(recipes.map((r) => [r['id'], r]));

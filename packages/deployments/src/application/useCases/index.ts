@@ -1,4 +1,5 @@
 // Re-export individual use cases
+export { AddArtefactsToPackageUsecase } from './addArtefactsToPackage/addArtefactsToPackage.usecase';
 export { AddTargetUseCase } from './AddTargetUseCase';
 export { CreatePackageUsecase } from './createPackage/createPackage.usecase';
 export { CreateRenderModeConfigurationUseCase } from './CreateRenderModeConfigurationUseCase';

@@ -4,6 +4,7 @@ import {
   IPullDataUseCase,
 } from '../../domain/useCases/IPullDataUseCase';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
+import { mergeSectionsIntoFileContent } from '@packmind/node-utils';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
@@ -28,12 +29,7 @@ export class PullDataUseCase implements IPullDataUseCase {
       // Process createOrUpdate files
       for (const file of response.fileUpdates.createOrUpdate) {
         try {
-          await this.createOrUpdateFile(
-            baseDirectory,
-            file.path,
-            file.content,
-            result,
-          );
+          await this.createOrUpdateFile(baseDirectory, file, result);
         } catch (error) {
           const errorMsg =
             error instanceof Error ? error.message : String(error);
@@ -63,11 +59,14 @@ export class PullDataUseCase implements IPullDataUseCase {
 
   private async createOrUpdateFile(
     baseDirectory: string,
-    filePath: string,
-    content: string,
+    file: {
+      path: string;
+      content?: string;
+      sections?: { key: string; content: string }[];
+    },
     result: IPullDataResult,
   ): Promise<void> {
-    const fullPath = path.join(baseDirectory, filePath);
+    const fullPath = path.join(baseDirectory, file.path);
     const directory = path.dirname(fullPath);
 
     // Create directory if it doesn't exist
@@ -76,6 +75,31 @@ export class PullDataUseCase implements IPullDataUseCase {
     // Check if file exists
     const fileExists = await this.fileExists(fullPath);
 
+    if (file.content !== undefined) {
+      // Handle full content replacement
+      await this.handleFullContentUpdate(
+        fullPath,
+        file.content,
+        fileExists,
+        result,
+      );
+    } else if (file.sections !== undefined) {
+      // Handle section-based update
+      await this.handleSectionsUpdate(
+        fullPath,
+        file.sections,
+        fileExists,
+        result,
+      );
+    }
+  }
+
+  private async handleFullContentUpdate(
+    fullPath: string,
+    content: string,
+    fileExists: boolean,
+    result: IPullDataResult,
+  ): Promise<void> {
     if (fileExists) {
       // Read existing file content
       const existingContent = await fs.readFile(fullPath, 'utf-8');
@@ -102,6 +126,34 @@ export class PullDataUseCase implements IPullDataUseCase {
     } else {
       // Create new file
       await fs.writeFile(fullPath, content, 'utf-8');
+      result.filesCreated++;
+    }
+  }
+
+  private async handleSectionsUpdate(
+    fullPath: string,
+    sections: { key: string; content: string }[],
+    fileExists: boolean,
+    result: IPullDataResult,
+  ): Promise<void> {
+    let currentContent = '';
+
+    if (fileExists) {
+      // Read existing file content
+      currentContent = await fs.readFile(fullPath, 'utf-8');
+    }
+
+    // Merge all sections into the content using shared utility
+    const mergedContent = mergeSectionsIntoFileContent(
+      currentContent,
+      sections,
+    );
+
+    await fs.writeFile(fullPath, mergedContent, 'utf-8');
+
+    if (fileExists) {
+      result.filesUpdated++;
+    } else {
       result.filesCreated++;
     }
   }

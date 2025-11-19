@@ -14,7 +14,11 @@ import {
   PMTabs,
   PMSpinner,
   PMHeading,
+  PMIconButton,
+  PMCopiable,
+  PMTooltip,
 } from '@packmind/ui';
+import { LuCopy } from 'react-icons/lu';
 import { useNavigate } from 'react-router';
 import {
   useGetRecipeByIdQuery,
@@ -177,6 +181,17 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
       isFullWidth
       actions={
         <PMHStack gap={2}>
+          <PMCopiable.Root value={recipe.content}>
+            <PMTooltip label="Copy to clipboard">
+              <PMCopiable.Trigger asChild>
+                <PMIconButton aria-label="Copy to clipboard" variant="outline">
+                  <PMCopiable.Indicator>
+                    <LuCopy />
+                  </PMCopiable.Indicator>
+                </PMIconButton>
+              </PMCopiable.Trigger>
+            </PMTooltip>
+          </PMCopiable.Root>
           <PMButton variant="primary" onClick={() => setIsEditing(true)}>
             Edit
           </PMButton>

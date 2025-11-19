@@ -1,25 +1,68 @@
-# Make standards and recipes available to your coding assistant
+# Distribute standards and recipes
 
-Let’s see how to distribute your **Standards** and **Recipes** in a format your coding agent understands.
+This guide shows you how to pull your **Standards** and **Recipes** locally using the Packmind CLI, making them available to your AI coding assistant.
 
-:::warning
-An authenticated connection to a Git repository is required.
+This approach downloads content directly to your local machine without requiring Git configuration.
 
-Read the page dedicated to [Git configuration](./git-repository-connection.md).
+## Create your first package
+
+Before distributing your standards and recipes, organize them into **Packages**. A package is a curated collection of recipes and standards grouped together—for example, "Frontend Guidelines" or "Backend API Standards".
+
+Packages make it easy to distribute related guidelines as a single unit.
+
+**To create a package:**
+
+1. Navigate to **Packages** in the Packmind UI
+2. Click **Create Package**
+3. Provide a name and description
+4. Select recipes and standards to include
+5. Save the package
+
+You can organize packages by technology, domain, team, or architectural layer—whatever matches how your team works.
+
+For more details on managing packages, see the [Packages Management](./packages-management.md) documentation.
+
+## Pull artifacts locally with CLI
+
+:::warning API Key Required
+The pull command requires a valid API key to authenticate with Packmind.
+
+See the [CLI documentation](./cli.md#authentication) for setup instructions.
 :::
 
-## Deploy your artifacts
+Use the Packmind CLI to pull packages locally:
 
-1. Go to the **Standards** or **Recipes** list.
-2. Select one or more items and click **Deploy**.
-3. Choose a target (learn more about targets [on this page](./git-repository-connection.md#deployment-targets)).
-4. Run the deployment.
+**List available packages:**
 
-Packmind will push the selected artifacts as Markdown files and update your coding agent configuration files (for example: `copilot-instructions.md`, `AGENTS.md`, etc.).
+```bash
+packmind-cli pull --list
+```
+
+**View package details:**
+
+```bash
+packmind-cli pull --show <package-slug>
+```
+
+**Pull one or more packages:**
+
+```bash
+packmind-cli pull <package-slug> [additional-package-slugs...]
+```
+
+This downloads all recipes and standards from the specified packages and creates the appropriate files for your AI coding assistant.
+
+For detailed CLI usage, see the [CLI documentation](./cli.md#using-the-pull-command).
+
+## Alternative: Deploy to Git repositories
+
+Instead of pulling locally, you can deploy packages directly to your Git repositories. This pushes standards and recipes as files that are committed to your codebase.
+
+To learn about deploying to Git repositories, see the [Deployment documentation](./deployment.md).
 
 ## Use your artifacts
 
 When you prompt your coding assistant, **Standards** and **Recipes** are automatically included in its context.
 For complex tasks, the context can grow large, and the generated code may stop following your standards and recipes.
 
-If this happens, re-add the `.packmind` directory to the agent’s context and try again.
+If this happens, re-add the `.packmind` directory to the agent's context and try again.

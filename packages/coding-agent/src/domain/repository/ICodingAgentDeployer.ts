@@ -3,8 +3,8 @@ import {
   RecipeVersion,
   StandardVersion,
   Target,
+  FileUpdates,
 } from '@packmind/types';
-import { FileUpdates } from '../entities/FileUpdates';
 
 export interface ICodingAgentDeployer {
   deployRecipes(
@@ -26,6 +26,5 @@ export interface ICodingAgentDeployer {
   deployArtifacts(
     recipeVersions: RecipeVersion[],
     standardVersions: StandardVersion[],
-    existingContent: string,
   ): Promise<FileUpdates>;
 }

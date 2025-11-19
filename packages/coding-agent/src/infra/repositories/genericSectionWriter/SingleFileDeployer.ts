@@ -79,22 +79,20 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
       targetPath: target.path,
     });
 
-    const existingContent = await this.getExistingContent(gitRepo, target);
+    const recipesListContent = recipeVersions
+      .map((recipeVersion) =>
+        this.formatMarkdownLink(
+          recipeVersion,
+          `${this.config.pathToPackmindFolder ?? ''}.packmind/recipes/${recipeVersion.slug}.md`,
+        ),
+      )
+      .join('\n');
 
-    const updatedContent = GenericRecipeSectionWriter.replace({
+    const sectionContent = GenericRecipeSectionWriter.generateRecipesSection({
       agentName: this.config.agentName,
       repoName: `${gitRepo.owner}/${gitRepo.repo}`,
-      currentContent: existingContent,
-      commentMarker: 'Packmind recipes',
       target: target.path,
-      recipesSection: recipeVersions
-        .map((recipeVersion) =>
-          this.formatMarkdownLink(
-            recipeVersion,
-            `${this.config.pathToPackmindFolder ?? ''}.packmind/recipes/${recipeVersion.slug}.md`,
-          ),
-        )
-        .join('\n'),
+      recipesSection: recipesListContent,
     });
 
     const fileUpdates: FileUpdates = {
@@ -102,14 +100,19 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    if (updatedContent !== existingContent) {
+    if (sectionContent) {
       const targetPrefixedPath = getTargetPrefixedPath(
         this.config.filePath,
         target,
       );
       fileUpdates.createOrUpdate.push({
         path: targetPrefixedPath,
-        content: updatedContent,
+        sections: [
+          {
+            key: 'Packmind recipes',
+            content: sectionContent,
+          },
+        ],
       });
     }
 
@@ -128,9 +131,7 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
       targetPath: target.path,
     });
 
-    const existingContent = await this.getExistingContent(gitRepo, target);
-
-    const standardsSection = await Promise.all(
+    const standardsListContent = await Promise.all(
       standardVersions.map((standardVersion) =>
         this.formatStandardContent(
           standardVersion,
@@ -139,25 +140,29 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
       ),
     );
 
-    const updatedContent = GenericStandardSectionWriter.replace({
-      currentContent: existingContent,
-      commentMarker: 'Packmind standards',
-      standardsSection: standardsSection.join('\n\n'),
-    });
+    const sectionContent =
+      GenericStandardSectionWriter.generateStandardsSection({
+        standardsSection: standardsListContent.join('\n\n'),
+      });
 
     const fileUpdates: FileUpdates = {
       createOrUpdate: [],
       delete: [],
     };
 
-    if (updatedContent !== existingContent) {
+    if (sectionContent) {
       const targetPrefixedPath = getTargetPrefixedPath(
         this.config.filePath,
         target,
       );
       fileUpdates.createOrUpdate.push({
         path: targetPrefixedPath,
-        content: updatedContent,
+        sections: [
+          {
+            key: 'Packmind standards',
+            content: sectionContent,
+          },
+        ],
       });
     }
 
@@ -246,7 +251,6 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
   async deployArtifacts(
     recipeVersions: RecipeVersion[],
     standardVersions: StandardVersion[],
-    existingContent: string,
   ): Promise<FileUpdates> {
     this.logger.info(
       `Deploying artifacts (recipes + standards) for ${this.config.agentName}`,
@@ -256,25 +260,24 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
       },
     );
 
-    let updatedContent = existingContent;
+    const recipesListContent = recipeVersions
+      .map((recipeVersion) =>
+        this.formatMarkdownLink(
+          recipeVersion,
+          `${this.config.pathToPackmindFolder ?? ''}.packmind/recipes/${recipeVersion.slug}.md`,
+        ),
+      )
+      .join('\n');
 
-    updatedContent = GenericRecipeSectionWriter.replace({
-      agentName: this.config.agentName,
-      repoName: 'repository',
-      currentContent: updatedContent,
-      commentMarker: 'Packmind recipes',
-      target: '/',
-      recipesSection: recipeVersions
-        .map((recipeVersion) =>
-          this.formatMarkdownLink(
-            recipeVersion,
-            `${this.config.pathToPackmindFolder ?? ''}.packmind/recipes/${recipeVersion.slug}.md`,
-          ),
-        )
-        .join('\n'),
-    });
+    const recipesSectionContent =
+      GenericRecipeSectionWriter.generateRecipesSection({
+        agentName: this.config.agentName,
+        repoName: 'repository',
+        target: '/',
+        recipesSection: recipesListContent,
+      });
 
-    const standardsSection = await Promise.all(
+    const standardsListContent = await Promise.all(
       standardVersions.map((standardVersion) =>
         this.formatStandardContent(
           standardVersion,
@@ -283,21 +286,36 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
       ),
     );
 
-    updatedContent = GenericStandardSectionWriter.replace({
-      currentContent: updatedContent,
-      commentMarker: 'Packmind standards',
-      standardsSection: standardsSection.join('\n\n'),
-    });
+    const standardsSectionContent =
+      GenericStandardSectionWriter.generateStandardsSection({
+        standardsSection: standardsListContent.join('\n\n'),
+      });
 
     const fileUpdates: FileUpdates = {
       createOrUpdate: [],
       delete: [],
     };
 
-    if (updatedContent !== existingContent) {
+    const sections: { key: string; content: string }[] = [];
+
+    if (recipesSectionContent) {
+      sections.push({
+        key: 'Packmind recipes',
+        content: recipesSectionContent,
+      });
+    }
+
+    if (standardsSectionContent) {
+      sections.push({
+        key: 'Packmind standards',
+        content: standardsSectionContent,
+      });
+    }
+
+    if (sections.length > 0) {
       fileUpdates.createOrUpdate.push({
         path: this.config.filePath,
-        content: updatedContent,
+        sections,
       });
     }
 

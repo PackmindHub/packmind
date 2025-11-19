@@ -4,6 +4,7 @@ interface ProgramEditorProps {
   standardId: string;
   ruleId: string;
   detectionLanguages: string[];
+  selectedLanguage: string;
 }
 
 export const ProgramEditor = (props: ProgramEditorProps) => {

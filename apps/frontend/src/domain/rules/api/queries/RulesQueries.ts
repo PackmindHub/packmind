@@ -1,9 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createStandardId,
+  OrganizationId,
   RuleExample,
   RuleExampleId,
   RuleId,
+  SpaceId,
+  StandardId,
 } from '@packmind/types';
 import { rulesGateway } from '../gateways';
 import { GET_RULE_EXAMPLES_KEY } from '../queryKeys';
@@ -18,14 +21,24 @@ import {
 } from '@packmind/proprietary/frontend/domain/detection/api/queryKeys';
 
 export const useGetRuleExamplesQuery = (
-  standardId: string,
+  organizationId: OrganizationId,
+  spaceId: SpaceId,
+  standardId: StandardId,
   ruleId: RuleId,
   enabled = true,
 ) => {
   return useQuery({
-    queryKey: [...GET_RULE_EXAMPLES_KEY, standardId, ruleId],
-    queryFn: () => rulesGateway.getRuleExamples(standardId, ruleId),
-    enabled: enabled && !!standardId && !!ruleId,
+    queryKey: [
+      ...GET_RULE_EXAMPLES_KEY,
+      organizationId,
+      spaceId,
+      standardId,
+      ruleId,
+    ],
+    queryFn: () =>
+      rulesGateway.getRuleExamples(organizationId, spaceId, standardId, ruleId),
+    enabled:
+      enabled && !!organizationId && !!spaceId && !!standardId && !!ruleId,
   });
 };
 

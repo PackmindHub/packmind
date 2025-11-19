@@ -19,6 +19,14 @@ export enum LLMModelPerformance {
   STANDARD = 'STANDARD',
 }
 
+export enum OpenAIServiceTier {
+  AUTO = 'AUTO',
+  DEFAULT = 'DEFAULT',
+  FLEX = 'FLEX',
+  SCALE = 'SCALE',
+  PRIORITY = 'PRIORITY',
+}
+
 /**
  * Configuration options for AI prompts
  */
@@ -28,6 +36,7 @@ export interface AIPromptOptions {
   retryAttempts?: number;
   responseFormat?: AI_RESPONSE_FORMAT;
   performance?: LLMModelPerformance;
+  service_tier?: OpenAIServiceTier;
 }
 
 /**
