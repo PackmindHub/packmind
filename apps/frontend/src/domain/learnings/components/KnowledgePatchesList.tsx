@@ -73,25 +73,11 @@ export const KnowledgePatchesList = () => {
   const handleBatchReject = async () => {
     if (!isSomeSelected) return;
 
-    const reviewNotes =
-      prompt(
-        `Please provide a reason for rejecting ${selectedPatchIds.length} ${selectedPatchIds.length === 1 ? 'patch' : 'patches'}:`,
-      ) || '';
-
-    if (!reviewNotes.trim()) {
-      setAlert({
-        type: 'error',
-        message: 'Review notes are required for rejection',
-      });
-      setTimeout(() => setAlert(null), 3000);
-      return;
-    }
-
     try {
       const count = selectedPatchIds.length;
       await batchRejectMutation.mutateAsync({
         patchIds: selectedPatchIds,
-        reviewNotes,
+        reviewNotes: 'Batch rejected', // Default review note
       });
       setSelectedPatchIds([]);
       setAlert({
