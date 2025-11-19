@@ -4,6 +4,7 @@ import { AIService } from '@packmind/node-utils';
 import {
   IStandardsPort,
   IRecipesPort,
+  ISpacesPort,
   StandardVersion,
   RecipeVersion,
   createStandardVersionId,
@@ -12,16 +13,20 @@ import {
   createRecipeId,
   createSpaceId,
   createRuleId,
+  createOrganizationId,
 } from '@packmind/types';
 import { standardVersionFactory } from '@packmind/standards/test';
 import { recipeVersionFactory } from '@packmind/recipes/test';
 import { EmbeddingOrchestrationService } from './EmbeddingOrchestrationService';
+import { IRagLabConfigurationRepository } from '../../domain/repositories/IRagLabConfigurationRepository';
 import { v4 as uuidv4 } from 'uuid';
 
 describe('EmbeddingOrchestrationService', () => {
   let service: EmbeddingOrchestrationService;
   let mockStandardsPort: jest.Mocked<IStandardsPort>;
   let mockRecipesPort: jest.Mocked<IRecipesPort>;
+  let mockSpacesPort: jest.Mocked<ISpacesPort>;
+  let mockRagLabConfigurationRepository: jest.Mocked<IRagLabConfigurationRepository>;
   let mockAIService: jest.Mocked<AIService>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
@@ -68,11 +73,25 @@ describe('EmbeddingOrchestrationService', () => {
       findAllLatestRecipeVersions: jest.fn(),
     } as jest.Mocked<IRecipesPort>;
 
+    mockSpacesPort = {
+      getSpaceById: jest.fn(),
+      listSpacesByOrganization: jest.fn(),
+    } as jest.Mocked<ISpacesPort>;
+
+    mockRagLabConfigurationRepository = {
+      findByOrganizationId: jest.fn(),
+      save: jest.fn(),
+      findById: jest.fn(),
+      findAll: jest.fn(),
+    } as unknown as jest.Mocked<IRagLabConfigurationRepository>;
+
     stubbedLogger = stubLogger();
 
     service = new EmbeddingOrchestrationService(
       mockStandardsPort,
       mockRecipesPort,
+      mockSpacesPort,
+      mockRagLabConfigurationRepository,
       stubbedLogger,
     );
 
@@ -96,10 +115,14 @@ describe('EmbeddingOrchestrationService', () => {
 
   describe('generateAndSaveStandardEmbedding', () => {
     it('generates and saves embedding for standard version', async () => {
+      const standardId = createStandardId(uuidv4());
+      const spaceId = createSpaceId(uuidv4());
+      const organizationId = createOrganizationId(uuidv4());
       const versionId = createStandardVersionId(uuidv4());
+
       const mockVersion: StandardVersion = standardVersionFactory({
         id: versionId,
-        standardId: createStandardId(uuidv4()),
+        standardId,
         name: 'Test Standard',
         description: 'Test description',
         rules: [
@@ -110,9 +133,33 @@ describe('EmbeddingOrchestrationService', () => {
           },
         ],
       });
+
+      const mockStandard = {
+        id: standardId,
+        name: 'Test Standard',
+        slug: 'test-standard',
+        description: 'Test description',
+        version: 1,
+        userId: 'user-id',
+        scope: null,
+        spaceId,
+      };
+
+      const mockSpace = {
+        id: spaceId,
+        name: 'Test Space',
+        slug: 'test-space',
+        organizationId,
+      };
+
       const embedding = new Array(1536).fill(0.1);
 
       mockStandardsPort.getStandardVersionById.mockResolvedValue(mockVersion);
+      mockStandardsPort.getStandard.mockResolvedValue(mockStandard);
+      mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
+      mockRagLabConfigurationRepository.findByOrganizationId.mockResolvedValue(
+        null,
+      );
       mockAIService.generateEmbedding.mockResolvedValue(embedding);
       mockStandardsPort.updateStandardVersionEmbedding.mockResolvedValue();
 
@@ -121,8 +168,14 @@ describe('EmbeddingOrchestrationService', () => {
       expect(mockStandardsPort.getStandardVersionById).toHaveBeenCalledWith(
         versionId,
       );
+      expect(mockStandardsPort.getStandard).toHaveBeenCalledWith(standardId);
+      expect(mockSpacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
+      expect(
+        mockRagLabConfigurationRepository.findByOrganizationId,
+      ).toHaveBeenCalledWith(organizationId);
       expect(mockAIService.generateEmbedding).toHaveBeenCalledWith(
         expect.stringContaining('Test Standard'),
+        undefined,
       );
       expect(
         mockStandardsPort.updateStandardVersionEmbedding,
@@ -144,12 +197,40 @@ describe('EmbeddingOrchestrationService', () => {
     });
 
     it('throws error when AI service returns empty embedding', async () => {
+      const standardId = createStandardId(uuidv4());
+      const spaceId = createSpaceId(uuidv4());
+      const organizationId = createOrganizationId(uuidv4());
       const versionId = createStandardVersionId(uuidv4());
+
       const mockVersion: StandardVersion = standardVersionFactory({
         id: versionId,
+        standardId,
       });
 
+      const mockStandard = {
+        id: standardId,
+        name: 'Test Standard',
+        slug: 'test-standard',
+        description: 'Test description',
+        version: 1,
+        userId: 'user-id',
+        scope: null,
+        spaceId,
+      };
+
+      const mockSpace = {
+        id: spaceId,
+        name: 'Test Space',
+        slug: 'test-space',
+        organizationId,
+      };
+
       mockStandardsPort.getStandardVersionById.mockResolvedValue(mockVersion);
+      mockStandardsPort.getStandard.mockResolvedValue(mockStandard);
+      mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
+      mockRagLabConfigurationRepository.findByOrganizationId.mockResolvedValue(
+        null,
+      );
       mockAIService.generateEmbedding.mockResolvedValue([]);
 
       await expect(
@@ -164,13 +245,42 @@ describe('EmbeddingOrchestrationService', () => {
     });
 
     it('logs correctly throughout the process', async () => {
+      const standardId = createStandardId(uuidv4());
+      const spaceId = createSpaceId(uuidv4());
+      const organizationId = createOrganizationId(uuidv4());
       const versionId = createStandardVersionId(uuidv4());
+
       const mockVersion: StandardVersion = standardVersionFactory({
         id: versionId,
+        standardId,
       });
+
+      const mockStandard = {
+        id: standardId,
+        name: 'Test Standard',
+        slug: 'test-standard',
+        description: 'Test description',
+        version: 1,
+        userId: 'user-id',
+        scope: null,
+        spaceId,
+      };
+
+      const mockSpace = {
+        id: spaceId,
+        name: 'Test Space',
+        slug: 'test-space',
+        organizationId,
+      };
+
       const embedding = new Array(1536).fill(0.1);
 
       mockStandardsPort.getStandardVersionById.mockResolvedValue(mockVersion);
+      mockStandardsPort.getStandard.mockResolvedValue(mockStandard);
+      mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
+      mockRagLabConfigurationRepository.findByOrganizationId.mockResolvedValue(
+        null,
+      );
       mockAIService.generateEmbedding.mockResolvedValue(embedding);
       mockStandardsPort.updateStandardVersionEmbedding.mockResolvedValue();
 
@@ -189,16 +299,43 @@ describe('EmbeddingOrchestrationService', () => {
 
   describe('generateAndSaveRecipeEmbedding', () => {
     it('generates and saves embedding for recipe version', async () => {
+      const recipeId = createRecipeId(uuidv4());
+      const spaceId = createSpaceId(uuidv4());
+      const organizationId = createOrganizationId(uuidv4());
       const versionId = createRecipeVersionId(uuidv4());
+
       const mockVersion: RecipeVersion = recipeVersionFactory({
         id: versionId,
-        recipeId: createRecipeId(uuidv4()),
+        recipeId,
         name: 'Test Recipe',
         content: 'Test content',
       });
+
+      const mockRecipe = {
+        id: recipeId,
+        name: 'Test Recipe',
+        slug: 'test-recipe',
+        content: 'Test content',
+        version: 1,
+        userId: 'user-id',
+        spaceId,
+      };
+
+      const mockSpace = {
+        id: spaceId,
+        name: 'Test Space',
+        slug: 'test-space',
+        organizationId,
+      };
+
       const embedding = new Array(1536).fill(0.1);
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(mockVersion);
+      mockRecipesPort.getRecipeByIdInternal.mockResolvedValue(mockRecipe);
+      mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
+      mockRagLabConfigurationRepository.findByOrganizationId.mockResolvedValue(
+        null,
+      );
       mockAIService.generateEmbedding.mockResolvedValue(embedding);
       mockRecipesPort.updateRecipeVersionEmbedding.mockResolvedValue();
 
@@ -207,8 +344,16 @@ describe('EmbeddingOrchestrationService', () => {
       expect(mockRecipesPort.getRecipeVersionById).toHaveBeenCalledWith(
         versionId,
       );
+      expect(mockRecipesPort.getRecipeByIdInternal).toHaveBeenCalledWith(
+        recipeId,
+      );
+      expect(mockSpacesPort.getSpaceById).toHaveBeenCalledWith(spaceId);
+      expect(
+        mockRagLabConfigurationRepository.findByOrganizationId,
+      ).toHaveBeenCalledWith(organizationId);
       expect(mockAIService.generateEmbedding).toHaveBeenCalledWith(
         expect.stringContaining('Test Recipe'),
+        undefined,
       );
       expect(mockRecipesPort.updateRecipeVersionEmbedding).toHaveBeenCalledWith(
         versionId,
@@ -231,12 +376,39 @@ describe('EmbeddingOrchestrationService', () => {
     });
 
     it('throws error when AI service returns empty embedding', async () => {
+      const recipeId = createRecipeId(uuidv4());
+      const spaceId = createSpaceId(uuidv4());
+      const organizationId = createOrganizationId(uuidv4());
       const versionId = createRecipeVersionId(uuidv4());
+
       const mockVersion: RecipeVersion = recipeVersionFactory({
         id: versionId,
+        recipeId,
       });
 
+      const mockRecipe = {
+        id: recipeId,
+        name: 'Test Recipe',
+        slug: 'test-recipe',
+        content: 'Test content',
+        version: 1,
+        userId: 'user-id',
+        spaceId,
+      };
+
+      const mockSpace = {
+        id: spaceId,
+        name: 'Test Space',
+        slug: 'test-space',
+        organizationId,
+      };
+
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(mockVersion);
+      mockRecipesPort.getRecipeByIdInternal.mockResolvedValue(mockRecipe);
+      mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
+      mockRagLabConfigurationRepository.findByOrganizationId.mockResolvedValue(
+        null,
+      );
       mockAIService.generateEmbedding.mockResolvedValue([]);
 
       await expect(
@@ -251,13 +423,41 @@ describe('EmbeddingOrchestrationService', () => {
     });
 
     it('logs correctly throughout the process', async () => {
+      const recipeId = createRecipeId(uuidv4());
+      const spaceId = createSpaceId(uuidv4());
+      const organizationId = createOrganizationId(uuidv4());
       const versionId = createRecipeVersionId(uuidv4());
+
       const mockVersion: RecipeVersion = recipeVersionFactory({
         id: versionId,
+        recipeId,
       });
+
+      const mockRecipe = {
+        id: recipeId,
+        name: 'Test Recipe',
+        slug: 'test-recipe',
+        content: 'Test content',
+        version: 1,
+        userId: 'user-id',
+        spaceId,
+      };
+
+      const mockSpace = {
+        id: spaceId,
+        name: 'Test Space',
+        slug: 'test-space',
+        organizationId,
+      };
+
       const embedding = new Array(1536).fill(0.1);
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(mockVersion);
+      mockRecipesPort.getRecipeByIdInternal.mockResolvedValue(mockRecipe);
+      mockSpacesPort.getSpaceById.mockResolvedValue(mockSpace);
+      mockRagLabConfigurationRepository.findByOrganizationId.mockResolvedValue(
+        null,
+      );
       mockAIService.generateEmbedding.mockResolvedValue(embedding);
       mockRecipesPort.updateRecipeVersionEmbedding.mockResolvedValue();
 

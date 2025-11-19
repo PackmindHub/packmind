@@ -1,5 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
-import { IRecipesPort, IStandardsPort } from '@packmind/types';
+import { IRecipesPort, IStandardsPort, ISpacesPort } from '@packmind/types';
 import { ILearningsRepositories } from '../../domain/repositories/ILearningsRepositories';
 import { ITopicRepository } from '../../domain/repositories/ITopicRepository';
 import { ITopicKnowledgePatchRepository } from '../../domain/repositories/ITopicKnowledgePatchRepository';
@@ -58,11 +58,14 @@ export class LearningsServices {
   initializeEmbeddingOrchestrationService(
     standardsPort: IStandardsPort,
     recipesPort: IRecipesPort,
+    spacesPort: ISpacesPort,
     logger: PackmindLogger = new PackmindLogger(origin),
   ): void {
     this.embeddingOrchestrationService = new EmbeddingOrchestrationService(
       standardsPort,
       recipesPort,
+      spacesPort,
+      this.ragLabConfigurationRepository,
       logger,
     );
   }

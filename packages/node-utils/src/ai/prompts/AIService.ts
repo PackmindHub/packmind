@@ -34,14 +34,22 @@ export interface AIService {
   /**
    * Generate embedding vector for a single text
    * @param text The text to generate embedding for
-   * @returns Promise resolving to embedding vector (1536 dimensions for text-embedding-3-small)
+   * @param options Optional configuration for embedding generation (model, dimensions)
+   * @returns Promise resolving to embedding vector (1536 dimensions for text-embedding-3-small by default)
    */
-  generateEmbedding(text: string): Promise<number[]>;
+  generateEmbedding(
+    text: string,
+    options?: { model?: string; dimensions?: number },
+  ): Promise<number[]>;
 
   /**
    * Generate embedding vectors for multiple texts in batch
    * @param texts Array of texts to generate embeddings for
+   * @param options Optional configuration for embedding generation (model, dimensions)
    * @returns Promise resolving to array of embedding vectors
    */
-  generateEmbeddings(texts: string[]): Promise<number[][]>;
+  generateEmbeddings(
+    texts: string[],
+    options?: { model?: string; dimensions?: number },
+  ): Promise<number[][]>;
 }

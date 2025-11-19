@@ -218,6 +218,7 @@ export class LearningsAdapter
     this.learningsServices.initializeEmbeddingOrchestrationService(
       this.standardsPort,
       this.recipesPort,
+      this.spacesPort,
       this.logger,
     );
 

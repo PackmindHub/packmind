@@ -3,13 +3,16 @@ import { AIService, OpenAIService } from '@packmind/node-utils';
 import {
   IStandardsPort,
   IRecipesPort,
+  ISpacesPort,
   StandardVersionId,
   RecipeVersionId,
   SpaceId,
   StandardVersion,
   RecipeVersion,
+  OrganizationId,
 } from '@packmind/types';
 import { TextExtractor } from './TextExtractor';
+import { IRagLabConfigurationRepository } from '../../domain/repositories/IRagLabConfigurationRepository';
 
 const origin = 'EmbeddingOrchestrationService';
 
@@ -24,10 +27,68 @@ export class EmbeddingOrchestrationService {
   constructor(
     private readonly standardsPort: IStandardsPort,
     private readonly recipesPort: IRecipesPort,
+    private readonly spacesPort: ISpacesPort,
+    private readonly ragLabConfigurationRepository: IRagLabConfigurationRepository,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.aiService = new OpenAIService();
     this.logger.info('EmbeddingOrchestrationService initialized');
+  }
+
+  /**
+   * Get organization ID from a standard version ID
+   * @param versionId - Standard version ID
+   * @returns Organization ID
+   * @throws Error if version, standard, or space not found
+   */
+  private async getOrganizationIdFromStandardVersion(
+    versionId: StandardVersionId,
+  ): Promise<OrganizationId> {
+    const version = await this.standardsPort.getStandardVersionById(versionId);
+    if (!version) {
+      throw new Error(`StandardVersion ${versionId} not found`);
+    }
+
+    const standard = await this.standardsPort.getStandard(version.standardId);
+    if (!standard) {
+      throw new Error(`Standard ${version.standardId} not found`);
+    }
+
+    const space = await this.spacesPort.getSpaceById(standard.spaceId);
+    if (!space) {
+      throw new Error(`Space ${standard.spaceId} not found`);
+    }
+
+    return space.organizationId;
+  }
+
+  /**
+   * Get organization ID from a recipe version ID
+   * @param versionId - Recipe version ID
+   * @returns Organization ID
+   * @throws Error if version, recipe, or space not found
+   */
+  private async getOrganizationIdFromRecipeVersion(
+    versionId: RecipeVersionId,
+  ): Promise<OrganizationId> {
+    const version = await this.recipesPort.getRecipeVersionById(versionId);
+    if (!version) {
+      throw new Error(`RecipeVersion ${versionId} not found`);
+    }
+
+    const recipe = await this.recipesPort.getRecipeByIdInternal(
+      version.recipeId,
+    );
+    if (!recipe) {
+      throw new Error(`Recipe ${version.recipeId} not found`);
+    }
+
+    const space = await this.spacesPort.getSpaceById(recipe.spaceId);
+    if (!space) {
+      throw new Error(`Space ${recipe.spaceId} not found`);
+    }
+
+    return space.organizationId;
   }
 
   /**
@@ -52,6 +113,31 @@ export class EmbeddingOrchestrationService {
         throw new Error(errorMsg);
       }
 
+      // Get organization ID to fetch RAG Lab configuration
+      const organizationId =
+        await this.getOrganizationIdFromStandardVersion(versionId);
+
+      // Fetch RAG Lab configuration for the organization
+      const ragLabConfig =
+        await this.ragLabConfigurationRepository.findByOrganizationId(
+          organizationId,
+        );
+
+      const embeddingOptions = ragLabConfig
+        ? {
+            model: ragLabConfig.embeddingModel,
+            dimensions: ragLabConfig.embeddingDimensions,
+          }
+        : undefined;
+
+      this.logger.debug('Using embedding configuration', {
+        versionId,
+        organizationId,
+        hasConfig: !!ragLabConfig,
+        model: embeddingOptions?.model,
+        dimensions: embeddingOptions?.dimensions,
+      });
+
       // Extract text
       const text = TextExtractor.extractStandardText(version);
       this.logger.debug('Extracted text for standard embedding', {
@@ -59,8 +145,11 @@ export class EmbeddingOrchestrationService {
         textLength: text.length,
       });
 
-      // Generate embedding
-      const embedding = await this.aiService.generateEmbedding(text);
+      // Generate embedding with configuration
+      const embedding = await this.aiService.generateEmbedding(
+        text,
+        embeddingOptions,
+      );
 
       if (!embedding || embedding.length === 0) {
         const errorMsg = `Failed to generate embedding for standard version ${versionId}`;
@@ -111,6 +200,31 @@ export class EmbeddingOrchestrationService {
         throw new Error(errorMsg);
       }
 
+      // Get organization ID to fetch RAG Lab configuration
+      const organizationId =
+        await this.getOrganizationIdFromRecipeVersion(versionId);
+
+      // Fetch RAG Lab configuration for the organization
+      const ragLabConfig =
+        await this.ragLabConfigurationRepository.findByOrganizationId(
+          organizationId,
+        );
+
+      const embeddingOptions = ragLabConfig
+        ? {
+            model: ragLabConfig.embeddingModel,
+            dimensions: ragLabConfig.embeddingDimensions,
+          }
+        : undefined;
+
+      this.logger.debug('Using embedding configuration', {
+        versionId,
+        organizationId,
+        hasConfig: !!ragLabConfig,
+        model: embeddingOptions?.model,
+        dimensions: embeddingOptions?.dimensions,
+      });
+
       // Extract text
       const text = TextExtractor.extractRecipeText(version);
       this.logger.debug('Extracted text for recipe embedding', {
@@ -118,8 +232,11 @@ export class EmbeddingOrchestrationService {
         textLength: text.length,
       });
 
-      // Generate embedding
-      const embedding = await this.aiService.generateEmbedding(text);
+      // Generate embedding with configuration
+      const embedding = await this.aiService.generateEmbedding(
+        text,
+        embeddingOptions,
+      );
 
       if (!embedding || embedding.length === 0) {
         const errorMsg = `Failed to generate embedding for recipe version ${versionId}`;

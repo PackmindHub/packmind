@@ -444,9 +444,17 @@ export class OpenAIService implements AIService {
   /**
    * Generate embedding vector for a single text using text-embedding-3-small model
    */
-  async generateEmbedding(text: string): Promise<number[]> {
+  async generateEmbedding(
+    text: string,
+    options?: { model?: string; dimensions?: number },
+  ): Promise<number[]> {
+    const model = options?.model || 'text-embedding-3-small';
+    const dimensions = options?.dimensions;
+
     this.logger.info('Generating embedding', {
       textLength: text.length,
+      model,
+      dimensions,
     });
 
     await this.initialize();
@@ -474,12 +482,14 @@ export class OpenAIService implements AIService {
 
         this.logger.info('Sending embedding request to OpenAI', {
           attempt,
-          model: 'text-embedding-3-small',
+          model,
+          dimensions,
         });
 
         const response = await this.client.embeddings.create({
           input: text,
-          model: 'text-embedding-3-small',
+          model,
+          ...(dimensions && { dimensions }),
         });
 
         const embedding = response.data[0]?.embedding;
@@ -538,9 +548,17 @@ export class OpenAIService implements AIService {
   /**
    * Generate embedding vectors for multiple texts in batch using text-embedding-3-small model
    */
-  async generateEmbeddings(texts: string[]): Promise<number[][]> {
+  async generateEmbeddings(
+    texts: string[],
+    options?: { model?: string; dimensions?: number },
+  ): Promise<number[][]> {
+    const model = options?.model || 'text-embedding-3-small';
+    const dimensions = options?.dimensions;
+
     this.logger.info('Generating embeddings in batch', {
       count: texts.length,
+      model,
+      dimensions,
     });
 
     await this.initialize();
@@ -568,13 +586,15 @@ export class OpenAIService implements AIService {
 
         this.logger.info('Sending batch embedding request to OpenAI', {
           attempt,
-          model: 'text-embedding-3-small',
+          model,
+          dimensions,
           count: texts.length,
         });
 
         const response = await this.client.embeddings.create({
           input: texts,
-          model: 'text-embedding-3-small',
+          model,
+          ...(dimensions && { dimensions }),
         });
 
         const embeddings = response.data.map((item) => item.embedding);
