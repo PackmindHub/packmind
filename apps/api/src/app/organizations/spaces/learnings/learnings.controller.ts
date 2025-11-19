@@ -463,7 +463,7 @@ export class OrganizationsSpacesLearningsController {
 
   /**
    * Search artifacts by semantic similarity
-   * GET /organizations/:orgId/spaces/:spaceId/learnings/rag-lab/search?queryText=...&threshold=...
+   * GET /organizations/:orgId/spaces/:spaceId/learnings/rag-lab/search?queryText=...&threshold=...&maxResults=...&resultTypes=...
    */
   @Get('rag-lab/search')
   async searchArtifactsBySemantics(
@@ -471,6 +471,8 @@ export class OrganizationsSpacesLearningsController {
     @Param('spaceId') spaceId: SpaceId,
     @Query('queryText') queryText: string,
     @Query('threshold') threshold: string | undefined,
+    @Query('maxResults') maxResults: string | undefined,
+    @Query('resultTypes') resultTypes: 'standards' | 'recipes' | 'both' | undefined,
     @Req() request: AuthenticatedRequest,
   ): Promise<SearchArtifactsBySemanticsResponse> {
     const userId = request.user.userId;
@@ -482,6 +484,8 @@ export class OrganizationsSpacesLearningsController {
         spaceId,
         queryText,
         threshold,
+        maxResults,
+        resultTypes,
       },
     );
 
@@ -489,6 +493,8 @@ export class OrganizationsSpacesLearningsController {
       return await this.learningsAdapter.searchArtifactsBySemantics({
         queryText,
         threshold: threshold ? parseFloat(threshold) : undefined,
+        maxResults: maxResults ? parseInt(maxResults, 10) : undefined,
+        resultTypes,
         spaceId,
         organizationId,
         userId,
@@ -503,6 +509,8 @@ export class OrganizationsSpacesLearningsController {
           spaceId,
           queryText,
           threshold,
+          maxResults,
+          resultTypes,
           error: errorMessage,
         },
       );

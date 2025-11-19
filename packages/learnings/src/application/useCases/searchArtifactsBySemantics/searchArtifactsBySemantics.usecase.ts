@@ -44,6 +44,8 @@ export class SearchArtifactsBySemanticsUsecase
       organizationId: command.organizationId,
       queryTextLength: command.queryText.length,
       threshold: command.threshold,
+      maxResults: command.maxResults,
+      resultTypes: command.resultTypes,
     });
 
     try {
@@ -90,25 +92,50 @@ export class SearchArtifactsBySemanticsUsecase
         embeddingDimensions: queryEmbedding.length,
       });
 
-      // Search both standards and recipes in parallel
+      // Determine which types to search based on resultTypes parameter
+      const resultTypes = command.resultTypes || 'both';
+      const shouldSearchStandards =
+        resultTypes === 'standards' || resultTypes === 'both';
+      const shouldSearchRecipes =
+        resultTypes === 'recipes' || resultTypes === 'both';
+
+      // Search requested artifact types in parallel
       const [standards, recipes] = await Promise.all([
-        this.embeddingOrchestrationService.findSimilarStandards(
-          queryEmbedding,
-          spaceId,
-          command.threshold,
-        ),
-        this.embeddingOrchestrationService.findSimilarRecipes(
-          queryEmbedding,
-          spaceId,
-          command.threshold,
-        ),
+        shouldSearchStandards
+          ? this.embeddingOrchestrationService.findSimilarStandards(
+              queryEmbedding,
+              spaceId,
+              command.threshold,
+            )
+          : Promise.resolve([]),
+        shouldSearchRecipes
+          ? this.embeddingOrchestrationService.findSimilarRecipes(
+              queryEmbedding,
+              spaceId,
+              command.threshold,
+            )
+          : Promise.resolve([]),
       ]);
 
       // Sort by similarity descending (already done in repository, but ensure consistency)
-      const sortedStandards = standards.sort(
+      let sortedStandards = standards.sort(
         (a, b) => b.similarity - a.similarity,
       );
-      const sortedRecipes = recipes.sort((a, b) => b.similarity - a.similarity);
+      let sortedRecipes = recipes.sort((a, b) => b.similarity - a.similarity);
+
+      // Apply maxResults limit if specified
+      if (command.maxResults !== undefined && command.maxResults > 0) {
+        // When resultTypes is 'both', split maxResults between standards and recipes
+        if (resultTypes === 'both') {
+          const halfMax = Math.ceil(command.maxResults / 2);
+          sortedStandards = sortedStandards.slice(0, halfMax);
+          sortedRecipes = sortedRecipes.slice(0, halfMax);
+        } else {
+          // For single type searches, apply maxResults directly
+          sortedStandards = sortedStandards.slice(0, command.maxResults);
+          sortedRecipes = sortedRecipes.slice(0, command.maxResults);
+        }
+      }
 
       this.logger.info('Artifacts search completed successfully', {
         spaceId: command.spaceId,
@@ -116,6 +143,8 @@ export class SearchArtifactsBySemanticsUsecase
         standardsCount: sortedStandards.length,
         recipesCount: sortedRecipes.length,
         threshold: command.threshold,
+        maxResults: command.maxResults,
+        resultTypes,
       });
 
       return {

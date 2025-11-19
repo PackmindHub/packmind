@@ -3,10 +3,14 @@ import { SpaceId } from '../../spaces/SpaceId';
 import { StandardVersion } from '../../standards/StandardVersion';
 import { RecipeVersion } from '../../recipes/RecipeVersion';
 
+export type ResultType = 'standards' | 'recipes' | 'both';
+
 export type SearchArtifactsBySemanticsCommand = PackmindCommand & {
   spaceId: SpaceId;
   queryText: string;
   threshold?: number;
+  maxResults?: number;
+  resultTypes?: ResultType;
 };
 
 export type ArtifactWithSimilarity<T> = T & {
