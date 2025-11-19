@@ -150,7 +150,12 @@ export const useUpdateStandardMutation = () => {
 
       // Invalidate the rules for this standard (rules may have been added/deleted)
       await queryClient.invalidateQueries({
-        queryKey: [...GET_RULES_BY_STANDARD_ID_KEY, variables.id],
+        queryKey: [
+          ...GET_RULES_BY_STANDARD_ID_KEY,
+          organization.id,
+          spaceId,
+          variables.id,
+        ],
       });
 
       await queryClient.invalidateQueries({

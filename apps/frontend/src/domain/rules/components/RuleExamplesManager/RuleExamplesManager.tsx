@@ -1,12 +1,19 @@
 import React, { useState } from 'react';
-import { RuleId } from '@packmind/types';
-import { ProgrammingLanguage } from '@packmind/types';
+import {
+  OrganizationId,
+  ProgrammingLanguage,
+  RuleId,
+  SpaceId,
+  StandardId,
+} from '@packmind/types';
 import { PMVStack, PMText, PMSpinner, PMBox, PMButton } from '@packmind/ui';
 import { RuleExampleItem } from '../RuleExampleItem';
 import {
   useGetRuleExamplesQuery,
   useCreateRuleExampleMutation,
 } from '../../api/queries';
+import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
+import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 
 interface RuleExamplesManagerProps {
   standardId: string;
@@ -27,6 +34,8 @@ export const RuleExamplesManager: React.FC<RuleExamplesManagerProps> = ({
   ruleId,
   selectedLanguage,
 }) => {
+  const { organization } = useAuthContext();
+  const { spaceId } = useCurrentSpace();
   const [newExamples, setNewExamples] = useState<NewExample[]>([]);
   const createRuleExampleMutation = useCreateRuleExampleMutation();
 
@@ -35,7 +44,12 @@ export const RuleExamplesManager: React.FC<RuleExamplesManagerProps> = ({
     isLoading,
     isError,
     error,
-  } = useGetRuleExamplesQuery(standardId, ruleId);
+  } = useGetRuleExamplesQuery(
+    organization?.id as OrganizationId,
+    spaceId as SpaceId,
+    standardId as StandardId,
+    ruleId,
+  );
 
   const handleCreateNewExample = () => {
     const newExample: NewExample = {

@@ -1,4 +1,11 @@
-import { RuleExample, RuleExampleId, RuleId } from '@packmind/types';
+import {
+  OrganizationId,
+  RuleExample,
+  RuleExampleId,
+  RuleId,
+  SpaceId,
+  StandardId,
+} from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import { IRulesGateway } from './IRulesGateway';
 
@@ -23,11 +30,13 @@ export class RulesGatewayApi extends PackmindGateway implements IRulesGateway {
   }
 
   async getRuleExamples(
-    standardId: string,
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    standardId: StandardId,
     ruleId: RuleId,
   ): Promise<RuleExample[]> {
     return this._api.get<RuleExample[]>(
-      `${this._endpoint}/${standardId}/rules/${ruleId}/examples`,
+      `/organizations/${organizationId}/spaces/${spaceId}/standards/${standardId}/rules/${ruleId}/examples`,
     );
   }
 

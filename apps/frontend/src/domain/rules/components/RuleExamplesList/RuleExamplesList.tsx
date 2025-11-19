@@ -1,8 +1,10 @@
 import React from 'react';
-import { RuleId } from '@packmind/types';
+import { OrganizationId, RuleId, SpaceId, StandardId } from '@packmind/types';
 import { PMVStack, PMText, PMSpinner, PMBox } from '@packmind/ui';
 import { RuleExampleItem } from '../RuleExampleItem';
 import { useGetRuleExamplesQuery } from '../../api/queries';
+import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
+import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 
 interface RuleExamplesListProps {
   standardId: string;
@@ -13,12 +15,20 @@ export const RuleExamplesList: React.FC<RuleExamplesListProps> = ({
   standardId,
   ruleId,
 }) => {
+  const { organization } = useAuthContext();
+  const { spaceId } = useCurrentSpace();
+
   const {
     data: examples,
     isLoading,
     isError,
     error,
-  } = useGetRuleExamplesQuery(standardId, ruleId);
+  } = useGetRuleExamplesQuery(
+    organization?.id as OrganizationId,
+    spaceId as SpaceId,
+    standardId as StandardId,
+    ruleId,
+  );
 
   if (isLoading) {
     return (

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   Get,
   NotFoundException,
@@ -8,7 +9,16 @@ import {
 } from '@nestjs/common';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
-import { OrganizationId, Rule, SpaceId, StandardId } from '@packmind/types';
+import { GetRuleExamplesCommand } from '@packmind/standards';
+import {
+  OrganizationId,
+  Rule,
+  RuleExample,
+  RuleId,
+  SpaceId,
+  StandardId,
+} from '@packmind/types';
+import { AuthService } from '../../../../auth/auth.service';
 import { RulesService } from '../../../../standards/rules/rules.service';
 import { StandardsService } from '../../../../standards/standards.service';
 import { OrganizationAccessGuard } from '../../../guards/organization-access.guard';
@@ -35,6 +45,7 @@ export class OrganizationsSpacesStandardsRulesController {
   constructor(
     private readonly rulesService: RulesService,
     private readonly standardsService: StandardsService,
+    private readonly authService: AuthService,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.INFO,
@@ -136,6 +147,112 @@ export class OrganizationsSpacesStandardsRulesController {
             organizationId,
             spaceId,
             standardId,
+            userId,
+            error: errorMessage,
+          },
+        );
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * Get examples for a specific rule within a standard
+   * GET /organizations/:orgId/spaces/:spaceId/standards/:standardId/rules/:ruleId/examples
+   */
+  @Get(':ruleId/examples')
+  async getRuleExamples(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('standardId') standardId: StandardId,
+    @Param('ruleId') ruleId: RuleId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<RuleExample[]> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'GET /organizations/:orgId/spaces/:spaceId/standards/:standardId/rules/:ruleId/examples - Getting rule examples',
+      {
+        organizationId,
+        spaceId,
+        standardId,
+        ruleId,
+        userId,
+      },
+    );
+
+    try {
+      // Validate that the standard belongs to the specified space
+      const standardResponse = await this.standardsService.getStandardById(
+        standardId,
+        organizationId,
+        spaceId,
+        userId,
+      );
+
+      if (!standardResponse || !standardResponse.standard) {
+        this.logger.warn(
+          'Standard not found or does not belong to the specified organization/space',
+          { organizationId, spaceId, standardId, ruleId, userId },
+        );
+        throw new NotFoundException(
+          `Standard with ID ${standardId} not found in organization ${organizationId} and space ${spaceId}`,
+        );
+      }
+
+      const standard = standardResponse.standard;
+
+      // Verify standard belongs to the specified space
+      if (standard.spaceId !== spaceId) {
+        this.logger.warn('Standard does not belong to the specified space', {
+          organizationId,
+          spaceId,
+          standardId,
+          ruleId,
+          standardSpaceId: standard.spaceId,
+          userId,
+        });
+        throw new NotFoundException(
+          `Standard ${standardId} does not belong to space ${spaceId}`,
+        );
+      }
+
+      // Create command and fetch rule examples
+      const command = this.authService.makePackmindCommand(request, {
+        ruleId,
+      }) as GetRuleExamplesCommand;
+
+      const result = await this.rulesService.getRuleExamples(command);
+
+      this.logger.info(
+        'GET /organizations/:orgId/spaces/:spaceId/standards/:standardId/rules/:ruleId/examples - Rule examples fetched successfully',
+        {
+          organizationId,
+          spaceId,
+          standardId,
+          ruleId,
+          count: result.length,
+        },
+      );
+
+      return result;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
+      // Don't log again if it's already an exception we threw
+      if (
+        !(error instanceof NotFoundException) &&
+        !(error instanceof BadRequestException)
+      ) {
+        this.logger.error(
+          'GET /organizations/:orgId/spaces/:spaceId/standards/:standardId/rules/:ruleId/examples - Failed to get rule examples',
+          {
+            organizationId,
+            spaceId,
+            standardId,
+            ruleId,
             userId,
             error: errorMessage,
           },

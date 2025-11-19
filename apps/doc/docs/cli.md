@@ -117,6 +117,14 @@ packmind-cli pull backend frontend
 
 This downloads all recipes and standards from the specified packages and creates the appropriate files for your AI coding assistant.
 
+:::tip AI Agent Rendering
+The files created by the pull command depend on which AI agents are enabled in your organization settings. The CLI respects your organization's configured agents and creates instruction files accordingly (e.g., `AGENTS.md`, `.cursor/rules/`, `.github/copilot-instructions.md`).
+
+The `.packmind/` directory is always created regardless of your configuration.
+
+To configure which agents are enabled, see [Manage AI Agent Rendering](./manage-ai-agents.md).
+:::
+
 ## Lint Command
 
 :::info Enterprise Feature
