@@ -13,9 +13,8 @@ import {
   PMCheckbox,
   PMButton,
   PMButtonGroup,
-  PMAlertDialog,
   PMAlert,
-  PMTextarea,
+  PMTextArea,
 } from '@packmind/ui';
 import { KnowledgePatchStatus, KnowledgePatchId } from '@packmind/types';
 import {
@@ -74,12 +73,19 @@ export const KnowledgePatchesList = () => {
     }
   };
 
+  const handleOpenRejectDialog = () => {
+    if (!isSomeSelected) return;
+    setRejectDialogOpen(true);
+  };
+
   const handleBatchReject = async () => {
-    if (!isSomeSelected || !reviewNotes.trim()) {
+    if (!reviewNotes.trim()) {
       setAlert({
         type: 'error',
         message: 'Review notes are required for rejection',
       });
+      setRejectDialogOpen(false);
+      setTimeout(() => setAlert(null), 3000);
       return;
     }
 
@@ -256,43 +262,15 @@ export const KnowledgePatchesList = () => {
     return (
       <PMBox>
         <PMButtonGroup size="sm" mb={4}>
-          <PMAlertDialog
-            trigger={
-              <PMButton
-                variant="secondary"
-                colorScheme="red"
-                loading={batchRejectMutation.isPending}
-                disabled={!isSomeSelected}
-              >
-                {`Reject (${selectedPatchIds.length})`}
-              </PMButton>
-            }
-            title="Reject Knowledge Patches"
-            confirmText="Reject"
-            cancelText="Cancel"
-            confirmColorScheme="red"
-            onConfirm={handleBatchReject}
-            open={rejectDialogOpen}
-            onOpenChange={({ open }) => setRejectDialogOpen(open)}
-            isLoading={batchRejectMutation.isPending}
+          <PMButton
+            variant="secondary"
+            colorScheme="red"
+            loading={batchRejectMutation.isPending}
+            disabled={!isSomeSelected}
+            onClick={handleOpenRejectDialog}
           >
-            <PMBox mb={4}>
-              <PMText mb={2}>
-                Are you sure you want to reject {selectedPatchIds.length}{' '}
-                {selectedPatchIds.length === 1 ? 'patch' : 'patches'}?
-              </PMText>
-              <PMText mb={3} fontSize="sm" color="fg.muted">
-                Please provide a reason for rejecting these patches:
-              </PMText>
-              <PMTextarea
-                placeholder="Enter review notes (required)..."
-                value={reviewNotes}
-                onChange={(e) => setReviewNotes(e.target.value)}
-                rows={4}
-                required
-              />
-            </PMBox>
-          </PMAlertDialog>
+            {`Reject (${selectedPatchIds.length})`}
+          </PMButton>
           <PMButton
             variant="secondary"
             onClick={() => setSelectedPatchIds([])}
@@ -301,6 +279,74 @@ export const KnowledgePatchesList = () => {
             Clear Selection
           </PMButton>
         </PMButtonGroup>
+
+        {/* Custom Reject Dialog */}
+        {rejectDialogOpen && (
+          <PMBox
+            position="fixed"
+            top="0"
+            left="0"
+            right="0"
+            bottom="0"
+            bg="rgba(0, 0, 0, 0.5)"
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            zIndex="modal"
+            onClick={() => setRejectDialogOpen(false)}
+          >
+            <PMBox
+              bg="bg.panel"
+              p={6}
+              borderRadius="md"
+              maxW="md"
+              w="full"
+              mx={4}
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+            >
+              <PMText fontSize="lg" fontWeight="semibold" mb={4}>
+                Reject Knowledge Patches
+              </PMText>
+              <PMText mb={2}>
+                Are you sure you want to reject {selectedPatchIds.length}{' '}
+                {selectedPatchIds.length === 1 ? 'patch' : 'patches'}?
+              </PMText>
+              <PMText mb={3} fontSize="sm">
+                Please provide a reason for rejecting these patches:
+              </PMText>
+              <PMTextArea
+                placeholder="Enter review notes (required)..."
+                value={reviewNotes}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                  setReviewNotes(e.target.value)
+                }
+                rows={4}
+                mb={4}
+              />
+              <PMButtonGroup>
+                <PMButton
+                  colorScheme="red"
+                  onClick={handleBatchReject}
+                  loading={batchRejectMutation.isPending}
+                  disabled={!reviewNotes.trim()}
+                >
+                  Reject
+                </PMButton>
+                <PMButton
+                  variant="secondary"
+                  onClick={() => {
+                    setRejectDialogOpen(false);
+                    setReviewNotes('');
+                  }}
+                  disabled={batchRejectMutation.isPending}
+                >
+                  Cancel
+                </PMButton>
+              </PMButtonGroup>
+            </PMBox>
+          </PMBox>
+        )}
+
         <PMTable columns={columns} data={tableData} />
       </PMBox>
     );
