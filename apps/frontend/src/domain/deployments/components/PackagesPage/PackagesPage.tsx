@@ -135,9 +135,8 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
             </Link>
           </PMLink>
         ),
-        description: <>{pkg.description || '-'}</>,
-        recipes: <>{pkg.recipes?.length || 0}</>,
-        standards: <>{pkg.standards?.length || 0}</>,
+        recipes: pkg.recipes?.length || 0,
+        standards: pkg.standards?.length || 0,
       })),
     );
   }, [packagesResponse, orgSlug, spaceSlug, selectedPackageIds]);
@@ -155,8 +154,7 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
       width: '50px',
       align: 'center',
     },
-    { key: 'name', header: 'Name', width: '250px' },
-    { key: 'description', header: 'Description', grow: true },
+    { key: 'name', header: 'Name', grow: true },
     { key: 'recipes', header: 'Recipes', width: '100px', align: 'center' },
     { key: 'standards', header: 'Standards', width: '100px', align: 'center' },
   ];
