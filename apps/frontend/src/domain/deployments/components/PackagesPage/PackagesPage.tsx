@@ -187,7 +187,7 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
               <PMAlertDialog
                 trigger={
                   <PMButton
-                    variant="secondary"
+                    variant="tertiary"
                     loading={deleteBatchMutation.isPending}
                     disabled={!isSomeSelected}
                   >
