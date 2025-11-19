@@ -7,11 +7,14 @@ import {
   PMSelect,
   PMSelectTrigger,
   pmCreateListCollection,
+  PMHStack,
+  PMText,
 } from '@packmind/ui';
 import {
   Rule,
   StandardId,
   getAllLanguagesSortedByDisplayName,
+  ProgrammingLanguage,
 } from '@packmind/types';
 import { RuleExamplesManager } from './RuleExamplesManager';
 import { ProgramEditor } from '@packmind/proprietary/frontend/domain/detection/components/ProgramEditor';
@@ -31,20 +34,22 @@ export const RuleDetails = ({
   defaultTab = 'examples',
   detectionLanguages = [],
 }: RuleDetailsProps) => {
-  const [selectedLanguage, setSelectedLanguage] =
-    useState<string>('javascript');
+  const [selectedLanguage, setSelectedLanguage] = useState<ProgrammingLanguage>(
+    ProgrammingLanguage.JAVASCRIPT,
+  );
 
   // Set the default language to the first configured language
   useEffect(() => {
     if (detectionLanguages.length === 0) {
-      setSelectedLanguage('javascript');
+      setSelectedLanguage(ProgrammingLanguage.JAVASCRIPT);
       return;
     }
     const allLanguages = getAllLanguagesSortedByDisplayName();
     const firstConfigured = allLanguages.find((l) =>
       detectionLanguages.includes(l.language),
     );
-    const defaultLang = firstConfigured?.language || 'javascript';
+    const defaultLang =
+      firstConfigured?.language || ProgrammingLanguage.JAVASCRIPT;
     setSelectedLanguage(defaultLang);
   }, [detectionLanguages]);
 
@@ -108,41 +113,45 @@ export const RuleDetails = ({
   ];
 
   return (
-    <PMBox position="relative">
-      <PMBox position="absolute" top={0} right={0} zIndex={1} width="200px">
-        <PMSelect.Root
-          collection={languageCollection}
-          value={[selectedLanguage]}
-          onValueChange={(e) => setSelectedLanguage(e.value[0])}
-          size="sm"
-        >
-          <PMSelectTrigger placeholder="Select a language" />
-          <PMSelect.Positioner>
-            <PMSelect.Content zIndex={1500}>
-              {configuredLanguages.length > 0 && (
-                <PMSelect.ItemGroup>
-                  <PMSelect.ItemGroupLabel>
-                    Configured Languages
-                  </PMSelect.ItemGroupLabel>
-                  {configuredLanguages.map((item) => (
+    <PMVStack position="relative" gap={4} width="100%" alignItems="flex-start">
+      <PMHStack>
+        <PMText whiteSpace="nowrap">Language : </PMText>
+        <PMBox width="200px">
+          <PMSelect.Root
+            collection={languageCollection}
+            value={[selectedLanguage]}
+            onValueChange={(e) =>
+              setSelectedLanguage(e.value[0] as ProgrammingLanguage)
+            }
+          >
+            <PMSelectTrigger placeholder="Select a language" />
+            <PMSelect.Positioner>
+              <PMSelect.Content zIndex={1500}>
+                {configuredLanguages.length > 0 && (
+                  <PMSelect.ItemGroup>
+                    <PMSelect.ItemGroupLabel>
+                      Configured Languages
+                    </PMSelect.ItemGroupLabel>
+                    {configuredLanguages.map((item) => (
+                      <PMSelect.Item item={item} key={item.value}>
+                        {item.label}
+                      </PMSelect.Item>
+                    ))}
+                  </PMSelect.ItemGroup>
+                )}
+                <PMSelect.CollapsibleItemGroup label="Other Languages">
+                  {otherLanguages.map((item) => (
                     <PMSelect.Item item={item} key={item.value}>
                       {item.label}
                     </PMSelect.Item>
                   ))}
-                </PMSelect.ItemGroup>
-              )}
-              <PMSelect.CollapsibleItemGroup label="Other Languages">
-                {otherLanguages.map((item) => (
-                  <PMSelect.Item item={item} key={item.value}>
-                    {item.label}
-                  </PMSelect.Item>
-                ))}
-              </PMSelect.CollapsibleItemGroup>
-            </PMSelect.Content>
-          </PMSelect.Positioner>
-        </PMSelect.Root>
-      </PMBox>
+                </PMSelect.CollapsibleItemGroup>
+              </PMSelect.Content>
+            </PMSelect.Positioner>
+          </PMSelect.Root>
+        </PMBox>
+      </PMHStack>
       <PMTabs defaultValue={defaultTab} tabs={tabs} />
-    </PMBox>
+    </PMVStack>
   );
 };
