@@ -151,7 +151,7 @@ export const RuleDetails = ({
           </PMSelect.Root>
         </PMBox>
       </PMHStack>
-      <PMTabs defaultValue={defaultTab} tabs={tabs} />
+      <PMTabs defaultValue={defaultTab} tabs={tabs} width="100%" />
     </PMVStack>
   );
 };
