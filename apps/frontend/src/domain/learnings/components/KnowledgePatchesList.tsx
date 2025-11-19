@@ -73,11 +73,12 @@ export const KnowledgePatchesList = () => {
   const handleBatchReject = async () => {
     if (!isSomeSelected) return;
 
-    const reviewNotes = prompt(
-      `Please provide a reason for rejecting ${selectedPatchIds.length} ${selectedPatchIds.length === 1 ? 'patch' : 'patches'}:`,
-    );
+    const reviewNotes =
+      prompt(
+        `Please provide a reason for rejecting ${selectedPatchIds.length} ${selectedPatchIds.length === 1 ? 'patch' : 'patches'}:`,
+      ) || '';
 
-    if (!reviewNotes || !reviewNotes.trim()) {
+    if (!reviewNotes.trim()) {
       setAlert({
         type: 'error',
         message: 'Review notes are required for rejection',
