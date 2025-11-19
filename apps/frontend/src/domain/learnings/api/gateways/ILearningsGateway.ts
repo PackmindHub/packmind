@@ -1,5 +1,6 @@
 import {
   IAcceptKnowledgePatchUseCase,
+  IBatchRejectKnowledgePatchesUseCase,
   IDistillAllPendingTopicsUseCase,
   IDistillTopicUseCase,
   IGetKnowledgePatchUseCase,
@@ -22,6 +23,7 @@ export interface ILearningsGateway {
   getKnowledgePatch: NewGateway<IGetKnowledgePatchUseCase>;
   acceptKnowledgePatch: NewGateway<IAcceptKnowledgePatchUseCase>;
   rejectKnowledgePatch: NewGateway<IRejectKnowledgePatchUseCase>;
+  batchRejectKnowledgePatches: NewGateway<IBatchRejectKnowledgePatchesUseCase>;
   distillAllPendingTopics: NewGateway<IDistillAllPendingTopicsUseCase>;
   distillTopic: NewGateway<IDistillTopicUseCase>;
   getTopicsStats: NewGateway<IGetTopicsStatsUseCase>;

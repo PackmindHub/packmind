@@ -1,6 +1,8 @@
 import {
   AcceptKnowledgePatchCommand,
   AcceptKnowledgePatchResponse,
+  BatchRejectKnowledgePatchesCommand,
+  BatchRejectKnowledgePatchesResponse,
   DistillAllPendingTopicsCommand,
   DistillAllPendingTopicsResponse,
   DistillTopicCommand,
@@ -12,6 +14,7 @@ import {
   GetTopicsStatsCommand,
   GetTopicsStatsResponse,
   IAcceptKnowledgePatchUseCase,
+  IBatchRejectKnowledgePatchesUseCase,
   IDistillAllPendingTopicsUseCase,
   IDistillTopicUseCase,
   IGetKnowledgePatchUseCase,
@@ -103,6 +106,19 @@ export class LearningsGatewayApi
       { reviewNotes },
     );
   };
+
+  batchRejectKnowledgePatches: NewGateway<IBatchRejectKnowledgePatchesUseCase> =
+    async ({
+      patchIds,
+      organizationId,
+      spaceId,
+      reviewNotes,
+    }: NewPackmindCommandBody<BatchRejectKnowledgePatchesCommand>) => {
+      return this._api.delete<BatchRejectKnowledgePatchesResponse>(
+        `/organizations/${organizationId}/spaces/${spaceId}/learnings/patches`,
+        { data: { patchIds, reviewNotes } },
+      );
+    };
 
   distillAllPendingTopics: NewGateway<IDistillAllPendingTopicsUseCase> =
     async ({

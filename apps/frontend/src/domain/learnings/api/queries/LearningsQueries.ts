@@ -303,6 +303,43 @@ export const useRejectKnowledgePatchMutation = () => {
   });
 };
 
+const BATCH_REJECT_KNOWLEDGE_PATCHES_MUTATION_KEY =
+  'batchRejectKnowledgePatches';
+
+export const useBatchRejectKnowledgePatchesMutation = () => {
+  const queryClient = useQueryClient();
+  const { spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationKey: [BATCH_REJECT_KNOWLEDGE_PATCHES_MUTATION_KEY],
+    mutationFn: async ({
+      patchIds,
+      reviewNotes,
+    }: {
+      patchIds: KnowledgePatchId[];
+      reviewNotes: string;
+    }) => {
+      return learningsGateway.batchRejectKnowledgePatches({
+        patchIds,
+        spaceId: spaceId as SpaceId,
+        organizationId: organization!.id,
+        reviewedBy: organization!.id, // This should be userId, but we'll get it from the backend via auth
+        reviewNotes,
+      });
+    },
+    onSuccess: async () => {
+      // Invalidate the patches list
+      await queryClient.invalidateQueries({
+        queryKey: getKnowledgePatchesBySpaceKey(spaceId),
+      });
+    },
+    onError: async (error) => {
+      console.error('Error batch rejecting knowledge patches', error);
+    },
+  });
+};
+
 const DISTILL_ALL_PENDING_TOPICS_MUTATION_KEY = 'distillAllPendingTopics';
 
 export const useDistillAllPendingTopicsMutation = () => {
