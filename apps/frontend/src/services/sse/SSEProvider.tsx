@@ -130,7 +130,12 @@ export function SSEProvider({ children }: SSEProviderProps) {
     [],
   );
 
-  useEffect(() => {
+  const retryCountRef = useRef(0);
+  const MAX_RETRIES = 5;
+  const RETRY_INTERVAL_MS = 2500;
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const connectSSE = useCallback(() => {
     // Always close any existing connection before establishing a new one
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
@@ -158,10 +163,29 @@ export function SSEProvider({ children }: SSEProviderProps) {
 
     eventSource.addEventListener('open', () => {
       setIsConnected(true);
+      retryCountRef.current = 0; // Reset retry count on successful connection
     });
+
     eventSource.addEventListener('error', () => {
       if (eventSource.readyState === EventSource.CLOSED) {
         setIsConnected(false);
+      }
+      eventSource.close();
+      eventSourceRef.current = null;
+      setIsConnected(false);
+
+      if (retryCountRef.current < MAX_RETRIES) {
+        retryCountRef.current += 1;
+        console.log(
+          `SSE connection lost. Retrying in ${RETRY_INTERVAL_MS / 1000}s... (Attempt ${retryCountRef.current}/${MAX_RETRIES})`,
+        );
+        retryTimeoutRef.current = setTimeout(() => {
+          connectSSE();
+        }, RETRY_INTERVAL_MS);
+      } else {
+        console.error(
+          'SSE connection failed after maximum retries. Please refresh the page.',
+        );
       }
     });
 
@@ -171,6 +195,10 @@ export function SSEProvider({ children }: SSEProviderProps) {
         eventSource.addEventListener(eventType, handler);
       }
     }
+  }, [isAuthenticated, isLoading]);
+
+  useEffect(() => {
+    connectSSE();
 
     // Clean up on unmount or when authentication changes
     return () => {
@@ -178,9 +206,13 @@ export function SSEProvider({ children }: SSEProviderProps) {
         eventSourceRef.current.close();
         eventSourceRef.current = null;
       }
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
       setIsConnected(false);
+      retryCountRef.current = 0;
     };
-  }, [isAuthenticated, isLoading]);
+  }, [connectSSE]);
 
   const contextValue: SSEContextValue = useMemo(
     () => ({
