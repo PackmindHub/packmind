@@ -1,7 +1,6 @@
 import { AnthropicService } from './AnthropicService';
 import { AIServiceErrorTypes } from '@packmind/types';
-import { PackmindLogger } from '@packmind/logger';
-import { stubLogger } from '@packmind/test-utils';
+import { LLMProvider } from '../../types/LLMServiceConfig';
 
 // Helper for accessing private methods in tests (test-only type assertion)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -24,7 +23,6 @@ const MockedConfiguration = jest.mocked(Configuration);
 
 describe('AnthropicService', () => {
   let service: AnthropicService;
-  let mockLogger: jest.Mocked<PackmindLogger>;
   let mockAnthropicInstance: {
     messages: {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -33,9 +31,6 @@ describe('AnthropicService', () => {
   };
 
   beforeEach(() => {
-    // Create mock logger
-    mockLogger = stubLogger();
-
     // Create mock Anthropic instance
     mockAnthropicInstance = {
       messages: {
@@ -48,7 +43,7 @@ describe('AnthropicService', () => {
     );
     MockedConfiguration.getConfig.mockResolvedValue('test-api-key');
 
-    service = new AnthropicService(mockLogger);
+    service = new AnthropicService({ provider: LLMProvider.ANTHROPIC });
   });
 
   afterEach(() => {
@@ -401,7 +396,7 @@ describe('AnthropicService', () => {
     let service: AnthropicService;
 
     beforeEach(() => {
-      service = new AnthropicService(mockLogger);
+      service = new AnthropicService({ provider: LLMProvider.ANTHROPIC });
     });
 
     it('classifies rate limit errors correctly', () => {
@@ -433,7 +428,7 @@ describe('AnthropicService', () => {
     let service: AnthropicService;
 
     beforeEach(() => {
-      service = new AnthropicService(mockLogger);
+      service = new AnthropicService({ provider: LLMProvider.ANTHROPIC });
     });
 
     it('retries for rate limit errors', () => {
