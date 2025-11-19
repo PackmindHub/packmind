@@ -55,6 +55,10 @@ import {
   GetRagLabConfigurationResult,
 } from '../contracts/IGetRagLabConfigurationUseCase';
 import { UpdateRagLabConfigurationCommand } from '../contracts/IUpdateRagLabConfigurationUseCase';
+import {
+  TriggerFullReembeddingCommand,
+  TriggerFullReembeddingResponse,
+} from '../contracts/ITriggerFullReembeddingUseCase';
 import { RagLabConfiguration } from '../RagLabConfiguration';
 import { StandardVersionId } from '../../standards/StandardVersionId';
 import { RecipeVersionId } from '../../recipes/RecipeVersion';
@@ -103,6 +107,9 @@ export interface ILearningsPort {
   updateRagLabConfiguration(
     command: UpdateRagLabConfigurationCommand,
   ): Promise<RagLabConfiguration>;
+  triggerFullReembedding(
+    command: TriggerFullReembeddingCommand,
+  ): Promise<TriggerFullReembeddingResponse>;
 
   // Embedding job enqueueing methods
   enqueueStandardEmbeddingGeneration(

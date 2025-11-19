@@ -42,6 +42,8 @@ import {
   GetRagLabConfigurationResult,
   UpdateRagLabConfigurationCommand,
   RagLabConfiguration,
+  TriggerFullReembeddingCommand,
+  TriggerFullReembeddingResponse,
 } from '@packmind/types';
 import { LearningsServices } from '../services/LearningsServices';
 import { CaptureTopicUsecase } from '../useCases/captureTopic/captureTopic.usecase';
@@ -60,6 +62,7 @@ import { GetEmbeddingHealthUsecase } from '../useCases/getEmbeddingHealth/getEmb
 import { TriggerEmbeddingBackfillUsecase } from '../useCases/triggerEmbeddingBackfill/triggerEmbeddingBackfill.usecase';
 import { GetRagLabConfigurationUseCase } from '../useCases/getRagLabConfiguration/GetRagLabConfigurationUseCase';
 import { UpdateRagLabConfigurationUseCase } from '../useCases/updateRagLabConfiguration/UpdateRagLabConfigurationUseCase';
+import { TriggerFullReembeddingUseCase } from '../useCases/triggerFullReembedding/TriggerFullReembeddingUseCase';
 import { ILearningsDelayedJobs } from '../../domain/jobs/ILearningsDelayedJobs';
 import { DistillTopicsJobFactory } from '../../infra/jobs/DistillTopicsJobFactory';
 import { GenerateStandardEmbeddingJobFactory } from '../../infra/jobs/GenerateStandardEmbeddingJobFactory';
@@ -93,6 +96,8 @@ export class LearningsAdapter
     null;
   private getRagLabConfigurationUseCase: GetRagLabConfigurationUseCase;
   private updateRagLabConfigurationUseCase: UpdateRagLabConfigurationUseCase;
+  private triggerFullReembeddingUseCase: TriggerFullReembeddingUseCase | null =
+    null;
   private accountsPort: IAccountsPort | null = null;
   private spacesPort: ISpacesPort | null = null;
   private standardsPort: IStandardsPort | null = null;
@@ -297,6 +302,16 @@ export class LearningsAdapter
       this.learningsServices.getEmbeddingOrchestrationService(),
       this.spacesPort,
       this,
+      this.logger,
+    );
+
+    this.logger.debug('Initializing triggerFullReembedding use case');
+    this.triggerFullReembeddingUseCase = new TriggerFullReembeddingUseCase(
+      this.spacesPort,
+      this.standardsPort,
+      this.recipesPort,
+      (versionId) => this.enqueueStandardEmbeddingGeneration(versionId),
+      (versionId) => this.enqueueRecipeEmbeddingGeneration(versionId),
       this.logger,
     );
 
@@ -681,5 +696,20 @@ export class LearningsAdapter
     command: UpdateRagLabConfigurationCommand,
   ): Promise<RagLabConfiguration> {
     return this.updateRagLabConfigurationUseCase.execute(command);
+  }
+
+  /**
+   * Trigger full re-embedding of all standards and recipes across all spaces in an organization.
+   * This is typically used after changing the RAG Lab embedding configuration.
+   */
+  public async triggerFullReembedding(
+    command: TriggerFullReembeddingCommand,
+  ): Promise<TriggerFullReembeddingResponse> {
+    if (!this.triggerFullReembeddingUseCase) {
+      throw new Error(
+        'LearningsAdapter: triggerFullReembeddingUseCase not initialized. Call initialize() first.',
+      );
+    }
+    return this.triggerFullReembeddingUseCase.execute(command);
   }
 }
