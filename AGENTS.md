@@ -68,160 +68,38 @@ Failure to follow these standards may lead to inconsistencies, errors, or rework
 
 ## Standard: Back-end repositories SQL queries using TypeORM
 
-Utilize TypeORM's Repository or QueryBuilder methods for writing SQL queries in back-end repositories located in /infra/repositories/*Repository.ts to enhance type safety, ensure automatic parameterization, and improve maintainability of the codebase. :
-* Use TypeORM’s Repository or QueryBuilder methods (e.g., repository.findOne({ where: { id } })) instead of raw SQL strings to gain type safety, automatic parameterization, and maintainability.
+Implement SQL query guidelines using TypeORM's QueryBuilder in back-end repositories under /infra/repositories/*Repository.ts to enhance type safety, prevent SQL injection, and improve code maintainability when writing database queries, including lookups, joins, and handling soft-deleted entities. :
+* Handle soft-deleted entities properly using withDeleted() or includeDeleted options. Always respect the QueryOption parameter when provided, and only include deleted entities when explicitly requested.
+* Use IN clause with array parameterization for filtering by multiple values. Always pass arrays as spread parameters using :...paramName syntax to ensure proper parameterization.
+* Use TypeORM's QueryBuilder with parameterized queries instead of raw SQL strings. Always pass parameters as objects to where(), andWhere(), and other query methods to prevent SQL injection and ensure type safety.
 
 Full standard is available here for further request: [Back-end repositories SQL queries using TypeORM](.packmind/standards/back-end-repositories-sql-queries-using-typeorm.md)
 
-## Standard: Back-end Typescript
+## Standard: Backend Tests Redaction
 
-Establish clean code practices in TypeScript for back-end development by limiting logger.debug calls in production, organizing import statements, using dedicated error types, and injecting PackmindLogger to enhance maintainability and ensure consistent logging across services. :
-* Avoid excessive logger.debug calls in production code and limit logging to essential logger.info statements
-* Inject PackmindLogger as constructor parameter with origin constant for consistent logging across services
-* Keep all import statements at the top of the file before any other code
-* Use dedicated error types instead of generic Error instances to enable precise error handling and improve code maintainability
+Enforce backend test conventions for .spec.ts files in the Packmind monorepo using Jest with TypeScript/Node.js by favoring behavioral assertions over implementation checks, organizing context in describe('when…') blocks with verb-first it names, preferring expect(...).toEqual for deep array equality and one expect per test, using afterEach(() => jest.clearAllMocks()) and afterEach(() => datasource.destroy()) to prevent inter-test pollution and clean the test database (TypeORM DataSource or equivalent), and using stubLogger() for typed PackmindLogger stubs to ensure readable, reliable, maintainable unit, integration and service tests when writing or refactoring backend tests :
+* Avoid asserting on stubbed logger output like specific messages or call counts; instead verify observable behavior or return values
+* Avoid testing that a method is a function; instead invoke the method and assert its observable behavior
+* Avoid testing that registry components are defined; instead test the actual behavior and functionality of the registry methods like registration, retrieval, and error handling
+* Avoid using "when" in it() test descriptions; move contextual clauses into describe('when…') blocks and keep it() descriptions focused on expected behavior
+* Remove explicit 'Arrange, Act, Assert' comments from tests and structure them so the setup, execution, and verification phases are clear without redundant labels
+* Use afterEach to call datasource.destroy() to clean up the test database whenever you initialize it in beforeEach
+* Use afterEach(() => jest.clearAllMocks()) instead of beforeEach(() => jest.clearAllMocks()) to clear mocks after each test and prevent inter-test pollution
+* Use assertive, verb-first unit test names instead of starting with 'should'
+* Use expect(actualArray).toEqual(expectedArray) for deep array equality in Jest tests instead of manual length and index checks
+* Use one expect per test case for better clarity and easier debugging; group related tests in describe blocks with shared setup in beforeEach
+* Use stubLogger() in Jest tests to get a fully typed PackmindLogger stub instead of manually creating a jest.Mocked<PackmindLogger> object with jest.fn() methods
 
-Full standard is available here for further request: [Back-end Typescript](.packmind/standards/back-end-typescript.md)
-
-## Standard: Compliance
-
-Mask personal information in application logs across all environments using the standard format of the first 6 characters followed by "*" when logging user emails to ensure compliance with data protection regulations and safeguard user privacy. :
-* Never log personal information in clear text across all log levels
-* Use the standard masking format of first 6 characters followed by "*" for logging users email
-
-Full standard is available here for further request: [Compliance](.packmind/standards/compliance.md)
-
-## Standard: DDD monorepo architecture
-
-Establish DDD monorepo architecture by implementing domain adapters through shared/types and managing dependencies lazily with dependency injection to prevent circular dependencies and maintain clean separation of concerns across TypeScript projects. :
-* A domain package uses external domains through an adapter which implements a port defined in shared/types.
-* A package expose adapters through a getter in the domain Hexa class.
-* An adapter is implemented in its own domain as the root UseCases class.
-* At runtime a consumer's adapter reference must be null checked where it is used. (in the usecase)
-* Commands and Responses which define contracts must be defined in shared/types
-* Consumers hexa should only import the 'port' interface. Consumers cannot be dependent on an adapter.
-* Dependency between Hexas are handled lazily through dependency injection.
-
-Full standard is available here for further request: [DDD monorepo architecture](.packmind/standards/ddd-monorepo-architecture.md)
+Full standard is available here for further request: [Backend Tests Redaction](.packmind/standards/backend-tests-redaction.md)
 
 ## Standard: Front-end UI and Design Systems
 
-Adopt consistent UI component usage by importing from '@packmind/ui' instead of '@chakra-ui' in React applications to ensure uniformity in design and maintainability across the front-end codebase. :
-* Never use vanilla HTML tags in frontend code, only @packmind/ui components
-* Prefer using the design token 'full' instead of the literal value '100%' for width or height in UI components.
-* Use components imported from '@packmind/ui' instead of '@chakra-ui' packages to keep a consistent UI abstraction, e.g.  `import { PMButton } from '@packmind/ui';
-* Use only semantic tokens to customize @packmind/ui components.
+Adopt guidelines for using Chakra UI v3 through the @packmind/ui design system in React applications to ensure consistent UI implementation and visual consistency, applying this standard when building or modifying any frontend components. :
+* Never use vanilla HTML tags (div, span, button, input, etc.) in frontend component code; always use corresponding @packmind/ui components (PMBox, PMText, PMButton, PMInput, etc.) to ensure consistent styling and theming.
+* Prefer using the design token 'full' instead of the literal value '100%' for width or height properties in UI components to maintain consistency with the design system.
+* Use components imported from '@packmind/ui' instead of '@chakra-ui' packages to maintain a consistent UI abstraction layer, e.g., import { PMButton } from '@packmind/ui'; not import { Button } from '@chakra-ui/react';
+* Use only semantic tokens to customize @packmind/ui components, such as colorPalette for color schemes, background.primary/secondary/tertiary for backgrounds, text.primary/secondary/tertiary for text colors, and border.primary/secondary/tertiary for borders, rather than hardcoded color values.
 
 Full standard is available here for further request: [Front-end UI and Design Systems](.packmind/standards/front-end-ui-and-design-systems.md)
-
-## Standard: Frontend data flow
-
-Establish a structured frontend data flow pattern using React Router v7, @react-router/fs-routes, and TanStack Query in the Packmind codebase to centralize data fetching logic and ensure data availability before rendering, enhancing maintainability and user experience across applications. :
-* Define "crumb" property in "handle" hook of RouteModule to define link for navigation breadcrumb
-* Don't use gateways directly in frontend route modules. Always access data via query or mutation hooks in these modules.
-* Queries options should be exported as well as hooks that use them
-* Resource associated to a route should be loaded by its RouteModule in clientLoader
-* Route module component name must end by "RouteModule"
-
-Full standard is available here for further request: [Frontend data flow](.packmind/standards/frontend-data-flow.md)
-
-## Standard: Frontend Error Management
-
-Define explicit error boundary usage in React applications with TypeScript by implementing page-level and component-level error boundaries only when necessary, while ensuring proper error handling for async operations and event handlers, to enhance user experience and maintain clear error flows. :
-* Avoid overusing error boundaries as they increase code complexity and make error flows harder to trace
-* Display validation errors inline near the relevant form fields for better user experience
-* Do NOT use error boundaries for errors that should be handled explicitly (form validation, expected API errors, user input errors)
-* Handle TanStack Query mutation errors using onError callbacks to display contextual error messages
-* Only add a page-level error boundary when you need custom error UI for a specific route (different from the default error page)
-* Only add component-level error boundaries for isolated critical features where partial failure is acceptable (e.g., independent dashboard widgets that can fail without affecting the rest of the page)
-* Prevent double submissions by checking mutation pending state before triggering operations
-* Use the key prop to reset error boundaries by forcing React to remount the component with fresh state
-* Use typed error guards (e.g., isPackmindError) to safely extract error details from API responses before displaying to users
-* Wrap async operations in try-catch blocks since error boundaries do NOT catch errors in event handlers or async code
-
-Full standard is available here for further request: [Frontend Error Management](.packmind/standards/frontend-error-management.md)
-
-## Standard: TanStack Query Key Management
-
-Structure TanStack Query keys hierarchically with domain-scoped constants and enums to enable predictable cache invalidation and prevent cross-domain dependencies in React applications. :
-* Cross-domain imports must only include query key constants and enums
-* Define base query key arrays as const to enable precise invalidation patterns
-* Domain query scope must be defined as separate const outside enum
-* Query invalidation must use prefix matching from key start in order
-* Query keys must be defined in queryKeys.ts file in domain's api folder
-* Query keys must follow hierarchical structure: organization scope, domain scope, operation, identifiers
-
-Full standard is available here for further request: [TanStack Query Key Management](.packmind/standards/tanstack-query-key-management.md)
-
-## Standard: Tests redaction
-
-Redefine testing practices for both back-end and front-end applications using Jest by removing redundant comments, structuring tests for clarity, and employing assertive naming conventions to enhance test readability and reliability in TypeScript projects. :
-* * Avoid testing that a method is a function; instead invoke the method and assert its observable behavior, e.g.  
-  const result = myService.greet('Alice');  
-  expect(result).toBe('Hello, Alice');
-* Avoid asserting on stubbed logger output like specific messages or call counts; instead verify observable behavior or return values.
-* Avoid testing that registry components are defined; instead test the actual behavior and functionality of the registry methods like registration, retrieval, and error handling.
-* Avoid using "when" in it() test descriptions; move contextual clauses into describe('when…') blocks and keep it() descriptions focused on expected behavior.
-* Remove explicit 'Arrange, Act, Assert' comments from tests and structure them so the setup, execution, and verification phases are clear without redundant labels.
-* Use afterEach to call datasource.destroy() to clean up the test database whenever you initialize it in beforeEach.
-* Use afterEach(() => jest.clearAllMocks()) instead of beforeEach(() => jest.clearAllMocks()) to clear mocks after each test and prevent inter-test pollution.
-* Use assertive, verb-first unit test names instead of starting with 'should', e.g. it('returns null when input is empty', ...).
-* Use expect(actualArray).toEqual(expectedArray) for deep array equality in Jest tests instead of manual length and index checks, e.g., expect(result).toEqual([1,2,3]);
-* Use one expect per test case for better clarity and easier debugging; group related tests in describe blocks with shared setup in beforeEach
-* Use stubLogger() in your Jest tests to get a fully typed PackmindLogger stub instead of manually creating a jest.Mocked<PackmindLogger> object with jest.fn() methods.
-* Use the factory functions from @packmind/shared (e.g., createGitRepoId, createStandardId, createRecipeId) instead of creating custom test helper functions for type casting.
-
-Full standard is available here for further request: [Tests redaction](.packmind/standards/tests-redaction.md)
-
-## Standard: Use cases
-
-Define use cases for each public method in a hexagonal architecture using TypeScript, ensuring they are stored in `types/<domain>/contracts/` and properly typed with commands and responses to enhance code organization and maintainability across shared packages. :
-* Admin use cases must extend `AbstractAdminUseCase` and implement `executeForAdmins`
-* Gateway interfaces should only be defined as an object of `Gateway<...>` (or `PublicGateway<...>` for public endpoints)
-* Member use cases must extend `AbstractMemberUseCase` and implement `executeForMembers`
-* Public use cases must implement `IPublicUseCase` directly
-* The only allowed public method for a use case is `execute` (or `executeForMembers` and `executeForAdmins` for the ones extending the abstract use cases)
-
-Full standard is available here for further request: [Use cases](.packmind/standards/use-cases.md)
 <!-- end: Packmind standards -->
 
-<!-- start: Packmind recipes -->
-# Packmind Recipes
-
-🚨 **MANDATORY STEP** 🚨
-
-Before writing, editing, or generating ANY code:
-
-**ALWAYS READ**: the available recipes below to see what recipes are available
-
-## Recipe Usage Rules:
-- **MANDATORY**: Always check the recipes list first
-- **CONDITIONAL**: Only read/use individual recipes if they are relevant to your task
-- **OPTIONAL**: If no recipes are relevant, proceed without using any
-
-## Recipe Usage Tracking:
-When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you MUST call the 'packmind_notify_recipe_usage' MCP tool with:
-* Recipe slugs array (e.g., ["recipe-name"] from "recipe-name.md")
-* aiAgent: "AGENTS.md"
-* gitRepo: "PackmindHub/packmind-monorepo"
-* target: "/"
-
-**Remember: Always check the recipes list first, but only use recipes that actually apply to your specific task.**`
-
-## Available recipes
-
-* [Check GitHub Webhook Headers](.packmind/recipes/check-github-webhook-headers.md): Validate GitHub webhook headers to ensure only push events are processed, enhancing event handling efficiency in your application.
-* [Create or update model and TypeORM schemas](.packmind/recipes/create-or-update-model-and-typeorm-schemas.md): "Create new models and update existing ones with TypeORM to ensure proper database structure and maintainability when adapting to evolving business requirements."
-* [Create Organization-Scoped Page with React Router Navigation](.packmind/recipes/create-organization-scoped-page-with-react-router-navigation.md): "Create organization-scoped pages in a React Router application to enhance navigation and user experience by ensuring secure access to relevant data for each organization."
-* [Create UseCase Test Class Template](.packmind/recipes/create-usecase-test-class-template.md): "Create a comprehensive test class for UseCases to ensure consistent testing patterns and thorough coverage of various execution scenarios in the Packmind monorepo."
-* [Creating a new test factory](.packmind/recipes/creating-a-new-test-factory.md): "Create a test factory for each entity to generate consistent and randomized test data, ensuring reliable and efficient testing of your application."
-* [Creating End-User Documentation for Packmind](.packmind/recipes/creating-end-user-documentation-for-packmind.md): Create clear and concise end-user documentation for Packmind features to empower users in accomplishing their tasks effectively while avoiding unnecessary technical details.
-* [Gateway Pattern Implementation in Packmind Frontend](.packmind/recipes/gateway-pattern-implementation-in-packmind-frontend.md): Implement gateways in the Packmind frontend to create a clean abstraction for API communication, enhancing maintainability and testability across the application.
-* [Hexa Entities Migration to Shared Types](.packmind/recipes/hexa-entities-migration-to-shared-types.md): Migrate cross-domain entities to a shared types folder to eliminate circular dependencies and establish a single source of truth for improved code organization and maintainability.
-* [hexagonal usecase port-adapter refactoring](.packmind/recipes/hexagonal-usecase-port-adapter-refactoring.md): Refactor hexagonal use cases to implement a domain Port interface that simplifies dependency management and enhances testability and maintainability when integrating multiple use cases at the service layer.
-* [How to Write TypeORM Migrations in Packmind](.packmind/recipes/how-to-write-typeorm-migrations-in-packmind.md): "Write TypeORM migrations in the Packmind monorepo to manage database schema changes effectively while ensuring proper logging and rollback capabilities."
-* [Refactor Use Case to Follow IUseCase Pattern](.packmind/recipes/refactor-use-case-to-follow-iusecase-pattern.md): Refactor existing use cases to implement the IUseCase pattern for consistent command/response typing and enhanced business rule enforcement, ensuring maintainability and clarity across your application's architecture.
-* [Repository Implementation and Testing Pattern](.packmind/recipes/repository-implementation-and-testing-pattern.md): Implement a standardized repository with soft delete functionality and comprehensive tests to ensure maintainable code and reliable data access patterns in the Packmind codebase.
-* [Using Environment Variables with Configuration.getConfig](.packmind/recipes/using-environment-variables-with-configurationgetconfig.md): Access environment variables using `Configuration.getConfig()` to streamline configuration management across local and production environments, ensuring secure and consistent access to sensitive data.
-* [Wrapping Chakra UI with Slot Components](.packmind/recipes/wrapping-chakra-ui-with-slot-components.md): "Create slot components to wrap Chakra UI primitives for enhanced custom composition and API consistency in your design system."
-<!-- end: Packmind recipes -->

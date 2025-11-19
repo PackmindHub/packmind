@@ -1,0 +1,41 @@
+name: Create Release
+
+on:
+  workflow_call:
+
+jobs:
+  create-release:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get package version
+        id: get-version
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release v${{ steps.get-version.outputs.version }}
+          body: |
+            ## Release Notes
+            
+            Upgrade to ${{ steps.get-version.outputs.version }}
+            
+            ## Docker Images
+            
+            The following Docker images have been built and pushed to Docker Hub:
+            - `packmind/api:v${{ steps.get-version.outputs.version }}`
+            - `packmind/front:v${{ steps.get-version.outputs.version }}`
+            - `packmind/mcp:v${{ steps.get-version.outputs.version }}`
+            
+            All images are also available with the `latest` tag.
+          draft: false
+          prerelease: false
