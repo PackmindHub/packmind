@@ -444,6 +444,69 @@ export class OrganizationsSpacesLearningsController {
   }
 
   /**
+   * Delete multiple topics
+   * DELETE /organizations/:orgId/spaces/:spaceId/learnings/topics
+   */
+  @Delete('topics')
+  async deleteTopics(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Body() body: { topicIds: TopicId[] },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<void> {
+    const userId = request.user.userId;
+    const { topicIds } = body;
+
+    try {
+      if (!topicIds || !Array.isArray(topicIds)) {
+        throw new BadRequestException('topicIds must be an array');
+      }
+
+      if (topicIds.length === 0) {
+        throw new BadRequestException('topicIds array cannot be empty');
+      }
+
+      this.logger.info(
+        'DELETE /organizations/:orgId/spaces/:spaceId/learnings/topics - Deleting topics',
+        {
+          organizationId,
+          spaceId,
+          count: topicIds.length,
+        },
+      );
+
+      await this.learningsAdapter.deleteTopics({
+        topicIds,
+        spaceId,
+        organizationId,
+        userId,
+      });
+
+      this.logger.info(
+        'DELETE /organizations/:orgId/spaces/:spaceId/learnings/topics - Topics deleted successfully',
+        {
+          organizationId,
+          spaceId,
+          count: topicIds.length,
+        },
+      );
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'DELETE /organizations/:orgId/spaces/:spaceId/learnings/topics - Failed to delete topics',
+        {
+          organizationId,
+          spaceId,
+          count: topicIds?.length ?? 0,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
    * Get a single topic by ID
    * GET /organizations/:orgId/spaces/:spaceId/learnings/topics/:topicId
    */
