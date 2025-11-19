@@ -25,6 +25,9 @@ import {
   pmUseListCollection,
   PMBadge,
   PMCloseButton,
+  PMDataList,
+  PMPopover,
+  PMCopiable,
 } from '@packmind/ui';
 import { Link, useNavigate } from 'react-router';
 import {
@@ -534,12 +537,12 @@ export const PackageDetails = ({
   );
 
   const recipeColumns: PMTableColumn[] = React.useMemo(
-    () => [{ key: 'name', header: 'Recipe Name', grow: true }],
+    () => [{ key: 'name', header: 'Name', grow: true }],
     [],
   );
 
   const standardColumns: PMTableColumn[] = React.useMemo(
-    () => [{ key: 'name', header: 'Standard Name', grow: true }],
+    () => [{ key: 'name', header: 'Name', grow: true }],
     [],
   );
 
@@ -749,10 +752,11 @@ export const PackageDetails = ({
     );
   }
 
+  const pullCommand = `packmind pull ${pkg.slug}`;
+
   return (
     <PMPage
       title={pkg.name}
-      subtitle={pkg.slug}
       breadcrumbComponent={<AutobreadCrumb />}
       actions={
         <PMHStack gap={3}>
@@ -762,10 +766,12 @@ export const PackageDetails = ({
             selectedPackages={[pkg]}
             disabled={isPackageEmpty}
           />
-          <PMButton onClick={handleEdit}>Edit</PMButton>
+          <PMButton variant="tertiary" onClick={handleEdit}>
+            Edit
+          </PMButton>
           <PMAlertDialog
             trigger={
-              <PMButton variant="outline" colorPalette="red">
+              <PMButton variant="tertiary" colorPalette="red">
                 Delete
               </PMButton>
             }
@@ -783,6 +789,74 @@ export const PackageDetails = ({
       }
     >
       <PMVStack align="stretch" gap="6">
+        <PMDataList
+          size="md"
+          orientation="horizontal"
+          items={[
+            {
+              label: 'Slug',
+              value: (
+                <PMHStack gap={2}>
+                  <PMText>{pkg.slug}</PMText>
+                  <PMPopover.Root positioning={{ placement: 'bottom-start' }}>
+                    <PMPopover.Trigger asChild>
+                      <PMButton variant="ghost" size="xs">
+                        Pull package
+                      </PMButton>
+                    </PMPopover.Trigger>
+                    <PMPopover.Positioner>
+                      <PMPopover.Content>
+                        <PMPopover.Arrow>
+                          <PMPopover.ArrowTip />
+                        </PMPopover.Arrow>
+                        <PMPopover.Body>
+                          <PMPopover.Title>Pull this package</PMPopover.Title>
+                          <PMText
+                            variant="small"
+                            mb={2}
+                            as="p"
+                            color="secondary"
+                          >
+                            Use this command to pull the package with the
+                            Packmind CLI:
+                          </PMText>
+                          <PMCopiable.Root value={pullCommand}>
+                            <PMBox
+                              position="relative"
+                              bg="background.secondary"
+                              p={3}
+                              borderRadius="md"
+                              border="1px solid"
+                              borderColor="border.primary"
+                            >
+                              <PMText fontFamily="mono" fontSize="sm">
+                                {pullCommand}
+                              </PMText>
+                              <PMCopiable.Trigger asChild>
+                                <PMButton
+                                  position="absolute"
+                                  top={2}
+                                  right={2}
+                                  size="xs"
+                                  variant="ghost"
+                                >
+                                  <PMCopiable.Indicator>
+                                    Copy
+                                  </PMCopiable.Indicator>
+                                </PMButton>
+                              </PMCopiable.Trigger>
+                            </PMBox>
+                          </PMCopiable.Root>
+                        </PMPopover.Body>
+                        <PMPopover.CloseTrigger />
+                      </PMPopover.Content>
+                    </PMPopover.Positioner>
+                  </PMPopover.Root>
+                </PMHStack>
+              ),
+            },
+          ]}
+        />
         {pkg.description && (
           <PMBox>
             <PMMarkdownViewer content={pkg.description} />
