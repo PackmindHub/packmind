@@ -103,6 +103,7 @@ export const SidebarNavigation: React.FunctionComponent<
             key="learnings"
             url={routes.space.toLearnings(orgSlug, currentSpaceSlug)}
             label="Learnings"
+            exact
           />,
           <SidebarNavigationLink
             key="rag-lab"
@@ -113,11 +114,13 @@ export const SidebarNavigation: React.FunctionComponent<
             key="standards"
             url={routes.space.toStandards(orgSlug, currentSpaceSlug)}
             label="Standards"
+            exact
           />,
           <SidebarNavigationLink
             key="recipes"
             url={routes.space.toRecipes(orgSlug, currentSpaceSlug)}
             label="Recipes"
+            exact
           />,
         ]}
       />

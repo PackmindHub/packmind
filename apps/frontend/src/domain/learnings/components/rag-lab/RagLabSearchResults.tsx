@@ -62,7 +62,7 @@ export function RagLabSearchResults({ results }: RagLabSearchResultsProps) {
                         {standard.slug}
                       </Link>
                     </PMLink>
-                    <PMBadge colorScheme="blue">
+                    <PMBadge>
                       {(standard.similarity * 100).toFixed(1)}% match
                     </PMBadge>
                   </PMHStack>
@@ -95,7 +95,7 @@ export function RagLabSearchResults({ results }: RagLabSearchResultsProps) {
                         {recipe.slug}
                       </Link>
                     </PMLink>
-                    <PMBadge colorScheme="green">
+                    <PMBadge>
                       {(recipe.similarity * 100).toFixed(1)}% match
                     </PMBadge>
                   </PMHStack>

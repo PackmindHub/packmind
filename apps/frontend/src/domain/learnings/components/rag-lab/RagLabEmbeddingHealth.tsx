@@ -49,7 +49,6 @@ export function RagLabEmbeddingHealth() {
               onClick={handleBackfill}
               disabled={backfillMutation.isPending}
               loading={backfillMutation.isPending}
-              colorScheme="blue"
               size="sm"
             >
               Generate Missing

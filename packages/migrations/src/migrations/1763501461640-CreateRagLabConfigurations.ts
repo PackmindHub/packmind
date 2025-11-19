@@ -1,13 +1,14 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
-import { PackmindLogger, LogLevel } from '@packmind/logger';
+import { PackmindLogger } from '@packmind/logger';
+
+const origin = 'CreateRagLabConfigurations1763501461640' as const;
 
 export class CreateRagLabConfigurations1763501461640
   implements MigrationInterface
 {
-  private readonly logger = new PackmindLogger(
-    'CreateRagLabConfigurations1763501461640',
-    LogLevel.DEBUG,
-  );
+  constructor(
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
+  ) {}
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     this.logger.info('Starting migration: Create rag_lab_configurations table');
@@ -16,7 +17,7 @@ export class CreateRagLabConfigurations1763501461640
       this.logger.debug('Creating rag_lab_configurations table');
       await queryRunner.query(`
         CREATE TABLE "rag_lab_configurations" (
-          "id" uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+          "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
           "organization_id" uuid NOT NULL,
           "embedding_model" VARCHAR(100) NOT NULL DEFAULT 'text-embedding-3-small',
           "embedding_dimensions" INTEGER NOT NULL DEFAULT 1536,

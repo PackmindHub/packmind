@@ -46,7 +46,6 @@ export function RagLabSearchForm({
             placeholder="Enter a description or question about your standards and recipes..."
             value={queryText}
             onChange={(e) => setQueryText(e.target.value)}
-            size="lg"
           />
           <PMText fontSize="sm">
             Search uses AI embeddings to find semantically similar content
@@ -84,8 +83,6 @@ export function RagLabSearchForm({
 
         <PMButton
           type="submit"
-          colorScheme="blue"
-          size="lg"
           disabled={!queryText.trim() || isSearching}
           loading={isSearching}
         >

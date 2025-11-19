@@ -85,13 +85,7 @@ export function RagLabEmbeddingConfig() {
         </PMVStack>
 
         {isDefaultConfig && (
-          <PMBox
-            p={3}
-            bg="blue.50"
-            borderRadius="md"
-            borderWidth="1px"
-            borderColor="blue.200"
-          >
+          <PMBox p={3} borderRadius="md" borderWidth="1px">
             <PMText fontSize="sm">
               Currently using default settings. Customize below to optimize for
               your use case.
@@ -203,25 +197,13 @@ export function RagLabEmbeddingConfig() {
         </PMHStack>
 
         {updateMutation.isSuccess && (
-          <PMBox
-            p={3}
-            bg="green.50"
-            borderRadius="md"
-            borderWidth="1px"
-            borderColor="green.200"
-          >
+          <PMBox p={3} borderRadius="md" borderWidth="1px">
             <PMText fontSize="sm">Configuration saved successfully!</PMText>
           </PMBox>
         )}
 
         {reembedMutation.isSuccess && reembedMutation.data && (
-          <PMBox
-            p={3}
-            bg="green.50"
-            borderRadius="md"
-            borderWidth="1px"
-            borderColor="green.200"
-          >
+          <PMBox p={3} borderRadius="md" borderWidth="1px">
             <PMText fontSize="sm">
               Re-embedding started! {reembedMutation.data.totalQueued} artifacts
               queued for processing.
