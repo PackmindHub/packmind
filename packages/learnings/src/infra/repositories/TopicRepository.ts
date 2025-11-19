@@ -130,4 +130,29 @@ export class TopicRepository
       throw error;
     }
   }
+
+  async deleteTopic(id: TopicId, spaceId: SpaceId): Promise<void> {
+    this.logger.info('Deleting topic', { id, spaceId });
+
+    try {
+      const topic = await this.repository.findOne({
+        where: { id, spaceId },
+      });
+
+      if (!topic) {
+        throw new Error(`Topic with id ${id} not found in space ${spaceId}`);
+      }
+
+      await this.deleteById(id);
+
+      this.logger.info('Topic deleted successfully', { id, spaceId });
+    } catch (error) {
+      this.logger.error('Failed to delete topic', {
+        id,
+        spaceId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
 }

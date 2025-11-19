@@ -7,6 +7,8 @@ import {
   BatchRejectKnowledgePatchesResponse,
   CaptureTopicCommand,
   CaptureTopicResponse,
+  DeleteTopicsCommand,
+  DeleteTopicsResponse,
   DistillTopicCommand,
   DistillTopicResponse,
   DistillAllPendingTopicsCommand,
@@ -55,6 +57,7 @@ import { DistillAllPendingTopicsUsecase } from '../useCases/distillAllPendingTop
 import { GetTopicsStatsUsecase } from '../useCases/getTopicsStats/getTopicsStats.usecase';
 import { GetTopicByIdUsecase } from '../useCases/getTopicById/getTopicById.usecase';
 import { ListTopicsUsecase } from '../useCases/listTopics/listTopics.usecase';
+import { DeleteTopicsUsecase } from '../useCases/deleteTopics/deleteTopics.usecase';
 import { ListKnowledgePatchesUsecase } from '../useCases/listKnowledgePatches/listKnowledgePatches.usecase';
 import { GetKnowledgePatchUsecase } from '../useCases/getKnowledgePatch/getKnowledgePatch.usecase';
 import { AcceptKnowledgePatchUsecase } from '../useCases/acceptKnowledgePatch/acceptKnowledgePatch.usecase';
@@ -88,6 +91,7 @@ export class LearningsAdapter
   private getTopicsStatsUsecase: GetTopicsStatsUsecase;
   private listTopicsUsecase: ListTopicsUsecase | null = null;
   private getTopicByIdUsecase: GetTopicByIdUsecase | null = null;
+  private deleteTopicsUsecase: DeleteTopicsUsecase;
   private listKnowledgePatchesUsecase: ListKnowledgePatchesUsecase;
   private getKnowledgePatchUsecase: GetKnowledgePatchUsecase;
   private acceptKnowledgePatchUsecase: AcceptKnowledgePatchUsecase;
@@ -158,6 +162,11 @@ export class LearningsAdapter
     this.getTopicsStatsUsecase = new GetTopicsStatsUsecase(
       this.learningsServices.getTopicService(),
       knowledgePatchService,
+      this.logger,
+    );
+
+    this.deleteTopicsUsecase = new DeleteTopicsUsecase(
+      this.learningsServices.getTopicRepository(),
       this.logger,
     );
 
@@ -608,6 +617,20 @@ export class LearningsAdapter
     }
 
     return await this.getTopicByIdUsecase.execute(command);
+  }
+
+  /**
+   * Delete multiple topics.
+   */
+  public async deleteTopics(
+    command: DeleteTopicsCommand,
+  ): Promise<DeleteTopicsResponse> {
+    this.logger.info('deleteTopics called', {
+      count: command.topicIds.length,
+      spaceId: command.spaceId,
+    });
+
+    return await this.deleteTopicsUsecase.execute(command);
   }
 
   /**

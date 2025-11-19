@@ -23,6 +23,10 @@ import {
   GetTopicByIdResponse,
 } from '../contracts/GetTopicByIdUseCase';
 import {
+  DeleteTopicsCommand,
+  DeleteTopicsResponse,
+} from '../contracts/DeleteTopicsUseCase';
+import {
   ListKnowledgePatchesCommand,
   ListKnowledgePatchesResponse,
 } from '../contracts/ListKnowledgePatchesUseCase';
@@ -84,6 +88,7 @@ export interface ILearningsPort {
   ): Promise<GetTopicsStatsResponse>;
   listTopics(command: ListTopicsCommand): Promise<ListTopicsResponse>;
   getTopicById(command: GetTopicByIdCommand): Promise<GetTopicByIdResponse>;
+  deleteTopics(command: DeleteTopicsCommand): Promise<DeleteTopicsResponse>;
   listKnowledgePatches(
     command: ListKnowledgePatchesCommand,
   ): Promise<ListKnowledgePatchesResponse>;

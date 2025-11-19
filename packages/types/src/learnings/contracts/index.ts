@@ -4,6 +4,7 @@ export * from './DistillAllPendingTopicsUseCase';
 export * from './GetTopicsStatsUseCase';
 export * from './ListTopicsUseCase';
 export * from './GetTopicByIdUseCase';
+export * from './DeleteTopicsUseCase';
 export * from './ListKnowledgePatchesUseCase';
 export * from './GetKnowledgePatchUseCase';
 export * from './AcceptKnowledgePatchUseCase';

@@ -30,6 +30,7 @@ describe('TopicService', () => {
       updateStatus: jest.fn(),
       findPendingDigestion: jest.fn(),
       findByKnowledgePatchId: jest.fn(),
+      deleteTopic: jest.fn(),
     };
 
     stubbedLogger = stubLogger();

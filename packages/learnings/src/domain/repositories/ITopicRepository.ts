@@ -12,4 +12,5 @@ export interface ITopicRepository extends IRepository<Topic> {
   updateStatus(id: TopicId, status: TopicStatus): Promise<void>;
   findPendingDigestion(spaceId: SpaceId): Promise<Topic[]>;
   findByKnowledgePatchId(patchId: KnowledgePatchId): Promise<Topic[]>;
+  deleteTopic(id: TopicId, spaceId: SpaceId): Promise<void>;
 }

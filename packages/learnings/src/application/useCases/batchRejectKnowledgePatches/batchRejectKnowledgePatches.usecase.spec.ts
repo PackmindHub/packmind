@@ -5,6 +5,7 @@ import {
   createKnowledgePatchId,
   createSpaceId,
   createUserId,
+  KnowledgePatch,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { RejectKnowledgePatchUsecase } from '../rejectKnowledgePatch/rejectKnowledgePatch.usecase';
@@ -52,7 +53,7 @@ describe('BatchRejectKnowledgePatchesUsecase', () => {
 
     it('rejects multiple patches successfully', async () => {
       rejectKnowledgePatchUsecase.execute.mockResolvedValue({
-        patch: {} as any,
+        patch: {} as KnowledgePatch,
       });
 
       const result = await batchRejectUsecase.execute(command);
@@ -71,7 +72,7 @@ describe('BatchRejectKnowledgePatchesUsecase', () => {
 
     it('applies same review notes to all patches', async () => {
       rejectKnowledgePatchUsecase.execute.mockResolvedValue({
-        patch: {} as any,
+        patch: {} as KnowledgePatch,
       });
 
       await batchRejectUsecase.execute(command);
