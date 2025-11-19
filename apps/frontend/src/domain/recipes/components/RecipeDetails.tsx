@@ -184,11 +184,7 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
           <PMCopiable.Root value={recipe.content}>
             <PMTooltip label="Copy to clipboard">
               <PMCopiable.Trigger asChild>
-                <PMIconButton
-                  aria-label="Copy to clipboard"
-                  variant="ghost"
-                  size="sm"
-                >
+                <PMIconButton aria-label="Copy to clipboard" variant="outline">
                   <PMCopiable.Indicator>
                     <LuCopy />
                   </PMCopiable.Indicator>
