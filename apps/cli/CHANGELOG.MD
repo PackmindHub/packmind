@@ -1,3 +1,13 @@
+# [Unreleased]
+
+## Added
+
+## Changed
+
+## Fixed
+
+## Removed
+
 # [0.4.0] - 2025-11-19
 
 ## Added
@@ -8,11 +18,19 @@
   - Add `pull --show package` command to get package details
 - Add possibility to lint a single file.
 
+# [0.3.4] - 2025-11-13
+
+## Fixed
+
+- Can now lint a file within a directory even though the CLI is not launched at the root of the local git repo.
+
 # [0.3.3] - 2025-11-03
 
 ## Fixed
 
 - Add proper CHANGELOG.MD in the GH release
 
-[0.4.0]: https://github.com/PackmindHub/packmind-monorepo/compare/release-cli/0.3.3...release-cli/0.4.0
-[0.3.3]: https://github.com/PackmindHub/packmind/compare/97dce6228693e6f477654dd0018cca583cc95e8c...release-cli/0.3.3
+- [Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.4.0...HEAD
+  [0.4.0]: https://github.com/PackmindHub/packmind-monorepo/compare/release-cli/0.3.4...release-cli/0.4.0
+  [0.3.4]: https://github.com/PackmindHub/packmind-monorepo/compare/release-cli/0.3.3...release-cli/0.3.4
+  [0.3.3]: https://github.com/PackmindHub/packmind/compare/97dce6228693e6f477654dd0018cca583cc95e8c...release-cli/0.3.3
