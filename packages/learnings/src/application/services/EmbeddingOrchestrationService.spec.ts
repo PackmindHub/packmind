@@ -59,6 +59,7 @@ describe('EmbeddingOrchestrationService', () => {
       findLatestRecipeVersionsWithoutEmbedding: jest.fn(),
       findSimilarRecipesByEmbedding: jest.fn(),
       captureRecipe: jest.fn(),
+      captureRecipeWithPackages: jest.fn(),
       deleteRecipe: jest.fn(),
       deleteRecipesBatch: jest.fn(),
       getRecipeById: jest.fn(),
