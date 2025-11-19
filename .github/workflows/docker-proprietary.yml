@@ -108,6 +108,7 @@ jobs:
         uses: docker/scout-action@v1
         with:
           command: cves
+          organization: packmind
           image: ${{ env.API_IMAGE_NAME }}:${{ steps.get-version.outputs.version }}
           only-severities: critical,high
           exit-code: true
@@ -195,6 +196,7 @@ jobs:
         uses: docker/scout-action@v1
         with:
           command: cves
+          organization: packmind
           image: ${{ env.FRONTEND_IMAGE_NAME }}:${{ steps.get-version.outputs.version }}
           only-severities: critical,high
           exit-code: true
@@ -282,6 +284,7 @@ jobs:
         uses: docker/scout-action@v1
         with:
           command: cves
+          organization: packmind
           image: ${{ env.MCP_IMAGE_NAME }}:${{ steps.get-version.outputs.version }}
           only-severities: critical,high
           exit-code: true
