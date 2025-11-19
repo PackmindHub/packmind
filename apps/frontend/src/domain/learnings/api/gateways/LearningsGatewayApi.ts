@@ -3,6 +3,8 @@ import {
   AcceptKnowledgePatchResponse,
   BatchRejectKnowledgePatchesCommand,
   BatchRejectKnowledgePatchesResponse,
+  DeleteTopicsCommand,
+  DeleteTopicsResponse,
   DistillAllPendingTopicsCommand,
   DistillAllPendingTopicsResponse,
   DistillTopicCommand,
@@ -15,6 +17,7 @@ import {
   GetTopicsStatsResponse,
   IAcceptKnowledgePatchUseCase,
   IBatchRejectKnowledgePatchesUseCase,
+  IDeleteTopicsUseCase,
   IDistillAllPendingTopicsUseCase,
   IDistillTopicUseCase,
   IGetKnowledgePatchUseCase,
@@ -168,6 +171,17 @@ export class LearningsGatewayApi
   }: NewPackmindCommandBody<GetTopicByIdCommand>) => {
     return this._api.get<GetTopicByIdResponse>(
       `/organizations/${organizationId}/spaces/${spaceId}/learnings/topics/${topicId}`,
+    );
+  };
+
+  deleteTopics: NewGateway<IDeleteTopicsUseCase> = async ({
+    topicIds,
+    organizationId,
+    spaceId,
+  }: NewPackmindCommandBody<DeleteTopicsCommand>) => {
+    return this._api.delete<DeleteTopicsResponse>(
+      `/organizations/${organizationId}/spaces/${spaceId}/learnings/topics`,
+      { data: { topicIds } },
     );
   };
 

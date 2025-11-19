@@ -367,6 +367,34 @@ export const useDistillAllPendingTopicsMutation = () => {
   });
 };
 
+const DELETE_TOPICS_MUTATION_KEY = 'deleteTopics';
+
+export const useDeleteTopicsMutation = () => {
+  const queryClient = useQueryClient();
+  const { spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationKey: [DELETE_TOPICS_MUTATION_KEY],
+    mutationFn: async ({ topicIds }: { topicIds: TopicId[] }) => {
+      return learningsGateway.deleteTopics({
+        topicIds,
+        spaceId: spaceId as SpaceId,
+        organizationId: organization!.id,
+      });
+    },
+    onSuccess: async () => {
+      // Invalidate the topics list
+      await queryClient.invalidateQueries({
+        queryKey: getTopicsBySpaceKey(spaceId),
+      });
+    },
+    onError: async (error) => {
+      console.error('Error deleting topics', error);
+    },
+  });
+};
+
 const DISTILL_TOPIC_MUTATION_KEY = 'distillTopic';
 
 export const useDistillTopicMutation = () => {
