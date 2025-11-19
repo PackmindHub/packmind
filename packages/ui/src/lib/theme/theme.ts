@@ -6,6 +6,7 @@ import { pmButtonRecipe } from '../components/form/PMButton/PMButton.recipe';
 import { pmMenuRecipe } from '../components/form/PMMenu/PMMenu.recipe';
 import { pmLinkRecipe } from '../components/typography/PMLink.recipe';
 import { pmTabsRecipe } from '../components/navigation/PMTabs/PMTabs.recipe';
+import { pmTimelineRecipe } from '../components/content/PMTimeline/PMTimeline.recipe';
 import { pmComboboxRecipe } from '../components/form/PMCombobox/PMCombobox.recipe';
 import { pmToasterRecipe } from '../components/feedback/PMToaster/PMToaster.recipe';
 import { pmCheckboxCard } from '../components/form/PMCheckboxCard/PMCheckboxCard.recipe';
@@ -147,6 +148,7 @@ export const packmindTheme = (preflight: boolean) =>
         table: pmTableRecipe,
         menu: pmMenuRecipe,
         tabs: pmTabsRecipe,
+        timeline: pmTimelineRecipe,
         combobox: pmComboboxRecipe,
         toast: pmToasterRecipe,
         checkboxCard: pmCheckboxCard,

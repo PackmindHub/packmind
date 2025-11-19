@@ -28,3 +28,14 @@ export {
   DEFAULT_FEATURE_DOMAIN_MAP,
 } from './PMFeatureFlag/PMFeatureFlag';
 export type { IPMFeatureFlagProps } from './PMFeatureFlag/PMFeatureFlag';
+export {
+  PMTimeline,
+  PMTimelineItem,
+  PMTimelineContent,
+  PMTimelineSeparator,
+  PMTimelineIndicator,
+  PMTimelineConnector,
+  PMTimelineTitle,
+  PMTimelineDescription,
+  PMTimelineTimestamp,
+} from './PMTimeline/PMTimeline';
