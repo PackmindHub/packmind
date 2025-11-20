@@ -110,7 +110,7 @@ export const DetectionProgramConfiguration: React.FC<
   }, [assessment?.status]);
 
   const isProgramDisabled = useMemo(
-    () => assessment?.status === RuleDetectionAssessmentStatus.FAILED,
+    () => assessment?.status !== RuleDetectionAssessmentStatus.SUCCESS,
     [assessment?.status],
   );
 
