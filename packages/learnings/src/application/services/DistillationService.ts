@@ -20,8 +20,21 @@ import { filterRecipeCandidatesPrompt } from './prompts/filterRecipeCandidates.p
 import { analyzeStandardMatchPrompt } from './prompts/analyzeStandardMatch.prompt';
 import { analyzeRecipeMatchPrompt } from './prompts/analyzeRecipeMatch.prompt';
 import { determineNewArtifactPrompt } from './prompts/determineNewArtifact.prompt';
+import { classifyChangeTypePrompt } from './prompts/classifyChangeType.prompt';
 
 const origin = 'DistillationService';
+
+type ChangeClassification =
+  | 'edit_standard'
+  | 'edit_recipe'
+  | 'create_standard'
+  | 'create_recipe'
+  | 'no_change';
+
+type ClassificationResult = {
+  classification: ChangeClassification;
+  reasoning: string;
+};
 
 type StandardMatchResult = {
   action: 'addRule' | 'updateRule' | 'noMatch';
@@ -74,6 +87,56 @@ export class DistillationService {
       return JSON.parse(data.trim()) as T;
     }
     return data as T;
+  }
+
+  /**
+   * Classify what type of change should be made to an artifact based on the topic
+   */
+  private async classifyChangeType(
+    topic: Topic,
+    artifactName: string,
+    artifactContent: string,
+    artifactType: 'standard' | 'recipe',
+  ): Promise<ClassificationResult> {
+    this.logger.debug('Classifying change type', {
+      artifactName,
+      artifactType,
+    });
+
+    try {
+      const prompt = classifyChangeTypePrompt
+        .replace('{topicTitle}', topic.title)
+        .replace('{topicContent}', topic.content)
+        .replace('{artifactType}', artifactType)
+        .replace('{artifactName}', artifactName)
+        .replace('{artifactContent}', artifactContent)
+        .replace(/{artifactType}/g, artifactType);
+
+      const result = await this.aiService.executePrompt<string>(prompt);
+
+      if (!result.success || !result.data) {
+        this.logger.warn('AI service failed to classify change type', {
+          error: result.error,
+        });
+        return { classification: 'no_change', reasoning: 'AI service error' };
+      }
+
+      const classification = this.parseAIResponse<ClassificationResult>(
+        result.data,
+      );
+      this.logger.debug('Classification result', {
+        classification: classification.classification,
+        reasoning: classification.reasoning,
+      });
+
+      return classification;
+    } catch (error) {
+      this.logger.error('Failed to classify change type', {
+        artifactName,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return { classification: 'no_change', reasoning: 'Classification error' };
+    }
   }
 
   async distillTopic(
