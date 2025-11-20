@@ -36,22 +36,17 @@ export class PatchApplicationService {
           return await this.applyStandardUpdate(patch, organizationId, userId);
 
         case KnowledgePatchType.NEW_STANDARD:
-          this.logger.warn('NEW_STANDARD patch type not yet implemented', {
-            patchId: patch.id,
-          });
-          return false;
+          return await this.applyStandardCreation(
+            patch,
+            organizationId,
+            userId,
+          );
 
         case KnowledgePatchType.UPDATE_RECIPE:
-          this.logger.warn('UPDATE_RECIPE patch type not yet implemented', {
-            patchId: patch.id,
-          });
-          return false;
+          return await this.applyRecipeUpdate(patch, organizationId, userId);
 
         case KnowledgePatchType.NEW_RECIPE:
-          this.logger.warn('NEW_RECIPE patch type not yet implemented', {
-            patchId: patch.id,
-          });
-          return false;
+          return await this.applyRecipeCreation(patch, organizationId, userId);
 
         default:
           this.logger.error('Unknown patch type', {
@@ -249,6 +244,147 @@ export class PatchApplicationService {
     this.logger.error('No valid changes or action found in patch', {
       patchId: patch.id,
     });
+    return false;
+  }
+
+  private async applyStandardCreation(
+    patch: KnowledgePatch,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _organizationId: OrganizationId,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _userId: string,
+  ): Promise<boolean> {
+    if (!this.standardsPort) {
+      this.logger.error('StandardsPort not available', {
+        patchId: patch.id,
+      });
+      throw new Error('StandardsPort not available for applying patch');
+    }
+
+    const proposedChanges = patch.proposedChanges as {
+      name: string;
+      description: string;
+      rules: string[];
+      examples?: string[];
+      scope: string;
+      rationale: string;
+    };
+
+    this.logger.info('Creating new standard', {
+      patchId: patch.id,
+      standardName: proposedChanges.name,
+      rulesCount: proposedChanges.rules?.length || 0,
+      examplesCount: proposedChanges.examples?.length || 0,
+    });
+
+    // TODO: Implement standard creation with examples when port method supports it
+    this.logger.warn('Standard creation not yet fully implemented', {
+      patchId: patch.id,
+      message: 'Port method for creating standards with examples needed',
+    });
+
+    return false;
+  }
+
+  private async applyRecipeUpdate(
+    patch: KnowledgePatch,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _organizationId: OrganizationId,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _userId: string,
+  ): Promise<boolean> {
+    if (!this.recipesPort) {
+      this.logger.error('RecipesPort not available', {
+        patchId: patch.id,
+      });
+      throw new Error('RecipesPort not available for applying patch');
+    }
+
+    const proposedChanges = patch.proposedChanges as {
+      recipeId: string;
+      changes: {
+        name?: string | null;
+        content?: string | null;
+        exampleChanges?: {
+          toAdd?: Array<{
+            lang: string;
+            code: string;
+            description: string;
+          }> | null;
+          toUpdate?: Array<{
+            exampleId: string;
+            lang: string;
+            code: string;
+            description: string;
+          }> | null;
+          toDelete?: string[] | null;
+        } | null;
+      };
+      rationale: string;
+    };
+
+    this.logger.info('Applying recipe update', {
+      patchId: patch.id,
+      recipeId: proposedChanges.recipeId,
+    });
+
+    // TODO: Implement recipe update when port methods available
+    if (proposedChanges.changes?.name) {
+      this.logger.warn('Recipe name update not yet supported by port', {
+        patchId: patch.id,
+        newName: proposedChanges.changes.name,
+      });
+    }
+
+    if (proposedChanges.changes?.content) {
+      this.logger.warn('Recipe content update not yet supported by port', {
+        patchId: patch.id,
+      });
+    }
+
+    if (proposedChanges.changes?.exampleChanges) {
+      this.logger.warn('Recipe example changes not yet supported by port', {
+        patchId: patch.id,
+      });
+    }
+
+    return false;
+  }
+
+  private async applyRecipeCreation(
+    patch: KnowledgePatch,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _organizationId: OrganizationId,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _userId: string,
+  ): Promise<boolean> {
+    if (!this.recipesPort) {
+      this.logger.error('RecipesPort not available', {
+        patchId: patch.id,
+      });
+      throw new Error('RecipesPort not available for applying patch');
+    }
+
+    const proposedChanges = patch.proposedChanges as {
+      name: string;
+      description: string;
+      content: string;
+      examples?: string[];
+      rationale: string;
+    };
+
+    this.logger.info('Creating new recipe', {
+      patchId: patch.id,
+      recipeName: proposedChanges.name,
+      examplesCount: proposedChanges.examples?.length || 0,
+    });
+
+    // TODO: Implement recipe creation with examples when port method supports it
+    this.logger.warn('Recipe creation not yet fully implemented', {
+      patchId: patch.id,
+      message: 'Port method for creating recipes with examples needed',
+    });
+
     return false;
   }
 }
