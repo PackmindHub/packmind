@@ -52,7 +52,7 @@ export function RagLabSearchForm({
           </PMText>
         </PMVStack>
 
-        <PMHStack gap={4}>
+        <PMHStack gap={4} align="flex-start">
           <PMField.Root>
             <PMField.Label>Result Type</PMField.Label>
             <PMNativeSelect
@@ -79,9 +79,6 @@ export function RagLabSearchForm({
                 { label: '90% (Very strict)', value: '0.9' },
               ]}
             />
-            <PMText fontSize="xs" mt={1}>
-              Minimum similarity score for results
-            </PMText>
           </PMField.Root>
 
           <PMField.Root>
