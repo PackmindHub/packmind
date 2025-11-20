@@ -17,7 +17,7 @@ import { RuleWithExamples, AiNotConfigured } from '@packmind/types';
 import { OrganizationId, UserId } from '@packmind/types';
 import { SpaceId, ProgrammingLanguage } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
-import type { ILinterPort } from '@packmind/types';
+import type { ILinterPort, IEventTrackingPort } from '@packmind/types';
 
 const origin = 'CreateStandardWithExamplesUsecase';
 
@@ -40,6 +40,7 @@ export class CreateStandardWithExamplesUsecase {
     private readonly ruleExampleRepository: IRuleExampleRepository,
     private readonly ruleRepository: IRuleRepository,
     private readonly _linterAdapter?: ILinterPort,
+    private readonly eventTrackingPort?: IEventTrackingPort,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.DEBUG,
@@ -48,6 +49,7 @@ export class CreateStandardWithExamplesUsecase {
     this.logger.info('CreateStandardWithExamplesUsecase initialized', {
       hasLinterAdapter: !!_linterAdapter,
       linterAdapterType: _linterAdapter ? typeof _linterAdapter : 'undefined',
+      hasEventTrackingPort: !!eventTrackingPort,
     });
   }
 
@@ -182,6 +184,20 @@ export class CreateStandardWithExamplesUsecase {
         organizationId,
         userId,
       );
+
+      // Track analytics event for standard creation via MCP
+      if (this.eventTrackingPort) {
+        await this.eventTrackingPort.trackEvent(
+          userId,
+          organizationId,
+          'standard_created',
+          { source: 'mcp' },
+        );
+        this.logger.debug('Analytics event tracked', {
+          event: 'standard_created',
+          source: 'mcp',
+        });
+      }
 
       this.logger.info(
         'CreateStandardWithExamples process completed successfully',
