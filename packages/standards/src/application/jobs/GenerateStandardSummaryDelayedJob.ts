@@ -55,9 +55,6 @@ export class GenerateStandardSummaryDelayedJob extends AbstractAIDelayedJob<
       input.standardVersion,
       input.rules,
     );
-    console.log('-------------------');
-    console.log(summary);
-    console.log('-------------------');
     return {
       organizationId: input.organizationId,
       userId: input.userId,
