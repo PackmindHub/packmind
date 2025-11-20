@@ -2,12 +2,12 @@ import AIRequestEmitter from '../../../../domain/entities/AIRequestEmitter';
 import { DetectionProgramRuleInput } from '@packmind/types';
 import { generate_rule_heuristics } from './prompts/generate_rule_heuristics';
 import { PackmindLogger } from '@packmind/logger';
+import { getErrorMessage } from '@packmind/node-utils';
 import {
   AIService,
   PromptConversationRole,
   AI_RESPONSE_FORMAT,
-  getErrorMessage,
-} from '@packmind/node-utils';
+} from '@packmind/types';
 import { getBadExamplesCode, getGoodExamplesCode } from '../utils/PromptUtils';
 
 const origin = 'GenerateRuleHeuristics';

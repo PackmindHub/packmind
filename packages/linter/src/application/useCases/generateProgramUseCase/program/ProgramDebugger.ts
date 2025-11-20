@@ -1,10 +1,7 @@
 import { AnalysisResult, LineViolation } from '../generation/Types';
 import { SourceCodeRepresentation } from './AbstractRuleDetectionProgram';
 import { PackmindLogger } from '@packmind/logger';
-import {
-  PromptConversation,
-  PromptConversationRole,
-} from '@packmind/node-utils';
+import { PromptConversation, PromptConversationRole } from '@packmind/types';
 
 const logger = new PackmindLogger('ProgramDebugger');
 

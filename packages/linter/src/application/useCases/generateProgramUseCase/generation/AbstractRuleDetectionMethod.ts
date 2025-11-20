@@ -5,7 +5,7 @@ import {
   PromptConversation,
   PromptConversationRole,
   TokensUsed,
-} from '@packmind/node-utils';
+} from '@packmind/types';
 //import { getBadExamplesCode, getGoodExamplesCode } from '../utils/PromptUtils';
 import { DetectionProgramRuleInput } from '@packmind/types';
 

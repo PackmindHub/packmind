@@ -2,7 +2,8 @@ import { DetectionMethodType, DetectionTechniqueGenerated } from './Types';
 import DetectionProgramPackmindRule from '../program/DetectionProgramPackmindRule';
 import DetectionToolingLogWriter from '../log/DetectionToolingLogWriter';
 import { PackmindLogger } from '@packmind/logger';
-import { AIService, TokensUsed, getErrorMessage } from '@packmind/node-utils';
+import { getErrorMessage } from '@packmind/node-utils';
+import { AIService, TokensUsed } from '@packmind/types';
 import { DetectionStatus, ILinterAstPort } from '@packmind/types';
 import { DetectionProgramRuleInput } from '@packmind/types';
 import {

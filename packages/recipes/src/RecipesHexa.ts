@@ -98,7 +98,6 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
       const eventTrackingPort = registry.getAdapter<IEventTrackingPort>(
         IEventTrackingPortName,
       );
-      const llmPort = registry.getAdapter<ILlmPort>(ILlmPortName);
 
       // Get deployment port - this will be updated later via setDeploymentPort()
       // due to circular dependency with DeploymentsHexa

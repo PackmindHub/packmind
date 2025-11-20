@@ -20,6 +20,8 @@
     "typeorm": "0.3.27",
     "uuid": "^11.1.0",
     "@nestjs/common": "^11.1.6",
-    "@packmind/test-utils": "0.0.1"
+    "@packmind/test-utils": "*",
+    "@packmind/llm": "*",
+    "yaml": "^2.8.1"
   }
 }

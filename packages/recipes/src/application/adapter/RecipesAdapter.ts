@@ -60,7 +60,6 @@ export class RecipesAdapter
   private spacesPort: ISpacesPort | null = null;
   private llmPort: ILlmPort | null = null;
   private eventTrackingPort: IEventTrackingPort | null = null;
-  private llmPort: ILlmPort | null = null;
 
   // Delayed jobs - built internally from JobsService
   private recipesDelayedJobs: IRecipesDelayedJobs | null = null;

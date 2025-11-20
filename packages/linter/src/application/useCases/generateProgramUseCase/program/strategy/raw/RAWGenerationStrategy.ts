@@ -4,11 +4,8 @@ import { parseCodeOrJsonFromAIAnswer } from '../../ProgramOutputUtils';
 import { SourceCodeRepresentation } from '../../AbstractRuleDetectionProgram';
 import { DetectionProgramRuleInput } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
-import {
-  AI_RESPONSE_FORMAT,
-  AIService,
-  getErrorMessage,
-} from '@packmind/node-utils';
+import { getErrorMessage } from '@packmind/node-utils';
+import { AI_RESPONSE_FORMAT, AIService } from '@packmind/types';
 import {
   getBadExamplesCode,
   getGoodExamplesCode,

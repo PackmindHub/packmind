@@ -3,10 +3,10 @@ import {
   AI_RESPONSE_FORMAT,
   AIPromptOptions,
   AIService,
-  getErrorMessage,
   PromptConversation,
   TokensUsedByOperation,
-} from '@packmind/node-utils';
+} from '@packmind/types';
+import { getErrorMessage } from '@packmind/node-utils';
 
 const origin = 'AIRequestEmitter';
 

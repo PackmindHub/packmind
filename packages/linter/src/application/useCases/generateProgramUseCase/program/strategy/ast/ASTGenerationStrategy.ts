@@ -13,12 +13,12 @@ import {
   getPartialAstFromASourceCode,
 } from './ASTUtils';
 import { PackmindLogger } from '@packmind/logger';
+import { getErrorMessage } from '@packmind/node-utils';
 import {
   AI_RESPONSE_FORMAT,
   AIService,
   PromptConversationRole,
-  getErrorMessage,
-} from '@packmind/node-utils';
+} from '@packmind/types';
 import { ILinterAstPort } from '@packmind/types';
 import { RuleExample } from '@packmind/types';
 import { ProgrammingLanguage } from '@packmind/types';

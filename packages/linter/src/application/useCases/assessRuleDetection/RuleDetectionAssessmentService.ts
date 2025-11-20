@@ -11,7 +11,7 @@ import {
   AIService,
   OpenAIServiceTier,
   PromptConversationRole,
-} from '@packmind/node-utils';
+} from '@packmind/types';
 import AIRequestEmitter from '../../../domain/entities/AIRequestEmitter';
 import {
   getBadExamplesCode,
