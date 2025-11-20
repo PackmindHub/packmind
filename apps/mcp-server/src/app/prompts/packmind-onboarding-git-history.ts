@@ -243,12 +243,38 @@ What would you prefer?"
 Each rule must include:
 - **content**: Single detailed sentence starting with a verb describing the rule based on git patterns
 - **positive**: Code snippet showing correct implementation
-- **negative**: Code snippet showing incorrect implementation  
+- **negative**: Code snippet showing incorrect implementation
 - **language**: Programming language used for the code snippets
 
 ## Workflow Completion
 
-After user confirms they want to send to Packmind, create the standard using the MCP tool and inform the user:
+After user confirms they want to send to Packmind:
+
+### Package Selection
+
+Before creating the standard, determine if it should be added to any packages:
+
+1. Call \`packmind_list_packages\` to see available packages
+2. Analyze the standard's scope and topic (e.g., "frontend", "backend", "testing", specific technology, etc.)
+3. **If matching packages are found:**
+   - Suggest 2-3 relevant packages based on keyword matching between:
+     - Standard name/description/scope
+     - Package names/descriptions
+   - Ask the user: "Would you like to add this standard to any packages? Here are some suggestions based on the standard's topic: [suggestions]. You can also choose from all available packages: [list]"
+4. **If packages exist but none match well:**
+   - Ask the user: "Would you like to add this standard to any of the existing packages? Available packages: [list]"
+5. **If no packages exist at all:**
+   - Skip package selection entirely (don't mention anything)
+
+### Standard Creation
+
+Create the standard using the MCP tool (\`packmind_create_standard\`) with:
+- \`name\`: Clear, descriptive name for the standard
+- \`description\`: The scope and context of the standard (without duplicating the individual rules)
+- \`rules\`: Array of rule objects
+- \`packageSlugs\`: Array of package slugs if user selected packages (optional)
+
+Then inform the user:
 
 "✅ Successfully created the '[STANDARD_NAME]' standard in Packmind!"
 
