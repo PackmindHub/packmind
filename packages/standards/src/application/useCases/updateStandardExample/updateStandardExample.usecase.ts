@@ -1,6 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
   OrganizationId,
+  ProgrammingLanguage,
   RuleExample,
   createRuleExampleId,
 } from '@packmind/types';
@@ -40,7 +41,7 @@ export class UpdateStandardExampleUsecase {
 
       const updatedExample = await this.updateRuleExampleUsecase.execute({
         ruleExampleId,
-        lang: lang as any, // Port accepts string, but UpdateRuleExampleCommand expects ProgrammingLanguage
+        lang: lang as ProgrammingLanguage,
         positive,
         negative,
         organizationId: organizationId.toString(),

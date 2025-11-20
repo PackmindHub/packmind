@@ -1,6 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import {
   OrganizationId,
+  ProgrammingLanguage,
   RuleExample,
   RuleId,
   StandardId,
@@ -92,7 +93,7 @@ export class AddStandardExampleUsecase {
       const ruleExample: RuleExample = {
         id: createRuleExampleId(uuidv4()),
         ruleId,
-        lang: lang as any, // Port accepts string, but RuleExample expects ProgrammingLanguage
+        lang: lang as ProgrammingLanguage,
         positive: positive || '',
         negative: negative || '',
       };
@@ -143,7 +144,7 @@ export class AddStandardExampleUsecase {
     try {
       await this.linterPort.updateRuleDetectionAssessmentAfterUpdate({
         ruleId,
-        language: language as any, // Port accepts string, but linter expects ProgrammingLanguage
+        language: language as ProgrammingLanguage,
         organizationId: createOrganizationId(organizationId),
         userId: createUserId(userId),
       });
