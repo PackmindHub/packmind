@@ -3,7 +3,7 @@ import { AccountsHexa } from '@packmind/accounts';
 import { AnalyticsHexa } from '@packmind/analytics';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { DeploymentsHexa } from '@packmind/deployments';
-import { EventTrackingHexa } from '@packmind/amplitude';
+import { AmplitudeHexa } from '@packmind/amplitude';
 import { GitHexa } from '@packmind/git';
 import { LinterHexa } from '@packmind/linter';
 import { PackmindLogger } from '@packmind/logger';
@@ -49,7 +49,7 @@ describe('PackmindApp API', () => {
       expect(definition.hexas).toEqual([
         SpacesHexa,
         AccountsHexa,
-        EventTrackingHexa,
+        AmplitudeHexa,
         GitHexa,
         RecipesHexa,
         AnalyticsHexa,

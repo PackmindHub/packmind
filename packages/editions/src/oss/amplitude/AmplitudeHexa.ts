@@ -4,19 +4,16 @@ import { IEventTrackingPort, IEventTrackingPortName } from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { EventTrackingAdapter } from './application/EventTrackingAdapter';
 
-const origin = 'EventTrackingHexa';
+const origin = 'AmplitudeHexa';
 
 /**
- * EventTrackingHexa - Facade for the EventTracking domain following the Hexa pattern.
+ * AmplitudeHexa - Facade for the Amplitude event tracking domain following the Hexa pattern.
  *
  * This class serves as the main entry point for event tracking functionality.
  * In the OSS edition, this provides a no-op implementation.
  * In the proprietary edition, this would integrate with Amplitude.
  */
-export class EventTrackingHexa extends BaseHexa<
-  BaseHexaOpts,
-  IEventTrackingPort
-> {
+export class AmplitudeHexa extends BaseHexa<BaseHexaOpts, IEventTrackingPort> {
   private readonly adapter: EventTrackingAdapter;
 
   constructor(
@@ -25,15 +22,15 @@ export class EventTrackingHexa extends BaseHexa<
   ) {
     super(dataSource, opts);
 
-    this.logger.info('Constructing EventTrackingHexa');
+    this.logger.info('Constructing AmplitudeHexa');
 
     try {
       this.logger.debug('Creating EventTrackingAdapter (OSS - no-op)');
       this.adapter = new EventTrackingAdapter(this.logger);
 
-      this.logger.info('EventTrackingHexa construction completed');
+      this.logger.info('AmplitudeHexa construction completed');
     } catch (error) {
-      this.logger.error('Failed to construct EventTrackingHexa', {
+      this.logger.error('Failed to construct AmplitudeHexa', {
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
@@ -45,9 +42,9 @@ export class EventTrackingHexa extends BaseHexa<
    * EventTracking has no dependencies, so this is a no-op.
    */
   public async initialize(): Promise<void> {
-    this.logger.info('Initializing EventTrackingHexa');
+    this.logger.info('Initializing AmplitudeHexa');
     // No dependencies to initialize
-    this.logger.info('EventTrackingHexa initialized successfully');
+    this.logger.info('AmplitudeHexa initialized successfully');
   }
 
   /**
@@ -66,11 +63,11 @@ export class EventTrackingHexa extends BaseHexa<
   }
 
   /**
-   * Destroys the EventTrackingHexa and cleans up resources
+   * Destroys the AmplitudeHexa and cleans up resources
    */
   public destroy(): void {
-    this.logger.info('Destroying EventTrackingHexa');
+    this.logger.info('Destroying AmplitudeHexa');
     // Add any cleanup logic here if needed
-    this.logger.info('EventTrackingHexa destroyed');
+    this.logger.info('AmplitudeHexa destroyed');
   }
 }
