@@ -1,0 +1,19 @@
+{
+  "name": "@packmind/llm",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "dependencies": {
+    "tslib": "^2.3.0",
+    "@packmind/logger": "*",
+    "@packmind/node-utils": "*",
+    "@packmind/types": "*",
+    "openai": "^6.9.0",
+    "uuid": "^11.1.0",
+    "typeorm": "0.3.27",
+    "@anthropic-ai/sdk": "^0.70.0",
+    "@google/genai": "^1.30.0"
+  }
+}

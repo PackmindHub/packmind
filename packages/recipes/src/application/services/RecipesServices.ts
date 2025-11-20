@@ -3,15 +3,17 @@ import { RecipeVersionService } from './RecipeVersionService';
 import { RecipeSummaryService } from './RecipeSummaryService';
 import { IRecipesRepositories } from '../../domain/repositories/IRecipesRepositories';
 import { PackmindLogger } from '@packmind/logger';
+import type { ILlmPort } from '@packmind/types';
 
 export class RecipesServices {
   private readonly recipeService: RecipeService;
   private readonly recipeVersionService: RecipeVersionService;
-  private readonly recipeSummaryService: RecipeSummaryService;
+  private recipeSummaryService: RecipeSummaryService;
 
   constructor(
     private readonly recipesRepositories: IRecipesRepositories,
     private readonly logger: PackmindLogger,
+    private llmPort?: ILlmPort,
   ) {
     this.recipeService = new RecipeService(
       this.recipesRepositories.getRecipeRepository(),
@@ -20,7 +22,11 @@ export class RecipesServices {
     this.recipeVersionService = new RecipeVersionService(
       this.recipesRepositories.getRecipeVersionRepository(),
     );
-    this.recipeSummaryService = new RecipeSummaryService(this.logger);
+    // RecipeSummaryService created with llmPort (may be undefined initially)
+    this.recipeSummaryService = new RecipeSummaryService(
+      this.logger,
+      this.llmPort,
+    );
   }
 
   getRecipeService(): RecipeService {
@@ -33,5 +39,14 @@ export class RecipesServices {
 
   getRecipeSummaryService(): RecipeSummaryService {
     return this.recipeSummaryService;
+  }
+
+  setLlmPort(port: ILlmPort): void {
+    this.llmPort = port;
+    // Recreate RecipeSummaryService with the llmPort
+    this.recipeSummaryService = new RecipeSummaryService(
+      this.logger,
+      this.llmPort,
+    );
   }
 }

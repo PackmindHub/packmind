@@ -1,6 +1,5 @@
 import OpenAI from 'openai';
-import { Configuration } from '../../config/config/Configuration';
-import { LogLevel, PackmindLogger } from '@packmind/logger';
+import { PackmindLogger } from '@packmind/logger';
 import {
   AIPromptOptions,
   AIPromptResult,
@@ -10,84 +9,58 @@ import {
   LLMModelPerformance,
   PromptConversation,
   PromptConversationRole,
-} from './types';
-import { AIService } from './AIService';
-
-const origin = 'OpenAIService';
+  AIService,
+} from '@packmind/types';
 
 type serviceTierTypes = 'auto' | 'default' | 'flex' | 'scale' | 'priority';
 
-export class OpenAIService implements AIService {
-  private client: OpenAI | null = null;
-  private readonly defaultModel = 'gpt-5-mini';
-  private readonly defaultFastModel = 'gpt-4.1-mini';
-  private readonly maxRetries = 5;
-  private initialized = false;
+/**
+ * Abstract base class for OpenAI and OpenAI-compatible services.
+ * Provides shared logic for executing prompts, retry mechanisms, and error handling.
+ */
+export abstract class BaseOpenAIService implements AIService {
+  protected client: OpenAI | null = null;
+  protected readonly maxRetries = 5;
+  protected initialized = false;
+
+  /**
+   * Abstract properties that must be defined by subclasses
+   */
+  protected abstract readonly defaultModel: string;
+  protected abstract readonly defaultFastModel: string;
 
   constructor(
-    private readonly logger: PackmindLogger = new PackmindLogger(
-      origin,
-      LogLevel.INFO,
-    ),
+    protected readonly logger: PackmindLogger,
+    protected readonly serviceName: string,
   ) {
-    this.logger.info('OpenAIService initialized');
+    this.logger.info(`${this.serviceName} initialized`);
   }
 
   /**
-   * Check if the OpenAI service is properly configured and ready to use
+   * Check if the service is properly configured and ready to use.
+   * Must be implemented by subclasses with their specific configuration checks.
    */
-  async isConfigured(): Promise<boolean> {
-    try {
-      const apiKey = await Configuration.getConfig('OPENAI_API_KEY');
-      return !!apiKey;
-    } catch (error) {
-      this.logger.debug('Failed to check OpenAI configuration', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      return false;
-    }
-  }
+  abstract isConfigured(): Promise<boolean>;
 
   /**
-   * Initialize the OpenAI client with API key from configuration
+   * Initialize the OpenAI client with service-specific configuration.
+   * Must be implemented by subclasses with their specific initialization logic.
    */
-  private async initialize(): Promise<void> {
-    if (this.initialized) return;
+  protected abstract initialize(): Promise<void>;
 
-    this.logger.info('Initializing OpenAI client');
-
-    try {
-      const apiKey = await Configuration.getConfig('OPENAI_API_KEY');
-
-      if (!apiKey) {
-        this.logger.warn(
-          'OpenAI API key not found in configuration - AI features will be disabled',
-        );
-        this.initialized = true; // Mark as initialized but without client
-        return;
-      }
-
-      this.client = new OpenAI({
-        apiKey,
-      });
-
-      this.initialized = true;
-      this.logger.info('OpenAI client initialized successfully');
-    } catch (error) {
-      this.logger.error('Failed to initialize OpenAI client', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }
-
-  private getModel(options: AIPromptOptions) {
+  /**
+   * Get the appropriate model based on performance options
+   */
+  protected getModel(options: AIPromptOptions): string {
     return options.performance === LLMModelPerformance.FAST
       ? this.defaultFastModel
       : this.defaultModel;
   }
 
-  private getServiceTier(options: AIPromptOptions): serviceTierTypes {
+  /**
+   * Get the service tier from options
+   */
+  protected getServiceTier(options: AIPromptOptions): serviceTierTypes {
     if (options.service_tier) {
       const tier = options.service_tier.toLowerCase();
       return tier as serviceTierTypes;
@@ -115,12 +88,12 @@ export class OpenAIService implements AIService {
     // Return graceful failure if no client is available (missing API key)
     if (!this.client) {
       this.logger.warn(
-        'OpenAI client not available - returning graceful failure',
+        `${this.serviceName} client not available - returning graceful failure`,
       );
       return {
         success: false,
         data: null,
-        error: 'OpenAI API key not configured',
+        error: `${this.serviceName} not configured`,
         attempts: 1,
         model,
       };
@@ -133,7 +106,7 @@ export class OpenAIService implements AIService {
       try {
         if (!this.client) {
           throw new AIServiceError(
-            'OpenAI client not initialized',
+            `${this.serviceName} client not initialized`,
             AIServiceErrorTypes.API_ERROR,
             attempt,
           );
@@ -142,7 +115,7 @@ export class OpenAIService implements AIService {
         const model = this.getModel(options);
         const serviceTier = this.getServiceTier(options);
 
-        this.logger.info('Sending request to OpenAI', {
+        this.logger.info(`Sending request to ${this.serviceName}`, {
           attempt,
           model,
           service_tier: serviceTier,
@@ -164,7 +137,7 @@ export class OpenAIService implements AIService {
 
         if (!content) {
           throw new AIServiceError(
-            'Invalid response from OpenAI: no content returned',
+            `Invalid response from ${this.serviceName}: no content returned`,
             AIServiceErrorTypes.INVALID_RESPONSE,
             attempt,
           );
@@ -262,12 +235,12 @@ export class OpenAIService implements AIService {
     // Return graceful failure if no client is available (missing API key)
     if (!this.client) {
       this.logger.warn(
-        'OpenAI client not available - returning graceful failure',
+        `${this.serviceName} client not available - returning graceful failure`,
       );
       return {
         success: false,
         data: null,
-        error: 'OpenAI API key not configured',
+        error: `${this.serviceName} not configured`,
         attempts: 1,
         model,
       };
@@ -280,7 +253,7 @@ export class OpenAIService implements AIService {
       try {
         if (!this.client) {
           throw new AIServiceError(
-            'OpenAI client not initialized',
+            `${this.serviceName} client not initialized`,
             AIServiceErrorTypes.API_ERROR,
             attempt,
           );
@@ -294,12 +267,15 @@ export class OpenAIService implements AIService {
           content: conv.message,
         }));
 
-        this.logger.info('Sending request to OpenAI with history', {
-          attempt,
-          model,
-          service_tier: serviceTier,
-          messageCount: messages.length,
-        });
+        this.logger.info(
+          `Sending request to ${this.serviceName} with history`,
+          {
+            attempt,
+            model,
+            service_tier: serviceTier,
+            messageCount: messages.length,
+          },
+        );
 
         const response = await this.client.chat.completions.create({
           model,
@@ -311,7 +287,7 @@ export class OpenAIService implements AIService {
 
         if (!content) {
           throw new AIServiceError(
-            'Invalid response from OpenAI: no content returned',
+            `Invalid response from ${this.serviceName}: no content returned`,
             AIServiceErrorTypes.INVALID_RESPONSE,
             attempt,
           );
@@ -393,7 +369,7 @@ export class OpenAIService implements AIService {
   /**
    * Map PromptConversationRole to OpenAI role format
    */
-  private mapRoleToOpenAI(
+  protected mapRoleToOpenAI(
     role: PromptConversationRole,
   ): 'user' | 'assistant' | 'system' {
     switch (role) {
@@ -411,7 +387,7 @@ export class OpenAIService implements AIService {
   /**
    * Classify error type for retry logic
    */
-  private classifyError(error: unknown): AIServiceErrorType {
+  protected classifyError(error: unknown): AIServiceErrorType {
     if (error instanceof AIServiceError) {
       return error.type;
     }
@@ -437,7 +413,7 @@ export class OpenAIService implements AIService {
   /**
    * Determine if we should retry based on error type and attempt number
    */
-  private shouldRetry(
+  protected shouldRetry(
     errorType: AIServiceErrorType,
     attempt: number,
     maxRetries: number,

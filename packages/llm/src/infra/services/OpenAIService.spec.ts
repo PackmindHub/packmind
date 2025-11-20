@@ -1,7 +1,6 @@
 import { OpenAIService } from './OpenAIService';
-import { AIServiceErrorTypes } from './types';
-import { PackmindLogger } from '@packmind/logger';
-import { stubLogger } from '@packmind/test-utils';
+import { AIServiceErrorTypes } from '@packmind/types';
+import { LLMProvider } from '../../types/LLMServiceConfig';
 
 // Helper for accessing private methods in tests (test-only type assertion)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -9,17 +8,21 @@ const getPrivateAccess = (service: OpenAIService) => service as any;
 
 // Mock OpenAI
 jest.mock('openai');
-jest.mock('../../config/config/Configuration');
+jest.mock('@packmind/node-utils', () => ({
+  ...jest.requireActual('@packmind/node-utils'),
+  Configuration: {
+    getConfig: jest.fn(),
+  },
+}));
 
 import OpenAI from 'openai';
-import { Configuration } from '../../config/config/Configuration';
+import { Configuration } from '@packmind/node-utils';
 
 const MockedOpenAI = jest.mocked(OpenAI);
 const MockedConfiguration = jest.mocked(Configuration);
 
 describe('OpenAIService', () => {
   let service: OpenAIService;
-  let mockLogger: jest.Mocked<PackmindLogger>;
   let mockOpenAIInstance: {
     chat: {
       completions: {
@@ -30,9 +33,6 @@ describe('OpenAIService', () => {
   };
 
   beforeEach(() => {
-    // Create mock logger
-    mockLogger = stubLogger();
-
     // Create mock OpenAI instance
     mockOpenAIInstance = {
       chat: {
@@ -47,7 +47,7 @@ describe('OpenAIService', () => {
     );
     MockedConfiguration.getConfig.mockResolvedValue('test-api-key');
 
-    service = new OpenAIService(mockLogger);
+    service = new OpenAIService({ provider: LLMProvider.OPENAI });
   });
 
   afterEach(() => {
@@ -121,7 +121,7 @@ describe('OpenAIService', () => {
 
       expect(result.success).toBe(false);
       expect(result.data).toBeNull();
-      expect(result.error).toBe('OpenAI API key not configured');
+      expect(result.error).toBe('OpenAIService not configured');
       expect(result.attempts).toBe(1);
     });
 
@@ -238,7 +238,7 @@ describe('OpenAIService', () => {
     let service: OpenAIService;
 
     beforeEach(() => {
-      service = new OpenAIService(mockLogger);
+      service = new OpenAIService({ provider: LLMProvider.OPENAI });
     });
 
     it('classifies rate limit errors correctly', () => {
@@ -270,7 +270,7 @@ describe('OpenAIService', () => {
     let service: OpenAIService;
 
     beforeEach(() => {
-      service = new OpenAIService(mockLogger);
+      service = new OpenAIService({ provider: LLMProvider.OPENAI });
     });
 
     it('retries for rate limit errors', () => {

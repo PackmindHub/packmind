@@ -451,14 +451,17 @@ describe('CaptureRecipeUsecase', () => {
 
         await captureRecipeUsecase.execute(inputData);
 
-        expect(recipeSummaryService.createRecipeSummary).toHaveBeenCalledWith({
-          recipeId: createdRecipe.id,
-          name: createdRecipe.name,
-          slug: createdRecipe.slug,
-          content: createdRecipe.content,
-          version: 1,
-          userId: createdRecipe.userId,
-        });
+        expect(recipeSummaryService.createRecipeSummary).toHaveBeenCalledWith(
+          expect.any(String), // organizationId
+          {
+            recipeId: createdRecipe.id,
+            name: createdRecipe.name,
+            slug: createdRecipe.slug,
+            content: createdRecipe.content,
+            version: 1,
+            userId: createdRecipe.userId,
+          },
+        );
       });
 
       it('uses generated summary in RecipeVersionService', async () => {
@@ -548,14 +551,17 @@ describe('CaptureRecipeUsecase', () => {
 
         await captureRecipeUsecase.execute(inputData);
 
-        expect(recipeSummaryService.createRecipeSummary).toHaveBeenCalledWith({
-          recipeId: createdRecipe.id,
-          name: createdRecipe.name,
-          slug: createdRecipe.slug,
-          content: createdRecipe.content,
-          version: 1,
-          userId: createdRecipe.userId,
-        });
+        expect(recipeSummaryService.createRecipeSummary).toHaveBeenCalledWith(
+          expect.any(String), // organizationId
+          {
+            recipeId: createdRecipe.id,
+            name: createdRecipe.name,
+            slug: createdRecipe.slug,
+            content: createdRecipe.content,
+            version: 1,
+            userId: createdRecipe.userId,
+          },
+        );
       });
     });
 

@@ -1,4 +1,8 @@
-import { AIPromptResult, AIPromptOptions, PromptConversation } from './types';
+import {
+  AIPromptResult,
+  AIPromptOptions,
+  PromptConversation,
+} from './AIServiceTypes';
 
 /**
  * Interface for AI service implementations.

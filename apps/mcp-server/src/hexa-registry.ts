@@ -2,6 +2,7 @@ import { AccountsHexa } from '@packmind/accounts';
 import { AnalyticsHexa } from '@packmind/analytics';
 import { DeploymentsHexa } from '@packmind/deployments';
 import { GitHexa } from '@packmind/git';
+import { LlmHexa } from '@packmind/llm';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { HexaRegistry, JobsService } from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
@@ -81,6 +82,17 @@ async function hexaRegistryPlugin(fastify: FastifyInstance) {
       return fastify.hexaRegistry.getService(JobsService);
     });
     logger.debug('jobsService decorator added');
+
+    fastify.decorate('llmHexa', () => {
+      logger.debug('llmHexa() called');
+      if (!fastify.hexaRegistry || !fastify.hexaRegistry.initialized) {
+        throw new Error(
+          'HexaRegistry not initialized yet. Ensure database connection is ready.',
+        );
+      }
+      return fastify.hexaRegistry.get(LlmHexa);
+    });
+    logger.debug('llmHexa decorator added');
 
     fastify.decorate('gitHexa', () => {
       logger.debug('gitHexa() called');

@@ -201,16 +201,19 @@ export class UpdateRecipesAndGenerateSummariesDelayedJob extends AbstractAIDelay
         this.logger.debug(
           `[${this.origin}] Generating summary for recipe version`,
         );
-        summary = await this.recipeSummaryService.createRecipeSummary({
-          recipeId: existingRecipe.id,
-          name: existingRecipe.name,
-          slug: existingRecipe.slug,
-          content: fileContent,
-          version: nextVersion,
-          summary: null,
-          gitCommit,
-          userId: null, // Git commits don't have a specific user
-        });
+        summary = await this.recipeSummaryService.createRecipeSummary(
+          input.organizationId,
+          {
+            recipeId: existingRecipe.id,
+            name: existingRecipe.name,
+            slug: existingRecipe.slug,
+            content: fileContent,
+            version: nextVersion,
+            summary: null,
+            gitCommit,
+            userId: null, // Git commits don't have a specific user
+          },
+        );
         this.logger.debug(`[${this.origin}] Summary generated successfully`, {
           summaryLength: summary.length,
         });

@@ -14,6 +14,8 @@ import {
   IEventTrackingPortName,
   IGitPort,
   IGitPortName,
+  ILlmPort,
+  ILlmPortName,
   IRecipesPort,
   IRecipesPortName,
   ISpacesPort,
@@ -92,6 +94,7 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
       const accountsPort =
         registry.getAdapter<IAccountsPort>(IAccountsPortName);
       const spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
+      const llmPort = registry.getAdapter<ILlmPort>(ILlmPortName);
       const eventTrackingPort = registry.getAdapter<IEventTrackingPort>(
         IEventTrackingPortName,
       );
@@ -113,6 +116,9 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
       // Get JobsService
       const jobsService = registry.getService(JobsService);
 
+      // Set llmPort on services
+      this.recipesServices.setLlmPort(llmPort);
+
       // Initialize adapter with all dependencies
       // The adapter will build and register delayed jobs internally
       await this.adapter.initialize({
@@ -121,6 +127,7 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
         [IAccountsPortName]: accountsPort,
         [ISpacesPortName]: spacesPort,
         [IEventTrackingPortName]: eventTrackingPort,
+        [ILlmPortName]: llmPort,
         jobsService,
       });
 
@@ -156,6 +163,7 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
       const eventTrackingPort = registry.getAdapter<IEventTrackingPort>(
         IEventTrackingPortName,
       );
+      const llmPort = registry.getAdapter<ILlmPort>(ILlmPortName);
 
       // Get JobsService
       const jobsService = registry.getService(JobsService);
@@ -168,6 +176,7 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
         [IAccountsPortName]: accountsPort,
         [ISpacesPortName]: spacesPort,
         [IEventTrackingPortName]: eventTrackingPort,
+        [ILlmPortName]: llmPort,
         jobsService,
       });
 

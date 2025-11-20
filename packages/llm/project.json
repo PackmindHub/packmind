@@ -1,0 +1,20 @@
+{
+  "name": "llm",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/llm/src",
+  "projectType": "library",
+  "tags": ["env:node"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/llm",
+        "tsConfig": "packages/llm/tsconfig.lib.json",
+        "packageJson": "packages/llm/package.json",
+        "main": "packages/llm/src/index.ts",
+        "assets": ["packages/llm/*.md"]
+      }
+    }
+  }
+}
