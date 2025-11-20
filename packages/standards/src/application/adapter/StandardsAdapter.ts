@@ -57,6 +57,7 @@ import { ListStandardVersionsUsecase } from '../useCases/listStandardVersions/li
 import { UpdateRuleExampleUsecase } from '../useCases/updateRuleExample/updateRuleExample.usecase';
 import { UpdateStandardUsecase } from '../useCases/updateStandard/updateStandard.usecase';
 import { UpdateStandardNameUsecase } from '../useCases/updateStandardName/updateStandardName.usecase';
+import { UpdateStandardDescriptionUsecase } from '../useCases/updateStandardDescription/updateStandardDescription.usecase';
 
 const origin = 'StandardsAdapter';
 
@@ -92,6 +93,7 @@ export class StandardsAdapter
   private _updateRuleExample!: UpdateRuleExampleUsecase;
   private _deleteRuleExample!: DeleteRuleExampleUsecase;
   private _updateStandardName!: UpdateStandardNameUsecase;
+  private _updateStandardDescription!: UpdateStandardDescriptionUsecase;
 
   constructor(
     private readonly services: StandardsServices,
@@ -263,6 +265,13 @@ export class StandardsAdapter
     );
 
     this._updateStandardName = new UpdateStandardNameUsecase(
+      this.services.getStandardService(),
+      this.services.getStandardVersionService(),
+      this.repositories.getRuleRepository(),
+      this.repositories.getRuleExampleRepository(),
+    );
+
+    this._updateStandardDescription = new UpdateStandardDescriptionUsecase(
       this.services.getStandardService(),
       this.services.getStandardVersionService(),
       this.repositories.getRuleRepository(),
@@ -486,15 +495,13 @@ export class StandardsAdapter
     return this._updateStandardName.updateStandardName(params);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async updateStandardDescription(params: {
     standardId: StandardId;
     newDescription: string;
     organizationId: OrganizationId;
     userId: string;
   }): Promise<StandardVersion> {
-    // TODO: Implement updateStandardDescription use case
-    throw new Error('updateStandardDescription not yet implemented');
+    return this._updateStandardDescription.updateStandardDescription(params);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
