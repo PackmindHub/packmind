@@ -25,9 +25,7 @@ import RAWGenerationStrategy from './strategy/raw/RAWGenerationStrategy';
 import AbstractGenerationStrategy from './strategy/AbstractGenerationStrategy';
 import { parseCodeOrJsonFromAIAnswer } from './ProgramOutputUtils';
 import { PackmindLogger } from '@packmind/logger';
-import {
-  getErrorMessage,
-} from '@packmind/node-utils';
+import { getErrorMessage } from '@packmind/node-utils';
 import {
   AI_RESPONSE_FORMAT,
   AIService,
