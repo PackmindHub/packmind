@@ -468,6 +468,76 @@ export class StandardsAdapter
     });
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async updateStandardName(params: {
+    standardId: StandardId;
+    newName: string;
+    organizationId: OrganizationId;
+    userId: string;
+  }): Promise<StandardVersion> {
+    // TODO: Implement updateStandardName use case
+    throw new Error('updateStandardName not yet implemented');
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async updateStandardDescription(params: {
+    standardId: StandardId;
+    newDescription: string;
+    organizationId: OrganizationId;
+    userId: string;
+  }): Promise<StandardVersion> {
+    // TODO: Implement updateStandardDescription use case
+    throw new Error('updateStandardDescription not yet implemented');
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async deleteStandardRule(params: {
+    standardId: StandardId;
+    ruleId: RuleId;
+    organizationId: OrganizationId;
+    userId: string;
+  }): Promise<StandardVersion> {
+    // TODO: Implement deleteStandardRule use case
+    throw new Error('deleteStandardRule not yet implemented');
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async addStandardExample(params: {
+    standardId: StandardId;
+    ruleId: RuleId;
+    lang: string;
+    positive: string;
+    negative: string;
+    organizationId: OrganizationId;
+    userId: string;
+  }): Promise<RuleExample> {
+    // TODO: Implement addStandardExample use case
+    throw new Error('addStandardExample not yet implemented');
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async updateStandardExample(params: {
+    exampleId: string;
+    lang: string;
+    positive: string;
+    negative: string;
+    organizationId: OrganizationId;
+    userId: string;
+  }): Promise<RuleExample> {
+    // TODO: Implement updateStandardExample use case
+    throw new Error('updateStandardExample not yet implemented');
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async deleteStandardExample(params: {
+    exampleId: string;
+    organizationId: OrganizationId;
+    userId: string;
+  }): Promise<void> {
+    // TODO: Implement deleteStandardExample use case
+    throw new Error('deleteStandardExample not yet implemented');
+  }
+
   async getStandardById(command: {
     standardId: StandardId;
     organizationId: OrganizationId;

@@ -5,6 +5,7 @@ import {
   KnowledgePatch,
   KnowledgePatchType,
   OrganizationId,
+  RecipeId,
   RuleId,
   StandardId,
 } from '@packmind/types';
@@ -121,22 +122,31 @@ export class PatchApplicationService {
       throw new Error(`Standard ${standardId} not found`);
     }
 
-    // TODO: Implement name update when port method available
+    // Update standard name
     if (changes.name) {
-      this.logger.warn('Standard name update not yet supported by port', {
+      await this.standardsPort.updateStandardName({
+        standardId: standardId as StandardId,
+        newName: changes.name,
+        organizationId,
+        userId,
+      });
+      this.logger.info('Updated standard name', {
         patchId: patch.id,
         newName: changes.name,
       });
     }
 
-    // TODO: Implement description update when port method available
+    // Update standard description
     if (changes.description) {
-      this.logger.warn(
-        'Standard description update not yet supported by port',
-        {
-          patchId: patch.id,
-        },
-      );
+      await this.standardsPort.updateStandardDescription({
+        standardId: standardId as StandardId,
+        newDescription: changes.description,
+        organizationId,
+        userId,
+      });
+      this.logger.info('Updated standard description', {
+        patchId: patch.id,
+      });
     }
 
     // Add new rules
@@ -172,19 +182,80 @@ export class PatchApplicationService {
       });
     }
 
-    // TODO: Implement rule deletion when port method available
+    // Delete rules
     if (changes.rulesToDelete && changes.rulesToDelete.length > 0) {
-      this.logger.warn('Rule deletion not yet supported by port', {
+      for (const ruleId of changes.rulesToDelete) {
+        await this.standardsPort.deleteStandardRule({
+          standardId: standardId as StandardId,
+          ruleId: ruleId as RuleId,
+          organizationId,
+          userId,
+        });
+      }
+      this.logger.info('Deleted rules from standard', {
         patchId: patch.id,
-        ruleIds: changes.rulesToDelete,
+        count: changes.rulesToDelete.length,
       });
     }
 
-    // TODO: Implement example changes when port methods available
+    // Handle example changes
     if (changes.exampleChanges) {
-      this.logger.warn('Example changes not yet supported by port', {
-        patchId: patch.id,
-      });
+      // Add new examples
+      if (
+        changes.exampleChanges.toAdd &&
+        changes.exampleChanges.toAdd.length > 0
+      ) {
+        for (const example of changes.exampleChanges.toAdd) {
+          // Note: We need to know which rule to add the example to
+          // For now, log a warning as we need to enhance the data structure
+          this.logger.warn(
+            'Adding examples requires ruleId in the data structure',
+            {
+              patchId: patch.id,
+              exampleLang: example.lang,
+            },
+          );
+        }
+      }
+
+      // Update existing examples
+      if (
+        changes.exampleChanges.toUpdate &&
+        changes.exampleChanges.toUpdate.length > 0
+      ) {
+        for (const example of changes.exampleChanges.toUpdate) {
+          await this.standardsPort.updateStandardExample({
+            exampleId: example.exampleId,
+            lang: example.lang,
+            positive: example.positive,
+            negative: example.negative,
+            organizationId,
+            userId,
+          });
+        }
+        this.logger.info('Updated standard examples', {
+          patchId: patch.id,
+          count: changes.exampleChanges.toUpdate.length,
+        });
+      }
+
+      // Delete examples
+      if (
+        changes.exampleChanges.toDelete &&
+        changes.exampleChanges.toDelete.length > 0
+      ) {
+        for (const exampleId of changes.exampleChanges.toDelete) {
+          await this.standardsPort.deleteStandardExample({
+            exampleId,
+            organizationId,
+            userId,
+          });
+        }
+        this.logger.info('Deleted standard examples', {
+          patchId: patch.id,
+          count: changes.exampleChanges.toDelete.length,
+        });
+      }
     }
 
     return true;
@@ -231,10 +302,8 @@ export class PatchApplicationService {
 
   private async applyRecipeUpdate(
     patch: KnowledgePatch,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _organizationId: OrganizationId,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _userId: string,
+    organizationId: OrganizationId,
+    userId: string,
   ): Promise<boolean> {
     if (!this.recipesPort) {
       this.logger.error('RecipesPort not available', {
@@ -266,32 +335,104 @@ export class PatchApplicationService {
       rationale: string;
     };
 
+    const { recipeId, changes } = proposedChanges;
+
     this.logger.info('Applying recipe update', {
       patchId: patch.id,
-      recipeId: proposedChanges.recipeId,
+      recipeId,
     });
 
-    // TODO: Implement recipe update when port methods available
-    if (proposedChanges.changes?.name) {
-      this.logger.warn('Recipe name update not yet supported by port', {
+    // Update recipe name
+    if (changes.name) {
+      await this.recipesPort.updateRecipeName({
+        recipeId: recipeId as RecipeId,
+        newName: changes.name,
+        organizationId,
+        userId,
+      });
+      this.logger.info('Updated recipe name', {
         patchId: patch.id,
-        newName: proposedChanges.changes.name,
+        newName: changes.name,
       });
     }
 
-    if (proposedChanges.changes?.content) {
-      this.logger.warn('Recipe content update not yet supported by port', {
+    // Update recipe content
+    if (changes.content) {
+      await this.recipesPort.updateRecipeContent({
+        recipeId: recipeId as RecipeId,
+        newContent: changes.content,
+        organizationId,
+        userId,
+      });
+      this.logger.info('Updated recipe content', {
         patchId: patch.id,
       });
     }
 
-    if (proposedChanges.changes?.exampleChanges) {
-      this.logger.warn('Recipe example changes not yet supported by port', {
-        patchId: patch.id,
-      });
+    // Handle example changes
+    if (changes.exampleChanges) {
+      // Add new examples
+      if (
+        changes.exampleChanges.toAdd &&
+        changes.exampleChanges.toAdd.length > 0
+      ) {
+        for (const example of changes.exampleChanges.toAdd) {
+          await this.recipesPort.addRecipeExample({
+            recipeId: recipeId as RecipeId,
+            lang: example.lang,
+            code: example.code,
+            description: example.description,
+            organizationId,
+            userId,
+          });
+        }
+        this.logger.info('Added recipe examples', {
+          patchId: patch.id,
+          count: changes.exampleChanges.toAdd.length,
+        });
+      }
+
+      // Update existing examples
+      if (
+        changes.exampleChanges.toUpdate &&
+        changes.exampleChanges.toUpdate.length > 0
+      ) {
+        for (const example of changes.exampleChanges.toUpdate) {
+          await this.recipesPort.updateRecipeExample({
+            exampleId: example.exampleId,
+            lang: example.lang,
+            code: example.code,
+            description: example.description,
+            organizationId,
+            userId,
+          });
+        }
+        this.logger.info('Updated recipe examples', {
+          patchId: patch.id,
+          count: changes.exampleChanges.toUpdate.length,
+        });
+      }
+
+      // Delete examples
+      if (
+        changes.exampleChanges.toDelete &&
+        changes.exampleChanges.toDelete.length > 0
+      ) {
+        for (const exampleId of changes.exampleChanges.toDelete) {
+          await this.recipesPort.deleteRecipeExample({
+            exampleId,
+            organizationId,
+            userId,
+          });
+        }
+        this.logger.info('Deleted recipe examples', {
+          patchId: patch.id,
+          count: changes.exampleChanges.toDelete.length,
+        });
+      }
     }
 
-    return false;
+    return true;
   }
 
   private async applyRecipeCreation(

@@ -36,6 +36,20 @@ export interface IStandardsPort {
   ): Promise<Standard | null>;
 
   // Write methods for knowledge patch application
+  updateStandardName(params: {
+    standardId: StandardId;
+    newName: string;
+    organizationId: OrganizationId;
+    userId: string;
+  }): Promise<StandardVersion>;
+
+  updateStandardDescription(params: {
+    standardId: StandardId;
+    newDescription: string;
+    organizationId: OrganizationId;
+    userId: string;
+  }): Promise<StandardVersion>;
+
   addRuleToStandard(params: {
     standardSlug: string;
     ruleContent: string;
@@ -50,6 +64,38 @@ export interface IStandardsPort {
     organizationId: OrganizationId;
     userId: string;
   }): Promise<StandardVersion>;
+
+  deleteStandardRule(params: {
+    standardId: StandardId;
+    ruleId: RuleId;
+    organizationId: OrganizationId;
+    userId: string;
+  }): Promise<StandardVersion>;
+
+  addStandardExample(params: {
+    standardId: StandardId;
+    ruleId: RuleId;
+    lang: string;
+    positive: string;
+    negative: string;
+    organizationId: OrganizationId;
+    userId: string;
+  }): Promise<RuleExample>;
+
+  updateStandardExample(params: {
+    exampleId: string;
+    lang: string;
+    positive: string;
+    negative: string;
+    organizationId: OrganizationId;
+    userId: string;
+  }): Promise<RuleExample>;
+
+  deleteStandardExample(params: {
+    exampleId: string;
+    organizationId: OrganizationId;
+    userId: string;
+  }): Promise<void>;
 
   // Embedding methods
   updateStandardVersionEmbedding(

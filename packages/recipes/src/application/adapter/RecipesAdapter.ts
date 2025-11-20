@@ -425,4 +425,62 @@ export class RecipesAdapter
       threshold,
     );
   }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async updateRecipeName(params: {
+    recipeId: RecipeId;
+    newName: string;
+    organizationId: OrganizationId;
+    userId: string;
+  }): Promise<RecipeVersion> {
+    // TODO: Implement updateRecipeName use case
+    throw new Error('updateRecipeName not yet implemented');
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async updateRecipeContent(params: {
+    recipeId: RecipeId;
+    newContent: string;
+    organizationId: OrganizationId;
+    userId: string;
+  }): Promise<RecipeVersion> {
+    // TODO: Implement updateRecipeContent use case
+    throw new Error('updateRecipeContent not yet implemented');
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async addRecipeExample(params: {
+    recipeId: RecipeId;
+    lang: string;
+    code: string;
+    description: string;
+    organizationId: OrganizationId;
+    userId: string;
+  }): Promise<RecipeVersion> {
+    // TODO: Implement addRecipeExample use case
+    throw new Error('addRecipeExample not yet implemented');
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async updateRecipeExample(params: {
+    exampleId: string;
+    lang: string;
+    code: string;
+    description: string;
+    organizationId: OrganizationId;
+    userId: string;
+  }): Promise<RecipeVersion> {
+    // TODO: Implement updateRecipeExample use case
+    throw new Error('updateRecipeExample not yet implemented');
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async deleteRecipeExample(params: {
+    exampleId: string;
+    organizationId: OrganizationId;
+    userId: string;
+  }): Promise<void> {
+    // TODO: Implement deleteRecipeExample use case
+    throw new Error('deleteRecipeExample not yet implemented');
+  }
 }

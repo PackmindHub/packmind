@@ -135,6 +135,63 @@ export interface IRecipesPort {
   ): Promise<UpdateRecipeFromUIResponse>;
 
   // ===========================
+  // KNOWLEDGE PATCH METHODS
+  // ===========================
+
+  /**
+   * Update a recipe's name (creates new version)
+   */
+  updateRecipeName(params: {
+    recipeId: RecipeId;
+    newName: string;
+    organizationId: OrganizationId;
+    userId: string;
+  }): Promise<RecipeVersion>;
+
+  /**
+   * Update a recipe's content (creates new version)
+   */
+  updateRecipeContent(params: {
+    recipeId: RecipeId;
+    newContent: string;
+    organizationId: OrganizationId;
+    userId: string;
+  }): Promise<RecipeVersion>;
+
+  /**
+   * Add a code example to a recipe
+   */
+  addRecipeExample(params: {
+    recipeId: RecipeId;
+    lang: string;
+    code: string;
+    description: string;
+    organizationId: OrganizationId;
+    userId: string;
+  }): Promise<RecipeVersion>;
+
+  /**
+   * Update an existing recipe code example
+   */
+  updateRecipeExample(params: {
+    exampleId: string;
+    lang: string;
+    code: string;
+    description: string;
+    organizationId: OrganizationId;
+    userId: string;
+  }): Promise<RecipeVersion>;
+
+  /**
+   * Delete a recipe code example
+   */
+  deleteRecipeExample(params: {
+    exampleId: string;
+    organizationId: OrganizationId;
+    userId: string;
+  }): Promise<void>;
+
+  // ===========================
   // EMBEDDING METHODS
   // ===========================
 

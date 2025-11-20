@@ -195,7 +195,7 @@ describe('PatchApplicationService', () => {
     });
   });
 
-  describe('applyPatch - unsupported patch types', () => {
+  describe('applyPatch - not yet implemented patch types', () => {
     it('returns false for NEW_STANDARD patch type', async () => {
       const patch = knowledgePatchFactory({
         patchType: KnowledgePatchType.NEW_STANDARD,
@@ -210,9 +210,9 @@ describe('PatchApplicationService', () => {
       expect(result).toBe(false);
     });
 
-    it('returns false for UPDATE_RECIPE patch type', async () => {
+    it('returns false for NEW_RECIPE patch type', async () => {
       const patch = knowledgePatchFactory({
-        patchType: KnowledgePatchType.UPDATE_RECIPE,
+        patchType: KnowledgePatchType.NEW_RECIPE,
       });
 
       const result = await patchApplicationService.applyPatch(
