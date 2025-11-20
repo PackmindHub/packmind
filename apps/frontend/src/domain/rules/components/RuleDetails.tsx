@@ -32,14 +32,12 @@ interface RuleDetailsProps {
   standardId: StandardId;
   rule: Rule;
   defaultTab?: RuleDetailsTab;
-  detectionLanguages?: string[];
 }
 
 export const RuleDetails = ({
   standardId,
   rule,
   defaultTab = 'examples',
-  detectionLanguages = [],
 }: RuleDetailsProps) => {
   const { organization } = useAuthContext();
   const { spaceId } = useCurrentSpace();
@@ -47,7 +45,6 @@ export const RuleDetails = ({
     ProgrammingLanguage.JAVASCRIPT,
   );
   const [isCreatingFirstExample, setIsCreatingFirstExample] = useState(false);
-
   const { data: examples, isLoading: isLoadingExamples } =
     useGetRuleExamplesQuery(
       organization?.id as OrganizationId,
@@ -58,12 +55,34 @@ export const RuleDetails = ({
 
   const hasExamples = examples && examples.length > 0;
 
+  const detectionLanguages = useMemo<ProgrammingLanguage[]>(() => {
+    if (!examples) {
+      return [];
+    }
+
+    const uniqueLanguages = new Set<ProgrammingLanguage>();
+    examples.forEach((example) => {
+      if (example.lang) {
+        uniqueLanguages.add(example.lang);
+      }
+    });
+
+    return Array.from(uniqueLanguages);
+  }, [examples]);
+
+  useEffect(() => {
+    if (hasExamples && isCreatingFirstExample) {
+      setIsCreatingFirstExample(false);
+    }
+  }, [hasExamples, isCreatingFirstExample]);
+
   // Set the default language to the first configured language
   useEffect(() => {
     if (detectionLanguages.length === 0) {
       setSelectedLanguage(ProgrammingLanguage.JAVASCRIPT);
       return;
     }
+
     const allLanguages = getAllLanguagesSortedByDisplayName();
     const firstConfigured = allLanguages.find((l) =>
       detectionLanguages.includes(l.language),
@@ -75,6 +94,7 @@ export const RuleDetails = ({
 
   const { configuredLanguages, otherLanguages } = useMemo(() => {
     const allLanguages = getAllLanguagesSortedByDisplayName();
+
     const configured: { value: string; label: string }[] = [];
     const other: { value: string; label: string }[] = [];
 
@@ -123,7 +143,9 @@ export const RuleDetails = ({
             <ProgramEditor
               standardId={standardId}
               ruleId={rule.id}
-              detectionLanguages={detectionLanguages}
+              detectionLanguages={detectionLanguages.map((language) =>
+                language.toString(),
+              )}
               selectedLanguage={selectedLanguage}
             />
           </PMPageSection>

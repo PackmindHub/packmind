@@ -6,7 +6,7 @@ import { RuleDetails } from '../../src/domain/rules/components';
 
 export default function StandardDetailRuleRouteModule() {
   const { ruleId } = useParams<{ ruleId: string }>();
-  const { standard, rules, rulesLoading, rulesError, ruleLanguages } =
+  const { standard, rules, rulesLoading, rulesError } =
     useOutletContext<StandardDetailsOutletContext>();
 
   useEffect(() => {
@@ -52,14 +52,5 @@ export default function StandardDetailRuleRouteModule() {
     );
   }
 
-  const detectionLanguages =
-    (selectedRule && ruleLanguages[String(selectedRule.id)]) ?? [];
-
-  return (
-    <RuleDetails
-      standardId={standard.id}
-      rule={selectedRule}
-      detectionLanguages={detectionLanguages}
-    />
-  );
+  return <RuleDetails standardId={standard.id} rule={selectedRule} />;
 }
