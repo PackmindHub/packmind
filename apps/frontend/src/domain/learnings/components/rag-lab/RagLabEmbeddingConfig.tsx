@@ -10,12 +10,32 @@ import {
   PMVStack,
   PMCheckbox,
   PMConfirmationModal,
+  PMSelect,
+  PMSelectTrigger,
+  pmCreateListCollection,
 } from '@packmind/ui';
 import {
   useGetRagLabConfigurationQuery,
   useUpdateRagLabConfigurationMutation,
   useTriggerFullReembeddingMutation,
 } from '../../api/queries/LearningsQueries';
+
+const embeddingModelCollection = pmCreateListCollection({
+  items: [
+    {
+      value: 'text-embedding-3-small',
+      label: 'text-embedding-3-small (Cost-effective, recommended)',
+    },
+    {
+      value: 'text-embedding-3-large',
+      label: 'text-embedding-3-large (Most capable)',
+    },
+    {
+      value: 'text-embedding-ada-002',
+      label: 'text-embedding-ada-002 (Legacy)',
+    },
+  ],
+});
 
 export function RagLabEmbeddingConfig() {
   const { data: config, isLoading } = useGetRagLabConfigurationQuery();
@@ -96,17 +116,27 @@ export function RagLabEmbeddingConfig() {
         <PMVStack align="stretch" gap={4}>
           <PMField.Root>
             <PMField.Label>Embedding Model</PMField.Label>
-            <PMInput
-              value={embeddingModel}
-              onChange={(e) => {
-                setEmbeddingModel(e.target.value);
+            <PMSelect.Root
+              collection={embeddingModelCollection}
+              value={[embeddingModel]}
+              onValueChange={(e) => {
+                setEmbeddingModel(e.value[0]);
                 handleChange();
               }}
-              placeholder="text-embedding-3-small"
-            />
+            >
+              <PMSelectTrigger placeholder="Select an embedding model" />
+              <PMSelect.Positioner>
+                <PMSelect.Content>
+                  {embeddingModelCollection.items.map((item) => (
+                    <PMSelect.Item item={item} key={item.value}>
+                      {item.label}
+                    </PMSelect.Item>
+                  ))}
+                </PMSelect.Content>
+              </PMSelect.Positioner>
+            </PMSelect.Root>
             <PMText fontSize="sm" mt={1}>
-              OpenAI embedding model to use (e.g., text-embedding-3-small,
-              text-embedding-3-large)
+              Select the OpenAI embedding model to use for semantic search
             </PMText>
           </PMField.Root>
 
