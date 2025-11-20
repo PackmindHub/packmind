@@ -58,6 +58,7 @@ import { UpdateRuleExampleUsecase } from '../useCases/updateRuleExample/updateRu
 import { UpdateStandardUsecase } from '../useCases/updateStandard/updateStandard.usecase';
 import { UpdateStandardNameUsecase } from '../useCases/updateStandardName/updateStandardName.usecase';
 import { UpdateStandardDescriptionUsecase } from '../useCases/updateStandardDescription/updateStandardDescription.usecase';
+import { DeleteStandardRuleUsecase } from '../useCases/deleteStandardRule/deleteStandardRule.usecase';
 
 const origin = 'StandardsAdapter';
 
@@ -94,6 +95,7 @@ export class StandardsAdapter
   private _deleteRuleExample!: DeleteRuleExampleUsecase;
   private _updateStandardName!: UpdateStandardNameUsecase;
   private _updateStandardDescription!: UpdateStandardDescriptionUsecase;
+  private _deleteStandardRule!: DeleteStandardRuleUsecase;
 
   constructor(
     private readonly services: StandardsServices,
@@ -272,6 +274,13 @@ export class StandardsAdapter
     );
 
     this._updateStandardDescription = new UpdateStandardDescriptionUsecase(
+      this.services.getStandardService(),
+      this.services.getStandardVersionService(),
+      this.repositories.getRuleRepository(),
+      this.repositories.getRuleExampleRepository(),
+    );
+
+    this._deleteStandardRule = new DeleteStandardRuleUsecase(
       this.services.getStandardService(),
       this.services.getStandardVersionService(),
       this.repositories.getRuleRepository(),
@@ -504,15 +513,13 @@ export class StandardsAdapter
     return this._updateStandardDescription.updateStandardDescription(params);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async deleteStandardRule(params: {
     standardId: StandardId;
     ruleId: RuleId;
     organizationId: OrganizationId;
     userId: string;
   }): Promise<StandardVersion> {
-    // TODO: Implement deleteStandardRule use case
-    throw new Error('deleteStandardRule not yet implemented');
+    return this._deleteStandardRule.deleteStandardRule(params);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
