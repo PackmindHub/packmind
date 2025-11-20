@@ -9,15 +9,22 @@ import {
   pmCreateListCollection,
   PMHStack,
   PMText,
+  PMButton,
+  PMEmptyState,
 } from '@packmind/ui';
 import {
   Rule,
   StandardId,
   getAllLanguagesSortedByDisplayName,
   ProgrammingLanguage,
+  OrganizationId,
+  SpaceId,
 } from '@packmind/types';
 import { RuleExamplesManager } from './RuleExamplesManager';
 import { ProgramEditor } from '@packmind/proprietary/frontend/domain/detection/components/ProgramEditor';
+import { useGetRuleExamplesQuery } from '../api/queries';
+import { useAuthContext } from '../../accounts/hooks/useAuthContext';
+import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
 
 type RuleDetailsTab = 'examples' | 'detection';
 
@@ -25,18 +32,49 @@ interface RuleDetailsProps {
   standardId: StandardId;
   rule: Rule;
   defaultTab?: RuleDetailsTab;
-  detectionLanguages?: string[];
 }
 
 export const RuleDetails = ({
   standardId,
   rule,
   defaultTab = 'examples',
-  detectionLanguages = [],
 }: RuleDetailsProps) => {
+  const { organization } = useAuthContext();
+  const { spaceId } = useCurrentSpace();
   const [selectedLanguage, setSelectedLanguage] = useState<ProgrammingLanguage>(
     ProgrammingLanguage.JAVASCRIPT,
   );
+  const [isCreatingFirstExample, setIsCreatingFirstExample] = useState(false);
+  const { data: examples, isLoading: isLoadingExamples } =
+    useGetRuleExamplesQuery(
+      organization?.id as OrganizationId,
+      spaceId as SpaceId,
+      standardId as StandardId,
+      rule.id,
+    );
+
+  const hasExamples = examples && examples.length > 0;
+
+  const detectionLanguages = useMemo<ProgrammingLanguage[]>(() => {
+    if (!examples) {
+      return [];
+    }
+
+    const uniqueLanguages = new Set<ProgrammingLanguage>();
+    examples.forEach((example) => {
+      if (example.lang) {
+        uniqueLanguages.add(example.lang);
+      }
+    });
+
+    return Array.from(uniqueLanguages);
+  }, [examples]);
+
+  useEffect(() => {
+    if (hasExamples && isCreatingFirstExample) {
+      setIsCreatingFirstExample(false);
+    }
+  }, [hasExamples, isCreatingFirstExample]);
 
   // Set the default language to the first configured language
   useEffect(() => {
@@ -44,6 +82,7 @@ export const RuleDetails = ({
       setSelectedLanguage(ProgrammingLanguage.JAVASCRIPT);
       return;
     }
+
     const allLanguages = getAllLanguagesSortedByDisplayName();
     const firstConfigured = allLanguages.find((l) =>
       detectionLanguages.includes(l.language),
@@ -55,6 +94,7 @@ export const RuleDetails = ({
 
   const { configuredLanguages, otherLanguages } = useMemo(() => {
     const allLanguages = getAllLanguagesSortedByDisplayName();
+
     const configured: { value: string; label: string }[] = [];
     const other: { value: string; label: string }[] = [];
 
@@ -103,7 +143,9 @@ export const RuleDetails = ({
             <ProgramEditor
               standardId={standardId}
               ruleId={rule.id}
-              detectionLanguages={detectionLanguages}
+              detectionLanguages={detectionLanguages.map((language) =>
+                language.toString(),
+              )}
               selectedLanguage={selectedLanguage}
             />
           </PMPageSection>
@@ -111,6 +153,47 @@ export const RuleDetails = ({
       ),
     },
   ];
+
+  if (isLoadingExamples) {
+    return null; // Or a spinner
+  }
+
+  if (!hasExamples && !isCreatingFirstExample) {
+    return (
+      <PMEmptyState
+        backgroundColor={'background.primary'}
+        borderRadius={'md'}
+        width={'2xl'}
+        mx={'auto'}
+        mt={32}
+        title={'No code examples yet'}
+      >
+        Document the rule usage using code examples and detect violations with
+        Packmind linter
+        <PMButton
+          variant="primary"
+          onClick={() => setIsCreatingFirstExample(true)}
+        >
+          Add
+        </PMButton>
+      </PMEmptyState>
+    );
+  }
+
+  if (!hasExamples && isCreatingFirstExample) {
+    return (
+      <PMVStack alignItems={'stretch'} gap="4" paddingY={'4'} width="100%">
+        <RuleExamplesManager
+          standardId={standardId}
+          ruleId={rule.id}
+          selectedLanguage={selectedLanguage}
+          forceCreate={true}
+          onLanguageChange={setSelectedLanguage}
+          onCancelCreation={() => setIsCreatingFirstExample(false)}
+        />
+      </PMVStack>
+    );
+  }
 
   return (
     <PMVStack position="relative" gap={4} width="100%" alignItems="flex-start">

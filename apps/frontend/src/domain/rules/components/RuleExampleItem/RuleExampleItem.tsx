@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { RuleExample, RuleId } from '@packmind/types';
 import {
@@ -25,6 +25,9 @@ import {
   PMIcon,
   PMGrid,
   PMGridItem,
+  PMSelect,
+  PMSelectTrigger,
+  pmCreateListCollection,
 } from '@packmind/ui';
 import { LuCircleCheckBig, LuCircleX } from 'react-icons/lu';
 import { GET_STANDARD_RULES_DETECTION_STATUS_KEY } from '@packmind/proprietary/frontend/domain/detection/api/queryKeys';
@@ -39,6 +42,8 @@ interface RuleExampleItemProps {
     values: { lang: string; positive: string; negative: string },
   ) => Promise<void>;
   onCancelNew?: (exampleId: string) => void;
+  allowLanguageSelection?: boolean;
+  onLanguageChange?: (lang: ProgrammingLanguage) => void;
 }
 
 export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
@@ -48,6 +53,8 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
   isNew = false,
   onSaveNew,
   onCancelNew,
+  allowLanguageSelection = false,
+  onLanguageChange,
 }) => {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(isNew);
@@ -99,6 +106,15 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
 
   // Get sorted languages for display
   const sortedLanguages = getAllLanguagesSortedByDisplayName();
+
+  const languageCollection = useMemo(() => {
+    return pmCreateListCollection({
+      items: sortedLanguages.map((l) => ({
+        value: l.language,
+        label: l.info.displayName,
+      })),
+    });
+  }, [sortedLanguages]);
 
   const handleEditToggle = async () => {
     if (isEditing) {
@@ -227,10 +243,43 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
       <PMFlex justify="space-between" align="center" mb={4}>
         <PMHStack>
           <PMText>Language:</PMText>
-          <PMBadge colorPalette={'blue'} size={'lg'}>
-            {sortedLanguages.find(({ language }) => language === example.lang)
-              ?.info.displayName || example.lang}
-          </PMBadge>
+          {allowLanguageSelection && isNew ? (
+            <PMBox width="200px">
+              <PMSelect.Root
+                collection={languageCollection}
+                value={[editValues.lang]}
+                onValueChange={(e) => {
+                  const newLang = e.value[0] as ProgrammingLanguage;
+                  setEditValues({ ...editValues, lang: newLang });
+                  if (onLanguageChange) {
+                    onLanguageChange(newLang);
+                  }
+                }}
+              >
+                <PMSelectTrigger placeholder="Select a language" />
+                <PMSelect.Positioner>
+                  <PMSelect.Content zIndex={1500}>
+                    {sortedLanguages.map((l) => (
+                      <PMSelect.Item
+                        item={{
+                          value: l.language,
+                          label: l.info.displayName,
+                        }}
+                        key={l.language}
+                      >
+                        {l.info.displayName}
+                      </PMSelect.Item>
+                    ))}
+                  </PMSelect.Content>
+                </PMSelect.Positioner>
+              </PMSelect.Root>
+            </PMBox>
+          ) : (
+            <PMBadge colorPalette={'blue'} size={'lg'}>
+              {sortedLanguages.find(({ language }) => language === example.lang)
+                ?.info.displayName || example.lang}
+            </PMBadge>
+          )}
         </PMHStack>
         {isEditing ? (
           <PMButtonGroup size="sm">
