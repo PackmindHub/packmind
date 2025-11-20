@@ -23,6 +23,8 @@ import { useGetMeQuery } from '../../accounts/api/queries/UserQueries';
 import { ConfigurationCard, ConfigurationCardProps } from './ConfigurationCard';
 import { DraftCardData } from './DetectionDraftCard/DetectionDraftCard';
 import { RxQuestionMarkCircled } from 'react-icons/rx';
+import { ProgramVersionBadge } from './ProgramVersionBadge';
+import { LuCircleAlert } from 'react-icons/lu';
 
 export enum ActiveConfigurationState {
   OK = 'ok',
@@ -30,6 +32,7 @@ export enum ActiveConfigurationState {
   NO_CONFIG = 'noConfig',
   IN_PROGRESS = 'inProgress',
   ERROR = 'error',
+  OUTDATED = 'outdated',
 }
 
 export type ActiveConfigurationCardData = {
@@ -39,6 +42,7 @@ export type ActiveConfigurationCardData = {
   draftProgram: DetectionProgram | null | undefined;
   state: ActiveConfigurationState;
   isExampleOnly?: boolean;
+  isOutdated?: boolean;
 };
 
 export type ActiveConfigurationCardProps = {
@@ -128,15 +132,30 @@ export const ActiveConfigurationCard: React.FC<
       configurationCardProps.menuActions.push(testProgramAction);
 
       configurationCardChildren = (
-        <PMText color="faded" fontSize="sm">
-          Version {configuration.detectionProgram?.version ?? '—'}
-        </PMText>
+        <PMVStack alignItems="flex-start" gap={2}>
+          <ProgramVersionBadge
+            version={configuration.detectionProgram?.version ?? 1}
+            createdAt={configuration.detectionProgram?.createdAt}
+            programState="active"
+            status={DetectionStatus.READY}
+          />
+          {configuration.draftProgram && (
+            <PMHStack gap={1} alignItems="center">
+              <PMIcon color="text.success" size="xs">
+                <LuCircleAlert />
+              </PMIcon>
+              <PMText fontSize="sm" color="success">
+                Draft v{configuration.draftProgram.version} available
+              </PMText>
+            </PMHStack>
+          )}
+        </PMVStack>
       );
       break;
     case ActiveConfigurationState.TO_REVIEW:
       configurationCardProps.badge = {
         label: 'To review',
-        colorPalette: 'gray',
+        colorPalette: 'orange',
       };
       configurationCardProps.menuActions.push(testProgramAction);
       mainButtonProps = getToReviewMainAction({
@@ -153,9 +172,57 @@ export const ActiveConfigurationCard: React.FC<
       }
 
       configurationCardChildren = (
-        <PMText color="faded" fontSize="sm">
-          Version {configuration.detectionProgram?.version ?? '—'}
-        </PMText>
+        <PMVStack alignItems="flex-start" gap={2}>
+          <ProgramVersionBadge
+            version={configuration.detectionProgram?.version ?? 1}
+            createdAt={configuration.detectionProgram?.createdAt}
+            programState="active"
+            status={configuration.detectionProgram?.status ?? DetectionStatus.TO_REVIEW}
+          />
+          {configuration.draftProgram && (
+            <PMText fontSize="sm" color="faded">
+              Draft v{configuration.draftProgram.version} requires review
+            </PMText>
+          )}
+        </PMVStack>
+      );
+      break;
+    case ActiveConfigurationState.OUTDATED:
+      configurationCardProps.badge = {
+        label: 'Outdated',
+        colorPalette: 'orange',
+      };
+      configurationCardProps.menuActions.push(testProgramAction);
+      mainButtonProps = {
+        onClick: () =>
+          onGenerateProgram
+            ? onGenerateProgram(configuration.language)
+            : undefined,
+        children: 'Regenerate',
+        loading: isGenerating,
+        disabled: isGenerating,
+      };
+      configurationCardProps.mainAction = (
+        <PMButton size="sm" variant="outline" {...mainButtonProps} />
+      );
+
+      configurationCardChildren = (
+        <PMVStack alignItems="flex-start" gap={2}>
+          <ProgramVersionBadge
+            version={configuration.detectionProgram?.version ?? 1}
+            createdAt={configuration.detectionProgram?.createdAt}
+            programState="outdated"
+            status={configuration.detectionProgram?.status ?? DetectionStatus.READY}
+          />
+          <PMHStack gap={1} alignItems="center">
+            <PMIcon color="text.warning" size="xs">
+              <LuCircleAlert />
+            </PMIcon>
+            <PMText fontSize="sm" color="warning">
+              Rule specifications have changed. Regenerate to ensure accuracy.
+            </PMText>
+          </PMHStack>
+        </PMVStack>
       );
       break;
     case ActiveConfigurationState.ERROR:

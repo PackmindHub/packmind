@@ -8,6 +8,7 @@ import {
   PMHeading,
   PMDialog,
   PMCodeMirror,
+  PMBadge,
   DETECTION_ACCORDION_VIEW_FEATURE_KEY,
   DEFAULT_FEATURE_DOMAIN_MAP,
   isFeatureFlagEnabled,
@@ -53,11 +54,17 @@ export function computeActiveConfigurationState(
   program: LanguageDetectionPrograms,
   detectionProgram: LanguageDetectionPrograms['detectionProgram'] | null,
   draftProgram: LanguageDetectionPrograms['draftDetectionProgram'] | null,
+  isOutdated?: boolean,
 ): ActiveConfigurationState {
   if (!program.detectionProgramVersion || !detectionProgram) {
     return draftProgram
       ? ActiveConfigurationState.IN_PROGRESS
       : ActiveConfigurationState.NO_CONFIG;
+  }
+
+  // Check if program is outdated first
+  if (isOutdated) {
+    return ActiveConfigurationState.OUTDATED;
   }
 
   switch (detectionProgram.status) {
@@ -77,6 +84,38 @@ export function computeActiveConfigurationState(
     default:
       return ActiveConfigurationState.ERROR;
   }
+}
+
+/**
+ * Mock implementation to detect if a program is outdated.
+ * In a real scenario, this would check if rule specifications or examples
+ * have been modified after the program creation date.
+ * For now, we use a simple heuristic: if there's a newer draft with a higher version,
+ * consider the active program potentially outdated.
+ */
+function checkIfProgramIsOutdated(
+  detectionProgram: LanguageDetectionPrograms['detectionProgram'] | null,
+  draftProgram: LanguageDetectionPrograms['draftDetectionProgram'] | null,
+): boolean {
+  if (!detectionProgram) {
+    return false;
+  }
+
+  // Mock logic: If there's a draft with READY status and a higher version,
+  // consider the active program outdated
+  if (
+    draftProgram &&
+    draftProgram.status === DetectionStatus.READY &&
+    draftProgram.version > detectionProgram.version
+  ) {
+    return false; // Don't mark as outdated if there's a ready draft, just show draft available
+  }
+
+  // Mock: You can manually set a program as outdated by checking creation dates
+  // For demonstration, we'll add a flag here that could be set from backend
+  // In production, backend would send an "isOutdated" flag or "needsRegeneration" flag
+  
+  return false; // For now, no programs are marked as outdated automatically
 }
 
 const ProgramEditor: React.FC<ProgramEditorProps> = ({
@@ -146,10 +185,15 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
       .map((program) => {
         const detectionProgram = program.detectionProgram ?? null;
         const draftProgram = program.draftDetectionProgram ?? null;
+        
+        // Check if program is outdated
+        const isOutdated = checkIfProgramIsOutdated(detectionProgram, draftProgram);
+        
         const state = computeActiveConfigurationState(
           program,
           detectionProgram,
           draftProgram,
+          isOutdated,
         );
 
         return {
@@ -159,6 +203,7 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
           draftProgram,
           state,
           isExampleOnly: program.isExampleOnly ?? false,
+          isOutdated,
         };
       });
   }, [normalizedPrograms, selectedLanguage]);
@@ -373,6 +418,23 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
     return typeof rawLanguage === 'string' ? rawLanguage : undefined;
   }, [selectedProgramForTest]);
 
+  // Get modal title with version and type
+  const testModalTitle = useMemo(() => {
+    if (!selectedProgramForTest) {
+      return 'Test Program';
+    }
+
+    const isDraft = isDraftCardData(selectedProgramForTest);
+    const version = isDraft
+      ? selectedProgramForTest.draftProgram.version
+      : selectedProgramForTest.detectionProgram?.version;
+
+    if (isDraft) {
+      return `Test Draft Program${version ? ` (v${version})` : ''}`;
+    }
+    return `Test Active Version${version ? ` (v${version})` : ''}`;
+  }, [selectedProgramForTest]);
+
   return (
     <PMVStack alignItems="stretch" gap={6} width="full">
       {isAccordionViewEnabled && (
@@ -439,7 +501,19 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
         <PMDialog.Positioner>
           <PMDialog.Content maxW="800px">
             <PMDialog.Header>
-              <PMDialog.Title>Test draft</PMDialog.Title>
+              <PMHStack gap={3} alignItems="center">
+                <PMDialog.Title>{testModalTitle}</PMDialog.Title>
+                {selectedProgramForTest && isDraftCardData(selectedProgramForTest) && (
+                  <PMBadge colorPalette="gray" size="sm">
+                    Draft
+                  </PMBadge>
+                )}
+                {selectedProgramForTest && isActiveConfigurationCardData(selectedProgramForTest) && (
+                  <PMBadge colorPalette="green" size="sm">
+                    Active
+                  </PMBadge>
+                )}
+              </PMHStack>
               <PMDialog.CloseTrigger onClick={handleCloseTestModal} />
             </PMDialog.Header>
             <PMDialog.Body>
@@ -447,7 +521,7 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
                 <PMVStack alignItems="stretch" gap={3}>
                   <PMText>
                     Copy and run this command in your terminal to test the
-                    draft.
+                    {isDraftCardData(selectedProgramForTest) ? ' draft' : ' active version'}.
                   </PMText>
                   {testDraftCommand ? (
                     <CopiableTextField value={testDraftCommand} readOnly />

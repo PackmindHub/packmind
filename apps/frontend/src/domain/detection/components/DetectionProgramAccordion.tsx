@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import {
   PMAccordion,
-  PMBox,
   PMHStack,
   PMSpinner,
   PMText,
@@ -18,7 +17,7 @@ import { ActiveConfigurationSection } from './ActiveConfigurationSection';
 import { DraftsSection } from './DraftsSection';
 import { ActiveConfigurationCardData, ActiveConfigurationState } from './ActiveConfigurationCard';
 import { DraftCardData } from './DetectionDraftCard';
-import { DetectabilitySection } from './DetectabilitySection';
+import { DetectabilitySection } from './DetectionAccordions/DetectabilitySection';
 import { ProgramGenerationTimeline } from './ProgramGenerationTimeline';
 import { ProgramStateSummary } from './ProgramStateSummary';
 
@@ -210,7 +209,6 @@ export const DetectionProgramAccordion: React.FC<
           standardId={standardId}
           ruleId={ruleId}
           language={language}
-          defaultOpen={defaultAccordionValue.includes('detectability')}
         />
 
         {/* Program Accordion */}
