@@ -43,8 +43,8 @@ describe('PatchApplicationService', () => {
     jest.clearAllMocks();
   });
 
-  describe('applyPatch - UPDATE_STANDARD with addRule action', () => {
-    it('adds new rule to standard successfully', async () => {
+  describe('applyPatch - UPDATE_STANDARD with rulesToAdd', () => {
+    it('adds new rules to standard successfully', async () => {
       const standardId = createStandardId(uuidv4());
       const organizationId = createOrganizationId(uuidv4());
       const userId = 'user-123';
@@ -58,10 +58,10 @@ describe('PatchApplicationService', () => {
         patchType: KnowledgePatchType.UPDATE_STANDARD,
         proposedChanges: {
           standardId: standardId,
-          action: 'addRule',
-          targetRuleId: null,
-          content: 'New rule content',
-          rationale: 'Adding new rule',
+          changes: {
+            rulesToAdd: ['New rule content 1', 'New rule content 2'],
+          },
+          rationale: 'Adding new rules',
         },
       });
 
@@ -76,19 +76,27 @@ describe('PatchApplicationService', () => {
 
       expect(result).toBe(true);
       expect(standardsPort.getStandard).toHaveBeenCalledWith(standardId);
+      expect(standardsPort.addRuleToStandard).toHaveBeenCalledTimes(2);
       expect(standardsPort.addRuleToStandard).toHaveBeenCalledWith({
         standardSlug: 'test-standard',
-        ruleContent: 'New rule content',
+        ruleContent: 'New rule content 1',
+        organizationId,
+        userId,
+      });
+      expect(standardsPort.addRuleToStandard).toHaveBeenCalledWith({
+        standardSlug: 'test-standard',
+        ruleContent: 'New rule content 2',
         organizationId,
         userId,
       });
     });
   });
 
-  describe('applyPatch - UPDATE_STANDARD with updateRule action', () => {
-    it('updates existing rule in standard successfully', async () => {
+  describe('applyPatch - UPDATE_STANDARD with rulesToUpdate', () => {
+    it('updates existing rules in standard successfully', async () => {
       const standardId = createStandardId(uuidv4());
-      const ruleId = createRuleId(uuidv4());
+      const ruleId1 = createRuleId(uuidv4());
+      const ruleId2 = createRuleId(uuidv4());
       const organizationId = createOrganizationId(uuidv4());
       const userId = 'user-123';
 
@@ -101,10 +109,13 @@ describe('PatchApplicationService', () => {
         patchType: KnowledgePatchType.UPDATE_STANDARD,
         proposedChanges: {
           standardId: standardId,
-          action: 'updateRule',
-          targetRuleId: ruleId,
-          content: 'Updated rule content',
-          rationale: 'Updating existing rule',
+          changes: {
+            rulesToUpdate: [
+              { ruleId: ruleId1, content: 'Updated rule content 1' },
+              { ruleId: ruleId2, content: 'Updated rule content 2' },
+            ],
+          },
+          rationale: 'Updating existing rules',
         },
       });
 
@@ -121,42 +132,26 @@ describe('PatchApplicationService', () => {
 
       expect(result).toBe(true);
       expect(standardsPort.getStandard).toHaveBeenCalledWith(standardId);
+      expect(standardsPort.updateStandardRules).toHaveBeenCalledTimes(2);
       expect(standardsPort.updateStandardRules).toHaveBeenCalledWith({
         standardId,
-        ruleId,
-        newRuleContent: 'Updated rule content',
+        ruleId: ruleId1,
+        newRuleContent: 'Updated rule content 1',
+        organizationId,
+        userId,
+      });
+      expect(standardsPort.updateStandardRules).toHaveBeenCalledWith({
+        standardId,
+        ruleId: ruleId2,
+        newRuleContent: 'Updated rule content 2',
         organizationId,
         userId,
       });
     });
-
-    it('throws error when targetRuleId is missing for updateRule action', async () => {
-      const standardId = createStandardId(uuidv4());
-      const organizationId = createOrganizationId(uuidv4());
-
-      const standard = standardFactory({ id: standardId });
-
-      const patch = knowledgePatchFactory({
-        patchType: KnowledgePatchType.UPDATE_STANDARD,
-        proposedChanges: {
-          standardId: standardId,
-          action: 'updateRule',
-          targetRuleId: null,
-          content: 'Content',
-          rationale: 'Rationale',
-        },
-      });
-
-      standardsPort.getStandard.mockResolvedValue(standard);
-
-      await expect(
-        patchApplicationService.applyPatch(patch, organizationId, 'user-123'),
-      ).rejects.toThrow('targetRuleId is required for updateRule action');
-    });
   });
 
   describe('applyPatch - errors', () => {
-    it('throws error when standard not found', async () => {
+    it('throws error if standard not found', async () => {
       const standardId = createStandardId(uuidv4());
       const organizationId = createOrganizationId(uuidv4());
 
@@ -164,9 +159,9 @@ describe('PatchApplicationService', () => {
         patchType: KnowledgePatchType.UPDATE_STANDARD,
         proposedChanges: {
           standardId: standardId,
-          action: 'addRule',
-          targetRuleId: null,
-          content: 'Content',
+          changes: {
+            rulesToAdd: ['New rule'],
+          },
           rationale: 'Rationale',
         },
       });
@@ -178,7 +173,7 @@ describe('PatchApplicationService', () => {
       ).rejects.toThrow(`Standard ${standardId} not found`);
     });
 
-    it('throws error when standardsPort is not available', async () => {
+    it('throws error if standardsPort is not available', async () => {
       const serviceWithoutPort = new PatchApplicationService(
         null,
         null,
