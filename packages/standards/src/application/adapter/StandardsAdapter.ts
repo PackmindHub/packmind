@@ -56,6 +56,7 @@ import { ListStandardsBySpaceUsecase } from '../useCases/listStandardsBySpace/li
 import { ListStandardVersionsUsecase } from '../useCases/listStandardVersions/listStandardVersions.usecase';
 import { UpdateRuleExampleUsecase } from '../useCases/updateRuleExample/updateRuleExample.usecase';
 import { UpdateStandardUsecase } from '../useCases/updateStandard/updateStandard.usecase';
+import { UpdateStandardNameUsecase } from '../useCases/updateStandardName/updateStandardName.usecase';
 
 const origin = 'StandardsAdapter';
 
@@ -90,6 +91,7 @@ export class StandardsAdapter
   private _getRuleExamples!: GetRuleExamplesUsecase;
   private _updateRuleExample!: UpdateRuleExampleUsecase;
   private _deleteRuleExample!: DeleteRuleExampleUsecase;
+  private _updateStandardName!: UpdateStandardNameUsecase;
 
   constructor(
     private readonly services: StandardsServices,
@@ -258,6 +260,13 @@ export class StandardsAdapter
     this._deleteRuleExample = new DeleteRuleExampleUsecase(
       this.repositories,
       this.linterPort,
+    );
+
+    this._updateStandardName = new UpdateStandardNameUsecase(
+      this.services.getStandardService(),
+      this.services.getStandardVersionService(),
+      this.repositories.getRuleRepository(),
+      this.repositories.getRuleExampleRepository(),
     );
 
     this.logger.info(
@@ -468,15 +477,13 @@ export class StandardsAdapter
     });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async updateStandardName(params: {
     standardId: StandardId;
     newName: string;
     organizationId: OrganizationId;
     userId: string;
   }): Promise<StandardVersion> {
-    // TODO: Implement updateStandardName use case
-    throw new Error('updateStandardName not yet implemented');
+    return this._updateStandardName.updateStandardName(params);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
