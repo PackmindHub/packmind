@@ -1,4 +1,4 @@
-# Packmind OSS — From AI Chaos to Context Engineering
+# One Engineering Playbook. Synced Everywhere. For Every AI Coding Agent.
 
 ![License](https://img.shields.io/github/license/PackmindHub/packmind)
 ![Stars](https://img.shields.io/github/stars/PackmindHub/packmind)
@@ -7,15 +7,40 @@
 ![Works with Cursor](https://img.shields.io/badge/works%20with-Cursor-blueviolet?logo=cursor&logoColor=white)
 ![Works with Claude Code](https://img.shields.io/badge/works%20with-Claude%20Code-purple?logo=anthropic&logoColor=white)
 
-**Create, scale, and govern your engineering playbook for AI coding assistants (Copilot, Cursor, Claude Code, Codex, Kiro…).**
+**❗ The 2 big problems every AI-native engineer runs into**
 
-- **Create** — turn scattered rules from wikis, ADRs, code reviews and more into a living playbook.
-- **Scale** — auto-sync the same context to all repos & agents.
-- **Govern** — check adherence to your rules, visualize, and repair drift.
+### **1️⃣ “What do I even put in these AI instructions?”**
 
-# Documentation
+Every tool expects its own inputs:
 
-Available here: [https://packmindhub.github.io/packmind](https://packmindhub.github.io/packmind).
+- **Copilot** → `.github/copilot-instructions.md`, chat modes, reusable prompts  
+- **Claude** → `CLAUDE.md`, commands, skills  
+- **Cursor** → `.cursor/rules/*.mdc`  
+- **Kiro** → `.kiro/steering/*.md`  
+- *(with more formats appearing every month…)*
+
+But your team’s **actual standards aren’t stored anywhere**:
+
+- architecture rules → buried in Slack or Notion  
+- naming conventions → stuck in your head  
+- patterns → hiding in PR comments  
+- best practices → scattered across repos  
+
+👉 **Packmind helps you turn all of this into a real engineering playbook**  
+(standards, rules, patterns, recipes) so **AI agents finally code *your way*.**
+
+---
+
+### **2️⃣ “Why am I copy-pasting this across every repo and every agent?”**
+
+Every repo.  
+Every assistant.  
+Different files, different folders, different formats.
+
+Keeping everything in sync is impossible.
+
+👉 **Packmind centralizes your playbook once — and distributes it everywhere**,  
+generating the exact instruction files each AI tool needs, optimized for context.
 
 # Get started
 
@@ -70,6 +95,10 @@ packmind-cli pull <package-slug>
 Your standards are now available in the `.packmind` directory and your AI agent configuration files.
 
 For detailed CLI setup and usage, see the [CLI documentation](https://packmindhub.github.io/packmind/cli).
+
+# Documentation
+
+Available here: [https://packmindhub.github.io/packmind](https://packmindhub.github.io/packmind).
 
 # :compass: Key Links
 
