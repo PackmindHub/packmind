@@ -1,7 +1,9 @@
 import { createLLMService } from './createLLMService';
 import { OpenAIService } from '../infra/services/OpenAIService';
 import { AnthropicService } from '../infra/services/AnthropicService';
+import { GeminiService } from '../infra/services/GeminiService';
 import { OpenAIAPICompatibleService } from '../infra/services/OpenAIAPICompatibleService';
+import { AzureOpenAIService } from '../infra/services/AzureOpenAIService';
 import { LLMProvider, LLMServiceConfig } from '../types/LLMServiceConfig';
 
 describe('createLLMService', () => {
@@ -45,6 +47,24 @@ describe('createLLMService', () => {
     });
   });
 
+  describe('when provider is gemini', () => {
+    it('creates GeminiService instance', () => {
+      const service = createLLMService({ provider: LLMProvider.GEMINI });
+
+      expect(service).toBeInstanceOf(GeminiService);
+    });
+
+    it('creates GeminiService with custom models', () => {
+      const service = createLLMService({
+        provider: LLMProvider.GEMINI,
+        model: 'gemini-2.0-flash',
+        fastestModel: 'gemini-1.5-flash',
+      });
+
+      expect(service).toBeInstanceOf(GeminiService);
+    });
+  });
+
   describe('when provider is openai-compatible', () => {
     it('creates OpenAIAPICompatibleService instance', () => {
       const service = createLLMService({
@@ -56,6 +76,30 @@ describe('createLLMService', () => {
       });
 
       expect(service).toBeInstanceOf(OpenAIAPICompatibleService);
+    });
+  });
+
+  describe('when provider is azure-openai', () => {
+    it('creates AzureOpenAIService instance', () => {
+      const service = createLLMService({
+        provider: LLMProvider.AZURE_OPENAI,
+        model: 'gpt-4-deployment',
+        fastestModel: 'gpt-35-turbo-deployment',
+      });
+
+      expect(service).toBeInstanceOf(AzureOpenAIService);
+    });
+
+    it('creates AzureOpenAIService with explicit endpoint and API key', () => {
+      const service = createLLMService({
+        provider: LLMProvider.AZURE_OPENAI,
+        model: 'gpt-4-deployment',
+        fastestModel: 'gpt-35-turbo-deployment',
+        endpoint: 'https://my-resource.openai.azure.com',
+        apiKey: 'my-api-key',
+      });
+
+      expect(service).toBeInstanceOf(AzureOpenAIService);
     });
   });
 

@@ -99,8 +99,10 @@ describe('OpenAIAPICompatibleService', () => {
     });
 
     describe('when API key is empty', () => {
-      it('does not create client', async () => {
-        const serviceWithEmptyKey = new OpenAIAPICompatibleService({
+      let serviceWithEmptyKey: OpenAIAPICompatibleService;
+
+      beforeEach(() => {
+        serviceWithEmptyKey = new OpenAIAPICompatibleService({
           provider: LLMProvider.OPENAI_COMPATIBLE,
           llmEndpoint: testBaseUrl,
           llmApiKey: '',
@@ -112,10 +114,17 @@ describe('OpenAIAPICompatibleService', () => {
           choices: [{ message: { content: 'test' } }],
           usage: { total_tokens: 10 },
         });
+      });
 
+      it('returns failure result', async () => {
         const result = await serviceWithEmptyKey.executePrompt('test');
 
         expect(result.success).toBe(false);
+      });
+
+      it('returns configuration error message', async () => {
+        const result = await serviceWithEmptyKey.executePrompt('test');
+
         expect(result.error).toBe('OpenAIAPICompatibleService not configured');
       });
     });
@@ -138,25 +147,227 @@ describe('OpenAIAPICompatibleService', () => {
       },
     };
 
-    it('executes prompt successfully and returns string result', async () => {
-      mockOpenAIInstance.chat.completions.create.mockResolvedValue(
-        mockResponse,
-      );
+    describe('when executing prompt successfully', () => {
+      beforeEach(() => {
+        mockOpenAIInstance.chat.completions.create.mockResolvedValue(
+          mockResponse,
+        );
+      });
 
-      const result = await service.executePrompt(mockPrompt);
+      it('returns success status', async () => {
+        const result = await service.executePrompt(mockPrompt);
 
-      expect(result.success).toBe(true);
-      expect(result.data).toBe('Test AI response');
-      expect(result.attempts).toBe(1);
-      expect(result.model).toBe(testDefaultModel);
-      expect(result.error).toBeUndefined();
-      expect(result.tokensUsed).toEqual({
-        input: 10,
-        output: 20,
+        expect(result.success).toBe(true);
+      });
+
+      it('returns expected data content', async () => {
+        const result = await service.executePrompt(mockPrompt);
+
+        expect(result.data).toBe('Test AI response');
+      });
+
+      it('tracks number of attempts', async () => {
+        const result = await service.executePrompt(mockPrompt);
+
+        expect(result.attempts).toBe(1);
+      });
+
+      it('returns used model name', async () => {
+        const result = await service.executePrompt(mockPrompt);
+
+        expect(result.model).toBe(testDefaultModel);
+      });
+
+      it('does not include error message', async () => {
+        const result = await service.executePrompt(mockPrompt);
+
+        expect(result.error).toBeUndefined();
+      });
+
+      it('includes token usage information', async () => {
+        const result = await service.executePrompt(mockPrompt);
+
+        expect(result.tokensUsed).toEqual({
+          input: 10,
+          output: 20,
+        });
       });
     });
 
-    it('executes prompt successfully and returns parsed JSON object', async () => {
+    describe('when response contains thinking tags', () => {
+      const responseWithThinking = {
+        choices: [
+          {
+            message: {
+              content:
+                '<think>First, let me analyze this... The answer should be clear.</think>The final answer is 42.',
+            },
+          },
+        ],
+        usage: {
+          prompt_tokens: 10,
+          completion_tokens: 30,
+          total_tokens: 40,
+        },
+      };
+
+      beforeEach(() => {
+        mockOpenAIInstance.chat.completions.create.mockResolvedValue(
+          responseWithThinking,
+        );
+      });
+
+      it('returns success status', async () => {
+        const result = await service.executePrompt(mockPrompt);
+
+        expect(result.success).toBe(true);
+      });
+
+      it('returns content without thinking tags', async () => {
+        const result = await service.executePrompt(mockPrompt);
+
+        expect(result.data).toBe('The final answer is 42.');
+      });
+
+      it('does not include opening thinking tag', async () => {
+        const result = await service.executePrompt(mockPrompt);
+
+        expect(result.data).not.toContain('<think>');
+      });
+
+      it('does not include closing thinking tag', async () => {
+        const result = await service.executePrompt(mockPrompt);
+
+        expect(result.data).not.toContain('</think>');
+      });
+    });
+
+    describe('when response contains multiple thinking tag blocks', () => {
+      const responseWithMultipleThinking = {
+        choices: [
+          {
+            message: {
+              content:
+                '<think>Reasoning part 1...</think>Answer part 1. <think>Reasoning part 2...</think>Answer part 2.',
+            },
+          },
+        ],
+        usage: {
+          prompt_tokens: 10,
+          completion_tokens: 40,
+          total_tokens: 50,
+        },
+      };
+
+      beforeEach(() => {
+        mockOpenAIInstance.chat.completions.create.mockResolvedValue(
+          responseWithMultipleThinking,
+        );
+      });
+
+      it('returns success status', async () => {
+        const result = await service.executePrompt(mockPrompt);
+
+        expect(result.success).toBe(true);
+      });
+
+      it('removes all thinking tag blocks', async () => {
+        const result = await service.executePrompt(mockPrompt);
+
+        expect(result.data).toBe('Answer part 1. Answer part 2.');
+      });
+
+      it('does not include thinking tags', async () => {
+        const result = await service.executePrompt(mockPrompt);
+
+        expect(result.data).not.toContain('<think>');
+      });
+    });
+
+    describe('when response contains multiline thinking tags', () => {
+      const responseWithMultilineThinking = {
+        choices: [
+          {
+            message: {
+              content: `<think>
+Let me think about this step by step:
+1. First consideration
+2. Second consideration
+3. Final reasoning
+</think>
+
+Here is the final answer.`,
+            },
+          },
+        ],
+        usage: {
+          prompt_tokens: 10,
+          completion_tokens: 50,
+          total_tokens: 60,
+        },
+      };
+
+      beforeEach(() => {
+        mockOpenAIInstance.chat.completions.create.mockResolvedValue(
+          responseWithMultilineThinking,
+        );
+      });
+
+      it('returns success status', async () => {
+        const result = await service.executePrompt(mockPrompt);
+
+        expect(result.success).toBe(true);
+      });
+
+      it('returns only final answer', async () => {
+        const result = await service.executePrompt(mockPrompt);
+
+        expect(result.data).toBe('Here is the final answer.');
+      });
+
+      it('does not include reasoning content', async () => {
+        const result = await service.executePrompt(mockPrompt);
+
+        expect(result.data).not.toContain('step by step');
+      });
+    });
+
+    describe('when response has no thinking tags', () => {
+      const normalResponse = {
+        choices: [
+          {
+            message: {
+              content: 'Normal response without any thinking tags.',
+            },
+          },
+        ],
+        usage: {
+          prompt_tokens: 10,
+          completion_tokens: 15,
+          total_tokens: 25,
+        },
+      };
+
+      beforeEach(() => {
+        mockOpenAIInstance.chat.completions.create.mockResolvedValue(
+          normalResponse,
+        );
+      });
+
+      it('returns success status', async () => {
+        const result = await service.executePrompt(mockPrompt);
+
+        expect(result.success).toBe(true);
+      });
+
+      it('returns unmodified content', async () => {
+        const result = await service.executePrompt(mockPrompt);
+
+        expect(result.data).toBe('Normal response without any thinking tags.');
+      });
+    });
+
+    describe('when response is JSON', () => {
       const jsonResponse = {
         choices: [
           {
@@ -169,111 +380,229 @@ describe('OpenAIAPICompatibleService', () => {
         usage: { prompt_tokens: 10, completion_tokens: 20, total_tokens: 30 },
       };
 
-      mockOpenAIInstance.chat.completions.create.mockResolvedValue(
-        jsonResponse,
-      );
-
       interface TestResponse {
         summary: string;
         keywords: string[];
       }
 
-      const result = await service.executePrompt<TestResponse>(mockPrompt);
-
-      expect(result.success).toBe(true);
-      expect(result.data).toEqual({
-        summary: 'Test summary',
-        keywords: ['test', 'ai'],
-      });
-      expect(result.attempts).toBe(1);
-    });
-
-    it('uses fast model when performance option is set to FAST', async () => {
-      mockOpenAIInstance.chat.completions.create.mockResolvedValue(
-        mockResponse,
-      );
-
-      const result = await service.executePrompt(mockPrompt, {
-        performance: LLMModelPerformance.FAST,
+      beforeEach(() => {
+        mockOpenAIInstance.chat.completions.create.mockResolvedValue(
+          jsonResponse,
+        );
       });
 
-      expect(result.success).toBe(true);
-      expect(result.model).toBe(testFastModel);
-      expect(mockOpenAIInstance.chat.completions.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          model: testFastModel,
-        }),
-      );
+      it('returns success status', async () => {
+        const result = await service.executePrompt<TestResponse>(mockPrompt);
+
+        expect(result.success).toBe(true);
+      });
+
+      it('parses JSON content correctly', async () => {
+        const result = await service.executePrompt<TestResponse>(mockPrompt);
+
+        expect(result.data).toEqual({
+          summary: 'Test summary',
+          keywords: ['test', 'ai'],
+        });
+      });
+
+      it('tracks number of attempts', async () => {
+        const result = await service.executePrompt<TestResponse>(mockPrompt);
+
+        expect(result.attempts).toBe(1);
+      });
     });
 
-    it('handles invalid response from API', async () => {
+    describe('when performance option is set to FAST', () => {
+      beforeEach(() => {
+        mockOpenAIInstance.chat.completions.create.mockResolvedValue(
+          mockResponse,
+        );
+      });
+
+      it('returns success status', async () => {
+        const result = await service.executePrompt(mockPrompt, {
+          performance: LLMModelPerformance.FAST,
+        });
+
+        expect(result.success).toBe(true);
+      });
+
+      it('uses fast model name', async () => {
+        const result = await service.executePrompt(mockPrompt, {
+          performance: LLMModelPerformance.FAST,
+        });
+
+        expect(result.model).toBe(testFastModel);
+      });
+
+      it('calls API with fast model', async () => {
+        await service.executePrompt(mockPrompt, {
+          performance: LLMModelPerformance.FAST,
+        });
+
+        expect(mockOpenAIInstance.chat.completions.create).toHaveBeenCalledWith(
+          expect.objectContaining({
+            model: testFastModel,
+          }),
+        );
+      });
+    });
+
+    describe('when API returns invalid response', () => {
       const invalidResponse = {
         choices: [],
         usage: { total_tokens: 0 },
       };
 
-      mockOpenAIInstance.chat.completions.create.mockResolvedValue(
-        invalidResponse,
-      );
-
-      const result = await service.executePrompt(mockPrompt);
-
-      expect(result.success).toBe(false);
-      expect(result.data).toBeNull();
-      expect(result.error).toContain(
-        'Invalid response from OpenAIAPICompatibleService',
-      );
-    });
-
-    it('retries on rate limit errors immediately', async () => {
-      const rateLimitError = new Error('Rate limit exceeded (429)');
-
-      mockOpenAIInstance.chat.completions.create
-        .mockRejectedValueOnce(rateLimitError)
-        .mockRejectedValueOnce(rateLimitError)
-        .mockResolvedValue(mockResponse);
-
-      const result = await service.executePrompt(mockPrompt);
-
-      expect(result.success).toBe(true);
-      expect(result.data).toBe('Test AI response');
-      expect(result.attempts).toBe(3);
-      expect(mockOpenAIInstance.chat.completions.create).toHaveBeenCalledTimes(
-        3,
-      );
-    });
-
-    it('stops retrying on authentication errors', async () => {
-      const authError = new Error('Unauthorized (401)');
-      mockOpenAIInstance.chat.completions.create.mockRejectedValue(authError);
-
-      const result = await service.executePrompt(mockPrompt);
-
-      expect(result.success).toBe(false);
-      expect(result.data).toBeNull();
-      expect(result.error).toContain('failed after 5 attempts');
-      expect(mockOpenAIInstance.chat.completions.create).toHaveBeenCalledTimes(
-        1,
-      );
-    });
-
-    it('fails after maximum retry attempts', async () => {
-      const networkError = new Error('Network timeout');
-      mockOpenAIInstance.chat.completions.create.mockRejectedValue(
-        networkError,
-      );
-
-      const result = await service.executePrompt(mockPrompt, {
-        retryAttempts: 3,
+      beforeEach(() => {
+        mockOpenAIInstance.chat.completions.create.mockResolvedValue(
+          invalidResponse,
+        );
       });
 
-      expect(result.success).toBe(false);
-      expect(result.data).toBeNull();
-      expect(result.error).toContain('failed after 3 attempts');
-      expect(result.attempts).toBe(3);
-      expect(mockOpenAIInstance.chat.completions.create).toHaveBeenCalledTimes(
-        3,
-      );
+      it('returns failure status', async () => {
+        const result = await service.executePrompt(mockPrompt);
+
+        expect(result.success).toBe(false);
+      });
+
+      it('returns null data', async () => {
+        const result = await service.executePrompt(mockPrompt);
+
+        expect(result.data).toBeNull();
+      });
+
+      it('includes invalid response error message', async () => {
+        const result = await service.executePrompt(mockPrompt);
+
+        expect(result.error).toContain(
+          'Invalid response from OpenAIAPICompatibleService',
+        );
+      });
+    });
+
+    describe('when rate limit errors occur', () => {
+      const rateLimitError = new Error('Rate limit exceeded (429)');
+
+      beforeEach(() => {
+        mockOpenAIInstance.chat.completions.create
+          .mockRejectedValueOnce(rateLimitError)
+          .mockRejectedValueOnce(rateLimitError)
+          .mockResolvedValue(mockResponse);
+      });
+
+      it('returns success after retries', async () => {
+        const result = await service.executePrompt(mockPrompt);
+
+        expect(result.success).toBe(true);
+      });
+
+      it('returns expected data', async () => {
+        const result = await service.executePrompt(mockPrompt);
+
+        expect(result.data).toBe('Test AI response');
+      });
+
+      it('tracks all retry attempts', async () => {
+        const result = await service.executePrompt(mockPrompt);
+
+        expect(result.attempts).toBe(3);
+      });
+
+      it('calls API multiple times', async () => {
+        await service.executePrompt(mockPrompt);
+
+        expect(
+          mockOpenAIInstance.chat.completions.create,
+        ).toHaveBeenCalledTimes(3);
+      });
+    });
+
+    describe('when authentication error occurs', () => {
+      const authError = new Error('Unauthorized (401)');
+
+      beforeEach(() => {
+        mockOpenAIInstance.chat.completions.create.mockRejectedValue(authError);
+      });
+
+      it('returns failure status', async () => {
+        const result = await service.executePrompt(mockPrompt);
+
+        expect(result.success).toBe(false);
+      });
+
+      it('returns null data', async () => {
+        const result = await service.executePrompt(mockPrompt);
+
+        expect(result.data).toBeNull();
+      });
+
+      it('includes failure message', async () => {
+        const result = await service.executePrompt(mockPrompt);
+
+        expect(result.error).toContain('failed after 5 attempts');
+      });
+
+      it('does not retry', async () => {
+        await service.executePrompt(mockPrompt);
+
+        expect(
+          mockOpenAIInstance.chat.completions.create,
+        ).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('when maximum retry attempts reached', () => {
+      const networkError = new Error('Network timeout');
+
+      beforeEach(() => {
+        mockOpenAIInstance.chat.completions.create.mockRejectedValue(
+          networkError,
+        );
+      });
+
+      it('returns failure status', async () => {
+        const result = await service.executePrompt(mockPrompt, {
+          retryAttempts: 3,
+        });
+
+        expect(result.success).toBe(false);
+      });
+
+      it('returns null data', async () => {
+        const result = await service.executePrompt(mockPrompt, {
+          retryAttempts: 3,
+        });
+
+        expect(result.data).toBeNull();
+      });
+
+      it('includes failure message with attempt count', async () => {
+        const result = await service.executePrompt(mockPrompt, {
+          retryAttempts: 3,
+        });
+
+        expect(result.error).toContain('failed after 3 attempts');
+      });
+
+      it('tracks all attempts', async () => {
+        const result = await service.executePrompt(mockPrompt, {
+          retryAttempts: 3,
+        });
+
+        expect(result.attempts).toBe(3);
+      });
+
+      it('calls API for each retry', async () => {
+        await service.executePrompt(mockPrompt, {
+          retryAttempts: 3,
+        });
+
+        expect(
+          mockOpenAIInstance.chat.completions.create,
+        ).toHaveBeenCalledTimes(3);
+      });
     });
   });
 
@@ -299,25 +628,92 @@ describe('OpenAIAPICompatibleService', () => {
       },
     };
 
-    it('executes prompt with history successfully', async () => {
-      mockOpenAIInstance.chat.completions.create.mockResolvedValue(
-        mockResponse,
-      );
+    describe('when executing with conversation history', () => {
+      beforeEach(() => {
+        mockOpenAIInstance.chat.completions.create.mockResolvedValue(
+          mockResponse,
+        );
+      });
 
-      const result = await service.executePromptWithHistory(mockConversation);
+      it('returns success status', async () => {
+        const result = await service.executePromptWithHistory(mockConversation);
 
-      expect(result.success).toBe(true);
-      expect(result.data).toBe('I am doing well, thank you!');
-      expect(result.attempts).toBe(1);
-      expect(mockOpenAIInstance.chat.completions.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          messages: [
-            { role: 'user', content: 'Hello' },
-            { role: 'assistant', content: 'Hi there!' },
-            { role: 'user', content: 'How are you?' },
-          ],
-        }),
-      );
+        expect(result.success).toBe(true);
+      });
+
+      it('returns expected response', async () => {
+        const result = await service.executePromptWithHistory(mockConversation);
+
+        expect(result.data).toBe('I am doing well, thank you!');
+      });
+
+      it('tracks single attempt', async () => {
+        const result = await service.executePromptWithHistory(mockConversation);
+
+        expect(result.attempts).toBe(1);
+      });
+
+      it('formats conversation messages correctly', async () => {
+        await service.executePromptWithHistory(mockConversation);
+
+        expect(mockOpenAIInstance.chat.completions.create).toHaveBeenCalledWith(
+          expect.objectContaining({
+            messages: [
+              { role: 'user', content: 'Hello' },
+              { role: 'assistant', content: 'Hi there!' },
+              { role: 'user', content: 'How are you?' },
+            ],
+          }),
+        );
+      });
+    });
+
+    describe('when history response contains thinking tags', () => {
+      const responseWithThinking = {
+        choices: [
+          {
+            message: {
+              content:
+                '<think>Let me consider the conversation context...</think>I am doing well, thank you!',
+            },
+          },
+        ],
+        usage: {
+          prompt_tokens: 20,
+          completion_tokens: 25,
+          total_tokens: 45,
+        },
+      };
+
+      beforeEach(() => {
+        mockOpenAIInstance.chat.completions.create.mockResolvedValue(
+          responseWithThinking,
+        );
+      });
+
+      it('returns success status', async () => {
+        const result = await service.executePromptWithHistory(mockConversation);
+
+        expect(result.success).toBe(true);
+      });
+
+      it('returns content without thinking tags', async () => {
+        const result = await service.executePromptWithHistory(mockConversation);
+
+        expect(result.data).toBe('I am doing well, thank you!');
+      });
+
+      it('does not include opening thinking tag', async () => {
+        const result = await service.executePromptWithHistory(mockConversation);
+
+        expect(result.data).not.toContain('<think>');
+      });
+
+      it('does not include closing thinking tag', async () => {
+        const result = await service.executePromptWithHistory(mockConversation);
+
+        expect(result.data).not.toContain('</think>');
+      });
     });
 
     it('maps SYSTEM role to system in messages', async () => {
@@ -345,17 +741,26 @@ describe('OpenAIAPICompatibleService', () => {
       );
     });
 
-    it('handles errors with retry logic', async () => {
+    describe('when errors occur with retry', () => {
       const rateLimitError = new Error('Rate limit exceeded (429)');
 
-      mockOpenAIInstance.chat.completions.create
-        .mockRejectedValueOnce(rateLimitError)
-        .mockResolvedValue(mockResponse);
+      beforeEach(() => {
+        mockOpenAIInstance.chat.completions.create
+          .mockRejectedValueOnce(rateLimitError)
+          .mockResolvedValue(mockResponse);
+      });
 
-      const result = await service.executePromptWithHistory(mockConversation);
+      it('returns success after retry', async () => {
+        const result = await service.executePromptWithHistory(mockConversation);
 
-      expect(result.success).toBe(true);
-      expect(result.attempts).toBe(2);
+        expect(result.success).toBe(true);
+      });
+
+      it('tracks retry attempts', async () => {
+        const result = await service.executePromptWithHistory(mockConversation);
+
+        expect(result.attempts).toBe(2);
+      });
     });
   });
 

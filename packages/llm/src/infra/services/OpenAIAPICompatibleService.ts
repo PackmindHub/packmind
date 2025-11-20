@@ -2,6 +2,11 @@ import OpenAI from 'openai';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { BaseOpenAIService } from './BaseOpenAIService';
 import { OpenAICompatibleServiceConfig } from '../../types/LLMServiceConfig';
+import {
+  AIPromptOptions,
+  AIPromptResult,
+  PromptConversation,
+} from '@packmind/types';
 
 const origin = 'OpenAIAPICompatibleService';
 
@@ -43,6 +48,16 @@ export class OpenAIAPICompatibleService extends BaseOpenAIService {
   }
 
   /**
+   * Remove thinking tags from LLM response content.
+   * Some reasoning models (e.g., DeepSeek-R1, QwQ) output their reasoning
+   * process wrapped in <think>...</think> tags. This method removes those tags
+   * and their content from the response.
+   */
+  private removeThinkingTags(content: string): string {
+    return content.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+  }
+
+  /**
    * Check if the service is properly configured and ready to use
    */
   async isConfigured(): Promise<boolean> {
@@ -79,5 +94,48 @@ export class OpenAIAPICompatibleService extends BaseOpenAIService {
       });
       throw error;
     }
+  }
+
+  /**
+   * Execute a prompt with thinking tag removal
+   */
+  async executePrompt<T = string>(
+    prompt: string,
+    options: AIPromptOptions = {},
+  ): Promise<AIPromptResult<T>> {
+    const result = await super.executePrompt<T>(prompt, options);
+
+    if (result.success && result.data && typeof result.data === 'string') {
+      const cleanedData = this.removeThinkingTags(result.data);
+      return {
+        ...result,
+        data: cleanedData as T,
+      };
+    }
+
+    return result;
+  }
+
+  /**
+   * Execute a prompt with conversation history and thinking tag removal
+   */
+  async executePromptWithHistory<T = string>(
+    conversationHistory: PromptConversation[],
+    options: AIPromptOptions = {},
+  ): Promise<AIPromptResult<T>> {
+    const result = await super.executePromptWithHistory<T>(
+      conversationHistory,
+      options,
+    );
+
+    if (result.success && result.data && typeof result.data === 'string') {
+      const cleanedData = this.removeThinkingTags(result.data);
+      return {
+        ...result,
+        data: cleanedData as T,
+      };
+    }
+
+    return result;
   }
 }

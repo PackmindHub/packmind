@@ -2,7 +2,9 @@ import { AIService } from '@packmind/types';
 import { LLMServiceConfig, LLMProvider } from '../types/LLMServiceConfig';
 import { OpenAIService } from '../infra/services/OpenAIService';
 import { AnthropicService } from '../infra/services/AnthropicService';
+import { GeminiService } from '../infra/services/GeminiService';
 import { OpenAIAPICompatibleService } from '../infra/services/OpenAIAPICompatibleService';
+import { AzureOpenAIService } from '../infra/services/AzureOpenAIService';
 
 /**
  * Factory function to create an LLM service based on configuration.
@@ -41,8 +43,12 @@ export function createLLMService(config: LLMServiceConfig): AIService {
       return new OpenAIService(config);
     case LLMProvider.ANTHROPIC:
       return new AnthropicService(config);
+    case LLMProvider.GEMINI:
+      return new GeminiService(config);
     case LLMProvider.OPENAI_COMPATIBLE:
       return new OpenAIAPICompatibleService(config);
+    case LLMProvider.AZURE_OPENAI:
+      return new AzureOpenAIService(config);
     default: {
       // TypeScript exhaustiveness check
       const _exhaustive: never = config;
