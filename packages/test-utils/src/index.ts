@@ -3,3 +3,4 @@ export * from './factories/factory';
 export * from './factories/randomIn';
 export * from './logger/stubLogger';
 export * from './repository';
+export * from './createMockInstance';
