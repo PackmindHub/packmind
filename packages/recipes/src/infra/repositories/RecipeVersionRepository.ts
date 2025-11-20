@@ -166,9 +166,12 @@ export class RecipeVersionRepository
     });
 
     try {
+      // Convert number array to pgvector format string
+      const embeddingString = `[${embedding.join(',')}]`;
+
       const result = await this.repository.update(
         { id: recipeVersionId },
-        { embedding },
+        { embedding: embeddingString },
       );
 
       if (result.affected === 0) {
