@@ -60,6 +60,8 @@ import { UpdateStandardNameUsecase } from '../useCases/updateStandardName/update
 import { UpdateStandardDescriptionUsecase } from '../useCases/updateStandardDescription/updateStandardDescription.usecase';
 import { DeleteStandardRuleUsecase } from '../useCases/deleteStandardRule/deleteStandardRule.usecase';
 import { AddStandardExampleUsecase } from '../useCases/addStandardExample/addStandardExample.usecase';
+import { UpdateStandardExampleUsecase } from '../useCases/updateStandardExample/updateStandardExample.usecase';
+import { DeleteStandardExampleUsecase } from '../useCases/deleteStandardExample/deleteStandardExample.usecase';
 
 const origin = 'StandardsAdapter';
 
@@ -98,6 +100,8 @@ export class StandardsAdapter
   private _updateStandardDescription!: UpdateStandardDescriptionUsecase;
   private _deleteStandardRule!: DeleteStandardRuleUsecase;
   private _addStandardExample!: AddStandardExampleUsecase;
+  private _updateStandardExample!: UpdateStandardExampleUsecase;
+  private _deleteStandardExample!: DeleteStandardExampleUsecase;
 
   constructor(
     private readonly services: StandardsServices,
@@ -294,6 +298,14 @@ export class StandardsAdapter
       this.repositories.getRuleRepository(),
       this.repositories.getRuleExampleRepository(),
       this.linterPort,
+    );
+
+    this._updateStandardExample = new UpdateStandardExampleUsecase(
+      this._updateRuleExample,
+    );
+
+    this._deleteStandardExample = new DeleteStandardExampleUsecase(
+      this._deleteRuleExample,
     );
 
     this.logger.info(
@@ -543,7 +555,6 @@ export class StandardsAdapter
     return this._addStandardExample.addStandardExample(params);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async updateStandardExample(params: {
     exampleId: string;
     lang: string;
@@ -552,18 +563,15 @@ export class StandardsAdapter
     organizationId: OrganizationId;
     userId: string;
   }): Promise<RuleExample> {
-    // TODO: Implement updateStandardExample use case
-    throw new Error('updateStandardExample not yet implemented');
+    return this._updateStandardExample.updateStandardExample(params);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async deleteStandardExample(params: {
     exampleId: string;
     organizationId: OrganizationId;
     userId: string;
   }): Promise<void> {
-    // TODO: Implement deleteStandardExample use case
-    throw new Error('deleteStandardExample not yet implemented');
+    return this._deleteStandardExample.deleteStandardExample(params);
   }
 
   async getStandardById(command: {
