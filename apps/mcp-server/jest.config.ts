@@ -1,19 +1,53 @@
-import { pathsToModuleNameMapper } from 'ts-jest';
-
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @nx/enforce-module-boundaries
 const { compilerOptions } = require('../../tsconfig.base.effective.json');
+
+// Helper to convert TypeScript paths to Jest moduleNameMapper format
+function pathsToModuleNameMapper(
+  paths: Record<string, string[]>,
+  prefix: string,
+) {
+  const moduleNameMapper: Record<string, string> = {};
+  for (const [key, [value]] of Object.entries(paths)) {
+    // Convert TS path pattern to Jest regex pattern
+    const regexKey = '^' + key.replace(/\*/g, '(.*)') + '$';
+    const mappedValue = prefix + value.replace(/\*/g, '$1');
+    moduleNameMapper[regexKey] = mappedValue;
+  }
+  return moduleNameMapper;
+}
 
 export default {
   displayName: 'mcp-server',
   preset: '../../jest.preset.ts',
   testEnvironment: 'node',
   transform: {
-    '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+    '^.+\\.[tj]s$': [
+      '@swc/jest',
+      {
+        jsc: {
+          parser: {
+            syntax: 'typescript',
+            tsx: false,
+            decorators: true, // Enable decorators for NestJS
+          },
+          target: 'es2022',
+          transform: {
+            legacyDecorator: true, // Use legacy decorator implementation
+            decoratorMetadata: true, // Enable decorator metadata (needed for NestJS DI)
+            useDefineForClassFields: false,
+          },
+        },
+        module: {
+          type: 'commonjs',
+        },
+      },
+    ],
   },
   transformIgnorePatterns: ['/node_modules/(?!slug).+\\.js$'],
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/apps/mcp-server',
-  moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, {
-    prefix: '<rootDir>/../../',
-  }),
+  moduleNameMapper: pathsToModuleNameMapper(
+    compilerOptions.paths,
+    '<rootDir>/../../',
+  ),
 };
