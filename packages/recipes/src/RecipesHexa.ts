@@ -94,6 +94,7 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
       const accountsPort =
         registry.getAdapter<IAccountsPort>(IAccountsPortName);
       const spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
+      const llmPort = registry.getAdapter<ILlmPort>(ILlmPortName);
       const eventTrackingPort = registry.getAdapter<IEventTrackingPort>(
         IEventTrackingPortName,
       );

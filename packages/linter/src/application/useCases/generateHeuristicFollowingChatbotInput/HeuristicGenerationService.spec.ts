@@ -1,7 +1,7 @@
 import { HeuristicGenerationService } from './HeuristicGenerationService';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
-import { AIService } from '@packmind/node-utils';
+import { AIService } from '@packmind/types';
 import { Rule, RuleExample, ProgrammingLanguage } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { createRuleId, createRuleExampleId } from '@packmind/types';

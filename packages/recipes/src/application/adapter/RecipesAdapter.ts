@@ -58,6 +58,7 @@ export class RecipesAdapter
   private deploymentPort: IDeploymentPort | null = null;
   private accountsPort: IAccountsPort | null = null;
   private spacesPort: ISpacesPort | null = null;
+  private llmPort: ILlmPort | null = null;
   private eventTrackingPort: IEventTrackingPort | null = null;
   private llmPort: ILlmPort | null = null;
 

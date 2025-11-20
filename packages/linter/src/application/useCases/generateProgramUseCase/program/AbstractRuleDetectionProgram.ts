@@ -26,14 +26,16 @@ import AbstractGenerationStrategy from './strategy/AbstractGenerationStrategy';
 import { parseCodeOrJsonFromAIAnswer } from './ProgramOutputUtils';
 import { PackmindLogger } from '@packmind/logger';
 import {
+  getErrorMessage,
+} from '@packmind/node-utils';
+import {
   AI_RESPONSE_FORMAT,
   AIService,
   PromptConversation,
   PromptConversationRole,
   TokensUsed,
-  getErrorMessage,
   AIPromptOptions,
-} from '@packmind/node-utils';
+} from '@packmind/types';
 import { ILinterAstPort } from '@packmind/types';
 import {
   PackmindTimeoutError,

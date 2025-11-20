@@ -6,7 +6,7 @@ import {
   createRuleId,
   Rule,
 } from '@packmind/types';
-import { AIService } from '@packmind/node-utils';
+import { AIService } from '@packmind/llm';
 import DetectionToolingLogWriter from '../log/DetectionToolingLogWriter';
 import { stubLogger } from '@packmind/test-utils';
 import { PackmindLogger } from '@packmind/logger';

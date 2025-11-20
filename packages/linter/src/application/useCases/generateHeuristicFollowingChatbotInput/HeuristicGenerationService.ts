@@ -5,7 +5,7 @@ import {
   LLMModelPerformance,
   OpenAIServiceTier,
   PromptConversationRole,
-} from '@packmind/node-utils';
+} from '@packmind/types';
 import { Rule, RuleExample } from '@packmind/types';
 import AIRequestEmitter from '../../../domain/entities/AIRequestEmitter';
 import { generate_heuristic_from_answer } from './prompts/generate_heuristic_from_answer';

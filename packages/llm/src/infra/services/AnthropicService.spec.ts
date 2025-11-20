@@ -123,36 +123,38 @@ describe('AnthropicService', () => {
       });
     });
 
-    it('handles missing API key gracefully with failure status', async () => {
-      MockedConfiguration.getConfig.mockResolvedValue(null);
+    describe('when API key is missing', () => {
+      it('handles missing API key gracefully with failure status', async () => {
+        MockedConfiguration.getConfig.mockResolvedValue(null);
 
-      const result = await service.executePrompt(mockPrompt);
+        const result = await service.executePrompt(mockPrompt);
 
-      expect(result.success).toBe(false);
-    });
+        expect(result.success).toBe(false);
+      });
 
-    it('returns null data when API key is missing', async () => {
-      MockedConfiguration.getConfig.mockResolvedValue(null);
+      it('returns null data', async () => {
+        MockedConfiguration.getConfig.mockResolvedValue(null);
 
-      const result = await service.executePrompt(mockPrompt);
+        const result = await service.executePrompt(mockPrompt);
 
-      expect(result.data).toBeNull();
-    });
+        expect(result.data).toBeNull();
+      });
 
-    it('provides error message when API key is not configured', async () => {
-      MockedConfiguration.getConfig.mockResolvedValue(null);
+      it('provides error message', async () => {
+        MockedConfiguration.getConfig.mockResolvedValue(null);
 
-      const result = await service.executePrompt(mockPrompt);
+        const result = await service.executePrompt(mockPrompt);
 
-      expect(result.error).toBe('Anthropic API key not configured');
-    });
+        expect(result.error).toBe('Anthropic API key not configured');
+      });
 
-    it('sets attempts to 1 when API key is missing', async () => {
-      MockedConfiguration.getConfig.mockResolvedValue(null);
+      it('sets attempts to 1', async () => {
+        MockedConfiguration.getConfig.mockResolvedValue(null);
 
-      const result = await service.executePrompt(mockPrompt);
+        const result = await service.executePrompt(mockPrompt);
 
-      expect(result.attempts).toBe(1);
+        expect(result.attempts).toBe(1);
+      });
     });
 
     describe('isConfigured', () => {
@@ -248,147 +250,153 @@ describe('AnthropicService', () => {
       expect(result.error).toContain('Invalid response from Anthropic');
     });
 
-    it('retries on rate limit errors immediately', async () => {
-      const rateLimitError = new Error('Rate limit exceeded (429)');
+    describe('when retrying on rate limit errors', () => {
+      it('retries immediately', async () => {
+        const rateLimitError = new Error('Rate limit exceeded (429)');
 
-      mockAnthropicInstance.messages.create
-        .mockRejectedValueOnce(rateLimitError)
-        .mockRejectedValueOnce(rateLimitError)
-        .mockResolvedValue(mockResponse);
+        mockAnthropicInstance.messages.create
+          .mockRejectedValueOnce(rateLimitError)
+          .mockRejectedValueOnce(rateLimitError)
+          .mockResolvedValue(mockResponse);
 
-      const result = await service.executePrompt(mockPrompt);
+        const result = await service.executePrompt(mockPrompt);
 
-      expect(result.success).toBe(true);
-    });
-
-    it('returns correct data after retrying', async () => {
-      const rateLimitError = new Error('Rate limit exceeded (429)');
-
-      mockAnthropicInstance.messages.create
-        .mockRejectedValueOnce(rateLimitError)
-        .mockRejectedValueOnce(rateLimitError)
-        .mockResolvedValue(mockResponse);
-
-      const result = await service.executePrompt(mockPrompt);
-
-      expect(result.data).toBe('Test AI response');
-    });
-
-    it('tracks correct number of attempts after retries', async () => {
-      const rateLimitError = new Error('Rate limit exceeded (429)');
-
-      mockAnthropicInstance.messages.create
-        .mockRejectedValueOnce(rateLimitError)
-        .mockRejectedValueOnce(rateLimitError)
-        .mockResolvedValue(mockResponse);
-
-      const result = await service.executePrompt(mockPrompt);
-
-      expect(result.attempts).toBe(3);
-    });
-
-    it('calls create method multiple times when retrying', async () => {
-      const rateLimitError = new Error('Rate limit exceeded (429)');
-
-      mockAnthropicInstance.messages.create
-        .mockRejectedValueOnce(rateLimitError)
-        .mockRejectedValueOnce(rateLimitError)
-        .mockResolvedValue(mockResponse);
-
-      await service.executePrompt(mockPrompt);
-
-      expect(mockAnthropicInstance.messages.create).toHaveBeenCalledTimes(3);
-    });
-
-    it('stops retrying on authentication errors', async () => {
-      const authError = new Error('Unauthorized (401)');
-      mockAnthropicInstance.messages.create.mockRejectedValue(authError);
-
-      const result = await service.executePrompt(mockPrompt);
-
-      expect(result.success).toBe(false);
-    });
-
-    it('returns null data when authentication fails', async () => {
-      const authError = new Error('Unauthorized (401)');
-      mockAnthropicInstance.messages.create.mockRejectedValue(authError);
-
-      const result = await service.executePrompt(mockPrompt);
-
-      expect(result.data).toBeNull();
-    });
-
-    it('provides error message indicating retry failure', async () => {
-      const authError = new Error('Unauthorized (401)');
-      mockAnthropicInstance.messages.create.mockRejectedValue(authError);
-
-      const result = await service.executePrompt(mockPrompt);
-
-      expect(result.error).toContain('failed after 5 attempts');
-    });
-
-    it('calls create only once for authentication errors', async () => {
-      const authError = new Error('Unauthorized (401)');
-      mockAnthropicInstance.messages.create.mockRejectedValue(authError);
-
-      await service.executePrompt(mockPrompt);
-
-      expect(mockAnthropicInstance.messages.create).toHaveBeenCalledTimes(1);
-    });
-
-    it('fails after maximum retry attempts', async () => {
-      const networkError = new Error('Network timeout');
-      mockAnthropicInstance.messages.create.mockRejectedValue(networkError);
-
-      const result = await service.executePrompt(mockPrompt, {
-        retryAttempts: 3,
+        expect(result.success).toBe(true);
       });
 
-      expect(result.success).toBe(false);
-    });
+      it('returns correct data after retrying', async () => {
+        const rateLimitError = new Error('Rate limit exceeded (429)');
 
-    it('returns null data after exceeding max retries', async () => {
-      const networkError = new Error('Network timeout');
-      mockAnthropicInstance.messages.create.mockRejectedValue(networkError);
+        mockAnthropicInstance.messages.create
+          .mockRejectedValueOnce(rateLimitError)
+          .mockRejectedValueOnce(rateLimitError)
+          .mockResolvedValue(mockResponse);
 
-      const result = await service.executePrompt(mockPrompt, {
-        retryAttempts: 3,
+        const result = await service.executePrompt(mockPrompt);
+
+        expect(result.data).toBe('Test AI response');
       });
 
-      expect(result.data).toBeNull();
-    });
+      it('tracks correct number of attempts after retries', async () => {
+        const rateLimitError = new Error('Rate limit exceeded (429)');
 
-    it('provides error message about max retries', async () => {
-      const networkError = new Error('Network timeout');
-      mockAnthropicInstance.messages.create.mockRejectedValue(networkError);
+        mockAnthropicInstance.messages.create
+          .mockRejectedValueOnce(rateLimitError)
+          .mockRejectedValueOnce(rateLimitError)
+          .mockResolvedValue(mockResponse);
 
-      const result = await service.executePrompt(mockPrompt, {
-        retryAttempts: 3,
+        const result = await service.executePrompt(mockPrompt);
+
+        expect(result.attempts).toBe(3);
       });
 
-      expect(result.error).toContain('failed after 3 attempts');
+      it('calls create method multiple times', async () => {
+        const rateLimitError = new Error('Rate limit exceeded (429)');
+
+        mockAnthropicInstance.messages.create
+          .mockRejectedValueOnce(rateLimitError)
+          .mockRejectedValueOnce(rateLimitError)
+          .mockResolvedValue(mockResponse);
+
+        await service.executePrompt(mockPrompt);
+
+        expect(mockAnthropicInstance.messages.create).toHaveBeenCalledTimes(3);
+      });
     });
 
-    it('tracks correct attempts when max retries exceeded', async () => {
-      const networkError = new Error('Network timeout');
-      mockAnthropicInstance.messages.create.mockRejectedValue(networkError);
+    describe('when authentication fails', () => {
+      it('stops retrying on authentication errors', async () => {
+        const authError = new Error('Unauthorized (401)');
+        mockAnthropicInstance.messages.create.mockRejectedValue(authError);
 
-      const result = await service.executePrompt(mockPrompt, {
-        retryAttempts: 3,
+        const result = await service.executePrompt(mockPrompt);
+
+        expect(result.success).toBe(false);
       });
 
-      expect(result.attempts).toBe(3);
+      it('returns null data', async () => {
+        const authError = new Error('Unauthorized (401)');
+        mockAnthropicInstance.messages.create.mockRejectedValue(authError);
+
+        const result = await service.executePrompt(mockPrompt);
+
+        expect(result.data).toBeNull();
+      });
+
+      it('provides error message indicating retry failure', async () => {
+        const authError = new Error('Unauthorized (401)');
+        mockAnthropicInstance.messages.create.mockRejectedValue(authError);
+
+        const result = await service.executePrompt(mockPrompt);
+
+        expect(result.error).toContain('failed after 5 attempts');
+      });
+
+      it('calls create only once for authentication errors', async () => {
+        const authError = new Error('Unauthorized (401)');
+        mockAnthropicInstance.messages.create.mockRejectedValue(authError);
+
+        await service.executePrompt(mockPrompt);
+
+        expect(mockAnthropicInstance.messages.create).toHaveBeenCalledTimes(1);
+      });
     });
 
-    it('calls create exact number of retry attempts', async () => {
-      const networkError = new Error('Network timeout');
-      mockAnthropicInstance.messages.create.mockRejectedValue(networkError);
+    describe('when max retries exceeded', () => {
+      it('fails after maximum retry attempts', async () => {
+        const networkError = new Error('Network timeout');
+        mockAnthropicInstance.messages.create.mockRejectedValue(networkError);
 
-      await service.executePrompt(mockPrompt, {
-        retryAttempts: 3,
+        const result = await service.executePrompt(mockPrompt, {
+          retryAttempts: 3,
+        });
+
+        expect(result.success).toBe(false);
       });
 
-      expect(mockAnthropicInstance.messages.create).toHaveBeenCalledTimes(3);
+      it('returns null data', async () => {
+        const networkError = new Error('Network timeout');
+        mockAnthropicInstance.messages.create.mockRejectedValue(networkError);
+
+        const result = await service.executePrompt(mockPrompt, {
+          retryAttempts: 3,
+        });
+
+        expect(result.data).toBeNull();
+      });
+
+      it('provides error message about max retries', async () => {
+        const networkError = new Error('Network timeout');
+        mockAnthropicInstance.messages.create.mockRejectedValue(networkError);
+
+        const result = await service.executePrompt(mockPrompt, {
+          retryAttempts: 3,
+        });
+
+        expect(result.error).toContain('failed after 3 attempts');
+      });
+
+      it('tracks correct attempts', async () => {
+        const networkError = new Error('Network timeout');
+        mockAnthropicInstance.messages.create.mockRejectedValue(networkError);
+
+        const result = await service.executePrompt(mockPrompt, {
+          retryAttempts: 3,
+        });
+
+        expect(result.attempts).toBe(3);
+      });
+
+      it('calls create exact number of retry attempts', async () => {
+        const networkError = new Error('Network timeout');
+        mockAnthropicInstance.messages.create.mockRejectedValue(networkError);
+
+        await service.executePrompt(mockPrompt, {
+          retryAttempts: 3,
+        });
+
+        expect(mockAnthropicInstance.messages.create).toHaveBeenCalledTimes(3);
+      });
     });
   });
 

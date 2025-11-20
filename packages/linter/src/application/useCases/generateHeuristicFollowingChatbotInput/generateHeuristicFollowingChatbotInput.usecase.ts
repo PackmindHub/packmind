@@ -7,7 +7,7 @@ import {
   IAccountsPort,
 } from '@packmind/types';
 import { ILinterRepositories } from '../../../domain/repositories/ILinterRepositories';
-import { OpenAIService } from '@packmind/node-utils';
+import { OpenAIService } from '@packmind/llm';
 import { HeuristicGenerationService } from './HeuristicGenerationService';
 
 const origin = 'GenerateHeuristicFollowingChatbotInputUsecase';

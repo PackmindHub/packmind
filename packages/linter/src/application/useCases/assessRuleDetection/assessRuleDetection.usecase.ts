@@ -1,5 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
-import { OpenAIService } from '@packmind/node-utils';
+import { OpenAIService } from '@packmind/llm';
 import { IStandardsPort, ILinterPort } from '@packmind/types';
 import {
   AssessRuleDetectionOutput,
