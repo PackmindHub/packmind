@@ -28,7 +28,7 @@ export function RagLabSearchForm({
   const [queryText, setQueryText] = useState('');
   const [maxResults, setMaxResults] = useState<number>(10);
   const [resultTypes, setResultTypes] = useState<ResultType>('both');
-  const threshold = 0.7;
+  const [threshold, setThreshold] = useState<number>(0.7);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,6 +64,24 @@ export function RagLabSearchForm({
                 { label: 'Recipes Only', value: 'recipes' },
               ]}
             />
+          </PMField.Root>
+
+          <PMField.Root>
+            <PMField.Label>Similarity Threshold</PMField.Label>
+            <PMNativeSelect
+              value={threshold.toString()}
+              onChange={(e) => setThreshold(Number(e.target.value))}
+              items={[
+                { label: '50% (More results)', value: '0.5' },
+                { label: '60%', value: '0.6' },
+                { label: '70% (Recommended)', value: '0.7' },
+                { label: '80%', value: '0.8' },
+                { label: '90% (Very strict)', value: '0.9' },
+              ]}
+            />
+            <PMText fontSize="xs" mt={1}>
+              Minimum similarity score for results
+            </PMText>
           </PMField.Root>
 
           <PMField.Root>
