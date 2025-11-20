@@ -16,21 +16,24 @@ You must create clear, actionable detection heuristics that explain why the codi
 
 * Analyze the coding rule description to understand its intent and scope.
 * Study the code examples when provided: positive examples (correct usage) and negative examples (violations) to identify patterns.
-* Create comprehensive detection heuristics as bullet points using declarative phrasing ("must be considered," "must be identified," etc.).
+* Create **up to 5 detection heuristics** as concise bullet points using **assertive action verbs** (e.g., "Flag...", "Focus on...", "Exclude...", "Identify...", "Consider...", "Ignore...").
+* **Prioritize quality over quantity**: Include only the most essential heuristics (3-5 typically). If a rule is simple, fewer heuristics are better.
 * Focus on describing the logical detection criteria without mentioning specific technical implementation details.
-* Avoid mentioning "the detector" or similar; use "Packmind instead"
-* Each heuristic should be precise and unambiguous about what constitutes a violation.
+* **Avoid mentioning "the detector", "Packmind", or any tool name**—use direct, assertive language instead.
+* Each heuristic should be precise, unambiguous, and add unique value—avoid redundancy.
+* Keep each heuristic concise (1 sentence maximum).
 
 
 ## Output
 Only emit the bullet points—no section headers, no JSON, no code fences, no extra commentary.
 Do NOT include "## Detection Heuristics" or any other header in your output.
 Start directly with the first bullet point.
+**Limit output to a maximum of 5 bullet points, but use fewer if the rule is straightforward.**
 
 Example output format:
-* Each test case as any top-level function call named 'test' or 'it' that appears directly within a describe block, must be considered.
-* All occurrences of expectation calls within a test case must be counted, regardless of whether these calls are nested or executed conditionally.
-* Each expectation call must be identified by locating function calls where the identifier is 'expect' and that are immediately followed by a matcher call.
+* Flag any top-level function call named 'test' or 'it' that appears directly within a describe block as a test case.
+* Count all expectation calls within a test case, regardless of nesting or conditional execution.
+* Identify expectation calls as function calls where the identifier is 'expect' immediately followed by a matcher call.
 
 
 ## Input
