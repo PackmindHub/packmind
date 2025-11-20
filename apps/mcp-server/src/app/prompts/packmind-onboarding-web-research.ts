@@ -68,19 +68,39 @@ Once the user specifies their topic (either from the detected technologies or a 
 6. **Security & Performance**: Research security and performance considerations
 7. **URL Documentation**: Track and document all source URLs used for creating the standards
 
-### Step 4: Standard Generation and Creation
+### Step 4: Standard Generation and Package Selection
 
 **Implementation Process:**
 
 1. **Research current industry best practices** for the selected technology
 2. **Generate 5 rules internally** based on authoritative sources
 3. **Create a scope/description** that includes source URLs in Markdown format
-4. **Call the Packmind MCP tool** (\`packmind_create_standard\`) directly with:
+
+**Package Selection:**
+
+Before creating the standard, determine if it should be added to any packages:
+
+1. Call \`packmind_list_packages\` to see available packages
+2. Analyze the standard's scope and topic (e.g., "frontend", "backend", "testing", specific technology, etc.)
+3. **If matching packages are found:**
+   - Suggest 2-3 relevant packages based on keyword matching between:
+     - Standard name/description/scope
+     - Package names/descriptions
+   - Ask the user: "Would you like to add this standard to any packages? Here are some suggestions based on the standard's topic: [suggestions]. You can also choose from all available packages: [list]"
+4. **If packages exist but none match well:**
+   - Ask the user: "Would you like to add this standard to any of the existing packages? Available packages: [list]"
+5. **If no packages exist at all:**
+   - Skip package selection entirely (don't mention anything)
+
+**Standard Creation:**
+
+4. **Call the Packmind MCP tool** (\`packmind_create_standard\`) with:
    - \`name\`: Clear, descriptive name for the standard
    - \`description\`: The scope and context including source URLs in Markdown format
    - \`rules\`: Array of rule objects, each containing:
      - \`content\`: The rule description (single detailed sentence starting with a verb)
      - \`examples\`: Array containing one object with \`positive\`, \`negative\`, and \`language\` fields
+   - \`packageSlugs\`: Array of package slugs if user selected packages (optional)
 5. **Confirm successful creation**: "✅ Successfully created '[STANDARD_NAME]' standard in Packmind based on industry best practices with documented sources."
 
 **Description Format for Web Research:**
