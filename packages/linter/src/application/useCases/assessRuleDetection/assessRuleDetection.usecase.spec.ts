@@ -8,6 +8,8 @@ import {
   ProgrammingLanguage,
   IStandardsPort,
   ILinterPort,
+  ILlmPort,
+  AIService,
   RuleDetectionAssessmentStatus,
   createRuleDetectionAssessmentId,
   DetectionModeEnum,
@@ -31,6 +33,8 @@ describe('AssessRuleDetectionUseCase', () => {
   let standardsAdapter: jest.Mocked<IStandardsPort>;
   let linterAdapter: jest.Mocked<ILinterPort>;
   let getLinterAdapter: jest.Mock<ILinterPort>;
+  let llmPort: jest.Mocked<ILlmPort>;
+  let mockAiService: jest.Mocked<AIService>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
@@ -96,12 +100,24 @@ describe('AssessRuleDetectionUseCase', () => {
 
     getLinterAdapter = jest.fn().mockReturnValue(linterAdapter);
 
+    // Mock AI service
+    mockAiService = {
+      executePrompt: jest.fn(),
+      isConfigured: jest.fn().mockResolvedValue(true),
+    } as unknown as jest.Mocked<AIService>;
+
+    // Mock LLM port
+    llmPort = {
+      getLlmForOrganization: jest.fn().mockResolvedValue(mockAiService),
+    } as jest.Mocked<ILlmPort>;
+
     stubbedLogger = stubLogger();
 
     assessRuleDetectionUseCase = new AssessRuleDetectionUseCase(
       linterRepositories,
       standardsAdapter,
       getLinterAdapter,
+      llmPort,
       stubbedLogger,
     );
   });

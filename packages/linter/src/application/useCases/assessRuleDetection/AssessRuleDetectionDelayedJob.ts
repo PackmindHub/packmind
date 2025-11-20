@@ -1,6 +1,6 @@
 import { PackmindLogger } from '@packmind/logger';
 import { SSEEventPublisher } from '@packmind/node-utils';
-import type { IStandardsPort, ILinterPort } from '@packmind/types';
+import type { IStandardsPort, ILinterPort, ILlmPort } from '@packmind/types';
 import {
   AbstractAIDelayedJob,
   IQueue,
@@ -31,6 +31,7 @@ export class AssessRuleDetectionDelayedJob extends AbstractAIDelayedJob<
     private readonly linterRepositories: ILinterRepositories,
     private readonly getStandardsAdapter: () => IStandardsPort,
     private readonly getLinterAdapter: () => ILinterPort,
+    private readonly llmPort: ILlmPort | null,
   ) {
     super(queueFactory, logger);
   }
@@ -64,6 +65,7 @@ export class AssessRuleDetectionDelayedJob extends AbstractAIDelayedJob<
       this.linterRepositories,
       this.getStandardsAdapter(),
       this.getLinterAdapter,
+      this.llmPort,
       this.logger,
     );
 

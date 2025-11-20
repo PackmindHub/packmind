@@ -1,6 +1,11 @@
 import { PackmindLogger } from '@packmind/logger';
-import { OpenAIService } from '@packmind/llm';
-import { IStandardsPort, ILinterAstPort } from '@packmind/types';
+import {
+  IStandardsPort,
+  ILinterAstPort,
+  ILlmPort,
+  AiNotConfigured,
+  createOrganizationId,
+} from '@packmind/types';
 import { GenerateProgramOutput } from '@packmind/types';
 import { DetectionProgram } from '@packmind/types';
 import { DetectionProgramRuleInput } from '@packmind/types';
@@ -19,6 +24,7 @@ export class GenerateProgramUseCase implements IGenerateProgramJob {
     private readonly linterRepositories: ILinterRepositories,
     private readonly standardsAdapter: IStandardsPort,
     private readonly linterAstAdapter: ILinterAstPort | null,
+    private readonly llmPort: ILlmPort | null,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -90,8 +96,15 @@ export class GenerateProgramUseCase implements IGenerateProgramJob {
         examplesCount: filteredExamples.length,
       });
 
-      // Later, this must be updated so that we use the current LLM config of the organization
-      const aiService = new OpenAIService();
+      // Get AI service for the organization
+      if (!this.llmPort) {
+        throw new AiNotConfigured(
+          'LLM port not configured for program generation',
+        );
+      }
+      const aiService = await this.llmPort.getLlmForOrganization(
+        createOrganizationId(command.organizationId),
+      );
 
       const generateRuleDetection = new GenerateRuleDetection(
         command.jobId,

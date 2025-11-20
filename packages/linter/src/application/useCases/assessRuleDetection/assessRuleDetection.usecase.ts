@@ -1,6 +1,12 @@
 import { PackmindLogger } from '@packmind/logger';
-import { OpenAIService } from '@packmind/llm';
-import { IStandardsPort, ILinterPort } from '@packmind/types';
+import {
+  IStandardsPort,
+  ILinterPort,
+  ILlmPort,
+  AiNotConfigured,
+  OrganizationId,
+  createOrganizationId,
+} from '@packmind/types';
 import {
   AssessRuleDetectionOutput,
   RuleDetectionAssessment,
@@ -25,6 +31,7 @@ export class AssessRuleDetectionUseCase implements IAssessRuleDetectionJob {
     private readonly linterRepositories: ILinterRepositories,
     private readonly standardsAdapter: IStandardsPort,
     private readonly getLinterAdapter: () => ILinterPort,
+    private readonly llmPort: ILlmPort | null,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -57,6 +64,7 @@ export class AssessRuleDetectionUseCase implements IAssessRuleDetectionJob {
       const assessmentResult = await this.runFeasibilityAssessment(
         detectionProgramRuleInput,
         existingHeuristics,
+        createOrganizationId(command.organizationId),
         command.jobId,
       );
 
@@ -128,9 +136,15 @@ export class AssessRuleDetectionUseCase implements IAssessRuleDetectionJob {
   private async runFeasibilityAssessment(
     detectionProgramRuleInput: DetectionProgramRuleInput,
     existingHeuristics: DetectionHeuristics | null,
+    organizationId: OrganizationId,
     jobId: string,
   ) {
-    const aiService = new OpenAIService();
+    if (!this.llmPort) {
+      throw new AiNotConfigured(
+        'LLM port not configured for rule detection assessment',
+      );
+    }
+    const aiService = await this.llmPort.getLlmForOrganization(organizationId);
     const assessmentService = new RuleDetectionAssessmentService(
       aiService,
       this.logger,

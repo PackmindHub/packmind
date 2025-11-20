@@ -4,6 +4,7 @@ import {
   AssessRuleDetectionInput,
   IStandardsPort,
   ILinterPort,
+  ILlmPort,
 } from '@packmind/types';
 import { AssessRuleDetectionDelayedJob } from '../application/useCases/assessRuleDetection/AssessRuleDetectionDelayedJob';
 import { ILinterRepositories } from '../domain/repositories/ILinterRepositories';
@@ -19,6 +20,7 @@ export class AssessRuleDetectionJobFactory
     private readonly linterRepositories: ILinterRepositories,
     private readonly getStandardsAdapter: () => IStandardsPort,
     private readonly getLinterAdapter: () => ILinterPort,
+    private readonly llmPort: ILlmPort | null,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -31,6 +33,7 @@ export class AssessRuleDetectionJobFactory
       this.linterRepositories,
       this.getStandardsAdapter,
       this.getLinterAdapter,
+      this.llmPort,
     );
 
     // Wrap the delayed job to implement IJobQueue interface

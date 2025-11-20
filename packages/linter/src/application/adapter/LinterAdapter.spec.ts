@@ -74,6 +74,7 @@ describe('LinterAdapter', () => {
           [IGitPortName]: mockGitPort,
           [IStandardsPortName]: mockStandardsPort,
           [IAccountsPortName]: mockAccountsPort,
+          llmPort: null,
           linterDelayedJobs: mockLinterDelayedJobs,
         });
 
@@ -116,6 +117,7 @@ describe('LinterAdapter', () => {
           [IGitPortName]: mockGitPort,
           [IStandardsPortName]: mockStandardsPort,
           [IAccountsPortName]: mockAccountsPort,
+          llmPort: null,
           linterDelayedJobs: mockLinterDelayedJobs,
         }),
       ).resolves.not.toThrow();
@@ -131,6 +133,7 @@ describe('LinterAdapter', () => {
           [IAccountsPortName]: mockAccountsPort,
           [IDeploymentPortName]: mockDeploymentsPort,
           [ISpacesPortName]: mockSpacesPort,
+          llmPort: null,
           linterDelayedJobs: mockLinterDelayedJobs,
         }),
       ).resolves.not.toThrow();
@@ -145,6 +148,7 @@ describe('LinterAdapter', () => {
         [IGitPortName]: mockGitPort,
         [IStandardsPortName]: mockStandardsPort,
         [IAccountsPortName]: mockAccountsPort,
+        llmPort: null,
         linterDelayedJobs: mockLinterDelayedJobs,
       });
 

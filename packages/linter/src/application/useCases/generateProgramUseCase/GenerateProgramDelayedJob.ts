@@ -4,6 +4,7 @@ import {
   IStandardsPort,
   ILinterAstPort,
   ILinterPort,
+  ILlmPort,
   ProgrammingLanguage,
 } from '@packmind/types';
 import { DetectionStatus } from '@packmind/types';
@@ -38,6 +39,7 @@ export class GenerateProgramDelayedJob extends AbstractAIDelayedJob<
     private readonly getStandardsAdapter: () => IStandardsPort,
     private readonly getLinterAstAdapter: () => ILinterAstPort | null,
     private readonly getLinterAdapter: () => ILinterPort,
+    private readonly llmPort: ILlmPort | null,
   ) {
     super(queueFactory, logger);
   }
@@ -76,6 +78,7 @@ export class GenerateProgramDelayedJob extends AbstractAIDelayedJob<
       this.linterRepositories,
       this.getStandardsAdapter(),
       linterAstAdapter,
+      this.llmPort,
       this.logger,
     );
 

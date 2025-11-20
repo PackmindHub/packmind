@@ -13,6 +13,8 @@ import {
   ILinterAstPort,
   ILinterPort,
   ILinterPortName,
+  ILlmPort,
+  ILlmPortName,
   ISpacesPort,
   ISpacesPortName,
   IStandardsPort,
@@ -160,6 +162,20 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
         });
       }
 
+      // Get optional llm port
+      let llmPort: ILlmPort | null = null;
+      try {
+        llmPort = registry.getAdapter<ILlmPort>(ILlmPortName);
+        this.logger.debug('Retrieved LlmAdapter from registry');
+      } catch (error) {
+        this.logger.warn(
+          'LlmHexa not available in registry - AI features will be disabled',
+          {
+            error: error instanceof Error ? error.message : String(error),
+          },
+        );
+      }
+
       // Get JobsHexa (required) for delayed job registration
       const jobsService = registry.getService(JobsService);
       if (!jobsService) {
@@ -172,6 +188,7 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
         jobsService,
         () => standardsPort,
         () => this.getAdapter(),
+        llmPort,
       );
 
       // Initialize adapter once with all ports and delayed jobs
@@ -182,6 +199,7 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
         [IAccountsPortName]: accountsPort,
         [IDeploymentPortName]: deploymentsPort,
         [ISpacesPortName]: spacesPort,
+        llmPort,
         linterDelayedJobs,
       });
 
@@ -204,6 +222,7 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
     jobsService: JobsService,
     getStandardsAdapter: () => IStandardsPort,
     getLinterAdapter: () => ILinterPort,
+    llmPort: ILlmPort | null,
   ): Promise<ILinterDelayedJobs> {
     // Register generate program job queue with JobsService
     const generateProgramJobFactory = new GenerateProgramJobFactory(
@@ -212,6 +231,7 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
       getStandardsAdapter,
       () => this.linterAstAdapter,
       getLinterAdapter,
+      llmPort,
     );
 
     jobsService.registerJobQueue(
@@ -230,6 +250,7 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
       this.linterRepositories,
       getStandardsAdapter,
       getLinterAdapter,
+      llmPort,
     );
 
     jobsService.registerJobQueue(

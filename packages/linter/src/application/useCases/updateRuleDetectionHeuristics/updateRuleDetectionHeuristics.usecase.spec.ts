@@ -97,6 +97,7 @@ describe('UpdateRuleDetectionHeuristicsUseCase', () => {
       standardsAdapter,
       getLinterAdapter,
       accountsPort,
+      null,
       stubbedLogger,
     );
   });

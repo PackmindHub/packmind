@@ -5,6 +5,7 @@ import {
   UpdateRuleDetectionHeuristicsResponse,
   IStandardsPort,
   ILinterPort,
+  ILlmPort,
   RuleId,
   ProgrammingLanguage,
   OrganizationId,
@@ -28,6 +29,7 @@ export class UpdateRuleDetectionHeuristicsUseCase
     private readonly standardsAdapter: IStandardsPort,
     private readonly getLinterAdapter: () => ILinterPort,
     private readonly accountsPort: IAccountsPort,
+    private readonly llmPort: ILlmPort | null,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -69,6 +71,7 @@ export class UpdateRuleDetectionHeuristicsUseCase
         this.accountsPort,
         this.linterRepositories,
         this.standardsAdapter,
+        this.llmPort,
       );
 
       const chatbotCommand: UpdateHeuristicsFollowingChatbotInputCommand = {

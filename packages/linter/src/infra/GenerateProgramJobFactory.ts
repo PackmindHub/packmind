@@ -1,6 +1,11 @@
 import { IJobFactory, IJobQueue, queueFactory } from '@packmind/node-utils';
 import { PackmindLogger } from '@packmind/logger';
-import { IStandardsPort, ILinterAstPort, ILinterPort } from '@packmind/types';
+import {
+  IStandardsPort,
+  ILinterAstPort,
+  ILinterPort,
+  ILlmPort,
+} from '@packmind/types';
 import { GenerateProgramInput } from '../domain';
 import { GenerateProgramDelayedJob } from '../application/useCases/generateProgramUseCase/GenerateProgramDelayedJob';
 import { ILinterRepositories } from '../domain/repositories/ILinterRepositories';
@@ -16,6 +21,7 @@ export class GenerateProgramJobFactory
     private readonly getStandardsAdapter: () => IStandardsPort,
     private readonly getLinterAstAdapter: () => ILinterAstPort | null,
     private readonly getLinterAdapter: () => ILinterPort,
+    private readonly llmPort: ILlmPort | null,
   ) {}
 
   async createQueue(): Promise<IJobQueue<GenerateProgramInput>> {
@@ -28,6 +34,7 @@ export class GenerateProgramJobFactory
       this.getStandardsAdapter,
       this.getLinterAstAdapter,
       this.getLinterAdapter,
+      this.llmPort,
     );
 
     // Wrap the delayed job to implement IJobQueue interface

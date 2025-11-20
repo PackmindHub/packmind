@@ -5,9 +5,11 @@ import {
   UpdateHeuristicsFollowingChatbotInputResponse,
   IStandardsPort,
   IAccountsPort,
+  ILlmPort,
+  AiNotConfigured,
+  createOrganizationId,
 } from '@packmind/types';
 import { ILinterRepositories } from '../../../domain/repositories/ILinterRepositories';
-import { OpenAIService } from '@packmind/llm';
 import { HeuristicGenerationService } from './HeuristicGenerationService';
 
 const origin = 'GenerateHeuristicFollowingChatbotInputUsecase';
@@ -20,6 +22,7 @@ export class GenerateHeuristicFollowingChatbotInputUsecase extends AbstractMembe
     accountsPort: IAccountsPort,
     private readonly linterRepositories: ILinterRepositories,
     private readonly standardsAdapter: IStandardsPort,
+    private readonly llmPort: ILlmPort | null,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -75,7 +78,14 @@ export class GenerateHeuristicFollowingChatbotInputUsecase extends AbstractMembe
       });
 
       // Generate new heuristic using AI
-      const aiService = new OpenAIService();
+      if (!this.llmPort) {
+        throw new AiNotConfigured(
+          'LLM port not configured for heuristic generation',
+        );
+      }
+      const aiService = await this.llmPort.getLlmForOrganization(
+        createOrganizationId(command.organizationId),
+      );
       const heuristicGenerationService = new HeuristicGenerationService(
         aiService,
         this.logger,

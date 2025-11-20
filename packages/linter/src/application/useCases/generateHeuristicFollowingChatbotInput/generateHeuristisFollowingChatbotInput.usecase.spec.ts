@@ -15,6 +15,8 @@ import {
   Rule,
   RuleExample,
   IAccountsPort,
+  ILlmPort,
+  AIService,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
@@ -38,6 +40,8 @@ describe('UpdateHeuristicsFollowingChatbotInputUseCase', () => {
   let linterRepositories: jest.Mocked<ILinterRepositories>;
   let standardsAdapter: jest.Mocked<IStandardsPort>;
   let accountsPort: jest.Mocked<IAccountsPort>;
+  let llmPort: jest.Mocked<ILlmPort>;
+  let mockAiService: jest.Mocked<AIService>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   const userId = createUserId(uuidv4());
@@ -74,12 +78,24 @@ describe('UpdateHeuristicsFollowingChatbotInputUseCase', () => {
       getOrganizationById: jest.fn(),
     } as unknown as jest.Mocked<IAccountsPort>;
 
+    // Mock AI service
+    mockAiService = {
+      executePrompt: jest.fn(),
+      isConfigured: jest.fn().mockResolvedValue(true),
+    } as unknown as jest.Mocked<AIService>;
+
+    // Mock LLM port
+    llmPort = {
+      getLlmForOrganization: jest.fn().mockResolvedValue(mockAiService),
+    } as jest.Mocked<ILlmPort>;
+
     stubbedLogger = stubLogger();
 
     useCase = new GenerateHeuristicFollowingChatbotInputUsecase(
       accountsPort,
       linterRepositories,
       standardsAdapter,
+      llmPort,
       stubbedLogger,
     );
   });

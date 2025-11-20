@@ -11,6 +11,7 @@ import type {
   IDeploymentPort,
   IGitPort,
   ILinterPort,
+  ILlmPort,
   ISpacesPort,
   IStandardsPort,
 } from '@packmind/types';
@@ -136,6 +137,7 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
   // Optional ports - may be undefined
   private deploymentsPort: IDeploymentPort | undefined;
   private spacesPort: ISpacesPort | undefined;
+  private llmPort: ILlmPort | null = null;
 
   // Use cases - created in initialize() after ports are set
   private _createDetectionProgramUseCase!: CreateDetectionProgramUseCase;
@@ -175,7 +177,7 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
 
   /**
    * Initialize adapter with ports from registry.
-   * All ports in signature are REQUIRED except deploymentsPort and spacesPort.
+   * All ports in signature are REQUIRED except deploymentsPort, spacesPort, and llmPort.
    */
   public async initialize(ports: {
     [IStandardsPortName]: IStandardsPort;
@@ -183,6 +185,7 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
     [IAccountsPortName]: IAccountsPort;
     [IDeploymentPortName]?: IDeploymentPort;
     [ISpacesPortName]?: ISpacesPort;
+    llmPort: ILlmPort | null;
     linterDelayedJobs: ILinterDelayedJobs;
   }): Promise<void> {
     // Step 1: Set all ports
@@ -192,6 +195,7 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
     this.linterDelayedJobs = ports.linterDelayedJobs;
     this.deploymentsPort = ports[IDeploymentPortName];
     this.spacesPort = ports[ISpacesPortName];
+    this.llmPort = ports.llmPort;
 
     // Step 2: Validate all required ports are set
     if (!this.isReady()) {
@@ -320,6 +324,7 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
         this.standardsPort,
         () => this,
         this.accountsPort,
+        this.llmPort,
       );
 
     this._getDetectionHeuristicsUseCase = new GetDetectionHeuristicsUseCase(
