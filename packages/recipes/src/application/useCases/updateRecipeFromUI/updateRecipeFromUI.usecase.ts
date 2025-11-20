@@ -3,7 +3,13 @@ import { RecipeVersionService } from '../../services/RecipeVersionService';
 import { RecipeSummaryService } from '../../services/RecipeSummaryService';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { AiNotConfigured } from '@packmind/node-utils';
-import { OrganizationId, RecipeId, SpaceId, UserId } from '@packmind/types';
+import {
+  IEventTrackingPort,
+  OrganizationId,
+  RecipeId,
+  SpaceId,
+  UserId,
+} from '@packmind/types';
 
 const origin = 'UpdateRecipeFromUIUsecase';
 
@@ -21,6 +27,7 @@ export class UpdateRecipeFromUIUsecase {
     private readonly recipeService: RecipeService,
     private readonly recipeVersionService: RecipeVersionService,
     private readonly recipeSummaryService: RecipeSummaryService,
+    private readonly eventTrackingPort: IEventTrackingPort,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.DEBUG,
@@ -147,6 +154,12 @@ export class UpdateRecipeFromUIUsecase {
         versionId: newRecipeVersion.id,
         editorUserId,
       });
+
+      await this.eventTrackingPort.trackEvent(
+        editorUserId,
+        organizationId,
+        'recipe_edited',
+      );
 
       return updatedRecipe;
     } catch (error) {

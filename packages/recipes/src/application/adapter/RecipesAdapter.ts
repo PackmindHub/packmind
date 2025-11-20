@@ -11,6 +11,8 @@ import {
   IAccountsPortName,
   IDeploymentPort,
   IDeploymentPortName,
+  IEventTrackingPort,
+  IEventTrackingPortName,
   IGitPort,
   IGitPortName,
   IRecipesPort,
@@ -54,6 +56,7 @@ export class RecipesAdapter
   private deploymentPort: IDeploymentPort | null = null;
   private accountsPort: IAccountsPort | null = null;
   private spacesPort: ISpacesPort | null = null;
+  private eventTrackingPort: IEventTrackingPort | null = null;
 
   // Delayed jobs - built internally from JobsService
   private recipesDelayedJobs: IRecipesDelayedJobs | null = null;
@@ -90,6 +93,7 @@ export class RecipesAdapter
     [IDeploymentPortName]: IDeploymentPort;
     [IAccountsPortName]: IAccountsPort;
     [ISpacesPortName]: ISpacesPort;
+    [IEventTrackingPortName]: IEventTrackingPort;
     jobsService: JobsService;
   }): Promise<void> {
     this.logger.info('Initializing RecipesAdapter with ports and JobsService');
@@ -99,6 +103,7 @@ export class RecipesAdapter
     this.deploymentPort = ports[IDeploymentPortName];
     this.accountsPort = ports[IAccountsPortName];
     this.spacesPort = ports[ISpacesPortName];
+    this.eventTrackingPort = ports[IEventTrackingPortName];
 
     // Step 2: Build delayed jobs
     this.recipesDelayedJobs = await this.buildDelayedJobs(
@@ -118,6 +123,7 @@ export class RecipesAdapter
       this.recipesServices.getRecipeService(),
       this.recipesServices.getRecipeVersionService(),
       this.recipesServices.getRecipeSummaryService(),
+      this.eventTrackingPort!,
       this.logger,
     );
 
@@ -151,6 +157,7 @@ export class RecipesAdapter
       this.recipesServices.getRecipeService(),
       this.recipesServices.getRecipeVersionService(),
       this.recipesServices.getRecipeSummaryService(),
+      this.eventTrackingPort!,
       this.logger,
     );
 
@@ -257,6 +264,7 @@ export class RecipesAdapter
       this.deploymentPort != null &&
       this.accountsPort != null &&
       this.spacesPort != null &&
+      this.eventTrackingPort != null &&
       this.recipesDelayedJobs != null
     );
   }

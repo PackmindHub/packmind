@@ -8,7 +8,7 @@ import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { RuleExample } from '@packmind/types';
 import { OrganizationId, UserId, StandardVersionId } from '@packmind/types';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
-import type { ILinterPort } from '@packmind/types';
+import type { IEventTrackingPort, ILinterPort } from '@packmind/types';
 
 const origin = 'AddRuleToStandardUsecase';
 
@@ -27,6 +27,7 @@ export class AddRuleToStandardUsecase {
     private readonly ruleExampleRepository: IRuleExampleRepository,
     private readonly generateStandardSummaryDelayedJob: GenerateStandardSummaryDelayedJob,
     private readonly linterAdapter?: ILinterPort,
+    private readonly eventTrackingPort?: IEventTrackingPort,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.DEBUG,
@@ -173,6 +174,12 @@ export class AddRuleToStandardUsecase {
         newStandardVersion.id,
         organizationId,
         userId,
+      );
+
+      await this.eventTrackingPort?.trackEvent(
+        userId,
+        organizationId,
+        'rule_added',
       );
 
       return newStandardVersion;

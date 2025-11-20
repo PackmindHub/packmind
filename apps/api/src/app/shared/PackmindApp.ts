@@ -6,6 +6,7 @@ import {
 import { AnalyticsHexa } from '@packmind/analytics';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { DeploymentsHexa } from '@packmind/deployments';
+import { EventTrackingHexa } from '@packmind/editions';
 import { GitHexa } from '@packmind/git';
 import { LinterHexa } from '@packmind/linter';
 import {
@@ -60,6 +61,7 @@ export function getPackmindAppDefinition(): PackmindAppDefinition {
     hexas: [
       SpacesHexa, // Must come before AccountsHexa (AccountsHexa depends on SpacesHexa)
       AccountsHexa,
+      EventTrackingHexa,
       GitHexa,
       RecipesHexa,
       AnalyticsHexa,

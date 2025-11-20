@@ -6,6 +6,7 @@ import {
   createRecipeVersionId,
   createSpaceId,
   createUserId,
+  IEventTrackingPort,
 } from '@packmind/types';
 import slug from 'slug';
 import { v4 as uuidv4 } from 'uuid';
@@ -26,6 +27,7 @@ describe('CaptureRecipeUsecase', () => {
   let recipeService: jest.Mocked<RecipeService>;
   let recipeVersionService: jest.Mocked<RecipeVersionService>;
   let recipeSummaryService: jest.Mocked<RecipeSummaryService>;
+  let eventTrackingPort: jest.Mocked<IEventTrackingPort>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
@@ -60,6 +62,10 @@ describe('CaptureRecipeUsecase', () => {
       createRecipeSummary: jest.fn().mockResolvedValue('AI-generated summary'),
     } as unknown as jest.Mocked<RecipeSummaryService>;
 
+    eventTrackingPort = {
+      trackEvent: jest.fn().mockResolvedValue(undefined),
+    } as jest.Mocked<IEventTrackingPort>;
+
     // Default: no existing recipes (can be overridden in individual tests)
     recipeService.listRecipesBySpace.mockResolvedValue([]);
 
@@ -67,6 +73,7 @@ describe('CaptureRecipeUsecase', () => {
       recipeService,
       recipeVersionService,
       recipeSummaryService,
+      eventTrackingPort,
       stubbedLogger,
     );
   });

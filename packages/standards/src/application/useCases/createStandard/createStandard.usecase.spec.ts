@@ -5,6 +5,7 @@ import {
   createOrganizationId,
   createSpaceId,
   createUserId,
+  IEventTrackingPort,
 } from '@packmind/types';
 import slug from 'slug';
 import { v4 as uuidv4 } from 'uuid';
@@ -27,6 +28,7 @@ describe('CreateStandardUsecase', () => {
   let standardService: jest.Mocked<StandardService>;
   let standardVersionService: jest.Mocked<StandardVersionService>;
   let generateStandardSummaryDelayedJob: jest.Mocked<GenerateStandardSummaryDelayedJob>;
+  let eventTrackingPort: jest.Mocked<IEventTrackingPort>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
@@ -62,6 +64,10 @@ describe('CreateStandardUsecase', () => {
       input.toLowerCase().replace(/\s+/g, '-'),
     );
 
+    eventTrackingPort = {
+      trackEvent: jest.fn().mockResolvedValue(undefined),
+    } as jest.Mocked<IEventTrackingPort>;
+
     stubbedLogger = stubLogger();
     generateStandardSummaryDelayedJob.addJob.mockResolvedValue('job-id-123');
 
@@ -71,6 +77,7 @@ describe('CreateStandardUsecase', () => {
       standardService,
       standardVersionService,
       generateStandardSummaryDelayedJob,
+      eventTrackingPort,
       stubbedLogger,
     );
   });
@@ -620,6 +627,7 @@ describe('CreateStandardUsecase', () => {
           standardService,
           standardVersionService,
           generateStandardSummaryDelayedJob,
+          eventTrackingPort,
           stubbedLogger,
         );
       });
