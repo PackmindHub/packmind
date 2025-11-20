@@ -10,6 +10,7 @@ import {
   IRecipesPort,
   IStandardsPort,
   ICodingAgentPort,
+  IEventTrackingPort,
   IGitPort,
   OrganizationId,
   UserId,
@@ -50,6 +51,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     private readonly standardsDeploymentRepository: IStandardsDeploymentRepository,
     private readonly targetService: TargetService,
     private readonly renderModeConfigurationService: RenderModeConfigurationService,
+    private readonly eventTrackingPort: IEventTrackingPort,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -268,6 +270,12 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       standardDeploymentsCount: standardDeployments.length,
       repositoriesProcessed: repositoryTargetsMap.size,
     });
+
+    await this.eventTrackingPort.trackEvent(
+      command.userId as UserId,
+      command.organizationId as OrganizationId,
+      'deployment_done',
+    );
 
     return {
       recipeDeployments,

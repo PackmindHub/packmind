@@ -13,7 +13,7 @@ import { ruleFactory } from '../../../../test/ruleFactory';
 import { v4 as uuidv4 } from 'uuid';
 import slug from 'slug';
 import { PackmindLogger } from '@packmind/logger';
-import { IAccountsPort } from '@packmind/types';
+import { IAccountsPort, IEventTrackingPort } from '@packmind/types';
 import {
   UpdateStandardCommand,
   ISpacesPort,
@@ -47,6 +47,7 @@ describe('UpdateStandardUsecase', () => {
   let ruleExampleRepository: jest.Mocked<IRuleExampleRepository>;
   let accountsAdapter: jest.Mocked<IAccountsPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
+  let eventTrackingPort: jest.Mocked<IEventTrackingPort>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
   let mockUser: User;
   let mockOrganization: Organization;
@@ -157,6 +158,10 @@ describe('UpdateStandardUsecase', () => {
       deleteSpace: jest.fn(),
     } as unknown as jest.Mocked<ISpacesPort>;
 
+    eventTrackingPort = {
+      trackEvent: jest.fn().mockResolvedValue(undefined),
+    } as jest.Mocked<IEventTrackingPort>;
+
     updateStandardUsecase = new UpdateStandardUsecase(
       accountsAdapter,
       standardService,
@@ -165,6 +170,7 @@ describe('UpdateStandardUsecase', () => {
       ruleExampleRepository,
       generateStandardSummaryDelayedJob,
       spacesPort,
+      eventTrackingPort,
       stubbedLogger,
     );
 

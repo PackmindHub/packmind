@@ -6,6 +6,8 @@ import {
   IAccountsPortName,
   IDeploymentPort,
   IDeploymentPortName,
+  IEventTrackingPort,
+  IEventTrackingPortName,
   ILinterPort,
   ILinterPortName,
   ISpacesPort,
@@ -64,6 +66,7 @@ export class StandardsAdapter
   private spacesPort: ISpacesPort | null = null;
   private linterPort: ILinterPort | null = null;
   private deploymentsPort: IDeploymentPort | null = null;
+  private eventTrackingPort: IEventTrackingPort | null = null;
 
   // Use cases - all initialized in initialize()
   private _createStandard!: CreateStandardUsecase;
@@ -106,6 +109,7 @@ export class StandardsAdapter
     [ISpacesPortName]: ISpacesPort;
     [ILinterPortName]: ILinterPort;
     [IDeploymentPortName]: IDeploymentPort;
+    [IEventTrackingPortName]: IEventTrackingPort;
     jobsService: JobsService;
   }): Promise<void> {
     this.logger.info('Initializing StandardsAdapter with ports and services');
@@ -114,6 +118,7 @@ export class StandardsAdapter
     this.spacesPort = ports[ISpacesPortName];
     this.linterPort = ports[ILinterPortName];
     this.deploymentsPort = ports[IDeploymentPortName];
+    this.eventTrackingPort = ports[IEventTrackingPortName];
 
     this.standardDelayedJobs = await this.buildDelayedJobs(ports.jobsService);
 
@@ -122,6 +127,7 @@ export class StandardsAdapter
       !this.spacesPort ||
       !this.linterPort ||
       !this.deploymentsPort ||
+      !this.eventTrackingPort ||
       !this.standardDelayedJobs
     ) {
       throw new Error(
@@ -187,6 +193,7 @@ export class StandardsAdapter
       this.services.getStandardService(),
       this.services.getStandardVersionService(),
       this.standardDelayedJobs.standardSummaryDelayedJob,
+      this.eventTrackingPort,
     );
 
     this._updateStandard = new UpdateStandardUsecase(
@@ -197,6 +204,7 @@ export class StandardsAdapter
       this.repositories.getRuleExampleRepository(),
       this.standardDelayedJobs.standardSummaryDelayedJob,
       this.spacesPort,
+      this.eventTrackingPort,
     );
 
     this._addRuleToStandard = new AddRuleToStandardUsecase(
@@ -206,6 +214,7 @@ export class StandardsAdapter
       this.repositories.getRuleExampleRepository(),
       this.standardDelayedJobs.standardSummaryDelayedJob,
       this.linterPort,
+      this.eventTrackingPort,
     );
 
     // Use cases that depend on linterPort

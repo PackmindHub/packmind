@@ -10,6 +10,8 @@ import {
   IAccountsPortName,
   IDeploymentPort,
   IDeploymentPortName,
+  IEventTrackingPort,
+  IEventTrackingPortName,
   IGitPort,
   IGitPortName,
   IRecipesPort,
@@ -90,6 +92,9 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
       const accountsPort =
         registry.getAdapter<IAccountsPort>(IAccountsPortName);
       const spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
+      const eventTrackingPort = registry.getAdapter<IEventTrackingPort>(
+        IEventTrackingPortName,
+      );
 
       // Get deployment port - this will be updated later via setDeploymentPort()
       // due to circular dependency with DeploymentsHexa
@@ -115,6 +120,7 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
         [IDeploymentPortName]: deploymentPort,
         [IAccountsPortName]: accountsPort,
         [ISpacesPortName]: spacesPort,
+        [IEventTrackingPortName]: eventTrackingPort,
         jobsService,
       });
 
@@ -147,6 +153,9 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
       const accountsPort =
         registry.getAdapter<IAccountsPort>(IAccountsPortName);
       const spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
+      const eventTrackingPort = registry.getAdapter<IEventTrackingPort>(
+        IEventTrackingPortName,
+      );
 
       // Get JobsService
       const jobsService = registry.getService(JobsService);
@@ -158,6 +167,7 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
         [IDeploymentPortName]: deploymentPort,
         [IAccountsPortName]: accountsPort,
         [ISpacesPortName]: spacesPort,
+        [IEventTrackingPortName]: eventTrackingPort,
         jobsService,
       });
 

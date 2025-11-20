@@ -2,7 +2,7 @@ import { AccountsHexa } from '@packmind/accounts';
 import { AnalyticsHexa } from '@packmind/analytics';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { DeploymentsHexa } from '@packmind/deployments';
-import { LinterHexa } from '@packmind/editions';
+import { EventTrackingHexa, LinterHexa } from '@packmind/editions';
 import { GitHexa } from '@packmind/git';
 import { HexaRegistry, JobsService } from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
@@ -21,6 +21,7 @@ export class TestApp {
   public deploymentsHexa!: DeploymentsHexa;
   public analyticsHexa!: AnalyticsHexa;
   public linterHexa!: LinterHexa;
+  public eventTrackingHexa!: EventTrackingHexa;
 
   private registry: HexaRegistry;
   private dataSource: DataSource;
@@ -32,6 +33,7 @@ export class TestApp {
     this.registry.register(SpacesHexa);
     this.registry.register(AccountsHexa);
     this.registry.registerService(JobsService);
+    this.registry.register(EventTrackingHexa);
     this.registry.register(GitHexa);
     this.registry.register(LinterHexa);
     this.registry.register(RecipesHexa);
@@ -55,5 +57,6 @@ export class TestApp {
     this.jobsService = this.registry.getService(JobsService);
     this.deploymentsHexa = this.registry.get(DeploymentsHexa);
     this.analyticsHexa = this.registry.get(AnalyticsHexa);
+    this.eventTrackingHexa = this.registry.get(EventTrackingHexa);
   }
 }

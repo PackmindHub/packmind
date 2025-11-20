@@ -7,6 +7,8 @@ import {
   ICodingAgentPortName,
   IDeploymentPort,
   IDeploymentPortName,
+  IEventTrackingPort,
+  IEventTrackingPortName,
   IGitPort,
   IGitPortName,
   IRecipesPort,
@@ -91,6 +93,9 @@ export class DeploymentsHexa extends BaseHexa<
       const spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
       const accountsPort =
         registry.getAdapter<IAccountsPort>(IAccountsPortName);
+      const eventTrackingPort = registry.getAdapter<IEventTrackingPort>(
+        IEventTrackingPortName,
+      );
 
       // Initialize adapter with all ports
       await this.adapter.initialize({
@@ -100,6 +105,7 @@ export class DeploymentsHexa extends BaseHexa<
         [IStandardsPortName]: standardsPort,
         [ISpacesPortName]: spacesPort,
         [IAccountsPortName]: accountsPort,
+        [IEventTrackingPortName]: eventTrackingPort,
       });
 
       this.logger.info('DeploymentsHexa initialized successfully');

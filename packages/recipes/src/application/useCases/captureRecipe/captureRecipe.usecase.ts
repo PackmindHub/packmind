@@ -7,6 +7,7 @@ import {
   createSpaceId,
   createUserId,
   ICaptureRecipeUseCase,
+  IEventTrackingPort,
   Recipe,
   RecipeStep,
 } from '@packmind/types';
@@ -22,6 +23,7 @@ export class CaptureRecipeUsecase implements ICaptureRecipeUseCase {
     private readonly recipeService: RecipeService,
     private readonly recipeVersionService: RecipeVersionService,
     private readonly recipeSummaryService: RecipeSummaryService,
+    private readonly eventTrackingPort: IEventTrackingPort,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.INFO,
@@ -140,6 +142,12 @@ export class CaptureRecipeUsecase implements ICaptureRecipeUseCase {
         userId,
         spaceId,
       });
+
+      await this.eventTrackingPort.trackEvent(
+        userId,
+        organizationId,
+        'recipe_created',
+      );
 
       return recipe;
     } catch (error) {

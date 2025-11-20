@@ -55,6 +55,16 @@ export function registerOnboardingTool(
         }
 
         if (!workflow) {
+          // Track onboarding start event
+          if (userContext) {
+            await analyticsAdapter.trackEvent(
+              createUserId(userContext.userId),
+              createOrganizationId(userContext.organizationId),
+              'on_boarding_started',
+              { source: 'mcp' },
+            );
+          }
+
           return {
             content: [
               {
