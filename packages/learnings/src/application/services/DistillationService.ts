@@ -410,11 +410,25 @@ export class DistillationService {
         standardIds: candidateStandardIds,
       });
 
-      // Step 2: Analyze each candidate standard
+      // Step 2: Classify and analyze each candidate standard
       for (const standardId of candidateStandardIds) {
-        const patch = await this.analyzeStandardMatch(topic, standardId);
-        if (patch) {
-          patches.push(patch);
+        const standard = await this.standardsPort.getStandard(
+          standardId as StandardId,
+        );
+        if (!standard) continue;
+
+        const classification = await this.classifyChangeType(
+          topic,
+          standard.name,
+          standard.description,
+          'standard',
+        );
+
+        if (classification.classification === 'edit_standard') {
+          const patch = await this.analyzeStandardEdit(topic, standard.id);
+          if (patch) {
+            patches.push(patch);
+          }
         }
       }
 
@@ -428,15 +442,29 @@ export class DistillationService {
         recipeIds: candidateRecipeIds,
       });
 
-      // Step 4: Analyze each candidate recipe
+      // Step 4: Classify and analyze each candidate recipe
       for (const recipeId of candidateRecipeIds) {
-        const patch = await this.analyzeRecipeMatch(topic, recipeId);
-        if (patch) {
-          patches.push(patch);
+        const recipe = await this.recipesPort.getRecipeByIdInternal(
+          recipeId as RecipeId,
+        );
+        if (!recipe) continue;
+
+        const classification = await this.classifyChangeType(
+          topic,
+          recipe.name,
+          recipe.content.substring(0, 500),
+          'recipe',
+        );
+
+        if (classification.classification === 'edit_recipe') {
+          const patch = await this.analyzeRecipeEdit(topic, recipe.id);
+          if (patch) {
+            patches.push(patch);
+          }
         }
       }
 
-      // Step 5: If no matches found, determine if new artifact needed
+      // Step 5: If no edit patches found, determine if new artifacts needed
       if (patches.length === 0) {
         this.logger.info(
           'No existing artifacts matched - checking if new artifact needed',
