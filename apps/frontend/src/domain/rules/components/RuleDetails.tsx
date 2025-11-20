@@ -45,6 +45,8 @@ export const RuleDetails = ({
     ProgrammingLanguage.JAVASCRIPT,
   );
   const [isCreatingFirstExample, setIsCreatingFirstExample] = useState(false);
+  const [isCreatingExampleForLanguage, setIsCreatingExampleForLanguage] =
+    useState(false);
   const { data: examples, isLoading: isLoadingExamples } =
     useGetRuleExamplesQuery(
       organization?.id as OrganizationId,
@@ -76,20 +78,33 @@ export const RuleDetails = ({
     }
   }, [hasExamples, isCreatingFirstExample]);
 
-  // Set the default language to the first configured language
+  // Reset the creation state when examples are updated for the selected language
+  useEffect(() => {
+    if (
+      isCreatingExampleForLanguage &&
+      detectionLanguages.includes(selectedLanguage)
+    ) {
+      setIsCreatingExampleForLanguage(false);
+    }
+  }, [isCreatingExampleForLanguage, detectionLanguages, selectedLanguage]);
+
   useEffect(() => {
     if (detectionLanguages.length === 0) {
       setSelectedLanguage(ProgrammingLanguage.JAVASCRIPT);
       return;
     }
 
-    const allLanguages = getAllLanguagesSortedByDisplayName();
-    const firstConfigured = allLanguages.find((l) =>
-      detectionLanguages.includes(l.language),
-    );
-    const defaultLang =
-      firstConfigured?.language || ProgrammingLanguage.JAVASCRIPT;
-    setSelectedLanguage(defaultLang);
+    // Only change the selected language when the current one
+    // is not available in the configured detection languages.
+    if (!detectionLanguages.includes(selectedLanguage)) {
+      const allLanguages = getAllLanguagesSortedByDisplayName();
+      const firstConfigured = allLanguages.find((l) =>
+        detectionLanguages.includes(l.language),
+      );
+      const defaultLang =
+        firstConfigured?.language || ProgrammingLanguage.JAVASCRIPT;
+      setSelectedLanguage(defaultLang);
+    }
   }, [detectionLanguages]);
 
   const { configuredLanguages, otherLanguages } = useMemo(() => {
@@ -130,6 +145,9 @@ export const RuleDetails = ({
             standardId={standardId}
             ruleId={rule.id}
             selectedLanguage={selectedLanguage}
+            forceCreate={isCreatingExampleForLanguage}
+            onLanguageChange={setSelectedLanguage}
+            onCancelCreation={() => setIsCreatingExampleForLanguage(false)}
           />
         </PMVStack>
       ),
@@ -188,6 +206,7 @@ export const RuleDetails = ({
           ruleId={rule.id}
           selectedLanguage={selectedLanguage}
           forceCreate={true}
+          allowLanguageSelection={true}
           onLanguageChange={setSelectedLanguage}
           onCancelCreation={() => setIsCreatingFirstExample(false)}
         />
@@ -203,9 +222,17 @@ export const RuleDetails = ({
           <PMSelect.Root
             collection={languageCollection}
             value={[selectedLanguage]}
-            onValueChange={(e) =>
-              setSelectedLanguage(e.value[0] as ProgrammingLanguage)
-            }
+            onValueChange={(e) => {
+              const newLanguage = e.value[0] as ProgrammingLanguage;
+              setSelectedLanguage(newLanguage);
+
+              // Check if the selected language is from "Add a language" group (not configured)
+              if (!detectionLanguages.includes(newLanguage)) {
+                setIsCreatingExampleForLanguage(true);
+              } else {
+                setIsCreatingExampleForLanguage(false);
+              }
+            }}
           >
             <PMSelectTrigger placeholder="Select a language" />
             <PMSelect.Positioner>
@@ -222,7 +249,7 @@ export const RuleDetails = ({
                     ))}
                   </PMSelect.ItemGroup>
                 )}
-                <PMSelect.CollapsibleItemGroup label="Other Languages">
+                <PMSelect.CollapsibleItemGroup label="Add a language">
                   {otherLanguages.map((item) => (
                     <PMSelect.Item item={item} key={item.value}>
                       {item.label}
