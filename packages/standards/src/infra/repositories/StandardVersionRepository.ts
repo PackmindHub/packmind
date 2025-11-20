@@ -193,7 +193,7 @@ export class StandardVersionRepository
 
       const result = await this.repository.update(
         { id: standardVersionId },
-        { embedding: embeddingString },
+        { embedding: embeddingString as unknown as number[] },
       );
 
       if (result.affected === 0) {

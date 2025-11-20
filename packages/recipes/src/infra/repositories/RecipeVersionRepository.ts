@@ -171,7 +171,7 @@ export class RecipeVersionRepository
 
       const result = await this.repository.update(
         { id: recipeVersionId },
-        { embedding: embeddingString },
+        { embedding: embeddingString as unknown as number[] },
       );
 
       if (result.affected === 0) {
