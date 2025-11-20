@@ -26,8 +26,6 @@ import {
   PMBadge,
   PMCloseButton,
   PMDataList,
-  PMPopover,
-  PMCopiable,
 } from '@packmind/ui';
 import { Link, useNavigate } from 'react-router';
 import {
@@ -54,6 +52,7 @@ import {
   MarkdownEditor,
   MarkdownEditorProvider,
 } from '../../../../shared/components/editor/MarkdownEditor';
+import { CopiableTextField } from '../../../../shared/components/inputs/CopiableTextField';
 
 interface PackageDetailsProps {
   id: PackageId;
@@ -752,7 +751,7 @@ export const PackageDetails = ({
     );
   }
 
-  const pullCommand = `packmind pull ${pkg.slug}`;
+  const pullCommand = `packmind-cli pull ${pkg.slug}`;
 
   return (
     <PMPage
@@ -789,74 +788,29 @@ export const PackageDetails = ({
       }
     >
       <PMVStack align="stretch" gap="6">
-        <PMDataList
-          size="md"
-          orientation="horizontal"
-          items={[
-            {
-              label: 'Slug',
-              value: (
-                <PMHStack gap={2}>
-                  <PMText>{pkg.slug}</PMText>
-                  <PMPopover.Root positioning={{ placement: 'bottom-start' }}>
-                    <PMPopover.Trigger asChild>
-                      <PMButton variant="ghost" size="xs">
-                        Pull package
-                      </PMButton>
-                    </PMPopover.Trigger>
-                    <PMPopover.Positioner>
-                      <PMPopover.Content>
-                        <PMPopover.Arrow>
-                          <PMPopover.ArrowTip />
-                        </PMPopover.Arrow>
-                        <PMPopover.Body>
-                          <PMPopover.Title>Pull this package</PMPopover.Title>
-                          <PMText
-                            variant="small"
-                            mb={2}
-                            as="p"
-                            color="secondary"
-                          >
-                            Use this command to pull the package with the
-                            Packmind CLI:
-                          </PMText>
-                          <PMCopiable.Root value={pullCommand}>
-                            <PMBox
-                              position="relative"
-                              bg="background.secondary"
-                              p={3}
-                              borderRadius="md"
-                              border="1px solid"
-                              borderColor="border.primary"
-                            >
-                              <PMText fontFamily="mono" fontSize="sm">
-                                {pullCommand}
-                              </PMText>
-                              <PMCopiable.Trigger asChild>
-                                <PMButton
-                                  position="absolute"
-                                  top={2}
-                                  right={2}
-                                  size="xs"
-                                  variant="ghost"
-                                >
-                                  <PMCopiable.Indicator>
-                                    Copy
-                                  </PMCopiable.Indicator>
-                                </PMButton>
-                              </PMCopiable.Trigger>
-                            </PMBox>
-                          </PMCopiable.Root>
-                        </PMPopover.Body>
-                        <PMPopover.CloseTrigger />
-                      </PMPopover.Content>
-                    </PMPopover.Positioner>
-                  </PMPopover.Root>
-                </PMHStack>
-              ),
-            },
-          ]}
-        />
+        <PMHStack gap={8} align="center" justifyContent="space-between">
+          <PMDataList
+            size="md"
+            orientation="horizontal"
+            items={[
+              {
+                label: 'Slug',
+                value: <PMText>{pkg.slug}</PMText>,
+              },
+            ]}
+          />
+          <PMHStack
+            gap={2}
+            align="center"
+            flexGrow={1}
+            justifyContent="flex-end"
+          >
+            <PMText variant="small" color="primary" fontWeight="medium">
+              Install package
+            </PMText>
+            <CopiableTextField value={pullCommand} readOnly width="auto" />
+          </PMHStack>
+        </PMHStack>
         {pkg.description && (
           <PMBox>
             <PMMarkdownViewer content={pkg.description} />
