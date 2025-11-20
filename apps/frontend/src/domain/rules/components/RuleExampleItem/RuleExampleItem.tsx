@@ -240,45 +240,44 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
       shadow="sm"
     >
       {/* Header */}
-      <PMFlex justify="space-between" align="center" mb={4}>
+      <PMFlex justify="space-between" align="center" mb={2}>
         <PMHStack>
-          <PMText>Language:</PMText>
           {allowLanguageSelection && isNew ? (
-            <PMBox width="200px">
-              <PMSelect.Root
-                collection={languageCollection}
-                value={[editValues.lang]}
-                onValueChange={(e) => {
-                  const newLang = e.value[0] as ProgrammingLanguage;
-                  setEditValues({ ...editValues, lang: newLang });
-                  if (onLanguageChange) {
-                    onLanguageChange(newLang);
-                  }
-                }}
-              >
-                <PMSelectTrigger placeholder="Select a language" />
-                <PMSelect.Positioner>
-                  <PMSelect.Content zIndex={1500}>
-                    {sortedLanguages.map((l) => (
-                      <PMSelect.Item
-                        item={{
-                          value: l.language,
-                          label: l.info.displayName,
-                        }}
-                        key={l.language}
-                      >
-                        {l.info.displayName}
-                      </PMSelect.Item>
-                    ))}
-                  </PMSelect.Content>
-                </PMSelect.Positioner>
-              </PMSelect.Root>
-            </PMBox>
+            <>
+              <PMText>Language:</PMText>
+              <PMBox width="200px">
+                <PMSelect.Root
+                  collection={languageCollection}
+                  value={[editValues.lang]}
+                  onValueChange={(e) => {
+                    const newLang = e.value[0] as ProgrammingLanguage;
+                    setEditValues({ ...editValues, lang: newLang });
+                    if (onLanguageChange) {
+                      onLanguageChange(newLang);
+                    }
+                  }}
+                >
+                  <PMSelectTrigger placeholder="Select a language" />
+                  <PMSelect.Positioner>
+                    <PMSelect.Content zIndex={1500}>
+                      {sortedLanguages.map((l) => (
+                        <PMSelect.Item
+                          item={{
+                            value: l.language,
+                            label: l.info.displayName,
+                          }}
+                          key={l.language}
+                        >
+                          {l.info.displayName}
+                        </PMSelect.Item>
+                      ))}
+                    </PMSelect.Content>
+                  </PMSelect.Positioner>
+                </PMSelect.Root>
+              </PMBox>
+            </>
           ) : (
-            <PMBadge colorPalette={'blue'} size={'lg'}>
-              {sortedLanguages.find(({ language }) => language === example.lang)
-                ?.info.displayName || example.lang}
-            </PMBadge>
+            <></>
           )}
         </PMHStack>
         {isEditing ? (
@@ -345,91 +344,88 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
         )}
       </PMFlex>
 
-      {/* Code Examples Side by Side */}
-      <PMGrid gridTemplateColumns={'repeat(2, minmax(0, 1fr))'} gap={4}>
-        <PMGridItem>
-          {/* Positive Example */}
-          <PMVStack flex={1} align="stretch" gap={2}>
-            <PMHeading level="h5">
-              <PMIcon color="green.500" marginRight={'1'}>
-                <LuCircleCheckBig />
-              </PMIcon>
-              Do
-            </PMHeading>
-            <PMBox>
-              <PMCodeMirror
-                value={isEditing ? editValues.positive : example.positive}
-                onChange={handlePositiveChange}
-                editable={isEditing}
-                language={isEditing ? editValues.lang : example.lang}
-                placeholder={'Code complying with the rule...'}
-                height="200px"
-                basicSetup={{
-                  lineNumbers: true,
-                  foldGutter: false,
-                  dropCursor: false,
-                  allowMultipleSelections: false,
-                  indentOnInput: true,
-                  bracketMatching: true,
-                  closeBrackets: true,
-                  autocompletion: false,
-                  searchKeymap: false,
-                }}
-                style={{
-                  opacity: isEditing ? 1 : 0.8,
-                  cursor: isEditing ? 'text' : 'default',
-                }}
-              />
-              {validationErrors.positive && (
-                <PMText color="error" variant="small" mt={1}>
-                  {validationErrors.positive}
-                </PMText>
-              )}
-            </PMBox>
-          </PMVStack>
-        </PMGridItem>
-        <PMGridItem>
-          {/* Negative Example */}
-          <PMVStack flex={1} align="stretch" gap={2}>
-            <PMHeading level="h5">
-              <PMIcon color="red.500" marginRight={'1'}>
-                <LuCircleX />
-              </PMIcon>
-              Don't
-            </PMHeading>
-            <PMBox>
-              <PMCodeMirror
-                value={isEditing ? editValues.negative : example.negative}
-                onChange={handleNegativeChange}
-                editable={isEditing}
-                language={isEditing ? editValues.lang : example.lang}
-                placeholder={'Code violating the rule...'}
-                height="200px"
-                basicSetup={{
-                  lineNumbers: true,
-                  foldGutter: false,
-                  dropCursor: false,
-                  allowMultipleSelections: false,
-                  indentOnInput: true,
-                  bracketMatching: true,
-                  closeBrackets: true,
-                  autocompletion: false,
-                  searchKeymap: false,
-                }}
-                style={{
-                  opacity: isEditing ? 1 : 0.8,
-                  cursor: isEditing ? 'text' : 'default',
-                }}
-              />
-              {validationErrors.negative && (
-                <PMText color="error" variant="small" mt={1}>
-                  {validationErrors.negative}
-                </PMText>
-              )}
-            </PMBox>
-          </PMVStack>
-        </PMGridItem>
-      </PMGrid>
+      {/* Code Examples Stacked Vertically */}
+      <PMVStack gap={4} align="stretch">
+        {/* Positive Example */}
+        <PMVStack flex={1} align="stretch" gap={2}>
+          <PMHeading level="h5">
+            <PMIcon color="green.500" marginRight={'1'}>
+              <LuCircleCheckBig />
+            </PMIcon>
+            Do
+          </PMHeading>
+          <PMBox>
+            <PMCodeMirror
+              value={isEditing ? editValues.positive : example.positive}
+              onChange={handlePositiveChange}
+              editable={isEditing}
+              language={isEditing ? editValues.lang : example.lang}
+              placeholder={'Code complying with the rule...'}
+              height="200px"
+              basicSetup={{
+                lineNumbers: true,
+                foldGutter: false,
+                dropCursor: false,
+                allowMultipleSelections: false,
+                indentOnInput: true,
+                bracketMatching: true,
+                closeBrackets: true,
+                autocompletion: false,
+                searchKeymap: false,
+              }}
+              style={{
+                opacity: isEditing ? 1 : 0.8,
+                cursor: isEditing ? 'text' : 'default',
+              }}
+            />
+            {validationErrors.positive && (
+              <PMText color="error" variant="small" mt={1}>
+                {validationErrors.positive}
+              </PMText>
+            )}
+          </PMBox>
+        </PMVStack>
+
+        {/* Negative Example */}
+        <PMVStack flex={1} align="stretch" gap={2}>
+          <PMHeading level="h5">
+            <PMIcon color="red.500" marginRight={'1'}>
+              <LuCircleX />
+            </PMIcon>
+            Don't
+          </PMHeading>
+          <PMBox>
+            <PMCodeMirror
+              value={isEditing ? editValues.negative : example.negative}
+              onChange={handleNegativeChange}
+              editable={isEditing}
+              language={isEditing ? editValues.lang : example.lang}
+              placeholder={'Code violating the rule...'}
+              height="200px"
+              basicSetup={{
+                lineNumbers: true,
+                foldGutter: false,
+                dropCursor: false,
+                allowMultipleSelections: false,
+                indentOnInput: true,
+                bracketMatching: true,
+                closeBrackets: true,
+                autocompletion: false,
+                searchKeymap: false,
+              }}
+              style={{
+                opacity: isEditing ? 1 : 0.8,
+                cursor: isEditing ? 'text' : 'default',
+              }}
+            />
+            {validationErrors.negative && (
+              <PMText color="error" variant="small" mt={1}>
+                {validationErrors.negative}
+              </PMText>
+            )}
+          </PMBox>
+        </PMVStack>
+      </PMVStack>
 
       {/* Total character count error */}
       {validationErrors.total && (
