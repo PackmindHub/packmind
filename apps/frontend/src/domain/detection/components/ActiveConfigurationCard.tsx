@@ -300,7 +300,7 @@ const ActiveConfigurationCardAssessment: React.FC<
       return (
         <ConfigurationCard {...configurationCardProps}>
           <PMText color="faded" fontSize="sm">
-            Assessment in progress
+            Checking if the rule can be detected by linter...
           </PMText>
         </ConfigurationCard>
       );

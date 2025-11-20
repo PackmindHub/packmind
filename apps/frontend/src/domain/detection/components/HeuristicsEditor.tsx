@@ -80,7 +80,7 @@ export const HeuristicsEditor: React.FC<HeuristicsEditorProps> = ({
                 </PMButton>
               </PMHStack>
             )}
-            <PMText whiteSpace="pre-wrap" width="full" color="faded">
+            <PMText whiteSpace="pre-wrap" width="full" color="secondary">
               {value || 'No clues defined yet...'}
             </PMText>
           </>

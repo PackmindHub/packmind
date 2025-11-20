@@ -47,6 +47,7 @@ describe('ActivateConfigurationCard', () => {
       onTestProgram: jest.fn(),
       ruleId: createRuleId('rule-id'),
       standardId: createStandardId('standard-id'),
+      onOpenAssessmentDrawer: jest.fn(),
     };
   });
 
@@ -115,14 +116,17 @@ describe('ActivateConfigurationCard', () => {
         beforeEach(() => {
           ruleDetectionAssessment.status =
             RuleDetectionAssessmentStatus.IN_PROGRESS;
-          ruleDetectionAssessment.details = 'Assessment in progress';
+          ruleDetectionAssessment.details =
+            'Checking if the rule can be detected by linter';
 
           screen = renderWithContext();
         });
 
-        it('shows an "Assessment in progress" message', () => {
+        it('shows an "Checking if the rule can be detected by linter" message', () => {
           expect(
-            screen.getByText('Assessment in progress'),
+            screen.getByText(
+              'Checking if the rule can be detected by linter...',
+            ),
           ).toBeInTheDocument();
         });
 

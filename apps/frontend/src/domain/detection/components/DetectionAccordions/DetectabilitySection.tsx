@@ -9,6 +9,8 @@ import {
   PMText,
   PMVStack,
   PMIcon,
+  PMHeading,
+  PMList,
 } from '@packmind/ui';
 import {
   RuleDetectionAssessmentStatus,
@@ -81,7 +83,7 @@ export const DetectabilitySection: React.FC<DetectabilitySectionProps> = ({
     const isAssessmentInError =
       assessment.status === RuleDetectionAssessmentStatus.FAILED;
 
-    // Check if program generation is in error
+    // Check if program generation is in error, failed, or needs review
     const programForLanguage = activePrograms?.find(
       (program) =>
         program.detectionProgram?.language === language ||
@@ -89,7 +91,10 @@ export const DetectabilitySection: React.FC<DetectabilitySectionProps> = ({
     );
     const isProgramGenerationInError =
       programForLanguage?.detectionProgram?.status === DetectionStatus.ERROR ||
-      programForLanguage?.detectionProgram?.status === DetectionStatus.FAILURE;
+      programForLanguage?.detectionProgram?.status ===
+        DetectionStatus.FAILURE ||
+      programForLanguage?.detectionProgram?.status ===
+        DetectionStatus.TO_REVIEW;
 
     return isAssessmentInError || isProgramGenerationInError;
   }, [assessment, activePrograms, language]);
@@ -359,6 +364,40 @@ export const DetectabilitySection: React.FC<DetectabilitySectionProps> = ({
             )}
           </PMBox>
         </PMGrid>
+
+        {assessment.status === RuleDetectionAssessmentStatus.SUCCESS && (
+          <PMVStack width="full" align="flex-start" mt={2}>
+            <PMHeading size="sm" color="tertiary">
+              Flagged a false positive?
+            </PMHeading>
+            <PMList.Root as="ul" listStyle="disc" pl={4}>
+              <PMList.Item>
+                <PMText color="tertiary">
+                  Add a new &quot;don&apos;t&quot; example that reflects the
+                  code flagged as a false positive
+                </PMText>
+              </PMList.Item>
+              <PMList.Item>
+                <PMText color="tertiary">
+                  The status of the detection program should be updated to
+                  &quot;To review&quot;
+                </PMText>
+              </PMList.Item>
+              <PMList.Item>
+                <PMText color="tertiary">
+                  You can then update the detection heuristics to indicate why
+                  this kind of code example should not be flagged
+                </PMText>
+              </PMList.Item>
+              <PMList.Item>
+                <PMText color="tertiary">
+                  Click on &quot;Retry&quot; to re-generate a new detection
+                  program
+                </PMText>
+              </PMList.Item>
+            </PMList.Root>
+          </PMVStack>
+        )}
       </PMVStack>
     </PMVStack>
   );
