@@ -22,6 +22,7 @@ interface RuleExamplesManagerProps {
   forceCreate?: boolean;
   onLanguageChange?: (lang: ProgrammingLanguage) => void;
   onCancelCreation?: () => void;
+  allowLanguageSelection?: boolean;
 }
 
 export interface NewExample {
@@ -39,12 +40,13 @@ export const RuleExamplesManager: React.FC<RuleExamplesManagerProps> = ({
   forceCreate = false,
   onLanguageChange,
   onCancelCreation,
+  allowLanguageSelection = false,
 }) => {
   const { organization } = useAuthContext();
   const { spaceId } = useCurrentSpace();
   const [newExamples, setNewExamples] = useState<NewExample[]>([]);
   const createRuleExampleMutation = useCreateRuleExampleMutation();
-  const hasInitializedFirstExampleRef = useRef(false);
+  const previousForceCreateRef = useRef(false);
 
   const {
     data: existingExamples,
@@ -70,13 +72,25 @@ export const RuleExamplesManager: React.FC<RuleExamplesManagerProps> = ({
     setNewExamples((prev) => [...prev, newExample]);
   }, [selectedLanguage]);
 
-  // Automatically trigger creation once when forceCreate is true
+  // Automatically trigger creation when forceCreate becomes true
   React.useEffect(() => {
-    if (forceCreate && !hasInitializedFirstExampleRef.current) {
-      hasInitializedFirstExampleRef.current = true;
+    if (forceCreate && !previousForceCreateRef.current) {
       handleCreateNewExample();
     }
+    previousForceCreateRef.current = forceCreate;
   }, [forceCreate, handleCreateNewExample]);
+
+  // Update the language of new examples when selectedLanguage changes in forceCreate mode
+  React.useEffect(() => {
+    if (forceCreate && newExamples.length > 0) {
+      setNewExamples((prev) =>
+        prev.map((example) => ({
+          ...example,
+          lang: selectedLanguage as ProgrammingLanguage,
+        })),
+      );
+    }
+  }, [selectedLanguage, forceCreate, newExamples.length]);
 
   const handleSaveNewExample = async (
     newExample: NewExample,
@@ -180,7 +194,7 @@ export const RuleExamplesManager: React.FC<RuleExamplesManagerProps> = ({
               isNew={true}
               onSaveNew={handleSaveNewExample}
               onCancelNew={handleCancelNewExample}
-              allowLanguageSelection={forceCreate}
+              allowLanguageSelection={allowLanguageSelection}
               onLanguageChange={onLanguageChange}
             />
           ))}
