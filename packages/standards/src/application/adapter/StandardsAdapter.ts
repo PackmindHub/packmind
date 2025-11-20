@@ -236,6 +236,7 @@ export class StandardsAdapter
       this.repositories.getRuleExampleRepository(),
       this.repositories.getRuleRepository(),
       this.linterPort,
+      this.eventTrackingPort,
     );
 
     // Use case that depends on accountsPort, deploymentsPort, and spacesPort
