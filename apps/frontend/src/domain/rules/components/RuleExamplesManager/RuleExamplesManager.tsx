@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   OrganizationId,
   ProgrammingLanguage,
@@ -19,6 +19,9 @@ interface RuleExamplesManagerProps {
   standardId: string;
   ruleId: RuleId;
   selectedLanguage: string;
+  forceCreate?: boolean;
+  onLanguageChange?: (lang: ProgrammingLanguage) => void;
+  onCancelCreation?: () => void;
 }
 
 export interface NewExample {
@@ -33,11 +36,15 @@ export const RuleExamplesManager: React.FC<RuleExamplesManagerProps> = ({
   standardId,
   ruleId,
   selectedLanguage,
+  forceCreate = false,
+  onLanguageChange,
+  onCancelCreation,
 }) => {
   const { organization } = useAuthContext();
   const { spaceId } = useCurrentSpace();
   const [newExamples, setNewExamples] = useState<NewExample[]>([]);
   const createRuleExampleMutation = useCreateRuleExampleMutation();
+  const hasInitializedFirstExampleRef = useRef(false);
 
   const {
     data: existingExamples,
@@ -51,7 +58,7 @@ export const RuleExamplesManager: React.FC<RuleExamplesManagerProps> = ({
     ruleId,
   );
 
-  const handleCreateNewExample = () => {
+  const handleCreateNewExample = useCallback(() => {
     const newExample: NewExample = {
       id: `new-${Date.now()}-${Math.random()}`,
       lang: selectedLanguage as ProgrammingLanguage,
@@ -61,7 +68,15 @@ export const RuleExamplesManager: React.FC<RuleExamplesManagerProps> = ({
     };
 
     setNewExamples((prev) => [...prev, newExample]);
-  };
+  }, [selectedLanguage]);
+
+  // Automatically trigger creation once when forceCreate is true
+  React.useEffect(() => {
+    if (forceCreate && !hasInitializedFirstExampleRef.current) {
+      hasInitializedFirstExampleRef.current = true;
+      handleCreateNewExample();
+    }
+  }, [forceCreate, handleCreateNewExample]);
 
   const handleSaveNewExample = async (
     newExample: NewExample,
@@ -84,6 +99,9 @@ export const RuleExamplesManager: React.FC<RuleExamplesManagerProps> = ({
 
   const handleCancelNewExample = (newExampleId: string) => {
     setNewExamples((prev) => prev.filter((ex) => ex.id !== newExampleId));
+    if (onCancelCreation) {
+      onCancelCreation();
+    }
   };
 
   if (isLoading) {
@@ -121,7 +139,7 @@ export const RuleExamplesManager: React.FC<RuleExamplesManagerProps> = ({
   );
 
   const filteredNewExamples = newExamples.filter(
-    (ex) => ex.lang === selectedLanguage,
+    (ex) => ex.lang === selectedLanguage || forceCreate,
   );
 
   const hasExamples =
@@ -130,19 +148,21 @@ export const RuleExamplesManager: React.FC<RuleExamplesManagerProps> = ({
 
   return (
     <PMVStack alignItems={'stretch'} gap="4" width={'full'}>
-      <PMBox alignSelf="flex-start">
-        <PMButton
-          variant="primary"
-          size="sm"
-          onClick={handleCreateNewExample}
-          loading={createRuleExampleMutation.isPending}
-          disabled={createRuleExampleMutation.isPending}
-        >
-          Add Example
-        </PMButton>
-      </PMBox>
+      {!forceCreate && (
+        <PMBox alignSelf="flex-start">
+          <PMButton
+            variant="primary"
+            size="sm"
+            onClick={handleCreateNewExample}
+            loading={createRuleExampleMutation.isPending}
+            disabled={createRuleExampleMutation.isPending}
+          >
+            Add Example
+          </PMButton>
+        </PMBox>
+      )}
 
-      {!hasExamples ? (
+      {!hasExamples && !forceCreate ? (
         <PMBox textAlign="center" py={8}>
           <PMText color="secondary">
             No examples have been added for this rule yet.
@@ -160,6 +180,8 @@ export const RuleExamplesManager: React.FC<RuleExamplesManagerProps> = ({
               isNew={true}
               onSaveNew={handleSaveNewExample}
               onCancelNew={handleCancelNewExample}
+              allowLanguageSelection={forceCreate}
+              onLanguageChange={onLanguageChange}
             />
           ))}
 

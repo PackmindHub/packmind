@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { PMHeading, PMText, PMVStack } from '@packmind/ui';
+import { PMText } from '@packmind/ui';
 import { useOutletContext, useParams } from 'react-router';
 import { StandardDetailsOutletContext } from '../../src/domain/standards/components/StandardDetails';
 import { RuleDetails } from '../../src/domain/rules/components';
@@ -56,13 +56,10 @@ export default function StandardDetailRuleRouteModule() {
     (selectedRule && ruleLanguages[String(selectedRule.id)]) ?? [];
 
   return (
-    <PMVStack align="stretch" gap={4} height="full">
-      <PMHeading level="h3">{selectedRule.content}</PMHeading>
-      <RuleDetails
-        standardId={standard.id}
-        rule={selectedRule}
-        detectionLanguages={detectionLanguages}
-      />
-    </PMVStack>
+    <RuleDetails
+      standardId={standard.id}
+      rule={selectedRule}
+      detectionLanguages={detectionLanguages}
+    />
   );
 }

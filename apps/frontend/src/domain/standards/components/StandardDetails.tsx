@@ -72,6 +72,7 @@ export const StandardDetails = ({
 
   const {
     activeSection,
+    currentRuleId,
     showSummaryActions,
     showRuleActions,
     handleSectionSelect,
@@ -95,6 +96,15 @@ export const StandardDetails = ({
       }),
     );
   }, [rules]);
+
+  const selectedRule = useMemo(() => {
+    if (!currentRuleId || !sortedRules) {
+      return undefined;
+    }
+    return sortedRules.find((rule) => rule.id === currentRuleId);
+  }, [currentRuleId, sortedRules]);
+
+  const pageTitle = selectedRule ? selectedRule.content : standard.name;
 
   const deleteStandardMutation = useDeleteStandardMutation();
 
@@ -221,7 +231,7 @@ export const StandardDetails = ({
       />
 
       <PMPage
-        title={standard.name}
+        title={pageTitle}
         breadcrumbComponent={
           !showRuleActions ? (
             <StandardVersionHistoryHeader
