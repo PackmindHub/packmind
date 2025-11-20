@@ -24,6 +24,7 @@ import { analyzeRecipeMatchPrompt } from './prompts/analyzeRecipeMatch.prompt';
 import { determineNewArtifactPrompt } from './prompts/determineNewArtifact.prompt';
 import { classifyChangeTypePrompt } from './prompts/classifyChangeType.prompt';
 import { analyzeStandardEditPrompt } from './prompts/analyzeStandardEdit.prompt';
+import { analyzeRecipeEditPrompt } from './prompts/analyzeRecipeEdit.prompt';
 
 const origin = 'DistillationService';
 
@@ -57,6 +58,24 @@ type StandardEditResult = {
         lang: string;
         positive: string;
         negative: string;
+      }> | null;
+      toDelete?: string[] | null;
+    } | null;
+  };
+  rationale: string;
+};
+
+type RecipeEditResult = {
+  changes: {
+    name?: string | null;
+    content?: string | null;
+    exampleChanges?: {
+      toAdd?: Array<{ lang: string; code: string; description: string }> | null;
+      toUpdate?: Array<{
+        exampleId: string;
+        lang: string;
+        code: string;
+        description: string;
       }> | null;
       toDelete?: string[] | null;
     } | null;
@@ -289,6 +308,70 @@ export class DistillationService {
     } catch (error) {
       this.logger.error('Failed to analyze standard edit', {
         standardId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return null;
+    }
+  }
+
+  /**
+   * Analyze a recipe to determine what edits should be made based on the topic
+   */
+  private async analyzeRecipeEdit(
+    topic: Topic,
+    recipeId: RecipeId,
+  ): Promise<CreateKnowledgePatchData | null> {
+    this.logger.debug('Analyzing recipe for edits', { recipeId });
+
+    try {
+      const recipe = await this.recipesPort.getRecipeByIdInternal(recipeId);
+      if (!recipe) {
+        this.logger.warn('Recipe not found', { recipeId });
+        return null;
+      }
+
+      const codeExamplesText =
+        topic.codeExamples.length > 0
+          ? topic.codeExamples
+              .map((ex) => `\`\`\`${ex.language}\n${ex.code}\n\`\`\``)
+              .join('\n\n')
+          : 'No code examples provided';
+
+      const prompt = analyzeRecipeEditPrompt
+        .replace('{topicTitle}', topic.title)
+        .replace('{topicContent}', topic.content)
+        .replace('{codeExamples}', codeExamplesText)
+        .replace('{recipeName}', recipe.name)
+        .replace('{recipeContent}', recipe.content);
+
+      const result = await this.aiService.executePrompt<string>(prompt);
+
+      if (!result.success || !result.data) {
+        this.logger.warn('AI service failed to analyze recipe edit', {
+          error: result.error,
+        });
+        return null;
+      }
+
+      const analysis = this.parseAIResponse<RecipeEditResult>(result.data);
+
+      const diffOriginal = `# ${recipe.name}\n\n${recipe.content}`;
+      const diffModified = `# ${analysis.changes.name || recipe.name}\n\n${analysis.changes.content || recipe.content}`;
+
+      return {
+        spaceId: topic.spaceId,
+        patchType: KnowledgePatchType.UPDATE_RECIPE,
+        proposedChanges: {
+          recipeId: recipe.id,
+          changes: analysis.changes,
+          rationale: analysis.rationale,
+        },
+        diffOriginal,
+        diffModified,
+      };
+    } catch (error) {
+      this.logger.error('Failed to analyze recipe edit', {
+        recipeId,
         error: error instanceof Error ? error.message : String(error),
       });
       return null;
