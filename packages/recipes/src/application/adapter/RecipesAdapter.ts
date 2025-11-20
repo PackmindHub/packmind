@@ -48,6 +48,11 @@ import { ListRecipeVersionsUsecase } from '../useCases/listRecipeVersions/listRe
 import { UpdateRecipeFromUIUsecase } from '../useCases/updateRecipeFromUI/updateRecipeFromUI.usecase';
 import { UpdateRecipesFromGitHubUsecase } from '../useCases/updateRecipesFromGitHub/updateRecipesFromGitHub.usecase';
 import { UpdateRecipesFromGitLabUsecase } from '../useCases/updateRecipesFromGitLab/updateRecipesFromGitLab.usecase';
+import { UpdateRecipeNameUsecase } from '../useCases/updateRecipeName/updateRecipeName.usecase';
+import { UpdateRecipeContentUsecase } from '../useCases/updateRecipeContent/updateRecipeContent.usecase';
+import { AddRecipeExampleUsecase } from '../useCases/addRecipeExample/addRecipeExample.usecase';
+import { UpdateRecipeExampleUsecase } from '../useCases/updateRecipeExample/updateRecipeExample.usecase';
+import { DeleteRecipeExampleUsecase } from '../useCases/deleteRecipeExample/deleteRecipeExample.usecase';
 
 const origin = 'RecipesAdapter';
 
@@ -78,6 +83,11 @@ export class RecipesAdapter
   private _listRecipeVersions!: ListRecipeVersionsUsecase;
   private _getRecipeVersion!: GetRecipeVersionUsecase;
   private _deleteRecipesBatch!: DeleteRecipesBatchUsecase;
+  private _updateRecipeName!: UpdateRecipeNameUsecase;
+  private _updateRecipeContent!: UpdateRecipeContentUsecase;
+  private _addRecipeExample!: AddRecipeExampleUsecase;
+  private _updateRecipeExample!: UpdateRecipeExampleUsecase;
+  private _deleteRecipeExample!: DeleteRecipeExampleUsecase;
 
   constructor(
     private readonly recipesServices: RecipesServices,
@@ -208,6 +218,22 @@ export class RecipesAdapter
       this._deleteRecipe,
       this.logger,
     );
+
+    this._updateRecipeName = new UpdateRecipeNameUsecase(
+      this.recipesServices.getRecipeService(),
+      this.recipesServices.getRecipeVersionService(),
+    );
+
+    this._updateRecipeContent = new UpdateRecipeContentUsecase(
+      this.recipesServices.getRecipeService(),
+      this.recipesServices.getRecipeVersionService(),
+    );
+
+    this._addRecipeExample = new AddRecipeExampleUsecase();
+
+    this._updateRecipeExample = new UpdateRecipeExampleUsecase();
+
+    this._deleteRecipeExample = new DeleteRecipeExampleUsecase();
 
     this.logger.info('RecipesAdapter initialized successfully');
   }
@@ -426,29 +452,24 @@ export class RecipesAdapter
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async updateRecipeName(params: {
     recipeId: RecipeId;
     newName: string;
     organizationId: OrganizationId;
     userId: string;
   }): Promise<RecipeVersion> {
-    // TODO: Implement updateRecipeName use case
-    throw new Error('updateRecipeName not yet implemented');
+    return this._updateRecipeName.updateRecipeName(params);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async updateRecipeContent(params: {
     recipeId: RecipeId;
     newContent: string;
     organizationId: OrganizationId;
     userId: string;
   }): Promise<RecipeVersion> {
-    // TODO: Implement updateRecipeContent use case
-    throw new Error('updateRecipeContent not yet implemented');
+    return this._updateRecipeContent.updateRecipeContent(params);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async addRecipeExample(params: {
     recipeId: RecipeId;
     lang: string;
@@ -457,11 +478,9 @@ export class RecipesAdapter
     organizationId: OrganizationId;
     userId: string;
   }): Promise<RecipeVersion> {
-    // TODO: Implement addRecipeExample use case
-    throw new Error('addRecipeExample not yet implemented');
+    return this._addRecipeExample.addRecipeExample(params);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async updateRecipeExample(params: {
     exampleId: string;
     lang: string;
@@ -470,17 +489,14 @@ export class RecipesAdapter
     organizationId: OrganizationId;
     userId: string;
   }): Promise<RecipeVersion> {
-    // TODO: Implement updateRecipeExample use case
-    throw new Error('updateRecipeExample not yet implemented');
+    return this._updateRecipeExample.updateRecipeExample(params);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async deleteRecipeExample(params: {
     exampleId: string;
     organizationId: OrganizationId;
     userId: string;
   }): Promise<void> {
-    // TODO: Implement deleteRecipeExample use case
-    throw new Error('deleteRecipeExample not yet implemented');
+    return this._deleteRecipeExample.deleteRecipeExample(params);
   }
 }
