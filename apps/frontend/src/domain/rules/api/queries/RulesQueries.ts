@@ -9,7 +9,7 @@ import {
   StandardId,
 } from '@packmind/types';
 import { rulesGateway } from '../gateways';
-import { GET_RULE_EXAMPLES_KEY } from '../queryKeys';
+import { GET_RULE_EXAMPLES_KEY, getRuleExamplesKey } from '../queryKeys';
 import {
   GET_RULES_BY_STANDARD_ID_KEY,
   getStandardByIdKey,
@@ -19,6 +19,7 @@ import {
   GET_ACTIVE_DETECTION_PROGRAMS_KEY,
   GET_ALL_DETECTION_PROGRAMS_KEY,
 } from '@packmind/proprietary/frontend/domain/detection/api/queryKeys';
+import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 
 export const useGetRuleExamplesQuery = (
   organizationId: OrganizationId,
@@ -28,13 +29,7 @@ export const useGetRuleExamplesQuery = (
   enabled = true,
 ) => {
   return useQuery({
-    queryKey: [
-      ...GET_RULE_EXAMPLES_KEY,
-      organizationId,
-      spaceId,
-      standardId,
-      ruleId,
-    ],
+    queryKey: getRuleExamplesKey(organizationId, spaceId, standardId, ruleId),
     queryFn: () =>
       rulesGateway.getRuleExamples(organizationId, spaceId, standardId, ruleId),
     enabled:
@@ -45,6 +40,7 @@ export const useGetRuleExamplesQuery = (
 export const useCreateRuleExampleMutation = () => {
   const queryClient = useQueryClient();
   const { spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
 
   return useMutation({
     mutationKey: ['createRuleExample'],
@@ -66,13 +62,16 @@ export const useCreateRuleExampleMutation = () => {
     onSuccess: async (newRuleExample: RuleExample, variables) => {
       // Only invalidate specific rule examples
       await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: [
-            ...GET_RULE_EXAMPLES_KEY,
-            variables.standardId,
-            variables.ruleId,
-          ],
-        }),
+        organization?.id && spaceId
+          ? queryClient.invalidateQueries({
+              queryKey: getRuleExamplesKey(
+                organization.id,
+                spaceId as SpaceId,
+                createStandardId(variables.standardId),
+                variables.ruleId,
+              ),
+            })
+          : Promise.resolve(),
 
         // Only invalidate the specific standard (if examples are embedded)
         queryClient.invalidateQueries({
@@ -109,6 +108,7 @@ export const useCreateRuleExampleMutation = () => {
 export const useUpdateRuleExampleMutation = () => {
   const queryClient = useQueryClient();
   const { spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
 
   return useMutation({
     mutationKey: ['updateRuleExample'],
@@ -131,13 +131,16 @@ export const useUpdateRuleExampleMutation = () => {
     },
     onSuccess: async (updatedRuleExample: RuleExample, variables) => {
       await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: [
-            ...GET_RULE_EXAMPLES_KEY,
-            variables.standardId,
-            variables.ruleId,
-          ],
-        }),
+        organization?.id && spaceId
+          ? queryClient.invalidateQueries({
+              queryKey: getRuleExamplesKey(
+                organization.id,
+                spaceId as SpaceId,
+                createStandardId(variables.standardId),
+                variables.ruleId,
+              ),
+            })
+          : Promise.resolve(),
         queryClient.invalidateQueries({
           queryKey: getStandardByIdKey(
             spaceId,
@@ -169,6 +172,7 @@ export const useUpdateRuleExampleMutation = () => {
 export const useDeleteRuleExampleMutation = () => {
   const queryClient = useQueryClient();
   const { spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
 
   return useMutation({
     mutationKey: ['deleteRuleExample'],
@@ -185,13 +189,16 @@ export const useDeleteRuleExampleMutation = () => {
     },
     onSuccess: async (_, variables) => {
       await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: [
-            ...GET_RULE_EXAMPLES_KEY,
-            variables.standardId,
-            variables.ruleId,
-          ],
-        }),
+        organization?.id && spaceId
+          ? queryClient.invalidateQueries({
+              queryKey: getRuleExamplesKey(
+                organization.id,
+                spaceId as SpaceId,
+                createStandardId(variables.standardId),
+                variables.ruleId,
+              ),
+            })
+          : Promise.resolve(),
         queryClient.invalidateQueries({
           queryKey: getStandardByIdKey(
             spaceId,
