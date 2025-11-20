@@ -13,6 +13,8 @@ import {
   KnowledgePatchType,
   RecipeId,
   StandardId,
+  RuleId,
+  createRuleId,
 } from '@packmind/types';
 import { CreateKnowledgePatchData } from './KnowledgePatchService';
 import { filterStandardCandidatesPrompt } from './prompts/filterStandardCandidates.prompt';
@@ -21,6 +23,7 @@ import { analyzeStandardMatchPrompt } from './prompts/analyzeStandardMatch.promp
 import { analyzeRecipeMatchPrompt } from './prompts/analyzeRecipeMatch.prompt';
 import { determineNewArtifactPrompt } from './prompts/determineNewArtifact.prompt';
 import { classifyChangeTypePrompt } from './prompts/classifyChangeType.prompt';
+import { analyzeStandardEditPrompt } from './prompts/analyzeStandardEdit.prompt';
 
 const origin = 'DistillationService';
 
@@ -34,6 +37,31 @@ type ChangeClassification =
 type ClassificationResult = {
   classification: ChangeClassification;
   reasoning: string;
+};
+
+type StandardEditResult = {
+  changes: {
+    name?: string | null;
+    description?: string | null;
+    rulesToAdd?: string[] | null;
+    rulesToUpdate?: Array<{ ruleId: string; content: string }> | null;
+    rulesToDelete?: string[] | null;
+    exampleChanges?: {
+      toAdd?: Array<{
+        lang: string;
+        positive: string;
+        negative: string;
+      }> | null;
+      toUpdate?: Array<{
+        exampleId: string;
+        lang: string;
+        positive: string;
+        negative: string;
+      }> | null;
+      toDelete?: string[] | null;
+    } | null;
+  };
+  rationale: string;
 };
 
 type StandardMatchResult = {
@@ -136,6 +164,134 @@ export class DistillationService {
         error: error instanceof Error ? error.message : String(error),
       });
       return { classification: 'no_change', reasoning: 'Classification error' };
+    }
+  }
+
+  /**
+   * Analyze a standard to determine what edits should be made based on the topic
+   */
+  private async analyzeStandardEdit(
+    topic: Topic,
+    standardId: StandardId,
+  ): Promise<CreateKnowledgePatchData | null> {
+    this.logger.debug('Analyzing standard for edits', { standardId });
+
+    try {
+      const standard = await this.standardsPort.getStandard(standardId);
+      if (!standard) {
+        this.logger.warn('Standard not found', { standardId });
+        return null;
+      }
+
+      const rules = await this.standardsPort.getLatestRulesByStandardId(
+        standard.id,
+      );
+      const rulesText =
+        rules.length > 0
+          ? rules.map((r) => `[${r.id}] ${r.content}`).join('\n')
+          : 'No rules defined yet';
+
+      const examplesText = 'No examples loaded yet';
+
+      const codeExamplesText =
+        topic.codeExamples.length > 0
+          ? topic.codeExamples
+              .map((ex) => `\`\`\`${ex.language}\n${ex.code}\n\`\`\``)
+              .join('\n\n')
+          : 'No code examples provided';
+
+      const prompt = analyzeStandardEditPrompt
+        .replace('{topicTitle}', topic.title)
+        .replace('{topicContent}', topic.content)
+        .replace('{codeExamples}', codeExamplesText)
+        .replace('{standardName}', standard.name)
+        .replace('{standardDescription}', standard.description)
+        .replace('{standardRules}', rulesText)
+        .replace('{standardExamples}', examplesText);
+
+      const result = await this.aiService.executePrompt<string>(prompt);
+
+      if (!result.success || !result.data) {
+        this.logger.warn('AI service failed to analyze standard edit', {
+          error: result.error,
+        });
+        return null;
+      }
+
+      const analysis = this.parseAIResponse<StandardEditResult>(result.data);
+
+      const buildStandardDoc = (
+        name: string,
+        description: string,
+        rulesList: Array<{ id: RuleId; content: string }>,
+      ) => {
+        return `# ${name}\n\n${description}\n\n## Rules\n\n${rulesList.map((r) => `- ${r.content}`).join('\n')}`;
+      };
+
+      const originalRules = rules.map((r) => ({
+        id: r.id,
+        content: r.content,
+      }));
+      let modifiedRules = [...originalRules];
+
+      if (
+        analysis.changes.rulesToAdd &&
+        analysis.changes.rulesToAdd.length > 0
+      ) {
+        modifiedRules.push(
+          ...analysis.changes.rulesToAdd.map((content, idx) => ({
+            id: createRuleId(`new-${idx}`),
+            content,
+          })),
+        );
+      }
+
+      if (analysis.changes.rulesToUpdate) {
+        for (const update of analysis.changes.rulesToUpdate) {
+          const idx = modifiedRules.findIndex((r) => r.id === update.ruleId);
+          if (idx !== -1) {
+            modifiedRules[idx] = {
+              id: createRuleId(update.ruleId),
+              content: update.content,
+            };
+          }
+        }
+      }
+
+      if (analysis.changes.rulesToDelete) {
+        modifiedRules = modifiedRules.filter(
+          (r) => !analysis.changes.rulesToDelete?.includes(r.id as string),
+        );
+      }
+
+      const diffOriginal = buildStandardDoc(
+        standard.name,
+        standard.description,
+        originalRules,
+      );
+      const diffModified = buildStandardDoc(
+        analysis.changes.name || standard.name,
+        analysis.changes.description || standard.description,
+        modifiedRules,
+      );
+
+      return {
+        spaceId: topic.spaceId,
+        patchType: KnowledgePatchType.UPDATE_STANDARD,
+        proposedChanges: {
+          standardId: standard.id,
+          changes: analysis.changes,
+          rationale: analysis.rationale,
+        },
+        diffOriginal,
+        diffModified,
+      };
+    } catch (error) {
+      this.logger.error('Failed to analyze standard edit', {
+        standardId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return null;
     }
   }
 
