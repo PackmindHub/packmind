@@ -38,7 +38,7 @@ import {
 import { ActiveConfigurationSection } from './ActiveConfigurationSection';
 import { useGetStandardByIdQuery } from '../../standards/api/queries/StandardsQueries';
 import { CopiableTextField } from '../../../shared/components/inputs/CopiableTextField';
-import { DetectionProgramAccordion } from './DetectionProgramAccordion';
+import { DetectionProgramConfiguration } from './DetectionProgramConfiguration';
 import { useGetMeQuery } from '../../accounts/api/queries/UserQueries';
 
 interface ProgramEditorProps {
@@ -374,7 +374,7 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
   return (
     <PMVStack alignItems="stretch" gap={6} width="full">
       {isAccordionViewEnabled && (
-        <DetectionProgramAccordion
+        <DetectionProgramConfiguration
           standardId={standardId}
           ruleId={ruleId}
           detectionLanguages={detectionLanguages}
