@@ -84,22 +84,43 @@ export class PatchApplicationService {
 
     const proposedChanges = patch.proposedChanges as {
       standardId: string;
-      action: 'addRule' | 'updateRule';
-      targetRuleId: string | null;
-      content: string;
+      changes?: {
+        name?: string | null;
+        description?: string | null;
+        rulesToAdd?: string[] | null;
+        rulesToUpdate?: Array<{ ruleId: string; content: string }> | null;
+        rulesToDelete?: string[] | null;
+        exampleChanges?: {
+          toAdd?: Array<{
+            lang: string;
+            positive: string;
+            negative: string;
+          }> | null;
+          toUpdate?: Array<{
+            exampleId: string;
+            lang: string;
+            positive: string;
+            negative: string;
+          }> | null;
+          toDelete?: string[] | null;
+        } | null;
+      };
+      action?: 'addRule' | 'updateRule';
+      targetRuleId?: string | null;
+      content?: string;
       rationale: string;
     };
 
-    const { standardId, action, targetRuleId, content } = proposedChanges;
+    const { standardId, changes, action, targetRuleId, content } =
+      proposedChanges;
 
     this.logger.info('Applying standard update', {
       patchId: patch.id,
       standardId,
-      action,
-      targetRuleId,
+      hasChanges: !!changes,
+      hasLegacyAction: !!action,
     });
 
-    // Get the standard to retrieve its slug
     const standard = await this.standardsPort.getStandard(
       standardId as StandardId,
     );
@@ -111,7 +132,79 @@ export class PatchApplicationService {
       throw new Error(`Standard ${standardId} not found`);
     }
 
-    if (action === 'addRule') {
+    // Handle new comprehensive changes format
+    if (changes) {
+      // TODO: Implement name update when port method available
+      if (changes.name) {
+        this.logger.warn('Standard name update not yet supported by port', {
+          patchId: patch.id,
+          newName: changes.name,
+        });
+      }
+
+      // TODO: Implement description update when port method available
+      if (changes.description) {
+        this.logger.warn(
+          'Standard description update not yet supported by port',
+          {
+            patchId: patch.id,
+          },
+        );
+      }
+
+      // Add new rules
+      if (changes.rulesToAdd && changes.rulesToAdd.length > 0) {
+        for (const ruleContent of changes.rulesToAdd) {
+          await this.standardsPort.addRuleToStandard({
+            standardSlug: standard.slug,
+            ruleContent,
+            organizationId,
+            userId,
+          });
+        }
+        this.logger.info('Added new rules to standard', {
+          patchId: patch.id,
+          count: changes.rulesToAdd.length,
+        });
+      }
+
+      // Update existing rules
+      if (changes.rulesToUpdate && changes.rulesToUpdate.length > 0) {
+        for (const ruleUpdate of changes.rulesToUpdate) {
+          await this.standardsPort.updateStandardRules({
+            standardId: standardId as StandardId,
+            ruleId: ruleUpdate.ruleId as RuleId,
+            newRuleContent: ruleUpdate.content,
+            organizationId,
+            userId,
+          });
+        }
+        this.logger.info('Updated existing rules in standard', {
+          patchId: patch.id,
+          count: changes.rulesToUpdate.length,
+        });
+      }
+
+      // TODO: Implement rule deletion when port method available
+      if (changes.rulesToDelete && changes.rulesToDelete.length > 0) {
+        this.logger.warn('Rule deletion not yet supported by port', {
+          patchId: patch.id,
+          ruleIds: changes.rulesToDelete,
+        });
+      }
+
+      // TODO: Implement example changes when port methods available
+      if (changes.exampleChanges) {
+        this.logger.warn('Example changes not yet supported by port', {
+          patchId: patch.id,
+        });
+      }
+
+      return true;
+    }
+
+    // Handle legacy format for backward compatibility
+    if (action === 'addRule' && content) {
       await this.standardsPort.addRuleToStandard({
         standardSlug: standard.slug,
         ruleContent: content,
@@ -119,13 +212,13 @@ export class PatchApplicationService {
         userId,
       });
 
-      this.logger.info('Rule added to standard successfully', {
+      this.logger.info('Rule added to standard successfully (legacy format)', {
         patchId: patch.id,
         standardId,
         standardSlug: standard.slug,
       });
       return true;
-    } else if (action === 'updateRule') {
+    } else if (action === 'updateRule' && content) {
       if (!targetRuleId) {
         this.logger.error('targetRuleId is required for updateRule action', {
           patchId: patch.id,
@@ -142,18 +235,20 @@ export class PatchApplicationService {
         userId,
       });
 
-      this.logger.info('Rule updated in standard successfully', {
-        patchId: patch.id,
-        standardId,
-        targetRuleId,
-      });
+      this.logger.info(
+        'Rule updated in standard successfully (legacy format)',
+        {
+          patchId: patch.id,
+          standardId,
+          targetRuleId,
+        },
+      );
       return true;
-    } else {
-      this.logger.error('Unknown action for standard update', {
-        patchId: patch.id,
-        action,
-      });
-      return false;
     }
+
+    this.logger.error('No valid changes or action found in patch', {
+      patchId: patch.id,
+    });
+    return false;
   }
 }
