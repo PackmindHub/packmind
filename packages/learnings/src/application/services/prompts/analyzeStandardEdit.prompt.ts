@@ -22,7 +22,11 @@ Analyze the topic and determine what changes should be made to this standard. Yo
 1. **Modify the standard name** if the topic suggests a better, clearer name
 2. **Modify the standard description** if the topic provides better context or scope
 3. **Add new rules** if the topic introduces new practices not covered
+   - **CRITICAL**: Rules must be ultra-concise (8-10 words maximum)
+   - Start with action verbs (Use, Avoid, Ensure, Prefer, Keep, etc.)
+   - State WHAT to do, not HOW (examples show the "how")
 4. **Update existing rules** if the topic clarifies, improves, or corrects them
+   - **CRITICAL**: Keep updated rules ultra-concise (8-10 words maximum)
 5. **Delete rules** if the topic indicates they are outdated or incorrect
 6. **Add new examples** if the topic provides code examples that illustrate the standard
 7. **Update existing examples** if the topic shows better examples

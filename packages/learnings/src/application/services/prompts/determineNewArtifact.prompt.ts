@@ -30,16 +30,18 @@ Determine if this topic should:
 **Structure:**
 - **Name**: Clear, descriptive title (e.g., "Back-end TypeScript", "Frontend Error Management")
 - **Description**: Context paragraph (2-3 sentences) explaining when/why to apply this standard
-- **Rules**: 3-5 concise rules (one-liners, ~12 words each)
-  - Start with action verbs (Use, Avoid, Ensure, Prefer, etc.)
+- **Rules**: 3-5 concise rules
+  - **Maximum 8-10 words each** - ultra-concise one-liners
+  - Start with action verbs (Use, Avoid, Ensure, Prefer, Keep, etc.)
   - State WHAT to do, not HOW (examples show the "how")
   - Be specific and actionable
 - **Scope**: What this applies to (e.g., "TypeScript back-end services", "React components")
 
-**Examples of GOOD rules:**
-- "Use TypeORM's Repository or QueryBuilder methods instead of raw SQL strings"
-- "Inject PackmindLogger as constructor parameter with origin constant"
-- "Avoid excessive logger.debug calls in production code"
+**Examples of GOOD rules (note the brevity):**
+- "Use TypeORM Repository methods instead of raw SQL"
+- "Inject PackmindLogger with origin constant in constructor"
+- "Avoid excessive logger.debug calls in production"
+- "Keep all import statements at top of file"
 
 ## For Recipes
 
@@ -51,18 +53,20 @@ Determine if this topic should:
 **Structure:**
 - **Name**: Action-oriented title of what to accomplish (e.g., "Create UseCase Test Class Template")
 - **Description**: Single sentence (max 2 lines) explaining intent and value
-- **Content**: Markdown with these sections:
-  - **Summary**: Concise one-liner of what this recipe does
-  - **When to Use**: 3-5 brief, specific scenarios (one line each)
-  - **Implementation Steps**: 5-8 numbered steps maximum
-    - Each step has action-oriented title (5-8 words)
-    - Brief description (1-2 sentences)
-    - Optional focused code snippet (5-15 lines, no boilerplate)
+- **Content**: Markdown with these REQUIRED sections in order:
+  - **Summary**: Single concise sentence (max 2 lines) explaining intent and value
+  - **When to Use**: 3-5 brief, specific scenarios (one line each, no extra explanation)
+  - **Context Validation Checkpoints**: 3-5 focused questions to validate context (one line each)
+  - **Implementation Steps**: 5-8 numbered steps maximum, each containing:
+    - **Step name**: Clear, action-oriented (5-8 words max)
+    - **Description**: 1-2 sentences describing intent and implementation
+    - **Code snippet** (optional): Minimal, focused example (5-15 lines max, no boilerplate)
 
-**Focus on:**
-- Conciseness - no redundant explanations
-- Minimal code examples showing essential patterns only
-- "What" and "why", not detailed "how"
+**Critical Focus:**
+- **Ultra-concise** - keep all text brief and to the point
+- **Minimal code** - show only the essential pattern, no boilerplate
+- **No redundancy** - avoid repetitive explanations or over-documentation
+- Focus on "what" and "why", keep "how" minimal
 
 # Return Format
 

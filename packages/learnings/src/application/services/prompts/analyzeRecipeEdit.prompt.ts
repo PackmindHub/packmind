@@ -16,6 +16,13 @@ Content:
 Analyze the topic and determine what changes should be made to this recipe. You can:
 1. **Modify the recipe name** if the topic suggests a better, clearer name
 2. **Modify the recipe content** (the full markdown content including steps, examples, etc.)
+   - **CRITICAL**: Content must follow this structure:
+     - **Summary**: Single concise sentence (max 2 lines)
+     - **When to Use**: 3-5 brief scenarios (one line each)
+     - **Context Validation Checkpoints**: 3-5 focused questions (one line each)
+     - **Implementation Steps**: 5-8 numbered steps max
+       - Each step: action-oriented title (5-8 words), 1-2 sentence description, optional minimal code (5-15 lines)
+   - **CRITICAL**: Keep all text ultra-concise, avoid redundancy, minimal code examples only
 3. **Add new code examples** if the topic provides examples that illustrate the recipe
 4. **Update existing code examples** if the topic shows better examples
 5. **Delete code examples** if the topic indicates they are outdated or misleading
