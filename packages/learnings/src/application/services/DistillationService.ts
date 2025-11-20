@@ -87,8 +87,7 @@ export class DistillationService {
 
     const isConfigured = await this.aiService.isConfigured();
     if (!isConfigured) {
-      this.logger.warn('AI service not configured - cannot distill topic', {
-      });
+      this.logger.warn('AI service not configured - cannot distill topic', {});
       throw new AiNotConfigured(
         'AI service not configured for topic distillation',
       );
@@ -181,7 +180,7 @@ export class DistillationService {
       const standardsList = standards
         .map(
           (s) =>
-            `ID: ${s.id}\nName: ${s.name}\nDescription: ${s.description}\nScope: ${s.scope || 'Global'}`,
+            `ID: ${s.id}\nName: ${s.name}\nSummary: ${s.description.substring(0, 200)}${s.description.length > 200 ? '...' : ''}`,
         )
         .join('\n---\n');
 
@@ -225,7 +224,10 @@ export class DistillationService {
       }
 
       const recipesList = recipes
-        .map((r) => `ID: ${r.id}\nName: ${r.name}\nSlug: ${r.slug}`)
+        .map((r) => {
+          const contentLines = r.content.split('\n').slice(0, 2).join('\n');
+          return `ID: ${r.id}\nName: ${r.name}\nFirst lines: ${contentLines}`;
+        })
         .join('\n---\n');
 
       const prompt = filterRecipeCandidatesPrompt
@@ -449,8 +451,7 @@ export class DistillationService {
   private async determineNewArtifacts(
     topic: Topic,
   ): Promise<CreateKnowledgePatchData[]> {
-    this.logger.debug('Determining if new artifacts needed', {
-    });
+    this.logger.debug('Determining if new artifacts needed', {});
 
     try {
       const codeExamplesText =
