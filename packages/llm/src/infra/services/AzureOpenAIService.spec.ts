@@ -692,7 +692,6 @@ describe('AzureOpenAIService', () => {
         mockAzureOpenAIInstance.chat.completions.create,
       ).toHaveBeenCalledWith({
         model: expect.any(String),
-        service_tier: 'auto',
         messages: [
           { role: 'user', content: 'Hello' },
           { role: 'assistant', content: 'Hi there!' },

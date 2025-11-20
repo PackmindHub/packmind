@@ -12,8 +12,6 @@ import {
   AIService,
 } from '@packmind/types';
 
-type serviceTierTypes = 'auto' | 'default' | 'flex' | 'scale' | 'priority';
-
 /**
  * Abstract base class for OpenAI and OpenAI-compatible services.
  * Provides shared logic for executing prompts, retry mechanisms, and error handling.
@@ -55,18 +53,6 @@ export abstract class BaseOpenAIService implements AIService {
     return options.performance === LLMModelPerformance.FAST
       ? this.defaultFastModel
       : this.defaultModel;
-  }
-
-  /**
-   * Get the service tier from options
-   */
-  protected getServiceTier(options: AIPromptOptions): serviceTierTypes {
-    if (options.service_tier) {
-      const tier = options.service_tier.toLowerCase();
-      return tier as serviceTierTypes;
-    }
-
-    return 'auto';
   }
 
   /**
@@ -113,18 +99,15 @@ export abstract class BaseOpenAIService implements AIService {
         }
 
         const model = this.getModel(options);
-        const serviceTier = this.getServiceTier(options);
 
         this.logger.info(`Sending request to ${this.serviceName}`, {
           attempt,
           model,
-          service_tier: serviceTier,
           promptLength: prompt.length,
         });
 
         const response = await this.client.chat.completions.create({
           model,
-          service_tier: serviceTier,
           messages: [
             {
               role: 'user',
@@ -259,8 +242,6 @@ export abstract class BaseOpenAIService implements AIService {
           );
         }
 
-        const serviceTier = this.getServiceTier(options);
-
         // Convert PromptConversation to OpenAI message format
         const messages = conversationHistory.map((conv) => ({
           role: this.mapRoleToOpenAI(conv.role),
@@ -272,14 +253,12 @@ export abstract class BaseOpenAIService implements AIService {
           {
             attempt,
             model,
-            service_tier: serviceTier,
             messageCount: messages.length,
           },
         );
 
         const response = await this.client.chat.completions.create({
           model,
-          service_tier: serviceTier,
           messages,
         });
 
