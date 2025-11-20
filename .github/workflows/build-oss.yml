@@ -160,8 +160,8 @@ jobs:
       - name: Build packages (Proprietary)
         env:
           PACKMIND_EDITION: ${{ env.OSS_EDITION }}
-        run: ./node_modules/.bin/nx run-many -t build -p packages/* --parallel=3
+        run: ./node_modules/.bin/nx run-many -t build -p packages/*
       - name: Test packages (Proprietary)
         env:
           PACKMIND_EDITION: ${{ env.OSS_EDITION }}
-        run: ./node_modules/.bin/nx run-many -t test -p packages/* --passWithNoTests --parallel=3
+        run: ./node_modules/.bin/nx run-many -t test -p packages/* --passWithNoTests
