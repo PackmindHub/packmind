@@ -59,6 +59,7 @@ import { UpdateStandardUsecase } from '../useCases/updateStandard/updateStandard
 import { UpdateStandardNameUsecase } from '../useCases/updateStandardName/updateStandardName.usecase';
 import { UpdateStandardDescriptionUsecase } from '../useCases/updateStandardDescription/updateStandardDescription.usecase';
 import { DeleteStandardRuleUsecase } from '../useCases/deleteStandardRule/deleteStandardRule.usecase';
+import { AddStandardExampleUsecase } from '../useCases/addStandardExample/addStandardExample.usecase';
 
 const origin = 'StandardsAdapter';
 
@@ -96,6 +97,7 @@ export class StandardsAdapter
   private _updateStandardName!: UpdateStandardNameUsecase;
   private _updateStandardDescription!: UpdateStandardDescriptionUsecase;
   private _deleteStandardRule!: DeleteStandardRuleUsecase;
+  private _addStandardExample!: AddStandardExampleUsecase;
 
   constructor(
     private readonly services: StandardsServices,
@@ -285,6 +287,13 @@ export class StandardsAdapter
       this.services.getStandardVersionService(),
       this.repositories.getRuleRepository(),
       this.repositories.getRuleExampleRepository(),
+    );
+
+    this._addStandardExample = new AddStandardExampleUsecase(
+      this.services.getStandardVersionService(),
+      this.repositories.getRuleRepository(),
+      this.repositories.getRuleExampleRepository(),
+      this.linterPort,
     );
 
     this.logger.info(
@@ -522,7 +531,6 @@ export class StandardsAdapter
     return this._deleteStandardRule.deleteStandardRule(params);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async addStandardExample(params: {
     standardId: StandardId;
     ruleId: RuleId;
@@ -532,8 +540,7 @@ export class StandardsAdapter
     organizationId: OrganizationId;
     userId: string;
   }): Promise<RuleExample> {
-    // TODO: Implement addStandardExample use case
-    throw new Error('addStandardExample not yet implemented');
+    return this._addStandardExample.addStandardExample(params);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
