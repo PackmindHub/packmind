@@ -28,3 +28,16 @@ export const OPENAI_ENDPOINT = 'https://api.openai.com/v1';
  * Anthropic official API endpoint
  */
 export const ANTHROPIC_ENDPOINT = 'https://api.anthropic.com';
+
+/**
+ * Default Gemini models
+ */
+export const DEFAULT_GEMINI_MODELS = {
+  model: 'gemini-3-pro-preview',
+  fastestModel: 'gemini-2.5-flash',
+} as const;
+
+/**
+ * Default Azure OpenAI API version
+ */
+export const DEFAULT_AZURE_OPENAI_API_VERSION = '2024-12-01-preview';

@@ -24,7 +24,6 @@ export class GetAiServiceForOrganizationUseCase
       organizationId: command.organizationId.toString(),
     });
     const aiService = new OpenAIService();
-
     return {
       aiService,
     };
