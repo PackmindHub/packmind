@@ -41,6 +41,47 @@ Restart then with:
 docker compose up -d
 ```
 
+## Add custom CA certificates (Docker Compose)
+
+If your infrastructure uses self-signed certificates or custom Certificate Authorities (CA), you can configure Packmind to trust them:
+
+1. Create a `certs` directory next to your `docker-compose.yml`:
+
+   ```bash
+   mkdir certs
+   ```
+
+2. Place your CA certificate(s) in PEM format as `certs/ca-bundle.pem`:
+
+   ```bash
+   # For a single certificate
+   cp your-ca-cert.pem certs/ca-bundle.pem
+
+   # For multiple certificates, combine them
+   cat cert1.pem cert2.pem > certs/ca-bundle.pem
+   ```
+
+3. Edit `docker-compose.yml` and uncomment the certificate lines in both `api` and `mcp-server` services:
+
+   ```yaml
+   api:
+     environment:
+       NODE_EXTRA_CA_CERTS: /ca-certs/ca-bundle.pem # Uncomment this line
+     volumes:
+       - ./certs/ca-bundle.pem:/ca-certs/ca-bundle.pem:ro # Uncomment these 2 lines
+
+   mcp-server:
+     environment:
+       NODE_EXTRA_CA_CERTS: /ca-certs/ca-bundle.pem # Uncomment this line
+     volumes:
+       - ./certs/ca-bundle.pem:/ca-certs/ca-bundle.pem:ro # Uncomment these 2 lines
+   ```
+
+4. Restart the services:
+   ```bash
+   docker compose up -d
+   ```
+
 ## Configure deployment and environment variables
 
 ### Override environment variables

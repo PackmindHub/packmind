@@ -20,6 +20,12 @@ x-redis-config: &redis-config
 x-openai-config: &openai-config
   OPENAI_API_KEY: ${OPENAI_API_KEY:-} # Set via environment variable to enable calls to OpenAI
 
+# To enable custom CA certificates for Node.js applications:
+# 1. Create a ./certs/ directory next to this docker-compose.yml file
+# 2. Place your CA certificate(s) in PEM format as ./certs/ca-bundle.pem
+#    (combine multiple certificates: cat cert1.pem cert2.pem > ca-bundle.pem)
+# 3. Uncomment the certificate-related lines in the api and mcp-server services below
+
 services:
   # Infrastructure services
   postgres:
@@ -53,6 +59,11 @@ services:
     environment:
       <<: [*database-url, *redis-config, *openai-config]
       COOKIE_SECURE: false # Set to true if exposed behind HTTPS
+      # Uncomment the next line to enable custom CA certificates:
+      # NODE_EXTRA_CA_CERTS: /ca-certs/ca-bundle.pem
+    # Uncomment the next 2 lines to mount custom CA certificates:
+    # volumes:
+    #   - ./certs/ca-bundle.pem:/ca-certs/ca-bundle.pem:ro
     secrets:
       - encryption_key
       - api_jwt_secret_key
@@ -80,6 +91,11 @@ services:
     environment:
       <<: [*database-url, *redis-config, *openai-config]
       RATE_LIMIT_MAX_REQUESTS: 10000
+      # Uncomment the next line to enable custom CA certificates:
+      # NODE_EXTRA_CA_CERTS: /ca-certs/ca-bundle.pem
+    # Uncomment the next 2 lines to mount custom CA certificates:
+    # volumes:
+    #   - ./certs/ca-bundle.pem:/ca-certs/ca-bundle.pem:ro
     secrets:
       - encryption_key
       - mcp_jwt_secret_key
