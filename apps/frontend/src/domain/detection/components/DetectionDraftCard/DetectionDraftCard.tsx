@@ -59,8 +59,10 @@ interface DraftCardProps {
 export const DetectionDraftCard: React.FC<DraftCardProps> = ({
   draft,
   onMakeActive,
+  isActivating,
   onTestDraft,
   onRetryDraft,
+  isGenerating,
   standardId,
   ruleId,
 }) => {
@@ -75,13 +77,20 @@ export const DetectionDraftCard: React.FC<DraftCardProps> = ({
   const state = determineDraftCardState(assessment?.status, draft.status);
   const badgeConfig = getBadgeConfig(state);
 
-  const timelineConfig = getTimelineConfig(state, {
-    onShowLogs: () => setIsLogsDrawerOpen(true),
-    onShowProgram: () => setIsProgramDrawerOpen(true),
-    onTestDraft: () => onTestDraft(draft),
-    onMakeActive: () => onMakeActive(draft),
-    onRetryDraft: () => onRetryDraft?.(draft),
-  });
+  const timelineConfig = getTimelineConfig(
+    state,
+    {
+      onShowLogs: () => setIsLogsDrawerOpen(true),
+      onShowProgram: () => setIsProgramDrawerOpen(true),
+      onTestDraft: () => onTestDraft(draft),
+      onMakeActive: () => onMakeActive(draft),
+      onRetryDraft: () => onRetryDraft?.(draft),
+    },
+    {
+      isActivating: isActivating ?? false,
+      isGenerating: isGenerating ?? false,
+    },
+  );
 
   return (
     <PMBox width="full" py={2} position="relative">
@@ -139,6 +148,7 @@ function getStepIcon(status: TimelineStepStatus) {
 type TimelineButton = {
   label: string;
   onClick: () => void;
+  disabled?: boolean;
 };
 
 enum TimelineStepStatus {
@@ -233,6 +243,7 @@ const TimelineStep: React.FC<TimelineStepProps> = ({ config }) => {
                   size="sm"
                   variant="outline"
                   onClick={button.onClick}
+                  disabled={button.disabled}
                 >
                   {button.label}
                 </PMButton>
@@ -289,9 +300,15 @@ export function determineDraftCardState(
   return DraftCardState.ASSESSING;
 }
 
+type LoadingStates = {
+  isActivating: boolean;
+  isGenerating: boolean;
+};
+
 function getTimelineConfig(
   state: DraftCardState,
   handlers: TimelineHandlers,
+  loadingStates: LoadingStates,
 ): TimelineConfig {
   switch (state) {
     case DraftCardState.ASSESSING:
@@ -395,6 +412,7 @@ function getTimelineConfig(
             {
               label: 'Retry',
               onClick: handlers.onRetryDraft,
+              disabled: loadingStates.isGenerating,
             },
             {
               label: 'Show log',
@@ -443,6 +461,7 @@ function getTimelineConfig(
             {
               label: 'Set as active',
               onClick: handlers.onMakeActive,
+              disabled: loadingStates.isActivating,
             },
           ],
         },
