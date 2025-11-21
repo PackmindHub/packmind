@@ -19,6 +19,7 @@ import { IListPackagesUseCase } from './domain/useCases/IListPackagesUseCase';
 import { ListPackagesUseCase } from './application/useCases/ListPackagesUseCase';
 import { IGetPackageSummaryUseCase } from './domain/useCases/IGetPackageSummaryUseCase';
 import { GetPackageSummaryUseCase } from './application/useCases/GetPackageSummaryUseCase';
+import { ConfigFileRepository } from './infra/repositories/ConfigFileRepository';
 
 export class PackmindCliHexaFactory {
   public repositories: IPackmindRepositories;
@@ -39,6 +40,7 @@ export class PackmindCliHexaFactory {
       packmindGateway: new PackmindGateway(
         process.env.PACKMIND_API_KEY_V3 || '',
       ),
+      configFileRepository: new ConfigFileRepository(),
     };
 
     this.services = {

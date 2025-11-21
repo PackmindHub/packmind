@@ -28,6 +28,7 @@ import {
   IGetPackageSummaryCommand,
   IGetPackageSummaryResult,
 } from './domain/useCases/IGetPackageSummaryUseCase';
+import { PackmindFileConfig } from '@packmind/types';
 
 const origin = 'PackmindCliHexa';
 
@@ -96,5 +97,33 @@ export class PackmindCliHexa {
     command: IGetPackageSummaryCommand,
   ): Promise<IGetPackageSummaryResult> {
     return this.hexa.useCases.getPackageBySlug.execute(command);
+  }
+
+  public async writeConfig(
+    baseDirectory: string,
+    packagesSlugs: string[],
+  ): Promise<void> {
+    const config: PackmindFileConfig = {
+      packages: packagesSlugs.reduce(
+        (acc, slug) => {
+          acc[slug] = '*';
+          return acc;
+        },
+        {} as { [slug: string]: '*' },
+      ),
+    };
+    await this.hexa.repositories.configFileRepository.writeConfig(
+      baseDirectory,
+      config,
+    );
+  }
+
+  public async readConfig(baseDirectory: string): Promise<string[]> {
+    const config =
+      await this.hexa.repositories.configFileRepository.readConfig(
+        baseDirectory,
+      );
+    if (!config) return [];
+    return Object.keys(config.packages);
   }
 }
