@@ -393,6 +393,16 @@ describe('ProgramGenerationTimeline', () => {
               expect(screen.getByText('Program Content')).toBeInTheDocument();
             });
           });
+
+          it('calls onTestDraft when "Test draft program" button is clicked', () => {
+            const testDraftButton = screen.getByText('Test draft program');
+            fireEvent.click(testDraftButton);
+          });
+
+          it('calls onMakeActive when "Set as active" button is clicked', () => {
+            const setActiveButton = screen.getByText('Set as active');
+            fireEvent.click(setActiveButton);
+          });
         });
       });
     });

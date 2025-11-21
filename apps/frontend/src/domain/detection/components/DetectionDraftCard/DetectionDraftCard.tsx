@@ -76,6 +76,8 @@ export const DetectionDraftCard: React.FC<DraftCardProps> = ({
   const timelineConfig = getTimelineConfig(state, {
     onShowLogs: () => setIsLogsDrawerOpen(true),
     onShowProgram: () => setIsProgramDrawerOpen(true),
+    onTestDraft: () => _onTestDraft(draft),
+    onMakeActive: () => _onMakeActive(draft),
   });
 
   return (
@@ -122,9 +124,9 @@ export const DetectionDraftCard: React.FC<DraftCardProps> = ({
               timelineConfig.step2.buttons.length > 0 && (
                 <PMBox mt={2}>
                   <PMHStack gap={2}>
-                    {timelineConfig.step2.buttons.map((button, index) => (
+                    {timelineConfig.step2.buttons.map((button) => (
                       <PMButton
-                        key={index}
+                        key={button.label}
                         size="sm"
                         variant="outline"
                         onClick={button.onClick}
@@ -154,6 +156,23 @@ export const DetectionDraftCard: React.FC<DraftCardProps> = ({
                 {timelineConfig.step3.description}
               </PMTimelineDescription>
             )}
+            {timelineConfig.step3.buttons &&
+              timelineConfig.step3.buttons.length > 0 && (
+                <PMBox mt={2}>
+                  <PMHStack gap={2}>
+                    {timelineConfig.step3.buttons.map((button) => (
+                      <PMButton
+                        key={button.label}
+                        size="sm"
+                        variant="outline"
+                        onClick={button.onClick}
+                      >
+                        {button.label}
+                      </PMButton>
+                    ))}
+                  </PMHStack>
+                </PMBox>
+              )}
           </PMTimelineContent>
         </PMTimelineItem>
       </PMTimeline>
@@ -239,6 +258,8 @@ type TimelineConfig = {
 type TimelineHandlers = {
   onShowLogs: () => void;
   onShowProgram: () => void;
+  onTestDraft: () => void;
+  onMakeActive: () => void;
 };
 
 function getTimelineConfig(
@@ -383,6 +404,16 @@ function getTimelineConfig(
           title: 'Ready to use',
           color: 'primary',
           isLast: true,
+          buttons: [
+            {
+              label: 'Test draft program',
+              onClick: handlers.onTestDraft,
+            },
+            {
+              label: 'Set as active',
+              onClick: handlers.onMakeActive,
+            },
+          ],
         },
       };
   }
