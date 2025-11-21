@@ -33,10 +33,10 @@ import {
 import { DraftsSection } from './DraftsSection';
 import { DraftCardData } from './DetectionDraftCard/DetectionDraftCard';
 import {
-  ActiveConfigurationCardData,
+  ActiveConfigurationSectionData as ActiveConfigurationCardData,
   ActiveConfigurationState,
-} from './ActiveConfigurationCard';
-import { ActiveConfigurationSection } from './ActiveConfigurationSection';
+} from './ActiveConfigurationSection/';
+import { ActiveConfigurationSection } from './ActiveConfigurationsList';
 import { useGetStandardByIdQuery } from '../../standards/api/queries/StandardsQueries';
 import { CopiableTextField } from '../../../shared/components/inputs/CopiableTextField';
 import { DetectionProgramConfiguration } from './DetectionProgramConfiguration';
@@ -114,7 +114,7 @@ function checkIfProgramIsOutdated(
   // Mock: You can manually set a program as outdated by checking creation dates
   // For demonstration, we'll add a flag here that could be set from backend
   // In production, backend would send an "isOutdated" flag or "needsRegeneration" flag
-  
+
   return false; // For now, no programs are marked as outdated automatically
 }
 
@@ -185,10 +185,13 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
       .map((program) => {
         const detectionProgram = program.detectionProgram ?? null;
         const draftProgram = program.draftDetectionProgram ?? null;
-        
+
         // Check if program is outdated
-        const isOutdated = checkIfProgramIsOutdated(detectionProgram, draftProgram);
-        
+        const isOutdated = checkIfProgramIsOutdated(
+          detectionProgram,
+          draftProgram,
+        );
+
         const state = computeActiveConfigurationState(
           program,
           detectionProgram,
@@ -350,7 +353,7 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
       )
         return selectedProgramForTest.detectionProgram.id;
       if (isDraftCardData(selectedProgramForTest))
-        return selectedProgramForTest.draftProgram.id;
+        return selectedProgramForTest.draftProgram?.id;
     }
 
     const detectionProgramId = getDetectionProgramId();
@@ -426,7 +429,7 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
 
     const isDraft = isDraftCardData(selectedProgramForTest);
     const version = isDraft
-      ? selectedProgramForTest.draftProgram.version
+      ? selectedProgramForTest.draftProgram?.version
       : selectedProgramForTest.detectionProgram?.version;
 
     if (isDraft) {
@@ -503,16 +506,18 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
             <PMDialog.Header>
               <PMHStack gap={3} alignItems="center">
                 <PMDialog.Title>{testModalTitle}</PMDialog.Title>
-                {selectedProgramForTest && isDraftCardData(selectedProgramForTest) && (
-                  <PMBadge colorPalette="gray" size="sm">
-                    Draft
-                  </PMBadge>
-                )}
-                {selectedProgramForTest && isActiveConfigurationCardData(selectedProgramForTest) && (
-                  <PMBadge colorPalette="green" size="sm">
-                    Active
-                  </PMBadge>
-                )}
+                {selectedProgramForTest &&
+                  isDraftCardData(selectedProgramForTest) && (
+                    <PMBadge colorPalette="gray" size="sm">
+                      Draft
+                    </PMBadge>
+                  )}
+                {selectedProgramForTest &&
+                  isActiveConfigurationCardData(selectedProgramForTest) && (
+                    <PMBadge colorPalette="green" size="sm">
+                      Active
+                    </PMBadge>
+                  )}
               </PMHStack>
               <PMDialog.CloseTrigger onClick={handleCloseTestModal} />
             </PMDialog.Header>
@@ -521,7 +526,10 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
                 <PMVStack alignItems="stretch" gap={3}>
                   <PMText>
                     Copy and run this command in your terminal to test the
-                    {isDraftCardData(selectedProgramForTest) ? ' draft' : ' active version'}.
+                    {isDraftCardData(selectedProgramForTest)
+                      ? ' draft'
+                      : ' active version'}
+                    .
                   </PMText>
                   {testDraftCommand ? (
                     <CopiableTextField value={testDraftCommand} readOnly />
@@ -613,7 +621,8 @@ function isDraftCardData(tbd: unknown): tbd is DraftCardData {
   return (
     tbd !== null &&
     typeof tbd === 'object' &&
-    (tbd as DraftCardData).draftProgram !== undefined
+    (tbd as DraftCardData).draftProgram !== undefined &&
+    (tbd as DraftCardData).draftProgram !== null
   );
 }
 

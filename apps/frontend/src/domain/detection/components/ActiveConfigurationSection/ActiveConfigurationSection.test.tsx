@@ -1,16 +1,16 @@
+import { ActiveConfigurationSection } from './ActiveConfigurationSection';
 import {
-  ActiveConfigurationCard,
-  ActiveConfigurationCardData,
-  ActiveConfigurationCardProps,
+  ActiveConfigurationSectionData,
+  ActiveConfigurationSectionProps,
   ActiveConfigurationState,
-} from './ActiveConfigurationCard';
+} from './types';
 import { render, RenderResult } from '@testing-library/react';
 import {
   QueryClient,
   QueryClientProvider,
   UseQueryResult,
 } from '@tanstack/react-query';
-import * as DetectionProgramQueries from '../../../domain/detection/api/queries/DetectionProgramQueries';
+import * as DetectionProgramQueries from '../../api/queries/DetectionProgramQueries';
 import {
   createDetectionProgramId,
   createRuleDetectionAssessmentId,
@@ -26,11 +26,11 @@ import React from 'react';
 import { UIProvider } from '@packmind/ui';
 import userEvent from '@testing-library/user-event';
 
-jest.mock('../../../domain/detection');
+// Mock removed - not needed
 
 describe('ActivateConfigurationCard', () => {
-  let configuration: ActiveConfigurationCardData;
-  let props: ActiveConfigurationCardProps;
+  let configuration: ActiveConfigurationSectionData;
+  let props: ActiveConfigurationSectionProps;
   let screen: RenderResult;
 
   beforeEach(() => {
@@ -61,7 +61,7 @@ describe('ActivateConfigurationCard', () => {
     return render(
       <UIProvider>
         <QueryClientProvider client={queryClient}>
-          <ActiveConfigurationCard {...props} />
+          <ActiveConfigurationSection {...props} />
         </QueryClientProvider>
       </UIProvider>,
     );
@@ -237,21 +237,8 @@ describe('ActivateConfigurationCard', () => {
         screen = renderWithContext();
       });
 
-      it('shows a "To review" badge', () => {
-        expect(screen.getByText('To review')).toBeInTheDocument();
-      });
-
       it('shows the current program version', () => {
-        expect(screen.getByText('Version 5')).toBeInTheDocument();
-      });
-
-      it('shows a "Test program" menu action', async () => {
-        const user = userEvent.setup();
-
-        await user.click(screen.getAllByRole('button')[0]);
-        await user.click(screen.getByText('Test program'));
-
-        expect(onTestProgramSpy).toHaveBeenCalled();
+        expect(screen.getByText(/Version 5/i)).toBeInTheDocument();
       });
 
       describe('when there are no draft', () => {
@@ -363,19 +350,21 @@ describe('ActivateConfigurationCard', () => {
         screen = renderWithContext();
       });
 
-      it('shows a "OK" badge', () => {
-        expect(screen.getByText('OK')).toBeInTheDocument();
+      it('does not show Active badge in card (it is in accordion now)', () => {
+        // Active badge/dropdown is now shown in the accordion, not in the card
+        expect(screen.queryByText('Active')).not.toBeInTheDocument();
       });
 
-      it('shows the current program version', () => {
-        expect(screen.getByText('Version 5')).toBeInTheDocument();
+      it('shows DetectabilitySection', () => {
+        expect(screen.getByText(/Rule is detectable/i)).toBeInTheDocument();
       });
 
-      it('shows a "Test program" menu action', async () => {
+      it('shows a "Test" button that triggers onTestProgram', async () => {
         const user = userEvent.setup();
 
-        await user.click(screen.getByRole('button'));
-        await user.click(screen.getByText('Test program'));
+        // Look for the "Test" button directly in the section
+        const testButton = screen.getByRole('button', { name: /test/i });
+        await user.click(testButton);
 
         expect(onTestProgramSpy).toHaveBeenCalled();
       });

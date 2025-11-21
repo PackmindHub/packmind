@@ -5,7 +5,7 @@ import {
   DetectionStatus,
 } from '@packmind/types';
 import { useGetRuleDetectionAssessmentQuery } from '../api/queries/DetectionProgramQueries';
-import { ActiveConfigurationCardData } from './ActiveConfigurationCard';
+import { ActiveConfigurationSectionData as ActiveConfigurationCardData } from './ActiveConfigurationSection/';
 import { DraftCardData } from './DetectionDraftCard/DetectionDraftCard';
 import {
   DetectabilitySection,

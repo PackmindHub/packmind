@@ -6,6 +6,10 @@ import {
   DetectionDraftCard,
   DraftCardData,
 } from '../DetectionDraftCard/DetectionDraftCard';
+import { ActiveConfigurationSection } from '../ActiveConfigurationsList';
+import { DraftsSection } from '../DraftsSection';
+import { ActiveConfigurationSectionData as ActiveConfigurationCardData } from '../ActiveConfigurationSection/';
+import { DraftCardData } from '../DetectionDraftCard';
 
 interface ProgramGenerationSectionProps {
   standardId: string;

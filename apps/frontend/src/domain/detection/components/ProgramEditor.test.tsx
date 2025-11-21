@@ -1,5 +1,5 @@
 import { computeActiveConfigurationState } from './ProgramEditor';
-import { ActiveConfigurationState } from './ActiveConfigurationCard';
+import { ActiveConfigurationState } from './ActiveConfigurationSection/';
 import {
   createActiveDetectionProgramId,
   createDetectionProgramId,

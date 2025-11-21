@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import {
-  ActiveConfigurationCard,
+  ActiveConfigurationSection,
   ActiveConfigurationState,
-} from './ActiveConfigurationCard';
+} from './ActiveConfigurationSection/index';
 import {
   createDetectionProgramId,
   createRuleId,
@@ -59,8 +59,8 @@ const createQueryMock = (assessmentData?: {
 };
 
 const meta = {
-  title: 'Domain/Detection/ActiveConfigurationCard',
-  component: ActiveConfigurationCard,
+  title: 'Domain/Detection/ActiveConfigurationSection',
+  component: ActiveConfigurationSection,
   parameters: {
     layout: 'padded',
   },
@@ -85,7 +85,7 @@ const meta = {
     onOpenAssessmentDrawer: () => {},
   },
   decorators: [],
-} satisfies Meta<typeof ActiveConfigurationCard>;
+} satisfies Meta<typeof ActiveConfigurationSection>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;

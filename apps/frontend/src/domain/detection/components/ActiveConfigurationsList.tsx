@@ -7,9 +7,10 @@ import {
   PMSpinner,
 } from '@packmind/ui';
 import {
-  ActiveConfigurationCard,
-  ActiveConfigurationCardData,
-} from './ActiveConfigurationCard';
+  ActiveConfigurationSection as ActiveConfigurationCard,
+  ActiveConfigurationSectionData as ActiveConfigurationCardData,
+  ActiveConfigurationState,
+} from './ActiveConfigurationSection/';
 import { DraftCardData } from './DetectionDraftCard/DetectionDraftCard';
 import { DetectionAssessmentDrawer } from './DetectionAssessmentDrawer';
 
@@ -125,25 +126,23 @@ export const ActiveConfigurationSection: React.FC<
 
   return (
     <>
-      <PMPageSection variant="outline">
-        <PMFlex gap={4} wrap="wrap">
-          {configurations.map((config) => (
-            <ActiveConfigurationCard
-              key={config.id}
-              configuration={config}
-              onGenerateProgram={onGenerateProgram}
-              isGenerating={isGeneratingProgram}
-              standardId={standardId}
-              ruleId={ruleId}
-              onTestProgram={onTestProgram}
-              onActivateDraft={onActivateDraft}
-              activatingDraftId={activatingDraftId}
-              isActivatingDraft={isActivatingDraft}
-              onOpenAssessmentDrawer={handleOpenAssessmentDrawer}
-            />
-          ))}
-        </PMFlex>
-      </PMPageSection>
+      <PMFlex gap={4} wrap="wrap">
+        {configurations.map((config) => (
+          <ActiveConfigurationCard
+            key={config.id}
+            configuration={config}
+            onGenerateProgram={onGenerateProgram}
+            isGenerating={isGeneratingProgram}
+            standardId={standardId}
+            ruleId={ruleId}
+            onTestProgram={onTestProgram}
+            onActivateDraft={onActivateDraft}
+            activatingDraftId={activatingDraftId}
+            isActivatingDraft={isActivatingDraft}
+            onOpenAssessmentDrawer={handleOpenAssessmentDrawer}
+          />
+        ))}
+      </PMFlex>
       <DetectionAssessmentDrawer
         isOpen={openDrawerLanguage !== null}
         onClose={handleCloseDrawer}

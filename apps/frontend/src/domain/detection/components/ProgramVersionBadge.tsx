@@ -6,7 +6,7 @@ export type ProgramState = 'active' | 'draft' | 'outdated';
 
 interface ProgramVersionBadgeProps {
   version: number;
-  createdAt?: Date;
+  createdAt?: Date | string;
   programState: ProgramState;
   status: DetectionStatus;
 }
@@ -20,8 +20,9 @@ const PROGRAM_STATE_CONFIG: Record<
   outdated: { label: 'Outdated', colorPalette: 'orange' },
 };
 
-const formatDate = (date: Date): string => {
-  return date.toLocaleDateString('en-US', {
+const formatDate = (date: Date | string): string => {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  return dateObj.toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
   });

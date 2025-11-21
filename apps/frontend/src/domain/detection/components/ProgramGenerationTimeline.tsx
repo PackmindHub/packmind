@@ -18,7 +18,7 @@ import {
   DetectionStatus,
 } from '@packmind/types';
 import { LuCheck, LuCircle, LuLoader } from 'react-icons/lu';
-import { ActiveConfigurationCardData } from './ActiveConfigurationCard';
+import { ActiveConfigurationSectionData as ActiveConfigurationCardData } from './ActiveConfigurationSection/';
 import { ExecutionLogsDrawer } from './ExecutionLogsDrawer';
 
 interface ProgramGenerationTimelineProps {

@@ -17,6 +17,7 @@ export type ConfigurationCardProps = PropsWithChildren<{
     label: string;
     colorPalette: string;
   };
+  statusIndicator?: React.ReactNode;
   mainAction?: React.ReactNode;
   menuActions: PMEllipsisMenuAction[];
   actionsDisabled: boolean;
@@ -25,59 +26,63 @@ export type ConfigurationCardProps = PropsWithChildren<{
 export const ConfigurationCard: React.FunctionComponent<
   ConfigurationCardProps
 > = (props) => (
-  <PMBox key={props.id} flex="1 1 280px" minWidth="280px" maxWidth="420px">
-    <PMBox
-      border="1px solid"
-      borderColor="border.tertiary"
-      borderRadius="lg"
-      p={4}
-      backgroundColor="background.primary"
+  <PMBox
+    key={props.id}
+    flex="1 1 280px"
+    minWidth="280px"
+    maxWidth="420px"
+    border="1px solid"
+    borderColor="border.tertiary"
+    borderRadius="lg"
+    p={4}
+    backgroundColor="background.primary"
+    height="full"
+  >
+    <PMVStack
+      alignItems="stretch"
+      gap={4}
+      width="full"
       height="full"
+      justifyContent="space-between"
     >
-      <PMVStack
-        alignItems="stretch"
-        gap={4}
-        width="full"
-        height="full"
-        justifyContent="space-between"
-      >
-        <PMVStack alignItems="flex-start" gap={2} width="full">
-          <PMHStack
-            width="full"
-            justifyContent="space-between"
-            alignItems="center"
-          >
-            <PMHeading size="sm">
-              {getLanguageDisplayName(props.language)}
-            </PMHeading>
-            <PMHStack gap={2}>
-              {props.badge && (
-                <PMBadge colorPalette={props.badge.colorPalette}>
-                  {props.badge.label}
-                </PMBadge>
-              )}
-              {props.menuActions.length > 0 && (
-                <PMEllipsisMenu
-                  title="Draft actions"
-                  actions={props.menuActions}
-                  disabled={props.actionsDisabled}
-                />
-              )}
-            </PMHStack>
-          </PMHStack>
-        </PMVStack>
+      <PMVStack alignItems="flex-start" gap={2} width="full">
         <PMHStack
-          alignItems="center"
-          gap={4}
-          justifyContent={props.mainAction ? 'space-between' : 'flex-start'}
           width="full"
+          justifyContent="space-between"
+          alignItems="center"
         >
-          <PMVStack alignItems="flex-start" gap={2}>
-            {props.children}
-          </PMVStack>
-          {props.mainAction ? <PMBox>{props.mainAction}</PMBox> : null}
+          <PMHeading size="sm">
+            {getLanguageDisplayName(props.language)}
+          </PMHeading>
+          <PMHStack gap={2}>
+            {props.statusIndicator
+              ? props.statusIndicator
+              : props.badge && (
+                  <PMBadge colorPalette={props.badge.colorPalette}>
+                    {props.badge.label}
+                  </PMBadge>
+                )}
+            {props.menuActions.length > 0 && (
+              <PMEllipsisMenu
+                title="Draft actions"
+                actions={props.menuActions}
+                disabled={props.actionsDisabled}
+              />
+            )}
+          </PMHStack>
         </PMHStack>
       </PMVStack>
-    </PMBox>
+      <PMHStack
+        alignItems="center"
+        gap={4}
+        justifyContent={props.mainAction ? 'space-between' : 'flex-start'}
+        width="full"
+      >
+        <PMVStack alignItems="flex-start" gap={2}>
+          {props.children}
+        </PMVStack>
+        {props.mainAction ? <PMBox>{props.mainAction}</PMBox> : null}
+      </PMHStack>
+    </PMVStack>
   </PMBox>
 );
