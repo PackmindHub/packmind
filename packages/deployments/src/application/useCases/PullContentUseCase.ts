@@ -5,11 +5,14 @@ import {
   FileUpdates,
   IAccountsPort,
   ICodingAgentPort,
+  IEventTrackingPort,
   IPullContentResponse,
   IRecipesPort,
   IStandardsPort,
   PullContentCommand,
   RecipeVersion,
+  createOrganizationId,
+  createUserId,
 } from '@packmind/types';
 import { PackageService } from '../services/PackageService';
 import { PackagesNotFoundError } from '../../domain/errors/PackagesNotFoundError';
@@ -28,6 +31,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
     private readonly codingAgentPort: ICodingAgentPort,
     private readonly renderModeConfigurationService: RenderModeConfigurationService,
     accountsPort: IAccountsPort,
+    private readonly eventTrackingPort?: IEventTrackingPort,
     logger: PackmindLogger = new PackmindLogger(origin, LogLevel.INFO),
   ) {
     super(accountsPort, logger);
@@ -177,6 +181,15 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         totalCreateOrUpdateCount: mergedFileUpdates.createOrUpdate.length,
         totalDeleteCount: mergedFileUpdates.delete.length,
       });
+
+      if (this.eventTrackingPort) {
+        await this.eventTrackingPort.trackEvent(
+          createUserId(command.userId),
+          createOrganizationId(command.organizationId),
+          'artifacts_pulled',
+          { source: 'cli' },
+        );
+      }
 
       return { fileUpdates: mergedFileUpdates };
     } catch (error) {

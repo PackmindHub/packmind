@@ -3,6 +3,7 @@ import {
   FileUpdates,
   IAccountsPort,
   ICodingAgentPort,
+  IEventTrackingPort,
   IRecipesPort,
   IStandardsPort,
   Organization,
@@ -46,6 +47,7 @@ describe('PullContentUseCase', () => {
   let standardsPort: jest.Mocked<IStandardsPort>;
   let codingAgentPort: jest.Mocked<ICodingAgentPort>;
   let accountsPort: jest.Mocked<IAccountsPort>;
+  let eventTrackingPort: jest.Mocked<IEventTrackingPort>;
   let renderModeConfigurationService: jest.Mocked<RenderModeConfigurationService>;
   let useCase: PullContentUseCase;
   let command: PullContentCommand;
@@ -86,6 +88,10 @@ describe('PullContentUseCase', () => {
       getOrganizationById: jest.fn(),
     } as unknown as jest.Mocked<IAccountsPort>;
 
+    eventTrackingPort = {
+      trackEvent: jest.fn().mockResolvedValue(undefined),
+    } as unknown as jest.Mocked<IEventTrackingPort>;
+
     renderModeConfigurationService = {
       resolveActiveCodingAgents: jest.fn(),
     } as unknown as jest.Mocked<RenderModeConfigurationService>;
@@ -120,6 +126,7 @@ describe('PullContentUseCase', () => {
       codingAgentPort,
       renderModeConfigurationService,
       accountsPort,
+      eventTrackingPort,
       stubLogger(),
     );
   });
@@ -245,6 +252,40 @@ describe('PullContentUseCase', () => {
 
       expect(result.fileUpdates.createOrUpdate).toEqual([]);
       expect(result.fileUpdates.delete).toEqual([]);
+    });
+
+    it('tracks artifacts_pulled event with source cli', async () => {
+      const testPackage: PackageWithArtefacts = {
+        id: createPackageId('test-package-id'),
+        slug: 'test-package',
+        name: 'Test Package',
+        description: 'Test package description',
+        spaceId: createSpaceId('space-1'),
+        createdBy: createUserId('user-1'),
+        recipes: [],
+        standards: [],
+      };
+
+      packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+        testPackage,
+      ]);
+
+      recipesPort.listRecipeVersions.mockResolvedValue([]);
+      standardsPort.listStandardVersions.mockResolvedValue([]);
+
+      mockDeployer.deployArtifacts.mockResolvedValue({
+        createOrUpdate: [],
+        delete: [],
+      } as FileUpdates);
+
+      await useCase.execute(command);
+
+      expect(eventTrackingPort.trackEvent).toHaveBeenCalledWith(
+        createUserId(command.userId),
+        createOrganizationId(command.organizationId),
+        'artifacts_pulled',
+        { source: 'cli' },
+      );
     });
 
     describe('when package slugs do not match', () => {

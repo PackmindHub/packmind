@@ -13,21 +13,21 @@
 
 Every tool expects its own inputs:
 
-- **Copilot** → `.github/copilot-instructions.md`, chat modes, reusable prompts  
-- **Claude** → `CLAUDE.md`, commands, skills  
-- **Cursor** → `.cursor/rules/*.mdc`  
-- **Kiro** → `.kiro/steering/*.md`  
-- *(with more formats appearing every month…)*
+- **Copilot** → `.github/copilot-instructions.md`, chat modes, reusable prompts
+- **Claude** → `CLAUDE.md`, commands, skills
+- **Cursor** → `.cursor/rules/*.mdc`
+- **Kiro** → `.kiro/steering/*.md`
+- _(with more formats appearing every month…)_
 
 But your team’s **actual standards aren’t stored anywhere**:
 
-- architecture rules → buried in Slack or Notion  
-- naming conventions → stuck in your head  
-- patterns → hiding in PR comments  
-- best practices → scattered across repos  
+- architecture rules → buried in Slack or Notion
+- naming conventions → stuck in your head
+- patterns → hiding in PR comments
+- best practices → scattered across repos
 
 👉 **Packmind helps you turn all of this into a real engineering playbook**  
-(standards, rules, patterns, recipes) so **AI agents finally code *your way*.**
+(standards, rules, patterns, recipes) so **AI agents finally code _your way_.**
 
 ---
 
