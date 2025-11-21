@@ -18,7 +18,6 @@
     "@packmind/recipes": "*",
     "@packmind/standards": "*",
     "@packmind/types": "*",
-    "ts-jest": "^29.4.1",
     "@packmind/test-utils": "0.0.1"
   }
 }

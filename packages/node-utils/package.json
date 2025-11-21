@@ -10,7 +10,7 @@
     "@packmind/types": "*",
     "express": "^5.1.0",
     "openai": "^6.9.0",
-    "ts-jest": "^29.4.1",
+    "@swc/jest": "^0.2.39",
     "tslib": "^2.3.0",
     "typeorm": "0.3.27",
     "uuid": "^11.1.0",

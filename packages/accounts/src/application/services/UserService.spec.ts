@@ -16,15 +16,10 @@ import {
   UserNotInOrganizationError,
   UserCannotExcludeSelfError,
 } from '../../domain/errors';
+import * as bcrypt from 'bcrypt';
 
 // Mock bcrypt
-jest.mock('bcrypt', () => ({
-  hash: jest.fn(),
-  compare: jest.fn(),
-}));
-
-const mockHash = jest.fn<Promise<string>, [string, number]>();
-const mockCompare = jest.fn<Promise<boolean>, [string, string | null]>();
+jest.mock('bcrypt');
 
 describe('UserService', () => {
   let userService: UserService;
@@ -48,11 +43,6 @@ describe('UserService', () => {
       removeMembership: jest.fn(),
       updateRole: jest.fn(),
     } as unknown as jest.Mocked<IUserOrganizationMembershipRepository>;
-
-    // Set up the mock implementations
-    const bcrypt = jest.requireMock('bcrypt');
-    bcrypt.hash = mockHash;
-    bcrypt.compare = mockCompare;
 
     stubbedLogger = stubLogger();
 
@@ -280,7 +270,7 @@ describe('UserService', () => {
 
   describe('.createUser', () => {
     beforeEach(() => {
-      mockHash.mockResolvedValue('hashedpassword123');
+      jest.mocked(bcrypt.hash).mockResolvedValue('hashedpassword123' as never);
     });
 
     it('creates a new user successfully', async () => {
@@ -301,7 +291,7 @@ describe('UserService', () => {
       expect(
         mockUserRepository.findByEmailCaseInsensitive,
       ).toHaveBeenCalledWith(email);
-      expect(mockHash).toHaveBeenCalledWith(password, 10);
+      expect(bcrypt.hash).toHaveBeenCalledWith(password, 10);
       expect(mockUserRepository.add).toHaveBeenCalledWith(
         expect.objectContaining({
           email,
@@ -594,11 +584,11 @@ describe('UserService', () => {
       const password = 'plainpassword';
       const hashedPassword = 'hashedpassword123';
 
-      mockHash.mockResolvedValue(hashedPassword);
+      jest.mocked(bcrypt.hash).mockResolvedValue(hashedPassword as never);
 
       const result = await userService.hashPassword(password);
 
-      expect(mockHash).toHaveBeenCalledWith(password, 10);
+      expect(bcrypt.hash).toHaveBeenCalledWith(password, 10);
       expect(result).toBe(hashedPassword);
     });
   });
@@ -609,11 +599,11 @@ describe('UserService', () => {
         const password = 'plainpassword';
         const hash = 'hashedpassword123';
 
-        mockCompare.mockResolvedValue(true);
+        jest.mocked(bcrypt.compare).mockResolvedValue(true as never);
 
         const result = await userService.validatePassword(password, hash);
 
-        expect(mockCompare).toHaveBeenCalledWith(password, hash);
+        expect(bcrypt.compare).toHaveBeenCalledWith(password, hash);
         expect(result).toBe(true);
       });
     });
@@ -623,11 +613,11 @@ describe('UserService', () => {
         const password = 'plainpassword';
         const hash = 'hashedpassword123';
 
-        mockCompare.mockResolvedValue(false);
+        jest.mocked(bcrypt.compare).mockResolvedValue(false as never);
 
         const result = await userService.validatePassword(password, hash);
 
-        expect(mockCompare).toHaveBeenCalledWith(password, hash);
+        expect(bcrypt.compare).toHaveBeenCalledWith(password, hash);
         expect(result).toBe(false);
       });
     });
@@ -638,7 +628,7 @@ describe('UserService', () => {
 
         const result = await userService.validatePassword(password, null);
 
-        expect(mockCompare).not.toHaveBeenCalled();
+        expect(bcrypt.compare).not.toHaveBeenCalled();
         expect(result).toBe(false);
       });
     });
