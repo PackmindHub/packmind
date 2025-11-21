@@ -87,6 +87,7 @@ const app = subcommands({
   cmds: {
     lint: lintCommand,
     pull: pullCommand,
+    install: pullCommand,
   },
 });
 
