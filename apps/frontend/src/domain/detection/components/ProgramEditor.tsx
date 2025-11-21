@@ -396,33 +396,37 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
         />
       )}
 
-      <ActiveConfigurationSection
-        configurations={activeConfigurations}
-        isLoading={isLoadingActivePrograms}
-        isError={isActiveProgramsError}
-        onGenerateProgram={handleGenerateProgram}
-        isGeneratingProgram={generateProgram.isPending}
-        standardId={standardId}
-        ruleId={ruleId}
-        onTestProgram={handleTestDraft}
-        onActivateDraft={handleMakeDraftActive}
-        activatingDraftId={activatingDraftId}
-        isActivatingDraft={activateDraft.isPending}
-      />
+      {!isAccordionViewEnabled && (
+        <ActiveConfigurationSection
+          configurations={activeConfigurations}
+          isLoading={isLoadingActivePrograms}
+          isError={isActiveProgramsError}
+          onGenerateProgram={handleGenerateProgram}
+          isGeneratingProgram={generateProgram.isPending}
+          standardId={standardId}
+          ruleId={ruleId}
+          onTestProgram={handleTestDraft}
+          onActivateDraft={handleMakeDraftActive}
+          activatingDraftId={activatingDraftId}
+          isActivatingDraft={activateDraft.isPending}
+        />
+      )}
 
-      <DraftsSection
-        drafts={draftPrograms}
-        isLoading={isLoadingActivePrograms}
-        isError={isActiveProgramsError}
-        onMakeActive={handleMakeDraftActive}
-        activatingDraftId={activatingDraftId}
-        isActivatingDraft={activateDraft.isPending}
-        onTestDraft={handleTestDraft}
-        onRetryDraft={handleRetryDraftGeneration}
-        isGeneratingProgram={generateProgram.isPending}
-        standardId={standardId}
-        ruleId={ruleId}
-      />
+      {!isAccordionViewEnabled && (
+        <DraftsSection
+          drafts={draftPrograms}
+          isLoading={isLoadingActivePrograms}
+          isError={isActiveProgramsError}
+          onMakeActive={handleMakeDraftActive}
+          activatingDraftId={activatingDraftId}
+          isActivatingDraft={activateDraft.isPending}
+          onTestDraft={handleTestDraft}
+          onRetryDraft={handleRetryDraftGeneration}
+          isGeneratingProgram={generateProgram.isPending}
+          standardId={standardId}
+          ruleId={ruleId}
+        />
+      )}
       <PMDialog.Root
         open={isTestModalOpen}
         onOpenChange={(details) => {
