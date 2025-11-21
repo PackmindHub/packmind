@@ -15,6 +15,7 @@ export * from './PackagesDeployment';
 export * from './StandardDeploymentOverview';
 export * from './FileUpdates';
 export * from './Package';
+export * from './PackmindFileConfig';
 
 // Contracts
 export * from './contracts';

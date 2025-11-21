@@ -109,8 +109,14 @@ export const pullCommand = command({
       }
     }
 
-    // Show help if no package slugs provided
-    if (packagesSlugs.length === 0) {
+    // Read existing config
+    const configPackages = await packmindCliHexa.readConfig(process.cwd());
+
+    // Merge config packages with command line args
+    const allPackages = [...new Set([...configPackages, ...packagesSlugs])];
+
+    // Show help if no packages from either source
+    if (allPackages.length === 0) {
       console.log('Usage: packmind-cli pull <package-slug> [package-slug...]');
       console.log('       packmind-cli pull --list');
       console.log('');
@@ -123,15 +129,13 @@ export const pullCommand = command({
       process.exit(0);
     }
 
-    console.log(
-      `Pulling content from packages: ${packagesSlugs.join(', ')}...`,
-    );
+    console.log(`Pulling content from packages: ${allPackages.join(', ')}...`);
 
     try {
       // Execute the pull operation
       const result = await packmindCliHexa.pullData({
         baseDirectory: process.cwd(),
-        packagesSlugs,
+        packagesSlugs: allPackages,
       });
 
       // Display results
@@ -147,6 +151,10 @@ export const pullCommand = command({
         });
         process.exit(1);
       }
+
+      // Write config with all packages that were successfully pulled
+      await packmindCliHexa.writeConfig(process.cwd(), allPackages);
+      console.log('✓ Updated packmind.json');
     } catch (error) {
       console.error('\n❌ Failed to pull content:');
 

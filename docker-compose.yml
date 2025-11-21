@@ -10,7 +10,7 @@ x-nx-env: &nx-env
 services:
   nx-daemon:
     image: node:22.17.0-alpine3.21
-    container_name: dev-${PACKMIND_EDITION:-oss}-packmind-nx-daemon
+    container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-packmind-nx-daemon
     working_dir: /packmind
     command: >
       sh -lc "
@@ -42,7 +42,7 @@ services:
 
   postgres:
     image: postgres:17-alpine
-    container_name: dev-${PACKMIND_EDITION:-oss}-packmind-postgres
+    container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-packmind-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -59,7 +59,7 @@ services:
 
   redis:
     image: redis:7.2.4
-    container_name: dev-${PACKMIND_EDITION:-oss}-redis
+    container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-redis
     ports:
       - '6379:6379'
     volumes:
@@ -72,7 +72,7 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4:latest
-    container_name: dev-${PACKMIND_EDITION:-oss}-packmind-pgadmin
+    container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-packmind-pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@pgadmin.com
       PGADMIN_DEFAULT_PASSWORD: password
@@ -86,7 +86,7 @@ services:
 
   install-dependencies:
     image: node:22.17.0-alpine3.21
-    container_name: dev-${PACKMIND_EDITION:-oss}-packmind-install-deps
+    container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-packmind-install-deps
     working_dir: /packmind
     entrypoint:
       - sh
@@ -103,7 +103,7 @@ services:
 
   run-migrations:
     image: node:22.17.0-alpine3.21
-    container_name: dev-${PACKMIND_EDITION:-oss}-packmind-run-migrations
+    container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-packmind-run-migrations
     working_dir: /packmind
     entrypoint: >
       sh -lc '
@@ -142,7 +142,7 @@ services:
 
   frontend:
     image: node:22.17.0-alpine3.21
-    container_name: dev-${PACKMIND_EDITION:-oss}-packmind-frontend
+    container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-packmind-frontend
     working_dir: /packmind
     ports:
       - '4200:4200'
@@ -183,7 +183,7 @@ services:
 
   backend:
     image: node:22.17.0-alpine3.21
-    container_name: dev-${PACKMIND_EDITION:-oss}-packmind-backend
+    container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-packmind-backend
     working_dir: /packmind
     entrypoint: >
       sh -lc '
@@ -236,7 +236,7 @@ services:
 
   mcp-server:
     image: node:22.17.0-alpine3.21
-    container_name: dev-${PACKMIND_EDITION:-oss}-packmind-mcp-server
+    container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-packmind-mcp-server
     working_dir: /packmind
     entrypoint: >
       sh -lc '
@@ -275,7 +275,7 @@ services:
 
   run-e2e-tests:
     image: mcr.microsoft.com/playwright:v1.56.1-jammy
-    container_name: run-e2e-tests-${PACKMIND_EDITION:-oss}
+    container_name: ${COMPOSE_PROJECT_NAME:-dev}-run-e2e-tests-${PACKMIND_EDITION:-oss}
     profiles:
       - e2e
     volumes:
