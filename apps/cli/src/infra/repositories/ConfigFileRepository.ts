@@ -10,7 +10,7 @@ export class ConfigFileRepository {
     config: PackmindFileConfig,
   ): Promise<void> {
     const configPath = path.join(baseDirectory, this.CONFIG_FILENAME);
-    const configContent = JSON.stringify(config, null, 2);
+    const configContent = JSON.stringify(config, null, 2) + '\n';
     await fs.writeFile(configPath, configContent, 'utf-8');
   }
 
