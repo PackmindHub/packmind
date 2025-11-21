@@ -13,6 +13,7 @@ import {
   PMButton,
   PMHStack,
   type PMTextColors,
+  PMIcon,
 } from '@packmind/ui';
 import {
   DetectionProgram,
@@ -22,6 +23,7 @@ import {
 import { useGetRuleDetectionAssessmentQuery } from '@packmind/proprietary/frontend/domain/detection';
 import { ExecutionLogsDrawer } from '../ExecutionLogsDrawer';
 import { ProgramContentDrawer } from '../ProgramContentDrawer';
+import { LuCheck, LuCircleAlert, LuLoader } from 'react-icons/lu';
 
 export enum DraftCardState {
   ASSESSING = 'assessing',
@@ -85,12 +87,14 @@ export const DetectionDraftCard: React.FC<DraftCardProps> = ({
         {/* Step 1: Assessment */}
         <PMTimelineItem>
           <PMTimelineSeparator>
-            <PMTimelineIndicator />
+            <PMTimelineIndicator
+              icon={getStepIcon(timelineConfig.step1.status)}
+            />
             {!timelineConfig.step1.isLast && <PMTimelineConnector />}
           </PMTimelineSeparator>
           <PMTimelineContent>
             <PMTimelineTitle>
-              <PMText color={timelineConfig.step1.color}>
+              <PMText color={getStepTextColor(timelineConfig.step1.status)}>
                 {timelineConfig.step1.title}
               </PMText>
             </PMTimelineTitle>
@@ -105,12 +109,14 @@ export const DetectionDraftCard: React.FC<DraftCardProps> = ({
         {/* Step 2: Generation */}
         <PMTimelineItem>
           <PMTimelineSeparator>
-            <PMTimelineIndicator />
+            <PMTimelineIndicator
+              icon={getStepIcon(timelineConfig.step2.status)}
+            />
             {!timelineConfig.step2.isLast && <PMTimelineConnector />}
           </PMTimelineSeparator>
           <PMTimelineContent>
             <PMTimelineTitle>
-              <PMText color={timelineConfig.step2.color}>
+              <PMText color={getStepTextColor(timelineConfig.step2.status)}>
                 {timelineConfig.step2.title}
               </PMText>
             </PMTimelineTitle>
@@ -142,11 +148,13 @@ export const DetectionDraftCard: React.FC<DraftCardProps> = ({
         {/* Step 3: Ready */}
         <PMTimelineItem>
           <PMTimelineSeparator>
-            <PMTimelineIndicator />
+            <PMTimelineIndicator
+              icon={getStepIcon(timelineConfig.step3.status)}
+            />
           </PMTimelineSeparator>
           <PMTimelineContent>
             <PMTimelineTitle>
-              <PMText color={timelineConfig.step3.color}>
+              <PMText color={getStepTextColor(timelineConfig.step3.status)}>
                 {timelineConfig.step3.title}
               </PMText>
             </PMTimelineTitle>
@@ -190,6 +198,37 @@ export const DetectionDraftCard: React.FC<DraftCardProps> = ({
     </PMBox>
   );
 };
+
+function getStepIcon(status: TimelineStepStatus) {
+  switch (status) {
+    case TimelineStepStatus.failure:
+      return (
+        <PMIcon color="text.error" size="xs">
+          <LuCircleAlert />
+        </PMIcon>
+      );
+    case TimelineStepStatus.success:
+      return (
+        <PMIcon color="text.success" size="xs">
+          <LuCheck />
+        </PMIcon>
+      );
+    case TimelineStepStatus.pending:
+      return (
+        <PMIcon color="branding.primary" size="xs">
+          <LuLoader />
+        </PMIcon>
+      );
+    default:
+      return;
+  }
+}
+
+function getStepTextColor(status: TimelineStepStatus): PMTextColors {
+  if (status === TimelineStepStatus.unreachable) return 'faded';
+
+  return 'primary';
+}
 
 export function determineDraftCardState(
   assessmentStatus: RuleDetectionAssessmentStatus | undefined,
@@ -240,12 +279,19 @@ type TimelineButton = {
   onClick: () => void;
 };
 
+enum TimelineStepStatus {
+  pending,
+  success,
+  failure,
+  unreachable,
+}
+
 type TimelineStepConfig = {
   title: string;
   description?: string;
-  color: PMTextColors;
   isLast: boolean;
   buttons?: TimelineButton[];
+  status: TimelineStepStatus;
 };
 
 type TimelineConfig = {
@@ -271,18 +317,18 @@ function getTimelineConfig(
       return {
         step1: {
           title: 'Checking the detectability of the rule',
-          color: 'primary',
           isLast: false,
+          status: TimelineStepStatus.pending,
         },
         step2: {
           title: 'Generating program',
-          color: 'faded',
           isLast: false,
+          status: TimelineStepStatus.unreachable,
         },
         step3: {
           title: 'Ready to use',
-          color: 'faded',
           isLast: true,
+          status: TimelineStepStatus.unreachable,
         },
       };
 
@@ -290,18 +336,18 @@ function getTimelineConfig(
       return {
         step1: {
           title: 'The rule can not be detected',
-          color: 'error',
           isLast: false,
+          status: TimelineStepStatus.failure,
         },
         step2: {
           title: 'Generating program',
-          color: 'faded',
           isLast: false,
+          status: TimelineStepStatus.unreachable,
         },
         step3: {
           title: 'Ready to use',
-          color: 'faded',
           isLast: true,
+          status: TimelineStepStatus.unreachable,
         },
       };
 
@@ -309,20 +355,20 @@ function getTimelineConfig(
       return {
         step1: {
           title: 'The rule can be detected',
-          color: 'success',
           isLast: false,
+          status: TimelineStepStatus.success,
         },
         step2: {
           title: 'Generating program',
           description:
             'Packmind AI generates a program that comply with rule specifications. Program is ran on code examples to ensure its validity',
-          color: 'primary',
           isLast: false,
+          status: TimelineStepStatus.pending,
         },
         step3: {
           title: 'Ready to use',
-          color: 'faded',
           isLast: true,
+          status: TimelineStepStatus.unreachable,
         },
       };
 
@@ -330,15 +376,15 @@ function getTimelineConfig(
       return {
         step1: {
           title: 'The rule can be detected',
-          color: 'success',
           isLast: false,
+          status: TimelineStepStatus.success,
         },
         step2: {
           title: 'Generating program',
           description:
             'Packmind AI generates a program that comply with rule specifications. Program is ran on code examples to ensure its validity',
-          color: 'primary',
           isLast: false,
+          status: TimelineStepStatus.pending,
           buttons: [
             {
               label: 'Show log',
@@ -348,8 +394,8 @@ function getTimelineConfig(
         },
         step3: {
           title: 'Ready to use',
-          color: 'faded',
           isLast: true,
+          status: TimelineStepStatus.unreachable,
         },
       };
 
@@ -357,13 +403,13 @@ function getTimelineConfig(
       return {
         step1: {
           title: 'The rule can be detected',
-          color: 'success',
           isLast: false,
+          status: TimelineStepStatus.success,
         },
         step2: {
           title: 'Unable to generate a program',
-          color: 'error',
           isLast: false,
+          status: TimelineStepStatus.failure,
           buttons: [
             {
               label: 'Retry',
@@ -377,8 +423,8 @@ function getTimelineConfig(
         },
         step3: {
           title: 'Ready to use',
-          color: 'faded',
           isLast: true,
+          status: TimelineStepStatus.unreachable,
         },
       };
 
@@ -386,13 +432,13 @@ function getTimelineConfig(
       return {
         step1: {
           title: 'The rule can be detected',
-          color: 'success',
           isLast: false,
+          status: TimelineStepStatus.success,
         },
         step2: {
           title: 'Program has been generated',
-          color: 'success',
           isLast: false,
+          status: TimelineStepStatus.success,
           buttons: [
             {
               label: 'Show log',
@@ -406,8 +452,8 @@ function getTimelineConfig(
         },
         step3: {
           title: 'Ready to use',
-          color: 'primary',
           isLast: true,
+          status: TimelineStepStatus.success,
           buttons: [
             {
               label: 'Test draft program',
