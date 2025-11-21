@@ -29,8 +29,6 @@ But your team’s **actual standards aren’t stored anywhere**:
 👉 **Packmind helps you turn all of this into a real engineering playbook**  
 (standards, rules, patterns, recipes) so **AI agents finally code _your way_.**
 
----
-
 ### **2️⃣ “Why am I copy-pasting this across every repo and every agent?”**
 
 Every repo.  

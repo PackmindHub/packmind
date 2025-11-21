@@ -2,16 +2,37 @@
 
 ## What's Packmind
 
-Packmind helps engineering teams safely scale AI coding by syncing organizational decisions into GitHub Copilot, Claude Code, Cursor and other assistants, enforcing them via code checks and rewrites, and providing governance with a full ledger of what standards and recipes were applied where. Teams ship faster, with zero rework and full trust.
+Packmind is a developer tool that fixes two big problems every AI-native engineer runs into:
 
-1. **Capture & normalize engineering playbook**
-   Turn scattered rules from docs and code reviews into structured, versioned standards, recipes, and workflows — keeping knowledge consistent and out of experts' heads.
+### **1️⃣ “What do I even put in these AI instructions?”**
 
-2. **Organize & share with packages**
-   Group related standards and recipes into packages tailored to specific teams, technologies, or projects. Deploy or pull entire collections to maintain consistency across your codebase.
+Every tool expects its own inputs:
 
-3. **Align AI and enforce engineering playbook**
-   Keep per-repo instruction files always up to date so AI assistants follow organizational rules. Detect and rewrite violations before merge, eliminating costly rework.
+- **Copilot** → `.github/copilot-instructions.md`, chat modes, reusable prompts
+- **Claude** → `CLAUDE.md`, commands, skills
+- **Cursor** → `.cursor/rules/*.mdc`
+- **Kiro** → `.kiro/steering/*.md`
+- _(with more formats appearing every month…)_
 
-4. **Govern & Scale safely**
-   Gradually roll out standards and recipes with scopes and drift repair to prevent architectural drift. Track what's applied where to build trust and safely scale agentic AI.
+But your team’s **actual standards aren’t stored anywhere**:
+
+- architecture rules → buried in Slack or Notion
+- naming conventions → stuck in your head
+- patterns → hiding in PR comments
+- best practices → scattered across repos
+
+👉 **Packmind helps you turn all of this into a real engineering playbook**  
+(standards, rules, patterns, recipes) so **AI agents finally code _your way_.**
+
+---
+
+### **2️⃣ “Why am I copy-pasting this across every repo and every agent?”**
+
+Every repo.  
+Every assistant.  
+Different files, different folders, different formats.
+
+Keeping everything in sync is impossible.
+
+👉 **Packmind centralizes your playbook once — and distributes it everywhere**,  
+generating the exact instruction files each AI tool needs, optimized for context.
