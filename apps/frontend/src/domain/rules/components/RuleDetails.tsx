@@ -47,6 +47,7 @@ export const RuleDetails = ({
   const [isCreatingFirstExample, setIsCreatingFirstExample] = useState(false);
   const [isCreatingExampleForLanguage, setIsCreatingExampleForLanguage] =
     useState(false);
+  const [currentTab, setCurrentTab] = useState<RuleDetailsTab>(defaultTab);
   const { data: examples, isLoading: isLoadingExamples } =
     useGetRuleExamplesQuery(
       organization?.id as OrganizationId,
@@ -72,6 +73,10 @@ export const RuleDetails = ({
     return Array.from(uniqueLanguages);
   }, [examples]);
 
+  const selectedLanguageHasExamples = useMemo(() => {
+    return detectionLanguages.includes(selectedLanguage);
+  }, [detectionLanguages, selectedLanguage]);
+
   useEffect(() => {
     if (hasExamples && isCreatingFirstExample) {
       setIsCreatingFirstExample(false);
@@ -94,17 +99,13 @@ export const RuleDetails = ({
       return;
     }
 
-    // Only change the selected language when the current one
-    // is not available in the configured detection languages.
-    if (!detectionLanguages.includes(selectedLanguage)) {
-      const allLanguages = getAllLanguagesSortedByDisplayName();
-      const firstConfigured = allLanguages.find((l) =>
-        detectionLanguages.includes(l.language),
-      );
-      const defaultLang =
-        firstConfigured?.language || ProgrammingLanguage.JAVASCRIPT;
-      setSelectedLanguage(defaultLang);
-    }
+    const allLanguages = getAllLanguagesSortedByDisplayName();
+    const firstConfigured = allLanguages.find((l) =>
+      detectionLanguages.includes(l.language),
+    );
+    const defaultLang =
+      firstConfigured?.language || ProgrammingLanguage.JAVASCRIPT;
+    setSelectedLanguage(defaultLang);
   }, [detectionLanguages]);
 
   const { configuredLanguages, otherLanguages } = useMemo(() => {
@@ -135,6 +136,10 @@ export const RuleDetails = ({
     });
   }, []);
 
+  const handleNavigateToExamples = () => {
+    setCurrentTab('examples');
+  };
+
   const tabs = [
     {
       value: 'examples',
@@ -155,6 +160,7 @@ export const RuleDetails = ({
     {
       value: 'detection',
       triggerLabel: 'Linter',
+      disabled: !selectedLanguageHasExamples,
       content: (
         <PMVStack alignItems={'stretch'} gap="4" paddingY={'4'}>
           <PMPageSection>
@@ -165,6 +171,7 @@ export const RuleDetails = ({
                 language.toString(),
               )}
               selectedLanguage={selectedLanguage}
+              onNavigateToExamples={handleNavigateToExamples}
             />
           </PMPageSection>
         </PMVStack>
@@ -261,7 +268,15 @@ export const RuleDetails = ({
           </PMSelect.Root>
         </PMBox>
       </PMHStack>
-      <PMTabs defaultValue={defaultTab} tabs={tabs} width="100%" />
+      <PMTabs
+        defaultValue={defaultTab}
+        value={currentTab}
+        onValueChange={(details) =>
+          setCurrentTab(details.value as RuleDetailsTab)
+        }
+        tabs={tabs}
+        width="100%"
+      />
     </PMVStack>
   );
 };

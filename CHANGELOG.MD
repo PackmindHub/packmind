@@ -1,5 +1,11 @@
 # [Unreleased]
 
+# [1.4.0] - 2025-11-21
+
+## Added
+
+- Create and deploy packages to bundle standards and recipes together for organized distribution (#7)
+
 # [1.3.1] - 2025-10-28
 
 ## Changed
