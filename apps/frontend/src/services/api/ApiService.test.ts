@@ -330,10 +330,16 @@ describe('ApiService', () => {
       });
 
       it('rejects with PackmindConflictError is status is 409', async () => {
-        mockAxiosInstance.get.mockRejectedValue({ ...error, status: 409 });
+        const conflictError = {
+          response: {
+            ...error.response,
+            status: 409,
+          },
+        };
+        mockAxiosInstance.get.mockRejectedValue(conflictError);
 
         await expect(apiService.get('/users')).rejects.toThrow(
-          new PackmindConflictError({ ...error, status: 409 }.response),
+          new PackmindConflictError(conflictError.response),
         );
       });
     });

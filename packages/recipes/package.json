@@ -13,7 +13,6 @@
     "@packmind/node-utils": "*",
     "@packmind/spaces": "*",
     "@packmind/types": "*",
-    "ts-jest": "^29.4.1",
     "uuid": "^11.1.0",
     "slug": "^11.0.0",
     "bullmq": "^5.58.2",

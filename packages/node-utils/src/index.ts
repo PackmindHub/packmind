@@ -1,3 +1,5 @@
+import localDataSource from './dataSources/local';
+
 export * from './adapter/IBaseAdapter';
 export * from './cache/Cache';
 export * from './config/config/Configuration';
@@ -24,5 +26,3 @@ export * from './security/EncryptionService';
 export * from './sse';
 export * from './text';
 export { localDataSource };
-
-import localDataSource from './dataSources/local';

@@ -1,21 +1,24 @@
-import { pathsToModuleNameMapper } from 'ts-jest';
-
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import { compilerOptions } from '../../tsconfig.base.effective.json';
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import {
+  pathsToModuleNameMapper,
+  swcTransformWithDecorators,
+  standardModuleFileExtensions,
+} from '../../jest-utils';
 
 export default {
   displayName: '@packmind/integration-tests',
   preset: '../../jest.preset.ts',
   testEnvironment: 'node',
   setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
-  transform: {
-    '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
-  },
+  transform: swcTransformWithDecorators,
   transformIgnorePatterns: ['node_modules/(?!(slug)/)'],
-  moduleFileExtensions: ['ts', 'js', 'html'],
+  moduleFileExtensions: standardModuleFileExtensions,
   coverageDirectory: '../../coverage/packages/integration-tests',
-  moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths, {
-    prefix: '<rootDir>/../../',
-  }),
+  moduleNameMapper: pathsToModuleNameMapper(
+    compilerOptions.paths,
+    '<rootDir>/../../',
+  ),
   testTimeout: 30000,
 };

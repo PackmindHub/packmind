@@ -1,11 +1,23 @@
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import { compilerOptions } from '../../tsconfig.base.effective.json';
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import {
+  pathsToModuleNameMapper,
+  swcTransform,
+  standardTransformIgnorePatterns,
+  standardModuleFileExtensions,
+} from '../../jest-utils';
+
 export default {
   displayName: 'linter',
-  preset: '../../jest.preset.js',
+  preset: '../../jest.preset.ts',
   testEnvironment: 'node',
-  transform: {
-    '^.+\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
-  },
-  moduleFileExtensions: ['ts', 'js', 'html'],
+  transform: swcTransform,
+  transformIgnorePatterns: standardTransformIgnorePatterns,
+  moduleFileExtensions: standardModuleFileExtensions,
   coverageDirectory: '../../coverage/packages/linter',
-  transformIgnorePatterns: ['/node_modules/(?!slug).+\\.js$'],
+  moduleNameMapper: pathsToModuleNameMapper(
+    compilerOptions.paths,
+    '<rootDir>/../../',
+  ),
 };

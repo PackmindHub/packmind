@@ -12,7 +12,6 @@
     "@packmind/node-utils": "*",
     "@packmind/types": "*",
     "uuid": "^11.1.0",
-    "slug": "^11.0.0",
-    "ts-jest": "^29.4.1"
+    "slug": "^11.0.0"
   }
 }

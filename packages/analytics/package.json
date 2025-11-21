@@ -7,7 +7,6 @@
   "types": "./src/index.d.ts",
   "dependencies": {
     "tslib": "^2.3.0",
-    "ts-jest": "^29.4.1",
     "typeorm": "0.3.27",
     "@nestjs/common": "^11.1.6",
     "@packmind/accounts": "*",

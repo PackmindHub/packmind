@@ -13,7 +13,6 @@
     "@packmind/types": "*",
     "uuid": "^11.1.0",
     "bcrypt": "^6.0.0",
-    "ts-jest": "^29.4.1",
     "slug": "^11.0.0",
     "@nestjs/common": "^11.1.6",
     "validator": "^13.15.15",
