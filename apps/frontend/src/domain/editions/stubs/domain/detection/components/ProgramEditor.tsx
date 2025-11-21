@@ -5,6 +5,7 @@ interface ProgramEditorProps {
   ruleId: string;
   detectionLanguages: string[];
   selectedLanguage: string;
+  onNavigateToExamples?: () => void;
 }
 
 export const ProgramEditor = (props: ProgramEditorProps) => {
