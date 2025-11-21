@@ -242,7 +242,7 @@ describe('DetectionProgramConfiguration', () => {
 
       it('renders detectability accordion with success status', () => {
         expect(screen.getByText('Detectability')).toBeInTheDocument();
-        expect(screen.getByText('Success')).toBeInTheDocument();
+        expect(screen.getByText('Active')).toBeInTheDocument();
       });
 
       it('enables the program accordion', () => {
@@ -293,7 +293,7 @@ describe('DetectionProgramConfiguration', () => {
         });
 
         it('displays success status for program accordion', () => {
-          const successBadges = screen.getAllByText('Success');
+          const successBadges = screen.getAllByText('Active');
           expect(successBadges.length).toBeGreaterThan(0);
         });
       });

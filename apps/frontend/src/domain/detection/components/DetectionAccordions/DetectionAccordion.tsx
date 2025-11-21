@@ -20,7 +20,7 @@ const renderStatusBadge = (status: DetectionAccordionStatus) => {
     case DetectionAccordionStatus.SUCCESS:
       return (
         <PMBadge colorPalette="green" variant="solid">
-          Success
+          Active
         </PMBadge>
       );
     case DetectionAccordionStatus.FAILED:
