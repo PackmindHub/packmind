@@ -285,6 +285,7 @@ export class DeploymentsAdapter
       this.codingAgentPort,
       this.deploymentsServices.getRenderModeConfigurationService(),
       this.accountsPort,
+      this.eventTrackingPort,
     );
 
     this._listPackagesBySpaceUseCase = new ListPackagesBySpaceUsecase(
