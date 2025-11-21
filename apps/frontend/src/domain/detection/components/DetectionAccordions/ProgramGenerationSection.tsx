@@ -1,9 +1,11 @@
 import React from 'react';
 import { PMVStack } from '@packmind/ui';
 import { ActiveConfigurationSection } from '../ActiveConfigurationSection';
-import { DraftsSection } from '../DraftsSection';
 import { ActiveConfigurationCardData } from '../ActiveConfigurationCard';
-import { DraftCardData } from '../DetectionDraftCard/DetectionDraftCard';
+import {
+  DetectionDraftCard,
+  DraftCardData,
+} from '../DetectionDraftCard/DetectionDraftCard';
 
 interface ProgramGenerationSectionProps {
   standardId: string;
@@ -38,6 +40,8 @@ export const ProgramGenerationSection: React.FC<
   isActivatingDraft,
   onRetryDraft,
 }) => {
+  const activeDraft = draftPrograms[0];
+
   return (
     <PMVStack alignItems="stretch" gap={6} p={4}>
       <ActiveConfigurationSection
@@ -54,19 +58,21 @@ export const ProgramGenerationSection: React.FC<
         isActivatingDraft={isActivatingDraft}
       />
 
-      <DraftsSection
-        drafts={draftPrograms}
-        isLoading={isLoadingActivePrograms}
-        isError={isActiveProgramsError}
-        onMakeActive={onActivateDraft}
-        activatingDraftId={activatingDraftId}
-        isActivatingDraft={isActivatingDraft}
-        onTestDraft={onTestProgram}
-        onRetryDraft={onRetryDraft}
-        isGeneratingProgram={isGeneratingProgram}
-        standardId={standardId}
-        ruleId={ruleId}
-      />
+      {activeDraft && !isLoadingActivePrograms && (
+        <DetectionDraftCard
+          key={activeDraft.id}
+          draft={activeDraft}
+          onMakeActive={onActivateDraft}
+          isActivating={
+            activatingDraftId === activeDraft.id && isActivatingDraft
+          }
+          onTestDraft={onTestProgram}
+          onRetryDraft={onRetryDraft}
+          isGenerating={isGeneratingProgram}
+          standardId={standardId}
+          ruleId={ruleId}
+        />
+      )}
     </PMVStack>
   );
 };

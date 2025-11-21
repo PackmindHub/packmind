@@ -228,6 +228,10 @@ describe('ProgramGenerationTimeline', () => {
       // The text should be present but with faded color
       expect(readyText).toBeInTheDocument();
     });
+
+    it('displays "Draft: pending" badge', () => {
+      expect(screen.getByText('Draft: pending')).toBeInTheDocument();
+    });
   });
 
   describe('when assessment is done', () => {
@@ -250,6 +254,10 @@ describe('ProgramGenerationTimeline', () => {
 
       it('disables the "Ready to use" section', () => {
         expect(screen.getByText('Ready to use')).toBeInTheDocument();
+      });
+
+      it('displays "Draft: failure" badge', () => {
+        expect(screen.getByText('Draft: failure')).toBeInTheDocument();
       });
     });
 
@@ -283,6 +291,10 @@ describe('ProgramGenerationTimeline', () => {
         it('disables the "Ready to use" section', () => {
           expect(screen.getByText('Ready to use')).toBeInTheDocument();
         });
+
+        it('displays "Draft: pending" badge', () => {
+          expect(screen.getByText('Draft: pending')).toBeInTheDocument();
+        });
       });
 
       describe('when program is being generated', () => {
@@ -314,6 +326,10 @@ describe('ProgramGenerationTimeline', () => {
           await waitFor(() => {
             expect(screen.getByRole('dialog')).toBeInTheDocument();
           });
+        });
+
+        it('displays "Draft: pending" badge', () => {
+          expect(screen.getByText('Draft: pending')).toBeInTheDocument();
         });
       });
 
@@ -354,6 +370,10 @@ describe('ProgramGenerationTimeline', () => {
           it('calls onRetryDraft when "Retry" button is clicked', () => {
             const retryButton = screen.getByText('Retry');
             fireEvent.click(retryButton);
+          });
+
+          it('displays "Draft: failure" badge', () => {
+            expect(screen.getByText('Draft: failure')).toBeInTheDocument();
           });
         });
 
@@ -407,6 +427,10 @@ describe('ProgramGenerationTimeline', () => {
           it('calls onMakeActive when "Set as active" button is clicked', () => {
             const setActiveButton = screen.getByText('Set as active');
             fireEvent.click(setActiveButton);
+          });
+
+          it('displays "Draft: OK" badge', () => {
+            expect(screen.getByText('Draft: OK')).toBeInTheDocument();
           });
         });
       });

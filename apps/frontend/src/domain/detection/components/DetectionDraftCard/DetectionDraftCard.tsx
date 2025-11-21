@@ -14,6 +14,7 @@ import {
   PMHStack,
   type PMTextColors,
   PMIcon,
+  PMBadge,
 } from '@packmind/ui';
 import {
   DetectionProgram,
@@ -72,6 +73,7 @@ export const DetectionDraftCard: React.FC<DraftCardProps> = ({
   );
 
   const state = determineDraftCardState(assessment?.status, draft.status);
+  const badgeConfig = getBadgeConfig(state);
 
   const timelineConfig = getTimelineConfig(state, {
     onShowLogs: () => setIsLogsDrawerOpen(true),
@@ -82,106 +84,16 @@ export const DetectionDraftCard: React.FC<DraftCardProps> = ({
   });
 
   return (
-    <PMBox width="full" py={2}>
+    <PMBox width="full" py={2} position="relative">
+      <PMBox position="absolute" top={0} right={0}>
+        <PMBadge colorPalette={badgeConfig.colorPalette}>
+          {badgeConfig.label}
+        </PMBadge>
+      </PMBox>
       <PMTimeline variant="outline">
-        {/* Step 1: Assessment */}
-        <PMTimelineItem>
-          <PMTimelineSeparator>
-            <PMTimelineIndicator
-              icon={getStepIcon(timelineConfig.step1.status)}
-            />
-            {!timelineConfig.step1.isLast && <PMTimelineConnector />}
-          </PMTimelineSeparator>
-          <PMTimelineContent>
-            <PMTimelineTitle>
-              <PMText color={getStepTextColor(timelineConfig.step1.status)}>
-                {timelineConfig.step1.title}
-              </PMText>
-            </PMTimelineTitle>
-            {timelineConfig.step1.description && (
-              <PMTimelineDescription>
-                {timelineConfig.step1.description}
-              </PMTimelineDescription>
-            )}
-          </PMTimelineContent>
-        </PMTimelineItem>
-
-        {/* Step 2: Generation */}
-        <PMTimelineItem>
-          <PMTimelineSeparator>
-            <PMTimelineIndicator
-              icon={getStepIcon(timelineConfig.step2.status)}
-            />
-            {!timelineConfig.step2.isLast && <PMTimelineConnector />}
-          </PMTimelineSeparator>
-          <PMTimelineContent>
-            <PMTimelineTitle>
-              <PMText color={getStepTextColor(timelineConfig.step2.status)}>
-                {timelineConfig.step2.title}
-              </PMText>
-            </PMTimelineTitle>
-            {timelineConfig.step2.description && (
-              <PMTimelineDescription>
-                {timelineConfig.step2.description}
-              </PMTimelineDescription>
-            )}
-            {timelineConfig.step2.buttons &&
-              timelineConfig.step2.buttons.length > 0 && (
-                <PMBox mt={2}>
-                  <PMHStack gap={2}>
-                    {timelineConfig.step2.buttons.map((button) => (
-                      <PMButton
-                        key={button.label}
-                        size="sm"
-                        variant="outline"
-                        onClick={button.onClick}
-                      >
-                        {button.label}
-                      </PMButton>
-                    ))}
-                  </PMHStack>
-                </PMBox>
-              )}
-          </PMTimelineContent>
-        </PMTimelineItem>
-
-        {/* Step 3: Ready */}
-        <PMTimelineItem>
-          <PMTimelineSeparator>
-            <PMTimelineIndicator
-              icon={getStepIcon(timelineConfig.step3.status)}
-            />
-          </PMTimelineSeparator>
-          <PMTimelineContent>
-            <PMTimelineTitle>
-              <PMText color={getStepTextColor(timelineConfig.step3.status)}>
-                {timelineConfig.step3.title}
-              </PMText>
-            </PMTimelineTitle>
-            {timelineConfig.step3.description && (
-              <PMTimelineDescription>
-                {timelineConfig.step3.description}
-              </PMTimelineDescription>
-            )}
-            {timelineConfig.step3.buttons &&
-              timelineConfig.step3.buttons.length > 0 && (
-                <PMBox mt={2}>
-                  <PMHStack gap={2}>
-                    {timelineConfig.step3.buttons.map((button) => (
-                      <PMButton
-                        key={button.label}
-                        size="sm"
-                        variant="outline"
-                        onClick={button.onClick}
-                      >
-                        {button.label}
-                      </PMButton>
-                    ))}
-                  </PMHStack>
-                </PMBox>
-              )}
-          </PMTimelineContent>
-        </PMTimelineItem>
+        <TimelineStep config={timelineConfig.step1} />
+        <TimelineStep config={timelineConfig.step2} />
+        <TimelineStep config={timelineConfig.step3} />
       </PMTimeline>
       <ExecutionLogsDrawer
         isOpen={isLogsDrawerOpen}
@@ -224,11 +136,114 @@ function getStepIcon(status: TimelineStepStatus) {
   }
 }
 
+type TimelineButton = {
+  label: string;
+  onClick: () => void;
+};
+
+enum TimelineStepStatus {
+  pending,
+  success,
+  failure,
+  unreachable,
+}
+
+type TimelineStepConfig = {
+  title: string;
+  description?: string;
+  isLast: boolean;
+  buttons?: TimelineButton[];
+  status: TimelineStepStatus;
+};
+
+type TimelineConfig = {
+  step1: TimelineStepConfig;
+  step2: TimelineStepConfig;
+  step3: TimelineStepConfig;
+};
+
+type TimelineHandlers = {
+  onShowLogs: () => void;
+  onShowProgram: () => void;
+  onTestDraft: () => void;
+  onMakeActive: () => void;
+  onRetryDraft: () => void;
+};
+
 function getStepTextColor(status: TimelineStepStatus): PMTextColors {
   if (status === TimelineStepStatus.unreachable) return 'faded';
 
   return 'primary';
 }
+
+type BadgeConfig = {
+  label: string;
+  colorPalette: 'gray' | 'red' | 'green';
+};
+
+function getBadgeConfig(state: DraftCardState): BadgeConfig {
+  switch (state) {
+    case DraftCardState.ASSESSING:
+    case DraftCardState.ASSESSMENT_SUCCESSFUL:
+    case DraftCardState.GENERATING:
+      return {
+        label: 'Draft: pending',
+        colorPalette: 'gray',
+      };
+    case DraftCardState.ASSESSMENT_FAILED:
+    case DraftCardState.GENERATION_FAILED:
+      return {
+        label: 'Draft: failure',
+        colorPalette: 'red',
+      };
+    case DraftCardState.GENERATION_SUCCESSFUL:
+      return {
+        label: 'Draft: OK',
+        colorPalette: 'green',
+      };
+  }
+}
+
+interface TimelineStepProps {
+  config: TimelineStepConfig;
+}
+
+const TimelineStep: React.FC<TimelineStepProps> = ({ config }) => {
+  return (
+    <PMTimelineItem>
+      <PMTimelineSeparator>
+        <PMTimelineIndicator icon={getStepIcon(config.status)} />
+        {!config.isLast && <PMTimelineConnector />}
+      </PMTimelineSeparator>
+      <PMTimelineContent>
+        <PMTimelineTitle>
+          <PMText color={getStepTextColor(config.status)}>
+            {config.title}
+          </PMText>
+        </PMTimelineTitle>
+        {config.description && (
+          <PMTimelineDescription>{config.description}</PMTimelineDescription>
+        )}
+        {config.buttons && config.buttons.length > 0 && (
+          <PMBox mt={2}>
+            <PMHStack gap={2}>
+              {config.buttons.map((button) => (
+                <PMButton
+                  key={button.label}
+                  size="sm"
+                  variant="outline"
+                  onClick={button.onClick}
+                >
+                  {button.label}
+                </PMButton>
+              ))}
+            </PMHStack>
+          </PMBox>
+        )}
+      </PMTimelineContent>
+    </PMTimelineItem>
+  );
+};
 
 export function determineDraftCardState(
   assessmentStatus: RuleDetectionAssessmentStatus | undefined,
@@ -273,40 +288,6 @@ export function determineDraftCardState(
   // Default fallback
   return DraftCardState.ASSESSING;
 }
-
-type TimelineButton = {
-  label: string;
-  onClick: () => void;
-};
-
-enum TimelineStepStatus {
-  pending,
-  success,
-  failure,
-  unreachable,
-}
-
-type TimelineStepConfig = {
-  title: string;
-  description?: string;
-  isLast: boolean;
-  buttons?: TimelineButton[];
-  status: TimelineStepStatus;
-};
-
-type TimelineConfig = {
-  step1: TimelineStepConfig;
-  step2: TimelineStepConfig;
-  step3: TimelineStepConfig;
-};
-
-type TimelineHandlers = {
-  onShowLogs: () => void;
-  onShowProgram: () => void;
-  onTestDraft: () => void;
-  onMakeActive: () => void;
-  onRetryDraft: () => void;
-};
 
 function getTimelineConfig(
   state: DraftCardState,
