@@ -1,0 +1,210 @@
+name: Publish to Public Repository
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_message:
+        description: 'Custom commit message (optional)'
+        required: false
+        type: string
+      changelog:
+        description: 'Changelog entry (optional)'
+        required: false
+        type: string
+
+jobs:
+  publish:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    steps:
+      - name: Checkout private repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1000
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Check if allowlist exists
+        id: check_allowlist
+        run: |
+          if [ -f ".mirror/whitelist.txt" ]; then
+            echo "allowlist_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "allowlist_exists=false" >> $GITHUB_OUTPUT
+            echo "❌ .mirror/whitelist.txt file not found"
+            exit 1
+          fi
+
+      - name: Add public repository as remote and fetch
+        run: |
+          git remote add public https://x-access-token:${{ secrets.PUBLIC_REPO_TOKEN }}@github.com/${{ vars.PUBLIC_REPO_NAME }}.git
+          git fetch public
+
+      - name: Checkout public repository main branch
+        run: |
+          # Configure git with custom user (from secrets)
+          git config user.name "${{ secrets.GIT_COMMIT_USER_NAME }}"
+          git config user.email "${{ secrets.GIT_COMMIT_USER_EMAIL }}"
+
+          # Store the private repository's main branch reference BEFORE switching
+          PRIVATE_MAIN_SHA=$(git rev-parse main)
+          echo "PRIVATE_MAIN_SHA=$PRIVATE_MAIN_SHA" >> $GITHUB_ENV
+          echo "Stored private main SHA: $PRIVATE_MAIN_SHA"
+
+          # Check if public main exists and checkout, otherwise create new branch
+          if git ls-remote --exit-code --heads public main >/dev/null 2>&1; then
+            echo "Public repository main branch exists, switching to it..."
+            git checkout -b public-main public/main
+          else
+            echo "Public repository main branch doesn't exist, creating new orphan branch..."
+            git checkout --orphan public-main
+            git rm -rf . || true
+          fi
+
+      - name: Remove files that no longer exist in source
+        id: clean_repository
+        run: |
+          # Extract required scripts from the private commit
+          tmp_deletion_script=$(mktemp)
+          
+          # Extract deletion script
+          if git show "$PRIVATE_MAIN_SHA:scripts/delete-remotely-deleted-files.sh" > "$tmp_deletion_script" 2>/dev/null; then
+            chmod +x "$tmp_deletion_script"
+          else
+            echo "❌ scripts/delete-remotely-deleted-files.sh not found in private commit $PRIVATE_MAIN_SHA"
+            exit 1
+          fi
+          
+          # Extract list-whitelisted-files script (required by deletion script)
+          # Create scripts directory and copy the script there so deletion script can find it
+          mkdir -p scripts
+          if git show "$PRIVATE_MAIN_SHA:scripts/list-whitelisted-files.sh" > "scripts/list-whitelisted-files.sh" 2>/dev/null; then
+            chmod +x scripts/list-whitelisted-files.sh
+          else
+            echo "❌ scripts/list-whitelisted-files.sh not found in private commit $PRIVATE_MAIN_SHA"
+            exit 1
+          fi
+          
+          # Run the deletion script
+          PRIVATE_MAIN_SHA="$PRIVATE_MAIN_SHA" "$tmp_deletion_script"
+
+      - name: Apply whitelist filter from private repository
+        id: filter_files
+        run: |
+          # Extract the filtering script from the private commit and run it.
+          tmp_script=$(mktemp)
+          if git show "$PRIVATE_MAIN_SHA:scripts/apply-whitelist-filter.sh" > "$tmp_script" 2>/dev/null; then
+            chmod +x "$tmp_script"
+            
+            # Ensure scripts directory exists and list-whitelisted-files.sh is available
+            mkdir -p scripts
+            if [ ! -f scripts/list-whitelisted-files.sh ]; then
+              echo "🔧 Extracting list-whitelisted-files.sh for filtering script"
+              if git show "$PRIVATE_MAIN_SHA:scripts/list-whitelisted-files.sh" > "scripts/list-whitelisted-files.sh" 2>/dev/null; then
+                chmod +x scripts/list-whitelisted-files.sh
+              else
+                echo "❌ scripts/list-whitelisted-files.sh not found in private commit $PRIVATE_MAIN_SHA"
+                exit 1
+              fi
+            else
+              echo "✅ scripts/list-whitelisted-files.sh already exists from previous step"
+            fi
+            
+            PRIVATE_MAIN_SHA="$PRIVATE_MAIN_SHA" "$tmp_script"
+          else
+            echo "❌ scripts/apply-whitelist-filter.sh not found in private commit $PRIVATE_MAIN_SHA"
+            exit 1
+          fi
+
+      - name: Rename files for OSS
+        id: rename_files_oss
+        run: |
+          tmp_script=$(mktemp)
+          if git show "$PRIVATE_MAIN_SHA:scripts/rename-files-oss.sh" > "$tmp_script" 2>/dev/null; then
+            chmod +x "$tmp_script"
+            PRIVATE_MAIN_SHA="$PRIVATE_MAIN_SHA" "$tmp_script"
+          else
+            echo "❌ scripts/rename-files-oss.sh not found in private commit $PRIVATE_MAIN_SHA"
+            exit 1
+          fi
+
+      - name: Generate changelog entry
+        id: changelog
+        run: |
+          # Create or update CHANGELOG.md if changelog input is provided
+          if [ -n "${{ github.event.inputs.changelog }}" ]; then
+            changelog_entry="${{ github.event.inputs.changelog }}"
+            current_date=$(date +"%Y-%m-%d")
+
+            if [ -f "CHANGELOG.md" ]; then
+              # Insert new entry after the header
+              temp_file=$(mktemp)
+              echo "# Changelog" > "$temp_file"
+              echo "" >> "$temp_file"
+              echo "## [$current_date]" >> "$temp_file"
+              echo "$changelog_entry" >> "$temp_file"
+              echo "" >> "$temp_file"
+              tail -n +3 CHANGELOG.md >> "$temp_file"
+              mv "$temp_file" CHANGELOG.md
+            else
+              # Create new changelog
+              echo "# Changelog" > CHANGELOG.md
+              echo "" >> CHANGELOG.md
+              echo "## [$current_date]" >> CHANGELOG.md
+              echo "$changelog_entry" >> CHANGELOG.md
+            fi
+
+            git add CHANGELOG.md
+            echo "changelog_updated=true" >> $GITHUB_OUTPUT
+          else
+            echo "changelog_updated=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit and push changes
+        run: |
+          # Check if there are changes to commit
+          if [ -z "$(git diff --cached --name-only)" ]; then
+            echo "📭 No changes to commit"
+            exit 0
+          fi
+
+          # Determine commit message
+          if [ -n "${{ github.event.inputs.commit_message }}" ]; then
+            commit_msg="${{ github.event.inputs.commit_message }}"
+          else
+            commit_msg="Sync from private repository - $(date +"%Y-%m-%d %H:%M:%S")"
+          fi
+
+          # Commit all staged changes as a single commit
+          git commit -m "$commit_msg"
+
+          echo "✅ Created commit with message: $commit_msg"
+
+          # Push to public repository (regular push, not force)
+          git push public public-main:main
+
+          echo "✅ Successfully published to public repository"
+
+          # Get commit SHA
+          commit_sha=$(git rev-parse HEAD)
+          echo "🔗 Commit SHA: $commit_sha"
+
+      - name: Summary
+        run: |
+          echo "## 🚀 Publication Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Files processed**: ${{ steps.filter_files.outputs.files_count }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Target repository**: ${{ secrets.PUBLIC_REPO_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Changelog updated**: ${{ steps.changelog.outputs.changelog_updated }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Private commit**: ${{ steps.filter_files.outputs.private_commit }}" >> $GITHUB_STEP_SUMMARY
+
+          if [ -n "${{ github.event.inputs.commit_message }}" ]; then
+            echo "- **Custom commit message**: ${{ github.event.inputs.commit_message }}" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [ -n "${{ github.event.inputs.changelog }}" ]; then
+            echo "- **Changelog entry**: ${{ github.event.inputs.changelog }}" >> $GITHUB_STEP_SUMMARY
+          fi

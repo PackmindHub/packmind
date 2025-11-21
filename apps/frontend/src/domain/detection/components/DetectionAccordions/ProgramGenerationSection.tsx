@@ -1,0 +1,72 @@
+import React from 'react';
+import { PMVStack } from '@packmind/ui';
+import { ActiveConfigurationSection } from '../ActiveConfigurationSection';
+import { DraftsSection } from '../DraftsSection';
+import { ActiveConfigurationCardData } from '../ActiveConfigurationCard';
+import { DraftCardData } from '../DetectionDraftCard';
+
+interface ProgramGenerationSectionProps {
+  standardId: string;
+  ruleId: string;
+  activeConfigurations: ActiveConfigurationCardData[];
+  draftPrograms: DraftCardData[];
+  isLoadingActivePrograms: boolean;
+  isActiveProgramsError: boolean;
+  onGenerateProgram: (language?: string) => void;
+  isGeneratingProgram: boolean;
+  onTestProgram: (draft: DraftCardData | ActiveConfigurationCardData) => void;
+  onActivateDraft: (draft: DraftCardData) => void;
+  activatingDraftId: string | null;
+  isActivatingDraft: boolean;
+  onRetryDraft: (draft: DraftCardData) => void;
+}
+
+export const ProgramGenerationSection: React.FC<
+  ProgramGenerationSectionProps
+> = ({
+  standardId,
+  ruleId,
+  activeConfigurations,
+  draftPrograms,
+  isLoadingActivePrograms,
+  isActiveProgramsError,
+  onGenerateProgram,
+  isGeneratingProgram,
+  onTestProgram,
+  onActivateDraft,
+  activatingDraftId,
+  isActivatingDraft,
+  onRetryDraft,
+}) => {
+  return (
+    <PMVStack alignItems="stretch" gap={6} p={4}>
+      <ActiveConfigurationSection
+        configurations={activeConfigurations}
+        isLoading={isLoadingActivePrograms}
+        isError={isActiveProgramsError}
+        onGenerateProgram={onGenerateProgram}
+        isGeneratingProgram={isGeneratingProgram}
+        standardId={standardId}
+        ruleId={ruleId}
+        onTestProgram={onTestProgram}
+        onActivateDraft={onActivateDraft}
+        activatingDraftId={activatingDraftId}
+        isActivatingDraft={isActivatingDraft}
+      />
+
+      <DraftsSection
+        drafts={draftPrograms}
+        isLoading={isLoadingActivePrograms}
+        isError={isActiveProgramsError}
+        onMakeActive={onActivateDraft}
+        activatingDraftId={activatingDraftId}
+        isActivatingDraft={isActivatingDraft}
+        onTestDraft={onTestProgram}
+        onRetryDraft={onRetryDraft}
+        isGeneratingProgram={isGeneratingProgram}
+        standardId={standardId}
+        ruleId={ruleId}
+      />
+    </PMVStack>
+  );
+};
