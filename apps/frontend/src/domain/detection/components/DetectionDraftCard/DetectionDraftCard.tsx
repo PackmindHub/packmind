@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   PMBox,
   PMText,
@@ -10,6 +10,8 @@ import {
   PMTimelineConnector,
   PMTimelineTitle,
   PMTimelineDescription,
+  PMButton,
+  PMHStack,
   type PMTextColors,
 } from '@packmind/ui';
 import {
@@ -18,6 +20,8 @@ import {
   DetectionStatus,
 } from '@packmind/types';
 import { useGetRuleDetectionAssessmentQuery } from '@packmind/proprietary/frontend/domain/detection';
+import { ExecutionLogsDrawer } from '../ExecutionLogsDrawer';
+import { ProgramContentDrawer } from '../ProgramContentDrawer';
 
 export enum DraftCardState {
   ASSESSING = 'assessing',
@@ -59,6 +63,8 @@ export const DetectionDraftCard: React.FC<DraftCardProps> = ({
   standardId,
   ruleId,
 }) => {
+  const [isLogsDrawerOpen, setIsLogsDrawerOpen] = useState(false);
+  const [isProgramDrawerOpen, setIsProgramDrawerOpen] = useState(false);
   const { data: assessment } = useGetRuleDetectionAssessmentQuery(
     standardId,
     ruleId,
@@ -67,7 +73,10 @@ export const DetectionDraftCard: React.FC<DraftCardProps> = ({
 
   const state = determineDraftCardState(assessment?.status, draft.status);
 
-  const timelineConfig = getTimelineConfig(state);
+  const timelineConfig = getTimelineConfig(state, {
+    onShowLogs: () => setIsLogsDrawerOpen(true),
+    onShowProgram: () => setIsProgramDrawerOpen(true),
+  });
 
   return (
     <PMBox width="full" py={2}>
@@ -109,6 +118,23 @@ export const DetectionDraftCard: React.FC<DraftCardProps> = ({
                 {timelineConfig.step2.description}
               </PMTimelineDescription>
             )}
+            {timelineConfig.step2.buttons &&
+              timelineConfig.step2.buttons.length > 0 && (
+                <PMBox mt={2}>
+                  <PMHStack gap={2}>
+                    {timelineConfig.step2.buttons.map((button, index) => (
+                      <PMButton
+                        key={index}
+                        size="sm"
+                        variant="outline"
+                        onClick={button.onClick}
+                      >
+                        {button.label}
+                      </PMButton>
+                    ))}
+                  </PMHStack>
+                </PMBox>
+              )}
           </PMTimelineContent>
         </PMTimelineItem>
 
@@ -131,6 +157,18 @@ export const DetectionDraftCard: React.FC<DraftCardProps> = ({
           </PMTimelineContent>
         </PMTimelineItem>
       </PMTimeline>
+      <ExecutionLogsDrawer
+        isOpen={isLogsDrawerOpen}
+        onClose={() => setIsLogsDrawerOpen(false)}
+        standardId={standardId}
+        ruleId={ruleId}
+        detectionProgramId={draft.draftProgram.id}
+      />
+      <ProgramContentDrawer
+        isOpen={isProgramDrawerOpen}
+        onClose={() => setIsProgramDrawerOpen(false)}
+        programCode={draft.draftProgram.code}
+      />
     </PMBox>
   );
 };
@@ -179,11 +217,17 @@ export function determineDraftCardState(
   return DraftCardState.ASSESSING;
 }
 
+type TimelineButton = {
+  label: string;
+  onClick: () => void;
+};
+
 type TimelineStepConfig = {
   title: string;
   description?: string;
   color: PMTextColors;
   isLast: boolean;
+  buttons?: TimelineButton[];
 };
 
 type TimelineConfig = {
@@ -192,7 +236,15 @@ type TimelineConfig = {
   step3: TimelineStepConfig;
 };
 
-function getTimelineConfig(state: DraftCardState): TimelineConfig {
+type TimelineHandlers = {
+  onShowLogs: () => void;
+  onShowProgram: () => void;
+};
+
+function getTimelineConfig(
+  state: DraftCardState,
+  handlers: TimelineHandlers,
+): TimelineConfig {
   switch (state) {
     case DraftCardState.ASSESSING:
       return {
@@ -233,7 +285,6 @@ function getTimelineConfig(state: DraftCardState): TimelineConfig {
       };
 
     case DraftCardState.ASSESSMENT_SUCCESSFUL:
-    case DraftCardState.GENERATING:
       return {
         step1: {
           title: 'The rule can be detected',
@@ -254,6 +305,33 @@ function getTimelineConfig(state: DraftCardState): TimelineConfig {
         },
       };
 
+    case DraftCardState.GENERATING:
+      return {
+        step1: {
+          title: 'The rule can be detected',
+          color: 'success',
+          isLast: false,
+        },
+        step2: {
+          title: 'Generating program',
+          description:
+            'Packmind AI generates a program that comply with rule specifications. Program is ran on code examples to ensure its validity',
+          color: 'primary',
+          isLast: false,
+          buttons: [
+            {
+              label: 'Show log',
+              onClick: handlers.onShowLogs,
+            },
+          ],
+        },
+        step3: {
+          title: 'Ready to use',
+          color: 'faded',
+          isLast: true,
+        },
+      };
+
     case DraftCardState.GENERATION_FAILED:
       return {
         step1: {
@@ -265,6 +343,12 @@ function getTimelineConfig(state: DraftCardState): TimelineConfig {
           title: 'Unable to generate a program',
           color: 'error',
           isLast: false,
+          buttons: [
+            {
+              label: 'Show log',
+              onClick: handlers.onShowLogs,
+            },
+          ],
         },
         step3: {
           title: 'Ready to use',
@@ -284,6 +368,16 @@ function getTimelineConfig(state: DraftCardState): TimelineConfig {
           title: 'Program has been generated',
           color: 'success',
           isLast: false,
+          buttons: [
+            {
+              label: 'Show log',
+              onClick: handlers.onShowLogs,
+            },
+            {
+              label: 'Show program',
+              onClick: handlers.onShowProgram,
+            },
+          ],
         },
         step3: {
           title: 'Ready to use',

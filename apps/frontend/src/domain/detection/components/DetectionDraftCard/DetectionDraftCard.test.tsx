@@ -1,5 +1,10 @@
 import React from 'react';
-import { render, RenderResult } from '@testing-library/react';
+import {
+  render,
+  RenderResult,
+  fireEvent,
+  waitFor,
+} from '@testing-library/react';
 import {
   DetectionStatus,
   RuleDetectionAssessmentStatus,
@@ -158,6 +163,15 @@ describe('ProgramGenerationTimeline', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any);
 
+    // Mock the metadata query used by ExecutionLogsDrawer
+    jest
+      .spyOn(DetectionProgramQueries, 'useGetDetectionProgramMetadataQuery')
+      .mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any);
+
     return render(
       <UIProvider>
         <QueryClientProvider client={queryClient}>
@@ -292,6 +306,15 @@ describe('ProgramGenerationTimeline', () => {
         it('disables the "Ready to use" section', () => {
           expect(screen.getByText('Ready to use')).toBeInTheDocument();
         });
+
+        it('opens logs drawer when "Show log" button is clicked', async () => {
+          const showLogButton = screen.getByText('Show log');
+          fireEvent.click(showLogButton);
+          // ExecutionLogsDrawer should be visible after clicking
+          await waitFor(() => {
+            expect(screen.getByRole('dialog')).toBeInTheDocument();
+          });
+        });
       });
 
       describe('when program generation is done', () => {
@@ -318,6 +341,15 @@ describe('ProgramGenerationTimeline', () => {
           it('disables the "Ready to use" section', () => {
             expect(screen.getByText('Ready to use')).toBeInTheDocument();
           });
+
+          it('opens logs drawer when "Show log" button is clicked', async () => {
+            const showLogButton = screen.getByText('Show log');
+            fireEvent.click(showLogButton);
+            // ExecutionLogsDrawer should be visible after clicking
+            await waitFor(() => {
+              expect(screen.getByRole('dialog')).toBeInTheDocument();
+            });
+          });
         });
 
         describe('when program generation succeeded', () => {
@@ -342,6 +374,24 @@ describe('ProgramGenerationTimeline', () => {
 
           it('shows "Ready to use" as active', () => {
             expect(screen.getByText('Ready to use')).toBeInTheDocument();
+          });
+
+          it('opens logs drawer when "Show log" button is clicked', async () => {
+            const showLogButton = screen.getByText('Show log');
+            fireEvent.click(showLogButton);
+            // ExecutionLogsDrawer should be visible after clicking
+            await waitFor(() => {
+              expect(screen.getByRole('dialog')).toBeInTheDocument();
+            });
+          });
+
+          it('opens program drawer when "Show program" button is clicked', async () => {
+            const showProgramButton = screen.getByText('Show program');
+            fireEvent.click(showProgramButton);
+            // ProgramContentDrawer should be visible after clicking
+            await waitFor(() => {
+              expect(screen.getByText('Program Content')).toBeInTheDocument();
+            });
           });
         });
       });
