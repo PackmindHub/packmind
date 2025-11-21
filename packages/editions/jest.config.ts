@@ -1,48 +1,20 @@
 // eslint-disable-next-line @nx/enforce-module-boundaries
 import { compilerOptions } from '../../tsconfig.base.effective.json';
-
-// Helper to convert TypeScript paths to Jest moduleNameMapper format
-function pathsToModuleNameMapper(
-  paths: Record<string, string[]>,
-  prefix: string,
-) {
-  const moduleNameMapper: Record<string, string> = {};
-  for (const [key, [value]] of Object.entries(paths)) {
-    // Convert TS path pattern to Jest regex pattern
-    const regexKey = '^' + key.replace(/\*/g, '(.*)') + '$';
-    // Replace each * with its corresponding capture group ($1, $2, etc.)
-    let groupIndex = 0;
-    const mappedValue = prefix + value.replace(/\*/g, () => `$${++groupIndex}`);
-    moduleNameMapper[regexKey] = mappedValue;
-  }
-  return moduleNameMapper;
-}
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import {
+  pathsToModuleNameMapper,
+  swcTransformWithDecoratorsOnly,
+  standardTransformIgnorePatterns,
+  standardModuleFileExtensions,
+} from '../../jest-utils';
 
 export default {
   displayName: 'editions',
   preset: '../../jest.preset.ts',
   testEnvironment: 'node',
-  transform: {
-    '^.+\\.[tj]s$': [
-      '@swc/jest',
-      {
-        jsc: {
-          parser: {
-            syntax: 'typescript',
-            tsx: false,
-            decorators: true, // Enable decorators for NestJS
-          },
-          target: 'es2022',
-          transform: {
-            legacyDecorator: true, // Use legacy decorator implementation
-            decoratorMetadata: true, // Enable decorator metadata (needed for NestJS DI)
-          },
-        },
-      },
-    ],
-  },
-  transformIgnorePatterns: ['/node_modules/(?!slug).+\\.js$'],
-  moduleFileExtensions: ['ts', 'js', 'html'],
+  transform: swcTransformWithDecoratorsOnly,
+  transformIgnorePatterns: standardTransformIgnorePatterns,
+  moduleFileExtensions: standardModuleFileExtensions,
   coverageDirectory: '../../coverage/packages/editions',
   moduleNameMapper: pathsToModuleNameMapper(
     compilerOptions.paths,
