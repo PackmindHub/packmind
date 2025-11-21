@@ -5,9 +5,6 @@ import {
   PMLink,
   PMIcon,
   PMSeparator,
-  PMFeatureFlag,
-  PACKAGES_FEATURE_KEY,
-  DEFAULT_FEATURE_DOMAIN_MAP,
 } from '@packmind/ui';
 import { NavLink, useParams } from 'react-router';
 import {
@@ -57,7 +54,6 @@ export const SidebarNavigation: React.FunctionComponent<
 > = ({ organization }) => {
   const { spaceSlug } = useParams<{ spaceSlug?: string }>();
   const { data: spaces } = useGetSpacesQuery();
-  const { user } = useAuthContext();
 
   // Use spaceSlug from URL if available, otherwise use first space from query
   const currentSpaceSlug =
@@ -114,17 +110,11 @@ export const SidebarNavigation: React.FunctionComponent<
       <PMVerticalNavSection
         title="Deployments"
         navEntries={[
-          <PMFeatureFlag
+          <SidebarNavigationLink
             key="packages"
-            featureKeys={[PACKAGES_FEATURE_KEY]}
-            featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
-            userEmail={user?.email}
-          >
-            <SidebarNavigationLink
-              url={routes.space.toPackages(orgSlug, currentSpaceSlug)}
-              label="Packages"
-            />
-          </PMFeatureFlag>,
+            url={routes.space.toPackages(orgSlug, currentSpaceSlug)}
+            label="Packages"
+          />,
           <SidebarNavigationLink
             key="overview"
             url={routes.org.toDeployments(orgSlug)}
