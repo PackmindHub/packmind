@@ -292,19 +292,23 @@ export const DetectabilitySection: React.FC<DetectabilitySectionProps> = ({
                 justifyContent="space-between"
               >
                 <PMVStack gap={3} width="full">
-                  <PMText mb={3}>{assessment.clarificationQuestion}</PMText>
+                  <PMHeading width="full" level="h5">
+                    {assessment.clarificationQuestion}
+                  </PMHeading>
                   <PMRadioGroup.Root
                     value={selectedAnswer ?? undefined}
                     onValueChange={(details) =>
                       handleAnswerChange(details.value)
                     }
+                    variant="outline"
+                    colorPalette="blue"
                   >
                     <PMVStack gap={2} align="flex-start">
                       {assessment.clarificationAnswers.map((answer) => (
                         <PMRadioGroup.Item key={answer} value={answer}>
                           <PMRadioGroup.ItemHiddenInput />
                           <PMRadioGroup.ItemControl>
-                            <PMRadioGroup.ItemIndicator />
+                            <PMRadioGroup.ItemIndicator borderColor="border.tertiary" />
                           </PMRadioGroup.ItemControl>
                           <PMRadioGroup.ItemText>
                             {answer}
@@ -314,19 +318,21 @@ export const DetectabilitySection: React.FC<DetectabilitySectionProps> = ({
                       <PMRadioGroup.Item value={OTHER_ANSWER_VALUE}>
                         <PMRadioGroup.ItemHiddenInput />
                         <PMRadioGroup.ItemControl>
-                          <PMRadioGroup.ItemIndicator />
+                          <PMRadioGroup.ItemIndicator borderColor="border.tertiary" />
                         </PMRadioGroup.ItemControl>
                         <PMRadioGroup.ItemText>Other</PMRadioGroup.ItemText>
                       </PMRadioGroup.Item>
                     </PMVStack>
                   </PMRadioGroup.Root>
                   {selectedAnswer === OTHER_ANSWER_VALUE && (
-                    <PMBox mt={2} ml={6}>
+                    <PMBox width="full">
                       <PMInput
                         placeholder="Please specify..."
                         value={otherAnswerText}
                         onChange={handleOtherAnswerTextChange}
                         disabled={updateHeuristics.isPending}
+                        width="full"
+                        size="sm"
                       />
                     </PMBox>
                   )}
