@@ -20,7 +20,7 @@ import {
   RuleDetectionAssessmentStatus,
   DetectionStatus,
 } from '@packmind/types';
-import { useGetRuleDetectionAssessmentQuery } from '@packmind/proprietary/frontend/domain/detection';
+import { useGetRuleDetectionAssessmentQuery } from '../../api/queries/DetectionProgramQueries';
 import { ExecutionLogsDrawer } from '../ExecutionLogsDrawer';
 import { ProgramContentDrawer } from '../ProgramContentDrawer';
 import { LuCheck, LuCircleAlert, LuLoader } from 'react-icons/lu';
