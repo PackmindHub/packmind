@@ -25,7 +25,6 @@ export const HeuristicsEditor: React.FC<HeuristicsEditorProps> = ({
   isLoading = false,
   isEditable,
   maxLength = 3000,
-  rows = 5,
 }) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editValue, setEditValue] = useState('');
@@ -122,10 +121,10 @@ export const HeuristicsEditor: React.FC<HeuristicsEditorProps> = ({
               value={editValue}
               onChange={handleTextChange}
               placeholder="Enter detection heuristics..."
-              rows={rows}
               disabled={isLoading}
               maxLength={maxLength}
               width="full"
+              height="full"
             />
           </>
         )}

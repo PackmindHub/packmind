@@ -99,22 +99,6 @@ export const DetectabilitySection: React.FC<DetectabilitySectionProps> = ({
     return isAssessmentInError || isProgramGenerationInError;
   }, [assessment, activePrograms, language]);
 
-  const textareaRows = useMemo(() => {
-    const heuristicsLines = heuristicsText.split('\n').length;
-    const MIN_ROWS = 5;
-    const MAX_ROWS = 8;
-
-    if (heuristicsLines <= MIN_ROWS) {
-      return MIN_ROWS;
-    }
-
-    if (heuristicsLines > MIN_ROWS && heuristicsLines < MAX_ROWS) {
-      return heuristicsLines;
-    }
-
-    return MAX_ROWS;
-  }, [heuristicsText]);
-
   useEffect(() => {
     if (detectionHeuristics && Array.isArray(detectionHeuristics.heuristics)) {
       // Join array with newlines for display
@@ -365,7 +349,6 @@ export const DetectabilitySection: React.FC<DetectabilitySectionProps> = ({
                 isLoading={updateHeuristics.isPending}
                 isEditable={isEditable}
                 maxLength={3000}
-                rows={textareaRows}
               />
             )}
           </PMBox>
