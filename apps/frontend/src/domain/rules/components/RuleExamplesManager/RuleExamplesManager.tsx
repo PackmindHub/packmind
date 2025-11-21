@@ -62,7 +62,7 @@ export const RuleExamplesManager: React.FC<RuleExamplesManagerProps> = ({
 
   const handleCreateNewExample = useCallback(() => {
     const newExample: NewExample = {
-      id: `new-${Date.now()}-${Math.random()}`,
+      id: `new-${Date.now()}-${ruleId}-${selectedLanguage}`,
       lang: selectedLanguage as ProgrammingLanguage,
       positive: '',
       negative: '',
@@ -70,7 +70,7 @@ export const RuleExamplesManager: React.FC<RuleExamplesManagerProps> = ({
     };
 
     setNewExamples((prev) => [...prev, newExample]);
-  }, [selectedLanguage]);
+  }, [ruleId, selectedLanguage]);
 
   // Automatically trigger creation when forceCreate becomes true
   React.useEffect(() => {
@@ -84,7 +84,7 @@ export const RuleExamplesManager: React.FC<RuleExamplesManagerProps> = ({
         }
 
         const newExample: NewExample = {
-          id: `new-${Date.now()}-${Math.random()}`,
+          id: `new-${Date.now()}-${ruleId}-${selectedLanguage}`,
           lang: selectedLanguage as ProgrammingLanguage,
           positive: '',
           negative: '',
@@ -95,7 +95,7 @@ export const RuleExamplesManager: React.FC<RuleExamplesManagerProps> = ({
       });
     }
     previousForceCreateRef.current = forceCreate;
-  }, [forceCreate, selectedLanguage]);
+  }, [forceCreate, ruleId, selectedLanguage]);
 
   // Update the language of new examples when selectedLanguage changes in forceCreate mode
   React.useEffect(() => {
