@@ -75,10 +75,27 @@ export const RuleExamplesManager: React.FC<RuleExamplesManagerProps> = ({
   // Automatically trigger creation when forceCreate becomes true
   React.useEffect(() => {
     if (forceCreate && !previousForceCreateRef.current) {
-      handleCreateNewExample();
+      setNewExamples((prev) => {
+        if (prev.length > 0) {
+          return prev.map((example) => ({
+            ...example,
+            lang: selectedLanguage as ProgrammingLanguage,
+          }));
+        }
+
+        const newExample: NewExample = {
+          id: `new-${Date.now()}-${Math.random()}`,
+          lang: selectedLanguage as ProgrammingLanguage,
+          positive: '',
+          negative: '',
+          isNew: true,
+        };
+
+        return [...prev, newExample];
+      });
     }
     previousForceCreateRef.current = forceCreate;
-  }, [forceCreate, handleCreateNewExample]);
+  }, [forceCreate, selectedLanguage]);
 
   // Update the language of new examples when selectedLanguage changes in forceCreate mode
   React.useEffect(() => {
