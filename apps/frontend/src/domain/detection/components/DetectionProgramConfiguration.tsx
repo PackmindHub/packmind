@@ -152,6 +152,23 @@ export const DetectionProgramConfiguration: React.FC<
     );
   }
 
+  const programStatusTooltip = useMemo(() => {
+    const activeConfig = activeConfigurations.find(
+      (config) => config.detectionProgram?.status === DetectionStatus.READY,
+    );
+    if (!activeConfig?.detectionProgram) {
+      return undefined;
+    }
+    return {
+      version: activeConfig.detectionProgram.version,
+      createdAt: activeConfig.detectionProgram.createdAt,
+    };
+  }, [activeConfigurations]);
+
+  if (!language) {
+    return null;
+  }
+
   return (
     <PMVStack alignItems="stretch" gap={4} width="full">
       <DetectionAccordion
@@ -169,6 +186,7 @@ export const DetectionProgramConfiguration: React.FC<
       <DetectionAccordion
         title="Program"
         status={programStatus}
+        statusTooltip={programStatusTooltip}
         defaultOpen={shouldOpenProgram}
         disabled={isProgramDisabled}
       >
