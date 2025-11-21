@@ -10,7 +10,6 @@ export interface IPMFeatureFlagProps {
 export const RULE_DETAILS_DETECTION_TAB_FEATURE_KEY =
   'rule-details-detection-tab';
 
-
 export const DETECTION_ASSESSMENT_DRAWER_FEATURE_KEY =
   'detection-assessment-drawer';
 
