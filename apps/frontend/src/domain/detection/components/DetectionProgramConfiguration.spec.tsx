@@ -22,7 +22,7 @@ import {
 } from '@packmind/types';
 import { DetectionProgramConfiguration } from './DetectionProgramConfiguration';
 import { ActiveConfigurationCardData } from './ActiveConfigurationCard';
-import { DraftCardData } from './DetectionDraftCard';
+import { DraftCardData } from './DetectionDraftCard/DetectionDraftCard';
 import * as DetectionProgramQueries from '../api/queries/DetectionProgramQueries';
 
 jest.mock('../api/queries/DetectionProgramQueries');

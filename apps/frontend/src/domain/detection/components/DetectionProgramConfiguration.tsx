@@ -6,7 +6,7 @@ import {
 } from '@packmind/types';
 import { useGetRuleDetectionAssessmentQuery } from '../api/queries/DetectionProgramQueries';
 import { ActiveConfigurationCardData } from './ActiveConfigurationCard';
-import { DraftCardData } from './DetectionDraftCard';
+import { DraftCardData } from './DetectionDraftCard/DetectionDraftCard';
 import {
   DetectabilitySection,
   ProgramGenerationSection,

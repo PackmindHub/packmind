@@ -6,7 +6,10 @@ import {
   PMPageSection,
   PMSpinner,
 } from '@packmind/ui';
-import { DetectionDraftCard, DraftCardData } from './DetectionDraftCard';
+import {
+  DetectionDraftCard,
+  DraftCardData,
+} from './DetectionDraftCard/DetectionDraftCard';
 
 const LoadingState = ({
   title,

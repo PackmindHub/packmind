@@ -21,7 +21,7 @@ import {
 } from '../api/queries/DetectionProgramQueries';
 import { useGetMeQuery } from '../../accounts/api/queries/UserQueries';
 import { ConfigurationCard, ConfigurationCardProps } from './ConfigurationCard';
-import { DraftCardData } from './DetectionDraftCard';
+import { DraftCardData } from './DetectionDraftCard/DetectionDraftCard';
 import { RxQuestionMarkCircled } from 'react-icons/rx';
 
 export enum ActiveConfigurationState {

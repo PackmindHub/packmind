@@ -10,7 +10,7 @@ import {
   ActiveConfigurationCard,
   ActiveConfigurationCardData,
 } from './ActiveConfigurationCard';
-import { DraftCardData } from './DetectionDraftCard';
+import { DraftCardData } from './DetectionDraftCard/DetectionDraftCard';
 import { DetectionAssessmentDrawer } from './DetectionAssessmentDrawer';
 
 const LoadingState = ({

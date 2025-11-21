@@ -30,7 +30,7 @@ import {
   GET_ALL_DETECTION_PROGRAMS_KEY,
 } from '../api/queryKeys';
 import { DraftsSection } from './DraftsSection';
-import { DraftCardData } from './DetectionDraftCard';
+import { DraftCardData } from './DetectionDraftCard/DetectionDraftCard';
 import {
   ActiveConfigurationCardData,
   ActiveConfigurationState,

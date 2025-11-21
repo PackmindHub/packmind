@@ -3,7 +3,7 @@ import { PMVStack } from '@packmind/ui';
 import { ActiveConfigurationSection } from '../ActiveConfigurationSection';
 import { DraftsSection } from '../DraftsSection';
 import { ActiveConfigurationCardData } from '../ActiveConfigurationCard';
-import { DraftCardData } from '../DetectionDraftCard';
+import { DraftCardData } from '../DetectionDraftCard/DetectionDraftCard';
 
 interface ProgramGenerationSectionProps {
   standardId: string;
