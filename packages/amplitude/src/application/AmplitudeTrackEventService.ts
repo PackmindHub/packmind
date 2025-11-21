@@ -43,6 +43,7 @@ export class AmplitudeTrackEventService {
       },
       {
         user_id: event.userId,
+        groups: { organization: event.orgaId },
       },
     );
   }
