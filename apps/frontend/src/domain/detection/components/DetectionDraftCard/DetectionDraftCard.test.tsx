@@ -350,6 +350,11 @@ describe('ProgramGenerationTimeline', () => {
               expect(screen.getByRole('dialog')).toBeInTheDocument();
             });
           });
+
+          it('calls onRetryDraft when "Retry" button is clicked', () => {
+            const retryButton = screen.getByText('Retry');
+            fireEvent.click(retryButton);
+          });
         });
 
         describe('when program generation succeeded', () => {

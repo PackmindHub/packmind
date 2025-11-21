@@ -55,11 +55,9 @@ interface DraftCardProps {
 
 export const DetectionDraftCard: React.FC<DraftCardProps> = ({
   draft,
-  onMakeActive: _onMakeActive,
-  isActivating: _isActivating = false,
-  onTestDraft: _onTestDraft,
-  onRetryDraft: _onRetryDraft,
-  isGenerating: _isGenerating = false,
+  onMakeActive,
+  onTestDraft,
+  onRetryDraft,
   standardId,
   ruleId,
 }) => {
@@ -76,8 +74,9 @@ export const DetectionDraftCard: React.FC<DraftCardProps> = ({
   const timelineConfig = getTimelineConfig(state, {
     onShowLogs: () => setIsLogsDrawerOpen(true),
     onShowProgram: () => setIsProgramDrawerOpen(true),
-    onTestDraft: () => _onTestDraft(draft),
-    onMakeActive: () => _onMakeActive(draft),
+    onTestDraft: () => onTestDraft(draft),
+    onMakeActive: () => onMakeActive(draft),
+    onRetryDraft: () => onRetryDraft?.(draft),
   });
 
   return (
@@ -260,6 +259,7 @@ type TimelineHandlers = {
   onShowProgram: () => void;
   onTestDraft: () => void;
   onMakeActive: () => void;
+  onRetryDraft: () => void;
 };
 
 function getTimelineConfig(
@@ -365,6 +365,10 @@ function getTimelineConfig(
           color: 'error',
           isLast: false,
           buttons: [
+            {
+              label: 'Retry',
+              onClick: handlers.onRetryDraft,
+            },
             {
               label: 'Show log',
               onClick: handlers.onShowLogs,
