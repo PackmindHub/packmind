@@ -46,6 +46,7 @@ interface ProgramEditorProps {
   ruleId: string;
   detectionLanguages?: string[];
   selectedLanguage: string;
+  onNavigateToExamples?: () => void;
 }
 
 export function computeActiveConfigurationState(
@@ -83,6 +84,7 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
   ruleId,
   detectionLanguages = [],
   selectedLanguage,
+  onNavigateToExamples,
 }) => {
   const queryClient = useQueryClient();
   const { data: meData } = useGetMeQuery();
@@ -378,6 +380,7 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
           standardId={standardId}
           ruleId={ruleId}
           detectionLanguages={detectionLanguages}
+          selectedLanguage={selectedLanguage}
           activeConfigurations={activeConfigurations}
           draftPrograms={draftPrograms}
           isLoadingActivePrograms={isLoadingActivePrograms}
@@ -389,6 +392,7 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
           activatingDraftId={activatingDraftId}
           isActivatingDraft={activateDraft.isPending}
           onRetryDraft={handleRetryDraftGeneration}
+          onNavigateToExamples={onNavigateToExamples}
         />
       )}
 

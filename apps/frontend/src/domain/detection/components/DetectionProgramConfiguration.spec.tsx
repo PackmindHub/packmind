@@ -45,6 +45,7 @@ describe('DetectionProgramConfiguration', () => {
     standardId: string;
     ruleId: string;
     detectionLanguages: string[];
+    selectedLanguage: string;
     activeConfigurations: ActiveConfigurationCardData[];
     draftPrograms: DraftCardData[];
     isLoadingActivePrograms: boolean;
@@ -56,6 +57,7 @@ describe('DetectionProgramConfiguration', () => {
     activatingDraftId: string | null;
     isActivatingDraft: boolean;
     onRetryDraft: jest.Mock;
+    onNavigateToExamples?: jest.Mock;
   };
   let screen: RenderResult;
   let assessment: RuleDetectionAssessment;
@@ -99,6 +101,7 @@ describe('DetectionProgramConfiguration', () => {
       standardId: createStandardId('standard-id'),
       ruleId: createRuleId('rule-id'),
       detectionLanguages: [ProgrammingLanguage.TYPESCRIPT],
+      selectedLanguage: ProgrammingLanguage.TYPESCRIPT,
       activeConfigurations: [],
       draftPrograms: [],
       isLoadingActivePrograms: false,
@@ -152,6 +155,7 @@ describe('DetectionProgramConfiguration', () => {
   describe('when no detection languages are available', () => {
     beforeEach(() => {
       props.detectionLanguages = [];
+      props.selectedLanguage = '';
       jest
         .spyOn(DetectionProgramQueries, 'useGetRuleDetectionAssessmentQuery')
         .mockReturnValue({ data: assessment } as Partial<
@@ -161,8 +165,11 @@ describe('DetectionProgramConfiguration', () => {
       screen = renderWithContext();
     });
 
-    it('renders nothing', () => {
-      expect(screen.container.firstChild).toBeNull();
+    it('renders empty state for no examples', () => {
+      expect(
+        screen.getByText('No code examples for this language'),
+      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /add/i })).toBeInTheDocument();
     });
   });
 
@@ -173,6 +180,41 @@ describe('DetectionProgramConfiguration', () => {
         .mockReturnValue({ data: assessment } as Partial<
           UseQueryResult<RuleDetectionAssessment | null>
         > as UseQueryResult<RuleDetectionAssessment | null>);
+    });
+
+    describe('when selected language has no examples', () => {
+      beforeEach(() => {
+        props.detectionLanguages = [ProgrammingLanguage.JAVASCRIPT];
+        props.selectedLanguage = ProgrammingLanguage.PYTHON;
+        screen = renderWithContext();
+      });
+
+      it('renders empty state instead of accordions', () => {
+        expect(screen.queryByText('Detectability')).not.toBeInTheDocument();
+        expect(screen.queryByText('Program')).not.toBeInTheDocument();
+        expect(
+          screen.getByText('No code examples for this language'),
+        ).toBeInTheDocument();
+      });
+
+      it('renders Add button', () => {
+        const addButton = screen.getByRole('button', { name: /add/i });
+        expect(addButton).toBeInTheDocument();
+      });
+
+      it('calls onNavigateToExamples when Add button is clicked', () => {
+        const onNavigateToExamples = jest.fn();
+        props.onNavigateToExamples = onNavigateToExamples;
+
+        // Re-render with the callback
+        screen.unmount();
+        screen = renderWithContext();
+
+        const addButton = screen.getByRole('button', { name: /add/i });
+        addButton.click();
+
+        expect(onNavigateToExamples).toHaveBeenCalledTimes(1);
+      });
     });
 
     describe('when assessment status is FAILED', () => {

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { PMVStack } from '@packmind/ui';
+import { PMVStack, PMEmptyState, PMButton } from '@packmind/ui';
 import {
   RuleDetectionAssessmentStatus,
   DetectionStatus,
@@ -18,6 +18,7 @@ interface DetectionProgramConfigurationProps {
   standardId: string;
   ruleId: string;
   detectionLanguages: string[];
+  selectedLanguage: string;
   activeConfigurations: ActiveConfigurationCardData[];
   draftPrograms: DraftCardData[];
   isLoadingActivePrograms: boolean;
@@ -29,6 +30,7 @@ interface DetectionProgramConfigurationProps {
   activatingDraftId: string | null;
   isActivatingDraft: boolean;
   onRetryDraft: (draft: DraftCardData) => void;
+  onNavigateToExamples?: () => void;
 }
 
 const convertToAccordionStatus = (
@@ -79,6 +81,7 @@ export const DetectionProgramConfiguration: React.FC<
   standardId,
   ruleId,
   detectionLanguages,
+  selectedLanguage,
   activeConfigurations,
   draftPrograms,
   isLoadingActivePrograms,
@@ -90,9 +93,9 @@ export const DetectionProgramConfiguration: React.FC<
   activatingDraftId,
   isActivatingDraft,
   onRetryDraft,
+  onNavigateToExamples,
 }) => {
-  // Get the first available language for detectability queries
-  const language = detectionLanguages.length > 0 ? detectionLanguages[0] : '';
+  const language = selectedLanguage;
 
   const { data: assessment } = useGetRuleDetectionAssessmentQuery(
     standardId,
@@ -125,8 +128,28 @@ export const DetectionProgramConfiguration: React.FC<
     [activeConfigurations, isGeneratingProgram],
   );
 
-  if (!language) {
-    return null;
+  const hasNoExamples = useMemo(() => {
+    // Check if the selected language has examples by checking if it's in detectionLanguages
+    return !detectionLanguages.includes(selectedLanguage);
+  }, [detectionLanguages, selectedLanguage]);
+
+  if (hasNoExamples) {
+    return (
+      <PMEmptyState
+        backgroundColor={'background.primary'}
+        borderRadius={'md'}
+        width={'2xl'}
+        mx={'auto'}
+        mt={32}
+        title={'No code examples for this language'}
+      >
+        Create code examples to document the rule usage and enable violation
+        detection with Packmind linter
+        <PMButton variant="primary" onClick={onNavigateToExamples}>
+          Add
+        </PMButton>
+      </PMEmptyState>
+    );
   }
 
   return (
