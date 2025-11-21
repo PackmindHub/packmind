@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router';
 import {
   PMPageSection,
   PMTabs,
@@ -41,13 +42,36 @@ export const RuleDetails = ({
 }: RuleDetailsProps) => {
   const { organization } = useAuthContext();
   const { spaceId } = useCurrentSpace();
-  const [selectedLanguage, setSelectedLanguage] = useState<ProgrammingLanguage>(
-    ProgrammingLanguage.JAVASCRIPT,
-  );
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Initialize state from URL parameters
+  const getInitialTab = (): RuleDetailsTab => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'examples' || tabParam === 'detection') {
+      return tabParam;
+    }
+    return defaultTab;
+  };
+
+  const getInitialLanguage = (): ProgrammingLanguage => {
+    const langParam = searchParams.get('lang');
+    if (
+      langParam &&
+      Object.values(ProgrammingLanguage).includes(
+        langParam as ProgrammingLanguage,
+      )
+    ) {
+      return langParam as ProgrammingLanguage;
+    }
+    return ProgrammingLanguage.JAVASCRIPT;
+  };
+
+  const [selectedLanguage, setSelectedLanguage] =
+    useState<ProgrammingLanguage>(getInitialLanguage());
   const [isCreatingFirstExample, setIsCreatingFirstExample] = useState(false);
   const [isCreatingExampleForLanguage, setIsCreatingExampleForLanguage] =
     useState(false);
-  const [currentTab, setCurrentTab] = useState<RuleDetailsTab>(defaultTab);
+  const [currentTab, setCurrentTab] = useState<RuleDetailsTab>(getInitialTab());
   const { data: examples, isLoading: isLoadingExamples } =
     useGetRuleExamplesQuery(
       organization?.id as OrganizationId,
@@ -77,6 +101,14 @@ export const RuleDetails = ({
     return detectionLanguages.includes(selectedLanguage);
   }, [detectionLanguages, selectedLanguage]);
 
+  // Sync URL parameters when tab or language changes
+  useEffect(() => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('tab', currentTab);
+    newParams.set('lang', selectedLanguage);
+    setSearchParams(newParams, { replace: false });
+  }, [currentTab, searchParams, selectedLanguage, setSearchParams]);
+
   useEffect(() => {
     if (hasExamples && isCreatingFirstExample) {
       setIsCreatingFirstExample(false);
@@ -93,7 +125,15 @@ export const RuleDetails = ({
     }
   }, [isCreatingExampleForLanguage, detectionLanguages, selectedLanguage]);
 
+  // Only auto-select language if no URL parameter was provided
   useEffect(() => {
+    const langParam = searchParams.get('lang');
+
+    // Skip auto-selection if there's a URL parameter
+    if (langParam) {
+      return;
+    }
+
     if (detectionLanguages.length === 0) {
       setSelectedLanguage(ProgrammingLanguage.JAVASCRIPT);
       return;
@@ -106,7 +146,7 @@ export const RuleDetails = ({
     const defaultLang =
       firstConfigured?.language || ProgrammingLanguage.JAVASCRIPT;
     setSelectedLanguage(defaultLang);
-  }, [detectionLanguages]);
+  }, [detectionLanguages, searchParams]);
 
   const { configuredLanguages, otherLanguages } = useMemo(() => {
     const allLanguages = getAllLanguagesSortedByDisplayName();
