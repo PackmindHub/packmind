@@ -8,6 +8,8 @@ import {
   IAccountsPortName,
   IDeploymentPort,
   IDeploymentPortName,
+  IEventTrackingPort,
+  IEventTrackingPortName,
   IGitPort,
   IGitPortName,
   ILinterAstPort,
@@ -162,6 +164,18 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
         });
       }
 
+      let eventTrackingPort: IEventTrackingPort | null = null;
+      try {
+        eventTrackingPort = registry.getAdapter<IEventTrackingPort>(
+          IEventTrackingPortName,
+        );
+        this.logger.debug('Retrieved EventTrackingAdapter from registry');
+      } catch (error) {
+        this.logger.debug('EventTrackingPort not available in registry', {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
+
       // Get optional llm port
       let llmPort: ILlmPort | null = null;
       try {
@@ -199,6 +213,7 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
         [IAccountsPortName]: accountsPort,
         [IDeploymentPortName]: deploymentsPort,
         [ISpacesPortName]: spacesPort,
+        [IEventTrackingPortName]: eventTrackingPort,
         llmPort,
         linterDelayedJobs,
       });

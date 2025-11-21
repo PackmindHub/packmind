@@ -2,6 +2,7 @@ import { IBaseAdapter } from '@packmind/node-utils';
 import {
   IAccountsPortName,
   IDeploymentPortName,
+  IEventTrackingPortName,
   IGitPortName,
   ISpacesPortName,
   IStandardsPortName,
@@ -9,6 +10,7 @@ import {
 import type {
   IAccountsPort,
   IDeploymentPort,
+  IEventTrackingPort,
   IGitPort,
   ILinterPort,
   ILlmPort,
@@ -134,9 +136,10 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
   private accountsPort!: IAccountsPort;
   private linterDelayedJobs!: ILinterDelayedJobs;
 
-  // Optional ports - may be undefined
+  // Optional ports - may be null
   private deploymentsPort: IDeploymentPort | undefined;
   private spacesPort: ISpacesPort | undefined;
+  private eventTrackingPort: IEventTrackingPort | null = null;
   private llmPort: ILlmPort | null = null;
 
   // Use cases - created in initialize() after ports are set
@@ -185,6 +188,7 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
     [IAccountsPortName]: IAccountsPort;
     [IDeploymentPortName]?: IDeploymentPort;
     [ISpacesPortName]?: ISpacesPort;
+    [IEventTrackingPortName]: IEventTrackingPort | null;
     llmPort: ILlmPort | null;
     linterDelayedJobs: ILinterDelayedJobs;
   }): Promise<void> {
@@ -195,6 +199,7 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
     this.linterDelayedJobs = ports.linterDelayedJobs;
     this.deploymentsPort = ports[IDeploymentPortName];
     this.spacesPort = ports[ISpacesPortName];
+    this.eventTrackingPort = ports[IEventTrackingPortName];
     this.llmPort = ports.llmPort;
 
     // Step 2: Validate all required ports are set
@@ -227,6 +232,7 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
       this.standardsPort,
       this.spacesPort,
       this.gitPort,
+      this.eventTrackingPort,
     );
 
     this._updateDetectionProgramUseCase = new UpdateDetectionProgramUseCase(

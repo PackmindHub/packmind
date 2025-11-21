@@ -61,6 +61,7 @@ describe('ListDetectionProgramUseCase', () => {
       mockStandardsAdapter as never,
       mockSpacesAdapter,
       mockGitPort,
+      null,
       stubLogger(),
     );
   });

@@ -9,6 +9,7 @@ import {
   StandardVersion,
   GitRepo,
   GitRepoId,
+  IEventTrackingPort,
 } from '@packmind/types';
 
 import {
@@ -38,6 +39,7 @@ export class ListDetectionProgramUseCase
     private readonly standardsAdapter: IStandardsPort | undefined,
     private readonly spacesAdapter: ISpacesPort | undefined,
     private readonly gitPort: IGitPort,
+    private readonly eventTrackingPort: IEventTrackingPort | null,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.DEBUG,
@@ -188,6 +190,18 @@ export class ListDetectionProgramUseCase
           targetsCount: targetsWithStandards.length,
         },
       );
+
+      // Track analytics event
+      if (this.eventTrackingPort) {
+        await this.eventTrackingPort.trackEvent(
+          createUserId(command.userId),
+          createOrganizationId(command.organizationId),
+          'linter_called',
+        );
+        this.logger.debug('Analytics event tracked', {
+          event: 'linter_called',
+        });
+      }
 
       return { targets: targetsWithStandards };
     } catch (error) {
