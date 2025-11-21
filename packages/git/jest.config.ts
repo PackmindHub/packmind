@@ -10,7 +10,9 @@ function pathsToModuleNameMapper(
   for (const [key, [value]] of Object.entries(paths)) {
     // Convert TS path pattern to Jest regex pattern
     const regexKey = '^' + key.replace(/\*/g, '(.*)') + '$';
-    const mappedValue = prefix + value.replace(/\*/g, '\\$1');
+    // Replace each * with its corresponding capture group ($1, $2, etc.)
+    let groupIndex = 0;
+    const mappedValue = prefix + value.replace(/\*/g, () => `$${++groupIndex}`);
     moduleNameMapper[regexKey] = mappedValue;
   }
   return moduleNameMapper;
