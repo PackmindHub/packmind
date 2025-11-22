@@ -111,10 +111,14 @@ export const pullCommand = command({
 
     // Read existing config
     let configPackages: string[];
+    let configExists = false;
     try {
       configPackages = await packmindCliHexa.readConfig(process.cwd());
+      configExists = configPackages.length > 0;
     } catch (error) {
-      console.error('\n❌ Error reading packmind.json:');
+      console.error('ERR! code EJSONPARSE');
+      console.error('ERR! Failed to parse packmind.json\n');
+      console.error('❌ Error reading packmind.json:');
       if (error instanceof Error) {
         console.error(`   ${error.message}`);
       } else {
@@ -131,6 +135,7 @@ export const pullCommand = command({
 
     // Show help if no packages from either source
     if (allPackages.length === 0) {
+      console.log('WARN config packmind.json not found');
       console.log('Usage: packmind-cli pull <package-slug> [package-slug...]');
       console.log('       packmind-cli pull --list');
       console.log('');
@@ -141,6 +146,13 @@ export const pullCommand = command({
       console.log('');
       console.log('Pull recipes and standards from the specified packages.');
       process.exit(0);
+    }
+
+    // Log config status
+    if (configExists) {
+      console.log('info using packmind.json');
+    } else if (packagesSlugs.length > 0) {
+      console.log('WARN config packmind.json not found, creating one');
     }
 
     console.log(`Pulling content from packages: ${allPackages.join(', ')}...`);
@@ -168,7 +180,11 @@ export const pullCommand = command({
 
       // Write config with all packages that were successfully pulled
       await packmindCliHexa.writeConfig(process.cwd(), allPackages);
-      console.log('✓ Updated packmind.json');
+      if (configExists) {
+        console.log('\nnotice updated packmind.json');
+      } else {
+        console.log('\nnotice created a packmind.json file');
+      }
     } catch (error) {
       console.error('\n❌ Failed to pull content:');
 
