@@ -180,11 +180,6 @@ export const pullCommand = command({
 
       // Write config with all packages that were successfully pulled
       await packmindCliHexa.writeConfig(process.cwd(), allPackages);
-      if (configExists) {
-        console.log('\nnotice updated packmind.json');
-      } else {
-        console.log('\nnotice created a packmind.json file');
-      }
     } catch (error) {
       console.error('\n❌ Failed to pull content:');
 
