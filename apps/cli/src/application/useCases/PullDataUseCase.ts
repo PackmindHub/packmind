@@ -19,6 +19,8 @@ export class PullDataUseCase implements IPullDataUseCase {
       filesUpdated: 0,
       filesDeleted: 0,
       errors: [],
+      recipesCount: 0,
+      standardsCount: 0,
     };
     // Fetch data from the gateway
     const response = await this.packmindGateway.getPullData({
@@ -30,6 +32,19 @@ export class PullDataUseCase implements IPullDataUseCase {
       for (const file of response.fileUpdates.createOrUpdate) {
         try {
           await this.createOrUpdateFile(baseDirectory, file, result);
+
+          // Count recipes and standards
+          if (
+            file.path.includes('.packmind/recipes/') &&
+            file.path.endsWith('.md')
+          ) {
+            result.recipesCount++;
+          } else if (
+            file.path.includes('.packmind/standards/') &&
+            file.path.endsWith('.md')
+          ) {
+            result.standardsCount++;
+          }
         } catch (error) {
           const errorMsg =
             error instanceof Error ? error.message : String(error);

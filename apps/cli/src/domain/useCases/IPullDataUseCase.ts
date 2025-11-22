@@ -10,6 +10,8 @@ export type IPullDataResult = {
   filesUpdated: number;
   filesDeleted: number;
   errors: string[];
+  recipesCount: number;
+  standardsCount: number;
 };
 
 export type IPullDataUseCase = IPublicUseCase<

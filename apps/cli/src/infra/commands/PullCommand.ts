@@ -168,6 +168,8 @@ export const pullCommand = command({
 
       // Display results
       console.log('\n✅ Installation completed successfully!');
+      console.log(`   Recipes: ${result.recipesCount}`);
+      console.log(`   Standards: ${result.standardsCount}`);
       console.log(`   Files created: ${result.filesCreated}`);
       console.log(`   Files updated: ${result.filesUpdated}`);
       console.log(`   Files deleted: ${result.filesDeleted}`);
