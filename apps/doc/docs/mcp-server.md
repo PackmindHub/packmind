@@ -19,7 +19,7 @@ The workflow tools don't create content themselves—they provide guidance that 
 
 ### Onboarding Workflows
 
-**Tool:** `packmind_onboarding`
+**Tool:** `onboarding`
 
 Provides guided workflows for creating coding standards based on different information sources. This is particularly useful when first setting up standards for your organization.
 
@@ -40,7 +40,7 @@ When no workflow is specified, returns a mode selection guide to help choose the
 
 ### List Standards
 
-**Tool:** `packmind_list_standards`
+**Tool:** `list_standards`
 
 Retrieves all coding standards created in your organization. Returns up to 20 standards sorted alphabetically by slug.
 
@@ -50,7 +50,7 @@ Retrieves all coding standards created in your organization. Returns up to 20 st
 
 ### Get Standard Details
 
-**Tool:** `packmind_get_standard_details`
+**Tool:** `get_standard_details`
 
 Retrieves the full content of a specific standard including all its rules and code examples by its slug identifier.
 
@@ -62,7 +62,7 @@ Retrieves the full content of a specific standard including all its rules and co
 
 ### Standard Creation Workflow
 
-**Tool:** `packmind_create_standard`
+**Tool:** `create_standard`
 
 Provides step-by-step guidance for creating a new coding standard. This workflow ensures the AI agent gathers appropriate context, collaborates with you to draft the standard, and prepares it properly for submission.
 
@@ -72,18 +72,18 @@ Provides step-by-step guidance for creating a new coding standard. This workflow
   - `initial-request` - Initial guidance for understanding the user's intent and gathering context
   - `clarify` - Instructions for clarifying requirements and scope
   - `drafting` - Instructions for creating the standard draft and iterating with the user
-  - `finalization` - Final checks and instructions before calling `packmind_save_standard`
+  - `finalization` - Final checks and instructions before calling `save_standard`
 
 **Usage:** The AI agent will automatically progress through these steps. You typically don't need to specify the step parameter.
 
 ### Save Standard
 
-**Tool:** `packmind_save_standard`
+**Tool:** `save_standard`
 
 Creates a new coding standard with multiple rules and code examples in a single operation.
 
 :::warning
-Do not call this tool directly. AI agents must first complete the standard creation workflow using `packmind_create_standard`.
+Do not call this tool directly. AI agents must first complete the standard creation workflow using `create_standard`.
 :::
 
 **Parameters:**
@@ -100,7 +100,7 @@ Do not call this tool directly. AI agents must first complete the standard creat
 
 ### Add Rule to Standard Workflow
 
-**Tool:** `packmind_create_standard_rule`
+**Tool:** `create_standard_rule`
 
 Provides step-by-step guidance for adding a new rule to an existing standard. Ensures the rule is well-formed, includes appropriate examples, and fits within the standard's context.
 
@@ -109,21 +109,21 @@ Provides step-by-step guidance for adding a new rule to an existing standard. En
 - `step` (optional) - Workflow step identifier. Defaults to `initial-request` when omitted.
   - `initial-request` - Guidance for understanding what rule to add and to which standard
   - `drafting` - Instructions for drafting the rule content and examples
-  - `finalization` - Final checks before calling `packmind_save_standard_rule`
+  - `finalization` - Final checks before calling `save_standard_rule`
 
 ### Save Standard Rule
 
-**Tool:** `packmind_save_standard_rule`
+**Tool:** `save_standard_rule`
 
 Adds a new coding rule to an existing standard in your organization. Creates a new version of the standard.
 
 :::warning
-Do not call this tool directly. AI agents must first complete the add rule workflow using `packmind_create_standard_rule`.
+Do not call this tool directly. AI agents must first complete the add rule workflow using `create_standard_rule`.
 :::
 
 **Parameters:**
 
-- `standardSlug` (required) - Slug of the existing standard (use `packmind_list_standards` to find it)
+- `standardSlug` (required) - Slug of the existing standard (use `list_standards` to find it)
 - `ruleContent` (required) - Descriptive rule starting with a verb explaining its intention and how/when to use it
 - `positiveExample` (optional) - Code snippet showing correct implementation of the rule
 - `negativeExample` (optional) - Code snippet showing incorrect implementation
@@ -137,7 +137,7 @@ Do not call this tool directly. AI agents must first complete the add rule workf
 
 ### List Recipes
 
-**Tool:** `packmind_list_recipes`
+**Tool:** `list_recipes`
 
 Retrieves all recipes created in your organization. Returns up to 20 recipes sorted alphabetically by slug.
 
@@ -147,7 +147,7 @@ Retrieves all recipes created in your organization. Returns up to 20 recipes sor
 
 ### Get Recipe Details
 
-**Tool:** `packmind_get_recipe_details`
+**Tool:** `get_recipe_details`
 
 Retrieves the full content of a specific recipe by its slug identifier.
 
@@ -159,7 +159,7 @@ Retrieves the full content of a specific recipe by its slug identifier.
 
 ### Recipe Creation Workflow
 
-**Tool:** `packmind_create_recipe`
+**Tool:** `create_recipe`
 
 Provides step-by-step guidance for creating a new recipe. This workflow ensures the AI agent properly structures the recipe with clear steps, appropriate context validation checkpoints, and usage scenarios.
 
@@ -168,18 +168,18 @@ Provides step-by-step guidance for creating a new recipe. This workflow ensures 
 - `step` (optional) - Workflow step identifier. Defaults to `initial-request` when omitted.
   - `initial-request` - Initial guidance for understanding the process to capture as a recipe
   - `drafting` - Instructions for structuring the recipe with steps, checkpoints, and scenarios
-  - `finalization` - Final validation before calling `packmind_save_recipe`
+  - `finalization` - Final validation before calling `save_recipe`
 
 **Usage:** The AI agent will automatically progress through these steps. You typically don't need to specify the step parameter.
 
 ### Save Recipe
 
-**Tool:** `packmind_save_recipe`
+**Tool:** `save_recipe`
 
 Captures a reusable development process or procedure as a structured Packmind recipe with clear, actionable steps.
 
 :::warning
-Do not call this tool directly. AI agents must first complete the recipe creation workflow using `packmind_create_recipe`.
+Do not call this tool directly. AI agents must first complete the recipe creation workflow using `create_recipe`.
 :::
 
 **Parameters:**
@@ -195,7 +195,7 @@ Do not call this tool directly. AI agents must first complete the recipe creatio
 
 ### Track Recipe Usage
 
-**Tool:** `packmind_notify_recipe_usage`
+**Tool:** `notify_recipe_usage`
 
 Records when a deployed recipe is used by an AI agent. This tracks adoption and provides usage analytics for your organization.
 
@@ -214,7 +214,7 @@ Records when a deployed recipe is used by an AI agent. This tracks adoption and 
 
 ### List Packages
 
-**Tool:** `packmind_list_packages`
+**Tool:** `list_packages`
 
 Retrieves all packages created in your organization. Packages are collections of recipes and standards that can be deployed together.
 
@@ -230,7 +230,7 @@ Retrieves all packages created in your organization. Packages are collections of
 
 ### Get Package Details
 
-**Tool:** `packmind_get_package_details`
+**Tool:** `get_package_details`
 
 Retrieves the full content of a specific package including all its recipes and standards.
 
@@ -251,5 +251,5 @@ Retrieves the full content of a specific package including all its recipes and s
 ```
 
 :::tip
-When creating new recipes or standards using `packmind_save_recipe` or `packmind_save_standard`, you can include the optional `packageSlugs` parameter to automatically add them to packages during creation.
+When creating new recipes or standards using `save_recipe` or `save_standard`, you can include the optional `packageSlugs` parameter to automatically add them to packages during creation.
 :::
