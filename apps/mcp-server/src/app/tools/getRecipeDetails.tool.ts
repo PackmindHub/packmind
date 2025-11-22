@@ -7,11 +7,10 @@ export function registerGetRecipeDetailsTool(
   dependencies: ToolDependencies,
   mcpServer: McpServer,
 ) {
-  const { fastify, userContext, analyticsAdapter, mcpToolPrefix } =
-    dependencies;
+  const { fastify, userContext, analyticsAdapter } = dependencies;
 
   mcpServer.tool(
-    `${mcpToolPrefix}_get_recipe_details`,
+    `get_recipe_details`,
     'Get the full content of a recipe by its slug.',
     {
       recipeSlug: z
@@ -61,7 +60,7 @@ export function registerGetRecipeDetailsTool(
           createUserId(userContext.userId),
           createOrganizationId(userContext.organizationId),
           'mcp_tool_call',
-          { tool: `${mcpToolPrefix}_get_recipe_details`, recipeSlug },
+          { tool: `get_recipe_details`, recipeSlug },
         );
 
         return {

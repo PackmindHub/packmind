@@ -42,7 +42,7 @@ describe('getStandardDetails.tool', () => {
 
     mcpServer = {
       tool: jest.fn((name, description, schema, handler) => {
-        if (name === 'packmind_get_standard_details') {
+        if (name === 'get_standard_details') {
           toolHandler = handler;
         }
       }),
@@ -57,7 +57,7 @@ describe('getStandardDetails.tool', () => {
     registerGetStandardDetailsTool(dependencies, mcpServer);
 
     expect(mcpServer.tool).toHaveBeenCalledWith(
-      'packmind_get_standard_details',
+      'get_standard_details',
       'Get the full content of a standard including its rules and examples by its slug.',
       expect.any(Object),
       expect.any(Function),
@@ -238,7 +238,7 @@ describe('getStandardDetails.tool', () => {
       'user-123',
       'org-123',
       'mcp_tool_call',
-      { tool: 'packmind_get_standard_details', standardSlug: 'analytics-test' },
+      { tool: 'get_standard_details', standardSlug: 'analytics-test' },
     );
   });
 

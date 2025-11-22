@@ -56,7 +56,7 @@ describe('packages.tools', () => {
     beforeEach(() => {
       (mcpServer.tool as jest.Mock).mockImplementation(
         (name, description, schema, handler) => {
-          if (name === 'packmind_list_packages') {
+          if (name === 'list_packages') {
             toolHandler = handler;
           }
         },
@@ -67,7 +67,7 @@ describe('packages.tools', () => {
       registerListPackagesTool(dependencies, mcpServer);
 
       expect(mcpServer.tool).toHaveBeenCalledWith(
-        'packmind_list_packages',
+        'list_packages',
         'Get a list of all available packages in Packmind. Packages are collections of recipes and standards that can be pulled together.',
         {},
         expect.any(Function),
@@ -170,7 +170,7 @@ describe('packages.tools', () => {
         'user-123',
         'org-123',
         'mcp_tool_call',
-        { tool: 'packmind_list_packages' },
+        { tool: 'list_packages' },
       );
     });
 
@@ -241,7 +241,7 @@ describe('packages.tools', () => {
     beforeEach(() => {
       (mcpServer.tool as jest.Mock).mockImplementation(
         (name, description, schema, handler) => {
-          if (name === 'packmind_get_package_details') {
+          if (name === 'get_package_details') {
             toolHandler = handler;
           }
         },
@@ -252,7 +252,7 @@ describe('packages.tools', () => {
       registerShowPackageTool(dependencies, mcpServer);
 
       expect(mcpServer.tool).toHaveBeenCalledWith(
-        'packmind_get_package_details',
+        'get_package_details',
         'Get detailed information about a specific package including its recipes and standards.',
         expect.any(Object),
         expect.any(Function),
@@ -379,7 +379,7 @@ describe('packages.tools', () => {
         'user-123',
         'org-123',
         'mcp_tool_call',
-        { tool: 'packmind_get_package_details', packageSlug: 'test-pkg' },
+        { tool: 'get_package_details', packageSlug: 'test-pkg' },
       );
     });
 

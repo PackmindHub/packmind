@@ -57,7 +57,7 @@ describe('notifyRecipeUsage.tool', () => {
     beforeEach(() => {
       (mcpServer.tool as jest.Mock).mockImplementation(
         (name, description, schema, handler) => {
-          if (name === 'packmind_notify_recipe_usage') {
+          if (name === 'notify_recipe_usage') {
             toolHandler = handler;
           }
         },
@@ -68,7 +68,7 @@ describe('notifyRecipeUsage.tool', () => {
       registerNotifyRecipeUsageTool(dependencies, mcpServer);
 
       expect(mcpServer.tool).toHaveBeenCalledWith(
-        'packmind_notify_recipe_usage',
+        'notify_recipe_usage',
         'Notify a reusable coding recipe deployed with Packmind has been used by an AI Agent such as GitHub Copilot, Claude Code or Cursor.',
         expect.any(Object),
         expect.any(Function),
@@ -218,7 +218,7 @@ describe('notifyRecipeUsage.tool', () => {
         'user-123',
         'org-123',
         'mcp_tool_call',
-        { tool: 'packmind_notify_recipe_usage' },
+        { tool: 'notify_recipe_usage' },
       );
     });
 

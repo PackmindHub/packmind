@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { stubLogger } from '@packmind/test-utils';
 import { IEventTrackingPort } from '@packmind/types';
-import { registerAddRuleToStandardTool } from './addRuleToStandard.tool';
+import { registerSaveStandardRuleTool } from './saveStandardRule.tool';
 import { ToolDependencies, UserContext } from './types';
 
 jest.mock('@packmind/node-utils', () => ({
@@ -67,7 +67,7 @@ describe('addRuleToStandard.tool', () => {
     beforeEach(() => {
       (mcpServer.tool as jest.Mock).mockImplementation(
         (name, description, schema, handler) => {
-          if (name === 'packmind_add_rule_to_standard') {
+          if (name === 'save_standard_rule') {
             toolHandler = handler;
           }
         },
@@ -75,11 +75,11 @@ describe('addRuleToStandard.tool', () => {
     });
 
     it('registers the tool with correct name and description', () => {
-      registerAddRuleToStandardTool(dependencies, mcpServer);
+      registerSaveStandardRuleTool(dependencies, mcpServer);
 
       expect(mcpServer.tool).toHaveBeenCalledWith(
-        'packmind_add_rule_to_standard',
-        'Add a new coding rule to an existing standard identified by its slug. Do not call this tool directly—you need to first use the tool packmind_add_rule_to_standard_workflow.',
+        'save_standard_rule',
+        'Add a new coding rule to an existing standard identified by its slug. Do not call this tool directly—you need to first use the tool packmind_create_standard_rule.',
         expect.any(Object),
         expect.any(Function),
       );
@@ -103,7 +103,7 @@ describe('addRuleToStandard.tool', () => {
         getAdapter: () => mockAdapter,
       });
 
-      registerAddRuleToStandardTool(dependencies, mcpServer);
+      registerSaveStandardRuleTool(dependencies, mcpServer);
 
       const result = await toolHandler({
         standardSlug: 'typescript-best-practices',
@@ -153,7 +153,7 @@ describe('addRuleToStandard.tool', () => {
         getAdapter: () => mockAdapter,
       });
 
-      registerAddRuleToStandardTool(dependencies, mcpServer);
+      registerSaveStandardRuleTool(dependencies, mcpServer);
 
       const result = await toolHandler({
         standardSlug: 'typescript-best-practices',
@@ -200,7 +200,7 @@ describe('addRuleToStandard.tool', () => {
         getAdapter: () => mockAdapter,
       });
 
-      registerAddRuleToStandardTool(dependencies, mcpServer);
+      registerSaveStandardRuleTool(dependencies, mcpServer);
 
       const result = await toolHandler({
         standardSlug: 'TypeScript-Best-Practices',
@@ -243,7 +243,7 @@ describe('addRuleToStandard.tool', () => {
         getAdapter: () => mockAdapter,
       });
 
-      registerAddRuleToStandardTool(dependencies, mcpServer);
+      registerSaveStandardRuleTool(dependencies, mcpServer);
 
       await toolHandler({
         standardSlug: 'test-standard',
@@ -286,7 +286,7 @@ describe('addRuleToStandard.tool', () => {
         getAdapter: () => mockAdapter,
       });
 
-      registerAddRuleToStandardTool(dependencies, mcpServer);
+      registerSaveStandardRuleTool(dependencies, mcpServer);
 
       await toolHandler({
         standardSlug: 'test-standard',
@@ -297,7 +297,7 @@ describe('addRuleToStandard.tool', () => {
         'user-123',
         'org-123',
         'mcp_tool_call',
-        { tool: 'packmind_add_rule_to_standard' },
+        { tool: 'save_standard_rule' },
       );
     });
 
@@ -305,7 +305,7 @@ describe('addRuleToStandard.tool', () => {
       it('throws error', async () => {
         dependencies.userContext = undefined;
 
-        registerAddRuleToStandardTool(dependencies, mcpServer);
+        registerSaveStandardRuleTool(dependencies, mcpServer);
 
         await expect(
           toolHandler({
@@ -328,7 +328,7 @@ describe('addRuleToStandard.tool', () => {
           getAdapter: () => mockAdapter,
         });
 
-        registerAddRuleToStandardTool(dependencies, mcpServer);
+        registerSaveStandardRuleTool(dependencies, mcpServer);
 
         const result = await toolHandler({
           standardSlug: 'non-existent-standard',
@@ -366,7 +366,7 @@ describe('addRuleToStandard.tool', () => {
           getAdapter: () => mockAdapter,
         });
 
-        registerAddRuleToStandardTool(dependencies, mcpServer);
+        registerSaveStandardRuleTool(dependencies, mcpServer);
 
         await toolHandler({
           standardSlug: 'test-standard',
@@ -397,7 +397,7 @@ describe('addRuleToStandard.tool', () => {
           getAdapter: () => mockAdapter,
         });
 
-        registerAddRuleToStandardTool(dependencies, mcpServer);
+        registerSaveStandardRuleTool(dependencies, mcpServer);
 
         await toolHandler({
           standardSlug: 'test-standard',
@@ -436,7 +436,7 @@ describe('addRuleToStandard.tool', () => {
           getAdapter: () => mockAdapter,
         });
 
-        registerAddRuleToStandardTool(dependencies, mcpServer);
+        registerSaveStandardRuleTool(dependencies, mcpServer);
 
         await toolHandler({
           standardSlug: 'test-standard',
@@ -475,7 +475,7 @@ describe('addRuleToStandard.tool', () => {
           getAdapter: () => mockAdapter,
         });
 
-        registerAddRuleToStandardTool(dependencies, mcpServer);
+        registerSaveStandardRuleTool(dependencies, mcpServer);
 
         const result = await toolHandler({
           standardSlug: 'test-standard',
@@ -516,7 +516,7 @@ describe('addRuleToStandard.tool', () => {
           getAdapter: () => mockAdapter,
         });
 
-        registerAddRuleToStandardTool(dependencies, mcpServer);
+        registerSaveStandardRuleTool(dependencies, mcpServer);
 
         const result = await toolHandler({
           standardSlug: 'test-standard',
@@ -551,7 +551,7 @@ describe('addRuleToStandard.tool', () => {
         getAdapter: () => mockAdapter,
       });
 
-      registerAddRuleToStandardTool(dependencies, mcpServer);
+      registerSaveStandardRuleTool(dependencies, mcpServer);
 
       await toolHandler({
         standardSlug: 'test-standard',

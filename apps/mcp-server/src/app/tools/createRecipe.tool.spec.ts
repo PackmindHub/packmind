@@ -1,33 +1,15 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { stubLogger } from '@packmind/test-utils';
-import {
-  createOrganizationId,
-  createSpaceId,
-  createUserId,
-  IEventTrackingPort,
-  RecipeId,
-  Space,
-} from '@packmind/types';
+import { IEventTrackingPort } from '@packmind/types';
 import { registerCreateRecipeTool } from './createRecipe.tool';
 import { ToolDependencies, UserContext } from './types';
-
-// Mock getGlobalSpace utility
-jest.mock('./utils', () => ({
-  getGlobalSpace: jest.fn(),
-}));
-
-import { getGlobalSpace } from './utils';
 
 describe('createRecipe.tool', () => {
   let mcpServer: McpServer;
   let dependencies: ToolDependencies;
   let mockAnalyticsAdapter: jest.Mocked<IEventTrackingPort>;
-  let mockFastify: jest.Mocked<{
-    recipesHexa: () => unknown;
-    spacesHexa: () => unknown;
-  }>;
+  let mockFastify: jest.Mocked<{ deploymentsHexa: () => unknown }>;
   let userContext: UserContext;
-  let mockGetGlobalSpace: jest.MockedFunction<typeof getGlobalSpace>;
 
   beforeEach(() => {
     const mockLogger = stubLogger();
@@ -44,12 +26,8 @@ describe('createRecipe.tool', () => {
     };
 
     mockFastify = {
-      recipesHexa: jest.fn(),
-      spacesHexa: jest.fn(),
-    } as unknown as jest.Mocked<{
-      recipesHexa: () => unknown;
-      spacesHexa: () => unknown;
-    }>;
+      deploymentsHexa: jest.fn(),
+    } as unknown as jest.Mocked<{ deploymentsHexa: () => unknown }>;
 
     dependencies = {
       fastify: mockFastify as unknown as ToolDependencies['fastify'],
@@ -62,10 +40,6 @@ describe('createRecipe.tool', () => {
     mcpServer = {
       tool: jest.fn(),
     } as unknown as McpServer;
-
-    mockGetGlobalSpace = getGlobalSpace as jest.MockedFunction<
-      typeof getGlobalSpace
-    >;
   });
 
   afterEach(() => {
@@ -74,21 +48,13 @@ describe('createRecipe.tool', () => {
 
   describe('registerCreateRecipeTool', () => {
     let toolHandler: (params: {
-      name: string;
-      summary: string;
-      whenToUse: string[];
-      contextValidationCheckpoints: string[];
-      steps: Array<{
-        name: string;
-        description: string;
-        codeSnippet?: string;
-      }>;
+      step?: string;
     }) => Promise<{ content: { type: string; text: string }[] }>;
 
     beforeEach(() => {
       (mcpServer.tool as jest.Mock).mockImplementation(
         (name, description, schema, handler) => {
-          if (name === 'packmind_create_recipe') {
+          if (name === 'create_recipe') {
             toolHandler = handler;
           }
         },
@@ -99,398 +65,182 @@ describe('createRecipe.tool', () => {
       registerCreateRecipeTool(dependencies, mcpServer);
 
       expect(mcpServer.tool).toHaveBeenCalledWith(
-        'packmind_create_recipe',
-        'Create a new reusable recipe as a structured Packmind recipe. Do not call this tool directly—you need to first use the tool packmind_create_recipe_workflow.',
+        'create_recipe',
+        'Get step-by-step guidance for the Packmind recipe creation workflow. Provide an optional step to retrieve a specific stage.',
         expect.any(Object),
         expect.any(Function),
       );
     });
 
-    it('creates recipe with all parameters', async () => {
-      const mockRecipe = {
-        id: 'recipe-123' as RecipeId,
-        name: 'Test Recipe',
-        summary: 'A test recipe summary',
-        whenToUse: ['When testing'],
-        contextValidationCheckpoints: ['Ensure tests exist'],
-        steps: [
-          {
-            name: 'Step 1',
-            description: 'First step',
-            codeSnippet: undefined,
-          },
-        ],
-      };
-
-      const mockGlobalSpace: Space = {
-        id: createSpaceId('space-123'),
-        name: 'Global Space',
-        slug: 'global-space',
-        organizationId: createOrganizationId('org-123'),
-      };
-
-      const mockAdapter = {
-        captureRecipe: jest.fn().mockResolvedValue(mockRecipe),
-      };
-
-      mockGetGlobalSpace.mockResolvedValue(mockGlobalSpace);
-      mockFastify.recipesHexa.mockReturnValue({
-        getAdapter: () => mockAdapter,
-      });
-
-      registerCreateRecipeTool(dependencies, mcpServer);
-
-      const result = await toolHandler({
-        name: 'Test Recipe',
-        summary: 'A test recipe summary',
-        whenToUse: ['When testing'],
-        contextValidationCheckpoints: ['Ensure tests exist'],
-        steps: [
-          {
-            name: 'Step 1',
-            description: 'First step',
-          },
-        ],
-      });
-
-      expect(mockAdapter.captureRecipe).toHaveBeenCalledWith({
-        name: 'Test Recipe',
-        summary: 'A test recipe summary',
-        whenToUse: ['When testing'],
-        contextValidationCheckpoints: ['Ensure tests exist'],
-        steps: [
-          {
-            name: 'Step 1',
-            description: 'First step',
-          },
-        ],
-        organizationId: createOrganizationId('org-123'),
-        userId: createUserId('user-123'),
-        spaceId: createSpaceId('space-123'),
-      });
-
-      expect(result).toEqual({
-        content: [
-          {
-            type: 'text',
-            text: "Recipe 'Test Recipe' has been created successfully.",
-          },
-        ],
-      });
-    });
-
-    it('creates recipe with complex steps including code snippets', async () => {
-      const mockRecipe = {
-        id: 'recipe-456' as RecipeId,
-        name: 'Complex Recipe',
-        summary: 'A complex recipe with code snippets',
-        whenToUse: [
-          'When creating TypeORM entities',
-          'When setting up database migrations',
-        ],
-        contextValidationCheckpoints: [
-          'Database connection is configured',
-          'TypeORM is installed',
-        ],
-        steps: [
-          {
-            name: 'Create Entity',
-            description:
-              'Define a TypeORM entity with proper decorators and types',
-            codeSnippet: `\`\`\`typescript
-@Entity()
-export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
-
-  @Column()
-  name: string;
-}
-\`\`\``,
-          },
-          {
-            name: 'Generate Migration',
-            description: 'Run migration generation command',
-            codeSnippet: '```bash\nnpm run migration:generate\n```',
-          },
-        ],
-      };
-
-      const mockGlobalSpace: Space = {
-        id: createSpaceId('space-456'),
-        name: 'Global Space',
-        slug: 'global-space',
-        organizationId: createOrganizationId('org-123'),
-      };
-
-      const mockAdapter = {
-        captureRecipe: jest.fn().mockResolvedValue(mockRecipe),
-      };
-
-      mockGetGlobalSpace.mockResolvedValue(mockGlobalSpace);
-      mockFastify.recipesHexa.mockReturnValue({
-        getAdapter: () => mockAdapter,
-      });
-
-      registerCreateRecipeTool(dependencies, mcpServer);
-
-      const result = await toolHandler({
-        name: 'Complex Recipe',
-        summary: 'A complex recipe with code snippets',
-        whenToUse: [
-          'When creating TypeORM entities',
-          'When setting up database migrations',
-        ],
-        contextValidationCheckpoints: [
-          'Database connection is configured',
-          'TypeORM is installed',
-        ],
-        steps: [
-          {
-            name: 'Create Entity',
-            description:
-              'Define a TypeORM entity with proper decorators and types',
-            codeSnippet: `\`\`\`typescript
-@Entity()
-export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
-
-  @Column()
-  name: string;
-}
-\`\`\``,
-          },
-          {
-            name: 'Generate Migration',
-            description: 'Run migration generation command',
-            codeSnippet: '```bash\nnpm run migration:generate\n```',
-          },
-        ],
-      });
-
-      expect(mockAdapter.captureRecipe).toHaveBeenCalledWith({
-        name: 'Complex Recipe',
-        summary: 'A complex recipe with code snippets',
-        whenToUse: [
-          'When creating TypeORM entities',
-          'When setting up database migrations',
-        ],
-        contextValidationCheckpoints: [
-          'Database connection is configured',
-          'TypeORM is installed',
-        ],
-        steps: [
-          {
-            name: 'Create Entity',
-            description:
-              'Define a TypeORM entity with proper decorators and types',
-            codeSnippet: `\`\`\`typescript
-@Entity()
-export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
-
-  @Column()
-  name: string;
-}
-\`\`\``,
-          },
-          {
-            name: 'Generate Migration',
-            description: 'Run migration generation command',
-            codeSnippet: '```bash\nnpm run migration:generate\n```',
-          },
-        ],
-        organizationId: createOrganizationId('org-123'),
-        userId: createUserId('user-123'),
-        spaceId: createSpaceId('space-456'),
-      });
-
-      expect(result).toEqual({
-        content: [
-          {
-            type: 'text',
-            text: "Recipe 'Complex Recipe' has been created successfully.",
-          },
-        ],
-      });
-    });
-
-    it('tracks analytics event on success', async () => {
-      const mockRecipe = {
-        id: 'recipe-789' as RecipeId,
-        name: 'Analytics Recipe',
-        summary: 'Testing analytics tracking',
-      };
-
-      const mockGlobalSpace: Space = {
-        id: createSpaceId('space-789'),
-        name: 'Global Space',
-        slug: 'global-space',
-        organizationId: createOrganizationId('org-123'),
-      };
-
-      const mockAdapter = {
-        captureRecipe: jest.fn().mockResolvedValue(mockRecipe),
-      };
-
-      mockGetGlobalSpace.mockResolvedValue(mockGlobalSpace);
-      mockFastify.recipesHexa.mockReturnValue({
-        getAdapter: () => mockAdapter,
-      });
-
-      registerCreateRecipeTool(dependencies, mcpServer);
-
-      await toolHandler({
-        name: 'Analytics Recipe',
-        summary: 'Testing analytics tracking',
-        whenToUse: ['When testing analytics'],
-        contextValidationCheckpoints: ['Analytics is configured'],
-        steps: [
-          {
-            name: 'Track Event',
-            description: 'Call analytics tracking',
-          },
-        ],
-      });
-
-      expect(mockAnalyticsAdapter.trackEvent).toHaveBeenCalledWith(
-        createUserId('user-123'),
-        createOrganizationId('org-123'),
-        'mcp_tool_call',
-        { tool: 'packmind_create_recipe' },
-      );
-    });
-
-    describe('when user context is missing', () => {
-      it('throws error', async () => {
-        dependencies.userContext = undefined;
-
+    describe('when no step specified', () => {
+      it('returns default step content', async () => {
         registerCreateRecipeTool(dependencies, mcpServer);
 
-        await expect(
-          toolHandler({
-            name: 'Test Recipe',
-            summary: 'A test recipe',
-            whenToUse: ['When testing'],
-            contextValidationCheckpoints: ['Ensure context exists'],
-            steps: [
-              {
-                name: 'Step 1',
-                description: 'First step',
-              },
-            ],
-          }),
-        ).rejects.toThrow('User context is required to create recipes');
-      });
-    });
+        const result = await toolHandler({});
 
-    describe('when adapter throws error', () => {
-      it('returns error message', async () => {
-        const mockGlobalSpace: Space = {
-          id: createSpaceId('space-error'),
-          name: 'Global Space',
-          slug: 'global-space',
-          organizationId: createOrganizationId('org-123'),
-        };
-
-        const mockAdapter = {
-          captureRecipe: jest
-            .fn()
-            .mockRejectedValue(new Error('Database connection failed')),
-        };
-
-        mockGetGlobalSpace.mockResolvedValue(mockGlobalSpace);
-        mockFastify.recipesHexa.mockReturnValue({
-          getAdapter: () => mockAdapter,
+        expect(result).toEqual({
+          content: [
+            {
+              type: 'text',
+              text: expect.stringContaining(
+                '# Step 1 · Capture and Clarify the Request',
+              ),
+            },
+          ],
         });
-
-        registerCreateRecipeTool(dependencies, mcpServer);
-
-        await expect(
-          toolHandler({
-            name: 'Error Recipe',
-            summary: 'This should fail',
-            whenToUse: ['When testing errors'],
-            contextValidationCheckpoints: ['Error handling is configured'],
-            steps: [
-              {
-                name: 'Fail Step',
-                description: 'This will fail',
-              },
-            ],
-          }),
-        ).rejects.toThrow('Database connection failed');
       });
     });
 
-    it('uses global space via getGlobalSpace', async () => {
-      const mockRecipe = {
-        id: 'recipe-space' as RecipeId,
-        name: 'Space Recipe',
-        summary: 'Testing space usage',
-      };
-
-      const mockGlobalSpace: Space = {
-        id: createSpaceId('space-global'),
-        name: 'Global Space',
-        slug: 'global-space',
-        organizationId: createOrganizationId('org-123'),
-      };
-
-      const mockAdapter = {
-        captureRecipe: jest.fn().mockResolvedValue(mockRecipe),
-      };
-
-      mockGetGlobalSpace.mockResolvedValue(mockGlobalSpace);
-      mockFastify.recipesHexa.mockReturnValue({
-        getAdapter: () => mockAdapter,
-      });
-
+    it('returns specific step content for initial-request', async () => {
       registerCreateRecipeTool(dependencies, mcpServer);
 
-      await toolHandler({
-        name: 'Space Recipe',
-        summary: 'Testing space usage',
-        whenToUse: ['When testing spaces'],
-        contextValidationCheckpoints: ['Space exists'],
-        steps: [
+      const result = await toolHandler({ step: 'initial-request' });
+
+      expect(result).toEqual({
+        content: [
           {
-            name: 'Use Space',
-            description: 'Access the global space',
+            type: 'text',
+            text: expect.stringContaining(
+              '# Step 1 · Capture and Clarify the Request',
+            ),
           },
         ],
       });
-
-      expect(mockGetGlobalSpace).toHaveBeenCalledWith(
-        mockFastify,
-        createOrganizationId('org-123'),
-      );
     });
 
-    describe('when getGlobalSpace fails', () => {
-      it('propagates error', async () => {
-        mockGetGlobalSpace.mockRejectedValue(
-          new Error('No spaces found in organization'),
-        );
+    it('returns specific step content for drafting', async () => {
+      registerCreateRecipeTool(dependencies, mcpServer);
 
+      const result = await toolHandler({ step: 'drafting' });
+
+      expect(result).toEqual({
+        content: [
+          {
+            type: 'text',
+            text: expect.stringContaining(
+              '# Step 2 · Draft and Iterate with the User',
+            ),
+          },
+        ],
+      });
+    });
+
+    it('returns specific step content for finalization', async () => {
+      registerCreateRecipeTool(dependencies, mcpServer);
+
+      const result = await toolHandler({ step: 'finalization' });
+
+      expect(result).toEqual({
+        content: [
+          {
+            type: 'text',
+            text: expect.stringContaining('# Step 3 · Finalization Prep'),
+          },
+        ],
+      });
+    });
+
+    it('returns error message for invalid step name', async () => {
+      registerCreateRecipeTool(dependencies, mcpServer);
+
+      const result = await toolHandler({ step: 'invalid-step' });
+
+      expect(result).toEqual({
+        content: [
+          {
+            type: 'text',
+            text: "Unknown workflow step 'invalid-step'. Available steps: initial-request, drafting, finalization",
+          },
+        ],
+      });
+    });
+
+    describe('when userContext is available', () => {
+      it('tracks analytics event with correct step', async () => {
         registerCreateRecipeTool(dependencies, mcpServer);
 
-        await expect(
-          toolHandler({
-            name: 'No Space Recipe',
-            summary: 'This should fail due to missing space',
-            whenToUse: ['When no space exists'],
-            contextValidationCheckpoints: ['Space should exist'],
-            steps: [
-              {
-                name: 'Fail',
-                description: 'This will fail',
-              },
-            ],
-          }),
-        ).rejects.toThrow('No spaces found in organization');
+        await toolHandler({ step: 'drafting' });
+
+        expect(mockAnalyticsAdapter.trackEvent).toHaveBeenCalledWith(
+          'user-123',
+          'org-123',
+          'mcp_tool_call',
+          { tool: 'create_recipe', step: 'drafting' },
+        );
+      });
+    });
+
+    describe('when userContext is missing', () => {
+      it('does not track analytics', async () => {
+        dependencies.userContext = undefined;
+        registerCreateRecipeTool(dependencies, mcpServer);
+
+        const result = await toolHandler({ step: 'initial-request' });
+
+        expect(mockAnalyticsAdapter.trackEvent).not.toHaveBeenCalled();
+        expect(result).toEqual({
+          content: [
+            {
+              type: 'text',
+              text: expect.stringContaining(
+                '# Step 1 · Capture and Clarify the Request',
+              ),
+            },
+          ],
+        });
+      });
+    });
+
+    describe('when no step provided', () => {
+      it("defaults to 'initial-request'", async () => {
+        registerCreateRecipeTool(dependencies, mcpServer);
+
+        await toolHandler({});
+
+        expect(mockAnalyticsAdapter.trackEvent).toHaveBeenCalledWith(
+          'user-123',
+          'org-123',
+          'mcp_tool_call',
+          { tool: 'create_recipe', step: 'initial-request' },
+        );
+      });
+    });
+
+    it('tracks analytics with different steps for each valid step', async () => {
+      registerCreateRecipeTool(dependencies, mcpServer);
+
+      const steps = ['initial-request', 'drafting', 'finalization'];
+
+      for (const step of steps) {
+        mockAnalyticsAdapter.trackEvent.mockClear();
+        await toolHandler({ step });
+        expect(mockAnalyticsAdapter.trackEvent).toHaveBeenCalledWith(
+          'user-123',
+          'org-123',
+          'mcp_tool_call',
+          { tool: 'create_recipe', step },
+        );
+      }
+    });
+
+    describe('when userContext is missing for default step', () => {
+      it('continues to work', async () => {
+        dependencies.userContext = undefined;
+        registerCreateRecipeTool(dependencies, mcpServer);
+
+        const result = await toolHandler({});
+
+        expect(mockAnalyticsAdapter.trackEvent).not.toHaveBeenCalled();
+        expect(result).toEqual({
+          content: [
+            {
+              type: 'text',
+              text: expect.stringContaining(
+                '# Step 1 · Capture and Clarify the Request',
+              ),
+            },
+          ],
+        });
       });
     });
   });

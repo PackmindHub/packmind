@@ -7,11 +7,10 @@ export function registerListStandardsTool(
   dependencies: ToolDependencies,
   mcpServer: McpServer,
 ) {
-  const { fastify, userContext, analyticsAdapter, mcpToolPrefix } =
-    dependencies;
+  const { fastify, userContext, analyticsAdapter } = dependencies;
 
   mcpServer.tool(
-    `${mcpToolPrefix}_list_standards`,
+    `list_standards`,
     'Get a list of current standards in Packmind.',
     {},
     async () => {
@@ -59,7 +58,7 @@ export function registerListStandardsTool(
           createUserId(userContext.userId),
           createOrganizationId(userContext.organizationId),
           'mcp_tool_call',
-          { tool: `${mcpToolPrefix}_list_standards` },
+          { tool: `list_standards` },
         );
 
         return {

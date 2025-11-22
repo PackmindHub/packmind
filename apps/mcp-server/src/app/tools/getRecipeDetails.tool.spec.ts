@@ -42,7 +42,7 @@ describe('getRecipeDetails.tool', () => {
 
     mcpServer = {
       tool: jest.fn((name, description, schema, handler) => {
-        if (name === 'packmind_get_recipe_details') {
+        if (name === 'get_recipe_details') {
           toolHandler = handler;
         }
       }),
@@ -57,7 +57,7 @@ describe('getRecipeDetails.tool', () => {
     registerGetRecipeDetailsTool(dependencies, mcpServer);
 
     expect(mcpServer.tool).toHaveBeenCalledWith(
-      'packmind_get_recipe_details',
+      'get_recipe_details',
       'Get the full content of a recipe by its slug.',
       expect.any(Object),
       expect.any(Function),
@@ -140,7 +140,7 @@ describe('getRecipeDetails.tool', () => {
       'user-123',
       'org-123',
       'mcp_tool_call',
-      { tool: 'packmind_get_recipe_details', recipeSlug: 'test-recipe' },
+      { tool: 'get_recipe_details', recipeSlug: 'test-recipe' },
     );
   });
 

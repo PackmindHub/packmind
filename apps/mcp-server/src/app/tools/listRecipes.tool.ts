@@ -7,11 +7,10 @@ export function registerListRecipesTool(
   dependencies: ToolDependencies,
   mcpServer: McpServer,
 ) {
-  const { fastify, userContext, analyticsAdapter, mcpToolPrefix } =
-    dependencies;
+  const { fastify, userContext, analyticsAdapter } = dependencies;
 
   mcpServer.tool(
-    `${mcpToolPrefix}_list_recipes`,
+    `list_recipes`,
     'Get a list of current recipes in Packmind.',
     {},
     async () => {
@@ -57,7 +56,7 @@ export function registerListRecipesTool(
           createUserId(userContext.userId),
           createOrganizationId(userContext.organizationId),
           'mcp_tool_call',
-          { tool: `${mcpToolPrefix}_list_recipes` },
+          { tool: `list_recipes` },
         );
 
         return {

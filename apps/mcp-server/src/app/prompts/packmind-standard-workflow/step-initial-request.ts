@@ -21,7 +21,7 @@ You are the coding agent responsible for checking if a similar standard already 
   \`\`\`
 - Stop after asking the question. Do not suggest alternatives, modifications, or additional options.
 - Wait for the user's decision.
-- If the user confirms they want to proceed, continue to Step 2 by calling \`packmind_create_standard_workflow\` with:
+- If the user confirms they want to proceed, continue to Step 2 by calling \`packmind_save_standard_workflow\` with:
   \`\`\`json
   { "step": "clarify" }
   \`\`\`
@@ -29,7 +29,7 @@ You are the coding agent responsible for checking if a similar standard already 
 
 ### If No Similar Standards Exist:
 - Proceed directly to Step 2 without asking the user.
-- Call \`packmind_create_standard_workflow\` with:
+- Call \`packmind_save_standard_workflow\` with:
   \`\`\`json
   { "step": "clarify" }
   \`\`\`
@@ -45,7 +45,7 @@ Be conservative: only flag standards that truly overlap. Don't flag standards th
 
 ## Next Step
 
-Once you've checked for similar standards and either addressed the user's decision or confirmed there are none, call \`packmind_create_standard_workflow\` with:
+Once you've checked for similar standards and either addressed the user's decision or confirmed there are none, call \`packmind_save_standard_workflow\` with:
 \`\`\`json
 { "step": "clarify" }
 \`\`\`

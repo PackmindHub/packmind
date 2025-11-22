@@ -7,11 +7,10 @@ export function registerNotifyRecipeUsageTool(
   dependencies: ToolDependencies,
   mcpServer: McpServer,
 ) {
-  const { fastify, userContext, analyticsAdapter, mcpToolPrefix } =
-    dependencies;
+  const { fastify, userContext, analyticsAdapter } = dependencies;
 
   mcpServer.tool(
-    `${mcpToolPrefix}_notify_recipe_usage`,
+    `notify_recipe_usage`,
     'Notify a reusable coding recipe deployed with Packmind has been used by an AI Agent such as GitHub Copilot, Claude Code or Cursor.',
     {
       recipeSlugs: z
@@ -58,7 +57,7 @@ export function registerNotifyRecipeUsageTool(
           createUserId(userContext.userId),
           createOrganizationId(userContext.organizationId),
           'mcp_tool_call',
-          { tool: `${mcpToolPrefix}_notify_recipe_usage` },
+          { tool: `notify_recipe_usage` },
         );
 
         return {

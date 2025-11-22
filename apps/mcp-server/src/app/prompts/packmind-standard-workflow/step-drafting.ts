@@ -54,7 +54,7 @@ Now that the context is locked in, create the draft standard and iterate with th
 
 ## Next Step
 
-Once the user approves both rules AND examples, call \`packmind_create_standard_workflow\` with:
+Once the user approves both rules AND examples, call \`packmind_save_standard_workflow\` with:
 \`\`\`json
 { "step": "finalization" }
 \`\`\`

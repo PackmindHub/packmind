@@ -4,17 +4,17 @@ import { IEventTrackingPort } from '@packmind/types';
 import {
   registerCreateRecipeTool,
   registerNotifyRecipeUsageTool,
-  registerAddRuleToStandardTool,
+  registerSaveStandardRuleTool,
   registerListStandardsTool,
   registerGetStandardDetailsTool,
   registerListRecipesTool,
   registerGetRecipeDetailsTool,
   registerListPackagesTool,
   registerShowPackageTool,
-  registerCreateStandardWorkflowTool,
-  registerCreateRecipeWorkflowTool,
   registerCreateStandardTool,
-  registerAddRuleToStandardWorkflowTool,
+  registerSaveRecipeTool,
+  registerSaveStandardTool,
+  registerCreateStandardRuleTool,
   registerOnboardingTool,
 } from './index';
 import { ToolDependencies, UserContext } from './types';
@@ -93,35 +93,35 @@ describe('tools.integration', () => {
       // Register all tools
       registerCreateRecipeTool(dependencies, mcpServer);
       registerNotifyRecipeUsageTool(dependencies, mcpServer);
-      registerAddRuleToStandardTool(dependencies, mcpServer);
+      registerSaveStandardRuleTool(dependencies, mcpServer);
       registerListStandardsTool(dependencies, mcpServer);
       registerGetStandardDetailsTool(dependencies, mcpServer);
       registerListRecipesTool(dependencies, mcpServer);
       registerGetRecipeDetailsTool(dependencies, mcpServer);
       registerListPackagesTool(dependencies, mcpServer);
       registerShowPackageTool(dependencies, mcpServer);
-      registerCreateStandardWorkflowTool(dependencies, mcpServer);
-      registerCreateRecipeWorkflowTool(dependencies, mcpServer);
       registerCreateStandardTool(dependencies, mcpServer);
-      registerAddRuleToStandardWorkflowTool(dependencies, mcpServer);
+      registerSaveRecipeTool(dependencies, mcpServer);
+      registerSaveStandardTool(dependencies, mcpServer);
+      registerCreateStandardRuleTool(dependencies, mcpServer);
       registerOnboardingTool(dependencies, mcpServer);
 
       // Verify all expected tools are registered
       const expectedTools = [
-        'packmind_create_recipe',
-        'packmind_notify_recipe_usage',
-        'packmind_add_rule_to_standard',
-        'packmind_list_standards',
-        'packmind_get_standard_details',
-        'packmind_list_recipes',
-        'packmind_get_recipe_details',
-        'packmind_list_packages',
-        'packmind_get_package_details',
-        'packmind_create_standard_workflow',
-        'packmind_create_recipe_workflow',
-        'packmind_create_standard',
-        'packmind_add_rule_to_standard_workflow',
-        'packmind_onboarding',
+        'create_recipe',
+        'notify_recipe_usage',
+        'save_standard_rule',
+        'list_standards',
+        'get_standard_details',
+        'list_recipes',
+        'get_recipe_details',
+        'list_packages',
+        'get_package_details',
+        'create_standard',
+        'save_recipe',
+        'save_standard',
+        'create_standard_rule',
+        'onboarding',
       ];
 
       expect(registeredTools.size).toBe(14);
@@ -134,17 +134,17 @@ describe('tools.integration', () => {
       // Register all tools
       registerCreateRecipeTool(dependencies, mcpServer);
       registerNotifyRecipeUsageTool(dependencies, mcpServer);
-      registerAddRuleToStandardTool(dependencies, mcpServer);
+      registerSaveStandardRuleTool(dependencies, mcpServer);
       registerListStandardsTool(dependencies, mcpServer);
       registerGetStandardDetailsTool(dependencies, mcpServer);
       registerListRecipesTool(dependencies, mcpServer);
       registerGetRecipeDetailsTool(dependencies, mcpServer);
       registerListPackagesTool(dependencies, mcpServer);
       registerShowPackageTool(dependencies, mcpServer);
-      registerCreateStandardWorkflowTool(dependencies, mcpServer);
-      registerCreateRecipeWorkflowTool(dependencies, mcpServer);
       registerCreateStandardTool(dependencies, mcpServer);
-      registerAddRuleToStandardWorkflowTool(dependencies, mcpServer);
+      registerSaveRecipeTool(dependencies, mcpServer);
+      registerSaveStandardTool(dependencies, mcpServer);
+      registerCreateStandardRuleTool(dependencies, mcpServer);
       registerOnboardingTool(dependencies, mcpServer);
 
       // Verify each tool has a non-empty description
@@ -154,18 +154,17 @@ describe('tools.integration', () => {
       });
     });
 
-    it('tools use the correct prefix', () => {
+    it('tools are registered without prefix', () => {
       // Register all tools
       registerListPackagesTool(dependencies, mcpServer);
 
-      // Verify tools use the prefix from dependencies
+      // Verify tools do not use prefix (prefix is automatically added by the system)
       registeredTools.forEach((tool, toolName) => {
-        expect(toolName.startsWith('packmind_')).toBe(true);
+        expect(toolName).not.toContain('packmind_');
       });
     });
 
-    it('tools respect custom prefix', () => {
-      dependencies.mcpToolPrefix = 'custom';
+    it('tools use simple names without prefix', () => {
       registeredTools.clear();
 
       mcpServer = {
@@ -176,7 +175,7 @@ describe('tools.integration', () => {
 
       registerListPackagesTool(dependencies, mcpServer);
 
-      expect(registeredTools.has('custom_list_packages')).toBe(true);
+      expect(registeredTools.has('list_packages')).toBe(true);
       expect(registeredTools.has('packmind_list_packages')).toBe(false);
     });
   });
@@ -185,7 +184,7 @@ describe('tools.integration', () => {
     it('tools can access fastify instance', () => {
       registerListPackagesTool(dependencies, mcpServer);
 
-      const tool = registeredTools.get('packmind_list_packages');
+      const tool = registeredTools.get('list_packages');
       expect(tool).toBeDefined();
       // The tool should have access to fastify through closure
     });
@@ -193,7 +192,7 @@ describe('tools.integration', () => {
     it('tools can access user context', () => {
       registerListPackagesTool(dependencies, mcpServer);
 
-      const tool = registeredTools.get('packmind_list_packages');
+      const tool = registeredTools.get('list_packages');
       expect(tool).toBeDefined();
       // The tool should have access to userContext through closure
     });
@@ -201,7 +200,7 @@ describe('tools.integration', () => {
     it('tools can access analytics adapter', () => {
       registerListPackagesTool(dependencies, mcpServer);
 
-      const tool = registeredTools.get('packmind_list_packages');
+      const tool = registeredTools.get('list_packages');
       expect(tool).toBeDefined();
       // The tool should have access to analyticsAdapter through closure
     });
@@ -209,7 +208,7 @@ describe('tools.integration', () => {
     it('tools can access logger', () => {
       registerListPackagesTool(dependencies, mcpServer);
 
-      const tool = registeredTools.get('packmind_list_packages');
+      const tool = registeredTools.get('list_packages');
       expect(tool).toBeDefined();
       // The tool should have access to logger through closure
     });
@@ -222,11 +221,11 @@ describe('tools.integration', () => {
       registerShowPackageTool(dependencies, mcpServer);
 
       expect(registeredTools.size).toBe(3);
-      expect(registeredTools.get('packmind_create_recipe')?.handler).not.toBe(
-        registeredTools.get('packmind_list_packages')?.handler,
+      expect(registeredTools.get('create_recipe')?.handler).not.toBe(
+        registeredTools.get('list_packages')?.handler,
       );
-      expect(registeredTools.get('packmind_list_packages')?.handler).not.toBe(
-        registeredTools.get('packmind_get_package_details')?.handler,
+      expect(registeredTools.get('list_packages')?.handler).not.toBe(
+        registeredTools.get('get_package_details')?.handler,
       );
     });
 

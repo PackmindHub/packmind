@@ -29,11 +29,9 @@ After extracting the standard content, determine if this standard should be adde
    - Skip package selection entirely (no need to prompt the user)
 6. If user selects packages, include their slugs in the \`packageSlugs\` parameter
 
-**Note:** The user can always add the standard to packages later using the \`packmind_add_standard_to_packages\` tool.
-
 ## Final Call
 
-When ready, call \`packmind_create_standard\` with:
+When ready, call \`packmind_save_standard\` with:
 \`\`\`json
 {
   "name": "...",
@@ -55,7 +53,7 @@ When ready, call \`packmind_create_standard\` with:
 }
 \`\`\`
 
-If the user wants to add the standard to packages later, they can use the \`packmind_add_standard_to_packages\` tool.
+If the user wants to add the standard to packages later, they can use the \`REMOVED_TOOL\` tool.
 
 The tool will create the standard and respond with wrap-up guidance for your final message.`;
 
