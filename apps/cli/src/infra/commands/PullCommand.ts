@@ -110,7 +110,21 @@ export const pullCommand = command({
     }
 
     // Read existing config
-    const configPackages = await packmindCliHexa.readConfig(process.cwd());
+    let configPackages: string[];
+    try {
+      configPackages = await packmindCliHexa.readConfig(process.cwd());
+    } catch (error) {
+      console.error('\n❌ Error reading packmind.json:');
+      if (error instanceof Error) {
+        console.error(`   ${error.message}`);
+      } else {
+        console.error(`   ${String(error)}`);
+      }
+      console.error(
+        '\n💡 Please fix the packmind.json file or delete it to continue.',
+      );
+      process.exit(1);
+    }
 
     // Merge config packages with command line args
     const allPackages = [...new Set([...configPackages, ...packagesSlugs])];
