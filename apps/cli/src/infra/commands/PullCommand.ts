@@ -158,6 +158,13 @@ export const pullCommand = command({
     }
 
     try {
+      // Show fetching message
+      const packageCount = allPackages.length;
+      const packageWord = packageCount === 1 ? 'package' : 'packages';
+      console.log(
+        `Fetching ${packageCount} ${packageWord}: ${allPackages.join(', ')}...`,
+      );
+
       // Execute the pull operation to get counts first
       const result = await packmindCliHexa.pullData({
         baseDirectory: process.cwd(),
