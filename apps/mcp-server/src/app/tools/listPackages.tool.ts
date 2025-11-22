@@ -6,11 +6,10 @@ export function registerListPackagesTool(
   dependencies: ToolDependencies,
   mcpServer: McpServer,
 ) {
-  const { fastify, userContext, analyticsAdapter, mcpToolPrefix } =
-    dependencies;
+  const { fastify, userContext, analyticsAdapter } = dependencies;
 
   mcpServer.tool(
-    `${mcpToolPrefix}_list_packages`,
+    `list_packages`,
     'Get a list of all available packages in Packmind. Packages are collections of recipes and standards that can be pulled together.',
     {},
     async () => {
@@ -64,7 +63,7 @@ export function registerListPackagesTool(
           createUserId(userContext.userId),
           createOrganizationId(userContext.organizationId),
           'mcp_tool_call',
-          { tool: `${mcpToolPrefix}_list_packages` },
+          { tool: `list_packages` },
         );
 
         return {

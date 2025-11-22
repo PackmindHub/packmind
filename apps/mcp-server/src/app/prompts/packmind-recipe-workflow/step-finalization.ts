@@ -37,11 +37,9 @@ After extracting the recipe content, determine if this recipe should be added to
    - Skip package selection entirely (no need to prompt the user)
 6. If user selects packages, include their slugs in the \`packageSlugs\` parameter
 
-**Note:** The user can always add the recipe to packages later using the \`packmind_add_recipe_to_packages\` tool.
-
 ## Final Call
 
-When ready, call \`packmind_create_recipe\` with:
+When ready, call \`packmind_save_recipe\` with:
 \`\`\`json
 {
   "name": "...",
@@ -58,8 +56,6 @@ When ready, call \`packmind_create_recipe\` with:
   "packageSlugs": ["package-slug-1", "package-slug-2"]  // Optional
 }
 \`\`\`
-
-If the user wants to add the recipe to packages later, they can use the \`packmind_add_recipe_to_packages\` tool.
 
 The tool will create the recipe and respond with wrap-up guidance for your final message.`;
 

@@ -33,7 +33,7 @@ The AI agent will automatically follow the **recipe creation workflow** which gu
    - **When to use** scenarios - Specific situations where the recipe applies
    - **Context validation checkpoints** - Questions to clarify before implementing
    - **Step-by-step instructions** - Atomic, repeatable actions with optional code examples
-3. **Finalization** - Once structured properly, the agent calls the `packmind_create_recipe` MCP tool
+3. **Finalization** - Once structured properly, the agent calls the `packmind_save_recipe` MCP tool
 
 Your new recipe will be available in the Packmind web app, in the **Recipes** panel.
 

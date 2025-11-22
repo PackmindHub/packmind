@@ -4,21 +4,19 @@ import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { IEventTrackingPort } from '@packmind/types';
 import { FastifyInstance } from 'fastify';
 import {
-  registerAddRecipeToPackagesTool,
-  registerAddStandardToPackagesTool,
-  registerCreateRecipeTool,
+  registerSaveRecipeTool,
   registerNotifyRecipeUsageTool,
-  registerAddRuleToStandardTool,
+  registerSaveStandardRuleTool,
   registerListStandardsTool,
   registerGetStandardDetailsTool,
   registerListRecipesTool,
   registerGetRecipeDetailsTool,
   registerListPackagesTool,
   registerShowPackageTool,
-  registerCreateStandardWorkflowTool,
-  registerCreateRecipeWorkflowTool,
   registerCreateStandardTool,
-  registerAddRuleToStandardWorkflowTool,
+  registerCreateRecipeTool,
+  registerSaveStandardTool,
+  registerCreateStandardRuleTool,
   registerOnboardingTool,
 } from './tools';
 import { UserContext } from './tools/types';
@@ -69,21 +67,19 @@ export function createMCPServer(
   };
 
   // Register all tools
-  registerAddRecipeToPackagesTool(toolDependencies, mcpServer);
-  registerAddStandardToPackagesTool(toolDependencies, mcpServer);
-  registerCreateRecipeTool(toolDependencies, mcpServer);
+  registerSaveRecipeTool(toolDependencies, mcpServer);
   registerNotifyRecipeUsageTool(toolDependencies, mcpServer);
-  registerAddRuleToStandardTool(toolDependencies, mcpServer);
+  registerSaveStandardRuleTool(toolDependencies, mcpServer);
   registerListStandardsTool(toolDependencies, mcpServer);
   registerGetStandardDetailsTool(toolDependencies, mcpServer);
   registerListRecipesTool(toolDependencies, mcpServer);
   registerGetRecipeDetailsTool(toolDependencies, mcpServer);
   registerListPackagesTool(toolDependencies, mcpServer);
   registerShowPackageTool(toolDependencies, mcpServer);
-  registerCreateStandardWorkflowTool(toolDependencies, mcpServer);
-  registerCreateRecipeWorkflowTool(toolDependencies, mcpServer);
   registerCreateStandardTool(toolDependencies, mcpServer);
-  registerAddRuleToStandardWorkflowTool(toolDependencies, mcpServer);
+  registerCreateRecipeTool(toolDependencies, mcpServer);
+  registerSaveStandardTool(toolDependencies, mcpServer);
+  registerCreateStandardRuleTool(toolDependencies, mcpServer);
   registerOnboardingTool(toolDependencies, mcpServer);
 
   return mcpServer;

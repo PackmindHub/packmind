@@ -55,7 +55,7 @@ describe('onboarding.tool', () => {
     beforeEach(() => {
       (mcpServer.tool as jest.Mock).mockImplementation(
         (name, description, schema, handler) => {
-          if (name === 'packmind_onboarding') {
+          if (name === 'onboarding') {
             toolHandler = handler;
           }
         },
@@ -66,7 +66,7 @@ describe('onboarding.tool', () => {
       registerOnboardingTool(dependencies, mcpServer);
 
       expect(mcpServer.tool).toHaveBeenCalledWith(
-        'packmind_onboarding',
+        'onboarding',
         'Get onboarding workflows for coding standards creation. Returns mode selection if no workflow specified, or specific workflow content.',
         expect.any(Object),
         expect.any(Function),
@@ -200,7 +200,7 @@ describe('onboarding.tool', () => {
           'user-123',
           'org-123',
           'mcp_tool_call',
-          { tool: 'packmind_onboarding', step: 'codebase-analysis' },
+          { tool: 'onboarding', step: 'codebase-analysis' },
         );
       });
     });
@@ -215,7 +215,7 @@ describe('onboarding.tool', () => {
           'user-123',
           'org-123',
           'mcp_tool_call',
-          { tool: 'packmind_onboarding', step: 'mode-selection' },
+          { tool: 'onboarding', step: 'mode-selection' },
         );
       });
     });
@@ -317,7 +317,7 @@ describe('onboarding.tool', () => {
           'user-123',
           'org-123',
           'mcp_tool_call',
-          { tool: 'packmind_onboarding', step: workflow },
+          { tool: 'onboarding', step: workflow },
         );
       }
     });

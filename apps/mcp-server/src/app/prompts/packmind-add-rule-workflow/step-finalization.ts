@@ -19,7 +19,7 @@ The user approved the rule draft. Now add it to the standard using the MCP tool.
 
 ## Final Call
 
-Call \`packmind_add_rule_to_standard\` with:
+Call \`packmind_packmind_save_standard_rule\` with:
 \`\`\`json
 {
   "standardSlug": "...",

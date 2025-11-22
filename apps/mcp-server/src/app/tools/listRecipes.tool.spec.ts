@@ -47,7 +47,7 @@ describe('listRecipes.tool', () => {
 
     mcpServer = {
       tool: jest.fn((name, description, schema, handler) => {
-        if (name === 'packmind_list_recipes') {
+        if (name === 'list_recipes') {
           toolHandler = handler;
         }
       }),
@@ -62,7 +62,7 @@ describe('listRecipes.tool', () => {
     registerListRecipesTool(dependencies, mcpServer);
 
     expect(mcpServer.tool).toHaveBeenCalledWith(
-      'packmind_list_recipes',
+      'list_recipes',
       'Get a list of current recipes in Packmind.',
       {},
       expect.any(Function),
@@ -213,7 +213,7 @@ describe('listRecipes.tool', () => {
       'user-123',
       'org-123',
       'mcp_tool_call',
-      { tool: 'packmind_list_recipes' },
+      { tool: 'list_recipes' },
     );
   });
 

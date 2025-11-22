@@ -7,11 +7,10 @@ export function registerShowPackageTool(
   dependencies: ToolDependencies,
   mcpServer: McpServer,
 ) {
-  const { fastify, userContext, analyticsAdapter, mcpToolPrefix } =
-    dependencies;
+  const { fastify, userContext, analyticsAdapter } = dependencies;
 
   mcpServer.tool(
-    `${mcpToolPrefix}_get_package_details`,
+    `get_package_details`,
     'Get detailed information about a specific package including its recipes and standards.',
     {
       packageSlug: z
@@ -73,7 +72,7 @@ export function registerShowPackageTool(
           createUserId(userContext.userId),
           createOrganizationId(userContext.organizationId),
           'mcp_tool_call',
-          { tool: `${mcpToolPrefix}_get_package_details`, packageSlug },
+          { tool: `get_package_details`, packageSlug },
         );
 
         return {

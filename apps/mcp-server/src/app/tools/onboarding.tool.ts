@@ -23,10 +23,10 @@ export function registerOnboardingTool(
   dependencies: ToolDependencies,
   mcpServer: McpServer,
 ) {
-  const { userContext, analyticsAdapter, logger, mcpToolPrefix } = dependencies;
+  const { userContext, analyticsAdapter, logger } = dependencies;
 
   mcpServer.tool(
-    `${mcpToolPrefix}_onboarding`,
+    `onboarding`,
     'Get onboarding workflows for coding standards creation. Returns mode selection if no workflow specified, or specific workflow content.',
     {
       workflow: z
@@ -48,7 +48,7 @@ export function registerOnboardingTool(
             createOrganizationId(userContext.organizationId),
             'mcp_tool_call',
             {
-              tool: `${mcpToolPrefix}_onboarding`,
+              tool: `onboarding`,
               step: workflow || 'mode-selection',
             },
           );

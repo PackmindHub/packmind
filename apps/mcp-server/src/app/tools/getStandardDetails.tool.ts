@@ -7,11 +7,10 @@ export function registerGetStandardDetailsTool(
   dependencies: ToolDependencies,
   mcpServer: McpServer,
 ) {
-  const { fastify, userContext, analyticsAdapter, mcpToolPrefix } =
-    dependencies;
+  const { fastify, userContext, analyticsAdapter } = dependencies;
 
   mcpServer.tool(
-    `${mcpToolPrefix}_get_standard_details`,
+    `get_standard_details`,
     'Get the full content of a standard including its rules and examples by its slug.',
     {
       standardSlug: z
@@ -101,7 +100,7 @@ export function registerGetStandardDetailsTool(
           createUserId(userContext.userId),
           createOrganizationId(userContext.organizationId),
           'mcp_tool_call',
-          { tool: `${mcpToolPrefix}_get_standard_details`, standardSlug },
+          { tool: `get_standard_details`, standardSlug },
         );
 
         return {

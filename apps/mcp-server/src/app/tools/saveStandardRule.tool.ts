@@ -10,16 +10,15 @@ import {
 import { z } from 'zod';
 import { ToolDependencies } from './types';
 
-export function registerAddRuleToStandardTool(
+export function registerSaveStandardRuleTool(
   dependencies: ToolDependencies,
   mcpServer: McpServer,
 ) {
-  const { fastify, userContext, analyticsAdapter, logger, mcpToolPrefix } =
-    dependencies;
+  const { fastify, userContext, analyticsAdapter, logger } = dependencies;
 
   mcpServer.tool(
-    `${mcpToolPrefix}_add_rule_to_standard`,
-    'Add a new coding rule to an existing standard identified by its slug. Do not call this tool directly—you need to first use the tool packmind_add_rule_to_standard_workflow.',
+    `save_standard_rule`,
+    'Add a new coding rule to an existing standard identified by its slug. Do not call this tool directly—you need to first use the tool packmind_create_standard_rule.',
     {
       standardSlug: z
         .string()
@@ -100,7 +99,7 @@ export function registerAddRuleToStandardTool(
           createUserId(userContext.userId),
           createOrganizationId(userContext.organizationId),
           'mcp_tool_call',
-          { tool: `${mcpToolPrefix}_add_rule_to_standard` },
+          { tool: `save_standard_rule` },
         );
 
         return {

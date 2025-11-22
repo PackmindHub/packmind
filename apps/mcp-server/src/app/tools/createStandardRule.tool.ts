@@ -2,38 +2,38 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { createOrganizationId, createUserId } from '@packmind/types';
 import { z } from 'zod';
 import {
-  STANDARD_WORKFLOW_STEP_ORDER,
-  STANDARD_WORKFLOW_STEPS,
-  StandardWorkflowStep,
-} from '../prompts/packmind-standard-workflow';
+  ADD_RULE_WORKFLOW_STEP_ORDER,
+  ADD_RULE_WORKFLOW_STEPS,
+  AddRuleWorkflowStep,
+} from '../prompts/packmind-add-rule-workflow';
 import { ToolDependencies } from './types';
 
-const isStandardWorkflowStep = (value: string): value is StandardWorkflowStep =>
-  Object.prototype.hasOwnProperty.call(STANDARD_WORKFLOW_STEPS, value);
+const isAddRuleWorkflowStep = (value: string): value is AddRuleWorkflowStep =>
+  Object.prototype.hasOwnProperty.call(ADD_RULE_WORKFLOW_STEPS, value);
 
-export function registerCreateStandardWorkflowTool(
+export function registerCreateStandardRuleTool(
   dependencies: ToolDependencies,
   mcpServer: McpServer,
 ) {
-  const { userContext, analyticsAdapter, mcpToolPrefix } = dependencies;
+  const { userContext, analyticsAdapter } = dependencies;
 
-  const standardWorkflowStepSchema = z
-    .enum(STANDARD_WORKFLOW_STEP_ORDER)
+  const addRuleWorkflowStepSchema = z
+    .enum(ADD_RULE_WORKFLOW_STEP_ORDER)
     .describe(
       'Identifier of the workflow step to retrieve guidance for. Leave empty to start at the first step.',
     );
 
   mcpServer.tool(
-    `${mcpToolPrefix}_create_standard_workflow`,
-    'Get step-by-step guidance for the Packmind standard creation workflow. Provide an optional step to retrieve a specific stage.',
+    `create_standard_rule`,
+    'Get step-by-step guidance for adding a new rule to an existing Packmind standard. Provide an optional step to retrieve a specific stage.',
     {
-      step: standardWorkflowStepSchema.optional(),
+      step: addRuleWorkflowStepSchema.optional(),
     },
     async ({ step }) => {
       const requestedStep = step ?? 'initial-request';
 
-      if (!isStandardWorkflowStep(requestedStep)) {
-        const availableSteps = Object.keys(STANDARD_WORKFLOW_STEPS).join(', ');
+      if (!isAddRuleWorkflowStep(requestedStep)) {
+        const availableSteps = Object.keys(ADD_RULE_WORKFLOW_STEPS).join(', ');
         return {
           content: [
             {
@@ -51,7 +51,7 @@ export function registerCreateStandardWorkflowTool(
           createOrganizationId(userContext.organizationId),
           'mcp_tool_call',
           {
-            tool: `${mcpToolPrefix}_create_standard_workflow`,
+            tool: `create_standard_rule`,
             step: requestedStep,
           },
         );
@@ -61,7 +61,7 @@ export function registerCreateStandardWorkflowTool(
         content: [
           {
             type: 'text',
-            text: STANDARD_WORKFLOW_STEPS[requestedStep],
+            text: ADD_RULE_WORKFLOW_STEPS[requestedStep],
           },
         ],
       };

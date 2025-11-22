@@ -47,7 +47,7 @@ describe('listStandards.tool', () => {
 
     mcpServer = {
       tool: jest.fn((name, description, schema, handler) => {
-        if (name === 'packmind_list_standards') {
+        if (name === 'list_standards') {
           toolHandler = handler;
         }
       }),
@@ -62,7 +62,7 @@ describe('listStandards.tool', () => {
     registerListStandardsTool(dependencies, mcpServer);
 
     expect(mcpServer.tool).toHaveBeenCalledWith(
-      'packmind_list_standards',
+      'list_standards',
       'Get a list of current standards in Packmind.',
       {},
       expect.any(Function),
@@ -213,7 +213,7 @@ describe('listStandards.tool', () => {
       'user-123',
       'org-123',
       'mcp_tool_call',
-      { tool: 'packmind_list_standards' },
+      { tool: 'list_standards' },
     );
   });
 
