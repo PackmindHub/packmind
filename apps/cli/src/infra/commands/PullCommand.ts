@@ -148,11 +148,9 @@ export const pullCommand = command({
       process.exit(0);
     }
 
-    // Log config status
-    if (configExists) {
-      console.log('INFO using packmind.json');
-    } else if (packagesSlugs.length > 0) {
-      console.log('INFO packmind.json not found, initializing');
+    // Log config status only if initializing
+    if (!configExists && packagesSlugs.length > 0) {
+      console.log('INFO initializing packmind.json');
     }
 
     try {

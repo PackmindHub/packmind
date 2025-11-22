@@ -179,7 +179,7 @@ export class PackmindGateway implements IPackmindGateway {
       }
 
       throw new Error(
-        `Failed to pull content: Error: ${err?.message || JSON.stringify(error)}`,
+        `Failed to fetch content: Error: ${err?.message || JSON.stringify(error)}`,
       );
     }
   };
