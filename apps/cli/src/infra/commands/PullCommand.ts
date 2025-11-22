@@ -116,13 +116,11 @@ export const pullCommand = command({
       configPackages = await packmindCliHexa.readConfig(process.cwd());
       configExists = configPackages.length > 0;
     } catch (error) {
-      console.error('ERR! code EJSONPARSE');
-      console.error('ERR! Failed to parse packmind.json\n');
-      console.error('❌ Error reading packmind.json:');
+      console.error('ERROR Failed to parse packmind.json');
       if (error instanceof Error) {
-        console.error(`   ${error.message}`);
+        console.error(`ERROR ${error.message}`);
       } else {
-        console.error(`   ${String(error)}`);
+        console.error(`ERROR ${String(error)}`);
       }
       console.error(
         '\n💡 Please fix the packmind.json file or delete it to continue.',
@@ -152,9 +150,9 @@ export const pullCommand = command({
 
     // Log config status
     if (configExists) {
-      console.log('info using packmind.json');
+      console.log('INFO using packmind.json');
     } else if (packagesSlugs.length > 0) {
-      console.log('WARN config packmind.json not found, creating one');
+      console.log('INFO packmind.json not found, initializing');
     }
 
     try {
@@ -177,10 +175,9 @@ export const pullCommand = command({
       );
 
       // Display results
-      console.log('\n✅ Installation completed successfully!');
-      console.log(`   Files created: ${result.filesCreated}`);
-      console.log(`   Files updated: ${result.filesUpdated}`);
-      console.log(`   Files deleted: ${result.filesDeleted}`);
+      console.log(
+        `\nadded ${result.filesCreated} files, changed ${result.filesUpdated} files, removed ${result.filesDeleted} files`,
+      );
 
       if (result.errors.length > 0) {
         console.log('\n⚠️  Errors encountered:');
