@@ -23,22 +23,22 @@ export class ConfigFileRepository {
 
       // Validate structure
       if (!config.packages || typeof config.packages !== 'object') {
-        console.warn(
+        throw new Error(
           'Invalid packmind.json structure. Expected { packages: { ... } }',
         );
-        return null;
       }
 
       return config;
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-        // File doesn't exist
+        // File doesn't exist - this is OK
         return null;
       }
 
-      // Malformed JSON or other error
-      console.warn('Failed to read packmind.json:', (error as Error).message);
-      return null;
+      // Malformed JSON or invalid structure - throw error to stop execution
+      throw new Error(
+        `Failed to read packmind.json: ${(error as Error).message}`,
+      );
     }
   }
 }

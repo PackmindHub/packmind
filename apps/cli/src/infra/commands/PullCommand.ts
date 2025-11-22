@@ -110,39 +110,72 @@ export const pullCommand = command({
     }
 
     // Read existing config
-    const configPackages = await packmindCliHexa.readConfig(process.cwd());
+    let configPackages: string[];
+    let configExists = false;
+    try {
+      configPackages = await packmindCliHexa.readConfig(process.cwd());
+      configExists = configPackages.length > 0;
+    } catch (error) {
+      console.error('ERROR Failed to parse packmind.json');
+      if (error instanceof Error) {
+        console.error(`ERROR ${error.message}`);
+      } else {
+        console.error(`ERROR ${String(error)}`);
+      }
+      console.error(
+        '\n💡 Please fix the packmind.json file or delete it to continue.',
+      );
+      process.exit(1);
+    }
 
     // Merge config packages with command line args
     const allPackages = [...new Set([...configPackages, ...packagesSlugs])];
 
     // Show help if no packages from either source
     if (allPackages.length === 0) {
-      console.log('Usage: packmind-cli pull <package-slug> [package-slug...]');
-      console.log('       packmind-cli pull --list');
+      console.log('WARN config packmind.json not found');
+      console.log(
+        'Usage: packmind-cli install <package-slug> [package-slug...]',
+      );
+      console.log('       packmind-cli install --list');
       console.log('');
       console.log('Examples:');
-      console.log('  packmind-cli pull backend');
-      console.log('  packmind-cli pull backend frontend');
-      console.log('  packmind-cli pull --list  # Show available packages');
+      console.log('  packmind-cli install backend');
+      console.log('  packmind-cli install backend frontend');
+      console.log('  packmind-cli install --list  # Show available packages');
       console.log('');
-      console.log('Pull recipes and standards from the specified packages.');
+      console.log('Install recipes and standards from the specified packages.');
       process.exit(0);
     }
 
-    console.log(`Pulling content from packages: ${allPackages.join(', ')}...`);
+    // Log config status only if initializing
+    if (!configExists && packagesSlugs.length > 0) {
+      console.log('INFO initializing packmind.json');
+    }
 
     try {
-      // Execute the pull operation
+      // Show fetching message
+      const packageCount = allPackages.length;
+      const packageWord = packageCount === 1 ? 'package' : 'packages';
+      console.log(
+        `Fetching ${packageCount} ${packageWord}: ${allPackages.join(', ')}...`,
+      );
+
+      // Execute the pull operation to get counts first
       const result = await packmindCliHexa.pullData({
         baseDirectory: process.cwd(),
         packagesSlugs: allPackages,
       });
 
+      // Show installation message with counts
+      console.log(
+        `Installing ${result.recipesCount} recipes and ${result.standardsCount} standards...`,
+      );
+
       // Display results
-      console.log('\n✅ Pull completed successfully!');
-      console.log(`   Files created: ${result.filesCreated}`);
-      console.log(`   Files updated: ${result.filesUpdated}`);
-      console.log(`   Files deleted: ${result.filesDeleted}`);
+      console.log(
+        `\nadded ${result.filesCreated} files, changed ${result.filesUpdated} files, removed ${result.filesDeleted} files`,
+      );
 
       if (result.errors.length > 0) {
         console.log('\n⚠️  Errors encountered:');
@@ -154,9 +187,8 @@ export const pullCommand = command({
 
       // Write config with all packages that were successfully pulled
       await packmindCliHexa.writeConfig(process.cwd(), allPackages);
-      console.log('✓ Updated packmind.json');
     } catch (error) {
-      console.error('\n❌ Failed to pull content:');
+      console.error('\n❌ Failed to install content:');
 
       if (error instanceof Error) {
         const errorObj = error as Error & { statusCode?: number };
@@ -165,7 +197,7 @@ export const pullCommand = command({
         if (errorObj.statusCode === 404) {
           console.error(`   ${errorObj.message}`);
           console.error(
-            '\n💡 Use `packmind-cli pull --list` to show available packages',
+            '\n💡 Use `packmind-cli install --list` to show available packages',
           );
         } else {
           console.error(`   ${errorObj.message}`);

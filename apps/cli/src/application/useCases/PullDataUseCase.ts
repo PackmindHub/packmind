@@ -19,11 +19,28 @@ export class PullDataUseCase implements IPullDataUseCase {
       filesUpdated: 0,
       filesDeleted: 0,
       errors: [],
+      recipesCount: 0,
+      standardsCount: 0,
     };
     // Fetch data from the gateway
     const response = await this.packmindGateway.getPullData({
       packagesSlugs: command.packagesSlugs,
     });
+
+    // Count recipes and standards from the response
+    for (const file of response.fileUpdates.createOrUpdate) {
+      if (
+        file.path.includes('.packmind/recipes/') &&
+        file.path.endsWith('.md')
+      ) {
+        result.recipesCount++;
+      } else if (
+        file.path.includes('.packmind/standards/') &&
+        file.path.endsWith('.md')
+      ) {
+        result.standardsCount++;
+      }
+    }
 
     try {
       // Process createOrUpdate files
