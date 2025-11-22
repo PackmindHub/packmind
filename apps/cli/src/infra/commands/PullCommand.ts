@@ -157,19 +157,20 @@ export const pullCommand = command({
       console.log('WARN config packmind.json not found, creating one');
     }
 
-    console.log(`Installing packages: ${allPackages.join(', ')}...`);
-
     try {
-      // Execute the pull operation
+      // Execute the pull operation to get counts first
       const result = await packmindCliHexa.pullData({
         baseDirectory: process.cwd(),
         packagesSlugs: allPackages,
       });
 
+      // Show installation message with counts
+      console.log(
+        `Installing ${result.recipesCount} recipes and ${result.standardsCount} standards...`,
+      );
+
       // Display results
       console.log('\n✅ Installation completed successfully!');
-      console.log(`   Recipes: ${result.recipesCount}`);
-      console.log(`   Standards: ${result.standardsCount}`);
       console.log(`   Files created: ${result.filesCreated}`);
       console.log(`   Files updated: ${result.filesUpdated}`);
       console.log(`   Files deleted: ${result.filesDeleted}`);

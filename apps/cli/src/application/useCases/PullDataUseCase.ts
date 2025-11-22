@@ -27,24 +27,26 @@ export class PullDataUseCase implements IPullDataUseCase {
       packagesSlugs: command.packagesSlugs,
     });
 
+    // Count recipes and standards from the response
+    for (const file of response.fileUpdates.createOrUpdate) {
+      if (
+        file.path.includes('.packmind/recipes/') &&
+        file.path.endsWith('.md')
+      ) {
+        result.recipesCount++;
+      } else if (
+        file.path.includes('.packmind/standards/') &&
+        file.path.endsWith('.md')
+      ) {
+        result.standardsCount++;
+      }
+    }
+
     try {
       // Process createOrUpdate files
       for (const file of response.fileUpdates.createOrUpdate) {
         try {
           await this.createOrUpdateFile(baseDirectory, file, result);
-
-          // Count recipes and standards
-          if (
-            file.path.includes('.packmind/recipes/') &&
-            file.path.endsWith('.md')
-          ) {
-            result.recipesCount++;
-          } else if (
-            file.path.includes('.packmind/standards/') &&
-            file.path.endsWith('.md')
-          ) {
-            result.standardsCount++;
-          }
         } catch (error) {
           const errorMsg =
             error instanceof Error ? error.message : String(error);
