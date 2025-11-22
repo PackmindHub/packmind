@@ -64,10 +64,10 @@ Learn more in the [Deployment documentation](./deployment.md).
 
 AI agents can work with packages using these tools:
 
-- `packmind_list_packages` - View available packages
-- `packmind_get_package_details` - Inspect package contents
+- `list_packages` - View available packages
+- `get_package_details` - Inspect package contents
 
-When creating recipes or standards via MCP using `packmind_save_recipe` or `packmind_save_standard`, use the `packageSlugs` parameter to add them to packages automatically.
+When creating recipes or standards via MCP using `save_recipe` or `save_standard`, use the `packageSlugs` parameter to add them to packages automatically.
 
 See the [MCP Server reference](./mcp-server.md#packages-tools) for details.
 
