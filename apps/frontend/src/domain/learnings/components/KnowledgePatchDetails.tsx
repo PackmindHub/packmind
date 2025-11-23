@@ -26,6 +26,7 @@ import {
   useRejectKnowledgePatchMutation,
 } from '../api/queries/LearningsQueries';
 import { routes } from '../../../shared/utils/routes';
+import { StandardPatchDiff } from './StandardPatchDiff';
 
 interface KnowledgePatchDetailsProps {
   patchId: KnowledgePatchId;
@@ -91,6 +92,39 @@ export const KnowledgePatchDetails = ({
   const isNewArtifact =
     patch.patchType === KnowledgePatchType.NEW_STANDARD ||
     patch.patchType === KnowledgePatchType.NEW_RECIPE;
+  const isStandardUpdate =
+    patch.patchType === KnowledgePatchType.UPDATE_STANDARD;
+
+  // Parse original standard from diffOriginal for UPDATE_STANDARD patches
+  const parseOriginalStandard = () => {
+    if (!isStandardUpdate) return null;
+
+    const lines = patch.diffOriginal.split('\n');
+    const name = lines[0]?.replace('# ', '').trim() || '';
+    const descriptionStart = 1;
+    const rulesStart = lines.findIndex((l) => l.startsWith('## Rules'));
+    const description = lines
+      .slice(descriptionStart, rulesStart > 0 ? rulesStart : lines.length)
+      .join('\n')
+      .trim();
+
+    const rules: Array<{ id: string; content: string }> = [];
+    if (rulesStart > 0) {
+      const ruleLines = lines.slice(rulesStart + 1);
+      ruleLines.forEach((line) => {
+        if (line.startsWith('- ')) {
+          rules.push({
+            id: `rule-${rules.length}`,
+            content: line.replace('- ', '').trim(),
+          });
+        }
+      });
+    }
+
+    return { name, description, rules };
+  };
+
+  const originalStandard = parseOriginalStandard();
 
   return (
     <PMVStack align="stretch" gap={6}>
@@ -141,6 +175,23 @@ export const KnowledgePatchDetails = ({
           <MarkdownEditorProvider>
             <MarkdownEditor defaultValue={patch.diffModified} readOnly />
           </MarkdownEditorProvider>
+        ) : isStandardUpdate && originalStandard && patch.proposedChanges ? (
+          <StandardPatchDiff
+            proposedChanges={
+              patch.proposedChanges as unknown as {
+                standardId: string;
+                description?: string | null;
+                rules: {
+                  toKeep: string[];
+                  toUpdate: Array<{ ruleId: string; newContent: string }>;
+                  toDelete: string[];
+                  toAdd: Array<{ content: string }>;
+                };
+                rationale: string;
+              }
+            }
+            originalStandard={originalStandard}
+          />
         ) : (
           <PMDiffView
             original={
