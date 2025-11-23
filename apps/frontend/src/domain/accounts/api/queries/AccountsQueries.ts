@@ -5,7 +5,12 @@ import {
   GET_USER_STATUSES_KEY,
   GET_ONBOARDING_STATUS_KEY,
 } from '../queryKeys';
-import { UserId, UserOrganizationRole } from '@packmind/types';
+import {
+  UserId,
+  UserOrganizationRole,
+  createOrganizationId,
+} from '@packmind/types';
+import { useAuthContext } from '../../hooks/useAuthContext';
 
 const CREATE_ORGANIZATION_MUTATION_KEY = 'createOrganization';
 const INVITE_USERS_MUTATION_KEY = 'inviteUsers';
@@ -66,6 +71,7 @@ export const useInviteUsersMutation = () => {
 
 export const useChangeUserRoleMutation = () => {
   const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
 
   return useMutation({
     mutationKey: [CHANGE_USER_ROLE_MUTATION_KEY],
@@ -73,8 +79,15 @@ export const useChangeUserRoleMutation = () => {
       targetUserId: UserId;
       newRole: UserOrganizationRole;
     }) => {
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to change user role');
+      }
       const { targetUserId, newRole } = params;
-      return userGateway.changeUserRole(targetUserId, newRole);
+      return userGateway.changeUserRole({
+        organizationId: organization.id,
+        targetUserId,
+        newRole,
+      });
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({

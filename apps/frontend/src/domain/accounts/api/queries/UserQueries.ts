@@ -5,6 +5,7 @@ import {
   GET_USERS_IN_MY_ORGANIZATION_KEY,
   GET_USER_STATUSES_KEY,
 } from '../queryKeys';
+import { useAuthContext } from '../../hooks/useAuthContext';
 
 export const getMeQueryOptions = () => ({
   queryKey: GET_ME_KEY,
@@ -20,21 +21,35 @@ export const useGetMeQuery = () => {
 };
 
 export const useGetUsersInMyOrganizationQuery = () => {
+  const { organization } = useAuthContext();
+
   return useQuery({
-    queryKey: GET_USERS_IN_MY_ORGANIZATION_KEY,
+    queryKey: [...GET_USERS_IN_MY_ORGANIZATION_KEY, organization?.id],
     queryFn: () => {
-      return userGateway.getUsersInMyOrganization({});
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to fetch users');
+      }
+      return userGateway.getUsersInMyOrganization({
+        organizationId: organization.id,
+      });
     },
     retry: false,
+    enabled: !!organization?.id,
   });
 };
 
 export const useGetUserStatusesQuery = () => {
+  const { organization } = useAuthContext();
+
   return useQuery({
-    queryKey: GET_USER_STATUSES_KEY,
+    queryKey: [...GET_USER_STATUSES_KEY, organization?.id],
     queryFn: () => {
-      return userGateway.getUserStatuses();
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to fetch user statuses');
+      }
+      return userGateway.getUserStatuses({ organizationId: organization.id });
     },
     retry: false,
+    enabled: !!organization?.id,
   });
 };
