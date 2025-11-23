@@ -2,23 +2,109 @@ import React from 'react';
 import { PMBox, PMVStack, PMHeading, PMText, PMBadge } from '@packmind/ui';
 import * as Diff from 'diff';
 
-// Character-level diff highlighting in separate blocks
+// Word-level diff highlighting in separate blocks
 const renderInlineDiff = (oldText: string, newText: string) => {
-  const diff = Diff.diffChars(oldText, newText);
+  const diff = Diff.diffWords(oldText, newText);
 
-  const removedParts: string[] = [];
-  const addedParts: string[] = [];
-  const unchangedParts: string[] = [];
+  // Merge consecutive parts, including whitespace between same-type changes
+  const mergedDiff: Array<{
+    added?: boolean;
+    removed?: boolean;
+    value: string;
+  }> = [];
 
-  diff.forEach((part) => {
-    if (part.removed) {
-      removedParts.push(part.value);
-    } else if (part.added) {
-      addedParts.push(part.value);
+  let i = 0;
+  while (i < diff.length) {
+    const part = diff[i];
+    const partType = part.added
+      ? 'added'
+      : part.removed
+        ? 'removed'
+        : 'unchanged';
+
+    if (partType === 'added' || partType === 'removed') {
+      // Start accumulating this type
+      let accumulated = part.value;
+      let j = i + 1;
+
+      // Look ahead and merge same-type parts
+      // When accumulating 'added', we include whitespace and skip over 'removed' parts
+      // (and vice versa) since they appear in different views
+      const oppositeType = partType === 'added' ? 'removed' : 'added';
+
+      while (j < diff.length) {
+        const nextPart = diff[j];
+        const nextType = nextPart.added
+          ? 'added'
+          : nextPart.removed
+            ? 'removed'
+            : 'unchanged';
+
+        if (nextType === partType) {
+          // Same type, merge it
+          accumulated += nextPart.value;
+          j++;
+        } else if (
+          nextType === oppositeType ||
+          (nextType === 'unchanged' && /^\s+$/.test(nextPart.value))
+        ) {
+          // It's either the opposite type or whitespace
+          // Look ahead to see if our type continues
+          let k = j + 1;
+          let foundSameType = false;
+
+          while (k < diff.length) {
+            const peekPart = diff[k];
+            const peekType = peekPart.added
+              ? 'added'
+              : peekPart.removed
+                ? 'removed'
+                : 'unchanged';
+
+            if (peekType === partType) {
+              // Found same type ahead
+              foundSameType = true;
+              break;
+            } else if (
+              peekType !== oppositeType &&
+              (peekType !== 'unchanged' || !/^\s+$/.test(peekPart.value))
+            ) {
+              // Hit non-whitespace unchanged content, stop looking
+              break;
+            }
+            k++;
+          }
+
+          if (foundSameType) {
+            // Include everything from j to k (whitespace and opposite type)
+            while (j < k) {
+              accumulated += diff[j].value;
+              j++;
+            }
+          } else {
+            // No more of same type found, stop here
+            break;
+          }
+        } else {
+          // Hit non-whitespace unchanged content, stop
+          break;
+        }
+      }
+
+      mergedDiff.push({
+        added: partType === 'added',
+        removed: partType === 'removed',
+        value: accumulated,
+      });
+      i = j;
     } else {
-      unchangedParts.push(part.value);
+      // Unchanged part
+      mergedDiff.push({
+        value: part.value,
+      });
+      i++;
     }
-  });
+  }
 
   return (
     <PMVStack align="stretch" gap={2}>
@@ -26,7 +112,7 @@ const renderInlineDiff = (oldText: string, newText: string) => {
       <PMBox>
         <PMBadge mb={1}>Old</PMBadge>
         <PMText>
-          {diff.map((part, index) => {
+          {mergedDiff.map((part, index) => {
             if (part.removed) {
               return (
                 <PMBox
@@ -52,7 +138,7 @@ const renderInlineDiff = (oldText: string, newText: string) => {
       <PMBox>
         <PMBadge mb={1}>New</PMBadge>
         <PMText>
-          {diff.map((part, index) => {
+          {mergedDiff.map((part, index) => {
             if (part.added) {
               return (
                 <PMBox key={index} as="span" bg="green.100" px={0.5}>
