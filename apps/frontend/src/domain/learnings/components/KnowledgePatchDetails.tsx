@@ -10,6 +10,7 @@ import {
   PMBadge,
   PMAlert,
   PMDiffView,
+  PMTextArea,
 } from '@packmind/ui';
 import {
   KnowledgePatchId,
@@ -236,17 +237,11 @@ export const KnowledgePatchDetails = ({
               <PMText mb={2}>
                 Review Notes (optional for accept, required for reject):
               </PMText>
-              <textarea
+              <PMTextArea
                 value={reviewNotes}
                 onChange={(e) => setReviewNotes(e.target.value)}
                 placeholder="Add your review notes here..."
                 rows={4}
-                style={{
-                  width: '100%',
-                  padding: '8px',
-                  borderRadius: '4px',
-                  border: '1px solid #ccc',
-                }}
               />
             </PMBox>
 
