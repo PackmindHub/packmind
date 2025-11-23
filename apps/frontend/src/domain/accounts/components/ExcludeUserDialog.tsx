@@ -10,21 +10,19 @@ import {
   pmToaster,
 } from '@packmind/ui';
 import { LuUserMinus } from 'react-icons/lu';
-import { UserStatus, OrganizationId } from '@packmind/types';
+import { UserStatus } from '@packmind/types';
 import { useExcludeUserMutation } from '../api/queries/AccountsQueries';
 
 interface ExcludeUserDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   userStatus: UserStatus | null;
-  organizationId: OrganizationId;
 }
 
 export const ExcludeUserDialog: React.FC<ExcludeUserDialogProps> = ({
   open,
   onOpenChange,
   userStatus,
-  organizationId,
 }) => {
   const { mutateAsync: excludeUser, isPending } = useExcludeUserMutation();
 
@@ -33,8 +31,7 @@ export const ExcludeUserDialog: React.FC<ExcludeUserDialogProps> = ({
 
     try {
       await excludeUser({
-        orgId: organizationId,
-        userId: userStatus.userId,
+        targetUserId: userStatus.userId,
       });
 
       onOpenChange(false);

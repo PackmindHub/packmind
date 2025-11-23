@@ -47,16 +47,23 @@ export const useCreateOrganizationMutation = () => {
 
 export const useInviteUsersMutation = () => {
   const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
 
   return useMutation({
     mutationKey: [INVITE_USERS_MUTATION_KEY],
     mutationFn: async (params: {
-      orgId: string;
       emails: string[];
       role: UserOrganizationRole;
     }) => {
-      const { orgId, emails, role } = params;
-      return organizationGateway.inviteUsers(orgId, emails, role);
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to invite users');
+      }
+      const { emails, role } = params;
+      return organizationGateway.inviteUsers({
+        organizationId: organization.id,
+        emails,
+        role,
+      });
     },
     onSuccess: async (data) => {
       await queryClient.invalidateQueries({
@@ -99,12 +106,19 @@ export const useChangeUserRoleMutation = () => {
 
 export const useExcludeUserMutation = () => {
   const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
 
   return useMutation({
     mutationKey: [EXCLUDE_USER_MUTATION_KEY],
-    mutationFn: async (params: { orgId: string; userId: string }) => {
-      const { orgId, userId } = params;
-      return organizationGateway.excludeUser(orgId, userId);
+    mutationFn: async (params: { targetUserId: UserId }) => {
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to remove user');
+      }
+      const { targetUserId } = params;
+      return organizationGateway.removeUser({
+        organizationId: organization.id,
+        targetUserId,
+      });
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({

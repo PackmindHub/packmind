@@ -4,8 +4,11 @@ import {
   Param,
   Req,
   Patch,
+  Post,
+  Delete,
   Body,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 
 import { OrganizationId, UserId, UserOrganizationRole } from '@packmind/types';
@@ -16,6 +19,10 @@ import {
   ListOrganizationUserStatusesCommand,
   ListOrganizationUsersCommand,
   ChangeUserRoleCommand,
+  CreateInvitationsCommand,
+  CreateInvitationsResponse,
+  RemoveUserFromOrganizationCommand,
+  RemoveUserFromOrganizationResponse,
 } from '@packmind/accounts';
 import { UsersService } from './users.service';
 import { PackmindLogger } from '@packmind/logger';
@@ -163,6 +170,111 @@ export class UsersController {
           newRole,
           requesterId: request.user.userId,
           organizationId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Post('invite')
+  async inviteUsers(
+    @Param('orgId') organizationId: OrganizationId,
+    @Body() body: { emails: string[]; role: UserOrganizationRole },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<CreateInvitationsResponse> {
+    this.logger.info(
+      'POST /organizations/:orgId/users/invite - Inviting users',
+      {
+        organizationId,
+        requesterId: request.user.userId,
+        emailCount: Array.isArray(body?.emails) ? body.emails.length : 0,
+      },
+    );
+
+    try {
+      if (!Array.isArray(body?.emails)) {
+        throw new BadRequestException('emails must be an array of strings');
+      }
+
+      const command: CreateInvitationsCommand = {
+        userId: request.user.userId,
+        organizationId,
+        emails: body.emails,
+        role: body.role,
+      };
+      const response = await this.usersService.createInvitations(command);
+
+      this.logger.info(
+        'POST /organizations/:orgId/users/invite - Users invited successfully',
+        {
+          organizationId,
+          requesterId: request.user.userId,
+          createdCount: response.created.length,
+          skippedCount: response.skipped.length,
+        },
+      );
+
+      return response;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /organizations/:orgId/users/invite - Failed to invite users',
+        {
+          organizationId,
+          requesterId: request.user.userId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Delete(':userId')
+  async removeUser(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('userId') targetUserId: UserId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<RemoveUserFromOrganizationResponse> {
+    this.logger.info(
+      'DELETE /organizations/:orgId/users/:userId - Removing user from organization',
+      {
+        organizationId,
+        targetUserId,
+        requesterId: request.user.userId,
+      },
+    );
+
+    try {
+      const command: RemoveUserFromOrganizationCommand = {
+        userId: request.user.userId,
+        organizationId,
+        targetUserId,
+      };
+      const response =
+        await this.usersService.removeUserFromOrganization(command);
+
+      this.logger.info(
+        'DELETE /organizations/:orgId/users/:userId - User removed successfully',
+        {
+          organizationId,
+          targetUserId,
+          requesterId: request.user.userId,
+          removed: response.removed,
+        },
+      );
+
+      return response;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'DELETE /organizations/:orgId/users/:userId - Failed to remove user',
+        {
+          organizationId,
+          targetUserId,
+          requesterId: request.user.userId,
           error: errorMessage,
         },
       );
