@@ -118,7 +118,7 @@ const renderInlineDiff = (oldText: string, newText: string) => {
                 <PMBox
                   key={index}
                   as="span"
-                  bg="red.100"
+                  bg="feedback.error/10"
                   textDecoration="line-through"
                   px={0.5}
                 >
@@ -141,7 +141,7 @@ const renderInlineDiff = (oldText: string, newText: string) => {
           {mergedDiff.map((part, index) => {
             if (part.added) {
               return (
-                <PMBox key={index} as="span" bg="green.100" px={0.5}>
+                <PMBox key={index} as="span" bg="feedback.success/10" px={0.5}>
                   {part.value}
                 </PMBox>
               );
