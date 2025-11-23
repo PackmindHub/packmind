@@ -38,27 +38,22 @@ type ClassificationResult = {
   reasoning: string;
 };
 
+type RuleUpdate = {
+  ruleId: string;
+  newContent: string;
+};
+
+type NewRule = {
+  content: string;
+};
+
 type StandardEditResult = {
-  changes: {
-    name?: string | null;
-    description?: string | null;
-    rulesToAdd?: string[] | null;
-    rulesToUpdate?: Array<{ ruleId: string; content: string }> | null;
-    rulesToDelete?: string[] | null;
-    exampleChanges?: {
-      toAdd?: Array<{
-        lang: string;
-        positive: string;
-        negative: string;
-      }> | null;
-      toUpdate?: Array<{
-        exampleId: string;
-        lang: string;
-        positive: string;
-        negative: string;
-      }> | null;
-      toDelete?: string[] | null;
-    } | null;
+  description?: string | null;
+  rules: {
+    toKeep: string[]; // Array of ruleIds
+    toUpdate: RuleUpdate[];
+    toDelete: string[]; // Array of ruleIds
+    toAdd: NewRule[];
   };
   rationale: string;
 };
@@ -238,33 +233,33 @@ export class DistillationService {
       }));
       let modifiedRules = [...originalRules];
 
-      if (
-        analysis.changes.rulesToAdd &&
-        analysis.changes.rulesToAdd.length > 0
-      ) {
-        modifiedRules.push(
-          ...analysis.changes.rulesToAdd.map((content, idx) => ({
-            id: createRuleId(`new-${idx}`),
-            content,
-          })),
-        );
-      }
-
-      if (analysis.changes.rulesToUpdate) {
-        for (const update of analysis.changes.rulesToUpdate) {
+      // Apply rule updates
+      if (analysis.rules.toUpdate.length > 0) {
+        for (const update of analysis.rules.toUpdate) {
           const idx = modifiedRules.findIndex((r) => r.id === update.ruleId);
           if (idx !== -1) {
             modifiedRules[idx] = {
               id: createRuleId(update.ruleId),
-              content: update.content,
+              content: update.newContent,
             };
           }
         }
       }
 
-      if (analysis.changes.rulesToDelete) {
+      // Apply rule deletions
+      if (analysis.rules.toDelete.length > 0) {
         modifiedRules = modifiedRules.filter(
-          (r) => !analysis.changes.rulesToDelete?.includes(r.id as string),
+          (r) => !analysis.rules.toDelete.includes(r.id as string),
+        );
+      }
+
+      // Apply rule additions
+      if (analysis.rules.toAdd.length > 0) {
+        modifiedRules.push(
+          ...analysis.rules.toAdd.map((newRule, idx) => ({
+            id: createRuleId(`new-${idx}`),
+            content: newRule.content,
+          })),
         );
       }
 
@@ -274,8 +269,8 @@ export class DistillationService {
         originalRules,
       );
       const diffModified = buildStandardDoc(
-        analysis.changes.name || standard.name,
-        analysis.changes.description || standard.description,
+        standard.name,
+        analysis.description || standard.description,
         modifiedRules,
       );
 
@@ -284,8 +279,7 @@ export class DistillationService {
         patchType: KnowledgePatchType.UPDATE_STANDARD,
         proposedChanges: {
           standardId: standard.id,
-          changes: analysis.changes,
-          rationale: analysis.rationale,
+          ...analysis,
         },
         diffOriginal,
         diffModified,

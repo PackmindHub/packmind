@@ -51,6 +51,12 @@ describe('EmbeddingOrchestrationService', () => {
       addRuleToStandard: jest.fn(),
       updateStandardRules: jest.fn(),
       findAllLatestStandardVersions: jest.fn(),
+      updateStandardName: jest.fn(),
+      updateStandardDescription: jest.fn(),
+      deleteStandardRule: jest.fn(),
+      addStandardExample: jest.fn(),
+      updateStandardExample: jest.fn(),
+      deleteStandardExample: jest.fn(),
     } as jest.Mocked<IStandardsPort>;
 
     mockRecipesPort = {
@@ -73,6 +79,11 @@ describe('EmbeddingOrchestrationService', () => {
       updateRecipesFromGitLab: jest.fn(),
       updateRecipeFromUI: jest.fn(),
       findAllLatestRecipeVersions: jest.fn(),
+      updateRecipeName: jest.fn(),
+      updateRecipeContent: jest.fn(),
+      addRecipeExample: jest.fn(),
+      updateRecipeExample: jest.fn(),
+      deleteRecipeExample: jest.fn(),
     } as jest.Mocked<IRecipesPort>;
 
     mockSpacesPort = {
