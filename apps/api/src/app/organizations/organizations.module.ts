@@ -3,6 +3,7 @@ import { OrganizationsController } from './organizations.controller';
 import { OrganizationAccessGuard } from './guards/organization-access.guard';
 import { OrganizationsSpacesModule } from './spaces/spaces.module';
 import { OrganizationsUsersModule } from './users/users.module';
+import { OrganizationDeploymentsModule } from './deployments/deployments.module';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 
 /**
@@ -25,7 +26,11 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
  * that the authenticated user has access to the requested organization.
  */
 @Module({
-  imports: [OrganizationsSpacesModule, OrganizationsUsersModule],
+  imports: [
+    OrganizationsSpacesModule,
+    OrganizationsUsersModule,
+    OrganizationDeploymentsModule,
+  ],
   controllers: [OrganizationsController],
   providers: [
     OrganizationAccessGuard,

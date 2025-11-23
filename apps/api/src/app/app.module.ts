@@ -38,6 +38,7 @@ import { OrganizationsSpacesStandardsModule } from './organizations/spaces/stand
 import { OrganizationsSpacesStandardsRulesModule } from './organizations/spaces/standards/rules/rules.module';
 import { OrganizationsSpacesPackagesModule } from './organizations/spaces/packages/packages.module';
 import { OrganizationsUsersModule } from './organizations/users/users.module';
+import { OrganizationDeploymentsModule } from './organizations/deployments/deployments.module';
 import { HexaRegistryModule } from './shared/HexaRegistryModule';
 import { SSEModule } from './sse/sse.module';
 import { StandardsModule } from './standards/standards.module';
@@ -121,6 +122,10 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
           {
             path: 'users',
             module: OrganizationsUsersModule,
+          },
+          {
+            path: 'deployments',
+            module: OrganizationDeploymentsModule,
           },
           {
             path: 'spaces',
