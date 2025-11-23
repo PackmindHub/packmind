@@ -25,7 +25,6 @@ import {
 import { LinterHexa, LinterModule, linterSchemas } from '@packmind/linter';
 import { JobsService } from '@packmind/node-utils';
 import { OrganizationsModule as AccountsOrganizationsModule } from './accounts/organizations/organizations.module';
-import { UsersModule } from './accounts/users/users.module';
 import { AuthGuard } from './auth/auth.guard';
 import { AuthModule } from './auth/auth.module';
 import { DeploymentsController } from './deployments/deployments.controller';
@@ -38,6 +37,7 @@ import { OrganizationsSpacesModule } from './organizations/spaces/spaces.module'
 import { OrganizationsSpacesStandardsModule } from './organizations/spaces/standards/standards.module';
 import { OrganizationsSpacesStandardsRulesModule } from './organizations/spaces/standards/rules/rules.module';
 import { OrganizationsSpacesPackagesModule } from './organizations/spaces/packages/packages.module';
+import { OrganizationsUsersModule } from './organizations/users/users.module';
 import { HexaRegistryModule } from './shared/HexaRegistryModule';
 import { SSEModule } from './sse/sse.module';
 import { StandardsModule } from './standards/standards.module';
@@ -102,7 +102,6 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
     HooksModule,
     AuthModule,
     GitModule,
-    UsersModule,
     AccountsOrganizationsModule,
     OrganizationsModule,
     McpModule,
@@ -119,6 +118,10 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
         path: 'organizations/:orgId',
         module: OrganizationsModule,
         children: [
+          {
+            path: 'users',
+            module: OrganizationsUsersModule,
+          },
           {
             path: 'spaces',
             module: OrganizationsSpacesModule,

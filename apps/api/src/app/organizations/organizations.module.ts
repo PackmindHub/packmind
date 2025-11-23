@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { OrganizationsController } from './organizations.controller';
 import { OrganizationAccessGuard } from './guards/organization-access.guard';
 import { OrganizationsSpacesModule } from './spaces/spaces.module';
+import { OrganizationsUsersModule } from './users/users.module';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 
 /**
@@ -24,7 +25,7 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
  * that the authenticated user has access to the requested organization.
  */
 @Module({
-  imports: [OrganizationsSpacesModule],
+  imports: [OrganizationsSpacesModule, OrganizationsUsersModule],
   controllers: [OrganizationsController],
   providers: [
     OrganizationAccessGuard,

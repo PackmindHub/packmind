@@ -1,4 +1,5 @@
 import { UserGatewayApi } from './UserGatewayApi';
+import { createOrganizationId } from '@packmind/types';
 
 // Mock the PackmindGateway
 const mockApiGet = jest.fn();
@@ -26,6 +27,8 @@ describe('UserGatewayApi', () => {
   });
 
   describe('getUsersInMyOrganization', () => {
+    const organizationId = createOrganizationId('org-123');
+
     it('calls API service with correct parameters', async () => {
       const mockUsers = [
         {
@@ -57,9 +60,9 @@ describe('UserGatewayApi', () => {
       ];
       mockApiGet.mockResolvedValue(mockUsers);
 
-      const result = await gateway.getUsersInMyOrganization();
+      const result = await gateway.getUsersInMyOrganization({ organizationId });
 
-      expect(mockApiGet).toHaveBeenCalledWith('/users/organization');
+      expect(mockApiGet).toHaveBeenCalledWith('/organizations/org-123/users');
       expect(result).toEqual(mockUsers);
     });
 
@@ -67,17 +70,17 @@ describe('UserGatewayApi', () => {
       const error = new Error('Network error');
       mockApiGet.mockRejectedValue(error);
 
-      await expect(gateway.getUsersInMyOrganization()).rejects.toThrow(
-        'Network error',
-      );
+      await expect(
+        gateway.getUsersInMyOrganization({ organizationId }),
+      ).rejects.toThrow('Network error');
     });
 
     it('returns empty array when no users found', async () => {
       mockApiGet.mockResolvedValue([]);
 
-      const result = await gateway.getUsersInMyOrganization();
+      const result = await gateway.getUsersInMyOrganization({ organizationId });
 
-      expect(mockApiGet).toHaveBeenCalledWith('/users/organization');
+      expect(mockApiGet).toHaveBeenCalledWith('/organizations/org-123/users');
       expect(result).toEqual([]);
     });
   });

@@ -1,36 +1,48 @@
 import {
-  ListOrganizationUserStatusesResponse,
+  NewGateway,
+  IListOrganizationUsersUseCase,
+  IListOrganizationUserStatusesUseCase,
+  IChangeUserRoleUseCase,
+  NewPackmindCommandBody,
+  ListOrganizationUsersCommand,
+  ListOrganizationUserStatusesCommand,
+  ChangeUserRoleCommand,
   ListOrganizationUsersResponse,
-  UserId,
+  ListOrganizationUserStatusesResponse,
+  ChangeUserRoleResponse,
 } from '@packmind/types';
-import { ChangeUserRoleResponse, UserOrganizationRole } from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import { IUserGateway } from './IUserGateway';
 
 export class UserGatewayApi extends PackmindGateway implements IUserGateway {
   constructor() {
-    super('/users');
+    super('/organizations');
   }
 
-  async getUsersInMyOrganization(): Promise<ListOrganizationUsersResponse> {
+  getUsersInMyOrganization: NewGateway<IListOrganizationUsersUseCase> = async ({
+    organizationId,
+  }: NewPackmindCommandBody<ListOrganizationUsersCommand>) => {
     return this._api.get<ListOrganizationUsersResponse>(
-      `${this._endpoint}/organization`,
+      `${this._endpoint}/${organizationId}/users`,
     );
-  }
+  };
 
-  async getUserStatuses(): Promise<ListOrganizationUserStatusesResponse> {
+  getUserStatuses: NewGateway<IListOrganizationUserStatusesUseCase> = async ({
+    organizationId,
+  }: NewPackmindCommandBody<ListOrganizationUserStatusesCommand>) => {
     return this._api.get<ListOrganizationUserStatusesResponse>(
-      `${this._endpoint}/statuses`,
+      `${this._endpoint}/${organizationId}/users/statuses`,
     );
-  }
+  };
 
-  async changeUserRole(
-    targetUserId: UserId,
-    newRole: UserOrganizationRole,
-  ): Promise<ChangeUserRoleResponse> {
+  changeUserRole: NewGateway<IChangeUserRoleUseCase> = async ({
+    organizationId,
+    targetUserId,
+    newRole,
+  }: NewPackmindCommandBody<ChangeUserRoleCommand>) => {
     return this._api.patch<ChangeUserRoleResponse>(
-      `${this._endpoint}/${targetUserId}/role`,
+      `${this._endpoint}/${organizationId}/users/${targetUserId}/role`,
       { newRole },
     );
-  }
+  };
 }

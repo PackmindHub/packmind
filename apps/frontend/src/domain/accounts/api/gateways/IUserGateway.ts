@@ -1,14 +1,12 @@
 import {
   OrganizationId,
   UserId,
-  ListOrganizationUserStatusesResponse,
   IListOrganizationUsersUseCase,
+  IListOrganizationUserStatusesUseCase,
+  IChangeUserRoleUseCase,
+  NewGateway,
 } from '@packmind/types';
-import {
-  ChangeUserRoleResponse,
-  UserOrganizationRole,
-  Gateway,
-} from '@packmind/types';
+import { UserOrganizationRole } from '@packmind/types';
 
 export interface UserMeResponse {
   message: string;
@@ -21,10 +19,7 @@ export interface UserMeResponse {
 }
 
 export interface IUserGateway {
-  getUsersInMyOrganization: Gateway<IListOrganizationUsersUseCase>;
-  getUserStatuses(): Promise<ListOrganizationUserStatusesResponse>;
-  changeUserRole(
-    targetUserId: UserId,
-    newRole: UserOrganizationRole,
-  ): Promise<ChangeUserRoleResponse>;
+  getUsersInMyOrganization: NewGateway<IListOrganizationUsersUseCase>;
+  getUserStatuses: NewGateway<IListOrganizationUserStatusesUseCase>;
+  changeUserRole: NewGateway<IChangeUserRoleUseCase>;
 }
