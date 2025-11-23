@@ -15,5 +15,6 @@ import { LogLevel, PackmindLogger } from '@packmind/logger';
         new PackmindLogger('OrganizationDeploymentsModule', LogLevel.INFO),
     },
   ],
+  exports: [DeploymentsService],
 })
 export class OrganizationDeploymentsModule {}

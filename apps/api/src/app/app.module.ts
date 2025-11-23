@@ -27,8 +27,6 @@ import { JobsService } from '@packmind/node-utils';
 import { OrganizationsModule as AccountsOrganizationsModule } from './accounts/organizations/organizations.module';
 import { AuthGuard } from './auth/auth.guard';
 import { AuthModule } from './auth/auth.module';
-import { DeploymentsController } from './deployments/deployments.controller';
-import { DeploymentsModule } from './deployments/deployments.module';
 import { GitModule } from './git/git.module';
 import { McpModule } from './mcp/mcp.module';
 import { OrganizationsModule } from './organizations/organizations.module';
@@ -43,7 +41,6 @@ import { OrganizationTargetsModule } from './organizations/deployments/targets/t
 import { HexaRegistryModule } from './shared/HexaRegistryModule';
 import { SSEModule } from './sse/sse.module';
 import { StandardsModule } from './standards/standards.module';
-import { TargetsModule } from './targets/targets.module';
 
 const logger = new PackmindLogger('AppModule', LogLevel.INFO);
 
@@ -108,8 +105,6 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
     OrganizationsModule,
     McpModule,
     AnalyticsModule,
-    DeploymentsModule,
-    TargetsModule,
     SSEModule,
     AmplitudeModule,
     LinterModule,
@@ -162,7 +157,7 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
       },
     ]),
   ],
-  controllers: [AppController, DeploymentsController],
+  controllers: [AppController],
   providers: [
     AppService,
     Reflector,

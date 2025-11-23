@@ -18,6 +18,16 @@ import {
   RenderModeConfiguration,
   GetRenderModeConfigurationCommand,
   GetRenderModeConfigurationResult,
+  CreatePackageCommand,
+  CreatePackageResponse,
+  UpdatePackageCommand,
+  UpdatePackageResponse,
+  GetPackageByIdCommand,
+  GetPackageByIdResponse,
+  DeletePackagesBatchCommand,
+  DeletePackagesBatchResponse,
+  ListPackagesBySpaceCommand,
+  ListPackagesBySpaceResponse,
   IDeploymentPort,
 } from '@packmind/types';
 import { InjectDeploymentAdapter } from '../../shared/HexaInjection';
@@ -93,5 +103,35 @@ export class DeploymentsService {
     command: UpdateRenderModeConfigurationCommand,
   ): Promise<RenderModeConfiguration> {
     return this.deploymentAdapter.updateRenderModeConfiguration(command);
+  }
+
+  async listPackagesBySpace(
+    command: ListPackagesBySpaceCommand,
+  ): Promise<ListPackagesBySpaceResponse> {
+    return this.deploymentAdapter.listPackagesBySpace(command);
+  }
+
+  async createPackage(
+    command: CreatePackageCommand,
+  ): Promise<CreatePackageResponse> {
+    return this.deploymentAdapter.createPackage(command);
+  }
+
+  async updatePackage(
+    command: UpdatePackageCommand,
+  ): Promise<UpdatePackageResponse> {
+    return this.deploymentAdapter.updatePackage(command);
+  }
+
+  async getPackageById(
+    command: GetPackageByIdCommand,
+  ): Promise<GetPackageByIdResponse> {
+    return this.deploymentAdapter.getPackageById(command);
+  }
+
+  async deletePackagesBatch(
+    command: DeletePackagesBatchCommand,
+  ): Promise<DeletePackagesBatchResponse> {
+    return this.deploymentAdapter.deletePackagesBatch(command);
   }
 }
