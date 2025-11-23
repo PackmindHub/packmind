@@ -113,10 +113,14 @@ export const KnowledgePatchDetails = ({
       const ruleLines = lines.slice(rulesStart + 1);
       ruleLines.forEach((line) => {
         if (line.startsWith('- ')) {
-          rules.push({
-            id: `rule-${rules.length}`,
-            content: line.replace('- ', '').trim(),
-          });
+          // Extract rule ID and content from format: "- [ruleId] content"
+          const match = line.match(/^- \[([^\]]+)\] (.+)$/);
+          if (match) {
+            rules.push({
+              id: match[1],
+              content: match[2].trim(),
+            });
+          }
         }
       });
     }

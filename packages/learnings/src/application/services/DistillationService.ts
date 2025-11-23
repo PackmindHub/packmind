@@ -295,7 +295,7 @@ export class DistillationService {
         description: string,
         rulesList: Array<{ id: RuleId; content: string }>,
       ) => {
-        return `# ${name}\n\n${description}\n\n## Rules\n\n${rulesList.map((r) => `- ${r.content}`).join('\n')}`;
+        return `# ${name}\n\n${description}\n\n## Rules\n\n${rulesList.map((r) => `- [${r.id}] ${r.content}`).join('\n')}`;
       };
 
       const originalRules = rules.map((r) => ({
