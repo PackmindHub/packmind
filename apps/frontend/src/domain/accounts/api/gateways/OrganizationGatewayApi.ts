@@ -1,9 +1,18 @@
-import { Organization } from '@packmind/types';
+import {
+  Organization,
+  NewGateway,
+  NewPackmindCommandBody,
+} from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import { IOrganizationGateway } from './IOrganizationGateway';
 import {
-  UserOrganizationRole,
   OrganizationOnboardingStatus,
+  ICreateInvitationsUseCase,
+  CreateInvitationsCommand,
+  CreateInvitationsResponse,
+  IRemoveUserFromOrganizationUseCase,
+  RemoveUserFromOrganizationCommand,
+  RemoveUserFromOrganizationResponse,
 } from '@packmind/types';
 
 export class OrganizationGatewayApi
@@ -26,39 +35,29 @@ export class OrganizationGatewayApi
     );
   }
 
-  async getBySlug(slug: string): Promise<Organization> {
-    return this._api.get<Organization>(`${this._endpoint}/slug/${slug}`);
-  }
-
   async getUserOrganizations(): Promise<Organization[]> {
     return this._api.get<Organization[]>(this._endpoint);
   }
 
-  async inviteUsers(
-    orgId: string,
-    emails: string[],
-    role: UserOrganizationRole,
-  ): Promise<{
-    created: { email: string; userId: string }[];
-    organizationInvitations: {
-      email: string;
-      userId: string;
-      organizationId: string;
-      role: string;
-    }[];
-    skipped: { email: string; reason: string }[];
-  }> {
-    return this._api.post(
-      `${this._endpoint}/${encodeURIComponent(orgId)}/invite`,
+  inviteUsers: NewGateway<ICreateInvitationsUseCase> = async ({
+    organizationId,
+    emails,
+    role,
+  }: NewPackmindCommandBody<CreateInvitationsCommand>) => {
+    return this._api.post<CreateInvitationsResponse>(
+      `${this._endpoint}/${encodeURIComponent(organizationId)}/users/invite`,
       { emails, role },
     );
-  }
+  };
 
-  async excludeUser(orgId: string, userId: string): Promise<void> {
-    return this._api.delete(
-      `${this._endpoint}/${encodeURIComponent(orgId)}/user/${encodeURIComponent(userId)}`,
+  removeUser: NewGateway<IRemoveUserFromOrganizationUseCase> = async ({
+    organizationId,
+    targetUserId,
+  }: NewPackmindCommandBody<RemoveUserFromOrganizationCommand>) => {
+    return this._api.delete<RemoveUserFromOrganizationResponse>(
+      `${this._endpoint}/${encodeURIComponent(organizationId)}/users/${encodeURIComponent(targetUserId)}`,
     );
-  }
+  };
 
   async getOnboardingStatus(
     orgId: string,

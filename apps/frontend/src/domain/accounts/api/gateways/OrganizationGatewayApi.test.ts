@@ -58,45 +58,68 @@ describe('OrganizationGatewayApi', () => {
     });
   });
 
-  describe('getBySlug', () => {
+  describe('inviteUsers', () => {
     it('calls API service with correct parameters', async () => {
-      const mockResponse = { id: '1', name: 'Test Org', slug: 'test-org' };
-      mockApiGet.mockResolvedValue(mockResponse);
+      const mockResponse = {
+        created: [{ email: 'test@example.com', userId: 'user123' }],
+        organizationInvitations: [],
+        skipped: [],
+      };
+      mockApiPost.mockResolvedValue(mockResponse);
 
-      const result = await gateway.getBySlug('test-org');
+      const result = await gateway.inviteUsers({
+        organizationId: 'org123',
+        emails: ['test@example.com'],
+        role: 'member',
+      });
 
-      expect(mockApiGet).toHaveBeenCalledWith('/organizations/slug/test-org');
+      expect(mockApiPost).toHaveBeenCalledWith(
+        '/organizations/org123/users/invite',
+        { emails: ['test@example.com'], role: 'member' },
+      );
       expect(result).toEqual(mockResponse);
     });
 
     it('handles API errors', async () => {
-      const error = new Error('Organization not found');
-      mockApiGet.mockRejectedValue(error);
+      const error = new Error('Invalid email');
+      mockApiPost.mockRejectedValue(error);
 
-      await expect(gateway.getBySlug('non-existent')).rejects.toThrow(
-        'Organization not found',
-      );
+      await expect(
+        gateway.inviteUsers({
+          organizationId: 'org123',
+          emails: ['invalid-email'],
+          role: 'member',
+        }),
+      ).rejects.toThrow('Invalid email');
     });
   });
 
-  describe('excludeUser', () => {
+  describe('removeUser', () => {
     it('calls API service with correct parameters', async () => {
-      mockApiDelete.mockResolvedValue(undefined);
+      const mockResponse = { removed: true };
+      mockApiDelete.mockResolvedValue(mockResponse);
 
-      await gateway.excludeUser('org123', 'user456');
+      const result = await gateway.removeUser({
+        organizationId: 'org123',
+        targetUserId: 'user456',
+      });
 
       expect(mockApiDelete).toHaveBeenCalledWith(
-        '/organizations/org123/user/user456',
+        '/organizations/org123/users/user456',
       );
+      expect(result).toEqual(mockResponse);
     });
 
     it('handles API errors', async () => {
       const error = new Error('User not found');
       mockApiDelete.mockRejectedValue(error);
 
-      await expect(gateway.excludeUser('org123', 'user456')).rejects.toThrow(
-        'User not found',
-      );
+      await expect(
+        gateway.removeUser({
+          organizationId: 'org123',
+          targetUserId: 'user456',
+        }),
+      ).rejects.toThrow('User not found');
     });
   });
 });

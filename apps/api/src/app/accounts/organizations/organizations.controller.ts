@@ -2,7 +2,6 @@ import {
   Controller,
   Get,
   Post,
-  Delete,
   Body,
   Param,
   Req,
@@ -10,22 +9,10 @@ import {
   BadRequestException,
   ConflictException,
 } from '@nestjs/common';
-import {
-  Organization,
-  OrganizationId,
-  UserId,
-  UserOrganizationRole,
-} from '@packmind/types';
-import {
-  OrganizationSlugConflictError,
-  OrganizationNotFoundError,
-  InvitationBatchEmptyError,
-  RemoveUserFromOrganizationResponse,
-  RemoveUserFromOrganizationCommand,
-} from '@packmind/accounts';
+import { Organization } from '@packmind/types';
+import { OrganizationSlugConflictError } from '@packmind/accounts';
 import { OrganizationsService } from './organizations.service';
 import { PackmindLogger } from '@packmind/logger';
-import { UserNotFoundError } from '@packmind/node-utils';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { Public } from '@packmind/node-utils';
 
@@ -58,35 +45,6 @@ export class OrganizationsController {
         'GET /organizations - Failed to fetch user organizations',
         {
           userId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
-  }
-
-  @Get(':id')
-  async getOrganizationById(
-    @Param('id') id: OrganizationId,
-  ): Promise<Organization> {
-    this.logger.info('GET /organizations/:id - Fetching organization by ID', {
-      organizationId: id,
-    });
-
-    try {
-      const organization =
-        await this.organizationsService.getOrganizationById(id);
-      if (!organization) {
-        throw new NotFoundException(`Organization with ID ${id} not found`);
-      }
-      return organization;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:id - Failed to fetch organization',
-        {
-          organizationId: id,
           error: errorMessage,
         },
       );
@@ -129,41 +87,6 @@ export class OrganizationsController {
     }
   }
 
-  @Public()
-  @Get('slug/:slug')
-  async getOrganizationBySlug(
-    @Param('slug') slug: string,
-  ): Promise<Organization> {
-    this.logger.info(
-      'GET /organizations/slug/:slug - Fetching organization by slug',
-      {
-        organizationSlug: slug,
-      },
-    );
-
-    try {
-      const organization =
-        await this.organizationsService.getOrganizationBySlug(slug);
-      if (!organization) {
-        throw new NotFoundException(
-          `Organization with slug '${slug}' not found`,
-        );
-      }
-      return organization;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/slug/:slug - Failed to fetch organization',
-        {
-          organizationSlug: slug,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
-  }
-
   @Post()
   async createOrganization(
     @Body() body: { name: string },
@@ -196,89 +119,5 @@ export class OrganizationsController {
 
       throw error;
     }
-  }
-
-  @Post(':orgId/invite')
-  async inviteUsers(
-    @Param('orgId') orgId: OrganizationId,
-    @Body() body: { emails: string[]; role: UserOrganizationRole },
-    @Req() request: AuthenticatedRequest,
-  ) {
-    const inviterId = request.user?.userId;
-    this.logger.info('POST /organizations/:orgId/invite - Inviting users', {
-      organizationId: orgId,
-      inviterId,
-      emailCount: Array.isArray(body?.emails) ? body.emails.length : 0,
-    });
-
-    try {
-      if (!Array.isArray(body?.emails)) {
-        throw new BadRequestException('emails must be an array of strings');
-      }
-
-      if (!inviterId) {
-        throw new BadRequestException('User authentication required');
-      }
-
-      return await this.organizationsService.inviteUsers(
-        orgId,
-        inviterId,
-        body.emails,
-        body.role,
-      );
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'POST /organizations/:orgId/invite - Failed to invite users',
-        {
-          organizationId: orgId,
-          inviterId,
-          error: errorMessage,
-        },
-      );
-
-      if (error instanceof OrganizationNotFoundError) {
-        throw new NotFoundException(error.message);
-      }
-      if (error instanceof UserNotFoundError) {
-        throw new NotFoundException(error.message);
-      }
-      if (error instanceof InvitationBatchEmptyError) {
-        throw new BadRequestException(error.message);
-      }
-      if (
-        error instanceof BadRequestException ||
-        error instanceof NotFoundException
-      ) {
-        throw error;
-      }
-
-      throw error;
-    }
-  }
-
-  @Delete(':organizationId/user/:userId')
-  async removeUserFromOrganization(
-    @Param('organizationId') organizationId: OrganizationId,
-    @Param('userId') userId: UserId,
-    @Req() request: AuthenticatedRequest,
-  ): Promise<RemoveUserFromOrganizationResponse> {
-    this.logger.info(
-      'DELETE /organizations/:organizationId/user/:userId - Removing user from organization',
-      {
-        organizationId,
-        targetUserId: userId,
-        requestingUserId: request.user?.userId,
-      },
-    );
-
-    const command: RemoveUserFromOrganizationCommand = {
-      userId: request.user.userId,
-      organizationId,
-      targetUserId: userId,
-    };
-
-    return this.organizationsService.removeUserFromOrganization(command);
   }
 }

@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { OrganizationsController } from './organizations.controller';
 import { OrganizationsService } from './organizations.service';
 import { createOrganizationId } from '@packmind/types';
-import { NotFoundException } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
 import { createUserId, IAccountsPort } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
@@ -19,11 +18,8 @@ describe('OrganizationsController', () => {
     const mockAccountsAdapter: Partial<IAccountsPort> = {
       getOrganizationById: jest.fn(),
       getOrganizationByName: jest.fn(),
-      getOrganizationBySlug: jest.fn(),
       createOrganization: jest.fn(),
-      removeUserFromOrganization: jest.fn(),
       listUserOrganizations: jest.fn(),
-      createInvitations: jest.fn(),
     };
 
     app = await Test.createTestingModule({
@@ -45,70 +41,6 @@ describe('OrganizationsController', () => {
       OrganizationsController,
     );
     organizationsService = app.get<OrganizationsService>(OrganizationsService);
-  });
-
-  describe('getOrganizationById', () => {
-    describe('when organization is found', () => {
-      it('returns the organization', async () => {
-        const organizationId = createOrganizationId('1');
-        const result = organizationFactory({
-          id: organizationId,
-          name: 'Test Org',
-          slug: 'test-org',
-        });
-        jest
-          .spyOn(organizationsService, 'getOrganizationById')
-          .mockImplementation(async () => result);
-
-        expect(
-          await organizationsController.getOrganizationById(organizationId),
-        ).toBe(result);
-      });
-    });
-
-    describe('when organization is not found', () => {
-      it('throws NotFoundException', async () => {
-        const organizationId = createOrganizationId('1');
-        jest
-          .spyOn(organizationsService, 'getOrganizationById')
-          .mockImplementation(async () => null);
-
-        await expect(
-          organizationsController.getOrganizationById(organizationId),
-        ).rejects.toThrow(NotFoundException);
-      });
-    });
-  });
-
-  describe('getOrganizationBySlug', () => {
-    describe('when organization is found', () => {
-      it('returns the organization', async () => {
-        const result = organizationFactory({
-          id: createOrganizationId('1'),
-          name: 'Test Org',
-          slug: 'test-org',
-        });
-        jest
-          .spyOn(organizationsService, 'getOrganizationBySlug')
-          .mockImplementation(async () => result);
-
-        expect(
-          await organizationsController.getOrganizationBySlug('test-org'),
-        ).toBe(result);
-      });
-    });
-
-    describe('when organization is not found', () => {
-      it('throws NotFoundException', async () => {
-        jest
-          .spyOn(organizationsService, 'getOrganizationBySlug')
-          .mockImplementation(async () => null);
-
-        await expect(
-          organizationsController.getOrganizationBySlug('non-existent'),
-        ).rejects.toThrow(NotFoundException);
-      });
-    });
   });
 
   describe('getUserOrganizations', () => {

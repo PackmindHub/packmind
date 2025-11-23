@@ -68,7 +68,6 @@ export const InviteUsersDialog: React.FC<InviteUsersDialogProps> = ({
 
     try {
       const result = await inviteUsers({
-        orgId: organization.id,
         emails,
         role,
       });

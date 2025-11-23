@@ -159,7 +159,6 @@ export const UsersList: React.FC<UsersListProps> = ({ organizationId }) => {
             })
           }
           userStatus={excludeUserState.userStatus}
-          organizationId={organizationId}
         />
       )}
     </PMVStack>
@@ -204,7 +203,6 @@ const UserActions: React.FunctionComponent<{
 
   async function onResendInvitation() {
     await inviteUsers({
-      orgId: organizationId,
       emails: [userStatus.email],
       role: userStatus.role,
     });

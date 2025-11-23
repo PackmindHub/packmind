@@ -7,6 +7,10 @@ import {
   ListOrganizationUsersResponse,
   ChangeUserRoleCommand,
   ChangeUserRoleResponse,
+  CreateInvitationsCommand,
+  CreateInvitationsResponse,
+  RemoveUserFromOrganizationCommand,
+  RemoveUserFromOrganizationResponse,
 } from '@packmind/accounts';
 import { ACCOUNTS_ADAPTER_TOKEN } from '../../shared/HexaRegistryModule';
 
@@ -33,5 +37,17 @@ export class UsersService {
     command: ChangeUserRoleCommand,
   ): Promise<ChangeUserRoleResponse> {
     return this.accountsAdapter.changeUserRole(command);
+  }
+
+  async createInvitations(
+    command: CreateInvitationsCommand,
+  ): Promise<CreateInvitationsResponse> {
+    return this.accountsAdapter.createInvitations(command);
+  }
+
+  async removeUserFromOrganization(
+    command: RemoveUserFromOrganizationCommand,
+  ): Promise<RemoveUserFromOrganizationResponse> {
+    return this.accountsAdapter.removeUserFromOrganization(command);
   }
 }
