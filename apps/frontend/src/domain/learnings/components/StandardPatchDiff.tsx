@@ -46,9 +46,9 @@ const renderInlineDiff = (oldText: string, newText: string) => {
           j++;
         } else if (
           nextType === oppositeType ||
-          (nextType === 'unchanged' && /^\s+$/.test(nextPart.value))
+          (nextType === 'unchanged' && /^[\s,.;:]+$/.test(nextPart.value))
         ) {
-          // It's either the opposite type or whitespace
+          // It's either the opposite type or whitespace/punctuation
           // Look ahead to see if our type continues
           let k = j + 1;
           let foundSameType = false;
@@ -67,9 +67,9 @@ const renderInlineDiff = (oldText: string, newText: string) => {
               break;
             } else if (
               peekType !== oppositeType &&
-              (peekType !== 'unchanged' || !/^\s+$/.test(peekPart.value))
+              (peekType !== 'unchanged' || !/^[\s,.;:]+$/.test(peekPart.value))
             ) {
-              // Hit non-whitespace unchanged content, stop looking
+              // Hit non-whitespace/punctuation unchanged content, stop looking
               break;
             }
             k++;
