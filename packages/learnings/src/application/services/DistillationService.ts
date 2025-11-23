@@ -21,8 +21,10 @@ import { filterStandardCandidatesPrompt } from './prompts/filterStandardCandidat
 import { filterRecipeCandidatesPrompt } from './prompts/filterRecipeCandidates.prompt';
 import { determineNewArtifactPrompt } from './prompts/determineNewArtifact.prompt';
 import { classifyChangeTypePrompt } from './prompts/classifyChangeType.prompt';
-import { analyzeStandardEditPrompt } from './prompts/analyzeStandardEdit.prompt';
 import { analyzeRecipeEditPrompt } from './prompts/analyzeRecipeEdit.prompt';
+import { classifyStandardRulesPrompt } from './prompts/classifyStandardRules.prompt';
+import { updateRulePrompt } from './prompts/updateRule.prompt';
+import { analyzeStandardDescriptionPrompt } from './prompts/analyzeStandardDescription.prompt';
 
 const origin = 'DistillationService';
 
@@ -45,6 +47,29 @@ type RuleUpdate = {
 
 type NewRule = {
   content: string;
+};
+
+type RuleClassificationResult = {
+  ruleClassifications: Array<{
+    ruleId: string;
+    action: 'keep' | 'update' | 'delete';
+    reasoning: string;
+  }>;
+  newRules: Array<{
+    content: string;
+    reasoning: string;
+  }>;
+};
+
+type RuleUpdateResult = {
+  updatedContent: string;
+  changes: string;
+};
+
+type DescriptionAnalysisResult = {
+  shouldUpdate: boolean;
+  newDescription: string | null;
+  reasoning: string;
 };
 
 type StandardEditResult = {
@@ -168,6 +193,7 @@ export class DistillationService {
 
   /**
    * Analyze a standard to determine what edits should be made based on the topic
+   * Uses new rule-centric flow: classify rules -> update specific rules -> analyze description
    */
   private async analyzeStandardEdit(
     topic: Topic,
@@ -185,12 +211,6 @@ export class DistillationService {
       const rules = await this.standardsPort.getLatestRulesByStandardId(
         standard.id,
       );
-      const rulesText =
-        rules.length > 0
-          ? rules.map((r) => `[${r.id}] ${r.content}`).join('\n')
-          : 'No rules defined yet';
-
-      const examplesText = 'No examples loaded yet';
 
       const codeExamplesText =
         topic.codeExamples.length > 0
@@ -199,26 +219,77 @@ export class DistillationService {
               .join('\n\n')
           : 'No code examples provided';
 
-      const prompt = analyzeStandardEditPrompt
-        .replace('{topicTitle}', topic.title)
-        .replace('{topicContent}', topic.content)
-        .replace('{codeExamples}', codeExamplesText)
-        .replace('{standardName}', standard.name)
-        .replace('{standardDescription}', standard.description)
-        .replace('{standardRules}', rulesText)
-        .replace('{standardExamples}', examplesText);
+      // Step 1: Classify all rules (keep/update/delete) and identify new rules
+      const ruleClassifications = await this.classifyStandardRules(
+        topic,
+        standard,
+        rules,
+        codeExamplesText,
+      );
 
-      const result = await this.aiService.executePrompt<string>(prompt);
-
-      if (!result.success || !result.data) {
-        this.logger.warn('AI service failed to analyze standard edit', {
-          error: result.error,
-        });
+      if (!ruleClassifications) {
+        this.logger.warn('Failed to classify rules', { standardId });
         return null;
       }
 
-      const analysis = this.parseAIResponse<StandardEditResult>(result.data);
+      // Step 2: For each rule marked 'update', generate the updated content
+      const rulesToUpdate: RuleUpdate[] = [];
+      for (const classification of ruleClassifications.ruleClassifications) {
+        if (classification.action === 'update') {
+          const rule = rules.find((r) => r.id === classification.ruleId);
+          if (rule) {
+            const updatedRule = await this.updateRule(
+              topic,
+              standard,
+              rule,
+              codeExamplesText,
+            );
+            if (updatedRule) {
+              rulesToUpdate.push({
+                ruleId: rule.id,
+                newContent: updatedRule.updatedContent,
+              });
+            }
+          }
+        }
+      }
 
+      // Step 3: Determine description changes
+      const descriptionAnalysis = await this.analyzeStandardDescription(
+        topic,
+        standard,
+        rules,
+        ruleClassifications,
+        rulesToUpdate,
+      );
+
+      // Build the StandardEditResult
+      const toKeep = ruleClassifications.ruleClassifications
+        .filter((c) => c.action === 'keep')
+        .map((c) => c.ruleId);
+
+      const toDelete = ruleClassifications.ruleClassifications
+        .filter((c) => c.action === 'delete')
+        .map((c) => c.ruleId);
+
+      const toAdd = ruleClassifications.newRules.map((r) => ({
+        content: r.content,
+      }));
+
+      const analysis: StandardEditResult = {
+        description: descriptionAnalysis?.shouldUpdate
+          ? descriptionAnalysis.newDescription
+          : null,
+        rules: {
+          toKeep,
+          toUpdate: rulesToUpdate,
+          toDelete,
+          toAdd,
+        },
+        rationale: `Based on topic "${topic.title}": ${ruleClassifications.ruleClassifications.length} rules classified, ${rulesToUpdate.length} rules updated, ${toDelete.length} rules deleted, ${toAdd.length} new rules added.`,
+      };
+
+      // Build diff representation
       const buildStandardDoc = (
         name: string,
         description: string,
@@ -231,37 +302,32 @@ export class DistillationService {
         id: r.id,
         content: r.content,
       }));
+
       let modifiedRules = [...originalRules];
 
       // Apply rule updates
-      if (analysis.rules.toUpdate.length > 0) {
-        for (const update of analysis.rules.toUpdate) {
-          const idx = modifiedRules.findIndex((r) => r.id === update.ruleId);
-          if (idx !== -1) {
-            modifiedRules[idx] = {
-              id: createRuleId(update.ruleId),
-              content: update.newContent,
-            };
-          }
+      for (const update of rulesToUpdate) {
+        const idx = modifiedRules.findIndex((r) => r.id === update.ruleId);
+        if (idx !== -1) {
+          modifiedRules[idx] = {
+            id: createRuleId(update.ruleId),
+            content: update.newContent,
+          };
         }
       }
 
       // Apply rule deletions
-      if (analysis.rules.toDelete.length > 0) {
-        modifiedRules = modifiedRules.filter(
-          (r) => !analysis.rules.toDelete.includes(r.id as string),
-        );
-      }
+      modifiedRules = modifiedRules.filter(
+        (r) => !toDelete.includes(r.id as string),
+      );
 
       // Apply rule additions
-      if (analysis.rules.toAdd.length > 0) {
-        modifiedRules.push(
-          ...analysis.rules.toAdd.map((newRule, idx) => ({
-            id: createRuleId(`new-${idx}`),
-            content: newRule.content,
-          })),
-        );
-      }
+      modifiedRules.push(
+        ...toAdd.map((newRule, idx) => ({
+          id: createRuleId(`new-${idx}`),
+          content: newRule.content,
+        })),
+      );
 
       const diffOriginal = buildStandardDoc(
         standard.name,
@@ -287,6 +353,170 @@ export class DistillationService {
     } catch (error) {
       this.logger.error('Failed to analyze standard edit', {
         standardId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return null;
+    }
+  }
+
+  /**
+   * Classify rules within a standard (keep/update/delete) and identify new rules to add
+   */
+  private async classifyStandardRules(
+    topic: Topic,
+    standard: { name: string; description: string },
+    rules: Array<{ id: RuleId; content: string }>,
+    codeExamplesText: string,
+  ): Promise<RuleClassificationResult | null> {
+    this.logger.debug('Classifying standard rules', {
+      standardName: standard.name,
+      ruleCount: rules.length,
+    });
+
+    try {
+      const rulesText =
+        rules.length > 0
+          ? rules.map((r) => `[${r.id}] ${r.content}`).join('\n')
+          : 'No rules defined yet';
+
+      const prompt = classifyStandardRulesPrompt
+        .replace('{topicTitle}', topic.title)
+        .replace('{topicContent}', topic.content)
+        .replace('{codeExamples}', codeExamplesText)
+        .replace('{standardName}', standard.name)
+        .replace('{standardDescription}', standard.description)
+        .replace('{rules}', rulesText);
+
+      const result = await this.aiService.executePrompt<string>(prompt);
+
+      if (!result.success || !result.data) {
+        this.logger.warn('AI service failed to classify rules', {
+          error: result.error,
+        });
+        return null;
+      }
+
+      return this.parseAIResponse<RuleClassificationResult>(result.data);
+    } catch (error) {
+      this.logger.error('Failed to classify standard rules', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return null;
+    }
+  }
+
+  /**
+   * Update a specific rule based on the topic
+   */
+  private async updateRule(
+    topic: Topic,
+    standard: { name: string; description: string },
+    rule: { id: RuleId; content: string },
+    codeExamplesText: string,
+  ): Promise<RuleUpdateResult | null> {
+    this.logger.debug('Updating rule', { ruleId: rule.id });
+
+    try {
+      const prompt = updateRulePrompt
+        .replace('{topicTitle}', topic.title)
+        .replace('{topicContent}', topic.content)
+        .replace('{codeExamples}', codeExamplesText)
+        .replace('{standardName}', standard.name)
+        .replace('{standardDescription}', standard.description)
+        .replace('{ruleId}', rule.id)
+        .replace('{ruleContent}', rule.content);
+
+      const result = await this.aiService.executePrompt<string>(prompt);
+
+      if (!result.success || !result.data) {
+        this.logger.warn('AI service failed to update rule', {
+          error: result.error,
+          ruleId: rule.id,
+        });
+        return null;
+      }
+
+      return this.parseAIResponse<RuleUpdateResult>(result.data);
+    } catch (error) {
+      this.logger.error('Failed to update rule', {
+        ruleId: rule.id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return null;
+    }
+  }
+
+  /**
+   * Analyze whether the standard's description needs to be updated
+   */
+  private async analyzeStandardDescription(
+    topic: Topic,
+    standard: { name: string; description: string },
+    currentRules: Array<{ id: RuleId; content: string }>,
+    ruleClassifications: RuleClassificationResult,
+    rulesToUpdate: RuleUpdate[],
+  ): Promise<DescriptionAnalysisResult | null> {
+    this.logger.debug('Analyzing standard description', {
+      standardName: standard.name,
+    });
+
+    try {
+      const currentRulesText = currentRules
+        .map((r) => `- ${r.content}`)
+        .join('\n');
+
+      const rulesToAddText =
+        ruleClassifications.newRules.length > 0
+          ? ruleClassifications.newRules.map((r) => `- ${r.content}`).join('\n')
+          : 'None';
+
+      const rulesToUpdateText =
+        rulesToUpdate.length > 0
+          ? rulesToUpdate
+              .map((u) => {
+                const originalRule = currentRules.find(
+                  (r) => r.id === u.ruleId,
+                );
+                return `- [${u.ruleId}] "${originalRule?.content}" → "${u.newContent}"`;
+              })
+              .join('\n')
+          : 'None';
+
+      const rulesToDeleteText =
+        ruleClassifications.ruleClassifications.filter(
+          (c) => c.action === 'delete',
+        ).length > 0
+          ? ruleClassifications.ruleClassifications
+              .filter((c) => c.action === 'delete')
+              .map((c) => {
+                const rule = currentRules.find((r) => r.id === c.ruleId);
+                return `- [${c.ruleId}] ${rule?.content}`;
+              })
+              .join('\n')
+          : 'None';
+
+      const prompt = analyzeStandardDescriptionPrompt
+        .replace('{topicTitle}', topic.title)
+        .replace('{topicContent}', topic.content)
+        .replace('{standardName}', standard.name)
+        .replace('{currentDescription}', standard.description)
+        .replace('{currentRules}', currentRulesText)
+        .replace('{rulesToAdd}', rulesToAddText)
+        .replace('{rulesToUpdate}', rulesToUpdateText)
+        .replace('{rulesToDelete}', rulesToDeleteText);
+
+      const result = await this.aiService.executePrompt<string>(prompt);
+
+      if (!result.success || !result.data) {
+        this.logger.warn('AI service failed to analyze description', {
+          error: result.error,
+        });
+        return null;
+      }
+
+      return this.parseAIResponse<DescriptionAnalysisResult>(result.data);
+    } catch (error) {
+      this.logger.error('Failed to analyze standard description', {
         error: error instanceof Error ? error.message : String(error),
       });
       return null;
