@@ -23,9 +23,7 @@ export default function TargetsRouteModule() {
     data: targetsWithRepository,
     isError,
     error,
-  } = useGetTargetsByOrganizationQuery(
-    organization?.id || ('' as OrganizationId),
-  );
+  } = useGetTargetsByOrganizationQuery();
 
   if (!organization) {
     return null;

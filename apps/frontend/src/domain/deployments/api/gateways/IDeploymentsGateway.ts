@@ -1,4 +1,4 @@
-import { Gateway, NewGateway } from '@packmind/types';
+import { NewGateway } from '@packmind/types';
 import {
   IGetDeploymentOverview,
   IGetPackageByIdUseCase,
@@ -12,8 +12,6 @@ import {
   IPublishRecipes,
   IPublishStandards,
   IPublishPackages,
-  IGetTargetsByGitRepoUseCase,
-  IGetTargetsByRepositoryUseCase,
   IGetTargetsByOrganizationUseCase,
   IAddTargetUseCase,
   IUpdateTargetUseCase,
@@ -23,24 +21,22 @@ import {
 } from '@packmind/types';
 
 export interface IDeploymentsGateway {
-  listDeploymentsByRecipeId: Gateway<IListDeploymentsByRecipe>;
-  listDeploymentsByStandardId: Gateway<IListDeploymentsByStandard>;
+  listDeploymentsByRecipeId: NewGateway<IListDeploymentsByRecipe>;
+  listDeploymentsByStandardId: NewGateway<IListDeploymentsByStandard>;
   listPackagesBySpace: NewGateway<IListPackagesBySpaceUseCase>;
   createPackage: NewGateway<ICreatePackageUseCase>;
   updatePackage: NewGateway<IUpdatePackageUseCase>;
   deletePackagesBatch: NewGateway<IDeletePackagesBatchUseCase>;
   getPackageById: NewGateway<IGetPackageByIdUseCase>;
-  getRecipesDeploymentOverview: Gateway<IGetDeploymentOverview>;
-  getStandardsDeploymentOverview: Gateway<IGetStandardDeploymentOverview>;
-  publishRecipes: Gateway<IPublishRecipes>;
-  publishStandards: Gateway<IPublishStandards>;
-  publishPackages: Gateway<IPublishPackages>;
-  getTargetsByGitRepo: Gateway<IGetTargetsByGitRepoUseCase>;
-  getTargetsByRepository: Gateway<IGetTargetsByRepositoryUseCase>;
-  getTargetsByOrganization: Gateway<IGetTargetsByOrganizationUseCase>;
-  addTarget: Gateway<IAddTargetUseCase>;
-  updateTarget: Gateway<IUpdateTargetUseCase>;
-  deleteTarget: Gateway<IDeleteTargetUseCase>;
-  getRenderModeConfiguration: Gateway<IGetRenderModeConfigurationUseCase>;
-  updateRenderModeConfiguration: Gateway<IUpdateRenderModeConfigurationUseCase>;
+  getRecipesDeploymentOverview: NewGateway<IGetDeploymentOverview>;
+  getStandardsDeploymentOverview: NewGateway<IGetStandardDeploymentOverview>;
+  publishRecipes: NewGateway<IPublishRecipes>;
+  publishStandards: NewGateway<IPublishStandards>;
+  publishPackages: NewGateway<IPublishPackages>;
+  getTargetsByOrganization: NewGateway<IGetTargetsByOrganizationUseCase>;
+  addTarget: NewGateway<IAddTargetUseCase>;
+  updateTarget: NewGateway<IUpdateTargetUseCase>;
+  deleteTarget: NewGateway<IDeleteTargetUseCase>;
+  getRenderModeConfiguration: NewGateway<IGetRenderModeConfigurationUseCase>;
+  updateRenderModeConfiguration: NewGateway<IUpdateRenderModeConfigurationUseCase>;
 }
