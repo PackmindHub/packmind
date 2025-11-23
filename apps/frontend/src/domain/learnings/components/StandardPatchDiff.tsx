@@ -76,9 +76,19 @@ const renderInlineDiff = (oldText: string, newText: string) => {
           }
 
           if (foundSameType) {
-            // Include everything from j to k (whitespace and opposite type)
+            // Include only whitespace between j and k (skip opposite type words)
             while (j < k) {
-              accumulated += diff[j].value;
+              const partToInclude = diff[j];
+              const partToIncludeType = partToInclude.added
+                ? 'added'
+                : partToInclude.removed
+                  ? 'removed'
+                  : 'unchanged';
+
+              // Only include whitespace, not opposite-type words
+              if (partToIncludeType === 'unchanged') {
+                accumulated += partToInclude.value;
+              }
               j++;
             }
           } else {
@@ -118,8 +128,8 @@ const renderInlineDiff = (oldText: string, newText: string) => {
                 <PMBox
                   key={index}
                   as="span"
-                  bg="feedback.error/10"
-                  textDecoration="line-through"
+                  bg="red.800"
+                  color="red.200"
                   px={0.5}
                 >
                   {part.value}
@@ -141,7 +151,13 @@ const renderInlineDiff = (oldText: string, newText: string) => {
           {mergedDiff.map((part, index) => {
             if (part.added) {
               return (
-                <PMBox key={index} as="span" bg="feedback.success/10" px={0.5}>
+                <PMBox
+                  key={index}
+                  as="span"
+                  bg="green.800"
+                  color="green.200"
+                  px={0.5}
+                >
                   {part.value}
                 </PMBox>
               );
