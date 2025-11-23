@@ -80,35 +80,25 @@ export class PatchApplicationService {
 
     const proposedChanges = patch.proposedChanges as {
       standardId: string;
-      changes: {
-        name?: string | null;
-        description?: string | null;
-        rulesToAdd?: string[] | null;
-        rulesToUpdate?: Array<{ ruleId: string; content: string }> | null;
-        rulesToDelete?: string[] | null;
-        exampleChanges?: {
-          toAdd?: Array<{
-            lang: string;
-            positive: string;
-            negative: string;
-          }> | null;
-          toUpdate?: Array<{
-            exampleId: string;
-            lang: string;
-            positive: string;
-            negative: string;
-          }> | null;
-          toDelete?: string[] | null;
-        } | null;
+      description?: string | null;
+      rules: {
+        toKeep: string[]; // ruleIds that don't need changes
+        toUpdate: Array<{ ruleId: string; newContent: string }>;
+        toDelete: string[]; // ruleIds to delete
+        toAdd: Array<{ content: string }>;
       };
       rationale: string;
     };
 
-    const { standardId, changes } = proposedChanges;
+    const { standardId, description, rules } = proposedChanges;
 
     this.logger.info('Applying standard update', {
       patchId: patch.id,
       standardId,
+      rulesToKeep: rules.toKeep.length,
+      rulesToUpdate: rules.toUpdate.length,
+      rulesToDelete: rules.toDelete.length,
+      rulesToAdd: rules.toAdd.length,
     });
 
     const standard = await this.standardsPort.getStandard(
@@ -122,25 +112,11 @@ export class PatchApplicationService {
       throw new Error(`Standard ${standardId} not found`);
     }
 
-    // Update standard name
-    if (changes.name) {
-      await this.standardsPort.updateStandardName({
-        standardId: standardId as StandardId,
-        newName: changes.name,
-        organizationId,
-        userId,
-      });
-      this.logger.info('Updated standard name', {
-        patchId: patch.id,
-        newName: changes.name,
-      });
-    }
-
-    // Update standard description
-    if (changes.description) {
+    // Update standard description (if changed)
+    if (description) {
       await this.standardsPort.updateStandardDescription({
         standardId: standardId as StandardId,
-        newDescription: changes.description,
+        newDescription: description,
         organizationId,
         userId,
       });
@@ -149,42 +125,26 @@ export class PatchApplicationService {
       });
     }
 
-    // Add new rules
-    if (changes.rulesToAdd && changes.rulesToAdd.length > 0) {
-      for (const ruleContent of changes.rulesToAdd) {
-        await this.standardsPort.addRuleToStandard({
-          standardSlug: standard.slug,
-          ruleContent,
-          organizationId,
-          userId,
-        });
-      }
-      this.logger.info('Added new rules to standard', {
-        patchId: patch.id,
-        count: changes.rulesToAdd.length,
-      });
-    }
-
     // Update existing rules
-    if (changes.rulesToUpdate && changes.rulesToUpdate.length > 0) {
-      for (const ruleUpdate of changes.rulesToUpdate) {
+    if (rules.toUpdate.length > 0) {
+      for (const ruleUpdate of rules.toUpdate) {
         await this.standardsPort.updateStandardRules({
           standardId: standardId as StandardId,
           ruleId: ruleUpdate.ruleId as RuleId,
-          newRuleContent: ruleUpdate.content,
+          newRuleContent: ruleUpdate.newContent,
           organizationId,
           userId,
         });
       }
       this.logger.info('Updated existing rules in standard', {
         patchId: patch.id,
-        count: changes.rulesToUpdate.length,
+        count: rules.toUpdate.length,
       });
     }
 
     // Delete rules
-    if (changes.rulesToDelete && changes.rulesToDelete.length > 0) {
-      for (const ruleId of changes.rulesToDelete) {
+    if (rules.toDelete.length > 0) {
+      for (const ruleId of rules.toDelete) {
         await this.standardsPort.deleteStandardRule({
           standardId: standardId as StandardId,
           ruleId: ruleId as RuleId,
@@ -194,69 +154,30 @@ export class PatchApplicationService {
       }
       this.logger.info('Deleted rules from standard', {
         patchId: patch.id,
-        count: changes.rulesToDelete.length,
+        count: rules.toDelete.length,
       });
     }
 
-    // Handle example changes
-    if (changes.exampleChanges) {
-      // Add new examples
-      if (
-        changes.exampleChanges.toAdd &&
-        changes.exampleChanges.toAdd.length > 0
-      ) {
-        for (const example of changes.exampleChanges.toAdd) {
-          // Note: We need to know which rule to add the example to
-          // For now, log a warning as we need to enhance the data structure
-          this.logger.warn(
-            'Adding examples requires ruleId in the data structure',
-            {
-              patchId: patch.id,
-              exampleLang: example.lang,
-            },
-          );
-        }
-      }
-
-      // Update existing examples
-      if (
-        changes.exampleChanges.toUpdate &&
-        changes.exampleChanges.toUpdate.length > 0
-      ) {
-        for (const example of changes.exampleChanges.toUpdate) {
-          await this.standardsPort.updateStandardExample({
-            exampleId: example.exampleId,
-            lang: example.lang,
-            positive: example.positive,
-            negative: example.negative,
-            organizationId,
-            userId,
-          });
-        }
-        this.logger.info('Updated standard examples', {
-          patchId: patch.id,
-          count: changes.exampleChanges.toUpdate.length,
+    // Add new rules
+    if (rules.toAdd.length > 0) {
+      for (const newRule of rules.toAdd) {
+        await this.standardsPort.addRuleToStandard({
+          standardSlug: standard.slug,
+          ruleContent: newRule.content,
+          organizationId,
+          userId,
         });
       }
-
-      // Delete examples
-      if (
-        changes.exampleChanges.toDelete &&
-        changes.exampleChanges.toDelete.length > 0
-      ) {
-        for (const exampleId of changes.exampleChanges.toDelete) {
-          await this.standardsPort.deleteStandardExample({
-            exampleId,
-            organizationId,
-            userId,
-          });
-        }
-        this.logger.info('Deleted standard examples', {
-          patchId: patch.id,
-          count: changes.exampleChanges.toDelete.length,
-        });
-      }
+      this.logger.info('Added new rules to standard', {
+        patchId: patch.id,
+        count: rules.toAdd.length,
+      });
     }
+
+    this.logger.info('Standard update completed successfully', {
+      patchId: patch.id,
+      standardId,
+    });
 
     return true;
   }

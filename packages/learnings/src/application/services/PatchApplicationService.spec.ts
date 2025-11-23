@@ -43,7 +43,7 @@ describe('PatchApplicationService', () => {
     jest.clearAllMocks();
   });
 
-  describe('applyPatch - UPDATE_STANDARD with rulesToAdd', () => {
+  describe('applyPatch - UPDATE_STANDARD with rules.toAdd', () => {
     it('adds new rules to standard successfully', async () => {
       const standardId = createStandardId(uuidv4());
       const organizationId = createOrganizationId(uuidv4());
@@ -58,8 +58,14 @@ describe('PatchApplicationService', () => {
         patchType: KnowledgePatchType.UPDATE_STANDARD,
         proposedChanges: {
           standardId: standardId,
-          changes: {
-            rulesToAdd: ['New rule content 1', 'New rule content 2'],
+          rules: {
+            toKeep: [],
+            toUpdate: [],
+            toDelete: [],
+            toAdd: [
+              { content: 'New rule content 1' },
+              { content: 'New rule content 2' },
+            ],
           },
           rationale: 'Adding new rules',
         },
@@ -92,7 +98,7 @@ describe('PatchApplicationService', () => {
     });
   });
 
-  describe('applyPatch - UPDATE_STANDARD with rulesToUpdate', () => {
+  describe('applyPatch - UPDATE_STANDARD with rules.toUpdate', () => {
     it('updates existing rules in standard successfully', async () => {
       const standardId = createStandardId(uuidv4());
       const ruleId1 = createRuleId(uuidv4());
@@ -109,11 +115,14 @@ describe('PatchApplicationService', () => {
         patchType: KnowledgePatchType.UPDATE_STANDARD,
         proposedChanges: {
           standardId: standardId,
-          changes: {
-            rulesToUpdate: [
-              { ruleId: ruleId1, content: 'Updated rule content 1' },
-              { ruleId: ruleId2, content: 'Updated rule content 2' },
+          rules: {
+            toKeep: [],
+            toUpdate: [
+              { ruleId: ruleId1, newContent: 'Updated rule content 1' },
+              { ruleId: ruleId2, newContent: 'Updated rule content 2' },
             ],
+            toDelete: [],
+            toAdd: [],
           },
           rationale: 'Updating existing rules',
         },
@@ -159,8 +168,11 @@ describe('PatchApplicationService', () => {
         patchType: KnowledgePatchType.UPDATE_STANDARD,
         proposedChanges: {
           standardId: standardId,
-          changes: {
-            rulesToAdd: ['New rule'],
+          rules: {
+            toKeep: [],
+            toUpdate: [],
+            toDelete: [],
+            toAdd: [{ content: 'New rule' }],
           },
           rationale: 'Rationale',
         },
