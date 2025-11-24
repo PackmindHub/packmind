@@ -34,5 +34,4 @@ export {
   PMTimelineConnector,
   PMTimelineTitle,
   PMTimelineDescription,
-  PMTimelineTimestamp,
 } from './PMTimeline/PMTimeline';
