@@ -17,6 +17,10 @@ import {
   LintFilesInDirectoryResult,
 } from './domain/useCases/ILintFilesInDirectory';
 import {
+  LintFilesLocallyCommand,
+  LintFilesLocallyResult,
+} from './domain/useCases/ILintFilesLocally';
+import {
   IPullDataCommand,
   IPullDataResult,
 } from './domain/useCases/IPullDataUseCase';
@@ -81,6 +85,12 @@ export class PackmindCliHexa {
     command: LintFilesInDirectoryCommand,
   ): Promise<LintFilesInDirectoryResult> {
     return this.hexa.useCases.lintFilesInDirectory.execute(command);
+  }
+
+  public async lintFilesLocally(
+    command: LintFilesLocallyCommand,
+  ): Promise<LintFilesLocallyResult> {
+    return this.hexa.useCases.lintFilesLocally.execute(command);
   }
 
   public async pullData(command: IPullDataCommand): Promise<IPullDataResult> {

@@ -88,10 +88,44 @@ export type GetActiveDetectionProgramsForRule = IUseCase<
   GetActiveDetectionProgramsForRuleResult
 >;
 
+// Waiting for the linter hexa to expose the use case
+export type GetDetectionProgramsForPackagesCommand = PackmindCommand & {
+  packagesSlugs: string[];
+};
+
+export type GetDetectionProgramsForPackagesResult = {
+  targets: {
+    name: string;
+    path: string;
+    standards: {
+      name: string;
+      slug: string;
+      scope: string[];
+      rules: {
+        content: string;
+        activeDetectionPrograms: {
+          language: string;
+          detectionProgram: {
+            mode: string;
+            code: string;
+            sourceCodeState: 'AST' | 'RAW';
+          };
+        }[];
+      }[];
+    }[];
+  }[];
+};
+
+export type GetDetectionProgramsForPackages = IUseCase<
+  GetDetectionProgramsForPackagesCommand,
+  GetDetectionProgramsForPackagesResult
+>;
+
 export interface IPackmindGateway {
   listExecutionPrograms: Gateway<ListDetectionPrograms>;
   getDraftDetectionProgramsForRule: Gateway<GetDraftDetectionProgramsForRule>;
   getActiveDetectionProgramsForRule: Gateway<GetActiveDetectionProgramsForRule>;
+  getDetectionProgramsForPackages: Gateway<GetDetectionProgramsForPackages>;
   getPullData: Gateway<IPullContentUseCase>;
   listPackages: PublicGateway<IListPackagesUseCase>;
   getPackageSummary: PublicGateway<IGetPackageSummaryUseCase>;
