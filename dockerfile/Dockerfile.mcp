@@ -27,6 +27,12 @@ COPY --chown=node:node dist/apps/mcp-server/ ./
 # Copy base tree-sitter WASM files to /app/ directory for runtime initialization
 COPY --chown=node:node dist/apps/mcp-server/tree-sitter*.wasm ./
 
+# Remove npm and its global node_modules to eliminate vulnerabilities
+USER root
+RUN rm -rf /usr/local/lib/node_modules/npm && \
+    rm -f /usr/local/bin/npm /usr/local/bin/npx
+USER node
+
 # Expose port
 EXPOSE 3001
 
