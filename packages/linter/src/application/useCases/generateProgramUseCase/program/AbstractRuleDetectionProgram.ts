@@ -760,14 +760,19 @@ The provided program has generated the following runtime errors:
 
   private getPromptDescribeFunction(candidateProgram: string) {
     return `
-Can you please describe how does 'checkSourceCode' function works and what kind of violations it aims to detect.
-Provide a concise summary that explains the algorithm.
-Discard the console.log instructions in the code.
-Don't mention the function 'checkSourceCode' in the description, refer to it as 'the program'.
-Don't mention how to use the program, only how it works.
-Don't include 'example usage' in your program description.
+Describe how the 'checkSourceCode' function works and what kind of violations it aims to detect.
+Be as concise as possible.
+Discard the console.log instructions in the codef if you find some.
 
-Please return your output only in plain text.
+Format your response as follows:
+- Start the first bullet point with "This program..."
+- Provide at most 5 bullet points total
+- Each bullet point must be exactly 1 sentence
+- Focus on the algorithm and violation detection logic
+- Don't mention how to use the program, only how it works
+- Don't include 'example usage' in your description
+
+Return your output only as a bulleted list in plain text.
  ---BeginCode---
 ${candidateProgram}
  ---EndCode---`;
