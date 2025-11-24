@@ -40,6 +40,12 @@ RUN npm install && npm cache clean --force
 # Return to app directory
 WORKDIR /app
 
+# Remove npm and its global node_modules to eliminate vulnerabilities
+USER root
+RUN rm -rf /usr/local/lib/node_modules/npm && \
+    rm -f /usr/local/bin/npm /usr/local/bin/npx
+USER node
+
 # Expose port
 EXPOSE 3000
 
