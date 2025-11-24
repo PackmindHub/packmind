@@ -12,6 +12,7 @@ import {
   ProgramGenerationSection,
   DetectionAccordion,
   DetectionAccordionStatus,
+  StatusMenuAction,
 } from './DetectionAccordions';
 
 interface DetectionProgramConfigurationProps {
@@ -148,6 +149,45 @@ export const DetectionProgramConfiguration: React.FC<
     };
   }, [activeConfigurations]);
 
+  const programMenuActions = useMemo<StatusMenuAction[] | undefined>(() => {
+    if (programStatus !== DetectionAccordionStatus.SUCCESS) {
+      return undefined;
+    }
+
+    const activeConfig = activeConfigurations.find(
+      (config) => config.detectionProgram?.status === DetectionStatus.READY,
+    );
+
+    if (!activeConfig) {
+      return undefined;
+    }
+
+    const actions: StatusMenuAction[] = [];
+
+    // Add "Test Program" action
+    actions.push({
+      label: 'Test program',
+      onClick: () => onTestProgram(activeConfig),
+    });
+
+    // Add "Generate new draft" action
+    if (onGenerateProgram && !isGeneratingProgram) {
+      actions.push({
+        label: 'Generate new draft',
+        onClick: () => onGenerateProgram(selectedLanguage),
+      });
+    }
+
+    return actions.length > 0 ? actions : undefined;
+  }, [
+    programStatus,
+    activeConfigurations,
+    onTestProgram,
+    onGenerateProgram,
+    isGeneratingProgram,
+    selectedLanguage,
+  ]);
+
   if (hasNoExamples) {
     return (
       <PMEmptyState
@@ -189,6 +229,7 @@ export const DetectionProgramConfiguration: React.FC<
         title="Program"
         status={programStatus}
         statusTooltip={programStatusTooltip}
+        statusMenuActions={programMenuActions}
         defaultOpen={shouldOpenProgram}
         disabled={isProgramDisabled}
       >

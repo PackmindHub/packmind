@@ -9,6 +9,13 @@ import {
   PMVStack,
   PMSeparator,
 } from '@packmind/ui';
+import {
+  StatusDropdownBadge,
+  StatusMenuAction,
+  StatusTooltipData,
+  BadgeStatus,
+  getBadgeConfig,
+} from './StatusDropdownBadge';
 
 export enum DetectionAccordionStatus {
   SUCCESS = 'SUCCESS',
@@ -16,15 +23,23 @@ export enum DetectionAccordionStatus {
   IN_PROGRESS = 'IN_PROGRESS',
 }
 
-interface StatusTooltipData {
-  version?: number;
-  createdAt?: Date;
-}
+// Map DetectionAccordionStatus to BadgeStatus
+const statusToBadgeStatus = (status: DetectionAccordionStatus): BadgeStatus => {
+  switch (status) {
+    case DetectionAccordionStatus.SUCCESS:
+      return BadgeStatus.SUCCESS;
+    case DetectionAccordionStatus.FAILED:
+      return BadgeStatus.FAILED;
+    case DetectionAccordionStatus.IN_PROGRESS:
+      return BadgeStatus.IN_PROGRESS;
+  }
+};
 
 interface DetectionAccordionProps {
   title: string;
   status?: DetectionAccordionStatus;
   statusTooltip?: StatusTooltipData;
+  statusMenuActions?: StatusMenuAction[];
   defaultOpen?: boolean;
   disabled?: boolean;
   children: React.ReactNode;
@@ -43,79 +58,78 @@ const formatDate = (date: Date): string => {
 const renderStatusBadge = (
   status: DetectionAccordionStatus,
   tooltipData?: StatusTooltipData,
+  menuActions?: StatusMenuAction[],
 ) => {
-  switch (status) {
-    case DetectionAccordionStatus.SUCCESS: {
-      const badge = (
-        <PMBadge colorPalette="green" variant="solid">
-          Active
-        </PMBadge>
-      );
-
-      if (tooltipData && (tooltipData.version || tooltipData.createdAt)) {
-        const tooltipContent = (
-          <PMVStack gap={2} alignItems="flex-start" padding={1} minWidth="48">
-            <PMText fontWeight="semibold" fontSize="sm">
-              Information
-            </PMText>
-            {tooltipData.version && (
-              <PMVStack gap={1} alignItems="flex-start" width="full">
-                <PMText fontSize="xs" color="secondary">
-                  Version
-                </PMText>
-                <PMText fontSize="sm">{tooltipData.version}</PMText>
-              </PMVStack>
-            )}
-            {tooltipData.createdAt && (
-              <>
-                <PMSeparator width="full" />
-                <PMVStack gap={1} alignItems="flex-start" width="full">
-                  <PMText fontSize="xs" color="secondary">
-                    Generation details
-                  </PMText>
-                  <PMText
-                    fontSize="sm"
-                    cursor="pointer"
-                    role="button"
-                    tabIndex={0}
-                    _hover={{ textDecoration: 'underline' }}
-                  >
-                    {formatDate(tooltipData.createdAt)}
-                  </PMText>
-                </PMVStack>
-              </>
-            )}
-          </PMVStack>
-        );
-
-        return (
-          <PMTooltip label={tooltipContent} placement="top" showArrow>
-            {badge}
-          </PMTooltip>
-        );
-      }
-      return badge;
-    }
-
-    case DetectionAccordionStatus.FAILED:
-      return (
-        <PMBadge colorPalette="red" variant="solid">
-          Failed
-        </PMBadge>
-      );
-    case DetectionAccordionStatus.IN_PROGRESS:
-      return (
-        <PMBadge colorPalette="blue" variant="solid">
-          In progress
-        </PMBadge>
-      );
+  // If menu actions are provided, render as dropdown button styled like a badge
+  if (menuActions && menuActions.length > 0) {
+    return (
+      <StatusDropdownBadge
+        status={statusToBadgeStatus(status)}
+        tooltipData={tooltipData}
+        menuActions={menuActions}
+      />
+    );
   }
+
+  // Otherwise, render as regular badge (with optional tooltip)
+  const badgeConfig = getBadgeConfig(statusToBadgeStatus(status));
+  const badge = (
+    <PMBadge colorPalette={badgeConfig.colorPalette} variant="solid">
+      {badgeConfig.text}
+    </PMBadge>
+  );
+
+  if (tooltipData && (tooltipData.version || tooltipData.createdAt)) {
+    const tooltipContent = (
+      <PMVStack gap={2} alignItems="flex-start" padding={1} minWidth="48">
+        <PMText fontWeight="semibold" fontSize="sm">
+          Information
+        </PMText>
+        {tooltipData.version && (
+          <PMVStack gap={1} alignItems="flex-start" width="full">
+            <PMText fontSize="xs" color="secondary">
+              Version
+            </PMText>
+            <PMText fontSize="sm">{tooltipData.version}</PMText>
+          </PMVStack>
+        )}
+        {tooltipData.createdAt && (
+          <>
+            <PMSeparator width="full" />
+            <PMVStack gap={1} alignItems="flex-start" width="full">
+              <PMText fontSize="xs" color="secondary">
+                Generation details
+              </PMText>
+              <PMText
+                fontSize="sm"
+                cursor="pointer"
+                role="button"
+                tabIndex={0}
+                _hover={{ textDecoration: 'underline' }}
+              >
+                {formatDate(tooltipData.createdAt)}
+              </PMText>
+            </PMVStack>
+          </>
+        )}
+      </PMVStack>
+    );
+
+    return (
+      <PMTooltip label={tooltipContent} placement="top" showArrow>
+        {badge}
+      </PMTooltip>
+    );
+  }
+
+  return badge;
 };
 
 export const DetectionAccordion: React.FC<DetectionAccordionProps> = ({
   title,
   status,
   statusTooltip,
+  statusMenuActions,
   defaultOpen = false,
   disabled = false,
   children,
@@ -143,7 +157,7 @@ export const DetectionAccordion: React.FC<DetectionAccordionProps> = ({
             <PMText>{title}</PMText>
             {status && (
               <PMBox marginLeft="auto">
-                {renderStatusBadge(status, statusTooltip)}
+                {renderStatusBadge(status, statusTooltip, statusMenuActions)}
               </PMBox>
             )}
           </PMHStack>
