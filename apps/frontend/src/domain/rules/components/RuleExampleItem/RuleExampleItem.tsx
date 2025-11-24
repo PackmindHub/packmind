@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { RuleExample, RuleId } from '@packmind/types';
 import {
@@ -106,6 +106,14 @@ export const RuleExampleItem: React.FC<RuleExampleItemProps> = ({
 
   // Get sorted languages for display
   const sortedLanguages = getAllLanguagesSortedByDisplayName();
+
+  useEffect(() => {
+    setEditValues((previousValues) => ({
+      positive: '',
+      negative: '',
+      lang: example.lang,
+    }));
+  }, [example.lang]);
 
   const languageCollection = useMemo(() => {
     return pmCreateListCollection({
