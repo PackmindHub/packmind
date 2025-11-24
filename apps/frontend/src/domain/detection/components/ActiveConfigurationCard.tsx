@@ -177,7 +177,10 @@ export const ActiveConfigurationCard: React.FC<
             version={configuration.detectionProgram?.version ?? 1}
             createdAt={configuration.detectionProgram?.createdAt}
             programState="active"
-            status={configuration.detectionProgram?.status ?? DetectionStatus.TO_REVIEW}
+            status={
+              configuration.detectionProgram?.status ??
+              DetectionStatus.TO_REVIEW
+            }
           />
           {configuration.draftProgram && (
             <PMText fontSize="sm" color="faded">
@@ -212,7 +215,9 @@ export const ActiveConfigurationCard: React.FC<
             version={configuration.detectionProgram?.version ?? 1}
             createdAt={configuration.detectionProgram?.createdAt}
             programState="outdated"
-            status={configuration.detectionProgram?.status ?? DetectionStatus.READY}
+            status={
+              configuration.detectionProgram?.status ?? DetectionStatus.READY
+            }
           />
           <PMHStack gap={1} alignItems="center">
             <PMIcon color="text.warning" size="xs">
