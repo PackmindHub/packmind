@@ -1,7 +1,7 @@
 import { createOrganizationId } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { GetAiServiceForOrganizationUseCase } from './getAiServiceForOrganization.usecase';
-import { OpenAIService } from '../../../infra/services/OpenAIService';
+import { PackmindService } from '../../../infra/services/PackmindService';
 
 describe('GetAiServiceForOrganizationUseCase', () => {
   let useCase: GetAiServiceForOrganizationUseCase;
@@ -21,16 +21,15 @@ describe('GetAiServiceForOrganizationUseCase', () => {
 
         const result = await useCase.execute({ organizationId });
 
-        expect(result).toBeDefined();
         expect(result.aiService).toBeDefined();
       });
 
-      it('returns an OpenAIService instance', async () => {
+      it('returns a PackmindService instance', async () => {
         const organizationId = createOrganizationId(uuidv4());
 
         const result = await useCase.execute({ organizationId });
 
-        expect(result.aiService).toBeInstanceOf(OpenAIService);
+        expect(result.aiService).toBeInstanceOf(PackmindService);
       });
 
       it('returns a new instance on each call', async () => {

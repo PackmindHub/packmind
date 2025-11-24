@@ -13,6 +13,7 @@ export enum LLMProvider {
   GEMINI = 'gemini',
   OPENAI_COMPATIBLE = 'openai-compatible',
   AZURE_OPENAI = 'azure-openai',
+  PACKMIND = 'packmind',
 }
 
 /**
@@ -78,6 +79,16 @@ export type AzureOpenAIServiceConfig = {
 };
 
 /**
+ * Packmind service configuration.
+ * This is the default provider for the SaaS platform.
+ * Delegates to a concrete provider based on PACKMIND_DEFAULT_PROVIDER environment variable.
+ * Defaults to OpenAI if not configured.
+ */
+export type PackmindServiceConfig = {
+  provider: LLMProvider.PACKMIND;
+};
+
+/**
  * Discriminated union of all supported LLM service configurations.
  * The 'provider' field is used as the discriminator for type safety.
  */
@@ -86,4 +97,5 @@ export type LLMServiceConfig =
   | AnthropicServiceConfig
   | GeminiServiceConfig
   | OpenAICompatibleServiceConfig
-  | AzureOpenAIServiceConfig;
+  | AzureOpenAIServiceConfig
+  | PackmindServiceConfig;
