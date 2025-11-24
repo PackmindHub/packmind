@@ -49,6 +49,8 @@ import {
   CopyDetectionHeuristicsResponse,
   CopyLinterArtefactsCommand,
   CopyLinterArtefactsResponse,
+  GetDetectionProgramsForPackagesCommand,
+  GetDetectionProgramsForPackagesResponse,
   DetectionModeEnum,
   SourceCodeState,
 } from '@packmind/types';
@@ -304,5 +306,12 @@ export class LinterAdapter implements ILinterPort {
       copiedAssessmentsCount: 0,
       copiedProgramsCount: 0,
     };
+  }
+
+  getDetectionProgramsForPackages(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    command: GetDetectionProgramsForPackagesCommand,
+  ): Promise<GetDetectionProgramsForPackagesResponse> {
+    throw new Error('Method not implemented.');
   }
 }
