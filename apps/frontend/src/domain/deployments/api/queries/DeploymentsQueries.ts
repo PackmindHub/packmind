@@ -22,6 +22,7 @@ import {
   UPDATE_PACKAGE_MUTATION_KEY,
   GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
   GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
+  GET_TARGETS_BY_REPOSITORY_KEY,
   GET_TARGETS_BY_ORGANIZATION_KEY,
   GET_RENDER_MODE_CONFIGURATION_KEY,
 } from '../queryKeys';
@@ -316,6 +317,33 @@ export const useDeployPackagesMutation = () => {
       console.log('variables: ', variables);
       console.log('context: ', context);
     },
+  });
+};
+
+/**
+ * @deprecated Use useGetTargetsByOrganizationQuery instead.
+ * This hook is maintained for backward compatibility with components
+ * that still reference repository-scoped queries.
+ *
+ * Note: This now fetches all organization targets and returns them directly.
+ * Consumers should filter by repository if needed.
+ */
+export const useGetTargetsByRepositoryQuery = (owner: string, repo: string) => {
+  const { organization } = useAuthContext();
+
+  return useQuery({
+    queryKey: [...GET_TARGETS_BY_REPOSITORY_KEY, owner, repo],
+    queryFn: () => {
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to fetch targets');
+      }
+      return deploymentsGateways.getTargetsByRepository({
+        organizationId: organization.id,
+        owner,
+        repo,
+      });
+    },
+    enabled: !!owner && !!repo && !!organization?.id,
   });
 };
 

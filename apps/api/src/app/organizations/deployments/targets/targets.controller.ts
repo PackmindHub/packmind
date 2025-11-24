@@ -17,6 +17,7 @@ import {
   TargetId,
   TargetWithRepository,
   GetTargetsByOrganizationCommand,
+  GetTargetsByRepositoryCommand,
   AddTargetCommand,
   UpdateTargetCommand,
   DeleteTargetCommand,
@@ -75,6 +76,59 @@ export class TargetsController {
         'GET /organizations/:orgId/deployments/targets - Failed to fetch targets',
         {
           organizationId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Get('repository/:owner/:repo')
+  async getTargetsByRepository(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('owner') owner: string,
+    @Param('repo') repo: string,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<TargetWithRepository[]> {
+    this.logger.info(
+      'GET /organizations/:orgId/deployments/targets/repository/:owner/:repo - Fetching targets by repository name',
+      {
+        organizationId,
+        owner,
+        repo,
+      },
+    );
+
+    try {
+      const command: GetTargetsByRepositoryCommand = {
+        userId: request.user.userId,
+        organizationId,
+        owner,
+        repo,
+      };
+
+      const targets = await this.targetsService.getTargetsByRepository(command);
+
+      this.logger.info(
+        'GET /organizations/:orgId/deployments/targets/repository/:owner/:repo - Targets fetched successfully',
+        {
+          organizationId,
+          owner,
+          repo,
+          count: targets.length,
+        },
+      );
+
+      return targets;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/deployments/targets/repository/:owner/:repo - Failed to fetch targets',
+        {
+          organizationId,
+          owner,
+          repo,
           error: errorMessage,
         },
       );

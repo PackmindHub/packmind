@@ -13,6 +13,7 @@ import {
   IPublishStandards,
   IPublishPackages,
   IGetTargetsByOrganizationUseCase,
+  IGetTargetsByRepositoryUseCase,
   IAddTargetUseCase,
   IUpdateTargetUseCase,
   IDeleteTargetUseCase,
@@ -34,6 +35,7 @@ export interface IDeploymentsGateway {
   publishStandards: NewGateway<IPublishStandards>;
   publishPackages: NewGateway<IPublishPackages>;
   getTargetsByOrganization: NewGateway<IGetTargetsByOrganizationUseCase>;
+  getTargetsByRepository: NewGateway<IGetTargetsByRepositoryUseCase>;
   addTarget: NewGateway<IAddTargetUseCase>;
   updateTarget: NewGateway<IUpdateTargetUseCase>;
   deleteTarget: NewGateway<IDeleteTargetUseCase>;
