@@ -10,6 +10,7 @@ import {
   PMTimelineDescription,
 } from './PMTimeline';
 import { LuCheck, LuRocket, LuInfo, LuCircleAlert } from 'react-icons/lu';
+import { PMBox } from '../../layout/PMBox/PMBox';
 
 const meta: Meta<typeof PMTimeline> = {
   title: 'Content/PMTimeline',
@@ -266,6 +267,50 @@ export const SubtleVariant: Story = {
         </PMTimelineItem>
       </PMTimeline>
     </div>
+  ),
+};
+
+export const SubtleOnPrimaryVariant: Story = {
+  render: () => (
+    <PMBox bg="{colors.background.primary}">
+      <PMTimeline variant="subtleOnPrimary">
+        <PMTimelineItem>
+          <PMTimelineConnector>
+            <PMTimelineSeparator />
+            <PMTimelineIndicator />
+          </PMTimelineConnector>
+          <PMTimelineContent>
+            <PMTimelineTitle>Registration</PMTimelineTitle>
+            <PMTimelineDescription>User account created</PMTimelineDescription>
+          </PMTimelineContent>
+        </PMTimelineItem>
+
+        <PMTimelineItem>
+          <PMTimelineConnector>
+            <PMTimelineSeparator />
+            <PMTimelineIndicator />
+          </PMTimelineConnector>
+          <PMTimelineContent>
+            <PMTimelineTitle>Email Verification</PMTimelineTitle>
+            <PMTimelineDescription>
+              Verification email sent
+            </PMTimelineDescription>
+          </PMTimelineContent>
+        </PMTimelineItem>
+
+        <PMTimelineItem>
+          <PMTimelineConnector>
+            <PMTimelineIndicator icon={<LuCheck />} />
+          </PMTimelineConnector>
+          <PMTimelineContent>
+            <PMTimelineTitle>Onboarding</PMTimelineTitle>
+            <PMTimelineDescription>
+              Welcome tour completed
+            </PMTimelineDescription>
+          </PMTimelineContent>
+        </PMTimelineItem>
+      </PMTimeline>
+    </PMBox>
   ),
 };
 
