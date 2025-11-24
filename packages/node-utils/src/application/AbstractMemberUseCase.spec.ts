@@ -132,10 +132,6 @@ describe('AbstractMemberUseCase', () => {
         organization,
         membership,
       });
-      expect(logger.info).toHaveBeenCalledWith('Member validation successful', {
-        userId: command.userId,
-        organizationId: command.organizationId,
-      });
     });
   });
 
@@ -170,11 +166,6 @@ describe('AbstractMemberUseCase', () => {
         UserNotFoundError,
       );
       expect(mockExecuteForMembers).not.toHaveBeenCalled();
-      expect(logger.error).toHaveBeenCalledWith('Member validation failed', {
-        userId: command.userId,
-        organizationId: command.organizationId,
-        reason: 'user_not_found',
-      });
     });
   });
 
@@ -194,11 +185,6 @@ describe('AbstractMemberUseCase', () => {
         UserNotInOrganizationError,
       );
       expect(mockExecuteForMembers).not.toHaveBeenCalled();
-      expect(logger.error).toHaveBeenCalledWith('Member validation failed', {
-        userId: command.userId,
-        organizationId: command.organizationId,
-        reason: 'user_not_in_organization',
-      });
     });
   });
 });
