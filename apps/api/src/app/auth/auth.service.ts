@@ -162,42 +162,34 @@ export class AuthService {
       email: maskEmail(signInRequest.email),
     });
 
-    try {
-      // Use the SignInUser use case
-      const signInUserResponse =
-        await this.accountsAdapter.signInUser(signInRequest);
+    // Use the SignInUser use case
+    const signInUserResponse =
+      await this.accountsAdapter.signInUser(signInRequest);
 
-      // Create JWT payload
-      const payload = {
-        user: {
-          name: signInUserResponse.user.email,
-          userId: signInUserResponse.user.id,
-        },
-        organization: signInUserResponse.organization
-          ? {
-              id: signInUserResponse.organization.id,
-              name: signInUserResponse.organization.name,
-              slug: signInUserResponse.organization.slug,
-              role: signInUserResponse.role,
-            }
-          : undefined,
-      };
+    // Create JWT payload
+    const payload = {
+      user: {
+        name: signInUserResponse.user.email,
+        userId: signInUserResponse.user.id,
+      },
+      organization: signInUserResponse.organization
+        ? {
+            id: signInUserResponse.organization.id,
+            name: signInUserResponse.organization.name,
+            slug: signInUserResponse.organization.slug,
+            role: signInUserResponse.role,
+          }
+        : undefined,
+    };
 
-      // Generate access token
-      const accessToken = this.jwtService.sign(payload);
+    // Generate access token
+    const accessToken = this.jwtService.sign(payload);
 
-      this.logger.log('User signed in successfully', {
-        email: maskEmail(signInUserResponse.user.email),
-      });
+    this.logger.log('User signed in successfully', {
+      email: maskEmail(signInUserResponse.user.email),
+    });
 
-      return { ...signInUserResponse, accessToken };
-    } catch (error) {
-      this.logger.error('Sign in failed for user', {
-        email: maskEmail(signInRequest.email),
-        error,
-      });
-      throw error;
-    }
+    return { ...signInUserResponse, accessToken };
   }
 
   async getMe(accessToken?: string): Promise<GetMeResponse> {

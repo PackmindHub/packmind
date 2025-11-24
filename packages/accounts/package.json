@@ -14,7 +14,6 @@
     "uuid": "^11.1.0",
     "bcrypt": "^6.0.0",
     "slug": "^11.0.0",
-    "@nestjs/common": "^11.1.6",
     "validator": "^13.15.15",
     "@packmind/test-utils": "0.0.1"
   },

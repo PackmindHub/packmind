@@ -8,6 +8,7 @@ export { InvitationConfigurationError } from './InvitationConfigurationError';
 export { InvalidInvitationEmailError } from './InvalidInvitationEmailError';
 export { InvitationNotFoundError } from './InvitationNotFoundError';
 export { InvitationExpiredError } from './InvitationExpiredError';
+export { InvalidEmailOrPasswordError } from './InvalidEmailOrPasswordError';
 export { UserNotFoundError } from './UserNotFoundError';
 export { TooManyLoginAttemptsError } from './TooManyLoginAttemptsError';
 export { UserNotInOrganizationError } from './UserNotInOrganizationError';
