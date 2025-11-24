@@ -127,21 +127,23 @@ export const ActiveConfigurationSection: React.FC<
   return (
     <>
       <PMFlex gap={4} wrap="wrap">
-        {configurations.map((config) => (
-          <ActiveConfigurationCard
-            key={config.id}
-            configuration={config}
-            onGenerateProgram={onGenerateProgram}
-            isGenerating={isGeneratingProgram}
-            standardId={standardId}
-            ruleId={ruleId}
-            onTestProgram={onTestProgram}
-            onActivateDraft={onActivateDraft}
-            activatingDraftId={activatingDraftId}
-            isActivatingDraft={isActivatingDraft}
-            onOpenAssessmentDrawer={handleOpenAssessmentDrawer}
-          />
-        ))}
+        {configurations
+          .filter((config) => config != null)
+          .map((config) => (
+            <ActiveConfigurationCard
+              key={config.id}
+              configuration={config}
+              onGenerateProgram={onGenerateProgram}
+              isGenerating={isGeneratingProgram}
+              standardId={standardId}
+              ruleId={ruleId}
+              onTestProgram={onTestProgram}
+              onActivateDraft={onActivateDraft}
+              activatingDraftId={activatingDraftId}
+              isActivatingDraft={isActivatingDraft}
+              onOpenAssessmentDrawer={handleOpenAssessmentDrawer}
+            />
+          ))}
       </PMFlex>
       <DetectionAssessmentDrawer
         isOpen={openDrawerLanguage !== null}

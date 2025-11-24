@@ -1,15 +1,11 @@
 import React from 'react';
 import { PMVStack } from '@packmind/ui';
-import { ActiveConfigurationSection } from '../ActiveConfigurationSection';
-import { ActiveConfigurationCardData } from '../ActiveConfigurationCard';
+import { ActiveConfigurationSection } from '../ActiveConfigurationsList';
+import { ActiveConfigurationSectionData as ActiveConfigurationCardData } from '../ActiveConfigurationSection/';
 import {
   DetectionDraftCard,
   DraftCardData,
 } from '../DetectionDraftCard/DetectionDraftCard';
-import { ActiveConfigurationSection } from '../ActiveConfigurationsList';
-import { DraftsSection } from '../DraftsSection';
-import { ActiveConfigurationSectionData as ActiveConfigurationCardData } from '../ActiveConfigurationSection/';
-import { DraftCardData } from '../DetectionDraftCard';
 
 interface ProgramGenerationSectionProps {
   standardId: string;

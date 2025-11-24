@@ -10,7 +10,7 @@ import {
   ActiveConfigurationSectionData as ActiveConfigurationCardData,
   ActiveConfigurationState,
 } from '../ActiveConfigurationSection/';
-import { DraftCardData } from '../DetectionDraftCard';
+import { DraftCardData } from '../DetectionDraftCard/DetectionDraftCard';
 import { ProgramGenerationTimeline } from '../ProgramGenerationTimeline';
 import { ProgramStateSummary } from '../ProgramStateSummary';
 import { AccordionSection } from './AccordionSection';

@@ -1,5 +1,5 @@
 import { DetectionProgram } from '@packmind/types';
-import { DraftCardData } from '../DetectionDraftCard';
+import { DraftCardData } from '../DetectionDraftCard/DetectionDraftCard';
 
 export enum ActiveConfigurationState {
   OK = 'ok',

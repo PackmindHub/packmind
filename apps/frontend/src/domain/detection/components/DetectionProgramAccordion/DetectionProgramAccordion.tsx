@@ -3,7 +3,7 @@ import { PMVStack } from '@packmind/ui';
 import { RuleDetectionAssessmentStatus } from '@packmind/types';
 import { useGetRuleDetectionAssessmentQuery } from '../../api/queries/DetectionProgramQueries';
 import { ActiveConfigurationSectionData as ActiveConfigurationCardData } from '../ActiveConfigurationSection/';
-import { DraftCardData } from '../DetectionDraftCard';
+import { DraftCardData } from '../DetectionDraftCard/DetectionDraftCard';
 import { DetectabilitySection } from '../DetectionAccordions/DetectabilitySection';
 import { ProgramAccordionSection } from './ProgramAccordionSection';
 

@@ -1,7 +1,7 @@
 import { IPMButtonProps } from '@packmind/ui';
 import { DetectionStatus } from '@packmind/types';
 import { ActiveConfigurationSectionProps } from './types';
-import { DraftCardData } from '../DetectionDraftCard';
+import { DraftCardData } from '../DetectionDraftCard/DetectionDraftCard';
 
 export function getToReviewMainAction({
   configuration,

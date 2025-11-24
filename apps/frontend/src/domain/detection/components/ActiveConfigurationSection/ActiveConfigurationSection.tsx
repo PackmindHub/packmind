@@ -46,6 +46,11 @@ export const ActiveConfigurationSection: React.FC<
     userEmail,
   });
 
+  // Handle undefined configuration
+  if (!configuration) {
+    return null;
+  }
+
   // Handle NO_CONFIG state separately with assessment component
   if (configuration.state === ActiveConfigurationState.NO_CONFIG) {
     return (

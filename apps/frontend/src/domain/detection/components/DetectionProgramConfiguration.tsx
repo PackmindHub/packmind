@@ -133,6 +133,21 @@ export const DetectionProgramConfiguration: React.FC<
     return !detectionLanguages.includes(selectedLanguage);
   }, [detectionLanguages, selectedLanguage]);
 
+  const programStatusTooltip = useMemo(() => {
+    const activeConfig = activeConfigurations.find(
+      (config) => config.detectionProgram?.status === DetectionStatus.READY,
+    );
+    if (!activeConfig?.detectionProgram) {
+      return undefined;
+    }
+    return {
+      version: activeConfig.detectionProgram.version,
+      createdAt: activeConfig.detectionProgram.createdAt
+        ? new Date(activeConfig.detectionProgram.createdAt)
+        : undefined,
+    };
+  }, [activeConfigurations]);
+
   if (hasNoExamples) {
     return (
       <PMEmptyState
@@ -151,21 +166,6 @@ export const DetectionProgramConfiguration: React.FC<
       </PMEmptyState>
     );
   }
-
-  const programStatusTooltip = useMemo(() => {
-    const activeConfig = activeConfigurations.find(
-      (config) => config.detectionProgram?.status === DetectionStatus.READY,
-    );
-    if (!activeConfig?.detectionProgram) {
-      return undefined;
-    }
-    return {
-      version: activeConfig.detectionProgram.version,
-      createdAt: activeConfig.detectionProgram.createdAt
-        ? new Date(activeConfig.detectionProgram.createdAt)
-        : undefined,
-    };
-  }, [activeConfigurations]);
 
   if (!language) {
     return null;
