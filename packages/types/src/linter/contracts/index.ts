@@ -15,6 +15,7 @@ export * from './IGetActiveDetectionProgram';
 export * from './IGetActiveDetectionProgramForRule';
 export * from './IGetAllDetectionProgramsByRule';
 export * from './IGetDetectionHeuristics';
+export * from './IGetDetectionProgramsForPackages';
 export * from './IGetDetectionProgramMetadata';
 export * from './IGetDraftDetectionProgramForRule';
 export * from './IGetRuleDetectionAssessment';

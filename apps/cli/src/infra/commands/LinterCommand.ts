@@ -12,6 +12,7 @@ import { createRuleId, RuleId } from '@packmind/types';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { IDELintLogger } from '../repositories/IDELintLogger';
 import { HumanReadableLogger } from '../repositories/HumanReadableLogger';
+import * as pathModule from 'path';
 
 enum Loggers {
   ide = 'ide',
@@ -99,18 +100,30 @@ export const lintCommand = command({
     const targetPath = path ?? '.';
     const hasArguments = !!(draft || rule || language);
 
-    // Check if we should use local linting: no arguments + packmind.json exists
+    // Convert to absolute path for config detection
+    const absolutePath = pathModule.isAbsolute(targetPath)
+      ? targetPath
+      : pathModule.resolve(process.cwd(), targetPath);
+
+    // Check if we should use local linting: no arguments + packmind.json exists in hierarchy
     let useLocalLinting = false;
     if (!hasArguments) {
-      const config = await packmindCliHexa.readConfig(targetPath);
-      useLocalLinting = config.length > 0;
+      try {
+        const gitRoot =
+          await packmindCliHexa.getGitRepositoryRoot(absolutePath);
+        const hierarchicalConfig = await packmindCliHexa.readHierarchicalConfig(
+          absolutePath,
+          gitRoot,
+        );
+        useLocalLinting = hierarchicalConfig.hasConfigs;
+      } catch {
+        // Git root not found or other error - fall back to deployment mode
+        useLocalLinting = false;
+      }
     }
 
     let violations;
     if (useLocalLinting) {
-      packmindLogger.info(
-        'Using local linting with packmind.json configuration',
-      );
       const result = await packmindCliHexa.lintFilesLocally({
         path: targetPath,
       });

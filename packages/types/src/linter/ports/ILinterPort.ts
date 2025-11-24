@@ -24,6 +24,8 @@ import type {
   GetAllDetectionProgramsByRuleResponse,
   GetDetectionProgramMetadataCommand,
   GetDetectionProgramMetadataResponse,
+  GetDetectionProgramsForPackagesCommand,
+  GetDetectionProgramsForPackagesResponse,
   GetDraftDetectionProgramForRuleCommand,
   GetDraftDetectionProgramForRuleResponse,
   GetRuleDetectionAssessmentCommand,
@@ -157,4 +159,8 @@ export interface ILinterPort {
   createDetectionHeuristics(
     command: CreateDetectionHeuristicsCommand,
   ): Promise<CreateDetectionHeuristicsResponse>;
+
+  getDetectionProgramsForPackages(
+    command: GetDetectionProgramsForPackagesCommand,
+  ): Promise<GetDetectionProgramsForPackagesResponse>;
 }

@@ -107,19 +107,34 @@ export class LintFilesLocallyUseCase implements ILintFilesLocally {
       ? path.dirname(absoluteUserPath)
       : absoluteUserPath;
 
-    const config =
-      await this.repositories.configFileRepository.readConfig(
+    const gitRepoRoot =
+      await this.services.gitRemoteUrlService.getGitRepositoryRoot(
         directoryForConfig,
       );
 
-    if (!config) {
+    const hierarchicalConfig =
+      await this.repositories.configFileRepository.readHierarchicalConfig(
+        directoryForConfig,
+        gitRepoRoot,
+      );
+
+    if (!hierarchicalConfig.hasConfigs) {
       throw new Error(
-        `No packmind.json found at ${directoryForConfig}. Cannot use local linting.`,
+        `No packmind.json found between ${directoryForConfig} and ${gitRepoRoot}. Cannot use local linting.`,
       );
     }
 
-    const packageSlugs = Object.keys(config.packages);
-    this.logger.info(`Found ${packageSlugs.length} packages in packmind.json`);
+    this.logger.debug(
+      `Found ${hierarchicalConfig.configPaths.length} packmind.json file(s)`,
+    );
+    for (const configPath of hierarchicalConfig.configPaths) {
+      this.logger.debug(`Using config: ${configPath}`);
+    }
+
+    const packageSlugs = Object.keys(hierarchicalConfig.packages);
+    this.logger.debug(
+      `Merged ${packageSlugs.length} packages from configuration files`,
+    );
 
     const detectionPrograms =
       await this.repositories.packmindGateway.getDetectionProgramsForPackages({
@@ -139,11 +154,6 @@ export class LintFilesLocallyUseCase implements ILintFilesLocally {
         );
 
     this.logger.debug(`Found ${files.length} files to lint`);
-
-    const gitRepoRoot =
-      await this.services.gitRemoteUrlService.getGitRepositoryRoot(
-        directoryForConfig,
-      );
 
     const violations: LintViolation[] = [];
 
