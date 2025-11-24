@@ -12,5 +12,5 @@ export type {
   StatusTooltipData,
   BadgeConfig,
 } from './StatusDropdownBadge';
-export { ProgramGenerationSection } from './ProgramGenerationSection';
+export { ProgramGenerationAccordion } from './ProgramGenerationAccordion';
 export { DetectabilitySection } from './DetectabilitySection';

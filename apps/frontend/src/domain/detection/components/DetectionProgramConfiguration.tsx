@@ -1,18 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { PMVStack, PMEmptyState, PMButton } from '@packmind/ui';
-import {
-  RuleDetectionAssessmentStatus,
-  DetectionStatus,
-} from '@packmind/types';
+import { RuleDetectionAssessmentStatus } from '@packmind/types';
 import { useGetRuleDetectionAssessmentQuery } from '../api/queries/DetectionProgramQueries';
 import { ActiveConfigurationSectionData as ActiveConfigurationCardData } from './ActiveConfigurationSection/';
 import { DraftCardData } from './DetectionDraftCard/DetectionDraftCard';
 import {
   DetectabilitySection,
-  ProgramGenerationSection,
+  ProgramGenerationAccordion,
   DetectionAccordion,
   DetectionAccordionStatus,
-  StatusMenuAction,
 } from './DetectionAccordions';
 
 interface DetectionProgramConfigurationProps {
@@ -47,33 +43,6 @@ const convertToAccordionStatus = (
     default:
       return DetectionAccordionStatus.IN_PROGRESS;
   }
-};
-
-const getProgramStatus = (
-  activeConfigurations: ActiveConfigurationCardData[],
-  isGeneratingProgram: boolean,
-): DetectionAccordionStatus | undefined => {
-  if (isGeneratingProgram) {
-    return DetectionAccordionStatus.IN_PROGRESS;
-  }
-
-  const hasSuccess = activeConfigurations.some(
-    (config) => config.detectionProgram?.status === DetectionStatus.READY,
-  );
-  const hasError = activeConfigurations.some(
-    (config) =>
-      config.detectionProgram?.status === DetectionStatus.ERROR ||
-      config.detectionProgram?.status === DetectionStatus.FAILURE,
-  );
-
-  if (hasError) {
-    return DetectionAccordionStatus.FAILED;
-  }
-  if (hasSuccess) {
-    return DetectionAccordionStatus.SUCCESS;
-  }
-
-  return undefined;
 };
 
 export const DetectionProgramConfiguration: React.FC<
@@ -130,69 +99,10 @@ export const DetectionProgramConfiguration: React.FC<
       : undefined;
   }, [assessment?.status]);
 
-  const programStatus = useMemo(
-    () => getProgramStatus(activeConfigurations, isGeneratingProgram),
-    [activeConfigurations, isGeneratingProgram],
-  );
-
   const hasNoExamples = useMemo(() => {
     // Check if the selected language has examples by checking if it's in detectionLanguages
     return !detectionLanguages.includes(selectedLanguage);
   }, [detectionLanguages, selectedLanguage]);
-
-  const programStatusTooltip = useMemo(() => {
-    const activeConfig = activeConfigurations.find(
-      (config) => config.detectionProgram?.status === DetectionStatus.READY,
-    );
-    if (!activeConfig?.detectionProgram) {
-      return undefined;
-    }
-    return {
-      version: activeConfig.detectionProgram.version,
-      createdAt: activeConfig.detectionProgram.createdAt
-        ? new Date(activeConfig.detectionProgram.createdAt)
-        : undefined,
-    };
-  }, [activeConfigurations]);
-
-  const programMenuActions = useMemo<StatusMenuAction[] | undefined>(() => {
-    if (programStatus !== DetectionAccordionStatus.SUCCESS) {
-      return undefined;
-    }
-
-    const activeConfig = activeConfigurations.find(
-      (config) => config.detectionProgram?.status === DetectionStatus.READY,
-    );
-
-    if (!activeConfig) {
-      return undefined;
-    }
-
-    const actions: StatusMenuAction[] = [];
-
-    // Add "Test Program" action
-    actions.push({
-      label: 'Test program',
-      onClick: () => onTestProgram(activeConfig),
-    });
-
-    // Add "Generate new draft" action
-    if (onGenerateProgram && !isGeneratingProgram) {
-      actions.push({
-        label: 'Generate new draft',
-        onClick: () => onGenerateProgram(selectedLanguage),
-      });
-    }
-
-    return actions.length > 0 ? actions : undefined;
-  }, [
-    programStatus,
-    activeConfigurations,
-    onTestProgram,
-    onGenerateProgram,
-    isGeneratingProgram,
-    selectedLanguage,
-  ]);
 
   if (hasNoExamples) {
     return (
@@ -232,31 +142,25 @@ export const DetectionProgramConfiguration: React.FC<
         />
       </DetectionAccordion>
 
-      <DetectionAccordion
-        title="Program"
-        status={programStatus}
-        statusTooltip={programStatusTooltip}
-        statusMenuActions={programMenuActions}
-        open={isProgramOpen}
+      <ProgramGenerationAccordion
+        isOpen={isProgramOpen}
+        standardId={standardId}
+        ruleId={ruleId}
+        activeConfigurations={activeConfigurations}
+        draftPrograms={draftPrograms}
+        isLoadingActivePrograms={isLoadingActivePrograms}
+        isActiveProgramsError={isActiveProgramsError}
+        onGenerateProgram={onGenerateProgram}
+        isGeneratingProgram={isGeneratingProgram}
+        onTestProgram={onTestProgram}
+        onActivateDraft={onActivateDraft}
+        activatingDraftId={activatingDraftId}
+        isActivatingDraft={isActivatingDraft}
+        onRetryDraft={onRetryDraft}
+        selectedLanguage={selectedLanguage}
         onOpenChange={setIsProgramOpen}
         disabled={isProgramDisabled}
-      >
-        <ProgramGenerationSection
-          standardId={standardId}
-          ruleId={ruleId}
-          activeConfigurations={activeConfigurations}
-          draftPrograms={draftPrograms}
-          isLoadingActivePrograms={isLoadingActivePrograms}
-          isActiveProgramsError={isActiveProgramsError}
-          onGenerateProgram={onGenerateProgram}
-          isGeneratingProgram={isGeneratingProgram}
-          onTestProgram={onTestProgram}
-          onActivateDraft={onActivateDraft}
-          activatingDraftId={activatingDraftId}
-          isActivatingDraft={isActivatingDraft}
-          onRetryDraft={onRetryDraft}
-        />
-      </DetectionAccordion>
+      />
     </PMVStack>
   );
 };
