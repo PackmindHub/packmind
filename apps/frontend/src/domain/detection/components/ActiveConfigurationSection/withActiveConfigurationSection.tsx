@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { PMButton, PMText, PMVStack, PMHStack, PMIcon } from '@packmind/ui';
+import { PMButton, PMText, PMVStack, PMHStack } from '@packmind/ui';
 import { DetectionStatus } from '@packmind/types';
 import { ProgramVersionBadge } from '../ProgramVersionBadge';
 import {
@@ -10,8 +10,7 @@ import { getToReviewMainAction } from './utils';
 import { DetectabilitySection } from './sections/DetectabilitySection';
 import { TestActiveVersionSection } from './sections/TestActiveVersionSection';
 import { FalsePositivesSection } from './sections/FalsePositivesSection';
-import { OutdatedSection } from './sections/OutdatedSection';
-import { LuCircleAlert } from 'react-icons/lu';
+import { ToReviewSection } from './sections/ToReviewSection';
 
 export interface WithActiveConfigurationSectionOptions {
   isAssessmentFeatureEnabled?: boolean;
@@ -31,8 +30,7 @@ export function withActiveConfigurationSection(
     isActivatingDraft = false,
   } = props;
 
-  const { isAssessmentFeatureEnabled = false, standardName = 'Standard name' } =
-    options || {};
+  const { standardName } = options || {};
 
   const sections: ReactNode[] = [];
 
@@ -43,9 +41,21 @@ export function withActiveConfigurationSection(
 
     case ActiveConfigurationState.IN_PROGRESS:
       return (
-        <PMText color="faded" fontSize="sm">
-          Configuration in progress.
-        </PMText>
+        <PMVStack alignItems="stretch" gap={4} width="full">
+          {configuration.draftProgram && (
+            <ProgramVersionBadge
+              version={configuration.draftProgram.version}
+              createdAt={configuration.draftProgram.createdAt}
+              programState="draft"
+              status={
+                configuration.draftProgram.status ?? DetectionStatus.IN_PROGRESS
+              }
+            />
+          )}
+          <PMText color="faded" fontSize="sm">
+            Configuration in progress.
+          </PMText>
+        </PMVStack>
       );
 
     case ActiveConfigurationState.OK: {
@@ -75,12 +85,66 @@ export function withActiveConfigurationSection(
 
       return (
         <PMVStack alignItems="stretch" gap={4} width="full">
+          <ProgramVersionBadge
+            version={configuration.detectionProgram?.version ?? 1}
+            createdAt={configuration.detectionProgram?.createdAt}
+            programState="active"
+            status={
+              configuration.detectionProgram?.status ?? DetectionStatus.READY
+            }
+          />
           {sections}
         </PMVStack>
       );
     }
 
     case ActiveConfigurationState.TO_REVIEW: {
+      // If there's an active program, show ToReviewSection + other sections (excluding DetectabilitySection)
+      if (configuration.detectionProgram) {
+        sections.push(
+          <ToReviewSection
+            key="to-review"
+            onGenerateProgramClick={() =>
+              onGenerateProgram
+                ? onGenerateProgram(configuration.language)
+                : undefined
+            }
+            isGenerating={isGenerating}
+          />,
+        );
+
+        sections.push(
+          <TestActiveVersionSection
+            key="test"
+            onTestClick={() => onTestProgram(configuration)}
+          />,
+        );
+
+        sections.push(
+          <FalsePositivesSection
+            key="false-positives"
+            onCodeExamplesClick={() => {
+              // TODO: Implement code examples navigation
+            }}
+          />,
+        );
+
+        return (
+          <PMVStack alignItems="stretch" gap={4} width="full">
+            <ProgramVersionBadge
+              version={configuration.detectionProgram.version}
+              createdAt={configuration.detectionProgram.createdAt}
+              programState="toReview"
+              status={
+                configuration.detectionProgram.status ?? DetectionStatus.READY
+              }
+            />
+            {sections}
+          </PMVStack>
+        );
+      }
+
+      // If there's only a draft program (no active program), show minimal UI
       const mainButtonProps = getToReviewMainAction({
         configuration,
         onGenerateProgram,
@@ -93,19 +157,21 @@ export function withActiveConfigurationSection(
         <PMVStack alignItems="stretch" gap={4} width="full">
           <PMHStack justifyContent="space-between" alignItems="center">
             <PMVStack alignItems="flex-start" gap={2}>
-              <ProgramVersionBadge
-                version={configuration.detectionProgram?.version ?? 1}
-                createdAt={configuration.detectionProgram?.createdAt}
-                programState="active"
-                status={
-                  configuration.detectionProgram?.status ??
-                  DetectionStatus.TO_REVIEW
-                }
-              />
               {configuration.draftProgram && (
-                <PMText fontSize="sm" color="faded">
-                  Draft v{configuration.draftProgram.version} requires review
-                </PMText>
+                <>
+                  <ProgramVersionBadge
+                    version={configuration.draftProgram.version}
+                    createdAt={configuration.draftProgram.createdAt}
+                    programState="toReview"
+                    status={
+                      configuration.draftProgram.status ??
+                      DetectionStatus.TO_REVIEW
+                    }
+                  />
+                  <PMText fontSize="sm" color="faded">
+                    Draft v{configuration.draftProgram.version} requires review
+                  </PMText>
+                </>
               )}
             </PMVStack>
             {mainButtonProps && (
@@ -115,59 +181,6 @@ export function withActiveConfigurationSection(
         </PMVStack>
       );
     }
-
-    case ActiveConfigurationState.OUTDATED:
-      sections.push(
-        <OutdatedSection
-          key="outdated"
-          onGenerateProgramClick={() =>
-            onGenerateProgram
-              ? onGenerateProgram(configuration.language)
-              : undefined
-          }
-          isGenerating={isGenerating}
-        />,
-      );
-
-      sections.push(
-        <TestActiveVersionSection
-          key="test"
-          onTestClick={() => onTestProgram(configuration)}
-        />,
-      );
-
-      sections.push(
-        <FalsePositivesSection
-          key="false-positives"
-          onCodeExamplesClick={() => {
-            // TODO: Implement code examples navigation
-          }}
-        />,
-      );
-
-      return (
-        <PMVStack alignItems="stretch" gap={4} width="full">
-          <PMVStack alignItems="flex-start" gap={2}>
-            <ProgramVersionBadge
-              version={configuration.detectionProgram?.version ?? 1}
-              createdAt={configuration.detectionProgram?.createdAt}
-              programState="outdated"
-              status={
-                configuration.detectionProgram?.status ?? DetectionStatus.READY
-              }
-            />
-            <PMHStack gap={1} alignItems="center">
-              <PMIcon color="text.warning" size="xs">
-                <LuCircleAlert />
-              </PMIcon>
-              <PMText fontSize="sm" color="warning">
-                Rule specifications have changed. Regenerate to ensure accuracy.
-              </PMText>
-            </PMHStack>
-          </PMVStack>
-          {sections}
-        </PMVStack>
-      );
 
     case ActiveConfigurationState.ERROR:
       return null;

@@ -13,6 +13,7 @@ import {
 
 interface DetectionProgramConfigurationProps {
   standardId: string;
+  standardName?: string;
   ruleId: string;
   detectionLanguages: string[];
   selectedLanguage: string;
@@ -49,6 +50,7 @@ export const DetectionProgramConfiguration: React.FC<
   DetectionProgramConfigurationProps
 > = ({
   standardId,
+  standardName,
   ruleId,
   detectionLanguages,
   selectedLanguage,

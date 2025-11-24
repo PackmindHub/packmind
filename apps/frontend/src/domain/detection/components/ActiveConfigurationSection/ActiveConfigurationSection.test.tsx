@@ -275,11 +275,25 @@ describe('ActivateConfigurationCard', () => {
           screen = renderWithContext();
         });
 
-        it('shows a "Activate draft" button', async () => {
-          const user = userEvent.setup();
-          await user.click(screen.getByText('Activate draft'));
+        it('shows active configuration sections with ToReview section', () => {
+          expect(
+            screen.getAllByText(/Program needs review/i)[0],
+          ).toBeInTheDocument();
+          expect(
+            screen.getAllByText(/Test active version/i)[0],
+          ).toBeInTheDocument();
+          expect(
+            screen.getAllByText(/Deal with false-positives/i)[0],
+          ).toBeInTheDocument();
+        });
 
-          expect(onActivateDraft).toHaveBeenCalled();
+        it('shows "Generate new program" button in ToReview section', async () => {
+          const user = userEvent.setup();
+          await user.click(screen.getAllByText('Generate new program')[0]);
+
+          expect(onGenerateProgramSpy).toHaveBeenCalledWith(
+            configuration.language,
+          );
         });
       });
 
@@ -300,9 +314,21 @@ describe('ActivateConfigurationCard', () => {
           screen = renderWithContext();
         });
 
-        it('shows an "Update draft" button', async () => {
+        it('shows active configuration sections with ToReview section', () => {
+          expect(
+            screen.getAllByText(/Program needs review/i)[0],
+          ).toBeInTheDocument();
+          expect(
+            screen.getAllByText(/Test active version/i)[0],
+          ).toBeInTheDocument();
+          expect(
+            screen.getAllByText(/Deal with false-positives/i)[0],
+          ).toBeInTheDocument();
+        });
+
+        it('shows "Generate new program" button in ToReview section', async () => {
           const user = userEvent.setup();
-          await user.click(screen.getByText('Update draft'));
+          await user.click(screen.getAllByText('Generate new program')[0]);
 
           expect(onGenerateProgramSpy).toHaveBeenCalledWith(
             configuration.language,
@@ -327,9 +353,21 @@ describe('ActivateConfigurationCard', () => {
           screen = renderWithContext();
         });
 
-        it('shows an "Retry draft" button', async () => {
+        it('shows active configuration sections with ToReview section', () => {
+          expect(
+            screen.getAllByText(/Program needs review/i)[0],
+          ).toBeInTheDocument();
+          expect(
+            screen.getAllByText(/Test active version/i)[0],
+          ).toBeInTheDocument();
+          expect(
+            screen.getAllByText(/Deal with false-positives/i)[0],
+          ).toBeInTheDocument();
+        });
+
+        it('shows "Generate new program" button in ToReview section', async () => {
           const user = userEvent.setup();
-          await user.click(screen.getByText('Retry draft'));
+          await user.click(screen.getAllByText('Generate new program')[0]);
 
           expect(onGenerateProgramSpy).toHaveBeenCalledWith(
             configuration.language,
@@ -350,9 +388,10 @@ describe('ActivateConfigurationCard', () => {
         screen = renderWithContext();
       });
 
-      it('does not show Active badge in card (it is in accordion now)', () => {
-        // Active badge/dropdown is now shown in the accordion, not in the card
-        expect(screen.queryByText('Active')).not.toBeInTheDocument();
+      it('shows Active badge with version info', () => {
+        // Active badge is shown to display program status and version
+        expect(screen.getByText('Active')).toBeInTheDocument();
+        expect(screen.getByText(/Version \d+/)).toBeInTheDocument();
       });
 
       it('shows DetectabilitySection', () => {

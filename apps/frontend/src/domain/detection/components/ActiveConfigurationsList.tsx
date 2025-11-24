@@ -45,6 +45,7 @@ interface ActiveConfigurationSectionProps {
   onGenerateProgram: (language?: string) => void;
   isGeneratingProgram: boolean;
   standardId: string;
+  standardName?: string;
   ruleId: string;
   onTestProgram: (program: ActiveConfigurationCardData) => void;
   onActivateDraft: (draft: DraftCardData) => void;
@@ -61,6 +62,7 @@ export const ActiveConfigurationSection: React.FC<
   onGenerateProgram,
   isGeneratingProgram,
   standardId,
+  standardName,
   ruleId,
   onTestProgram,
   onActivateDraft,
@@ -136,6 +138,7 @@ export const ActiveConfigurationSection: React.FC<
               onGenerateProgram={onGenerateProgram}
               isGenerating={isGeneratingProgram}
               standardId={standardId}
+              standardName={standardName}
               ruleId={ruleId}
               onTestProgram={onTestProgram}
               onActivateDraft={onActivateDraft}

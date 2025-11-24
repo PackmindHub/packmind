@@ -8,7 +8,7 @@ interface DetectabilitySectionProps {
 
 export const DetectabilitySection: React.FC<DetectabilitySectionProps> = ({
   onLinterUsageClick,
-  standardName = 'Standard name',
+  standardName,
 }) => {
   return (
     <PMBox

@@ -16,10 +16,13 @@ describe('DetectabilitySection', () => {
     jest.restoreAllMocks();
   });
 
-  function renderWithContext() {
+  function renderWithContext(standardName?: string) {
     return render(
       <UIProvider>
-        <DetectabilitySection onLinterUsageClick={onLinterUsageClick} />
+        <DetectabilitySection
+          onLinterUsageClick={onLinterUsageClick}
+          standardName={standardName}
+        />
       </UIProvider>,
     );
   }
@@ -50,6 +53,20 @@ describe('DetectabilitySection', () => {
       await user.click(button);
 
       expect(onLinterUsageClick).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('when standard name is provided', () => {
+    beforeEach(() => {
+      screen = renderWithContext('My Custom Standard');
+    });
+
+    it('displays the standard name in the description', () => {
+      expect(
+        screen.getByText(
+          /Packmind linter will now detect violations of this rules in code where standard 'My Custom Standard' is deployed\./i,
+        ),
+      ).toBeInTheDocument();
     });
   });
 });

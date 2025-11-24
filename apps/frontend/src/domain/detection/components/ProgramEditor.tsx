@@ -54,7 +54,7 @@ export function computeActiveConfigurationState(
   program: LanguageDetectionPrograms,
   detectionProgram: LanguageDetectionPrograms['detectionProgram'] | null,
   draftProgram: LanguageDetectionPrograms['draftDetectionProgram'] | null,
-  isOutdated?: boolean,
+  isToReview?: boolean,
 ): ActiveConfigurationState {
   if (!program.detectionProgramVersion || !detectionProgram) {
     return draftProgram
@@ -62,9 +62,9 @@ export function computeActiveConfigurationState(
       : ActiveConfigurationState.NO_CONFIG;
   }
 
-  // Check if program is outdated first
-  if (isOutdated) {
-    return ActiveConfigurationState.OUTDATED;
+  // Check if program needs review first (due to changes in rules/examples)
+  if (isToReview) {
+    return ActiveConfigurationState.TO_REVIEW;
   }
 
   switch (detectionProgram.status) {
@@ -87,13 +87,14 @@ export function computeActiveConfigurationState(
 }
 
 /**
- * Mock implementation to detect if a program is outdated.
+ * Detects if a program needs review based on rule specifications or examples changes.
  * In a real scenario, this would check if rule specifications or examples
  * have been modified after the program creation date.
- * For now, we use a simple heuristic: if there's a newer draft with a higher version,
- * consider the active program potentially outdated.
+ *
+ * Current implementation checks if the detection program has a "toReview" marker
+ * or if the program data indicates it needs regeneration (from backend).
  */
-function checkIfProgramIsOutdated(
+function checkIfProgramNeedsReview(
   detectionProgram: LanguageDetectionPrograms['detectionProgram'] | null,
   draftProgram: LanguageDetectionPrograms['draftDetectionProgram'] | null,
 ): boolean {
@@ -101,21 +102,36 @@ function checkIfProgramIsOutdated(
     return false;
   }
 
-  // Mock logic: If there's a draft with READY status and a higher version,
-  // consider the active program outdated
+  // Don't mark as needing review if there's a ready draft with a higher version
+  // In this case, the draft should be shown separately
   if (
     draftProgram &&
     draftProgram.status === DetectionStatus.READY &&
     draftProgram.version > detectionProgram.version
   ) {
-    return false; // Don't mark as outdated if there's a ready draft, just show draft available
+    return false;
   }
 
-  // Mock: You can manually set a program as outdated by checking creation dates
-  // For demonstration, we'll add a flag here that could be set from backend
-  // In production, backend would send an "isOutdated" flag or "needsRegeneration" flag
+  // Check if the backend has marked this program as needing review
+  // This would typically be set when rule specifications or examples are modified
+  // after the program was generated
+  const programData = detectionProgram as unknown as {
+    isToReview?: boolean;
+    needsRegeneration?: boolean;
+  };
+  if (programData?.isToReview || programData?.needsRegeneration) {
+    return true;
+  }
 
-  return false; // For now, no programs are marked as outdated automatically
+  // TODO: Remove this temporary testing logic
+  // For demonstration: mark READY programs as needing review to test the UI
+  // In production, this will be determined by comparing rule/example modification
+  // dates with the program creation date
+  if (detectionProgram.status === DetectionStatus.READY) {
+    return true; // Temporarily mark all READY programs as needing review for testing
+  }
+
+  return false;
 }
 
 const ProgramEditor: React.FC<ProgramEditorProps> = ({
@@ -162,6 +178,7 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
     standardId as StandardId,
   );
   const standardSlug = standardData?.standard?.slug ?? null;
+  const standardName = standardData?.standard?.name ?? undefined;
 
   const normalizedPrograms = useMemo<LanguageDetectionPrograms[]>(() => {
     if (!Array.isArray(activePrograms)) {
@@ -186,8 +203,8 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
         const detectionProgram = program.detectionProgram ?? null;
         const draftProgram = program.draftDetectionProgram ?? null;
 
-        // Check if program is outdated
-        const isOutdated = checkIfProgramIsOutdated(
+        // Check if program needs review
+        const isToReview = checkIfProgramNeedsReview(
           detectionProgram,
           draftProgram,
         );
@@ -196,7 +213,7 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
           program,
           detectionProgram,
           draftProgram,
-          isOutdated,
+          isToReview,
         );
 
         return {
@@ -206,7 +223,7 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
           draftProgram,
           state,
           isExampleOnly: program.isExampleOnly ?? false,
-          isOutdated,
+          isToReview,
         };
       });
   }, [normalizedPrograms, selectedLanguage]);
@@ -443,6 +460,7 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
       {isAccordionViewEnabled && (
         <DetectionProgramConfiguration
           standardId={standardId}
+          standardName={standardName}
           ruleId={ruleId}
           detectionLanguages={detectionLanguages}
           selectedLanguage={selectedLanguage}
@@ -469,6 +487,7 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
           onGenerateProgram={handleGenerateProgram}
           isGeneratingProgram={generateProgram.isPending}
           standardId={standardId}
+          standardName={standardName}
           ruleId={ruleId}
           onTestProgram={handleTestDraft}
           onActivateDraft={handleMakeDraftActive}

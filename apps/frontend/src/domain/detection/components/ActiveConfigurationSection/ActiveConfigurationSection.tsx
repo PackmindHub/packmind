@@ -30,6 +30,7 @@ export const ActiveConfigurationSection: React.FC<
   onGenerateProgram,
   isGenerating = false,
   standardId,
+  standardName,
   ruleId,
   onTestProgram,
   onActivateDraft,
@@ -79,6 +80,7 @@ export const ActiveConfigurationSection: React.FC<
       onGenerateProgram,
       isGenerating,
       standardId,
+      standardName,
       ruleId,
       onTestProgram,
       onActivateDraft,
@@ -88,6 +90,7 @@ export const ActiveConfigurationSection: React.FC<
     },
     {
       isAssessmentFeatureEnabled,
+      standardName,
     },
   );
 };

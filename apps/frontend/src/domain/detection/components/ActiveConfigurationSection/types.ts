@@ -7,7 +7,6 @@ export enum ActiveConfigurationState {
   NO_CONFIG = 'noConfig',
   IN_PROGRESS = 'inProgress',
   ERROR = 'error',
-  OUTDATED = 'outdated',
 }
 
 export type ActiveConfigurationSectionData = {
@@ -17,7 +16,7 @@ export type ActiveConfigurationSectionData = {
   draftProgram: DetectionProgram | null | undefined;
   state: ActiveConfigurationState;
   isExampleOnly?: boolean;
-  isOutdated?: boolean;
+  isToReview?: boolean;
 };
 
 // Keep old name as alias for backward compatibility during migration
@@ -28,6 +27,7 @@ export type ActiveConfigurationSectionProps = {
   onGenerateProgram?: (language: string) => void;
   isGenerating?: boolean;
   standardId: string;
+  standardName?: string;
   ruleId: string;
   onTestProgram: (program: ActiveConfigurationSectionData) => void;
   onActivateDraft?: (draft: DraftCardData) => void;
