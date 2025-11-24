@@ -1,33 +1,38 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { deploymentsGateways } from '../gateways';
-import { RecipeId, RecipeVersionId } from '@packmind/types';
-import { StandardId, StandardVersionId } from '@packmind/types';
-import { SpaceId } from '@packmind/types';
-import { OrganizationId, PackageId } from '@packmind/types';
 import {
-  TargetId,
   AddTargetCommand,
-  UpdateTargetCommand,
+  CreatePackageCommand,
   DeleteTargetCommand,
   DeleteTargetResponse,
-  UpdateRenderModeConfigurationCommand,
-  CreatePackageCommand,
+  OrganizationId,
+  PackageId,
+  RecipeId,
+  RecipeVersionId,
+  SpaceId,
+  StandardId,
+  StandardVersionId,
+  TargetId,
   UpdatePackageCommand,
+  UpdateRenderModeConfigurationCommand,
+  UpdateTargetCommand,
 } from '@packmind/types';
-import {
-  LIST_RECIPE_DEPLOYMENTS_KEY,
-  LIST_STANDARD_DEPLOYMENTS_KEY,
-  LIST_PACKAGES_BY_SPACE_KEY,
-  GET_PACKAGE_BY_ID_KEY,
-  UPDATE_PACKAGE_MUTATION_KEY,
-  GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
-  GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
-  GET_TARGETS_BY_REPOSITORY_KEY,
-  GET_TARGETS_BY_ORGANIZATION_KEY,
-  GET_RENDER_MODE_CONFIGURATION_KEY,
-} from '../queryKeys';
+import { pmToaster } from '@packmind/ui';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { isPackmindError } from '../../../../services/api/errors/PackmindError';
 import { GET_ONBOARDING_STATUS_KEY } from '../../../accounts/api/queryKeys';
 import { useAuthContext } from '../../../accounts/hooks';
+import { deploymentsGateways } from '../gateways';
+import {
+  GET_PACKAGE_BY_ID_KEY,
+  GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
+  GET_RENDER_MODE_CONFIGURATION_KEY,
+  GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
+  GET_TARGETS_BY_ORGANIZATION_KEY,
+  GET_TARGETS_BY_REPOSITORY_KEY,
+  LIST_PACKAGES_BY_SPACE_KEY,
+  LIST_RECIPE_DEPLOYMENTS_KEY,
+  LIST_STANDARD_DEPLOYMENTS_KEY,
+  UPDATE_PACKAGE_MUTATION_KEY,
+} from '../queryKeys';
 
 export const useListRecipeDeploymentsQuery = (recipeId: RecipeId) => {
   const { organization } = useAuthContext();
@@ -399,9 +404,22 @@ export const useAddTargetMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
       });
+
+      pmToaster.create({
+        type: 'success',
+        title: 'Target Added',
+        description: `Target "${newTarget.name}" has been created successfully.`,
+      });
     },
     onError: (error) => {
       console.error('Error adding target:', error);
+      pmToaster.create({
+        type: 'error',
+        title: 'Failed to Add Target',
+        description: isPackmindError(error)
+          ? error.message
+          : 'An unexpected error occurred while adding the target.',
+      });
     },
   });
 };
@@ -425,7 +443,7 @@ export const useUpdateTargetMutation = () => {
       });
     },
     onSuccess: async (updatedTarget) => {
-      // Same as useAddTargetMutation
+      // Invalidate all target queries
       await queryClient.invalidateQueries({
         queryKey: GET_TARGETS_BY_ORGANIZATION_KEY,
       });
@@ -436,9 +454,22 @@ export const useUpdateTargetMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
       });
+
+      pmToaster.create({
+        type: 'success',
+        title: 'Target Updated',
+        description: `Target "${updatedTarget.name}" has been updated successfully.`,
+      });
     },
     onError: (error) => {
       console.error('Error updating target:', error);
+      pmToaster.create({
+        type: 'error',
+        title: 'Failed to Update Target',
+        description: isPackmindError(error)
+          ? error.message
+          : 'An unexpected error occurred while updating the target.',
+      });
     },
   });
 };
@@ -461,7 +492,7 @@ export const useDeleteTargetMutation = () => {
         organizationId: organization.id,
       });
     },
-    onSuccess: async () => {
+    onSuccess: async (response) => {
       // Target deleted affects all target queries and deployment overviews
       await queryClient.invalidateQueries({
         queryKey: GET_TARGETS_BY_ORGANIZATION_KEY,
@@ -473,9 +504,22 @@ export const useDeleteTargetMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
       });
+
+      pmToaster.create({
+        type: 'success',
+        title: 'Target Deleted',
+        description: 'Target has been deleted successfully.',
+      });
     },
     onError: (error) => {
       console.error('Error deleting target:', error);
+      pmToaster.create({
+        type: 'error',
+        title: 'Failed to Delete Target',
+        description: isPackmindError(error)
+          ? error.message
+          : 'An unexpected error occurred while deleting the target.',
+      });
     },
   });
 };
