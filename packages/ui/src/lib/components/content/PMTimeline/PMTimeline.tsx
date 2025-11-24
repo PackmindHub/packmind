@@ -6,7 +6,6 @@ import { PMTimelineIndicator } from './PMTimelineIndicator';
 import { PMTimelineConnector } from './PMTimelineConnector';
 import { PMTimelineTitle } from './PMTimelineTitle';
 import { PMTimelineDescription } from './PMTimelineDescription';
-import { PMTimelineTimestamp } from './PMTimelineTimestamp';
 
 export interface PMTimelineProps extends TimelineRootProps {
   children: React.ReactNode;
@@ -25,5 +24,4 @@ export {
   PMTimelineConnector,
   PMTimelineTitle,
   PMTimelineDescription,
-  PMTimelineTimestamp,
 };
