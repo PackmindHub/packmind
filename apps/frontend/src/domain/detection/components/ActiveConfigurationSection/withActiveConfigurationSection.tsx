@@ -11,7 +11,6 @@ import { DetectabilitySection } from './sections/DetectabilitySection';
 import { TestActiveVersionSection } from './sections/TestActiveVersionSection';
 import { FalsePositivesSection } from './sections/FalsePositivesSection';
 import { OutdatedSection } from './sections/OutdatedSection';
-import { InformationSection } from './sections/InformationSection';
 import { LuCircleAlert } from 'react-icons/lu';
 
 export interface WithActiveConfigurationSectionOptions {
@@ -55,17 +54,6 @@ export function withActiveConfigurationSection(
           key="detectability"
           onLinterUsageClick={() => onTestProgram(configuration)}
           standardName={standardName}
-        />,
-      );
-
-      sections.push(
-        <InformationSection
-          key="information"
-          version={configuration.detectionProgram?.version}
-          createdAt={configuration.detectionProgram?.createdAt}
-          onGenerationDetailsClick={() => {
-            // TODO: Implement generation details navigation
-          }}
         />,
       );
 

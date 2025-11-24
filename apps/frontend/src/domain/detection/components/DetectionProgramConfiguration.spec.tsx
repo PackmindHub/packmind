@@ -21,7 +21,7 @@ import {
   DetectionModeEnum,
 } from '@packmind/types';
 import { DetectionProgramConfiguration } from './DetectionProgramConfiguration';
-import { ActiveConfigurationCardData } from './ActiveConfigurationCard';
+import { ActiveConfigurationSectionData as ActiveConfigurationCardData } from './ActiveConfigurationSection/';
 import { DraftCardData } from './DetectionDraftCard/DetectionDraftCard';
 import * as DetectionProgramQueries from '../api/queries/DetectionProgramQueries';
 
