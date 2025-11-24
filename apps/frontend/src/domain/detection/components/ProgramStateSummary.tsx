@@ -15,7 +15,7 @@ import { DetectionStatus } from '@packmind/types';
 interface ProgramStateSummaryProps {
   version?: number;
   status?: DetectionStatus;
-  isOutdated?: boolean;
+  isToReview?: boolean;
   hasDraftAvailable?: boolean;
   showDropdown?: boolean;
   createdAt?: Date;
@@ -34,7 +34,7 @@ const formatDate = (date: Date): string => {
 export const ProgramStateSummary: React.FC<ProgramStateSummaryProps> = ({
   version,
   status,
-  isOutdated,
+  isToReview,
   hasDraftAvailable,
   showDropdown = false,
   createdAt,
@@ -54,7 +54,7 @@ export const ProgramStateSummary: React.FC<ProgramStateSummaryProps> = ({
       </PMText>
 
       {status === DetectionStatus.READY &&
-        !isOutdated &&
+        !isToReview &&
         (showDropdown ? (
           <PMMenu.Root>
             <PMMenu.Trigger asChild>
@@ -112,9 +112,9 @@ export const ProgramStateSummary: React.FC<ProgramStateSummaryProps> = ({
           </PMBadge>
         ))}
 
-      {isOutdated && (
+      {isToReview && (
         <PMTooltip
-          label="Active program is outdated. Rule specifications have changed."
+          label="Active program needs review. Rule specifications have changed."
           placement="top"
         >
           <PMHStack gap={1} alignItems="center">
@@ -122,13 +122,13 @@ export const ProgramStateSummary: React.FC<ProgramStateSummaryProps> = ({
               <LuCircleAlert />
             </PMIcon>
             <PMBadge colorPalette="orange" size="sm">
-              Outdated
+              To Review
             </PMBadge>
           </PMHStack>
         </PMTooltip>
       )}
 
-      {hasDraftAvailable && !isOutdated && (
+      {hasDraftAvailable && !isToReview && (
         <PMTooltip label="New draft available for review" placement="top">
           <PMHStack gap={1} alignItems="center">
             <PMIcon color="text.success" size="xs">

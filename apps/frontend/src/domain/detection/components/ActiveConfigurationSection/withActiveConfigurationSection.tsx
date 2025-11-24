@@ -1,7 +1,5 @@
 import React, { ReactNode } from 'react';
 import { PMButton, PMText, PMVStack, PMHStack } from '@packmind/ui';
-import { DetectionStatus } from '@packmind/types';
-import { ProgramVersionBadge } from '../ProgramVersionBadge';
 import {
   ActiveConfigurationSectionProps,
   ActiveConfigurationState,
@@ -42,16 +40,6 @@ export function withActiveConfigurationSection(
     case ActiveConfigurationState.IN_PROGRESS:
       return (
         <PMVStack alignItems="stretch" gap={4} width="full">
-          {configuration.draftProgram && (
-            <ProgramVersionBadge
-              version={configuration.draftProgram.version}
-              createdAt={configuration.draftProgram.createdAt}
-              programState="draft"
-              status={
-                configuration.draftProgram.status ?? DetectionStatus.IN_PROGRESS
-              }
-            />
-          )}
           <PMText color="faded" fontSize="sm">
             Configuration in progress.
           </PMText>
@@ -85,14 +73,6 @@ export function withActiveConfigurationSection(
 
       return (
         <PMVStack alignItems="stretch" gap={4} width="full">
-          <ProgramVersionBadge
-            version={configuration.detectionProgram?.version ?? 1}
-            createdAt={configuration.detectionProgram?.createdAt}
-            programState="active"
-            status={
-              configuration.detectionProgram?.status ?? DetectionStatus.READY
-            }
-          />
           {sections}
         </PMVStack>
       );
@@ -131,14 +111,6 @@ export function withActiveConfigurationSection(
 
         return (
           <PMVStack alignItems="stretch" gap={4} width="full">
-            <ProgramVersionBadge
-              version={configuration.detectionProgram.version}
-              createdAt={configuration.detectionProgram.createdAt}
-              programState="toReview"
-              status={
-                configuration.detectionProgram.status ?? DetectionStatus.READY
-              }
-            />
             {sections}
           </PMVStack>
         );
@@ -158,20 +130,9 @@ export function withActiveConfigurationSection(
           <PMHStack justifyContent="space-between" alignItems="center">
             <PMVStack alignItems="flex-start" gap={2}>
               {configuration.draftProgram && (
-                <>
-                  <ProgramVersionBadge
-                    version={configuration.draftProgram.version}
-                    createdAt={configuration.draftProgram.createdAt}
-                    programState="toReview"
-                    status={
-                      configuration.draftProgram.status ??
-                      DetectionStatus.TO_REVIEW
-                    }
-                  />
-                  <PMText fontSize="sm" color="faded">
-                    Draft v{configuration.draftProgram.version} requires review
-                  </PMText>
-                </>
+                <PMText fontSize="sm" color="faded">
+                  Draft v{configuration.draftProgram.version} requires review
+                </PMText>
               )}
             </PMVStack>
             {mainButtonProps && (

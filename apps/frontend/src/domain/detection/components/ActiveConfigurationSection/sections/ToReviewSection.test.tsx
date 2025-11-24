@@ -32,8 +32,8 @@ describe('ToReviewSection', () => {
       screen = renderWithContext();
     });
 
-    it('shows "Program needs review" heading', () => {
-      expect(screen.getByText(/Program needs review/i)).toBeInTheDocument();
+    it('shows "Program is outdated" heading', () => {
+      expect(screen.getByText(/Program is outdated/i)).toBeInTheDocument();
     });
 
     it('shows message about active version not matching rule specifications', () => {

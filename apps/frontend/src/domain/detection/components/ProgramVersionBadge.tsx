@@ -2,7 +2,7 @@ import React from 'react';
 import { PMBadge, PMHStack, PMText } from '@packmind/ui';
 import { DetectionStatus } from '@packmind/types';
 
-export type ProgramState = 'active' | 'draft' | 'outdated';
+export type ProgramState = 'active' | 'draft' | 'toReview';
 
 interface ProgramVersionBadgeProps {
   version: number;
@@ -17,7 +17,7 @@ const PROGRAM_STATE_CONFIG: Record<
 > = {
   active: { label: 'Active', colorPalette: 'green' },
   draft: { label: 'Draft', colorPalette: 'gray' },
-  outdated: { label: 'Outdated', colorPalette: 'orange' },
+  toReview: { label: 'To Review', colorPalette: 'orange' },
 };
 
 const formatDate = (date: Date | string): string => {

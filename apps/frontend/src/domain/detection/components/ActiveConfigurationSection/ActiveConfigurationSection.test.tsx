@@ -237,8 +237,10 @@ describe('ActivateConfigurationCard', () => {
         screen = renderWithContext();
       });
 
-      it('shows the current program version', () => {
-        expect(screen.getByText(/Version 5/i)).toBeInTheDocument();
+      it('shows the ToReview section when configuration needs review', () => {
+        expect(
+          screen.getAllByText(/Program is outdated/i)[0],
+        ).toBeInTheDocument();
       });
 
       describe('when there are no draft', () => {
@@ -277,7 +279,7 @@ describe('ActivateConfigurationCard', () => {
 
         it('shows active configuration sections with ToReview section', () => {
           expect(
-            screen.getAllByText(/Program needs review/i)[0],
+            screen.getAllByText(/Program is outdated/i)[0],
           ).toBeInTheDocument();
           expect(
             screen.getAllByText(/Test active version/i)[0],
@@ -316,7 +318,7 @@ describe('ActivateConfigurationCard', () => {
 
         it('shows active configuration sections with ToReview section', () => {
           expect(
-            screen.getAllByText(/Program needs review/i)[0],
+            screen.getAllByText(/Program is outdated/i)[0],
           ).toBeInTheDocument();
           expect(
             screen.getAllByText(/Test active version/i)[0],
@@ -355,7 +357,7 @@ describe('ActivateConfigurationCard', () => {
 
         it('shows active configuration sections with ToReview section', () => {
           expect(
-            screen.getAllByText(/Program needs review/i)[0],
+            screen.getAllByText(/Program is outdated/i)[0],
           ).toBeInTheDocument();
           expect(
             screen.getAllByText(/Test active version/i)[0],
@@ -388,10 +390,10 @@ describe('ActivateConfigurationCard', () => {
         screen = renderWithContext();
       });
 
-      it('shows Active badge with version info', () => {
-        // Active badge is shown to display program status and version
-        expect(screen.getByText('Active')).toBeInTheDocument();
-        expect(screen.getByText(/Version \d+/)).toBeInTheDocument();
+      it('shows the detectability and active program sections', () => {
+        // For OK state, we show detectability and other active program sections
+        expect(screen.getByText(/Rule is detectable/i)).toBeInTheDocument();
+        expect(screen.getByText(/Test active version/i)).toBeInTheDocument();
       });
 
       it('shows DetectabilitySection', () => {
