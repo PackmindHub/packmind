@@ -53,8 +53,6 @@ When ready, call \`packmind_save_standard\` with:
 }
 \`\`\`
 
-If the user wants to add the standard to packages later, they can use the \`REMOVED_TOOL\` tool.
-
 The tool will create the standard and respond with wrap-up guidance for your final message.`;
 
 export default prompt;

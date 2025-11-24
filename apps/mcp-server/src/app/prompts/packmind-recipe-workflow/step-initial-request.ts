@@ -53,7 +53,7 @@ Do not open or scan repository files unless the user explicitly points to them (
 
 ## Next Step
 
-Once these essentials are confirmed, call \`packmind_save_recipe_workflow\` with:
+Once these essentials are confirmed, call \`packmind_save_recipe\` with:
 \`\`\`json
 { "step": "drafting" }
 \`\`\`
