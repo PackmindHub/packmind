@@ -1,5 +1,5 @@
 export type PackmindFileConfig = {
   packages: {
-    [slug: string]: '*';
+    [slug: string]: string;
   };
 };

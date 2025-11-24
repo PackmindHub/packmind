@@ -124,6 +124,18 @@ export class PackmindCliHexa {
         baseDirectory,
       );
     if (!config) return [];
+
+    // Check for non-wildcard versions and warn the user
+    const hasNonWildcardVersions = Object.values(config.packages).some(
+      (version) => version !== '*',
+    );
+
+    if (hasNonWildcardVersions) {
+      console.log(
+        'WARN: Package versions are not supported yet, getting the latest version',
+      );
+    }
+
     return Object.keys(config.packages);
   }
 }

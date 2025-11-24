@@ -27,8 +27,24 @@ export class PullDataUseCase implements IPullDataUseCase {
       packagesSlugs: command.packagesSlugs,
     });
 
-    // Count recipes and standards from the response
+    // Deduplicate files by path (when multiple packages share standards/recipes)
+    const uniqueFilesMap = new Map<
+      string,
+      {
+        path: string;
+        content?: string;
+        sections?: { key: string; content: string }[];
+      }
+    >();
+
     for (const file of response.fileUpdates.createOrUpdate) {
+      uniqueFilesMap.set(file.path, file);
+    }
+
+    const uniqueFiles = Array.from(uniqueFilesMap.values());
+
+    // Count recipes and standards from the deduplicated files
+    for (const file of uniqueFiles) {
       if (
         file.path.includes('.packmind/recipes/') &&
         file.path.endsWith('.md')
@@ -43,8 +59,8 @@ export class PullDataUseCase implements IPullDataUseCase {
     }
 
     try {
-      // Process createOrUpdate files
-      for (const file of response.fileUpdates.createOrUpdate) {
+      // Process createOrUpdate files (deduplicated)
+      for (const file of uniqueFiles) {
         try {
           await this.createOrUpdateFile(baseDirectory, file, result);
         } catch (error) {

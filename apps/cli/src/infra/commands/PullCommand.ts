@@ -43,7 +43,11 @@ export const pullCommand = command({
 
         console.log('Available packages:');
         packages.forEach((pkg) => {
-          console.log(`  - ${pkg.slug}: ${pkg.description || pkg.name}`);
+          console.log(`- ${pkg.name} (${pkg.slug})`);
+          if (pkg.description) {
+            console.log(`  ${pkg.description}`);
+            console.log('');
+          }
         });
         process.exit(0);
       } catch (error) {
@@ -196,9 +200,49 @@ export const pullCommand = command({
         // Handle 404 errors specifically (package not found)
         if (errorObj.statusCode === 404) {
           console.error(`   ${errorObj.message}`);
-          console.error(
-            '\n💡 Use `packmind-cli install --list` to show available packages',
-          );
+
+          // If package comes from config, suggest removing it
+          if (configExists && configPackages.length > 0) {
+            const missingPackages = allPackages.filter((pkg) =>
+              configPackages.includes(pkg),
+            );
+            if (missingPackages.length > 0) {
+              console.error(
+                '\n💡 Either remove the following package(s) from packmind.json:',
+              );
+              missingPackages.forEach((pkg) => {
+                console.error(`     "${pkg}"`);
+              });
+              console.error('   Or ensure that:');
+              console.error(
+                '     - The package slug exists and is correctly spelled',
+              );
+              console.error('     - The package exists in your organization');
+              console.error('     - You have the correct API key configured');
+            } else {
+              console.error('\n💡 Troubleshooting tips:');
+              console.error(
+                '   - Check if the package slug exists and is correctly spelled',
+              );
+              console.error(
+                '   - Check that the package exists in your organization',
+              );
+              console.error(
+                '   - Ensure you have the correct API key configured',
+              );
+            }
+          } else {
+            console.error('\n💡 Troubleshooting tips:');
+            console.error(
+              '   - Check if the package slug exists and is correctly spelled',
+            );
+            console.error(
+              '   - Check that the package exists in your organization',
+            );
+            console.error(
+              '   - Ensure you have the correct API key configured',
+            );
+          }
         } else {
           console.error(`   ${errorObj.message}`);
 
