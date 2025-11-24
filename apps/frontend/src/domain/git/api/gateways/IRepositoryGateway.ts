@@ -1,4 +1,4 @@
-import { GitRepoId } from '@packmind/types';
+import { GitRepoId, OrganizationId } from '@packmind/types';
 
 export interface Repository {
   id: GitRepoId;
@@ -8,5 +8,5 @@ export interface Repository {
 }
 
 export interface IRepositoryGateway {
-  getRepositories(): Promise<Repository[]>;
+  getRepositories(organizationId: OrganizationId): Promise<Repository[]>;
 }

@@ -18,7 +18,7 @@ export const useGetGitProvidersQuery = () => {
   const { organization } = useAuthContext();
 
   return useQuery({
-    queryKey: [...GET_GIT_PROVIDERS_KEY, organization?.id],
+    queryKey: GET_GIT_PROVIDERS_KEY,
     queryFn: () => {
       if (!organization?.id) {
         throw new Error('Organization ID is required to fetch git providers');
@@ -33,7 +33,7 @@ export const useGetGitProviderByIdQuery = (id: GitProviderId) => {
   const { organization } = useAuthContext();
 
   return useQuery({
-    queryKey: [...GET_GIT_PROVIDER_BY_ID_KEY, organization?.id, id],
+    queryKey: [...GET_GIT_PROVIDER_BY_ID_KEY, id],
     queryFn: () => {
       if (!organization?.id) {
         throw new Error('Organization ID is required to fetch git provider');
@@ -57,9 +57,8 @@ export const useCreateGitProviderMutation = () => {
       return gitProviderGateway.createGitProvider(organization.id, data);
     },
     onSuccess: async () => {
-      if (!organization?.id) return;
       await queryClient.invalidateQueries({
-        queryKey: [...GET_GIT_PROVIDERS_KEY, organization.id],
+        queryKey: GET_GIT_PROVIDERS_KEY,
       });
       await queryClient.invalidateQueries({
         queryKey: [GET_ONBOARDING_STATUS_KEY],
@@ -90,14 +89,10 @@ export const useUpdateGitProviderMutation = () => {
     },
     onSuccess: async (provider) => {
       await queryClient.invalidateQueries({
-        queryKey: [...GET_GIT_PROVIDERS_KEY, provider.organizationId],
+        queryKey: GET_GIT_PROVIDERS_KEY,
       });
       await queryClient.invalidateQueries({
-        queryKey: [
-          ...GET_GIT_PROVIDER_BY_ID_KEY,
-          provider.organizationId,
-          provider.id,
-        ],
+        queryKey: [...GET_GIT_PROVIDER_BY_ID_KEY, provider.id],
       });
     },
     onError: (error) => {
