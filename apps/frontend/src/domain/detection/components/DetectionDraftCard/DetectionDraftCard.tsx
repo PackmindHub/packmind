@@ -153,7 +153,7 @@ enum TimelineStepStatus {
 
 type TimelineStepConfig = {
   title: string;
-  description?: string;
+  description?: string | React.ReactNode;
   isLast: boolean;
   buttons?: TimelineButton[];
   status: TimelineStepStatus;
@@ -323,8 +323,18 @@ function getTimelineConfig(
         },
         step2: {
           title: 'Generating program',
-          description:
-            'Packmind AI generates a program that comply with rule specifications. Program is ran on code examples to ensure its validity',
+          description: (
+            <>
+              <PMText as="p" variant="small">
+                Packmind AI generates a program that comply with rule
+                specifications. Program is ran on code examples to ensure its
+                validity.
+              </PMText>
+              <PMText as="p" color="faded" variant="small">
+                Note: generation can take more than a minute to finish.
+              </PMText>
+            </>
+          ),
           isLast: false,
           status: TimelineStepStatus.pending,
         },
@@ -344,8 +354,18 @@ function getTimelineConfig(
         },
         step2: {
           title: 'Generating program',
-          description:
-            'Packmind AI generates a program that comply with rule specifications. Program is ran on code examples to ensure its validity',
+          description: (
+            <>
+              <PMText as="p" variant="small">
+                Packmind AI generates a program that comply with rule
+                specifications. Program is ran on code examples to ensure its
+                validity.
+              </PMText>
+              <PMText as="p" color="faded" variant="small">
+                Note: generation can take more than a minute to finish.
+              </PMText>
+            </>
+          ),
           isLast: false,
           status: TimelineStepStatus.pending,
           buttons: [
