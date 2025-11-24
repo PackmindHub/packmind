@@ -12,33 +12,47 @@ import { CheckDirectoryExistenceResult } from '@packmind/types';
 export interface IGitProviderGateway {
   // Git Provider CRUD operations
   getGitProviders(organizationId: OrganizationId): Promise<GitProviderUI[]>;
-  getGitProviderById(id: GitProviderId): Promise<GitProviderUI>;
+  getGitProviderById(
+    organizationId: OrganizationId,
+    id: GitProviderId,
+  ): Promise<GitProviderUI>;
   createGitProvider(
     organizationId: OrganizationId,
     data: CreateGitProviderForm,
   ): Promise<GitProviderUI>;
   updateGitProvider(
+    organizationId: OrganizationId,
     id: GitProviderId,
     data: Partial<CreateGitProviderForm>,
   ): Promise<GitProviderUI>;
-  deleteGitProvider(id: GitProviderId): Promise<void>;
+  deleteGitProvider(
+    organizationId: OrganizationId,
+    id: GitProviderId,
+  ): Promise<void>;
 
   // Repository operations
-  getRepositoriesByProvider(providerId: GitProviderId): Promise<GitRepoUI[]>;
+  getRepositoriesByProvider(
+    organizationId: OrganizationId,
+    providerId: GitProviderId,
+  ): Promise<GitRepoUI[]>;
   getAvailableRepositories(
+    organizationId: OrganizationId,
     providerId: GitProviderId,
   ): Promise<AvailableRepository[]>;
   addRepositoryToProvider(
+    organizationId: OrganizationId,
     providerId: GitProviderId,
     data: AddRepositoryForm,
   ): Promise<GitRepoUI>;
   removeRepositoryFromProvider(
+    organizationId: OrganizationId,
     providerId: GitProviderId,
     repoId: GitRepoId,
   ): Promise<void>;
 
   // Branch operations
   checkBranchExists(
+    organizationId: OrganizationId,
     providerId: GitProviderId,
     owner: string,
     repo: string,
@@ -47,12 +61,14 @@ export interface IGitProviderGateway {
 
   // Target operations
   getAvailableRemoteDirectories(
+    organizationId: OrganizationId,
     repositoryId: GitRepoId,
     path?: string,
   ): Promise<string[]>;
 
   // Directory operations
   checkDirectoryExistence(
+    organizationId: OrganizationId,
     repositoryId: GitRepoId,
     directoryPath: string,
     branch: string,

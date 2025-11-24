@@ -45,8 +45,8 @@ export const RepositoriesManagement: React.FC<RepositoriesManagementProps> = ({
     if (!repoToRemove) return;
     try {
       await removeRepositoryMutation.mutateAsync({
-        repoId: repoToRemove.id,
         providerId: provider.id,
+        repoId: repoToRemove.id,
       });
       setDeleteAlert({
         type: 'success',

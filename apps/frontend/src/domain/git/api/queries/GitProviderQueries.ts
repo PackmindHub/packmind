@@ -11,41 +11,55 @@ import {
 } from '../queryKeys';
 import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
 import { GET_ONBOARDING_STATUS_KEY } from '../../../accounts/api/queryKeys';
+import { useAuthContext } from '../../../accounts/hooks';
 
 // Git Provider Queries
-export const useGetGitProvidersQuery = (organizationId: OrganizationId) => {
+export const useGetGitProvidersQuery = () => {
+  const { organization } = useAuthContext();
+
   return useQuery({
-    queryKey: [...GET_GIT_PROVIDERS_KEY, organizationId],
-    queryFn: () => gitProviderGateway.getGitProviders(organizationId),
-    enabled: !!organizationId,
+    queryKey: [...GET_GIT_PROVIDERS_KEY, organization?.id],
+    queryFn: () => {
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to fetch git providers');
+      }
+      return gitProviderGateway.getGitProviders(organization.id);
+    },
+    enabled: !!organization?.id,
   });
 };
 
 export const useGetGitProviderByIdQuery = (id: GitProviderId) => {
+  const { organization } = useAuthContext();
+
   return useQuery({
-    queryKey: [...GET_GIT_PROVIDER_BY_ID_KEY, id],
-    queryFn: () => gitProviderGateway.getGitProviderById(id),
-    enabled: !!id,
+    queryKey: [...GET_GIT_PROVIDER_BY_ID_KEY, organization?.id, id],
+    queryFn: () => {
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to fetch git provider');
+      }
+      return gitProviderGateway.getGitProviderById(organization.id, id);
+    },
+    enabled: !!organization?.id && !!id,
   });
 };
 
 // Git Provider Mutations
 export const useCreateGitProviderMutation = () => {
   const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
 
   return useMutation({
-    mutationFn: async ({
-      organizationId,
-      data,
-    }: {
-      organizationId: OrganizationId;
-      data: CreateGitProviderForm;
-    }) => {
-      return gitProviderGateway.createGitProvider(organizationId, data);
+    mutationFn: async ({ data }: { data: CreateGitProviderForm }) => {
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to create git provider');
+      }
+      return gitProviderGateway.createGitProvider(organization.id, data);
     },
-    onSuccess: async (_, { organizationId }) => {
+    onSuccess: async () => {
+      if (!organization?.id) return;
       await queryClient.invalidateQueries({
-        queryKey: [...GET_GIT_PROVIDERS_KEY, organizationId],
+        queryKey: [...GET_GIT_PROVIDERS_KEY, organization.id],
       });
       await queryClient.invalidateQueries({
         queryKey: [GET_ONBOARDING_STATUS_KEY],
@@ -59,6 +73,7 @@ export const useCreateGitProviderMutation = () => {
 
 export const useUpdateGitProviderMutation = () => {
   const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
 
   return useMutation({
     mutationFn: async ({
@@ -68,14 +83,21 @@ export const useUpdateGitProviderMutation = () => {
       id: GitProviderId;
       data: Partial<CreateGitProviderForm>;
     }) => {
-      return gitProviderGateway.updateGitProvider(id, data);
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to update git provider');
+      }
+      return gitProviderGateway.updateGitProvider(organization.id, id, data);
     },
     onSuccess: async (provider) => {
       await queryClient.invalidateQueries({
         queryKey: [...GET_GIT_PROVIDERS_KEY, provider.organizationId],
       });
       await queryClient.invalidateQueries({
-        queryKey: [...GET_GIT_PROVIDER_BY_ID_KEY, provider.id],
+        queryKey: [
+          ...GET_GIT_PROVIDER_BY_ID_KEY,
+          provider.organizationId,
+          provider.id,
+        ],
       });
     },
     onError: (error) => {
@@ -86,16 +108,14 @@ export const useUpdateGitProviderMutation = () => {
 
 export const useDeleteGitProviderMutation = () => {
   const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
 
   return useMutation({
-    mutationFn: async ({
-      id,
-      organizationId,
-    }: {
-      id: GitProviderId;
-      organizationId: OrganizationId;
-    }) => {
-      return gitProviderGateway.deleteGitProvider(id);
+    mutationFn: async ({ id }: { id: GitProviderId }) => {
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to delete git provider');
+      }
+      return gitProviderGateway.deleteGitProvider(organization.id, id);
     },
     onSuccess: async () => {
       // All git data (provider deleted → repos deleted)

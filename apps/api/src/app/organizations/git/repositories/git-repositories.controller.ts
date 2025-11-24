@@ -7,6 +7,7 @@ import {
   Request,
   Query,
   ConflictException,
+  UseGuards,
 } from '@nestjs/common';
 import { GitRepositoriesService } from './git-repositories.service';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
@@ -16,8 +17,10 @@ import {
   GitRepo,
   GitRepoAlreadyExistsError,
   GitRepoId,
+  OrganizationId,
 } from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/node-utils';
+import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 
 interface AddGitRepoDto {
   gitProviderId: GitProviderId;
@@ -31,9 +34,10 @@ interface CheckDirectoryExistenceDto {
   branch: string;
 }
 
-const origin = 'GitRepositoriesController';
+const origin = 'OrganizationGitRepositoriesController';
 
-@Controller('git/repositories')
+@Controller()
+@UseGuards(OrganizationAccessGuard)
 export class GitRepositoriesController {
   constructor(
     private readonly gitRepositoriesService: GitRepositoriesService,
@@ -42,23 +46,25 @@ export class GitRepositoriesController {
       LogLevel.INFO,
     ),
   ) {
-    this.logger.info('GitRepositoriesController initialized');
+    this.logger.info('OrganizationGitRepositoriesController initialized');
   }
 
   @Post()
   async addGitRepo(
+    @Param('orgId') organizationId: OrganizationId,
     @Request() req: AuthenticatedRequest,
     @Body() addGitRepoDto: AddGitRepoDto,
   ): Promise<GitRepo> {
-    const organizationId = req.organization.id;
-
-    this.logger.info('POST /git/repositories - Adding git repository', {
-      organizationId,
-      gitProviderId: addGitRepoDto.gitProviderId,
-      owner: addGitRepoDto.owner,
-      repo: addGitRepoDto.repo,
-      branch: addGitRepoDto.branch,
-    });
+    this.logger.info(
+      'POST /organizations/:orgId/git/repositories - Adding git repository',
+      {
+        organizationId,
+        gitProviderId: addGitRepoDto.gitProviderId,
+        owner: addGitRepoDto.owner,
+        repo: addGitRepoDto.repo,
+        branch: addGitRepoDto.branch,
+      },
+    );
 
     try {
       return await this.gitRepositoriesService.addRepositoryToProvider(
@@ -70,24 +76,20 @@ export class GitRepositoriesController {
         addGitRepoDto.branch,
       );
     } catch (error) {
-      // Handle the main business case: repository already exists
       if (error instanceof GitRepoAlreadyExistsError) {
         throw new ConflictException(error.message);
       }
 
-      // Let other errors bubble up (they're already logged in the use case)
       throw error;
     }
   }
 
   @Get()
   async getOrganizationRepositories(
-    @Request() req: AuthenticatedRequest,
+    @Param('orgId') organizationId: OrganizationId,
   ): Promise<GitRepo[]> {
-    const organizationId = req.organization.id;
-
     this.logger.info(
-      'GET /git/repositories - Fetching organization repositories',
+      'GET /organizations/:orgId/git/repositories - Fetching organization repositories',
       {
         organizationId,
       },
@@ -101,7 +103,7 @@ export class GitRepositoriesController {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(
-        'GET /git/repositories - Failed to fetch organization repositories',
+        'GET /organizations/:orgId/git/repositories - Failed to fetch organization repositories',
         {
           organizationId,
           error: errorMessage,
@@ -113,15 +115,15 @@ export class GitRepositoriesController {
 
   @Get(':id/available-remote-directories')
   async getAvailableRemoteDirectories(
+    @Param('orgId') organizationId: OrganizationId,
     @Request() req: AuthenticatedRequest,
     @Param('id') repositoryId: GitRepoId,
     @Query('path') path?: string,
   ): Promise<string[]> {
-    const organizationId = req.organization.id;
     const userId = req.user.userId;
 
     this.logger.info(
-      'GET /git/repositories/:id/available-remote-directories - Getting available remote directories',
+      'GET /organizations/:orgId/git/repositories/:id/available-remote-directories - Getting available remote directories',
       {
         organizationId,
         repositoryId,
@@ -141,7 +143,7 @@ export class GitRepositoriesController {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(
-        'GET /git/repositories/:id/available-remote-directories - Failed to get available remote directories',
+        'GET /organizations/:orgId/git/repositories/:id/available-remote-directories - Failed to get available remote directories',
         {
           organizationId,
           repositoryId,
@@ -156,15 +158,16 @@ export class GitRepositoriesController {
 
   @Get(':id')
   async getRepositoryById(
-    @Request() req: AuthenticatedRequest,
+    @Param('orgId') organizationId: OrganizationId,
     @Param('id') repositoryId: GitRepoId,
   ): Promise<GitRepo | null> {
-    const organizationId = req.organization.id;
-
-    this.logger.info('GET /git/repositories/:id - Fetching repository by ID', {
-      organizationId,
-      repositoryId,
-    });
+    this.logger.info(
+      'GET /organizations/:orgId/git/repositories/:id - Fetching repository by ID',
+      {
+        organizationId,
+        repositoryId,
+      },
+    );
 
     try {
       return await this.gitRepositoriesService.getRepositoryById(repositoryId);
@@ -172,7 +175,7 @@ export class GitRepositoriesController {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(
-        'GET /git/repositories/:id - Failed to fetch repository',
+        'GET /organizations/:orgId/git/repositories/:id - Failed to fetch repository',
         {
           organizationId,
           repositoryId,
@@ -185,13 +188,11 @@ export class GitRepositoriesController {
 
   @Get('provider/:providerId')
   async listReposByProvider(
-    @Request() req: AuthenticatedRequest,
+    @Param('orgId') organizationId: OrganizationId,
     @Param('providerId') gitProviderId: GitProviderId,
   ): Promise<GitRepo[]> {
-    const organizationId = req.organization.id;
-
     this.logger.info(
-      'GET /git/repositories/provider/:providerId - Fetching repositories by provider',
+      'GET /organizations/:orgId/git/repositories/provider/:providerId - Fetching repositories by provider',
       {
         organizationId,
         gitProviderId,
@@ -206,7 +207,7 @@ export class GitRepositoriesController {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(
-        'GET /git/repositories/provider/:providerId - Failed to fetch repositories by provider',
+        'GET /organizations/:orgId/git/repositories/provider/:providerId - Failed to fetch repositories by provider',
         {
           organizationId,
           gitProviderId,
@@ -219,15 +220,15 @@ export class GitRepositoriesController {
 
   @Post(':id/check-directory-existence')
   async checkDirectoryExistence(
+    @Param('orgId') organizationId: OrganizationId,
     @Request() req: AuthenticatedRequest,
     @Param('id') repositoryId: GitRepoId,
     @Body() checkDirectoryDto: CheckDirectoryExistenceDto,
   ): Promise<CheckDirectoryExistenceResult> {
-    const organizationId = req.organization.id;
     const userId = req.user.userId;
 
     this.logger.info(
-      'POST /git/repositories/:id/check-directory-existence - Checking directory existence',
+      'POST /organizations/:orgId/git/repositories/:id/check-directory-existence - Checking directory existence',
       {
         organizationId,
         userId,
@@ -249,7 +250,7 @@ export class GitRepositoriesController {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.logger.error(
-        'POST /git/repositories/:id/check-directory-existence - Failed to check directory existence',
+        'POST /organizations/:orgId/git/repositories/:id/check-directory-existence - Failed to check directory existence',
         {
           organizationId,
           userId,
