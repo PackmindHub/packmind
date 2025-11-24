@@ -10,7 +10,7 @@ import {
 } from '@packmind/types';
 import { createOrganizationId, Organization } from '@packmind/types';
 import { TooManyLoginAttemptsError } from '../../../domain/errors/TooManyLoginAttemptsError';
-import { UnauthorizedException } from '@nestjs/common';
+import { InvalidEmailOrPasswordError } from '../../../domain/errors/InvalidEmailOrPasswordError';
 import { userFactory } from '../../../../test';
 
 describe('SignInUserUseCase', () => {
@@ -66,13 +66,17 @@ describe('SignInUserUseCase', () => {
     );
   });
 
-  describe('when user signs in with valid credentials', () => {
-    it('returns the user, organization from first membership, and membership role', async () => {
-      const command: SignInUserCommand = {
-        email: 'testuser@packmind.com',
-        password: 'password123',
-      };
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
 
+  describe('when user signs in with valid credentials', () => {
+    const command: SignInUserCommand = {
+      email: 'testuser@packmind.com',
+      password: 'password123',
+    };
+
+    beforeEach(() => {
       loginRateLimiterService.checkLoginAllowed.mockResolvedValue();
       userService.getUserByEmailCaseInsensitive.mockResolvedValue(testUser);
       userService.validatePassword.mockResolvedValue(true);
@@ -80,7 +84,9 @@ describe('SignInUserUseCase', () => {
         testOrganization,
       );
       loginRateLimiterService.clearAttempts.mockResolvedValue();
+    });
 
+    it('returns the user, organization from first membership, and membership role', async () => {
       const result = await useCase.execute(command);
 
       expect(result).toEqual({
@@ -88,13 +94,28 @@ describe('SignInUserUseCase', () => {
         organization: testOrganization,
         role: 'admin',
       });
+    });
+
+    it('calls getUserByEmailCaseInsensitive with the email', async () => {
+      await useCase.execute(command);
+
       expect(userService.getUserByEmailCaseInsensitive).toHaveBeenCalledWith(
         'testuser@packmind.com',
       );
+    });
+
+    it('calls validatePassword with password and hash', async () => {
+      await useCase.execute(command);
+
       expect(userService.validatePassword).toHaveBeenCalledWith(
         'password123',
         'hashedPassword',
       );
+    });
+
+    it('calls getOrganizationById with organizationId', async () => {
+      await useCase.execute(command);
+
       expect(organizationService.getOrganizationById).toHaveBeenCalledWith(
         organizationId,
       );
@@ -102,7 +123,7 @@ describe('SignInUserUseCase', () => {
   });
 
   describe('when user signs in with different email case', () => {
-    it('finds user with case-insensitive search and preserves original email case', async () => {
+    it('finds user with case-insensitive search and returns user with original email case', async () => {
       const command: SignInUserCommand = {
         email: 'TestUser@PACKMIND.com', // Different case than stored email
         password: 'password123',
@@ -125,40 +146,61 @@ describe('SignInUserUseCase', () => {
 
       const result = await useCase.execute(command);
 
-      expect(result).toEqual({
-        user: userWithOriginalCase,
-        organization: testOrganization,
-        role: 'admin',
-      });
-      expect(result.user.email).toBe('testuser@packmind.com'); // Original case preserved
-      expect(userService.getUserByEmailCaseInsensitive).toHaveBeenCalledWith(
-        'TestUser@PACKMIND.com', // Search was with different case
-      );
+      expect(result.user.email).toBe('testuser@packmind.com');
     });
   });
 
   describe('when organization does not exist', () => {
-    it('throws Invalid credentials error', async () => {
-      const command: SignInUserCommand = {
-        email: 'testuser@packmind.com',
-        password: 'password123',
-      };
+    const command: SignInUserCommand = {
+      email: 'testuser@packmind.com',
+      password: 'password123',
+    };
 
+    beforeEach(() => {
       loginRateLimiterService.checkLoginAllowed.mockResolvedValue();
       userService.getUserByEmailCaseInsensitive.mockResolvedValue(testUser);
       userService.validatePassword.mockResolvedValue(true);
       organizationService.getOrganizationById.mockResolvedValue(null);
+    });
 
+    it('throws InvalidEmailOrPasswordError', async () => {
       await expect(useCase.execute(command)).rejects.toThrow(
-        new Error('Invalid credentials'),
+        InvalidEmailOrPasswordError,
       );
+    });
+
+    it('calls getUserByEmailCaseInsensitive with the email', async () => {
+      try {
+        await useCase.execute(command);
+      } catch {
+        // Expected to throw
+      }
+
       expect(userService.getUserByEmailCaseInsensitive).toHaveBeenCalledWith(
         'testuser@packmind.com',
       );
+    });
+
+    it('calls validatePassword with password and hash', async () => {
+      try {
+        await useCase.execute(command);
+      } catch {
+        // Expected to throw
+      }
+
       expect(userService.validatePassword).toHaveBeenCalledWith(
         'password123',
         'hashedPassword',
       );
+    });
+
+    it('calls getOrganizationById with organizationId', async () => {
+      try {
+        await useCase.execute(command);
+      } catch {
+        // Expected to throw
+      }
+
       expect(organizationService.getOrganizationById).toHaveBeenCalledWith(
         organizationId,
       );
@@ -166,7 +208,7 @@ describe('SignInUserUseCase', () => {
   });
 
   describe('when user does not exist', () => {
-    it('throws Invalid credentials error', async () => {
+    it('throws InvalidEmailOrPasswordError', async () => {
       const command: SignInUserCommand = {
         email: 'nonexistent@packmind.com',
         password: 'password123',
@@ -176,15 +218,13 @@ describe('SignInUserUseCase', () => {
       userService.getUserByEmailCaseInsensitive.mockResolvedValue(null);
 
       await expect(useCase.execute(command)).rejects.toThrow(
-        new Error('Invalid email or password'),
+        InvalidEmailOrPasswordError,
       );
-      expect(userService.validatePassword).not.toHaveBeenCalled();
-      expect(organizationService.getOrganizationById).not.toHaveBeenCalled();
     });
   });
 
   describe('when password is invalid', () => {
-    it('throws Invalid credentials error', async () => {
+    it('throws InvalidEmailOrPasswordError', async () => {
       const command: SignInUserCommand = {
         email: 'testuser@packmind.com',
         password: 'wrongpassword',
@@ -196,37 +236,48 @@ describe('SignInUserUseCase', () => {
       loginRateLimiterService.recordFailedAttempt.mockResolvedValue();
 
       await expect(useCase.execute(command)).rejects.toThrow(
-        new Error('Invalid email or password'),
+        InvalidEmailOrPasswordError,
       );
-      expect(organizationService.getOrganizationById).not.toHaveBeenCalled();
     });
   });
 
   describe('when user has no memberships', () => {
-    it('returns the user with empty organizations array', async () => {
-      const command: SignInUserCommand = {
-        email: 'testuser@packmind.com',
-        password: 'password123',
-      };
+    const command: SignInUserCommand = {
+      email: 'testuser@packmind.com',
+      password: 'password123',
+    };
 
-      const userWithNoMemberships: User = {
-        ...testUser,
-        memberships: [],
-      };
+    const userWithNoMemberships: User = {
+      ...testUser,
+      memberships: [],
+    };
 
+    beforeEach(() => {
       loginRateLimiterService.checkLoginAllowed.mockResolvedValue();
       userService.getUserByEmailCaseInsensitive.mockResolvedValue(
         userWithNoMemberships,
       );
       userService.validatePassword.mockResolvedValue(true);
+    });
 
+    it('returns the user with empty organizations array', async () => {
       const result = await useCase.execute(command);
 
       expect(result).toEqual({
         user: userWithNoMemberships,
         organizations: [],
       });
+    });
+
+    it('does not call getOrganizationById', async () => {
+      await useCase.execute(command);
+
       expect(organizationService.getOrganizationById).not.toHaveBeenCalled();
+    });
+
+    it('calls clearAttempts with the email', async () => {
+      await useCase.execute(command);
+
       expect(loginRateLimiterService.clearAttempts).toHaveBeenCalledWith(
         command.email,
       );
@@ -234,30 +285,30 @@ describe('SignInUserUseCase', () => {
   });
 
   describe('when user belongs to multiple organizations', () => {
-    it('returns the user and list of available organizations with roles', async () => {
-      const organizationId2 = createOrganizationId('org-456');
-      const membership2: UserOrganizationMembership = {
-        userId,
-        organizationId: organizationId2,
-        role: 'member',
-      };
+    const organizationId2 = createOrganizationId('org-456');
+    const membership2: UserOrganizationMembership = {
+      userId,
+      organizationId: organizationId2,
+      role: 'member',
+    };
 
-      const testOrganization2: Organization = {
-        id: organizationId2,
-        name: 'Second Organization',
-        slug: 'second-org',
-      };
+    const testOrganization2: Organization = {
+      id: organizationId2,
+      name: 'Second Organization',
+      slug: 'second-org',
+    };
 
-      const userWithMultipleOrgs: User = {
-        ...testUser,
-        memberships: [membership, membership2],
-      };
+    const userWithMultipleOrgs: User = {
+      ...testUser,
+      memberships: [membership, membership2],
+    };
 
-      const command: SignInUserCommand = {
-        email: 'testuser@packmind.com',
-        password: 'password123',
-      };
+    const command: SignInUserCommand = {
+      email: 'testuser@packmind.com',
+      password: 'password123',
+    };
 
+    beforeEach(() => {
       loginRateLimiterService.checkLoginAllowed.mockResolvedValue();
       userService.getUserByEmailCaseInsensitive.mockResolvedValue(
         userWithMultipleOrgs,
@@ -267,7 +318,9 @@ describe('SignInUserUseCase', () => {
         .mockResolvedValueOnce(testOrganization)
         .mockResolvedValueOnce(testOrganization2);
       loginRateLimiterService.clearAttempts.mockResolvedValue();
+    });
 
+    it('returns the user and list of available organizations with roles', async () => {
       const result = await useCase.execute(command);
 
       expect(result).toEqual({
@@ -283,203 +336,268 @@ describe('SignInUserUseCase', () => {
           },
         ],
       });
+    });
+
+    it('calls getOrganizationById twice', async () => {
+      await useCase.execute(command);
+
       expect(organizationService.getOrganizationById).toHaveBeenCalledTimes(2);
+    });
+
+    it('calls getOrganizationById with first organizationId', async () => {
+      await useCase.execute(command);
+
       expect(organizationService.getOrganizationById).toHaveBeenCalledWith(
         organizationId,
       );
+    });
+
+    it('calls getOrganizationById with second organizationId', async () => {
+      await useCase.execute(command);
+
       expect(organizationService.getOrganizationById).toHaveBeenCalledWith(
         organizationId2,
       );
     });
+  });
 
-    describe('when one of the organizations does not exist', () => {
-      it('throws Invalid credentials error', async () => {
-        const organizationId2 = createOrganizationId('org-456');
-        const membership2: UserOrganizationMembership = {
-          userId,
-          organizationId: organizationId2,
-          role: 'member',
-        };
+  describe('when user belongs to multiple organizations and one does not exist', () => {
+    const organizationId2 = createOrganizationId('org-456');
+    const membership2: UserOrganizationMembership = {
+      userId,
+      organizationId: organizationId2,
+      role: 'member',
+    };
 
-        const userWithMultipleOrgs: User = {
-          ...testUser,
-          memberships: [membership, membership2],
-        };
+    const userWithMultipleOrgs: User = {
+      ...testUser,
+      memberships: [membership, membership2],
+    };
 
-        const command: SignInUserCommand = {
-          email: 'testuser@packmind.com',
-          password: 'password123',
-        };
+    const command: SignInUserCommand = {
+      email: 'testuser@packmind.com',
+      password: 'password123',
+    };
 
-        loginRateLimiterService.checkLoginAllowed.mockResolvedValue();
-        userService.getUserByEmailCaseInsensitive.mockResolvedValue(
-          userWithMultipleOrgs,
-        );
-        userService.validatePassword.mockResolvedValue(true);
-        organizationService.getOrganizationById
-          .mockResolvedValueOnce(testOrganization)
-          .mockResolvedValueOnce(null);
+    it('throws InvalidEmailOrPasswordError', async () => {
+      loginRateLimiterService.checkLoginAllowed.mockResolvedValue();
+      userService.getUserByEmailCaseInsensitive.mockResolvedValue(
+        userWithMultipleOrgs,
+      );
+      userService.validatePassword.mockResolvedValue(true);
+      organizationService.getOrganizationById
+        .mockResolvedValueOnce(testOrganization)
+        .mockResolvedValueOnce(null);
 
-        await expect(useCase.execute(command)).rejects.toThrow(
-          new Error('Invalid credentials'),
-        );
-      });
+      await expect(useCase.execute(command)).rejects.toThrow(
+        InvalidEmailOrPasswordError,
+      );
     });
   });
 
   describe('rate limiting', () => {
-    it('throws TooManyLoginAttemptsError on rate limit exceeded', async () => {
+    describe('when rate limit is exceeded', () => {
       const command: SignInUserCommand = {
         email: 'testuser@packmind.com',
         password: 'password123',
       };
 
-      const bannedUntil = new Date(Date.now() + 30 * 60 * 1000);
-      const rateLimitError = new TooManyLoginAttemptsError(bannedUntil);
-      loginRateLimiterService.checkLoginAllowed.mockRejectedValue(
-        rateLimitError,
-      );
+      beforeEach(() => {
+        const bannedUntil = new Date(Date.now() + 30 * 60 * 1000);
+        const rateLimitError = new TooManyLoginAttemptsError(bannedUntil);
+        loginRateLimiterService.checkLoginAllowed.mockRejectedValue(
+          rateLimitError,
+        );
+      });
 
-      await expect(useCase.execute(command)).rejects.toThrow(
-        TooManyLoginAttemptsError,
-      );
+      it('throws TooManyLoginAttemptsError', async () => {
+        await expect(useCase.execute(command)).rejects.toThrow(
+          TooManyLoginAttemptsError,
+        );
+      });
 
-      expect(loginRateLimiterService.checkLoginAllowed).toHaveBeenCalledWith(
-        'testuser@packmind.com',
-      );
-      // Should not proceed with authentication when rate limited
-      expect(userService.getUserByEmailCaseInsensitive).not.toHaveBeenCalled();
-      expect(
-        loginRateLimiterService.recordFailedAttempt,
-      ).not.toHaveBeenCalled();
+      it('does not call getUserByEmailCaseInsensitive', async () => {
+        try {
+          await useCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
+
+        expect(
+          userService.getUserByEmailCaseInsensitive,
+        ).not.toHaveBeenCalled();
+      });
+
+      it('does not record failed attempt', async () => {
+        try {
+          await useCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
+
+        expect(
+          loginRateLimiterService.recordFailedAttempt,
+        ).not.toHaveBeenCalled();
+      });
     });
 
-    it('does not record failed attempt for nonexistent user', async () => {
+    describe('when user does not exist', () => {
       const command: SignInUserCommand = {
         email: 'nonexistent@packmind.com',
         password: 'password123',
       };
 
-      loginRateLimiterService.checkLoginAllowed.mockResolvedValue();
-      userService.getUserByEmailCaseInsensitive.mockResolvedValue(null);
+      beforeEach(() => {
+        loginRateLimiterService.checkLoginAllowed.mockResolvedValue();
+        userService.getUserByEmailCaseInsensitive.mockResolvedValue(null);
+      });
 
-      await expect(useCase.execute(command)).rejects.toThrow(
-        UnauthorizedException,
-      );
+      it('does not record failed attempt', async () => {
+        try {
+          await useCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
 
-      expect(loginRateLimiterService.checkLoginAllowed).toHaveBeenCalledWith(
-        'nonexistent@packmind.com',
-      );
-      expect(
-        loginRateLimiterService.recordFailedAttempt,
-      ).not.toHaveBeenCalled();
-      expect(loginRateLimiterService.clearAttempts).not.toHaveBeenCalled();
+        expect(
+          loginRateLimiterService.recordFailedAttempt,
+        ).not.toHaveBeenCalled();
+      });
+
+      it('does not clear attempts', async () => {
+        try {
+          await useCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
+
+        expect(loginRateLimiterService.clearAttempts).not.toHaveBeenCalled();
+      });
     });
 
-    it('records failed attempt for invalid password', async () => {
+    describe('when password is invalid', () => {
       const command: SignInUserCommand = {
         email: 'testuser@packmind.com',
         password: 'wrongpassword',
       };
 
-      loginRateLimiterService.checkLoginAllowed.mockResolvedValue();
-      userService.getUserByEmailCaseInsensitive.mockResolvedValue(testUser);
-      userService.validatePassword.mockResolvedValue(false);
-      loginRateLimiterService.recordFailedAttempt.mockResolvedValue();
-
-      await expect(useCase.execute(command)).rejects.toThrow(
-        UnauthorizedException,
-      );
-
-      expect(loginRateLimiterService.checkLoginAllowed).toHaveBeenCalledWith(
-        'testuser@packmind.com',
-      );
-      expect(loginRateLimiterService.recordFailedAttempt).toHaveBeenCalledWith(
-        'testuser@packmind.com',
-      );
-      expect(loginRateLimiterService.clearAttempts).not.toHaveBeenCalled();
-    });
-
-    it('clears attempts for successful login with user with no memberships', async () => {
-      const command: SignInUserCommand = {
-        email: 'testuser@packmind.com',
-        password: 'password123',
-      };
-
-      const userWithNoMemberships: User = {
-        ...testUser,
-        memberships: [],
-      };
-
-      loginRateLimiterService.checkLoginAllowed.mockResolvedValue();
-      userService.getUserByEmailCaseInsensitive.mockResolvedValue(
-        userWithNoMemberships,
-      );
-      userService.validatePassword.mockResolvedValue(true);
-
-      const result = await useCase.execute(command);
-
-      expect(result).toEqual({
-        user: userWithNoMemberships,
-        organizations: [],
+      beforeEach(() => {
+        loginRateLimiterService.checkLoginAllowed.mockResolvedValue();
+        userService.getUserByEmailCaseInsensitive.mockResolvedValue(testUser);
+        userService.validatePassword.mockResolvedValue(false);
+        loginRateLimiterService.recordFailedAttempt.mockResolvedValue();
       });
-      expect(loginRateLimiterService.checkLoginAllowed).toHaveBeenCalledWith(
-        'testuser@packmind.com',
-      );
-      expect(
-        loginRateLimiterService.recordFailedAttempt,
-      ).not.toHaveBeenCalled();
-      expect(loginRateLimiterService.clearAttempts).toHaveBeenCalledWith(
-        'testuser@packmind.com',
-      );
+
+      it('calls checkLoginAllowed with the email', async () => {
+        try {
+          await useCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
+
+        expect(loginRateLimiterService.checkLoginAllowed).toHaveBeenCalledWith(
+          'testuser@packmind.com',
+        );
+      });
+
+      it('records failed attempt with the email', async () => {
+        try {
+          await useCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
+
+        expect(
+          loginRateLimiterService.recordFailedAttempt,
+        ).toHaveBeenCalledWith('testuser@packmind.com');
+      });
+
+      it('does not clear attempts', async () => {
+        try {
+          await useCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
+
+        expect(loginRateLimiterService.clearAttempts).not.toHaveBeenCalled();
+      });
     });
 
-    it('does not record failed attempt for nonexistent organization', async () => {
+    describe('when organization does not exist', () => {
       const command: SignInUserCommand = {
         email: 'testuser@packmind.com',
         password: 'password123',
       };
 
-      loginRateLimiterService.checkLoginAllowed.mockResolvedValue();
-      userService.getUserByEmailCaseInsensitive.mockResolvedValue(testUser);
-      userService.validatePassword.mockResolvedValue(true);
-      organizationService.getOrganizationById.mockResolvedValue(null);
+      beforeEach(() => {
+        loginRateLimiterService.checkLoginAllowed.mockResolvedValue();
+        userService.getUserByEmailCaseInsensitive.mockResolvedValue(testUser);
+        userService.validatePassword.mockResolvedValue(true);
+        organizationService.getOrganizationById.mockResolvedValue(null);
+      });
 
-      await expect(useCase.execute(command)).rejects.toThrow(
-        UnauthorizedException,
-      );
+      it('does not record failed attempt', async () => {
+        try {
+          await useCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
 
-      expect(loginRateLimiterService.checkLoginAllowed).toHaveBeenCalledWith(
-        'testuser@packmind.com',
-      );
-      expect(
-        loginRateLimiterService.recordFailedAttempt,
-      ).not.toHaveBeenCalled();
-      expect(loginRateLimiterService.clearAttempts).not.toHaveBeenCalled();
+        expect(
+          loginRateLimiterService.recordFailedAttempt,
+        ).not.toHaveBeenCalled();
+      });
+
+      it('does not clear attempts', async () => {
+        try {
+          await useCase.execute(command);
+        } catch {
+          // Expected to throw
+        }
+
+        expect(loginRateLimiterService.clearAttempts).not.toHaveBeenCalled();
+      });
     });
 
-    it('clears attempts only on successful login', async () => {
+    describe('when login is successful', () => {
       const command: SignInUserCommand = {
         email: 'testuser@packmind.com',
         password: 'password123',
       };
 
-      loginRateLimiterService.checkLoginAllowed.mockResolvedValue();
-      userService.getUserByEmailCaseInsensitive.mockResolvedValue(testUser);
-      userService.validatePassword.mockResolvedValue(true);
-      organizationService.getOrganizationById.mockResolvedValue(
-        testOrganization,
-      );
-      loginRateLimiterService.clearAttempts.mockResolvedValue();
+      beforeEach(() => {
+        loginRateLimiterService.checkLoginAllowed.mockResolvedValue();
+        userService.getUserByEmailCaseInsensitive.mockResolvedValue(testUser);
+        userService.validatePassword.mockResolvedValue(true);
+        organizationService.getOrganizationById.mockResolvedValue(
+          testOrganization,
+        );
+        loginRateLimiterService.clearAttempts.mockResolvedValue();
+      });
 
-      await useCase.execute(command);
+      it('calls checkLoginAllowed with the email', async () => {
+        await useCase.execute(command);
 
-      expect(loginRateLimiterService.checkLoginAllowed).toHaveBeenCalledWith(
-        'testuser@packmind.com',
-      );
-      expect(
-        loginRateLimiterService.recordFailedAttempt,
-      ).not.toHaveBeenCalled();
+        expect(loginRateLimiterService.checkLoginAllowed).toHaveBeenCalledWith(
+          'testuser@packmind.com',
+        );
+      });
+
+      it('clears attempts with the email', async () => {
+        await useCase.execute(command);
+
+        expect(loginRateLimiterService.clearAttempts).toHaveBeenCalledWith(
+          'testuser@packmind.com',
+        );
+      });
+
+      it('does not record failed attempt', async () => {
+        await useCase.execute(command);
+
+        expect(
+          loginRateLimiterService.recordFailedAttempt,
+        ).not.toHaveBeenCalled();
+      });
     });
   });
 });

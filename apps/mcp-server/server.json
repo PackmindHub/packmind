@@ -1,0 +1,24 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+  "name": "ai.packmind/mcp-server",
+  "description": "Packmind captures, scales, and enforces your organization's technical decisions.",
+  "repository": {
+    "url": "https://github.com/PackmindHub/packmind",
+    "source": "github",
+    "subfolder": "apps/mcp-server"
+  },
+  "version": "1.0.0",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://app.packmind.ai/mcp",
+      "headers": [
+        {
+          "description": "Bearer token for Packmind authentication",
+          "value": "Bearer {packmind_mcp_token}",
+          "name": "Authorization"
+        }
+      ]
+    }
+  ]
+}

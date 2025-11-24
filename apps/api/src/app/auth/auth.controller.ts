@@ -31,6 +31,7 @@ import {
   RequestPasswordResetCommand,
   RequestPasswordResetResponse,
   TooManyLoginAttemptsError,
+  InvalidEmailOrPasswordError,
 } from '@packmind/accounts';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { Configuration } from '@packmind/node-utils';
@@ -170,6 +171,11 @@ export class AuthController {
           },
           HttpStatus.TOO_MANY_REQUESTS,
         );
+      }
+
+      // Convert domain error to HTTP exception (prevents stack trace logging)
+      if (error instanceof InvalidEmailOrPasswordError) {
+        throw new HttpException(error.message, HttpStatus.UNAUTHORIZED);
       }
 
       throw error;

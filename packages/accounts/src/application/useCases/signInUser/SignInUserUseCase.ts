@@ -6,8 +6,8 @@ import {
 import { UserService } from '../../services/UserService';
 import { OrganizationService } from '../../services/OrganizationService';
 import { LoginRateLimiterService } from '../../services/LoginRateLimiterService';
-import { UnauthorizedException } from '@nestjs/common';
 import { MissingEmailError } from '../../../domain/errors/MissingEmailError';
+import { InvalidEmailOrPasswordError } from '../../../domain/errors/InvalidEmailOrPasswordError';
 
 export class SignInUserUseCase implements ISignInUserUseCase {
   constructor(
@@ -29,7 +29,7 @@ export class SignInUserUseCase implements ISignInUserUseCase {
       command.email,
     );
     if (!user) {
-      throw new UnauthorizedException('Invalid email or password');
+      throw new InvalidEmailOrPasswordError();
     }
 
     // Validate password
@@ -40,7 +40,7 @@ export class SignInUserUseCase implements ISignInUserUseCase {
     if (!isPasswordValid) {
       // Only record failed attempt for invalid password (not for user not found, etc.)
       await this.loginRateLimiterService.recordFailedAttempt(command.email);
-      throw new UnauthorizedException('Invalid email or password');
+      throw new InvalidEmailOrPasswordError();
     }
 
     // If user has no memberships, allow them to sign in to create an organization
@@ -62,7 +62,7 @@ export class SignInUserUseCase implements ISignInUserUseCase {
       );
 
       if (!organization) {
-        throw new UnauthorizedException('Invalid credentials');
+        throw new InvalidEmailOrPasswordError();
       }
 
       // Successful login - clear any previous failed attempts
@@ -83,7 +83,7 @@ export class SignInUserUseCase implements ISignInUserUseCase {
         );
 
         if (!organization) {
-          throw new UnauthorizedException('Invalid credentials');
+          throw new InvalidEmailOrPasswordError();
         }
 
         return {
