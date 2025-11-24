@@ -95,13 +95,36 @@ export const lintCommand = command({
       debug ? LogLevel.DEBUG : LogLevel.INFO,
     );
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
-    const { violations } = await packmindCliHexa.lintFilesInDirectory({
-      path: path ?? '.',
-      draftMode: draft,
-      standardSlug: rule?.standardSlug,
-      ruleId: rule?.ruleId,
-      language,
-    });
+
+    const targetPath = path ?? '.';
+    const hasArguments = !!(draft || rule || language);
+
+    // Check if we should use local linting: no arguments + packmind.json exists
+    let useLocalLinting = false;
+    if (!hasArguments) {
+      const config = await packmindCliHexa.readConfig(targetPath);
+      useLocalLinting = config.length > 0;
+    }
+
+    let violations;
+    if (useLocalLinting) {
+      packmindLogger.info(
+        'Using local linting with packmind.json configuration',
+      );
+      const result = await packmindCliHexa.lintFilesLocally({
+        path: targetPath,
+      });
+      violations = result.violations;
+    } else {
+      const result = await packmindCliHexa.lintFilesInDirectory({
+        path: targetPath,
+        draftMode: draft,
+        standardSlug: rule?.standardSlug,
+        ruleId: rule?.ruleId,
+        language,
+      });
+      violations = result.violations;
+    }
 
     (logger === Loggers.ide
       ? new IDELintLogger()

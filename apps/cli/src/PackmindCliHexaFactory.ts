@@ -7,6 +7,8 @@ import { IListFilesInDirectoryUseCase } from './domain/useCases/IListFilesInDire
 import { ListFilesInDirectoryUseCase } from './application/useCases/ListFilesInDirectoryUseCase';
 import { ILintFilesInDirectory } from './domain/useCases/ILintFilesInDirectory';
 import { LintFilesInDirectoryUseCase } from './application/useCases/LintFilesInDirectoryUseCase';
+import { ILintFilesLocally } from './domain/useCases/ILintFilesLocally';
+import { LintFilesLocallyUseCase } from './application/useCases/LintFilesLocallyUseCase';
 import { PackmindGateway } from './infra/repositories/PackmindGateway';
 import { PackmindServices } from './application/services/PackmindServices';
 import { IPackmindRepositories } from './domain/repositories/IPackmindRepositories';
@@ -30,6 +32,7 @@ export class PackmindCliHexaFactory {
     getGitRemoteUrl: IGetGitRemoteUrlUseCase;
     listFilesInDirectoryUseCase: IListFilesInDirectoryUseCase;
     lintFilesInDirectory: ILintFilesInDirectory;
+    lintFilesLocally: ILintFilesLocally;
     pullData: IPullDataUseCase;
     listPackages: IListPackagesUseCase;
     getPackageBySlug: IGetPackageSummaryUseCase;
@@ -56,6 +59,11 @@ export class PackmindCliHexaFactory {
       getGitRemoteUrl: new GetGitRemoteUrlUseCase(),
       listFilesInDirectoryUseCase: new ListFilesInDirectoryUseCase(),
       lintFilesInDirectory: new LintFilesInDirectoryUseCase(
+        this.services,
+        this.repositories,
+        this.logger,
+      ),
+      lintFilesLocally: new LintFilesLocallyUseCase(
         this.services,
         this.repositories,
         this.logger,
