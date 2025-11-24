@@ -35,6 +35,16 @@ export const pmTimelineRecipe = defineSlotRecipe({
           borderColor: '{colors.border.tertiary}',
         },
       },
+      subtleOnPrimary: {
+        separator: {
+          borderColor: '{colors.border.tertiary}',
+        },
+        indicator: {
+          outlineWidth: '1px',
+          bg: '{colors.background.primary}',
+          borderColor: '{colors.border.tertiary}',
+        },
+      },
     },
   },
   defaultVariants: {
