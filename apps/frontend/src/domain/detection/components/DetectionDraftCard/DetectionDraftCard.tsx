@@ -221,10 +221,10 @@ interface TimelineStepProps {
 const TimelineStep: React.FC<TimelineStepProps> = ({ config }) => {
   return (
     <PMTimelineItem>
-      <PMTimelineSeparator>
+      <PMTimelineConnector>
+        {!config.isLast && <PMTimelineSeparator />}
         <PMTimelineIndicator icon={getStepIcon(config.status)} />
-        {!config.isLast && <PMTimelineConnector />}
-      </PMTimelineSeparator>
+      </PMTimelineConnector>
       <PMTimelineContent>
         <PMTimelineTitle>
           <PMText color={getStepTextColor(config.status)}>

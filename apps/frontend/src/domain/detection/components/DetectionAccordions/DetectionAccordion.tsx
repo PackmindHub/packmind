@@ -60,7 +60,7 @@ const renderStatusBadge = (
             </PMText>
             {tooltipData.version && (
               <PMVStack gap={1} alignItems="flex-start" width="full">
-                <PMText fontSize="xs" color="text.secondary">
+                <PMText fontSize="xs" color="secondary">
                   Version
                 </PMText>
                 <PMText fontSize="sm">{tooltipData.version}</PMText>
@@ -70,7 +70,7 @@ const renderStatusBadge = (
               <>
                 <PMSeparator width="full" />
                 <PMVStack gap={1} alignItems="flex-start" width="full">
-                  <PMText fontSize="xs" color="text.secondary">
+                  <PMText fontSize="xs" color="secondary">
                     Generation details
                   </PMText>
                   <PMText
@@ -89,7 +89,7 @@ const renderStatusBadge = (
         );
 
         return (
-          <PMTooltip label={tooltipContent} placement="top" hasArrow>
+          <PMTooltip label={tooltipContent} placement="top" showArrow>
             {badge}
           </PMTooltip>
         );
