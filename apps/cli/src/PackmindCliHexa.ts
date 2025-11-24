@@ -32,7 +32,7 @@ import {
   IGetPackageSummaryCommand,
   IGetPackageSummaryResult,
 } from './domain/useCases/IGetPackageSummaryUseCase';
-import { PackmindFileConfig } from '@packmind/types';
+import { HierarchicalConfigResult, PackmindFileConfig } from '@packmind/types';
 
 const origin = 'PackmindCliHexa';
 
@@ -147,5 +147,21 @@ export class PackmindCliHexa {
     }
 
     return Object.keys(config.packages);
+  }
+
+  public async readHierarchicalConfig(
+    startDirectory: string,
+    stopDirectory: string,
+  ): Promise<HierarchicalConfigResult> {
+    return this.hexa.repositories.configFileRepository.readHierarchicalConfig(
+      startDirectory,
+      stopDirectory,
+    );
+  }
+
+  public async getGitRepositoryRoot(directory: string): Promise<string> {
+    return this.hexa.services.gitRemoteUrlService.getGitRepositoryRoot(
+      directory,
+    );
   }
 }
