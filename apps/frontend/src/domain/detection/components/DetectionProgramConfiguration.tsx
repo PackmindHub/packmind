@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { PMVStack, PMEmptyState, PMButton } from '@packmind/ui';
 import {
   RuleDetectionAssessmentStatus,
@@ -104,13 +104,19 @@ export const DetectionProgramConfiguration: React.FC<
     language,
   );
 
-  // Determine default accordion value based on assessment status
-  const shouldOpenDetectability = useMemo(() => {
-    return assessment?.status === RuleDetectionAssessmentStatus.FAILED;
-  }, [assessment?.status]);
+  // Controlled accordion state that updates when assessment loads
+  const [isDetectabilityOpen, setIsDetectabilityOpen] = useState(false);
+  const [isProgramOpen, setIsProgramOpen] = useState(false);
 
-  const shouldOpenProgram = useMemo(() => {
-    return assessment?.status !== RuleDetectionAssessmentStatus.FAILED;
+  useEffect(() => {
+    const shouldOpenDetectability =
+      assessment?.status === RuleDetectionAssessmentStatus.FAILED ||
+      assessment?.status === RuleDetectionAssessmentStatus.IN_PROGRESS;
+    const shouldOpenProgram =
+      assessment?.status === RuleDetectionAssessmentStatus.SUCCESS;
+
+    setIsDetectabilityOpen(shouldOpenDetectability);
+    setIsProgramOpen(shouldOpenProgram);
   }, [assessment?.status]);
 
   const isProgramDisabled = useMemo(
@@ -216,7 +222,8 @@ export const DetectionProgramConfiguration: React.FC<
       <DetectionAccordion
         title="Detectability"
         status={detectabilityStatus}
-        defaultOpen={shouldOpenDetectability}
+        open={isDetectabilityOpen}
+        onOpenChange={setIsDetectabilityOpen}
       >
         <DetectabilitySection
           standardId={standardId}
@@ -230,7 +237,8 @@ export const DetectionProgramConfiguration: React.FC<
         status={programStatus}
         statusTooltip={programStatusTooltip}
         statusMenuActions={programMenuActions}
-        defaultOpen={shouldOpenProgram}
+        open={isProgramOpen}
+        onOpenChange={setIsProgramOpen}
         disabled={isProgramDisabled}
       >
         <ProgramGenerationSection

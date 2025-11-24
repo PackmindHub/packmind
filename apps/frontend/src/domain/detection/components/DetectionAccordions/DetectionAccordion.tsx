@@ -40,7 +40,8 @@ interface DetectionAccordionProps {
   status?: DetectionAccordionStatus;
   statusTooltip?: StatusTooltipData;
   statusMenuActions?: StatusMenuAction[];
-  defaultOpen?: boolean;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   disabled?: boolean;
   children: React.ReactNode;
 }
@@ -130,15 +131,22 @@ export const DetectionAccordion: React.FC<DetectionAccordionProps> = ({
   status,
   statusTooltip,
   statusMenuActions,
-  defaultOpen = false,
+  open,
+  onOpenChange,
   disabled = false,
   children,
 }) => {
   const accordionValue = 'content';
+  const value = open && !disabled ? [accordionValue] : [];
+
+  const handleValueChange = (details: { value: string[] }) => {
+    onOpenChange(details.value.includes(accordionValue));
+  };
 
   return (
     <PMAccordion.Root
-      defaultValue={defaultOpen && !disabled ? [accordionValue] : []}
+      value={value}
+      onValueChange={handleValueChange}
       collapsible
       backgroundColor={disabled ? 'background.tertiary' : 'background.primary'}
       px="4"
