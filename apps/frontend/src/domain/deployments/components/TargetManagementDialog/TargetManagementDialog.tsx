@@ -59,9 +59,7 @@ export const TargetManagementDialog: React.FC<TargetManagementDialogProps> = ({
     isLoading,
     isError,
     error,
-  } = useGetTargetsByOrganizationQuery(
-    organization?.id || ('' as OrganizationId),
-  );
+  } = useGetTargetsByOrganizationQuery();
 
   // Filter targets for this specific repository (owner/repo) across all branches
   const repositoryTargets = allTargetsWithRepository.filter(

@@ -2,8 +2,6 @@ import { Injectable } from '@nestjs/common';
 import {
   Target,
   TargetWithRepository,
-  GetTargetsByGitRepoCommand,
-  GetTargetsByRepositoryCommand,
   GetTargetsByOrganizationCommand,
   AddTargetCommand,
   UpdateTargetCommand,
@@ -11,7 +9,7 @@ import {
   DeleteTargetResponse,
   IDeploymentPort,
 } from '@packmind/types';
-import { InjectDeploymentAdapter } from '../shared/HexaInjection';
+import { InjectDeploymentAdapter } from '../../../shared/HexaInjection';
 
 @Injectable()
 export class TargetsService {
@@ -19,18 +17,6 @@ export class TargetsService {
     @InjectDeploymentAdapter()
     private readonly deploymentAdapter: IDeploymentPort,
   ) {}
-
-  async getTargetsByGitRepo(
-    command: GetTargetsByGitRepoCommand,
-  ): Promise<Target[]> {
-    return this.deploymentAdapter.getTargetsByGitRepo(command);
-  }
-
-  async getTargetsByRepository(
-    command: GetTargetsByRepositoryCommand,
-  ): Promise<TargetWithRepository[]> {
-    return this.deploymentAdapter.getTargetsByRepository(command);
-  }
 
   async getTargetsByOrganization(
     command: GetTargetsByOrganizationCommand,

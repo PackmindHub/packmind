@@ -27,8 +27,6 @@ import { JobsService } from '@packmind/node-utils';
 import { OrganizationsModule as AccountsOrganizationsModule } from './accounts/organizations/organizations.module';
 import { AuthGuard } from './auth/auth.guard';
 import { AuthModule } from './auth/auth.module';
-import { DeploymentsController } from './deployments/deployments.controller';
-import { DeploymentsModule } from './deployments/deployments.module';
 import { GitModule } from './git/git.module';
 import { McpModule } from './mcp/mcp.module';
 import { OrganizationsModule } from './organizations/organizations.module';
@@ -38,10 +36,11 @@ import { OrganizationsSpacesStandardsModule } from './organizations/spaces/stand
 import { OrganizationsSpacesStandardsRulesModule } from './organizations/spaces/standards/rules/rules.module';
 import { OrganizationsSpacesPackagesModule } from './organizations/spaces/packages/packages.module';
 import { OrganizationsUsersModule } from './organizations/users/users.module';
+import { OrganizationDeploymentsModule } from './organizations/deployments/deployments.module';
+import { OrganizationTargetsModule } from './organizations/deployments/targets/targets.module';
 import { HexaRegistryModule } from './shared/HexaRegistryModule';
 import { SSEModule } from './sse/sse.module';
 import { StandardsModule } from './standards/standards.module';
-import { TargetsModule } from './targets/targets.module';
 
 const logger = new PackmindLogger('AppModule', LogLevel.INFO);
 
@@ -106,8 +105,6 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
     OrganizationsModule,
     McpModule,
     AnalyticsModule,
-    DeploymentsModule,
-    TargetsModule,
     SSEModule,
     AmplitudeModule,
     LinterModule,
@@ -121,6 +118,16 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
           {
             path: 'users',
             module: OrganizationsUsersModule,
+          },
+          {
+            path: 'deployments',
+            module: OrganizationDeploymentsModule,
+            children: [
+              {
+                path: 'targets',
+                module: OrganizationTargetsModule,
+              },
+            ],
           },
           {
             path: 'spaces',
@@ -150,7 +157,7 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
       },
     ]),
   ],
-  controllers: [AppController, DeploymentsController],
+  controllers: [AppController],
   providers: [
     AppService,
     Reflector,

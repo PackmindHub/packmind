@@ -90,9 +90,7 @@ const RunDistributionComponent: React.FC<RunDistributionProps> = ({
     data: targetsList = [],
     isLoading: targetsLoading,
     isError: targetsError,
-  } = useGetTargetsByOrganizationQuery(
-    organization?.id || ('' as OrganizationId),
-  );
+  } = useGetTargetsByOrganizationQuery();
 
   const renderModeConfiguration =
     renderModeConfigurationResult?.configuration ?? null;

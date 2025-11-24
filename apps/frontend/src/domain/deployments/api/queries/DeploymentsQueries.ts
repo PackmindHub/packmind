@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { deploymentsGateways } from '../gateways';
 import { RecipeId, RecipeVersionId } from '@packmind/types';
 import { StandardId, StandardVersionId } from '@packmind/types';
-import { GitRepoId, SpaceId } from '@packmind/types';
+import { SpaceId } from '@packmind/types';
 import { OrganizationId, PackageId } from '@packmind/types';
 import {
   TargetId,
@@ -22,27 +22,59 @@ import {
   UPDATE_PACKAGE_MUTATION_KEY,
   GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
   GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
-  GET_TARGETS_BY_GIT_REPO_KEY,
-  GET_TARGETS_BY_REPOSITORY_KEY,
   GET_TARGETS_BY_ORGANIZATION_KEY,
   GET_RENDER_MODE_CONFIGURATION_KEY,
 } from '../queryKeys';
 import { GET_ONBOARDING_STATUS_KEY } from '../../../accounts/api/queryKeys';
+import { useAuthContext } from '../../../accounts/hooks';
+
 export const useListRecipeDeploymentsQuery = (recipeId: RecipeId) => {
+  const { organization } = useAuthContext();
+
   return useQuery({
-    queryKey: [...LIST_RECIPE_DEPLOYMENTS_KEY, recipeId],
+    queryKey: [
+      'organizations',
+      organization?.id,
+      ...LIST_RECIPE_DEPLOYMENTS_KEY,
+      recipeId,
+    ],
     queryFn: () => {
-      return deploymentsGateways.listDeploymentsByRecipeId({ recipeId });
+      if (!organization?.id) {
+        throw new Error(
+          'Organization ID is required to fetch recipe deployments',
+        );
+      }
+      return deploymentsGateways.listDeploymentsByRecipeId({
+        organizationId: organization.id,
+        recipeId,
+      });
     },
+    enabled: !!organization?.id,
   });
 };
 
 export const useListStandardDeploymentsQuery = (standardId: StandardId) => {
+  const { organization } = useAuthContext();
+
   return useQuery({
-    queryKey: [...LIST_STANDARD_DEPLOYMENTS_KEY, standardId],
+    queryKey: [
+      'organizations',
+      organization?.id,
+      ...LIST_STANDARD_DEPLOYMENTS_KEY,
+      standardId,
+    ],
     queryFn: () => {
-      return deploymentsGateways.listDeploymentsByStandardId({ standardId });
+      if (!organization?.id) {
+        throw new Error(
+          'Organization ID is required to fetch standard deployments',
+        );
+      }
+      return deploymentsGateways.listDeploymentsByStandardId({
+        organizationId: organization.id,
+        standardId,
+      });
     },
+    enabled: !!organization?.id,
   });
 };
 
@@ -96,26 +128,55 @@ export const useGetPackageByIdQuery = (
 };
 
 export const useGetRecipesDeploymentOverviewQuery = () => {
+  const { organization } = useAuthContext();
+
   return useQuery({
-    queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
+    queryKey: [
+      'organizations',
+      organization?.id,
+      ...GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
+    ],
     queryFn: () => {
-      return deploymentsGateways.getRecipesDeploymentOverview({});
+      if (!organization?.id) {
+        throw new Error(
+          'Organization ID is required to fetch recipes deployment overview',
+        );
+      }
+      return deploymentsGateways.getRecipesDeploymentOverview({
+        organizationId: organization.id,
+      });
     },
+    enabled: !!organization?.id,
   });
 };
 
 export const useGetStandardsDeploymentOverviewQuery = () => {
+  const { organization } = useAuthContext();
+
   return useQuery({
-    queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
+    queryKey: [
+      'organizations',
+      organization?.id,
+      ...GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
+    ],
     queryFn: () => {
-      return deploymentsGateways.getStandardsDeploymentOverview({});
+      if (!organization?.id) {
+        throw new Error(
+          'Organization ID is required to fetch standards deployment overview',
+        );
+      }
+      return deploymentsGateways.getStandardsDeploymentOverview({
+        organizationId: organization.id,
+      });
     },
+    enabled: !!organization?.id,
   });
 };
 
 export const DEPLOY_RECIPES_MUTATION_KEY = 'deployRecipes';
 export const useDeployRecipesMutation = () => {
   const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
 
   return useMutation({
     mutationKey: [DEPLOY_RECIPES_MUTATION_KEY],
@@ -126,8 +187,12 @@ export const useDeployRecipesMutation = () => {
       recipeVersionIds: RecipeVersionId[];
       targetIds: TargetId[];
     }) => {
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to publish recipes');
+      }
       console.log('Publishing recipes to targets...');
       return deploymentsGateways.publishRecipes({
+        organizationId: organization.id,
         recipeVersionIds,
         targetIds,
       });
@@ -160,6 +225,7 @@ export const useDeployRecipesMutation = () => {
 export const DEPLOY_STANDARDS_MUTATION_KEY = 'deployStandards';
 export const useDeployStandardsMutation = () => {
   const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
 
   return useMutation({
     mutationKey: [DEPLOY_STANDARDS_MUTATION_KEY],
@@ -170,8 +236,12 @@ export const useDeployStandardsMutation = () => {
       standardVersionIds: StandardVersionId[];
       targetIds: TargetId[];
     }) => {
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to publish standards');
+      }
       console.log('Deploying standards to targets...');
       return deploymentsGateways.publishStandards({
+        organizationId: organization.id,
         standardVersionIds,
         targetIds,
       });
@@ -202,6 +272,7 @@ export const useDeployStandardsMutation = () => {
 export const DEPLOY_PACKAGES_MUTATION_KEY = 'deployPackages';
 export const useDeployPackagesMutation = () => {
   const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
 
   return useMutation({
     mutationKey: [DEPLOY_PACKAGES_MUTATION_KEY],
@@ -212,8 +283,12 @@ export const useDeployPackagesMutation = () => {
       packageIds: PackageId[];
       targetIds: TargetId[];
     }) => {
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to publish packages');
+      }
       console.log('Deploying packages to targets...');
       return deploymentsGateways.publishPackages({
+        organizationId: organization.id,
         packageIds,
         targetIds,
       });
@@ -244,53 +319,47 @@ export const useDeployPackagesMutation = () => {
   });
 };
 
-export const useGetTargetsByGitRepoQuery = (gitRepoId: GitRepoId) => {
-  return useQuery({
-    queryKey: [...GET_TARGETS_BY_GIT_REPO_KEY, gitRepoId],
-    queryFn: () => {
-      return deploymentsGateways.getTargetsByGitRepo({ gitRepoId });
-    },
-    enabled: !!gitRepoId,
-  });
-};
+export const useGetTargetsByOrganizationQuery = () => {
+  const { organization } = useAuthContext();
 
-export const useGetTargetsByRepositoryQuery = (owner: string, repo: string) => {
   return useQuery({
-    queryKey: [...GET_TARGETS_BY_REPOSITORY_KEY, owner, repo],
+    queryKey: [
+      'organizations',
+      organization?.id,
+      ...GET_TARGETS_BY_ORGANIZATION_KEY,
+    ],
     queryFn: () => {
-      return deploymentsGateways.getTargetsByRepository({ owner, repo });
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to fetch targets');
+      }
+      return deploymentsGateways.getTargetsByOrganization({
+        organizationId: organization.id,
+      });
     },
-    enabled: !!owner && !!repo,
-  });
-};
-
-export const useGetTargetsByOrganizationQuery = (
-  organizationId: OrganizationId,
-) => {
-  return useQuery({
-    queryKey: [...GET_TARGETS_BY_ORGANIZATION_KEY, organizationId],
-    queryFn: () => {
-      return deploymentsGateways.getTargetsByOrganization({ organizationId });
-    },
+    enabled: !!organization?.id,
   });
 };
 
 export const ADD_TARGET_MUTATION_KEY = 'addTarget';
 export const useAddTargetMutation = () => {
   const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
 
   return useMutation({
     mutationKey: [ADD_TARGET_MUTATION_KEY],
     mutationFn: async (
       command: Omit<AddTargetCommand, 'userId' | 'organizationId'>,
     ) => {
-      return deploymentsGateways.addTarget(command);
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to add target');
+      }
+      return deploymentsGateways.addTarget({
+        ...command,
+        organizationId: organization.id,
+      });
     },
     onSuccess: async (newTarget) => {
-      // Invalidate all target queries (simpler)
-      await queryClient.invalidateQueries({
-        queryKey: GET_TARGETS_BY_REPOSITORY_KEY,
-      });
+      // Invalidate all target queries
       await queryClient.invalidateQueries({
         queryKey: GET_TARGETS_BY_ORGANIZATION_KEY,
       });
@@ -312,19 +381,23 @@ export const useAddTargetMutation = () => {
 export const UPDATE_TARGET_MUTATION_KEY = 'updateTarget';
 export const useUpdateTargetMutation = () => {
   const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
 
   return useMutation({
     mutationKey: [UPDATE_TARGET_MUTATION_KEY],
     mutationFn: async (
       command: Omit<UpdateTargetCommand, 'userId' | 'organizationId'>,
     ) => {
-      return deploymentsGateways.updateTarget(command);
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to update target');
+      }
+      return deploymentsGateways.updateTarget({
+        ...command,
+        organizationId: organization.id,
+      });
     },
     onSuccess: async (updatedTarget) => {
       // Same as useAddTargetMutation
-      await queryClient.invalidateQueries({
-        queryKey: GET_TARGETS_BY_REPOSITORY_KEY,
-      });
       await queryClient.invalidateQueries({
         queryKey: GET_TARGETS_BY_ORGANIZATION_KEY,
       });
@@ -345,20 +418,23 @@ export const useUpdateTargetMutation = () => {
 export const DELETE_TARGET_MUTATION_KEY = 'deleteTarget';
 export const useDeleteTargetMutation = () => {
   const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
 
   return useMutation({
     mutationKey: [DELETE_TARGET_MUTATION_KEY],
     mutationFn: async (
       command: Omit<DeleteTargetCommand, 'userId' | 'organizationId'>,
     ): Promise<DeleteTargetResponse> => {
-      return deploymentsGateways.deleteTarget(command);
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to delete target');
+      }
+      return deploymentsGateways.deleteTarget({
+        ...command,
+        organizationId: organization.id,
+      });
     },
     onSuccess: async () => {
-      // Current is correct - target deleted affects all target queries
-      // and deployment overviews
-      await queryClient.invalidateQueries({
-        queryKey: GET_TARGETS_BY_REPOSITORY_KEY,
-      });
+      // Target deleted affects all target queries and deployment overviews
       await queryClient.invalidateQueries({
         queryKey: GET_TARGETS_BY_ORGANIZATION_KEY,
       });
@@ -377,11 +453,25 @@ export const useDeleteTargetMutation = () => {
 };
 
 export const useGetRenderModeConfigurationQuery = () => {
+  const { organization } = useAuthContext();
+
   return useQuery({
-    queryKey: GET_RENDER_MODE_CONFIGURATION_KEY,
+    queryKey: [
+      'organizations',
+      organization?.id,
+      ...GET_RENDER_MODE_CONFIGURATION_KEY,
+    ],
     queryFn: () => {
-      return deploymentsGateways.getRenderModeConfiguration({});
+      if (!organization?.id) {
+        throw new Error(
+          'Organization ID is required to fetch render mode configuration',
+        );
+      }
+      return deploymentsGateways.getRenderModeConfiguration({
+        organizationId: organization.id,
+      });
     },
+    enabled: !!organization?.id,
   });
 };
 
@@ -389,6 +479,7 @@ export const UPDATE_RENDER_MODE_CONFIGURATION_MUTATION_KEY =
   'updateRenderModeConfiguration';
 export const useUpdateRenderModeConfigurationMutation = () => {
   const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
 
   return useMutation({
     mutationKey: [UPDATE_RENDER_MODE_CONFIGURATION_MUTATION_KEY],
@@ -398,7 +489,15 @@ export const useUpdateRenderModeConfigurationMutation = () => {
         'userId' | 'organizationId'
       >,
     ) => {
-      return deploymentsGateways.updateRenderModeConfiguration(command);
+      if (!organization?.id) {
+        throw new Error(
+          'Organization ID is required to update render mode configuration',
+        );
+      }
+      return deploymentsGateways.updateRenderModeConfiguration({
+        ...command,
+        organizationId: organization.id,
+      });
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({

@@ -23,7 +23,7 @@ import {
   SpaceId,
   StandardId,
 } from '@packmind/types';
-import { DeploymentsService } from '../../../deployments/deployments.service';
+import { DeploymentsService } from '../../deployments/deployments.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 import { SpaceAccessGuard } from '../guards/space-access.guard';
 

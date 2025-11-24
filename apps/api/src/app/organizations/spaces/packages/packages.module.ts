@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { OrganizationsSpacesPackagesController } from './packages.controller';
-import { DeploymentsModule } from '../../../deployments/deployments.module';
+import { OrganizationDeploymentsModule } from '../../deployments/deployments.module';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 import { SpaceAccessGuard } from '../guards/space-access.guard';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
@@ -11,11 +11,11 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
  * This module is registered as a child of OrganizationsSpacesModule via RouterModule,
  * automatically inheriting the /organizations/:orgId/spaces/:spaceId path prefix.
  *
- * The DeploymentsModule is imported to provide access to DeploymentsService.
+ * The OrganizationDeploymentsModule is imported to provide access to DeploymentsService.
  * Both OrganizationAccessGuard and SpaceAccessGuard are provided to ensure proper access validation.
  */
 @Module({
-  imports: [DeploymentsModule],
+  imports: [OrganizationDeploymentsModule],
   controllers: [OrganizationsSpacesPackagesController],
   providers: [
     OrganizationAccessGuard,

@@ -1,11 +1,10 @@
-import { Gateway, NewGateway } from '@packmind/types';
-import { StandardId, SpaceId } from '@packmind/types';
+import { NewGateway, NewPackmindCommandBody } from '@packmind/types';
+import { StandardId, SpaceId, RecipeId } from '@packmind/types';
 import { IUpdateTargetUseCase, IDeleteTargetUseCase } from '@packmind/types';
 import {
   IAddTargetUseCase,
   IGetRenderModeConfigurationUseCase,
   IUpdateRenderModeConfigurationUseCase,
-  GitRepoId,
 } from '@packmind/types';
 import {
   IGetDeploymentOverview,
@@ -20,13 +19,21 @@ import {
   ICreatePackageUseCase,
   IUpdatePackageUseCase,
   IDeletePackagesBatchUseCase,
-  IGetTargetsByGitRepoUseCase,
-  IGetTargetsByRepositoryUseCase,
   IGetTargetsByOrganizationUseCase,
+  PackageId,
+  ListDeploymentsByRecipeCommand,
+  ListDeploymentsByStandardCommand,
+  GetDeploymentOverviewCommand,
+  GetStandardDeploymentOverviewCommand,
+  PublishRecipesCommand,
+  PublishStandardsCommand,
+  PublishPackagesCommand,
+  GetTargetsByOrganizationCommand,
+  AddTargetCommand,
   UpdateTargetCommand,
   DeleteTargetCommand,
-  DeleteTargetResponse,
-  PackageId,
+  GetRenderModeConfigurationCommand,
+  UpdateRenderModeConfigurationCommand,
 } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
@@ -37,21 +44,25 @@ export class DeploymentsGatewayApi
   implements IDeploymentsGateway
 {
   constructor() {
-    super('/deployments');
+    super('/organizations');
   }
 
-  listDeploymentsByRecipeId: Gateway<IListDeploymentsByRecipe> = async ({
+  listDeploymentsByRecipeId: NewGateway<IListDeploymentsByRecipe> = async ({
+    organizationId,
     recipeId,
-  }) => {
-    return this._api.get(`${this._endpoint}/recipe/${recipeId}`);
+  }: NewPackmindCommandBody<ListDeploymentsByRecipeCommand>) => {
+    return this._api.get(
+      `${this._endpoint}/${organizationId}/deployments/recipe/${recipeId}`,
+    );
   };
 
-  listDeploymentsByStandardId: Gateway<IListDeploymentsByStandard> = async ({
+  listDeploymentsByStandardId: NewGateway<IListDeploymentsByStandard> = async ({
+    organizationId,
     standardId,
-  }: {
-    standardId: StandardId;
-  }) => {
-    return this._api.get(`${this._endpoint}/standard/${standardId}`);
+  }: NewPackmindCommandBody<ListDeploymentsByStandardCommand>) => {
+    return this._api.get(
+      `${this._endpoint}/${organizationId}/deployments/standard/${standardId}`,
+    );
   };
 
   listPackagesBySpace: NewGateway<IListPackagesBySpaceUseCase> = async ({
@@ -121,80 +132,115 @@ export class DeploymentsGatewayApi
     );
   };
 
-  getRecipesDeploymentOverview: Gateway<IGetDeploymentOverview> = async () => {
-    return this._api.get(`${this._endpoint}/recipes/overview`);
-  };
-
-  getStandardsDeploymentOverview: Gateway<IGetStandardDeploymentOverview> =
-    async () => {
-      return this._api.get(`${this._endpoint}/standards/overview`);
-    };
-
-  publishRecipes: Gateway<IPublishRecipes> = async (command) => {
-    return this._api.post(`${this._endpoint}/recipes/publish`, command);
-  };
-
-  publishStandards: Gateway<IPublishStandards> = async (command) => {
-    return this._api.post(`${this._endpoint}/standards/publish`, command);
-  };
-
-  publishPackages: Gateway<IPublishPackages> = async (command) => {
-    return this._api.post(`${this._endpoint}/packages/publish`, command);
-  };
-
-  getTargetsByGitRepo: Gateway<IGetTargetsByGitRepoUseCase> = async ({
-    gitRepoId,
-  }: {
-    gitRepoId: GitRepoId;
-  }) => {
-    return this._api.get(`/targets/git-repo/${gitRepoId}`);
-  };
-
-  getTargetsByRepository: Gateway<IGetTargetsByRepositoryUseCase> = async ({
-    owner,
-    repo,
-  }: {
-    owner: string;
-    repo: string;
-  }) => {
+  getRecipesDeploymentOverview: NewGateway<IGetDeploymentOverview> = async ({
+    organizationId,
+  }: NewPackmindCommandBody<GetDeploymentOverviewCommand>) => {
     return this._api.get(
-      `/targets/repository/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`,
+      `${this._endpoint}/${organizationId}/deployments/recipes/overview`,
     );
   };
 
-  getTargetsByOrganization: Gateway<IGetTargetsByOrganizationUseCase> = async (
-    params: Record<string, unknown>, // TODO: Fix type mismatch - should include organizationId in command
-  ) => {
-    const { organizationId } = params as { organizationId: OrganizationId };
-    return this._api.get(`/targets/organization/${organizationId}`);
-  };
-
-  addTarget: Gateway<IAddTargetUseCase> = async (command) => {
-    return this._api.post(`/targets`, command);
-  };
-
-  updateTarget: Gateway<IUpdateTargetUseCase> = async (command) => {
-    const cmd = command as UpdateTargetCommand;
-    return this._api.put(`/targets/${cmd.targetId}`, command);
-  };
-
-  deleteTarget: Gateway<IDeleteTargetUseCase> = async (command) => {
-    const cmd = command as DeleteTargetCommand;
-    return this._api.delete(
-      `/targets/${cmd.targetId}`,
-    ) as Promise<DeleteTargetResponse>;
-  };
-
-  getRenderModeConfiguration: Gateway<IGetRenderModeConfigurationUseCase> =
-    async () => {
-      return this._api.get(`${this._endpoint}/renderModeConfiguration`);
+  getStandardsDeploymentOverview: NewGateway<IGetStandardDeploymentOverview> =
+    async ({
+      organizationId,
+    }: NewPackmindCommandBody<GetStandardDeploymentOverviewCommand>) => {
+      return this._api.get(
+        `${this._endpoint}/${organizationId}/deployments/standards/overview`,
+      );
     };
 
-  updateRenderModeConfiguration: Gateway<IUpdateRenderModeConfigurationUseCase> =
-    async (command) => {
+  publishRecipes: NewGateway<IPublishRecipes> = async ({
+    organizationId,
+    targetIds,
+    recipeVersionIds,
+  }: NewPackmindCommandBody<PublishRecipesCommand>) => {
+    return this._api.post(
+      `${this._endpoint}/${organizationId}/deployments/recipes/publish`,
+      { targetIds, recipeVersionIds },
+    );
+  };
+
+  publishStandards: NewGateway<IPublishStandards> = async ({
+    organizationId,
+    targetIds,
+    standardVersionIds,
+  }: NewPackmindCommandBody<PublishStandardsCommand>) => {
+    return this._api.post(
+      `${this._endpoint}/${organizationId}/deployments/standards/publish`,
+      { targetIds, standardVersionIds },
+    );
+  };
+
+  publishPackages: NewGateway<IPublishPackages> = async ({
+    organizationId,
+    targetIds,
+    packageIds,
+  }: NewPackmindCommandBody<PublishPackagesCommand>) => {
+    return this._api.post(
+      `${this._endpoint}/${organizationId}/deployments/packages/publish`,
+      { targetIds, packageIds },
+    );
+  };
+
+  getTargetsByOrganization: NewGateway<IGetTargetsByOrganizationUseCase> =
+    async ({
+      organizationId,
+    }: NewPackmindCommandBody<GetTargetsByOrganizationCommand>) => {
+      return this._api.get(
+        `${this._endpoint}/${organizationId}/deployments/targets`,
+      );
+    };
+
+  addTarget: NewGateway<IAddTargetUseCase> = async ({
+    organizationId,
+    name,
+    path,
+    gitRepoId,
+  }: NewPackmindCommandBody<AddTargetCommand>) => {
+    return this._api.post(
+      `${this._endpoint}/${organizationId}/deployments/targets`,
+      { name, path, gitRepoId },
+    );
+  };
+
+  updateTarget: NewGateway<IUpdateTargetUseCase> = async ({
+    organizationId,
+    targetId,
+    name,
+    path,
+  }: NewPackmindCommandBody<UpdateTargetCommand>) => {
+    return this._api.patch(
+      `${this._endpoint}/${organizationId}/deployments/targets/${targetId}`,
+      { name, path },
+    );
+  };
+
+  deleteTarget: NewGateway<IDeleteTargetUseCase> = async ({
+    organizationId,
+    targetId,
+  }: NewPackmindCommandBody<DeleteTargetCommand>) => {
+    return this._api.delete(
+      `${this._endpoint}/${organizationId}/deployments/targets/${targetId}`,
+    );
+  };
+
+  getRenderModeConfiguration: NewGateway<IGetRenderModeConfigurationUseCase> =
+    async ({
+      organizationId,
+    }: NewPackmindCommandBody<GetRenderModeConfigurationCommand>) => {
+      return this._api.get(
+        `${this._endpoint}/${organizationId}/deployments/renderModeConfiguration`,
+      );
+    };
+
+  updateRenderModeConfiguration: NewGateway<IUpdateRenderModeConfigurationUseCase> =
+    async ({
+      organizationId,
+      activeRenderModes,
+    }: NewPackmindCommandBody<UpdateRenderModeConfigurationCommand>) => {
       return this._api.post(
-        `${this._endpoint}/renderModeConfiguration`,
-        command,
+        `${this._endpoint}/${organizationId}/deployments/renderModeConfiguration`,
+        { activeRenderModes },
       );
     };
 }

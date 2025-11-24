@@ -1,19 +1,20 @@
 import { Module } from '@nestjs/common';
 import { DeploymentsController } from './deployments.controller';
 import { DeploymentsService } from './deployments.service';
+import { OrganizationTargetsModule } from './targets/targets.module';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [AuthModule],
+  imports: [OrganizationTargetsModule],
   controllers: [DeploymentsController],
   providers: [
     DeploymentsService,
     {
       provide: PackmindLogger,
-      useFactory: () => new PackmindLogger('DeploymentsModule', LogLevel.INFO),
+      useFactory: () =>
+        new PackmindLogger('OrganizationDeploymentsModule', LogLevel.INFO),
     },
   ],
   exports: [DeploymentsService],
 })
-export class DeploymentsModule {}
+export class OrganizationDeploymentsModule {}
