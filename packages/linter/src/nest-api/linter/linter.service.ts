@@ -1,8 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { LinterHexa } from '../../LinterHexa';
-import { PackmindLogger } from '@packmind/logger';
-import { IDeploymentPort } from '@packmind/types';
-import { SpacesHexa } from '@packmind/spaces';
 import {
   ActiveDetectionProgram,
   ActiveDetectionProgramId,
@@ -39,27 +36,13 @@ import {
   GetDetectionHeuristicsResponse,
   CreateDetectionHeuristicsCommand,
   CreateDetectionHeuristicsResponse,
+  GetDetectionProgramsForPackagesCommand,
+  GetDetectionProgramsForPackagesResponse,
 } from '@packmind/types';
-import { DeploymentsHexa } from '@packmind/deployments';
-import { StandardsHexa } from '@packmind/standards';
-
-const origin = 'LinterService';
 
 @Injectable()
 export class LinterService {
-  private readonly deploymentAdapter: IDeploymentPort;
-
-  constructor(
-    private readonly linterHexa: LinterHexa,
-    private readonly deploymentsHexa: DeploymentsHexa,
-    private readonly standardsHexa: StandardsHexa,
-    private readonly spacesHexa: SpacesHexa,
-    private readonly logger: PackmindLogger = new PackmindLogger(origin),
-  ) {
-    // Ports are now set automatically during LinterHexa.initialize()
-    // No need to set them manually here
-    this.deploymentAdapter = deploymentsHexa.getAdapter();
-  }
+  constructor(private readonly linterHexa: LinterHexa) {}
 
   private get linterAdapter(): ILinterPort {
     return this.linterHexa.getAdapter();
@@ -167,5 +150,11 @@ export class LinterService {
     command: CreateDetectionHeuristicsCommand,
   ): Promise<CreateDetectionHeuristicsResponse> {
     return this.linterAdapter.createDetectionHeuristics(command);
+  }
+
+  async getDetectionProgramsForPackages(
+    command: GetDetectionProgramsForPackagesCommand,
+  ): Promise<GetDetectionProgramsForPackagesResponse> {
+    return this.linterAdapter.getDetectionProgramsForPackages(command);
   }
 }

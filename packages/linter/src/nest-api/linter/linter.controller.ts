@@ -49,6 +49,8 @@ import {
   UpdateRuleDetectionHeuristicsCommand,
   GetDetectionHeuristicsCommand,
   DetectionHeuristics,
+  GetDetectionProgramsForPackagesCommand,
+  GetDetectionProgramsForPackagesResponse,
 } from '@packmind/types';
 import { LinterHexa } from '../../LinterHexa';
 import { LinterService } from './linter.service';
@@ -691,6 +693,93 @@ export class LinterController {
         'GET /standards/list-detection-program - Failed to list detection programs',
         {
           gitRemoteUrl,
+          organizationId: request.organization?.id,
+          userId: request.user?.userId,
+          error: errorMessage,
+        },
+      );
+
+      // Return appropriate HTTP status codes for different error scenarios
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+
+      // For other errors, wrap in BadRequestException to maintain consistency
+      throw new BadRequestException(errorMessage);
+    }
+  }
+
+  @Post('detection-programs-for-packages')
+  async getDetectionProgramsForPackages(
+    @Body() body: { packagesSlugs: string[] },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<GetDetectionProgramsForPackagesResponse> {
+    const { packagesSlugs } = body;
+    this.logger.info(
+      'POST /detection-programs-for-packages - Getting detection programs for packages',
+      {
+        packagesSlugs,
+        userId: request.user?.userId,
+        organizationId: request.organization?.id,
+      },
+    );
+
+    try {
+      // Extract user and organization context from authenticated request
+      const organizationId = request.organization?.id;
+      const userId = request.user?.userId;
+
+      // Validate packagesSlugs parameter
+      if (
+        !packagesSlugs ||
+        !Array.isArray(packagesSlugs) ||
+        packagesSlugs.length === 0
+      ) {
+        this.logger.error(
+          'POST /detection-programs-for-packages - packagesSlugs parameter is required',
+          {
+            packagesSlugs,
+            organizationId,
+            userId,
+          },
+        );
+        throw new BadRequestException(
+          'packagesSlugs parameter is required and must be a non-empty array',
+        );
+      }
+
+      const command: GetDetectionProgramsForPackagesCommand = {
+        organizationId: request.organization.id,
+        userId: request.user.userId,
+        packagesSlugs,
+      };
+
+      // Call the service method to get detection programs for packages
+      const result =
+        await this.linterService.getDetectionProgramsForPackages(command);
+
+      this.logger.info(
+        'POST /detection-programs-for-packages - Detection programs retrieved successfully',
+        {
+          packagesSlugs,
+          organizationId,
+          userId,
+          targetsCount: result.targets.length,
+          totalStandards: result.targets.reduce(
+            (sum, target) => sum + target.standards.length,
+            0,
+          ),
+        },
+      );
+
+      return result;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /detection-programs-for-packages - Failed to get detection programs for packages',
+        {
+          packagesSlugs,
           organizationId: request.organization?.id,
           userId: request.user?.userId,
           error: errorMessage,

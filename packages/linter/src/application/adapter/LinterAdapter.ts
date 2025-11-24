@@ -51,6 +51,8 @@ import {
   GetDetectionHeuristicsResponse,
   GetDetectionProgramMetadataCommand,
   GetDetectionProgramMetadataResponse,
+  GetDetectionProgramsForPackagesCommand,
+  GetDetectionProgramsForPackagesResponse,
   GetDraftDetectionProgramForRuleCommand,
   GetDraftDetectionProgramForRuleResponse,
   GetRuleDetectionAssessmentCommand,
@@ -79,6 +81,7 @@ import { CopyDetectionProgramsToNewRuleUseCase } from '../useCases/copyDetection
 import { CopyLinterArtefactsUseCase } from '../useCases/copyLinterArtefacts/copyLinterArtefacts.usecase';
 import { CopyRuleDetectionAssessmentsUseCase } from '../useCases/copyRuleDetectionAssessments/copyRuleDetectionAssessments.usecase';
 import { CreateDetectionHeuristicsUseCase } from '../useCases/createDetectionHeuristics/createDetectionHeuristics.usecase';
+import { GetDetectionProgramsForPackagesUseCase } from '../useCases/getDetectionProgramsForPackages/getDetectionProgramsForPackages.usecase';
 import { CreateDetectionProgramUseCase } from '../useCases/createDetectionProgram/createDetectionProgram.usecase';
 import { CreateNewDetectionProgramVersionUsecase } from '../useCases/createNewDetectionProgramVersion/createNewDetectionProgramVersion.usecase';
 import { GetActiveDetectionProgramUseCase } from '../useCases/getActiveDetectionProgram/getActiveDetectionProgram.usecase';
@@ -168,6 +171,7 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
   private _updateRuleDetectionHeuristicsUseCase!: UpdateRuleDetectionHeuristicsUseCase;
   private _getDetectionHeuristicsUseCase!: GetDetectionHeuristicsUseCase;
   private _createDetectionHeuristicsUseCase!: CreateDetectionHeuristicsUseCase;
+  private _getDetectionProgramsForPackagesUseCase!: GetDetectionProgramsForPackagesUseCase;
 
   constructor({
     hexaFactory,
@@ -339,6 +343,14 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
 
     this._createDetectionHeuristicsUseCase =
       new CreateDetectionHeuristicsUseCase(this.repositories);
+
+    this._getDetectionProgramsForPackagesUseCase =
+      new GetDetectionProgramsForPackagesUseCase(
+        this.detectionProgramService,
+        this.deploymentsPort,
+        this.standardsPort,
+        this.spacesPort,
+      );
   }
 
   public isReady(): boolean {
@@ -512,5 +524,11 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
     command: CreateDetectionHeuristicsCommand,
   ): Promise<CreateDetectionHeuristicsResponse> {
     return this._createDetectionHeuristicsUseCase.execute(command);
+  }
+
+  async getDetectionProgramsForPackages(
+    command: GetDetectionProgramsForPackagesCommand,
+  ): Promise<GetDetectionProgramsForPackagesResponse> {
+    return this._getDetectionProgramsForPackagesUseCase.execute(command);
   }
 }
