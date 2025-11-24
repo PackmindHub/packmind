@@ -33,7 +33,7 @@ Now that the context is locked in, create the draft recipe and iterate with the 
 
 ## Next Step
 
-Once the user approves the draft, call \`packmind_save_recipe_workflow\` with:
+Once the user approves the draft, call \`packmind_save_recipe\` with:
 \`\`\`json
 { "step": "finalization" }
 \`\`\`

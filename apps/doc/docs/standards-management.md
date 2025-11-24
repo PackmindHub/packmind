@@ -34,7 +34,7 @@ _"Create a Packmind standard 'Unit tests with Jest' and extract coding rules by 
 
 The agent will:
 
-1. Use the `packmind_create_standard_workflow` tool to get step-by-step guidance
+1. Use the `packmind_create_standard` tool to get step-by-step guidance
 2. Gather context from your codebase and iterate with you on the draft
 3. Create the standard with rules and code examples using `packmind_create_standard`
 
@@ -54,7 +54,7 @@ _"Add a rule to our standard 'Back-end unit tests' that states that one single e
 
 The agent will:
 
-1. Use the `packmind_add_rule_to_standard_workflow` tool to get guidance
+1. Use the `packmind_add_rule_to_standard` tool to get guidance
 2. Validate the rule content and ensure it fits the standard's context
 3. Add the rule (with optional code examples) using `packmind_add_rule_to_standard`
 4. Create a new version of the standard

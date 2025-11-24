@@ -36,7 +36,7 @@ Now that you have the context, create a draft of the rule and iterate with the u
 
 ## Next Step
 
-Once the user approves the draft, call \`packmind_packmind_save_standard_rule_workflow\` with:
+Once the user approves the draft, call \`packmind_save_standard_rule\` with:
 \`\`\`json
 { "step": "finalization" }
 \`\`\`
