@@ -20,7 +20,10 @@ import {
   RuleDetectionAssessmentStatus,
   DetectionStatus,
 } from '@packmind/types';
-import { useGetRuleDetectionAssessmentQuery } from '../../api/queries/DetectionProgramQueries';
+import {
+  useGetDetectionProgramMetadataQuery,
+  useGetRuleDetectionAssessmentQuery,
+} from '../../api/queries/DetectionProgramQueries';
 import { ExecutionLogsDrawer } from '../ExecutionLogsDrawer';
 import { ProgramContentDrawer } from '../ProgramContentDrawer';
 import { LuCheck, LuCircleAlert, LuLoader } from 'react-icons/lu';
@@ -73,6 +76,12 @@ export const DetectionDraftCard: React.FC<DraftCardProps> = ({
     draft.language,
   );
 
+  const { data: programMetadata } = useGetDetectionProgramMetadataQuery(
+    standardId,
+    ruleId,
+    draft.draftProgram.id,
+  );
+
   const state = determineDraftCardState(assessment?.status, draft.status);
 
   const handlers: TimelineHandlers = {
@@ -108,6 +117,7 @@ export const DetectionDraftCard: React.FC<DraftCardProps> = ({
         isOpen={isProgramDrawerOpen}
         onClose={() => setIsProgramDrawerOpen(false)}
         programCode={draft.draftProgram.code}
+        programDescription={programMetadata?.programDescription}
       />
     </PMBox>
   );

@@ -9,7 +9,6 @@ import {
   PMSpinner,
 } from '@packmind/ui';
 import {
-  ExecutionLog,
   DETECTION_LOG_MESSAGES,
   DetectionLogMessageType,
   ExecutionLogMetadata,

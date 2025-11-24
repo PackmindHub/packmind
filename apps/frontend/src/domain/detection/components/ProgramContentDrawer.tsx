@@ -6,18 +6,21 @@ import {
   PMPortal,
   PMText,
   PMCodeMirror,
+  PMMarkdownViewer,
 } from '@packmind/ui';
 
 interface ProgramContentDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   programCode: string;
+  programDescription?: string;
 }
 
 export const ProgramContentDrawer: React.FC<ProgramContentDrawerProps> = ({
   isOpen,
   onClose,
   programCode,
+  programDescription,
 }) => {
   const handleOpenChange = ({ open }: { open: boolean }) => {
     if (!open) {
@@ -41,6 +44,10 @@ export const ProgramContentDrawer: React.FC<ProgramContentDrawerProps> = ({
                 display="flex"
                 flexDirection="column"
               >
+                {programDescription && (
+                  <PMMarkdownViewer content={programDescription} />
+                )}
+
                 {!programCode || programCode.trim() === '' ? (
                   <PMBox p={4}>
                     <PMText color="faded">No program content available.</PMText>
