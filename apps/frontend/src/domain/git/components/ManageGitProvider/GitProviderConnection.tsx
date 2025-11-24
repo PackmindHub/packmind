@@ -104,7 +104,6 @@ export const GitProviderConnection: React.FC<GitProviderConnectionProps> = ({
         });
       } else {
         mutationResult = await createMutation.mutateAsync({
-          organizationId,
           data: formData,
         });
       }

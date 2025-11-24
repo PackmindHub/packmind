@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { gitProviderGateway, repositoryGateway } from '../gateways';
-import { GitProviderId, GitRepoId } from '@packmind/types';
+import { GitProviderId, GitRepoId, OrganizationId } from '@packmind/types';
 import { AddRepositoryForm } from '../../types/GitProviderTypes';
 import { CheckDirectoryExistenceResult } from '@packmind/types';
 import {
@@ -13,6 +13,7 @@ import {
 import { DEPLOYMENTS_QUERY_SCOPE } from '../../../deployments/api/queryKeys';
 import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
 import { GET_ONBOARDING_STATUS_KEY } from '../../../accounts/api/queryKeys';
+import { useAuthContext } from '../../../accounts/hooks';
 
 export const useGetGitReposQuery = () => {
   return useQuery({
@@ -26,24 +27,51 @@ export const useGetGitReposQuery = () => {
 export const useGetRepositoriesByProviderQuery = (
   providerId: GitProviderId,
 ) => {
+  const { organization } = useAuthContext();
+
   return useQuery({
-    queryKey: [...GET_REPOSITORIES_BY_PROVIDER_KEY, providerId],
-    queryFn: () => gitProviderGateway.getRepositoriesByProvider(providerId),
-    enabled: !!providerId,
+    queryKey: [
+      ...GET_REPOSITORIES_BY_PROVIDER_KEY,
+      organization?.id,
+      providerId,
+    ],
+    queryFn: () => {
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to fetch repositories');
+      }
+      return gitProviderGateway.getRepositoriesByProvider(
+        organization.id,
+        providerId,
+      );
+    },
+    enabled: !!organization?.id && !!providerId,
   });
 };
 
 export const useGetAvailableRepositoriesQuery = (providerId: GitProviderId) => {
+  const { organization } = useAuthContext();
+
   return useQuery({
-    queryKey: [...GET_AVAILABLE_REPOSITORIES_KEY, providerId],
-    queryFn: () => gitProviderGateway.getAvailableRepositories(providerId),
-    enabled: !!providerId,
+    queryKey: [...GET_AVAILABLE_REPOSITORIES_KEY, organization?.id, providerId],
+    queryFn: () => {
+      if (!organization?.id) {
+        throw new Error(
+          'Organization ID is required to fetch available repositories',
+        );
+      }
+      return gitProviderGateway.getAvailableRepositories(
+        organization.id,
+        providerId,
+      );
+    },
+    enabled: !!organization?.id && !!providerId,
   });
 };
 
 // Repository Mutations
 export const useAddRepositoryMutation = () => {
   const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
 
   return useMutation({
     mutationFn: async ({
@@ -53,7 +81,14 @@ export const useAddRepositoryMutation = () => {
       providerId: GitProviderId;
       data: AddRepositoryForm;
     }) => {
-      return gitProviderGateway.addRepositoryToProvider(providerId, data);
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to add repository');
+      }
+      return gitProviderGateway.addRepositoryToProvider(
+        organization.id,
+        providerId,
+        data,
+      );
     },
     onSuccess: async () => {
       // Simplify: All git data is interconnected
@@ -76,16 +111,21 @@ export const useAddRepositoryMutation = () => {
 };
 export const useRemoveRepositoryMutation = () => {
   const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
 
   return useMutation({
     mutationFn: async ({
-      repoId,
       providerId,
+      repoId,
     }: {
-      repoId: GitRepoId;
       providerId: GitProviderId;
+      repoId: GitRepoId;
     }) => {
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to remove repository');
+      }
       return gitProviderGateway.removeRepositoryFromProvider(
+        organization.id,
         providerId,
         repoId,
       );
@@ -108,28 +148,41 @@ export const useRemoveRepositoryMutation = () => {
 };
 
 // Available Targets Query
-export const getAvailableTargetsOptions = (
-  repositoryId: GitRepoId,
-  path?: string,
-  enabled = true,
-) => ({
-  queryKey: [...GET_AVAILABLE_TARGETS_KEY, repositoryId, path],
-  queryFn: () =>
-    gitProviderGateway.getAvailableRemoteDirectories(repositoryId, path),
-  enabled: !!repositoryId && enabled,
-  retry: false,
-});
-
 export const useGetAvailableTargetsQuery = (
   repositoryId: GitRepoId,
   path?: string,
   enabled = true,
 ) => {
-  return useQuery(getAvailableTargetsOptions(repositoryId, path, enabled));
+  const { organization } = useAuthContext();
+
+  return useQuery({
+    queryKey: [
+      ...GET_AVAILABLE_TARGETS_KEY,
+      organization?.id,
+      repositoryId,
+      path,
+    ],
+    queryFn: () => {
+      if (!organization?.id) {
+        throw new Error(
+          'Organization ID is required to fetch available targets',
+        );
+      }
+      return gitProviderGateway.getAvailableRemoteDirectories(
+        organization.id,
+        repositoryId,
+        path,
+      );
+    },
+    enabled: !!organization?.id && !!repositoryId && enabled,
+    retry: false,
+  });
 };
 
 // Check Directory Existence Mutation
 export const useCheckDirectoryExistenceMutation = () => {
+  const { organization } = useAuthContext();
+
   return useMutation({
     mutationFn: async ({
       repositoryId,
@@ -140,7 +193,13 @@ export const useCheckDirectoryExistenceMutation = () => {
       directoryPath: string;
       branch: string;
     }): Promise<CheckDirectoryExistenceResult> => {
+      if (!organization?.id) {
+        throw new Error(
+          'Organization ID is required to check directory existence',
+        );
+      }
       return gitProviderGateway.checkDirectoryExistence(
+        organization.id,
         repositoryId,
         directoryPath,
         branch,

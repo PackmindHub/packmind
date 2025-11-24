@@ -16,20 +16,23 @@ export class GitProviderGatewayApi
   implements IGitProviderGateway
 {
   constructor() {
-    super('/git');
+    super('/organizations');
   }
 
   async getGitProviders(
     organizationId: OrganizationId,
   ): Promise<GitProviderUI[]> {
-    return await this._api.get<GitProviderUI[]>(`${this._endpoint}/providers`);
+    return await this._api.get<GitProviderUI[]>(
+      `${this._endpoint}/${organizationId}/git/providers`,
+    );
   }
 
-  async getGitProviderById(id: GitProviderId): Promise<GitProviderUI> {
-    // This endpoint doesn't exist yet in the backend
-    // For now, get all providers and find by ID as a workaround
+  async getGitProviderById(
+    organizationId: OrganizationId,
+    id: GitProviderId,
+  ): Promise<GitProviderUI> {
     const providers = await this._api.get<GitProviderUI[]>(
-      `${this._endpoint}/providers`,
+      `${this._endpoint}/${organizationId}/git/providers`,
     );
     const provider = providers.find((p) => p.id === id);
     if (!provider) {
@@ -49,12 +52,13 @@ export class GitProviderGatewayApi
       token: data.token,
     };
     return await this._api.put<GitProviderUI>(
-      `${this._endpoint}/providers`,
+      `${this._endpoint}/${organizationId}/git/providers`,
       gitProvider,
     );
   }
 
   async updateGitProvider(
+    organizationId: OrganizationId,
     id: GitProviderId,
     data: Partial<CreateGitProviderForm>,
   ): Promise<GitProviderUI> {
@@ -64,24 +68,31 @@ export class GitProviderGatewayApi
       token: data.token,
     };
     return await this._api.put<GitProviderUI>(
-      `${this._endpoint}/providers/${id}`,
+      `${this._endpoint}/${organizationId}/git/providers/${id}`,
       gitProvider,
     );
   }
 
-  async deleteGitProvider(id: GitProviderId): Promise<void> {
-    await this._api.delete(`${this._endpoint}/providers/${id}`);
+  async deleteGitProvider(
+    organizationId: OrganizationId,
+    id: GitProviderId,
+  ): Promise<void> {
+    await this._api.delete(
+      `${this._endpoint}/${organizationId}/git/providers/${id}`,
+    );
   }
 
   async getRepositoriesByProvider(
+    organizationId: OrganizationId,
     providerId: GitProviderId,
   ): Promise<GitRepoUI[]> {
     return await this._api.get<GitRepoUI[]>(
-      `${this._endpoint}/repositories/provider/${providerId}`,
+      `${this._endpoint}/${organizationId}/git/repositories/provider/${providerId}`,
     );
   }
 
   async getAvailableRepositories(
+    organizationId: OrganizationId,
     providerId: GitProviderId,
   ): Promise<AvailableRepository[]> {
     const repos = await this._api.get<
@@ -94,7 +105,9 @@ export class GitProviderGatewayApi
         language?: string;
         stars: number;
       }[]
-    >(`${this._endpoint}/providers/${providerId}/available-repos`);
+    >(
+      `${this._endpoint}/${organizationId}/git/providers/${providerId}/available-repos`,
+    );
     return repos.map((repo) => ({
       name: repo.name,
       owner: repo.owner,
@@ -108,6 +121,7 @@ export class GitProviderGatewayApi
   }
 
   async addRepositoryToProvider(
+    organizationId: OrganizationId,
     providerId: GitProviderId,
     data: AddRepositoryForm,
   ): Promise<GitRepoUI> {
@@ -118,21 +132,23 @@ export class GitProviderGatewayApi
     };
 
     return this._api.post<GitRepoUI>(
-      `${this._endpoint}/providers/${providerId}/repositories`,
+      `${this._endpoint}/${organizationId}/git/providers/${providerId}/repositories`,
       payload,
     );
   }
 
   async removeRepositoryFromProvider(
+    organizationId: OrganizationId,
     providerId: GitProviderId,
     repoId: GitRepoId,
   ): Promise<void> {
     return this._api.delete<void>(
-      `${this._endpoint}/providers/${providerId}/repositories/${repoId}`,
+      `${this._endpoint}/${organizationId}/git/providers/${providerId}/repositories/${repoId}`,
     );
   }
 
   async checkBranchExists(
+    organizationId: OrganizationId,
     providerId: GitProviderId,
     owner: string,
     repo: string,
@@ -140,40 +156,40 @@ export class GitProviderGatewayApi
   ): Promise<boolean> {
     try {
       const response = await this._api.get<{ exists: boolean }>(
-        `${this._endpoint}/providers/${providerId}/repos/${owner}/${repo}/branches/${branch}/exists`,
+        `${this._endpoint}/${organizationId}/git/providers/${providerId}/repos/${owner}/${repo}/branches/${branch}/exists`,
       );
       return response.exists;
     } catch (error) {
       console.error('Failed to check if branch exists:', error);
-      // Return false for any error (branch doesn't exist, network issues, etc.)
       return false;
     }
   }
 
   async getAvailableRemoteDirectories(
+    organizationId: OrganizationId,
     repositoryId: GitRepoId,
     path?: string,
   ): Promise<string[]> {
-    // Use a longer timeout for this specific request since it can take up to 30 seconds
     const axiosInstance = this._api.getAxiosInstance();
     const params = path ? { path } : {};
     const response = await axiosInstance.get<string[]>(
-      `${this._endpoint}/repositories/${repositoryId}/available-remote-directories`,
+      `${this._endpoint}/${organizationId}/git/repositories/${repositoryId}/available-remote-directories`,
       {
         params,
-        timeout: 35000, // 35 seconds timeout to accommodate the 30-second processing time
+        timeout: 35000,
       },
     );
     return response.data;
   }
 
   async checkDirectoryExistence(
+    organizationId: OrganizationId,
     repositoryId: GitRepoId,
     directoryPath: string,
     branch: string,
   ): Promise<CheckDirectoryExistenceResult> {
     const response = await this._api.post<CheckDirectoryExistenceResult>(
-      `${this._endpoint}/repositories/${repositoryId}/check-directory-existence`,
+      `${this._endpoint}/${organizationId}/git/repositories/${repositoryId}/check-directory-existence`,
       {
         directoryPath,
         branch,

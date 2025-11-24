@@ -41,7 +41,7 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
     isLoading,
     isError,
     error,
-  } = useGetGitProvidersQuery(organizationId);
+  } = useGetGitProvidersQuery();
   const deleteProviderMutation = useDeleteGitProviderMutation();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [providerToDelete, setProviderToDelete] =
@@ -67,7 +67,6 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
     try {
       await deleteProviderMutation.mutateAsync({
         id: providerToDelete.id,
-        organizationId: providerToDelete.organizationId,
       });
       setDeleteAlert({
         type: 'success',

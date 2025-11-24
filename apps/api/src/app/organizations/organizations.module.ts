@@ -4,6 +4,7 @@ import { OrganizationAccessGuard } from './guards/organization-access.guard';
 import { OrganizationsSpacesModule } from './spaces/spaces.module';
 import { OrganizationsUsersModule } from './users/users.module';
 import { OrganizationDeploymentsModule } from './deployments/deployments.module';
+import { OrganizationGitModule } from './git/git.module';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 
 /**
@@ -30,6 +31,7 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
     OrganizationsSpacesModule,
     OrganizationsUsersModule,
     OrganizationDeploymentsModule,
+    OrganizationGitModule,
   ],
   controllers: [OrganizationsController],
   providers: [
