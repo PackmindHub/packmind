@@ -3,6 +3,7 @@ import {
   Target,
   TargetWithRepository,
   GetTargetsByOrganizationCommand,
+  GetTargetsByRepositoryCommand,
   AddTargetCommand,
   UpdateTargetCommand,
   DeleteTargetCommand,
@@ -22,6 +23,12 @@ export class TargetsService {
     command: GetTargetsByOrganizationCommand,
   ): Promise<TargetWithRepository[]> {
     return this.deploymentAdapter.getTargetsByOrganization(command);
+  }
+
+  async getTargetsByRepository(
+    command: GetTargetsByRepositoryCommand,
+  ): Promise<TargetWithRepository[]> {
+    return this.deploymentAdapter.getTargetsByRepository(command);
   }
 
   async addTarget(command: AddTargetCommand): Promise<Target> {

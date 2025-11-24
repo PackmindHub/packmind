@@ -20,6 +20,7 @@ import {
   IUpdatePackageUseCase,
   IDeletePackagesBatchUseCase,
   IGetTargetsByOrganizationUseCase,
+  IGetTargetsByRepositoryUseCase,
   PackageId,
   ListDeploymentsByRecipeCommand,
   ListDeploymentsByStandardCommand,
@@ -29,6 +30,7 @@ import {
   PublishStandardsCommand,
   PublishPackagesCommand,
   GetTargetsByOrganizationCommand,
+  GetTargetsByRepositoryCommand,
   AddTargetCommand,
   UpdateTargetCommand,
   DeleteTargetCommand,
@@ -190,6 +192,16 @@ export class DeploymentsGatewayApi
         `${this._endpoint}/${organizationId}/deployments/targets`,
       );
     };
+
+  getTargetsByRepository: NewGateway<IGetTargetsByRepositoryUseCase> = async ({
+    organizationId,
+    owner,
+    repo,
+  }: NewPackmindCommandBody<GetTargetsByRepositoryCommand>) => {
+    return this._api.get(
+      `${this._endpoint}/${organizationId}/deployments/targets/repository/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`,
+    );
+  };
 
   addTarget: NewGateway<IAddTargetUseCase> = async ({
     organizationId,
