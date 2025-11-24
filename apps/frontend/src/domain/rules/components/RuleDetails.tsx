@@ -69,8 +69,6 @@ export const RuleDetails = ({
   const [selectedLanguage, setSelectedLanguage] =
     useState<ProgrammingLanguage>(getInitialLanguage());
   const [isCreatingFirstExample, setIsCreatingFirstExample] = useState(false);
-  const [isCreatingExampleForLanguage, setIsCreatingExampleForLanguage] =
-    useState(false);
   const [currentTab, setCurrentTab] = useState<RuleDetailsTab>(getInitialTab());
   const { data: examples, isLoading: isLoadingExamples } =
     useGetRuleExamplesQuery(
@@ -101,29 +99,45 @@ export const RuleDetails = ({
     return detectionLanguages.includes(selectedLanguage);
   }, [detectionLanguages, selectedLanguage]);
 
-  // Sync URL parameters when tab or language changes
   useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    const langParam = searchParams.get('lang');
+
+    if (tabParam === 'examples' || tabParam === 'detection') {
+      setCurrentTab(tabParam);
+    }
+
+    if (
+      langParam &&
+      Object.values(ProgrammingLanguage).includes(
+        langParam as ProgrammingLanguage,
+      )
+    ) {
+      setSelectedLanguage(langParam as ProgrammingLanguage);
+    }
+  }, [searchParams]);
+
+  // Helper to update tab and URL atomically
+  const updateTabWithUrl = (tab: RuleDetailsTab) => {
+    setCurrentTab(tab);
     const newParams = new URLSearchParams(searchParams);
-    newParams.set('tab', currentTab);
-    newParams.set('lang', selectedLanguage);
+    newParams.set('tab', tab);
     setSearchParams(newParams, { replace: false });
-  }, [currentTab, searchParams, selectedLanguage, setSearchParams]);
+  };
+
+  // Helper to update language and URL atomically
+  const updateLanguageWithUrl = (lang: ProgrammingLanguage) => {
+    setSelectedLanguage(lang);
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('lang', lang);
+    setSearchParams(newParams, { replace: false });
+  };
 
   useEffect(() => {
     if (hasExamples && isCreatingFirstExample) {
       setIsCreatingFirstExample(false);
     }
   }, [hasExamples, isCreatingFirstExample]);
-
-  // Reset the creation state when examples are updated for the selected language
-  useEffect(() => {
-    if (
-      isCreatingExampleForLanguage &&
-      detectionLanguages.includes(selectedLanguage)
-    ) {
-      setIsCreatingExampleForLanguage(false);
-    }
-  }, [isCreatingExampleForLanguage, detectionLanguages, selectedLanguage]);
 
   // Only auto-select language if no URL parameter was provided
   useEffect(() => {
@@ -177,7 +191,7 @@ export const RuleDetails = ({
   }, []);
 
   const handleNavigateToExamples = () => {
-    setCurrentTab('examples');
+    updateTabWithUrl('examples');
   };
 
   const tabs = [
@@ -190,9 +204,9 @@ export const RuleDetails = ({
             standardId={standardId}
             ruleId={rule.id}
             selectedLanguage={selectedLanguage}
-            forceCreate={isCreatingExampleForLanguage}
+            forceCreate={!selectedLanguageHasExamples}
             onLanguageChange={setSelectedLanguage}
-            onCancelCreation={() => setIsCreatingExampleForLanguage(false)}
+            onCancelCreation={() => undefined}
           />
         </PMVStack>
       ),
@@ -271,14 +285,7 @@ export const RuleDetails = ({
             value={[selectedLanguage]}
             onValueChange={(e) => {
               const newLanguage = e.value[0] as ProgrammingLanguage;
-              setSelectedLanguage(newLanguage);
-
-              // Check if the selected language is from "Add a language" group (not configured)
-              if (!detectionLanguages.includes(newLanguage)) {
-                setIsCreatingExampleForLanguage(true);
-              } else {
-                setIsCreatingExampleForLanguage(false);
-              }
+              updateLanguageWithUrl(newLanguage);
             }}
           >
             <PMSelectTrigger placeholder="Select a language" />
@@ -312,7 +319,7 @@ export const RuleDetails = ({
         defaultValue={defaultTab}
         value={currentTab}
         onValueChange={(details) =>
-          setCurrentTab(details.value as RuleDetailsTab)
+          updateTabWithUrl(details.value as RuleDetailsTab)
         }
         tabs={tabs}
         width="100%"
