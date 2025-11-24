@@ -161,7 +161,9 @@ export const DetectionProgramConfiguration: React.FC<
     }
     return {
       version: activeConfig.detectionProgram.version,
-      createdAt: activeConfig.detectionProgram.createdAt,
+      createdAt: activeConfig.detectionProgram.createdAt
+        ? new Date(activeConfig.detectionProgram.createdAt)
+        : undefined,
     };
   }, [activeConfigurations]);
 

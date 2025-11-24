@@ -6,6 +6,8 @@ import {
   PMText,
   PMBadge,
   PMTooltip,
+  PMVStack,
+  PMSeparator,
 } from '@packmind/ui';
 
 export enum DetectionAccordionStatus {
@@ -51,18 +53,43 @@ const renderStatusBadge = (
       );
 
       if (tooltipData && (tooltipData.version || tooltipData.createdAt)) {
-        const tooltipLines = ['Information'];
-        if (tooltipData.version) {
-          tooltipLines.push(`Version: ${tooltipData.version}`);
-        }
-        if (tooltipData.createdAt) {
-          tooltipLines.push(
-            `Generation details: ${formatDate(tooltipData.createdAt)}`,
-          );
-        }
+        const tooltipContent = (
+          <PMVStack gap={2} alignItems="flex-start" padding={1} minWidth="48">
+            <PMText fontWeight="semibold" fontSize="sm">
+              Information
+            </PMText>
+            {tooltipData.version && (
+              <PMVStack gap={1} alignItems="flex-start" width="full">
+                <PMText fontSize="xs" color="text.secondary">
+                  Version
+                </PMText>
+                <PMText fontSize="sm">{tooltipData.version}</PMText>
+              </PMVStack>
+            )}
+            {tooltipData.createdAt && (
+              <>
+                <PMSeparator width="full" />
+                <PMVStack gap={1} alignItems="flex-start" width="full">
+                  <PMText fontSize="xs" color="text.secondary">
+                    Generation details
+                  </PMText>
+                  <PMText
+                    fontSize="sm"
+                    cursor="pointer"
+                    role="button"
+                    tabIndex={0}
+                    _hover={{ textDecoration: 'underline' }}
+                  >
+                    {formatDate(tooltipData.createdAt)}
+                  </PMText>
+                </PMVStack>
+              </>
+            )}
+          </PMVStack>
+        );
 
         return (
-          <PMTooltip label={tooltipLines.join('\n')} placement="top">
+          <PMTooltip label={tooltipContent} placement="top" hasArrow>
             {badge}
           </PMTooltip>
         );
