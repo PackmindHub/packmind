@@ -14,7 +14,6 @@ import {
   PMHStack,
   type PMTextColors,
   PMIcon,
-  PMBadge,
 } from '@packmind/ui';
 import {
   DetectionProgram,
@@ -75,31 +74,25 @@ export const DetectionDraftCard: React.FC<DraftCardProps> = ({
   );
 
   const state = determineDraftCardState(assessment?.status, draft.status);
-  const badgeConfig = getBadgeConfig(state);
 
-  const timelineConfig = getTimelineConfig(
-    state,
-    {
-      onShowLogs: () => setIsLogsDrawerOpen(true),
-      onShowProgram: () => setIsProgramDrawerOpen(true),
-      onTestDraft: () => onTestDraft(draft),
-      onMakeActive: () => onMakeActive(draft),
-      onRetryDraft: () => onRetryDraft?.(draft),
-    },
-    {
-      isActivating: isActivating ?? false,
-      isGenerating: isGenerating ?? false,
-    },
-  );
+  const handlers: TimelineHandlers = {
+    onShowLogs: () => setIsLogsDrawerOpen(true),
+    onShowProgram: () => setIsProgramDrawerOpen(true),
+    onTestDraft: () => onTestDraft(draft),
+    onMakeActive: () => onMakeActive(draft),
+    onRetryDraft: () => onRetryDraft?.(draft),
+  };
+
+  const loadingStates: LoadingStates = {
+    isActivating: isActivating ?? false,
+    isGenerating: isGenerating ?? false,
+  };
+
+  const timelineConfig = getTimelineConfig(state, handlers, loadingStates);
 
   return (
-    <PMBox width="full" py={2} position="relative">
-      <PMBox position="absolute" top={0} right={0}>
-        <PMBadge colorPalette={badgeConfig.colorPalette}>
-          {badgeConfig.label}
-        </PMBadge>
-      </PMBox>
-      <PMTimeline variant="outline">
+    <PMBox width="full">
+      <PMTimeline variant="subtleOnPrimary">
         <TimelineStep config={timelineConfig.step1} />
         <TimelineStep config={timelineConfig.step2} />
         <TimelineStep config={timelineConfig.step3} />
@@ -124,13 +117,13 @@ function getStepIcon(status: TimelineStepStatus) {
   switch (status) {
     case TimelineStepStatus.failure:
       return (
-        <PMIcon color="text.error" size="xs">
+        <PMIcon bgColor={'colorPalette.primary'} color="text.error" size="xs">
           <LuCircleAlert />
         </PMIcon>
       );
     case TimelineStepStatus.success:
       return (
-        <PMIcon color="text.success" size="xs">
+        <PMIcon bgColor={'colorPalette.primary'} color="text.success" size="xs">
           <LuCheck />
         </PMIcon>
       );
@@ -184,34 +177,6 @@ function getStepTextColor(status: TimelineStepStatus): PMTextColors {
   if (status === TimelineStepStatus.unreachable) return 'faded';
 
   return 'primary';
-}
-
-type BadgeConfig = {
-  label: string;
-  colorPalette: 'gray' | 'red' | 'green';
-};
-
-function getBadgeConfig(state: DraftCardState): BadgeConfig {
-  switch (state) {
-    case DraftCardState.ASSESSING:
-    case DraftCardState.ASSESSMENT_SUCCESSFUL:
-    case DraftCardState.GENERATING:
-      return {
-        label: 'Draft: pending',
-        colorPalette: 'gray',
-      };
-    case DraftCardState.ASSESSMENT_FAILED:
-    case DraftCardState.GENERATION_FAILED:
-      return {
-        label: 'Draft: failure',
-        colorPalette: 'red',
-      };
-    case DraftCardState.GENERATION_SUCCESSFUL:
-      return {
-        label: 'Draft: OK',
-        colorPalette: 'green',
-      };
-  }
 }
 
 interface TimelineStepProps {
