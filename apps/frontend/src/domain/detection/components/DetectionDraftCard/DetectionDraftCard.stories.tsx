@@ -89,6 +89,10 @@ const meta = {
     onTestDraft: () => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     onRetryDraft: () => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    onShowLogs: () => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    onShowProgram: () => {},
     standardId: 'standard-123',
     ruleId: 'rule-456',
   },

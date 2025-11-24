@@ -120,6 +120,13 @@ describe('determineDraftCardState', () => {
 describe('ProgramGenerationTimeline', () => {
   let screen: RenderResult;
   let baseDraft: DraftCardData;
+
+  let onMakeActive: jest.Mock;
+  let onRetryDraft: jest.Mock;
+  let onTestDraft: jest.Mock;
+  let onShowProgram: jest.Mock;
+  let onShowLogs: jest.Mock;
+
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -148,7 +155,11 @@ describe('ProgramGenerationTimeline', () => {
       version: 1,
     };
 
-    jest.clearAllMocks();
+    onMakeActive = jest.fn();
+    onRetryDraft = jest.fn();
+    onTestDraft = jest.fn();
+    onShowProgram = jest.fn();
+    onShowLogs = jest.fn();
   });
 
   afterEach(() => {
@@ -177,9 +188,11 @@ describe('ProgramGenerationTimeline', () => {
         <QueryClientProvider client={queryClient}>
           <DetectionDraftCard
             draft={baseDraft}
-            onMakeActive={jest.fn()}
-            onTestDraft={jest.fn()}
-            onRetryDraft={jest.fn()}
+            onMakeActive={onMakeActive}
+            onTestDraft={onTestDraft}
+            onRetryDraft={onRetryDraft}
+            onShowLogs={onShowLogs}
+            onShowProgram={onShowProgram}
             standardId={createStandardId('standard-123')}
             ruleId={createRuleId('rule-456')}
           />
@@ -312,7 +325,7 @@ describe('ProgramGenerationTimeline', () => {
           fireEvent.click(showLogButton);
           // ExecutionLogsDrawer should be visible after clicking
           await waitFor(() => {
-            expect(screen.getByRole('dialog')).toBeInTheDocument();
+            expect(onShowLogs).toHaveBeenCalled();
           });
         });
       });
@@ -345,9 +358,8 @@ describe('ProgramGenerationTimeline', () => {
           it('opens logs drawer when "Show log" button is clicked', async () => {
             const showLogButton = screen.getByText('Show log');
             fireEvent.click(showLogButton);
-            // ExecutionLogsDrawer should be visible after clicking
             await waitFor(() => {
-              expect(screen.getByRole('dialog')).toBeInTheDocument();
+              expect(onShowLogs).toHaveBeenCalled();
             });
           });
 
@@ -384,29 +396,34 @@ describe('ProgramGenerationTimeline', () => {
           it('opens logs drawer when "Show log" button is clicked', async () => {
             const showLogButton = screen.getByText('Show log');
             fireEvent.click(showLogButton);
-            // ExecutionLogsDrawer should be visible after clicking
             await waitFor(() => {
-              expect(screen.getByRole('dialog')).toBeInTheDocument();
+              expect(onShowLogs).toHaveBeenCalled();
             });
           });
 
           it('opens program drawer when "Show program" button is clicked', async () => {
             const showProgramButton = screen.getByText('Show program');
             fireEvent.click(showProgramButton);
-            // ProgramContentDrawer should be visible after clicking
             await waitFor(() => {
-              expect(screen.getByText('Program Content')).toBeInTheDocument();
+              expect(onShowProgram).toHaveBeenCalled();
             });
           });
 
-          it('calls onTestDraft when "Test draft program" button is clicked', () => {
+          it('calls onTestDraft when "Test draft program" button is clicked', async () => {
             const testDraftButton = screen.getByText('Test draft program');
             fireEvent.click(testDraftButton);
+
+            await waitFor(() => {
+              expect(onTestDraft).toHaveBeenCalled();
+            });
           });
 
-          it('calls onMakeActive when "Set as active" button is clicked', () => {
+          it('calls onMakeActive when "Set as active" button is clicked', async () => {
             const setActiveButton = screen.getByText('Set as active');
             fireEvent.click(setActiveButton);
+            await waitFor(() => {
+              expect(onMakeActive).toHaveBeenCalled();
+            });
           });
         });
       });

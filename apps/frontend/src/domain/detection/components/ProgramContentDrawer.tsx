@@ -8,25 +8,36 @@ import {
   PMCodeMirror,
   PMMarkdownViewer,
 } from '@packmind/ui';
+import { useGetDetectionProgramMetadataQuery } from '@packmind/proprietary/frontend/domain/detection';
 
 interface ProgramContentDrawerProps {
   isOpen: boolean;
   onClose: () => void;
+  standardId: string;
+  ruleId: string;
+  detectionProgramId: string;
   programCode: string;
-  programDescription?: string;
 }
 
 export const ProgramContentDrawer: React.FC<ProgramContentDrawerProps> = ({
   isOpen,
   onClose,
+  standardId,
+  ruleId,
+  detectionProgramId,
   programCode,
-  programDescription,
 }) => {
   const handleOpenChange = ({ open }: { open: boolean }) => {
     if (!open) {
       onClose();
     }
   };
+
+  const { data: draftMetadata } = useGetDetectionProgramMetadataQuery(
+    standardId,
+    ruleId,
+    detectionProgramId,
+  );
 
   return (
     <PMDrawer.Root open={isOpen} onOpenChange={handleOpenChange} size="xl">
@@ -44,8 +55,10 @@ export const ProgramContentDrawer: React.FC<ProgramContentDrawerProps> = ({
                 display="flex"
                 flexDirection="column"
               >
-                {programDescription && (
-                  <PMMarkdownViewer content={programDescription} />
+                {draftMetadata?.programDescription && (
+                  <PMMarkdownViewer
+                    content={draftMetadata?.programDescription}
+                  />
                 )}
 
                 {!programCode || programCode.trim() === '' ? (

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   PMBox,
   PMText,
@@ -20,12 +20,7 @@ import {
   RuleDetectionAssessmentStatus,
   DetectionStatus,
 } from '@packmind/types';
-import {
-  useGetDetectionProgramMetadataQuery,
-  useGetRuleDetectionAssessmentQuery,
-} from '../../api/queries/DetectionProgramQueries';
-import { ExecutionLogsDrawer } from '../ExecutionLogsDrawer';
-import { ProgramContentDrawer } from '../ProgramContentDrawer';
+import { useGetRuleDetectionAssessmentQuery } from '../../api/queries/DetectionProgramQueries';
 import { LuCheck, LuCircleAlert, LuLoader } from 'react-icons/lu';
 
 export enum DraftCardState {
@@ -53,6 +48,8 @@ interface DraftCardProps {
   isActivating?: boolean;
   onTestDraft: (draft: DraftCardData) => void;
   onRetryDraft?: (draft: DraftCardData) => void;
+  onShowLogs: () => void;
+  onShowProgram: () => void;
   isGenerating?: boolean;
   standardId: string;
   ruleId: string;
@@ -67,26 +64,19 @@ export const DetectionDraftCard: React.FC<DraftCardProps> = ({
   isGenerating,
   standardId,
   ruleId,
+  onShowLogs,
+  onShowProgram,
 }) => {
-  const [isLogsDrawerOpen, setIsLogsDrawerOpen] = useState(false);
-  const [isProgramDrawerOpen, setIsProgramDrawerOpen] = useState(false);
   const { data: assessment } = useGetRuleDetectionAssessmentQuery(
     standardId,
     ruleId,
     draft.language,
   );
-
-  const { data: programMetadata } = useGetDetectionProgramMetadataQuery(
-    standardId,
-    ruleId,
-    draft.draftProgram.id,
-  );
-
   const state = determineDraftCardState(assessment?.status, draft.status);
 
   const handlers: TimelineHandlers = {
-    onShowLogs: () => setIsLogsDrawerOpen(true),
-    onShowProgram: () => setIsProgramDrawerOpen(true),
+    onShowLogs: () => onShowLogs(),
+    onShowProgram: () => onShowProgram(),
     onTestDraft: () => onTestDraft(draft),
     onMakeActive: () => onMakeActive(draft),
     onRetryDraft: () => onRetryDraft?.(draft),
@@ -106,19 +96,6 @@ export const DetectionDraftCard: React.FC<DraftCardProps> = ({
         <TimelineStep config={timelineConfig.step2} />
         <TimelineStep config={timelineConfig.step3} />
       </PMTimeline>
-      <ExecutionLogsDrawer
-        isOpen={isLogsDrawerOpen}
-        onClose={() => setIsLogsDrawerOpen(false)}
-        standardId={standardId}
-        ruleId={ruleId}
-        detectionProgramId={draft.draftProgram.id}
-      />
-      <ProgramContentDrawer
-        isOpen={isProgramDrawerOpen}
-        onClose={() => setIsProgramDrawerOpen(false)}
-        programCode={draft.draftProgram.code}
-        programDescription={programMetadata?.programDescription}
-      />
     </PMBox>
   );
 };

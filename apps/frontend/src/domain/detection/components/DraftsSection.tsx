@@ -102,6 +102,12 @@ export const DraftsSection: React.FC<DraftsSectionProps> = ({
             isGenerating={isGeneratingProgram}
             standardId={standardId}
             ruleId={ruleId}
+            onShowLogs={function (): void {
+              // no-op
+            }}
+            onShowProgram={function (): void {
+              // no-op
+            }}
           />
         ))}
       </PMFlex>

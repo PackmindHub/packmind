@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ActiveConfigurationSection } from '../ActiveConfigurationsList';
 import { ActiveConfigurationSectionData as ActiveConfigurationCardData } from '../ActiveConfigurationSection/';
 import {
@@ -11,6 +11,8 @@ import {
 } from '@packmind/proprietary/frontend/domain/detection/components/DetectionAccordions/DetectionAccordion';
 import { DetectionStatus } from '@packmind/types';
 import { StatusMenuAction } from '@packmind/proprietary/frontend/domain/detection/components/DetectionAccordions/StatusDropdownBadge';
+import { ExecutionLogsDrawer } from '@packmind/proprietary/frontend/domain/detection/components/ExecutionLogsDrawer';
+import { ProgramContentDrawer } from '@packmind/proprietary/frontend/domain/detection/components/ProgramContentDrawer';
 
 interface ProgramGenerationSectionProps {
   isOpen: boolean;
@@ -53,6 +55,8 @@ export const ProgramGenerationAccordion: React.FC<
   onOpenChange,
   disabled,
 }) => {
+  const [isLogsDrawerOpen, setIsLogsDrawerOpen] = useState(false);
+  const [isProgramDrawerOpen, setIsProgramDrawerOpen] = useState(false);
   const activeDraft = draftPrograms[0];
 
   const getProgramStatus = (
@@ -166,19 +170,38 @@ export const ProgramGenerationAccordion: React.FC<
       />
 
       {activeDraft && !isLoadingActivePrograms && (
-        <DetectionDraftCard
-          key={activeDraft.id}
-          draft={activeDraft}
-          onMakeActive={onActivateDraft}
-          isActivating={
-            activatingDraftId === activeDraft.id && isActivatingDraft
-          }
-          onTestDraft={onTestProgram}
-          onRetryDraft={onRetryDraft}
-          isGenerating={isGeneratingProgram}
-          standardId={standardId}
-          ruleId={ruleId}
-        />
+        <>
+          <DetectionDraftCard
+            key={activeDraft.id}
+            draft={activeDraft}
+            onMakeActive={onActivateDraft}
+            isActivating={
+              activatingDraftId === activeDraft.id && isActivatingDraft
+            }
+            onTestDraft={onTestProgram}
+            onRetryDraft={onRetryDraft}
+            isGenerating={isGeneratingProgram}
+            standardId={standardId}
+            ruleId={ruleId}
+            onShowLogs={() => setIsLogsDrawerOpen(true)}
+            onShowProgram={() => setIsProgramDrawerOpen(true)}
+          />
+          <ExecutionLogsDrawer
+            isOpen={isLogsDrawerOpen}
+            onClose={() => setIsLogsDrawerOpen(false)}
+            standardId={standardId}
+            ruleId={ruleId}
+            detectionProgramId={activeDraft.draftProgram.id}
+          />
+          <ProgramContentDrawer
+            isOpen={isProgramDrawerOpen}
+            onClose={() => setIsProgramDrawerOpen(false)}
+            standardId={standardId}
+            ruleId={ruleId}
+            detectionProgramId={activeDraft.draftProgram.id}
+            programCode={activeDraft.draftProgram.code}
+          />
+        </>
       )}
     </DetectionAccordion>
   );
