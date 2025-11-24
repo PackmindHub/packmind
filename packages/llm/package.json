@@ -10,6 +10,7 @@
     "@packmind/logger": "*",
     "@packmind/node-utils": "*",
     "@packmind/types": "*",
+    "@packmind/test-utils": "*",
     "openai": "^6.9.0",
     "uuid": "^11.1.0",
     "typeorm": "0.3.27",

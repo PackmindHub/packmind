@@ -7,6 +7,7 @@ export { OpenAIAPICompatibleService } from './infra/services/OpenAIAPICompatible
 export { AnthropicService } from './infra/services/AnthropicService';
 export { GeminiService } from './infra/services/GeminiService';
 export { AzureOpenAIService } from './infra/services/AzureOpenAIService';
+export { PackmindService } from './infra/services/PackmindService';
 export { GetAiServiceForOrganizationUseCase } from './application/useCases/getAiServiceForOrganization/getAiServiceForOrganization.usecase';
 export { createLLMService } from './factories/createLLMService';
 export type {
@@ -16,6 +17,7 @@ export type {
   GeminiServiceConfig,
   OpenAICompatibleServiceConfig,
   AzureOpenAIServiceConfig,
+  PackmindServiceConfig,
 } from './types/LLMServiceConfig';
 export { LLMProvider } from './types/LLMServiceConfig';
 export type { LLMRuntimeConfig } from './types/LLMRuntimeConfig';

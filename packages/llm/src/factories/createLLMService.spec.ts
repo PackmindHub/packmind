@@ -4,6 +4,7 @@ import { AnthropicService } from '../infra/services/AnthropicService';
 import { GeminiService } from '../infra/services/GeminiService';
 import { OpenAIAPICompatibleService } from '../infra/services/OpenAIAPICompatibleService';
 import { AzureOpenAIService } from '../infra/services/AzureOpenAIService';
+import { PackmindService } from '../infra/services/PackmindService';
 import { LLMProvider, LLMServiceConfig } from '../types/LLMServiceConfig';
 
 describe('createLLMService', () => {
@@ -100,6 +101,14 @@ describe('createLLMService', () => {
       });
 
       expect(service).toBeInstanceOf(AzureOpenAIService);
+    });
+  });
+
+  describe('when provider is packmind', () => {
+    it('creates PackmindService instance', () => {
+      const service = createLLMService({ provider: LLMProvider.PACKMIND });
+
+      expect(service).toBeInstanceOf(PackmindService);
     });
   });
 

@@ -7,7 +7,7 @@
  * Default OpenAI models
  */
 export const DEFAULT_OPENAI_MODELS = {
-  model: 'gpt-5-mini',
+  model: 'gpt-5',
   fastestModel: 'gpt-4.1-mini',
 } as const;
 
