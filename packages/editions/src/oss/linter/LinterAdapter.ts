@@ -48,6 +48,8 @@ import {
   CopyDetectionHeuristicsResponse,
   CopyLinterArtefactsCommand,
   CopyLinterArtefactsResponse,
+  GetDetectionProgramsForPackagesCommand,
+  GetDetectionProgramsForPackagesResponse,
 } from '@packmind/types';
 import { ILinterPort } from '@packmind/types';
 import { LinterUsecases } from '.';
@@ -234,5 +236,12 @@ export class LinterAdapter implements ILinterPort {
       copiedAssessmentsCount: 0,
       copiedProgramsCount: 0,
     };
+  }
+
+  getDetectionProgramsForPackages(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    command: GetDetectionProgramsForPackagesCommand,
+  ): Promise<GetDetectionProgramsForPackagesResponse> {
+    throw new Error('Method not implemented.');
   }
 }
