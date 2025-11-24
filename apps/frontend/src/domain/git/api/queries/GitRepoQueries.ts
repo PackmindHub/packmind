@@ -16,11 +16,17 @@ import { GET_ONBOARDING_STATUS_KEY } from '../../../accounts/api/queryKeys';
 import { useAuthContext } from '../../../accounts/hooks';
 
 export const useGetGitReposQuery = () => {
+  const { organization } = useAuthContext();
+
   return useQuery({
     queryKey: GET_GIT_REPOSITORIES_KEY,
     queryFn: () => {
-      return repositoryGateway.getRepositories();
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to fetch repositories');
+      }
+      return repositoryGateway.getRepositories(organization.id);
     },
+    enabled: !!organization?.id,
   });
 };
 
@@ -30,11 +36,7 @@ export const useGetRepositoriesByProviderQuery = (
   const { organization } = useAuthContext();
 
   return useQuery({
-    queryKey: [
-      ...GET_REPOSITORIES_BY_PROVIDER_KEY,
-      organization?.id,
-      providerId,
-    ],
+    queryKey: [...GET_REPOSITORIES_BY_PROVIDER_KEY, providerId],
     queryFn: () => {
       if (!organization?.id) {
         throw new Error('Organization ID is required to fetch repositories');
@@ -52,7 +54,7 @@ export const useGetAvailableRepositoriesQuery = (providerId: GitProviderId) => {
   const { organization } = useAuthContext();
 
   return useQuery({
-    queryKey: [...GET_AVAILABLE_REPOSITORIES_KEY, organization?.id, providerId],
+    queryKey: [...GET_AVAILABLE_REPOSITORIES_KEY, providerId],
     queryFn: () => {
       if (!organization?.id) {
         throw new Error(
@@ -156,12 +158,7 @@ export const useGetAvailableTargetsQuery = (
   const { organization } = useAuthContext();
 
   return useQuery({
-    queryKey: [
-      ...GET_AVAILABLE_TARGETS_KEY,
-      organization?.id,
-      repositoryId,
-      path,
-    ],
+    queryKey: [...GET_AVAILABLE_TARGETS_KEY, repositoryId, path],
     queryFn: () => {
       if (!organization?.id) {
         throw new Error(
