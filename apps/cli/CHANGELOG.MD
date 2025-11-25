@@ -8,6 +8,12 @@
 
 ## Removed
 
+# [0.5.0] - 2025-11-25
+
+## Added
+
+- Add `install` command to install packages and track them in `packmind.json`
+
 # [0.4.0] - 2025-11-19
 
 ## Added
@@ -30,7 +36,8 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-- [Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.4.0...HEAD
-  [0.4.0]: https://github.com/PackmindHub/packmind-monorepo/compare/release-cli/0.3.4...release-cli/0.4.0
-  [0.3.4]: https://github.com/PackmindHub/packmind-monorepo/compare/release-cli/0.3.3...release-cli/0.3.4
-  [0.3.3]: https://github.com/PackmindHub/packmind/compare/97dce6228693e6f477654dd0018cca583cc95e8c...release-cli/0.3.3
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.5.0...HEAD
+[0.5.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.4.0...release-cli/0.5.0
+[0.4.0]: https://github.com/PackmindHub/packmind-monorepo/compare/release-cli/0.3.4...release-cli/0.4.0
+[0.3.4]: https://github.com/PackmindHub/packmind-monorepo/compare/release-cli/0.3.3...release-cli/0.3.4
+[0.3.3]: https://github.com/PackmindHub/packmind/compare/97dce6228693e6f477654dd0018cca583cc95e8c...release-cli/0.3.3
