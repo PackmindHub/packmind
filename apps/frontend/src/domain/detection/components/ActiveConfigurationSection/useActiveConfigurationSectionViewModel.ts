@@ -75,6 +75,7 @@ type ToReviewDescriptor = {
     onGenerateProgramClick: () => void;
     isGenerating: boolean;
     hasDraftToReview: boolean;
+    isDraftInProgress: boolean;
   };
 };
 
@@ -209,8 +210,13 @@ export const useActiveConfigurationSectionViewModel = (
                   : undefined,
               isGenerating,
               hasDraftToReview:
-                configuration.draftProgram?.status ===
-                DetectionStatus.TO_REVIEW,
+                configuration?.draftProgram?.status !== undefined &&
+                [DetectionStatus.READY, DetectionStatus.TO_REVIEW].includes(
+                  configuration.draftProgram.status,
+                ),
+              isDraftInProgress:
+                configuration?.draftProgram?.status ===
+                DetectionStatus.IN_PROGRESS,
             },
           });
           break;

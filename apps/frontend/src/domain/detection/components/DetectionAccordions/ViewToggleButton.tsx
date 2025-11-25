@@ -1,5 +1,5 @@
 import React from 'react';
-import { PMBox, PMIcon } from '@packmind/ui';
+import { PMBox, PMButton, PMIcon } from '@packmind/ui';
 import { LuFileCheck, LuFilePen } from 'react-icons/lu';
 
 interface ViewToggleButtonProps {
@@ -19,23 +19,20 @@ export const ViewToggleButton: React.FC<ViewToggleButtonProps> = ({
 
   const config = {
     active: {
-      icon: LuFileCheck,
-      text: 'Active',
-      colorPalette: 'gray' as const,
+      text: 'See draft',
+      colorPalette: 'primary' as const,
     },
     draft: {
-      icon: LuFilePen,
-      text: 'Draft',
-      colorPalette: 'blue' as const,
+      text: 'Go back',
+      colorPalette: 'gray' as const,
     },
   };
 
   const current = config[mode];
 
   return (
-    <PMBox
-      as="button"
-      backgroundColor={`${current.colorPalette}.subtle`}
+    <PMButton
+      backgroundColor={`${current.colorPalette}`}
       color={`${current.colorPalette}.fg`}
       px={2}
       py={0.5}
@@ -56,10 +53,7 @@ export const ViewToggleButton: React.FC<ViewToggleButtonProps> = ({
         onToggle();
       }}
     >
-      <PMIcon size="xs">
-        <current.icon />
-      </PMIcon>
       {current.text}
-    </PMBox>
+    </PMButton>
   );
 };
