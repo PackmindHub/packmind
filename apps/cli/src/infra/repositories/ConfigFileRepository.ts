@@ -4,6 +4,14 @@ import * as path from 'path';
 
 export class ConfigFileRepository {
   private readonly CONFIG_FILENAME = 'packmind.json';
+  private readonly EXCLUDED_DIRECTORIES = [
+    'node_modules',
+    '.git',
+    'dist',
+    'build',
+    'coverage',
+    '.nx',
+  ];
 
   async writeConfig(
     baseDirectory: string,
@@ -43,22 +51,66 @@ export class ConfigFileRepository {
   }
 
   /**
+   * Recursively finds all directories containing packmind.json in descendant folders.
+   * Excludes common build/dependency directories (node_modules, .git, dist, etc.)
+   *
+   * @param directory - The root directory to search from
+   * @returns Array of directory paths that contain a packmind.json file
+   */
+  async findDescendantConfigs(directory: string): Promise<string[]> {
+    const normalizedDir = path.resolve(directory);
+    const results: string[] = [];
+
+    const searchRecursively = async (currentDir: string): Promise<void> => {
+      let entries;
+      try {
+        entries = await fs.readdir(currentDir, { withFileTypes: true });
+      } catch {
+        return;
+      }
+
+      for (const entry of entries) {
+        if (!entry.isDirectory()) {
+          continue;
+        }
+
+        if (this.EXCLUDED_DIRECTORIES.includes(entry.name)) {
+          continue;
+        }
+
+        const entryPath = path.join(currentDir, entry.name);
+        const config = await this.readConfig(entryPath);
+
+        if (config) {
+          results.push(entryPath);
+        }
+
+        await searchRecursively(entryPath);
+      }
+    };
+
+    await searchRecursively(normalizedDir);
+
+    return results;
+  }
+
+  /**
    * Reads all packmind.json files from startDirectory up to stopDirectory (inclusive)
    * and merges their package configurations.
    *
    * @param startDirectory - Directory to start searching from (typically the lint target)
-   * @param stopDirectory - Directory to stop searching at (typically git repo root)
+   * @param stopDirectory - Directory to stop searching at (typically git repo root), or null to walk to filesystem root
    * @returns Merged configuration from all found packmind.json files
    */
   async readHierarchicalConfig(
     startDirectory: string,
-    stopDirectory: string,
+    stopDirectory: string | null,
   ): Promise<HierarchicalConfigResult> {
     const configs: PackmindFileConfig[] = [];
     const configPaths: string[] = [];
 
     const normalizedStart = path.resolve(startDirectory);
-    const normalizedStop = path.resolve(stopDirectory);
+    const normalizedStop = stopDirectory ? path.resolve(stopDirectory) : null;
 
     let currentDir = normalizedStart;
 
@@ -69,7 +121,7 @@ export class ConfigFileRepository {
         configPaths.push(path.join(currentDir, this.CONFIG_FILENAME));
       }
 
-      if (currentDir === normalizedStop) {
+      if (normalizedStop !== null && currentDir === normalizedStop) {
         break;
       }
 

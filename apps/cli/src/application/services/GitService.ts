@@ -44,6 +44,14 @@ export class GitService {
     }
   }
 
+  public async tryGetGitRepositoryRoot(path: string): Promise<string | null> {
+    try {
+      return await this.getGitRepositoryRoot(path);
+    } catch {
+      return null;
+    }
+  }
+
   public async getCurrentBranches(
     repoPath: string,
   ): Promise<GitBranchesResult> {
