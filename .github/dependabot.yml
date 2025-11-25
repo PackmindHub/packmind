@@ -4,3 +4,5 @@ updates:
     allow:
       - dependency-type: "direct"
     open-pull-requests-limit: 15
+    cooldown:
+      default-days: 7
