@@ -2,6 +2,8 @@ import { PackmindLogger } from '@packmind/logger';
 import { IBaseAdapter } from '@packmind/node-utils';
 import {
   AIService,
+  IAccountsPort,
+  IAccountsPortName,
   ILlmPort,
   OrganizationId,
   TestLLMConnectionCommand,
@@ -16,6 +18,9 @@ import { GetModelsUseCase } from '../useCases/getModels/getModels.usecase';
 const origin = 'LlmAdapter';
 
 export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
+  // Ports
+  private accountsPort?: IAccountsPort;
+
   // Use cases - created in initialize()
   private _getAiServiceForOrganization!: GetAiServiceForOrganizationUseCase;
   private _testLLMConnection!: TestLLMConnectionUseCase;
@@ -29,31 +34,39 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
 
   /**
    * Initialize adapter with ports from registry.
-   * Currently no external ports are needed, but this allows for future extensibility
-   * when organization-specific LLM configurations are stored in the database.
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public async initialize(ports: Record<string, unknown>): Promise<void> {
+  public async initialize(ports: {
+    [IAccountsPortName]: IAccountsPort;
+  }): Promise<void> {
     this.logger.info('Initializing LlmAdapter');
-    // No external ports needed for initial implementation
-    // Future: Retrieve IAccountsPort or IConfigPort when org-specific configs are added
+
+    // Set accounts port
+    this.accountsPort = ports[IAccountsPortName];
+
+    if (!this.accountsPort) {
+      throw new Error(
+        'IAccountsPort is required for LlmAdapter initialization',
+      );
+    }
 
     // Initialize use cases
     this._getAiServiceForOrganization = new GetAiServiceForOrganizationUseCase(
       this.logger,
     );
-    this._testLLMConnection = new TestLLMConnectionUseCase(this.logger);
-    this._getModels = new GetModelsUseCase(this.logger);
+    this._testLLMConnection = new TestLLMConnectionUseCase(
+      this.accountsPort,
+      this.logger,
+    );
+    this._getModels = new GetModelsUseCase(this.accountsPort, this.logger);
 
     this.logger.info('LlmAdapter initialized successfully');
   }
 
   /**
    * Check if adapter is ready.
-   * Always returns true as no external dependencies are required initially.
    */
   public isReady(): boolean {
-    return true;
+    return !!this.accountsPort;
   }
 
   /**

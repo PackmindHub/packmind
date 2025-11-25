@@ -1,5 +1,14 @@
-import { createOrganizationId, LLMProvider } from '@packmind/types';
-import { v4 as uuidv4 } from 'uuid';
+import {
+  createOrganizationId,
+  createUserId,
+  LLMProvider,
+  IAccountsPort,
+  GetModelsCommand,
+} from '@packmind/types';
+import { PackmindLogger } from '@packmind/logger';
+import { MemberContext } from '@packmind/node-utils';
+import { stubLogger } from '@packmind/test-utils';
+import { organizationFactory, userFactory } from '@packmind/accounts/test';
 import { GetModelsUseCase } from './getModels.usecase';
 import { createLLMService } from '../../../factories/createLLMService';
 
@@ -12,9 +21,18 @@ const mockedCreateLLMService = createLLMService as jest.MockedFunction<
 describe('GetModelsUseCase', () => {
   let useCase: GetModelsUseCase;
   let mockGetModels: jest.Mock;
+  let mockAccountsPort: jest.Mocked<IAccountsPort>;
+  let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
-    useCase = new GetModelsUseCase();
+    mockAccountsPort = {
+      getUserById: jest.fn(),
+      getOrganizationById: jest.fn(),
+    } as unknown as jest.Mocked<IAccountsPort>;
+
+    stubbedLogger = stubLogger();
+
+    useCase = new GetModelsUseCase(mockAccountsPort, stubbedLogger);
     mockGetModels = jest.fn();
 
     mockedCreateLLMService.mockReturnValue({
@@ -29,7 +47,32 @@ describe('GetModelsUseCase', () => {
     jest.clearAllMocks();
   });
 
-  describe('execute', () => {
+  describe('executeForMembers', () => {
+    const userId = createUserId('user-123');
+    const organizationId = createOrganizationId('org-456');
+    const user = userFactory({ id: userId });
+    const organization = organizationFactory({ id: organizationId });
+    const membership = {
+      userId,
+      organizationId,
+      role: 'member' as const,
+    };
+
+    const createValidCommand = (
+      configOverrides?: Partial<GetModelsCommand['config']>,
+    ): GetModelsCommand & MemberContext => ({
+      userId: String(userId),
+      organizationId,
+      user,
+      organization,
+      membership,
+      config: {
+        provider: LLMProvider.OPENAI,
+        apiKey: 'test-key',
+        ...configOverrides,
+      },
+    });
+
     describe('when models are successfully retrieved', () => {
       beforeEach(() => {
         mockGetModels.mockResolvedValue([
@@ -40,27 +83,13 @@ describe('GetModelsUseCase', () => {
       });
 
       it('returns success true', async () => {
-        const result = await useCase.execute({
-          userId: 'user-123',
-          organizationId: createOrganizationId(uuidv4()),
-          config: {
-            provider: LLMProvider.OPENAI,
-            apiKey: 'test-key',
-          },
-        });
+        const result = await useCase.executeForMembers(createValidCommand());
 
         expect(result.success).toBe(true);
       });
 
       it('returns the list of model IDs', async () => {
-        const result = await useCase.execute({
-          userId: 'user-123',
-          organizationId: createOrganizationId(uuidv4()),
-          config: {
-            provider: LLMProvider.OPENAI,
-            apiKey: 'test-key',
-          },
-        });
+        const result = await useCase.executeForMembers(createValidCommand());
 
         expect(result.models).toEqual([
           'gpt-4',
@@ -70,27 +99,13 @@ describe('GetModelsUseCase', () => {
       });
 
       it('returns the provider', async () => {
-        const result = await useCase.execute({
-          userId: 'user-123',
-          organizationId: createOrganizationId(uuidv4()),
-          config: {
-            provider: LLMProvider.OPENAI,
-            apiKey: 'test-key',
-          },
-        });
+        const result = await useCase.executeForMembers(createValidCommand());
 
         expect(result.provider).toBe(LLMProvider.OPENAI);
       });
 
       it('does not include error', async () => {
-        const result = await useCase.execute({
-          userId: 'user-123',
-          organizationId: createOrganizationId(uuidv4()),
-          config: {
-            provider: LLMProvider.OPENAI,
-            apiKey: 'test-key',
-          },
-        });
+        const result = await useCase.executeForMembers(createValidCommand());
 
         expect(result.error).toBeUndefined();
       });
@@ -102,14 +117,9 @@ describe('GetModelsUseCase', () => {
       });
 
       it('returns success true with empty array', async () => {
-        const result = await useCase.execute({
-          userId: 'user-123',
-          organizationId: createOrganizationId(uuidv4()),
-          config: {
-            provider: LLMProvider.ANTHROPIC,
-            apiKey: 'test-key',
-          },
-        });
+        const result = await useCase.executeForMembers(
+          createValidCommand({ provider: LLMProvider.ANTHROPIC }),
+        );
 
         expect(result.success).toBe(true);
         expect(result.models).toEqual([]);
@@ -124,54 +134,26 @@ describe('GetModelsUseCase', () => {
       });
 
       it('returns success false', async () => {
-        const result = await useCase.execute({
-          userId: 'user-123',
-          organizationId: createOrganizationId(uuidv4()),
-          config: {
-            provider: LLMProvider.OPENAI,
-            apiKey: 'test-key',
-          },
-        });
+        const result = await useCase.executeForMembers(createValidCommand());
 
         expect(result.success).toBe(false);
       });
 
       it('returns empty models array', async () => {
-        const result = await useCase.execute({
-          userId: 'user-123',
-          organizationId: createOrganizationId(uuidv4()),
-          config: {
-            provider: LLMProvider.OPENAI,
-            apiKey: 'test-key',
-          },
-        });
+        const result = await useCase.executeForMembers(createValidCommand());
 
         expect(result.models).toEqual([]);
       });
 
       it('includes error details', async () => {
-        const result = await useCase.execute({
-          userId: 'user-123',
-          organizationId: createOrganizationId(uuidv4()),
-          config: {
-            provider: LLMProvider.OPENAI,
-            apiKey: 'test-key',
-          },
-        });
+        const result = await useCase.executeForMembers(createValidCommand());
 
         expect(result.error).toBeDefined();
         expect(result.error?.message).toBe('Network error: Failed to fetch');
       });
 
       it('classifies error type correctly', async () => {
-        const result = await useCase.execute({
-          userId: 'user-123',
-          organizationId: createOrganizationId(uuidv4()),
-          config: {
-            provider: LLMProvider.OPENAI,
-            apiKey: 'test-key',
-          },
-        });
+        const result = await useCase.executeForMembers(createValidCommand());
 
         expect(result.error?.type).toBe('NETWORK_ERROR');
       });
@@ -185,14 +167,12 @@ describe('GetModelsUseCase', () => {
       });
 
       it('classifies error as authentication error', async () => {
-        const result = await useCase.execute({
-          userId: 'user-123',
-          organizationId: createOrganizationId(uuidv4()),
-          config: {
+        const result = await useCase.executeForMembers(
+          createValidCommand({
             provider: LLMProvider.ANTHROPIC,
             apiKey: 'invalid-key',
-          },
-        });
+          }),
+        );
 
         expect(result.error?.type).toBe('AUTHENTICATION_ERROR');
       });
@@ -204,14 +184,9 @@ describe('GetModelsUseCase', () => {
       });
 
       it('classifies error as rate limit', async () => {
-        const result = await useCase.execute({
-          userId: 'user-123',
-          organizationId: createOrganizationId(uuidv4()),
-          config: {
-            provider: LLMProvider.GEMINI,
-            apiKey: 'test-key',
-          },
-        });
+        const result = await useCase.executeForMembers(
+          createValidCommand({ provider: LLMProvider.GEMINI }),
+        );
 
         expect(result.error?.type).toBe('RATE_LIMIT');
       });
@@ -223,13 +198,9 @@ describe('GetModelsUseCase', () => {
       });
 
       it('returns empty array', async () => {
-        const result = await useCase.execute({
-          userId: 'user-123',
-          organizationId: createOrganizationId(uuidv4()),
-          config: {
-            provider: LLMProvider.PACKMIND,
-          },
-        });
+        const result = await useCase.executeForMembers(
+          createValidCommand({ provider: LLMProvider.PACKMIND }),
+        );
 
         expect(result.success).toBe(true);
         expect(result.models).toEqual([]);

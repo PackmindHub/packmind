@@ -1,5 +1,11 @@
-import { createOrganizationId, LLMProvider } from '@packmind/types';
-import { v4 as uuidv4 } from 'uuid';
+import {
+  createOrganizationId,
+  createUserId,
+  IAccountsPort,
+  LLMProvider,
+} from '@packmind/types';
+import { MemberContext } from '@packmind/node-utils';
+import { stubLogger } from '@packmind/test-utils';
 import { TestLLMConnectionUseCase } from './testLLMConnection.usecase';
 import { createLLMService } from '../../../factories/createLLMService';
 
@@ -12,9 +18,41 @@ const mockedCreateLLMService = createLLMService as jest.MockedFunction<
 describe('TestLLMConnectionUseCase', () => {
   let useCase: TestLLMConnectionUseCase;
   let mockExecutePrompt: jest.Mock;
+  let mockAccountsPort: jest.Mocked<IAccountsPort>;
+
+  const userId = createUserId('user-123');
+  const organizationId = createOrganizationId('org-456');
+  const memberContext: MemberContext = {
+    user: {
+      id: userId,
+      email: 'test@example.com',
+      memberships: [
+        {
+          userId: String(userId),
+          organizationId,
+          role: 'member',
+        },
+      ],
+    },
+    organization: {
+      id: organizationId,
+      name: 'Test Organization',
+      slug: 'test-org',
+    },
+    membership: {
+      userId: String(userId),
+      organizationId,
+      role: 'member',
+    },
+  };
 
   beforeEach(() => {
-    useCase = new TestLLMConnectionUseCase();
+    mockAccountsPort = {
+      getUserById: jest.fn(),
+      getOrganizationById: jest.fn(),
+    } as unknown as jest.Mocked<IAccountsPort>;
+
+    useCase = new TestLLMConnectionUseCase(mockAccountsPort, stubLogger());
     mockExecutePrompt = jest.fn();
 
     mockedCreateLLMService.mockReturnValue({
@@ -28,7 +66,7 @@ describe('TestLLMConnectionUseCase', () => {
     jest.clearAllMocks();
   });
 
-  describe('execute', () => {
+  describe('executeForMembers', () => {
     describe('when both models test successfully', () => {
       beforeEach(() => {
         mockExecutePrompt
@@ -45,9 +83,10 @@ describe('TestLLMConnectionUseCase', () => {
       });
 
       it('returns overall success true', async () => {
-        const result = await useCase.execute({
-          userId: 'user-123',
-          organizationId: createOrganizationId(uuidv4()),
+        const result = await useCase.executeForMembers({
+          userId: String(userId),
+          organizationId,
+          ...memberContext,
           config: {
             provider: LLMProvider.OPENAI,
             apiKey: 'test-key',
@@ -60,9 +99,10 @@ describe('TestLLMConnectionUseCase', () => {
       });
 
       it('returns standard model success', async () => {
-        const result = await useCase.execute({
-          userId: 'user-123',
-          organizationId: createOrganizationId(uuidv4()),
+        const result = await useCase.executeForMembers({
+          userId: String(userId),
+          organizationId,
+          ...memberContext,
           config: {
             provider: LLMProvider.OPENAI,
             apiKey: 'test-key',
@@ -75,9 +115,10 @@ describe('TestLLMConnectionUseCase', () => {
       });
 
       it('returns fast model success', async () => {
-        const result = await useCase.execute({
-          userId: 'user-123',
-          organizationId: createOrganizationId(uuidv4()),
+        const result = await useCase.executeForMembers({
+          userId: String(userId),
+          organizationId,
+          ...memberContext,
           config: {
             provider: LLMProvider.OPENAI,
             apiKey: 'test-key',
@@ -98,9 +139,10 @@ describe('TestLLMConnectionUseCase', () => {
           data: 'Hello!',
         });
 
-        const result = await useCase.execute({
-          userId: 'user-123',
-          organizationId: createOrganizationId(uuidv4()),
+        const result = await useCase.executeForMembers({
+          userId: String(userId),
+          organizationId,
+          ...memberContext,
           config: {
             provider: LLMProvider.OPENAI,
             apiKey: 'test-key',
@@ -121,9 +163,10 @@ describe('TestLLMConnectionUseCase', () => {
           data: 'Hello!',
         });
 
-        const result = await useCase.execute({
-          userId: 'user-123',
-          organizationId: createOrganizationId(uuidv4()),
+        const result = await useCase.executeForMembers({
+          userId: String(userId),
+          organizationId,
+          ...memberContext,
           config: {
             provider: LLMProvider.ANTHROPIC,
             apiKey: 'test-key',
@@ -147,9 +190,10 @@ describe('TestLLMConnectionUseCase', () => {
       });
 
       it('returns overall failure', async () => {
-        const result = await useCase.execute({
-          userId: 'user-123',
-          organizationId: createOrganizationId(uuidv4()),
+        const result = await useCase.executeForMembers({
+          userId: String(userId),
+          organizationId,
+          ...memberContext,
           config: {
             provider: LLMProvider.OPENAI,
             apiKey: 'invalid-key',
@@ -160,9 +204,10 @@ describe('TestLLMConnectionUseCase', () => {
       });
 
       it('returns authentication error type', async () => {
-        const result = await useCase.execute({
-          userId: 'user-123',
-          organizationId: createOrganizationId(uuidv4()),
+        const result = await useCase.executeForMembers({
+          userId: String(userId),
+          organizationId,
+          ...memberContext,
           config: {
             provider: LLMProvider.OPENAI,
             apiKey: 'invalid-key',
@@ -173,9 +218,10 @@ describe('TestLLMConnectionUseCase', () => {
       });
 
       it('returns error message', async () => {
-        const result = await useCase.execute({
-          userId: 'user-123',
-          organizationId: createOrganizationId(uuidv4()),
+        const result = await useCase.executeForMembers({
+          userId: String(userId),
+          organizationId,
+          ...memberContext,
           config: {
             provider: LLMProvider.OPENAI,
             apiKey: 'invalid-key',
@@ -196,9 +242,10 @@ describe('TestLLMConnectionUseCase', () => {
           attempts: 2,
         });
 
-        const result = await useCase.execute({
-          userId: 'user-123',
-          organizationId: createOrganizationId(uuidv4()),
+        const result = await useCase.executeForMembers({
+          userId: String(userId),
+          organizationId,
+          ...memberContext,
           config: {
             provider: LLMProvider.OPENAI,
             apiKey: 'test-key',
@@ -219,9 +266,10 @@ describe('TestLLMConnectionUseCase', () => {
           attempts: 2,
         });
 
-        const result = await useCase.execute({
-          userId: 'user-123',
-          organizationId: createOrganizationId(uuidv4()),
+        const result = await useCase.executeForMembers({
+          userId: String(userId),
+          organizationId,
+          ...memberContext,
           config: {
             provider: LLMProvider.OPENAI,
             apiKey: 'test-key',
@@ -240,9 +288,10 @@ describe('TestLLMConnectionUseCase', () => {
         };
         mockExecutePrompt.mockRejectedValueOnce(testError);
 
-        const result = await useCase.execute({
-          userId: 'user-123',
-          organizationId: createOrganizationId(uuidv4()),
+        const result = await useCase.executeForMembers({
+          userId: String(userId),
+          organizationId,
+          ...memberContext,
           config: {
             provider: LLMProvider.OPENAI,
             apiKey: 'test-key',
@@ -269,9 +318,10 @@ describe('TestLLMConnectionUseCase', () => {
             attempts: 2,
           });
 
-        const result = await useCase.execute({
-          userId: 'user-123',
-          organizationId: createOrganizationId(uuidv4()),
+        const result = await useCase.executeForMembers({
+          userId: String(userId),
+          organizationId,
+          ...memberContext,
           config: {
             provider: LLMProvider.OPENAI,
             apiKey: 'test-key',

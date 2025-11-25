@@ -1,6 +1,11 @@
 import { PackmindLogger } from '@packmind/logger';
 import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
-import { ILlmPort, ILlmPortName } from '@packmind/types';
+import {
+  IAccountsPort,
+  IAccountsPortName,
+  ILlmPort,
+  ILlmPortName,
+} from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { LlmAdapter } from './application/adapter/LlmAdapter';
 
@@ -42,7 +47,6 @@ export class LlmHexa extends BaseHexa<BaseHexaOpts, ILlmPort> {
   /**
    * Initialize the hexa with access to the registry for adapter retrieval.
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public async initialize(registry: HexaRegistry): Promise<void> {
     if (this.isInitialized) {
       this.logger.debug('LlmHexa already initialized');
@@ -52,9 +56,16 @@ export class LlmHexa extends BaseHexa<BaseHexaOpts, ILlmPort> {
     this.logger.info('Initializing LlmHexa (adapter retrieval phase)');
 
     try {
-      // Initialize adapter with empty ports object
-      // Currently no external ports needed for LlmAdapter
-      await this.adapter.initialize({});
+      // Get required ports from registry
+      const accountsPort =
+        registry.getAdapter<IAccountsPort>(IAccountsPortName);
+
+      this.logger.info('Required ports retrieved from registry');
+
+      // Initialize adapter with ports
+      await this.adapter.initialize({
+        [IAccountsPortName]: accountsPort,
+      });
 
       this.isInitialized = true;
       this.logger.info('LlmHexa initialized successfully');

@@ -8,8 +8,10 @@ import {
   LLMModelPerformance,
   AIService,
   LLMServiceConfig,
+  IAccountsPort,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
+import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import { createLLMService } from '../../../factories/createLLMService';
 
 const origin = 'TestLLMConnectionUseCase';
@@ -57,18 +59,29 @@ function classifyErrorType(error: unknown): AIServiceErrorType {
   return AIServiceErrorTypes.API_ERROR;
 }
 
-export class TestLLMConnectionUseCase implements ITestLLMConnectionUseCase {
+export class TestLLMConnectionUseCase
+  extends AbstractMemberUseCase<
+    TestLLMConnectionCommand,
+    TestLLMConnectionResponse
+  >
+  implements ITestLLMConnectionUseCase
+{
   constructor(
-    private readonly logger: PackmindLogger = new PackmindLogger(origin),
-  ) {}
+    accountsPort: IAccountsPort,
+    logger: PackmindLogger = new PackmindLogger(origin),
+  ) {
+    super(accountsPort, logger);
+  }
 
-  async execute(
-    command: TestLLMConnectionCommand,
+  async executeForMembers(
+    command: TestLLMConnectionCommand & MemberContext,
   ): Promise<TestLLMConnectionResponse> {
     const { config } = command;
 
     this.logger.info('Testing LLM connection', {
       provider: config.provider,
+      userId: command.userId,
+      organizationId: command.organizationId,
     });
 
     // Create the LLM service from the configuration

@@ -4,8 +4,10 @@ import {
   IGetModelsUseCase,
   AIServiceErrorType,
   AIServiceErrorTypes,
+  IAccountsPort,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
+import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import { createLLMService } from '../../../factories/createLLMService';
 
 const origin = 'GetModelsUseCase';
@@ -53,16 +55,26 @@ function classifyErrorType(error: unknown): AIServiceErrorType {
   return AIServiceErrorTypes.API_ERROR;
 }
 
-export class GetModelsUseCase implements IGetModelsUseCase {
+export class GetModelsUseCase
+  extends AbstractMemberUseCase<GetModelsCommand, GetModelsResponse>
+  implements IGetModelsUseCase
+{
   constructor(
-    private readonly logger: PackmindLogger = new PackmindLogger(origin),
-  ) {}
+    accountsPort: IAccountsPort,
+    logger: PackmindLogger = new PackmindLogger(origin),
+  ) {
+    super(accountsPort, logger);
+  }
 
-  async execute(command: GetModelsCommand): Promise<GetModelsResponse> {
+  async executeForMembers(
+    command: GetModelsCommand & MemberContext,
+  ): Promise<GetModelsResponse> {
     const { config } = command;
 
     this.logger.info('Getting available models', {
       provider: config.provider,
+      organizationId: command.organizationId,
+      userId: command.userId,
     });
 
     try {
@@ -75,6 +87,7 @@ export class GetModelsUseCase implements IGetModelsUseCase {
       this.logger.info('Successfully retrieved models', {
         provider: config.provider,
         count: models.length,
+        organizationId: command.organizationId,
       });
 
       return {
@@ -94,6 +107,7 @@ export class GetModelsUseCase implements IGetModelsUseCase {
         error: errorMessage,
         errorType,
         statusCode,
+        organizationId: command.organizationId,
       });
 
       return {
