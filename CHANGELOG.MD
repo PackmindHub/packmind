@@ -1,5 +1,11 @@
 # [Unreleased]
 
+# [1.4.1] - 2025-11-25
+
+## Fixed
+
+- Navigation issues on code examples for rules
+
 # [1.4.0] - 2025-11-21
 
 ## Added
@@ -111,12 +117,14 @@
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.3.0...HEAD
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.4.1...HEAD
+[1.3.1]: https://github.com/PackmindHub/packmind/compare/release/1.4.0...release/1.4.1
+[1.3.1]: https://github.com/PackmindHub/packmind/compare/release/1.3.1...release/1.4.0
 [1.3.1]: https://github.com/PackmindHub/packmind/compare/release/1.3.0...release/1.3.1
 [1.3.0]: https://github.com/PackmindHub/packmind/compare/release/1.2.1...release/1.3.0
 [1.2.1]: https://github.com/PackmindHub/packmind/compare/release/1.2.0...release/1.2.1
-[1.2.0]: https://github.com/PackmindHub/packmind/compare/release/1.2.0...release/1.2.1
-[1.1.1]: https://github.com/PackmindHub/packmind/compare/release/1.1.0...release/1.2.0
+[1.2.0]: https://github.com/PackmindHub/packmind/compare/release/1.1.1...release/1.2.0
+[1.1.1]: https://github.com/PackmindHub/packmind/compare/release/1.1.0...release/1.1.1
 [1.1.0]: https://github.com/PackmindHub/packmind/compare/release/1.0.1...release/1.1.0
 [1.0.1]: https://github.com/PackmindHub/packmind/compare/release/1.0.0...release/1.0.1
 [1.0.0]: https://github.com/PackmindHub/packmind/compare/97dce6228693e6f477654dd0018cca583cc95e8c...release/1.0.0
