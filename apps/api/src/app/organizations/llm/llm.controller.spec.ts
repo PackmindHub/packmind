@@ -120,25 +120,27 @@ describe('LlmController', () => {
       expect(result).toEqual(expectedResponse);
     });
 
-    it('throws error when service fails', async () => {
-      const body: PackmindCommandBody<TestLLMConnectionCommand> = {
-        config: {
-          provider: LLMProvider.OPENAI,
-          apiKey: 'test-key',
-        },
-      };
+    describe('when service fails', () => {
+      it('throws error', async () => {
+        const body: PackmindCommandBody<TestLLMConnectionCommand> = {
+          config: {
+            provider: LLMProvider.OPENAI,
+            apiKey: 'test-key',
+          },
+        };
 
-      jest
-        .spyOn(service, 'testConnection')
-        .mockRejectedValue(new Error('Service unavailable'));
+        jest
+          .spyOn(service, 'testConnection')
+          .mockRejectedValue(new Error('Service unavailable'));
 
-      await expect(
-        controller.testConnection(
-          createOrganizationId('org-123'),
-          mockRequest,
-          body,
-        ),
-      ).rejects.toThrow('Service unavailable');
+        await expect(
+          controller.testConnection(
+            createOrganizationId('org-123'),
+            mockRequest,
+            body,
+          ),
+        ).rejects.toThrow('Service unavailable');
+      });
     });
   });
 
@@ -169,55 +171,59 @@ describe('LlmController', () => {
       expect(service.getModels).toHaveBeenCalledWith(mockRequest, body);
     });
 
-    it('returns error response when models retrieval fails', async () => {
-      const body: PackmindCommandBody<GetModelsCommand> = {
-        config: {
+    describe('when models retrieval fails', () => {
+      it('returns error response', async () => {
+        const body: PackmindCommandBody<GetModelsCommand> = {
+          config: {
+            provider: LLMProvider.ANTHROPIC,
+            apiKey: 'invalid-key',
+          },
+        };
+
+        const expectedResponse: GetModelsResponse = {
           provider: LLMProvider.ANTHROPIC,
-          apiKey: 'invalid-key',
-        },
-      };
+          models: [],
+          success: false,
+          error: {
+            message: 'Authentication failed',
+            type: AIServiceErrorTypes.AUTHENTICATION_ERROR,
+            statusCode: 401,
+          },
+        };
 
-      const expectedResponse: GetModelsResponse = {
-        provider: LLMProvider.ANTHROPIC,
-        models: [],
-        success: false,
-        error: {
-          message: 'Authentication failed',
-          type: AIServiceErrorTypes.AUTHENTICATION_ERROR,
-          statusCode: 401,
-        },
-      };
+        jest.spyOn(service, 'getModels').mockResolvedValue(expectedResponse);
 
-      jest.spyOn(service, 'getModels').mockResolvedValue(expectedResponse);
-
-      const result = await controller.getModels(
-        createOrganizationId('org-123'),
-        mockRequest,
-        body,
-      );
-
-      expect(result).toEqual(expectedResponse);
-    });
-
-    it('throws error when service fails', async () => {
-      const body: PackmindCommandBody<GetModelsCommand> = {
-        config: {
-          provider: LLMProvider.GEMINI,
-          apiKey: 'test-key',
-        },
-      };
-
-      jest
-        .spyOn(service, 'getModels')
-        .mockRejectedValue(new Error('Network error'));
-
-      await expect(
-        controller.getModels(
+        const result = await controller.getModels(
           createOrganizationId('org-123'),
           mockRequest,
           body,
-        ),
-      ).rejects.toThrow('Network error');
+        );
+
+        expect(result).toEqual(expectedResponse);
+      });
+    });
+
+    describe('when service fails', () => {
+      it('throws error', async () => {
+        const body: PackmindCommandBody<GetModelsCommand> = {
+          config: {
+            provider: LLMProvider.GEMINI,
+            apiKey: 'test-key',
+          },
+        };
+
+        jest
+          .spyOn(service, 'getModels')
+          .mockRejectedValue(new Error('Network error'));
+
+        await expect(
+          controller.getModels(
+            createOrganizationId('org-123'),
+            mockRequest,
+            body,
+          ),
+        ).rejects.toThrow('Network error');
+      });
     });
   });
 });
