@@ -2,6 +2,10 @@ import * as fs from 'fs/promises';
 import { ConfigFileRepository } from './ConfigFileRepository';
 
 jest.mock('fs/promises');
+jest.mock('chalk', () => ({
+  bgYellow: { bold: (s: string) => s },
+  yellow: (s: string) => s,
+}));
 
 const mockFs = fs as jest.Mocked<typeof fs>;
 
@@ -136,7 +140,11 @@ describe('ConfigFileRepository', () => {
     });
 
     describe('when config file has malformed JSON', () => {
-      it('throws descriptive error', async () => {
+      it('logs warning once and returns empty result', async () => {
+        const consoleWarnSpy = jest
+          .spyOn(console, 'warn')
+          .mockImplementation(jest.fn());
+
         mockFs.readFile.mockImplementation(async (filePath: unknown) => {
           if (filePath === '/project/packmind.json') {
             return 'not valid json';
@@ -144,9 +152,22 @@ describe('ConfigFileRepository', () => {
           throw { code: 'ENOENT' };
         });
 
-        await expect(
-          repository.readHierarchicalConfig('/project', '/project'),
-        ).rejects.toThrow('Failed to read packmind.json');
+        // Call twice to verify warning is only shown once
+        await repository.readHierarchicalConfig('/project', '/project');
+        const result = await repository.readHierarchicalConfig(
+          '/project',
+          '/project',
+        );
+
+        expect(result.hasConfigs).toBe(false);
+        expect(result.configPaths).toHaveLength(0);
+        expect(consoleWarnSpy).toHaveBeenCalledTimes(1);
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.stringContaining('/project/packmind.json'),
+        );
+
+        consoleWarnSpy.mockRestore();
       });
     });
 
@@ -299,6 +320,40 @@ describe('ConfigFileRepository', () => {
         const result = await repository.findDescendantConfigs('/project');
 
         expect(result).toEqual(['/project/src']);
+      });
+    });
+
+    describe('when descendant has malformed JSON', () => {
+      it('logs warning and skips malformed config', async () => {
+        const consoleWarnSpy = jest
+          .spyOn(console, 'warn')
+          .mockImplementation(jest.fn());
+
+        mockFs.readdir
+          .mockResolvedValueOnce([
+            { name: 'valid', isDirectory: () => true },
+            { name: 'invalid', isDirectory: () => true },
+          ] as MockDirent[] as never)
+          .mockResolvedValue([]);
+        mockFs.readFile.mockImplementation(async (filePath: unknown) => {
+          if (filePath === '/project/valid/packmind.json') {
+            return JSON.stringify({ packages: { valid: '*' } });
+          }
+          if (filePath === '/project/invalid/packmind.json') {
+            return 'not valid json';
+          }
+          throw { code: 'ENOENT' };
+        });
+
+        const result = await repository.findDescendantConfigs('/project');
+
+        expect(result).toEqual(['/project/valid']);
+        expect(consoleWarnSpy).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.stringContaining('/project/invalid/packmind.json'),
+        );
+
+        consoleWarnSpy.mockRestore();
       });
     });
   });

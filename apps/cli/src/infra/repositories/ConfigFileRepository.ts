@@ -1,9 +1,11 @@
 import { HierarchicalConfigResult, PackmindFileConfig } from '@packmind/types';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import chalk from 'chalk';
 
 export class ConfigFileRepository {
   private readonly CONFIG_FILENAME = 'packmind.json';
+  private readonly warnedFiles = new Set<string>();
   private readonly EXCLUDED_DIRECTORIES = [
     'node_modules',
     '.git',
@@ -43,10 +45,15 @@ export class ConfigFileRepository {
         return null;
       }
 
-      // Malformed JSON or invalid structure - throw error to stop execution
-      throw new Error(
-        `Failed to read packmind.json: ${(error as Error).message}`,
-      );
+      // Malformed JSON or invalid structure - warn once and skip
+      if (!this.warnedFiles.has(configPath)) {
+        this.warnedFiles.add(configPath);
+        console.warn(
+          chalk.bgYellow.bold('packmind-cli'),
+          chalk.yellow(`⚠ Skipping malformed config file: ${configPath}`),
+        );
+      }
+      return null;
     }
   }
 
