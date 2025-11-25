@@ -6,11 +6,11 @@ import {
   AIPromptResult,
   AIService,
   LLMModelPerformance,
+  LLMProvider,
   PromptConversation,
   PromptConversationRole,
 } from '@packmind/types';
 import { PackmindService } from './PackmindService';
-import { LLMProvider } from '../../types/LLMServiceConfig';
 import { OpenAIService } from './OpenAIService';
 import { AnthropicService } from './AnthropicService';
 import { GeminiService } from './GeminiService';

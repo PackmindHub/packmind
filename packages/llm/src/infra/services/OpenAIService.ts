@@ -2,13 +2,14 @@ import OpenAI from 'openai';
 import { Configuration } from '@packmind/node-utils';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { BaseOpenAIService } from './BaseOpenAIService';
-import { OpenAIServiceConfig, LLMProvider } from '../../types/LLMServiceConfig';
+import { OpenAIServiceConfig } from '../../types/LLMServiceConfig';
 import { DEFAULT_OPENAI_MODELS } from '../../constants/defaultModels';
 import {
   AIPromptOptions,
   AIPromptResult,
   AIServiceError,
   AIServiceErrorTypes,
+  LLMProvider,
   PromptConversation,
 } from '@packmind/types';
 

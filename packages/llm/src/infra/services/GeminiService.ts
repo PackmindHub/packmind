@@ -8,11 +8,12 @@ import {
   AIServiceErrorType,
   AIServiceErrorTypes,
   LLMModelPerformance,
+  LLMProvider,
   PromptConversation,
   PromptConversationRole,
   AIService,
 } from '@packmind/types';
-import { GeminiServiceConfig, LLMProvider } from '../../types/LLMServiceConfig';
+import { GeminiServiceConfig } from '../../types/LLMServiceConfig';
 import { DEFAULT_GEMINI_MODELS } from '../../constants/defaultModels';
 
 const origin = 'GeminiService';

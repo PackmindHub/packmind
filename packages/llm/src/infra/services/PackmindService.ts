@@ -4,12 +4,10 @@ import {
   AIPromptOptions,
   AIPromptResult,
   AIService,
+  LLMProvider,
   PromptConversation,
 } from '@packmind/types';
-import {
-  LLMProvider,
-  PackmindServiceConfig,
-} from '../../types/LLMServiceConfig';
+import { PackmindServiceConfig } from '../../types/LLMServiceConfig';
 import { OpenAIService } from './OpenAIService';
 import { AnthropicService } from './AnthropicService';
 import { GeminiService } from './GeminiService';

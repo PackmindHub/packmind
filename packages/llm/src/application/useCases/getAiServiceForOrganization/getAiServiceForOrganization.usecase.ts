@@ -2,10 +2,10 @@ import {
   GetAiServiceForOrganizationCommand,
   GetAiServiceForOrganizationResponse,
   IGetAiServiceForOrganizationUseCase,
+  LLMProvider,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { createLLMService } from '../../../factories/createLLMService';
-import { LLMProvider } from '../../../types/LLMServiceConfig';
 
 const origin = 'GetAiServiceForOrganizationUseCase';
 

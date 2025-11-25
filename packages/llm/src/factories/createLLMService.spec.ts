@@ -5,7 +5,8 @@ import { GeminiService } from '../infra/services/GeminiService';
 import { OpenAIAPICompatibleService } from '../infra/services/OpenAIAPICompatibleService';
 import { AzureOpenAIService } from '../infra/services/AzureOpenAIService';
 import { PackmindService } from '../infra/services/PackmindService';
-import { LLMProvider, LLMServiceConfig } from '../types/LLMServiceConfig';
+import { LLMProvider } from '@packmind/types';
+import { LLMServiceConfig } from '../types/LLMServiceConfig';
 
 describe('createLLMService', () => {
   afterEach(() => {

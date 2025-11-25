@@ -8,14 +8,12 @@ import {
   AIServiceErrorType,
   AIServiceErrorTypes,
   LLMModelPerformance,
+  LLMProvider,
   PromptConversation,
   PromptConversationRole,
   AIService,
 } from '@packmind/types';
-import {
-  AnthropicServiceConfig,
-  LLMProvider,
-} from '../../types/LLMServiceConfig';
+import { AnthropicServiceConfig } from '../../types/LLMServiceConfig';
 import { DEFAULT_ANTHROPIC_MODELS } from '../../constants/defaultModels';
 
 const origin = 'AnthropicService';

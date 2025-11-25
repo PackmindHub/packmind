@@ -3,18 +3,10 @@
  * Uses discriminated union pattern for type-safe configuration.
  */
 
-/**
- * Enum for LLM service providers.
- * Centralizes provider identifiers to avoid magic strings.
- */
-export enum LLMProvider {
-  OPENAI = 'openai',
-  ANTHROPIC = 'anthropic',
-  GEMINI = 'gemini',
-  OPENAI_COMPATIBLE = 'openai-compatible',
-  AZURE_OPENAI = 'azure-openai',
-  PACKMIND = 'packmind',
-}
+import { LLMProvider } from '@packmind/types';
+
+// Re-export LLMProvider for backward compatibility
+export { LLMProvider } from '@packmind/types';
 
 /**
  * OpenAI service configuration.

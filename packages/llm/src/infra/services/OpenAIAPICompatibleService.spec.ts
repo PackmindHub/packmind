@@ -2,9 +2,9 @@ import { OpenAIAPICompatibleService } from './OpenAIAPICompatibleService';
 import {
   AIServiceErrorTypes,
   LLMModelPerformance,
+  LLMProvider,
   PromptConversationRole,
 } from '@packmind/types';
-import { LLMProvider } from '../../types/LLMServiceConfig';
 
 // Helper for accessing protected methods in tests (test-only type assertion)
 const getProtectedAccess = (
