@@ -3,14 +3,6 @@ import { DetectabilitySection } from './DetectabilitySection';
 import React, { useMemo } from 'react';
 import { useGetRuleDetectionAssessmentQuery } from '../../api/queries';
 import { RuleDetectionAssessmentStatus } from '@packmind/types';
-import {
-  BadgeConfig,
-  BadgeStatus,
-  getBadgeConfig,
-  StatusDropdownBadge,
-  StatusMenuAction,
-  StatusTooltipData,
-} from '@packmind/proprietary/frontend/domain/detection/components/DetectionAccordions/StatusDropdownBadge';
 import { PMBadge } from '@packmind/ui';
 
 export enum DetectionAccordionStatus {
