@@ -1,4 +1,4 @@
-import { exec } from 'child_process';
+import { exec, execSync } from 'child_process';
 import { promisify } from 'util';
 import { PackmindLogger } from '@packmind/logger';
 
@@ -47,6 +47,19 @@ export class GitService {
   public async tryGetGitRepositoryRoot(path: string): Promise<string | null> {
     try {
       return await this.getGitRepositoryRoot(path);
+    } catch {
+      return null;
+    }
+  }
+
+  public getGitRepositoryRootSync(cwd: string): string | null {
+    try {
+      const result = execSync('git rev-parse --show-toplevel', {
+        cwd,
+        stdio: ['pipe', 'pipe', 'pipe'],
+        encoding: 'utf-8',
+      });
+      return result.trim();
     } catch {
       return null;
     }

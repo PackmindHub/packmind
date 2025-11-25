@@ -1,6 +1,7 @@
 import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs/promises';
+import * as fsSync from 'fs';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { GitService } from './GitService';
@@ -107,6 +108,139 @@ describe('GitService', () => {
         const result = await service.tryGetGitRepositoryRoot(nonExistentPath);
 
         expect(result).toBeNull();
+      });
+    });
+  });
+
+  describe('getGitRepositoryRootSync', () => {
+    describe('when path is at repository root', () => {
+      it('returns repository root path', async () => {
+        const resolvedTempDir = await fs.realpath(tempDir);
+
+        const result = service.getGitRepositoryRootSync(tempDir);
+
+        expect(result).toBe(resolvedTempDir);
+      });
+    });
+
+    describe('when path is a subdirectory', () => {
+      it('returns repository root path', async () => {
+        const subDir = path.join(tempDir, 'src', 'main', 'java');
+        await fs.mkdir(subDir, { recursive: true });
+        const resolvedTempDir = await fs.realpath(tempDir);
+
+        const result = service.getGitRepositoryRootSync(subDir);
+
+        expect(result).toBe(resolvedTempDir);
+      });
+    });
+
+    describe('when path is not in a git repository', () => {
+      it('returns null', async () => {
+        const nonGitDir = await fs.mkdtemp(path.join(os.tmpdir(), 'non-git-'));
+
+        try {
+          const result = service.getGitRepositoryRootSync(nonGitDir);
+
+          expect(result).toBeNull();
+        } finally {
+          await fs.rm(nonGitDir, { recursive: true, force: true });
+        }
+      });
+    });
+
+    describe('when path does not exist', () => {
+      it('returns null', () => {
+        const nonExistentPath = path.join(os.tmpdir(), 'non-existent-path-xyz');
+
+        const result = service.getGitRepositoryRootSync(nonExistentPath);
+
+        expect(result).toBeNull();
+      });
+    });
+  });
+
+  describe('when inside a git worktree', () => {
+    let mainRepo: string;
+    let worktreeDir: string;
+
+    beforeEach(async () => {
+      // Create main repository with initial commit (required for worktrees)
+      mainRepo = await fs.mkdtemp(path.join(os.tmpdir(), 'git-main-'));
+      await execAsync('git init', { cwd: mainRepo });
+      await execAsync('git config user.email "test@example.com"', {
+        cwd: mainRepo,
+      });
+      await execAsync('git config user.name "Test User"', { cwd: mainRepo });
+      await fs.writeFile(path.join(mainRepo, 'README.md'), '# Test');
+      await execAsync('git add .', { cwd: mainRepo });
+      await execAsync('git commit -m "Initial commit"', { cwd: mainRepo });
+
+      // Create a worktree
+      worktreeDir = path.join(os.tmpdir(), 'git-worktree-' + Date.now());
+      await execAsync(`git worktree add "${worktreeDir}" -b test-branch`, {
+        cwd: mainRepo,
+      });
+    });
+
+    afterEach(async () => {
+      // Cleanup may fail if worktree was already removed, which is fine
+      await execAsync(`git worktree remove "${worktreeDir}" --force`, {
+        cwd: mainRepo,
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+      }).catch(() => {});
+      await fs
+        .rm(worktreeDir, { recursive: true, force: true })
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        .catch(() => {});
+      await fs.rm(mainRepo, { recursive: true, force: true });
+    });
+
+    it('has .git as a file (not directory) in worktree', async () => {
+      const gitPath = path.join(worktreeDir, '.git');
+      const stat = await fs.stat(gitPath);
+
+      expect(stat.isFile()).toBe(true);
+      expect(stat.isDirectory()).toBe(false);
+    });
+
+    describe('getGitRepositoryRoot', () => {
+      it('returns worktree root path', async () => {
+        const resolvedWorktreeDir = await fs.realpath(worktreeDir);
+
+        const result = await service.getGitRepositoryRoot(worktreeDir);
+
+        expect(result).toBe(resolvedWorktreeDir);
+      });
+
+      it('returns worktree root path from subdirectory', async () => {
+        const subDir = path.join(worktreeDir, 'src');
+        await fs.mkdir(subDir, { recursive: true });
+        const resolvedWorktreeDir = await fs.realpath(worktreeDir);
+
+        const result = await service.getGitRepositoryRoot(subDir);
+
+        expect(result).toBe(resolvedWorktreeDir);
+      });
+    });
+
+    describe('getGitRepositoryRootSync', () => {
+      it('returns worktree root path', async () => {
+        const resolvedWorktreeDir = fsSync.realpathSync(worktreeDir);
+
+        const result = service.getGitRepositoryRootSync(worktreeDir);
+
+        expect(result).toBe(resolvedWorktreeDir);
+      });
+
+      it('returns worktree root path from subdirectory', async () => {
+        const subDir = path.join(worktreeDir, 'src');
+        await fs.mkdir(subDir, { recursive: true });
+        const resolvedWorktreeDir = fsSync.realpathSync(worktreeDir);
+
+        const result = service.getGitRepositoryRootSync(subDir);
+
+        expect(result).toBe(resolvedWorktreeDir);
       });
     });
   });
