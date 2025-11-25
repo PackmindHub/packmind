@@ -1,6 +1,9 @@
 import { AzureOpenAIService } from './AzureOpenAIService';
-import { AIServiceErrorTypes, PromptConversationRole } from '@packmind/types';
-import { LLMProvider } from '../../types/LLMServiceConfig';
+import {
+  AIServiceErrorTypes,
+  LLMProvider,
+  PromptConversationRole,
+} from '@packmind/types';
 
 // Helper for accessing private methods in tests (test-only type assertion)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

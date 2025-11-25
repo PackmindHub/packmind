@@ -1,5 +1,5 @@
-import { AIService } from '@packmind/types';
-import { LLMServiceConfig, LLMProvider } from '../types/LLMServiceConfig';
+import { AIService, LLMProvider } from '@packmind/types';
+import { LLMServiceConfig } from '../types/LLMServiceConfig';
 import { OpenAIService } from '../infra/services/OpenAIService';
 import { AnthropicService } from '../infra/services/AnthropicService';
 import { GeminiService } from '../infra/services/GeminiService';

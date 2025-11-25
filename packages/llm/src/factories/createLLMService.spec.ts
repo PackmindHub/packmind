@@ -5,7 +5,8 @@ import { GeminiService } from '../infra/services/GeminiService';
 import { OpenAIAPICompatibleService } from '../infra/services/OpenAIAPICompatibleService';
 import { AzureOpenAIService } from '../infra/services/AzureOpenAIService';
 import { PackmindService } from '../infra/services/PackmindService';
-import { LLMProvider, LLMServiceConfig } from '../types/LLMServiceConfig';
+import { LLMProvider } from '@packmind/types';
+import { LLMServiceConfig } from '../types/LLMServiceConfig';
 
 describe('createLLMService', () => {
   afterEach(() => {
@@ -14,7 +15,10 @@ describe('createLLMService', () => {
 
   describe('when provider is openai', () => {
     it('creates OpenAIService instance', () => {
-      const service = createLLMService({ provider: LLMProvider.OPENAI });
+      const service = createLLMService({
+        provider: LLMProvider.OPENAI,
+        apiKey: 'test-api-key',
+      });
 
       expect(service).toBeInstanceOf(OpenAIService);
     });
@@ -22,6 +26,7 @@ describe('createLLMService', () => {
     it('creates OpenAIService with custom models', () => {
       const service = createLLMService({
         provider: LLMProvider.OPENAI,
+        apiKey: 'test-api-key',
         model: 'gpt-4o',
         fastestModel: 'gpt-4o-mini',
       });
@@ -32,7 +37,10 @@ describe('createLLMService', () => {
 
   describe('when provider is anthropic', () => {
     it('creates AnthropicService instance', () => {
-      const service = createLLMService({ provider: LLMProvider.ANTHROPIC });
+      const service = createLLMService({
+        provider: LLMProvider.ANTHROPIC,
+        apiKey: 'test-api-key',
+      });
 
       expect(service).toBeInstanceOf(AnthropicService);
     });
@@ -40,6 +48,7 @@ describe('createLLMService', () => {
     it('creates AnthropicService with custom models', () => {
       const service = createLLMService({
         provider: LLMProvider.ANTHROPIC,
+        apiKey: 'test-api-key',
         model: 'claude-opus-4',
         fastestModel: 'claude-haiku-4',
       });
@@ -50,7 +59,10 @@ describe('createLLMService', () => {
 
   describe('when provider is gemini', () => {
     it('creates GeminiService instance', () => {
-      const service = createLLMService({ provider: LLMProvider.GEMINI });
+      const service = createLLMService({
+        provider: LLMProvider.GEMINI,
+        apiKey: 'test-api-key',
+      });
 
       expect(service).toBeInstanceOf(GeminiService);
     });
@@ -58,6 +70,7 @@ describe('createLLMService', () => {
     it('creates GeminiService with custom models', () => {
       const service = createLLMService({
         provider: LLMProvider.GEMINI,
+        apiKey: 'test-api-key',
         model: 'gemini-2.0-flash',
         fastestModel: 'gemini-1.5-flash',
       });

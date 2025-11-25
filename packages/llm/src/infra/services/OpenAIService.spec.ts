@@ -1,6 +1,5 @@
 import { OpenAIService } from './OpenAIService';
-import { AIServiceErrorTypes } from '@packmind/types';
-import { LLMProvider } from '../../types/LLMServiceConfig';
+import { AIServiceErrorTypes, LLMProvider } from '@packmind/types';
 
 // Helper for accessing private methods in tests (test-only type assertion)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -8,18 +7,10 @@ const getPrivateAccess = (service: OpenAIService) => service as any;
 
 // Mock OpenAI
 jest.mock('openai');
-jest.mock('@packmind/node-utils', () => ({
-  ...jest.requireActual('@packmind/node-utils'),
-  Configuration: {
-    getConfig: jest.fn(),
-  },
-}));
 
 import OpenAI from 'openai';
-import { Configuration } from '@packmind/node-utils';
 
 const MockedOpenAI = jest.mocked(OpenAI);
-const MockedConfiguration = jest.mocked(Configuration);
 
 describe('OpenAIService', () => {
   let service: OpenAIService;
@@ -45,9 +36,11 @@ describe('OpenAIService', () => {
     MockedOpenAI.mockImplementation(
       () => mockOpenAIInstance as unknown as OpenAI,
     );
-    MockedConfiguration.getConfig.mockResolvedValue('test-api-key');
 
-    service = new OpenAIService({ provider: LLMProvider.OPENAI });
+    service = new OpenAIService({
+      provider: LLMProvider.OPENAI,
+      apiKey: 'test-api-key',
+    });
   });
 
   afterEach(() => {
@@ -115,9 +108,12 @@ describe('OpenAIService', () => {
     });
 
     it('handles missing API key gracefully', async () => {
-      MockedConfiguration.getConfig.mockResolvedValue(null);
+      const serviceWithoutKey = new OpenAIService({
+        provider: LLMProvider.OPENAI,
+        apiKey: '',
+      });
 
-      const result = await service.executePrompt(mockPrompt);
+      const result = await serviceWithoutKey.executePrompt(mockPrompt);
 
       expect(result.success).toBe(false);
       expect(result.data).toBeNull();
@@ -128,37 +124,20 @@ describe('OpenAIService', () => {
     describe('isConfigured', () => {
       describe('when API key is available', () => {
         it('returns true', async () => {
-          MockedConfiguration.getConfig.mockResolvedValue('test-api-key');
-
           const result = await service.isConfigured();
 
           expect(result).toBe(true);
-          expect(MockedConfiguration.getConfig).toHaveBeenCalledWith(
-            'OPENAI_API_KEY',
-          );
         });
       });
 
       describe(' when API key is missing', () => {
         it('returns false', async () => {
-          MockedConfiguration.getConfig.mockResolvedValue(null);
+          const serviceWithoutKey = new OpenAIService({
+            provider: LLMProvider.OPENAI,
+            apiKey: '',
+          });
 
-          const result = await service.isConfigured();
-
-          expect(result).toBe(false);
-          expect(MockedConfiguration.getConfig).toHaveBeenCalledWith(
-            'OPENAI_API_KEY',
-          );
-        });
-      });
-
-      describe('when configuration throws an error', () => {
-        it('returns false', async () => {
-          MockedConfiguration.getConfig.mockRejectedValue(
-            new Error('Config error'),
-          );
-
-          const result = await service.isConfigured();
+          const result = await serviceWithoutKey.isConfigured();
 
           expect(result).toBe(false);
         });
@@ -238,7 +217,10 @@ describe('OpenAIService', () => {
     let service: OpenAIService;
 
     beforeEach(() => {
-      service = new OpenAIService({ provider: LLMProvider.OPENAI });
+      service = new OpenAIService({
+        provider: LLMProvider.OPENAI,
+        apiKey: 'test-api-key',
+      });
     });
 
     it('classifies rate limit errors correctly', () => {
@@ -270,7 +252,10 @@ describe('OpenAIService', () => {
     let service: OpenAIService;
 
     beforeEach(() => {
-      service = new OpenAIService({ provider: LLMProvider.OPENAI });
+      service = new OpenAIService({
+        provider: LLMProvider.OPENAI,
+        apiKey: 'test-api-key',
+      });
     });
 
     it('retries for rate limit errors', () => {

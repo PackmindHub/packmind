@@ -19,7 +19,7 @@ export type {
   AzureOpenAIServiceConfig,
   PackmindServiceConfig,
 } from './types/LLMServiceConfig';
-export { LLMProvider } from './types/LLMServiceConfig';
+export { LLMProvider } from '@packmind/types';
 export type { LLMRuntimeConfig } from './types/LLMRuntimeConfig';
 export {
   DEFAULT_OPENAI_MODELS,

@@ -3,48 +3,43 @@
  * Uses discriminated union pattern for type-safe configuration.
  */
 
-/**
- * Enum for LLM service providers.
- * Centralizes provider identifiers to avoid magic strings.
- */
-export enum LLMProvider {
-  OPENAI = 'openai',
-  ANTHROPIC = 'anthropic',
-  GEMINI = 'gemini',
-  OPENAI_COMPATIBLE = 'openai-compatible',
-  AZURE_OPENAI = 'azure-openai',
-  PACKMIND = 'packmind',
-}
+import { LLMProvider } from '@packmind/types';
+
+// Re-export LLMProvider for backward compatibility
+export { LLMProvider } from '@packmind/types';
 
 /**
  * OpenAI service configuration.
- * API key is retrieved from environment variable OPENAI_API_KEY.
+ * API key should be injected through the constructor.
  * Endpoint is hardcoded to OpenAI's official API.
  */
 export type OpenAIServiceConfig = {
   provider: LLMProvider.OPENAI;
+  apiKey: string;
   model?: string;
   fastestModel?: string;
 };
 
 /**
  * Anthropic service configuration.
- * API key is retrieved from environment variable ANTHROPIC_API_KEY.
+ * API key should be injected through the constructor.
  * Endpoint is hardcoded to Anthropic's official API.
  */
 export type AnthropicServiceConfig = {
   provider: LLMProvider.ANTHROPIC;
+  apiKey: string;
   model?: string;
   fastestModel?: string;
 };
 
 /**
  * Gemini service configuration.
- * API key is retrieved from environment variable GEMINI_API_KEY.
+ * API key should be injected through the constructor.
  * Uses Google's Generative AI API.
  */
 export type GeminiServiceConfig = {
   provider: LLMProvider.GEMINI;
+  apiKey: string;
   model?: string;
   fastestModel?: string;
 };
