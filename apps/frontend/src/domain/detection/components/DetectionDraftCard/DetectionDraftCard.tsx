@@ -85,7 +85,7 @@ export const DetectionDraftCard: React.FC<DraftCardProps> = ({
   const timelineConfig = getTimelineConfig(state, handlers, loadingStates);
 
   return (
-    <PMBox width="full">
+    <PMBox width="full" m={4}>
       <PMTimeline variant="subtle">
         <TimelineStep config={timelineConfig.step1} />
         <TimelineStep config={timelineConfig.step2} />
