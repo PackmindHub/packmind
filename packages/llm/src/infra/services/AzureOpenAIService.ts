@@ -127,12 +127,14 @@ export class AzureOpenAIService extends BaseOpenAIService {
    * Users must obtain deployment names from the Azure Portal:
    * Azure Portal > Azure OpenAI Resource > Model deployments
    *
-   * @returns Empty array - deployment names must be manually configured
+   * @throws Error - This method is not implemented for Azure OpenAI provider
    */
   async getModels(): Promise<string[]> {
-    this.logger.info(
-      'getModels called on AzureOpenAIService - Azure deployments must be manually configured from Azure Portal',
+    this.logger.warn(
+      'getModels called on AzureOpenAIService - method not implemented',
     );
-    return [];
+    throw new Error(
+      'Method not implemented for this Provider. Azure OpenAI deployment names must be configured manually from Azure Portal.',
+    );
   }
 }

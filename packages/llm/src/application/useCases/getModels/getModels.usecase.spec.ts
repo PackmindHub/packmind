@@ -206,5 +206,28 @@ describe('GetModelsUseCase', () => {
         expect(result.models).toEqual([]);
       });
     });
+
+    describe('when using Azure OpenAI provider', () => {
+      beforeEach(() => {
+        mockGetModels.mockRejectedValue(
+          new Error(
+            'Method not implemented for this Provider. Azure OpenAI deployment names must be configured manually from Azure Portal.',
+          ),
+        );
+      });
+
+      it('returns error indicating method not implemented', async () => {
+        const result = await useCase.executeForMembers(
+          createValidCommand({
+            provider: LLMProvider.AZURE_OPENAI,
+            model: 'my-deployment',
+            fastestModel: 'my-fast-deployment',
+          }),
+        );
+
+        expect(result.success).toBe(false);
+        expect(result.error?.message).toContain('Method not implemented');
+      });
+    });
   });
 });

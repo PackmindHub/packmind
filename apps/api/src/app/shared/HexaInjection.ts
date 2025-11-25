@@ -9,6 +9,7 @@ import {
   SPACES_ADAPTER_TOKEN,
   LINTER_ADAPTER_TOKEN,
   CODING_AGENT_ADAPTER_TOKEN,
+  LLM_ADAPTER_TOKEN,
 } from './HexaRegistryModule';
 
 /**
@@ -69,3 +70,4 @@ export const InjectSpacesAdapter = () => Inject(SPACES_ADAPTER_TOKEN);
 export const InjectLinterAdapter = () => Inject(LINTER_ADAPTER_TOKEN);
 export const InjectCodingAgentAdapter = () =>
   Inject(CODING_AGENT_ADAPTER_TOKEN);
+export const InjectLlmAdapter = () => Inject(LLM_ADAPTER_TOKEN);

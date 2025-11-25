@@ -41,6 +41,7 @@ import { OrganizationTargetsModule } from './organizations/deployments/targets/t
 import { OrganizationGitModule } from './organizations/git/git.module';
 import { OrganizationGitProvidersModule } from './organizations/git/providers/git-providers.module';
 import { OrganizationGitRepositoriesModule } from './organizations/git/repositories/git-repositories.module';
+import { OrganizationLlmModule } from './organizations/llm/llm.module';
 import { HexaRegistryModule } from './shared/HexaRegistryModule';
 import { SSEModule } from './sse/sse.module';
 import { StandardsModule } from './standards/standards.module';
@@ -145,6 +146,10 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
                 module: OrganizationGitRepositoriesModule,
               },
             ],
+          },
+          {
+            path: 'llm',
+            module: OrganizationLlmModule,
           },
           {
             path: 'spaces',

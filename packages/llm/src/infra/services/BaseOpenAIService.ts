@@ -47,6 +47,12 @@ export abstract class BaseOpenAIService implements AIService {
   protected abstract initialize(): Promise<void>;
 
   /**
+   * Get a list of available model IDs for this provider.
+   * Must be implemented by subclasses with their provider-specific model listing logic.
+   */
+  abstract getModels(): Promise<string[]>;
+
+  /**
    * Get the appropriate model based on performance options
    */
   protected getModel(options: AIPromptOptions): string {

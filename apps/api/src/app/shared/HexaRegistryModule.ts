@@ -6,6 +6,7 @@ import { CodingAgentHexa } from '@packmind/coding-agent';
 import { DeploymentsHexa } from '@packmind/deployments';
 import { GitHexa } from '@packmind/git';
 import { LinterHexa } from '@packmind/linter';
+import { LlmHexa } from '@packmind/llm';
 import { PackmindLogger } from '@packmind/logger';
 import {
   BaseHexa,
@@ -23,6 +24,7 @@ import {
   IDeploymentPort,
   IGitPort,
   ILinterPort,
+  ILlmPort,
   IRecipesPort,
   ISpacesPort,
   IStandardsPort,
@@ -70,6 +72,7 @@ export const GIT_ADAPTER_TOKEN = 'GIT_ADAPTER';
 export const SPACES_ADAPTER_TOKEN = 'SPACES_ADAPTER';
 export const LINTER_ADAPTER_TOKEN = 'LINTER_ADAPTER';
 export const CODING_AGENT_ADAPTER_TOKEN = 'CODING_AGENT_ADAPTER';
+export const LLM_ADAPTER_TOKEN = 'LLM_ADAPTER';
 
 /**
  * NestJS Module for integrating HexaRegistry with dependency injection.
@@ -116,6 +119,7 @@ export class HexaRegistryModule {
         SPACES_ADAPTER_TOKEN,
         LINTER_ADAPTER_TOKEN,
         CODING_AGENT_ADAPTER_TOKEN,
+        LLM_ADAPTER_TOKEN,
       ],
     };
   }
@@ -298,6 +302,21 @@ export class HexaRegistryModule {
           return codingAgentHexa.getAdapter();
         } catch {
           // CodingAgentHexa not available
+        }
+        return null;
+      },
+      inject: [HEXA_REGISTRY_TOKEN],
+    });
+
+    // LLM adapter
+    providers.push({
+      provide: LLM_ADAPTER_TOKEN,
+      useFactory: (registry: HexaRegistry): ILlmPort | null => {
+        try {
+          const llmHexa = registry.get(LlmHexa);
+          return llmHexa.getAdapter();
+        } catch {
+          // LlmHexa not available
         }
         return null;
       },
