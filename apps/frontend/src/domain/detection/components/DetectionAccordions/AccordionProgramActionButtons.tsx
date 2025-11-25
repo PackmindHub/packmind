@@ -33,6 +33,7 @@ interface AccordionProgramActionButtonsProps {
   ruleId: string;
   onShowLogs: () => void;
   onShowProgram: () => void;
+  onShowDetails: (config: ActiveConfigurationSectionData) => void;
   isActivating?: boolean;
 }
 
@@ -52,6 +53,7 @@ export const AccordionProgramActionButtons: React.FC<
   ruleId,
   onShowLogs,
   onShowProgram,
+  onShowDetails,
   isActivating,
 }) => {
   // Compute derived state
@@ -102,6 +104,7 @@ export const AccordionProgramActionButtons: React.FC<
         activeConfigurations={activeConfigurations}
         onTestProgram={onTestProgram}
         onGenerateProgram={onGenerateProgram}
+        onShowDetails={onShowDetails}
         isGeneratingProgram={isGeneratingProgram}
         selectedLanguage={selectedLanguage}
       />,

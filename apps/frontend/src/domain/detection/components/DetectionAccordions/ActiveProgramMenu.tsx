@@ -7,7 +7,7 @@ import {
   PMText,
   PMVStack,
 } from '@packmind/ui';
-import { LuChevronDown, LuPlay, LuSparkles } from 'react-icons/lu';
+import { LuChevronDown, LuPlay, LuSparkles, LuFileText } from 'react-icons/lu';
 import { DetectionStatus } from '@packmind/types';
 import { ActiveConfigurationSectionData } from '../ActiveConfigurationSection';
 import { formatDate } from '../../../../shared/utils/dateUtils';
@@ -28,6 +28,7 @@ interface ActiveProgramMenuProps {
   activeConfigurations: ActiveConfigurationSectionData[];
   onTestProgram: (config: ActiveConfigurationSectionData) => void;
   onGenerateProgram: (language?: string) => void;
+  onShowDetails: (config: ActiveConfigurationSectionData) => void;
   isGeneratingProgram: boolean;
   selectedLanguage: string;
 }
@@ -76,6 +77,7 @@ export const ActiveProgramMenu: React.FC<ActiveProgramMenuProps> = ({
   activeConfigurations,
   onTestProgram,
   onGenerateProgram,
+  onShowDetails,
   isGeneratingProgram,
   selectedLanguage,
 }) => {
@@ -93,6 +95,11 @@ export const ActiveProgramMenu: React.FC<ActiveProgramMenuProps> = ({
         onClick: () => onTestProgram(activeConfig),
         icon: <LuPlay />,
       });
+      menuActions.push({
+        label: 'Generation details',
+        onClick: () => onShowDetails(activeConfig),
+        icon: <LuFileText />,
+      });
     }
 
     if (onGenerateProgram && !isGeneratingProgram) {
@@ -107,6 +114,7 @@ export const ActiveProgramMenu: React.FC<ActiveProgramMenuProps> = ({
   }, [
     activeConfigurations,
     onTestProgram,
+    onShowDetails,
     onGenerateProgram,
     isGeneratingProgram,
     selectedLanguage,

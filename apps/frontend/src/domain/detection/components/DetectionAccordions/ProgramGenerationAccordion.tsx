@@ -8,6 +8,7 @@ import {
 import { DetectionAccordion } from './DetectionAccordion';
 import { ExecutionLogsDrawer } from '../ExecutionLogsDrawer';
 import { ProgramContentDrawer } from '../ProgramContentDrawer';
+import { ProgramDetailsDrawer } from '../ProgramDetailsDrawer';
 import {
   AccordionProgramActionButtons,
   ViewMode,
@@ -56,6 +57,9 @@ export const ProgramGenerationAccordion: React.FC<
 }) => {
   const [isLogsDrawerOpen, setIsLogsDrawerOpen] = useState(false);
   const [isProgramDrawerOpen, setIsProgramDrawerOpen] = useState(false);
+  const [isDetailsDrawerOpen, setIsDetailsDrawerOpen] = useState(false);
+  const [selectedActiveConfig, setSelectedActiveConfig] =
+    useState<ActiveConfigurationCardData | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('active');
   const activeDraft = draftPrograms[0];
 
@@ -80,6 +84,14 @@ export const ProgramGenerationAccordion: React.FC<
     setViewMode(mode);
   }, []);
 
+  const handleShowDetails = useCallback(
+    (config: ActiveConfigurationCardData) => {
+      setSelectedActiveConfig(config);
+      setIsDetailsDrawerOpen(true);
+    },
+    [],
+  );
+
   return (
     <DetectionAccordion
       title="Program"
@@ -98,6 +110,7 @@ export const ProgramGenerationAccordion: React.FC<
           ruleId={ruleId}
           onShowLogs={() => setIsLogsDrawerOpen(true)}
           onShowProgram={() => setIsProgramDrawerOpen(true)}
+          onShowDetails={handleShowDetails}
           isActivating={
             activatingDraftId === activeDraft?.id && isActivatingDraft
           }
@@ -156,6 +169,17 @@ export const ProgramGenerationAccordion: React.FC<
             programCode={activeDraft.draftProgram.code}
           />
         </>
+      )}
+
+      {selectedActiveConfig?.detectionProgram && (
+        <ProgramDetailsDrawer
+          isOpen={isDetailsDrawerOpen}
+          onClose={() => setIsDetailsDrawerOpen(false)}
+          standardId={standardId}
+          ruleId={ruleId}
+          detectionProgramId={selectedActiveConfig.detectionProgram.id}
+          programCode={selectedActiveConfig.detectionProgram.code}
+        />
       )}
     </DetectionAccordion>
   );
