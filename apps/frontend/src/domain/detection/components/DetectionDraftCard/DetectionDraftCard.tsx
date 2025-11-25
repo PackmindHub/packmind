@@ -18,7 +18,7 @@ import {
 import { DetectionProgram, DetectionStatus } from '@packmind/types';
 import { useGetRuleDetectionAssessmentQuery } from '../../api/queries/DetectionProgramQueries';
 import { LuCheck, LuCircleAlert, LuLoader } from 'react-icons/lu';
-import { determineDraftStatus } from '@packmind/proprietary/frontend/domain/detection/components/DetectionDraftCard/determineDraftStatus';
+import { determineDraftStatus } from './determineDraftStatus';
 import {
   getTimelineConfig,
   LoadingStates,
