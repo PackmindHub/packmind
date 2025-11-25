@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   PMAccordion,
-  PMBox,
   PMHStack,
   PMText,
   PMBadge,
@@ -40,6 +39,7 @@ interface DetectionAccordionProps {
   status?: DetectionAccordionStatus;
   statusTooltip?: StatusTooltipData;
   statusMenuActions?: StatusMenuAction[];
+  statusAdditionalActions?: React.ReactNode;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   disabled?: boolean;
@@ -131,6 +131,7 @@ export const DetectionAccordion: React.FC<DetectionAccordionProps> = ({
   status,
   statusTooltip,
   statusMenuActions,
+  statusAdditionalActions,
   open,
   onOpenChange,
   disabled = false,
@@ -163,11 +164,11 @@ export const DetectionAccordion: React.FC<DetectionAccordionProps> = ({
           <PMHStack gap={3} align="center" width="full">
             <PMAccordion.ItemIndicator />
             <PMText>{title}</PMText>
-            {status && (
-              <PMBox marginLeft="auto">
-                {renderStatusBadge(status, statusTooltip, statusMenuActions)}
-              </PMBox>
-            )}
+            <PMHStack gap={2} marginLeft="auto">
+              {statusAdditionalActions}
+              {status &&
+                renderStatusBadge(status, statusTooltip, statusMenuActions)}
+            </PMHStack>
           </PMHStack>
         </PMAccordion.ItemTrigger>
         {!disabled && (
