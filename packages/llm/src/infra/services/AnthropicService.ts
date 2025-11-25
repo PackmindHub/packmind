@@ -1,5 +1,4 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { Configuration } from '@packmind/node-utils';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import {
   AIPromptOptions,
@@ -8,7 +7,6 @@ import {
   AIServiceErrorType,
   AIServiceErrorTypes,
   LLMModelPerformance,
-  LLMProvider,
   PromptConversation,
   PromptConversationRole,
   AIService,
@@ -24,14 +22,16 @@ export class AnthropicService implements AIService {
   private readonly defaultFastModel: string;
   private readonly maxRetries = 5;
   private initialized = false;
+  private readonly apiKey: string;
 
   constructor(
-    config: AnthropicServiceConfig = { provider: LLMProvider.ANTHROPIC },
+    config: AnthropicServiceConfig,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.INFO,
     ),
   ) {
+    this.apiKey = config.apiKey;
     this.defaultModel = config.model || DEFAULT_ANTHROPIC_MODELS.model;
     this.defaultFastModel =
       config.fastestModel || DEFAULT_ANTHROPIC_MODELS.fastestModel;
@@ -42,49 +42,32 @@ export class AnthropicService implements AIService {
    * Check if the Anthropic service is properly configured and ready to use
    */
   async isConfigured(): Promise<boolean> {
-    try {
-      const apiKey = await Configuration.getConfig('ANTHROPIC_API_KEY');
-      return !!apiKey;
-    } catch (error) {
-      this.logger.debug('Failed to check Anthropic configuration', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      return false;
-    }
+    return !!this.apiKey;
   }
 
   /**
-   * Initialize the Anthropic client with API key from configuration
+   * Initialize the Anthropic client with the injected API key
    */
   private async initialize(): Promise<void> {
     if (this.initialized) return;
 
     this.logger.info('Initializing Anthropic client');
 
-    try {
-      const apiKey = await Configuration.getConfig('ANTHROPIC_API_KEY');
-
-      if (!apiKey) {
-        this.logger.warn(
-          'Anthropic API key not found in configuration - AI features will be disabled',
-        );
-        this.initialized = true; // Mark as initialized but without client
-        return;
-      }
-
-      this.client = new Anthropic({
-        apiKey,
-        timeout: 60 * 1000, // 1 minute timeout in milliseconds
-      });
-
-      this.initialized = true;
-      this.logger.info('Anthropic client initialized successfully');
-    } catch (error) {
-      this.logger.error('Failed to initialize Anthropic client', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+    if (!this.apiKey) {
+      this.logger.warn(
+        'Anthropic API key not provided - AI features will be disabled',
+      );
+      this.initialized = true; // Mark as initialized but without client
+      return;
     }
+
+    this.client = new Anthropic({
+      apiKey: this.apiKey,
+      timeout: 60 * 1000, // 1 minute timeout in milliseconds
+    });
+
+    this.initialized = true;
+    this.logger.info('Anthropic client initialized successfully');
   }
 
   private getModel(options: AIPromptOptions) {

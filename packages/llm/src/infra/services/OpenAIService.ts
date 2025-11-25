@@ -1,5 +1,4 @@
 import OpenAI from 'openai';
-import { Configuration } from '@packmind/node-utils';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { BaseOpenAIService } from './BaseOpenAIService';
 import { OpenAIServiceConfig } from '../../types/LLMServiceConfig';
@@ -9,7 +8,6 @@ import {
   AIPromptResult,
   AIServiceError,
   AIServiceErrorTypes,
-  LLMProvider,
   PromptConversation,
 } from '@packmind/types';
 
@@ -20,12 +18,14 @@ type ServiceTierType = 'auto' | 'default' | 'flex' | 'scale' | 'priority';
 export class OpenAIService extends BaseOpenAIService {
   protected readonly defaultModel: string;
   protected readonly defaultFastModel: string;
+  private readonly apiKey: string;
 
   constructor(
-    config: OpenAIServiceConfig = { provider: LLMProvider.OPENAI },
+    config: OpenAIServiceConfig,
     logger: PackmindLogger = new PackmindLogger(origin, LogLevel.INFO),
   ) {
     super(logger, origin);
+    this.apiKey = config.apiKey;
     this.defaultModel = config.model || DEFAULT_OPENAI_MODELS.model;
     this.defaultFastModel =
       config.fastestModel || DEFAULT_OPENAI_MODELS.fastestModel;
@@ -35,48 +35,31 @@ export class OpenAIService extends BaseOpenAIService {
    * Check if the OpenAI service is properly configured and ready to use
    */
   async isConfigured(): Promise<boolean> {
-    try {
-      const apiKey = await Configuration.getConfig('OPENAI_API_KEY');
-      return !!apiKey;
-    } catch (error) {
-      this.logger.debug('Failed to check OpenAI configuration', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      return false;
-    }
+    return !!this.apiKey;
   }
 
   /**
-   * Initialize the OpenAI client with API key from configuration
+   * Initialize the OpenAI client with the injected API key
    */
   protected async initialize(): Promise<void> {
     if (this.initialized) return;
 
     this.logger.info('Initializing OpenAI client');
 
-    try {
-      const apiKey = await Configuration.getConfig('OPENAI_API_KEY');
-
-      if (!apiKey) {
-        this.logger.warn(
-          'OpenAI API key not found in configuration - AI features will be disabled',
-        );
-        this.initialized = true; // Mark as initialized but without client
-        return;
-      }
-
-      this.client = new OpenAI({
-        apiKey,
-      });
-
-      this.initialized = true;
-      this.logger.info('OpenAI client initialized successfully');
-    } catch (error) {
-      this.logger.error('Failed to initialize OpenAI client', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+    if (!this.apiKey) {
+      this.logger.warn(
+        'OpenAI API key not provided - AI features will be disabled',
+      );
+      this.initialized = true; // Mark as initialized but without client
+      return;
     }
+
+    this.client = new OpenAI({
+      apiKey: this.apiKey,
+    });
+
+    this.initialized = true;
+    this.logger.info('OpenAI client initialized successfully');
   }
 
   /**

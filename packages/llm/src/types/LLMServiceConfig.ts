@@ -10,33 +10,36 @@ export { LLMProvider } from '@packmind/types';
 
 /**
  * OpenAI service configuration.
- * API key is retrieved from environment variable OPENAI_API_KEY.
+ * API key should be injected through the constructor.
  * Endpoint is hardcoded to OpenAI's official API.
  */
 export type OpenAIServiceConfig = {
   provider: LLMProvider.OPENAI;
+  apiKey: string;
   model?: string;
   fastestModel?: string;
 };
 
 /**
  * Anthropic service configuration.
- * API key is retrieved from environment variable ANTHROPIC_API_KEY.
+ * API key should be injected through the constructor.
  * Endpoint is hardcoded to Anthropic's official API.
  */
 export type AnthropicServiceConfig = {
   provider: LLMProvider.ANTHROPIC;
+  apiKey: string;
   model?: string;
   fastestModel?: string;
 };
 
 /**
  * Gemini service configuration.
- * API key is retrieved from environment variable GEMINI_API_KEY.
+ * API key should be injected through the constructor.
  * Uses Google's Generative AI API.
  */
 export type GeminiServiceConfig = {
   provider: LLMProvider.GEMINI;
+  apiKey: string;
   model?: string;
   fastestModel?: string;
 };

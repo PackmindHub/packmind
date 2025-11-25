@@ -54,7 +54,7 @@ export class PackmindService implements AIService {
         provider: providerName,
       });
 
-      this.underlyingService = this.createUnderlyingService(providerName);
+      this.underlyingService = await this.createUnderlyingService(providerName);
       this.initialized = true;
 
       this.logger.info('PackmindService initialized successfully', {
@@ -120,15 +120,36 @@ export class PackmindService implements AIService {
   /**
    * Create the underlying service instance based on the provider.
    * Only supports OpenAI, Anthropic, and Gemini as underlying providers.
+   * Retrieves the appropriate API key from configuration.
    */
-  private createUnderlyingService(provider: LLMProvider): AIService {
+  private async createUnderlyingService(
+    provider: LLMProvider,
+  ): Promise<AIService> {
     switch (provider) {
-      case LLMProvider.OPENAI:
-        return new OpenAIService({ provider: LLMProvider.OPENAI });
-      case LLMProvider.ANTHROPIC:
-        return new AnthropicService({ provider: LLMProvider.ANTHROPIC });
-      case LLMProvider.GEMINI:
-        return new GeminiService({ provider: LLMProvider.GEMINI });
+      case LLMProvider.OPENAI: {
+        const apiKey = await Configuration.getConfig('OPENAI_API_KEY');
+        if (!apiKey) {
+          throw new Error('OPENAI_API_KEY not found in configuration');
+        }
+        return new OpenAIService({ provider: LLMProvider.OPENAI, apiKey });
+      }
+      case LLMProvider.ANTHROPIC: {
+        const apiKey = await Configuration.getConfig('ANTHROPIC_API_KEY');
+        if (!apiKey) {
+          throw new Error('ANTHROPIC_API_KEY not found in configuration');
+        }
+        return new AnthropicService({
+          provider: LLMProvider.ANTHROPIC,
+          apiKey,
+        });
+      }
+      case LLMProvider.GEMINI: {
+        const apiKey = await Configuration.getConfig('GEMINI_API_KEY');
+        if (!apiKey) {
+          throw new Error('GEMINI_API_KEY not found in configuration');
+        }
+        return new GeminiService({ provider: LLMProvider.GEMINI, apiKey });
+      }
       case LLMProvider.PACKMIND:
         throw new Error('Cannot use PACKMIND as underlying provider');
       default:

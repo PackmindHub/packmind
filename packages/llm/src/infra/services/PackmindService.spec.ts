@@ -39,7 +39,13 @@ describe('PackmindService', () => {
   describe('initialization', () => {
     describe('when PACKMIND_DEFAULT_PROVIDER is not set', () => {
       it('returns configured status', async () => {
-        mockGetConfig.mockResolvedValue(undefined);
+        mockGetConfig.mockImplementation((key: string) => {
+          if (key === 'PACKMIND_DEFAULT_PROVIDER')
+            return Promise.resolve(undefined);
+          if (key === 'OPENAI_API_KEY')
+            return Promise.resolve('test-openai-key');
+          return Promise.resolve(undefined);
+        });
 
         const mockOpenAIService = {
           isConfigured: jest.fn().mockResolvedValue(true),
@@ -59,7 +65,13 @@ describe('PackmindService', () => {
       });
 
       it('uses OpenAI as default provider', async () => {
-        mockGetConfig.mockResolvedValue(undefined);
+        mockGetConfig.mockImplementation((key: string) => {
+          if (key === 'PACKMIND_DEFAULT_PROVIDER')
+            return Promise.resolve(undefined);
+          if (key === 'OPENAI_API_KEY')
+            return Promise.resolve('test-openai-key');
+          return Promise.resolve(undefined);
+        });
 
         const mockOpenAIService = {
           isConfigured: jest.fn().mockResolvedValue(true),
@@ -77,13 +89,20 @@ describe('PackmindService', () => {
 
         expect(OpenAIService).toHaveBeenCalledWith({
           provider: LLMProvider.OPENAI,
+          apiKey: 'test-openai-key',
         });
       });
     });
 
     describe('when PACKMIND_DEFAULT_PROVIDER is set to openai', () => {
       it('uses OpenAI provider', async () => {
-        mockGetConfig.mockResolvedValue('openai');
+        mockGetConfig.mockImplementation((key: string) => {
+          if (key === 'PACKMIND_DEFAULT_PROVIDER')
+            return Promise.resolve('openai');
+          if (key === 'OPENAI_API_KEY')
+            return Promise.resolve('test-openai-key');
+          return Promise.resolve(undefined);
+        });
 
         const mockOpenAIService = {
           isConfigured: jest.fn().mockResolvedValue(true),
@@ -101,13 +120,20 @@ describe('PackmindService', () => {
 
         expect(OpenAIService).toHaveBeenCalledWith({
           provider: LLMProvider.OPENAI,
+          apiKey: 'test-openai-key',
         });
       });
     });
 
     describe('when PACKMIND_DEFAULT_PROVIDER is set to anthropic', () => {
       it('uses Anthropic provider', async () => {
-        mockGetConfig.mockResolvedValue('anthropic');
+        mockGetConfig.mockImplementation((key: string) => {
+          if (key === 'PACKMIND_DEFAULT_PROVIDER')
+            return Promise.resolve('anthropic');
+          if (key === 'ANTHROPIC_API_KEY')
+            return Promise.resolve('test-anthropic-key');
+          return Promise.resolve(undefined);
+        });
 
         const mockAnthropicService = {
           isConfigured: jest.fn().mockResolvedValue(true),
@@ -125,13 +151,20 @@ describe('PackmindService', () => {
 
         expect(AnthropicService).toHaveBeenCalledWith({
           provider: LLMProvider.ANTHROPIC,
+          apiKey: 'test-anthropic-key',
         });
       });
     });
 
     describe('when PACKMIND_DEFAULT_PROVIDER is set to gemini', () => {
       it('uses Gemini provider', async () => {
-        mockGetConfig.mockResolvedValue('gemini');
+        mockGetConfig.mockImplementation((key: string) => {
+          if (key === 'PACKMIND_DEFAULT_PROVIDER')
+            return Promise.resolve('gemini');
+          if (key === 'GEMINI_API_KEY')
+            return Promise.resolve('test-gemini-key');
+          return Promise.resolve(undefined);
+        });
 
         const mockGeminiService = {
           isConfigured: jest.fn().mockResolvedValue(true),
@@ -149,13 +182,20 @@ describe('PackmindService', () => {
 
         expect(GeminiService).toHaveBeenCalledWith({
           provider: LLMProvider.GEMINI,
+          apiKey: 'test-gemini-key',
         });
       });
     });
 
     describe('when PACKMIND_DEFAULT_PROVIDER is set to packmind', () => {
       it('defaults to OpenAI to avoid infinite loop', async () => {
-        mockGetConfig.mockResolvedValue('packmind');
+        mockGetConfig.mockImplementation((key: string) => {
+          if (key === 'PACKMIND_DEFAULT_PROVIDER')
+            return Promise.resolve('packmind');
+          if (key === 'OPENAI_API_KEY')
+            return Promise.resolve('test-openai-key');
+          return Promise.resolve(undefined);
+        });
 
         const mockOpenAIService = {
           isConfigured: jest.fn().mockResolvedValue(true),
@@ -173,13 +213,20 @@ describe('PackmindService', () => {
 
         expect(OpenAIService).toHaveBeenCalledWith({
           provider: LLMProvider.OPENAI,
+          apiKey: 'test-openai-key',
         });
       });
     });
 
     describe('when PACKMIND_DEFAULT_PROVIDER is set to invalid value', () => {
       it('defaults to OpenAI provider', async () => {
-        mockGetConfig.mockResolvedValue('invalid-provider');
+        mockGetConfig.mockImplementation((key: string) => {
+          if (key === 'PACKMIND_DEFAULT_PROVIDER')
+            return Promise.resolve('invalid-provider');
+          if (key === 'OPENAI_API_KEY')
+            return Promise.resolve('test-openai-key');
+          return Promise.resolve(undefined);
+        });
 
         const mockOpenAIService = {
           isConfigured: jest.fn().mockResolvedValue(true),
@@ -197,13 +244,20 @@ describe('PackmindService', () => {
 
         expect(OpenAIService).toHaveBeenCalledWith({
           provider: LLMProvider.OPENAI,
+          apiKey: 'test-openai-key',
         });
       });
     });
 
     describe('when Configuration.getConfig throws an error', () => {
       it('defaults to OpenAI provider', async () => {
-        mockGetConfig.mockRejectedValue(new Error('Config error'));
+        mockGetConfig.mockImplementation((key: string) => {
+          if (key === 'PACKMIND_DEFAULT_PROVIDER')
+            return Promise.reject(new Error('Config error'));
+          if (key === 'OPENAI_API_KEY')
+            return Promise.resolve('test-openai-key');
+          return Promise.resolve(undefined);
+        });
 
         const mockOpenAIService = {
           isConfigured: jest.fn().mockResolvedValue(true),
@@ -221,6 +275,7 @@ describe('PackmindService', () => {
 
         expect(OpenAIService).toHaveBeenCalledWith({
           provider: LLMProvider.OPENAI,
+          apiKey: 'test-openai-key',
         });
       });
     });
@@ -562,7 +617,12 @@ describe('PackmindService', () => {
 
   describe('initialization is lazy', () => {
     it('does not initialize until first method call', async () => {
-      mockGetConfig.mockResolvedValue('openai');
+      mockGetConfig.mockImplementation((key: string) => {
+        if (key === 'PACKMIND_DEFAULT_PROVIDER')
+          return Promise.resolve('openai');
+        if (key === 'OPENAI_API_KEY') return Promise.resolve('test-openai-key');
+        return Promise.resolve(undefined);
+      });
 
       const mockOpenAIService = {
         isConfigured: jest.fn().mockResolvedValue(true),
@@ -577,7 +637,12 @@ describe('PackmindService', () => {
     });
 
     it('initializes only once across multiple calls', async () => {
-      mockGetConfig.mockResolvedValue('openai');
+      mockGetConfig.mockImplementation((key: string) => {
+        if (key === 'PACKMIND_DEFAULT_PROVIDER')
+          return Promise.resolve('openai');
+        if (key === 'OPENAI_API_KEY') return Promise.resolve('test-openai-key');
+        return Promise.resolve(undefined);
+      });
 
       const mockOpenAIService = {
         isConfigured: jest.fn().mockResolvedValue(true),
@@ -601,7 +666,8 @@ describe('PackmindService', () => {
       await service.executePrompt('test');
       await service.executePrompt('test2');
 
-      expect(mockGetConfig).toHaveBeenCalledTimes(1);
+      // Should call getConfig twice: once for PACKMIND_DEFAULT_PROVIDER, once for OPENAI_API_KEY
+      expect(mockGetConfig).toHaveBeenCalledTimes(2);
     });
   });
 });

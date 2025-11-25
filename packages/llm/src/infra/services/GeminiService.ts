@@ -1,5 +1,4 @@
 import { GoogleGenAI } from '@google/genai';
-import { Configuration } from '@packmind/node-utils';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import {
   AIPromptOptions,
@@ -8,7 +7,6 @@ import {
   AIServiceErrorType,
   AIServiceErrorTypes,
   LLMModelPerformance,
-  LLMProvider,
   PromptConversation,
   PromptConversationRole,
   AIService,
@@ -24,14 +22,16 @@ export class GeminiService implements AIService {
   private readonly defaultFastModel: string;
   private readonly maxRetries = 5;
   private initialized = false;
+  private readonly apiKey: string;
 
   constructor(
-    config: GeminiServiceConfig = { provider: LLMProvider.GEMINI },
+    config: GeminiServiceConfig,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.INFO,
     ),
   ) {
+    this.apiKey = config.apiKey;
     this.defaultModel = config.model || DEFAULT_GEMINI_MODELS.model;
     this.defaultFastModel =
       config.fastestModel || DEFAULT_GEMINI_MODELS.fastestModel;
@@ -42,46 +42,29 @@ export class GeminiService implements AIService {
    * Check if the Gemini service is properly configured and ready to use
    */
   async isConfigured(): Promise<boolean> {
-    try {
-      const apiKey = await Configuration.getConfig('GEMINI_API_KEY');
-      return !!apiKey;
-    } catch (error) {
-      this.logger.debug('Failed to check Gemini configuration', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      return false;
-    }
+    return !!this.apiKey;
   }
 
   /**
-   * Initialize the Gemini client with API key from configuration
+   * Initialize the Gemini client with the injected API key
    */
   private async initialize(): Promise<void> {
     if (this.initialized) return;
 
     this.logger.info('Initializing Gemini client');
 
-    try {
-      const apiKey = await Configuration.getConfig('GEMINI_API_KEY');
-
-      if (!apiKey) {
-        this.logger.warn(
-          'Gemini API key not found in configuration - AI features will be disabled',
-        );
-        this.initialized = true; // Mark as initialized but without client
-        return;
-      }
-
-      this.client = new GoogleGenAI({ apiKey });
-
-      this.initialized = true;
-      this.logger.info('Gemini client initialized successfully');
-    } catch (error) {
-      this.logger.error('Failed to initialize Gemini client', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+    if (!this.apiKey) {
+      this.logger.warn(
+        'Gemini API key not provided - AI features will be disabled',
+      );
+      this.initialized = true; // Mark as initialized but without client
+      return;
     }
+
+    this.client = new GoogleGenAI({ apiKey: this.apiKey });
+
+    this.initialized = true;
+    this.logger.info('Gemini client initialized successfully');
   }
 
   private getModel(options: AIPromptOptions): string {

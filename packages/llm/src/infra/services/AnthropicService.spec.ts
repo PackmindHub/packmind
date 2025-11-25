@@ -7,18 +7,10 @@ const getPrivateAccess = (service: AnthropicService) => service as any;
 
 // Mock Anthropic
 jest.mock('@anthropic-ai/sdk');
-jest.mock('@packmind/node-utils', () => ({
-  ...jest.requireActual('@packmind/node-utils'),
-  Configuration: {
-    getConfig: jest.fn(),
-  },
-}));
 
 import Anthropic from '@anthropic-ai/sdk';
-import { Configuration } from '@packmind/node-utils';
 
 const MockedAnthropic = jest.mocked(Anthropic);
-const MockedConfiguration = jest.mocked(Configuration);
 
 describe('AnthropicService', () => {
   let service: AnthropicService;
@@ -40,9 +32,11 @@ describe('AnthropicService', () => {
     MockedAnthropic.mockImplementation(
       () => mockAnthropicInstance as unknown as Anthropic,
     );
-    MockedConfiguration.getConfig.mockResolvedValue('test-api-key');
 
-    service = new AnthropicService({ provider: LLMProvider.ANTHROPIC });
+    service = new AnthropicService({
+      provider: LLMProvider.ANTHROPIC,
+      apiKey: 'test-api-key',
+    });
   });
 
   afterEach(() => {
@@ -124,33 +118,45 @@ describe('AnthropicService', () => {
 
     describe('when API key is missing', () => {
       it('handles missing API key gracefully with failure status', async () => {
-        MockedConfiguration.getConfig.mockResolvedValue(null);
+        const serviceWithoutKey = new AnthropicService({
+          provider: LLMProvider.ANTHROPIC,
+          apiKey: '',
+        });
 
-        const result = await service.executePrompt(mockPrompt);
+        const result = await serviceWithoutKey.executePrompt(mockPrompt);
 
         expect(result.success).toBe(false);
       });
 
       it('returns null data', async () => {
-        MockedConfiguration.getConfig.mockResolvedValue(null);
+        const serviceWithoutKey = new AnthropicService({
+          provider: LLMProvider.ANTHROPIC,
+          apiKey: '',
+        });
 
-        const result = await service.executePrompt(mockPrompt);
+        const result = await serviceWithoutKey.executePrompt(mockPrompt);
 
         expect(result.data).toBeNull();
       });
 
       it('provides error message', async () => {
-        MockedConfiguration.getConfig.mockResolvedValue(null);
+        const serviceWithoutKey = new AnthropicService({
+          provider: LLMProvider.ANTHROPIC,
+          apiKey: '',
+        });
 
-        const result = await service.executePrompt(mockPrompt);
+        const result = await serviceWithoutKey.executePrompt(mockPrompt);
 
         expect(result.error).toBe('Anthropic API key not configured');
       });
 
       it('sets attempts to 1', async () => {
-        MockedConfiguration.getConfig.mockResolvedValue(null);
+        const serviceWithoutKey = new AnthropicService({
+          provider: LLMProvider.ANTHROPIC,
+          apiKey: '',
+        });
 
-        const result = await service.executePrompt(mockPrompt);
+        const result = await serviceWithoutKey.executePrompt(mockPrompt);
 
         expect(result.attempts).toBe(1);
       });
@@ -159,51 +165,20 @@ describe('AnthropicService', () => {
     describe('isConfigured', () => {
       describe('when API key is available', () => {
         it('returns true', async () => {
-          MockedConfiguration.getConfig.mockResolvedValue('test-api-key');
-
           const result = await service.isConfigured();
 
           expect(result).toBe(true);
-        });
-
-        it('calls Configuration.getConfig with ANTHROPIC_API_KEY', async () => {
-          MockedConfiguration.getConfig.mockResolvedValue('test-api-key');
-
-          await service.isConfigured();
-
-          expect(MockedConfiguration.getConfig).toHaveBeenCalledWith(
-            'ANTHROPIC_API_KEY',
-          );
         });
       });
 
       describe('when API key is missing', () => {
         it('returns false', async () => {
-          MockedConfiguration.getConfig.mockResolvedValue(null);
+          const serviceWithoutKey = new AnthropicService({
+            provider: LLMProvider.ANTHROPIC,
+            apiKey: '',
+          });
 
-          const result = await service.isConfigured();
-
-          expect(result).toBe(false);
-        });
-
-        it('calls Configuration.getConfig with ANTHROPIC_API_KEY', async () => {
-          MockedConfiguration.getConfig.mockResolvedValue(null);
-
-          await service.isConfigured();
-
-          expect(MockedConfiguration.getConfig).toHaveBeenCalledWith(
-            'ANTHROPIC_API_KEY',
-          );
-        });
-      });
-
-      describe('when configuration throws an error', () => {
-        it('returns false', async () => {
-          MockedConfiguration.getConfig.mockRejectedValue(
-            new Error('Config error'),
-          );
-
-          const result = await service.isConfigured();
+          const result = await serviceWithoutKey.isConfigured();
 
           expect(result).toBe(false);
         });
@@ -403,7 +378,10 @@ describe('AnthropicService', () => {
     let service: AnthropicService;
 
     beforeEach(() => {
-      service = new AnthropicService({ provider: LLMProvider.ANTHROPIC });
+      service = new AnthropicService({
+        provider: LLMProvider.ANTHROPIC,
+        apiKey: 'test-api-key',
+      });
     });
 
     it('classifies rate limit errors correctly', () => {
@@ -435,7 +413,10 @@ describe('AnthropicService', () => {
     let service: AnthropicService;
 
     beforeEach(() => {
-      service = new AnthropicService({ provider: LLMProvider.ANTHROPIC });
+      service = new AnthropicService({
+        provider: LLMProvider.ANTHROPIC,
+        apiKey: 'test-api-key',
+      });
     });
 
     it('retries for rate limit errors', () => {

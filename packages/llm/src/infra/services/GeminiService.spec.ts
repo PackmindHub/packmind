@@ -11,18 +11,10 @@ const getPrivateAccess = (service: GeminiService) => service as any;
 
 // Mock Google Generative AI
 jest.mock('@google/genai');
-jest.mock('@packmind/node-utils', () => ({
-  ...jest.requireActual('@packmind/node-utils'),
-  Configuration: {
-    getConfig: jest.fn(),
-  },
-}));
 
 import { GoogleGenAI } from '@google/genai';
-import { Configuration } from '@packmind/node-utils';
 
 const MockedGoogleGenAI = jest.mocked(GoogleGenAI);
-const MockedConfiguration = jest.mocked(Configuration);
 
 describe('GeminiService', () => {
   let service: GeminiService;
@@ -44,9 +36,11 @@ describe('GeminiService', () => {
     MockedGoogleGenAI.mockImplementation(
       () => mockGeminiInstance as unknown as GoogleGenAI,
     );
-    MockedConfiguration.getConfig.mockResolvedValue('test-api-key');
 
-    service = new GeminiService({ provider: LLMProvider.GEMINI });
+    service = new GeminiService({
+      provider: LLMProvider.GEMINI,
+      apiKey: 'test-api-key',
+    });
   });
 
   afterEach(() => {
@@ -128,33 +122,45 @@ describe('GeminiService', () => {
     });
 
     it('handles missing API key gracefully with failure status', async () => {
-      MockedConfiguration.getConfig.mockResolvedValue(null);
+      const serviceWithoutKey = new GeminiService({
+        provider: LLMProvider.GEMINI,
+        apiKey: '',
+      });
 
-      const result = await service.executePrompt(mockPrompt);
+      const result = await serviceWithoutKey.executePrompt(mockPrompt);
 
       expect(result.success).toBe(false);
     });
 
     it('returns null data if API key is missing', async () => {
-      MockedConfiguration.getConfig.mockResolvedValue(null);
+      const serviceWithoutKey = new GeminiService({
+        provider: LLMProvider.GEMINI,
+        apiKey: '',
+      });
 
-      const result = await service.executePrompt(mockPrompt);
+      const result = await serviceWithoutKey.executePrompt(mockPrompt);
 
       expect(result.data).toBeNull();
     });
 
     it('provides error message if API key is not configured', async () => {
-      MockedConfiguration.getConfig.mockResolvedValue(null);
+      const serviceWithoutKey = new GeminiService({
+        provider: LLMProvider.GEMINI,
+        apiKey: '',
+      });
 
-      const result = await service.executePrompt(mockPrompt);
+      const result = await serviceWithoutKey.executePrompt(mockPrompt);
 
       expect(result.error).toBe('Gemini API key not configured');
     });
 
     it('sets attempts to 1 if API key is missing', async () => {
-      MockedConfiguration.getConfig.mockResolvedValue(null);
+      const serviceWithoutKey = new GeminiService({
+        provider: LLMProvider.GEMINI,
+        apiKey: '',
+      });
 
-      const result = await service.executePrompt(mockPrompt);
+      const result = await serviceWithoutKey.executePrompt(mockPrompt);
 
       expect(result.attempts).toBe(1);
     });
@@ -162,51 +168,20 @@ describe('GeminiService', () => {
     describe('isConfigured', () => {
       describe('with API key available', () => {
         it('returns true', async () => {
-          MockedConfiguration.getConfig.mockResolvedValue('test-api-key');
-
           const result = await service.isConfigured();
 
           expect(result).toBe(true);
-        });
-
-        it('calls Configuration.getConfig with GEMINI_API_KEY', async () => {
-          MockedConfiguration.getConfig.mockResolvedValue('test-api-key');
-
-          await service.isConfigured();
-
-          expect(MockedConfiguration.getConfig).toHaveBeenCalledWith(
-            'GEMINI_API_KEY',
-          );
         });
       });
 
       describe('with API key missing', () => {
         it('returns false', async () => {
-          MockedConfiguration.getConfig.mockResolvedValue(null);
+          const serviceWithoutKey = new GeminiService({
+            provider: LLMProvider.GEMINI,
+            apiKey: '',
+          });
 
-          const result = await service.isConfigured();
-
-          expect(result).toBe(false);
-        });
-
-        it('calls Configuration.getConfig with GEMINI_API_KEY', async () => {
-          MockedConfiguration.getConfig.mockResolvedValue(null);
-
-          await service.isConfigured();
-
-          expect(MockedConfiguration.getConfig).toHaveBeenCalledWith(
-            'GEMINI_API_KEY',
-          );
-        });
-      });
-
-      describe('if configuration throws an error', () => {
-        it('returns false', async () => {
-          MockedConfiguration.getConfig.mockRejectedValue(
-            new Error('Config error'),
-          );
-
-          const result = await service.isConfigured();
+          const result = await serviceWithoutKey.isConfigured();
 
           expect(result).toBe(false);
         });
@@ -462,25 +437,37 @@ describe('GeminiService', () => {
     });
 
     it('handles missing API key gracefully with history', async () => {
-      MockedConfiguration.getConfig.mockResolvedValue(null);
+      const serviceWithoutKey = new GeminiService({
+        provider: LLMProvider.GEMINI,
+        apiKey: '',
+      });
 
-      const result = await service.executePromptWithHistory(mockConversation);
+      const result =
+        await serviceWithoutKey.executePromptWithHistory(mockConversation);
 
       expect(result.success).toBe(false);
     });
 
     it('returns null data if API key missing with history', async () => {
-      MockedConfiguration.getConfig.mockResolvedValue(null);
+      const serviceWithoutKey = new GeminiService({
+        provider: LLMProvider.GEMINI,
+        apiKey: '',
+      });
 
-      const result = await service.executePromptWithHistory(mockConversation);
+      const result =
+        await serviceWithoutKey.executePromptWithHistory(mockConversation);
 
       expect(result.data).toBeNull();
     });
 
     it('provides error message for missing API key with history', async () => {
-      MockedConfiguration.getConfig.mockResolvedValue(null);
+      const serviceWithoutKey = new GeminiService({
+        provider: LLMProvider.GEMINI,
+        apiKey: '',
+      });
 
-      const result = await service.executePromptWithHistory(mockConversation);
+      const result =
+        await serviceWithoutKey.executePromptWithHistory(mockConversation);
 
       expect(result.error).toBe('Gemini API key not configured');
     });
@@ -542,7 +529,10 @@ describe('GeminiService', () => {
     let service: GeminiService;
 
     beforeEach(() => {
-      service = new GeminiService({ provider: LLMProvider.GEMINI });
+      service = new GeminiService({
+        provider: LLMProvider.GEMINI,
+        apiKey: 'test-api-key',
+      });
     });
 
     it('classifies rate limit errors correctly', () => {
@@ -574,7 +564,10 @@ describe('GeminiService', () => {
     let service: GeminiService;
 
     beforeEach(() => {
-      service = new GeminiService({ provider: LLMProvider.GEMINI });
+      service = new GeminiService({
+        provider: LLMProvider.GEMINI,
+        apiKey: 'test-api-key',
+      });
     });
 
     it('retries for rate limit errors', () => {
