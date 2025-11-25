@@ -9,7 +9,6 @@ import {
   PMDialog,
   PMCodeMirror,
   PMBadge,
-  DETECTION_ACCORDION_VIEW_FEATURE_KEY,
   DEFAULT_FEATURE_DOMAIN_MAP,
   isFeatureFlagEnabled,
 } from '@packmind/ui';
@@ -30,13 +29,11 @@ import {
   GET_ACTIVE_DETECTION_PROGRAMS_KEY,
   GET_ALL_DETECTION_PROGRAMS_KEY,
 } from '../api/queryKeys';
-import { DraftsSection } from './DraftsSection';
 import { DraftCardData } from './DetectionDraftCard/DetectionDraftCard';
 import {
   ActiveConfigurationSectionData as ActiveConfigurationCardData,
   ActiveConfigurationState,
 } from './ActiveConfigurationSection/';
-import { ActiveConfigurationSection } from './ActiveConfigurationsList';
 import { useGetStandardByIdQuery } from '../../standards/api/queries/StandardsQueries';
 import { CopiableTextField } from '../../../shared/components/inputs/CopiableTextField';
 import { DetectionProgramConfiguration } from './DetectionProgramConfiguration';
@@ -144,12 +141,6 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
   const queryClient = useQueryClient();
   const { data: meData } = useGetMeQuery();
   const userEmail = meData?.authenticated === true ? meData.user.email : null;
-
-  const isAccordionViewEnabled = isFeatureFlagEnabled({
-    featureKeys: [DETECTION_ACCORDION_VIEW_FEATURE_KEY],
-    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
-    userEmail,
-  });
 
   const [activatingDraftId, setActivatingDraftId] = useState<string | null>(
     null,
@@ -457,60 +448,25 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
 
   return (
     <PMVStack alignItems="stretch" gap={6} width="full">
-      {isAccordionViewEnabled && (
-        <DetectionProgramConfiguration
-          standardId={standardId}
-          standardName={standardName}
-          ruleId={ruleId}
-          detectionLanguages={detectionLanguages}
-          selectedLanguage={selectedLanguage}
-          activeConfigurations={activeConfigurations}
-          draftPrograms={draftPrograms}
-          isLoadingActivePrograms={isLoadingActivePrograms}
-          isActiveProgramsError={isActiveProgramsError}
-          onGenerateProgram={handleGenerateProgram}
-          isGeneratingProgram={generateProgram.isPending}
-          onTestProgram={handleTestDraft}
-          onActivateDraft={handleMakeDraftActive}
-          activatingDraftId={activatingDraftId}
-          isActivatingDraft={activateDraft.isPending}
-          onRetryDraft={handleRetryDraftGeneration}
-          onNavigateToExamples={onNavigateToExamples}
-        />
-      )}
+      <DetectionProgramConfiguration
+        standardId={standardId}
+        standardName={standardName}ruleId={ruleId}
+        detectionLanguages={detectionLanguages}
+        selectedLanguage={selectedLanguage}
+        activeConfigurations={activeConfigurations}
+        draftPrograms={draftPrograms}
+        isLoadingActivePrograms={isLoadingActivePrograms}
+        isActiveProgramsError={isActiveProgramsError}
+        onGenerateProgram={handleGenerateProgram}
+        isGeneratingProgram={generateProgram.isPending}
+        onTestProgram={handleTestDraft}
+        onActivateDraft={handleMakeDraftActive}
+        activatingDraftId={activatingDraftId}
+        isActivatingDraft={activateDraft.isPending}
+        onRetryDraft={handleRetryDraftGeneration}
+        onNavigateToExamples={onNavigateToExamples}
+      />
 
-      {!isAccordionViewEnabled && (
-        <ActiveConfigurationSection
-          configurations={activeConfigurations}
-          isLoading={isLoadingActivePrograms}
-          isError={isActiveProgramsError}
-          onGenerateProgram={handleGenerateProgram}
-          isGeneratingProgram={generateProgram.isPending}
-          standardId={standardId}
-          standardName={standardName}
-          ruleId={ruleId}
-          onTestProgram={handleTestDraft}
-          onActivateDraft={handleMakeDraftActive}
-          activatingDraftId={activatingDraftId}
-          isActivatingDraft={activateDraft.isPending}
-        />
-      )}
-
-      {!isAccordionViewEnabled && (
-        <DraftsSection
-          drafts={draftPrograms}
-          isLoading={isLoadingActivePrograms}
-          isError={isActiveProgramsError}
-          onMakeActive={handleMakeDraftActive}
-          activatingDraftId={activatingDraftId}
-          isActivatingDraft={activateDraft.isPending}
-          onTestDraft={handleTestDraft}
-          onRetryDraft={handleRetryDraftGeneration}
-          isGeneratingProgram={generateProgram.isPending}
-          standardId={standardId}
-          ruleId={ruleId}
-        />
-      )}
       <PMDialog.Root
         open={isTestModalOpen}
         onOpenChange={(details) => {

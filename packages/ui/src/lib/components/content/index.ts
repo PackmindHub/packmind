@@ -8,7 +8,6 @@ export type { IPMPageProps } from './PMPage/PMPage';
 export { PMPopover } from './PMPopover';
 export * from './PMEmptyState/PMEmptyState';
 export { PMBadge } from './PMBadge/PMBadge';
-export type { BadgeProps as PMBadgeProps } from './PMBadge/PMBadge';
 export { PMAvatar } from './PMAvatar/PMAvatar';
 export { PMBreadcrumb } from './PMBreadcrumb/PMBreadcrumb';
 export { PMDrawer } from './PMDrawer/PMDrawer';
@@ -23,7 +22,6 @@ export {
   isFeatureFlagEnabled,
   RULE_DETAILS_DETECTION_TAB_FEATURE_KEY,
   DETECTION_ASSESSMENT_DRAWER_FEATURE_KEY,
-  DETECTION_ACCORDION_VIEW_FEATURE_KEY,
   DEFAULT_FEATURE_DOMAIN_MAP,
 } from './PMFeatureFlag/PMFeatureFlag';
 export type { IPMFeatureFlagProps } from './PMFeatureFlag/PMFeatureFlag';
