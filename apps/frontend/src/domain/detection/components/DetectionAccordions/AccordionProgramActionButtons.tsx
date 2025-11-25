@@ -1,9 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { PMButton, PMHStack } from '@packmind/ui';
+import {
+  PMButton,
+  PMButtonGroup,
+  PMIcon,
+  PMMenu,
+  PMPortal,
+} from '@packmind/ui';
 import { ActiveConfigurationSectionData } from '../ActiveConfigurationSection';
 import { DraftCardData } from '../DetectionDraftCard/DetectionDraftCard';
-import { DetectionDraftMenu } from './DetectionDraftMenu';
+import { DetectionDraftMenu, getMenuLabel } from './DetectionDraftMenu';
 import { ActiveProgramMenu } from './ActiveProgramMenu';
+import { LuChevronDown } from 'react-icons/lu';
+import { determineDraftStatus } from '../DetectionDraftCard/determineDraftStatus';
+import { useGetRuleDetectionAssessmentQuery } from '../../api/queries';
 
 export type ViewMode = 'active' | 'draft';
 
@@ -26,56 +35,6 @@ interface AccordionProgramActionButtonsProps {
   onShowProgram: () => void;
   isActivating?: boolean;
 }
-
-interface SwitchButtonProps {
-  currentMode: ViewMode;
-  onToggle: () => void;
-}
-
-const SwitchButton: React.FC<SwitchButtonProps> = ({
-  currentMode,
-  onToggle,
-}) => {
-  const config = {
-    active: {
-      text: 'See draft',
-      colorPalette: 'primary' as const,
-    },
-    draft: {
-      text: 'Go back',
-      colorPalette: 'gray' as const,
-    },
-  };
-
-  const current = config[currentMode];
-
-  return (
-    <PMButton
-      backgroundColor={current.colorPalette}
-      color={`${current.colorPalette}.fg`}
-      px={2}
-      py={0.5}
-      borderRadius="full"
-      fontSize="xs"
-      fontWeight="medium"
-      cursor="pointer"
-      display="inline-flex"
-      alignItems="center"
-      gap={1}
-      border="1px solid"
-      borderColor={`${current.colorPalette}.emphasized`}
-      _hover={{
-        backgroundColor: `${current.colorPalette}.emphasized`,
-      }}
-      onClick={(e: React.MouseEvent) => {
-        e.stopPropagation();
-        onToggle();
-      }}
-    >
-      {current.text}
-    </PMButton>
-  );
-};
 
 export const AccordionProgramActionButtons: React.FC<
   AccordionProgramActionButtonsProps
@@ -101,6 +60,12 @@ export const AccordionProgramActionButtons: React.FC<
   );
   const hasDraft = !!activeDraft;
   const showToggle = hasActiveProgram && hasDraft;
+
+  const { data: assessment } = useGetRuleDetectionAssessmentQuery(
+    standardId,
+    ruleId,
+    activeDraft?.language ?? '',
+  );
 
   // Determine initial view mode based on what's available
   const getInitialViewMode = (): ViewMode => {
@@ -130,20 +95,73 @@ export const AccordionProgramActionButtons: React.FC<
     setViewMode((prev) => (prev === 'active' ? 'draft' : 'active'));
   };
 
-  // Render based on current view mode
-  return (
-    <PMHStack gap={2}>
-      {viewMode === 'active' && (
-        <ActiveProgramMenu
-          activeConfigurations={activeConfigurations}
-          onTestProgram={onTestProgram}
-          onGenerateProgram={onGenerateProgram}
-          isGeneratingProgram={isGeneratingProgram}
-          selectedLanguage={selectedLanguage}
-        />
-      )}
+  const buttons: React.ReactNode[] = [];
+  if (viewMode === 'active') {
+    buttons.push(
+      <ActiveProgramMenu
+        activeConfigurations={activeConfigurations}
+        onTestProgram={onTestProgram}
+        onGenerateProgram={onGenerateProgram}
+        isGeneratingProgram={isGeneratingProgram}
+        selectedLanguage={selectedLanguage}
+      />,
+    );
+    if (showToggle) {
+      buttons.push(
+        <PMMenu.Root>
+          <PMMenu.Trigger asChild>
+            <PMButton
+              size="2xs"
+              variant={'tertiary'}
+              onClick={(e: React.MouseEvent) => {
+                e.stopPropagation();
+              }}
+            >
+              {getMenuLabel(
+                determineDraftStatus(assessment?.status, activeDraft.status),
+              )}
+              <PMIcon size="xs">
+                <LuChevronDown />
+              </PMIcon>
+            </PMButton>
+          </PMMenu.Trigger>
+          <PMPortal>
+            <PMMenu.Positioner>
+              <PMMenu.Content>
+                <PMMenu.Item
+                  value={'editDraft'}
+                  onClick={(e: React.MouseEvent) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleToggle();
+                  }}
+                >
+                  Edit draft
+                </PMMenu.Item>
+              </PMMenu.Content>
+            </PMMenu.Positioner>
+          </PMPortal>
+        </PMMenu.Root>,
+      );
+    }
+  } else {
+    if (showToggle) {
+      buttons.push(
+        <PMButton
+          size="2xs"
+          variant={'tertiary'}
+          onClick={(e: React.MouseEvent) => {
+            e.stopPropagation();
+            handleToggle();
+          }}
+        >
+          Back
+        </PMButton>,
+      );
+    }
 
-      {viewMode === 'draft' && activeDraft && (
+    if (activeDraft) {
+      buttons.push(
         <DetectionDraftMenu
           draft={activeDraft}
           onMakeActive={onActivateDraft}
@@ -155,12 +173,11 @@ export const AccordionProgramActionButtons: React.FC<
           ruleId={ruleId}
           onShowLogs={onShowLogs}
           onShowProgram={onShowProgram}
-        />
-      )}
+        />,
+      );
+    }
+  }
 
-      {showToggle && (
-        <SwitchButton currentMode={viewMode} onToggle={handleToggle} />
-      )}
-    </PMHStack>
-  );
+  // Render based on current view mode
+  return <PMButtonGroup>{buttons}</PMButtonGroup>;
 };

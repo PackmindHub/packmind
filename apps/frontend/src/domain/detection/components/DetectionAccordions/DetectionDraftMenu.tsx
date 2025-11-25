@@ -10,10 +10,10 @@ import {
   TimelineHandlers,
 } from '../DetectionDraftCard/getTimelineConfig';
 import { DraftCardProps } from '../DetectionDraftCard/DetectionDraftCard';
-import { PMBox, PMMenu, PMPortal, PMIcon } from '@packmind/ui';
+import { PMMenu, PMPortal, PMIcon, PMButton } from '@packmind/ui';
 import { LuChevronDown } from 'react-icons/lu';
 
-const getMenuLabel = (state: DraftStatus): string => {
+export const getMenuLabel = (state: DraftStatus): string => {
   switch (state) {
     case DraftStatus.GENERATION_SUCCESSFUL:
       return 'Draft: OK';
@@ -25,17 +25,17 @@ const getMenuLabel = (state: DraftStatus): string => {
   }
 };
 
-const getColorPalette = (
+const getButtonVariant = (
   state: DraftStatus,
-): 'green' | 'red' | 'blue' | 'gray' => {
+): 'success' | 'danger' | 'tertiary' => {
   switch (state) {
     case DraftStatus.GENERATION_SUCCESSFUL:
-      return 'green';
+      return 'success';
     case DraftStatus.ASSESSMENT_FAILED:
     case DraftStatus.GENERATION_FAILED:
-      return 'red';
+      return 'danger';
     default:
-      return 'blue';
+      return 'tertiary';
   }
 };
 
@@ -80,37 +80,21 @@ export const DetectionDraftMenu: React.FC<DraftCardProps> = ({
     ...(timelineConfig.step3.buttons ?? []),
   ];
 
-  const menuLabel = getMenuLabel(state);
-  const colorPalette = getColorPalette(state);
-
   return (
     <PMMenu.Root>
       <PMMenu.Trigger asChild>
-        <PMBox
-          as="span"
-          backgroundColor={`${colorPalette}.solid`}
-          color="white"
-          px={2}
-          py={0.5}
-          borderRadius="full"
-          fontSize="xs"
-          fontWeight="small"
-          cursor="pointer"
-          display="inline-flex"
-          alignItems="center"
-          gap={0.5}
-          _hover={{
-            opacity: 0.9,
-          }}
+        <PMButton
+          size="2xs"
+          variant={getButtonVariant(state)}
           onClick={(e: React.MouseEvent) => {
             e.stopPropagation();
           }}
         >
-          {menuLabel}
+          {getMenuLabel(state)}
           <PMIcon size="xs">
             <LuChevronDown />
           </PMIcon>
-        </PMBox>
+        </PMButton>
       </PMMenu.Trigger>
       <PMPortal>
         <PMMenu.Positioner>

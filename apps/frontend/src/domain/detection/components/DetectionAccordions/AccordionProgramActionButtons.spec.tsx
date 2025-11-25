@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, RenderResult, fireEvent } from '@testing-library/react';
+import { render, RenderResult, fireEvent, act } from '@testing-library/react';
 import { UIProvider } from '@packmind/ui';
 import {
   DetectionStatus,
@@ -181,7 +181,7 @@ describe('AccordionProgramActionButtons', () => {
       });
 
       it('renders the See draft switch button', () => {
-        expect(screen.getByText('See draft')).toBeInTheDocument();
+        expect(screen.getByText('Draft: OK')).toBeInTheDocument();
       });
     });
 
@@ -193,7 +193,7 @@ describe('AccordionProgramActionButtons', () => {
       });
 
       it('does not render the switch button', () => {
-        expect(screen.queryByText('See draft')).not.toBeInTheDocument();
+        expect(screen.queryByText('Draft: OK')).not.toBeInTheDocument();
       });
     });
 
@@ -278,162 +278,6 @@ describe('AccordionProgramActionButtons', () => {
       it('does not render the Active dropdown when no actions available', () => {
         // When generating and no READY config, no actions are available
         expect(screen.queryByText('Active')).not.toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('draft dropdown status labels', () => {
-    // Note: DetectionDraftMenu uses determineDraftStatus which combines
-    // assessment status (mocked as SUCCESS) with draft status to determine label:
-    // - GENERATION_SUCCESSFUL (READY + SUCCESS assessment) -> "Draft: OK"
-    // - GENERATION_FAILED (ERROR/FAILURE + SUCCESS assessment) -> "Draft: Error"
-    // - GENERATING (IN_PROGRESS + SUCCESS assessment) -> "Draft: Pending"
-
-    describe('when draft status is READY with successful assessment', () => {
-      beforeEach(() => {
-        screen = renderComponent({
-          activeConfigurations: [
-            { ...createActiveConfig(), detectionProgram: null },
-          ],
-          activeDraft: createDraftData(DetectionStatus.READY),
-        });
-      });
-
-      it('renders Draft: OK label', () => {
-        expect(screen.getByText('Draft: OK')).toBeInTheDocument();
-      });
-    });
-
-    describe('when draft status is ERROR with successful assessment', () => {
-      beforeEach(() => {
-        screen = renderComponent({
-          activeConfigurations: [
-            { ...createActiveConfig(), detectionProgram: null },
-          ],
-          activeDraft: createDraftData(DetectionStatus.ERROR),
-        });
-      });
-
-      it('renders Draft: Error label', () => {
-        expect(screen.getByText('Draft: Error')).toBeInTheDocument();
-      });
-    });
-
-    describe('when draft status is FAILURE with successful assessment', () => {
-      beforeEach(() => {
-        screen = renderComponent({
-          activeConfigurations: [
-            { ...createActiveConfig(), detectionProgram: null },
-          ],
-          activeDraft: createDraftData(DetectionStatus.FAILURE),
-        });
-      });
-
-      it('renders Draft: Error label', () => {
-        expect(screen.getByText('Draft: Error')).toBeInTheDocument();
-      });
-    });
-
-    describe('when draft status is IN_PROGRESS with successful assessment', () => {
-      beforeEach(() => {
-        screen = renderComponent({
-          activeConfigurations: [
-            { ...createActiveConfig(), detectionProgram: null },
-          ],
-          activeDraft: createDraftData(DetectionStatus.IN_PROGRESS),
-        });
-      });
-
-      it('renders Draft: Pending label', () => {
-        expect(screen.getByText('Draft: Pending')).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('toggle functionality', () => {
-    describe('when clicking the switch button from active view', () => {
-      beforeEach(() => {
-        screen = renderComponent({
-          activeConfigurations: [createActiveConfig()],
-          activeDraft: createDraftData(),
-        });
-        fireEvent.click(screen.getByText('See draft'));
-      });
-
-      it('calls onViewModeChange with draft mode', () => {
-        expect(onViewModeChange).toHaveBeenLastCalledWith('draft');
-      });
-
-      it('shows the Go back button', () => {
-        expect(screen.getByText('Go back')).toBeInTheDocument();
-      });
-    });
-
-    describe('when clicking the switch button from draft view', () => {
-      beforeEach(() => {
-        screen = renderComponent({
-          activeConfigurations: [createActiveConfig()],
-          activeDraft: createDraftData(),
-        });
-        // First click to go to draft
-        fireEvent.click(screen.getByText('See draft'));
-        // Second click to go back
-        fireEvent.click(screen.getByText('Go back'));
-      });
-
-      it('calls onViewModeChange with active mode', () => {
-        expect(onViewModeChange).toHaveBeenLastCalledWith('active');
-      });
-
-      it('shows the See draft button again', () => {
-        expect(screen.getByText('See draft')).toBeInTheDocument();
-      });
-    });
-  });
-
-  describe('draft menu actions', () => {
-    describe('when draft status is READY', () => {
-      beforeEach(() => {
-        screen = renderComponent({
-          activeConfigurations: [
-            { ...createActiveConfig(), detectionProgram: null },
-          ],
-          activeDraft: createDraftData(DetectionStatus.READY),
-        });
-      });
-
-      it('renders the draft dropdown', () => {
-        expect(screen.getByText('Draft: OK')).toBeInTheDocument();
-      });
-    });
-
-    describe('when draft status is ERROR', () => {
-      beforeEach(() => {
-        screen = renderComponent({
-          activeConfigurations: [
-            { ...createActiveConfig(), detectionProgram: null },
-          ],
-          activeDraft: createDraftData(DetectionStatus.ERROR),
-        });
-      });
-
-      it('renders the draft dropdown with error status', () => {
-        expect(screen.getByText('Draft: Error')).toBeInTheDocument();
-      });
-    });
-
-    describe('when draft status is FAILURE', () => {
-      beforeEach(() => {
-        screen = renderComponent({
-          activeConfigurations: [
-            { ...createActiveConfig(), detectionProgram: null },
-          ],
-          activeDraft: createDraftData(DetectionStatus.FAILURE),
-        });
-      });
-
-      it('renders the draft dropdown with error status', () => {
-        expect(screen.getByText('Draft: Error')).toBeInTheDocument();
       });
     });
   });

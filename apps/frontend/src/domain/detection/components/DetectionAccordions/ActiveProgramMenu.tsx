@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { PMBox, PMMenu, PMPortal, PMIcon } from '@packmind/ui';
+import { PMMenu, PMPortal, PMIcon, PMButton } from '@packmind/ui';
 import { LuChevronDown } from 'react-icons/lu';
 import { DetectionStatus } from '@packmind/types';
 import { ActiveConfigurationSectionData } from '../ActiveConfigurationSection';
@@ -54,13 +54,13 @@ const getMenuLabel = (status: ActiveProgramStatus): string => {
   }
 };
 
-const getColorPalette = (status: ActiveProgramStatus): 'green' | 'orange' => {
-  switch (status) {
-    case ActiveProgramStatus.ACTIVE:
-      return 'green';
-    case ActiveProgramStatus.TO_REVIEW:
-      return 'orange';
+const getButtonVariant = (
+  status: ActiveProgramStatus,
+): 'success' | 'warning' => {
+  if (status === ActiveProgramStatus.ACTIVE) {
+    return 'success';
   }
+  return 'warning';
 };
 
 export const ActiveProgramMenu: React.FC<ActiveProgramMenuProps> = ({
@@ -106,37 +106,21 @@ export const ActiveProgramMenu: React.FC<ActiveProgramMenuProps> = ({
     return null;
   }
 
-  const menuLabel = getMenuLabel(status);
-  const colorPalette = getColorPalette(status);
-
   return (
     <PMMenu.Root>
       <PMMenu.Trigger asChild>
-        <PMBox
-          as="span"
-          backgroundColor={`${colorPalette}.solid`}
-          color="white"
-          px={2}
-          py={0.5}
-          borderRadius="full"
-          fontSize="xs"
-          fontWeight="medium"
-          cursor="pointer"
-          display="inline-flex"
-          alignItems="center"
-          gap={0.5}
-          _hover={{
-            opacity: 0.9,
-          }}
+        <PMButton
+          variant={getButtonVariant(status)}
+          size="2xs"
           onClick={(e: React.MouseEvent) => {
             e.stopPropagation();
           }}
         >
-          {menuLabel}
+          {getMenuLabel(status)}
           <PMIcon size="xs">
             <LuChevronDown />
           </PMIcon>
-        </PMBox>
+        </PMButton>
       </PMMenu.Trigger>
       <PMPortal>
         <PMMenu.Positioner>
