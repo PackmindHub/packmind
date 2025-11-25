@@ -7,6 +7,7 @@ import { config as dotenvConfig } from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
 import { pullCommand } from './infra/commands/PullCommand';
+import { GitService } from './application/services/GitService';
 
 // Read version from package.json (bundled by esbuild)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -14,42 +15,36 @@ const { version: CLI_VERSION } = require('../package.json');
 
 /**
  * Find .env file by searching upwards from current directory
- * Stops at git repository root (where .git exists)
- * If not in a git repo, only checks current directory
+ * Stops at git repository root if in a git repo
+ * Searches up to filesystem root if not in a git repo
  */
 function findEnvFile(): string | null {
-  let currentDir = process.cwd();
-  const startDir = currentDir;
-  let gitRootFound = false;
+  const currentDir = process.cwd();
+  const gitService = new GitService();
+  const gitRoot = gitService.getGitRepositoryRootSync(currentDir);
 
-  // First, find if we're in a git repository and locate its root
+  // Determine stop directory: git root if in a repo, otherwise filesystem root
+  const filesystemRoot = path.parse(currentDir).root;
+  const stopDir = gitRoot ?? filesystemRoot;
+
   let searchDir = currentDir;
-  while (searchDir !== path.parse(searchDir).root) {
-    if (fs.existsSync(path.join(searchDir, '.git'))) {
-      gitRootFound = true;
-      break;
-    }
-    searchDir = path.dirname(searchDir);
-  }
+  let parentDir = path.dirname(searchDir);
 
-  // Now search for .env file
-  while (currentDir !== path.parse(currentDir).root) {
-    const envPath = path.join(currentDir, '.env');
+  // Search until we've checked the stop directory
+  // Loop naturally terminates at filesystem root since path.dirname('/') === '/'
+  while (searchDir !== parentDir) {
+    const envPath = path.join(searchDir, '.env');
     if (fs.existsSync(envPath)) {
       return envPath;
     }
 
-    // If we're in a git repo, stop at git root
-    if (gitRootFound && fs.existsSync(path.join(currentDir, '.git'))) {
-      break;
+    // Reached stop directory, stop after checking it
+    if (searchDir === stopDir) {
+      return null;
     }
 
-    // If not in a git repo, only check the starting directory
-    if (!gitRootFound && currentDir !== startDir) {
-      break;
-    }
-
-    currentDir = path.dirname(currentDir);
+    searchDir = parentDir;
+    parentDir = path.dirname(searchDir);
   }
 
   return null;
@@ -57,7 +52,7 @@ function findEnvFile(): string | null {
 
 // Load environment variables from .env file
 // Priority: 1) Explicitly set env vars, 2) .env file found by searching upwards
-// The search stops at git repository root or current dir if not in a git repo
+// The search stops at git repository root if in a git repo, or filesystem root otherwise
 const envPath = findEnvFile();
 if (envPath) {
   dotenvConfig({ path: envPath });
