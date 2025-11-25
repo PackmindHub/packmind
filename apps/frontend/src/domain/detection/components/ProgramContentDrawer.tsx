@@ -8,7 +8,7 @@ import {
   PMCodeMirror,
   PMMarkdownViewer,
 } from '@packmind/ui';
-import { useGetDetectionProgramMetadataQuery } from '@packmind/proprietary/frontend/domain/detection';
+import { useGetDetectionProgramMetadataQuery } from '../api/queries/DetectionProgramQueries';
 
 interface ProgramContentDrawerProps {
   isOpen: boolean;

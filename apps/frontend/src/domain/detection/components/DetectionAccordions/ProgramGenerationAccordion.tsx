@@ -8,11 +8,11 @@ import {
 import {
   DetectionAccordion,
   DetectionAccordionStatus,
-} from '@packmind/proprietary/frontend/domain/detection/components/DetectionAccordions/DetectionAccordion';
+} from './DetectionAccordion';
 import { DetectionStatus } from '@packmind/types';
-import { StatusMenuAction } from '@packmind/proprietary/frontend/domain/detection/components/DetectionAccordions/StatusDropdownBadge';
-import { ExecutionLogsDrawer } from '@packmind/proprietary/frontend/domain/detection/components/ExecutionLogsDrawer';
-import { ProgramContentDrawer } from '@packmind/proprietary/frontend/domain/detection/components/ProgramContentDrawer';
+import { StatusMenuAction } from './StatusDropdownBadge';
+import { ExecutionLogsDrawer } from '../ExecutionLogsDrawer';
+import { ProgramContentDrawer } from '../ProgramContentDrawer';
 
 interface ProgramGenerationSectionProps {
   isOpen: boolean;
