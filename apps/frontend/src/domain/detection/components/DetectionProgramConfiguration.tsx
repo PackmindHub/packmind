@@ -5,10 +5,8 @@ import { useGetRuleDetectionAssessmentQuery } from '../api/queries/DetectionProg
 import { ActiveConfigurationSectionData as ActiveConfigurationCardData } from './ActiveConfigurationSection/';
 import { DraftCardData } from './DetectionDraftCard/DetectionDraftCard';
 import {
-  DetectabilitySection,
   ProgramGenerationAccordion,
-  DetectionAccordion,
-  DetectionAccordionStatus,
+  DetectabilityAccordion,
 } from './DetectionAccordions';
 
 interface DetectionProgramConfigurationProps {
@@ -31,26 +29,10 @@ interface DetectionProgramConfigurationProps {
   onNavigateToExamples?: () => void;
 }
 
-const convertToAccordionStatus = (
-  status: RuleDetectionAssessmentStatus,
-): DetectionAccordionStatus => {
-  switch (status) {
-    case RuleDetectionAssessmentStatus.SUCCESS:
-      return DetectionAccordionStatus.SUCCESS;
-    case RuleDetectionAssessmentStatus.FAILED:
-      return DetectionAccordionStatus.FAILED;
-    case RuleDetectionAssessmentStatus.IN_PROGRESS:
-      return DetectionAccordionStatus.IN_PROGRESS;
-    default:
-      return DetectionAccordionStatus.IN_PROGRESS;
-  }
-};
-
 export const DetectionProgramConfiguration: React.FC<
   DetectionProgramConfigurationProps
 > = ({
   standardId,
-  standardName,
   ruleId,
   detectionLanguages,
   selectedLanguage,
@@ -95,12 +77,6 @@ export const DetectionProgramConfiguration: React.FC<
     [assessment?.status],
   );
 
-  const detectabilityStatus = useMemo(() => {
-    return assessment?.status
-      ? convertToAccordionStatus(assessment.status)
-      : undefined;
-  }, [assessment?.status]);
-
   const hasNoExamples = useMemo(() => {
     // Check if the selected language has examples by checking if it's in detectionLanguages
     return !detectionLanguages.includes(selectedLanguage);
@@ -131,18 +107,13 @@ export const DetectionProgramConfiguration: React.FC<
 
   return (
     <PMVStack alignItems="stretch" gap={4} width="full">
-      <DetectionAccordion
-        title="Detectability"
-        status={detectabilityStatus}
-        open={isDetectabilityOpen}
+      <DetectabilityAccordion
+        isOpen={isDetectabilityOpen}
         onOpenChange={setIsDetectabilityOpen}
-      >
-        <DetectabilitySection
-          standardId={standardId}
-          ruleId={ruleId}
-          language={language}
-        />
-      </DetectionAccordion>
+        standardId={standardId}
+        ruleId={ruleId}
+        language={language}
+      />
 
       <ProgramGenerationAccordion
         isOpen={isProgramOpen}

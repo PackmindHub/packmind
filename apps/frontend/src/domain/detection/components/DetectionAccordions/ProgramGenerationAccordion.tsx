@@ -83,7 +83,7 @@ export const ProgramGenerationAccordion: React.FC<
   return (
     <DetectionAccordion
       title="Program"
-      statusAdditionalActions={
+      actions={
         <AccordionProgramActionButtons
           activeConfigurations={activeConfigurations}
           activeDraft={activeDraft}
