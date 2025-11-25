@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   PMBox,
   PMButton,
@@ -11,33 +10,29 @@ import {
   DEFAULT_FEATURE_DOMAIN_MAP,
   isFeatureFlagEnabled,
 } from '@packmind/ui';
-import {
-  useGetRuleDetectionAssessmentQuery,
-  useGetDetectionHeuristicsQuery,
-} from '../../api/queries/DetectionProgramQueries';
+import React from 'react';
 import { useGetMeQuery } from '../../../accounts/api/queries/UserQueries';
 import { RxQuestionMarkCircled } from 'react-icons/rx';
+import { ActiveConfigurationSectionProps } from './types';
 import {
-  ActiveConfigurationSectionProps,
-  ActiveConfigurationState,
-} from './types';
-import { withActiveConfigurationSection } from './withActiveConfigurationSection';
+  useActiveConfigurationSectionViewModel,
+  NoConfigurationAssessmentView,
+} from './useActiveConfigurationSectionViewModel';
+import {
+  ActiveConfigurationSectionKey,
+  ActiveConfigurationViewState,
+} from './viewState';
+import { SectionDescriptor } from './useActiveConfigurationSectionViewModel';
+import { DetectabilitySection } from './sections/DetectabilitySection';
+import { TestActiveVersionSection } from './sections/TestActiveVersionSection';
+import { FalsePositivesSection } from './sections/FalsePositivesSection';
+import { ToReviewSection } from './sections/ToReviewSection';
+import { DraftReviewSummarySection } from './sections/DraftReviewSummarySection';
 
 export const ActiveConfigurationSection: React.FC<
   ActiveConfigurationSectionProps
-> = ({
-  configuration,
-  onGenerateProgram,
-  isGenerating = false,
-  standardId,
-  standardName,
-  ruleId,
-  onTestProgram,
-  onActivateDraft,
-  activatingDraftId,
-  isActivatingDraft = false,
-  onOpenAssessmentDrawer,
-}) => {
+> = (props) => {
+  const { configuration } = props;
   const { data: meData } = useGetMeQuery();
   const userEmail = meData?.authenticated === true ? meData.user.email : null;
 
@@ -47,160 +42,204 @@ export const ActiveConfigurationSection: React.FC<
     userEmail,
   });
 
-  // Handle undefined configuration
   if (!configuration) {
     return null;
   }
 
-  // Handle NO_CONFIG state separately with assessment component
-  if (configuration.state === ActiveConfigurationState.NO_CONFIG) {
+  return (
+    <ActiveConfigurationSectionInner
+      {...props}
+      configuration={configuration}
+      isAssessmentFeatureEnabled={isAssessmentFeatureEnabled}
+    />
+  );
+};
+
+type ActiveConfigurationSectionInnerProps = ActiveConfigurationSectionProps & {
+  isAssessmentFeatureEnabled: boolean;
+};
+
+const ActiveConfigurationSectionInner: React.FC<
+  ActiveConfigurationSectionInnerProps
+> = ({
+  configuration,
+  onGenerateProgram,
+  isGenerating = false,
+  standardId,
+  standardName,
+  ruleId,
+  onTestProgram,
+  onActivateDraft,
+  isActivatingDraft = false,
+  onOpenAssessmentDrawer,
+  isAssessmentFeatureEnabled,
+}) => {
+  const { descriptor, sections, assessmentView } =
+    useActiveConfigurationSectionViewModel({
+      configuration,
+      standardId,
+      ruleId,
+      standardName,
+      onGenerateProgram,
+      isGenerating,
+      onTestProgram,
+      onActivateDraft,
+      isActivatingDraft,
+      onOpenAssessmentDrawer,
+      isAssessmentFeatureEnabled,
+    });
+
+  if (descriptor.viewState === ActiveConfigurationViewState.NO_CONFIGURATION) {
     return (
-      <ActiveConfigurationCardAssessment
-        id={configuration.id}
-        ruleId={ruleId}
-        standardId={standardId}
-        language={configuration.language}
+      <NoConfigurationCard
+        assessment={assessmentView}
         isGenerating={isGenerating}
-        onGenerateProgram={() =>
+        onGenerateProgram={
           onGenerateProgram
-            ? onGenerateProgram(configuration.language)
+            ? () => onGenerateProgram(configuration.language)
             : undefined
         }
-        onOpenDrawer={() => onOpenAssessmentDrawer(configuration.language)}
-        userEmail={userEmail}
-        isAssessmentFeatureEnabled={isAssessmentFeatureEnabled}
       />
     );
   }
 
-  // Use HOC for all other states
-  return withActiveConfigurationSection(
-    {
-      configuration,
-      onGenerateProgram,
-      isGenerating,
-      standardId,
-      standardName,
-      ruleId,
-      onTestProgram,
-      onActivateDraft,
-      activatingDraftId,
-      isActivatingDraft,
-      onOpenAssessmentDrawer,
-    },
-    {
-      isAssessmentFeatureEnabled,
-      standardName,
-    },
-  );
+  if (descriptor.viewState === ActiveConfigurationViewState.IN_PROGRESS) {
+    return (
+      <PMVStack alignItems="stretch" gap={4} width="full">
+        <PMText color="faded" fontSize="sm">
+          Configuration in progress.
+        </PMText>
+      </PMVStack>
+    );
+  }
+
+  if (descriptor.viewState === ActiveConfigurationViewState.ERROR) {
+    return null;
+  }
+
+  return <StateSectionsList sections={sections} />;
 };
 
-type ActiveConfigurationCardAssessmentProps = {
-  id: string;
-  language: string;
-  standardId: string;
-  ruleId: string;
+type NoConfigurationCardProps = {
+  assessment: NoConfigurationAssessmentView | null;
   isGenerating: boolean;
-  onGenerateProgram: () => void;
-  onOpenDrawer: () => void;
-  userEmail: string | null;
-  isAssessmentFeatureEnabled: boolean;
+  onGenerateProgram?: () => void;
 };
-const ActiveConfigurationCardAssessment: React.FC<
-  ActiveConfigurationCardAssessmentProps
-> = ({
-  id,
-  language,
-  standardId,
-  ruleId,
+
+const NoConfigurationCard: React.FC<NoConfigurationCardProps> = ({
+  assessment,
   isGenerating,
   onGenerateProgram,
-  onOpenDrawer,
-  isAssessmentFeatureEnabled,
 }) => {
-  const { data: assessment } = useGetRuleDetectionAssessmentQuery(
-    standardId,
-    ruleId,
-    language,
-  );
+  if (!assessment) {
+    return null;
+  }
 
-  const { data: detectionHeuristics } = useGetDetectionHeuristicsQuery(
-    standardId,
-    ruleId,
-    language,
-  );
+  if (assessment.status === 'loading') {
+    return (
+      <PMText color="faded" fontSize="sm">
+        Loading assessment data.
+      </PMText>
+    );
+  }
 
-  if (assessment) {
-    if (assessment.status === 'IN_PROGRESS') {
-      return (
-        <PMText color="faded" fontSize="sm">
-          Checking if the rule can be detected by linter...
+  if (assessment.status === 'inProgress') {
+    return (
+      <PMText color="faded" fontSize="sm">
+        Checking if the rule can be detected by linter...
+      </PMText>
+    );
+  }
+
+  if (assessment.status === 'failed') {
+    const tooltipLabel = (
+      <PMVStack alignItems="flex-start" gap={2} width="full">
+        <PMText color="tertiary">
+          We have assessed that the rule is not detectable :
         </PMText>
-      );
-    }
-
-    if (assessment.status === 'FAILED') {
-      const tooltipLabel = (
-        <PMVStack alignItems="flex-start" gap={2} width="full">
-          <PMText color="tertiary">
-            We have assessed that the rule is not detectable :
-          </PMText>
-          {assessment.details && (
-            <PMBox padding={2} width="full">
-              <PMText whiteSpace="pre-wrap">{assessment.details}</PMText>
-            </PMBox>
-          )}
-        </PMVStack>
-      );
-
-      return (
-        <PMHStack
-          justifyContent="space-between"
-          alignItems="center"
-          width="full"
-        >
-          <PMHStack>
-            <PMText color="faded" fontSize="sm">
-              This rule can not be automated.
-            </PMText>
-            <PMTooltip label={tooltipLabel} placement="top">
-              <PMIcon
-                as={RxQuestionMarkCircled}
-                color={'text.tertiary'}
-                boxSize={4}
-                cursor="help"
-              />
-            </PMTooltip>
-          </PMHStack>
-          {isAssessmentFeatureEnabled && detectionHeuristics && (
-            <PMButton size="sm" variant="outline" onClick={onOpenDrawer}>
-              Refine
-            </PMButton>
-          )}
-        </PMHStack>
-      );
-    }
+        {assessment.details && (
+          <PMBox padding={2} width="full">
+            <PMText whiteSpace="pre-wrap">{assessment.details}</PMText>
+          </PMBox>
+        )}
+      </PMVStack>
+    );
 
     return (
       <PMHStack justifyContent="space-between" alignItems="center" width="full">
-        <PMText color="faded" fontSize="sm">
-          No configuration.
-        </PMText>
-        <PMButton
-          size="sm"
-          variant="outline"
-          onClick={onGenerateProgram}
-          loading={isGenerating}
-        >
-          Configure
-        </PMButton>
+        <PMHStack>
+          <PMText color="faded" fontSize="sm">
+            This rule can not be automated.
+          </PMText>
+          <PMTooltip label={tooltipLabel} placement="top">
+            <PMIcon
+              as={RxQuestionMarkCircled}
+              color="text.tertiary"
+              boxSize={4}
+              cursor="help"
+            />
+          </PMTooltip>
+        </PMHStack>
+        {assessment.canRefine && (
+          <PMButton size="sm" variant="outline" onClick={assessment.onRefine}>
+            Refine
+          </PMButton>
+        )}
       </PMHStack>
     );
   }
 
   return (
-    <PMText color="faded" fontSize="sm">
-      Loading assessment data.
-    </PMText>
+    <PMHStack justifyContent="space-between" alignItems="center" width="full">
+      <PMText color="faded" fontSize="sm">
+        No configuration.
+      </PMText>
+      <PMButton
+        size="sm"
+        variant="outline"
+        onClick={onGenerateProgram}
+        loading={isGenerating}
+        disabled={!onGenerateProgram || isGenerating}
+      >
+        Configure
+      </PMButton>
+    </PMHStack>
+  );
+};
+
+const StateSectionsList: React.FC<{ sections: SectionDescriptor[] }> = ({
+  sections,
+}) => {
+  if (!sections.length) {
+    return null;
+  }
+
+  return (
+    <PMVStack alignItems="stretch" gap={4} width="full">
+      {sections.map((section) => {
+        switch (section.key) {
+          case ActiveConfigurationSectionKey.DETECTABILITY:
+            return (
+              <DetectabilitySection key={section.key} {...section.props} />
+            );
+          case ActiveConfigurationSectionKey.TEST_ACTIVE_VERSION:
+            return (
+              <TestActiveVersionSection key={section.key} {...section.props} />
+            );
+          case ActiveConfigurationSectionKey.FALSE_POSITIVES:
+            return (
+              <FalsePositivesSection key={section.key} {...section.props} />
+            );
+          case ActiveConfigurationSectionKey.TO_REVIEW_CARD:
+            return <ToReviewSection key={section.key} {...section.props} />;
+          case ActiveConfigurationSectionKey.DRAFT_REVIEW_SUMMARY:
+            return (
+              <DraftReviewSummarySection key={section.key} {...section.props} />
+            );
+          default:
+            return null;
+        }
+      })}
+    </PMVStack>
   );
 };

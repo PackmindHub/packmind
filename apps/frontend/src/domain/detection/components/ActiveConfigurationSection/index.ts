@@ -8,5 +8,3 @@ export type {
   ActiveConfigurationCardData,
 } from './types';
 export { ActiveConfigurationState } from './types';
-export { withActiveConfigurationSection } from './withActiveConfigurationSection';
-export { withActiveConfigurationSection as withActiveConfigurationCard } from './withActiveConfigurationSection';
