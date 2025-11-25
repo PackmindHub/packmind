@@ -11,6 +11,7 @@ import { LuChevronDown } from 'react-icons/lu';
 import { DetectionStatus } from '@packmind/types';
 import { ActiveConfigurationSectionData } from '../ActiveConfigurationSection';
 import { DraftCardData } from '../DetectionDraftCard/DetectionDraftCard';
+import { DetectionDraftMenu } from './DetectionDraftMenu';
 
 export type ViewMode = 'active' | 'draft';
 
@@ -26,40 +27,18 @@ interface AccordionProgramActionButtonsProps {
   isGeneratingProgram: boolean;
   selectedLanguage: string;
   onViewModeChange: (mode: ViewMode) => void;
+  // Props for DetectionDraftMenu
+  standardId: string;
+  ruleId: string;
+  onShowLogs: () => void;
+  onShowProgram: () => void;
+  isActivating?: boolean;
 }
 
 interface MenuAction {
   label: string;
   onClick: () => void;
 }
-
-const DRAFT_STATUS_LABELS: Record<string, string> = {
-  [DetectionStatus.READY]: 'Ready',
-  [DetectionStatus.ERROR]: 'Error',
-  [DetectionStatus.FAILURE]: 'Failed',
-  [DetectionStatus.IN_PROGRESS]: 'In progress',
-  [DetectionStatus.TO_REVIEW]: 'To review',
-};
-
-const getDraftStatusLabel = (status: DetectionStatus | string): string => {
-  return DRAFT_STATUS_LABELS[status] || 'Draft';
-};
-
-const getDraftStatusColor = (
-  status: DetectionStatus | string,
-): 'green' | 'red' | 'blue' | 'gray' => {
-  switch (status) {
-    case DetectionStatus.READY:
-      return 'green';
-    case DetectionStatus.ERROR:
-    case DetectionStatus.FAILURE:
-      return 'red';
-    case DetectionStatus.IN_PROGRESS:
-      return 'blue';
-    default:
-      return 'gray';
-  }
-};
 
 interface DropdownButtonProps {
   label: string;
@@ -191,6 +170,11 @@ export const AccordionProgramActionButtons: React.FC<
   isGeneratingProgram,
   selectedLanguage,
   onViewModeChange,
+  standardId,
+  ruleId,
+  onShowLogs,
+  onShowProgram,
+  isActivating,
 }) => {
   // Compute derived state
   const hasActiveProgram = activeConfigurations.some(
@@ -258,49 +242,6 @@ export const AccordionProgramActionButtons: React.FC<
     selectedLanguage,
   ]);
 
-  // Compute draft menu actions
-  const draftMenuActions = useMemo<MenuAction[]>(() => {
-    if (!activeDraft) {
-      return [];
-    }
-
-    const actions: MenuAction[] = [];
-    const draftStatus = activeDraft.draftProgram.status;
-
-    actions.push({
-      label: 'Test draft',
-      onClick: () => onTestProgram(activeDraft),
-    });
-
-    if (
-      draftStatus === DetectionStatus.ERROR ||
-      draftStatus === DetectionStatus.FAILURE
-    ) {
-      actions.push({
-        label: 'Retry draft',
-        onClick: () => onRetryDraft(activeDraft),
-      });
-    }
-
-    if (draftStatus === DetectionStatus.READY) {
-      actions.push({
-        label: 'Activate draft',
-        onClick: () => onActivateDraft(activeDraft),
-      });
-    }
-
-    return actions;
-  }, [activeDraft, onTestProgram, onRetryDraft, onActivateDraft]);
-
-  // Compute draft status
-  const draftStatus = activeDraft?.draftProgram.status;
-  const draftStatusLabel = draftStatus
-    ? `Draft: ${getDraftStatusLabel(draftStatus)}`
-    : 'Draft';
-  const draftStatusColor = draftStatus
-    ? getDraftStatusColor(draftStatus)
-    : 'gray';
-
   // Render based on current view mode
   return (
     <PMHStack gap={2}>
@@ -312,11 +253,18 @@ export const AccordionProgramActionButtons: React.FC<
         />
       )}
 
-      {viewMode === 'draft' && draftMenuActions.length > 0 && (
-        <DropdownButton
-          label={draftStatusLabel}
-          colorPalette={draftStatusColor}
-          actions={draftMenuActions}
+      {viewMode === 'draft' && activeDraft && (
+        <DetectionDraftMenu
+          draft={activeDraft}
+          onMakeActive={onActivateDraft}
+          isActivating={isActivating}
+          onTestDraft={onTestProgram}
+          onRetryDraft={onRetryDraft}
+          isGenerating={isGeneratingProgram}
+          standardId={standardId}
+          ruleId={ruleId}
+          onShowLogs={onShowLogs}
+          onShowProgram={onShowProgram}
         />
       )}
 

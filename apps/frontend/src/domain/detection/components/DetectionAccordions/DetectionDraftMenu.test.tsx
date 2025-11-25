@@ -16,7 +16,7 @@ import {
   createStandardId,
 } from '@packmind/types';
 import { DetectionDraftMenu } from './DetectionDraftMenu';
-import { DraftCardData } from './DetectionDraftCard';
+import { DraftCardData } from '../DetectionDraftCard/DetectionDraftCard';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { UIProvider } from '@packmind/ui';
 import * as DetectionProgramQueries from '../../api/queries/DetectionProgramQueries';

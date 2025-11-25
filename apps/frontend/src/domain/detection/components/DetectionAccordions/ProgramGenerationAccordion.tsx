@@ -94,6 +94,13 @@ export const ProgramGenerationAccordion: React.FC<
           isGeneratingProgram={isGeneratingProgram}
           selectedLanguage={selectedLanguage}
           onViewModeChange={handleViewModeChange}
+          standardId={standardId}
+          ruleId={ruleId}
+          onShowLogs={() => setIsLogsDrawerOpen(true)}
+          onShowProgram={() => setIsProgramDrawerOpen(true)}
+          isActivating={
+            activatingDraftId === activeDraft?.id && isActivatingDraft
+          }
         />
       }
       open={isOpen}

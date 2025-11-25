@@ -5,10 +5,15 @@ import {
   DetectionStatus,
   ProgrammingLanguage,
   createRuleId,
+  createStandardId,
+  RuleDetectionAssessmentStatus,
 } from '@packmind/types';
 import { ActiveConfigurationSectionData } from '../ActiveConfigurationSection';
 import { DraftCardData } from '../DetectionDraftCard/DetectionDraftCard';
 import { AccordionProgramActionButtons } from './AccordionProgramActionButtons';
+import * as DetectionProgramQueries from '../../api/queries/DetectionProgramQueries';
+
+jest.mock('../../api/queries/DetectionProgramQueries');
 
 describe('AccordionProgramActionButtons', () => {
   let screen: RenderResult;
@@ -17,6 +22,11 @@ describe('AccordionProgramActionButtons', () => {
   let onActivateDraft: jest.Mock;
   let onRetryDraft: jest.Mock;
   let onViewModeChange: jest.Mock;
+  let onShowLogs: jest.Mock;
+  let onShowProgram: jest.Mock;
+
+  const standardId = createStandardId('standard-123');
+  const ruleId = createRuleId('rule-456');
 
   const createActiveConfig = (
     status: DetectionStatus = DetectionStatus.READY,
@@ -64,6 +74,18 @@ describe('AccordionProgramActionButtons', () => {
     onActivateDraft = jest.fn();
     onRetryDraft = jest.fn();
     onViewModeChange = jest.fn();
+    onShowLogs = jest.fn();
+    onShowProgram = jest.fn();
+
+    // Mock the assessment query with SUCCESS status by default
+    jest
+      .spyOn(DetectionProgramQueries, 'useGetRuleDetectionAssessmentQuery')
+      .mockReturnValue({
+        data: {
+          status: RuleDetectionAssessmentStatus.SUCCESS,
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any);
   });
 
   afterEach(() => {
@@ -75,6 +97,7 @@ describe('AccordionProgramActionButtons', () => {
     activeDraft?: DraftCardData;
     isGeneratingProgram?: boolean;
     selectedLanguage?: string;
+    isActivating?: boolean;
   }
 
   function renderComponent({
@@ -82,6 +105,7 @@ describe('AccordionProgramActionButtons', () => {
     activeDraft,
     isGeneratingProgram = false,
     selectedLanguage = ProgrammingLanguage.TYPESCRIPT,
+    isActivating = false,
   }: RenderProps = {}) {
     return render(
       <UIProvider>
@@ -95,6 +119,11 @@ describe('AccordionProgramActionButtons', () => {
           isGeneratingProgram={isGeneratingProgram}
           selectedLanguage={selectedLanguage}
           onViewModeChange={onViewModeChange}
+          standardId={standardId}
+          ruleId={ruleId}
+          onShowLogs={onShowLogs}
+          onShowProgram={onShowProgram}
+          isActivating={isActivating}
         />
       </UIProvider>,
     );
@@ -242,7 +271,13 @@ describe('AccordionProgramActionButtons', () => {
   });
 
   describe('draft dropdown status labels', () => {
-    describe('when draft status is READY', () => {
+    // Note: DetectionDraftMenu uses determineDraftStatus which combines
+    // assessment status (mocked as SUCCESS) with draft status to determine label:
+    // - GENERATION_SUCCESSFUL (READY + SUCCESS assessment) -> "Draft: OK"
+    // - GENERATION_FAILED (ERROR/FAILURE + SUCCESS assessment) -> "Draft: Error"
+    // - GENERATING (IN_PROGRESS + SUCCESS assessment) -> "Draft: Pending"
+
+    describe('when draft status is READY with successful assessment', () => {
       beforeEach(() => {
         screen = renderComponent({
           activeConfigurations: [
@@ -252,12 +287,12 @@ describe('AccordionProgramActionButtons', () => {
         });
       });
 
-      it('renders Draft: Ready label', () => {
-        expect(screen.getByText('Draft: Ready')).toBeInTheDocument();
+      it('renders Draft: OK label', () => {
+        expect(screen.getByText('Draft: OK')).toBeInTheDocument();
       });
     });
 
-    describe('when draft status is ERROR', () => {
+    describe('when draft status is ERROR with successful assessment', () => {
       beforeEach(() => {
         screen = renderComponent({
           activeConfigurations: [
@@ -272,7 +307,7 @@ describe('AccordionProgramActionButtons', () => {
       });
     });
 
-    describe('when draft status is FAILURE', () => {
+    describe('when draft status is FAILURE with successful assessment', () => {
       beforeEach(() => {
         screen = renderComponent({
           activeConfigurations: [
@@ -282,12 +317,12 @@ describe('AccordionProgramActionButtons', () => {
         });
       });
 
-      it('renders Draft: Failed label', () => {
-        expect(screen.getByText('Draft: Failed')).toBeInTheDocument();
+      it('renders Draft: Error label', () => {
+        expect(screen.getByText('Draft: Error')).toBeInTheDocument();
       });
     });
 
-    describe('when draft status is IN_PROGRESS', () => {
+    describe('when draft status is IN_PROGRESS with successful assessment', () => {
       beforeEach(() => {
         screen = renderComponent({
           activeConfigurations: [
@@ -297,8 +332,8 @@ describe('AccordionProgramActionButtons', () => {
         });
       });
 
-      it('renders Draft: In progress label', () => {
-        expect(screen.getByText('Draft: In progress')).toBeInTheDocument();
+      it('renders Draft: Pending label', () => {
+        expect(screen.getByText('Draft: Pending')).toBeInTheDocument();
       });
     });
   });
@@ -356,7 +391,7 @@ describe('AccordionProgramActionButtons', () => {
       });
 
       it('renders the draft dropdown', () => {
-        expect(screen.getByText('Draft: Ready')).toBeInTheDocument();
+        expect(screen.getByText('Draft: OK')).toBeInTheDocument();
       });
     });
 
@@ -385,8 +420,8 @@ describe('AccordionProgramActionButtons', () => {
         });
       });
 
-      it('renders the draft dropdown with failed status', () => {
-        expect(screen.getByText('Draft: Failed')).toBeInTheDocument();
+      it('renders the draft dropdown with error status', () => {
+        expect(screen.getByText('Draft: Error')).toBeInTheDocument();
       });
     });
   });

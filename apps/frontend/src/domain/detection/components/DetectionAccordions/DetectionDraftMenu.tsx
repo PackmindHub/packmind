@@ -1,12 +1,15 @@
 import React from 'react';
 import { useGetRuleDetectionAssessmentQuery } from '@packmind/proprietary/frontend/domain/detection';
-import { determineDraftStatus, DraftStatus } from './determineDraftStatus';
+import {
+  determineDraftStatus,
+  DraftStatus,
+} from '../DetectionDraftCard/determineDraftStatus';
 import {
   getTimelineConfig,
   LoadingStates,
   TimelineHandlers,
-} from './getTimelineConfig';
-import { DraftCardProps } from './DetectionDraftCard';
+} from '../DetectionDraftCard/getTimelineConfig';
+import { DraftCardProps } from '../DetectionDraftCard/DetectionDraftCard';
 import { PMBox, PMMenu, PMPortal, PMIcon } from '@packmind/ui';
 import { LuChevronDown } from 'react-icons/lu';
 
