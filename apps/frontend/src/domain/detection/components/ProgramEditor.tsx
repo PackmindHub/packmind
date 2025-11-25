@@ -450,7 +450,8 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
     <PMVStack alignItems="stretch" gap={6} width="full">
       <DetectionProgramConfiguration
         standardId={standardId}
-        standardName={standardName}ruleId={ruleId}
+        standardName={standardName}
+        ruleId={ruleId}
         detectionLanguages={detectionLanguages}
         selectedLanguage={selectedLanguage}
         activeConfigurations={activeConfigurations}
