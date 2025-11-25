@@ -111,6 +111,11 @@ export const DetectionDraftMenu: React.FC<DraftCardProps> = ({
                   button.onClick();
                 }}
               >
+                {button.icon && (
+                  <PMIcon size="sm" mr={2}>
+                    {button.icon}
+                  </PMIcon>
+                )}
                 {button.label}
               </PMMenu.Item>
             ))}

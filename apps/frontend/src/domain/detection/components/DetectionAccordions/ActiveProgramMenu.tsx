@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { PMMenu, PMPortal, PMIcon, PMButton } from '@packmind/ui';
-import { LuChevronDown } from 'react-icons/lu';
+import { LuChevronDown, LuPlay, LuSparkles } from 'react-icons/lu';
 import { DetectionStatus } from '@packmind/types';
 import { ActiveConfigurationSectionData } from '../ActiveConfigurationSection';
 
@@ -13,6 +13,7 @@ interface MenuAction {
   label: string;
   onClick: () => void;
   disabled?: boolean;
+  icon?: React.ReactNode;
 }
 
 interface ActiveProgramMenuProps {
@@ -83,6 +84,7 @@ export const ActiveProgramMenu: React.FC<ActiveProgramMenuProps> = ({
       menuActions.push({
         label: 'Test program',
         onClick: () => onTestProgram(activeConfig),
+        icon: <LuPlay />,
       });
     }
 
@@ -90,6 +92,7 @@ export const ActiveProgramMenu: React.FC<ActiveProgramMenuProps> = ({
       menuActions.push({
         label: 'Generate new draft',
         onClick: () => onGenerateProgram(selectedLanguage),
+        icon: <LuSparkles />,
       });
     }
 
@@ -137,6 +140,11 @@ export const ActiveProgramMenu: React.FC<ActiveProgramMenuProps> = ({
                   action.onClick();
                 }}
               >
+                {action.icon && (
+                  <PMIcon size="sm" mr={2}>
+                    {action.icon}
+                  </PMIcon>
+                )}
                 {action.label}
               </PMMenu.Item>
             ))}

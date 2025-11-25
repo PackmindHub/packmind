@@ -1,11 +1,19 @@
 import { DraftStatus } from './determineDraftStatus';
 import { PMText } from '@packmind/ui';
 import React from 'react';
+import {
+  LuFileText,
+  LuCode,
+  LuPlay,
+  LuCircleCheckBig,
+  LuRefreshCw,
+} from 'react-icons/lu';
 
 type TimelineButton = {
   label: string;
   onClick: () => void;
   disabled?: boolean;
+  icon?: React.ReactNode;
 };
 
 export enum TimelineStepStatus {
@@ -142,6 +150,7 @@ export function getTimelineConfig(
             {
               label: 'Show log',
               onClick: handlers.onShowLogs,
+              icon: <LuFileText />,
             },
           ],
         },
@@ -168,10 +177,12 @@ export function getTimelineConfig(
               label: 'Retry',
               onClick: handlers.onRetryDraft,
               disabled: loadingStates.isGenerating,
+              icon: <LuRefreshCw />,
             },
             {
               label: 'Show log',
               onClick: handlers.onShowLogs,
+              icon: <LuFileText />,
             },
           ],
         },
@@ -197,10 +208,12 @@ export function getTimelineConfig(
             {
               label: 'Show log',
               onClick: handlers.onShowLogs,
+              icon: <LuFileText />,
             },
             {
               label: 'Show program',
               onClick: handlers.onShowProgram,
+              icon: <LuCode />,
             },
           ],
         },
@@ -212,11 +225,13 @@ export function getTimelineConfig(
             {
               label: 'Test draft program',
               onClick: handlers.onTestDraft,
+              icon: <LuPlay />,
             },
             {
               label: 'Set as active',
               onClick: handlers.onMakeActive,
               disabled: loadingStates.isActivating,
+              icon: <LuCircleCheckBig />,
             },
           ],
         },
