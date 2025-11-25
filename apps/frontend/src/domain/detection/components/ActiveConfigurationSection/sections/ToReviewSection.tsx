@@ -11,11 +11,13 @@ import {
 interface ToReviewSectionProps {
   onGenerateProgramClick: () => void;
   isGenerating?: boolean;
+  hasDraftToReview?: boolean;
 }
 
 export const ToReviewSection: React.FC<ToReviewSectionProps> = ({
   onGenerateProgramClick,
   isGenerating = false,
+  hasDraftToReview = false,
 }) => {
   return (
     <PMBox
@@ -57,7 +59,7 @@ export const ToReviewSection: React.FC<ToReviewSectionProps> = ({
             loading={isGenerating}
             disabled={isGenerating}
           >
-            Generate new program
+            {hasDraftToReview ? 'Review draft instead' : 'Generate new program'}
           </PMButton>
         </PMTooltip>
       </PMVStack>

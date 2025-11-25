@@ -1,6 +1,9 @@
 import { useMemo } from 'react';
 import { IPMButtonProps } from '@packmind/ui';
-import { RuleDetectionAssessmentStatus } from '@packmind/types';
+import {
+  RuleDetectionAssessmentStatus,
+  DetectionStatus,
+} from '@packmind/types';
 import {
   useGetDetectionHeuristicsQuery,
   useGetRuleDetectionAssessmentQuery,
@@ -71,6 +74,7 @@ type ToReviewDescriptor = {
   props: {
     onGenerateProgramClick: () => void;
     isGenerating: boolean;
+    hasDraftToReview: boolean;
   };
 };
 
@@ -204,6 +208,9 @@ export const useActiveConfigurationSectionViewModel = (
                   ? onGenerateProgram(configuration.language)
                   : undefined,
               isGenerating,
+              hasDraftToReview:
+                configuration.draftProgram?.status ===
+                DetectionStatus.TO_REVIEW,
             },
           });
           break;
