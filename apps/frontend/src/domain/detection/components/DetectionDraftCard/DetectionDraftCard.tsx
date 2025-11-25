@@ -1,36 +1,27 @@
 import React from 'react';
 import {
   PMBox,
-  PMText,
-  PMTimeline,
-  PMTimelineItem,
-  PMTimelineContent,
-  PMTimelineSeparator,
-  PMTimelineIndicator,
-  PMTimelineConnector,
-  PMTimelineTitle,
-  PMTimelineDescription,
   PMButton,
   PMHStack,
-  type PMTextColors,
   PMIcon,
+  PMText,
+  type PMTextColors,
+  PMTimeline,
+  PMTimelineConnector,
+  PMTimelineContent,
+  PMTimelineDescription,
+  PMTimelineIndicator,
+  PMTimelineItem,
+  PMTimelineSeparator,
+  PMTimelineTitle,
 } from '@packmind/ui';
-import {
-  DetectionProgram,
-  RuleDetectionAssessmentStatus,
-  DetectionStatus,
-} from '@packmind/types';
+import { DetectionProgram, DetectionStatus } from '@packmind/types';
 import { useGetRuleDetectionAssessmentQuery } from '../../api/queries/DetectionProgramQueries';
 import { LuCheck, LuCircleAlert, LuLoader } from 'react-icons/lu';
-
-export enum DraftCardState {
-  ASSESSING = 'assessing',
-  ASSESSMENT_FAILED = 'assessment_failed',
-  ASSESSMENT_SUCCESSFUL = 'assessment_successful',
-  GENERATING = 'generating',
-  GENERATION_FAILED = 'generation_failed',
-  GENERATION_SUCCESSFUL = 'generation_successful',
-}
+import {
+  determineDraftStatus,
+  DraftStatus,
+} from '@packmind/proprietary/frontend/domain/detection/components/DetectionDraftCard/determineDraftStatus';
 
 export type DraftCardData = {
   id: string;
@@ -72,7 +63,7 @@ export const DetectionDraftCard: React.FC<DraftCardProps> = ({
     ruleId,
     draft.language,
   );
-  const state = determineDraftCardState(assessment?.status, draft.status);
+  const state = determineDraftStatus(assessment?.status, draft.status);
 
   const handlers: TimelineHandlers = {
     onShowLogs: () => onShowLogs(),
@@ -208,62 +199,18 @@ const TimelineStep: React.FC<TimelineStepProps> = ({ config }) => {
   );
 };
 
-export function determineDraftCardState(
-  assessmentStatus: RuleDetectionAssessmentStatus | undefined,
-  draftStatus: DetectionStatus | string,
-): DraftCardState {
-  // If no assessment or assessment is running
-  if (
-    !assessmentStatus ||
-    assessmentStatus === RuleDetectionAssessmentStatus.NOT_STARTED ||
-    assessmentStatus === RuleDetectionAssessmentStatus.IN_PROGRESS
-  ) {
-    return DraftCardState.ASSESSING;
-  }
-
-  // If assessment failed
-  if (assessmentStatus === RuleDetectionAssessmentStatus.FAILED) {
-    return DraftCardState.ASSESSMENT_FAILED;
-  }
-
-  // If assessment succeeded
-  if (assessmentStatus === RuleDetectionAssessmentStatus.SUCCESS) {
-    // Check draft status
-    if (draftStatus === DetectionStatus.IN_PROGRESS) {
-      return DraftCardState.GENERATING;
-    }
-
-    if (
-      draftStatus === DetectionStatus.FAILURE ||
-      draftStatus === DetectionStatus.ERROR
-    ) {
-      return DraftCardState.GENERATION_FAILED;
-    }
-
-    if (draftStatus === DetectionStatus.READY) {
-      return DraftCardState.GENERATION_SUCCESSFUL;
-    }
-
-    // Assessment successful but generation hasn't started or is in an intermediate state
-    return DraftCardState.ASSESSMENT_SUCCESSFUL;
-  }
-
-  // Default fallback
-  return DraftCardState.ASSESSING;
-}
-
 type LoadingStates = {
   isActivating: boolean;
   isGenerating: boolean;
 };
 
 function getTimelineConfig(
-  state: DraftCardState,
+  state: DraftStatus,
   handlers: TimelineHandlers,
   loadingStates: LoadingStates,
 ): TimelineConfig {
   switch (state) {
-    case DraftCardState.ASSESSING:
+    case DraftStatus.ASSESSING:
       return {
         step1: {
           title: 'Checking the detectability of the rule',
@@ -282,7 +229,7 @@ function getTimelineConfig(
         },
       };
 
-    case DraftCardState.ASSESSMENT_FAILED:
+    case DraftStatus.ASSESSMENT_FAILED:
       return {
         step1: {
           title: 'The rule can not be detected',
@@ -301,7 +248,7 @@ function getTimelineConfig(
         },
       };
 
-    case DraftCardState.ASSESSMENT_SUCCESSFUL:
+    case DraftStatus.ASSESSMENT_SUCCESSFUL:
       return {
         step1: {
           title: 'The rule can be detected',
@@ -332,7 +279,7 @@ function getTimelineConfig(
         },
       };
 
-    case DraftCardState.GENERATING:
+    case DraftStatus.GENERATING:
       return {
         step1: {
           title: 'The rule can be detected',
@@ -369,7 +316,7 @@ function getTimelineConfig(
         },
       };
 
-    case DraftCardState.GENERATION_FAILED:
+    case DraftStatus.GENERATION_FAILED:
       return {
         step1: {
           title: 'The rule can be detected',
@@ -399,7 +346,7 @@ function getTimelineConfig(
         },
       };
 
-    case DraftCardState.GENERATION_SUCCESSFUL:
+    case DraftStatus.GENERATION_SUCCESSFUL:
       return {
         step1: {
           title: 'The rule can be detected',

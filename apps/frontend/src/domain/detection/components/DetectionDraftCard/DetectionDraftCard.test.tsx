@@ -15,107 +15,11 @@ import {
   createRuleId,
   createStandardId,
 } from '@packmind/types';
-import {
-  determineDraftCardState,
-  DraftCardState,
-  DetectionDraftCard,
-  DraftCardData,
-} from './DetectionDraftCard';
+import { DetectionDraftCard, DraftCardData } from './DetectionDraftCard';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { UIProvider } from '@packmind/ui';
 import * as DetectionProgramQueries from '../../api/queries/DetectionProgramQueries';
-
 jest.mock('../../api/queries/DetectionProgramQueries');
-
-describe('determineDraftCardState', () => {
-  describe('when assessment is not started or in progress', () => {
-    it('returns ASSESSING when assessment status is undefined', () => {
-      const state = determineDraftCardState(
-        undefined,
-        DetectionStatus.IN_PROGRESS,
-      );
-      expect(state).toEqual(DraftCardState.ASSESSING);
-    });
-
-    it('returns ASSESSING when assessment status is NOT_STARTED', () => {
-      const state = determineDraftCardState(
-        RuleDetectionAssessmentStatus.NOT_STARTED,
-        DetectionStatus.IN_PROGRESS,
-      );
-      expect(state).toEqual(DraftCardState.ASSESSING);
-    });
-
-    it('returns ASSESSING when assessment status is IN_PROGRESS', () => {
-      const state = determineDraftCardState(
-        RuleDetectionAssessmentStatus.IN_PROGRESS,
-        DetectionStatus.IN_PROGRESS,
-      );
-      expect(state).toEqual(DraftCardState.ASSESSING);
-    });
-  });
-
-  describe('when assessment is done', () => {
-    describe('when assessment failed', () => {
-      it('returns ASSESSMENT_FAILED', () => {
-        const state = determineDraftCardState(
-          RuleDetectionAssessmentStatus.FAILED,
-          DetectionStatus.IN_PROGRESS,
-        );
-        expect(state).toEqual(DraftCardState.ASSESSMENT_FAILED);
-      });
-    });
-
-    describe('when assessment succeeded', () => {
-      it('returns ASSESSMENT_SUCCESSFUL when draft status is TO_REVIEW', () => {
-        const state = determineDraftCardState(
-          RuleDetectionAssessmentStatus.SUCCESS,
-          DetectionStatus.TO_REVIEW,
-        );
-        expect(state).toEqual(DraftCardState.ASSESSMENT_SUCCESSFUL);
-      });
-
-      describe('when program generation is in progress', () => {
-        it('returns GENERATING when draft status is IN_PROGRESS', () => {
-          const state = determineDraftCardState(
-            RuleDetectionAssessmentStatus.SUCCESS,
-            DetectionStatus.IN_PROGRESS,
-          );
-          expect(state).toEqual(DraftCardState.GENERATING);
-        });
-      });
-
-      describe('when program generation is done', () => {
-        describe('when program generation failed', () => {
-          it('returns GENERATION_FAILED when draft status is FAILURE', () => {
-            const state = determineDraftCardState(
-              RuleDetectionAssessmentStatus.SUCCESS,
-              DetectionStatus.FAILURE,
-            );
-            expect(state).toEqual(DraftCardState.GENERATION_FAILED);
-          });
-
-          it('returns GENERATION_FAILED when draft status is ERROR', () => {
-            const state = determineDraftCardState(
-              RuleDetectionAssessmentStatus.SUCCESS,
-              DetectionStatus.ERROR,
-            );
-            expect(state).toEqual(DraftCardState.GENERATION_FAILED);
-          });
-        });
-
-        describe('when program generation succeeded', () => {
-          it('returns GENERATION_SUCCESSFUL when draft status is READY', () => {
-            const state = determineDraftCardState(
-              RuleDetectionAssessmentStatus.SUCCESS,
-              DetectionStatus.READY,
-            );
-            expect(state).toEqual(DraftCardState.GENERATION_SUCCESSFUL);
-          });
-        });
-      });
-    });
-  });
-});
 
 describe('ProgramGenerationTimeline', () => {
   let screen: RenderResult;
