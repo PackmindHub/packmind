@@ -408,4 +408,40 @@ export class GeminiService implements AIService {
       AIServiceErrorTypes.API_ERROR,
     ].includes(errorType);
   }
+
+  /**
+   * Get a list of available model IDs from Gemini
+   */
+  async getModels(): Promise<string[]> {
+    this.logger.info('Fetching available models from Gemini');
+
+    await this.initialize();
+
+    if (!this.client) {
+      this.logger.warn('Gemini client not available - returning empty array');
+      return [];
+    }
+
+    try {
+      const modelsList = await this.client.models.list();
+      const models: string[] = [];
+
+      for await (const model of modelsList) {
+        if (model.name) {
+          models.push(model.name);
+        }
+      }
+
+      this.logger.info('Successfully fetched Gemini models', {
+        count: models.length,
+      });
+
+      return models;
+    } catch (error) {
+      this.logger.error('Failed to fetch Gemini models', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return [];
+    }
+  }
 }

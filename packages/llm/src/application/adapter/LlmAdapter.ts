@@ -1,13 +1,30 @@
 import { PackmindLogger } from '@packmind/logger';
 import { IBaseAdapter } from '@packmind/node-utils';
-import { AIService, ILlmPort, OrganizationId } from '@packmind/types';
+import {
+  AIService,
+  IAccountsPort,
+  IAccountsPortName,
+  ILlmPort,
+  OrganizationId,
+  TestLLMConnectionCommand,
+  TestLLMConnectionResponse,
+  GetModelsCommand,
+  GetModelsResponse,
+} from '@packmind/types';
 import { GetAiServiceForOrganizationUseCase } from '../useCases/getAiServiceForOrganization/getAiServiceForOrganization.usecase';
+import { TestLLMConnectionUseCase } from '../useCases/testLLMConnection/testLLMConnection.usecase';
+import { GetModelsUseCase } from '../useCases/getModels/getModels.usecase';
 
 const origin = 'LlmAdapter';
 
 export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
-  // Use case - created in initialize()
+  // Ports
+  private accountsPort?: IAccountsPort;
+
+  // Use cases - created in initialize()
   private _getAiServiceForOrganization!: GetAiServiceForOrganizationUseCase;
+  private _testLLMConnection!: TestLLMConnectionUseCase;
+  private _getModels!: GetModelsUseCase;
 
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
@@ -17,29 +34,39 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
 
   /**
    * Initialize adapter with ports from registry.
-   * Currently no external ports are needed, but this allows for future extensibility
-   * when organization-specific LLM configurations are stored in the database.
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public async initialize(ports: Record<string, unknown>): Promise<void> {
+  public async initialize(ports: {
+    [IAccountsPortName]: IAccountsPort;
+  }): Promise<void> {
     this.logger.info('Initializing LlmAdapter');
-    // No external ports needed for initial implementation
-    // Future: Retrieve IAccountsPort or IConfigPort when org-specific configs are added
 
-    // Initialize use case
+    // Set accounts port
+    this.accountsPort = ports[IAccountsPortName];
+
+    if (!this.accountsPort) {
+      throw new Error(
+        'IAccountsPort is required for LlmAdapter initialization',
+      );
+    }
+
+    // Initialize use cases
     this._getAiServiceForOrganization = new GetAiServiceForOrganizationUseCase(
       this.logger,
     );
+    this._testLLMConnection = new TestLLMConnectionUseCase(
+      this.accountsPort,
+      this.logger,
+    );
+    this._getModels = new GetModelsUseCase(this.accountsPort, this.logger);
 
     this.logger.info('LlmAdapter initialized successfully');
   }
 
   /**
    * Check if adapter is ready.
-   * Always returns true as no external dependencies are required initially.
    */
   public isReady(): boolean {
-    return true;
+    return !!this.accountsPort;
   }
 
   /**
@@ -76,5 +103,31 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
     }
 
     return result.aiService;
+  }
+
+  /**
+   * Test an LLM connection configuration.
+   * Executes a simple prompt against both standard and fast models (if different).
+   */
+  async testLLMConnection(
+    command: TestLLMConnectionCommand,
+  ): Promise<TestLLMConnectionResponse> {
+    this.logger.info('Testing LLM connection', {
+      provider: command.config.provider,
+    });
+
+    return this._testLLMConnection.execute(command);
+  }
+
+  /**
+   * Get available models for an LLM provider.
+   * Returns a list of model IDs that can be used to configure the LLM.
+   */
+  async getModels(command: GetModelsCommand): Promise<GetModelsResponse> {
+    this.logger.info('Getting available models', {
+      provider: command.config.provider,
+    });
+
+    return this._getModels.execute(command);
   }
 }

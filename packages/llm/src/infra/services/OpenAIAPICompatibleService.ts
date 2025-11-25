@@ -138,4 +138,42 @@ export class OpenAIAPICompatibleService extends BaseOpenAIService {
 
     return result;
   }
+
+  /**
+   * Get a list of available model IDs from OpenAI-compatible endpoint
+   */
+  async getModels(): Promise<string[]> {
+    this.logger.info(
+      'Fetching available models from OpenAI-compatible endpoint',
+    );
+
+    await this.initialize();
+
+    if (!this.client) {
+      this.logger.warn(
+        'OpenAI-compatible client not available - returning empty array',
+      );
+      return [];
+    }
+
+    try {
+      const modelsList = await this.client.models.list();
+      const models: string[] = [];
+
+      for await (const model of modelsList) {
+        models.push(model.id);
+      }
+
+      this.logger.info('Successfully fetched OpenAI-compatible models', {
+        count: models.length,
+      });
+
+      return models;
+    } catch (error) {
+      this.logger.error('Failed to fetch OpenAI-compatible models', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return [];
+    }
+  }
 }

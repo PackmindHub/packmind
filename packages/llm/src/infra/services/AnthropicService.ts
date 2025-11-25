@@ -450,4 +450,36 @@ export class AnthropicService implements AIService {
       AIServiceErrorTypes.API_ERROR,
     ].includes(errorType);
   }
+
+  /**
+   * Get a list of available model IDs from Anthropic
+   */
+  async getModels(): Promise<string[]> {
+    this.logger.info('Fetching available models from Anthropic');
+
+    await this.initialize();
+
+    if (!this.client) {
+      this.logger.warn(
+        'Anthropic client not available - returning empty array',
+      );
+      return [];
+    }
+
+    try {
+      const page = await this.client.models.list();
+      const models = page.data.map((modelInfo) => modelInfo.id);
+
+      this.logger.info('Successfully fetched Anthropic models', {
+        count: models.length,
+      });
+
+      return models;
+    } catch (error) {
+      this.logger.error('Failed to fetch Anthropic models', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return [];
+    }
+  }
 }

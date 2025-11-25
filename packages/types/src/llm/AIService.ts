@@ -34,4 +34,10 @@ export interface AIService {
     conversationHistory: PromptConversation[],
     options?: AIPromptOptions,
   ): Promise<AIPromptResult<T>>;
+
+  /**
+   * Get a list of available model IDs for this provider
+   * @returns Promise resolving to an array of model ID strings
+   */
+  getModels(): Promise<string[]>;
 }

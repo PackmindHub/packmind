@@ -369,4 +369,38 @@ export class OpenAIService extends BaseOpenAIService {
       model,
     };
   }
+
+  /**
+   * Get a list of available model IDs from OpenAI
+   */
+  async getModels(): Promise<string[]> {
+    this.logger.info('Fetching available models from OpenAI');
+
+    await this.initialize();
+
+    if (!this.client) {
+      this.logger.warn('OpenAI client not available - returning empty array');
+      return [];
+    }
+
+    try {
+      const modelsList = await this.client.models.list();
+      const models: string[] = [];
+
+      for await (const model of modelsList) {
+        models.push(model.id);
+      }
+
+      this.logger.info('Successfully fetched OpenAI models', {
+        count: models.length,
+      });
+
+      return models;
+    } catch (error) {
+      this.logger.error('Failed to fetch OpenAI models', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return [];
+    }
+  }
 }

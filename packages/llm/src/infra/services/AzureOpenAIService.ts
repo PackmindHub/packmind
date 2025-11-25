@@ -116,4 +116,25 @@ export class AzureOpenAIService extends BaseOpenAIService {
       throw error;
     }
   }
+
+  /**
+   * Get a list of available model deployments from Azure OpenAI.
+   *
+   * Note: Azure OpenAI uses deployment names (not model IDs) for executing prompts.
+   * Listing deployments requires the Azure Management API with subscription ID and
+   * resource group information, which is not available through the data plane API.
+   *
+   * Users must obtain deployment names from the Azure Portal:
+   * Azure Portal > Azure OpenAI Resource > Model deployments
+   *
+   * @throws Error - This method is not implemented for Azure OpenAI provider
+   */
+  async getModels(): Promise<string[]> {
+    this.logger.warn(
+      'getModels called on AzureOpenAIService - method not implemented',
+    );
+    throw new Error(
+      'Method not implemented for this Provider. Azure OpenAI deployment names must be configured manually from Azure Portal.',
+    );
+  }
 }

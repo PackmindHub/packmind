@@ -260,4 +260,15 @@ export class PackmindService implements AIService {
       };
     }
   }
+
+  /**
+   * Get a list of available model IDs.
+   * For PackmindService, returns empty array since models are managed internally.
+   */
+  async getModels(): Promise<string[]> {
+    this.logger.info(
+      'getModels called on PackmindService - returning empty array',
+    );
+    return [];
+  }
 }
