@@ -1,5 +1,5 @@
 import React from 'react';
-import { useGetRuleDetectionAssessmentQuery } from '@packmind/proprietary/frontend/domain/detection';
+import { useGetRuleDetectionAssessmentQuery } from '../../api/queries/DetectionProgramQueries';
 import {
   determineDraftStatus,
   DraftStatus,

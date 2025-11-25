@@ -226,6 +226,18 @@ describe('AccordionProgramActionButtons', () => {
       });
     });
 
+    describe('when active config has TO_REVIEW status', () => {
+      beforeEach(() => {
+        screen = renderComponent({
+          activeConfigurations: [createActiveConfig(DetectionStatus.TO_REVIEW)],
+        });
+      });
+
+      it('renders the To review dropdown button', () => {
+        expect(screen.getByText('To review')).toBeInTheDocument();
+      });
+    });
+
     describe('when active config has ERROR status', () => {
       beforeEach(() => {
         screen = renderComponent({
