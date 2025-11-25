@@ -41,6 +41,8 @@ export type ProviderConfigField = {
   optional: boolean;
   /** Optional placeholder text for input */
   placeholder?: string;
+  /** Whether this field contains sensitive/secret information */
+  secret?: boolean;
 };
 
 /**
@@ -107,6 +109,7 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
         helpMessage: 'Your OpenAI API key from platform.openai.com.',
         optional: false,
         placeholder: 'sk-...',
+        secret: true,
       },
       {
         name: 'model',
@@ -117,6 +120,7 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
           'The primary model to use for standard operations. Defaults to the latest recommended model.',
         optional: true,
         placeholder: 'gpt-5.1',
+        secret: false,
       },
       {
         name: 'fastestModel',
@@ -127,6 +131,7 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
           'A faster, more economical model for less complex operations.',
         optional: true,
         placeholder: 'gpt-4.1-mini',
+        secret: false,
       },
     ],
   },
@@ -148,6 +153,7 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
         helpMessage: 'Your Anthropic API key from console.anthropic.com.',
         optional: false,
         placeholder: 'sk-ant-...',
+        secret: true,
       },
       {
         name: 'model',
@@ -158,6 +164,7 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
           'The primary Claude model to use. Defaults to the latest Sonnet model.',
         optional: true,
         placeholder: 'claude-sonnet-4-5-20250929',
+        secret: false,
       },
       {
         name: 'fastestModel',
@@ -168,6 +175,7 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
           'A faster Claude model for less complex operations. Defaults to Haiku.',
         optional: true,
         placeholder: 'claude-haiku-4-5-20251001',
+        secret: false,
       },
     ],
   },
@@ -189,6 +197,7 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
         helpMessage: 'Your Google AI API key from aistudio.google.com.',
         optional: false,
         placeholder: 'AIza...',
+        secret: true,
       },
       {
         name: 'model',
@@ -199,6 +208,7 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
           'The primary Gemini model to use. Defaults to the latest Pro model.',
         optional: true,
         placeholder: 'gemini-3-pro-preview',
+        secret: false,
       },
       {
         name: 'fastestModel',
@@ -209,6 +219,7 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
           'A faster Gemini model for less complex operations. Defaults to Flash.',
         optional: true,
         placeholder: 'gemini-2.5-flash',
+        secret: false,
       },
     ],
   },
@@ -232,6 +243,7 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
           'The Azure deployment name for the primary model. This is the name you gave your deployment in Azure Portal.',
         optional: false,
         placeholder: 'my-gpt-4-deployment',
+        secret: false,
       },
       {
         name: 'fastestModel',
@@ -241,6 +253,7 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
         helpMessage: 'The Azure deployment name for the fast/economical model.',
         optional: false,
         placeholder: 'my-gpt-35-turbo-deployment',
+        secret: false,
       },
       {
         name: 'endpoint',
@@ -250,6 +263,7 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
         helpMessage: 'Your Azure OpenAI endpoint URL.',
         optional: false,
         placeholder: 'https://your-resource.openai.azure.com',
+        secret: false,
       },
       {
         name: 'apiKey',
@@ -259,6 +273,7 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
         helpMessage: 'Your Azure OpenAI API key.',
         optional: false,
         placeholder: '',
+        secret: true,
       },
       {
         name: 'apiVersion',
@@ -269,6 +284,7 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
           'The Azure OpenAI API version to use. Defaults to the latest stable version.',
         optional: true,
         placeholder: '2024-12-01-preview',
+        secret: false,
       },
     ],
   },
@@ -291,6 +307,7 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
           'The base URL of the OpenAI-compatible API endpoint (e.g., http://localhost:11434/v1 for Ollama).',
         optional: false,
         placeholder: 'http://localhost:11434/v1',
+        secret: false,
       },
       {
         name: 'llmApiKey',
@@ -301,6 +318,7 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
           'API key for authentication. Some local providers may not require this.',
         optional: false,
         placeholder: '',
+        secret: true,
       },
       {
         name: 'model',
@@ -311,6 +329,7 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
           'The model identifier to use for standard operations (e.g., llama3, mistral).',
         optional: false,
         placeholder: 'llama3',
+        secret: false,
       },
       {
         name: 'fastestModel',
@@ -321,6 +340,7 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
           'A faster model for less complex operations. Can be the same as the primary model.',
         optional: false,
         placeholder: 'llama3',
+        secret: false,
       },
     ],
   },
