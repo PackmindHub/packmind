@@ -37,7 +37,7 @@ export type DraftCardData = {
   version?: number;
 };
 
-interface DraftCardProps {
+export interface DraftCardProps {
   draft: DraftCardData;
   onMakeActive: (draft: DraftCardData) => void;
   isActivating?: boolean;
