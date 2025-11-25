@@ -107,11 +107,13 @@ export class LintFilesLocallyUseCase implements ILintFilesLocally {
       ? path.dirname(absoluteUserPath)
       : absoluteUserPath;
 
+    // Try to get git root (may be null if outside git repo)
     const gitRepoRoot =
-      await this.services.gitRemoteUrlService.getGitRepositoryRoot(
+      await this.services.gitRemoteUrlService.tryGetGitRepositoryRoot(
         directoryForConfig,
       );
 
+    // Use git root as stop boundary, or null to walk to filesystem root
     const hierarchicalConfig =
       await this.repositories.configFileRepository.readHierarchicalConfig(
         directoryForConfig,
@@ -119,10 +121,14 @@ export class LintFilesLocallyUseCase implements ILintFilesLocally {
       );
 
     if (!hierarchicalConfig.hasConfigs) {
+      const boundary = gitRepoRoot ?? 'filesystem root';
       throw new Error(
-        `No packmind.json found between ${directoryForConfig} and ${gitRepoRoot}. Cannot use local linting.`,
+        `No packmind.json found between ${directoryForConfig} and ${boundary}. Cannot use local linting.`,
       );
     }
+
+    // Use git root as base for relative paths, or the config directory if outside git
+    const basePath = gitRepoRoot ?? directoryForConfig;
 
     this.logger.debug(
       `Found ${hierarchicalConfig.configPaths.length} packmind.json file(s)`,
@@ -160,8 +166,8 @@ export class LintFilesLocallyUseCase implements ILintFilesLocally {
     for (const file of files) {
       const fileViolations: LintViolation['violations'] = [];
 
-      const relativeFilePath = file.path.startsWith(gitRepoRoot)
-        ? file.path.substring(gitRepoRoot.length)
+      const relativeFilePath = file.path.startsWith(basePath)
+        ? file.path.substring(basePath.length)
         : file.path;
 
       const normalizedFilePath = relativeFilePath.startsWith('/')

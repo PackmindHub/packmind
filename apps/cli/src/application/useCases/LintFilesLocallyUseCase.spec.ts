@@ -37,6 +37,7 @@ describe('LintFilesLocallyUseCase', () => {
       getGitRemoteUrl: jest.fn(),
       getCurrentBranches: jest.fn(),
       getGitRepositoryRoot: jest.fn(),
+      tryGetGitRepositoryRoot: jest.fn(),
     } as unknown as jest.Mocked<GitService>;
 
     mockLinterExecutionUseCase = {
@@ -107,7 +108,7 @@ describe('LintFilesLocallyUseCase', () => {
         hasConfigs: true,
       };
 
-      mockGitRemoteUrlService.getGitRepositoryRoot.mockResolvedValue(
+      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockResolvedValue(
         '/project',
       );
       mockConfigFileRepository.readHierarchicalConfig.mockResolvedValue(
@@ -137,7 +138,7 @@ describe('LintFilesLocallyUseCase', () => {
         hasConfigs: true,
       };
 
-      mockGitRemoteUrlService.getGitRepositoryRoot.mockResolvedValue(
+      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockResolvedValue(
         '/project',
       );
       mockConfigFileRepository.readHierarchicalConfig.mockResolvedValue(
@@ -166,7 +167,7 @@ describe('LintFilesLocallyUseCase', () => {
         hasConfigs: false,
       };
 
-      mockGitRemoteUrlService.getGitRepositoryRoot.mockResolvedValue(
+      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockResolvedValue(
         '/project',
       );
       mockConfigFileRepository.readHierarchicalConfig.mockResolvedValue(
@@ -187,7 +188,7 @@ describe('LintFilesLocallyUseCase', () => {
         hasConfigs: true,
       };
 
-      mockGitRemoteUrlService.getGitRepositoryRoot.mockResolvedValue(
+      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockResolvedValue(
         '/project',
       );
       mockConfigFileRepository.readHierarchicalConfig.mockResolvedValue(
@@ -221,7 +222,7 @@ describe('LintFilesLocallyUseCase', () => {
         hasConfigs: true,
       };
 
-      mockGitRemoteUrlService.getGitRepositoryRoot.mockResolvedValue(
+      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockResolvedValue(
         '/project',
       );
       mockConfigFileRepository.readHierarchicalConfig.mockResolvedValue(
@@ -279,7 +280,7 @@ describe('LintFilesLocallyUseCase', () => {
         ],
       };
 
-      mockGitRemoteUrlService.getGitRepositoryRoot.mockResolvedValue(
+      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockResolvedValue(
         '/project',
       );
       mockConfigFileRepository.readHierarchicalConfig.mockResolvedValue(

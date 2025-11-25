@@ -10,6 +10,7 @@ import {
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { createRuleId, RuleId } from '@packmind/types';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
+import { LintViolation } from '../../domain/entities/LintViolation';
 import { IDELintLogger } from '../repositories/IDELintLogger';
 import { HumanReadableLogger } from '../repositories/HumanReadableLogger';
 import * as pathModule from 'path';
@@ -105,30 +106,58 @@ export const lintCommand = command({
       ? targetPath
       : pathModule.resolve(process.cwd(), targetPath);
 
-    // Check if we should use local linting: no arguments + packmind.json exists in hierarchy
+    // Determine linting mode and targets
     let useLocalLinting = false;
+    let lintTargets: string[] = [];
+
     if (!hasArguments) {
-      try {
-        const gitRoot =
-          await packmindCliHexa.getGitRepositoryRoot(absolutePath);
-        const hierarchicalConfig = await packmindCliHexa.readHierarchicalConfig(
+      const stopDirectory =
+        await packmindCliHexa.tryGetGitRepositoryRoot(absolutePath);
+
+      // Check if there's a config at the root level
+      const hierarchicalConfig = await packmindCliHexa.readHierarchicalConfig(
+        absolutePath,
+        stopDirectory,
+      );
+
+      if (hierarchicalConfig.hasConfigs) {
+        useLocalLinting = true;
+
+        // Start with the root as a target if it has a direct config
+        const rootConfig = await packmindCliHexa.readHierarchicalConfig(
           absolutePath,
-          gitRoot,
+          absolutePath,
         );
-        useLocalLinting = hierarchicalConfig.hasConfigs;
-      } catch {
-        // Git root not found or other error - fall back to deployment mode
-        useLocalLinting = false;
+        if (rootConfig.hasConfigs) {
+          lintTargets.push(absolutePath);
+        }
+
+        // Find all descendant configs (child targets)
+        const descendantTargets =
+          await packmindCliHexa.findDescendantConfigs(absolutePath);
+        lintTargets = [...lintTargets, ...descendantTargets];
+
+        // If no direct targets found but hierarchical config exists,
+        // use the root as the only target
+        if (lintTargets.length === 0) {
+          lintTargets.push(absolutePath);
+        }
       }
     }
 
-    let violations;
-    if (useLocalLinting) {
-      const result = await packmindCliHexa.lintFilesLocally({
-        path: targetPath,
-      });
-      violations = result.violations;
+    let violations: LintViolation[] = [];
+
+    if (useLocalLinting && lintTargets.length > 0) {
+      // Lint each target independently and aggregate results
+      for (const target of lintTargets) {
+        packmindLogger.debug(`Linting target: ${target}`);
+        const result = await packmindCliHexa.lintFilesLocally({
+          path: target,
+        });
+        violations = [...violations, ...result.violations];
+      }
     } else {
+      // Fall back to deployment mode
       const result = await packmindCliHexa.lintFilesInDirectory({
         path: targetPath,
         draftMode: draft,

@@ -76,6 +76,41 @@ describe('GitService', () => {
     });
   });
 
+  describe('tryGetGitRepositoryRoot', () => {
+    describe('when path is inside a git repository', () => {
+      it('returns repository root path', async () => {
+        const result = await service.tryGetGitRepositoryRoot(tempDir);
+        const resolvedTempDir = await fs.realpath(tempDir);
+
+        expect(result).toBe(resolvedTempDir);
+      });
+    });
+
+    describe('when path is not in a git repository', () => {
+      it('returns null', async () => {
+        const nonGitDir = await fs.mkdtemp(path.join(os.tmpdir(), 'non-git-'));
+
+        try {
+          const result = await service.tryGetGitRepositoryRoot(nonGitDir);
+
+          expect(result).toBeNull();
+        } finally {
+          await fs.rm(nonGitDir, { recursive: true, force: true });
+        }
+      });
+    });
+
+    describe('when path does not exist', () => {
+      it('returns null', async () => {
+        const nonExistentPath = path.join(os.tmpdir(), 'non-existent-path-xyz');
+
+        const result = await service.tryGetGitRepositoryRoot(nonExistentPath);
+
+        expect(result).toBeNull();
+      });
+    });
+  });
+
   describe('when only one remote is available', () => {
     it('returns single remote', async () => {
       await execAsync(

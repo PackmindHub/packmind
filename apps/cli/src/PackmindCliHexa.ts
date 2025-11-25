@@ -151,7 +151,7 @@ export class PackmindCliHexa {
 
   public async readHierarchicalConfig(
     startDirectory: string,
-    stopDirectory: string,
+    stopDirectory: string | null,
   ): Promise<HierarchicalConfigResult> {
     return this.hexa.repositories.configFileRepository.readHierarchicalConfig(
       startDirectory,
@@ -159,8 +159,22 @@ export class PackmindCliHexa {
     );
   }
 
+  public async findDescendantConfigs(directory: string): Promise<string[]> {
+    return this.hexa.repositories.configFileRepository.findDescendantConfigs(
+      directory,
+    );
+  }
+
   public async getGitRepositoryRoot(directory: string): Promise<string> {
     return this.hexa.services.gitRemoteUrlService.getGitRepositoryRoot(
+      directory,
+    );
+  }
+
+  public async tryGetGitRepositoryRoot(
+    directory: string,
+  ): Promise<string | null> {
+    return this.hexa.services.gitRemoteUrlService.tryGetGitRepositoryRoot(
       directory,
     );
   }

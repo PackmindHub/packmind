@@ -5,6 +5,8 @@ jest.mock('fs/promises');
 
 const mockFs = fs as jest.Mocked<typeof fs>;
 
+type MockDirent = { name: string; isDirectory: () => boolean };
+
 describe('ConfigFileRepository', () => {
   let repository: ConfigFileRepository;
 
@@ -173,6 +175,130 @@ describe('ConfigFileRepository', () => {
           '/project/apps/packmind.json',
           '/project/packmind.json',
         ]);
+      });
+    });
+
+    describe('when stopDirectory is null', () => {
+      it('walks up to filesystem root', async () => {
+        mockFs.readFile.mockImplementation(async (filePath: unknown) => {
+          if (filePath === '/home/user/packmind.json') {
+            return JSON.stringify({ packages: { home: '*' } });
+          }
+          if (filePath === '/home/user/project/packmind.json') {
+            return JSON.stringify({ packages: { project: '*' } });
+          }
+          throw { code: 'ENOENT' };
+        });
+
+        const result = await repository.readHierarchicalConfig(
+          '/home/user/project',
+          null,
+        );
+
+        expect(result.hasConfigs).toBe(true);
+        expect(result.packages).toEqual({ home: '*', project: '*' });
+        expect(result.configPaths).toContain(
+          '/home/user/project/packmind.json',
+        );
+        expect(result.configPaths).toContain('/home/user/packmind.json');
+      });
+    });
+  });
+
+  describe('findDescendantConfigs', () => {
+    beforeEach(() => {
+      mockFs.readdir.mockResolvedValue([]);
+    });
+
+    describe('when no packmind.json exists in descendants', () => {
+      it('returns empty array', async () => {
+        mockFs.readdir.mockResolvedValueOnce([
+          { name: 'src', isDirectory: () => true },
+          { name: 'file.ts', isDirectory: () => false },
+        ] as MockDirent[] as never);
+        mockFs.readFile.mockRejectedValue({ code: 'ENOENT' });
+
+        const result = await repository.findDescendantConfigs('/project');
+
+        expect(result).toEqual([]);
+      });
+    });
+
+    describe('when packmind.json exists in child directory', () => {
+      it('returns directory path', async () => {
+        mockFs.readdir
+          .mockResolvedValueOnce([
+            { name: 'apps', isDirectory: () => true },
+          ] as MockDirent[] as never)
+          .mockResolvedValue([]);
+        mockFs.readFile.mockImplementation(async (filePath: unknown) => {
+          if (filePath === '/project/apps/packmind.json') {
+            return JSON.stringify({ packages: { apps: '*' } });
+          }
+          throw { code: 'ENOENT' };
+        });
+
+        const result = await repository.findDescendantConfigs('/project');
+
+        expect(result).toEqual(['/project/apps']);
+      });
+    });
+
+    describe('when packmind.json exists in nested directories', () => {
+      it('returns all directory paths', async () => {
+        mockFs.readdir
+          .mockResolvedValueOnce([
+            { name: 'apps', isDirectory: () => true },
+            { name: 'packages', isDirectory: () => true },
+          ] as MockDirent[] as never)
+          .mockResolvedValueOnce([
+            { name: 'api', isDirectory: () => true },
+          ] as MockDirent[] as never)
+          .mockResolvedValue([]);
+        mockFs.readFile.mockImplementation(async (filePath: unknown) => {
+          if (filePath === '/project/apps/packmind.json') {
+            return JSON.stringify({ packages: { apps: '*' } });
+          }
+          if (filePath === '/project/apps/api/packmind.json') {
+            return JSON.stringify({ packages: { api: '*' } });
+          }
+          if (filePath === '/project/packages/packmind.json') {
+            return JSON.stringify({ packages: { packages: '*' } });
+          }
+          throw { code: 'ENOENT' };
+        });
+
+        const result = await repository.findDescendantConfigs('/project');
+
+        expect(result).toContain('/project/apps');
+        expect(result).toContain('/project/apps/api');
+        expect(result).toContain('/project/packages');
+      });
+    });
+
+    describe('when excluded directories exist', () => {
+      it('skips node_modules, .git, dist, build, coverage, .nx', async () => {
+        mockFs.readdir
+          .mockResolvedValueOnce([
+            { name: 'node_modules', isDirectory: () => true },
+            { name: '.git', isDirectory: () => true },
+            { name: 'dist', isDirectory: () => true },
+            { name: 'build', isDirectory: () => true },
+            { name: 'coverage', isDirectory: () => true },
+            { name: '.nx', isDirectory: () => true },
+            { name: 'src', isDirectory: () => true },
+          ] as MockDirent[] as never)
+          .mockResolvedValue([]);
+        mockFs.readFile.mockImplementation(async (filePath: unknown) => {
+          if (filePath === '/project/src/packmind.json') {
+            return JSON.stringify({ packages: { src: '*' } });
+          }
+          throw { code: 'ENOENT' };
+        });
+
+        const result = await repository.findDescendantConfigs('/project');
+
+        expect(result).toEqual(['/project/src']);
       });
     });
   });
