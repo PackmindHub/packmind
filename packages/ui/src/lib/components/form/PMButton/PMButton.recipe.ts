@@ -51,6 +51,42 @@ export const pmButtonRecipe = defineRecipe({
           bg: 'transparent',
         },
       },
+      danger: {
+        bg: '{colors.red.500}',
+        borderColor: '{colors.red.500}',
+        _hover: {
+          bg: '{colors.red.900}',
+        },
+        _disabled: {
+          bg: '{colors.red.900}',
+          color: '{colors.red.500}',
+          borderColor: '{colors.red.1000}',
+        },
+      },
+      success: {
+        bg: '{colors.green.500}',
+        borderColor: '{colors.green.500}',
+        _hover: {
+          bg: '{colors.green.900}',
+        },
+        _disabled: {
+          bg: '{colors.green.900}',
+          color: '{colors.green.500}',
+          borderColor: '{colors.green.1000}',
+        },
+      },
+      warning: {
+        bg: '{colors.yellow.500}',
+        borderColor: '{colors.yellow.500}',
+        _hover: {
+          bg: '{colors.yellow.900}',
+        },
+        _disabled: {
+          bg: '{colors.yellow.900}',
+          color: '{colors.yellow.500}',
+          borderColor: '{colors.yellow.1000}',
+        },
+      },
       ghost: {
         borderColor: 'transparent',
         padding: 0,

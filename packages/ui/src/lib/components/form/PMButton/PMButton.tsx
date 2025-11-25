@@ -6,7 +6,15 @@ import {
 } from '@chakra-ui/react';
 
 export interface IPMButtonProps extends ButtonProps {
-  variant?: 'primary' | 'secondary' | 'tertiary' | 'outline' | 'ghost';
+  variant?:
+    | 'primary'
+    | 'secondary'
+    | 'tertiary'
+    | 'outline'
+    | 'ghost'
+    | 'success'
+    | 'warning'
+    | 'danger';
   children: React.ReactNode;
 }
 
