@@ -32,6 +32,7 @@ describe('ActivateConfigurationCard', () => {
   let configuration: ActiveConfigurationSectionData;
   let props: ActiveConfigurationSectionProps;
   let screen: RenderResult;
+  let ruleDetectionAssessmentQuerySpy: jest.SpyInstance;
 
   beforeEach(() => {
     configuration = {
@@ -49,6 +50,18 @@ describe('ActivateConfigurationCard', () => {
       standardId: createStandardId('standard-id'),
       onOpenAssessmentDrawer: jest.fn(),
     };
+
+    ruleDetectionAssessmentQuerySpy = jest
+      .spyOn(DetectionProgramQueries, 'useGetRuleDetectionAssessmentQuery')
+      .mockReturnValue({ data: undefined } as Partial<
+        UseQueryResult<RuleDetectionAssessment | null>
+      > as UseQueryResult<RuleDetectionAssessment | null>);
+
+    jest
+      .spyOn(DetectionProgramQueries, 'useGetDetectionHeuristicsQuery')
+      .mockReturnValue({
+        data: undefined,
+      } as Partial<UseQueryResult<unknown>> as UseQueryResult<unknown>);
   });
 
   afterEach(() => {
@@ -74,12 +87,6 @@ describe('ActivateConfigurationCard', () => {
 
     describe('when assessment is not available', () => {
       beforeEach(() => {
-        jest
-          .spyOn(DetectionProgramQueries, 'useGetRuleDetectionAssessmentQuery')
-          .mockReturnValue({ data: undefined } as Partial<
-            UseQueryResult<RuleDetectionAssessment | null>
-          > as UseQueryResult<RuleDetectionAssessment | null>);
-
         screen = renderWithContext();
       });
 
@@ -105,11 +112,11 @@ describe('ActivateConfigurationCard', () => {
           clarificationQuestion: '',
         };
 
-        jest
-          .spyOn(DetectionProgramQueries, 'useGetRuleDetectionAssessmentQuery')
-          .mockReturnValue({ data: ruleDetectionAssessment } as Partial<
-            UseQueryResult<RuleDetectionAssessment | null>
-          > as UseQueryResult<RuleDetectionAssessment | null>);
+        ruleDetectionAssessmentQuerySpy.mockReturnValue({
+          data: ruleDetectionAssessment,
+        } as Partial<
+          UseQueryResult<RuleDetectionAssessment | null>
+        > as UseQueryResult<RuleDetectionAssessment | null>);
       });
 
       describe('when assessment is in progress', () => {
@@ -257,6 +264,44 @@ describe('ActivateConfigurationCard', () => {
           expect(onGenerateProgramSpy).toHaveBeenCalledWith(
             configuration.language,
           );
+        });
+
+        it('shows that a draft requires review', () => {
+          expect(
+            screen.getByText(/Draft requires review/i),
+          ).toBeInTheDocument();
+        });
+      });
+
+      describe('when only a draft exists', () => {
+        beforeEach(() => {
+          configuration.detectionProgram = null;
+          configuration.draftProgram = {
+            code: '',
+            createdAt: undefined,
+            id: createDetectionProgramId('only-draft-id'),
+            language: ProgrammingLanguage.TYPESCRIPT,
+            mode: DetectionModeEnum.SINGLE_AST,
+            ruleId: createRuleId('some-rule-id'),
+            sourceCodeState: 'AST',
+            status: DetectionStatus.READY,
+            version: 2,
+          };
+
+          screen = renderWithContext();
+        });
+
+        it('shows the draft summary information', () => {
+          expect(
+            screen.getByText(/Draft v2 requires review/i),
+          ).toBeInTheDocument();
+        });
+
+        it('lets the user activate the draft', async () => {
+          const user = userEvent.setup();
+          await user.click(screen.getByText('Activate draft'));
+
+          expect(onActivateDraft).toHaveBeenCalled();
         });
       });
 
