@@ -15,7 +15,15 @@ const meta: Meta<typeof PMButton> = {
     },
     variant: {
       control: 'select',
-      options: ['primary', 'secondary', 'tertiary', 'outline'],
+      options: [
+        'primary',
+        'secondary',
+        'tertiary',
+        'outline',
+        'danger',
+        'success',
+        'warning',
+      ],
       defaultValue: 'primary',
     },
   },
