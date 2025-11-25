@@ -1,30 +1,31 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   PMBox,
   PMButton,
-  PMHStack,
   PMGrid,
+  PMHeading,
+  PMHStack,
+  PMIcon,
   PMInput,
+  PMList,
   PMRadioGroup,
+  PMSpinner,
   PMText,
   PMVStack,
-  PMIcon,
-  PMHeading,
-  PMList,
-  PMSpinner,
 } from '@packmind/ui';
 import {
-  RuleDetectionAssessmentStatus,
   DetectionStatus,
+  RuleDetectionAssessmentStatus,
 } from '@packmind/types';
 import { LuSendHorizontal } from 'react-icons/lu';
 import {
-  useGetDetectionHeuristicsQuery,
-  useUpdateDetectionHeuristicsMutation,
   useGetActiveDetectionProgramsQuery,
+  useGetDetectionHeuristicsQuery,
   useGetRuleDetectionAssessmentQuery,
+  useUpdateDetectionHeuristicsMutation,
 } from '../../api/queries/DetectionProgramQueries';
 import { HeuristicsEditor } from '../HeuristicsEditor';
+import { formatDuration } from '../../../../shared/utils/dateUtils';
 
 interface DetectabilitySectionProps {
   standardId: string;
@@ -56,24 +57,6 @@ const LoadingOverlay: React.FC = () => (
     </PMVStack>
   </PMBox>
 );
-
-const formatDuration = (updatedAt: Date): string => {
-  const now = new Date();
-  const diffInMs = now.getTime() - updatedAt.getTime();
-  const diffInMinutes = Math.floor(diffInMs / 60000);
-  const diffInHours = Math.floor(diffInMinutes / 60);
-  const diffInDays = Math.floor(diffInHours / 24);
-
-  if (diffInDays > 0) {
-    return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
-  } else if (diffInHours > 0) {
-    return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
-  } else if (diffInMinutes > 0) {
-    return `${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''} ago`;
-  } else {
-    return 'Just now';
-  }
-};
 
 export const DetectabilitySection: React.FC<DetectabilitySectionProps> = ({
   standardId,

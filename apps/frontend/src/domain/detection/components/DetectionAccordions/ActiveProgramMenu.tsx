@@ -1,8 +1,16 @@
 import React, { useMemo } from 'react';
-import { PMMenu, PMPortal, PMIcon, PMButton } from '@packmind/ui';
+import {
+  PMMenu,
+  PMPortal,
+  PMIcon,
+  PMButton,
+  PMText,
+  PMVStack,
+} from '@packmind/ui';
 import { LuChevronDown, LuPlay, LuSparkles } from 'react-icons/lu';
 import { DetectionStatus } from '@packmind/types';
 import { ActiveConfigurationSectionData } from '../ActiveConfigurationSection';
+import { formatDate } from '../../../../shared/utils/dateUtils';
 
 export enum ActiveProgramStatus {
   ACTIVE = 'active',
@@ -72,13 +80,12 @@ export const ActiveProgramMenu: React.FC<ActiveProgramMenuProps> = ({
   selectedLanguage,
 }) => {
   const status = determineActiveStatus(activeConfigurations);
+  const activeConfig = activeConfigurations.find(
+    (config) => config.detectionProgram?.status === DetectionStatus.READY,
+  );
 
   const actions = useMemo<MenuAction[]>(() => {
     const menuActions: MenuAction[] = [];
-
-    const activeConfig = activeConfigurations.find(
-      (config) => config.detectionProgram?.status === DetectionStatus.READY,
-    );
 
     if (activeConfig) {
       menuActions.push({
@@ -128,6 +135,18 @@ export const ActiveProgramMenu: React.FC<ActiveProgramMenuProps> = ({
       <PMPortal>
         <PMMenu.Positioner>
           <PMMenu.Content>
+            <PMVStack alignItems="left">
+              <PMText variant={'body-important'}>Information</PMText>
+              <PMText fontSize={'sm'}>
+                Version: {activeConfig?.detectionProgram?.version}
+              </PMText>
+              {activeConfig?.detectionProgram?.createdAt && (
+                <PMText fontSize={'sm'}>
+                  Generated on{' '}
+                  {formatDate(activeConfig.detectionProgram.createdAt)}
+                </PMText>
+              )}
+            </PMVStack>
             {actions.map((action, index) => (
               <PMMenu.Item
                 key={index}
