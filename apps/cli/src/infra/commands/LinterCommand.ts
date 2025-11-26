@@ -11,6 +11,7 @@ import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { createRuleId, RuleId } from '@packmind/types';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { LintViolation } from '../../domain/entities/LintViolation';
+import { DiffMode } from '../../domain/entities/DiffMode';
 import { IDELintLogger } from '../repositories/IDELintLogger';
 import { HumanReadableLogger } from '../repositories/HumanReadableLogger';
 import * as pathModule from 'path';
@@ -46,6 +47,20 @@ const RuleID: Type<string, { standardSlug: string; ruleId: RuleId }> = {
       standardSlug: match[1],
       ruleId: createRuleId(match[2]),
     };
+  },
+};
+
+const DiffModeType: Type<string, DiffMode> = {
+  from: async (input) => {
+    switch (input) {
+      case 'files':
+        return DiffMode.FILES;
+      case 'lines':
+        return DiffMode.LINES;
+    }
+    throw new Error(
+      `${input} is not a valid value for the --diff option. Expected values are: files, lines`,
+    );
   },
 };
 
@@ -85,8 +100,13 @@ export const lintCommand = command({
       long: 'debug',
       description: 'Enable debug logging',
     }),
+    diff: option({
+      long: 'diff',
+      description: 'Filter violations by git diff (files | lines)',
+      type: optional(DiffModeType),
+    }),
   },
-  handler: async ({ path, draft, rule, debug, language, logger }) => {
+  handler: async ({ path, draft, rule, debug, language, logger, diff }) => {
     if (draft && !rule) {
       throw new Error('option --rule is required to use --draft mode');
     }
@@ -105,6 +125,17 @@ export const lintCommand = command({
     const absolutePath = pathModule.isAbsolute(targetPath)
       ? targetPath
       : pathModule.resolve(process.cwd(), targetPath);
+
+    // Validate git repository when --diff is used
+    if (diff) {
+      const gitRoot =
+        await packmindCliHexa.tryGetGitRepositoryRoot(absolutePath);
+      if (!gitRoot) {
+        throw new Error(
+          'The --diff option requires the project to be in a Git repository',
+        );
+      }
+    }
 
     // Determine linting mode
     let useLocalLinting = false;
@@ -129,6 +160,7 @@ export const lintCommand = command({
       // Local linting mode: LintFilesLocallyUseCase handles all configs in tree
       const result = await packmindCliHexa.lintFilesLocally({
         path: absolutePath,
+        diffMode: diff,
       });
       violations = result.violations;
     } else {
@@ -139,6 +171,7 @@ export const lintCommand = command({
         standardSlug: rule?.standardSlug,
         ruleId: rule?.ruleId,
         language,
+        diffMode: diff,
       });
       violations = result.violations;
     }

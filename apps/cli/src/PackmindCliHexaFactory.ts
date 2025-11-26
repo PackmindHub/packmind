@@ -14,6 +14,7 @@ import { PackmindServices } from './application/services/PackmindServices';
 import { IPackmindRepositories } from './domain/repositories/IPackmindRepositories';
 import { ListFiles } from './application/services/ListFiles';
 import { GitService } from './application/services/GitService';
+import { DiffViolationFilterService } from './application/services/DiffViolationFilterService';
 import { ExecuteLinterProgramsUseCase } from '@packmind/linter-execution';
 import { IPullDataUseCase } from './domain/useCases/IPullDataUseCase';
 import { PullDataUseCase } from './application/useCases/PullDataUseCase';
@@ -50,6 +51,7 @@ export class PackmindCliHexaFactory {
       listFiles: new ListFiles(),
       gitRemoteUrlService: new GitService(this.logger),
       linterExecutionUseCase: new ExecuteLinterProgramsUseCase(),
+      diffViolationFilterService: new DiffViolationFilterService(),
     };
 
     this.useCases = {

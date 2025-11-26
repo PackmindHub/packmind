@@ -1,8 +1,10 @@
 import { IPublicUseCase } from '@packmind/types';
 import { LintViolation } from '../entities/LintViolation';
+import { DiffMode } from '../entities/DiffMode';
 
 export type LintFilesLocallyCommand = {
   path: string;
+  diffMode?: DiffMode;
 };
 
 export type LintFilesLocallyResult = {
