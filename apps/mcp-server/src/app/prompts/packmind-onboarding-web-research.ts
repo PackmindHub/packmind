@@ -1,3 +1,5 @@
+import { RULE_WRITING_GUIDELINES } from './shared/rule-writing-guidelines';
+
 const prompt = `# Contextualized Coding Standards Creation - Web Research Method
 
 This method researches industry best practices and current standards for specific technologies or topics you want to focus on.
@@ -98,7 +100,7 @@ Before creating the standard, determine if it should be added to any packages:
    - \`name\`: Clear, descriptive name for the standard
    - \`description\`: The scope and context including source URLs in Markdown format
    - \`rules\`: Array of rule objects, each containing:
-     - \`content\`: The rule description (single detailed sentence starting with a verb)
+     - \`content\`: Concise rule (~22 words max) starting with a verb, with inline code if helpful
      - \`examples\`: Array containing one object with \`positive\`, \`negative\`, and \`language\` fields
    - \`packageSlugs\`: Array of package slugs if user selected packages (optional)
 5. **Confirm successful creation**: "✅ Successfully created '[STANDARD_NAME]' standard in Packmind based on industry best practices with documented sources."
@@ -154,10 +156,11 @@ The description field should include:
 9. **Include source URLs in Markdown format** in the standard description field when calling the Packmind MCP tool
 10. **Generate rules internally** and send directly to Packmind without showing to user
 
-### Rule Structure Requirements
+${RULE_WRITING_GUIDELINES}
 
+### Rule Structure
 Each rule must include:
-- **content**: Single detailed sentence starting with a verb describing the rule based on industry best practices
+- **content**: Concise sentence (~22 words max) starting with a verb, with inline code if helpful
 - **positive**: Code snippet showing correct implementation based on authoritative sources
 - **negative**: Code snippet showing incorrect implementation (anti-patterns)
 - **language**: Programming language used for the code snippets

@@ -1,6 +1,10 @@
+import { RULE_WRITING_GUIDELINES } from '../shared/rule-writing-guidelines';
+
 const prompt = `# Step 3 · Draft and Iterate with the User
 
 Now that the context is locked in, create the draft standard and iterate with the user in two phases. Keep all reasoning local—no backend completions.
+
+${RULE_WRITING_GUIDELINES}
 
 ## Phase 1: Draft and Validate Rules Only
 
@@ -11,7 +15,7 @@ Now that the context is locked in, create the draft standard and iterate with th
    - \`# <Standard Title>\`
    - Context paragraph explaining when/why to apply the standard in this codebase.
    - Optional **Key References** list citing files or authoritative sources.
-   - \`## Rules\` as bullet points, each starting with a verb and stating the required behavior.
+   - \`## Rules\` as bullet points following the Rule Writing Guidelines above.
    - **DO NOT include examples yet** - examples will be added in Phase 2 after rules are validated.
 3. After the file is saved, tell the user the file path and flag anything that needs special attention.
 
@@ -19,7 +23,7 @@ Now that the context is locked in, create the draft standard and iterate with th
 
 1. Write a concise TL;DR that captures:
    - One sentence summarizing the standard's purpose.
-   - A bullet list of all rules added in the new standard (keep each rule summary very short and concise—8-10 words max).
+   - A bullet list of all rules (each rule ~22 words max, imperative form, with inline code if helpful).
    - **Do not add any additional explanatory paragraphs or duplicate content after the TL;DR.**
 2. Share the TL;DR with the user only after the draft file exists so they can confirm the plan.
 3. Ask for precise feedback on the rules and apply requested changes in the draft file while keeping the TL;DR aligned.

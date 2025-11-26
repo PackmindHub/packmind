@@ -1,3 +1,5 @@
+import { RULE_WRITING_GUIDELINES_WITH_STRUCTURE } from './shared/rule-writing-guidelines';
+
 const prompt = `# Contextualized Coding Standards Creation - Git History Analysis Method
 
 This method analyzes your last 30 git commits to identify areas where standards could address recent development patterns and issues.
@@ -92,7 +94,7 @@ This standard covers [specific scope based on commit analysis] and addresses pat
 
 **Rule 1:**
 
-- **Content**: [Single detailed sentence starting with a verb describing the rule based on git patterns]
+- **Content**: [Concise sentence (~22 words max) starting with a verb, with inline code if helpful]
 - **Positive Example**:
 
 \`\`\`[language]
@@ -109,7 +111,7 @@ This standard covers [specific scope based on commit analysis] and addresses pat
 
 **Rule 2:**
 
-- **Content**: [Single detailed sentence starting with a verb describing the rule based on git patterns]
+- **Content**: [Concise sentence (~22 words max) starting with a verb, with inline code if helpful]
 - **Positive Example**:
 
 \`\`\`[language]
@@ -126,7 +128,7 @@ This standard covers [specific scope based on commit analysis] and addresses pat
 
 **Rule 3:**
 
-- **Content**: [Single detailed sentence starting with a verb describing the rule based on git patterns]
+- **Content**: [Concise sentence (~22 words max) starting with a verb, with inline code if helpful]
 - **Positive Example**:
 
 \`\`\`[language]
@@ -143,7 +145,7 @@ This standard covers [specific scope based on commit analysis] and addresses pat
 
 **Rule 4:**
 
-- **Content**: [Single detailed sentence starting with a verb describing the rule based on git patterns]
+- **Content**: [Concise sentence (~22 words max) starting with a verb, with inline code if helpful]
 - **Positive Example**:
 
 \`\`\`[language]
@@ -160,7 +162,7 @@ This standard covers [specific scope based on commit analysis] and addresses pat
 
 **Rule 5:**
 
-- **Content**: [Single detailed sentence starting with a verb describing the rule based on git patterns]
+- **Content**: [Concise sentence (~22 words max) starting with a verb, with inline code if helpful]
 - **Positive Example**:
 
 \`\`\`[language]
@@ -238,13 +240,7 @@ What would you prefer?"
 5. **Analyze developer activity** on shared code areas
 6. **Review file change statistics** to understand development hotspots
 
-### Rule Structure Requirements
-
-Each rule must include:
-- **content**: Single detailed sentence starting with a verb describing the rule based on git patterns
-- **positive**: Code snippet showing correct implementation
-- **negative**: Code snippet showing incorrect implementation
-- **language**: Programming language used for the code snippets
+${RULE_WRITING_GUIDELINES_WITH_STRUCTURE}
 
 ## Workflow Completion
 

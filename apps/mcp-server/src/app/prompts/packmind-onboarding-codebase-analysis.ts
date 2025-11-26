@@ -1,3 +1,5 @@
+import { RULE_WRITING_GUIDELINES_WITH_STRUCTURE } from './shared/rule-writing-guidelines';
+
 const prompt = `# Contextualized Coding Standards Creation - Codebase Analysis Method
 
 This method analyzes your current codebase to identify languages, frameworks, or architectural patterns and creates coding standards based on actual usage patterns found in your code.
@@ -67,7 +69,7 @@ Before creating the standard, determine if it should be added to any packages:
    - \`name\`: Clear, descriptive name for the standard
    - \`description\`: The scope and context of the standard (without duplicating the individual rules)
    - \`rules\`: Array of rule objects, each containing:
-     - \`content\`: The rule description (single detailed sentence starting with a verb)
+     - \`content\`: Concise rule (~22 words max) starting with a verb, with inline code if helpful
      - \`examples\`: Array containing one object with \`positive\`, \`negative\`, and \`language\` fields
    - \`packageSlugs\`: Array of package slugs if user selected packages (optional)
 5. **Confirm successful creation**: "✅ Successfully created '[STANDARD_NAME]' standard in Packmind based on your [TECHNOLOGY] codebase patterns."
@@ -98,13 +100,7 @@ Focus on technologies that appear most frequently in:
 9. **Separate scope/description from rules** - only send the scope section as description, rules go in the rules array
 10. **Confirm successful creation** and inform the user the standard is available
 
-## Rule Structure Requirements
-
-Each rule must include:
-- **content**: Single detailed sentence starting with a verb describing the rule based on codebase patterns
-- **positive**: Code snippet showing correct implementation
-- **negative**: Code snippet showing incorrect implementation
-- **language**: Programming language used for the code snippets
+${RULE_WRITING_GUIDELINES_WITH_STRUCTURE}
 
 ## Technology Focus Areas
 
