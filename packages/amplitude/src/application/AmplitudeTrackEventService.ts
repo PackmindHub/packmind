@@ -8,12 +8,14 @@ const origin = 'AmplitudeTrackEventService';
 
 export class AmplitudeTrackEventService {
   private initialized = false;
+  private configurationChecked = false;
 
   constructor(private readonly logger = new PackmindLogger(origin)) {
     this.logger.info('AmplitudeTrackEventService (proprietary) initialized');
   }
 
   private async initializeAmplitude() {
+    this.configurationChecked = true;
     const config = await new AmplitudeService().getConfig();
     if (!config.amplitudeKey) {
       this.logger.debug('No API Key provisioned for Amplitude, skip');
@@ -26,8 +28,12 @@ export class AmplitudeTrackEventService {
   }
 
   async pushEventToAmplitude(event: AmplitudeNodeEvent) {
-    if (!this.initialized) {
+    if (!this.configurationChecked) {
       await this.initializeAmplitude();
+    }
+
+    if (!this.initialized) {
+      return;
     }
 
     this.logger.info('Tracking event', {
