@@ -8,6 +8,18 @@ import {
   GetModelsCommand,
   GetModelsResponse,
 } from '../contracts/GetModelsUseCase';
+import {
+  GetLLMConfigurationCommand,
+  GetLLMConfigurationResponse,
+} from '../contracts/GetLLMConfigurationUseCase';
+import {
+  SaveLLMConfigurationCommand,
+  SaveLLMConfigurationResponse,
+} from '../contracts/SaveLLMConfigurationUseCase';
+import {
+  TestSavedLLMConfigurationCommand,
+  TestSavedLLMConfigurationResponse,
+} from '../contracts/TestSavedLLMConfigurationUseCase';
 
 export const ILlmPortName = 'ILlmPort' as const;
 
@@ -17,4 +29,13 @@ export interface ILlmPort {
     command: TestLLMConnectionCommand,
   ): Promise<TestLLMConnectionResponse>;
   getModels(command: GetModelsCommand): Promise<GetModelsResponse>;
+  saveLLMConfiguration(
+    command: SaveLLMConfigurationCommand,
+  ): Promise<SaveLLMConfigurationResponse>;
+  getLLMConfiguration(
+    command: GetLLMConfigurationCommand,
+  ): Promise<GetLLMConfigurationResponse>;
+  testSavedLLMConfiguration(
+    command: TestSavedLLMConfigurationCommand,
+  ): Promise<TestSavedLLMConfigurationResponse>;
 }

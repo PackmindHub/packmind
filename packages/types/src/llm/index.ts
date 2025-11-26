@@ -6,5 +6,8 @@ export * from './errors/AiNotConfigured';
 export * from './contracts/GetAiServiceForOrganizationUseCase';
 export * from './contracts/TestLLMConnectionUseCase';
 export * from './contracts/GetModelsUseCase';
+export * from './contracts/GetLLMConfigurationUseCase';
+export * from './contracts/SaveLLMConfigurationUseCase';
+export * from './contracts/TestSavedLLMConfigurationUseCase';
 export * from './LLMProviderMetadata';
 export * from './LLMServiceConfig';
