@@ -6,6 +6,7 @@ const origin = 'CrispTrackEventService';
 
 export class CrispTrackEventService {
   private initialized = false;
+  private configurationChecked = false;
   private crispClient: Crisp = new Crisp();
   private webSite = '';
 
@@ -14,6 +15,7 @@ export class CrispTrackEventService {
   }
 
   private async initializeCrisp() {
+    this.configurationChecked = true;
     const pluginIdentifier = await Configuration.getConfig(
       'CRISP_PLUGIN_IDENTIFIER',
     );
@@ -32,9 +34,14 @@ export class CrispTrackEventService {
   }
 
   async createPeopleIfNotAlreadyExists(email: string) {
-    if (!this.initialized) {
+    if (!this.configurationChecked) {
       await this.initializeCrisp();
     }
+
+    if (!this.initialized) {
+      return;
+    }
+
     this.logger.info(`Create People if not already exists ${maskEmail(email)}`);
     try {
       await this.crispClient.website.checkPeopleProfileExists(
@@ -65,9 +72,14 @@ export class CrispTrackEventService {
   }
 
   async addPeopleEvent(email: string, eventName: string) {
-    if (!this.initialized) {
+    if (!this.configurationChecked) {
       await this.initializeCrisp();
     }
+
+    if (!this.initialized) {
+      return;
+    }
+
     try {
       await this.createPeopleIfNotAlreadyExists(email);
       const peopleEvent = {
