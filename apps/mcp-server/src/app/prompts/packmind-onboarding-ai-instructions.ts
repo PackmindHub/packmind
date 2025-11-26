@@ -1,3 +1,5 @@
+import { RULE_WRITING_GUIDELINES_WITH_STRUCTURE } from './shared/rule-writing-guidelines';
+
 const prompt = `# Contextualized Coding Standards Creation - AI Agent Instructions Analysis Method
 
 This method analyzes AI coding agent instruction files (copilot-instructions.md, CLAUDE.md, AGENTS.md, .cursor/rules/*.mdc) to create standards based on existing AI guidance and coding preferences.
@@ -90,7 +92,7 @@ This standard covers [specific scope based on AI instructions analysis] and form
 
 **Rule 1:**
 
-- **Content**: [Single detailed sentence starting with a verb describing the rule based on AI agent preferences]
+- **Content**: [Concise sentence (~22 words max) starting with a verb, with inline code if helpful]
 - **Positive Example**:
 
 \`\`\`[language]
@@ -107,7 +109,7 @@ This standard covers [specific scope based on AI instructions analysis] and form
 
 **Rule 2:**
 
-- **Content**: [Single detailed sentence starting with a verb describing the rule based on AI coding guidance]
+- **Content**: [Concise sentence (~22 words max) starting with a verb, with inline code if helpful]
 - **Positive Example**:
 
 \`\`\`[language]
@@ -124,7 +126,7 @@ This standard covers [specific scope based on AI instructions analysis] and form
 
 **Rule 3:**
 
-- **Content**: [Single detailed sentence starting with a verb describing the rule based on AI pattern instructions]
+- **Content**: [Concise sentence (~22 words max) starting with a verb, with inline code if helpful]
 - **Positive Example**:
 
 \`\`\`[language]
@@ -141,7 +143,7 @@ This standard covers [specific scope based on AI instructions analysis] and form
 
 **Rule 4:**
 
-- **Content**: [Single detailed sentence starting with a verb describing the rule based on AI style preferences]
+- **Content**: [Concise sentence (~22 words max) starting with a verb, with inline code if helpful]
 - **Positive Example**:
 
 \`\`\`[language]
@@ -158,7 +160,7 @@ This standard covers [specific scope based on AI instructions analysis] and form
 
 **Rule 5:**
 
-- **Content**: [Single detailed sentence starting with a verb describing the rule based on AI quality guidelines]
+- **Content**: [Concise sentence (~22 words max) starting with a verb, with inline code if helpful]
 - **Positive Example**:
 
 \`\`\`[language]
@@ -231,13 +233,7 @@ What would you prefer?"
 5. **Look for implicit standards** mentioned in AI guidance that could be formalized
 6. **Reference existing AI preferences** when creating new standards
 
-### Rule Structure Requirements
-
-Each rule must include:
-- **content**: Single detailed sentence starting with a verb describing the rule based on AI agent preferences
-- **positive**: Code snippet showing correct implementation
-- **negative**: Code snippet showing incorrect implementation
-- **language**: Programming language used for the code snippets
+${RULE_WRITING_GUIDELINES_WITH_STRUCTURE}
 
 ## AI Agent Focus Areas
 

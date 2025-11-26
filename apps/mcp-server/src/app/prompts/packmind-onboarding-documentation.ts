@@ -1,3 +1,5 @@
+import { RULE_WRITING_GUIDELINES_WITH_STRUCTURE } from './shared/rule-writing-guidelines';
+
 const prompt = `# Contextualized Coding Standards Creation - Documentation Analysis Method
 
 This method analyzes markdown files in your repository, including ADRs and coding guidelines, to create standards based on existing documented decisions and practices.
@@ -83,7 +85,7 @@ This standard covers [specific scope based on documentation analysis] and formal
 
 **Rule 1:**
 
-- **Content**: [Single detailed sentence starting with a verb describing the rule based on documented decisions]
+- **Content**: [Concise sentence (~22 words max) starting with a verb, with inline code if helpful]
 - **Positive Example**:
 
 \`\`\`[language]
@@ -100,7 +102,7 @@ This standard covers [specific scope based on documentation analysis] and formal
 
 **Rule 2:**
 
-- **Content**: [Single detailed sentence starting with a verb describing the rule based on documented practices]
+- **Content**: [Concise sentence (~22 words max) starting with a verb, with inline code if helpful]
 - **Positive Example**:
 
 \`\`\`[language]
@@ -117,7 +119,7 @@ This standard covers [specific scope based on documentation analysis] and formal
 
 **Rule 3:**
 
-- **Content**: [Single detailed sentence starting with a verb describing the rule based on documented guidelines]
+- **Content**: [Concise sentence (~22 words max) starting with a verb, with inline code if helpful]
 - **Positive Example**:
 
 \`\`\`[language]
@@ -134,7 +136,7 @@ This standard covers [specific scope based on documentation analysis] and formal
 
 **Rule 4:**
 
-- **Content**: [Single detailed sentence starting with a verb describing the rule based on documented workflows]
+- **Content**: [Concise sentence (~22 words max) starting with a verb, with inline code if helpful]
 - **Positive Example**:
 
 \`\`\`[language]
@@ -151,7 +153,7 @@ This standard covers [specific scope based on documentation analysis] and formal
 
 **Rule 5:**
 
-- **Content**: [Single detailed sentence starting with a verb describing the rule based on documented standards]
+- **Content**: [Concise sentence (~22 words max) starting with a verb, with inline code if helpful]
 - **Positive Example**:
 
 \`\`\`[language]
@@ -224,13 +226,7 @@ What would you prefer?"
 5. **Look for implicit rules** that could be formalized into explicit standards
 6. **Reference existing documentation** when creating new standards
 
-### Rule Structure Requirements
-
-Each rule must include:
-- **content**: Single detailed sentence starting with a verb describing the rule based on documented decisions
-- **positive**: Code snippet showing correct implementation
-- **negative**: Code snippet showing incorrect implementation
-- **language**: Programming language used for the code snippets
+${RULE_WRITING_GUIDELINES_WITH_STRUCTURE}
 
 ## Documentation Focus Areas
 

@@ -1,14 +1,16 @@
+import { RULE_WRITING_GUIDELINES } from '../shared/rule-writing-guidelines';
+
 const prompt = `# Step 2 · Draft the Rule
 
 Now that you have the context, create a draft of the rule and iterate with the user until they approve.
 
+${RULE_WRITING_GUIDELINES}
+
+Focus on the essential behavior only—let examples provide the details.
+
 ## Rule Drafting
 
-1. **Write the rule content**:
-   - **One-liner format**: Keep it to a single sentence of around a dozen words
-   - Start with a clear verb (e.g., "Use", "Avoid", "Ensure", "Prefer")
-   - Focus on the essential behavior only
-   - Avoid redundant explanations—let the examples provide the details
+1. **Write the rule content** following the Rule Writing Guidelines above.
 
 2. **Create examples** (if applicable):
    - **Positive Example**: Show the correct way to apply the rule

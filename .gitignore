@@ -36,3 +36,4 @@ test-results/
 .env
 compose.env
 .mcp.json
+apps/mcp-server/key.pem
