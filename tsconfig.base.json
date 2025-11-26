@@ -20,7 +20,6 @@
     "paths": {
       "@packmind/accounts": ["packages/accounts/src/index.ts"],
       "@packmind/amplitude": ["packages/amplitude/src/index.ts"],
-      "@packmind/analytics/types": ["packages/analytics/src/types/index.ts"],
       "@packmind/assets": ["packages/assets/src/index.ts"],
       "@packmind/assets/*": ["packages/assets/src/*"],
       "@packmind/coding-agent": ["packages/coding-agent/src/index.ts"],
@@ -37,6 +36,7 @@
       ],
       "@packmind/linter-ast": ["packages/linter-ast/src/index.ts"],
       "@packmind/linter-execution": ["packages/linter-execution/src/index.ts"],
+      "@packmind/llm": ["packages/llm/src/index.ts"],
       "@packmind/logger": ["packages/logger/src/index.ts"],
       "@packmind/migrations": ["packages/migrations/src/index.ts"],
       "@packmind/node-utils": ["packages/node-utils/src/index.ts"],
@@ -54,7 +54,6 @@
       "features/detection/ProgramEditor": [
         "apps/frontend/src/domain/detection/components/ProgramEditor"
       ],
-      "@packmind/llm": ["packages/llm/src/index.ts"],
       "packmind-plugin": ["tools/packmind-plugin/src/index.ts"]
     }
   },
