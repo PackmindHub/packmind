@@ -96,7 +96,7 @@ export const ProgramGenerationAccordion: React.FC<
 
   return (
     <DetectionAccordion
-      title="Program"
+      title="Detection program"
       actions={
         <>
           {!disabled && (

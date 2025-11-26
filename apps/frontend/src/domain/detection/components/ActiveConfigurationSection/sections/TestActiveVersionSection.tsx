@@ -16,7 +16,7 @@ export const TestActiveVersionSection: React.FC<
       <PMText fontSize="sm" color="faded">
         Test current linter configuration for this rule on your code.
       </PMText>
-      <PMButton size="sm" variant="outline" onClick={onTestClick}>
+      <PMButton size="2xs" variant="tertiary" onClick={onTestClick}>
         Test
       </PMButton>
     </PMVStack>

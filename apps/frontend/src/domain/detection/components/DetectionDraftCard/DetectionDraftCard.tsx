@@ -14,18 +14,15 @@ import {
   PMTimelineItem,
   PMTimelineSeparator,
   PMTimelineTitle,
+  type IPMButtonProps,
 } from '@packmind/ui';
 import { DetectionProgram, DetectionStatus } from '@packmind/types';
 import { useGetRuleDetectionAssessmentQuery } from '../../api/queries/DetectionProgramQueries';
 import { LuCheck, LuCircleAlert, LuLoader } from 'react-icons/lu';
-import { determineDraftStatus } from './determineDraftStatus';
 import {
-  getTimelineConfig,
-  LoadingStates,
-  TimelineHandlers,
-  TimelineStepConfig,
-  TimelineStepStatus,
-} from './getTimelineConfig';
+  determineDraftStatus,
+  DraftStatus,
+} from '@packmind/proprietary/frontend/domain/detection/components/DetectionDraftCard/determineDraftStatus';
 
 export type DraftCardData = {
   id: string;
@@ -85,7 +82,7 @@ export const DetectionDraftCard: React.FC<DraftCardProps> = ({
   const timelineConfig = getTimelineConfig(state, handlers, loadingStates);
 
   return (
-    <PMBox width="full" m={4}>
+    <PMBox width="full">
       <PMTimeline variant="subtle">
         <TimelineStep config={timelineConfig.step1} />
         <TimelineStep config={timelineConfig.step2} />
@@ -123,6 +120,43 @@ function getStepIcon(status: TimelineStepStatus) {
       return;
   }
 }
+
+type TimelineButton = {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+  variant?: IPMButtonProps['variant'];
+  size?: IPMButtonProps['size'];
+};
+
+enum TimelineStepStatus {
+  pending,
+  success,
+  failure,
+  unreachable,
+}
+
+type TimelineStepConfig = {
+  title: string;
+  description?: string | React.ReactNode;
+  isLast: boolean;
+  buttons?: TimelineButton[];
+  status: TimelineStepStatus;
+};
+
+type TimelineConfig = {
+  step1: TimelineStepConfig;
+  step2: TimelineStepConfig;
+  step3: TimelineStepConfig;
+};
+
+type TimelineHandlers = {
+  onShowLogs: () => void;
+  onShowProgram: () => void;
+  onTestDraft: () => void;
+  onMakeActive: () => void;
+  onRetryDraft: () => void;
+};
 
 function getStepTextColor(status: TimelineStepStatus): PMTextColors {
   if (status === TimelineStepStatus.unreachable) return 'faded';
@@ -171,3 +205,205 @@ const TimelineStep: React.FC<TimelineStepProps> = ({ config }) => {
     </PMTimelineItem>
   );
 };
+
+type LoadingStates = {
+  isActivating: boolean;
+  isGenerating: boolean;
+};
+
+function getTimelineConfig(
+  state: DraftStatus,
+  handlers: TimelineHandlers,
+  loadingStates: LoadingStates,
+): TimelineConfig {
+  switch (state) {
+    case DraftStatus.ASSESSING:
+      return {
+        step1: {
+          title: 'Checking the detectability of the rule',
+          isLast: false,
+          status: TimelineStepStatus.pending,
+        },
+        step2: {
+          title: 'Generating program',
+          isLast: false,
+          status: TimelineStepStatus.unreachable,
+        },
+        step3: {
+          title: 'Ready to use',
+          isLast: true,
+          status: TimelineStepStatus.unreachable,
+        },
+      };
+
+    case DraftStatus.ASSESSMENT_FAILED:
+      return {
+        step1: {
+          title: 'The rule can not be detected',
+          isLast: false,
+          status: TimelineStepStatus.failure,
+        },
+        step2: {
+          title: 'Generating program',
+          isLast: false,
+          status: TimelineStepStatus.unreachable,
+        },
+        step3: {
+          title: 'Ready to use',
+          isLast: true,
+          status: TimelineStepStatus.unreachable,
+        },
+      };
+
+    case DraftStatus.ASSESSMENT_SUCCESSFUL:
+      return {
+        step1: {
+          title: 'The rule can be detected',
+          isLast: false,
+          status: TimelineStepStatus.success,
+        },
+        step2: {
+          title: 'Generating program',
+          description: (
+            <>
+              <PMText as="p" variant="small">
+                Packmind AI generates a program that comply with rule
+                specifications. Program is ran on code examples to ensure its
+                validity.
+              </PMText>
+              <PMText as="p" color="faded" variant="small">
+                Note: generation can take more than a minute to finish.
+              </PMText>
+            </>
+          ),
+          isLast: false,
+          status: TimelineStepStatus.pending,
+        },
+        step3: {
+          title: 'Ready to use',
+          isLast: true,
+          status: TimelineStepStatus.unreachable,
+        },
+      };
+
+    case DraftStatus.GENERATING:
+      return {
+        step1: {
+          title: 'The rule can be detected',
+          isLast: false,
+          status: TimelineStepStatus.success,
+        },
+        step2: {
+          title: 'Generating program',
+          description: (
+            <>
+              <PMText as="p" variant="small">
+                Packmind AI generates a program that comply with rule
+                specifications. Program is ran on code examples to ensure its
+                validity.
+              </PMText>
+              <PMText as="p" color="faded" variant="small">
+                Note: generation can take more than a minute to finish.
+              </PMText>
+            </>
+          ),
+          isLast: false,
+          status: TimelineStepStatus.pending,
+          buttons: [
+            {
+              label: 'Show log',
+              onClick: handlers.onShowLogs,
+              variant: 'tertiary',
+              size: '2xs',
+            },
+          ],
+        },
+        step3: {
+          title: 'Ready to use',
+          isLast: true,
+          status: TimelineStepStatus.unreachable,
+        },
+      };
+
+    case DraftStatus.GENERATION_FAILED:
+      return {
+        step1: {
+          title: 'The rule can be detected',
+          isLast: false,
+          status: TimelineStepStatus.success,
+        },
+        step2: {
+          title: 'Unable to generate a program',
+          isLast: false,
+          status: TimelineStepStatus.failure,
+          buttons: [
+            {
+              label: 'Retry',
+              onClick: handlers.onRetryDraft,
+              disabled: loadingStates.isGenerating,
+            },
+            {
+              label: 'Show log',
+              onClick: handlers.onShowLogs,
+              variant: 'tertiary',
+              size: '2xs',
+            },
+          ],
+        },
+        step3: {
+          title: 'Ready to use',
+          isLast: true,
+          status: TimelineStepStatus.unreachable,
+        },
+      };
+
+    case DraftStatus.GENERATION_SUCCESSFUL:
+      return {
+        step1: {
+          title: 'The rule can be detected',
+          isLast: false,
+          status: TimelineStepStatus.success,
+        },
+        step2: {
+          title: 'Program has been generated',
+          isLast: false,
+          status: TimelineStepStatus.success,
+          buttons: [
+            {
+              label: 'Show log',
+              onClick: handlers.onShowLogs,
+              variant: 'tertiary',
+              size: '2xs',
+            },
+            {
+              label: 'Show program',
+              onClick: handlers.onShowProgram,
+              variant: 'tertiary',
+              size: '2xs',
+            },
+          ],
+        },
+        step3: {
+          title: 'Ready to use',
+          isLast: true,
+          status: TimelineStepStatus.success,
+          buttons: [
+            {
+              label: 'Test draft program',
+              onClick: handlers.onTestDraft,
+            },
+            {
+              label: 'Set as active',
+              onClick: handlers.onMakeActive,
+              disabled: loadingStates.isActivating,
+            },
+          ],
+        },
+      };
+
+    default: {
+      const _exhaustiveCheck: never = state;
+      throw new Error(`Unhandled DraftStatus: ${_exhaustiveCheck}`);
+    }
+  }
+}

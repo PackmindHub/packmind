@@ -18,7 +18,7 @@ export const FalsePositivesSection: React.FC<FalsePositivesSectionProps> = ({
         violations. Add Code examples illustrating these cases to generate a new
         program.
       </PMText>
-      <PMButton size="sm" variant="outline" onClick={onCodeExamplesClick}>
+      <PMButton size="2xs" variant="tertiary" onClick={onCodeExamplesClick}>
         Code examples
       </PMButton>
     </PMVStack>
