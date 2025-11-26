@@ -15,7 +15,7 @@ import {
 import {
   InjectRecipesAdapter,
   InjectDeploymentAdapter,
-} from '../shared/HexaInjection';
+} from '../../../shared/HexaInjection';
 
 @Injectable()
 export class RecipesService {

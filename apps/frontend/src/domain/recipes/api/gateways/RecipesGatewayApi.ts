@@ -79,9 +79,12 @@ export class RecipesGatewayApi
   deleteRecipesBatch: NewGateway<IDeleteRecipesBatchUseCase> = async (
     command,
   ) => {
-    const { spaceId } = command;
-    return this._api.delete(this._endpoint, {
-      data: command,
-    });
+    const { organizationId, spaceId, recipeIds } = command;
+    return this._api.delete(
+      `/organizations/${organizationId}/spaces/${spaceId}/recipes`,
+      {
+        data: { recipeIds },
+      },
+    );
   };
 }

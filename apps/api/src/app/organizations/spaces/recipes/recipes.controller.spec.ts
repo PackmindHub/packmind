@@ -10,7 +10,7 @@ import {
   createRecipeId,
   createRecipeVersionId,
 } from '@packmind/types';
-import { RecipesService } from '../../../recipes/recipes.service';
+import { RecipesService } from './recipes.service';
 import { OrganizationsSpacesRecipesController } from './recipes.controller';
 
 describe('OrganizationsSpacesRecipesController', () => {

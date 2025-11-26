@@ -21,8 +21,8 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
  * Route hierarchy (configured via RouterModule in AppModule):
  * - /organizations/:orgId (OrganizationsController)
  *   - /spaces/:spaceId (OrganizationsSpacesModule)
- *     - /recipes (OrganizationsSpacesRecipesModule)
- *     - /standards (future)
+ *     - /recipes (RecipesModule)
+ *     - /standards (OrganizationsSpacesStandardsModule)
  *
  * All routes are protected by OrganizationAccessGuard which validates
  * that the authenticated user has access to the requested organization.
