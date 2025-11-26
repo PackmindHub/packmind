@@ -35,7 +35,7 @@ export const nxPreset = {
   passWithNoTests: true, // Allow packages without tests to pass
 
   // Memory optimizations
-  maxWorkers: '40%', // Limit parallel workers to 1
+  maxWorkers: '25%', // Limit parallel workers to 1
   workerIdleMemoryLimit: '512MB', // Kill workers using more than 512MB when idle
 
   // Force worker cleanup to prevent memory leaks
