@@ -21,6 +21,7 @@ export const routes = {
     toSettingsTargets: (orgSlug: string) => `/org/${orgSlug}/settings/targets`,
     toSettingsDistribution: (orgSlug: string) =>
       `/org/${orgSlug}/settings/distribution-rendering`,
+    toSettingsLLM: (orgSlug: string) => `/org/${orgSlug}/settings/llm`,
     toAccountSettings: (orgSlug: string) => `/org/${orgSlug}/account-settings`,
   },
 
