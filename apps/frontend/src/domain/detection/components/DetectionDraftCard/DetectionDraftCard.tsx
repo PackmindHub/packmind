@@ -111,7 +111,11 @@ function getStepIcon(status: TimelineStepStatus) {
       );
     case TimelineStepStatus.pending:
       return (
-        <PMIcon color="branding.primary" size="xs">
+        <PMIcon
+          color="branding.primary"
+          size="xs"
+          animation="spin 1500ms linear infinite"
+        >
           <LuLoader />
         </PMIcon>
       );
