@@ -15,6 +15,7 @@ type TimelineButton = {
   disabled?: boolean;
   icon?: React.ReactNode;
   variant?: IPMButtonProps['variant'];
+  size?: IPMButtonProps['size'];
 };
 
 export enum TimelineStepStatus {
@@ -151,6 +152,8 @@ export function getTimelineConfig(
             {
               label: 'Show log',
               onClick: handlers.onShowLogs,
+              variant: 'tertiary',
+              size: '2xs',
               icon: <LuFileText />,
             },
           ],
@@ -178,11 +181,14 @@ export function getTimelineConfig(
               label: 'Retry',
               onClick: handlers.onRetryDraft,
               disabled: loadingStates.isGenerating,
+              size: '2xs',
               icon: <LuRefreshCw />,
             },
             {
               label: 'Show log',
               onClick: handlers.onShowLogs,
+              variant: 'tertiary',
+              size: '2xs',
               icon: <LuFileText />,
             },
           ],
@@ -209,11 +215,15 @@ export function getTimelineConfig(
             {
               label: 'Show log',
               onClick: handlers.onShowLogs,
+              variant: 'tertiary',
+              size: '2xs',
               icon: <LuFileText />,
             },
             {
               label: 'Show program',
               onClick: handlers.onShowProgram,
+              variant: 'tertiary',
+              size: '2xs',
               icon: <LuCode />,
             },
           ],

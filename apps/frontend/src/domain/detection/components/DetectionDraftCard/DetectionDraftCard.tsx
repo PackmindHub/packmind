@@ -156,7 +156,7 @@ const TimelineStep: React.FC<TimelineStepProps> = ({ config }) => {
               {config.buttons.map((button) => (
                 <PMButton
                   key={button.label}
-                  size="sm"
+                  size={button?.size ?? 'sm'}
                   variant={button?.variant ?? 'outline'}
                   onClick={button.onClick}
                   disabled={button.disabled}
