@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -19,7 +20,7 @@ import {
   RecipeVersion,
   SpaceId,
 } from '@packmind/types';
-import { RecipesService } from '../../../recipes/recipes.service';
+import { RecipesService } from './recipes.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 import { SpaceAccessGuard } from '../guards/space-access.guard';
 
@@ -265,6 +266,71 @@ export class OrganizationsSpacesRecipesController {
           recipeId: id,
           recipeName: updateData.name,
           userId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Delete multiple recipes within a space (batch delete)
+   * DELETE /organizations/:orgId/spaces/:spaceId/recipes
+   */
+  @Delete()
+  async deleteRecipesBatch(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Body() body: { recipeIds: RecipeId[] },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<void> {
+    const userId = request.user.userId;
+
+    if (!body.recipeIds || !Array.isArray(body.recipeIds)) {
+      throw new BadRequestException('recipeIds must be an array');
+    }
+
+    if (body.recipeIds.length === 0) {
+      throw new BadRequestException('recipeIds array cannot be empty');
+    }
+
+    this.logger.info(
+      'DELETE /organizations/:orgId/spaces/:spaceId/recipes - Deleting recipes in batch',
+      {
+        organizationId,
+        spaceId,
+        recipeIds: body.recipeIds,
+        count: body.recipeIds.length,
+        userId,
+      },
+    );
+
+    try {
+      await this.recipesService.deleteRecipesBatch(
+        body.recipeIds,
+        spaceId,
+        userId,
+        organizationId,
+      );
+
+      this.logger.info(
+        'DELETE /organizations/:orgId/spaces/:spaceId/recipes - Recipes deleted successfully in batch',
+        {
+          organizationId,
+          spaceId,
+          count: body.recipeIds.length,
+          userId,
+        },
+      );
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'DELETE /organizations/:orgId/spaces/:spaceId/recipes - Failed to delete recipes in batch',
+        {
+          organizationId,
+          spaceId,
+          recipeIds: body.recipeIds,
           error: errorMessage,
         },
       );

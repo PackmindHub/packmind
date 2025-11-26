@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { OrganizationsSpacesController } from './spaces.controller';
 import { SpaceAccessGuard } from './guards/space-access.guard';
-import { OrganizationsSpacesRecipesModule } from './recipes/recipes.module';
+import { RecipesModule } from './recipes/recipes.module';
 import { OrganizationsSpacesStandardsModule } from './standards/standards.module';
 import { OrganizationsSpacesPackagesModule } from './packages/packages.module';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
@@ -29,7 +29,7 @@ import { SpacesService } from '../../spaces/spaces.service';
  */
 @Module({
   imports: [
-    OrganizationsSpacesRecipesModule,
+    RecipesModule,
     OrganizationsSpacesStandardsModule,
     OrganizationsSpacesPackagesModule,
   ],

@@ -14,7 +14,6 @@ import { StandardsHexa, standardsSchemas } from '@packmind/standards';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HooksModule } from './hooks/hooks.module';
-import { RecipesModule } from './recipes/recipes.module';
 
 import { AmplitudeModule } from '@packmind/amplitude';
 import {
@@ -30,7 +29,7 @@ import { AuthModule } from './auth/auth.module';
 import { GitModule } from './git/git.module';
 import { McpModule } from './mcp/mcp.module';
 import { OrganizationsModule } from './organizations/organizations.module';
-import { OrganizationsSpacesRecipesModule } from './organizations/spaces/recipes/recipes.module';
+import { RecipesModule } from './organizations/spaces/recipes/recipes.module';
 import { OrganizationsSpacesModule } from './organizations/spaces/spaces.module';
 import { OrganizationsSpacesStandardsModule } from './organizations/spaces/standards/standards.module';
 import { OrganizationsSpacesStandardsRulesModule } from './organizations/spaces/standards/rules/rules.module';
@@ -100,7 +99,6 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
         JobsService, // Infrastructure service for background jobs
       ],
     }),
-    RecipesModule,
     StandardsModule,
     HooksModule,
     AuthModule,
@@ -157,7 +155,7 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
             children: [
               {
                 path: ':spaceId/recipes',
-                module: OrganizationsSpacesRecipesModule,
+                module: RecipesModule,
               },
               {
                 path: ':spaceId/standards',

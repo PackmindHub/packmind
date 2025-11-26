@@ -1,5 +1,5 @@
 import { Body, Controller, Headers, Post, Param, Get } from '@nestjs/common';
-import { RecipesService } from '../recipes/recipes.service';
+import { RecipesService } from '../organizations/spaces/recipes/recipes.service';
 import { PackmindLogger } from '@packmind/logger';
 import { Configuration } from '@packmind/node-utils';
 import { Recipe } from '@packmind/types';
