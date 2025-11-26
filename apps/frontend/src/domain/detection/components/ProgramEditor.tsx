@@ -120,14 +120,6 @@ function checkIfProgramNeedsReview(
     return true;
   }
 
-  // TODO: Remove this temporary testing logic
-  // For demonstration: mark READY programs as needing review to test the UI
-  // In production, this will be determined by comparing rule/example modification
-  // dates with the program creation date
-  if (detectionProgram.status === DetectionStatus.READY) {
-    return true; // Temporarily mark all READY programs as needing review for testing
-  }
-
   return false;
 }
 
