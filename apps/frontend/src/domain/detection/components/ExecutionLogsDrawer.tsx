@@ -95,6 +95,9 @@ export const ExecutionLogsDrawer: React.FC<ExecutionLogsDrawerProps> = ({
     standardId,
     ruleId,
     detectionProgramId,
+    {
+      refetchInterval: isOpen ? 5000 : false,
+    },
   );
 
   const sortedLogs = useMemo(() => {

@@ -208,6 +208,7 @@ export const useGetDetectionProgramMetadataQuery = (
   standardId: string,
   ruleId: string,
   detectionProgramId: string | null,
+  options?: { refetchInterval?: number | false },
 ) => {
   return useQuery({
     queryKey: [
@@ -223,6 +224,7 @@ export const useGetDetectionProgramMetadataQuery = (
         detectionProgramId!,
       ),
     enabled: !!standardId && !!ruleId && !!detectionProgramId,
+    ...options,
   });
 };
 
