@@ -1,5 +1,5 @@
 import { DraftStatus } from './determineDraftStatus';
-import { PMText } from '@packmind/ui';
+import { IPMButtonProps, PMText } from '@packmind/ui';
 import React from 'react';
 import {
   LuFileText,
@@ -14,6 +14,7 @@ type TimelineButton = {
   onClick: () => void;
   disabled?: boolean;
   icon?: React.ReactNode;
+  variant?: IPMButtonProps['variant'];
 };
 
 export enum TimelineStepStatus {
@@ -232,6 +233,7 @@ export function getTimelineConfig(
               onClick: handlers.onMakeActive,
               disabled: loadingStates.isActivating,
               icon: <LuCircleCheckBig />,
+              variant: 'primary',
             },
           ],
         },
