@@ -9,13 +9,20 @@ import {
   LuRefreshCw,
 } from 'react-icons/lu';
 
-type TimelineButton = {
+type TimelineButtonConfirmation = {
+  title: string;
+  message: string;
+  confirmText?: string;
+};
+
+export type TimelineButton = {
   label: string;
   onClick: () => void;
   disabled?: boolean;
   icon?: React.ReactNode;
   variant?: IPMButtonProps['variant'];
   size?: IPMButtonProps['size'];
+  confirmation?: TimelineButtonConfirmation;
 };
 
 export enum TimelineStepStatus {
@@ -50,10 +57,17 @@ export type LoadingStates = {
   isGenerating: boolean;
 };
 
+export type DraftInfo = {
+  language: string;
+  version?: number;
+  hasActiveProgram: boolean;
+};
+
 export function getTimelineConfig(
   state: DraftStatus,
   handlers: TimelineHandlers,
   loadingStates: LoadingStates,
+  draftInfo?: DraftInfo,
 ): TimelineConfig {
   switch (state) {
     case DraftStatus.ASSESSING:
@@ -244,6 +258,13 @@ export function getTimelineConfig(
               disabled: loadingStates.isActivating,
               icon: <LuCircleCheckBig />,
               variant: 'primary',
+              confirmation: draftInfo?.hasActiveProgram
+                ? {
+                    title: 'Activate Detection Program',
+                    message: `Are you sure you want to activate this ${draftInfo.language} detection program${draftInfo.version ? ` (v${draftInfo.version})` : ''}? This will replace the current active program.`,
+                    confirmText: 'Activate',
+                  }
+                : undefined,
             },
           ],
         },

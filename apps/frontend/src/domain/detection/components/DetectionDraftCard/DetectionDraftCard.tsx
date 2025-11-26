@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  PMAlertDialog,
   PMBox,
   PMButton,
   PMHStack,
@@ -79,7 +80,18 @@ export const DetectionDraftCard: React.FC<DraftCardProps> = ({
     isGenerating: isGenerating ?? false,
   };
 
-  const timelineConfig = getTimelineConfig(state, handlers, loadingStates);
+  const draftInfo: DraftInfo = {
+    language: draft.language,
+    version: draft.version,
+    hasActiveProgram: !!draft.activeDetectionProgramId,
+  };
+
+  const timelineConfig = getTimelineConfig(
+    state,
+    handlers,
+    loadingStates,
+    draftInfo,
+  );
 
   return (
     <PMBox width="full">
@@ -121,12 +133,19 @@ function getStepIcon(status: TimelineStepStatus) {
   }
 }
 
+type TimelineButtonConfirmation = {
+  title: string;
+  message: string;
+  confirmText?: string;
+};
+
 type TimelineButton = {
   label: string;
   onClick: () => void;
   disabled?: boolean;
   variant?: IPMButtonProps['variant'];
   size?: IPMButtonProps['size'];
+  confirmation?: TimelineButtonConfirmation;
 };
 
 enum TimelineStepStatus {
@@ -187,17 +206,37 @@ const TimelineStep: React.FC<TimelineStepProps> = ({ config }) => {
         {config.buttons && config.buttons.length > 0 && (
           <PMBox mt={2}>
             <PMHStack gap={2}>
-              {config.buttons.map((button) => (
-                <PMButton
-                  key={button.label}
-                  size={button?.size ?? 'sm'}
-                  variant={button?.variant ?? 'outline'}
-                  onClick={button.onClick}
-                  disabled={button.disabled}
-                >
-                  {button.label}
-                </PMButton>
-              ))}
+              {config.buttons.map((button) =>
+                button.confirmation ? (
+                  <PMAlertDialog
+                    key={button.label}
+                    trigger={
+                      <PMButton
+                        size={button?.size ?? 'sm'}
+                        variant={button?.variant ?? 'outline'}
+                        disabled={button.disabled}
+                      >
+                        {button.label}
+                      </PMButton>
+                    }
+                    title={button.confirmation.title}
+                    message={button.confirmation.message}
+                    confirmText={button.confirmation.confirmText ?? 'Confirm'}
+                    confirmColorScheme="blue"
+                    onConfirm={button.onClick}
+                  />
+                ) : (
+                  <PMButton
+                    key={button.label}
+                    size={button?.size ?? 'sm'}
+                    variant={button?.variant ?? 'outline'}
+                    onClick={button.onClick}
+                    disabled={button.disabled}
+                  >
+                    {button.label}
+                  </PMButton>
+                ),
+              )}
             </PMHStack>
           </PMBox>
         )}
@@ -211,10 +250,17 @@ type LoadingStates = {
   isGenerating: boolean;
 };
 
+type DraftInfo = {
+  language: string;
+  version?: number;
+  hasActiveProgram: boolean;
+};
+
 function getTimelineConfig(
   state: DraftStatus,
   handlers: TimelineHandlers,
   loadingStates: LoadingStates,
+  draftInfo?: DraftInfo,
 ): TimelineConfig {
   switch (state) {
     case DraftStatus.ASSESSING:
@@ -396,6 +442,13 @@ function getTimelineConfig(
               label: 'Set as active',
               onClick: handlers.onMakeActive,
               disabled: loadingStates.isActivating,
+              confirmation: draftInfo?.hasActiveProgram
+                ? {
+                    title: 'Activate Detection Program',
+                    message: `Are you sure you want to activate this ${draftInfo.language} detection program${draftInfo.version ? ` (v${draftInfo.version})` : ''}? This will replace the current active program.`,
+                    confirmText: 'Activate',
+                  }
+                : undefined,
             },
           ],
         },
