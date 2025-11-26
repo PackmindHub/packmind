@@ -4,6 +4,8 @@
 
 ## Changed
 
+- Improve layout of the CLI command `install --list` to make slugs easier to identify (#12)
+
 ## Fixed
 
 ## Removed
