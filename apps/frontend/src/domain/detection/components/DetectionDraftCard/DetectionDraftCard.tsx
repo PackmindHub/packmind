@@ -5,6 +5,7 @@ import {
   PMButton,
   PMHStack,
   PMIcon,
+  PMSpinner,
   PMText,
   type PMTextColors,
   PMTimeline,
@@ -19,7 +20,7 @@ import {
 } from '@packmind/ui';
 import { DetectionProgram, DetectionStatus } from '@packmind/types';
 import { useGetRuleDetectionAssessmentQuery } from '../../api/queries/DetectionProgramQueries';
-import { LuCheck, LuCircleAlert, LuLoader } from 'react-icons/lu';
+import { LuCheck, LuCircleAlert } from 'react-icons/lu';
 import { determineDraftStatus, DraftStatus } from './determineDraftStatus';
 
 export type DraftCardData = {
@@ -116,15 +117,7 @@ function getStepIcon(status: TimelineStepStatus) {
         </PMIcon>
       );
     case TimelineStepStatus.pending:
-      return (
-        <PMIcon
-          color="branding.primary"
-          size="xs"
-          animation="spin 1500ms linear infinite"
-        >
-          <LuLoader />
-        </PMIcon>
-      );
+      return <PMSpinner size="xs" />;
     default:
       return;
   }
