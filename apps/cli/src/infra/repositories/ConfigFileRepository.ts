@@ -1,4 +1,9 @@
-import { HierarchicalConfigResult, PackmindFileConfig } from '@packmind/types';
+import {
+  AllConfigsResult,
+  ConfigWithTarget,
+  HierarchicalConfigResult,
+  PackmindFileConfig,
+} from '@packmind/types';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import chalk from 'chalk';
@@ -155,5 +160,104 @@ export class ConfigFileRepository {
       configPaths,
       hasConfigs: configs.length > 0,
     };
+  }
+
+  /**
+   * Finds all packmind.json files in the tree (both ancestors and descendants)
+   * and returns each config with its target path.
+   *
+   * @param startDirectory - Directory to start searching from (typically the lint target)
+   * @param stopDirectory - Directory to stop ancestor search at (typically git repo root), also used as base for descendants search
+   * @returns All configs found with their target paths
+   */
+  async findAllConfigsInTree(
+    startDirectory: string,
+    stopDirectory: string | null,
+  ): Promise<AllConfigsResult> {
+    const normalizedStart = path.resolve(startDirectory);
+    const normalizedStop = stopDirectory ? path.resolve(stopDirectory) : null;
+    const basePath = normalizedStop ?? normalizedStart;
+
+    const configsMap = new Map<string, ConfigWithTarget>();
+
+    // 1. Walk up from start to stop (ancestors)
+    let currentDir = normalizedStart;
+    while (true) {
+      const config = await this.readConfig(currentDir);
+      if (config) {
+        const targetPath = this.computeRelativeTargetPath(currentDir, basePath);
+        configsMap.set(currentDir, {
+          targetPath,
+          absoluteTargetPath: currentDir,
+          packages: config.packages,
+        });
+      }
+
+      if (normalizedStop !== null && currentDir === normalizedStop) {
+        break;
+      }
+
+      const parentDir = path.dirname(currentDir);
+      if (parentDir === currentDir) {
+        break;
+      }
+      currentDir = parentDir;
+    }
+
+    // 2. Walk down from stop directory (or start if no stop) to find descendants
+    const searchRoot = normalizedStop ?? normalizedStart;
+    const descendantDirs = await this.findDescendantConfigs(searchRoot);
+
+    for (const descendantDir of descendantDirs) {
+      // Skip if already found in ancestor walk
+      if (configsMap.has(descendantDir)) {
+        continue;
+      }
+
+      const config = await this.readConfig(descendantDir);
+      if (config) {
+        const targetPath = this.computeRelativeTargetPath(
+          descendantDir,
+          basePath,
+        );
+        configsMap.set(descendantDir, {
+          targetPath,
+          absoluteTargetPath: descendantDir,
+          packages: config.packages,
+        });
+      }
+    }
+
+    // 3. Also check the search root itself if not already checked
+    if (!configsMap.has(searchRoot)) {
+      const rootConfig = await this.readConfig(searchRoot);
+      if (rootConfig) {
+        configsMap.set(searchRoot, {
+          targetPath: '/',
+          absoluteTargetPath: searchRoot,
+          packages: rootConfig.packages,
+        });
+      }
+    }
+
+    const configs = Array.from(configsMap.values());
+
+    return {
+      configs,
+      hasConfigs: configs.length > 0,
+      basePath,
+    };
+  }
+
+  private computeRelativeTargetPath(
+    absolutePath: string,
+    basePath: string,
+  ): string {
+    if (absolutePath === basePath) {
+      return '/';
+    }
+
+    const relativePath = absolutePath.substring(basePath.length);
+    return relativePath.startsWith('/') ? relativePath : '/' + relativePath;
   }
 }
