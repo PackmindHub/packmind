@@ -133,6 +133,7 @@ export const DetectionProgramConfiguration: React.FC<
         selectedLanguage={selectedLanguage}
         onOpenChange={setIsProgramOpen}
         disabled={isProgramDisabled}
+        onNavigateToExamples={onNavigateToExamples}
       />
     </PMVStack>
   );

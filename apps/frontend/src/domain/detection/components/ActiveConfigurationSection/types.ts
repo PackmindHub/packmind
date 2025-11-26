@@ -34,6 +34,7 @@ export type ActiveConfigurationSectionProps = {
   activatingDraftId?: string | null;
   isActivatingDraft?: boolean;
   onOpenAssessmentDrawer: (language: string) => void;
+  onNavigateToExamples?: () => void;
 };
 
 // Keep old name as alias for backward compatibility during migration

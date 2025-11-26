@@ -32,6 +32,7 @@ type HookParams = Pick<
   | 'onActivateDraft'
   | 'isActivatingDraft'
   | 'onOpenAssessmentDrawer'
+  | 'onNavigateToExamples'
 > & {
   isAssessmentFeatureEnabled: boolean;
 };
@@ -115,6 +116,7 @@ export const useActiveConfigurationSectionViewModel = (
     isActivatingDraft = false,
     onOpenAssessmentDrawer,
     isAssessmentFeatureEnabled,
+    onNavigateToExamples,
   } = params;
 
   const descriptor = useMemo(
@@ -196,7 +198,7 @@ export const useActiveConfigurationSectionViewModel = (
           acc.push({
             key,
             props: {
-              onCodeExamplesClick: () => undefined,
+              onCodeExamplesClick: onNavigateToExamples ?? (() => undefined),
             },
           });
           break;
@@ -248,6 +250,7 @@ export const useActiveConfigurationSectionViewModel = (
     isGenerating,
     onActivateDraft,
     onGenerateProgram,
+    onNavigateToExamples,
     onTestProgram,
     standardName,
   ]);

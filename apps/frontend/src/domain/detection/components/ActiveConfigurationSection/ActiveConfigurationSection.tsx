@@ -73,6 +73,7 @@ const ActiveConfigurationSectionInner: React.FC<
   isActivatingDraft = false,
   onOpenAssessmentDrawer,
   isAssessmentFeatureEnabled,
+  onNavigateToExamples,
 }) => {
   const { descriptor, sections, assessmentView } =
     useActiveConfigurationSectionViewModel({
@@ -87,6 +88,7 @@ const ActiveConfigurationSectionInner: React.FC<
       isActivatingDraft,
       onOpenAssessmentDrawer,
       isAssessmentFeatureEnabled,
+      onNavigateToExamples,
     });
 
   if (descriptor.viewState === ActiveConfigurationViewState.NO_CONFIGURATION) {

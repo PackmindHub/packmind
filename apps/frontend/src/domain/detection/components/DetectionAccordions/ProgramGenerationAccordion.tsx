@@ -32,6 +32,7 @@ interface ProgramGenerationSectionProps {
   selectedLanguage: string;
   onOpenChange: (open: boolean) => void;
   disabled: boolean;
+  onNavigateToExamples?: () => void;
 }
 
 export const ProgramGenerationAccordion: React.FC<
@@ -54,6 +55,7 @@ export const ProgramGenerationAccordion: React.FC<
   selectedLanguage,
   onOpenChange,
   disabled,
+  onNavigateToExamples,
 }) => {
   const [isLogsDrawerOpen, setIsLogsDrawerOpen] = useState(false);
   const [isProgramDrawerOpen, setIsProgramDrawerOpen] = useState(false);
@@ -137,6 +139,7 @@ export const ProgramGenerationAccordion: React.FC<
           onActivateDraft={onActivateDraft}
           activatingDraftId={activatingDraftId}
           isActivatingDraft={isActivatingDraft}
+          onNavigateToExamples={onNavigateToExamples}
         />
       )}
 
