@@ -393,7 +393,9 @@ export class LintFilesLocallyUseCase implements ILintFilesLocally {
   private async getDetectionProgramsForTarget(
     targetConfig: ConfigWithTarget,
   ): Promise<GetDetectionProgramsForPackagesResult> {
-    const packageSlugs = Object.keys(targetConfig.packages).sort();
+    const packageSlugs = Object.keys(targetConfig.packages).sort((a, b) =>
+      a.localeCompare(b),
+    );
     const cacheKey = packageSlugs.join(',');
 
     const cached = this.detectionProgramsCache.get(cacheKey);
