@@ -10,6 +10,12 @@ import {
   TestLLMConnectionResponse,
   GetModelsCommand,
   GetModelsResponse,
+  SaveLLMConfigurationCommand,
+  SaveLLMConfigurationResponse,
+  GetLLMConfigurationCommand,
+  GetLLMConfigurationResponse,
+  TestSavedLLMConfigurationCommand,
+  TestSavedLLMConfigurationResponse,
 } from '@packmind/types';
 import { GetAiServiceForOrganizationUseCase } from '../useCases/getAiServiceForOrganization/getAiServiceForOrganization.usecase';
 import { TestLLMConnectionUseCase } from '../useCases/testLLMConnection/testLLMConnection.usecase';
@@ -129,5 +135,51 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
     });
 
     return this._getModels.execute(command);
+  }
+
+  /**
+   * Save LLM configuration for an organization.
+   * TODO: Will be implemented in a subsequent sub-task.
+   */
+  async saveLLMConfiguration(
+    command: SaveLLMConfigurationCommand,
+  ): Promise<SaveLLMConfigurationResponse> {
+    this.logger.info('Saving LLM configuration', {
+      organizationId: command.organizationId,
+      provider: command.config.provider,
+    });
+
+    // TODO: Implement in subsequent sub-task
+    throw new Error('saveLLMConfiguration not yet implemented');
+  }
+
+  /**
+   * Get LLM configuration for an organization.
+   * TODO: Will be implemented in a subsequent sub-task.
+   */
+  async getLLMConfiguration(
+    command: GetLLMConfigurationCommand,
+  ): Promise<GetLLMConfigurationResponse> {
+    this.logger.info('Getting LLM configuration', {
+      organizationId: command.organizationId,
+    });
+
+    // TODO: Implement in subsequent sub-task
+    throw new Error('getLLMConfiguration not yet implemented');
+  }
+
+  /**
+   * Test the saved LLM configuration for an organization.
+   * TODO: Will be implemented in a subsequent sub-task.
+   */
+  async testSavedLLMConfiguration(
+    command: TestSavedLLMConfigurationCommand,
+  ): Promise<TestSavedLLMConfigurationResponse> {
+    this.logger.info('Testing saved LLM configuration', {
+      organizationId: command.organizationId,
+    });
+
+    // TODO: Implement in subsequent sub-task
+    throw new Error('testSavedLLMConfiguration not yet implemented');
   }
 }
