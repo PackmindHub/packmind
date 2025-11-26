@@ -20,10 +20,7 @@ import {
 import { DetectionProgram, DetectionStatus } from '@packmind/types';
 import { useGetRuleDetectionAssessmentQuery } from '../../api/queries/DetectionProgramQueries';
 import { LuCheck, LuCircleAlert, LuLoader } from 'react-icons/lu';
-import {
-  determineDraftStatus,
-  DraftStatus,
-} from '@packmind/proprietary/frontend/domain/detection/components/DetectionDraftCard/determineDraftStatus';
+import { determineDraftStatus, DraftStatus } from './determineDraftStatus';
 
 export type DraftCardData = {
   id: string;
