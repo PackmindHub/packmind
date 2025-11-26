@@ -18,6 +18,7 @@ describe('ActiveProgramMenu', () => {
   let screen: RenderResult;
   let onTestProgram: jest.Mock;
   let onGenerateProgram: jest.Mock;
+  let onShowDetails: jest.Mock;
 
   const createActiveConfig = (
     status: DetectionStatus = DetectionStatus.READY,
@@ -41,6 +42,7 @@ describe('ActiveProgramMenu', () => {
   beforeEach(() => {
     onTestProgram = jest.fn();
     onGenerateProgram = jest.fn();
+    onShowDetails = jest.fn();
   });
 
   afterEach(() => {
@@ -63,6 +65,7 @@ describe('ActiveProgramMenu', () => {
         <ActiveProgramMenu
           activeConfigurations={activeConfigurations}
           onTestProgram={onTestProgram}
+          onShowDetails={onShowDetails}
           onGenerateProgram={onGenerateProgram}
           isGeneratingProgram={isGeneratingProgram}
           selectedLanguage={selectedLanguage}
@@ -113,7 +116,7 @@ describe('ActiveProgramMenu', () => {
   });
 
   describe('menu visibility', () => {
-    describe('when no actions available', () => {
+    describe('when generating and no detection program', () => {
       beforeEach(() => {
         screen = renderComponent({
           activeConfigurations: [
@@ -123,9 +126,9 @@ describe('ActiveProgramMenu', () => {
         });
       });
 
-      it('does not render the menu', () => {
+      it('does not render menu when generating without active program', () => {
+        // Menu should not render when there's no active program and we're generating
         expect(screen.queryByText('Active')).not.toBeInTheDocument();
-        expect(screen.queryByText('To review')).not.toBeInTheDocument();
       });
     });
   });
@@ -139,12 +142,13 @@ describe('ActiveProgramMenu', () => {
         });
       });
 
-      it('shows "Test program" and "Generate new draft" actions', async () => {
+      it('shows "Test program", "Generation details" and "Generate new draft" actions', async () => {
         const trigger = screen.getByText('Active');
         fireEvent.click(trigger);
 
         await waitFor(() => {
           expect(screen.getByText('Test program')).toBeInTheDocument();
+          expect(screen.getByText('Generation details')).toBeInTheDocument();
           expect(screen.getByText('Generate new draft')).toBeInTheDocument();
         });
       });
@@ -184,12 +188,13 @@ describe('ActiveProgramMenu', () => {
         });
       });
 
-      it('shows only "Generate new draft" action (no Test for TO_REVIEW)', async () => {
+      it('shows "Generation details" and "Generate new draft" actions (no Test for TO_REVIEW)', async () => {
         const trigger = screen.getByText('To review');
         fireEvent.click(trigger);
 
         await waitFor(() => {
           expect(screen.queryByText('Test program')).not.toBeInTheDocument();
+          expect(screen.getByText('Generation details')).toBeInTheDocument();
           expect(screen.getByText('Generate new draft')).toBeInTheDocument();
         });
       });
@@ -203,15 +208,15 @@ describe('ActiveProgramMenu', () => {
         });
       });
 
-      it('does not show "Generate new draft" action', async () => {
+      it('shows "Generate new draft" action as disabled', async () => {
         const trigger = screen.getByText('Active');
         fireEvent.click(trigger);
 
         await waitFor(() => {
           expect(screen.getByText('Test program')).toBeInTheDocument();
-          expect(
-            screen.queryByText('Generate new draft'),
-          ).not.toBeInTheDocument();
+          const generateItem = screen.getByText('Generate new draft');
+          expect(generateItem).toBeInTheDocument();
+          expect(generateItem.closest('[data-disabled]')).toBeInTheDocument();
         });
       });
     });

@@ -86,6 +86,10 @@ export const ProgramGenerationAccordion: React.FC<
     setViewMode(mode);
   }, []);
 
+  const handleReviewDraft = useCallback(() => {
+    setViewMode('draft');
+  }, []);
+
   const handleShowDetails = useCallback(
     (config: ActiveConfigurationCardData) => {
       setSelectedActiveConfig(config);
@@ -109,6 +113,7 @@ export const ProgramGenerationAccordion: React.FC<
               onRetryDraft={onRetryDraft}
               isGeneratingProgram={isGeneratingProgram}
               selectedLanguage={selectedLanguage}
+              viewMode={viewMode}
               onViewModeChange={handleViewModeChange}
               standardId={standardId}
               ruleId={ruleId}
@@ -140,6 +145,7 @@ export const ProgramGenerationAccordion: React.FC<
           activatingDraftId={activatingDraftId}
           isActivatingDraft={isActivatingDraft}
           onNavigateToExamples={onNavigateToExamples}
+          onReviewDraft={handleReviewDraft}
         />
       )}
 

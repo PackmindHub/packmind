@@ -52,6 +52,7 @@ interface ActiveConfigurationSectionProps {
   activatingDraftId: string | null;
   isActivatingDraft: boolean;
   onNavigateToExamples?: () => void;
+  onReviewDraft?: () => void;
 }
 
 export const ActiveConfigurationSection: React.FC<
@@ -70,6 +71,7 @@ export const ActiveConfigurationSection: React.FC<
   activatingDraftId,
   isActivatingDraft,
   onNavigateToExamples,
+  onReviewDraft,
 }) => {
   const [openDrawerLanguage, setOpenDrawerLanguage] = useState<string | null>(
     null,
@@ -148,6 +150,7 @@ export const ActiveConfigurationSection: React.FC<
               isActivatingDraft={isActivatingDraft}
               onOpenAssessmentDrawer={handleOpenAssessmentDrawer}
               onNavigateToExamples={onNavigateToExamples}
+              onReviewDraft={onReviewDraft}
             />
           ))}
       </PMFlex>

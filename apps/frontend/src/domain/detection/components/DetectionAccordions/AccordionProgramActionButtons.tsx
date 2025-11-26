@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import {
   PMButton,
   PMButtonGroup,
@@ -27,6 +27,7 @@ interface AccordionProgramActionButtonsProps {
   onRetryDraft: (draft: DraftCardData) => void;
   isGeneratingProgram: boolean;
   selectedLanguage: string;
+  viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
   // Props for DetectionDraftMenu
   standardId: string;
@@ -48,6 +49,7 @@ export const AccordionProgramActionButtons: React.FC<
   onRetryDraft,
   isGeneratingProgram,
   selectedLanguage,
+  viewMode,
   onViewModeChange,
   standardId,
   ruleId,
@@ -69,49 +71,35 @@ export const AccordionProgramActionButtons: React.FC<
     activeDraft?.language ?? '',
   );
 
-  // Determine initial view mode based on what's available
-  const getInitialViewMode = (): ViewMode => {
-    if (hasDraft && !hasActiveProgram) {
-      return 'draft';
-    }
-    return 'active';
-  };
-
-  const [viewMode, setViewMode] = useState<ViewMode>(getInitialViewMode);
-
-  // Notify parent when view mode changes
-  useEffect(() => {
-    onViewModeChange(viewMode);
-  }, [viewMode, onViewModeChange]);
-
   // Update view mode if conditions change
   useEffect(() => {
     if (hasDraft && !hasActiveProgram) {
-      setViewMode('draft');
+      onViewModeChange('draft');
     } else if (!hasDraft && hasActiveProgram) {
-      setViewMode('active');
+      onViewModeChange('active');
     }
-  }, [hasDraft, hasActiveProgram]);
+  }, [hasDraft, hasActiveProgram, onViewModeChange]);
 
   const handleToggle = () => {
-    setViewMode((prev) => (prev === 'active' ? 'draft' : 'active'));
+    onViewModeChange(viewMode === 'active' ? 'draft' : 'active');
   };
 
   const buttons: React.ReactNode[] = [];
   if (viewMode === 'active') {
     buttons.push(
       <ActiveProgramMenu
+        key="active-menu"
         activeConfigurations={activeConfigurations}
         onTestProgram={onTestProgram}
-        onGenerateProgram={onGenerateProgram}
         onShowDetails={onShowDetails}
+        onGenerateProgram={onGenerateProgram}
         isGeneratingProgram={isGeneratingProgram}
         selectedLanguage={selectedLanguage}
       />,
     );
     if (showToggle) {
       buttons.push(
-        <PMMenu.Root>
+        <PMMenu.Root key="draft-toggle-menu">
           <PMMenu.Trigger asChild>
             <PMButton
               size="2xs"
@@ -151,6 +139,7 @@ export const AccordionProgramActionButtons: React.FC<
     if (showToggle) {
       buttons.push(
         <PMButton
+          key="back-button"
           size="2xs"
           variant={'tertiary'}
           onClick={(e: React.MouseEvent) => {
@@ -166,6 +155,7 @@ export const AccordionProgramActionButtons: React.FC<
     if (activeDraft) {
       buttons.push(
         <DetectionDraftMenu
+          key="draft-menu"
           draft={activeDraft}
           onMakeActive={onActivateDraft}
           isActivating={isActivating}

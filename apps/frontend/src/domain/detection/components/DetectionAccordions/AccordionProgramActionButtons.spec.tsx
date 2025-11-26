@@ -98,6 +98,7 @@ describe('AccordionProgramActionButtons', () => {
     isGeneratingProgram?: boolean;
     selectedLanguage?: string;
     isActivating?: boolean;
+    viewMode?: 'active' | 'draft';
   }
 
   function renderComponent({
@@ -106,6 +107,7 @@ describe('AccordionProgramActionButtons', () => {
     isGeneratingProgram = false,
     selectedLanguage = ProgrammingLanguage.TYPESCRIPT,
     isActivating = false,
+    viewMode = 'active',
   }: RenderProps = {}) {
     return render(
       <UIProvider>
@@ -118,6 +120,7 @@ describe('AccordionProgramActionButtons', () => {
           onRetryDraft={onRetryDraft}
           isGeneratingProgram={isGeneratingProgram}
           selectedLanguage={selectedLanguage}
+          viewMode={viewMode}
           onViewModeChange={onViewModeChange}
           standardId={standardId}
           ruleId={ruleId}
@@ -129,15 +132,16 @@ describe('AccordionProgramActionButtons', () => {
     );
   }
 
-  describe('view mode initialization', () => {
+  describe('view mode synchronization', () => {
     describe('when only active program exists', () => {
       beforeEach(() => {
         screen = renderComponent({
           activeConfigurations: [createActiveConfig()],
+          viewMode: 'active',
         });
       });
 
-      it('calls onViewModeChange with active mode', () => {
+      it('calls onViewModeChange with active mode to sync state', () => {
         expect(onViewModeChange).toHaveBeenCalledWith('active');
       });
     });
@@ -149,10 +153,11 @@ describe('AccordionProgramActionButtons', () => {
             { ...createActiveConfig(), detectionProgram: null },
           ],
           activeDraft: createDraftData(),
+          viewMode: 'active',
         });
       });
 
-      it('calls onViewModeChange with draft mode', () => {
+      it('calls onViewModeChange with draft mode to sync state', () => {
         expect(onViewModeChange).toHaveBeenCalledWith('draft');
       });
     });
@@ -162,11 +167,13 @@ describe('AccordionProgramActionButtons', () => {
         screen = renderComponent({
           activeConfigurations: [createActiveConfig()],
           activeDraft: createDraftData(),
+          viewMode: 'active',
         });
       });
 
-      it('calls onViewModeChange with active mode by default', () => {
-        expect(onViewModeChange).toHaveBeenCalledWith('active');
+      it('does not auto-switch mode when both exist', () => {
+        // Component is controlled, doesn't auto-switch when both exist
+        expect(onViewModeChange).not.toHaveBeenCalled();
       });
     });
   });
@@ -265,19 +272,17 @@ describe('AccordionProgramActionButtons', () => {
       });
     });
 
-    describe('when generating program', () => {
+    describe('when generating program with active config', () => {
       beforeEach(() => {
         screen = renderComponent({
-          activeConfigurations: [
-            { ...createActiveConfig(), detectionProgram: null },
-          ],
+          activeConfigurations: [createActiveConfig()],
           isGeneratingProgram: true,
         });
       });
 
-      it('does not render the Active dropdown when no actions available', () => {
-        // When generating and no READY config, no actions are available
-        expect(screen.queryByText('Active')).not.toBeInTheDocument();
+      it('renders menu with disabled Generate action', () => {
+        // Menu still renders with disabled "Generate new draft" action when there's an active program
+        expect(screen.getByText('Active')).toBeInTheDocument();
       });
     });
   });

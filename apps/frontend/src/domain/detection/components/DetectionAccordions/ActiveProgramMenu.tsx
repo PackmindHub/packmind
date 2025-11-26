@@ -7,7 +7,7 @@ import {
   PMText,
   PMVStack,
 } from '@packmind/ui';
-import { LuChevronDown, LuPlay, LuSparkles, LuFileText } from 'react-icons/lu';
+import { LuChevronDown, LuPlay, LuFileText, LuSparkles } from 'react-icons/lu';
 import { DetectionStatus } from '@packmind/types';
 import { ActiveConfigurationSectionData } from '../ActiveConfigurationSection';
 import { formatDate } from '../../../../shared/utils/dateUtils';
@@ -27,8 +27,8 @@ interface MenuAction {
 interface ActiveProgramMenuProps {
   activeConfigurations: ActiveConfigurationSectionData[];
   onTestProgram: (config: ActiveConfigurationSectionData) => void;
-  onGenerateProgram: (language?: string) => void;
   onShowDetails: (config: ActiveConfigurationSectionData) => void;
+  onGenerateProgram: (language?: string) => void;
   isGeneratingProgram: boolean;
   selectedLanguage: string;
 }
@@ -76,43 +76,63 @@ const getButtonVariant = (
 export const ActiveProgramMenu: React.FC<ActiveProgramMenuProps> = ({
   activeConfigurations,
   onTestProgram,
-  onGenerateProgram,
   onShowDetails,
+  onGenerateProgram,
   isGeneratingProgram,
   selectedLanguage,
 }) => {
   const status = determineActiveStatus(activeConfigurations);
-  const activeConfig = activeConfigurations.find(
+
+  // Find config with READY status for full actions
+  const readyConfig = activeConfigurations.find(
     (config) => config.detectionProgram?.status === DetectionStatus.READY,
   );
+
+  // Find config with TO_REVIEW status for details action
+  const toReviewConfig = activeConfigurations.find(
+    (config) => config.detectionProgram?.status === DetectionStatus.TO_REVIEW,
+  );
+
+  // Use ready config if available, otherwise to review config
+  const activeConfig = readyConfig ?? toReviewConfig;
 
   const actions = useMemo<MenuAction[]>(() => {
     const menuActions: MenuAction[] = [];
 
-    if (activeConfig) {
+    if (readyConfig) {
+      // Full actions for READY status
       menuActions.push({
         label: 'Test program',
-        onClick: () => onTestProgram(activeConfig),
+        onClick: () => onTestProgram(readyConfig),
         icon: <LuPlay />,
       });
       menuActions.push({
         label: 'Generation details',
-        onClick: () => onShowDetails(activeConfig),
+        onClick: () => onShowDetails(readyConfig),
+        icon: <LuFileText />,
+      });
+    } else if (toReviewConfig) {
+      // Limited actions for TO_REVIEW status - just show details
+      menuActions.push({
+        label: 'Generation details',
+        onClick: () => onShowDetails(toReviewConfig),
         icon: <LuFileText />,
       });
     }
 
-    if (onGenerateProgram && !isGeneratingProgram) {
+    if (onGenerateProgram) {
       menuActions.push({
         label: 'Generate new draft',
         onClick: () => onGenerateProgram(selectedLanguage),
         icon: <LuSparkles />,
+        disabled: isGeneratingProgram,
       });
     }
 
     return menuActions;
   }, [
-    activeConfigurations,
+    readyConfig,
+    toReviewConfig,
     onTestProgram,
     onShowDetails,
     onGenerateProgram,
@@ -120,7 +140,9 @@ export const ActiveProgramMenu: React.FC<ActiveProgramMenuProps> = ({
     selectedLanguage,
   ]);
 
-  if (actions.length === 0) {
+  // Don't render if no actions or if we're only generating without an active program
+  const hasActiveProgram = readyConfig || toReviewConfig;
+  if (actions.length === 0 || (!hasActiveProgram && isGeneratingProgram)) {
     return null;
   }
 

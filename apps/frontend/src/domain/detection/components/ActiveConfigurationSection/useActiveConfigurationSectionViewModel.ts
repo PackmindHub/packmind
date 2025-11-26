@@ -33,6 +33,7 @@ type HookParams = Pick<
   | 'isActivatingDraft'
   | 'onOpenAssessmentDrawer'
   | 'onNavigateToExamples'
+  | 'onReviewDraft'
 > & {
   isAssessmentFeatureEnabled: boolean;
 };
@@ -74,6 +75,7 @@ type ToReviewDescriptor = {
   key: ActiveConfigurationSectionKey.TO_REVIEW_CARD;
   props: {
     onGenerateProgramClick: () => void;
+    onReviewDraft?: () => void;
     isGenerating: boolean;
     hasDraftToReview: boolean;
     isDraftInProgress: boolean;
@@ -117,6 +119,7 @@ export const useActiveConfigurationSectionViewModel = (
     onOpenAssessmentDrawer,
     isAssessmentFeatureEnabled,
     onNavigateToExamples,
+    onReviewDraft,
   } = params;
 
   const descriptor = useMemo(
@@ -210,6 +213,7 @@ export const useActiveConfigurationSectionViewModel = (
                 onGenerateProgram
                   ? onGenerateProgram(configuration.language)
                   : undefined,
+              onReviewDraft,
               isGenerating,
               hasDraftToReview:
                 configuration?.draftProgram?.status !== undefined &&
@@ -251,6 +255,7 @@ export const useActiveConfigurationSectionViewModel = (
     onActivateDraft,
     onGenerateProgram,
     onNavigateToExamples,
+    onReviewDraft,
     onTestProgram,
     standardName,
   ]);

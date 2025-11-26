@@ -10,6 +10,7 @@ import {
 
 interface ToReviewSectionProps {
   onGenerateProgramClick: () => void;
+  onReviewDraft?: () => void;
   isGenerating?: boolean;
   hasDraftToReview?: boolean;
   isDraftInProgress?: boolean;
@@ -17,10 +18,19 @@ interface ToReviewSectionProps {
 
 export const ToReviewSection: React.FC<ToReviewSectionProps> = ({
   onGenerateProgramClick,
+  onReviewDraft,
   isGenerating = false,
   hasDraftToReview = false,
   isDraftInProgress = false,
 }) => {
+  const handleButtonClick = () => {
+    if (hasDraftToReview && onReviewDraft) {
+      onReviewDraft();
+    } else {
+      onGenerateProgramClick();
+    }
+  };
+
   return (
     <PMBox
       border="1px solid"
@@ -57,7 +67,7 @@ export const ToReviewSection: React.FC<ToReviewSectionProps> = ({
           <PMButton
             size="sm"
             variant="outline"
-            onClick={onGenerateProgramClick}
+            onClick={handleButtonClick}
             loading={isGenerating || isDraftInProgress}
             disabled={isGenerating || isDraftInProgress}
           >
