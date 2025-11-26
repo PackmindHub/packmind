@@ -96,25 +96,29 @@ export const ProgramGenerationAccordion: React.FC<
     <DetectionAccordion
       title="Program"
       actions={
-        <AccordionProgramActionButtons
-          activeConfigurations={activeConfigurations}
-          activeDraft={activeDraft}
-          onTestProgram={onTestProgram}
-          onGenerateProgram={onGenerateProgram}
-          onActivateDraft={onActivateDraft}
-          onRetryDraft={onRetryDraft}
-          isGeneratingProgram={isGeneratingProgram}
-          selectedLanguage={selectedLanguage}
-          onViewModeChange={handleViewModeChange}
-          standardId={standardId}
-          ruleId={ruleId}
-          onShowLogs={() => setIsLogsDrawerOpen(true)}
-          onShowProgram={() => setIsProgramDrawerOpen(true)}
-          onShowDetails={handleShowDetails}
-          isActivating={
-            activatingDraftId === activeDraft?.id && isActivatingDraft
-          }
-        />
+        <>
+          {!disabled && (
+            <AccordionProgramActionButtons
+              activeConfigurations={activeConfigurations}
+              activeDraft={activeDraft}
+              onTestProgram={onTestProgram}
+              onGenerateProgram={onGenerateProgram}
+              onActivateDraft={onActivateDraft}
+              onRetryDraft={onRetryDraft}
+              isGeneratingProgram={isGeneratingProgram}
+              selectedLanguage={selectedLanguage}
+              onViewModeChange={handleViewModeChange}
+              standardId={standardId}
+              ruleId={ruleId}
+              onShowLogs={() => setIsLogsDrawerOpen(true)}
+              onShowProgram={() => setIsProgramDrawerOpen(true)}
+              onShowDetails={handleShowDetails}
+              isActivating={
+                activatingDraftId === activeDraft?.id && isActivatingDraft
+              }
+            />
+          )}
+        </>
       }
       open={isOpen}
       onOpenChange={onOpenChange}
