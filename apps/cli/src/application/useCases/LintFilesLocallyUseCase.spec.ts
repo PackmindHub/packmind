@@ -1,6 +1,6 @@
 import {
+  AllConfigsResult,
   ExecuteLinterProgramsCommand,
-  HierarchicalConfigResult,
   IExecuteLinterProgramsUseCase,
   LinterExecutionViolation,
 } from '@packmind/types';
@@ -68,6 +68,8 @@ describe('LintFilesLocallyUseCase', () => {
       readConfig: jest.fn(),
       writeConfig: jest.fn(),
       readHierarchicalConfig: jest.fn(),
+      findAllConfigsInTree: jest.fn(),
+      findDescendantConfigs: jest.fn(),
     } as unknown as jest.Mocked<ConfigFileRepository>;
 
     mockServices = {
@@ -97,22 +99,30 @@ describe('LintFilesLocallyUseCase', () => {
     jest.clearAllMocks();
   });
 
-  describe('when hierarchical configs exist', () => {
-    it('merges packages from root and subdirectory configs', async () => {
-      const hierarchicalConfig: HierarchicalConfigResult = {
-        packages: { generic: '*', backend: '*' },
-        configPaths: [
-          '/project/apps/api/packmind.json',
-          '/project/packmind.json',
+  describe('when configs exist in tree', () => {
+    it('finds all configs and fetches detection programs for each target', async () => {
+      const allConfigs: AllConfigsResult = {
+        configs: [
+          {
+            targetPath: '/apps/api',
+            absoluteTargetPath: '/project/apps/api',
+            packages: { backend: '*' },
+          },
+          {
+            targetPath: '/',
+            absoluteTargetPath: '/project',
+            packages: { generic: '*' },
+          },
         ],
         hasConfigs: true,
+        basePath: '/project',
       };
 
       mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockResolvedValue(
         '/project',
       );
-      mockConfigFileRepository.readHierarchicalConfig.mockResolvedValue(
-        hierarchicalConfig,
+      mockConfigFileRepository.findAllConfigsInTree.mockResolvedValue(
+        allConfigs,
       );
       mockListFiles.listFilesInDirectory.mockResolvedValue([]);
       mockPackmindGateway.getDetectionProgramsForPackages.mockResolvedValue({
@@ -122,29 +132,33 @@ describe('LintFilesLocallyUseCase', () => {
       await useCase.execute({ path: '/project/apps/api' });
 
       expect(
-        mockConfigFileRepository.readHierarchicalConfig,
+        mockConfigFileRepository.findAllConfigsInTree,
       ).toHaveBeenCalledWith('/project/apps/api', '/project');
-      expect(
-        mockPackmindGateway.getDetectionProgramsForPackages,
-      ).toHaveBeenCalledWith({
-        packagesSlugs: ['generic', 'backend'],
-      });
     });
 
-    it('passes merged packages to gateway', async () => {
-      const hierarchicalConfig: HierarchicalConfigResult = {
-        packages: { frontend: '*', shared: '1.0.0' },
-        configPaths: ['/project/packmind.json'],
+    it('fetches detection programs for single target', async () => {
+      const allConfigs: AllConfigsResult = {
+        configs: [
+          {
+            targetPath: '/',
+            absoluteTargetPath: '/project',
+            packages: { frontend: '*', shared: '1.0.0' },
+          },
+        ],
         hasConfigs: true,
+        basePath: '/project',
       };
 
       mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockResolvedValue(
         '/project',
       );
-      mockConfigFileRepository.readHierarchicalConfig.mockResolvedValue(
-        hierarchicalConfig,
+      mockConfigFileRepository.findAllConfigsInTree.mockResolvedValue(
+        allConfigs,
       );
-      mockListFiles.listFilesInDirectory.mockResolvedValue([]);
+      mockListFiles.listFilesInDirectory.mockResolvedValue([
+        { path: '/project/src/file.ts' },
+      ]);
+      mockListFiles.readFileContent.mockResolvedValue('const x = 1;');
       mockPackmindGateway.getDetectionProgramsForPackages.mockResolvedValue({
         targets: [],
       });
@@ -159,19 +173,19 @@ describe('LintFilesLocallyUseCase', () => {
     });
   });
 
-  describe('when no hierarchical configs exist', () => {
+  describe('when no configs exist in tree', () => {
     it('throws descriptive error', async () => {
-      const hierarchicalConfig: HierarchicalConfigResult = {
-        packages: {},
-        configPaths: [],
+      const allConfigs: AllConfigsResult = {
+        configs: [],
         hasConfigs: false,
+        basePath: '/project',
       };
 
       mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockResolvedValue(
         '/project',
       );
-      mockConfigFileRepository.readHierarchicalConfig.mockResolvedValue(
-        hierarchicalConfig,
+      mockConfigFileRepository.findAllConfigsInTree.mockResolvedValue(
+        allConfigs,
       );
 
       await expect(useCase.execute({ path: '/project' })).rejects.toThrow(
@@ -181,20 +195,29 @@ describe('LintFilesLocallyUseCase', () => {
   });
 
   describe('when single config exists at root', () => {
-    it('uses packages from root config', async () => {
-      const hierarchicalConfig: HierarchicalConfigResult = {
-        packages: { 'root-package': '*' },
-        configPaths: ['/project/packmind.json'],
+    it('uses packages from root config for files in subdirectories', async () => {
+      const allConfigs: AllConfigsResult = {
+        configs: [
+          {
+            targetPath: '/',
+            absoluteTargetPath: '/project',
+            packages: { 'root-package': '*' },
+          },
+        ],
         hasConfigs: true,
+        basePath: '/project',
       };
 
       mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockResolvedValue(
         '/project',
       );
-      mockConfigFileRepository.readHierarchicalConfig.mockResolvedValue(
-        hierarchicalConfig,
+      mockConfigFileRepository.findAllConfigsInTree.mockResolvedValue(
+        allConfigs,
       );
-      mockListFiles.listFilesInDirectory.mockResolvedValue([]);
+      mockListFiles.listFilesInDirectory.mockResolvedValue([
+        { path: '/project/apps/api/file.ts' },
+      ]);
+      mockListFiles.readFileContent.mockResolvedValue('const x = 1;');
       mockPackmindGateway.getDetectionProgramsForPackages.mockResolvedValue({
         targets: [],
       });
@@ -216,17 +239,23 @@ describe('LintFilesLocallyUseCase', () => {
         isDirectory: () => false,
       });
 
-      const hierarchicalConfig: HierarchicalConfigResult = {
-        packages: { typescript: '*' },
-        configPaths: ['/project/packmind.json'],
+      const allConfigs: AllConfigsResult = {
+        configs: [
+          {
+            targetPath: '/',
+            absoluteTargetPath: '/project',
+            packages: { typescript: '*' },
+          },
+        ],
         hasConfigs: true,
+        basePath: '/project',
       };
 
       mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockResolvedValue(
         '/project',
       );
-      mockConfigFileRepository.readHierarchicalConfig.mockResolvedValue(
-        hierarchicalConfig,
+      mockConfigFileRepository.findAllConfigsInTree.mockResolvedValue(
+        allConfigs,
       );
       mockListFiles.readFileContent.mockResolvedValue('const x = 1;');
       mockPackmindGateway.getDetectionProgramsForPackages.mockResolvedValue({
@@ -236,17 +265,23 @@ describe('LintFilesLocallyUseCase', () => {
       await useCase.execute({ path: '/project/src/file.ts' });
 
       expect(
-        mockConfigFileRepository.readHierarchicalConfig,
+        mockConfigFileRepository.findAllConfigsInTree,
       ).toHaveBeenCalledWith('/project/src', '/project');
     });
   });
 
-  describe('when executing linting with merged packages', () => {
+  describe('when executing linting with target-based matching', () => {
     it('returns violations from detection programs', async () => {
-      const hierarchicalConfig: HierarchicalConfigResult = {
-        packages: { frontend: '*' },
-        configPaths: ['/project/packmind.json'],
+      const allConfigs: AllConfigsResult = {
+        configs: [
+          {
+            targetPath: '/',
+            absoluteTargetPath: '/project',
+            packages: { frontend: '*' },
+          },
+        ],
         hasConfigs: true,
+        basePath: '/project',
       };
 
       const mockDetectionPrograms = {
@@ -283,8 +318,8 @@ describe('LintFilesLocallyUseCase', () => {
       mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockResolvedValue(
         '/project',
       );
-      mockConfigFileRepository.readHierarchicalConfig.mockResolvedValue(
-        hierarchicalConfig,
+      mockConfigFileRepository.findAllConfigsInTree.mockResolvedValue(
+        allConfigs,
       );
       mockListFiles.listFilesInDirectory.mockResolvedValue([
         { path: '/project/src/file.ts' },
@@ -299,6 +334,253 @@ describe('LintFilesLocallyUseCase', () => {
       expect(result.violations).toHaveLength(1);
       expect(result.summary.totalFiles).toBe(1);
       expect(result.summary.standardsChecked).toContain('test-standard');
+    });
+
+    it('accumulates programs from multiple matching targets', async () => {
+      const allConfigs: AllConfigsResult = {
+        configs: [
+          {
+            targetPath: '/',
+            absoluteTargetPath: '/project',
+            packages: { generic: '*' },
+          },
+          {
+            targetPath: '/src',
+            absoluteTargetPath: '/project/src',
+            packages: { backend: '*' },
+          },
+        ],
+        hasConfigs: true,
+        basePath: '/project',
+      };
+
+      const genericPrograms = {
+        targets: [
+          {
+            name: 'Generic Target',
+            path: '/',
+            standards: [
+              {
+                name: 'Generic Standard',
+                slug: 'generic-standard',
+                scope: [],
+                rules: [
+                  {
+                    content: 'Generic rule',
+                    activeDetectionPrograms: [
+                      {
+                        language: 'typescript',
+                        detectionProgram: {
+                          mode: 'ast',
+                          code: 'function checkSourceCode(ast) { return [1]; }',
+                          sourceCodeState: 'AST' as const,
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      const backendPrograms = {
+        targets: [
+          {
+            name: 'Backend Target',
+            path: '/',
+            standards: [
+              {
+                name: 'Backend Standard',
+                slug: 'backend-standard',
+                scope: [],
+                rules: [
+                  {
+                    content: 'Backend rule',
+                    activeDetectionPrograms: [
+                      {
+                        language: 'typescript',
+                        detectionProgram: {
+                          mode: 'ast',
+                          code: 'function checkSourceCode(ast) { return [2]; }',
+                          sourceCodeState: 'AST' as const,
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockResolvedValue(
+        '/project',
+      );
+      mockConfigFileRepository.findAllConfigsInTree.mockResolvedValue(
+        allConfigs,
+      );
+      mockListFiles.listFilesInDirectory.mockResolvedValue([
+        { path: '/project/src/file.ts' },
+      ]);
+      mockListFiles.readFileContent.mockResolvedValue('const x = 1;');
+      mockPackmindGateway.getDetectionProgramsForPackages
+        .mockResolvedValueOnce(genericPrograms)
+        .mockResolvedValueOnce(backendPrograms);
+
+      const result = await useCase.execute({ path: '/project' });
+
+      // File matches both targets, so both standards' programs should run
+      expect(result.violations).toHaveLength(1);
+      expect(result.violations[0].violations).toHaveLength(2);
+      expect(result.summary.standardsChecked).toContain('generic-standard');
+      expect(result.summary.standardsChecked).toContain('backend-standard');
+    });
+
+    it('caches API calls for identical package sets', async () => {
+      const allConfigs: AllConfigsResult = {
+        configs: [
+          {
+            targetPath: '/',
+            absoluteTargetPath: '/project',
+            packages: { shared: '*' },
+          },
+          {
+            targetPath: '/apps/api',
+            absoluteTargetPath: '/project/apps/api',
+            packages: { shared: '*' },
+          },
+        ],
+        hasConfigs: true,
+        basePath: '/project',
+      };
+
+      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockResolvedValue(
+        '/project',
+      );
+      mockConfigFileRepository.findAllConfigsInTree.mockResolvedValue(
+        allConfigs,
+      );
+      mockListFiles.listFilesInDirectory.mockResolvedValue([
+        { path: '/project/apps/api/file.ts' },
+      ]);
+      mockListFiles.readFileContent.mockResolvedValue('const x = 1;');
+      mockPackmindGateway.getDetectionProgramsForPackages.mockResolvedValue({
+        targets: [],
+      });
+
+      await useCase.execute({ path: '/project' });
+
+      // Both targets have same packages, so API should only be called once
+      expect(
+        mockPackmindGateway.getDetectionProgramsForPackages,
+      ).toHaveBeenCalledTimes(1);
+    });
+
+    it('only applies programs to files under matching target', async () => {
+      const allConfigs: AllConfigsResult = {
+        configs: [
+          {
+            targetPath: '/',
+            absoluteTargetPath: '/project',
+            packages: { generic: '*' },
+          },
+          {
+            targetPath: '/apps/api',
+            absoluteTargetPath: '/project/apps/api',
+            packages: { backend: '*' },
+          },
+        ],
+        hasConfigs: true,
+        basePath: '/project',
+      };
+
+      const genericPrograms = {
+        targets: [
+          {
+            name: 'Generic Target',
+            path: '/',
+            standards: [
+              {
+                name: 'Generic Standard',
+                slug: 'generic-standard',
+                scope: [],
+                rules: [
+                  {
+                    content: 'Generic rule',
+                    activeDetectionPrograms: [
+                      {
+                        language: 'typescript',
+                        detectionProgram: {
+                          mode: 'ast',
+                          code: 'function checkSourceCode(ast) { return [1]; }',
+                          sourceCodeState: 'AST' as const,
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      const backendPrograms = {
+        targets: [
+          {
+            name: 'Backend Target',
+            path: '/',
+            standards: [
+              {
+                name: 'Backend Standard',
+                slug: 'backend-standard',
+                scope: [],
+                rules: [
+                  {
+                    content: 'Backend rule',
+                    activeDetectionPrograms: [
+                      {
+                        language: 'typescript',
+                        detectionProgram: {
+                          mode: 'ast',
+                          code: 'function checkSourceCode(ast) { return [2]; }',
+                          sourceCodeState: 'AST' as const,
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      mockGitRemoteUrlService.tryGetGitRepositoryRoot.mockResolvedValue(
+        '/project',
+      );
+      mockConfigFileRepository.findAllConfigsInTree.mockResolvedValue(
+        allConfigs,
+      );
+      // File in /libs - not under /apps/api
+      mockListFiles.listFilesInDirectory.mockResolvedValue([
+        { path: '/project/libs/utils.ts' },
+      ]);
+      mockListFiles.readFileContent.mockResolvedValue('const x = 1;');
+      mockPackmindGateway.getDetectionProgramsForPackages
+        .mockResolvedValueOnce(genericPrograms)
+        .mockResolvedValueOnce(backendPrograms);
+
+      const result = await useCase.execute({ path: '/project' });
+
+      // File only matches root target, not /apps/api
+      expect(result.violations).toHaveLength(1);
+      expect(result.violations[0].violations).toHaveLength(1);
+      expect(result.summary.standardsChecked).toContain('generic-standard');
+      expect(result.summary.standardsChecked).not.toContain('backend-standard');
     });
   });
 

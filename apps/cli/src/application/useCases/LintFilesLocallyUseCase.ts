@@ -9,10 +9,12 @@ import { LintViolation } from '../../domain/entities/LintViolation';
 import { minimatch } from 'minimatch';
 import { PackmindLogger } from '@packmind/logger';
 import {
+  ConfigWithTarget,
   ExecuteLinterProgramsCommand,
   LinterExecutionProgram,
   LinterExecutionViolation,
 } from '@packmind/types';
+import { GetDetectionProgramsForPackagesResult } from '../../domain/repositories/IPackmindGateway';
 import {
   ProgrammingLanguage,
   stringToProgrammingLanguage,
@@ -23,6 +25,11 @@ import * as fs from 'fs/promises';
 const origin = 'LintFilesLocallyUseCase';
 
 export class LintFilesLocallyUseCase implements ILintFilesLocally {
+  private detectionProgramsCache: Map<
+    string,
+    GetDetectionProgramsForPackagesResult
+  > = new Map();
+
   constructor(
     private readonly services: PackmindServices,
     private readonly repositories: IPackmindRepositories,
@@ -89,6 +96,9 @@ export class LintFilesLocallyUseCase implements ILintFilesLocally {
 
     this.logger.debug(`Starting local linting: path="${userPath}"`);
 
+    // Clear cache at the start of each execution
+    this.detectionProgramsCache.clear();
+
     const absoluteUserPath = path.isAbsolute(userPath)
       ? userPath
       : path.resolve(process.cwd(), userPath);
@@ -113,43 +123,30 @@ export class LintFilesLocallyUseCase implements ILintFilesLocally {
         directoryForConfig,
       );
 
-    // Use git root as stop boundary, or null to walk to filesystem root
-    const hierarchicalConfig =
-      await this.repositories.configFileRepository.readHierarchicalConfig(
+    // Find all configs in tree (ancestors and descendants)
+    const allConfigs =
+      await this.repositories.configFileRepository.findAllConfigsInTree(
         directoryForConfig,
         gitRepoRoot,
       );
 
-    if (!hierarchicalConfig.hasConfigs) {
+    if (!allConfigs.hasConfigs) {
       const boundary = gitRepoRoot ?? 'filesystem root';
       throw new Error(
         `No packmind.json found between ${directoryForConfig} and ${boundary}. Cannot use local linting.`,
       );
     }
 
-    // Use git root as base for relative paths, or the config directory if outside git
-    const basePath = gitRepoRoot ?? directoryForConfig;
+    const basePath = allConfigs.basePath;
 
     this.logger.debug(
-      `Found ${hierarchicalConfig.configPaths.length} packmind.json file(s)`,
+      `Found ${allConfigs.configs.length} packmind.json file(s)`,
     );
-    for (const configPath of hierarchicalConfig.configPaths) {
-      this.logger.debug(`Using config: ${configPath}`);
+    for (const config of allConfigs.configs) {
+      this.logger.debug(
+        `Using config: ${config.absoluteTargetPath}/packmind.json (target: ${config.targetPath})`,
+      );
     }
-
-    const packageSlugs = Object.keys(hierarchicalConfig.packages);
-    this.logger.debug(
-      `Merged ${packageSlugs.length} packages from configuration files`,
-    );
-
-    const detectionPrograms =
-      await this.repositories.packmindGateway.getDetectionProgramsForPackages({
-        packagesSlugs: packageSlugs,
-      });
-
-    this.logger.debug(
-      `Retrieved detection programs: targetsCount=${detectionPrograms.targets.length}`,
-    );
 
     const files = isFile
       ? [{ path: absoluteUserPath }]
@@ -162,6 +159,7 @@ export class LintFilesLocallyUseCase implements ILintFilesLocally {
     this.logger.debug(`Found ${files.length} files to lint`);
 
     const violations: LintViolation[] = [];
+    const allStandardsChecked = new Set<string>();
 
     for (const file of files) {
       const fileViolations: LintViolation['violations'] = [];
@@ -185,51 +183,66 @@ export class LintFilesLocallyUseCase implements ILintFilesLocally {
         continue;
       }
 
+      // Find all matching targets (configs whose directory is an ancestor of the file)
+      const matchingTargets = this.findMatchingTargets(
+        file.path,
+        allConfigs.configs,
+      );
+
       const programsByLanguage = new Map<
         ProgrammingLanguage,
         LinterExecutionProgram[]
       >();
 
-      for (const target of detectionPrograms.targets) {
-        for (const standard of target.standards) {
-          if (
-            !this.fileMatchesTargetAndScope(
-              normalizedFilePath,
-              target.path,
-              standard.scope,
-            )
-          ) {
-            continue;
-          }
+      // Accumulate programs from all matching targets
+      for (const targetConfig of matchingTargets) {
+        const detectionPrograms =
+          await this.getDetectionProgramsForTarget(targetConfig);
 
-          for (const rule of standard.rules) {
-            for (const activeProgram of rule.activeDetectionPrograms) {
-              try {
-                const programLanguage = this.resolveProgrammingLanguage(
-                  activeProgram.language,
-                );
+        for (const target of detectionPrograms.targets) {
+          for (const standard of target.standards) {
+            // Apply scope filtering within the target
+            if (
+              !this.fileMatchesTargetAndScope(
+                normalizedFilePath,
+                targetConfig.targetPath,
+                standard.scope,
+              )
+            ) {
+              continue;
+            }
 
-                if (!programLanguage || programLanguage !== fileLanguage) {
-                  continue;
+            allStandardsChecked.add(standard.slug);
+
+            for (const rule of standard.rules) {
+              for (const activeProgram of rule.activeDetectionPrograms) {
+                try {
+                  const programLanguage = this.resolveProgrammingLanguage(
+                    activeProgram.language,
+                  );
+
+                  if (!programLanguage || programLanguage !== fileLanguage) {
+                    continue;
+                  }
+
+                  const programsForLanguage =
+                    programsByLanguage.get(programLanguage) ?? [];
+
+                  programsForLanguage.push({
+                    code: activeProgram.detectionProgram.code,
+                    ruleContent: rule.content,
+                    standardSlug: standard.slug,
+                    sourceCodeState:
+                      activeProgram.detectionProgram.sourceCodeState,
+                    language: fileLanguage,
+                  });
+
+                  programsByLanguage.set(programLanguage, programsForLanguage);
+                } catch (error) {
+                  console.error(
+                    `Error preparing program for file ${file.path}: ${error}`,
+                  );
                 }
-
-                const programsForLanguage =
-                  programsByLanguage.get(programLanguage) ?? [];
-
-                programsForLanguage.push({
-                  code: activeProgram.detectionProgram.code,
-                  ruleContent: rule.content,
-                  standardSlug: standard.slug,
-                  sourceCodeState:
-                    activeProgram.detectionProgram.sourceCodeState,
-                  language: fileLanguage,
-                });
-
-                programsByLanguage.set(programLanguage, programsForLanguage);
-              } catch (error) {
-                console.error(
-                  `Error preparing program for file ${file.path}: ${error}`,
-                );
               }
             }
           }
@@ -278,23 +291,62 @@ export class LintFilesLocallyUseCase implements ILintFilesLocally {
       0,
     );
 
-    const standardsChecked: string[] = Array.from(
-      new Set(
-        detectionPrograms.targets.flatMap((target) =>
-          target.standards.map((standard) => standard.slug),
-        ),
-      ),
-    );
-
     return {
       violations,
       summary: {
         totalFiles: files.length,
         violatedFiles: violations.length,
         totalViolations,
-        standardsChecked,
+        standardsChecked: Array.from(allStandardsChecked),
       },
     };
+  }
+
+  /**
+   * Finds all targets (configs) that are ancestors of the given file path.
+   * A target matches if the file is located within or under the target's directory.
+   */
+  private findMatchingTargets(
+    absoluteFilePath: string,
+    configs: ConfigWithTarget[],
+  ): ConfigWithTarget[] {
+    return configs.filter(
+      (config) =>
+        absoluteFilePath.startsWith(config.absoluteTargetPath + '/') ||
+        absoluteFilePath === config.absoluteTargetPath,
+    );
+  }
+
+  /**
+   * Gets detection programs for a target, using cache to avoid redundant API calls.
+   * Cache key is the sorted package slugs to handle identical package sets.
+   */
+  private async getDetectionProgramsForTarget(
+    targetConfig: ConfigWithTarget,
+  ): Promise<GetDetectionProgramsForPackagesResult> {
+    const packageSlugs = Object.keys(targetConfig.packages).sort();
+    const cacheKey = packageSlugs.join(',');
+
+    const cached = this.detectionProgramsCache.get(cacheKey);
+    if (cached) {
+      this.logger.debug(
+        `Using cached detection programs for packages: ${cacheKey}`,
+      );
+      return cached;
+    }
+
+    this.logger.debug(
+      `Fetching detection programs for packages: ${packageSlugs.join(', ')}`,
+    );
+
+    const detectionPrograms =
+      await this.repositories.packmindGateway.getDetectionProgramsForPackages({
+        packagesSlugs: packageSlugs,
+      });
+
+    this.detectionProgramsCache.set(cacheKey, detectionPrograms);
+
+    return detectionPrograms;
   }
 
   private resolveProgrammingLanguage(

@@ -357,4 +357,224 @@ describe('ConfigFileRepository', () => {
       });
     });
   });
+
+  describe('findAllConfigsInTree', () => {
+    beforeEach(() => {
+      mockFs.readdir.mockResolvedValue([]);
+    });
+
+    describe('when no packmind.json exists anywhere', () => {
+      it('returns empty configs with hasConfigs false', async () => {
+        mockFs.readFile.mockRejectedValue({ code: 'ENOENT' });
+
+        const result = await repository.findAllConfigsInTree(
+          '/project/apps/api',
+          '/project',
+        );
+
+        expect(result.hasConfigs).toBe(false);
+        expect(result.configs).toHaveLength(0);
+        expect(result.basePath).toBe('/project');
+      });
+    });
+
+    describe('when packmind.json exists only at root', () => {
+      it('returns root config with target path "/"', async () => {
+        mockFs.readFile.mockImplementation(async (filePath: unknown) => {
+          if (filePath === '/project/packmind.json') {
+            return JSON.stringify({ packages: { generic: '*' } });
+          }
+          throw { code: 'ENOENT' };
+        });
+
+        const result = await repository.findAllConfigsInTree(
+          '/project/apps/api',
+          '/project',
+        );
+
+        expect(result.hasConfigs).toBe(true);
+        expect(result.configs).toHaveLength(1);
+        expect(result.configs[0]).toEqual({
+          targetPath: '/',
+          absoluteTargetPath: '/project',
+          packages: { generic: '*' },
+        });
+      });
+    });
+
+    describe('when packmind.json exists in ancestor directories', () => {
+      it('returns all ancestor configs with correct target paths', async () => {
+        mockFs.readFile.mockImplementation(async (filePath: unknown) => {
+          if (filePath === '/project/packmind.json') {
+            return JSON.stringify({ packages: { generic: '*' } });
+          }
+          if (filePath === '/project/apps/api/packmind.json') {
+            return JSON.stringify({ packages: { backend: '*' } });
+          }
+          throw { code: 'ENOENT' };
+        });
+
+        const result = await repository.findAllConfigsInTree(
+          '/project/apps/api',
+          '/project',
+        );
+
+        expect(result.hasConfigs).toBe(true);
+        expect(result.configs).toHaveLength(2);
+
+        const rootConfig = result.configs.find((c) => c.targetPath === '/');
+        const apiConfig = result.configs.find(
+          (c) => c.targetPath === '/apps/api',
+        );
+
+        expect(rootConfig).toEqual({
+          targetPath: '/',
+          absoluteTargetPath: '/project',
+          packages: { generic: '*' },
+        });
+        expect(apiConfig).toEqual({
+          targetPath: '/apps/api',
+          absoluteTargetPath: '/project/apps/api',
+          packages: { backend: '*' },
+        });
+      });
+    });
+
+    describe('when packmind.json exists in descendant directories', () => {
+      it('returns descendant configs with correct target paths', async () => {
+        mockFs.readdir
+          .mockResolvedValueOnce([
+            { name: 'apps', isDirectory: () => true },
+          ] as MockDirent[] as never)
+          .mockResolvedValueOnce([
+            { name: 'api', isDirectory: () => true },
+            { name: 'web', isDirectory: () => true },
+          ] as MockDirent[] as never)
+          .mockResolvedValue([]);
+        mockFs.readFile.mockImplementation(async (filePath: unknown) => {
+          if (filePath === '/project/packmind.json') {
+            return JSON.stringify({ packages: { generic: '*' } });
+          }
+          if (filePath === '/project/apps/api/packmind.json') {
+            return JSON.stringify({ packages: { backend: '*' } });
+          }
+          if (filePath === '/project/apps/web/packmind.json') {
+            return JSON.stringify({ packages: { frontend: '*' } });
+          }
+          throw { code: 'ENOENT' };
+        });
+
+        const result = await repository.findAllConfigsInTree(
+          '/project',
+          '/project',
+        );
+
+        expect(result.hasConfigs).toBe(true);
+        expect(result.configs).toHaveLength(3);
+
+        const rootConfig = result.configs.find((c) => c.targetPath === '/');
+        const apiConfig = result.configs.find(
+          (c) => c.targetPath === '/apps/api',
+        );
+        const webConfig = result.configs.find(
+          (c) => c.targetPath === '/apps/web',
+        );
+
+        expect(rootConfig?.packages).toEqual({ generic: '*' });
+        expect(apiConfig?.packages).toEqual({ backend: '*' });
+        expect(webConfig?.packages).toEqual({ frontend: '*' });
+      });
+    });
+
+    describe('when packmind.json exists in both ancestors and descendants', () => {
+      it('returns all configs without duplicates', async () => {
+        mockFs.readdir
+          .mockResolvedValueOnce([
+            { name: 'apps', isDirectory: () => true },
+            { name: 'libs', isDirectory: () => true },
+          ] as MockDirent[] as never)
+          .mockResolvedValueOnce([
+            { name: 'api', isDirectory: () => true },
+          ] as MockDirent[] as never)
+          .mockResolvedValue([]);
+        mockFs.readFile.mockImplementation(async (filePath: unknown) => {
+          if (filePath === '/project/packmind.json') {
+            return JSON.stringify({ packages: { generic: '*' } });
+          }
+          if (filePath === '/project/apps/api/packmind.json') {
+            return JSON.stringify({ packages: { backend: '*' } });
+          }
+          if (filePath === '/project/libs/packmind.json') {
+            return JSON.stringify({ packages: { libs: '*' } });
+          }
+          throw { code: 'ENOENT' };
+        });
+
+        // Start from /project/apps/api, so it's an ancestor
+        // /project/libs is a descendant from /project root
+        const result = await repository.findAllConfigsInTree(
+          '/project/apps/api',
+          '/project',
+        );
+
+        expect(result.hasConfigs).toBe(true);
+        expect(result.configs).toHaveLength(3);
+
+        const targetPaths = result.configs.map((c) => c.targetPath).sort();
+        expect(targetPaths).toEqual(['/', '/apps/api', '/libs']);
+      });
+    });
+
+    describe('when stopDirectory is null', () => {
+      it('uses startDirectory as basePath', async () => {
+        mockFs.readFile.mockImplementation(async (filePath: unknown) => {
+          if (filePath === '/home/user/project/packmind.json') {
+            return JSON.stringify({ packages: { project: '*' } });
+          }
+          throw { code: 'ENOENT' };
+        });
+
+        const result = await repository.findAllConfigsInTree(
+          '/home/user/project',
+          null,
+        );
+
+        expect(result.basePath).toBe('/home/user/project');
+        expect(result.hasConfigs).toBe(true);
+        expect(result.configs[0].targetPath).toBe('/');
+      });
+    });
+
+    describe('when configs have same packages', () => {
+      it('keeps each config separate with its own packages', async () => {
+        mockFs.readdir
+          .mockResolvedValueOnce([
+            { name: 'apps', isDirectory: () => true },
+          ] as MockDirent[] as never)
+          .mockResolvedValue([]);
+        mockFs.readFile.mockImplementation(async (filePath: unknown) => {
+          if (filePath === '/project/packmind.json') {
+            return JSON.stringify({ packages: { shared: '1.0.0' } });
+          }
+          if (filePath === '/project/apps/packmind.json') {
+            return JSON.stringify({ packages: { shared: '2.0.0' } });
+          }
+          throw { code: 'ENOENT' };
+        });
+
+        const result = await repository.findAllConfigsInTree(
+          '/project',
+          '/project',
+        );
+
+        expect(result.configs).toHaveLength(2);
+
+        const rootConfig = result.configs.find((c) => c.targetPath === '/');
+        const appsConfig = result.configs.find((c) => c.targetPath === '/apps');
+
+        expect(rootConfig?.packages).toEqual({ shared: '1.0.0' });
+        expect(appsConfig?.packages).toEqual({ shared: '2.0.0' });
+      });
+    });
+  });
 });
