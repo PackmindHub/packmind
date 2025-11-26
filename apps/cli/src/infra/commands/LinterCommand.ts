@@ -106,15 +106,13 @@ export const lintCommand = command({
       ? targetPath
       : pathModule.resolve(process.cwd(), targetPath);
 
-    // Determine linting mode and targets
+    // Determine linting mode
     let useLocalLinting = false;
-    let lintTargets: string[] = [];
 
     if (!hasArguments) {
       const stopDirectory =
         await packmindCliHexa.tryGetGitRepositoryRoot(absolutePath);
 
-      // Check if there's a config at the root level
       const hierarchicalConfig = await packmindCliHexa.readHierarchicalConfig(
         absolutePath,
         stopDirectory,
@@ -122,40 +120,17 @@ export const lintCommand = command({
 
       if (hierarchicalConfig.hasConfigs) {
         useLocalLinting = true;
-
-        // Start with the root as a target if it has a direct config
-        const rootConfig = await packmindCliHexa.readHierarchicalConfig(
-          absolutePath,
-          absolutePath,
-        );
-        if (rootConfig.hasConfigs) {
-          lintTargets.push(absolutePath);
-        }
-
-        // Find all descendant configs (child targets)
-        const descendantTargets =
-          await packmindCliHexa.findDescendantConfigs(absolutePath);
-        lintTargets = [...lintTargets, ...descendantTargets];
-
-        // If no direct targets found but hierarchical config exists,
-        // use the root as the only target
-        if (lintTargets.length === 0) {
-          lintTargets.push(absolutePath);
-        }
       }
     }
 
     let violations: LintViolation[] = [];
 
-    if (useLocalLinting && lintTargets.length > 0) {
-      // Lint each target independently and aggregate results
-      for (const target of lintTargets) {
-        packmindLogger.debug(`Linting target: ${target}`);
-        const result = await packmindCliHexa.lintFilesLocally({
-          path: target,
-        });
-        violations = [...violations, ...result.violations];
-      }
+    if (useLocalLinting) {
+      // Local linting mode: LintFilesLocallyUseCase handles all configs in tree
+      const result = await packmindCliHexa.lintFilesLocally({
+        path: absolutePath,
+      });
+      violations = result.violations;
     } else {
       // Fall back to deployment mode
       const result = await packmindCliHexa.lintFilesInDirectory({
