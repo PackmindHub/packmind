@@ -6,6 +6,7 @@ import {
 import { PackmindServices } from '../services/PackmindServices';
 import { IPackmindRepositories } from '../../domain/repositories/IPackmindRepositories';
 import { LintViolation } from '../../domain/entities/LintViolation';
+import { DiffMode, ModifiedLine } from '../../domain/entities/DiffMode';
 import { minimatch } from 'minimatch';
 import { PackmindLogger } from '@packmind/logger';
 import {
@@ -92,9 +93,11 @@ export class LintFilesLocallyUseCase implements ILintFilesLocally {
   public async execute(
     command: LintFilesLocallyCommand,
   ): Promise<LintFilesLocallyResult> {
-    const { path: userPath } = command;
+    const { path: userPath, diffMode } = command;
 
-    this.logger.debug(`Starting local linting: path="${userPath}"`);
+    this.logger.debug(
+      `Starting local linting: path="${userPath}", diffMode="${diffMode ?? 'none'}"`,
+    );
 
     // Clear cache at the start of each execution
     this.detectionProgramsCache.clear();
@@ -123,6 +126,52 @@ export class LintFilesLocallyUseCase implements ILintFilesLocally {
         directoryForConfig,
       );
 
+    // Get diff information if diffMode is enabled
+    let modifiedFiles: string[] | null = null;
+    let modifiedLines: ModifiedLine[] | null = null;
+
+    if (diffMode && gitRepoRoot) {
+      if (diffMode === DiffMode.FILES) {
+        modifiedFiles =
+          await this.services.gitRemoteUrlService.getModifiedFiles(gitRepoRoot);
+        this.logger.debug(`Found ${modifiedFiles.length} modified files`);
+
+        // If no files are modified, return early with no violations
+        if (modifiedFiles.length === 0) {
+          return {
+            violations: [],
+            summary: {
+              totalFiles: 0,
+              violatedFiles: 0,
+              totalViolations: 0,
+              standardsChecked: [],
+            },
+          };
+        }
+      } else if (diffMode === DiffMode.LINES) {
+        modifiedLines =
+          await this.services.gitRemoteUrlService.getModifiedLines(gitRepoRoot);
+        // Also get modified files to pre-filter
+        modifiedFiles = [...new Set(modifiedLines.map((ml) => ml.file))];
+        this.logger.debug(
+          `Found ${modifiedLines.length} modified line ranges in ${modifiedFiles.length} files`,
+        );
+
+        // If no files are modified, return early with no violations
+        if (modifiedFiles.length === 0) {
+          return {
+            violations: [],
+            summary: {
+              totalFiles: 0,
+              violatedFiles: 0,
+              totalViolations: 0,
+              standardsChecked: [],
+            },
+          };
+        }
+      }
+    }
+
     // Find all configs in tree (ancestors and descendants)
     const allConfigs =
       await this.repositories.configFileRepository.findAllConfigsInTree(
@@ -148,13 +197,20 @@ export class LintFilesLocallyUseCase implements ILintFilesLocally {
       );
     }
 
-    const files = isFile
+    let files = isFile
       ? [{ path: absoluteUserPath }]
       : await this.services.listFiles.listFilesInDirectory(
           absoluteUserPath,
           [],
           ['node_modules', 'dist', '.min.', '.map.', '.git'],
         );
+
+    // Filter files by modified files if diffMode is set
+    if (modifiedFiles) {
+      const modifiedFilesSet = new Set(modifiedFiles);
+      files = files.filter((file) => modifiedFilesSet.has(file.path));
+      this.logger.debug(`Filtered to ${files.length} modified files`);
+    }
 
     this.logger.debug(`Found ${files.length} files to lint`);
 
@@ -286,16 +342,29 @@ export class LintFilesLocallyUseCase implements ILintFilesLocally {
       }
     }
 
-    const totalViolations = violations.reduce(
+    // Filter violations by lines if diffMode is LINES
+    let filteredViolations = violations;
+    if (diffMode === DiffMode.LINES && modifiedLines) {
+      filteredViolations =
+        this.services.diffViolationFilterService.filterByLines(
+          violations,
+          modifiedLines,
+        );
+      this.logger.debug(
+        `Filtered violations by lines: ${violations.length} -> ${filteredViolations.length}`,
+      );
+    }
+
+    const totalViolations = filteredViolations.reduce(
       (sum, violation) => sum + violation.violations.length,
       0,
     );
 
     return {
-      violations,
+      violations: filteredViolations,
       summary: {
         totalFiles: files.length,
-        violatedFiles: violations.length,
+        violatedFiles: filteredViolations.length,
         totalViolations,
         standardsChecked: Array.from(allStandardsChecked),
       },
@@ -324,9 +393,7 @@ export class LintFilesLocallyUseCase implements ILintFilesLocally {
   private async getDetectionProgramsForTarget(
     targetConfig: ConfigWithTarget,
   ): Promise<GetDetectionProgramsForPackagesResult> {
-    const packageSlugs = Object.keys(targetConfig.packages).sort((a, b) =>
-      a.localeCompare(b),
-    );
+    const packageSlugs = Object.keys(targetConfig.packages).sort();
     const cacheKey = packageSlugs.join(',');
 
     const cached = this.detectionProgramsCache.get(cacheKey);

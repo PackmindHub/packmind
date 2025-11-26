@@ -6,6 +6,7 @@ import {
 import { PackmindServices } from '../services/PackmindServices';
 import { IPackmindRepositories } from '../../domain/repositories/IPackmindRepositories';
 import { LintViolation } from '../../domain/entities/LintViolation';
+import { DiffMode, ModifiedLine } from '../../domain/entities/DiffMode';
 import { minimatch } from 'minimatch';
 import { PackmindLogger } from '@packmind/logger';
 import {
@@ -133,10 +134,11 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
       standardSlug,
       ruleId,
       language,
+      diffMode,
     } = command;
 
     this.logger.debug(
-      `Starting linting: path="${userPath}", draftMode=${!!draftMode}, standardSlug="${standardSlug || 'N/A'}", ruleId="${ruleId || 'N/A'}", language="${language || 'N/A'}"`,
+      `Starting linting: path="${userPath}", draftMode=${!!draftMode}, standardSlug="${standardSlug || 'N/A'}", ruleId="${ruleId || 'N/A'}", language="${language || 'N/A'}", diffMode="${diffMode ?? 'none'}"`,
     );
 
     // Step 0: Resolve git repository root and absolute path to lint
@@ -184,14 +186,77 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
       `Resolved paths: gitRoot="${gitRepoRoot}", lintPath="${absoluteLintPath}"`,
     );
 
+    // Get diff information if diffMode is enabled
+    let modifiedFiles: string[] | null = null;
+    let modifiedLines: ModifiedLine[] | null = null;
+
+    if (diffMode) {
+      if (diffMode === DiffMode.FILES) {
+        modifiedFiles =
+          await this.services.gitRemoteUrlService.getModifiedFiles(gitRepoRoot);
+        this.logger.debug(`Found ${modifiedFiles.length} modified files`);
+
+        // If no files are modified, return early with no violations
+        if (modifiedFiles.length === 0) {
+          const { gitRemoteUrl } =
+            await this.services.gitRemoteUrlService.getGitRemoteUrl(
+              gitRepoRoot,
+            );
+          return {
+            gitRemoteUrl,
+            violations: [],
+            summary: {
+              totalFiles: 0,
+              violatedFiles: 0,
+              totalViolations: 0,
+              standardsChecked: [],
+            },
+          };
+        }
+      } else if (diffMode === DiffMode.LINES) {
+        modifiedLines =
+          await this.services.gitRemoteUrlService.getModifiedLines(gitRepoRoot);
+        // Also get modified files to pre-filter
+        modifiedFiles = [...new Set(modifiedLines.map((ml) => ml.file))];
+        this.logger.debug(
+          `Found ${modifiedLines.length} modified line ranges in ${modifiedFiles.length} files`,
+        );
+
+        // If no files are modified, return early with no violations
+        if (modifiedFiles.length === 0) {
+          const { gitRemoteUrl } =
+            await this.services.gitRemoteUrlService.getGitRemoteUrl(
+              gitRepoRoot,
+            );
+          return {
+            gitRemoteUrl,
+            violations: [],
+            summary: {
+              totalFiles: 0,
+              violatedFiles: 0,
+              totalViolations: 0,
+              standardsChecked: [],
+            },
+          };
+        }
+      }
+    }
+
     // Step 1: List files - if single file, use it directly; otherwise scan directory
-    const files = isFile
+    let files = isFile
       ? [{ path: absoluteLintPath }]
       : await this.services.listFiles.listFilesInDirectory(
           absoluteLintPath,
           [],
           ['node_modules', 'dist', '.min.', '.map.', '.git'],
         );
+
+    // Filter files by modified files if diffMode is set
+    if (modifiedFiles) {
+      const modifiedFilesSet = new Set(modifiedFiles);
+      files = files.filter((file) => modifiedFilesSet.has(file.path));
+      this.logger.debug(`Filtered to ${files.length} modified files`);
+    }
 
     // Step 2: Get Git remote URL
     const { gitRemoteUrl } =
@@ -458,8 +523,21 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
       }
     }
 
-    // Step 5: Format results with summary
-    const totalViolations = violations.reduce(
+    // Step 5: Filter violations by lines if diffMode is LINES
+    let filteredViolations = violations;
+    if (diffMode === DiffMode.LINES && modifiedLines) {
+      filteredViolations =
+        this.services.diffViolationFilterService.filterByLines(
+          violations,
+          modifiedLines,
+        );
+      this.logger.debug(
+        `Filtered violations by lines: ${violations.length} -> ${filteredViolations.length}`,
+      );
+    }
+
+    // Step 6: Format results with summary
+    const totalViolations = filteredViolations.reduce(
       (sum, violation) => sum + violation.violations.length,
       0,
     );
@@ -474,10 +552,10 @@ export class LintFilesInDirectoryUseCase implements ILintFilesInDirectory {
 
     return {
       gitRemoteUrl,
-      violations,
+      violations: filteredViolations,
       summary: {
         totalFiles: files.length,
-        violatedFiles: violations.length,
+        violatedFiles: filteredViolations.length,
         totalViolations,
         standardsChecked,
       },

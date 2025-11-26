@@ -375,4 +375,218 @@ describe('GitService', () => {
       }
     });
   });
+
+  describe('getModifiedFiles', () => {
+    describe('when there are no modified files', () => {
+      it('returns empty array', async () => {
+        // Create initial commit
+        await fs.writeFile(path.join(tempDir, 'file.txt'), 'content');
+        await execAsync('git add .', { cwd: tempDir });
+        await execAsync('git commit -m "Initial commit"', { cwd: tempDir });
+
+        const result = await service.getModifiedFiles(tempDir);
+
+        expect(result).toEqual([]);
+      });
+    });
+
+    describe('when there are staged modified files', () => {
+      it('returns modified file paths', async () => {
+        // Create initial commit
+        await fs.writeFile(path.join(tempDir, 'file.txt'), 'content');
+        await execAsync('git add .', { cwd: tempDir });
+        await execAsync('git commit -m "Initial commit"', { cwd: tempDir });
+
+        // Modify and stage file
+        await fs.writeFile(path.join(tempDir, 'file.txt'), 'modified content');
+        await execAsync('git add .', { cwd: tempDir });
+
+        const result = await service.getModifiedFiles(tempDir);
+        const resolvedTempDir = await fs.realpath(tempDir);
+
+        expect(result).toEqual([path.join(resolvedTempDir, 'file.txt')]);
+      });
+    });
+
+    describe('when there are unstaged modified files', () => {
+      it('returns modified file paths', async () => {
+        // Create initial commit
+        await fs.writeFile(path.join(tempDir, 'file.txt'), 'content');
+        await execAsync('git add .', { cwd: tempDir });
+        await execAsync('git commit -m "Initial commit"', { cwd: tempDir });
+
+        // Modify file without staging
+        await fs.writeFile(path.join(tempDir, 'file.txt'), 'modified content');
+
+        const result = await service.getModifiedFiles(tempDir);
+        const resolvedTempDir = await fs.realpath(tempDir);
+
+        expect(result).toEqual([path.join(resolvedTempDir, 'file.txt')]);
+      });
+    });
+
+    describe('when there are untracked files', () => {
+      it('returns untracked file paths', async () => {
+        // Create initial commit
+        await fs.writeFile(path.join(tempDir, 'file.txt'), 'content');
+        await execAsync('git add .', { cwd: tempDir });
+        await execAsync('git commit -m "Initial commit"', { cwd: tempDir });
+
+        // Add untracked file
+        await fs.writeFile(path.join(tempDir, 'untracked.txt'), 'new content');
+
+        const result = await service.getModifiedFiles(tempDir);
+        const resolvedTempDir = await fs.realpath(tempDir);
+
+        expect(result).toEqual([path.join(resolvedTempDir, 'untracked.txt')]);
+      });
+    });
+
+    describe('when there are both modified and untracked files', () => {
+      it('returns all file paths', async () => {
+        // Create initial commit
+        await fs.writeFile(path.join(tempDir, 'file.txt'), 'content');
+        await execAsync('git add .', { cwd: tempDir });
+        await execAsync('git commit -m "Initial commit"', { cwd: tempDir });
+
+        // Modify existing file and add new untracked file
+        await fs.writeFile(path.join(tempDir, 'file.txt'), 'modified content');
+        await fs.writeFile(path.join(tempDir, 'untracked.txt'), 'new content');
+
+        const result = await service.getModifiedFiles(tempDir);
+        const resolvedTempDir = await fs.realpath(tempDir);
+
+        expect(result.sort()).toEqual([
+          path.join(resolvedTempDir, 'file.txt'),
+          path.join(resolvedTempDir, 'untracked.txt'),
+        ]);
+      });
+    });
+  });
+
+  describe('getUntrackedFiles', () => {
+    describe('when there are no untracked files', () => {
+      it('returns empty array', async () => {
+        // Create initial commit
+        await fs.writeFile(path.join(tempDir, 'file.txt'), 'content');
+        await execAsync('git add .', { cwd: tempDir });
+        await execAsync('git commit -m "Initial commit"', { cwd: tempDir });
+
+        const result = await service.getUntrackedFiles(tempDir);
+
+        expect(result).toEqual([]);
+      });
+    });
+
+    describe('when there are untracked files', () => {
+      it('returns untracked file paths', async () => {
+        // Create initial commit
+        await fs.writeFile(path.join(tempDir, 'file.txt'), 'content');
+        await execAsync('git add .', { cwd: tempDir });
+        await execAsync('git commit -m "Initial commit"', { cwd: tempDir });
+
+        // Add untracked files
+        await fs.writeFile(path.join(tempDir, 'new1.txt'), 'content');
+        await fs.writeFile(path.join(tempDir, 'new2.txt'), 'content');
+
+        const result = await service.getUntrackedFiles(tempDir);
+        const resolvedTempDir = await fs.realpath(tempDir);
+
+        expect(result.sort()).toEqual([
+          path.join(resolvedTempDir, 'new1.txt'),
+          path.join(resolvedTempDir, 'new2.txt'),
+        ]);
+      });
+    });
+  });
+
+  describe('getModifiedLines', () => {
+    describe('when there are no modifications', () => {
+      it('returns empty array', async () => {
+        // Create initial commit
+        await fs.writeFile(path.join(tempDir, 'file.txt'), 'line1\nline2\n');
+        await execAsync('git add .', { cwd: tempDir });
+        await execAsync('git commit -m "Initial commit"', { cwd: tempDir });
+
+        const result = await service.getModifiedLines(tempDir);
+
+        expect(result).toEqual([]);
+      });
+    });
+
+    describe('when there are modified lines in tracked files', () => {
+      it('returns modified line ranges', async () => {
+        // Create initial commit
+        await fs.writeFile(
+          path.join(tempDir, 'file.txt'),
+          'line1\nline2\nline3\n',
+        );
+        await execAsync('git add .', { cwd: tempDir });
+        await execAsync('git commit -m "Initial commit"', { cwd: tempDir });
+
+        // Modify line 2
+        await fs.writeFile(
+          path.join(tempDir, 'file.txt'),
+          'line1\nmodified\nline3\n',
+        );
+
+        const result = await service.getModifiedLines(tempDir);
+        const resolvedTempDir = await fs.realpath(tempDir);
+
+        expect(result).toContainEqual({
+          file: path.join(resolvedTempDir, 'file.txt'),
+          startLine: 2,
+          lineCount: 1,
+        });
+      });
+    });
+
+    describe('when there are added lines', () => {
+      it('returns added line ranges', async () => {
+        // Create initial commit
+        await fs.writeFile(path.join(tempDir, 'file.txt'), 'line1\nline2\n');
+        await execAsync('git add .', { cwd: tempDir });
+        await execAsync('git commit -m "Initial commit"', { cwd: tempDir });
+
+        // Add new lines
+        await fs.writeFile(
+          path.join(tempDir, 'file.txt'),
+          'line1\nline2\nnew1\nnew2\n',
+        );
+
+        const result = await service.getModifiedLines(tempDir);
+        const resolvedTempDir = await fs.realpath(tempDir);
+
+        expect(result).toContainEqual({
+          file: path.join(resolvedTempDir, 'file.txt'),
+          startLine: 3,
+          lineCount: 2,
+        });
+      });
+    });
+
+    describe('when there are untracked files', () => {
+      it('returns all lines as modified', async () => {
+        // Create initial commit
+        await fs.writeFile(path.join(tempDir, 'file.txt'), 'content\n');
+        await execAsync('git add .', { cwd: tempDir });
+        await execAsync('git commit -m "Initial commit"', { cwd: tempDir });
+
+        // Add untracked file with 3 lines
+        await fs.writeFile(
+          path.join(tempDir, 'untracked.txt'),
+          'line1\nline2\nline3\n',
+        );
+
+        const result = await service.getModifiedLines(tempDir);
+        const resolvedTempDir = await fs.realpath(tempDir);
+
+        expect(result).toContainEqual({
+          file: path.join(resolvedTempDir, 'untracked.txt'),
+          startLine: 1,
+          lineCount: 3,
+        });
+      });
+    });
+  });
 });

@@ -1,5 +1,6 @@
 import { IPublicUseCase, RuleId } from '@packmind/types';
 import { LintViolation } from '../entities/LintViolation';
+import { DiffMode } from '../entities/DiffMode';
 
 export type LintFilesInDirectoryCommand = {
   path: string;
@@ -7,6 +8,7 @@ export type LintFilesInDirectoryCommand = {
   standardSlug?: string;
   ruleId?: RuleId;
   language?: string;
+  diffMode?: DiffMode;
 };
 
 export type LintFilesInDirectoryResult = {
