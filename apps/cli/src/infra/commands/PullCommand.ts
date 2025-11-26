@@ -42,25 +42,36 @@ export const pullCommand = command({
           process.exit(0);
         }
 
-        console.log('Available packages:');
-        packages.forEach((pkg) => {
-          console.log(`- ${pkg.name} [${chalk.blue.bold(pkg.slug)}]`);
+        // Sort packages alphabetically by slug
+        const sortedPackages = [...packages].sort((a, b) =>
+          a.slug.localeCompare(b.slug),
+        );
+
+        console.log('Available packages:\n');
+        sortedPackages.forEach((pkg, index) => {
+          console.log(`- ${chalk.blue.bold(pkg.slug)}`);
+          console.log(`    Name: ${pkg.name}`);
           if (pkg.description) {
             const descriptionLines = pkg.description
               .trim()
               .split('\n')
-              .map((line) => `  ${line.trim()}`)
-              .join('\n');
-            console.log(descriptionLines);
+              .map((line) => line.trim())
+              .filter((line) => line.length > 0);
+            const [firstLine, ...restLines] = descriptionLines;
+            console.log(`    Description: ${firstLine}`);
+            restLines.forEach((line) => {
+              console.log(`                 ${line}`);
+            });
+          }
+          // Add blank line between packages (but not after the last one)
+          if (index < sortedPackages.length - 1) {
+            console.log('');
           }
         });
 
-        const exampleSlugs = packages
-          .slice(0, 2)
-          .map((p) => chalk.blue.bold(p.slug))
-          .join(' ');
-        console.log('\nExample usage:\n');
-        console.log(`  $ packmind-cli install ${exampleSlugs}`);
+        const exampleSlug = chalk.blue.bold(sortedPackages[0].slug);
+        console.log('\nHow to install a package:\n');
+        console.log(`  $ packmind-cli install ${exampleSlug}`);
         process.exit(0);
       } catch (error) {
         console.error('\n❌ Failed to list packages:');
