@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import {
   GET_ACTIVE_DETECTION_PROGRAMS_KEY,
   GET_ALL_DETECTION_PROGRAMS_KEY,
+  GET_DETECTION_PROGRAM_METADATA_KEY,
   GET_RULE_DETECTION_ASSESSMENT_KEY,
   GET_RULE_LANGUAGE_DETECTION_STATUS_KEY,
   GET_STANDARD_RULES_DETECTION_STATUS_KEY,
@@ -99,6 +100,14 @@ export const useStandardEditionFeatures = (
           queryKey: [
             ...GET_STANDARD_RULES_DETECTION_STATUS_KEY,
             standardIdString,
+          ],
+        }),
+        // Invalidate all metadata queries for this rule (any detectionProgramId)
+        queryClient.invalidateQueries({
+          queryKey: [
+            ...GET_DETECTION_PROGRAM_METADATA_KEY,
+            standardIdString,
+            ruleIdString,
           ],
         }),
       ];
