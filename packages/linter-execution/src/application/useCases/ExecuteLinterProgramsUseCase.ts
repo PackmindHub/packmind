@@ -196,10 +196,11 @@ export class ExecuteLinterProgramsUseCase
     let line: number | undefined;
     let character = 0;
 
+    // Detection programs return 0-indexed line numbers, convert to 1-indexed for display
     if (typeof value === 'number' && Number.isFinite(value)) {
-      line = value;
+      line = value + 1;
     } else if (this.isViolationLike(value)) {
-      line = value.line;
+      line = value.line + 1;
       character = value.character ?? 0;
     }
 

@@ -66,19 +66,19 @@ describe('ExecuteLinterProgramsUseCase', () => {
     expect(astAdapter.parseSourceCode).toHaveBeenCalledTimes(1);
     expect(result.violations).toEqual([
       {
-        line: 1,
+        line: 2,
         character: 0,
         rule: 'interface-rule',
         standard: 'interface-standard',
       },
       {
-        line: 3,
+        line: 4,
         character: 0,
         rule: 'interface-rule',
         standard: 'interface-standard',
       },
       {
-        line: 5,
+        line: 6,
         character: 2,
         rule: 'Method rule',
         standard: 'method-standard',
@@ -166,7 +166,7 @@ describe('ExecuteLinterProgramsUseCase', () => {
     expect(astAdapter.parseSourceCode).not.toHaveBeenCalled();
     expect(result.violations).toEqual([
       {
-        line: 1,
+        line: 2,
         character: 0,
         rule: 'Raw content rule',
         standard: 'raw-standard',
@@ -201,13 +201,13 @@ describe('ExecuteLinterProgramsUseCase', () => {
     expect(astAdapter.parseSourceCode).toHaveBeenCalledTimes(1);
     expect(result.violations).toEqual([
       {
-        line: 2,
+        line: 3,
         character: 0,
         rule: 'Raw rule',
         standard: 'raw-standard',
       },
       {
-        line: 4,
+        line: 5,
         character: 0,
         rule: 'AST rule',
         standard: 'ast-standard',
@@ -273,7 +273,7 @@ describe('ExecuteLinterProgramsUseCase', () => {
 
     expect(result.violations).toEqual([
       {
-        line: 1,
+        line: 2,
         character: 0,
         rule: 'Raw rule',
         standard: 'raw-standard',
@@ -307,9 +307,10 @@ describe('ExecuteLinterProgramsUseCase', () => {
 
       const result = await useCase.execute(command);
 
+      // Program returns [1] → violation at line 2 (0-indexed to 1-indexed conversion)
       expect(result.violations).toEqual([
         {
-          line: 1,
+          line: 2,
           character: 0,
           rule: 'TypeScript rule',
           standard: 'ts-standard',
