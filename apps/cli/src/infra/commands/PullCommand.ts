@@ -50,7 +50,7 @@ export const pullCommand = command({
         console.log('Available packages:\n');
         sortedPackages.forEach((pkg, index) => {
           console.log(`- ${chalk.blue.bold(pkg.slug)}`);
-          console.log(`    Name: ${pkg.name}`);
+          console.log(`    ${chalk.dim('Name:')} ${pkg.name}`);
           if (pkg.description) {
             const descriptionLines = pkg.description
               .trim()
@@ -58,7 +58,7 @@ export const pullCommand = command({
               .map((line) => line.trim())
               .filter((line) => line.length > 0);
             const [firstLine, ...restLines] = descriptionLines;
-            console.log(`    Description: ${firstLine}`);
+            console.log(`    ${chalk.dim('Description:')} ${firstLine}`);
             restLines.forEach((line) => {
               console.log(`                 ${line}`);
             });
