@@ -1,4 +1,5 @@
 import { command, restPositionals, string, flag, option } from 'cmd-ts';
+import chalk from 'chalk';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { SummarizedArtifact } from '@packmind/types';
@@ -43,12 +44,23 @@ export const pullCommand = command({
 
         console.log('Available packages:');
         packages.forEach((pkg) => {
-          console.log(`- ${pkg.name} (${pkg.slug})`);
+          console.log(`- ${pkg.name} [${chalk.blue.bold(pkg.slug)}]`);
           if (pkg.description) {
-            console.log(`  ${pkg.description}`);
-            console.log('');
+            const descriptionLines = pkg.description
+              .trim()
+              .split('\n')
+              .map((line) => `  ${line.trim()}`)
+              .join('\n');
+            console.log(descriptionLines);
           }
         });
+
+        const exampleSlugs = packages
+          .slice(0, 2)
+          .map((p) => chalk.blue.bold(p.slug))
+          .join(' ');
+        console.log('\nExample usage:\n');
+        console.log(`  $ packmind-cli install ${exampleSlugs}`);
         process.exit(0);
       } catch (error) {
         console.error('\n❌ Failed to list packages:');
