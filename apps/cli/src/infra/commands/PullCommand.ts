@@ -1,8 +1,12 @@
 import { command, restPositionals, string, flag, option } from 'cmd-ts';
-import chalk from 'chalk';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { SummarizedArtifact } from '@packmind/types';
+import {
+  logWarningConsole,
+  formatSlug,
+  formatLabel,
+} from '../utils/consoleLogger';
 
 export const pullCommand = command({
   name: 'pull',
@@ -49,8 +53,8 @@ export const pullCommand = command({
 
         console.log('Available packages:\n');
         sortedPackages.forEach((pkg, index) => {
-          console.log(`- ${chalk.blue.bold(pkg.slug)}`);
-          console.log(`    ${chalk.dim('Name:')} ${pkg.name}`);
+          console.log(`- ${formatSlug(pkg.slug)}`);
+          console.log(`    ${formatLabel('Name:')} ${pkg.name}`);
           if (pkg.description) {
             const descriptionLines = pkg.description
               .trim()
@@ -58,7 +62,7 @@ export const pullCommand = command({
               .map((line) => line.trim())
               .filter((line) => line.length > 0);
             const [firstLine, ...restLines] = descriptionLines;
-            console.log(`    ${chalk.dim('Description:')} ${firstLine}`);
+            console.log(`    ${formatLabel('Description:')} ${firstLine}`);
             restLines.forEach((line) => {
               console.log(`                 ${line}`);
             });
@@ -69,7 +73,7 @@ export const pullCommand = command({
           }
         });
 
-        const exampleSlug = chalk.blue.bold(sortedPackages[0].slug);
+        const exampleSlug = formatSlug(sortedPackages[0].slug);
         console.log('\nHow to install a package:\n');
         console.log(`  $ packmind-cli install ${exampleSlug}`);
         process.exit(0);
@@ -160,7 +164,7 @@ export const pullCommand = command({
 
     // Show help if no packages from either source
     if (allPackages.length === 0) {
-      console.log('WARN config packmind.json not found');
+      logWarningConsole('config packmind.json not found');
       console.log(
         'Usage: packmind-cli install <package-slug> [package-slug...]',
       );

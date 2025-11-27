@@ -6,7 +6,7 @@ import {
 } from '@packmind/types';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import chalk from 'chalk';
+import { logWarningConsole } from '../utils/consoleLogger';
 
 export class ConfigFileRepository {
   private readonly CONFIG_FILENAME = 'packmind.json';
@@ -53,10 +53,7 @@ export class ConfigFileRepository {
       // Malformed JSON or invalid structure - warn once and skip
       if (!this.warnedFiles.has(configPath)) {
         this.warnedFiles.add(configPath);
-        console.warn(
-          chalk.bgYellow.bold('packmind-cli'),
-          chalk.yellow(`⚠ Skipping malformed config file: ${configPath}`),
-        );
+        logWarningConsole(`⚠ Skipping malformed config file: ${configPath}`);
       }
       return null;
     }

@@ -1,4 +1,3 @@
-import chalk from 'chalk';
 import { run, subcommands } from 'cmd-ts';
 import { lintCommand } from './infra/commands/LinterCommand';
 import { BaseParser } from '@packmind/linter-ast';
@@ -8,6 +7,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { pullCommand } from './infra/commands/PullCommand';
 import { GitService } from './application/services/GitService';
+import { logErrorConsole } from './infra/utils/consoleLogger';
 
 // Read version from package.json (bundled by esbuild)
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -87,6 +87,6 @@ const app = subcommands({
 });
 
 run(app, args).catch((error) => {
-  console.error(chalk.bgRed.bold('packmind-cli'), chalk.red(error.message));
+  logErrorConsole(error.message);
   process.exit(1);
 });

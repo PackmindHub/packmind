@@ -1,6 +1,12 @@
 import { LintViolation } from '../../domain/entities/LintViolation';
 import { ILogger } from '../../domain/repositories/ILogger';
-import chalk from 'chalk';
+import {
+  logErrorConsole,
+  logSuccessConsole,
+  formatFilePath,
+  formatError,
+  formatBold,
+} from '../utils/consoleLogger';
 
 export class HumanReadableLogger implements ILogger {
   logViolations(violations: LintViolation[]) {
@@ -13,25 +19,19 @@ export class HumanReadableLogger implements ILogger {
         (acc, violation) => acc + violation.violations.length,
         0,
       );
-      console.log(
-        chalk.bgRed.bold('packmind-cli'),
-        chalk.red(
-          `❌ Found ${chalk.bold(totalViolationCount)} violation(s) in ${chalk.bold(violations.length)} file(s)`,
-        ),
+      logErrorConsole(
+        `❌ Found ${formatBold(String(totalViolationCount))} violation(s) in ${formatBold(String(violations.length))} file(s)`,
       );
     } else {
-      console.log(
-        chalk.bgGreen.bold('packmind-cli'),
-        chalk.green.bold(`✅ No violations found`),
-      );
+      logSuccessConsole(`✅ No violations found`);
     }
   }
 
   logViolation(violation: LintViolation) {
-    console.log(chalk.underline.gray(violation.file));
+    console.log(formatFilePath(violation.file));
     violation.violations.forEach(({ line, character, standard, rule }) => {
       console.log(
-        chalk.red(`\t${line}:${character}\terror\t@${standard}/${rule}`),
+        formatError(`\t${line}:${character}\terror\t@${standard}/${rule}`),
       );
     });
   }
