@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   PMBox,
   PMVStack,
@@ -9,17 +9,18 @@ import {
   PMNativeSelect,
   PMText,
   PMAlert,
-  PMTooltip,
   PMLink,
+  PMAlertDialog,
+  pmToaster,
 } from '@packmind/ui';
 import {
   LLM_PROVIDER_METADATA,
-  getConfigurableProviders,
   LLMProvider,
   LLMServiceConfig,
   TestLLMConnectionResponse,
   ProviderConfigField,
   getAllProviders,
+  LLMConfigurationDTO,
 } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 
@@ -28,6 +29,9 @@ interface LLMConfigurationFormProps {
   onTestConnection: (
     config: LLMServiceConfig,
   ) => Promise<TestLLMConnectionResponse>;
+  onSaveConfiguration: (config: LLMServiceConfig) => Promise<void>;
+  isSaving?: boolean;
+  existingConfiguration?: LLMConfigurationDTO | null;
   deploymentEnv?: string;
 }
 
@@ -51,6 +55,9 @@ interface TestConnectionState {
 
 export const LLMConfigurationForm: React.FC<LLMConfigurationFormProps> = ({
   onTestConnection,
+  onSaveConfiguration,
+  isSaving = false,
+  existingConfiguration,
 }) => {
   const providerItems = useMemo(
     () =>
@@ -63,7 +70,7 @@ export const LLMConfigurationForm: React.FC<LLMConfigurationFormProps> = ({
   );
 
   const [selectedProvider, setSelectedProvider] = useState<string>(
-    LLMProvider.PACKMIND,
+    existingConfiguration?.provider ?? LLMProvider.PACKMIND,
   );
   const [formValues, setFormValues] = useState<FormValues>({});
   const [errors, setErrors] = useState<FormErrors>({});
@@ -72,6 +79,44 @@ export const LLMConfigurationForm: React.FC<LLMConfigurationFormProps> = ({
     result: null,
     error: null,
   });
+  const [isOverwriteDialogOpen, setIsOverwriteDialogOpen] = useState(false);
+
+  // Initialize form values from existing configuration
+  useEffect(() => {
+    if (existingConfiguration) {
+      setSelectedProvider(existingConfiguration.provider);
+
+      // Initialize form values with existing configuration data
+      const metadata = LLM_PROVIDER_METADATA[existingConfiguration.provider];
+      if (metadata) {
+        const initialValues: FormValues = {};
+        metadata.fields.forEach((field) => {
+          // Use existing config values where available, otherwise use defaults
+          if (field.name === 'model' && existingConfiguration.model) {
+            initialValues[field.name] = existingConfiguration.model;
+          } else if (
+            field.name === 'fastestModel' &&
+            existingConfiguration.fastestModel
+          ) {
+            initialValues[field.name] = existingConfiguration.fastestModel;
+          } else if (
+            field.name === 'endpoint' &&
+            existingConfiguration.endpoint
+          ) {
+            initialValues[field.name] = existingConfiguration.endpoint;
+          } else if (
+            field.name === 'apiVersion' &&
+            existingConfiguration.apiVersion
+          ) {
+            initialValues[field.name] = existingConfiguration.apiVersion;
+          } else {
+            initialValues[field.name] = field.defaultValue;
+          }
+        });
+        setFormValues(initialValues);
+      }
+    }
+  }, [existingConfiguration]);
 
   const selectedProviderMetadata = useMemo(() => {
     if (!selectedProvider) return null;
@@ -185,6 +230,48 @@ export const LLMConfigurationForm: React.FC<LLMConfigurationFormProps> = ({
       });
     }
   }, [validateForm, buildConfig, onTestConnection]);
+
+  const handleSaveConfiguration = useCallback(async () => {
+    const config = buildConfig();
+    if (!config) {
+      return;
+    }
+
+    try {
+      await onSaveConfiguration(config);
+      pmToaster.create({
+        type: 'success',
+        title: 'Configuration Saved',
+        description: 'Your LLM provider configuration has been saved.',
+      });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to save configuration';
+      pmToaster.create({
+        type: 'error',
+        title: 'Save Failed',
+        description: errorMessage,
+      });
+    }
+  }, [buildConfig, onSaveConfiguration]);
+
+  const handleSaveClick = useCallback(() => {
+    if (!validateForm()) {
+      return;
+    }
+
+    // If there's an existing configuration, show confirmation dialog
+    if (existingConfiguration) {
+      setIsOverwriteDialogOpen(true);
+    } else {
+      handleSaveConfiguration();
+    }
+  }, [validateForm, existingConfiguration, handleSaveConfiguration]);
+
+  const handleConfirmOverwrite = useCallback(() => {
+    setIsOverwriteDialogOpen(false);
+    handleSaveConfiguration();
+  }, [handleSaveConfiguration]);
 
   const renderField = useCallback(
     (field: ProviderConfigField) => {
@@ -335,17 +422,36 @@ export const LLMConfigurationForm: React.FC<LLMConfigurationFormProps> = ({
             <PMHStack gap={4}>
               <PMButton
                 onClick={handleTestConnection}
-                disabled={testConnection.isLoading || !selectedProvider}
+                disabled={
+                  testConnection.isLoading || !selectedProvider || isSaving
+                }
                 variant="outline"
                 data-testid="test-connection-button"
               >
                 {testConnection.isLoading ? 'Testing...' : 'Test Connection'}
               </PMButton>
-              <PMTooltip label="Backend not ready - Save functionality coming soon">
-                <PMButton disabled data-testid="save-configuration-button">
-                  Save Configuration
-                </PMButton>
-              </PMTooltip>
+              <PMAlertDialog
+                trigger={
+                  <PMButton
+                    onClick={handleSaveClick}
+                    disabled={
+                      testConnection.isLoading || !selectedProvider || isSaving
+                    }
+                    data-testid="save-configuration-button"
+                  >
+                    {isSaving ? 'Saving...' : 'Save Configuration'}
+                  </PMButton>
+                }
+                title="Overwrite Configuration"
+                message="An existing LLM configuration will be overwritten. Are you sure you want to continue?"
+                confirmText="Overwrite"
+                cancelText="Cancel"
+                confirmColorScheme="red"
+                onConfirm={handleConfirmOverwrite}
+                open={isOverwriteDialogOpen}
+                onOpenChange={({ open }) => setIsOverwriteDialogOpen(open)}
+                isLoading={isSaving}
+              />
             </PMHStack>
 
             {selectedProviderMetadata.documentationUrl && (
