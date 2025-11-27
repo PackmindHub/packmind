@@ -8,6 +8,7 @@ import {
   OrganizationId,
   LLMProvider,
   TestLLMConnectionResponse,
+  LLMConfigurationDTO,
 } from '@packmind/types';
 
 const renderWithProvider = (component: React.ReactElement) => {
@@ -17,6 +18,7 @@ const renderWithProvider = (component: React.ReactElement) => {
 describe('LLMConfigurationForm', () => {
   const mockOrganizationId = 'org-123' as OrganizationId;
   const mockOnTestConnection = jest.fn();
+  const mockOnSaveConfiguration = jest.fn();
 
   afterEach(() => {
     jest.clearAllMocks();
@@ -28,6 +30,7 @@ describe('LLMConfigurationForm', () => {
         <LLMConfigurationForm
           organizationId={mockOrganizationId}
           onTestConnection={mockOnTestConnection}
+          onSaveConfiguration={mockOnSaveConfiguration}
           deploymentEnv="cloud"
         />,
       );
@@ -41,6 +44,7 @@ describe('LLMConfigurationForm', () => {
         <LLMConfigurationForm
           organizationId={mockOrganizationId}
           onTestConnection={mockOnTestConnection}
+          onSaveConfiguration={mockOnSaveConfiguration}
         />,
       );
 
@@ -57,6 +61,7 @@ describe('LLMConfigurationForm', () => {
         <LLMConfigurationForm
           organizationId={mockOrganizationId}
           onTestConnection={mockOnTestConnection}
+          onSaveConfiguration={mockOnSaveConfiguration}
         />,
       );
 
@@ -76,6 +81,7 @@ describe('LLMConfigurationForm', () => {
         <LLMConfigurationForm
           organizationId={mockOrganizationId}
           onTestConnection={mockOnTestConnection}
+          onSaveConfiguration={mockOnSaveConfiguration}
         />,
       );
 
@@ -103,6 +109,7 @@ describe('LLMConfigurationForm', () => {
         <LLMConfigurationForm
           organizationId={mockOrganizationId}
           onTestConnection={mockOnTestConnection}
+          onSaveConfiguration={mockOnSaveConfiguration}
         />,
       );
 
@@ -124,6 +131,7 @@ describe('LLMConfigurationForm', () => {
         <LLMConfigurationForm
           organizationId={mockOrganizationId}
           onTestConnection={mockOnTestConnection}
+          onSaveConfiguration={mockOnSaveConfiguration}
         />,
       );
 
@@ -162,6 +170,7 @@ describe('LLMConfigurationForm', () => {
         <LLMConfigurationForm
           organizationId={mockOrganizationId}
           onTestConnection={mockOnTestConnection}
+          onSaveConfiguration={mockOnSaveConfiguration}
         />,
       );
 
@@ -197,6 +206,7 @@ describe('LLMConfigurationForm', () => {
         <LLMConfigurationForm
           organizationId={mockOrganizationId}
           onTestConnection={mockOnTestConnection}
+          onSaveConfiguration={mockOnSaveConfiguration}
         />,
       );
 
@@ -222,6 +232,7 @@ describe('LLMConfigurationForm', () => {
         <LLMConfigurationForm
           organizationId={mockOrganizationId}
           onTestConnection={mockOnTestConnection}
+          onSaveConfiguration={mockOnSaveConfiguration}
         />,
       );
 
@@ -259,6 +270,7 @@ describe('LLMConfigurationForm', () => {
         <LLMConfigurationForm
           organizationId={mockOrganizationId}
           onTestConnection={mockOnTestConnection}
+          onSaveConfiguration={mockOnSaveConfiguration}
         />,
       );
 
@@ -295,6 +307,7 @@ describe('LLMConfigurationForm', () => {
         <LLMConfigurationForm
           organizationId={mockOrganizationId}
           onTestConnection={mockOnTestConnection}
+          onSaveConfiguration={mockOnSaveConfiguration}
         />,
       );
 
@@ -321,12 +334,91 @@ describe('LLMConfigurationForm', () => {
   });
 
   describe('save button', () => {
-    it('renders disabled save button with tooltip', async () => {
+    it('renders enabled save button when provider is selected', async () => {
       const user = userEvent.setup();
       renderWithProvider(
         <LLMConfigurationForm
           organizationId={mockOrganizationId}
           onTestConnection={mockOnTestConnection}
+          onSaveConfiguration={mockOnSaveConfiguration}
+        />,
+      );
+
+      const select = screen.getByRole('combobox');
+      await user.selectOptions(select, LLMProvider.OPENAI);
+
+      const saveButton = screen.getByTestId('save-configuration-button');
+      expect(saveButton).toBeEnabled();
+    });
+
+    it('calls onSaveConfiguration with correct config when form is valid', async () => {
+      const user = userEvent.setup();
+      mockOnSaveConfiguration.mockResolvedValue(undefined);
+
+      renderWithProvider(
+        <LLMConfigurationForm
+          organizationId={mockOrganizationId}
+          onTestConnection={mockOnTestConnection}
+          onSaveConfiguration={mockOnSaveConfiguration}
+        />,
+      );
+
+      const select = screen.getByRole('combobox');
+      await user.selectOptions(select, LLMProvider.OPENAI);
+
+      const apiKeyInput = screen.getByPlaceholderText('sk-...');
+      await user.type(apiKeyInput, 'sk-test-key-123');
+
+      const saveButton = screen.getByTestId('save-configuration-button');
+      await user.click(saveButton);
+
+      await waitFor(() => {
+        expect(mockOnSaveConfiguration).toHaveBeenCalledWith({
+          provider: LLMProvider.OPENAI,
+          apiKey: 'sk-test-key-123',
+          model: 'gpt-5.1',
+          fastestModel: 'gpt-4.1-mini',
+        });
+      });
+    });
+
+    it('shows confirmation dialog when existing configuration exists', async () => {
+      const user = userEvent.setup();
+      const existingConfig: LLMConfigurationDTO = {
+        provider: LLMProvider.OPENAI,
+        model: 'gpt-4',
+        fastestModel: 'gpt-4-mini',
+        configuredAt: new Date(),
+      };
+
+      renderWithProvider(
+        <LLMConfigurationForm
+          organizationId={mockOrganizationId}
+          onTestConnection={mockOnTestConnection}
+          onSaveConfiguration={mockOnSaveConfiguration}
+          existingConfiguration={existingConfig}
+        />,
+      );
+
+      const apiKeyInput = screen.getByPlaceholderText('sk-...');
+      await user.type(apiKeyInput, 'sk-test-key-123');
+
+      const saveButton = screen.getByTestId('save-configuration-button');
+      await user.click(saveButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Overwrite Configuration')).toBeInTheDocument();
+      });
+    });
+
+    it('disables save button when isSaving is true', async () => {
+      const user = userEvent.setup();
+      renderWithProvider(
+        <LLMConfigurationForm
+          organizationId={mockOrganizationId}
+          onTestConnection={mockOnTestConnection}
+          onSaveConfiguration={mockOnSaveConfiguration}
+          isSaving={true}
         />,
       );
 

@@ -17,9 +17,14 @@ import {
   TestSavedLLMConfigurationCommand,
   TestSavedLLMConfigurationResponse,
 } from '@packmind/types';
+import { ILLMConfigurationRepository } from '../../domain/repositories/ILLMConfigurationRepository';
+import { LLMConfigurationRepositoryCache } from '../../infra/repositories/LLMConfigurationRepositoryCache';
 import { GetAiServiceForOrganizationUseCase } from '../useCases/getAiServiceForOrganization/getAiServiceForOrganization.usecase';
-import { TestLLMConnectionUseCase } from '../useCases/testLLMConnection/testLLMConnection.usecase';
+import { GetLLMConfigurationUseCase } from '../useCases/getLLMConfiguration/getLLMConfiguration.usecase';
 import { GetModelsUseCase } from '../useCases/getModels/getModels.usecase';
+import { SaveLLMConfigurationUseCase } from '../useCases/saveLLMConfiguration/saveLLMConfiguration.usecase';
+import { TestLLMConnectionUseCase } from '../useCases/testLLMConnection/testLLMConnection.usecase';
+import { TestSavedLLMConfigurationUseCase } from '../useCases/testSavedLLMConfiguration/testSavedLLMConfiguration.usecase';
 
 const origin = 'LlmAdapter';
 
@@ -27,10 +32,16 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
   // Ports
   private accountsPort?: IAccountsPort;
 
+  // Repositories
+  private llmConfigurationRepository: ILLMConfigurationRepository | null = null;
+
   // Use cases - created in initialize()
   private _getAiServiceForOrganization!: GetAiServiceForOrganizationUseCase;
   private _testLLMConnection!: TestLLMConnectionUseCase;
   private _getModels!: GetModelsUseCase;
+  private _saveLLMConfiguration!: SaveLLMConfigurationUseCase;
+  private _getLLMConfiguration!: GetLLMConfigurationUseCase;
+  private _testSavedLLMConfiguration!: TestSavedLLMConfigurationUseCase;
 
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
@@ -55,6 +66,9 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
       );
     }
 
+    // Initialize repository
+    this.llmConfigurationRepository = new LLMConfigurationRepositoryCache();
+
     // Initialize use cases
     this._getAiServiceForOrganization = new GetAiServiceForOrganizationUseCase(
       this.logger,
@@ -64,6 +78,21 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
       this.logger,
     );
     this._getModels = new GetModelsUseCase(this.accountsPort, this.logger);
+    this._saveLLMConfiguration = new SaveLLMConfigurationUseCase(
+      this.accountsPort,
+      this.llmConfigurationRepository,
+      this.logger,
+    );
+    this._getLLMConfiguration = new GetLLMConfigurationUseCase(
+      this.accountsPort,
+      this.llmConfigurationRepository,
+      this.logger,
+    );
+    this._testSavedLLMConfiguration = new TestSavedLLMConfigurationUseCase(
+      this.accountsPort,
+      this.llmConfigurationRepository,
+      this.logger,
+    );
 
     this.logger.info('LlmAdapter initialized successfully');
   }
@@ -72,7 +101,7 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
    * Check if adapter is ready.
    */
   public isReady(): boolean {
-    return !!this.accountsPort;
+    return !!this.accountsPort && !!this.llmConfigurationRepository;
   }
 
   /**
@@ -139,7 +168,7 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
 
   /**
    * Save LLM configuration for an organization.
-   * TODO: Will be implemented in a subsequent sub-task.
+   * Requires admin privileges.
    */
   async saveLLMConfiguration(
     command: SaveLLMConfigurationCommand,
@@ -149,13 +178,13 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
       provider: command.config.provider,
     });
 
-    // TODO: Implement in subsequent sub-task
-    throw new Error('saveLLMConfiguration not yet implemented');
+    return this._saveLLMConfiguration.execute(command);
   }
 
   /**
    * Get LLM configuration for an organization.
-   * TODO: Will be implemented in a subsequent sub-task.
+   * Returns configuration without secrets.
+   * Requires admin privileges.
    */
   async getLLMConfiguration(
     command: GetLLMConfigurationCommand,
@@ -164,13 +193,12 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
       organizationId: command.organizationId,
     });
 
-    // TODO: Implement in subsequent sub-task
-    throw new Error('getLLMConfiguration not yet implemented');
+    return this._getLLMConfiguration.execute(command);
   }
 
   /**
    * Test the saved LLM configuration for an organization.
-   * TODO: Will be implemented in a subsequent sub-task.
+   * Requires admin privileges.
    */
   async testSavedLLMConfiguration(
     command: TestSavedLLMConfigurationCommand,
@@ -179,7 +207,6 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
       organizationId: command.organizationId,
     });
 
-    // TODO: Implement in subsequent sub-task
-    throw new Error('testSavedLLMConfiguration not yet implemented');
+    return this._testSavedLLMConfiguration.execute(command);
   }
 }

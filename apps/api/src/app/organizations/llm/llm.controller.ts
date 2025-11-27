@@ -1,23 +1,28 @@
 import {
   Body,
   Controller,
+  Get,
+  Param,
   Post,
   Request,
   UseGuards,
-  Param,
 } from '@nestjs/common';
-import { LlmService } from './llm.service';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
+import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
-  TestLLMConnectionResponse,
+  GetLLMConfigurationResponse,
+  GetModelsCommand,
   GetModelsResponse,
   OrganizationId,
-  TestLLMConnectionCommand,
-  GetModelsCommand,
   PackmindCommandBody,
+  SaveLLMConfigurationCommand,
+  SaveLLMConfigurationResponse,
+  TestLLMConnectionCommand,
+  TestLLMConnectionResponse,
+  TestSavedLLMConfigurationResponse,
 } from '@packmind/types';
-import { AuthenticatedRequest } from '@packmind/node-utils';
 import { OrganizationAccessGuard } from '../guards/organization-access.guard';
+import { LlmService } from './llm.service';
 
 const origin = 'OrganizationLlmController';
 
@@ -112,6 +117,125 @@ export class LlmController {
         {
           organizationId,
           provider: body.config.provider,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Post('configuration')
+  async saveConfiguration(
+    @Param('orgId') organizationId: OrganizationId,
+    @Request() req: AuthenticatedRequest,
+    @Body() body: PackmindCommandBody<SaveLLMConfigurationCommand>,
+  ): Promise<SaveLLMConfigurationResponse> {
+    this.logger.info(
+      'POST /organizations/:orgId/llm/configuration - Saving LLM configuration',
+      {
+        organizationId,
+        provider: body.config.provider,
+      },
+    );
+
+    try {
+      const result = await this.llmService.saveConfiguration(req, body);
+
+      this.logger.info(
+        'POST /organizations/:orgId/llm/configuration - Configuration saved',
+        {
+          organizationId,
+          provider: body.config.provider,
+          success: result.success,
+        },
+      );
+
+      return result;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /organizations/:orgId/llm/configuration - Failed to save configuration',
+        {
+          organizationId,
+          provider: body.config.provider,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Get('configuration')
+  async getConfiguration(
+    @Param('orgId') organizationId: OrganizationId,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<GetLLMConfigurationResponse> {
+    this.logger.info(
+      'GET /organizations/:orgId/llm/configuration - Getting LLM configuration',
+      {
+        organizationId,
+      },
+    );
+
+    try {
+      const result = await this.llmService.getConfiguration(req);
+
+      this.logger.info(
+        'GET /organizations/:orgId/llm/configuration - Configuration retrieved',
+        {
+          organizationId,
+          hasConfiguration: result.hasConfiguration,
+        },
+      );
+
+      return result;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/llm/configuration - Failed to get configuration',
+        {
+          organizationId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Post('configuration/test')
+  async testSavedConfiguration(
+    @Param('orgId') organizationId: OrganizationId,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<TestSavedLLMConfigurationResponse> {
+    this.logger.info(
+      'POST /organizations/:orgId/llm/configuration/test - Testing saved LLM configuration',
+      {
+        organizationId,
+      },
+    );
+
+    try {
+      const result = await this.llmService.testSavedConfiguration(req);
+
+      this.logger.info(
+        'POST /organizations/:orgId/llm/configuration/test - Saved configuration test completed',
+        {
+          organizationId,
+          hasConfiguration: result.hasConfiguration,
+          overallSuccess: result.overallSuccess,
+        },
+      );
+
+      return result;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /organizations/:orgId/llm/configuration/test - Failed to test saved configuration',
+        {
+          organizationId,
           error: errorMessage,
         },
       );

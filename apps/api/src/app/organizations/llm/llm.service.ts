@@ -1,15 +1,21 @@
 import { Injectable, Inject } from '@nestjs/common';
 import {
-  ILlmPort,
-  TestLLMConnectionCommand,
-  TestLLMConnectionResponse,
+  GetLLMConfigurationCommand,
+  GetLLMConfigurationResponse,
   GetModelsCommand,
   GetModelsResponse,
+  ILlmPort,
   PackmindCommandBody,
+  SaveLLMConfigurationCommand,
+  SaveLLMConfigurationResponse,
+  TestLLMConnectionCommand,
+  TestLLMConnectionResponse,
+  TestSavedLLMConfigurationCommand,
+  TestSavedLLMConfigurationResponse,
 } from '@packmind/types';
-import { LLM_ADAPTER_TOKEN } from '../../shared/HexaRegistryModule';
-import { AuthService } from '../../auth/auth.service';
 import { AuthenticatedRequest } from '@packmind/node-utils';
+import { AuthService } from '../../auth/auth.service';
+import { LLM_ADAPTER_TOKEN } from '../../shared/HexaRegistryModule';
 
 @Injectable()
 export class LlmService {
@@ -39,5 +45,33 @@ export class LlmService {
     );
 
     return this.llmAdapter.getModels(command);
+  }
+
+  async saveConfiguration(
+    request: AuthenticatedRequest,
+    body: PackmindCommandBody<SaveLLMConfigurationCommand>,
+  ): Promise<SaveLLMConfigurationResponse> {
+    const command: SaveLLMConfigurationCommand =
+      this.authService.makePackmindCommand(request, body);
+
+    return this.llmAdapter.saveLLMConfiguration(command);
+  }
+
+  async getConfiguration(
+    request: AuthenticatedRequest,
+  ): Promise<GetLLMConfigurationResponse> {
+    const command: GetLLMConfigurationCommand =
+      this.authService.makePackmindCommand(request, {});
+
+    return this.llmAdapter.getLLMConfiguration(command);
+  }
+
+  async testSavedConfiguration(
+    request: AuthenticatedRequest,
+  ): Promise<TestSavedLLMConfigurationResponse> {
+    const command: TestSavedLLMConfigurationCommand =
+      this.authService.makePackmindCommand(request, {});
+
+    return this.llmAdapter.testSavedLLMConfiguration(command);
   }
 }

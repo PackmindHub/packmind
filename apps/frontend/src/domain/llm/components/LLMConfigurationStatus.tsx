@@ -1,5 +1,12 @@
 import React from 'react';
-import { PMAlert, PMSpinner, PMHStack, PMText } from '@packmind/ui';
+import {
+  PMAlert,
+  PMSpinner,
+  PMHStack,
+  PMText,
+  PMButton,
+  PMVStack,
+} from '@packmind/ui';
 
 export type LLMConfigurationStatusType =
   | 'loading'
@@ -12,6 +19,8 @@ interface LLMConfigurationStatusProps {
   providerName?: string;
   model?: string;
   errorMessage?: string;
+  onTestAgain?: () => void;
+  isTestingAgain?: boolean;
 }
 
 export const LLMConfigurationStatus: React.FC<LLMConfigurationStatusProps> = ({
@@ -19,6 +28,8 @@ export const LLMConfigurationStatus: React.FC<LLMConfigurationStatusProps> = ({
   providerName,
   model,
   errorMessage,
+  onTestAgain,
+  isTestingAgain = false,
 }) => {
   if (status === 'loading') {
     return (
@@ -33,26 +44,54 @@ export const LLMConfigurationStatus: React.FC<LLMConfigurationStatusProps> = ({
 
   if (status === 'connected') {
     return (
-      <PMAlert.Root status="success">
-        <PMAlert.Indicator />
-        <PMAlert.Title>Connected</PMAlert.Title>
-        <PMAlert.Description>
-          Successfully connected to {providerName}
-          {model && ` using model ${model}`}
-        </PMAlert.Description>
-      </PMAlert.Root>
+      <PMVStack gap={3} alignItems="stretch">
+        <PMAlert.Root status="success">
+          <PMAlert.Indicator />
+          <PMAlert.Title>Connected</PMAlert.Title>
+          <PMAlert.Description>
+            Successfully connected to {providerName}
+            {model && ` using model ${model}`}
+          </PMAlert.Description>
+        </PMAlert.Root>
+        {onTestAgain && (
+          <PMHStack>
+            <PMButton
+              variant="outline"
+              size="sm"
+              onClick={onTestAgain}
+              disabled={isTestingAgain}
+            >
+              {isTestingAgain ? 'Testing...' : 'Test Again'}
+            </PMButton>
+          </PMHStack>
+        )}
+      </PMVStack>
     );
   }
 
   if (status === 'failed') {
     return (
-      <PMAlert.Root status="error">
-        <PMAlert.Indicator />
-        <PMAlert.Title>Connection Failed</PMAlert.Title>
-        <PMAlert.Description>
-          {errorMessage || 'Failed to connect to the AI provider'}
-        </PMAlert.Description>
-      </PMAlert.Root>
+      <PMVStack gap={3} alignItems="stretch">
+        <PMAlert.Root status="error">
+          <PMAlert.Indicator />
+          <PMAlert.Title>Connection Failed</PMAlert.Title>
+          <PMAlert.Description>
+            {errorMessage || 'Failed to connect to the AI provider'}
+          </PMAlert.Description>
+        </PMAlert.Root>
+        {onTestAgain && (
+          <PMHStack>
+            <PMButton
+              variant="outline"
+              size="sm"
+              onClick={onTestAgain}
+              disabled={isTestingAgain}
+            >
+              {isTestingAgain ? 'Testing...' : 'Test Again'}
+            </PMButton>
+          </PMHStack>
+        )}
+      </PMVStack>
     );
   }
 
