@@ -1,4 +1,5 @@
 import { stubLogger } from '@packmind/test-utils';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
   FileUpdates,
   IAccountsPort,
@@ -48,6 +49,7 @@ describe('PullContentUseCase', () => {
   let codingAgentPort: jest.Mocked<ICodingAgentPort>;
   let accountsPort: jest.Mocked<IAccountsPort>;
   let eventTrackingPort: jest.Mocked<IEventTrackingPort>;
+  let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let renderModeConfigurationService: jest.Mocked<RenderModeConfigurationService>;
   let useCase: PullContentUseCase;
   let command: PullContentCommand;
@@ -92,6 +94,10 @@ describe('PullContentUseCase', () => {
       trackEvent: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<IEventTrackingPort>;
 
+    eventEmitterService = {
+      emit: jest.fn(),
+    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+
     renderModeConfigurationService = {
       resolveActiveCodingAgents: jest.fn(),
     } as unknown as jest.Mocked<RenderModeConfigurationService>;
@@ -127,6 +133,7 @@ describe('PullContentUseCase', () => {
       renderModeConfigurationService,
       accountsPort,
       eventTrackingPort,
+      eventEmitterService,
       stubLogger(),
     );
   });

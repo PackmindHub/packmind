@@ -1,7 +1,12 @@
 import { ICodingAgentDeployer } from '@packmind/coding-agent';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
 import {
+  AbstractMemberUseCase,
+  MemberContext,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
+import {
+  ArtifactsPulledEvent,
   FileUpdates,
   IAccountsPort,
   ICodingAgentPort,
@@ -31,7 +36,8 @@ export class PullContentUseCase extends AbstractMemberUseCase<
     private readonly codingAgentPort: ICodingAgentPort,
     private readonly renderModeConfigurationService: RenderModeConfigurationService,
     accountsPort: IAccountsPort,
-    private readonly eventTrackingPort?: IEventTrackingPort,
+    private readonly eventTrackingPort: IEventTrackingPort,
+    private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin, LogLevel.INFO),
   ) {
     super(accountsPort, logger);
@@ -182,14 +188,23 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         totalDeleteCount: mergedFileUpdates.delete.length,
       });
 
-      if (this.eventTrackingPort) {
-        await this.eventTrackingPort.trackEvent(
-          createUserId(command.userId),
-          createOrganizationId(command.organizationId),
-          'artifacts_pulled',
-          { source: 'cli' },
-        );
-      }
+      await this.eventTrackingPort.trackEvent(
+        createUserId(command.userId),
+        createOrganizationId(command.organizationId),
+        'artifacts_pulled',
+        { source: 'cli' },
+      );
+
+      this.eventEmitterService.emit(
+        new ArtifactsPulledEvent({
+          userId: createUserId(command.userId),
+          organizationId: createOrganizationId(command.organizationId),
+          packageSlugs: command.packagesSlugs,
+          recipeCount: recipeVersions.length,
+          standardCount: standardVersions.length,
+          source: 'cli',
+        }),
+      );
 
       return { fileUpdates: mergedFileUpdates };
     } catch (error) {

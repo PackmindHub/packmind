@@ -1,4 +1,14 @@
+import { OrganizationId, UserId } from '../accounts';
 import { PackmindEvent } from './PackmindEvent';
+
+/**
+ * Base payload for user-triggered events.
+ * All UserEvent payloads automatically include userId and organizationId.
+ */
+export interface UserEventPayload {
+  userId: UserId;
+  organizationId: OrganizationId;
+}
 
 /**
  * Base class for user-triggered domain events.
@@ -8,17 +18,18 @@ import { PackmindEvent } from './PackmindEvent';
  * - User authentication events
  * - User-initiated workflows
  *
+ * The payload automatically includes userId and organizationId.
+ *
  * @example
  * ```typescript
  * export class RecipeCreatedEvent extends UserEvent<{
  *   recipeId: RecipeId;
- *   userId: UserId;
- *   organizationId: OrganizationId;
+ *   spaceId: SpaceId;
  * }> {
  *   static readonly eventName = 'recipes.recipe.created';
  * }
  * ```
  */
-export abstract class UserEvent<
-  TPayload = unknown,
-> extends PackmindEvent<TPayload> {}
+export abstract class UserEvent<TPayload = object> extends PackmindEvent<
+  TPayload & UserEventPayload
+> {}

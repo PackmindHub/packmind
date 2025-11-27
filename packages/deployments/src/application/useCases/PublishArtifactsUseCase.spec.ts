@@ -29,6 +29,7 @@ import {
   Rule,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { recipeVersionFactory } from '@packmind/recipes/test/recipeVersionFactory';
 import { standardVersionFactory } from '@packmind/standards/test/standardVersionFactory';
 import { targetFactory } from '../../../test/targetFactory';
@@ -46,6 +47,7 @@ describe('PublishArtifactsUseCase', () => {
   let mockTargetService: jest.Mocked<TargetService>;
   let mockRenderModeConfigurationService: jest.Mocked<RenderModeConfigurationService>;
   let mockEventTrackingPort: jest.Mocked<IEventTrackingPort>;
+  let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let mockLogger: PackmindLogger;
 
   const userId = createUserId(uuidv4());
@@ -114,6 +116,10 @@ describe('PublishArtifactsUseCase', () => {
       trackEvent: jest.fn().mockResolvedValue(undefined),
     } as jest.Mocked<IEventTrackingPort>;
 
+    mockEventEmitterService = {
+      emit: jest.fn(),
+    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+
     useCase = new PublishArtifactsUseCase(
       mockRecipesPort,
       mockStandardsPort,
@@ -124,6 +130,7 @@ describe('PublishArtifactsUseCase', () => {
       mockTargetService,
       mockRenderModeConfigurationService,
       mockEventTrackingPort,
+      mockEventEmitterService,
       mockLogger,
     );
   });

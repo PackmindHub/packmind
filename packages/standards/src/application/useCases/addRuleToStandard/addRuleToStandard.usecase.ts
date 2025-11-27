@@ -2,10 +2,16 @@ import { StandardService } from '../../services/StandardService';
 import { StandardVersionService } from '../../services/StandardVersionService';
 import { GenerateStandardSummaryDelayedJob } from '../../jobs/GenerateStandardSummaryDelayedJob';
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
-import { StandardVersion } from '@packmind/types';
+import {
+  createStandardId,
+  createStandardVersionId,
+  RuleAddedEvent,
+  RuleExample,
+  StandardVersion,
+} from '@packmind/types';
 import { CreateStandardVersionData } from '../../services/StandardVersionService';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { RuleExample } from '@packmind/types';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { OrganizationId, UserId, StandardVersionId } from '@packmind/types';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
 import type { IEventTrackingPort, ILinterPort } from '@packmind/types';
@@ -26,6 +32,7 @@ export class AddRuleToStandardUsecase {
     private readonly ruleRepository: IRuleRepository,
     private readonly ruleExampleRepository: IRuleExampleRepository,
     private readonly generateStandardSummaryDelayedJob: GenerateStandardSummaryDelayedJob,
+    private readonly eventEmitterService: PackmindEventEmitterService,
     private readonly linterAdapter?: ILinterPort,
     private readonly eventTrackingPort?: IEventTrackingPort,
     private readonly logger: PackmindLogger = new PackmindLogger(
@@ -180,6 +187,16 @@ export class AddRuleToStandardUsecase {
         userId,
         organizationId,
         'rule_added',
+      );
+
+      this.eventEmitterService.emit(
+        new RuleAddedEvent({
+          standardId: createStandardId(existingStandard.id),
+          standardVersionId: createStandardVersionId(newStandardVersion.id),
+          organizationId,
+          userId,
+          newVersion: nextVersion,
+        }),
       );
 
       return newStandardVersion;

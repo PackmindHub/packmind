@@ -1,14 +1,17 @@
 import { LogLevel, PackmindLogger } from '@packmind/logger';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
   CreateStandardCommand,
   CreateStandardResponse,
   ICreateStandardUseCase,
   IEventTrackingPort,
   OrganizationId,
+  StandardCreatedEvent,
   StandardVersion,
   UserId,
   createOrganizationId,
   createSpaceId,
+  createStandardId,
   createUserId,
 } from '@packmind/types';
 import slug from 'slug';
@@ -27,6 +30,7 @@ export class CreateStandardUsecase implements ICreateStandardUseCase {
     private readonly standardVersionService: StandardVersionService,
     private readonly generateStandardSummaryDelayedJob: GenerateStandardSummaryDelayedJob,
     private readonly eventTrackingPort: IEventTrackingPort,
+    private readonly eventEmitterService: PackmindEventEmitterService,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.DEBUG,
@@ -154,6 +158,16 @@ export class CreateStandardUsecase implements ICreateStandardUseCase {
         organizationId,
         'standard_created',
         { source: 'ui' },
+      );
+
+      this.eventEmitterService.emit(
+        new StandardCreatedEvent({
+          standardId: createStandardId(standard.id),
+          spaceId,
+          organizationId,
+          userId,
+          source: 'ui',
+        }),
       );
 
       return standard;
