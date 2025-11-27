@@ -1,5 +1,15 @@
 # [0.6.0] - 2025-11-27
 
+# [Unreleased]
+
+## Added
+
+## Changed
+
+## Fixed
+
+## Removed
+
 ## Added
 
 - Add `--continue-on-error` option to allow skipping error return when violations are found #16
@@ -41,6 +51,7 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.6.0...HEAD
 [0.6.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.5.0...0.6.0
 [0.5.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.4.0...release-cli/0.5.0
 [0.4.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.3.4...release-cli/0.4.0
