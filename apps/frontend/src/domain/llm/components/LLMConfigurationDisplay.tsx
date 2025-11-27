@@ -73,7 +73,7 @@ export const LLMEmptyState: React.FC<LLMEmptyStateProps> = ({
   return (
     <PMEmptyState
       title="No AI Provider Configured"
-      description="Configure an AI provider to enable features like standard suggestions and recipe generation."
+      description="Configure an AI provider to enable features like standards and recipes summaries generation, and linting (enterprise feature)"
     >
       <PMButton size="xl" onClick={onConfigure}>
         Configure AI Provider
