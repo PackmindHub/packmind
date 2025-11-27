@@ -12,10 +12,14 @@ import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampl
 import { IRuleRepository } from '../../../domain/repositories/IRuleRepository';
 import slug from 'slug';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { getErrorMessage } from '@packmind/node-utils';
+import {
+  getErrorMessage,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import { RuleWithExamples, AiNotConfigured } from '@packmind/types';
 import { OrganizationId, UserId } from '@packmind/types';
 import { SpaceId, ProgrammingLanguage } from '@packmind/types';
+import { StandardCreatedEvent, createStandardId } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import type { ILinterPort, IEventTrackingPort } from '@packmind/types';
 
@@ -39,6 +43,7 @@ export class CreateStandardWithExamplesUsecase {
     private readonly standardSummaryService: StandardSummaryService,
     private readonly ruleExampleRepository: IRuleExampleRepository,
     private readonly ruleRepository: IRuleRepository,
+    private readonly eventEmitterService: PackmindEventEmitterService,
     private readonly _linterAdapter?: ILinterPort,
     private readonly eventTrackingPort?: IEventTrackingPort,
     private readonly logger: PackmindLogger = new PackmindLogger(
@@ -198,6 +203,16 @@ export class CreateStandardWithExamplesUsecase {
           source: 'mcp',
         });
       }
+
+      this.eventEmitterService.emit(
+        new StandardCreatedEvent({
+          standardId: createStandardId(standard.id),
+          spaceId,
+          organizationId,
+          userId,
+          source: 'mcp',
+        }),
+      );
 
       this.logger.info(
         'CreateStandardWithExamples process completed successfully',

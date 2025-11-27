@@ -1,4 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import type { ILinterPort, IEventTrackingPort } from '@packmind/types';
 import {
@@ -31,6 +32,7 @@ describe('CreateStandardWithExamplesUsecase', () => {
   let ruleRepository: jest.Mocked<IRuleRepository>;
   let linterAdapter: jest.Mocked<ILinterPort>;
   let eventTrackingPort: jest.Mocked<IEventTrackingPort>;
+  let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let logger: jest.Mocked<PackmindLogger>;
 
   const organizationId = createOrganizationId(uuidv4());
@@ -101,6 +103,11 @@ describe('CreateStandardWithExamplesUsecase', () => {
       trackEvent: jest.fn(),
     } as unknown as jest.Mocked<IEventTrackingPort>;
 
+    // Mock EventEmitterService
+    eventEmitterService = {
+      emit: jest.fn().mockReturnValue(true),
+    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+
     // Use stubLogger from shared test utils
     logger = stubLogger();
 
@@ -113,6 +120,7 @@ describe('CreateStandardWithExamplesUsecase', () => {
       standardSummaryService,
       ruleExampleRepository,
       ruleRepository,
+      eventEmitterService,
       linterAdapter,
       eventTrackingPort,
       logger,
@@ -1235,6 +1243,7 @@ describe('CreateStandardWithExamplesUsecase', () => {
             standardSummaryService,
             ruleExampleRepository,
             ruleRepository,
+            eventEmitterService,
             undefined,
             eventTrackingPort,
             logger,

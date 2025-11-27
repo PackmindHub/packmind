@@ -213,6 +213,7 @@ export class StandardsAdapter
       this.services.getStandardVersionService(),
       this.standardDelayedJobs.standardSummaryDelayedJob,
       this.eventTrackingPort,
+      this.eventEmitterService,
     );
 
     this._updateStandard = new UpdateStandardUsecase(
@@ -244,6 +245,7 @@ export class StandardsAdapter
       this.services.getStandardSummaryService(),
       this.repositories.getRuleExampleRepository(),
       this.repositories.getRuleRepository(),
+      this.eventEmitterService,
       this.linterPort,
       this.eventTrackingPort,
     );

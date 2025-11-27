@@ -1,4 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   CreateStandardCommand,
@@ -29,6 +30,7 @@ describe('CreateStandardUsecase', () => {
   let standardVersionService: jest.Mocked<StandardVersionService>;
   let generateStandardSummaryDelayedJob: jest.Mocked<GenerateStandardSummaryDelayedJob>;
   let eventTrackingPort: jest.Mocked<IEventTrackingPort>;
+  let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
@@ -68,6 +70,10 @@ describe('CreateStandardUsecase', () => {
       trackEvent: jest.fn().mockResolvedValue(undefined),
     } as jest.Mocked<IEventTrackingPort>;
 
+    eventEmitterService = {
+      emit: jest.fn().mockReturnValue(true),
+    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+
     stubbedLogger = stubLogger();
     generateStandardSummaryDelayedJob.addJob.mockResolvedValue('job-id-123');
 
@@ -78,6 +84,7 @@ describe('CreateStandardUsecase', () => {
       standardVersionService,
       generateStandardSummaryDelayedJob,
       eventTrackingPort,
+      eventEmitterService,
       stubbedLogger,
     );
   });
@@ -585,6 +592,7 @@ describe('CreateStandardUsecase', () => {
       let standardService: jest.Mocked<StandardService>;
       let standardVersionService: jest.Mocked<StandardVersionService>;
       let generateStandardSummaryDelayedJob: jest.Mocked<GenerateStandardSummaryDelayedJob>;
+      let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
       let stubbedLogger: jest.Mocked<PackmindLogger>;
 
       beforeEach(() => {
@@ -623,11 +631,16 @@ describe('CreateStandardUsecase', () => {
           (input: string) => input.toLowerCase().replace(/\s+/g, '-'),
         );
 
+        eventEmitterService = {
+          emit: jest.fn().mockReturnValue(true),
+        } as unknown as jest.Mocked<PackmindEventEmitterService>;
+
         createStandardUsecase = new CreateStandardUsecase(
           standardService,
           standardVersionService,
           generateStandardSummaryDelayedJob,
           eventTrackingPort,
+          eventEmitterService,
           stubbedLogger,
         );
       });
