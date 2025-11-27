@@ -125,7 +125,7 @@ Use the **Sandbox** module in the Packmind interface to test your draft program:
 
 You can also test draft programs using the Packmind CLI. This allows you to run the draft program against your actual codebase before activating it.
 
-For complete CLI testing instructions, see the [CLI documentation](./cli.md).
+The CLI supports testing both through local `packmind.json` configuration files and through deployed standards. For complete CLI testing instructions, see the [CLI documentation](./cli.md).
 
 ## Multi-Language Detection Strategy
 

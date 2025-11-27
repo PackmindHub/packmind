@@ -131,11 +131,30 @@ To configure which agents are enabled, see [Manage AI Agent Rendering](./manage-
 The lint command is only available in the **Enterprise** edition.
 :::
 
-:::info Git Repository Required
-The lint command must be run from within a Git repository. Packmind identifies your repository and applies detection programs from standards that have been deployed to it. See [Deployment](./deployment.md) to learn how to deploy standards to your repositories.
-:::
-
 Run detection programs against your codebase from the command line. This is useful for testing draft detection programs, verifying active programs, and integrating linting into your development workflow or CI/CD pipelines.
+
+### How Lint Works
+
+The CLI supports two linting modes:
+
+**Local Mode** (recommended):
+
+When you have `packmind.json` files in your project, the CLI uses them to determine which standards to check against. The CLI automatically searches for all `packmind.json` files in your project tree:
+
+- **Ancestor configs**: Searches parent directories up to the Git repository root
+- **Descendant configs**: Searches subdirectories from your current location
+
+All standards from packages defined in these `packmind.json` files are included in the analysis scope. This allows different parts of your codebase to have different standards while inheriting common standards from parent directories.
+
+To set up local linting, install packages using the `install` command. See [Distribute Standards and Recipes](./gs-distribute.md) for details.
+
+**Deployment Mode**:
+
+If no `packmind.json` files are found, the CLI falls back to using standards that have been deployed to your Git repository through the web interface. See [Deployment](./deployment.md) to learn about this approach.
+
+:::tip Priority
+When both local `packmind.json` files and deployments exist, the local configuration takes priority.
+:::
 
 ### Basic Usage
 
@@ -145,10 +164,10 @@ packmind-cli lint .
 
 This command:
 
-- Identifies your Git repository
-- Loads detection programs from standards deployed to your repository
+- Searches for `packmind.json` files in your project tree
+- Loads detection programs from the standards defined in your packages
 - Scans all files in the current directory (excluding `node_modules`, `dist`, and other common build folders)
-- Runs all active detection programs that apply to your repository
+- Runs all active detection programs
 - Reports any violations found
 
 ### Specify a Path
@@ -161,6 +180,43 @@ packmind-cli lint src/
 
 ```bash
 packmind-cli lint /path/to/your/project
+```
+
+### Limiting Scope with --diff
+
+When working on large codebases, you can focus the lint check on only the files or lines you've modified using the `--diff` option.
+
+:::info Git Repository Required
+The `--diff` option requires your project to be in a Git repository.
+:::
+
+**Check modified lines only:**
+
+```bash
+packmind-cli lint . --diff=lines
+```
+
+This analyzes only the specific lines you've changed, making it ideal for pre-commit hooks or reviewing your work before pushing.
+
+**Check modified files only:**
+
+```bash
+packmind-cli lint . --diff=files
+```
+
+This analyzes all content in files you've modified, useful when you want full context but don't want to scan the entire codebase.
+
+**Example workflow:**
+
+```bash
+# Make some changes to your code
+git add .
+
+# Check only what you changed
+packmind-cli lint . --diff=lines
+
+# If clean, commit
+git commit -m "Your changes"
 ```
 
 ### Output Formats
