@@ -18,6 +18,7 @@ export type LintHandlerArgs = {
   language?: string;
   logger: Loggers;
   continueOnError: boolean;
+  continueOnMissingKey: boolean;
   diff?: DiffMode;
 };
 
@@ -29,11 +30,30 @@ export type LintHandlerDependencies = {
   exit: (code: number) => void;
 };
 
+const MISSING_API_KEY_ERROR =
+  'Please set the PACKMIND_API_KEY_V3 environment variable';
+
+function isMissingApiKeyError(error: unknown): boolean {
+  if (error instanceof Error) {
+    return error.message.includes(MISSING_API_KEY_ERROR);
+  }
+  return false;
+}
+
 export async function lintHandler(
   args: LintHandlerArgs,
   deps: LintHandlerDependencies,
 ): Promise<void> {
-  const { path, draft, rule, language, logger, continueOnError, diff } = args;
+  const {
+    path,
+    draft,
+    rule,
+    language,
+    logger,
+    continueOnError,
+    continueOnMissingKey,
+    diff,
+  } = args;
   const {
     packmindCliHexa,
     humanReadableLogger,
@@ -78,22 +98,31 @@ export async function lintHandler(
 
   let violations: LintViolation[] = [];
 
-  if (useLocalLinting) {
-    const result = await packmindCliHexa.lintFilesLocally({
-      path: absolutePath,
-      diffMode: diff,
-    });
-    violations = result.violations;
-  } else {
-    const result = await packmindCliHexa.lintFilesInDirectory({
-      path: targetPath,
-      draftMode: draft,
-      standardSlug: rule?.standardSlug,
-      ruleId: rule?.ruleId,
-      language,
-      diffMode: diff,
-    });
-    violations = result.violations;
+  try {
+    if (useLocalLinting) {
+      const result = await packmindCliHexa.lintFilesLocally({
+        path: absolutePath,
+        diffMode: diff,
+      });
+      violations = result.violations;
+    } else {
+      const result = await packmindCliHexa.lintFilesInDirectory({
+        path: targetPath,
+        draftMode: draft,
+        standardSlug: rule?.standardSlug,
+        ruleId: rule?.ruleId,
+        language,
+        diffMode: diff,
+      });
+      violations = result.violations;
+    }
+  } catch (error) {
+    if (isMissingApiKeyError(error) && continueOnMissingKey) {
+      console.warn('Warning: No PACKMIND_API_KEY_V3 set, linting is skipped.');
+      exit(0);
+      return;
+    }
+    throw error;
   }
 
   (logger === Loggers.ide ? ideLintLogger : humanReadableLogger).logViolations(

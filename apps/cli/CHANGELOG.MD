@@ -3,6 +3,7 @@
 ## Added
 
 - Add `--continue-on-error` option to allow skipping error return when violations are found #16
+- Add `--continue-on-missing-key` option to skip linting when API key is not set #17
 - Add `packkmind.json` support for linter
 - Add `--diff` option to `lint` command
   - Add `--diff=files` option to lint modified files only
