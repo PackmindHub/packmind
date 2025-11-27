@@ -71,6 +71,7 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
 
     // Initialize use cases
     this._getAiServiceForOrganization = new GetAiServiceForOrganizationUseCase(
+      this.llmConfigurationRepository,
       this.logger,
     );
     this._testLLMConnection = new TestLLMConnectionUseCase(

@@ -5,6 +5,7 @@ import {
   LLMProvider,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
+import { ILLMConfigurationRepository } from '../../../domain/repositories/ILLMConfigurationRepository';
 import { createLLMService } from '../../../factories/createLLMService';
 
 const origin = 'GetAiServiceForOrganizationUseCase';
@@ -13,22 +14,37 @@ export class GetAiServiceForOrganizationUseCase
   implements IGetAiServiceForOrganizationUseCase
 {
   constructor(
+    private readonly configurationRepository: ILLMConfigurationRepository,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
   async execute(
     command: GetAiServiceForOrganizationCommand,
   ): Promise<GetAiServiceForOrganizationResponse> {
-    // Use PackmindService as the default provider for all SaaS users
-    // PackmindService will delegate to the configured provider based on PACKMIND_DEFAULT_PROVIDER
-    // Future: Will retrieve organization-specific LLM configuration from database
     this.logger.info('Getting AI service for organization', {
       organizationId: command.organizationId.toString(),
     });
-    const aiService = createLLMService({ provider: LLMProvider.PACKMIND });
 
-    return {
-      aiService,
-    };
+    const storedConfig = await this.configurationRepository.get(
+      command.organizationId,
+    );
+
+    if (storedConfig) {
+      this.logger.info('Using organization-specific LLM configuration', {
+        organizationId: command.organizationId.toString(),
+        provider: storedConfig.config.provider,
+      });
+      const aiService = createLLMService(storedConfig.config);
+      return { aiService };
+    }
+
+    this.logger.info(
+      'No organization configuration found, using default Packmind provider',
+      {
+        organizationId: command.organizationId.toString(),
+      },
+    );
+    const aiService = createLLMService({ provider: LLMProvider.PACKMIND });
+    return { aiService };
   }
 }
