@@ -1,19 +1,16 @@
-import { exec, execSync, ExecOptions } from 'child_process';
-import { promisify } from 'util';
+import { execSync, ExecSyncOptions } from 'child_process';
 import { PackmindLogger } from '@packmind/logger';
 import { ModifiedLine } from '../../domain/entities/DiffMode';
 import * as path from 'path';
 
-const execAsync = promisify(exec);
-
 const origin = 'GitService';
 
-export type GitRunnerOptions = ExecOptions & { maxBuffer?: number };
-export type GitRunnerResult = { stdout: string; stderr: string };
+export type GitRunnerOptions = ExecSyncOptions & { maxBuffer?: number };
+export type GitRunnerResult = { stdout: string };
 export type GitRunner = (
   command: string,
   options?: GitRunnerOptions,
-) => Promise<GitRunnerResult>;
+) => GitRunnerResult;
 
 export type GitRemoteResult = {
   gitRemoteUrl: string;
@@ -28,20 +25,21 @@ export class GitService {
 
   constructor(
     logger: PackmindLogger = new PackmindLogger(origin),
-    private readonly gitRunner: GitRunner = async (cmd, opts) => {
-      const result = await execAsync(`git ${cmd}`, opts);
-      return {
-        stdout: result.stdout.toString(),
-        stderr: result.stderr.toString(),
-      };
+    private readonly gitRunner: GitRunner = (cmd, opts) => {
+      const stdout = execSync(`git ${cmd}`, {
+        ...opts,
+        encoding: 'utf-8',
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+      return { stdout };
     },
   ) {
     this.logger = logger;
   }
 
-  public async getGitRepositoryRoot(path: string): Promise<string> {
+  public getGitRepositoryRoot(path: string): string {
     try {
-      const { stdout } = await this.gitRunner('rev-parse --show-toplevel', {
+      const { stdout } = this.gitRunner('rev-parse --show-toplevel', {
         cwd: path,
       });
 
@@ -62,9 +60,9 @@ export class GitService {
     }
   }
 
-  public async tryGetGitRepositoryRoot(path: string): Promise<string | null> {
+  public tryGetGitRepositoryRoot(path: string): string | null {
     try {
-      return await this.getGitRepositoryRoot(path);
+      return this.getGitRepositoryRoot(path);
     } catch {
       return null;
     }
@@ -83,11 +81,9 @@ export class GitService {
     }
   }
 
-  public async getCurrentBranches(
-    repoPath: string,
-  ): Promise<GitBranchesResult> {
+  public getCurrentBranches(repoPath: string): GitBranchesResult {
     try {
-      const { stdout } = await this.gitRunner('branch -a --contains HEAD', {
+      const { stdout } = this.gitRunner('branch -a --contains HEAD', {
         cwd: repoPath,
       });
 
@@ -104,12 +100,9 @@ export class GitService {
     }
   }
 
-  public async getGitRemoteUrl(
-    repoPath: string,
-    origin?: string,
-  ): Promise<GitRemoteResult> {
+  public getGitRemoteUrl(repoPath: string, origin?: string): GitRemoteResult {
     try {
-      const { stdout } = await this.gitRunner('remote -v', {
+      const { stdout } = this.gitRunner('remote -v', {
         cwd: repoPath,
       });
 
@@ -242,14 +235,14 @@ export class GitService {
    * Gets files that have been modified (staged + unstaged) compared to HEAD.
    * Returns absolute file paths.
    */
-  public async getModifiedFiles(repoPath: string): Promise<string[]> {
-    const gitRoot = await this.getGitRepositoryRoot(repoPath);
+  public getModifiedFiles(repoPath: string): string[] {
+    const gitRoot = this.getGitRepositoryRoot(repoPath);
 
     // Get tracked modified files (staged + unstaged)
-    const trackedFiles = await this.getTrackedModifiedFiles(gitRoot);
+    const trackedFiles = this.getTrackedModifiedFiles(gitRoot);
 
     // Get untracked files
-    const untrackedFiles = await this.getUntrackedFiles(gitRoot);
+    const untrackedFiles = this.getUntrackedFiles(gitRoot);
 
     // Combine and deduplicate
     const allFiles = [...new Set([...trackedFiles, ...untrackedFiles])];
@@ -267,9 +260,9 @@ export class GitService {
    * Gets tracked files that have been modified (staged + unstaged) compared to HEAD.
    * Returns absolute file paths.
    */
-  private async getTrackedModifiedFiles(gitRoot: string): Promise<string[]> {
+  private getTrackedModifiedFiles(gitRoot: string): string[] {
     try {
-      const { stdout } = await this.gitRunner('diff --name-only HEAD', {
+      const { stdout } = this.gitRunner('diff --name-only HEAD', {
         cwd: gitRoot,
       });
 
@@ -296,8 +289,8 @@ export class GitService {
   /**
    * Gets staged files when HEAD doesn't exist (first commit scenario).
    */
-  private async getStagedFilesWithoutHead(gitRoot: string): Promise<string[]> {
-    const { stdout } = await this.gitRunner('diff --cached --name-only', {
+  private getStagedFilesWithoutHead(gitRoot: string): string[] {
+    const { stdout } = this.gitRunner('diff --cached --name-only', {
       cwd: gitRoot,
     });
 
@@ -312,15 +305,12 @@ export class GitService {
    * Gets untracked files (new files not yet added to git).
    * Returns absolute file paths.
    */
-  public async getUntrackedFiles(repoPath: string): Promise<string[]> {
-    const gitRoot = await this.getGitRepositoryRoot(repoPath);
+  public getUntrackedFiles(repoPath: string): string[] {
+    const gitRoot = this.getGitRepositoryRoot(repoPath);
 
-    const { stdout } = await this.gitRunner(
-      'ls-files --others --exclude-standard',
-      {
-        cwd: gitRoot,
-      },
-    );
+    const { stdout } = this.gitRunner('ls-files --others --exclude-standard', {
+      cwd: gitRoot,
+    });
 
     return stdout
       .trim()
@@ -334,18 +324,18 @@ export class GitService {
    * For untracked files, all lines are considered modified (new file).
    * Returns ModifiedLine objects with absolute file paths.
    */
-  public async getModifiedLines(repoPath: string): Promise<ModifiedLine[]> {
-    const gitRoot = await this.getGitRepositoryRoot(repoPath);
+  public getModifiedLines(repoPath: string): ModifiedLine[] {
+    const gitRoot = this.getGitRepositoryRoot(repoPath);
     const modifiedLines: ModifiedLine[] = [];
 
     // Get tracked file modifications from unified diff
-    const trackedModifications = await this.getTrackedModifiedLines(gitRoot);
+    const trackedModifications = this.getTrackedModifiedLines(gitRoot);
     modifiedLines.push(...trackedModifications);
 
     // For untracked files, count all lines as modified
-    const untrackedFiles = await this.getUntrackedFiles(gitRoot);
+    const untrackedFiles = this.getUntrackedFiles(gitRoot);
     for (const filePath of untrackedFiles) {
-      const lineCount = await this.countFileLines(filePath);
+      const lineCount = this.countFileLines(filePath);
       if (lineCount > 0) {
         modifiedLines.push({
           file: filePath,
@@ -367,11 +357,9 @@ export class GitService {
   /**
    * Parses git diff output to extract line-level modifications.
    */
-  private async getTrackedModifiedLines(
-    gitRoot: string,
-  ): Promise<ModifiedLine[]> {
+  private getTrackedModifiedLines(gitRoot: string): ModifiedLine[] {
     try {
-      const { stdout } = await this.gitRunner('diff HEAD --unified=0', {
+      const { stdout } = this.gitRunner('diff HEAD --unified=0', {
         cwd: gitRoot,
         maxBuffer: 50 * 1024 * 1024, // 50MB buffer for large diffs
       });
@@ -395,10 +383,8 @@ export class GitService {
   /**
    * Gets modified lines from staged files when HEAD doesn't exist.
    */
-  private async getStagedModifiedLinesWithoutHead(
-    gitRoot: string,
-  ): Promise<ModifiedLine[]> {
-    const { stdout } = await this.gitRunner('diff --cached --unified=0', {
+  private getStagedModifiedLinesWithoutHead(gitRoot: string): ModifiedLine[] {
+    const { stdout } = this.gitRunner('diff --cached --unified=0', {
       cwd: gitRoot,
       maxBuffer: 50 * 1024 * 1024,
     });
@@ -447,14 +433,16 @@ export class GitService {
   /**
    * Counts the number of lines in a file.
    */
-  private async countFileLines(filePath: string): Promise<number> {
+  private countFileLines(filePath: string): number {
     try {
-      const { stdout } = await execAsync(`wc -l < "${filePath}"`);
+      const stdout = execSync(`wc -l < "${filePath}"`, { encoding: 'utf-8' });
       const count = parseInt(stdout.trim(), 10);
       // wc -l returns 0 for files without trailing newline, but file has content
       // Add 1 if file has content but no trailing newline
       if (count === 0) {
-        const { stdout: content } = await execAsync(`head -c 1 "${filePath}"`);
+        const content = execSync(`head -c 1 "${filePath}"`, {
+          encoding: 'utf-8',
+        });
         return content.length > 0 ? 1 : 0;
       }
       return count;
