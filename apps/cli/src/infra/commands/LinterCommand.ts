@@ -99,6 +99,11 @@ export const lintCommand = command({
       long: 'continue-on-error',
       description: 'Exit with status code 0 even if violations are found',
     }),
+    continueOnMissingKey: flag({
+      long: 'continue-on-missing-key',
+      description:
+        'Skip linting and exit with status code 0 if PACKMIND_API_KEY_V3 is not set',
+    }),
     diff: option({
       long: 'diff',
       description: 'Filter violations by git diff (files | lines)',

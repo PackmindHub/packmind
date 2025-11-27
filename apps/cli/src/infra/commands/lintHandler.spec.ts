@@ -59,6 +59,7 @@ describe('lintHandler', () => {
     debug: false,
     logger: Loggers.human,
     continueOnError: false,
+    continueOnMissingKey: false,
     ...overrides,
   });
 
@@ -355,6 +356,81 @@ describe('lintHandler', () => {
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringMatching(/^Lint completed in \d+\.\d+s$/),
       );
+    });
+  });
+
+  describe('--continue-on-missing-key flag', () => {
+    let consoleWarnSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation();
+      mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue('/project');
+      mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
+        hasConfigs: false,
+        configs: [],
+      });
+    });
+
+    afterEach(() => {
+      consoleWarnSpy.mockRestore();
+    });
+
+    it('exits with code 0 and logs warning when API key is missing and flag is set', async () => {
+      mockPackmindCliHexa.lintFilesInDirectory.mockRejectedValue(
+        new Error(
+          'Invalid API key: Please set the PACKMIND_API_KEY_V3 environment variable',
+        ),
+      );
+
+      await lintHandler(createArgs({ continueOnMissingKey: true }), deps);
+
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        'Warning: No PACKMIND_API_KEY_V3 set, linting is skipped.',
+      );
+      expect(mockExit).toHaveBeenCalledWith(0);
+    });
+
+    it('throws error when API key is missing and flag is not set', async () => {
+      mockPackmindCliHexa.lintFilesInDirectory.mockRejectedValue(
+        new Error(
+          'Invalid API key: Please set the PACKMIND_API_KEY_V3 environment variable',
+        ),
+      );
+
+      await expect(
+        lintHandler(createArgs({ continueOnMissingKey: false }), deps),
+      ).rejects.toThrow(
+        'Please set the PACKMIND_API_KEY_V3 environment variable',
+      );
+    });
+
+    it('rethrows non-API-key errors even when flag is set', async () => {
+      mockPackmindCliHexa.lintFilesInDirectory.mockRejectedValue(
+        new Error('Some other error'),
+      );
+
+      await expect(
+        lintHandler(createArgs({ continueOnMissingKey: true }), deps),
+      ).rejects.toThrow('Some other error');
+    });
+
+    it('handles missing API key error in local linting mode', async () => {
+      mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
+        hasConfigs: true,
+        configs: [{ path: '/project/packmind.json' }],
+      });
+      mockPackmindCliHexa.lintFilesLocally.mockRejectedValue(
+        new Error(
+          'Invalid API key: Please set the PACKMIND_API_KEY_V3 environment variable',
+        ),
+      );
+
+      await lintHandler(createArgs({ continueOnMissingKey: true }), deps);
+
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        'Warning: No PACKMIND_API_KEY_V3 set, linting is skipped.',
+      );
+      expect(mockExit).toHaveBeenCalledWith(0);
     });
   });
 });
