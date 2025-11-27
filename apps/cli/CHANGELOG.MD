@@ -2,6 +2,7 @@
 
 ## Added
 
+- Add `--continue-on-error` option to allow skipping error return when violations are found #16
 - Add `packkmind.json` support for linter
 - Add `--diff` option to `lint` command
   - Add `--diff=files` option to lint modified files only
