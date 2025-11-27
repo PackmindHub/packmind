@@ -16,6 +16,8 @@ import {
   GetLLMConfigurationResponse,
   TestSavedLLMConfigurationCommand,
   TestSavedLLMConfigurationResponse,
+  GetAvailableProvidersCommand,
+  GetAvailableProvidersResponse,
 } from '@packmind/types';
 import { ILLMConfigurationRepository } from '../../domain/repositories/ILLMConfigurationRepository';
 import { LLMConfigurationRepositoryCache } from '../../infra/repositories/LLMConfigurationRepositoryCache';
@@ -25,6 +27,7 @@ import { GetModelsUseCase } from '../useCases/getModels/getModels.usecase';
 import { SaveLLMConfigurationUseCase } from '../useCases/saveLLMConfiguration/saveLLMConfiguration.usecase';
 import { TestLLMConnectionUseCase } from '../useCases/testLLMConnection/testLLMConnection.usecase';
 import { TestSavedLLMConfigurationUseCase } from '../useCases/testSavedLLMConfiguration/testSavedLLMConfiguration.usecase';
+import { GetAvailableProvidersUseCase } from '../useCases/getAvailableProviders/getAvailableProviders.usecase';
 
 const origin = 'LlmAdapter';
 
@@ -42,6 +45,7 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
   private _saveLLMConfiguration!: SaveLLMConfigurationUseCase;
   private _getLLMConfiguration!: GetLLMConfigurationUseCase;
   private _testSavedLLMConfiguration!: TestSavedLLMConfigurationUseCase;
+  private _getAvailableProviders!: GetAvailableProvidersUseCase;
 
   constructor(
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
@@ -92,6 +96,10 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
     this._testSavedLLMConfiguration = new TestSavedLLMConfigurationUseCase(
       this.accountsPort,
       this.llmConfigurationRepository,
+      this.logger,
+    );
+    this._getAvailableProviders = new GetAvailableProvidersUseCase(
+      this.accountsPort,
       this.logger,
     );
 
@@ -209,5 +217,19 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
     });
 
     return this._testSavedLLMConfiguration.execute(command);
+  }
+
+  /**
+   * Get available LLM providers.
+   * Filters providers based on deployment edition (OSS excludes Packmind provider).
+   */
+  async getAvailableProviders(
+    command: GetAvailableProvidersCommand,
+  ): Promise<GetAvailableProvidersResponse> {
+    this.logger.info('Getting available providers', {
+      organizationId: command.organizationId,
+    });
+
+    return this._getAvailableProviders.execute(command);
   }
 }

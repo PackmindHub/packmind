@@ -20,6 +20,10 @@ import {
   TestSavedLLMConfigurationCommand,
   TestSavedLLMConfigurationResponse,
 } from '../contracts/TestSavedLLMConfigurationUseCase';
+import {
+  GetAvailableProvidersCommand,
+  GetAvailableProvidersResponse,
+} from '../contracts/GetAvailableProvidersUseCase';
 
 export const ILlmPortName = 'ILlmPort' as const;
 
@@ -38,4 +42,7 @@ export interface ILlmPort {
   testSavedLLMConfiguration(
     command: TestSavedLLMConfigurationCommand,
   ): Promise<TestSavedLLMConfigurationResponse>;
+  getAvailableProviders(
+    command: GetAvailableProvidersCommand,
+  ): Promise<GetAvailableProvidersResponse>;
 }
