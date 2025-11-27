@@ -6,6 +6,8 @@
 
 ## Fixed
 
+- Improve error message when running lint outside a Git repository without a `packmind.json` config #18
+
 ## Removed
 
 # [0.6.0] - 2025-11-27
