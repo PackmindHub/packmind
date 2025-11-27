@@ -1,4 +1,4 @@
-# [Unreleased]
+# [0.6.0] - 2025-11-27
 
 ## Added
 
@@ -12,10 +12,6 @@
 ## Changed
 
 - Improve layout of the CLI command `install --list` to make slugs easier to identify (#12)
-
-## Fixed
-
-## Removed
 
 # [0.5.0] - 2025-11-25
 
@@ -45,7 +41,7 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.5.0...HEAD
+[0.6.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.5.0...0.6.0
 [0.5.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.4.0...release-cli/0.5.0
 [0.4.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.3.4...release-cli/0.4.0
 [0.3.4]: https://github.com/PackmindHub/packmind/compare/release-cli/0.3.3...release-cli/0.3.4
