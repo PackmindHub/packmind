@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   PMHStack,
   PMButton,
@@ -9,14 +10,11 @@ import {
   PMIcon,
   PMBox,
 } from '@packmind/ui';
-import {
-  AuthContextOrganization,
-  useAuthContext,
-} from '../../accounts/hooks/useAuthContext';
+import { AuthContextOrganization } from '../../accounts/hooks/useAuthContext';
 import { LuBuilding, LuCirclePlus } from 'react-icons/lu';
 import { NewOrganizationDialog } from './NewOrganizationDialog';
 import { useGetUserOrganizationsQuery } from '../../accounts/api/queries/AccountsQueries';
-import { UserId } from '@packmind/types';
+import { ORGANIZATION_QUERY_SCOPE } from '../api/queryKeys';
 import { routes } from '../../../shared/utils/routes';
 
 interface ISidebarOrgaSelectorProps {
@@ -28,6 +26,7 @@ export const SidebarOrgaSelector: React.FunctionComponent<
 > = ({ currentOrganization }) => {
   const [createOrgaDialogOpen, setCreateOrgaDialogOpen] = React.useState(false);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { data: organizations = [], isLoading } =
     useGetUserOrganizationsQuery();
@@ -37,11 +36,25 @@ export const SidebarOrgaSelector: React.FunctionComponent<
     (org) => org.id !== currentOrganization.id,
   );
 
-  const handleOrgaSelect = (orgaId: string) => {
+  const handleOrgaSelect = async (orgaId: string) => {
     const selectedOrg = organizations.find((org) => org.id === orgaId);
     if (!selectedOrg) return;
 
-    // Navigate to org dashboard (not space-scoped)
+    // Cancel all in-flight organization-scoped queries to prevent 403/500 errors
+    // from requests using the old organization context
+    await queryClient.cancelQueries({
+      queryKey: [ORGANIZATION_QUERY_SCOPE],
+    });
+
+    // Remove all organization-scoped queries from the cache to prevent
+    // refetching with stale organization context during navigation
+    queryClient.removeQueries({
+      queryKey: [ORGANIZATION_QUERY_SCOPE],
+    });
+
+    // Navigate to the new organization's dashboard
+    // The clientLoader in org.$orgSlug._protected.tsx will detect the org mismatch
+    // and call validateAndSwitchIfNeeded to update the JWT token
     navigate(routes.org.toDashboard(selectedOrg.slug));
   };
 
