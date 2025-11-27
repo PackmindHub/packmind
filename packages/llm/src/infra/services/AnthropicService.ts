@@ -13,6 +13,7 @@ import {
 } from '@packmind/types';
 import { AnthropicServiceConfig } from '../../types/LLMServiceConfig';
 import { DEFAULT_ANTHROPIC_MODELS } from '../../constants/defaultModels';
+import { extractUserFriendlyErrorMessage } from './extractUserFriendlyErrorMessage';
 
 const origin = 'AnthropicService';
 
@@ -223,7 +224,7 @@ export class AnthropicService implements AIService {
     return {
       success: false,
       data: null,
-      error: finalError.message,
+      error: extractUserFriendlyErrorMessage(lastError),
       attempts: maxRetries,
       model,
     };
@@ -375,7 +376,7 @@ export class AnthropicService implements AIService {
     return {
       success: false,
       data: null,
-      error: finalError.message,
+      error: extractUserFriendlyErrorMessage(lastError),
       attempts: maxRetries,
       model,
     };

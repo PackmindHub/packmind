@@ -302,13 +302,13 @@ describe('GeminiService', () => {
       expect(result.data).toBeNull();
     });
 
-    it('provides error message indicating retry failure', async () => {
+    it('provides the error message', async () => {
       const authError = new Error('Unauthorized (401)');
       mockGeminiInstance.models.generateContent.mockRejectedValue(authError);
 
       const result = await service.executePrompt(mockPrompt);
 
-      expect(result.error).toContain('failed after 5 attempts');
+      expect(result.error).toBe('Unauthorized (401)');
     });
 
     it('calls generateContent only once for authentication errors', async () => {
@@ -344,7 +344,7 @@ describe('GeminiService', () => {
       expect(result.data).toBeNull();
     });
 
-    it('provides error message about max retries', async () => {
+    it('provides the error message', async () => {
       const networkError = new Error('Network timeout');
       mockGeminiInstance.models.generateContent.mockRejectedValue(networkError);
 
@@ -352,7 +352,7 @@ describe('GeminiService', () => {
         retryAttempts: 3,
       });
 
-      expect(result.error).toContain('failed after 3 attempts');
+      expect(result.error).toBe('Network timeout');
     });
 
     it('tracks correct attempts after exceeding max retries', async () => {

@@ -11,6 +11,7 @@ import {
   PromptConversationRole,
   AIService,
 } from '@packmind/types';
+import { extractUserFriendlyErrorMessage } from './extractUserFriendlyErrorMessage';
 
 /**
  * Abstract base class for OpenAI and OpenAI-compatible services.
@@ -199,7 +200,7 @@ export abstract class BaseOpenAIService implements AIService {
     return {
       success: false,
       data: null,
-      error: finalError.message,
+      error: extractUserFriendlyErrorMessage(lastError),
       attempts: maxRetries,
       model,
     };
@@ -345,7 +346,7 @@ export abstract class BaseOpenAIService implements AIService {
     return {
       success: false,
       data: null,
-      error: finalError.message,
+      error: extractUserFriendlyErrorMessage(lastError),
       attempts: maxRetries,
       model,
     };

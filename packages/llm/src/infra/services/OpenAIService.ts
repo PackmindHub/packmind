@@ -10,6 +10,7 @@ import {
   AIServiceErrorTypes,
   PromptConversation,
 } from '@packmind/types';
+import { extractUserFriendlyErrorMessage } from './extractUserFriendlyErrorMessage';
 
 const origin = 'OpenAIService';
 
@@ -214,7 +215,7 @@ export class OpenAIService extends BaseOpenAIService {
     return {
       success: false,
       data: null,
-      error: finalError.message,
+      error: extractUserFriendlyErrorMessage(lastError),
       attempts: maxRetries,
       model,
     };
@@ -364,7 +365,7 @@ export class OpenAIService extends BaseOpenAIService {
     return {
       success: false,
       data: null,
-      error: finalError.message,
+      error: extractUserFriendlyErrorMessage(lastError),
       attempts: maxRetries,
       model,
     };
