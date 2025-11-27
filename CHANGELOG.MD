@@ -1,5 +1,9 @@
 # [Unreleased]
 
+## Changed
+
+- Structure and formulation of the rules generated through MCP has been improved (#13)
+
 # [1.4.1] - 2025-11-25
 
 ## Fixed
