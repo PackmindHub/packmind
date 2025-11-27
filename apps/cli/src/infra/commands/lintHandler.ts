@@ -93,6 +93,10 @@ export async function lintHandler(
 
     if (hierarchicalConfig.hasConfigs) {
       useLocalLinting = true;
+    } else if (!stopDirectory) {
+      throw new Error(
+        'Unable to run linting: no packmind.json config found and this is not a Git repository',
+      );
     }
   }
 
