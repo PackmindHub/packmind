@@ -7,6 +7,7 @@ import {
   PMBadge,
   PMBox,
   PMTooltip,
+  PMEmptyState,
 } from '@packmind/ui';
 import { LLMConfigurationDTO, LLM_PROVIDER_METADATA } from '@packmind/types';
 import { LuPencil, LuX } from 'react-icons/lu';
@@ -70,23 +71,14 @@ export const LLMEmptyState: React.FC<LLMEmptyStateProps> = ({
   onConfigure,
 }) => {
   return (
-    <PMBox
-      p={6}
-      borderWidth="1px"
-      borderRadius="md"
-      borderColor="border.muted"
-      bg="bg.muted"
-      textAlign="center"
+    <PMEmptyState
+      title="No AI Provider Configured"
+      description="Configure an AI provider to enable features like standard suggestions and recipe generation."
     >
-      <PMVStack gap={4}>
-        <PMText color="secondary">
-          No AI provider configured. Configure one to enable AI features.
-        </PMText>
-        <PMButton colorPalette="blue" onClick={onConfigure}>
-          Configure AI Provider
-        </PMButton>
-      </PMVStack>
-    </PMBox>
+      <PMButton size="xl" onClick={onConfigure}>
+        Configure AI Provider
+      </PMButton>
+    </PMEmptyState>
   );
 };
 
