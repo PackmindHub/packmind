@@ -538,10 +538,10 @@ Here is the final answer.`,
         expect(result.data).toBeNull();
       });
 
-      it('includes failure message', async () => {
+      it('includes the error message', async () => {
         const result = await service.executePrompt(mockPrompt);
 
-        expect(result.error).toContain('failed after 5 attempts');
+        expect(result.error).toBe('Unauthorized (401)');
       });
 
       it('does not retry', async () => {
@@ -578,12 +578,12 @@ Here is the final answer.`,
         expect(result.data).toBeNull();
       });
 
-      it('includes failure message with attempt count', async () => {
+      it('includes the error message', async () => {
         const result = await service.executePrompt(mockPrompt, {
           retryAttempts: 3,
         });
 
-        expect(result.error).toContain('failed after 3 attempts');
+        expect(result.error).toBe('Network timeout');
       });
 
       it('tracks all attempts', async () => {

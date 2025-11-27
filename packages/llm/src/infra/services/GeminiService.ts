@@ -13,6 +13,7 @@ import {
 } from '@packmind/types';
 import { GeminiServiceConfig } from '../../types/LLMServiceConfig';
 import { DEFAULT_GEMINI_MODELS } from '../../constants/defaultModels';
+import { extractUserFriendlyErrorMessage } from './extractUserFriendlyErrorMessage';
 
 const origin = 'GeminiService';
 
@@ -198,7 +199,7 @@ export class GeminiService implements AIService {
     return {
       success: false,
       data: null,
-      error: finalError.message,
+      error: extractUserFriendlyErrorMessage(lastError),
       attempts: maxRetries,
       model,
     };
@@ -335,7 +336,7 @@ export class GeminiService implements AIService {
     return {
       success: false,
       data: null,
-      error: finalError.message,
+      error: extractUserFriendlyErrorMessage(lastError),
       attempts: maxRetries,
       model,
     };

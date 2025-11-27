@@ -35,34 +35,12 @@ type FormValues = Record<string, string>;
 type FormErrors = Record<string, string>;
 
 /**
- * Extracts a user-friendly error message from potentially verbose API error responses.
- * Handles JSON error responses and nested error structures.
+ * Returns the error message directly - backend now extracts user-friendly messages.
  */
 const extractReadableErrorMessage = (
   errorMessage: string | undefined,
 ): string => {
-  if (!errorMessage) {
-    return 'An unknown error occurred';
-  }
-
-  // Try to find and parse JSON in the error message
-  const jsonMatch = errorMessage.match(/\{[\s\S]*\}/);
-  if (jsonMatch) {
-    try {
-      const parsed = JSON.parse(jsonMatch[0]);
-      // Handle nested error structures (e.g., Google API errors)
-      if (parsed.error?.message) {
-        return parsed.error.message;
-      }
-      if (parsed.message) {
-        return parsed.message;
-      }
-    } catch {
-      // JSON parsing failed, continue with other extraction methods
-    }
-  }
-
-  return 'An error occurred.';
+  return errorMessage || 'An unknown error occurred';
 };
 
 interface TestConnectionState {

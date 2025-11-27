@@ -240,16 +240,16 @@ describe('LLMConfigurationForm', () => {
       });
     });
 
-    it('extracts readable message from verbose JSON error', async () => {
+    it('displays user-friendly error message from backend', async () => {
       const user = userEvent.setup();
-      const verboseError =
-        'AI prompt execution failed after 2 attempts: {"error":{"code":400,"message":"API key not valid. Please pass a valid API key.","status":"INVALID_ARGUMENT"}}';
+      // Backend now extracts and returns clean error messages
+      const cleanError = 'API key not valid. Please pass a valid API key.';
       const mockResponse: TestLLMConnectionResponse = {
         provider: LLMProvider.GEMINI,
         standardModel: {
           model: 'gemini-3-pro-preview',
           success: false,
-          error: { message: verboseError },
+          error: { message: cleanError },
         },
         overallSuccess: false,
       };
@@ -278,8 +278,6 @@ describe('LLMConfigurationForm', () => {
         expect(
           screen.getByText(/API key not valid\. Please pass a valid API key\./),
         ).toBeInTheDocument();
-        // Should NOT show the full JSON error
-        expect(screen.queryByText(/INVALID_ARGUMENT/)).not.toBeInTheDocument();
       });
     });
 

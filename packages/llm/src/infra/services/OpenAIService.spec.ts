@@ -187,7 +187,7 @@ describe('OpenAIService', () => {
 
       expect(result.success).toBe(false);
       expect(result.data).toBeNull();
-      expect(result.error).toContain('failed after 5 attempts');
+      expect(result.error).toBe('Unauthorized (401)');
       expect(mockOpenAIInstance.chat.completions.create).toHaveBeenCalledTimes(
         1,
       );
@@ -205,7 +205,7 @@ describe('OpenAIService', () => {
 
       expect(result.success).toBe(false);
       expect(result.data).toBeNull();
-      expect(result.error).toContain('failed after 3 attempts');
+      expect(result.error).toBe('Network timeout');
       expect(result.attempts).toBe(3);
       expect(mockOpenAIInstance.chat.completions.create).toHaveBeenCalledTimes(
         3,

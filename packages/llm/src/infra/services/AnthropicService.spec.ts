@@ -297,13 +297,13 @@ describe('AnthropicService', () => {
         expect(result.data).toBeNull();
       });
 
-      it('provides error message indicating retry failure', async () => {
+      it('provides the error message', async () => {
         const authError = new Error('Unauthorized (401)');
         mockAnthropicInstance.messages.create.mockRejectedValue(authError);
 
         const result = await service.executePrompt(mockPrompt);
 
-        expect(result.error).toContain('failed after 5 attempts');
+        expect(result.error).toBe('Unauthorized (401)');
       });
 
       it('calls create only once for authentication errors', async () => {
@@ -339,7 +339,7 @@ describe('AnthropicService', () => {
         expect(result.data).toBeNull();
       });
 
-      it('provides error message about max retries', async () => {
+      it('provides the error message', async () => {
         const networkError = new Error('Network timeout');
         mockAnthropicInstance.messages.create.mockRejectedValue(networkError);
 
@@ -347,7 +347,7 @@ describe('AnthropicService', () => {
           retryAttempts: 3,
         });
 
-        expect(result.error).toContain('failed after 3 attempts');
+        expect(result.error).toBe('Network timeout');
       });
 
       it('tracks correct attempts', async () => {
