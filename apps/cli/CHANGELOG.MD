@@ -2,6 +2,11 @@
 
 ## Added
 
+- Add `packkmind.json` support for linter
+- Add `--diff` option to `lint` command
+  - Add `--diff=files` option to lint modified files only
+  - Add `--diff=lines` option to lint modified lines only
+
 ## Changed
 
 - Improve layout of the CLI command `install --list` to make slugs easier to identify (#12)
