@@ -118,7 +118,7 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
         defaultValue: DEFAULT_OPENAI_MODELS.model,
         helpMessage:
           'The primary model to use for standard operations. Defaults to the latest recommended model.',
-        optional: true,
+        optional: false,
         placeholder: 'gpt-5.1',
         secret: false,
       },
@@ -162,7 +162,7 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
         defaultValue: DEFAULT_ANTHROPIC_MODELS.model,
         helpMessage:
           'The primary Claude model to use. Defaults to the latest Sonnet model.',
-        optional: true,
+        optional: false,
         placeholder: 'claude-sonnet-4-5-20250929',
         secret: false,
       },
@@ -206,7 +206,7 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
         defaultValue: DEFAULT_GEMINI_MODELS.model,
         helpMessage:
           'The primary Gemini model to use. Defaults to the latest Pro model.',
-        optional: true,
+        optional: false,
         placeholder: 'gemini-3-pro-preview',
         secret: false,
       },
@@ -235,27 +235,6 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
       'https://learn.microsoft.com/en-us/azure/ai-services/openai/',
     fields: [
       {
-        name: 'model',
-        label: 'Model Deployment Name',
-        type: 'text',
-        defaultValue: '',
-        helpMessage:
-          'The Azure deployment name for the primary model. This is the name you gave your deployment in Azure Portal.',
-        optional: false,
-        placeholder: 'my-gpt-4-deployment',
-        secret: false,
-      },
-      {
-        name: 'fastestModel',
-        label: 'Fast Model Deployment Name',
-        type: 'text',
-        defaultValue: '',
-        helpMessage: 'The Azure deployment name for the fast/economical model.',
-        optional: false,
-        placeholder: 'my-gpt-35-turbo-deployment',
-        secret: false,
-      },
-      {
         name: 'endpoint',
         label: 'Endpoint URL',
         type: 'url',
@@ -274,6 +253,27 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
         optional: false,
         placeholder: '',
         secret: true,
+      },
+      {
+        name: 'model',
+        label: 'Model Deployment Name',
+        type: 'text',
+        defaultValue: '',
+        helpMessage:
+          'The Azure deployment name for the primary model. This is the name you gave your deployment in Azure Portal.',
+        optional: false,
+        placeholder: 'my-gpt-4-deployment',
+        secret: false,
+      },
+      {
+        name: 'fastestModel',
+        label: 'Fast Model Deployment Name',
+        type: 'text',
+        defaultValue: '',
+        helpMessage: 'The Azure deployment name for the fast/economical model.',
+        optional: true,
+        placeholder: 'my-gpt-35-turbo-deployment',
+        secret: false,
       },
       {
         name: 'apiVersion',
@@ -338,7 +338,7 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
         defaultValue: '',
         helpMessage:
           'A faster model for less complex operations. Can be the same as the primary model.',
-        optional: false,
+        optional: true,
         placeholder: 'llama3',
         secret: false,
       },

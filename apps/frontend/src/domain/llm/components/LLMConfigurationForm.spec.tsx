@@ -98,9 +98,9 @@ describe('LLMConfigurationForm', () => {
       await user.selectOptions(select, LLMProvider.OPENAI);
 
       await waitFor(() => {
-        expect(screen.getByLabelText(/API Key/)).toBeInTheDocument();
-        expect(screen.getByLabelText(/^Model$/)).toBeInTheDocument();
-        expect(screen.getByLabelText(/Fast Model/)).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('sk-...')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('gpt-5.1')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('gpt-4.1-mini')).toBeInTheDocument();
       });
     });
 
