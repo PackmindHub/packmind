@@ -8,6 +8,7 @@ export * from './database/schemas';
 export * from './database/types';
 export * from './hexa/BaseHexa';
 export * from './hexa/BaseService';
+export * from './hexa/events';
 export * from './hexa/HexaRegistry';
 export { AbstractAIDelayedJob } from './jobs/application/AbstractAIDelayedJob';
 export * from './jobs/domain/IJobQueue';
