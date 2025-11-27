@@ -20,5 +20,8 @@ export * from './PackmindFileConfig';
 // Contracts
 export * from './contracts';
 
+// Events
+export * from './events';
+
 // Ports
 export * from './ports';

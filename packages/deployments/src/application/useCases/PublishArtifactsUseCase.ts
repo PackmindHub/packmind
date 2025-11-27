@@ -1,4 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
   IPublishArtifactsUseCase,
   PublishArtifactsCommand,
@@ -24,6 +25,7 @@ import {
   RenderMode,
   FileUpdates,
   CodingAgent,
+  DeploymentCompletedEvent,
 } from '@packmind/types';
 import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
@@ -52,6 +54,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     private readonly targetService: TargetService,
     private readonly renderModeConfigurationService: RenderModeConfigurationService,
     private readonly eventTrackingPort: IEventTrackingPort,
+    private readonly eventEmitterService: PackmindEventEmitterService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -275,6 +278,16 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       command.userId as UserId,
       command.organizationId as OrganizationId,
       'deployment_done',
+    );
+
+    this.eventEmitterService.emit(
+      new DeploymentCompletedEvent({
+        userId: command.userId as UserId,
+        organizationId: command.organizationId as OrganizationId,
+        targetIds: command.targetIds,
+        recipeCount: recipeDeployments.length,
+        standardCount: standardDeployments.length,
+      }),
     );
 
     return {

@@ -1,5 +1,10 @@
 import { PackmindLogger } from '@packmind/logger';
-import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
+import {
+  BaseHexa,
+  BaseHexaOpts,
+  HexaRegistry,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import {
   IAccountsPort,
   IAccountsPortName,
@@ -96,6 +101,9 @@ export class DeploymentsHexa extends BaseHexa<
       const eventTrackingPort = registry.getAdapter<IEventTrackingPort>(
         IEventTrackingPortName,
       );
+      const eventEmitterService = registry.getService(
+        PackmindEventEmitterService,
+      );
 
       // Initialize adapter with all ports
       await this.adapter.initialize({
@@ -106,6 +114,7 @@ export class DeploymentsHexa extends BaseHexa<
         [ISpacesPortName]: spacesPort,
         [IAccountsPortName]: accountsPort,
         [IEventTrackingPortName]: eventTrackingPort,
+        eventEmitterService,
       });
 
       this.logger.info('DeploymentsHexa initialized successfully');

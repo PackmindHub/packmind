@@ -1,4 +1,7 @@
-import { IBaseAdapter } from '@packmind/node-utils';
+import {
+  IBaseAdapter,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import {
   AddArtefactsToPackageCommand,
   AddArtefactsToPackageResponse,
@@ -153,6 +156,7 @@ export class DeploymentsAdapter
     [ISpacesPortName]: ISpacesPort;
     [IAccountsPortName]: IAccountsPort;
     [IEventTrackingPortName]: IEventTrackingPort;
+    eventEmitterService: PackmindEventEmitterService;
   }): Promise<void> {
     // Step 1: Set all ports
     this.gitPort = ports[IGitPortName];
@@ -191,6 +195,7 @@ export class DeploymentsAdapter
       this.deploymentsServices.getTargetService(),
       this.deploymentsServices.getRenderModeConfigurationService(),
       this.eventTrackingPort,
+      ports.eventEmitterService,
     );
 
     this._publishPackagesUseCase = new PublishPackagesUseCase(
