@@ -10,7 +10,7 @@ Update the [CHANGELOG](./CHANGELOG.MD) file:
 ```
 
 - Update version in the [package.json](./package.json) file.
-- Commit this, create the `relase/X.Y.Z` tag and push to GitHub.
+- Commit this, create the `relase-cli/X.Y.Z` tag and push to GitHub.
 - Add a new section `[Unreleased]` section in the Changelog:
 
 ```markdown
