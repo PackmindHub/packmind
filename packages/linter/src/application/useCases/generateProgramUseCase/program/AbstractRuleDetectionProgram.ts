@@ -42,7 +42,6 @@ import {
 import { callIndexJsWithInput } from '../utils/IO';
 import { SourceCodeState } from '@packmind/types';
 import { DetectionProgramRuleInput } from '@packmind/types';
-import { wrapText } from '../utils/PromptUtils';
 import Globals from '../utils/Globals';
 import { GenerateRuleHeuristics } from '../assessment/GenerateRuleHeuristics';
 
@@ -305,7 +304,7 @@ export default abstract class AbstractRuleDetectionProgram extends AbstractRuleD
       this._tokensUsed.push(answer.tokensUsed);
     }
 
-    const programDescription = wrapText((answer?.data ?? '').trim());
+    const programDescription = (answer?.data ?? '').trim();
     this._logger.info(
       `[${this._detectionProgramRule.rule.id}] Program Description generated`,
     );
