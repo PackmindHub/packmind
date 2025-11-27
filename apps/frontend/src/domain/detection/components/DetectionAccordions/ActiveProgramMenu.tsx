@@ -96,6 +96,13 @@ export const ActiveProgramMenu: React.FC<ActiveProgramMenuProps> = ({
   // Use ready config if available, otherwise to review config
   const activeConfig = readyConfig ?? toReviewConfig;
 
+  // Check if any draft is pending (IN_PROGRESS) or ready (READY)
+  const hasPendingOrReadyDraft = activeConfigurations.some(
+    (config) =>
+      config.draftProgram?.status === DetectionStatus.IN_PROGRESS ||
+      config.draftProgram?.status === DetectionStatus.READY,
+  );
+
   const actions = useMemo<MenuAction[]>(() => {
     const menuActions: MenuAction[] = [];
 
@@ -125,7 +132,7 @@ export const ActiveProgramMenu: React.FC<ActiveProgramMenuProps> = ({
         label: 'Generate new draft',
         onClick: () => onGenerateProgram(selectedLanguage),
         icon: <LuSparkles />,
-        disabled: isGeneratingProgram,
+        disabled: isGeneratingProgram || hasPendingOrReadyDraft,
       });
     }
 
@@ -137,6 +144,7 @@ export const ActiveProgramMenu: React.FC<ActiveProgramMenuProps> = ({
     onShowDetails,
     onGenerateProgram,
     isGeneratingProgram,
+    hasPendingOrReadyDraft,
     selectedLanguage,
   ]);
 
@@ -181,12 +189,14 @@ export const ActiveProgramMenu: React.FC<ActiveProgramMenuProps> = ({
               <PMMenu.Item
                 key={index}
                 value={action.label}
-                cursor="pointer"
+                cursor={action.disabled ? 'not-allowed' : 'pointer'}
                 disabled={action.disabled}
                 onClick={(e: React.MouseEvent) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  action.onClick();
+                  if (!action.disabled) {
+                    action.onClick();
+                  }
                 }}
               >
                 {action.icon && (
