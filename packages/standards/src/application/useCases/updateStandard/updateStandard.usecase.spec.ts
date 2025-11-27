@@ -1,3 +1,4 @@
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { UpdateStandardUsecase } from './updateStandard.usecase';
 import { StandardService } from '../../services/StandardService';
 import { StandardVersionService } from '../../services/StandardVersionService';
@@ -48,6 +49,7 @@ describe('UpdateStandardUsecase', () => {
   let accountsAdapter: jest.Mocked<IAccountsPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
   let eventTrackingPort: jest.Mocked<IEventTrackingPort>;
+  let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
   let mockUser: User;
   let mockOrganization: Organization;
@@ -162,6 +164,15 @@ describe('UpdateStandardUsecase', () => {
       trackEvent: jest.fn().mockResolvedValue(undefined),
     } as jest.Mocked<IEventTrackingPort>;
 
+    eventEmitterService = {
+      emit: jest.fn().mockReturnValue(true),
+      on: jest.fn().mockReturnThis(),
+      off: jest.fn().mockReturnThis(),
+      once: jest.fn().mockReturnThis(),
+      listenerCount: jest.fn().mockReturnValue(0),
+      removeAllListeners: jest.fn().mockReturnThis(),
+    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+
     updateStandardUsecase = new UpdateStandardUsecase(
       accountsAdapter,
       standardService,
@@ -171,6 +182,7 @@ describe('UpdateStandardUsecase', () => {
       generateStandardSummaryDelayedJob,
       spacesPort,
       eventTrackingPort,
+      eventEmitterService,
       stubbedLogger,
     );
 

@@ -1,5 +1,9 @@
 import { PackmindLogger } from '@packmind/logger';
-import { IBaseAdapter, JobsService } from '@packmind/node-utils';
+import {
+  IBaseAdapter,
+  JobsService,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import {
   GetStandardByIdResponse,
   IAccountsPort,
@@ -70,6 +74,7 @@ export class StandardsAdapter
   private deploymentsPort: IDeploymentPort | null = null;
   private eventTrackingPort: IEventTrackingPort | null = null;
   private llmPort: ILlmPort | null = null;
+  private eventEmitterService: PackmindEventEmitterService | null = null;
 
   // Use cases - all initialized in initialize()
   private _createStandard!: CreateStandardUsecase;
@@ -115,6 +120,7 @@ export class StandardsAdapter
     [IEventTrackingPortName]: IEventTrackingPort;
     [ILlmPortName]: ILlmPort;
     jobsService: JobsService;
+    eventEmitterService: PackmindEventEmitterService;
   }): Promise<void> {
     this.logger.info('Initializing StandardsAdapter with ports and services');
 
@@ -124,6 +130,7 @@ export class StandardsAdapter
     this.deploymentsPort = ports[IDeploymentPortName];
     this.eventTrackingPort = ports[IEventTrackingPortName];
     this.llmPort = ports[ILlmPortName];
+    this.eventEmitterService = ports.eventEmitterService;
 
     this.standardDelayedJobs = await this.buildDelayedJobs(ports.jobsService);
 
@@ -139,10 +146,11 @@ export class StandardsAdapter
       !this.deploymentsPort ||
       !this.eventTrackingPort ||
       !this.llmPort ||
-      !this.standardDelayedJobs
+      !this.standardDelayedJobs ||
+      !this.eventEmitterService
     ) {
       throw new Error(
-        'StandardsAdapter: Required ports/services not provided. Ensure JobsService is passed to initialize().',
+        'StandardsAdapter: Required ports/services not provided. Ensure JobsService and PackmindEventEmitterService are passed to initialize().',
       );
     }
 
@@ -216,6 +224,7 @@ export class StandardsAdapter
       this.standardDelayedJobs.standardSummaryDelayedJob,
       this.spacesPort,
       this.eventTrackingPort,
+      this.eventEmitterService,
     );
 
     this._addRuleToStandard = new AddRuleToStandardUsecase(

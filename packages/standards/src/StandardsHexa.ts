@@ -4,6 +4,7 @@ import {
   BaseHexaOpts,
   HexaRegistry,
   JobsService,
+  PackmindEventEmitterService,
 } from '@packmind/node-utils';
 import {
   IAccountsPort,
@@ -112,6 +113,11 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
         throw new Error('JobsService not found in registry');
       }
 
+      // Get PackmindEventEmitterService (required) - for domain event emission
+      const eventEmitterService = registry.getService(
+        PackmindEventEmitterService,
+      );
+
       // Set adapters on services for backward compatibility
       this.standardsServices.setLinterAdapter(linterPort);
       this.standardsServices.setLlmPort(llmPort);
@@ -126,6 +132,7 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
         [IEventTrackingPortName]: eventTrackingPort,
         [ILlmPortName]: llmPort,
         jobsService,
+        eventEmitterService,
       });
 
       this.isInitialized = true;
