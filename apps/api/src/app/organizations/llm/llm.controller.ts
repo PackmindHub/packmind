@@ -20,6 +20,7 @@ import {
   TestLLMConnectionCommand,
   TestLLMConnectionResponse,
   TestSavedLLMConfigurationResponse,
+  GetAvailableProvidersResponse,
 } from '@packmind/types';
 import { OrganizationAccessGuard } from '../guards/organization-access.guard';
 import { LlmService } from './llm.service';
@@ -234,6 +235,44 @@ export class LlmController {
         error instanceof Error ? error.message : String(error);
       this.logger.error(
         'POST /organizations/:orgId/llm/configuration/test - Failed to test saved configuration',
+        {
+          organizationId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Get('providers')
+  async getAvailableProviders(
+    @Param('orgId') organizationId: OrganizationId,
+    @Request() req: AuthenticatedRequest,
+  ): Promise<GetAvailableProvidersResponse> {
+    this.logger.info(
+      'GET /organizations/:orgId/llm/providers - Getting available LLM providers',
+      {
+        organizationId,
+      },
+    );
+
+    try {
+      const result = await this.llmService.getAvailableProviders(req);
+
+      this.logger.info(
+        'GET /organizations/:orgId/llm/providers - Available providers retrieved',
+        {
+          organizationId,
+          providerCount: result.providers.length,
+        },
+      );
+
+      return result;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/llm/providers - Failed to get available providers',
         {
           organizationId,
           error: errorMessage,

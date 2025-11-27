@@ -6,6 +6,7 @@ import {
   SaveLLMConfigurationResponse,
   GetLLMConfigurationResponse,
   TestSavedLLMConfigurationResponse,
+  GetAvailableProvidersResponse,
 } from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 
@@ -48,6 +49,14 @@ export class LLMGatewayApi extends PackmindGateway implements ILLMGateway {
     return this._api.post<TestSavedLLMConfigurationResponse>(
       `${this._endpoint}/${organizationId}/llm/configuration/test`,
       {},
+    );
+  }
+
+  async getAvailableProviders(
+    organizationId: OrganizationId,
+  ): Promise<GetAvailableProvidersResponse> {
+    return this._api.get<GetAvailableProvidersResponse>(
+      `${this._endpoint}/${organizationId}/llm/providers`,
     );
   }
 }

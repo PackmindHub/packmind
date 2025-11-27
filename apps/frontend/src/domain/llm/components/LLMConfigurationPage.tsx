@@ -1,38 +1,46 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { PMVStack, PMPageSection, PMSpinner, PMBox } from '@packmind/ui';
 import {
   OrganizationId,
   LLMServiceConfig,
   TestLLMConnectionResponse,
-  LLM_PROVIDER_METADATA,
 } from '@packmind/types';
 import {
-  LLMConfigurationStatus,
-  LLMConfigurationStatusType,
-} from './LLMConfigurationStatus';
+  LLMConfigurationDisplay,
+  LLMEmptyState,
+  ConfigurationStatusType,
+} from './LLMConfigurationDisplay';
 import { LLMConfigurationForm } from './LLMConfigurationForm';
 import {
   useTestLLMConnectionMutation,
   useGetLLMConfigurationQuery,
   useTestSavedLLMConfigurationQuery,
   useSaveLLMConfigurationMutation,
+  useGetAvailableProvidersQuery,
 } from '../api/queries/LLMQueries';
 
 interface LLMConfigurationPageProps {
   organizationId: OrganizationId;
-  deploymentEnv?: string;
 }
 
 export const LLMConfigurationPage: React.FC<LLMConfigurationPageProps> = ({
   organizationId,
-  deploymentEnv,
 }) => {
+  const [isEditing, setIsEditing] = useState(false);
+
   const testConnectionMutation = useTestLLMConnectionMutation(organizationId);
   const saveMutation = useSaveLLMConfigurationMutation(organizationId);
 
+  // Fetch available providers from API
+  const { data: providersData, isLoading: isLoadingProviders } =
+    useGetAvailableProvidersQuery(organizationId);
+
   // Fetch existing configuration
-  const { data: configurationData, isLoading: isLoadingConfiguration } =
-    useGetLLMConfigurationQuery(organizationId);
+  const {
+    data: configurationData,
+    isLoading: isLoadingConfiguration,
+    refetch: refetchConfiguration,
+  } = useGetLLMConfigurationQuery(organizationId);
 
   const hasConfiguration = configurationData?.hasConfiguration ?? false;
 
@@ -40,12 +48,11 @@ export const LLMConfigurationPage: React.FC<LLMConfigurationPageProps> = ({
   const {
     data: testSavedData,
     isLoading: isTestingSaved,
-    refetch: refetchTestSaved,
     isFetching: isRefetchingTest,
   } = useTestSavedLLMConfigurationQuery(organizationId, hasConfiguration);
 
   // Determine the current status
-  const currentStatus: LLMConfigurationStatusType = useMemo(() => {
+  const currentStatus: ConfigurationStatusType = useMemo(() => {
     if (isLoadingConfiguration) {
       return 'loading';
     }
@@ -75,16 +82,6 @@ export const LLMConfigurationPage: React.FC<LLMConfigurationPageProps> = ({
     isRefetchingTest,
     testSavedData,
   ]);
-
-  // Get provider display name and model info
-  const providerName = useMemo(() => {
-    if (!configurationData?.configuration?.provider) return undefined;
-    const metadata =
-      LLM_PROVIDER_METADATA[configurationData.configuration.provider];
-    return metadata?.displayName;
-  }, [configurationData?.configuration?.provider]);
-
-  const model = configurationData?.configuration?.model;
 
   // Build error message from test results
   const errorMessage = useMemo(() => {
@@ -119,15 +116,29 @@ export const LLMConfigurationPage: React.FC<LLMConfigurationPageProps> = ({
   const handleSaveConfiguration = useCallback(
     async (config: LLMServiceConfig): Promise<void> => {
       await saveMutation.mutateAsync({ config });
+      // Refetch configuration after save to update the display
+      await refetchConfiguration();
     },
-    [saveMutation],
+    [saveMutation, refetchConfiguration],
   );
 
-  const handleTestAgain = useCallback(() => {
-    refetchTestSaved();
-  }, [refetchTestSaved]);
+  const handleEdit = useCallback(() => {
+    setIsEditing(true);
+  }, []);
 
-  if (isLoadingConfiguration) {
+  const handleCancel = useCallback(() => {
+    setIsEditing(false);
+  }, []);
+
+  const handleSaveSuccess = useCallback(() => {
+    setIsEditing(false);
+  }, []);
+
+  const handleConfigure = useCallback(() => {
+    setIsEditing(true);
+  }, []);
+
+  if (isLoadingConfiguration || isLoadingProviders) {
     return (
       <PMBox
         display="flex"
@@ -140,28 +151,54 @@ export const LLMConfigurationPage: React.FC<LLMConfigurationPageProps> = ({
     );
   }
 
+  const providers = providersData?.providers ?? [];
+
   return (
     <PMVStack gap={6} alignItems="stretch" width="full">
-      <PMPageSection title="Connection Status" variant="outline">
-        <LLMConfigurationStatus
-          status={currentStatus}
-          providerName={providerName}
-          model={model}
-          errorMessage={errorMessage}
-          onTestAgain={hasConfiguration ? handleTestAgain : undefined}
-          isTestingAgain={isRefetchingTest}
-        />
-      </PMPageSection>
+      <PMPageSection variant="outline">
+        {!hasConfiguration && !isEditing && (
+          <LLMEmptyState onConfigure={handleConfigure} />
+        )}
 
-      <PMPageSection title="Provider Configuration" variant="outline">
-        <LLMConfigurationForm
-          organizationId={organizationId}
-          onTestConnection={handleTestConnection}
-          onSaveConfiguration={handleSaveConfiguration}
-          isSaving={saveMutation.isPending}
-          existingConfiguration={configurationData?.configuration}
-          deploymentEnv={deploymentEnv}
-        />
+        {hasConfiguration && configurationData?.configuration && (
+          <PMVStack gap={4} alignItems="stretch" width="full">
+            <LLMConfigurationDisplay
+              configuration={configurationData.configuration}
+              status={currentStatus}
+              errorMessage={errorMessage}
+              isEditing={isEditing}
+              onEdit={handleEdit}
+              onCancel={handleCancel}
+            />
+
+            {isEditing && (
+              <PMBox pt={4} borderTopWidth="1px">
+                <LLMConfigurationForm
+                  organizationId={organizationId}
+                  onTestConnection={handleTestConnection}
+                  onSaveConfiguration={handleSaveConfiguration}
+                  isSaving={saveMutation.isPending}
+                  existingConfiguration={configurationData.configuration}
+                  providers={providers}
+                  onSaveSuccess={handleSaveSuccess}
+                />
+              </PMBox>
+            )}
+          </PMVStack>
+        )}
+
+        {!hasConfiguration && isEditing && (
+          <LLMConfigurationForm
+            organizationId={organizationId}
+            onTestConnection={handleTestConnection}
+            onSaveConfiguration={handleSaveConfiguration}
+            isSaving={saveMutation.isPending}
+            existingConfiguration={null}
+            providers={providers}
+            onCancel={handleCancel}
+            onSaveSuccess={handleSaveSuccess}
+          />
+        )}
       </PMPageSection>
     </PMVStack>
   );

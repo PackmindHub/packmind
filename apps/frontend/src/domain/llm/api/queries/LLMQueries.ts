@@ -5,6 +5,7 @@ import {
   TEST_LLM_CONNECTION_KEY,
   getLLMConfigurationKey,
   getTestSavedLLMConfigurationKey,
+  getAvailableProvidersKey,
 } from '../queryKeys';
 
 const TEST_LLM_CONNECTION_MUTATION_KEY = 'testLlmConnection';
@@ -78,4 +79,21 @@ export const useSaveLLMConfigurationMutation = (
       });
     },
   });
+};
+
+// Query options for getting available LLM providers
+export const getAvailableProvidersQueryOptions = (
+  organizationId: OrganizationId,
+) => ({
+  queryKey: getAvailableProvidersKey(organizationId),
+  queryFn: () => llmGateway.getAvailableProviders(organizationId),
+  enabled: !!organizationId,
+  // Providers don't change often, cache for longer
+  staleTime: 5 * 60 * 1000, // 5 minutes
+});
+
+export const useGetAvailableProvidersQuery = (
+  organizationId: OrganizationId,
+) => {
+  return useQuery(getAvailableProvidersQueryOptions(organizationId));
 };

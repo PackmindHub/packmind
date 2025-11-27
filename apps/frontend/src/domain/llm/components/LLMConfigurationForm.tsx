@@ -11,16 +11,16 @@ import {
   PMAlert,
   PMLink,
   PMAlertDialog,
+  PMTooltip,
   pmToaster,
 } from '@packmind/ui';
 import {
-  LLM_PROVIDER_METADATA,
   LLMProvider,
   LLMServiceConfig,
   TestLLMConnectionResponse,
   ProviderConfigField,
-  getAllProviders,
   LLMConfigurationDTO,
+  ProviderMetadata,
 } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 
@@ -32,7 +32,9 @@ interface LLMConfigurationFormProps {
   onSaveConfiguration: (config: LLMServiceConfig) => Promise<void>;
   isSaving?: boolean;
   existingConfiguration?: LLMConfigurationDTO | null;
-  deploymentEnv?: string;
+  providers: ProviderMetadata[];
+  onCancel?: () => void;
+  onSaveSuccess?: () => void;
 }
 
 type FormValues = Record<string, string>;
@@ -58,20 +60,38 @@ export const LLMConfigurationForm: React.FC<LLMConfigurationFormProps> = ({
   onSaveConfiguration,
   isSaving = false,
   existingConfiguration,
+  providers,
+  onCancel,
+  onSaveSuccess,
 }) => {
   const providerItems = useMemo(
     () =>
-      getAllProviders().map((provider) => ({
+      providers.map((provider) => ({
         label: provider.displayName,
         value: provider.id,
         disabled: false,
       })),
-    [],
+    [providers],
   );
 
-  const [selectedProvider, setSelectedProvider] = useState<string>(
-    existingConfiguration?.provider ?? LLMProvider.PACKMIND,
+  // Helper to find provider metadata by ID
+  const findProviderMetadata = useCallback(
+    (providerId: string): ProviderMetadata | null => {
+      return providers.find((p) => p.id === providerId) || null;
+    },
+    [providers],
   );
+
+  // Get the default provider from the providers list
+  const defaultProvider = useMemo(() => {
+    if (existingConfiguration?.provider) {
+      return existingConfiguration.provider;
+    }
+    return providers.length > 0 ? (providers[0].id as LLMProvider) : '';
+  }, [existingConfiguration, providers]);
+
+  const [selectedProvider, setSelectedProvider] =
+    useState<string>(defaultProvider);
   const [formValues, setFormValues] = useState<FormValues>({});
   const [errors, setErrors] = useState<FormErrors>({});
   const [testConnection, setTestConnection] = useState<TestConnectionState>({
@@ -87,7 +107,7 @@ export const LLMConfigurationForm: React.FC<LLMConfigurationFormProps> = ({
       setSelectedProvider(existingConfiguration.provider);
 
       // Initialize form values with existing configuration data
-      const metadata = LLM_PROVIDER_METADATA[existingConfiguration.provider];
+      const metadata = findProviderMetadata(existingConfiguration.provider);
       if (metadata) {
         const initialValues: FormValues = {};
         metadata.fields.forEach((field) => {
@@ -116,12 +136,12 @@ export const LLMConfigurationForm: React.FC<LLMConfigurationFormProps> = ({
         setFormValues(initialValues);
       }
     }
-  }, [existingConfiguration]);
+  }, [existingConfiguration, findProviderMetadata]);
 
   const selectedProviderMetadata = useMemo(() => {
     if (!selectedProvider) return null;
-    return LLM_PROVIDER_METADATA[selectedProvider as LLMProvider] || null;
-  }, [selectedProvider]);
+    return findProviderMetadata(selectedProvider);
+  }, [selectedProvider, findProviderMetadata]);
 
   const handleProviderChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -132,7 +152,7 @@ export const LLMConfigurationForm: React.FC<LLMConfigurationFormProps> = ({
 
       // Initialize form values with defaults for the new provider
       if (newProvider) {
-        const metadata = LLM_PROVIDER_METADATA[newProvider as LLMProvider];
+        const metadata = findProviderMetadata(newProvider);
         if (metadata) {
           const initialValues: FormValues = {};
           metadata.fields.forEach((field) => {
@@ -144,7 +164,7 @@ export const LLMConfigurationForm: React.FC<LLMConfigurationFormProps> = ({
         setFormValues({});
       }
     },
-    [],
+    [findProviderMetadata],
   );
 
   const handleFieldChange = useCallback(
@@ -244,6 +264,7 @@ export const LLMConfigurationForm: React.FC<LLMConfigurationFormProps> = ({
         title: 'Configuration Saved',
         description: 'Your LLM provider configuration has been saved.',
       });
+      onSaveSuccess?.();
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Failed to save configuration';
@@ -253,7 +274,7 @@ export const LLMConfigurationForm: React.FC<LLMConfigurationFormProps> = ({
         description: errorMessage,
       });
     }
-  }, [buildConfig, onSaveConfiguration]);
+  }, [buildConfig, onSaveConfiguration, onSaveSuccess]);
 
   const handleSaveClick = useCallback(() => {
     if (!validateForm()) {
@@ -376,7 +397,12 @@ export const LLMConfigurationForm: React.FC<LLMConfigurationFormProps> = ({
   };
 
   return (
-    <PMBox width="full">
+    <PMBox
+      width="full"
+      backgroundColor="background.primary"
+      p={6}
+      borderRadius="md"
+    >
       <PMVStack gap={6} alignItems="stretch">
         <PMField.Root required>
           <PMField.Label>
@@ -420,38 +446,57 @@ export const LLMConfigurationForm: React.FC<LLMConfigurationFormProps> = ({
             {renderTestConnectionResult()}
 
             <PMHStack gap={4}>
+              {onCancel && (
+                <PMButton
+                  variant="ghost"
+                  onClick={onCancel}
+                  disabled={isSaving}
+                >
+                  Cancel
+                </PMButton>
+              )}
               <PMButton
                 onClick={handleTestConnection}
                 disabled={
                   testConnection.isLoading || !selectedProvider || isSaving
                 }
-                variant="outline"
+                variant="secondary"
                 data-testid="test-connection-button"
               >
                 {testConnection.isLoading ? 'Testing...' : 'Test Connection'}
               </PMButton>
-              <PMAlertDialog
-                trigger={
-                  <PMButton
-                    onClick={handleSaveClick}
-                    disabled={
-                      testConnection.isLoading || !selectedProvider || isSaving
+              <PMTooltip
+                label="Test connection before saving"
+                disabled={testConnection.result?.overallSuccess}
+              >
+                <span>
+                  <PMAlertDialog
+                    trigger={
+                      <PMButton
+                        onClick={handleSaveClick}
+                        disabled={
+                          testConnection.isLoading ||
+                          !selectedProvider ||
+                          isSaving ||
+                          !testConnection.result?.overallSuccess
+                        }
+                        data-testid="save-configuration-button"
+                      >
+                        {isSaving ? 'Saving...' : 'Save Configuration'}
+                      </PMButton>
                     }
-                    data-testid="save-configuration-button"
-                  >
-                    {isSaving ? 'Saving...' : 'Save Configuration'}
-                  </PMButton>
-                }
-                title="Overwrite Configuration"
-                message="An existing LLM configuration will be overwritten. Are you sure you want to continue?"
-                confirmText="Overwrite"
-                cancelText="Cancel"
-                confirmColorScheme="red"
-                onConfirm={handleConfirmOverwrite}
-                open={isOverwriteDialogOpen}
-                onOpenChange={({ open }) => setIsOverwriteDialogOpen(open)}
-                isLoading={isSaving}
-              />
+                    title="Overwrite Configuration"
+                    message="An existing LLM configuration will be overwritten. Are you sure you want to continue?"
+                    confirmText="Overwrite"
+                    cancelText="Cancel"
+                    confirmColorScheme="red"
+                    onConfirm={handleConfirmOverwrite}
+                    open={isOverwriteDialogOpen}
+                    onOpenChange={({ open }) => setIsOverwriteDialogOpen(open)}
+                    isLoading={isSaving}
+                  />
+                </span>
+              </PMTooltip>
             </PMHStack>
 
             {selectedProviderMetadata.documentationUrl && (

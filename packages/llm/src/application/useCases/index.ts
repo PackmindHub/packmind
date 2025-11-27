@@ -4,3 +4,4 @@ export { GetModelsUseCase } from './getModels/getModels.usecase';
 export { SaveLLMConfigurationUseCase } from './saveLLMConfiguration/saveLLMConfiguration.usecase';
 export { TestLLMConnectionUseCase } from './testLLMConnection/testLLMConnection.usecase';
 export { TestSavedLLMConfigurationUseCase } from './testSavedLLMConfiguration/testSavedLLMConfiguration.usecase';
+export { GetAvailableProvidersUseCase } from './getAvailableProviders/getAvailableProviders.usecase';

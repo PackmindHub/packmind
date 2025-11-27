@@ -5,6 +5,7 @@ import {
   SaveLLMConfigurationResponse,
   GetLLMConfigurationResponse,
   TestSavedLLMConfigurationResponse,
+  GetAvailableProvidersResponse,
 } from '@packmind/types';
 
 export interface ILLMGateway {
@@ -25,4 +26,8 @@ export interface ILLMGateway {
   testSavedConfiguration(
     organizationId: OrganizationId,
   ): Promise<TestSavedLLMConfigurationResponse>;
+
+  getAvailableProviders(
+    organizationId: OrganizationId,
+  ): Promise<GetAvailableProvidersResponse>;
 }

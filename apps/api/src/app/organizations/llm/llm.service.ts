@@ -12,6 +12,8 @@ import {
   TestLLMConnectionResponse,
   TestSavedLLMConfigurationCommand,
   TestSavedLLMConfigurationResponse,
+  GetAvailableProvidersCommand,
+  GetAvailableProvidersResponse,
 } from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { AuthService } from '../../auth/auth.service';
@@ -73,5 +75,14 @@ export class LlmService {
       this.authService.makePackmindCommand(request, {});
 
     return this.llmAdapter.testSavedLLMConfiguration(command);
+  }
+
+  async getAvailableProviders(
+    request: AuthenticatedRequest,
+  ): Promise<GetAvailableProvidersResponse> {
+    const command: GetAvailableProvidersCommand =
+      this.authService.makePackmindCommand(request, {});
+
+    return this.llmAdapter.getAvailableProviders(command);
   }
 }
