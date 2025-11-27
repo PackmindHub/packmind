@@ -1,500 +1,388 @@
 import * as path from 'path';
-import * as os from 'os';
-import * as fs from 'fs/promises';
-import * as fsSync from 'fs';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import { GitService } from './GitService';
+import { GitRunner, GitService } from './GitService';
 import { stubLogger } from '@packmind/test-utils';
 
-const execAsync = promisify(exec);
-
 describe('GitService', () => {
-  let tempDir: string;
+  let gitRunner: jest.MockedFunction<GitRunner>;
   let service: GitService;
 
-  beforeEach(async () => {
-    const logger = stubLogger();
-    service = new GitService(logger);
-    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'git-test-'));
-
-    // Initialize a git repository
-    await execAsync('git init', { cwd: tempDir });
-    await execAsync('git config user.email "test@example.com"', {
-      cwd: tempDir,
-    });
-    await execAsync('git config user.name "Test User"', { cwd: tempDir });
+  beforeEach(() => {
+    gitRunner = jest.fn();
+    service = new GitService(stubLogger(), gitRunner);
   });
 
-  afterEach(async () => {
-    await fs.rm(tempDir, { recursive: true, force: true });
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('getGitRepositoryRoot', () => {
-    describe('when path is at repository root', () => {
-      it('returns repository root path', async () => {
-        const result = await service.getGitRepositoryRoot(tempDir);
-        const resolvedTempDir = await fs.realpath(tempDir);
+    describe('when path is inside a git repository', () => {
+      it('returns repository root path', () => {
+        gitRunner.mockReturnValue({ stdout: '/home/user/project\n' });
 
-        expect(result).toBe(resolvedTempDir);
+        const result = service.getGitRepositoryRoot('/home/user/project');
+
+        expect(result).toBe('/home/user/project');
+        expect(gitRunner).toHaveBeenCalledWith('rev-parse --show-toplevel', {
+          cwd: '/home/user/project',
+        });
       });
     });
 
     describe('when path is a subdirectory', () => {
-      it('returns repository root path', async () => {
-        const subDir = path.join(tempDir, 'src', 'main', 'java');
-        await fs.mkdir(subDir, { recursive: true });
-        const resolvedTempDir = await fs.realpath(tempDir);
+      it('returns repository root path', () => {
+        gitRunner.mockReturnValue({ stdout: '/home/user/project\n' });
 
-        const result = await service.getGitRepositoryRoot(subDir);
+        const result = service.getGitRepositoryRoot(
+          '/home/user/project/src/main',
+        );
 
-        expect(result).toBe(resolvedTempDir);
+        expect(result).toBe('/home/user/project');
+        expect(gitRunner).toHaveBeenCalledWith('rev-parse --show-toplevel', {
+          cwd: '/home/user/project/src/main',
+        });
       });
     });
 
     describe('when path is not in a git repository', () => {
-      it('throws error with descriptive message', async () => {
-        const nonGitDir = await fs.mkdtemp(path.join(os.tmpdir(), 'non-git-'));
-
-        try {
-          await expect(service.getGitRepositoryRoot(nonGitDir)).rejects.toThrow(
-            'Failed to get Git repository root',
+      it('throws error with descriptive message', () => {
+        gitRunner.mockImplementation(() => {
+          throw new Error(
+            'fatal: not a git repository (or any of the parent directories): .git',
           );
-        } finally {
-          await fs.rm(nonGitDir, { recursive: true, force: true });
-        }
+        });
+
+        expect(() => service.getGitRepositoryRoot('/non-git-dir')).toThrow(
+          'Failed to get Git repository root',
+        );
       });
     });
 
     describe('when path does not exist', () => {
-      it('throws error', async () => {
-        const nonExistentPath = path.join(os.tmpdir(), 'non-existent-path-xyz');
+      it('throws error', () => {
+        gitRunner.mockImplementation(() => {
+          throw new Error('ENOENT: no such file or directory');
+        });
 
-        await expect(
-          service.getGitRepositoryRoot(nonExistentPath),
-        ).rejects.toThrow('Failed to get Git repository root');
+        expect(() =>
+          service.getGitRepositoryRoot('/non-existent-path'),
+        ).toThrow('Failed to get Git repository root');
       });
     });
   });
 
   describe('tryGetGitRepositoryRoot', () => {
     describe('when path is inside a git repository', () => {
-      it('returns repository root path', async () => {
-        const result = await service.tryGetGitRepositoryRoot(tempDir);
-        const resolvedTempDir = await fs.realpath(tempDir);
+      it('returns repository root path', () => {
+        gitRunner.mockReturnValue({ stdout: '/home/user/project\n' });
 
-        expect(result).toBe(resolvedTempDir);
+        const result = service.tryGetGitRepositoryRoot('/home/user/project');
+
+        expect(result).toBe('/home/user/project');
       });
     });
 
     describe('when path is not in a git repository', () => {
-      it('returns null', async () => {
-        const nonGitDir = await fs.mkdtemp(path.join(os.tmpdir(), 'non-git-'));
+      it('returns null', () => {
+        gitRunner.mockImplementation(() => {
+          throw new Error('fatal: not a git repository');
+        });
 
-        try {
-          const result = await service.tryGetGitRepositoryRoot(nonGitDir);
-
-          expect(result).toBeNull();
-        } finally {
-          await fs.rm(nonGitDir, { recursive: true, force: true });
-        }
-      });
-    });
-
-    describe('when path does not exist', () => {
-      it('returns null', async () => {
-        const nonExistentPath = path.join(os.tmpdir(), 'non-existent-path-xyz');
-
-        const result = await service.tryGetGitRepositoryRoot(nonExistentPath);
+        const result = service.tryGetGitRepositoryRoot('/non-git-dir');
 
         expect(result).toBeNull();
-      });
-    });
-  });
-
-  describe('getGitRepositoryRootSync', () => {
-    describe('when path is at repository root', () => {
-      it('returns repository root path', async () => {
-        const resolvedTempDir = await fs.realpath(tempDir);
-
-        const result = service.getGitRepositoryRootSync(tempDir);
-
-        expect(result).toBe(resolvedTempDir);
-      });
-    });
-
-    describe('when path is a subdirectory', () => {
-      it('returns repository root path', async () => {
-        const subDir = path.join(tempDir, 'src', 'main', 'java');
-        await fs.mkdir(subDir, { recursive: true });
-        const resolvedTempDir = await fs.realpath(tempDir);
-
-        const result = service.getGitRepositoryRootSync(subDir);
-
-        expect(result).toBe(resolvedTempDir);
-      });
-    });
-
-    describe('when path is not in a git repository', () => {
-      it('returns null', async () => {
-        const nonGitDir = await fs.mkdtemp(path.join(os.tmpdir(), 'non-git-'));
-
-        try {
-          const result = service.getGitRepositoryRootSync(nonGitDir);
-
-          expect(result).toBeNull();
-        } finally {
-          await fs.rm(nonGitDir, { recursive: true, force: true });
-        }
       });
     });
 
     describe('when path does not exist', () => {
       it('returns null', () => {
-        const nonExistentPath = path.join(os.tmpdir(), 'non-existent-path-xyz');
+        gitRunner.mockImplementation(() => {
+          throw new Error('ENOENT: no such file or directory');
+        });
 
-        const result = service.getGitRepositoryRootSync(nonExistentPath);
+        const result = service.tryGetGitRepositoryRoot('/non-existent-path');
 
         expect(result).toBeNull();
       });
     });
   });
 
-  describe('when inside a git worktree', () => {
-    let mainRepo: string;
-    let worktreeDir: string;
+  describe('getCurrentBranches', () => {
+    describe('when on a single branch', () => {
+      it('returns the branch name', () => {
+        gitRunner.mockReturnValue({
+          stdout: '* main\n  remotes/origin/main\n',
+        });
 
-    beforeEach(async () => {
-      // Create main repository with initial commit (required for worktrees)
-      mainRepo = await fs.mkdtemp(path.join(os.tmpdir(), 'git-main-'));
-      await execAsync('git init', { cwd: mainRepo });
-      await execAsync('git config user.email "test@example.com"', {
-        cwd: mainRepo,
-      });
-      await execAsync('git config user.name "Test User"', { cwd: mainRepo });
-      await fs.writeFile(path.join(mainRepo, 'README.md'), '# Test');
-      await execAsync('git add .', { cwd: mainRepo });
-      await execAsync('git commit -m "Initial commit"', { cwd: mainRepo });
+        const result = service.getCurrentBranches('/repo');
 
-      // Create a worktree
-      worktreeDir = path.join(os.tmpdir(), 'git-worktree-' + Date.now());
-      await execAsync(`git worktree add "${worktreeDir}" -b test-branch`, {
-        cwd: mainRepo,
+        expect(result).toEqual({ branches: ['main'] });
+        expect(gitRunner).toHaveBeenCalledWith('branch -a --contains HEAD', {
+          cwd: '/repo',
+        });
       });
     });
 
-    afterEach(async () => {
-      // Cleanup may fail if worktree was already removed, which is fine
-      await execAsync(`git worktree remove "${worktreeDir}" --force`, {
-        cwd: mainRepo,
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
-      }).catch(() => {});
-      await fs
-        .rm(worktreeDir, { recursive: true, force: true })
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
-        .catch(() => {});
-      await fs.rm(mainRepo, { recursive: true, force: true });
-    });
+    describe('when on multiple branches', () => {
+      it('returns all unique branch names', () => {
+        gitRunner.mockReturnValue({
+          stdout:
+            '* feature-branch\n  main\n  remotes/origin/feature-branch\n  remotes/origin/main\n',
+        });
 
-    it('has .git as a file (not directory) in worktree', async () => {
-      const gitPath = path.join(worktreeDir, '.git');
-      const stat = await fs.stat(gitPath);
+        const result = service.getCurrentBranches('/repo');
 
-      expect(stat.isFile()).toBe(true);
-      expect(stat.isDirectory()).toBe(false);
-    });
-
-    describe('getGitRepositoryRoot', () => {
-      it('returns worktree root path', async () => {
-        const resolvedWorktreeDir = await fs.realpath(worktreeDir);
-
-        const result = await service.getGitRepositoryRoot(worktreeDir);
-
-        expect(result).toBe(resolvedWorktreeDir);
-      });
-
-      it('returns worktree root path from subdirectory', async () => {
-        const subDir = path.join(worktreeDir, 'src');
-        await fs.mkdir(subDir, { recursive: true });
-        const resolvedWorktreeDir = await fs.realpath(worktreeDir);
-
-        const result = await service.getGitRepositoryRoot(subDir);
-
-        expect(result).toBe(resolvedWorktreeDir);
+        expect(result.branches.sort()).toEqual(['feature-branch', 'main']);
       });
     });
 
-    describe('getGitRepositoryRootSync', () => {
-      it('returns worktree root path', async () => {
-        const resolvedWorktreeDir = fsSync.realpathSync(worktreeDir);
+    describe('when not in a git repository', () => {
+      it('throws error', () => {
+        gitRunner.mockImplementation(() => {
+          throw new Error('fatal: not a git repository');
+        });
 
-        const result = service.getGitRepositoryRootSync(worktreeDir);
-
-        expect(result).toBe(resolvedWorktreeDir);
-      });
-
-      it('returns worktree root path from subdirectory', async () => {
-        const subDir = path.join(worktreeDir, 'src');
-        await fs.mkdir(subDir, { recursive: true });
-        const resolvedWorktreeDir = fsSync.realpathSync(worktreeDir);
-
-        const result = service.getGitRepositoryRootSync(subDir);
-
-        expect(result).toBe(resolvedWorktreeDir);
+        expect(() => service.getCurrentBranches('/non-git')).toThrow(
+          'Failed to get Git branches',
+        );
       });
     });
   });
 
-  describe('when only one remote is available', () => {
-    it('returns single remote', async () => {
-      await execAsync(
-        'git remote add origin git@github.com:PackmindHub/test-repo.git',
-        { cwd: tempDir },
-      );
+  describe('getGitRemoteUrl', () => {
+    describe('when only one remote is available', () => {
+      it('returns single remote', () => {
+        gitRunner.mockReturnValue({
+          stdout:
+            'origin\tgit@github.com:PackmindHub/test-repo.git (fetch)\norigin\tgit@github.com:PackmindHub/test-repo.git (push)\n',
+        });
 
-      const result = await service.getGitRemoteUrl(tempDir);
+        const result = service.getGitRemoteUrl('/repo');
 
-      expect(result).toEqual({
-        gitRemoteUrl: 'github.com/PackmindHub/test-repo',
-      });
-    });
-  });
-
-  describe('when multiple remotes are available', () => {
-    it('returns origin remote ', async () => {
-      await execAsync(
-        'git remote add origin git@github.com:PackmindHub/main-repo.git',
-        { cwd: tempDir },
-      );
-      await execAsync(
-        'git remote add upstream git@github.com:OtherUser/upstream-repo.git',
-        { cwd: tempDir },
-      );
-
-      const result = await service.getGitRemoteUrl(tempDir);
-
-      expect(result).toEqual({
-        gitRemoteUrl: 'github.com/PackmindHub/main-repo',
-      });
-    });
-  });
-
-  describe('when origin parameter is provided', () => {
-    it('returns specified remote', async () => {
-      await execAsync(
-        'git remote add origin git@github.com:PackmindHub/main-repo.git',
-        { cwd: tempDir },
-      );
-      await execAsync(
-        'git remote add upstream git@github.com:OtherUser/upstream-repo.git',
-        { cwd: tempDir },
-      );
-
-      const result = await service.getGitRemoteUrl(tempDir, 'upstream');
-
-      expect(result).toEqual({
-        gitRemoteUrl: 'github.com/OtherUser/upstream-repo',
+        expect(result).toEqual({
+          gitRemoteUrl: 'github.com/PackmindHub/test-repo',
+        });
+        expect(gitRunner).toHaveBeenCalledWith('remote -v', { cwd: '/repo' });
       });
     });
 
-    it('throws error if there is no origin remote', async () => {
-      await execAsync(
-        'git remote add upstream git@github.com:OtherUser/upstream-repo.git',
-        { cwd: tempDir },
-      );
-      await execAsync(
-        'git remote add fork git@github.com:MyUser/fork-repo.git',
-        {
-          cwd: tempDir,
-        },
-      );
+    describe('when multiple remotes are available', () => {
+      it('returns origin remote by default', () => {
+        gitRunner.mockReturnValue({
+          stdout:
+            'origin\tgit@github.com:PackmindHub/main-repo.git (fetch)\norigin\tgit@github.com:PackmindHub/main-repo.git (push)\nupstream\tgit@github.com:OtherUser/upstream-repo.git (fetch)\nupstream\tgit@github.com:OtherUser/upstream-repo.git (push)\n',
+        });
 
-      await expect(service.getGitRemoteUrl(tempDir)).rejects.toThrow(
-        "Multiple remotes found but no 'origin' remote. Please specify the remote name.",
-      );
+        const result = service.getGitRemoteUrl('/repo');
+
+        expect(result).toEqual({
+          gitRemoteUrl: 'github.com/PackmindHub/main-repo',
+        });
+      });
     });
-  });
 
-  it('normalizes SSH URLs correctly', async () => {
-    await execAsync(
-      'git remote add origin git@gitlab.com:company/project.git',
-      { cwd: tempDir },
-    );
+    describe('when origin parameter is provided', () => {
+      it('returns specified remote', () => {
+        gitRunner.mockReturnValue({
+          stdout:
+            'origin\tgit@github.com:PackmindHub/main-repo.git (fetch)\norigin\tgit@github.com:PackmindHub/main-repo.git (push)\nupstream\tgit@github.com:OtherUser/upstream-repo.git (fetch)\nupstream\tgit@github.com:OtherUser/upstream-repo.git (push)\n',
+        });
 
-    const result = await service.getGitRemoteUrl(tempDir);
+        const result = service.getGitRemoteUrl('/repo', 'upstream');
 
-    expect(result).toEqual({
-      gitRemoteUrl: 'gitlab.com/company/project',
+        expect(result).toEqual({
+          gitRemoteUrl: 'github.com/OtherUser/upstream-repo',
+        });
+      });
     });
-  });
 
-  it('normalizes HTTPS URLs correctly', async () => {
-    await execAsync(
-      'git remote add origin https://github.com/PackmindHub/test-repo.git',
-      { cwd: tempDir },
-    );
+    describe('when there is no origin remote and multiple remotes exist', () => {
+      it('throws error', () => {
+        gitRunner.mockReturnValue({
+          stdout:
+            'upstream\tgit@github.com:OtherUser/upstream-repo.git (fetch)\nupstream\tgit@github.com:OtherUser/upstream-repo.git (push)\nfork\tgit@github.com:MyUser/fork-repo.git (fetch)\nfork\tgit@github.com:MyUser/fork-repo.git (push)\n',
+        });
 
-    const result = await service.getGitRemoteUrl(tempDir);
-
-    expect(result).toEqual({
-      gitRemoteUrl: 'github.com/PackmindHub/test-repo',
+        expect(() => service.getGitRemoteUrl('/repo')).toThrow(
+          "Multiple remotes found but no 'origin' remote. Please specify the remote name.",
+        );
+      });
     });
-  });
 
-  describe('when no remotes are found', () => {
-    it('throws error', async () => {
-      await expect(service.getGitRemoteUrl(tempDir)).rejects.toThrow(
-        'No Git remotes found in the repository',
-      );
+    describe('when specified remote is not found', () => {
+      it('throws error', () => {
+        gitRunner.mockReturnValue({
+          stdout:
+            'origin\tgit@github.com:PackmindHub/test-repo.git (fetch)\norigin\tgit@github.com:PackmindHub/test-repo.git (push)\n',
+        });
+
+        expect(() => service.getGitRemoteUrl('/repo', 'nonexistent')).toThrow(
+          "Remote 'nonexistent' not found in repository",
+        );
+      });
     });
-  });
 
-  describe('when specified remote is not found', () => {
-    it('throws error', async () => {
-      await execAsync(
-        'git remote add origin git@github.com:PackmindHub/test-repo.git',
-        { cwd: tempDir },
-      );
+    describe('when no remotes are found', () => {
+      it('throws error', () => {
+        gitRunner.mockReturnValue({ stdout: '' });
 
-      await expect(
-        service.getGitRemoteUrl(tempDir, 'nonexistent'),
-      ).rejects.toThrow("Remote 'nonexistent' not found in repository");
+        expect(() => service.getGitRemoteUrl('/repo')).toThrow(
+          'No Git remotes found in the repository',
+        );
+      });
     });
-  });
 
-  describe('when path is not a git repository', () => {
-    it('throws error', async () => {
-      const nonGitDir = await fs.mkdtemp(path.join(os.tmpdir(), 'non-git-'));
+    describe('when normalizing SSH URLs', () => {
+      it('normalizes SSH URLs correctly', () => {
+        gitRunner.mockReturnValue({
+          stdout:
+            'origin\tgit@gitlab.com:company/project.git (fetch)\norigin\tgit@gitlab.com:company/project.git (push)\n',
+        });
 
-      try {
-        await expect(service.getGitRemoteUrl(nonGitDir)).rejects.toThrow(
+        const result = service.getGitRemoteUrl('/repo');
+
+        expect(result).toEqual({
+          gitRemoteUrl: 'gitlab.com/company/project',
+        });
+      });
+    });
+
+    describe('when normalizing HTTPS URLs', () => {
+      it('normalizes HTTPS URLs correctly', () => {
+        gitRunner.mockReturnValue({
+          stdout:
+            'origin\thttps://github.com/PackmindHub/test-repo.git (fetch)\norigin\thttps://github.com/PackmindHub/test-repo.git (push)\n',
+        });
+
+        const result = service.getGitRemoteUrl('/repo');
+
+        expect(result).toEqual({
+          gitRemoteUrl: 'github.com/PackmindHub/test-repo',
+        });
+      });
+    });
+
+    describe('when path is not a git repository', () => {
+      it('throws error', () => {
+        gitRunner.mockImplementation(() => {
+          throw new Error('fatal: not a git repository');
+        });
+
+        expect(() => service.getGitRemoteUrl('/non-git')).toThrow(
           'Failed to get Git remote URL',
         );
-      } finally {
-        await fs.rm(nonGitDir, { recursive: true, force: true });
-      }
+      });
     });
   });
 
   describe('getModifiedFiles', () => {
     describe('when there are no modified files', () => {
-      it('returns empty array', async () => {
-        // Create initial commit
-        await fs.writeFile(path.join(tempDir, 'file.txt'), 'content');
-        await execAsync('git add .', { cwd: tempDir });
-        await execAsync('git commit -m "Initial commit"', { cwd: tempDir });
+      it('returns empty array', () => {
+        gitRunner
+          .mockReturnValueOnce({ stdout: '/repo\n' }) // getGitRepositoryRoot
+          .mockReturnValueOnce({ stdout: '' }) // git diff --name-only HEAD
+          .mockReturnValueOnce({ stdout: '/repo\n' }) // getGitRepositoryRoot (for untracked)
+          .mockReturnValueOnce({ stdout: '' }); // git ls-files
 
-        const result = await service.getModifiedFiles(tempDir);
+        const result = service.getModifiedFiles('/repo');
 
         expect(result).toEqual([]);
       });
     });
 
     describe('when there are staged modified files', () => {
-      it('returns modified file paths', async () => {
-        // Create initial commit
-        await fs.writeFile(path.join(tempDir, 'file.txt'), 'content');
-        await execAsync('git add .', { cwd: tempDir });
-        await execAsync('git commit -m "Initial commit"', { cwd: tempDir });
+      it('returns modified file paths', () => {
+        gitRunner
+          .mockReturnValueOnce({ stdout: '/repo\n' })
+          .mockReturnValueOnce({ stdout: 'file.txt\n' })
+          .mockReturnValueOnce({ stdout: '/repo\n' })
+          .mockReturnValueOnce({ stdout: '' });
 
-        // Modify and stage file
-        await fs.writeFile(path.join(tempDir, 'file.txt'), 'modified content');
-        await execAsync('git add .', { cwd: tempDir });
+        const result = service.getModifiedFiles('/repo');
 
-        const result = await service.getModifiedFiles(tempDir);
-        const resolvedTempDir = await fs.realpath(tempDir);
-
-        expect(result).toEqual([path.join(resolvedTempDir, 'file.txt')]);
-      });
-    });
-
-    describe('when there are unstaged modified files', () => {
-      it('returns modified file paths', async () => {
-        // Create initial commit
-        await fs.writeFile(path.join(tempDir, 'file.txt'), 'content');
-        await execAsync('git add .', { cwd: tempDir });
-        await execAsync('git commit -m "Initial commit"', { cwd: tempDir });
-
-        // Modify file without staging
-        await fs.writeFile(path.join(tempDir, 'file.txt'), 'modified content');
-
-        const result = await service.getModifiedFiles(tempDir);
-        const resolvedTempDir = await fs.realpath(tempDir);
-
-        expect(result).toEqual([path.join(resolvedTempDir, 'file.txt')]);
+        expect(result).toEqual([path.join('/repo', 'file.txt')]);
       });
     });
 
     describe('when there are untracked files', () => {
-      it('returns untracked file paths', async () => {
-        // Create initial commit
-        await fs.writeFile(path.join(tempDir, 'file.txt'), 'content');
-        await execAsync('git add .', { cwd: tempDir });
-        await execAsync('git commit -m "Initial commit"', { cwd: tempDir });
+      it('returns untracked file paths', () => {
+        gitRunner
+          .mockReturnValueOnce({ stdout: '/repo\n' })
+          .mockReturnValueOnce({ stdout: '' })
+          .mockReturnValueOnce({ stdout: '/repo\n' })
+          .mockReturnValueOnce({ stdout: 'untracked.txt\n' });
 
-        // Add untracked file
-        await fs.writeFile(path.join(tempDir, 'untracked.txt'), 'new content');
+        const result = service.getModifiedFiles('/repo');
 
-        const result = await service.getModifiedFiles(tempDir);
-        const resolvedTempDir = await fs.realpath(tempDir);
-
-        expect(result).toEqual([path.join(resolvedTempDir, 'untracked.txt')]);
+        expect(result).toEqual([path.join('/repo', 'untracked.txt')]);
       });
     });
 
     describe('when there are both modified and untracked files', () => {
-      it('returns all file paths', async () => {
-        // Create initial commit
-        await fs.writeFile(path.join(tempDir, 'file.txt'), 'content');
-        await execAsync('git add .', { cwd: tempDir });
-        await execAsync('git commit -m "Initial commit"', { cwd: tempDir });
+      it('returns all file paths', () => {
+        gitRunner
+          .mockReturnValueOnce({ stdout: '/repo\n' })
+          .mockReturnValueOnce({ stdout: 'file.txt\n' })
+          .mockReturnValueOnce({ stdout: '/repo\n' })
+          .mockReturnValueOnce({ stdout: 'untracked.txt\n' });
 
-        // Modify existing file and add new untracked file
-        await fs.writeFile(path.join(tempDir, 'file.txt'), 'modified content');
-        await fs.writeFile(path.join(tempDir, 'untracked.txt'), 'new content');
-
-        const result = await service.getModifiedFiles(tempDir);
-        const resolvedTempDir = await fs.realpath(tempDir);
+        const result = service.getModifiedFiles('/repo');
 
         expect(result.sort()).toEqual([
-          path.join(resolvedTempDir, 'file.txt'),
-          path.join(resolvedTempDir, 'untracked.txt'),
+          path.join('/repo', 'file.txt'),
+          path.join('/repo', 'untracked.txt'),
         ]);
+      });
+    });
+
+    describe('when HEAD does not exist (first commit scenario)', () => {
+      it('gets staged files only', () => {
+        let callCount = 0;
+        gitRunner.mockImplementation(() => {
+          callCount++;
+          if (callCount === 1) return { stdout: '/repo\n' }; // getGitRepositoryRoot
+          if (callCount === 2)
+            throw new Error('unknown revision or path not in the working tree');
+          if (callCount === 3) return { stdout: 'staged.txt\n' }; // diff --cached
+          if (callCount === 4) return { stdout: '/repo\n' }; // getGitRepositoryRoot (for untracked)
+          return { stdout: '' }; // git ls-files
+        });
+
+        const result = service.getModifiedFiles('/repo');
+
+        expect(result).toEqual([path.join('/repo', 'staged.txt')]);
       });
     });
   });
 
   describe('getUntrackedFiles', () => {
     describe('when there are no untracked files', () => {
-      it('returns empty array', async () => {
-        // Create initial commit
-        await fs.writeFile(path.join(tempDir, 'file.txt'), 'content');
-        await execAsync('git add .', { cwd: tempDir });
-        await execAsync('git commit -m "Initial commit"', { cwd: tempDir });
+      it('returns empty array', () => {
+        gitRunner
+          .mockReturnValueOnce({ stdout: '/repo\n' })
+          .mockReturnValueOnce({ stdout: '' });
 
-        const result = await service.getUntrackedFiles(tempDir);
+        const result = service.getUntrackedFiles('/repo');
 
         expect(result).toEqual([]);
+        expect(gitRunner).toHaveBeenLastCalledWith(
+          'ls-files --others --exclude-standard',
+          { cwd: '/repo' },
+        );
       });
     });
 
     describe('when there are untracked files', () => {
-      it('returns untracked file paths', async () => {
-        // Create initial commit
-        await fs.writeFile(path.join(tempDir, 'file.txt'), 'content');
-        await execAsync('git add .', { cwd: tempDir });
-        await execAsync('git commit -m "Initial commit"', { cwd: tempDir });
+      it('returns untracked file paths', () => {
+        gitRunner
+          .mockReturnValueOnce({ stdout: '/repo\n' })
+          .mockReturnValueOnce({ stdout: 'new1.txt\nnew2.txt\n' });
 
-        // Add untracked files
-        await fs.writeFile(path.join(tempDir, 'new1.txt'), 'content');
-        await fs.writeFile(path.join(tempDir, 'new2.txt'), 'content');
-
-        const result = await service.getUntrackedFiles(tempDir);
-        const resolvedTempDir = await fs.realpath(tempDir);
+        const result = service.getUntrackedFiles('/repo');
 
         expect(result.sort()).toEqual([
-          path.join(resolvedTempDir, 'new1.txt'),
-          path.join(resolvedTempDir, 'new2.txt'),
+          path.join('/repo', 'new1.txt'),
+          path.join('/repo', 'new2.txt'),
         ]);
       });
     });
@@ -502,39 +390,39 @@ describe('GitService', () => {
 
   describe('getModifiedLines', () => {
     describe('when there are no modifications', () => {
-      it('returns empty array', async () => {
-        // Create initial commit
-        await fs.writeFile(path.join(tempDir, 'file.txt'), 'line1\nline2\n');
-        await execAsync('git add .', { cwd: tempDir });
-        await execAsync('git commit -m "Initial commit"', { cwd: tempDir });
+      it('returns empty array', () => {
+        gitRunner
+          .mockReturnValueOnce({ stdout: '/repo\n' }) // getGitRepositoryRoot
+          .mockReturnValueOnce({ stdout: '' }) // git diff HEAD --unified=0
+          .mockReturnValueOnce({ stdout: '/repo\n' }) // getGitRepositoryRoot (for untracked)
+          .mockReturnValueOnce({ stdout: '' }); // git ls-files
 
-        const result = await service.getModifiedLines(tempDir);
+        const result = service.getModifiedLines('/repo');
 
         expect(result).toEqual([]);
       });
     });
 
     describe('when there are modified lines in tracked files', () => {
-      it('returns modified line ranges', async () => {
-        // Create initial commit
-        await fs.writeFile(
-          path.join(tempDir, 'file.txt'),
-          'line1\nline2\nline3\n',
-        );
-        await execAsync('git add .', { cwd: tempDir });
-        await execAsync('git commit -m "Initial commit"', { cwd: tempDir });
+      it('returns modified line ranges', () => {
+        const diffOutput = `diff --git a/file.txt b/file.txt
+index abc123..def456 100644
+--- a/file.txt
++++ b/file.txt
+@@ -2 +2 @@ context
+-old line
++new line`;
 
-        // Modify line 2
-        await fs.writeFile(
-          path.join(tempDir, 'file.txt'),
-          'line1\nmodified\nline3\n',
-        );
+        gitRunner
+          .mockReturnValueOnce({ stdout: '/repo\n' })
+          .mockReturnValueOnce({ stdout: diffOutput })
+          .mockReturnValueOnce({ stdout: '/repo\n' })
+          .mockReturnValueOnce({ stdout: '' });
 
-        const result = await service.getModifiedLines(tempDir);
-        const resolvedTempDir = await fs.realpath(tempDir);
+        const result = service.getModifiedLines('/repo');
 
         expect(result).toContainEqual({
-          file: path.join(resolvedTempDir, 'file.txt'),
+          file: path.join('/repo', 'file.txt'),
           startLine: 2,
           lineCount: 1,
         });
@@ -542,23 +430,25 @@ describe('GitService', () => {
     });
 
     describe('when there are added lines', () => {
-      it('returns added line ranges', async () => {
-        // Create initial commit
-        await fs.writeFile(path.join(tempDir, 'file.txt'), 'line1\nline2\n');
-        await execAsync('git add .', { cwd: tempDir });
-        await execAsync('git commit -m "Initial commit"', { cwd: tempDir });
+      it('returns added line ranges', () => {
+        const diffOutput = `diff --git a/file.txt b/file.txt
+index abc123..def456 100644
+--- a/file.txt
++++ b/file.txt
+@@ -2,0 +3,2 @@ context
++new1
++new2`;
 
-        // Add new lines
-        await fs.writeFile(
-          path.join(tempDir, 'file.txt'),
-          'line1\nline2\nnew1\nnew2\n',
-        );
+        gitRunner
+          .mockReturnValueOnce({ stdout: '/repo\n' })
+          .mockReturnValueOnce({ stdout: diffOutput })
+          .mockReturnValueOnce({ stdout: '/repo\n' })
+          .mockReturnValueOnce({ stdout: '' });
 
-        const result = await service.getModifiedLines(tempDir);
-        const resolvedTempDir = await fs.realpath(tempDir);
+        const result = service.getModifiedLines('/repo');
 
         expect(result).toContainEqual({
-          file: path.join(resolvedTempDir, 'file.txt'),
+          file: path.join('/repo', 'file.txt'),
           startLine: 3,
           lineCount: 2,
         });
@@ -566,23 +456,47 @@ describe('GitService', () => {
     });
 
     describe('when there are untracked files', () => {
-      it('returns all lines as modified', async () => {
-        // Create initial commit
-        await fs.writeFile(path.join(tempDir, 'file.txt'), 'content\n');
-        await execAsync('git add .', { cwd: tempDir });
-        await execAsync('git commit -m "Initial commit"', { cwd: tempDir });
+      it('returns empty when file does not exist', () => {
+        gitRunner
+          .mockReturnValueOnce({ stdout: '/repo\n' }) // getGitRepositoryRoot
+          .mockReturnValueOnce({ stdout: '' }) // git diff HEAD --unified=0
+          .mockReturnValueOnce({ stdout: '/repo\n' }) // getGitRepositoryRoot (for untracked)
+          .mockReturnValueOnce({ stdout: 'untracked.txt\n' }); // git ls-files
 
-        // Add untracked file with 3 lines
-        await fs.writeFile(
-          path.join(tempDir, 'untracked.txt'),
-          'line1\nline2\nline3\n',
-        );
+        // countFileLines uses execSync for wc -l
+        // The file won't exist, so countFileLines returns 0 and no entry is added
+        const result = service.getModifiedLines('/repo');
 
-        const result = await service.getModifiedLines(tempDir);
-        const resolvedTempDir = await fs.realpath(tempDir);
+        expect(result).toEqual([]);
+      });
+    });
+
+    describe('when HEAD does not exist (first commit scenario)', () => {
+      it('gets staged diff only', () => {
+        const diffOutput = `diff --git a/file.txt b/file.txt
+new file mode 100644
+index 0000000..abc123
+--- /dev/null
++++ b/file.txt
+@@ -0,0 +1,3 @@
++line1
++line2
++line3`;
+
+        let callCount = 0;
+        gitRunner.mockImplementation(() => {
+          callCount++;
+          if (callCount === 1) return { stdout: '/repo\n' }; // getGitRepositoryRoot
+          if (callCount === 2) throw new Error('unknown revision');
+          if (callCount === 3) return { stdout: diffOutput }; // diff --cached
+          if (callCount === 4) return { stdout: '/repo\n' }; // getGitRepositoryRoot (for untracked)
+          return { stdout: '' }; // git ls-files
+        });
+
+        const result = service.getModifiedLines('/repo');
 
         expect(result).toContainEqual({
-          file: path.join(resolvedTempDir, 'untracked.txt'),
+          file: path.join('/repo', 'file.txt'),
           startLine: 1,
           lineCount: 3,
         });
