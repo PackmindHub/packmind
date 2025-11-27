@@ -17,6 +17,7 @@ import {
 interface ProgramGenerationSectionProps {
   isOpen: boolean;
   standardId: string;
+  standardName?: string;
   ruleId: string;
   activeConfigurations: ActiveConfigurationCardData[];
   draftPrograms: DraftCardData[];
@@ -40,6 +41,7 @@ export const ProgramGenerationAccordion: React.FC<
 > = ({
   isOpen,
   standardId,
+  standardName,
   ruleId,
   activeConfigurations,
   draftPrograms,
@@ -139,6 +141,7 @@ export const ProgramGenerationAccordion: React.FC<
           onGenerateProgram={onGenerateProgram}
           isGeneratingProgram={isGeneratingProgram}
           standardId={standardId}
+          standardName={standardName}
           ruleId={ruleId}
           onTestProgram={onTestProgram}
           onActivateDraft={onActivateDraft}

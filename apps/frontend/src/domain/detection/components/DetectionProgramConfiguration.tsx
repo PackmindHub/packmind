@@ -33,6 +33,7 @@ export const DetectionProgramConfiguration: React.FC<
   DetectionProgramConfigurationProps
 > = ({
   standardId,
+  standardName,
   ruleId,
   detectionLanguages,
   selectedLanguage,
@@ -118,6 +119,7 @@ export const DetectionProgramConfiguration: React.FC<
       <ProgramGenerationAccordion
         isOpen={isProgramOpen}
         standardId={standardId}
+        standardName={standardName}
         ruleId={ruleId}
         activeConfigurations={activeConfigurations}
         draftPrograms={draftPrograms}
