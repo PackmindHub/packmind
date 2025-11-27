@@ -456,7 +456,7 @@ index abc123..def456 100644
     });
 
     describe('when there are untracked files', () => {
-      it('returns empty when file does not exist', () => {
+      it('returns empty', () => {
         gitRunner
           .mockReturnValueOnce({ stdout: '/repo\n' }) // getGitRepositoryRoot
           .mockReturnValueOnce({ stdout: '' }) // git diff HEAD --unified=0
