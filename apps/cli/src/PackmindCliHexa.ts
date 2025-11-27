@@ -33,6 +33,7 @@ import {
   IGetPackageSummaryResult,
 } from './domain/useCases/IGetPackageSummaryUseCase';
 import { HierarchicalConfigResult, PackmindFileConfig } from '@packmind/types';
+import { logWarningConsole } from './infra/utils/consoleLogger';
 
 const origin = 'PackmindCliHexa';
 
@@ -141,8 +142,8 @@ export class PackmindCliHexa {
     );
 
     if (hasNonWildcardVersions) {
-      console.log(
-        'WARN: Package versions are not supported yet, getting the latest version',
+      logWarningConsole(
+        'Package versions are not supported yet, getting the latest version',
       );
     }
 
