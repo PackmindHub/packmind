@@ -14,6 +14,7 @@ import { standardVersionFactory } from '../../../../test/standardVersionFactory'
 import { ruleFactory } from '../../../../test/ruleFactory';
 import { v4 as uuidv4 } from 'uuid';
 import { PackmindLogger } from '@packmind/logger';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
@@ -32,6 +33,7 @@ describe('AddRuleToStandardUsecase', () => {
   let generateStandardSummaryDelayedJob: jest.Mocked<GenerateStandardSummaryDelayedJob>;
   let ruleRepository: jest.Mocked<IRuleRepository>;
   let ruleExampleRepository: jest.Mocked<IRuleExampleRepository>;
+  let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let eventTrackingPort: jest.Mocked<IEventTrackingPort> | undefined;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
@@ -86,6 +88,10 @@ describe('AddRuleToStandardUsecase', () => {
       findAll: jest.fn(),
     } as unknown as jest.Mocked<IRuleExampleRepository>;
 
+    eventEmitterService = {
+      emit: jest.fn().mockReturnValue(true),
+    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+
     eventTrackingPort = {
       trackEvent: jest.fn().mockResolvedValue(undefined),
     } as jest.Mocked<IEventTrackingPort>;
@@ -101,6 +107,7 @@ describe('AddRuleToStandardUsecase', () => {
       ruleRepository,
       ruleExampleRepository,
       generateStandardSummaryDelayedJob,
+      eventEmitterService,
       undefined, // linterAdapter
       eventTrackingPort,
       stubbedLogger,

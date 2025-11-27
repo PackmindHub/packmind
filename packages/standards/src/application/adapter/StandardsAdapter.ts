@@ -234,6 +234,7 @@ export class StandardsAdapter
       this.repositories.getRuleRepository(),
       this.repositories.getRuleExampleRepository(),
       this.standardDelayedJobs.standardSummaryDelayedJob,
+      this.eventEmitterService,
       this.linterPort,
       this.eventTrackingPort,
     );
