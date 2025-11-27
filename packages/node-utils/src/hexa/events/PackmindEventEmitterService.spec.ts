@@ -28,22 +28,26 @@ describe('PackmindEventEmitterService', () => {
   });
 
   describe('emit', () => {
-    it('returns true when event has listeners', () => {
-      service.on(TestUserCreatedEvent, jest.fn());
+    describe('when event has listeners', () => {
+      it('returns true', () => {
+        service.on(TestUserCreatedEvent, jest.fn());
 
-      const result = service.emit(
-        new TestUserCreatedEvent({ userId: 'user-123' }),
-      );
+        const result = service.emit(
+          new TestUserCreatedEvent({ userId: 'user-123' }),
+        );
 
-      expect(result).toBe(true);
+        expect(result).toBe(true);
+      });
     });
 
-    it('returns false when event has no listeners', () => {
-      const result = service.emit(
-        new TestUserCreatedEvent({ userId: 'user-123' }),
-      );
+    describe('when event has no listeners', () => {
+      it('returns false', () => {
+        const result = service.emit(
+          new TestUserCreatedEvent({ userId: 'user-123' }),
+        );
 
-      expect(result).toBe(false);
+        expect(result).toBe(false);
+      });
     });
 
     it('passes event instance to handler', () => {
@@ -120,17 +124,19 @@ describe('PackmindEventEmitterService', () => {
       expect(handler).not.toHaveBeenCalled();
     });
 
-    it('keeps other handlers when removing one', () => {
-      const handler1 = jest.fn();
-      const handler2 = jest.fn();
+    describe('when removing one handler', () => {
+      it('keeps other handlers', () => {
+        const handler1 = jest.fn();
+        const handler2 = jest.fn();
 
-      service.on(TestUserCreatedEvent, handler1);
-      service.on(TestUserCreatedEvent, handler2);
-      service.off(TestUserCreatedEvent, handler1);
-      service.emit(new TestUserCreatedEvent({ userId: 'user-123' }));
+        service.on(TestUserCreatedEvent, handler1);
+        service.on(TestUserCreatedEvent, handler2);
+        service.off(TestUserCreatedEvent, handler1);
+        service.emit(new TestUserCreatedEvent({ userId: 'user-123' }));
 
-      expect(handler1).not.toHaveBeenCalled();
-      expect(handler2).toHaveBeenCalledTimes(1);
+        expect(handler1).not.toHaveBeenCalled();
+        expect(handler2).toHaveBeenCalledTimes(1);
+      });
     });
 
     it('returns service for chaining', () => {
