@@ -1,0 +1,47 @@
+---
+alwaysApply: true
+---
+
+# Packmind Recipes
+
+🚨 **MANDATORY STEP** 🚨
+
+Before writing, editing, or generating ANY code:
+
+**ALWAYS READ**: the available recipes below to see what recipes are available
+
+## Recipe Usage Rules:
+- **MANDATORY**: Always check the recipes list first
+- **CONDITIONAL**: Only read/use individual recipes if they are relevant to your task
+- **OPTIONAL**: If no recipes are relevant, proceed without using any
+
+## Recipe Usage Tracking:
+When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you MUST call the 'packmind_notify_recipe_usage' MCP tool with:
+* Recipe slugs array (e.g., ["recipe-name"] from "recipe-name.md")
+* aiAgent: "Cursor"
+* gitRepo: "PackmindHub/packmind-monorepo"
+* target: "/"
+
+**Remember: Always check the recipes list first, but only use recipes that actually apply to your specific task.**`
+
+## Available recipes
+
+- [Check GitHub Webhook Headers](.packmind/recipes/check-github-webhook-headers.md) : Validate GitHub webhook headers to ensure only push events are processed, enhancing event handling efficiency in your application.
+- [Create or update model and TypeORM schemas](.packmind/recipes/create-or-update-model-and-typeorm-schemas.md) : "Create new models and update existing ones with TypeORM to ensure proper database structure and maintainability when adapting to evolving business requirements."
+- [Create Organization-Scoped Page with React Router Navigation](.packmind/recipes/create-organization-scoped-page-with-react-router-navigation.md) : "Create organization-scoped pages in a React Router application to enhance navigation and user experience by ensuring secure access to relevant data for each organization."
+- [Create UseCase Test Class Template](.packmind/recipes/create-usecase-test-class-template.md) : "Create a comprehensive test class for UseCases to ensure consistent testing patterns and thorough coverage of various execution scenarios in the Packmind monorepo."
+- [Creating a new test factory](.packmind/recipes/creating-a-new-test-factory.md) : "Create a test factory for each entity to generate consistent and randomized test data, ensuring reliable testing and validation of your models."
+- [Creating End-User Documentation for Packmind](.packmind/recipes/creating-end-user-documentation-for-packmind.md) : Create clear and concise end-user documentation for Packmind features to empower users in accomplishing their tasks effectively while avoiding unnecessary technical details.
+- [Cross-Domain Integration with Port/Adapter Pattern](.packmind/recipes/cross-domain-integration-with-portadapter-pattern.md) : Integrate a consumer domain with a provider domain using lazy dependency injection through the Port/Adapter pattern to enable cross-domain operations while avoiding circular dependencies and maintaining loose coupling.
+- [Exposing Services from Hexagonal Architecture using Port-Adapter Pattern](.packmind/recipes/exposing-services-from-hexagonal-architecture-using-port-adapter-pattern.md) : Expose services from hexagonal domains using the Port-Adapter pattern to ensure secure inter-domain communication and maintain clean architecture principles while avoiding circular dependencies.
+- [Gateway Pattern Implementation in Packmind Frontend](.packmind/recipes/gateway-pattern-implementation-in-packmind-frontend.md) : Implement gateways in the Packmind frontend to create a clean abstraction for API communication, enhancing maintainability and testability across the application.
+- [Hexa Entities Migration to Shared Types](.packmind/recipes/hexa-entities-migration-to-shared-types.md) : Migrate cross-domain entities to a shared types folder to eliminate circular dependencies and establish a single source of truth for improved code organization and maintainability.
+- [hexagonal usecase port-adapter refactoring](.packmind/recipes/hexagonal-usecase-port-adapter-refactoring.md) : Refactor hexagonal use cases to implement a domain Port interface that simplifies dependency management and enhances testability and maintainability when integrating multiple use cases at the service layer.
+- [How to Write TypeORM Migrations in Packmind](.packmind/recipes/how-to-write-typeorm-migrations-in-packmind.md) : "Write TypeORM migrations in the Packmind monorepo to manage database schema changes effectively while ensuring proper logging and rollback capabilities."
+- [Migrate API Endpoint to Organization-Scoped Architecture](.packmind/recipes/migrate-api-endpoint-to-organization-scoped-architecture.md) : Migrate existing flat API endpoints (e.g., POST /standard/:id) to the new hierarchical organization-scoped structure (e.g., POST /organizations/:orgId/standards/:id) to improve API clarity and enforce organization-based access control, relevant when modernizing legacy endpoints or implementing organization-level access patterns.
+- [Refactor Domain Package to Hexagonal Architecture with Port-Adapter Pattern](.packmind/recipes/refactor-domain-package-to-hexagonal-architecture-with-port-adapter-pattern.md) : Transform a domain's facade UseCases class into a proper hexagonal architecture by creating an adapter, migrating contracts to shared, and implementing the port-adapter pattern for cross-domain integration.
+- [Refactor Use Case to Follow IUseCase Pattern](.packmind/recipes/refactor-use-case-to-follow-iusecase-pattern.md) : Refactor existing use cases to implement the IUseCase pattern for consistent command/response typing and enhanced business rule enforcement, ensuring maintainability and clarity across your application's architecture.
+- [Repository Implementation and Testing Pattern](.packmind/recipes/repository-implementation-and-testing-pattern.md) : Implement a standardized repository with soft delete functionality and comprehensive tests to ensure maintainable code and reliable data access patterns in the Packmind codebase.
+- [Using Environment Variables with Configuration.getConfig](.packmind/recipes/using-environment-variables-with-configurationgetconfig.md) : Access environment variables using `Configuration.getConfig()` to streamline configuration management across local and production environments, ensuring secure and consistent access to sensitive data.
+- [Using ErrorBoundary Component](.packmind/recipes/using-errorboundary-component.md) : Use the ErrorBoundary component to add custom error UI for specific routes or isolate critical features like dashboard widgets, remembering that a global error boundary already handles most cases automatically.
+- [Wrapping Chakra UI with Slot Components](.packmind/recipes/wrapping-chakra-ui-with-slot-components.md) : "Create slot components to wrap Chakra UI primitives for enhanced custom composition and API consistency in your design system."

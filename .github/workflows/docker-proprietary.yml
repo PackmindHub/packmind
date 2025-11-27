@@ -1,0 +1,323 @@
+name: Docker Proprietary Image Build
+
+env:
+  API_IMAGE_NAME: packmind/api-proprietary
+  FRONTEND_IMAGE_NAME: packmind/frontend-proprietary
+  MCP_IMAGE_NAME: packmind/mcp-proprietary
+
+on:
+  workflow_call:
+    inputs:
+      api-artifact:
+        required: true
+        type: string
+        description: 'API Proprietary build artifact name'
+      frontend-artifact:
+        required: true
+        type: string
+        description: 'Frontend Proprietary build artifact name'
+      mcp-server-artifact:
+        required: true
+        type: string
+        description: 'MCP Server Proprietary build artifact name'
+      node-version:
+        required: true
+        type: string
+        description: 'Node.js version to use'
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: true
+        description: 'Docker Hub username'
+      DOCKERHUB_TOKEN:
+        required: true
+        description: 'Docker Hub access token'
+    outputs:
+      api-image-tag:
+        description: 'API Proprietary Docker image tag'
+        value: ${{ jobs.build-api-image.outputs.image-tag }}
+      frontend-image-tag:
+        description: 'Frontend Proprietary Docker image tag'
+        value: ${{ jobs.build-frontend-image.outputs.image-tag }}
+      mcp-server-image-tag:
+        description: 'MCP Server Proprietary Docker image tag'
+        value: ${{ jobs.build-mcp-server-image.outputs.image-tag }}
+      version:
+        description: 'Package version used for Docker tags'
+        value: ${{ jobs.build-api-image.outputs.version }}
+
+jobs:
+  build-api-image:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    outputs:
+      image-tag: ${{ env.API_IMAGE_NAME }}:${{ steps.get-version.outputs.version }}
+      version: ${{ steps.get-version.outputs.version }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ inputs.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+
+      - name: Get package version
+        id: get-version
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download API Proprietary build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.api-artifact }}
+          path: dist/apps/api/
+
+      - name: Generate Proprietary tsconfig
+        env:
+          PACKMIND_EDITION: proprietary
+        run: node scripts/select-tsconfig.mjs
+
+      - name: Build migration bundle for Docker
+        env:
+          PACKMIND_EDITION: proprietary
+        run: ./node_modules/.bin/nx bundle-docker migrations
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          logout: false
+
+      - name: Build API Proprietary Docker image
+        run: |
+          docker build \
+            -f dockerfile/Dockerfile.api \
+            -t ${{ env.API_IMAGE_NAME }}:${{ steps.get-version.outputs.version }} \
+            -t ${{ env.API_IMAGE_NAME }}:latest \
+            -t ${{ env.API_IMAGE_NAME }}:${{ github.sha }} \
+            .
+
+      - name: Scan API Proprietary Docker image for vulnerabilities
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          organization: packmind
+          image: ${{ env.API_IMAGE_NAME }}:${{ steps.get-version.outputs.version }}
+          only-severities: critical,high
+          exit-code: true
+
+      - name: Push API Proprietary Docker image
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/release/')
+        run: |
+          # Retry function for docker push
+          retry_push() {
+            local image=$1
+            local max_attempts=3
+            local attempt=1
+            
+            while [ $attempt -le $max_attempts ]; do
+              echo "Attempt $attempt/$max_attempts: Pushing $image"
+              if docker push "$image"; then
+                echo "Successfully pushed $image"
+                return 0
+              else
+                echo "Failed to push $image on attempt $attempt"
+                if [ $attempt -lt $max_attempts ]; then
+                  echo "Waiting 10 seconds before retry..."
+                  sleep 10
+                fi
+                attempt=$((attempt + 1))
+              fi
+            done
+            
+            echo "Failed to push $image after $max_attempts attempts"
+            return 1
+          }
+          
+          # Push with retry
+          retry_push "${{ env.API_IMAGE_NAME }}:${{ steps.get-version.outputs.version }}"
+          retry_push "${{ env.API_IMAGE_NAME }}:latest"
+          retry_push "${{ env.API_IMAGE_NAME }}:${{ github.sha }}"
+
+
+
+  build-frontend-image:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    outputs:
+      image-tag: ${{ env.FRONTEND_IMAGE_NAME }}:${{ steps.get-version.outputs.version }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ inputs.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+
+      - name: Get package version
+        id: get-version
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Download Frontend Proprietary build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.frontend-artifact }}
+          path: apps/frontend/build/client/
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          logout: false
+
+      - name: Build Frontend Proprietary Docker image
+        run: |
+          docker build \
+            -f dockerfile/Dockerfile.frontend \
+            -t ${{ env.FRONTEND_IMAGE_NAME }}:${{ steps.get-version.outputs.version }} \
+            -t ${{ env.FRONTEND_IMAGE_NAME }}:latest \
+            -t ${{ env.FRONTEND_IMAGE_NAME }}:${{ github.sha }} \
+            .
+
+      - name: Scan Frontend Proprietary Docker image for vulnerabilities
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          organization: packmind
+          image: ${{ env.FRONTEND_IMAGE_NAME }}:${{ steps.get-version.outputs.version }}
+          only-severities: critical,high
+          exit-code: true
+
+      - name: Push Frontend Proprietary Docker image
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/release/')
+        run: |
+          # Retry function for docker push
+          retry_push() {
+            local image=$1
+            local max_attempts=3
+            local attempt=1
+            
+            while [ $attempt -le $max_attempts ]; do
+              echo "Attempt $attempt/$max_attempts: Pushing $image"
+              if docker push "$image"; then
+                echo "Successfully pushed $image"
+                return 0
+              else
+                echo "Failed to push $image on attempt $attempt"
+                if [ $attempt -lt $max_attempts ]; then
+                  echo "Waiting 10 seconds before retry..."
+                  sleep 10
+                fi
+                attempt=$((attempt + 1))
+              fi
+            done
+            
+            echo "Failed to push $image after $max_attempts attempts"
+            return 1
+          }
+          
+          # Push with retry
+          retry_push "${{ env.FRONTEND_IMAGE_NAME }}:${{ steps.get-version.outputs.version }}"
+          retry_push "${{ env.FRONTEND_IMAGE_NAME }}:latest"
+          retry_push "${{ env.FRONTEND_IMAGE_NAME }}:${{ github.sha }}"
+
+
+
+  build-mcp-server-image:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    outputs:
+      image-tag: ${{ env.MCP_IMAGE_NAME }}:${{ steps.get-version.outputs.version }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ inputs.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+
+      - name: Get package version
+        id: get-version
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Download MCP Server Proprietary build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.mcp-server-artifact }}
+          path: dist/apps/mcp-server/
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          logout: false
+
+      - name: Build MCP Server Proprietary Docker image
+        run: |
+          docker build \
+            -f dockerfile/Dockerfile.mcp \
+            -t ${{ env.MCP_IMAGE_NAME }}:${{ steps.get-version.outputs.version }} \
+            -t ${{ env.MCP_IMAGE_NAME }}:latest \
+            -t ${{ env.MCP_IMAGE_NAME }}:${{ github.sha }} \
+            .
+
+      - name: Scan MCP Server Proprietary Docker image for vulnerabilities
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          organization: packmind
+          image: ${{ env.MCP_IMAGE_NAME }}:${{ steps.get-version.outputs.version }}
+          only-severities: critical,high
+          exit-code: true
+
+      - name: Push MCP Server Proprietary Docker image
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/release/')
+        run: |
+          # Retry function for docker push
+          retry_push() {
+            local image=$1
+            local max_attempts=3
+            local attempt=1
+            
+            while [ $attempt -le $max_attempts ]; do
+              echo "Attempt $attempt/$max_attempts: Pushing $image"
+              if docker push "$image"; then
+                echo "Successfully pushed $image"
+                return 0
+              else
+                echo "Failed to push $image on attempt $attempt"
+                if [ $attempt -lt $max_attempts ]; then
+                  echo "Waiting 10 seconds before retry..."
+                  sleep 10
+                fi
+                attempt=$((attempt + 1))
+              fi
+            done
+            
+            echo "Failed to push $image after $max_attempts attempts"
+            return 1
+          }
+          
+          # Push with retry
+          retry_push "${{ env.MCP_IMAGE_NAME }}:${{ steps.get-version.outputs.version }}"
+          retry_push "${{ env.MCP_IMAGE_NAME }}:latest"
+          retry_push "${{ env.MCP_IMAGE_NAME }}:${{ github.sha }}"
