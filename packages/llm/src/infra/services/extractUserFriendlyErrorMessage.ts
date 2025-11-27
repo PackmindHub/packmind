@@ -3,7 +3,7 @@
  * Handles different error formats from OpenAI, Anthropic, Gemini, and Azure.
  *
  * Provider error messages often contain JSON with status codes, e.g.:
- * - Anthropic: "401 {\"type\":\"error\",\"error\":{\"message\":\"invalid x-api-key\"}}"
+ * - Anthropic: "401 {\"type\":\"error\",\"error\":{\"type\":\"not_found_error\",\"message\":\"model: claude-xxx\"}}"
  * - Google: "400 {\"error\":{\"code\":400,\"message\":\"API key not valid\"}}"
  */
 export function extractUserFriendlyErrorMessage(error: Error | null): string {
@@ -20,8 +20,12 @@ export function extractUserFriendlyErrorMessage(error: Error | null): string {
       const jsonPart = message.slice(jsonStartIndex);
       const parsed = JSON.parse(jsonPart);
 
-      // Anthropic/OpenAI format: { error: { message: "..." } }
+      // Anthropic/OpenAI format: { error: { type?: "...", message: "..." } }
       if (parsed.error?.message) {
+        // Include error type if available for better context
+        if (parsed.error.type) {
+          return `${parsed.error.type}: ${parsed.error.message}`;
+        }
         return parsed.error.message;
       }
 
