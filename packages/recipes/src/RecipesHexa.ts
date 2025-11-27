@@ -4,6 +4,7 @@ import {
   BaseHexaOpts,
   HexaRegistry,
   JobsService,
+  PackmindEventEmitterService,
 } from '@packmind/node-utils';
 import {
   IAccountsPort,
@@ -116,6 +117,11 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
       // Get JobsService
       const jobsService = registry.getService(JobsService);
 
+      // Get PackmindEventEmitterService (required) - for domain event emission
+      const eventEmitterService = registry.getService(
+        PackmindEventEmitterService,
+      );
+
       // Set llmPort on services
       this.recipesServices.setLlmPort(llmPort);
 
@@ -129,6 +135,7 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
         [IEventTrackingPortName]: eventTrackingPort,
         [ILlmPortName]: llmPort,
         jobsService,
+        eventEmitterService,
       });
 
       this.isInitialized = true;
@@ -168,6 +175,11 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
       // Get JobsService
       const jobsService = registry.getService(JobsService);
 
+      // Get PackmindEventEmitterService (required) - for domain event emission
+      const eventEmitterService = registry.getService(
+        PackmindEventEmitterService,
+      );
+
       // Reinitialize adapter with updated ports
       // The adapter will rebuild delayed jobs with the real deployment port
       await this.adapter.initialize({
@@ -178,6 +190,7 @@ export class RecipesHexa extends BaseHexa<BaseHexaOpts, IRecipesPort> {
         [IEventTrackingPortName]: eventTrackingPort,
         [ILlmPortName]: llmPort,
         jobsService,
+        eventEmitterService,
       });
 
       this.logger.info(

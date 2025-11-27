@@ -1,5 +1,9 @@
 import { PackmindLogger } from '@packmind/logger';
-import { IBaseAdapter, JobsService } from '@packmind/node-utils';
+import {
+  IBaseAdapter,
+  JobsService,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import {
   CaptureRecipeCommand,
   CaptureRecipeWithPackagesCommand,
@@ -99,6 +103,7 @@ export class RecipesAdapter
     [IEventTrackingPortName]: IEventTrackingPort;
     [ILlmPortName]: ILlmPort;
     jobsService: JobsService;
+    eventEmitterService: PackmindEventEmitterService;
   }): Promise<void> {
     this.logger.info('Initializing RecipesAdapter with ports and JobsService');
 
@@ -133,6 +138,7 @@ export class RecipesAdapter
       this.recipesServices.getRecipeService(),
       this.recipesServices.getRecipeVersionService(),
       this.recipesServices.getRecipeSummaryService(),
+      ports.eventEmitterService,
       this.eventTrackingPort!,
       this.logger,
     );

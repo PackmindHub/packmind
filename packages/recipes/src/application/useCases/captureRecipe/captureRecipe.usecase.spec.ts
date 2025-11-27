@@ -1,4 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
@@ -27,6 +28,7 @@ describe('CaptureRecipeUsecase', () => {
   let recipeService: jest.Mocked<RecipeService>;
   let recipeVersionService: jest.Mocked<RecipeVersionService>;
   let recipeSummaryService: jest.Mocked<RecipeSummaryService>;
+  let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let eventTrackingPort: jest.Mocked<IEventTrackingPort>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
@@ -62,6 +64,10 @@ describe('CaptureRecipeUsecase', () => {
       createRecipeSummary: jest.fn().mockResolvedValue('AI-generated summary'),
     } as unknown as jest.Mocked<RecipeSummaryService>;
 
+    eventEmitterService = {
+      emit: jest.fn().mockReturnValue(true),
+    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+
     eventTrackingPort = {
       trackEvent: jest.fn().mockResolvedValue(undefined),
     } as jest.Mocked<IEventTrackingPort>;
@@ -73,6 +79,7 @@ describe('CaptureRecipeUsecase', () => {
       recipeService,
       recipeVersionService,
       recipeSummaryService,
+      eventEmitterService,
       eventTrackingPort,
       stubbedLogger,
     );

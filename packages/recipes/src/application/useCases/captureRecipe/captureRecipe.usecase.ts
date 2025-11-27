@@ -1,14 +1,17 @@
 import { LogLevel, PackmindLogger } from '@packmind/logger';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { AiNotConfigured, OrganizationId } from '@packmind/types';
 import {
   CaptureRecipeCommand,
   CaptureRecipeResponse,
   createOrganizationId,
+  createRecipeId,
   createSpaceId,
   createUserId,
   ICaptureRecipeUseCase,
   IEventTrackingPort,
   Recipe,
+  RecipeCreatedEvent,
   RecipeStep,
 } from '@packmind/types';
 import slug from 'slug';
@@ -23,6 +26,7 @@ export class CaptureRecipeUsecase implements ICaptureRecipeUseCase {
     private readonly recipeService: RecipeService,
     private readonly recipeVersionService: RecipeVersionService,
     private readonly recipeSummaryService: RecipeSummaryService,
+    private readonly eventEmitterService: PackmindEventEmitterService,
     private readonly eventTrackingPort: IEventTrackingPort,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
@@ -148,6 +152,15 @@ export class CaptureRecipeUsecase implements ICaptureRecipeUseCase {
         userId,
         organizationId,
         'recipe_created',
+      );
+
+      this.eventEmitterService.emit(
+        new RecipeCreatedEvent({
+          recipeId: createRecipeId(recipe.id),
+          spaceId,
+          organizationId,
+          userId,
+        }),
       );
 
       return recipe;
