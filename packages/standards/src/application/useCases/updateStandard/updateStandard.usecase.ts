@@ -1,5 +1,9 @@
 import { PackmindLogger } from '@packmind/logger';
-import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import {
+  AbstractMemberUseCase,
+  MemberContext,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import {
   IAccountsPort,
   IEventTrackingPort,
@@ -8,11 +12,14 @@ import {
   OrganizationId,
   RuleExample,
   RuleId,
+  StandardUpdatedEvent,
   StandardVersion,
   UpdateStandardCommand,
   UpdateStandardResponse,
   UserId,
   createOrganizationId,
+  createSpaceId,
+  createStandardId,
   createUserId,
 } from '@packmind/types';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
@@ -39,6 +46,7 @@ export class UpdateStandardUsecase
     private readonly generateStandardSummaryDelayedJob: GenerateStandardSummaryDelayedJob,
     private readonly spacesPort: ISpacesPort | null,
     private readonly eventTrackingPort: IEventTrackingPort,
+    private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsAdapter, logger);
@@ -253,6 +261,21 @@ export class UpdateStandardUsecase
         organizationId as OrganizationId,
         'standard_edited',
       );
+
+      const event = new StandardUpdatedEvent({
+        standardId: createStandardId(standardId),
+        spaceId: createSpaceId(spaceId),
+        organizationId: brandedOrganizationId,
+        userId: brandedUserId,
+        newVersion: nextVersion,
+      });
+      const hasListeners = this.eventEmitterService.emit(event);
+      this.logger.info('StandardUpdatedEvent emitted', {
+        eventName: event.name,
+        hasListeners,
+        standardId,
+        newVersion: nextVersion,
+      });
 
       return { standard: updatedStandard };
     } catch (error) {

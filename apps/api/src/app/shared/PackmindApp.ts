@@ -17,6 +17,7 @@ import {
   BaseServiceOpts,
   HexaRegistry,
   JobsService,
+  PackmindEventEmitterService,
 } from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
 import { SpacesHexa } from '@packmind/spaces';
@@ -72,7 +73,7 @@ export function getPackmindAppDefinition(): PackmindAppDefinition {
       CodingAgentHexa,
       DeploymentsHexa,
     ],
-    services: [JobsService],
+    services: [JobsService, PackmindEventEmitterService],
   };
 }
 
@@ -104,8 +105,10 @@ export async function initializePackmindApp(
     }
   }
 
-  // Register JobsService
-  registry.registerService(JobsService);
+  // Register all services
+  for (const ServiceClass of definition.services) {
+    registry.registerService(ServiceClass);
+  }
 
   // Initialize the registry with the DataSource
   await registry.init(dataSource);

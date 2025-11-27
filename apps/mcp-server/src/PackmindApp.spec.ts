@@ -6,7 +6,7 @@ import { AmplitudeHexa } from '@packmind/amplitude';
 import { GitHexa } from '@packmind/git';
 import { LinterHexa } from '@packmind/linter';
 import { LlmHexa } from '@packmind/llm';
-import { JobsService } from '@packmind/node-utils';
+import { JobsService, PackmindEventEmitterService } from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
 import { SpacesHexa } from '@packmind/spaces';
 import { StandardsHexa } from '@packmind/standards';
@@ -56,7 +56,10 @@ describe('PackmindApp MCP Server', () => {
     it('includes required infrastructure services', () => {
       const definition = getPackmindAppDefinition();
 
-      expect(definition.services).toEqual([JobsService]);
+      expect(definition.services).toEqual([
+        JobsService,
+        PackmindEventEmitterService,
+      ]);
     });
   });
 
