@@ -173,6 +173,7 @@ export class RecipesAdapter
       this.recipesServices.getRecipeService(),
       this.recipesServices.getRecipeVersionService(),
       this.recipesServices.getRecipeSummaryService(),
+      ports.eventEmitterService,
       this.eventTrackingPort!,
       this.logger,
     );
