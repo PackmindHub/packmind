@@ -1,4 +1,4 @@
-import { exec, execSync } from 'child_process';
+import { exec, execSync, ExecOptions } from 'child_process';
 import { promisify } from 'util';
 import { PackmindLogger } from '@packmind/logger';
 import { ModifiedLine } from '../../domain/entities/DiffMode';
@@ -7,6 +7,13 @@ import * as path from 'path';
 const execAsync = promisify(exec);
 
 const origin = 'GitService';
+
+export type GitRunnerOptions = ExecOptions & { maxBuffer?: number };
+export type GitRunnerResult = { stdout: string; stderr: string };
+export type GitRunner = (
+  command: string,
+  options?: GitRunnerOptions,
+) => Promise<GitRunnerResult>;
 
 export type GitRemoteResult = {
   gitRemoteUrl: string;
@@ -19,13 +26,22 @@ export type GitBranchesResult = {
 export class GitService {
   private readonly logger: PackmindLogger;
 
-  constructor(logger: PackmindLogger = new PackmindLogger(origin)) {
+  constructor(
+    logger: PackmindLogger = new PackmindLogger(origin),
+    private readonly gitRunner: GitRunner = async (cmd, opts) => {
+      const result = await execAsync(`git ${cmd}`, opts);
+      return {
+        stdout: result.stdout.toString(),
+        stderr: result.stderr.toString(),
+      };
+    },
+  ) {
     this.logger = logger;
   }
 
   public async getGitRepositoryRoot(path: string): Promise<string> {
     try {
-      const { stdout } = await execAsync('git rev-parse --show-toplevel', {
+      const { stdout } = await this.gitRunner('rev-parse --show-toplevel', {
         cwd: path,
       });
 
@@ -71,7 +87,7 @@ export class GitService {
     repoPath: string,
   ): Promise<GitBranchesResult> {
     try {
-      const { stdout } = await execAsync('git branch -a --contains HEAD', {
+      const { stdout } = await this.gitRunner('branch -a --contains HEAD', {
         cwd: repoPath,
       });
 
@@ -93,7 +109,7 @@ export class GitService {
     origin?: string,
   ): Promise<GitRemoteResult> {
     try {
-      const { stdout } = await execAsync('git remote -v', {
+      const { stdout } = await this.gitRunner('remote -v', {
         cwd: repoPath,
       });
 
@@ -253,7 +269,7 @@ export class GitService {
    */
   private async getTrackedModifiedFiles(gitRoot: string): Promise<string[]> {
     try {
-      const { stdout } = await execAsync('git diff --name-only HEAD', {
+      const { stdout } = await this.gitRunner('diff --name-only HEAD', {
         cwd: gitRoot,
       });
 
@@ -281,7 +297,7 @@ export class GitService {
    * Gets staged files when HEAD doesn't exist (first commit scenario).
    */
   private async getStagedFilesWithoutHead(gitRoot: string): Promise<string[]> {
-    const { stdout } = await execAsync('git diff --cached --name-only', {
+    const { stdout } = await this.gitRunner('diff --cached --name-only', {
       cwd: gitRoot,
     });
 
@@ -299,8 +315,8 @@ export class GitService {
   public async getUntrackedFiles(repoPath: string): Promise<string[]> {
     const gitRoot = await this.getGitRepositoryRoot(repoPath);
 
-    const { stdout } = await execAsync(
-      'git ls-files --others --exclude-standard',
+    const { stdout } = await this.gitRunner(
+      'ls-files --others --exclude-standard',
       {
         cwd: gitRoot,
       },
@@ -355,7 +371,7 @@ export class GitService {
     gitRoot: string,
   ): Promise<ModifiedLine[]> {
     try {
-      const { stdout } = await execAsync('git diff HEAD --unified=0', {
+      const { stdout } = await this.gitRunner('diff HEAD --unified=0', {
         cwd: gitRoot,
         maxBuffer: 50 * 1024 * 1024, // 50MB buffer for large diffs
       });
@@ -382,7 +398,7 @@ export class GitService {
   private async getStagedModifiedLinesWithoutHead(
     gitRoot: string,
   ): Promise<ModifiedLine[]> {
-    const { stdout } = await execAsync('git diff --cached --unified=0', {
+    const { stdout } = await this.gitRunner('diff --cached --unified=0', {
       cwd: gitRoot,
       maxBuffer: 50 * 1024 * 1024,
     });
