@@ -10,16 +10,11 @@ import {
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { createRuleId, RuleId } from '@packmind/types';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
-import { LintViolation } from '../../domain/entities/LintViolation';
 import { DiffMode } from '../../domain/entities/DiffMode';
 import { IDELintLogger } from '../repositories/IDELintLogger';
 import { HumanReadableLogger } from '../repositories/HumanReadableLogger';
 import * as pathModule from 'path';
-
-enum Loggers {
-  ide = 'ide',
-  human = 'human',
-}
+import { lintHandler, LintHandlerDependencies, Loggers } from './lintHandler';
 
 const Logger: Type<string, Loggers> = {
   from: async (input) => {
@@ -100,94 +95,33 @@ export const lintCommand = command({
       long: 'debug',
       description: 'Enable debug logging',
     }),
+    continueOnError: flag({
+      long: 'continue-on-error',
+      description: 'Exit with status code 0 even if violations are found',
+    }),
     diff: option({
       long: 'diff',
       description: 'Filter violations by git diff (files | lines)',
       type: optional(DiffModeType),
     }),
   },
-  handler: async ({ path, draft, rule, debug, language, logger, diff }) => {
-    if (draft && !rule) {
-      throw new Error('option --rule is required to use --draft mode');
-    }
-
-    const startedAt = Date.now();
+  handler: async (args) => {
     const packmindLogger = new PackmindLogger(
       'PackmindCLI',
-      debug ? LogLevel.DEBUG : LogLevel.INFO,
+      args.debug ? LogLevel.DEBUG : LogLevel.INFO,
     );
-    const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
-    const targetPath = path ?? '.';
-    const hasArguments = !!(draft || rule || language);
+    const deps: LintHandlerDependencies = {
+      packmindCliHexa: new PackmindCliHexa(packmindLogger),
+      humanReadableLogger: new HumanReadableLogger(),
+      ideLintLogger: new IDELintLogger(),
+      resolvePath: (targetPath: string) =>
+        pathModule.isAbsolute(targetPath)
+          ? targetPath
+          : pathModule.resolve(process.cwd(), targetPath),
+      exit: (code: number) => process.exit(code),
+    };
 
-    // Convert to absolute path for config detection
-    const absolutePath = pathModule.isAbsolute(targetPath)
-      ? targetPath
-      : pathModule.resolve(process.cwd(), targetPath);
-
-    // Validate git repository when --diff is used
-    if (diff) {
-      const gitRoot =
-        await packmindCliHexa.tryGetGitRepositoryRoot(absolutePath);
-      if (!gitRoot) {
-        throw new Error(
-          'The --diff option requires the project to be in a Git repository',
-        );
-      }
-    }
-
-    // Determine linting mode
-    let useLocalLinting = false;
-
-    if (!hasArguments) {
-      const stopDirectory =
-        await packmindCliHexa.tryGetGitRepositoryRoot(absolutePath);
-
-      const hierarchicalConfig = await packmindCliHexa.readHierarchicalConfig(
-        absolutePath,
-        stopDirectory,
-      );
-
-      if (hierarchicalConfig.hasConfigs) {
-        useLocalLinting = true;
-      }
-    }
-
-    let violations: LintViolation[] = [];
-
-    if (useLocalLinting) {
-      // Local linting mode: LintFilesLocallyUseCase handles all configs in tree
-      const result = await packmindCliHexa.lintFilesLocally({
-        path: absolutePath,
-        diffMode: diff,
-      });
-      violations = result.violations;
-    } else {
-      // Fall back to deployment mode
-      const result = await packmindCliHexa.lintFilesInDirectory({
-        path: targetPath,
-        draftMode: draft,
-        standardSlug: rule?.standardSlug,
-        ruleId: rule?.ruleId,
-        language,
-        diffMode: diff,
-      });
-      violations = result.violations;
-    }
-
-    (logger === Loggers.ide
-      ? new IDELintLogger()
-      : new HumanReadableLogger()
-    ).logViolations(violations);
-
-    const durationSeconds = (Date.now() - startedAt) / 1000;
-    console.log(`Lint completed in ${durationSeconds.toFixed(2)}s`);
-
-    if (violations.length > 0) {
-      process.exit(1);
-    } else {
-      process.exit(0);
-    }
+    await lintHandler(args, deps);
   },
 });
