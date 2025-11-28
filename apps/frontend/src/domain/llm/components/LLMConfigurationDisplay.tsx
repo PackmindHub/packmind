@@ -124,12 +124,14 @@ export const LLMConfigurationDisplay: React.FC<
           </PMHStack>
 
           <PMVStack alignItems="flex-start" gap={1}>
-            <PMHStack gap={2}>
-              <PMText color="secondary" fontSize="sm">
-                Model:
-              </PMText>
-              <PMText fontSize="sm">{configuration.model}</PMText>
-            </PMHStack>
+            {configuration.model && (
+              <PMHStack gap={2}>
+                <PMText color="secondary" fontSize="sm">
+                  Model:
+                </PMText>
+                <PMText fontSize="sm">{configuration.model}</PMText>
+              </PMHStack>
+            )}
 
             {configuration.fastestModel && (
               <PMHStack gap={2}>
