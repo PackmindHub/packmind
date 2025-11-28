@@ -1,7 +1,7 @@
 FROM nginx:1.29.1-alpine3.22-slim
 
 # Create a single-layer for all setup operations
-RUN apk add --no-cache bash openssl=3.5.4-r0 && \
+RUN apk add --no-cache bash openssl=3.5.4-r0 gettext && \
     rm /etc/nginx/conf.d/default.conf && \
     mkdir -p /home/packmind && \
     # Create non-root user with explicit UID 1000
@@ -26,6 +26,7 @@ RUN apk add --no-cache bash openssl=3.5.4-r0 && \
 COPY --chown=packmind:packmind apps/frontend/build/client /usr/share/nginx/html
 COPY --chown=packmind:packmind dockerfile/nginx.k8s.conf /etc/nginx/nginx.k8s.conf
 COPY --chown=packmind:packmind dockerfile/nginx.compose.conf /etc/nginx/nginx.compose.conf
+COPY --chown=packmind:packmind dockerfile/nginx.k8s.no-ingress.conf /etc/nginx/nginx.k8s.no-ingress.conf
 COPY --chown=packmind:packmind dockerfile/nginx-entrypoint.sh /home/packmind/nginx.sh
 
 # Set executable permission for the script

@@ -1,4 +1,5 @@
 export enum ProgrammingLanguage {
+  AVRO = 'AVRO',
   JAVASCRIPT = 'JAVASCRIPT',
   JAVASCRIPT_JSX = 'JAVASCRIPT_JSX',
   TYPESCRIPT = 'TYPESCRIPT',
@@ -40,6 +41,10 @@ export const ProgrammingLanguageDetails: Record<
   ProgrammingLanguage,
   ProgrammingLanguageInfo
 > = {
+  [ProgrammingLanguage.AVRO]: {
+    displayName: 'Avro',
+    fileExtensions: ['avsc', 'avro', 'avdl'],
+  },
   [ProgrammingLanguage.GENERIC]: {
     displayName: 'Generic',
     fileExtensions: [],

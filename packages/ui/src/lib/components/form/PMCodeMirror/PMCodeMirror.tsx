@@ -123,6 +123,11 @@ const getLanguageExtensions = (language?: string) => {
     case 'SWIFT':
       normalizedLanguage = 'SWIFT';
       break;
+    case 'AVRO':
+    case 'AVSC':
+    case 'AVDL':
+      normalizedLanguage = 'AVRO';
+      break;
   }
 
   switch (normalizedLanguage) {
@@ -185,6 +190,9 @@ const getLanguageExtensions = (language?: string) => {
       return [StreamLanguage.define(ruby)];
     case 'SWIFT':
       return [StreamLanguage.define(swift)];
+    case 'AVRO':
+      // Avro schema files (.avsc) are JSON-based
+      return [json()];
     default:
       return [];
   }
