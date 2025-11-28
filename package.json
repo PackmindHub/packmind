@@ -9,7 +9,7 @@
   "scripts": {
     "build": "nx run-many -t build",
     "chakra:typegen": "npx --workspace=packages/ui @chakra-ui/cli typegen ./src/lib/theme/theme.ts",
-    "e2e": "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=false npx playwright test --config apps/frontend-e2e/playwright.config.ts",
+    "e2e": "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=false npx playwright test --config apps/e2e-tests/playwright.config.ts",
     "husky": "husky",
     "lint": "nx run-many -t lint",
     "lint:staged": "nx affected:lint --parallel --uncommitted",

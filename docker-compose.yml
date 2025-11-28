@@ -287,7 +287,7 @@ services:
       - ./dist/.playwright:/packmind/dist/.playwright
     ports:
       - '9323:9323'
-    working_dir: /packmind/apps/frontend-e2e
+    working_dir: /packmind/apps/e2e-tests
     entrypoint: npm run e2e
     environment:
       BASE_URL: http://frontend:4200

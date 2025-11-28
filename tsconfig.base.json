@@ -31,6 +31,7 @@
       "@packmind/deployments/test": ["packages/deployments/test/index.ts"],
       "@packmind/deployments/test/*": ["packages/deployments/test/*"],
       "@packmind/editions": ["packages/editions/src/index.ts"],
+      "@packmind/frontend": ["packages/frontend/src/index.ts"],
       "@packmind/git": ["packages/git/src/index.ts"],
       "@packmind/integration-tests": [
         "packages/integration-tests/src/index.ts"
