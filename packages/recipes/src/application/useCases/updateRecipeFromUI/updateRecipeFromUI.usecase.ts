@@ -2,7 +2,6 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { AiNotConfigured } from '@packmind/types';
 import {
-  IEventTrackingPort,
   OrganizationId,
   RecipeId,
   RecipeUpdatedEvent,
@@ -30,7 +29,6 @@ export class UpdateRecipeFromUIUsecase {
     private readonly recipeVersionService: RecipeVersionService,
     private readonly recipeSummaryService: RecipeSummaryService,
     private readonly eventEmitterService: PackmindEventEmitterService,
-    private readonly eventTrackingPort: IEventTrackingPort,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.DEBUG,
@@ -160,12 +158,6 @@ export class UpdateRecipeFromUIUsecase {
         versionId: newRecipeVersion.id,
         editorUserId,
       });
-
-      await this.eventTrackingPort.trackEvent(
-        editorUserId,
-        organizationId,
-        'recipe_edited',
-      );
 
       this.eventEmitterService.emit(
         new RecipeUpdatedEvent({

@@ -15,8 +15,6 @@ import {
   IAccountsPortName,
   IDeploymentPort,
   IDeploymentPortName,
-  IEventTrackingPort,
-  IEventTrackingPortName,
   IGitPort,
   IGitPortName,
   ILlmPort,
@@ -63,7 +61,6 @@ export class RecipesAdapter
   private accountsPort: IAccountsPort | null = null;
   private spacesPort: ISpacesPort | null = null;
   private llmPort: ILlmPort | null = null;
-  private eventTrackingPort: IEventTrackingPort | null = null;
 
   // Delayed jobs - built internally from JobsService
   private recipesDelayedJobs: IRecipesDelayedJobs | null = null;
@@ -100,7 +97,6 @@ export class RecipesAdapter
     [IDeploymentPortName]: IDeploymentPort;
     [IAccountsPortName]: IAccountsPort;
     [ISpacesPortName]: ISpacesPort;
-    [IEventTrackingPortName]: IEventTrackingPort;
     [ILlmPortName]: ILlmPort;
     jobsService: JobsService;
     eventEmitterService: PackmindEventEmitterService;
@@ -112,7 +108,6 @@ export class RecipesAdapter
     this.deploymentPort = ports[IDeploymentPortName];
     this.accountsPort = ports[IAccountsPortName];
     this.spacesPort = ports[ISpacesPortName];
-    this.eventTrackingPort = ports[IEventTrackingPortName];
     this.llmPort = ports[ILlmPortName];
 
     // Set llmPort to services
@@ -139,7 +134,6 @@ export class RecipesAdapter
       this.recipesServices.getRecipeVersionService(),
       this.recipesServices.getRecipeSummaryService(),
       ports.eventEmitterService,
-      this.eventTrackingPort!,
       this.logger,
     );
 
@@ -174,7 +168,6 @@ export class RecipesAdapter
       this.recipesServices.getRecipeVersionService(),
       this.recipesServices.getRecipeSummaryService(),
       ports.eventEmitterService,
-      this.eventTrackingPort!,
       this.logger,
     );
 
@@ -281,7 +274,6 @@ export class RecipesAdapter
       this.deploymentPort != null &&
       this.accountsPort != null &&
       this.spacesPort != null &&
-      this.eventTrackingPort != null &&
       this.recipesDelayedJobs != null
     );
   }
