@@ -128,7 +128,7 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
         type: 'text',
         defaultValue: DEFAULT_OPENAI_MODELS.fastestModel,
         helpMessage:
-          'A faster, more economical model for less complex operations.',
+          '(Optional) A faster, more economical model for less complex operations. If not set, will use default model.',
         optional: true,
         placeholder: 'gpt-4.1-mini',
         secret: false,
@@ -172,7 +172,7 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
         type: 'text',
         defaultValue: DEFAULT_ANTHROPIC_MODELS.fastestModel,
         helpMessage:
-          'A faster Claude model for less complex operations. Defaults to Haiku.',
+          '(Optional) A faster, more economical model for less complex operations. If not set, will use default model.',
         optional: true,
         placeholder: 'claude-haiku-4-5-20251001',
         secret: false,
@@ -216,7 +216,7 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
         type: 'text',
         defaultValue: DEFAULT_GEMINI_MODELS.fastestModel,
         helpMessage:
-          'A faster Gemini model for less complex operations. Defaults to Flash.',
+          '(Optional) A faster, more economical model for less complex operations. If not set, will use default model.',
         optional: true,
         placeholder: 'gemini-2.5-flash',
         secret: false,
@@ -270,7 +270,8 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
         label: 'Fast Model Deployment Name',
         type: 'text',
         defaultValue: '',
-        helpMessage: 'The Azure deployment name for the fast/economical model.',
+        helpMessage:
+          '(Optional) The Azure deployment name for the fastest operation. Will use the default one is missing.',
         optional: true,
         placeholder: 'my-gpt-35-turbo-deployment',
         secret: false,
@@ -337,7 +338,7 @@ export const LLM_PROVIDER_METADATA: Record<LLMProvider, ProviderMetadata> = {
         type: 'text',
         defaultValue: '',
         helpMessage:
-          'A faster model for less complex operations. Can be the same as the primary model.',
+          '(Optional) A faster, more economical model for less complex operations. If not set, will use default model.',
         optional: true,
         placeholder: 'llama3',
         secret: false,
