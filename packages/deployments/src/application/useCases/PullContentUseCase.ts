@@ -10,7 +10,6 @@ import {
   FileUpdates,
   IAccountsPort,
   ICodingAgentPort,
-  IEventTrackingPort,
   IPullContentResponse,
   IRecipesPort,
   IStandardsPort,
@@ -36,7 +35,6 @@ export class PullContentUseCase extends AbstractMemberUseCase<
     private readonly codingAgentPort: ICodingAgentPort,
     private readonly renderModeConfigurationService: RenderModeConfigurationService,
     accountsPort: IAccountsPort,
-    private readonly eventTrackingPort: IEventTrackingPort,
     private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin, LogLevel.INFO),
   ) {
@@ -187,13 +185,6 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         totalCreateOrUpdateCount: mergedFileUpdates.createOrUpdate.length,
         totalDeleteCount: mergedFileUpdates.delete.length,
       });
-
-      await this.eventTrackingPort.trackEvent(
-        createUserId(command.userId),
-        createOrganizationId(command.organizationId),
-        'artifacts_pulled',
-        { source: 'cli' },
-      );
 
       this.eventEmitterService.emit(
         new ArtifactsPulledEvent({

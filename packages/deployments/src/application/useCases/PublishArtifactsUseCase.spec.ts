@@ -25,7 +25,6 @@ import {
   IStandardsPort,
   ICodingAgentPort,
   IGitPort,
-  IEventTrackingPort,
   Rule,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
@@ -46,7 +45,6 @@ describe('PublishArtifactsUseCase', () => {
   let mockStandardsDeploymentRepository: jest.Mocked<IStandardsDeploymentRepository>;
   let mockTargetService: jest.Mocked<TargetService>;
   let mockRenderModeConfigurationService: jest.Mocked<RenderModeConfigurationService>;
-  let mockEventTrackingPort: jest.Mocked<IEventTrackingPort>;
   let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let mockLogger: PackmindLogger;
 
@@ -112,10 +110,6 @@ describe('PublishArtifactsUseCase', () => {
       activeCodingAgents,
     );
 
-    mockEventTrackingPort = {
-      trackEvent: jest.fn().mockResolvedValue(undefined),
-    } as jest.Mocked<IEventTrackingPort>;
-
     mockEventEmitterService = {
       emit: jest.fn(),
     } as unknown as jest.Mocked<PackmindEventEmitterService>;
@@ -129,7 +123,6 @@ describe('PublishArtifactsUseCase', () => {
       mockStandardsDeploymentRepository,
       mockTargetService,
       mockRenderModeConfigurationService,
-      mockEventTrackingPort,
       mockEventEmitterService,
       mockLogger,
     );
