@@ -1,7 +1,13 @@
 import { PackmindLogger } from '@packmind/logger';
-import { BaseHexa, BaseHexaOpts } from '@packmind/node-utils';
+import {
+  BaseHexa,
+  BaseHexaOpts,
+  HexaRegistry,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import { IEventTrackingPort, IEventTrackingPortName } from '@packmind/types';
 import { DataSource } from 'typeorm';
+import { AmplitudeEventListener } from './application/AmplitudeEventListener';
 import { EventTrackingAdapter } from './application/EventTrackingAdapter';
 
 const origin = 'AmplitudeHexa';
@@ -14,6 +20,7 @@ const origin = 'AmplitudeHexa';
  */
 export class AmplitudeHexa extends BaseHexa<BaseHexaOpts, IEventTrackingPort> {
   private readonly adapter: EventTrackingAdapter;
+  private readonly listener: AmplitudeEventListener;
 
   constructor(
     dataSource: DataSource,
@@ -28,6 +35,7 @@ export class AmplitudeHexa extends BaseHexa<BaseHexaOpts, IEventTrackingPort> {
         'Creating EventTrackingAdapter with Amplitude integration',
       );
       this.adapter = new EventTrackingAdapter(this.logger);
+      this.listener = new AmplitudeEventListener(this.adapter);
 
       this.logger.info('AmplitudeHexa construction completed');
     } catch (error) {
@@ -40,11 +48,16 @@ export class AmplitudeHexa extends BaseHexa<BaseHexaOpts, IEventTrackingPort> {
 
   /**
    * Initialize the hexa with access to the registry for adapter retrieval.
-   * EventTracking has no dependencies, so this is a no-op.
+   * Sets up event listeners to forward domain events to Amplitude.
    */
-  public async initialize(): Promise<void> {
+  public async initialize(registry: HexaRegistry): Promise<void> {
     this.logger.info('Initializing AmplitudeHexa');
-    // No dependencies to initialize
+
+    const eventEmitterService = registry.getService(
+      PackmindEventEmitterService,
+    );
+    this.listener.initialize(eventEmitterService);
+
     this.logger.info('AmplitudeHexa initialized successfully');
   }
 
@@ -68,7 +81,7 @@ export class AmplitudeHexa extends BaseHexa<BaseHexaOpts, IEventTrackingPort> {
    */
   public destroy(): void {
     this.logger.info('Destroying AmplitudeHexa');
-    // Add any cleanup logic here if needed
+    this.listener.destroy();
     this.logger.info('AmplitudeHexa destroyed');
   }
 }
