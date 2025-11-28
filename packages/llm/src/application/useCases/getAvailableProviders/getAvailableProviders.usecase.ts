@@ -9,6 +9,7 @@ import {
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import { isPackmindProviderAvailable } from '../utils';
 
 const origin = 'GetAvailableProvidersUseCase';
 
@@ -34,7 +35,7 @@ export class GetAvailableProvidersUseCase
       userId: command.userId,
     });
 
-    const providers = this.getFilteredProviders();
+    const providers = await this.getFilteredProviders();
 
     this.logger.info('Retrieved available providers', {
       organizationId: command.organizationId,
@@ -46,11 +47,10 @@ export class GetAvailableProvidersUseCase
     };
   }
 
-  private getFilteredProviders(): ProviderMetadata[] {
-    const isOssMode = process.env.PACKMIND_EDITION !== 'proprietary';
+  private async getFilteredProviders(): Promise<ProviderMetadata[]> {
     const allProviders = Object.values(LLM_PROVIDER_METADATA);
 
-    if (isOssMode) {
+    if (!(await isPackmindProviderAvailable())) {
       return allProviders.filter(
         (provider) => provider.id !== LLMProvider.PACKMIND,
       );

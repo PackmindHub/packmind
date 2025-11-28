@@ -7,6 +7,7 @@ import {
 import { PackmindLogger } from '@packmind/logger';
 import { ILLMConfigurationRepository } from '../../../domain/repositories/ILLMConfigurationRepository';
 import { createLLMService } from '../../../factories/createLLMService';
+import { isPackmindProviderAvailable } from '../utils';
 
 const origin = 'GetAiServiceForOrganizationUseCase';
 
@@ -30,12 +31,35 @@ export class GetAiServiceForOrganizationUseCase
     );
 
     if (storedConfig) {
+      if (
+        storedConfig.config.provider === LLMProvider.PACKMIND &&
+        !(await isPackmindProviderAvailable())
+      ) {
+        this.logger.info(
+          'Packmind provider not available in OSS mode, returning undefined',
+          {
+            organizationId: command.organizationId.toString(),
+          },
+        );
+        return { aiService: undefined };
+      }
+
       this.logger.info('Using organization-specific LLM configuration', {
         organizationId: command.organizationId.toString(),
         provider: storedConfig.config.provider,
       });
       const aiService = createLLMService(storedConfig.config);
       return { aiService };
+    }
+
+    if (!(await isPackmindProviderAvailable())) {
+      this.logger.info(
+        'No configuration found and Packmind provider not available in OSS mode',
+        {
+          organizationId: command.organizationId.toString(),
+        },
+      );
+      return { aiService: undefined };
     }
 
     this.logger.info(

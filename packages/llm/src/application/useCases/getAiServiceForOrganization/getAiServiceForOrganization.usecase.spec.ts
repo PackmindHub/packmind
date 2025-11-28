@@ -6,6 +6,9 @@ import { GetAiServiceForOrganizationUseCase } from './getAiServiceForOrganizatio
 import { PackmindService } from '../../../infra/services/PackmindService';
 import { OpenAIService } from '../../../infra/services/OpenAIService';
 import { AnthropicService } from '../../../infra/services/AnthropicService';
+import * as utils from '../utils';
+
+jest.mock('../utils');
 
 describe('GetAiServiceForOrganizationUseCase', () => {
   const organizationId = createOrganizationId(uuidv4());
@@ -31,90 +34,175 @@ describe('GetAiServiceForOrganizationUseCase', () => {
   });
 
   describe('execute', () => {
-    describe('when organization has no configuration', () => {
+    describe('when in proprietary mode (Packmind available)', () => {
       beforeEach(() => {
+        jest
+          .spyOn(utils, 'isPackmindProviderAvailable')
+          .mockResolvedValue(true);
+      });
+
+      describe('when organization has no configuration', () => {
+        beforeEach(() => {
+          mockConfigurationRepository.get.mockResolvedValue(null);
+        });
+
+        it('returns a PackmindService instance', async () => {
+          const result = await useCase.execute({ organizationId });
+
+          expect(result.aiService).toBeInstanceOf(PackmindService);
+        });
+
+        it('queries the repository with the organization ID', async () => {
+          await useCase.execute({ organizationId });
+
+          expect(mockConfigurationRepository.get).toHaveBeenCalledWith(
+            organizationId,
+          );
+        });
+      });
+
+      describe('when organization has OpenAI configuration', () => {
+        beforeEach(() => {
+          mockConfigurationRepository.get.mockResolvedValue({
+            config: {
+              provider: LLMProvider.OPENAI,
+              apiKey: 'sk-test-key',
+              model: 'gpt-4',
+              fastestModel: 'gpt-4-mini',
+            },
+            configuredAt: new Date(),
+          });
+        });
+
+        it('returns an OpenAIService instance', async () => {
+          const result = await useCase.execute({ organizationId });
+
+          expect(result.aiService).toBeInstanceOf(OpenAIService);
+        });
+      });
+
+      describe('when organization has Anthropic configuration', () => {
+        beforeEach(() => {
+          mockConfigurationRepository.get.mockResolvedValue({
+            config: {
+              provider: LLMProvider.ANTHROPIC,
+              apiKey: 'anthropic-test-key',
+              model: 'claude-3-opus-20240229',
+              fastestModel: 'claude-3-haiku-20240307',
+            },
+            configuredAt: new Date(),
+          });
+        });
+
+        it('returns an AnthropicService instance', async () => {
+          const result = await useCase.execute({ organizationId });
+
+          expect(result.aiService).toBeInstanceOf(AnthropicService);
+        });
+      });
+
+      describe('when organization has Packmind configuration', () => {
+        beforeEach(() => {
+          mockConfigurationRepository.get.mockResolvedValue({
+            config: {
+              provider: LLMProvider.PACKMIND,
+            },
+            configuredAt: new Date(),
+          });
+        });
+
+        it('returns a PackmindService instance', async () => {
+          const result = await useCase.execute({ organizationId });
+
+          expect(result.aiService).toBeInstanceOf(PackmindService);
+        });
+      });
+
+      it('returns a new instance on each call', async () => {
         mockConfigurationRepository.get.mockResolvedValue(null);
-      });
 
-      it('returns a PackmindService instance', async () => {
-        const result = await useCase.execute({ organizationId });
+        const result1 = await useCase.execute({ organizationId });
+        const result2 = await useCase.execute({ organizationId });
 
-        expect(result.aiService).toBeInstanceOf(PackmindService);
-      });
-
-      it('queries the repository with the organization ID', async () => {
-        await useCase.execute({ organizationId });
-
-        expect(mockConfigurationRepository.get).toHaveBeenCalledWith(
-          organizationId,
-        );
+        expect(result1.aiService).not.toBe(result2.aiService);
       });
     });
 
-    describe('when organization has OpenAI configuration', () => {
+    describe('when in OSS mode (Packmind not available)', () => {
       beforeEach(() => {
-        mockConfigurationRepository.get.mockResolvedValue({
-          config: {
-            provider: LLMProvider.OPENAI,
-            apiKey: 'sk-test-key',
-            model: 'gpt-4',
-            fastestModel: 'gpt-4-mini',
-          },
-          configuredAt: new Date(),
+        jest
+          .spyOn(utils, 'isPackmindProviderAvailable')
+          .mockResolvedValue(false);
+      });
+
+      describe('when organization has no configuration', () => {
+        beforeEach(() => {
+          mockConfigurationRepository.get.mockResolvedValue(null);
+        });
+
+        it('returns undefined aiService', async () => {
+          const result = await useCase.execute({ organizationId });
+
+          expect(result.aiService).toBeUndefined();
         });
       });
 
-      it('returns an OpenAIService instance', async () => {
-        const result = await useCase.execute({ organizationId });
+      describe('when organization has Packmind configuration', () => {
+        beforeEach(() => {
+          mockConfigurationRepository.get.mockResolvedValue({
+            config: {
+              provider: LLMProvider.PACKMIND,
+            },
+            configuredAt: new Date(),
+          });
+        });
 
-        expect(result.aiService).toBeInstanceOf(OpenAIService);
-      });
-    });
+        it('returns undefined aiService', async () => {
+          const result = await useCase.execute({ organizationId });
 
-    describe('when organization has Anthropic configuration', () => {
-      beforeEach(() => {
-        mockConfigurationRepository.get.mockResolvedValue({
-          config: {
-            provider: LLMProvider.ANTHROPIC,
-            apiKey: 'anthropic-test-key',
-            model: 'claude-3-opus-20240229',
-            fastestModel: 'claude-3-haiku-20240307',
-          },
-          configuredAt: new Date(),
+          expect(result.aiService).toBeUndefined();
         });
       });
 
-      it('returns an AnthropicService instance', async () => {
-        const result = await useCase.execute({ organizationId });
+      describe('when organization has OpenAI configuration', () => {
+        beforeEach(() => {
+          mockConfigurationRepository.get.mockResolvedValue({
+            config: {
+              provider: LLMProvider.OPENAI,
+              apiKey: 'sk-test-key',
+              model: 'gpt-4',
+              fastestModel: 'gpt-4-mini',
+            },
+            configuredAt: new Date(),
+          });
+        });
 
-        expect(result.aiService).toBeInstanceOf(AnthropicService);
-      });
-    });
+        it('returns an OpenAIService instance', async () => {
+          const result = await useCase.execute({ organizationId });
 
-    describe('when organization has Packmind configuration', () => {
-      beforeEach(() => {
-        mockConfigurationRepository.get.mockResolvedValue({
-          config: {
-            provider: LLMProvider.PACKMIND,
-          },
-          configuredAt: new Date(),
+          expect(result.aiService).toBeInstanceOf(OpenAIService);
         });
       });
 
-      it('returns a PackmindService instance', async () => {
-        const result = await useCase.execute({ organizationId });
+      describe('when organization has Anthropic configuration', () => {
+        beforeEach(() => {
+          mockConfigurationRepository.get.mockResolvedValue({
+            config: {
+              provider: LLMProvider.ANTHROPIC,
+              apiKey: 'anthropic-test-key',
+              model: 'claude-3-opus-20240229',
+              fastestModel: 'claude-3-haiku-20240307',
+            },
+            configuredAt: new Date(),
+          });
+        });
 
-        expect(result.aiService).toBeInstanceOf(PackmindService);
+        it('returns an AnthropicService instance', async () => {
+          const result = await useCase.execute({ organizationId });
+
+          expect(result.aiService).toBeInstanceOf(AnthropicService);
+        });
       });
-    });
-
-    it('returns a new instance on each call', async () => {
-      mockConfigurationRepository.get.mockResolvedValue(null);
-
-      const result1 = await useCase.execute({ organizationId });
-      const result2 = await useCase.execute({ organizationId });
-
-      expect(result1.aiService).not.toBe(result2.aiService);
     });
   });
 });

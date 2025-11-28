@@ -66,11 +66,13 @@ export const LLMConfigurationForm: React.FC<LLMConfigurationFormProps> = ({
 }) => {
   const providerItems = useMemo(
     () =>
-      providers.map((provider) => ({
-        label: provider.displayName,
-        value: provider.id,
-        disabled: false,
-      })),
+      providers
+        .map((provider) => ({
+          label: provider.displayName,
+          value: provider.id,
+          disabled: false,
+        }))
+        .sort((a, b) => a.label.localeCompare(b.label)),
     [providers],
   );
 
