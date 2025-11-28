@@ -177,25 +177,25 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Start E2E test environment
-        env:
-          PACKMIND_EDITION: ${{ env.OSS_EDITION }}
-          COMPOSE_PROJECT_NAME: ci-${{ github.run_number }}
-        run: |
-          # Run in background - docker compose up -d blocks while waiting for depends_on conditions
-          docker compose --profile=e2e up -d &
-          # Wait for containers to be created (not necessarily healthy yet)
-          sleep 10
-
-      - name: Wait for E2E tests to complete
         uses: nick-fields/retry@v3
         with:
-          timeout_minutes: 10
+          timeout_minutes: 5
           max_attempts: 3
           retry_wait_seconds: 10
-          command: ./scripts/wait-for-e2e-tests.sh
+          command: |
+            # Run in background - docker compose up -d blocks while waiting for depends_on conditions
+            docker compose --profile=e2e up -d &
+            # Wait for containers to be created (not necessarily healthy yet)
+            sleep 10
         env:
           PACKMIND_EDITION: ${{ env.OSS_EDITION }}
           COMPOSE_PROJECT_NAME: ci-${{ github.run_number }}
+
+      - name: Wait for E2E tests to complete
+        env:
+          PACKMIND_EDITION: ${{ env.OSS_EDITION }}
+          COMPOSE_PROJECT_NAME: ci-${{ github.run_number }}
+        run: ./scripts/wait-for-e2e-tests.sh
 
       - name: Upload Playwright report
         if: always()
