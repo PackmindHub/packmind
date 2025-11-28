@@ -168,7 +168,7 @@ jobs:
 
   e2e-tests:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
-    timeout-minutes: 15
+    timeout-minutes: 10
     strategy:
       matrix:
         node-version: ['${{ inputs.node-version }}']
