@@ -11,8 +11,6 @@ import {
   IAccountsPortName,
   IDeploymentPort,
   IDeploymentPortName,
-  IEventTrackingPort,
-  IEventTrackingPortName,
   ILinterPort,
   ILinterPortName,
   ILlmPort,
@@ -100,9 +98,6 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
       const linterPort = registry.getAdapter<ILinterPort>(ILinterPortName);
       const deploymentsPort =
         registry.getAdapter<IDeploymentPort>(IDeploymentPortName);
-      const eventTrackingPort = registry.getAdapter<IEventTrackingPort>(
-        IEventTrackingPortName,
-      );
       const llmPort = registry.getAdapter<ILlmPort>(ILlmPortName);
 
       this.logger.info('All required ports retrieved from registry');
@@ -129,7 +124,6 @@ export class StandardsHexa extends BaseHexa<BaseHexaOpts, StandardsAdapter> {
         [ISpacesPortName]: spacesPort,
         [ILinterPortName]: linterPort,
         [IDeploymentPortName]: deploymentsPort,
-        [IEventTrackingPortName]: eventTrackingPort,
         [ILlmPortName]: llmPort,
         jobsService,
         eventEmitterService,

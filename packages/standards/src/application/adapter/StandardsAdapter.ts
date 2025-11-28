@@ -10,8 +10,6 @@ import {
   IAccountsPortName,
   IDeploymentPort,
   IDeploymentPortName,
-  IEventTrackingPort,
-  IEventTrackingPortName,
   ILinterPort,
   ILinterPortName,
   ILlmPort,
@@ -72,7 +70,6 @@ export class StandardsAdapter
   private spacesPort: ISpacesPort | null = null;
   private linterPort: ILinterPort | null = null;
   private deploymentsPort: IDeploymentPort | null = null;
-  private eventTrackingPort: IEventTrackingPort | null = null;
   private llmPort: ILlmPort | null = null;
   private eventEmitterService: PackmindEventEmitterService | null = null;
 
@@ -117,7 +114,6 @@ export class StandardsAdapter
     [ISpacesPortName]: ISpacesPort;
     [ILinterPortName]: ILinterPort;
     [IDeploymentPortName]: IDeploymentPort;
-    [IEventTrackingPortName]: IEventTrackingPort;
     [ILlmPortName]: ILlmPort;
     jobsService: JobsService;
     eventEmitterService: PackmindEventEmitterService;
@@ -128,7 +124,6 @@ export class StandardsAdapter
     this.spacesPort = ports[ISpacesPortName];
     this.linterPort = ports[ILinterPortName];
     this.deploymentsPort = ports[IDeploymentPortName];
-    this.eventTrackingPort = ports[IEventTrackingPortName];
     this.llmPort = ports[ILlmPortName];
     this.eventEmitterService = ports.eventEmitterService;
 
@@ -144,7 +139,6 @@ export class StandardsAdapter
       !this.spacesPort ||
       !this.linterPort ||
       !this.deploymentsPort ||
-      !this.eventTrackingPort ||
       !this.llmPort ||
       !this.standardDelayedJobs ||
       !this.eventEmitterService
@@ -212,7 +206,6 @@ export class StandardsAdapter
       this.services.getStandardService(),
       this.services.getStandardVersionService(),
       this.standardDelayedJobs.standardSummaryDelayedJob,
-      this.eventTrackingPort,
       this.eventEmitterService,
     );
 
@@ -224,7 +217,6 @@ export class StandardsAdapter
       this.repositories.getRuleExampleRepository(),
       this.standardDelayedJobs.standardSummaryDelayedJob,
       this.spacesPort,
-      this.eventTrackingPort,
       this.eventEmitterService,
     );
 
@@ -236,7 +228,6 @@ export class StandardsAdapter
       this.standardDelayedJobs.standardSummaryDelayedJob,
       this.eventEmitterService,
       this.linterPort,
-      this.eventTrackingPort,
     );
 
     // Use cases that depend on linterPort
@@ -248,7 +239,6 @@ export class StandardsAdapter
       this.repositories.getRuleRepository(),
       this.eventEmitterService,
       this.linterPort,
-      this.eventTrackingPort,
     );
 
     // Use case that depends on accountsPort, deploymentsPort, and spacesPort
