@@ -1,9 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useParams } from 'react-router';
 
 import { recipesGateway } from '../gateways';
-import { RecipeId } from '@packmind/types';
-import { OrganizationId } from '@packmind/types';
-import { SpaceId } from '@packmind/types';
+import { OrganizationId, RecipeId, SpaceId } from '@packmind/types';
 import { GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY } from '../../../deployments/api/queryKeys';
 import {
   GET_RECIPES_KEY,
@@ -15,23 +14,28 @@ import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 
+export const getRecipesBySpaceQueryOptions = (
+  organizationId: OrganizationId | undefined,
+  spaceId: SpaceId | undefined,
+) => ({
+  queryKey: GET_RECIPES_KEY,
+  queryFn: () => {
+    if (!organizationId) {
+      throw new Error('Organization ID is required to fetch recipes');
+    }
+    if (!spaceId) {
+      throw new Error('Space ID is required to fetch recipes');
+    }
+    return recipesGateway.getRecipes(organizationId, spaceId);
+  },
+  enabled: !!organizationId && !!spaceId,
+});
+
 export const useGetRecipesQuery = () => {
   const { organization } = useAuthContext();
   const { spaceId } = useCurrentSpace();
 
-  return useQuery({
-    queryKey: GET_RECIPES_KEY,
-    queryFn: () => {
-      if (!organization?.id) {
-        throw new Error('Organization ID is required to fetch recipes');
-      }
-      if (!spaceId) {
-        throw new Error('Space ID is required to fetch recipes');
-      }
-      return recipesGateway.getRecipes(organization.id, spaceId);
-    },
-    enabled: !!organization?.id && !!spaceId,
-  });
+  return useQuery(getRecipesBySpaceQueryOptions(organization?.id, spaceId));
 };
 
 export const getRecipeByIdOptions = (
@@ -48,15 +52,26 @@ export const getRecipeByIdOptions = (
 
 export const useGetRecipeByIdQuery = (id: RecipeId) => {
   const { organization } = useAuthContext();
-  const { spaceId } = useCurrentSpace();
+  const { spaceId, spaceSlug: currentSpaceSlug } = useCurrentSpace();
+  const { orgSlug, spaceSlug } = useParams<{
+    orgSlug: string;
+    spaceSlug: string;
+  }>();
 
-  return useQuery(
-    getRecipeByIdOptions(
+  // Prevent query from running during org/space transitions
+  // When switching orgs, the URL params may not match the current context
+  const isOrgMatch = organization?.slug === orgSlug;
+  const isSpaceMatch = currentSpaceSlug === spaceSlug;
+
+  return useQuery({
+    ...getRecipeByIdOptions(
       organization?.id as OrganizationId,
       spaceId as SpaceId,
       id,
     ),
-  );
+    enabled:
+      !!organization?.id && !!spaceId && !!id && isOrgMatch && isSpaceMatch,
+  });
 };
 
 const UPDATE_RECIPE_MUTATION_KEY = 'updateRecipe';

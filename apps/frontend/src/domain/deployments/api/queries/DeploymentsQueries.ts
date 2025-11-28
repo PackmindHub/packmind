@@ -17,9 +17,11 @@ import {
 } from '@packmind/types';
 import { pmToaster } from '@packmind/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useParams } from 'react-router';
 import { isPackmindError } from '../../../../services/api/errors/PackmindError';
 import { GET_ONBOARDING_STATUS_KEY } from '../../../accounts/api/queryKeys';
 import { useAuthContext } from '../../../accounts/hooks';
+import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { deploymentsGateways } from '../gateways';
 import {
   GET_PACKAGE_BY_ID_KEY,
@@ -84,20 +86,31 @@ export const useListStandardDeploymentsQuery = (standardId: StandardId) => {
   });
 };
 
+export const getPackagesBySpaceQueryOptions = (
+  spaceId: SpaceId | undefined,
+  organizationId: OrganizationId | undefined,
+) => ({
+  queryKey: [...LIST_PACKAGES_BY_SPACE_KEY, spaceId, organizationId],
+  queryFn: () => {
+    if (!spaceId) {
+      throw new Error('Space ID is required to fetch packages');
+    }
+    if (!organizationId) {
+      throw new Error('Organization ID is required to fetch packages');
+    }
+    return deploymentsGateways.listPackagesBySpace({
+      spaceId,
+      organizationId,
+    });
+  },
+  enabled: !!spaceId && !!organizationId,
+});
+
 export const useListPackagesBySpaceQuery = (
   spaceId: SpaceId | undefined,
   organizationId: OrganizationId | undefined,
 ) => {
-  return useQuery({
-    queryKey: [...LIST_PACKAGES_BY_SPACE_KEY, spaceId, organizationId],
-    queryFn: () => {
-      return deploymentsGateways.listPackagesBySpace({
-        spaceId: spaceId!,
-        organizationId: organizationId!,
-      });
-    },
-    enabled: !!spaceId && !!organizationId,
-  });
+  return useQuery(getPackagesBySpaceQueryOptions(spaceId, organizationId));
 };
 
 export const getPackageByIdOptions = (
@@ -120,6 +133,18 @@ export const useGetPackageByIdQuery = (
   spaceId: SpaceId | undefined,
   organizationId: OrganizationId | undefined,
 ) => {
+  const { spaceSlug: currentSpaceSlug } = useCurrentSpace();
+  const { organization } = useAuthContext();
+  const { orgSlug, spaceSlug } = useParams<{
+    orgSlug: string;
+    spaceSlug: string;
+  }>();
+
+  // Prevent query from running during org/space transitions
+  // When switching orgs, the URL params may not match the current context
+  const isOrgMatch = organization?.slug === orgSlug;
+  const isSpaceMatch = currentSpaceSlug === spaceSlug;
+
   return useQuery({
     queryKey: [...GET_PACKAGE_BY_ID_KEY, packageId, spaceId, organizationId],
     queryFn: () => {
@@ -129,7 +154,12 @@ export const useGetPackageByIdQuery = (
         organizationId: organizationId!,
       });
     },
-    enabled: !!packageId && !!spaceId && !!organizationId,
+    enabled:
+      !!packageId &&
+      !!spaceId &&
+      !!organizationId &&
+      isOrgMatch &&
+      isSpaceMatch,
   });
 };
 
