@@ -13,8 +13,12 @@ const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
+const isCI = !!process.env.CI;
+
 export default defineConfig({
   ...nxE2EPreset(__filename, { testDir: './src' }),
+  /* Reporter configuration - don't serve HTML report interactively in CI (blocks container) */
+  reporter: [['html', { open: isCI ? 'never' : 'on-failure' }]],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     baseURL,
