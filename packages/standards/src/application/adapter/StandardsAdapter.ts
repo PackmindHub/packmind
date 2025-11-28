@@ -293,6 +293,7 @@ export class StandardsAdapter
       this.logger,
       this.repositories,
       this.services.getStandardSummaryService(),
+      this.services.getStandardVersionService(),
     );
 
     jobsService.registerJobQueue(jobFactory.getQueueName(), jobFactory);

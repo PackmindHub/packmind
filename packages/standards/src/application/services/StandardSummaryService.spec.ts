@@ -31,7 +31,9 @@ describe('StandardSummaryService', () => {
 
     // Mock ILlmPort
     mockLlmPort = {
-      getLlmForOrganization: jest.fn().mockResolvedValue(mockAIService),
+      getLlmForOrganization: jest
+        .fn()
+        .mockResolvedValue({ aiService: mockAIService }),
     } as jest.Mocked<ILlmPort>;
 
     stubbedLogger = stubLogger();

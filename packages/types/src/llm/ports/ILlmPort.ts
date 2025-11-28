@@ -1,9 +1,11 @@
-import { AIService } from '../AIService';
-import { OrganizationId } from '../../accounts/Organization';
 import {
   TestLLMConnectionCommand,
   TestLLMConnectionResponse,
 } from '../contracts/TestLLMConnectionUseCase';
+import {
+  GetAiServiceForOrganizationCommand,
+  GetAiServiceForOrganizationResponse,
+} from '../contracts/GetAiServiceForOrganizationUseCase';
 import {
   GetModelsCommand,
   GetModelsResponse,
@@ -28,7 +30,9 @@ import {
 export const ILlmPortName = 'ILlmPort' as const;
 
 export interface ILlmPort {
-  getLlmForOrganization(organizationId: OrganizationId): Promise<AIService>;
+  getLlmForOrganization(
+    command: GetAiServiceForOrganizationCommand,
+  ): Promise<GetAiServiceForOrganizationResponse>;
   testLLMConnection(
     command: TestLLMConnectionCommand,
   ): Promise<TestLLMConnectionResponse>;

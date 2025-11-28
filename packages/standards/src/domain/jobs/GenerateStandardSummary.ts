@@ -15,5 +15,5 @@ export interface GenerateStandardSummaryOutput {
   organizationId: OrganizationId;
   userId: UserId;
   standardVersion: StandardVersion;
-  summary: string;
+  summary: string | null;
 }

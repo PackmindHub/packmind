@@ -14,7 +14,7 @@ import {
 import { RecipeService } from '../services/RecipeService';
 import { RecipeVersionService } from '../services/RecipeVersionService';
 import { RecipeSummaryService } from '../services/RecipeSummaryService';
-import { RecipeVersionId } from '@packmind/types';
+import { AiNotConfigured, RecipeVersionId } from '@packmind/types';
 
 const logOrigin = 'UpdateRecipesAndGenerateSummariesDelayedJob';
 
@@ -218,12 +218,42 @@ export class UpdateRecipesAndGenerateSummariesDelayedJob extends AbstractAIDelay
           summaryLength: summary.length,
         });
       } catch (summaryError) {
-        this.logger.error(
-          `[${this.origin}] Failed to generate summary, proceeding without summary`,
-          {
-            error: getErrorMessage(summaryError),
-          },
-        );
+        if (summaryError instanceof AiNotConfigured) {
+          this.logger.warn(
+            `[${this.origin}] AI service not configured - reusing previous summary`,
+            {
+              recipeSlug: existingRecipe.slug,
+              error: summaryError.message,
+            },
+          );
+        } else {
+          this.logger.warn(
+            `[${this.origin}] Failed to generate summary - reusing previous summary`,
+            {
+              recipeSlug: existingRecipe.slug,
+              error: getErrorMessage(summaryError),
+            },
+          );
+        }
+      }
+
+      // If no new summary was generated, reuse the previous version's summary
+      if (!summary) {
+        const previousVersion =
+          await this.recipeVersionService.getRecipeVersion(
+            existingRecipe.id,
+            existingRecipe.version,
+          );
+        if (previousVersion?.summary) {
+          summary = previousVersion.summary;
+          this.logger.info(
+            `[${this.origin}] Reusing summary from previous version`,
+            {
+              recipeSlug: existingRecipe.slug,
+              previousVersion: existingRecipe.version,
+            },
+          );
+        }
       }
 
       // Create new recipe version with summary

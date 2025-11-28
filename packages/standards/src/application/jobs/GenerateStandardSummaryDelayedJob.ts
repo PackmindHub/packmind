@@ -7,11 +7,13 @@ import {
   WorkerListeners,
 } from '@packmind/node-utils';
 import { Job } from 'bullmq';
+import { AiNotConfigured } from '@packmind/types';
 import {
   GenerateStandardSummaryInput,
   GenerateStandardSummaryOutput,
 } from '../../domain/jobs/GenerateStandardSummary';
 import { StandardSummaryService } from '../services/StandardSummaryService';
+import { StandardVersionService } from '../services/StandardVersionService';
 import { UpdateStandardVersionSummaryUsecase } from '../useCases/updateStandardVersionSummary/updateStandardVersionSummary.usecase';
 
 const logOrigin = 'GenerateStandardSummaryDelayedJob';
@@ -30,6 +32,7 @@ export class GenerateStandardSummaryDelayedJob extends AbstractAIDelayedJob<
     >,
     private readonly _updateStandardVersionSummaryUsecase: UpdateStandardVersionSummaryUsecase,
     private readonly _standardSummaryService: StandardSummaryService,
+    private readonly _standardVersionService: StandardVersionService,
     logger: PackmindLogger = new PackmindLogger(logOrigin),
   ) {
     super(queueFactory, logger);
@@ -50,11 +53,52 @@ export class GenerateStandardSummaryDelayedJob extends AbstractAIDelayedJob<
       `[${this.origin}] Processing job ${jobId} with input standard: ${input.standardVersion.standardId}`,
     );
 
-    const summary = await this._standardSummaryService.createStandardSummary(
-      input.organizationId,
-      input.standardVersion,
-      input.rules,
-    );
+    let summary: string | null = null;
+    try {
+      summary = await this._standardSummaryService.createStandardSummary(
+        input.organizationId,
+        input.standardVersion,
+        input.rules,
+      );
+    } catch (error) {
+      if (error instanceof AiNotConfigured) {
+        this.logger.warn(
+          `[${this.origin}] AI service not configured - reusing previous summary`,
+          {
+            standardId: input.standardVersion.standardId,
+            error: error.message,
+          },
+        );
+      } else {
+        this.logger.error(
+          `[${this.origin}] Failed to generate summary - reusing previous summary`,
+          {
+            standardId: input.standardVersion.standardId,
+            error: getErrorMessage(error),
+          },
+        );
+      }
+    }
+
+    // If no new summary was generated, reuse the previous version's summary
+    if (!summary && input.standardVersion.version > 1) {
+      const previousVersion =
+        await this._standardVersionService.getStandardVersion(
+          input.standardVersion.standardId,
+          input.standardVersion.version - 1,
+        );
+      if (previousVersion?.summary) {
+        summary = previousVersion.summary;
+        this.logger.info(
+          `[${this.origin}] Reusing summary from previous version`,
+          {
+            standardId: input.standardVersion.standardId,
+            previousVersion: input.standardVersion.version - 1,
+          },
+        );
+      }
+    }
+
     return {
       organizationId: input.organizationId,
       userId: input.userId,
@@ -88,13 +132,14 @@ export class GenerateStandardSummaryDelayedJob extends AbstractAIDelayedJob<
           `[${this.origin}] Job ${job.id} completed successfully`,
         );
 
-        try {
-          if (!result.summary?.length) {
-            this.logger.warn(
-              `[${this.origin}] Job ${job.id} did not generate any summary, will not save it`,
-            );
-          }
+        if (!result.summary?.length) {
+          this.logger.warn(
+            `[${this.origin}] Job ${job.id} did not generate any summary, skipping update`,
+          );
+          return;
+        }
 
+        try {
           this.logger.info(
             `[${this.origin}] Job ${job.id} - Will update summary for standard ${result.standardVersion.standardId}`,
           );
