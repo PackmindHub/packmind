@@ -165,3 +165,45 @@ jobs:
         env:
           PACKMIND_EDITION: ${{ env.OSS_EDITION }}
         run: ./node_modules/.bin/nx run-many -t test -p packages/* --passWithNoTests
+
+  e2e-tests:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    strategy:
+      matrix:
+        node-version: ['${{ inputs.node-version }}']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start E2E test environment
+        env:
+          PACKMIND_EDITION: ${{ env.OSS_EDITION }}
+          COMPOSE_PROJECT_NAME: ci-${{ github.run_number }}
+        run: docker compose --profile=e2e up -d
+
+      - name: Wait for E2E tests to complete
+        env:
+          COMPOSE_PROJECT_NAME: ci-${{ github.run_number }}
+        run: ./scripts/wait-for-e2e-tests.sh
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ github.run_number }}-${{ github.sha }}
+          path: playwright-report/
+          if-no-files-found: ignore
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results-${{ github.run_number }}-${{ github.sha }}
+          path: test-results/
+          if-no-files-found: ignore
+
+      - name: Cleanup Docker containers
+        if: always()
+        env:
+          COMPOSE_PROJECT_NAME: ci-${{ github.run_number }}
+        run: docker compose --profile=e2e down -v --remove-orphans
