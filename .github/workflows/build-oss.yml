@@ -187,10 +187,15 @@ jobs:
           sleep 10
 
       - name: Wait for E2E tests to complete
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_wait_seconds: 10
+          command: ./scripts/wait-for-e2e-tests.sh
         env:
           PACKMIND_EDITION: ${{ env.OSS_EDITION }}
           COMPOSE_PROJECT_NAME: ci-${{ github.run_number }}
-        run: ./scripts/wait-for-e2e-tests.sh
 
       - name: Upload Playwright report
         if: always()
