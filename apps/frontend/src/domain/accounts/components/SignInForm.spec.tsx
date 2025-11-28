@@ -480,7 +480,9 @@ describe('SignInForm', () => {
     it('selects organization and navigates', async () => {
       const user = userEvent.setup();
       const mockSignInMutation = createSignInMutation();
-      const mockSelectOrganizationMutation = createSelectOrganizationMutation();
+      const mockSelectOrganizationMutation = createSelectOrganizationMutation({
+        mutateAsync: jest.fn().mockResolvedValue({}),
+      });
       mockUseSignInMutation.mockReturnValue(mockSignInMutation);
       mockUseSelectOrganizationMutation.mockReturnValue(
         mockSelectOrganizationMutation,
@@ -544,23 +546,16 @@ describe('SignInForm', () => {
       await user.click(continueButton);
 
       await waitFor(() => {
-        expect(mockSelectOrganizationMutation.mutate).toHaveBeenCalledWith(
-          { organizationId: 'org-2' },
-          expect.objectContaining({
-            onSuccess: expect.any(Function),
-            onError: expect.any(Function),
-          }),
+        expect(mockSelectOrganizationMutation.mutateAsync).toHaveBeenCalledWith(
+          {
+            organizationId: 'org-2',
+          },
         );
       });
 
-      const selectOrgCall = mockSelectOrganizationMutation.mutate.mock.calls[0];
-      const onSelectSuccess = selectOrgCall[1].onSuccess;
-
-      act(() => {
-        onSelectSuccess();
+      await waitFor(() => {
+        expect(mockNavigate).toHaveBeenCalledWith('/org/organization-2');
       });
-
-      expect(mockNavigate).toHaveBeenCalledWith('/org/organization-2');
     });
   });
 

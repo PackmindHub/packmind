@@ -268,9 +268,16 @@ export const useSelectOrganizationMutation = () => {
         organizationId: createOrganizationId(request.organizationId),
       });
     },
-    onSuccess: (data) => {
-      // Invalidate ALL organization-scoped data when switching organizations
-      queryClient.invalidateQueries({
+    onSuccess: async () => {
+      // After the new JWT is set, cancel all in-flight organization-scoped queries
+      // to prevent 403/500 errors from requests using the old organization context
+      await queryClient.cancelQueries({
+        queryKey: [ORGANIZATION_QUERY_SCOPE],
+      });
+
+      // Remove all organization-scoped queries from the cache to prevent
+      // refetching with stale organization context during navigation
+      queryClient.removeQueries({
         queryKey: [ORGANIZATION_QUERY_SCOPE],
       });
     },
