@@ -286,8 +286,8 @@ services:
       - dev-nx-sock:/nx-sock
       - ./dist/.playwright:/packmind/dist/.playwright
     ports:
-      - '9324:9323'
-    working_dir: /packmind/apps/frontend-e2e
+      - '9323:9323'
+    working_dir: /packmind/apps/e2e-tests
     entrypoint: npm run e2e
     environment:
       BASE_URL: http://frontend:4200

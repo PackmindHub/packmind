@@ -1,0 +1,34 @@
+import { AbstractPackmindPage } from './AbstractPackmindPage';
+import { IDashboardPage, ISignupPage } from '../../domain/pages';
+
+import { SignUpWithOrganizationFormDataTestIds } from '@packmind/frontend';
+
+export class SignupPage extends AbstractPackmindPage implements ISignupPage {
+  async signup(
+    email: string,
+    password: string,
+    organizationName: string,
+  ): Promise<IDashboardPage> {
+    await this.page
+      .getByTestId(SignUpWithOrganizationFormDataTestIds.OrganizationField)
+      .fill(organizationName);
+    await this.page
+      .getByTestId(SignUpWithOrganizationFormDataTestIds.EmailField)
+      .fill(email);
+    await this.page
+      .getByTestId(SignUpWithOrganizationFormDataTestIds.PasswordField)
+      .fill(password);
+    await this.page
+      .getByTestId(SignUpWithOrganizationFormDataTestIds.ConfirmPasswordField)
+      .fill(password);
+    await this.page
+      .getByTestId(SignUpWithOrganizationFormDataTestIds.Submit)
+      .click();
+
+    return this.pageFactory.getDashboardPage();
+  }
+
+  expectedUrl(): string {
+    return '/sign-up';
+  }
+}

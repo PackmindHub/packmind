@@ -17,7 +17,7 @@ import { organizationGateway } from '../api/gateways';
 import { isPackmindConflictError } from '../../../services/api/errors/PackmindConflictError';
 import validator from 'validator';
 import { routes } from '../../../shared/utils/routes';
-import { SignUpWithOrganizationFormDataTestIds } from './SignUpWithOrganizationFormDataTestIds';
+import { SignUpWithOrganizationFormDataTestIds } from '@packmind/frontend';
 
 export default function SignUpWithOrganizationForm() {
   const [organizationName, setOrganizationName] = useState('');
