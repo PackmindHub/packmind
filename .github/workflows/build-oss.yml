@@ -180,7 +180,11 @@ jobs:
         env:
           PACKMIND_EDITION: ${{ env.OSS_EDITION }}
           COMPOSE_PROJECT_NAME: ci-${{ github.run_number }}
-        run: docker compose --profile=e2e up -d
+        run: |
+          # Run in background - docker compose up -d blocks while waiting for depends_on conditions
+          docker compose --profile=e2e up -d &
+          # Wait for containers to be created (not necessarily healthy yet)
+          sleep 10
 
       - name: Wait for E2E tests to complete
         env:
