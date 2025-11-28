@@ -1,6 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router';
-import { useQueryClient } from '@tanstack/react-query';
+import { useNavigate, useLocation } from 'react-router';
 import {
   PMHStack,
   PMButton,
@@ -14,11 +13,35 @@ import { AuthContextOrganization } from '../../accounts/hooks/useAuthContext';
 import { LuBuilding, LuCirclePlus } from 'react-icons/lu';
 import { NewOrganizationDialog } from './NewOrganizationDialog';
 import { useGetUserOrganizationsQuery } from '../../accounts/api/queries/AccountsQueries';
-import { ORGANIZATION_QUERY_SCOPE } from '../api/queryKeys';
+import { useSelectOrganizationMutation } from '../../accounts/api/queries/AuthQueries';
 import { routes } from '../../../shared/utils/routes';
 
 interface ISidebarOrgaSelectorProps {
   currentOrganization: AuthContextOrganization;
+}
+
+/**
+ * Determines the target route when switching organizations.
+ * Preserves the current section (standards, recipes, packages) but navigates to the list view
+ * since specific items (standardId, recipeId, etc.) won't exist in the new organization.
+ */
+function getTargetRouteForOrgSwitch(
+  currentPath: string,
+  newOrgSlug: string,
+): string {
+  // Check if user is on a space-scoped section and redirect to the list view
+  if (currentPath.includes('/standards')) {
+    return routes.space.toStandards(newOrgSlug, 'global');
+  }
+  if (currentPath.includes('/recipes')) {
+    return routes.space.toRecipes(newOrgSlug, 'global');
+  }
+  if (currentPath.includes('/packages')) {
+    return routes.space.toPackages(newOrgSlug, 'global');
+  }
+
+  // Default to dashboard for other routes
+  return routes.org.toDashboard(newOrgSlug);
 }
 
 export const SidebarOrgaSelector: React.FunctionComponent<
@@ -26,7 +49,8 @@ export const SidebarOrgaSelector: React.FunctionComponent<
 > = ({ currentOrganization }) => {
   const [createOrgaDialogOpen, setCreateOrgaDialogOpen] = React.useState(false);
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const location = useLocation();
+  const selectOrganizationMutation = useSelectOrganizationMutation();
 
   const { data: organizations = [], isLoading } =
     useGetUserOrganizationsQuery();
@@ -40,22 +64,15 @@ export const SidebarOrgaSelector: React.FunctionComponent<
     const selectedOrg = organizations.find((org) => org.id === orgaId);
     if (!selectedOrg) return;
 
-    // Cancel all in-flight organization-scoped queries to prevent 403/500 errors
-    // from requests using the old organization context
-    await queryClient.cancelQueries({
-      queryKey: [ORGANIZATION_QUERY_SCOPE],
-    });
+    // Switch organization via API (sets new JWT), then clear cache and navigate
+    await selectOrganizationMutation.mutateAsync({ organizationId: orgaId });
 
-    // Remove all organization-scoped queries from the cache to prevent
-    // refetching with stale organization context during navigation
-    queryClient.removeQueries({
-      queryKey: [ORGANIZATION_QUERY_SCOPE],
-    });
-
-    // Navigate to the new organization's dashboard
-    // The clientLoader in org.$orgSlug._protected.tsx will detect the org mismatch
-    // and call validateAndSwitchIfNeeded to update the JWT token
-    navigate(routes.org.toDashboard(selectedOrg.slug));
+    // Navigate to the same section in the new organization (or dashboard if not applicable)
+    const targetRoute = getTargetRouteForOrgSwitch(
+      location.pathname,
+      selectedOrg.slug,
+    );
+    navigate(targetRoute);
   };
 
   const handleOpenOrganizationCreation = () => {

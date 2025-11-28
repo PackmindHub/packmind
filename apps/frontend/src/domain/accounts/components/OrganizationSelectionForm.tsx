@@ -26,7 +26,7 @@ export default function OrganizationSelectionForm({
   const selectOrganizationMutation = useSelectOrganizationMutation();
   const navigate = useNavigate();
 
-  const handleOrganizationSelect = () => {
+  const handleOrganizationSelect = async () => {
     if (!selectedOrganizationSlug || !signInResult) {
       setErrors({ organization: 'Please select an organization' });
       return;
@@ -42,26 +42,24 @@ export default function OrganizationSelectionForm({
       return;
     }
 
-    // Call the selectOrganization API
-    selectOrganizationMutation.mutate(
-      { organizationId: selectedOrg.organization.id },
-      {
-        onSuccess: () => {
-          // Navigate to the selected organization
-          navigate(routes.org.toDashboard(selectedOrganizationSlug));
-        },
-        onError: (error) => {
-          // Use the actual error message from the server when available
-          let errorMessage = 'Failed to select organization';
+    try {
+      // Call the selectOrganization API and wait for query cleanup to complete
+      await selectOrganizationMutation.mutateAsync({
+        organizationId: selectedOrg.organization.id,
+      });
 
-          if (isPackmindError(error)) {
-            errorMessage = error.serverError.data.message;
-          }
+      // Navigate to the selected organization's dashboard
+      navigate(routes.org.toDashboard(selectedOrganizationSlug));
+    } catch (error) {
+      // Use the actual error message from the server when available
+      let errorMessage = 'Failed to select organization';
 
-          setErrors({ organization: errorMessage });
-        },
-      },
-    );
+      if (isPackmindError(error)) {
+        errorMessage = error.serverError.data.message;
+      }
+
+      setErrors({ organization: errorMessage });
+    }
   };
 
   const organizationItems = (signInResult.organizations || []).map(
