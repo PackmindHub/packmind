@@ -20,53 +20,57 @@ describe('org protected clientLoader', () => {
     getInstanceMock.mockReset();
   });
 
-  it('redirects to the active organization dashboard when URL slug mismatches current org', async () => {
-    const getMe = jest.fn().mockResolvedValue({
-      authenticated: true,
-      organization: { slug: 'packmind', name: 'Packmind' },
+  describe('when URL slug mismatches current org', () => {
+    it('redirects to the active organization dashboard', async () => {
+      const getMe = jest.fn().mockResolvedValue({
+        authenticated: true,
+        organization: { slug: 'packmind', name: 'Packmind' },
+      });
+
+      getInstanceMock.mockReturnValue({
+        getMe,
+      } as unknown as AuthService);
+
+      let caught: Response | null = null;
+      try {
+        await clientLoader(
+          buildLoaderArgs({
+            orgSlug: 'hello',
+          }),
+        );
+      } catch (error) {
+        caught = error as Response;
+      }
+
+      expect(caught).toBeTruthy();
+      expect(getMe).toHaveBeenCalledTimes(1);
     });
-
-    getInstanceMock.mockReturnValue({
-      getMe,
-    } as unknown as AuthService);
-
-    let caught: Response | null = null;
-    try {
-      await clientLoader(
-        buildLoaderArgs({
-          orgSlug: 'hello',
-        }),
-      );
-    } catch (error) {
-      caught = error as Response;
-    }
-
-    expect(caught).toBeTruthy();
-    expect(getMe).toHaveBeenCalledTimes(1);
   });
 
-  it('returns the user data when the URL slug matches the active organization', async () => {
-    const getMe = jest.fn().mockResolvedValue({
-      authenticated: true,
-      organization: { slug: 'packmind', name: 'Packmind' },
-    });
+  describe('when the URL slug matches the active organization', () => {
+    it('returns the user data', async () => {
+      const getMe = jest.fn().mockResolvedValue({
+        authenticated: true,
+        organization: { slug: 'packmind', name: 'Packmind' },
+      });
 
-    getInstanceMock.mockReturnValue({
-      getMe,
-    } as unknown as AuthService);
+      getInstanceMock.mockReturnValue({
+        getMe,
+      } as unknown as AuthService);
 
-    const result = await clientLoader(
-      buildLoaderArgs({
-        orgSlug: 'packmind',
-      }),
-    );
-
-    expect(result).toEqual(
-      expect.objectContaining({
-        me: expect.objectContaining({
-          organization: expect.objectContaining({ slug: 'packmind' }),
+      const result = await clientLoader(
+        buildLoaderArgs({
+          orgSlug: 'packmind',
         }),
-      }),
-    );
+      );
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          me: expect.objectContaining({
+            organization: expect.objectContaining({ slug: 'packmind' }),
+          }),
+        }),
+      );
+    });
   });
 });
