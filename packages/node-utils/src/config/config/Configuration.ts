@@ -166,7 +166,7 @@ export class Configuration {
             return infisicalValue;
           }
         } catch (error) {
-          Configuration.logger.error(
+          Configuration.logger.warn(
             'Failed to retrieve value from Infisical, value not available',
             {
               key,

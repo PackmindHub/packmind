@@ -4,7 +4,7 @@ import { IUseCase } from '@packmind/types';
 
 export interface UpdateStandardVersionSummaryCommand extends PackmindCommand {
   standardVersionId: StandardVersionId;
-  summary: string;
+  summary: string | null;
 }
 
 export type IUpdateStandardVersionSummary = IUseCase<

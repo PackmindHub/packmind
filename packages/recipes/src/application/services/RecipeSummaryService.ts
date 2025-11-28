@@ -24,7 +24,21 @@ export class RecipeSummaryService {
         'LLM port not configured for RecipeSummaryService',
       );
     }
-    return await this.llmPort.getLlmForOrganization(organizationId);
+    const response = await this.llmPort.getLlmForOrganization({
+      organizationId,
+    });
+    if (!response.aiService) {
+      this.logger.warn(
+        'AI service not available - skipping summary generation',
+        {
+          organizationId: organizationId.toString(),
+        },
+      );
+      throw new AiNotConfigured(
+        'AI service not available for RecipeSummaryService',
+      );
+    }
+    return response.aiService;
   }
 
   public async createRecipeSummary(

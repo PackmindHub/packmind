@@ -5,6 +5,7 @@ import { GenerateStandardSummaryDelayedJob } from '../../application/jobs/Genera
 import { IStandardsRepositories } from '../../domain/repositories/IStandardsRepositories';
 import { UpdateStandardVersionSummaryUsecase } from '../../application/useCases/updateStandardVersionSummary/updateStandardVersionSummary.usecase';
 import { StandardSummaryService } from '../../application/services/StandardSummaryService';
+import { StandardVersionService } from '../../application/services/StandardVersionService';
 
 const origin = 'GenerateStandardSummaryJobFactory';
 
@@ -17,6 +18,7 @@ export class GenerateStandardSummaryJobFactory
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
     private readonly standardsRepositories: IStandardsRepositories,
     private readonly standardSummaryService: StandardSummaryService,
+    private readonly standardVersionService: StandardVersionService,
   ) {}
 
   async createQueue(): Promise<IJobQueue<GenerateStandardSummaryInput>> {
@@ -26,6 +28,7 @@ export class GenerateStandardSummaryJobFactory
       (listeners) => queueFactory(this.getQueueName(), listeners),
       new UpdateStandardVersionSummaryUsecase(this.standardsRepositories),
       this.standardSummaryService,
+      this.standardVersionService,
     );
 
     // Wrap the delayed job to implement IJobQueue interface

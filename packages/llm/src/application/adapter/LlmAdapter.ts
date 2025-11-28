@@ -1,11 +1,9 @@
 import { PackmindLogger } from '@packmind/logger';
 import { IBaseAdapter } from '@packmind/node-utils';
 import {
-  AIService,
   IAccountsPort,
   IAccountsPortName,
   ILlmPort,
-  OrganizationId,
   TestLLMConnectionCommand,
   TestLLMConnectionResponse,
   GetModelsCommand,
@@ -18,6 +16,8 @@ import {
   TestSavedLLMConfigurationResponse,
   GetAvailableProvidersCommand,
   GetAvailableProvidersResponse,
+  GetAiServiceForOrganizationCommand,
+  GetAiServiceForOrganizationResponse,
 } from '@packmind/types';
 import { ILLMConfigurationRepository } from '../../domain/repositories/ILLMConfigurationRepository';
 import { LLMConfigurationRepositoryCache } from '../../infra/repositories/LLMConfigurationRepositoryCache';
@@ -130,23 +130,13 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
    * Future: Will retrieve organization-specific LLM configuration from database.
    */
   async getLlmForOrganization(
-    organizationId: OrganizationId,
-  ): Promise<AIService> {
+    command: GetAiServiceForOrganizationCommand,
+  ): Promise<GetAiServiceForOrganizationResponse> {
     this.logger.info('Getting LLM service for organization', {
-      organizationId: organizationId.toString(),
+      organizationId: command.organizationId.toString(),
     });
 
-    const result = await this._getAiServiceForOrganization.execute({
-      organizationId,
-    });
-
-    if (!result.aiService) {
-      throw new Error(
-        `Failed to get AI service for organization ${organizationId.toString()}`,
-      );
-    }
-
-    return result.aiService;
+    return this._getAiServiceForOrganization.execute(command);
   }
 
   /**
