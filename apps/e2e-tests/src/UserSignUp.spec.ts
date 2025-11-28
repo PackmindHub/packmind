@@ -12,5 +12,7 @@ test('User can signup', async ({ page }) => {
     uuidv4(),
     `my-organization-${uuidv4()}`,
   );
+  throw new Error('...')
+
   await dashboardPage.expectWelcomeMessage();
 });
