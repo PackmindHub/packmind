@@ -17,6 +17,7 @@ import {
   IAccountsPort,
   ILlmPort,
   AIService,
+  AiNotConfigured,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { stubLogger } from '@packmind/test-utils';
@@ -86,7 +87,9 @@ describe('UpdateHeuristicsFollowingChatbotInputUseCase', () => {
 
     // Mock LLM port
     llmPort = {
-      getLlmForOrganization: jest.fn().mockResolvedValue(mockAiService),
+      getLlmForOrganization: jest
+        .fn()
+        .mockResolvedValue({ aiService: mockAiService }),
     } as jest.Mocked<ILlmPort>;
 
     stubbedLogger = stubLogger();
@@ -567,6 +570,66 @@ describe('UpdateHeuristicsFollowingChatbotInputUseCase', () => {
       await expect(useCase.execute(command)).rejects.toThrow(
         'AI generation error',
       );
+    });
+  });
+
+  describe('when AI service is not configured for organization', () => {
+    it('throws AiNotConfigured error', async () => {
+      const heuristicsId = createDetectionHeuristicsId(uuidv4());
+      const ruleId = createRuleId(uuidv4());
+      const testUserId = createUserId(uuidv4());
+      const testOrgId = createOrganizationId(uuidv4());
+
+      accountsPort.getUserById.mockResolvedValue({
+        id: testUserId,
+        email: 'test@example.com',
+        passwordHash: 'hashed',
+        memberships: [
+          {
+            organizationId: testOrgId,
+            role: 'member',
+            userId: testUserId,
+          },
+        ],
+        active: true,
+      });
+
+      accountsPort.getOrganizationById.mockResolvedValue({
+        id: testOrgId,
+        name: 'Test Organization',
+        slug: 'test-org',
+      });
+
+      const command: UpdateHeuristicsFollowingChatbotInputCommand = {
+        detectionHeuristicsId: heuristicsId,
+        question: 'test question',
+        answer: 'test answer',
+        userId: testUserId,
+        organizationId: testOrgId,
+      };
+
+      const existingHeuristics: DetectionHeuristics = {
+        id: heuristicsId,
+        ruleId,
+        language: ProgrammingLanguage.TYPESCRIPT,
+        heuristics: ['existing heuristic'],
+      };
+
+      const mockRule: Rule = {
+        id: ruleId,
+        content: 'Test rule',
+      } as Rule;
+
+      heuristicsRepository.getHeuristicsById.mockResolvedValue(
+        existingHeuristics,
+      );
+      standardsAdapter.getRule.mockResolvedValue(mockRule);
+      standardsAdapter.getRuleCodeExamples.mockResolvedValue([]);
+
+      // Mock LLM port returning undefined aiService
+      llmPort.getLlmForOrganization.mockResolvedValue({ aiService: undefined });
+
+      await expect(useCase.execute(command)).rejects.toThrow(AiNotConfigured);
     });
   });
 });

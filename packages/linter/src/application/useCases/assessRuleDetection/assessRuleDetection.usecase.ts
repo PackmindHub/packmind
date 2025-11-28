@@ -144,7 +144,22 @@ export class AssessRuleDetectionUseCase implements IAssessRuleDetectionJob {
         'LLM port not configured for rule detection assessment',
       );
     }
-    const aiService = await this.llmPort.getLlmForOrganization(organizationId);
+    const response = await this.llmPort.getLlmForOrganization({
+      organizationId,
+    });
+    if (!response.aiService) {
+      this.logger.warn(
+        'AI service not configured for organization - cannot assess rule detection',
+        {
+          organizationId: organizationId.toString(),
+          jobId,
+        },
+      );
+      throw new AiNotConfigured(
+        'AI service not configured for this organization',
+      );
+    }
+    const aiService = response.aiService;
     const assessmentService = new RuleDetectionAssessmentService(
       aiService,
       this.logger,

@@ -10,6 +10,7 @@ import {
   ILinterPort,
   ILlmPort,
   AIService,
+  AiNotConfigured,
   RuleDetectionAssessmentStatus,
   createRuleDetectionAssessmentId,
   DetectionModeEnum,
@@ -108,7 +109,9 @@ describe('AssessRuleDetectionUseCase', () => {
 
     // Mock LLM port
     llmPort = {
-      getLlmForOrganization: jest.fn().mockResolvedValue(mockAiService),
+      getLlmForOrganization: jest
+        .fn()
+        .mockResolvedValue({ aiService: mockAiService }),
     } as jest.Mocked<ILlmPort>;
 
     stubbedLogger = stubLogger();
@@ -546,6 +549,30 @@ describe('AssessRuleDetectionUseCase', () => {
           }),
         );
       });
+    });
+  });
+
+  describe('when AI service is not configured for organization', () => {
+    it('throws AiNotConfigured error', async () => {
+      const rule = ruleFactory({
+        id: createRuleId(uuidv4()),
+        content: 'Test rule',
+      });
+      const command: AssessRuleDetectionJobCommand = {
+        rule,
+        jobId: 'job-no-ai',
+        organizationId: createOrganizationId(uuidv4()),
+        userId: createUserId(uuidv4()),
+        language: ProgrammingLanguage.TYPESCRIPT,
+        assessmentId: createRuleDetectionAssessmentId(uuidv4()),
+      };
+
+      // Mock LLM port returning undefined aiService
+      llmPort.getLlmForOrganization.mockResolvedValue({ aiService: undefined });
+
+      await expect(assessRuleDetectionUseCase.execute(command)).rejects.toThrow(
+        AiNotConfigured,
+      );
     });
   });
 });

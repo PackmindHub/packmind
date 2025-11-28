@@ -83,9 +83,21 @@ export class GenerateHeuristicFollowingChatbotInputUsecase extends AbstractMembe
           'LLM port not configured for heuristic generation',
         );
       }
-      const aiService = await this.llmPort.getLlmForOrganization(
-        createOrganizationId(command.organizationId),
-      );
+      const response = await this.llmPort.getLlmForOrganization({
+        organizationId: createOrganizationId(command.organizationId),
+      });
+      if (!response.aiService) {
+        this.logger.warn(
+          'AI service not configured for organization - cannot generate heuristic',
+          {
+            organizationId: command.organizationId,
+          },
+        );
+        throw new AiNotConfigured(
+          'AI service not configured for this organization',
+        );
+      }
+      const aiService = response.aiService;
       const heuristicGenerationService = new HeuristicGenerationService(
         aiService,
         this.logger,

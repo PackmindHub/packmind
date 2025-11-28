@@ -102,9 +102,22 @@ export class GenerateProgramUseCase implements IGenerateProgramJob {
           'LLM port not configured for program generation',
         );
       }
-      const aiService = await this.llmPort.getLlmForOrganization(
-        createOrganizationId(command.organizationId),
-      );
+      const response = await this.llmPort.getLlmForOrganization({
+        organizationId: createOrganizationId(command.organizationId),
+      });
+      if (!response.aiService) {
+        this.logger.warn(
+          'AI service not configured for organization - cannot generate program',
+          {
+            organizationId: command.organizationId,
+            jobId: command.jobId,
+          },
+        );
+        throw new AiNotConfigured(
+          'AI service not configured for this organization',
+        );
+      }
+      const aiService = response.aiService;
 
       const generateRuleDetection = new GenerateRuleDetection(
         command.jobId,
