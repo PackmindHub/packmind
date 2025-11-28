@@ -1,10 +1,15 @@
-import { NavLink, useLoaderData, useParams } from 'react-router';
+import { NavLink, useLoaderData, useParams, redirect } from 'react-router';
 import { queryClient } from '../../src/shared/data/queryClient';
 import {
   getStandardByIdOptions,
+  getStandardsBySpaceQueryOptions,
   useGetStandardByIdQuery,
 } from '../../src/domain/standards/api/queries/StandardsQueries';
-import { Standard, StandardId } from '@packmind/types';
+import {
+  ListStandardsBySpaceResponse,
+  Standard,
+  StandardId,
+} from '@packmind/types';
 import { routes } from '../../src/shared/utils/routes';
 import { getSpaceBySlugQueryOptions } from '../../src/domain/spaces/api/queries/SpacesQueries';
 import { getMeQueryOptions } from '../../src/domain/accounts/api/queries/UserQueries';
@@ -31,6 +36,21 @@ export async function clientLoader({
   );
   if (!space) {
     throw new Error('Space not found');
+  }
+
+  const standardsResponse =
+    await queryClient.fetchQuery<ListStandardsBySpaceResponse>(
+      getStandardsBySpaceQueryOptions(space.id, me.organization.id),
+    );
+  const standardsList: Standard[] = Array.isArray(standardsResponse)
+    ? standardsResponse
+    : (standardsResponse?.standards ?? []);
+  const standardExists = standardsList.some(
+    (candidate) => candidate.id === params.standardId,
+  );
+
+  if (!standardExists) {
+    throw redirect(routes.org.toDashboard(me.organization.slug));
   }
 
   return queryClient.fetchQuery(

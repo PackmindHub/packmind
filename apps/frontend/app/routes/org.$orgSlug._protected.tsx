@@ -1,6 +1,6 @@
 import { Outlet, redirect } from 'react-router';
 import { useEffect } from 'react';
-import { PMBox, PMHStack, pmToaster } from '@packmind/ui';
+import { PMBox, PMHStack } from '@packmind/ui';
 import { SidebarNavigation } from '../../src/domain/organizations/components/SidebarNavigation';
 
 import type { LoaderFunctionArgs } from 'react-router';
@@ -24,23 +24,23 @@ export async function clientLoader({ params }: LoaderFunctionArgs) {
       throw redirect('/sign-in');
     }
 
-    // Condition: org mismatch → validate and switch
-    if (me.organization?.slug && me.organization.slug !== params.orgSlug) {
-      const result = await authService.validateAndSwitchIfNeeded(
-        params.orgSlug!,
+    // Condition: org mismatch → try to validate and switch to target org
+    if (
+      me.organization?.slug &&
+      params.orgSlug &&
+      me.organization.slug !== params.orgSlug
+    ) {
+      const switchResult = await authService.validateAndSwitchIfNeeded(
+        params.orgSlug,
       );
 
-      // Condition: no access → show error and redirect
-      if (!result.hasAccess) {
-        pmToaster.error({
-          title: 'Access denied',
-          description: `You don't have access to this organization. Redirecting to ${me.organization.name}.`,
-        });
+      // If user doesn't have access to target org, redirect to current org dashboard
+      if (!switchResult.success || !switchResult.hasAccess) {
         throw redirect(`/org/${me.organization.slug}`);
       }
 
-      // Organization switched successfully, return updated me
-      return { me: result.updatedMe };
+      // Switch succeeded, return updated me
+      return { me: switchResult.updatedMe || me };
     }
 
     return { me };

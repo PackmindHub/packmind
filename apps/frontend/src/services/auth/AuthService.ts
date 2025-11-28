@@ -6,6 +6,7 @@ import {
   getSelectOrganizationQueryOptions,
 } from '../../domain/accounts/api/queries';
 import { MeResponse } from '../../domain/accounts/api/gateways/IAuthGateway';
+import { ORGANIZATION_QUERY_SCOPE } from '../../domain/organizations/api/queryKeys';
 
 export interface OrganizationSwitchResult {
   success: boolean;
@@ -106,10 +107,19 @@ export class AuthService {
       getSelectOrganizationQueryOptions(targetOrganization.id),
     );
 
-    // Invalidate all queries to refresh with new organization context
-    await queryClient.invalidateQueries();
+    // Stop any in-flight organization-scoped queries before clearing the cache
+    await queryClient.cancelQueries({
+      queryKey: [ORGANIZATION_QUERY_SCOPE],
+    });
 
-    // Fetch updated me data
+    // Remove all organization-scoped queries from the cache
+    // This prevents stale queries from refetching with the wrong org context
+    // which can cause "does not belong to space" errors during org transitions
+    queryClient.removeQueries({
+      queryKey: [ORGANIZATION_QUERY_SCOPE],
+    });
+
+    // Fetch updated me data (this will be fresh since we removed the cached query)
     const updatedMe = await queryClient.fetchQuery(getMeQueryOptions());
 
     return {

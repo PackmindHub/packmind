@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useParams } from 'react-router';
 
 import { standardsGateway } from '../gateways';
-import { OrganizationId } from '@packmind/types';
-import { RuleId, StandardId, SpaceId } from '@packmind/types';
+import { OrganizationId, RuleId, StandardId, SpaceId } from '@packmind/types';
 import { GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY } from '../../../deployments/api/queryKeys';
 import {
   GET_STANDARD_VERSIONS_KEY,
@@ -15,26 +15,31 @@ import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { GET_ONBOARDING_STATUS_KEY } from '../../../accounts/api/queryKeys';
 import { GET_STANDARD_RULES_DETECTION_STATUS_KEY } from '@packmind/proprietary/frontend/domain/detection/api/queryKeys';
 
+export const getStandardsBySpaceQueryOptions = (
+  spaceId: SpaceId | undefined,
+  organizationId: OrganizationId | undefined,
+) => ({
+  queryKey: getStandardsBySpaceKey(spaceId),
+  queryFn: () => {
+    if (!spaceId) {
+      throw new Error('Space ID is required to fetch standards');
+    }
+    if (!organizationId) {
+      throw new Error('Organization ID is required to fetch standards');
+    }
+    return standardsGateway.getStandards({
+      spaceId,
+      organizationId,
+    });
+  },
+  enabled: !!spaceId && !!organizationId,
+});
+
 export const useGetStandardsQuery = () => {
   const { spaceId } = useCurrentSpace();
   const { organization } = useAuthContext();
 
-  return useQuery({
-    queryKey: getStandardsBySpaceKey(spaceId),
-    queryFn: () => {
-      if (!spaceId) {
-        throw new Error('Space ID is required to fetch standards');
-      }
-      if (!organization?.id) {
-        throw new Error('Organization ID is required to fetch standards');
-      }
-      return standardsGateway.getStandards({
-        spaceId,
-        organizationId: organization.id,
-      });
-    },
-    enabled: !!spaceId && !!organization?.id,
-  });
+  return useQuery(getStandardsBySpaceQueryOptions(spaceId, organization?.id));
 };
 
 export const getStandardByIdOptions = (
@@ -49,16 +54,27 @@ export const getStandardByIdOptions = (
 });
 
 export const useGetStandardByIdQuery = (id: StandardId) => {
-  const { spaceId } = useCurrentSpace();
+  const { spaceId, spaceSlug: currentSpaceSlug } = useCurrentSpace();
   const { organization } = useAuthContext();
+  const { orgSlug, spaceSlug } = useParams<{
+    orgSlug: string;
+    spaceSlug: string;
+  }>();
 
-  return useQuery(
-    getStandardByIdOptions(
+  // Prevent query from running during org/space transitions
+  // When switching orgs, the URL params may not match the current context
+  const isOrgMatch = organization?.slug === orgSlug;
+  const isSpaceMatch = currentSpaceSlug === spaceSlug;
+
+  return useQuery({
+    ...getStandardByIdOptions(
       id,
       spaceId as SpaceId,
       organization?.id as OrganizationId,
     ),
-  );
+    enabled:
+      !!id && !!spaceId && !!organization?.id && isOrgMatch && isSpaceMatch,
+  });
 };
 
 const CREATE_STANDARD_MUTATION_KEY = 'createStandard';
@@ -212,9 +228,27 @@ export const useGetRulesByStandardIdQuery = (
   spaceId: SpaceId,
   standardId: StandardId,
 ) => {
-  return useQuery(
-    getRulesByStandardIdOptions(organizationId, spaceId, standardId),
-  );
+  const { spaceSlug: currentSpaceSlug } = useCurrentSpace();
+  const { organization } = useAuthContext();
+  const { orgSlug, spaceSlug } = useParams<{
+    orgSlug: string;
+    spaceSlug: string;
+  }>();
+
+  // Prevent query from running during org/space transitions
+  // When switching orgs, the URL params may not match the current context
+  const isOrgMatch = organization?.slug === orgSlug;
+  const isSpaceMatch = currentSpaceSlug === spaceSlug;
+
+  return useQuery({
+    ...getRulesByStandardIdOptions(organizationId, spaceId, standardId),
+    enabled:
+      !!organizationId &&
+      !!spaceId &&
+      !!standardId &&
+      isOrgMatch &&
+      isSpaceMatch,
+  });
 };
 
 const DELETE_STANDARD_MUTATION_KEY = 'deleteStandard';
