@@ -17,8 +17,15 @@ echo "[e2e] PACKMIND_EDITION: ${PACKMIND_EDITION:-not set}"
 echo "[e2e] =========================================="
 
 # Show initial state
-echo "[e2e] Current containers:"
-docker ps -a --format 'table {{.Names}}\t{{.Status}}\t{{.Image}}' | head -20
+echo "[e2e] All container names:"
+docker ps -a --format '{{.Names}}' | sort
+
+echo "[e2e] Docker compose services (e2e profile):"
+docker compose --profile=e2e ps -a 2>/dev/null || echo "[e2e] docker compose ps failed"
+
+echo "[e2e] Searching for pattern: $CONTAINER_PATTERN"
+echo "[e2e] Matching containers:"
+docker ps -a --format '{{.Names}}' | grep "$CONTAINER_PATTERN" || echo "[e2e] No matches found yet"
 
 # Wait for the container to exist (it might not have been created yet)
 MAX_WAIT=300
