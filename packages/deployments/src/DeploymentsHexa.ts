@@ -12,8 +12,6 @@ import {
   ICodingAgentPortName,
   IDeploymentPort,
   IDeploymentPortName,
-  IEventTrackingPort,
-  IEventTrackingPortName,
   IGitPort,
   IGitPortName,
   IRecipesPort,
@@ -98,9 +96,6 @@ export class DeploymentsHexa extends BaseHexa<
       const spacesPort = registry.getAdapter<ISpacesPort>(ISpacesPortName);
       const accountsPort =
         registry.getAdapter<IAccountsPort>(IAccountsPortName);
-      const eventTrackingPort = registry.getAdapter<IEventTrackingPort>(
-        IEventTrackingPortName,
-      );
       const eventEmitterService = registry.getService(
         PackmindEventEmitterService,
       );
@@ -113,7 +108,6 @@ export class DeploymentsHexa extends BaseHexa<
         [IStandardsPortName]: standardsPort,
         [ISpacesPortName]: spacesPort,
         [IAccountsPortName]: accountsPort,
-        [IEventTrackingPortName]: eventTrackingPort,
         eventEmitterService,
       });
 

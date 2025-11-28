@@ -4,7 +4,6 @@ import {
   FileUpdates,
   IAccountsPort,
   ICodingAgentPort,
-  IEventTrackingPort,
   IRecipesPort,
   IStandardsPort,
   Organization,
@@ -48,7 +47,6 @@ describe('PullContentUseCase', () => {
   let standardsPort: jest.Mocked<IStandardsPort>;
   let codingAgentPort: jest.Mocked<ICodingAgentPort>;
   let accountsPort: jest.Mocked<IAccountsPort>;
-  let eventTrackingPort: jest.Mocked<IEventTrackingPort>;
   let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let renderModeConfigurationService: jest.Mocked<RenderModeConfigurationService>;
   let useCase: PullContentUseCase;
@@ -90,10 +88,6 @@ describe('PullContentUseCase', () => {
       getOrganizationById: jest.fn(),
     } as unknown as jest.Mocked<IAccountsPort>;
 
-    eventTrackingPort = {
-      trackEvent: jest.fn().mockResolvedValue(undefined),
-    } as unknown as jest.Mocked<IEventTrackingPort>;
-
     eventEmitterService = {
       emit: jest.fn(),
     } as unknown as jest.Mocked<PackmindEventEmitterService>;
@@ -132,7 +126,6 @@ describe('PullContentUseCase', () => {
       codingAgentPort,
       renderModeConfigurationService,
       accountsPort,
-      eventTrackingPort,
       eventEmitterService,
       stubLogger(),
     );
@@ -261,7 +254,7 @@ describe('PullContentUseCase', () => {
       expect(result.fileUpdates.delete).toEqual([]);
     });
 
-    it('tracks artifacts_pulled event with source cli', async () => {
+    it('emits ArtifactsPulledEvent domain event', async () => {
       const testPackage: PackageWithArtefacts = {
         id: createPackageId('test-package-id'),
         slug: 'test-package',
@@ -287,11 +280,14 @@ describe('PullContentUseCase', () => {
 
       await useCase.execute(command);
 
-      expect(eventTrackingPort.trackEvent).toHaveBeenCalledWith(
-        createUserId(command.userId),
-        createOrganizationId(command.organizationId),
-        'artifacts_pulled',
-        { source: 'cli' },
+      expect(eventEmitterService.emit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          payload: expect.objectContaining({
+            userId: createUserId(command.userId),
+            organizationId: createOrganizationId(command.organizationId),
+            source: 'cli',
+          }),
+        }),
       );
     });
 

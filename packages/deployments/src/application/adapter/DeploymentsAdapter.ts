@@ -36,8 +36,6 @@ import {
   ICodingAgentPort,
   ICodingAgentPortName,
   IDeploymentPort,
-  IEventTrackingPort,
-  IEventTrackingPortName,
   IGitPort,
   IGitPortName,
   IPullContentResponse,
@@ -107,7 +105,6 @@ export class DeploymentsAdapter
   private standardsPort: IStandardsPort | null = null;
   private spacesPort: ISpacesPort | null = null;
   private accountsPort: IAccountsPort | null = null;
-  private eventTrackingPort: IEventTrackingPort | null = null;
 
   // Use cases - initialized in initialize()
   private _listDeploymentsByRecipeUseCase!: ListDeploymentsByRecipeUseCase;
@@ -155,7 +152,6 @@ export class DeploymentsAdapter
     [IStandardsPortName]: IStandardsPort;
     [ISpacesPortName]: ISpacesPort;
     [IAccountsPortName]: IAccountsPort;
-    [IEventTrackingPortName]: IEventTrackingPort;
     eventEmitterService: PackmindEventEmitterService;
   }): Promise<void> {
     // Step 1: Set all ports
@@ -165,7 +161,6 @@ export class DeploymentsAdapter
     this.standardsPort = ports[IStandardsPortName];
     this.spacesPort = ports[ISpacesPortName];
     this.accountsPort = ports[IAccountsPortName];
-    this.eventTrackingPort = ports[IEventTrackingPortName];
 
     // Step 2: Validate all required ports are set
     if (
@@ -194,7 +189,6 @@ export class DeploymentsAdapter
       this.standardDeploymentRepository,
       this.deploymentsServices.getTargetService(),
       this.deploymentsServices.getRenderModeConfigurationService(),
-      this.eventTrackingPort,
       ports.eventEmitterService,
     );
 
@@ -290,7 +284,6 @@ export class DeploymentsAdapter
       this.codingAgentPort,
       this.deploymentsServices.getRenderModeConfigurationService(),
       this.accountsPort,
-      this.eventTrackingPort,
       ports.eventEmitterService,
     );
 
