@@ -4,6 +4,8 @@ import { PageFactory } from './infra/PageFactory';
 import { v4 as uuidv4 } from 'uuid';
 
 test('User can signup', async ({ page }) => {
+  throw new Error('this test will fail apparently')
+
   const pageFactory: IPageFactory = new PageFactory(page);
 
   const signupPage = await pageFactory.getSignupPage();
@@ -13,6 +15,4 @@ test('User can signup', async ({ page }) => {
     `my-organization-${uuidv4()}`,
   );
   await dashboardPage.expectWelcomeMessage();
-
-  throw new Error('this test will fail apparently')
 });
