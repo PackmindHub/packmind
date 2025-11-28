@@ -29,7 +29,7 @@ echo "[e2e] Matching containers:"
 docker ps -a --format '{{.Names}}' | grep "$CONTAINER_PATTERN" || echo "[e2e] No matches found yet"
 
 # Wait for the container to exist (it might not have been created yet)
-MAX_WAIT=300
+MAX_WAIT=600
 WAIT_COUNT=0
 CONTAINER_NAME=""
 
