@@ -4,7 +4,6 @@ import {
   CreateStandardCommand,
   CreateStandardResponse,
   ICreateStandardUseCase,
-  IEventTrackingPort,
   OrganizationId,
   StandardCreatedEvent,
   StandardVersion,
@@ -29,7 +28,6 @@ export class CreateStandardUsecase implements ICreateStandardUseCase {
     private readonly standardService: StandardService,
     private readonly standardVersionService: StandardVersionService,
     private readonly generateStandardSummaryDelayedJob: GenerateStandardSummaryDelayedJob,
-    private readonly eventTrackingPort: IEventTrackingPort,
     private readonly eventEmitterService: PackmindEventEmitterService,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
@@ -151,13 +149,6 @@ export class CreateStandardUsecase implements ICreateStandardUseCase {
         organizationId,
         standardVersion,
         rules,
-      );
-
-      await this.eventTrackingPort.trackEvent(
-        userId,
-        organizationId,
-        'standard_created',
-        { source: 'ui' },
       );
 
       this.eventEmitterService.emit(

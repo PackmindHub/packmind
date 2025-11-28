@@ -1,7 +1,7 @@
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
-import type { ILinterPort, IEventTrackingPort } from '@packmind/types';
+import type { ILinterPort } from '@packmind/types';
 import {
   createOrganizationId,
   createSpaceId,
@@ -31,7 +31,6 @@ describe('CreateStandardWithExamplesUsecase', () => {
   let ruleExampleRepository: jest.Mocked<IRuleExampleRepository>;
   let ruleRepository: jest.Mocked<IRuleRepository>;
   let linterAdapter: jest.Mocked<ILinterPort>;
-  let eventTrackingPort: jest.Mocked<IEventTrackingPort>;
   let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let logger: jest.Mocked<PackmindLogger>;
 
@@ -98,11 +97,6 @@ describe('CreateStandardWithExamplesUsecase', () => {
       computeRuleLanguageDetectionStatus: jest.fn(),
     } as unknown as jest.Mocked<ILinterPort>;
 
-    // Mock EventTrackingPort
-    eventTrackingPort = {
-      trackEvent: jest.fn(),
-    } as unknown as jest.Mocked<IEventTrackingPort>;
-
     // Mock EventEmitterService
     eventEmitterService = {
       emit: jest.fn().mockReturnValue(true),
@@ -122,7 +116,6 @@ describe('CreateStandardWithExamplesUsecase', () => {
       ruleRepository,
       eventEmitterService,
       linterAdapter,
-      eventTrackingPort,
       logger,
     );
   });
@@ -141,52 +134,6 @@ describe('CreateStandardWithExamplesUsecase', () => {
       scope: null,
       spaceId: createSpaceId(uuidv4()),
     };
-
-    it('tracks analytics event with mcp source', async () => {
-      const rules: RuleWithExamples[] = [
-        { content: 'Use consistent indentation' },
-      ];
-
-      const mockStandard = standardFactory({
-        id: createStandardId(uuidv4()),
-        name: baseRequest.name,
-        slug: 'test-standard',
-        description: baseRequest.description,
-        version: 1,
-        userId,
-        scope: null,
-      });
-
-      const mockStandardVersion = standardVersionFactory({
-        id: createStandardVersionId(uuidv4()),
-        standardId: mockStandard.id,
-        name: baseRequest.name,
-        slug: 'test-standard',
-        description: baseRequest.description,
-        version: 1,
-      });
-
-      standardService.listStandardsBySpace.mockResolvedValue([]);
-      standardService.addStandard.mockResolvedValue(mockStandard);
-      standardSummaryService.createStandardSummary.mockResolvedValue(
-        'Generated summary',
-      );
-      standardVersionService.addStandardVersion.mockResolvedValue(
-        mockStandardVersion,
-      );
-
-      await usecase.createStandardWithExamples({
-        ...baseRequest,
-        rules,
-      });
-
-      expect(eventTrackingPort.trackEvent).toHaveBeenCalledWith(
-        userId,
-        organizationId,
-        'standard_created',
-        { source: 'mcp' },
-      );
-    });
 
     it('creates a standard with rules that have no examples', async () => {
       const rules: RuleWithExamples[] = [
@@ -1245,7 +1192,6 @@ describe('CreateStandardWithExamplesUsecase', () => {
             ruleRepository,
             eventEmitterService,
             undefined,
-            eventTrackingPort,
             logger,
           );
 

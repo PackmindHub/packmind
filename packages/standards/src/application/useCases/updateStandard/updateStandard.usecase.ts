@@ -6,7 +6,6 @@ import {
 } from '@packmind/node-utils';
 import {
   IAccountsPort,
-  IEventTrackingPort,
   ISpacesPort,
   IUpdateStandardUseCase,
   OrganizationId,
@@ -45,7 +44,6 @@ export class UpdateStandardUsecase
     private readonly ruleExampleRepository: IRuleExampleRepository,
     private readonly generateStandardSummaryDelayedJob: GenerateStandardSummaryDelayedJob,
     private readonly spacesPort: ISpacesPort | null,
-    private readonly eventTrackingPort: IEventTrackingPort,
     private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
@@ -255,12 +253,6 @@ export class UpdateStandardUsecase
         userId,
         rulesCount: rules.length,
       });
-
-      await this.eventTrackingPort.trackEvent(
-        userId as UserId,
-        organizationId as OrganizationId,
-        'standard_edited',
-      );
 
       const event = new StandardUpdatedEvent({
         standardId: createStandardId(standardId),

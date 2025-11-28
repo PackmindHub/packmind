@@ -21,7 +21,6 @@ import {
   createUserId,
   OrganizationId,
   UserId,
-  IEventTrackingPort,
 } from '@packmind/types';
 import { createStandardVersionId } from '@packmind/types';
 import { IRuleExampleRepository } from '../../../domain/repositories/IRuleExampleRepository';
@@ -34,7 +33,6 @@ describe('AddRuleToStandardUsecase', () => {
   let ruleRepository: jest.Mocked<IRuleRepository>;
   let ruleExampleRepository: jest.Mocked<IRuleExampleRepository>;
   let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
-  let eventTrackingPort: jest.Mocked<IEventTrackingPort> | undefined;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   let organizationId: OrganizationId;
@@ -92,10 +90,6 @@ describe('AddRuleToStandardUsecase', () => {
       emit: jest.fn().mockReturnValue(true),
     } as unknown as jest.Mocked<PackmindEventEmitterService>;
 
-    eventTrackingPort = {
-      trackEvent: jest.fn().mockResolvedValue(undefined),
-    } as jest.Mocked<IEventTrackingPort>;
-
     stubbedLogger = stubLogger();
 
     // Setup default mock implementations
@@ -109,7 +103,6 @@ describe('AddRuleToStandardUsecase', () => {
       generateStandardSummaryDelayedJob,
       eventEmitterService,
       undefined, // linterAdapter
-      eventTrackingPort,
       stubbedLogger,
     );
   });
