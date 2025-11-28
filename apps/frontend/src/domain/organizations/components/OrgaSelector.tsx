@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate, useLocation } from 'react-router';
+import { useNavigate } from 'react-router';
 import {
   PMHStack,
   PMButton,
@@ -20,36 +20,11 @@ interface ISidebarOrgaSelectorProps {
   currentOrganization: AuthContextOrganization;
 }
 
-/**
- * Determines the target route when switching organizations.
- * Preserves the current section (standards, recipes, packages) but navigates to the list view
- * since specific items (standardId, recipeId, etc.) won't exist in the new organization.
- */
-function getTargetRouteForOrgSwitch(
-  currentPath: string,
-  newOrgSlug: string,
-): string {
-  // Check if user is on a space-scoped section and redirect to the list view
-  if (currentPath.includes('/standards')) {
-    return routes.space.toStandards(newOrgSlug, 'global');
-  }
-  if (currentPath.includes('/recipes')) {
-    return routes.space.toRecipes(newOrgSlug, 'global');
-  }
-  if (currentPath.includes('/packages')) {
-    return routes.space.toPackages(newOrgSlug, 'global');
-  }
-
-  // Default to dashboard for other routes
-  return routes.org.toDashboard(newOrgSlug);
-}
-
 export const SidebarOrgaSelector: React.FunctionComponent<
   ISidebarOrgaSelectorProps
 > = ({ currentOrganization }) => {
   const [createOrgaDialogOpen, setCreateOrgaDialogOpen] = React.useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
   const selectOrganizationMutation = useSelectOrganizationMutation();
 
   const { data: organizations = [], isLoading } =
@@ -67,12 +42,9 @@ export const SidebarOrgaSelector: React.FunctionComponent<
     // Switch organization via API (sets new JWT), then clear cache and navigate
     await selectOrganizationMutation.mutateAsync({ organizationId: orgaId });
 
-    // Navigate to the same section in the new organization (or dashboard if not applicable)
-    const targetRoute = getTargetRouteForOrgSwitch(
-      location.pathname,
-      selectedOrg.slug,
-    );
-    navigate(targetRoute);
+    // Navigate to the new organization's dashboard
+    // The route loaders will handle redirecting to the appropriate space
+    navigate(routes.org.toDashboard(selectedOrg.slug));
   };
 
   const handleOpenOrganizationCreation = () => {
