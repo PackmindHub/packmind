@@ -1,24 +1,34 @@
 import {
   BadRequestException,
+  Body,
   Controller,
+  Delete,
   Get,
   NotFoundException,
   Param,
+  Post,
+  Put,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
-import { GetRuleExamplesCommand } from '@packmind/standards';
+import {
+  CreateRuleExampleCommand,
+  DeleteRuleExampleCommand,
+  GetRuleExamplesCommand,
+  UpdateRuleExampleCommand,
+} from '@packmind/standards';
 import {
   OrganizationId,
   Rule,
   RuleExample,
+  RuleExampleId,
   RuleId,
   SpaceId,
   StandardId,
+  stringToProgrammingLanguage,
 } from '@packmind/types';
-import { AuthService } from '../../../../auth/auth.service';
 import { RulesService } from '../../../../standards/rules/rules.service';
 import { StandardsService } from '../../../../standards/standards.service';
 import { OrganizationAccessGuard } from '../../../guards/organization-access.guard';
@@ -45,7 +55,6 @@ export class OrganizationsSpacesStandardsRulesController {
   constructor(
     private readonly rulesService: RulesService,
     private readonly standardsService: StandardsService,
-    private readonly authService: AuthService,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.INFO,
@@ -219,9 +228,11 @@ export class OrganizationsSpacesStandardsRulesController {
       }
 
       // Create command and fetch rule examples
-      const command = this.authService.makePackmindCommand(request, {
+      const command: GetRuleExamplesCommand = {
+        userId,
+        organizationId,
         ruleId,
-      }) as GetRuleExamplesCommand;
+      };
 
       const result = await this.rulesService.getRuleExamples(command);
 
@@ -253,6 +264,327 @@ export class OrganizationsSpacesStandardsRulesController {
             spaceId,
             standardId,
             ruleId,
+            userId,
+            error: errorMessage,
+          },
+        );
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * Create a new example for a specific rule within a standard
+   * POST /organizations/:orgId/spaces/:spaceId/standards/:standardId/rules/:ruleId/examples
+   */
+  @Post(':ruleId/examples')
+  async createRuleExample(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('standardId') standardId: StandardId,
+    @Param('ruleId') ruleId: RuleId,
+    @Body()
+    body: {
+      lang: string;
+      positive: string;
+      negative: string;
+    },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<RuleExample> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'POST /organizations/:orgId/spaces/:spaceId/standards/:standardId/rules/:ruleId/examples - Creating rule example',
+      {
+        organizationId,
+        spaceId,
+        standardId,
+        ruleId,
+        lang: body.lang,
+        userId,
+      },
+    );
+
+    try {
+      // Validate request body
+      if (
+        !body.lang ||
+        typeof body.lang !== 'string' ||
+        body.lang.trim().length === 0
+      ) {
+        throw new BadRequestException(
+          'Language is required and cannot be empty',
+        );
+      }
+
+      if (typeof body.positive !== 'string') {
+        throw new BadRequestException('Positive example must be a string');
+      }
+
+      if (typeof body.negative !== 'string') {
+        throw new BadRequestException('Negative example must be a string');
+      }
+
+      // Validate that the standard belongs to the specified space
+      const standardResponse = await this.standardsService.getStandardById(
+        standardId,
+        organizationId,
+        spaceId,
+        userId,
+      );
+
+      if (!standardResponse || !standardResponse.standard) {
+        throw new NotFoundException(
+          `Standard with ID ${standardId} not found in organization ${organizationId} and space ${spaceId}`,
+        );
+      }
+
+      if (standardResponse.standard.spaceId !== spaceId) {
+        throw new NotFoundException(
+          `Standard ${standardId} does not belong to space ${spaceId}`,
+        );
+      }
+
+      // Create command and call service
+      const command: CreateRuleExampleCommand = {
+        userId,
+        organizationId,
+        ruleId,
+        lang: stringToProgrammingLanguage(body.lang),
+        positive: body.positive || '',
+        negative: body.negative || '',
+      };
+
+      const result = await this.rulesService.createRuleExample(command);
+
+      this.logger.info(
+        'POST /organizations/:orgId/spaces/:spaceId/standards/:standardId/rules/:ruleId/examples - Rule example created successfully',
+        {
+          organizationId,
+          spaceId,
+          standardId,
+          ruleId,
+          lang: body.lang,
+          ruleExampleId: result.id,
+        },
+      );
+
+      return result;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
+      if (
+        !(error instanceof NotFoundException) &&
+        !(error instanceof BadRequestException)
+      ) {
+        this.logger.error(
+          'POST /organizations/:orgId/spaces/:spaceId/standards/:standardId/rules/:ruleId/examples - Failed to create rule example',
+          {
+            organizationId,
+            spaceId,
+            standardId,
+            ruleId,
+            lang: body?.lang,
+            userId,
+            error: errorMessage,
+          },
+        );
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * Update an existing example for a specific rule within a standard
+   * PUT /organizations/:orgId/spaces/:spaceId/standards/:standardId/rules/:ruleId/examples/:exampleId
+   */
+  @Put(':ruleId/examples/:exampleId')
+  async updateRuleExample(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('standardId') standardId: StandardId,
+    @Param('ruleId') ruleId: RuleId,
+    @Param('exampleId') exampleId: RuleExampleId,
+    @Body()
+    body: {
+      lang?: string;
+      positive?: string;
+      negative?: string;
+    },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<RuleExample> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'PUT /organizations/:orgId/spaces/:spaceId/standards/:standardId/rules/:ruleId/examples/:exampleId - Updating rule example',
+      {
+        organizationId,
+        spaceId,
+        standardId,
+        ruleId,
+        exampleId,
+        userId,
+      },
+    );
+
+    try {
+      // Validate that the standard belongs to the specified space
+      const standardResponse = await this.standardsService.getStandardById(
+        standardId,
+        organizationId,
+        spaceId,
+        userId,
+      );
+
+      if (!standardResponse || !standardResponse.standard) {
+        throw new NotFoundException(
+          `Standard with ID ${standardId} not found in organization ${organizationId} and space ${spaceId}`,
+        );
+      }
+
+      if (standardResponse.standard.spaceId !== spaceId) {
+        throw new NotFoundException(
+          `Standard ${standardId} does not belong to space ${spaceId}`,
+        );
+      }
+
+      // Create command and call service
+      const command: UpdateRuleExampleCommand = {
+        userId,
+        organizationId,
+        ruleExampleId: exampleId,
+        lang: body.lang ? stringToProgrammingLanguage(body.lang) : undefined,
+        positive: body.positive,
+        negative: body.negative,
+      };
+
+      const result = await this.rulesService.updateRuleExample(command);
+
+      this.logger.info(
+        'PUT /organizations/:orgId/spaces/:spaceId/standards/:standardId/rules/:ruleId/examples/:exampleId - Rule example updated successfully',
+        {
+          organizationId,
+          spaceId,
+          standardId,
+          ruleId,
+          exampleId,
+          updatedFields: Object.keys(body),
+        },
+      );
+
+      return result;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
+      if (
+        !(error instanceof NotFoundException) &&
+        !(error instanceof BadRequestException)
+      ) {
+        this.logger.error(
+          'PUT /organizations/:orgId/spaces/:spaceId/standards/:standardId/rules/:ruleId/examples/:exampleId - Failed to update rule example',
+          {
+            organizationId,
+            spaceId,
+            standardId,
+            ruleId,
+            exampleId,
+            userId,
+            error: errorMessage,
+          },
+        );
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * Delete an example for a specific rule within a standard
+   * DELETE /organizations/:orgId/spaces/:spaceId/standards/:standardId/rules/:ruleId/examples/:exampleId
+   */
+  @Delete(':ruleId/examples/:exampleId')
+  async deleteRuleExample(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('spaceId') spaceId: SpaceId,
+    @Param('standardId') standardId: StandardId,
+    @Param('ruleId') ruleId: RuleId,
+    @Param('exampleId') exampleId: RuleExampleId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<void> {
+    const userId = request.user.userId;
+
+    this.logger.info(
+      'DELETE /organizations/:orgId/spaces/:spaceId/standards/:standardId/rules/:ruleId/examples/:exampleId - Deleting rule example',
+      {
+        organizationId,
+        spaceId,
+        standardId,
+        ruleId,
+        exampleId,
+        userId,
+      },
+    );
+
+    try {
+      // Validate that the standard belongs to the specified space
+      const standardResponse = await this.standardsService.getStandardById(
+        standardId,
+        organizationId,
+        spaceId,
+        userId,
+      );
+
+      if (!standardResponse || !standardResponse.standard) {
+        throw new NotFoundException(
+          `Standard with ID ${standardId} not found in organization ${organizationId} and space ${spaceId}`,
+        );
+      }
+
+      if (standardResponse.standard.spaceId !== spaceId) {
+        throw new NotFoundException(
+          `Standard ${standardId} does not belong to space ${spaceId}`,
+        );
+      }
+
+      // Create command and call service
+      const command: DeleteRuleExampleCommand = {
+        userId,
+        organizationId,
+        ruleExampleId: exampleId,
+      };
+
+      await this.rulesService.deleteRuleExample(command);
+
+      this.logger.info(
+        'DELETE /organizations/:orgId/spaces/:spaceId/standards/:standardId/rules/:ruleId/examples/:exampleId - Rule example deleted successfully',
+        {
+          organizationId,
+          spaceId,
+          standardId,
+          ruleId,
+          exampleId,
+        },
+      );
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
+      if (
+        !(error instanceof NotFoundException) &&
+        !(error instanceof BadRequestException)
+      ) {
+        this.logger.error(
+          'DELETE /organizations/:orgId/spaces/:spaceId/standards/:standardId/rules/:ruleId/examples/:exampleId - Failed to delete rule example',
+          {
+            organizationId,
+            spaceId,
+            standardId,
+            ruleId,
+            exampleId,
             userId,
             error: errorMessage,
           },

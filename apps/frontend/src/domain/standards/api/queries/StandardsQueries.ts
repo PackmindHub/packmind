@@ -197,13 +197,23 @@ export const useUpdateStandardMutation = () => {
   });
 };
 
-export const useGetStandardVersionsQuery = (id: StandardId) => {
+export const useGetStandardVersionsQuery = (standardId: StandardId) => {
+  const { spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
+
   return useQuery({
-    queryKey: [...GET_STANDARD_VERSIONS_KEY, id],
+    queryKey: [...GET_STANDARD_VERSIONS_KEY, standardId],
     queryFn: () => {
-      return standardsGateway.getVersionsById(id);
+      if (!organization?.id || !spaceId) {
+        throw new Error('Organization and space context required');
+      }
+      return standardsGateway.getVersionsById(
+        organization.id,
+        spaceId as SpaceId,
+        standardId,
+      );
     },
-    enabled: !!id, // Only run query if id is provided
+    enabled: !!standardId && !!organization?.id && !!spaceId,
   });
 };
 
@@ -256,11 +266,19 @@ const DELETE_STANDARD_MUTATION_KEY = 'deleteStandard';
 export const useDeleteStandardMutation = () => {
   const queryClient = useQueryClient();
   const { spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
 
   return useMutation({
     mutationKey: [DELETE_STANDARD_MUTATION_KEY],
-    mutationFn: async (id: StandardId) => {
-      return standardsGateway.deleteStandard(id);
+    mutationFn: async (standardId: StandardId) => {
+      if (!organization?.id || !spaceId) {
+        throw new Error('Organization and space context required');
+      }
+      return standardsGateway.deleteStandard(
+        organization.id,
+        spaceId as SpaceId,
+        standardId,
+      );
     },
     onSuccess: async () => {
       // Invalidate all standards (standard is gone, may have had cached details)
@@ -287,11 +305,19 @@ const DELETE_STANDARDS_BATCH_MUTATION_KEY = 'deleteStandardsBatch';
 export const useDeleteStandardsBatchMutation = () => {
   const queryClient = useQueryClient();
   const { spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
 
   return useMutation({
     mutationKey: [DELETE_STANDARDS_BATCH_MUTATION_KEY],
     mutationFn: async (standardIds: StandardId[]) => {
-      return standardsGateway.deleteStandardsBatch(standardIds);
+      if (!organization?.id || !spaceId) {
+        throw new Error('Organization and space context required');
+      }
+      return standardsGateway.deleteStandardsBatch(
+        organization.id,
+        spaceId as SpaceId,
+        standardIds,
+      );
     },
     onSuccess: async () => {
       // Same as useDeleteStandardMutation

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { RuleExample, RuleId } from '@packmind/types';
+import { RuleExample, RuleId, StandardId } from '@packmind/types';
 import {
   ProgrammingLanguage,
   getAllLanguagesSortedByDisplayName,
@@ -34,7 +34,7 @@ import { GET_STANDARD_RULES_DETECTION_STATUS_KEY } from '@packmind/proprietary/f
 
 interface RuleExampleItemProps {
   example: RuleExample | NewExample;
-  standardId: string;
+  standardId: StandardId;
   ruleId: RuleId;
   isNew?: boolean;
   onSaveNew?: (

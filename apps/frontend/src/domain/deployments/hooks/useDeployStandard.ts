@@ -1,8 +1,15 @@
 import { useCallback } from 'react';
 import { standardsGateway } from '../../standards/api/gateways';
-import { StandardId, StandardVersionId } from '@packmind/types';
-import { TargetId } from '@packmind/types';
+import {
+  OrganizationId,
+  SpaceId,
+  StandardId,
+  StandardVersionId,
+  TargetId,
+} from '@packmind/types';
 import { useDeployStandardsMutation } from '../api/queries/DeploymentsQueries';
+import { useCurrentSpace } from '../../spaces/hooks/useCurrentSpace';
+import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 
 interface DeployParams {
   id: StandardId;
@@ -16,12 +23,18 @@ interface BatchDeployParams {
 
 // Helper function to get StandardVersionId from standardId and version
 const getStandardVersionId = async (
+  organizationId: OrganizationId,
+  spaceId: SpaceId,
   standardId: StandardId,
   version: number,
 ): Promise<StandardVersionId | null> => {
   try {
     // Get all versions for the standard
-    const versions = await standardsGateway.getVersionsById(standardId);
+    const versions = await standardsGateway.getVersionsById(
+      organizationId,
+      spaceId,
+      standardId,
+    );
 
     // Find the version with the matching version number
     const standardVersion = versions.find((v) => v.version === version);
@@ -39,11 +52,19 @@ const getStandardVersionId = async (
 
 export const useDeployStandard = () => {
   const deployMutation = useDeployStandardsMutation();
+  const { spaceId } = useCurrentSpace();
+  const { organization } = useAuthContext();
 
   const deployToTargets = useCallback(
     async (params: DeployParams, targetIds: TargetId[]) => {
+      if (!organization?.id || !spaceId) {
+        throw new Error('Organization and space context required');
+      }
+
       // Get the StandardVersionId for this standard and version
       const standardVersionId = await getStandardVersionId(
+        organization.id,
+        spaceId as SpaceId,
         params.id,
         params.version,
       );
@@ -67,7 +88,7 @@ export const useDeployStandard = () => {
 
       return deployments;
     },
-    [deployMutation],
+    [deployMutation, organization?.id, spaceId],
   );
 
   const deploySingle = useCallback(
@@ -93,6 +114,10 @@ export const useDeployStandard = () => {
   const deployBatch = useCallback(
     async (batchParams: BatchDeployParams, targetIds: TargetId[]) => {
       try {
+        if (!organization?.id || !spaceId) {
+          throw new Error('Organization and space context required');
+        }
+
         if (!targetIds.length) {
           throw new Error('Target IDs array cannot be empty');
         } else {
@@ -102,6 +127,8 @@ export const useDeployStandard = () => {
           const standardVersionIdsPromises = batchParams.standards.map(
             async (standard) => {
               const standardVersionId = await getStandardVersionId(
+                organization.id,
+                spaceId as SpaceId,
                 standard.id,
                 standard.version,
               );
@@ -153,7 +180,7 @@ export const useDeployStandard = () => {
         throw error;
       }
     },
-    [deployMutation],
+    [deployMutation, organization?.id, spaceId],
   );
 
   return {

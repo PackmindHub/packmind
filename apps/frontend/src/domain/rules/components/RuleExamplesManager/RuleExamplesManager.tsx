@@ -16,7 +16,7 @@ import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 
 interface RuleExamplesManagerProps {
-  standardId: string;
+  standardId: StandardId;
   ruleId: RuleId;
   selectedLanguage: string;
   forceCreate?: boolean;
@@ -56,7 +56,7 @@ export const RuleExamplesManager: React.FC<RuleExamplesManagerProps> = ({
   } = useGetRuleExamplesQuery(
     organization?.id as OrganizationId,
     spaceId as SpaceId,
-    standardId as StandardId,
+    standardId,
     ruleId,
   );
 
