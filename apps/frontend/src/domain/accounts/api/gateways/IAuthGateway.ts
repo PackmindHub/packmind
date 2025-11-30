@@ -7,6 +7,9 @@ import {
   ISignInUserUseCase,
   IGenerateApiKeyUseCase,
   IGetCurrentApiKeyUseCase,
+  IGetMcpTokenUseCase,
+  IGetMcpUrlUseCase,
+  NewGateway,
 } from '@packmind/types';
 import {
   PublicGateway,
@@ -83,8 +86,8 @@ export interface IAuthGateway {
   checkEmailAvailability: PublicGateway<ICheckEmailAvailabilityUseCase>;
   signOut(): Promise<SignOutResponse>;
   getMe(): Promise<MeResponse>;
-  getMcpToken(): Promise<TokenResponse>;
-  getMcpURL(): Promise<{ url: string }>;
+  getMcpToken: NewGateway<IGetMcpTokenUseCase>;
+  getMcpURL: NewGateway<IGetMcpUrlUseCase>;
   generateApiKey: Gateway<IGenerateApiKeyUseCase>;
   getCurrentApiKey: PublicGateway<IGetCurrentApiKeyUseCase>;
   validateInvitationToken(token: string): Promise<ValidateInvitationResponse>;
