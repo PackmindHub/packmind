@@ -27,7 +27,7 @@ import { OrganizationsModule as AccountsOrganizationsModule } from './accounts/o
 import { AuthGuard } from './auth/auth.guard';
 import { AuthModule } from './auth/auth.module';
 import { GitModule } from './git/git.module';
-import { McpModule } from './mcp/mcp.module';
+
 import { OrganizationsModule } from './organizations/organizations.module';
 import { RecipesModule } from './organizations/spaces/recipes/recipes.module';
 import { OrganizationsSpacesModule } from './organizations/spaces/spaces.module';
@@ -106,7 +106,6 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
     GitModule,
     AccountsOrganizationsModule,
     OrganizationsModule,
-    McpModule,
     AnalyticsModule,
     SSEModule,
     AmplitudeModule,
