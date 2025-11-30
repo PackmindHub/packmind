@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  createStandardId,
   OrganizationId,
   RuleExample,
   RuleExampleId,
@@ -45,7 +44,7 @@ export const useCreateRuleExampleMutation = () => {
   return useMutation({
     mutationKey: ['createRuleExample'],
     mutationFn: async (params: {
-      standardId: string;
+      standardId: StandardId;
       ruleId: RuleId;
       example: {
         lang: string;
@@ -53,7 +52,12 @@ export const useCreateRuleExampleMutation = () => {
         negative: string;
       };
     }) => {
+      if (!organization?.id || !spaceId) {
+        throw new Error('Organization and space context required');
+      }
       return rulesGateway.createRuleExample(
+        organization.id,
+        spaceId as SpaceId,
         params.standardId,
         params.ruleId,
         params.example,
@@ -67,7 +71,7 @@ export const useCreateRuleExampleMutation = () => {
               queryKey: getRuleExamplesKey(
                 organization.id,
                 spaceId as SpaceId,
-                createStandardId(variables.standardId),
+                variables.standardId,
                 variables.ruleId,
               ),
             })
@@ -75,10 +79,7 @@ export const useCreateRuleExampleMutation = () => {
 
         // Only invalidate the specific standard (if examples are embedded)
         queryClient.invalidateQueries({
-          queryKey: getStandardByIdKey(
-            spaceId,
-            createStandardId(variables.standardId),
-          ),
+          queryKey: getStandardByIdKey(spaceId, variables.standardId),
         }),
 
         // Only invalidate rules for this standard
@@ -113,7 +114,7 @@ export const useUpdateRuleExampleMutation = () => {
   return useMutation({
     mutationKey: ['updateRuleExample'],
     mutationFn: async (params: {
-      standardId: string;
+      standardId: StandardId;
       ruleId: RuleId;
       exampleId: RuleExampleId;
       updates: {
@@ -122,7 +123,12 @@ export const useUpdateRuleExampleMutation = () => {
         negative?: string;
       };
     }) => {
+      if (!organization?.id || !spaceId) {
+        throw new Error('Organization and space context required');
+      }
       return rulesGateway.updateRuleExample(
+        organization.id,
+        spaceId as SpaceId,
         params.standardId,
         params.ruleId,
         params.exampleId,
@@ -136,16 +142,13 @@ export const useUpdateRuleExampleMutation = () => {
               queryKey: getRuleExamplesKey(
                 organization.id,
                 spaceId as SpaceId,
-                createStandardId(variables.standardId),
+                variables.standardId,
                 variables.ruleId,
               ),
             })
           : Promise.resolve(),
         queryClient.invalidateQueries({
-          queryKey: getStandardByIdKey(
-            spaceId,
-            createStandardId(variables.standardId),
-          ),
+          queryKey: getStandardByIdKey(spaceId, variables.standardId),
         }),
         queryClient.invalidateQueries({
           queryKey: [...GET_RULES_BY_STANDARD_ID_KEY, variables.standardId],
@@ -177,11 +180,16 @@ export const useDeleteRuleExampleMutation = () => {
   return useMutation({
     mutationKey: ['deleteRuleExample'],
     mutationFn: async (params: {
-      standardId: string;
+      standardId: StandardId;
       ruleId: RuleId;
       exampleId: RuleExampleId;
     }) => {
+      if (!organization?.id || !spaceId) {
+        throw new Error('Organization and space context required');
+      }
       return rulesGateway.deleteRuleExample(
+        organization.id,
+        spaceId as SpaceId,
         params.standardId,
         params.ruleId,
         params.exampleId,
@@ -194,16 +202,13 @@ export const useDeleteRuleExampleMutation = () => {
               queryKey: getRuleExamplesKey(
                 organization.id,
                 spaceId as SpaceId,
-                createStandardId(variables.standardId),
+                variables.standardId,
                 variables.ruleId,
               ),
             })
           : Promise.resolve(),
         queryClient.invalidateQueries({
-          queryKey: getStandardByIdKey(
-            spaceId,
-            createStandardId(variables.standardId),
-          ),
+          queryKey: getStandardByIdKey(spaceId, variables.standardId),
         }),
         queryClient.invalidateQueries({
           queryKey: [...GET_RULES_BY_STANDARD_ID_KEY, variables.standardId],

@@ -14,7 +14,11 @@ import { GitRepoId } from '@packmind/types';
 export interface IStandardsGateway {
   getStandards: NewGateway<IListStandardsBySpaceUseCase>;
   getStandardById: NewGateway<IGetStandardByIdUseCase>;
-  getVersionsById(id: StandardId): Promise<StandardVersion[]>;
+  getVersionsById(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    standardId: StandardId,
+  ): Promise<StandardVersion[]>;
   getRulesByStandardId(
     organizationId: OrganizationId,
     spaceId: SpaceId,
@@ -45,6 +49,14 @@ export interface IStandardsGateway {
       scope?: string | null;
     },
   ): Promise<Standard>;
-  deleteStandard(id: StandardId): Promise<void>;
-  deleteStandardsBatch(standardIds: StandardId[]): Promise<void>;
+  deleteStandard(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    standardId: StandardId,
+  ): Promise<void>;
+  deleteStandardsBatch(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    standardIds: StandardId[],
+  ): Promise<void>;
 }

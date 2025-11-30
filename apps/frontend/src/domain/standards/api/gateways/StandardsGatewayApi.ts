@@ -26,11 +26,17 @@ export class StandardsGatewayApi
   implements IStandardsGateway
 {
   constructor() {
-    super('/standards');
+    super('/organizations');
   }
 
-  getVersionsById(id: StandardId): Promise<StandardVersion[]> {
-    return this._api.get<StandardVersion[]>(`${this._endpoint}/${id}/versions`);
+  getVersionsById(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    standardId: StandardId,
+  ): Promise<StandardVersion[]> {
+    return this._api.get<StandardVersion[]>(
+      `${this._endpoint}/${organizationId}/spaces/${spaceId}/standards/${standardId}/versions`,
+    );
   }
 
   getRulesByStandardId(
@@ -105,13 +111,26 @@ export class StandardsGatewayApi
     });
   }
 
-  async deleteStandard(id: StandardId): Promise<void> {
-    return this._api.delete<void>(`${this._endpoint}/${id}`);
+  async deleteStandard(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    standardId: StandardId,
+  ): Promise<void> {
+    return this._api.delete<void>(
+      `${this._endpoint}/${organizationId}/spaces/${spaceId}/standards/${standardId}`,
+    );
   }
 
-  async deleteStandardsBatch(standardIds: StandardId[]): Promise<void> {
-    return this._api.delete<void>(this._endpoint, {
-      data: { standardIds },
-    });
+  async deleteStandardsBatch(
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    standardIds: StandardId[],
+  ): Promise<void> {
+    return this._api.delete<void>(
+      `${this._endpoint}/${organizationId}/spaces/${spaceId}/standards`,
+      {
+        data: { standardIds },
+      },
+    );
   }
 }

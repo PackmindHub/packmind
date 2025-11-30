@@ -11,11 +11,13 @@ import { IRulesGateway } from './IRulesGateway';
 
 export class RulesGatewayApi extends PackmindGateway implements IRulesGateway {
   constructor() {
-    super('/standards');
+    super('/organizations');
   }
 
   async createRuleExample(
-    standardId: string,
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    standardId: StandardId,
     ruleId: RuleId,
     example: {
       lang: string;
@@ -24,7 +26,7 @@ export class RulesGatewayApi extends PackmindGateway implements IRulesGateway {
     },
   ): Promise<RuleExample> {
     return this._api.post<RuleExample>(
-      `${this._endpoint}/${standardId}/rules/${ruleId}/examples`,
+      `${this._endpoint}/${organizationId}/spaces/${spaceId}/standards/${standardId}/rules/${ruleId}/examples`,
       example,
     );
   }
@@ -36,12 +38,14 @@ export class RulesGatewayApi extends PackmindGateway implements IRulesGateway {
     ruleId: RuleId,
   ): Promise<RuleExample[]> {
     return this._api.get<RuleExample[]>(
-      `/organizations/${organizationId}/spaces/${spaceId}/standards/${standardId}/rules/${ruleId}/examples`,
+      `${this._endpoint}/${organizationId}/spaces/${spaceId}/standards/${standardId}/rules/${ruleId}/examples`,
     );
   }
 
   async updateRuleExample(
-    standardId: string,
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    standardId: StandardId,
     ruleId: RuleId,
     exampleId: RuleExampleId,
     updates: {
@@ -51,18 +55,20 @@ export class RulesGatewayApi extends PackmindGateway implements IRulesGateway {
     },
   ): Promise<RuleExample> {
     return this._api.put<RuleExample>(
-      `${this._endpoint}/${standardId}/rules/${ruleId}/examples/${exampleId}`,
+      `${this._endpoint}/${organizationId}/spaces/${spaceId}/standards/${standardId}/rules/${ruleId}/examples/${exampleId}`,
       updates,
     );
   }
 
   async deleteRuleExample(
-    standardId: string,
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    standardId: StandardId,
     ruleId: RuleId,
     exampleId: RuleExampleId,
   ): Promise<void> {
     await this._api.delete(
-      `${this._endpoint}/${standardId}/rules/${ruleId}/examples/${exampleId}`,
+      `${this._endpoint}/${organizationId}/spaces/${spaceId}/standards/${standardId}/rules/${ruleId}/examples/${exampleId}`,
     );
   }
 }

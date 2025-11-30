@@ -9,7 +9,9 @@ import {
 
 export interface IRulesGateway {
   createRuleExample(
-    standardId: string,
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    standardId: StandardId,
     ruleId: RuleId,
     example: {
       lang: string;
@@ -26,7 +28,9 @@ export interface IRulesGateway {
   ): Promise<RuleExample[]>;
 
   updateRuleExample(
-    standardId: string,
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    standardId: StandardId,
     ruleId: RuleId,
     exampleId: RuleExampleId,
     updates: {
@@ -37,7 +41,9 @@ export interface IRulesGateway {
   ): Promise<RuleExample>;
 
   deleteRuleExample(
-    standardId: string,
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    standardId: StandardId,
     ruleId: RuleId,
     exampleId: RuleExampleId,
   ): Promise<void>;

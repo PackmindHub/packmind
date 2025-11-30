@@ -1,7 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
 import { AuthenticatedRequest } from '@packmind/node-utils';
-import { GetRuleExamplesCommand } from '@packmind/standards';
 import { stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
@@ -16,7 +15,6 @@ import {
   Standard,
   ProgrammingLanguage,
 } from '@packmind/types';
-import { AuthService } from '../../../../auth/auth.service';
 import { RulesService } from '../../../../standards/rules/rules.service';
 import { StandardsService } from '../../../../standards/standards.service';
 import { OrganizationsSpacesStandardsRulesController } from './rules.controller';
@@ -25,7 +23,6 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
   let controller: OrganizationsSpacesStandardsRulesController;
   let rulesService: jest.Mocked<RulesService>;
   let standardsService: jest.Mocked<StandardsService>;
-  let authService: jest.Mocked<AuthService>;
   let logger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
@@ -38,15 +35,10 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
       getStandardById: jest.fn(),
     } as unknown as jest.Mocked<StandardsService>;
 
-    authService = {
-      makePackmindCommand: jest.fn(),
-    } as unknown as jest.Mocked<AuthService>;
-
     logger = stubLogger();
     controller = new OrganizationsSpacesStandardsRulesController(
       rulesService,
       standardsService,
-      authService,
       logger,
     );
   });
@@ -383,14 +375,9 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
           },
         } as unknown as AuthenticatedRequest;
 
-        const mockCommand = { ruleId, userId, organizationId: orgId };
-
         standardsService.getStandardById.mockResolvedValue({
           standard: mockStandard,
         });
-        authService.makePackmindCommand.mockReturnValue(
-          mockCommand as GetRuleExamplesCommand,
-        );
         rulesService.getRuleExamples.mockResolvedValue(mockRuleExamples);
 
         const result = await controller.getRuleExamples(
@@ -408,10 +395,11 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
           spaceId,
           userId,
         );
-        expect(authService.makePackmindCommand).toHaveBeenCalledWith(request, {
+        expect(rulesService.getRuleExamples).toHaveBeenCalledWith({
+          userId,
+          organizationId: orgId,
           ruleId,
         });
-        expect(rulesService.getRuleExamples).toHaveBeenCalledWith(mockCommand);
       });
     });
 
@@ -461,7 +449,6 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
           `Standard with ID ${standardId} not found in organization ${orgId} and space ${spaceId}`,
         );
 
-        expect(authService.makePackmindCommand).not.toHaveBeenCalled();
         expect(rulesService.getRuleExamples).not.toHaveBeenCalled();
       });
     });
@@ -524,7 +511,6 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
           `Standard ${standardId} does not belong to space ${spaceId}`,
         );
 
-        expect(authService.makePackmindCommand).not.toHaveBeenCalled();
         expect(rulesService.getRuleExamples).not.toHaveBeenCalled();
       });
     });
@@ -561,14 +547,9 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
           },
         } as unknown as AuthenticatedRequest;
 
-        const mockCommand = { ruleId, userId, organizationId: orgId };
-
         standardsService.getStandardById.mockResolvedValue({
           standard: mockStandard,
         });
-        authService.makePackmindCommand.mockReturnValue(
-          mockCommand as GetRuleExamplesCommand,
-        );
         rulesService.getRuleExamples.mockResolvedValue([]);
 
         const result = await controller.getRuleExamples(
@@ -580,7 +561,11 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
         );
 
         expect(result).toEqual([]);
-        expect(rulesService.getRuleExamples).toHaveBeenCalledWith(mockCommand);
+        expect(rulesService.getRuleExamples).toHaveBeenCalledWith({
+          userId,
+          organizationId: orgId,
+          ruleId,
+        });
       });
     });
 
@@ -615,14 +600,9 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
         },
       } as unknown as AuthenticatedRequest;
 
-      const mockCommand = { ruleId, userId, organizationId: orgId };
-
       standardsService.getStandardById.mockResolvedValue({
         standard: mockStandard,
       });
-      authService.makePackmindCommand.mockReturnValue(
-        mockCommand as GetRuleExamplesCommand,
-      );
 
       const error = new Error('Failed to fetch examples');
       rulesService.getRuleExamples.mockRejectedValue(error);
