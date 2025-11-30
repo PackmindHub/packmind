@@ -10,7 +10,6 @@ import {
   UserId,
   RequestPasswordResetCommand,
   ResetPasswordCommand,
-  PackmindCommandBody,
 } from '@packmind/types';
 import { authGateway } from '../gateways';
 import {
@@ -22,8 +21,10 @@ import {
   SELECT_ORGANIZATION_KEY,
   GET_USER_ORGANIZATIONS_KEY,
   ACCOUNTS_QUERY_SCOPE,
+  GET_MCP_TOKEN_KEY,
 } from '../queryKeys';
 import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
+import { useAuthContext } from '../../hooks/useAuthContext';
 
 type SignInRequest = SignInUserCommand;
 
@@ -103,10 +104,15 @@ export const useSignOutMutation = () => {
 };
 
 export const useGetMcpTokenMutation = () => {
+  const { organization } = useAuthContext();
+
   return useMutation({
     mutationKey: [GET_MCP_TOKEN_MUTATION_KEY],
     mutationFn: async () => {
-      return authGateway.getMcpToken();
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to get MCP token');
+      }
+      return authGateway.getMcpToken({ organizationId: organization.id });
     },
     onSuccess: (data) => {
       console.log('MCP access token retrieved successfully:', data);
@@ -118,9 +124,17 @@ export const useGetMcpTokenMutation = () => {
 };
 
 export const useGetMcpURLQuery = () => {
+  const { organization } = useAuthContext();
+
   return useQuery({
     queryKey: GET_MCP_URL_KEY,
-    queryFn: () => authGateway.getMcpURL(),
+    queryFn: () => {
+      if (!organization?.id) {
+        throw new Error('Organization ID is required to get MCP URL');
+      }
+      return authGateway.getMcpURL({ organizationId: organization.id });
+    },
+    enabled: !!organization?.id,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
   });

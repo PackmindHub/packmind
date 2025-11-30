@@ -5,6 +5,14 @@ import {
   SignUpWithOrganizationResponse,
   GenerateApiKeyResponse,
   GetCurrentApiKeyResponse,
+  NewGateway,
+  NewPackmindCommandBody,
+  IGetMcpTokenUseCase,
+  IGetMcpUrlUseCase,
+  GetMcpTokenCommand,
+  GetMcpTokenResponse,
+  GetMcpUrlCommand,
+  GetMcpUrlResponse,
 } from '@packmind/types';
 import {
   CheckEmailAvailabilityCommand,
@@ -22,7 +30,6 @@ import {
   IAuthGateway,
   SignOutResponse,
   MeResponse,
-  TokenResponse,
   SelectOrganizationCommand,
   SelectOrganizationResponse,
   ValidateInvitationResponse,
@@ -67,13 +74,21 @@ export class AuthGatewayApi extends PackmindGateway implements IAuthGateway {
     return this._api.get<MeResponse>(`${this._endpoint}/me`);
   }
 
-  async getMcpToken(): Promise<TokenResponse> {
-    return this._api.get<TokenResponse>(`/mcp/token`);
-  }
+  getMcpToken: NewGateway<IGetMcpTokenUseCase> = async ({
+    organizationId,
+  }: NewPackmindCommandBody<GetMcpTokenCommand>) => {
+    return this._api.get<GetMcpTokenResponse>(
+      `/organizations/${organizationId}/mcp/token`,
+    );
+  };
 
-  async getMcpURL(): Promise<{ url: string }> {
-    return this._api.get<{ url: string }>(`/mcp/url`);
-  }
+  getMcpURL: NewGateway<IGetMcpUrlUseCase> = async ({
+    organizationId,
+  }: NewPackmindCommandBody<GetMcpUrlCommand>) => {
+    return this._api.get<GetMcpUrlResponse>(
+      `/organizations/${organizationId}/mcp/url`,
+    );
+  };
 
   async generateApiKey(): Promise<GenerateApiKeyResponse> {
     return this._api.post<GenerateApiKeyResponse>(
