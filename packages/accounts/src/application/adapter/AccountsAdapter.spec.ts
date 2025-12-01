@@ -1,4 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
   IDeploymentPort,
   IDeploymentPortName,
@@ -9,8 +10,8 @@ import {
   IStandardsPort,
   IStandardsPortName,
 } from '@packmind/types';
-import { AccountsAdapter } from './AccountsAdapter';
 import { EnhancedAccountsServices } from '../services/EnhancedAccountsServices';
+import { AccountsAdapter } from './AccountsAdapter';
 
 describe('AccountsAdapter', () => {
   let adapter: AccountsAdapter;
@@ -20,6 +21,7 @@ describe('AccountsAdapter', () => {
   let mockGitPort: IGitPort;
   let mockStandardsPort: IStandardsPort;
   let mockDeploymentPort: IDeploymentPort;
+  let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
 
   beforeEach(() => {
     mockLogger = {
@@ -33,6 +35,9 @@ describe('AccountsAdapter', () => {
     mockGitPort = {} as IGitPort;
     mockStandardsPort = {} as IStandardsPort;
     mockDeploymentPort = {} as IDeploymentPort;
+    mockEventEmitterService = {
+      emit: jest.fn().mockReturnValue(true),
+    } as unknown as jest.Mocked<PackmindEventEmitterService>;
 
     mockServices = {
       getUserService: jest.fn(),
@@ -61,6 +66,7 @@ describe('AccountsAdapter', () => {
         [IGitPortName]: mockGitPort,
         [IStandardsPortName]: mockStandardsPort,
         [IDeploymentPortName]: mockDeploymentPort,
+        eventEmitterService: mockEventEmitterService,
       });
       expect(adapter.isReady()).toBe(true);
     });
@@ -88,6 +94,7 @@ describe('AccountsAdapter', () => {
           [IGitPortName]: mockGitPort,
           [IStandardsPortName]: mockStandardsPort,
           [IDeploymentPortName]: mockDeploymentPort,
+          eventEmitterService: mockEventEmitterService,
         }),
       ).resolves.not.toThrow();
 
@@ -102,6 +109,7 @@ describe('AccountsAdapter', () => {
         [IGitPortName]: mockGitPort,
         [IStandardsPortName]: mockStandardsPort,
         [IDeploymentPortName]: mockDeploymentPort,
+        eventEmitterService: mockEventEmitterService,
       });
       expect(adapter.getPort()).toBe(adapter);
     });

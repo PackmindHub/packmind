@@ -1,5 +1,8 @@
 import { PackmindLogger } from '@packmind/logger';
-import { IBaseAdapter } from '@packmind/node-utils';
+import {
+  IBaseAdapter,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import {
   ActivateUserAccountCommand,
   ActivateUserAccountResponse,
@@ -156,6 +159,7 @@ export class AccountsAdapter
     [IGitPortName]: IGitPort;
     [IStandardsPortName]: IStandardsPort;
     [IDeploymentPortName]: IDeploymentPort;
+    eventEmitterService: PackmindEventEmitterService;
   }): Promise<void> {
     this.logger.info('Initializing AccountsAdapter with optional ports');
 
@@ -178,6 +182,7 @@ export class AccountsAdapter
     this._signUpWithOrganization = new SignUpWithOrganizationUseCase(
       this.accountsServices.getUserService(),
       this.accountsServices.getOrganizationService(),
+      ports.eventEmitterService,
       this.logger,
       this.spacesPort,
     );
@@ -243,6 +248,7 @@ export class AccountsAdapter
     this._activateUserAccount = new ActivateUserAccountUseCase(
       this.accountsServices.getUserService(),
       this.accountsServices.getInvitationService(),
+      ports.eventEmitterService,
       this.logger,
     );
     this._validateInvitationToken = new ValidateInvitationTokenUseCase(

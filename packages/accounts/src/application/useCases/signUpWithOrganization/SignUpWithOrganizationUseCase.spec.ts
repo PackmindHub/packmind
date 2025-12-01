@@ -1,20 +1,23 @@
-import { SignUpWithOrganizationUseCase } from './SignUpWithOrganizationUseCase';
-import { UserService } from '../../services/UserService';
-import { OrganizationService } from '../../services/OrganizationService';
-import { createOrganizationId } from '@packmind/types';
-import { createUserId } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
-import { userFactory, organizationFactory } from '../../../../test';
 import {
+  createOrganizationId,
+  createUserId,
   SignUpWithOrganizationCommand,
   SignUpWithOrganizationResponse,
+  UserSignedUpEvent,
 } from '@packmind/types';
+import { organizationFactory, userFactory } from '../../../../test';
+import { OrganizationService } from '../../services/OrganizationService';
+import { UserService } from '../../services/UserService';
+import { SignUpWithOrganizationUseCase } from './SignUpWithOrganizationUseCase';
 
 describe('SignUpWithOrganizationUseCase', () => {
   let signUpWithOrganizationUseCase: SignUpWithOrganizationUseCase;
   let mockUserService: jest.Mocked<UserService>;
   let mockOrganizationService: jest.Mocked<OrganizationService>;
+  let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
@@ -34,11 +37,16 @@ describe('SignUpWithOrganizationUseCase', () => {
       listOrganizations: jest.fn(),
     } as unknown as jest.Mocked<OrganizationService>;
 
+    mockEventEmitterService = {
+      emit: jest.fn().mockReturnValue(true),
+    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+
     stubbedLogger = stubLogger();
 
     signUpWithOrganizationUseCase = new SignUpWithOrganizationUseCase(
       mockUserService,
       mockOrganizationService,
+      mockEventEmitterService,
       stubbedLogger,
     );
   });
@@ -114,6 +122,34 @@ describe('SignUpWithOrganizationUseCase', () => {
 
         expect(mockOrganizationService.createOrganization).toHaveBeenCalledWith(
           'Test Organization',
+        );
+      });
+
+      it('emits UserSignedUpEvent after successful signup', async () => {
+        const command: SignUpWithOrganizationCommand = {
+          organizationName: 'Test Organization',
+          email: 'testuser@packmind.com',
+          password: 'password123!@',
+        };
+
+        mockOrganizationService.createOrganization.mockResolvedValue(
+          mockOrganization,
+        );
+        mockUserService.createUser.mockResolvedValue(mockUser);
+
+        await signUpWithOrganizationUseCase.execute(command);
+
+        expect(mockEventEmitterService.emit).toHaveBeenCalledWith(
+          expect.any(UserSignedUpEvent),
+        );
+        expect(mockEventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: {
+              userId: mockUser.id,
+              organizationId: mockOrganization.id,
+              email: 'testuser@packmind.com',
+            },
+          }),
         );
       });
     });
@@ -229,6 +265,24 @@ describe('SignUpWithOrganizationUseCase', () => {
           'Test Organization',
         );
         expect(mockUserService.createUser).not.toHaveBeenCalled();
+      });
+
+      it('does not emit UserSignedUpEvent', async () => {
+        const command: SignUpWithOrganizationCommand = {
+          organizationName: 'Test Organization',
+          email: 'testuser@packmind.com',
+          password: 'password123!@',
+        };
+
+        mockOrganizationService.createOrganization.mockRejectedValue(
+          new Error('Organization name already exists'),
+        );
+
+        await expect(
+          signUpWithOrganizationUseCase.execute(command),
+        ).rejects.toThrow();
+
+        expect(mockEventEmitterService.emit).not.toHaveBeenCalled();
       });
     });
 

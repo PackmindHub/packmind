@@ -1,17 +1,19 @@
+import { maskEmail, PackmindLogger } from '@packmind/logger';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
   ActivateUserAccountCommand,
   ActivateUserAccountResponse,
   IActivateUserAccountUseCase,
+  UserJoinedOrganizationEvent,
 } from '@packmind/types';
-import { PackmindLogger, maskEmail } from '@packmind/logger';
-import { UserService } from '../../services/UserService';
-import { InvitationService } from '../../services/InvitationService';
+import { createInvitationToken } from '../../../domain/entities/Invitation';
 import {
-  InvitationNotFoundError,
   InvitationExpiredError,
+  InvitationNotFoundError,
   UserNotFoundError,
 } from '../../../domain/errors';
-import { createInvitationToken } from '../../../domain/entities/Invitation';
+import { InvitationService } from '../../services/InvitationService';
+import { UserService } from '../../services/UserService';
 
 const origin = 'ActivateUserAccountUseCase';
 
@@ -19,6 +21,7 @@ export class ActivateUserAccountUseCase implements IActivateUserAccountUseCase {
   constructor(
     private readonly userService: UserService,
     private readonly invitationService: InvitationService,
+    private readonly eventEmitterService: PackmindEventEmitterService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('ActivateUserAccountUseCase initialized');
@@ -103,6 +106,18 @@ export class ActivateUserAccountUseCase implements IActivateUserAccountUseCase {
         userId: updatedUser.id,
         email: maskEmail(updatedUser.email),
       });
+
+      // Emit event for user joining organization
+      const organizationId = updatedUser.memberships[0]?.organizationId;
+      if (organizationId) {
+        this.eventEmitterService.emit(
+          new UserJoinedOrganizationEvent({
+            userId: updatedUser.id,
+            organizationId,
+            email: updatedUser.email,
+          }),
+        );
+      }
 
       return {
         success: true,

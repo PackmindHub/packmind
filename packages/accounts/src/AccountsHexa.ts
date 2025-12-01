@@ -1,5 +1,10 @@
 import { PackmindLogger } from '@packmind/logger';
-import { BaseHexa, BaseHexaOpts, HexaRegistry } from '@packmind/node-utils';
+import {
+  BaseHexa,
+  BaseHexaOpts,
+  HexaRegistry,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import {
   IAccountsPort,
   IAccountsPortName,
@@ -76,6 +81,10 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts, IAccountsPort> {
     this.logger.info('Initializing AccountsHexa (adapter retrieval phase)');
 
     try {
+      const eventEmitterService = registry.getService(
+        PackmindEventEmitterService,
+      );
+
       await this.adapter.initialize({
         [ISpacesPortName]: registry.getAdapter<ISpacesPort>(ISpacesPortName),
         [IGitPortName]: registry.getAdapter<IGitPort>(IGitPortName),
@@ -83,6 +92,7 @@ export class AccountsHexa extends BaseHexa<AccountsHexaOpts, IAccountsPort> {
           registry.getAdapter<IStandardsPort>(IStandardsPortName),
         [IDeploymentPortName]:
           registry.getAdapter<IDeploymentPort>(IDeploymentPortName),
+        eventEmitterService,
       });
 
       this.logger.info('AccountsHexa initialized successfully');
