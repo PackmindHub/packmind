@@ -19,6 +19,7 @@ module.exports = function getOssWebpackPaths(__dirname) {
       '../../packages/editions/src',
     ),
     '@packmind/amplitude': join(__dirname, '../../packages/editions/src'),
+    '@packmind/plugins': join(__dirname, '../../packages/editions/src'),
     // Add other OSS-specific overrides here as needed
   };
 };

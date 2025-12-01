@@ -20,6 +20,7 @@ module.exports = function getProprietaryWebpackPaths(__dirname) {
     ),
     '@packmind/amplitude': join(__dirname, '../../packages/amplitude/src'),
     '@packmind/crisp': join(__dirname, '../../packages/crisp/src'),
+    '@packmind/plugins': join(__dirname, '../../packages/plugins/src'),
     // Add other proprietary-specific overrides here as needed
   };
 };

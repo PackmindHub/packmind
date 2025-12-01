@@ -20,7 +20,7 @@ import { RecipesHexa } from '@packmind/recipes';
 import { SpacesHexa } from '@packmind/spaces';
 import { StandardsHexa } from '@packmind/standards';
 import { DataSource } from 'typeorm';
-import { hexaPlugins } from './hexaPlugins';
+import { mcpHexaPlugins } from '@packmind/plugins';
 
 const logger = new PackmindLogger('PackmindApp', LogLevel.INFO);
 
@@ -65,7 +65,7 @@ export function getPackmindAppDefinition(): PackmindAppDefinition {
       CodingAgentHexa,
       DeploymentsHexa,
       AnalyticsHexa,
-      ...hexaPlugins,
+      ...mcpHexaPlugins,
     ],
     services: [JobsService, PackmindEventEmitterService],
   };

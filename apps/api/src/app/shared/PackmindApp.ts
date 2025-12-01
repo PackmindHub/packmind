@@ -23,7 +23,7 @@ import { RecipesHexa } from '@packmind/recipes';
 import { SpacesHexa } from '@packmind/spaces';
 import { StandardsHexa } from '@packmind/standards';
 import { DataSource } from 'typeorm';
-import { hexaPlugins } from './hexaPlugins';
+import { apiHexaPlugins } from '@packmind/plugins';
 
 /**
  * Configuration for PackmindApp API initialization.
@@ -73,7 +73,7 @@ export function getPackmindAppDefinition(): PackmindAppDefinition {
       StandardsHexa,
       CodingAgentHexa,
       DeploymentsHexa,
-      ...hexaPlugins,
+      ...apiHexaPlugins,
     ],
     services: [JobsService, PackmindEventEmitterService],
   };

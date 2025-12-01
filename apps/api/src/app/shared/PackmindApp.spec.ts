@@ -2,7 +2,6 @@ import { JwtService } from '@nestjs/jwt';
 import { AccountsHexa } from '@packmind/accounts';
 import { AnalyticsHexa } from '@packmind/analytics';
 import { CodingAgentHexa } from '@packmind/coding-agent';
-import { CrispHexa } from '@packmind/crisp';
 import { DeploymentsHexa } from '@packmind/deployments';
 import { AmplitudeHexa } from '@packmind/amplitude';
 import { GitHexa } from '@packmind/git';
@@ -10,6 +9,7 @@ import { LinterHexa } from '@packmind/linter';
 import { LlmHexa } from '@packmind/llm';
 import { PackmindLogger } from '@packmind/logger';
 import { JobsService } from '@packmind/node-utils';
+import { apiHexaPlugins } from '@packmind/plugins';
 import { RecipesHexa } from '@packmind/recipes';
 import { SpacesHexa } from '@packmind/spaces';
 import { StandardsHexa } from '@packmind/standards';
@@ -60,7 +60,7 @@ describe('PackmindApp API', () => {
         StandardsHexa,
         CodingAgentHexa,
         DeploymentsHexa,
-        CrispHexa,
+        ...apiHexaPlugins,
       ]);
     });
 
