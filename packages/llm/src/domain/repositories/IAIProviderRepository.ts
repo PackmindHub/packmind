@@ -1,12 +1,12 @@
 import { LLMServiceConfig, OrganizationId } from '@packmind/types';
 
-export type StoredLLMConfiguration = {
+export type StoredAIProvider = {
   config: LLMServiceConfig;
   configuredAt: Date;
 };
 
-export interface ILLMConfigurationRepository {
+export interface IAIProviderRepository {
   save(orgId: OrganizationId, config: LLMServiceConfig): Promise<void>;
-  get(orgId: OrganizationId): Promise<StoredLLMConfiguration | null>;
+  get(orgId: OrganizationId): Promise<StoredAIProvider | null>;
   exists(orgId: OrganizationId): Promise<boolean>;
 }

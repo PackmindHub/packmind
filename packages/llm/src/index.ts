@@ -1,6 +1,7 @@
 export { LlmHexa } from './LlmHexa';
 export { LlmAdapter } from './application/adapter/LlmAdapter';
 export { ILlmPort, ILlmPortName } from '@packmind/types';
+export { llmSchemas } from './infra/schemas';
 export { BaseOpenAIService } from './infra/services/BaseOpenAIService';
 export { OpenAIService } from './infra/services/OpenAIService';
 export { OpenAIAPICompatibleService } from './infra/services/OpenAIAPICompatibleService';

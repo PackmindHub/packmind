@@ -5,7 +5,7 @@ import {
   LLMProvider,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
-import { ILLMConfigurationRepository } from '../../../domain/repositories/ILLMConfigurationRepository';
+import { IAIProviderRepository } from '../../../domain/repositories/IAIProviderRepository';
 import { createLLMService } from '../../../factories/createLLMService';
 import { isPackmindProviderAvailable } from '../utils';
 
@@ -15,7 +15,7 @@ export class GetAiServiceForOrganizationUseCase
   implements IGetAiServiceForOrganizationUseCase
 {
   constructor(
-    private readonly configurationRepository: ILLMConfigurationRepository,
+    private readonly configurationRepository: IAIProviderRepository,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 

@@ -12,3 +12,5 @@ export * from './contracts/TestSavedLLMConfigurationUseCase';
 export * from './contracts/GetAvailableProvidersUseCase';
 export * from './LLMProviderMetadata';
 export * from './LLMServiceConfig';
+export * from './AIProviderId';
+export * from './AIProvider';

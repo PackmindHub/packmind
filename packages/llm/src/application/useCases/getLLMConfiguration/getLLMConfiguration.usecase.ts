@@ -10,16 +10,16 @@ import {
   OrganizationId,
 } from '@packmind/types';
 import {
-  ILLMConfigurationRepository,
-  StoredLLMConfiguration,
-} from '../../../domain/repositories/ILLMConfigurationRepository';
+  IAIProviderRepository,
+  StoredAIProvider,
+} from '../../../domain/repositories/IAIProviderRepository';
 import { isPackmindProviderAvailable } from '../utils';
 
 const origin = 'GetLLMConfigurationUseCase';
 
 export class GetLLMConfigurationUseCase implements IGetLLMConfigurationUseCase {
   constructor(
-    private readonly configurationRepository: ILLMConfigurationRepository,
+    private readonly configurationRepository: IAIProviderRepository,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -77,7 +77,7 @@ export class GetLLMConfigurationUseCase implements IGetLLMConfigurationUseCase {
   /**
    * Convert stored configuration to DTO, stripping secrets.
    */
-  private toDTO(storedConfig: StoredLLMConfiguration): LLMConfigurationDTO {
+  private toDTO(storedConfig: StoredAIProvider): LLMConfigurationDTO {
     const { config, configuredAt } = storedConfig;
 
     return {
