@@ -1,26 +1,31 @@
-import { ActivateUserAccountUseCase } from './ActivateUserAccountUseCase';
-import { UserService } from '../../services/UserService';
-import { InvitationService } from '../../services/InvitationService';
 import { PackmindLogger } from '@packmind/logger';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
+import { stubLogger } from '@packmind/test-utils';
 import {
-  InvitationNotFoundError,
-  InvitationExpiredError,
-  UserNotFoundError,
-} from '../../../domain/errors';
+  createOrganizationId,
+  createUserId,
+  User,
+  UserJoinedOrganizationEvent,
+} from '@packmind/types';
 import {
   createInvitationId,
   createInvitationToken,
   Invitation,
 } from '../../../domain/entities/Invitation';
-import { createUserId, User } from '@packmind/types';
-import { createOrganizationId } from '@packmind/types';
-import { stubLogger } from '@packmind/test-utils';
+import {
+  InvitationExpiredError,
+  InvitationNotFoundError,
+  UserNotFoundError,
+} from '../../../domain/errors';
+import { InvitationService } from '../../services/InvitationService';
+import { UserService } from '../../services/UserService';
+import { ActivateUserAccountUseCase } from './ActivateUserAccountUseCase';
 
 describe('ActivateUserAccountUseCase', () => {
   let useCase: ActivateUserAccountUseCase;
   let mockUserService: jest.Mocked<UserService>;
   let mockInvitationService: jest.Mocked<InvitationService>;
-
+  let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let mockLogger: jest.Mocked<PackmindLogger>;
 
   const mockUserId = createUserId('user-123');
@@ -61,13 +66,22 @@ describe('ActivateUserAccountUseCase', () => {
       delete: jest.fn(),
     } as unknown as jest.Mocked<InvitationService>;
 
+    mockEventEmitterService = {
+      emit: jest.fn().mockReturnValue(true),
+    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+
     mockLogger = stubLogger();
 
     useCase = new ActivateUserAccountUseCase(
       mockUserService,
       mockInvitationService,
+      mockEventEmitterService,
       mockLogger,
     );
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('execute', () => {
@@ -111,6 +125,40 @@ describe('ActivateUserAccountUseCase', () => {
       );
     });
 
+    it('emits UserJoinedOrganizationEvent after successful activation', async () => {
+      const command = {
+        token: mockToken as string,
+        password: 'newPassword123!',
+      };
+
+      const hashedPassword = 'hashed-password';
+      const updatedUser = {
+        ...mockUser,
+        passwordHash: hashedPassword,
+        active: true,
+      };
+
+      mockInvitationService.findByToken.mockResolvedValue(mockInvitation);
+      mockUserService.getUserById.mockResolvedValue(mockUser);
+      mockUserService.hashPassword.mockResolvedValue(hashedPassword);
+      mockUserService.updateUser.mockResolvedValue(updatedUser);
+
+      await useCase.execute(command);
+
+      expect(mockEventEmitterService.emit).toHaveBeenCalledWith(
+        expect.any(UserJoinedOrganizationEvent),
+      );
+      expect(mockEventEmitterService.emit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          payload: {
+            userId: mockUserId,
+            organizationId: mockOrganizationId,
+            email: 'test@example.com',
+          },
+        }),
+      );
+    });
+
     describe('when invitation does not exist', () => {
       it('throws InvitationNotFoundError', async () => {
         const command = {
@@ -127,6 +175,19 @@ describe('ActivateUserAccountUseCase', () => {
           mockToken,
         );
         expect(mockUserService.getUserById).not.toHaveBeenCalled();
+      });
+
+      it('does not emit UserJoinedOrganizationEvent', async () => {
+        const command = {
+          token: mockToken as string,
+          password: 'newPassword123!',
+        };
+
+        mockInvitationService.findByToken.mockResolvedValue(null);
+
+        await expect(useCase.execute(command)).rejects.toThrow();
+
+        expect(mockEventEmitterService.emit).not.toHaveBeenCalled();
       });
     });
 

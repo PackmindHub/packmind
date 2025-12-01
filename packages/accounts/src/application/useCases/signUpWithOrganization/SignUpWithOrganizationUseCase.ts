@@ -1,12 +1,15 @@
-import { UserService } from '../../services/UserService';
-import { OrganizationService } from '../../services/OrganizationService';
 import { PackmindLogger } from '@packmind/logger';
-import { ISpacesPort } from '@packmind/types';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
+  createUserId,
   ISignUpWithOrganizationUseCase,
+  ISpacesPort,
   SignUpWithOrganizationCommand,
   SignUpWithOrganizationResponse,
+  UserSignedUpEvent,
 } from '@packmind/types';
+import { OrganizationService } from '../../services/OrganizationService';
+import { UserService } from '../../services/UserService';
 
 const origin = 'SignUpWithOrganizationUseCase';
 
@@ -16,6 +19,7 @@ export class SignUpWithOrganizationUseCase
   constructor(
     private readonly userService: UserService,
     private readonly organizationService: OrganizationService,
+    private readonly eventEmitterService: PackmindEventEmitterService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
     private readonly spacesPort?: ISpacesPort,
   ) {
@@ -98,6 +102,14 @@ export class SignUpWithOrganizationUseCase
         organizationId: organization.id,
         organizationName: organization.name,
       });
+
+      this.eventEmitterService.emit(
+        new UserSignedUpEvent({
+          userId: createUserId(user.id),
+          organizationId: organization.id,
+          email,
+        }),
+      );
 
       return { user, organization };
     } catch (error) {
