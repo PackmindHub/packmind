@@ -1,4 +1,4 @@
 export {
-  ILLMConfigurationRepository,
-  StoredLLMConfiguration,
-} from './ILLMConfigurationRepository';
+  IAIProviderRepository,
+  StoredAIProvider,
+} from './IAIProviderRepository';

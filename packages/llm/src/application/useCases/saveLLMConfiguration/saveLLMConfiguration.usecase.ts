@@ -7,7 +7,7 @@ import {
   SaveLLMConfigurationCommand,
   SaveLLMConfigurationResponse,
 } from '@packmind/types';
-import { ILLMConfigurationRepository } from '../../../domain/repositories/ILLMConfigurationRepository';
+import { IAIProviderRepository } from '../../../domain/repositories/IAIProviderRepository';
 
 const origin = 'SaveLLMConfigurationUseCase';
 
@@ -20,7 +20,7 @@ export class SaveLLMConfigurationUseCase
 {
   constructor(
     accountsPort: IAccountsPort,
-    private readonly configurationRepository: ILLMConfigurationRepository,
+    private readonly configurationRepository: IAIProviderRepository,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);

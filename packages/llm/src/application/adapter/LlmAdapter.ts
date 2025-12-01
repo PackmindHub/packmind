@@ -19,8 +19,10 @@ import {
   GetAiServiceForOrganizationCommand,
   GetAiServiceForOrganizationResponse,
 } from '@packmind/types';
-import { ILLMConfigurationRepository } from '../../domain/repositories/ILLMConfigurationRepository';
-import { LLMConfigurationRepositoryCache } from '../../infra/repositories/LLMConfigurationRepositoryCache';
+import { DataSource } from 'typeorm';
+import { IAIProviderRepository } from '../../domain/repositories/IAIProviderRepository';
+import { AIProviderRepository } from '../../infra/repositories/AIProviderRepository';
+import { AIProviderSchema } from '../../infra/schemas/AIProviderSchema';
 import { GetAiServiceForOrganizationUseCase } from '../useCases/getAiServiceForOrganization/getAiServiceForOrganization.usecase';
 import { GetLLMConfigurationUseCase } from '../useCases/getLLMConfiguration/getLLMConfiguration.usecase';
 import { GetModelsUseCase } from '../useCases/getModels/getModels.usecase';
@@ -36,7 +38,7 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
   private accountsPort?: IAccountsPort;
 
   // Repositories
-  private llmConfigurationRepository: ILLMConfigurationRepository | null = null;
+  private aiProviderRepository: IAIProviderRepository | null = null;
 
   // Use cases - created in initialize()
   private _getAiServiceForOrganization!: GetAiServiceForOrganizationUseCase;
@@ -48,6 +50,7 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
   private _getAvailableProviders!: GetAvailableProvidersUseCase;
 
   constructor(
+    private readonly dataSource: DataSource,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger.info('LlmAdapter constructed - awaiting initialization');
@@ -70,12 +73,15 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
       );
     }
 
-    // Initialize repository
-    this.llmConfigurationRepository = new LLMConfigurationRepositoryCache();
+    // Initialize repository with dataSource
+    this.aiProviderRepository = new AIProviderRepository(
+      this.dataSource.getRepository(AIProviderSchema),
+      this.logger,
+    );
 
     // Initialize use cases
     this._getAiServiceForOrganization = new GetAiServiceForOrganizationUseCase(
-      this.llmConfigurationRepository,
+      this.aiProviderRepository,
       this.logger,
     );
     this._testLLMConnection = new TestLLMConnectionUseCase(
@@ -85,16 +91,16 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
     this._getModels = new GetModelsUseCase(this.accountsPort, this.logger);
     this._saveLLMConfiguration = new SaveLLMConfigurationUseCase(
       this.accountsPort,
-      this.llmConfigurationRepository,
+      this.aiProviderRepository,
       this.logger,
     );
     this._getLLMConfiguration = new GetLLMConfigurationUseCase(
-      this.llmConfigurationRepository,
+      this.aiProviderRepository,
       this.logger,
     );
     this._testSavedLLMConfiguration = new TestSavedLLMConfigurationUseCase(
       this.accountsPort,
-      this.llmConfigurationRepository,
+      this.aiProviderRepository,
       this.logger,
     );
     this._getAvailableProviders = new GetAvailableProvidersUseCase(
@@ -109,7 +115,7 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
    * Check if adapter is ready.
    */
   public isReady(): boolean {
-    return !!this.accountsPort && !!this.llmConfigurationRepository;
+    return !!this.accountsPort && !!this.aiProviderRepository;
   }
 
   /**

@@ -1,1 +1,1 @@
-export { LLMConfigurationRepositoryCache } from './LLMConfigurationRepositoryCache';
+export { AIProviderRepository } from './AIProviderRepository';

@@ -6,6 +6,7 @@ import { AccountsHexa, accountsSchemas } from '@packmind/accounts';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { DeploymentsHexa, deploymentsSchemas } from '@packmind/deployments';
 import { GitHexa, gitSchemas } from '@packmind/git';
+import { llmSchemas } from '@packmind/llm';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { Configuration } from '@packmind/node-utils';
 import { RecipesHexa, recipesSchemas } from '@packmind/recipes';
@@ -59,6 +60,7 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
         ...standardsSchemas,
         ...deploymentsSchemas,
         ...linterSchemas,
+        ...llmSchemas,
       ],
       logging: false,
       synchronize: false,
