@@ -16,6 +16,7 @@ import {
 } from '@packmind/types';
 import { IAIProviderRepository } from '../../../domain/repositories/IAIProviderRepository';
 import { createLLMService } from '../../../factories/createLLMService';
+import { isPackmindProviderAvailable } from '../utils';
 
 const origin = 'TestSavedLLMConfigurationUseCase';
 
@@ -89,20 +90,7 @@ export class TestSavedLLMConfigurationUseCase
     );
 
     if (!storedConfig) {
-      this.logger.info('No LLM configuration found', { organizationId });
-      return {
-        hasConfiguration: false,
-        provider: LLMProvider.PACKMIND,
-        standardModel: {
-          model: 'unknown',
-          success: false,
-          error: {
-            message: 'No LLM configuration found for this organization',
-            type: AIServiceErrorTypes.API_ERROR,
-          },
-        },
-        overallSuccess: false,
-      };
+      return this.handleNoStoredConfiguration(organizationId);
     }
 
     const { config } = storedConfig;
@@ -141,6 +129,56 @@ export class TestSavedLLMConfigurationUseCase
       standardModel: standardModelResult,
       fastModel: fastModelResult,
       overallSuccess,
+    };
+  }
+
+  /**
+   * Handle the case when no stored configuration exists.
+   * Falls back to testing Packmind provider if available in cloud environment.
+   */
+  private async handleNoStoredConfiguration(
+    organizationId: string,
+  ): Promise<TestSavedLLMConfigurationResponse> {
+    const packmindProviderAvailable = await isPackmindProviderAvailable();
+
+    if (packmindProviderAvailable) {
+      this.logger.info(
+        'No configuration found, testing Packmind provider fallback',
+        { organizationId },
+      );
+
+      const llmService = createLLMService({ provider: LLMProvider.PACKMIND });
+      const standardModelResult = await this.testModel(
+        llmService,
+        LLMModelPerformance.STANDARD,
+      );
+
+      this.logger.info('Packmind provider fallback test completed', {
+        organizationId,
+        success: standardModelResult.success,
+      });
+
+      return {
+        hasConfiguration: false,
+        provider: LLMProvider.PACKMIND,
+        standardModel: standardModelResult,
+        overallSuccess: standardModelResult.success,
+      };
+    }
+
+    this.logger.info('No LLM configuration found', { organizationId });
+    return {
+      hasConfiguration: false,
+      provider: LLMProvider.PACKMIND,
+      standardModel: {
+        model: 'unknown',
+        success: false,
+        error: {
+          message: 'No LLM configuration found for this organization',
+          type: AIServiceErrorTypes.API_ERROR,
+        },
+      },
+      overallSuccess: false,
     };
   }
 

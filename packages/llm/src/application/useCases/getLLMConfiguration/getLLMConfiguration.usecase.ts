@@ -56,7 +56,7 @@ export class GetLLMConfigurationUseCase implements IGetLLMConfigurationUseCase {
       );
       return {
         configuration: this.getPackmindFallbackConfiguration(),
-        hasConfiguration: false,
+        hasConfiguration: true,
       };
     }
 
