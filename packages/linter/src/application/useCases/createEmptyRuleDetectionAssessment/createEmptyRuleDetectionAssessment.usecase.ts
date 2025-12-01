@@ -13,8 +13,9 @@ import { v4 as uuidv4 } from 'uuid';
 const origin = 'CreateEmptyRuleDetectionAssessmentUseCase';
 
 /**
- * Use case for creating an empty RuleDetectionAssessment with NOT_STARTED status.
- * Used during bulk imports where assessment should be created but not triggered.
+ * Use case for creating a RuleDetectionAssessment.
+ * By default creates with NOT_STARTED status, but can be configured
+ * to use SUCCESS status when importing ready-to-use detection programs.
  */
 export class CreateEmptyRuleDetectionAssessmentUseCase
   implements ICreateEmptyRuleDetectionAssessment
@@ -27,9 +28,13 @@ export class CreateEmptyRuleDetectionAssessmentUseCase
   async execute(
     command: CreateEmptyRuleDetectionAssessmentCommand,
   ): Promise<CreateEmptyRuleDetectionAssessmentResponse> {
-    this.logger.info('Creating empty rule detection assessment', {
+    const status = command.status ?? RuleDetectionAssessmentStatus.NOT_STARTED;
+    const details = command.details ?? '';
+
+    this.logger.info('Creating rule detection assessment', {
       ruleId: command.ruleId,
       language: command.language,
+      status,
     });
 
     try {
@@ -50,15 +55,14 @@ export class CreateEmptyRuleDetectionAssessmentUseCase
         return existingAssessment;
       }
 
-      // Create new assessment entity with NOT_STARTED status
       const assessmentId = createRuleDetectionAssessmentId(uuidv4());
       const assessment: CreateEmptyRuleDetectionAssessmentResponse = {
         id: assessmentId,
         ruleId: command.ruleId,
         language: command.language,
         detectionMode: DetectionModeEnum.SINGLE_AST,
-        status: RuleDetectionAssessmentStatus.NOT_STARTED,
-        details: '',
+        status,
+        details,
         clarificationQuestion: null,
         clarificationAnswers: null,
       };
@@ -67,15 +71,16 @@ export class CreateEmptyRuleDetectionAssessmentUseCase
         .getRuleDetectionAssessmentRepository()
         .add(assessment);
 
-      this.logger.info('Empty assessment created with NOT_STARTED status', {
+      this.logger.info('Assessment created', {
         assessmentId: assessment.id,
         ruleId: command.ruleId,
         language: command.language,
+        status,
       });
 
       return assessment;
     } catch (error) {
-      this.logger.error('Failed to create empty rule detection assessment', {
+      this.logger.error('Failed to create rule detection assessment', {
         ruleId: command.ruleId,
         language: command.language,
         error: error instanceof Error ? error.message : String(error),

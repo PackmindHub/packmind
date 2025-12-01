@@ -7,7 +7,10 @@
       "@packmind/linter": ["packages/linter/src/index.ts"],
       "@packmind/amplitude": ["packages/amplitude/src/index.ts"],
       "@packmind/crisp": ["packages/crisp/src/index.ts"],
-      "@packmind/plugins": ["packages/plugins/src/index.ts"]
+      "@packmind/plugins": ["packages/plugins/src/index.ts"],
+      "@packmind/import-practices-legacy": [
+        "packages/import-practices-legacy/src/index.ts"
+      ]
     }
   }
 }

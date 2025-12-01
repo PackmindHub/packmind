@@ -56,9 +56,6 @@
       "features/detection/ProgramEditor": [
         "apps/frontend/src/domain/detection/components/ProgramEditor"
       ],
-      "import-practices-legacy": [
-        "packages/import-practices-legacy/src/index.ts"
-      ],
       "packmind-plugin": ["tools/packmind-plugin/src/index.ts"]
     }
   },

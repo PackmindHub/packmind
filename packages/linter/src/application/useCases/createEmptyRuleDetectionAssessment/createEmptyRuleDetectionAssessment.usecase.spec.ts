@@ -180,6 +180,42 @@ describe('CreateEmptyRuleDetectionAssessmentUseCase', () => {
     });
   });
 
+  describe('when custom status is provided', () => {
+    beforeEach(() => {
+      ruleDetectionAssessmentRepository.get.mockResolvedValue(null);
+      ruleDetectionAssessmentRepository.add.mockImplementation(
+        async (assessment: RuleDetectionAssessment) => assessment,
+      );
+    });
+
+    describe('when program is provided', () => {
+      it('creates assessment with SUCCESS', async () => {
+        const result = await useCase.execute({
+          ruleId,
+          language: ProgrammingLanguage.KOTLIN,
+          organizationId,
+          userId,
+          status: RuleDetectionAssessmentStatus.SUCCESS,
+        });
+
+        expect(result.status).toBe(RuleDetectionAssessmentStatus.SUCCESS);
+      });
+
+      it('creates assessment with custom details', async () => {
+        const result = await useCase.execute({
+          ruleId,
+          language: ProgrammingLanguage.KOTLIN,
+          organizationId,
+          userId,
+          status: RuleDetectionAssessmentStatus.SUCCESS,
+          details: 'Imported from legacy data',
+        });
+
+        expect(result.details).toBe('Imported from legacy data');
+      });
+    });
+  });
+
   describe('when repository throws error', () => {
     it('re-throws the error', async () => {
       const error = new Error('Database connection failed');

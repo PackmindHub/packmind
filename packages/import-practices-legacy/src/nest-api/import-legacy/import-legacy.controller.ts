@@ -27,7 +27,7 @@ export class ImportLegacyController {
     this.logger.info('ImportLegacyController initialized');
   }
 
-  @Post('')
+  @Post('import-legacy')
   @UseGuards(IpFilterGuard)
   async importLegacy(
     @Body() body: LegacyPracticeInput,

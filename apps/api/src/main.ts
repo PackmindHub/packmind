@@ -8,6 +8,7 @@ import './instrument';
 
 import { Logger, VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app/app.module';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
@@ -87,6 +88,11 @@ async function bootstrap() {
     // Enable cookie parsing
     app.use(cookieParser());
     logger.debug('Cookie parser enabled');
+
+    // Configure body-parser with increased limit for bulk imports
+    app.use(bodyParser.json({ limit: '5mb' }));
+    app.use(bodyParser.urlencoded({ limit: '5mb', extended: true }));
+    logger.debug('Body parser configured with 5MB limit');
 
     // Enable CORS with dynamic origins
     const corsOrigins = await getCorsOrigins();

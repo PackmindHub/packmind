@@ -9,12 +9,14 @@ import {
   createOrganizationId,
   createUserId,
   createStandardId,
+  createSpaceId,
   OrganizationId,
   SpaceId,
   Rule,
   DetectionModeEnum,
   DetectionStatus,
   ProgrammingLanguage,
+  RuleDetectionAssessmentStatus,
 } from '@packmind/types';
 import { StandardsAdapter } from '@packmind/standards';
 import {
@@ -146,7 +148,7 @@ export class ImportPracticeLegacyUseCase
       organizationId: createOrganizationId(organizationId),
       userId: createUserId(userId),
       scope: null,
-      spaceId: spaceId as import('@packmind/types').SpaceId,
+      spaceId: createSpaceId(spaceId),
       disableTriggerAssessment: true,
     });
 
@@ -320,18 +322,23 @@ export class ImportPracticeLegacyUseCase
         language,
       });
 
-      // Create empty RuleDetectionAssessment for this rule and language
+      // Create RuleDetectionAssessment with SUCCESS status for imported detection program
       await this.linterPort.createEmptyRuleDetectionAssessment({
         ruleId: rule.id,
         language,
         organizationId,
         userId,
+        status: RuleDetectionAssessmentStatus.SUCCESS,
+        details: '',
       });
 
-      this.logger.info('Empty rule detection assessment created', {
-        ruleId: rule.id,
-        language,
-      });
+      this.logger.info(
+        'Rule detection assessment created with SUCCESS status',
+        {
+          ruleId: rule.id,
+          language,
+        },
+      );
     } catch (error) {
       this.logger.error('Failed to import detection program for rule', {
         ruleId: rule.id,

@@ -15,6 +15,7 @@ import {
   createStandardVersionId,
   DetectionModeEnum,
   DetectionStatus,
+  RuleDetectionAssessmentStatus,
 } from '@packmind/types';
 import { StandardsAdapter } from '@packmind/standards';
 import { ImportPracticeLegacyUseCase } from './importPracticeLegacy.usecase';
@@ -873,6 +874,8 @@ describe('ImportPracticeLegacyUseCase', () => {
           language: ProgrammingLanguage.KOTLIN,
           organizationId,
           userId,
+          status: RuleDetectionAssessmentStatus.SUCCESS,
+          details: '',
         });
       });
 

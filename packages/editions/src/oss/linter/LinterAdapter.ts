@@ -6,6 +6,7 @@ import {
   ComputeRuleLanguageDetectionStatusResponse,
   CopyRuleDetectionAssessmentsResponse,
   CreateDetectionProgramCommand,
+  CreateEmptyRuleDetectionAssessmentCommand,
   CreateNewDetectionProgramVersionCommand,
   DetectionProgram,
   GetActiveDetectionProgramCommand,
@@ -206,6 +207,22 @@ export class LinterAdapter implements ILinterPort {
       details: '',
       clarificationQuestion: '',
       clarificationAnswers: [],
+    };
+  }
+
+  async createEmptyRuleDetectionAssessment(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    command: CreateEmptyRuleDetectionAssessmentCommand,
+  ): Promise<RuleDetectionAssessment> {
+    return {
+      id: '' as unknown as RuleDetectionAssessment['id'],
+      ruleId: command.ruleId,
+      language: command.language,
+      detectionMode: DetectionModeEnum.SINGLE_AST,
+      status: command.status ?? RuleDetectionAssessmentStatus.NOT_STARTED,
+      details: command.details ?? '',
+      clarificationQuestion: null,
+      clarificationAnswers: null,
     };
   }
 
