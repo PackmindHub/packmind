@@ -1,7 +1,7 @@
-import { IUseCase, PackmindCommand } from '../../UseCase';
+import { ISystemUseCase, SystemPackmindCommand } from '../../UseCase';
 import { LLMProvider } from '../LLMServiceConfig';
 
-export type GetLLMConfigurationCommand = PackmindCommand;
+export type GetLLMConfigurationCommand = SystemPackmindCommand;
 
 /**
  * LLM Configuration DTO for display purposes.
@@ -13,7 +13,7 @@ export type LLMConfigurationDTO = {
   fastestModel: string;
   endpoint?: string; // For Azure/OpenAI-compatible
   apiVersion?: string; // For Azure
-  configuredAt: Date;
+  configuredAt?: Date; // Optional for fallback configurations
 };
 
 export type GetLLMConfigurationResponse = {
@@ -21,7 +21,7 @@ export type GetLLMConfigurationResponse = {
   hasConfiguration: boolean;
 };
 
-export type IGetLLMConfigurationUseCase = IUseCase<
+export type IGetLLMConfigurationUseCase = ISystemUseCase<
   GetLLMConfigurationCommand,
   GetLLMConfigurationResponse
 >;

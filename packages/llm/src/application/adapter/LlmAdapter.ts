@@ -89,7 +89,6 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
       this.logger,
     );
     this._getLLMConfiguration = new GetLLMConfigurationUseCase(
-      this.accountsPort,
       this.llmConfigurationRepository,
       this.logger,
     );
@@ -183,7 +182,7 @@ export class LlmAdapter implements IBaseAdapter<ILlmPort>, ILlmPort {
   /**
    * Get LLM configuration for an organization.
    * Returns configuration without secrets.
-   * Requires admin privileges.
+   * Falls back to Packmind provider if no configuration exists and in proprietary cloud.
    */
   async getLLMConfiguration(
     command: GetLLMConfigurationCommand,
