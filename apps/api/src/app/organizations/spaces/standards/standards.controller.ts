@@ -22,7 +22,7 @@ import {
   StandardId,
   StandardVersion,
 } from '@packmind/types';
-import { StandardsService } from '../../../standards/standards.service';
+import { StandardsService } from './standards.service';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 import { SpaceAccessGuard } from '../guards/space-access.guard';
 

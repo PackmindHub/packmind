@@ -29,8 +29,7 @@ import {
   StandardId,
   stringToProgrammingLanguage,
 } from '@packmind/types';
-import { RulesService } from '../../../../standards/rules/rules.service';
-import { StandardsService } from '../../../../standards/standards.service';
+import { RulesService } from './rules.service';
 import { OrganizationAccessGuard } from '../../../guards/organization-access.guard';
 import { SpaceAccessGuard } from '../../guards/space-access.guard';
 
@@ -54,7 +53,6 @@ const origin = 'OrganizationsSpacesStandardsRulesController';
 export class OrganizationsSpacesStandardsRulesController {
   constructor(
     private readonly rulesService: RulesService,
-    private readonly standardsService: StandardsService,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.INFO,
@@ -88,7 +86,7 @@ export class OrganizationsSpacesStandardsRulesController {
 
     try {
       // Validate that the standard belongs to the specified space
-      const standardResponse = await this.standardsService.getStandardById(
+      const standardResponse = await this.rulesService.getStandardById(
         standardId,
         organizationId,
         spaceId,
@@ -193,7 +191,7 @@ export class OrganizationsSpacesStandardsRulesController {
 
     try {
       // Validate that the standard belongs to the specified space
-      const standardResponse = await this.standardsService.getStandardById(
+      const standardResponse = await this.rulesService.getStandardById(
         standardId,
         organizationId,
         spaceId,
@@ -327,7 +325,7 @@ export class OrganizationsSpacesStandardsRulesController {
       }
 
       // Validate that the standard belongs to the specified space
-      const standardResponse = await this.standardsService.getStandardById(
+      const standardResponse = await this.rulesService.getStandardById(
         standardId,
         organizationId,
         spaceId,
@@ -432,7 +430,7 @@ export class OrganizationsSpacesStandardsRulesController {
 
     try {
       // Validate that the standard belongs to the specified space
-      const standardResponse = await this.standardsService.getStandardById(
+      const standardResponse = await this.rulesService.getStandardById(
         standardId,
         organizationId,
         spaceId,
@@ -531,7 +529,7 @@ export class OrganizationsSpacesStandardsRulesController {
 
     try {
       // Validate that the standard belongs to the specified space
-      const standardResponse = await this.standardsService.getStandardById(
+      const standardResponse = await this.rulesService.getStandardById(
         standardId,
         organizationId,
         spaceId,
