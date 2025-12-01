@@ -11,6 +11,7 @@ apps/mcp-server/.env
 
 .nx/cache
 .nx/workspace-data
+graph.json
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 dockerfile/local
