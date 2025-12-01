@@ -233,6 +233,7 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
           id: `${program.id}-draft-${draftProgram.id}`,
           language: lang,
           activeDetectionProgramId: program.id,
+          hasActiveProgram: !!program.detectionProgram,
           draftProgram,
           status: draftProgram.status,
           mode: draftProgram.mode,

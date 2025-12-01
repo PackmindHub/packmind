@@ -53,7 +53,6 @@ type DetectabilityDescriptor = {
   key: ActiveConfigurationSectionKey.DETECTABILITY;
   props: {
     standardName?: string;
-    onLinterUsageClick: () => void;
   };
 };
 
@@ -185,7 +184,6 @@ export const useActiveConfigurationSectionViewModel = (
             key,
             props: {
               standardName,
-              onLinterUsageClick: () => onTestProgram(configuration),
             },
           });
           break;

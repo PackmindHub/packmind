@@ -35,6 +35,7 @@ export function getToReviewMainAction({
     id: `${configuration.id}-draft-${draftProgram.id}`,
     language: draftProgram.language ?? configuration.language,
     activeDetectionProgramId: configuration.id,
+    hasActiveProgram: !!configuration.detectionProgram,
     draftProgram,
     status: draftProgram.status,
     mode: draftProgram.mode,

@@ -27,6 +27,7 @@ export type DraftCardData = {
   id: string;
   language: string;
   activeDetectionProgramId: string;
+  hasActiveProgram?: boolean;
   draftProgram: DetectionProgram;
   status: DetectionStatus | string;
   mode?: string;
@@ -81,7 +82,8 @@ export const DetectionDraftCard: React.FC<DraftCardProps> = ({
   const draftInfo: DraftInfo = {
     language: draft.language,
     version: draft.version,
-    hasActiveProgram: !!draft.activeDetectionProgramId,
+    hasActiveProgram:
+      draft.hasActiveProgram ?? !!draft.activeDetectionProgramId,
   };
 
   const timelineConfig = getTimelineConfig(
@@ -432,6 +434,7 @@ function getTimelineConfig(
               label: 'Set as active',
               onClick: handlers.onMakeActive,
               disabled: loadingStates.isActivating,
+              variant: 'primary',
               confirmation: draftInfo?.hasActiveProgram
                 ? {
                     title: 'Activate Detection Program',

@@ -1,16 +1,10 @@
 import React from 'react';
 import { render, RenderResult } from '@testing-library/react';
 import { UIProvider } from '@packmind/ui';
-import userEvent from '@testing-library/user-event';
 import { DetectabilitySection } from './DetectabilitySection';
 
 describe('DetectabilitySection', () => {
   let screen: RenderResult;
-  let onLinterUsageClick: jest.Mock;
-
-  beforeEach(() => {
-    onLinterUsageClick = jest.fn();
-  });
 
   afterEach(() => {
     jest.restoreAllMocks();
@@ -19,10 +13,7 @@ describe('DetectabilitySection', () => {
   function renderWithContext(standardName?: string) {
     return render(
       <UIProvider>
-        <DetectabilitySection
-          onLinterUsageClick={onLinterUsageClick}
-          standardName={standardName}
-        />
+        <DetectabilitySection standardName={standardName} />
       </UIProvider>,
     );
   }
@@ -42,17 +33,18 @@ describe('DetectabilitySection', () => {
       ).toBeInTheDocument();
     });
 
-    it('shows "Linter usage" button', () => {
+    it('shows "Linter usage" link', () => {
       expect(screen.getByText('Linter usage')).toBeInTheDocument();
     });
 
-    it('calls onLinterUsageClick when "Linter usage" button is clicked', async () => {
-      const user = userEvent.setup();
-      const button = screen.getByText('Linter usage');
-
-      await user.click(button);
-
-      expect(onLinterUsageClick).toHaveBeenCalledTimes(1);
+    it('renders "Linter usage" as a link to documentation', () => {
+      const link = screen.getByRole('link', { name: 'Linter usage' });
+      expect(link).toHaveAttribute(
+        'href',
+        'https://packmindhub.github.io/packmind/linter',
+      );
+      expect(link).toHaveAttribute('target', '_blank');
+      expect(link).toHaveAttribute('rel', 'noopener noreferrer');
     });
   });
 

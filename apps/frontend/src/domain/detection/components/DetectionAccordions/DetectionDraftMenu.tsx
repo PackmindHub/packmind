@@ -89,7 +89,8 @@ export const DetectionDraftMenu: React.FC<DraftCardProps> = ({
   const draftInfo: DraftInfo = {
     language: draft.language,
     version: draft.version,
-    hasActiveProgram: !!draft.activeDetectionProgramId,
+    hasActiveProgram:
+      draft.hasActiveProgram ?? !!draft.activeDetectionProgramId,
   };
 
   const timelineConfig = getTimelineConfig(
