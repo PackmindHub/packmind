@@ -1,0 +1,26 @@
+{
+  "name": "import-practices-legacy",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/import-practices-legacy/src",
+  "projectType": "library",
+  "tags": ["env:node"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit --project packages/import-practices-legacy/tsconfig.lib.json"
+      }
+    },
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/import-practices-legacy",
+        "tsConfig": "packages/import-practices-legacy/tsconfig.lib.json",
+        "packageJson": "packages/import-practices-legacy/package.json",
+        "main": "packages/import-practices-legacy/src/index.ts",
+        "assets": ["packages/import-practices-legacy/*.md"]
+      }
+    }
+  }
+}

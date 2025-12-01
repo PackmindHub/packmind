@@ -15,6 +15,8 @@ import type {
   CopyLinterArtefactsCommand,
   CopyLinterArtefactsResponse,
   CreateDetectionProgramCommand,
+  CreateEmptyRuleDetectionAssessmentCommand,
+  CreateEmptyRuleDetectionAssessmentResponse,
   CreateNewDetectionProgramVersionCommand,
   GetActiveDetectionProgramCommand,
   GetActiveDetectionProgramForRuleCommand,
@@ -163,4 +165,8 @@ export interface ILinterPort {
   getDetectionProgramsForPackages(
     command: GetDetectionProgramsForPackagesCommand,
   ): Promise<GetDetectionProgramsForPackagesResponse>;
+
+  createEmptyRuleDetectionAssessment(
+    command: CreateEmptyRuleDetectionAssessmentCommand,
+  ): Promise<CreateEmptyRuleDetectionAssessmentResponse>;
 }

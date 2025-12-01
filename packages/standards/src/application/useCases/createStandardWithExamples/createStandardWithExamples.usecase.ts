@@ -34,6 +34,11 @@ export type CreateStandardWithExamplesRequest = {
   userId: UserId;
   scope: string | null;
   spaceId: SpaceId;
+  /**
+   * When true, skips the detection program assessment for rules.
+   * Useful for bulk imports where assessment would be too expensive.
+   */
+  disableTriggerAssessment?: boolean;
 };
 
 export class CreateStandardWithExamplesUsecase {
@@ -65,6 +70,7 @@ export class CreateStandardWithExamplesUsecase {
     userId,
     scope,
     spaceId,
+    disableTriggerAssessment = false,
   }: CreateStandardWithExamplesRequest) {
     this.logger.info('Starting createStandardWithExamples process', {
       name,
@@ -182,11 +188,20 @@ export class CreateStandardWithExamplesUsecase {
       );
 
       // Validate detection programs for all rules with examples
-      await this.assessRulesDetections(
-        standardVersion.id,
-        organizationId,
-        userId,
-      );
+      if (!disableTriggerAssessment) {
+        await this.assessRulesDetections(
+          standardVersion.id,
+          organizationId,
+          userId,
+        );
+      } else {
+        this.logger.info(
+          'Detection program assessment disabled, skipping validation',
+          {
+            standardVersionId: standardVersion.id,
+          },
+        );
+      }
 
       this.eventEmitterService.emit(
         new StandardCreatedEvent({

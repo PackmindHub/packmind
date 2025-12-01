@@ -7,6 +7,7 @@ export * from './ICopyLinterArtefacts';
 export * from './ICopyRuleDetectionAssessments';
 export * from './ICreateDetectionHeuristics';
 export * from './ICreateDetectionProgram';
+export * from './ICreateEmptyRuleDetectionAssessment';
 export * from './ICreateNewDetectionProgramVersion';
 export * from './IExecuteLinterProgramsUseCase';
 export * from './IGenerateProgramJob';

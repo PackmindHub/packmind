@@ -419,6 +419,7 @@ export class StandardsAdapter
     userId: UserId;
     scope: string | null;
     spaceId: SpaceId | null;
+    disableTriggerAssessment?: boolean;
   }): Promise<Standard> {
     if (!params.spaceId) {
       throw new Error(
