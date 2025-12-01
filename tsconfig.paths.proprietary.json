@@ -5,7 +5,8 @@
       "@packmind/analytics": ["packages/analytics/src/index.ts"],
       "@packmind/jobs": ["packages/jobs/src/index.ts"],
       "@packmind/linter": ["packages/linter/src/index.ts"],
-      "@packmind/amplitude": ["packages/amplitude/src/index.ts"]
+      "@packmind/amplitude": ["packages/amplitude/src/index.ts"],
+      "@packmind/plugins": ["packages/plugins/src/index.ts"]
     }
   }
 }

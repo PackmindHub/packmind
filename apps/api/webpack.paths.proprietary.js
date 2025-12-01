@@ -19,6 +19,7 @@ module.exports = function getProprietaryWebpackPaths(__dirname) {
       '../../packages/linter-execution/src',
     ),
     '@packmind/amplitude': join(__dirname, '../../packages/amplitude/src'),
+    '@packmind/plugins': join(__dirname, '../../packages/plugins/src'),
     // Add other proprietary-specific overrides here as needed
   };
 };
