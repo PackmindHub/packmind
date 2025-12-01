@@ -15,30 +15,24 @@ import {
   Standard,
   ProgrammingLanguage,
 } from '@packmind/types';
-import { RulesService } from '../../../../standards/rules/rules.service';
-import { StandardsService } from '../../../../standards/standards.service';
+import { RulesService } from './rules.service';
 import { OrganizationsSpacesStandardsRulesController } from './rules.controller';
 
 describe('OrganizationsSpacesStandardsRulesController', () => {
   let controller: OrganizationsSpacesStandardsRulesController;
   let rulesService: jest.Mocked<RulesService>;
-  let standardsService: jest.Mocked<StandardsService>;
   let logger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
     rulesService = {
+      getStandardById: jest.fn(),
       getRulesByStandardId: jest.fn(),
       getRuleExamples: jest.fn(),
     } as unknown as jest.Mocked<RulesService>;
 
-    standardsService = {
-      getStandardById: jest.fn(),
-    } as unknown as jest.Mocked<StandardsService>;
-
     logger = stubLogger();
     controller = new OrganizationsSpacesStandardsRulesController(
       rulesService,
-      standardsService,
       logger,
     );
   });
@@ -92,7 +86,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
           },
         } as unknown as AuthenticatedRequest;
 
-        standardsService.getStandardById.mockResolvedValue({
+        rulesService.getStandardById.mockResolvedValue({
           standard: mockStandard,
         });
         rulesService.getRulesByStandardId.mockResolvedValue(mockRules);
@@ -105,7 +99,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
         );
 
         expect(result).toEqual(mockRules);
-        expect(standardsService.getStandardById).toHaveBeenCalledWith(
+        expect(rulesService.getStandardById).toHaveBeenCalledWith(
           standardId,
           orgId,
           spaceId,
@@ -137,7 +131,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
           },
         } as unknown as AuthenticatedRequest;
 
-        standardsService.getStandardById.mockResolvedValue({
+        rulesService.getStandardById.mockResolvedValue({
           standard: null as unknown as Standard,
         });
 
@@ -186,7 +180,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
           },
         } as unknown as AuthenticatedRequest;
 
-        standardsService.getStandardById.mockResolvedValue({
+        rulesService.getStandardById.mockResolvedValue({
           standard: mockStandard,
         });
 
@@ -234,7 +228,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
           },
         } as unknown as AuthenticatedRequest;
 
-        standardsService.getStandardById.mockResolvedValue({
+        rulesService.getStandardById.mockResolvedValue({
           standard: mockStandard,
         });
         rulesService.getRulesByStandardId.mockResolvedValue([]);
@@ -273,7 +267,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
       } as unknown as AuthenticatedRequest;
 
       const error = new Error('Database error');
-      standardsService.getStandardById.mockRejectedValue(error);
+      rulesService.getStandardById.mockRejectedValue(error);
 
       await expect(
         controller.getRulesByStandardId(orgId, spaceId, standardId, request),
@@ -312,7 +306,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
         },
       } as unknown as AuthenticatedRequest;
 
-      standardsService.getStandardById.mockResolvedValue({
+      rulesService.getStandardById.mockResolvedValue({
         standard: mockStandard,
       });
 
@@ -375,7 +369,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
           },
         } as unknown as AuthenticatedRequest;
 
-        standardsService.getStandardById.mockResolvedValue({
+        rulesService.getStandardById.mockResolvedValue({
           standard: mockStandard,
         });
         rulesService.getRuleExamples.mockResolvedValue(mockRuleExamples);
@@ -389,7 +383,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
         );
 
         expect(result).toEqual(mockRuleExamples);
-        expect(standardsService.getStandardById).toHaveBeenCalledWith(
+        expect(rulesService.getStandardById).toHaveBeenCalledWith(
           standardId,
           orgId,
           spaceId,
@@ -424,7 +418,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
           },
         } as unknown as AuthenticatedRequest;
 
-        standardsService.getStandardById.mockResolvedValue({
+        rulesService.getStandardById.mockResolvedValue({
           standard: null as unknown as Standard,
         });
 
@@ -486,7 +480,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
           },
         } as unknown as AuthenticatedRequest;
 
-        standardsService.getStandardById.mockResolvedValue({
+        rulesService.getStandardById.mockResolvedValue({
           standard: mockStandard,
         });
 
@@ -547,7 +541,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
           },
         } as unknown as AuthenticatedRequest;
 
-        standardsService.getStandardById.mockResolvedValue({
+        rulesService.getStandardById.mockResolvedValue({
           standard: mockStandard,
         });
         rulesService.getRuleExamples.mockResolvedValue([]);
@@ -600,7 +594,7 @@ describe('OrganizationsSpacesStandardsRulesController', () => {
         },
       } as unknown as AuthenticatedRequest;
 
-      standardsService.getStandardById.mockResolvedValue({
+      rulesService.getStandardById.mockResolvedValue({
         standard: mockStandard,
       });
 

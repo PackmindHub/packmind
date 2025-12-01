@@ -7,7 +7,15 @@ import {
   StandardsHexa,
   UpdateRuleExampleCommand,
 } from '@packmind/standards';
-import { Rule, RuleExample, StandardId } from '@packmind/types';
+import {
+  GetStandardByIdResponse,
+  OrganizationId,
+  Rule,
+  RuleExample,
+  SpaceId,
+  StandardId,
+  UserId,
+} from '@packmind/types';
 
 @Injectable()
 export class RulesService {
@@ -15,6 +23,20 @@ export class RulesService {
     private readonly standardsHexa: StandardsHexa,
     private readonly logger: PackmindLogger,
   ) {}
+
+  async getStandardById(
+    standardId: StandardId,
+    organizationId: OrganizationId,
+    spaceId: SpaceId,
+    userId: UserId,
+  ): Promise<GetStandardByIdResponse> {
+    return this.standardsHexa.getAdapter().getStandardById({
+      standardId,
+      organizationId,
+      spaceId,
+      userId,
+    });
+  }
 
   async getRulesByStandardId(standardId: StandardId): Promise<Rule[]> {
     return this.standardsHexa.getAdapter().getRulesByStandardId(standardId);

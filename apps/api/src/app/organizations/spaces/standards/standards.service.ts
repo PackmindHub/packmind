@@ -15,7 +15,7 @@ import {
   StandardVersion,
   UserId,
 } from '@packmind/types';
-import { InjectDeploymentAdapter } from '../shared/HexaInjection';
+import { InjectDeploymentAdapter } from '../../../shared/HexaInjection';
 
 @Injectable()
 export class StandardsService {

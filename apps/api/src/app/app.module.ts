@@ -26,8 +26,6 @@ import { JobsService } from '@packmind/node-utils';
 import { OrganizationsModule as AccountsOrganizationsModule } from './accounts/organizations/organizations.module';
 import { AuthGuard } from './auth/auth.guard';
 import { AuthModule } from './auth/auth.module';
-import { GitModule } from './git/git.module';
-
 import { OrganizationsModule } from './organizations/organizations.module';
 import { RecipesModule } from './organizations/spaces/recipes/recipes.module';
 import { OrganizationsSpacesModule } from './organizations/spaces/spaces.module';
@@ -44,7 +42,6 @@ import { OrganizationLlmModule } from './organizations/llm/llm.module';
 import { OrganizationMcpModule } from './organizations/mcp/mcp.module';
 import { HexaRegistryModule } from './shared/HexaRegistryModule';
 import { SSEModule } from './sse/sse.module';
-import { StandardsModule } from './standards/standards.module';
 
 const logger = new PackmindLogger('AppModule', LogLevel.INFO);
 
@@ -100,10 +97,8 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
         JobsService, // Infrastructure service for background jobs
       ],
     }),
-    StandardsModule,
     HooksModule,
     AuthModule,
-    GitModule,
     AccountsOrganizationsModule,
     OrganizationsModule,
     AnalyticsModule,
