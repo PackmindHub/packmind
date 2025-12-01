@@ -1,11 +1,11 @@
 import { PackmindLogger } from '@packmind/logger';
-import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
 import {
+  DEFAULT_OPENAI_MODELS,
   GetLLMConfigurationCommand,
   GetLLMConfigurationResponse,
-  IAccountsPort,
   IGetLLMConfigurationUseCase,
   LLMConfigurationDTO,
+  LLMProvider,
   LLMServiceConfig,
   OrganizationId,
 } from '@packmind/types';
@@ -13,26 +13,18 @@ import {
   ILLMConfigurationRepository,
   StoredLLMConfiguration,
 } from '../../../domain/repositories/ILLMConfigurationRepository';
+import { isPackmindProviderAvailable } from '../utils';
 
 const origin = 'GetLLMConfigurationUseCase';
 
-export class GetLLMConfigurationUseCase
-  extends AbstractAdminUseCase<
-    GetLLMConfigurationCommand,
-    GetLLMConfigurationResponse
-  >
-  implements IGetLLMConfigurationUseCase
-{
+export class GetLLMConfigurationUseCase implements IGetLLMConfigurationUseCase {
   constructor(
-    accountsPort: IAccountsPort,
     private readonly configurationRepository: ILLMConfigurationRepository,
-    logger: PackmindLogger = new PackmindLogger(origin),
-  ) {
-    super(accountsPort, logger);
-  }
+    private readonly logger: PackmindLogger = new PackmindLogger(origin),
+  ) {}
 
-  protected async executeForAdmins(
-    command: GetLLMConfigurationCommand & AdminContext,
+  async execute(
+    command: GetLLMConfigurationCommand,
   ): Promise<GetLLMConfigurationResponse> {
     const { organizationId } = command;
 
@@ -45,10 +37,7 @@ export class GetLLMConfigurationUseCase
     );
 
     if (!storedConfig) {
-      return {
-        configuration: null,
-        hasConfiguration: false,
-      };
+      return this.handleNoStoredConfiguration();
     }
 
     const configDTO = this.toDTO(storedConfig);
@@ -56,6 +45,32 @@ export class GetLLMConfigurationUseCase
     return {
       configuration: configDTO,
       hasConfiguration: true,
+    };
+  }
+
+  private async handleNoStoredConfiguration(): Promise<GetLLMConfigurationResponse> {
+    const packmindProviderAvailable = await isPackmindProviderAvailable();
+    if (packmindProviderAvailable) {
+      this.logger.info(
+        'No configuration found, falling back to Packmind provider',
+      );
+      return {
+        configuration: this.getPackmindFallbackConfiguration(),
+        hasConfiguration: false,
+      };
+    }
+
+    return {
+      configuration: null,
+      hasConfiguration: false,
+    };
+  }
+
+  private getPackmindFallbackConfiguration(): LLMConfigurationDTO {
+    return {
+      provider: LLMProvider.PACKMIND,
+      model: DEFAULT_OPENAI_MODELS.model,
+      fastestModel: DEFAULT_OPENAI_MODELS.fastestModel,
     };
   }
 
