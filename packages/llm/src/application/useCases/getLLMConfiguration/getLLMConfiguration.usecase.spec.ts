@@ -1,6 +1,6 @@
 import { createOrganizationId, LLMProvider } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
-import { ILLMConfigurationRepository } from '../../../domain/repositories/ILLMConfigurationRepository';
+import { IAIProviderRepository } from '../../../domain/repositories/IAIProviderRepository';
 import { GetLLMConfigurationUseCase } from './getLLMConfiguration.usecase';
 import * as utils from '../utils';
 
@@ -10,7 +10,7 @@ describe('GetLLMConfigurationUseCase', () => {
   const organizationId = createOrganizationId('org-123');
 
   let useCase: GetLLMConfigurationUseCase;
-  let mockConfigurationRepository: jest.Mocked<ILLMConfigurationRepository>;
+  let mockConfigurationRepository: jest.Mocked<IAIProviderRepository>;
   let mockIsPackmindProviderAvailable: jest.MockedFunction<
     typeof utils.isPackmindProviderAvailable
   >;
@@ -169,10 +169,10 @@ describe('GetLLMConfigurationUseCase', () => {
         mockIsPackmindProviderAvailable.mockResolvedValue(true);
       });
 
-      it('returns hasConfiguration as false', async () => {
+      it('returns hasConfiguration as true', async () => {
         const result = await useCase.execute({ organizationId });
 
-        expect(result.hasConfiguration).toBe(false);
+        expect(result.hasConfiguration).toBe(true);
       });
 
       it('returns Packmind fallback configuration', async () => {

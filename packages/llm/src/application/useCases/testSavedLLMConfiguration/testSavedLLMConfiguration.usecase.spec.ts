@@ -6,11 +6,13 @@ import {
 } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 import { OrganizationAdminRequiredError } from '@packmind/node-utils';
-import { ILLMConfigurationRepository } from '../../../domain/repositories/ILLMConfigurationRepository';
+import { IAIProviderRepository } from '../../../domain/repositories/IAIProviderRepository';
 import { TestSavedLLMConfigurationUseCase } from './testSavedLLMConfiguration.usecase';
 import { createLLMService } from '../../../factories/createLLMService';
+import * as utils from '../utils';
 
 jest.mock('../../../factories/createLLMService');
+jest.mock('../utils');
 
 const mockedCreateLLMService = createLLMService as jest.MockedFunction<
   typeof createLLMService
@@ -22,8 +24,11 @@ describe('TestSavedLLMConfigurationUseCase', () => {
 
   let useCase: TestSavedLLMConfigurationUseCase;
   let mockAccountsPort: jest.Mocked<IAccountsPort>;
-  let mockConfigurationRepository: jest.Mocked<ILLMConfigurationRepository>;
+  let mockConfigurationRepository: jest.Mocked<IAIProviderRepository>;
   let mockExecutePrompt: jest.Mock;
+  let mockIsPackmindProviderAvailable: jest.MockedFunction<
+    typeof utils.isPackmindProviderAvailable
+  >;
 
   const adminUser = {
     id: userId,
@@ -73,6 +78,12 @@ describe('TestSavedLLMConfigurationUseCase', () => {
 
     mockExecutePrompt = jest.fn();
 
+    mockIsPackmindProviderAvailable =
+      utils.isPackmindProviderAvailable as jest.MockedFunction<
+        typeof utils.isPackmindProviderAvailable
+      >;
+    mockIsPackmindProviderAvailable.mockResolvedValue(false);
+
     mockedCreateLLMService.mockReturnValue({
       executePrompt: mockExecutePrompt,
       isConfigured: jest.fn().mockResolvedValue(true),
@@ -102,22 +113,113 @@ describe('TestSavedLLMConfigurationUseCase', () => {
         mockConfigurationRepository.get.mockResolvedValue(null);
       });
 
-      it('returns hasConfiguration as false', async () => {
-        const result = await useCase.execute({ userId, organizationId });
+      describe('when Packmind provider is not available', () => {
+        beforeEach(() => {
+          mockIsPackmindProviderAvailable.mockResolvedValue(false);
+        });
 
-        expect(result.hasConfiguration).toBe(false);
+        it('returns hasConfiguration as false', async () => {
+          const result = await useCase.execute({ userId, organizationId });
+
+          expect(result.hasConfiguration).toBe(false);
+        });
+
+        it('returns overallSuccess as false', async () => {
+          const result = await useCase.execute({ userId, organizationId });
+
+          expect(result.overallSuccess).toBe(false);
+        });
+
+        it('does not call createLLMService', async () => {
+          await useCase.execute({ userId, organizationId });
+
+          expect(mockedCreateLLMService).not.toHaveBeenCalled();
+        });
+
+        it('returns error message indicating no configuration', async () => {
+          const result = await useCase.execute({ userId, organizationId });
+
+          expect(result.standardModel.error?.message).toBe(
+            'No LLM configuration found for this organization',
+          );
+        });
       });
 
-      it('returns overallSuccess as false', async () => {
-        const result = await useCase.execute({ userId, organizationId });
+      describe('when Packmind provider is available', () => {
+        beforeEach(() => {
+          mockIsPackmindProviderAvailable.mockResolvedValue(true);
+        });
 
-        expect(result.overallSuccess).toBe(false);
-      });
+        describe('when Packmind test succeeds', () => {
+          beforeEach(() => {
+            mockExecutePrompt.mockResolvedValueOnce({
+              success: true,
+              model: 'gpt-4',
+              data: 'Hello!',
+            });
+          });
 
-      it('does not call createLLMService', async () => {
-        await useCase.execute({ userId, organizationId });
+          it('returns hasConfiguration as false', async () => {
+            const result = await useCase.execute({ userId, organizationId });
 
-        expect(mockedCreateLLMService).not.toHaveBeenCalled();
+            expect(result.hasConfiguration).toBe(false);
+          });
+
+          it('returns overallSuccess as true', async () => {
+            const result = await useCase.execute({ userId, organizationId });
+
+            expect(result.overallSuccess).toBe(true);
+          });
+
+          it('returns provider as PACKMIND', async () => {
+            const result = await useCase.execute({ userId, organizationId });
+
+            expect(result.provider).toBe(LLMProvider.PACKMIND);
+          });
+
+          it('returns standard model success', async () => {
+            const result = await useCase.execute({ userId, organizationId });
+
+            expect(result.standardModel.success).toBe(true);
+          });
+
+          it('calls createLLMService with Packmind config', async () => {
+            await useCase.execute({ userId, organizationId });
+
+            expect(mockedCreateLLMService).toHaveBeenCalledWith({
+              provider: LLMProvider.PACKMIND,
+            });
+          });
+        });
+
+        describe('when Packmind test fails', () => {
+          beforeEach(() => {
+            mockExecutePrompt.mockResolvedValueOnce({
+              success: false,
+              model: 'gpt-4',
+              data: null,
+              error: 'Service unavailable',
+            });
+          });
+
+          it('returns hasConfiguration as false', async () => {
+            const result = await useCase.execute({ userId, organizationId });
+
+            expect(result.hasConfiguration).toBe(false);
+          });
+
+          it('returns overallSuccess as false', async () => {
+            const result = await useCase.execute({ userId, organizationId });
+
+            expect(result.overallSuccess).toBe(false);
+          });
+
+          it('returns standard model failure', async () => {
+            const result = await useCase.execute({ userId, organizationId });
+
+            expect(result.standardModel.success).toBe(false);
+          });
+        });
       });
     });
 
