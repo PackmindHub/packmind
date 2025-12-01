@@ -35,14 +35,14 @@ To add code examples to a rule, see the [Standards Management](./standards-manag
 Once you've added code examples, Packmind **automatically triggers** an assessment to determine whether automated detection is possible for your rule.
 
 :::tip Automatic Assessment
-When you create a standard through the MCP server, all rules with code examples will have their assessment run automatically in the background. You don't need to manually trigger the assessment process.
+Assessment is triggered automatically whenever you update code examples or Detection Clues. There is no manual trigger for assessment - the system re-evaluates detectability each time relevant inputs change (and no program generated successfully)
 :::
 
 The AI analyzes:
 
-- The rule's description and guidelines
+- The rule's description
 - The code examples you provided
-- The complexity and specificity of the rule
+- Detection Clues (tips and instructions that help AI understand how to detect violations)
 
 **Assessment Results:**
 
@@ -54,9 +54,20 @@ The AI analyzes:
 - The rule requires analyzing multiple files (not supported yet by the current linter capabilities)
 - The rule lacks specific, measurable criteria
 
-:::info Coming soon
-We're working to let users refine instructions for AI agent to better understand how to detect violations
-:::
+### Improving Detectability
+
+When assessment fails, the **Detectability** section becomes available in the rule's detection settings. This section helps you understand and improve why detection isn't possible:
+
+1. **View failure reasons**: See exactly why Packmind determined the rule cannot be automatically detected
+2. **Answer clarification questions**: Packmind AI may generate questions to better understand your rule's context. Answering these questions helps refine the assessment
+3. **Add Detection clues manually**: Provide your own tips and instructions to guide the AI in understanding how to detect violations
+
+Every update to Detection Clues triggers a new detectability assessment:
+
+- If assessment succeeds, program generation starts automatically
+- If assessment fails again, the explanations are updated with new insights
+
+Detection Clues remain accessible at any time once an assessment has completed (whether successful or not). You can continue to refine clues if program generation fails or produces errors.
 
 ### Step 3: Program Generation
 
@@ -80,7 +91,7 @@ When assessment is positive, Packmind uses AI to generate a detection program fo
 When program generation succeeds, Packmind creates a new **draft version** of the detection program.
 
 Draft versions are not automatically used for detection. This gives you the opportunity to validate the program before it becomes active.
-You can test the program behavior against a source code using the sandbox module in the interface, or using the CLI.
+You can test the program behavior against source code using the sandbox module in the interface, or using the [CLI](./cli.md#lint-command).
 
 ## Understanding Program Versions
 
