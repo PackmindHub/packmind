@@ -2,7 +2,6 @@ import { LLMServiceConfig, OrganizationId } from '@packmind/types';
 
 export type StoredAIProvider = {
   config: LLMServiceConfig;
-  configuredAt: Date;
 };
 
 export interface IAIProviderRepository {

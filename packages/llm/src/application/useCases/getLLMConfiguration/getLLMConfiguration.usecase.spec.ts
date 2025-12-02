@@ -39,8 +39,6 @@ describe('GetLLMConfigurationUseCase', () => {
   });
 
   describe('when configuration exists', () => {
-    const configuredAt = new Date('2024-01-15T10:00:00Z');
-
     beforeEach(() => {
       mockConfigurationRepository.get.mockResolvedValue({
         config: {
@@ -49,7 +47,6 @@ describe('GetLLMConfigurationUseCase', () => {
           model: 'gpt-4',
           fastestModel: 'gpt-4-mini',
         },
-        configuredAt,
       });
     });
 
@@ -77,12 +74,6 @@ describe('GetLLMConfigurationUseCase', () => {
       expect(result.configuration?.fastestModel).toBe('gpt-4-mini');
     });
 
-    it('returns configuration configuredAt', async () => {
-      const result = await useCase.execute({ organizationId });
-
-      expect(result.configuration?.configuredAt).toEqual(configuredAt);
-    });
-
     it('does not include apiKey in response', async () => {
       const result = await useCase.execute({ organizationId });
 
@@ -91,8 +82,6 @@ describe('GetLLMConfigurationUseCase', () => {
   });
 
   describe('when Azure OpenAI configuration exists', () => {
-    const configuredAt = new Date('2024-01-15T10:00:00Z');
-
     beforeEach(() => {
       mockConfigurationRepository.get.mockResolvedValue({
         config: {
@@ -103,7 +92,6 @@ describe('GetLLMConfigurationUseCase', () => {
           model: 'gpt-4-deployment',
           fastestModel: 'gpt-35-turbo-deployment',
         },
-        configuredAt,
       });
     });
 
@@ -129,8 +117,6 @@ describe('GetLLMConfigurationUseCase', () => {
   });
 
   describe('when OpenAI-compatible configuration exists', () => {
-    const configuredAt = new Date('2024-01-15T10:00:00Z');
-
     beforeEach(() => {
       mockConfigurationRepository.get.mockResolvedValue({
         config: {
@@ -140,7 +126,6 @@ describe('GetLLMConfigurationUseCase', () => {
           model: 'custom-model',
           fastestModel: 'custom-fast-model',
         },
-        configuredAt,
       });
     });
 
@@ -156,6 +141,40 @@ describe('GetLLMConfigurationUseCase', () => {
       const result = await useCase.execute({ organizationId });
 
       expect(result.configuration).not.toHaveProperty('llmApiKey');
+    });
+  });
+
+  describe('when Packmind configuration exists', () => {
+    beforeEach(() => {
+      mockConfigurationRepository.get.mockResolvedValue({
+        config: {
+          provider: LLMProvider.PACKMIND,
+        },
+      });
+    });
+
+    it('returns hasConfiguration as true', async () => {
+      const result = await useCase.execute({ organizationId });
+
+      expect(result.hasConfiguration).toBe(true);
+    });
+
+    it('returns Packmind provider', async () => {
+      const result = await useCase.execute({ organizationId });
+
+      expect(result.configuration?.provider).toBe(LLMProvider.PACKMIND);
+    });
+
+    it('returns default model', async () => {
+      const result = await useCase.execute({ organizationId });
+
+      expect(result.configuration?.model).toBe('gpt-5.1');
+    });
+
+    it('returns default fastestModel', async () => {
+      const result = await useCase.execute({ organizationId });
+
+      expect(result.configuration?.fastestModel).toBe('gpt-4.1-mini');
     });
   });
 
@@ -191,12 +210,6 @@ describe('GetLLMConfigurationUseCase', () => {
         const result = await useCase.execute({ organizationId });
 
         expect(result.configuration?.fastestModel).toBe('gpt-4.1-mini');
-      });
-
-      it('does not include configuredAt in fallback configuration', async () => {
-        const result = await useCase.execute({ organizationId });
-
-        expect(result.configuration?.configuredAt).toBeUndefined();
       });
     });
 

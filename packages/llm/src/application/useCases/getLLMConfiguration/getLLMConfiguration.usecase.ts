@@ -78,7 +78,7 @@ export class GetLLMConfigurationUseCase implements IGetLLMConfigurationUseCase {
    * Convert stored configuration to DTO, stripping secrets.
    */
   private toDTO(storedConfig: StoredAIProvider): LLMConfigurationDTO {
-    const { config, configuredAt } = storedConfig;
+    const { config } = storedConfig;
 
     return {
       provider: config.provider,
@@ -86,7 +86,6 @@ export class GetLLMConfigurationUseCase implements IGetLLMConfigurationUseCase {
       fastestModel: this.getFastestModel(config),
       endpoint: this.getEndpoint(config),
       apiVersion: this.getApiVersion(config),
-      configuredAt,
     };
   }
 
@@ -94,12 +93,18 @@ export class GetLLMConfigurationUseCase implements IGetLLMConfigurationUseCase {
     if ('model' in config && config.model) {
       return config.model;
     }
+    if (config.provider === LLMProvider.PACKMIND) {
+      return DEFAULT_OPENAI_MODELS.model;
+    }
     return '';
   }
 
   private getFastestModel(config: LLMServiceConfig): string {
     if ('fastestModel' in config && config.fastestModel) {
       return config.fastestModel;
+    }
+    if (config.provider === LLMProvider.PACKMIND) {
+      return DEFAULT_OPENAI_MODELS.fastestModel;
     }
     return '';
   }

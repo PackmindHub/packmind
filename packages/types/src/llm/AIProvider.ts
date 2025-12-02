@@ -7,10 +7,10 @@ import { LLMServiceConfig } from './LLMServiceConfig';
  * Each organization can have one active AI provider configuration.
  * The config field stores the provider-specific configuration as JSON.
  * Secrets (API keys) are encrypted at the repository layer.
+ * Uses standard createdAt/updatedAt timestamps from WithTimestamps.
  */
 export type AIProvider = {
   id: AIProviderId;
   organizationId: OrganizationId;
   config: LLMServiceConfig;
-  configuredAt: Date;
 };
