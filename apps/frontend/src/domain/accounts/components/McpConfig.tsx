@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   PMButton,
+  PMHStack,
   PMPageSection,
   PMText,
   PMTabs,
@@ -79,6 +80,20 @@ export const McpConfig: React.FunctionComponent = () => {
         },
       };
       return JSON.stringify(config, null, 2);
+    }
+    return '';
+  };
+
+  const getCursorInstallLink = () => {
+    if (getMcpTokenMutation.data?.access_token && url) {
+      const config = {
+        url,
+        headers: {
+          Authorization: `Bearer ${getMcpTokenMutation.data.access_token}`,
+        },
+      };
+      const base64Config = btoa(JSON.stringify(config));
+      return `cursor://anysphere.cursor-deeplink/mcp/install?name=packmind&config=${base64Config}`;
     }
     return '';
   };
@@ -167,6 +182,31 @@ export const McpConfig: React.FunctionComponent = () => {
                     rows={12}
                     data-testid="mcp-config-github-jetbrains"
                   />
+                ),
+              },
+              {
+                value: 'cursor',
+                triggerLabel: 'Cursor',
+                content: (
+                  <PMVStack
+                    gap={4}
+                    width="100%"
+                    pt={8}
+                    data-testid="mcp-config-cursor"
+                  >
+                    <PMHStack gap={4}>
+                      <a
+                        href={getCursorInstallLink()}
+                        data-testid="cursor-install-button"
+                      >
+                        <img
+                          src="https://cursor.com/deeplink/mcp-install-dark.png"
+                          alt="Add Packmind MCP server to Cursor"
+                          style={{ maxHeight: 32 }}
+                        />
+                      </a>
+                    </PMHStack>
+                  </PMVStack>
                 ),
               },
             ]}

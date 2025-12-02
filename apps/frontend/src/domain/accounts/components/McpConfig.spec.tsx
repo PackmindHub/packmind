@@ -199,6 +199,15 @@ describe('McpConfig', () => {
       },
     };
 
+    const expectedCursorConfig = {
+      url: 'https://mcp.packmind.com',
+      headers: {
+        Authorization: 'Bearer test-token-123',
+      },
+    };
+
+    const expectedCursorInstallLink = `cursor://anysphere.cursor-deeplink/mcp/install?name=packmind&config=${btoa(JSON.stringify(expectedCursorConfig))}`;
+
     beforeEach(async () => {
       const mockMutation = createMockMutation({
         isSuccess: true,
@@ -244,6 +253,23 @@ describe('McpConfig', () => {
     it('displays copy buttons for all configurations', () => {
       const copyButtons = screen.getAllByLabelText('Copy to clipboard');
       expect(copyButtons).toHaveLength(4);
+    });
+
+    it('displays Cursor install button with correct href and image', async () => {
+      const user = userEvent.setup();
+      const cursorTab = screen.getByRole('tab', { name: 'Cursor' });
+      await user.click(cursorTab);
+
+      const installButton = screen.getByTestId('cursor-install-button');
+      expect(installButton).toHaveAttribute('href', expectedCursorInstallLink);
+
+      const image = installButton.querySelector('img');
+      expect(image).toBeInTheDocument();
+      expect(image).toHaveAttribute(
+        'src',
+        'https://cursor.com/deeplink/mcp-install-dark.png',
+      );
+      expect(image).toHaveAttribute('alt', 'Add Packmind MCP server to Cursor');
     });
   });
 });
