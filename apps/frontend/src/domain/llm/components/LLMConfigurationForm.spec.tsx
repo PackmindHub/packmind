@@ -295,7 +295,7 @@ describe('LLMConfigurationForm', () => {
         standardModel: {
           model: 'gemini-3-pro-preview',
           success: false,
-          error: { message: cleanError },
+          error: { type: 'API_ERROR', message: cleanError },
         },
         overallSuccess: false,
       };
@@ -552,7 +552,6 @@ describe('LLMConfigurationForm', () => {
         provider: LLMProvider.OPENAI,
         model: 'gpt-4',
         fastestModel: 'gpt-4-mini',
-        configuredAt: new Date(),
       };
 
       renderWithProvider(
@@ -600,7 +599,6 @@ describe('LLMConfigurationForm', () => {
         provider: LLMProvider.OPENAI,
         model: 'gpt-4',
         fastestModel: 'gpt-4-mini',
-        configuredAt: new Date(),
       };
 
       renderWithProvider(

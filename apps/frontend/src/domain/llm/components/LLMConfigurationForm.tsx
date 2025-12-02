@@ -145,6 +145,9 @@ export const LLMConfigurationForm: React.FC<LLMConfigurationFormProps> = ({
     return findProviderMetadata(selectedProvider);
   }, [selectedProvider, findProviderMetadata]);
 
+  // Check if selected provider is Packmind (SaaS) - no test needed
+  const isPackmindProvider = selectedProvider === LLMProvider.PACKMIND;
+
   const handleProviderChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       const newProvider = e.target.value;
@@ -457,19 +460,23 @@ export const LLMConfigurationForm: React.FC<LLMConfigurationFormProps> = ({
                   Cancel
                 </PMButton>
               )}
-              <PMButton
-                onClick={handleTestConnection}
-                disabled={
-                  testConnection.isLoading || !selectedProvider || isSaving
-                }
-                variant="secondary"
-                data-testid="test-connection-button"
-              >
-                {testConnection.isLoading ? 'Testing...' : 'Test Connection'}
-              </PMButton>
+              {!isPackmindProvider && (
+                <PMButton
+                  onClick={handleTestConnection}
+                  disabled={
+                    testConnection.isLoading || !selectedProvider || isSaving
+                  }
+                  variant="secondary"
+                  data-testid="test-connection-button"
+                >
+                  {testConnection.isLoading ? 'Testing...' : 'Test Connection'}
+                </PMButton>
+              )}
               <PMTooltip
                 label="Test connection before saving"
-                disabled={testConnection.result?.overallSuccess}
+                disabled={
+                  isPackmindProvider || testConnection.result?.overallSuccess
+                }
               >
                 <span>
                   <PMAlertDialog
@@ -480,7 +487,8 @@ export const LLMConfigurationForm: React.FC<LLMConfigurationFormProps> = ({
                           testConnection.isLoading ||
                           !selectedProvider ||
                           isSaving ||
-                          !testConnection.result?.overallSuccess
+                          (!isPackmindProvider &&
+                            !testConnection.result?.overallSuccess)
                         }
                         data-testid="save-configuration-button"
                       >
