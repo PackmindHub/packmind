@@ -208,7 +208,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report-${{ github.run_number }}-${{ github.sha }}
-          path: playwright-report/
+          path: apps/e2e-tests/playwright-report/
           if-no-files-found: ignore
 
       - name: Upload test results
@@ -216,7 +216,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: e2e-test-results-${{ github.run_number }}-${{ github.sha }}
-          path: test-results/
+          path: apps/e2e-tests/test-results/
           if-no-files-found: ignore
 
       - name: Collect Docker container logs
