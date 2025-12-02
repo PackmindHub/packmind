@@ -219,11 +219,14 @@ jobs:
           COMPOSE_PROJECT_NAME: ci-${{ github.run_number }}
         run: |
           mkdir -p docker-logs
-          for container in $(docker compose --profile=e2e ps -aq 2>/dev/null); do
-            name=$(docker inspect --format='{{.Name}}' "$container" | sed 's/^\///')
-            echo "Collecting logs for $name..."
-            docker logs "$container" > "docker-logs/${name}.log" 2>&1 || true
+          echo "Looking for containers with prefix: ${COMPOSE_PROJECT_NAME}"
+          docker ps -a --format '{{.Names}}' | grep "^${COMPOSE_PROJECT_NAME}" || echo "No containers found"
+          for container in $(docker ps -a --format '{{.Names}}' | grep "^${COMPOSE_PROJECT_NAME}" || true); do
+            echo "Collecting logs for $container..."
+            docker logs "$container" > "docker-logs/${container}.log" 2>&1 || true
           done
+          echo "Collected logs:"
+          ls -la docker-logs/ || echo "No logs collected"
 
       - name: Upload Docker logs
         if: always()
