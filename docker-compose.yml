@@ -114,7 +114,8 @@ services:
         echo "[migrations] NX_* env:"; env | grep -E "^NX_" || true
         if [ -n "${CI:-}" ]; then
           echo "[migrations] CI mode -> WITHOUT daemon (verbose, no cache)"
-          exec env NX_DAEMON=false npx nx run migrations:run --no-daemon --verbose --skip-nx-cache
+          export NX_DAEMON=false
+          exec npx nx run migrations:run --verbose --skip-nx-cache
         fi
         echo "[migrations] /nx-sock:"; ls -l /nx-sock || true
         echo "[migrations] Checking daemon status..."
@@ -160,7 +161,8 @@ services:
         echo "[frontend] NX_* env:"; env | grep -E "^NX_" || true
         if [ -n "${CI:-}" ]; then
           echo "[frontend] CI mode -> WITHOUT daemon"
-          exec NX_DAEMON=false npx nx run frontend:dev --host=0.0.0.0 --no-daemon
+          export NX_DAEMON=false
+          exec npx nx run frontend:dev --host=0.0.0.0
         fi
         echo "[frontend] /nx-sock:"; ls -l /nx-sock || true
         if npx nx daemon --status >/dev/null 2>&1; then
@@ -212,7 +214,8 @@ services:
         echo "[backend] NX_* env:"; env | grep -E "^NX_" || true
         if [ -n "${CI:-}" ]; then
           echo "[backend] CI mode -> WITHOUT daemon"
-          exec NX_DAEMON=false npx nx run api:serve:development --skip-nx-cache --no-daemon
+          export NX_DAEMON=false
+          exec npx nx run api:serve:development --skip-nx-cache
         fi
         echo "[backend] /nx-sock:"; ls -l /nx-sock || true
         if npx nx daemon --status >/dev/null 2>&1; then
@@ -267,7 +270,8 @@ services:
         fi && \
         if [ -n "${CI:-}" ]; then
           echo "[mcp] CI mode -> WITHOUT daemon"
-          exec NX_DAEMON=false npx nx run mcp-server:serve:development --host=0.0.0.0 --verbose --no-daemon
+          export NX_DAEMON=false
+          exec npx nx run mcp-server:serve:development --host=0.0.0.0 --verbose
         fi
         echo "[mcp] /nx-sock:"; ls -l /nx-sock || true
         if npx nx daemon --status >/dev/null 2>&1; then
