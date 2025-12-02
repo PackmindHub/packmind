@@ -33,7 +33,7 @@ export class CrispHexa extends BaseHexa<BaseHexaOpts, void> {
 
     this.logger.info('Constructing CrispHexa (proprietary)');
 
-    this.crispService = new CrispTrackEventService(this.logger);
+    this.crispService = new CrispTrackEventService();
     this.listener = new CrispEventListener(this.crispService);
 
     this.logger.info('CrispHexa construction completed');
