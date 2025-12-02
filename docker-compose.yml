@@ -291,6 +291,7 @@ services:
     entrypoint: npm run e2e
     environment:
       BASE_URL: http://frontend:4200
+      CI: 'true'
     depends_on:
       frontend:
         condition: service_healthy
