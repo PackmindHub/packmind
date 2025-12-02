@@ -41,7 +41,6 @@ export class AIProviderRepository
     return {
       id: entity.id,
       organizationId: entity.organizationId,
-      configuredAt: entity.configuredAt,
     };
   }
 
@@ -115,7 +114,6 @@ export class AIProviderRepository
 
     try {
       const encryptedConfig = await this.encryptSecrets(config);
-      const now = new Date();
 
       const existing = await this.findByOrganizationId(organizationId);
 
@@ -123,7 +121,6 @@ export class AIProviderRepository
         await this.repository.save({
           ...existing,
           config: encryptedConfig,
-          configuredAt: now,
         });
 
         this.logger.info('AI provider configuration updated', {
@@ -135,7 +132,6 @@ export class AIProviderRepository
           id: createAIProviderId(uuidv4()),
           organizationId,
           config: encryptedConfig,
-          configuredAt: now,
         };
 
         await this.repository.save(newConfiguration);
@@ -171,7 +167,6 @@ export class AIProviderRepository
 
       return {
         config: decryptedConfig,
-        configuredAt: new Date(configuration.configuredAt),
       };
     } catch (error) {
       this.logger.error('Failed to get AI provider configuration', {

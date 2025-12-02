@@ -13,7 +13,6 @@ export type LLMConfigurationDTO = {
   fastestModel: string;
   endpoint?: string; // For Azure/OpenAI-compatible
   apiVersion?: string; // For Azure
-  configuredAt?: Date; // Optional for fallback configurations
 };
 
 export type GetLLMConfigurationResponse = {
