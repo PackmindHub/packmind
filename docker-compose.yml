@@ -9,6 +9,8 @@ x-nx-env: &nx-env
 
 services:
   nx-daemon:
+    profiles:
+      - dev
     image: node:22.17.0-alpine3.21
     container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-packmind-nx-daemon
     working_dir: /packmind
@@ -71,6 +73,8 @@ services:
       retries: 5
 
   pgadmin:
+    profiles:
+      - dev
     image: dpage/pgadmin4:latest
     container_name: ${COMPOSE_PROJECT_NAME:-dev}-${PACKMIND_EDITION:-oss}-packmind-pgadmin
     environment:
@@ -110,7 +114,13 @@ services:
         set -euo pipefail
         node scripts/select-tsconfig.mjs;
         echo "[migrations] node: $(node -v)"
+        echo "[migrations] CI: ${CI:-not set}"
         echo "[migrations] NX_* env:"; env | grep -E "^NX_" || true
+        if [ -n "${CI:-}" ]; then
+          echo "[migrations] CI mode -> WITHOUT daemon (verbose, no cache)"
+          export NX_DAEMON=false
+          exec npx nx run migrations:run --verbose --skip-nx-cache
+        fi
         echo "[migrations] /nx-sock:"; ls -l /nx-sock || true
         echo "[migrations] Checking daemon status..."
         if npx nx daemon --status >/dev/null 2>&1; then
@@ -125,6 +135,7 @@ services:
       '
     environment:
       <<: *nx-env
+      CI: ${CI:-}
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/packmind
     volumes:
       - .:/packmind
@@ -135,6 +146,7 @@ services:
     depends_on:
       nx-daemon:
         condition: service_healthy
+        required: false
       install-dependencies:
         condition: service_completed_successfully
       postgres:
@@ -150,7 +162,13 @@ services:
       sh -lc '
         set -eu
         node scripts/select-tsconfig.mjs;
+        echo "[frontend] CI: ${CI:-not set}"
         echo "[frontend] NX_* env:"; env | grep -E "^NX_" || true
+        if [ -n "${CI:-}" ]; then
+          echo "[frontend] CI mode -> WITHOUT daemon"
+          export NX_DAEMON=false
+          exec npx nx run frontend:dev --host=0.0.0.0
+        fi
         echo "[frontend] /nx-sock:"; ls -l /nx-sock || true
         if npx nx daemon --status >/dev/null 2>&1; then
           echo "[frontend] Daemon OK -> WITH daemon"
@@ -162,6 +180,7 @@ services:
       '
     environment:
       <<: *nx-env
+      CI: ${CI:-}
       API_HOSTNAME: 'backend'
       API_PORT: 3000
       MCP_HOSTNAME: 'mcp-server'
@@ -178,6 +197,7 @@ services:
     depends_on:
       nx-daemon:
         condition: service_healthy
+        required: false
       install-dependencies:
         condition: service_completed_successfully
 
@@ -196,7 +216,13 @@ services:
           cp -R packages/linter/js-playground $$JS_PLAYGROUND_PATH || true; \
         fi && \
         node scripts/select-tsconfig.mjs;
+        echo "[backend] CI: ${CI:-not set}"
         echo "[backend] NX_* env:"; env | grep -E "^NX_" || true
+        if [ -n "${CI:-}" ]; then
+          echo "[backend] CI mode -> WITHOUT daemon"
+          export NX_DAEMON=false
+          exec npx nx run api:serve:development --skip-nx-cache
+        fi
         echo "[backend] /nx-sock:"; ls -l /nx-sock || true
         if npx nx daemon --status >/dev/null 2>&1; then
           echo "[backend] Daemon OK -> WITH daemon"
@@ -208,6 +234,7 @@ services:
       '
     environment:
       <<: *nx-env
+      CI: ${CI:-}
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/packmind
       REDIS_URI: redis://redis:6379
       COOKIE_SECURE: 'false'
@@ -229,6 +256,7 @@ services:
     depends_on:
       nx-daemon:
         condition: service_healthy
+        required: false
       run-migrations:
         condition: service_completed_successfully
       redis:
@@ -242,11 +270,17 @@ services:
       sh -lc '
         set -eu
         node scripts/select-tsconfig.mjs;
+        echo "[mcp] CI: ${CI:-not set}"
         echo "[mcp] NX_* env:"; env | grep -E "^NX_" || true
-        echo "[mcp] /nx-sock:"; ls -l /nx-sock || true
         if [ ! -d "$$JS_PLAYGROUND_PATH" ]; then \
           cp -R packages/linter/js-playground $$JS_PLAYGROUND_PATH || true; \
         fi && \
+        if [ -n "${CI:-}" ]; then
+          echo "[mcp] CI mode -> WITHOUT daemon"
+          export NX_DAEMON=false
+          exec npx nx run mcp-server:serve:development --host=0.0.0.0 --verbose
+        fi
+        echo "[mcp] /nx-sock:"; ls -l /nx-sock || true
         if npx nx daemon --status >/dev/null 2>&1; then
           echo "[mcp] Daemon OK -> WITH daemon"
           exec npx nx run mcp-server:serve:development --host=0.0.0.0 --verbose
@@ -257,6 +291,7 @@ services:
       '
     environment:
       <<: *nx-env
+      CI: ${CI:-}
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/packmind
       REDIS_URI: redis://redis:6379
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
@@ -270,6 +305,7 @@ services:
     depends_on:
       nx-daemon:
         condition: service_healthy
+        required: false
       run-migrations:
         condition: service_completed_successfully
 

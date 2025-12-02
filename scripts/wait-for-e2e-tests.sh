@@ -125,13 +125,9 @@ echo "$SEPARATOR"
 echo "[e2e] Container logs:"
 docker logs "$CONTAINER_NAME" 2>&1 | tail -200
 
-# Copy test results if they exist
-if docker cp "$CONTAINER_NAME":/packmind/apps/e2e-tests/playwright-report ./playwright-report 2>/dev/null; then
-  echo "[e2e] Test report copied to ./playwright-report"
-fi
-
-if docker cp "$CONTAINER_NAME":/packmind/apps/e2e-tests/test-results ./test-results 2>/dev/null; then
-  echo "[e2e] Test results copied to ./test-results"
-fi
+# Test results are available via volume mount at apps/e2e-tests/
+echo "[e2e] Test artifacts (via volume mount):"
+ls -la apps/e2e-tests/playwright-report/ 2>/dev/null || echo "[e2e] No playwright-report directory found"
+ls -la apps/e2e-tests/test-results/ 2>/dev/null || echo "[e2e] No test-results directory found"
 
 exit "$CONTAINER_EXIT_CODE"
