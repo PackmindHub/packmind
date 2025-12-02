@@ -110,7 +110,12 @@ services:
         set -euo pipefail
         node scripts/select-tsconfig.mjs;
         echo "[migrations] node: $(node -v)"
+        echo "[migrations] CI: ${CI:-not set}"
         echo "[migrations] NX_* env:"; env | grep -E "^NX_" || true
+        if [ -n "${CI:-}" ]; then
+          echo "[migrations] CI mode -> WITHOUT daemon (verbose, no cache)"
+          exec env NX_DAEMON=false npx nx run migrations:run --no-daemon --verbose --skip-nx-cache
+        fi
         echo "[migrations] /nx-sock:"; ls -l /nx-sock || true
         echo "[migrations] Checking daemon status..."
         if npx nx daemon --status >/dev/null 2>&1; then
@@ -125,6 +130,7 @@ services:
       '
     environment:
       <<: *nx-env
+      CI: ${CI:-}
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/packmind
     volumes:
       - .:/packmind
@@ -150,7 +156,12 @@ services:
       sh -lc '
         set -eu
         node scripts/select-tsconfig.mjs;
+        echo "[frontend] CI: ${CI:-not set}"
         echo "[frontend] NX_* env:"; env | grep -E "^NX_" || true
+        if [ -n "${CI:-}" ]; then
+          echo "[frontend] CI mode -> WITHOUT daemon"
+          exec NX_DAEMON=false npx nx run frontend:dev --host=0.0.0.0 --no-daemon
+        fi
         echo "[frontend] /nx-sock:"; ls -l /nx-sock || true
         if npx nx daemon --status >/dev/null 2>&1; then
           echo "[frontend] Daemon OK -> WITH daemon"
@@ -162,6 +173,7 @@ services:
       '
     environment:
       <<: *nx-env
+      CI: ${CI:-}
       API_HOSTNAME: 'backend'
       API_PORT: 3000
       MCP_HOSTNAME: 'mcp-server'
@@ -196,7 +208,12 @@ services:
           cp -R packages/linter/js-playground $$JS_PLAYGROUND_PATH || true; \
         fi && \
         node scripts/select-tsconfig.mjs;
+        echo "[backend] CI: ${CI:-not set}"
         echo "[backend] NX_* env:"; env | grep -E "^NX_" || true
+        if [ -n "${CI:-}" ]; then
+          echo "[backend] CI mode -> WITHOUT daemon"
+          exec NX_DAEMON=false npx nx run api:serve:development --skip-nx-cache --no-daemon
+        fi
         echo "[backend] /nx-sock:"; ls -l /nx-sock || true
         if npx nx daemon --status >/dev/null 2>&1; then
           echo "[backend] Daemon OK -> WITH daemon"
@@ -208,6 +225,7 @@ services:
       '
     environment:
       <<: *nx-env
+      CI: ${CI:-}
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/packmind
       REDIS_URI: redis://redis:6379
       COOKIE_SECURE: 'false'
@@ -242,11 +260,16 @@ services:
       sh -lc '
         set -eu
         node scripts/select-tsconfig.mjs;
+        echo "[mcp] CI: ${CI:-not set}"
         echo "[mcp] NX_* env:"; env | grep -E "^NX_" || true
-        echo "[mcp] /nx-sock:"; ls -l /nx-sock || true
         if [ ! -d "$$JS_PLAYGROUND_PATH" ]; then \
           cp -R packages/linter/js-playground $$JS_PLAYGROUND_PATH || true; \
         fi && \
+        if [ -n "${CI:-}" ]; then
+          echo "[mcp] CI mode -> WITHOUT daemon"
+          exec NX_DAEMON=false npx nx run mcp-server:serve:development --host=0.0.0.0 --verbose --no-daemon
+        fi
+        echo "[mcp] /nx-sock:"; ls -l /nx-sock || true
         if npx nx daemon --status >/dev/null 2>&1; then
           echo "[mcp] Daemon OK -> WITH daemon"
           exec npx nx run mcp-server:serve:development --host=0.0.0.0 --verbose
@@ -257,6 +280,7 @@ services:
       '
     environment:
       <<: *nx-env
+      CI: ${CI:-}
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/packmind
       REDIS_URI: redis://redis:6379
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}

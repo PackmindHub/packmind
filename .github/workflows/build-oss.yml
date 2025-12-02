@@ -166,83 +166,84 @@ jobs:
           PACKMIND_EDITION: ${{ env.OSS_EDITION }}
         run: ./node_modules/.bin/nx run-many -t test -p packages/* --passWithNoTests
 
-#  e2e-tests:
-#    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
-#    timeout-minutes: 10
-#    strategy:
-#      matrix:
-#        node-version: ['${{ inputs.node-version }}']
-#
-#    steps:
-#      - uses: actions/checkout@v4
-#
-#      - name: Start E2E test environment
-#        uses: nick-fields/retry@v3
-#        with:
-#          timeout_minutes: 10
-#          max_attempts: 3
-#          retry_wait_seconds: 10
-#          command: |
-#            echo "Starting docker compose with COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}"
-#            echo "Docker version:"
-#            docker --version
-#            docker compose version
-#            echo "Starting containers..."
-#            docker compose --profile=e2e up -d --wait-timeout 300
-#            echo "Docker compose up completed. Container status:"
-#            docker compose --profile=e2e ps -a
-#            docker ps -a --format 'table {{.Names}}\t{{.Status}}'
-#        env:
-#          PACKMIND_EDITION: ${{ env.OSS_EDITION }}
-#          COMPOSE_PROJECT_NAME: ci-${{ github.run_number }}
-#
-#      - name: Wait for E2E tests to complete
-#        env:
-#          PACKMIND_EDITION: ${{ env.OSS_EDITION }}
-#          COMPOSE_PROJECT_NAME: ci-${{ github.run_number }}
-#        run: ./scripts/wait-for-e2e-tests.sh
-#
-#      - name: Upload Playwright report
-#        if: always()
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: playwright-report-${{ github.run_number }}-${{ github.sha }}
-#          path: playwright-report/
-#          if-no-files-found: ignore
-#
-#      - name: Upload test results
-#        if: always()
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: e2e-test-results-${{ github.run_number }}-${{ github.sha }}
-#          path: test-results/
-#          if-no-files-found: ignore
-#
-#      - name: Collect Docker container logs
-#        if: always()
-#        env:
-#          COMPOSE_PROJECT_NAME: ci-${{ github.run_number }}
-#        run: |
-#          mkdir -p docker-logs
-#          echo "Looking for containers with prefix: ${COMPOSE_PROJECT_NAME}"
-#          docker ps -a --format '{{.Names}}' | grep "^${COMPOSE_PROJECT_NAME}" || echo "No containers found"
-#          for container in $(docker ps -a --format '{{.Names}}' | grep "^${COMPOSE_PROJECT_NAME}" || true); do
-#            echo "Collecting logs for $container..."
-#            docker logs "$container" > "docker-logs/${container}.log" 2>&1 || true
-#          done
-#          echo "Collected logs:"
-#          ls -la docker-logs/ || echo "No logs collected"
-#
-#      - name: Upload Docker logs
-#        if: always()
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: docker-logs-${{ github.run_number }}-${{ github.sha }}
-#          path: docker-logs/
-#          if-no-files-found: ignore
-#
-#      - name: Cleanup Docker containers
-#        if: always()
-#        env:
-#          COMPOSE_PROJECT_NAME: ci-${{ github.run_number }}
-#        run: docker compose --profile=e2e down -v --remove-orphans
+  e2e-tests:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        node-version: ['${{ inputs.node-version }}']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start E2E test environment
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_wait_seconds: 10
+          command: |
+            echo "Starting docker compose with COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}"
+            echo "Docker version:"
+            docker --version
+            docker compose version
+            echo "Starting containers..."
+            docker compose --profile=e2e up -d --wait-timeout 300
+            echo "Docker compose up completed. Container status:"
+            docker compose --profile=e2e ps -a
+            docker ps -a --format 'table {{.Names}}\t{{.Status}}'
+        env:
+          PACKMIND_EDITION: ${{ env.OSS_EDITION }}
+          COMPOSE_PROJECT_NAME: ci-${{ github.run_number }}
+          CI: 'true'
+
+      - name: Wait for E2E tests to complete
+        env:
+          PACKMIND_EDITION: ${{ env.OSS_EDITION }}
+          COMPOSE_PROJECT_NAME: ci-${{ github.run_number }}
+        run: ./scripts/wait-for-e2e-tests.sh
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ github.run_number }}-${{ github.sha }}
+          path: playwright-report/
+          if-no-files-found: ignore
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results-${{ github.run_number }}-${{ github.sha }}
+          path: test-results/
+          if-no-files-found: ignore
+
+      - name: Collect Docker container logs
+        if: always()
+        env:
+          COMPOSE_PROJECT_NAME: ci-${{ github.run_number }}
+        run: |
+          mkdir -p docker-logs
+          echo "Looking for containers with prefix: ${COMPOSE_PROJECT_NAME}"
+          docker ps -a --format '{{.Names}}' | grep "^${COMPOSE_PROJECT_NAME}" || echo "No containers found"
+          for container in $(docker ps -a --format '{{.Names}}' | grep "^${COMPOSE_PROJECT_NAME}" || true); do
+            echo "Collecting logs for $container..."
+            docker logs "$container" > "docker-logs/${container}.log" 2>&1 || true
+          done
+          echo "Collected logs:"
+          ls -la docker-logs/ || echo "No logs collected"
+
+      - name: Upload Docker logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-logs-${{ github.run_number }}-${{ github.sha }}
+          path: docker-logs/
+          if-no-files-found: ignore
+
+      - name: Cleanup Docker containers
+        if: always()
+        env:
+          COMPOSE_PROJECT_NAME: ci-${{ github.run_number }}
+        run: docker compose --profile=e2e down -v --remove-orphans
