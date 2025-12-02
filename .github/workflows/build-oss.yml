@@ -126,7 +126,7 @@ jobs:
       - name: Build MCP Server (OSS)
         env:
           PACKMIND_EDITION: ${{ env.OSS_EDITION }}
-        run: ./node_modules/.bin/nx build mcp-server
+        run: ./node_modules/.bin/nx build mcp-server --parallel=4
       - name: Test MCP Server (OSS)
         env:
           PACKMIND_EDITION: ${{ env.OSS_EDITION }}
