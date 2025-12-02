@@ -3,6 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/assets/src",
   "projectType": "library",
+  "tags": ["env:shared"],
   "targets": {
     "typecheck": {
       "executor": "nx:run-commands",
@@ -11,7 +12,7 @@
       }
     },
     "build": {
-      "executor": "@nx/js:tsc",
+      "executor": "@nx/js:swc",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/packages/assets",
@@ -51,6 +52,5 @@
         "parallel": false
       }
     }
-  },
-  "tags": ["env:shared"]
+  }
 }

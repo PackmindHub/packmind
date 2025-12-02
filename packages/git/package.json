@@ -6,15 +6,16 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
-    "tslib": "^2.3.0",
-    "axios": "^1.12.0",
     "@packmind/accounts": "*",
     "@packmind/logger": "*",
     "@packmind/node-utils": "*",
+    "@packmind/test-utils": "0.0.1",
     "@packmind/types": "*",
-    "typeorm": "0.3.27",
-    "uuid": "^11.1.0",
+    "@swc/helpers": "~0.5.11",
+    "axios": "^1.12.0",
     "bullmq": "^5.58.2",
-    "@packmind/test-utils": "0.0.1"
-  }
+    "typeorm": "0.3.27",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {}
 }

@@ -55,9 +55,23 @@ module.exports = {
       {
         test: /\.ts$/,
         use: {
-          loader: 'ts-loader',
+          loader: 'swc-loader',
           options: {
-            configFile: join(__dirname, 'tsconfig.app.json'),
+            jsc: {
+              parser: {
+                syntax: 'typescript',
+                decorators: true,
+              },
+              target: 'es2022',
+              transform: {
+                legacyDecorator: true,
+                decoratorMetadata: true,
+              },
+              keepClassNames: true,
+            },
+            module: {
+              type: 'commonjs',
+            },
           },
         },
         exclude: /node_modules/,

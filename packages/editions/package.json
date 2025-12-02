@@ -6,11 +6,12 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
-    "tslib": "^2.3.0",
+    "@nestjs/common": "^11.1.6",
     "@packmind/logger": "*",
     "@packmind/node-utils": "*",
     "@packmind/types": "*",
-    "@nestjs/common": "^11.1.6",
+    "@swc/helpers": "~0.5.11",
     "typeorm": "0.3.27"
-  }
+  },
+  "devDependencies": {}
 }
