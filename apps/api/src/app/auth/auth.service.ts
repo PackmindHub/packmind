@@ -25,6 +25,10 @@ import {
   SignUpWithOrganizationResponse,
   CheckEmailAvailabilityCommand,
   CheckEmailAvailabilityResponse,
+  CreateCliLoginCodeCommand,
+  CreateCliLoginCodeResponse,
+  ExchangeCliLoginCodeCommand,
+  ExchangeCliLoginCodeResponse,
 } from '@packmind/accounts';
 import { InjectAccountsAdapter } from '../shared/HexaInjection';
 import { maskEmail } from '@packmind/logger';
@@ -728,6 +732,66 @@ export class AuthService {
     } catch (error) {
       this.logger.error('Failed to reset password', {
         token: this.maskToken(request.token),
+        error: getErrorMessage(error),
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Creates a CLI login code for the authenticated user
+   * @param req Authenticated request containing user and organization info
+   * @returns Generated CLI login code and expiration info
+   */
+  async createCliLoginCode(
+    req: AuthenticatedRequest,
+  ): Promise<CreateCliLoginCodeResponse> {
+    this.logger.log('Creating CLI login code for user', {
+      userId: req.user.userId,
+      organizationId: req.organization.id,
+    });
+
+    try {
+      const command: CreateCliLoginCodeCommand = {
+        userId: req.user.userId,
+        organizationId: req.organization.id,
+      };
+
+      const result = await this.accountsAdapter.createCliLoginCode(command);
+
+      this.logger.log('CLI login code created successfully', {
+        userId: req.user.userId,
+        expiresAt: result.expiresAt.toISOString(),
+      });
+
+      return result;
+    } catch (error) {
+      this.logger.error('Failed to create CLI login code', {
+        userId: req.user.userId,
+        error: getErrorMessage(error),
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Exchanges a CLI login code for an API key
+   * @param command Contains the code to exchange
+   * @returns API key and expiration info
+   */
+  async exchangeCliLoginCode(
+    command: ExchangeCliLoginCodeCommand,
+  ): Promise<ExchangeCliLoginCodeResponse> {
+    this.logger.log('Exchanging CLI login code');
+
+    try {
+      const result = await this.accountsAdapter.exchangeCliLoginCode(command);
+
+      this.logger.log('CLI login code exchanged successfully');
+
+      return result;
+    } catch (error) {
+      this.logger.error('Failed to exchange CLI login code', {
         error: getErrorMessage(error),
       });
       throw error;
