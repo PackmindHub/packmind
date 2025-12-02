@@ -16,21 +16,28 @@ export class CrispTrackEventService {
 
   private async initializeCrisp() {
     this.configurationChecked = true;
+    this.logger.info('[Crisp API] Starting initialization...');
     const pluginIdentifier = await Configuration.getConfig(
       'CRISP_PLUGIN_IDENTIFIER',
     );
     const apiKey = await Configuration.getConfig('CRISP_API_KEY');
     const webSiteId = await Configuration.getConfig('CRISP_WEBSITE_ID');
     if (!pluginIdentifier?.length || !apiKey?.length || !webSiteId?.length) {
-      this.logger.debug(
-        'No Configuration for Crisp, missing CRISP_PLUGIN_IDENTIFIER or CRISP_API_KEY or CRISP_WEBSITE_ID, skip',
+      this.logger.info(
+        '[Crisp API] Initialization skipped - missing configuration (CRISP_PLUGIN_IDENTIFIER, CRISP_API_KEY, or CRISP_WEBSITE_ID)',
       );
       return;
     }
     this.webSite = webSiteId;
+    this.logger.info(
+      `[Crisp API] Before authenticateTier for websiteId=${webSiteId}`,
+    );
     this.crispClient.authenticateTier('plugin', pluginIdentifier, apiKey);
-    this.logger.info('CrispTrackEventService initialized');
+    this.logger.info(
+      `[Crisp API] After authenticateTier - authentication configured successfully`,
+    );
     this.initialized = true;
+    this.logger.info('[Crisp API] Initialization complete');
   }
 
   async createPeopleIfNotAlreadyExists(email: string) {
@@ -42,11 +49,16 @@ export class CrispTrackEventService {
       return;
     }
 
-    this.logger.info(`Create People if not already exists ${maskEmail(email)}`);
+    this.logger.info(
+      `[Crisp API] Before checkPeopleProfileExists for ${maskEmail(email)}`,
+    );
     try {
       await this.crispClient.website.checkPeopleProfileExists(
         this.webSite,
         email,
+      );
+      this.logger.info(
+        `[Crisp API] After checkPeopleProfileExists for ${maskEmail(email)} - profile exists`,
       );
     } catch (error: unknown) {
       if (
@@ -55,17 +67,21 @@ export class CrispTrackEventService {
         'code' in error &&
         error.code === 404
       ) {
-        this.logger.info(`Add new user to Crisp ${maskEmail(email)}`);
         const peopleProfile = {
           email,
           person: {
             nickname: email,
           },
         };
-        this.logger.info(`Add People Profile ${maskEmail(email)}`);
+        this.logger.info(
+          `[Crisp API] Before addNewPeopleProfile for ${maskEmail(email)}`,
+        );
         await this.crispClient.website.addNewPeopleProfile(
           this.webSite,
           peopleProfile,
+        );
+        this.logger.info(
+          `[Crisp API] After addNewPeopleProfile for ${maskEmail(email)} - success`,
         );
       }
     }
@@ -85,13 +101,21 @@ export class CrispTrackEventService {
       const peopleEvent = {
         text: eventName,
       };
+      this.logger.info(
+        `[Crisp API] Before addPeopleEvent '${eventName}' for ${maskEmail(email)}`,
+      );
       await this.crispClient.website.addPeopleEvent(
         this.webSite,
         email,
         peopleEvent,
       );
+      this.logger.info(
+        `[Crisp API] After addPeopleEvent '${eventName}' for ${maskEmail(email)} - success`,
+      );
     } catch (error) {
-      this.logger.error(getErrorMessage(error));
+      this.logger.error(
+        `[Crisp API] addPeopleEvent '${eventName}' for ${maskEmail(email)} failed: ${getErrorMessage(error)}`,
+      );
     }
   }
 }
