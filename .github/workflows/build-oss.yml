@@ -23,7 +23,7 @@ on:
 
 jobs:
   build-api-oss:
-    runs-on: shipfox-4vcpu-ubuntu-2404
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
     outputs:
       artifact-name: api-dist-oss-${{ github.run_number }}-${{ github.sha }}
     strategy:
@@ -61,7 +61,7 @@ jobs:
           path: dist/apps/api/
 
   build-frontend-oss:
-    runs-on: shipfox-4vcpu-ubuntu-2404
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
     outputs:
       artifact-name: frontend-dist-oss-${{ github.run_number }}-${{ github.sha }}
     strategy:
@@ -104,7 +104,7 @@ jobs:
           path: apps/frontend/build/client
 
   build-mcp-server-oss:
-    runs-on: shipfox-4vcpu-ubuntu-2404
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
     outputs:
       artifact-name: mcp-server-dist-oss-${{ github.run_number }}-${{ github.sha }}
     strategy:
@@ -140,7 +140,7 @@ jobs:
           path: dist/apps/mcp-server/
 
   build-packages:
-    runs-on: shipfox-4vcpu-ubuntu-2404
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
     strategy:
       matrix:
         node-version: ['${{ inputs.node-version }}']
