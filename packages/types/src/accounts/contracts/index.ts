@@ -2,6 +2,8 @@ export * from './ISignUpWithOrganizationUseCase';
 export * from './ICheckEmailAvailabilityUseCase';
 export * from './IActivateUserAccountUseCase';
 export * from './IChangeUserRoleUseCase';
+export * from './ICreateCliLoginCodeUseCase';
+export * from './IExchangeCliLoginCodeUseCase';
 export * from './IRemoveUserFromOrganizationUseCase';
 export * from './IRequestPasswordResetUseCase';
 export * from './IResetPasswordUseCase';
