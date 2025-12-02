@@ -213,6 +213,26 @@ jobs:
           path: test-results/
           if-no-files-found: ignore
 
+      - name: Collect Docker container logs
+        if: always()
+        env:
+          COMPOSE_PROJECT_NAME: ci-${{ github.run_number }}
+        run: |
+          mkdir -p docker-logs
+          for container in $(docker compose --profile=e2e ps -aq 2>/dev/null); do
+            name=$(docker inspect --format='{{.Name}}' "$container" | sed 's/^\///')
+            echo "Collecting logs for $name..."
+            docker logs "$container" > "docker-logs/${name}.log" 2>&1 || true
+          done
+
+      - name: Upload Docker logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-logs-${{ github.run_number }}-${{ github.sha }}
+          path: docker-logs/
+          if-no-files-found: ignore
+
       - name: Cleanup Docker containers
         if: always()
         env:
