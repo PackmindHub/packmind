@@ -183,10 +183,15 @@ jobs:
           max_attempts: 3
           retry_wait_seconds: 10
           command: |
-            # Run in background - docker compose up -d blocks while waiting for depends_on conditions
-            docker compose --profile=e2e up -d &
-            # Wait for containers to be created (not necessarily healthy yet)
-            sleep 10
+            echo "Starting docker compose with COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}"
+            echo "Docker version:"
+            docker --version
+            docker compose version
+            echo "Starting containers..."
+            docker compose --profile=e2e up -d --wait-timeout 300
+            echo "Docker compose up completed. Container status:"
+            docker compose --profile=e2e ps -a
+            docker ps -a --format 'table {{.Names}}\t{{.Status}}'
         env:
           PACKMIND_EDITION: ${{ env.OSS_EDITION }}
           COMPOSE_PROJECT_NAME: ci-${{ github.run_number }}
