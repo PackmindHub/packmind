@@ -93,7 +93,7 @@ export const SidebarNavigation: React.FunctionComponent<
         ]}
       />
       <PMVerticalNavSection
-        title="Knowledge base"
+        title="Playbook"
         navEntries={[
           <SidebarNavigationLink
             key="standards"
