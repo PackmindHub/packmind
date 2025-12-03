@@ -67,7 +67,8 @@ export class DeploymentsHexa extends BaseHexa<
         this.services,
         this.repositories.getStandardsDeploymentRepository(),
         this.repositories.getRecipesDeploymentRepository(),
-        this.repositories.getPackagesDeploymentRepository(),
+        this.repositories.getDistributionRepository(),
+        this.repositories.getDistributedPackageRepository(),
       );
 
       this.logger.info('DeploymentsHexa construction completed');

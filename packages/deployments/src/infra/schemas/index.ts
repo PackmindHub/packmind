@@ -5,6 +5,8 @@ import { RenderModeConfigurationSchema } from './RenderModeConfigurationSchema';
 import { PackageSchema } from './PackageSchema';
 import { PackageRecipesSchema } from './PackageRecipesSchema';
 import { PackageStandardsSchema } from './PackageStandardsSchema';
+import { DistributionSchema } from './DistributionSchema';
+import { DistributedPackageSchema } from './DistributedPackageSchema';
 
 export {
   RecipesDeploymentSchema,
@@ -14,6 +16,8 @@ export {
   PackageSchema,
   PackageRecipesSchema,
   PackageStandardsSchema,
+  DistributionSchema,
+  DistributedPackageSchema,
 };
 export const deploymentsSchemas = [
   RecipesDeploymentSchema,
@@ -23,4 +27,6 @@ export const deploymentsSchemas = [
   PackageSchema,
   PackageRecipesSchema,
   PackageStandardsSchema,
+  DistributionSchema,
+  DistributedPackageSchema,
 ];

@@ -14,6 +14,7 @@ export * from './IPublishArtifactsUseCase';
 export * from './IPublishPackages';
 export * from './IListDeploymentsByRecipe';
 export * from './IListDeploymentsByStandard';
+export * from './IListDeploymentsByPackage';
 export * from './IGetRenderModeConfigurationUseCase';
 export * from './ICreateRenderModeConfigurationUseCase';
 export * from './IUpdateRenderModeConfigurationUseCase';

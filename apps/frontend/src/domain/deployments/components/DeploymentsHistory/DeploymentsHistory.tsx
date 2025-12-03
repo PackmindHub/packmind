@@ -14,16 +14,17 @@ import {
   PMTooltip,
 } from '@packmind/ui';
 import {
+  Distribution,
   RecipesDeployment,
   RenderMode,
   StandardsDeployment,
 } from '@packmind/types';
 import { format } from 'date-fns';
 
-export type DeploymentType = 'recipe' | 'standard';
+export type DeploymentType = 'recipe' | 'standard' | 'package';
 
 interface DeploymentsHistoryProps {
-  deployments: RecipesDeployment[] | StandardsDeployment[];
+  deployments: RecipesDeployment[] | StandardsDeployment[] | Distribution[];
   type: DeploymentType;
   entityId: string;
   usersMap?: Record<string, string>;
@@ -83,23 +84,28 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     return <PMBadge colorPalette="green">{fallback || 'Deployed'}</PMBadge>;
   };
 
-  const getVersion = (deployment: RecipesDeployment | StandardsDeployment) => {
+  const getVersion = (
+    deployment: RecipesDeployment | StandardsDeployment | Distribution,
+  ) => {
     if (type === 'recipe') {
       const recipeVersion = (
         deployment as RecipesDeployment
       ).recipeVersions?.find((v) => v.recipeId === entityId);
       return recipeVersion?.version || '-';
-    } else {
+    } else if (type === 'standard') {
       const standardVersion = (
         deployment as StandardsDeployment
       ).standardVersions?.find((v) => v.standardId === entityId);
       return standardVersion?.version || '-';
+    } else {
+      // Packages don't have versions like recipes/standards
+      return '-';
     }
   };
 
   // Helper pour target/repo
   const getTargetInfo = (
-    deployment: RecipesDeployment | StandardsDeployment,
+    deployment: RecipesDeployment | StandardsDeployment | Distribution,
   ) => {
     const target = deployment.target;
     if (!target) return 'No target specified';
@@ -110,7 +116,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
   };
 
   const getCommitLinks = (
-    deployment: RecipesDeployment | StandardsDeployment,
+    deployment: RecipesDeployment | StandardsDeployment | Distribution,
   ) => {
     const commit = deployment.gitCommit;
     if (!commit) return null;
@@ -135,7 +141,9 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     );
   };
 
-  const getAuthor = (deployment: RecipesDeployment | StandardsDeployment) => {
+  const getAuthor = (
+    deployment: RecipesDeployment | StandardsDeployment | Distribution,
+  ) => {
     if (usersMap) {
       return usersMap[deployment.authorId || 'N/A'] || 'Unknown User';
     }
@@ -146,7 +154,9 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     return format(new Date(date), 'yyyy-MM-dd');
   };
 
-  const getMessage = (deployment: RecipesDeployment | StandardsDeployment) => {
+  const getMessage = (
+    deployment: RecipesDeployment | StandardsDeployment | Distribution,
+  ) => {
     if (deployment.status === 'failure' && deployment.error)
       return deployment.error;
     if (deployment.status === 'success')
@@ -179,18 +189,14 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
 
   const tableData: PMTableRow[] = deployments.map((deployment) => ({
     key: deployment.id,
-    version: getVersion(deployment as RecipesDeployment | StandardsDeployment),
-    target: getTargetInfo(
-      deployment as RecipesDeployment | StandardsDeployment,
-    ),
+    version: getVersion(deployment),
+    target: getTargetInfo(deployment),
     renderModes: <RenderModes renderModes={deployment.renderModes} />,
-    commits: getCommitLinks(
-      deployment as RecipesDeployment | StandardsDeployment,
-    ),
-    author: getAuthor(deployment as RecipesDeployment | StandardsDeployment),
+    commits: getCommitLinks(deployment),
+    author: getAuthor(deployment),
     createdAt: getDate(deployment.createdAt),
     status: getStatusBadge(deployment.status),
-    message: getMessage(deployment as RecipesDeployment | StandardsDeployment),
+    message: getMessage(deployment),
   }));
 
   return (

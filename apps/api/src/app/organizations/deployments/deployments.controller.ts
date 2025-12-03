@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import {
   DeploymentOverview,
+  Distribution,
   StandardsDeployment,
   RecipesDeployment,
   PackagesDeployment,
@@ -33,6 +34,7 @@ import {
   GetStandardDeploymentOverviewCommand,
   ListDeploymentsByRecipeCommand,
   ListDeploymentsByStandardCommand,
+  ListDeploymentsByPackageCommand,
 } from '@packmind/types';
 import { DeploymentsService } from './deployments.service';
 import { PackmindLogger } from '@packmind/logger';
@@ -163,6 +165,66 @@ export class DeploymentsController {
         'GET /organizations/:orgId/deployments/standard/:id - Failed to fetch deployments',
         {
           standardId: id,
+          organizationId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Get('package/:id')
+  async getDeploymentsByPackageId(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('id') id: PackageId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<Distribution[]> {
+    this.logger.info(
+      'GET /organizations/:orgId/deployments/package/:id - Fetching deployments by package ID',
+      {
+        packageId: id,
+        organizationId,
+      },
+    );
+
+    try {
+      const command: ListDeploymentsByPackageCommand = {
+        userId: request.user.userId,
+        organizationId,
+        packageId: id,
+      };
+
+      const deployments =
+        await this.deploymentsService.listDeploymentsByPackage(command);
+
+      if (!deployments || deployments.length === 0) {
+        this.logger.warn(
+          'GET /organizations/:orgId/deployments/package/:id - No deployments found',
+          {
+            packageId: id,
+            organizationId,
+          },
+        );
+        return [];
+      }
+
+      this.logger.info(
+        'GET /organizations/:orgId/deployments/package/:id - Deployments fetched successfully',
+        {
+          packageId: id,
+          organizationId,
+          count: deployments.length,
+        },
+      );
+
+      return deployments;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/deployments/package/:id - Failed to fetch deployments',
+        {
+          packageId: id,
           organizationId,
           error: errorMessage,
         },

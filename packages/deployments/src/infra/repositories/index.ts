@@ -3,6 +3,8 @@ import { StandardsDeploymentRepository } from './StandardsDeploymentRepository';
 import { TargetRepository } from './TargetRepository';
 import { RenderModeConfigurationRepository } from './RenderModeConfigurationRepository';
 import { PackageRepository } from './PackageRepository';
+import { DistributionRepository } from './DistributionRepository';
+import { DistributedPackageRepository } from './DistributedPackageRepository';
 import { DeploymentsRepositories } from './DeploymentsRepositories';
 
 export {
@@ -11,5 +13,7 @@ export {
   TargetRepository,
   RenderModeConfigurationRepository,
   PackageRepository,
+  DistributionRepository,
+  DistributedPackageRepository,
   DeploymentsRepositories,
 };

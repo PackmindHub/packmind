@@ -26,6 +26,7 @@ import {
   PMBadge,
   PMCloseButton,
   PMDataList,
+  PMTabs,
 } from '@packmind/ui';
 import { Link, useNavigate } from 'react-router';
 import {
@@ -48,6 +49,7 @@ import { useGetRecipesQuery } from '../../../recipes/api/queries/RecipesQueries'
 import { useGetStandardsQuery } from '../../../standards/api/queries/StandardsQueries';
 import { PACKAGE_MESSAGES } from '../../constants/messages';
 import { DeployPackageButton } from '../PackageDeployments/DeployPackageButton';
+import { PackageDistributionList } from '../PackageDistributionList';
 import {
   MarkdownEditor,
   MarkdownEditorProvider,
@@ -787,70 +789,94 @@ export const PackageDetails = ({
         </PMHStack>
       }
     >
-      <PMVStack align="stretch" gap="6">
-        <PMHStack gap={8} align="center" justifyContent="space-between">
-          <PMDataList
-            size="md"
-            orientation="horizontal"
-            items={[
-              {
-                label: 'Slug',
-                value: <PMText>{pkg.slug}</PMText>,
-              },
-            ]}
-          />
-          <PMHStack
-            gap={2}
-            align="center"
-            flexGrow={1}
-            justifyContent="flex-end"
-          >
-            <PMText variant="small" color="primary" fontWeight="medium">
-              Install package
-            </PMText>
-            <CopiableTextField value={pullCommand} readOnly width="auto" />
-          </PMHStack>
-        </PMHStack>
-        {pkg.description && (
-          <PMBox>
-            <PMMarkdownViewer content={pkg.description} />
-          </PMBox>
-        )}
+      <PMTabs
+        defaultValue="content"
+        tabs={[
+          {
+            value: 'content',
+            triggerLabel: 'Content',
+            content: (
+              <PMVStack align="stretch" gap="6" pt={4}>
+                <PMHStack gap={8} align="center" justifyContent="space-between">
+                  <PMDataList
+                    size="md"
+                    orientation="horizontal"
+                    items={[
+                      {
+                        label: 'Slug',
+                        value: <PMText>{pkg.slug}</PMText>,
+                      },
+                    ]}
+                  />
+                  <PMHStack
+                    gap={2}
+                    align="center"
+                    flexGrow={1}
+                    justifyContent="flex-end"
+                  >
+                    <PMText variant="small" color="primary" fontWeight="medium">
+                      Install package
+                    </PMText>
+                    <CopiableTextField
+                      value={pullCommand}
+                      readOnly
+                      width="auto"
+                    />
+                  </PMHStack>
+                </PMHStack>
+                {pkg.description && (
+                  <PMBox>
+                    <PMMarkdownViewer content={pkg.description} />
+                  </PMBox>
+                )}
 
-        {(recipeCount > 0 || standardCount > 0) && (
-          <PMHStack align="flex-start" gap={6} width="full">
-            {standardCount > 0 && (
-              <PMBox flex={1} width="full">
-                <PMHeading size="lg" mb={4}>
-                  Standards ({standardCount})
-                </PMHeading>
-                <PMTable
-                  columns={standardColumns}
-                  data={standardTableData}
-                  striped={true}
-                  hoverable={true}
-                  variant="line"
-                />
-              </PMBox>
-            )}
+                {(recipeCount > 0 || standardCount > 0) && (
+                  <PMHStack align="flex-start" gap={6} width="full">
+                    {standardCount > 0 && (
+                      <PMBox flex={1} width="full">
+                        <PMHeading size="lg" mb={4}>
+                          Standards ({standardCount})
+                        </PMHeading>
+                        <PMTable
+                          columns={standardColumns}
+                          data={standardTableData}
+                          striped={true}
+                          hoverable={true}
+                          variant="line"
+                        />
+                      </PMBox>
+                    )}
 
-            {recipeCount > 0 && (
-              <PMBox flex={1} width="full">
-                <PMHeading size="lg" mb={4}>
-                  Recipes ({recipeCount})
-                </PMHeading>
-                <PMTable
-                  columns={recipeColumns}
-                  data={recipeTableData}
-                  striped={true}
-                  hoverable={true}
-                  variant="line"
-                />
+                    {recipeCount > 0 && (
+                      <PMBox flex={1} width="full">
+                        <PMHeading size="lg" mb={4}>
+                          Recipes ({recipeCount})
+                        </PMHeading>
+                        <PMTable
+                          columns={recipeColumns}
+                          data={recipeTableData}
+                          striped={true}
+                          hoverable={true}
+                          variant="line"
+                        />
+                      </PMBox>
+                    )}
+                  </PMHStack>
+                )}
+              </PMVStack>
+            ),
+          },
+          {
+            value: 'distributions',
+            triggerLabel: 'Distributions',
+            content: (
+              <PMBox pt={4}>
+                <PackageDistributionList packageId={id} />
               </PMBox>
-            )}
-          </PMHStack>
-        )}
-      </PMVStack>
+            ),
+          },
+        ]}
+      />
     </PMPage>
   );
 };

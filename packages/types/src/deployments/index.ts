@@ -16,6 +16,10 @@ export * from './StandardDeploymentOverview';
 export * from './FileUpdates';
 export * from './Package';
 export * from './PackmindFileConfig';
+export * from './DistributionId';
+export * from './Distribution';
+export * from './DistributedPackageId';
+export * from './DistributedPackage';
 
 // Contracts
 export * from './contracts';

@@ -24,6 +24,7 @@ import { useAuthContext } from '../../../accounts/hooks';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { deploymentsGateways } from '../gateways';
 import {
+  DeploymentQueryKeys,
   GET_PACKAGE_BY_ID_KEY,
   GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
   GET_RENDER_MODE_CONFIGURATION_KEY,
@@ -31,6 +32,7 @@ import {
   GET_TARGETS_BY_ORGANIZATION_KEY,
   GET_TARGETS_BY_REPOSITORY_KEY,
   LIST_PACKAGES_BY_SPACE_KEY,
+  LIST_PACKAGE_DEPLOYMENTS_KEY,
   LIST_RECIPE_DEPLOYMENTS_KEY,
   LIST_STANDARD_DEPLOYMENTS_KEY,
   UPDATE_PACKAGE_MUTATION_KEY,
@@ -80,6 +82,31 @@ export const useListStandardDeploymentsQuery = (standardId: StandardId) => {
       return deploymentsGateways.listDeploymentsByStandardId({
         organizationId: organization.id,
         standardId,
+      });
+    },
+    enabled: !!organization?.id,
+  });
+};
+
+export const useListPackageDeploymentsQuery = (packageId: PackageId) => {
+  const { organization } = useAuthContext();
+
+  return useQuery({
+    queryKey: [
+      'organizations',
+      organization?.id,
+      ...LIST_PACKAGE_DEPLOYMENTS_KEY,
+      packageId,
+    ],
+    queryFn: () => {
+      if (!organization?.id) {
+        throw new Error(
+          'Organization ID is required to fetch package deployments',
+        );
+      }
+      return deploymentsGateways.listDeploymentsByPackageId({
+        organizationId: organization.id,
+        packageId,
       });
     },
     enabled: !!organization?.id,
@@ -335,6 +362,12 @@ export const useDeployPackagesMutation = () => {
       });
       await queryClient.invalidateQueries({
         queryKey: LIST_STANDARD_DEPLOYMENTS_KEY,
+      });
+      // Invalidate package deployments using predicate to match query key structure
+      await queryClient.invalidateQueries({
+        predicate: (query) =>
+          Array.isArray(query.queryKey) &&
+          query.queryKey.includes(DeploymentQueryKeys.LIST_PACKAGE_DEPLOYMENTS),
       });
       await queryClient.invalidateQueries({
         queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
