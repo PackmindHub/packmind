@@ -10,7 +10,6 @@ import {
   PMTableColumn,
   PMTableRow,
 } from '@packmind/ui';
-import { DeployRecipeButton } from './DeployRecipeButton';
 
 interface RecipeVersionsListProps {
   recipeId: RecipeId;
@@ -44,14 +43,7 @@ export const RecipeVersionsList: React.FC<RecipeVersionsListProps> = ({
         ) : (
           'N/A'
         ),
-        actions: (
-          <></>
-          // <DeployRecipeButton
-          //   label={`Deploy v${version.version}`}
-          //   size="sm"
-          //   selectedRecipes={[version.re]}
-          // />
-        ),
+        actions: <></>,
       }))
     : [];
 

@@ -26,7 +26,6 @@ import {
 } from '../api/queries/RecipesQueries';
 import { RecipeVersionsListDrawer } from './RecipeVersionsListDrawer';
 import { RecipeDeploymentsList } from '../../deployments/components/RecipeDeploymentsList/RecipeDeploymentsList';
-import { DeployRecipeButton } from './DeployRecipeButton';
 import { EditRecipe } from './EditRecipe';
 import { AutobreadCrumb } from '../../../../src/shared/components/navigation/AutobreadCrumb';
 import { RECIPE_MESSAGES } from '../constants/messages';
@@ -269,19 +268,10 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
               content: (
                 <PMVStack align="stretch" gap={6} marginTop={6}>
                   <PMPageSection
-                    title="Run deployment"
+                    title="Deployment"
                     backgroundColor="primary"
                     headingLevel="h4"
                     boxProps={{ width: 'xl' }}
-                    cta={
-                      <DeployRecipeButton
-                        label={`Deploy v${recipe.version}`}
-                        disabled={!recipe}
-                        selectedRecipes={[recipe]}
-                        size="sm"
-                        variant="secondary"
-                      />
-                    }
                   >
                     <PMBox
                       marginTop={4}

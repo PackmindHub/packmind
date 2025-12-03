@@ -7,7 +7,6 @@ import {
   PMVStack,
 } from '@packmind/ui';
 import { StandardDetailsOutletContext } from '../../src/domain/standards/components/StandardDetails';
-import { DeployStandardButton } from '../../src/domain/deployments/components/StandardDeployments/DeployStandardButton';
 import { DeploymentsHistory } from '../../src/domain/deployments/components/StandardDeployments/StandardDeploymentsList';
 
 export default function StandardDetailDeploymentRouteModule() {
@@ -17,19 +16,10 @@ export default function StandardDetailDeploymentRouteModule() {
   return (
     <PMVStack align="stretch" gap={6}>
       <PMPageSection
-        title="Run deployment"
+        title="Deployment"
         backgroundColor="primary"
         headingLevel="h4"
         boxProps={{ width: 'xl' }}
-        cta={
-          <DeployStandardButton
-            label={`Deploy v${standard.version}`}
-            disabled={!standard}
-            selectedStandards={[standard]}
-            size="sm"
-            variant="secondary"
-          />
-        }
       >
         <PMBox
           marginTop={4}
