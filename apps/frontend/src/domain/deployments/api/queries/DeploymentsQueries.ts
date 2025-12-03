@@ -42,12 +42,7 @@ export const useListRecipeDeploymentsQuery = (recipeId: RecipeId) => {
   const { organization } = useAuthContext();
 
   return useQuery({
-    queryKey: [
-      'organizations',
-      organization?.id,
-      ...LIST_RECIPE_DEPLOYMENTS_KEY,
-      recipeId,
-    ],
+    queryKey: [...LIST_RECIPE_DEPLOYMENTS_KEY, recipeId],
     queryFn: () => {
       if (!organization?.id) {
         throw new Error(
@@ -67,12 +62,7 @@ export const useListStandardDeploymentsQuery = (standardId: StandardId) => {
   const { organization } = useAuthContext();
 
   return useQuery({
-    queryKey: [
-      'organizations',
-      organization?.id,
-      ...LIST_STANDARD_DEPLOYMENTS_KEY,
-      standardId,
-    ],
+    queryKey: [...LIST_STANDARD_DEPLOYMENTS_KEY, standardId],
     queryFn: () => {
       if (!organization?.id) {
         throw new Error(
@@ -92,12 +82,7 @@ export const useListPackageDeploymentsQuery = (packageId: PackageId) => {
   const { organization } = useAuthContext();
 
   return useQuery({
-    queryKey: [
-      'organizations',
-      organization?.id,
-      ...LIST_PACKAGE_DEPLOYMENTS_KEY,
-      packageId,
-    ],
+    queryKey: [...LIST_PACKAGE_DEPLOYMENTS_KEY, packageId],
     queryFn: () => {
       if (!organization?.id) {
         throw new Error(
@@ -194,11 +179,7 @@ export const useGetRecipesDeploymentOverviewQuery = () => {
   const { organization } = useAuthContext();
 
   return useQuery({
-    queryKey: [
-      'organizations',
-      organization?.id,
-      ...GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
-    ],
+    queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
     queryFn: () => {
       if (!organization?.id) {
         throw new Error(
@@ -217,11 +198,7 @@ export const useGetStandardsDeploymentOverviewQuery = () => {
   const { organization } = useAuthContext();
 
   return useQuery({
-    queryKey: [
-      'organizations',
-      organization?.id,
-      ...GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
-    ],
+    queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
     queryFn: () => {
       if (!organization?.id) {
         throw new Error(
@@ -419,11 +396,7 @@ export const useGetTargetsByOrganizationQuery = () => {
   const { organization } = useAuthContext();
 
   return useQuery({
-    queryKey: [
-      'organizations',
-      organization?.id,
-      ...GET_TARGETS_BY_ORGANIZATION_KEY,
-    ],
+    queryKey: GET_TARGETS_BY_ORGANIZATION_KEY,
     queryFn: () => {
       if (!organization?.id) {
         throw new Error('Organization ID is required to fetch targets');
@@ -591,11 +564,7 @@ export const useGetRenderModeConfigurationQuery = () => {
   const { organization } = useAuthContext();
 
   return useQuery({
-    queryKey: [
-      'organizations',
-      organization?.id,
-      ...GET_RENDER_MODE_CONFIGURATION_KEY,
-    ],
+    queryKey: GET_RENDER_MODE_CONFIGURATION_KEY,
     queryFn: () => {
       if (!organization?.id) {
         throw new Error(
