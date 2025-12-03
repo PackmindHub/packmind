@@ -152,7 +152,7 @@
     "@milkdown/crepe": "^7.15.2",
     "@milkdown/kit": "^7.15.2",
     "@milkdown/react": "^7.15.2",
-    "@modelcontextprotocol/sdk": "^1.15.0",
+    "@modelcontextprotocol/sdk": "^1.24.0",
     "@nestjs/common": "^11.1.6",
     "@nestjs/core": "^11.1.6",
     "@nestjs/jwt": "^11.0.0",
