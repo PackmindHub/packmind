@@ -136,12 +136,18 @@ function startCallbackServer(): Promise<string> {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true }));
 
-        // Clean up and resolve
+        // Clean up timeout
         if (timeoutId) {
           clearTimeout(timeoutId);
         }
-        server.close();
+
+        // Resolve immediately so CLI can proceed without waiting for server close
         resolve(code);
+
+        // Close server in background - don't block on this
+        setImmediate(() => {
+          server.close();
+        });
       } else {
         res.writeHead(400, { 'Content-Type': 'text/plain' });
         res.end('Missing code parameter');
