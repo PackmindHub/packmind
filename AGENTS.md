@@ -66,94 +66,32 @@ All rules and guidelines defined in these standards are mandatory and must be fo
 
 Failure to follow these standards may lead to inconsistencies, errors, or rework. Treat them as the source of truth for how code should be written, structured, and maintained.
 
-## Standard: UseCase Test Structure and Validation
+## Standard: Changelog
 
-Define testing patterns for use case unit tests to ensure consistent organization and comprehensive validation coverage in the Packmind hexagonal architecture. :
-* Group test scenarios by execution context using nested describe blocks with shared setup in beforeEach to eliminate duplication and improve test readability
-* Test all validation error scenarios individually with distinct test cases to ensure each validation rule is properly enforced and error messages are accurate
+Maintain CHANGELOG.MD using Keep a Changelog format with a top [Unreleased] section linked to HEAD, ISO 8601 dates (YYYY-MM-DD), and per-release comparison links like [X.Y.Z]: https://github.com/PackmindHub/packmind/compare/release/<previous>...release/X.Y.Z to ensure accurate, consistent release documentation and version links. :
+* Ensure all released versions have their corresponding comparison links defined at the bottom of the CHANGELOG.MD file in the format [X.Y.Z]: https://github.com/PackmindHub/packmind/compare/release/<previous>...release/X.Y.Z
+* Format all release dates using the ISO 8601 date format YYYY-MM-DD (e.g., 2025-11-21) to ensure consistent and internationally recognized date representation
+* Maintain an [Unreleased] section at the top of the changelog with its corresponding link at the bottom pointing to HEAD to track ongoing changes between releases
 
-Full standard is available here for further request: [UseCase Test Structure and Validation](.packmind/standards/usecase-test-structure-and-validation.md)
+Full standard is available here for further request: [Changelog](.packmind/standards/changelog.md)
 
-## Standard: Back-end TypeScript Clean Code Practices
+## Standard: Typescript code standards
 
-Apply back-end TypeScript clean code practices by implementing logging best practices, error handling with custom error types, and organized code structure to enhance maintainability and ensure consistent patterns across services in the Packmind monorepo when writing services, use cases, controllers, and any back-end TypeScript code. :
-* Avoid excessive logger.debug calls in production code and limit logging to essential logger.info statements. Use logger.info for important business events, logger.error for error handling, and add logger.debug manually only when debugging specific issues.
-* Inject PackmindLogger as constructor parameter with origin constant for consistent logging across services. Define a const origin at the top of the file with the class name, then inject PackmindLogger with a default value using that origin.
-* Keep all import statements at the top of the file before any other code. Never use dynamic imports in the middle of the code unless absolutely necessary for code splitting or lazy loading.
-* Use dedicated error types instead of generic Error instances to enable precise error handling and improve code maintainability. Create custom error classes that extend Error with descriptive names and context-specific information.
+Adopt TypeScript code standards by prefixing interfaces with "I" and abstract classes with "Abstract" while choosing "Type" for plain objects and "Interface" for implementations to enhance clarity and maintainability when writing .ts files. :
+* Prefix abstract classes with Abstract
+* Prefix interfaces with I
+* Use Type for plain objects, Interface when implmentation is required
 
-Full standard is available here for further request: [Back-end TypeScript Clean Code Practices](.packmind/standards/back-end-typescript-clean-code-practices.md)
+Full standard is available here for further request: [Typescript code standards](.packmind/standards/typescript-code-standards.md)
 
-## Standard: Use Case Architecture Patterns
+## Standard: Tests redaction
 
-Standardize Packmind monorepo use case architecture using hexagonal principles, typed command/response contracts, and role-specific base classes (AbstractMemberUseCase, AbstractAdminUseCase, IPublicUseCase, PackmindCommand/PublicPackmindCommand) to ensure consistent authentication/authorization behavior, clean interfaces, and type-safe command passing via full command objects and port/adapter reuse. :
-* Accept commands as single parameters in adapter methods rather than multiple individual parameters to ensure consistency and easier parameter additions
-* Define each use case contract in its own file at packages/types/src/{domain}/contracts/{UseCaseName}.ts with Command type, Response type, and UseCase interface exports
-* Export exactly three type definitions from each use case contract file: {Name}Command for input parameters, {Name}Response for return value, and I{Name}UseCase as the interface combining both
-* Extend AbstractAdminUseCase and implement executeForAdmins method for use cases requiring admin privileges, with automatic validation that the user is a member with admin role
-* Extend AbstractMemberUseCase and implement executeForMembers method for use cases requiring the user to be a member of an organization, with automatic user and organization validation
-* Extend PackmindCommand for authenticated use case commands that include userId and organizationId, or extend PublicPackmindCommand for public endpoints without authentication
-* Implement IPublicUseCase interface directly with an execute method for public use cases that don't require authentication, without extending any abstract use case class
-* Never spread commands as multiple arguments in hexagon or UseCase classes; always pass the complete command object to maintain type safety and reduce errors
-* Restrict use case classes to expose only the execute method for public use cases or executeForMembers/executeForAdmins methods for member/admin use cases, with no other public methods
-* Reuse existing use cases through port/adapter interfaces instead of instantiating them directly within use cases
+Apply good practices for test redaction in **/*.spec.ts files using single expectations, assertive titles, and nested describe blocks for workflows to improve test clarity and maintainability during the development and testing of TypeScript applications. :
+* Tests have a single expectation
+* Tests have an assertive title and do not start with should
+* Tests that show a workflow uses multiple describe to nest steps
 
-Full standard is available here for further request: [Use Case Architecture Patterns](.packmind/standards/use-case-architecture-patterns.md)
-
-## Standard: Compliance - Logging Personal Information
-
-Ensure personal information is masked in logs using a standard format in TypeScript projects to maintain user privacy and comply with data protection regulations when logging user-related information or debugging authentication flows. :
-* Never log personal information in clear text across all log levels. Always mask sensitive data such as emails, phone numbers, IP addresses, and other personally identifiable information before logging.
-* Use the standard masking format of first 6 characters followed by "*" for logging user emails. This ensures consistency across the codebase and makes it easier to audit logs for compliance.
-
-Full standard is available here for further request: [Compliance - Logging Personal Information](.packmind/standards/compliance-logging-personal-information.md)
-
-## Standard: Backend Tests Redaction
-
-Enforce backend test practices for /**/*.spec.ts in the Packmind monorepo by prescribing Jest-based TypeScript patterns—behavioral testing that invokes methods (not asserting a method is a function), clear describe/it scoping (move "when" into describe), verb-first test names, one expect per test, expect(actualArray).toEqual(expectedArray) for deep array equality, avoid asserting on stubbed logger messages or registry definedness, remove explicit "Arrange/Act/Assert" comments, use afterEach(() => datasource.destroy()) for DB cleanup and afterEach(() => jest.clearAllMocks()) to prevent inter-test pollution, and prefer stubLogger() for a fully typed PackmindLogger stub—to ensure clarity, maintainability, consistency, and reliable, easy-to-debug backend unit, integration, and service tests when writing or refactoring tests. :
-* Avoid asserting on stubbed logger output like specific messages or call counts; instead verify observable behavior or return values
-* Avoid testing that a method is a function; instead invoke the method and assert its observable behavior
-* Avoid testing that registry components are defined; instead test the actual behavior and functionality of the registry methods like registration, retrieval, and error handling
-* Avoid using "when" in it() test descriptions; move contextual clauses into describe('when…') blocks and keep it() descriptions focused on expected behavior
-* Remove explicit 'Arrange, Act, Assert' comments from tests and structure them so the setup, execution, and verification phases are clear without redundant labels
-* Use afterEach to call datasource.destroy() to clean up the test database whenever you initialize it in beforeEach
-* Use afterEach(() => jest.clearAllMocks()) instead of beforeEach(() => jest.clearAllMocks()) to clear mocks after each test and prevent inter-test pollution
-* Use assertive, verb-first unit test names instead of starting with 'should'
-* Use expect(actualArray).toEqual(expectedArray) for deep array equality in Jest tests instead of manual length and index checks
-* Use one expect per test case for better clarity and easier debugging; group related tests in describe blocks with shared setup in beforeEach
-* Use stubLogger() in Jest tests to get a fully typed PackmindLogger stub instead of manually creating a jest.Mocked<PackmindLogger> object with jest.fn() methods
-
-Full standard is available here for further request: [Backend Tests Redaction](.packmind/standards/backend-tests-redaction.md)
-
-## Standard: Back-end repositories SQL queries using TypeORM
-
-Implement SQL query guidelines using TypeORM's QueryBuilder in back-end repositories under /infra/repositories/*Repository.ts to enhance type safety, prevent SQL injection, and improve code maintainability when writing database queries, including lookups, joins, and handling soft-deleted entities. :
-* Handle soft-deleted entities properly using withDeleted() or includeDeleted options. Always respect the QueryOption parameter when provided, and only include deleted entities when explicitly requested.
-* Use IN clause with array parameterization for filtering by multiple values. Always pass arrays as spread parameters using :...paramName syntax to ensure proper parameterization.
-* Use TypeORM's QueryBuilder with parameterized queries instead of raw SQL strings. Always pass parameters as objects to where(), andWhere(), and other query methods to prevent SQL injection and ensure type safety.
-
-Full standard is available here for further request: [Back-end repositories SQL queries using TypeORM](.packmind/standards/back-end-repositories-sql-queries-using-typeorm.md)
-
-## Standard: NestJS Module Hierarchy
-
-Establish a consistent NestJS module hierarchy using RouterModule.register() for routing and dedicated modules for each resource in the apps/api/src/app/ directory to enhance maintainability and scalability by mirroring the URL hierarchy and ensuring clear separation of concerns across the codebase, applicable to all modules including controllers, services, and modules. :
-* Configure all hierarchical routing exclusively in AppModule using RouterModule.register() with nested children arrays to ensure a single source of truth for the entire API route structure
-* Create a dedicated NestJS module for each resource type, preventing controllers from handling sub-resource routes to maintain clear separation of concerns
-* Define controller routes using empty @Controller() decorators to inherit path segments from RouterModule configuration and avoid path duplication
-* Import child modules in parent module's imports array and register them as children in AppModule's RouterModule configuration to establish proper module dependencies
-* Include all parent resource IDs in URL paths to make hierarchical relationships explicit and enable proper resource scoping and validation
-* Place module files in directories that mirror the URL path hierarchy to make the codebase structure immediately understandable
-* Use organization ID from route parameters (@Param('orgId')) instead of extracting it from AuthRequest to ensure consistency with the URL hierarchy
-
-Full standard is available here for further request: [NestJS Module Hierarchy](.packmind/standards/nestjs-module-hierarchy.md)
-
-## Standard: TypeScript Naming Practices
-
-Apply these rules whenever defining TypeScript interfaces or abstract classes. :
-* Prefix abstract classes with Abstract to distinguish them from concrete implementations.
-* Prefix interfaces with I so their role is immediately recognizable.
-
-Full standard is available here for further request: [TypeScript Naming Practices](.packmind/standards/typescript-naming-practices.md)
+Full standard is available here for further request: [Tests redaction](.packmind/standards/tests-redaction.md)
 <!-- end: Packmind standards -->
 
 <!-- start: Packmind recipes -->
