@@ -19,7 +19,7 @@ Packmind supports the following LLM providers:
 The recommended way to configure your LLM provider is through the Packmind web interface:
 
 1. Log in to Packmind as an administrator
-2. Navigate to **Settings** > **LLM Configuration**
+2. Navigate to **Settings** > **AI** > **Provider**
 3. Select your preferred provider from the dropdown
 4. Fill in the required configuration fields
 5. Save the configuration
