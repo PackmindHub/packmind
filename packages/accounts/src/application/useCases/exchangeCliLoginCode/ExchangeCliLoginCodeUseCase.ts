@@ -28,6 +28,37 @@ export class CliLoginCodeExpiredError extends Error {
   }
 }
 
+export class CliLoginCodeUserNotFoundError extends Error {
+  constructor(public readonly userId: string) {
+    super(`User not found for CLI login code: ${userId}`);
+    this.name = 'CliLoginCodeUserNotFoundError';
+  }
+}
+
+export class CliLoginCodeMembershipNotFoundError extends Error {
+  constructor(
+    public readonly userId: string,
+    public readonly organizationId: string,
+  ) {
+    super(`User ${userId} is not a member of organization ${organizationId}`);
+    this.name = 'CliLoginCodeMembershipNotFoundError';
+  }
+}
+
+export class CliLoginCodeOrganizationNotFoundError extends Error {
+  constructor(public readonly organizationId: string) {
+    super(`Organization not found for CLI login code: ${organizationId}`);
+    this.name = 'CliLoginCodeOrganizationNotFoundError';
+  }
+}
+
+export class CliLoginCodeApiKeyError extends Error {
+  constructor() {
+    super('Failed to generate API key or get expiration');
+    this.name = 'CliLoginCodeApiKeyError';
+  }
+}
+
 export class ExchangeCliLoginCodeUseCase
   implements IExchangeCliLoginCodeUseCase
 {
@@ -37,113 +68,72 @@ export class ExchangeCliLoginCodeUseCase
     private readonly organizationService: OrganizationService,
     private readonly apiKeyService: ApiKeyService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
-  ) {
-    this.logger.info('ExchangeCliLoginCodeUseCase initialized');
-  }
+  ) {}
 
   async execute(
     command: ExchangeCliLoginCodeCommand,
   ): Promise<ExchangeCliLoginCodeResponse> {
-    this.logger.info('Executing ExchangeCliLoginCodeUseCase', {
-      code: this.maskCode(command.code),
-    });
+    const codeToken = createCliLoginCodeToken(command.code);
+    const cliLoginCode =
+      await this.cliLoginCodeRepository.findByCode(codeToken);
 
-    try {
-      // 1. Find the CLI login code
-      const codeToken = createCliLoginCodeToken(command.code);
-      const cliLoginCode =
-        await this.cliLoginCodeRepository.findByCode(codeToken);
+    if (!cliLoginCode) {
+      throw new CliLoginCodeNotFoundError();
+    }
 
-      if (!cliLoginCode) {
-        this.logger.warn('CLI login code not found', {
-          code: this.maskCode(command.code),
-        });
-        throw new CliLoginCodeNotFoundError();
-      }
+    if (cliLoginCode.expiresAt < new Date()) {
+      await this.cliLoginCodeRepository.delete(cliLoginCode.id);
+      throw new CliLoginCodeExpiredError();
+    }
 
-      // 2. Check if the code has expired
-      const now = new Date();
-      if (cliLoginCode.expiresAt < now) {
-        this.logger.warn('CLI login code has expired', {
-          code: this.maskCode(command.code),
-          expiresAt: cliLoginCode.expiresAt.toISOString(),
-        });
-        // Delete the expired code
-        await this.cliLoginCodeRepository.delete(cliLoginCode.id);
-        throw new CliLoginCodeExpiredError();
-      }
+    const user = await this.userService.getUserById(cliLoginCode.userId);
+    if (!user) {
+      throw new CliLoginCodeUserNotFoundError(cliLoginCode.userId);
+    }
 
-      // 3. Get user and organization data
-      const user = await this.userService.getUserById(cliLoginCode.userId);
-      if (!user) {
-        this.logger.error('User not found for CLI login code', {
-          userId: cliLoginCode.userId,
-        });
-        throw new Error('User not found');
-      }
-
-      const membership = user.memberships.find(
-        (item) => item.organizationId === cliLoginCode.organizationId,
-      );
-      if (!membership) {
-        this.logger.error('User organization membership not found', {
-          userId: cliLoginCode.userId,
-          organizationId: cliLoginCode.organizationId,
-        });
-        throw new Error('User organization membership not found');
-      }
-
-      const organization = await this.organizationService.getOrganizationById(
+    const membership = user.memberships.find(
+      (item) => item.organizationId === cliLoginCode.organizationId,
+    );
+    if (!membership) {
+      throw new CliLoginCodeMembershipNotFoundError(
+        cliLoginCode.userId,
         cliLoginCode.organizationId,
       );
-      if (!organization) {
-        this.logger.error('Organization not found for CLI login code', {
-          organizationId: cliLoginCode.organizationId,
-        });
-        throw new Error('Organization not found');
-      }
-
-      // 4. Generate API key
-      const host = await this.getApplicationUrl();
-      const apiKey = this.apiKeyService.generateApiKey(
-        user,
-        organization,
-        membership.role,
-        host,
-      );
-      const expiresAt = this.apiKeyService.getApiKeyExpiration(apiKey);
-
-      if (!expiresAt) {
-        throw new Error('Failed to get API key expiration');
-      }
-
-      // 5. Delete the CLI login code (one-time use)
-      await this.cliLoginCodeRepository.delete(cliLoginCode.id);
-
-      this.logger.info('CLI login code exchanged successfully', {
-        userId: cliLoginCode.userId,
-        organizationId: cliLoginCode.organizationId,
-        expiresAt: expiresAt.toISOString(),
-      });
-
-      return {
-        apiKey,
-        expiresAt,
-      };
-    } catch (error) {
-      if (
-        error instanceof CliLoginCodeNotFoundError ||
-        error instanceof CliLoginCodeExpiredError
-      ) {
-        throw error;
-      }
-
-      this.logger.error('Failed to exchange CLI login code', {
-        code: this.maskCode(command.code),
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
     }
+
+    const organization = await this.organizationService.getOrganizationById(
+      cliLoginCode.organizationId,
+    );
+    if (!organization) {
+      throw new CliLoginCodeOrganizationNotFoundError(
+        cliLoginCode.organizationId,
+      );
+    }
+
+    const host = await this.getApplicationUrl();
+    const apiKey = this.apiKeyService.generateApiKey(
+      user,
+      organization,
+      membership.role,
+      host,
+    );
+    const expiresAt = this.apiKeyService.getApiKeyExpiration(apiKey);
+
+    if (!expiresAt) {
+      throw new CliLoginCodeApiKeyError();
+    }
+
+    await this.cliLoginCodeRepository.delete(cliLoginCode.id);
+
+    this.logger.info('CLI login code exchanged', {
+      userId: cliLoginCode.userId,
+      organizationId: cliLoginCode.organizationId,
+    });
+
+    return {
+      apiKey,
+      expiresAt,
+    };
   }
 
   private async getApplicationUrl(): Promise<string> {
@@ -151,17 +141,6 @@ export class ExchangeCliLoginCodeUseCase
     if (configValue) {
       return configValue.endsWith('/') ? configValue.slice(0, -1) : configValue;
     }
-    this.logger.warn('Failed to get APP_WEB_URL value, using default', {
-      configValue,
-      default: DEFAULT_APP_WEB_URL,
-    });
     return DEFAULT_APP_WEB_URL;
-  }
-
-  private maskCode(code: string): string {
-    if (code.length <= 4) {
-      return '****';
-    }
-    return `${code.slice(0, 2)}****${code.slice(-2)}`;
   }
 }

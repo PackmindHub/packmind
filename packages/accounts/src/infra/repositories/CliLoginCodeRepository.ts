@@ -29,16 +29,9 @@ export class CliLoginCodeRepository
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super('cli_login_code', repository, logger, CliLoginCodeSchema);
-    this.logger.info('CliLoginCodeRepository initialized');
   }
 
   override async add(cliLoginCode: CliLoginCode): Promise<CliLoginCode> {
-    this.logger.info('Adding CLI login code', {
-      id: cliLoginCode.id,
-      userId: cliLoginCode.userId,
-      organizationId: cliLoginCode.organizationId,
-    });
-
     const encrypted = await this.encryptCliLoginCode(cliLoginCode);
     const saved = await super.add(encrypted);
     return this.decryptCliLoginCode(saved);
@@ -46,37 +39,16 @@ export class CliLoginCodeRepository
 
   async findByCode(code: CliLoginCodeToken): Promise<CliLoginCode | null> {
     const encryptedCode = await this.encryptCode(code);
-    const maskedCode = this.maskCode(code);
 
-    this.logger.info('Finding CLI login code by code', {
-      code: maskedCode,
+    const cliLoginCode = await this.repository.findOne({
+      where: { code: encryptedCode },
     });
 
-    try {
-      const cliLoginCode = await this.repository.findOne({
-        where: { code: encryptedCode },
-      });
-
-      if (!cliLoginCode) {
-        this.logger.warn('CLI login code not found', {
-          code: maskedCode,
-        });
-        return null;
-      }
-
-      this.logger.info('CLI login code found', {
-        code: maskedCode,
-        id: cliLoginCode.id,
-      });
-
-      return this.decryptCliLoginCode(cliLoginCode);
-    } catch (error) {
-      this.logger.error('Failed to find CLI login code', {
-        code: maskedCode,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
+    if (!cliLoginCode) {
+      return null;
     }
+
+    return this.decryptCliLoginCode(cliLoginCode);
   }
 
   override async findById(id: CliLoginCodeId): Promise<CliLoginCode | null> {
@@ -91,33 +63,15 @@ export class CliLoginCodeRepository
   }
 
   async delete(id: CliLoginCodeId): Promise<void> {
-    this.logger.info('Deleting CLI login code', { id });
     await this.repository.delete({ id });
   }
 
   async deleteExpired(): Promise<number> {
-    const now = new Date();
-    this.logger.info('Deleting expired CLI login codes', {
-      before: now.toISOString(),
+    const result = await this.repository.delete({
+      expiresAt: LessThan(new Date()),
     });
 
-    try {
-      const result = await this.repository.delete({
-        expiresAt: LessThan(now),
-      });
-
-      const deletedCount = result.affected ?? 0;
-      this.logger.info('Deleted expired CLI login codes', {
-        count: deletedCount,
-      });
-
-      return deletedCount;
-    } catch (error) {
-      this.logger.error('Failed to delete expired CLI login codes', {
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
+    return result.affected ?? 0;
   }
 
   protected override loggableEntity(
@@ -216,14 +170,5 @@ export class CliLoginCodeRepository
   private deriveInitializationVector(code: string): Buffer {
     const hash = createHash('sha256').update(code).digest();
     return hash.subarray(0, 12);
-  }
-
-  private maskCode(code: CliLoginCodeToken): string {
-    const codeString = code as string;
-    if (codeString.length <= 4) {
-      return '****';
-    }
-
-    return `${codeString.slice(0, 2)}****${codeString.slice(-2)}`;
   }
 }
