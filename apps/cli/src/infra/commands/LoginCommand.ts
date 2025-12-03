@@ -119,8 +119,10 @@ function openBrowser(url: string): void {
  * Start a local HTTP server to receive the callback from the browser.
  * Returns a promise that resolves with the code when received.
  */
-function startCallbackServer(): Promise<{ code: string; server: http.Server }> {
+function startCallbackServer(): Promise<string> {
   return new Promise((resolve, reject) => {
+    let timeoutId: NodeJS.Timeout | null = null;
+
     const server = http.createServer((req, res) => {
       // Set CORS headers to allow browser redirect
       res.setHeader('Access-Control-Allow-Origin', '*');
@@ -167,7 +169,12 @@ function startCallbackServer(): Promise<{ code: string; server: http.Server }> {
           </html>
         `);
 
-        resolve({ code, server });
+        // Clean up and resolve
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+        server.close();
+        resolve(code);
       } else {
         res.writeHead(400, { 'Content-Type': 'text/plain' });
         res.end('Missing code parameter');
@@ -175,6 +182,9 @@ function startCallbackServer(): Promise<{ code: string; server: http.Server }> {
     });
 
     server.on('error', (err: NodeJS.ErrnoException) => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       if (err.code === 'EADDRINUSE') {
         reject(new Error(`Port ${CALLBACK_PORT} is already in use`));
       } else {
@@ -187,7 +197,7 @@ function startCallbackServer(): Promise<{ code: string; server: http.Server }> {
     });
 
     // Timeout after 5 minutes
-    setTimeout(() => {
+    timeoutId = setTimeout(() => {
       server.close();
       reject(new Error('Login timed out. Please try again.'));
     }, CALLBACK_TIMEOUT_MS);
@@ -206,15 +216,10 @@ export const loginCommand = command({
     }),
   },
   handler: async ({ host }) => {
-    let server: http.Server | null = null;
-
     try {
       // Try to start the callback server
       let useCallback = true;
-      let callbackPromise: Promise<{
-        code: string;
-        server: http.Server;
-      }> | null = null;
+      let callbackPromise: Promise<string> | null = null;
 
       try {
         callbackPromise = startCallbackServer();
@@ -237,12 +242,9 @@ export const loginCommand = command({
       if (useCallback && callbackPromise) {
         logInfoConsole('Waiting for browser authentication...');
         try {
-          const result = await callbackPromise;
-          code = result.code;
-          server = result.server;
+          code = await callbackPromise;
         } catch {
           // Fallback to manual code entry
-          useCallback = false;
           code = await promptForCode();
         }
       } else {
@@ -278,11 +280,6 @@ export const loginCommand = command({
         logErrorConsole(String(error));
       }
       process.exit(1);
-    } finally {
-      // Clean up server
-      if (server) {
-        server.close();
-      }
     }
   },
 });
