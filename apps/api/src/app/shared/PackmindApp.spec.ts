@@ -11,6 +11,7 @@ import { PackmindLogger } from '@packmind/logger';
 import { JobsService } from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
 import { SpacesHexa } from '@packmind/spaces';
+import { ImportPracticeLegacyHexa } from '@packmind/import-practices-legacy';
 import { StandardsHexa } from '@packmind/standards';
 import { DataSource } from 'typeorm';
 import { ApiKeyServiceProvider } from './ApiKeyServiceProvider';
@@ -59,6 +60,7 @@ describe('PackmindApp API', () => {
         StandardsHexa,
         CodingAgentHexa,
         DeploymentsHexa,
+        ImportPracticeLegacyHexa,
       ]);
     });
 
