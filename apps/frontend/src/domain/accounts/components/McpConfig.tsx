@@ -19,22 +19,14 @@ import { CopiableTextarea } from '../../../shared/components/inputs';
 import { McpConfigRedesigned } from './McpConfig/McpConfigRedesigned';
 import { useAuthContext } from '../hooks/useAuthContext';
 
-// VS Code icon as inline SVG
+// VS Code icon from CDN
 const VSCodeIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 100 100"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path d="M74.5 97.5L24.5 85V15L74.5 2.5V97.5Z" fill="#007ACC" />
-    <path
-      d="M74.5 27.5L50 50L74.5 72.5V97.5L24.5 85L50 50L24.5 15L74.5 2.5V27.5Z"
-      fill="#1F9CF0"
-    />
-    <path d="M24.5 15L50 50L24.5 85V15Z" fill="#0065A9" />
-  </svg>
+  <img
+    src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vscode/vscode-original.svg"
+    alt="VS Code"
+    width={16}
+    height={16}
+  />
 );
 
 // Styled badge component similar to Cursor's
