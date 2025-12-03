@@ -107,16 +107,23 @@ export class StandardsService {
     return result.standardDeployments;
   }
 
-  async deleteStandard(id: StandardId, userId: UserId): Promise<void> {
-    return this.standardsHexa.getAdapter().deleteStandard(id, userId);
+  async deleteStandard(
+    id: StandardId,
+    userId: UserId,
+    organizationId: OrganizationId,
+  ): Promise<void> {
+    return this.standardsHexa
+      .getAdapter()
+      .deleteStandard(id, userId, organizationId);
   }
 
   async deleteStandardsBatch(
     standardIds: StandardId[],
     userId: UserId,
+    organizationId: OrganizationId,
   ): Promise<void> {
     return this.standardsHexa
       .getAdapter()
-      .deleteStandardsBatch(standardIds, userId);
+      .deleteStandardsBatch(standardIds, userId, organizationId);
   }
 }

@@ -23,4 +23,5 @@ export interface IPackageRepository extends IRepository<Package> {
   ): Promise<void>;
   setRecipes(packageId: PackageId, recipeIds: RecipeId[]): Promise<void>;
   setStandards(packageId: PackageId, standardIds: StandardId[]): Promise<void>;
+  removeStandardFromAllPackages(standardId: StandardId): Promise<void>;
 }

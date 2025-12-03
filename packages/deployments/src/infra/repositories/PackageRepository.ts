@@ -518,4 +518,28 @@ export class PackageRepository
       throw error;
     }
   }
+
+  async removeStandardFromAllPackages(standardId: StandardId): Promise<void> {
+    this.logger.info('Removing standard from all packages', { standardId });
+
+    try {
+      const result = await this.repository
+        .createQueryBuilder()
+        .delete()
+        .from('package_standards')
+        .where('standard_id = :standardId', { standardId })
+        .execute();
+
+      this.logger.info('Standard removed from all packages successfully', {
+        standardId,
+        affectedRows: result.affected ?? 0,
+      });
+    } catch (error) {
+      this.logger.error('Failed to remove standard from all packages', {
+        standardId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
 }

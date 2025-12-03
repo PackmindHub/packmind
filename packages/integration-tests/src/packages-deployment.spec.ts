@@ -292,6 +292,66 @@ describe('Package deployment integration', () => {
     });
   });
 
+  describe('when a standard in a package is deleted', () => {
+    let packageWithStandard: Package;
+
+    beforeEach(async () => {
+      const response = await testApp.deploymentsHexa
+        .getAdapter()
+        .createPackage({
+          userId: dataFactory.user.id,
+          organizationId: dataFactory.organization.id,
+          spaceId: dataFactory.space.id,
+          name: 'Package with standard to delete',
+          description: 'Package containing a standard that will be deleted',
+          recipeIds: [recipe1.id],
+          standardIds: [standard1.id, standard2.id],
+        });
+      packageWithStandard = response.package;
+    });
+
+    it('removes the deleted standard from the package', async () => {
+      // Verify initial state - package has 2 standards
+      const beforeDelete = await testApp.deploymentsHexa
+        .getAdapter()
+        .getPackageById({
+          userId: dataFactory.user.id,
+          organizationId: dataFactory.organization.id,
+          spaceId: dataFactory.space.id,
+          packageId: packageWithStandard.id,
+        });
+      expect(beforeDelete.package.standards).toHaveLength(2);
+      expect(beforeDelete.package.standards).toContain(standard1.id);
+      expect(beforeDelete.package.standards).toContain(standard2.id);
+
+      // Delete standard1
+      await testApp.standardsHexa
+        .getAdapter()
+        .deleteStandard(
+          standard1.id,
+          dataFactory.user.id,
+          dataFactory.organization.id,
+        );
+
+      // Wait a bit for the async event handler to complete
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      // Verify the standard was removed from the package
+      const afterDelete = await testApp.deploymentsHexa
+        .getAdapter()
+        .getPackageById({
+          userId: dataFactory.user.id,
+          organizationId: dataFactory.organization.id,
+          spaceId: dataFactory.space.id,
+          packageId: packageWithStandard.id,
+        });
+
+      expect(afterDelete.package.standards).toHaveLength(1);
+      expect(afterDelete.package.standards).not.toContain(standard1.id);
+      expect(afterDelete.package.standards).toContain(standard2.id);
+    });
+  });
+
   describe('Standard deployment with rules', () => {
     it('deploys standard with rules correctly loaded', async () => {
       // Create a standard with actual rules

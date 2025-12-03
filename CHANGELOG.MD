@@ -11,6 +11,7 @@
 ## Fixed
 
 - Server error when switching organization from the rule pages.
+- Deleted standards are now properly removed from packages, preventing UUID display and edit issues
 
 # [1.4.1] - 2025-11-25
 
