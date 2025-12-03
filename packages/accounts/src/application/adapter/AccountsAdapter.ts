@@ -98,7 +98,6 @@ import { CheckEmailAvailabilityUseCase } from '../useCases/checkEmailAvailabilit
 import { CreateCliLoginCodeUseCase } from '../useCases/createCliLoginCode/CreateCliLoginCodeUseCase';
 import { CreateInvitationsUseCase } from '../useCases/createInvitations/CreateInvitationsUseCase';
 import { ExchangeCliLoginCodeUseCase } from '../useCases/exchangeCliLoginCode/ExchangeCliLoginCodeUseCase';
-import { CliLoginCodeRepository } from '../../infra/repositories/CliLoginCodeRepository';
 import { CreateOrganizationUseCase } from '../useCases/createOrganization/CreateOrganizationUseCase';
 import { GenerateApiKeyUseCase } from '../useCases/generateApiKey/GenerateApiKeyUseCase';
 import { GenerateUserTokenUseCase } from '../useCases/generateUserToken/GenerateUserTokenUseCase';
@@ -312,13 +311,12 @@ export class AccountsAdapter
       this.logger.debug('API key use cases initialized');
 
       // CLI login use cases require API key service
-      const cliLoginCodeRepository = new CliLoginCodeRepository();
       this._createCliLoginCode = new CreateCliLoginCodeUseCase(
-        cliLoginCodeRepository,
+        this.accountsServices.getCliLoginCodeRepository(),
         this.logger,
       );
       this._exchangeCliLoginCode = new ExchangeCliLoginCodeUseCase(
-        cliLoginCodeRepository,
+        this.accountsServices.getCliLoginCodeRepository(),
         this.accountsServices.getUserService(),
         this.accountsServices.getOrganizationService(),
         apiKeyService,

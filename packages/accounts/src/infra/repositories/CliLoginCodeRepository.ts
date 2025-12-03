@@ -9,7 +9,6 @@ import { ICliLoginCodeRepository } from '../../domain/repositories/ICliLoginCode
 import { CliLoginCodeSchema } from '../schemas/CliLoginCodeSchema';
 import { PackmindLogger } from '@packmind/logger';
 import {
-  localDataSource,
   AbstractRepository,
   Configuration,
   WithTimestamps,
@@ -26,11 +25,7 @@ export class CliLoginCodeRepository
   private encryptionKey: Buffer | null = null;
 
   constructor(
-    repository: Repository<
-      WithTimestamps<CliLoginCode>
-    > = localDataSource.getRepository<WithTimestamps<CliLoginCode>>(
-      CliLoginCodeSchema,
-    ),
+    repository: Repository<WithTimestamps<CliLoginCode>>,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super('cli_login_code', repository, logger, CliLoginCodeSchema);
