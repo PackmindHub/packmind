@@ -4,6 +4,7 @@ import {
   OrganizationId,
   UserId,
 } from '@packmind/types';
+import { v4 as uuidv4 } from 'uuid';
 
 export type CliLoginCodeId = Branded<'CliLoginCodeId'>;
 export const createCliLoginCodeId = brandedIdFactory<CliLoginCodeId>();
@@ -20,16 +21,11 @@ export type CliLoginCode = {
 };
 
 /**
- * Generates a random 10-character code using uppercase alphanumeric characters.
- * Excludes ambiguous characters: 0, O, 1, I, L
+ * Generates a random CLI login code using UUID.
+ * Uses the same pattern as invitation tokens for consistency.
  */
 export function generateCliLoginCode(): CliLoginCodeToken {
-  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-  let code = '';
-  for (let i = 0; i < 10; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code as CliLoginCodeToken;
+  return createCliLoginCodeToken(uuidv4());
 }
 
 /**
