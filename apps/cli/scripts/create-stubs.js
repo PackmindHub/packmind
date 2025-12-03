@@ -60,20 +60,27 @@ backendModules.forEach((moduleName) => {
 // Stub module for ${moduleName}
 // This module is not actually used by the CLI but is imported by shared dependencies
 
-const stub = function(...args) {
-  return new Proxy({}, {
-    get: (target, prop) => {
+// Create a chainable stub that works for both property access and function calls
+const createStub = () => {
+  const handler = {
+    get(target, prop) {
+      // Avoid thenable detection
       if (prop === 'then' || prop === 'catch') {
         return undefined;
       }
-      return stub;
+      // Return a new stub for any property access
+      return createStub();
     },
-    apply: () => stub,
-  });
+    apply() {
+      // When called as a function, return a stub
+      return createStub();
+    },
+  };
+  // Wrap a function in a Proxy so it can be called and have properties accessed
+  return new Proxy(function() {}, handler);
 };
 
-// Provide both CommonJS and ES module exports
-stub.default = stub;
+const stub = createStub();
 module.exports = stub;
 module.exports.default = stub;
 `;

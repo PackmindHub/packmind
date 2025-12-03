@@ -30,6 +30,10 @@ const backendModules = [
   '@types/nodemailer',
 ];
 
+// Modules that are bundled into main.cjs and don't need to be installed
+// cmd-ts and chalk are bundled to avoid ESM/CJS compatibility issues in Node 20
+const bundledModules = ['cmd-ts', 'chalk'];
+
 // Remove backend modules from dependencies
 if (packageJson.dependencies) {
   backendModules.forEach((mod) => {
@@ -38,6 +42,20 @@ if (packageJson.dependencies) {
       delete packageJson.dependencies[mod];
     }
   });
+
+  // Remove bundled modules from dependencies (they're included in main.cjs)
+  bundledModules.forEach((mod) => {
+    if (packageJson.dependencies[mod]) {
+      console.log(`Removing bundled dependency: ${mod}`);
+      delete packageJson.dependencies[mod];
+    }
+  });
+}
+
+// Remove overrides section if present (no longer needed since cmd-ts/chalk are bundled)
+if (packageJson.overrides) {
+  console.log('Removing overrides section (no longer needed)');
+  delete packageJson.overrides;
 }
 
 // Ensure stub modules in node_modules are included in the package
