@@ -241,8 +241,10 @@ describe('McpConfig', () => {
     });
 
     it('displays VS Code MCP configuration JSON', () => {
-      const vscodeConfig = screen.getByTestId('mcp-config-vscode');
-      const config = JSON.parse(vscodeConfig.textContent ?? '{}');
+      const vscodeConfigTextarea = screen.getByTestId(
+        'mcp-config-vscode-textarea',
+      );
+      const config = JSON.parse(vscodeConfigTextarea.textContent ?? '{}');
       expect(config).toEqual(expectedVSCodeConfig);
     });
 
@@ -261,7 +263,8 @@ describe('McpConfig', () => {
 
     it('displays copy buttons for all configurations', () => {
       const copyButtons = screen.getAllByLabelText('Copy to clipboard');
-      expect(copyButtons).toHaveLength(4);
+      // 5 copy buttons: Classic, VS Code, Claude CLI, GitHub Copilot JetBrains, Cursor
+      expect(copyButtons).toHaveLength(5);
     });
 
     it('displays Cursor install button with correct href and image', async () => {
@@ -279,6 +282,24 @@ describe('McpConfig', () => {
         'https://cursor.com/deeplink/mcp-install-dark.png',
       );
       expect(image).toHaveAttribute('alt', 'Add Packmind MCP server to Cursor');
+    });
+
+    it('displays VS Code install button with correct href', async () => {
+      const user = userEvent.setup();
+      const vscodeTab = screen.getByRole('tab', { name: 'VS Code' });
+      await user.click(vscodeTab);
+
+      const installButton = screen.getByTestId('vscode-install-button');
+      const expectedVSCodeInstallConfig = {
+        name: 'packmind',
+        type: 'http',
+        url: 'https://mcp.packmind.com',
+        headers: {
+          Authorization: 'Bearer test-token-123',
+        },
+      };
+      const expectedVSCodeInstallLink = `vscode:mcp/install?${encodeURIComponent(JSON.stringify(expectedVSCodeInstallConfig))}`;
+      expect(installButton).toHaveAttribute('href', expectedVSCodeInstallLink);
     });
   });
 });

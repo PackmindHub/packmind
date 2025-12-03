@@ -19,6 +19,54 @@ import { CopiableTextarea } from '../../../shared/components/inputs';
 import { McpConfigRedesigned } from './McpConfig/McpConfigRedesigned';
 import { useAuthContext } from '../hooks/useAuthContext';
 
+// VS Code icon as inline SVG
+const VSCodeIcon = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 100 100"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M74.5 97.5L24.5 85V15L74.5 2.5V97.5Z" fill="#007ACC" />
+    <path
+      d="M74.5 27.5L50 50L74.5 72.5V97.5L24.5 85L50 50L24.5 15L74.5 2.5V27.5Z"
+      fill="#1F9CF0"
+    />
+    <path d="M24.5 15L50 50L24.5 85V15Z" fill="#0065A9" />
+  </svg>
+);
+
+// Styled badge component similar to Cursor's
+const VSCodeInstallBadge: React.FC<{ href: string }> = ({ href }) => (
+  <a
+    href={href}
+    data-testid="vscode-install-button"
+    style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '8px',
+      padding: '8px 16px',
+      backgroundColor: '#007ACC',
+      color: 'white',
+      borderRadius: '6px',
+      textDecoration: 'none',
+      fontSize: '14px',
+      fontWeight: 500,
+      transition: 'background-color 0.2s',
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.backgroundColor = '#005a9e';
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.backgroundColor = '#007ACC';
+    }}
+  >
+    <VSCodeIcon />
+    <span>Install in VS Code</span>
+  </a>
+);
+
 export const McpConfig: React.FunctionComponent = () => {
   const { user } = useAuthContext();
   const getMcpTokenMutation = useGetMcpTokenMutation();
@@ -62,6 +110,24 @@ export const McpConfig: React.FunctionComponent = () => {
         inputs: [],
       };
       return JSON.stringify(config, null, 2);
+    }
+    return '';
+  };
+
+  const getVSCodeInstallLink = () => {
+    if (getMcpTokenMutation.data?.access_token && url) {
+      // VS Code expects a server configuration object matching mcp.json format
+      const config = {
+        name: 'packmind',
+        type: 'http',
+        url: url,
+        headers: {
+          Authorization: `Bearer ${getMcpTokenMutation.data.access_token}`,
+        },
+      };
+      // Double-stringify and encode to ensure proper URL encoding
+      const jsonConfig = JSON.stringify(config);
+      return `vscode:mcp/install?${encodeURIComponent(jsonConfig)}`;
     }
     return '';
   };
@@ -173,12 +239,27 @@ export const McpConfig: React.FunctionComponent = () => {
                     value: 'vscode',
                     triggerLabel: 'VS Code',
                     content: (
-                      <CopiableTextarea
-                        value={getVSCodeConfig()}
-                        readOnly
-                        rows={12}
+                      <PMVStack
+                        gap={4}
+                        width="100%"
+                        pt={8}
                         data-testid="mcp-config-vscode"
-                      />
+                      >
+                        <PMHStack gap={4}>
+                          <VSCodeInstallBadge href={getVSCodeInstallLink()} />
+                        </PMHStack>
+                        <PMText as="p" variant="small" color="faded">
+                          Or copy the configuration below and save it to{' '}
+                          <code>.vscode/mcp.json</code> in your workspace or{' '}
+                          <code>mcp.json</code> in your user settings directory.
+                        </PMText>
+                        <CopiableTextarea
+                          value={getVSCodeConfig()}
+                          readOnly
+                          rows={12}
+                          data-testid="mcp-config-vscode-textarea"
+                        />
+                      </PMVStack>
                     ),
                   },
                   {
