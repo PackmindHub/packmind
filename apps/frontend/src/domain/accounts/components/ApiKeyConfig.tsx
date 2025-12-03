@@ -7,14 +7,20 @@ import {
   PMHStack,
   PMAlert,
   PMField,
+  PMTabs,
 } from '@packmind/ui';
 import {
   useGetCurrentApiKeyQuery,
   useGenerateApiKeyMutation,
 } from '../api/queries/AuthQueries';
-import { CopiableTextarea } from '../../../shared/components/inputs';
+import {
+  CopiableTextarea,
+  CopiableTextField,
+} from '../../../shared/components/inputs';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { UserId } from '@packmind/types';
+
+const DEFAULT_HOST = 'https://app.packmind.com';
 
 export const ApiKeyConfig: React.FunctionComponent = () => {
   const { user, organization } = useAuthContext();
@@ -52,106 +58,142 @@ export const ApiKeyConfig: React.FunctionComponent = () => {
     }
   };
 
-  return (
-    <PMPageSection title="API Key" variant="outline">
+  const buildCliLoginCommand = () => {
+    const currentHost = window.location.origin;
+    const isDefaultHost = currentHost === DEFAULT_HOST;
+    const hostFlag = isDefaultHost ? '' : ` --host ${currentHost}`;
+    return `packmind-cli login${hostFlag}`;
+  };
+
+  const loginCommandTab = (
+    <PMVStack width="full" alignItems="stretch" gap={4}>
       <PMText as="p">
-        Generate an API key for Packmind CLI. It will expires after 3 months.
+        Run this command in your terminal to authenticate with Packmind CLI.
+        This will open your browser to complete the login.
+      </PMText>
+      <CopiableTextField value={buildCliLoginCommand()} readOnly />
+      <PMText variant="small" color="tertiary">
+        The CLI will automatically receive an API key that expires after 3
+        months.
+      </PMText>
+    </PMVStack>
+  );
+
+  const envVarTab = (
+    <PMVStack width="full" alignItems="stretch" gap={4}>
+      <PMText as="p">
+        Generate an API key to use as an environment variable. It will expire
+        after 3 months.
       </PMText>
 
-      <PMVStack width="100%" alignItems="baseline" gap={4}>
-        {/* Current API Key Status */}
-        {getCurrentApiKeyQuery.data?.hasApiKey && (
-          <PMAlert.Root status="info">
+      {getCurrentApiKeyQuery.data?.hasApiKey && (
+        <PMAlert.Root status="info">
+          <PMAlert.Indicator />
+          <PMAlert.Title>Active API Key</PMAlert.Title>
+          <PMAlert.Description>
+            You have an active API key that expires on{' '}
+            {formatExpirationDate(getCurrentApiKeyQuery.data.expiresAt)}
+          </PMAlert.Description>
+        </PMAlert.Root>
+      )}
+
+      {showConfirmGenerate ? (
+        <PMVStack gap={3}>
+          <PMAlert.Root status="warning">
             <PMAlert.Indicator />
-            <PMAlert.Title>Active API Key</PMAlert.Title>
+            <PMAlert.Title>Replace Existing API Key?</PMAlert.Title>
             <PMAlert.Description>
-              You have an active API key that expires on{' '}
-              {formatExpirationDate(getCurrentApiKeyQuery.data.expiresAt)}
+              This will invalidate your current API key. Any applications using
+              the old key will need to be updated.
             </PMAlert.Description>
           </PMAlert.Root>
-        )}
 
-        {/* Generate Button or Confirmation */}
-        {showConfirmGenerate ? (
-          <PMVStack gap={3}>
-            <PMAlert.Root status="warning">
-              <PMAlert.Indicator />
-              <PMAlert.Title>Replace Existing API Key?</PMAlert.Title>
-              <PMAlert.Description>
-                This will invalidate your current API key. Any applications
-                using the old key will need to be updated.
-              </PMAlert.Description>
-            </PMAlert.Root>
+          <PMHStack gap={2}>
+            <PMButton
+              onClick={handleGenerateApiKey}
+              disabled={generateApiKeyMutation.isPending}
+            >
+              {generateApiKeyMutation.isPending
+                ? 'Generating...'
+                : 'Yes, Generate New Key'}
+            </PMButton>
+            <PMButton
+              variant="outline"
+              onClick={handleCancelGenerate}
+              disabled={generateApiKeyMutation.isPending}
+            >
+              Cancel
+            </PMButton>
+          </PMHStack>
+        </PMVStack>
+      ) : (
+        <PMButton
+          onClick={handleGenerateApiKey}
+          disabled={generateApiKeyMutation.isPending}
+        >
+          {generateApiKeyMutation.isPending
+            ? 'Generating...'
+            : getCurrentApiKeyQuery.data?.hasApiKey
+              ? 'Generate New API Key'
+              : 'Generate API Key'}
+        </PMButton>
+      )}
 
-            <PMHStack gap={2}>
-              <PMButton
-                onClick={handleGenerateApiKey}
-                disabled={generateApiKeyMutation.isPending}
-              >
-                {generateApiKeyMutation.isPending
-                  ? 'Generating...'
-                  : 'Yes, Generate New Key'}
-              </PMButton>
-              <PMButton
-                variant="outline"
-                onClick={handleCancelGenerate}
-                disabled={generateApiKeyMutation.isPending}
-              >
-                Cancel
-              </PMButton>
-            </PMHStack>
-          </PMVStack>
-        ) : (
-          <PMButton
-            onClick={handleGenerateApiKey}
-            disabled={generateApiKeyMutation.isPending}
-          >
-            {generateApiKeyMutation.isPending
-              ? 'Generating...'
-              : getCurrentApiKeyQuery.data?.hasApiKey
-                ? 'Generate New API Key'
-                : 'Generate API Key'}
-          </PMButton>
-        )}
+      {generateApiKeyMutation.isError && (
+        <PMAlert.Root status="error">
+          <PMAlert.Indicator />
+          <PMAlert.Title>Error Generating API Key</PMAlert.Title>
+          <PMAlert.Description>
+            {generateApiKeyMutation.error instanceof Error
+              ? generateApiKeyMutation.error.message
+              : 'Failed to generate API key. Please try again.'}
+          </PMAlert.Description>
+        </PMAlert.Root>
+      )}
 
-        {/* Error Display */}
-        {generateApiKeyMutation.isError && (
-          <PMAlert.Root status="error">
+      {generateApiKeyMutation.isSuccess && generateApiKeyMutation.data && (
+        <PMVStack width="full" gap={3} alignItems={'stretch'}>
+          <PMAlert.Root status="success">
             <PMAlert.Indicator />
-            <PMAlert.Title>Error Generating API Key</PMAlert.Title>
+            <PMAlert.Title>API Key Generated Successfully!</PMAlert.Title>
             <PMAlert.Description>
-              {generateApiKeyMutation.error instanceof Error
-                ? generateApiKeyMutation.error.message
-                : 'Failed to generate API key. Please try again.'}
+              Copy this key now - it won't be shown again. Expires on{' '}
+              {formatExpirationDate(generateApiKeyMutation.data.expiresAt)}
             </PMAlert.Description>
           </PMAlert.Root>
-        )}
 
-        {/* Success Display with API Key */}
-        {generateApiKeyMutation.isSuccess && generateApiKeyMutation.data && (
-          <PMVStack width="full" gap={3} alignItems={'stretch'}>
-            <PMAlert.Root status="success">
-              <PMAlert.Indicator />
-              <PMAlert.Title>API Key Generated Successfully!</PMAlert.Title>
-              <PMAlert.Description>
-                Copy this key now - it won't be shown again. Expires on{' '}
-                {formatExpirationDate(generateApiKeyMutation.data.expiresAt)}
-              </PMAlert.Description>
-            </PMAlert.Root>
+          <PMField.Root>
+            <PMField.Label>Your API Key</PMField.Label>
+            <CopiableTextarea
+              value={generateApiKeyMutation.data.apiKey}
+              readOnly
+              rows={4}
+              data-testid="generated-api-key"
+              width={'full'}
+            />
+          </PMField.Root>
+        </PMVStack>
+      )}
+    </PMVStack>
+  );
 
-            <PMField.Root>
-              <PMField.Label>Your API Key</PMField.Label>
-              <CopiableTextarea
-                value={generateApiKeyMutation.data.apiKey}
-                readOnly
-                rows={4}
-                data-testid="generated-api-key"
-                width={'full'}
-              />
-            </PMField.Root>
-          </PMVStack>
-        )}
-      </PMVStack>
+  return (
+    <PMPageSection title="CLI Authentication" variant="outline">
+      <PMTabs
+        defaultValue="login-command"
+        tabs={[
+          {
+            value: 'login-command',
+            triggerLabel: 'Login Command',
+            content: loginCommandTab,
+          },
+          {
+            value: 'env-var',
+            triggerLabel: 'Environment Variable',
+            content: envVarTab,
+          },
+        ]}
+      />
     </PMPageSection>
   );
 };

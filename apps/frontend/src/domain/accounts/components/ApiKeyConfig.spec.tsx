@@ -21,7 +21,7 @@ jest.mock('../api/queries/AuthQueries', () => ({
   useGenerateApiKeyMutation: jest.fn(),
 }));
 
-// Mock the CopiableTextarea component
+// Mock the CopiableTextarea and CopiableTextField components
 jest.mock('../../../shared/components/inputs', () => ({
   CopiableTextarea: ({
     value,
@@ -30,6 +30,13 @@ jest.mock('../../../shared/components/inputs', () => ({
     value: string;
     [key: string]: unknown;
   }) => <textarea value={value} readOnly {...props} />,
+  CopiableTextField: ({
+    value,
+    ...props
+  }: {
+    value: string;
+    [key: string]: unknown;
+  }) => <input value={value} readOnly {...props} />,
 }));
 
 const renderWithQueryClient = (component: React.ReactElement) => {
@@ -123,7 +130,7 @@ describe('ApiKeyConfig', () => {
     jest.clearAllMocks();
   });
 
-  it('should render API key section', () => {
+  it('renders CLI authentication section with tabs', () => {
     const mockQueryResult: MockQueryResult = {
       data: { hasApiKey: false },
       isLoading: false,
@@ -158,13 +165,12 @@ describe('ApiKeyConfig', () => {
 
     renderWithQueryClient(<ApiKeyConfig />);
 
-    expect(screen.getByText('API Key')).toBeInTheDocument();
-    expect(
-      screen.getByText(/Generate an API key for Packmind CLI/),
-    ).toBeInTheDocument();
+    expect(screen.getByText('CLI Authentication')).toBeInTheDocument();
+    expect(screen.getByText('Login Command')).toBeInTheDocument();
+    expect(screen.getByText('Environment Variable')).toBeInTheDocument();
   });
 
-  it('should show active API key info when user has a key', () => {
+  it('shows active API key info in Environment Variable tab when user has a key', async () => {
     const expirationDate = '2024-12-31T23:59:59.000Z';
 
     const mockQueryResult: MockQueryResult = {
@@ -201,14 +207,20 @@ describe('ApiKeyConfig', () => {
 
     renderWithQueryClient(<ApiKeyConfig />);
 
-    expect(screen.getByText('Active API Key')).toBeInTheDocument();
-    expect(
-      screen.getByText(/You have an active API key that expires on/),
-    ).toBeInTheDocument();
-    expect(screen.getByText('Generate New API Key')).toBeInTheDocument();
+    // Switch to Environment Variable tab
+    const envVarTab = screen.getByText('Environment Variable');
+    fireEvent.click(envVarTab);
+
+    await waitFor(() => {
+      expect(screen.getByText('Active API Key')).toBeInTheDocument();
+      expect(
+        screen.getByText(/You have an active API key that expires on/),
+      ).toBeInTheDocument();
+      expect(screen.getByText('Generate New API Key')).toBeInTheDocument();
+    });
   });
 
-  it('should show confirmation dialog when generating new key with existing key', async () => {
+  it('shows confirmation dialog when generating new key with existing key', async () => {
     const mockQueryResult: MockQueryResult = {
       data: { hasApiKey: true, expiresAt: '2024-12-31T23:59:59.000Z' },
       isLoading: false,
@@ -242,6 +254,14 @@ describe('ApiKeyConfig', () => {
     );
 
     renderWithQueryClient(<ApiKeyConfig />);
+
+    // Switch to Environment Variable tab
+    const envVarTab = screen.getByText('Environment Variable');
+    fireEvent.click(envVarTab);
+
+    await waitFor(() => {
+      expect(screen.getByText('Generate New API Key')).toBeInTheDocument();
+    });
 
     const generateButton = screen.getByText('Generate New API Key');
     fireEvent.click(generateButton);
