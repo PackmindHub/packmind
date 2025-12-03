@@ -28,6 +28,7 @@ import {
   IPullContentResponse,
   ListDeploymentsByRecipeCommand,
   ListDeploymentsByStandardCommand,
+  ListDeploymentsByPackageCommand,
   ListPackagesBySpaceCommand,
   ListPackagesBySpaceResponse,
   ListPackagesCommand,
@@ -41,6 +42,7 @@ import {
   UpdateRenderModeConfigurationCommand,
   UpdateTargetCommand,
 } from '../contracts';
+import { Distribution } from '../Distribution';
 import { PackagesDeployment } from '../PackagesDeployment';
 import { RecipesDeployment } from '../RecipesDeployment';
 import { RenderModeConfiguration } from '../RenderModeConfiguration';
@@ -137,6 +139,16 @@ export interface IDeploymentPort {
   listDeploymentsByStandard(
     command: ListDeploymentsByStandardCommand,
   ): Promise<StandardsDeployment[]>;
+
+  /**
+   * Lists all distributions for a specific package
+   *
+   * @param command - Command containing packageId and organizationId
+   * @returns Promise of Distribution entries that include the specified package
+   */
+  listDeploymentsByPackage(
+    command: ListDeploymentsByPackageCommand,
+  ): Promise<Distribution[]>;
 
   /**
    * Gets standard deployment overview for an organization

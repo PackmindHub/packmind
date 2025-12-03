@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import {
   DeploymentOverview,
+  Distribution,
   GetDeploymentOverviewCommand,
   GetStandardDeploymentOverviewCommand,
   ListDeploymentsByRecipeCommand,
   ListDeploymentsByStandardCommand,
+  ListDeploymentsByPackageCommand,
   PublishArtifactsCommand,
   PublishArtifactsResponse,
   PublishRecipesCommand,
@@ -49,6 +51,12 @@ export class DeploymentsService {
     command: ListDeploymentsByRecipeCommand,
   ): Promise<RecipesDeployment[]> {
     return this.deploymentAdapter.listDeploymentsByRecipe(command);
+  }
+
+  async listDeploymentsByPackage(
+    command: ListDeploymentsByPackageCommand,
+  ): Promise<Distribution[]> {
+    return this.deploymentAdapter.listDeploymentsByPackage(command);
   }
 
   async getStandardDeploymentOverview(

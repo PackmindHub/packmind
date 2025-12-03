@@ -5,6 +5,7 @@ export const DEPLOYMENTS_QUERY_SCOPE = 'deployments';
 export enum DeploymentQueryKeys {
   LIST_RECIPE_DEPLOYMENTS = 'list-recipe-deployments',
   LIST_STANDARD_DEPLOYMENTS = 'list-standard-deployments',
+  LIST_PACKAGE_DEPLOYMENTS = 'list-package-deployments',
   LIST_PACKAGES_BY_SPACE = 'list-packages-by-space',
   GET_PACKAGE_BY_ID = 'get-package-by-id',
   UPDATE_PACKAGE = 'update-package',
@@ -27,6 +28,12 @@ export const LIST_STANDARD_DEPLOYMENTS_KEY = [
   ORGANIZATION_QUERY_SCOPE,
   DEPLOYMENTS_QUERY_SCOPE,
   DeploymentQueryKeys.LIST_STANDARD_DEPLOYMENTS,
+] as const;
+
+export const LIST_PACKAGE_DEPLOYMENTS_KEY = [
+  ORGANIZATION_QUERY_SCOPE,
+  DEPLOYMENTS_QUERY_SCOPE,
+  DeploymentQueryKeys.LIST_PACKAGE_DEPLOYMENTS,
 ] as const;
 
 export const LIST_PACKAGES_BY_SPACE_KEY = [

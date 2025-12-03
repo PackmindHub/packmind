@@ -17,6 +17,15 @@ export const DistributedPackageSchema = new EntitySchema<DistributedPackage>({
     ...uuidSchema,
   },
   relations: {
+    distribution: {
+      type: 'many-to-one',
+      target: 'Distribution',
+      joinColumn: {
+        name: 'distribution_id',
+        referencedColumnName: 'id',
+      },
+      onDelete: 'CASCADE',
+    },
     package: {
       type: 'many-to-one',
       target: 'Package',
