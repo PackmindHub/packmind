@@ -58,7 +58,7 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Administration',
-      items: ['manage-users', 'manage-ai-agents'],
+      items: ['manage-users', 'manage-ai-agents', 'llm-configuration'],
     },
   ],
 };

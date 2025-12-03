@@ -10,7 +10,7 @@ Instead of managing dozens of individual items, packages let you group related g
 
 There are two ways to distribute packages to your team:
 
-1. **Pull locally via CLI** - Download packages directly to your local machine (no Git required)
+1. **Install locally via CLI** - Download packages directly to your local machine (no Git required)
 2. **Deploy to Git repositories** - Push packages to your repositories (requires Git configuration)
 
 These are alternative distribution methods—you can choose the approach that fits your workflow. You don't need to use both.
@@ -31,21 +31,21 @@ You can also add items to packages automatically when creating recipes or standa
 
 Once you've created packages, you can distribute them using either of these methods:
 
-### Option 1: Pull Locally
+### Option 1: Install Locally
 
 Download package content directly to your machine using the CLI:
 
 ```bash
-packmind-cli pull --list
+packmind-cli install --list
 ```
 
 ```bash
-packmind-cli pull backend-api frontend-web
+packmind-cli install backend-api frontend-web
 ```
 
 This creates the appropriate files for your AI coding assistant on your local machine without requiring Git.
 
-See the [CLI documentation](./cli.md#pull-command) for details.
+See the [CLI documentation](./cli.md#install-command) for details.
 
 ### Option 2: Deploy to Repositories
 

@@ -1,8 +1,16 @@
 # [Unreleased]
 
+## Added
+
+- AI provider is now configurable at organization level from the settings menu (#11)
+
 ## Changed
 
 - Structure and formulation of the rules generated through MCP has been improved (#13)
+
+## Fixed
+
+- Server error when switching organization from the rule pages.
 
 # [1.4.1] - 2025-11-25
 

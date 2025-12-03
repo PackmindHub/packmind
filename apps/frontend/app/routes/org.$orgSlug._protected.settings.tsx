@@ -12,9 +12,6 @@ import {
   useGetMeQuery,
 } from '../../src/domain/accounts/api/queries/UserQueries';
 import {
-  DEFAULT_FEATURE_DOMAIN_MAP,
-  isFeatureFlagEnabled,
-  LLM_CONFIGURATION_FEATURE_KEY,
   PMFlex,
   PMGrid,
   PMHeading,
@@ -77,13 +74,6 @@ export default function SettingsIndexRouteModule() {
   const navigate = useNavigate();
   const { orgSlug } = useParams();
 
-  const userEmail = me?.authenticated ? me.user.email : null;
-  const isLLMConfigurationEnabled = isFeatureFlagEnabled({
-    featureKeys: [LLM_CONFIGURATION_FEATURE_KEY],
-    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
-    userEmail,
-  });
-
   useEffect(() => {
     const hasAccessResponse = hasAccess(me);
     if (!hasAccessResponse.hasAccess) {
@@ -141,19 +131,17 @@ export default function SettingsIndexRouteModule() {
           ]}
         />
 
-        {isLLMConfigurationEnabled && (
-          <PMVerticalNavSection
-            title="AI"
-            navEntries={[
-              <SidebarNavigationLink
-                key="llm"
-                url={orgSlug ? routes.org.toSettingsLLM(orgSlug) : '#'}
-                label="Provider"
-                exact
-              />,
-            ]}
-          />
-        )}
+        <PMVerticalNavSection
+          title="AI"
+          navEntries={[
+            <SidebarNavigationLink
+              key="llm"
+              url={orgSlug ? routes.org.toSettingsLLM(orgSlug) : '#'}
+              label="Provider"
+              exact
+            />,
+          ]}
+        />
       </PMVerticalNav>
 
       <Outlet />

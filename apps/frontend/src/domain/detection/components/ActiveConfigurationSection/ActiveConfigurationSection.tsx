@@ -6,12 +6,8 @@ import {
   PMText,
   PMTooltip,
   PMVStack,
-  DETECTION_ASSESSMENT_DRAWER_FEATURE_KEY,
-  DEFAULT_FEATURE_DOMAIN_MAP,
-  isFeatureFlagEnabled,
 } from '@packmind/ui';
 import React from 'react';
-import { useGetMeQuery } from '../../../accounts/api/queries/UserQueries';
 import { RxQuestionMarkCircled } from 'react-icons/rx';
 import { ActiveConfigurationSectionProps } from './types';
 import {
@@ -33,14 +29,8 @@ export const ActiveConfigurationSection: React.FC<
   ActiveConfigurationSectionProps
 > = (props) => {
   const { configuration } = props;
-  const { data: meData } = useGetMeQuery();
-  const userEmail = meData?.authenticated === true ? meData.user.email : null;
 
-  const isAssessmentFeatureEnabled = isFeatureFlagEnabled({
-    featureKeys: [DETECTION_ASSESSMENT_DRAWER_FEATURE_KEY],
-    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
-    userEmail,
-  });
+  const isAssessmentFeatureEnabled = true;
 
   if (!configuration) {
     return null;

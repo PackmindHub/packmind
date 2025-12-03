@@ -20,9 +20,6 @@ export { PMStat } from './PMStat/PMStat';
 export {
   PMFeatureFlag,
   isFeatureFlagEnabled,
-  RULE_DETAILS_DETECTION_TAB_FEATURE_KEY,
-  LLM_CONFIGURATION_FEATURE_KEY,
-  DETECTION_ASSESSMENT_DRAWER_FEATURE_KEY,
   DEFAULT_FEATURE_DOMAIN_MAP,
 } from './PMFeatureFlag/PMFeatureFlag';
 export type { IPMFeatureFlagProps } from './PMFeatureFlag/PMFeatureFlag';

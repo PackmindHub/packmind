@@ -68,10 +68,6 @@ packmind-cli install
 
 This installs all packages defined in your `packmind.json` file.
 
-:::tip Command Alias
-The `pull` command is an alias for `install` and works identically. You can use either command.
-:::
-
 For detailed CLI usage, see the [CLI documentation](./cli.md).
 
 ## Understanding packmind.json
