@@ -1,5 +1,3 @@
-import { PackmindLogger } from '@packmind/logger';
-import { stubLogger } from '@packmind/test-utils';
 import { createUserId, createOrganizationId } from '@packmind/types';
 import { CreateCliLoginCodeUseCase } from './CreateCliLoginCodeUseCase';
 import { ICliLoginCodeRepository } from '../../../domain/repositories/ICliLoginCodeRepository';
@@ -11,7 +9,6 @@ import {
 describe('CreateCliLoginCodeUseCase', () => {
   let useCase: CreateCliLoginCodeUseCase;
   let mockRepository: jest.Mocked<ICliLoginCodeRepository>;
-  let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   const userId = createUserId('user-123');
   const organizationId = createOrganizationId('org-456');
@@ -26,9 +23,7 @@ describe('CreateCliLoginCodeUseCase', () => {
       deleteExpired: jest.fn(),
     } as jest.Mocked<ICliLoginCodeRepository>;
 
-    stubbedLogger = stubLogger();
-
-    useCase = new CreateCliLoginCodeUseCase(mockRepository, stubbedLogger);
+    useCase = new CreateCliLoginCodeUseCase(mockRepository);
   });
 
   afterEach(() => {
@@ -100,28 +95,6 @@ describe('CreateCliLoginCodeUseCase', () => {
 
         expect(mockRepository.add).toHaveBeenCalledTimes(1);
         expect(mockRepository.add).toHaveBeenCalledWith(
-          expect.objectContaining({
-            userId,
-            organizationId,
-          }),
-        );
-      });
-
-      it('logs info on successful creation', async () => {
-        const savedCode: CliLoginCode = {
-          id: 'code-id' as CliLoginCode['id'],
-          code: 'ABCD1234EF' as CliLoginCode['code'],
-          userId,
-          organizationId,
-          expiresAt: new Date(),
-        };
-
-        mockRepository.add.mockResolvedValue(savedCode);
-
-        await useCase.execute({ userId, organizationId });
-
-        expect(stubbedLogger.info).toHaveBeenCalledWith(
-          'CLI login code created',
           expect.objectContaining({
             userId,
             organizationId,
