@@ -16,6 +16,7 @@
         "bundle": true,
         "main": "apps/cli/src/main.ts",
         "tsConfig": "apps/cli/tsconfig.app.json",
+        "excludeFromExternal": ["cmd-ts", "chalk"],
         "assets": [
           {
             "input": "apps/cli/src/assets",
