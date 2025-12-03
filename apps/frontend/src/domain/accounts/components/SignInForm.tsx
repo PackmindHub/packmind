@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { SignInUserResponse } from '@packmind/types';
 import SignInCredentialsForm from './SignInCredentialsForm';
 import OrganizationSelectionForm from './OrganizationSelectionForm';
@@ -11,11 +11,21 @@ export default function SignInForm() {
     null,
   );
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnUrl = searchParams.get('returnUrl');
+
+  const getRedirectUrl = (orgSlug: string) => {
+    // If returnUrl is provided and starts with /, use it (must be an internal path)
+    if (returnUrl && returnUrl.startsWith('/')) {
+      return returnUrl;
+    }
+    return routes.org.toDashboard(orgSlug);
+  };
 
   const handleSignInSuccess = (data: SignInUserResponse) => {
     // If user belongs to a single organization, redirect immediately
     if (data.organization) {
-      navigate(routes.org.toDashboard(data.organization.slug));
+      navigate(getRedirectUrl(data.organization.slug));
     } else if (data.organizations) {
       // Store the result to show organization selection
       setSignInResult(data);
@@ -33,7 +43,12 @@ export default function SignInForm() {
 
   // If we have multiple organizations, show organization selection
   if (signInResult?.organizations && signInResult.organizations.length > 0) {
-    return <OrganizationSelectionForm signInResult={signInResult} />;
+    return (
+      <OrganizationSelectionForm
+        signInResult={signInResult}
+        returnUrl={returnUrl}
+      />
+    );
   }
 
   // Default: show sign-in form
