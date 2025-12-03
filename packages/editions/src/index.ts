@@ -5,3 +5,4 @@ export * from './oss/linter-ast';
 export * from './oss/amplitude';
 export * from './oss/apiHexaPlugins';
 export * from './oss/mcpHexaPlugins';
+export * from './oss/practices-import-legacy';

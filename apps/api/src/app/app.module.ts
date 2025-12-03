@@ -22,6 +22,10 @@ import {
   AnalyticsModule,
   recipesUsageSchemas,
 } from '@packmind/analytics';
+import {
+  ImportLegacyModule,
+  ImportPracticeLegacyHexa,
+} from '@packmind/import-practices-legacy';
 import { LinterHexa, LinterModule, linterSchemas } from '@packmind/linter';
 import { JobsService } from '@packmind/node-utils';
 import { OrganizationsModule as AccountsOrganizationsModule } from './accounts/organizations/organizations.module';
@@ -92,6 +96,7 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
         AnalyticsHexa,
         LinterHexa, // Must come before StandardsHexa (StandardsHexa depends on LinterHexa)
         StandardsHexa,
+        ImportPracticeLegacyHexa, // After StandardsHexa (depends on Linter/Standards ports)
         CodingAgentHexa,
         DeploymentsHexa,
       ],
@@ -107,6 +112,7 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
     SSEModule,
     AmplitudeModule,
     LinterModule,
+    ImportLegacyModule,
     // RouterModule configuration for organization-scoped routes
     // This must come after OrganizationsModule and its child modules are imported
     RouterModule.register([

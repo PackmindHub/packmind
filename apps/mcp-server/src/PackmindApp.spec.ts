@@ -10,6 +10,7 @@ import { JobsService, PackmindEventEmitterService } from '@packmind/node-utils';
 import { RecipesHexa } from '@packmind/recipes';
 import { SpacesHexa } from '@packmind/spaces';
 import { StandardsHexa } from '@packmind/standards';
+import { ImportPracticeLegacyHexa } from '@packmind/import-practices-legacy';
 import { DataSource } from 'typeorm';
 import { getPackmindAppDefinition, initializePackmindApp } from './PackmindApp';
 
@@ -50,6 +51,7 @@ describe('PackmindApp MCP Server', () => {
         CodingAgentHexa,
         DeploymentsHexa,
         AnalyticsHexa,
+        ImportPracticeLegacyHexa,
       ]);
     });
 

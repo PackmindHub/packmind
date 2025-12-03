@@ -50,8 +50,10 @@ import {
   CopyLinterArtefactsResponse,
   GetDetectionProgramsForPackagesCommand,
   GetDetectionProgramsForPackagesResponse,
+  CreateEmptyRuleDetectionAssessmentCommand,
+  CreateEmptyRuleDetectionAssessmentResponse,
+  ILinterPort,
 } from '@packmind/types';
-import { ILinterPort } from '@packmind/types';
 import { LinterUsecases } from '.';
 
 export class LinterAdapter implements ILinterPort {
@@ -242,6 +244,13 @@ export class LinterAdapter implements ILinterPort {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     command: GetDetectionProgramsForPackagesCommand,
   ): Promise<GetDetectionProgramsForPackagesResponse> {
+    throw new Error('Method not implemented.');
+  }
+
+  createEmptyRuleDetectionAssessment(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    command: CreateEmptyRuleDetectionAssessmentCommand,
+  ): Promise<CreateEmptyRuleDetectionAssessmentResponse> {
     throw new Error('Method not implemented.');
   }
 }
