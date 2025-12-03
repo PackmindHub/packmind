@@ -4,7 +4,7 @@
 
 The Packmind CLI provides two main commands:
 
-- **`pull`** - Download packages locally
+- **`install`** - Download packages locally
 - **`lint`** - Run detection programs (Enterprise only)
 
 ## Installation
@@ -22,7 +22,7 @@ After installation, the `packmind-cli` command will be available globally.
 **npx** (no installation required):
 
 ```bash
-npx @packmind/cli pull --list
+npx @packmind/cli install --list
 ```
 
 This runs the CLI directly without installing it, always using the latest version.
@@ -87,38 +87,38 @@ echo 'export PACKMIND_API_KEY_V3="your-api-key-here"' >> ~/.zshrc
 source ~/.zshrc
 ```
 
-## Pull Command
+## Install Command
 
 Download recipes and standards from packages to your local machine.
 
 ### List Available Packages
 
 ```bash
-packmind-cli pull --list
+packmind-cli install --list
 ```
 
 ### View Package Details
 
 ```bash
-packmind-cli pull --show <package-slug>
+packmind-cli install --show <package-slug>
 ```
 
-### Pull Packages
+### Install Packages
 
 ```bash
-packmind-cli pull <package-slug> [additional-package-slugs...]
+packmind-cli install <package-slug> [additional-package-slugs...]
 ```
 
 **Example:**
 
 ```bash
-packmind-cli pull backend frontend
+packmind-cli install backend frontend
 ```
 
 This downloads all recipes and standards from the specified packages and creates the appropriate files for your AI coding assistant.
 
 :::tip AI Agent Rendering
-The files created by the pull command depend on which AI agents are enabled in your organization settings. The CLI respects your organization's configured agents and creates instruction files accordingly (e.g., `AGENTS.md`, `.cursor/rules/`, `.github/copilot-instructions.md`).
+The files created by the install command depend on which AI agents are enabled in your organization settings. The CLI respects your organization's configured agents and creates instruction files accordingly (e.g., `AGENTS.md`, `.cursor/rules/`, `.github/copilot-instructions.md`).
 
 The `.packmind/` directory is always created regardless of your configuration.
 
