@@ -2,6 +2,10 @@
 
 ## Added
 
+- Add `login` command to authenticate via browser with automatic callback #31
+- Add `logout` command to clear stored credentials #31
+- Add `whoami` command to display current authentication status #31
+
 ## Changed
 
 ## Fixed

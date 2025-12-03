@@ -178,6 +178,25 @@ For production distribution, the GitHub Actions workflow automatically signs mac
 
 ## Usage
 
+### Authentication Commands
+
+```bash
+# Login via browser (recommended)
+packmind-cli login
+
+# Login to self-hosted instance
+packmind-cli login --host https://your-instance.com
+
+# Login with manual code
+packmind-cli login --code YOUR_CODE
+
+# Check authentication status
+packmind-cli whoami
+
+# Logout (clear credentials)
+packmind-cli logout
+```
+
 ### Basic Commands
 
 ```bash
