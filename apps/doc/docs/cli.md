@@ -2,8 +2,11 @@
 
 ## Overview
 
-The Packmind CLI provides two main commands:
+The Packmind CLI provides the following commands:
 
+- **`login`** - Authenticate with your Packmind instance
+- **`logout`** - Clear stored credentials
+- **`whoami`** - Show current authentication status
 - **`install`** - Download packages locally
 - **`lint`** - Run detection programs (Enterprise only)
 
@@ -62,17 +65,80 @@ sudo mv packmind-cli-*-{version} /usr/local/bin/packmind-cli
 
 ## Authentication
 
-The CLI requires an API key to authenticate with your Packmind instance.
+The CLI requires authentication to communicate with your Packmind instance.
 
-### Getting Your API Key
+### Login Command (Recommended)
+
+The easiest way to authenticate is using the `login` command:
+
+```bash
+packmind-cli login
+```
+
+This will:
+
+1. Open your browser to the Packmind login page
+2. After you authenticate, automatically receive credentials
+3. Store credentials securely in `~/.packmind/credentials.json`
+
+**For self-hosted instances**, specify your host:
+
+```bash
+packmind-cli login --host https://your-packmind-instance.com
+```
+
+**Manual code entry** (if browser flow doesn't work):
+
+You can also enter a login code manually from the web interface:
+
+```bash
+packmind-cli login --code YOUR_CODE_HERE
+```
+
+### Logout Command
+
+To clear stored credentials:
+
+```bash
+packmind-cli logout
+```
+
+This removes the credentials file. If you also have `PACKMIND_API_KEY_V3` set as an environment variable, you'll need to unset it separately:
+
+```bash
+unset PACKMIND_API_KEY_V3
+```
+
+### Whoami Command
+
+Check your current authentication status:
+
+```bash
+packmind-cli whoami
+```
+
+This displays:
+
+- Your API key (masked)
+- Connected host
+- Organization name
+- User name
+- Credential expiration status
+
+### Alternative: Environment Variable
+
+You can also authenticate using an environment variable. This is useful for CI/CD pipelines or when you prefer not to store credentials in a file.
+
+#### Getting Your API Key
 
 1. Log in to your Packmind instance (Cloud or self-hosted)
 2. Navigate to **Settings** (click your profile icon in the top right)
-3. Scroll to the **API Key** section
-4. Click **Generate New Key** to create an API key (valid for 90 days)
-5. Copy the generated key
+3. Scroll to the **CLI Authentication** section
+4. Go to the **Environment Variable** tab
+5. Click **Generate New Key** to create an API key (valid for 90 days)
+6. Copy the generated key
 
-### Setting the API Key
+#### Setting the API Key
 
 Set the API key as an environment variable:
 
@@ -86,6 +152,10 @@ To make this permanent, add it to your shell configuration file (`~/.bashrc`, `~
 echo 'export PACKMIND_API_KEY_V3="your-api-key-here"' >> ~/.zshrc
 source ~/.zshrc
 ```
+
+:::tip Credential Priority
+When both a credentials file and environment variable exist, the environment variable takes precedence.
+:::
 
 ## Install Command
 
