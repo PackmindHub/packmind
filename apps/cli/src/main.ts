@@ -7,6 +7,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { pullCommand } from './infra/commands/PullCommand';
 import { loginCommand } from './infra/commands/LoginCommand';
+import { whoamiCommand } from './infra/commands/WhoamiCommand';
 import { GitService } from './application/services/GitService';
 import { logErrorConsole } from './infra/utils/consoleLogger';
 
@@ -85,6 +86,7 @@ const app = subcommands({
     pull: pullCommand,
     install: pullCommand,
     login: loginCommand,
+    whoami: whoamiCommand,
   },
 });
 

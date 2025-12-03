@@ -1,4 +1,5 @@
 import { command, option, string } from 'cmd-ts';
+import * as http from 'http';
 import * as readline from 'readline';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -13,6 +14,8 @@ import {
 const DEFAULT_HOST = 'https://app.packmind.com';
 const CREDENTIALS_DIR = '.packmind';
 const CREDENTIALS_FILE = 'credentials.json';
+const CALLBACK_PORT = 19284;
+const CALLBACK_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
 
 interface Credentials {
   apiKey: string;
@@ -112,10 +115,88 @@ function openBrowser(url: string): void {
   });
 }
 
+/**
+ * Start a local HTTP server to receive the callback from the browser.
+ * Returns a promise that resolves with the code when received.
+ */
+function startCallbackServer(): Promise<{ code: string; server: http.Server }> {
+  return new Promise((resolve, reject) => {
+    const server = http.createServer((req, res) => {
+      // Set CORS headers to allow browser redirect
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET');
+
+      const url = new URL(req.url || '/', `http://localhost:${CALLBACK_PORT}`);
+      const code = url.searchParams.get('code');
+
+      if (code) {
+        // Send success response to browser
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.end(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Packmind CLI Login</title>
+            <style>
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+                background: #f5f5f5;
+              }
+              .container {
+                text-align: center;
+                padding: 40px;
+                background: white;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+              }
+              h1 { color: #22c55e; margin-bottom: 16px; }
+              p { color: #666; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h1>Login Successful!</h1>
+              <p>You can close this window and return to your terminal.</p>
+            </div>
+          </body>
+          </html>
+        `);
+
+        resolve({ code, server });
+      } else {
+        res.writeHead(400, { 'Content-Type': 'text/plain' });
+        res.end('Missing code parameter');
+      }
+    });
+
+    server.on('error', (err: NodeJS.ErrnoException) => {
+      if (err.code === 'EADDRINUSE') {
+        reject(new Error(`Port ${CALLBACK_PORT} is already in use`));
+      } else {
+        reject(err);
+      }
+    });
+
+    server.listen(CALLBACK_PORT, '127.0.0.1', () => {
+      // Server started successfully
+    });
+
+    // Timeout after 5 minutes
+    setTimeout(() => {
+      server.close();
+      reject(new Error('Login timed out. Please try again.'));
+    }, CALLBACK_TIMEOUT_MS);
+  });
+}
+
 export const loginCommand = command({
   name: 'login',
-  description:
-    'Authenticate with Packmind by logging in through the browser and entering the code',
+  description: 'Authenticate with Packmind by logging in through the browser',
   args: {
     host: option({
       type: string,
@@ -125,18 +206,51 @@ export const loginCommand = command({
     }),
   },
   handler: async ({ host }) => {
+    let server: http.Server | null = null;
+
     try {
-      const loginUrl = `${host}/cli-login`;
+      // Try to start the callback server
+      let useCallback = true;
+      let callbackPromise: Promise<{
+        code: string;
+        server: http.Server;
+      }> | null = null;
+
+      try {
+        callbackPromise = startCallbackServer();
+      } catch {
+        useCallback = false;
+      }
+
+      const callbackUrl = `http://127.0.0.1:${CALLBACK_PORT}`;
+      const loginUrl = useCallback
+        ? `${host}/cli-login?callback_url=${encodeURIComponent(callbackUrl)}`
+        : `${host}/cli-login`;
 
       console.log('\nOpening browser for authentication...');
       console.log(`\nIf the browser doesn't open, visit: ${loginUrl}\n`);
 
       openBrowser(loginUrl);
 
-      const code = await promptForCode();
+      let code: string;
+
+      if (useCallback && callbackPromise) {
+        logInfoConsole('Waiting for browser authentication...');
+        try {
+          const result = await callbackPromise;
+          code = result.code;
+          server = result.server;
+        } catch {
+          // Fallback to manual code entry
+          useCallback = false;
+          code = await promptForCode();
+        }
+      } else {
+        code = await promptForCode();
+      }
 
       if (!code) {
-        logErrorConsole('No code entered. Login cancelled.');
+        logErrorConsole('No code received. Login cancelled.');
         process.exit(1);
       }
 
@@ -164,6 +278,11 @@ export const loginCommand = command({
         logErrorConsole(String(error));
       }
       process.exit(1);
+    } finally {
+      // Clean up server
+      if (server) {
+        server.close();
+      }
     }
   },
 });

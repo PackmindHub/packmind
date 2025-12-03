@@ -6,23 +6,25 @@ import {
   PMBox,
   PMText,
   PMButton,
-  PMHStack,
-  PMInput,
   PMSpinner,
-  PMIcon,
+  PMAlert,
+  PMCopiable,
+  PMInputGroup,
+  PMInput,
+  PMIconButton,
 } from '@packmind/ui';
-import { LuCopy, LuCheck } from 'react-icons/lu';
+import { LuCopy } from 'react-icons/lu';
 import { useGetMeQuery } from '../../src/domain/accounts/api/queries';
 import { AuthGatewayApi } from '../../src/domain/accounts/api/gateways/AuthGatewayApi';
 
 export default function CliLoginRoute() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [copied, setCopied] = useState(false);
   const [code, setCode] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<Date | null>(null);
   const [codeLoading, setCodeLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [redirecting, setRedirecting] = useState(false);
 
   const callbackUrl = searchParams.get('callback_url');
 
@@ -59,25 +61,18 @@ export default function CliLoginRoute() {
     loadCode();
   }, [me?.authenticated]);
 
-  const handleCopy = async () => {
-    if (!code) return;
-
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Fallback for older browsers
-      const textArea = document.createElement('textarea');
-      textArea.value = code;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+  // Auto-redirect to CLI callback if provided
+  useEffect(() => {
+    if (code && callbackUrl) {
+      setRedirecting(true);
+      const redirectUrl = `${callbackUrl}?code=${encodeURIComponent(code)}`;
+      // Small delay to show the code before redirecting
+      const timer = setTimeout(() => {
+        window.location.href = redirectUrl;
+      }, 1500);
+      return () => clearTimeout(timer);
     }
-  };
+  }, [code, callbackUrl]);
 
   const formatExpiresAt = (date: Date) => {
     const minutes = Math.ceil((date.getTime() - Date.now()) / 60000);
@@ -89,9 +84,12 @@ export default function CliLoginRoute() {
   // Show loading while checking auth or loading code
   if (authLoading || codeLoading || (!me?.authenticated && !error)) {
     return (
-      <PMVStack gap={6} align="center" py={8}>
+      <PMVStack gap={6} align="center">
+        <PMBox textAlign="center">
+          <PMHeading level="h2">CLI Login</PMHeading>
+        </PMBox>
         <PMSpinner size="lg" />
-        <PMText>
+        <PMText color="secondary">
           {authLoading
             ? 'Checking authentication...'
             : 'Generating login code...'}
@@ -106,10 +104,29 @@ export default function CliLoginRoute() {
         <PMBox textAlign="center">
           <PMHeading level="h2">CLI Login</PMHeading>
         </PMBox>
-        <PMText color="error" textAlign="center">
-          {error}
-        </PMText>
+        <PMAlert.Root status="error">
+          <PMAlert.Indicator />
+          <PMAlert.Title>{error}</PMAlert.Title>
+        </PMAlert.Root>
         <PMButton onClick={() => window.location.reload()}>Try Again</PMButton>
+      </PMVStack>
+    );
+  }
+
+  if (redirecting) {
+    return (
+      <PMVStack gap={6} align="center">
+        <PMBox textAlign="center">
+          <PMHeading level="h2">CLI Login</PMHeading>
+        </PMBox>
+        <PMAlert.Root status="success">
+          <PMAlert.Indicator />
+          <PMAlert.Content>
+            <PMAlert.Title>Code generated successfully!</PMAlert.Title>
+            <PMAlert.Description>Redirecting to the CLI...</PMAlert.Description>
+          </PMAlert.Content>
+        </PMAlert.Root>
+        <PMSpinner size="lg" />
       </PMVStack>
     );
   }
@@ -120,62 +137,47 @@ export default function CliLoginRoute() {
         <PMHeading level="h2">CLI Login</PMHeading>
       </PMBox>
 
-      <PMText textAlign="center">
+      <PMText textAlign="center" color="secondary">
         Copy the code below and paste it into the CLI to complete the login.
       </PMText>
 
-      <PMBox
-        bg="gray.100"
-        p={4}
-        borderRadius="md"
-        fontFamily="mono"
-        fontSize="2xl"
-        textAlign="center"
-        letterSpacing="0.2em"
-      >
-        <PMHStack justify="center" gap={4}>
+      <PMCopiable.Root value={code || ''}>
+        <PMInputGroup
+          endElement={
+            <PMCopiable.Trigger asChild>
+              <PMIconButton
+                aria-label="Copy to clipboard"
+                variant="outline"
+                size="sm"
+                me="-2"
+              >
+                <PMCopiable.Indicator copied="Copied!">
+                  <LuCopy />
+                </PMCopiable.Indicator>
+              </PMIconButton>
+            </PMCopiable.Trigger>
+          }
+        >
           <PMInput
             value={code || ''}
             readOnly
             textAlign="center"
-            fontSize="2xl"
             fontFamily="mono"
-            letterSpacing="0.2em"
             fontWeight="bold"
-            bg="white"
-            borderColor="gray.300"
+            letterSpacing="0.1em"
           />
-          <PMButton
-            onClick={handleCopy}
-            variant={copied ? 'secondary' : 'primary'}
-            size="lg"
-          >
-            <PMHStack gap={2}>
-              <PMIcon as={copied ? LuCheck : LuCopy} />
-              <span>{copied ? 'Copied!' : 'Copy'}</span>
-            </PMHStack>
-          </PMButton>
-        </PMHStack>
-      </PMBox>
+        </PMInputGroup>
+      </PMCopiable.Root>
 
       {expiresAt && (
-        <PMText textAlign="center" color="faded" variant="small">
+        <PMText textAlign="center" color="secondary" variant="small">
           {formatExpiresAt(expiresAt)}
         </PMText>
       )}
 
-      {callbackUrl && (
-        <PMText textAlign="center" color="faded" variant="small">
-          The CLI is waiting at: {callbackUrl}
-        </PMText>
-      )}
-
-      <PMBox mt={4} textAlign="center">
-        <PMText variant="small" color="tertiary">
-          This code will only work once and is tied to your current
-          organization.
-        </PMText>
-      </PMBox>
+      <PMText textAlign="center" variant="small" color="tertiary">
+        This code will only work once and is tied to your current organization.
+      </PMText>
     </PMVStack>
   );
 }
