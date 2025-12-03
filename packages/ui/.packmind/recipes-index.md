@@ -4,7 +4,7 @@ This recipes index contains all available coding recipes that can be used by AI 
 
 ## Available Recipes
 
-No recipes available.
+- [Wrapping Chakra UI with Slot Components](recipes/wrapping-chakra-ui-with-slot-components.md) : Create slot components to wrap Chakra UI primitives for enhanced custom composition and API consistency in your design system.
 
 
 ---

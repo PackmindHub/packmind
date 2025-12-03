@@ -81,6 +81,6 @@ When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you
 
 ## Available recipes
 
-* [Create New Package in Monorepo](.packmind/recipes/create-new-package-in-monorepo.md): Create a new buildable TypeScript package in the Packmind monorepo using Nx tools to establish a shared library for code reuse across applications and packages when setting up common utilities or implementing domain-specific logic.
-* [How to Write TypeORM Migrations in Packmind](.packmind/recipes/how-to-write-typeorm-migrations-in-packmind.md): Write TypeORM migrations in the Packmind monorepo to manage and version database schema changes with consistent logging, reversible rollbacks, and shared helpers so you can safely create or modify tables, columns, and foreign-key relationships whenever schema changes need to be tracked and reversible.
+* [Working with Git Worktrees in Cursor](.packmind/recipes/working-with-git-worktrees-in-cursor.md): Enable parallel development on multiple branches simultaneously without switching contexts, with automatic setup and clean commit integration.
+* [Creating End-User Documentation for Packmind](.packmind/recipes/creating-end-user-documentation-for-packmind.md): Create clear and concise end-user documentation for Packmind features to empower users in accomplishing their tasks effectively while avoiding unnecessary technical details.
 <!-- end: Packmind recipes -->
