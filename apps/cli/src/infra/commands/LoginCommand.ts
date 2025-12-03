@@ -4,7 +4,7 @@ import * as readline from 'readline';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { exec } from 'child_process';
+import open from 'open';
 import {
   logSuccessConsole,
   logErrorConsole,
@@ -95,24 +95,13 @@ async function promptForCode(): Promise<string> {
   });
 }
 
-function openBrowser(url: string): void {
-  const platform = process.platform;
-
-  let openCommand: string;
-  if (platform === 'darwin') {
-    openCommand = `open "${url}"`;
-  } else if (platform === 'win32') {
-    openCommand = `start "" "${url}"`;
-  } else {
-    openCommand = `xdg-open "${url}"`;
+async function openBrowser(url: string): Promise<void> {
+  try {
+    await open(url);
+  } catch {
+    console.log(`\nCould not open browser automatically.`);
+    console.log(`Please open this URL manually: ${url}\n`);
   }
-
-  exec(openCommand, (error: Error | null) => {
-    if (error) {
-      console.log(`\nCould not open browser automatically.`);
-      console.log(`Please open this URL manually: ${url}\n`);
-    }
-  });
 }
 
 /**
@@ -211,7 +200,7 @@ export const loginCommand = command({
         console.log('\nOpening browser for authentication...');
         console.log(`\nIf the browser doesn't open, visit: ${loginUrl}\n`);
 
-        openBrowser(loginUrl);
+        await openBrowser(loginUrl);
 
         logInfoConsole('Waiting for browser authentication...');
         try {
