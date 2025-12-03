@@ -23,6 +23,7 @@ import { ListPackagesUseCase } from './application/useCases/ListPackagesUseCase'
 import { IGetPackageSummaryUseCase } from './domain/useCases/IGetPackageSummaryUseCase';
 import { GetPackageSummaryUseCase } from './application/useCases/GetPackageSummaryUseCase';
 import { ConfigFileRepository } from './infra/repositories/ConfigFileRepository';
+import { loadApiKey } from './infra/utils/credentialsLoader';
 
 export class PackmindCliHexaFactory {
   public repositories: IPackmindRepositories;
@@ -41,9 +42,7 @@ export class PackmindCliHexaFactory {
 
   constructor(private readonly logger: PackmindLogger) {
     this.repositories = {
-      packmindGateway: new PackmindGateway(
-        process.env.PACKMIND_API_KEY_V3 || '',
-      ),
+      packmindGateway: new PackmindGateway(loadApiKey()),
       configFileRepository: new ConfigFileRepository(),
     };
 

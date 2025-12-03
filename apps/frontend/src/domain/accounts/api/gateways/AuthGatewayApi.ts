@@ -13,6 +13,7 @@ import {
   GetMcpTokenResponse,
   GetMcpUrlCommand,
   GetMcpUrlResponse,
+  CreateCliLoginCodeResponse,
 } from '@packmind/types';
 import {
   CheckEmailAvailabilityCommand,
@@ -152,6 +153,13 @@ export class AuthGatewayApi extends PackmindGateway implements IAuthGateway {
     return this._api.post<SelectOrganizationResponse>(
       `${this._endpoint}/selectOrganization`,
       request,
+    );
+  }
+
+  async createCliLoginCode(): Promise<CreateCliLoginCodeResponse> {
+    return this._api.post<CreateCliLoginCodeResponse>(
+      `${this._endpoint}/cli-login-code`,
+      {},
     );
   }
 }

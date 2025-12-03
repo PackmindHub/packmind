@@ -5,9 +5,13 @@ import {
   ChangeUserRoleResponse,
   CheckEmailAvailabilityCommand,
   CheckEmailAvailabilityResponse,
+  CreateCliLoginCodeCommand,
+  CreateCliLoginCodeResponse,
   CreateInvitationsCommand,
   CreateInvitationsResponse,
   CreateOrganizationCommand,
+  ExchangeCliLoginCodeCommand,
+  ExchangeCliLoginCodeResponse,
   GenerateApiKeyCommand,
   GenerateApiKeyResponse,
   GenerateUserTokenCommand,
@@ -149,4 +153,13 @@ export interface IAccountsPort {
   getOrganizationOnboardingStatus(
     command: GetOrganizationOnboardingStatusCommand,
   ): Promise<OrganizationOnboardingStatus>;
+
+  // CLI login operations
+  createCliLoginCode(
+    command: CreateCliLoginCodeCommand,
+  ): Promise<CreateCliLoginCodeResponse>;
+
+  exchangeCliLoginCode(
+    command: ExchangeCliLoginCodeCommand,
+  ): Promise<ExchangeCliLoginCodeResponse>;
 }

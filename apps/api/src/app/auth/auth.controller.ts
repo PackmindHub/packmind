@@ -32,6 +32,11 @@ import {
   RequestPasswordResetResponse,
   TooManyLoginAttemptsError,
   InvalidEmailOrPasswordError,
+  CreateCliLoginCodeResponse,
+  ExchangeCliLoginCodeCommand,
+  ExchangeCliLoginCodeResponse,
+  CliLoginCodeExpiredError,
+  CliLoginCodeNotFoundError,
 } from '@packmind/accounts';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { Configuration } from '@packmind/node-utils';
@@ -598,6 +603,78 @@ export class AuthController {
           error: getErrorMessage(error),
         },
       );
+      throw error;
+    }
+  }
+
+  @Post('cli-login-code')
+  @HttpCode(HttpStatus.CREATED)
+  async createCliLoginCode(
+    @Req() request: AuthenticatedRequest,
+  ): Promise<CreateCliLoginCodeResponse> {
+    this.logger.log('POST /auth/cli-login-code - Creating CLI login code', {
+      userId: request.user.userId,
+      organizationId: request.organization.id,
+    });
+
+    try {
+      const result = await this.authService.createCliLoginCode(request);
+
+      this.logger.log(
+        'POST /auth/cli-login-code - CLI login code created successfully',
+        {
+          userId: request.user.userId,
+          expiresAt: result.expiresAt.toISOString(),
+        },
+      );
+
+      return result;
+    } catch (error) {
+      this.logger.error(
+        'POST /auth/cli-login-code - Failed to create CLI login code',
+        {
+          userId: request.user.userId,
+          error: getErrorMessage(error),
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Public()
+  @Post('cli-login-exchange')
+  @HttpCode(HttpStatus.OK)
+  async exchangeCliLoginCode(
+    @Body() body: ExchangeCliLoginCodeCommand,
+  ): Promise<ExchangeCliLoginCodeResponse> {
+    this.logger.log(
+      'POST /auth/cli-login-exchange - Exchanging CLI login code',
+    );
+
+    try {
+      const result = await this.authService.exchangeCliLoginCode(body);
+
+      this.logger.log(
+        'POST /auth/cli-login-exchange - CLI login code exchanged successfully',
+      );
+
+      return result;
+    } catch (error) {
+      this.logger.error(
+        'POST /auth/cli-login-exchange - Failed to exchange CLI login code',
+        {
+          error: getErrorMessage(error),
+        },
+      );
+
+      // Handle specific domain errors with appropriate HTTP status codes
+      if (error instanceof CliLoginCodeNotFoundError) {
+        throw new HttpException(error.message, HttpStatus.NOT_FOUND);
+      }
+      if (error instanceof CliLoginCodeExpiredError) {
+        throw new HttpException(error.message, HttpStatus.GONE);
+      }
+
       throw error;
     }
   }

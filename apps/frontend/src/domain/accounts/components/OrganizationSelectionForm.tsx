@@ -13,10 +13,12 @@ import { routes } from '../../../shared/utils/routes';
 
 interface OrganizationSelectionFormProps {
   signInResult: SignInUserResponse;
+  returnUrl?: string | null;
 }
 
 export default function OrganizationSelectionForm({
   signInResult,
+  returnUrl,
 }: OrganizationSelectionFormProps) {
   const [selectedOrganizationSlug, setSelectedOrganizationSlug] = useState('');
   const [errors, setErrors] = useState<{
@@ -25,6 +27,14 @@ export default function OrganizationSelectionForm({
 
   const selectOrganizationMutation = useSelectOrganizationMutation();
   const navigate = useNavigate();
+
+  const getRedirectUrl = (orgSlug: string) => {
+    // If returnUrl is provided and starts with /, use it (must be an internal path)
+    if (returnUrl && returnUrl.startsWith('/')) {
+      return returnUrl;
+    }
+    return routes.org.toDashboard(orgSlug);
+  };
 
   const handleOrganizationSelect = async () => {
     if (!selectedOrganizationSlug || !signInResult) {
@@ -48,8 +58,8 @@ export default function OrganizationSelectionForm({
         organizationId: selectedOrg.organization.id,
       });
 
-      // Navigate to the selected organization's dashboard
-      navigate(routes.org.toDashboard(selectedOrganizationSlug));
+      // Navigate to the return URL or the selected organization's dashboard
+      navigate(getRedirectUrl(selectedOrganizationSlug));
     } catch (error) {
       // Use the actual error message from the server when available
       let errorMessage = 'Failed to select organization';

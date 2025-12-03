@@ -5,6 +5,7 @@ import { ApiKeyService } from './ApiKeyService';
 import { LoginRateLimiterService } from './LoginRateLimiterService';
 import { PasswordResetTokenService } from './PasswordResetTokenService';
 import { IAccountsRepositories } from '../../domain/repositories/IAccountsRepositories';
+import { ICliLoginCodeRepository } from '../../domain/repositories/ICliLoginCodeRepository';
 import { PackmindLogger } from '@packmind/logger';
 import { SmtpMailService } from '@packmind/node-utils';
 
@@ -77,5 +78,9 @@ export class EnhancedAccountsServices {
 
   getPasswordResetTokenService(): PasswordResetTokenService {
     return this.passwordResetTokenService;
+  }
+
+  getCliLoginCodeRepository(): ICliLoginCodeRepository {
+    return this.accountsRepositories.getCliLoginCodeRepository();
   }
 }

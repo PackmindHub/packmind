@@ -2,8 +2,14 @@
 export { ActivateUserAccountUseCase } from './activateUserAccount/ActivateUserAccountUseCase';
 export { ChangeUserRoleUseCase } from './changeUserRole/ChangeUserRoleUseCase';
 export { CheckEmailAvailabilityUseCase } from './checkEmailAvailability/CheckEmailAvailabilityUseCase';
+export { CreateCliLoginCodeUseCase } from './createCliLoginCode/CreateCliLoginCodeUseCase';
 export { CreateInvitationsUseCase } from './createInvitations/CreateInvitationsUseCase';
 export { CreateOrganizationUseCase } from './createOrganization/CreateOrganizationUseCase';
+export {
+  ExchangeCliLoginCodeUseCase,
+  CliLoginCodeNotFoundError,
+  CliLoginCodeExpiredError,
+} from './exchangeCliLoginCode/ExchangeCliLoginCodeUseCase';
 export { GenerateApiKeyUseCase } from './generateApiKey/GenerateApiKeyUseCase';
 export { GenerateUserTokenUseCase } from './generateUserToken/GenerateUserTokenUseCase';
 export { GetCurrentApiKeyUseCase } from './getCurrentApiKey/GetCurrentApiKeyUseCase';

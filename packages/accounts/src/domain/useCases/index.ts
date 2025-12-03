@@ -88,4 +88,12 @@ export type {
   IGetCurrentApiKeyUseCase,
   GetCurrentApiKeyCommand,
   GetCurrentApiKeyResponse,
+
+  // CLI Login Codes
+  ICreateCliLoginCodeUseCase,
+  CreateCliLoginCodeCommand,
+  CreateCliLoginCodeResponse,
+  IExchangeCliLoginCodeUseCase,
+  ExchangeCliLoginCodeCommand,
+  ExchangeCliLoginCodeResponse,
 } from '@packmind/types';

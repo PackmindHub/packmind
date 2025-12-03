@@ -9,9 +9,13 @@ import {
   ChangeUserRoleCommand,
   ChangeUserRoleResponse,
   CheckEmailAvailabilityCommand,
+  CreateCliLoginCodeCommand,
+  CreateCliLoginCodeResponse,
   CreateInvitationsCommand,
   CreateInvitationsResponse,
   CreateOrganizationCommand,
+  ExchangeCliLoginCodeCommand,
+  ExchangeCliLoginCodeResponse,
   GenerateApiKeyCommand,
   GenerateUserTokenCommand,
   GetCurrentApiKeyCommand,
@@ -24,10 +28,12 @@ import {
   IActivateUserAccountUseCase,
   IChangeUserRoleUseCase,
   ICheckEmailAvailabilityUseCase,
+  ICreateCliLoginCodeUseCase,
   ICreateInvitationsUseCase,
   ICreateOrganizationUseCase,
   IDeploymentPort,
   IDeploymentPortName,
+  IExchangeCliLoginCodeUseCase,
   IGenerateApiKeyUseCase,
   IGenerateUserTokenUseCase,
   IGetCurrentApiKeyUseCase,
@@ -89,7 +95,9 @@ import { ValidatePasswordResetTokenUseCase } from '../useCases/ValidatePasswordR
 import { ActivateUserAccountUseCase } from '../useCases/activateUserAccount/ActivateUserAccountUseCase';
 import { ChangeUserRoleUseCase } from '../useCases/changeUserRole/ChangeUserRoleUseCase';
 import { CheckEmailAvailabilityUseCase } from '../useCases/checkEmailAvailability/CheckEmailAvailabilityUseCase';
+import { CreateCliLoginCodeUseCase } from '../useCases/createCliLoginCode/CreateCliLoginCodeUseCase';
 import { CreateInvitationsUseCase } from '../useCases/createInvitations/CreateInvitationsUseCase';
+import { ExchangeCliLoginCodeUseCase } from '../useCases/exchangeCliLoginCode/ExchangeCliLoginCodeUseCase';
 import { CreateOrganizationUseCase } from '../useCases/createOrganization/CreateOrganizationUseCase';
 import { GenerateApiKeyUseCase } from '../useCases/generateApiKey/GenerateApiKeyUseCase';
 import { GenerateUserTokenUseCase } from '../useCases/generateUserToken/GenerateUserTokenUseCase';
@@ -142,6 +150,8 @@ export class AccountsAdapter
   private _resetPassword!: IResetPasswordUseCase;
   private _validatePasswordResetToken!: IValidatePasswordResetTokenUseCase;
   private _getOrganizationOnboardingStatus!: IGetOrganizationOnboardingStatusUseCase;
+  private _createCliLoginCode?: ICreateCliLoginCodeUseCase;
+  private _exchangeCliLoginCode?: IExchangeCliLoginCodeUseCase;
 
   constructor(
     private readonly accountsServices: EnhancedAccountsServices,
@@ -299,6 +309,20 @@ export class AccountsAdapter
       );
       this._getCurrentApiKey = new GetCurrentApiKeyUseCase(this.logger);
       this.logger.debug('API key use cases initialized');
+
+      // CLI login use cases require API key service
+      this._createCliLoginCode = new CreateCliLoginCodeUseCase(
+        this.accountsServices.getCliLoginCodeRepository(),
+        this.logger,
+      );
+      this._exchangeCliLoginCode = new ExchangeCliLoginCodeUseCase(
+        this.accountsServices.getCliLoginCodeRepository(),
+        this.accountsServices.getUserService(),
+        this.accountsServices.getOrganizationService(),
+        apiKeyService,
+        this.logger,
+      );
+      this.logger.debug('CLI login use cases initialized');
     } else {
       this.logger.debug('API key use cases skipped - service not available');
     }
@@ -491,5 +515,28 @@ export class AccountsAdapter
     command: GetOrganizationOnboardingStatusCommand,
   ): Promise<OrganizationOnboardingStatus> {
     return this._getOrganizationOnboardingStatus.execute(command);
+  }
+
+  // CLI login use cases
+  public async createCliLoginCode(
+    command: CreateCliLoginCodeCommand,
+  ): Promise<CreateCliLoginCodeResponse> {
+    if (!this._createCliLoginCode) {
+      throw new Error(
+        'CLI login code creation not available - missing dependencies',
+      );
+    }
+    return this._createCliLoginCode.execute(command);
+  }
+
+  public async exchangeCliLoginCode(
+    command: ExchangeCliLoginCodeCommand,
+  ): Promise<ExchangeCliLoginCodeResponse> {
+    if (!this._exchangeCliLoginCode) {
+      throw new Error(
+        'CLI login code exchange not available - missing dependencies',
+      );
+    }
+    return this._exchangeCliLoginCode.execute(command);
   }
 }

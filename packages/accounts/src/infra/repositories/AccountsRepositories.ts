@@ -4,14 +4,17 @@ import { IUserRepository } from '../../domain/repositories/IUserRepository';
 import { IOrganizationRepository } from '../../domain/repositories/IOrganizationRepository';
 import { IInvitationRepository } from '../../domain/repositories/IInvitationRepository';
 import { IPasswordResetTokenRepository } from '../../domain/repositories/IPasswordResetTokenRepository';
+import { ICliLoginCodeRepository } from '../../domain/repositories/ICliLoginCodeRepository';
 import { UserRepository } from './UserRepository';
 import { OrganizationRepository } from './OrganizationRepository';
 import { InvitationRepository } from './InvitationRepository';
 import { PasswordResetTokenRepository } from './PasswordResetTokenRepository';
+import { CliLoginCodeRepository } from './CliLoginCodeRepository';
 import { UserSchema } from '../schemas/UserSchema';
 import { OrganizationSchema } from '../schemas/OrganizationSchema';
 import { InvitationSchema } from '../schemas/InvitationSchema';
 import { PasswordResetTokenSchema } from '../schemas/PasswordResetTokenSchema';
+import { CliLoginCodeSchema } from '../schemas/CliLoginCodeSchema';
 import { UserOrganizationMembershipSchema } from '../schemas/UserOrganizationMembershipSchema';
 import { UserOrganizationMembershipRepository } from './UserOrganizationMembershipRepository';
 import { IUserOrganizationMembershipRepository } from '../../domain/repositories/IUserOrganizationMembershipRepository';
@@ -29,6 +32,8 @@ export class AccountsRepositories implements IAccountsRepositories {
   private readonly invitationRepository: IInvitationRepository;
   private readonly passwordResetTokenRepository: IPasswordResetTokenRepository;
   private readonly userOrganizationMembershipRepository: IUserOrganizationMembershipRepository;
+  private readonly cliLoginCodeRepository: ICliLoginCodeRepository;
+
   constructor(private readonly dataSource: DataSource) {
     // Initialize all repositories with their respective schemas
     this.userRepository = new UserRepository(
@@ -47,6 +52,9 @@ export class AccountsRepositories implements IAccountsRepositories {
       new UserOrganizationMembershipRepository(
         this.dataSource.getRepository(UserOrganizationMembershipSchema),
       );
+    this.cliLoginCodeRepository = new CliLoginCodeRepository(
+      this.dataSource.getRepository(CliLoginCodeSchema),
+    );
   }
 
   getUserRepository(): IUserRepository {
@@ -67,5 +75,9 @@ export class AccountsRepositories implements IAccountsRepositories {
 
   getPasswordResetTokenRepository(): IPasswordResetTokenRepository {
     return this.passwordResetTokenRepository;
+  }
+
+  getCliLoginCodeRepository(): ICliLoginCodeRepository {
+    return this.cliLoginCodeRepository;
   }
 }

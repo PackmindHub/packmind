@@ -3,6 +3,7 @@ import { IOrganizationRepository } from './IOrganizationRepository';
 import { IInvitationRepository } from './IInvitationRepository';
 import { IUserOrganizationMembershipRepository } from './IUserOrganizationMembershipRepository';
 import { IPasswordResetTokenRepository } from './IPasswordResetTokenRepository';
+import { ICliLoginCodeRepository } from './ICliLoginCodeRepository';
 
 /**
  * IAccountsRepositories - Repository aggregator interface for the Accounts domain
@@ -36,4 +37,9 @@ export interface IAccountsRepositories {
    * Get the password reset token repository instance
    */
   getPasswordResetTokenRepository(): IPasswordResetTokenRepository;
+
+  /**
+   * Get the CLI login code repository instance
+   */
+  getCliLoginCodeRepository(): ICliLoginCodeRepository;
 }

@@ -10,6 +10,7 @@ import {
   IGetMcpTokenUseCase,
   IGetMcpUrlUseCase,
   NewGateway,
+  CreateCliLoginCodeResponse,
 } from '@packmind/types';
 import {
   PublicGateway,
@@ -100,4 +101,5 @@ export interface IAuthGateway {
   selectOrganization(
     request: SelectOrganizationCommand,
   ): Promise<SelectOrganizationResponse>;
+  createCliLoginCode(): Promise<CreateCliLoginCodeResponse>;
 }
