@@ -12,10 +12,14 @@ import {
   PMInputGroup,
   PMInput,
   PMIconButton,
+  PMHStack,
 } from '@packmind/ui';
 import { LuCopy } from 'react-icons/lu';
 import { useGetMeQuery } from '../../src/domain/accounts/api/queries';
 import { AuthGatewayApi } from '../../src/domain/accounts/api/gateways/AuthGatewayApi';
+import { routes } from '../../src/shared/utils/routes';
+
+type CallbackStatus = 'idle' | 'connecting' | 'success' | 'error';
 
 export default function CliLoginRoute() {
   const [searchParams] = useSearchParams();
@@ -23,9 +27,8 @@ export default function CliLoginRoute() {
   const [code, setCode] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<Date | null>(null);
   const [codeLoading, setCodeLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [callbackSuccess, setCallbackSuccess] = useState(false);
-  const [callbackError, setCallbackError] = useState<string | null>(null);
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const [callbackStatus, setCallbackStatus] = useState<CallbackStatus>('idle');
 
   const callbackUrl = searchParams.get('callback_url');
 
@@ -48,13 +51,14 @@ export default function CliLoginRoute() {
       if (!me?.authenticated) return;
 
       setCodeLoading(true);
+      setCodeError(null);
       try {
         const authGateway = new AuthGatewayApi();
         const response = await authGateway.createCliLoginCode();
         setCode(response.code);
         setExpiresAt(new Date(response.expiresAt));
       } catch {
-        setError('Failed to generate login code. Please try again.');
+        setCodeError('Failed to generate login code.');
       } finally {
         setCodeLoading(false);
       }
@@ -67,19 +71,18 @@ export default function CliLoginRoute() {
     async function sendToCallback() {
       if (!code || !callbackUrl) return;
 
+      setCallbackStatus('connecting');
       try {
         const response = await fetch(
           `${callbackUrl}?code=${encodeURIComponent(code)}`,
         );
         if (response.ok) {
-          setCallbackSuccess(true);
+          setCallbackStatus('success');
         } else {
-          setCallbackError('Failed to send code to CLI. Please copy manually.');
+          setCallbackStatus('error');
         }
       } catch {
-        setCallbackError(
-          'Could not connect to CLI. Please copy the code manually.',
-        );
+        setCallbackStatus('error');
       }
     }
     sendToCallback();
@@ -92,24 +95,129 @@ export default function CliLoginRoute() {
     return `Expires in ${minutes} minutes`;
   };
 
-  // Show loading while checking auth or loading code
-  if (authLoading || codeLoading || (!me?.authenticated && !error)) {
+  const handleRetry = () => {
+    window.location.reload();
+  };
+
+  // Render the code input section - shown whenever code is available
+  const renderCodeSection = () => {
+    if (!code) return null;
+
+    return (
+      <>
+        <PMCopiable.Root value={code}>
+          <PMInputGroup
+            endElement={
+              <PMCopiable.Trigger asChild>
+                <PMIconButton
+                  aria-label="Copy to clipboard"
+                  variant="outline"
+                  size="sm"
+                  me="-2"
+                >
+                  <PMCopiable.Indicator copied="Copied!">
+                    <LuCopy />
+                  </PMCopiable.Indicator>
+                </PMIconButton>
+              </PMCopiable.Trigger>
+            }
+          >
+            <PMInput
+              value={code}
+              readOnly
+              textAlign="center"
+              fontFamily="mono"
+              fontWeight="bold"
+              letterSpacing="0.1em"
+              fontSize="lg"
+            />
+          </PMInputGroup>
+        </PMCopiable.Root>
+
+        {expiresAt && (
+          <PMText textAlign="center" color="secondary" variant="small">
+            {formatExpiresAt(expiresAt)}
+          </PMText>
+        )}
+      </>
+    );
+  };
+
+  // Render the callback status indicator
+  const renderCallbackStatus = () => {
+    if (!callbackUrl) {
+      return (
+        <PMText textAlign="center" color="secondary">
+          Copy the code above and paste it into the CLI to complete login.
+        </PMText>
+      );
+    }
+
+    switch (callbackStatus) {
+      case 'connecting':
+        return (
+          <PMHStack gap={2} justify="center">
+            <PMSpinner size="sm" />
+            <PMText color="secondary">Sending code to CLI...</PMText>
+          </PMHStack>
+        );
+      case 'success':
+        return (
+          <PMAlert.Root status="success">
+            <PMAlert.Indicator />
+            <PMAlert.Content>
+              <PMAlert.Title>Login successful!</PMAlert.Title>
+              <PMAlert.Description>
+                You can close this window and return to your terminal.
+              </PMAlert.Description>
+            </PMAlert.Content>
+          </PMAlert.Root>
+        );
+      case 'error':
+        return (
+          <PMAlert.Root status="warning">
+            <PMAlert.Indicator />
+            <PMAlert.Content>
+              <PMAlert.Title>Could not connect to CLI</PMAlert.Title>
+              <PMAlert.Description>
+                Copy the code above and paste it manually in your terminal.
+              </PMAlert.Description>
+            </PMAlert.Content>
+          </PMAlert.Root>
+        );
+      default:
+        return null;
+    }
+  };
+
+  // Show loading while checking auth
+  if (authLoading || (!me?.authenticated && !codeError)) {
     return (
       <PMVStack gap={6} align="center">
         <PMBox textAlign="center">
           <PMHeading level="h2">CLI Login</PMHeading>
         </PMBox>
         <PMSpinner size="lg" />
-        <PMText color="secondary">
-          {authLoading
-            ? 'Checking authentication...'
-            : 'Generating login code...'}
-        </PMText>
+        <PMText color="secondary">Checking authentication...</PMText>
       </PMVStack>
     );
   }
 
-  if (error) {
+  // Show loading while generating code
+  if (codeLoading) {
+    return (
+      <PMVStack gap={6} align="center">
+        <PMBox textAlign="center">
+          <PMHeading level="h2">CLI Login</PMHeading>
+        </PMBox>
+        <PMSpinner size="lg" />
+        <PMText color="secondary">Generating login code...</PMText>
+      </PMVStack>
+    );
+  }
+
+  // Show error if code generation failed
+  if (codeError) {
     return (
       <PMVStack gap={6} align="stretch">
         <PMBox textAlign="center">
@@ -117,87 +225,41 @@ export default function CliLoginRoute() {
         </PMBox>
         <PMAlert.Root status="error">
           <PMAlert.Indicator />
-          <PMAlert.Title>{error}</PMAlert.Title>
-        </PMAlert.Root>
-        <PMButton onClick={() => window.location.reload()}>Try Again</PMButton>
-      </PMVStack>
-    );
-  }
-
-  // Show success when code was sent to CLI automatically
-  if (callbackSuccess) {
-    return (
-      <PMVStack gap={6} align="center">
-        <PMBox textAlign="center">
-          <PMHeading level="h2">CLI Login</PMHeading>
-        </PMBox>
-        <PMAlert.Root status="success">
-          <PMAlert.Indicator />
           <PMAlert.Content>
-            <PMAlert.Title>Login successful!</PMAlert.Title>
-            <PMAlert.Description>
-              You can close this window and return to your terminal.
-            </PMAlert.Description>
+            <PMAlert.Title>Error</PMAlert.Title>
+            <PMAlert.Description>{codeError}</PMAlert.Description>
           </PMAlert.Content>
         </PMAlert.Root>
+        <PMButton onClick={handleRetry}>Try Again</PMButton>
       </PMVStack>
     );
   }
 
+  const handleGoToOrganization = () => {
+    if (me?.organization?.slug) {
+      navigate(routes.org.toDashboard(me.organization.slug));
+    }
+  };
+
+  // Main view with code and status
   return (
     <PMVStack gap={6} align="stretch">
       <PMBox textAlign="center">
         <PMHeading level="h2">CLI Login</PMHeading>
       </PMBox>
 
-      {callbackError && (
-        <PMAlert.Root status="warning">
-          <PMAlert.Indicator />
-          <PMAlert.Title>{callbackError}</PMAlert.Title>
-        </PMAlert.Root>
-      )}
-
-      <PMText textAlign="center" color="secondary">
-        Copy the code below and paste it into the CLI to complete the login.
-      </PMText>
-
-      <PMCopiable.Root value={code || ''}>
-        <PMInputGroup
-          endElement={
-            <PMCopiable.Trigger asChild>
-              <PMIconButton
-                aria-label="Copy to clipboard"
-                variant="outline"
-                size="sm"
-                me="-2"
-              >
-                <PMCopiable.Indicator copied="Copied!">
-                  <LuCopy />
-                </PMCopiable.Indicator>
-              </PMIconButton>
-            </PMCopiable.Trigger>
-          }
-        >
-          <PMInput
-            value={code || ''}
-            readOnly
-            textAlign="center"
-            fontFamily="mono"
-            fontWeight="bold"
-            letterSpacing="0.1em"
-          />
-        </PMInputGroup>
-      </PMCopiable.Root>
-
-      {expiresAt && (
-        <PMText textAlign="center" color="secondary" variant="small">
-          {formatExpiresAt(expiresAt)}
-        </PMText>
-      )}
+      {renderCodeSection()}
+      {renderCallbackStatus()}
 
       <PMText textAlign="center" variant="small" color="tertiary">
         This code will only work once and is tied to your current organization.
       </PMText>
+
+      {me?.organization?.slug && (
+        <PMButton variant="outline" onClick={handleGoToOrganization}>
+          Go to {me.organization.name}
+        </PMButton>
+      )}
     </PMVStack>
   );
 }
