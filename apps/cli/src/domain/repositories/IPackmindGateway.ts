@@ -9,6 +9,29 @@ import {
 import { IListPackagesUseCase } from '../useCases/IListPackagesUseCase';
 import { IGetPackageSummaryUseCase } from '../useCases/IGetPackageSummaryUseCase';
 
+// MCP Token types
+export type GetMcpTokenCommand = PackmindCommand;
+
+export type GetMcpTokenResult = {
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+};
+
+export type IGetMcpTokenUseCase = IUseCase<
+  GetMcpTokenCommand,
+  GetMcpTokenResult
+>;
+
+// MCP URL types
+export type GetMcpUrlCommand = PackmindCommand;
+
+export type GetMcpUrlResult = {
+  url: string;
+};
+
+export type IGetMcpUrlUseCase = IUseCase<GetMcpUrlCommand, GetMcpUrlResult>;
+
 // Waiting for the standards hexa to expose the use case
 export type ListDetectionProgramsCommand = PackmindCommand & {
   gitRemoteUrl: string;
@@ -129,4 +152,6 @@ export interface IPackmindGateway {
   getPullData: Gateway<IPullContentUseCase>;
   listPackages: PublicGateway<IListPackagesUseCase>;
   getPackageSummary: PublicGateway<IGetPackageSummaryUseCase>;
+  getMcpToken: Gateway<IGetMcpTokenUseCase>;
+  getMcpUrl: Gateway<IGetMcpUrlUseCase>;
 }
