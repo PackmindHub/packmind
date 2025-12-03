@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import {
   UserOrganizationRole,
-  createOrganizationId,
   OrganizationId,
   UserId,
   createUserId,
@@ -204,77 +203,7 @@ export class AuthService {
       // Verify and decode the JWT
       const payload: JwtPayload = this.jwtService.verify(accessToken);
 
-      // Check if organization is present in the token
-      if (!payload.organization) {
-        this.logger.log(
-          'User is authenticated but has not selected an organization',
-          {
-            userId: payload.user.userId,
-          },
-        );
-
-        // Fetch user to get their organizations
-        const user = await this.accountsAdapter.getUserById({
-          userId: payload.user.userId,
-        });
-
-        if (!user) {
-          this.logger.warn('User not found', {
-            userId: payload.user.userId,
-          });
-          return {
-            message: 'User not found',
-            authenticated: false,
-          } as GetMeResponse;
-        }
-
-        // Fetch organization details for each membership
-        const organizationsWithDetails = await Promise.all(
-          user.memberships.map(async (membership) => {
-            const org = await this.accountsAdapter.getOrganizationById({
-              organizationId: membership.organizationId,
-            });
-
-            if (!org) {
-              this.logger.warn('Organization not found', {
-                organizationId: membership.organizationId,
-              });
-              return null;
-            }
-
-            return {
-              organization: {
-                id: org.id,
-                name: org.name,
-                slug: org.slug,
-              },
-              role: membership.role,
-            };
-          }),
-        ).then((orgs) =>
-          orgs.filter((org): org is NonNullable<typeof org> => org !== null),
-        );
-
-        return {
-          user: {
-            id: user.id,
-            email: user.email,
-          },
-          organizations: organizationsWithDetails,
-          message: 'User is authenticated but has not selected an organization',
-          authenticated: true,
-        } as GetMeResponse;
-      }
-
-      // At this point, payload.organization must exist (checked above)
-      if (!payload.organization) {
-        throw new Error('Organization not found in token after check');
-      }
-
-      // Store the non-null organization for TypeScript narrowing
-      const tokenOrganization = payload.organization;
-
-      // Verify that the user has access to the organization in the token
+      // Fetch user to get their organizations
       const user = await this.accountsAdapter.getUserById({
         userId: payload.user.userId,
       });
@@ -289,48 +218,41 @@ export class AuthService {
         } as GetMeResponse;
       }
 
-      const organizationMembership = user.memberships.find(
-        (membership) => membership.organizationId === tokenOrganization.id,
+      // Fetch organization details for each membership
+      const organizationsWithDetails = await Promise.all(
+        user.memberships.map(async (membership) => {
+          const org = await this.accountsAdapter.getOrganizationById({
+            organizationId: membership.organizationId,
+          });
+
+          if (!org) {
+            this.logger.warn('Organization not found', {
+              organizationId: membership.organizationId,
+            });
+            return null;
+          }
+
+          return {
+            organization: {
+              id: org.id,
+              name: org.name,
+              slug: org.slug,
+            },
+            role: membership.role,
+          };
+        }),
+      ).then((orgs) =>
+        orgs.filter((org): org is NonNullable<typeof org> => org !== null),
       );
-
-      if (!organizationMembership) {
-        this.logger.warn('User does not have access to organization', {
-          userId: payload.user.userId,
-          organizationId: tokenOrganization.id,
-        });
-        return {
-          message: 'User does not have access to the organization in token',
-          authenticated: false,
-        } as GetMeResponse;
-      }
-
-      const org = await this.accountsAdapter.getOrganizationById({
-        organizationId: organizationMembership.organizationId,
-      });
-
-      if (!org) {
-        this.logger.warn('Organization not found', {
-          organizationId: organizationMembership.organizationId,
-        });
-        return {
-          message: 'Organization not found',
-          authenticated: false,
-        } as GetMeResponse;
-      }
 
       return {
         user: {
           id: user.id,
           email: user.email,
         },
-        organization: {
-          id: createOrganizationId(organizationMembership.organizationId),
-          name: org.name,
-          slug: org.slug,
-          role: organizationMembership.role,
-        },
+        organizations: organizationsWithDetails,
         authenticated: true,
-      };
+      } as GetMeResponse;
     } catch {
       this.logger.warn('Invalid or expired access token');
       return {
@@ -346,27 +268,29 @@ export class AuthService {
   ): Command {
     return {
       userId: req.user.userId,
-      organizationId: req.organization.id,
       ...bodyOrParams,
     } as unknown as Command;
   }
 
   /**
    * Generates a new API key for the authenticated user
-   * @param req Authenticated request containing user and organization info
+   * @param req Authenticated request containing user info
+   * @param organizationId The organization ID for the API key
    * @returns Generated API key and expiration info
    */
   async generateApiKey(
     req: AuthenticatedRequest,
+    organizationId: OrganizationId,
   ): Promise<GenerateApiKeyResponse> {
     this.logger.log('Generating API key for user', {
       userId: req.user.userId,
+      organizationId,
     });
 
     try {
       const command: GenerateApiKeyCommand = {
         userId: req.user.userId,
-        organizationId: req.organization.id,
+        organizationId,
       };
 
       const result = await this.accountsAdapter.generateApiKey(command);

@@ -7,7 +7,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { Observable } from 'rxjs';
-import { createOrganizationId, createUserId } from '@packmind/types';
+import { createUserId } from '@packmind/types';
 import { ApiKeyService, IJwtService } from '@packmind/accounts';
 import { JwtPayload } from './JwtPayload';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
@@ -59,11 +59,7 @@ export class AuthGuard implements CanActivate {
     if (token) {
       try {
         const payload = this.jwtService.verify<JwtPayload>(token);
-        if (!payload.organization) {
-          throw new UnauthorizedException('No organization in token');
-        }
         request.user = payload.user;
-        request.organization = payload.organization;
         return true;
       } catch {
         // Fall through to try API key header
@@ -92,12 +88,6 @@ export class AuthGuard implements CanActivate {
     request.user = {
       name: userInfo.user.name,
       userId: createUserId(userInfo.user.userId),
-    };
-    request.organization = {
-      id: createOrganizationId(userInfo.organization.id),
-      name: userInfo.organization.name,
-      slug: userInfo.organization.slug,
-      role: 'admin',
     };
 
     return true;

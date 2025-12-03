@@ -2,7 +2,6 @@ import {
   CanActivate,
   ExecutionContext,
   Injectable,
-  ForbiddenException,
   BadRequestException,
 } from '@nestjs/common';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
@@ -12,8 +11,10 @@ import { createOrganizationId, OrganizationId } from '@packmind/types';
 const origin = 'OrganizationAccessGuard';
 
 /**
- * Guard that validates the user has access to the organization specified in the URL
+ * Guard that validates the organization ID in the URL is valid.
  * Expected URL pattern: /organizations/:orgId/...
+ *
+ * Note: Organization membership validation is handled by the use case layer.
  */
 @Injectable()
 export class OrganizationAccessGuard implements CanActivate {
@@ -49,32 +50,6 @@ export class OrganizationAccessGuard implements CanActivate {
         error: error instanceof Error ? error.message : String(error),
       });
       throw new BadRequestException('Invalid organization ID format');
-    }
-
-    // Verify user's organization from JWT matches the requested organization
-    const userOrgId = request.organization?.id;
-
-    if (!userOrgId) {
-      this.logger.error(
-        'User organization not found in request - authentication issue',
-        {
-          path: request.path,
-          userId: request.user?.userId,
-        },
-      );
-      throw new ForbiddenException('User organization context missing');
-    }
-
-    if (userOrgId !== requestedOrgId) {
-      this.logger.warn('User attempted to access different organization', {
-        userOrgId,
-        requestedOrgId,
-        path: request.path,
-        userId: request.user?.userId,
-      });
-      throw new ForbiddenException(
-        'Access denied: You do not have access to this organization',
-      );
     }
 
     this.logger.info('Organization access granted', {

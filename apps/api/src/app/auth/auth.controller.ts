@@ -36,6 +36,7 @@ import {
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { Configuration } from '@packmind/node-utils';
 import { Public } from '@packmind/node-utils';
+import { createOrganizationId } from '@packmind/types';
 
 @Controller('auth')
 export class AuthController {
@@ -299,14 +300,19 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   async generateApiKey(
     @Req() request: AuthenticatedRequest,
+    @Body() body: { organizationId: string },
   ): Promise<GenerateApiKeyResponse> {
+    const organizationId = createOrganizationId(body.organizationId);
     this.logger.log('POST /auth/api-key/generate - Generating API key', {
       userId: request.user.userId,
-      organizationId: request.organization.id,
+      organizationId,
     });
 
     try {
-      const result = await this.authService.generateApiKey(request);
+      const result = await this.authService.generateApiKey(
+        request,
+        organizationId,
+      );
 
       this.logger.log(
         'POST /auth/api-key/generate - API key generated successfully',
@@ -338,7 +344,6 @@ export class AuthController {
       'GET /auth/api-key/current - Getting current API key info',
       {
         userId: request.user.userId,
-        organizationId: request.organization.id,
       },
     );
 

@@ -2,7 +2,6 @@ import {
   BadRequestException,
   CanActivate,
   ExecutionContext,
-  ForbiddenException,
   Injectable,
 } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
@@ -13,14 +12,13 @@ import { Observable } from 'rxjs';
 const origin = 'SpaceAccessGuard';
 
 /**
- * Guard that validates user access to a specific space within an organization.
+ * Guard that validates the space ID in the URL is valid.
  *
  * This guard ensures:
  * 1. The spaceId parameter exists in the URL and is valid
- * 2. The user has access to the organization (already validated by OrganizationAccessGuard)
- * 3. The space belongs to the organization the user is accessing
  *
- * Note: This guard should be used in conjunction with OrganizationAccessGuard
+ * Note: Space ownership validation is handled by the use case layer.
+ * This guard should be used in conjunction with OrganizationAccessGuard
  * to ensure proper access control at both organization and space levels.
  */
 @Injectable()
@@ -51,22 +49,8 @@ export class SpaceAccessGuard implements CanActivate {
       throw new BadRequestException('Invalid space ID format');
     }
 
-    if (!request.organization) {
-      this.logger.error('User organization context missing for space access', {
-        path: request.path,
-        spaceIdParam,
-      });
-      throw new ForbiddenException('User organization context missing');
-    }
-
-    // TODO: Add space ownership validation here
-    // We should verify that the space belongs to the organization
-    // For now, we just validate the space ID format
-    // In a future iteration, we can query the database to verify ownership
-
     this.logger.info('Space access granted', {
       spaceId,
-      organizationId: request.organization.id,
       userId: request.user?.userId,
     });
 

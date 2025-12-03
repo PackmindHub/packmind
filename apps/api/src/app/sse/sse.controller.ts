@@ -31,14 +31,10 @@ export class SSEController {
   ): Promise<void> {
     const connectionId = `${request.user.userId}-${randomUUID()}`;
     const userId = request.user.userId;
-    const organizationId = request.organization
-      ? request.organization.id
-      : null;
 
     this.logger.info('New SSE connection request', {
       connectionId,
       userId,
-      organizationId,
     });
 
     // Set SSE headers with proper CORS
@@ -67,13 +63,12 @@ export class SSEController {
       connectionId,
       response,
       userId, // Required now
-      organizationId ?? undefined,
+      undefined,
     );
 
     this.logger.info('SSE connection established', {
       connectionId,
       userId,
-      organizationId,
     });
   }
 

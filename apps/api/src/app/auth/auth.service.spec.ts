@@ -24,12 +24,6 @@ describe('AuthService - getMe method', () => {
       name: 'testuser@packmind.com',
       userId: createUserId('1'),
     },
-    organization: {
-      id: createOrganizationId('org-1'),
-      name: 'Test Organization',
-      slug: 'test-organization',
-      role: 'admin',
-    },
     iat: Math.floor(Date.now() / 1000),
     exp: Math.floor(Date.now() / 1000) + 3600,
   };
@@ -67,181 +61,195 @@ describe('AuthService - getMe method', () => {
 
   describe('getMe', () => {
     describe('when valid token is provided', () => {
-      describe('when user has access to organization', () => {
-        it('returns user payload', async () => {
-          mockJwtService.verify = jest.fn().mockReturnValue(mockPayload);
-          mockAccountsAdapter.getUserById.mockResolvedValue({
-            id: createUserId('1'),
-            email: 'testuser@packmind.com',
-            memberships: [
-              {
-                organizationId: createOrganizationId('org-1'),
-                role: 'admin',
-              },
-            ],
-          });
-
-          mockAccountsAdapter.getOrganizationById.mockResolvedValue({
-            id: createOrganizationId('org-1'),
-            name: 'Test Organization',
-            slug: 'test-organization',
-          });
-
-          const result = await authService.getMe('valid-jwt-token');
-
-          expect(result).toEqual({
-            authenticated: true,
-            user: {
-              id: '1',
-              email: 'testuser@packmind.com',
-            },
-            organization: {
-              id: 'org-1',
-              name: 'Test Organization',
-              slug: 'test-organization',
+      it('returns user with organizations list', async () => {
+        mockJwtService.verify = jest.fn().mockReturnValue(mockPayload);
+        mockAccountsAdapter.getUserById.mockResolvedValue({
+          id: createUserId('1'),
+          email: 'testuser@packmind.com',
+          memberships: [
+            {
+              organizationId: createOrganizationId('org-1'),
               role: 'admin',
             },
-          });
-          expect(mockJwtService.verify).toHaveBeenCalledWith('valid-jwt-token');
-          expect(mockAccountsAdapter.getUserById).toHaveBeenCalledWith({
-            userId: createUserId('1'),
-          });
+          ],
         });
-      });
 
-      describe('when user does not have access to organization in token', () => {
-        it('returns unauthenticated', async () => {
-          mockJwtService.verify = jest.fn().mockReturnValue(mockPayload);
-          mockAccountsAdapter.getUserById.mockResolvedValue({
-            id: createUserId('1'),
+        mockAccountsAdapter.getOrganizationById.mockResolvedValue({
+          id: createOrganizationId('org-1'),
+          name: 'Test Organization',
+          slug: 'test-organization',
+        });
+
+        const result = await authService.getMe('valid-jwt-token');
+
+        expect(result).toEqual({
+          authenticated: true,
+          user: {
+            id: '1',
             email: 'testuser@packmind.com',
-            memberships: [
-              {
-                organizationId: createOrganizationId('org-2'),
-                role: 'admin',
-              },
-            ],
-          });
-
-          const result = await authService.getMe('valid-jwt-token');
-
-          expect(result).toEqual({
-            message: 'User does not have access to the organization in token',
-            authenticated: false,
-          });
-          expect(mockJwtService.verify).toHaveBeenCalledWith('valid-jwt-token');
-          expect(mockAccountsAdapter.getUserById).toHaveBeenCalledWith({
-            userId: createUserId('1'),
-          });
-          expect(authService.logger.warn).toHaveBeenCalledWith(
-            'User does not have access to organization',
+          },
+          organizations: [
             {
-              userId: '1',
-              organizationId: 'org-1',
+              organization: {
+                id: 'org-1',
+                name: 'Test Organization',
+                slug: 'test-organization',
+              },
+              role: 'admin',
             },
-          );
+          ],
+        });
+        expect(mockJwtService.verify).toHaveBeenCalledWith('valid-jwt-token');
+        expect(mockAccountsAdapter.getUserById).toHaveBeenCalledWith({
+          userId: createUserId('1'),
         });
       });
 
-      describe('when user has no memberships', () => {
-        it('returns unauthenticated', async () => {
-          mockJwtService.verify = jest.fn().mockReturnValue(mockPayload);
-          mockAccountsAdapter.getUserById.mockResolvedValue({
-            id: createUserId('1'),
-            email: 'testuser@packmind.com',
-            memberships: [],
-          });
-
-          const result = await authService.getMe('valid-jwt-token');
-
-          expect(result).toEqual({
-            message: 'User does not have access to the organization in token',
-            authenticated: false,
-          });
-        });
-      });
-
-      describe('when token has no organization', () => {
-        it('returns authenticated with user organizations', async () => {
-          const payloadWithoutOrg: JwtPayload = {
-            user: {
-              name: 'testuser@packmind.com',
-              userId: createUserId('1'),
-            },
-            organization: null,
-            iat: Math.floor(Date.now() / 1000),
-            exp: Math.floor(Date.now() / 1000) + 3600,
-          };
-
-          mockJwtService.verify = jest.fn().mockReturnValue(payloadWithoutOrg);
-          mockAccountsAdapter.getUserById.mockResolvedValue({
-            id: createUserId('1'),
-            email: 'testuser@packmind.com',
-            memberships: [
-              {
-                organizationId: createOrganizationId('org-1'),
-                role: 'admin',
-              },
-              {
-                organizationId: createOrganizationId('org-2'),
-                role: 'member',
-              },
-            ],
-          });
-          mockAccountsAdapter.getOrganizationById
-            .mockResolvedValueOnce({
-              id: createOrganizationId('org-1'),
-              name: 'Organization 1',
-              slug: 'org-1',
-            })
-            .mockResolvedValueOnce({
-              id: createOrganizationId('org-2'),
-              name: 'Organization 2',
-              slug: 'org-2',
-            });
-
-          const result = await authService.getMe('valid-jwt-token');
-
-          expect(result).toEqual({
-            user: {
-              id: '1',
-              email: 'testuser@packmind.com',
-            },
-            organizations: [
-              {
-                organization: {
-                  id: 'org-1',
-                  name: 'Organization 1',
-                  slug: 'org-1',
-                },
-                role: 'admin',
-              },
-              {
-                organization: {
-                  id: 'org-2',
-                  name: 'Organization 2',
-                  slug: 'org-2',
-                },
-                role: 'member',
-              },
-            ],
-            message:
-              'User is authenticated but has not selected an organization',
-            authenticated: true,
-          });
-          expect(mockJwtService.verify).toHaveBeenCalledWith('valid-jwt-token');
-          expect(mockAccountsAdapter.getUserById).toHaveBeenCalledWith({
-            userId: createUserId('1'),
-          });
-          expect(mockAccountsAdapter.getOrganizationById).toHaveBeenCalledTimes(
-            2,
-          );
-          expect(authService.logger.log).toHaveBeenCalledWith(
-            'User is authenticated but has not selected an organization',
+      it('returns user with multiple organizations', async () => {
+        mockJwtService.verify = jest.fn().mockReturnValue(mockPayload);
+        mockAccountsAdapter.getUserById.mockResolvedValue({
+          id: createUserId('1'),
+          email: 'testuser@packmind.com',
+          memberships: [
             {
-              userId: '1',
+              organizationId: createOrganizationId('org-1'),
+              role: 'admin',
             },
-          );
+            {
+              organizationId: createOrganizationId('org-2'),
+              role: 'member',
+            },
+          ],
+        });
+        mockAccountsAdapter.getOrganizationById
+          .mockResolvedValueOnce({
+            id: createOrganizationId('org-1'),
+            name: 'Organization 1',
+            slug: 'org-1',
+          })
+          .mockResolvedValueOnce({
+            id: createOrganizationId('org-2'),
+            name: 'Organization 2',
+            slug: 'org-2',
+          });
+
+        const result = await authService.getMe('valid-jwt-token');
+
+        expect(result).toEqual({
+          user: {
+            id: '1',
+            email: 'testuser@packmind.com',
+          },
+          organizations: [
+            {
+              organization: {
+                id: 'org-1',
+                name: 'Organization 1',
+                slug: 'org-1',
+              },
+              role: 'admin',
+            },
+            {
+              organization: {
+                id: 'org-2',
+                name: 'Organization 2',
+                slug: 'org-2',
+              },
+              role: 'member',
+            },
+          ],
+          authenticated: true,
+        });
+        expect(mockAccountsAdapter.getOrganizationById).toHaveBeenCalledTimes(
+          2,
+        );
+      });
+
+      it('returns user with empty organizations when user has no memberships', async () => {
+        mockJwtService.verify = jest.fn().mockReturnValue(mockPayload);
+        mockAccountsAdapter.getUserById.mockResolvedValue({
+          id: createUserId('1'),
+          email: 'testuser@packmind.com',
+          memberships: [],
+        });
+
+        const result = await authService.getMe('valid-jwt-token');
+
+        expect(result).toEqual({
+          user: {
+            id: '1',
+            email: 'testuser@packmind.com',
+          },
+          organizations: [],
+          authenticated: true,
+        });
+      });
+
+      it('filters out null organizations when organization not found', async () => {
+        mockJwtService.verify = jest.fn().mockReturnValue(mockPayload);
+        mockAccountsAdapter.getUserById.mockResolvedValue({
+          id: createUserId('1'),
+          email: 'testuser@packmind.com',
+          memberships: [
+            {
+              organizationId: createOrganizationId('org-1'),
+              role: 'admin',
+            },
+            {
+              organizationId: createOrganizationId('org-2'),
+              role: 'member',
+            },
+          ],
+        });
+        mockAccountsAdapter.getOrganizationById
+          .mockResolvedValueOnce({
+            id: createOrganizationId('org-1'),
+            name: 'Organization 1',
+            slug: 'org-1',
+          })
+          .mockResolvedValueOnce(null); // org-2 not found
+
+        const result = await authService.getMe('valid-jwt-token');
+
+        expect(result).toEqual({
+          user: {
+            id: '1',
+            email: 'testuser@packmind.com',
+          },
+          organizations: [
+            {
+              organization: {
+                id: 'org-1',
+                name: 'Organization 1',
+                slug: 'org-1',
+              },
+              role: 'admin',
+            },
+          ],
+          authenticated: true,
+        });
+        expect(authService.logger.warn).toHaveBeenCalledWith(
+          'Organization not found',
+          {
+            organizationId: 'org-2',
+          },
+        );
+      });
+    });
+
+    describe('when user is not found', () => {
+      it('returns unauthenticated response', async () => {
+        mockJwtService.verify = jest.fn().mockReturnValue(mockPayload);
+        mockAccountsAdapter.getUserById.mockResolvedValue(null);
+
+        const result = await authService.getMe('valid-jwt-token');
+
+        expect(result).toEqual({
+          message: 'User not found',
+          authenticated: false,
+        });
+        expect(authService.logger.warn).toHaveBeenCalledWith('User not found', {
+          userId: '1',
         });
       });
     });
