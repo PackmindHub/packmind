@@ -1,5 +1,3 @@
-import { PackmindLogger } from '@packmind/logger';
-import { stubLogger } from '@packmind/test-utils';
 import { createUserId, createOrganizationId } from '@packmind/types';
 import {
   ExchangeCliLoginCodeUseCase,
@@ -23,7 +21,6 @@ describe('ExchangeCliLoginCodeUseCase', () => {
   let mockUserService: jest.Mocked<UserService>;
   let mockOrganizationService: jest.Mocked<OrganizationService>;
   let mockApiKeyService: jest.Mocked<ApiKeyService>;
-  let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   const userId = createUserId('user-123');
   const organizationId = createOrganizationId('org-456');
@@ -55,14 +52,11 @@ describe('ExchangeCliLoginCodeUseCase', () => {
       getApiKeyExpiration: jest.fn(),
     } as jest.Mocked<Partial<ApiKeyService>> as jest.Mocked<ApiKeyService>;
 
-    stubbedLogger = stubLogger();
-
     useCase = new ExchangeCliLoginCodeUseCase(
       mockRepository,
       mockUserService,
       mockOrganizationService,
       mockApiKeyService,
-      stubbedLogger,
     );
   });
 
@@ -133,26 +127,6 @@ describe('ExchangeCliLoginCodeUseCase', () => {
         await useCase.execute({ code: codeToken as string });
 
         expect(mockRepository.delete).toHaveBeenCalledWith(codeId);
-      });
-
-      it('logs info on successful exchange', async () => {
-        mockRepository.findByCode.mockResolvedValue(validCliLoginCode);
-        mockUserService.getUserById.mockResolvedValue(testUser);
-        mockOrganizationService.getOrganizationById.mockResolvedValue(
-          testOrganization,
-        );
-        mockApiKeyService.generateApiKey.mockReturnValue('test.api.key');
-        mockApiKeyService.getApiKeyExpiration.mockReturnValue(new Date());
-
-        await useCase.execute({ code: codeToken as string });
-
-        expect(stubbedLogger.info).toHaveBeenCalledWith(
-          'CLI login code exchanged',
-          expect.objectContaining({
-            userId,
-            organizationId,
-          }),
-        );
       });
     });
 

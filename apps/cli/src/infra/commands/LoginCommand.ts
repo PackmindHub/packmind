@@ -1,4 +1,4 @@
-import { command, option, string } from 'cmd-ts';
+import { command, option, string, optional } from 'cmd-ts';
 import * as http from 'http';
 import * as readline from 'readline';
 import * as fs from 'fs';
@@ -187,41 +187,52 @@ export const loginCommand = command({
       description: 'Packmind server URL (default: https://app.packmind.com)',
       defaultValue: () => DEFAULT_HOST,
     }),
+    code: option({
+      type: optional(string),
+      long: 'code',
+      description:
+        'Login code from the web interface (skips browser authentication)',
+    }),
   },
-  handler: async ({ host }) => {
+  handler: async ({ host, code: providedCode }) => {
     try {
-      // Try to start the callback server
-      let useCallback = true;
-      let callbackPromise: Promise<string> | null = null;
-
-      try {
-        callbackPromise = startCallbackServer();
-      } catch {
-        useCallback = false;
-      }
-
-      const callbackUrl = `http://127.0.0.1:${CALLBACK_PORT}`;
-      const loginUrl = useCallback
-        ? `${host}/cli-login?callback_url=${encodeURIComponent(callbackUrl)}`
-        : `${host}/cli-login`;
-
-      console.log('\nOpening browser for authentication...');
-      console.log(`\nIf the browser doesn't open, visit: ${loginUrl}\n`);
-
-      openBrowser(loginUrl);
-
       let code: string;
 
-      if (useCallback && callbackPromise) {
-        logInfoConsole('Waiting for browser authentication...');
+      if (providedCode) {
+        // Code provided via --code flag, skip browser flow
+        code = providedCode;
+      } else {
+        // Try to start the callback server for browser flow
+        let useCallback = true;
+        let callbackPromise: Promise<string> | null = null;
+
         try {
-          code = await callbackPromise;
+          callbackPromise = startCallbackServer();
         } catch {
-          // Fallback to manual code entry
+          useCallback = false;
+        }
+
+        const callbackUrl = `http://127.0.0.1:${CALLBACK_PORT}`;
+        const loginUrl = useCallback
+          ? `${host}/cli-login?callback_url=${encodeURIComponent(callbackUrl)}`
+          : `${host}/cli-login`;
+
+        console.log('\nOpening browser for authentication...');
+        console.log(`\nIf the browser doesn't open, visit: ${loginUrl}\n`);
+
+        openBrowser(loginUrl);
+
+        if (useCallback && callbackPromise) {
+          logInfoConsole('Waiting for browser authentication...');
+          try {
+            code = await callbackPromise;
+          } catch {
+            // Fallback to manual code entry
+            code = await promptForCode();
+          }
+        } else {
           code = await promptForCode();
         }
-      } else {
-        code = await promptForCode();
       }
 
       if (!code) {

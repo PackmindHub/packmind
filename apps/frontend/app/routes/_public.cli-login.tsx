@@ -99,40 +99,52 @@ export default function CliLoginRoute() {
     window.location.reload();
   };
 
+  // Build the CLI command with optional --host flag
+  const buildCliCommand = (loginCode: string) => {
+    const currentHost = window.location.origin;
+    const isDefaultHost = currentHost === 'https://app.packmind.com';
+    const hostFlag = isDefaultHost ? '' : ` --host ${currentHost}`;
+    return `packmind-cli login${hostFlag} --code ${loginCode}`;
+  };
+
   // Render the code input section - shown whenever code is available
   const renderCodeSection = () => {
     if (!code) return null;
 
+    const cliCommand = buildCliCommand(code);
+
     return (
       <>
-        <PMCopiable.Root value={code}>
-          <PMInputGroup
-            endElement={
-              <PMCopiable.Trigger asChild>
-                <PMIconButton
-                  aria-label="Copy to clipboard"
-                  variant="outline"
-                  size="sm"
-                  me="-2"
-                >
-                  <PMCopiable.Indicator copied="Copied!">
-                    <LuCopy />
-                  </PMCopiable.Indicator>
-                </PMIconButton>
-              </PMCopiable.Trigger>
-            }
-          >
-            <PMInput
-              value={code}
-              readOnly
-              textAlign="center"
-              fontFamily="mono"
-              fontWeight="bold"
-              letterSpacing="0.1em"
-              fontSize="lg"
-            />
-          </PMInputGroup>
-        </PMCopiable.Root>
+        <PMVStack gap={4} align="stretch">
+          <PMText textAlign="center" fontWeight="medium">
+            Run this command in your terminal:
+          </PMText>
+          <PMCopiable.Root value={cliCommand}>
+            <PMInputGroup
+              endElement={
+                <PMCopiable.Trigger asChild>
+                  <PMIconButton
+                    aria-label="Copy command to clipboard"
+                    variant="outline"
+                    size="sm"
+                    me="-2"
+                  >
+                    <PMCopiable.Indicator copied="Copied!">
+                      <LuCopy />
+                    </PMCopiable.Indicator>
+                  </PMIconButton>
+                </PMCopiable.Trigger>
+              }
+            >
+              <PMInput
+                value={cliCommand}
+                readOnly
+                fontFamily="mono"
+                fontSize="sm"
+              />
+            </PMInputGroup>
+          </PMCopiable.Root>
+        </PMVStack>
 
         {expiresAt && (
           <PMText textAlign="center" color="secondary" variant="small">
@@ -148,7 +160,7 @@ export default function CliLoginRoute() {
     if (!callbackUrl) {
       return (
         <PMText textAlign="center" color="secondary">
-          Copy the code above and paste it into the CLI to complete login.
+          Copy the command above and run it in your terminal to complete login.
         </PMText>
       );
     }
@@ -180,7 +192,7 @@ export default function CliLoginRoute() {
             <PMAlert.Content>
               <PMAlert.Title>Could not connect to CLI</PMAlert.Title>
               <PMAlert.Description>
-                Copy the code above and paste it manually in your terminal.
+                Copy the command above and run it in your terminal.
               </PMAlert.Description>
             </PMAlert.Content>
           </PMAlert.Root>
