@@ -20,7 +20,6 @@ import {
   useDeleteRecipesBatchMutation,
 } from '../api/queries/RecipesQueries';
 
-import { DeployRecipeButton } from './DeployRecipeButton';
 import './RecipesList.styles.scss';
 import { Recipe, RecipeId } from '@packmind/types';
 import { RECIPE_MESSAGES } from '../constants/messages';
@@ -190,14 +189,6 @@ export const RecipesList = ({ orgSlug }: RecipesListProps) => {
       {recipes?.length ? (
         <PMBox>
           <PMButtonGroup size="sm">
-            <DeployRecipeButton
-              label={`Deploy (${selectedRecipeIds.length})`}
-              disabled={!isSomeSelected}
-              selectedRecipes={
-                recipes?.filter((r) => selectedRecipeIds.includes(r.id)) ?? []
-              }
-              size="sm"
-            />
             <PMAlertDialog
               trigger={
                 <PMButton

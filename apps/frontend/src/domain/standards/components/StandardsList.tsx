@@ -19,7 +19,6 @@ import {
   useDeleteStandardsBatchMutation,
 } from '../api/queries/StandardsQueries';
 
-import { DeployStandardButton } from '../../deployments/components/StandardDeployments/DeployStandardButton';
 import './StandardsList.styles.scss';
 import { StandardId } from '@packmind/types';
 import { STANDARD_MESSAGES } from '../constants/messages';
@@ -201,12 +200,6 @@ export const StandardsList = ({ orgSlug }: StandardsListProps = {}) => {
         <PMBox>
           <PMBox mb={2}>
             <PMHStack gap={2}>
-              <DeployStandardButton
-                label={`Deploy (${selectedStandardIds.length})`}
-                selectedStandards={selectedStandards}
-                disabled={selectedStandardIds.length === 0}
-                size="sm"
-              />
               <PMAlertDialog
                 trigger={
                   <PMButton
