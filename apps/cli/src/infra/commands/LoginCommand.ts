@@ -132,42 +132,9 @@ function startCallbackServer(): Promise<string> {
       const code = url.searchParams.get('code');
 
       if (code) {
-        // Send success response to browser
-        res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end(`
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <title>Packmind CLI Login</title>
-            <style>
-              body {
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                height: 100vh;
-                margin: 0;
-                background: #f5f5f5;
-              }
-              .container {
-                text-align: center;
-                padding: 40px;
-                background: white;
-                border-radius: 8px;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-              }
-              h1 { color: #22c55e; margin-bottom: 16px; }
-              p { color: #666; }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <h1>Login Successful!</h1>
-              <p>You can close this window and return to your terminal.</p>
-            </div>
-          </body>
-          </html>
-        `);
+        // Send simple JSON success response - the webapp will show the success UI
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true }));
 
         // Clean up and resolve
         if (timeoutId) {

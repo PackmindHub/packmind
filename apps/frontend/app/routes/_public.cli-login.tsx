@@ -24,7 +24,8 @@ export default function CliLoginRoute() {
   const [expiresAt, setExpiresAt] = useState<Date | null>(null);
   const [codeLoading, setCodeLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [redirecting, setRedirecting] = useState(false);
+  const [callbackSuccess, setCallbackSuccess] = useState(false);
+  const [callbackError, setCallbackError] = useState<string | null>(null);
 
   const callbackUrl = searchParams.get('callback_url');
 
@@ -61,17 +62,27 @@ export default function CliLoginRoute() {
     loadCode();
   }, [me?.authenticated]);
 
-  // Auto-redirect to CLI callback if provided
+  // Send code to CLI callback via background fetch
   useEffect(() => {
-    if (code && callbackUrl) {
-      setRedirecting(true);
-      const redirectUrl = `${callbackUrl}?code=${encodeURIComponent(code)}`;
-      // Small delay to show the code before redirecting
-      const timer = setTimeout(() => {
-        window.location.href = redirectUrl;
-      }, 1500);
-      return () => clearTimeout(timer);
+    async function sendToCallback() {
+      if (!code || !callbackUrl) return;
+
+      try {
+        const response = await fetch(
+          `${callbackUrl}?code=${encodeURIComponent(code)}`,
+        );
+        if (response.ok) {
+          setCallbackSuccess(true);
+        } else {
+          setCallbackError('Failed to send code to CLI. Please copy manually.');
+        }
+      } catch {
+        setCallbackError(
+          'Could not connect to CLI. Please copy the code manually.',
+        );
+      }
     }
+    sendToCallback();
   }, [code, callbackUrl]);
 
   const formatExpiresAt = (date: Date) => {
@@ -113,7 +124,8 @@ export default function CliLoginRoute() {
     );
   }
 
-  if (redirecting) {
+  // Show success when code was sent to CLI automatically
+  if (callbackSuccess) {
     return (
       <PMVStack gap={6} align="center">
         <PMBox textAlign="center">
@@ -122,11 +134,12 @@ export default function CliLoginRoute() {
         <PMAlert.Root status="success">
           <PMAlert.Indicator />
           <PMAlert.Content>
-            <PMAlert.Title>Code generated successfully!</PMAlert.Title>
-            <PMAlert.Description>Redirecting to the CLI...</PMAlert.Description>
+            <PMAlert.Title>Login successful!</PMAlert.Title>
+            <PMAlert.Description>
+              You can close this window and return to your terminal.
+            </PMAlert.Description>
           </PMAlert.Content>
         </PMAlert.Root>
-        <PMSpinner size="lg" />
       </PMVStack>
     );
   }
@@ -136,6 +149,13 @@ export default function CliLoginRoute() {
       <PMBox textAlign="center">
         <PMHeading level="h2">CLI Login</PMHeading>
       </PMBox>
+
+      {callbackError && (
+        <PMAlert.Root status="warning">
+          <PMAlert.Indicator />
+          <PMAlert.Title>{callbackError}</PMAlert.Title>
+        </PMAlert.Root>
+      )}
 
       <PMText textAlign="center" color="secondary">
         Copy the code below and paste it into the CLI to complete the login.

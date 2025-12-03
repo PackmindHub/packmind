@@ -21,36 +21,39 @@ export const logoutCommand = command({
   args: {},
   handler: async () => {
     const credentialsPath = getCredentialsPath();
+    const hasEnvVar = !!process.env.PACKMIND_API_KEY_V3;
+    const hasCredentialsFile = fs.existsSync(credentialsPath);
 
-    // Check if using environment variable
-    if (process.env.PACKMIND_API_KEY_V3) {
-      logInfoConsole(
-        'Authentication is configured via PACKMIND_API_KEY_V3 environment variable.',
-      );
-      console.log(
-        'To log out, unset the environment variable: unset PACKMIND_API_KEY_V3',
-      );
-    }
-
-    // Check if credentials file exists
-    if (!fs.existsSync(credentialsPath)) {
-      if (!process.env.PACKMIND_API_KEY_V3) {
-        logInfoConsole('No stored credentials found. Already logged out.');
-      }
+    // No credentials at all
+    if (!hasCredentialsFile && !hasEnvVar) {
+      logInfoConsole('No stored credentials found. Already logged out.');
       return;
     }
 
-    // Remove credentials file
-    try {
-      fs.unlinkSync(credentialsPath);
-      logSuccessConsole('Logged out successfully.');
-      console.log(`\nRemoved credentials from: ${credentialsPath}`);
-    } catch (error) {
-      logErrorConsole('Failed to remove credentials file.');
+    // Remove credentials file if it exists
+    if (hasCredentialsFile) {
+      try {
+        fs.unlinkSync(credentialsPath);
+        logSuccessConsole('Logged out successfully.');
+        console.log(`Removed credentials from: ${credentialsPath}`);
+      } catch (error) {
+        logErrorConsole('Failed to remove credentials file.');
+        console.log(
+          `Error: ${error instanceof Error ? error.message : String(error)}`,
+        );
+        process.exit(1);
+      }
+    }
+
+    // Note about environment variable if set
+    if (hasEnvVar) {
+      if (!hasCredentialsFile) {
+        logInfoConsole('No stored credentials file found.');
+      }
       console.log(
-        `Error: ${error instanceof Error ? error.message : String(error)}`,
+        '\nNote: PACKMIND_API_KEY_V3 environment variable is still set.',
       );
-      process.exit(1);
+      console.log('To fully log out, run: unset PACKMIND_API_KEY_V3');
     }
   },
 });
