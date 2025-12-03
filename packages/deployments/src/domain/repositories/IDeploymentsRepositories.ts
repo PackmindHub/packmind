@@ -3,6 +3,8 @@ import { IRecipesDeploymentRepository } from './IRecipesDeploymentRepository';
 import { IStandardsDeploymentRepository } from './IStandardsDeploymentRepository';
 import { IRenderModeConfigurationRepository } from './IRenderModeConfigurationRepository';
 import { IPackageRepository } from './IPackageRepository';
+import { IDistributionRepository } from './IDistributionRepository';
+import { IDistributedPackageRepository } from './IDistributedPackageRepository';
 
 /**
  * IDeploymentsRepositories - Repository aggregator interface for the Deployments domain
@@ -36,4 +38,14 @@ export interface IDeploymentsRepositories {
    * Get the package repository instance
    */
   getPackageRepository(): IPackageRepository;
+
+  /**
+   * Get the distribution repository instance
+   */
+  getDistributionRepository(): IDistributionRepository;
+
+  /**
+   * Get the distributed package repository instance
+   */
+  getDistributedPackageRepository(): IDistributedPackageRepository;
 }

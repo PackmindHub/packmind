@@ -3,17 +3,38 @@ import {
   PublishPackagesCommand,
   PackagesDeployment,
   Package,
+  PackageId,
   RecipeId,
   StandardId,
+  RecipeVersionId,
+  StandardVersionId,
   PublishArtifactsCommand,
   IRecipesPort,
   IStandardsPort,
   IDeploymentPort,
+  createDistributionId,
+  createDistributedPackageId,
+  RecipesDeployment,
+  StandardsDeployment,
+  UserId,
+  OrganizationId,
 } from '@packmind/types';
+import { v4 as uuidv4 } from 'uuid';
 import { PackmindLogger } from '@packmind/logger';
 import { PackageService } from '../services/PackageService';
+import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
+import { IDistributedPackageRepository } from '../../domain/repositories/IDistributedPackageRepository';
 
 const origin = 'PublishPackagesUseCase';
+
+// Track resolved versions per package
+type PackageVersionsMap = Map<
+  PackageId,
+  {
+    recipeVersionIds: RecipeVersionId[];
+    standardVersionIds: StandardVersionId[];
+  }
+>;
 
 export class PublishPackagesUseCase implements IPublishPackages {
   constructor(
@@ -21,6 +42,8 @@ export class PublishPackagesUseCase implements IPublishPackages {
     private readonly standardsPort: IStandardsPort,
     private readonly deploymentPort: IDeploymentPort,
     public readonly packageService: PackageService,
+    private readonly distributionRepository: IDistributionRepository,
+    private readonly distributedPackageRepository: IDistributedPackageRepository,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -51,37 +74,69 @@ export class PublishPackagesUseCase implements IPublishPackages {
       packages.push(pkg);
     }
 
-    // Extract unique recipe and standard IDs from all packages
-    const uniqueRecipeIds = new Set<string>();
-    const uniqueStandardIds = new Set<string>();
+    // Build a map of recipeId -> latestVersionId for deduplication
+    const recipeVersionCache = new Map<string, RecipeVersionId>();
+    const standardVersionCache = new Map<string, StandardVersionId>();
 
+    // Track per-package versions for distribution storage
+    const packageVersionsMap: PackageVersionsMap = new Map();
+
+    // Resolve versions per package and cache them
     for (const pkg of packages) {
-      pkg.recipes.forEach((recipeId) => uniqueRecipeIds.add(recipeId));
-      pkg.standards.forEach((standardId) => uniqueStandardIds.add(standardId));
+      const pkgRecipeVersionIds: RecipeVersionId[] = [];
+      const pkgStandardVersionIds: StandardVersionId[] = [];
+
+      // Resolve recipe versions
+      for (const recipeId of pkg.recipes) {
+        if (!recipeVersionCache.has(recipeId)) {
+          const versions = await this.recipesPort.listRecipeVersions(
+            recipeId as RecipeId,
+          );
+          if (versions.length > 0) {
+            const latestVersion = versions.sort(
+              (a, b) => b.version - a.version,
+            )[0];
+            recipeVersionCache.set(
+              recipeId,
+              latestVersion.id as RecipeVersionId,
+            );
+          }
+        }
+        const versionId = recipeVersionCache.get(recipeId);
+        if (versionId) {
+          pkgRecipeVersionIds.push(versionId);
+        }
+      }
+
+      // Resolve standard versions
+      for (const standardId of pkg.standards) {
+        if (!standardVersionCache.has(standardId)) {
+          const latestVersion =
+            await this.standardsPort.getLatestStandardVersion(
+              standardId as StandardId,
+            );
+          if (latestVersion) {
+            standardVersionCache.set(
+              standardId,
+              latestVersion.id as StandardVersionId,
+            );
+          }
+        }
+        const versionId = standardVersionCache.get(standardId);
+        if (versionId) {
+          pkgStandardVersionIds.push(versionId);
+        }
+      }
+
+      packageVersionsMap.set(pkg.id, {
+        recipeVersionIds: pkgRecipeVersionIds,
+        standardVersionIds: pkgStandardVersionIds,
+      });
     }
 
-    // Resolve recipe IDs to latest version IDs
-    const recipeVersionIds: string[] = [];
-    for (const recipeId of Array.from(uniqueRecipeIds)) {
-      const versions = await this.recipesPort.listRecipeVersions(
-        recipeId as RecipeId,
-      );
-      if (versions.length > 0) {
-        const latestVersion = versions.sort((a, b) => b.version - a.version)[0];
-        recipeVersionIds.push(latestVersion.id);
-      }
-    }
-
-    // Resolve standard IDs to latest version IDs
-    const standardVersionIds: string[] = [];
-    for (const standardId of Array.from(uniqueStandardIds)) {
-      const latestVersion = await this.standardsPort.getLatestStandardVersion(
-        standardId as StandardId,
-      );
-      if (latestVersion) {
-        standardVersionIds.push(latestVersion.id);
-      }
-    }
+    // Collect unique version IDs for publishing
+    const recipeVersionIds = Array.from(recipeVersionCache.values());
+    const standardVersionIds = Array.from(standardVersionCache.values());
 
     this.logger.info('Resolved package contents', {
       packagesCount: packages.length,
@@ -105,10 +160,101 @@ export class PublishPackagesUseCase implements IPublishPackages {
       ...(recipeDeployments as unknown as PackagesDeployment[]),
     ];
 
+    // Store distributions for each target
+    await this.storeDistributions(
+      command,
+      packages,
+      packageVersionsMap,
+      recipeDeployments,
+      standardDeployments,
+    );
+
     this.logger.info('Successfully published packages', {
       deploymentsCount: allDeployments.length,
     });
 
     return allDeployments;
+  }
+
+  /**
+   * Store distribution records for tracking package deployments.
+   * Creates one Distribution per target, with DistributedPackages linking
+   * each package to its deployed standard and recipe versions.
+   */
+  private async storeDistributions(
+    command: PublishPackagesCommand,
+    packages: Package[],
+    packageVersionsMap: PackageVersionsMap,
+    recipeDeployments: RecipesDeployment[],
+    standardDeployments: StandardsDeployment[],
+  ): Promise<void> {
+    // Use recipe deployments as the primary source (one per target)
+    // Fall back to standard deployments if no recipes
+    const deployments: (RecipesDeployment | StandardsDeployment)[] =
+      recipeDeployments.length > 0 ? recipeDeployments : standardDeployments;
+
+    if (deployments.length === 0) {
+      this.logger.info('No deployments to store distributions for');
+      return;
+    }
+
+    this.logger.info('Storing distributions', {
+      deploymentsCount: deployments.length,
+      packagesCount: packages.length,
+    });
+
+    for (const deployment of deployments) {
+      // Create Distribution record using data from the deployment
+      const distributionId = createDistributionId(uuidv4());
+      await this.distributionRepository.add({
+        id: distributionId,
+        authorId: command.userId as UserId,
+        organizationId: command.organizationId as OrganizationId,
+        target: deployment.target,
+        status: deployment.status,
+        gitCommit: deployment.gitCommit,
+        error: deployment.error,
+        renderModes: deployment.renderModes,
+        distributedPackages: [],
+        createdAt: new Date().toISOString(),
+      });
+
+      // Create DistributedPackage records for each package
+      for (const pkg of packages) {
+        const versions = packageVersionsMap.get(pkg.id);
+        if (!versions) continue;
+
+        const distributedPackageId = createDistributedPackageId(uuidv4());
+        await this.distributedPackageRepository.add({
+          id: distributedPackageId,
+          distributionId,
+          packageId: pkg.id,
+          standardVersions: [],
+          recipeVersions: [],
+        });
+
+        // Link standard versions
+        if (versions.standardVersionIds.length > 0) {
+          await this.distributedPackageRepository.addStandardVersions(
+            distributedPackageId,
+            versions.standardVersionIds,
+          );
+        }
+
+        // Link recipe versions
+        if (versions.recipeVersionIds.length > 0) {
+          await this.distributedPackageRepository.addRecipeVersions(
+            distributedPackageId,
+            versions.recipeVersionIds,
+          );
+        }
+      }
+
+      this.logger.info('Distribution stored', {
+        distributionId,
+        targetId: deployment.target.id,
+        packagesCount: packages.length,
+      });
+    }
   }
 }

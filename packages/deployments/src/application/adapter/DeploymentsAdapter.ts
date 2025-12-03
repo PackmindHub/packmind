@@ -68,6 +68,8 @@ import {
 import { IPackagesDeploymentRepository } from '../../domain/repositories/IPackagesDeploymentRepository';
 import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
 import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
+import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
+import { IDistributedPackageRepository } from '../../domain/repositories/IDistributedPackageRepository';
 import { DeploymentsServices } from '../services/DeploymentsServices';
 import { AddArtefactsToPackageUsecase } from '../useCases/addArtefactsToPackage/addArtefactsToPackage.usecase';
 import { AddTargetUseCase } from '../useCases/AddTargetUseCase';
@@ -139,6 +141,8 @@ export class DeploymentsAdapter
     private readonly standardDeploymentRepository: IStandardsDeploymentRepository,
     private readonly recipesDeploymentRepository: IRecipesDeploymentRepository,
     private readonly packagesDeploymentRepository: IPackagesDeploymentRepository,
+    private readonly distributionRepository: IDistributionRepository,
+    private readonly distributedPackageRepository: IDistributedPackageRepository,
   ) {}
 
   /**
@@ -197,6 +201,8 @@ export class DeploymentsAdapter
       this.standardsPort,
       this,
       this.deploymentsServices.getPackageService(),
+      this.distributionRepository,
+      this.distributedPackageRepository,
     );
 
     this._findDeployedStandardByRepositoryUseCase =
