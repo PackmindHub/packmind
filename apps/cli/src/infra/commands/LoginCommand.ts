@@ -11,7 +11,7 @@ import {
   logInfoConsole,
 } from '../utils/consoleLogger';
 
-const DEFAULT_HOST = 'https://app.packmind.com';
+const DEFAULT_HOST = 'https://app.packmind.ai';
 const CREDENTIALS_DIR = '.packmind';
 const CREDENTIALS_FILE = 'credentials.json';
 const CALLBACK_PORT = 19284;
@@ -202,35 +202,22 @@ export const loginCommand = command({
         // Code provided via --code flag, skip browser flow
         code = providedCode;
       } else {
-        // Try to start the callback server for browser flow
-        let useCallback = true;
-        let callbackPromise: Promise<string> | null = null;
-
-        try {
-          callbackPromise = startCallbackServer();
-        } catch {
-          useCallback = false;
-        }
+        // Start the callback server for browser flow
+        const callbackPromise = startCallbackServer();
 
         const callbackUrl = `http://127.0.0.1:${CALLBACK_PORT}`;
-        const loginUrl = useCallback
-          ? `${host}/cli-login?callback_url=${encodeURIComponent(callbackUrl)}`
-          : `${host}/cli-login`;
+        const loginUrl = `${host}/cli-login?callback_url=${encodeURIComponent(callbackUrl)}`;
 
         console.log('\nOpening browser for authentication...');
         console.log(`\nIf the browser doesn't open, visit: ${loginUrl}\n`);
 
         openBrowser(loginUrl);
 
-        if (useCallback && callbackPromise) {
-          logInfoConsole('Waiting for browser authentication...');
-          try {
-            code = await callbackPromise;
-          } catch {
-            // Fallback to manual code entry
-            code = await promptForCode();
-          }
-        } else {
+        logInfoConsole('Waiting for browser authentication...');
+        try {
+          code = await callbackPromise;
+        } catch {
+          // Fallback to manual code entry if callback server fails
           code = await promptForCode();
         }
       }
