@@ -1,5 +1,5 @@
 import { AccountsHexa } from '@packmind/accounts';
-import { AnalyticsHexa, ImportPracticeLegacyHexa } from '@packmind/analytics';
+import { AnalyticsHexa } from '@packmind/analytics';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { DeploymentsHexa } from '@packmind/deployments';
 import { AmplitudeHexa } from '@packmind/amplitude';
@@ -65,7 +65,6 @@ export function getPackmindAppDefinition(): PackmindAppDefinition {
       CodingAgentHexa,
       DeploymentsHexa,
       AnalyticsHexa,
-      ImportPracticeLegacyHexa,
       ...mcpHexaPlugins,
     ],
     services: [JobsService, PackmindEventEmitterService],
