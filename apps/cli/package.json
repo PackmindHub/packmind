@@ -32,5 +32,9 @@
   },
   "scripts": {
     "packmind-cli": "ts-node --project tsconfig.app.json src/main.ts"
+  },
+  "dependencies": {
+    "@types/inquirer": "^9.0.9",
+    "inquirer": "^13.0.2"
   }
 }
