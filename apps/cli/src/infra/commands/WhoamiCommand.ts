@@ -88,13 +88,6 @@ function decodeApiKey(
   }
 }
 
-function maskApiKey(apiKey: string): string {
-  if (apiKey.length <= 8) {
-    return '********';
-  }
-  return `${apiKey.slice(0, 4)}...${apiKey.slice(-4)}`;
-}
-
 function formatExpiresAt(expiresAt: Date): string {
   const now = new Date();
 
@@ -118,7 +111,6 @@ function formatExpiresAt(expiresAt: Date): string {
 }
 
 interface AuthInfo {
-  apiKey: string;
   host: string;
   organizationName?: string;
   userName?: string;
@@ -127,8 +119,7 @@ interface AuthInfo {
 }
 
 function displayAuthInfo(info: AuthInfo, isExpired: boolean): void {
-  console.log(`\nAPI Key: ${maskApiKey(info.apiKey)}`);
-  console.log(`Host: ${info.host}`);
+  console.log(`\nHost: ${info.host}`);
   if (info.organizationName) {
     console.log(`Organization: ${info.organizationName}`);
   }
@@ -167,7 +158,6 @@ export const whoamiCommand = command({
 
       displayAuthInfo(
         {
-          apiKey: envApiKey,
           host: decoded?.host || 'Unknown',
           organizationName: decoded?.jwt.organization?.name,
           userName: decoded?.jwt.user?.name,
@@ -206,7 +196,6 @@ export const whoamiCommand = command({
 
     displayAuthInfo(
       {
-        apiKey: credentials.apiKey,
         host: credentials.host,
         organizationName: decoded?.jwt.organization?.name,
         userName: decoded?.jwt.user?.name,
