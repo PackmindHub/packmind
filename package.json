@@ -54,7 +54,7 @@
     "@nx/node": "21.6.8",
     "@nx/playwright": "21.6.8",
     "@nx/plugin": "^21.6.8",
-    "@nx/react": "^21.6.8",
+    "@nx/react": "^22.1.3",
     "@nx/storybook": "21.6.8",
     "@nx/vite": "21.6.8",
     "@nx/web": "21.6.8",
