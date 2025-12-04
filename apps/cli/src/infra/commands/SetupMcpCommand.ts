@@ -1,4 +1,4 @@
-import { command } from 'cmd-ts';
+import { command, option, optional, Type } from 'cmd-ts';
 import * as inquirer from 'inquirer';
 import { PackmindGateway } from '../repositories/PackmindGateway';
 import {
@@ -12,6 +12,27 @@ import {
   logWarningConsole,
   formatBold,
 } from '../utils/consoleLogger';
+
+const VALID_AGENTS = ['copilot', 'cursor', 'claude'] as const;
+type AgentArg = (typeof VALID_AGENTS)[number];
+
+const agentArgToType: Record<AgentArg, AgentType> = {
+  copilot: 'vscode',
+  cursor: 'cursor',
+  claude: 'claude',
+};
+
+const AgentArgType: Type<string, AgentArg> = {
+  from: async (input) => {
+    const normalized = input.toLowerCase() as AgentArg;
+    if (VALID_AGENTS.includes(normalized)) {
+      return normalized;
+    }
+    throw new Error(
+      `Invalid agent '${input}'. Valid options are: ${VALID_AGENTS.join(', ')}`,
+    );
+  },
+};
 
 type AgentInfo = {
   type: AgentType;
@@ -27,8 +48,16 @@ const ALL_AGENTS: AgentInfo[] = [
 export const setupMcpCommand = command({
   name: 'setup-mcp',
   description: 'Configure MCP (Model Context Protocol) for AI coding agents',
-  args: {},
-  handler: async () => {
+  args: {
+    target: option({
+      type: optional(AgentArgType),
+      long: 'target',
+      short: 't',
+      description:
+        'Target agent to configure (copilot, cursor, or claude). If omitted, interactive mode is used.',
+    }),
+  },
+  handler: async ({ target }) => {
     const apiKey = process.env['PACKMIND_API_KEY_V3'];
 
     if (!apiKey) {
@@ -42,41 +71,51 @@ export const setupMcpCommand = command({
     const mcpConfigService = new McpConfigService();
     const gateway = new PackmindGateway(apiKey);
 
-    console.log('\nDetecting installed AI agents...\n');
+    let selectedAgents: AgentType[];
 
-    const detectedAgents = agentDetectionService.detectAgents();
-
-    if (detectedAgents.length > 0) {
-      console.log('Found agents:');
-      detectedAgents.forEach((agent) => {
-        console.log(`  - ${agent.name}`);
-      });
-      console.log('');
+    if (target) {
+      // Direct mode: skip interactive selection
+      selectedAgents = [agentArgToType[target]];
     } else {
-      console.log('No supported agents detected.\n');
-    }
+      // Interactive mode: detect and prompt
+      console.log('\nDetecting installed AI agents...\n');
 
-    const detectedTypes = new Set(detectedAgents.map((a) => a.type));
-    const choices = ALL_AGENTS.map((agent) => ({
-      name: agent.name,
-      value: agent.type,
-      checked: detectedTypes.has(agent.type),
-    }));
+      const detectedAgents = agentDetectionService.detectAgents();
 
-    const { selectedAgents } = await inquirer.default.prompt<{
-      selectedAgents: AgentType[];
-    }>([
-      {
-        type: 'checkbox',
-        name: 'selectedAgents',
-        message: 'Select agents to configure:',
-        choices,
-      },
-    ]);
+      if (detectedAgents.length > 0) {
+        console.log('Found agents:');
+        detectedAgents.forEach((detectedAgent) => {
+          console.log(`  - ${detectedAgent.name}`);
+        });
+        console.log('');
+      } else {
+        console.log('No supported agents detected.\n');
+      }
 
-    if (selectedAgents.length === 0) {
-      console.log('\nNo agents selected. Exiting.');
-      process.exit(0);
+      const detectedTypes = new Set(detectedAgents.map((a) => a.type));
+      const choices = ALL_AGENTS.map((agentInfo) => ({
+        name: agentInfo.name,
+        value: agentInfo.type,
+        checked: detectedTypes.has(agentInfo.type),
+      }));
+
+      const { selectedAgents: promptedAgents } = await inquirer.default.prompt<{
+        selectedAgents: AgentType[];
+      }>([
+        {
+          type: 'checkbox',
+          name: 'selectedAgents',
+          message: 'Select agents to configure:',
+          choices,
+        },
+      ]);
+
+      if (promptedAgents.length === 0) {
+        console.log('\nNo agents selected. Exiting.');
+        process.exit(0);
+      }
+
+      selectedAgents = promptedAgents;
     }
 
     console.log('\nFetching MCP configuration...\n');
