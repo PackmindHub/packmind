@@ -1,5 +1,8 @@
 // Global setup for integration tests to mock Redis connections
 
+// Increase timeout for integration tests (hooks and tests)
+jest.setTimeout(60000);
+
 // Mock the queueFactory and Configuration from @packmind/node-utils
 jest.mock('@packmind/node-utils', () => {
   const actual = jest.requireActual('@packmind/node-utils');

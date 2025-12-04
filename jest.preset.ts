@@ -6,11 +6,13 @@ export const nxPreset = {
   coverageReporters: ['html'],
   setupFilesAfterEnv: ['<rootDir>/../../jest.setup.ts'],
   transform: {
-    '^.+\\.(ts|js|html)$': [
-      'ts-jest',
+    '^.+\\.[tj]sx?$': [
+      '@swc/jest',
       {
-        tsconfig: '<rootDir>/tsconfig.spec.json',
-        isolatedModules: true, // Faster compilation, less memory
+        jsc: {
+          parser: { syntax: 'typescript', tsx: true },
+          target: 'es2022',
+        },
       },
     ],
   },

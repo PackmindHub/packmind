@@ -6,10 +6,6 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
-    "tslib": "^2.3.0",
-    "typeorm": "0.3.27",
-    "uuid": "^11.1.0",
-    "slug": "^11.0.1",
     "@packmind/accounts": "*",
     "@packmind/coding-agent": "*",
     "@packmind/git": "*",
@@ -17,7 +13,12 @@
     "@packmind/node-utils": "*",
     "@packmind/recipes": "*",
     "@packmind/standards": "*",
+    "@packmind/test-utils": "0.0.1",
     "@packmind/types": "*",
-    "@packmind/test-utils": "0.0.1"
-  }
+    "@swc/helpers": "~0.5.11",
+    "slug": "^11.0.1",
+    "typeorm": "0.3.27",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {}
 }
