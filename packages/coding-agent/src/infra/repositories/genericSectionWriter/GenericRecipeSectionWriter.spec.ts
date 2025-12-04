@@ -35,8 +35,6 @@ Some content after`;
         expect(result).toContain('<!-- start: packmind-recipes -->');
         expect(result).toContain('<!-- end: packmind-recipes -->');
         expect(result).toContain('MANDATORY STEP');
-        expect(result).toContain('TestAgent');
-        expect(result).toContain('test-repo');
       });
 
       it('removes old content between markers', () => {
@@ -76,8 +74,6 @@ More content`;
       it('appends the new section with markers', () => {
         expect(result).toContain('<!-- start: recipes-section -->');
         expect(result).toContain('<!-- end: recipes-section -->');
-        expect(result).toContain('NoMarkerAgent');
-        expect(result).toContain('no-marker-repo');
       });
 
       it('appends at the end of the document', () => {
@@ -170,7 +166,6 @@ Second occurrence
       it('creates section with markers', () => {
         expect(result).toContain('<!-- start: empty-marker -->');
         expect(result).toContain('<!-- end: empty-marker -->');
-        expect(result).toContain('EmptyAgent');
       });
     });
   });
@@ -188,14 +183,6 @@ Second occurrence
 
       it('includes mandatory step warning', () => {
         expect(result).toContain('MANDATORY STEP');
-      });
-
-      it('includes agent name', () => {
-        expect(result).toContain('TestAgent');
-      });
-
-      it('includes repo name', () => {
-        expect(result).toContain('test-repo');
       });
 
       it('includes custom recipes section', () => {

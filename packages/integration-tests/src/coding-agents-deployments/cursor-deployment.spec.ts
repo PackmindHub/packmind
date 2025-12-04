@@ -192,8 +192,6 @@ describe('Cursor Deployment Integration', () => {
         expect(cursorFile.content).toContain('🚨 **MANDATORY STEP** 🚨');
         expect(cursorFile.content).toContain('ALWAYS READ');
         expect(cursorFile.content).toContain('available recipes below');
-        expect(cursorFile.content).toContain('aiAgent: "Cursor"');
-        expect(cursorFile.content).toContain('gitRepo: "test-owner/test-repo"');
 
         // Check recipes list
         expect(cursorFile.content).toContain('## Available recipes');
@@ -399,13 +397,6 @@ Before writing, editing, or generating ANY code:
 - **MANDATORY**: Always check the recipes list first
 - **CONDITIONAL**: Only read/use individual recipes if they are relevant to your task
 - **OPTIONAL**: If no recipes are relevant, proceed without using any
-
-## Recipe Usage Tracking:
-When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you MUST call the 'packmind_notify_recipe_usage' MCP tool with:
-* Recipe slugs array (e.g., ["recipe-name"] from "recipe-name.md")
-* aiAgent: "Cursor"
-* gitRepo: "test-owner/test-repo"
-* target: "/"
 
 **Remember: Always check the recipes list first, but only use recipes that actually apply to your specific task.**\`
 

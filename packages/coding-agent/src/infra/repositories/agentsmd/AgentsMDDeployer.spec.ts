@@ -79,8 +79,6 @@ describe('AgentsMDDeployer', () => {
       expect(sectionContent).toContain('🚨 **MANDATORY STEP** 🚨');
       expect(sectionContent).toContain('ALWAYS READ');
       expect(sectionContent).toContain(recipe.name);
-      expect(sectionContent).toContain('aiAgent: "AGENTS.md"');
-      expect(sectionContent).toContain('gitRepo: "test-owner/test-repo"');
     });
 
     it('handles empty recipe list', async () => {
@@ -139,7 +137,6 @@ describe('AgentsMDDeployer', () => {
       expect(sectionContent).toContain('🚨 **MANDATORY STEP** 🚨');
       expect(sectionContent).toContain(recipeVersion1.name);
       expect(sectionContent).toContain(recipeVersion2.name);
-      expect(sectionContent).toContain('aiAgent: "AGENTS.md"');
     });
   });
 

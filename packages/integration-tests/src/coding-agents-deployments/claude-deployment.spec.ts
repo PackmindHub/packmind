@@ -188,8 +188,6 @@ describe('Claude Deployment Integration', () => {
         expect(sectionContent).toContain('🚨 **MANDATORY STEP** 🚨');
         expect(sectionContent).toContain('ALWAYS READ');
         expect(sectionContent).toContain(recipeVersions[0].name);
-        expect(sectionContent).toContain('aiAgent: "Claude Code"');
-        expect(sectionContent).toContain('gitRepo: "test-owner/test-repo"');
 
         // Should NOT contain standards content yet
         expect(sectionContent).not.toContain('## Packmind Standards');
@@ -369,8 +367,6 @@ describe('Claude Deployment Integration', () => {
       // Should generate recipe section with Packmind content only
       expect(sectionContent).toContain('# Packmind Recipes');
       expect(sectionContent).toContain('🚨 **MANDATORY STEP** 🚨');
-      expect(sectionContent).toContain('aiAgent: "Claude Code"');
-      expect(sectionContent).toContain('gitRepo: "test-owner/test-repo"');
 
       // Should NOT contain user content (that's preserved by merge layer)
       expect(sectionContent).not.toContain('# Some User Instructions');

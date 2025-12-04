@@ -3,7 +3,6 @@ import { stubLogger } from '@packmind/test-utils';
 import { IEventTrackingPort } from '@packmind/types';
 import {
   registerCreateRecipeTool,
-  registerNotifyRecipeUsageTool,
   registerSaveStandardRuleTool,
   registerListStandardsTool,
   registerGetStandardDetailsTool,
@@ -89,10 +88,9 @@ describe('tools.integration', () => {
   });
 
   describe('tool registration', () => {
-    it('registers all 14 tools with correct names', () => {
+    it('registers all tools with correct names', () => {
       // Register all tools
       registerCreateRecipeTool(dependencies, mcpServer);
-      registerNotifyRecipeUsageTool(dependencies, mcpServer);
       registerSaveStandardRuleTool(dependencies, mcpServer);
       registerListStandardsTool(dependencies, mcpServer);
       registerGetStandardDetailsTool(dependencies, mcpServer);
@@ -109,7 +107,6 @@ describe('tools.integration', () => {
       // Verify all expected tools are registered
       const expectedTools = [
         'create_recipe',
-        'notify_recipe_usage',
         'save_standard_rule',
         'list_standards',
         'get_standard_details',
@@ -124,7 +121,7 @@ describe('tools.integration', () => {
         'onboarding',
       ];
 
-      expect(registeredTools.size).toBe(14);
+      expect(registeredTools.size).toBe(expectedTools.length);
       expectedTools.forEach((toolName) => {
         expect(registeredTools.has(toolName)).toBe(true);
       });
@@ -133,7 +130,6 @@ describe('tools.integration', () => {
     it('each tool has a description', () => {
       // Register all tools
       registerCreateRecipeTool(dependencies, mcpServer);
-      registerNotifyRecipeUsageTool(dependencies, mcpServer);
       registerSaveStandardRuleTool(dependencies, mcpServer);
       registerListStandardsTool(dependencies, mcpServer);
       registerGetStandardDetailsTool(dependencies, mcpServer);
