@@ -36,7 +36,7 @@ function createTestApiKey(options: {
 }
 
 describe('FileCredentialsProvider', () => {
-  beforeEach(() => {
+  afterEach(() => {
     jest.clearAllMocks();
   });
 
@@ -61,72 +61,88 @@ describe('FileCredentialsProvider', () => {
   });
 
   describe('hasCredentials', () => {
-    it('returns false when credentials file does not exist', () => {
-      mockFs.existsSync.mockReturnValue(false);
-      const provider = new FileCredentialsProvider();
+    describe('when credentials file does not exist', () => {
+      it('returns false', () => {
+        mockFs.existsSync.mockReturnValue(false);
+        const provider = new FileCredentialsProvider();
 
-      expect(provider.hasCredentials()).toBe(false);
+        expect(provider.hasCredentials()).toBe(false);
+      });
     });
 
-    it('returns false when credentials file has no apiKey', () => {
-      mockFs.existsSync.mockReturnValue(true);
-      mockFs.readFileSync.mockReturnValue(JSON.stringify({}));
-      const provider = new FileCredentialsProvider();
+    describe('when credentials file has no apiKey', () => {
+      it('returns false', () => {
+        mockFs.existsSync.mockReturnValue(true);
+        mockFs.readFileSync.mockReturnValue(JSON.stringify({}));
+        const provider = new FileCredentialsProvider();
 
-      expect(provider.hasCredentials()).toBe(false);
+        expect(provider.hasCredentials()).toBe(false);
+      });
     });
 
-    it('returns false when credentials file contains invalid JSON', () => {
-      mockFs.existsSync.mockReturnValue(true);
-      mockFs.readFileSync.mockReturnValue('invalid json');
-      const provider = new FileCredentialsProvider();
+    describe('when credentials file contains invalid JSON', () => {
+      it('returns false', () => {
+        mockFs.existsSync.mockReturnValue(true);
+        mockFs.readFileSync.mockReturnValue('invalid json');
+        const provider = new FileCredentialsProvider();
 
-      expect(provider.hasCredentials()).toBe(false);
+        expect(provider.hasCredentials()).toBe(false);
+      });
     });
 
-    it('returns true when credentials file has apiKey', () => {
-      mockFs.existsSync.mockReturnValue(true);
-      mockFs.readFileSync.mockReturnValue(
-        JSON.stringify({ apiKey: createTestApiKey({}) }),
-      );
-      const provider = new FileCredentialsProvider();
+    describe('when credentials file has apiKey', () => {
+      it('returns true', () => {
+        mockFs.existsSync.mockReturnValue(true);
+        mockFs.readFileSync.mockReturnValue(
+          JSON.stringify({ apiKey: createTestApiKey({}) }),
+        );
+        const provider = new FileCredentialsProvider();
 
-      expect(provider.hasCredentials()).toBe(true);
+        expect(provider.hasCredentials()).toBe(true);
+      });
     });
   });
 
   describe('loadCredentials', () => {
-    it('returns null when credentials file does not exist', () => {
-      mockFs.existsSync.mockReturnValue(false);
-      const provider = new FileCredentialsProvider();
+    describe('when credentials file does not exist', () => {
+      it('returns null', () => {
+        mockFs.existsSync.mockReturnValue(false);
+        const provider = new FileCredentialsProvider();
 
-      expect(provider.loadCredentials()).toBeNull();
+        expect(provider.loadCredentials()).toBeNull();
+      });
     });
 
-    it('returns null when credentials file has invalid JSON', () => {
-      mockFs.existsSync.mockReturnValue(true);
-      mockFs.readFileSync.mockReturnValue('invalid json');
-      const provider = new FileCredentialsProvider();
+    describe('when credentials file has invalid JSON', () => {
+      it('returns null', () => {
+        mockFs.existsSync.mockReturnValue(true);
+        mockFs.readFileSync.mockReturnValue('invalid json');
+        const provider = new FileCredentialsProvider();
 
-      expect(provider.loadCredentials()).toBeNull();
+        expect(provider.loadCredentials()).toBeNull();
+      });
     });
 
-    it('returns null when credentials file has no apiKey', () => {
-      mockFs.existsSync.mockReturnValue(true);
-      mockFs.readFileSync.mockReturnValue(JSON.stringify({}));
-      const provider = new FileCredentialsProvider();
+    describe('when credentials file has no apiKey', () => {
+      it('returns null', () => {
+        mockFs.existsSync.mockReturnValue(true);
+        mockFs.readFileSync.mockReturnValue(JSON.stringify({}));
+        const provider = new FileCredentialsProvider();
 
-      expect(provider.loadCredentials()).toBeNull();
+        expect(provider.loadCredentials()).toBeNull();
+      });
     });
 
-    it('returns null when API key is invalid', () => {
-      mockFs.existsSync.mockReturnValue(true);
-      mockFs.readFileSync.mockReturnValue(
-        JSON.stringify({ apiKey: 'invalid-api-key' }),
-      );
-      const provider = new FileCredentialsProvider();
+    describe('when API key is invalid', () => {
+      it('returns null', () => {
+        mockFs.existsSync.mockReturnValue(true);
+        mockFs.readFileSync.mockReturnValue(
+          JSON.stringify({ apiKey: 'invalid-api-key' }),
+        );
+        const provider = new FileCredentialsProvider();
 
-      expect(provider.loadCredentials()).toBeNull();
+        expect(provider.loadCredentials()).toBeNull();
+      });
     });
 
     it('returns credentials with host from API key', () => {

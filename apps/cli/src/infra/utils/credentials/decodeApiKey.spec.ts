@@ -110,35 +110,41 @@ describe('decodeApiKey', () => {
       expect(result).toBeNull();
     });
 
-    it('returns null when host is missing', () => {
-      const payload = { jwt: 'some.jwt.token' };
-      const apiKey = Buffer.from(JSON.stringify(payload)).toString('base64');
+    describe('when host is missing', () => {
+      it('returns null', () => {
+        const payload = { jwt: 'some.jwt.token' };
+        const apiKey = Buffer.from(JSON.stringify(payload)).toString('base64');
 
-      const result = decodeApiKey(apiKey);
+        const result = decodeApiKey(apiKey);
 
-      expect(result).toBeNull();
+        expect(result).toBeNull();
+      });
     });
 
-    it('returns null when jwt is missing', () => {
-      const payload = { host: 'https://app.packmind.ai' };
-      const apiKey = Buffer.from(JSON.stringify(payload)).toString('base64');
+    describe('when jwt is missing', () => {
+      it('returns null', () => {
+        const payload = { host: 'https://app.packmind.ai' };
+        const apiKey = Buffer.from(JSON.stringify(payload)).toString('base64');
 
-      const result = decodeApiKey(apiKey);
+        const result = decodeApiKey(apiKey);
 
-      expect(result).toBeNull();
+        expect(result).toBeNull();
+      });
     });
 
-    it('returns host with empty jwt when JWT format is invalid', () => {
-      const payload = {
-        host: 'https://app.packmind.ai',
-        jwt: 'invalid-jwt-format',
-      };
-      const apiKey = Buffer.from(JSON.stringify(payload)).toString('base64');
+    describe('when JWT format is invalid', () => {
+      it('returns host with empty jwt', () => {
+        const payload = {
+          host: 'https://app.packmind.ai',
+          jwt: 'invalid-jwt-format',
+        };
+        const apiKey = Buffer.from(JSON.stringify(payload)).toString('base64');
 
-      const result = decodeApiKey(apiKey);
+        const result = decodeApiKey(apiKey);
 
-      expect(result?.host).toBe('https://app.packmind.ai');
-      expect(result?.jwt).toEqual({});
+        expect(result?.host).toBe('https://app.packmind.ai');
+        expect(result?.jwt).toEqual({});
+      });
     });
   });
 });

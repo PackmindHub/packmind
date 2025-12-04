@@ -4,6 +4,7 @@ import { LintViolation } from '../../domain/entities/LintViolation';
 import { DiffMode } from '../../domain/entities/DiffMode';
 import { IDELintLogger } from '../repositories/IDELintLogger';
 import { HumanReadableLogger } from '../repositories/HumanReadableLogger';
+import { CommunityEditionError } from '../../domain/errors/CommunityEditionError';
 
 export enum Loggers {
   ide = 'ide',
@@ -123,6 +124,12 @@ export async function lintHandler(
   } catch (error) {
     if (isMissingApiKeyError(error) && continueOnMissingKey) {
       console.warn('Warning: No PACKMIND_API_KEY_V3 set, linting is skipped.');
+      exit(0);
+      return;
+    }
+    if (error instanceof CommunityEditionError) {
+      console.log(`packmind-cli ${error.message}`);
+      console.log('Linting skipped.');
       exit(0);
       return;
     }
