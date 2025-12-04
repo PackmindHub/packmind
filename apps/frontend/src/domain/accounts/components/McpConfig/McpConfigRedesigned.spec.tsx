@@ -62,7 +62,7 @@ describe('McpConfigRedesigned', () => {
     it('displays the page title', () => {
       renderWithProviders(<McpConfigRedesigned />);
 
-      expect(screen.getByText('MCP Access Token')).toBeInTheDocument();
+      expect(screen.getByText('MCP server configuration')).toBeInTheDocument();
     });
 
     it('displays the description text', () => {
@@ -70,29 +70,20 @@ describe('McpConfigRedesigned', () => {
 
       expect(
         screen.getByText(
-          'Generate an access token for MCP (Model Context Protocol) integration.',
+          'Configure your AI assistant to connect to Packmind MCP server.',
         ),
       ).toBeInTheDocument();
     });
 
-    it('displays the get token button', () => {
+    it('automatically fetches token on mount', () => {
       renderWithProviders(<McpConfigRedesigned />);
-
-      expect(screen.getByText('Get MCP Access Token')).toBeInTheDocument();
-    });
-  });
-
-  describe('Get token button', () => {
-    it('calls mutate when clicked', () => {
-      renderWithProviders(<McpConfigRedesigned />);
-
-      const button = screen.getByText('Get MCP Access Token');
-      fireEvent.click(button);
 
       expect(mockMutate).toHaveBeenCalledTimes(1);
     });
+  });
 
-    it('is disabled when mutation is pending', () => {
+  describe('Loading state', () => {
+    it('displays loading spinner when fetching token', () => {
       mockUseGetMcpTokenMutation.mockReturnValue({
         mutate: mockMutate,
         isPending: true,
@@ -104,8 +95,9 @@ describe('McpConfigRedesigned', () => {
 
       renderWithProviders(<McpConfigRedesigned />);
 
-      const button = screen.getByText('Getting Token...');
-      expect(button).toBeDisabled();
+      expect(
+        screen.getByText('Generating access token...'),
+      ).toBeInTheDocument();
     });
   });
 
@@ -139,11 +131,11 @@ describe('McpConfigRedesigned', () => {
       } as ReturnType<typeof useGetMcpTokenMutation>);
     });
 
-    it('displays success alert', () => {
+    it('displays agent selection prompt', () => {
       renderWithProviders(<McpConfigRedesigned />);
 
       expect(
-        screen.getByText('Token Generated Successfully!'),
+        screen.getByText('Select an AI assistant to configure:'),
       ).toBeInTheDocument();
     });
 

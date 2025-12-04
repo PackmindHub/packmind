@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
-  PMButton,
   PMPageSection,
   PMText,
   PMVStack,
   PMAlert,
   PMGrid,
+  PMSpinner,
 } from '@packmind/ui';
 import {
   useGetMcpTokenMutation,
@@ -16,67 +16,79 @@ import { AgentCard } from './AgentCard';
 import { AgentModal } from './AgentModal';
 import { IAgentConfig } from './types';
 
+const ERROR_MESSAGE = 'Failed to retrieve MCP access token';
+const DESCRIPTION_TEXT =
+  'Configure your AI assistant to connect to Packmind MCP server.';
+const LOADING_TEXT = 'Generating access token...';
+const SELECTION_PROMPT = 'Select an AI assistant to configure:';
+
 export const McpConfigRedesigned: React.FunctionComponent = () => {
   const getMcpTokenMutation = useGetMcpTokenMutation();
   const getMcpURLQuery = useGetMcpURLQuery();
   const [selectedAgent, setSelectedAgent] = useState<IAgentConfig | null>(null);
 
-  const handleGetToken = () => {
-    getMcpTokenMutation.mutate();
-  };
+  // Automatically fetch token on mount
+  useEffect(() => {
+    if (!getMcpTokenMutation.data && !getMcpTokenMutation.isPending) {
+      getMcpTokenMutation.mutate();
+    }
+    // Disable exhaustive-deps as we only want this to run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const handleAgentClick = (agent: IAgentConfig) => () => {
-    setSelectedAgent(agent);
-  };
+  const handleAgentClick = useCallback(
+    (agent: IAgentConfig) => () => {
+      setSelectedAgent(agent);
+    },
+    [],
+  );
 
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setSelectedAgent(null);
-  };
+  }, []);
 
-  const { url } = getMcpURLQuery.data || {};
+  const url = getMcpURLQuery.data?.url;
   const token = getMcpTokenMutation.data?.access_token;
+  const isTokenReady = getMcpTokenMutation.isSuccess && token && url;
 
-  const agentsConfig = getAgentsConfig();
+  const agentsConfig = useMemo(() => getAgentsConfig(), []);
+
+  const errorMessage = useMemo(() => {
+    if (!getMcpTokenMutation.isError) return null;
+    return getMcpTokenMutation.error instanceof Error
+      ? getMcpTokenMutation.error.message
+      : ERROR_MESSAGE;
+  }, [getMcpTokenMutation.isError, getMcpTokenMutation.error]);
 
   return (
-    <PMPageSection title="MCP Access Token" variant="outline">
-      <PMText as="p">
-        Generate an access token for MCP (Model Context Protocol) integration.
+    <PMPageSection title="MCP server configuration" variant="outline">
+      <PMText as="p" mb={4}>
+        {DESCRIPTION_TEXT}
       </PMText>
 
-      <PMButton
-        onClick={handleGetToken}
-        disabled={getMcpTokenMutation.isPending}
-        marginBottom={4}
-      >
-        {getMcpTokenMutation.isPending
-          ? 'Getting Token...'
-          : 'Get MCP Access Token'}
-      </PMButton>
+      {getMcpTokenMutation.isPending && (
+        <PMVStack alignItems="center" gap={4} py={8}>
+          <PMSpinner size="lg" />
+          <PMText as="p" fontSize="sm" color="faded">
+            {LOADING_TEXT}
+          </PMText>
+        </PMVStack>
+      )}
 
-      {getMcpTokenMutation.isError && (
+      {getMcpTokenMutation.isError && errorMessage && (
         <PMAlert.Root status="error" mb={4}>
           <PMAlert.Indicator />
           <PMAlert.Content>
             <PMAlert.Title>Error!</PMAlert.Title>
-            <PMAlert.Description>
-              {getMcpTokenMutation.error instanceof Error
-                ? getMcpTokenMutation.error.message
-                : 'Failed to retrieve MCP access token'}
-            </PMAlert.Description>
+            <PMAlert.Description>{errorMessage}</PMAlert.Description>
           </PMAlert.Content>
         </PMAlert.Root>
       )}
 
-      {getMcpTokenMutation.isSuccess && token && url && (
+      {isTokenReady && (
         <PMVStack width="100%" alignItems="baseline" gap={4}>
-          <PMAlert.Root status="success">
-            <PMAlert.Indicator />
-            <PMAlert.Title>Token Generated Successfully!</PMAlert.Title>
-          </PMAlert.Root>
-
           <PMText as="p" fontSize="sm" color="faded">
-            Select an AI assistant to configure:
+            {SELECTION_PROMPT}
           </PMText>
 
           <PMGrid
@@ -97,12 +109,12 @@ export const McpConfigRedesigned: React.FunctionComponent = () => {
             ))}
           </PMGrid>
 
-          {selectedAgent && (
+          {selectedAgent && token && url && (
             <AgentModal
               agent={selectedAgent}
               token={token}
               url={url}
-              isOpen={!!selectedAgent}
+              isOpen={true}
               onClose={handleCloseModal}
             />
           )}

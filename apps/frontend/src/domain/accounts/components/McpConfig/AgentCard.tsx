@@ -1,25 +1,23 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { PMCard, PMHStack, PMText, PMVStack, PMBadge } from '@packmind/ui';
-import { IAgentConfig, InstallMethodType } from './types';
+import { IAgentConfig, METHOD_LABELS } from './types';
 
 interface IAgentCardProps {
   agent: IAgentConfig;
   onClick: (event: React.MouseEvent<HTMLDivElement>) => void;
 }
 
-const methodLabels: Record<InstallMethodType, string> = {
-  cli: 'CLI',
-  magicLink: 'Magic Link',
-  json: 'JSON',
-};
-
 export const AgentCard: React.FunctionComponent<IAgentCardProps> = ({
   agent,
   onClick,
 }) => {
-  const availableMethods = agent.installMethods
-    .filter((method) => method.available)
-    .map((method) => method.type);
+  const availableMethods = useMemo(
+    () =>
+      agent.installMethods
+        .filter((method) => method.available)
+        .map((method) => method.type),
+    [agent.installMethods],
+  );
 
   return (
     <PMCard.Root
@@ -42,7 +40,7 @@ export const AgentCard: React.FunctionComponent<IAgentCardProps> = ({
           <PMHStack gap={2} flexWrap="wrap">
             {availableMethods.map((methodType) => (
               <PMBadge key={methodType} colorScheme="blue" size="sm">
-                {methodLabels[methodType]}
+                {METHOD_LABELS[methodType]}
               </PMBadge>
             ))}
           </PMHStack>
