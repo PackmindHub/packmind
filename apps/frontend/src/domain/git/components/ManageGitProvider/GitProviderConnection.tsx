@@ -171,7 +171,10 @@ export const GitProviderConnection: React.FC<GitProviderConnectionProps> = ({
 
           {/* URL */}
           <PMField.Root required invalid={!!errors.url}>
-            <PMField.Label htmlFor={urlInputId}>URL</PMField.Label>
+            <PMField.Label htmlFor={urlInputId}>
+              URL
+              <PMField.RequiredIndicator />
+            </PMField.Label>
             <PMInput
               id={urlInputId}
               size={'sm'}
@@ -201,6 +204,7 @@ export const GitProviderConnection: React.FC<GitProviderConnectionProps> = ({
           <PMField.Root required invalid={!!errors.token}>
             <PMField.Label htmlFor={tokenInputId}>
               Access Token
+              <PMField.RequiredIndicator />
               <PMPopover.Root positioning={{ placement: 'right' }}>
                 <PMPopover.Trigger asChild>
                   <PMButton variant="ghost" size="xs" marginLeft={2}>
@@ -279,6 +283,7 @@ export const GitProviderConnection: React.FC<GitProviderConnectionProps> = ({
               loading={
                 isEditing ? updateMutation.isPending : createMutation.isPending
               }
+              disabled={!formData.token.trim() || !formData.url.trim()}
             >
               Save
             </PMButton>
