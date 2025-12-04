@@ -48,46 +48,58 @@ describe('EnvCredentialsProvider', () => {
   });
 
   describe('hasCredentials', () => {
-    it('returns false when env variable is not set', () => {
-      const provider = new EnvCredentialsProvider();
+    describe('when env variable is not set', () => {
+      it('returns false', () => {
+        const provider = new EnvCredentialsProvider();
 
-      expect(provider.hasCredentials()).toBe(false);
+        expect(provider.hasCredentials()).toBe(false);
+      });
     });
 
-    it('returns false when env variable is empty', () => {
-      process.env.PACKMIND_API_KEY_V3 = '';
-      const provider = new EnvCredentialsProvider();
+    describe('when env variable is empty', () => {
+      it('returns false', () => {
+        process.env.PACKMIND_API_KEY_V3 = '';
+        const provider = new EnvCredentialsProvider();
 
-      expect(provider.hasCredentials()).toBe(false);
+        expect(provider.hasCredentials()).toBe(false);
+      });
     });
 
-    it('returns false when env variable is whitespace only', () => {
-      process.env.PACKMIND_API_KEY_V3 = '   ';
-      const provider = new EnvCredentialsProvider();
+    describe('when env variable is whitespace only', () => {
+      it('returns false', () => {
+        process.env.PACKMIND_API_KEY_V3 = '   ';
+        const provider = new EnvCredentialsProvider();
 
-      expect(provider.hasCredentials()).toBe(false);
+        expect(provider.hasCredentials()).toBe(false);
+      });
     });
 
-    it('returns true when env variable is set', () => {
-      process.env.PACKMIND_API_KEY_V3 = createTestApiKey({});
-      const provider = new EnvCredentialsProvider();
+    describe('when env variable is set', () => {
+      it('returns true', () => {
+        process.env.PACKMIND_API_KEY_V3 = createTestApiKey({});
+        const provider = new EnvCredentialsProvider();
 
-      expect(provider.hasCredentials()).toBe(true);
+        expect(provider.hasCredentials()).toBe(true);
+      });
     });
   });
 
   describe('loadCredentials', () => {
-    it('returns null when env variable is not set', () => {
-      const provider = new EnvCredentialsProvider();
+    describe('when env variable is not set', () => {
+      it('returns null', () => {
+        const provider = new EnvCredentialsProvider();
 
-      expect(provider.loadCredentials()).toBeNull();
+        expect(provider.loadCredentials()).toBeNull();
+      });
     });
 
-    it('returns null when API key is invalid', () => {
-      process.env.PACKMIND_API_KEY_V3 = 'invalid-api-key';
-      const provider = new EnvCredentialsProvider();
+    describe('when API key is invalid', () => {
+      it('returns null', () => {
+        process.env.PACKMIND_API_KEY_V3 = 'invalid-api-key';
+        const provider = new EnvCredentialsProvider();
 
-      expect(provider.loadCredentials()).toBeNull();
+        expect(provider.loadCredentials()).toBeNull();
+      });
     });
 
     it('returns credentials with host from API key', () => {
@@ -148,13 +160,15 @@ describe('EnvCredentialsProvider', () => {
       expect(credentials?.apiKey).toBe(apiKey);
     });
 
-    it('returns undefined expiresAt when JWT has no exp claim', () => {
-      process.env.PACKMIND_API_KEY_V3 = createTestApiKey({});
-      const provider = new EnvCredentialsProvider();
+    describe('when JWT has no exp claim', () => {
+      it('returns undefined expiresAt', () => {
+        process.env.PACKMIND_API_KEY_V3 = createTestApiKey({});
+        const provider = new EnvCredentialsProvider();
 
-      const credentials = provider.loadCredentials();
+        const credentials = provider.loadCredentials();
 
-      expect(credentials?.expiresAt).toBeUndefined();
+        expect(credentials?.expiresAt).toBeUndefined();
+      });
     });
   });
 });

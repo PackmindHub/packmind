@@ -25,14 +25,16 @@ class MockCredentialsProvider implements ICredentialsProvider {
 
 describe('CredentialsService', () => {
   describe('loadCredentials', () => {
-    it('returns null when no providers have credentials', () => {
-      const provider1 = new MockCredentialsProvider('Provider 1', null);
-      const provider2 = new MockCredentialsProvider('Provider 2', null);
-      const service = new CredentialsService([provider1, provider2]);
+    describe('when no providers have credentials', () => {
+      it('returns null', () => {
+        const provider1 = new MockCredentialsProvider('Provider 1', null);
+        const provider2 = new MockCredentialsProvider('Provider 2', null);
+        const service = new CredentialsService([provider1, provider2]);
 
-      const result = service.loadCredentials();
+        const result = service.loadCredentials();
 
-      expect(result).toBeNull();
+        expect(result).toBeNull();
+      });
     });
 
     it('returns credentials from first provider that has them', () => {
@@ -56,20 +58,25 @@ describe('CredentialsService', () => {
       expect(result?.host).toBe('https://host1.com');
     });
 
-    it('falls back to second provider when first has no credentials', () => {
-      const credentials2: DecodedCredentials = {
-        apiKey: 'api-key-2',
-        host: 'https://host2.com',
-        userName: 'User 2',
-      };
-      const provider1 = new MockCredentialsProvider('Provider 1', null);
-      const provider2 = new MockCredentialsProvider('Provider 2', credentials2);
-      const service = new CredentialsService([provider1, provider2]);
+    describe('when first provider has no credentials', () => {
+      it('falls back to second provider', () => {
+        const credentials2: DecodedCredentials = {
+          apiKey: 'api-key-2',
+          host: 'https://host2.com',
+          userName: 'User 2',
+        };
+        const provider1 = new MockCredentialsProvider('Provider 1', null);
+        const provider2 = new MockCredentialsProvider(
+          'Provider 2',
+          credentials2,
+        );
+        const service = new CredentialsService([provider1, provider2]);
 
-      const result = service.loadCredentials();
+        const result = service.loadCredentials();
 
-      expect(result?.apiKey).toBe('api-key-2');
-      expect(result?.host).toBe('https://host2.com');
+        expect(result?.apiKey).toBe('api-key-2');
+        expect(result?.host).toBe('https://host2.com');
+      });
     });
 
     it('includes source name from the provider', () => {
@@ -88,58 +95,66 @@ describe('CredentialsService', () => {
       expect(result?.source).toBe('My Custom Source');
     });
 
-    it('sets isExpired to true when expiresAt is in the past', () => {
-      const pastDate = new Date(Date.now() - 1000);
-      const credentials: DecodedCredentials = {
-        apiKey: 'api-key',
-        host: 'https://host.com',
-        expiresAt: pastDate,
-      };
-      const provider = new MockCredentialsProvider('Provider', credentials);
-      const service = new CredentialsService([provider]);
+    describe('when expiresAt is in the past', () => {
+      it('sets isExpired to true', () => {
+        const pastDate = new Date(Date.now() - 1000);
+        const credentials: DecodedCredentials = {
+          apiKey: 'api-key',
+          host: 'https://host.com',
+          expiresAt: pastDate,
+        };
+        const provider = new MockCredentialsProvider('Provider', credentials);
+        const service = new CredentialsService([provider]);
 
-      const result = service.loadCredentials();
+        const result = service.loadCredentials();
 
-      expect(result?.isExpired).toBe(true);
+        expect(result?.isExpired).toBe(true);
+      });
     });
 
-    it('sets isExpired to false when expiresAt is in the future', () => {
-      const futureDate = new Date(Date.now() + 3600000);
-      const credentials: DecodedCredentials = {
-        apiKey: 'api-key',
-        host: 'https://host.com',
-        expiresAt: futureDate,
-      };
-      const provider = new MockCredentialsProvider('Provider', credentials);
-      const service = new CredentialsService([provider]);
+    describe('when expiresAt is in the future', () => {
+      it('sets isExpired to false', () => {
+        const futureDate = new Date(Date.now() + 3600000);
+        const credentials: DecodedCredentials = {
+          apiKey: 'api-key',
+          host: 'https://host.com',
+          expiresAt: futureDate,
+        };
+        const provider = new MockCredentialsProvider('Provider', credentials);
+        const service = new CredentialsService([provider]);
 
-      const result = service.loadCredentials();
+        const result = service.loadCredentials();
 
-      expect(result?.isExpired).toBe(false);
+        expect(result?.isExpired).toBe(false);
+      });
     });
 
-    it('sets isExpired to false when expiresAt is undefined', () => {
-      const credentials: DecodedCredentials = {
-        apiKey: 'api-key',
-        host: 'https://host.com',
-      };
-      const provider = new MockCredentialsProvider('Provider', credentials);
-      const service = new CredentialsService([provider]);
+    describe('when expiresAt is undefined', () => {
+      it('sets isExpired to false', () => {
+        const credentials: DecodedCredentials = {
+          apiKey: 'api-key',
+          host: 'https://host.com',
+        };
+        const provider = new MockCredentialsProvider('Provider', credentials);
+        const service = new CredentialsService([provider]);
 
-      const result = service.loadCredentials();
+        const result = service.loadCredentials();
 
-      expect(result?.isExpired).toBe(false);
+        expect(result?.isExpired).toBe(false);
+      });
     });
   });
 
   describe('loadApiKey', () => {
-    it('returns empty string when no providers have credentials', () => {
-      const provider = new MockCredentialsProvider('Provider', null);
-      const service = new CredentialsService([provider]);
+    describe('when no providers have credentials', () => {
+      it('returns empty string', () => {
+        const provider = new MockCredentialsProvider('Provider', null);
+        const service = new CredentialsService([provider]);
 
-      const result = service.loadApiKey();
+        const result = service.loadApiKey();
 
-      expect(result).toBe('');
+        expect(result).toBe('');
+      });
     });
 
     it('returns API key from credentials', () => {
@@ -157,37 +172,46 @@ describe('CredentialsService', () => {
   });
 
   describe('hasCredentials', () => {
-    it('returns false when no providers have credentials', () => {
-      const provider1 = new MockCredentialsProvider('Provider 1', null);
-      const provider2 = new MockCredentialsProvider('Provider 2', null);
-      const service = new CredentialsService([provider1, provider2]);
+    describe('when no providers have credentials', () => {
+      it('returns false', () => {
+        const provider1 = new MockCredentialsProvider('Provider 1', null);
+        const provider2 = new MockCredentialsProvider('Provider 2', null);
+        const service = new CredentialsService([provider1, provider2]);
 
-      const result = service.hasCredentials();
+        const result = service.hasCredentials();
 
-      expect(result).toBe(false);
+        expect(result).toBe(false);
+      });
     });
 
-    it('returns true when at least one provider has credentials', () => {
-      const credentials: DecodedCredentials = {
-        apiKey: 'api-key',
-        host: 'https://host.com',
-      };
-      const provider1 = new MockCredentialsProvider('Provider 1', null);
-      const provider2 = new MockCredentialsProvider('Provider 2', credentials);
-      const service = new CredentialsService([provider1, provider2]);
+    describe('when at least one provider has credentials', () => {
+      it('returns true', () => {
+        const credentials: DecodedCredentials = {
+          apiKey: 'api-key',
+          host: 'https://host.com',
+        };
+        const provider1 = new MockCredentialsProvider('Provider 1', null);
+        const provider2 = new MockCredentialsProvider(
+          'Provider 2',
+          credentials,
+        );
+        const service = new CredentialsService([provider1, provider2]);
 
-      const result = service.hasCredentials();
+        const result = service.hasCredentials();
 
-      expect(result).toBe(true);
+        expect(result).toBe(true);
+      });
     });
   });
 
   describe('default providers', () => {
-    it('creates service with default providers when none provided', () => {
-      const service = new CredentialsService();
+    describe('when none provided', () => {
+      it('creates service with default providers', () => {
+        const service = new CredentialsService();
 
-      // Service should be created without error
-      expect(service).toBeInstanceOf(CredentialsService);
+        // Service should be created without error
+        expect(service).toBeInstanceOf(CredentialsService);
+      });
     });
   });
 });
