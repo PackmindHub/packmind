@@ -8,27 +8,16 @@ export const getAgentsConfig = (): IAgentConfig[] => [
     installMethods: [
       {
         type: 'cli',
-        label: 'CLI Command',
+        label: 'Packmind CLI',
         available: true,
         getCliCommand: () => 'packmind-cli setup-mcp claude',
       },
       {
-        type: 'json',
-        label: 'JSON Configuration',
+        type: 'cli',
+        label: 'Claude CLI',
         available: true,
-        getJsonConfig: (token: string, url: string) => {
-          const config = {
-            mcpServers: {
-              packmind: {
-                url,
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              },
-            },
-          };
-          return JSON.stringify(config, null, 2);
-        },
+        getCliCommand: (token: string, url: string) =>
+          `claude mcp add --transport http packmind ${url} --header "Authorization: Bearer ${token}"`,
       },
     ],
   },
