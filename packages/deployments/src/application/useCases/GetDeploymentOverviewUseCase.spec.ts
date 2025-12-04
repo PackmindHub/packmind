@@ -3,26 +3,59 @@ import { recipeFactory } from '@packmind/recipes/test';
 import { recipeVersionFactory } from '@packmind/recipes/test';
 import { stubLogger } from '@packmind/test-utils';
 import {
+  createDistributedPackageId,
+  createDistributionId,
   createOrganizationId,
+  createPackageId,
   createRecipeVersionId,
   createSpaceId,
   createUserId,
   DeploymentOverview,
+  Distribution,
   DistributionStatus,
   GetDeploymentOverviewCommand,
   IGitPort,
   IRecipesPort,
   ISpacesPort,
+  RecipeVersion,
+  Target,
 } from '@packmind/types';
-import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
+import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 import { GetDeploymentOverviewUseCase } from './GetDeploymentOverviewUseCase';
-import { deploymentFactory } from '../../../test/deploymentFactory';
 import { targetFactory } from '../../../test/targetFactory';
 import { GetTargetsByOrganizationUseCase } from './GetTargetsByOrganizationUseCase';
+import { v4 as uuidv4 } from 'uuid';
+
+function createDistribution(params: {
+  organizationId: ReturnType<typeof createOrganizationId>;
+  target?: Target;
+  status?: DistributionStatus;
+  recipeVersions?: RecipeVersion[];
+}): Distribution {
+  const distributionId = createDistributionId(uuidv4());
+  return {
+    id: distributionId,
+    distributedPackages: [
+      {
+        id: createDistributedPackageId(uuidv4()),
+        distributionId,
+        packageId: createPackageId(uuidv4()),
+        recipeVersions: params.recipeVersions || [],
+        standardVersions: [],
+      },
+    ],
+    createdAt: new Date().toISOString(),
+    authorId: createUserId('test-author-id'),
+    organizationId: params.organizationId,
+    target: params.target || targetFactory(),
+    status: params.status ?? DistributionStatus.success,
+    renderModes: [],
+  };
+}
 
 describe('GetDeploymentOverviewUseCase', () => {
   let useCase: GetDeploymentOverviewUseCase;
-  let deploymentsRepository: jest.Mocked<IRecipesDeploymentRepository>;
+  let distributionRepository: jest.Mocked<IDistributionRepository>;
   let recipesPort: jest.Mocked<IRecipesPort>;
   let spacesPort: jest.Mocked<ISpacesPort>;
   let gitPort: jest.Mocked<IGitPort>;
@@ -31,20 +64,16 @@ describe('GetDeploymentOverviewUseCase', () => {
   beforeEach(() => {
     const logger = stubLogger();
 
-    deploymentsRepository = {
-      listByOrganizationId: jest.fn(),
-      listByOrganizationIdWithStatus: jest.fn(),
-      listByRecipeId: jest.fn(),
-      listByOrganizationIdAndGitRepos: jest.fn(),
-      listByTargetIds: jest.fn(),
-      create: jest.fn(),
+    distributionRepository = {
+      add: jest.fn(),
       findById: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-      deleteById: jest.fn(),
-      restoreById: jest.fn(),
-      list: jest.fn(),
-    } as unknown as jest.Mocked<IRecipesDeploymentRepository>;
+      listByOrganizationId: jest.fn(),
+      listByPackageId: jest.fn(),
+      listByRecipeId: jest.fn(),
+      listByStandardId: jest.fn(),
+      listByTargetIds: jest.fn(),
+      listByOrganizationIdWithStatus: jest.fn(),
+    } as jest.Mocked<IDistributionRepository>;
 
     recipesPort = {
       listRecipesByOrganization: jest.fn(),
@@ -68,7 +97,7 @@ describe('GetDeploymentOverviewUseCase', () => {
     } as unknown as jest.Mocked<GetTargetsByOrganizationUseCase>;
 
     useCase = new GetDeploymentOverviewUseCase(
-      deploymentsRepository,
+      distributionRepository,
       recipesPort,
       spacesPort,
       gitPort,
@@ -98,7 +127,7 @@ describe('GetDeploymentOverviewUseCase', () => {
           createdAt: new Date(),
           updatedAt: new Date(),
         };
-        deploymentsRepository.listByOrganizationIdWithStatus.mockResolvedValue(
+        distributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
           [],
         );
         spacesPort.listSpacesByOrganization.mockResolvedValue([space]);
@@ -123,7 +152,7 @@ describe('GetDeploymentOverviewUseCase', () => {
 
       it('calls deployments repository with organization id and success status', () => {
         expect(
-          deploymentsRepository.listByOrganizationIdWithStatus,
+          distributionRepository.listByOrganizationIdWithStatus,
         ).toHaveBeenCalledWith(organizationId, DistributionStatus.success);
       });
 
@@ -156,7 +185,7 @@ describe('GetDeploymentOverviewUseCase', () => {
           createdAt: new Date(),
           updatedAt: new Date(),
         };
-        deploymentsRepository.listByOrganizationIdWithStatus.mockResolvedValue(
+        distributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
           [],
         );
         spacesPort.listSpacesByOrganization.mockResolvedValue([space]);
@@ -194,7 +223,7 @@ describe('GetDeploymentOverviewUseCase', () => {
           createdAt: new Date(),
           updatedAt: new Date(),
         };
-        deploymentsRepository.listByOrganizationIdWithStatus.mockResolvedValue(
+        distributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
           [],
         );
         spacesPort.listSpacesByOrganization.mockResolvedValue([space]);
@@ -241,7 +270,7 @@ describe('GetDeploymentOverviewUseCase', () => {
           version: 1,
         });
 
-        const mockDeployment = deploymentFactory({
+        const mockDistribution = createDistribution({
           organizationId,
           target: mockTarget,
           status: DistributionStatus.success,
@@ -256,9 +285,9 @@ describe('GetDeploymentOverviewUseCase', () => {
           createdAt: new Date(),
           updatedAt: new Date(),
         };
-        deploymentsRepository.listByOrganizationIdWithStatus.mockResolvedValue([
-          mockDeployment,
-        ]);
+        distributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
+          [mockDistribution],
+        );
         spacesPort.listSpacesByOrganization.mockResolvedValue([space]);
         recipesPort.listRecipesBySpace.mockResolvedValue([mockRecipe]);
         gitPort.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
@@ -330,14 +359,14 @@ describe('GetDeploymentOverviewUseCase', () => {
           version: 1,
         });
 
-        const mockDeployment1 = deploymentFactory({
+        const mockDistribution1 = createDistribution({
           organizationId,
           target: mockTarget1,
           status: DistributionStatus.success,
           recipeVersions: [mockRecipeVersion],
         });
 
-        const mockDeployment2 = deploymentFactory({
+        const mockDistribution2 = createDistribution({
           organizationId,
           target: mockTarget2,
           status: DistributionStatus.success,
@@ -352,10 +381,9 @@ describe('GetDeploymentOverviewUseCase', () => {
           createdAt: new Date(),
           updatedAt: new Date(),
         };
-        deploymentsRepository.listByOrganizationIdWithStatus.mockResolvedValue([
-          mockDeployment1,
-          mockDeployment2,
-        ]);
+        distributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
+          [mockDistribution1, mockDistribution2],
+        );
         spacesPort.listSpacesByOrganization.mockResolvedValue([space]);
         recipesPort.listRecipesBySpace.mockResolvedValue([mockRecipe]);
         gitPort.getOrganizationRepositories.mockResolvedValue([mockGitRepo]);
@@ -406,13 +434,13 @@ describe('GetDeploymentOverviewUseCase', () => {
       const mockRecipe = recipeFactory();
 
       describe('getTargetDeploymentStatus', () => {
-        it('groups deployments by target correctly', async () => {
+        it('groups distributions by target correctly', async () => {
           const mockRecipeVersion = recipeVersionFactory({
             recipeId: mockRecipe.id,
             version: 1,
           });
 
-          const mockDeployment = deploymentFactory({
+          const mockDistribution = createDistribution({
             organizationId,
             target: mockTarget,
             status: DistributionStatus.success,
@@ -420,7 +448,7 @@ describe('GetDeploymentOverviewUseCase', () => {
           });
 
           const targetStatuses = await useCase.getTargetDeploymentStatus(
-            [mockDeployment],
+            [mockDistribution],
             [mockGitRepo],
             [mockRecipe],
           );
@@ -430,8 +458,8 @@ describe('GetDeploymentOverviewUseCase', () => {
           expect(targetStatuses[0].deployedRecipes).toHaveLength(1);
         });
 
-        it('handles deployments without targets gracefully', async () => {
-          const mockDeployment = deploymentFactory({
+        it('handles distributions without targets gracefully', async () => {
+          const mockDistribution = createDistribution({
             organizationId,
             target: undefined,
             status: DistributionStatus.success,
@@ -439,7 +467,7 @@ describe('GetDeploymentOverviewUseCase', () => {
           });
 
           const targetStatuses = await useCase.getTargetDeploymentStatus(
-            [mockDeployment],
+            [mockDistribution],
             [mockGitRepo],
             [mockRecipe],
           );
@@ -455,7 +483,7 @@ describe('GetDeploymentOverviewUseCase', () => {
             version: 1,
           });
 
-          const mockDeployment = deploymentFactory({
+          const mockDistribution = createDistribution({
             organizationId,
             target: mockTarget,
             status: DistributionStatus.success,
@@ -464,7 +492,7 @@ describe('GetDeploymentOverviewUseCase', () => {
 
           const targetDeployments = useCase.buildTargetDeploymentsForRecipe(
             mockRecipe,
-            [mockDeployment],
+            [mockDistribution],
             [mockGitRepo],
           );
 
@@ -475,14 +503,14 @@ describe('GetDeploymentOverviewUseCase', () => {
           );
         });
 
-        it('filters out deployments for other recipes', () => {
+        it('filters out distributions for other recipes', () => {
           const otherRecipe = recipeFactory();
           const otherRecipeVersion = recipeVersionFactory({
             recipeId: otherRecipe.id,
             version: 1,
           });
 
-          const mockDeployment = deploymentFactory({
+          const mockDistribution = createDistribution({
             organizationId,
             target: mockTarget,
             status: DistributionStatus.success,
@@ -491,7 +519,7 @@ describe('GetDeploymentOverviewUseCase', () => {
 
           const targetDeployments = useCase.buildTargetDeploymentsForRecipe(
             mockRecipe, // Looking for this recipe
-            [mockDeployment],
+            [mockDistribution],
             [mockGitRepo],
           );
 

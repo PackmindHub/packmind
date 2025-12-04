@@ -14,7 +14,7 @@ import {
   DeployedStandardTargetInfo,
   IGitPort,
   OrganizationId,
-  StandardsDeployment,
+  Distribution,
   StandardDeploymentOverview,
   RepositoryStandardDeploymentStatus,
   StandardDeploymentStatus,
@@ -22,7 +22,7 @@ import {
   RepositoryStandardDeploymentInfo,
   GitRepo,
 } from '@packmind/types';
-import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
+import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 
 const origin = 'GetStandardDeploymentOverviewUseCase';
 
@@ -30,7 +30,7 @@ export class GetStandardDeploymentOverviewUseCase
   implements IGetStandardDeploymentOverview
 {
   constructor(
-    private readonly standardsDeploymentRepository: IStandardsDeploymentRepository,
+    private readonly distributionRepository: IDistributionRepository,
     private readonly standardsPort: IStandardsPort,
     private readonly gitPort: IGitPort,
     private readonly spacesPort: ISpacesPort,
@@ -45,11 +45,11 @@ export class GetStandardDeploymentOverviewUseCase
     });
 
     try {
-      // Fetch only successful standard deployments for the organization
-      const deployments =
-        await this.standardsDeploymentRepository.listByOrganizationIdWithStatus(
+      // Fetch only successful distributions for the organization
+      const distributions =
+        await this.distributionRepository.listByOrganizationIdWithStatus(
           command.organizationId as OrganizationId,
-          DistributionStatus.success, // Filter only successful deployments for overview
+          DistributionStatus.success, // Filter only successful distributions for overview
         );
 
       // Get all spaces for the organization
@@ -76,9 +76,9 @@ export class GetStandardDeploymentOverviewUseCase
       // Flatten standards from all spaces
       const standards = standardsPerSpace.flat();
 
-      // Build the overview using the deployment data
-      const overview = this.buildOverviewFromDeployments(
-        deployments,
+      // Build the overview using the distribution data
+      const overview = this.buildOverviewFromDistributions(
+        distributions,
         standards,
         gitRepos,
       );
@@ -99,8 +99,8 @@ export class GetStandardDeploymentOverviewUseCase
     }
   }
 
-  private buildOverviewFromDeployments(
-    deployments: StandardsDeployment[],
+  private buildOverviewFromDistributions(
+    distributions: Distribution[],
     standards: Standard[],
     gitRepos: GitRepo[],
   ): StandardDeploymentOverview {
@@ -122,7 +122,7 @@ export class GetStandardDeploymentOverviewUseCase
       (gitRepo) => {
         const deployedStandards = this.getDeployedStandardsForRepo(
           gitRepo,
-          deployments,
+          distributions,
           latestStandardVersionMap,
           standardsMap,
         );
@@ -152,7 +152,7 @@ export class GetStandardDeploymentOverviewUseCase
           standard,
           latestVersion,
           gitRepos,
-          deployments,
+          distributions,
         );
 
         const hasOutdatedDeployments = deploymentInfos.some(
@@ -162,7 +162,7 @@ export class GetStandardDeploymentOverviewUseCase
         // Build target-based deployments for this standard
         const targetDeployments = this.buildTargetDeploymentsForStandard(
           standard,
-          deployments,
+          distributions,
           gitRepos,
         );
 
@@ -178,7 +178,7 @@ export class GetStandardDeploymentOverviewUseCase
 
     // Build target-centric view
     const targets = this.buildTargetCentricView(
-      deployments,
+      distributions,
       standards,
       gitRepos,
     );
@@ -191,22 +191,22 @@ export class GetStandardDeploymentOverviewUseCase
   }
 
   public buildTargetCentricView(
-    deployments: StandardsDeployment[],
+    distributions: Distribution[],
     standards: Standard[],
     gitRepos: GitRepo[],
   ): TargetStandardDeploymentStatus[] {
-    // Group deployments by target
-    const targetMap = new Map<string, StandardsDeployment[]>();
+    // Group distributions by target
+    const targetMap = new Map<string, Distribution[]>();
 
-    for (const deployment of deployments) {
-      if (deployment.target) {
-        const targetId = deployment.target.id;
+    for (const distribution of distributions) {
+      if (distribution.target) {
+        const targetId = distribution.target.id;
         if (!targetMap.has(targetId)) {
           targetMap.set(targetId, []);
         }
-        const targetDeployments = targetMap.get(targetId);
-        if (targetDeployments) {
-          targetDeployments.push(deployment);
+        const targetDistributions = targetMap.get(targetId);
+        if (targetDistributions) {
+          targetDistributions.push(distribution);
         }
       }
     }
@@ -214,8 +214,8 @@ export class GetStandardDeploymentOverviewUseCase
     // Build target deployment status for each target
     const targetStatuses: TargetStandardDeploymentStatus[] = [];
 
-    for (const [, targetDeployments] of targetMap.entries()) {
-      const target = targetDeployments[0]?.target; // All deployments have the same target
+    for (const [, targetDistributions] of targetMap.entries()) {
+      const target = targetDistributions[0]?.target; // All distributions have the same target
       if (!target) continue;
       const gitRepo = gitRepos.find((repo) => repo.id === target.gitRepoId);
 
@@ -231,14 +231,17 @@ export class GetStandardDeploymentOverviewUseCase
         StandardVersion & { deploymentDate: string }
       >();
 
-      for (const deployment of targetDeployments) {
-        // All deployments are successful since we filtered at query level
-        for (const standardVersion of deployment.standardVersions) {
+      for (const distribution of targetDistributions) {
+        // All distributions are successful since we filtered at query level
+        const standardVersions = distribution.distributedPackages.flatMap(
+          (dp) => dp.standardVersions,
+        );
+        for (const standardVersion of standardVersions) {
           const existing = standardVersionsMap.get(standardVersion.standardId);
           if (!existing || standardVersion.version > existing.version) {
             standardVersionsMap.set(standardVersion.standardId, {
               ...standardVersion,
-              deploymentDate: deployment.createdAt,
+              deploymentDate: distribution.createdAt,
             });
           }
         }
@@ -293,34 +296,36 @@ export class GetStandardDeploymentOverviewUseCase
 
   public buildTargetDeploymentsForStandard(
     standard: Standard,
-    allDeployments: StandardsDeployment[],
+    allDistributions: Distribution[],
     gitRepos: GitRepo[],
   ): TargetStandardDeploymentInfo[] {
-    // Filter deployments for this specific standard
-    const standardDeployments = allDeployments.filter((deployment) =>
-      deployment.standardVersions.some((sv) => sv.standardId === standard.id),
+    // Filter distributions for this specific standard
+    const standardDistributions = allDistributions.filter((distribution) =>
+      distribution.distributedPackages.some((dp) =>
+        dp.standardVersions.some((sv) => sv.standardId === standard.id),
+      ),
     );
 
     // Group by target
-    const targetDeploymentMap = new Map<string, StandardsDeployment[]>();
+    const targetDistributionMap = new Map<string, Distribution[]>();
 
-    for (const deployment of standardDeployments) {
-      if (deployment.target) {
-        const targetId = deployment.target.id;
-        if (!targetDeploymentMap.has(targetId)) {
-          targetDeploymentMap.set(targetId, []);
+    for (const distribution of standardDistributions) {
+      if (distribution.target) {
+        const targetId = distribution.target.id;
+        if (!targetDistributionMap.has(targetId)) {
+          targetDistributionMap.set(targetId, []);
         }
-        const targetDeployments = targetDeploymentMap.get(targetId);
-        if (targetDeployments) {
-          targetDeployments.push(deployment);
+        const targetDistributions = targetDistributionMap.get(targetId);
+        if (targetDistributions) {
+          targetDistributions.push(distribution);
         }
       }
     }
 
     const targetDeployments: TargetStandardDeploymentInfo[] = [];
 
-    for (const [, deployments] of targetDeploymentMap.entries()) {
-      const target = deployments[0]?.target;
+    for (const [, targetDistributions] of targetDistributionMap.entries()) {
+      const target = targetDistributions[0]?.target;
       if (!target) continue;
       const gitRepo = gitRepos.find((repo) => repo.id === target.gitRepoId);
 
@@ -330,15 +335,18 @@ export class GetStandardDeploymentOverviewUseCase
       let latestDeployedVersion: StandardVersion | null = null;
       let latestDeploymentDate = '';
 
-      for (const deployment of deployments) {
-        for (const standardVersion of deployment.standardVersions) {
+      for (const distribution of targetDistributions) {
+        const standardVersions = distribution.distributedPackages.flatMap(
+          (dp) => dp.standardVersions,
+        );
+        for (const standardVersion of standardVersions) {
           if (standardVersion.standardId === standard.id) {
             if (
               !latestDeployedVersion ||
               standardVersion.version > latestDeployedVersion.version
             ) {
               latestDeployedVersion = standardVersion;
-              latestDeploymentDate = deployment.createdAt;
+              latestDeploymentDate = distribution.createdAt;
             }
           }
         }
@@ -401,17 +409,17 @@ export class GetStandardDeploymentOverviewUseCase
 
   private getDeployedStandardsForRepo(
     gitRepo: GitRepo,
-    deployments: StandardsDeployment[],
+    distributions: Distribution[],
     latestStandardVersionMap: Map<string, StandardVersion>,
     standardsMap: Map<string, Standard>,
   ): DeployedStandardInfo[] {
-    const repoDeployments = deployments.filter((deployment) => {
+    const repoDistributions = distributions.filter((distribution) => {
       // Use the new single-reference model
-      return deployment.target?.gitRepoId === gitRepo.id;
+      return distribution.target?.gitRepoId === gitRepo.id;
     });
 
-    // Get the latest deployment for this repo
-    const latestDeployment = repoDeployments.reduce(
+    // Get the latest distribution for this repo
+    const latestDistribution = repoDistributions.reduce(
       (latest, current) => {
         if (
           !latest ||
@@ -421,16 +429,19 @@ export class GetStandardDeploymentOverviewUseCase
         }
         return latest;
       },
-      null as StandardsDeployment | null,
+      null as Distribution | null,
     );
 
-    if (!latestDeployment) {
+    if (!latestDistribution) {
       return [];
     }
 
-    // Get all unique standards from the latest deployment
+    // Get all unique standards from the latest distribution
     const deployedStandardsMap = new Map<string, StandardVersion>();
-    latestDeployment.standardVersions.forEach((standardVersion) => {
+    const standardVersions = latestDistribution.distributedPackages.flatMap(
+      (dp) => dp.standardVersions,
+    );
+    standardVersions.forEach((standardVersion) => {
       const existing = deployedStandardsMap.get(standardVersion.standardId);
       if (!existing || standardVersion.version > existing.version) {
         deployedStandardsMap.set(standardVersion.standardId, standardVersion);
@@ -460,7 +471,7 @@ export class GetStandardDeploymentOverviewUseCase
           deployedVersion,
           latestVersion,
           isUpToDate,
-          deploymentDate: latestDeployment.createdAt,
+          deploymentDate: latestDistribution.createdAt,
         };
       })
       .filter((info): info is DeployedStandardInfo => info !== null);
@@ -470,27 +481,29 @@ export class GetStandardDeploymentOverviewUseCase
     standard: Standard,
     latestVersion: StandardVersion,
     gitRepos: GitRepo[],
-    deployments: StandardsDeployment[],
+    distributions: Distribution[],
   ): RepositoryStandardDeploymentInfo[] {
-    const standardDeployments = deployments.filter((deployment) =>
-      deployment.standardVersions.some(
-        (version) => version.standardId === standard.id,
+    const standardDistributions = distributions.filter((distribution) =>
+      distribution.distributedPackages.some((dp) =>
+        dp.standardVersions.some(
+          (version) => version.standardId === standard.id,
+        ),
       ),
     );
 
     const deploymentInfos: RepositoryStandardDeploymentInfo[] = [];
 
     gitRepos.forEach((gitRepo) => {
-      // Find the latest deployment of this standard to this repo
-      const repoDeployments = standardDeployments.filter(
-        (deployment) => deployment.target?.gitRepoId === gitRepo.id,
+      // Find the latest distribution of this standard to this repo
+      const repoDistributions = standardDistributions.filter(
+        (distribution) => distribution.target?.gitRepoId === gitRepo.id,
       );
 
-      if (repoDeployments.length === 0) {
-        return; // No deployments to this repo
+      if (repoDistributions.length === 0) {
+        return; // No distributions to this repo
       }
 
-      const latestDeployment = repoDeployments.reduce((latest, current) => {
+      const latestDistribution = repoDistributions.reduce((latest, current) => {
         if (
           !latest ||
           new Date(current.createdAt) > new Date(latest.createdAt)
@@ -498,22 +511,22 @@ export class GetStandardDeploymentOverviewUseCase
           return current;
         }
         return latest;
-      }, repoDeployments[0]);
+      }, repoDistributions[0]);
 
-      // Find the latest version of this standard in the deployment
-      const standardsInLatestDeployment =
-        latestDeployment.standardVersions.filter(
-          (version) => version.standardId === standard.id,
-        );
+      // Find the latest version of this standard in the distribution
+      const standardsInLatestDistribution =
+        latestDistribution.distributedPackages
+          .flatMap((dp) => dp.standardVersions)
+          .filter((version) => version.standardId === standard.id);
 
-      const deployedVersion = standardsInLatestDeployment.reduce(
+      const deployedVersion = standardsInLatestDistribution.reduce(
         (latest, current) => {
           if (!latest || current.version > latest.version) {
             return current;
           }
           return latest;
         },
-        standardsInLatestDeployment[0],
+        standardsInLatestDistribution[0],
       );
 
       const isUpToDate = deployedVersion.version >= latestVersion.version;
@@ -522,7 +535,7 @@ export class GetStandardDeploymentOverviewUseCase
         gitRepo,
         deployedVersion,
         isUpToDate,
-        deploymentDate: latestDeployment.createdAt,
+        deploymentDate: latestDistribution.createdAt,
       });
     });
 

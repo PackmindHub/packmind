@@ -3,7 +3,7 @@ import { WithTimestamps } from '@packmind/node-utils';
 import { ISpacesPort } from '@packmind/types';
 import { IRecipesPort } from '@packmind/types';
 import { IGitPort } from '@packmind/types';
-import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
+import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 import { createUserId } from '@packmind/types';
 import {
   DeploymentOverview,
@@ -14,7 +14,7 @@ import {
   TargetDeploymentStatus,
   TargetDeploymentInfo,
   DeployedRecipeTargetInfo,
-  RecipesDeployment,
+  Distribution,
   DistributionStatus,
   TargetWithRepository,
   GitRepoId,
@@ -33,7 +33,7 @@ const origin = 'GetDeploymentOverviewUseCase';
 
 export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
   constructor(
-    private readonly deploymentsRepository: IRecipesDeploymentRepository,
+    private readonly distributionRepository: IDistributionRepository,
     private readonly recipesPort: IRecipesPort,
     private readonly spacesPort: ISpacesPort,
     private readonly gitPort: IGitPort,
@@ -59,8 +59,8 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
         throw new Error('RecipesPort.listRecipesBySpace is not available');
       }
 
-      const [deployments, recipesPerSpace, gitRepos] = await Promise.all([
-        this.deploymentsRepository.listByOrganizationIdWithStatus(
+      const [distributions, recipesPerSpace, gitRepos] = await Promise.all([
+        this.distributionRepository.listByOrganizationIdWithStatus(
           organizationId,
           DistributionStatus.success,
         ),
@@ -85,20 +85,25 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
         WithTimestamps<RecipeVersion>[]
       >();
 
-      // Process deployments to extract latest recipe versions per target's repository
-      for (const deployment of deployments) {
+      // Process distributions to extract latest recipe versions per target's repository
+      for (const distribution of distributions) {
         // Handle both old array-based and new single-reference models
-        const targets = deployment.target ? [deployment.target] : [];
+        const targets = distribution.target ? [distribution.target] : [];
+
+        // Flatten recipe versions from all distributed packages
+        const recipeVersions = distribution.distributedPackages.flatMap(
+          (dp) => dp.recipeVersions,
+        );
 
         for (const target of targets) {
           const gitRepoId = target.gitRepoId;
           const existingVersions = latestRecipeVersionsMap.get(gitRepoId) || [];
 
-          // Convert deployment recipe versions to WithTimestamps format
-          const timestampedVersions = deployment.recipeVersions.map((rv) => ({
+          // Convert distribution recipe versions to WithTimestamps format
+          const timestampedVersions = recipeVersions.map((rv) => ({
             ...rv,
-            createdAt: new Date(deployment.createdAt),
-            updatedAt: new Date(deployment.createdAt),
+            createdAt: new Date(distribution.createdAt),
+            updatedAt: new Date(distribution.createdAt),
           }));
 
           // Merge and keep only the latest version of each recipe
@@ -122,7 +127,7 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
         gitRepos,
         recipes,
         latestRecipeVersionsMap,
-        deployments,
+        distributions,
       );
 
       // Get all targets for the organization (including those with no deployments)
@@ -134,7 +139,7 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
 
       // Transform data for target-centric view
       const targets = await this.getTargetDeploymentStatus(
-        deployments,
+        distributions,
         gitRepos,
         recipes,
         allTargetsWithRepository,
@@ -253,7 +258,7 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
     gitRepos: GitRepo[],
     recipes: Recipe[],
     latestRecipeVersionsMap: Map<GitRepoId, WithTimestamps<RecipeVersion>[]>,
-    allDeployments: RecipesDeployment[],
+    allDistributions: Distribution[],
   ): Promise<RecipeDeploymentStatus[]> {
     return recipes.map((recipe) => {
       const deployments = [];
@@ -297,7 +302,7 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
       // Build target-based deployments for this recipe
       const targetDeployments = this.buildTargetDeploymentsForRecipe(
         recipe,
-        allDeployments,
+        allDistributions,
         gitRepos,
       );
 
@@ -313,34 +318,36 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
 
   public buildTargetDeploymentsForRecipe(
     recipe: Recipe,
-    allDeployments: RecipesDeployment[],
+    allDistributions: Distribution[],
     gitRepos: GitRepo[],
   ): TargetDeploymentInfo[] {
-    // Filter deployments for this specific recipe
-    const recipeDeployments = allDeployments.filter((deployment) =>
-      deployment.recipeVersions.some((rv) => rv.recipeId === recipe.id),
+    // Filter distributions for this specific recipe
+    const recipeDistributions = allDistributions.filter((distribution) =>
+      distribution.distributedPackages.some((dp) =>
+        dp.recipeVersions.some((rv) => rv.recipeId === recipe.id),
+      ),
     );
 
     // Group by target
-    const targetDeploymentMap = new Map<string, RecipesDeployment[]>();
+    const targetDistributionMap = new Map<string, Distribution[]>();
 
-    for (const deployment of recipeDeployments) {
-      if (deployment.target) {
-        const targetId = deployment.target.id;
-        if (!targetDeploymentMap.has(targetId)) {
-          targetDeploymentMap.set(targetId, []);
+    for (const distribution of recipeDistributions) {
+      if (distribution.target) {
+        const targetId = distribution.target.id;
+        if (!targetDistributionMap.has(targetId)) {
+          targetDistributionMap.set(targetId, []);
         }
-        const targetDeployments = targetDeploymentMap.get(targetId);
-        if (targetDeployments) {
-          targetDeployments.push(deployment);
+        const targetDistributions = targetDistributionMap.get(targetId);
+        if (targetDistributions) {
+          targetDistributions.push(distribution);
         }
       }
     }
 
     const targetDeployments: TargetDeploymentInfo[] = [];
 
-    for (const [, deployments] of targetDeploymentMap.entries()) {
-      const target = deployments[0]?.target;
+    for (const [, targetDistributions] of targetDistributionMap.entries()) {
+      const target = targetDistributions[0]?.target;
       if (!target) continue;
       const gitRepo = gitRepos.find((repo) => repo.id === target.gitRepoId);
 
@@ -350,15 +357,18 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
       let latestDeployedVersion: RecipeVersion | null = null;
       let latestDeploymentDate = '';
 
-      for (const deployment of deployments) {
-        for (const recipeVersion of deployment.recipeVersions) {
+      for (const distribution of targetDistributions) {
+        const recipeVersions = distribution.distributedPackages.flatMap(
+          (dp) => dp.recipeVersions,
+        );
+        for (const recipeVersion of recipeVersions) {
           if (recipeVersion.recipeId === recipe.id) {
             if (
               !latestDeployedVersion ||
               recipeVersion.version > latestDeployedVersion.version
             ) {
               latestDeployedVersion = recipeVersion;
-              latestDeploymentDate = deployment.createdAt;
+              latestDeploymentDate = distribution.createdAt;
             }
           }
         }
@@ -404,23 +414,23 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
   }
 
   public async getTargetDeploymentStatus(
-    deployments: RecipesDeployment[],
+    distributions: Distribution[],
     gitRepos: GitRepo[],
     recipes: Recipe[],
     allTargetsWithRepository?: TargetWithRepository[], // All targets including those with no deployments
   ): Promise<TargetDeploymentStatus[]> {
-    // Group deployments by target
-    const targetMap = new Map<string, RecipesDeployment[]>();
+    // Group distributions by target
+    const targetMap = new Map<string, Distribution[]>();
 
-    for (const deployment of deployments) {
-      if (deployment.target) {
-        const targetId = deployment.target.id;
+    for (const distribution of distributions) {
+      if (distribution.target) {
+        const targetId = distribution.target.id;
         if (!targetMap.has(targetId)) {
           targetMap.set(targetId, []);
         }
-        const targetDeployments = targetMap.get(targetId);
-        if (targetDeployments) {
-          targetDeployments.push(deployment);
+        const targetDistributions = targetMap.get(targetId);
+        if (targetDistributions) {
+          targetDistributions.push(distribution);
         }
       }
     }
@@ -431,10 +441,10 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
     // If we have allTargetsWithRepository, include all targets (even those without deployments)
     const targetsToProcess = allTargetsWithRepository || [];
 
-    // Add targets from deployments that might not be in allTargetsWithRepository (fallback)
+    // Add targets from distributions that might not be in allTargetsWithRepository (fallback)
     if (!allTargetsWithRepository) {
-      for (const [, targetDeployments] of targetMap.entries()) {
-        const target = targetDeployments[0]?.target;
+      for (const [, targetDistributions] of targetMap.entries()) {
+        const target = targetDistributions[0]?.target;
         if (target) {
           const gitRepo = gitRepos.find((repo) => repo.id === target.gitRepoId);
           if (gitRepo) {
@@ -457,7 +467,7 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
 
       if (!gitRepo) continue;
 
-      const targetDeployments = targetMap.get(target.id) || []; // Empty array for targets with no deployments
+      const targetDistributions = targetMap.get(target.id) || []; // Empty array for targets with no distributions
 
       // Get deployed recipes for this target
       const deployedRecipes: DeployedRecipeTargetInfo[] = [];
@@ -469,14 +479,17 @@ export class GetDeploymentOverviewUseCase implements IGetDeploymentOverview {
         RecipeVersion & { deploymentDate: string }
       >();
 
-      for (const deployment of targetDeployments) {
-        // All deployments are successful since we filtered at query level
-        for (const recipeVersion of deployment.recipeVersions) {
+      for (const distribution of targetDistributions) {
+        // All distributions are successful since we filtered at query level
+        const recipeVersions = distribution.distributedPackages.flatMap(
+          (dp) => dp.recipeVersions,
+        );
+        for (const recipeVersion of recipeVersions) {
           const existing = recipeVersionsMap.get(recipeVersion.recipeId);
           if (!existing || recipeVersion.version > existing.version) {
             recipeVersionsMap.set(recipeVersion.recipeId, {
               ...recipeVersion,
-              deploymentDate: deployment.createdAt,
+              deploymentDate: distribution.createdAt,
             });
           }
         }

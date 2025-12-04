@@ -1,6 +1,5 @@
 import React from 'react';
 import { render, screen, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
 import { MemoryRouter } from 'react-router';
@@ -120,23 +119,6 @@ jest.mock('../../../spaces/hooks/useCurrentSpace', () => ({
   }),
 }));
 
-// Mock RunDistribution to avoid react-query and heavy internals in tests
-jest.mock('../RunDistribution/RunDistribution', () => {
-  type RDComponent = React.FC<{ children?: React.ReactNode }> & {
-    Body: React.FC;
-    Cta: React.FC;
-  };
-  const RunDistribution = (({ children }) => (
-    <div data-testid="run-distribution">{children}</div>
-  )) as RDComponent;
-  RunDistribution.Body = () => <div data-testid="run-distribution-body" />;
-  RunDistribution.Cta = () => <button>Deploy</button>;
-  return {
-    RunDistribution,
-    useRunDistribution: () => ({ setSelectedTargetIds: jest.fn() }),
-  };
-});
-
 const renderView = (ui: React.ReactElement) =>
   render(
     <MemoryRouter initialEntries={['/org/test-org/space/test-space']}>
@@ -195,7 +177,7 @@ describe('ArtifactsView', () => {
     // Trouve la table du recipe "Recipe Z" en détectant les lignes cibles Alpha/Prod
     const recipeZTable = tables.find((t) => {
       const cells = within(t).getAllByRole('cell');
-      const targetCells = cells.filter((_, idx) => idx % 5 === 1);
+      const targetCells = cells.filter((_, idx) => idx % 4 === 1);
       const texts = targetCells
         .map((c) => within(c).queryByText(/Alpha|Prod/))
         .filter((n): n is HTMLElement => !!n)
@@ -205,7 +187,7 @@ describe('ArtifactsView', () => {
     expect(recipeZTable).toBeTruthy();
 
     const cells = within(recipeZTable as HTMLElement).getAllByRole('cell');
-    const targetCells = cells.filter((_, idx) => idx % 5 === 1); // name column index 1 based on TABLE_COLUMNS order
+    const targetCells = cells.filter((_, idx) => idx % 4 === 1); // name column index 1 based on TABLE_COLUMNS order
     const targetText = targetCells
       .map((c) => within(c).queryByText(/Alpha|Prod/)?.textContent)
       .filter((t): t is string => !!t);
@@ -243,31 +225,5 @@ describe('ArtifactsView', () => {
 
     // Status badges should read Outdated only
     expect(screen.getAllByText('Outdated').length).toBeGreaterThan(0);
-  });
-
-  it('opens update dialog when clicking Update button on outdated entries', async () => {
-    const user = userEvent.setup();
-    const recipes = [
-      makeRecipe('r1', 'Recipe Z', 10, [
-        { name: 'Prod', deployed: 8, up: false },
-      ]),
-    ];
-    const standards: StandardDeploymentStatus[] = [];
-
-    renderView(
-      <ArtifactsView
-        recipes={recipes}
-        standards={standards}
-        artifactStatusFilter="outdated"
-        searchTerm=""
-      />,
-    );
-
-    // Click the update button
-    const btn = screen.getByRole('button', { name: 'Update' });
-    await user.click(btn);
-
-    // The dialog content should appear (title "Deploy to targets")
-    expect(await screen.findByText('Deploy to targets')).toBeInTheDocument();
   });
 });

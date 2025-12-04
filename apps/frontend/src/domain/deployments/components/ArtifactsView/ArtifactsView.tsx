@@ -1,16 +1,11 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { DeploymentStatsSummary } from '../DeploymentStatsSummary/DeploymentStatsSummary';
 import {
   PMBadge,
-  PMBox,
-  PMButton,
-  PMCloseButton,
-  PMDialog,
   PMEmptyState,
   PMHeading,
   PMHStack,
   PMLink,
-  PMPortal,
   PMTable,
   PMTableColumn,
   PMTableRow,
@@ -21,12 +16,7 @@ import { Link } from 'react-router';
 import {
   RecipeDeploymentStatus,
   StandardDeploymentStatus,
-  TargetId,
 } from '@packmind/types';
-import {
-  RunDistribution,
-  useRunDistribution,
-} from '../RunDistribution/RunDistribution';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { routes } from '../../../../shared/utils/routes';
 
@@ -39,77 +29,6 @@ type ArtifactsViewProps = {
   artifactStatusFilter?: ArtifactStatus;
   orgSlug?: string;
   artifactTypeFilter?: ArtifactTypeFilter;
-};
-
-// Top-level helpers (not nested) to respect lint rules
-const PreselectTargetArtifacts: React.FC<{ targetId: TargetId }> = ({
-  targetId,
-}) => {
-  const { setSelectedTargetIds } = useRunDistribution();
-  useEffect(() => {
-    setSelectedTargetIds([targetId]);
-  }, [setSelectedTargetIds, targetId]);
-  return null;
-};
-
-const UpdateDialogActionArtifacts: React.FC<{
-  targetId: TargetId;
-  recipe?: RecipeDeploymentStatus['recipe'];
-  standard?: StandardDeploymentStatus['standard'];
-}> = ({ targetId, recipe, standard }) => {
-  return (
-    <PMDialog.Root
-      size="md"
-      placement="center"
-      motionPreset="slide-in-bottom"
-      scrollBehavior={'outside'}
-    >
-      <PMDialog.Trigger asChild>
-        <PMButton size="xs" variant="secondary">
-          Update
-        </PMButton>
-      </PMDialog.Trigger>
-      <PMPortal>
-        <PMDialog.Backdrop />
-        <PMDialog.Positioner>
-          <PMDialog.Content>
-            <PMDialog.Context>
-              {(store) => (
-                <RunDistribution
-                  selectedRecipes={recipe ? [recipe] : []}
-                  selectedStandards={standard ? [standard] : []}
-                  onDistributionComplete={() => store.setOpen(false)}
-                >
-                  <PMDialog.Header>
-                    <PMDialog.Title asChild>
-                      <PMHeading level="h6">Deploy to targets</PMHeading>
-                    </PMDialog.Title>
-                    <PMDialog.CloseTrigger asChild>
-                      <PMCloseButton size="sm" />
-                    </PMDialog.CloseTrigger>
-                  </PMDialog.Header>
-
-                  <PMDialog.Body>
-                    <PreselectTargetArtifacts targetId={targetId} />
-                    <RunDistribution.Body />
-                  </PMDialog.Body>
-
-                  <PMDialog.Footer>
-                    <PMDialog.Trigger asChild>
-                      <PMButton variant="tertiary" size="sm">
-                        Cancel
-                      </PMButton>
-                    </PMDialog.Trigger>
-                    <RunDistribution.Cta />
-                  </PMDialog.Footer>
-                </RunDistribution>
-              )}
-            </PMDialog.Context>
-          </PMDialog.Content>
-        </PMDialog.Positioner>
-      </PMPortal>
-    </PMDialog.Root>
-  );
 };
 
 type EmptyState = { title: string; description: string } | null;
@@ -147,7 +66,6 @@ const TABLE_COLUMNS: PMTableColumn[] = [
     grow: true,
   },
   { key: 'status', header: 'Status', align: 'center' },
-  { key: 'action', header: 'Action', align: 'center' },
 ];
 
 const filterAndSortDeployments = <
@@ -247,17 +165,6 @@ const buildRecipeBlocks = (
           recipe.latestVersion.version,
         );
         const status = renderStatusNode(artifactStatusFilter, upToDate);
-        const action =
-          upToDate && artifactStatusFilter !== 'outdated' ? (
-            <PMText variant="small" color="tertiary">
-              –
-            </PMText>
-          ) : (
-            <UpdateDialogActionArtifacts
-              targetId={td.target.id}
-              recipe={recipe.recipe}
-            />
-          );
         const repoLabel = formatRepoLabel(td);
 
         return {
@@ -265,7 +172,6 @@ const buildRecipeBlocks = (
           repository: <PMText variant="body">{repoLabel}</PMText>,
           version,
           status,
-          action,
         };
       });
 
@@ -324,17 +230,6 @@ const buildStandardBlocks = (
           standard.latestVersion.version,
         );
         const status = renderStatusNode(artifactStatusFilter, upToDate);
-        const action =
-          upToDate && artifactStatusFilter !== 'outdated' ? (
-            <PMText variant="small" color="tertiary">
-              –
-            </PMText>
-          ) : (
-            <UpdateDialogActionArtifacts
-              targetId={td.target.id}
-              standard={standard.standard}
-            />
-          );
         const repoLabel = formatRepoLabel(td);
 
         return {
@@ -342,7 +237,6 @@ const buildStandardBlocks = (
           repository: <PMText variant="body">{repoLabel}</PMText>,
           version,
           status,
-          action,
         };
       });
 

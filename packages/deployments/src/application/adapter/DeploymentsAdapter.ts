@@ -229,7 +229,7 @@ export class DeploymentsAdapter
     );
 
     this._getDeploymentOverviewUseCase = new GetDeploymentOverviewUseCase(
-      this.recipesDeploymentRepository,
+      this.distributionRepository,
       this.recipesPort,
       this.spacesPort,
       this.gitPort,
@@ -251,7 +251,7 @@ export class DeploymentsAdapter
 
     this._getStandardDeploymentOverviewUseCase =
       new GetStandardDeploymentOverviewUseCase(
-        this.standardDeploymentRepository,
+        this.distributionRepository,
         this.standardsPort,
         this.gitPort,
         this.spacesPort,
