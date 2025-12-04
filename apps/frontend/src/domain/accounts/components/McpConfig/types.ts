@@ -2,7 +2,7 @@ export type InstallMethodType = 'json' | 'cli' | 'magicLink';
 
 export const METHOD_LABELS: Record<InstallMethodType, string> = {
   cli: 'CLI',
-  magicLink: 'Magic Link',
+  magicLink: 'One-Click Install',
   json: 'JSON',
 } as const;
 

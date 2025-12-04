@@ -13,9 +13,13 @@ export const AgentCard: React.FunctionComponent<IAgentCardProps> = ({
 }) => {
   const availableMethods = useMemo(
     () =>
-      agent.installMethods
-        .filter((method) => method.available)
-        .map((method) => method.type),
+      Array.from(
+        new Set(
+          agent.installMethods
+            .filter((method) => method.available)
+            .map((method) => method.type),
+        ),
+      ),
     [agent.installMethods],
   );
 
