@@ -1,90 +1,14 @@
 import { command } from 'cmd-ts';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as os from 'os';
 import {
   logSuccessConsole,
   logErrorConsole,
   logInfoConsole,
 } from '../utils/consoleLogger';
-
-const CREDENTIALS_DIR = '.packmind';
-const CREDENTIALS_FILE = 'credentials.json';
-
-interface Credentials {
-  apiKey: string;
-}
-
-interface ApiKeyPayload {
-  host: string;
-  jwt: string;
-}
-
-interface JwtPayload {
-  user?: {
-    name: string;
-    userId: string;
-  };
-  organization?: {
-    id: string;
-    name: string;
-    slug: string;
-    role: string;
-  };
-  exp?: number;
-  iat?: number;
-}
-
-function getCredentialsPath(): string {
-  return path.join(os.homedir(), CREDENTIALS_DIR, CREDENTIALS_FILE);
-}
-
-function loadCredentials(): Credentials | null {
-  const credentialsPath = getCredentialsPath();
-
-  if (!fs.existsSync(credentialsPath)) {
-    return null;
-  }
-
-  try {
-    const content = fs.readFileSync(credentialsPath, 'utf-8');
-    return JSON.parse(content) as Credentials;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Decodes an API key to extract host and JWT payload.
- * API key format: base64({ host: string, jwt: string })
- * JWT payload contains: { user, organization, exp, iat }
- */
-function decodeApiKey(
-  apiKey: string,
-): { host: string; jwt: JwtPayload } | null {
-  try {
-    // First decode the base64 wrapper to get { host, jwt }
-    const jsonString = Buffer.from(apiKey.trim(), 'base64').toString('utf-8');
-    const apiKeyPayload = JSON.parse(jsonString) as ApiKeyPayload;
-
-    if (!apiKeyPayload.host || !apiKeyPayload.jwt) {
-      return null;
-    }
-
-    // Then decode the JWT payload (middle part of JWT)
-    const jwtParts = apiKeyPayload.jwt.split('.');
-    if (jwtParts.length !== 3) {
-      return { host: apiKeyPayload.host, jwt: {} };
-    }
-
-    const jwtPayload = Buffer.from(jwtParts[1], 'base64').toString('utf-8');
-    const decoded = JSON.parse(jwtPayload) as JwtPayload;
-
-    return { host: apiKeyPayload.host, jwt: decoded };
-  } catch {
-    return null;
-  }
-}
+import {
+  loadCredentials,
+  CredentialsResult,
+  getCredentialsPath,
+} from '../utils/credentials';
 
 function formatExpiresAt(expiresAt: Date): string {
   const now = new Date();
@@ -108,28 +32,20 @@ function formatExpiresAt(expiresAt: Date): string {
   return 'Expires soon';
 }
 
-interface AuthInfo {
-  host: string;
-  organizationName?: string;
-  userName?: string;
-  expiresAt?: Date;
-  source: string;
-}
+function displayAuthInfo(credentials: CredentialsResult): void {
+  console.log(`\nHost: ${credentials.host}`);
+  if (credentials.organizationName) {
+    console.log(`Organization: ${credentials.organizationName}`);
+  }
+  if (credentials.userName) {
+    console.log(`User: ${credentials.userName}`);
+  }
+  if (credentials.expiresAt) {
+    console.log(formatExpiresAt(credentials.expiresAt));
+  }
+  logInfoConsole(`Source: ${credentials.source}`);
 
-function displayAuthInfo(info: AuthInfo, isExpired: boolean): void {
-  console.log(`\nHost: ${info.host}`);
-  if (info.organizationName) {
-    console.log(`Organization: ${info.organizationName}`);
-  }
-  if (info.userName) {
-    console.log(`User: ${info.userName}`);
-  }
-  if (info.expiresAt) {
-    console.log(formatExpiresAt(info.expiresAt));
-  }
-  logInfoConsole(`Source: ${info.source}`);
-
-  if (isExpired) {
+  if (credentials.isExpired) {
     console.log('\nRun `packmind-cli login` to re-authenticate.');
   }
 }
@@ -139,73 +55,28 @@ export const whoamiCommand = command({
   description: 'Show current authentication status and credentials info',
   args: {},
   handler: async () => {
-    // Check environment variable first
-    const envApiKey = process.env.PACKMIND_API_KEY_V3;
-    if (envApiKey) {
-      const decoded = decodeApiKey(envApiKey);
-      const expiresAt = decoded?.jwt.exp
-        ? new Date(decoded.jwt.exp * 1000)
-        : undefined;
-      const isExpired = expiresAt ? expiresAt < new Date() : false;
-
-      if (isExpired) {
-        logErrorConsole('Credentials expired');
-      } else {
-        logSuccessConsole('Authenticated');
-      }
-
-      displayAuthInfo(
-        {
-          host: decoded?.host || 'Unknown',
-          organizationName: decoded?.jwt.organization?.name,
-          userName: decoded?.jwt.user?.name,
-          expiresAt,
-          source: 'PACKMIND_API_KEY_V3 environment variable',
-        },
-        isExpired,
-      );
-
-      if (isExpired) {
-        process.exit(1);
-      }
-      return;
-    }
-
-    // Check credentials file
     const credentials = loadCredentials();
 
     if (!credentials) {
       logErrorConsole('Not authenticated');
       console.log(
-        '\nNo credentials found. Run `packmind-cli login` to authenticate.',
+        `\nNo credentials found. Run \`packmind-cli login\` to authenticate.`,
       );
+      console.log(`\nCredentials are loaded from (in order of priority):`);
+      console.log(`  1. PACKMIND_API_KEY_V3 environment variable`);
+      console.log(`  2. ${getCredentialsPath()}`);
       process.exit(1);
     }
 
-    const decoded = decodeApiKey(credentials.apiKey);
-    const expiresAt = decoded?.jwt.exp
-      ? new Date(decoded.jwt.exp * 1000)
-      : undefined;
-    const isExpired = expiresAt ? expiresAt < new Date() : false;
-
-    if (isExpired) {
+    if (credentials.isExpired) {
       logErrorConsole('Credentials expired');
     } else {
       logSuccessConsole('Authenticated');
     }
 
-    displayAuthInfo(
-      {
-        host: decoded?.host || 'Unknown',
-        organizationName: decoded?.jwt.organization?.name,
-        userName: decoded?.jwt.user?.name,
-        expiresAt,
-        source: getCredentialsPath(),
-      },
-      isExpired,
-    );
+    displayAuthInfo(credentials);
 
-    if (isExpired) {
+    if (credentials.isExpired) {
       process.exit(1);
     }
   },

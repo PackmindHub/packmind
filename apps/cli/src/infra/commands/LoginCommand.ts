@@ -1,42 +1,17 @@
 import { command, option, string, optional } from 'cmd-ts';
 import * as http from 'http';
 import * as readline from 'readline';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as os from 'os';
 import open from 'open';
 import {
   logSuccessConsole,
   logErrorConsole,
   logInfoConsole,
 } from '../utils/consoleLogger';
+import { getCredentialsPath, saveCredentials } from '../utils/credentials';
 
 const DEFAULT_HOST = 'https://app.packmind.ai';
-const CREDENTIALS_DIR = '.packmind';
-const CREDENTIALS_FILE = 'credentials.json';
 const CALLBACK_PORT = 19284;
 const CALLBACK_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
-
-interface Credentials {
-  apiKey: string;
-}
-
-function getCredentialsPath(): string {
-  return path.join(os.homedir(), CREDENTIALS_DIR, CREDENTIALS_FILE);
-}
-
-function saveCredentials(credentials: Credentials): void {
-  const credentialsDir = path.join(os.homedir(), CREDENTIALS_DIR);
-
-  if (!fs.existsSync(credentialsDir)) {
-    fs.mkdirSync(credentialsDir, { recursive: true, mode: 0o700 });
-  }
-
-  const credentialsPath = getCredentialsPath();
-  fs.writeFileSync(credentialsPath, JSON.stringify(credentials, null, 2), {
-    mode: 0o600,
-  });
-}
 
 async function exchangeCodeForApiKey(
   code: string,
@@ -218,11 +193,7 @@ export const loginCommand = command({
 
       const result = await exchangeCodeForApiKey(code, host);
 
-      const credentials: Credentials = {
-        apiKey: result.apiKey,
-      };
-
-      saveCredentials(credentials);
+      saveCredentials(result.apiKey);
 
       logSuccessConsole('Login successful!');
       console.log(`\nCredentials saved to: ${getCredentialsPath()}`);
