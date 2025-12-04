@@ -92,3 +92,19 @@ export class GitProviderHasRepositoriesError extends Error {
     }
   }
 }
+
+/**
+ * Error thrown when attempting to add a repository to a git provider that has no token configured
+ */
+export class GitProviderMissingTokenError extends Error {
+  constructor(public readonly gitProviderId: string) {
+    super(
+      `Git provider '${gitProviderId}' has no token configured. Cannot add repositories to providers without authentication.`,
+    );
+    this.name = 'GitProviderMissingTokenError';
+
+    if (hasCaptureStackTrace(Error)) {
+      Error.captureStackTrace(this, GitProviderMissingTokenError);
+    }
+  }
+}
