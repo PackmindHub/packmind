@@ -315,6 +315,7 @@ export class ImportPracticeLegacyUseCase
         organizationId,
         userId,
         mustBeDraftVersion: false,
+        sourceCodeState: detectionProgram.mode,
       });
 
       this.logger.info('Detection program created successfully', {
