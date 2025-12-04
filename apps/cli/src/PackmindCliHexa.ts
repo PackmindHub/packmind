@@ -41,6 +41,10 @@ import {
   IWhoamiCommand,
   IWhoamiResult,
 } from './domain/useCases/IWhoamiUseCase';
+import {
+  ISetupMcpCommand,
+  ISetupMcpResult,
+} from './domain/useCases/ISetupMcpUseCase';
 import { HierarchicalConfigResult, PackmindFileConfig } from '@packmind/types';
 import { logWarningConsole } from './infra/utils/consoleLogger';
 
@@ -199,5 +203,9 @@ export class PackmindCliHexa {
 
   public async whoami(command: IWhoamiCommand): Promise<IWhoamiResult> {
     return this.hexa.useCases.whoami.execute(command);
+  }
+
+  public async setupMcp(command: ISetupMcpCommand): Promise<ISetupMcpResult> {
+    return this.hexa.useCases.setupMcp.execute(command);
   }
 }

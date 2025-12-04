@@ -28,6 +28,9 @@ import { ILogoutUseCase } from './domain/useCases/ILogoutUseCase';
 import { LogoutUseCase } from './application/useCases/LogoutUseCase';
 import { IWhoamiUseCase } from './domain/useCases/IWhoamiUseCase';
 import { WhoamiUseCase } from './application/useCases/WhoamiUseCase';
+import { ISetupMcpUseCase } from './domain/useCases/ISetupMcpUseCase';
+import { SetupMcpUseCase } from './application/useCases/SetupMcpUseCase';
+import { McpConfigService } from './application/services/McpConfigService';
 import { ConfigFileRepository } from './infra/repositories/ConfigFileRepository';
 import { loadApiKey } from './infra/utils/credentialsLoader';
 
@@ -47,6 +50,7 @@ export class PackmindCliHexaFactory {
     login: ILoginUseCase;
     logout: ILogoutUseCase;
     whoami: IWhoamiUseCase;
+    setupMcp: ISetupMcpUseCase;
   };
 
   constructor(private readonly logger: PackmindLogger) {
@@ -86,6 +90,10 @@ export class PackmindCliHexaFactory {
       login: new LoginUseCase(),
       logout: new LogoutUseCase(),
       whoami: new WhoamiUseCase(),
+      setupMcp: new SetupMcpUseCase({
+        gateway: this.repositories.packmindGateway,
+        mcpConfigService: new McpConfigService(),
+      }),
     };
   }
 }

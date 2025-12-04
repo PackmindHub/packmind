@@ -1,11 +1,9 @@
 import { command, option, optional, Type } from 'cmd-ts';
 import * as inquirer from 'inquirer';
-import { PackmindGateway } from '../repositories/PackmindGateway';
 import {
   AgentDetectionService,
   AgentType,
 } from '../../application/services/AgentDetectionService';
-import { McpConfigService } from '../../application/services/McpConfigService';
 import {
   logSuccessConsole,
   logErrorConsole,
@@ -13,6 +11,8 @@ import {
   formatBold,
 } from '../utils/consoleLogger';
 import { loadCredentials, getCredentialsPath } from '../utils/credentials';
+import { PackmindCliHexa } from '../../PackmindCliHexa';
+import { PackmindLogger, LogLevel } from '@packmind/logger';
 
 const VALID_AGENTS = ['copilot', 'cursor', 'claude'] as const;
 type AgentArg = (typeof VALID_AGENTS)[number];
@@ -78,11 +78,7 @@ export const setupMcpCommand = command({
       process.exit(1);
     }
 
-    const apiKey = credentials.apiKey;
-
     const agentDetectionService = new AgentDetectionService();
-    const mcpConfigService = new McpConfigService();
-    const gateway = new PackmindGateway(apiKey);
 
     let selectedAgents: AgentType[];
 
@@ -133,16 +129,12 @@ export const setupMcpCommand = command({
 
     console.log('\nFetching MCP configuration...\n');
 
-    let mcpToken: string;
-    let mcpUrl: string;
+    const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
+    const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
+    let result;
     try {
-      const [tokenResult, urlResult] = await Promise.all([
-        gateway.getMcpToken({}),
-        gateway.getMcpUrl({}),
-      ]);
-      mcpToken = tokenResult.access_token;
-      mcpUrl = urlResult.url;
+      result = await packmindCliHexa.setupMcp({ agentTypes: selectedAgents });
     } catch (error) {
       logErrorConsole('Failed to fetch MCP configuration from server.');
       if (error instanceof Error) {
@@ -151,7 +143,6 @@ export const setupMcpCommand = command({
       process.exit(1);
     }
 
-    const config = { url: mcpUrl, accessToken: mcpToken };
     let successCount = 0;
     const failedAgents: {
       name: string;
@@ -159,22 +150,18 @@ export const setupMcpCommand = command({
       command?: string;
     }[] = [];
 
-    for (const agentType of selectedAgents) {
-      const agentName =
-        ALL_AGENTS.find((a) => a.type === agentType)?.name || agentType;
-      console.log(`Installing MCP for ${agentName}...`);
+    for (const agentResult of result.results) {
+      console.log(`Installing MCP for ${agentResult.agentName}...`);
 
-      const result = mcpConfigService.installForAgent(agentType, config);
-
-      if (result.success) {
-        logSuccessConsole(`  ${agentName} configured successfully`);
+      if (agentResult.success) {
+        logSuccessConsole(`  ${agentResult.agentName} configured successfully`);
         successCount++;
       } else {
-        logErrorConsole(`  Failed to configure ${agentName}`);
+        logErrorConsole(`  Failed to configure ${agentResult.agentName}`);
         failedAgents.push({
-          name: agentName,
-          error: result.error || '',
-          command: result.command,
+          name: agentResult.agentName,
+          error: agentResult.error || '',
+          command: agentResult.command,
         });
       }
     }
@@ -203,7 +190,7 @@ export const setupMcpCommand = command({
         }
 
         console.log(`\n  Manual configuration:`);
-        console.log(mcpConfigService.getClassicConfig(config));
+        console.log(result.manualConfigJson);
         console.log('');
       }
     }
