@@ -1,0 +1,265 @@
+name: Docker Image Build
+
+on:
+  workflow_call:
+    inputs:
+      api-artifact:
+        required: true
+        type: string
+        description: 'API build artifact name'
+      frontend-artifact:
+        required: true
+        type: string
+        description: 'Frontend build artifact name'
+      mcp-server-artifact:
+        required: true
+        type: string
+        description: 'MCP Server build artifact name'
+      node-version:
+        required: true
+        type: string
+        description: 'Node.js version to use'
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: true
+        description: 'Docker Hub username'
+      DOCKERHUB_TOKEN:
+        required: true
+        description: 'Docker Hub access token'
+    outputs:
+      api-image-tag:
+        description: 'API Docker image tag'
+        value: ${{ jobs.build-scan-push.outputs.api-image-tag }}
+      frontend-image-tag:
+        description: 'Frontend Docker image tag'
+        value: ${{ jobs.build-scan-push.outputs.frontend-image-tag }}
+      mcp-server-image-tag:
+        description: 'MCP Server Docker image tag'
+        value: ${{ jobs.build-scan-push.outputs.mcp-image-tag }}
+      version:
+        description: 'Package version used for Docker tags'
+        value: ${{ jobs.build-scan-push.outputs.version }}
+
+jobs:
+  build-scan-push:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    # Both editions: main, docker-bake branch, release tags
+    if: |
+      github.ref == 'refs/heads/main' ||
+      startsWith(github.ref, 'refs/tags/release/') ||
+      github.ref == 'refs/heads/docker-bake'
+    outputs:
+      api-image-tag: packmind/api-${{ vars.PACKMIND_EDITION }}:${{ steps.get-version.outputs.version }}
+      frontend-image-tag: packmind/frontend-${{ vars.PACKMIND_EDITION }}:${{ steps.get-version.outputs.version }}
+      mcp-image-tag: packmind/mcp-${{ vars.PACKMIND_EDITION }}:${{ steps.get-version.outputs.version }}
+      version: ${{ steps.get-version.outputs.version }}
+
+    steps:
+      # ========================================================================
+      # SETUP
+      # ========================================================================
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ inputs.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: 'npm'
+
+      - name: Get package version
+        id: get-version
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Download all build artifacts
+      - name: Download API build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.api-artifact }}
+          path: dist/apps/api/
+
+      - name: Download Frontend build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.frontend-artifact }}
+          path: apps/frontend/build/client/
+
+      - name: Download MCP Server build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.mcp-server-artifact }}
+          path: dist/apps/mcp-server/
+
+      # API-specific pre-build step
+      - name: Generate tsconfig
+        env:
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+        run: node scripts/select-tsconfig.mjs
+
+      - name: Build migration bundle for Docker
+        env:
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+        run: ./node_modules/.bin/nx bundle-docker migrations
+
+      # Docker setup
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          platforms: linux/amd64,linux/arm64
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          logout: false
+
+      # ========================================================================
+      # STEP 1: BUILD ALL IMAGES WITH DOCKER BAKE
+      # ========================================================================
+      - name: Build all Docker images with Bake
+        env:
+          VERSION: ${{ steps.get-version.outputs.version }}
+          SHA: ${{ github.sha }}
+          EDITION: ${{ vars.PACKMIND_EDITION }}
+        run: |
+          docker buildx bake \
+            --file docker-bake.hcl \
+            --load
+
+      # ========================================================================
+      # STEP 2: CVE SCANNING (ALL 3 IMAGES)
+      # ========================================================================
+      - name: Scan API Docker image for vulnerabilities
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          organization: packmind
+          image: packmind/api-${{ vars.PACKMIND_EDITION }}:${{ steps.get-version.outputs.version }}
+          only-severities: critical,high
+          exit-code: true
+
+      - name: Scan Frontend Docker image for vulnerabilities
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          organization: packmind
+          image: packmind/frontend-${{ vars.PACKMIND_EDITION }}:${{ steps.get-version.outputs.version }}
+          only-severities: critical,high
+          exit-code: true
+
+      - name: Scan MCP Server Docker image for vulnerabilities
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          organization: packmind
+          image: packmind/mcp-${{ vars.PACKMIND_EDITION }}:${{ steps.get-version.outputs.version }}
+          only-severities: critical,high
+          exit-code: true
+
+      # ========================================================================
+      # STEP 3: PUSH IMAGES
+      # ========================================================================
+
+      # docker-bake branch: Push only SHA tag for testing
+      - name: Push Docker images (docker-bake branch - SHA only)
+        if: github.ref == 'refs/heads/docker-bake'
+        run: |
+          docker push packmind/api-${{ vars.PACKMIND_EDITION }}:${{ github.sha }}
+          docker push packmind/frontend-${{ vars.PACKMIND_EDITION }}:${{ github.sha }}
+          docker push packmind/mcp-${{ vars.PACKMIND_EDITION }}:${{ github.sha }}
+
+      # Main branch: Push all tags with retry logic
+      - name: Push Docker images (main branch)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          # Retry function for docker push
+          retry_push() {
+            local image=$1
+            local max_attempts=3
+            local attempt=1
+
+            while [ $attempt -le $max_attempts ]; do
+              echo "Attempt $attempt/$max_attempts: Pushing $image"
+              if docker push "$image"; then
+                echo "Successfully pushed $image"
+                return 0
+              else
+                echo "Failed to push $image on attempt $attempt"
+                if [ $attempt -lt $max_attempts ]; then
+                  echo "Waiting 10 seconds before retry..."
+                  sleep 10
+                fi
+                attempt=$((attempt + 1))
+              fi
+            done
+
+            echo "Failed to push $image after $max_attempts attempts"
+            return 1
+          }
+
+          # Push API images
+          retry_push "packmind/api-${{ vars.PACKMIND_EDITION }}:${{ steps.get-version.outputs.version }}"
+          retry_push "packmind/api-${{ vars.PACKMIND_EDITION }}:latest"
+          retry_push "packmind/api-${{ vars.PACKMIND_EDITION }}:${{ github.sha }}"
+
+          # Push Frontend images
+          retry_push "packmind/frontend-${{ vars.PACKMIND_EDITION }}:${{ steps.get-version.outputs.version }}"
+          retry_push "packmind/frontend-${{ vars.PACKMIND_EDITION }}:latest"
+          retry_push "packmind/frontend-${{ vars.PACKMIND_EDITION }}:${{ github.sha }}"
+
+          # Push MCP images
+          retry_push "packmind/mcp-${{ vars.PACKMIND_EDITION }}:${{ steps.get-version.outputs.version }}"
+          retry_push "packmind/mcp-${{ vars.PACKMIND_EDITION }}:latest"
+          retry_push "packmind/mcp-${{ vars.PACKMIND_EDITION }}:${{ github.sha }}"
+
+      # Release tags: Rebuild with multi-platform and push
+      - name: Build and push multi-platform images (release)
+        if: startsWith(github.ref, 'refs/tags/release/')
+        env:
+          VERSION: ${{ steps.get-version.outputs.version }}
+          SHA: ${{ github.sha }}
+          EDITION: ${{ vars.PACKMIND_EDITION }}
+        run: |
+          docker buildx bake \
+            --file docker-bake.hcl \
+            release \
+            --push
+
+      # Release tags (OSS only): Build and push public images
+      - name: Build and push public images (release - OSS only)
+        if: startsWith(github.ref, 'refs/tags/release/') && vars.PACKMIND_EDITION == 'oss'
+        run: |
+          # Build and push public API image
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            -f dockerfile/Dockerfile.api \
+            -t packmind/api:${{ steps.get-version.outputs.version }} \
+            -t packmind/api:latest \
+            --push \
+            .
+
+          # Build and push public Frontend image
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            -f dockerfile/Dockerfile.frontend \
+            -t packmind/frontend:${{ steps.get-version.outputs.version }} \
+            -t packmind/frontend:latest \
+            --push \
+            .
+
+          # Build and push public MCP image
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            -f dockerfile/Dockerfile.mcp \
+            -t packmind/mcp:${{ steps.get-version.outputs.version }} \
+            -t packmind/mcp:latest \
+            --push \
+            .
+

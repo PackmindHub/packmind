@@ -1,0 +1,303 @@
+name: Publish CLI Release
+
+on:
+  workflow_call:
+    secrets:
+      MACOS_CERTIFICATE:
+        required: true
+      MACOS_CERTIFICATE_PASSWORD:
+        required: true
+      MACOS_SIGNING_IDENTITY:
+        required: true
+      APPLE_ID:
+        required: true
+      APPLE_ID_PASSWORD:
+        required: true
+      APPLE_TEAM_ID:
+        required: true
+      NPM_TOKEN:
+        required: true
+
+env:
+  NODE_VERSION: '22.17.0'
+
+jobs:
+  sign-macos-cli:
+    runs-on: depot-macos-15
+    outputs:
+      version: ${{ steps.get-version.outputs.version }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get package version
+        id: get-version
+        run: echo "version=$(node -p "require('./apps/cli/package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Download CLI executables artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: cli-executables-${{ steps.get-version.outputs.version }}
+          path: cli-executables
+
+      - name: Install Apple certificate
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+        run: |
+          echo "🔐 Installing certificate..."
+          
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
+          
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          
+          echo "$MACOS_CERTIFICATE" | base64 --decode > certificate.p12
+          security import certificate.p12 -P "$MACOS_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          rm certificate.p12
+          
+          security list-keychain -d user -s "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          
+          echo "✅ Certificate installed successfully"
+
+      - name: Sign macOS arm64 executable
+        env:
+          MACOS_SIGNING_IDENTITY: ${{ secrets.MACOS_SIGNING_IDENTITY }}
+          VERSION: ${{ steps.get-version.outputs.version }}
+        run: |
+          echo "✍️  Signing macOS arm64 executable..."
+          
+          EXECUTABLE="cli-executables/packmind-cli-macos-arm64"
+          SIGNED_EXECUTABLE="cli-executables/packmind-cli-macos-arm64-${VERSION}"
+          
+          if [ -f "$EXECUTABLE" ]; then
+            cp "$EXECUTABLE" "$SIGNED_EXECUTABLE"
+            
+            codesign \
+              --entitlements apps/cli/entitlements.plist \
+              --deep \
+              --force \
+              --options runtime \
+              --sign "$MACOS_SIGNING_IDENTITY" \
+              --timestamp \
+              "$SIGNED_EXECUTABLE"
+            
+            echo "✅ Signed: $SIGNED_EXECUTABLE"
+          else
+            echo "❌ Error: $EXECUTABLE not found"
+            exit 1
+          fi
+
+      - name: Notarize macOS executable
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          VERSION: ${{ steps.get-version.outputs.version }}
+        run: |
+          echo "📤 Notarizing macOS executable..."
+          
+          SIGNED_EXECUTABLE="cli-executables/packmind-cli-macos-arm64-${VERSION}"
+          ZIP_FILE="cli-executables/packmind-cli-macos-arm64-${VERSION}.zip"
+          
+          ditto -c -k --keepParent "$SIGNED_EXECUTABLE" "$ZIP_FILE"
+          
+          xcrun notarytool submit "$ZIP_FILE" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_ID_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --wait
+          
+          echo "✅ Notarization complete"
+
+      - name: Upload signed macOS executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-macos-arm64-signed-${{ steps.get-version.outputs.version }}
+          path: cli-executables/packmind-cli-macos-arm64-${{ steps.get-version.outputs.version }}
+
+  publish-npm:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    needs: sign-macos-cli
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: 'https://registry.npmjs.org'
+      
+      - name: Download CLI npm package artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: cli-dist-proprietary-${{ github.run_number }}-${{ github.sha }}
+          path: dist/apps/cli
+      
+      - name: Verify package.json
+        run: |
+          echo "📦 Verifying CLI package..."
+          cat dist/apps/cli/package.json
+          ls -la dist/apps/cli/
+      
+      - name: Publish to npm
+        working-directory: dist/apps/cli
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
+      
+      - name: Summary
+        run: |
+          echo "## npm Publishing Summary" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Successfully published @packmind/cli to npm registry" >> $GITHUB_STEP_SUMMARY
+          echo "Version: ${{ needs.sign-macos-cli.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+
+  create-github-release:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    needs: [sign-macos-cli, publish-npm]
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Download CLI executables
+        uses: actions/download-artifact@v4
+        with:
+          name: cli-executables-${{ needs.sign-macos-cli.outputs.version }}
+          path: executables
+      
+      - name: Download signed macOS arm64 executable
+        uses: actions/download-artifact@v4
+        with:
+          name: cli-macos-arm64-signed-${{ needs.sign-macos-cli.outputs.version }}
+          path: executables-signed
+      
+      - name: Extract changelog for version
+        id: extract-changelog
+        env:
+          VERSION: ${{ needs.sign-macos-cli.outputs.version }}
+        run: |
+          CHANGELOG_FILE="apps/cli/CHANGELOG.MD"
+          
+          # Extract section for this version
+          CHANGELOG_SECTION=$(awk -v ver="$VERSION" '
+            /^# \[/ { 
+              if (found) exit;
+              if ($0 ~ "\\[" ver "\\]") found=1;
+              next;
+            }
+            found { print }
+          ' "$CHANGELOG_FILE")
+          
+          # Save to output with proper escaping
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG_SECTION" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Prepare release assets
+        env:
+          VERSION: ${{ needs.sign-macos-cli.outputs.version }}
+        run: |
+          mkdir -p release-assets
+          
+          # Rename and copy Linux x64
+          if [ -f "executables/packmind-cli-linux-x64" ]; then
+            cp "executables/packmind-cli-linux-x64" "release-assets/packmind-cli-linux-x64-${VERSION}"
+            echo "✅ Prepared Linux x64 executable"
+          else
+            echo "❌ Error: Linux x64 executable not found"
+            exit 1
+          fi
+          
+          # Rename and copy Linux arm64
+          if [ -f "executables/packmind-cli-linux-arm64" ]; then
+            cp "executables/packmind-cli-linux-arm64" "release-assets/packmind-cli-linux-arm64-${VERSION}"
+            echo "✅ Prepared Linux arm64 executable"
+          else
+            echo "❌ Error: Linux arm64 executable not found"
+            exit 1
+          fi
+          
+          # Rename and copy Windows x64
+          if [ -f "executables/packmind-cli-windows-x64.exe" ]; then
+            cp "executables/packmind-cli-windows-x64.exe" "release-assets/packmind-cli-windows-x64-${VERSION}.exe"
+            echo "✅ Prepared Windows x64 executable"
+          else
+            echo "❌ Error: Windows x64 executable not found"
+            exit 1
+          fi
+          
+          # Copy signed macOS arm64 (already versioned) - must be signed
+          if [ -f "executables-signed/packmind-cli-macos-arm64-${VERSION}" ]; then
+            cp "executables-signed/packmind-cli-macos-arm64-${VERSION}" "release-assets/packmind-cli-macos-arm64-${VERSION}"
+            echo "✅ Prepared signed macOS arm64 executable"
+          else
+            echo "❌ Error: Signed macOS arm64 executable not found"
+            exit 1
+          fi
+          
+          echo ""
+          echo "📦 Release assets prepared:"
+          ls -lh release-assets/
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: CLI ${{ needs.sign-macos-cli.outputs.version }}
+          body: |
+            ## Packmind CLI ${{ needs.sign-macos-cli.outputs.version }}
+            
+            ### Installation
+            
+            #### npm/npx
+            ```bash
+            npm install -g @packmind/cli@${{ needs.sign-macos-cli.outputs.version }}
+            ```
+            
+            #### Standalone Executables
+            Download the appropriate executable for your platform:
+            - **Linux x64**: `packmind-cli-linux-x64-${{ needs.sign-macos-cli.outputs.version }}`
+            - **Linux arm64**: `packmind-cli-linux-arm64-${{ needs.sign-macos-cli.outputs.version }}`
+            - **macOS arm64**: `packmind-cli-macos-arm64-${{ needs.sign-macos-cli.outputs.version }}`
+            - **Windows x64**: `packmind-cli-windows-x64-${{ needs.sign-macos-cli.outputs.version }}.exe`
+            
+            Make the executable runnable (Linux/macOS):
+            ```bash
+            chmod +x packmind-cli-*-${{ needs.sign-macos-cli.outputs.version }}
+            ```
+            
+            ### Changes
+            ${{ steps.extract-changelog.outputs.changelog }}
+          draft: false
+          prerelease: false
+          files: |
+            release-assets/packmind-cli-linux-x64-${{ needs.sign-macos-cli.outputs.version }}
+            release-assets/packmind-cli-linux-arm64-${{ needs.sign-macos-cli.outputs.version }}
+            release-assets/packmind-cli-macos-arm64-${{ needs.sign-macos-cli.outputs.version }}
+            release-assets/packmind-cli-windows-x64-${{ needs.sign-macos-cli.outputs.version }}.exe
+      
+      - name: Summary
+        env:
+          VERSION: ${{ needs.sign-macos-cli.outputs.version }}
+          REPOSITORY: ${{ github.repository }}
+          REF: ${{ github.ref_name }}
+        run: |
+          echo "## GitHub Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Successfully created GitHub release: CLI ${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Release Assets" >> $GITHUB_STEP_SUMMARY
+          echo "- packmind-cli-linux-x64-${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "- packmind-cli-linux-arm64-${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "- packmind-cli-macos-arm64-${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "- packmind-cli-windows-x64-${VERSION}.exe" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🔗 [View Release](https://github.com/${REPOSITORY}/releases/tag/${REF})" >> $GITHUB_STEP_SUMMARY
