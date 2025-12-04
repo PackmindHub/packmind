@@ -7,7 +7,7 @@ import packmindOnboardingDocumentation from '../prompts/packmind-onboarding-docu
 import packmindOnboardingGitHistory from '../prompts/packmind-onboarding-git-history';
 import packmindOnboardingModeSelection from '../prompts/packmind-onboarding-mode-selection';
 import packmindOnboardingWebResearch from '../prompts/packmind-onboarding-web-research';
-import { ToolDependencies } from './types';
+import { registerMcpTool, ToolDependencies } from './types';
 
 // Onboarding prompt content imported as strings
 const ONBOARDING_PROMPTS = {
@@ -25,18 +25,23 @@ export function registerOnboardingTool(
 ) {
   const { userContext, analyticsAdapter, logger } = dependencies;
 
-  mcpServer.tool(
+  registerMcpTool(
+    mcpServer,
     `onboarding`,
-    'Get onboarding workflows for coding standards creation. Returns mode selection if no workflow specified, or specific workflow content.',
     {
-      workflow: z
-        .string()
-        .optional()
-        .describe(
-          'The workflow name to retrieve. Available: codebase-analysis, git-history, documentation, ai-instructions, web-research',
-        ),
+      title: 'Onboarding',
+      description:
+        'Get onboarding workflows for coding standards creation. Returns mode selection if no workflow specified, or specific workflow content.',
+      inputSchema: {
+        workflow: z
+          .string()
+          .optional()
+          .describe(
+            'The workflow name to retrieve. Available: codebase-analysis, git-history, documentation, ai-instructions, web-research',
+          ),
+      },
     },
-    async ({ workflow }) => {
+    async ({ workflow }: { workflow?: string }) => {
       try {
         // If no workflow specified, return mode selection
         logger.info(`Onboarding tool called with workflow: ${workflow}`);

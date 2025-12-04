@@ -5,8 +5,37 @@ import {
   RecipeStep,
 } from '@packmind/types';
 import { z } from 'zod';
-import { ToolDependencies } from './types';
+import { registerMcpTool, ToolDependencies } from './types';
 import { getGlobalSpace } from './utils';
+
+// Define step schema separately to avoid deep type instantiation
+const recipeStepSchema = z.object({
+  name: z
+    .string()
+    .min(1)
+    .describe('The name/title of the step (e.g., "Setup Dependencies")'),
+  description: z
+    .string()
+    .min(1)
+    .describe(
+      'A sentence describing the intent of the step and how to implement it [Markdown formatted]',
+    ),
+  codeSnippet: z
+    .string()
+    .optional()
+    .describe(
+      'Optional concise and minimal code snippet demonstrating the step. Keep it brief and focused. [Markdown formatted with ``` including the language]',
+    ),
+});
+
+type SaveRecipeInput = {
+  name: string;
+  summary: string;
+  whenToUse: string[];
+  contextValidationCheckpoints: string[];
+  steps: Array<{ name: string; description: string; codeSnippet?: string }>;
+  packageSlugs?: string[];
+};
 
 export function registerSaveRecipeTool(
   dependencies: ToolDependencies,
@@ -14,68 +43,53 @@ export function registerSaveRecipeTool(
 ) {
   const { fastify, userContext, analyticsAdapter, logger } = dependencies;
 
-  mcpServer.tool(
+  registerMcpTool(
+    mcpServer,
     `save_recipe`,
-    'Create a new reusable recipe as a structured Packmind recipe. Do not call this tool directly—you need to first use the tool packmind_create_recipe.',
     {
-      name: z.string().min(1).describe('The name of the recipe to create'),
-      summary: z
-        .string()
-        .min(1)
-        .describe(
-          'A concise sentence describing the intent of this recipe (what it does) and its value (why it is useful) and when it is relevant to use it',
-        ),
-      whenToUse: z
-        .array(z.string())
-        .describe(
-          'Array of scenarios when this recipe is applicable. Provide specific, actionable scenarios.',
-        ),
-      contextValidationCheckpoints: z
-        .array(z.string())
-        .describe(
-          'Array of checkpoints to ensure the context is clarified enough before implementing the recipe steps. Each checkpoint should be a question or validation point.',
-        ),
-      steps: z
-        .array(
-          z.object({
-            name: z
-              .string()
-              .min(1)
-              .describe(
-                'The name/title of the step (e.g., "Setup Dependencies")',
-              ),
-            description: z
-              .string()
-              .min(1)
-              .describe(
-                'A sentence describing the intent of the step and how to implement it [Markdown formatted]',
-              ),
-            codeSnippet: z
-              .string()
-              .optional()
-              .describe(
-                'Optional concise and minimal code snippet demonstrating the step. Keep it brief and focused. [Markdown formatted with ``` including the language]',
-              ),
-          }),
-        )
-        .describe(
-          'Array of atomic steps that make up the recipe implementation. Each step should be clear and actionable.',
-        ),
-      packageSlugs: z
-        .array(z.string())
-        .optional()
-        .describe(
-          'Optional array of package slugs to add this recipe to after creation',
-        ),
+      title: 'Save Recipe',
+      description:
+        'Create a new reusable recipe as a structured Packmind recipe. Do not call this tool directly—you need to first use the tool packmind_create_recipe.',
+      inputSchema: {
+        name: z.string().min(1).describe('The name of the recipe to create'),
+        summary: z
+          .string()
+          .min(1)
+          .describe(
+            'A concise sentence describing the intent of this recipe (what it does) and its value (why it is useful) and when it is relevant to use it',
+          ),
+        whenToUse: z
+          .array(z.string())
+          .describe(
+            'Array of scenarios when this recipe is applicable. Provide specific, actionable scenarios.',
+          ),
+        contextValidationCheckpoints: z
+          .array(z.string())
+          .describe(
+            'Array of checkpoints to ensure the context is clarified enough before implementing the recipe steps. Each checkpoint should be a question or validation point.',
+          ),
+        steps: z
+          .array(recipeStepSchema)
+          .describe(
+            'Array of atomic steps that make up the recipe implementation. Each step should be clear and actionable.',
+          ),
+        packageSlugs: z
+          .array(z.string())
+          .optional()
+          .describe(
+            'Optional array of package slugs to add this recipe to after creation',
+          ),
+      },
     },
-    async ({
-      name,
-      summary,
-      whenToUse,
-      contextValidationCheckpoints,
-      steps,
-      packageSlugs,
-    }) => {
+    async (input: SaveRecipeInput) => {
+      const {
+        name,
+        summary,
+        whenToUse,
+        contextValidationCheckpoints,
+        steps,
+        packageSlugs,
+      } = input;
       if (!userContext) {
         throw new Error('User context is required to create recipes');
       }

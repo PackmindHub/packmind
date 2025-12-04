@@ -20,6 +20,15 @@ jest.mock('../api/queries/AuthQueries', () => ({
   })),
 }));
 
+// Mock useAuthContext
+jest.mock('../hooks/useAuthContext', () => ({
+  useAuthContext: jest.fn(() => ({
+    user: { email: 'test@example.com' },
+    isAuthenticated: true,
+    isLoading: false,
+  })),
+}));
+
 // Mock navigator.clipboard
 Object.assign(navigator, {
   clipboard: {

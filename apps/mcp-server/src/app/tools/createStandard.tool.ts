@@ -6,10 +6,21 @@ import {
   STANDARD_WORKFLOW_STEPS,
   StandardWorkflowStep,
 } from '../prompts/packmind-standard-workflow';
-import { ToolDependencies } from './types';
+import { registerMcpTool, ToolDependencies } from './types';
 
 const isStandardWorkflowStep = (value: string): value is StandardWorkflowStep =>
   Object.prototype.hasOwnProperty.call(STANDARD_WORKFLOW_STEPS, value);
+
+const stepSchema = z
+  .enum(STANDARD_WORKFLOW_STEP_ORDER)
+  .optional()
+  .describe(
+    'Identifier of the workflow step to retrieve guidance for. Leave empty to start at the first step.',
+  );
+
+type CreateStandardInput = {
+  step?: (typeof STANDARD_WORKFLOW_STEP_ORDER)[number];
+};
 
 export function registerCreateStandardTool(
   dependencies: ToolDependencies,
@@ -17,19 +28,19 @@ export function registerCreateStandardTool(
 ) {
   const { userContext, analyticsAdapter } = dependencies;
 
-  const standardWorkflowStepSchema = z
-    .enum(STANDARD_WORKFLOW_STEP_ORDER)
-    .describe(
-      'Identifier of the workflow step to retrieve guidance for. Leave empty to start at the first step.',
-    );
-
-  mcpServer.tool(
+  registerMcpTool(
+    mcpServer,
     `create_standard`,
-    'Get step-by-step guidance for the Packmind standard creation workflow. Provide an optional step to retrieve a specific stage.',
     {
-      step: standardWorkflowStepSchema.optional(),
+      title: 'Create Standard',
+      description:
+        'Get step-by-step guidance for the Packmind standard creation workflow. Provide an optional step to retrieve a specific stage.',
+      inputSchema: {
+        step: stepSchema,
+      },
     },
-    async ({ step }) => {
+    async (input: CreateStandardInput) => {
+      const { step } = input;
       const requestedStep = step ?? 'initial-request';
 
       if (!isStandardWorkflowStep(requestedStep)) {

@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { createOrganizationId, createUserId } from '@packmind/types';
 import { z } from 'zod';
-import { ToolDependencies } from './types';
+import { registerMcpTool, ToolDependencies } from './types';
 
 export function registerGetRecipeDetailsTool(
   dependencies: ToolDependencies,
@@ -9,16 +9,20 @@ export function registerGetRecipeDetailsTool(
 ) {
   const { fastify, userContext, analyticsAdapter } = dependencies;
 
-  mcpServer.tool(
+  registerMcpTool(
+    mcpServer,
     `get_recipe_details`,
-    'Get the full content of a recipe by its slug.',
     {
-      recipeSlug: z
-        .string()
-        .min(1)
-        .describe('The slug of the recipe to retrieve'),
+      title: 'Get Recipe Details',
+      description: 'Get the full content of a recipe by its slug.',
+      inputSchema: {
+        recipeSlug: z
+          .string()
+          .min(1)
+          .describe('The slug of the recipe to retrieve'),
+      },
     },
-    async ({ recipeSlug }) => {
+    async ({ recipeSlug }: { recipeSlug: string }) => {
       if (!userContext) {
         throw new Error('User context is required to get recipe by slug');
       }

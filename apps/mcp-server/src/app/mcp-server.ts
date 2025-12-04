@@ -33,10 +33,6 @@ export function createMCPServer(
   const mcpServer = new McpServer({
     name: 'packmind',
     version: '1.0.0',
-    capabilities: {
-      resources: {},
-      tools: {},
-    },
   });
 
   logger.info('Create MCP server', {

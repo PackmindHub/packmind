@@ -10,7 +10,15 @@ export interface IPMFeatureFlagProps {
 export const RULE_DETAILS_DETECTION_TAB_FEATURE_KEY =
   'rule-details-detection-tab';
 
-export const DEFAULT_FEATURE_DOMAIN_MAP: Record<string, readonly string[]> = {};
+export const MCP_CONFIG_REDESIGN_FEATURE_KEY = 'mcp-config-redesign';
+
+export const CLI_LOGIN_COMMAND_FEATURE_KEY = 'cli-login-command';
+
+export const DEFAULT_FEATURE_DOMAIN_MAP: Record<string, readonly string[]> = {
+  [RULE_DETAILS_DETECTION_TAB_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
+  [MCP_CONFIG_REDESIGN_FEATURE_KEY]: ['@packmind.com'],
+  [CLI_LOGIN_COMMAND_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
+};
 
 const normalizeDomain = (domain: string): string =>
   domain.trim().toLowerCase().replace(/^@/, '');

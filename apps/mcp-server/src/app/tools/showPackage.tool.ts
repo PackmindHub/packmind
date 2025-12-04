@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { createOrganizationId, createUserId } from '@packmind/types';
 import { z } from 'zod';
-import { ToolDependencies } from './types';
+import { registerMcpTool, ToolDependencies } from './types';
 
 export function registerShowPackageTool(
   dependencies: ToolDependencies,
@@ -9,16 +9,21 @@ export function registerShowPackageTool(
 ) {
   const { fastify, userContext, analyticsAdapter } = dependencies;
 
-  mcpServer.tool(
+  registerMcpTool(
+    mcpServer,
     `get_package_details`,
-    'Get detailed information about a specific package including its recipes and standards.',
     {
-      packageSlug: z
-        .string()
-        .min(1)
-        .describe('The slug of the package to retrieve'),
+      title: 'Get Package Details',
+      description:
+        'Get detailed information about a specific package including its recipes and standards.',
+      inputSchema: {
+        packageSlug: z
+          .string()
+          .min(1)
+          .describe('The slug of the package to retrieve'),
+      },
     },
-    async ({ packageSlug }) => {
+    async ({ packageSlug }: { packageSlug: string }) => {
       if (!userContext) {
         throw new Error('User context is required to show package details');
       }

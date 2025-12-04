@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { createOrganizationId, createUserId } from '@packmind/types';
 import { z } from 'zod';
-import { ToolDependencies } from './types';
+import { registerMcpTool, ToolDependencies } from './types';
 
 export function registerGetStandardDetailsTool(
   dependencies: ToolDependencies,
@@ -9,16 +9,21 @@ export function registerGetStandardDetailsTool(
 ) {
   const { fastify, userContext, analyticsAdapter } = dependencies;
 
-  mcpServer.tool(
+  registerMcpTool(
+    mcpServer,
     `get_standard_details`,
-    'Get the full content of a standard including its rules and examples by its slug.',
     {
-      standardSlug: z
-        .string()
-        .min(1)
-        .describe('The slug of the standard to retrieve'),
+      title: 'Get Standard Details',
+      description:
+        'Get the full content of a standard including its rules and examples by its slug.',
+      inputSchema: {
+        standardSlug: z
+          .string()
+          .min(1)
+          .describe('The slug of the standard to retrieve'),
+      },
     },
-    async ({ standardSlug }) => {
+    async ({ standardSlug }: { standardSlug: string }) => {
       if (!userContext) {
         throw new Error('User context is required to get standard by slug');
       }
