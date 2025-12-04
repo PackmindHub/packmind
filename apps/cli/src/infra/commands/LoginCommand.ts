@@ -19,8 +19,6 @@ const CALLBACK_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
 
 interface Credentials {
   apiKey: string;
-  host: string;
-  expiresAt: string;
 }
 
 function getCredentialsPath(): string {
@@ -222,8 +220,6 @@ export const loginCommand = command({
 
       const credentials: Credentials = {
         apiKey: result.apiKey,
-        host,
-        expiresAt: result.expiresAt,
       };
 
       saveCredentials(credentials);

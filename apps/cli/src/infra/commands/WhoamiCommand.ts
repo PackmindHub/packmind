@@ -13,8 +13,6 @@ const CREDENTIALS_FILE = 'credentials.json';
 
 interface Credentials {
   apiKey: string;
-  host: string;
-  expiresAt: string;
 }
 
 interface ApiKeyPayload {
@@ -184,9 +182,11 @@ export const whoamiCommand = command({
       process.exit(1);
     }
 
-    const expiresAt = new Date(credentials.expiresAt);
-    const isExpired = expiresAt < new Date();
     const decoded = decodeApiKey(credentials.apiKey);
+    const expiresAt = decoded?.jwt.exp
+      ? new Date(decoded.jwt.exp * 1000)
+      : undefined;
+    const isExpired = expiresAt ? expiresAt < new Date() : false;
 
     if (isExpired) {
       logErrorConsole('Credentials expired');
@@ -196,7 +196,7 @@ export const whoamiCommand = command({
 
     displayAuthInfo(
       {
-        host: credentials.host,
+        host: decoded?.host || 'Unknown',
         organizationName: decoded?.jwt.organization?.name,
         userName: decoded?.jwt.user?.name,
         expiresAt,
