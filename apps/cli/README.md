@@ -286,6 +286,13 @@ When modifying the CLI:
 4. Verify all output formats work correctly
 5. Run quality checks: `npm run quality-gate`
 
+### Run locally
+
+```
+  nx run packmind-cli:build --skip-nx-cache
+  node dist/apps/cli/main.cjs <args>
+```
+
 ## References
 
 - [Bun](https://bun.sh)
