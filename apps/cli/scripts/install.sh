@@ -286,14 +286,13 @@ configure_path() {
     esac
 
     # Detect shell and find appropriate config file
+    # Note: On Windows Git Bash, we use .bashrc because Git Bash runs as
+    # a non-login shell and only sources .bashrc, not .bash_profile
     shell_name=$(basename "${SHELL:-/bin/sh}")
     case "$shell_name" in
         bash)
-            if [ -f "$HOME/.bashrc" ]; then
-                rc_file="$HOME/.bashrc"
-            else
-                rc_file="$HOME/.bash_profile"
-            fi
+            # Always use .bashrc for bash (works on Linux, macOS, and Git Bash on Windows)
+            rc_file="$HOME/.bashrc"
             ;;
         zsh)
             rc_file="$HOME/.zshrc"
@@ -309,7 +308,7 @@ configure_path() {
     if [ -f "$rc_file" ] && grep -q "$INSTALL_DIR" "$rc_file" 2>/dev/null; then
         info "PATH already configured in $rc_file"
     else
-        # Add the export line to the rc file
+        # Add the export line to the rc file (creates the file if it doesn't exist)
         info "Adding PATH to $rc_file"
         echo "" >> "$rc_file"
         echo "# Packmind CLI" >> "$rc_file"
