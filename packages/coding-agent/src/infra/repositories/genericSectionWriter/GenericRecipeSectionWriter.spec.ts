@@ -173,10 +173,7 @@ Second occurrence
   describe('generateRecipesSection', () => {
     describe('when using recipesSection', () => {
       const opts = {
-        agentName: 'TestAgent',
-        repoName: 'test-repo',
         recipesSection: '## Custom Recipes\n\nRecipe content here',
-        target: '/',
       };
 
       const result = GenericRecipeSectionWriter.generateRecipesSection(opts);

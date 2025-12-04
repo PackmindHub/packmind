@@ -89,9 +89,6 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
       .join('\n');
 
     const sectionContent = GenericRecipeSectionWriter.generateRecipesSection({
-      agentName: this.config.agentName,
-      repoName: `${gitRepo.owner}/${gitRepo.repo}`,
-      target: target.path,
       recipesSection: recipesListContent,
     });
 
@@ -186,11 +183,8 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
 
     // Generate content without fetching existing content or using target prefixing
     const updatedContent = GenericRecipeSectionWriter.replace({
-      agentName: this.config.agentName,
-      repoName: 'repository',
       currentContent: '',
       commentMarker: 'Packmind recipes',
-      target: '/',
       recipesSection: recipeVersions
         .map((recipeVersion) =>
           this.formatMarkdownLink(
@@ -271,9 +265,6 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
 
     const recipesSectionContent =
       GenericRecipeSectionWriter.generateRecipesSection({
-        agentName: this.config.agentName,
-        repoName: 'repository',
-        target: '/',
         recipesSection: recipesListContent,
       });
 
