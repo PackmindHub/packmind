@@ -19,6 +19,7 @@ module.exports = function getProprietaryWebpackPaths(__dirname) {
       '../../packages/linter-execution/src',
     ),
     '@packmind/amplitude': join(__dirname, '../../packages/amplitude/src'),
+    '@packmind/crisp': join(__dirname, '../../packages/crisp/src'),
     '@packmind/plugins': join(__dirname, '../../packages/plugins/src'),
     '@packmind/import-practices-legacy': join(
       __dirname,

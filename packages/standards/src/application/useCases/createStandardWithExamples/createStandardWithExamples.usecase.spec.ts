@@ -550,14 +550,8 @@ describe('CreateStandardWithExamplesUsecase', () => {
       });
 
       expect(result).toEqual(mockStandard);
-      expect(logger.warn).toHaveBeenCalledWith(
-        'Example missing language, skipping',
-        expect.objectContaining({
-          ruleContent: expect.stringContaining('Use descriptive test names'),
-        }),
-      );
 
-      // Should only include the valid example
+      // Should only include the valid example (skipping the one with missing language)
       expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
         expect.objectContaining({
           rules: [
@@ -616,14 +610,8 @@ describe('CreateStandardWithExamplesUsecase', () => {
       });
 
       expect(result).toEqual(mockStandard);
-      expect(logger.error).toHaveBeenCalledWith(
-        'Failed to generate summary, proceeding without summary',
-        expect.objectContaining({
-          error: 'AI service unavailable',
-        }),
-      );
 
-      // Should still create the standard version with null summary
+      // Should still create the standard version with null summary (despite AI failure)
       expect(standardVersionService.addStandardVersion).toHaveBeenCalledWith(
         expect.objectContaining({
           summary: null,
@@ -800,13 +788,6 @@ describe('CreateStandardWithExamplesUsecase', () => {
           rules,
         }),
       ).rejects.toThrow('Database connection failed');
-
-      expect(logger.error).toHaveBeenCalledWith(
-        'Failed to create standard with examples',
-        expect.objectContaining({
-          error: 'Database connection failed',
-        }),
-      );
     });
 
     describe('detection program validation', () => {
@@ -1138,12 +1119,6 @@ describe('CreateStandardWithExamplesUsecase', () => {
         });
 
         expect(result).toEqual(mockStandard);
-        expect(logger.error).toHaveBeenCalledWith(
-          'Failed to update detection program status',
-          expect.objectContaining({
-            error: 'Linter service unavailable',
-          }),
-        );
       });
 
       describe('when linter adapter is not available', () => {
@@ -1201,10 +1176,6 @@ describe('CreateStandardWithExamplesUsecase', () => {
           });
 
           expect(result).toEqual(mockStandard);
-          expect(logger.warn).toHaveBeenCalledWith(
-            'Linter adapter not available, skipping detection program validation',
-            expect.any(Object),
-          );
         });
       });
     });

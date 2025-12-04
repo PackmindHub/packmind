@@ -169,8 +169,4 @@ export interface ILinterPort {
   createEmptyRuleDetectionAssessment(
     command: CreateEmptyRuleDetectionAssessmentCommand,
   ): Promise<CreateEmptyRuleDetectionAssessmentResponse>;
-
-  createEmptyRuleDetectionAssessment(
-    command: CreateEmptyRuleDetectionAssessmentCommand,
-  ): Promise<CreateEmptyRuleDetectionAssessmentResponse>;
 }
