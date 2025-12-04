@@ -122,6 +122,7 @@ export class DistributionRepository implements IDistributionRepository {
         .leftJoinAndSelect('distributedPackage.recipeVersions', 'recipeVersion')
         .leftJoinAndSelect('distribution.gitCommit', 'gitCommit')
         .leftJoinAndSelect('distribution.target', 'target')
+        .leftJoinAndSelect('target.gitRepo', 'gitRepo')
         .where('distributedPackage.packageId = :packageId', {
           packageId: packageId as string,
         })
@@ -176,6 +177,7 @@ export class DistributionRepository implements IDistributionRepository {
         )
         .leftJoinAndSelect('distribution.gitCommit', 'gitCommit')
         .leftJoinAndSelect('distribution.target', 'target')
+        .leftJoinAndSelect('target.gitRepo', 'gitRepo')
         .where('recipeVersion.recipeId = :recipeId', {
           recipeId: recipeId as string,
         })
@@ -230,6 +232,7 @@ export class DistributionRepository implements IDistributionRepository {
         .leftJoinAndSelect('distributedPackage.recipeVersions', 'recipeVersion')
         .leftJoinAndSelect('distribution.gitCommit', 'gitCommit')
         .leftJoinAndSelect('distribution.target', 'target')
+        .leftJoinAndSelect('target.gitRepo', 'gitRepo')
         .where('standardVersion.standardId = :standardId', {
           standardId: standardId as string,
         })

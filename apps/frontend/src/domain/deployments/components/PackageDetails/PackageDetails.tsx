@@ -763,6 +763,7 @@ export const PackageDetails = ({
     <PMPage
       title={pkg.name}
       breadcrumbComponent={<AutobreadCrumb />}
+      isFullWidth
       actions={
         <PMHStack gap={3}>
           <DeployPackageButton
