@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { createOrganizationId, createUserId } from '@packmind/types';
-import { ToolDependencies } from './types';
+import { registerMcpTool, ToolDependencies } from './types';
 import { getGlobalSpace } from './utils';
 
 export function registerListRecipesTool(
@@ -9,10 +9,14 @@ export function registerListRecipesTool(
 ) {
   const { fastify, userContext, analyticsAdapter } = dependencies;
 
-  mcpServer.tool(
+  registerMcpTool(
+    mcpServer,
     `list_recipes`,
-    'Get a list of current recipes in Packmind.',
-    {},
+    {
+      title: 'List Recipes',
+      description: 'Get a list of current recipes in Packmind.',
+      inputSchema: {},
+    },
     async () => {
       if (!userContext) {
         throw new Error('User context is required to list recipes');

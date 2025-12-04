@@ -6,7 +6,7 @@ import {
   ADD_RULE_WORKFLOW_STEPS,
   AddRuleWorkflowStep,
 } from '../prompts/packmind-add-rule-workflow';
-import { ToolDependencies } from './types';
+import { registerMcpTool, ToolDependencies } from './types';
 
 const isAddRuleWorkflowStep = (value: string): value is AddRuleWorkflowStep =>
   Object.prototype.hasOwnProperty.call(ADD_RULE_WORKFLOW_STEPS, value);
@@ -23,13 +23,23 @@ export function registerCreateStandardRuleTool(
       'Identifier of the workflow step to retrieve guidance for. Leave empty to start at the first step.',
     );
 
-  mcpServer.tool(
+  type CreateStandardRuleInput = {
+    step?: AddRuleWorkflowStep;
+  };
+
+  registerMcpTool(
+    mcpServer,
     `create_standard_rule`,
-    'Get step-by-step guidance for adding a new rule to an existing Packmind standard. Provide an optional step to retrieve a specific stage.',
     {
-      step: addRuleWorkflowStepSchema.optional(),
+      title: 'Create Standard Rule',
+      description:
+        'Get step-by-step guidance for adding a new rule to an existing Packmind standard. Provide an optional step to retrieve a specific stage.',
+      inputSchema: {
+        step: addRuleWorkflowStepSchema.optional(),
+      },
     },
-    async ({ step }) => {
+    async (input: CreateStandardRuleInput) => {
+      const { step } = input;
       const requestedStep = step ?? 'initial-request';
 
       if (!isAddRuleWorkflowStep(requestedStep)) {

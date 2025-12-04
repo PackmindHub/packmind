@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { createOrganizationId, createUserId } from '@packmind/types';
 import { z } from 'zod';
-import { ToolDependencies } from './types';
+import { registerMcpTool, ToolDependencies } from './types';
 
 export function registerNotifyRecipeUsageTool(
   dependencies: ToolDependencies,
@@ -9,33 +9,46 @@ export function registerNotifyRecipeUsageTool(
 ) {
   const { fastify, userContext, analyticsAdapter } = dependencies;
 
-  mcpServer.tool(
+  type NotifyRecipeUsageInput = {
+    recipeSlugs: string[];
+    aiAgent: string;
+    gitRepo?: string;
+    target?: string;
+  };
+
+  registerMcpTool(
+    mcpServer,
     `notify_recipe_usage`,
-    'Notify a reusable coding recipe deployed with Packmind has been used by an AI Agent such as GitHub Copilot, Claude Code or Cursor.',
     {
-      recipeSlugs: z
-        .array(z.string())
-        .min(1)
-        .describe('The slugs of the recipes that were used'),
-      aiAgent: z
-        .string()
-        .describe(
-          'The name of the AI Agent that used the recipes (ex: Cursor, Claude Code, GitHub Copilot)',
-        ),
-      gitRepo: z
-        .string()
-        .optional()
-        .describe(
-          'The git repository in "owner/repo" format where the recipes were used',
-        ),
-      target: z
-        .string()
-        .optional()
-        .describe(
-          'The path where the recipes are distributed (ex: /, /src/frontend/, /src/backend/)',
-        ),
+      title: 'Notify Recipe Usage',
+      description:
+        'Notify a reusable coding recipe deployed with Packmind has been used by an AI Agent such as GitHub Copilot, Claude Code or Cursor.',
+      inputSchema: {
+        recipeSlugs: z
+          .array(z.string())
+          .min(1)
+          .describe('The slugs of the recipes that were used'),
+        aiAgent: z
+          .string()
+          .describe(
+            'The name of the AI Agent that used the recipes (ex: Cursor, Claude Code, GitHub Copilot)',
+          ),
+        gitRepo: z
+          .string()
+          .optional()
+          .describe(
+            'The git repository in "owner/repo" format where the recipes were used',
+          ),
+        target: z
+          .string()
+          .optional()
+          .describe(
+            'The path where the recipes are distributed (ex: /, /src/frontend/, /src/backend/)',
+          ),
+      },
     },
-    async ({ recipeSlugs, aiAgent, gitRepo, target }) => {
+    async (input: NotifyRecipeUsageInput) => {
+      const { recipeSlugs, aiAgent, gitRepo, target } = input;
       if (!userContext) {
         throw new Error('User context is required to track recipe usage');
       }

@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { createOrganizationId, createUserId } from '@packmind/types';
-import { ToolDependencies } from './types';
+import { registerMcpTool, ToolDependencies } from './types';
 
 export function registerListPackagesTool(
   dependencies: ToolDependencies,
@@ -8,10 +8,15 @@ export function registerListPackagesTool(
 ) {
   const { fastify, userContext, analyticsAdapter } = dependencies;
 
-  mcpServer.tool(
+  registerMcpTool(
+    mcpServer,
     `list_packages`,
-    'Get a list of all available packages in Packmind. Packages are collections of recipes and standards that can be pulled together.',
-    {},
+    {
+      title: 'List Packages',
+      description:
+        'Get a list of all available packages in Packmind. Packages are collections of recipes and standards that can be pulled together.',
+      inputSchema: {},
+    },
     async () => {
       if (!userContext) {
         throw new Error('User context is required to list packages');

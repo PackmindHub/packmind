@@ -6,10 +6,21 @@ import {
   RECIPE_WORKFLOW_STEPS,
   RecipeWorkflowStep,
 } from '../prompts/packmind-recipe-workflow';
-import { ToolDependencies } from './types';
+import { registerMcpTool, ToolDependencies } from './types';
 
 const isRecipeWorkflowStep = (value: string): value is RecipeWorkflowStep =>
   Object.prototype.hasOwnProperty.call(RECIPE_WORKFLOW_STEPS, value);
+
+const stepSchema = z
+  .enum(RECIPE_WORKFLOW_STEP_ORDER)
+  .optional()
+  .describe(
+    'Identifier of the workflow step to retrieve guidance for. Leave empty to start at the first step.',
+  );
+
+type CreateRecipeInput = {
+  step?: (typeof RECIPE_WORKFLOW_STEP_ORDER)[number];
+};
 
 export function registerCreateRecipeTool(
   dependencies: ToolDependencies,
@@ -17,19 +28,19 @@ export function registerCreateRecipeTool(
 ) {
   const { userContext, analyticsAdapter } = dependencies;
 
-  const recipeWorkflowStepSchema = z
-    .enum(RECIPE_WORKFLOW_STEP_ORDER)
-    .describe(
-      'Identifier of the workflow step to retrieve guidance for. Leave empty to start at the first step.',
-    );
-
-  mcpServer.tool(
+  registerMcpTool(
+    mcpServer,
     `create_recipe`,
-    'Get step-by-step guidance for the Packmind recipe creation workflow. Provide an optional step to retrieve a specific stage.',
     {
-      step: recipeWorkflowStepSchema.optional(),
+      title: 'Create Recipe',
+      description:
+        'Get step-by-step guidance for the Packmind recipe creation workflow. Provide an optional step to retrieve a specific stage.',
+      inputSchema: {
+        step: stepSchema,
+      },
     },
-    async ({ step }) => {
+    async (input: CreateRecipeInput) => {
+      const { step } = input;
       const requestedStep = step ?? 'initial-request';
 
       if (!isRecipeWorkflowStep(requestedStep)) {

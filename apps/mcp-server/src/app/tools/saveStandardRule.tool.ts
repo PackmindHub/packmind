@@ -8,7 +8,7 @@ import {
   stringToProgrammingLanguage,
 } from '@packmind/types';
 import { z } from 'zod';
-import { ToolDependencies } from './types';
+import { registerMcpTool, ToolDependencies } from './types';
 
 export function registerSaveStandardRuleTool(
   dependencies: ToolDependencies,
@@ -16,46 +16,60 @@ export function registerSaveStandardRuleTool(
 ) {
   const { fastify, userContext, analyticsAdapter, logger } = dependencies;
 
-  mcpServer.tool(
+  type SaveStandardRuleInput = {
+    standardSlug: string;
+    ruleContent: string;
+    positiveExample?: string;
+    negativeExample?: string;
+    language?: string;
+  };
+
+  registerMcpTool(
+    mcpServer,
     `save_standard_rule`,
-    'Add a new coding rule to an existing standard identified by its slug. Do not call this tool directly—you need to first use the tool packmind_create_standard_rule.',
     {
-      standardSlug: z
-        .string()
-        .min(1)
-        .describe('The slug of the standard to add the rule to'),
-      ruleContent: z
-        .string()
-        .min(1)
-        .describe(
-          'A descriptive name for the coding rule that explains its intention and how it should be used. It must start with a verb to give the intention.',
-        ),
-      positiveExample: z
-        .string()
-        .optional()
-        .describe(
-          'A code snippet that is a valid example of the rule, if applicable. Make sure to use the appropriate language. Code snippet can be multi-line if relevant.',
-        ),
-      negativeExample: z
-        .string()
-        .optional()
-        .describe(
-          'A code snippet that is an invalid example of the rule, if applicable. Make sure to use the appropriate language. Code snippet can be multi-line if relevant.',
-        ),
-      language: z
-        .string()
-        .optional()
-        .describe(
-          `The programming language of the code snippet, if applicable. Pick from ${getAllProgrammingLanguages()}`,
-        ),
+      title: 'Save Standard Rule',
+      description:
+        'Add a new coding rule to an existing standard identified by its slug. Do not call this tool directly—you need to first use the tool packmind_create_standard_rule.',
+      inputSchema: {
+        standardSlug: z
+          .string()
+          .min(1)
+          .describe('The slug of the standard to add the rule to'),
+        ruleContent: z
+          .string()
+          .min(1)
+          .describe(
+            'A descriptive name for the coding rule that explains its intention and how it should be used. It must start with a verb to give the intention.',
+          ),
+        positiveExample: z
+          .string()
+          .optional()
+          .describe(
+            'A code snippet that is a valid example of the rule, if applicable. Make sure to use the appropriate language. Code snippet can be multi-line if relevant.',
+          ),
+        negativeExample: z
+          .string()
+          .optional()
+          .describe(
+            'A code snippet that is an invalid example of the rule, if applicable. Make sure to use the appropriate language. Code snippet can be multi-line if relevant.',
+          ),
+        language: z
+          .string()
+          .optional()
+          .describe(
+            `The programming language of the code snippet, if applicable. Pick from ${getAllProgrammingLanguages()}`,
+          ),
+      },
     },
-    async ({
-      standardSlug,
-      ruleContent,
-      positiveExample,
-      negativeExample,
-      language,
-    }) => {
+    async (input: SaveStandardRuleInput) => {
+      const {
+        standardSlug,
+        ruleContent,
+        positiveExample,
+        negativeExample,
+        language,
+      } = input;
       if (!userContext) {
         throw new Error('User context is required to add rules to standards');
       }
