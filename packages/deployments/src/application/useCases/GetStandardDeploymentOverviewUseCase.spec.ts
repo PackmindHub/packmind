@@ -14,23 +14,57 @@ import {
   ISpacesPort,
   Space,
   createSpaceId,
-  StandardsDeployment,
   StandardDeploymentOverview,
+  Distribution,
+  StandardVersion,
+  Target,
+  createDistributedPackageId,
+  createPackageId,
 } from '@packmind/types';
 import { stubLogger } from '@packmind/test-utils';
 import { gitRepoFactory } from '@packmind/git/test';
 import { GetStandardDeploymentOverviewUseCase } from './GetStandardDeploymentOverviewUseCase';
-import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
-import { standardsDeploymentFactory } from '../../../test/standardsDeploymentFactory';
+import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 import { targetFactory } from '../../../test/targetFactory';
+import { distributionFactory } from '../../../test/distributionFactory';
 import {
   createMockStandard,
   createMockStandardVersion,
 } from '../../../test/standardDeploymentOverviewFactory';
+import { v4 as uuidv4 } from 'uuid';
+
+function createDistributionWithStandards(params: {
+  organizationId: OrganizationId;
+  target?: Target;
+  status?: DistributionStatus;
+  standardVersions?: StandardVersion[];
+  createdAt?: string;
+}): Distribution {
+  const baseDistribution = distributionFactory({
+    organizationId: params.organizationId,
+    target: params.target,
+    status: params.status,
+    createdAt: params.createdAt,
+  });
+
+  // Override distributedPackages with provided standardVersions
+  return {
+    ...baseDistribution,
+    distributedPackages: [
+      {
+        id: createDistributedPackageId(uuidv4()),
+        distributionId: baseDistribution.id,
+        packageId: createPackageId(uuidv4()),
+        recipeVersions: [],
+        standardVersions: params.standardVersions || [],
+      },
+    ],
+  };
+}
 
 describe('GetStandardDeploymentOverviewUseCase', () => {
   let useCase: GetStandardDeploymentOverviewUseCase;
-  let mockStandardsDeploymentRepository: jest.Mocked<IStandardsDeploymentRepository>;
+  let mockDistributionRepository: jest.Mocked<IDistributionRepository>;
   let mockStandardsPort: jest.Mocked<IStandardsPort>;
   let mockGitPort: jest.Mocked<IGitPort>;
   let mockSpacesPort: jest.Mocked<ISpacesPort>;
@@ -46,22 +80,16 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
   };
 
   beforeEach(() => {
-    mockStandardsDeploymentRepository = {
+    mockDistributionRepository = {
+      add: jest.fn(),
+      findById: jest.fn(),
       listByOrganizationId: jest.fn(),
+      listByPackageId: jest.fn(),
+      listByRecipeId: jest.fn(),
       listByStandardId: jest.fn(),
-      listByOrganizationIdAndGitRepos: jest.fn(),
-      findActiveStandardVersionsByRepository: jest.fn(),
-      findActiveStandardVersionsByTarget: jest.fn(),
       listByTargetIds: jest.fn(),
       listByOrganizationIdWithStatus: jest.fn(),
-      create: jest.fn(),
-      findById: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-      deleteById: jest.fn(),
-      restoreById: jest.fn(),
-      list: jest.fn(),
-    } as unknown as jest.Mocked<IStandardsDeploymentRepository>;
+    } as jest.Mocked<IDistributionRepository>;
 
     mockStandardsPort = {
       listStandardsBySpace: jest.fn(),
@@ -79,7 +107,7 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
     } as jest.Mocked<ISpacesPort>;
 
     useCase = new GetStandardDeploymentOverviewUseCase(
-      mockStandardsDeploymentRepository,
+      mockDistributionRepository,
       mockStandardsPort,
       mockGitPort,
       mockSpacesPort,
@@ -94,7 +122,7 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
         userId,
       };
 
-      const mockDeployments: StandardsDeployment[] = [];
+      const mockDistributions: Distribution[] = [];
       const mockStandards: Standard[] = [];
       const mockGitRepos: GitRepo[] = [];
       const mockSpace: Space = {
@@ -104,8 +132,8 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
         organizationId,
       };
 
-      mockStandardsDeploymentRepository.listByOrganizationIdWithStatus.mockResolvedValue(
-        mockDeployments,
+      mockDistributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
+        mockDistributions,
       );
       mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
       mockStandardsPort.listStandardsBySpace.mockResolvedValue(mockStandards);
@@ -115,7 +143,7 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
 
       expect(result).toEqual(mockOverview);
       expect(
-        mockStandardsDeploymentRepository.listByOrganizationIdWithStatus,
+        mockDistributionRepository.listByOrganizationIdWithStatus,
       ).toHaveBeenCalledWith(organizationId, DistributionStatus.success);
       expect(mockSpacesPort.listSpacesByOrganization).toHaveBeenCalledWith(
         organizationId,
@@ -139,7 +167,7 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
       };
 
       const error = new Error('Repository error');
-      mockStandardsDeploymentRepository.listByOrganizationIdWithStatus.mockRejectedValue(
+      mockDistributionRepository.listByOrganizationIdWithStatus.mockRejectedValue(
         error,
       );
 
@@ -157,6 +185,9 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
       };
 
       const error = 'String error';
+      mockDistributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
+        [],
+      );
       mockSpacesPort.listSpacesByOrganization.mockRejectedValue(error);
 
       await expect(useCase.execute(command)).rejects.toBe('String error');
@@ -170,7 +201,7 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
         userId,
       };
 
-      const mockDeployments: StandardsDeployment[] = [];
+      const mockDistributions: Distribution[] = [];
       const mockStandards: Standard[] = [
         { id: 'std-1', name: 'Standard 1', version: 1 } as Standard,
       ];
@@ -200,8 +231,8 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
         organizationId,
       };
 
-      mockStandardsDeploymentRepository.listByOrganizationIdWithStatus.mockResolvedValue(
-        mockDeployments,
+      mockDistributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
+        mockDistributions,
       );
       mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
       mockStandardsPort.listStandardsBySpace.mockResolvedValue(mockStandards);
@@ -246,15 +277,15 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
         version: 1,
       });
 
-      const mockDeployment = standardsDeploymentFactory({
+      const mockDistribution = createDistributionWithStandards({
         organizationId,
         target: mockTarget,
         status: DistributionStatus.success,
         standardVersions: [mockStandardVersion],
       });
 
-      mockStandardsDeploymentRepository.listByOrganizationIdWithStatus.mockResolvedValue(
-        [mockDeployment],
+      mockDistributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
+        [mockDistribution],
       );
       mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
       mockStandardsPort.listStandardsBySpace.mockResolvedValue([mockStandard]);
@@ -322,14 +353,14 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
         version: 1,
       });
 
-      const mockDeployment1 = standardsDeploymentFactory({
+      const mockDistribution1 = createDistributionWithStandards({
         organizationId,
         target: mockTarget1,
         status: DistributionStatus.success,
         standardVersions: [mockStandardVersion],
       });
 
-      const mockDeployment2 = standardsDeploymentFactory({
+      const mockDistribution2 = createDistributionWithStandards({
         organizationId,
         target: mockTarget2,
         status: DistributionStatus.success,
@@ -343,8 +374,8 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
         organizationId,
       };
 
-      mockStandardsDeploymentRepository.listByOrganizationIdWithStatus.mockResolvedValue(
-        [mockDeployment1, mockDeployment2],
+      mockDistributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
+        [mockDistribution1, mockDistribution2],
       );
       mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
       mockStandardsPort.listStandardsBySpace.mockResolvedValue([mockStandard]);
@@ -395,7 +426,7 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
         organizationId,
       };
 
-      mockStandardsDeploymentRepository.listByOrganizationIdWithStatus.mockResolvedValue(
+      mockDistributionRepository.listByOrganizationIdWithStatus.mockResolvedValue(
         [],
       );
       mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
@@ -440,7 +471,7 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
           version: 1,
         });
 
-        const mockDeployment = standardsDeploymentFactory({
+        const mockDistribution = createDistributionWithStandards({
           organizationId,
           target: mockTarget,
           status: DistributionStatus.success,
@@ -448,7 +479,7 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
         });
 
         const targetStatuses = useCase.buildTargetCentricView(
-          [mockDeployment],
+          [mockDistribution],
           [mockStandard],
           [mockGitRepo],
         );
@@ -459,7 +490,7 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
       });
 
       it('handles deployments without targets gracefully', () => {
-        const mockDeployment = standardsDeploymentFactory({
+        const mockDistribution = createDistributionWithStandards({
           organizationId,
           target: undefined,
           status: DistributionStatus.success,
@@ -467,7 +498,7 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
         });
 
         const targetStatuses = useCase.buildTargetCentricView(
-          [mockDeployment],
+          [mockDistribution],
           [mockStandard],
           [mockGitRepo],
         );
@@ -483,7 +514,7 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
           version: 1,
         });
 
-        const mockDeployment = standardsDeploymentFactory({
+        const mockDistribution = createDistributionWithStandards({
           organizationId,
           target: mockTarget,
           status: DistributionStatus.success,
@@ -492,7 +523,7 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
 
         const targetDeployments = useCase.buildTargetDeploymentsForStandard(
           mockStandard,
-          [mockDeployment],
+          [mockDistribution],
           [mockGitRepo],
         );
 
@@ -512,7 +543,7 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
           version: 1,
         });
 
-        const mockDeployment = standardsDeploymentFactory({
+        const mockDistribution = createDistributionWithStandards({
           organizationId,
           target: mockTarget,
           status: DistributionStatus.success,
@@ -521,7 +552,7 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
 
         const targetDeployments = useCase.buildTargetDeploymentsForStandard(
           mockStandard, // Looking for this standard
-          [mockDeployment],
+          [mockDistribution],
           [mockGitRepo],
         );
 
@@ -540,7 +571,7 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
             version: 2,
           });
 
-          const olderDeployment = standardsDeploymentFactory({
+          const olderDistribution = createDistributionWithStandards({
             organizationId,
             target: mockTarget,
             status: DistributionStatus.success,
@@ -548,7 +579,7 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
             createdAt: '2023-01-01T00:00:00Z',
           });
 
-          const newerDeployment = standardsDeploymentFactory({
+          const newerDistribution = createDistributionWithStandards({
             organizationId,
             target: mockTarget,
             status: DistributionStatus.success,
@@ -558,7 +589,7 @@ describe('GetStandardDeploymentOverviewUseCase', () => {
 
           const targetDeployments = useCase.buildTargetDeploymentsForStandard(
             mockStandard,
-            [olderDeployment, newerDeployment],
+            [olderDistribution, newerDistribution],
             [mockGitRepo],
           );
 

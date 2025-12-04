@@ -1,11 +1,7 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   PMBadge,
   PMBox,
-  PMButton,
-  PMCloseButton,
-  PMDialog,
-  PMHeading,
   PMHStack,
   PMIcon,
   PMLink,
@@ -14,7 +10,6 @@ import {
   PMTableRow,
   PMText,
   PMVStack,
-  PMPortal,
 } from '@packmind/ui';
 import { Link } from 'react-router';
 import { LuCircleCheckBig } from 'react-icons/lu';
@@ -23,10 +18,6 @@ import {
   DeployedRecipeTargetInfo,
   DeployedStandardTargetInfo,
 } from '@packmind/types';
-import {
-  RunDistribution,
-  useRunDistribution,
-} from '../RunDistribution/RunDistribution';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { routes } from '../../../../shared/utils/routes';
 
@@ -47,81 +38,12 @@ const TABLE_COLUMNS: PMTableColumn[] = [
     grow: true,
   },
   { key: 'status', header: 'Status', align: 'center' },
-  { key: 'action', header: 'Action', align: 'center' },
 ];
 
 const getGapPalette = (gap: number): 'blue' | 'orange' | 'red' => {
   if (gap >= 10) return 'red';
   if (gap >= 5) return 'orange';
   return 'blue';
-};
-
-const PreselectTarget: React.FC<{ targetId: TargetId }> = ({ targetId }) => {
-  const { setSelectedTargetIds } = useRunDistribution();
-  useEffect(() => {
-    setSelectedTargetIds([targetId]);
-  }, [setSelectedTargetIds, targetId]);
-  return null;
-};
-
-const UpdateDialogAction: React.FC<{
-  targetId: TargetId;
-  recipe?: DeployedRecipeTargetInfo['recipe'];
-  standard?: DeployedStandardTargetInfo['standard'];
-}> = ({ targetId, recipe, standard }) => {
-  return (
-    <PMDialog.Root
-      size="md"
-      placement="center"
-      motionPreset="slide-in-bottom"
-      scrollBehavior={'outside'}
-    >
-      <PMDialog.Trigger asChild>
-        <PMButton size="xs" variant="secondary">
-          Update
-        </PMButton>
-      </PMDialog.Trigger>
-      <PMPortal>
-        <PMDialog.Backdrop />
-        <PMDialog.Positioner>
-          <PMDialog.Content>
-            <PMDialog.Context>
-              {(store) => (
-                <RunDistribution
-                  selectedRecipes={recipe ? [recipe] : []}
-                  selectedStandards={standard ? [standard] : []}
-                  onDistributionComplete={() => store.setOpen(false)}
-                >
-                  <PMDialog.Header>
-                    <PMDialog.Title asChild>
-                      <PMHeading level="h6">Deploy to targets</PMHeading>
-                    </PMDialog.Title>
-                    <PMDialog.CloseTrigger asChild>
-                      <PMCloseButton size="sm" />
-                    </PMDialog.CloseTrigger>
-                  </PMDialog.Header>
-
-                  <PMDialog.Body>
-                    <PreselectTarget targetId={targetId} />
-                    <RunDistribution.Body />
-                  </PMDialog.Body>
-
-                  <PMDialog.Footer>
-                    <PMDialog.Trigger asChild>
-                      <PMButton variant="tertiary" size="sm">
-                        Cancel
-                      </PMButton>
-                    </PMDialog.Trigger>
-                    <RunDistribution.Cta />
-                  </PMDialog.Footer>
-                </RunDistribution>
-              )}
-            </PMDialog.Context>
-          </PMDialog.Content>
-        </PMDialog.Positioner>
-      </PMPortal>
-    </PMDialog.Root>
-  );
 };
 
 export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
@@ -187,15 +109,6 @@ export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
         );
       }
 
-      const actionNode =
-        d.isUpToDate && mode !== 'outdated' ? (
-          <PMText variant="small" color="tertiary">
-            –
-          </PMText>
-        ) : (
-          <UpdateDialogAction targetId={target.id} recipe={d.recipe} />
-        );
-
       return {
         name: (
           <PMVStack align="start" gap={0}>
@@ -217,7 +130,6 @@ export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
         ),
         version: versionNode,
         status: statusNode,
-        action: actionNode,
       };
     });
 
@@ -268,15 +180,6 @@ export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
         );
       }
 
-      const actionNode =
-        d.isUpToDate && mode !== 'outdated' ? (
-          <PMText variant="small" color="tertiary">
-            –
-          </PMText>
-        ) : (
-          <UpdateDialogAction targetId={target.id} standard={d.standard} />
-        );
-
       return {
         name: (
           <PMVStack align="start" gap={0}>
@@ -302,7 +205,6 @@ export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
         ),
         version: versionNode,
         status: statusNode,
-        action: actionNode,
       };
     });
 
