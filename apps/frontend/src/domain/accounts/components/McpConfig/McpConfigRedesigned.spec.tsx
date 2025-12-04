@@ -1,0 +1,201 @@
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { McpConfigRedesigned } from './McpConfigRedesigned';
+import {
+  useGetMcpTokenMutation,
+  useGetMcpURLQuery,
+} from '../../api/queries/AuthQueries';
+import { UIProvider } from '@packmind/ui';
+
+jest.mock('../../api/queries/AuthQueries');
+
+const mockUseGetMcpTokenMutation =
+  useGetMcpTokenMutation as jest.MockedFunction<typeof useGetMcpTokenMutation>;
+const mockUseGetMcpURLQuery = useGetMcpURLQuery as jest.MockedFunction<
+  typeof useGetMcpURLQuery
+>;
+
+const renderWithProviders = (ui: React.ReactElement) => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <UIProvider>{ui}</UIProvider>
+    </QueryClientProvider>,
+  );
+};
+
+describe('McpConfigRedesigned', () => {
+  const mockMutate = jest.fn();
+  const mockUrl = 'https://mcp.packmind.com';
+  const mockToken = 'test-token-12345';
+
+  beforeEach(() => {
+    mockUseGetMcpTokenMutation.mockReturnValue({
+      mutate: mockMutate,
+      isPending: false,
+      isError: false,
+      isSuccess: false,
+      error: null,
+      data: undefined,
+    } as ReturnType<typeof useGetMcpTokenMutation>);
+
+    mockUseGetMcpURLQuery.mockReturnValue({
+      data: { url: mockUrl },
+      isLoading: false,
+      error: null,
+    } as ReturnType<typeof useGetMcpURLQuery>);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('Initial render', () => {
+    it('displays the page title', () => {
+      renderWithProviders(<McpConfigRedesigned />);
+
+      expect(screen.getByText('MCP Access Token')).toBeInTheDocument();
+    });
+
+    it('displays the description text', () => {
+      renderWithProviders(<McpConfigRedesigned />);
+
+      expect(
+        screen.getByText(
+          'Generate an access token for MCP (Model Context Protocol) integration.',
+        ),
+      ).toBeInTheDocument();
+    });
+
+    it('displays the get token button', () => {
+      renderWithProviders(<McpConfigRedesigned />);
+
+      expect(screen.getByText('Get MCP Access Token')).toBeInTheDocument();
+    });
+  });
+
+  describe('Get token button', () => {
+    it('calls mutate when clicked', () => {
+      renderWithProviders(<McpConfigRedesigned />);
+
+      const button = screen.getByText('Get MCP Access Token');
+      fireEvent.click(button);
+
+      expect(mockMutate).toHaveBeenCalledTimes(1);
+    });
+
+    it('is disabled when mutation is pending', () => {
+      mockUseGetMcpTokenMutation.mockReturnValue({
+        mutate: mockMutate,
+        isPending: true,
+        isError: false,
+        isSuccess: false,
+        error: null,
+        data: undefined,
+      } as ReturnType<typeof useGetMcpTokenMutation>);
+
+      renderWithProviders(<McpConfigRedesigned />);
+
+      const button = screen.getByText('Getting Token...');
+      expect(button).toBeDisabled();
+    });
+  });
+
+  describe('Error state', () => {
+    it('displays error message when mutation fails', () => {
+      mockUseGetMcpTokenMutation.mockReturnValue({
+        mutate: mockMutate,
+        isPending: false,
+        isError: true,
+        isSuccess: false,
+        error: new Error('Network error'),
+        data: undefined,
+      } as ReturnType<typeof useGetMcpTokenMutation>);
+
+      renderWithProviders(<McpConfigRedesigned />);
+
+      expect(screen.getByText('Error!')).toBeInTheDocument();
+      expect(screen.getByText('Network error')).toBeInTheDocument();
+    });
+  });
+
+  describe('Success state', () => {
+    beforeEach(() => {
+      mockUseGetMcpTokenMutation.mockReturnValue({
+        mutate: mockMutate,
+        isPending: false,
+        isError: false,
+        isSuccess: true,
+        error: null,
+        data: { access_token: mockToken },
+      } as ReturnType<typeof useGetMcpTokenMutation>);
+    });
+
+    it('displays success alert', () => {
+      renderWithProviders(<McpConfigRedesigned />);
+
+      expect(
+        screen.getByText('Token Generated Successfully!'),
+      ).toBeInTheDocument();
+    });
+
+    it('displays all agent cards', () => {
+      renderWithProviders(<McpConfigRedesigned />);
+
+      expect(screen.getByTestId('agent-card-claude')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('agent-card-github-copilot'),
+      ).toBeInTheDocument();
+      expect(screen.getByTestId('agent-card-cursor')).toBeInTheDocument();
+      expect(screen.getByTestId('agent-card-jetbrains')).toBeInTheDocument();
+      expect(screen.getByTestId('agent-card-generic')).toBeInTheDocument();
+    });
+
+    it('displays agent names', () => {
+      renderWithProviders(<McpConfigRedesigned />);
+
+      expect(screen.getByText('Claude (Anthropic)')).toBeInTheDocument();
+      expect(screen.getByText('GitHub Copilot')).toBeInTheDocument();
+      expect(screen.getByText('Cursor')).toBeInTheDocument();
+      expect(screen.getByText('JetBrains Assistant')).toBeInTheDocument();
+      expect(screen.getByText('MCP Generic')).toBeInTheDocument();
+    });
+
+    it('displays method badges on cards', () => {
+      renderWithProviders(<McpConfigRedesigned />);
+
+      // All agents should have CLI and JSON badges
+      const cliBadges = screen.getAllByText('CLI');
+      expect(cliBadges.length).toBeGreaterThan(0);
+
+      const jsonBadges = screen.getAllByText('JSON');
+      expect(jsonBadges.length).toBeGreaterThan(0);
+
+      // Cursor should have Magic Link badge
+      const magicLinkBadge = screen.getByText('Magic Link');
+      expect(magicLinkBadge).toBeInTheDocument();
+    });
+
+    describe('Agent card interaction', () => {
+      it('opens modal when clicking on a card', async () => {
+        renderWithProviders(<McpConfigRedesigned />);
+
+        const claudeCard = screen.getByTestId('agent-card-claude');
+        fireEvent.click(claudeCard);
+
+        // Modal should be opened
+        await waitFor(() => {
+          expect(claudeCard).toBeInTheDocument();
+        });
+      });
+    });
+  });
+});

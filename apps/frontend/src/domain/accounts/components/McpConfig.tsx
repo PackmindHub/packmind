@@ -7,14 +7,20 @@ import {
   PMTabs,
   PMVStack,
   PMAlert,
+  PMFeatureFlag,
+  MCP_CONFIG_REDESIGN_FEATURE_KEY,
+  DEFAULT_FEATURE_DOMAIN_MAP,
 } from '@packmind/ui';
 import {
   useGetMcpTokenMutation,
   useGetMcpURLQuery,
 } from '../api/queries/AuthQueries';
 import { CopiableTextarea } from '../../../shared/components/inputs';
+import { McpConfigRedesigned } from './McpConfig/McpConfigRedesigned';
+import { useAuthContext } from '../hooks/useAuthContext';
 
 export const McpConfig: React.FunctionComponent = () => {
+  const { user } = useAuthContext();
   const getMcpTokenMutation = useGetMcpTokenMutation();
   const getMcpURLQuery = useGetMcpURLQuery();
 
@@ -99,120 +105,137 @@ export const McpConfig: React.FunctionComponent = () => {
   };
 
   return (
-    <PMPageSection title="MCP Access Token" variant="outline">
-      <PMText as="p">
-        Generate an access token for MCP (Model Context Protocol) integration.
-      </PMText>
-
-      <PMButton
-        onClick={handleGetToken}
-        disabled={getMcpTokenMutation.isPending}
-        marginBottom={4}
+    <>
+      <PMFeatureFlag
+        featureKeys={[MCP_CONFIG_REDESIGN_FEATURE_KEY]}
+        featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
+        userEmail={user?.email}
       >
-        {getMcpTokenMutation.isPending
-          ? 'Getting Token...'
-          : 'Get MCP Access Token'}
-      </PMButton>
+        <McpConfigRedesigned />
+      </PMFeatureFlag>
 
-      {getMcpTokenMutation.isError && (
-        <div>
-          <h3>Error!</h3>
-          <p>
-            {getMcpTokenMutation.error instanceof Error
-              ? getMcpTokenMutation.error.message
-              : 'Failed to retrieve MCP access token'}
-          </p>
-        </div>
-      )}
+      <PMFeatureFlag
+        featureKeys={[]}
+        featureDomainMap={{}}
+        userEmail={user?.email}
+      >
+        <PMPageSection title="MCP Access Token" variant="outline">
+          <PMText as="p">
+            Generate an access token for MCP (Model Context Protocol)
+            integration.
+          </PMText>
 
-      {getMcpTokenMutation.isSuccess && getMcpTokenMutation.data && (
-        <PMVStack width={'100%'} alignItems={'baseline'}>
-          <PMAlert.Root status="success">
-            <PMAlert.Indicator />
-            <PMAlert.Title>Token Generated Successfully!</PMAlert.Title>
-          </PMAlert.Root>
+          <PMButton
+            onClick={handleGetToken}
+            disabled={getMcpTokenMutation.isPending}
+            marginBottom={4}
+          >
+            {getMcpTokenMutation.isPending
+              ? 'Getting Token...'
+              : 'Get MCP Access Token'}
+          </PMButton>
 
-          <PMTabs
-            width={'100%'}
-            defaultValue="classic"
-            tabs={[
-              {
-                value: 'classic',
-                triggerLabel: 'Classic MCP',
-                content: (
-                  <CopiableTextarea
-                    value={getClassicMcpConfig()}
-                    readOnly
-                    rows={12}
-                    data-testid="mcp-config-classic"
-                  />
-                ),
-              },
-              {
-                value: 'vscode',
-                triggerLabel: 'VS Code',
-                content: (
-                  <CopiableTextarea
-                    value={getVSCodeConfig()}
-                    readOnly
-                    rows={12}
-                    data-testid="mcp-config-vscode"
-                  />
-                ),
-              },
-              {
-                value: 'cli',
-                triggerLabel: 'Claude CLI',
-                content: (
-                  <CopiableTextarea
-                    value={getClaudeCliCommand()}
-                    readOnly
-                    rows={12}
-                    data-testid="mcp-config-cli"
-                  />
-                ),
-              },
-              {
-                value: 'github-jetbrains',
-                triggerLabel: 'GitHub Copilot (JetBrains)',
-                content: (
-                  <CopiableTextarea
-                    value={getGithubCopilotJetBrainsConfig()}
-                    readOnly
-                    rows={12}
-                    data-testid="mcp-config-github-jetbrains"
-                  />
-                ),
-              },
-              {
-                value: 'cursor',
-                triggerLabel: 'Cursor',
-                content: (
-                  <PMVStack
-                    gap={4}
-                    width="100%"
-                    pt={8}
-                    data-testid="mcp-config-cursor"
-                  >
-                    <PMHStack gap={4}>
-                      <a
-                        href={getCursorInstallLink()}
-                        data-testid="cursor-install-button"
+          {getMcpTokenMutation.isError && (
+            <div>
+              <h3>Error!</h3>
+              <p>
+                {getMcpTokenMutation.error instanceof Error
+                  ? getMcpTokenMutation.error.message
+                  : 'Failed to retrieve MCP access token'}
+              </p>
+            </div>
+          )}
+
+          {getMcpTokenMutation.isSuccess && getMcpTokenMutation.data && (
+            <PMVStack width={'100%'} alignItems={'baseline'}>
+              <PMAlert.Root status="success">
+                <PMAlert.Indicator />
+                <PMAlert.Title>Token Generated Successfully!</PMAlert.Title>
+              </PMAlert.Root>
+
+              <PMTabs
+                width={'100%'}
+                defaultValue="classic"
+                tabs={[
+                  {
+                    value: 'classic',
+                    triggerLabel: 'Classic MCP',
+                    content: (
+                      <CopiableTextarea
+                        value={getClassicMcpConfig()}
+                        readOnly
+                        rows={12}
+                        data-testid="mcp-config-classic"
+                      />
+                    ),
+                  },
+                  {
+                    value: 'vscode',
+                    triggerLabel: 'VS Code',
+                    content: (
+                      <CopiableTextarea
+                        value={getVSCodeConfig()}
+                        readOnly
+                        rows={12}
+                        data-testid="mcp-config-vscode"
+                      />
+                    ),
+                  },
+                  {
+                    value: 'cli',
+                    triggerLabel: 'Claude CLI',
+                    content: (
+                      <CopiableTextarea
+                        value={getClaudeCliCommand()}
+                        readOnly
+                        rows={12}
+                        data-testid="mcp-config-cli"
+                      />
+                    ),
+                  },
+                  {
+                    value: 'github-jetbrains',
+                    triggerLabel: 'GitHub Copilot (JetBrains)',
+                    content: (
+                      <CopiableTextarea
+                        value={getGithubCopilotJetBrainsConfig()}
+                        readOnly
+                        rows={12}
+                        data-testid="mcp-config-github-jetbrains"
+                      />
+                    ),
+                  },
+                  {
+                    value: 'cursor',
+                    triggerLabel: 'Cursor',
+                    content: (
+                      <PMVStack
+                        gap={4}
+                        width="100%"
+                        pt={8}
+                        data-testid="mcp-config-cursor"
                       >
-                        <img
-                          src="https://cursor.com/deeplink/mcp-install-dark.png"
-                          alt="Add Packmind MCP server to Cursor"
-                          style={{ maxHeight: 32 }}
-                        />
-                      </a>
-                    </PMHStack>
-                  </PMVStack>
-                ),
-              },
-            ]}
-          />
-        </PMVStack>
-      )}
-    </PMPageSection>
+                        <PMHStack gap={4}>
+                          <a
+                            href={getCursorInstallLink()}
+                            data-testid="cursor-install-button"
+                          >
+                            <img
+                              src="https://cursor.com/deeplink/mcp-install-dark.png"
+                              alt="Add Packmind MCP server to Cursor"
+                              style={{ maxHeight: 32 }}
+                            />
+                          </a>
+                        </PMHStack>
+                      </PMVStack>
+                    ),
+                  },
+                ]}
+              />
+            </PMVStack>
+          )}
+        </PMPageSection>
+      </PMFeatureFlag>
+    </>
   );
 };
