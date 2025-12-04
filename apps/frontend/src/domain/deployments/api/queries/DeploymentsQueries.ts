@@ -34,7 +34,9 @@ import {
   LIST_PACKAGES_BY_SPACE_KEY,
   LIST_PACKAGE_DEPLOYMENTS_KEY,
   LIST_RECIPE_DEPLOYMENTS_KEY,
+  LIST_RECIPE_DISTRIBUTIONS_KEY,
   LIST_STANDARD_DEPLOYMENTS_KEY,
+  LIST_STANDARD_DISTRIBUTIONS_KEY,
   UPDATE_PACKAGE_MUTATION_KEY,
 } from '../queryKeys';
 
@@ -92,6 +94,46 @@ export const useListPackageDeploymentsQuery = (packageId: PackageId) => {
       return deploymentsGateways.listDeploymentsByPackageId({
         organizationId: organization.id,
         packageId,
+      });
+    },
+    enabled: !!organization?.id,
+  });
+};
+
+export const useListRecipeDistributionsQuery = (recipeId: RecipeId) => {
+  const { organization } = useAuthContext();
+
+  return useQuery({
+    queryKey: [...LIST_RECIPE_DISTRIBUTIONS_KEY, recipeId],
+    queryFn: () => {
+      if (!organization?.id) {
+        throw new Error(
+          'Organization ID is required to fetch recipe distributions',
+        );
+      }
+      return deploymentsGateways.listDistributionsByRecipeId({
+        organizationId: organization.id,
+        recipeId,
+      });
+    },
+    enabled: !!organization?.id,
+  });
+};
+
+export const useListStandardDistributionsQuery = (standardId: StandardId) => {
+  const { organization } = useAuthContext();
+
+  return useQuery({
+    queryKey: [...LIST_STANDARD_DISTRIBUTIONS_KEY, standardId],
+    queryFn: () => {
+      if (!organization?.id) {
+        throw new Error(
+          'Organization ID is required to fetch standard distributions',
+        );
+      }
+      return deploymentsGateways.listDistributionsByStandardId({
+        organizationId: organization.id,
+        standardId,
       });
     },
     enabled: !!organization?.id,

@@ -29,6 +29,8 @@ import {
   ListDeploymentsByRecipeCommand,
   ListDeploymentsByStandardCommand,
   ListDeploymentsByPackageCommand,
+  ListDistributionsByRecipeCommand,
+  ListDistributionsByStandardCommand,
   ListPackagesBySpaceCommand,
   ListPackagesBySpaceResponse,
   ListPackagesCommand,
@@ -148,6 +150,26 @@ export interface IDeploymentPort {
    */
   listDeploymentsByPackage(
     command: ListDeploymentsByPackageCommand,
+  ): Promise<Distribution[]>;
+
+  /**
+   * Lists all distributions that include a specific recipe
+   *
+   * @param command - Command containing recipeId and organizationId
+   * @returns Promise of Distribution entries that include versions of the specified recipe
+   */
+  listDistributionsByRecipe(
+    command: ListDistributionsByRecipeCommand,
+  ): Promise<Distribution[]>;
+
+  /**
+   * Lists all distributions that include a specific standard
+   *
+   * @param command - Command containing standardId and organizationId
+   * @returns Promise of Distribution entries that include versions of the specified standard
+   */
+  listDistributionsByStandard(
+    command: ListDistributionsByStandardCommand,
   ): Promise<Distribution[]>;
 
   /**

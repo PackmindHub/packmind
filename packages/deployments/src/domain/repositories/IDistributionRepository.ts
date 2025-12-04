@@ -4,6 +4,8 @@ import {
   DistributionStatus,
   OrganizationId,
   PackageId,
+  RecipeId,
+  StandardId,
   TargetId,
 } from '@packmind/types';
 
@@ -16,6 +18,16 @@ export interface IDistributionRepository {
 
   listByPackageId(
     packageId: PackageId,
+    organizationId: OrganizationId,
+  ): Promise<Distribution[]>;
+
+  listByRecipeId(
+    recipeId: RecipeId,
+    organizationId: OrganizationId,
+  ): Promise<Distribution[]>;
+
+  listByStandardId(
+    standardId: StandardId,
     organizationId: OrganizationId,
   ): Promise<Distribution[]>;
 

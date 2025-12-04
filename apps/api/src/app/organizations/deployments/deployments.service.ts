@@ -7,6 +7,8 @@ import {
   ListDeploymentsByRecipeCommand,
   ListDeploymentsByStandardCommand,
   ListDeploymentsByPackageCommand,
+  ListDistributionsByRecipeCommand,
+  ListDistributionsByStandardCommand,
   PublishArtifactsCommand,
   PublishArtifactsResponse,
   PublishRecipesCommand,
@@ -57,6 +59,18 @@ export class DeploymentsService {
     command: ListDeploymentsByPackageCommand,
   ): Promise<Distribution[]> {
     return this.deploymentAdapter.listDeploymentsByPackage(command);
+  }
+
+  async listDistributionsByRecipe(
+    command: ListDistributionsByRecipeCommand,
+  ): Promise<Distribution[]> {
+    return this.deploymentAdapter.listDistributionsByRecipe(command);
+  }
+
+  async listDistributionsByStandard(
+    command: ListDistributionsByStandardCommand,
+  ): Promise<Distribution[]> {
+    return this.deploymentAdapter.listDistributionsByStandard(command);
   }
 
   async getStandardDeploymentOverview(
