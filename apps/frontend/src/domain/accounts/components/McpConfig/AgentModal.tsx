@@ -6,6 +6,7 @@ import {
   PMTabs,
   PMText,
   PMHStack,
+  PMLink,
 } from '@packmind/ui';
 import { CopiableTextarea } from '../../../../shared/components/inputs';
 import {
@@ -14,6 +15,26 @@ import {
   groupMethodsByType,
   getAvailableMethods,
 } from './types';
+
+// VS Code icon from CDN
+const VSCodeIcon = () => (
+  <img
+    src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vscode/vscode-original.svg"
+    alt="VS Code"
+    width={16}
+    height={16}
+  />
+);
+
+// VS Code install button using PMLink with VS Code blue color
+const VSCodeInstallBadge: React.FC<{ href: string }> = ({ href }) => (
+  <PMLink href={href} variant="plain" data-testid="vscode-install-button">
+    <PMButton as="span" bg="#007ACC" color="white" _hover={{ bg: '#005a9e' }}>
+      <VSCodeIcon />
+      Install in VS Code
+    </PMButton>
+  </PMLink>
+);
 
 interface IAgentModalProps {
   agent: IAgentConfig;
@@ -56,6 +77,7 @@ const MagicLinkMethodContent: React.FunctionComponent<IMethodContentProps> = ({
   if (!method.getMagicLink) return null;
 
   const magicLink = method.getMagicLink(token, url);
+  const isVSCode = magicLink.startsWith('vscode:');
 
   return (
     <PMVStack gap={4} width="100%" alignItems="flex-start">
@@ -63,13 +85,17 @@ const MagicLinkMethodContent: React.FunctionComponent<IMethodContentProps> = ({
         Click the button below to install automatically:
       </PMText>
       <PMHStack gap={4}>
-        <a href={magicLink} data-testid="cursor-install-button">
-          <img
-            src="https://cursor.com/deeplink/mcp-install-dark.png"
-            alt="Add Packmind MCP server to Cursor"
-            style={{ maxHeight: 32 }}
-          />
-        </a>
+        {isVSCode ? (
+          <VSCodeInstallBadge href={magicLink} />
+        ) : (
+          <a href={magicLink} data-testid="cursor-install-button">
+            <img
+              src="https://cursor.com/deeplink/mcp-install-dark.png"
+              alt="Add Packmind MCP server to Cursor"
+              style={{ maxHeight: 32 }}
+            />
+          </a>
+        )}
       </PMHStack>
     </PMVStack>
   );

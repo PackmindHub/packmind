@@ -44,6 +44,23 @@ export const getAgentsConfig = (): IAgentConfig[] => [
         getCliCommand: () => 'packmind-cli setup-mcp github-copilot',
       },
       {
+        type: 'magicLink',
+        label: 'One-Click Install',
+        available: true,
+        getMagicLink: (token: string, url: string) => {
+          const config = {
+            name: 'packmind',
+            type: 'http',
+            url,
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          };
+          const jsonConfig = JSON.stringify(config);
+          return `vscode:mcp/install?${encodeURIComponent(jsonConfig)}`;
+        },
+      },
+      {
         type: 'json',
         label: 'JSON Configuration',
         available: true,

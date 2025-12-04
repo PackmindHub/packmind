@@ -263,8 +263,9 @@ describe('McpConfig', () => {
 
     it('displays copy buttons for all configurations', () => {
       const copyButtons = screen.getAllByLabelText('Copy to clipboard');
-      // 5 copy buttons: Classic, VS Code, Claude CLI, GitHub Copilot JetBrains, Cursor
-      expect(copyButtons).toHaveLength(5);
+      // 4 copy buttons: Classic, VS Code, Claude CLI, GitHub Copilot JetBrains
+      // Cursor tab uses install button instead of copy button
+      expect(copyButtons).toHaveLength(4);
     });
 
     it('displays Cursor install button with correct href and image', async () => {
