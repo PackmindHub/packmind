@@ -75,8 +75,6 @@ describe('JunieDeployer', () => {
       expect(sectionContent).toContain('🚨 **MANDATORY STEP** 🚨');
       expect(sectionContent).toContain('ALWAYS READ');
       expect(sectionContent).toContain(recipe.name);
-      expect(sectionContent).toContain('aiAgent: "Junie"');
-      expect(sectionContent).toContain('gitRepo: "test-owner/test-repo"');
     });
 
     it('handles empty recipe list', async () => {

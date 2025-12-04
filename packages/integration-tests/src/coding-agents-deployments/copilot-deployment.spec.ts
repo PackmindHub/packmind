@@ -194,10 +194,6 @@ describe('GitHub Copilot Deployment Integration', () => {
         expect(copilotFile.content).toContain('🚨 **MANDATORY STEP** 🚨');
         expect(copilotFile.content).toContain('ALWAYS READ');
         expect(copilotFile.content).toContain('available recipes below');
-        expect(copilotFile.content).toContain('aiAgent: "GitHub Copilot"');
-        expect(copilotFile.content).toContain(
-          'gitRepo: "test-owner/test-repo"',
-        );
 
         // Check recipes list
         expect(copilotFile.content).toContain('## Available recipes');
@@ -404,13 +400,6 @@ Before writing, editing, or generating ANY code:
 - **MANDATORY**: Always check the recipes list first
 - **CONDITIONAL**: Only read/use individual recipes if they are relevant to your task
 - **OPTIONAL**: If no recipes are relevant, proceed without using any
-
-## Recipe Usage Tracking:
-When you DO use or apply a relevant Packmind recipe from .packmind/recipes/, you MUST call the 'packmind_notify_recipe_usage' MCP tool with:
-* Recipe slugs array (e.g., ["recipe-name"] from "recipe-name.md")
-* aiAgent: "GitHub Copilot"
-* gitRepo: "test-owner/test-repo"
-* target: "/"
 
 **Remember: Always check the recipes list first, but only use recipes that actually apply to your specific task.**\`
 
