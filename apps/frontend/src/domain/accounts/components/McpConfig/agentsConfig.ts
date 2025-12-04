@@ -10,7 +10,7 @@ export const getAgentsConfig = (): IAgentConfig[] => [
         type: 'cli',
         label: 'CLI Command',
         available: true,
-        getCliCommand: () => 'packmind-cli setup mcp claude',
+        getCliCommand: () => 'packmind-cli setup-mcp claude',
       },
       {
         type: 'json',
@@ -33,19 +33,19 @@ export const getAgentsConfig = (): IAgentConfig[] => [
     ],
   },
   {
-    id: 'github-copilot',
-    name: 'GitHub Copilot',
-    description: 'Install Packmind MCP for GitHub Copilot',
+    id: 'github-copilot-vscode',
+    name: 'GitHub Copilot (VS Code)',
+    description: 'Install Packmind MCP for GitHub Copilot in VS Code',
     installMethods: [
       {
         type: 'cli',
         label: 'CLI Command',
         available: true,
-        getCliCommand: () => 'packmind-cli setup mcp github-copilot',
+        getCliCommand: () => 'packmind-cli setup-mcp github-copilot',
       },
       {
         type: 'json',
-        label: 'JSON Configuration (VS Code)',
+        label: 'JSON Configuration',
         available: true,
         getJsonConfig: (token: string, url: string) => {
           const config = {
@@ -63,9 +63,22 @@ export const getAgentsConfig = (): IAgentConfig[] => [
           return JSON.stringify(config, null, 2);
         },
       },
+    ],
+  },
+  {
+    id: 'github-copilot-jetbrains',
+    name: 'GitHub Copilot (JetBrains)',
+    description: 'Install Packmind MCP for GitHub Copilot in JetBrains IDEs',
+    installMethods: [
+      {
+        type: 'cli',
+        label: 'CLI Command',
+        available: true,
+        getCliCommand: () => 'packmind-cli setup-mcp jetbrains',
+      },
       {
         type: 'json',
-        label: 'JSON Configuration (JetBrains)',
+        label: 'JSON Configuration',
         available: true,
         getJsonConfig: (token: string, url: string) => {
           const config = {
@@ -92,7 +105,7 @@ export const getAgentsConfig = (): IAgentConfig[] => [
         type: 'cli',
         label: 'CLI Command',
         available: true,
-        getCliCommand: () => 'packmind-cli setup mcp cursor',
+        getCliCommand: () => 'packmind-cli setup-mcp cursor',
       },
       {
         type: 'magicLink',
@@ -126,47 +139,10 @@ export const getAgentsConfig = (): IAgentConfig[] => [
     ],
   },
   {
-    id: 'jetbrains',
-    name: 'JetBrains Assistant',
-    description: 'Install Packmind MCP for JetBrains IDEs',
-    installMethods: [
-      {
-        type: 'cli',
-        label: 'CLI Command',
-        available: true,
-        getCliCommand: () => 'packmind-cli setup mcp jetbrains',
-      },
-      {
-        type: 'json',
-        label: 'JSON Configuration',
-        available: true,
-        getJsonConfig: (token: string, url: string) => {
-          const config = {
-            'packmind-mcp-server': {
-              url,
-              requestInit: {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              },
-            },
-          };
-          return JSON.stringify(config, null, 2);
-        },
-      },
-    ],
-  },
-  {
     id: 'generic',
     name: 'MCP Generic',
     description: 'Generic MCP configuration for compatible clients',
     installMethods: [
-      {
-        type: 'cli',
-        label: 'CLI Command',
-        available: true,
-        getCliCommand: () => 'packmind-cli setup mcp generic',
-      },
       {
         type: 'json',
         label: 'JSON Configuration',

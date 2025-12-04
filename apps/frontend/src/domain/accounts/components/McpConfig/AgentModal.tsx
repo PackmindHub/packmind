@@ -57,18 +57,20 @@ const MagicLinkMethodContent: React.FunctionComponent<IMethodContentProps> = ({
 
   const magicLink = method.getMagicLink(token, url);
 
-  const handleNavigate = () => {
-    window.location.href = magicLink;
-  };
-
   return (
     <PMVStack gap={4} width="100%" alignItems="flex-start">
       <PMText as="p" fontSize="sm" color="faded">
         Click the button below to install automatically:
       </PMText>
-      <PMButton onClick={handleNavigate} colorScheme="blue">
-        Install with Magic Link
-      </PMButton>
+      <PMHStack gap={4}>
+        <a href={magicLink} data-testid="cursor-install-button">
+          <img
+            src="https://cursor.com/deeplink/mcp-install-dark.png"
+            alt="Add Packmind MCP server to Cursor"
+            style={{ maxHeight: 32 }}
+          />
+        </a>
+      </PMHStack>
     </PMVStack>
   );
 };

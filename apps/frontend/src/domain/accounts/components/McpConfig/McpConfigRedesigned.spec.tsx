@@ -152,10 +152,12 @@ describe('McpConfigRedesigned', () => {
 
       expect(screen.getByTestId('agent-card-claude')).toBeInTheDocument();
       expect(
-        screen.getByTestId('agent-card-github-copilot'),
+        screen.getByTestId('agent-card-github-copilot-vscode'),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId('agent-card-github-copilot-jetbrains'),
       ).toBeInTheDocument();
       expect(screen.getByTestId('agent-card-cursor')).toBeInTheDocument();
-      expect(screen.getByTestId('agent-card-jetbrains')).toBeInTheDocument();
       expect(screen.getByTestId('agent-card-generic')).toBeInTheDocument();
     });
 
@@ -163,9 +165,11 @@ describe('McpConfigRedesigned', () => {
       renderWithProviders(<McpConfigRedesigned />);
 
       expect(screen.getByText('Claude (Anthropic)')).toBeInTheDocument();
-      expect(screen.getByText('GitHub Copilot')).toBeInTheDocument();
+      expect(screen.getByText('GitHub Copilot (VS Code)')).toBeInTheDocument();
+      expect(
+        screen.getByText('GitHub Copilot (JetBrains)'),
+      ).toBeInTheDocument();
       expect(screen.getByText('Cursor')).toBeInTheDocument();
-      expect(screen.getByText('JetBrains Assistant')).toBeInTheDocument();
       expect(screen.getByText('MCP Generic')).toBeInTheDocument();
     });
 
