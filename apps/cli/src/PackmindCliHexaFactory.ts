@@ -22,6 +22,12 @@ import { IListPackagesUseCase } from './domain/useCases/IListPackagesUseCase';
 import { ListPackagesUseCase } from './application/useCases/ListPackagesUseCase';
 import { IGetPackageSummaryUseCase } from './domain/useCases/IGetPackageSummaryUseCase';
 import { GetPackageSummaryUseCase } from './application/useCases/GetPackageSummaryUseCase';
+import { ILoginUseCase } from './domain/useCases/ILoginUseCase';
+import { LoginUseCase } from './application/useCases/LoginUseCase';
+import { ILogoutUseCase } from './domain/useCases/ILogoutUseCase';
+import { LogoutUseCase } from './application/useCases/LogoutUseCase';
+import { IWhoamiUseCase } from './domain/useCases/IWhoamiUseCase';
+import { WhoamiUseCase } from './application/useCases/WhoamiUseCase';
 import { ConfigFileRepository } from './infra/repositories/ConfigFileRepository';
 import { loadApiKey } from './infra/utils/credentialsLoader';
 
@@ -38,6 +44,9 @@ export class PackmindCliHexaFactory {
     pullData: IPullDataUseCase;
     listPackages: IListPackagesUseCase;
     getPackageBySlug: IGetPackageSummaryUseCase;
+    login: ILoginUseCase;
+    logout: ILogoutUseCase;
+    whoami: IWhoamiUseCase;
   };
 
   constructor(private readonly logger: PackmindLogger) {
@@ -74,6 +83,9 @@ export class PackmindCliHexaFactory {
       getPackageBySlug: new GetPackageSummaryUseCase(
         this.repositories.packmindGateway,
       ),
+      login: new LoginUseCase(),
+      logout: new LogoutUseCase(),
+      whoami: new WhoamiUseCase(),
     };
   }
 }

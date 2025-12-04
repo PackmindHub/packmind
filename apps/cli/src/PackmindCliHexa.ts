@@ -32,6 +32,15 @@ import {
   IGetPackageSummaryCommand,
   IGetPackageSummaryResult,
 } from './domain/useCases/IGetPackageSummaryUseCase';
+import { ILoginCommand, ILoginResult } from './domain/useCases/ILoginUseCase';
+import {
+  ILogoutCommand,
+  ILogoutResult,
+} from './domain/useCases/ILogoutUseCase';
+import {
+  IWhoamiCommand,
+  IWhoamiResult,
+} from './domain/useCases/IWhoamiUseCase';
 import { HierarchicalConfigResult, PackmindFileConfig } from '@packmind/types';
 import { logWarningConsole } from './infra/utils/consoleLogger';
 
@@ -178,5 +187,17 @@ export class PackmindCliHexa {
     return this.hexa.services.gitRemoteUrlService.tryGetGitRepositoryRoot(
       directory,
     );
+  }
+
+  public async login(command: ILoginCommand): Promise<ILoginResult> {
+    return this.hexa.useCases.login.execute(command);
+  }
+
+  public async logout(command: ILogoutCommand): Promise<ILogoutResult> {
+    return this.hexa.useCases.logout.execute(command);
+  }
+
+  public async whoami(command: IWhoamiCommand): Promise<IWhoamiResult> {
+    return this.hexa.useCases.whoami.execute(command);
   }
 }
