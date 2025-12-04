@@ -3,7 +3,6 @@ import { MemberContext } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   GetOrganizationOnboardingStatusCommand,
-  GitProvider,
   GitRepo,
   IAccountsPort,
   IDeploymentPort,
@@ -110,9 +109,9 @@ describe('GetOrganizationOnboardingStatusUseCase', () => {
           user,
           userFactory(),
         ]);
-        mockGitPort.listProviders.mockResolvedValue([
-          { id: 'provider-1' } as unknown as GitProvider,
-        ]);
+        mockGitPort.listProviders.mockResolvedValue({
+          providers: [{ id: 'provider-1', hasToken: true } as never],
+        });
         mockGitPort.getOrganizationRepositories.mockResolvedValue([
           { id: 'repo-1' } as unknown as GitRepo,
         ]);
@@ -153,7 +152,7 @@ describe('GetOrganizationOnboardingStatusUseCase', () => {
         };
 
         mockUserService.listUsersByOrganization.mockResolvedValue([user]);
-        mockGitPort.listProviders.mockResolvedValue([]);
+        mockGitPort.listProviders.mockResolvedValue({ providers: [] });
         mockGitPort.getOrganizationRepositories.mockResolvedValue([]);
         mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
         mockStandardsPort.listStandardsBySpace.mockResolvedValue([]);
@@ -188,9 +187,9 @@ describe('GetOrganizationOnboardingStatusUseCase', () => {
         };
 
         mockUserService.listUsersByOrganization.mockResolvedValue([user]);
-        mockGitPort.listProviders.mockResolvedValue([
-          { id: 'provider-1' } as unknown as GitProvider,
-        ]);
+        mockGitPort.listProviders.mockResolvedValue({
+          providers: [{ id: 'provider-1', hasToken: true } as never],
+        });
         mockGitPort.getOrganizationRepositories.mockResolvedValue([]);
         mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
         mockStandardsPort.listStandardsBySpace.mockResolvedValue([]);
@@ -252,7 +251,7 @@ describe('GetOrganizationOnboardingStatusUseCase', () => {
         };
 
         mockUserService.listUsersByOrganization.mockResolvedValue([user]);
-        mockGitPort.listProviders.mockResolvedValue([]);
+        mockGitPort.listProviders.mockResolvedValue({ providers: [] });
         mockGitPort.getOrganizationRepositories.mockResolvedValue([]);
         mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
         mockStandardsPort.listStandardsBySpace.mockResolvedValue([]);
@@ -287,7 +286,7 @@ describe('GetOrganizationOnboardingStatusUseCase', () => {
           userFactory(),
           userFactory(),
         ]);
-        mockGitPort.listProviders.mockResolvedValue([]);
+        mockGitPort.listProviders.mockResolvedValue({ providers: [] });
         mockGitPort.getOrganizationRepositories.mockResolvedValue([]);
         mockSpacesPort.listSpacesByOrganization.mockResolvedValue([mockSpace]);
         mockStandardsPort.listStandardsBySpace.mockResolvedValue([]);

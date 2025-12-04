@@ -17,6 +17,7 @@ import {
   Target,
   createTargetId,
   GitRepoAlreadyExistsError,
+  GitProviderMissingTokenError,
   GitProviderNotFoundError,
   GitProviderOrganizationMismatchError,
   createOrganizationId,
@@ -390,6 +391,33 @@ describe('AddGitRepoUseCase', () => {
 
       await expect(useCase.execute(command)).rejects.toThrow(
         GitProviderOrganizationMismatchError,
+      );
+    });
+
+    it('throws error for git provider with null token', async () => {
+      const command: AddGitRepoCommand = {
+        userId,
+        organizationId,
+        gitProviderId,
+        owner: 'testowner',
+        repo: 'testrepo',
+        branch: 'main',
+      };
+
+      const mockProvider: GitProvider = {
+        id: gitProviderId,
+        source: GitProviderVendors.github,
+        organizationId,
+        url: 'https://github.com',
+        token: null,
+      };
+
+      mockGitProviderService.findGitProviderById.mockResolvedValue(
+        mockProvider,
+      );
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        GitProviderMissingTokenError,
       );
     });
 

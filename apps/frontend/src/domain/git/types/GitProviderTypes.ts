@@ -1,5 +1,9 @@
-import { OrganizationId } from '@packmind/types';
-import { GitProviderId, GitRepoId } from '@packmind/types';
+import {
+  GitProviderId,
+  GitProviderVendor,
+  GitRepoId,
+  OrganizationId,
+} from '@packmind/types';
 
 // Available git provider types for UI
 export enum GitProviders {
@@ -10,9 +14,9 @@ export enum GitProviders {
 // Frontend-specific GitProvider interface for UI
 export interface GitProviderUI {
   id: GitProviderId;
-  source: GitProviders;
+  source: GitProviderVendor;
   organizationId: OrganizationId;
-  token: string | null;
+  hasToken: boolean;
   url: string | null;
   repos?: GitRepoUI[];
 }
@@ -29,7 +33,7 @@ export interface GitRepoUI {
 
 // Form data types for creating new providers
 export interface CreateGitProviderForm {
-  source: GitProviders;
+  source: GitProviderVendor;
   token: string;
   url: string;
 }

@@ -7,6 +7,8 @@ import {
   GitRepo,
   GitRepoId,
   IGitPort,
+  ListProvidersCommand,
+  ListProvidersResponse,
   OrganizationId,
   UserId,
 } from '@packmind/types';
@@ -53,8 +55,10 @@ export class GitProvidersService {
     return await this.gitAdapter.addGitRepo(command);
   }
 
-  async listProviders(organizationId: OrganizationId): Promise<GitProvider[]> {
-    return this.gitAdapter.listProviders(organizationId);
+  async listProviders(
+    command: ListProvidersCommand,
+  ): Promise<ListProvidersResponse> {
+    return this.gitAdapter.listProviders(command);
   }
 
   async getRepositories(organizationId: OrganizationId): Promise<GitRepo[]> {

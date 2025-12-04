@@ -53,8 +53,11 @@ export class GetOrganizationOnboardingStatusUseCase
     // Check git providers
     let hasConnectedGitProvider = false;
     if (this.gitPort) {
-      const gitProviders = await this.gitPort.listProviders(organization.id);
-      hasConnectedGitProvider = gitProviders.length > 0;
+      const gitProvidersResponse = await this.gitPort.listProviders({
+        userId,
+        organizationId: organization.id,
+      });
+      hasConnectedGitProvider = gitProvidersResponse.providers.length > 0;
     }
 
     // Check git repos

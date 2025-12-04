@@ -25,6 +25,8 @@ import {
   IDeploymentPortName,
   IFindGitRepoByOwnerRepoAndBranchInOrganizationUseCase,
   IGitPort,
+  ListProvidersCommand,
+  ListProvidersResponse,
   OrganizationId,
   QueryOption,
   UserId,
@@ -194,6 +196,7 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     );
 
     this._listProviders = new ListProvidersUseCase(
+      this.accountsPort,
       this.gitServices.getGitProviderService(),
     );
 
@@ -396,9 +399,9 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
   }
 
   public async listProviders(
-    organizationId: OrganizationId,
-  ): Promise<GitProvider[]> {
-    return this._listProviders.execute({ organizationId });
+    command: ListProvidersCommand,
+  ): Promise<ListProvidersResponse> {
+    return this._listProviders.execute(command);
   }
 
   public async getOrganizationRepositories(

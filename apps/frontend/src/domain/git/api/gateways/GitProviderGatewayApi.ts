@@ -1,7 +1,15 @@
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
 import { IGitProviderGateway } from './IGitProviderGateway';
-import { GitProvider, GitProviderId, GitRepoId } from '@packmind/types';
-import { OrganizationId } from '@packmind/types';
+import {
+  CheckDirectoryExistenceResult,
+  GitProvider,
+  GitProviderId,
+  GitRepoId,
+  IListProvidersUseCase,
+  ListProvidersResponse,
+  NewGateway,
+  OrganizationId,
+} from '@packmind/types';
 import {
   GitProviderUI,
   GitRepoUI,
@@ -9,7 +17,6 @@ import {
   AddRepositoryForm,
   AvailableRepository,
 } from '../../types/GitProviderTypes';
-import { CheckDirectoryExistenceResult } from '@packmind/types';
 
 export class GitProviderGatewayApi
   extends PackmindGateway
@@ -19,26 +26,26 @@ export class GitProviderGatewayApi
     super('/organizations');
   }
 
-  async getGitProviders(
-    organizationId: OrganizationId,
-  ): Promise<GitProviderUI[]> {
-    return await this._api.get<GitProviderUI[]>(
+  getGitProviders: NewGateway<IListProvidersUseCase> = async ({
+    organizationId,
+  }) => {
+    return await this._api.get<ListProvidersResponse>(
       `${this._endpoint}/${organizationId}/git/providers`,
     );
-  }
+  };
 
   async getGitProviderById(
     organizationId: OrganizationId,
     id: GitProviderId,
   ): Promise<GitProviderUI> {
-    const providers = await this._api.get<GitProviderUI[]>(
+    const response = await this._api.get<ListProvidersResponse>(
       `${this._endpoint}/${organizationId}/git/providers`,
     );
-    const provider = providers.find((p) => p.id === id);
+    const provider = response.providers.find((p) => p.id === id);
     if (!provider) {
       throw new Error(`Git provider with id ${id} not found`);
     }
-    return provider;
+    return provider as GitProviderUI;
   }
 
   async createGitProvider(

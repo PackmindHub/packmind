@@ -13,10 +13,9 @@ import {
   PMAlertDialog,
   PMVStack,
   PMSpinner,
-  PMMenu,
-  PMPortal,
-  PMIcon,
   PMEllipsisMenu,
+  PMTooltip,
+  PMIcon,
 } from '@packmind/ui';
 import { OrganizationId } from '@packmind/types';
 import {
@@ -27,7 +26,7 @@ import { GitProviderUI } from '../types/GitProviderTypes';
 import { GIT_MESSAGES } from '../constants/messages';
 import { ManageGitProviderDialog } from './ManageGitProviderDialog';
 import { extractErrorMessage } from '../utils/errorUtils';
-import { LuEllipsis } from 'react-icons/lu';
+import { LuInfo } from 'react-icons/lu';
 
 interface GitProvidersListProps {
   organizationId: OrganizationId;
@@ -37,11 +36,12 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
   organizationId,
 }) => {
   const {
-    data: providers,
+    data: providersResponse,
     isLoading,
     isError,
     error,
   } = useGetGitProvidersQuery();
+  const providers = providersResponse?.providers;
   const deleteProviderMutation = useDeleteGitProviderMutation();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [providerToDelete, setProviderToDelete] =
@@ -104,7 +104,7 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
       ),
       url: provider.url,
       repositoryCount: provider.repos?.length || 0,
-      actions: (
+      actions: provider.hasToken ? (
         <PMEllipsisMenu
           actions={[
             {
@@ -125,6 +125,12 @@ export const GitProvidersList: React.FC<GitProvidersListProps> = ({
             },
           ]}
         />
+      ) : (
+        <PMTooltip label="This provider was automatically created after a deployment from packmind-cli">
+          <PMIcon color="secondary">
+            <LuInfo />
+          </PMIcon>
+        </PMTooltip>
       ),
     }));
   }, [providers]);

@@ -16,6 +16,8 @@ import {
   HandleWebHookResult,
   HandleWebHookWithoutContentCommand,
   HandleWebHookWithoutContentResult,
+  ListProvidersCommand,
+  ListProvidersResponse,
 } from '../contracts';
 import { GitCommit } from '../GitCommit';
 import { GitProvider, GitProviderId } from '../GitProvider';
@@ -29,10 +31,10 @@ export interface IGitPort {
   /**
    * List all git providers for an organization
    *
-   * @param organizationId - The organization ID
-   * @returns Promise of array of git providers
+   * @param command - Command containing userId and organizationId
+   * @returns Promise of list providers response with providers array
    */
-  listProviders(organizationId: OrganizationId): Promise<GitProvider[]>;
+  listProviders(command: ListProvidersCommand): Promise<ListProvidersResponse>;
 
   /**
    * Get all repositories for an organization

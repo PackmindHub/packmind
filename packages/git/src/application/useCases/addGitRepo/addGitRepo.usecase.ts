@@ -3,6 +3,7 @@ import { AbstractAdminUseCase, AdminContext } from '@packmind/node-utils';
 import {
   AddGitRepoCommand,
   createUserId,
+  GitProviderMissingTokenError,
   GitProviderNotFoundError,
   GitProviderOrganizationMismatchError,
   GitRepo,
@@ -70,6 +71,16 @@ export class AddGitRepoUseCase
         gitProviderId,
         organization.id,
       );
+    }
+
+    // Business rule: git provider must have a token configured
+    if (!gitProvider.token) {
+      this.logger.error('Git provider has no token configured', {
+        gitProviderId,
+        organizationId: organization.id,
+        userId,
+      });
+      throw new GitProviderMissingTokenError(gitProviderId);
     }
 
     // Business rule: check for duplicate repositories (same owner/repo/branch combination in same organization)

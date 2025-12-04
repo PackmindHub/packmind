@@ -1,4 +1,11 @@
-import { OrganizationId } from '@packmind/types';
+import {
+  CheckDirectoryExistenceResult,
+  GitProviderId,
+  GitRepoId,
+  IListProvidersUseCase,
+  NewGateway,
+  OrganizationId,
+} from '@packmind/types';
 import {
   GitProviderUI,
   GitRepoUI,
@@ -6,12 +13,10 @@ import {
   AddRepositoryForm,
   AvailableRepository,
 } from '../../types/GitProviderTypes';
-import { GitProviderId, GitRepoId } from '@packmind/types';
-import { CheckDirectoryExistenceResult } from '@packmind/types';
 
 export interface IGitProviderGateway {
   // Git Provider CRUD operations
-  getGitProviders(organizationId: OrganizationId): Promise<GitProviderUI[]>;
+  getGitProviders: NewGateway<IListProvidersUseCase>;
   getGitProviderById(
     organizationId: OrganizationId,
     id: GitProviderId,
