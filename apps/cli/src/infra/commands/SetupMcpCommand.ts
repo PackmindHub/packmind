@@ -114,7 +114,7 @@ export const setupMcpCommand = command({
         {
           type: 'checkbox',
           name: 'selectedAgents',
-          message: 'Select agents to configure:',
+          message: 'Select agents to configure (use space to select):',
           choices,
         },
       ]);
