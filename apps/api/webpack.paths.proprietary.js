@@ -13,11 +13,6 @@ module.exports = function getProprietaryWebpackPaths(__dirname) {
     // Proprietary version uses the real analytics package
     '@packmind/analytics': join(__dirname, '../../packages/analytics/src'),
     '@packmind/linter': join(__dirname, '../../packages/linter/src'),
-    '@packmind/linter-ast': join(__dirname, '../../packages/linter-ast/src'),
-    '@packmind/linter-execution': join(
-      __dirname,
-      '../../packages/linter-execution/src',
-    ),
     '@packmind/amplitude': join(__dirname, '../../packages/amplitude/src'),
     '@packmind/plugins': join(__dirname, '../../packages/plugins/src'),
     '@packmind/import-practices-legacy': join(

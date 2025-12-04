@@ -13,11 +13,6 @@ module.exports = function getOssWebpackPaths(__dirname) {
     // OSS version uses stubs from editions package
     '@packmind/analytics': join(__dirname, '../../packages/editions/src'),
     '@packmind/linter': join(__dirname, '../../packages/editions/src'),
-    '@packmind/linter-ast': join(__dirname, '../../packages/editions/src'),
-    '@packmind/linter-execution': join(
-      __dirname,
-      '../../packages/editions/src',
-    ),
     '@packmind/amplitude': join(__dirname, '../../packages/editions/src'),
     '@packmind/plugins': join(__dirname, '../../packages/editions/src'),
     '@packmind/import-practices-legacy': join(
