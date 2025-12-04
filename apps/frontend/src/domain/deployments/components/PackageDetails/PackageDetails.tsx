@@ -493,49 +493,53 @@ export const PackageDetails = ({
       ? 'Select standards...'
       : `${selectedStandardIds.length} standard(s) selected`;
 
-  const recipeTableData: PMTableRow[] = React.useMemo(
-    () =>
-      recipeIds
-        .map((recipeId) => {
-          const recipe = allRecipes.find((r) => r.id === recipeId);
-          return {
-            key: recipeId,
-            name: (
-              <PMLink asChild>
-                <Link to={routes.space.toRecipe(orgSlug, spaceSlug, recipeId)}>
-                  {recipe?.name || recipeId}
-                </Link>
-              </PMLink>
-            ),
-            sortName: recipe?.name || recipeId,
-          };
-        })
-        .sort((a, b) => a.sortName.localeCompare(b.sortName)),
-    [recipeIds, allRecipes, orgSlug, spaceSlug],
-  );
+  const recipeTableData: PMTableRow[] = React.useMemo(() => {
+    const rows: PMTableRow[] = [];
+    for (const recipeId of recipeIds) {
+      const recipe = allRecipes.find((r) => r.id === recipeId);
+      if (recipe) {
+        rows.push({
+          key: recipeId,
+          name: (
+            <PMLink asChild>
+              <Link to={routes.space.toRecipe(orgSlug, spaceSlug, recipeId)}>
+                {recipe.name}
+              </Link>
+            </PMLink>
+          ),
+          sortName: recipe.name,
+        });
+      }
+    }
+    return rows.sort((a, b) =>
+      (a.sortName as string).localeCompare(b.sortName as string),
+    );
+  }, [recipeIds, allRecipes, orgSlug, spaceSlug]);
 
-  const standardTableData: PMTableRow[] = React.useMemo(
-    () =>
-      standardIds
-        .map((standardId) => {
-          const standard = allStandards.find((s) => s.id === standardId);
-          return {
-            key: standardId,
-            name: (
-              <PMLink asChild>
-                <Link
-                  to={routes.space.toStandard(orgSlug, spaceSlug, standardId)}
-                >
-                  {standard?.name || standardId}
-                </Link>
-              </PMLink>
-            ),
-            sortName: standard?.name || standardId,
-          };
-        })
-        .sort((a, b) => a.sortName.localeCompare(b.sortName)),
-    [standardIds, allStandards, orgSlug, spaceSlug],
-  );
+  const standardTableData: PMTableRow[] = React.useMemo(() => {
+    const rows: PMTableRow[] = [];
+    for (const standardId of standardIds) {
+      const standard = allStandards.find((s) => s.id === standardId);
+      if (standard) {
+        rows.push({
+          key: standardId,
+          name: (
+            <PMLink asChild>
+              <Link
+                to={routes.space.toStandard(orgSlug, spaceSlug, standardId)}
+              >
+                {standard.name}
+              </Link>
+            </PMLink>
+          ),
+          sortName: standard.name,
+        });
+      }
+    }
+    return rows.sort((a, b) =>
+      (a.sortName as string).localeCompare(b.sortName as string),
+    );
+  }, [standardIds, allStandards, orgSlug, spaceSlug]);
 
   const recipeColumns: PMTableColumn[] = React.useMemo(
     () => [{ key: 'name', header: 'Name', grow: true }],
@@ -597,8 +601,8 @@ export const PackageDetails = ({
     );
   }
 
-  const recipeCount = recipeIds.length;
-  const standardCount = standardIds.length;
+  const recipeCount = recipeTableData.length;
+  const standardCount = standardTableData.length;
   const isPackageEmpty = recipeCount === 0 && standardCount === 0;
 
   const isPending = updatePackageMutation.isPending || isSubmitting;

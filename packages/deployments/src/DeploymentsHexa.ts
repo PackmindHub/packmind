@@ -23,6 +23,7 @@ import {
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { DeploymentsAdapter } from './application/adapter/DeploymentsAdapter';
+import { DeploymentsListener } from './application/listeners/DeploymentsListener';
 import { DeploymentsServices } from './application/services/DeploymentsServices';
 import { DeploymentsRepositories } from './infra/repositories/DeploymentsRepositories';
 
@@ -44,6 +45,7 @@ export class DeploymentsHexa extends BaseHexa<
   private readonly repositories: DeploymentsRepositories;
   private readonly services: DeploymentsServices;
   private readonly adapter: DeploymentsAdapter;
+  private readonly listener: DeploymentsListener;
 
   constructor(
     dataSource: DataSource,
@@ -69,6 +71,11 @@ export class DeploymentsHexa extends BaseHexa<
         this.repositories.getRecipesDeploymentRepository(),
         this.repositories.getDistributionRepository(),
         this.repositories.getDistributedPackageRepository(),
+      );
+
+      // Create listener - will be initialized during initialize()
+      this.listener = new DeploymentsListener(
+        this.repositories.getPackageRepository(),
       );
 
       this.logger.info('DeploymentsHexa construction completed');
@@ -111,6 +118,9 @@ export class DeploymentsHexa extends BaseHexa<
         [IAccountsPortName]: accountsPort,
         eventEmitterService,
       });
+
+      // Initialize listener with event emitter service
+      this.listener.initialize(eventEmitterService);
 
       this.logger.info('DeploymentsHexa initialized successfully');
     } catch (error) {

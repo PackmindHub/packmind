@@ -2,6 +2,7 @@ import React from 'react';
 import {
   PMButton,
   PMHStack,
+  PMLink,
   PMPageSection,
   PMText,
   PMTabs,
@@ -18,6 +19,26 @@ import {
 import { CopiableTextarea } from '../../../shared/components/inputs';
 import { McpConfigRedesigned } from './McpConfig/McpConfigRedesigned';
 import { useAuthContext } from '../hooks/useAuthContext';
+
+// VS Code icon from CDN
+const VSCodeIcon = () => (
+  <img
+    src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vscode/vscode-original.svg"
+    alt="VS Code"
+    width={16}
+    height={16}
+  />
+);
+
+// VS Code install button using PMLink with VS Code blue color
+const VSCodeInstallBadge: React.FC<{ href: string }> = ({ href }) => (
+  <PMLink href={href} variant="plain" data-testid="vscode-install-button">
+    <PMButton as="span" bg="#007ACC" color="white" _hover={{ bg: '#005a9e' }}>
+      <VSCodeIcon />
+      Install in VS Code
+    </PMButton>
+  </PMLink>
+);
 
 export const McpConfig: React.FunctionComponent = () => {
   const { user } = useAuthContext();
@@ -62,6 +83,22 @@ export const McpConfig: React.FunctionComponent = () => {
         inputs: [],
       };
       return JSON.stringify(config, null, 2);
+    }
+    return '';
+  };
+
+  const getVSCodeInstallLink = () => {
+    if (getMcpTokenMutation.data?.access_token && url) {
+      const config = {
+        name: 'packmind',
+        type: 'http',
+        url: url,
+        headers: {
+          Authorization: `Bearer ${getMcpTokenMutation.data.access_token}`,
+        },
+      };
+      const jsonConfig = JSON.stringify(config);
+      return `vscode:mcp/install?${encodeURIComponent(jsonConfig)}`;
     }
     return '';
   };
@@ -173,12 +210,27 @@ export const McpConfig: React.FunctionComponent = () => {
                     value: 'vscode',
                     triggerLabel: 'VS Code',
                     content: (
-                      <CopiableTextarea
-                        value={getVSCodeConfig()}
-                        readOnly
-                        rows={12}
+                      <PMVStack
+                        gap={4}
+                        width="100%"
+                        pt={8}
                         data-testid="mcp-config-vscode"
-                      />
+                      >
+                        <PMHStack gap={4}>
+                          <VSCodeInstallBadge href={getVSCodeInstallLink()} />
+                        </PMHStack>
+                        <PMText as="p" variant="small" color="faded">
+                          Or copy the configuration below and save it to{' '}
+                          <code>.vscode/mcp.json</code> in your workspace or{' '}
+                          <code>mcp.json</code> in your user settings directory.
+                        </PMText>
+                        <CopiableTextarea
+                          value={getVSCodeConfig()}
+                          readOnly
+                          rows={12}
+                          data-testid="mcp-config-vscode-textarea"
+                        />
+                      </PMVStack>
                     ),
                   },
                   {

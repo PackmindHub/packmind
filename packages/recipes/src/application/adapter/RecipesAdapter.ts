@@ -174,7 +174,7 @@ export class RecipesAdapter
     this._deleteRecipe = new DeleteRecipeUsecase(
       this.recipesServices.getRecipeService(),
       this.recipesServices.getRecipeVersionService(),
-      this.logger,
+      ports.eventEmitterService,
     );
 
     this._getRecipeById = new GetRecipeByIdUsecase(

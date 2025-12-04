@@ -16,7 +16,7 @@ export const CLI_LOGIN_COMMAND_FEATURE_KEY = 'cli-login-command';
 
 export const DEFAULT_FEATURE_DOMAIN_MAP: Record<string, readonly string[]> = {
   [RULE_DETAILS_DETECTION_TAB_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
-  [MCP_CONFIG_REDESIGN_FEATURE_KEY]: ['@packmind.com'],
+  [MCP_CONFIG_REDESIGN_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
   [CLI_LOGIN_COMMAND_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
 };
 

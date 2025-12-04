@@ -183,9 +183,9 @@ describe('McpConfigRedesigned', () => {
       const jsonBadges = screen.getAllByText('JSON');
       expect(jsonBadges.length).toBeGreaterThan(0);
 
-      // Cursor should have Magic Link badge
-      const magicLinkBadge = screen.getByText('Magic Link');
-      expect(magicLinkBadge).toBeInTheDocument();
+      // Cursor and VS Code should have Magic Link badges
+      const magicLinkBadges = screen.getAllByText('Magic Link');
+      expect(magicLinkBadges.length).toBe(2);
     });
 
     describe('Agent card interaction', () => {

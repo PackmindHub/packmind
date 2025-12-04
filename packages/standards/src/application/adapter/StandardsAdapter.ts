@@ -173,10 +173,12 @@ export class StandardsAdapter
 
     this._deleteStandard = new DeleteStandardUsecase(
       this.services.getStandardService(),
+      this.eventEmitterService,
     );
 
     this._deleteStandardsBatch = new DeleteStandardsBatchUsecase(
       this.services.getStandardService(),
+      this.eventEmitterService,
     );
 
     this._findStandardBySlug = new FindStandardBySlugUsecase(
@@ -469,8 +471,16 @@ export class StandardsAdapter
     return this._getStandardById.execute(command);
   }
 
-  async deleteStandard(standardId: StandardId, userId: UserId): Promise<void> {
-    return this._deleteStandard.deleteStandard(standardId, userId);
+  async deleteStandard(
+    standardId: StandardId,
+    userId: UserId,
+    organizationId: OrganizationId,
+  ): Promise<void> {
+    return this._deleteStandard.deleteStandard(
+      standardId,
+      userId,
+      organizationId,
+    );
   }
 
   async updateStandard(command: UpdateStandardCommand): Promise<Standard> {
@@ -481,8 +491,13 @@ export class StandardsAdapter
   async deleteStandardsBatch(
     standardIds: StandardId[],
     userId: UserId,
+    organizationId: OrganizationId,
   ): Promise<void> {
-    return this._deleteStandardsBatch.deleteStandardsBatch(standardIds, userId);
+    return this._deleteStandardsBatch.deleteStandardsBatch(
+      standardIds,
+      userId,
+      organizationId,
+    );
   }
 
   async createRuleExample(

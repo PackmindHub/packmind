@@ -42,29 +42,64 @@ export class PackageRepository
     this.logger.info('Finding packages by space ID', { spaceId });
 
     try {
-      const results = await this.repository
+      // Fetch packages first
+      const packages = await this.repository
         .createQueryBuilder('package')
-        .select([
-          'package.id as id',
-          'package.name as name',
-          'package.slug as slug',
-          'package.description as description',
-          'package.spaceId as "spaceId"',
-          'package.createdBy as "createdBy"',
-          'package.createdAt as "createdAt"',
-          'package.updatedAt as "updatedAt"',
-          'package.deletedAt as "deletedAt"',
-          'package.deletedBy as "deletedBy"',
-          `COALESCE(array_agg(DISTINCT pr.recipe_id) FILTER (WHERE pr.recipe_id IS NOT NULL), '{}') as recipes`,
-          `COALESCE(array_agg(DISTINCT ps.standard_id) FILTER (WHERE ps.standard_id IS NOT NULL), '{}') as standards`,
-        ])
-        .leftJoin('package_recipes', 'pr', 'package.id = pr.package_id')
-        .leftJoin('package_standards', 'ps', 'package.id = ps.package_id')
         .where('package.spaceId = :spaceId', { spaceId })
         .andWhere('package.deletedAt IS NULL')
-        .groupBy('package.id')
         .orderBy('package.createdAt', 'DESC')
+        .getMany();
+
+      if (packages.length === 0) {
+        this.logger.info('No packages found by space ID', { spaceId });
+        return [];
+      }
+
+      const packageIds = packages.map((p) => p.id);
+
+      // Fetch recipe relations (relationships are cleaned up when recipes are deleted)
+      const recipeRelations = await this.repository.manager
+        .createQueryBuilder()
+        .select(['pr.package_id as package_id', 'pr.recipe_id as recipe_id'])
+        .from('package_recipes', 'pr')
+        .where('pr.package_id IN (:...packageIds)', { packageIds })
         .getRawMany();
+
+      // Fetch standard relations (relationships are cleaned up when standards are deleted)
+      const standardRelations = await this.repository.manager
+        .createQueryBuilder()
+        .select([
+          'ps.package_id as package_id',
+          'ps.standard_id as standard_id',
+        ])
+        .from('package_standards', 'ps')
+        .where('ps.package_id IN (:...packageIds)', { packageIds })
+        .getRawMany();
+
+      // Group relations by package ID
+      const recipesByPackage = recipeRelations.reduce(
+        (acc, rel) => {
+          if (!acc[rel.package_id]) acc[rel.package_id] = [];
+          acc[rel.package_id].push(rel.recipe_id);
+          return acc;
+        },
+        {} as Record<string, string[]>,
+      );
+
+      const standardsByPackage = standardRelations.reduce(
+        (acc, rel) => {
+          if (!acc[rel.package_id]) acc[rel.package_id] = [];
+          acc[rel.package_id].push(rel.standard_id);
+          return acc;
+        },
+        {} as Record<string, string[]>,
+      );
+
+      const results: Package[] = packages.map((pkg) => ({
+        ...pkg,
+        recipes: (recipesByPackage[pkg.id] || []) as RecipeId[],
+        standards: (standardsByPackage[pkg.id] || []) as StandardId[],
+      }));
 
       this.logger.info('Packages found by space ID successfully', {
         spaceId,
@@ -89,30 +124,67 @@ export class PackageRepository
     });
 
     try {
-      const results = await this.repository
+      // Fetch packages first
+      const packages = await this.repository
         .createQueryBuilder('package')
-        .select([
-          'package.id as id',
-          'package.name as name',
-          'package.slug as slug',
-          'package.description as description',
-          'package.spaceId as "spaceId"',
-          'package.createdBy as "createdBy"',
-          'package.createdAt as "createdAt"',
-          'package.updatedAt as "updatedAt"',
-          'package.deletedAt as "deletedAt"',
-          'package.deletedBy as "deletedBy"',
-          `COALESCE(array_agg(DISTINCT pr.recipe_id) FILTER (WHERE pr.recipe_id IS NOT NULL), '{}') as recipes`,
-          `COALESCE(array_agg(DISTINCT ps.standard_id) FILTER (WHERE ps.standard_id IS NOT NULL), '{}') as standards`,
-        ])
-        .innerJoin('spaces', 's', 'package.spaceId = s.id')
-        .leftJoin('package_recipes', 'pr', 'package.id = pr.package_id')
-        .leftJoin('package_standards', 'ps', 'package.id = ps.package_id')
-        .where('s.organizationId = :organizationId', { organizationId })
+        .innerJoin('spaces', 'sp', 'package.spaceId = sp.id')
+        .where('sp.organizationId = :organizationId', { organizationId })
         .andWhere('package.deletedAt IS NULL')
-        .groupBy('package.id')
         .orderBy('package.createdAt', 'DESC')
+        .getMany();
+
+      if (packages.length === 0) {
+        this.logger.info('No packages found by organization ID', {
+          organizationId,
+        });
+        return [];
+      }
+
+      const packageIds = packages.map((p) => p.id);
+
+      // Fetch recipe relations (relationships are cleaned up when recipes are deleted)
+      const recipeRelations = await this.repository.manager
+        .createQueryBuilder()
+        .select(['pr.package_id as package_id', 'pr.recipe_id as recipe_id'])
+        .from('package_recipes', 'pr')
+        .where('pr.package_id IN (:...packageIds)', { packageIds })
         .getRawMany();
+
+      // Fetch standard relations (relationships are cleaned up when standards are deleted)
+      const standardRelations = await this.repository.manager
+        .createQueryBuilder()
+        .select([
+          'ps.package_id as package_id',
+          'ps.standard_id as standard_id',
+        ])
+        .from('package_standards', 'ps')
+        .where('ps.package_id IN (:...packageIds)', { packageIds })
+        .getRawMany();
+
+      // Group relations by package ID
+      const recipesByPackage = recipeRelations.reduce(
+        (acc, rel) => {
+          if (!acc[rel.package_id]) acc[rel.package_id] = [];
+          acc[rel.package_id].push(rel.recipe_id);
+          return acc;
+        },
+        {} as Record<string, string[]>,
+      );
+
+      const standardsByPackage = standardRelations.reduce(
+        (acc, rel) => {
+          if (!acc[rel.package_id]) acc[rel.package_id] = [];
+          acc[rel.package_id].push(rel.standard_id);
+          return acc;
+        },
+        {} as Record<string, string[]>,
+      );
+
+      const results: Package[] = packages.map((pkg) => ({
+        ...pkg,
+        recipes: (recipesByPackage[pkg.id] || []) as RecipeId[],
+        standards: (standardsByPackage[pkg.id] || []) as StandardId[],
+      }));
 
       this.logger.info('Packages found by organization ID successfully', {
         organizationId,
@@ -133,35 +205,41 @@ export class PackageRepository
     this.logger.info('Finding package by ID', { packageId: id });
 
     try {
-      const results = await this.repository
+      // Fetch package first
+      const pkg = await this.repository
         .createQueryBuilder('package')
-        .select([
-          'package.id as id',
-          'package.name as name',
-          'package.slug as slug',
-          'package.description as description',
-          'package.spaceId as "spaceId"',
-          'package.createdBy as "createdBy"',
-          'package.createdAt as "createdAt"',
-          'package.updatedAt as "updatedAt"',
-          'package.deletedAt as "deletedAt"',
-          'package.deletedBy as "deletedBy"',
-          `COALESCE(array_agg(DISTINCT pr.recipe_id) FILTER (WHERE pr.recipe_id IS NOT NULL), '{}') as recipes`,
-          `COALESCE(array_agg(DISTINCT ps.standard_id) FILTER (WHERE ps.standard_id IS NOT NULL), '{}') as standards`,
-        ])
-        .leftJoin('package_recipes', 'pr', 'package.id = pr.package_id')
-        .leftJoin('package_standards', 'ps', 'package.id = ps.package_id')
         .where('package.id = :id', { id })
-        .groupBy('package.id')
-        .getRawMany();
+        .getOne();
 
-      if (results.length === 0) {
+      if (!pkg) {
         this.logger.info('Package not found', { packageId: id });
         return null;
       }
 
+      // Fetch recipe IDs separately (relationships are cleaned up when recipes are deleted)
+      const recipeRelations = await this.repository.manager
+        .createQueryBuilder()
+        .select('pr.recipe_id', 'recipe_id')
+        .from('package_recipes', 'pr')
+        .where('pr.package_id = :packageId', { packageId: id })
+        .getRawMany();
+
+      // Fetch standard IDs separately (relationships are cleaned up when standards are deleted)
+      const standardRelations = await this.repository.manager
+        .createQueryBuilder()
+        .select('ps.standard_id', 'standard_id')
+        .from('package_standards', 'ps')
+        .where('ps.package_id = :packageId', { packageId: id })
+        .getRawMany();
+
+      const result: Package = {
+        ...pkg,
+        recipes: recipeRelations.map((r) => r.recipe_id) as RecipeId[],
+        standards: standardRelations.map((s) => s.standard_id) as StandardId[],
+      };
+
       this.logger.info('Package found by ID successfully', { packageId: id });
-      return results[0];
+      return result;
     } catch (error) {
       this.logger.error('Failed to find package by ID', {
         packageId: id,
@@ -513,6 +591,54 @@ export class PackageRepository
     } catch (error) {
       this.logger.error('Failed to set standards for package', {
         packageId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async removeRecipeFromAllPackages(recipeId: RecipeId): Promise<void> {
+    this.logger.info('Removing recipe from all packages', { recipeId });
+
+    try {
+      const result = await this.repository
+        .createQueryBuilder()
+        .delete()
+        .from('package_recipes')
+        .where('recipe_id = :recipeId', { recipeId })
+        .execute();
+
+      this.logger.info('Recipe removed from all packages successfully', {
+        recipeId,
+        affectedRows: result.affected ?? 0,
+      });
+    } catch (error) {
+      this.logger.error('Failed to remove recipe from all packages', {
+        recipeId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async removeStandardFromAllPackages(standardId: StandardId): Promise<void> {
+    this.logger.info('Removing standard from all packages', { standardId });
+
+    try {
+      const result = await this.repository
+        .createQueryBuilder()
+        .delete()
+        .from('package_standards')
+        .where('standard_id = :standardId', { standardId })
+        .execute();
+
+      this.logger.info('Standard removed from all packages successfully', {
+        standardId,
+        affectedRows: result.affected ?? 0,
+      });
+    } catch (error) {
+      this.logger.error('Failed to remove standard from all packages', {
+        standardId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
