@@ -14,6 +14,7 @@ import {
   IGetMcpUrlUseCase,
 } from '../../domain/repositories/IPackmindGateway';
 import { CommunityEditionError } from '../../domain/errors/CommunityEditionError';
+import { NotLoggedInError } from '../../domain/errors/NotLoggedInError';
 import {
   RuleId,
   Gateway,
@@ -64,7 +65,7 @@ function decodeApiKey(apiKey: string): DecodedApiKey {
     return {
       payload: { host: '', jwt: '' },
       isValid: false,
-      error: 'Please set the PACKMIND_API_KEY_V3 environment variable',
+      error: 'NOT_LOGGED_IN',
     };
   }
 
@@ -111,6 +112,9 @@ export class PackmindGateway implements IPackmindGateway {
     const decodedApiKey = decodeApiKey(this.apiKey);
 
     if (!decodedApiKey.isValid) {
+      if (decodedApiKey.error === 'NOT_LOGGED_IN') {
+        throw new NotLoggedInError();
+      }
       throw new Error(`Invalid API key: ${decodedApiKey.error}`);
     }
 
@@ -120,7 +124,7 @@ export class PackmindGateway implements IPackmindGateway {
     const jwtPayload = decodeJwt(jwt);
 
     if (!jwtPayload?.organization?.id) {
-      throw new Error('Invalid JWT: missing organizationId');
+      throw new Error('Invalid API key: missing organizationId in JWT');
     }
 
     const organizationId = jwtPayload.organization.id;
@@ -196,6 +200,9 @@ export class PackmindGateway implements IPackmindGateway {
     const decodedApiKey = decodeApiKey(this.apiKey);
 
     if (!decodedApiKey.isValid) {
+      if (decodedApiKey.error === 'NOT_LOGGED_IN') {
+        throw new NotLoggedInError();
+      }
       throw new Error(`Invalid API key: ${decodedApiKey.error}`);
     }
 
@@ -205,7 +212,7 @@ export class PackmindGateway implements IPackmindGateway {
     const jwtPayload = decodeJwt(jwt);
 
     if (!jwtPayload?.organization?.id) {
-      throw new Error('Invalid JWT: missing organizationId');
+      throw new Error('Invalid API key: missing organizationId in JWT');
     }
 
     const organizationId = jwtPayload.organization.id;
@@ -274,6 +281,9 @@ export class PackmindGateway implements IPackmindGateway {
       const decodedApiKey = decodeApiKey(this.apiKey);
 
       if (!decodedApiKey.isValid) {
+        if (decodedApiKey.error === 'NOT_LOGGED_IN') {
+          throw new NotLoggedInError();
+        }
         throw new Error(`Invalid API key: ${decodedApiKey.error}`);
       }
 
@@ -350,6 +360,9 @@ export class PackmindGateway implements IPackmindGateway {
       const decodedApiKey = decodeApiKey(this.apiKey);
 
       if (!decodedApiKey.isValid) {
+        if (decodedApiKey.error === 'NOT_LOGGED_IN') {
+          throw new NotLoggedInError();
+        }
         throw new Error(`Invalid API key: ${decodedApiKey.error}`);
       }
 
@@ -467,6 +480,9 @@ export class PackmindGateway implements IPackmindGateway {
       const decodedApiKey = decodeApiKey(this.apiKey);
 
       if (!decodedApiKey.isValid) {
+        if (decodedApiKey.error === 'NOT_LOGGED_IN') {
+          throw new NotLoggedInError();
+        }
         throw new Error(`Invalid API key: ${decodedApiKey.error}`);
       }
 
@@ -581,6 +597,9 @@ export class PackmindGateway implements IPackmindGateway {
     const decodedApiKey = decodeApiKey(this.apiKey);
 
     if (!decodedApiKey.isValid) {
+      if (decodedApiKey.error === 'NOT_LOGGED_IN') {
+        throw new NotLoggedInError();
+      }
       throw new Error(`Invalid API key: ${decodedApiKey.error}`);
     }
 
@@ -590,7 +609,7 @@ export class PackmindGateway implements IPackmindGateway {
     const jwtPayload = decodeJwt(jwt);
 
     if (!jwtPayload?.organization?.id) {
-      throw new Error('Invalid JWT: missing organizationId');
+      throw new Error('Invalid API key: missing organizationId in JWT');
     }
 
     const organizationId = jwtPayload.organization.id;
@@ -658,6 +677,9 @@ export class PackmindGateway implements IPackmindGateway {
       const decodedApiKey = decodeApiKey(this.apiKey);
 
       if (!decodedApiKey.isValid) {
+        if (decodedApiKey.error === 'NOT_LOGGED_IN') {
+          throw new NotLoggedInError();
+        }
         throw new Error(`Invalid API key: ${decodedApiKey.error}`);
       }
 
@@ -736,6 +758,9 @@ export class PackmindGateway implements IPackmindGateway {
     const decodedApiKey = decodeApiKey(this.apiKey);
 
     if (!decodedApiKey.isValid) {
+      if (decodedApiKey.error === 'NOT_LOGGED_IN') {
+        throw new NotLoggedInError();
+      }
       throw new Error(`Invalid API key: ${decodedApiKey.error}`);
     }
 
@@ -744,7 +769,7 @@ export class PackmindGateway implements IPackmindGateway {
     const jwtPayload = decodeJwt(jwt);
 
     if (!jwtPayload?.organization?.id) {
-      throw new Error('Invalid JWT: missing organizationId');
+      throw new Error('Invalid API key: missing organizationId in JWT');
     }
 
     const organizationId = jwtPayload.organization.id;
@@ -807,6 +832,9 @@ export class PackmindGateway implements IPackmindGateway {
     const decodedApiKey = decodeApiKey(this.apiKey);
 
     if (!decodedApiKey.isValid) {
+      if (decodedApiKey.error === 'NOT_LOGGED_IN') {
+        throw new NotLoggedInError();
+      }
       throw new Error(`Invalid API key: ${decodedApiKey.error}`);
     }
 
@@ -815,7 +843,7 @@ export class PackmindGateway implements IPackmindGateway {
     const jwtPayload = decodeJwt(jwt);
 
     if (!jwtPayload?.organization?.id) {
-      throw new Error('Invalid JWT: missing organizationId');
+      throw new Error('Invalid API key: missing organizationId in JWT');
     }
 
     const organizationId = jwtPayload.organization.id;

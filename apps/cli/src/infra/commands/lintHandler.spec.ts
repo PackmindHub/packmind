@@ -3,6 +3,7 @@ import { LintViolation } from '../../domain/entities/LintViolation';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { HumanReadableLogger } from '../repositories/HumanReadableLogger';
 import { IDELintLogger } from '../repositories/IDELintLogger';
+import { NotLoggedInError } from '../../domain/errors/NotLoggedInError';
 import {
   lintHandler,
   LintHandlerArgs,
@@ -425,36 +426,30 @@ describe('lintHandler', () => {
       consoleWarnSpy.mockRestore();
     });
 
-    describe('when API key is missing and flag is set', () => {
+    describe('when not logged in and flag is set', () => {
       it('exits with code 0 and logs warning', async () => {
         mockPackmindCliHexa.lintFilesInDirectory.mockRejectedValue(
-          new Error(
-            'Invalid API key: Please set the PACKMIND_API_KEY_V3 environment variable',
-          ),
+          new NotLoggedInError(),
         );
 
         await lintHandler(createArgs({ continueOnMissingKey: true }), deps);
 
         expect(consoleWarnSpy).toHaveBeenCalledWith(
-          'Warning: No PACKMIND_API_KEY_V3 set, linting is skipped.',
+          'Warning: Not logged in to Packmind, linting is skipped. Run `packmind-cli login` to authenticate.',
         );
         expect(mockExit).toHaveBeenCalledWith(0);
       });
     });
 
-    describe('when API key is missing and flag is not set', () => {
+    describe('when not logged in and flag is not set', () => {
       it('throws error', async () => {
         mockPackmindCliHexa.lintFilesInDirectory.mockRejectedValue(
-          new Error(
-            'Invalid API key: Please set the PACKMIND_API_KEY_V3 environment variable',
-          ),
+          new NotLoggedInError(),
         );
 
         await expect(
           lintHandler(createArgs({ continueOnMissingKey: false }), deps),
-        ).rejects.toThrow(
-          'Please set the PACKMIND_API_KEY_V3 environment variable',
-        );
+        ).rejects.toThrow("You're not logged in to Packmind");
       });
     });
 
@@ -470,21 +465,19 @@ describe('lintHandler', () => {
       });
     });
 
-    it('handles missing API key error in local linting mode', async () => {
+    it('handles not logged in error in local linting mode', async () => {
       mockPackmindCliHexa.readHierarchicalConfig.mockResolvedValue({
         hasConfigs: true,
         configs: [{ path: '/project/packmind.json' }],
       });
       mockPackmindCliHexa.lintFilesLocally.mockRejectedValue(
-        new Error(
-          'Invalid API key: Please set the PACKMIND_API_KEY_V3 environment variable',
-        ),
+        new NotLoggedInError(),
       );
 
       await lintHandler(createArgs({ continueOnMissingKey: true }), deps);
 
       expect(consoleWarnSpy).toHaveBeenCalledWith(
-        'Warning: No PACKMIND_API_KEY_V3 set, linting is skipped.',
+        'Warning: Not logged in to Packmind, linting is skipped. Run `packmind-cli login` to authenticate.',
       );
       expect(mockExit).toHaveBeenCalledWith(0);
     });

@@ -5,6 +5,7 @@ import { DiffMode } from '../../domain/entities/DiffMode';
 import { IDELintLogger } from '../repositories/IDELintLogger';
 import { HumanReadableLogger } from '../repositories/HumanReadableLogger';
 import { CommunityEditionError } from '../../domain/errors/CommunityEditionError';
+import { NotLoggedInError } from '../../domain/errors/NotLoggedInError';
 
 export enum Loggers {
   ide = 'ide',
@@ -31,14 +32,8 @@ export type LintHandlerDependencies = {
   exit: (code: number) => void;
 };
 
-const MISSING_API_KEY_ERROR =
-  'Please set the PACKMIND_API_KEY_V3 environment variable';
-
-function isMissingApiKeyError(error: unknown): boolean {
-  if (error instanceof Error) {
-    return error.message.includes(MISSING_API_KEY_ERROR);
-  }
-  return false;
+function isNotLoggedInError(error: unknown): boolean {
+  return error instanceof NotLoggedInError;
 }
 
 export async function lintHandler(
@@ -122,8 +117,10 @@ export async function lintHandler(
       violations = result.violations;
     }
   } catch (error) {
-    if (isMissingApiKeyError(error) && continueOnMissingKey) {
-      console.warn('Warning: No PACKMIND_API_KEY_V3 set, linting is skipped.');
+    if (isNotLoggedInError(error) && continueOnMissingKey) {
+      console.warn(
+        'Warning: Not logged in to Packmind, linting is skipped. Run `packmind-cli login` to authenticate.',
+      );
       exit(0);
       return;
     }
