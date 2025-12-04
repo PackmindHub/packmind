@@ -260,7 +260,7 @@ export default function CliLoginRoute() {
         <PMHeading level="h2">CLI Login</PMHeading>
       </PMBox>
 
-      {renderCodeSection()}
+      {callbackStatus !== 'success' && renderCodeSection()}
       {renderCallbackStatus()}
 
       <PMText textAlign="center" variant="small" color="tertiary">
