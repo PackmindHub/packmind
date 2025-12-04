@@ -292,6 +292,65 @@ describe('Package deployment integration', () => {
     });
   });
 
+  describe('when a recipe in a package is deleted', () => {
+    let packageWithRecipe: Package;
+
+    beforeEach(async () => {
+      const response = await testApp.deploymentsHexa
+        .getAdapter()
+        .createPackage({
+          userId: dataFactory.user.id,
+          organizationId: dataFactory.organization.id,
+          spaceId: dataFactory.space.id,
+          name: 'Package with recipe to delete',
+          description: 'Package containing a recipe that will be deleted',
+          recipeIds: [recipe1.id, recipe2.id],
+          standardIds: [standard1.id],
+        });
+      packageWithRecipe = response.package;
+    });
+
+    it('removes the deleted recipe from the package', async () => {
+      // Verify initial state - package has 2 recipes
+      const beforeDelete = await testApp.deploymentsHexa
+        .getAdapter()
+        .getPackageById({
+          userId: dataFactory.user.id,
+          organizationId: dataFactory.organization.id,
+          spaceId: dataFactory.space.id,
+          packageId: packageWithRecipe.id,
+        });
+      expect(beforeDelete.package.recipes).toHaveLength(2);
+      expect(beforeDelete.package.recipes).toContain(recipe1.id);
+      expect(beforeDelete.package.recipes).toContain(recipe2.id);
+
+      // Delete recipe1
+      await testApp.recipesHexa.getAdapter().deleteRecipe({
+        recipeId: recipe1.id,
+        spaceId: dataFactory.space.id,
+        userId: dataFactory.user.id,
+        organizationId: dataFactory.organization.id,
+      });
+
+      // Wait a bit for the async event handler to complete
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      // Verify the recipe was removed from the package
+      const afterDelete = await testApp.deploymentsHexa
+        .getAdapter()
+        .getPackageById({
+          userId: dataFactory.user.id,
+          organizationId: dataFactory.organization.id,
+          spaceId: dataFactory.space.id,
+          packageId: packageWithRecipe.id,
+        });
+
+      expect(afterDelete.package.recipes).toHaveLength(1);
+      expect(afterDelete.package.recipes).not.toContain(recipe1.id);
+      expect(afterDelete.package.recipes).toContain(recipe2.id);
+    });
+  });
+
   describe('when a standard in a package is deleted', () => {
     let packageWithStandard: Package;
 

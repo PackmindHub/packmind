@@ -1,11 +1,15 @@
 import { RecipeService } from '../../services/RecipeService';
 import { RecipeVersionService } from '../../services/RecipeVersionService';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { UserId } from '@packmind/types';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
+  createOrganizationId,
+  createUserId,
   DeleteRecipeCommand,
   DeleteRecipeResponse,
   IDeleteRecipeUseCase,
+  RecipeDeletedEvent,
+  UserId,
 } from '@packmind/types';
 
 const origin = 'DeleteRecipeUsecase';
@@ -14,6 +18,7 @@ export class DeleteRecipeUsecase implements IDeleteRecipeUseCase {
   constructor(
     private readonly recipeService: RecipeService,
     private readonly recipeVersionService: RecipeVersionService,
+    private readonly eventEmitterService: PackmindEventEmitterService,
     private readonly logger: PackmindLogger = new PackmindLogger(
       origin,
       LogLevel.DEBUG,
@@ -67,6 +72,19 @@ export class DeleteRecipeUsecase implements IDeleteRecipeUseCase {
         recipeId,
         userId,
       );
+
+      // Emit event to notify other domains
+      const event = new RecipeDeletedEvent({
+        recipeId,
+        spaceId,
+        organizationId: createOrganizationId(organizationId),
+        userId: createUserId(userId),
+      });
+      this.eventEmitterService.emit(event);
+      this.logger.info('RecipeDeletedEvent emitted', {
+        recipeId,
+        spaceId,
+      });
 
       this.logger.info('Recipe deletion completed successfully', { recipeId });
       return {};

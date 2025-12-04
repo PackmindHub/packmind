@@ -1,4 +1,4 @@
-import { PackmindLogger } from '@packmind/logger';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
@@ -8,6 +8,7 @@ import {
   DeleteRecipeCommand,
   OrganizationId,
   Recipe,
+  RecipeDeletedEvent,
   RecipeId,
   SpaceId,
   UserId,
@@ -21,7 +22,7 @@ describe('DeleteRecipeUsecase', () => {
   let deleteRecipeUsecase: DeleteRecipeUsecase;
   let recipeService: jest.Mocked<RecipeService>;
   let recipeVersionService: jest.Mocked<RecipeVersionService>;
-  let stubbedLogger: jest.Mocked<PackmindLogger>;
+  let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
 
   beforeEach(() => {
     // Mock RecipeService
@@ -46,12 +47,16 @@ describe('DeleteRecipeUsecase', () => {
       prepareForGitPublishing: jest.fn(),
     } as unknown as jest.Mocked<RecipeVersionService>;
 
-    stubbedLogger = stubLogger();
+    eventEmitterService = {
+      emit: jest.fn().mockReturnValue(true),
+    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+
+    stubLogger();
 
     deleteRecipeUsecase = new DeleteRecipeUsecase(
       recipeService,
       recipeVersionService,
-      stubbedLogger,
+      eventEmitterService,
     );
   });
 
@@ -128,6 +133,16 @@ describe('DeleteRecipeUsecase', () => {
           recipeVersionService.deleteRecipeVersionsForRecipe.mock
             .invocationCallOrder[0];
         expect(recipeServiceCall).toBeLessThan(versionServiceCall);
+      });
+
+      it('emits RecipeDeletedEvent with correct payload', () => {
+        expect(eventEmitterService.emit).toHaveBeenCalledWith(
+          expect.any(RecipeDeletedEvent),
+        );
+        const emittedEvent = eventEmitterService.emit.mock
+          .calls[0][0] as RecipeDeletedEvent;
+        expect(emittedEvent.payload.recipeId).toBe(recipeId);
+        expect(emittedEvent.payload.spaceId).toBe(spaceId);
       });
     });
 

@@ -1,9 +1,11 @@
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
   createOrganizationId,
+  createRecipeId,
   createSpaceId,
   createStandardId,
   createUserId,
+  RecipeDeletedEvent,
   StandardDeletedEvent,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
@@ -16,6 +18,10 @@ describe('DeploymentsListener', () => {
   let listener: DeploymentsListener;
   let mockDataSource: DataSource;
 
+  const spaceId = createSpaceId('space-456');
+  const organizationId = createOrganizationId('org-789');
+  const userId = createUserId('user-abc');
+
   beforeEach(() => {
     mockDataSource = {
       isInitialized: true,
@@ -24,6 +30,7 @@ describe('DeploymentsListener', () => {
 
     eventService = new PackmindEventEmitterService(mockDataSource);
     mockPackageRepository = {
+      removeRecipeFromAllPackages: jest.fn().mockResolvedValue(undefined),
       removeStandardFromAllPackages: jest.fn().mockResolvedValue(undefined),
       findBySpaceId: jest.fn(),
       findByOrganizationId: jest.fn(),
@@ -48,11 +55,64 @@ describe('DeploymentsListener', () => {
     jest.clearAllMocks();
   });
 
+  describe('when RecipeDeletedEvent is emitted', () => {
+    const recipeId = createRecipeId('recipe-123');
+
+    it('calls removeRecipeFromAllPackages with the recipeId', async () => {
+      const event = new RecipeDeletedEvent({
+        recipeId,
+        spaceId,
+        organizationId,
+        userId,
+      });
+
+      eventService.emit(event);
+
+      // Wait for async handler to complete
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      expect(
+        mockPackageRepository.removeRecipeFromAllPackages,
+      ).toHaveBeenCalledWith(recipeId);
+    });
+
+    it('handles multiple RecipeDeletedEvents', async () => {
+      const recipeId2 = createRecipeId('recipe-456');
+
+      eventService.emit(
+        new RecipeDeletedEvent({
+          recipeId,
+          spaceId,
+          organizationId,
+          userId,
+        }),
+      );
+
+      eventService.emit(
+        new RecipeDeletedEvent({
+          recipeId: recipeId2,
+          spaceId,
+          organizationId,
+          userId,
+        }),
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      expect(
+        mockPackageRepository.removeRecipeFromAllPackages,
+      ).toHaveBeenCalledTimes(2);
+      expect(
+        mockPackageRepository.removeRecipeFromAllPackages,
+      ).toHaveBeenCalledWith(recipeId);
+      expect(
+        mockPackageRepository.removeRecipeFromAllPackages,
+      ).toHaveBeenCalledWith(recipeId2);
+    });
+  });
+
   describe('when StandardDeletedEvent is emitted', () => {
     const standardId = createStandardId('standard-123');
-    const spaceId = createSpaceId('space-456');
-    const organizationId = createOrganizationId('org-789');
-    const userId = createUserId('user-abc');
 
     it('calls removeStandardFromAllPackages with the standardId', async () => {
       const event = new StandardDeletedEvent({

@@ -519,6 +519,30 @@ export class PackageRepository
     }
   }
 
+  async removeRecipeFromAllPackages(recipeId: RecipeId): Promise<void> {
+    this.logger.info('Removing recipe from all packages', { recipeId });
+
+    try {
+      const result = await this.repository
+        .createQueryBuilder()
+        .delete()
+        .from('package_recipes')
+        .where('recipe_id = :recipeId', { recipeId })
+        .execute();
+
+      this.logger.info('Recipe removed from all packages successfully', {
+        recipeId,
+        affectedRows: result.affected ?? 0,
+      });
+    } catch (error) {
+      this.logger.error('Failed to remove recipe from all packages', {
+        recipeId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
   async removeStandardFromAllPackages(standardId: StandardId): Promise<void> {
     this.logger.info('Removing standard from all packages', { standardId });
 
