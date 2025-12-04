@@ -66,7 +66,7 @@ const CliMethodContent: React.FunctionComponent<IMethodContentProps> = ({
   if (!command) return null;
 
   return (
-    <PMVStack gap={4} width="100%">
+    <PMVStack gap={4} width="100%" alignItems="flex-start">
       <PMText as="p" fontSize="sm" color="faded">
         {METHOD_DESCRIPTIONS.cli}
       </PMText>
@@ -116,7 +116,7 @@ const JsonMethodContent: React.FunctionComponent<IMethodContentProps> = ({
   if (!config) return null;
 
   return (
-    <PMVStack gap={4} width="100%">
+    <PMVStack gap={4} width="100%" alignItems="flex-start">
       <PMText as="p" fontSize="sm" color="faded">
         {METHOD_DESCRIPTIONS.json(method.label)}
       </PMText>
@@ -154,11 +154,16 @@ const createTabsFromMethods = (
       value: type,
       triggerLabel: firstMethod.label,
       content: (
-        <PMVStack gap={4} width="100%" p={4}>
+        <PMVStack gap={4} width="100%" p={4} alignItems="flex-start">
           {methods.length > 1 ? (
-            <PMVStack gap={6} width="100%">
+            <PMVStack gap={6} width="100%" alignItems="flex-start">
               {methods.map((method, index) => (
-                <PMVStack key={index} gap={2} width="100%">
+                <PMVStack
+                  key={index}
+                  gap={2}
+                  width="100%"
+                  alignItems="flex-start"
+                >
                   <MethodContent method={method} token={token} url={url} />
                 </PMVStack>
               ))}
