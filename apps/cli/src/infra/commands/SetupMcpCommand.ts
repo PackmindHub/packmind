@@ -12,6 +12,7 @@ import {
   logWarningConsole,
   formatBold,
 } from '../utils/consoleLogger';
+import { loadCredentials, getCredentialsPath } from '../utils/credentials';
 
 const VALID_AGENTS = ['copilot', 'cursor', 'claude'] as const;
 type AgentArg = (typeof VALID_AGENTS)[number];
@@ -58,14 +59,26 @@ export const setupMcpCommand = command({
     }),
   },
   handler: async ({ target }) => {
-    const apiKey = process.env['PACKMIND_API_KEY_V3'];
+    const credentials = loadCredentials();
 
-    if (!apiKey) {
-      logErrorConsole('PACKMIND_API_KEY_V3 environment variable is not set.');
-      console.log('\nPlease set your API key before running this command:');
-      console.log('  export PACKMIND_API_KEY_V3=<your-api-key>');
+    if (!credentials) {
+      logErrorConsole('Not authenticated');
+      console.log('\nNo credentials found. You can authenticate by either:');
+      console.log('  1. Running `packmind-cli login`');
+      console.log('  2. Setting PACKMIND_API_KEY_V3 environment variable');
+      console.log(`\nCredentials are loaded from (in order of priority):`);
+      console.log(`  1. PACKMIND_API_KEY_V3 environment variable`);
+      console.log(`  2. ${getCredentialsPath()}`);
       process.exit(1);
     }
+
+    if (credentials.isExpired) {
+      logErrorConsole('Credentials expired');
+      console.log('\nRun `packmind-cli login` to re-authenticate.');
+      process.exit(1);
+    }
+
+    const apiKey = credentials.apiKey;
 
     const agentDetectionService = new AgentDetectionService();
     const mcpConfigService = new McpConfigService();
