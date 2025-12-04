@@ -14,6 +14,8 @@ import {
   HandleWebHookWithoutContentResult,
   IAccountsPort,
   IDeploymentPort,
+  ListProvidersCommand,
+  ListProvidersResponse,
   OrganizationId,
   QueryOption,
   UserId,
@@ -130,6 +132,7 @@ export class GitUseCases {
       gitServices.getGitRepoService(),
     );
     this._listProviders = new ListProvidersUseCase(
+      this.accountsAdapter,
       gitServices.getGitProviderService(),
     );
     this._getOrganizationRepositories = new GetOrganizationRepositoriesUseCase(
@@ -334,9 +337,9 @@ export class GitUseCases {
   }
 
   public async listProviders(
-    organizationId: OrganizationId,
-  ): Promise<GitProvider[]> {
-    return this._listProviders.execute({ organizationId });
+    command: ListProvidersCommand,
+  ): Promise<ListProvidersResponse> {
+    return this._listProviders.execute(command);
   }
 
   public async getOrganizationRepositories(

@@ -23,7 +23,9 @@ export const useGetGitProvidersQuery = () => {
       if (!organization?.id) {
         throw new Error('Organization ID is required to fetch git providers');
       }
-      return gitProviderGateway.getGitProviders(organization.id);
+      return gitProviderGateway.getGitProviders({
+        organizationId: organization.id,
+      });
     },
     enabled: !!organization?.id,
   });

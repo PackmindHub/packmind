@@ -1,24 +1,50 @@
-import { GitProvider } from '@packmind/types';
-import { OrganizationId } from '@packmind/types';
+import { PackmindLogger } from '@packmind/logger';
+import { AbstractMemberUseCase, MemberContext } from '@packmind/node-utils';
+import {
+  IAccountsPort,
+  IListProvidersUseCase,
+  ListProvidersCommand,
+  ListProvidersResponse,
+} from '@packmind/types';
 import { GitProviderService } from '../../GitProviderService';
 
-export interface ListProvidersUseCaseInput {
-  organizationId: OrganizationId;
-}
+const origin = 'ListProvidersUseCase';
 
-export class ListProvidersUseCase {
-  constructor(private readonly gitProviderService: GitProviderService) {}
+export class ListProvidersUseCase
+  extends AbstractMemberUseCase<ListProvidersCommand, ListProvidersResponse>
+  implements IListProvidersUseCase
+{
+  constructor(
+    accountsPort: IAccountsPort,
+    private readonly gitProviderService: GitProviderService,
+    logger: PackmindLogger = new PackmindLogger(origin),
+  ) {
+    super(accountsPort, logger);
+    logger.info('ListProvidersUseCase initialized');
+  }
 
-  async execute(input: ListProvidersUseCaseInput): Promise<GitProvider[]> {
-    const { organizationId } = input;
+  async executeForMembers(
+    command: ListProvidersCommand & MemberContext,
+  ): Promise<ListProvidersResponse> {
+    this.logger.info('Fetching git providers for organization', {
+      organizationId: command.organizationId,
+    });
 
-    // Business rule: organizationId is required
-    if (!organizationId) {
-      throw new Error('Organization ID is required');
-    }
+    const providers =
+      await this.gitProviderService.findGitProvidersByOrganizationId(
+        command.organization.id,
+      );
 
-    return this.gitProviderService.findGitProvidersByOrganizationId(
-      organizationId,
-    );
+    const providersWithoutToken = providers.map(({ token, ...provider }) => ({
+      ...provider,
+      hasToken: token !== null && token !== undefined && token.length > 0,
+    }));
+
+    this.logger.info('Git providers fetched successfully', {
+      organizationId: command.organizationId,
+      providerCount: providersWithoutToken.length,
+    });
+
+    return { providers: providersWithoutToken };
   }
 }

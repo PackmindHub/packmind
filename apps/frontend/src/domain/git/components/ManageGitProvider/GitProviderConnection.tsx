@@ -12,14 +12,13 @@ import {
   PMNativeSelect,
   PMAlert,
 } from '@packmind/ui';
-import { OrganizationId } from '@packmind/types';
+import { GitProviderVendor, OrganizationId } from '@packmind/types';
 import {
   useCreateGitProviderMutation,
   useUpdateGitProviderMutation,
 } from '../../api/queries';
 import {
   CreateGitProviderForm as FormData,
-  GitProviders,
   GitProviderUI,
 } from '../../types/GitProviderTypes';
 import { extractErrorMessage } from '../../utils/errorUtils';
@@ -37,11 +36,11 @@ export const GitProviderConnection: React.FC<GitProviderConnectionProps> = ({
 }) => {
   const isEditing = !!editingProvider;
   const [formData, setFormData] = useState<FormData>({
-    source: editingProvider?.source || GitProviders.GITHUB,
-    token: editingProvider?.token || '',
+    source: editingProvider?.source || 'github',
+    token: '',
     url:
       editingProvider?.url ||
-      (editingProvider?.source === GitProviders.GITLAB
+      (editingProvider?.source === 'gitlab'
         ? 'https://gitlab.com'
         : 'https://github.com'),
   });
@@ -144,11 +143,11 @@ export const GitProviderConnection: React.FC<GitProviderConnectionProps> = ({
               value={formData.source}
               size={'sm'}
               onChange={(e) => {
-                const newSource = e.target.value as GitProviders;
+                const newSource = e.target.value as GitProviderVendor;
                 handleInputChange('source', newSource);
                 // Update URL based on provider selection
                 const defaultUrl =
-                  newSource === GitProviders.GITLAB
+                  newSource === 'gitlab'
                     ? 'https://gitlab.com'
                     : 'https://github.com';
                 if (
@@ -162,8 +161,8 @@ export const GitProviderConnection: React.FC<GitProviderConnectionProps> = ({
                 isEditing ? updateMutation.isPending : createMutation.isPending
               }
               items={[
-                { label: 'GitHub', value: GitProviders.GITHUB },
-                { label: 'GitLab', value: GitProviders.GITLAB },
+                { label: 'GitHub', value: 'github' },
+                { label: 'GitLab', value: 'gitlab' },
               ]}
             />
             <PMField.ErrorText>{errors.source}</PMField.ErrorText>
@@ -182,7 +181,7 @@ export const GitProviderConnection: React.FC<GitProviderConnectionProps> = ({
               value={formData.url}
               onChange={(e) => handleInputChange('url', e.target.value)}
               placeholder={
-                formData.source === GitProviders.GITLAB
+                formData.source === 'gitlab'
                   ? 'https://gitlab.com'
                   : 'https://github.com'
               }
@@ -228,13 +227,13 @@ export const GitProviderConnection: React.FC<GitProviderConnectionProps> = ({
                         your behalf. Never share this token publicly.
                       </PMText>
                       <PMText variant="body-important" as="p" mb={2}>
-                        {formData.source === GitProviders.GITLAB && 'GitLab'}
-                        {formData.source === GitProviders.GITHUB && 'GitHub'}
+                        {formData.source === 'gitlab' && 'GitLab'}
+                        {formData.source === 'github' && 'GitHub'}
                       </PMText>
                       <PMText variant="small" as="p" color="secondary">
-                        {formData.source === GitProviders.GITLAB &&
+                        {formData.source === 'gitlab' &&
                           'Generate a personal access token with api, read_repository, and write_repository scopes from your GitLab account settings.'}
-                        {formData.source === GitProviders.GITHUB &&
+                        {formData.source === 'github' &&
                           `Generate a personal access token with repository access and
                         read/write access on 'Contents' permission for 'fine-grained tokens'
                         OR 'repo' scope for 'classic tokens' from your GitHub account settings.`}
@@ -251,7 +250,7 @@ export const GitProviderConnection: React.FC<GitProviderConnectionProps> = ({
               value={formData.token}
               onChange={(e) => handleInputChange('token', e.target.value)}
               placeholder={
-                formData.source === GitProviders.GITLAB
+                formData.source === 'gitlab'
                   ? 'glpat-xxxxxxxxxxxxxxxxxxxx'
                   : 'ghp_xxxxxxxxxxxxxxxxxxxx'
               }

@@ -20,6 +20,7 @@ import {
   GitRepoAlreadyExistsError,
   GitRepoId,
   GitProviderHasRepositoriesError,
+  ListProvidersResponse,
   OrganizationId,
 } from '@packmind/types';
 import { AuthService } from '../../../auth/auth.service';
@@ -87,19 +88,23 @@ export class GitProvidersController {
   @Get()
   async listProviders(
     @Param('orgId') organizationId: OrganizationId,
-  ): Promise<Omit<GitProvider, 'token'>[]> {
+    @Request() req: AuthenticatedRequest,
+  ): Promise<ListProvidersResponse> {
+    const userId = req.user.userId;
+
     this.logger.info(
       'GET /organizations/:orgId/git/providers - Fetching git providers',
       {
         organizationId,
+        userId,
       },
     );
 
     try {
-      const providers =
-        await this.gitProvidersService.listProviders(organizationId);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      return providers.map(({ token, ...provider }) => provider);
+      return await this.gitProvidersService.listProviders({
+        userId,
+        organizationId,
+      });
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
