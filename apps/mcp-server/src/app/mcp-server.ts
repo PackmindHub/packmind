@@ -5,7 +5,6 @@ import { IEventTrackingPort } from '@packmind/types';
 import { FastifyInstance } from 'fastify';
 import {
   registerSaveRecipeTool,
-  registerNotifyRecipeUsageTool,
   registerSaveStandardRuleTool,
   registerListStandardsTool,
   registerGetStandardDetailsTool,
@@ -64,7 +63,6 @@ export function createMCPServer(
 
   // Register all tools
   registerSaveRecipeTool(toolDependencies, mcpServer);
-  registerNotifyRecipeUsageTool(toolDependencies, mcpServer);
   registerSaveStandardRuleTool(toolDependencies, mcpServer);
   registerListStandardsTool(toolDependencies, mcpServer);
   registerGetStandardDetailsTool(toolDependencies, mcpServer);

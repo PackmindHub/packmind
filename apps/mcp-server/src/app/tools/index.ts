@@ -1,5 +1,4 @@
 export { registerSaveRecipeTool } from './saveRecipe.tool';
-export { registerNotifyRecipeUsageTool } from './notifyRecipeUsage.tool';
 export { registerSaveStandardRuleTool } from './saveStandardRule.tool';
 export { registerListStandardsTool } from './listStandards.tool';
 export { registerGetStandardDetailsTool } from './getStandardDetails.tool';

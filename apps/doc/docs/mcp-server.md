@@ -193,21 +193,6 @@ Do not call this tool directly. AI agents must first complete the recipe creatio
   - `description` (required) - Sentence describing the step's intent and how to implement it (supports Markdown)
   - `codeSnippet` (optional) - Brief, focused code example demonstrating the step (Markdown with language-specific code blocks)
 
-### Track Recipe Usage
-
-**Tool:** `notify_recipe_usage`
-
-Records when a deployed recipe is used by an AI agent. This tracks adoption and provides usage analytics for your organization.
-
-**Parameters:**
-
-- `recipesSlug` (required) - Array of recipe slugs that were used (e.g., `["add-rest-endpoint", "create-use-case"]`)
-- `aiAgent` (required) - Name of the AI agent using the recipe (e.g., "Cursor", "Claude Code", "GitHub Copilot")
-- `gitRepo` (optional) - Git repository in "owner/repo" format where recipes were used
-- `target` (optional) - Path where recipes are distributed (e.g., "/", "/src/frontend/", "/src/backend/")
-
-**Usage:** This tool is typically called automatically when AI agents apply deployed recipes from your `.packmind/recipes/` directory.
-
 ---
 
 ## Packages Tools
