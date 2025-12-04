@@ -42,6 +42,7 @@ export const PackageDistributionList: React.FC<
       loading={isLoadingDeployments || isLoadingUsers}
       error={isError ? error?.message : undefined}
       title="Distributions"
+      hidePackageColumn
     />
   );
 };
