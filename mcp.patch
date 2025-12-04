@@ -1,0 +1,998 @@
+diff --git a/apps/mcp-server/src/app/mcp-server.ts b/apps/mcp-server/src/app/mcp-server.ts
+index 0e568e90..4934951e 100644
+--- a/apps/mcp-server/src/app/mcp-server.ts
++++ b/apps/mcp-server/src/app/mcp-server.ts
+@@ -33,10 +33,6 @@ export function createMCPServer(
+   const mcpServer = new McpServer({
+     name: 'packmind',
+     version: '1.0.0',
+-    capabilities: {
+-      resources: {},
+-      tools: {},
+-    },
+   });
+ 
+   logger.info('Create MCP server', {
+diff --git a/apps/mcp-server/src/app/tools/createRecipe.tool.ts b/apps/mcp-server/src/app/tools/createRecipe.tool.ts
+index 3f052dd8..f0e19247 100644
+--- a/apps/mcp-server/src/app/tools/createRecipe.tool.ts
++++ b/apps/mcp-server/src/app/tools/createRecipe.tool.ts
+@@ -6,30 +6,41 @@ import {
+   RECIPE_WORKFLOW_STEPS,
+   RecipeWorkflowStep,
+ } from '../prompts/packmind-recipe-workflow';
+-import { ToolDependencies } from './types';
++import { registerMcpTool, ToolDependencies } from './types';
+ 
+ const isRecipeWorkflowStep = (value: string): value is RecipeWorkflowStep =>
+   Object.prototype.hasOwnProperty.call(RECIPE_WORKFLOW_STEPS, value);
+ 
++const stepSchema = z
++  .enum(RECIPE_WORKFLOW_STEP_ORDER)
++  .optional()
++  .describe(
++    'Identifier of the workflow step to retrieve guidance for. Leave empty to start at the first step.',
++  );
++
++type CreateRecipeInput = {
++  step?: (typeof RECIPE_WORKFLOW_STEP_ORDER)[number];
++};
++
+ export function registerCreateRecipeTool(
+   dependencies: ToolDependencies,
+   mcpServer: McpServer,
+ ) {
+   const { userContext, analyticsAdapter } = dependencies;
+ 
+-  const recipeWorkflowStepSchema = z
+-    .enum(RECIPE_WORKFLOW_STEP_ORDER)
+-    .describe(
+-      'Identifier of the workflow step to retrieve guidance for. Leave empty to start at the first step.',
+-    );
+-
+-  mcpServer.tool(
++  registerMcpTool(
++    mcpServer,
+     `create_recipe`,
+-    'Get step-by-step guidance for the Packmind recipe creation workflow. Provide an optional step to retrieve a specific stage.',
+     {
+-      step: recipeWorkflowStepSchema.optional(),
++      title: 'Create Recipe',
++      description:
++        'Get step-by-step guidance for the Packmind recipe creation workflow. Provide an optional step to retrieve a specific stage.',
++      inputSchema: {
++        step: stepSchema,
++      },
+     },
+-    async ({ step }) => {
++    async (input: CreateRecipeInput) => {
++      const { step } = input;
+       const requestedStep = step ?? 'initial-request';
+ 
+       if (!isRecipeWorkflowStep(requestedStep)) {
+diff --git a/apps/mcp-server/src/app/tools/createStandard.tool.ts b/apps/mcp-server/src/app/tools/createStandard.tool.ts
+index 9b9bf029..cdd7a374 100644
+--- a/apps/mcp-server/src/app/tools/createStandard.tool.ts
++++ b/apps/mcp-server/src/app/tools/createStandard.tool.ts
+@@ -6,30 +6,41 @@ import {
+   STANDARD_WORKFLOW_STEPS,
+   StandardWorkflowStep,
+ } from '../prompts/packmind-standard-workflow';
+-import { ToolDependencies } from './types';
++import { registerMcpTool, ToolDependencies } from './types';
+ 
+ const isStandardWorkflowStep = (value: string): value is StandardWorkflowStep =>
+   Object.prototype.hasOwnProperty.call(STANDARD_WORKFLOW_STEPS, value);
+ 
++const stepSchema = z
++  .enum(STANDARD_WORKFLOW_STEP_ORDER)
++  .optional()
++  .describe(
++    'Identifier of the workflow step to retrieve guidance for. Leave empty to start at the first step.',
++  );
++
++type CreateStandardInput = {
++  step?: (typeof STANDARD_WORKFLOW_STEP_ORDER)[number];
++};
++
+ export function registerCreateStandardTool(
+   dependencies: ToolDependencies,
+   mcpServer: McpServer,
+ ) {
+   const { userContext, analyticsAdapter } = dependencies;
+ 
+-  const standardWorkflowStepSchema = z
+-    .enum(STANDARD_WORKFLOW_STEP_ORDER)
+-    .describe(
+-      'Identifier of the workflow step to retrieve guidance for. Leave empty to start at the first step.',
+-    );
+-
+-  mcpServer.tool(
++  registerMcpTool(
++    mcpServer,
+     `create_standard`,
+-    'Get step-by-step guidance for the Packmind standard creation workflow. Provide an optional step to retrieve a specific stage.',
+     {
+-      step: standardWorkflowStepSchema.optional(),
++      title: 'Create Standard',
++      description:
++        'Get step-by-step guidance for the Packmind standard creation workflow. Provide an optional step to retrieve a specific stage.',
++      inputSchema: {
++        step: stepSchema,
++      },
+     },
+-    async ({ step }) => {
++    async (input: CreateStandardInput) => {
++      const { step } = input;
+       const requestedStep = step ?? 'initial-request';
+ 
+       if (!isStandardWorkflowStep(requestedStep)) {
+diff --git a/apps/mcp-server/src/app/tools/createStandardRule.tool.ts b/apps/mcp-server/src/app/tools/createStandardRule.tool.ts
+index 036e3c9d..731b4641 100644
+--- a/apps/mcp-server/src/app/tools/createStandardRule.tool.ts
++++ b/apps/mcp-server/src/app/tools/createStandardRule.tool.ts
+@@ -6,7 +6,7 @@ import {
+   ADD_RULE_WORKFLOW_STEPS,
+   AddRuleWorkflowStep,
+ } from '../prompts/packmind-add-rule-workflow';
+-import { ToolDependencies } from './types';
++import { registerMcpTool, ToolDependencies } from './types';
+ 
+ const isAddRuleWorkflowStep = (value: string): value is AddRuleWorkflowStep =>
+   Object.prototype.hasOwnProperty.call(ADD_RULE_WORKFLOW_STEPS, value);
+@@ -23,13 +23,23 @@ export function registerCreateStandardRuleTool(
+       'Identifier of the workflow step to retrieve guidance for. Leave empty to start at the first step.',
+     );
+ 
+-  mcpServer.tool(
++  type CreateStandardRuleInput = {
++    step?: AddRuleWorkflowStep;
++  };
++
++  registerMcpTool(
++    mcpServer,
+     `create_standard_rule`,
+-    'Get step-by-step guidance for adding a new rule to an existing Packmind standard. Provide an optional step to retrieve a specific stage.',
+     {
+-      step: addRuleWorkflowStepSchema.optional(),
++      title: 'Create Standard Rule',
++      description:
++        'Get step-by-step guidance for adding a new rule to an existing Packmind standard. Provide an optional step to retrieve a specific stage.',
++      inputSchema: {
++        step: addRuleWorkflowStepSchema.optional(),
++      },
+     },
+-    async ({ step }) => {
++    async (input: CreateStandardRuleInput) => {
++      const { step } = input;
+       const requestedStep = step ?? 'initial-request';
+ 
+       if (!isAddRuleWorkflowStep(requestedStep)) {
+diff --git a/apps/mcp-server/src/app/tools/getRecipeDetails.tool.ts b/apps/mcp-server/src/app/tools/getRecipeDetails.tool.ts
+index f905e34c..230b00ff 100644
+--- a/apps/mcp-server/src/app/tools/getRecipeDetails.tool.ts
++++ b/apps/mcp-server/src/app/tools/getRecipeDetails.tool.ts
+@@ -1,7 +1,7 @@
+ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+ import { createOrganizationId, createUserId } from '@packmind/types';
+ import { z } from 'zod';
+-import { ToolDependencies } from './types';
++import { registerMcpTool, ToolDependencies } from './types';
+ 
+ export function registerGetRecipeDetailsTool(
+   dependencies: ToolDependencies,
+@@ -9,16 +9,20 @@ export function registerGetRecipeDetailsTool(
+ ) {
+   const { fastify, userContext, analyticsAdapter } = dependencies;
+ 
+-  mcpServer.tool(
++  registerMcpTool(
++    mcpServer,
+     `get_recipe_details`,
+-    'Get the full content of a recipe by its slug.',
+     {
+-      recipeSlug: z
+-        .string()
+-        .min(1)
+-        .describe('The slug of the recipe to retrieve'),
++      title: 'Get Recipe Details',
++      description: 'Get the full content of a recipe by its slug.',
++      inputSchema: {
++        recipeSlug: z
++          .string()
++          .min(1)
++          .describe('The slug of the recipe to retrieve'),
++      },
+     },
+-    async ({ recipeSlug }) => {
++    async ({ recipeSlug }: { recipeSlug: string }) => {
+       if (!userContext) {
+         throw new Error('User context is required to get recipe by slug');
+       }
+diff --git a/apps/mcp-server/src/app/tools/getStandardDetails.tool.ts b/apps/mcp-server/src/app/tools/getStandardDetails.tool.ts
+index 16fe7263..d3c54e50 100644
+--- a/apps/mcp-server/src/app/tools/getStandardDetails.tool.ts
++++ b/apps/mcp-server/src/app/tools/getStandardDetails.tool.ts
+@@ -1,7 +1,7 @@
+ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+ import { createOrganizationId, createUserId } from '@packmind/types';
+ import { z } from 'zod';
+-import { ToolDependencies } from './types';
++import { registerMcpTool, ToolDependencies } from './types';
+ 
+ export function registerGetStandardDetailsTool(
+   dependencies: ToolDependencies,
+@@ -9,16 +9,21 @@ export function registerGetStandardDetailsTool(
+ ) {
+   const { fastify, userContext, analyticsAdapter } = dependencies;
+ 
+-  mcpServer.tool(
++  registerMcpTool(
++    mcpServer,
+     `get_standard_details`,
+-    'Get the full content of a standard including its rules and examples by its slug.',
+     {
+-      standardSlug: z
+-        .string()
+-        .min(1)
+-        .describe('The slug of the standard to retrieve'),
++      title: 'Get Standard Details',
++      description:
++        'Get the full content of a standard including its rules and examples by its slug.',
++      inputSchema: {
++        standardSlug: z
++          .string()
++          .min(1)
++          .describe('The slug of the standard to retrieve'),
++      },
+     },
+-    async ({ standardSlug }) => {
++    async ({ standardSlug }: { standardSlug: string }) => {
+       if (!userContext) {
+         throw new Error('User context is required to get standard by slug');
+       }
+diff --git a/apps/mcp-server/src/app/tools/listPackages.tool.ts b/apps/mcp-server/src/app/tools/listPackages.tool.ts
+index 93cd3f94..29bb2542 100644
+--- a/apps/mcp-server/src/app/tools/listPackages.tool.ts
++++ b/apps/mcp-server/src/app/tools/listPackages.tool.ts
+@@ -1,6 +1,6 @@
+ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+ import { createOrganizationId, createUserId } from '@packmind/types';
+-import { ToolDependencies } from './types';
++import { registerMcpTool, ToolDependencies } from './types';
+ 
+ export function registerListPackagesTool(
+   dependencies: ToolDependencies,
+@@ -8,10 +8,15 @@ export function registerListPackagesTool(
+ ) {
+   const { fastify, userContext, analyticsAdapter } = dependencies;
+ 
+-  mcpServer.tool(
++  registerMcpTool(
++    mcpServer,
+     `list_packages`,
+-    'Get a list of all available packages in Packmind. Packages are collections of recipes and standards that can be pulled together.',
+-    {},
++    {
++      title: 'List Packages',
++      description:
++        'Get a list of all available packages in Packmind. Packages are collections of recipes and standards that can be pulled together.',
++      inputSchema: {},
++    },
+     async () => {
+       if (!userContext) {
+         throw new Error('User context is required to list packages');
+diff --git a/apps/mcp-server/src/app/tools/listRecipes.tool.ts b/apps/mcp-server/src/app/tools/listRecipes.tool.ts
+index 07d23ea3..974dbfb5 100644
+--- a/apps/mcp-server/src/app/tools/listRecipes.tool.ts
++++ b/apps/mcp-server/src/app/tools/listRecipes.tool.ts
+@@ -1,6 +1,6 @@
+ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+ import { createOrganizationId, createUserId } from '@packmind/types';
+-import { ToolDependencies } from './types';
++import { registerMcpTool, ToolDependencies } from './types';
+ import { getGlobalSpace } from './utils';
+ 
+ export function registerListRecipesTool(
+@@ -9,10 +9,14 @@ export function registerListRecipesTool(
+ ) {
+   const { fastify, userContext, analyticsAdapter } = dependencies;
+ 
+-  mcpServer.tool(
++  registerMcpTool(
++    mcpServer,
+     `list_recipes`,
+-    'Get a list of current recipes in Packmind.',
+-    {},
++    {
++      title: 'List Recipes',
++      description: 'Get a list of current recipes in Packmind.',
++      inputSchema: {},
++    },
+     async () => {
+       if (!userContext) {
+         throw new Error('User context is required to list recipes');
+diff --git a/apps/mcp-server/src/app/tools/listStandards.tool.ts b/apps/mcp-server/src/app/tools/listStandards.tool.ts
+index 5a8b9d50..6628d6e7 100644
+--- a/apps/mcp-server/src/app/tools/listStandards.tool.ts
++++ b/apps/mcp-server/src/app/tools/listStandards.tool.ts
+@@ -1,6 +1,6 @@
+ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+ import { createOrganizationId, createUserId } from '@packmind/types';
+-import { ToolDependencies } from './types';
++import { registerMcpTool, ToolDependencies } from './types';
+ import { getGlobalSpace } from './utils';
+ 
+ export function registerListStandardsTool(
+@@ -9,10 +9,14 @@ export function registerListStandardsTool(
+ ) {
+   const { fastify, userContext, analyticsAdapter } = dependencies;
+ 
+-  mcpServer.tool(
++  registerMcpTool(
++    mcpServer,
+     `list_standards`,
+-    'Get a list of current standards in Packmind.',
+-    {},
++    {
++      title: 'List Standards',
++      description: 'Get a list of current standards in Packmind.',
++      inputSchema: {},
++    },
+     async () => {
+       if (!userContext) {
+         throw new Error('User context is required to list standards');
+diff --git a/apps/mcp-server/src/app/tools/notifyRecipeUsage.tool.ts b/apps/mcp-server/src/app/tools/notifyRecipeUsage.tool.ts
+index 5c76effa..f4f4c926 100644
+--- a/apps/mcp-server/src/app/tools/notifyRecipeUsage.tool.ts
++++ b/apps/mcp-server/src/app/tools/notifyRecipeUsage.tool.ts
+@@ -1,7 +1,7 @@
+ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+ import { createOrganizationId, createUserId } from '@packmind/types';
+ import { z } from 'zod';
+-import { ToolDependencies } from './types';
++import { registerMcpTool, ToolDependencies } from './types';
+ 
+ export function registerNotifyRecipeUsageTool(
+   dependencies: ToolDependencies,
+@@ -9,33 +9,46 @@ export function registerNotifyRecipeUsageTool(
+ ) {
+   const { fastify, userContext, analyticsAdapter } = dependencies;
+ 
+-  mcpServer.tool(
++  type NotifyRecipeUsageInput = {
++    recipeSlugs: string[];
++    aiAgent: string;
++    gitRepo?: string;
++    target?: string;
++  };
++
++  registerMcpTool(
++    mcpServer,
+     `notify_recipe_usage`,
+-    'Notify a reusable coding recipe deployed with Packmind has been used by an AI Agent such as GitHub Copilot, Claude Code or Cursor.',
+     {
+-      recipeSlugs: z
+-        .array(z.string())
+-        .min(1)
+-        .describe('The slugs of the recipes that were used'),
+-      aiAgent: z
+-        .string()
+-        .describe(
+-          'The name of the AI Agent that used the recipes (ex: Cursor, Claude Code, GitHub Copilot)',
+-        ),
+-      gitRepo: z
+-        .string()
+-        .optional()
+-        .describe(
+-          'The git repository in "owner/repo" format where the recipes were used',
+-        ),
+-      target: z
+-        .string()
+-        .optional()
+-        .describe(
+-          'The path where the recipes are distributed (ex: /, /src/frontend/, /src/backend/)',
+-        ),
++      title: 'Notify Recipe Usage',
++      description:
++        'Notify a reusable coding recipe deployed with Packmind has been used by an AI Agent such as GitHub Copilot, Claude Code or Cursor.',
++      inputSchema: {
++        recipeSlugs: z
++          .array(z.string())
++          .min(1)
++          .describe('The slugs of the recipes that were used'),
++        aiAgent: z
++          .string()
++          .describe(
++            'The name of the AI Agent that used the recipes (ex: Cursor, Claude Code, GitHub Copilot)',
++          ),
++        gitRepo: z
++          .string()
++          .optional()
++          .describe(
++            'The git repository in "owner/repo" format where the recipes were used',
++          ),
++        target: z
++          .string()
++          .optional()
++          .describe(
++            'The path where the recipes are distributed (ex: /, /src/frontend/, /src/backend/)',
++          ),
++      },
+     },
+-    async ({ recipeSlugs, aiAgent, gitRepo, target }) => {
++    async (input: NotifyRecipeUsageInput) => {
++      const { recipeSlugs, aiAgent, gitRepo, target } = input;
+       if (!userContext) {
+         throw new Error('User context is required to track recipe usage');
+       }
+diff --git a/apps/mcp-server/src/app/tools/onboarding.tool.ts b/apps/mcp-server/src/app/tools/onboarding.tool.ts
+index dc35a70c..2c4e7d96 100644
+--- a/apps/mcp-server/src/app/tools/onboarding.tool.ts
++++ b/apps/mcp-server/src/app/tools/onboarding.tool.ts
+@@ -7,7 +7,7 @@ import packmindOnboardingDocumentation from '../prompts/packmind-onboarding-docu
+ import packmindOnboardingGitHistory from '../prompts/packmind-onboarding-git-history';
+ import packmindOnboardingModeSelection from '../prompts/packmind-onboarding-mode-selection';
+ import packmindOnboardingWebResearch from '../prompts/packmind-onboarding-web-research';
+-import { ToolDependencies } from './types';
++import { registerMcpTool, ToolDependencies } from './types';
+ 
+ // Onboarding prompt content imported as strings
+ const ONBOARDING_PROMPTS = {
+@@ -25,18 +25,23 @@ export function registerOnboardingTool(
+ ) {
+   const { userContext, analyticsAdapter, logger } = dependencies;
+ 
+-  mcpServer.tool(
++  registerMcpTool(
++    mcpServer,
+     `onboarding`,
+-    'Get onboarding workflows for coding standards creation. Returns mode selection if no workflow specified, or specific workflow content.',
+     {
+-      workflow: z
+-        .string()
+-        .optional()
+-        .describe(
+-          'The workflow name to retrieve. Available: codebase-analysis, git-history, documentation, ai-instructions, web-research',
+-        ),
++      title: 'Onboarding',
++      description:
++        'Get onboarding workflows for coding standards creation. Returns mode selection if no workflow specified, or specific workflow content.',
++      inputSchema: {
++        workflow: z
++          .string()
++          .optional()
++          .describe(
++            'The workflow name to retrieve. Available: codebase-analysis, git-history, documentation, ai-instructions, web-research',
++          ),
++      },
+     },
+-    async ({ workflow }) => {
++    async ({ workflow }: { workflow?: string }) => {
+       try {
+         // If no workflow specified, return mode selection
+         logger.info(`Onboarding tool called with workflow: ${workflow}`);
+diff --git a/apps/mcp-server/src/app/tools/saveRecipe.tool.ts b/apps/mcp-server/src/app/tools/saveRecipe.tool.ts
+index 77f93d13..dd27edd4 100644
+--- a/apps/mcp-server/src/app/tools/saveRecipe.tool.ts
++++ b/apps/mcp-server/src/app/tools/saveRecipe.tool.ts
+@@ -5,77 +5,91 @@ import {
+   RecipeStep,
+ } from '@packmind/types';
+ import { z } from 'zod';
+-import { ToolDependencies } from './types';
++import { registerMcpTool, ToolDependencies } from './types';
+ import { getGlobalSpace } from './utils';
+ 
++// Define step schema separately to avoid deep type instantiation
++const recipeStepSchema = z.object({
++  name: z
++    .string()
++    .min(1)
++    .describe('The name/title of the step (e.g., "Setup Dependencies")'),
++  description: z
++    .string()
++    .min(1)
++    .describe(
++      'A sentence describing the intent of the step and how to implement it [Markdown formatted]',
++    ),
++  codeSnippet: z
++    .string()
++    .optional()
++    .describe(
++      'Optional concise and minimal code snippet demonstrating the step. Keep it brief and focused. [Markdown formatted with ``` including the language]',
++    ),
++});
++
++type SaveRecipeInput = {
++  name: string;
++  summary: string;
++  whenToUse: string[];
++  contextValidationCheckpoints: string[];
++  steps: Array<{ name: string; description: string; codeSnippet?: string }>;
++  packageSlugs?: string[];
++};
++
+ export function registerSaveRecipeTool(
+   dependencies: ToolDependencies,
+   mcpServer: McpServer,
+ ) {
+   const { fastify, userContext, analyticsAdapter, logger } = dependencies;
+ 
+-  mcpServer.tool(
++  registerMcpTool(
++    mcpServer,
+     `save_recipe`,
+-    'Create a new reusable recipe as a structured Packmind recipe. Do not call this tool directly—you need to first use the tool packmind_create_recipe.',
+     {
+-      name: z.string().min(1).describe('The name of the recipe to create'),
+-      summary: z
+-        .string()
+-        .min(1)
+-        .describe(
+-          'A concise sentence describing the intent of this recipe (what it does) and its value (why it is useful) and when it is relevant to use it',
+-        ),
+-      whenToUse: z
+-        .array(z.string())
+-        .describe(
+-          'Array of scenarios when this recipe is applicable. Provide specific, actionable scenarios.',
+-        ),
+-      contextValidationCheckpoints: z
+-        .array(z.string())
+-        .describe(
+-          'Array of checkpoints to ensure the context is clarified enough before implementing the recipe steps. Each checkpoint should be a question or validation point.',
+-        ),
+-      steps: z
+-        .array(
+-          z.object({
+-            name: z
+-              .string()
+-              .min(1)
+-              .describe(
+-                'The name/title of the step (e.g., "Setup Dependencies")',
+-              ),
+-            description: z
+-              .string()
+-              .min(1)
+-              .describe(
+-                'A sentence describing the intent of the step and how to implement it [Markdown formatted]',
+-              ),
+-            codeSnippet: z
+-              .string()
+-              .optional()
+-              .describe(
+-                'Optional concise and minimal code snippet demonstrating the step. Keep it brief and focused. [Markdown formatted with ``` including the language]',
+-              ),
+-          }),
+-        )
+-        .describe(
+-          'Array of atomic steps that make up the recipe implementation. Each step should be clear and actionable.',
+-        ),
+-      packageSlugs: z
+-        .array(z.string())
+-        .optional()
+-        .describe(
+-          'Optional array of package slugs to add this recipe to after creation',
+-        ),
++      title: 'Save Recipe',
++      description:
++        'Create a new reusable recipe as a structured Packmind recipe. Do not call this tool directly—you need to first use the tool packmind_create_recipe.',
++      inputSchema: {
++        name: z.string().min(1).describe('The name of the recipe to create'),
++        summary: z
++          .string()
++          .min(1)
++          .describe(
++            'A concise sentence describing the intent of this recipe (what it does) and its value (why it is useful) and when it is relevant to use it',
++          ),
++        whenToUse: z
++          .array(z.string())
++          .describe(
++            'Array of scenarios when this recipe is applicable. Provide specific, actionable scenarios.',
++          ),
++        contextValidationCheckpoints: z
++          .array(z.string())
++          .describe(
++            'Array of checkpoints to ensure the context is clarified enough before implementing the recipe steps. Each checkpoint should be a question or validation point.',
++          ),
++        steps: z
++          .array(recipeStepSchema)
++          .describe(
++            'Array of atomic steps that make up the recipe implementation. Each step should be clear and actionable.',
++          ),
++        packageSlugs: z
++          .array(z.string())
++          .optional()
++          .describe(
++            'Optional array of package slugs to add this recipe to after creation',
++          ),
++      },
+     },
+-    async ({
+-      name,
+-      summary,
+-      whenToUse,
+-      contextValidationCheckpoints,
+-      steps,
+-      packageSlugs,
+-    }) => {
++    async (input: SaveRecipeInput) => {
++      const {
++        name,
++        summary,
++        whenToUse,
++        contextValidationCheckpoints,
++        steps,
++        packageSlugs,
++      } = input;
+       if (!userContext) {
+         throw new Error('User context is required to create recipes');
+       }
+diff --git a/apps/mcp-server/src/app/tools/saveStandard.tool.ts b/apps/mcp-server/src/app/tools/saveStandard.tool.ts
+index 43a6528e..f8993243 100644
+--- a/apps/mcp-server/src/app/tools/saveStandard.tool.ts
++++ b/apps/mcp-server/src/app/tools/saveStandard.tool.ts
+@@ -8,78 +8,94 @@ import {
+   stringToProgrammingLanguage,
+ } from '@packmind/types';
+ import { z } from 'zod';
+-import { ToolDependencies } from './types';
++import { registerMcpTool, ToolDependencies } from './types';
+ import { getGlobalSpace } from './utils';
+ 
++// Define schemas separately to avoid deep type instantiation
++const ruleExampleSchema = z.object({
++  positive: z
++    .string()
++    .describe(
++      'A code snippet that is a valid example of the rule, if applicable. Make sure to use the appropriate language. Code snippet can be multi-line if relevant.',
++    ),
++  negative: z
++    .string()
++    .describe(
++      'A code snippet that is an invalid example of the rule, if applicable. Make sure to use the appropriate language. Code snippet can be multi-line if relevant.',
++    ),
++  language: z
++    .string()
++    .describe(
++      `The programming language of the code snippet, if applicable. Pick from ${getAllProgrammingLanguages()}`,
++    ),
++});
++
++const standardRuleSchema = z.object({
++  content: z
++    .string()
++    .min(1)
++    .describe(
++      'A concise sentence for the coding rule that explains its intent, and when and where it should be used. It must start with a verb.',
++    ),
++  examples: z
++    .array(ruleExampleSchema)
++    .optional()
++    .describe('Optional array of code examples demonstrating the rule'),
++});
++
++type SaveStandardInput = {
++  name: string;
++  description: string;
++  summary?: string;
++  rules?: Array<{
++    content: string;
++    examples?: Array<{ positive: string; negative: string; language: string }>;
++  }>;
++  packageSlugs?: string[];
++};
++
+ export function registerSaveStandardTool(
+   dependencies: ToolDependencies,
+   mcpServer: McpServer,
+ ) {
+   const { fastify, userContext, analyticsAdapter, logger } = dependencies;
+ 
+-  mcpServer.tool(
++  registerMcpTool(
++    mcpServer,
+     `save_standard`,
+-    'Create a new coding standard with multiple rules and optional examples in a single operation. Do not call this tool directly—you need to first use the tool packmind_create_standard.',
+     {
+-      name: z.string().min(1).describe('The name of the standard to create'),
+-      description: z
+-        .string()
+-        .min(1)
+-        .describe(
+-          'A description of the standard, one paragraph maximum, explaining the purpose, context, and when applicable. It sets the context for the rules in the standard. It must NOT contain code examples',
+-        ),
+-      summary: z
+-        .string()
+-        .min(1)
+-        .optional()
+-        .describe(
+-          'A concise sentence describing the intent of this standard and when it is relevant to apply its rules.',
+-        ),
+-      rules: z
+-        .array(
+-          z.object({
+-            content: z
+-              .string()
+-              .min(1)
+-              .describe(
+-                'A concise sentence for the coding rule that explains its intent, and when and where it should be used. It must start with a verb.',
+-              ),
+-            examples: z
+-              .array(
+-                z.object({
+-                  positive: z
+-                    .string()
+-                    .describe(
+-                      'A code snippet that is a valid example of the rule, if applicable. Make sure to use the appropriate language. Code snippet can be multi-line if relevant.',
+-                    ),
+-                  negative: z
+-                    .string()
+-                    .describe(
+-                      'A code snippet that is an invalid example of the rule, if applicable. Make sure to use the appropriate language. Code snippet can be multi-line if relevant.',
+-                    ),
+-                  language: z
+-                    .string()
+-                    .describe(
+-                      `The programming language of the code snippet, if applicable. Pick from ${getAllProgrammingLanguages()}`,
+-                    ),
+-                }),
+-              )
+-              .optional()
+-              .describe(
+-                'Optional array of code examples demonstrating the rule',
+-              ),
+-          }),
+-        )
+-        .optional()
+-        .describe('Array of rules with optional examples for the standard'),
+-      packageSlugs: z
+-        .array(z.string())
+-        .optional()
+-        .describe(
+-          'Optional array of package slugs to add this standard to after creation',
+-        ),
++      title: 'Save Standard',
++      description:
++        'Create a new coding standard with multiple rules and optional examples in a single operation. Do not call this tool directly—you need to first use the tool packmind_create_standard.',
++      inputSchema: {
++        name: z.string().min(1).describe('The name of the standard to create'),
++        description: z
++          .string()
++          .min(1)
++          .describe(
++            'A description of the standard, one paragraph maximum, explaining the purpose, context, and when applicable. It sets the context for the rules in the standard. It must NOT contain code examples',
++          ),
++        summary: z
++          .string()
++          .min(1)
++          .optional()
++          .describe(
++            'A concise sentence describing the intent of this standard and when it is relevant to apply its rules.',
++          ),
++        rules: z
++          .array(standardRuleSchema)
++          .optional()
++          .describe('Array of rules with optional examples for the standard'),
++        packageSlugs: z
++          .array(z.string())
++          .optional()
++          .describe(
++            'Optional array of package slugs to add this standard to after creation',
++          ),
++      },
+     },
+-    async ({ name, description, summary, rules = [], packageSlugs }) => {
++    async (input: SaveStandardInput) => {
++      const { name, description, summary, rules = [], packageSlugs } = input;
+       if (!userContext) {
+         throw new Error('User context is required to create standards');
+       }
+diff --git a/apps/mcp-server/src/app/tools/saveStandardRule.tool.ts b/apps/mcp-server/src/app/tools/saveStandardRule.tool.ts
+index 0fdc1d64..2e138e6a 100644
+--- a/apps/mcp-server/src/app/tools/saveStandardRule.tool.ts
++++ b/apps/mcp-server/src/app/tools/saveStandardRule.tool.ts
+@@ -8,7 +8,7 @@ import {
+   stringToProgrammingLanguage,
+ } from '@packmind/types';
+ import { z } from 'zod';
+-import { ToolDependencies } from './types';
++import { registerMcpTool, ToolDependencies } from './types';
+ 
+ export function registerSaveStandardRuleTool(
+   dependencies: ToolDependencies,
+@@ -16,46 +16,60 @@ export function registerSaveStandardRuleTool(
+ ) {
+   const { fastify, userContext, analyticsAdapter, logger } = dependencies;
+ 
+-  mcpServer.tool(
++  type SaveStandardRuleInput = {
++    standardSlug: string;
++    ruleContent: string;
++    positiveExample?: string;
++    negativeExample?: string;
++    language?: string;
++  };
++
++  registerMcpTool(
++    mcpServer,
+     `save_standard_rule`,
+-    'Add a new coding rule to an existing standard identified by its slug. Do not call this tool directly—you need to first use the tool packmind_create_standard_rule.',
+     {
+-      standardSlug: z
+-        .string()
+-        .min(1)
+-        .describe('The slug of the standard to add the rule to'),
+-      ruleContent: z
+-        .string()
+-        .min(1)
+-        .describe(
+-          'A descriptive name for the coding rule that explains its intention and how it should be used. It must start with a verb to give the intention.',
+-        ),
+-      positiveExample: z
+-        .string()
+-        .optional()
+-        .describe(
+-          'A code snippet that is a valid example of the rule, if applicable. Make sure to use the appropriate language. Code snippet can be multi-line if relevant.',
+-        ),
+-      negativeExample: z
+-        .string()
+-        .optional()
+-        .describe(
+-          'A code snippet that is an invalid example of the rule, if applicable. Make sure to use the appropriate language. Code snippet can be multi-line if relevant.',
+-        ),
+-      language: z
+-        .string()
+-        .optional()
+-        .describe(
+-          `The programming language of the code snippet, if applicable. Pick from ${getAllProgrammingLanguages()}`,
+-        ),
++      title: 'Save Standard Rule',
++      description:
++        'Add a new coding rule to an existing standard identified by its slug. Do not call this tool directly—you need to first use the tool packmind_create_standard_rule.',
++      inputSchema: {
++        standardSlug: z
++          .string()
++          .min(1)
++          .describe('The slug of the standard to add the rule to'),
++        ruleContent: z
++          .string()
++          .min(1)
++          .describe(
++            'A descriptive name for the coding rule that explains its intention and how it should be used. It must start with a verb to give the intention.',
++          ),
++        positiveExample: z
++          .string()
++          .optional()
++          .describe(
++            'A code snippet that is a valid example of the rule, if applicable. Make sure to use the appropriate language. Code snippet can be multi-line if relevant.',
++          ),
++        negativeExample: z
++          .string()
++          .optional()
++          .describe(
++            'A code snippet that is an invalid example of the rule, if applicable. Make sure to use the appropriate language. Code snippet can be multi-line if relevant.',
++          ),
++        language: z
++          .string()
++          .optional()
++          .describe(
++            `The programming language of the code snippet, if applicable. Pick from ${getAllProgrammingLanguages()}`,
++          ),
++      },
+     },
+-    async ({
+-      standardSlug,
+-      ruleContent,
+-      positiveExample,
+-      negativeExample,
+-      language,
+-    }) => {
++    async (input: SaveStandardRuleInput) => {
++      const {
++        standardSlug,
++        ruleContent,
++        positiveExample,
++        negativeExample,
++        language,
++      } = input;
+       if (!userContext) {
+         throw new Error('User context is required to add rules to standards');
+       }
+diff --git a/apps/mcp-server/src/app/tools/showPackage.tool.ts b/apps/mcp-server/src/app/tools/showPackage.tool.ts
+index 01d7ef2d..847ea74b 100644
+--- a/apps/mcp-server/src/app/tools/showPackage.tool.ts
++++ b/apps/mcp-server/src/app/tools/showPackage.tool.ts
+@@ -1,7 +1,7 @@
+ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+ import { createOrganizationId, createUserId } from '@packmind/types';
+ import { z } from 'zod';
+-import { ToolDependencies } from './types';
++import { registerMcpTool, ToolDependencies } from './types';
+ 
+ export function registerShowPackageTool(
+   dependencies: ToolDependencies,
+@@ -9,16 +9,21 @@ export function registerShowPackageTool(
+ ) {
+   const { fastify, userContext, analyticsAdapter } = dependencies;
+ 
+-  mcpServer.tool(
++  registerMcpTool(
++    mcpServer,
+     `get_package_details`,
+-    'Get detailed information about a specific package including its recipes and standards.',
+     {
+-      packageSlug: z
+-        .string()
+-        .min(1)
+-        .describe('The slug of the package to retrieve'),
++      title: 'Get Package Details',
++      description:
++        'Get detailed information about a specific package including its recipes and standards.',
++      inputSchema: {
++        packageSlug: z
++          .string()
++          .min(1)
++          .describe('The slug of the package to retrieve'),
++      },
+     },
+-    async ({ packageSlug }) => {
++    async ({ packageSlug }: { packageSlug: string }) => {
+       if (!userContext) {
+         throw new Error('User context is required to show package details');
+       }
+diff --git a/apps/mcp-server/src/app/tools/types.ts b/apps/mcp-server/src/app/tools/types.ts
+index b64ddb61..d8a29778 100644
+--- a/apps/mcp-server/src/app/tools/types.ts
++++ b/apps/mcp-server/src/app/tools/types.ts
+@@ -1,6 +1,8 @@
++import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+ import { FastifyInstance } from 'fastify';
+ import { IEventTrackingPort } from '@packmind/types';
+ import { PackmindLogger } from '@packmind/logger';
++import { z } from 'zod';
+ 
+ export interface UserContext {
+   email: string;
+@@ -16,3 +18,41 @@ export interface ToolDependencies {
+   logger: PackmindLogger;
+   mcpToolPrefix: string;
+ }
++
++/**
++ * MCP Tool Response type
++ */
++export type McpToolResponse = {
++  content: Array<{ type: 'text'; text: string }>;
++};
++
++/**
++ * MCP Tool Configuration
++ */
++export type McpToolConfig = {
++  title: string;
++  description: string;
++  inputSchema: z.ZodType | Record<string, z.ZodType>;
++};
++
++// eslint-disable-next-line @typescript-eslint/no-explicit-any
++type ToolHandler = (input: any) => Promise<McpToolResponse>;
++
++/**
++ * Helper function to register MCP tools with proper typing.
++ *
++ * MCP SDK 1.24+ has deeply recursive generic types in registerTool() that cause
++ * TypeScript error TS2589 "Type instantiation is excessively deep and possibly infinite".
++ * This wrapper centralizes the type workaround in one place.
++ *
++ * @see https://github.com/modelcontextprotocol/typescript-sdk/issues/324
++ */
++export function registerMcpTool(
++  mcpServer: McpServer,
++  name: string,
++  config: McpToolConfig,
++  handler: ToolHandler,
++): void {
++  // eslint-disable-next-line @typescript-eslint/no-explicit-any
++  (mcpServer as any).registerTool(name, config, handler);
++}

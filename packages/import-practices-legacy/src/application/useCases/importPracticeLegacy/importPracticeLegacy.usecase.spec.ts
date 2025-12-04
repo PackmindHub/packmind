@@ -783,6 +783,7 @@ describe('ImportPracticeLegacyUseCase', () => {
                     code: 'function detect() {}',
                     description: 'Detects violations',
                     language: 'KOTLIN',
+                    mode: 'AST',
                   },
                 },
               ],
@@ -814,6 +815,7 @@ describe('ImportPracticeLegacyUseCase', () => {
                     code: 'function detect() {}',
                     description: 'Detects violations',
                     language: 'KOTLIN',
+                    mode: 'AST',
                   },
                 },
               ],
@@ -836,6 +838,7 @@ describe('ImportPracticeLegacyUseCase', () => {
           organizationId,
           userId,
           mustBeDraftVersion: false,
+          sourceCodeState: 'AST',
         });
       });
 
@@ -854,6 +857,7 @@ describe('ImportPracticeLegacyUseCase', () => {
                     code: 'function detect() {}',
                     description: 'Detects violations',
                     language: 'KOTLIN',
+                    mode: 'AST',
                   },
                 },
               ],
@@ -945,6 +949,7 @@ describe('ImportPracticeLegacyUseCase', () => {
                       code: 'function detect() {}',
                       description: 'Detects violations',
                       language: 'INVALID_LANGUAGE',
+                      mode: 'AST',
                     },
                   },
                 ],
@@ -982,6 +987,7 @@ describe('ImportPracticeLegacyUseCase', () => {
                       code: 'function detect() {}',
                       description: 'Detects violations',
                       language: 'KOTLIN',
+                      mode: 'AST',
                     },
                   },
                 ],
@@ -1025,6 +1031,7 @@ describe('ImportPracticeLegacyUseCase', () => {
                     code: 'function detect1() {}',
                     description: 'Detects violations 1',
                     language: 'KOTLIN',
+                    mode: 'AST',
                   },
                 },
                 {
@@ -1035,6 +1042,7 @@ describe('ImportPracticeLegacyUseCase', () => {
                     code: 'function detect2() {}',
                     description: 'Detects violations 2',
                     language: 'JAVA',
+                    mode: 'AST',
                   },
                 },
               ],

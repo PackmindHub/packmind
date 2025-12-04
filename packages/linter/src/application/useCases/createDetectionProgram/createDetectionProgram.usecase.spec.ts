@@ -3,7 +3,11 @@ import { IDetectionProgramRepository } from '../../../domain/repositories/IDetec
 import { IActiveDetectionProgramRepository } from '../../../domain/repositories/IActiveDetectionProgramRepository';
 import { v4 as uuidv4 } from 'uuid';
 import { PackmindLogger } from '@packmind/logger';
-import { createOrganizationId, createUserId } from '@packmind/types';
+import {
+  createOrganizationId,
+  createUserId,
+  ILinterAstPort,
+} from '@packmind/types';
 import {
   createRuleId,
   createStandardId,
@@ -29,6 +33,13 @@ import {
 } from '../../../../test';
 import { standardFactory } from '@packmind/standards/test';
 
+// Mock clearConsoleLogFromProgramOutput
+const mockClearConsoleLog = jest.fn();
+jest.mock('../generateProgramUseCase/program/ProgramExecutionUtils', () => ({
+  clearConsoleLogFromProgramOutput: (...args: unknown[]) =>
+    mockClearConsoleLog(...args),
+}));
+
 // Add at the top, before other imports
 jest.mock('@packmind/node-utils', () => {
   const actual = jest.requireActual('@packmind/node-utils');
@@ -45,9 +56,12 @@ describe('CreateDetectionProgramUseCase', () => {
   let detectionProgramRepository: jest.Mocked<IDetectionProgramRepository>;
   let activeDetectionProgramRepository: jest.Mocked<IActiveDetectionProgramRepository>;
   let standardsAdapter: jest.Mocked<IStandardsPort>;
+  let linterAstPort: jest.Mocked<ILinterAstPort>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   beforeEach(() => {
+    // Reset mock to return the code as-is by default
+    mockClearConsoleLog.mockImplementation(async (code: string) => code);
     // Mock DetectionProgramRepository
     detectionProgramRepository = {
       add: jest.fn(),
@@ -85,6 +99,11 @@ describe('CreateDetectionProgramUseCase', () => {
       getLatestStandardVersion: jest.fn(),
     };
 
+    linterAstPort = {
+      removeConsoleStatements: jest.fn(),
+      getAvailableLanguages: jest.fn(),
+    } as unknown as jest.Mocked<ILinterAstPort>;
+
     stubbedLogger = stubLogger();
 
     const detectionProgramService = {
@@ -97,6 +116,7 @@ describe('CreateDetectionProgramUseCase', () => {
     createDetectionProgramUseCase = new CreateDetectionProgramUseCase(
       detectionProgramService,
       standardsAdapter,
+      linterAstPort,
       stubbedLogger,
     );
   });
@@ -229,6 +249,97 @@ describe('CreateDetectionProgramUseCase', () => {
 
       it('returns the created detection program', () => {
         expect(result).toEqual(createdDetectionProgram);
+      });
+
+      it('cleans console.log statements from the code before saving', () => {
+        expect(mockClearConsoleLog).toHaveBeenCalledWith(
+          command.code,
+          linterAstPort,
+        );
+      });
+    });
+
+    describe('when clearConsoleLogFromProgramOutput cleans the code', () => {
+      it('saves the cleaned code to the database', async () => {
+        const codeWithConsoleLog =
+          'console.log("debug"); if (ast.node.type === "ClassDeclaration") { return { line: ast.node.loc.start.line }; }';
+        const cleanedCode =
+          'if (ast.node.type === "ClassDeclaration") { return { line: ast.node.loc.start.line }; }';
+
+        mockClearConsoleLog.mockResolvedValue(cleanedCode);
+
+        const organizationId = createOrganizationId(uuidv4());
+        const userId = createUserId(uuidv4());
+        const ruleId = createRuleId(uuidv4());
+        const standardVersionId = createStandardVersionId(uuidv4());
+        const standardId = createStandardId(uuidv4());
+
+        const command: CreateDetectionProgramCommand = {
+          ruleId,
+          code: codeWithConsoleLog,
+          language: ProgrammingLanguage.JAVASCRIPT,
+          mode: DetectionModeEnum.SINGLE_AST,
+          userId,
+          organizationId,
+        };
+
+        const existingRule = ruleFactory({
+          id: ruleId,
+          standardVersionId,
+        });
+
+        const existingStandardVersion = {
+          id: standardVersionId,
+          standardId,
+          name: 'Test Standard',
+          slug: 'test-standard',
+          description: 'Test Description',
+          version: 1,
+          scope: null,
+        };
+
+        const existingStandard = standardFactory({
+          id: standardId,
+          name: 'Test Standard',
+          slug: 'test-standard',
+          userId,
+          scope: null,
+        });
+
+        const createdDetectionProgram = detectionProgramFactory({
+          id: createDetectionProgramId(uuidv4()),
+          ruleId,
+          code: cleanedCode,
+          version: 1,
+          mode: command.mode,
+        });
+
+        standardsAdapter.getRule.mockResolvedValue(existingRule);
+        standardsAdapter.getStandardVersion.mockResolvedValue(
+          existingStandardVersion,
+        );
+        standardsAdapter.getStandard.mockResolvedValue(existingStandard);
+        activeDetectionProgramRepository.findByRuleIdAndLanguage.mockResolvedValue(
+          null,
+        );
+        detectionProgramRepository.add.mockResolvedValue(
+          createdDetectionProgram,
+        );
+        activeDetectionProgramRepository.add.mockResolvedValue(
+          activeDetectionProgramFactory({
+            detectionProgramVersion: createdDetectionProgram.id,
+            ruleId,
+            language: command.language,
+          }),
+        );
+
+        await createDetectionProgramUseCase.execute(command);
+
+        expect(detectionProgramRepository.add).toHaveBeenCalledWith(
+          expect.objectContaining({
+            code: cleanedCode,
+          }),
+        );
       });
     });
 

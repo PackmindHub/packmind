@@ -12,6 +12,7 @@ import type {
   IDeploymentPort,
   IEventTrackingPort,
   IGitPort,
+  ILinterAstPort,
   ILinterPort,
   ILlmPort,
   ISpacesPort,
@@ -147,6 +148,7 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
   private spacesPort: ISpacesPort | undefined;
   private eventTrackingPort: IEventTrackingPort | null = null;
   private llmPort: ILlmPort | null = null;
+  private linterAstPort: ILinterAstPort | null = null;
 
   // Use cases - created in initialize() after ports are set
   private _createDetectionProgramUseCase!: CreateDetectionProgramUseCase;
@@ -198,6 +200,7 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
     [ISpacesPortName]?: ISpacesPort;
     [IEventTrackingPortName]: IEventTrackingPort | null;
     llmPort: ILlmPort | null;
+    linterAstPort: ILinterAstPort | null;
     linterDelayedJobs: ILinterDelayedJobs;
   }): Promise<void> {
     // Step 1: Set all ports
@@ -209,6 +212,7 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
     this.spacesPort = ports[ISpacesPortName];
     this.eventTrackingPort = ports[IEventTrackingPortName];
     this.llmPort = ports.llmPort;
+    this.linterAstPort = ports.linterAstPort;
 
     // Step 2: Validate all required ports are set
     if (!this.isReady()) {
@@ -219,6 +223,7 @@ export class LinterAdapter implements IBaseAdapter<ILinterPort>, ILinterPort {
     this._createDetectionProgramUseCase = new CreateDetectionProgramUseCase(
       this.detectionProgramService,
       this.standardsPort,
+      this.linterAstPort,
     );
 
     this._getActiveDetectionProgramUseCase =

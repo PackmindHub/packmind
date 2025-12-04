@@ -215,6 +215,7 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
         [ISpacesPortName]: spacesPort,
         [IEventTrackingPortName]: eventTrackingPort,
         llmPort,
+        linterAstPort: this.linterAstAdapter,
         linterDelayedJobs,
       });
 

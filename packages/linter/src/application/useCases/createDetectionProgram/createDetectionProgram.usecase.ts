@@ -1,6 +1,6 @@
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import { SSEEventPublisher } from '@packmind/node-utils';
-import { IStandardsPort } from '@packmind/types';
+import { ILinterAstPort, IStandardsPort } from '@packmind/types';
 import { DetectionStatus } from '@packmind/types';
 import { DetectionProgramService } from '../../services/DetectionProgramService';
 import { v4 as uuidv4 } from 'uuid';
@@ -12,11 +12,13 @@ import {
   ActiveDetectionProgram,
   createActiveDetectionProgramId,
 } from '@packmind/types';
+import { clearConsoleLogFromProgramOutput } from '../generateProgramUseCase/program/ProgramExecutionUtils';
 
 export class CreateDetectionProgramUseCase implements ICreateDetectionProgram {
   constructor(
     private readonly detectionProgramService: DetectionProgramService,
     private readonly standardsAdapter: IStandardsPort,
+    private readonly linterAstPort: ILinterAstPort | null,
     private readonly logger: PackmindLogger = new PackmindLogger(
       'CreateDetectionProgramUseCase',
       LogLevel.INFO,
@@ -72,16 +74,22 @@ export class CreateDetectionProgramUseCase implements ICreateDetectionProgram {
         );
       }
 
+      // Clean console.log statements from the code before saving
+      const cleanedCode = await clearConsoleLogFromProgramOutput(
+        command.code,
+        this.linterAstPort,
+      );
+
       // Create detection program with version 1 (do not increment)
       const detectionProgram: DetectionProgram = {
         id: createDetectionProgramId(uuidv4()),
         ruleId: command.ruleId,
-        code: command.code,
+        code: cleanedCode,
         version: 1,
         mode: command.mode,
         language: command.language,
         status: command.status || DetectionStatus.READY,
-        sourceCodeState: 'AST',
+        sourceCodeState: command.sourceCodeState ?? 'AST',
         createdAt: new Date(),
       };
 
