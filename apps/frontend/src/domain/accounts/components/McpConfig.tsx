@@ -2,6 +2,7 @@ import React from 'react';
 import {
   PMButton,
   PMHStack,
+  PMLink,
   PMPageSection,
   PMText,
   PMTabs,
@@ -29,34 +30,14 @@ const VSCodeIcon = () => (
   />
 );
 
-// Styled badge component similar to Cursor's
+// VS Code install button using PMLink with VS Code blue color
 const VSCodeInstallBadge: React.FC<{ href: string }> = ({ href }) => (
-  <a
-    href={href}
-    data-testid="vscode-install-button"
-    style={{
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: '8px',
-      padding: '8px 16px',
-      backgroundColor: '#007ACC',
-      color: 'white',
-      borderRadius: '6px',
-      textDecoration: 'none',
-      fontSize: '14px',
-      fontWeight: 500,
-      transition: 'background-color 0.2s',
-    }}
-    onMouseEnter={(e) => {
-      e.currentTarget.style.backgroundColor = '#005a9e';
-    }}
-    onMouseLeave={(e) => {
-      e.currentTarget.style.backgroundColor = '#007ACC';
-    }}
-  >
-    <VSCodeIcon />
-    <span>Install in VS Code</span>
-  </a>
+  <PMLink href={href} variant="plain" data-testid="vscode-install-button">
+    <PMButton as="span" bg="#007ACC" color="white" _hover={{ bg: '#005a9e' }}>
+      <VSCodeIcon />
+      Install in VS Code
+    </PMButton>
+  </PMLink>
 );
 
 export const McpConfig: React.FunctionComponent = () => {
@@ -108,7 +89,6 @@ export const McpConfig: React.FunctionComponent = () => {
 
   const getVSCodeInstallLink = () => {
     if (getMcpTokenMutation.data?.access_token && url) {
-      // VS Code expects a server configuration object matching mcp.json format
       const config = {
         name: 'packmind',
         type: 'http',
@@ -117,7 +97,6 @@ export const McpConfig: React.FunctionComponent = () => {
           Authorization: `Bearer ${getMcpTokenMutation.data.access_token}`,
         },
       };
-      // Double-stringify and encode to ensure proper URL encoding
       const jsonConfig = JSON.stringify(config);
       return `vscode:mcp/install?${encodeURIComponent(jsonConfig)}`;
     }

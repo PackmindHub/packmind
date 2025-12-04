@@ -3,7 +3,10 @@ import { useParams } from 'react-router';
 
 import { standardsGateway } from '../gateways';
 import { OrganizationId, RuleId, StandardId, SpaceId } from '@packmind/types';
-import { GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY } from '../../../deployments/api/queryKeys';
+import {
+  GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
+  LIST_PACKAGES_BY_SPACE_KEY,
+} from '../../../deployments/api/queryKeys';
 import {
   GET_STANDARD_VERSIONS_KEY,
   GET_RULES_BY_STANDARD_ID_KEY,
@@ -290,6 +293,11 @@ export const useDeleteStandardMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
       });
+
+      // Packages containing the deleted standard need to be refreshed
+      await queryClient.invalidateQueries({
+        queryKey: LIST_PACKAGES_BY_SPACE_KEY,
+      });
     },
     onError: async (error, variables, context) => {
       console.error('Error deleting standard');
@@ -327,6 +335,11 @@ export const useDeleteStandardsBatchMutation = () => {
 
       await queryClient.invalidateQueries({
         queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
+      });
+
+      // Packages containing the deleted standards need to be refreshed
+      await queryClient.invalidateQueries({
+        queryKey: LIST_PACKAGES_BY_SPACE_KEY,
       });
     },
     onError: async (error, variables, context) => {

@@ -3,7 +3,10 @@ import { useParams } from 'react-router';
 
 import { recipesGateway } from '../gateways';
 import { OrganizationId, RecipeId, SpaceId } from '@packmind/types';
-import { GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY } from '../../../deployments/api/queryKeys';
+import {
+  GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
+  LIST_PACKAGES_BY_SPACE_KEY,
+} from '../../../deployments/api/queryKeys';
 import {
   GET_RECIPES_KEY,
   GET_RECIPE_BY_ID_KEY,
@@ -166,6 +169,11 @@ export const useDeleteRecipeMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
       });
+
+      // Packages containing the deleted recipe need to be refreshed
+      await queryClient.invalidateQueries({
+        queryKey: LIST_PACKAGES_BY_SPACE_KEY,
+      });
     },
     onError: async (error, variables, context) => {
       console.error('Error deleting recipe');
@@ -198,6 +206,11 @@ export const useDeleteRecipesBatchMutation = () => {
 
       await queryClient.invalidateQueries({
         queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
+      });
+
+      // Packages containing the deleted recipes need to be refreshed
+      await queryClient.invalidateQueries({
+        queryKey: LIST_PACKAGES_BY_SPACE_KEY,
       });
     },
     onError: async (error, variables, context) => {
