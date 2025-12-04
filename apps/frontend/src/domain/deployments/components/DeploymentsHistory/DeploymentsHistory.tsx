@@ -20,6 +20,8 @@ import {
   StandardsDeployment,
 } from '@packmind/types';
 import { format } from 'date-fns';
+import { Link } from 'react-router';
+import { routes } from '../../../../shared/utils/routes';
 
 export type DeploymentType = 'recipe' | 'standard' | 'package';
 
@@ -31,6 +33,8 @@ interface DeploymentsHistoryProps {
   loading?: boolean;
   error?: string | null;
   title?: string;
+  orgSlug?: string;
+  spaceSlug?: string;
 }
 
 export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
@@ -41,6 +45,8 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
   loading,
   error,
   title = 'Deployment History',
+  orgSlug,
+  spaceSlug,
 }) => {
   if (loading) {
     return (
@@ -166,8 +172,41 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     return '-';
   };
 
-  const columns: PMTableColumn[] = [
+  const getPackageInfo = (
+    deployment: RecipesDeployment | StandardsDeployment | Distribution,
+  ): React.ReactNode => {
+    // Only distributions have distributedPackages
+    if (!('distributedPackages' in deployment)) return '-';
+
+    const distribution = deployment as Distribution;
+    const packages = distribution.distributedPackages
+      ?.map((dp) => dp.package)
+      .filter(Boolean);
+
+    if (!packages || packages.length === 0) return '-';
+
+    // If we have orgSlug and spaceSlug, render as links
+    if (orgSlug && spaceSlug) {
+      return (
+        <PMBox display="flex" flexDirection="column" gap={1}>
+          {packages.map((pkg) => (
+            <PMLink asChild key={pkg!.id} variant="active">
+              <Link to={routes.space.toPackage(orgSlug, spaceSlug, pkg!.id)}>
+                {pkg!.name}
+              </Link>
+            </PMLink>
+          ))}
+        </PMBox>
+      );
+    }
+
+    // Otherwise just show names
+    return packages.map((pkg) => pkg!.name).join(', ');
+  };
+
+  const baseColumns: PMTableColumn[] = [
     { key: 'version', header: 'Version', width: '100px', align: 'center' },
+    { key: 'package', header: 'Package', width: '150px', align: 'left' },
     { key: 'target', header: 'Target', width: '200px', align: 'left' },
     {
       key: 'renderModes',
@@ -185,11 +224,12 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     },
     { key: 'status', header: 'Status', width: '100px', align: 'center' },
     { key: 'message', header: 'Message', grow: true, align: 'left' },
-  ];
+  ] as PMTableColumn[];
 
   const tableData: PMTableRow[] = deployments.map((deployment) => ({
     key: deployment.id,
     version: getVersion(deployment),
+    package: getPackageInfo(deployment),
     target: getTargetInfo(deployment),
     renderModes: <RenderModes renderModes={deployment.renderModes} />,
     commits: getCommitLinks(deployment),
@@ -202,7 +242,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
   return (
     <PMPageSection title={title} headingLevel="h5">
       <PMTable
-        columns={columns}
+        columns={baseColumns}
         data={tableData}
         striped={true}
         hoverable={true}

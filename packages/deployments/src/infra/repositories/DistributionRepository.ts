@@ -6,6 +6,8 @@ import {
   DistributionStatus,
   OrganizationId,
   PackageId,
+  RecipeId,
+  StandardId,
   TargetId,
 } from '@packmind/types';
 import { Repository } from 'typeorm';
@@ -141,6 +143,114 @@ export class DistributionRepository implements IDistributionRepository {
     } catch (error) {
       this.logger.error('Failed to list distributions by package ID', {
         packageId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async listByRecipeId(
+    recipeId: RecipeId,
+    organizationId: OrganizationId,
+  ): Promise<Distribution[]> {
+    this.logger.info('Listing distributions by recipe ID and organization ID', {
+      recipeId,
+      organizationId,
+    });
+
+    try {
+      const distributions = await this.repository
+        .createQueryBuilder('distribution')
+        .innerJoinAndSelect(
+          'distribution.distributedPackages',
+          'distributedPackage',
+        )
+        .leftJoinAndSelect('distributedPackage.package', 'package')
+        .leftJoinAndSelect(
+          'distributedPackage.standardVersions',
+          'standardVersion',
+        )
+        .innerJoinAndSelect(
+          'distributedPackage.recipeVersions',
+          'recipeVersion',
+        )
+        .leftJoinAndSelect('distribution.gitCommit', 'gitCommit')
+        .leftJoinAndSelect('distribution.target', 'target')
+        .where('recipeVersion.recipeId = :recipeId', {
+          recipeId: recipeId as string,
+        })
+        .andWhere('distribution.organizationId = :organizationId', {
+          organizationId,
+        })
+        .orderBy('distribution.createdAt', 'DESC')
+        .getMany();
+
+      this.logger.info(
+        'Distributions listed by recipe ID and organization ID successfully',
+        {
+          recipeId,
+          organizationId,
+          count: distributions.length,
+        },
+      );
+      return distributions;
+    } catch (error) {
+      this.logger.error('Failed to list distributions by recipe ID', {
+        recipeId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async listByStandardId(
+    standardId: StandardId,
+    organizationId: OrganizationId,
+  ): Promise<Distribution[]> {
+    this.logger.info(
+      'Listing distributions by standard ID and organization ID',
+      {
+        standardId,
+        organizationId,
+      },
+    );
+
+    try {
+      const distributions = await this.repository
+        .createQueryBuilder('distribution')
+        .innerJoinAndSelect(
+          'distribution.distributedPackages',
+          'distributedPackage',
+        )
+        .leftJoinAndSelect('distributedPackage.package', 'package')
+        .innerJoinAndSelect(
+          'distributedPackage.standardVersions',
+          'standardVersion',
+        )
+        .leftJoinAndSelect('distributedPackage.recipeVersions', 'recipeVersion')
+        .leftJoinAndSelect('distribution.gitCommit', 'gitCommit')
+        .leftJoinAndSelect('distribution.target', 'target')
+        .where('standardVersion.standardId = :standardId', {
+          standardId: standardId as string,
+        })
+        .andWhere('distribution.organizationId = :organizationId', {
+          organizationId,
+        })
+        .orderBy('distribution.createdAt', 'DESC')
+        .getMany();
+
+      this.logger.info(
+        'Distributions listed by standard ID and organization ID successfully',
+        {
+          standardId,
+          organizationId,
+          count: distributions.length,
+        },
+      );
+      return distributions;
+    } catch (error) {
+      this.logger.error('Failed to list distributions by standard ID', {
+        standardId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

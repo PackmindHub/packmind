@@ -25,7 +25,7 @@ import {
   useDeleteRecipeMutation,
 } from '../api/queries/RecipesQueries';
 import { RecipeVersionsListDrawer } from './RecipeVersionsListDrawer';
-import { RecipeDeploymentsList } from '../../deployments/components/RecipeDeploymentsList/RecipeDeploymentsList';
+import { RecipeDistributionsList } from '../../deployments/components/RecipeDistributionsList/RecipeDistributionsList';
 import { EditRecipe } from './EditRecipe';
 import { AutobreadCrumb } from '../../../../src/shared/components/navigation/AutobreadCrumb';
 import { RECIPE_MESSAGES } from '../constants/messages';
@@ -299,7 +299,11 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
                     </PMBox>
                   </PMPageSection>
 
-                  <RecipeDeploymentsList recipeId={recipe.id} />
+                  <RecipeDistributionsList
+                    recipeId={recipe.id}
+                    orgSlug={orgSlug || ''}
+                    spaceSlug={spaceSlug || ''}
+                  />
                 </PMVStack>
               ),
             },

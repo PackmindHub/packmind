@@ -1,22 +1,24 @@
 import React from 'react';
 import { useGetUsersInMyOrganizationQuery } from '../../../accounts/api/queries/UserQueries';
-import { useListPackageDeploymentsQuery } from '../../api/queries/DeploymentsQueries';
-import { PackageId } from '@packmind/types';
+import { useListRecipeDistributionsQuery } from '../../api/queries/DeploymentsQueries';
+import { RecipeId } from '@packmind/types';
 import { DeploymentsHistory } from '../DeploymentsHistory/DeploymentsHistory';
 
-interface PackageDistributionListProps {
-  packageId: PackageId;
+interface RecipeDistributionsListProps {
+  recipeId: RecipeId;
+  orgSlug: string;
+  spaceSlug: string;
 }
 
-export const PackageDistributionList: React.FC<
-  PackageDistributionListProps
-> = ({ packageId }) => {
+export const RecipeDistributionsList: React.FC<
+  RecipeDistributionsListProps
+> = ({ recipeId, orgSlug, spaceSlug }) => {
   const {
-    data: deployments,
-    isLoading: isLoadingDeployments,
+    data: distributions,
+    isLoading: isLoadingDistributions,
     isError,
     error,
-  } = useListPackageDeploymentsQuery(packageId);
+  } = useListRecipeDistributionsQuery(recipeId);
 
   const { data: users, isLoading: isLoadingUsers } =
     useGetUsersInMyOrganizationQuery();
@@ -35,13 +37,15 @@ export const PackageDistributionList: React.FC<
 
   return (
     <DeploymentsHistory
-      deployments={deployments || []}
-      type="package"
-      entityId={packageId}
+      deployments={distributions || []}
+      type="recipe"
+      entityId={recipeId}
       usersMap={buildUserMap(users)}
-      loading={isLoadingDeployments || isLoadingUsers}
+      loading={isLoadingDistributions || isLoadingUsers}
       error={isError ? error?.message : undefined}
-      title="Distributions"
+      title="Distributions history"
+      orgSlug={orgSlug}
+      spaceSlug={spaceSlug}
     />
   );
 };

@@ -35,6 +35,8 @@ import {
   ListDeploymentsByRecipeCommand,
   ListDeploymentsByStandardCommand,
   ListDeploymentsByPackageCommand,
+  ListDistributionsByRecipeCommand,
+  ListDistributionsByStandardCommand,
 } from '@packmind/types';
 import { DeploymentsService } from './deployments.service';
 import { PackmindLogger } from '@packmind/logger';
@@ -225,6 +227,126 @@ export class DeploymentsController {
         'GET /organizations/:orgId/deployments/package/:id - Failed to fetch deployments',
         {
           packageId: id,
+          organizationId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Get('distributions/recipe/:id')
+  async getDistributionsByRecipeId(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('id') id: RecipeId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<Distribution[]> {
+    this.logger.info(
+      'GET /organizations/:orgId/deployments/distributions/recipe/:id - Fetching distributions by recipe ID',
+      {
+        recipeId: id,
+        organizationId,
+      },
+    );
+
+    try {
+      const command: ListDistributionsByRecipeCommand = {
+        userId: request.user.userId,
+        organizationId,
+        recipeId: id,
+      };
+
+      const distributions =
+        await this.deploymentsService.listDistributionsByRecipe(command);
+
+      if (!distributions || distributions.length === 0) {
+        this.logger.warn(
+          'GET /organizations/:orgId/deployments/distributions/recipe/:id - No distributions found',
+          {
+            recipeId: id,
+            organizationId,
+          },
+        );
+        return [];
+      }
+
+      this.logger.info(
+        'GET /organizations/:orgId/deployments/distributions/recipe/:id - Distributions fetched successfully',
+        {
+          recipeId: id,
+          organizationId,
+          count: distributions.length,
+        },
+      );
+
+      return distributions;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/deployments/distributions/recipe/:id - Failed to fetch distributions',
+        {
+          recipeId: id,
+          organizationId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Get('distributions/standard/:id')
+  async getDistributionsByStandardId(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('id') id: StandardId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<Distribution[]> {
+    this.logger.info(
+      'GET /organizations/:orgId/deployments/distributions/standard/:id - Fetching distributions by standard ID',
+      {
+        standardId: id,
+        organizationId,
+      },
+    );
+
+    try {
+      const command: ListDistributionsByStandardCommand = {
+        userId: request.user.userId,
+        organizationId,
+        standardId: id,
+      };
+
+      const distributions =
+        await this.deploymentsService.listDistributionsByStandard(command);
+
+      if (!distributions || distributions.length === 0) {
+        this.logger.warn(
+          'GET /organizations/:orgId/deployments/distributions/standard/:id - No distributions found',
+          {
+            standardId: id,
+            organizationId,
+          },
+        );
+        return [];
+      }
+
+      this.logger.info(
+        'GET /organizations/:orgId/deployments/distributions/standard/:id - Distributions fetched successfully',
+        {
+          standardId: id,
+          organizationId,
+          count: distributions.length,
+        },
+      );
+
+      return distributions;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'GET /organizations/:orgId/deployments/distributions/standard/:id - Failed to fetch distributions',
+        {
+          standardId: id,
           organizationId,
           error: errorMessage,
         },

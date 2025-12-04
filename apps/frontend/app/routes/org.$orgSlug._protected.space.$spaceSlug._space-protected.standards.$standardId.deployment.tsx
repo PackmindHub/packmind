@@ -1,4 +1,4 @@
-import { useOutletContext } from 'react-router';
+import { useOutletContext, useParams } from 'react-router';
 import {
   PMBox,
   PMDataList,
@@ -7,9 +7,13 @@ import {
   PMVStack,
 } from '@packmind/ui';
 import { StandardDetailsOutletContext } from '../../src/domain/standards/components/StandardDetails';
-import { DeploymentsHistory } from '../../src/domain/deployments/components/StandardDeployments/StandardDeploymentsList';
+import { StandardDistributionsList } from '../../src/domain/deployments/components/StandardDistributionsList/StandardDistributionsList';
 
 export default function StandardDetailDeploymentRouteModule() {
+  const { orgSlug, spaceSlug } = useParams<{
+    orgSlug: string;
+    spaceSlug: string;
+  }>();
   const { standard, defaultPath } =
     useOutletContext<StandardDetailsOutletContext>();
 
@@ -49,7 +53,11 @@ export default function StandardDetailDeploymentRouteModule() {
         </PMBox>
       </PMPageSection>
 
-      <DeploymentsHistory standardId={standard.id} />
+      <StandardDistributionsList
+        standardId={standard.id}
+        orgSlug={orgSlug || ''}
+        spaceSlug={spaceSlug || ''}
+      />
     </PMVStack>
   );
 }

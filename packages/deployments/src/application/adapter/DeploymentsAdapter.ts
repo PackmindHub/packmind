@@ -49,6 +49,8 @@ import {
   ListDeploymentsByRecipeCommand,
   ListDeploymentsByStandardCommand,
   ListDeploymentsByPackageCommand,
+  ListDistributionsByRecipeCommand,
+  ListDistributionsByStandardCommand,
   ListPackagesCommand,
   ListPackagesResponse,
   ListPackagesBySpaceCommand,
@@ -91,6 +93,8 @@ import { GetTargetsByRepositoryUseCase } from '../useCases/GetTargetsByRepositor
 import { ListDeploymentsByRecipeUseCase } from '../useCases/ListDeploymentsByRecipeUseCase';
 import { ListDeploymentsByStandardUseCase } from '../useCases/ListDeploymentsByStandardUseCase';
 import { ListDeploymentsByPackageUseCase } from '../useCases/ListDeploymentsByPackageUseCase';
+import { ListDistributionsByRecipeUseCase } from '../useCases/ListDistributionsByRecipeUseCase';
+import { ListDistributionsByStandardUseCase } from '../useCases/ListDistributionsByStandardUseCase';
 import { ListPackagesUsecase } from '../useCases/listPackages/listPackages.usecase';
 import { ListPackagesBySpaceUsecase } from '../useCases/listPackagesBySpace/listPackagesBySpace.usecase';
 import { GetPackageSummaryUsecase } from '../useCases/getPackageSummary/getPackageSummary.usecase';
@@ -119,6 +123,8 @@ export class DeploymentsAdapter
   private _getDeploymentOverviewUseCase!: GetDeploymentOverviewUseCase;
   private _listDeploymentsByStandardUseCase!: ListDeploymentsByStandardUseCase;
   private _listDeploymentsByPackageUseCase!: ListDeploymentsByPackageUseCase;
+  private _listDistributionsByRecipeUseCase!: ListDistributionsByRecipeUseCase;
+  private _listDistributionsByStandardUseCase!: ListDistributionsByStandardUseCase;
   private _getStandardDeploymentOverviewUseCase!: GetStandardDeploymentOverviewUseCase;
   private _addTargetUseCase!: AddTargetUseCase;
   private _getTargetsByGitRepoUseCase!: GetTargetsByGitRepoUseCase;
@@ -236,6 +242,12 @@ export class DeploymentsAdapter
     this._listDeploymentsByPackageUseCase = new ListDeploymentsByPackageUseCase(
       this.distributionRepository,
     );
+
+    this._listDistributionsByRecipeUseCase =
+      new ListDistributionsByRecipeUseCase(this.distributionRepository);
+
+    this._listDistributionsByStandardUseCase =
+      new ListDistributionsByStandardUseCase(this.distributionRepository);
 
     this._getStandardDeploymentOverviewUseCase =
       new GetStandardDeploymentOverviewUseCase(
@@ -411,6 +423,18 @@ export class DeploymentsAdapter
     command: ListDeploymentsByPackageCommand,
   ): Promise<Distribution[]> {
     return this._listDeploymentsByPackageUseCase.execute(command);
+  }
+
+  listDistributionsByRecipe(
+    command: ListDistributionsByRecipeCommand,
+  ): Promise<Distribution[]> {
+    return this._listDistributionsByRecipeUseCase.execute(command);
+  }
+
+  listDistributionsByStandard(
+    command: ListDistributionsByStandardCommand,
+  ): Promise<Distribution[]> {
+    return this._listDistributionsByStandardUseCase.execute(command);
   }
 
   getStandardDeploymentOverview(
