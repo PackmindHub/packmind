@@ -1,14 +1,12 @@
 import { command } from 'cmd-ts';
+import { PackmindCliHexa } from '../../PackmindCliHexa';
+import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
   logSuccessConsole,
   logErrorConsole,
   logInfoConsole,
 } from '../utils/consoleLogger';
-import {
-  loadCredentials,
-  CredentialsResult,
-  getCredentialsPath,
-} from '../utils/credentials';
+import { IWhoamiResult } from '../../domain/useCases/IWhoamiUseCase';
 
 function formatExpiresAt(expiresAt: Date): string {
   const now = new Date();
@@ -32,20 +30,22 @@ function formatExpiresAt(expiresAt: Date): string {
   return 'Expires soon';
 }
 
-function displayAuthInfo(credentials: CredentialsResult): void {
-  console.log(`\nHost: ${credentials.host}`);
-  if (credentials.organizationName) {
-    console.log(`Organization: ${credentials.organizationName}`);
+function displayAuthInfo(
+  result: IWhoamiResult & { isAuthenticated: true },
+): void {
+  console.log(`\nHost: ${result.host}`);
+  if (result.organizationName) {
+    console.log(`Organization: ${result.organizationName}`);
   }
-  if (credentials.userName) {
-    console.log(`User: ${credentials.userName}`);
+  if (result.userName) {
+    console.log(`User: ${result.userName}`);
   }
-  if (credentials.expiresAt) {
-    console.log(formatExpiresAt(credentials.expiresAt));
+  if (result.expiresAt) {
+    console.log(formatExpiresAt(result.expiresAt));
   }
-  logInfoConsole(`Source: ${credentials.source}`);
+  logInfoConsole(`Source: ${result.source}`);
 
-  if (credentials.isExpired) {
+  if (result.isExpired) {
     console.log('\nRun `packmind-cli login` to re-authenticate.');
   }
 }
@@ -55,28 +55,31 @@ export const whoamiCommand = command({
   description: 'Show current authentication status and credentials info',
   args: {},
   handler: async () => {
-    const credentials = loadCredentials();
+    const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
+    const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
-    if (!credentials) {
+    const result = await packmindCliHexa.whoami({});
+
+    if (!result.isAuthenticated) {
       logErrorConsole('Not authenticated');
       console.log(
         `\nNo credentials found. Run \`packmind-cli login\` to authenticate.`,
       );
       console.log(`\nCredentials are loaded from (in order of priority):`);
       console.log(`  1. PACKMIND_API_KEY_V3 environment variable`);
-      console.log(`  2. ${getCredentialsPath()}`);
+      console.log(`  2. ${result.credentialsPath}`);
       process.exit(1);
     }
 
-    if (credentials.isExpired) {
+    if (result.isExpired) {
       logErrorConsole('Credentials expired');
     } else {
       logSuccessConsole('Authenticated');
     }
 
-    displayAuthInfo(credentials);
+    displayAuthInfo(result);
 
-    if (credentials.isExpired) {
+    if (result.isExpired) {
       process.exit(1);
     }
   },
