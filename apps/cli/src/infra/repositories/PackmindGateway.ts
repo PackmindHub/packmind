@@ -13,6 +13,7 @@ import {
   IGetMcpTokenUseCase,
   IGetMcpUrlUseCase,
 } from '../../domain/repositories/IPackmindGateway';
+import { CommunityEditionError } from '../../domain/errors/CommunityEditionError';
 import {
   RuleId,
   Gateway,
@@ -678,6 +679,11 @@ export class PackmindGateway implements IPackmindGateway {
         });
 
         if (!response.ok) {
+          // 404 means the endpoint doesn't exist - this is a community edition
+          if (response.status === 404) {
+            throw new CommunityEditionError('local linting with packages');
+          }
+
           let errorMsg = `API request failed: ${response.status} ${response.statusText}`;
           try {
             const errorBody = await response.json();
@@ -694,6 +700,11 @@ export class PackmindGateway implements IPackmindGateway {
           await response.json();
         return result;
       } catch (error: unknown) {
+        // Re-throw CommunityEditionError as-is
+        if (error instanceof CommunityEditionError) {
+          throw error;
+        }
+
         const err = error as {
           code?: string;
           name?: string;
