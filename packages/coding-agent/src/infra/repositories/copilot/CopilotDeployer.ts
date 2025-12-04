@@ -46,11 +46,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
     );
 
     // Generate content with recipe instructions
-    const updatedContent = await this.generateRecipeContent(
-      recipeVersions,
-      gitRepo,
-      target,
-    );
+    const updatedContent = await this.generateRecipeContent(recipeVersions);
 
     const fileUpdates: FileUpdates = {
       createOrUpdate: [],
@@ -207,10 +203,7 @@ export class CopilotDeployer implements ICodingAgentDeployer {
 
     const packmindInstructions =
       GenericRecipeSectionWriter.generateRecipesSection({
-        agentName: 'GitHub Copilot',
-        repoName: 'repository',
         recipesSection,
-        target: '/',
       });
 
     return `---
@@ -259,12 +252,7 @@ ${packmindInstructions}`;
    */
   private async generateRecipeContent(
     recipeVersions: RecipeVersion[],
-    gitRepo: GitRepo,
-    target: Target,
   ): Promise<string> {
-    const repoName = `${gitRepo.owner}/${gitRepo.repo}`;
-    const targetPath = target.path;
-
     // Generate recipes list
     const recipesSection = this.generateRecipesSection(recipeVersions);
 
@@ -275,10 +263,7 @@ ${packmindInstructions}`;
 
     const packmindInstructions =
       GenericRecipeSectionWriter.generateRecipesSection({
-        agentName: 'GitHub Copilot',
-        repoName,
         recipesSection,
-        target: targetPath,
       });
 
     return `---

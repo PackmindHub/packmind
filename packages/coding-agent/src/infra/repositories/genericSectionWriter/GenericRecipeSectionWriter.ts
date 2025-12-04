@@ -1,9 +1,6 @@
 import { GenericSectionWriter } from './GenericSectionWriter';
 
 export type GenericRecipeSectionWriterOpts = {
-  agentName: string;
-  repoName: string;
-  target: string;
   recipesSection: string;
 };
 
