@@ -38,6 +38,7 @@ const CHECK_EMAIL_AVAILABILITY_MUTATION_KEY = 'checkEmailAvailability';
 const ACTIVATE_USER_ACCOUNT_MUTATION_KEY = 'activateUserAccount';
 const REQUEST_PASSWORD_RESET_MUTATION_KEY = 'requestPasswordReset';
 const RESET_PASSWORD_MUTATION_KEY = 'resetPassword';
+const CREATE_CLI_LOGIN_CODE_MUTATION_KEY = 'createCliLoginCode';
 
 export const useSignUpWithOrganizationMutation = () => {
   const queryClient = useQueryClient();
@@ -169,6 +170,18 @@ export const useGenerateApiKeyMutation = () => {
     },
     onError: (error) => {
       console.error('Error generating API key:', error);
+    },
+  });
+};
+
+export const useCreateCliLoginCodeMutation = () => {
+  return useMutation({
+    mutationKey: [CREATE_CLI_LOGIN_CODE_MUTATION_KEY],
+    mutationFn: async () => {
+      return authGateway.createCliLoginCode();
+    },
+    onError: (error) => {
+      console.error('Error creating CLI login code:', error);
     },
   });
 };

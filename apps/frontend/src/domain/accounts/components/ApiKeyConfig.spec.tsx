@@ -8,6 +8,7 @@ import * as AuthContextModule from '../../accounts/hooks/useAuthContext';
 import {
   useGetCurrentApiKeyQuery,
   useGenerateApiKeyMutation,
+  useCreateCliLoginCodeMutation,
 } from '../api/queries/AuthQueries';
 import type {
   UserId,
@@ -19,6 +20,7 @@ import type {
 jest.mock('../api/queries/AuthQueries', () => ({
   useGetCurrentApiKeyQuery: jest.fn(),
   useGenerateApiKeyMutation: jest.fn(),
+  useCreateCliLoginCodeMutation: jest.fn(),
 }));
 
 // Mock the CopiableTextarea and CopiableTextField components
@@ -125,9 +127,38 @@ describe('ApiKeyConfig', () => {
     useGenerateApiKeyMutation as jest.MockedFunction<
       typeof useGenerateApiKeyMutation
     >;
+  const mockUseCreateCliLoginCodeMutation =
+    useCreateCliLoginCodeMutation as jest.MockedFunction<
+      typeof useCreateCliLoginCodeMutation
+    >;
+
+  const defaultCliLoginCodeMutationResult = {
+    mutate: jest.fn(),
+    mutateAsync: jest.fn(),
+    isPending: false,
+    isSuccess: false,
+    isError: false,
+    isIdle: true,
+    status: 'idle' as const,
+    data: undefined,
+    error: null,
+    variables: undefined,
+    reset: jest.fn(),
+    failureCount: 0,
+    failureReason: null,
+    submittedAt: 0,
+    context: undefined,
+    isPaused: false,
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // Set default mock for CLI login code mutation
+    mockUseCreateCliLoginCodeMutation.mockReturnValue(
+      defaultCliLoginCodeMutationResult as ReturnType<
+        typeof useCreateCliLoginCodeMutation
+      >,
+    );
   });
 
   it('renders CLI authentication section with tabs', () => {
@@ -166,6 +197,7 @@ describe('ApiKeyConfig', () => {
     renderWithQueryClient(<ApiKeyConfig />);
 
     expect(screen.getByText('CLI Authentication')).toBeInTheDocument();
+    expect(screen.getByText('Quick Install')).toBeInTheDocument();
     expect(screen.getByText('Login Command')).toBeInTheDocument();
     expect(screen.getByText('Environment Variable')).toBeInTheDocument();
   });

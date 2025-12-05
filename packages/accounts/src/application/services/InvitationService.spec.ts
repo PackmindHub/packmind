@@ -37,7 +37,7 @@ describe('InvitationService', () => {
       mockMailService,
     );
 
-    mockedConfiguration.getConfig.mockResolvedValue('https://app.packmind.com');
+    mockedConfiguration.getConfig.mockResolvedValue('https://app.packmind.ai');
   });
 
   afterEach(() => {

@@ -15,6 +15,7 @@ import {
 import {
   useGetCurrentApiKeyQuery,
   useGenerateApiKeyMutation,
+  useCreateCliLoginCodeMutation,
 } from '../api/queries/AuthQueries';
 import {
   CopiableTextarea,
@@ -23,7 +24,7 @@ import {
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { UserId } from '@packmind/types';
 
-const DEFAULT_HOST = 'https://app.packmind.com';
+const DEFAULT_HOST = 'https://app.packmind.ai';
 
 export const ApiKeyConfig: React.FunctionComponent = () => {
   const { user, organization } = useAuthContext();
@@ -32,6 +33,7 @@ export const ApiKeyConfig: React.FunctionComponent = () => {
     userId: user?.id || ('' as UserId),
   });
   const generateApiKeyMutation = useGenerateApiKeyMutation();
+  const createCliLoginCodeMutation = useCreateCliLoginCodeMutation();
 
   if (!user || !organization) {
     return;
@@ -67,6 +69,103 @@ export const ApiKeyConfig: React.FunctionComponent = () => {
     const hostFlag = isDefaultHost ? '' : ` --host ${currentHost}`;
     return `packmind-cli login${hostFlag}`;
   };
+
+  const buildInstallCommand = (loginCode: string) => {
+    const currentHost = window.location.origin;
+    const isDefaultHost = currentHost === DEFAULT_HOST;
+    const hostExport = isDefaultHost
+      ? ''
+      : `export PACKMIND_HOST=${currentHost} && \\\n`;
+    return `${hostExport}export PACKMIND_LOGIN_CODE=${loginCode} && \\\ncurl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/PackmindHub/packmind/main/apps/cli/scripts/install.sh | sh`;
+  };
+
+  const handleGenerateInstallCommand = () => {
+    createCliLoginCodeMutation.mutate();
+  };
+
+  const formatCodeExpiresAt = (expiresAt?: string | Date) => {
+    if (!expiresAt) return '';
+    try {
+      const date = expiresAt instanceof Date ? expiresAt : new Date(expiresAt);
+      const minutes = Math.ceil((date.getTime() - Date.now()) / 60000);
+      if (minutes <= 0) return 'Code expired';
+      if (minutes === 1) return 'Code expires in 1 minute';
+      return `Code expires in ${minutes} minutes`;
+    } catch {
+      return '';
+    }
+  };
+
+  const quickInstallTab = (
+    <PMVStack width="full" alignItems="stretch" gap={4}>
+      <PMText as="p">
+        Generate a one-time install command that downloads the CLI and logs you
+        in automatically.
+      </PMText>
+
+      {!createCliLoginCodeMutation.isSuccess && (
+        <PMButton
+          onClick={handleGenerateInstallCommand}
+          disabled={createCliLoginCodeMutation.isPending}
+        >
+          {createCliLoginCodeMutation.isPending
+            ? 'Generating...'
+            : 'Generate Install Command'}
+        </PMButton>
+      )}
+
+      {createCliLoginCodeMutation.isError && (
+        <PMAlert.Root status="error">
+          <PMAlert.Indicator />
+          <PMAlert.Title>Error</PMAlert.Title>
+          <PMAlert.Description>
+            {createCliLoginCodeMutation.error instanceof Error
+              ? createCliLoginCodeMutation.error.message
+              : 'Failed to generate install command. Please try again.'}
+          </PMAlert.Description>
+        </PMAlert.Root>
+      )}
+
+      {createCliLoginCodeMutation.isSuccess &&
+        createCliLoginCodeMutation.data && (
+          <PMVStack width="full" gap={3} alignItems={'stretch'}>
+            <PMAlert.Root status="success">
+              <PMAlert.Indicator />
+              <PMAlert.Title>Install Command Ready!</PMAlert.Title>
+              <PMAlert.Description>
+                Copy and run this command in your terminal. The login code can
+                only be used once.
+              </PMAlert.Description>
+            </PMAlert.Root>
+
+            <PMField.Root>
+              <PMField.Label>Install Command</PMField.Label>
+              <CopiableTextarea
+                value={buildInstallCommand(
+                  createCliLoginCodeMutation.data.code,
+                )}
+                readOnly
+                rows={3}
+                data-testid="install-command"
+                width={'full'}
+              />
+            </PMField.Root>
+
+            <PMText variant="small" color="tertiary">
+              {formatCodeExpiresAt(createCliLoginCodeMutation.data.expiresAt)}
+            </PMText>
+
+            <PMButton
+              variant="outline"
+              onClick={handleGenerateInstallCommand}
+              disabled={createCliLoginCodeMutation.isPending}
+            >
+              Generate New Command
+            </PMButton>
+          </PMVStack>
+        )}
+    </PMVStack>
+  );
 
   const loginCommandTab = (
     <PMVStack width="full" alignItems="stretch" gap={4}>
@@ -190,6 +289,11 @@ export const ApiKeyConfig: React.FunctionComponent = () => {
     ...(showLoginCommandTab
       ? [
           {
+            value: 'quick-install',
+            triggerLabel: 'Quick Install',
+            content: quickInstallTab,
+          },
+          {
             value: 'login-command',
             triggerLabel: 'Login Command',
             content: loginCommandTab,
@@ -206,7 +310,7 @@ export const ApiKeyConfig: React.FunctionComponent = () => {
   return (
     <PMPageSection title="CLI Authentication" variant="outline">
       <PMTabs
-        defaultValue={showLoginCommandTab ? 'login-command' : 'env-var'}
+        defaultValue={showLoginCommandTab ? 'quick-install' : 'env-var'}
         tabs={tabs}
       />
     </PMPageSection>
