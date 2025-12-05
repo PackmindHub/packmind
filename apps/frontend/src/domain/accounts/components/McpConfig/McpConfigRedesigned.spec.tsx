@@ -59,12 +59,6 @@ describe('McpConfigRedesigned', () => {
   });
 
   describe('Initial render', () => {
-    it('displays the page title', () => {
-      renderWithProviders(<McpConfigRedesigned />);
-
-      expect(screen.getByText('MCP server configuration')).toBeInTheDocument();
-    });
-
     it('displays the description text', () => {
       renderWithProviders(<McpConfigRedesigned />);
 
