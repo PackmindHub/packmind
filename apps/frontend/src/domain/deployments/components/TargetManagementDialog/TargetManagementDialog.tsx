@@ -35,6 +35,7 @@ export interface TargetManagementDialogProps {
   trigger?: React.ReactNode;
   selectedTargetId?: string;
   onTargetSelected?: (target: Target) => void;
+  canDeleteTargets?: boolean;
 }
 
 export const TargetManagementDialog: React.FC<TargetManagementDialogProps> = ({
@@ -46,6 +47,7 @@ export const TargetManagementDialog: React.FC<TargetManagementDialogProps> = ({
   trigger,
   selectedTargetId,
   onTargetSelected,
+  canDeleteTargets = true,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedTarget, setSelectedTarget] = useState<Target | null>(null);
@@ -237,11 +239,12 @@ export const TargetManagementDialog: React.FC<TargetManagementDialogProps> = ({
           }
         }}
       >
-        {trigger ? (
-          <PMDialog.Trigger asChild>{trigger}</PMDialog.Trigger>
-        ) : (
-          defaultTrigger
-        )}
+        {trigger !== null &&
+          (trigger ? (
+            <PMDialog.Trigger asChild>{trigger}</PMDialog.Trigger>
+          ) : (
+            defaultTrigger
+          ))}
 
         <PMPortal>
           <PMDialog.Backdrop />
@@ -314,10 +317,14 @@ export const TargetManagementDialog: React.FC<TargetManagementDialogProps> = ({
                                 target={target}
                                 branch={targetWithRepo?.repository.branch}
                                 variant="subtle"
-                                showActions={true}
+                                showActions={canDeleteTargets}
                                 showEditAction={false}
                                 clickable={target.path !== '/'}
-                                onDelete={handleTargetDelete}
+                                onDelete={
+                                  canDeleteTargets
+                                    ? handleTargetDelete
+                                    : undefined
+                                }
                                 onClick={handleTargetClick}
                               />
                             );

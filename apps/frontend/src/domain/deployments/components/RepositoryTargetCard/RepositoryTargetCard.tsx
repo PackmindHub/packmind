@@ -78,23 +78,47 @@ export const RepositoryTargetCard: React.FC<RepositoryTargetCardProps> = ({
             </PMText>
           </PMVStack>
           <div>
-            <TargetManagementDialog
-              gitRepoId={gitRepoId}
-              repositoryName={repositoryName}
-              owner={targets[0]?.repository.owner || ''}
-              repo={targets[0]?.repository.repo || ''}
-              branch={targets[0]?.repository.branch}
-              selectedTargetId={selectedTargetId}
-              onTargetSelected={onTargetSelected}
-              trigger={
-                <PMButton size="sm" variant="outline">
-                  <PMIcon as={LuSettings} />
-                  Manage Targets
-                </PMButton>
-              }
-            />
+            {hasToken ? (
+              <TargetManagementDialog
+                gitRepoId={gitRepoId}
+                repositoryName={repositoryName}
+                owner={targets[0]?.repository.owner || ''}
+                repo={targets[0]?.repository.repo || ''}
+                branch={targets[0]?.repository.branch}
+                selectedTargetId={selectedTargetId}
+                onTargetSelected={onTargetSelected}
+                trigger={
+                  <PMButton size="sm" variant="outline">
+                    <PMIcon as={LuSettings} />
+                    Manage Targets
+                  </PMButton>
+                }
+              />
+            ) : (
+              <PMTooltip label="Targets are automatically managed by packmind-cli install commands">
+                <PMFlex align="center" gap={1} color="faded">
+                  <PMIcon as={LuCircleHelp} boxSize={4} />
+                  <PMText fontSize="sm">Auto-managed</PMText>
+                </PMFlex>
+              </PMTooltip>
+            )}
           </div>
         </PMHStack>
+
+        {/* Dialog for target clicks when provider has no token (no visible trigger) */}
+        {!hasToken && (
+          <TargetManagementDialog
+            gitRepoId={gitRepoId}
+            repositoryName={repositoryName}
+            owner={targets[0]?.repository.owner || ''}
+            repo={targets[0]?.repository.repo || ''}
+            branch={targets[0]?.repository.branch}
+            selectedTargetId={selectedTargetId}
+            onTargetSelected={onTargetSelected}
+            trigger={null}
+            canDeleteTargets={false}
+          />
+        )}
 
         {/* Targets */}
         <PMVStack gap={3} align="stretch">
