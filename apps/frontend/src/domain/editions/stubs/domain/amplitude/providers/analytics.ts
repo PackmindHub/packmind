@@ -1,41 +1,9 @@
-export type AnalyticsEventMap = {
-  page_view: {
-    path: string;
-    routeId?: string;
-    orgSlug?: string;
-    title?: string;
-  };
-  user_signed_in: {
-    method: 'email' | 'github' | 'gitlab' | 'google' | 'sso';
-  };
-  artifact_updated: {
-    artifactType: 'recipe' | 'standard';
-    id: string;
-    from: number;
-    to: number;
-  };
-  mcp_configuration_card_clicked: {
-    agent: string;
-  };
-};
-
-export type AnalyticsEventName = keyof AnalyticsEventMap;
-
-export type AnalyticsOptions = {
-  apiKey?: string;
-  enabled?: boolean;
-  appVersion?: string;
-  environment?: string;
-  serverZone?: 'US' | 'EU';
-};
-
-export type UserProperties = Record<string, unknown> & {
-  orgId?: string;
-  orgSlug?: string;
-  orgName?: string;
-  plan?: string;
-  edition?: 'oss' | 'proprietary';
-};
+import type {
+  AnalyticsEventMap,
+  AnalyticsEventName,
+  AnalyticsOptions,
+  UserProperties,
+} from './types';
 
 class NoopAnalyticsService {
   private enabled = false;
