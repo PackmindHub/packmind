@@ -20,6 +20,10 @@ export type GitBranchesResult = {
   branches: string[];
 };
 
+export type GitCurrentBranchResult = {
+  branch: string;
+};
+
 export class GitService {
   private readonly logger: PackmindLogger;
 
@@ -78,6 +82,29 @@ export class GitService {
       return result.trim();
     } catch {
       return null;
+    }
+  }
+
+  public getCurrentBranch(repoPath: string): GitCurrentBranchResult {
+    try {
+      const { stdout } = this.gitRunner('rev-parse --abbrev-ref HEAD', {
+        cwd: repoPath,
+      });
+
+      const branch = stdout.trim();
+      this.logger.debug('Resolved current branch', {
+        repoPath,
+        branch,
+      });
+
+      return { branch };
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(
+          `Failed to get current Git branch. The path '${repoPath}' does not appear to be inside a Git repository.\n${error.message}`,
+        );
+      }
+      throw new Error('Failed to get current Git branch: Unknown error');
     }
   }
 

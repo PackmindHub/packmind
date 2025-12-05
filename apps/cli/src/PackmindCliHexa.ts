@@ -47,6 +47,10 @@ import {
 } from './domain/useCases/ISetupMcpUseCase';
 import { HierarchicalConfigResult, PackmindFileConfig } from '@packmind/types';
 import { logWarningConsole } from './infra/utils/consoleLogger';
+import {
+  NotifyDistributionCommand,
+  NotifyDistributionResult,
+} from './domain/repositories/IPackmindGateway';
 
 const origin = 'PackmindCliHexa';
 
@@ -207,5 +211,21 @@ export class PackmindCliHexa {
 
   public async setupMcp(command: ISetupMcpCommand): Promise<ISetupMcpResult> {
     return this.hexa.useCases.setupMcp.execute(command);
+  }
+
+  public getCurrentBranch(repoPath: string): string {
+    return this.hexa.services.gitRemoteUrlService.getCurrentBranch(repoPath)
+      .branch;
+  }
+
+  public getGitRemoteUrlFromPath(repoPath: string): string {
+    return this.hexa.services.gitRemoteUrlService.getGitRemoteUrl(repoPath)
+      .gitRemoteUrl;
+  }
+
+  public async notifyDistribution(
+    command: NotifyDistributionCommand,
+  ): Promise<NotifyDistributionResult> {
+    return this.hexa.repositories.packmindGateway.notifyDistribution(command);
   }
 }

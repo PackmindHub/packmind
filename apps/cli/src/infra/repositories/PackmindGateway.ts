@@ -12,6 +12,8 @@ import {
   GetMcpUrlResult,
   IGetMcpTokenUseCase,
   IGetMcpUrlUseCase,
+  NotifyDistributionGateway,
+  NotifyDistributionResult,
 } from '../../domain/repositories/IPackmindGateway';
 import { CommunityEditionError } from '../../domain/errors/CommunityEditionError';
 import { NotLoggedInError } from '../../domain/errors/NotLoggedInError';
@@ -898,6 +900,88 @@ export class PackmindGateway implements IPackmindGateway {
 
       throw new Error(
         `Failed to get MCP URL: Error: ${err?.message || JSON.stringify(error)}`,
+      );
+    }
+  };
+
+  public notifyDistribution: NotifyDistributionGateway = async (params) => {
+    const decodedApiKey = decodeApiKey(this.apiKey);
+
+    if (!decodedApiKey.isValid) {
+      if (decodedApiKey.error === 'NOT_LOGGED_IN') {
+        throw new NotLoggedInError();
+      }
+      throw new Error(`Invalid API key: ${decodedApiKey.error}`);
+    }
+
+    const { host, jwt } = decodedApiKey.payload;
+
+    const jwtPayload = decodeJwt(jwt);
+
+    if (!jwtPayload?.organization?.id) {
+      throw new Error('Invalid API key: missing organizationId in JWT');
+    }
+
+    const organizationId = jwtPayload.organization.id;
+
+    const url = `${host}/api/v0/organizations/${organizationId}/deployments`;
+
+    const payload = {
+      distributedPackages: params.distributedPackages,
+      gitRemoteUrl: params.gitRemoteUrl,
+      gitBranch: params.gitBranch,
+      relativePath: params.relativePath,
+    };
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        let errorMsg = `API request failed: ${response.status} ${response.statusText}`;
+        try {
+          const errorBody = await response.json();
+          if (errorBody && errorBody.message) {
+            errorMsg = `${errorBody.message}`;
+          }
+        } catch {
+          // ignore if body is not json
+        }
+        throw new Error(errorMsg);
+      }
+
+      const result: NotifyDistributionResult = await response.json();
+      return result;
+    } catch (error: unknown) {
+      const err = error as {
+        code?: string;
+        name?: string;
+        message?: string;
+        cause?: { code?: string };
+      };
+      const code = err?.code || err?.cause?.code;
+      if (
+        code === 'ECONNREFUSED' ||
+        code === 'ENOTFOUND' ||
+        err?.name === 'FetchError' ||
+        (typeof err?.message === 'string' &&
+          (err.message.includes('Failed to fetch') ||
+            err.message.includes('network') ||
+            err.message.includes('NetworkError')))
+      ) {
+        throw new Error(
+          `Packmind server is not accessible at ${host}. Please check your network connection or the server URL.`,
+        );
+      }
+
+      throw new Error(
+        `Failed to notify distribution: Error: ${err?.message || JSON.stringify(error)}`,
       );
     }
   };
