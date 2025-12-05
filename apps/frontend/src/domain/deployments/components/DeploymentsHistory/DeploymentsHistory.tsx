@@ -13,12 +13,7 @@ import {
   PMLink,
   PMTooltip,
 } from '@packmind/ui';
-import {
-  Distribution,
-  RecipesDeployment,
-  RenderMode,
-  StandardsDeployment,
-} from '@packmind/types';
+import { Distribution, RenderMode } from '@packmind/types';
 import { format } from 'date-fns';
 import { Link } from 'react-router';
 import { routes } from '../../../../shared/utils/routes';
@@ -26,7 +21,7 @@ import { routes } from '../../../../shared/utils/routes';
 export type DeploymentType = 'recipe' | 'standard' | 'package';
 
 interface DeploymentsHistoryProps {
-  deployments: RecipesDeployment[] | StandardsDeployment[] | Distribution[];
+  deployments: Distribution[];
   type: DeploymentType;
   entityId: string;
   usersMap?: Record<string, string>;
@@ -121,9 +116,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
   };
 
   // Helper pour target/repo
-  const getTargetInfo = (
-    deployment: RecipesDeployment | StandardsDeployment | Distribution,
-  ) => {
+  const getTargetInfo = (deployment: Distribution) => {
     const target = deployment.target;
     if (!target) return 'No target specified';
     if (target.gitRepo) {
@@ -132,9 +125,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     return `${target.path} (Repository: ${target.gitRepoId})`;
   };
 
-  const getCommitLinks = (
-    deployment: RecipesDeployment | StandardsDeployment | Distribution,
-  ) => {
+  const getCommitLinks = (deployment: Distribution) => {
     const commit = deployment.gitCommit;
     if (!commit) return null;
     return (
@@ -158,9 +149,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     );
   };
 
-  const getAuthor = (
-    deployment: RecipesDeployment | StandardsDeployment | Distribution,
-  ) => {
+  const getAuthor = (deployment: Distribution) => {
     if (usersMap) {
       return usersMap[deployment.authorId || 'N/A'] || 'Unknown User';
     }
@@ -171,9 +160,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     return format(new Date(date), 'yyyy-MM-dd');
   };
 
-  const getMessage = (
-    deployment: RecipesDeployment | StandardsDeployment | Distribution,
-  ) => {
+  const getMessage = (deployment: Distribution) => {
     if (deployment.status === 'failure' && deployment.error)
       return deployment.error;
     if (deployment.status === 'success')
@@ -183,14 +170,8 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     return '-';
   };
 
-  const getPackageInfo = (
-    deployment: RecipesDeployment | StandardsDeployment | Distribution,
-  ): React.ReactNode => {
-    // Only distributions have distributedPackages
-    if (!('distributedPackages' in deployment)) return '-';
-
-    const distribution = deployment as Distribution;
-    const packages = distribution.distributedPackages
+  const getPackageInfo = (deployment: Distribution): React.ReactNode => {
+    const packages = deployment.distributedPackages
       ?.map((dp) => dp.package)
       .filter(Boolean);
 

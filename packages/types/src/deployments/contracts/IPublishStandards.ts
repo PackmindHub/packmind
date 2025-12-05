@@ -1,7 +1,7 @@
 import { IUseCase, PackmindCommand } from '../../UseCase';
 import { StandardVersionId } from '../../standards/StandardVersionId';
 import { TargetId } from '../TargetId';
-import { StandardsDeployment } from '../StandardsDeployment';
+import { Distribution } from '../Distribution';
 
 export type PublishStandardsCommand = PackmindCommand & {
   targetIds: TargetId[];
@@ -9,5 +9,5 @@ export type PublishStandardsCommand = PackmindCommand & {
 };
 export type IPublishStandards = IUseCase<
   PublishStandardsCommand,
-  StandardsDeployment[]
+  Distribution[]
 >;

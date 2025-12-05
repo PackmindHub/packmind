@@ -4,8 +4,6 @@ import {
   Distribution,
   GetDeploymentOverviewCommand,
   GetStandardDeploymentOverviewCommand,
-  ListDeploymentsByRecipeCommand,
-  ListDeploymentsByStandardCommand,
   ListDeploymentsByPackageCommand,
   ListDistributionsByRecipeCommand,
   ListDistributionsByStandardCommand,
@@ -14,7 +12,6 @@ import {
   PublishRecipesCommand,
   PublishStandardsCommand,
   PublishPackagesCommand,
-  StandardsDeployment,
   PackagesDeployment,
   StandardDeploymentOverview,
   UpdateRenderModeConfigurationCommand,
@@ -43,18 +40,6 @@ export class DeploymentsService {
     @InjectDeploymentAdapter()
     private readonly deploymentAdapter: IDeploymentPort,
   ) {}
-
-  async listDeploymentsByStandard(
-    command: ListDeploymentsByStandardCommand,
-  ): Promise<StandardsDeployment[]> {
-    return this.deploymentAdapter.listDeploymentsByStandard(command);
-  }
-
-  async listDeploymentsByRecipe(
-    command: ListDeploymentsByRecipeCommand,
-  ): Promise<Distribution[]> {
-    return this.deploymentAdapter.listDeploymentsByRecipe(command);
-  }
 
   async listDeploymentsByPackage(
     command: ListDeploymentsByPackageCommand,

@@ -6,15 +6,12 @@ export { CreateRenderModeConfigurationUseCase } from './CreateRenderModeConfigur
 export { DeletePackagesBatchUsecase } from './deletePackage/deletePackagesBatch.usecase';
 export { DeleteTargetUseCase } from './DeleteTargetUseCase';
 export { FindActiveStandardVersionsByTargetUseCase } from './FindActiveStandardVersionsByTargetUseCase';
-export { FindDeployedStandardByRepositoryUseCase } from './FindDeployedStandardByRepositoryUseCase';
 export { GetDeploymentOverviewUseCase } from './GetDeploymentOverviewUseCase';
 export { GetRenderModeConfigurationUseCase } from './GetRenderModeConfigurationUseCase';
 export { GetStandardDeploymentOverviewUseCase } from './GetStandardDeploymentOverviewUseCase';
 export { GetTargetsByGitRepoUseCase } from './GetTargetsByGitRepoUseCase';
 export { GetTargetsByOrganizationUseCase } from './GetTargetsByOrganizationUseCase';
 export { GetTargetsByRepositoryUseCase } from './GetTargetsByRepositoryUseCase';
-export { ListDeploymentsByRecipeUseCase } from './ListDeploymentsByRecipeUseCase';
-export { ListDeploymentsByStandardUseCase } from './ListDeploymentsByStandardUseCase';
 export { NotifyDistributionUseCase } from './notifyDistribution/notifyDistribution.usecase';
 export { PullContentUseCase } from './PullContentUseCase';
 export { UpdateRenderModeConfigurationUseCase } from './UpdateRenderModeConfigurationUseCase';

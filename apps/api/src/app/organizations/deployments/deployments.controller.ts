@@ -10,7 +10,6 @@ import {
 import {
   DeploymentOverview,
   Distribution,
-  StandardsDeployment,
   PackagesDeployment,
   StandardDeploymentOverview,
   PublishRecipesCommand,
@@ -31,8 +30,6 @@ import {
   OrganizationId,
   GetDeploymentOverviewCommand,
   GetStandardDeploymentOverviewCommand,
-  ListDeploymentsByRecipeCommand,
-  ListDeploymentsByStandardCommand,
   ListDeploymentsByPackageCommand,
   ListDistributionsByRecipeCommand,
   ListDistributionsByStandardCommand,
@@ -71,14 +68,14 @@ export class DeploymentsController {
     );
 
     try {
-      const command: ListDeploymentsByRecipeCommand = {
+      const command: ListDistributionsByRecipeCommand = {
         userId: request.user.userId,
         organizationId,
         recipeId: id,
       };
 
       const deployments =
-        await this.deploymentsService.listDeploymentsByRecipe(command);
+        await this.deploymentsService.listDistributionsByRecipe(command);
 
       if (!deployments || deployments.length === 0) {
         this.logger.warn(
@@ -108,66 +105,6 @@ export class DeploymentsController {
         'GET /organizations/:orgId/deployments/recipe/:id - Failed to fetch deployments',
         {
           recipeId: id,
-          organizationId,
-          error: errorMessage,
-        },
-      );
-      throw error;
-    }
-  }
-
-  @Get('standard/:id')
-  async getDeploymentsByStandardId(
-    @Param('orgId') organizationId: OrganizationId,
-    @Param('id') id: StandardId,
-    @Req() request: AuthenticatedRequest,
-  ): Promise<StandardsDeployment[]> {
-    this.logger.info(
-      'GET /organizations/:orgId/deployments/standard/:id - Fetching deployments by standard ID',
-      {
-        standardId: id,
-        organizationId,
-      },
-    );
-
-    try {
-      const command: ListDeploymentsByStandardCommand = {
-        userId: request.user.userId,
-        organizationId,
-        standardId: id,
-      };
-
-      const deployments =
-        await this.deploymentsService.listDeploymentsByStandard(command);
-
-      if (!deployments || deployments.length === 0) {
-        this.logger.warn(
-          'GET /organizations/:orgId/deployments/standard/:id - No deployments found',
-          {
-            standardId: id,
-            organizationId,
-          },
-        );
-        return [];
-      }
-
-      this.logger.info(
-        'GET /organizations/:orgId/deployments/standard/:id - Deployments fetched successfully',
-        {
-          standardId: id,
-          organizationId,
-          count: deployments.length,
-        },
-      );
-
-      return deployments;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      this.logger.error(
-        'GET /organizations/:orgId/deployments/standard/:id - Failed to fetch deployments',
-        {
-          standardId: id,
           organizationId,
           error: errorMessage,
         },

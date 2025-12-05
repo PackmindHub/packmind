@@ -1,6 +1,5 @@
 import {
-  RecipesDeployment,
-  StandardsDeployment,
+  Distribution,
   DistributionStatus,
   Target,
   GitRepo,
@@ -35,14 +34,14 @@ export interface DeploymentAnalysis {
 }
 
 /**
- * Analyzes deployment results from both recipes and standards deployments
+ * Analyzes deployment results from both recipes and standards distributions
  * and returns appropriate notification data
  */
 export function analyzeDeploymentResults(
-  recipesDeployments: RecipesDeployment[] = [],
-  standardsDeployments: StandardsDeployment[] = [],
+  recipesDistributions: Distribution[] = [],
+  standardsDistributions: Distribution[] = [],
 ): DeploymentNotificationResult {
-  const allDeployments = [...recipesDeployments, ...standardsDeployments];
+  const allDeployments = [...recipesDistributions, ...standardsDistributions];
 
   if (allDeployments.length === 0) {
     return {
@@ -129,10 +128,10 @@ export function analyzeDeploymentResults(
 }
 
 /**
- * Analyzes an array of deployments (recipes or standards) and returns statistics
+ * Analyzes an array of distributions and returns statistics
  */
 function getDeploymentAnalysis(
-  deployments: (RecipesDeployment | StandardsDeployment)[],
+  deployments: Distribution[],
 ): DeploymentAnalysis {
   const totalDeployments = deployments.length;
   const successfulDeployments = deployments.filter(
@@ -146,38 +145,31 @@ function getDeploymentAnalysis(
   ).length;
 
   // Count actual items (standards/recipes) instead of just deployment records
+  const countItems = (d: Distribution): number => {
+    if ('distributedPackages' in d) {
+      // For Distribution, count standard versions and recipe versions across all distributed packages
+      return d.distributedPackages.reduce(
+        (sum: number, dp: Distribution['distributedPackages'][number]) =>
+          sum +
+          (dp.standardVersions?.length || 0) +
+          (dp.recipeVersions?.length || 0),
+        0,
+      );
+    }
+    return 0;
+  };
+
   const successfulItems = deployments
     .filter((d) => d.status === DistributionStatus.success)
-    .reduce((count, d) => {
-      if ('standardVersions' in d) {
-        return count + d.standardVersions.length;
-      } else if ('recipeVersions' in d) {
-        return count + d.recipeVersions.length;
-      }
-      return count;
-    }, 0);
+    .reduce((count, d) => count + countItems(d), 0);
 
   const failedItems = deployments
     .filter((d) => d.status === DistributionStatus.failure)
-    .reduce((count, d) => {
-      if ('standardVersions' in d) {
-        return count + d.standardVersions.length;
-      } else if ('recipeVersions' in d) {
-        return count + d.recipeVersions.length;
-      }
-      return count;
-    }, 0);
+    .reduce((count, d) => count + countItems(d), 0);
 
   const noChangesItems = deployments
     .filter((d) => d.status === DistributionStatus.no_changes)
-    .reduce((count, d) => {
-      if ('standardVersions' in d) {
-        return count + d.standardVersions.length;
-      } else if ('recipeVersions' in d) {
-        return count + d.recipeVersions.length;
-      }
-      return count;
-    }, 0);
+    .reduce((count, d) => count + countItems(d), 0);
 
   const failedTargets = deployments
     .filter((d) => d.status === DistributionStatus.failure)
@@ -229,10 +221,10 @@ function getDeploymentAnalysis(
  * Returns an array of notifications to be displayed individually
  */
 export function createSeparateDeploymentNotifications(
-  recipesDeployments: RecipesDeployment[] = [],
-  standardsDeployments: StandardsDeployment[] = [],
+  recipesDistributions: Distribution[] = [],
+  standardsDistributions: Distribution[] = [],
 ): DeploymentNotificationResult[] {
-  const allDeployments = [...recipesDeployments, ...standardsDeployments];
+  const allDeployments = [...recipesDistributions, ...standardsDistributions];
 
   if (allDeployments.length === 0) {
     return [
@@ -285,33 +277,42 @@ export function createSeparateDeploymentNotifications(
 }
 
 export function createDeploymentSummary(
-  recipesDeployments: RecipesDeployment[] = [],
-  standardsDeployments: StandardsDeployment[] = [],
+  recipesDistributions: Distribution[] = [],
+  standardsDistributions: Distribution[] = [],
 ): string {
   const parts: string[] = [];
 
-  if (recipesDeployments.length > 0) {
+  if (recipesDistributions.length > 0) {
     const recipeNames = [
       ...new Set(
-        recipesDeployments.flatMap((d) =>
-          d.recipeVersions.map((rv) => rv.name),
+        recipesDistributions.flatMap((d) =>
+          d.distributedPackages.flatMap(
+            (dp) =>
+              dp.recipeVersions?.map((rv: { name: string }) => rv.name) || [],
+          ),
         ),
       ),
     ];
-    parts.push(`${recipeNames.length} recipe(s): ${recipeNames.join(', ')}`);
+    if (recipeNames.length > 0) {
+      parts.push(`${recipeNames.length} recipe(s): ${recipeNames.join(', ')}`);
+    }
   }
 
-  if (standardsDeployments.length > 0) {
+  if (standardsDistributions.length > 0) {
     const standardNames = [
       ...new Set(
-        standardsDeployments.flatMap((d) =>
-          d.standardVersions.map((sv) => sv.name),
+        standardsDistributions.flatMap((d) =>
+          d.distributedPackages.flatMap(
+            (dp) => dp.standardVersions?.map((sv) => sv.name) || [],
+          ),
         ),
       ),
     ];
-    parts.push(
-      `${standardNames.length} standard(s): ${standardNames.join(', ')}`,
-    );
+    if (standardNames.length > 0) {
+      parts.push(
+        `${standardNames.length} standard(s): ${standardNames.join(', ')}`,
+      );
+    }
   }
 
   return parts.join(' | ');

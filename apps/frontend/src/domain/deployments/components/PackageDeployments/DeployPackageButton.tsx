@@ -54,8 +54,8 @@ export const DeployPackageButton: React.FC<DeployPackageButtonProps> = ({
                     if (deploymentResults) {
                       const notifications =
                         createSeparateDeploymentNotifications(
-                          deploymentResults.recipesDeployments,
-                          deploymentResults.standardsDeployments,
+                          deploymentResults.recipesDistributions,
+                          deploymentResults.standardsDistributions,
                         );
 
                       notifications.forEach((notification) => {

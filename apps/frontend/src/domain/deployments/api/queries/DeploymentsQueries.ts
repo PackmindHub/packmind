@@ -35,7 +35,6 @@ import {
   LIST_PACKAGE_DEPLOYMENTS_KEY,
   LIST_RECIPE_DEPLOYMENTS_KEY,
   LIST_RECIPE_DISTRIBUTIONS_KEY,
-  LIST_STANDARD_DEPLOYMENTS_KEY,
   LIST_STANDARD_DISTRIBUTIONS_KEY,
   UPDATE_PACKAGE_MUTATION_KEY,
 } from '../queryKeys';
@@ -51,29 +50,9 @@ export const useListRecipeDeploymentsQuery = (recipeId: RecipeId) => {
           'Organization ID is required to fetch recipe deployments',
         );
       }
-      return deploymentsGateways.listDeploymentsByRecipeId({
+      return deploymentsGateways.listDistributionsByRecipeId({
         organizationId: organization.id,
         recipeId,
-      });
-    },
-    enabled: !!organization?.id,
-  });
-};
-
-export const useListStandardDeploymentsQuery = (standardId: StandardId) => {
-  const { organization } = useAuthContext();
-
-  return useQuery({
-    queryKey: [...LIST_STANDARD_DEPLOYMENTS_KEY, standardId],
-    queryFn: () => {
-      if (!organization?.id) {
-        throw new Error(
-          'Organization ID is required to fetch standard deployments',
-        );
-      }
-      return deploymentsGateways.listDeploymentsByStandardId({
-        organizationId: organization.id,
-        standardId,
       });
     },
     enabled: !!organization?.id,
@@ -329,10 +308,9 @@ export const useDeployStandardsMutation = () => {
       });
     },
     onSuccess: async () => {
-      // We need to invalidate queries, but we don't have standardIds directly
-      // For now, we'll invalidate all standards queries
+      // Invalidate standard distributions queries
       await queryClient.invalidateQueries({
-        queryKey: LIST_STANDARD_DEPLOYMENTS_KEY,
+        queryKey: LIST_STANDARD_DISTRIBUTIONS_KEY,
       });
       await queryClient.invalidateQueries({
         queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
@@ -340,7 +318,6 @@ export const useDeployStandardsMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: [GET_ONBOARDING_STATUS_KEY],
       });
-      // If we have specific standard IDs in the future, we can invalidate them individually
     },
     onError: async (error, variables, context) => {
       console.error('Error deploying standards to git');
@@ -380,7 +357,7 @@ export const useDeployPackagesMutation = () => {
         queryKey: LIST_RECIPE_DEPLOYMENTS_KEY,
       });
       await queryClient.invalidateQueries({
-        queryKey: LIST_STANDARD_DEPLOYMENTS_KEY,
+        queryKey: LIST_STANDARD_DISTRIBUTIONS_KEY,
       });
       // Invalidate package deployments using predicate to match query key structure
       await queryClient.invalidateQueries({

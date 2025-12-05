@@ -1,23 +1,11 @@
-import { RecipesDeployment } from '../RecipesDeployment';
 import { IUseCase, PackmindCommand } from '../../UseCase';
-import { TargetId } from '../TargetId';
-import { GitRepoId } from '../../git/GitRepoId';
 import { RecipeVersionId } from '../../recipes/RecipeVersion';
+import { TargetId } from '../TargetId';
+import { Distribution } from '../Distribution';
 
 export type PublishRecipesCommand = PackmindCommand & {
   recipeVersionIds: RecipeVersionId[];
-} & (
-    | {
-        gitRepoIds: GitRepoId[];
-        targetIds?: never;
-      }
-    | {
-        gitRepoIds?: never;
-        targetIds: TargetId[];
-      }
-  );
+  targetIds: TargetId[];
+};
 
-export type IPublishRecipes = IUseCase<
-  PublishRecipesCommand,
-  RecipesDeployment[]
->;
+export type IPublishRecipes = IUseCase<PublishRecipesCommand, Distribution[]>;

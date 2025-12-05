@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { useListStandardDeploymentsQuery } from '../../api/queries/DeploymentsQueries';
+import { useListStandardDistributionsQuery } from '../../api/queries/DeploymentsQueries';
 import { DeploymentsHistory as GenericDeploymentsHistory } from '../DeploymentsHistory/DeploymentsHistory';
 import { StandardId } from '@packmind/types';
 import { useGetUsersInMyOrganizationQuery } from '../../../accounts/api/queries/UserQueries';
@@ -16,7 +16,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     isLoading,
     isError,
     error,
-  } = useListStandardDeploymentsQuery(standardId);
+  } = useListStandardDistributionsQuery(standardId);
 
   const { data: users, isLoading: isLoadingUsers } =
     useGetUsersInMyOrganizationQuery();

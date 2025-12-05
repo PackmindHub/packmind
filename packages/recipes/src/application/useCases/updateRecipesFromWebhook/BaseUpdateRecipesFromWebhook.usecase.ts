@@ -176,13 +176,12 @@ export abstract class BaseUpdateRecipesFromWebhookUsecase {
 
       if (this.deploymentPort) {
         try {
-          const deployments = await this.deploymentPort.listDeploymentsByRecipe(
-            {
+          const deployments =
+            await this.deploymentPort.listDistributionsByRecipe({
               recipeId: existingRecipe.id,
               organizationId,
               userId: createUserId('system'), // System user for webhook operations
-            },
-          );
+            });
 
           // Check if any deployment includes this target path and this repository
           isDeployedToTarget = deployments.some(

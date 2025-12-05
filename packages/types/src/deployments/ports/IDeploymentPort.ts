@@ -12,8 +12,6 @@ import {
   DeploymentOverview,
   FindActiveStandardVersionsByTargetCommand,
   FindActiveStandardVersionsByTargetResponse,
-  FindDeployedStandardByRepositoryCommand,
-  FindDeployedStandardByRepositoryResponse,
   GetDeploymentOverviewCommand,
   GetPackageByIdCommand,
   GetPackageByIdResponse,
@@ -26,8 +24,6 @@ import {
   GetTargetsByOrganizationCommand,
   GetTargetsByRepositoryCommand,
   IPullContentResponse,
-  ListDeploymentsByRecipeCommand,
-  ListDeploymentsByStandardCommand,
   ListDeploymentsByPackageCommand,
   ListDistributionsByRecipeCommand,
   ListDistributionsByStandardCommand,
@@ -50,17 +46,12 @@ import { Distribution } from '../Distribution';
 import { PackagesDeployment } from '../PackagesDeployment';
 import { RenderModeConfiguration } from '../RenderModeConfiguration';
 import { StandardDeploymentOverview } from '../StandardDeploymentOverview';
-import { StandardsDeployment } from '../StandardsDeployment';
 import { Target } from '../Target';
 import { TargetWithRepository } from '../TargetWithRepository';
 
 export const IDeploymentPortName = 'IDeploymentPort' as const;
 
 export interface IDeploymentPort {
-  findActiveStandardVersionsByRepository(
-    command: FindDeployedStandardByRepositoryCommand,
-  ): Promise<FindDeployedStandardByRepositoryResponse>;
-
   /**
    * Get all currently deployed standard versions for a specific target.
    * This returns the latest deployed version of each unique standard.
@@ -122,26 +113,6 @@ export interface IDeploymentPort {
   publishArtifacts(
     command: PublishArtifactsCommand,
   ): Promise<PublishArtifactsResponse>;
-
-  /**
-   * Lists all distributions for a specific recipe
-   *
-   * @param command - Command containing recipeId and organizationId
-   * @returns Promise of Distribution entries that include versions of the specified recipe
-   */
-  listDeploymentsByRecipe(
-    command: ListDeploymentsByRecipeCommand,
-  ): Promise<Distribution[]>;
-
-  /**
-   * Lists all deployments for a specific standard
-   *
-   * @param command - Command containing standardId and organizationId
-   * @returns Promise of StandardDeployment entries that include versions of the specified standard
-   */
-  listDeploymentsByStandard(
-    command: ListDeploymentsByStandardCommand,
-  ): Promise<StandardsDeployment[]>;
 
   /**
    * Lists all distributions for a specific package
