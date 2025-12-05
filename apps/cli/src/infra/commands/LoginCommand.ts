@@ -27,6 +27,13 @@ export const loginCommand = command({
     }),
   },
   handler: async ({ host, code }) => {
+    if (!host.includes('://')) {
+      logErrorConsole(
+        'Invalid host URL: protocol is required (e.g., https://your-host.com)',
+      );
+      process.exit(1);
+    }
+
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
