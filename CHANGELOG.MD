@@ -10,8 +10,8 @@
 
 ## Fixed
 
-- Server error when switching organization from the rule pages.
-- Deleted standards and recipes are now properly removed from packages, preventing UUID display and edit issues
+- Server error when switching organization from the rule pages
+- Deleted standards and recipes are now properly removed from packages, preventing UUID display and edit issues (#34)
 
 # [1.4.1] - 2025-11-25
 
