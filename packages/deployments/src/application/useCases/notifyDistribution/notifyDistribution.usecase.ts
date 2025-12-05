@@ -37,14 +37,18 @@ const origin = 'NotifyDistributionUseCase';
 /**
  * Parse a git remote URL to extract the provider vendor type
  * @param gitRemoteUrl The git remote URL (e.g., https://github.com/owner/repo.git)
- * @returns 'github' if the URL is from GitHub, throws otherwise
+ * @returns 'github' or 'gitlab' based on the URL, throws otherwise
  */
-function parseGitProviderVendor(gitRemoteUrl: string): 'github' {
+function parseGitProviderVendor(gitRemoteUrl: string): 'github' | 'gitlab' {
   // Normalize URL - handle both HTTPS and SSH formats
   const normalizedUrl = gitRemoteUrl.toLowerCase();
 
   if (normalizedUrl.includes('github.com')) {
     return 'github';
+  }
+
+  if (normalizedUrl.includes('gitlab.com')) {
+    return 'gitlab';
   }
 
   throw new UnsupportedGitProviderError(gitRemoteUrl);
@@ -59,9 +63,11 @@ function parseGitRepoInfo(gitRemoteUrl: string): {
   owner: string;
   repo: string;
 } {
-  // Handle HTTPS format: https://github.com/owner/repo.git or https://github.com/owner/repo
-  // Handle SSH format: git@github.com:owner/repo.git
-  const match = gitRemoteUrl.match(/github\.com[/:]([^/]+)\/([^/.]+)/i);
+  // Handle HTTPS format: https://github.com/owner/repo.git or https://gitlab.com/owner/repo
+  // Handle SSH format: git@github.com:owner/repo.git or git@gitlab.com:owner/repo.git
+  const match = gitRemoteUrl.match(
+    /(?:github|gitlab)\.com[/:]([^/]+)\/([^/.]+)/i,
+  );
 
   if (match) {
     return {
@@ -184,12 +190,16 @@ export class NotifyDistributionUseCase
     } else {
       // Create new tokenless provider
       this.logger.info('Creating new tokenless provider');
+      const providerUrl =
+        providerVendor === 'gitlab'
+          ? 'https://gitlab.com'
+          : 'https://github.com';
       const newProvider = await this.gitPort.addGitProvider({
         userId,
         organizationId,
         gitProvider: {
           source: GitProviderVendors[providerVendor],
-          url: 'http://github.com',
+          url: providerUrl,
           token: null,
         },
         // Allow tokenless provider since this is an internal use case for CLI distributions

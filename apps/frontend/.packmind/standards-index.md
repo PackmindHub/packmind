@@ -20,4 +20,4 @@ This standards index contains all available coding standards that can be used by
 
 ---
 
-*This standards index was automatically generated from distributed standard versions.*
+*This standards index was automatically generated from deployed standard versions.*
