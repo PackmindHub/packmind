@@ -264,11 +264,11 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
             },
             {
               value: 'deployments',
-              triggerLabel: 'Deployments',
+              triggerLabel: 'Distributions',
               content: (
                 <PMVStack align="stretch" gap={6} marginTop={6}>
                   <PMPageSection
-                    title="Deployment"
+                    title="Distribution"
                     backgroundColor="primary"
                     headingLevel="h4"
                     boxProps={{ width: 'xl' }}
@@ -281,7 +281,7 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
                       borderRadius="md"
                     >
                       <PMHeading level="h5">
-                        Deployed file information
+                        Distributed file information
                       </PMHeading>
                       <PMDataList
                         my={2}

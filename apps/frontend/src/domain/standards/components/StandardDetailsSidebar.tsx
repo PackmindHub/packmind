@@ -91,7 +91,7 @@ export const StandardDetailsSidebar = ({
       label={{
         type: 'icon-text',
         icon: LuGitCommitVertical,
-        text: 'Deployment',
+        text: 'Distribution',
         gap: 2,
       }}
       value="deployment"

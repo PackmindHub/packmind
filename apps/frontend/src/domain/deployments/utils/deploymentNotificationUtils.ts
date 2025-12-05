@@ -54,7 +54,7 @@ export function analyzeDeploymentResults(
 
   const analysis = getDeploymentAnalysis(allDeployments);
 
-  // All no changes (already deployed)
+  // All no changes (already distributed)
   if (
     analysis.successfulDeployments === 0 &&
     analysis.failedDeployments === 0 &&
@@ -62,8 +62,8 @@ export function analyzeDeploymentResults(
   ) {
     return {
       type: 'info',
-      title: 'Already deployed',
-      description: `The version of ${analysis.noChangesDeployments === 1 ? 'this standard/recipe is' : 'these standards/recipes are'} already deployed on ${analysis.noChangesDeployments === 1 ? 'this target' : 'these targets'}.`,
+      title: 'Already distributed',
+      description: `The version of ${analysis.noChangesDeployments === 1 ? 'this standard/recipe is' : 'these standards/recipes are'} already distributed on ${analysis.noChangesDeployments === 1 ? 'this target' : 'these targets'}.`,
     };
   }
 
@@ -76,21 +76,21 @@ export function analyzeDeploymentResults(
       // Already handled above
       return {
         type: 'info',
-        title: 'Already deployed',
-        description: `The version of ${analysis.noChangesDeployments === 1 ? 'this standard/recipe is' : 'these standards/recipes are'} already deployed on ${analysis.noChangesDeployments === 1 ? 'this target' : 'these targets'}.`,
+        title: 'Already distributed',
+        description: `The version of ${analysis.noChangesDeployments === 1 ? 'this standard/recipe is' : 'these standards/recipes are'} already distributed on ${analysis.noChangesDeployments === 1 ? 'this target' : 'these targets'}.`,
       };
     }
     if (analysis.noChangesDeployments > 0) {
       // Mixed success and no_changes
       return {
         type: 'success',
-        title: 'Deployment completed',
+        title: 'Distribution completed',
         description: `${analysis.successfulDeployments} deployment(s) completed successfully. ${analysis.noChangesDeployments} already up-to-date.`,
       };
     }
     return {
       type: 'success',
-      title: 'Deployment completed successfully',
+      title: 'Distribution completed successfully',
       description: `All ${analysis.totalDeployments} deployment(s) completed successfully.`,
     };
   }
@@ -109,8 +109,8 @@ export function analyzeDeploymentResults(
 
     return {
       type: 'error',
-      title: 'All deployments failed',
-      description: `All ${analysis.totalDeployments} deployment(s) failed:\n${failedTargetsList}`,
+      title: 'All distributions failed',
+      description: `All ${analysis.totalDeployments} distribution(s) failed:\n${failedTargetsList}`,
     };
   }
 
@@ -222,7 +222,7 @@ function getDeploymentAnalysis(
 }
 
 /**
- * Creates a detailed breakdown of what was deployed
+ * Creates a detailed breakdown of what was distributed
  */
 /**
  * Creates separate notifications for each deployment status type
@@ -251,8 +251,8 @@ export function createSeparateDeploymentNotifications(
   if (analysis.successfulItems > 0) {
     notifications.push({
       type: 'success',
-      title: 'Deployment completed successfully',
-      description: `${analysis.successfulItems} standard(s)/recipe(s) deployed successfully.`,
+      title: 'Distribution completed successfully',
+      description: `${analysis.successfulItems} standard(s)/recipe(s) distributed successfully.`,
     });
   }
 
@@ -260,7 +260,7 @@ export function createSeparateDeploymentNotifications(
   if (analysis.noChangesItems > 0) {
     notifications.push({
       type: 'info',
-      title: 'Already deployed',
+      title: 'Already distributed',
       description: `${analysis.noChangesItems} standard(s)/recipe(s) already up-to-date - no changes needed.`,
     });
   }

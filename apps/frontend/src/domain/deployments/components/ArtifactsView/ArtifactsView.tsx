@@ -61,7 +61,7 @@ const TABLE_COLUMNS: PMTableColumn[] = [
   { key: 'name', header: 'Target', grow: true },
   {
     key: 'version',
-    header: 'Version (deployed → latest)',
+    header: 'Version (distributed → latest)',
     align: 'center',
     grow: true,
   },

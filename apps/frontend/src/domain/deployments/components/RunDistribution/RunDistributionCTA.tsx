@@ -21,7 +21,7 @@ export const RunDistributionCTAImpl: React.FC<{ label?: string }> = () => {
       size="sm"
       disabled={!canRunDistribution}
     >
-      Deploy
+      Distribute
     </PMButton>
   );
 };

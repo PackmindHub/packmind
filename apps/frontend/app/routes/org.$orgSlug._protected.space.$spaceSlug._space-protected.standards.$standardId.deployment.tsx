@@ -20,7 +20,7 @@ export default function StandardDetailDeploymentRouteModule() {
   return (
     <PMVStack align="stretch" gap={6}>
       <PMPageSection
-        title="Deployment"
+        title="Distributions"
         backgroundColor="primary"
         headingLevel="h4"
         boxProps={{ width: 'xl' }}
@@ -32,7 +32,7 @@ export default function StandardDetailDeploymentRouteModule() {
           borderColor="border.secondary"
           borderRadius="md"
         >
-          <PMHeading level="h5">Deployed file information</PMHeading>
+          <PMHeading level="h5">Distributed file information</PMHeading>
           <PMDataList
             my={2}
             flexDirection={'row'}

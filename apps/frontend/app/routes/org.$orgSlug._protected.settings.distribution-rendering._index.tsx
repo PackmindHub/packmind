@@ -5,7 +5,7 @@ export default function SettingsDistributionRenderingRouteModule() {
   return (
     <PMPage
       title="Distribution rendering"
-      subtitle="Configure for which agents and formats your artifacts are deployed"
+      subtitle="Configure for which agents and formats your artifacts are distributed"
     >
       <PMVStack gap={6} align="stretch" maxWidth={'xl'}>
         <RenderingSettings />

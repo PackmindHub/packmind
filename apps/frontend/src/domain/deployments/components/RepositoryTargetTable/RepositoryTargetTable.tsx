@@ -33,7 +33,7 @@ const TABLE_COLUMNS: PMTableColumn[] = [
   { key: 'name', header: 'Name', grow: true },
   {
     key: 'version',
-    header: 'Version (deployed → latest)',
+    header: 'Version (distributed → latest)',
     align: 'center',
     grow: true,
   },
@@ -234,7 +234,7 @@ export const RepositoryTargetTable: React.FC<RepositoryTargetTableProps> = ({
             <LuCircleCheckBig />
           </PMIcon>
           <PMText variant="body" color="faded">
-            No recipes or standards deployed here
+            No recipes or standards distributed here
           </PMText>
         </PMHStack>
       )}

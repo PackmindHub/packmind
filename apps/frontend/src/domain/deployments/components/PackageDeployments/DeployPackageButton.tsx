@@ -20,7 +20,7 @@ export interface DeployPackageButtonProps {
 }
 
 export const DeployPackageButton: React.FC<DeployPackageButtonProps> = ({
-  label = 'Deploy',
+  label = 'Distribute',
   disabled = false,
   size = 'md',
   variant = 'primary',
@@ -68,16 +68,16 @@ export const DeployPackageButton: React.FC<DeployPackageButtonProps> = ({
                     } else {
                       pmToaster.create({
                         type: 'success',
-                        title: 'Deployment done',
+                        title: 'Distribution done',
                         description:
-                          'Package(s) are now deployed to your targets',
+                          'Package(s) are now distributed to your targets',
                       });
                     }
                   }}
                 >
                   <PMDialog.Header>
                     <PMDialog.Title asChild>
-                      <PMHeading level="h2">Deploy to targets</PMHeading>
+                      <PMHeading level="h2">Distribute to targets</PMHeading>
                     </PMDialog.Title>
                     <PMDialog.CloseTrigger asChild>
                       <PMCloseButton size="sm" />

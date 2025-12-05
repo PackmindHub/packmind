@@ -8,7 +8,7 @@ export const STANDARD_MESSAGES = {
     created: 'Standard created successfully!',
     updated: 'Standard updated successfully!',
     deleted: 'Standard deleted successfully!',
-    deployed: 'Standard deployed successfully!',
+    distributed: 'Standard distributed successfully!',
   },
   error: {
     createFailed: 'Failed to create standard. Please try again.',

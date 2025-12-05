@@ -328,7 +328,7 @@ export const StandardForm: React.FC<StandardFormProps> = ({
 
         <PMFieldset.Root>
           <PMFieldset.Legend>
-            <PMHeading level="h3">Deployment</PMHeading>
+            <PMHeading level="h3">Distribution</PMHeading>
           </PMFieldset.Legend>
           <PMFieldset.Content
             border={'solid 1px'}

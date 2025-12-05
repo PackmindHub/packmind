@@ -9,7 +9,7 @@ export const RECIPE_MESSAGES = {
     created: 'Recipe created successfully!',
     updated: 'Recipe updated successfully!',
     deleted: 'Recipe deleted successfully!',
-    deployed: 'Recipe deployed successfully!',
+    distributed: 'Recipe distributed successfully!',
   },
   error: {
     createFailed: 'Failed to create recipe. Please try again.',

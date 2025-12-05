@@ -78,7 +78,7 @@ export const StandardCentricView: React.FC<StandardCentricViewProps> = ({
       return (
         <PMEmptyState
           title="No undeployed standards"
-          description="All standards have been deployed to at least one repository"
+          description="All standards have been distributed to at least one repository"
         />
       );
     }
@@ -174,7 +174,7 @@ export const StandardCentricView: React.FC<StandardCentricViewProps> = ({
                   <PMBox>
                     <PMBox mb={2}>
                       <PMText variant="body" color="faded">
-                        This standard has not been deployed yet
+                        This standard has not been distributed yet
                       </PMText>
                     </PMBox>
                   </PMBox>

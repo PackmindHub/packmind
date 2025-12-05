@@ -695,7 +695,7 @@ describe('RepositoryCentricView', () => {
       expect(screen.getByText('No outdated targets')).toBeInTheDocument();
       expect(
         screen.getByText(
-          'All targets have up-to-date recipes and standards deployed',
+          'All targets have up-to-date recipes and standards distributed',
         ),
       ).toBeInTheDocument();
     });
@@ -706,7 +706,7 @@ describe('RepositoryCentricView', () => {
       expect(screen.getByText('No repositories')).toBeInTheDocument();
       expect(
         screen.getByText(
-          'No repositories with deployed recipes or standards found',
+          'No repositories with distributed recipes or standards found',
         ),
       ).toBeInTheDocument();
     });

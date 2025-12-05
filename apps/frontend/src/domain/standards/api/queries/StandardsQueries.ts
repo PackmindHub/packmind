@@ -111,7 +111,7 @@ export const useCreateStandardMutation = () => {
         queryKey: getStandardsBySpaceKey(spaceId),
       });
 
-      // Deployments overview (new standard can be deployed)
+      // Deployments overview (new standard can be distributed)
       await queryClient.invalidateQueries({
         queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
       });

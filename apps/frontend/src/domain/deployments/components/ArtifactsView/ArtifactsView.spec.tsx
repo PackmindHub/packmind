@@ -16,7 +16,7 @@ const makeRecipe = (
   latest: number,
   targets: Array<{
     name: string;
-    deployed: number;
+    distributed: number;
     up: boolean;
     repo?: { owner: string; repo: string; branch?: string };
   }>,
@@ -26,7 +26,7 @@ const makeRecipe = (
     latestVersion: { version: latest },
     targetDeployments: targets.map((t) => ({
       target: { id: `${id}-${t.name}`, name: t.name },
-      deployedVersion: { version: t.deployed },
+      deployedVersion: { version: t.distributed },
       isUpToDate: t.up,
       gitRepo: t.repo ?? {
         id: `${id}-${t.name}-repo`,
@@ -43,7 +43,7 @@ const makeStandard = (
   latest: number,
   targets: Array<{
     name: string;
-    deployed: number;
+    distributed: number;
     up: boolean;
     repo?: { owner: string; repo: string; branch?: string };
   }>,
@@ -53,7 +53,7 @@ const makeStandard = (
     latestVersion: { version: latest },
     targetDeployments: targets.map((t) => ({
       target: { id: `${id}-${t.name}`, name: t.name },
-      deployedVersion: { version: t.deployed },
+      deployedVersion: { version: t.distributed },
       isUpToDate: t.up,
       gitRepo: t.repo ?? {
         id: `${id}-${t.name}-repo`,
@@ -131,17 +131,17 @@ describe('ArtifactsView', () => {
   it('renders data for recipes and standards with correct sorting by target name', () => {
     const recipes = [
       makeRecipe('r1', 'Recipe Z', 10, [
-        { name: 'Prod', deployed: 8, up: false },
-        { name: 'Alpha', deployed: 10, up: true },
+        { name: 'Prod', distributed: 8, up: false },
+        { name: 'Alpha', distributed: 10, up: true },
       ]),
       makeRecipe('r2', 'Recipe A', 5, [
-        { name: 'Beta', deployed: 5, up: true },
+        { name: 'Beta', distributed: 5, up: true },
       ]),
     ];
     const standards = [
       makeStandard('s1', 'Standard B', 3, [
-        { name: 'Gamma', deployed: 2, up: false },
-        { name: 'Delta', deployed: 3, up: true },
+        { name: 'Gamma', distributed: 2, up: false },
+        { name: 'Delta', distributed: 3, up: true },
       ]),
     ];
 
@@ -197,14 +197,14 @@ describe('ArtifactsView', () => {
   it('filters rows by status mode (outdated vs up-to-date)', () => {
     const recipes = [
       makeRecipe('r1', 'Recipe Z', 10, [
-        { name: 'Prod', deployed: 8, up: false },
-        { name: 'Alpha', deployed: 10, up: true },
+        { name: 'Prod', distributed: 8, up: false },
+        { name: 'Alpha', distributed: 10, up: true },
       ]),
     ];
     const standards = [
       makeStandard('s1', 'Standard B', 3, [
-        { name: 'Gamma', deployed: 2, up: false },
-        { name: 'Delta', deployed: 3, up: true },
+        { name: 'Gamma', distributed: 2, up: false },
+        { name: 'Delta', distributed: 3, up: true },
       ]),
     ];
 

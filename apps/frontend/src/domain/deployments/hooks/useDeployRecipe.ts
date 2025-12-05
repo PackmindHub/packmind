@@ -73,7 +73,7 @@ export const useDeployRecipe = () => {
 
       const recipeName = params.name || params.id;
       console.log(
-        `Recipe ${recipeName} v${params.version} deployed to ${targetIds.length} targets successfully`,
+        `Recipe ${recipeName} v${params.version} distributed to ${targetIds.length} targets successfully`,
       );
 
       return deployments;
@@ -147,7 +147,7 @@ export const useDeployRecipe = () => {
           });
 
           console.log(
-            `${validResults.length} recipes deployed to ${targetIds.length} targets successfully`,
+            `${validResults.length} recipes distributed to ${targetIds.length} targets successfully`,
           );
 
           // Log any skipped recipes

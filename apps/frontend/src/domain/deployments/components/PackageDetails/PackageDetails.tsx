@@ -767,7 +767,7 @@ export const PackageDetails = ({
       actions={
         <PMHStack gap={3}>
           <DeployPackageButton
-            label="Deploy"
+            label="Distribute"
             size="md"
             selectedPackages={[pkg]}
             disabled={isPackageEmpty}

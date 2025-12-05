@@ -143,7 +143,7 @@ export const OrganizationOnboardingChecklist: React.FC = () => {
               title={<>Make your first deployment</>}
               description={
                 hasAnyDeployment
-                  ? 'At least one standard or recipe is deployed.'
+                  ? 'At least one standard or recipe is distributed.'
                   : 'Deploy a standard or a recipe to a target repository.'
               }
               cta={
