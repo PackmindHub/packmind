@@ -14,6 +14,9 @@ export type AnalyticsEventMap = {
     from: number;
     to: number;
   };
+  mcp_configuration_card_clicked: {
+    agent: string;
+  };
 };
 
 export type AnalyticsEventName = keyof AnalyticsEventMap;
