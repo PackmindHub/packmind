@@ -3,8 +3,7 @@ import { OrganizationId, UserOrganizationRole } from '@packmind/types';
 import {
   TargetId,
   TargetWithRepository,
-  RecipesDeployment,
-  StandardsDeployment,
+  Distribution,
   RenderModeConfiguration,
   RenderMode,
   DEFAULT_ACTIVE_RENDER_MODES,
@@ -62,8 +61,8 @@ interface RunDistributionProps {
   selectedStandards: Standard[];
   selectedPackages?: Package[];
   onDistributionComplete?: (deploymentResults?: {
-    recipesDeployments: RecipesDeployment[];
-    standardsDeployments: StandardsDeployment[];
+    recipesDistributions: Distribution[];
+    standardsDistributions: Distribution[];
   }) => void;
   children?: React.ReactNode;
 }
@@ -146,11 +145,12 @@ const RunDistributionComponent: React.FC<RunDistributionProps> = ({
     if (!organization) return;
 
     try {
-      const recipesDeployments: RecipesDeployment[] = [];
-      const standardsDeployments: StandardsDeployment[] = [];
+      const recipesDistributions: Distribution[] = [];
+      const standardsDistributions: Distribution[] = [];
 
       if (selectedPackages.length > 0) {
-        const packageDeployments = await deployPackages(
+        // Deploy packages - results are PackagesDeployment[], not mixed with other types
+        await deployPackages(
           {
             packages: selectedPackages.map((pkg) => ({
               id: pkg.id,
@@ -159,18 +159,8 @@ const RunDistributionComponent: React.FC<RunDistributionProps> = ({
           },
           selectedTargetIds,
         );
-
-        // Package deployments return both standards and recipes deployments
-        // We need to separate them based on their properties
-        packageDeployments.forEach((deployment) => {
-          if ('standardVersions' in deployment) {
-            standardsDeployments.push(
-              deployment as unknown as StandardsDeployment,
-            );
-          } else if ('recipeVersions' in deployment) {
-            recipesDeployments.push(deployment as unknown as RecipesDeployment);
-          }
-        });
+        // Package deployments are tracked separately through the distributions system
+        // No need to add to recipesDistributions or standardsDistributions
       }
 
       if (selectedRecipes.length > 0) {
@@ -183,7 +173,7 @@ const RunDistributionComponent: React.FC<RunDistributionProps> = ({
           },
           selectedTargetIds,
         );
-        recipesDeployments.push(...recipeResults);
+        recipesDistributions.push(...recipeResults);
       }
 
       if (selectedStandards.length > 0) {
@@ -191,10 +181,13 @@ const RunDistributionComponent: React.FC<RunDistributionProps> = ({
           { standards: selectedStandards },
           selectedTargetIds,
         );
-        standardsDeployments.push(...standardResults);
+        standardsDistributions.push(...standardResults);
       }
       setDeploymentError(null);
-      onDistributionComplete?.({ recipesDeployments, standardsDeployments });
+      onDistributionComplete?.({
+        recipesDistributions,
+        standardsDistributions,
+      });
     } catch (e: unknown) {
       console.error('Distribution failed:', e);
       if (e instanceof Error) {

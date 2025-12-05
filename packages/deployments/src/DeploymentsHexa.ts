@@ -67,8 +67,6 @@ export class DeploymentsHexa extends BaseHexa<
       // Create adapter in constructor - ports will be set during initialize()
       this.adapter = new DeploymentsAdapter(
         this.services,
-        this.repositories.getStandardsDeploymentRepository(),
-        this.repositories.getRecipesDeploymentRepository(),
         this.repositories.getDistributionRepository(),
         this.repositories.getDistributedPackageRepository(),
       );

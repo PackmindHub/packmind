@@ -1,6 +1,4 @@
 import { ITargetRepository } from './ITargetRepository';
-import { IRecipesDeploymentRepository } from './IRecipesDeploymentRepository';
-import { IStandardsDeploymentRepository } from './IStandardsDeploymentRepository';
 import { IRenderModeConfigurationRepository } from './IRenderModeConfigurationRepository';
 import { IPackageRepository } from './IPackageRepository';
 import { IDistributionRepository } from './IDistributionRepository';
@@ -18,16 +16,6 @@ export interface IDeploymentsRepositories {
    * Get the target repository instance
    */
   getTargetRepository(): ITargetRepository;
-
-  /**
-   * Get the recipes deployment repository instance
-   */
-  getRecipesDeploymentRepository(): IRecipesDeploymentRepository;
-
-  /**
-   * Get the standards deployment repository instance
-   */
-  getStandardsDeploymentRepository(): IStandardsDeploymentRepository;
 
   /**
    * Get the render mode configuration repository instance

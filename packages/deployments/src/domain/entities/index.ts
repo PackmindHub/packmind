@@ -1,2 +1,2 @@
-// RecipesDeployment and StandardsDeployment are defined in @packmind/types
-// Import them directly from there, not from this package
+// RecipesDeployment is defined in @packmind/types
+// Import it directly from there, not from this package

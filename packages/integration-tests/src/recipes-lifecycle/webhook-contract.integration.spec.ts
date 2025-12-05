@@ -440,7 +440,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
           it('automatically deploys new recipe version to source repository', async () => {
             const distributions = await testApp.deploymentsHexa
               .getAdapter()
-              .listDeploymentsByRecipe({
+              .listDistributionsByRecipe({
                 ...dataFactory.packmindCommand(),
                 recipeId: recipe.id,
               });
@@ -668,7 +668,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
         jest
           .spyOn(
             testApp.deploymentsHexa.getAdapter(),
-            'listDeploymentsByRecipe',
+            'listDistributionsByRecipe',
           )
           .mockResolvedValue([
             {
@@ -750,7 +750,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
         jest
           .spyOn(
             testApp.deploymentsHexa.getAdapter(),
-            'listDeploymentsByRecipe',
+            'listDistributionsByRecipe',
           )
           .mockResolvedValue([
             {
@@ -866,7 +866,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
           jest
             .spyOn(
               testApp.deploymentsHexa.getAdapter(),
-              'listDeploymentsByRecipe',
+              'listDistributionsByRecipe',
             )
             .mockResolvedValue([
               {

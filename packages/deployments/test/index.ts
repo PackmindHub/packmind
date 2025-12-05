@@ -1,4 +1,3 @@
-export * from './deploymentFactory';
 export * from './deploymentOverviewFactory';
 export * from './packageFactory';
 export * from './renderModeConfigurationFactory';

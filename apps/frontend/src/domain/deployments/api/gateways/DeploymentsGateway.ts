@@ -1,5 +1,5 @@
 import { NewGateway, NewPackmindCommandBody } from '@packmind/types';
-import { StandardId, SpaceId, RecipeId } from '@packmind/types';
+import { SpaceId, RecipeId } from '@packmind/types';
 import { IUpdateTargetUseCase, IDeleteTargetUseCase } from '@packmind/types';
 import {
   IAddTargetUseCase,
@@ -12,9 +12,7 @@ import {
   IPublishRecipes,
   IPublishStandards,
   IPublishPackages,
-  IListDeploymentsByRecipe,
   IGetStandardDeploymentOverview,
-  IListDeploymentsByStandard,
   IListDeploymentsByPackage,
   IListDistributionsByRecipe,
   IListDistributionsByStandard,
@@ -25,8 +23,6 @@ import {
   IGetTargetsByOrganizationUseCase,
   IGetTargetsByRepositoryUseCase,
   PackageId,
-  ListDeploymentsByRecipeCommand,
-  ListDeploymentsByStandardCommand,
   ListDeploymentsByPackageCommand,
   ListDistributionsByRecipeCommand,
   ListDistributionsByStandardCommand,
@@ -54,24 +50,6 @@ export class DeploymentsGatewayApi
   constructor() {
     super('/organizations');
   }
-
-  listDeploymentsByRecipeId: NewGateway<IListDeploymentsByRecipe> = async ({
-    organizationId,
-    recipeId,
-  }: NewPackmindCommandBody<ListDeploymentsByRecipeCommand>) => {
-    return this._api.get(
-      `${this._endpoint}/${organizationId}/deployments/recipe/${recipeId}`,
-    );
-  };
-
-  listDeploymentsByStandardId: NewGateway<IListDeploymentsByStandard> = async ({
-    organizationId,
-    standardId,
-  }: NewPackmindCommandBody<ListDeploymentsByStandardCommand>) => {
-    return this._api.get(
-      `${this._endpoint}/${organizationId}/deployments/standard/${standardId}`,
-    );
-  };
 
   listDeploymentsByPackageId: NewGateway<IListDeploymentsByPackage> = async ({
     organizationId,

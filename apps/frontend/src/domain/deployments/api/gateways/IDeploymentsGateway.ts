@@ -3,8 +3,6 @@ import {
   IGetDeploymentOverview,
   IGetPackageByIdUseCase,
   IGetStandardDeploymentOverview,
-  IListDeploymentsByRecipe,
-  IListDeploymentsByStandard,
   IListDeploymentsByPackage,
   IListDistributionsByRecipe,
   IListDistributionsByStandard,
@@ -25,8 +23,6 @@ import {
 } from '@packmind/types';
 
 export interface IDeploymentsGateway {
-  listDeploymentsByRecipeId: NewGateway<IListDeploymentsByRecipe>;
-  listDeploymentsByStandardId: NewGateway<IListDeploymentsByStandard>;
   listDeploymentsByPackageId: NewGateway<IListDeploymentsByPackage>;
   listDistributionsByRecipeId: NewGateway<IListDistributionsByRecipe>;
   listDistributionsByStandardId: NewGateway<IListDistributionsByStandard>;

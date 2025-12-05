@@ -19,8 +19,6 @@ import {
   Distribution,
   FindActiveStandardVersionsByTargetCommand,
   FindActiveStandardVersionsByTargetResponse,
-  FindDeployedStandardByRepositoryCommand,
-  FindDeployedStandardByRepositoryResponse,
   GetDeploymentOverviewCommand,
   GetPackageByIdCommand,
   GetPackageByIdResponse,
@@ -46,8 +44,6 @@ import {
   ISpacesPortName,
   IStandardsPort,
   IStandardsPortName,
-  ListDeploymentsByRecipeCommand,
-  ListDeploymentsByStandardCommand,
   ListDeploymentsByPackageCommand,
   ListDistributionsByRecipeCommand,
   ListDistributionsByStandardCommand,
@@ -64,14 +60,11 @@ import {
   PullContentCommand,
   RenderModeConfiguration,
   StandardDeploymentOverview,
-  StandardsDeployment,
   Target,
   TargetWithRepository,
   UpdateRenderModeConfigurationCommand,
   UpdateTargetCommand,
 } from '@packmind/types';
-import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
-import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 import { IDistributedPackageRepository } from '../../domain/repositories/IDistributedPackageRepository';
 import { DeploymentsServices } from '../services/DeploymentsServices';
@@ -83,7 +76,6 @@ import { CreateRenderModeConfigurationUseCase } from '../useCases/CreateRenderMo
 import { DeletePackagesBatchUsecase } from '../useCases/deletePackage/deletePackagesBatch.usecase';
 import { DeleteTargetUseCase } from '../useCases/DeleteTargetUseCase';
 import { FindActiveStandardVersionsByTargetUseCase } from '../useCases/FindActiveStandardVersionsByTargetUseCase';
-import { FindDeployedStandardByRepositoryUseCase } from '../useCases/FindDeployedStandardByRepositoryUseCase';
 import { GetDeploymentOverviewUseCase } from '../useCases/GetDeploymentOverviewUseCase';
 import { GetPackageByIdUsecase } from '../useCases/getPackageById/getPackageById.usecase';
 import { GetRenderModeConfigurationUseCase } from '../useCases/GetRenderModeConfigurationUseCase';
@@ -91,8 +83,6 @@ import { GetStandardDeploymentOverviewUseCase } from '../useCases/GetStandardDep
 import { GetTargetsByGitRepoUseCase } from '../useCases/GetTargetsByGitRepoUseCase';
 import { GetTargetsByOrganizationUseCase } from '../useCases/GetTargetsByOrganizationUseCase';
 import { GetTargetsByRepositoryUseCase } from '../useCases/GetTargetsByRepositoryUseCase';
-import { ListDeploymentsByRecipeUseCase } from '../useCases/ListDeploymentsByRecipeUseCase';
-import { ListDeploymentsByStandardUseCase } from '../useCases/ListDeploymentsByStandardUseCase';
 import { ListDeploymentsByPackageUseCase } from '../useCases/ListDeploymentsByPackageUseCase';
 import { ListDistributionsByRecipeUseCase } from '../useCases/ListDistributionsByRecipeUseCase';
 import { ListDistributionsByStandardUseCase } from '../useCases/ListDistributionsByStandardUseCase';
@@ -117,13 +107,10 @@ export class DeploymentsAdapter
   private accountsPort: IAccountsPort | null = null;
 
   // Use cases - initialized in initialize()
-  private _listDeploymentsByRecipeUseCase!: ListDeploymentsByRecipeUseCase;
   private _publishArtifactsUseCase!: PublishArtifactsUseCase;
   private _publishPackagesUseCase!: PublishPackagesUseCase;
-  private _findDeployedStandardByRepositoryUseCase!: FindDeployedStandardByRepositoryUseCase;
   private _findActiveStandardVersionsByTargetUseCase!: FindActiveStandardVersionsByTargetUseCase;
   private _getDeploymentOverviewUseCase!: GetDeploymentOverviewUseCase;
-  private _listDeploymentsByStandardUseCase!: ListDeploymentsByStandardUseCase;
   private _listDeploymentsByPackageUseCase!: ListDeploymentsByPackageUseCase;
   private _listDistributionsByRecipeUseCase!: ListDistributionsByRecipeUseCase;
   private _listDistributionsByStandardUseCase!: ListDistributionsByStandardUseCase;
@@ -150,8 +137,6 @@ export class DeploymentsAdapter
 
   constructor(
     private readonly deploymentsServices: DeploymentsServices,
-    private readonly standardDeploymentRepository: IStandardsDeploymentRepository,
-    private readonly recipesDeploymentRepository: IRecipesDeploymentRepository,
     private readonly distributionRepository: IDistributionRepository,
     private readonly distributedPackageRepository: IDistributedPackageRepository,
   ) {}
@@ -191,10 +176,6 @@ export class DeploymentsAdapter
     }
 
     // Step 3: Create all use cases with non-null ports
-    this._listDeploymentsByRecipeUseCase = new ListDeploymentsByRecipeUseCase(
-      this.distributionRepository,
-    );
-
     this._publishArtifactsUseCase = new PublishArtifactsUseCase(
       this.recipesPort,
       this.standardsPort,
@@ -214,11 +195,6 @@ export class DeploymentsAdapter
       this.distributedPackageRepository,
     );
 
-    this._findDeployedStandardByRepositoryUseCase =
-      new FindDeployedStandardByRepositoryUseCase(
-        this.standardDeploymentRepository,
-      );
-
     this._findActiveStandardVersionsByTargetUseCase =
       new FindActiveStandardVersionsByTargetUseCase(
         this.distributionRepository,
@@ -236,9 +212,6 @@ export class DeploymentsAdapter
       this.gitPort,
       getTargetsByOrganizationUseCase,
     );
-
-    this._listDeploymentsByStandardUseCase =
-      new ListDeploymentsByStandardUseCase(this.standardDeploymentRepository);
 
     this._listDeploymentsByPackageUseCase = new ListDeploymentsByPackageUseCase(
       this.distributionRepository,
@@ -392,12 +365,6 @@ export class DeploymentsAdapter
     return this as IDeploymentPort;
   }
 
-  listDeploymentsByRecipe(
-    command: ListDeploymentsByRecipeCommand,
-  ): Promise<Distribution[]> {
-    return this._listDeploymentsByRecipeUseCase.execute(command);
-  }
-
   publishArtifacts(
     command: PublishArtifactsCommand,
   ): Promise<PublishArtifactsResponse> {
@@ -410,12 +377,6 @@ export class DeploymentsAdapter
     return this._publishPackagesUseCase.execute(command);
   }
 
-  findActiveStandardVersionsByRepository(
-    command: FindDeployedStandardByRepositoryCommand,
-  ): Promise<FindDeployedStandardByRepositoryResponse> {
-    return this._findDeployedStandardByRepositoryUseCase.execute(command);
-  }
-
   findActiveStandardVersionsByTarget(
     command: FindActiveStandardVersionsByTargetCommand,
   ): Promise<FindActiveStandardVersionsByTargetResponse> {
@@ -426,12 +387,6 @@ export class DeploymentsAdapter
     command: GetDeploymentOverviewCommand,
   ): Promise<DeploymentOverview> {
     return this._getDeploymentOverviewUseCase.execute(command);
-  }
-
-  listDeploymentsByStandard(
-    command: ListDeploymentsByStandardCommand,
-  ): Promise<StandardsDeployment[]> {
-    return this._listDeploymentsByStandardUseCase.execute(command);
   }
 
   listDeploymentsByPackage(
