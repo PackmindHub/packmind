@@ -56,6 +56,9 @@ target "_platforms-release" {
 target "api" {
   inherits   = ["_common"]
   dockerfile = "dockerfile/Dockerfile.api"
+  args = {
+    EDITION = "${EDITION}"
+  }
   tags = [
     "${REGISTRY}/api-${EDITION}:${VERSION}",
     "${REGISTRY}/api-${EDITION}:latest",

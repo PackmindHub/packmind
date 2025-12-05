@@ -240,6 +240,7 @@ jobs:
           docker buildx build \
             --platform linux/amd64,linux/arm64 \
             -f dockerfile/Dockerfile.api \
+            --build-arg EDITION=${{ vars.PACKMIND_EDITION }} \
             -t packmind/api:${{ steps.get-version.outputs.version }} \
             -t packmind/api:latest \
             --push \
