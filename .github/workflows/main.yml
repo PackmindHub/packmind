@@ -64,6 +64,8 @@ jobs:
     permissions:
       contents: write
     uses: ./.github/workflows/publish-cli-release.yml
+    with:
+      cli-artifact: ${{ needs.build.outputs.cli-artifact }}
     secrets:
       MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
       MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
