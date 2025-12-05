@@ -27,6 +27,7 @@ interface TargetFormProps {
   gitRepoId?: GitRepoId;
   availableBranches?: BranchOption[];
   defaultBranch?: string;
+  canEditPath?: boolean;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
@@ -50,6 +51,7 @@ export const TargetForm: React.FC<TargetFormProps> = ({
   gitRepoId,
   availableBranches = [],
   defaultBranch,
+  canEditPath = true,
   onSuccess,
   onCancel,
 }) => {
@@ -250,10 +252,15 @@ export const TargetForm: React.FC<TargetFormProps> = ({
             placeholder="e.g., /apps/frontend/, /docs/"
             error={errors.path}
             size="sm"
+            disabled={mode === 'edit' && !canEditPath}
           />
           {errors.path ? (
             <PMText fontSize="xs" color="error">
               {errors.path}
+            </PMText>
+          ) : mode === 'edit' && !canEditPath ? (
+            <PMText fontSize="xs" color="faded">
+              Path cannot be changed for targets on providers without a token
             </PMText>
           ) : (
             <PMText fontSize="xs" color="faded">
