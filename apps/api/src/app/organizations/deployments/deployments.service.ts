@@ -14,7 +14,6 @@ import {
   PublishRecipesCommand,
   PublishStandardsCommand,
   PublishPackagesCommand,
-  RecipesDeployment,
   StandardsDeployment,
   PackagesDeployment,
   StandardDeploymentOverview,
@@ -53,7 +52,7 @@ export class DeploymentsService {
 
   async listDeploymentsByRecipe(
     command: ListDeploymentsByRecipeCommand,
-  ): Promise<RecipesDeployment[]> {
+  ): Promise<Distribution[]> {
     return this.deploymentAdapter.listDeploymentsByRecipe(command);
   }
 
@@ -89,26 +88,26 @@ export class DeploymentsService {
 
   async publishRecipes(
     command: PublishRecipesCommand,
-  ): Promise<RecipesDeployment[]> {
+  ): Promise<Distribution[]> {
     const result: PublishArtifactsResponse =
       await this.deploymentAdapter.publishArtifacts({
         ...command,
         recipeVersionIds: command.recipeVersionIds,
         standardVersionIds: [],
       } as PublishArtifactsCommand);
-    return result.recipeDeployments;
+    return result.distributions;
   }
 
   async publishStandards(
     command: PublishStandardsCommand,
-  ): Promise<StandardsDeployment[]> {
+  ): Promise<Distribution[]> {
     const result: PublishArtifactsResponse =
       await this.deploymentAdapter.publishArtifacts({
         ...command,
         recipeVersionIds: [],
         standardVersionIds: command.standardVersionIds,
       } as PublishArtifactsCommand);
-    return result.standardDeployments;
+    return result.distributions;
   }
 
   async publishPackages(

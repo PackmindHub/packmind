@@ -7,7 +7,9 @@ import {
   OrganizationId,
   PackageId,
   RecipeId,
+  RecipeVersion,
   StandardId,
+  StandardVersion,
   TargetId,
 } from '@packmind/types';
 import { Repository } from 'typeorm';
@@ -410,6 +412,140 @@ export class DistributionRepository implements IDistributionRepository {
     } catch (error) {
       this.logger.error('Failed to find distribution by ID', {
         distributionId: id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async findActiveStandardVersionsByTarget(
+    organizationId: OrganizationId,
+    targetId: TargetId,
+  ): Promise<StandardVersion[]> {
+    this.logger.info('Finding active standard versions by target', {
+      organizationId,
+      targetId,
+    });
+
+    try {
+      const distributions = await this.repository
+        .createQueryBuilder('distribution')
+        .leftJoinAndSelect(
+          'distribution.distributedPackages',
+          'distributedPackage',
+        )
+        .leftJoinAndSelect(
+          'distributedPackage.standardVersions',
+          'standardVersion',
+        )
+        .where('distribution.organizationId = :organizationId', {
+          organizationId,
+        })
+        .andWhere('distribution.target_id = :targetId', { targetId })
+        .andWhere('distribution.status = :status', {
+          status: DistributionStatus.success,
+        })
+        .orderBy('distribution.createdAt', 'DESC')
+        .getMany();
+
+      // Extract all standard versions and deduplicate by standardId,
+      // keeping the most recently distributed version of each standard
+      const standardVersionMap = new Map<string, StandardVersion>();
+
+      // Process distributions in chronological order (most recent first)
+      for (const distribution of distributions) {
+        for (const distributedPackage of distribution.distributedPackages) {
+          for (const standardVersion of distributedPackage.standardVersions) {
+            // Only keep the first (most recent) version of each standard
+            if (!standardVersionMap.has(standardVersion.standardId)) {
+              standardVersionMap.set(
+                standardVersion.standardId,
+                standardVersion,
+              );
+            }
+          }
+        }
+      }
+
+      const activeStandardVersions = Array.from(standardVersionMap.values());
+
+      this.logger.info('Active standard versions found by target', {
+        organizationId,
+        targetId,
+        totalSuccessfulDistributions: distributions.length,
+        activeStandardVersionsCount: activeStandardVersions.length,
+        standardIds: activeStandardVersions.map((sv) => sv.standardId),
+      });
+
+      return activeStandardVersions;
+    } catch (error) {
+      this.logger.error('Failed to find active standard versions by target', {
+        organizationId,
+        targetId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
+
+  async findActiveRecipeVersionsByTarget(
+    organizationId: OrganizationId,
+    targetId: TargetId,
+  ): Promise<RecipeVersion[]> {
+    this.logger.info('Finding active recipe versions by target', {
+      organizationId,
+      targetId,
+    });
+
+    try {
+      const distributions = await this.repository
+        .createQueryBuilder('distribution')
+        .leftJoinAndSelect(
+          'distribution.distributedPackages',
+          'distributedPackage',
+        )
+        .leftJoinAndSelect('distributedPackage.recipeVersions', 'recipeVersion')
+        .where('distribution.organizationId = :organizationId', {
+          organizationId,
+        })
+        .andWhere('distribution.target_id = :targetId', { targetId })
+        .andWhere('distribution.status = :status', {
+          status: DistributionStatus.success,
+        })
+        .orderBy('distribution.createdAt', 'DESC')
+        .getMany();
+
+      // Extract all recipe versions and deduplicate by recipeId,
+      // keeping the most recently distributed version of each recipe
+      const recipeVersionMap = new Map<string, RecipeVersion>();
+
+      // Process distributions in chronological order (most recent first)
+      for (const distribution of distributions) {
+        for (const distributedPackage of distribution.distributedPackages) {
+          for (const recipeVersion of distributedPackage.recipeVersions) {
+            // Only keep the first (most recent) version of each recipe
+            if (!recipeVersionMap.has(recipeVersion.recipeId)) {
+              recipeVersionMap.set(recipeVersion.recipeId, recipeVersion);
+            }
+          }
+        }
+      }
+
+      const activeRecipeVersions = Array.from(recipeVersionMap.values());
+
+      this.logger.info('Active recipe versions found by target', {
+        organizationId,
+        targetId,
+        totalSuccessfulDistributions: distributions.length,
+        activeRecipeVersionsCount: activeRecipeVersions.length,
+        recipeIds: activeRecipeVersions.map((rv) => rv.recipeId),
+      });
+
+      return activeRecipeVersions;
+    } catch (error) {
+      this.logger.error('Failed to find active recipe versions by target', {
+        organizationId,
+        targetId,
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

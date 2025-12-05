@@ -4,7 +4,7 @@ import {
   IFindActiveStandardVersionsByTargetUseCase,
   StandardVersion,
 } from '@packmind/types';
-import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
+import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 
 const origin = 'FindActiveStandardVersionsByTargetUseCase';
 
@@ -12,7 +12,7 @@ export class FindActiveStandardVersionsByTargetUseCase
   implements IFindActiveStandardVersionsByTargetUseCase
 {
   constructor(
-    private readonly standardsDeploymentRepository: IStandardsDeploymentRepository,
+    private readonly distributionRepository: IDistributionRepository,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -26,7 +26,7 @@ export class FindActiveStandardVersionsByTargetUseCase
 
     try {
       const standardVersions =
-        await this.standardsDeploymentRepository.findActiveStandardVersionsByTarget(
+        await this.distributionRepository.findActiveStandardVersionsByTarget(
           command.organizationId,
           command.targetId,
         );

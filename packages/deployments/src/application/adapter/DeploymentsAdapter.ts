@@ -62,7 +62,6 @@ import {
   PublishArtifactsResponse,
   PublishPackagesCommand,
   PullContentCommand,
-  RecipesDeployment,
   RenderModeConfiguration,
   StandardDeploymentOverview,
   StandardsDeployment,
@@ -193,7 +192,7 @@ export class DeploymentsAdapter
 
     // Step 3: Create all use cases with non-null ports
     this._listDeploymentsByRecipeUseCase = new ListDeploymentsByRecipeUseCase(
-      this.recipesDeploymentRepository,
+      this.distributionRepository,
     );
 
     this._publishArtifactsUseCase = new PublishArtifactsUseCase(
@@ -201,8 +200,7 @@ export class DeploymentsAdapter
       this.standardsPort,
       this.gitPort,
       this.codingAgentPort,
-      this.recipesDeploymentRepository,
-      this.standardDeploymentRepository,
+      this.distributionRepository,
       this.deploymentsServices.getTargetService(),
       this.deploymentsServices.getRenderModeConfigurationService(),
       ports.eventEmitterService,
@@ -213,7 +211,6 @@ export class DeploymentsAdapter
       this.standardsPort,
       this,
       this.deploymentsServices.getPackageService(),
-      this.distributionRepository,
       this.distributedPackageRepository,
     );
 
@@ -224,7 +221,7 @@ export class DeploymentsAdapter
 
     this._findActiveStandardVersionsByTargetUseCase =
       new FindActiveStandardVersionsByTargetUseCase(
-        this.standardDeploymentRepository,
+        this.distributionRepository,
       );
 
     const getTargetsByOrganizationUseCase = new GetTargetsByOrganizationUseCase(
@@ -397,7 +394,7 @@ export class DeploymentsAdapter
 
   listDeploymentsByRecipe(
     command: ListDeploymentsByRecipeCommand,
-  ): Promise<RecipesDeployment[]> {
+  ): Promise<Distribution[]> {
     return this._listDeploymentsByRecipeUseCase.execute(command);
   }
 

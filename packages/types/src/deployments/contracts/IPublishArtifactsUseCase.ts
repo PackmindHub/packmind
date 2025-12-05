@@ -2,8 +2,7 @@ import { IUseCase, PackmindCommand } from '../../UseCase';
 import { RecipeVersionId } from '../../recipes';
 import { StandardVersionId } from '../../standards';
 import { TargetId } from '../TargetId';
-import { RecipesDeployment } from '../RecipesDeployment';
-import { StandardsDeployment } from '../StandardsDeployment';
+import { Distribution } from '../Distribution';
 
 /**
  * Command to publish both recipes and standards artifacts to targets
@@ -15,11 +14,10 @@ export type PublishArtifactsCommand = PackmindCommand & {
 };
 
 /**
- * Response contains both recipe and standard deployments
+ * Response contains distributions for each target
  */
 export type PublishArtifactsResponse = {
-  recipeDeployments: RecipesDeployment[];
-  standardDeployments: StandardsDeployment[];
+  distributions: Distribution[];
 };
 
 /**

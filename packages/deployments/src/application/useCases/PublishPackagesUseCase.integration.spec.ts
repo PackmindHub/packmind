@@ -7,24 +7,22 @@ import {
   createRecipeId,
   createStandardId,
   createTargetId,
-  createStandardsDeploymentId,
-  createRecipesDeploymentId,
+  createDistributionId,
   createStandardVersionId,
   createRecipeVersionId,
   PublishPackagesCommand,
   IRecipesPort,
   IStandardsPort,
   IDeploymentPort,
-  StandardsDeployment,
-  RecipesDeployment,
+  Distribution,
   DistributionStatus,
   PackagesDeployment,
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { packageFactory } from '../../../test/packageFactory';
+import { targetFactory } from '../../../test/targetFactory';
 import { v4 as uuidv4 } from 'uuid';
 import { stubLogger } from '@packmind/test-utils';
-import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 import { IDistributedPackageRepository } from '../../domain/repositories/IDistributedPackageRepository';
 
 describe('PublishPackagesUseCase - Integration behavior', () => {
@@ -33,7 +31,6 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
   let mockStandardsPort: jest.Mocked<IStandardsPort>;
   let mockDeploymentPort: jest.Mocked<IDeploymentPort>;
   let mockPackageService: jest.Mocked<PackageService>;
-  let mockDistributionRepository: jest.Mocked<IDistributionRepository>;
   let mockDistributedPackageRepository: jest.Mocked<IDistributedPackageRepository>;
   let mockLogger: PackmindLogger;
 
@@ -60,15 +57,6 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
       findById: jest.fn(),
     } as unknown as jest.Mocked<PackageService>;
 
-    mockDistributionRepository = {
-      add: jest.fn(),
-      findById: jest.fn(),
-      listByOrganizationId: jest.fn(),
-      listByPackageId: jest.fn(),
-      listByTargetIds: jest.fn(),
-      listByOrganizationIdWithStatus: jest.fn(),
-    } as unknown as jest.Mocked<IDistributionRepository>;
-
     mockDistributedPackageRepository = {
       add: jest.fn(),
       findById: jest.fn(),
@@ -85,7 +73,6 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
       mockStandardsPort,
       mockDeploymentPort,
       mockPackageService,
-      mockDistributionRepository,
       mockDistributedPackageRepository,
       mockLogger,
     );
@@ -100,6 +87,7 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
       const recipeId = createRecipeId(uuidv4());
       const standardId = createStandardId(uuidv4());
       const packageId = createPackageId(uuidv4());
+      const target = targetFactory({ id: targetId });
 
       const pkg = packageFactory({
         id: packageId,
@@ -107,17 +95,16 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
         standards: [standardId],
       });
 
-      // Mock a no_changes deployment (content already deployed)
-      const standardsDeployment: Partial<StandardsDeployment> = {
-        id: createStandardsDeploymentId(uuidv4()),
+      // Mock a no_changes distribution (content already distributed)
+      const distribution: Distribution = {
+        id: createDistributionId(uuidv4()),
+        distributedPackages: [],
+        createdAt: new Date().toISOString(),
+        authorId: userId,
+        organizationId,
+        target,
         status: DistributionStatus.no_changes,
-        target: { id: targetId } as StandardsDeployment['target'],
-      };
-
-      const recipesDeployment: Partial<RecipesDeployment> = {
-        id: createRecipesDeploymentId(uuidv4()),
-        status: DistributionStatus.no_changes,
-        target: { id: targetId } as RecipesDeployment['target'],
+        renderModes: [],
       };
 
       mockPackageService.findById.mockResolvedValue(pkg);
@@ -137,8 +124,7 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
       >);
 
       mockDeploymentPort.publishArtifacts.mockResolvedValue({
-        standardDeployments: [standardsDeployment as StandardsDeployment],
-        recipeDeployments: [recipesDeployment as RecipesDeployment],
+        distributions: [distribution],
       });
 
       const command: PublishPackagesCommand = {
@@ -150,16 +136,14 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
 
       const result = await useCase.execute(command);
 
-      // Should return 2 deployments (1 standards, 1 recipes)
-      expect(result).toHaveLength(2);
+      // Should return 1 deployment (one distribution per target)
+      expect(result).toHaveLength(1);
 
-      // Both should have status no_changes
+      // Should have status no_changes
       expect(result[0]).toHaveProperty('status', DistributionStatus.no_changes);
-      expect(result[1]).toHaveProperty('status', DistributionStatus.no_changes);
 
-      // Both should have target property
+      // Should have target property
       expect(result[0]).toHaveProperty('target');
-      expect(result[1]).toHaveProperty('target');
 
       // This simulates what the frontend does:
       // It should be able to count deployments and analyze their status
@@ -168,8 +152,8 @@ describe('PublishPackagesUseCase - Integration behavior', () => {
         (d: PackagesDeployment) => d.status === DistributionStatus.no_changes,
       );
 
-      expect(allDeployments.length).toBe(2);
-      expect(noChangesDeployments.length).toBe(2);
+      expect(allDeployments.length).toBe(1);
+      expect(noChangesDeployments.length).toBe(1);
     });
   });
 });

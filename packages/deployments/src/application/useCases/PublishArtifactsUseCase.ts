@@ -4,10 +4,8 @@ import {
   IPublishArtifactsUseCase,
   PublishArtifactsCommand,
   PublishArtifactsResponse,
-  RecipesDeployment,
-  StandardsDeployment,
-  createRecipesDeploymentId,
-  createStandardsDeploymentId,
+  Distribution,
+  createDistributionId,
   IRecipesPort,
   IStandardsPort,
   ICodingAgentPort,
@@ -15,6 +13,7 @@ import {
   OrganizationId,
   UserId,
   DistributionStatus,
+  GitCommit,
   GitRepo,
   Target,
   TargetId,
@@ -26,8 +25,7 @@ import {
   CodingAgent,
   DeploymentCompletedEvent,
 } from '@packmind/types';
-import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
-import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
+import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 import { TargetService } from '../services/TargetService';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import {
@@ -48,8 +46,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     private readonly standardsPort: IStandardsPort,
     private readonly gitPort: IGitPort,
     private readonly codingAgentPort: ICodingAgentPort,
-    private readonly recipesDeploymentRepository: IRecipesDeploymentRepository,
-    private readonly standardsDeploymentRepository: IStandardsDeploymentRepository,
+    private readonly distributionRepository: IDistributionRepository,
     private readonly targetService: TargetService,
     private readonly renderModeConfigurationService: RenderModeConfigurationService,
     private readonly eventEmitterService: PackmindEventEmitterService,
@@ -94,8 +91,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       command.standardVersionIds,
     );
 
-    const recipeDeployments: RecipesDeployment[] = [];
-    const standardDeployments: StandardsDeployment[] = [];
+    const distributions: Distribution[] = [];
 
     // Process each repository with all its targets
     for (const [
@@ -172,7 +168,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         );
 
         let gitCommit;
-        let deploymentStatus = DistributionStatus.success;
+        let distributionStatus = DistributionStatus.success;
 
         try {
           // Use file updates from first target (they're all the same for multi-target repos)
@@ -197,48 +193,30 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
             this.logger.info('No changes detected for unified deployment', {
               repositoryId,
             });
-            deploymentStatus = DistributionStatus.no_changes;
+            distributionStatus = DistributionStatus.no_changes;
             gitCommit = undefined;
           } else {
             throw error;
           }
         }
 
-        // Create deployment records for each target
+        // Create distribution records for each target
         for (const target of targets) {
-          // Recipe deployment
-          const recipeDeployment: RecipesDeployment = {
-            id: createRecipesDeploymentId(uuidv4()),
+          const distribution = await this.createDistribution(
+            command,
+            target,
             recipeVersions,
-            createdAt: new Date().toISOString(),
-            authorId: command.userId as UserId,
-            organizationId: command.organizationId as OrganizationId,
-            gitCommit,
-            target,
-            status: deploymentStatus,
-            renderModes: activeRenderModes,
-          };
-          await this.recipesDeploymentRepository.add(recipeDeployment);
-          recipeDeployments.push(recipeDeployment);
-
-          // Standard deployment
-          const standardDeployment: StandardsDeployment = {
-            id: createStandardsDeploymentId(uuidv4()),
             standardVersions,
-            createdAt: new Date().toISOString(),
-            authorId: command.userId as UserId,
-            organizationId: command.organizationId as OrganizationId,
+            activeRenderModes,
+            distributionStatus,
             gitCommit,
-            target,
-            status: deploymentStatus,
-            renderModes: activeRenderModes,
-          };
-          await this.standardsDeploymentRepository.add(standardDeployment);
-          standardDeployments.push(standardDeployment);
+          );
+          distributions.push(distribution);
 
-          this.logger.info('Created unified deployment records for target', {
+          this.logger.info('Created distribution record for target', {
             targetId: target.id,
-            status: deploymentStatus,
+            distributionId: distribution.id,
+            status: distributionStatus,
           });
         }
       } catch (error) {
@@ -249,26 +227,25 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           error: errorMessage,
         });
 
-        // Create failure deployments for all targets
+        // Create failure distributions for all targets
         for (const target of targets) {
-          await this.saveFailureDeployments(
+          const distribution = await this.createDistribution(
             command,
             target,
-            gitRepo,
-            errorMessage,
             recipeVersions,
             standardVersions,
             activeRenderModes,
-            recipeDeployments,
-            standardDeployments,
+            DistributionStatus.failure,
+            undefined,
+            errorMessage,
           );
+          distributions.push(distribution);
         }
       }
     }
 
     this.logger.info('Successfully published unified artifacts', {
-      recipeDeploymentsCount: recipeDeployments.length,
-      standardDeploymentsCount: standardDeployments.length,
+      distributionsCount: distributions.length,
       repositoriesProcessed: repositoryTargetsMap.size,
     });
 
@@ -277,15 +254,44 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         userId: command.userId as UserId,
         organizationId: command.organizationId as OrganizationId,
         targetIds: command.targetIds,
-        recipeCount: recipeDeployments.length,
-        standardCount: standardDeployments.length,
+        recipeCount: recipeVersions.length,
+        standardCount: standardVersions.length,
       }),
     );
 
     return {
-      recipeDeployments,
-      standardDeployments,
+      distributions,
     };
+  }
+
+  private async createDistribution(
+    command: PublishArtifactsCommand,
+    target: Target,
+    recipeVersions: RecipeVersion[],
+    standardVersions: StandardVersion[],
+    activeRenderModes: RenderMode[],
+    status: DistributionStatus,
+    gitCommit?: GitCommit,
+    error?: string,
+  ): Promise<Distribution> {
+    const distributionId = createDistributionId(uuidv4());
+
+    const distribution: Distribution = {
+      id: distributionId,
+      distributedPackages: [], // DistributedPackages are created by PublishPackagesUseCase
+      createdAt: new Date().toISOString(),
+      authorId: command.userId as UserId,
+      organizationId: command.organizationId as OrganizationId,
+      gitCommit,
+      target,
+      status,
+      error,
+      renderModes: activeRenderModes,
+    };
+
+    await this.distributionRepository.add(distribution);
+
+    return distribution;
   }
 
   /**
@@ -406,7 +412,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
 
     for (const target of targets) {
       const previousRecipeVersions =
-        await this.recipesDeploymentRepository.findActiveRecipeVersionsByTarget(
+        await this.distributionRepository.findActiveRecipeVersionsByTarget(
           command.organizationId as OrganizationId,
           target.id,
         );
@@ -432,7 +438,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
 
     for (const target of targets) {
       const previousStandardVersions =
-        await this.standardsDeploymentRepository.findActiveStandardVersionsByTarget(
+        await this.distributionRepository.findActiveStandardVersionsByTarget(
           command.organizationId as OrganizationId,
           target.id,
         );
@@ -521,61 +527,5 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     }
 
     return parts.join('\n');
-  }
-
-  private async saveFailureDeployments(
-    command: PublishArtifactsCommand,
-    target: Target,
-    gitRepo: GitRepo,
-    errorMessage: string,
-    recipeVersions: RecipeVersion[],
-    standardVersions: StandardVersion[],
-    activeRenderModes: RenderMode[],
-    recipeDeployments: RecipesDeployment[],
-    standardDeployments: StandardsDeployment[],
-  ): Promise<void> {
-    try {
-      const failureRecipeDeployment: RecipesDeployment = {
-        id: createRecipesDeploymentId(uuidv4()),
-        recipeVersions,
-        createdAt: new Date().toISOString(),
-        authorId: command.userId as UserId,
-        organizationId: command.organizationId as OrganizationId,
-        gitCommit: undefined,
-        target,
-        status: DistributionStatus.failure,
-        error: errorMessage,
-        renderModes: activeRenderModes,
-      };
-      await this.recipesDeploymentRepository.add(failureRecipeDeployment);
-      recipeDeployments.push(failureRecipeDeployment);
-
-      const failureStandardDeployment: StandardsDeployment = {
-        id: createStandardsDeploymentId(uuidv4()),
-        standardVersions,
-        createdAt: new Date().toISOString(),
-        authorId: command.userId as UserId,
-        organizationId: command.organizationId as OrganizationId,
-        gitCommit: undefined,
-        target,
-        status: DistributionStatus.failure,
-        error: errorMessage,
-        renderModes: activeRenderModes,
-      };
-      await this.standardsDeploymentRepository.add(failureStandardDeployment);
-      standardDeployments.push(failureStandardDeployment);
-
-      this.logger.info('Created failure deployment records', {
-        targetId: target.id,
-        gitRepoId: gitRepo.id,
-        error: errorMessage,
-      });
-    } catch (saveError) {
-      this.logger.error('Failed to save failure deployment records', {
-        targetId: target.id,
-        error:
-          saveError instanceof Error ? saveError.message : String(saveError),
-      });
-    }
   }
 }

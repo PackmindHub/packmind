@@ -228,67 +228,6 @@ export class StandardsDeploymentRepository
     }
   }
 
-  async findActiveStandardVersionsByTarget(
-    organizationId: OrganizationId,
-    targetId: TargetId,
-  ): Promise<StandardVersion[]> {
-    this.logger.info('Finding active standard versions by target', {
-      organizationId,
-      targetId,
-    });
-
-    try {
-      // Find all successful deployments to this target for this organization
-      const deployments = await this.repository
-        .createQueryBuilder('deployment')
-        .leftJoinAndSelect('deployment.standardVersions', 'standardVersion')
-        .leftJoinAndSelect('deployment.gitCommit', 'gitCommit')
-        .leftJoinAndSelect('deployment.target', 'target')
-        .where('deployment.organizationId = :organizationId', {
-          organizationId,
-        })
-        .andWhere('deployment.target_id = :targetId', { targetId })
-        .andWhere('deployment.status = :status', {
-          status: DistributionStatus.success,
-        })
-        .orderBy('deployment.createdAt', 'DESC')
-        .getMany();
-
-      // Extract all standard versions and deduplicate by standardId,
-      // keeping the most recently deployed version of each standard
-      const standardVersionMap = new Map<string, StandardVersion>();
-
-      // Process deployments in chronological order (most recent first)
-      for (const deployment of deployments) {
-        for (const standardVersion of deployment.standardVersions) {
-          // Only keep the first (most recent) version of each standard
-          if (!standardVersionMap.has(standardVersion.standardId)) {
-            standardVersionMap.set(standardVersion.standardId, standardVersion);
-          }
-        }
-      }
-
-      const activeStandardVersions = Array.from(standardVersionMap.values());
-
-      this.logger.info('Active standard versions found by target', {
-        organizationId,
-        targetId,
-        totalSuccessfulDeployments: deployments.length,
-        activeStandardVersionsCount: activeStandardVersions.length,
-        standardIds: activeStandardVersions.map((sv) => sv.standardId),
-      });
-
-      return activeStandardVersions;
-    } catch (error) {
-      this.logger.error('Failed to find active standard versions by target', {
-        organizationId,
-        targetId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      throw error;
-    }
-  }
-
   async listByTargetIds(
     organizationId: OrganizationId,
     targetIds: TargetId[],

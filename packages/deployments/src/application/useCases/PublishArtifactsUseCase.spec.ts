@@ -1,7 +1,6 @@
 import { PublishArtifactsUseCase } from './PublishArtifactsUseCase';
 import { CodingAgents } from '@packmind/coding-agent';
-import { IRecipesDeploymentRepository } from '../../domain/repositories/IRecipesDeploymentRepository';
-import { IStandardsDeploymentRepository } from '../../domain/repositories/IStandardsDeploymentRepository';
+import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 import { TargetService } from '../services/TargetService';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import { createUserId, createOrganizationId } from '@packmind/types';
@@ -41,8 +40,7 @@ describe('PublishArtifactsUseCase', () => {
   let mockStandardsPort: jest.Mocked<IStandardsPort>;
   let mockGitPort: jest.Mocked<IGitPort>;
   let mockCodingAgentPort: jest.Mocked<ICodingAgentPort>;
-  let mockRecipesDeploymentRepository: jest.Mocked<IRecipesDeploymentRepository>;
-  let mockStandardsDeploymentRepository: jest.Mocked<IStandardsDeploymentRepository>;
+  let mockDistributionRepository: jest.Mocked<IDistributionRepository>;
   let mockTargetService: jest.Mocked<TargetService>;
   let mockRenderModeConfigurationService: jest.Mocked<RenderModeConfigurationService>;
   let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
@@ -84,15 +82,11 @@ describe('PublishArtifactsUseCase', () => {
       renderArtifacts: jest.fn(),
     } as unknown as jest.Mocked<ICodingAgentPort>;
 
-    mockRecipesDeploymentRepository = {
-      add: jest.fn(),
-      findActiveRecipeVersionsByTarget: jest.fn(),
-    } as unknown as jest.Mocked<IRecipesDeploymentRepository>;
-
-    mockStandardsDeploymentRepository = {
+    mockDistributionRepository = {
       add: jest.fn(),
       findActiveStandardVersionsByTarget: jest.fn(),
-    } as unknown as jest.Mocked<IStandardsDeploymentRepository>;
+      findActiveRecipeVersionsByTarget: jest.fn(),
+    } as unknown as jest.Mocked<IDistributionRepository>;
 
     mockTargetService = {
       findById: jest.fn(),
@@ -119,8 +113,7 @@ describe('PublishArtifactsUseCase', () => {
       mockStandardsPort,
       mockGitPort,
       mockCodingAgentPort,
-      mockRecipesDeploymentRepository,
-      mockStandardsDeploymentRepository,
+      mockDistributionRepository,
       mockTargetService,
       mockRenderModeConfigurationService,
       mockEventEmitterService,
@@ -192,10 +185,10 @@ describe('PublishArtifactsUseCase', () => {
       );
       mockTargetService.findById.mockResolvedValue(target);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockRecipesDeploymentRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
       );
-      mockStandardsDeploymentRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
         [],
       );
       mockRenderModeConfigurationService.getActiveRenderModes.mockResolvedValue(
@@ -221,36 +214,19 @@ describe('PublishArtifactsUseCase', () => {
       mockGitPort.commitToGit.mockResolvedValue(gitCommit);
     });
 
-    it('returns both recipe and standard deployments', async () => {
+    it('returns distributions with empty distributedPackages', async () => {
       const result = await useCase.execute(command);
 
-      expect(result.recipeDeployments).toHaveLength(1);
-      expect(result.standardDeployments).toHaveLength(1);
+      expect(result.distributions).toHaveLength(1);
+      // distributedPackages are created by PublishPackagesUseCase, not PublishArtifactsUseCase
+      expect(result.distributions[0].distributedPackages).toEqual([]);
     });
 
-    it('stores recipe deployment with success status', async () => {
+    it('stores distribution with success status', async () => {
       const result = await useCase.execute(command);
 
-      expect(result.recipeDeployments[0].status).toBe(
-        DistributionStatus.success,
-      );
-      expect(result.recipeDeployments[0].gitCommit).toEqual(gitCommit);
-    });
-
-    it('stores standard deployment with success status', async () => {
-      const result = await useCase.execute(command);
-
-      expect(result.standardDeployments[0].status).toBe(
-        DistributionStatus.success,
-      );
-      expect(result.standardDeployments[0].gitCommit).toEqual(gitCommit);
-    });
-
-    it('stores both deployments with the same git commit', async () => {
-      const result = await useCase.execute(command);
-
-      expect(result.recipeDeployments[0].gitCommit).toEqual(gitCommit);
-      expect(result.standardDeployments[0].gitCommit).toEqual(gitCommit);
+      expect(result.distributions[0].status).toBe(DistributionStatus.success);
+      expect(result.distributions[0].gitCommit).toEqual(gitCommit);
     });
 
     it('calls renderArtifacts with both recipe and standard versions', async () => {
@@ -281,15 +257,10 @@ describe('PublishArtifactsUseCase', () => {
       ).toHaveBeenCalledWith(activeRenderModes);
     });
 
-    it('stores deployments with render modes', async () => {
+    it('stores distributions with render modes', async () => {
       const result = await useCase.execute(command);
 
-      expect(result.recipeDeployments[0].renderModes).toEqual(
-        activeRenderModes,
-      );
-      expect(result.standardDeployments[0].renderModes).toEqual(
-        activeRenderModes,
-      );
+      expect(result.distributions[0].renderModes).toEqual(activeRenderModes);
     });
 
     it('creates a single git commit for both artifacts', async () => {
@@ -361,10 +332,10 @@ describe('PublishArtifactsUseCase', () => {
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
       mockTargetService.findById.mockResolvedValue(target);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockRecipesDeploymentRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
       );
-      mockStandardsDeploymentRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
         [],
       );
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
@@ -377,12 +348,11 @@ describe('PublishArtifactsUseCase', () => {
       mockGitPort.commitToGit.mockResolvedValue(gitCommit);
     });
 
-    it('creates recipe deployment but still creates standard deployment', async () => {
+    it('creates distribution with empty distributedPackages', async () => {
       const result = await useCase.execute(command);
 
-      expect(result.recipeDeployments).toHaveLength(1);
-      expect(result.standardDeployments).toHaveLength(1);
-      expect(result.standardDeployments[0].standardVersions).toEqual([]);
+      expect(result.distributions).toHaveLength(1);
+      expect(result.distributions[0].distributedPackages).toEqual([]);
     });
 
     it('calls renderArtifacts with empty standards array', async () => {
@@ -439,10 +409,10 @@ describe('PublishArtifactsUseCase', () => {
       );
       mockTargetService.findById.mockResolvedValue(target);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockRecipesDeploymentRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
       );
-      mockStandardsDeploymentRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
         [],
       );
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
@@ -455,12 +425,11 @@ describe('PublishArtifactsUseCase', () => {
       mockGitPort.commitToGit.mockResolvedValue(gitCommit);
     });
 
-    it('creates standard deployment but still creates recipe deployment', async () => {
+    it('creates distribution with empty distributedPackages', async () => {
       const result = await useCase.execute(command);
 
-      expect(result.standardDeployments).toHaveLength(1);
-      expect(result.recipeDeployments).toHaveLength(1);
-      expect(result.recipeDeployments[0].recipeVersions).toEqual([]);
+      expect(result.distributions).toHaveLength(1);
+      expect(result.distributions[0].distributedPackages).toEqual([]);
     });
 
     it('calls renderArtifacts with empty recipes array', async () => {
@@ -513,10 +482,10 @@ describe('PublishArtifactsUseCase', () => {
       );
       mockTargetService.findById.mockResolvedValue(target);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockRecipesDeploymentRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
       );
-      mockStandardsDeploymentRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
         [],
       );
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
@@ -529,31 +498,24 @@ describe('PublishArtifactsUseCase', () => {
       );
     });
 
-    it('creates deployments with no_changes status', async () => {
+    it('creates distributions with no_changes status', async () => {
       const result = await useCase.execute(command);
 
-      expect(result.recipeDeployments[0].status).toBe(
-        DistributionStatus.no_changes,
-      );
-      expect(result.standardDeployments[0].status).toBe(
+      expect(result.distributions[0].status).toBe(
         DistributionStatus.no_changes,
       );
     });
 
-    it('creates deployments without git commit', async () => {
+    it('creates distributions without git commit', async () => {
       const result = await useCase.execute(command);
 
-      expect(result.recipeDeployments[0].gitCommit).toBeUndefined();
-      expect(result.standardDeployments[0].gitCommit).toBeUndefined();
+      expect(result.distributions[0].gitCommit).toBeUndefined();
     });
 
-    it('saves both deployments to repositories', async () => {
+    it('saves distribution to repository', async () => {
       await useCase.execute(command);
 
-      expect(mockRecipesDeploymentRepository.add).toHaveBeenCalledWith(
-        expect.objectContaining({ status: DistributionStatus.no_changes }),
-      );
-      expect(mockStandardsDeploymentRepository.add).toHaveBeenCalledWith(
+      expect(mockDistributionRepository.add).toHaveBeenCalledWith(
         expect.objectContaining({ status: DistributionStatus.no_changes }),
       );
     });
@@ -598,10 +560,10 @@ describe('PublishArtifactsUseCase', () => {
       );
       mockTargetService.findById.mockResolvedValue(target);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockRecipesDeploymentRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
       );
-      mockStandardsDeploymentRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
         [],
       );
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
@@ -610,29 +572,22 @@ describe('PublishArtifactsUseCase', () => {
       );
     });
 
-    it('creates failure deployments for both recipes and standards', async () => {
+    it('creates failure distribution', async () => {
       const result = await useCase.execute(command);
 
-      expect(result.recipeDeployments[0].status).toBe(
-        DistributionStatus.failure,
-      );
-      expect(result.standardDeployments[0].status).toBe(
-        DistributionStatus.failure,
-      );
+      expect(result.distributions[0].status).toBe(DistributionStatus.failure);
     });
 
-    it('stores error message in both deployments', async () => {
+    it('stores error message in distribution', async () => {
       const result = await useCase.execute(command);
 
-      expect(result.recipeDeployments[0].error).toBe('Rendering failed');
-      expect(result.standardDeployments[0].error).toBe('Rendering failed');
+      expect(result.distributions[0].error).toBe('Rendering failed');
     });
 
-    it('creates deployments without git commit', async () => {
+    it('creates distribution without git commit', async () => {
       const result = await useCase.execute(command);
 
-      expect(result.recipeDeployments[0].gitCommit).toBeUndefined();
-      expect(result.standardDeployments[0].gitCommit).toBeUndefined();
+      expect(result.distributions[0].gitCommit).toBeUndefined();
     });
   });
 
@@ -700,10 +655,10 @@ describe('PublishArtifactsUseCase', () => {
         .mockResolvedValueOnce(target1)
         .mockResolvedValueOnce(target2);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockRecipesDeploymentRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
       );
-      mockStandardsDeploymentRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
         [],
       );
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
@@ -717,20 +672,12 @@ describe('PublishArtifactsUseCase', () => {
       mockGitPort.commitToGit.mockResolvedValue(gitCommit);
     });
 
-    it('creates one deployment per target for recipes', async () => {
+    it('creates one distribution per target', async () => {
       const result = await useCase.execute(command);
 
-      expect(result.recipeDeployments).toHaveLength(2);
-      expect(result.recipeDeployments[0].target.id).toBe(targetId1);
-      expect(result.recipeDeployments[1].target.id).toBe(targetId2);
-    });
-
-    it('creates one deployment per target for standards', async () => {
-      const result = await useCase.execute(command);
-
-      expect(result.standardDeployments).toHaveLength(2);
-      expect(result.standardDeployments[0].target.id).toBe(targetId1);
-      expect(result.standardDeployments[1].target.id).toBe(targetId2);
+      expect(result.distributions).toHaveLength(2);
+      expect(result.distributions[0].target.id).toBe(targetId1);
+      expect(result.distributions[1].target.id).toBe(targetId2);
     });
 
     it('creates only one git commit for all targets', async () => {
@@ -739,13 +686,11 @@ describe('PublishArtifactsUseCase', () => {
       expect(mockGitPort.commitToGit).toHaveBeenCalledTimes(1);
     });
 
-    it('all deployments share the same git commit', async () => {
+    it('all distributions share the same git commit', async () => {
       const result = await useCase.execute(command);
 
-      expect(result.recipeDeployments[0].gitCommit).toEqual(gitCommit);
-      expect(result.recipeDeployments[1].gitCommit).toEqual(gitCommit);
-      expect(result.standardDeployments[0].gitCommit).toEqual(gitCommit);
-      expect(result.standardDeployments[1].gitCommit).toEqual(gitCommit);
+      expect(result.distributions[0].gitCommit).toEqual(gitCommit);
+      expect(result.distributions[1].gitCommit).toEqual(gitCommit);
     });
 
     it('calls renderArtifacts once per target', async () => {
@@ -835,10 +780,10 @@ describe('PublishArtifactsUseCase', () => {
       );
       mockTargetService.findById.mockResolvedValue(target);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockRecipesDeploymentRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [oldRecipeVersion],
       );
-      mockStandardsDeploymentRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
         [oldStandardVersion],
       );
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
@@ -876,15 +821,10 @@ describe('PublishArtifactsUseCase', () => {
       );
     });
 
-    it('stores only new versions in deployment record', async () => {
+    it('stores distribution with empty distributedPackages', async () => {
       const result = await useCase.execute(command);
 
-      expect(result.recipeDeployments[0].recipeVersions).toEqual([
-        newRecipeVersion,
-      ]);
-      expect(result.standardDeployments[0].standardVersions).toEqual([
-        newStandardVersion,
-      ]);
+      expect(result.distributions[0].distributedPackages).toEqual([]);
     });
   });
 
@@ -1033,10 +973,10 @@ describe('PublishArtifactsUseCase', () => {
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
       mockTargetService.findById.mockResolvedValue(target);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockRecipesDeploymentRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
       );
-      mockStandardsDeploymentRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
         [],
       );
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
@@ -1053,10 +993,7 @@ describe('PublishArtifactsUseCase', () => {
       expect(
         mockRenderModeConfigurationService.mapRenderModesToCodingAgents,
       ).toHaveBeenCalledWith(DEFAULT_ACTIVE_RENDER_MODES);
-      expect(result.recipeDeployments[0].renderModes).toEqual(
-        DEFAULT_ACTIVE_RENDER_MODES,
-      );
-      expect(result.standardDeployments[0].renderModes).toEqual(
+      expect(result.distributions[0].renderModes).toEqual(
         DEFAULT_ACTIVE_RENDER_MODES,
       );
     });
@@ -1133,11 +1070,11 @@ describe('PublishArtifactsUseCase', () => {
         .mockResolvedValue(mockRules);
       mockTargetService.findById.mockResolvedValue(target);
       mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
-      mockRecipesDeploymentRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
         [],
       );
       // Return previously deployed standard WITHOUT rules
-      mockStandardsDeploymentRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
         [previousStandardVersion],
       );
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
