@@ -78,7 +78,7 @@ export const RecipeCentricView: React.FC<RecipeCentricViewProps> = ({
       return (
         <PMEmptyState
           title="No undeployed recipes"
-          description="All recipes have been deployed to at least one repository"
+          description="All recipes have been distributed to at least one repository"
         />
       );
     }
@@ -166,7 +166,7 @@ export const RecipeCentricView: React.FC<RecipeCentricViewProps> = ({
                   <PMBox>
                     <PMBox mb={2}>
                       <PMText variant="body" color="faded">
-                        This recipe has not been deployed yet
+                        This recipe has not been distributed yet
                       </PMText>
                     </PMBox>
                   </PMBox>

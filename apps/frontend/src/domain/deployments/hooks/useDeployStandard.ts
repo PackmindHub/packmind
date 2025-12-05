@@ -83,7 +83,7 @@ export const useDeployStandard = () => {
 
       const standardName = params.name || params.id;
       console.log(
-        `Standard ${standardName} v${params.version} deployed to ${targetIds.length} targets successfully`,
+        `Standard ${standardName} v${params.version} distributed to ${targetIds.length} targets successfully`,
       );
 
       return deployments;
@@ -161,7 +161,7 @@ export const useDeployStandard = () => {
           });
 
           console.log(
-            `${validResults.length} standards deployed to ${targetIds.length} targets successfully`,
+            `${validResults.length} standards distributed to ${targetIds.length} targets successfully`,
           );
 
           // Log any skipped standards

@@ -349,7 +349,8 @@ const getEmptyStateProps = (
   if (artifactStatusFilter === 'outdated') {
     return {
       title: 'No outdated targets',
-      description: 'All targets have up-to-date recipes and standards deployed',
+      description:
+        'All targets have up-to-date recipes and standards distributed',
     };
   }
 
@@ -363,7 +364,7 @@ const getEmptyStateProps = (
 
   return {
     title: 'No repositories',
-    description: 'No repositories with deployed recipes or standards found',
+    description: 'No repositories with distributed recipes or standards found',
   };
 };
 

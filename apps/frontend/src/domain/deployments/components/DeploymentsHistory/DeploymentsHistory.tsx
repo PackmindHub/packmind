@@ -45,7 +45,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
   usersMap,
   loading,
   error,
-  title = 'Deployment History',
+  title = 'Distribution History',
   orgSlug,
   spaceSlug,
   hidePackageColumn = false,
@@ -79,7 +79,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
   }
 
   if (!deployments || deployments.length === 0) {
-    return <PMEmptyState title={`No deployments found for this ${type}.`} />;
+    return <PMEmptyState title={`No distributions found for this ${type}.`} />;
   }
 
   const getStatusBadge = (status: string, fallback?: string) => {
@@ -89,26 +89,35 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
       return <PMBadge colorPalette="red">Failed</PMBadge>;
     if (status === 'no_changes')
       return <PMBadge colorPalette="blue">No Changes</PMBadge>;
-    return <PMBadge colorPalette="green">{fallback || 'Deployed'}</PMBadge>;
+    return <PMBadge colorPalette="green">{fallback || 'Distributed'}</PMBadge>;
   };
 
-  const getVersion = (
-    deployment: RecipesDeployment | StandardsDeployment | Distribution,
-  ) => {
-    if (type === 'recipe') {
-      const recipeVersion = (
-        deployment as RecipesDeployment
-      ).recipeVersions?.find((v) => v.recipeId === entityId);
-      return recipeVersion?.version || '-';
-    } else if (type === 'standard') {
-      const standardVersion = (
-        deployment as StandardsDeployment
-      ).standardVersions?.find((v) => v.standardId === entityId);
-      return standardVersion?.version || '-';
-    } else {
+  const getVersion = (deployment: Distribution) => {
+    if (type === 'package') {
       // Packages don't have versions like recipes/standards
       return '-';
     }
+
+    // Search through all distributed packages for the version
+    for (const dp of deployment.distributedPackages || []) {
+      if (type === 'recipe') {
+        const recipeVersion = dp.recipeVersions?.find(
+          (v) => v.recipeId === entityId,
+        );
+        if (recipeVersion) {
+          return recipeVersion.version;
+        }
+      } else if (type === 'standard') {
+        const standardVersion = dp.standardVersions?.find(
+          (v) => v.standardId === entityId,
+        );
+        if (standardVersion) {
+          return standardVersion.version;
+        }
+      }
+    }
+
+    return '-';
   };
 
   // Helper pour target/repo
@@ -168,7 +177,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     if (deployment.status === 'failure' && deployment.error)
       return deployment.error;
     if (deployment.status === 'success')
-      return 'Deployment completed successfully';
+      return 'Distribution completed successfully';
     if (deployment.status === 'no_changes')
       return 'No changes detected - already up to date';
     return '-';
@@ -222,7 +231,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     { key: 'author', header: 'Author', width: '120px' },
     {
       key: 'createdAt',
-      header: 'Deployed At',
+      header: 'Distributed At',
       width: '120px',
       align: 'center',
     },
@@ -232,7 +241,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
 
   const tableData: PMTableRow[] = deployments.map((deployment) => ({
     key: deployment.id,
-    version: getVersion(deployment),
+    version: getVersion(deployment as Distribution),
     package: getPackageInfo(deployment),
     target: getTargetInfo(deployment),
     renderModes: <RenderModes renderModes={deployment.renderModes} />,

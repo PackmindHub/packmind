@@ -41,7 +41,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
       entityId={standardId}
       loading={isLoading || isLoadingUsers}
       error={isError ? error?.message : undefined}
-      title="Deployment History"
+      title="Distribution History"
       usersMap={userMap}
     />
   );

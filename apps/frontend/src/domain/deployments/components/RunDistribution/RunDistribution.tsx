@@ -196,12 +196,12 @@ const RunDistributionComponent: React.FC<RunDistributionProps> = ({
       setDeploymentError(null);
       onDistributionComplete?.({ recipesDeployments, standardsDeployments });
     } catch (e: unknown) {
-      console.error('Deployment failed:', e);
+      console.error('Distribution failed:', e);
       if (e instanceof Error) {
         setDeploymentError(e);
       } else {
         setDeploymentError(
-          new Error('Deployment has failed. please try again later'),
+          new Error('Distribution has failed. please try again later'),
         );
       }
     }

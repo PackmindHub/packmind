@@ -24,7 +24,7 @@ export const useDeployPackage = () => {
 
       const packageName = params.name || params.id;
       console.log(
-        `Package ${packageName} deployed to ${targetIds.length} targets successfully`,
+        `Package ${packageName} distributed to ${targetIds.length} targets successfully`,
       );
 
       return deployments;
@@ -67,7 +67,7 @@ export const useDeployPackage = () => {
           });
 
           console.log(
-            `${packageIds.length} packages deployed to ${targetIds.length} targets successfully`,
+            `${packageIds.length} packages distributed to ${targetIds.length} targets successfully`,
           );
 
           return deployments;

@@ -76,7 +76,7 @@ describe('RecipeCentricView', () => {
 
     expect(screen.getByText('Undeployed Recipe')).toBeInTheDocument();
     expect(
-      screen.getByText('This recipe has not been deployed yet'),
+      screen.getByText('This recipe has not been distributed yet'),
     ).toBeInTheDocument();
   });
 
@@ -155,7 +155,7 @@ describe('RecipeCentricView', () => {
     it('shows only undeployed recipes with active filter', () => {
       const recipes = [
         createRecipeDeploymentStatus({
-          recipe: recipeFactory({ name: 'Deployed Recipe' }),
+          recipe: recipeFactory({ name: 'Distributed Recipe' }),
           deployments: [createRepositoryDeploymentInfo()],
         }),
         createRecipeDeploymentStatus({
@@ -174,7 +174,7 @@ describe('RecipeCentricView', () => {
         <RecipeCentricView recipes={recipes} showOnlyUndeployed={true} />,
       );
 
-      expect(screen.queryByText('Deployed Recipe')).not.toBeInTheDocument();
+      expect(screen.queryByText('Distributed Recipe')).not.toBeInTheDocument();
       expect(screen.getByText('Undeployed Recipe 1')).toBeInTheDocument();
       expect(screen.getByText('Undeployed Recipe 2')).toBeInTheDocument();
     });
@@ -182,7 +182,7 @@ describe('RecipeCentricView', () => {
     it('applies search and undeployed filters together', () => {
       const recipes = [
         createRecipeDeploymentStatus({
-          recipe: recipeFactory({ name: 'Test Deployed Recipe' }),
+          recipe: recipeFactory({ name: 'Test Distributed Recipe' }),
           deployments: [createRepositoryDeploymentInfo()],
         }),
         createRecipeDeploymentStatus({
@@ -206,7 +206,7 @@ describe('RecipeCentricView', () => {
       );
 
       expect(
-        screen.queryByText('Test Deployed Recipe'),
+        screen.queryByText('Test Distributed Recipe'),
       ).not.toBeInTheDocument();
       expect(screen.getByText('Test Undeployed Recipe')).toBeInTheDocument();
       expect(
@@ -266,7 +266,7 @@ describe('RecipeCentricView', () => {
       expect(screen.getByText('No undeployed recipes')).toBeInTheDocument();
       expect(
         screen.getByText(
-          'All recipes have been deployed to at least one repository',
+          'All recipes have been distributed to at least one repository',
         ),
       ).toBeInTheDocument();
     });

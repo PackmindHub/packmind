@@ -76,7 +76,7 @@ describe('StandardCentricView', () => {
 
     expect(screen.getByText('Undeployed Standard')).toBeInTheDocument();
     expect(
-      screen.getByText('This standard has not been deployed yet'),
+      screen.getByText('This standard has not been distributed yet'),
     ).toBeInTheDocument();
   });
 
@@ -155,7 +155,7 @@ describe('StandardCentricView', () => {
     it('shows only undeployed standards with active filter', () => {
       const standards = [
         createStandardDeploymentStatus({
-          standard: standardFactory({ name: 'Deployed Standard' }),
+          standard: standardFactory({ name: 'Distributed Standard' }),
           deployments: [createRepositoryStandardDeploymentInfo()],
         }),
         createStandardDeploymentStatus({
@@ -174,7 +174,9 @@ describe('StandardCentricView', () => {
         <StandardCentricView standards={standards} showOnlyUndeployed={true} />,
       );
 
-      expect(screen.queryByText('Deployed Standard')).not.toBeInTheDocument();
+      expect(
+        screen.queryByText('Distributed Standard'),
+      ).not.toBeInTheDocument();
       expect(screen.getByText('Undeployed Standard 1')).toBeInTheDocument();
       expect(screen.getByText('Undeployed Standard 2')).toBeInTheDocument();
     });
@@ -182,7 +184,7 @@ describe('StandardCentricView', () => {
     it('applies search and undeployed filters together', () => {
       const standards = [
         createStandardDeploymentStatus({
-          standard: standardFactory({ name: 'Test Deployed Standard' }),
+          standard: standardFactory({ name: 'Test Distributed Standard' }),
           deployments: [createRepositoryStandardDeploymentInfo()],
         }),
         createStandardDeploymentStatus({
@@ -206,7 +208,7 @@ describe('StandardCentricView', () => {
       );
 
       expect(
-        screen.queryByText('Test Deployed Standard'),
+        screen.queryByText('Test Distributed Standard'),
       ).not.toBeInTheDocument();
       expect(screen.getByText('Test Undeployed Standard')).toBeInTheDocument();
       expect(
@@ -266,7 +268,7 @@ describe('StandardCentricView', () => {
       expect(screen.getByText('No undeployed standards')).toBeInTheDocument();
       expect(
         screen.getByText(
-          'All standards have been deployed to at least one repository',
+          'All standards have been distributed to at least one repository',
         ),
       ).toBeInTheDocument();
     });

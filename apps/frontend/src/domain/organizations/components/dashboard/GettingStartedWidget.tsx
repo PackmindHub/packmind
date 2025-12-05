@@ -177,18 +177,19 @@ const DEFAULT_DIALOGS: Required<
         <PMSeparator borderColor={'border.tertiary'} />
         <PMVStack align="stretch" gap={6} padding={4}>
           <PMHeading level="h3" textAlign={'center'}>
-            3. Deploy to your targets
+            3. Distribute to your targets
           </PMHeading>
 
           <PMList.Root>
             <PMList.Item>
               <PMText variant="body-important" marginRight={1}>
-                Deploy packages
+                Distribute packages
               </PMText>
 
               <PMText color="secondary">
-                From the Packages page, select the packages you want to deploy
-                and click Deploy. Each connected repository appears as a target.
+                From the Packages page, select the packages you want to
+                distribute and click Distribute. Each connected repository
+                appears as a target.
               </PMText>
             </PMList.Item>
 
@@ -266,7 +267,7 @@ const DEFAULT_DIALOGS: Required<
           </PMHeading>
 
           <PMText color="secondary">
-            During the "Deployment" action, Packmind also update config files
+            During the "Distribution" action, Packmind also update config files
             for most popular coding assistant (Github Copilot, Claude,
             Cursor...) so they are natively aware of your standards and recipes.
           </PMText>

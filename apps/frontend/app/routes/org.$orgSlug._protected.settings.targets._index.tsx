@@ -93,7 +93,7 @@ export default function TargetsRouteModule() {
         {repositories.length === 0 ? (
           <PMEmptyState
             title="No targets configured yet"
-            description="Targets define where your recipes and standards will be deployed. To get started, you'll need to configure your Git settings first."
+            description="Targets define where your recipes and standards will be distributed. To get started, you'll need to configure your Git settings first."
             icon={<PMIcon as={LuSettings} boxSize="12" color="gray.400" />}
           >
             <PMVStack gap={3} mt={6}>
