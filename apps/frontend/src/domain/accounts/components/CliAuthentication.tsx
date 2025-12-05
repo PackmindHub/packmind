@@ -68,7 +68,7 @@ export const CliAuthentication: React.FunctionComponent = () => {
   };
 
   const loginCommandTab = (
-    <PMVStack width="full" alignItems="stretch" gap={4}>
+    <PMVStack width="full" alignItems="stretch" gap={4} paddingY={4}>
       <PMText as="p">
         Run this command in your terminal to authenticate with Packmind CLI.
         This will open your browser to complete the login.
@@ -82,7 +82,7 @@ export const CliAuthentication: React.FunctionComponent = () => {
   );
 
   const envVarTab = (
-    <PMVStack width="full" alignItems="stretch" gap={4}>
+    <PMVStack width="full" alignItems="stretch" gap={4} paddingY={4}>
       <PMText as="p">
         Generate an API key to use as an environment variable. It will expire
         after 3 months.
