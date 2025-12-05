@@ -1,11 +1,21 @@
 import React from 'react';
-import { PMPage, PMVStack, PMPageSection } from '@packmind/ui';
+import {
+  PMPage,
+  PMVStack,
+  PMPageSection,
+  PMFeatureFlag,
+  CLI_LOGIN_COMMAND_FEATURE_KEY,
+  DEFAULT_FEATURE_DOMAIN_MAP,
+} from '@packmind/ui';
 import { McpConfigRedesigned } from './McpConfig/McpConfigRedesigned';
 import { SetupLocalEnvironment } from './SetupLocalEnvironment';
 import { CliAuthentication } from './CliAuthentication';
 import { AutobreadCrumb } from '../../../shared/components/navigation/AutobreadCrumb';
+import { useAuthContext } from '../hooks/useAuthContext';
 
 export function SettingsPage() {
+  const { user } = useAuthContext();
+
   return (
     <PMPage
       title="Settings"
@@ -13,13 +23,19 @@ export function SettingsPage() {
       breadcrumbComponent={<AutobreadCrumb />}
     >
       <PMVStack gap={6} width="100%" alignItems={'stretch'}>
-        <PMPageSection
-          title="Setup local environment"
-          variant="outline"
-          boxProps={{ px: 0 }}
+        <PMFeatureFlag
+          featureKeys={[CLI_LOGIN_COMMAND_FEATURE_KEY]}
+          featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
+          userEmail={user?.email}
         >
-          <SetupLocalEnvironment />
-        </PMPageSection>
+          <PMPageSection
+            title="Setup local environment"
+            variant="outline"
+            boxProps={{ px: 0 }}
+          >
+            <SetupLocalEnvironment />
+          </PMPageSection>
+        </PMFeatureFlag>
 
         <PMPageSection title="CLI" variant="outline" boxProps={{ px: 0 }}>
           <CliAuthentication />
