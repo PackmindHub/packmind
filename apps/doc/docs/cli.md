@@ -7,6 +7,7 @@ The Packmind CLI provides the following commands:
 - **`login`** - Authenticate with your Packmind instance
 - **`logout`** - Clear stored credentials
 - **`whoami`** - Show current authentication status
+- **`setup-mcp`** - Configure MCP for AI coding agents
 - **`install`** - Download packages locally
 - **`lint`** - Run detection programs (Enterprise only)
 
@@ -155,6 +156,54 @@ source ~/.zshrc
 
 :::tip Credential Priority
 When both a credentials file and environment variable exist, the environment variable takes precedence.
+:::
+
+## Setup MCP Command
+
+Configure MCP (Model Context Protocol) for your AI coding agents. This command automatically sets up the Packmind MCP server in your agents' configuration.
+
+### Supported Agents
+
+- **Claude Code** (`claude`)
+- **Cursor** (`cursor`)
+- **VS Code / GitHub Copilot** (`copilot`)
+
+### Interactive Mode
+
+Run without arguments to use interactive mode:
+
+```bash
+packmind-cli setup-mcp
+```
+
+This will:
+
+1. Detect which AI agents are installed on your system
+2. Present a selection prompt with detected agents pre-selected
+3. Configure MCP for all selected agents
+
+### Direct Mode
+
+Specify target agents directly using the `--target` (or `-t`) flag:
+
+```bash
+packmind-cli setup-mcp --target claude
+```
+
+Configure multiple agents at once:
+
+```bash
+packmind-cli setup-mcp --target claude --target cursor
+```
+
+Or using the short form:
+
+```bash
+packmind-cli setup-mcp -t claude -t cursor -t copilot
+```
+
+:::tip Automatic Setup
+When you run `packmind-cli login`, the setup-mcp command runs automatically after successful authentication.
 :::
 
 ## Install Command
