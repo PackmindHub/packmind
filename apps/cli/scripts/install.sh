@@ -246,7 +246,10 @@ install_binary() {
 }
 
 # Auto-login if credentials provided
+# Sets: LOGIN_SUCCESS (0 if successful, 1 otherwise)
 auto_login() {
+    LOGIN_SUCCESS=1
+
     if [ -z "${PACKMIND_LOGIN_CODE:-}" ]; then
         return
     fi
@@ -267,8 +270,36 @@ auto_login() {
 
     if "$cli_path" login --code "$PACKMIND_LOGIN_CODE" --host "$HOST"; then
         success "Login successful!"
+        LOGIN_SUCCESS=0
     else
         warn "Login failed. You can try again later with: $BINARY_NAME login"
+    fi
+}
+
+# Setup MCP after successful login
+setup_mcp() {
+    if [ "${LOGIN_SUCCESS:-1}" -ne 0 ]; then
+        return
+    fi
+
+    INSTALL_DIR="${PACKMIND_INSTALL_DIR:-$DEFAULT_INSTALL_DIR}"
+
+    case "$PLATFORM" in
+        windows-*)
+            cli_path="${INSTALL_DIR}/${BINARY_NAME}.exe"
+            ;;
+        *)
+            cli_path="${INSTALL_DIR}/${BINARY_NAME}"
+            ;;
+    esac
+
+    echo ""
+    info "Configuring MCP for AI agents..."
+
+    if "$cli_path" setup-mcp; then
+        success "MCP configured!"
+    else
+        warn "MCP setup failed. You can try again later with: $BINARY_NAME setup-mcp"
     fi
 }
 
@@ -356,6 +387,7 @@ main() {
     install_binary
     print_instructions
     auto_login
+    setup_mcp
 }
 
 # Wrap everything in main() to prevent partial execution when piping
