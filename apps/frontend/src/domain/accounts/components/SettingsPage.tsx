@@ -31,7 +31,7 @@ export function SettingsPage() {
           <PMPageSection
             title="Setup local environment"
             variant="outline"
-            boxProps={{ px: 0 }}
+            backgroundColor="primary"
           >
             <SetupLocalEnvironment />
           </PMPageSection>
