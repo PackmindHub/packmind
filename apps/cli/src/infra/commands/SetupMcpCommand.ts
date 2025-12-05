@@ -1,4 +1,4 @@
-import { command, option, optional, Type } from 'cmd-ts';
+import { command, multioption, Type, array } from 'cmd-ts';
 import * as inquirer from 'inquirer';
 import {
   AgentDetectionService,
@@ -50,15 +50,15 @@ export const setupMcpCommand = command({
   name: 'setup-mcp',
   description: 'Configure MCP (Model Context Protocol) for AI coding agents',
   args: {
-    target: option({
-      type: optional(AgentArgType),
+    targets: multioption({
+      type: array(AgentArgType),
       long: 'target',
       short: 't',
       description:
-        'Target agent to configure (copilot, cursor, or claude). If omitted, interactive mode is used.',
+        'Target agent(s) to configure (copilot, cursor, or claude). Can be specified multiple times. If omitted, interactive mode is used.',
     }),
   },
-  handler: async ({ target }) => {
+  handler: async ({ targets }) => {
     const credentials = loadCredentials();
 
     if (!credentials) {
@@ -82,9 +82,9 @@ export const setupMcpCommand = command({
 
     let selectedAgents: AgentType[];
 
-    if (target) {
+    if (targets.length > 0) {
       // Direct mode: skip interactive selection
-      selectedAgents = [agentArgToType[target]];
+      selectedAgents = targets.map((t) => agentArgToType[t]);
     } else {
       // Interactive mode: detect and prompt
       console.log('\nDetecting installed AI agents...\n');
@@ -147,7 +147,6 @@ export const setupMcpCommand = command({
     const failedAgents: {
       name: string;
       error: string;
-      command?: string;
     }[] = [];
 
     for (const agentResult of result.results) {
@@ -161,7 +160,6 @@ export const setupMcpCommand = command({
         failedAgents.push({
           name: agentResult.agentName,
           error: agentResult.error || '',
-          command: agentResult.command,
         });
       }
     }
@@ -171,11 +169,6 @@ export const setupMcpCommand = command({
     if (failedAgents.length > 0) {
       for (const failed of failedAgents) {
         logWarningConsole(`Failed to configure ${failed.name}:`);
-
-        if (failed.command) {
-          console.log(`\n  Command attempted:`);
-          console.log(`    ${failed.command}`);
-        }
 
         console.log(`\n  Error: ${failed.error}`);
 

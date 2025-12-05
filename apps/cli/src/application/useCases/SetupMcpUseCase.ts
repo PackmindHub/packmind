@@ -56,7 +56,6 @@ export class SetupMcpUseCase implements ISetupMcpUseCase {
         agentName,
         success: installResult.success,
         error: installResult.error,
-        command: installResult.command,
       });
 
       if (!installResult.success) {
