@@ -1,16 +1,51 @@
 import { AddTargetUseCase } from './AddTargetUseCase';
-import { AddTargetCommand } from '@packmind/types';
+import {
+  AddTargetCommand,
+  IGitPort,
+  GitProviderMissingTokenError,
+  GitProviderWithoutToken,
+  Target,
+  createTargetId,
+  createGitRepoId,
+  createGitProviderId,
+  createUserId,
+  createOrganizationId,
+} from '@packmind/types';
 import { TargetService } from '../services/TargetService';
-import { createUserId, createOrganizationId } from '@packmind/types';
-import { Target, createTargetId, createGitRepoId } from '@packmind/types';
-import { v4 as uuidv4 } from 'uuid';
 
 describe('AddTargetUseCase', () => {
   let useCase: AddTargetUseCase;
   let mockTargetService: jest.Mocked<TargetService>;
+  let mockGitPort: jest.Mocked<IGitPort>;
 
-  const userId = createUserId(uuidv4());
-  const organizationId = createOrganizationId(uuidv4());
+  const userId = createUserId('user-123');
+  const organizationId = createOrganizationId('org-123');
+  const gitRepoId = createGitRepoId('repo-123');
+  const providerId = createGitProviderId('provider-123');
+
+  const mockRepo = {
+    id: gitRepoId,
+    owner: 'owner',
+    repo: 'repo',
+    branch: 'main',
+    providerId,
+  };
+
+  const mockProviderWithToken: GitProviderWithoutToken = {
+    id: providerId,
+    source: 'github',
+    organizationId,
+    url: 'https://github.com',
+    hasToken: true,
+  };
+
+  const mockProviderWithoutToken: GitProviderWithoutToken = {
+    id: providerId,
+    source: 'github',
+    organizationId,
+    url: 'https://github.com',
+    hasToken: false,
+  };
 
   beforeEach(() => {
     mockTargetService = {
@@ -18,24 +53,40 @@ describe('AddTargetUseCase', () => {
       getTargetsByGitRepoId: jest.fn(),
     } as unknown as jest.Mocked<TargetService>;
 
-    useCase = new AddTargetUseCase(mockTargetService);
+    mockGitPort = {
+      getRepositoryById: jest.fn(),
+      listProviders: jest.fn(),
+    } as unknown as jest.Mocked<IGitPort>;
+
+    useCase = new AddTargetUseCase(mockTargetService, mockGitPort);
   });
 
-  describe('when executing addTarget command', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('when provider has a token', () => {
+    beforeEach(() => {
+      mockGitPort.getRepositoryById.mockResolvedValue(mockRepo);
+      mockGitPort.listProviders.mockResolvedValue({
+        providers: [mockProviderWithToken],
+      });
+    });
+
     it('creates target with valid name and path', async () => {
       const command: AddTargetCommand = {
         userId,
         organizationId,
         name: 'production',
         path: '/src/',
-        gitRepoId: createGitRepoId(uuidv4()),
+        gitRepoId,
       };
 
       const expectedTarget: Target = {
-        id: createTargetId(uuidv4()),
+        id: createTargetId('target-123'),
         name: 'production',
         path: '/src/',
-        gitRepoId: command.gitRepoId,
+        gitRepoId,
       };
 
       mockTargetService.addTarget.mockResolvedValue(expectedTarget);
@@ -46,7 +97,7 @@ describe('AddTargetUseCase', () => {
         expect.objectContaining({
           name: 'production',
           path: '/src/',
-          gitRepoId: command.gitRepoId,
+          gitRepoId,
         }),
       );
       expect(result).toEqual(expectedTarget);
@@ -58,14 +109,14 @@ describe('AddTargetUseCase', () => {
         organizationId,
         name: '  production  ',
         path: '/src/',
-        gitRepoId: createGitRepoId(uuidv4()),
+        gitRepoId,
       };
 
       const expectedTarget: Target = {
-        id: createTargetId(uuidv4()),
+        id: createTargetId('target-123'),
         name: 'production',
         path: '/src/',
-        gitRepoId: command.gitRepoId,
+        gitRepoId,
       };
 
       mockTargetService.addTarget.mockResolvedValue(expectedTarget);
@@ -76,7 +127,7 @@ describe('AddTargetUseCase', () => {
         expect.objectContaining({
           name: 'production',
           path: '/src/',
-          gitRepoId: command.gitRepoId,
+          gitRepoId,
         }),
       );
     });
@@ -87,14 +138,14 @@ describe('AddTargetUseCase', () => {
         organizationId,
         name: 'default',
         path: '/',
-        gitRepoId: createGitRepoId(uuidv4()),
+        gitRepoId,
       };
 
       const expectedTarget: Target = {
-        id: createTargetId(uuidv4()),
+        id: createTargetId('target-123'),
         name: 'default',
         path: '/',
-        gitRepoId: command.gitRepoId,
+        gitRepoId,
       };
 
       mockTargetService.addTarget.mockResolvedValue(expectedTarget);
@@ -105,7 +156,7 @@ describe('AddTargetUseCase', () => {
         expect.objectContaining({
           name: 'default',
           path: '/',
-          gitRepoId: command.gitRepoId,
+          gitRepoId,
         }),
       );
     });
@@ -116,14 +167,14 @@ describe('AddTargetUseCase', () => {
         organizationId,
         name: 'frontend',
         path: '/apps/frontend/',
-        gitRepoId: createGitRepoId(uuidv4()),
+        gitRepoId,
       };
 
       const expectedTarget: Target = {
-        id: createTargetId(uuidv4()),
+        id: createTargetId('target-123'),
         name: 'frontend',
         path: '/apps/frontend/',
-        gitRepoId: command.gitRepoId,
+        gitRepoId,
       };
 
       mockTargetService.addTarget.mockResolvedValue(expectedTarget);
@@ -134,20 +185,52 @@ describe('AddTargetUseCase', () => {
         expect.objectContaining({
           name: 'frontend',
           path: '/apps/frontend/',
-          gitRepoId: command.gitRepoId,
+          gitRepoId,
         }),
       );
     });
   });
 
+  describe('when provider has no token', () => {
+    beforeEach(() => {
+      mockGitPort.getRepositoryById.mockResolvedValue(mockRepo);
+      mockGitPort.listProviders.mockResolvedValue({
+        providers: [mockProviderWithoutToken],
+      });
+    });
+
+    it('throws GitProviderMissingTokenError', async () => {
+      const command: AddTargetCommand = {
+        userId,
+        organizationId,
+        name: 'production',
+        path: '/src/',
+        gitRepoId,
+      };
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        GitProviderMissingTokenError,
+      );
+
+      expect(mockTargetService.addTarget).not.toHaveBeenCalled();
+    });
+  });
+
   describe('when validating input', () => {
+    beforeEach(() => {
+      mockGitPort.getRepositoryById.mockResolvedValue(mockRepo);
+      mockGitPort.listProviders.mockResolvedValue({
+        providers: [mockProviderWithToken],
+      });
+    });
+
     it('throws error for empty target name', async () => {
       const command: AddTargetCommand = {
         userId,
         organizationId,
         name: '',
         path: '/src/',
-        gitRepoId: createGitRepoId(uuidv4()),
+        gitRepoId,
       };
 
       await expect(useCase.execute(command)).rejects.toThrow(
@@ -163,7 +246,7 @@ describe('AddTargetUseCase', () => {
         organizationId,
         name: '   ',
         path: '/src/',
-        gitRepoId: createGitRepoId(uuidv4()),
+        gitRepoId,
       };
 
       await expect(useCase.execute(command)).rejects.toThrow(
@@ -179,7 +262,7 @@ describe('AddTargetUseCase', () => {
         organizationId,
         name: 'production',
         path: '',
-        gitRepoId: createGitRepoId(uuidv4()),
+        gitRepoId,
       };
 
       await expect(useCase.execute(command)).rejects.toThrow(
@@ -195,7 +278,7 @@ describe('AddTargetUseCase', () => {
         organizationId,
         name: 'production',
         path: '../invalid',
-        gitRepoId: createGitRepoId(uuidv4()),
+        gitRepoId,
       };
 
       await expect(useCase.execute(command)).rejects.toThrow(
@@ -204,16 +287,41 @@ describe('AddTargetUseCase', () => {
 
       expect(mockTargetService.addTarget).not.toHaveBeenCalled();
     });
+
+    it('throws error for repository not found', async () => {
+      mockGitPort.getRepositoryById.mockResolvedValue(null);
+
+      const command: AddTargetCommand = {
+        userId,
+        organizationId,
+        name: 'production',
+        path: '/src/',
+        gitRepoId,
+      };
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        `Repository with id ${gitRepoId} not found`,
+      );
+
+      expect(mockTargetService.addTarget).not.toHaveBeenCalled();
+    });
   });
 
   describe('when repository operations fail', () => {
+    beforeEach(() => {
+      mockGitPort.getRepositoryById.mockResolvedValue(mockRepo);
+      mockGitPort.listProviders.mockResolvedValue({
+        providers: [mockProviderWithToken],
+      });
+    });
+
     it('propagates repository errors', async () => {
       const command: AddTargetCommand = {
         userId,
         organizationId,
         name: 'production',
         path: '/src/',
-        gitRepoId: createGitRepoId(uuidv4()),
+        gitRepoId,
       };
 
       const repositoryError = new Error('Database connection failed');

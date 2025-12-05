@@ -259,6 +259,7 @@ export class DeploymentsAdapter
 
     this._addTargetUseCase = new AddTargetUseCase(
       this.deploymentsServices.getTargetService(),
+      this.gitPort,
     );
 
     this._getTargetsByGitRepoUseCase = new GetTargetsByGitRepoUseCase(

@@ -8,8 +8,9 @@ import {
   PMVStack,
   PMIcon,
   PMEmptyState,
+  PMTooltip,
 } from '@packmind/ui';
-import { LuSettings, LuTarget } from 'react-icons/lu';
+import { LuSettings, LuTarget, LuCircleHelp } from 'react-icons/lu';
 import { TargetWithRepository, Target } from '@packmind/types';
 import { GitRepoId } from '@packmind/types';
 import { TargetBadge } from '../TargetBadge/TargetBadge';
@@ -20,6 +21,7 @@ interface RepositoryTargetCardProps {
   providerUrl: string;
   targets: TargetWithRepository[];
   gitRepoId: GitRepoId;
+  hasToken: boolean;
 }
 
 export const RepositoryTargetCard: React.FC<RepositoryTargetCardProps> = ({
@@ -27,6 +29,7 @@ export const RepositoryTargetCard: React.FC<RepositoryTargetCardProps> = ({
   providerUrl,
   targets,
   gitRepoId,
+  hasToken,
 }) => {
   const [selectedTargetId, setSelectedTargetId] = useState<
     string | undefined
@@ -117,7 +120,11 @@ export const RepositoryTargetCard: React.FC<RepositoryTargetCardProps> = ({
           {targets.length === 0 && (
             <PMEmptyState
               title="No targets configured"
-              description="Click 'Manage Targets' to create your first deployment target"
+              description={
+                hasToken
+                  ? "Click 'Manage Targets' to create your first deployment target"
+                  : 'Run packmind-cli install to create targets for this repository'
+              }
               icon={<PMIcon as={LuTarget} boxSize="8" color="gray.400" />}
             />
           )}

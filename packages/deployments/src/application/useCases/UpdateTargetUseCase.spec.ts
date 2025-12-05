@@ -258,7 +258,7 @@ describe('UpdateTargetUseCase', () => {
       expect(mockTargetService.updateTarget).not.toHaveBeenCalled();
     });
 
-    it('throws error for repository not found when changing path', async () => {
+    describe('when updating path', () => {
       const command: UpdateTargetCommand = {
         targetId,
         name: 'Valid Name',
@@ -267,19 +267,51 @@ describe('UpdateTargetUseCase', () => {
         organizationId,
       };
 
-      mockTargetService.findById.mockResolvedValue(existingTarget);
-      mockGitPort.getRepositoryById.mockResolvedValue(null);
+      it('throws error for repository not found', async () => {
+        mockTargetService.findById.mockResolvedValue(existingTarget);
+        mockGitPort.getRepositoryById.mockResolvedValue(null);
 
-      await expect(useCase.execute(command)).rejects.toThrow(
-        `Repository with id ${gitRepoId} not found`,
-      );
+        await expect(useCase.execute(command)).rejects.toThrow(
+          `Repository with id ${gitRepoId} not found`,
+        );
 
-      expect(mockTargetService.updateTarget).not.toHaveBeenCalled();
+        expect(mockTargetService.updateTarget).not.toHaveBeenCalled();
+      });
+
+      it('throws error if the gitProvider does not have a token', async () => {
+        const providerId = createGitProviderId('prodiver-id');
+
+        mockTargetService.findById.mockResolvedValue(existingTarget);
+        mockGitPort.getRepositoryById.mockResolvedValue({
+          id: createGitRepoId('some-git-repo-id'),
+          owner: 'some-company',
+          repo: 'my-repo',
+          branch: 'main',
+          providerId,
+        });
+        mockGitPort.listProviders.mockResolvedValue({
+          providers: [
+            {
+              id: providerId,
+              source: 'github',
+              hasToken: false,
+              organizationId,
+              url: 'https://github.com',
+            },
+          ],
+        });
+
+        await expect(useCase.execute(command)).rejects.toThrow(
+          `Cannot update path for target '${targetId}'. The associated git provider has no token configured`,
+        );
+
+        expect(mockTargetService.updateTarget).not.toHaveBeenCalled();
+      });
     });
   });
 
   describe('when path is root', () => {
-    it('allows updating to root path when provider has token', async () => {
+    it('allows updating to root path if provider has token', async () => {
       const command: UpdateTargetCommand = {
         targetId,
         name: 'Root Target',
