@@ -26,6 +26,8 @@ import { Standard } from '@packmind/types';
 import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { PMBox, PMHeading, PMSpinner, PMVStack, PMAlert } from '@packmind/ui';
 import { RenderingSettings } from '../RenderingSettings/RenderingSettings';
+import { useGetGitReposQuery } from '../../../git/api/queries/GitRepoQueries';
+import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
 
 type RunDistributionCtxType = {
   targetsList: TargetWithRepository[];
@@ -87,10 +89,36 @@ const RunDistributionComponent: React.FC<RunDistributionProps> = ({
     error: renderModeConfigurationError,
   } = useGetRenderModeConfigurationQuery();
   const {
-    data: targetsList = [],
+    data: allTargets = [],
     isLoading: targetsLoading,
     isError: targetsError,
   } = useGetTargetsByOrganizationQuery();
+
+  // Fetch repositories and providers to filter out targets from tokenless providers
+  const { data: repositories = [] } = useGetGitReposQuery();
+  const { data: providersResponse } = useGetGitProvidersQuery();
+  const providers = providersResponse?.providers ?? [];
+
+  // Filter targets to only include those from providers with tokens
+  const targetsList = useMemo(() => {
+    // Build a map of gitRepoId -> providerId
+    const repoToProviderMap = new Map(
+      repositories.map((repo) => [repo.id, repo.providerId]),
+    );
+
+    // Build a set of providerIds that have tokens
+    const providersWithToken = new Set(
+      providers.filter((p) => p.hasToken).map((p) => p.id),
+    );
+
+    // Filter targets to only those whose repository's provider has a token
+    return allTargets.filter((target) => {
+      const providerId = repoToProviderMap.get(target.gitRepoId);
+      // If we can't find the provider, include the target (safe fallback)
+      if (!providerId) return true;
+      return providersWithToken.has(providerId);
+    });
+  }, [allTargets, repositories, providers]);
 
   const renderModeConfiguration =
     renderModeConfigurationResult?.configuration ?? null;
