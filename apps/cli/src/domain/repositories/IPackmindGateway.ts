@@ -144,6 +144,22 @@ export type GetDetectionProgramsForPackages = IUseCase<
   GetDetectionProgramsForPackagesResult
 >;
 
+// Notify Distribution types
+export type NotifyDistributionCommand = {
+  distributedPackages: string[];
+  gitRemoteUrl: string;
+  gitBranch: string;
+  relativePath: string;
+};
+
+export type NotifyDistributionResult = {
+  deploymentId: string;
+};
+
+export type NotifyDistributionGateway = (
+  command: NotifyDistributionCommand,
+) => Promise<NotifyDistributionResult>;
+
 export interface IPackmindGateway {
   listExecutionPrograms: Gateway<ListDetectionPrograms>;
   getDraftDetectionProgramsForRule: Gateway<GetDraftDetectionProgramsForRule>;
@@ -154,4 +170,5 @@ export interface IPackmindGateway {
   getPackageSummary: PublicGateway<IGetPackageSummaryUseCase>;
   getMcpToken: Gateway<IGetMcpTokenUseCase>;
   getMcpUrl: Gateway<IGetMcpUrlUseCase>;
+  notifyDistribution: NotifyDistributionGateway;
 }

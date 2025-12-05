@@ -149,6 +149,53 @@ describe('GitService', () => {
     });
   });
 
+  describe('getCurrentBranch', () => {
+    describe('when on a branch', () => {
+      it('returns the current branch name', () => {
+        gitRunner.mockReturnValue({ stdout: 'main\n' });
+
+        const result = service.getCurrentBranch('/repo');
+
+        expect(result).toEqual({ branch: 'main' });
+        expect(gitRunner).toHaveBeenCalledWith('rev-parse --abbrev-ref HEAD', {
+          cwd: '/repo',
+        });
+      });
+    });
+
+    describe('when on a feature branch', () => {
+      it('returns the feature branch name', () => {
+        gitRunner.mockReturnValue({ stdout: 'feature/my-feature\n' });
+
+        const result = service.getCurrentBranch('/repo');
+
+        expect(result).toEqual({ branch: 'feature/my-feature' });
+      });
+    });
+
+    describe('when in detached HEAD state', () => {
+      it('returns HEAD', () => {
+        gitRunner.mockReturnValue({ stdout: 'HEAD\n' });
+
+        const result = service.getCurrentBranch('/repo');
+
+        expect(result).toEqual({ branch: 'HEAD' });
+      });
+    });
+
+    describe('when not in a git repository', () => {
+      it('throws error', () => {
+        gitRunner.mockImplementation(() => {
+          throw new Error('fatal: not a git repository');
+        });
+
+        expect(() => service.getCurrentBranch('/non-git')).toThrow(
+          'Failed to get current Git branch',
+        );
+      });
+    });
+  });
+
   describe('getGitRemoteUrl', () => {
     describe('when only one remote is available', () => {
       it('returns single remote', () => {
