@@ -2,17 +2,26 @@
 
 ## Added
 
-- Add `login` command to authenticate via browser with automatic callback #31
-- Add `logout` command to clear stored credentials #31
-- Add `whoami` command to display current authentication status #31
-
 ## Changed
 
 ## Fixed
 
-- Improve error message when running lint outside a Git repository without a `packmind.json` config #18
-
 ## Removed
+
+# [0.7.0] - 2025-12-05
+
+## Added
+
+- Add `login` command to authenticate via browser #31
+- Add `logout` command to clear stored credentials #31
+- Add `whoami` command to display current authentication status #31
+- Add `setup-mcp` command for AI agent configuration #32
+
+## Fixed
+
+- Improve error message when running lint outside a Git repository without a `packmind.json` config #18
+- Validate protocol in --host option for login command #31
+- Support Git Bash on Windows #31
 
 # [0.6.0] - 2025-11-27
 
@@ -57,8 +66,9 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.6.0...HEAD
-[0.6.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.5.0...0.6.0
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.7.0...HEAD
+[0.7.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.6.0...release-cli/0.7.0
+[0.6.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.5.0...release-cli/0.6.0
 [0.5.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.4.0...release-cli/0.5.0
 [0.4.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.3.4...release-cli/0.4.0
 [0.3.4]: https://github.com/PackmindHub/packmind/compare/release-cli/0.3.3...release-cli/0.3.4
