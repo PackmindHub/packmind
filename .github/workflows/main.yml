@@ -4,11 +4,15 @@ name: Main CI/CD Pipeline
 # │ GLOBAL CONFIGURATION                                            │
 # │ To update Node.js version, change all occurrences below        │
 # │ Current version: 22.17.0                                       │
+# │                                                                 │
+# │ Repository Variables Required:                                  │
+# │ - PACKMIND_EDITION: 'oss' or 'proprietary'                     │
+# │ - ACTION_RUNNER_TAG: (optional) defaults to 'self-hosted'      │
 # └─────────────────────────────────────────────────────────────────┘
 
 on:
   push:
-    branches: ['main']
+    branches: ['main', 'docker-bake']  # docker-bake is temporary for testing
     tags:
       - 'release/*'
       - 'release-cli/*'
@@ -17,63 +21,46 @@ on:
 
 jobs:
   # Stage 1: Build and Test
-  build-proprietary:
-    uses: ./.github/workflows/build-proprietary.yml
+  build:
+    uses: ./.github/workflows/build.yml
     with:
       node-version: 22.17.0
     secrets:
       VITE_SENTRY_FRONTEND_DSN: ${{ secrets.VITE_SENTRY_FRONTEND_DSN }}
       VITE_CRISP_WEBSITE_ID: ${{ secrets.VITE_CRISP_WEBSITE_ID }}
 
-  build-oss:
-    uses: ./.github/workflows/build-oss.yml
-    with:
-      node-version: 22.17.0
-
   # Stage 2: Quality and Security Checks
   quality:
-    needs: [build-proprietary, build-oss]
+    needs: [build]
     uses: ./.github/workflows/quality.yml
     with:
       node-version: 22.17.0
-      cli-executables-artifact: ${{ needs.build-proprietary.outputs.cli-executables-artifact }}
+      cli-executables-artifact: ${{ needs.build.outputs.cli-executables-artifact }}
     secrets:
       GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       PACKMIND_API_KEY: ${{ secrets.PACKMIND_API_KEY }}
       PACKMIND_API_KEY_V3: ${{ secrets.PACKMIND_API_KEY_V3 }}
 
-  # Stage 3: Docker Images (on main branch and release tags)
-  docker-oss:
-    needs: [build-proprietary, build-oss, quality]
-    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/release/')
-    uses: ./.github/workflows/docker-oss.yml
+  # Stage 3: Docker Images (on main branch, docker-bake branch, and release tags)
+  # Note: The docker workflow handles branch conditions internally based on edition
+  docker:
+    needs: [build, quality]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/docker-bake' || startsWith(github.ref, 'refs/tags/release/')
+    uses: ./.github/workflows/docker.yml
     with:
-      api-artifact: ${{ needs.build-oss.outputs.api-artifact-oss }}
-      frontend-artifact: ${{ needs.build-oss.outputs.frontend-artifact-oss }}
-      mcp-server-artifact: ${{ needs.build-oss.outputs.mcp-server-artifact-oss }}
+      api-artifact: ${{ needs.build.outputs.api-artifact }}
+      frontend-artifact: ${{ needs.build.outputs.frontend-artifact }}
+      mcp-server-artifact: ${{ needs.build.outputs.mcp-server-artifact }}
       node-version: 22.17.0
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
-  docker-proprietary:
-    needs: [build-proprietary, build-oss, quality]
-    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/release/')
-    uses: ./.github/workflows/docker-proprietary.yml
-    with:
-      api-artifact: ${{ needs.build-proprietary.outputs.api-artifact-proprietary }}
-      frontend-artifact: ${{ needs.build-proprietary.outputs.frontend-artifact-proprietary }}
-      mcp-server-artifact: ${{ needs.build-proprietary.outputs.mcp-server-artifact-proprietary }}
-      node-version: 22.17.0
-    secrets:
-      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-
-  # Stage 4: Publish CLI Release (only on release-cli/* tags, independent from Docker builds)
+  # Stage 4: Publish CLI Release (only on release-cli/* tags, OSS only)
   publish-cli-release:
-    needs: [build-proprietary]
-    if: startsWith(github.ref, 'refs/tags/release-cli/')
+    needs: [build]
+    if: startsWith(github.ref, 'refs/tags/release-cli/') && vars.PACKMIND_EDITION == 'oss'
     permissions:
       contents: write
     uses: ./.github/workflows/publish-cli-release.yml
@@ -86,25 +73,10 @@ jobs:
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-  # Stage 4b: Publish CLI Release to Public Repository (only on release-cli/* tags)
-  publish-public-cli-release:
-    needs: [build-proprietary, publish-cli-release]
-    if: startsWith(github.ref, 'refs/tags/release-cli/')
-    permissions:
-      contents: read
-    uses: ./.github/workflows/publish-public-cli-release.yml
-    with:
-      version: ${{ needs.build-proprietary.outputs.cli-version }}
-      cli-executables-artifact: ${{ needs.build-proprietary.outputs.cli-executables-artifact }}
-    secrets:
-      PUBLIC_REPO_TOKEN: ${{ secrets.PUBLIC_REPO_TOKEN }}
-
   # Stage 5: Deploy and Update Helm Charts (after Docker images are built)
+  # Note: The deploy workflow handles edition-specific logic internally
   deploy-staging-and-release:
-    needs:
-      [build-proprietary, build-oss,
-       quality,
-       docker-oss, docker-proprietary]
+    needs: [build, quality, docker]
     if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/release/')
     uses: ./.github/workflows/deploy-staging-and-release.yml
     with:
@@ -117,15 +89,7 @@ jobs:
 
   # Stage 6: Create Release (only on release tags, after all deployments)
   create-release:
-    needs:
-      [
-        build-proprietary,
-        build-oss,
-        quality,
-        docker-oss,
-        docker-proprietary,
-        deploy-staging-and-release,
-      ]
+    needs: [build, quality, docker, deploy-staging-and-release]
     if: startsWith(github.ref, 'refs/tags/release/')
     permissions:
       contents: write

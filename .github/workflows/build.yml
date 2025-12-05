@@ -1,7 +1,4 @@
-name: Build and Test Proprietary
-
-env:
-  ENTERPRISE_EDITION: proprietary
+name: Build and Test
 
 on:
   workflow_call:
@@ -13,22 +10,22 @@ on:
     secrets:
       VITE_SENTRY_FRONTEND_DSN:
         required: false
-        description: 'Sentry DSN for frontend monitoring'
+        description: 'Sentry DSN for frontend monitoring (proprietary only)'
       VITE_CRISP_WEBSITE_ID:
         required: false
-        description: 'Crisp Website ID for chat support'
+        description: 'Crisp Website ID for chat support (proprietary only)'
     outputs:
-      api-artifact-proprietary:
-        description: 'API proprietary build artifact name'
-        value: ${{ jobs.build-api-proprietary.outputs.artifact-name }}
-      frontend-artifact-proprietary:
-        description: 'Frontend proprietary build artifact name'
-        value: ${{ jobs.build-frontend-proprietary.outputs.artifact-name }}
-      mcp-server-artifact-proprietary:
-        description: 'MCP Server proprietary build artifact name'
-        value: ${{ jobs.build-mcp-server-proprietary.outputs.artifact-name }}
-      cli-artifact-proprietary:
-        description: 'CLI proprietary build artifact name'
+      api-artifact:
+        description: 'API build artifact name'
+        value: ${{ jobs.build-api.outputs.artifact-name }}
+      frontend-artifact:
+        description: 'Frontend build artifact name'
+        value: ${{ jobs.build-frontend.outputs.artifact-name }}
+      mcp-server-artifact:
+        description: 'MCP Server build artifact name'
+        value: ${{ jobs.build-mcp-server.outputs.artifact-name }}
+      cli-artifact:
+        description: 'CLI build artifact name'
         value: ${{ jobs.build-cli.outputs.artifact-name }}
       cli-version:
         description: 'CLI version'
@@ -38,10 +35,10 @@ on:
         value: ${{ jobs.build-cli.outputs.cli-executables-artifact }}
 
 jobs:
-  build-api-proprietary:
+  build-api:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
     outputs:
-      artifact-name: api-dist-proprietary-${{ github.run_number }}-${{ github.sha }}
+      artifact-name: api-dist-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
     strategy:
       matrix:
         node-version: ['${{ inputs.node-version }}']
@@ -54,17 +51,17 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
       - run: npm ci
-      - name: Generate Proprietary tsconfig
+      - name: Generate tsconfig
         env:
-          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: node scripts/select-tsconfig.mjs
-      - name: Build API (Proprietary)
+      - name: Build API
         env:
-          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: ./node_modules/.bin/nx build api
-      - name: Test API (Proprietary)
+      - name: Test API
         env:
-          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: ./node_modules/.bin/nx test api
       - run: cp apps/api/docker-package.json dist/apps/api/.
       - run: cp package.json dist/apps/api/.
@@ -74,13 +71,13 @@ jobs:
       - name: Upload API build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: api-dist-proprietary-${{ github.run_number }}-${{ github.sha }}
+          name: api-dist-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
           path: dist/apps/api/
 
-  build-frontend-proprietary:
+  build-frontend:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
     outputs:
-      artifact-name: frontend-dist-proprietary-${{ github.run_number }}-${{ github.sha }}
+      artifact-name: frontend-dist-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
     strategy:
       matrix:
         node-version: ['${{ inputs.node-version }}']
@@ -93,26 +90,26 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
       - run: npm ci
-      - name: Generate Proprietary tsconfig
+      - name: Generate tsconfig
         env:
-          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: node scripts/select-tsconfig.mjs
-      - name: Generate Chakra types (Proprietary)
+      - name: Generate Chakra types
         env:
-          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: npm run chakra:typegen
       - name: Typechecks
         run: npm run typecheck:frontend
-      - name: Test Frontend (Proprietary)
+      - name: Test Frontend
         env:
-          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: ./node_modules/.bin/nx test frontend
-      - name: Build frontend with Sentry DSN & Crisp (Proprietary)
+      - name: Build frontend
         env:
           NODE_ENV: production
-          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
           VITE_SENTRY_FRONTEND_DSN: ${{ secrets.VITE_SENTRY_FRONTEND_DSN }}
-          VITE_SENTRY_ENVIRONMENT: production
+          VITE_SENTRY_ENVIRONMENT: ${{ vars.PACKMIND_EDITION == 'proprietary' && 'production' || '' }}
           VITE_CRISP_WEBSITE_ID: ${{ secrets.VITE_CRISP_WEBSITE_ID }}
         run: ./node_modules/.bin/nx build frontend
       - run: cp tsconfig.base.effective.json apps/frontend/build/client/.
@@ -120,13 +117,13 @@ jobs:
       - name: Upload Frontend build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: frontend-dist-proprietary-${{ github.run_number }}-${{ github.sha }}
+          name: frontend-dist-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
           path: apps/frontend/build/client
 
-  build-mcp-server-proprietary:
+  build-mcp-server:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
     outputs:
-      artifact-name: mcp-server-dist-proprietary-${{ github.run_number }}-${{ github.sha }}
+      artifact-name: mcp-server-dist-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
     strategy:
       matrix:
         node-version: ['${{ inputs.node-version }}']
@@ -139,25 +136,24 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
       - run: npm ci
-      - name: Generate Proprietary tsconfig
+      - name: Generate tsconfig
         env:
-          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: node scripts/select-tsconfig.mjs
-      - name: Build MCP Server (Proprietary)
+      - name: Build MCP Server
         env:
-          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: ./node_modules/.bin/nx build mcp-server
-      - name: Test MCP Server (Proprietary)
+      - name: Test MCP Server
         env:
-          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: ./node_modules/.bin/nx test mcp-server
-
       - run: cp tsconfig.base.effective.json dist/apps/mcp-server/.
 
       - name: Upload MCP-Server build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: mcp-server-dist-proprietary-${{ github.run_number }}-${{ github.sha }}
+          name: mcp-server-dist-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
           path: dist/apps/mcp-server/
 
   build-packages:
@@ -174,23 +170,23 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
       - run: npm ci
-      - name: Generate Proprietary tsconfig
+      - name: Generate tsconfig
         env:
-          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: node scripts/select-tsconfig.mjs
-      - name: Build packages (Proprietary)
+      - name: Build packages
         env:
-          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: ./node_modules/.bin/nx run-many -t build -p packages/*
-      - name: Test packages (Proprietary)
+      - name: Test packages
         env:
-          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: ./node_modules/.bin/nx run-many -t test -p packages/* --passWithNoTests
 
   build-cli:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
     outputs:
-      artifact-name: cli-dist-proprietary-${{ github.run_number }}-${{ github.sha }}
+      artifact-name: cli-dist-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
       cli-executables-artifact: cli-executables-${{ steps.get-version.outputs.version }}
       version: ${{ steps.get-version.outputs.version }}
     strategy:
@@ -204,36 +200,36 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-      
+
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-      
+
       - name: Get package version
         id: get-version
         run: echo "version=$(node -p "require('./apps/cli/package.json').version")" >> $GITHUB_OUTPUT
-      
+
       - run: npm ci
-      - name: Generate Proprietary tsconfig
+      - name: Generate tsconfig
         env:
-          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: node scripts/select-tsconfig.mjs
-      - name: Build CLI (Proprietary)
+      - name: Build CLI
         env:
-          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: ./node_modules/.bin/nx build-publish packmind-cli
-      - name: Test CLI (Proprietary)
+      - name: Test CLI
         env:
-          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
         run: ./node_modules/.bin/nx test packmind-cli
 
       - name: Upload CLI build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: cli-dist-proprietary-${{ github.run_number }}-${{ github.sha }}
+          name: cli-dist-${{ vars.PACKMIND_EDITION }}-${{ github.run_number }}-${{ github.sha }}
           path: dist/apps/cli/
-      
+
       - name: Build CLI executables for all platforms
         run: |
           echo "📦 Building CLI executables with embedded WASM files..."
@@ -260,3 +256,78 @@ jobs:
             dist/apps/cli-executables/packmind-cli-macos-arm64
             dist/apps/cli-executables/packmind-cli-windows-x64.exe
           retention-days: 30
+
+  e2e-tests:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        node-version: ['${{ inputs.node-version }}']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start E2E test environment
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 10
+          max_attempts: 3
+          retry_wait_seconds: 10
+          command: |
+            echo "Starting docker compose with COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}"
+            echo "Docker version:"
+            docker --version
+            docker compose version
+            echo "Starting containers..."
+            docker compose --profile=e2e up -d --wait-timeout 300
+            echo "Docker compose up completed. Container status:"
+            docker compose --profile=e2e ps -a
+            docker ps -a --format 'table {{.Names}}\t{{.Status}}'
+        env:
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+          COMPOSE_PROJECT_NAME: ci-${{ github.run_number }}
+          CI: 'true'
+
+      - name: Wait for E2E tests to complete
+        env:
+          PACKMIND_EDITION: ${{ vars.PACKMIND_EDITION }}
+          COMPOSE_PROJECT_NAME: ci-${{ github.run_number }}
+        run: ./scripts/wait-for-e2e-tests.sh
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ github.run_number }}-${{ github.sha }}
+          path: apps/e2e-tests/playwright-report/
+          if-no-files-found: ignore
+
+      - name: Collect Docker container logs
+        if: always()
+        env:
+          COMPOSE_PROJECT_NAME: ci-${{ github.run_number }}
+        run: |
+          mkdir -p docker-logs
+          echo "Looking for containers with prefix: ${COMPOSE_PROJECT_NAME}"
+          docker ps -a --format '{{.Names}}' | grep "^${COMPOSE_PROJECT_NAME}" || echo "No containers found"
+          for container in $(docker ps -a --format '{{.Names}}' | grep "^${COMPOSE_PROJECT_NAME}" || true); do
+            echo "Collecting logs for $container..."
+            docker logs "$container" > "docker-logs/${container}.log" 2>&1 || true
+          done
+          echo "Collected logs:"
+          ls -la docker-logs/ || echo "No logs collected"
+
+      - name: Upload Docker logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-logs-${{ github.run_number }}-${{ github.sha }}
+          path: docker-logs/
+          if-no-files-found: ignore
+
+      - name: Cleanup Docker containers
+        if: always()
+        env:
+          COMPOSE_PROJECT_NAME: ci-${{ github.run_number }}
+        run: docker compose --profile=e2e down -v --remove-orphans
+
