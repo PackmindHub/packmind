@@ -1,0 +1,96 @@
+name: Main CI/CD Pipeline
+
+# ┌─────────────────────────────────────────────────────────────────┐
+# │ GLOBAL CONFIGURATION                                            │
+# │ To update Node.js version, change all occurrences below        │
+# │ Current version: 22.17.0                                       │
+# │                                                                 │
+# │ Repository Variables Required:                                  │
+# │ - PACKMIND_EDITION: 'oss' or 'proprietary'                     │
+# │ - ACTION_RUNNER_TAG: (optional) defaults to 'self-hosted'      │
+# └─────────────────────────────────────────────────────────────────┘
+
+on:
+  push:
+    branches: ['main', 'docker-bake']  # docker-bake is temporary for testing
+    tags:
+      - 'release/*'
+      - 'release-cli/*'
+  pull_request:
+    branches: ['main']
+
+jobs:
+  # Stage 1: Build and Test
+  build:
+    uses: ./.github/workflows/build.yml
+    with:
+      node-version: 22.17.0
+    secrets:
+      VITE_SENTRY_FRONTEND_DSN: ${{ secrets.VITE_SENTRY_FRONTEND_DSN }}
+      VITE_CRISP_WEBSITE_ID: ${{ secrets.VITE_CRISP_WEBSITE_ID }}
+
+  # Stage 2: Quality and Security Checks
+  quality:
+    needs: [build]
+    uses: ./.github/workflows/quality.yml
+    with:
+      node-version: 22.17.0
+      cli-executables-artifact: ${{ needs.build.outputs.cli-executables-artifact }}
+    secrets:
+      GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      PACKMIND_API_KEY: ${{ secrets.PACKMIND_API_KEY }}
+      PACKMIND_API_KEY_V3: ${{ secrets.PACKMIND_API_KEY_V3 }}
+
+  # Stage 3: Docker Images (on main branch, docker-bake branch, and release tags)
+  # Note: The docker workflow handles branch conditions internally based on edition
+  docker:
+    needs: [build, quality]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/docker-bake' || startsWith(github.ref, 'refs/tags/release/')
+    uses: ./.github/workflows/docker.yml
+    with:
+      api-artifact: ${{ needs.build.outputs.api-artifact }}
+      frontend-artifact: ${{ needs.build.outputs.frontend-artifact }}
+      mcp-server-artifact: ${{ needs.build.outputs.mcp-server-artifact }}
+      node-version: 22.17.0
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
+  # Stage 4: Publish CLI Release (only on release-cli/* tags, OSS only)
+  publish-cli-release:
+    needs: [build]
+    if: startsWith(github.ref, 'refs/tags/release-cli/') && vars.PACKMIND_EDITION == 'oss'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/publish-cli-release.yml
+    secrets:
+      MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+      MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+      MACOS_SIGNING_IDENTITY: ${{ secrets.MACOS_SIGNING_IDENTITY }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  # Stage 5: Deploy and Update Helm Charts (after Docker images are built)
+  # Note: The deploy workflow handles edition-specific logic internally
+  deploy-staging-and-release:
+    needs: [build, quality, docker]
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/release/')
+    uses: ./.github/workflows/deploy-staging-and-release.yml
+    with:
+      node-version: 22.17.0
+      helm-charts-repository: ${{ vars.HELM_CHARTS_REPOSITORY || 'PackmindHub/packmind-ai-helm-charts' }}
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      HELM_CHARTS_PAT: ${{ secrets.HELM_CHARTS_PAT }}
+
+  # Stage 6: Create Release (only on release tags, after all deployments)
+  create-release:
+    needs: [build, quality, docker, deploy-staging-and-release]
+    if: startsWith(github.ref, 'refs/tags/release/')
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release.yml

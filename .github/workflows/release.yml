@@ -1,0 +1,50 @@
+name: Create Release
+
+on:
+  workflow_call:
+
+jobs:
+  create-release:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get package version
+        id: get-version
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Set image suffix
+        id: set-image-suffix
+        run: |
+          if [ "${{ vars.PACKMIND_EDITION }}" = "oss" ]; then
+            echo "suffix=" >> $GITHUB_OUTPUT
+          else
+            echo "suffix=-${{ vars.PACKMIND_EDITION }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release v${{ steps.get-version.outputs.version }}
+          body: |
+            ## Release Notes
+
+            Upgrade to ${{ steps.get-version.outputs.version }}
+
+            ## Docker Images
+
+            The following Docker images have been built and pushed to Docker Hub:
+            - `packmind/api${{ steps.set-image-suffix.outputs.suffix }}:${{ steps.get-version.outputs.version }}`
+            - `packmind/frontend${{ steps.set-image-suffix.outputs.suffix }}:${{ steps.get-version.outputs.version }}`
+            - `packmind/mcp${{ steps.set-image-suffix.outputs.suffix }}:${{ steps.get-version.outputs.version }}`
+
+            All images are also available with the `latest` tag.
+          draft: false
+          prerelease: false

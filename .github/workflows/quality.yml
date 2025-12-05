@@ -11,6 +11,10 @@ on:
         required: true
         type: string
         description: 'Node.js version to use'
+      cli-executables-artifact:
+        required: true
+        type: string
+        description: 'CLI executables artifact name from build-proprietary'
     secrets:
       GITGUARDIAN_API_KEY:
         required: true
@@ -82,34 +86,6 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-  #  packmind-v3:
-  #    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
-  #    strategy:
-  #      matrix:
-  #        node-version: ["${{ inputs.node-version }}"]
-  #    name: Packmind V3 CLI scan
-  #
-  #    steps:
-  #      - name: Checkout
-  #        uses: actions/checkout@v4
-  #        with:
-  #          fetch-depth: 0
-  #      - name: Use Node.js ${{ matrix.node-version }}
-  #        uses: actions/setup-node@v4
-  #        with:
-  #          node-version: ${{ matrix.node-version }}
-  #          cache: 'npm'
-  #      - run: npm ci
-  #      - name: Generate Proprietary tsconfig
-  #        env:
-  #          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
-  #        run: node scripts/select-tsconfig.mjs
-  #      - name: Run new packmind-cli (Proprietary)
-  #        run: npm run packmind-cli:v3:lint
-  #        env:
-  #          PACKMIND_EDITION: ${{ env.ENTERPRISE_EDITION }}
-  #          PACKMIND_API_KEY_V3: ${{ secrets.PACKMIND_API_KEY_V3 }}
-
   packmind:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
     strategy:
@@ -132,3 +108,28 @@ jobs:
         run: packmind-cli scan "**/*.ts,**/*.tsx" --formatters=raw --errorIfResults=true --spaces="Packmind V3"
         env:
           PACKMIND_API_KEY: ${{ secrets.PACKMIND_API_KEY }}
+
+  packmind-cli-v3:
+    runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
+    name: Run Packmind CLI V3
+    continue-on-error: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Download CLI executable
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.cli-executables-artifact }}
+          path: ./cli-binary
+      
+      - name: Make binary executable
+        run: chmod +x ./cli-binary/packmind-cli-linux-x64
+      
+      - name: Run Packmind CLI V3
+        run: ./cli-binary/packmind-cli-linux-x64 lint .
+        env:
+          PACKMIND_API_KEY_V3: ${{ secrets.PACKMIND_API_KEY_V3 }}

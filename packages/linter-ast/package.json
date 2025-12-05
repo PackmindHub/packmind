@@ -1,0 +1,21 @@
+{
+  "name": "@packmind/linter-ast",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "workspaces": [
+    "parsers/*"
+  ],
+  "dependencies": {
+    "tslib": "^2.3.0",
+    "web-tree-sitter": "^0.25.0"
+  },
+  "optionalDependencies": {
+    "@packmind/linter-ast-typescript": "*",
+    "@packmind/linter-ast-javascript": "*",
+    "@packmind/linter-ast-python": "*",
+    "@packmind/linter-ast-java": "*"
+  }
+}
