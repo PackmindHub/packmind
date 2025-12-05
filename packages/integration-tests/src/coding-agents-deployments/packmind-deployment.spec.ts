@@ -121,36 +121,38 @@ describe('Packmind Deployment Spec', () => {
       );
     });
 
-    it('re-distributes previously distributed standards when new package is distributed', async () => {
-      const standardsPackage2 = await createPackage(
-        [standard2],
-        [],
-        'Standards Package 2',
-      );
-      await distributePackage(standardsPackage2);
+    describe('when new package is distributed', () => {
+      it('re-distributes previously distributed standards ', async () => {
+        const standardsPackage2 = await createPackage(
+          [standard2],
+          [],
+          'Standards Package 2',
+        );
+        await distributePackage(standardsPackage2);
 
-      expect(commitToGit).toHaveBeenCalledWith(
-        dataFactory.gitRepo,
-        [
-          {
-            content: expect.any(String),
-            path: `.packmind/recipes-index.md`,
-          },
-          {
-            content: expect.stringContaining(standard1.name),
-            path: `.packmind/standards/${standard1.slug}.md`,
-          },
-          {
-            content: expect.stringContaining(standard2.name),
-            path: `.packmind/standards/${standard2.slug}.md`,
-          },
-          {
-            content: expect.any(String),
-            path: `.packmind/standards-index.md`,
-          },
-        ],
-        expect.any(String),
-      );
+        expect(commitToGit).toHaveBeenCalledWith(
+          dataFactory.gitRepo,
+          [
+            {
+              content: expect.any(String),
+              path: `.packmind/recipes-index.md`,
+            },
+            {
+              content: expect.stringContaining(standard1.name),
+              path: `.packmind/standards/${standard1.slug}.md`,
+            },
+            {
+              content: expect.stringContaining(standard2.name),
+              path: `.packmind/standards/${standard2.slug}.md`,
+            },
+            {
+              content: expect.any(String),
+              path: `.packmind/standards-index.md`,
+            },
+          ],
+          expect.any(String),
+        );
+      });
     });
 
     describe('when a standard previously distributed has been deleted', () => {
@@ -235,36 +237,38 @@ describe('Packmind Deployment Spec', () => {
       );
     });
 
-    it('re-distributes previously distributed recipes when new package is distributed', async () => {
-      const recipesPackage2 = await createPackage(
-        [],
-        [recipe2],
-        'Recipes Package 2',
-      );
-      await distributePackage(recipesPackage2);
+    describe('when a new package is distributed', () => {
+      it('re-distributes previously distributed recipes ', async () => {
+        const recipesPackage2 = await createPackage(
+          [],
+          [recipe2],
+          'Recipes Package 2',
+        );
+        await distributePackage(recipesPackage2);
 
-      expect(commitToGit).toHaveBeenCalledWith(
-        dataFactory.gitRepo,
-        [
-          {
-            path: `.packmind/recipes/${recipe1.slug}.md`,
-            content: expect.stringContaining(recipe1.content),
-          },
-          {
-            path: `.packmind/recipes/${recipe2.slug}.md`,
-            content: expect.stringContaining(recipe2.content),
-          },
-          {
-            path: `.packmind/recipes-index.md`,
-            content: expect.any(String),
-          },
-          {
-            path: `.packmind/standards-index.md`,
-            content: expect.any(String),
-          },
-        ],
-        expect.any(String),
-      );
+        expect(commitToGit).toHaveBeenCalledWith(
+          dataFactory.gitRepo,
+          [
+            {
+              path: `.packmind/recipes/${recipe1.slug}.md`,
+              content: expect.stringContaining(recipe1.content),
+            },
+            {
+              path: `.packmind/recipes/${recipe2.slug}.md`,
+              content: expect.stringContaining(recipe2.content),
+            },
+            {
+              path: `.packmind/recipes-index.md`,
+              content: expect.any(String),
+            },
+            {
+              path: `.packmind/standards-index.md`,
+              content: expect.any(String),
+            },
+          ],
+          expect.any(String),
+        );
+      });
     });
 
     describe('when a distributed recipe has been deleted', () => {

@@ -255,7 +255,7 @@ describe('pullHandler', () => {
         expect(result.notificationSent).toBe(true);
       });
 
-      it('calculates relative path correctly when in subdirectory', async () => {
+      it('calculates relative path correctly in subdirectory', async () => {
         mockGetCwd.mockReturnValue('/project/src/frontend');
         mockPackmindCliHexa.notifyDistribution.mockResolvedValue({
           deploymentId: 'deployment-123',
