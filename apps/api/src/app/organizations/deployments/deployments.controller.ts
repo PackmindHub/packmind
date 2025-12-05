@@ -11,7 +11,6 @@ import {
   DeploymentOverview,
   Distribution,
   StandardsDeployment,
-  RecipesDeployment,
   PackagesDeployment,
   StandardDeploymentOverview,
   PublishRecipesCommand,
@@ -62,7 +61,7 @@ export class DeploymentsController {
     @Param('orgId') organizationId: OrganizationId,
     @Param('id') id: RecipeId,
     @Req() request: AuthenticatedRequest,
-  ): Promise<RecipesDeployment[]> {
+  ): Promise<Distribution[]> {
     this.logger.info(
       'GET /organizations/:orgId/deployments/recipe/:id - Fetching deployments by recipe ID',
       {
@@ -453,7 +452,7 @@ export class DeploymentsController {
     @Body()
     body: { targetIds: TargetId[]; recipeVersionIds: RecipeVersionId[] },
     @Req() request: AuthenticatedRequest,
-  ): Promise<RecipesDeployment[]> {
+  ): Promise<Distribution[]> {
     this.logger.info(
       'POST /organizations/:orgId/deployments/recipes/publish - Publishing recipes',
       {
@@ -502,7 +501,7 @@ export class DeploymentsController {
     @Body()
     body: { targetIds: TargetId[]; standardVersionIds: StandardVersionId[] },
     @Req() request: AuthenticatedRequest,
-  ): Promise<StandardsDeployment[]> {
+  ): Promise<Distribution[]> {
     this.logger.info(
       'POST /organizations/:orgId/deployments/standards/publish - Publishing standards',
       {

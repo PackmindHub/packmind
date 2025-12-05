@@ -144,8 +144,8 @@ export class RecipesService {
     return {
       deploymentsCreated: true,
       success: true,
-      commitsWithChangesCount: result.recipeDeployments.filter(
-        (deployment) => deployment.gitCommit,
+      commitsWithChangesCount: result.distributions.filter(
+        (distribution) => distribution.gitCommit,
       ).length,
     };
   }

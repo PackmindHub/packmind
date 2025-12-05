@@ -2,24 +2,20 @@ import { GitCommitSchema } from '@packmind/git';
 import { gitCommitFactory } from '@packmind/git/test';
 import {
   GitCommit,
+  Package,
+  PackagesDeployment,
   Recipe,
-  RecipesDeployment,
-  RecipeVersionId,
   RenderMode,
   Standard,
-  StandardsDeployment,
-  StandardVersionId,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { DataFactory } from '../helpers/DataFactory';
-import { DataQuery } from '../helpers/DataQuery';
 import { makeIntegrationTestDataSource } from '../helpers/makeIntegrationTestDataSource';
 import { TestApp } from '../helpers/TestApp';
 
 describe('Packmind Deployment Spec', () => {
   let testApp: TestApp;
   let dataFactory: DataFactory;
-  let dataQuery: DataQuery;
 
   let standard1: Standard;
   let standard2: Standard;
@@ -38,7 +34,6 @@ describe('Packmind Deployment Spec', () => {
     testApp = new TestApp(dataSource);
     await testApp.initialize();
 
-    dataQuery = new DataQuery(testApp);
     dataFactory = new DataFactory(testApp);
     await dataFactory.withUserAndOrganization();
     await dataFactory.withGitRepo();
@@ -61,37 +56,51 @@ describe('Packmind Deployment Spec', () => {
     return gitCommitRepo.save(gitCommitFactory());
   }
 
-  describe('when deploying standards', () => {
-    async function deployStandards(
-      standards: Standard[],
-    ): Promise<StandardsDeployment[]> {
-      const standardVersionIds: StandardVersionId[] = [];
-      for (const standard of standards) {
-        standardVersionIds.push(await dataQuery.getStandardVersionId(standard));
-      }
+  async function createPackage(
+    standards: Standard[],
+    recipes: Recipe[],
+    name: string,
+  ): Promise<Package> {
+    const response = await testApp.deploymentsHexa.getAdapter().createPackage({
+      userId: dataFactory.user.id,
+      organizationId: dataFactory.organization.id,
+      spaceId: dataFactory.space.id,
+      name,
+      description: `Package for ${name}`,
+      standardIds: standards.map((s) => s.id),
+      recipeIds: recipes.map((r) => r.id),
+    });
+    return response.package;
+  }
 
-      const result = await testApp.deploymentsHexa
-        .getAdapter()
-        .publishArtifacts({
-          ...dataFactory.packmindCommand(),
-          targetIds: [dataFactory.target.id],
-          recipeVersionIds: [],
-          standardVersionIds,
-        });
-      return result.standardDeployments;
-    }
+  async function distributePackage(
+    pkg: Package,
+  ): Promise<PackagesDeployment[]> {
+    return testApp.deploymentsHexa.getAdapter().publishPackages({
+      ...dataFactory.packmindCommand(),
+      packageIds: [pkg.id],
+      targetIds: [dataFactory.target.id],
+    });
+  }
+
+  describe('when distributing standards via package', () => {
+    let standardsPackage1: Package;
 
     beforeEach(async () => {
       commit = await createGitCommit();
       commitToGit = jest.fn().mockResolvedValue(commit);
-      // Mock the adapter method instead of the hexa method
       const gitAdapter = testApp.gitHexa.getAdapter();
       jest.spyOn(gitAdapter, 'commitToGit').mockImplementation(commitToGit);
 
-      await deployStandards([standard1]);
+      standardsPackage1 = await createPackage(
+        [standard1],
+        [],
+        'Standards Package 1',
+      );
+      await distributePackage(standardsPackage1);
     });
 
-    it('properly deploys standards', async () => {
+    it('properly distributes standards', async () => {
       expect(commitToGit).toHaveBeenCalledWith(
         dataFactory.gitRepo,
         [
@@ -112,8 +121,14 @@ describe('Packmind Deployment Spec', () => {
       );
     });
 
-    it('re-deploys previously deployed standards', async () => {
-      await deployStandards([standard2]);
+    it('re-distributes previously distributed standards when new package is distributed', async () => {
+      const standardsPackage2 = await createPackage(
+        [standard2],
+        [],
+        'Standards Package 2',
+      );
+      await distributePackage(standardsPackage2);
+
       expect(commitToGit).toHaveBeenCalledWith(
         dataFactory.gitRepo,
         [
@@ -138,21 +153,31 @@ describe('Packmind Deployment Spec', () => {
       );
     });
 
-    describe('when a standard previously deployed has been deleted', () => {
+    describe('when a standard previously distributed has been deleted', () => {
       beforeEach(async () => {
         await testApp.standardsHexa
           .getAdapter()
-          .deleteStandard(standard1.id, dataFactory.user.id);
+          .deleteStandard(
+            standard1.id,
+            dataFactory.user.id,
+            dataFactory.organization.id,
+          );
       });
 
-      it('does not re-deploy the deleted standard', async () => {
-        await deployStandards([standard2]);
+      it('does not re-distribute the deleted standard', async () => {
+        const standardsPackage2 = await createPackage(
+          [standard2],
+          [],
+          'Standards Package 2',
+        );
+        await distributePackage(standardsPackage2);
+
         // Check the second call (first call was in beforeEach with standard1)
         expect(commitToGit).toHaveBeenCalledTimes(2);
         const secondCallArgs = commitToGit.mock.calls[1];
         expect(secondCallArgs[0]).toEqual(dataFactory.gitRepo);
-        // Note: publishArtifacts re-deploys all active standards for the target
-        // including previously deployed ones, not just the requested ones
+        // Note: publishPackages re-distributes all active standards for the target
+        // including previously distributed ones, not just the requested ones
         expect(secondCallArgs[1]).toEqual([
           {
             content: expect.any(String),
@@ -176,37 +201,20 @@ describe('Packmind Deployment Spec', () => {
     });
   });
 
-  describe('when deploying recipes', () => {
-    async function deployRecipes(
-      recipes: Recipe[],
-    ): Promise<RecipesDeployment[]> {
-      const recipeVersionIds: RecipeVersionId[] = [];
-      for (const recipe of recipes) {
-        recipeVersionIds.push(await dataQuery.getRecipeVersionId(recipe));
-      }
-
-      const result = await testApp.deploymentsHexa
-        .getAdapter()
-        .publishArtifacts({
-          ...dataFactory.packmindCommand(),
-          recipeVersionIds,
-          standardVersionIds: [],
-          targetIds: [dataFactory.target.id],
-        });
-      return result.recipeDeployments;
-    }
+  describe('when distributing recipes via package', () => {
+    let recipesPackage1: Package;
 
     beforeEach(async () => {
       commit = await createGitCommit();
       commitToGit = jest.fn().mockResolvedValue(commit);
-      // Mock the adapter method instead of the hexa method
       const gitAdapter = testApp.gitHexa.getAdapter();
       jest.spyOn(gitAdapter, 'commitToGit').mockImplementation(commitToGit);
 
-      await deployRecipes([recipe1]);
+      recipesPackage1 = await createPackage([], [recipe1], 'Recipes Package 1');
+      await distributePackage(recipesPackage1);
     });
 
-    it('properly deploys the recipes', async () => {
+    it('properly distributes the recipes', async () => {
       expect(commitToGit).toHaveBeenCalledWith(
         dataFactory.gitRepo,
         [
@@ -227,8 +235,13 @@ describe('Packmind Deployment Spec', () => {
       );
     });
 
-    it('re-deploys previously deployed recipes', async () => {
-      await deployRecipes([recipe2]);
+    it('re-distributes previously distributed recipes when new package is distributed', async () => {
+      const recipesPackage2 = await createPackage(
+        [],
+        [recipe2],
+        'Recipes Package 2',
+      );
+      await distributePackage(recipesPackage2);
 
       expect(commitToGit).toHaveBeenCalledWith(
         dataFactory.gitRepo,
@@ -254,7 +267,7 @@ describe('Packmind Deployment Spec', () => {
       );
     });
 
-    describe('when a deployed recipe has been deleted', () => {
+    describe('when a distributed recipe has been deleted', () => {
       beforeEach(async () => {
         await testApp.recipesHexa.getAdapter().deleteRecipe({
           ...dataFactory.packmindCommand(),
@@ -263,8 +276,13 @@ describe('Packmind Deployment Spec', () => {
         });
       });
 
-      it('does not re-deploy the deleted recipe', async () => {
-        await deployRecipes([recipe2]);
+      it('does not re-distribute the deleted recipe', async () => {
+        const recipesPackage2 = await createPackage(
+          [],
+          [recipe2],
+          'Recipes Package 2',
+        );
+        await distributePackage(recipesPackage2);
 
         expect(commitToGit).toHaveBeenCalledWith(
           dataFactory.gitRepo,

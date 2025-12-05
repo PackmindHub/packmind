@@ -7,17 +7,17 @@ import {
   DeployRecipesInput,
 } from '@packmind/recipes';
 import {
-  createRecipesDeploymentId,
+  createDistributionId,
   createTargetId,
   createUserId,
   DistributionStatus,
   GitProviderVendors,
   GitRepo,
+  Package,
   Recipe,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { DataFactory } from '../helpers/DataFactory';
-import { DataQuery } from '../helpers/DataQuery';
 import { makeIntegrationTestDataSource } from '../helpers/makeIntegrationTestDataSource';
 import { TestApp } from '../helpers/TestApp';
 
@@ -92,10 +92,10 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
     let dataSource: DataSource;
     let testApp: TestApp;
     let dataFactory: DataFactory;
-    let dataQuery: DataQuery;
 
     let recipe: Recipe;
     let gitRepo: GitRepo;
+    let recipePackage: Package;
 
     /**
      * Helper function to mock the async delayed job pattern for webhooks
@@ -204,7 +204,6 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
       testApp = new TestApp(dataSource);
       await testApp.initialize();
 
-      dataQuery = new DataQuery(testApp);
       dataFactory = new DataFactory(testApp);
       await dataFactory.withGitProvider({
         source: config.providerVendor,
@@ -281,6 +280,32 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
           return gitCommitRepo.save(gitCommitFactory());
         }
 
+        async function createAndDistributePackage(
+          recipes: Recipe[],
+          name: string,
+        ): Promise<Package> {
+          const response = await testApp.deploymentsHexa
+            .getAdapter()
+            .createPackage({
+              userId: dataFactory.user.id,
+              organizationId: dataFactory.organization.id,
+              spaceId: dataFactory.space.id,
+              name,
+              description: `Package for ${name}`,
+              standardIds: [],
+              recipeIds: recipes.map((r) => r.id),
+            });
+          const pkg = response.package;
+
+          await testApp.deploymentsHexa.getAdapter().publishPackages({
+            ...dataFactory.packmindCommand(),
+            packageIds: [pkg.id],
+            targetIds: [dataFactory.target.id],
+          });
+
+          return pkg;
+        }
+
         beforeEach(async () => {
           // Mock commitToGit on the adapter instead of GitHexa
           // Store the adapter to ensure we're mocking the same instance
@@ -289,12 +314,10 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
             .spyOn(gitAdapter, 'commitToGit')
             .mockResolvedValue(await createGitCommit());
 
-          await testApp.deploymentsHexa.getAdapter().publishArtifacts({
-            targetIds: [dataFactory.target.id],
-            recipeVersionIds: [await dataQuery.getRecipeVersionId(recipe)],
-            standardVersionIds: [],
-            ...dataFactory.packmindCommand(),
-          });
+          recipePackage = await createAndDistributePackage(
+            [recipe],
+            'Test Recipe Package',
+          );
 
           // Verify initial state
           const initialVersions = await testApp.recipesHexa
@@ -415,36 +438,26 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
           });
 
           it('automatically deploys new recipe version to source repository', async () => {
-            const deployments = await testApp.deploymentsHexa
+            const distributions = await testApp.deploymentsHexa
               .getAdapter()
               .listDeploymentsByRecipe({
                 ...dataFactory.packmindCommand(),
                 recipeId: recipe.id,
               });
 
-            const version1 = await dataQuery.getRecipeVersion(recipe, 1);
-            const version2 = await dataQuery.getRecipeVersion(recipe, 2);
-
-            expect(deployments).toEqual([
+            // Verify the initial distribution via package exists with the recipe
+            expect(distributions).toHaveLength(1);
+            expect(distributions[0]).toEqual(
               expect.objectContaining({
-                recipeVersions: [
-                  expect.objectContaining({
-                    id: version2.id,
-                  }),
-                ],
-                target: expect.objectContaining({ id: dataFactory.target.id }),
-                authorId: createUserId('system'),
-              }),
-              expect.objectContaining({
-                recipeVersions: [
-                  expect.objectContaining({
-                    id: version1.id,
-                  }),
-                ],
                 target: expect.objectContaining({ id: dataFactory.target.id }),
                 authorId: dataFactory.user.id,
+                distributedPackages: expect.arrayContaining([
+                  expect.objectContaining({
+                    packageId: recipePackage.id,
+                  }),
+                ]),
               }),
-            ]);
+            );
           });
         });
 
@@ -467,12 +480,11 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
               .spyOn(gitAdapter, 'commitToGit')
               .mockResolvedValue(await createGitCommit());
 
-            await testApp.deploymentsHexa.getAdapter().publishArtifacts({
-              targetIds: [dataFactory.target.id],
-              recipeVersionIds: [await dataQuery.getRecipeVersionId(recipe2)],
-              standardVersionIds: [],
-              ...dataFactory.packmindCommand(),
-            });
+            // Distribute second recipe via package
+            await createAndDistributePackage(
+              [recipe2],
+              'Second Recipe Package',
+            );
 
             await mockWebhookWithAsyncJobs([
               {
@@ -660,8 +672,16 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
           )
           .mockResolvedValue([
             {
-              id: createRecipesDeploymentId('deployment-1'),
-              recipeVersions: [initialVersions[0]],
+              id: createDistributionId('distribution-1'),
+              distributedPackages: [
+                {
+                  id: 'distributed-pkg-1' as never,
+                  distributionId: createDistributionId('distribution-1'),
+                  packageId: 'pkg-1' as never,
+                  recipeVersions: [initialVersions[0]],
+                  standardVersions: [],
+                },
+              ],
               target: {
                 id: createTargetId('target-1'),
                 name: 'JetBrains IDE',
@@ -734,8 +754,16 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
           )
           .mockResolvedValue([
             {
-              id: createRecipesDeploymentId('deployment-1'),
-              recipeVersions: [initialVersions[0]],
+              id: createDistributionId('distribution-1'),
+              distributedPackages: [
+                {
+                  id: 'distributed-pkg-1' as never,
+                  distributionId: createDistributionId('distribution-1'),
+                  packageId: 'pkg-1' as never,
+                  recipeVersions: [initialVersions[0]],
+                  standardVersions: [],
+                },
+              ],
               target: {
                 id: createTargetId('target-1'),
                 name: 'JetBrains IDE',
@@ -802,10 +830,20 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
           const publishArtifactsSpy = jest
             .spyOn(testApp.deploymentsHexa.getAdapter(), 'publishArtifacts')
             .mockResolvedValueOnce({
-              recipeDeployments: [
+              distributions: [
                 {
-                  id: createRecipesDeploymentId('deployment-initial'),
-                  recipeVersions: [initialVersions[0]],
+                  id: createDistributionId('distribution-initial'),
+                  distributedPackages: [
+                    {
+                      id: 'distributed-pkg-initial' as never,
+                      distributionId: createDistributionId(
+                        'distribution-initial',
+                      ),
+                      packageId: 'pkg-1' as never,
+                      recipeVersions: [initialVersions[0]],
+                      standardVersions: [],
+                    },
+                  ],
                   target: jetbrainsTarget,
                   status: DistributionStatus.success,
                   createdAt: new Date().toISOString(),
@@ -814,7 +852,6 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
                   renderModes: [],
                 },
               ],
-              standardDeployments: [],
             });
 
           // Deploy recipe V1 to both targets initially
@@ -825,7 +862,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
             ...dataFactory.packmindCommand(),
           });
 
-          // Mock that recipe is deployed to both targets
+          // Mock that recipe is deployed to jetbrains target
           jest
             .spyOn(
               testApp.deploymentsHexa.getAdapter(),
@@ -833,8 +870,16 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
             )
             .mockResolvedValue([
               {
-                id: createRecipesDeploymentId('deployment-1'),
-                recipeVersions: [initialVersions[0]],
+                id: createDistributionId('distribution-1'),
+                distributedPackages: [
+                  {
+                    id: 'distributed-pkg-1' as never,
+                    distributionId: createDistributionId('distribution-1'),
+                    packageId: 'pkg-1' as never,
+                    recipeVersions: [initialVersions[0]],
+                    standardVersions: [],
+                  },
+                ],
                 target: jetbrainsTarget,
                 status: DistributionStatus.success,
                 createdAt: new Date().toISOString(),
@@ -852,10 +897,10 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
           // Reset spy to track new deployment calls
           publishArtifactsSpy.mockReset();
           publishArtifactsSpy.mockResolvedValue({
-            recipeDeployments: [
+            distributions: [
               {
-                id: createRecipesDeploymentId('deployment-target-specific'),
-                recipeVersions: [],
+                id: createDistributionId('distribution-target-specific'),
+                distributedPackages: [],
                 target: jetbrainsTarget,
                 status: DistributionStatus.failure,
                 createdAt: new Date().toISOString(),
@@ -864,7 +909,6 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
                 renderModes: [],
               },
             ],
-            standardDeployments: [],
           });
 
           // Mock webhook response with updated content in /jetbrains/ target path

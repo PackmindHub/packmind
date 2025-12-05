@@ -12,17 +12,13 @@ import {
   IRecipesPort,
   IStandardsPort,
   IDeploymentPort,
-  createDistributionId,
   createDistributedPackageId,
-  RecipesDeployment,
-  StandardsDeployment,
-  UserId,
-  OrganizationId,
+  createPackagesDeploymentId,
+  Distribution,
 } from '@packmind/types';
 import { v4 as uuidv4 } from 'uuid';
 import { PackmindLogger } from '@packmind/logger';
 import { PackageService } from '../services/PackageService';
-import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 import { IDistributedPackageRepository } from '../../domain/repositories/IDistributedPackageRepository';
 
 const origin = 'PublishPackagesUseCase';
@@ -42,7 +38,6 @@ export class PublishPackagesUseCase implements IPublishPackages {
     private readonly standardsPort: IStandardsPort,
     private readonly deploymentPort: IDeploymentPort,
     public readonly packageService: PackageService,
-    private readonly distributionRepository: IDistributionRepository,
     private readonly distributedPackageRepository: IDistributedPackageRepository,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
@@ -145,28 +140,35 @@ export class PublishPackagesUseCase implements IPublishPackages {
     });
 
     // Publish artifacts using the unified publishArtifacts use case
-    const { recipeDeployments, standardDeployments } =
-      await this.deploymentPort.publishArtifacts({
-        userId: command.userId,
-        organizationId: command.organizationId,
-        recipeVersionIds,
-        standardVersionIds,
-        targetIds: command.targetIds,
-      } as PublishArtifactsCommand);
+    const { distributions } = await this.deploymentPort.publishArtifacts({
+      userId: command.userId,
+      organizationId: command.organizationId,
+      recipeVersionIds,
+      standardVersionIds,
+      targetIds: command.targetIds,
+    } as PublishArtifactsCommand);
 
-    // Combine deployments into a single array
-    const allDeployments: PackagesDeployment[] = [
-      ...(standardDeployments as unknown as PackagesDeployment[]),
-      ...(recipeDeployments as unknown as PackagesDeployment[]),
-    ];
-
-    // Store distributions for each target
-    await this.storeDistributions(
-      command,
+    // Store distributed package records for each distribution
+    await this.storeDistributedPackages(
       packages,
       packageVersionsMap,
-      recipeDeployments,
-      standardDeployments,
+      distributions,
+    );
+
+    // Convert distributions to PackagesDeployment format for backward compatibility
+    const allDeployments: PackagesDeployment[] = distributions.map(
+      (distribution) => ({
+        id: createPackagesDeploymentId(uuidv4()),
+        packages, // All packages that were distributed
+        status: distribution.status,
+        gitCommit: distribution.gitCommit,
+        target: distribution.target,
+        error: distribution.error,
+        renderModes: distribution.renderModes,
+        createdAt: distribution.createdAt,
+        authorId: distribution.authorId,
+        organizationId: distribution.organizationId,
+      }),
     );
 
     this.logger.info('Successfully published packages', {
@@ -177,48 +179,26 @@ export class PublishPackagesUseCase implements IPublishPackages {
   }
 
   /**
-   * Store distribution records for tracking package deployments.
-   * Creates one Distribution per target, with DistributedPackages linking
-   * each package to its deployed standard and recipe versions.
+   * Store distributed package records for tracking package deployments.
+   * Creates DistributedPackage entries linking each package to its
+   * deployed standard and recipe versions within each distribution.
    */
-  private async storeDistributions(
-    command: PublishPackagesCommand,
+  private async storeDistributedPackages(
     packages: Package[],
     packageVersionsMap: PackageVersionsMap,
-    recipeDeployments: RecipesDeployment[],
-    standardDeployments: StandardsDeployment[],
+    distributions: Distribution[],
   ): Promise<void> {
-    // Use recipe deployments as the primary source (one per target)
-    // Fall back to standard deployments if no recipes
-    const deployments: (RecipesDeployment | StandardsDeployment)[] =
-      recipeDeployments.length > 0 ? recipeDeployments : standardDeployments;
-
-    if (deployments.length === 0) {
-      this.logger.info('No deployments to store distributions for');
+    if (distributions.length === 0) {
+      this.logger.info('No distributions to store distributed packages for');
       return;
     }
 
-    this.logger.info('Storing distributions', {
-      deploymentsCount: deployments.length,
+    this.logger.info('Storing distributed packages', {
+      distributionsCount: distributions.length,
       packagesCount: packages.length,
     });
 
-    for (const deployment of deployments) {
-      // Create Distribution record using data from the deployment
-      const distributionId = createDistributionId(uuidv4());
-      await this.distributionRepository.add({
-        id: distributionId,
-        authorId: command.userId as UserId,
-        organizationId: command.organizationId as OrganizationId,
-        target: deployment.target,
-        status: deployment.status,
-        gitCommit: deployment.gitCommit,
-        error: deployment.error,
-        renderModes: deployment.renderModes,
-        distributedPackages: [],
-        createdAt: new Date().toISOString(),
-      });
-
+    for (const distribution of distributions) {
       // Create DistributedPackage records for each package
       for (const pkg of packages) {
         const versions = packageVersionsMap.get(pkg.id);
@@ -227,7 +207,7 @@ export class PublishPackagesUseCase implements IPublishPackages {
         const distributedPackageId = createDistributedPackageId(uuidv4());
         await this.distributedPackageRepository.add({
           id: distributedPackageId,
-          distributionId,
+          distributionId: distribution.id,
           packageId: pkg.id,
           standardVersions: [],
           recipeVersions: [],
@@ -250,9 +230,9 @@ export class PublishPackagesUseCase implements IPublishPackages {
         }
       }
 
-      this.logger.info('Distribution stored', {
-        distributionId,
-        targetId: deployment.target.id,
+      this.logger.info('Distributed packages stored', {
+        distributionId: distribution.id,
+        targetId: distribution.target.id,
         packagesCount: packages.length,
       });
     }

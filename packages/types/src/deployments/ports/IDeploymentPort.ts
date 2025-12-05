@@ -48,7 +48,6 @@ import {
 } from '../contracts';
 import { Distribution } from '../Distribution';
 import { PackagesDeployment } from '../PackagesDeployment';
-import { RecipesDeployment } from '../RecipesDeployment';
 import { RenderModeConfiguration } from '../RenderModeConfiguration';
 import { StandardDeploymentOverview } from '../StandardDeploymentOverview';
 import { StandardsDeployment } from '../StandardsDeployment';
@@ -111,28 +110,28 @@ export interface IDeploymentPort {
    *
    * For each repository:
    * 1. Groups all targets by repository
-   * 2. Collects all previously deployed recipe and standard versions across all targets
+   * 2. Collects all previously distributed recipe and standard versions across all targets
    * 3. Combines with new versions (deduplicates, keeps latest)
    * 4. Calls renderArtifacts ONCE with both recipes and standards
    * 5. Makes ONE atomic commit per repository
-   * 6. Creates both RecipesDeployment AND StandardsDeployment records for each target
+   * 6. Creates Distribution records with DistributedPackage for each target
    *
    * @param command - Command containing recipe version IDs, standard version IDs, and target IDs
-   * @returns Promise of PublishArtifactsResponse with both recipe and standard deployments
+   * @returns Promise of PublishArtifactsResponse with distributions for each target
    */
   publishArtifacts(
     command: PublishArtifactsCommand,
   ): Promise<PublishArtifactsResponse>;
 
   /**
-   * Lists all deployments for a specific recipe
+   * Lists all distributions for a specific recipe
    *
    * @param command - Command containing recipeId and organizationId
-   * @returns Promise of RecipesDeployment entries that include versions of the specified recipe
+   * @returns Promise of Distribution entries that include versions of the specified recipe
    */
   listDeploymentsByRecipe(
     command: ListDeploymentsByRecipeCommand,
-  ): Promise<RecipesDeployment[]>;
+  ): Promise<Distribution[]>;
 
   /**
    * Lists all deployments for a specific standard

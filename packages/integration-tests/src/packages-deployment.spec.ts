@@ -1,12 +1,11 @@
 import { GitCommitSchema } from '@packmind/git';
 import { gitCommitFactory } from '@packmind/git/test';
 import {
+  DistributionStatus,
   GitCommit,
   Package,
   Recipe,
   Standard,
-  RecipesDeployment,
-  StandardsDeployment,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { DataFactory } from './helpers/DataFactory';
@@ -87,9 +86,11 @@ describe('Package deployment integration', () => {
           targetIds: [dataFactory.target.id],
         });
 
-      expect(result).toHaveLength(2); // One for standards, one for recipes
+      // Unified Distribution: one per target containing all artifacts
+      expect(result).toHaveLength(1);
       expect(result[0]).toHaveProperty('target');
       expect(result[0]).toHaveProperty('status');
+      expect(result[0].status).toBe(DistributionStatus.success);
       expect(commitToGit).toHaveBeenCalled();
     });
 
@@ -158,21 +159,11 @@ describe('Package deployment integration', () => {
           targetIds: [dataFactory.target.id],
         });
 
-      // publishArtifacts creates both recipe and standard deployment records
-      expect(result).toHaveLength(2);
-
-      // Find the recipes deployment (the one with recipeVersions)
-      const recipesDeployment = result.find((d) => {
-        const deployment = d as unknown as RecipesDeployment;
-        return 'recipeVersions' in d && deployment.recipeVersions.length > 0;
-      });
-      expect(recipesDeployment).toBeDefined();
-      expect(recipesDeployment).toHaveProperty('target');
-      expect(recipesDeployment).toHaveProperty('status');
-
-      // Find the standards deployment (the one with empty standardVersions)
-      const standardsDeployment = result.find((d) => 'standardVersions' in d);
-      expect(standardsDeployment).toBeDefined();
+      // Unified Distribution: one per target containing all artifacts
+      expect(result).toHaveLength(1);
+      expect(result[0]).toHaveProperty('target');
+      expect(result[0]).toHaveProperty('status');
+      expect(result[0].status).toBe(DistributionStatus.success);
       expect(commitToGit).toHaveBeenCalled();
 
       const getResponse = await testApp.deploymentsHexa
@@ -214,23 +205,11 @@ describe('Package deployment integration', () => {
           targetIds: [dataFactory.target.id],
         });
 
-      // publishArtifacts creates both recipe and standard deployment records
-      expect(result).toHaveLength(2);
-
-      // Find the standards deployment (the one with standardVersions)
-      const standardsDeployment = result.find((d) => {
-        const deployment = d as unknown as StandardsDeployment;
-        return (
-          'standardVersions' in d && deployment.standardVersions.length > 0
-        );
-      });
-      expect(standardsDeployment).toBeDefined();
-      expect(standardsDeployment).toHaveProperty('target');
-      expect(standardsDeployment).toHaveProperty('status');
-
-      // Find the recipes deployment (the one with empty recipeVersions)
-      const recipesDeployment = result.find((d) => 'recipeVersions' in d);
-      expect(recipesDeployment).toBeDefined();
+      // Unified Distribution: one per target containing all artifacts
+      expect(result).toHaveLength(1);
+      expect(result[0]).toHaveProperty('target');
+      expect(result[0]).toHaveProperty('status');
+      expect(result[0].status).toBe(DistributionStatus.success);
       expect(commitToGit).toHaveBeenCalled();
 
       const getResponse = await testApp.deploymentsHexa
@@ -285,9 +264,11 @@ describe('Package deployment integration', () => {
           targetIds: [dataFactory.target.id],
         });
 
-      expect(result).toHaveLength(2); // One for standards, one for recipes (deduplicated)
+      // Unified Distribution: one per target containing all artifacts (deduplicated)
+      expect(result).toHaveLength(1);
       expect(result[0]).toHaveProperty('target');
       expect(result[0]).toHaveProperty('status');
+      expect(result[0].status).toBe(DistributionStatus.success);
       expect(commitToGit).toHaveBeenCalled();
     });
   });
@@ -451,17 +432,11 @@ describe('Package deployment integration', () => {
           targetIds: [dataFactory.target.id],
         });
 
-      // publishArtifacts creates both recipe and standard deployment records
-      expect(result).toHaveLength(2);
-
-      // Find the standards deployment (the one with standardVersions)
-      const standardsDeployment = result.find((d) => {
-        const deployment = d as unknown as StandardsDeployment;
-        return (
-          'standardVersions' in d && deployment.standardVersions.length > 0
-        );
-      });
-      expect(standardsDeployment).toBeDefined();
+      // Unified Distribution: one per target containing all artifacts
+      expect(result).toHaveLength(1);
+      expect(result[0]).toHaveProperty('target');
+      expect(result[0]).toHaveProperty('status');
+      expect(result[0].status).toBe(DistributionStatus.success);
       expect(commitToGit).toHaveBeenCalled();
 
       // Verify the committed files contain the rules

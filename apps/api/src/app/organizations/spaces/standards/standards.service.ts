@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PackmindLogger } from '@packmind/logger';
 import { StandardsHexa } from '@packmind/standards';
 import {
+  Distribution,
   GetStandardByIdResponse,
   IDeploymentPort,
   ListStandardsBySpaceResponse,
@@ -11,7 +12,6 @@ import {
   SpaceId,
   Standard,
   StandardId,
-  StandardsDeployment,
   StandardVersion,
   UserId,
 } from '@packmind/types';
@@ -99,12 +99,12 @@ export class StandardsService {
 
   async deployStandardsToGit(
     command: PublishStandardsCommand,
-  ): Promise<StandardsDeployment[]> {
+  ): Promise<Distribution[]> {
     const result = await this.deploymentAdapter.publishArtifacts({
       ...command,
       recipeVersionIds: [],
     });
-    return result.standardDeployments;
+    return result.distributions;
   }
 
   async deleteStandard(
