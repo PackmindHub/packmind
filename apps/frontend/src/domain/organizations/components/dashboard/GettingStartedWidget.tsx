@@ -12,6 +12,7 @@ import {
   PMVStack,
   PMField,
   PMAlert,
+  PMButton,
 } from '@packmind/ui';
 import { ReactNode } from 'react';
 import { GettingStartedLearnMoreDialog } from './GettingStartedLearnMoreDialog';
@@ -150,21 +151,44 @@ const DEFAULT_DIALOGS: Required<
           </PMList.Root>
         </PMVStack>
         <PMSeparator borderColor={'border.tertiary'} />
+        <PMVStack align="flex-start" gap={4} padding={4}>
+          <PMHeading level="h3" textAlign={'center'} width="full">
+            2. Create packages
+          </PMHeading>
+          <PMList.Root>
+            <PMList.Item>
+              <PMText color="secondary">
+                Standards and recipes must be bundled into packages to be
+                distributed in your projects.
+              </PMText>
+            </PMList.Item>
+            <PMList.Item>
+              <PMText color="secondary">
+                Go to Packages →
+                <PMLink asChild variant="active" marginLeft={1}>
+                  <NavLink to="./space/global/packages/new" target="_blank">
+                    Create a new package
+                  </NavLink>
+                </PMLink>
+              </PMText>
+            </PMList.Item>
+          </PMList.Root>
+        </PMVStack>
+        <PMSeparator borderColor={'border.tertiary'} />
         <PMVStack align="stretch" gap={6} padding={4}>
           <PMHeading level="h3" textAlign={'center'}>
-            2. Deploy to your targets
+            3. Deploy to your targets
           </PMHeading>
 
           <PMList.Root>
             <PMList.Item>
               <PMText variant="body-important" marginRight={1}>
-                Deploy standards and recipes
+                Deploy packages
               </PMText>
 
               <PMText color="secondary">
-                From the Recipes or Standards page, select the artifacts you
-                want to deploy and click Deploy. Each connected repository
-                appears as a target.
+                From the Packages page, select the packages you want to deploy
+                and click Deploy. Each connected repository appears as a target.
               </PMText>
             </PMList.Item>
 
