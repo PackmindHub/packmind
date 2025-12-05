@@ -277,6 +277,7 @@ export class DeploymentsAdapter
 
     this._updateTargetUseCase = new UpdateTargetUseCase(
       this.deploymentsServices.getTargetService(),
+      this.gitPort,
     );
 
     this._deleteTargetUseCase = new DeleteTargetUseCase(

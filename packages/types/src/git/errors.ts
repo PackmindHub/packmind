@@ -108,3 +108,19 @@ export class GitProviderMissingTokenError extends Error {
     }
   }
 }
+
+/**
+ * Error thrown when attempting to update a target's path when its git provider has no token configured
+ */
+export class TargetPathUpdateForbiddenError extends Error {
+  constructor(public readonly targetId: string) {
+    super(
+      `Cannot update path for target '${targetId}'. The associated git provider has no token configured.`,
+    );
+    this.name = 'TargetPathUpdateForbiddenError';
+
+    if (hasCaptureStackTrace(Error)) {
+      Error.captureStackTrace(this, TargetPathUpdateForbiddenError);
+    }
+  }
+}

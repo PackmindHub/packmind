@@ -21,7 +21,8 @@ import {
   useDeleteTargetMutation,
 } from '../../api/queries/DeploymentsQueries';
 import { useAuthContext } from '../../../accounts/hooks';
-import { OrganizationId } from '@packmind/types';
+import { useGetGitReposQuery } from '../../../git/api/queries/GitRepoQueries';
+import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
 import { TargetBadge } from '../TargetBadge/TargetBadge';
 import { TargetForm } from '../TargetForm/TargetForm';
 
@@ -52,7 +53,7 @@ export const TargetManagementDialog: React.FC<TargetManagementDialogProps> = ({
   const [deletingTarget, setDeletingTarget] = useState<Target | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const { organization } = useAuthContext();
+  useAuthContext(); // Ensure user is authenticated
 
   const {
     data: allTargetsWithRepository = [],
@@ -60,6 +61,10 @@ export const TargetManagementDialog: React.FC<TargetManagementDialogProps> = ({
     isError,
     error,
   } = useGetTargetsByOrganizationQuery();
+
+  const { data: repositories = [] } = useGetGitReposQuery();
+  const { data: providersResponse } = useGetGitProvidersQuery();
+  const providers = providersResponse?.providers ?? [];
 
   // Filter targets for this specific repository (owner/repo) across all branches
   const repositoryTargets = allTargetsWithRepository.filter(
@@ -98,6 +103,17 @@ export const TargetManagementDialog: React.FC<TargetManagementDialogProps> = ({
   );
 
   const deleteTargetMutation = useDeleteTargetMutation();
+
+  // Check if a target's provider has a token
+  const canEditTargetPath = (targetGitRepoId: GitRepoId): boolean => {
+    const repository = repositories.find((r) => r.id === targetGitRepoId);
+    if (!repository) return true; // Default to allowing edit if repo not found
+
+    const provider = providers.find((p) => p.id === repository.providerId);
+    if (!provider) return true; // Default to allowing edit if provider not found
+
+    return provider.hasToken;
+  };
 
   // Sort targets with Root target first, then by creation date
   const sortedTargets = useMemo(
@@ -355,6 +371,11 @@ export const TargetManagementDialog: React.FC<TargetManagementDialogProps> = ({
                             }
                             availableBranches={availableBranches}
                             defaultBranch={availableBranches[0]?.branch}
+                            canEditPath={canEditTargetPath(
+                              repositoryTargets.find(
+                                (rt) => rt.id === selectedTarget.id,
+                              )?.gitRepoId || gitRepoId,
+                            )}
                             onSuccess={handleFormSuccess}
                             onCancel={handleFormCancel}
                           />
