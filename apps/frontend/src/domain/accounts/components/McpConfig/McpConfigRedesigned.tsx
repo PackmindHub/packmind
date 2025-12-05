@@ -1,12 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import {
-  PMPageSection,
-  PMText,
-  PMVStack,
-  PMAlert,
-  PMGrid,
-  PMSpinner,
-} from '@packmind/ui';
+import { PMText, PMVStack, PMAlert, PMGrid, PMSpinner } from '@packmind/ui';
 import {
   useGetMcpTokenMutation,
   useGetMcpURLQuery,
@@ -61,7 +54,7 @@ export const McpConfigRedesigned: React.FunctionComponent = () => {
   }, [getMcpTokenMutation.isError, getMcpTokenMutation.error]);
 
   return (
-    <PMPageSection title="MCP server configuration" variant="outline">
+    <>
       <PMText as="p" mb={4}>
         {DESCRIPTION_TEXT}
       </PMText>
@@ -120,6 +113,6 @@ export const McpConfigRedesigned: React.FunctionComponent = () => {
           )}
         </PMVStack>
       )}
-    </PMPageSection>
+    </>
   );
 };
