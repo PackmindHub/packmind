@@ -9,7 +9,6 @@ export type AgentInstallResult = {
   agentName: string;
   success: boolean;
   error?: string;
-  command?: string;
 };
 
 export type ISetupMcpResult = {

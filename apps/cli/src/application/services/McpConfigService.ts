@@ -12,7 +12,6 @@ export type McpConfig = {
 export type InstallResult = {
   success: boolean;
   error?: string;
-  command?: string;
 };
 
 export interface IMcpConfigService {
@@ -54,11 +53,13 @@ export class McpConfigService implements IMcpConfigService {
     const command = `claude mcp add --transport http packmind ${config.url} --header "Authorization: Bearer ${config.accessToken}"`;
     try {
       execSync(command, { stdio: 'pipe' });
-      return { success: true, command };
+      return { success: true };
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      return { success: false, error: errorMessage, command };
+      const execError = error as { stderr?: Buffer; message?: string };
+      const errorMessage = execError.stderr
+        ? execError.stderr.toString().trim()
+        : execError.message || String(error);
+      return { success: false, error: errorMessage };
     }
   }
 

@@ -147,7 +147,6 @@ export const setupMcpCommand = command({
     const failedAgents: {
       name: string;
       error: string;
-      command?: string;
     }[] = [];
 
     for (const agentResult of result.results) {
@@ -161,7 +160,6 @@ export const setupMcpCommand = command({
         failedAgents.push({
           name: agentResult.agentName,
           error: agentResult.error || '',
-          command: agentResult.command,
         });
       }
     }
@@ -171,11 +169,6 @@ export const setupMcpCommand = command({
     if (failedAgents.length > 0) {
       for (const failed of failedAgents) {
         logWarningConsole(`Failed to configure ${failed.name}:`);
-
-        if (failed.command) {
-          console.log(`\n  Command attempted:`);
-          console.log(`    ${failed.command}`);
-        }
 
         console.log(`\n  Error: ${failed.error}`);
 
