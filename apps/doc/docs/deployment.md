@@ -27,18 +27,7 @@ You can create an issue in our [repository](https://github.com/PackmindHub/packm
 
 ## How to Deploy
 
-Go on the respective **Recipes** and **Standards** menu to deploy them on Git repositories.
-
-You can either deploy a single or multiple standards/recipes at the same time.
-This can be achieved on the page that lists standards and recipes, or in the dedicated page for each standard and recipes.
-
-When deploying, you must choose one or several targets where your standards and recipes will be applied. This allows you to customize which parts of your repositories receive specific guidelines.
-
-This distribution creates a single commit for each target repository.
-
-## Deploying Packages
-
-Instead of deploying individual recipes and standards, you can organize them into **Packages** and deploy them as a single unit.
+To deploy standards and recipes, you need to add them to a package.
 
 A package is a curated collection of recipes and standards grouped together (e.g., "Frontend React Standards", "Backend API Guidelines"). When you deploy a package:
 
