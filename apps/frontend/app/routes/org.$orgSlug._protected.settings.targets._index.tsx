@@ -10,9 +10,10 @@ import {
 } from '@packmind/ui';
 import { useAuthContext } from '../../src/domain/accounts/hooks';
 import { useGetTargetsByOrganizationQuery } from '../../src/domain/deployments/api/queries/DeploymentsQueries';
+import { useGetGitReposQuery } from '../../src/domain/git/api/queries/GitRepoQueries';
+import { useGetGitProvidersQuery } from '../../src/domain/git/api/queries/GitProviderQueries';
 import { RepositoryTargetCard } from '../../src/domain/deployments/components/RepositoryTargetCard/RepositoryTargetCard';
 import { GitRepoId } from '@packmind/types';
-import { OrganizationId } from '@packmind/types';
 import { LuSettings, LuPlus } from 'react-icons/lu';
 
 export default function TargetsRouteModule() {
@@ -24,6 +25,19 @@ export default function TargetsRouteModule() {
     isError,
     error,
   } = useGetTargetsByOrganizationQuery();
+
+  const { data: gitRepos = [] } = useGetGitReposQuery();
+  const { data: providersResponse } = useGetGitProvidersQuery();
+  const providers = providersResponse?.providers ?? [];
+
+  // Helper function to check if a gitRepoId's provider has a token
+  const getProviderHasToken = (gitRepoIdToCheck: GitRepoId): boolean => {
+    const gitRepo = gitRepos.find((r) => r.id === gitRepoIdToCheck);
+    if (!gitRepo) return true; // Default to true if repo not found
+    const provider = providers.find((p) => p.id === gitRepo.providerId);
+    if (!provider) return true; // Default to true if provider not found
+    return provider.hasToken;
+  };
 
   if (!organization) {
     return null;
@@ -107,6 +121,7 @@ export default function TargetsRouteModule() {
               providerUrl={repo.providerUrl}
               targets={repo.targets || []}
               gitRepoId={repo.gitRepoId as GitRepoId}
+              hasToken={getProviderHasToken(repo.gitRepoId as GitRepoId)}
             />
           ))
         )}
