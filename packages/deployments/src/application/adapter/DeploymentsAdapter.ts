@@ -283,6 +283,7 @@ export class DeploymentsAdapter
 
     this._deleteTargetUseCase = new DeleteTargetUseCase(
       this.deploymentsServices.getTargetService(),
+      this.gitPort,
     );
 
     this._getRenderModeConfigurationUseCase =
