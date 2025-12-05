@@ -12,7 +12,7 @@ name: Main CI/CD Pipeline
 
 on:
   push:
-    branches: ['main', 'docker-bake']  # docker-bake is temporary for testing
+    branches: ['main']
     tags:
       - 'release/*'
       - 'release-cli/*'
@@ -42,11 +42,11 @@ jobs:
       PACKMIND_API_KEY: ${{ secrets.PACKMIND_API_KEY }}
       PACKMIND_API_KEY_V3: ${{ secrets.PACKMIND_API_KEY_V3 }}
 
-  # Stage 3: Docker Images (on main branch, docker-bake branch, and release tags)
+  # Stage 3: Docker Images (on main branch, and release tags)
   # Note: The docker workflow handles branch conditions internally based on edition
   docker:
     needs: [build, quality]
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/docker-bake' || startsWith(github.ref, 'refs/tags/release/')
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/release/')
     uses: ./.github/workflows/docker.yml
     with:
       api-artifact: ${{ needs.build.outputs.api-artifact }}

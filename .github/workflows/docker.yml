@@ -43,15 +43,16 @@ on:
 jobs:
   build-scan-push:
     runs-on: ${{ vars.ACTION_RUNNER_TAG || 'self-hosted' }}
-    # Both editions: main, docker-bake branch, release tags
+    # Both editions: main branch and release tags
     if: |
       github.ref == 'refs/heads/main' ||
-      startsWith(github.ref, 'refs/tags/release/') ||
-      github.ref == 'refs/heads/docker-bake'
+      startsWith(github.ref, 'refs/tags/release/')
     outputs:
-      api-image-tag: packmind/api-${{ vars.PACKMIND_EDITION }}:${{ steps.get-version.outputs.version }}
-      frontend-image-tag: packmind/frontend-${{ vars.PACKMIND_EDITION }}:${{ steps.get-version.outputs.version }}
-      mcp-image-tag: packmind/mcp-${{ vars.PACKMIND_EDITION }}:${{ steps.get-version.outputs.version }}
+      # On main: outputs SHA tag (what's actually pushed)
+      # On release/*: outputs version tag (what's actually pushed)
+      api-image-tag: packmind/api-${{ vars.PACKMIND_EDITION }}:${{ steps.get-image-tag.outputs.tag }}
+      frontend-image-tag: packmind/frontend-${{ vars.PACKMIND_EDITION }}:${{ steps.get-image-tag.outputs.tag }}
+      mcp-image-tag: packmind/mcp-${{ vars.PACKMIND_EDITION }}:${{ steps.get-image-tag.outputs.tag }}
       version: ${{ steps.get-version.outputs.version }}
 
     steps:
@@ -70,6 +71,17 @@ jobs:
       - name: Get package version
         id: get-version
         run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Determine image tag
+        id: get-image-tag
+        run: |
+          # On release/* tags: use semantic version (e.g., 1.4.2)
+          # On main branch: use commit SHA
+          if [[ "${{ github.ref }}" == refs/tags/release/* ]]; then
+            echo "tag=${{ steps.get-version.outputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${{ github.sha }}" >> $GITHUB_OUTPUT
+          fi
 
       - name: Install dependencies
         run: npm ci
@@ -167,16 +179,9 @@ jobs:
       # STEP 3: PUSH IMAGES
       # ========================================================================
 
-      # docker-bake branch: Push only SHA tag for testing
-      - name: Push Docker images (docker-bake branch - SHA only)
-        if: github.ref == 'refs/heads/docker-bake'
-        run: |
-          docker push packmind/api-${{ vars.PACKMIND_EDITION }}:${{ github.sha }}
-          docker push packmind/frontend-${{ vars.PACKMIND_EDITION }}:${{ github.sha }}
-          docker push packmind/mcp-${{ vars.PACKMIND_EDITION }}:${{ github.sha }}
-
-      # Main branch: Push all tags with retry logic
-      - name: Push Docker images (main branch)
+      # Main branch: Push only SHA tag
+      # Version tags (1.4.2, latest) are only pushed on release/* tags
+      - name: Push Docker images (main branch - SHA only)
         if: github.ref == 'refs/heads/main'
         run: |
           # Retry function for docker push
@@ -204,19 +209,9 @@ jobs:
             return 1
           }
 
-          # Push API images
-          retry_push "packmind/api-${{ vars.PACKMIND_EDITION }}:${{ steps.get-version.outputs.version }}"
-          retry_push "packmind/api-${{ vars.PACKMIND_EDITION }}:latest"
+          # Push only SHA-tagged images (version tags are reserved for releases)
           retry_push "packmind/api-${{ vars.PACKMIND_EDITION }}:${{ github.sha }}"
-
-          # Push Frontend images
-          retry_push "packmind/frontend-${{ vars.PACKMIND_EDITION }}:${{ steps.get-version.outputs.version }}"
-          retry_push "packmind/frontend-${{ vars.PACKMIND_EDITION }}:latest"
           retry_push "packmind/frontend-${{ vars.PACKMIND_EDITION }}:${{ github.sha }}"
-
-          # Push MCP images
-          retry_push "packmind/mcp-${{ vars.PACKMIND_EDITION }}:${{ steps.get-version.outputs.version }}"
-          retry_push "packmind/mcp-${{ vars.PACKMIND_EDITION }}:latest"
           retry_push "packmind/mcp-${{ vars.PACKMIND_EDITION }}:${{ github.sha }}"
 
       # Release tags: Rebuild with multi-platform and push
@@ -263,4 +258,3 @@ jobs:
             -t packmind/mcp:latest \
             --push \
             .
-
