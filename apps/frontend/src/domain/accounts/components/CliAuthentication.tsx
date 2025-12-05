@@ -7,6 +7,9 @@ import {
   PMAlert,
   PMField,
   PMTabs,
+  isFeatureFlagEnabled,
+  CLI_LOGIN_COMMAND_FEATURE_KEY,
+  DEFAULT_FEATURE_DOMAIN_MAP,
 } from '@packmind/ui';
 import {
   useGetCurrentApiKeyQuery,
@@ -176,12 +179,22 @@ export const CliAuthentication: React.FunctionComponent = () => {
     </PMVStack>
   );
 
+  const showLoginCommandTab = isFeatureFlagEnabled({
+    featureKeys: [CLI_LOGIN_COMMAND_FEATURE_KEY],
+    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
+    userEmail: user.email,
+  });
+
   const tabs = [
-    {
-      value: 'login-command',
-      triggerLabel: 'Login Command',
-      content: loginCommandTab,
-    },
+    ...(showLoginCommandTab
+      ? [
+          {
+            value: 'login-command',
+            triggerLabel: 'Login Command',
+            content: loginCommandTab,
+          },
+        ]
+      : []),
     {
       value: 'env-var',
       triggerLabel: 'Environment Variable',
@@ -189,5 +202,10 @@ export const CliAuthentication: React.FunctionComponent = () => {
     },
   ];
 
-  return <PMTabs defaultValue="login-command" tabs={tabs} />;
+  return (
+    <PMTabs
+      defaultValue={showLoginCommandTab ? 'login-command' : 'env-var'}
+      tabs={tabs}
+    />
+  );
 };
