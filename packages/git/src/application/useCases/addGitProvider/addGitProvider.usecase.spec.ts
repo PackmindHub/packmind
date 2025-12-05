@@ -126,4 +126,69 @@ describe('AddGitProviderUseCase', () => {
       expect(mockGitProviderService.addGitProvider).not.toHaveBeenCalled();
     });
   });
+
+  describe('allowTokenlessProvider flag', () => {
+    it('allows tokenless provider when allowTokenlessProvider is true', async () => {
+      const input = {
+        gitProvider: {
+          source: GitProviderVendors.github,
+          url: 'https://github.com',
+          token: null,
+        },
+        organizationId: organizationId,
+        userId: adminUser.id,
+        allowTokenlessProvider: true,
+      };
+
+      const expectedResult = gitProviderFactory({
+        id: createGitProviderId('provider-123'),
+        ...input.gitProvider,
+        organizationId: input.organizationId,
+      });
+
+      mockGitProviderService.addGitProvider.mockResolvedValue(expectedResult);
+
+      const result = await useCase.execute(input);
+
+      expect(result).toEqual(expectedResult);
+      expect(mockGitProviderService.addGitProvider).toHaveBeenCalled();
+    });
+
+    it('rejects tokenless provider when allowTokenlessProvider is false', async () => {
+      const input = {
+        gitProvider: {
+          source: GitProviderVendors.github,
+          url: 'https://github.com',
+          token: null,
+        },
+        organizationId: organizationId,
+        userId: adminUser.id,
+        allowTokenlessProvider: false,
+      };
+
+      await expect(useCase.execute(input)).rejects.toThrow(
+        'Git provider token is required',
+      );
+
+      expect(mockGitProviderService.addGitProvider).not.toHaveBeenCalled();
+    });
+
+    it('rejects tokenless provider when allowTokenlessProvider is not provided', async () => {
+      const input = {
+        gitProvider: {
+          source: GitProviderVendors.github,
+          url: 'https://github.com',
+          token: null,
+        },
+        organizationId: organizationId,
+        userId: adminUser.id,
+      };
+
+      await expect(useCase.execute(input)).rejects.toThrow(
+        'Git provider token is required',
+      );
+
+      expect(mockGitProviderService.addGitProvider).not.toHaveBeenCalled();
+    });
+  });
 });

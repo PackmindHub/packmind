@@ -124,3 +124,19 @@ export class TargetPathUpdateForbiddenError extends Error {
     }
   }
 }
+
+/**
+ * Error thrown when attempting to use a git remote URL with an unsupported provider
+ */
+export class UnsupportedGitProviderError extends Error {
+  constructor(public readonly gitRemoteUrl: string) {
+    super(
+      `Unsupported git provider for URL '${gitRemoteUrl}'. Only GitHub is currently supported.`,
+    );
+    this.name = 'UnsupportedGitProviderError';
+
+    if (hasCaptureStackTrace(Error)) {
+      Error.captureStackTrace(this, UnsupportedGitProviderError);
+    }
+  }
+}

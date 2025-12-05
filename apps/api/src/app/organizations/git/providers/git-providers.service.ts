@@ -30,6 +30,8 @@ export class GitProvidersService {
       userId: String(userId),
       organizationId: String(organizationId),
       gitProvider,
+      // Always false from API endpoints - only internal use cases can bypass token check
+      allowTokenlessProvider: false,
     };
 
     return this.gitAdapter.addGitProvider(command);

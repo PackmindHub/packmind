@@ -216,6 +216,73 @@ describe('AddTargetUseCase', () => {
     });
   });
 
+  describe('allowTokenlessProvider flag', () => {
+    beforeEach(() => {
+      mockGitPort.getRepositoryById.mockResolvedValue(mockRepo);
+      mockGitPort.listProviders.mockResolvedValue({
+        providers: [mockProviderWithoutToken],
+      });
+    });
+
+    it('allows tokenless provider when allowTokenlessProvider is true', async () => {
+      const command: AddTargetCommand = {
+        userId,
+        organizationId,
+        name: 'production',
+        path: '/src/',
+        gitRepoId,
+        allowTokenlessProvider: true,
+      };
+
+      const expectedTarget: Target = {
+        id: createTargetId('target-123'),
+        name: 'production',
+        path: '/src/',
+        gitRepoId,
+      };
+
+      mockTargetService.addTarget.mockResolvedValue(expectedTarget);
+
+      const result = await useCase.execute(command);
+
+      expect(result).toEqual(expectedTarget);
+      expect(mockTargetService.addTarget).toHaveBeenCalled();
+    });
+
+    it('rejects tokenless provider when allowTokenlessProvider is false', async () => {
+      const command: AddTargetCommand = {
+        userId,
+        organizationId,
+        name: 'production',
+        path: '/src/',
+        gitRepoId,
+        allowTokenlessProvider: false,
+      };
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        GitProviderMissingTokenError,
+      );
+
+      expect(mockTargetService.addTarget).not.toHaveBeenCalled();
+    });
+
+    it('rejects tokenless provider when allowTokenlessProvider is not provided', async () => {
+      const command: AddTargetCommand = {
+        userId,
+        organizationId,
+        name: 'production',
+        path: '/src/',
+        gitRepoId,
+      };
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        GitProviderMissingTokenError,
+      );
+
+      expect(mockTargetService.addTarget).not.toHaveBeenCalled();
+    });
+  });
+
   describe('when validating input', () => {
     beforeEach(() => {
       mockGitPort.getRepositoryById.mockResolvedValue(mockRepo);

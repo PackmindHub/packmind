@@ -34,8 +34,15 @@ export class AddGitRepoUseCase
   protected async executeForAdmins(
     command: AddGitRepoCommand & AdminContext,
   ): Promise<GitRepo> {
-    const { organization, gitProviderId, owner, repo, branch, userId } =
-      command;
+    const {
+      organization,
+      gitProviderId,
+      owner,
+      repo,
+      branch,
+      userId,
+      allowTokenlessProvider = false,
+    } = command;
 
     // Business rule: gitProviderId is required
     if (!gitProviderId) {
@@ -73,8 +80,8 @@ export class AddGitRepoUseCase
       );
     }
 
-    // Business rule: git provider must have a token configured
-    if (!gitProvider.token) {
+    // Business rule: git provider must have a token configured (unless explicitly allowed)
+    if (!gitProvider.token && !allowTokenlessProvider) {
       this.logger.error('Git provider has no token configured', {
         gitProviderId,
         organizationId: organization.id,

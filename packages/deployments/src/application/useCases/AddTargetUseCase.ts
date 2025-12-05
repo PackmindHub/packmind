@@ -17,7 +17,14 @@ export class AddTargetUseCase implements IAddTargetUseCase {
   ) {}
 
   async execute(command: AddTargetCommand): Promise<Target> {
-    const { name, path, gitRepoId, userId, organizationId } = command;
+    const {
+      name,
+      path,
+      gitRepoId,
+      userId,
+      organizationId,
+      allowTokenlessProvider = false,
+    } = command;
 
     // Validate target name is not empty
     if (!name || name.trim().length === 0) {
@@ -48,7 +55,8 @@ export class AddTargetUseCase implements IAddTargetUseCase {
       (p) => p.id === repo.providerId,
     );
 
-    if (provider && !provider.hasToken) {
+    // Business rule: git provider must have a token configured (unless explicitly allowed)
+    if (provider && !provider.hasToken && !allowTokenlessProvider) {
       throw new GitProviderMissingTokenError(repo.providerId);
     }
 

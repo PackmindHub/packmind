@@ -7,6 +7,7 @@ export type AddGitRepoCommand = PackmindCommand & {
   owner: string;
   repo: string;
   branch: string;
+  allowTokenlessProvider?: boolean;
 };
 
 export type IAddGitRepoUseCase = IUseCase<AddGitRepoCommand, GitRepo>;

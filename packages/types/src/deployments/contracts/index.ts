@@ -29,3 +29,4 @@ export * from './IGetPackageByIdUseCase';
 export * from './IUpdatePackageUseCase';
 export * from './IDeletePackagesBatchUseCase';
 export * from './IAddArtefactsToPackageUseCase';
+export * from './INotifyDistributionUseCase';

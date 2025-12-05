@@ -459,4 +459,101 @@ describe('AddGitRepoUseCase', () => {
       );
     });
   });
+
+  describe('allowTokenlessProvider flag', () => {
+    it('allows tokenless provider when allowTokenlessProvider is true', async () => {
+      const command: AddGitRepoCommand = {
+        userId,
+        organizationId,
+        gitProviderId,
+        owner: 'testowner',
+        repo: 'testrepo',
+        branch: 'main',
+        allowTokenlessProvider: true,
+      };
+
+      const mockProvider: GitProvider = {
+        id: gitProviderId,
+        source: GitProviderVendors.github,
+        organizationId,
+        url: 'https://github.com',
+        token: null,
+      };
+
+      const expectedResult: GitRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'testowner',
+        repo: 'testrepo',
+        branch: 'main',
+        providerId: gitProviderId,
+      };
+
+      mockGitProviderService.findGitProviderById.mockResolvedValue(
+        mockProvider,
+      );
+      mockGitRepoService.findGitRepoByOwnerRepoAndBranchInOrganization.mockResolvedValue(
+        null,
+      );
+      mockGitRepoService.addGitRepo.mockResolvedValue(expectedResult);
+
+      const result = await useCase.execute(command);
+
+      expect(result).toEqual(expectedResult);
+    });
+
+    it('rejects tokenless provider when allowTokenlessProvider is false', async () => {
+      const command: AddGitRepoCommand = {
+        userId,
+        organizationId,
+        gitProviderId,
+        owner: 'testowner',
+        repo: 'testrepo',
+        branch: 'main',
+        allowTokenlessProvider: false,
+      };
+
+      const mockProvider: GitProvider = {
+        id: gitProviderId,
+        source: GitProviderVendors.github,
+        organizationId,
+        url: 'https://github.com',
+        token: null,
+      };
+
+      mockGitProviderService.findGitProviderById.mockResolvedValue(
+        mockProvider,
+      );
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        GitProviderMissingTokenError,
+      );
+    });
+
+    it('rejects tokenless provider when allowTokenlessProvider is not provided', async () => {
+      const command: AddGitRepoCommand = {
+        userId,
+        organizationId,
+        gitProviderId,
+        owner: 'testowner',
+        repo: 'testrepo',
+        branch: 'main',
+      };
+
+      const mockProvider: GitProvider = {
+        id: gitProviderId,
+        source: GitProviderVendors.github,
+        organizationId,
+        url: 'https://github.com',
+        token: null,
+      };
+
+      mockGitProviderService.findGitProviderById.mockResolvedValue(
+        mockProvider,
+      );
+
+      await expect(useCase.execute(command)).rejects.toThrow(
+        GitProviderMissingTokenError,
+      );
+    });
+  });
 });
