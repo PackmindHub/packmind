@@ -296,7 +296,8 @@ setup_mcp() {
     echo ""
     info "Configuring MCP for AI agents..."
 
-    if "$cli_path" setup-mcp; then
+    # Use /dev/tty to allow interactive input even when script is piped (curl | sh)
+    if "$cli_path" setup-mcp < /dev/tty; then
         success "MCP configured!"
     else
         warn "MCP setup failed. You can try again later with: $BINARY_NAME setup-mcp"
