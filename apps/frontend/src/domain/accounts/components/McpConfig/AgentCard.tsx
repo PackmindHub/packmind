@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { PMCard, PMHStack, PMText, PMVStack, PMBadge } from '@packmind/ui';
+import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 import { IAgentConfig, METHOD_LABELS } from './types';
 
 interface IAgentCardProps {
@@ -11,6 +12,8 @@ export const AgentCard: React.FunctionComponent<IAgentCardProps> = ({
   agent,
   onClick,
 }) => {
+  const analytics = useAnalytics();
+
   const availableMethods = useMemo(
     () =>
       Array.from(
@@ -23,9 +26,14 @@ export const AgentCard: React.FunctionComponent<IAgentCardProps> = ({
     [agent.installMethods],
   );
 
+  const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    analytics.track('mcp_configuration_card_clicked', { agent: agent.name });
+    onClick(event);
+  };
+
   return (
     <PMCard.Root
-      onClick={onClick}
+      onClick={handleClick}
       cursor="pointer"
       _hover={{ shadow: 'md', borderColor: 'blue.500' }}
       transition="all 0.2s"
