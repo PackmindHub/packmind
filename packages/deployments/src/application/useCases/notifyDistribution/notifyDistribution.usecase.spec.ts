@@ -316,7 +316,7 @@ describe('NotifyDistributionUseCase', () => {
           organizationId,
           gitProvider: {
             source: 'github',
-            url: 'http://github.com',
+            url: 'https://github.com',
             token: null,
           },
           allowTokenlessProvider: true,
@@ -530,7 +530,70 @@ describe('NotifyDistributionUseCase', () => {
     });
 
     describe('with unsupported git provider URL', () => {
-      it('throws UnsupportedGitProviderError', async () => {
+      it('throws UnsupportedGitProviderError for Bitbucket', async () => {
+        const command: NotifyDistributionCommand = {
+          userId,
+          organizationId,
+          distributedPackages: ['my-package'],
+          gitRemoteUrl: 'https://bitbucket.org/test-owner/test-repo.git',
+          gitBranch: 'main',
+          relativePath: '/',
+        };
+
+        await expect(useCase.execute(command)).rejects.toThrow(
+          UnsupportedGitProviderError,
+        );
+      });
+    });
+
+    describe('with valid GitLab URL and existing tokenless provider', () => {
+      let result: { deploymentId: string };
+
+      beforeEach(async () => {
+        const existingTarget = buildTarget();
+        const recipeVersion = buildRecipeVersion();
+        const standardVersion = buildStandardVersion();
+        const pkg = buildPackage('my-package');
+
+        mockGitPort.listProviders.mockResolvedValue({
+          providers: [
+            {
+              id: gitProviderId,
+              source: 'gitlab',
+              organizationId,
+              url: null,
+              hasToken: false,
+            },
+          ],
+        });
+
+        mockGitPort.findGitRepoByOwnerRepoAndBranchInOrganization.mockResolvedValue(
+          {
+            gitRepo: {
+              id: gitRepoId,
+              owner: 'test-owner',
+              repo: 'test-repo',
+              branch: 'main',
+              providerId: gitProviderId,
+            },
+          },
+        );
+
+        mockTargetRepository.findByGitRepoId.mockResolvedValue([
+          existingTarget,
+        ]);
+        mockPackageRepository.findByOrganizationId.mockResolvedValue([pkg]);
+        mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
+          standardVersion,
+        );
+        mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+        mockDistributionRepository.add.mockImplementation((d) =>
+          Promise.resolve(d),
+        );
+        mockDistributedPackageRepository.add.mockImplementation((d) =>
+          Promise.resolve(d),
+        );
+
         const command: NotifyDistributionCommand = {
           userId,
           organizationId,
@@ -540,8 +603,153 @@ describe('NotifyDistributionUseCase', () => {
           relativePath: '/',
         };
 
-        await expect(useCase.execute(command)).rejects.toThrow(
-          UnsupportedGitProviderError,
+        result = await useCase.execute(command);
+      });
+
+      it('returns a deployment id', () => {
+        expect(result.deploymentId).toBeDefined();
+      });
+
+      it('does not create a new git provider', () => {
+        expect(mockGitPort.addGitProvider).not.toHaveBeenCalled();
+      });
+
+      it('saves the distribution', () => {
+        expect(mockDistributionRepository.add).toHaveBeenCalled();
+      });
+    });
+
+    describe('with GitLab URL and no tokenless provider', () => {
+      it('creates new tokenless GitLab provider', async () => {
+        const existingTarget = buildTarget();
+        const recipeVersion = buildRecipeVersion();
+        const standardVersion = buildStandardVersion();
+        const pkg = buildPackage('my-package');
+
+        mockGitPort.listProviders.mockResolvedValue({ providers: [] });
+        mockGitPort.addGitProvider.mockResolvedValue({
+          id: gitProviderId,
+          source: 'gitlab',
+          organizationId,
+          url: null,
+          token: null,
+        });
+
+        mockGitPort.findGitRepoByOwnerRepoAndBranchInOrganization.mockResolvedValue(
+          {
+            gitRepo: {
+              id: gitRepoId,
+              owner: 'test-owner',
+              repo: 'test-repo',
+              branch: 'main',
+              providerId: gitProviderId,
+            },
+          },
+        );
+
+        mockTargetRepository.findByGitRepoId.mockResolvedValue([
+          existingTarget,
+        ]);
+        mockPackageRepository.findByOrganizationId.mockResolvedValue([pkg]);
+        mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
+          standardVersion,
+        );
+        mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+        mockDistributionRepository.add.mockImplementation((d) =>
+          Promise.resolve(d),
+        );
+        mockDistributedPackageRepository.add.mockImplementation((d) =>
+          Promise.resolve(d),
+        );
+
+        const command: NotifyDistributionCommand = {
+          userId,
+          organizationId,
+          distributedPackages: ['my-package'],
+          gitRemoteUrl: 'https://gitlab.com/test-owner/test-repo.git',
+          gitBranch: 'main',
+          relativePath: '/',
+        };
+
+        await useCase.execute(command);
+
+        expect(mockGitPort.addGitProvider).toHaveBeenCalledWith({
+          userId,
+          organizationId,
+          gitProvider: {
+            source: 'gitlab',
+            url: 'https://gitlab.com',
+            token: null,
+          },
+          allowTokenlessProvider: true,
+        });
+      });
+    });
+
+    describe('with SSH GitLab URL', () => {
+      it('parses owner and repo correctly', async () => {
+        const existingTarget = buildTarget();
+        const recipeVersion = buildRecipeVersion();
+        const standardVersion = buildStandardVersion();
+        const pkg = buildPackage('my-package');
+
+        mockGitPort.listProviders.mockResolvedValue({
+          providers: [
+            {
+              id: gitProviderId,
+              source: 'gitlab',
+              organizationId,
+              url: null,
+              hasToken: false,
+            },
+          ],
+        });
+
+        mockGitPort.findGitRepoByOwnerRepoAndBranchInOrganization.mockResolvedValue(
+          {
+            gitRepo: null,
+          },
+        );
+
+        mockGitPort.addGitRepo.mockResolvedValue({
+          id: gitRepoId,
+          owner: 'test-owner',
+          repo: 'test-repo',
+          branch: 'main',
+          providerId: gitProviderId,
+        });
+
+        mockTargetRepository.findByGitRepoId.mockResolvedValue([
+          existingTarget,
+        ]);
+        mockPackageRepository.findByOrganizationId.mockResolvedValue([pkg]);
+        mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
+          standardVersion,
+        );
+        mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+        mockDistributionRepository.add.mockImplementation((d) =>
+          Promise.resolve(d),
+        );
+        mockDistributedPackageRepository.add.mockImplementation((d) =>
+          Promise.resolve(d),
+        );
+
+        const command: NotifyDistributionCommand = {
+          userId,
+          organizationId,
+          distributedPackages: ['my-package'],
+          gitRemoteUrl: 'git@gitlab.com:test-owner/test-repo.git',
+          gitBranch: 'main',
+          relativePath: '/',
+        };
+
+        await useCase.execute(command);
+
+        expect(mockGitPort.addGitRepo).toHaveBeenCalledWith(
+          expect.objectContaining({
+            owner: 'test-owner',
+            repo: 'test-repo',
+          }),
         );
       });
     });
