@@ -28,9 +28,14 @@ export class AddGitProviderUseCase
   protected async executeForAdmins(
     command: AddGitProviderCommand & AdminContext,
   ): Promise<GitProvider> {
-    const { gitProvider, organization } = command;
+    const {
+      gitProvider,
+      organization,
+      allowTokenlessProvider = false,
+    } = command;
 
-    if (!gitProvider.token) {
+    // Business rule: git provider must have a token configured (unless explicitly allowed)
+    if (!gitProvider.token && !allowTokenlessProvider) {
       throw new Error('Git provider token is required');
     }
 

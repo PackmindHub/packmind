@@ -37,6 +37,8 @@ import {
   ListDeploymentsByPackageCommand,
   ListDistributionsByRecipeCommand,
   ListDistributionsByStandardCommand,
+  NotifyDistributionCommand,
+  NotifyDistributionResponse,
 } from '@packmind/types';
 import { DeploymentsService } from './deployments.service';
 import { PackmindLogger } from '@packmind/logger';
@@ -691,6 +693,65 @@ export class DeploymentsController {
         error instanceof Error ? error.message : String(error);
       this.logger.error(
         'POST /organizations/:orgId/deployments/renderModeConfiguration - Failed to update render mode configuration',
+        {
+          organizationId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Post()
+  async notifyDistribution(
+    @Param('orgId') organizationId: OrganizationId,
+    @Body()
+    body: {
+      distributedPackages: string[];
+      gitRemoteUrl: string;
+      gitBranch: string;
+      relativePath: string;
+    },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<NotifyDistributionResponse> {
+    this.logger.info(
+      'POST /organizations/:orgId/deployments/ - Notifying distribution',
+      {
+        organizationId,
+        distributedPackagesCount: body.distributedPackages.length,
+        gitRemoteUrl: body.gitRemoteUrl,
+        gitBranch: body.gitBranch,
+        relativePath: body.relativePath,
+      },
+    );
+
+    try {
+      const command: NotifyDistributionCommand = {
+        userId: request.user.userId,
+        organizationId,
+        distributedPackages: body.distributedPackages,
+        gitRemoteUrl: body.gitRemoteUrl,
+        gitBranch: body.gitBranch,
+        relativePath: body.relativePath,
+      };
+
+      const response =
+        await this.deploymentsService.notifyDistribution(command);
+
+      this.logger.info(
+        'POST /organizations/:orgId/deployments/ - Distribution notified successfully',
+        {
+          organizationId,
+          deploymentId: response.deploymentId,
+        },
+      );
+
+      return response;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /organizations/:orgId/deployments/ - Failed to notify distribution',
         {
           organizationId,
           error: errorMessage,

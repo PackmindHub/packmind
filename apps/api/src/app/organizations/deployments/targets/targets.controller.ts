@@ -159,6 +159,8 @@ export class TargetsController {
         name: body.name,
         path: body.path,
         gitRepoId: body.gitRepoId,
+        // Always false from API endpoints - only internal use cases can bypass token check
+        allowTokenlessProvider: false,
       };
 
       const target = await this.targetsService.addTarget(command);

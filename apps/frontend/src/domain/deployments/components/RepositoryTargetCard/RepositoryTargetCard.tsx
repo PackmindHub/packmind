@@ -134,7 +134,7 @@ export const RepositoryTargetCard: React.FC<RepositoryTargetCardProps> = ({
                   target={target}
                   branch={target.repository.branch}
                   variant="subtle"
-                  clickable={true}
+                  clickable={target.path !== '/'}
                   onClick={handleTargetClick}
                 />
               ))}

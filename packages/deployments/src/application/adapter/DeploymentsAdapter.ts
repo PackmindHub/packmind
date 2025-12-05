@@ -55,6 +55,8 @@ import {
   ListPackagesResponse,
   ListPackagesBySpaceCommand,
   ListPackagesBySpaceResponse,
+  NotifyDistributionCommand,
+  NotifyDistributionResponse,
   PackagesDeployment,
   PublishArtifactsCommand,
   PublishArtifactsResponse,
@@ -96,6 +98,7 @@ import { ListDeploymentsByPackageUseCase } from '../useCases/ListDeploymentsByPa
 import { ListDistributionsByRecipeUseCase } from '../useCases/ListDistributionsByRecipeUseCase';
 import { ListDistributionsByStandardUseCase } from '../useCases/ListDistributionsByStandardUseCase';
 import { ListPackagesUsecase } from '../useCases/listPackages/listPackages.usecase';
+import { NotifyDistributionUseCase } from '../useCases/notifyDistribution/notifyDistribution.usecase';
 import { ListPackagesBySpaceUsecase } from '../useCases/listPackagesBySpace/listPackagesBySpace.usecase';
 import { GetPackageSummaryUsecase } from '../useCases/getPackageSummary/getPackageSummary.usecase';
 import { PublishArtifactsUseCase } from '../useCases/PublishArtifactsUseCase';
@@ -144,6 +147,7 @@ export class DeploymentsAdapter
   private _getPackageByIdUseCase!: GetPackageByIdUsecase;
   private _deletePackagesBatchUseCase!: DeletePackagesBatchUsecase;
   private _addArtefactsToPackageUseCase!: AddArtefactsToPackageUsecase;
+  private _notifyDistributionUseCase!: NotifyDistributionUseCase;
 
   constructor(
     private readonly deploymentsServices: DeploymentsServices,
@@ -362,6 +366,17 @@ export class DeploymentsAdapter
       this.recipesPort,
       this.standardsPort,
     );
+
+    this._notifyDistributionUseCase = new NotifyDistributionUseCase(
+      this.accountsPort,
+      this.gitPort,
+      this.recipesPort,
+      this.standardsPort,
+      this.deploymentsServices.getRepositories().getPackageRepository(),
+      this.deploymentsServices.getRepositories().getTargetRepository(),
+      this.distributionRepository,
+      this.distributedPackageRepository,
+    );
   }
 
   public isReady(): boolean {
@@ -548,5 +563,11 @@ export class DeploymentsAdapter
     command: AddArtefactsToPackageCommand,
   ): Promise<AddArtefactsToPackageResponse> {
     return this._addArtefactsToPackageUseCase.execute(command);
+  }
+
+  async notifyDistribution(
+    command: NotifyDistributionCommand,
+  ): Promise<NotifyDistributionResponse> {
+    return this._notifyDistributionUseCase.execute(command);
   }
 }

@@ -37,6 +37,8 @@ export class GitRepositoriesService {
       owner,
       repo,
       branch,
+      // Always false from API endpoints - only internal use cases can bypass token check
+      allowTokenlessProvider: false,
     };
 
     return await this.gitAdapter.addGitRepo(command);

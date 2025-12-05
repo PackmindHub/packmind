@@ -35,6 +35,8 @@ import {
   ListPackagesBySpaceResponse,
   ListPackagesCommand,
   ListPackagesResponse,
+  NotifyDistributionCommand,
+  NotifyDistributionResponse,
   PublishArtifactsCommand,
   PublishArtifactsResponse,
   PublishPackagesCommand,
@@ -396,4 +398,23 @@ export interface IDeploymentPort {
   addArtefactsToPackage(
     command: AddArtefactsToPackageCommand,
   ): Promise<AddArtefactsToPackageResponse>;
+
+  /**
+   * Notifies about a distribution from external sources (e.g., packmind-cli)
+   *
+   * This use case handles the notification of a distribution that happened outside
+   * of the Packmind UI. It:
+   * 1. Parses the git remote URL to identify the git provider (GitHub only for now)
+   * 2. Creates or finds a tokenless git provider for the organization
+   * 3. Creates or finds the git repository based on URL and branch
+   * 4. Creates or finds a target based on the relative path
+   * 5. Creates a distribution record linking packages to their deployed versions
+   *
+   * @param command - Command containing distribution details from external source
+   * @returns Promise of the created distribution ID
+   * @throws UnsupportedGitProviderError if the git URL is not from GitHub
+   */
+  notifyDistribution(
+    command: NotifyDistributionCommand,
+  ): Promise<NotifyDistributionResponse>;
 }
