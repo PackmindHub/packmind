@@ -128,7 +128,7 @@ describe('AddGitProviderUseCase', () => {
   });
 
   describe('allowTokenlessProvider flag', () => {
-    it('allows tokenless provider when allowTokenlessProvider is true', async () => {
+    it('allows tokenless provider if allowTokenlessProvider is true', async () => {
       const input = {
         gitProvider: {
           source: GitProviderVendors.github,
@@ -154,7 +154,7 @@ describe('AddGitProviderUseCase', () => {
       expect(mockGitProviderService.addGitProvider).toHaveBeenCalled();
     });
 
-    it('rejects tokenless provider when allowTokenlessProvider is false', async () => {
+    it('rejects tokenless provider if allowTokenlessProvider is false', async () => {
       const input = {
         gitProvider: {
           source: GitProviderVendors.github,
@@ -173,7 +173,7 @@ describe('AddGitProviderUseCase', () => {
       expect(mockGitProviderService.addGitProvider).not.toHaveBeenCalled();
     });
 
-    it('rejects tokenless provider when allowTokenlessProvider is not provided', async () => {
+    it('rejects tokenless provider if allowTokenlessProvider is not provided', async () => {
       const input = {
         gitProvider: {
           source: GitProviderVendors.github,

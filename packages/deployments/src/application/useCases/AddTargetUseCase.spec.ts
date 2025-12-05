@@ -224,7 +224,7 @@ describe('AddTargetUseCase', () => {
       });
     });
 
-    it('allows tokenless provider when allowTokenlessProvider is true', async () => {
+    it('allows tokenless provider if allowTokenlessProvider is true', async () => {
       const command: AddTargetCommand = {
         userId,
         organizationId,
@@ -249,7 +249,7 @@ describe('AddTargetUseCase', () => {
       expect(mockTargetService.addTarget).toHaveBeenCalled();
     });
 
-    it('rejects tokenless provider when allowTokenlessProvider is false', async () => {
+    it('rejects tokenless provider if allowTokenlessProvider is false', async () => {
       const command: AddTargetCommand = {
         userId,
         organizationId,
@@ -266,7 +266,7 @@ describe('AddTargetUseCase', () => {
       expect(mockTargetService.addTarget).not.toHaveBeenCalled();
     });
 
-    it('rejects tokenless provider when allowTokenlessProvider is not provided', async () => {
+    it('rejects tokenless provider if allowTokenlessProvider is not provided', async () => {
       const command: AddTargetCommand = {
         userId,
         organizationId,
