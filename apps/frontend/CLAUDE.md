@@ -20,7 +20,7 @@ Before writing, editing, or generating ANY code:
 * [Gateway Pattern Implementation in Packmind Frontend](.packmind/recipes/gateway-pattern-implementation-in-packmind-frontend.md): Implement gateways in the Packmind frontend to create a clean abstraction for API communication, enhancing maintainability and testability across the application.
 * [Create End-User Documentation for Packmind Features](.packmind/recipes/create-end-user-documentation-for-packmind-features.md): Create clear and concise end-user documentation for Packmind features to empower users in accomplishing their tasks effectively while avoiding unnecessary technical details.
 * [Create Organization-Scoped Pages in React Router](.packmind/recipes/create-organization-scoped-pages-in-react-router.md): Create organization-scoped pages in a React Router application to enhance navigation and user experience by ensuring secure access to relevant data for each organization.
-* [Create Slot Components for Chakra UI](.packmind/recipes/create-slot-components-for-chakra-ui.md): Create slot components to wrap Chakra UI primitives for enhanced custom composition and API consistency in your design system.
+* [Create Slot Components for Chakra UI](.packmind/recipes/create-slot-components-for-chakra-ui.md): Create typed slot components that wrap Chakra UI primitives to centralize custom behavior, styling, and context, improving API consistency and composability across your design system when building complex components like tabs, accordions, or modals.
 <!-- end: Packmind recipes -->
 <!-- start: Packmind standards -->
 # Packmind Standards
@@ -147,7 +147,7 @@ Full standard is available here for further request: [React Components with Chak
 
 ## Standard: React Query Data Fetching Patterns
 
-Establish consistent TanStack Query patterns in React by using reusable query options factories (queryKey, queryFn, enabled), custom hooks wrapping useQuery, and useMutation configured with mutationKey, onSuccess queryClient.invalidateQueries via useQueryClient, and onError contextual logging, to ensure predictable caching, type safety, and maintainable, reusable API logic for components and loaders. :
+Standardize React Query (TanStack Query) keys, options factories, and mutation patterns with cache invalidation and typed query definitions to ensure predictable data fetching, consistent cache behavior, and a maintainable API layer. :
 * Create query options factory functions that return queryKey, queryFn, and enabled properties for reuse in both hooks and loaders
 * Define mutation keys as constants with descriptive UPPER_SNAKE_CASE names for each mutation
 * Define query keys as exported constants with descriptive UPPER_SNAKE_CASE names at the top of query files

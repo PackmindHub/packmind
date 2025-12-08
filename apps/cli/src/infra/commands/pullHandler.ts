@@ -257,6 +257,146 @@ export type PullPackagesResult = {
   notificationSent: boolean;
 };
 
+export type RecursivePullArgs = Record<string, never>;
+
+export type RecursivePullResult = {
+  directoriesProcessed: number;
+  totalFilesCreated: number;
+  totalFilesUpdated: number;
+  totalFilesDeleted: number;
+  errors: { directory: string; message: string }[];
+};
+
+type SingleDirectoryPullResult = {
+  success: boolean;
+  filesCreated: number;
+  filesUpdated: number;
+  filesDeleted: number;
+  errorMessage?: string;
+};
+
+/**
+ * Internal function to execute pull for a single directory.
+ * Does not call exit() - returns result for caller to handle.
+ */
+async function executePullForDirectory(
+  directory: string,
+  deps: Omit<PullHandlerDependencies, 'exit'>,
+): Promise<SingleDirectoryPullResult> {
+  const { packmindCliHexa, log } = deps;
+
+  // Read existing config
+  let configPackages: string[];
+  try {
+    configPackages = await packmindCliHexa.readConfig(directory);
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    return {
+      success: false,
+      filesCreated: 0,
+      filesUpdated: 0,
+      filesDeleted: 0,
+      errorMessage: `Failed to parse packmind.json: ${errorMessage}`,
+    };
+  }
+
+  // Skip if no packages configured
+  if (configPackages.length === 0) {
+    return {
+      success: true,
+      filesCreated: 0,
+      filesUpdated: 0,
+      filesDeleted: 0,
+    };
+  }
+
+  try {
+    // Show fetching message
+    const packageCount = configPackages.length;
+    const packageWord = packageCount === 1 ? 'package' : 'packages';
+    log(
+      `  Fetching ${packageCount} ${packageWord}: ${configPackages.join(', ')}...`,
+    );
+
+    // Execute the pull operation
+    const result = await packmindCliHexa.pullData({
+      baseDirectory: directory,
+      packagesSlugs: configPackages,
+    });
+
+    // Show installation message with counts
+    log(
+      `  Installing ${result.recipesCount} recipes and ${result.standardsCount} standards...`,
+    );
+
+    // Display results
+    log(
+      `  added ${result.filesCreated} files, changed ${result.filesUpdated} files, removed ${result.filesDeleted} files`,
+    );
+
+    if (result.errors.length > 0) {
+      return {
+        success: false,
+        filesCreated: result.filesCreated,
+        filesUpdated: result.filesUpdated,
+        filesDeleted: result.filesDeleted,
+        errorMessage: result.errors.join(', '),
+      };
+    }
+
+    // Write config with all packages that were successfully pulled
+    await packmindCliHexa.writeConfig(directory, configPackages);
+
+    // Notify distribution if files were created or updated and we're in a git repo
+    if (result.filesCreated > 0 || result.filesUpdated > 0) {
+      const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(directory);
+
+      if (gitRoot) {
+        try {
+          const gitRemoteUrl = packmindCliHexa.getGitRemoteUrlFromPath(gitRoot);
+          const gitBranch = packmindCliHexa.getCurrentBranch(gitRoot);
+
+          // Calculate relative path from git root to current directory
+          let relativePath = directory.startsWith(gitRoot)
+            ? directory.slice(gitRoot.length)
+            : '/';
+          if (!relativePath.startsWith('/')) {
+            relativePath = '/' + relativePath;
+          }
+          if (!relativePath.endsWith('/')) {
+            relativePath = relativePath + '/';
+          }
+
+          await packmindCliHexa.notifyDistribution({
+            distributedPackages: configPackages,
+            gitRemoteUrl,
+            gitBranch,
+            relativePath,
+          });
+        } catch {
+          // Silently ignore distribution notification errors
+        }
+      }
+    }
+
+    return {
+      success: true,
+      filesCreated: result.filesCreated,
+      filesUpdated: result.filesUpdated,
+      filesDeleted: result.filesDeleted,
+    };
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    return {
+      success: false,
+      filesCreated: 0,
+      filesUpdated: 0,
+      filesDeleted: 0,
+      errorMessage,
+    };
+  }
+}
+
 export async function pullPackagesHandler(
   args: PullPackagesArgs,
   deps: PullHandlerDependencies,
@@ -469,5 +609,115 @@ export async function pullPackagesHandler(
       filesDeleted: 0,
       notificationSent: false,
     };
+  }
+}
+
+export async function recursivePullHandler(
+  _args: RecursivePullArgs,
+  deps: PullHandlerDependencies,
+): Promise<RecursivePullResult> {
+  const { packmindCliHexa, exit, getCwd, log, error } = deps;
+  const cwd = getCwd();
+
+  const result: RecursivePullResult = {
+    directoriesProcessed: 0,
+    totalFilesCreated: 0,
+    totalFilesUpdated: 0,
+    totalFilesDeleted: 0,
+    errors: [],
+  };
+
+  try {
+    // Try to get git root, fallback to cwd
+    const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
+    const basePath = gitRoot ?? cwd;
+
+    // Find all configs in the tree (current directory + descendants)
+    const allConfigs = await packmindCliHexa.findAllConfigsInTree(
+      cwd,
+      basePath,
+    );
+
+    if (!allConfigs.hasConfigs) {
+      log('No packmind.json files found in this workspace.');
+      log('');
+      log('Usage: packmind-cli install -r');
+      log('');
+      log(
+        'This command requires at least one packmind.json file in the current',
+      );
+      log(
+        'directory or its subdirectories. Create a packmind.json file first:',
+      );
+      log('');
+      log('  packmind-cli install <package-slug>');
+      exit(0);
+      return result;
+    }
+
+    // Sort configs by target path for consistent processing order
+    const sortedConfigs = [...allConfigs.configs].sort((a, b) =>
+      a.targetPath.localeCompare(b.targetPath),
+    );
+
+    log(`Found ${sortedConfigs.length} packmind.json file(s) to process\n`);
+
+    // Process each directory
+    for (const config of sortedConfigs) {
+      const displayPath = computeDisplayPath(config.targetPath);
+      log(`Installing in ${displayPath}...`);
+
+      const pullResult = await executePullForDirectory(
+        config.absoluteTargetPath,
+        { packmindCliHexa, getCwd, log, error },
+      );
+
+      result.directoriesProcessed++;
+      result.totalFilesCreated += pullResult.filesCreated;
+      result.totalFilesUpdated += pullResult.filesUpdated;
+      result.totalFilesDeleted += pullResult.filesDeleted;
+
+      if (!pullResult.success && pullResult.errorMessage) {
+        result.errors.push({
+          directory: displayPath,
+          message: pullResult.errorMessage,
+        });
+        error(`  Error: ${pullResult.errorMessage}`);
+      }
+
+      log(''); // Add blank line between directories
+    }
+
+    // Print summary
+    const dirWord =
+      result.directoriesProcessed === 1 ? 'directory' : 'directories';
+    log(
+      `Summary: ${result.directoriesProcessed} ${dirWord} processed, ` +
+        `${result.totalFilesCreated} files added, ` +
+        `${result.totalFilesUpdated} changed, ` +
+        `${result.totalFilesDeleted} removed`,
+    );
+
+    if (result.errors.length > 0) {
+      log('');
+      log(`⚠️  ${result.errors.length} error(s) encountered:`);
+      result.errors.forEach((err) => {
+        log(`   - ${err.directory}: ${err.message}`);
+      });
+      exit(1);
+      return result;
+    }
+
+    exit(0);
+    return result;
+  } catch (err) {
+    error('\n❌ Failed to run recursive install:');
+    if (err instanceof Error) {
+      error(`   ${err.message}`);
+    } else {
+      error(`   ${String(err)}`);
+    }
+    exit(1);
+    return result;
   }
 }

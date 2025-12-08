@@ -5,6 +5,7 @@ import {
   listPackagesHandler,
   showPackageHandler,
   pullPackagesHandler,
+  recursivePullHandler,
   statusHandler,
   PullHandlerDependencies,
 } from './pullHandler';
@@ -23,6 +24,12 @@ export const pullCommand = command({
       description:
         'Show status of all packmind.json files and their packages in the workspace',
     }),
+    recursive: flag({
+      short: 'r',
+      long: 'recursive',
+      description:
+        'Install packages recursively in current directory and all subdirectories with packmind.json',
+    }),
     show: option({
       type: string,
       long: 'show',
@@ -35,7 +42,7 @@ export const pullCommand = command({
       description: 'Package slugs to install (e.g., backend frontend)',
     }),
   },
-  handler: async ({ list, status, show, packagesSlugs }) => {
+  handler: async ({ list, status, recursive, show, packagesSlugs }) => {
     // Initialize hexa and logger
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
@@ -63,6 +70,12 @@ export const pullCommand = command({
     // Handle --show option
     if (show) {
       await showPackageHandler({ slug: show }, deps);
+      return;
+    }
+
+    // Handle --recursive flag
+    if (recursive) {
+      await recursivePullHandler({}, deps);
       return;
     }
 

@@ -2,13 +2,13 @@
 
 ## Added
 
-- CLI: Add `install --status` command to display all packmind.json files and their packages in the workspace (#45)
-
 ## Changed
 
 ## Fixed
 
 ## Removed
+
+Deleted standards still appear in packages are properly removed from packages #34
 
 # [1.5.0] - 2025-12-05
 

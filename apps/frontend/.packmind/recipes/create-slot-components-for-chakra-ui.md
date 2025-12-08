@@ -14,6 +14,7 @@ Create slot components to wrap Chakra UI primitives for enhanced custom composit
 * [ ] Is the SlotComponent type available from packages/ui/src/lib/types/slot.ts?
 * [ ] Have you determined what custom props or behavior you need to add?
 
+
 ## Recipe Steps
 
 ### Step 1: Understand Slot Component Pattern
