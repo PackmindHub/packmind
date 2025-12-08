@@ -5,12 +5,12 @@ import {
   createDistributionId,
   createGitProviderId,
   createGitRepoId,
-  createOrganizationId,
   createTargetId,
   Distribution,
   DistributedPackage,
   DistributionStatus,
   GitProviderVendors,
+  GitRepoId,
   IAccountsPort,
   IGitPort,
   INotifyDistributionUseCase,
@@ -19,11 +19,16 @@ import {
   NotifyDistributionCommand,
   NotifyDistributionResponse,
   OrganizationId,
+  Package,
+  RecipeId,
   RecipeVersion,
   RecipeVersionId,
-  StandardVersion,
+  StandardId,
   StandardVersionId,
+  Target,
   UnsupportedGitProviderError,
+  UserId,
+  GitProviderId,
 } from '@packmind/types';
 import slug from 'slug';
 import { v4 as uuidv4 } from 'uuid';
@@ -34,12 +39,19 @@ import { ITargetRepository } from '../../../domain/repositories/ITargetRepositor
 
 const origin = 'NotifyDistributionUseCase';
 
+type GitProviderVendor = 'github' | 'gitlab';
+
+type DistributedPackageWithVersionIds = DistributedPackage & {
+  _standardVersionIds: StandardVersionId[];
+  _recipeVersionIds: RecipeVersionId[];
+};
+
 /**
  * Parse a git remote URL to extract the provider vendor type
  * @param gitRemoteUrl The git remote URL (e.g., https://github.com/owner/repo.git)
  * @returns 'github' or 'gitlab' based on the URL, throws otherwise
  */
-function parseGitProviderVendor(gitRemoteUrl: string): 'github' | 'gitlab' {
+function parseGitProviderVendor(gitRemoteUrl: string): GitProviderVendor {
   // Normalize URL - handle both HTTPS and SSH formats
   const normalizedUrl = gitRemoteUrl.toLowerCase();
 
@@ -146,13 +158,10 @@ export class NotifyDistributionUseCase
       gitRemoteUrl,
       gitBranch,
       relativePath,
-      userId,
-      organizationId: organizationIdString,
     } = command;
 
-    // Cast organizationId to branded type
-    const organizationId: OrganizationId =
-      createOrganizationId(organizationIdString);
+    const userId = command.user.id;
+    const organizationId = command.organization.id;
 
     this.logger.info('Processing distribution notification', {
       packageSlugs,
@@ -161,97 +170,157 @@ export class NotifyDistributionUseCase
       relativePath,
     });
 
-    // Step 1: Parse git remote URL to determine provider type
     const providerVendor = parseGitProviderVendor(gitRemoteUrl);
+    const { owner, repo } = parseGitRepoInfo(gitRemoteUrl);
+
+    const providerId = await this.findOrCreateProvider({
+      userId,
+      organizationId,
+      providerVendor,
+    });
+
+    const gitRepoId = await this.findOrCreateGitRepo({
+      userId,
+      organizationId,
+      providerId,
+      owner,
+      repo,
+      branch: gitBranch,
+    });
+
+    const target = await this.findOrCreateTarget({
+      gitRepoId: createGitRepoId(gitRepoId),
+      relativePath,
+    });
+
+    const matchingPackages = await this.findMatchingPackages({
+      organizationId,
+      packageSlugs,
+    });
+
+    const distributionId = createDistributionId(uuidv4());
+    const distributedPackages = await this.buildDistributedPackages({
+      distributionId,
+      packages: matchingPackages,
+    });
+
+    await this.saveDistribution({
+      distributionId,
+      distributedPackages,
+      target,
+      organizationId,
+      authorId: command.user.id,
+    });
+
+    this.logger.info('Distribution notification completed successfully', {
+      distributionId,
+      distributedPackageCount: distributedPackages.length,
+    });
+
+    return { deploymentId: distributionId };
+  }
+
+  private async findOrCreateProvider(params: {
+    userId: UserId;
+    organizationId: OrganizationId;
+    providerVendor: GitProviderVendor;
+  }): Promise<GitProviderId> {
+    const { userId, organizationId, providerVendor } = params;
+
     this.logger.info('Detected git provider vendor', { providerVendor });
 
-    // Step 2: Parse owner/repo from URL
-    const { owner, repo } = parseGitRepoInfo(gitRemoteUrl);
-    this.logger.info('Parsed repository info', { owner, repo });
-
-    // Step 3: Find or create tokenless GitProvider
     const providersResponse = await this.gitPort.listProviders({
       userId,
       organizationId,
     });
 
-    // Find tokenless provider of the same vendor type
     const tokenlessProvider = providersResponse.providers.find(
       (p) => p.source === providerVendor && !p.hasToken,
     );
-
-    let providerId: string;
 
     if (tokenlessProvider) {
       this.logger.info('Found existing tokenless provider', {
         providerId: tokenlessProvider.id,
       });
-      providerId = tokenlessProvider.id;
-    } else {
-      // Create new tokenless provider
-      this.logger.info('Creating new tokenless provider');
-      const providerUrl =
-        providerVendor === 'gitlab'
-          ? 'https://gitlab.com'
-          : 'https://github.com';
-      const newProvider = await this.gitPort.addGitProvider({
-        userId,
-        organizationId,
-        gitProvider: {
-          source: GitProviderVendors[providerVendor],
-          url: providerUrl,
-          token: null,
-        },
-        // Allow tokenless provider since this is an internal use case for CLI distributions
-        allowTokenlessProvider: true,
-      });
-      providerId = newProvider.id;
-      this.logger.info('Created tokenless provider', {
-        providerId: newProvider.id,
-      });
+      return tokenlessProvider.id;
     }
 
-    // Step 4: Find or create GitRepo
+    this.logger.info('Creating new tokenless provider');
+    const providerUrl =
+      providerVendor === 'gitlab' ? 'https://gitlab.com' : 'https://github.com';
+
+    const newProvider = await this.gitPort.addGitProvider({
+      userId,
+      organizationId,
+      gitProvider: {
+        source: GitProviderVendors[providerVendor],
+        url: providerUrl,
+        token: null,
+      },
+      allowTokenlessProvider: true,
+    });
+
+    this.logger.info('Created tokenless provider', {
+      providerId: newProvider.id,
+    });
+
+    return newProvider.id;
+  }
+
+  private async findOrCreateGitRepo(params: {
+    userId: UserId;
+    organizationId: OrganizationId;
+    providerId: GitProviderId;
+    owner: string;
+    repo: string;
+    branch: string;
+  }): Promise<string> {
+    const { userId, organizationId, providerId, owner, repo, branch } = params;
+
+    this.logger.info('Parsed repository info', { owner, repo });
+
     const existingRepoResult =
       await this.gitPort.findGitRepoByOwnerRepoAndBranchInOrganization({
         userId,
         organizationId,
         owner,
         repo,
-        branch: gitBranch,
+        branch,
       });
-
-    let gitRepoId: string;
 
     if (existingRepoResult.gitRepo) {
       this.logger.info('Found existing git repository', {
         repoId: existingRepoResult.gitRepo.id,
       });
-      gitRepoId = existingRepoResult.gitRepo.id;
-    } else {
-      // Create new git repo
-      this.logger.info('Creating new git repository');
-      const newRepo = await this.gitPort.addGitRepo({
-        userId,
-        organizationId,
-        gitProviderId: createGitProviderId(providerId),
-        owner,
-        repo,
-        branch: gitBranch,
-        // Allow tokenless provider since this is an internal use case for CLI distributions
-        allowTokenlessProvider: true,
-      });
-      gitRepoId = newRepo.id;
-      this.logger.info('Created git repository', { repoId: newRepo.id });
+      return existingRepoResult.gitRepo.id;
     }
 
-    // Step 5: Find or create Target
-    const normalizedPath = normalizeRelativePath(relativePath);
-    const existingTargets = await this.targetRepository.findByGitRepoId(
-      createGitRepoId(gitRepoId),
-    );
+    this.logger.info('Creating new git repository');
+    const newRepo = await this.gitPort.addGitRepo({
+      userId,
+      organizationId,
+      gitProviderId: createGitProviderId(providerId),
+      owner,
+      repo,
+      branch,
+      allowTokenlessProvider: true,
+    });
 
-    let targetId: string;
+    this.logger.info('Created git repository', { repoId: newRepo.id });
+
+    return newRepo.id;
+  }
+
+  private async findOrCreateTarget(params: {
+    gitRepoId: GitRepoId;
+    relativePath: string;
+  }): Promise<Target> {
+    const { gitRepoId, relativePath } = params;
+    const normalizedPath = normalizeRelativePath(relativePath);
+
+    const existingTargets =
+      await this.targetRepository.findByGitRepoId(gitRepoId);
+
     const existingTarget = existingTargets.find(
       (t) => t.path === normalizedPath,
     );
@@ -260,28 +329,36 @@ export class NotifyDistributionUseCase
       this.logger.info('Found existing target', {
         targetId: existingTarget.id,
       });
-      targetId = existingTarget.id;
-    } else {
-      // Create new target
-      const targetName = generateTargetName(relativePath);
-      this.logger.info('Creating new target', {
-        targetName,
-        path: normalizedPath,
-      });
-
-      const newTarget = await this.targetRepository.add({
-        id: createTargetId(uuidv4()),
-        name: targetName,
-        path: normalizedPath,
-        gitRepoId: createGitRepoId(gitRepoId),
-      });
-      targetId = newTarget.id;
-      this.logger.info('Created target', { targetId: newTarget.id });
+      return existingTarget;
     }
 
-    // Step 6: Find matching packages by slug in the organization
+    const targetName = generateTargetName(relativePath);
+    this.logger.info('Creating new target', {
+      targetName,
+      path: normalizedPath,
+    });
+
+    const newTarget = await this.targetRepository.add({
+      id: createTargetId(uuidv4()),
+      name: targetName,
+      path: normalizedPath,
+      gitRepoId,
+    });
+
+    this.logger.info('Created target', { targetId: newTarget.id });
+
+    return newTarget;
+  }
+
+  private async findMatchingPackages(params: {
+    organizationId: OrganizationId;
+    packageSlugs: string[];
+  }): Promise<Package[]> {
+    const { organizationId, packageSlugs } = params;
+
     const orgPackages =
       await this.packageRepository.findByOrganizationId(organizationId);
+
     const matchingPackages = orgPackages.filter((pkg) =>
       packageSlugs.includes(pkg.slug),
     );
@@ -291,73 +368,94 @@ export class NotifyDistributionUseCase
       matchedCount: matchingPackages.length,
     });
 
-    // Step 7: Create Distribution
-    const distributionId = createDistributionId(uuidv4());
-    const now = new Date().toISOString();
+    return matchingPackages;
+  }
 
-    // Step 8: Create DistributedPackages with latest versions
-    const distributedPackageEntities: DistributedPackage[] = [];
+  private async buildDistributedPackages(params: {
+    distributionId: string;
+    packages: Package[];
+  }): Promise<DistributedPackageWithVersionIds[]> {
+    const { distributionId, packages } = params;
+    const distributedPackages: DistributedPackageWithVersionIds[] = [];
 
-    for (const pkg of matchingPackages) {
-      const distributedPackageId = createDistributedPackageId(uuidv4());
+    for (const pkg of packages) {
+      const standardVersionIds = await this.getLatestStandardVersionIds(
+        pkg.standards,
+      );
+      const recipeVersionIds = await this.getLatestRecipeVersionIds(
+        pkg.recipes,
+      );
 
-      // Get latest versions for each standard and recipe
-      const standardVersions: StandardVersion[] = [];
-      const recipeVersions: RecipeVersion[] = [];
-
-      for (const standardId of pkg.standards) {
-        const latestVersion =
-          await this.standardsPort.getLatestStandardVersion(standardId);
-        if (latestVersion) {
-          standardVersions.push(latestVersion);
-        }
-      }
-
-      for (const recipeId of pkg.recipes) {
-        const versions = await this.recipesPort.listRecipeVersions(recipeId);
-        // Get the latest version (highest version number)
-        const latestVersion = versions.reduce(
-          (latest, current) =>
-            current.version > (latest?.version ?? 0) ? current : latest,
-          versions[0],
-        );
-        if (latestVersion) {
-          recipeVersions.push(latestVersion);
-        }
-      }
-
-      const distributedPackage: DistributedPackage = {
-        id: distributedPackageId,
-        distributionId,
+      distributedPackages.push({
+        id: createDistributedPackageId(uuidv4()),
+        distributionId: createDistributionId(distributionId),
         packageId: pkg.id,
-        standardVersions: [], // Versions are linked separately via addStandardVersions/addRecipeVersions
+        standardVersions: [],
         recipeVersions: [],
-      };
-
-      distributedPackageEntities.push({
-        ...distributedPackage,
-        // Keep track of versions to link after creation
-        _standardVersionIds: standardVersions.map((sv) => sv.id),
-        _recipeVersionIds: recipeVersions.map((rv) => rv.id),
-      } as DistributedPackage & {
-        _standardVersionIds: string[];
-        _recipeVersionIds: string[];
+        _standardVersionIds: standardVersionIds,
+        _recipeVersionIds: recipeVersionIds,
       });
     }
 
-    // Step 9: Save Distribution
-    const target = existingTarget ?? {
-      id: createTargetId(targetId),
-      name: generateTargetName(relativePath),
-      path: normalizedPath,
-      gitRepoId: createGitRepoId(gitRepoId),
-    };
+    return distributedPackages;
+  }
+
+  private async getLatestStandardVersionIds(
+    standardIds: StandardId[],
+  ): Promise<StandardVersionId[]> {
+    const versionIds: StandardVersionId[] = [];
+
+    for (const standardId of standardIds) {
+      const latestVersion =
+        await this.standardsPort.getLatestStandardVersion(standardId);
+      if (latestVersion) {
+        versionIds.push(latestVersion.id);
+      }
+    }
+
+    return versionIds;
+  }
+
+  private async getLatestRecipeVersionIds(
+    recipeIds: RecipeId[],
+  ): Promise<RecipeVersionId[]> {
+    const versionIds: RecipeVersionId[] = [];
+
+    for (const recipeId of recipeIds) {
+      const versions = await this.recipesPort.listRecipeVersions(recipeId);
+      const latestVersion = versions.reduce<RecipeVersion | undefined>(
+        (latest, current) =>
+          current.version > (latest?.version ?? 0) ? current : latest,
+        undefined,
+      );
+      if (latestVersion) {
+        versionIds.push(latestVersion.id);
+      }
+    }
+
+    return versionIds;
+  }
+
+  private async saveDistribution(params: {
+    distributionId: string;
+    distributedPackages: DistributedPackageWithVersionIds[];
+    target: Target;
+    organizationId: OrganizationId;
+    authorId: UserId;
+  }): Promise<void> {
+    const {
+      distributionId,
+      distributedPackages,
+      target,
+      organizationId,
+      authorId,
+    } = params;
 
     const distribution: Distribution = {
-      id: distributionId,
-      distributedPackages: distributedPackageEntities,
-      createdAt: now,
-      authorId: command.user.id,
+      id: createDistributionId(distributionId),
+      distributedPackages,
+      createdAt: new Date().toISOString(),
+      authorId,
       organizationId,
       target,
       status: DistributionStatus.success,
@@ -367,35 +465,28 @@ export class NotifyDistributionUseCase
     await this.distributionRepository.add(distribution);
     this.logger.info('Created distribution', { distributionId });
 
-    // Step 10: Save DistributedPackages and link versions
-    for (const distributedPackage of distributedPackageEntities) {
-      const extendedPackage = distributedPackage as DistributedPackage & {
-        _standardVersionIds: string[];
-        _recipeVersionIds: string[];
-      };
+    await this.saveDistributedPackages(distributedPackages);
+  }
 
+  private async saveDistributedPackages(
+    distributedPackages: DistributedPackageWithVersionIds[],
+  ): Promise<void> {
+    for (const distributedPackage of distributedPackages) {
       await this.distributedPackageRepository.add(distributedPackage);
 
-      if (extendedPackage._standardVersionIds.length > 0) {
+      if (distributedPackage._standardVersionIds.length > 0) {
         await this.distributedPackageRepository.addStandardVersions(
           distributedPackage.id,
-          extendedPackage._standardVersionIds as StandardVersionId[],
+          distributedPackage._standardVersionIds,
         );
       }
 
-      if (extendedPackage._recipeVersionIds.length > 0) {
+      if (distributedPackage._recipeVersionIds.length > 0) {
         await this.distributedPackageRepository.addRecipeVersions(
           distributedPackage.id,
-          extendedPackage._recipeVersionIds as RecipeVersionId[],
+          distributedPackage._recipeVersionIds,
         );
       }
     }
-
-    this.logger.info('Distribution notification completed successfully', {
-      distributionId,
-      distributedPackageCount: distributedPackageEntities.length,
-    });
-
-    return { deploymentId: distributionId };
   }
 }
