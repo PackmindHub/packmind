@@ -9,6 +9,7 @@ import { deploymentsSchemas } from '@packmind/deployments';
 import { gitSchemas } from '@packmind/git';
 import { linterSchemas } from '@packmind/linter';
 import { recipesSchemas } from '@packmind/recipes';
+import { llmSchemas } from '@packmind/llm';
 import { spacesSchemas } from '@packmind/spaces';
 import { standardsSchemas } from '@packmind/standards';
 
@@ -26,6 +27,7 @@ export async function registerDb(fastify: FastifyInstance) {
       ...deploymentsSchemas,
       ...spacesSchemas,
       ...linterSchemas,
+      ...llmSchemas,
     ],
     synchronize: false,
   });
