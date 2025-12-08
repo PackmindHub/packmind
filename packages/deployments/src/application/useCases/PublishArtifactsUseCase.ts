@@ -109,15 +109,32 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         });
 
         // Get previous deployments for all targets in this repo
-        const allRecipeVersions = await this.collectAllRecipeVersions(
+        const {
+          previous: previousRecipeVersions,
+          combined: allRecipeVersions,
+        } = await this.collectAllRecipeVersions(
           command,
           targets,
           recipeVersions,
         );
-        const allStandardVersions = await this.collectAllStandardVersions(
+        const {
+          previous: previousStandardVersions,
+          combined: allStandardVersions,
+        } = await this.collectAllStandardVersions(
           command,
           targets,
           standardVersions,
+        );
+
+        // Compute removed artifacts (previously deployed but not in new deployment command)
+        // These are artifacts that were deployed before but are not being deployed in this command
+        const removedRecipeVersions = this.computeRemovedRecipeVersions(
+          previousRecipeVersions,
+          recipeVersions, // Compare against new versions from command, not combined
+        );
+        const removedStandardVersions = this.computeRemovedStandardVersions(
+          previousStandardVersions,
+          standardVersions, // Compare against new versions from command, not combined
         );
 
         // Load rules for all standard versions that don't have them populated
@@ -145,6 +162,8 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           totalStandards: standardVersionsWithRules.length,
           newRecipes: recipeVersions.length,
           newStandards: standardVersions.length,
+          removedRecipes: removedRecipeVersions.length,
+          removedStandards: removedStandardVersions.length,
         });
 
         // Prepare unified deployment using renderArtifacts for ALL targets
@@ -153,6 +172,8 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           command.organizationId as OrganizationId,
           allRecipeVersions,
           standardVersionsWithRules,
+          removedRecipeVersions,
+          removedStandardVersions,
           gitRepo,
           targets,
           codingAgents,
@@ -301,8 +322,10 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
   private async prepareUnifiedDeployment(
     userId: UserId,
     organizationId: OrganizationId,
-    recipeVersions: RecipeVersion[],
-    standardVersions: StandardVersion[],
+    installedRecipeVersions: RecipeVersion[],
+    installedStandardVersions: StandardVersion[],
+    removedRecipeVersions: RecipeVersion[],
+    removedStandardVersions: StandardVersion[],
     gitRepo: GitRepo,
     targets: Target[],
     codingAgents: CodingAgent[],
@@ -324,12 +347,12 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         userId,
         organizationId,
         installed: {
-          recipeVersions,
-          standardVersions,
+          recipeVersions: installedRecipeVersions,
+          standardVersions: installedStandardVersions,
         },
         removed: {
-          recipeVersions: [],
-          standardVersions: [],
+          recipeVersions: removedRecipeVersions,
+          standardVersions: removedStandardVersions,
         },
         codingAgents,
         existingFiles,
@@ -413,7 +436,10 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     command: PublishArtifactsCommand,
     targets: Target[],
     newRecipeVersions: RecipeVersion[],
-  ): Promise<RecipeVersion[]> {
+  ): Promise<{
+    previous: RecipeVersion[];
+    combined: RecipeVersion[];
+  }> {
     const allPreviousRecipeVersions = new Map<string, RecipeVersion>();
 
     for (const target of targets) {
@@ -431,15 +457,19 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       }
     }
 
-    const previousArray = Array.from(allPreviousRecipeVersions.values());
-    return this.combineRecipeVersions(previousArray, newRecipeVersions);
+    const previous = Array.from(allPreviousRecipeVersions.values());
+    const combined = this.combineRecipeVersions(previous, newRecipeVersions);
+    return { previous, combined };
   }
 
   private async collectAllStandardVersions(
     command: PublishArtifactsCommand,
     targets: Target[],
     newStandardVersions: StandardVersion[],
-  ): Promise<StandardVersion[]> {
+  ): Promise<{
+    previous: StandardVersion[];
+    combined: StandardVersion[];
+  }> {
     const allPreviousStandardVersions = new Map<string, StandardVersion>();
 
     for (const target of targets) {
@@ -462,8 +492,12 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       }
     }
 
-    const previousArray = Array.from(allPreviousStandardVersions.values());
-    return this.combineStandardVersions(previousArray, newStandardVersions);
+    const previous = Array.from(allPreviousStandardVersions.values());
+    const combined = this.combineStandardVersions(
+      previous,
+      newStandardVersions,
+    );
+    return { previous, combined };
   }
 
   private combineRecipeVersions(
@@ -487,6 +521,34 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     newVersions.forEach((sv) => map.set(sv.standardId, sv));
     return Array.from(map.values()).sort((a, b) =>
       a.name.localeCompare(b.name),
+    );
+  }
+
+  /**
+   * Computes recipe versions that were previously deployed but are no longer
+   * in the current deployment (i.e., they are being removed)
+   */
+  private computeRemovedRecipeVersions(
+    previousVersions: RecipeVersion[],
+    currentVersions: RecipeVersion[],
+  ): RecipeVersion[] {
+    const currentRecipeIds = new Set(currentVersions.map((rv) => rv.recipeId));
+    return previousVersions.filter((rv) => !currentRecipeIds.has(rv.recipeId));
+  }
+
+  /**
+   * Computes standard versions that were previously deployed but are no longer
+   * in the current deployment (i.e., they are being removed)
+   */
+  private computeRemovedStandardVersions(
+    previousVersions: StandardVersion[],
+    currentVersions: StandardVersion[],
+  ): StandardVersion[] {
+    const currentStandardIds = new Set(
+      currentVersions.map((sv) => sv.standardId),
+    );
+    return previousVersions.filter(
+      (sv) => !currentStandardIds.has(sv.standardId),
     );
   }
 
