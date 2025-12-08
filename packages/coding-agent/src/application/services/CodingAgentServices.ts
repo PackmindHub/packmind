@@ -118,6 +118,8 @@ export class CodingAgentServices {
     this.logger.info('Rendering artifacts (recipes + standards)', {
       recipesCount: installed.recipeVersions.length,
       standardsCount: installed.standardVersions.length,
+      removedRecipesCount: removed.recipeVersions.length,
+      removedStandardsCount: removed.standardVersions.length,
       agentsCount: codingAgents.length,
       existingFilesCount: existingFiles.size,
     });
@@ -134,8 +136,70 @@ export class CodingAgentServices {
       existingFiles,
     );
 
+    // Process removed artifacts to generate deletion paths
+    const hasRemovedArtifacts =
+      removed.recipeVersions.length > 0 || removed.standardVersions.length > 0;
+
+    if (hasRemovedArtifacts) {
+      this.logger.info('Processing removed artifacts for deletion', {
+        removedRecipesCount: removed.recipeVersions.length,
+        removedStandardsCount: removed.standardVersions.length,
+      });
+
+      const deletionPaths = new Set<string>();
+
+      for (const agent of codingAgents) {
+        try {
+          const deployer = this.deployerService.getDeployerForAgent(agent);
+
+          // Generate file paths for removed recipes
+          if (removed.recipeVersions.length > 0) {
+            const recipeUpdates = await deployer.generateFileUpdatesForRecipes(
+              removed.recipeVersions,
+            );
+            recipeUpdates.createOrUpdate.forEach((file) =>
+              deletionPaths.add(file.path),
+            );
+          }
+
+          // Generate file paths for removed standards
+          if (removed.standardVersions.length > 0) {
+            const standardUpdates =
+              await deployer.generateFileUpdatesForStandards(
+                removed.standardVersions,
+              );
+            standardUpdates.createOrUpdate.forEach((file) =>
+              deletionPaths.add(file.path),
+            );
+          }
+
+          this.logger.debug('Generated deletion paths for agent', {
+            agent,
+            pathsCount: deletionPaths.size,
+          });
+        } catch (error) {
+          this.logger.error('Failed to generate deletion paths for agent', {
+            agent,
+            error: error instanceof Error ? error.message : String(error),
+          });
+          throw error;
+        }
+      }
+
+      // Add deletion paths to result
+      deletionPaths.forEach((path) => {
+        result.delete.push({ path });
+      });
+
+      this.logger.info('Removed artifacts processed', {
+        deletionPathsCount: deletionPaths.size,
+      });
+    }
+
     this.logger.info('Artifacts rendered successfully', {
       filesCount: result.createOrUpdate.length + result.delete.length,
+      createOrUpdateCount: result.createOrUpdate.length,
+      deleteCount: result.delete.length,
     });
 
     return result;

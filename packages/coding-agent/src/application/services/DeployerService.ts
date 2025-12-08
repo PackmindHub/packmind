@@ -18,6 +18,12 @@ export class DeployerService {
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
+  getDeployerForAgent(agent: CodingAgent) {
+    return this.codingAgentRepositories
+      .getDeployerRegistry()
+      .getDeployer(agent);
+  }
+
   async aggregateRecipeDeployments(
     recipeVersions: RecipeVersion[],
     gitRepo: GitRepo,
