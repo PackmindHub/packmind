@@ -480,31 +480,33 @@ describe('CodingAgentServices', () => {
       });
     });
 
-    it('does not process removed artifacts when removed arrays are empty', async () => {
-      const mockFileUpdates: FileUpdates = {
-        createOrUpdate: [{ path: 'CLAUDE.md', content: 'test content' }],
-        delete: [],
-      };
+    describe('when removed arrays are empty', () => {
+      it('does not process removed artifacts', async () => {
+        const mockFileUpdates: FileUpdates = {
+          createOrUpdate: [{ path: 'CLAUDE.md', content: 'test content' }],
+          delete: [],
+        };
 
-      mockDeployerService.aggregateArtifactRendering.mockResolvedValue(
-        mockFileUpdates,
-      );
+        mockDeployerService.aggregateArtifactRendering.mockResolvedValue(
+          mockFileUpdates,
+        );
 
-      const result = await service.renderArtifacts(
-        {
-          recipeVersions: mockRecipeVersions,
-          standardVersions: mockStandardVersions,
-        },
-        {
-          recipeVersions: [],
-          standardVersions: [],
-        },
-        ['claude'],
-        new Map(),
-      );
+        const result = await service.renderArtifacts(
+          {
+            recipeVersions: mockRecipeVersions,
+            standardVersions: mockStandardVersions,
+          },
+          {
+            recipeVersions: [],
+            standardVersions: [],
+          },
+          ['claude'],
+          new Map(),
+        );
 
-      expect(mockDeployerService.getDeployerForAgent).not.toHaveBeenCalled();
-      expect(result.delete).toHaveLength(0);
+        expect(mockDeployerService.getDeployerForAgent).not.toHaveBeenCalled();
+        expect(result.delete).toHaveLength(0);
+      });
     });
   });
 });

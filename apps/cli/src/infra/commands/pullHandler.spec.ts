@@ -791,7 +791,7 @@ describe('pullHandler', () => {
         );
       });
 
-      it('exits with 0 when successful', async () => {
+      it('exits with 0', async () => {
         mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
         mockPackmindCliHexa.pullData.mockResolvedValue({
           filesCreated: 0,
@@ -876,7 +876,7 @@ describe('pullHandler', () => {
         );
       });
 
-      it('exits with 1 when there are errors', async () => {
+      it('exits with 1', async () => {
         mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
         mockPackmindCliHexa.pullData
           .mockRejectedValueOnce(new Error('Network error'))
