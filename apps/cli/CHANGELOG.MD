@@ -2,6 +2,8 @@
 
 ## Added
 
+- notify packmind after running `packmind-cli install` #38
+
 ## Changed
 
 ## Fixed
