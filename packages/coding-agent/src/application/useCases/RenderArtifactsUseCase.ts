@@ -18,8 +18,8 @@ export class RenderArtifactsUseCase implements IRenderArtifactsUseCase {
     command: RenderArtifactsCommand,
   ): Promise<RenderArtifactsResponse> {
     this.logger.info('Executing render artifacts use case', {
-      recipesCount: command.recipeVersions.length,
-      standardsCount: command.standardVersions.length,
+      recipesCount: command.installed.recipeVersions.length,
+      standardsCount: command.installed.standardVersions.length,
       agentsCount: command.codingAgents.length,
       existingFilesCount: command.existingFiles.size,
       organizationId: command.organizationId,
@@ -28,8 +28,8 @@ export class RenderArtifactsUseCase implements IRenderArtifactsUseCase {
 
     try {
       const fileUpdates = await this.codingAgentServices.renderArtifacts(
-        command.recipeVersions,
-        command.standardVersions,
+        command.installed,
+        command.removed,
         command.codingAgents,
         command.existingFiles,
       );
@@ -45,8 +45,8 @@ export class RenderArtifactsUseCase implements IRenderArtifactsUseCase {
     } catch (error) {
       this.logger.error('Failed to render artifacts', {
         error: error instanceof Error ? error.message : String(error),
-        recipesCount: command.recipeVersions.length,
-        standardsCount: command.standardVersions.length,
+        recipesCount: command.installed.recipeVersions.length,
+        standardsCount: command.installed.standardVersions.length,
         agentsCount: command.codingAgents.length,
       });
       throw error;

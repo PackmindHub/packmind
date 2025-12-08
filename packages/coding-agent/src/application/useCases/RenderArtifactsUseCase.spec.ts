@@ -75,8 +75,14 @@ describe('RenderArtifactsUseCase', () => {
       existingFiles.set('CLAUDE.md', 'existing content');
 
       const command: RenderArtifactsCommand = {
-        recipeVersions: mockRecipeVersions,
-        standardVersions: mockStandardVersions,
+        installed: {
+          recipeVersions: mockRecipeVersions,
+          standardVersions: mockStandardVersions,
+        },
+        removed: {
+          recipeVersions: [],
+          standardVersions: [],
+        },
         codingAgents: ['claude'],
         existingFiles,
         userId: 'user-1' as UserId,
@@ -87,8 +93,14 @@ describe('RenderArtifactsUseCase', () => {
 
       expect(result).toEqual(mockFileUpdates);
       expect(mockCodingAgentServices.renderArtifacts).toHaveBeenCalledWith(
-        mockRecipeVersions,
-        mockStandardVersions,
+        {
+          recipeVersions: mockRecipeVersions,
+          standardVersions: mockStandardVersions,
+        },
+        {
+          recipeVersions: [],
+          standardVersions: [],
+        },
         ['claude'],
         existingFiles,
       );
@@ -108,8 +120,14 @@ describe('RenderArtifactsUseCase', () => {
       );
 
       const command: RenderArtifactsCommand = {
-        recipeVersions: mockRecipeVersions,
-        standardVersions: mockStandardVersions,
+        installed: {
+          recipeVersions: mockRecipeVersions,
+          standardVersions: mockStandardVersions,
+        },
+        removed: {
+          recipeVersions: [],
+          standardVersions: [],
+        },
         codingAgents: ['claude', 'agents_md'],
         existingFiles: new Map(),
         userId: 'user-1' as UserId,
@@ -133,8 +151,14 @@ describe('RenderArtifactsUseCase', () => {
       existingFiles.set('.cursorrules', 'content2');
 
       const command: RenderArtifactsCommand = {
-        recipeVersions: mockRecipeVersions,
-        standardVersions: mockStandardVersions,
+        installed: {
+          recipeVersions: mockRecipeVersions,
+          standardVersions: mockStandardVersions,
+        },
+        removed: {
+          recipeVersions: [],
+          standardVersions: [],
+        },
         codingAgents: ['claude', 'cursor'],
         existingFiles,
         userId: 'user-1' as UserId,
@@ -144,8 +168,14 @@ describe('RenderArtifactsUseCase', () => {
       await useCase.execute(command);
 
       expect(mockCodingAgentServices.renderArtifacts).toHaveBeenCalledWith(
-        mockRecipeVersions,
-        mockStandardVersions,
+        {
+          recipeVersions: mockRecipeVersions,
+          standardVersions: mockStandardVersions,
+        },
+        {
+          recipeVersions: [],
+          standardVersions: [],
+        },
         ['claude', 'cursor'],
         existingFiles,
       );
@@ -158,8 +188,14 @@ describe('RenderArtifactsUseCase', () => {
       });
 
       const command: RenderArtifactsCommand = {
-        recipeVersions: [],
-        standardVersions: [],
+        installed: {
+          recipeVersions: [],
+          standardVersions: [],
+        },
+        removed: {
+          recipeVersions: [],
+          standardVersions: [],
+        },
         codingAgents: ['claude'],
         existingFiles: new Map(),
         userId: 'user-1' as UserId,
@@ -169,8 +205,14 @@ describe('RenderArtifactsUseCase', () => {
       await useCase.execute(command);
 
       expect(mockCodingAgentServices.renderArtifacts).toHaveBeenCalledWith(
-        [],
-        [],
+        {
+          recipeVersions: [],
+          standardVersions: [],
+        },
+        {
+          recipeVersions: [],
+          standardVersions: [],
+        },
         ['claude'],
         expect.any(Map),
       );
@@ -182,8 +224,14 @@ describe('RenderArtifactsUseCase', () => {
       );
 
       const command: RenderArtifactsCommand = {
-        recipeVersions: mockRecipeVersions,
-        standardVersions: mockStandardVersions,
+        installed: {
+          recipeVersions: mockRecipeVersions,
+          standardVersions: mockStandardVersions,
+        },
+        removed: {
+          recipeVersions: [],
+          standardVersions: [],
+        },
         codingAgents: ['claude'],
         existingFiles: new Map(),
         userId: 'user-1' as UserId,
@@ -200,8 +248,14 @@ describe('RenderArtifactsUseCase', () => {
       });
 
       const command: RenderArtifactsCommand = {
-        recipeVersions: mockRecipeVersions,
-        standardVersions: mockStandardVersions,
+        installed: {
+          recipeVersions: mockRecipeVersions,
+          standardVersions: mockStandardVersions,
+        },
+        removed: {
+          recipeVersions: [],
+          standardVersions: [],
+        },
         codingAgents: ['claude'],
         existingFiles: new Map(),
         userId: 'user-1' as UserId,
@@ -228,8 +282,14 @@ describe('RenderArtifactsUseCase', () => {
       );
 
       const command: RenderArtifactsCommand = {
-        recipeVersions: mockRecipeVersions,
-        standardVersions: mockStandardVersions,
+        installed: {
+          recipeVersions: mockRecipeVersions,
+          standardVersions: mockStandardVersions,
+        },
+        removed: {
+          recipeVersions: [],
+          standardVersions: [],
+        },
         codingAgents: ['claude', 'agents_md', 'cursor'],
         existingFiles: new Map(),
         userId: 'user-1' as UserId,
