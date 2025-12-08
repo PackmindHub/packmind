@@ -494,27 +494,29 @@ describe('pullHandler', () => {
         );
       });
 
-      it('displays <no packages> when packmind.json has empty packages', async () => {
-        mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(
-          '/project',
-        );
-        mockPackmindCliHexa.findAllConfigsInTree.mockResolvedValue({
-          configs: [
-            {
-              targetPath: '/',
-              absoluteTargetPath: '/project',
-              packages: {},
-            },
-          ],
-          hasConfigs: true,
-          basePath: '/project',
+      describe('when packmind.json has empty packages', () => {
+        it('displays <no packages>', async () => {
+          mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(
+            '/project',
+          );
+          mockPackmindCliHexa.findAllConfigsInTree.mockResolvedValue({
+            configs: [
+              {
+                targetPath: '/',
+                absoluteTargetPath: '/project',
+                packages: {},
+              },
+            ],
+            hasConfigs: true,
+            basePath: '/project',
+          });
+
+          await statusHandler({}, deps);
+
+          expect(mockLog).toHaveBeenCalledWith(
+            expect.stringContaining('<no packages>'),
+          );
         });
-
-        await statusHandler({}, deps);
-
-        expect(mockLog).toHaveBeenCalledWith(
-          expect.stringContaining('<no packages>'),
-        );
       });
 
       it('displays unique package count summary with deduplication', async () => {
@@ -545,46 +547,50 @@ describe('pullHandler', () => {
         );
       });
 
-      it('displays singular form when only 1 unique package', async () => {
-        mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(
-          '/project',
-        );
-        mockPackmindCliHexa.findAllConfigsInTree.mockResolvedValue({
-          configs: [
-            {
-              targetPath: '/',
-              absoluteTargetPath: '/project',
-              packages: { backend: '*' },
-            },
-          ],
-          hasConfigs: true,
-          basePath: '/project',
+      describe('when only 1 unique package', () => {
+        it('displays singular form', async () => {
+          mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(
+            '/project',
+          );
+          mockPackmindCliHexa.findAllConfigsInTree.mockResolvedValue({
+            configs: [
+              {
+                targetPath: '/',
+                absoluteTargetPath: '/project',
+                packages: { backend: '*' },
+              },
+            ],
+            hasConfigs: true,
+            basePath: '/project',
+          });
+
+          await statusHandler({}, deps);
+
+          expect(mockLog).toHaveBeenCalledWith(
+            '\n1 unique package currently installed.',
+          );
         });
-
-        await statusHandler({}, deps);
-
-        expect(mockLog).toHaveBeenCalledWith(
-          '\n1 unique package currently installed.',
-        );
       });
 
-      it('uses cwd as fallback when not in git repo', async () => {
-        mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(null);
-        mockPackmindCliHexa.findAllConfigsInTree.mockResolvedValue({
-          configs: [
-            {
-              targetPath: '/',
-              absoluteTargetPath: '/project',
-              packages: { test: '*' },
-            },
-          ],
-          hasConfigs: true,
-          basePath: '/project',
+      describe('when not in git repo', () => {
+        it('uses cwd as fallback', async () => {
+          mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(null);
+          mockPackmindCliHexa.findAllConfigsInTree.mockResolvedValue({
+            configs: [
+              {
+                targetPath: '/',
+                absoluteTargetPath: '/project',
+                packages: { test: '*' },
+              },
+            ],
+            hasConfigs: true,
+            basePath: '/project',
+          });
+
+          const result = await statusHandler({}, deps);
+
+          expect(result.basePath).toBe('/project');
         });
-
-        const result = await statusHandler({}, deps);
-
-        expect(result.basePath).toBe('/project');
       });
 
       it('returns configs in result', async () => {
