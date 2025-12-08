@@ -6,6 +6,7 @@ import { GettingStartedWidget } from '../../organizations/components/dashboard/G
 import { OrganizationOnboardingChecklist } from '../../organizations/components/dashboard/OrganizationOnboardingChecklist';
 import { useGetOnboardingStatusQuery } from '../api/queries/AccountsQueries';
 import { useAuthContext } from '../hooks/useAuthContext';
+import { OnboardingSteps } from './OnboardingSteps';
 
 export const OrganizationHomePage: React.FC = () => {
   const { organization } = useAuthContext();
@@ -13,20 +14,14 @@ export const OrganizationHomePage: React.FC = () => {
   const orgId = organization?.id || ('' as string);
   const { data: onboardingStatus } = useGetOnboardingStatusQuery(orgId);
 
-  const isOnboardingComplete =
-    onboardingStatus?.hasConnectedGitProvider &&
-    onboardingStatus?.hasConnectedGitRepo &&
-    onboardingStatus?.hasCreatedStandard &&
-    onboardingStatus?.hasDeployed &&
-    onboardingStatus?.hasInvitedColleague;
+  const isOnboardingComplete = onboardingStatus?.hasDeployed;
 
   return (
     <PMPage title={'👋 Welcome to your dashboard'} centeredHeader isFullWidth>
       {!isOnboardingComplete ? (
         <PMBox width="xl" marginX="auto">
           <PMVStack gap={8} align="stretch">
-            <GettingStartedWidget />
-            <OrganizationOnboardingChecklist />
+            <OnboardingSteps />
           </PMVStack>
         </PMBox>
       ) : (
