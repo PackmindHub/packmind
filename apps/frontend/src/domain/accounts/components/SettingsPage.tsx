@@ -3,50 +3,55 @@ import {
   PMPage,
   PMVStack,
   PMPageSection,
-  PMFeatureFlag,
-  CLI_LOGIN_COMMAND_FEATURE_KEY,
-  DEFAULT_FEATURE_DOMAIN_MAP,
+  PMHeading,
+  PMBox,
+  PMSeparator,
 } from '@packmind/ui';
 import { McpConfigRedesigned } from './McpConfig/McpConfigRedesigned';
 import { SetupLocalEnvironment } from './SetupLocalEnvironment';
 import { CliAuthentication } from './CliAuthentication';
 import { AutobreadCrumb } from '../../../shared/components/navigation/AutobreadCrumb';
-import { useAuthContext } from '../hooks/useAuthContext';
 
 export function SettingsPage() {
-  const { user } = useAuthContext();
-
   return (
     <PMPage
       title="Settings"
       subtitle="Manage your account settings and access tokens."
       breadcrumbComponent={<AutobreadCrumb />}
     >
-      <PMVStack gap={6} width="100%" alignItems={'stretch'}>
-        <PMFeatureFlag
-          featureKeys={[CLI_LOGIN_COMMAND_FEATURE_KEY]}
-          featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
-          userEmail={user?.email}
-        >
-          <PMPageSection
-            title="Setup local environment"
-            variant="outline"
-            backgroundColor="primary"
-          >
-            <SetupLocalEnvironment />
-          </PMPageSection>
-        </PMFeatureFlag>
+      <PMPageSection
+        title="Setup local environment"
+        variant="outline"
+        backgroundColor="primary"
+      >
+        <SetupLocalEnvironment />
+      </PMPageSection>
 
-        <PMPageSection title="CLI" variant="outline" boxProps={{ px: 0 }}>
-          <CliAuthentication />
+      <PMVStack width="100%" alignItems={'stretch'} gap={4} marginTop={8}>
+        <PMHeading level="h3">Manual configuration</PMHeading>
+
+        <PMPageSection
+          title="CLI"
+          variant="outline"
+          backgroundColor="primary"
+          headingLevel="h4"
+          collapsible={true}
+        >
+          <PMBox paddingY={2}>
+            <CliAuthentication />
+          </PMBox>
         </PMPageSection>
 
         <PMPageSection
           title="MCP server configuration"
           variant="outline"
-          boxProps={{ px: 0 }}
+          backgroundColor="primary"
+          headingLevel="h4"
+          collapsible={true}
         >
-          <McpConfigRedesigned />
+          <PMBox paddingY={2}>
+            <McpConfigRedesigned />
+          </PMBox>
         </PMPageSection>
       </PMVStack>
     </PMPage>
