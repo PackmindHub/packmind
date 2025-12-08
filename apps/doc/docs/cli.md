@@ -297,7 +297,7 @@ To set up local linting, install packages using the `install` command. See [Dist
 
 **Deployment Mode**:
 
-If no `packmind.json` files are found, the CLI falls back to using standards that have been deployed to your Git repository through the web interface. See [Deployment](./deployment.md) to learn about this approach.
+If no `packmind.json` files are found, the CLI falls back to using standards that have been deployed to your Git repository through the web interface. See [Deployment](./distribution.md) to learn about this approach.
 
 :::tip Priority
 When both local `packmind.json` files and deployments exist, the local configuration takes priority.
