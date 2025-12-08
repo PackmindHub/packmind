@@ -126,6 +126,7 @@ describe('NotifyDistributionUseCase', () => {
       listProviders: jest.fn(),
       addGitProvider: jest.fn(),
       listRepos: jest.fn(),
+      listAvailableRepos: jest.fn(),
       addGitRepo: jest.fn(),
     } as unknown as jest.Mocked<IGitPort>;
 
@@ -425,10 +426,9 @@ describe('NotifyDistributionUseCase', () => {
           token: null,
         });
 
-        // The newly created tokenless provider has no repos yet
-        // (Note: the token provider may have the same repo, but listRepos
-        // only returns repos for the specified provider - the tokenless one)
+        // The token provider has no repos and cannot access the target repo
         mockGitPort.listRepos.mockResolvedValue([]);
+        mockGitPort.listAvailableRepos.mockResolvedValue([]);
 
         // New repo will be created for the tokenless provider
         mockGitPort.addGitRepo.mockResolvedValue({
@@ -494,6 +494,286 @@ describe('NotifyDistributionUseCase', () => {
           branch: 'main',
           allowTokenlessProvider: true,
         });
+      });
+    });
+
+    describe('with token provider that has the existing repo', () => {
+      const tokenProviderId = createGitProviderId('token-provider-id');
+      const existingRepoId = createGitRepoId('existing-repo-id');
+
+      beforeEach(async () => {
+        const existingTarget = buildTarget();
+        const recipeVersion = buildRecipeVersion();
+        const standardVersion = buildStandardVersion();
+        const pkg = buildPackage('my-package');
+
+        // Token provider exists with the repo already registered
+        mockGitPort.listProviders.mockResolvedValue({
+          providers: [
+            {
+              id: tokenProviderId,
+              source: 'github',
+              organizationId,
+              url: null,
+              hasToken: true,
+            },
+          ],
+        });
+
+        // The token provider already has the repo
+        mockGitPort.listRepos.mockResolvedValue([
+          {
+            id: existingRepoId,
+            owner: 'my-company',
+            repo: 'my-repo',
+            branch: 'main',
+            providerId: tokenProviderId,
+          },
+        ]);
+
+        mockTargetRepository.findByGitRepoId.mockResolvedValue([
+          existingTarget,
+        ]);
+        mockPackageRepository.findByOrganizationId.mockResolvedValue([pkg]);
+        mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
+          standardVersion,
+        );
+        mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+        mockDistributionRepository.add.mockImplementation((d) =>
+          Promise.resolve(d),
+        );
+        mockDistributedPackageRepository.add.mockImplementation((d) =>
+          Promise.resolve(d),
+        );
+
+        const command: NotifyDistributionCommand = {
+          userId,
+          organizationId,
+          distributedPackages: ['my-package'],
+          gitRemoteUrl: 'https://github.com/my-company/my-repo.git',
+          gitBranch: 'main',
+          relativePath: '/',
+        };
+
+        await useCase.execute(command);
+      });
+
+      it('reuses the existing repo from the token provider', () => {
+        expect(mockGitPort.addGitRepo).not.toHaveBeenCalled();
+      });
+
+      it('does not create a tokenless provider', () => {
+        expect(mockGitPort.addGitProvider).not.toHaveBeenCalled();
+      });
+
+      it('does not call listAvailableRepos since repo already exists', () => {
+        expect(mockGitPort.listAvailableRepos).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('with token provider that can access the repo', () => {
+      const tokenProviderId = createGitProviderId('token-provider-id');
+      const newRepoId = createGitRepoId('new-repo-id');
+
+      beforeEach(async () => {
+        const existingTarget = buildTarget();
+        const recipeVersion = buildRecipeVersion();
+        const standardVersion = buildStandardVersion();
+        const pkg = buildPackage('my-package');
+
+        // Token provider exists but repo is not yet registered
+        mockGitPort.listProviders.mockResolvedValue({
+          providers: [
+            {
+              id: tokenProviderId,
+              source: 'github',
+              organizationId,
+              url: null,
+              hasToken: true,
+            },
+          ],
+        });
+
+        // No repos registered yet
+        mockGitPort.listRepos.mockResolvedValue([]);
+
+        // Token can access the repo (it's in the available repos list)
+        mockGitPort.listAvailableRepos.mockResolvedValue([
+          {
+            owner: 'my-company',
+            name: 'my-repo',
+            description: 'Test repo',
+            private: true,
+            defaultBranch: 'main',
+            stars: 0,
+          },
+        ]);
+
+        // Create repo under token provider
+        mockGitPort.addGitRepo.mockResolvedValue({
+          id: newRepoId,
+          owner: 'my-company',
+          repo: 'my-repo',
+          branch: 'main',
+          providerId: tokenProviderId,
+        });
+
+        mockTargetRepository.findByGitRepoId.mockResolvedValue([
+          existingTarget,
+        ]);
+        mockPackageRepository.findByOrganizationId.mockResolvedValue([pkg]);
+        mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
+          standardVersion,
+        );
+        mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+        mockDistributionRepository.add.mockImplementation((d) =>
+          Promise.resolve(d),
+        );
+        mockDistributedPackageRepository.add.mockImplementation((d) =>
+          Promise.resolve(d),
+        );
+
+        const command: NotifyDistributionCommand = {
+          userId,
+          organizationId,
+          distributedPackages: ['my-package'],
+          gitRemoteUrl: 'https://github.com/my-company/my-repo.git',
+          gitBranch: 'main',
+          relativePath: '/',
+        };
+
+        await useCase.execute(command);
+      });
+
+      it('creates the repo under the token provider', () => {
+        expect(mockGitPort.addGitRepo).toHaveBeenCalledWith({
+          userId,
+          organizationId,
+          gitProviderId: tokenProviderId,
+          owner: 'my-company',
+          repo: 'my-repo',
+          branch: 'main',
+        });
+      });
+
+      it('does not create a tokenless provider', () => {
+        expect(mockGitPort.addGitProvider).not.toHaveBeenCalled();
+      });
+
+      it('checks available repos from the token provider', () => {
+        expect(mockGitPort.listAvailableRepos).toHaveBeenCalledWith(
+          tokenProviderId,
+        );
+      });
+    });
+
+    describe('with multiple token providers where repo exists under second provider', () => {
+      const tokenProvider1Id = createGitProviderId('token-provider-1');
+      const tokenProvider2Id = createGitProviderId('token-provider-2');
+      const existingRepoId = 'existing-repo-under-provider-2';
+
+      beforeEach(async () => {
+        const recipeVersion = buildRecipeVersion();
+        const standardVersion = buildStandardVersion();
+        const pkg = buildPackage('my-package');
+        const target = {
+          id: targetId,
+          name: 'Default',
+          path: '/',
+          gitRepoId: createGitRepoId(existingRepoId),
+        };
+
+        // Two token providers exist
+        mockGitPort.listProviders.mockResolvedValue({
+          providers: [
+            {
+              id: tokenProvider1Id,
+              source: 'github',
+              organizationId,
+              url: null,
+              hasToken: true,
+            },
+            {
+              id: tokenProvider2Id,
+              source: 'github',
+              organizationId,
+              url: null,
+              hasToken: true,
+            },
+          ],
+        });
+
+        // Provider 1 has no repos, Provider 2 has the repo
+        mockGitPort.listRepos
+          .mockResolvedValueOnce([]) // Provider 1: no repos
+          .mockResolvedValueOnce([
+            // Provider 2: has the repo
+            {
+              id: existingRepoId,
+              owner: 'my-company',
+              repo: 'my-repo',
+              branch: 'main',
+              providerId: tokenProvider2Id,
+            },
+          ]);
+
+        // Provider 1 can access the repo (but we shouldn't create it there)
+        mockGitPort.listAvailableRepos.mockResolvedValue([
+          {
+            owner: 'my-company',
+            name: 'my-repo',
+            description: 'Test repo',
+            private: true,
+            defaultBranch: 'main',
+            stars: 0,
+          },
+        ]);
+
+        mockTargetRepository.findByGitRepoId.mockResolvedValue([target]);
+        mockPackageRepository.findByOrganizationId.mockResolvedValue([pkg]);
+        mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
+          standardVersion,
+        );
+        mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+        mockDistributionRepository.add.mockImplementation((d) =>
+          Promise.resolve(d),
+        );
+        mockDistributedPackageRepository.add.mockImplementation((d) =>
+          Promise.resolve(d),
+        );
+
+        const command: NotifyDistributionCommand = {
+          userId,
+          organizationId,
+          distributedPackages: ['my-package'],
+          gitRemoteUrl: 'https://github.com/my-company/my-repo.git',
+          gitBranch: 'main',
+          relativePath: '/',
+        };
+
+        await useCase.execute(command);
+      });
+
+      it('reuses the existing repo from the second provider', () => {
+        expect(mockTargetRepository.findByGitRepoId).toHaveBeenCalledWith(
+          createGitRepoId(existingRepoId),
+        );
+      });
+
+      it('does not create any new repo', () => {
+        expect(mockGitPort.addGitRepo).not.toHaveBeenCalled();
+      });
+
+      it('checks repos from both providers', () => {
+        expect(mockGitPort.listRepos).toHaveBeenCalledTimes(2);
+      });
+
+      it('checks repos from the first provider', () => {
+        expect(mockGitPort.listRepos).toHaveBeenCalledWith(tokenProvider1Id);
+      });
+
+      it('checks repos from the second provider', () => {
+        expect(mockGitPort.listRepos).toHaveBeenCalledWith(tokenProvider2Id);
       });
     });
 
