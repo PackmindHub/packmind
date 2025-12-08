@@ -45,7 +45,11 @@ import {
   ISetupMcpCommand,
   ISetupMcpResult,
 } from './domain/useCases/ISetupMcpUseCase';
-import { HierarchicalConfigResult, PackmindFileConfig } from '@packmind/types';
+import {
+  AllConfigsResult,
+  HierarchicalConfigResult,
+  PackmindFileConfig,
+} from '@packmind/types';
 import { logWarningConsole } from './infra/utils/consoleLogger';
 import {
   NotifyDistributionCommand,
@@ -180,6 +184,16 @@ export class PackmindCliHexa {
   public async findDescendantConfigs(directory: string): Promise<string[]> {
     return this.hexa.repositories.configFileRepository.findDescendantConfigs(
       directory,
+    );
+  }
+
+  public async findAllConfigsInTree(
+    startDirectory: string,
+    stopDirectory: string | null,
+  ): Promise<AllConfigsResult> {
+    return this.hexa.repositories.configFileRepository.findAllConfigsInTree(
+      startDirectory,
+      stopDirectory,
     );
   }
 
