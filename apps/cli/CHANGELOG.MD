@@ -2,6 +2,8 @@
 
 ## Added
 
+- CLI: add `install -r` to install recursively packages #49
+- CLI: Add `install --status` command to display all packmind.json files and their packages in the workspace #45
 - notify packmind after running `packmind-cli install` #38
 
 ## Changed

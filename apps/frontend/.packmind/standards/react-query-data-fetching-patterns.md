@@ -1,8 +1,6 @@
 # React Query Data Fetching Patterns
 
-When building React applications with TanStack Query (React Query), establish consistent patterns for defining queries, mutations, and cache management to ensure predictable data fetching behavior, proper cache invalidation, and maintainable API layer code. This standard applies to all data fetching logic in React applications using TanStack Query. It ensures type-safe queries, proper query key management, consistent mutation patterns with cache invalidation, and separation of query options from hooks for reusability in loaders and components.
-
-2
+When building React applications with TanStack Query (React Query), establish consistent patterns for defining queries, mutations, and cache management to ensure predictable data fetching behavior, proper cache invalidation, and maintainable API layer code. This standard applies to all data fetching logic in React applications using TanStack Query. It ensures type-safe queries, proper query key management, consistent mutation patterns with cache invalidation, and separation of query options from hooks for reusability in loaders and components .
 
 ## Rules
 

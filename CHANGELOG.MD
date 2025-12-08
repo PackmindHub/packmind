@@ -2,8 +2,6 @@
 
 ## Added
 
-- CLI: Add `install --status` command to display all packmind.json files and their packages in the workspace (#45)
-
 ## Changed
 
 ## Fixed

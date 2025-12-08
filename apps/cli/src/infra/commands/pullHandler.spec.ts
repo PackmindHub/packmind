@@ -3,6 +3,7 @@ import {
   listPackagesHandler,
   showPackageHandler,
   pullPackagesHandler,
+  recursivePullHandler,
   statusHandler,
   PullHandlerDependencies,
 } from './pullHandler';
@@ -652,6 +653,333 @@ describe('pullHandler', () => {
         await statusHandler({}, deps);
 
         expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+  });
+
+  describe('recursivePullHandler', () => {
+    describe('when no packmind.json files are found', () => {
+      beforeEach(() => {
+        mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(
+          '/project',
+        );
+        mockPackmindCliHexa.findAllConfigsInTree.mockResolvedValue({
+          configs: [],
+          hasConfigs: false,
+          basePath: '/project',
+        });
+      });
+
+      it('displays help message', async () => {
+        await recursivePullHandler({}, deps);
+
+        expect(mockLog).toHaveBeenCalledWith(
+          'No packmind.json files found in this workspace.',
+        );
+      });
+
+      it('exits with 0', async () => {
+        await recursivePullHandler({}, deps);
+
+        expect(mockExit).toHaveBeenCalledWith(0);
+      });
+
+      it('returns zero counts', async () => {
+        const result = await recursivePullHandler({}, deps);
+
+        expect(result.directoriesProcessed).toBe(0);
+        expect(result.totalFilesCreated).toBe(0);
+        expect(result.errors).toHaveLength(0);
+      });
+    });
+
+    describe('when packmind.json files are found', () => {
+      beforeEach(() => {
+        mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(
+          '/project',
+        );
+        mockPackmindCliHexa.findAllConfigsInTree.mockResolvedValue({
+          configs: [
+            {
+              targetPath: '/',
+              absoluteTargetPath: '/project',
+              packages: { backend: '*' },
+            },
+            {
+              targetPath: '/apps/api',
+              absoluteTargetPath: '/project/apps/api',
+              packages: { nestjs: '*' },
+            },
+          ],
+          hasConfigs: true,
+          basePath: '/project',
+        });
+      });
+
+      it('displays count of files to process', async () => {
+        mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+        mockPackmindCliHexa.pullData.mockResolvedValue({
+          filesCreated: 0,
+          filesUpdated: 0,
+          filesDeleted: 0,
+          recipesCount: 0,
+          standardsCount: 0,
+          errors: [],
+        });
+        mockPackmindCliHexa.writeConfig.mockResolvedValue(undefined);
+
+        await recursivePullHandler({}, deps);
+
+        expect(mockLog).toHaveBeenCalledWith(
+          'Found 2 packmind.json file(s) to process\n',
+        );
+      });
+
+      it('processes each directory', async () => {
+        mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+        mockPackmindCliHexa.pullData.mockResolvedValue({
+          filesCreated: 3,
+          filesUpdated: 1,
+          filesDeleted: 0,
+          recipesCount: 2,
+          standardsCount: 1,
+          errors: [],
+        });
+        mockPackmindCliHexa.writeConfig.mockResolvedValue(undefined);
+
+        const result = await recursivePullHandler({}, deps);
+
+        expect(result.directoriesProcessed).toBe(2);
+        expect(mockPackmindCliHexa.pullData).toHaveBeenCalledTimes(2);
+      });
+
+      it('aggregates file counts from all directories', async () => {
+        mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+        mockPackmindCliHexa.pullData.mockResolvedValue({
+          filesCreated: 3,
+          filesUpdated: 1,
+          filesDeleted: 2,
+          recipesCount: 2,
+          standardsCount: 1,
+          errors: [],
+        });
+        mockPackmindCliHexa.writeConfig.mockResolvedValue(undefined);
+
+        const result = await recursivePullHandler({}, deps);
+
+        expect(result.totalFilesCreated).toBe(6);
+        expect(result.totalFilesUpdated).toBe(2);
+        expect(result.totalFilesDeleted).toBe(4);
+      });
+
+      it('displays summary at the end', async () => {
+        mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+        mockPackmindCliHexa.pullData.mockResolvedValue({
+          filesCreated: 3,
+          filesUpdated: 1,
+          filesDeleted: 0,
+          recipesCount: 2,
+          standardsCount: 1,
+          errors: [],
+        });
+        mockPackmindCliHexa.writeConfig.mockResolvedValue(undefined);
+
+        await recursivePullHandler({}, deps);
+
+        expect(mockLog).toHaveBeenCalledWith(
+          'Summary: 2 directories processed, 6 files added, 2 changed, 0 removed',
+        );
+      });
+
+      it('exits with 0 when successful', async () => {
+        mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+        mockPackmindCliHexa.pullData.mockResolvedValue({
+          filesCreated: 0,
+          filesUpdated: 0,
+          filesDeleted: 0,
+          recipesCount: 0,
+          standardsCount: 0,
+          errors: [],
+        });
+        mockPackmindCliHexa.writeConfig.mockResolvedValue(undefined);
+
+        await recursivePullHandler({}, deps);
+
+        expect(mockExit).toHaveBeenCalledWith(0);
+      });
+    });
+
+    describe('when one directory fails', () => {
+      beforeEach(() => {
+        mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(
+          '/project',
+        );
+        mockPackmindCliHexa.findAllConfigsInTree.mockResolvedValue({
+          configs: [
+            {
+              targetPath: '/',
+              absoluteTargetPath: '/project',
+              packages: { backend: '*' },
+            },
+            {
+              targetPath: '/apps/api',
+              absoluteTargetPath: '/project/apps/api',
+              packages: { nestjs: '*' },
+            },
+          ],
+          hasConfigs: true,
+          basePath: '/project',
+        });
+      });
+
+      it('continues processing other directories', async () => {
+        mockPackmindCliHexa.readConfig
+          .mockResolvedValueOnce(['backend'])
+          .mockResolvedValueOnce(['nestjs']);
+        mockPackmindCliHexa.pullData
+          .mockRejectedValueOnce(new Error('Network error'))
+          .mockResolvedValueOnce({
+            filesCreated: 2,
+            filesUpdated: 0,
+            filesDeleted: 0,
+            recipesCount: 1,
+            standardsCount: 1,
+            errors: [],
+          });
+        mockPackmindCliHexa.writeConfig.mockResolvedValue(undefined);
+
+        const result = await recursivePullHandler({}, deps);
+
+        expect(result.directoriesProcessed).toBe(2);
+        expect(result.totalFilesCreated).toBe(2);
+        expect(result.errors).toHaveLength(1);
+      });
+
+      it('reports errors at the end', async () => {
+        mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+        mockPackmindCliHexa.pullData
+          .mockRejectedValueOnce(new Error('Network error'))
+          .mockResolvedValueOnce({
+            filesCreated: 2,
+            filesUpdated: 0,
+            filesDeleted: 0,
+            recipesCount: 1,
+            standardsCount: 1,
+            errors: [],
+          });
+        mockPackmindCliHexa.writeConfig.mockResolvedValue(undefined);
+
+        await recursivePullHandler({}, deps);
+
+        expect(mockLog).toHaveBeenCalledWith(
+          expect.stringContaining('1 error(s) encountered'),
+        );
+      });
+
+      it('exits with 1 when there are errors', async () => {
+        mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+        mockPackmindCliHexa.pullData
+          .mockRejectedValueOnce(new Error('Network error'))
+          .mockResolvedValueOnce({
+            filesCreated: 2,
+            filesUpdated: 0,
+            filesDeleted: 0,
+            recipesCount: 1,
+            standardsCount: 1,
+            errors: [],
+          });
+        mockPackmindCliHexa.writeConfig.mockResolvedValue(undefined);
+
+        await recursivePullHandler({}, deps);
+
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('when config parsing fails in a directory', () => {
+      beforeEach(() => {
+        mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(
+          '/project',
+        );
+        mockPackmindCliHexa.findAllConfigsInTree.mockResolvedValue({
+          configs: [
+            {
+              targetPath: '/',
+              absoluteTargetPath: '/project',
+              packages: { backend: '*' },
+            },
+          ],
+          hasConfigs: true,
+          basePath: '/project',
+        });
+      });
+
+      it('records the error and continues', async () => {
+        mockPackmindCliHexa.readConfig.mockRejectedValue(
+          new Error('Invalid JSON'),
+        );
+
+        const result = await recursivePullHandler({}, deps);
+
+        expect(result.errors).toHaveLength(1);
+        expect(result.errors[0].message).toContain('Invalid JSON');
+      });
+    });
+
+    describe('when findAllConfigsInTree fails', () => {
+      it('displays error and exits with 1', async () => {
+        mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(
+          '/project',
+        );
+        mockPackmindCliHexa.findAllConfigsInTree.mockRejectedValue(
+          new Error('Permission denied'),
+        );
+
+        await recursivePullHandler({}, deps);
+
+        expect(mockError).toHaveBeenCalledWith(
+          '\n❌ Failed to run recursive install:',
+        );
+        expect(mockError).toHaveBeenCalledWith('   Permission denied');
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('when processing single directory', () => {
+      beforeEach(() => {
+        mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(
+          '/project',
+        );
+        mockPackmindCliHexa.findAllConfigsInTree.mockResolvedValue({
+          configs: [
+            {
+              targetPath: '/',
+              absoluteTargetPath: '/project',
+              packages: { backend: '*' },
+            },
+          ],
+          hasConfigs: true,
+          basePath: '/project',
+        });
+      });
+
+      it('displays singular form in summary', async () => {
+        mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+        mockPackmindCliHexa.pullData.mockResolvedValue({
+          filesCreated: 1,
+          filesUpdated: 0,
+          filesDeleted: 0,
+          recipesCount: 1,
+          standardsCount: 0,
+          errors: [],
+        });
+        mockPackmindCliHexa.writeConfig.mockResolvedValue(undefined);
+
+        await recursivePullHandler({}, deps);
+
+        expect(mockLog).toHaveBeenCalledWith(
+          'Summary: 1 directory processed, 1 files added, 0 changed, 0 removed',
+        );
       });
     });
   });
