@@ -27,6 +27,7 @@ import {
   PMCloseButton,
   PMDataList,
   PMTabs,
+  PMEmptyState,
 } from '@packmind/ui';
 import { Link, useNavigate } from 'react-router';
 import {
@@ -835,7 +836,23 @@ export const PackageDetails = ({
                   </PMBox>
                 )}
 
-                {(recipeCount > 0 || standardCount > 0) && (
+                {isPackageEmpty ? (
+                  <PMEmptyState
+                    backgroundColor={'background.primary'}
+                    borderRadius={'md'}
+                    width={'2xl'}
+                    mx={'auto'}
+                    mt={8}
+                    title={'This package is empty'}
+                    description="Add recipes and standards to this package to distribute them to your repositories"
+                  >
+                    <PMHStack>
+                      <PMButton variant="secondary" onClick={handleEdit}>
+                        Edit Package
+                      </PMButton>
+                    </PMHStack>
+                  </PMEmptyState>
+                ) : (
                   <PMHStack align="flex-start" gap={6} width="full">
                     {standardCount > 0 && (
                       <PMBox flex={1} width="full">
