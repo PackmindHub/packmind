@@ -275,15 +275,26 @@ export class NotifyDistributionUseCase
       }
 
       // Check if token can access the repo
-      const availableRepos = await this.gitPort.listAvailableRepos(provider.id);
-      const canAccess = availableRepos.some(
-        (r) =>
-          r.owner.toLowerCase() === owner.toLowerCase() &&
-          r.name.toLowerCase() === repo.toLowerCase(),
-      );
+      // Wrap in try-catch to handle expired/invalid tokens gracefully
+      try {
+        const availableRepos = await this.gitPort.listAvailableRepos(
+          provider.id,
+        );
+        const canAccess = availableRepos.some(
+          (r) =>
+            r.owner.toLowerCase() === owner.toLowerCase() &&
+            r.name.toLowerCase() === repo.toLowerCase(),
+        );
 
-      if (canAccess) {
-        providersWithAccess.push(provider);
+        if (canAccess) {
+          providersWithAccess.push(provider);
+        }
+      } catch (error) {
+        this.logger.info('Failed to list available repos for provider', {
+          providerId: provider.id,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        // Continue to next provider - this one's token may be expired/invalid
       }
     }
 
