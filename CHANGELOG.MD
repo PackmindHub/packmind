@@ -2,13 +2,15 @@
 
 ## Added
 
+- Track distribution of packages installed using the command line #38
+
 ## Changed
 
 ## Fixed
 
 ## Removed
 
-Deleted standards still appear in packages are properly removed from packages #34
+- Deleted standards are properly removed from packages #34
 
 # [1.5.0] - 2025-12-05
 
