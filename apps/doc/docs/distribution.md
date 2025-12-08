@@ -27,21 +27,21 @@ You can create an issue in our [repository](https://github.com/PackmindHub/packm
 
 ## How to Deploy
 
-To deploy standards and recipes, you need to add them to a package.
+To distribute standards and recipes, you need to add them to a package.
 
-A package is a curated collection of recipes and standards grouped together (e.g., "Frontend React Standards", "Backend API Guidelines"). When you deploy a package:
+A package is a curated collection of recipes and standards grouped together (e.g., "Frontend React Standards", "Backend API Guidelines"). When you distribute a package:
 
 - All recipes and standards in the package are deployed together
 - The latest version of each item is used
 - A single commit contains all the package content
-- You can deploy multiple packages at once to the same target
+- You can distribute multiple packages at once to the same target
 
-To deploy packages:
+To distribute packages:
 
 1. Navigate to the **Packages** section
-2. Select the package(s) you want to deploy
-3. Click **Deploy** and choose your target repositories
-4. Confirm the deployment
+2. Select the package(s) you want to distribute
+3. Click **Distribute** and choose your target repositories
+4. Confirm the Distribution
 
 This approach is useful when you want to:
 

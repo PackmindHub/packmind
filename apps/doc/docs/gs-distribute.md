@@ -174,11 +174,11 @@ my-project/
 
 Each `packmind.json` file operates independently. When you run `packmind-cli install` in a directory, it only affects that directory's configuration.
 
-## Alternative: Deploy to Git repositories
+## Alternative: Distribute to Git repositories
 
-Instead of pulling locally, you can deploy packages directly to your Git repositories. This pushes standards and recipes as files that are committed to your codebase.
+Instead of pulling locally, you can distribute packages directly to your Git repositories. This pushes standards and recipes as files that are committed to your codebase.
 
-To learn about deploying to Git repositories, see the [Deployment documentation](./deployment.md).
+To learn about deploying to Git repositories, see the [Deployment documentation](./distribution.md).
 
 ## Use your artifacts
 

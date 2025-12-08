@@ -52,13 +52,13 @@ See the [CLI documentation](./cli.md#install-command) for details.
 Push packages to your Git repositories through the web interface:
 
 1. Navigate to **Packages**
-2. Select packages to deploy
+2. Select packages to distribute
 3. Choose target paths
 4. Click **Deploy**
 
 All recipes and standards in the package are committed together to your repository.
 
-Learn more in the [Deployment documentation](./deployment.md).
+Learn more in the [Distribution documentation](./distribution.md).
 
 ### Via MCP Server
 
@@ -73,6 +73,6 @@ See the [MCP Server reference](./mcp-server.md#packages-tools) for details.
 
 ## Package Versions
 
-Packages are dynamic collections without their own versions. When you deploy a package, it always includes the latest version of each recipe and standard it contains.
+Packages are dynamic collections without their own versions. When you distribute a package, it always includes the latest version of each recipe and standard it contains.
 
-To see which repositories have outdated versions, check the [deployment overview](./deployment.md).
+To see which repositories have outdated versions, check the [distribution overview](./distribution.md).
