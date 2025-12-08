@@ -34,6 +34,11 @@ export const DistributionSchema = new EntitySchema<
       nullable: false,
       default: '[]',
     },
+    source: {
+      type: 'varchar',
+      nullable: false,
+      default: 'app',
+    },
     ...uuidSchema,
     ...timestampsSchemas,
   },

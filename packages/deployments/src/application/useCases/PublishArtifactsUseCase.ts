@@ -312,6 +312,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       status,
       error,
       renderModes: activeRenderModes,
+      source: 'app',
     };
 
     await this.distributionRepository.add(distribution);
