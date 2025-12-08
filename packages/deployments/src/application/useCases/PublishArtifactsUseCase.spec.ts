@@ -1013,6 +1013,267 @@ describe('PublishArtifactsUseCase', () => {
     });
   });
 
+  describe('when previously deployed artifacts are removed', () => {
+    let command: PublishArtifactsCommand;
+    let newRecipeVersion: ReturnType<typeof recipeVersionFactory>;
+    let previousRecipeVersion: ReturnType<typeof recipeVersionFactory>;
+    let newStandardVersion: ReturnType<typeof standardVersionFactory>;
+    let previousStandardVersion: ReturnType<typeof standardVersionFactory>;
+    let target: ReturnType<typeof targetFactory>;
+    let gitRepo: GitRepo;
+    let gitCommit: GitCommit;
+
+    beforeEach(() => {
+      // New recipe to deploy (different recipeId than previous)
+      newRecipeVersion = recipeVersionFactory({
+        id: createRecipeVersionId(uuidv4()),
+        recipeId: createRecipeId('recipe-new'),
+        name: 'New Recipe',
+        slug: 'new-recipe',
+        version: 1,
+      });
+
+      // Previously deployed recipe that will NOT be in the new deployment (to be removed)
+      previousRecipeVersion = recipeVersionFactory({
+        id: createRecipeVersionId(uuidv4()),
+        recipeId: createRecipeId('recipe-old'),
+        name: 'Old Recipe',
+        slug: 'old-recipe',
+        version: 1,
+      });
+
+      // New standard to deploy (different standardId than previous)
+      newStandardVersion = standardVersionFactory({
+        id: createStandardVersionId(uuidv4()),
+        standardId: createStandardId('standard-new'),
+        name: 'New Standard',
+        slug: 'new-standard',
+        version: 1,
+        rules: [],
+      });
+
+      // Previously deployed standard that will NOT be in the new deployment (to be removed)
+      previousStandardVersion = standardVersionFactory({
+        id: createStandardVersionId(uuidv4()),
+        standardId: createStandardId('standard-old'),
+        name: 'Old Standard',
+        slug: 'old-standard',
+        version: 1,
+        rules: [],
+      });
+
+      gitRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'test-owner',
+        repo: 'test-repo',
+        branch: 'main',
+        providerId: createGitProviderId(uuidv4()),
+      };
+
+      target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
+
+      gitCommit = {
+        id: createGitCommitId(uuidv4()),
+        sha: 'abc123',
+        message: 'Test',
+        author: 'Author',
+        url: 'https://example.com',
+      };
+
+      // Deploy only new versions (not the previously deployed ones)
+      command = {
+        userId,
+        organizationId,
+        recipeVersionIds: [newRecipeVersion.id],
+        standardVersionIds: [newStandardVersion.id],
+        targetIds: [targetId],
+      };
+
+      mockRecipesPort.getRecipeVersionById.mockResolvedValue(newRecipeVersion);
+      mockStandardsPort.getStandardVersionById.mockResolvedValue(
+        newStandardVersion,
+      );
+      mockTargetService.findById.mockResolvedValue(target);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
+      // Return previously deployed versions that are NOT in the new deployment
+      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+        [previousRecipeVersion],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [previousStandardVersion],
+      );
+      mockGitPort.getFileFromRepo.mockResolvedValue(null);
+      mockCodingAgentPort.renderArtifacts.mockResolvedValue({
+        createOrUpdate: [
+          { path: '.packmind/recipes/new-recipe.md', content: 'content' },
+          { path: '.packmind/standards/new-standard.md', content: 'content' },
+        ],
+        delete: [],
+      });
+      mockGitPort.commitToGit.mockResolvedValue(gitCommit);
+    });
+
+    it('passes removed recipe versions to renderArtifacts', async () => {
+      await useCase.execute(command);
+
+      expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
+        expect.objectContaining({
+          removed: expect.objectContaining({
+            recipeVersions: expect.arrayContaining([
+              expect.objectContaining({
+                recipeId: previousRecipeVersion.recipeId,
+              }),
+            ]),
+          }),
+        }),
+      );
+    });
+
+    it('passes removed standard versions to renderArtifacts', async () => {
+      await useCase.execute(command);
+
+      expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
+        expect.objectContaining({
+          removed: expect.objectContaining({
+            standardVersions: expect.arrayContaining([
+              expect.objectContaining({
+                standardId: previousStandardVersion.standardId,
+              }),
+            ]),
+          }),
+        }),
+      );
+    });
+
+    it('includes both new and previously deployed recipes in installed', async () => {
+      await useCase.execute(command);
+
+      expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
+        expect.objectContaining({
+          installed: expect.objectContaining({
+            recipeVersions: expect.arrayContaining([
+              expect.objectContaining({
+                recipeId: newRecipeVersion.recipeId,
+              }),
+              expect.objectContaining({
+                recipeId: previousRecipeVersion.recipeId,
+              }),
+            ]),
+          }),
+        }),
+      );
+    });
+
+    it('includes both new and previously deployed standards in installed', async () => {
+      await useCase.execute(command);
+
+      expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
+        expect.objectContaining({
+          installed: expect.objectContaining({
+            standardVersions: expect.arrayContaining([
+              expect.objectContaining({
+                standardId: newStandardVersion.standardId,
+              }),
+              expect.objectContaining({
+                standardId: previousStandardVersion.standardId,
+              }),
+            ]),
+          }),
+        }),
+      );
+    });
+  });
+
+  describe('when no artifacts are removed', () => {
+    let command: PublishArtifactsCommand;
+    let recipeVersion: ReturnType<typeof recipeVersionFactory>;
+    let standardVersion: ReturnType<typeof standardVersionFactory>;
+    let target: ReturnType<typeof targetFactory>;
+    let gitRepo: GitRepo;
+    let gitCommit: GitCommit;
+
+    beforeEach(() => {
+      recipeVersion = recipeVersionFactory({
+        id: createRecipeVersionId(uuidv4()),
+        recipeId: createRecipeId('recipe-1'),
+        name: 'Recipe',
+        slug: 'recipe',
+        version: 1,
+      });
+
+      standardVersion = standardVersionFactory({
+        id: createStandardVersionId(uuidv4()),
+        standardId: createStandardId('standard-1'),
+        name: 'Standard',
+        slug: 'standard',
+        version: 1,
+        rules: [],
+      });
+
+      gitRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'test-owner',
+        repo: 'test-repo',
+        branch: 'main',
+        providerId: createGitProviderId(uuidv4()),
+      };
+
+      target = targetFactory({ id: targetId, gitRepoId: gitRepo.id });
+
+      gitCommit = {
+        id: createGitCommitId(uuidv4()),
+        sha: 'abc123',
+        message: 'Test',
+        author: 'Author',
+        url: 'https://example.com',
+      };
+
+      command = {
+        userId,
+        organizationId,
+        recipeVersionIds: [recipeVersion.id],
+        standardVersionIds: [standardVersion.id],
+        targetIds: [targetId],
+      };
+
+      mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
+      mockStandardsPort.getStandardVersionById.mockResolvedValue(
+        standardVersion,
+      );
+      mockTargetService.findById.mockResolvedValue(target);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
+      // No previously deployed versions
+      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockGitPort.getFileFromRepo.mockResolvedValue(null);
+      mockCodingAgentPort.renderArtifacts.mockResolvedValue({
+        createOrUpdate: [
+          { path: '.packmind/recipes/recipe.md', content: 'content' },
+          { path: '.packmind/standards/standard.md', content: 'content' },
+        ],
+        delete: [],
+      });
+      mockGitPort.commitToGit.mockResolvedValue(gitCommit);
+    });
+
+    it('passes empty removed arrays to renderArtifacts', async () => {
+      await useCase.execute(command);
+
+      expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
+        expect.objectContaining({
+          removed: {
+            recipeVersions: [],
+            standardVersions: [],
+          },
+        }),
+      );
+    });
+  });
+
   describe('when deploying with previously deployed standards that lack rules', () => {
     let command: PublishArtifactsCommand;
     let newStandardVersion: ReturnType<typeof standardVersionFactory>;
