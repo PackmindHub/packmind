@@ -104,14 +104,20 @@ export class CodingAgentServices {
   }
 
   async renderArtifacts(
-    recipeVersions: RecipeVersion[],
-    standardVersions: StandardVersion[],
+    installed: {
+      recipeVersions: RecipeVersion[];
+      standardVersions: StandardVersion[];
+    },
+    removed: {
+      recipeVersions: RecipeVersion[];
+      standardVersions: StandardVersion[];
+    },
     codingAgents: CodingAgent[],
     existingFiles: Map<string, string>,
   ): Promise<FileUpdates> {
     this.logger.info('Rendering artifacts (recipes + standards)', {
-      recipesCount: recipeVersions.length,
-      standardsCount: standardVersions.length,
+      recipesCount: installed.recipeVersions.length,
+      standardsCount: installed.standardVersions.length,
       agentsCount: codingAgents.length,
       existingFilesCount: existingFiles.size,
     });
@@ -122,8 +128,8 @@ export class CodingAgentServices {
     }
 
     const result = await this.deployerService.aggregateArtifactRendering(
-      recipeVersions,
-      standardVersions,
+      installed.recipeVersions,
+      installed.standardVersions,
       codingAgents,
       existingFiles,
     );

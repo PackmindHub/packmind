@@ -6,8 +6,14 @@ import { FileUpdates } from '../../deployments';
 import { CodingAgent } from '../CodingAgent';
 
 export type RenderArtifactsCommand = PackmindCommand & {
-  recipeVersions: RecipeVersion[];
-  standardVersions: StandardVersion[];
+  installed: {
+    recipeVersions: RecipeVersion[];
+    standardVersions: StandardVersion[];
+  };
+  removed: {
+    recipeVersions: RecipeVersion[];
+    standardVersions: StandardVersion[];
+  };
   codingAgents: CodingAgent[];
   existingFiles: Map<string, string>; // key: filePath (e.g., "CLAUDE.md"), value: current file content
 };

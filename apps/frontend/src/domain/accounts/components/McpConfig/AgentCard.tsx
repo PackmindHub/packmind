@@ -35,6 +35,9 @@ export const AgentCard: React.FunctionComponent<IAgentCardProps> = ({
     <PMCard.Root
       onClick={handleClick}
       cursor="pointer"
+      border={'solid 1px'}
+      borderRadius={'md'}
+      borderColor={'border.tertiary'}
       _hover={{ shadow: 'md', borderColor: 'blue.500' }}
       transition="all 0.2s"
       data-testid={`agent-card-${agent.id}`}

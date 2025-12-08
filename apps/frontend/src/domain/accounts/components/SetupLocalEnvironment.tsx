@@ -49,8 +49,8 @@ export const SetupLocalEnvironment: React.FunctionComponent = () => {
   return (
     <PMVStack width="full" alignItems="stretch" gap={4}>
       <PMText as="p">
-        Copy and run this command in your terminal to install the CLI and log
-        you in automatically.
+        Copy and run this command in your terminal to install the CLI and MCP
+        server automatically.
       </PMText>
 
       {createCliLoginCodeMutation.isPending && (
@@ -87,18 +87,20 @@ export const SetupLocalEnvironment: React.FunctionComponent = () => {
               />
             </PMField.Root>
 
-            <PMText variant="small" color="tertiary">
-              {formatCodeExpiresAt(createCliLoginCodeMutation.data.expiresAt)}
-            </PMText>
+            <PMVStack width="full" gap={2} alignItems={'flex-start'}>
+              <PMText variant="small" color="tertiary">
+                {formatCodeExpiresAt(createCliLoginCodeMutation.data.expiresAt)}
+              </PMText>
 
-            <PMButton
-              variant="outline"
-              onClick={handleGenerateInstallCommand}
-              disabled={createCliLoginCodeMutation.isPending}
-              size="sm"
-            >
-              Generate New Command
-            </PMButton>
+              <PMButton
+                variant="tertiary"
+                onClick={handleGenerateInstallCommand}
+                disabled={createCliLoginCodeMutation.isPending}
+                size="xs"
+              >
+                Generate New Command
+              </PMButton>
+            </PMVStack>
           </PMVStack>
         )}
     </PMVStack>

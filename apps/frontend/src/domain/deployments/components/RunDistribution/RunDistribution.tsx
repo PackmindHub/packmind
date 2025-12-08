@@ -1,19 +1,15 @@
 import React, { createContext, useContext, useMemo, useState } from 'react';
-import { OrganizationId, UserOrganizationRole } from '@packmind/types';
+import { UserOrganizationRole } from '@packmind/types';
 import {
   TargetId,
   TargetWithRepository,
-  Distribution,
   RenderModeConfiguration,
   RenderMode,
   DEFAULT_ACTIVE_RENDER_MODES,
   Package,
+  PackagesDeployment,
 } from '@packmind/types';
-import {
-  useDeployRecipe,
-  useDeployStandard,
-  useDeployPackage,
-} from '../../hooks';
+import { useDeployPackage } from '../../hooks';
 import { Recipe } from '@packmind/types';
 import {
   useGetRenderModeConfigurationQuery,
@@ -60,10 +56,7 @@ interface RunDistributionProps {
   selectedRecipes: Recipe[];
   selectedStandards: Standard[];
   selectedPackages?: Package[];
-  onDistributionComplete?: (deploymentResults?: {
-    recipesDistributions: Distribution[];
-    standardsDistributions: Distribution[];
-  }) => void;
+  onDistributionComplete?: (deploymentResults: PackagesDeployment[]) => void;
   children?: React.ReactNode;
 }
 
@@ -74,9 +67,6 @@ const RunDistributionComponent: React.FC<RunDistributionProps> = ({
   onDistributionComplete,
   children,
 }) => {
-  const { deployRecipes, isDeploying: isRecipesDeploying } = useDeployRecipe();
-  const { deployStandards, isDeploying: isStandardsDeploying } =
-    useDeployStandard();
   const { deployPackages, isDeploying: isPackagesDeploying } =
     useDeployPackage();
   const [deploymentError, setDeploymentError] = useState<Error | null>(null);
@@ -134,60 +124,26 @@ const RunDistributionComponent: React.FC<RunDistributionProps> = ({
 
   const [selectedTargetIds, setSelectedTargetIds] = useState<TargetId[]>([]);
   const canRunDistribution =
-    (selectedRecipes.length > 0 ||
-      selectedStandards.length > 0 ||
-      selectedPackages.length > 0) &&
+    selectedPackages.length > 0 &&
     selectedTargetIds.length > 0 &&
-    !isRecipesDeploying &&
     !isPackagesDeploying;
 
   const deploy = React.useCallback(async () => {
     if (!organization) return;
 
     try {
-      const recipesDistributions: Distribution[] = [];
-      const standardsDistributions: Distribution[] = [];
+      const deploymentResults = await deployPackages(
+        {
+          packages: selectedPackages.map((pkg) => ({
+            id: pkg.id,
+            name: pkg.name,
+          })),
+        },
+        selectedTargetIds,
+      );
 
-      if (selectedPackages.length > 0) {
-        // Deploy packages - results are PackagesDeployment[], not mixed with other types
-        await deployPackages(
-          {
-            packages: selectedPackages.map((pkg) => ({
-              id: pkg.id,
-              name: pkg.name,
-            })),
-          },
-          selectedTargetIds,
-        );
-        // Package deployments are tracked separately through the distributions system
-        // No need to add to recipesDistributions or standardsDistributions
-      }
-
-      if (selectedRecipes.length > 0) {
-        const recipeResults = await deployRecipes(
-          {
-            recipes: selectedRecipes.map((recipe) => ({
-              ...recipe,
-              organizationId: organization.id,
-            })),
-          },
-          selectedTargetIds,
-        );
-        recipesDistributions.push(...recipeResults);
-      }
-
-      if (selectedStandards.length > 0) {
-        const standardResults = await deployStandards(
-          { standards: selectedStandards },
-          selectedTargetIds,
-        );
-        standardsDistributions.push(...standardResults);
-      }
       setDeploymentError(null);
-      onDistributionComplete?.({
-        recipesDistributions,
-        standardsDistributions,
-      });
+      onDistributionComplete?.(deploymentResults);
     } catch (e: unknown) {
       console.error('Distribution failed:', e);
       if (e instanceof Error) {
@@ -199,14 +155,10 @@ const RunDistributionComponent: React.FC<RunDistributionProps> = ({
       }
     }
   }, [
-    selectedRecipes,
-    selectedStandards,
     selectedPackages,
     onDistributionComplete,
-    deployRecipes,
     deployPackages,
     selectedTargetIds,
-    deployStandards,
     organization,
   ]);
 
@@ -217,8 +169,7 @@ const RunDistributionComponent: React.FC<RunDistributionProps> = ({
       targetsError,
       selectedTargetIds,
       setSelectedTargetIds,
-      isDeploying:
-        isRecipesDeploying || isStandardsDeploying || isPackagesDeploying,
+      isDeploying: isPackagesDeploying,
       deploy,
       deploymentError,
       canRunDistribution,
@@ -238,8 +189,6 @@ const RunDistributionComponent: React.FC<RunDistributionProps> = ({
       targetsError,
       selectedTargetIds,
       setSelectedTargetIds,
-      isRecipesDeploying,
-      isStandardsDeploying,
       isPackagesDeploying,
       deploy,
       deploymentError,

@@ -234,13 +234,19 @@ describe('PublishArtifactsUseCase', () => {
 
       expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
         expect.objectContaining({
-          recipeVersions: [recipeVersion],
-          standardVersions: [
-            expect.objectContaining({
-              ...standardVersion,
-              rules: [],
-            }),
-          ],
+          installed: {
+            recipeVersions: [recipeVersion],
+            standardVersions: [
+              expect.objectContaining({
+                ...standardVersion,
+                rules: [],
+              }),
+            ],
+          },
+          removed: {
+            recipeVersions: [],
+            standardVersions: [],
+          },
           codingAgents: activeCodingAgents,
         }),
       );
@@ -360,7 +366,9 @@ describe('PublishArtifactsUseCase', () => {
 
       expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
         expect.objectContaining({
-          standardVersions: [],
+          installed: expect.objectContaining({
+            standardVersions: [],
+          }),
         }),
       );
     });
@@ -437,7 +445,9 @@ describe('PublishArtifactsUseCase', () => {
 
       expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
         expect.objectContaining({
-          recipeVersions: [],
+          installed: expect.objectContaining({
+            recipeVersions: [],
+          }),
         }),
       );
     });
@@ -802,9 +812,11 @@ describe('PublishArtifactsUseCase', () => {
 
       expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
         expect.objectContaining({
-          recipeVersions: expect.arrayContaining([
-            expect.objectContaining({ version: 2 }),
-          ]),
+          installed: expect.objectContaining({
+            recipeVersions: expect.arrayContaining([
+              expect.objectContaining({ version: 2 }),
+            ]),
+          }),
         }),
       );
     });
@@ -814,9 +826,11 @@ describe('PublishArtifactsUseCase', () => {
 
       expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
         expect.objectContaining({
-          standardVersions: expect.arrayContaining([
-            expect.objectContaining({ version: 2 }),
-          ]),
+          installed: expect.objectContaining({
+            standardVersions: expect.arrayContaining([
+              expect.objectContaining({ version: 2 }),
+            ]),
+          }),
         }),
       );
     });
@@ -1103,16 +1117,18 @@ describe('PublishArtifactsUseCase', () => {
 
       expect(mockCodingAgentPort.renderArtifacts).toHaveBeenCalledWith(
         expect.objectContaining({
-          standardVersions: expect.arrayContaining([
-            expect.objectContaining({
-              id: newStandardVersion.id,
-              rules: mockRules,
-            }),
-            expect.objectContaining({
-              id: previousStandardVersion.id,
-              rules: mockRules,
-            }),
-          ]),
+          installed: expect.objectContaining({
+            standardVersions: expect.arrayContaining([
+              expect.objectContaining({
+                id: newStandardVersion.id,
+                rules: mockRules,
+              }),
+              expect.objectContaining({
+                id: previousStandardVersion.id,
+                rules: mockRules,
+              }),
+            ]),
+          }),
         }),
       );
     });
@@ -1121,9 +1137,10 @@ describe('PublishArtifactsUseCase', () => {
       await useCase.execute(command);
 
       const renderCall = mockCodingAgentPort.renderArtifacts.mock.calls[0][0];
-      const standardsWithoutRules = renderCall.standardVersions.filter(
-        (sv: { rules?: unknown[] }) => !sv.rules || sv.rules.length === 0,
-      );
+      const standardsWithoutRules =
+        renderCall.installed.standardVersions.filter(
+          (sv: { rules?: unknown[] }) => !sv.rules || sv.rules.length === 0,
+        );
 
       expect(standardsWithoutRules).toHaveLength(0);
     });

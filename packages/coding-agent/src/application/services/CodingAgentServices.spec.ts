@@ -76,8 +76,14 @@ describe('CodingAgentServices', () => {
       existingFiles.set('CLAUDE.md', 'existing content');
 
       const result = await service.renderArtifacts(
-        mockRecipeVersions,
-        mockStandardVersions,
+        {
+          recipeVersions: mockRecipeVersions,
+          standardVersions: mockStandardVersions,
+        },
+        {
+          recipeVersions: [],
+          standardVersions: [],
+        },
         ['claude'],
         existingFiles,
       );
@@ -106,8 +112,14 @@ describe('CodingAgentServices', () => {
       const existingFiles = new Map<string, string>();
 
       const result = await service.renderArtifacts(
-        [],
-        mockStandardVersions,
+        {
+          recipeVersions: [],
+          standardVersions: mockStandardVersions,
+        },
+        {
+          recipeVersions: [],
+          standardVersions: [],
+        },
         ['claude'],
         existingFiles,
       );
@@ -136,8 +148,14 @@ describe('CodingAgentServices', () => {
       const existingFiles = new Map<string, string>();
 
       const result = await service.renderArtifacts(
-        mockRecipeVersions,
-        [],
+        {
+          recipeVersions: mockRecipeVersions,
+          standardVersions: [],
+        },
+        {
+          recipeVersions: [],
+          standardVersions: [],
+        },
         ['claude'],
         existingFiles,
       );
@@ -153,8 +171,14 @@ describe('CodingAgentServices', () => {
         const existingFiles = new Map<string, string>();
 
         const result = await service.renderArtifacts(
-          mockRecipeVersions,
-          mockStandardVersions,
+          {
+            recipeVersions: mockRecipeVersions,
+            standardVersions: mockStandardVersions,
+          },
+          {
+            recipeVersions: [],
+            standardVersions: [],
+          },
           [],
           existingFiles,
         );
@@ -184,8 +208,14 @@ describe('CodingAgentServices', () => {
       existingFiles.set('AGENTS.md', 'agents content');
 
       await service.renderArtifacts(
-        mockRecipeVersions,
-        mockStandardVersions,
+        {
+          recipeVersions: mockRecipeVersions,
+          standardVersions: mockStandardVersions,
+        },
+        {
+          recipeVersions: [],
+          standardVersions: [],
+        },
         ['claude', 'agents_md'],
         existingFiles,
       );
@@ -217,8 +247,14 @@ describe('CodingAgentServices', () => {
       const agents: CodingAgent[] = ['claude', 'cursor'];
 
       const result = await service.renderArtifacts(
-        mockRecipeVersions,
-        mockStandardVersions,
+        {
+          recipeVersions: mockRecipeVersions,
+          standardVersions: mockStandardVersions,
+        },
+        {
+          recipeVersions: [],
+          standardVersions: [],
+        },
         agents,
         existingFiles,
       );
@@ -235,8 +271,14 @@ describe('CodingAgentServices', () => {
 
       await expect(
         service.renderArtifacts(
-          mockRecipeVersions,
-          mockStandardVersions,
+          {
+            recipeVersions: mockRecipeVersions,
+            standardVersions: mockStandardVersions,
+          },
+          {
+            recipeVersions: [],
+            standardVersions: [],
+          },
           ['claude'],
           existingFiles,
         ),

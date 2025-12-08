@@ -3,6 +3,7 @@ import {
   DistributionStatus,
   Target,
   GitRepo,
+  PackagesDeployment,
 } from '@packmind/types';
 
 // Extended target type that includes the joined gitRepo from TypeORM queries
@@ -21,10 +22,10 @@ export interface DeploymentAnalysis {
   successfulDeployments: number;
   failedDeployments: number;
   noChangesDeployments: number;
-  // New: count actual items (standards/recipes) instead of just deployment records
-  successfulItems: number;
-  failedItems: number;
-  noChangesItems: number;
+  // Count packages deployed
+  successfulPackages: number;
+  failedPackages: number;
+  noChangesPackages: number;
   failedTargets: Array<{
     name: string;
     path: string;
@@ -53,6 +54,18 @@ export function analyzeDeploymentResults(
 
   const analysis = getDeploymentAnalysis(allDeployments);
 
+  // Helper to format description with optional target count
+  const formatWithTargets = (
+    packageCount: number,
+    targetCount: number,
+    action: string,
+  ): string => {
+    if (targetCount > 1) {
+      return `${packageCount} package(s) ${action} to ${targetCount} target(s).`;
+    }
+    return `${packageCount} package(s) ${action}.`;
+  };
+
   // All no changes (already distributed)
   if (
     analysis.successfulDeployments === 0 &&
@@ -62,7 +75,11 @@ export function analyzeDeploymentResults(
     return {
       type: 'info',
       title: 'Already distributed',
-      description: `The version of ${analysis.noChangesDeployments === 1 ? 'this standard/recipe is' : 'these standards/recipes are'} already distributed on ${analysis.noChangesDeployments === 1 ? 'this target' : 'these targets'}.`,
+      description: formatWithTargets(
+        analysis.noChangesPackages,
+        analysis.noChangesDeployments,
+        'already up-to-date',
+      ),
     };
   }
 
@@ -76,21 +93,34 @@ export function analyzeDeploymentResults(
       return {
         type: 'info',
         title: 'Already distributed',
-        description: `The version of ${analysis.noChangesDeployments === 1 ? 'this standard/recipe is' : 'these standards/recipes are'} already distributed on ${analysis.noChangesDeployments === 1 ? 'this target' : 'these targets'}.`,
+        description: formatWithTargets(
+          analysis.noChangesPackages,
+          analysis.noChangesDeployments,
+          'already up-to-date',
+        ),
       };
     }
     if (analysis.noChangesDeployments > 0) {
       // Mixed success and no_changes
+      const successDesc = formatWithTargets(
+        analysis.successfulPackages,
+        analysis.successfulDeployments,
+        'distributed successfully',
+      );
       return {
         type: 'success',
         title: 'Distribution completed',
-        description: `${analysis.successfulDeployments} deployment(s) completed successfully. ${analysis.noChangesDeployments} already up-to-date.`,
+        description: `${successDesc} ${analysis.noChangesPackages} package(s) already up-to-date.`,
       };
     }
     return {
       type: 'success',
       title: 'Distribution completed successfully',
-      description: `All ${analysis.totalDeployments} deployment(s) completed successfully.`,
+      description: formatWithTargets(
+        analysis.successfulPackages,
+        analysis.successfulDeployments,
+        'distributed successfully',
+      ),
     };
   }
 
@@ -109,7 +139,7 @@ export function analyzeDeploymentResults(
     return {
       type: 'error',
       title: 'All distributions failed',
-      description: `All ${analysis.totalDeployments} distribution(s) failed:\n${failedTargetsList}`,
+      description: `${analysis.failedPackages} package(s) failed to distribute:\n${failedTargetsList}`,
     };
   }
 
@@ -118,12 +148,14 @@ export function analyzeDeploymentResults(
     .map((target) => `• ${target.path} in ${target.repositoryInfo}`)
     .join('\n');
 
-  const successCount =
+  const successPackages =
+    analysis.successfulPackages + analysis.noChangesPackages;
+  const successTargets =
     analysis.successfulDeployments + analysis.noChangesDeployments;
   return {
     type: 'warning',
     title: 'Partial deployment completed',
-    description: `${successCount} of ${analysis.totalDeployments} deployment(s) successful${analysis.noChangesDeployments > 0 ? ` (${analysis.noChangesDeployments} already up-to-date)` : ''}. Failed targets:\n${failedTargetsList}`,
+    description: `${successPackages} of ${successPackages + analysis.failedPackages} package(s) successful${successTargets > 1 ? ` to ${successTargets} target(s)` : ''}${analysis.noChangesPackages > 0 ? ` (${analysis.noChangesPackages} already up-to-date)` : ''}. Failed targets:\n${failedTargetsList}`,
   };
 }
 
@@ -144,32 +176,25 @@ function getDeploymentAnalysis(
     (d) => d.status === DistributionStatus.no_changes,
   ).length;
 
-  // Count actual items (standards/recipes) instead of just deployment records
-  const countItems = (d: Distribution): number => {
+  // Count packages deployed
+  const countPackages = (d: Distribution): number => {
     if ('distributedPackages' in d) {
-      // For Distribution, count standard versions and recipe versions across all distributed packages
-      return d.distributedPackages.reduce(
-        (sum: number, dp: Distribution['distributedPackages'][number]) =>
-          sum +
-          (dp.standardVersions?.length || 0) +
-          (dp.recipeVersions?.length || 0),
-        0,
-      );
+      return d.distributedPackages.length;
     }
     return 0;
   };
 
-  const successfulItems = deployments
+  const successfulPackages = deployments
     .filter((d) => d.status === DistributionStatus.success)
-    .reduce((count, d) => count + countItems(d), 0);
+    .reduce((count, d) => count + countPackages(d), 0);
 
-  const failedItems = deployments
+  const failedPackages = deployments
     .filter((d) => d.status === DistributionStatus.failure)
-    .reduce((count, d) => count + countItems(d), 0);
+    .reduce((count, d) => count + countPackages(d), 0);
 
-  const noChangesItems = deployments
+  const noChangesPackages = deployments
     .filter((d) => d.status === DistributionStatus.no_changes)
-    .reduce((count, d) => count + countItems(d), 0);
+    .reduce((count, d) => count + countPackages(d), 0);
 
   const failedTargets = deployments
     .filter((d) => d.status === DistributionStatus.failure)
@@ -206,9 +231,9 @@ function getDeploymentAnalysis(
     successfulDeployments,
     failedDeployments,
     noChangesDeployments,
-    successfulItems,
-    failedItems,
-    noChangesItems,
+    successfulPackages,
+    failedPackages,
+    noChangesPackages,
     failedTargets,
   };
 }
@@ -239,26 +264,46 @@ export function createSeparateDeploymentNotifications(
   const analysis = getDeploymentAnalysis(allDeployments);
   const notifications: DeploymentNotificationResult[] = [];
 
+  // Helper to format description with optional target count
+  const formatDescription = (
+    packageCount: number,
+    targetCount: number,
+    action: string,
+  ): string => {
+    if (targetCount > 1) {
+      return `${packageCount} package(s) ${action} to ${targetCount} target(s).`;
+    }
+    return `${packageCount} package(s) ${action}.`;
+  };
+
   // Success notifications
-  if (analysis.successfulItems > 0) {
+  if (analysis.successfulPackages > 0) {
     notifications.push({
       type: 'success',
       title: 'Distribution completed successfully',
-      description: `${analysis.successfulItems} standard(s)/recipe(s) distributed successfully.`,
+      description: formatDescription(
+        analysis.successfulPackages,
+        analysis.successfulDeployments,
+        'distributed successfully',
+      ),
     });
   }
 
   // No changes notifications
-  if (analysis.noChangesItems > 0) {
+  if (analysis.noChangesPackages > 0) {
     notifications.push({
       type: 'info',
       title: 'Already distributed',
-      description: `${analysis.noChangesItems} standard(s)/recipe(s) already up-to-date - no changes needed.`,
+      description: formatDescription(
+        analysis.noChangesPackages,
+        analysis.noChangesDeployments,
+        'already up-to-date - no changes needed',
+      ),
     });
   }
 
   // Failure notifications
-  if (analysis.failedItems > 0) {
+  if (analysis.failedPackages > 0) {
     const failedTargetsList = analysis.failedTargets
       .map(
         (target) =>
@@ -269,7 +314,7 @@ export function createSeparateDeploymentNotifications(
     notifications.push({
       type: 'error',
       title: 'Deployment failed',
-      description: `${analysis.failedItems} standard(s)/recipe(s) failed to deploy:\n${failedTargetsList}`,
+      description: `${analysis.failedPackages} package(s) failed to deploy:\n${failedTargetsList}`,
     });
   }
 
@@ -316,4 +361,106 @@ export function createDeploymentSummary(
   }
 
   return parts.join(' | ');
+}
+
+/**
+ * Creates notifications for package deployment results
+ * Handles success, no_changes, and failure statuses
+ */
+export function createPackagesDeploymentNotifications(
+  deployments: PackagesDeployment[],
+): DeploymentNotificationResult[] {
+  if (deployments.length === 0) {
+    return [
+      {
+        type: 'error',
+        title: 'No deployments found',
+        description: 'No deployments were created. Please try again.',
+      },
+    ];
+  }
+
+  const successfulDeployments = deployments.filter(
+    (d) => d.status === DistributionStatus.success,
+  );
+  const failedDeployments = deployments.filter(
+    (d) => d.status === DistributionStatus.failure,
+  );
+  const noChangesDeployments = deployments.filter(
+    (d) => d.status === DistributionStatus.no_changes,
+  );
+
+  // Count unique packages across deployments
+  const countPackages = (deps: PackagesDeployment[]): number => {
+    const uniquePackageIds = new Set(
+      deps.flatMap((d) => d.packages.map((p) => p.id)),
+    );
+    return uniquePackageIds.size;
+  };
+
+  const successfulPackages = countPackages(successfulDeployments);
+  const failedPackages = countPackages(failedDeployments);
+  const noChangesPackages = countPackages(noChangesDeployments);
+
+  // Helper to format description with optional target count
+  const formatDescription = (
+    packageCount: number,
+    targetCount: number,
+    action: string,
+  ): string => {
+    if (targetCount > 1) {
+      return `${packageCount} package(s) ${action} to ${targetCount} target(s).`;
+    }
+    return `${packageCount} package(s) ${action}.`;
+  };
+
+  const notifications: DeploymentNotificationResult[] = [];
+
+  // Success notifications
+  if (successfulPackages > 0) {
+    notifications.push({
+      type: 'success',
+      title: 'Distribution completed successfully',
+      description: formatDescription(
+        successfulPackages,
+        successfulDeployments.length,
+        'distributed successfully',
+      ),
+    });
+  }
+
+  // No changes notifications
+  if (noChangesPackages > 0) {
+    notifications.push({
+      type: 'info',
+      title: 'Already distributed',
+      description: formatDescription(
+        noChangesPackages,
+        noChangesDeployments.length,
+        'already up-to-date - no changes needed',
+      ),
+    });
+  }
+
+  // Failure notifications
+  if (failedPackages > 0) {
+    const failedTargetsList = failedDeployments
+      .map((d) => {
+        const target = d.target as TargetWithGitRepo;
+        const gitRepo = target.gitRepo;
+        const repositoryInfo = gitRepo
+          ? `${gitRepo.owner}/${gitRepo.repo}:${gitRepo.branch}`
+          : 'repository';
+        return `• ${d.target.path} in ${repositoryInfo}${d.error ? ` - ${d.error}` : ''}`;
+      })
+      .join('\n');
+
+    notifications.push({
+      type: 'error',
+      title: 'Deployment failed',
+      description: `${failedPackages} package(s) failed to deploy:\n${failedTargetsList}`,
+    });
+  }
+
+  return notifications;
 }

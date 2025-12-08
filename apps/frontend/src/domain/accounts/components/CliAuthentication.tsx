@@ -7,9 +7,6 @@ import {
   PMAlert,
   PMField,
   PMTabs,
-  isFeatureFlagEnabled,
-  CLI_LOGIN_COMMAND_FEATURE_KEY,
-  DEFAULT_FEATURE_DOMAIN_MAP,
 } from '@packmind/ui';
 import {
   useGetCurrentApiKeyQuery,
@@ -68,7 +65,7 @@ export const CliAuthentication: React.FunctionComponent = () => {
   };
 
   const loginCommandTab = (
-    <PMVStack width="full" alignItems="stretch" gap={4}>
+    <PMVStack width="full" alignItems="stretch" gap={4} paddingY={4}>
       <PMText as="p">
         Run this command in your terminal to authenticate with Packmind CLI.
         This will open your browser to complete the login.
@@ -82,7 +79,7 @@ export const CliAuthentication: React.FunctionComponent = () => {
   );
 
   const envVarTab = (
-    <PMVStack width="full" alignItems="stretch" gap={4}>
+    <PMVStack width="full" alignItems="stretch" gap={4} paddingY={4}>
       <PMText as="p">
         Generate an API key to use as an environment variable. It will expire
         after 3 months.
@@ -179,22 +176,12 @@ export const CliAuthentication: React.FunctionComponent = () => {
     </PMVStack>
   );
 
-  const showLoginCommandTab = isFeatureFlagEnabled({
-    featureKeys: [CLI_LOGIN_COMMAND_FEATURE_KEY],
-    featureDomainMap: DEFAULT_FEATURE_DOMAIN_MAP,
-    userEmail: user.email,
-  });
-
   const tabs = [
-    ...(showLoginCommandTab
-      ? [
-          {
-            value: 'login-command',
-            triggerLabel: 'Login Command',
-            content: loginCommandTab,
-          },
-        ]
-      : []),
+    {
+      value: 'login-command',
+      triggerLabel: 'Login Command',
+      content: loginCommandTab,
+    },
     {
       value: 'env-var',
       triggerLabel: 'Environment Variable',
@@ -202,10 +189,5 @@ export const CliAuthentication: React.FunctionComponent = () => {
     },
   ];
 
-  return (
-    <PMTabs
-      defaultValue={showLoginCommandTab ? 'login-command' : 'env-var'}
-      tabs={tabs}
-    />
-  );
+  return <PMTabs defaultValue="login-command" tabs={tabs} />;
 };

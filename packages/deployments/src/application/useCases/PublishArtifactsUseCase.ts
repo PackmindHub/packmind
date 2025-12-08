@@ -323,8 +323,14 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
       const baseFileUpdates = await this.codingAgentPort.renderArtifacts({
         userId,
         organizationId,
-        recipeVersions,
-        standardVersions,
+        installed: {
+          recipeVersions,
+          standardVersions,
+        },
+        removed: {
+          recipeVersions: [],
+          standardVersions: [],
+        },
         codingAgents,
         existingFiles,
       });

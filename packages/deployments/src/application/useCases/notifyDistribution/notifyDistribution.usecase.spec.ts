@@ -125,7 +125,7 @@ describe('NotifyDistributionUseCase', () => {
     mockGitPort = {
       listProviders: jest.fn(),
       addGitProvider: jest.fn(),
-      findGitRepoByOwnerRepoAndBranchInOrganization: jest.fn(),
+      listRepos: jest.fn(),
       addGitRepo: jest.fn(),
     } as unknown as jest.Mocked<IGitPort>;
 
@@ -197,17 +197,15 @@ describe('NotifyDistributionUseCase', () => {
           ],
         });
 
-        mockGitPort.findGitRepoByOwnerRepoAndBranchInOrganization.mockResolvedValue(
+        mockGitPort.listRepos.mockResolvedValue([
           {
-            gitRepo: {
-              id: gitRepoId,
-              owner: 'test-owner',
-              repo: 'test-repo',
-              branch: 'main',
-              providerId: gitProviderId,
-            },
+            id: gitRepoId,
+            owner: 'test-owner',
+            repo: 'test-repo',
+            branch: 'main',
+            providerId: gitProviderId,
           },
-        );
+        ]);
 
         mockTargetRepository.findByGitRepoId.mockResolvedValue([
           existingTarget,
@@ -248,6 +246,10 @@ describe('NotifyDistributionUseCase', () => {
         expect(mockGitPort.addGitRepo).not.toHaveBeenCalled();
       });
 
+      it('searches repos within the provider', () => {
+        expect(mockGitPort.listRepos).toHaveBeenCalledWith(gitProviderId);
+      });
+
       it('does not create a new target', () => {
         expect(mockTargetRepository.add).not.toHaveBeenCalled();
       });
@@ -273,17 +275,15 @@ describe('NotifyDistributionUseCase', () => {
           token: null,
         });
 
-        mockGitPort.findGitRepoByOwnerRepoAndBranchInOrganization.mockResolvedValue(
+        mockGitPort.listRepos.mockResolvedValue([
           {
-            gitRepo: {
-              id: gitRepoId,
-              owner: 'test-owner',
-              repo: 'test-repo',
-              branch: 'main',
-              providerId: gitProviderId,
-            },
+            id: gitRepoId,
+            owner: 'test-owner',
+            repo: 'test-repo',
+            branch: 'main',
+            providerId: gitProviderId,
           },
-        );
+        ]);
 
         mockTargetRepository.findByGitRepoId.mockResolvedValue([
           existingTarget,
@@ -343,11 +343,8 @@ describe('NotifyDistributionUseCase', () => {
           ],
         });
 
-        mockGitPort.findGitRepoByOwnerRepoAndBranchInOrganization.mockResolvedValue(
-          {
-            gitRepo: null,
-          },
-        );
+        // No repos exist for this provider
+        mockGitPort.listRepos.mockResolvedValue([]);
 
         mockGitPort.addGitRepo.mockResolvedValue({
           id: gitRepoId,
@@ -395,6 +392,111 @@ describe('NotifyDistributionUseCase', () => {
       });
     });
 
+    describe('with existing repo belonging to a different provider', () => {
+      const tokenlessProviderId = createGitProviderId('tokenless-provider-id');
+
+      beforeEach(async () => {
+        const existingTarget = buildTarget();
+        const recipeVersion = buildRecipeVersion();
+        const standardVersion = buildStandardVersion();
+        const pkg = buildPackage('my-package');
+
+        const newRepoId = createGitRepoId('new-repo-id');
+
+        // There's an existing provider with a token but no tokenless provider
+        mockGitPort.listProviders.mockResolvedValue({
+          providers: [
+            {
+              id: createGitProviderId('token-provider-id'),
+              source: 'github',
+              organizationId,
+              url: null,
+              hasToken: true,
+            },
+          ],
+        });
+
+        // Create tokenless provider since none exists
+        mockGitPort.addGitProvider.mockResolvedValue({
+          id: tokenlessProviderId,
+          source: 'github',
+          organizationId,
+          url: null,
+          token: null,
+        });
+
+        // The newly created tokenless provider has no repos yet
+        // (Note: the token provider may have the same repo, but listRepos
+        // only returns repos for the specified provider - the tokenless one)
+        mockGitPort.listRepos.mockResolvedValue([]);
+
+        // New repo will be created for the tokenless provider
+        mockGitPort.addGitRepo.mockResolvedValue({
+          id: newRepoId,
+          owner: 'my-company',
+          repo: 'my-repo',
+          branch: 'main',
+          providerId: tokenlessProviderId,
+        });
+
+        mockTargetRepository.findByGitRepoId.mockResolvedValue([
+          existingTarget,
+        ]);
+        mockTargetRepository.add.mockResolvedValue(existingTarget);
+        mockPackageRepository.findByOrganizationId.mockResolvedValue([pkg]);
+        mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
+          standardVersion,
+        );
+        mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+        mockDistributionRepository.add.mockImplementation((d) =>
+          Promise.resolve(d),
+        );
+        mockDistributedPackageRepository.add.mockImplementation((d) =>
+          Promise.resolve(d),
+        );
+
+        const command: NotifyDistributionCommand = {
+          userId,
+          organizationId,
+          distributedPackages: ['my-package'],
+          gitRemoteUrl: 'https://github.com/my-company/my-repo.git',
+          gitBranch: 'main',
+          relativePath: '/',
+        };
+
+        await useCase.execute(command);
+      });
+
+      it('creates a new tokenless provider since existing one has a token', () => {
+        expect(mockGitPort.addGitProvider).toHaveBeenCalledWith({
+          userId,
+          organizationId,
+          gitProvider: {
+            source: 'github',
+            url: 'https://github.com',
+            token: null,
+          },
+          allowTokenlessProvider: true,
+        });
+      });
+
+      it('searches repos within the tokenless provider', () => {
+        expect(mockGitPort.listRepos).toHaveBeenCalledWith(tokenlessProviderId);
+      });
+
+      it('creates a new repo for the tokenless provider', () => {
+        expect(mockGitPort.addGitRepo).toHaveBeenCalledWith({
+          userId,
+          organizationId,
+          gitProviderId: tokenlessProviderId,
+          owner: 'my-company',
+          repo: 'my-repo',
+          branch: 'main',
+          allowTokenlessProvider: true,
+        });
+      });
+    });
+
     describe('with relative path that does not have existing target', () => {
       it('creates new target with slugified name', async () => {
         const recipeVersion = buildRecipeVersion();
@@ -419,17 +521,15 @@ describe('NotifyDistributionUseCase', () => {
           ],
         });
 
-        mockGitPort.findGitRepoByOwnerRepoAndBranchInOrganization.mockResolvedValue(
+        mockGitPort.listRepos.mockResolvedValue([
           {
-            gitRepo: {
-              id: gitRepoId,
-              owner: 'test-owner',
-              repo: 'test-repo',
-              branch: 'main',
-              providerId: gitProviderId,
-            },
+            id: gitRepoId,
+            owner: 'test-owner',
+            repo: 'test-repo',
+            branch: 'main',
+            providerId: gitProviderId,
           },
-        );
+        ]);
 
         mockTargetRepository.findByGitRepoId.mockResolvedValue([]);
         mockTargetRepository.add.mockResolvedValue(newTarget);
@@ -484,17 +584,15 @@ describe('NotifyDistributionUseCase', () => {
           ],
         });
 
-        mockGitPort.findGitRepoByOwnerRepoAndBranchInOrganization.mockResolvedValue(
+        mockGitPort.listRepos.mockResolvedValue([
           {
-            gitRepo: {
-              id: gitRepoId,
-              owner: 'test-owner',
-              repo: 'test-repo',
-              branch: 'main',
-              providerId: gitProviderId,
-            },
+            id: gitRepoId,
+            owner: 'test-owner',
+            repo: 'test-repo',
+            branch: 'main',
+            providerId: gitProviderId,
           },
-        );
+        ]);
 
         mockTargetRepository.findByGitRepoId.mockResolvedValue([
           existingTarget,
@@ -567,17 +665,15 @@ describe('NotifyDistributionUseCase', () => {
           ],
         });
 
-        mockGitPort.findGitRepoByOwnerRepoAndBranchInOrganization.mockResolvedValue(
+        mockGitPort.listRepos.mockResolvedValue([
           {
-            gitRepo: {
-              id: gitRepoId,
-              owner: 'test-owner',
-              repo: 'test-repo',
-              branch: 'main',
-              providerId: gitProviderId,
-            },
+            id: gitRepoId,
+            owner: 'test-owner',
+            repo: 'test-repo',
+            branch: 'main',
+            providerId: gitProviderId,
           },
-        );
+        ]);
 
         mockTargetRepository.findByGitRepoId.mockResolvedValue([
           existingTarget,
@@ -635,17 +731,15 @@ describe('NotifyDistributionUseCase', () => {
           token: null,
         });
 
-        mockGitPort.findGitRepoByOwnerRepoAndBranchInOrganization.mockResolvedValue(
+        mockGitPort.listRepos.mockResolvedValue([
           {
-            gitRepo: {
-              id: gitRepoId,
-              owner: 'test-owner',
-              repo: 'test-repo',
-              branch: 'main',
-              providerId: gitProviderId,
-            },
+            id: gitRepoId,
+            owner: 'test-owner',
+            repo: 'test-repo',
+            branch: 'main',
+            providerId: gitProviderId,
           },
-        );
+        ]);
 
         mockTargetRepository.findByGitRepoId.mockResolvedValue([
           existingTarget,
@@ -705,11 +799,8 @@ describe('NotifyDistributionUseCase', () => {
           ],
         });
 
-        mockGitPort.findGitRepoByOwnerRepoAndBranchInOrganization.mockResolvedValue(
-          {
-            gitRepo: null,
-          },
-        );
+        // No repos exist for this provider
+        mockGitPort.listRepos.mockResolvedValue([]);
 
         mockGitPort.addGitRepo.mockResolvedValue({
           id: gitRepoId,
@@ -773,11 +864,8 @@ describe('NotifyDistributionUseCase', () => {
           ],
         });
 
-        mockGitPort.findGitRepoByOwnerRepoAndBranchInOrganization.mockResolvedValue(
-          {
-            gitRepo: null,
-          },
-        );
+        // No repos exist for this provider
+        mockGitPort.listRepos.mockResolvedValue([]);
 
         mockGitPort.addGitRepo.mockResolvedValue({
           id: gitRepoId,
@@ -841,11 +929,8 @@ describe('NotifyDistributionUseCase', () => {
           ],
         });
 
-        mockGitPort.findGitRepoByOwnerRepoAndBranchInOrganization.mockResolvedValue(
-          {
-            gitRepo: null,
-          },
-        );
+        // No repos exist for this provider
+        mockGitPort.listRepos.mockResolvedValue([]);
 
         mockGitPort.addGitRepo.mockResolvedValue({
           id: gitRepoId,
@@ -913,17 +998,15 @@ describe('NotifyDistributionUseCase', () => {
           ],
         });
 
-        mockGitPort.findGitRepoByOwnerRepoAndBranchInOrganization.mockResolvedValue(
+        mockGitPort.listRepos.mockResolvedValue([
           {
-            gitRepo: {
-              id: gitRepoId,
-              owner: 'test-owner',
-              repo: 'test-repo',
-              branch: 'main',
-              providerId: gitProviderId,
-            },
+            id: gitRepoId,
+            owner: 'test-owner',
+            repo: 'test-repo',
+            branch: 'main',
+            providerId: gitProviderId,
           },
-        );
+        ]);
 
         mockTargetRepository.findByGitRepoId.mockResolvedValue([
           existingTarget,
@@ -977,17 +1060,15 @@ describe('NotifyDistributionUseCase', () => {
           ],
         });
 
-        mockGitPort.findGitRepoByOwnerRepoAndBranchInOrganization.mockResolvedValue(
+        mockGitPort.listRepos.mockResolvedValue([
           {
-            gitRepo: {
-              id: gitRepoId,
-              owner: 'test-owner',
-              repo: 'test-repo',
-              branch: 'main',
-              providerId: gitProviderId,
-            },
+            id: gitRepoId,
+            owner: 'test-owner',
+            repo: 'test-repo',
+            branch: 'main',
+            providerId: gitProviderId,
           },
-        );
+        ]);
 
         mockTargetRepository.findByGitRepoId.mockResolvedValue([
           existingTarget,
