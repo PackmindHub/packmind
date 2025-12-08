@@ -346,6 +346,7 @@ export class DeploymentsAdapter
       this.deploymentsServices.getRepositories().getTargetRepository(),
       this.distributionRepository,
       this.distributedPackageRepository,
+      this.deploymentsServices.getRenderModeConfigurationService(),
     );
   }
 

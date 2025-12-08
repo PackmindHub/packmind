@@ -11,6 +11,7 @@ import {
   createStandardId,
   createRecipeVersionId,
   createStandardVersionId,
+  DEFAULT_ACTIVE_RENDER_MODES,
   IAccountsPort,
   IGitPort,
   IRecipesPort,
@@ -28,6 +29,7 @@ import { IPackageRepository } from '../../../domain/repositories/IPackageReposit
 import { ITargetRepository } from '../../../domain/repositories/ITargetRepository';
 import { IDistributionRepository } from '../../../domain/repositories/IDistributionRepository';
 import { IDistributedPackageRepository } from '../../../domain/repositories/IDistributedPackageRepository';
+import { RenderModeConfigurationService } from '../../services/RenderModeConfigurationService';
 import { v4 as uuidv4 } from 'uuid';
 
 describe('NotifyDistributionUseCase', () => {
@@ -40,6 +42,7 @@ describe('NotifyDistributionUseCase', () => {
   let mockTargetRepository: jest.Mocked<ITargetRepository>;
   let mockDistributionRepository: jest.Mocked<IDistributionRepository>;
   let mockDistributedPackageRepository: jest.Mocked<IDistributedPackageRepository>;
+  let mockRenderModeConfigurationService: jest.Mocked<RenderModeConfigurationService>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   const userId = createUserId(uuidv4());
@@ -157,6 +160,12 @@ describe('NotifyDistributionUseCase', () => {
       addRecipeVersions: jest.fn(),
     } as unknown as jest.Mocked<IDistributedPackageRepository>;
 
+    mockRenderModeConfigurationService = {
+      getActiveRenderModes: jest
+        .fn()
+        .mockResolvedValue(DEFAULT_ACTIVE_RENDER_MODES),
+    } as unknown as jest.Mocked<RenderModeConfigurationService>;
+
     stubbedLogger = stubLogger();
 
     useCase = new NotifyDistributionUseCase(
@@ -168,6 +177,7 @@ describe('NotifyDistributionUseCase', () => {
       mockTargetRepository,
       mockDistributionRepository,
       mockDistributedPackageRepository,
+      mockRenderModeConfigurationService,
       stubbedLogger,
     );
   });
@@ -257,6 +267,14 @@ describe('NotifyDistributionUseCase', () => {
 
       it('saves the distribution', () => {
         expect(mockDistributionRepository.add).toHaveBeenCalled();
+      });
+
+      it('stores the organization render modes in the distribution', () => {
+        expect(mockDistributionRepository.add).toHaveBeenCalledWith(
+          expect.objectContaining({
+            renderModes: DEFAULT_ACTIVE_RENDER_MODES,
+          }),
+        );
       });
     });
 
@@ -664,6 +682,111 @@ describe('NotifyDistributionUseCase', () => {
         expect(mockGitPort.listAvailableRepos).toHaveBeenCalledWith(
           tokenProviderId,
         );
+      });
+    });
+
+    describe('with token provider where listAvailableRepos fails', () => {
+      const tokenProviderId = createGitProviderId('token-provider-id');
+      const tokenlessProviderId = createGitProviderId('tokenless-provider-id');
+      const newRepoId = createGitRepoId('new-repo-id');
+
+      beforeEach(async () => {
+        const existingTarget = buildTarget();
+        const recipeVersion = buildRecipeVersion();
+        const standardVersion = buildStandardVersion();
+        const pkg = buildPackage('my-package');
+
+        // Token provider exists
+        mockGitPort.listProviders.mockResolvedValue({
+          providers: [
+            {
+              id: tokenProviderId,
+              source: 'github',
+              organizationId,
+              url: null,
+              hasToken: true,
+            },
+          ],
+        });
+
+        // No repos registered yet for token provider
+        mockGitPort.listRepos
+          .mockResolvedValueOnce([]) // Token provider: no repos
+          .mockResolvedValueOnce([]); // Tokenless provider: no repos
+
+        // listAvailableRepos fails (e.g., expired token)
+        mockGitPort.listAvailableRepos.mockRejectedValue(
+          new Error('Bad credentials'),
+        );
+
+        // Create tokenless provider
+        mockGitPort.addGitProvider.mockResolvedValue({
+          id: tokenlessProviderId,
+          source: 'github',
+          organizationId,
+          url: null,
+          token: null,
+        });
+
+        // Create repo under tokenless provider
+        mockGitPort.addGitRepo.mockResolvedValue({
+          id: newRepoId,
+          owner: 'my-company',
+          repo: 'my-repo',
+          branch: 'main',
+          providerId: tokenlessProviderId,
+        });
+
+        mockTargetRepository.findByGitRepoId.mockResolvedValue([
+          existingTarget,
+        ]);
+        mockPackageRepository.findByOrganizationId.mockResolvedValue([pkg]);
+        mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
+          standardVersion,
+        );
+        mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+        mockDistributionRepository.add.mockImplementation((d) =>
+          Promise.resolve(d),
+        );
+        mockDistributedPackageRepository.add.mockImplementation((d) =>
+          Promise.resolve(d),
+        );
+
+        const command: NotifyDistributionCommand = {
+          userId,
+          organizationId,
+          distributedPackages: ['my-package'],
+          gitRemoteUrl: 'https://github.com/my-company/my-repo.git',
+          gitBranch: 'main',
+          relativePath: '/',
+        };
+
+        await useCase.execute(command);
+      });
+
+      it('falls back to tokenless provider', () => {
+        expect(mockGitPort.addGitProvider).toHaveBeenCalledWith({
+          userId,
+          organizationId,
+          gitProvider: {
+            source: 'github',
+            url: 'https://github.com',
+            token: null,
+          },
+          allowTokenlessProvider: true,
+        });
+      });
+
+      it('creates the repo under tokenless provider', () => {
+        expect(mockGitPort.addGitRepo).toHaveBeenCalledWith({
+          userId,
+          organizationId,
+          gitProviderId: tokenlessProviderId,
+          owner: 'my-company',
+          repo: 'my-repo',
+          branch: 'main',
+          allowTokenlessProvider: true,
+        });
       });
     });
 
