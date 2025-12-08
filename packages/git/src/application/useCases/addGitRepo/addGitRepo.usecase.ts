@@ -129,6 +129,7 @@ export class AddGitRepoUseCase
       name: 'Default',
       path: '/',
       gitRepoId: createdRepo.id,
+      allowTokenlessProvider,
     });
 
     return createdRepo;

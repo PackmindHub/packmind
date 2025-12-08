@@ -17,7 +17,6 @@ import {
   IRecipesPort,
   IStandardsPort,
   NotifyDistributionCommand,
-  UnsupportedGitProviderError,
   Package,
   Target,
   RecipeVersion,
@@ -1030,8 +1029,39 @@ describe('NotifyDistributionUseCase', () => {
       });
     });
 
-    describe('with unsupported git provider URL', () => {
-      it('throws UnsupportedGitProviderError for Bitbucket', async () => {
+    describe('with unknown git provider URL (e.g. Bitbucket)', () => {
+      let result: { deploymentId: string };
+
+      beforeEach(async () => {
+        mockGitPort.listProviders.mockResolvedValue({
+          providers: [],
+        });
+        mockGitPort.addGitProvider.mockResolvedValue({
+          id: gitProviderId,
+          source: 'unknown',
+          organizationId,
+          url: 'https://bitbucket.org',
+          token: null,
+        });
+        mockGitPort.listRepos.mockResolvedValue([]);
+        mockGitPort.addGitRepo.mockResolvedValue({
+          id: gitRepoId,
+          owner: 'test-owner',
+          repo: 'test-repo',
+          branch: 'main',
+          gitProviderId,
+        });
+        mockTargetRepository.findByGitRepoId.mockResolvedValue([]);
+        mockTargetRepository.add.mockResolvedValue({
+          id: targetId,
+          name: 'Default',
+          path: '/',
+          gitRepoId,
+        });
+        mockPackageRepository.findByOrganizationId.mockResolvedValue([
+          buildPackage(),
+        ]);
+
         const command: NotifyDistributionCommand = {
           userId,
           organizationId,
@@ -1041,9 +1071,40 @@ describe('NotifyDistributionUseCase', () => {
           relativePath: '/',
         };
 
-        await expect(useCase.execute(command)).rejects.toThrow(
-          UnsupportedGitProviderError,
-        );
+        result = await useCase.execute(command);
+      });
+
+      it('returns a deployment id', () => {
+        expect(result.deploymentId).toBeDefined();
+      });
+
+      it('creates unknown provider with base URL extracted from git remote', () => {
+        expect(mockGitPort.addGitProvider).toHaveBeenCalledWith({
+          userId,
+          organizationId,
+          gitProvider: {
+            source: 'unknown',
+            url: 'https://bitbucket.org',
+            token: null,
+          },
+          allowTokenlessProvider: true,
+        });
+      });
+
+      it('creates git repo under the unknown provider', () => {
+        expect(mockGitPort.addGitRepo).toHaveBeenCalledWith({
+          userId,
+          organizationId,
+          gitProviderId,
+          owner: 'test-owner',
+          repo: 'test-repo',
+          branch: 'main',
+          allowTokenlessProvider: true,
+        });
+      });
+
+      it('does not check available repos for unknown provider', () => {
+        expect(mockGitPort.listAvailableRepos).not.toHaveBeenCalled();
       });
     });
 
