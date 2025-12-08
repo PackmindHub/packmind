@@ -16,13 +16,15 @@ import {
 import {
   DetectionStatus,
   RuleDetectionAssessmentStatus,
+  RuleExample,
 } from '@packmind/types';
-import { LuSendHorizontal } from 'react-icons/lu';
+import { LuSendHorizontal, LuPlay } from 'react-icons/lu';
 import {
   useGetActiveDetectionProgramsQuery,
   useGetDetectionHeuristicsQuery,
   useGetRuleDetectionAssessmentQuery,
   useUpdateDetectionHeuristicsMutation,
+  useStartRuleDetectionAssessmentMutation,
 } from '../../api/queries/DetectionProgramQueries';
 import { HeuristicsEditor } from '../HeuristicsEditor';
 import { formatDuration } from '../../../../shared/utils/dateUtils';
@@ -31,6 +33,7 @@ interface DetectabilitySectionProps {
   standardId: string;
   ruleId: string;
   language: string;
+  ruleExamples?: RuleExample[];
 }
 
 const OTHER_ANSWER_VALUE = '__OTHER__';
@@ -62,6 +65,7 @@ export const DetectabilitySection: React.FC<DetectabilitySectionProps> = ({
   standardId,
   ruleId,
   language,
+  ruleExamples = [],
 }) => {
   const [heuristicsText, setHeuristicsText] = useState('');
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -81,6 +85,32 @@ export const DetectabilitySection: React.FC<DetectabilitySectionProps> = ({
     ruleId,
     language,
   );
+
+  const startAssessment = useStartRuleDetectionAssessmentMutation();
+
+  // Check if at least one negative example exists for the current language
+  const hasNegativeExampleForLanguage = useMemo(() => {
+    return ruleExamples.some(
+      (example) =>
+        example.lang === language &&
+        example.negative &&
+        example.negative.trim() !== '',
+    );
+  }, [ruleExamples, language]);
+
+  // Show trigger button when no assessment exists or status is NOT_STARTED
+  const shouldShowTriggerButton =
+    (!assessment ||
+      assessment.status === RuleDetectionAssessmentStatus.NOT_STARTED) &&
+    hasNegativeExampleForLanguage;
+
+  const handleTriggerAssessment = useCallback(() => {
+    startAssessment.mutate({
+      standardId,
+      ruleId,
+      language,
+    });
+  }, [startAssessment, standardId, ruleId, language]);
 
   const { data: detectionHeuristics, isLoading: isLoadingHeuristics } =
     useGetDetectionHeuristicsQuery(standardId, ruleId, language);
@@ -259,7 +289,33 @@ export const DetectabilitySection: React.FC<DetectabilitySectionProps> = ({
     assessment,
   ]);
 
-  if (!assessment || !language) {
+  if (!language) {
+    return null;
+  }
+
+  // Show trigger button when assessment doesn't exist or is NOT_STARTED
+  if (shouldShowTriggerButton) {
+    return (
+      <PMVStack width="full" gap={4} p={4} alignItems="center">
+        <PMText color="tertiary" textAlign="center">
+          No detectability assessment has been run for this rule yet.
+        </PMText>
+        <PMButton
+          variant="primary"
+          onClick={handleTriggerAssessment}
+          loading={startAssessment.isPending}
+          disabled={startAssessment.isPending}
+        >
+          <PMIcon size="sm" mr={2}>
+            <LuPlay />
+          </PMIcon>
+          Trigger manually
+        </PMButton>
+      </PMVStack>
+    );
+  }
+
+  if (!assessment) {
     return null;
   }
 

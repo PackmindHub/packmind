@@ -63,9 +63,16 @@ export class RuleDetectionAssessmentService extends AIRequestEmitter {
             ? response.data
             : JSON.stringify(response.data);
 
-        const assessment: AssessmentDetectionReadiness = JSON.parse(
-          parseCodeOrJsonFromAIAnswer(responseData),
-        );
+        // Try direct JSON parsing first (for JSON_MODE responses)
+        // This avoids parseCodeOrJsonFromAIAnswer incorrectly extracting inline code
+        // snippets from within JSON string values (e.g., code examples in reason text)
+        let assessment: AssessmentDetectionReadiness;
+        try {
+          assessment = JSON.parse(responseData);
+        } catch {
+          // Fallback to parseCodeOrJsonFromAIAnswer for non-JSON responses
+          assessment = JSON.parse(parseCodeOrJsonFromAIAnswer(responseData));
+        }
 
         this._logger.info(
           `Assessment result: ${JSON.stringify(assessment, null, 2)}`,

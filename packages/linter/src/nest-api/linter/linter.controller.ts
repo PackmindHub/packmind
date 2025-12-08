@@ -929,6 +929,85 @@ export class LinterController {
     }
   }
 
+  @Post('standards/:standardId/rules/:ruleId/detection-assessment')
+  async startRuleDetectionAssessment(
+    @Param('standardId') standardId: StandardId,
+    @Param('ruleId') ruleId: RuleId,
+    @Body() body: { language: string },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<RuleDetectionAssessment> {
+    this.logger.info(
+      'POST /standards/:standardId/rules/:ruleId/detection-assessment - Starting rule detection assessment',
+      {
+        standardId,
+        ruleId,
+        language: body.language,
+        userId: request.user?.userId,
+        organizationId: request.organization?.id,
+      },
+    );
+
+    try {
+      const organizationId = request.organization?.id;
+      const userId = request.user?.userId;
+
+      if (!organizationId || !userId) {
+        throw new BadRequestException('User authentication required');
+      }
+
+      // Validate language parameter
+      if (!body.language || body.language.trim() === '') {
+        throw new BadRequestException('language is required in request body');
+      }
+
+      const programmingLanguage = stringToProgrammingLanguage(body.language);
+      if (!programmingLanguage) {
+        throw new BadRequestException(
+          `Invalid language: ${body.language}. Must be a valid programming language.`,
+        );
+      }
+
+      const assessment = await this.linterService.startRuleDetectionAssessment({
+        ruleId,
+        language: programmingLanguage as ProgrammingLanguage,
+        userId,
+        organizationId,
+      });
+
+      this.logger.info(
+        'POST /standards/:standardId/rules/:ruleId/detection-assessment - Assessment started successfully',
+        {
+          standardId,
+          ruleId,
+          language: body.language,
+          assessmentId: assessment.id,
+        },
+      );
+
+      return assessment;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'POST /standards/:standardId/rules/:ruleId/detection-assessment - Failed to start assessment',
+        {
+          standardId,
+          ruleId,
+          language: body.language,
+          error: errorMessage,
+        },
+      );
+
+      if (
+        error instanceof BadRequestException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
+      throw new BadRequestException(errorMessage);
+    }
+  }
+
   @Get('standards/:standardId/rules/:ruleId/detection-status')
   async getRuleLanguageDetectionStatus(
     @Param('standardId') standardId: StandardId,

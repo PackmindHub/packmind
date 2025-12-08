@@ -12,7 +12,7 @@ import {
   DEFAULT_FEATURE_DOMAIN_MAP,
   isFeatureFlagEnabled,
 } from '@packmind/ui';
-import { LanguageDetectionPrograms } from '@packmind/types';
+import { LanguageDetectionPrograms, RuleExample } from '@packmind/types';
 import {
   DetectionProgramId,
   DetectionStatus,
@@ -45,6 +45,7 @@ interface ProgramEditorProps {
   detectionLanguages?: string[];
   selectedLanguage: string;
   onNavigateToExamples?: () => void;
+  ruleExamples?: RuleExample[];
 }
 
 export function computeActiveConfigurationState(
@@ -129,6 +130,7 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
   detectionLanguages = [],
   selectedLanguage,
   onNavigateToExamples,
+  ruleExamples = [],
 }) => {
   const queryClient = useQueryClient();
   const { data: meData } = useGetMeQuery();
@@ -459,6 +461,7 @@ const ProgramEditor: React.FC<ProgramEditorProps> = ({
         isActivatingDraft={activateDraft.isPending}
         onRetryDraft={handleRetryDraftGeneration}
         onNavigateToExamples={onNavigateToExamples}
+        ruleExamples={ruleExamples}
       />
 
       <PMDialog.Root

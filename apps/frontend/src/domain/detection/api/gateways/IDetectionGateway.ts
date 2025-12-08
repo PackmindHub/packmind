@@ -95,4 +95,10 @@ export interface IDetectionGateway {
       answer: string;
     },
   ): Promise<DetectionHeuristics>;
+
+  startRuleDetectionAssessment(
+    standardId: string,
+    ruleId: string,
+    language: string,
+  ): Promise<RuleDetectionAssessment>;
 }

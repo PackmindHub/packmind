@@ -52,6 +52,7 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
   private readonly detectionProgramService: DetectionProgramService;
   private readonly adapter: LinterAdapter;
   private linterAstAdapter: ILinterAstPort | null = null;
+  private standardsPort: IStandardsPort | null = null;
 
   constructor(dataSource: DataSource, opts?: Partial<LinterHexaOpts>) {
     super(dataSource, { ...baseLinterHexaOpts, ...opts });
@@ -134,8 +135,9 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
       const gitPort = registry.getAdapter<IGitPort>(IGitPortName);
       this.logger.debug('Retrieved GitAdapter from registry');
 
-      const standardsPort =
+      this.standardsPort =
         registry.getAdapter<IStandardsPort>(IStandardsPortName);
+      const standardsPort = this.standardsPort;
       this.logger.debug('Retrieved StandardsAdapter from registry');
 
       const accountsPort =
@@ -176,19 +178,9 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
         });
       }
 
-      // Get optional llm port
-      let llmPort: ILlmPort | null = null;
-      try {
-        llmPort = registry.getAdapter<ILlmPort>(ILlmPortName);
-        this.logger.debug('Retrieved LlmAdapter from registry');
-      } catch (error) {
-        this.logger.warn(
-          'LlmHexa not available in registry - AI features will be disabled',
-          {
-            error: error instanceof Error ? error.message : String(error),
-          },
-        );
-      }
+      // Get llm port (required for AI features)
+      const llmPort = registry.getAdapter<ILlmPort>(ILlmPortName);
+      this.logger.debug('Retrieved LlmAdapter from registry');
 
       // Get JobsHexa (required) for delayed job registration
       const jobsService = registry.getService(JobsService);
@@ -202,7 +194,7 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
         jobsService,
         () => standardsPort,
         () => this.getAdapter(),
-        llmPort,
+        () => llmPort,
       );
 
       // Initialize adapter once with all ports and delayed jobs
@@ -238,7 +230,7 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
     jobsService: JobsService,
     getStandardsAdapter: () => IStandardsPort,
     getLinterAdapter: () => ILinterPort,
-    llmPort: ILlmPort | null,
+    getLlmPort: () => ILlmPort,
   ): Promise<ILinterDelayedJobs> {
     // Register generate program job queue with JobsService
     const generateProgramJobFactory = new GenerateProgramJobFactory(
@@ -247,7 +239,7 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
       getStandardsAdapter,
       () => this.linterAstAdapter,
       getLinterAdapter,
-      llmPort,
+      getLlmPort,
     );
 
     jobsService.registerJobQueue(
@@ -266,7 +258,7 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
       this.linterRepositories,
       getStandardsAdapter,
       getLinterAdapter,
-      llmPort,
+      getLlmPort,
     );
 
     jobsService.registerJobQueue(
@@ -325,5 +317,18 @@ export class LinterHexa extends BaseHexa<LinterHexaOpts, ILinterPort> {
    */
   public getPortName(): string {
     return ILinterPortName;
+  }
+
+  /**
+   * Get the Standards port for accessing rule data.
+   * This is used by the service layer to fetch rules when starting assessments.
+   */
+  public getStandardsPort(): IStandardsPort {
+    if (!this.standardsPort) {
+      throw new Error(
+        'StandardsPort not initialized. Call initialize() first.',
+      );
+    }
+    return this.standardsPort;
   }
 }

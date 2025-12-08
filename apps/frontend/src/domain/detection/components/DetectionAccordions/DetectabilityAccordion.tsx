@@ -2,7 +2,7 @@ import { DetectionAccordion } from './DetectionAccordion';
 import { DetectabilitySection } from './DetectabilitySection';
 import React, { useMemo } from 'react';
 import { useGetRuleDetectionAssessmentQuery } from '../../api/queries';
-import { RuleDetectionAssessmentStatus } from '@packmind/types';
+import { RuleDetectionAssessmentStatus, RuleExample } from '@packmind/types';
 import { PMBadge } from '@packmind/ui';
 
 export enum DetectionAccordionStatus {
@@ -50,6 +50,7 @@ type DetectabilityAccordionProps = {
   standardId: string;
   ruleId: string;
   language: string;
+  ruleExamples?: RuleExample[];
 };
 
 const DetectabilityBadge: React.FunctionComponent<{
@@ -67,7 +68,7 @@ const DetectabilityBadge: React.FunctionComponent<{
 
 export const DetectabilityAccordion: React.FunctionComponent<
   DetectabilityAccordionProps
-> = ({ isOpen, onOpenChange, standardId, ruleId, language }) => {
+> = ({ isOpen, onOpenChange, standardId, ruleId, language, ruleExamples }) => {
   const { data: assessment } = useGetRuleDetectionAssessmentQuery(
     standardId,
     ruleId,
@@ -91,6 +92,7 @@ export const DetectabilityAccordion: React.FunctionComponent<
         standardId={standardId}
         ruleId={ruleId}
         language={language}
+        ruleExamples={ruleExamples}
       />
     </DetectionAccordion>
   );

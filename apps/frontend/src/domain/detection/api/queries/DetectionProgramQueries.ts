@@ -17,6 +17,8 @@ export const ACTIVATE_DETECTION_PROGRAM_MUTATION_KEY =
 export const TEST_PROGRAM_EXECUTION_MUTATION_KEY = 'testProgramExecution';
 export const UPDATE_DETECTION_HEURISTICS_MUTATION_KEY =
   'updateDetectionHeuristics';
+export const START_RULE_DETECTION_ASSESSMENT_MUTATION_KEY =
+  'startRuleDetectionAssessment';
 
 export const useSaveDetectionProgramMutation = () => {
   const queryClient = useQueryClient();
@@ -360,6 +362,38 @@ export const useUpdateDetectionHeuristicsMutation = () => {
           ...GET_DETECTION_HEURISTICS_KEY,
           variables.standardId,
           variables.ruleId,
+        ],
+      });
+    },
+  });
+};
+
+export const useStartRuleDetectionAssessmentMutation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: [START_RULE_DETECTION_ASSESSMENT_MUTATION_KEY],
+    mutationFn: async ({
+      standardId,
+      ruleId,
+      language,
+    }: {
+      standardId: string;
+      ruleId: string;
+      language: string;
+    }) => {
+      return detectionGateway.startRuleDetectionAssessment(
+        standardId,
+        ruleId,
+        language,
+      );
+    },
+    onSuccess: async (_, variables) => {
+      await queryClient.invalidateQueries({
+        queryKey: [
+          ...GET_RULE_DETECTION_ASSESSMENT_KEY,
+          variables.standardId,
+          variables.ruleId,
+          variables.language,
         ],
       });
     },

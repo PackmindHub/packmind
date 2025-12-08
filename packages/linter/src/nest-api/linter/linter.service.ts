@@ -38,6 +38,11 @@ import {
   CreateDetectionHeuristicsResponse,
   GetDetectionProgramsForPackagesCommand,
   GetDetectionProgramsForPackagesResponse,
+  RuleDetectionAssessment,
+  OrganizationId,
+  UserId,
+  RuleId,
+  ProgrammingLanguage,
 } from '@packmind/types';
 
 @Injectable()
@@ -156,5 +161,26 @@ export class LinterService {
     command: GetDetectionProgramsForPackagesCommand,
   ): Promise<GetDetectionProgramsForPackagesResponse> {
     return this.linterAdapter.getDetectionProgramsForPackages(command);
+  }
+
+  async startRuleDetectionAssessment(command: {
+    ruleId: RuleId;
+    language: ProgrammingLanguage;
+    userId: UserId;
+    organizationId: OrganizationId;
+  }): Promise<RuleDetectionAssessment> {
+    const rule = await this.linterHexa
+      .getStandardsPort()
+      .getRule(command.ruleId);
+    if (!rule) {
+      throw new Error(`Rule not found: ${command.ruleId}`);
+    }
+
+    return this.linterAdapter.startRuleDetectionAssessment({
+      rule,
+      language: command.language,
+      userId: command.userId,
+      organizationId: command.organizationId,
+    });
   }
 }

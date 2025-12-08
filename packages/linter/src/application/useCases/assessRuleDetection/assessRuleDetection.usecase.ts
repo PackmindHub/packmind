@@ -51,6 +51,34 @@ export class AssessRuleDetectionUseCase implements IAssessRuleDetectionJob {
         command.jobId,
       );
 
+      // Check if there is at least one negative example
+      const hasNegativeExample = this.hasNonEmptyNegativeExample(
+        filteredExamples,
+        command.jobId,
+      );
+
+      if (!hasNegativeExample) {
+        this.logger.info(
+          'No negative examples found for language, skipping assessment',
+          {
+            jobId: command.jobId,
+            ruleId: command.rule.id,
+            language: command.language,
+          },
+        );
+
+        // Save assessment as FAILED with appropriate message
+        const assessment =
+          await this.saveFailedAssessmentNoNegativeExamples(command);
+
+        return {
+          assessmentId: command.assessmentId,
+          status: assessment.status,
+          feasible: false,
+          details: assessment.details,
+        };
+      }
+
       const detectionProgramRuleInput = this.buildDetectionProgramRuleInput(
         command,
         filteredExamples,
@@ -110,6 +138,55 @@ export class AssessRuleDetectionUseCase implements IAssessRuleDetectionJob {
     });
 
     return filteredExamples;
+  }
+
+  private hasNonEmptyNegativeExample(
+    examples: RuleExample[],
+    jobId: string,
+  ): boolean {
+    const hasNegative = examples.some(
+      (example) => example.negative && example.negative.trim() !== '',
+    );
+
+    this.logger.info('Checked for negative examples', {
+      jobId,
+      examplesCount: examples.length,
+      hasNegativeExample: hasNegative,
+    });
+
+    return hasNegative;
+  }
+
+  private async saveFailedAssessmentNoNegativeExamples(
+    command: AssessRuleDetectionJobCommand,
+  ): Promise<RuleDetectionAssessment> {
+    const assessment: RuleDetectionAssessment = {
+      id: command.assessmentId,
+      ruleId: command.rule.id,
+      language: command.language,
+      detectionMode: DetectionModeEnum.SINGLE_AST,
+      status: RuleDetectionAssessmentStatus.FAILED,
+      details:
+        '- No negative code examples found for this language. Add at least one "Don\'t" example to enable detection assessment.',
+      clarificationQuestion: null,
+      clarificationAnswers: null,
+    };
+
+    await this.linterRepositories
+      .getRuleDetectionAssessmentRepository()
+      .add(assessment);
+
+    this.logger.info(
+      'Assessment saved as FAILED due to missing negative examples',
+      {
+        jobId: command.jobId,
+        assessmentId: assessment.id,
+        ruleId: command.rule.id,
+        language: command.language,
+      },
+    );
+
+    return assessment;
   }
 
   private buildDetectionProgramRuleInput(

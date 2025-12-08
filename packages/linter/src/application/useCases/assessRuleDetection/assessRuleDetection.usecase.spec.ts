@@ -575,4 +575,79 @@ describe('AssessRuleDetectionUseCase', () => {
       );
     });
   });
+
+  describe('when no negative examples exist for the language', () => {
+    let rule: ReturnType<typeof ruleFactory>;
+    let assessmentId: ReturnType<typeof createRuleDetectionAssessmentId>;
+    let command: AssessRuleDetectionJobCommand;
+
+    beforeEach(() => {
+      rule = ruleFactory({
+        id: createRuleId(uuidv4()),
+        content: 'Test rule with no negative examples',
+      });
+      assessmentId = createRuleDetectionAssessmentId(uuidv4());
+      command = {
+        rule,
+        jobId: 'job-no-negative',
+        organizationId: createOrganizationId(uuidv4()),
+        userId: createUserId(uuidv4()),
+        language: ProgrammingLanguage.TYPESCRIPT,
+        assessmentId,
+      };
+
+      // Mock examples with empty negative fields
+      standardsAdapter.getRuleCodeExamples.mockResolvedValue([
+        {
+          id: 'example-1',
+          positive: 'const x = 1;',
+          negative: '',
+          lang: ProgrammingLanguage.TYPESCRIPT,
+        },
+        {
+          id: 'example-2',
+          positive: 'const y = 2;',
+          negative: '   ',
+          lang: ProgrammingLanguage.TYPESCRIPT,
+        },
+      ]);
+    });
+
+    it('returns FAILED status', async () => {
+      const result = await assessRuleDetectionUseCase.execute(command);
+
+      expect(result.status).toBe(RuleDetectionAssessmentStatus.FAILED);
+    });
+
+    it('returns feasible as false', async () => {
+      const result = await assessRuleDetectionUseCase.execute(command);
+
+      expect(result.feasible).toBe(false);
+    });
+
+    it('returns appropriate error message in details', async () => {
+      const result = await assessRuleDetectionUseCase.execute(command);
+
+      expect(result.details).toContain('No negative code examples found');
+    });
+
+    it('saves assessment to repository', async () => {
+      await assessRuleDetectionUseCase.execute(command);
+
+      expect(ruleDetectionAssessmentRepository.add).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: assessmentId,
+          ruleId: rule.id,
+          language: ProgrammingLanguage.TYPESCRIPT,
+          status: RuleDetectionAssessmentStatus.FAILED,
+        }),
+      );
+    });
+
+    it('does not call the LLM service', async () => {
+      await assessRuleDetectionUseCase.execute(command);
+
+      expect(llmPort.getLlmForOrganization).not.toHaveBeenCalled();
+    });
+  });
 });

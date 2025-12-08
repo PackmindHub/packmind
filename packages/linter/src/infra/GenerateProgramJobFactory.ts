@@ -21,7 +21,7 @@ export class GenerateProgramJobFactory
     private readonly getStandardsAdapter: () => IStandardsPort,
     private readonly getLinterAstAdapter: () => ILinterAstPort | null,
     private readonly getLinterAdapter: () => ILinterPort,
-    private readonly llmPort: ILlmPort | null,
+    private readonly getLlmPort: () => ILlmPort,
   ) {}
 
   async createQueue(): Promise<IJobQueue<GenerateProgramInput>> {
@@ -34,7 +34,7 @@ export class GenerateProgramJobFactory
       this.getStandardsAdapter,
       this.getLinterAstAdapter,
       this.getLinterAdapter,
-      this.llmPort,
+      this.getLlmPort,
     );
 
     // Wrap the delayed job to implement IJobQueue interface

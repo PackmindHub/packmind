@@ -20,7 +20,7 @@ export class AssessRuleDetectionJobFactory
     private readonly linterRepositories: ILinterRepositories,
     private readonly getStandardsAdapter: () => IStandardsPort,
     private readonly getLinterAdapter: () => ILinterPort,
-    private readonly llmPort: ILlmPort | null,
+    private readonly getLlmPort: () => ILlmPort,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -33,7 +33,7 @@ export class AssessRuleDetectionJobFactory
       this.linterRepositories,
       this.getStandardsAdapter,
       this.getLinterAdapter,
-      this.llmPort,
+      this.getLlmPort,
     );
 
     // Wrap the delayed job to implement IJobQueue interface

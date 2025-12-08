@@ -178,4 +178,17 @@ export class DetectionGatewayApi
       },
     );
   }
+
+  async startRuleDetectionAssessment(
+    standardId: string,
+    ruleId: string,
+    language: string,
+  ): Promise<RuleDetectionAssessment> {
+    return this._api.post<RuleDetectionAssessment>(
+      `${this._endpoint}/${standardId}/rules/${ruleId}/detection-assessment`,
+      {
+        language,
+      },
+    );
+  }
 }

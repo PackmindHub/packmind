@@ -31,7 +31,7 @@ export class AssessRuleDetectionDelayedJob extends AbstractAIDelayedJob<
     private readonly linterRepositories: ILinterRepositories,
     private readonly getStandardsAdapter: () => IStandardsPort,
     private readonly getLinterAdapter: () => ILinterPort,
-    private readonly llmPort: ILlmPort | null,
+    private readonly getLlmPort: () => ILlmPort,
   ) {
     super(queueFactory, logger);
   }
@@ -65,7 +65,7 @@ export class AssessRuleDetectionDelayedJob extends AbstractAIDelayedJob<
       this.linterRepositories,
       this.getStandardsAdapter(),
       this.getLinterAdapter,
-      this.llmPort,
+      this.getLlmPort(),
       this.logger,
     );
 

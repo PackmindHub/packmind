@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { PMVStack, PMEmptyState, PMButton } from '@packmind/ui';
-import { RuleDetectionAssessmentStatus } from '@packmind/types';
+import { RuleDetectionAssessmentStatus, RuleExample } from '@packmind/types';
 import { useGetRuleDetectionAssessmentQuery } from '../api/queries/DetectionProgramQueries';
 import { ActiveConfigurationSectionData as ActiveConfigurationCardData } from './ActiveConfigurationSection/';
 import { DraftCardData } from './DetectionDraftCard/DetectionDraftCard';
@@ -27,6 +27,7 @@ interface DetectionProgramConfigurationProps {
   isActivatingDraft: boolean;
   onRetryDraft: (draft: DraftCardData) => void;
   onNavigateToExamples?: () => void;
+  ruleExamples?: RuleExample[];
 }
 
 export const DetectionProgramConfiguration: React.FC<
@@ -49,6 +50,7 @@ export const DetectionProgramConfiguration: React.FC<
   isActivatingDraft,
   onRetryDraft,
   onNavigateToExamples,
+  ruleExamples = [],
 }) => {
   const language = selectedLanguage;
 
@@ -114,6 +116,7 @@ export const DetectionProgramConfiguration: React.FC<
         standardId={standardId}
         ruleId={ruleId}
         language={language}
+        ruleExamples={ruleExamples}
       />
 
       <ProgramGenerationAccordion
