@@ -157,7 +157,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
   };
 
   const getDate = (date: string) => {
-    return format(new Date(date), 'yyyy-MM-dd');
+    return format(new Date(date), 'yyyy-MM-dd HH:mm');
   };
 
   const getMessage = (deployment: Distribution) => {
