@@ -32,6 +32,7 @@ import {
   fetchExistingFilesFromGit,
   applyTargetPrefixingToFileUpdates,
 } from '../utils/GitFileUtils';
+import { PackmindConfigService } from '../services/PackmindConfigService';
 import { v4 as uuidv4 } from 'uuid';
 
 const origin = 'PublishArtifactsUseCase';
@@ -50,6 +51,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     private readonly targetService: TargetService,
     private readonly renderModeConfigurationService: RenderModeConfigurationService,
     private readonly eventEmitterService: PackmindEventEmitterService,
+    private readonly packmindConfigService: PackmindConfigService = new PackmindConfigService(),
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
   ) {}
 
@@ -177,6 +179,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           gitRepo,
           targets,
           codingAgents,
+          command.packagesSlugs,
         );
 
         // Commit changes (once per repository)
@@ -329,6 +332,7 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     gitRepo: GitRepo,
     targets: Target[],
     codingAgents: CodingAgent[],
+    packagesSlugs: string[],
   ): Promise<Map<string, FileUpdates>> {
     const fileUpdatesPerTarget = new Map<string, FileUpdates>();
 
@@ -357,6 +361,11 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         codingAgents,
         existingFiles,
       });
+
+      // Add packmind.json config file
+      const configFile =
+        this.packmindConfigService.createConfigFileModification(packagesSlugs);
+      baseFileUpdates.createOrUpdate.push(configFile);
 
       // Apply target path prefixing
       const prefixedFileUpdates = applyTargetPrefixingToFileUpdates(

@@ -11,6 +11,7 @@ export type PublishArtifactsCommand = PackmindCommand & {
   recipeVersionIds: RecipeVersionId[];
   standardVersionIds: StandardVersionId[];
   targetIds: TargetId[];
+  packagesSlugs: string[];
 };
 
 /**

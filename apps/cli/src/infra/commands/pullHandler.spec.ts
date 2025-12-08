@@ -29,7 +29,6 @@ describe('pullHandler', () => {
       listPackages: jest.fn(),
       getPackageBySlug: jest.fn(),
       readConfig: jest.fn(),
-      writeConfig: jest.fn(),
       pullData: jest.fn(),
       tryGetGitRepositoryRoot: jest.fn(),
       getGitRemoteUrlFromPath: jest.fn(),
@@ -726,8 +725,6 @@ describe('pullHandler', () => {
           standardsCount: 0,
           errors: [],
         });
-        mockPackmindCliHexa.writeConfig.mockResolvedValue(undefined);
-
         await recursivePullHandler({}, deps);
 
         expect(mockLog).toHaveBeenCalledWith(
@@ -745,7 +742,6 @@ describe('pullHandler', () => {
           standardsCount: 1,
           errors: [],
         });
-        mockPackmindCliHexa.writeConfig.mockResolvedValue(undefined);
 
         const result = await recursivePullHandler({}, deps);
 
@@ -763,7 +759,6 @@ describe('pullHandler', () => {
           standardsCount: 1,
           errors: [],
         });
-        mockPackmindCliHexa.writeConfig.mockResolvedValue(undefined);
 
         const result = await recursivePullHandler({}, deps);
 
@@ -782,7 +777,6 @@ describe('pullHandler', () => {
           standardsCount: 1,
           errors: [],
         });
-        mockPackmindCliHexa.writeConfig.mockResolvedValue(undefined);
 
         await recursivePullHandler({}, deps);
 
@@ -801,7 +795,6 @@ describe('pullHandler', () => {
           standardsCount: 0,
           errors: [],
         });
-        mockPackmindCliHexa.writeConfig.mockResolvedValue(undefined);
 
         await recursivePullHandler({}, deps);
 
@@ -846,7 +839,6 @@ describe('pullHandler', () => {
             standardsCount: 1,
             errors: [],
           });
-        mockPackmindCliHexa.writeConfig.mockResolvedValue(undefined);
 
         const result = await recursivePullHandler({}, deps);
 
@@ -867,7 +859,6 @@ describe('pullHandler', () => {
             standardsCount: 1,
             errors: [],
           });
-        mockPackmindCliHexa.writeConfig.mockResolvedValue(undefined);
 
         await recursivePullHandler({}, deps);
 
@@ -888,7 +879,6 @@ describe('pullHandler', () => {
             standardsCount: 1,
             errors: [],
           });
-        mockPackmindCliHexa.writeConfig.mockResolvedValue(undefined);
 
         await recursivePullHandler({}, deps);
 
@@ -973,7 +963,6 @@ describe('pullHandler', () => {
           standardsCount: 0,
           errors: [],
         });
-        mockPackmindCliHexa.writeConfig.mockResolvedValue(undefined);
 
         await recursivePullHandler({}, deps);
 

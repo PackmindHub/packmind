@@ -859,6 +859,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
             targetIds: [dataFactory.target.id],
             recipeVersionIds: [initialVersions[0].id],
             standardVersionIds: [],
+            packagesSlugs: [],
             ...dataFactory.packmindCommand(),
           });
 

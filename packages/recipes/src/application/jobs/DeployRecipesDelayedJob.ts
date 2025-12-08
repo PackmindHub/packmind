@@ -152,6 +152,7 @@ export class DeployRecipesDelayedJob extends AbstractAIDelayedJob<
         targetIds: targetIdsToDeployTo,
         recipeVersionIds: input.recipeVersionIds,
         standardVersionIds: [],
+        packagesSlugs: [],
       });
 
       this.logger.info(

@@ -117,6 +117,7 @@ describe('PublishArtifactsUseCase', () => {
       mockTargetService,
       mockRenderModeConfigurationService,
       mockEventEmitterService,
+      undefined,
       mockLogger,
     );
   });
@@ -177,6 +178,7 @@ describe('PublishArtifactsUseCase', () => {
         recipeVersionIds: [recipeVersion.id],
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId],
+        packagesSlugs: [],
       };
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
@@ -295,6 +297,17 @@ describe('PublishArtifactsUseCase', () => {
       expect(commitMessage).toContain('test-standard');
       expect(commitMessage).toContain('Production');
     });
+
+    it('includes packmind.json in committed files', async () => {
+      await useCase.execute(command);
+
+      const committedFiles = mockGitPort.commitToGit.mock.calls[0][1];
+      expect(committedFiles).toContainEqual(
+        expect.objectContaining({
+          path: expect.stringMatching(/packmind\.json$/),
+        }),
+      );
+    });
   });
 
   describe('when deploying recipes only', () => {
@@ -333,6 +346,7 @@ describe('PublishArtifactsUseCase', () => {
         recipeVersionIds: [recipeVersion.id],
         standardVersionIds: [],
         targetIds: [targetId],
+        packagesSlugs: [],
       };
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
@@ -410,6 +424,7 @@ describe('PublishArtifactsUseCase', () => {
         recipeVersionIds: [],
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId],
+        packagesSlugs: [],
       };
 
       mockStandardsPort.getStandardVersionById.mockResolvedValue(
@@ -484,6 +499,7 @@ describe('PublishArtifactsUseCase', () => {
         recipeVersionIds: [recipeVersion.id],
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId],
+        packagesSlugs: [],
       };
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
@@ -562,6 +578,7 @@ describe('PublishArtifactsUseCase', () => {
         recipeVersionIds: [recipeVersion.id],
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId],
+        packagesSlugs: [],
       };
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
@@ -655,6 +672,7 @@ describe('PublishArtifactsUseCase', () => {
         recipeVersionIds: [recipeVersion.id],
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId1, targetId2],
+        packagesSlugs: [],
       };
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
@@ -782,6 +800,7 @@ describe('PublishArtifactsUseCase', () => {
         recipeVersionIds: [newRecipeVersion.id],
         standardVersionIds: [newStandardVersion.id],
         targetIds: [targetId],
+        packagesSlugs: [],
       };
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(newRecipeVersion);
@@ -850,6 +869,7 @@ describe('PublishArtifactsUseCase', () => {
         recipeVersionIds: [],
         standardVersionIds: [],
         targetIds: [createTargetId(uuidv4())],
+        packagesSlugs: [],
       };
 
       mockTargetService.findById.mockResolvedValue(null);
@@ -867,6 +887,7 @@ describe('PublishArtifactsUseCase', () => {
         recipeVersionIds: [],
         standardVersionIds: [],
         targetIds: [targetId],
+        packagesSlugs: [],
       };
 
       mockTargetService.findById.mockResolvedValue(target);
@@ -895,6 +916,7 @@ describe('PublishArtifactsUseCase', () => {
         recipeVersionIds: [createRecipeVersionId(uuidv4())],
         standardVersionIds: [],
         targetIds: [targetId],
+        packagesSlugs: [],
       };
 
       mockTargetService.findById.mockResolvedValue(target);
@@ -924,6 +946,7 @@ describe('PublishArtifactsUseCase', () => {
         recipeVersionIds: [],
         standardVersionIds: [createStandardVersionId(uuidv4())],
         targetIds: [targetId],
+        packagesSlugs: [],
       };
 
       mockTargetService.findById.mockResolvedValue(target);
@@ -944,6 +967,7 @@ describe('PublishArtifactsUseCase', () => {
         recipeVersionIds: [],
         standardVersionIds: [],
         targetIds: [],
+        packagesSlugs: [],
       };
 
       await expect(useCase.execute(command)).rejects.toThrow(
@@ -979,6 +1003,7 @@ describe('PublishArtifactsUseCase', () => {
         recipeVersionIds: [recipeVersion.id],
         standardVersionIds: [],
         targetIds: [targetId],
+        packagesSlugs: [],
       };
 
       mockRenderModeConfigurationService.getActiveRenderModes.mockResolvedValueOnce(
@@ -1087,6 +1112,7 @@ describe('PublishArtifactsUseCase', () => {
         recipeVersionIds: [newRecipeVersion.id],
         standardVersionIds: [newStandardVersion.id],
         targetIds: [targetId],
+        packagesSlugs: [],
       };
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(newRecipeVersion);
@@ -1234,6 +1260,7 @@ describe('PublishArtifactsUseCase', () => {
         recipeVersionIds: [recipeVersion.id],
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId],
+        packagesSlugs: [],
       };
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
@@ -1335,6 +1362,7 @@ describe('PublishArtifactsUseCase', () => {
         recipeVersionIds: [],
         standardVersionIds: [newStandardVersion.id],
         targetIds: [targetId],
+        packagesSlugs: [],
       };
 
       mockStandardsPort.getStandardVersionById.mockResolvedValue(
@@ -1404,6 +1432,124 @@ describe('PublishArtifactsUseCase', () => {
         );
 
       expect(standardsWithoutRules).toHaveLength(0);
+    });
+  });
+
+  describe('when deploying with packagesSlugs', () => {
+    let command: PublishArtifactsCommand;
+    let recipeVersion: ReturnType<typeof recipeVersionFactory>;
+    let target: ReturnType<typeof targetFactory>;
+    let gitRepo: GitRepo;
+    let gitCommit: GitCommit;
+
+    beforeEach(() => {
+      recipeVersion = recipeVersionFactory({
+        id: createRecipeVersionId(uuidv4()),
+        name: 'Test Recipe',
+        slug: 'test-recipe',
+        version: 1,
+      });
+
+      gitRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'test-owner',
+        repo: 'test-repo',
+        branch: 'main',
+        providerId: createGitProviderId(uuidv4()),
+      };
+
+      target = targetFactory({
+        id: targetId,
+        gitRepoId: gitRepo.id,
+        name: 'Production',
+        path: '',
+      });
+
+      gitCommit = {
+        id: createGitCommitId(uuidv4()),
+        sha: 'abc123def456',
+        message: 'Test commit',
+        author: 'Test Author <test@example.com>',
+        url: 'https://github.com/test-owner/test-repo/commit/abc123def456',
+      };
+
+      command = {
+        userId,
+        organizationId,
+        recipeVersionIds: [recipeVersion.id],
+        standardVersionIds: [],
+        targetIds: [targetId],
+        packagesSlugs: ['package-one', 'package-two'],
+      };
+
+      mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
+      mockTargetService.findById.mockResolvedValue(target);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
+      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockGitPort.getFileFromRepo.mockResolvedValue(null);
+      mockCodingAgentPort.renderArtifacts.mockResolvedValue({
+        createOrUpdate: [
+          {
+            path: '.packmind/recipes/test-recipe.md',
+            content: 'recipe content',
+          },
+        ],
+        delete: [],
+      });
+      mockGitPort.commitToGit.mockResolvedValue(gitCommit);
+    });
+
+    it('includes packmind.json in committed files', async () => {
+      await useCase.execute(command);
+
+      const committedFiles = mockGitPort.commitToGit.mock.calls[0][1];
+      const packmindJsonFile = committedFiles.find((f: { path: string }) =>
+        f.path.endsWith('packmind.json'),
+      );
+
+      expect(packmindJsonFile).toBeDefined();
+    });
+
+    it('includes package-one slug in packmind.json content', async () => {
+      await useCase.execute(command);
+
+      const committedFiles = mockGitPort.commitToGit.mock.calls[0][1];
+      const packmindJsonFile = committedFiles.find((f: { path: string }) =>
+        f.path.endsWith('packmind.json'),
+      );
+
+      expect(packmindJsonFile.content).toContain('package-one');
+    });
+
+    it('includes package-two slug in packmind.json content', async () => {
+      await useCase.execute(command);
+
+      const committedFiles = mockGitPort.commitToGit.mock.calls[0][1];
+      const packmindJsonFile = committedFiles.find((f: { path: string }) =>
+        f.path.endsWith('packmind.json'),
+      );
+
+      expect(packmindJsonFile.content).toContain('package-two');
+    });
+
+    it('generates valid JSON content for packmind.json', async () => {
+      await useCase.execute(command);
+
+      const committedFiles = mockGitPort.commitToGit.mock.calls[0][1];
+      const packmindJsonFile = committedFiles.find((f: { path: string }) =>
+        f.path.endsWith('packmind.json'),
+      );
+      const parsedContent = JSON.parse(packmindJsonFile.content);
+
+      expect(parsedContent.packages).toEqual({
+        'package-one': '*',
+        'package-two': '*',
+      });
     });
   });
 });

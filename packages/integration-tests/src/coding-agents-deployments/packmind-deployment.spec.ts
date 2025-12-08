@@ -116,6 +116,10 @@ describe('Packmind Deployment Spec', () => {
             content: expect.any(String),
             path: `.packmind/standards-index.md`,
           },
+          {
+            content: expect.any(String),
+            path: `packmind.json`,
+          },
         ],
         expect.any(String),
       );
@@ -148,6 +152,10 @@ describe('Packmind Deployment Spec', () => {
             {
               content: expect.any(String),
               path: `.packmind/standards-index.md`,
+            },
+            {
+              content: expect.any(String),
+              path: `packmind.json`,
             },
           ],
           expect.any(String),
@@ -197,6 +205,10 @@ describe('Packmind Deployment Spec', () => {
             content: expect.any(String),
             path: `.packmind/standards-index.md`,
           },
+          {
+            content: expect.any(String),
+            path: `packmind.json`,
+          },
         ]);
         expect(secondCallArgs[2]).toEqual(expect.any(String));
       });
@@ -232,6 +244,10 @@ describe('Packmind Deployment Spec', () => {
             path: `.packmind/standards-index.md`,
             content: expect.any(String),
           },
+          {
+            path: `packmind.json`,
+            content: expect.any(String),
+          },
         ],
         expect.any(String),
       );
@@ -263,6 +279,10 @@ describe('Packmind Deployment Spec', () => {
             },
             {
               path: `.packmind/standards-index.md`,
+              content: expect.any(String),
+            },
+            {
+              path: `packmind.json`,
               content: expect.any(String),
             },
           ],
@@ -301,6 +321,10 @@ describe('Packmind Deployment Spec', () => {
             },
             {
               path: `.packmind/standards-index.md`,
+              content: expect.any(String),
+            },
+            {
+              path: `packmind.json`,
               content: expect.any(String),
             },
           ],

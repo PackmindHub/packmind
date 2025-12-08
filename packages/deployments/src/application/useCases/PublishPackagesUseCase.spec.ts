@@ -196,7 +196,28 @@ describe('PublishPackagesUseCase', () => {
         recipeVersionIds: [recipeVersion.id],
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId],
+        packagesSlugs: [pkg.slug],
       });
+    });
+
+    it('extracts package slugs and passes them to publishArtifacts', async () => {
+      const customSlug = 'custom-slug-for-package';
+      const pkgWithCustomSlug = packageFactory({
+        id: packageId,
+        slug: customSlug,
+        recipes: [recipeId],
+        standards: [standardId],
+      });
+
+      mockPackageService.findById.mockResolvedValue(pkgWithCustomSlug);
+
+      await useCase.execute(command);
+
+      expect(mockDeploymentPort.publishArtifacts).toHaveBeenCalledWith(
+        expect.objectContaining({
+          packagesSlugs: [customSlug],
+        }),
+      );
     });
 
     it('stores distributed packages for each distribution', async () => {
@@ -277,6 +298,7 @@ describe('PublishPackagesUseCase', () => {
         recipeVersionIds: [recipeVersion.id],
         standardVersionIds: [],
         targetIds: [targetId],
+        packagesSlugs: [pkg.slug],
       });
     });
   });
@@ -318,6 +340,7 @@ describe('PublishPackagesUseCase', () => {
         recipeVersionIds: [],
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId],
+        packagesSlugs: [pkg.slug],
       });
     });
   });
@@ -381,12 +404,14 @@ describe('PublishPackagesUseCase', () => {
 
       const package1 = packageFactory({
         id: package1Id,
+        slug: 'package-1-slug',
         recipes: [sharedRecipeId, uniqueRecipeId],
         standards: [sharedStandardId],
       });
 
       const package2 = packageFactory({
         id: package2Id,
+        slug: 'package-2-slug',
         recipes: [sharedRecipeId],
         standards: [sharedStandardId, uniqueStandardId],
       });
@@ -488,6 +513,7 @@ describe('PublishPackagesUseCase', () => {
           uniqueStandardVersion.id,
         ]),
         targetIds: [targetId],
+        packagesSlugs: [package1.slug, package2.slug],
       });
       expect(
         mockDeploymentPort.publishArtifacts.mock.calls[0][0].recipeVersionIds,

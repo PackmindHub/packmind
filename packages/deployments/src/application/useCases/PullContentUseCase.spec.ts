@@ -20,6 +20,7 @@ import {
 import { CodingAgents } from '@packmind/coding-agent';
 import { v4 as uuidv4 } from 'uuid';
 import { PackageService } from '../services/PackageService';
+import { PackmindConfigService } from '../services/PackmindConfigService';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import { PullContentUseCase } from './PullContentUseCase';
 
@@ -49,6 +50,7 @@ describe('PullContentUseCase', () => {
   let accountsPort: jest.Mocked<IAccountsPort>;
   let eventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let renderModeConfigurationService: jest.Mocked<RenderModeConfigurationService>;
+  let packmindConfigService: jest.Mocked<PackmindConfigService>;
   let useCase: PullContentUseCase;
   let command: PullContentCommand;
   let organizationId: OrganizationId;
@@ -96,6 +98,16 @@ describe('PullContentUseCase', () => {
       resolveActiveCodingAgents: jest.fn(),
     } as unknown as jest.Mocked<RenderModeConfigurationService>;
 
+    packmindConfigService = {
+      createConfigFileModification: jest.fn(),
+      generateConfigContent: jest.fn(),
+    } as unknown as jest.Mocked<PackmindConfigService>;
+
+    packmindConfigService.createConfigFileModification.mockReturnValue({
+      path: 'packmind.json',
+      content: '{\n  "packages": {\n    "test-package": "*"\n  }\n}\n',
+    });
+
     renderModeConfigurationService.resolveActiveCodingAgents.mockResolvedValue([
       CodingAgents.packmind,
       CodingAgents.agents_md,
@@ -127,6 +139,7 @@ describe('PullContentUseCase', () => {
       renderModeConfigurationService,
       accountsPort,
       eventEmitterService,
+      packmindConfigService,
       stubLogger(),
     );
   });
@@ -224,34 +237,49 @@ describe('PullContentUseCase', () => {
       expect(result.fileUpdates.delete).toBeInstanceOf(Array);
     });
 
-    it('handles empty recipe and standard lists', async () => {
-      const testPackage: PackageWithArtefacts = {
-        id: createPackageId('test-package-id'),
-        slug: 'test-package',
-        name: 'Test Package',
-        description: 'Test package description',
-        spaceId: createSpaceId('space-1'),
-        createdBy: createUserId('user-1'),
-        recipes: [],
-        standards: [],
-      };
+    describe('when recipe and standard lists are empty', () => {
+      beforeEach(() => {
+        const testPackage: PackageWithArtefacts = {
+          id: createPackageId('test-package-id'),
+          slug: 'test-package',
+          name: 'Test Package',
+          description: 'Test package description',
+          spaceId: createSpaceId('space-1'),
+          createdBy: createUserId('user-1'),
+          recipes: [],
+          standards: [],
+        };
 
-      packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
-        testPackage,
-      ]);
+        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+          testPackage,
+        ]);
 
-      recipesPort.listRecipeVersions.mockResolvedValue([]);
-      standardsPort.listStandardVersions.mockResolvedValue([]);
+        recipesPort.listRecipeVersions.mockResolvedValue([]);
+        standardsPort.listStandardVersions.mockResolvedValue([]);
 
-      mockDeployer.deployArtifacts.mockResolvedValue({
-        createOrUpdate: [],
-        delete: [],
-      } as FileUpdates);
+        mockDeployer.deployArtifacts.mockResolvedValue({
+          createOrUpdate: [],
+          delete: [],
+        } as FileUpdates);
+      });
 
-      const result = await useCase.execute(command);
+      it('includes only packmind.json in createOrUpdate', async () => {
+        const result = await useCase.execute(command);
 
-      expect(result.fileUpdates.createOrUpdate).toEqual([]);
-      expect(result.fileUpdates.delete).toEqual([]);
+        expect(result.fileUpdates.createOrUpdate).toHaveLength(1);
+      });
+
+      it('sets packmind.json as the file path', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.fileUpdates.createOrUpdate[0].path).toBe('packmind.json');
+      });
+
+      it('returns empty delete array', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.fileUpdates.delete).toEqual([]);
+      });
     });
 
     it('emits ArtifactsPulledEvent domain event', async () => {
@@ -353,6 +381,63 @@ describe('PullContentUseCase', () => {
       it('throws PackagesNotFoundError', async () => {
         await expect(useCase.execute(commandWithMultipleSlugs)).rejects.toThrow(
           'Packages "unknown-1", "unknown-2" were not found',
+        );
+      });
+    });
+
+    describe('when generating packmind.json config file', () => {
+      let testPackage: PackageWithArtefacts;
+
+      beforeEach(() => {
+        testPackage = {
+          id: createPackageId('test-package-id'),
+          slug: 'test-package',
+          name: 'Test Package',
+          description: 'Test package description',
+          spaceId: createSpaceId('space-1'),
+          createdBy: createUserId('user-1'),
+          recipes: [],
+          standards: [],
+        };
+
+        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValue([
+          testPackage,
+        ]);
+
+        recipesPort.listRecipeVersions.mockResolvedValue([]);
+        standardsPort.listStandardVersions.mockResolvedValue([]);
+
+        mockDeployer.deployArtifacts.mockResolvedValue({
+          createOrUpdate: [],
+          delete: [],
+        } as FileUpdates);
+      });
+
+      it('includes packmind.json in file updates', async () => {
+        const result = await useCase.execute(command);
+
+        const packmindJsonFile = result.fileUpdates.createOrUpdate.find(
+          (file) => file.path === 'packmind.json',
+        );
+        expect(packmindJsonFile).toBeDefined();
+      });
+
+      it('calls PackmindConfigService with package slugs', async () => {
+        await useCase.execute(command);
+
+        expect(
+          packmindConfigService.createConfigFileModification,
+        ).toHaveBeenCalledWith(['test-package']);
+      });
+
+      it('includes correct content in packmind.json', async () => {
+        const result = await useCase.execute(command);
+
+        const packmindJsonFile = result.fileUpdates.createOrUpdate.find(
+          (file) => file.path === 'packmind.json',
+        );
+        expect(packmindJsonFile?.content).toBe(
+          '{\n  "packages": {\n    "test-package": "*"\n  }\n}\n',
         );
       });
     });

@@ -103,6 +103,7 @@ export class StandardsService {
     const result = await this.deploymentAdapter.publishArtifacts({
       ...command,
       recipeVersionIds: [],
+      packagesSlugs: [],
     });
     return result.distributions;
   }

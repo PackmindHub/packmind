@@ -139,6 +139,9 @@ export class PublishPackagesUseCase implements IPublishPackages {
       standardVersionsCount: standardVersionIds.length,
     });
 
+    // Extract package slugs
+    const packagesSlugs = packages.map((p) => p.slug);
+
     // Publish artifacts using the unified publishArtifacts use case
     const { distributions } = await this.deploymentPort.publishArtifacts({
       userId: command.userId,
@@ -146,6 +149,7 @@ export class PublishPackagesUseCase implements IPublishPackages {
       recipeVersionIds,
       standardVersionIds,
       targetIds: command.targetIds,
+      packagesSlugs,
     } as PublishArtifactsCommand);
 
     // Store distributed package records for each distribution

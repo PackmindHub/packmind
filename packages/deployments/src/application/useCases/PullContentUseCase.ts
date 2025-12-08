@@ -19,6 +19,7 @@ import {
   createUserId,
 } from '@packmind/types';
 import { PackageService } from '../services/PackageService';
+import { PackmindConfigService } from '../services/PackmindConfigService';
 import { PackagesNotFoundError } from '../../domain/errors/PackagesNotFoundError';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 
@@ -36,6 +37,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
     private readonly renderModeConfigurationService: RenderModeConfigurationService,
     accountsPort: IAccountsPort,
     private readonly eventEmitterService: PackmindEventEmitterService,
+    private readonly packmindConfigService: PackmindConfigService = new PackmindConfigService(),
     logger: PackmindLogger = new PackmindLogger(origin, LogLevel.INFO),
   ) {
     super(accountsPort, logger);
@@ -179,6 +181,13 @@ export class PullContentUseCase extends AbstractMemberUseCase<
 
         this.mergeFileUpdates(mergedFileUpdates, artifactFileUpdates);
       }
+
+      // Add packmind.json config file
+      const configFile =
+        this.packmindConfigService.createConfigFileModification(
+          command.packagesSlugs,
+        );
+      mergedFileUpdates.createOrUpdate.push(configFile);
 
       this.logger.info('Successfully pulled content', {
         organizationId: command.organizationId,
