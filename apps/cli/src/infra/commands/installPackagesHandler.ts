@@ -6,7 +6,7 @@ import {
   formatLabel,
 } from '../utils/consoleLogger';
 
-export type PullHandlerDependencies = {
+export type InstallHandlerDependencies = {
   packmindCliHexa: PackmindCliHexa;
   exit: (code: number) => void;
   getCwd: () => string;
@@ -18,7 +18,7 @@ export type ListPackagesArgs = Record<string, never>;
 
 export async function listPackagesHandler(
   _args: ListPackagesArgs,
-  deps: PullHandlerDependencies,
+  deps: InstallHandlerDependencies,
 ): Promise<void> {
   const { packmindCliHexa, exit, log, error } = deps;
 
@@ -80,7 +80,7 @@ export type ShowPackageArgs = {
 
 export async function showPackageHandler(
   args: ShowPackageArgs,
-  deps: PullHandlerDependencies,
+  deps: InstallHandlerDependencies,
 ): Promise<void> {
   const { packmindCliHexa, exit, log, error } = deps;
   const { slug } = args;
@@ -169,7 +169,7 @@ function computeDisplayPath(targetPath: string): string {
 
 export async function statusHandler(
   _args: StatusArgs,
-  deps: PullHandlerDependencies,
+  deps: InstallHandlerDependencies,
 ): Promise<StatusResult> {
   const { packmindCliHexa, exit, getCwd, log, error } = deps;
   const cwd = getCwd();
@@ -246,20 +246,20 @@ export async function statusHandler(
   }
 }
 
-export type PullPackagesArgs = {
+export type InstallPackagesArgs = {
   packagesSlugs: string[];
 };
 
-export type PullPackagesResult = {
+export type InstallPackagesResult = {
   filesCreated: number;
   filesUpdated: number;
   filesDeleted: number;
   notificationSent: boolean;
 };
 
-export type RecursivePullArgs = Record<string, never>;
+export type RecursiveInstallArgs = Record<string, never>;
 
-export type RecursivePullResult = {
+export type RecursiveInstallResult = {
   directoriesProcessed: number;
   totalFilesCreated: number;
   totalFilesUpdated: number;
@@ -267,7 +267,7 @@ export type RecursivePullResult = {
   errors: { directory: string; message: string }[];
 };
 
-type SingleDirectoryPullResult = {
+type SingleDirectoryInstallResult = {
   success: boolean;
   filesCreated: number;
   filesUpdated: number;
@@ -276,13 +276,13 @@ type SingleDirectoryPullResult = {
 };
 
 /**
- * Internal function to execute pull for a single directory.
+ * Internal function to execute install for a single directory.
  * Does not call exit() - returns result for caller to handle.
  */
-async function executePullForDirectory(
+async function executeInstallForDirectory(
   directory: string,
-  deps: Omit<PullHandlerDependencies, 'exit'>,
-): Promise<SingleDirectoryPullResult> {
+  deps: Omit<InstallHandlerDependencies, 'exit'>,
+): Promise<SingleDirectoryInstallResult> {
   const { packmindCliHexa, log } = deps;
 
   // Read existing config
@@ -318,8 +318,8 @@ async function executePullForDirectory(
       `  Fetching ${packageCount} ${packageWord}: ${configPackages.join(', ')}...`,
     );
 
-    // Execute the pull operation
-    const result = await packmindCliHexa.pullData({
+    // Execute the install operation
+    const result = await packmindCliHexa.installPackages({
       baseDirectory: directory,
       packagesSlugs: configPackages,
     });
@@ -394,10 +394,10 @@ async function executePullForDirectory(
   }
 }
 
-export async function pullPackagesHandler(
-  args: PullPackagesArgs,
-  deps: PullHandlerDependencies,
-): Promise<PullPackagesResult> {
+export async function installPackagesHandler(
+  args: InstallPackagesArgs,
+  deps: InstallHandlerDependencies,
+): Promise<InstallPackagesResult> {
   const { packmindCliHexa, exit, getCwd, log, error } = deps;
   const { packagesSlugs } = args;
   const cwd = getCwd();
@@ -463,7 +463,7 @@ export async function pullPackagesHandler(
     );
 
     // Execute the pull operation to get counts first
-    const result = await packmindCliHexa.pullData({
+    const result = await packmindCliHexa.installPackages({
       baseDirectory: cwd,
       packagesSlugs: allPackages,
     });
@@ -523,7 +523,7 @@ export async function pullPackagesHandler(
           notificationSent = true;
         } catch {
           // Silently ignore distribution notification errors
-          // The pull was successful, we don't want to fail the command
+          // The install was successful, we don't want to fail the command
         }
       }
     }
@@ -606,14 +606,14 @@ export async function pullPackagesHandler(
   }
 }
 
-export async function recursivePullHandler(
-  _args: RecursivePullArgs,
-  deps: PullHandlerDependencies,
-): Promise<RecursivePullResult> {
+export async function recursiveInstallHandler(
+  _args: RecursiveInstallArgs,
+  deps: InstallHandlerDependencies,
+): Promise<RecursiveInstallResult> {
   const { packmindCliHexa, exit, getCwd, log, error } = deps;
   const cwd = getCwd();
 
-  const result: RecursivePullResult = {
+  const result: RecursiveInstallResult = {
     directoriesProcessed: 0,
     totalFilesCreated: 0,
     totalFilesUpdated: 0,
@@ -661,22 +661,22 @@ export async function recursivePullHandler(
       const displayPath = computeDisplayPath(config.targetPath);
       log(`Installing in ${displayPath}...`);
 
-      const pullResult = await executePullForDirectory(
+      const installResult = await executeInstallForDirectory(
         config.absoluteTargetPath,
         { packmindCliHexa, getCwd, log, error },
       );
 
       result.directoriesProcessed++;
-      result.totalFilesCreated += pullResult.filesCreated;
-      result.totalFilesUpdated += pullResult.filesUpdated;
-      result.totalFilesDeleted += pullResult.filesDeleted;
+      result.totalFilesCreated += installResult.filesCreated;
+      result.totalFilesUpdated += installResult.filesUpdated;
+      result.totalFilesDeleted += installResult.filesDeleted;
 
-      if (!pullResult.success && pullResult.errorMessage) {
+      if (!installResult.success && installResult.errorMessage) {
         result.errors.push({
           directory: displayPath,
-          message: pullResult.errorMessage,
+          message: installResult.errorMessage,
         });
-        error(`  Error: ${pullResult.errorMessage}`);
+        error(`  Error: ${installResult.errorMessage}`);
       }
 
       log(''); // Add blank line between directories

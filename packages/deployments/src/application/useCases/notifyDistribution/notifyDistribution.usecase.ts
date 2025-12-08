@@ -565,6 +565,7 @@ export class NotifyDistributionUseCase
       target,
       status: DistributionStatus.success,
       renderModes,
+      source: 'cli',
     };
 
     await this.distributionRepository.add(distribution);

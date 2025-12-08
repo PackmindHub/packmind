@@ -1,11 +1,11 @@
 import { IPublicUseCase } from '@packmind/types';
 
-export type IPullDataCommand = {
+export type IInstallPackagesCommand = {
   baseDirectory?: string; // Directory where files should be created (defaults to current working directory)
   packagesSlugs: string[]; // Package slugs to pull content from
 };
 
-export type IPullDataResult = {
+export type IInstallPackagesResult = {
   filesCreated: number;
   filesUpdated: number;
   filesDeleted: number;
@@ -14,7 +14,7 @@ export type IPullDataResult = {
   standardsCount: number;
 };
 
-export type IPullDataUseCase = IPublicUseCase<
-  IPullDataCommand,
-  IPullDataResult
+export type IInstallPackagesUseCase = IPublicUseCase<
+  IInstallPackagesCommand,
+  IInstallPackagesResult
 >;

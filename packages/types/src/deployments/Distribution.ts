@@ -7,6 +7,8 @@ import { Target } from './Target';
 import { DistributionStatus } from './DistributionStatus';
 import { RenderMode } from './RenderMode';
 
+export type DistributionSource = 'app' | 'cli';
+
 export type Distribution = {
   id: DistributionId;
   distributedPackages: DistributedPackage[];
@@ -18,4 +20,5 @@ export type Distribution = {
   status: DistributionStatus; // Required - success or failure
   error?: string; // Optional - only present for failed distributions
   renderModes: RenderMode[]; // Defaults to empty array
+  source: DistributionSource;
 };

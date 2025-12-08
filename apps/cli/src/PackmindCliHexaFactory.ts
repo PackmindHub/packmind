@@ -16,8 +16,8 @@ import { ListFiles } from './application/services/ListFiles';
 import { GitService } from './application/services/GitService';
 import { DiffViolationFilterService } from './application/services/DiffViolationFilterService';
 import { ExecuteLinterProgramsUseCase } from '@packmind/linter-execution';
-import { IPullDataUseCase } from './domain/useCases/IPullDataUseCase';
-import { PullDataUseCase } from './application/useCases/PullDataUseCase';
+import { IInstallPackagesUseCase } from './domain/useCases/IInstallPackagesUseCase';
+import { InstallPackagesUseCase } from './application/useCases/InstallPackagesUseCase';
 import { IListPackagesUseCase } from './domain/useCases/IListPackagesUseCase';
 import { ListPackagesUseCase } from './application/useCases/ListPackagesUseCase';
 import { IGetPackageSummaryUseCase } from './domain/useCases/IGetPackageSummaryUseCase';
@@ -44,7 +44,7 @@ export class PackmindCliHexaFactory {
     listFilesInDirectoryUseCase: IListFilesInDirectoryUseCase;
     lintFilesInDirectory: ILintFilesInDirectory;
     lintFilesLocally: ILintFilesLocally;
-    pullData: IPullDataUseCase;
+    installPackages: IInstallPackagesUseCase;
     listPackages: IListPackagesUseCase;
     getPackageBySlug: IGetPackageSummaryUseCase;
     login: ILoginUseCase;
@@ -82,7 +82,9 @@ export class PackmindCliHexaFactory {
         this.repositories,
         this.logger,
       ),
-      pullData: new PullDataUseCase(this.repositories.packmindGateway),
+      installPackages: new InstallPackagesUseCase(
+        this.repositories.packmindGateway,
+      ),
       listPackages: new ListPackagesUseCase(this.repositories.packmindGateway),
       getPackageBySlug: new GetPackageSummaryUseCase(
         this.repositories.packmindGateway,

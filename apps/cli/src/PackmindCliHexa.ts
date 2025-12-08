@@ -21,9 +21,9 @@ import {
   LintFilesLocallyResult,
 } from './domain/useCases/ILintFilesLocally';
 import {
-  IPullDataCommand,
-  IPullDataResult,
-} from './domain/useCases/IPullDataUseCase';
+  IInstallPackagesCommand,
+  IInstallPackagesResult,
+} from './domain/useCases/IInstallPackagesUseCase';
 import {
   IListPackagesCommand,
   IListPackagesResult,
@@ -111,8 +111,10 @@ export class PackmindCliHexa {
     return this.hexa.useCases.lintFilesLocally.execute(command);
   }
 
-  public async pullData(command: IPullDataCommand): Promise<IPullDataResult> {
-    return this.hexa.useCases.pullData.execute(command);
+  public async installPackages(
+    command: IInstallPackagesCommand,
+  ): Promise<IInstallPackagesResult> {
+    return this.hexa.useCases.installPackages.execute(command);
   }
 
   public async listPackages(

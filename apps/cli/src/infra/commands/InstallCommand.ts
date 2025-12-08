@@ -4,16 +4,17 @@ import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
   listPackagesHandler,
   showPackageHandler,
-  pullPackagesHandler,
-  recursivePullHandler,
+  installPackagesHandler,
+  recursiveInstallHandler,
   statusHandler,
-  PullHandlerDependencies,
-} from './pullHandler';
+  InstallHandlerDependencies,
+} from './installPackagesHandler';
 
-export const pullCommand = command({
-  name: 'pull',
+export const installCommand = command({
+  name: 'install',
   description:
     'Install recipes and standards from specified packages and save them to the current directory',
+  aliases: ['pull'],
   args: {
     list: flag({
       long: 'list',
@@ -47,7 +48,7 @@ export const pullCommand = command({
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
-    const deps: PullHandlerDependencies = {
+    const deps: InstallHandlerDependencies = {
       packmindCliHexa,
       exit: process.exit,
       getCwd: () => process.cwd(),
@@ -75,11 +76,11 @@ export const pullCommand = command({
 
     // Handle --recursive flag
     if (recursive) {
-      await recursivePullHandler({}, deps);
+      await recursiveInstallHandler({}, deps);
       return;
     }
 
     // Handle pull/install
-    await pullPackagesHandler({ packagesSlugs }, deps);
+    await installPackagesHandler({ packagesSlugs }, deps);
   },
 });
