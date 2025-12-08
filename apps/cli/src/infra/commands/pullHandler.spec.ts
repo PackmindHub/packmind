@@ -6,6 +6,7 @@ import {
   statusHandler,
   PullHandlerDependencies,
 } from './pullHandler';
+import { createPackageId, createSpaceId, createUserId } from '@packmind/types';
 
 // Mock the consoleLogger module to avoid chalk ESM issues
 jest.mock('../utils/consoleLogger', () => ({
@@ -62,11 +63,21 @@ describe('pullHandler', () => {
             slug: 'zebra',
             name: 'Zebra Package',
             description: 'A zebra package',
+            id: createPackageId('zebra'),
+            spaceId: createSpaceId('my-space'),
+            createdBy: createUserId('my-user'),
+            recipes: [],
+            standards: [],
           },
           {
             slug: 'alpha',
             name: 'Alpha Package',
             description: 'An alpha package',
+            id: createPackageId('alpha'),
+            spaceId: createSpaceId('my-space'),
+            createdBy: createUserId('my-user'),
+            recipes: [],
+            standards: [],
           },
         ]);
 
