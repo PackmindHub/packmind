@@ -3,7 +3,7 @@ import {
   listPackagesHandler,
   showPackageHandler,
   pullPackagesHandler,
-  overviewHandler,
+  statusHandler,
   PullHandlerDependencies,
 } from './pullHandler';
 
@@ -398,7 +398,7 @@ describe('pullHandler', () => {
     });
   });
 
-  describe('overviewHandler', () => {
+  describe('statusHandler', () => {
     describe('when no configs are found', () => {
       beforeEach(() => {
         mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(
@@ -412,7 +412,7 @@ describe('pullHandler', () => {
       });
 
       it('displays no configs message', async () => {
-        await overviewHandler({}, deps);
+        await statusHandler({}, deps);
 
         expect(mockLog).toHaveBeenCalledWith(
           'No packmind.json available in this workspace.',
@@ -420,7 +420,7 @@ describe('pullHandler', () => {
       });
 
       it('exits with 0', async () => {
-        await overviewHandler({}, deps);
+        await statusHandler({}, deps);
 
         expect(mockExit).toHaveBeenCalledWith(0);
       });
@@ -443,7 +443,7 @@ describe('pullHandler', () => {
           basePath: '/project',
         });
 
-        await overviewHandler({}, deps);
+        await statusHandler({}, deps);
 
         expect(mockLog).toHaveBeenCalledWith(
           expect.stringContaining('Packages'),
@@ -466,7 +466,7 @@ describe('pullHandler', () => {
           basePath: '/project',
         });
 
-        await overviewHandler({}, deps);
+        await statusHandler({}, deps);
 
         expect(mockLog).toHaveBeenCalledWith(expect.stringMatching(/^-+$/));
       });
@@ -487,7 +487,7 @@ describe('pullHandler', () => {
           basePath: '/project',
         });
 
-        await overviewHandler({}, deps);
+        await statusHandler({}, deps);
 
         expect(mockLog).toHaveBeenCalledWith(
           expect.stringContaining('alpha, middle, zebra'),
@@ -510,7 +510,7 @@ describe('pullHandler', () => {
           basePath: '/project',
         });
 
-        await overviewHandler({}, deps);
+        await statusHandler({}, deps);
 
         expect(mockLog).toHaveBeenCalledWith(
           expect.stringContaining('<no packages>'),
@@ -538,7 +538,7 @@ describe('pullHandler', () => {
           basePath: '/project',
         });
 
-        await overviewHandler({}, deps);
+        await statusHandler({}, deps);
 
         expect(mockLog).toHaveBeenCalledWith(
           '\n3 unique packages currently installed.',
@@ -561,7 +561,7 @@ describe('pullHandler', () => {
           basePath: '/project',
         });
 
-        await overviewHandler({}, deps);
+        await statusHandler({}, deps);
 
         expect(mockLog).toHaveBeenCalledWith(
           '\n1 unique package currently installed.',
@@ -582,7 +582,7 @@ describe('pullHandler', () => {
           basePath: '/project',
         });
 
-        const result = await overviewHandler({}, deps);
+        const result = await statusHandler({}, deps);
 
         expect(result.basePath).toBe('/project');
       });
@@ -604,13 +604,13 @@ describe('pullHandler', () => {
           basePath: '/project',
         });
 
-        const result = await overviewHandler({}, deps);
+        const result = await statusHandler({}, deps);
 
         expect(result.configs).toEqual(mockConfigs);
       });
     });
 
-    describe('when overview fails', () => {
+    describe('when status fails', () => {
       beforeEach(() => {
         mockPackmindCliHexa.tryGetGitRepositoryRoot.mockRejectedValue(
           new Error('Git error'),
@@ -618,7 +618,7 @@ describe('pullHandler', () => {
       });
 
       it('displays error message', async () => {
-        await overviewHandler({}, deps);
+        await statusHandler({}, deps);
 
         expect(mockError).toHaveBeenCalledWith(
           '\n❌ Failed to get workspace overview:',
@@ -626,13 +626,13 @@ describe('pullHandler', () => {
       });
 
       it('displays error details', async () => {
-        await overviewHandler({}, deps);
+        await statusHandler({}, deps);
 
         expect(mockError).toHaveBeenCalledWith('   Git error');
       });
 
       it('exits with 1', async () => {
-        await overviewHandler({}, deps);
+        await statusHandler({}, deps);
 
         expect(mockExit).toHaveBeenCalledWith(1);
       });

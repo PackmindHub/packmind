@@ -5,7 +5,7 @@ import {
   listPackagesHandler,
   showPackageHandler,
   pullPackagesHandler,
-  overviewHandler,
+  statusHandler,
   PullHandlerDependencies,
 } from './pullHandler';
 
@@ -56,7 +56,7 @@ export const pullCommand = command({
 
     // Handle --status flag
     if (status) {
-      await overviewHandler({}, deps);
+      await statusHandler({}, deps);
       return;
     }
 

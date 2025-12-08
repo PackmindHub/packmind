@@ -135,9 +135,9 @@ export async function showPackageHandler(
   }
 }
 
-export type OverviewArgs = Record<string, never>;
+export type StatusArgs = Record<string, never>;
 
-export type OverviewResult = {
+export type StatusResult = {
   configs: ConfigWithTarget[];
   basePath: string;
 };
@@ -167,10 +167,10 @@ function computeDisplayPath(targetPath: string): string {
   return `.${normalizedPath}/packmind.json`;
 }
 
-export async function overviewHandler(
-  _args: OverviewArgs,
+export async function statusHandler(
+  _args: StatusArgs,
   deps: PullHandlerDependencies,
-): Promise<OverviewResult> {
+): Promise<StatusResult> {
   const { packmindCliHexa, exit, getCwd, log, error } = deps;
   const cwd = getCwd();
 
