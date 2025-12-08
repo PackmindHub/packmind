@@ -9,7 +9,7 @@ import {
 } from '@packmind/ui';
 import { RunDistribution } from '../RunDistribution/RunDistribution';
 import { Package } from '@packmind/types';
-import { createSeparateDeploymentNotifications } from '../../utils/deploymentNotificationUtils';
+import { createPackagesDeploymentNotifications } from '../../utils/deploymentNotificationUtils';
 
 export interface DeployPackageButtonProps {
   label?: string;
@@ -51,28 +51,16 @@ export const DeployPackageButton: React.FC<DeployPackageButtonProps> = ({
                   onDistributionComplete={(deploymentResults) => {
                     store.setOpen(false);
 
-                    if (deploymentResults) {
-                      const notifications =
-                        createSeparateDeploymentNotifications(
-                          deploymentResults.recipesDistributions,
-                          deploymentResults.standardsDistributions,
-                        );
+                    const notifications =
+                      createPackagesDeploymentNotifications(deploymentResults);
 
-                      notifications.forEach((notification) => {
-                        pmToaster.create({
-                          type: notification.type,
-                          title: notification.title,
-                          description: notification.description,
-                        });
-                      });
-                    } else {
+                    notifications.forEach((notification) => {
                       pmToaster.create({
-                        type: 'success',
-                        title: 'Distribution done',
-                        description:
-                          'Package(s) are now distributed to your targets',
+                        type: notification.type,
+                        title: notification.title,
+                        description: notification.description,
                       });
-                    }
+                    });
                   }}
                 >
                   <PMDialog.Header>
