@@ -8,6 +8,8 @@
 
 ## Removed
 
+Deleted standards still appear in packages are properly removed from packages #34
+
 # [1.5.0] - 2025-12-05
 
 ## Added
