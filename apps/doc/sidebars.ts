@@ -48,7 +48,7 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Governance',
-      items: ['deployment', 'git-repository-connection', 'overview'],
+      items: ['distribution', 'git-repository-connection', 'overview'],
     },
     {
       type: 'category',
