@@ -73,6 +73,8 @@ interface PackageEditFormContentProps {
   isPending: boolean;
   isLoadingRecipes: boolean;
   isLoadingStandards: boolean;
+  orgSlug: string;
+  spaceSlug: string;
 }
 
 const PackageEditFormContent = ({
@@ -85,6 +87,8 @@ const PackageEditFormContent = ({
   isPending,
   isLoadingRecipes,
   isLoadingStandards,
+  orgSlug,
+  spaceSlug,
 }: PackageEditFormContentProps) => {
   const { contains } = pmUseFilter({ sensitivity: 'base' });
 
@@ -198,9 +202,23 @@ const PackageEditFormContent = ({
                       display="inline-flex"
                       alignItems="center"
                     >
-                      <PMText truncate flex="1" minW="0" title={name}>
-                        {name}
-                      </PMText>
+                      <Link
+                        to={routes.space.toStandard(orgSlug, spaceSlug, id)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          flex: 1,
+                          minWidth: 0,
+                          textDecoration: 'none',
+                          color: 'inherit',
+                          cursor: 'pointer',
+                          overflow: 'hidden',
+                        }}
+                      >
+                        <PMText truncate title={name}>
+                          {name}
+                        </PMText>
+                      </Link>
                       <PMCloseButton
                         size="xs"
                         ml={1}
@@ -296,9 +314,23 @@ const PackageEditFormContent = ({
                       display="inline-flex"
                       alignItems="center"
                     >
-                      <PMText truncate flex="1" minW="0" title={name}>
-                        {name}
-                      </PMText>
+                      <Link
+                        to={routes.space.toRecipe(orgSlug, spaceSlug, id)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          flex: 1,
+                          minWidth: 0,
+                          textDecoration: 'none',
+                          color: 'inherit',
+                          cursor: 'pointer',
+                          overflow: 'hidden',
+                        }}
+                      >
+                        <PMText truncate title={name}>
+                          {name}
+                        </PMText>
+                      </Link>
                       <PMCloseButton
                         size="xs"
                         ml={1}
@@ -709,6 +741,8 @@ export const PackageDetails = ({
                       isPending={isPending}
                       isLoadingRecipes={isLoadingRecipes}
                       isLoadingStandards={isLoadingStandards}
+                      orgSlug={orgSlug}
+                      spaceSlug={spaceSlug}
                     />
                   )}
                 </PMFieldset.Content>
