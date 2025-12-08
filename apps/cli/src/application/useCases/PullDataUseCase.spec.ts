@@ -365,4 +365,148 @@ ${newSectionContent}
       });
     });
   });
+
+  describe('when file content has not changed', () => {
+    describe('with full content replacement', () => {
+      const content = '# Unchanged content\n\nThis is the same.';
+
+      beforeEach(() => {
+        mockGateway.getPullData.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: 'CLAUDE.md',
+                content,
+              },
+            ],
+            delete: [],
+          },
+        });
+
+        // File exists
+        (fs.access as jest.Mock).mockResolvedValue(undefined);
+        // Existing file has identical content
+        (fs.readFile as jest.Mock).mockResolvedValue(content);
+      });
+
+      it('does not write to file', async () => {
+        await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
+
+        expect(fs.writeFile).not.toHaveBeenCalled();
+      });
+
+      it('does not count as updated', async () => {
+        const result = await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
+
+        expect(result.filesUpdated).toBe(0);
+      });
+    });
+
+    describe('with section markers and identical section content', () => {
+      const sectionContent = '## Recipe\n- Step 1\n- Step 2';
+      const existingContent = `# Documentation
+
+<!-- start: Packmind recipes -->
+${sectionContent}
+<!-- end: Packmind recipes -->
+
+Footer text.`;
+      const newContentWithMarkers = `<!-- start: Packmind recipes -->
+${sectionContent}
+<!-- end: Packmind recipes -->`;
+
+      beforeEach(() => {
+        mockGateway.getPullData.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: 'CLAUDE.md',
+                content: newContentWithMarkers,
+              },
+            ],
+            delete: [],
+          },
+        });
+
+        // File exists
+        (fs.access as jest.Mock).mockResolvedValue(undefined);
+        // Existing file has identical section content
+        (fs.readFile as jest.Mock).mockResolvedValue(existingContent);
+      });
+
+      it('does not write to file', async () => {
+        await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
+
+        expect(fs.writeFile).not.toHaveBeenCalled();
+      });
+
+      it('does not count as updated', async () => {
+        const result = await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
+
+        expect(result.filesUpdated).toBe(0);
+      });
+    });
+
+    describe('with sections-based update and identical content', () => {
+      const existingContent = `# Documentation
+
+<!-- start: test-section -->
+Section content here
+<!-- end: test-section -->`;
+
+      beforeEach(() => {
+        mockGateway.getPullData.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: 'CLAUDE.md',
+                sections: [
+                  {
+                    key: 'test-section',
+                    content: 'Section content here',
+                  },
+                ],
+              },
+            ],
+            delete: [],
+          },
+        });
+
+        // File exists
+        (fs.access as jest.Mock).mockResolvedValue(undefined);
+        // Existing file has identical section content
+        (fs.readFile as jest.Mock).mockResolvedValue(existingContent);
+      });
+
+      it('does not write to file', async () => {
+        await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
+
+        expect(fs.writeFile).not.toHaveBeenCalled();
+      });
+
+      it('does not count as updated', async () => {
+        const result = await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
+
+        expect(result.filesUpdated).toBe(0);
+      });
+    });
+  });
 });

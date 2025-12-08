@@ -154,8 +154,11 @@ export class PullDataUseCase implements IPullDataUseCase {
         );
       }
 
-      await fs.writeFile(fullPath, finalContent, 'utf-8');
-      result.filesUpdated++;
+      // Only write and count as updated if content actually changed
+      if (existingContent !== finalContent) {
+        await fs.writeFile(fullPath, finalContent, 'utf-8');
+        result.filesUpdated++;
+      }
     } else {
       // Create new file
       await fs.writeFile(fullPath, content, 'utf-8');
@@ -182,12 +185,15 @@ export class PullDataUseCase implements IPullDataUseCase {
       sections,
     );
 
-    await fs.writeFile(fullPath, mergedContent, 'utf-8');
+    // Only write and count if content actually changed
+    if (currentContent !== mergedContent) {
+      await fs.writeFile(fullPath, mergedContent, 'utf-8');
 
-    if (fileExists) {
-      result.filesUpdated++;
-    } else {
-      result.filesCreated++;
+      if (fileExists) {
+        result.filesUpdated++;
+      } else {
+        result.filesCreated++;
+      }
     }
   }
 
