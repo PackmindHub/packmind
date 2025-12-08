@@ -139,6 +139,7 @@ export class RecipesService {
       recipeVersionIds,
       standardVersionIds: [],
       targetIds,
+      packagesSlugs: [],
     });
 
     return {

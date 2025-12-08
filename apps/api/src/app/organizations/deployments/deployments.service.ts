@@ -79,6 +79,7 @@ export class DeploymentsService {
         ...command,
         recipeVersionIds: command.recipeVersionIds,
         standardVersionIds: [],
+        packagesSlugs: [],
       } as PublishArtifactsCommand);
     return result.distributions;
   }
@@ -91,6 +92,7 @@ export class DeploymentsService {
         ...command,
         recipeVersionIds: [],
         standardVersionIds: command.standardVersionIds,
+        packagesSlugs: [],
       } as PublishArtifactsCommand);
     return result.distributions;
   }

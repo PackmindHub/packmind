@@ -45,11 +45,7 @@ import {
   ISetupMcpCommand,
   ISetupMcpResult,
 } from './domain/useCases/ISetupMcpUseCase';
-import {
-  AllConfigsResult,
-  HierarchicalConfigResult,
-  PackmindFileConfig,
-} from '@packmind/types';
+import { AllConfigsResult, HierarchicalConfigResult } from '@packmind/types';
 import { logWarningConsole } from './infra/utils/consoleLogger';
 import {
   NotifyDistributionCommand,
@@ -129,25 +125,6 @@ export class PackmindCliHexa {
     command: IGetPackageSummaryCommand,
   ): Promise<IGetPackageSummaryResult> {
     return this.hexa.useCases.getPackageBySlug.execute(command);
-  }
-
-  public async writeConfig(
-    baseDirectory: string,
-    packagesSlugs: string[],
-  ): Promise<void> {
-    const config: PackmindFileConfig = {
-      packages: packagesSlugs.reduce(
-        (acc, slug) => {
-          acc[slug] = '*';
-          return acc;
-        },
-        {} as { [slug: string]: '*' },
-      ),
-    };
-    await this.hexa.repositories.configFileRepository.writeConfig(
-      baseDirectory,
-      config,
-    );
   }
 
   public async readConfig(baseDirectory: string): Promise<string[]> {

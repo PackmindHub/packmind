@@ -344,9 +344,6 @@ async function executePullForDirectory(
       };
     }
 
-    // Write config with all packages that were successfully pulled
-    await packmindCliHexa.writeConfig(directory, configPackages);
-
     // Notify distribution if files were created or updated and we're in a git repo
     if (result.filesCreated > 0 || result.filesUpdated > 0) {
       const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(directory);
@@ -494,9 +491,6 @@ export async function pullPackagesHandler(
         notificationSent: false,
       };
     }
-
-    // Write config with all packages that were successfully pulled
-    await packmindCliHexa.writeConfig(cwd, allPackages);
 
     // Notify distribution if files were created or updated and we're in a git repo
     let notificationSent = false;
