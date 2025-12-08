@@ -252,15 +252,15 @@ This is useful for:
 
 ### Install Packages
 
-````bash
+```bash
 packmind-cli install <package-slug> [additional-package-slugs...]
-```@
+```
 
 **Example:**
 
 ```bash
 packmind-cli install backend frontend
-````
+```
 
 This downloads all recipes and standards from the specified packages and creates the appropriate files for your AI coding assistant.
 
