@@ -279,20 +279,21 @@ export class NotifyDistributionUseCase
 
     this.logger.info('Parsed repository info', { owner, repo });
 
-    const existingRepoResult =
-      await this.gitPort.findGitRepoByOwnerRepoAndBranchInOrganization({
-        userId,
-        organizationId,
-        owner,
-        repo,
-        branch,
-      });
+    // Search for existing repos within the target provider only
+    const providerRepos = await this.gitPort.listRepos(providerId);
+    const existingRepo = providerRepos.find(
+      (r) =>
+        r.owner.toLowerCase() === owner.toLowerCase() &&
+        r.repo.toLowerCase() === repo.toLowerCase() &&
+        r.branch === branch,
+    );
 
-    if (existingRepoResult.gitRepo) {
-      this.logger.info('Found existing git repository', {
-        repoId: existingRepoResult.gitRepo.id,
+    if (existingRepo) {
+      this.logger.info('Found existing git repository for this provider', {
+        repoId: existingRepo.id,
+        providerId,
       });
-      return existingRepoResult.gitRepo.id;
+      return existingRepo.id;
     }
 
     this.logger.info('Creating new git repository');
