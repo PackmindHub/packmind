@@ -24,6 +24,7 @@ import {
   FileUpdates,
   CodingAgent,
   DeploymentCompletedEvent,
+  PackmindFileConfig,
 } from '@packmind/types';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
 import { TargetService } from '../services/TargetService';
@@ -362,9 +363,19 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
         existingFiles,
       });
 
-      // Add packmind.json config file
+      // Fetch existing packmind.json to merge with new packages
+      const existingPackmindJson = await this.fetchExistingPackmindJson(
+        gitRepo,
+        target,
+      );
+      const existingPackages = existingPackmindJson?.packages ?? {};
+
+      // Add packmind.json config file with merged packages
       const configFile =
-        this.packmindConfigService.createConfigFileModification(packagesSlugs);
+        this.packmindConfigService.createConfigFileModification(
+          packagesSlugs,
+          existingPackages,
+        );
       baseFileUpdates.createOrUpdate.push(configFile);
 
       // Apply target path prefixing
@@ -383,6 +394,34 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
     }
 
     return fileUpdatesPerTarget;
+  }
+
+  /**
+   * Fetches and parses the existing packmind.json from the git repository
+   * Returns null if the file doesn't exist or couldn't be parsed
+   */
+  private async fetchExistingPackmindJson(
+    gitRepo: GitRepo,
+    target: Target,
+  ): Promise<PackmindFileConfig | null> {
+    const targetPath = target.path && target.path !== '/' ? target.path : '';
+    const packmindJsonPath = targetPath
+      ? `${targetPath}/packmind.json`
+      : 'packmind.json';
+
+    try {
+      const fileData = await this.gitPort.getFileFromRepo(
+        gitRepo,
+        packmindJsonPath,
+      );
+      if (!fileData) {
+        return null;
+      }
+      return JSON.parse(fileData.content) as PackmindFileConfig;
+    } catch {
+      // File doesn't exist or couldn't be parsed
+      return null;
+    }
   }
 
   private async groupTargetsByRepository(
