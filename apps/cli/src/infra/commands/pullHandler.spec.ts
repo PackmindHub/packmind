@@ -3,6 +3,7 @@ import {
   listPackagesHandler,
   showPackageHandler,
   pullPackagesHandler,
+  overviewHandler,
   PullHandlerDependencies,
 } from './pullHandler';
 
@@ -32,6 +33,7 @@ describe('pullHandler', () => {
       getGitRemoteUrlFromPath: jest.fn(),
       getCurrentBranch: jest.fn(),
       notifyDistribution: jest.fn(),
+      findAllConfigsInTree: jest.fn(),
     } as unknown as jest.Mocked<PackmindCliHexa>;
 
     mockExit = jest.fn();
@@ -392,6 +394,247 @@ describe('pullHandler', () => {
           baseDirectory: '/project',
           packagesSlugs: ['backend', 'frontend', 'api'],
         });
+      });
+    });
+  });
+
+  describe('overviewHandler', () => {
+    describe('when no configs are found', () => {
+      beforeEach(() => {
+        mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(
+          '/project',
+        );
+        mockPackmindCliHexa.findAllConfigsInTree.mockResolvedValue({
+          configs: [],
+          hasConfigs: false,
+          basePath: '/project',
+        });
+      });
+
+      it('displays no configs message', async () => {
+        await overviewHandler({}, deps);
+
+        expect(mockLog).toHaveBeenCalledWith(
+          'No packmind.json available in this workspace.',
+        );
+      });
+
+      it('exits with 0', async () => {
+        await overviewHandler({}, deps);
+
+        expect(mockExit).toHaveBeenCalledWith(0);
+      });
+    });
+
+    describe('when configs are found', () => {
+      it('displays table header with Packages column', async () => {
+        mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(
+          '/project',
+        );
+        mockPackmindCliHexa.findAllConfigsInTree.mockResolvedValue({
+          configs: [
+            {
+              targetPath: '/',
+              absoluteTargetPath: '/project',
+              packages: { generic: '*' },
+            },
+          ],
+          hasConfigs: true,
+          basePath: '/project',
+        });
+
+        await overviewHandler({}, deps);
+
+        expect(mockLog).toHaveBeenCalledWith(
+          expect.stringContaining('Packages'),
+        );
+      });
+
+      it('displays separator line', async () => {
+        mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(
+          '/project',
+        );
+        mockPackmindCliHexa.findAllConfigsInTree.mockResolvedValue({
+          configs: [
+            {
+              targetPath: '/',
+              absoluteTargetPath: '/project',
+              packages: { generic: '*' },
+            },
+          ],
+          hasConfigs: true,
+          basePath: '/project',
+        });
+
+        await overviewHandler({}, deps);
+
+        expect(mockLog).toHaveBeenCalledWith(expect.stringMatching(/^-+$/));
+      });
+
+      it('sorts packages alphabetically within each row', async () => {
+        mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(
+          '/project',
+        );
+        mockPackmindCliHexa.findAllConfigsInTree.mockResolvedValue({
+          configs: [
+            {
+              targetPath: '/',
+              absoluteTargetPath: '/project',
+              packages: { zebra: '*', alpha: '*', middle: '*' },
+            },
+          ],
+          hasConfigs: true,
+          basePath: '/project',
+        });
+
+        await overviewHandler({}, deps);
+
+        expect(mockLog).toHaveBeenCalledWith(
+          expect.stringContaining('alpha, middle, zebra'),
+        );
+      });
+
+      it('displays <no packages> when packmind.json has empty packages', async () => {
+        mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(
+          '/project',
+        );
+        mockPackmindCliHexa.findAllConfigsInTree.mockResolvedValue({
+          configs: [
+            {
+              targetPath: '/',
+              absoluteTargetPath: '/project',
+              packages: {},
+            },
+          ],
+          hasConfigs: true,
+          basePath: '/project',
+        });
+
+        await overviewHandler({}, deps);
+
+        expect(mockLog).toHaveBeenCalledWith(
+          expect.stringContaining('<no packages>'),
+        );
+      });
+
+      it('displays unique package count summary with deduplication', async () => {
+        mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(
+          '/project',
+        );
+        mockPackmindCliHexa.findAllConfigsInTree.mockResolvedValue({
+          configs: [
+            {
+              targetPath: '/',
+              absoluteTargetPath: '/project',
+              packages: { backend: '*', shared: '*' },
+            },
+            {
+              targetPath: '/apps/api',
+              absoluteTargetPath: '/project/apps/api',
+              packages: { backend: '*', nestjs: '*' },
+            },
+          ],
+          hasConfigs: true,
+          basePath: '/project',
+        });
+
+        await overviewHandler({}, deps);
+
+        expect(mockLog).toHaveBeenCalledWith(
+          '\n3 unique packages currently installed.',
+        );
+      });
+
+      it('displays singular form when only 1 unique package', async () => {
+        mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(
+          '/project',
+        );
+        mockPackmindCliHexa.findAllConfigsInTree.mockResolvedValue({
+          configs: [
+            {
+              targetPath: '/',
+              absoluteTargetPath: '/project',
+              packages: { backend: '*' },
+            },
+          ],
+          hasConfigs: true,
+          basePath: '/project',
+        });
+
+        await overviewHandler({}, deps);
+
+        expect(mockLog).toHaveBeenCalledWith(
+          '\n1 unique package currently installed.',
+        );
+      });
+
+      it('uses cwd as fallback when not in git repo', async () => {
+        mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(null);
+        mockPackmindCliHexa.findAllConfigsInTree.mockResolvedValue({
+          configs: [
+            {
+              targetPath: '/',
+              absoluteTargetPath: '/project',
+              packages: { test: '*' },
+            },
+          ],
+          hasConfigs: true,
+          basePath: '/project',
+        });
+
+        const result = await overviewHandler({}, deps);
+
+        expect(result.basePath).toBe('/project');
+      });
+
+      it('returns configs in result', async () => {
+        mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(
+          '/project',
+        );
+        const mockConfigs = [
+          {
+            targetPath: '/',
+            absoluteTargetPath: '/project',
+            packages: { test: '*' },
+          },
+        ];
+        mockPackmindCliHexa.findAllConfigsInTree.mockResolvedValue({
+          configs: mockConfigs,
+          hasConfigs: true,
+          basePath: '/project',
+        });
+
+        const result = await overviewHandler({}, deps);
+
+        expect(result.configs).toEqual(mockConfigs);
+      });
+    });
+
+    describe('when overview fails', () => {
+      beforeEach(() => {
+        mockPackmindCliHexa.tryGetGitRepositoryRoot.mockRejectedValue(
+          new Error('Git error'),
+        );
+      });
+
+      it('displays error message', async () => {
+        await overviewHandler({}, deps);
+
+        expect(mockError).toHaveBeenCalledWith(
+          '\n❌ Failed to get workspace overview:',
+        );
+      });
+
+      it('displays error details', async () => {
+        await overviewHandler({}, deps);
+
+        expect(mockError).toHaveBeenCalledWith('   Git error');
+      });
+
+      it('exits with 1', async () => {
+        await overviewHandler({}, deps);
+
+        expect(mockExit).toHaveBeenCalledWith(1);
       });
     });
   });

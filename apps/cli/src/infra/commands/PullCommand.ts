@@ -5,6 +5,7 @@ import {
   listPackagesHandler,
   showPackageHandler,
   pullPackagesHandler,
+  overviewHandler,
   PullHandlerDependencies,
 } from './pullHandler';
 
@@ -16,6 +17,11 @@ export const pullCommand = command({
     list: flag({
       long: 'list',
       description: 'List available packages',
+    }),
+    status: flag({
+      long: 'status',
+      description:
+        'Show status of all packmind.json files and their packages in the workspace',
     }),
     show: option({
       type: string,
@@ -29,7 +35,7 @@ export const pullCommand = command({
       description: 'Package slugs to install (e.g., backend frontend)',
     }),
   },
-  handler: async ({ list, show, packagesSlugs }) => {
+  handler: async ({ list, status, show, packagesSlugs }) => {
     // Initialize hexa and logger
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
@@ -45,6 +51,12 @@ export const pullCommand = command({
     // Handle --list flag
     if (list) {
       await listPackagesHandler({}, deps);
+      return;
+    }
+
+    // Handle --status flag
+    if (status) {
+      await overviewHandler({}, deps);
       return;
     }
 
