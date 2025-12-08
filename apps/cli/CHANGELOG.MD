@@ -8,6 +8,8 @@
 
 ## Fixed
 
+- only files modified are counted in the summary of changes after running `packmind-cli install` #48
+
 ## Removed
 
 # [0.7.0] - 2025-12-05
