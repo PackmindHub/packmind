@@ -2,11 +2,11 @@ import { PackmindCliHexa } from '../../PackmindCliHexa';
 import {
   listPackagesHandler,
   showPackageHandler,
-  pullPackagesHandler,
-  recursivePullHandler,
+  installPackagesHandler,
+  recursiveInstallHandler,
   statusHandler,
-  PullHandlerDependencies,
-} from './pullHandler';
+  InstallHandlerDependencies,
+} from './installPackagesHandler';
 import { createPackageId, createSpaceId, createUserId } from '@packmind/types';
 
 // Mock the consoleLogger module to avoid chalk ESM issues
@@ -16,20 +16,21 @@ jest.mock('../utils/consoleLogger', () => ({
   formatLabel: jest.fn((label: string) => label),
 }));
 
-describe('pullHandler', () => {
+describe('installPackagesHandler', () => {
   let mockPackmindCliHexa: jest.Mocked<PackmindCliHexa>;
   let mockExit: jest.Mock;
   let mockGetCwd: jest.Mock;
   let mockLog: jest.Mock;
   let mockError: jest.Mock;
-  let deps: PullHandlerDependencies;
+  let deps: InstallHandlerDependencies;
 
   beforeEach(() => {
     mockPackmindCliHexa = {
       listPackages: jest.fn(),
       getPackageBySlug: jest.fn(),
       readConfig: jest.fn(),
-      pullData: jest.fn(),
+      writeConfig: jest.fn(),
+      installPackages: jest.fn(),
       tryGetGitRepositoryRoot: jest.fn(),
       getGitRemoteUrlFromPath: jest.fn(),
       getCurrentBranch: jest.fn(),
@@ -160,14 +161,14 @@ describe('pullHandler', () => {
     });
   });
 
-  describe('pullPackagesHandler', () => {
+  describe('installPackagesHandler', () => {
     describe('when config parsing fails', () => {
       it('displays error and exits with 1', async () => {
         mockPackmindCliHexa.readConfig.mockRejectedValue(
           new Error('Invalid JSON'),
         );
 
-        await pullPackagesHandler({ packagesSlugs: [] }, deps);
+        await installPackagesHandler({ packagesSlugs: [] }, deps);
 
         expect(mockError).toHaveBeenCalledWith(
           'ERROR Failed to parse packmind.json',
@@ -181,7 +182,7 @@ describe('pullHandler', () => {
       it('displays help and exits with 0', async () => {
         mockPackmindCliHexa.readConfig.mockResolvedValue([]);
 
-        await pullPackagesHandler({ packagesSlugs: [] }, deps);
+        await installPackagesHandler({ packagesSlugs: [] }, deps);
 
         expect(mockLog).toHaveBeenCalledWith(
           'Usage: packmind-cli install <package-slug> [package-slug...]',
@@ -190,10 +191,10 @@ describe('pullHandler', () => {
       });
     });
 
-    describe('when pull succeeds with no file changes', () => {
+    describe('when install succeeds with no file changes', () => {
       it('does not notify distribution', async () => {
         mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
-        mockPackmindCliHexa.pullData.mockResolvedValue({
+        mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 0,
           filesUpdated: 0,
           filesDeleted: 0,
@@ -202,17 +203,20 @@ describe('pullHandler', () => {
           errors: [],
         });
 
-        const result = await pullPackagesHandler({ packagesSlugs: [] }, deps);
+        const result = await installPackagesHandler(
+          { packagesSlugs: [] },
+          deps,
+        );
 
         expect(mockPackmindCliHexa.notifyDistribution).not.toHaveBeenCalled();
         expect(result.notificationSent).toBe(false);
       });
     });
 
-    describe('when pull succeeds with file changes but not in git repo', () => {
+    describe('when install succeeds with file changes but not in git repo', () => {
       it('does not notify distribution', async () => {
         mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
-        mockPackmindCliHexa.pullData.mockResolvedValue({
+        mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 2,
           filesUpdated: 1,
           filesDeleted: 0,
@@ -222,17 +226,20 @@ describe('pullHandler', () => {
         });
         mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(null);
 
-        const result = await pullPackagesHandler({ packagesSlugs: [] }, deps);
+        const result = await installPackagesHandler(
+          { packagesSlugs: [] },
+          deps,
+        );
 
         expect(mockPackmindCliHexa.notifyDistribution).not.toHaveBeenCalled();
         expect(result.notificationSent).toBe(false);
       });
     });
 
-    describe('when pull succeeds with file changes in git repo', () => {
+    describe('when install succeeds with file changes in git repo', () => {
       beforeEach(() => {
         mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
-        mockPackmindCliHexa.pullData.mockResolvedValue({
+        mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 2,
           filesUpdated: 1,
           filesDeleted: 0,
@@ -254,7 +261,10 @@ describe('pullHandler', () => {
           deploymentId: 'deployment-123',
         });
 
-        const result = await pullPackagesHandler({ packagesSlugs: [] }, deps);
+        const result = await installPackagesHandler(
+          { packagesSlugs: [] },
+          deps,
+        );
 
         expect(mockPackmindCliHexa.notifyDistribution).toHaveBeenCalledWith({
           distributedPackages: ['backend'],
@@ -274,7 +284,7 @@ describe('pullHandler', () => {
           deploymentId: 'deployment-123',
         });
 
-        await pullPackagesHandler({ packagesSlugs: [] }, deps);
+        await installPackagesHandler({ packagesSlugs: [] }, deps);
 
         expect(mockPackmindCliHexa.notifyDistribution).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -289,7 +299,10 @@ describe('pullHandler', () => {
             new Error('Network error'),
           );
 
-          const result = await pullPackagesHandler({ packagesSlugs: [] }, deps);
+          const result = await installPackagesHandler(
+            { packagesSlugs: [] },
+            deps,
+          );
 
           expect(mockLog).not.toHaveBeenCalledWith(
             'Successfully notified Packmind of the new distribution',
@@ -308,9 +321,9 @@ describe('pullHandler', () => {
           statusCode: number;
         };
         error.statusCode = 404;
-        mockPackmindCliHexa.pullData.mockRejectedValue(error);
+        mockPackmindCliHexa.installPackages.mockRejectedValue(error);
 
-        await pullPackagesHandler({ packagesSlugs: ['non-existent'] }, deps);
+        await installPackagesHandler({ packagesSlugs: ['non-existent'] }, deps);
 
         expect(mockError).toHaveBeenCalledWith(
           '\n❌ Failed to install content:',
@@ -323,7 +336,7 @@ describe('pullHandler', () => {
     describe('when pull has errors in result', () => {
       it('displays errors and exits with 1', async () => {
         mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
-        mockPackmindCliHexa.pullData.mockResolvedValue({
+        mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 1,
           filesUpdated: 0,
           filesDeleted: 0,
@@ -332,7 +345,10 @@ describe('pullHandler', () => {
           errors: ['Failed to write file: permission denied'],
         });
 
-        const result = await pullPackagesHandler({ packagesSlugs: [] }, deps);
+        const result = await installPackagesHandler(
+          { packagesSlugs: [] },
+          deps,
+        );
 
         expect(mockLog).toHaveBeenCalledWith('\n⚠️  Errors encountered:');
         expect(mockLog).toHaveBeenCalledWith(
@@ -346,7 +362,7 @@ describe('pullHandler', () => {
     describe('when initializing new config', () => {
       it('logs initialization message', async () => {
         mockPackmindCliHexa.readConfig.mockResolvedValue([]);
-        mockPackmindCliHexa.pullData.mockResolvedValue({
+        mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 1,
           filesUpdated: 0,
           filesDeleted: 0,
@@ -356,7 +372,7 @@ describe('pullHandler', () => {
         });
         mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(null);
 
-        await pullPackagesHandler({ packagesSlugs: ['backend'] }, deps);
+        await installPackagesHandler({ packagesSlugs: ['backend'] }, deps);
 
         expect(mockLog).toHaveBeenCalledWith('INFO initializing packmind.json');
       });
@@ -365,7 +381,7 @@ describe('pullHandler', () => {
     describe('when updating existing config', () => {
       it('does not log initialization message', async () => {
         mockPackmindCliHexa.readConfig.mockResolvedValue(['frontend']);
-        mockPackmindCliHexa.pullData.mockResolvedValue({
+        mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 1,
           filesUpdated: 0,
           filesDeleted: 0,
@@ -375,7 +391,7 @@ describe('pullHandler', () => {
         });
         mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(null);
 
-        await pullPackagesHandler({ packagesSlugs: ['backend'] }, deps);
+        await installPackagesHandler({ packagesSlugs: ['backend'] }, deps);
 
         expect(mockLog).not.toHaveBeenCalledWith(
           'INFO initializing packmind.json',
@@ -389,7 +405,7 @@ describe('pullHandler', () => {
           'backend',
           'frontend',
         ]);
-        mockPackmindCliHexa.pullData.mockResolvedValue({
+        mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 0,
           filesUpdated: 0,
           filesDeleted: 0,
@@ -399,9 +415,12 @@ describe('pullHandler', () => {
         });
         mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(null);
 
-        await pullPackagesHandler({ packagesSlugs: ['backend', 'api'] }, deps);
+        await installPackagesHandler(
+          { packagesSlugs: ['backend', 'api'] },
+          deps,
+        );
 
-        expect(mockPackmindCliHexa.pullData).toHaveBeenCalledWith({
+        expect(mockPackmindCliHexa.installPackages).toHaveBeenCalledWith({
           baseDirectory: '/project',
           packagesSlugs: ['backend', 'frontend', 'api'],
         });
@@ -670,7 +689,7 @@ describe('pullHandler', () => {
       });
 
       it('displays help message', async () => {
-        await recursivePullHandler({}, deps);
+        await recursiveInstallHandler({}, deps);
 
         expect(mockLog).toHaveBeenCalledWith(
           'No packmind.json files found in this workspace.',
@@ -678,13 +697,13 @@ describe('pullHandler', () => {
       });
 
       it('exits with 0', async () => {
-        await recursivePullHandler({}, deps);
+        await recursiveInstallHandler({}, deps);
 
         expect(mockExit).toHaveBeenCalledWith(0);
       });
 
       it('returns zero counts', async () => {
-        const result = await recursivePullHandler({}, deps);
+        const result = await recursiveInstallHandler({}, deps);
 
         expect(result.directoriesProcessed).toBe(0);
         expect(result.totalFilesCreated).toBe(0);
@@ -717,7 +736,7 @@ describe('pullHandler', () => {
 
       it('displays count of files to process', async () => {
         mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
-        mockPackmindCliHexa.pullData.mockResolvedValue({
+        mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 0,
           filesUpdated: 0,
           filesDeleted: 0,
@@ -725,7 +744,7 @@ describe('pullHandler', () => {
           standardsCount: 0,
           errors: [],
         });
-        await recursivePullHandler({}, deps);
+        await recursiveInstallHandler({}, deps);
 
         expect(mockLog).toHaveBeenCalledWith(
           'Found 2 packmind.json file(s) to process\n',
@@ -734,7 +753,7 @@ describe('pullHandler', () => {
 
       it('processes each directory', async () => {
         mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
-        mockPackmindCliHexa.pullData.mockResolvedValue({
+        mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 3,
           filesUpdated: 1,
           filesDeleted: 0,
@@ -743,15 +762,15 @@ describe('pullHandler', () => {
           errors: [],
         });
 
-        const result = await recursivePullHandler({}, deps);
+        const result = await recursiveInstallHandler({}, deps);
 
         expect(result.directoriesProcessed).toBe(2);
-        expect(mockPackmindCliHexa.pullData).toHaveBeenCalledTimes(2);
+        expect(mockPackmindCliHexa.installPackages).toHaveBeenCalledTimes(2);
       });
 
       it('aggregates file counts from all directories', async () => {
         mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
-        mockPackmindCliHexa.pullData.mockResolvedValue({
+        mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 3,
           filesUpdated: 1,
           filesDeleted: 2,
@@ -760,7 +779,7 @@ describe('pullHandler', () => {
           errors: [],
         });
 
-        const result = await recursivePullHandler({}, deps);
+        const result = await recursiveInstallHandler({}, deps);
 
         expect(result.totalFilesCreated).toBe(6);
         expect(result.totalFilesUpdated).toBe(2);
@@ -769,7 +788,7 @@ describe('pullHandler', () => {
 
       it('displays summary at the end', async () => {
         mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
-        mockPackmindCliHexa.pullData.mockResolvedValue({
+        mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 3,
           filesUpdated: 1,
           filesDeleted: 0,
@@ -778,7 +797,7 @@ describe('pullHandler', () => {
           errors: [],
         });
 
-        await recursivePullHandler({}, deps);
+        await recursiveInstallHandler({}, deps);
 
         expect(mockLog).toHaveBeenCalledWith(
           'Summary: 2 directories processed, 6 files added, 2 changed, 0 removed',
@@ -787,7 +806,7 @@ describe('pullHandler', () => {
 
       it('exits with 0', async () => {
         mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
-        mockPackmindCliHexa.pullData.mockResolvedValue({
+        mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 0,
           filesUpdated: 0,
           filesDeleted: 0,
@@ -796,7 +815,7 @@ describe('pullHandler', () => {
           errors: [],
         });
 
-        await recursivePullHandler({}, deps);
+        await recursiveInstallHandler({}, deps);
 
         expect(mockExit).toHaveBeenCalledWith(0);
       });
@@ -829,7 +848,7 @@ describe('pullHandler', () => {
         mockPackmindCliHexa.readConfig
           .mockResolvedValueOnce(['backend'])
           .mockResolvedValueOnce(['nestjs']);
-        mockPackmindCliHexa.pullData
+        mockPackmindCliHexa.installPackages
           .mockRejectedValueOnce(new Error('Network error'))
           .mockResolvedValueOnce({
             filesCreated: 2,
@@ -840,7 +859,7 @@ describe('pullHandler', () => {
             errors: [],
           });
 
-        const result = await recursivePullHandler({}, deps);
+        const result = await recursiveInstallHandler({}, deps);
 
         expect(result.directoriesProcessed).toBe(2);
         expect(result.totalFilesCreated).toBe(2);
@@ -849,7 +868,7 @@ describe('pullHandler', () => {
 
       it('reports errors at the end', async () => {
         mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
-        mockPackmindCliHexa.pullData
+        mockPackmindCliHexa.installPackages
           .mockRejectedValueOnce(new Error('Network error'))
           .mockResolvedValueOnce({
             filesCreated: 2,
@@ -860,7 +879,7 @@ describe('pullHandler', () => {
             errors: [],
           });
 
-        await recursivePullHandler({}, deps);
+        await recursiveInstallHandler({}, deps);
 
         expect(mockLog).toHaveBeenCalledWith(
           expect.stringContaining('1 error(s) encountered'),
@@ -869,7 +888,7 @@ describe('pullHandler', () => {
 
       it('exits with 1', async () => {
         mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
-        mockPackmindCliHexa.pullData
+        mockPackmindCliHexa.installPackages
           .mockRejectedValueOnce(new Error('Network error'))
           .mockResolvedValueOnce({
             filesCreated: 2,
@@ -880,7 +899,7 @@ describe('pullHandler', () => {
             errors: [],
           });
 
-        await recursivePullHandler({}, deps);
+        await recursiveInstallHandler({}, deps);
 
         expect(mockExit).toHaveBeenCalledWith(1);
       });
@@ -909,7 +928,7 @@ describe('pullHandler', () => {
           new Error('Invalid JSON'),
         );
 
-        const result = await recursivePullHandler({}, deps);
+        const result = await recursiveInstallHandler({}, deps);
 
         expect(result.errors).toHaveLength(1);
         expect(result.errors[0].message).toContain('Invalid JSON');
@@ -925,7 +944,7 @@ describe('pullHandler', () => {
           new Error('Permission denied'),
         );
 
-        await recursivePullHandler({}, deps);
+        await recursiveInstallHandler({}, deps);
 
         expect(mockError).toHaveBeenCalledWith(
           '\n❌ Failed to run recursive install:',
@@ -955,7 +974,7 @@ describe('pullHandler', () => {
 
       it('displays singular form in summary', async () => {
         mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
-        mockPackmindCliHexa.pullData.mockResolvedValue({
+        mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 1,
           filesUpdated: 0,
           filesDeleted: 0,
@@ -964,7 +983,7 @@ describe('pullHandler', () => {
           errors: [],
         });
 
-        await recursivePullHandler({}, deps);
+        await recursiveInstallHandler({}, deps);
 
         expect(mockLog).toHaveBeenCalledWith(
           'Summary: 1 directory processed, 1 files added, 0 changed, 0 removed',

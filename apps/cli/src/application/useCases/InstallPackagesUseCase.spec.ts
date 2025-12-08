@@ -1,11 +1,11 @@
-import { PullDataUseCase } from './PullDataUseCase';
+import { InstallPackagesUseCase } from './InstallPackagesUseCase';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import * as fs from 'fs/promises';
 
 jest.mock('fs/promises');
 
-describe('PullDataUseCase', () => {
-  let useCase: PullDataUseCase;
+describe('InstallPackagesUseCase', () => {
+  let useCase: InstallPackagesUseCase;
   let mockGateway: jest.Mocked<IPackmindGateway>;
 
   beforeEach(() => {
@@ -26,7 +26,7 @@ describe('PullDataUseCase', () => {
     (fs.access as jest.Mock).mockResolvedValue(undefined);
     (fs.unlink as jest.Mock).mockResolvedValue(undefined);
 
-    useCase = new PullDataUseCase(mockGateway);
+    useCase = new InstallPackagesUseCase(mockGateway);
   });
 
   afterEach(() => {

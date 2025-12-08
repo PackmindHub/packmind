@@ -1,20 +1,22 @@
 import {
-  IPullDataCommand,
-  IPullDataResult,
-  IPullDataUseCase,
-} from '../../domain/useCases/IPullDataUseCase';
+  IInstallPackagesCommand,
+  IInstallPackagesResult,
+  IInstallPackagesUseCase,
+} from '../../domain/useCases/IInstallPackagesUseCase';
 import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import { mergeSectionsIntoFileContent } from '@packmind/node-utils';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 
-export class PullDataUseCase implements IPullDataUseCase {
+export class InstallPackagesUseCase implements IInstallPackagesUseCase {
   constructor(private readonly packmindGateway: IPackmindGateway) {}
 
-  public async execute(command: IPullDataCommand): Promise<IPullDataResult> {
+  public async execute(
+    command: IInstallPackagesCommand,
+  ): Promise<IInstallPackagesResult> {
     const baseDirectory = command.baseDirectory || process.cwd();
 
-    const result: IPullDataResult = {
+    const result: IInstallPackagesResult = {
       filesCreated: 0,
       filesUpdated: 0,
       filesDeleted: 0,
@@ -84,7 +86,7 @@ export class PullDataUseCase implements IPullDataUseCase {
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
-      result.errors.push(`Failed to pull data: ${errorMsg}`);
+      result.errors.push(`Failed to install packages: ${errorMsg}`);
     }
 
     return result;
@@ -97,7 +99,7 @@ export class PullDataUseCase implements IPullDataUseCase {
       content?: string;
       sections?: { key: string; content: string }[];
     },
-    result: IPullDataResult,
+    result: IInstallPackagesResult,
   ): Promise<void> {
     const fullPath = path.join(baseDirectory, file.path);
     const directory = path.dirname(fullPath);
@@ -131,7 +133,7 @@ export class PullDataUseCase implements IPullDataUseCase {
     fullPath: string,
     content: string,
     fileExists: boolean,
-    result: IPullDataResult,
+    result: IInstallPackagesResult,
   ): Promise<void> {
     if (fileExists) {
       // Read existing file content
@@ -170,7 +172,7 @@ export class PullDataUseCase implements IPullDataUseCase {
     fullPath: string,
     sections: { key: string; content: string }[],
     fileExists: boolean,
-    result: IPullDataResult,
+    result: IInstallPackagesResult,
   ): Promise<void> {
     let currentContent = '';
 
@@ -200,7 +202,7 @@ export class PullDataUseCase implements IPullDataUseCase {
   private async deleteFile(
     baseDirectory: string,
     filePath: string,
-    result: IPullDataResult,
+    result: IInstallPackagesResult,
   ): Promise<void> {
     const fullPath = path.join(baseDirectory, filePath);
 

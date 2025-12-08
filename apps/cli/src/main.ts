@@ -5,7 +5,7 @@ import { extractWasmFiles, hasEmbeddedWasmFiles } from './wasm-runtime';
 import { config as dotenvConfig } from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
-import { pullCommand } from './infra/commands/PullCommand';
+import { installCommand } from './infra/commands/InstallCommand';
 import { loginCommand } from './infra/commands/LoginCommand';
 import { logoutCommand } from './infra/commands/LogoutCommand';
 import { whoamiCommand } from './infra/commands/WhoamiCommand';
@@ -85,8 +85,7 @@ const app = subcommands({
   description: 'Packmind CLI tool',
   cmds: {
     lint: lintCommand,
-    pull: pullCommand,
-    install: pullCommand,
+    install: installCommand,
     login: loginCommand,
     logout: logoutCommand,
     whoami: whoamiCommand,
