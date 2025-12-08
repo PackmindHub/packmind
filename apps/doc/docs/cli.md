@@ -222,6 +222,34 @@ packmind-cli install --list
 packmind-cli install --show <package-slug>
 ```
 
+### View Workspace Status
+
+See an overview of all `packmind.json` files and their installed packages across your workspace:
+
+```bash
+packmind-cli install --status
+```
+
+**Example output:**
+
+```
+Workspace packages status
+
+packmind.json                        Packages
+-----------------------------------------------------------------
+./packmind.json                      generic
+./apps/api/packmind.json             nestjs
+./apps/frontend/packmind.json        frontend
+
+3 unique packages currently installed.
+```
+
+This is useful for:
+
+- Understanding what packages are installed across a monorepo
+- Identifying empty or misconfigured `packmind.json` files (shown as `<no packages>`)
+- Getting a quick summary of unique packages in your workspace
+
 ### Install Packages
 
 ```bash
