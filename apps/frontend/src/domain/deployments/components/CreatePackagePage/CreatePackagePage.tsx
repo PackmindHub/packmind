@@ -18,7 +18,7 @@ import {
   PMBadge,
   PMCloseButton,
 } from '@packmind/ui';
-import { useNavigate } from 'react-router';
+import { useNavigate, NavLink } from 'react-router';
 import { useCurrentSpace } from '../../../spaces/hooks/useCurrentSpace';
 import { useGetRecipesQuery } from '../../../recipes/api/queries/RecipesQueries';
 import { useGetStandardsQuery } from '../../../standards/api/queries/StandardsQueries';
@@ -28,6 +28,7 @@ import {
   MarkdownEditor,
   MarkdownEditorProvider,
 } from '../../../../shared/components/editor/MarkdownEditor';
+import { routes } from '../../../../shared/utils/routes';
 
 export interface CreatePackagePageProps {
   organizationSlug: string;
@@ -42,6 +43,8 @@ interface PackageFormContentProps {
   setSelectedRecipeIds: (ids: RecipeId[]) => void;
   setSelectedStandardIds: (ids: StandardId[]) => void;
   isPending: boolean;
+  organizationSlug: string;
+  spaceSlug: string;
 }
 
 const PackageFormContent = ({
@@ -52,6 +55,8 @@ const PackageFormContent = ({
   setSelectedRecipeIds,
   setSelectedStandardIds,
   isPending,
+  organizationSlug,
+  spaceSlug,
 }: PackageFormContentProps) => {
   const { contains } = pmUseFilter({ sensitivity: 'base' });
 
@@ -159,9 +164,27 @@ const PackageFormContent = ({
                       display="inline-flex"
                       alignItems="center"
                     >
-                      <PMText truncate flex="1" minW="0" title={name}>
-                        {name}
-                      </PMText>
+                      <NavLink
+                        to={routes.space.toStandard(
+                          organizationSlug,
+                          spaceSlug,
+                          id,
+                        )}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          flex: 1,
+                          minWidth: 0,
+                          textDecoration: 'none',
+                          color: 'inherit',
+                          cursor: 'pointer',
+                          overflow: 'hidden',
+                        }}
+                      >
+                        <PMText truncate title={name}>
+                          {name}
+                        </PMText>
+                      </NavLink>
                       <PMCloseButton
                         size="xs"
                         ml={1}
@@ -253,9 +276,27 @@ const PackageFormContent = ({
                       display="inline-flex"
                       alignItems="center"
                     >
-                      <PMText truncate flex="1" minW="0" title={name}>
-                        {name}
-                      </PMText>
+                      <NavLink
+                        to={routes.space.toRecipe(
+                          organizationSlug,
+                          spaceSlug,
+                          id,
+                        )}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          flex: 1,
+                          minWidth: 0,
+                          textDecoration: 'none',
+                          color: 'inherit',
+                          cursor: 'pointer',
+                          overflow: 'hidden',
+                        }}
+                      >
+                        <PMText truncate title={name}>
+                          {name}
+                        </PMText>
+                      </NavLink>
                       <PMCloseButton
                         size="xs"
                         ml={1}
@@ -454,6 +495,8 @@ export const CreatePackagePage: React.FC<CreatePackagePageProps> = ({
                   setSelectedRecipeIds={setSelectedRecipeIds}
                   setSelectedStandardIds={setSelectedStandardIds}
                   isPending={isPending}
+                  organizationSlug={organizationSlug}
+                  spaceSlug={spaceSlug}
                 />
               )}
             </PMFieldset.Content>
