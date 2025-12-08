@@ -49,6 +49,90 @@ describe('PackmindConfigService', () => {
         });
       });
     });
+
+    describe('with existing packages', () => {
+      it('merges new packages with existing packages', () => {
+        const existingPackages = {
+          'existing-a': '*',
+          'existing-b': '*',
+        };
+
+        const result = service.generateConfigContent(
+          ['new-package'],
+          existingPackages,
+        );
+
+        expect(result).toEqual({
+          packages: {
+            'existing-a': '*',
+            'existing-b': '*',
+            'new-package': '*',
+          },
+        });
+      });
+
+      it('overwrites existing package version with new version', () => {
+        const existingPackages = {
+          'shared-package': '1.0.0',
+        };
+
+        const result = service.generateConfigContent(
+          ['shared-package'],
+          existingPackages,
+        );
+
+        expect(result).toEqual({
+          packages: {
+            'shared-package': '*',
+          },
+        });
+      });
+
+      describe('when adding new packages to existing ones', () => {
+        it('preserves existing packages', () => {
+          const existingPackages = {
+            backend: '*',
+            frontend: '*',
+          };
+
+          const result = service.generateConfigContent(
+            ['api-standards'],
+            existingPackages,
+          );
+
+          expect(result).toEqual({
+            packages: {
+              backend: '*',
+              frontend: '*',
+              'api-standards': '*',
+            },
+          });
+        });
+      });
+
+      it('handles empty existing packages', () => {
+        const result = service.generateConfigContent(['new-package'], {});
+
+        expect(result).toEqual({
+          packages: {
+            'new-package': '*',
+          },
+        });
+      });
+
+      it('handles undefined existing packages', () => {
+        const result = service.generateConfigContent(
+          ['new-package'],
+          undefined,
+        );
+
+        expect(result).toEqual({
+          packages: {
+            'new-package': '*',
+          },
+        });
+      });
+    });
   });
 
   describe('createConfigFileModification', () => {
@@ -76,6 +160,27 @@ describe('PackmindConfigService', () => {
         const expectedContent = '{\n  "packages": {}\n}\n';
 
         expect(result.content).toBe(expectedContent);
+      });
+    });
+
+    describe('with existing packages', () => {
+      it('returns FileModification with merged packages content', () => {
+        const existingPackages = {
+          backend: '*',
+          frontend: '*',
+        };
+
+        const result = service.createConfigFileModification(
+          ['api-standards'],
+          existingPackages,
+        );
+
+        const parsed = JSON.parse(result.content);
+        expect(parsed.packages).toEqual({
+          backend: '*',
+          frontend: '*',
+          'api-standards': '*',
+        });
       });
     });
   });

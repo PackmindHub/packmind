@@ -1552,4 +1552,307 @@ describe('PublishArtifactsUseCase', () => {
       });
     });
   });
+
+  describe('when existing packmind.json exists in repository', () => {
+    let command: PublishArtifactsCommand;
+    let recipeVersion: ReturnType<typeof recipeVersionFactory>;
+    let target: ReturnType<typeof targetFactory>;
+    let gitRepo: GitRepo;
+    let gitCommit: GitCommit;
+
+    beforeEach(() => {
+      recipeVersion = recipeVersionFactory({
+        id: createRecipeVersionId(uuidv4()),
+        name: 'Test Recipe',
+        slug: 'test-recipe',
+        version: 1,
+      });
+
+      gitRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'test-owner',
+        repo: 'test-repo',
+        branch: 'main',
+        providerId: createGitProviderId(uuidv4()),
+      };
+
+      target = targetFactory({
+        id: targetId,
+        gitRepoId: gitRepo.id,
+        name: 'Production',
+        path: '',
+      });
+
+      gitCommit = {
+        id: createGitCommitId(uuidv4()),
+        sha: 'abc123def456',
+        message: 'Test commit',
+        author: 'Test Author <test@example.com>',
+        url: 'https://github.com/test-owner/test-repo/commit/abc123def456',
+      };
+
+      command = {
+        userId,
+        organizationId,
+        recipeVersionIds: [recipeVersion.id],
+        standardVersionIds: [],
+        targetIds: [targetId],
+        packagesSlugs: ['new-package'],
+      };
+
+      mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
+      mockTargetService.findById.mockResolvedValue(target);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
+      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      // Return existing packmind.json with packages
+      mockGitPort.getFileFromRepo.mockResolvedValue({
+        sha: 'existing-sha',
+        content: JSON.stringify({
+          packages: {
+            'existing-package-a': '*',
+            'existing-package-b': '*',
+          },
+        }),
+      });
+      mockCodingAgentPort.renderArtifacts.mockResolvedValue({
+        createOrUpdate: [
+          {
+            path: '.packmind/recipes/test-recipe.md',
+            content: 'recipe content',
+          },
+        ],
+        delete: [],
+      });
+      mockGitPort.commitToGit.mockResolvedValue(gitCommit);
+    });
+
+    it('merges new packages with existing packages', async () => {
+      await useCase.execute(command);
+
+      const committedFiles = mockGitPort.commitToGit.mock.calls[0][1];
+      const packmindJsonFile = committedFiles.find((f: { path: string }) =>
+        f.path.endsWith('packmind.json'),
+      );
+      const parsedContent = JSON.parse(packmindJsonFile.content);
+
+      expect(parsedContent.packages).toEqual({
+        'existing-package-a': '*',
+        'existing-package-b': '*',
+        'new-package': '*',
+      });
+    });
+
+    it('preserves existing-package-a in merged result', async () => {
+      await useCase.execute(command);
+
+      const committedFiles = mockGitPort.commitToGit.mock.calls[0][1];
+      const packmindJsonFile = committedFiles.find((f: { path: string }) =>
+        f.path.endsWith('packmind.json'),
+      );
+      const parsedContent = JSON.parse(packmindJsonFile.content);
+
+      expect(parsedContent.packages['existing-package-a']).toBe('*');
+    });
+
+    it('preserves existing-package-b in merged result', async () => {
+      await useCase.execute(command);
+
+      const committedFiles = mockGitPort.commitToGit.mock.calls[0][1];
+      const packmindJsonFile = committedFiles.find((f: { path: string }) =>
+        f.path.endsWith('packmind.json'),
+      );
+      const parsedContent = JSON.parse(packmindJsonFile.content);
+
+      expect(parsedContent.packages['existing-package-b']).toBe('*');
+    });
+
+    it('fetches existing packmind.json from git', async () => {
+      await useCase.execute(command);
+
+      const calls = mockGitPort.getFileFromRepo.mock.calls;
+      const packmindJsonCall = calls.find(
+        (call) => call[1] === 'packmind.json',
+      );
+
+      expect(packmindJsonCall).toBeDefined();
+    });
+  });
+
+  describe('when existing packmind.json has target path prefix', () => {
+    let command: PublishArtifactsCommand;
+    let recipeVersion: ReturnType<typeof recipeVersionFactory>;
+    let target: ReturnType<typeof targetFactory>;
+    let gitRepo: GitRepo;
+    let gitCommit: GitCommit;
+
+    beforeEach(() => {
+      recipeVersion = recipeVersionFactory({
+        id: createRecipeVersionId(uuidv4()),
+        name: 'Test Recipe',
+        slug: 'test-recipe',
+        version: 1,
+      });
+
+      gitRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'test-owner',
+        repo: 'test-repo',
+        branch: 'main',
+        providerId: createGitProviderId(uuidv4()),
+      };
+
+      target = targetFactory({
+        id: targetId,
+        gitRepoId: gitRepo.id,
+        name: 'Production',
+        path: 'apps/frontend',
+      });
+
+      gitCommit = {
+        id: createGitCommitId(uuidv4()),
+        sha: 'abc123def456',
+        message: 'Test commit',
+        author: 'Test Author <test@example.com>',
+        url: 'https://github.com/test-owner/test-repo/commit/abc123def456',
+      };
+
+      command = {
+        userId,
+        organizationId,
+        recipeVersionIds: [recipeVersion.id],
+        standardVersionIds: [],
+        targetIds: [targetId],
+        packagesSlugs: ['new-package'],
+      };
+
+      mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
+      mockTargetService.findById.mockResolvedValue(target);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
+      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockGitPort.getFileFromRepo.mockResolvedValue({
+        sha: 'existing-sha',
+        content: JSON.stringify({
+          packages: {
+            'existing-package': '*',
+          },
+        }),
+      });
+      mockCodingAgentPort.renderArtifacts.mockResolvedValue({
+        createOrUpdate: [
+          {
+            path: '.packmind/recipes/test-recipe.md',
+            content: 'recipe content',
+          },
+        ],
+        delete: [],
+      });
+      mockGitPort.commitToGit.mockResolvedValue(gitCommit);
+    });
+
+    it('fetches packmind.json from target path', async () => {
+      await useCase.execute(command);
+
+      const calls = mockGitPort.getFileFromRepo.mock.calls;
+      const packmindJsonCall = calls.find(
+        (call) => call[1] === 'apps/frontend/packmind.json',
+      );
+
+      expect(packmindJsonCall).toBeDefined();
+    });
+  });
+
+  describe('when packmind.json does not exist in repository', () => {
+    let command: PublishArtifactsCommand;
+    let recipeVersion: ReturnType<typeof recipeVersionFactory>;
+    let target: ReturnType<typeof targetFactory>;
+    let gitRepo: GitRepo;
+    let gitCommit: GitCommit;
+
+    beforeEach(() => {
+      recipeVersion = recipeVersionFactory({
+        id: createRecipeVersionId(uuidv4()),
+        name: 'Test Recipe',
+        slug: 'test-recipe',
+        version: 1,
+      });
+
+      gitRepo = {
+        id: createGitRepoId(uuidv4()),
+        owner: 'test-owner',
+        repo: 'test-repo',
+        branch: 'main',
+        providerId: createGitProviderId(uuidv4()),
+      };
+
+      target = targetFactory({
+        id: targetId,
+        gitRepoId: gitRepo.id,
+        name: 'Production',
+        path: '',
+      });
+
+      gitCommit = {
+        id: createGitCommitId(uuidv4()),
+        sha: 'abc123def456',
+        message: 'Test commit',
+        author: 'Test Author <test@example.com>',
+        url: 'https://github.com/test-owner/test-repo/commit/abc123def456',
+      };
+
+      command = {
+        userId,
+        organizationId,
+        recipeVersionIds: [recipeVersion.id],
+        standardVersionIds: [],
+        targetIds: [targetId],
+        packagesSlugs: ['new-package'],
+      };
+
+      mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
+      mockTargetService.findById.mockResolvedValue(target);
+      mockGitPort.getRepositoryById.mockResolvedValue(gitRepo);
+      mockDistributionRepository.findActiveRecipeVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      // No existing packmind.json
+      mockGitPort.getFileFromRepo.mockResolvedValue(null);
+      mockCodingAgentPort.renderArtifacts.mockResolvedValue({
+        createOrUpdate: [
+          {
+            path: '.packmind/recipes/test-recipe.md',
+            content: 'recipe content',
+          },
+        ],
+        delete: [],
+      });
+      mockGitPort.commitToGit.mockResolvedValue(gitCommit);
+    });
+
+    it('creates packmind.json with only new packages', async () => {
+      await useCase.execute(command);
+
+      const committedFiles = mockGitPort.commitToGit.mock.calls[0][1];
+      const packmindJsonFile = committedFiles.find((f: { path: string }) =>
+        f.path.endsWith('packmind.json'),
+      );
+      const parsedContent = JSON.parse(packmindJsonFile.content);
+
+      expect(parsedContent.packages).toEqual({
+        'new-package': '*',
+      });
+    });
+  });
 });
