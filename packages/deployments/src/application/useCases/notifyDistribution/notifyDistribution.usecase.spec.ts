@@ -11,6 +11,7 @@ import {
   createStandardId,
   createRecipeVersionId,
   createStandardVersionId,
+  DEFAULT_ACTIVE_RENDER_MODES,
   IAccountsPort,
   IGitPort,
   IRecipesPort,
@@ -28,6 +29,7 @@ import { IPackageRepository } from '../../../domain/repositories/IPackageReposit
 import { ITargetRepository } from '../../../domain/repositories/ITargetRepository';
 import { IDistributionRepository } from '../../../domain/repositories/IDistributionRepository';
 import { IDistributedPackageRepository } from '../../../domain/repositories/IDistributedPackageRepository';
+import { RenderModeConfigurationService } from '../../services/RenderModeConfigurationService';
 import { v4 as uuidv4 } from 'uuid';
 
 describe('NotifyDistributionUseCase', () => {
@@ -40,6 +42,7 @@ describe('NotifyDistributionUseCase', () => {
   let mockTargetRepository: jest.Mocked<ITargetRepository>;
   let mockDistributionRepository: jest.Mocked<IDistributionRepository>;
   let mockDistributedPackageRepository: jest.Mocked<IDistributedPackageRepository>;
+  let mockRenderModeConfigurationService: jest.Mocked<RenderModeConfigurationService>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   const userId = createUserId(uuidv4());
@@ -157,6 +160,12 @@ describe('NotifyDistributionUseCase', () => {
       addRecipeVersions: jest.fn(),
     } as unknown as jest.Mocked<IDistributedPackageRepository>;
 
+    mockRenderModeConfigurationService = {
+      getActiveRenderModes: jest
+        .fn()
+        .mockResolvedValue(DEFAULT_ACTIVE_RENDER_MODES),
+    } as unknown as jest.Mocked<RenderModeConfigurationService>;
+
     stubbedLogger = stubLogger();
 
     useCase = new NotifyDistributionUseCase(
@@ -168,6 +177,7 @@ describe('NotifyDistributionUseCase', () => {
       mockTargetRepository,
       mockDistributionRepository,
       mockDistributedPackageRepository,
+      mockRenderModeConfigurationService,
       stubbedLogger,
     );
   });
@@ -257,6 +267,14 @@ describe('NotifyDistributionUseCase', () => {
 
       it('saves the distribution', () => {
         expect(mockDistributionRepository.add).toHaveBeenCalled();
+      });
+
+      it('stores the organization render modes in the distribution', () => {
+        expect(mockDistributionRepository.add).toHaveBeenCalledWith(
+          expect.objectContaining({
+            renderModes: DEFAULT_ACTIVE_RENDER_MODES,
+          }),
+        );
       });
     });
 

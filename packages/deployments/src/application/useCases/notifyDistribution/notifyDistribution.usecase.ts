@@ -22,12 +22,14 @@ import {
   RecipeId,
   RecipeVersion,
   RecipeVersionId,
+  RenderMode,
   StandardId,
   StandardVersionId,
   Target,
   UnsupportedGitProviderError,
   UserId,
 } from '@packmind/types';
+import { RenderModeConfigurationService } from '../../services/RenderModeConfigurationService';
 import slug from 'slug';
 import { v4 as uuidv4 } from 'uuid';
 import { IDistributedPackageRepository } from '../../../domain/repositories/IDistributedPackageRepository';
@@ -143,6 +145,7 @@ export class NotifyDistributionUseCase
     private readonly targetRepository: ITargetRepository,
     private readonly distributionRepository: IDistributionRepository,
     private readonly distributedPackageRepository: IDistributedPackageRepository,
+    private readonly renderModeConfigurationService: RenderModeConfigurationService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     super(accountsPort, logger);
@@ -190,6 +193,11 @@ export class NotifyDistributionUseCase
       packageSlugs,
     });
 
+    const renderModes =
+      await this.renderModeConfigurationService.getActiveRenderModes(
+        organizationId,
+      );
+
     const distributionId = createDistributionId(uuidv4());
     const distributedPackages = await this.buildDistributedPackages({
       distributionId,
@@ -202,6 +210,7 @@ export class NotifyDistributionUseCase
       target,
       organizationId,
       authorId: command.user.id,
+      renderModes,
     });
 
     this.logger.info('Distribution notification completed successfully', {
@@ -485,6 +494,7 @@ export class NotifyDistributionUseCase
     target: Target;
     organizationId: OrganizationId;
     authorId: UserId;
+    renderModes: RenderMode[];
   }): Promise<void> {
     const {
       distributionId,
@@ -492,6 +502,7 @@ export class NotifyDistributionUseCase
       target,
       organizationId,
       authorId,
+      renderModes,
     } = params;
 
     const distribution: Distribution = {
@@ -502,7 +513,7 @@ export class NotifyDistributionUseCase
       organizationId,
       target,
       status: DistributionStatus.success,
-      renderModes: [],
+      renderModes,
     };
 
     await this.distributionRepository.add(distribution);
