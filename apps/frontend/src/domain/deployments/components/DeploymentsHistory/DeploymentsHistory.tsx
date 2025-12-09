@@ -163,8 +163,6 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
   const getMessage = (deployment: Distribution) => {
     if (deployment.status === 'failure' && deployment.error)
       return deployment.error;
-    if (deployment.status === 'success')
-      return 'Distribution completed successfully';
     if (deployment.status === 'no_changes')
       return 'No changes detected - already up to date';
     return '-';
