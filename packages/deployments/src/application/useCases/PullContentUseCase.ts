@@ -15,6 +15,7 @@ import {
   IStandardsPort,
   PullContentCommand,
   RecipeVersion,
+  StandardVersion,
   createOrganizationId,
   createUserId,
 } from '@packmind/types';
@@ -147,6 +148,37 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         count: standardVersions.length,
       });
 
+      // Process removed packages if previousPackagesSlugs provided
+      let removedRecipeVersions: RecipeVersion[] = [];
+      let removedStandardVersions: StandardVersion[] = [];
+
+      if (
+        command.previousPackagesSlugs &&
+        command.previousPackagesSlugs.length > 0
+      ) {
+        const removedPackageSlugs = this.computeRemovedPackages(
+          command.previousPackagesSlugs,
+          command.packagesSlugs,
+        );
+
+        if (removedPackageSlugs.length > 0) {
+          this.logger.info('Detected removed packages', {
+            removedPackageSlugs,
+            count: removedPackageSlugs.length,
+          });
+
+          const result =
+            await this.fetchArtifactsForRemovedPackages(removedPackageSlugs);
+          removedRecipeVersions = result.recipeVersions;
+          removedStandardVersions = result.standardVersions;
+
+          this.logger.info('Retrieved removed artifact versions', {
+            removedRecipesCount: removedRecipeVersions.length,
+            removedStandardsCount: removedStandardVersions.length,
+          });
+        }
+      }
+
       // Initialize the merged file updates
       const mergedFileUpdates: FileUpdates = {
         createOrUpdate: [],
@@ -180,6 +212,30 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         });
 
         this.mergeFileUpdates(mergedFileUpdates, artifactFileUpdates);
+
+        // Generate deletion paths for removed artifacts
+        if (
+          removedRecipeVersions.length > 0 ||
+          removedStandardVersions.length > 0
+        ) {
+          const deletionPaths = await this.generateDeletionPaths(
+            deployer,
+            removedRecipeVersions,
+            removedStandardVersions,
+          );
+
+          this.logger.info('Generated deletion paths', {
+            codingAgent,
+            deletionPathsCount: deletionPaths.length,
+          });
+
+          // Add deletion paths to file updates
+          deletionPaths.forEach((path) => {
+            if (!mergedFileUpdates.delete.some((f) => f.path === path)) {
+              mergedFileUpdates.delete.push({ path });
+            }
+          });
+        }
       }
 
       // Add packmind.json config file
@@ -234,5 +290,98 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         existingDeletePaths.add(file.path);
       }
     }
+  }
+
+  /**
+   * Computes which package slugs have been removed by comparing
+   * previous packages with current packages
+   */
+  private computeRemovedPackages(
+    previousSlugs: string[],
+    currentSlugs: string[],
+  ): string[] {
+    const currentSet = new Set(currentSlugs);
+    return previousSlugs.filter((slug) => !currentSet.has(slug));
+  }
+
+  /**
+   * Fetches recipe and standard versions for the removed packages
+   */
+  private async fetchArtifactsForRemovedPackages(
+    removedPackageSlugs: string[],
+  ): Promise<{
+    recipeVersions: RecipeVersion[];
+    standardVersions: StandardVersion[];
+  }> {
+    // Fetch packages by slugs (they may not exist anymore, so we handle gracefully)
+    const packages =
+      await this.packageService.getPackagesBySlugsWithArtefacts(
+        removedPackageSlugs,
+      );
+
+    // Extract recipes and standards from removed packages
+    const recipes = packages.flatMap((pkg) => pkg.recipes);
+    const standards = packages.flatMap((pkg) => pkg.standards);
+
+    // Get recipe versions for removed recipes
+    const recipeVersionsPromises = recipes.map(async (recipe) => {
+      const versions = await this.recipesPort.listRecipeVersions(recipe.id);
+      versions.sort(
+        (a: RecipeVersion, b: RecipeVersion) => b.version - a.version,
+      );
+      return versions[0];
+    });
+
+    const recipeVersions = (await Promise.all(recipeVersionsPromises)).filter(
+      (rv): rv is NonNullable<typeof rv> => rv !== null,
+    );
+
+    // Get standard versions for removed standards
+    const standardVersionsPromises = standards.map(async (standard) => {
+      const versions = await this.standardsPort.listStandardVersions(
+        standard.id,
+      );
+      versions.sort((a, b) => b.version - a.version);
+      return versions[0];
+    });
+
+    const standardVersions = (
+      await Promise.all(standardVersionsPromises)
+    ).filter((sv) => sv !== undefined);
+
+    return { recipeVersions, standardVersions };
+  }
+
+  /**
+   * Generates file paths to delete for removed artifacts using the deployer
+   */
+  private async generateDeletionPaths(
+    deployer: ICodingAgentDeployer,
+    removedRecipeVersions: RecipeVersion[],
+    removedStandardVersions: StandardVersion[],
+  ): Promise<string[]> {
+    const deletionPaths: string[] = [];
+
+    // Generate file updates for removed recipes to get their paths
+    if (removedRecipeVersions.length > 0) {
+      const recipeUpdates = await deployer.generateFileUpdatesForRecipes(
+        removedRecipeVersions,
+      );
+      recipeUpdates.createOrUpdate.forEach((file) =>
+        deletionPaths.push(file.path),
+      );
+    }
+
+    // Generate file updates for removed standards to get their paths
+    if (removedStandardVersions.length > 0) {
+      const standardUpdates = await deployer.generateFileUpdatesForStandards(
+        removedStandardVersions,
+      );
+      standardUpdates.createOrUpdate.forEach((file) =>
+        deletionPaths.push(file.path),
+      );
+    }
+
+    return deletionPaths;
   }
 }

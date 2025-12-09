@@ -109,13 +109,14 @@ export class OrganizationsController {
 
   /**
    * Pull all content (recipes and standards) for an organization
-   * GET /organizations/:orgId/pull?packageSlug=backend&packageSlug=frontend
+   * GET /organizations/:orgId/pull?packageSlug=backend&packageSlug=frontend&previousPackageSlug=old-package
    */
   @Get('pull')
   async pullAllContent(
     @Param('orgId') organizationId: OrganizationId,
     @Req() request: AuthenticatedRequest,
     @Query('packageSlug') packageSlug?: string | string[],
+    @Query('previousPackageSlug') previousPackageSlug?: string | string[],
   ): Promise<IPullContentResponse> {
     const userId = request.user.userId;
 
@@ -126,12 +127,20 @@ export class OrganizationsController {
         : [packageSlug]
       : [];
 
+    // Normalize previousPackageSlug to array
+    const previousPackagesSlugs = previousPackageSlug
+      ? Array.isArray(previousPackageSlug)
+        ? previousPackageSlug
+        : [previousPackageSlug]
+      : [];
+
     this.logger.info(
       'GET /organizations/:orgId/pull - Pulling all content for organization',
       {
         organizationId,
         userId,
         packagesSlugs,
+        previousPackagesSlugs,
       },
     );
 
@@ -140,6 +149,7 @@ export class OrganizationsController {
         userId,
         organizationId,
         packagesSlugs,
+        previousPackagesSlugs,
       });
     } catch (error) {
       const errorMessage =

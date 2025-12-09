@@ -7,6 +7,7 @@ export type IPullContentResponse = {
 
 export type PullContentCommand = PackmindCommand & {
   packagesSlugs: string[];
+  previousPackagesSlugs?: string[]; // Previously installed packages for change detection
 };
 
 export type IPullContentUseCase = IUseCase<

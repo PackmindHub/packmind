@@ -27,6 +27,7 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
     // Fetch data from the gateway
     const response = await this.packmindGateway.getPullData({
       packagesSlugs: command.packagesSlugs,
+      previousPackagesSlugs: command.previousPackagesSlugs,
     });
 
     // Deduplicate files by path (when multiple packages share standards/recipes)

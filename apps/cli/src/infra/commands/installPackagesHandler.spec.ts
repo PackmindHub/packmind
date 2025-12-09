@@ -423,6 +423,7 @@ describe('installPackagesHandler', () => {
         expect(mockPackmindCliHexa.installPackages).toHaveBeenCalledWith({
           baseDirectory: '/project',
           packagesSlugs: ['backend', 'frontend', 'api'],
+          previousPackagesSlugs: ['backend', 'frontend'],
         });
       });
     });

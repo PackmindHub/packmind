@@ -6,6 +6,8 @@
 
 ## Changed
 
+- Package form badges for standards and recipes are now clickable links that open in new tabs for easy preview
+
 ## Fixed
 
 ## Removed
