@@ -22,15 +22,6 @@ jest.mock('../hooks/useAuthContext', () => ({
   }),
 }));
 
-jest.mock('../../spaces/hooks/useCurrentSpace', () => ({
-  useCurrentSpace: () => ({
-    spaceSlug: 'test-space',
-    spaceId: 'space-1',
-    spaceName: 'Test Space',
-    isReady: true,
-  }),
-}));
-
 jest.mock('../../../shared/components/inputs', () => ({
   CopiableTextarea: ({
     value,
@@ -50,7 +41,7 @@ const renderWithProviders = (component: React.ReactElement) => {
   });
 
   return render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={['/org/test-org/space/test-space']}>
       <UIProvider>
         <QueryClientProvider client={queryClient}>
           {component}
@@ -96,10 +87,10 @@ describe('OnboardingSteps', () => {
     renderWithProviders(<OnboardingSteps />);
 
     expect(
-      screen.getByText('Configure your local environment'),
+      screen.getByText(/Configure your local environment/),
     ).toBeInTheDocument();
-    expect(screen.getByText('Build your playbook')).toBeInTheDocument();
-    expect(screen.getByText('Vibe code with confidence')).toBeInTheDocument();
+    expect(screen.getByText(/Build your playbook/)).toBeInTheDocument();
+    expect(screen.getByText(/Vibe code with confidence/)).toBeInTheDocument();
   });
 
   it('renders the first step expanded by default', () => {

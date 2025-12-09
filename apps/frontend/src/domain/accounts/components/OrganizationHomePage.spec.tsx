@@ -13,15 +13,6 @@ jest.mock('../hooks/useAuthContext', () => ({
   useAuthContext: jest.fn(),
 }));
 
-jest.mock('../../spaces/hooks/useCurrentSpace', () => ({
-  useCurrentSpace: () => ({
-    spaceSlug: 'test-space',
-    spaceId: 'space-1',
-    spaceName: 'Test Space',
-    isReady: true,
-  }),
-}));
-
 jest.mock('../api/queries/AccountsQueries', () => ({
   useGetOnboardingStatusQuery: jest.fn(),
 }));
@@ -54,15 +45,6 @@ jest.mock(
 );
 
 jest.mock(
-  '../../organizations/components/dashboard/GettingStartedWidget',
-  () => ({
-    GettingStartedWidget: () => (
-      <div data-testid="getting-started">Getting Started</div>
-    ),
-  }),
-);
-
-jest.mock(
   '../../organizations/components/dashboard/OrganizationOnboardingChecklist',
   () => ({
     OrganizationOnboardingChecklist: () => (
@@ -80,7 +62,7 @@ const renderWithProviders = (component: React.ReactElement) => {
   });
 
   return render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={['/org/test-org/space/test-space']}>
       <UIProvider>
         <QueryClientProvider client={queryClient}>
           {component}
@@ -160,10 +142,10 @@ describe('OrganizationHomePage', () => {
       renderWithProviders(<OrganizationHomePage />);
 
       expect(
-        screen.getByText('Configure your local environment'),
+        screen.getByText(/Configure your local environment/),
       ).toBeInTheDocument();
-      expect(screen.getByText('Build your playbook')).toBeInTheDocument();
-      expect(screen.getByText('Vibe code with confidence')).toBeInTheDocument();
+      expect(screen.getByText(/Build your playbook/)).toBeInTheDocument();
+      expect(screen.getByText(/Vibe code with confidence/)).toBeInTheDocument();
     });
 
     it('renders OnboardingSteps when hasDeployed is undefined', () => {
@@ -177,7 +159,7 @@ describe('OrganizationHomePage', () => {
       renderWithProviders(<OrganizationHomePage />);
 
       expect(
-        screen.getByText('Configure your local environment'),
+        screen.getByText(/Configure your local environment/),
       ).toBeInTheDocument();
     });
   });
@@ -202,7 +184,6 @@ describe('OrganizationHomePage', () => {
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-kpi')).toBeInTheDocument();
         expect(screen.getByTestId('outdated-targets')).toBeInTheDocument();
-        expect(screen.getByTestId('getting-started')).toBeInTheDocument();
         expect(screen.getByTestId('onboarding-checklist')).toBeInTheDocument();
       });
     });
@@ -224,7 +205,7 @@ describe('OrganizationHomePage', () => {
       renderWithProviders(<OrganizationHomePage />);
 
       expect(
-        screen.queryByText('Configure your local environment'),
+        screen.queryByText(/Configure your local environment/),
       ).not.toBeInTheDocument();
     });
   });

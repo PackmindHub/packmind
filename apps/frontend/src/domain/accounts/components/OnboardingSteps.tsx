@@ -20,29 +20,40 @@ export const OnboardingSteps: React.FC = () => {
   const { spaceSlug } = useCurrentSpace();
 
   const orgSlug = organization?.slug || '';
-  const currentSpaceSlug = spaceSlug || '';
+  const currentSpaceSlug = spaceSlug || 'global';
 
   return (
     <PMBox>
       <PMAccordion.Root defaultValue={['step-1']}>
-        <PMAccordion.Item value="step-1">
+        <PMAccordion.Item
+          value="step-1"
+          backgroundColor={'background.primary'}
+          p={2}
+        >
           <PMAccordion.ItemTrigger cursor="pointer">
             <PMAccordion.ItemIndicator />
-            Configure your local environment
+            <PMHeading level="h4">
+              ⚙️ Configure your local environment
+            </PMHeading>
           </PMAccordion.ItemTrigger>
-          <PMAccordion.ItemContent>
+          <PMAccordion.ItemContent p={2}>
             <PMVStack align="flex-start" paddingBottom={6}>
               <SetupLocalEnvironment />
             </PMVStack>
           </PMAccordion.ItemContent>
         </PMAccordion.Item>
 
-        <PMAccordion.Item value="step-2">
+        <PMAccordion.Item
+          value="step-2"
+          backgroundColor={'background.primary'}
+          mt={4}
+          p={2}
+        >
           <PMAccordion.ItemTrigger cursor="pointer">
             <PMAccordion.ItemIndicator />
-            Build your playbook
+            <PMHeading level="h4">🤖 Build your playbook</PMHeading>
           </PMAccordion.ItemTrigger>
-          <PMAccordion.ItemContent>
+          <PMAccordion.ItemContent p={2}>
             <PMVStack align="flex-start" paddingBottom={6} gap={4}>
               <PMText as="p">
                 Create standards and recipes tailored to your project context.
@@ -104,12 +115,17 @@ export const OnboardingSteps: React.FC = () => {
           </PMAccordion.ItemContent>
         </PMAccordion.Item>
 
-        <PMAccordion.Item value="step-3">
+        <PMAccordion.Item
+          value="step-3"
+          backgroundColor={'background.primary'}
+          mt={4}
+          p={2}
+        >
           <PMAccordion.ItemTrigger cursor="pointer">
             <PMAccordion.ItemIndicator />
-            Vibe code with confidence
+            <PMHeading level="h4">🚀 Vibe code with confidence</PMHeading>
           </PMAccordion.ItemTrigger>
-          <PMAccordion.ItemContent>
+          <PMAccordion.ItemContent p={2}>
             <PMVStack align="flex-start" paddingBottom={6} gap={4}>
               <PMHeading level="h6">Create packages</PMHeading>
 

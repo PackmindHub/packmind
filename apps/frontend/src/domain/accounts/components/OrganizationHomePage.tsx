@@ -2,7 +2,6 @@ import React from 'react';
 import { PMBox, PMGrid, PMGridItem, PMPage, PMVStack } from '@packmind/ui';
 import { DashboardKPI } from '../../organizations/components/dashboard/DashboardKPI';
 import { OutdatedTargetsSection } from '../../organizations/components/dashboard/OutdatedTargetsSection';
-import { GettingStartedWidget } from '../../organizations/components/dashboard/GettingStartedWidget';
 import { OrganizationOnboardingChecklist } from '../../organizations/components/dashboard/OrganizationOnboardingChecklist';
 import { useGetOnboardingStatusQuery } from '../api/queries/AccountsQueries';
 import { useAuthContext } from '../hooks/useAuthContext';
@@ -17,9 +16,9 @@ export const OrganizationHomePage: React.FC = () => {
   const isOnboardingComplete = onboardingStatus?.hasDeployed;
 
   return (
-    <PMPage title={'👋 Welcome to your dashboard'} centeredHeader isFullWidth>
+    <PMPage title={'👋 Welcome to your dashboard'} centeredHeader>
       {!isOnboardingComplete ? (
-        <PMBox width="xl" marginX="auto">
+        <PMBox width="full">
           <PMVStack gap={8} align="stretch">
             <OnboardingSteps />
           </PMVStack>
@@ -34,7 +33,6 @@ export const OrganizationHomePage: React.FC = () => {
           </PMGridItem>
           <PMGridItem>
             <PMVStack gap={8} align="stretch">
-              <GettingStartedWidget />
               <OrganizationOnboardingChecklist />
             </PMVStack>
           </PMGridItem>
