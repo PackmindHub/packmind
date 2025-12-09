@@ -12,7 +12,9 @@ import {
   PMHeading,
   PMLink,
   PMTooltip,
+  PMIcon,
 } from '@packmind/ui';
+import { LuInfo } from 'react-icons/lu';
 import { Distribution, RenderMode } from '@packmind/types';
 import { format } from 'date-fns';
 import { Link } from 'react-router';
@@ -127,7 +129,21 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
 
   const getCommitLinks = (deployment: Distribution) => {
     const commit = deployment.gitCommit;
-    if (!commit) return null;
+    if (!commit) {
+      if (deployment.source === 'cli') {
+        return (
+          <PMTooltip
+            label="This distribution was done using packmind-cli, no commit available"
+            placement="top"
+          >
+            <PMBox display="inline-flex" cursor="help">
+              <PMIcon as={LuInfo} color="gray.500" />
+            </PMBox>
+          </PMTooltip>
+        );
+      }
+      return null;
+    }
     return (
       <PMBox>
         <PMLink
