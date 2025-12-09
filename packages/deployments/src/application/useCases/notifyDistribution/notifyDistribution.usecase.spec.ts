@@ -1,4 +1,7 @@
-import { NotifyDistributionUseCase } from './notifyDistribution.usecase';
+import {
+  NotifyDistributionUseCase,
+  parseGitRepoInfo,
+} from './notifyDistribution.usecase';
 import {
   createUserId,
   createOrganizationId,
@@ -1569,5 +1572,37 @@ describe('NotifyDistributionUseCase', () => {
         expect(mockTargetRepository.add).not.toHaveBeenCalled();
       });
     });
+  });
+});
+
+describe('parseGitRepoInfo', () => {
+  it('parses self-hosted GitLab URL with trailing slash', () => {
+    const result = parseGitRepoInfo('https://lab.frogg.it/packmind/repo-test/');
+
+    expect(result).toEqual({ owner: 'packmind', repo: 'repo-test' });
+  });
+
+  it('parses GitHub HTTPS URL with .git suffix', () => {
+    const result = parseGitRepoInfo('https://github.com/owner/repo.git');
+
+    expect(result).toEqual({ owner: 'owner', repo: 'repo' });
+  });
+
+  it('parses GitHub HTTPS URL without .git suffix', () => {
+    const result = parseGitRepoInfo('https://github.com/owner/repo');
+
+    expect(result).toEqual({ owner: 'owner', repo: 'repo' });
+  });
+
+  it('parses SSH URL format', () => {
+    const result = parseGitRepoInfo('git@github.com:owner/repo.git');
+
+    expect(result).toEqual({ owner: 'owner', repo: 'repo' });
+  });
+
+  it('throws error for invalid URL format', () => {
+    expect(() => parseGitRepoInfo('invalid-url')).toThrow(
+      'Unable to parse git remote URL: invalid-url',
+    );
   });
 });
