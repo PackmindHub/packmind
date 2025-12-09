@@ -3,8 +3,8 @@ import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 import {
   uninstallPackagesHandler,
-  PullHandlerDependencies,
-} from './pullHandler';
+  InstallHandlerDependencies,
+} from './installPackagesHandler';
 
 export const uninstallCommand = command({
   name: 'uninstall',
@@ -22,7 +22,7 @@ export const uninstallCommand = command({
     const packmindLogger = new PackmindLogger('PackmindCLI', LogLevel.INFO);
     const packmindCliHexa = new PackmindCliHexa(packmindLogger);
 
-    const deps: PullHandlerDependencies = {
+    const deps: InstallHandlerDependencies = {
       packmindCliHexa,
       exit: process.exit,
       getCwd: () => process.cwd(),

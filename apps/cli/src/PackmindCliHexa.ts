@@ -150,6 +150,21 @@ export class PackmindCliHexa {
     return Object.keys(config.packages);
   }
 
+  public async writeConfig(
+    baseDirectory: string,
+    packagesSlugs: string[],
+  ): Promise<void> {
+    const packages: { [slug: string]: string } = {};
+    packagesSlugs.forEach((slug) => {
+      packages[slug] = '*';
+    });
+
+    await this.hexa.repositories.configFileRepository.writeConfig(
+      baseDirectory,
+      { packages },
+    );
+  }
+
   public async readHierarchicalConfig(
     startDirectory: string,
     stopDirectory: string | null,
