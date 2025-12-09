@@ -29,7 +29,7 @@ export const installCommand = command({
       short: 'r',
       long: 'recursive',
       description:
-        'Install packages recursively in current directory and all subdirectories with packmind.json',
+        'Install packages for all packmind.json files found in the git repository',
     }),
     show: option({
       type: string,

@@ -264,6 +264,22 @@ packmind-cli install backend frontend
 
 This downloads all recipes and standards from the specified packages and creates the appropriate files for your AI coding assistant.
 
+### Recursive Install (Monorepos)
+
+For monorepos or projects with multiple `packmind.json` files, use the recursive flag to install packages across all locations:
+
+```bash
+packmind-cli install -r
+```
+
+Or the long form:
+
+```bash
+packmind-cli install --recursive
+```
+
+This finds all `packmind.json` files in your git repository and installs their configured packages. After installation, a summary shows how many distributions were notified to Packmind.
+
 :::tip AI Agent Rendering
 The files created by the install command depend on which AI agents are enabled in your organization settings. The CLI respects your organization's configured agents and creates instruction files accordingly (e.g., `AGENTS.md`, `.cursor/rules/`, `.github/copilot-instructions.md`).
 
