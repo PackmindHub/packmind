@@ -354,24 +354,32 @@ export class NotifyDistributionUseCase
 
     // Fall back to tokenless provider
     this.logger.info('No token provider has access, falling back to tokenless');
-    let tokenlessProvider = vendorProviders.find((p) => !p.hasToken);
+
+    // Determine the expected provider URL for this git remote
+    let expectedProviderUrl: string;
+    if (providerVendor === 'github') {
+      expectedProviderUrl = 'https://github.com';
+    } else if (providerVendor === 'gitlab') {
+      expectedProviderUrl = 'https://gitlab.com';
+    } else {
+      expectedProviderUrl = extractBaseUrl(gitRemoteUrl);
+    }
+
+    // Find a tokenless provider that matches the expected URL
+    let tokenlessProvider = vendorProviders.find(
+      (p) =>
+        !p.hasToken &&
+        p.url?.toLowerCase() === expectedProviderUrl.toLowerCase(),
+    );
 
     if (!tokenlessProvider) {
       // Create new tokenless provider
-      let providerUrl: string;
-      if (providerVendor === 'github') {
-        providerUrl = 'https://github.com';
-      } else if (providerVendor === 'gitlab') {
-        providerUrl = 'https://gitlab.com';
-      } else {
-        providerUrl = extractBaseUrl(gitRemoteUrl);
-      }
       const newProvider = await this.gitPort.addGitProvider({
         userId,
         organizationId,
         gitProvider: {
           source: GitProviderVendors[providerVendor],
-          url: providerUrl,
+          url: expectedProviderUrl,
           token: null,
         },
         allowTokenlessProvider: true,
