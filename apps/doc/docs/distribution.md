@@ -25,7 +25,21 @@ When you distribute standards or recipes, only the enabled agents will receive u
 You can create an issue in our [repository](https://github.com/PackmindHub/packmind) to request support for additional AI coding assistants
 :::
 
-## How to Deploy
+## How to Distribute
+
+There are two ways to distribute packages to your repositories:
+
+1. **Using the Packmind app** - Deploy packages through the web interface with full control over targets and repositories
+2. **Using packmind-cli** - Install packages directly from your terminal, useful for CI/CD pipelines and local development
+
+### Distribution Methods Overview
+
+| Method  | Best For                                  | Git Provider Management                  |
+| ------- | ----------------------------------------- | ---------------------------------------- |
+| **App** | Centralized deployment, team coordination | Full control via connected Git providers |
+| **CLI** | CI/CD pipelines, local development        | Creates read-only provider entries       |
+
+## Distribute via the App
 
 To distribute standards and recipes, you need to add them to a package.
 
@@ -50,3 +64,47 @@ This approach is useful when you want to:
 - Organize guidelines by technology, team, or project structure
 
 For more information on creating and managing packages, see [Packages Management](./packages-management.md).
+
+## Distribute via packmind-cli
+
+You can also distribute packages directly from your terminal using the `packmind-cli` command:
+
+```bash
+packmind-cli install <package-slug>
+```
+
+For example:
+
+```bash
+packmind-cli install backend-standards frontend-react
+```
+
+This will:
+
+1. Fetch the specified packages from Packmind
+2. Generate the instruction files for all enabled AI agents
+3. Write the files to your local repository
+4. Notify Packmind that a distribution occurred
+
+### CLI Distribution Considerations
+
+When you distribute packages using the CLI, Packmind automatically creates a Git provider entry to track the distribution. However, these CLI-created providers have some limitations:
+
+:::warning Limited Provider Management
+Git providers created through CLI distributions do not have an associated token. This means:
+
+- **You cannot trigger new distributions** from the app for these repositories
+- **You cannot add new targets** to these providers from the app
+- The provider appears in your organization's Git settings but with limited functionality
+
+To enable full management from the app, connect a Git provider with a valid token in **Settings** → **Git Providers**.
+:::
+
+### When to Use CLI Distribution
+
+The CLI approach is ideal for:
+
+- **CI/CD pipelines** - Automate distribution as part of your deployment process
+- **Local development** - Quickly install packages without leaving your terminal
+- **Monorepos** - Use `packmind-cli install --recursive` to install packages across multiple directories
+- **Self-hosted Git instances** - Distribute to repositories that aren't connected to the app
