@@ -1,8 +1,7 @@
 import React from 'react';
-import { PMBox, PMGrid, PMGridItem, PMPage, PMVStack } from '@packmind/ui';
+import { PMBox, PMPage, PMVStack } from '@packmind/ui';
 import { DashboardKPI } from '../../organizations/components/dashboard/DashboardKPI';
 import { OutdatedTargetsSection } from '../../organizations/components/dashboard/OutdatedTargetsSection';
-import { OrganizationOnboardingChecklist } from '../../organizations/components/dashboard/OrganizationOnboardingChecklist';
 import { useGetOnboardingStatusQuery } from '../api/queries/AccountsQueries';
 import { useAuthContext } from '../hooks/useAuthContext';
 import { OnboardingSteps } from './OnboardingSteps';
@@ -24,19 +23,12 @@ export const OrganizationHomePage: React.FC = () => {
           </PMVStack>
         </PMBox>
       ) : (
-        <PMGrid gridTemplateColumns={'3fr 2fr'} gap={8}>
-          <PMGridItem>
-            <PMVStack gap={8} align="stretch">
-              <DashboardKPI />
-              <OutdatedTargetsSection />
-            </PMVStack>
-          </PMGridItem>
-          <PMGridItem>
-            <PMVStack gap={8} align="stretch">
-              <OrganizationOnboardingChecklist />
-            </PMVStack>
-          </PMGridItem>
-        </PMGrid>
+        <PMBox width="full">
+          <PMVStack gap={8} align="stretch">
+            <DashboardKPI />
+            <OutdatedTargetsSection />
+          </PMVStack>
+        </PMBox>
       )}
     </PMPage>
   );

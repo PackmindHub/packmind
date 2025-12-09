@@ -44,15 +44,6 @@ jest.mock(
   }),
 );
 
-jest.mock(
-  '../../organizations/components/dashboard/OrganizationOnboardingChecklist',
-  () => ({
-    OrganizationOnboardingChecklist: () => (
-      <div data-testid="onboarding-checklist">Onboarding Checklist</div>
-    ),
-  }),
-);
-
 const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -184,7 +175,6 @@ describe('OrganizationHomePage', () => {
       await waitFor(() => {
         expect(screen.getByTestId('dashboard-kpi')).toBeInTheDocument();
         expect(screen.getByTestId('outdated-targets')).toBeInTheDocument();
-        expect(screen.getByTestId('onboarding-checklist')).toBeInTheDocument();
       });
     });
 
