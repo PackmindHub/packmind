@@ -3,11 +3,32 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MemoryRouter } from 'react-router';
 import { OnboardingSteps } from './OnboardingSteps';
 import { useCreateCliLoginCodeMutation } from '../api/queries/AuthQueries';
 
 jest.mock('../api/queries/AuthQueries', () => ({
   useCreateCliLoginCodeMutation: jest.fn(),
+}));
+
+jest.mock('../hooks/useAuthContext', () => ({
+  useAuthContext: () => ({
+    organization: {
+      id: 'org-1',
+      name: 'Test Organization',
+      slug: 'test-org',
+      role: 'ADMIN',
+    },
+  }),
+}));
+
+jest.mock('../../spaces/hooks/useCurrentSpace', () => ({
+  useCurrentSpace: () => ({
+    spaceSlug: 'test-space',
+    spaceId: 'space-1',
+    spaceName: 'Test Space',
+    isReady: true,
+  }),
 }));
 
 jest.mock('../../../shared/components/inputs', () => ({
@@ -29,11 +50,13 @@ const renderWithProviders = (component: React.ReactElement) => {
   });
 
   return render(
-    <UIProvider>
-      <QueryClientProvider client={queryClient}>
-        {component}
-      </QueryClientProvider>
-    </UIProvider>,
+    <MemoryRouter>
+      <UIProvider>
+        <QueryClientProvider client={queryClient}>
+          {component}
+        </QueryClientProvider>
+      </UIProvider>
+    </MemoryRouter>,
   );
 };
 
@@ -94,15 +117,24 @@ describe('OnboardingSteps', () => {
     renderWithProviders(<OnboardingSteps />);
 
     expect(
-      screen.getByText('Content for step 2 will be added here'),
+      screen.getByText(
+        'Create standards and recipes tailored to your project context. With configured MCP server, use this prompt with your AI coding agent:',
+      ),
     ).toBeInTheDocument();
   });
 
-  it('renders placeholder content for step 3', () => {
+  it('renders content for step 3', () => {
     renderWithProviders(<OnboardingSteps />);
 
+    expect(screen.getByText('Create packages')).toBeInTheDocument();
     expect(
-      screen.getByText('Content for step 3 will be added here'),
+      screen.getByText(
+        'Standards and recipes must be bundled into packages to be distributed in your projects',
+      ),
     ).toBeInTheDocument();
+    expect(
+      screen.getByText('Configure the target AI agents'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Distribute playbook')).toBeInTheDocument();
   });
 });

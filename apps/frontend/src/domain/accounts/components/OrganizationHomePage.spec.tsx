@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MemoryRouter } from 'react-router';
 import { OrganizationHomePage } from './OrganizationHomePage';
 import { useAuthContext } from '../hooks/useAuthContext';
 import { useGetOnboardingStatusQuery } from '../api/queries/AccountsQueries';
@@ -10,6 +11,15 @@ import { useCreateCliLoginCodeMutation } from '../api/queries/AuthQueries';
 
 jest.mock('../hooks/useAuthContext', () => ({
   useAuthContext: jest.fn(),
+}));
+
+jest.mock('../../spaces/hooks/useCurrentSpace', () => ({
+  useCurrentSpace: () => ({
+    spaceSlug: 'test-space',
+    spaceId: 'space-1',
+    spaceName: 'Test Space',
+    isReady: true,
+  }),
 }));
 
 jest.mock('../api/queries/AccountsQueries', () => ({
@@ -70,11 +80,13 @@ const renderWithProviders = (component: React.ReactElement) => {
   });
 
   return render(
-    <UIProvider>
-      <QueryClientProvider client={queryClient}>
-        {component}
-      </QueryClientProvider>
-    </UIProvider>,
+    <MemoryRouter>
+      <UIProvider>
+        <QueryClientProvider client={queryClient}>
+          {component}
+        </QueryClientProvider>
+      </UIProvider>
+    </MemoryRouter>,
   );
 };
 
