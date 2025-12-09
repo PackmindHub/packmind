@@ -207,7 +207,7 @@ describe('GitService', () => {
         const result = service.getGitRemoteUrl('/repo');
 
         expect(result).toEqual({
-          gitRemoteUrl: 'github.com/PackmindHub/test-repo',
+          gitRemoteUrl: 'git@github.com:PackmindHub/test-repo',
         });
         expect(gitRunner).toHaveBeenCalledWith('remote -v', { cwd: '/repo' });
       });
@@ -223,7 +223,7 @@ describe('GitService', () => {
         const result = service.getGitRemoteUrl('/repo');
 
         expect(result).toEqual({
-          gitRemoteUrl: 'github.com/PackmindHub/main-repo',
+          gitRemoteUrl: 'git@github.com:PackmindHub/main-repo',
         });
       });
     });
@@ -238,7 +238,7 @@ describe('GitService', () => {
         const result = service.getGitRemoteUrl('/repo', 'upstream');
 
         expect(result).toEqual({
-          gitRemoteUrl: 'github.com/OtherUser/upstream-repo',
+          gitRemoteUrl: 'git@github.com:OtherUser/upstream-repo',
         });
       });
     });
@@ -279,8 +279,8 @@ describe('GitService', () => {
       });
     });
 
-    describe('when normalizing SSH URLs', () => {
-      it('normalizes SSH URLs correctly', () => {
+    describe('with SSH URLs', () => {
+      it('preserves SSH URL format and removes .git suffix', () => {
         gitRunner.mockReturnValue({
           stdout:
             'origin\tgit@gitlab.com:company/project.git (fetch)\norigin\tgit@gitlab.com:company/project.git (push)\n',
@@ -289,13 +289,13 @@ describe('GitService', () => {
         const result = service.getGitRemoteUrl('/repo');
 
         expect(result).toEqual({
-          gitRemoteUrl: 'gitlab.com/company/project',
+          gitRemoteUrl: 'git@gitlab.com:company/project',
         });
       });
     });
 
-    describe('when normalizing HTTPS URLs', () => {
-      it('normalizes HTTPS URLs correctly', () => {
+    describe('with HTTPS URLs', () => {
+      it('preserves HTTPS URL format and removes .git suffix', () => {
         gitRunner.mockReturnValue({
           stdout:
             'origin\thttps://github.com/PackmindHub/test-repo.git (fetch)\norigin\thttps://github.com/PackmindHub/test-repo.git (push)\n',
@@ -304,7 +304,7 @@ describe('GitService', () => {
         const result = service.getGitRemoteUrl('/repo');
 
         expect(result).toEqual({
-          gitRemoteUrl: 'github.com/PackmindHub/test-repo',
+          gitRemoteUrl: 'https://github.com/PackmindHub/test-repo',
         });
       });
     });

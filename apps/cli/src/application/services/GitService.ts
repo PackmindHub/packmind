@@ -236,26 +236,10 @@ export class GitService {
   }
 
   private normalizeGitUrl(url: string): string {
-    // Convert SSH URLs to a normalized format
-    // git@github.com:PackmindHub/packmind-monorepo.git -> github.com/PackmindHub/packmind-monorepo
-    const sshMatch = url.match(/^git@([^:]+):(.+)$/);
-    if (sshMatch) {
-      const [, host, urlPath] = sshMatch;
-      const cleanPath = urlPath.replace(/\.git$/, '');
-      return `${host}/${cleanPath}`;
-    }
-
-    // Convert HTTPS URLs to normalized format
-    // https://github.com/PackmindHub/packmind-monorepo.git -> github.com/PackmindHub/packmind-monorepo
-    const httpsMatch = url.match(/^https?:\/\/([^/]+)\/(.+)$/);
-    if (httpsMatch) {
-      const [, host, urlPath] = httpsMatch;
-      const cleanPath = urlPath.replace(/\.git$/, '');
-      return `${host}/${cleanPath}`;
-    }
-
-    // Return as-is if no normalization is needed
-    return url;
+    // Return the URL as-is - the backend handles both SSH and HTTPS formats
+    // and needs the protocol information to extract the base URL correctly.
+    // Only remove the .git suffix for consistency.
+    return url.replace(/\.git$/, '');
   }
 
   /**
