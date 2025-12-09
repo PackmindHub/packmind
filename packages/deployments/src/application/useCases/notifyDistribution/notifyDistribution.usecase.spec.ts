@@ -204,7 +204,7 @@ describe('NotifyDistributionUseCase', () => {
               id: gitProviderId,
               source: 'github',
               organizationId,
-              url: null,
+              url: 'https://github.com',
               hasToken: false,
             },
           ],
@@ -345,6 +345,90 @@ describe('NotifyDistributionUseCase', () => {
       });
     });
 
+    describe('with existing tokenless provider for a different URL', () => {
+      const differentProviderId = createGitProviderId('different-provider-id');
+      const newProviderId = createGitProviderId('new-tokenless-provider-id');
+
+      it('creates a new tokenless provider for the new URL', async () => {
+        const existingTarget = buildTarget();
+        const recipeVersion = buildRecipeVersion();
+        const standardVersion = buildStandardVersion();
+        const pkg = buildPackage('my-package');
+
+        // Existing tokenless provider is for a different URL (storage.local)
+        // Note: both are 'unknown' source since neither URL contains github.com or gitlab.com
+        mockGitPort.listProviders.mockResolvedValue({
+          providers: [
+            {
+              id: differentProviderId,
+              source: 'unknown',
+              organizationId,
+              url: 'http://storage.local',
+              hasToken: false,
+            },
+          ],
+        });
+
+        // Create new tokenless provider for the new URL
+        mockGitPort.addGitProvider.mockResolvedValue({
+          id: newProviderId,
+          source: 'unknown',
+          organizationId,
+          url: 'https://lab.frogg.it',
+          token: null,
+        });
+
+        // No repos for the new provider
+        mockGitPort.listRepos.mockResolvedValue([]);
+
+        mockGitPort.addGitRepo.mockResolvedValue({
+          id: gitRepoId,
+          owner: 'packmind',
+          repo: 'test-repo',
+          branch: 'main',
+          providerId: newProviderId,
+        });
+
+        mockTargetRepository.findByGitRepoId.mockResolvedValue([
+          existingTarget,
+        ]);
+        mockTargetRepository.add.mockResolvedValue(existingTarget);
+        mockPackageRepository.findByOrganizationId.mockResolvedValue([pkg]);
+        mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
+          standardVersion,
+        );
+        mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+        mockDistributionRepository.add.mockImplementation((d) =>
+          Promise.resolve(d),
+        );
+        mockDistributedPackageRepository.add.mockImplementation((d) =>
+          Promise.resolve(d),
+        );
+
+        const command: NotifyDistributionCommand = {
+          userId,
+          organizationId,
+          distributedPackages: ['my-package'],
+          gitRemoteUrl: 'git@lab.frogg.it:packmind/test-repo',
+          gitBranch: 'main',
+          relativePath: '/',
+        };
+
+        await useCase.execute(command);
+
+        expect(mockGitPort.addGitProvider).toHaveBeenCalledWith({
+          userId,
+          organizationId,
+          gitProvider: {
+            source: 'unknown',
+            url: 'https://lab.frogg.it',
+            token: null,
+          },
+          allowTokenlessProvider: true,
+        });
+      });
+    });
+
     describe('with GitHub URL and no existing repo', () => {
       it('creates new git repository', async () => {
         const existingTarget = buildTarget();
@@ -358,7 +442,7 @@ describe('NotifyDistributionUseCase', () => {
               id: gitProviderId,
               source: 'github',
               organizationId,
-              url: null,
+              url: 'https://github.com',
               hasToken: false,
             },
           ],
@@ -920,7 +1004,7 @@ describe('NotifyDistributionUseCase', () => {
               id: gitProviderId,
               source: 'github',
               organizationId,
-              url: null,
+              url: 'https://github.com',
               hasToken: false,
             },
           ],
@@ -983,7 +1067,7 @@ describe('NotifyDistributionUseCase', () => {
               id: gitProviderId,
               source: 'github',
               organizationId,
-              url: null,
+              url: 'https://github.com',
               hasToken: false,
             },
           ],
@@ -1126,7 +1210,7 @@ describe('NotifyDistributionUseCase', () => {
               id: gitProviderId,
               source: 'gitlab',
               organizationId,
-              url: null,
+              url: 'https://gitlab.com',
               hasToken: false,
             },
           ],
@@ -1260,7 +1344,7 @@ describe('NotifyDistributionUseCase', () => {
               id: gitProviderId,
               source: 'gitlab',
               organizationId,
-              url: null,
+              url: 'https://gitlab.com',
               hasToken: false,
             },
           ],
@@ -1325,7 +1409,7 @@ describe('NotifyDistributionUseCase', () => {
               id: gitProviderId,
               source: 'github',
               organizationId,
-              url: null,
+              url: 'https://github.com',
               hasToken: false,
             },
           ],
@@ -1390,7 +1474,7 @@ describe('NotifyDistributionUseCase', () => {
               id: gitProviderId,
               source: 'github',
               organizationId,
-              url: null,
+              url: 'https://github.com',
               hasToken: false,
             },
           ],
@@ -1459,7 +1543,7 @@ describe('NotifyDistributionUseCase', () => {
               id: gitProviderId,
               source: 'github',
               organizationId,
-              url: null,
+              url: 'https://github.com',
               hasToken: false,
             },
           ],
@@ -1521,7 +1605,7 @@ describe('NotifyDistributionUseCase', () => {
               id: gitProviderId,
               source: 'github',
               organizationId,
-              url: null,
+              url: 'https://github.com',
               hasToken: false,
             },
           ],
