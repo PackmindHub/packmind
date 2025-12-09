@@ -257,6 +257,15 @@ export type InstallPackagesResult = {
   notificationSent: boolean;
 };
 
+export type UninstallPackagesArgs = {
+  packagesSlugs: string[];
+};
+
+export type UninstallPackagesResult = {
+  filesDeleted: number;
+  packagesUninstalled: string[];
+};
+
 export type RecursiveInstallArgs = Record<string, never>;
 
 export type RecursiveInstallResult = {
@@ -319,9 +328,11 @@ async function executeInstallForDirectory(
     );
 
     // Execute the install operation
+    // Pass previous packages for change detection (same as current since we're pulling existing config)
     const result = await packmindCliHexa.installPackages({
       baseDirectory: directory,
       packagesSlugs: configPackages,
+      previousPackagesSlugs: configPackages, // Pass for consistency
     });
 
     // Show installation message with counts
@@ -462,10 +473,12 @@ export async function installPackagesHandler(
       `Fetching ${packageCount} ${packageWord}: ${allPackages.join(', ')}...`,
     );
 
-    // Execute the pull operation to get counts first
+    // Execute the install operation to get counts first
+    // Pass previous packages for change detection
     const result = await packmindCliHexa.installPackages({
       baseDirectory: cwd,
       packagesSlugs: allPackages,
+      previousPackagesSlugs: configPackages, // Pass previous config for change detection
     });
 
     // Show installation message with counts
@@ -602,6 +615,175 @@ export async function installPackagesHandler(
       filesUpdated: 0,
       filesDeleted: 0,
       notificationSent: false,
+    };
+  }
+}
+
+export async function uninstallPackagesHandler(
+  args: UninstallPackagesArgs,
+  deps: InstallHandlerDependencies,
+): Promise<UninstallPackagesResult> {
+  const { packmindCliHexa, exit, getCwd, log, error } = deps;
+  const { packagesSlugs } = args;
+  const cwd = getCwd();
+
+  // Validate that package slugs were provided
+  if (!packagesSlugs || packagesSlugs.length === 0) {
+    error('❌ No packages specified.');
+    log('');
+    log('Usage: packmind-cli uninstall <package-slug> [package-slug...]');
+    log('       packmind-cli remove <package-slug> [package-slug...]');
+    log('');
+    log('Examples:');
+    log('  packmind-cli uninstall backend');
+    log('  packmind-cli remove backend frontend');
+    exit(1);
+    return {
+      filesDeleted: 0,
+      packagesUninstalled: [],
+    };
+  }
+
+  // Read existing config
+  let configPackages: string[];
+  try {
+    configPackages = await packmindCliHexa.readConfig(cwd);
+  } catch (err) {
+    error('❌ Failed to read packmind.json');
+    if (err instanceof Error) {
+      error(`   ${err.message}`);
+    } else {
+      error(`   ${String(err)}`);
+    }
+    error('\n💡 Please fix the packmind.json file or delete it to continue.');
+    exit(1);
+    return {
+      filesDeleted: 0,
+      packagesUninstalled: [],
+    };
+  }
+
+  // Check if config exists
+  if (configPackages.length === 0) {
+    error('❌ No packmind.json found in current directory.');
+    log('');
+    log('💡 There are no packages to uninstall.');
+    log('   To install packages, run: packmind-cli install <package-slug>');
+    exit(1);
+    return {
+      filesDeleted: 0,
+      packagesUninstalled: [],
+    };
+  }
+
+  // Check which packages to uninstall are actually installed
+  const packagesToUninstall = packagesSlugs.filter((slug) =>
+    configPackages.includes(slug),
+  );
+  const notInstalledPackages = packagesSlugs.filter(
+    (slug) => !configPackages.includes(slug),
+  );
+
+  // Warn about packages that aren't installed
+  if (notInstalledPackages.length > 0) {
+    const packageWord =
+      notInstalledPackages.length === 1 ? 'package' : 'packages';
+    log(
+      `⚠️  Warning: The following ${packageWord} ${notInstalledPackages.length === 1 ? 'is' : 'are'} not installed:`,
+    );
+    notInstalledPackages.forEach((pkg) => {
+      log(`   - ${pkg}`);
+    });
+    log('');
+  }
+
+  // If no packages to uninstall, exit
+  if (packagesToUninstall.length === 0) {
+    error('❌ No packages to uninstall.');
+    exit(1);
+    return {
+      filesDeleted: 0,
+      packagesUninstalled: [],
+    };
+  }
+
+  try {
+    // Show uninstalling message
+    const packageCount = packagesToUninstall.length;
+    const packageWord = packageCount === 1 ? 'package' : 'packages';
+    log(
+      `Uninstalling ${packageCount} ${packageWord}: ${packagesToUninstall.join(', ')}...`,
+    );
+
+    // Calculate remaining packages after removal
+    const remainingPackages = configPackages.filter(
+      (pkg) => !packagesToUninstall.includes(pkg),
+    );
+
+    // Execute the install operation with remaining packages
+    // Pass all previous packages so removed ones are detected
+    const result = await packmindCliHexa.installPackages({
+      baseDirectory: cwd,
+      packagesSlugs: remainingPackages,
+      previousPackagesSlugs: configPackages,
+    });
+
+    // Show removal message with counts
+    if (result.recipesCount > 0 || result.standardsCount > 0) {
+      log(
+        `Removing ${result.recipesCount} recipes and ${result.standardsCount} standards...`,
+      );
+    }
+
+    // Display results
+    log(`\nremoved ${result.filesDeleted} files`);
+
+    if (result.errors.length > 0) {
+      log('\n⚠️  Errors encountered:');
+      result.errors.forEach((err) => {
+        log(`   - ${err}`);
+      });
+      exit(1);
+      return {
+        filesDeleted: result.filesDeleted,
+        packagesUninstalled: packagesToUninstall,
+      };
+    }
+
+    // Write config with remaining packages
+    await packmindCliHexa.writeConfig(cwd, remainingPackages);
+
+    // Show success message
+    log('');
+    if (packagesToUninstall.length === 1) {
+      log(`✓ Package '${packagesToUninstall[0]}' has been uninstalled.`);
+    } else {
+      log(`✓ ${packagesToUninstall.length} packages have been uninstalled.`);
+    }
+
+    if (remainingPackages.length === 0) {
+      log('');
+      log('💡 All packages have been uninstalled.');
+      log('   Your packmind.json still exists but contains no packages.');
+    }
+
+    return {
+      filesDeleted: result.filesDeleted,
+      packagesUninstalled: packagesToUninstall,
+    };
+  } catch (err) {
+    error('\n❌ Failed to uninstall packages:');
+
+    if (err instanceof Error) {
+      error(`   ${err.message}`);
+    } else {
+      error(`   ${String(err)}`);
+    }
+
+    exit(1);
+    return {
+      filesDeleted: 0,
+      packagesUninstalled: [],
     };
   }
 }

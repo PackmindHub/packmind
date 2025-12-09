@@ -6,6 +6,7 @@ import { config as dotenvConfig } from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
 import { installCommand } from './infra/commands/InstallCommand';
+import { uninstallCommand } from './infra/commands/UninstallCommand';
 import { loginCommand } from './infra/commands/LoginCommand';
 import { logoutCommand } from './infra/commands/LogoutCommand';
 import { whoamiCommand } from './infra/commands/WhoamiCommand';
@@ -86,6 +87,8 @@ const app = subcommands({
   cmds: {
     lint: lintCommand,
     install: installCommand,
+    uninstall: uninstallCommand,
+    remove: uninstallCommand, // Alias for uninstall
     login: loginCommand,
     logout: logoutCommand,
     whoami: whoamiCommand,

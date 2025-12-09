@@ -139,6 +139,16 @@ export class PackmindGateway implements IPackmindGateway {
       });
     }
 
+    // Add previous package slugs for change detection
+    if (
+      command.previousPackagesSlugs &&
+      command.previousPackagesSlugs.length > 0
+    ) {
+      command.previousPackagesSlugs.forEach((slug) => {
+        queryParams.append('previousPackageSlug', slug);
+      });
+    }
+
     // Make API call to pull all content
     const url = `${host}/api/v0/organizations/${organizationId}/pull?${queryParams.toString()}`;
 
