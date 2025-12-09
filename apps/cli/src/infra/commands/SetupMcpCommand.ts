@@ -1,4 +1,6 @@
 import { command, multioption, Type, array } from 'cmd-ts';
+import * as fs from 'fs';
+import * as readline from 'readline';
 import * as inquirer from 'inquirer';
 import {
   AgentDetectionService,
@@ -45,6 +47,67 @@ const ALL_AGENTS: AgentInfo[] = [
   { type: 'cursor', name: 'Cursor' },
   { type: 'vscode', name: 'VS Code' },
 ];
+
+type AgentChoice = {
+  name: string;
+  value: AgentType;
+  checked: boolean;
+};
+
+/**
+ * Simple readline-based prompt for selecting agents by number.
+ * This is a fallback for environments where inquirer's checkbox doesn't work
+ * (e.g., when stdin is redirected from /dev/tty in Bun on macOS).
+ */
+async function promptAgentsWithReadline(
+  choices: AgentChoice[],
+): Promise<AgentType[]> {
+  // Open /dev/tty directly for input/output
+  const input = fs.createReadStream('/dev/tty');
+  const output = fs.createWriteStream('/dev/tty');
+
+  const rl = readline.createInterface({
+    input,
+    output,
+  });
+
+  // Display choices with numbers
+  output.write('Select agents to configure:\n');
+  choices.forEach((choice, index) => {
+    const marker = choice.checked ? '*' : ' ';
+    output.write(`  ${index + 1}. [${marker}] ${choice.name}\n`);
+  });
+  output.write('\n');
+
+  // Get pre-selected indices
+  const preselected = choices
+    .map((c, i) => (c.checked ? i + 1 : null))
+    .filter((i) => i !== null);
+
+  const defaultValue = preselected.length > 0 ? preselected.join(',') : '1,2,3';
+
+  return new Promise((resolve) => {
+    rl.question(
+      `Enter numbers separated by commas (default: ${defaultValue}): `,
+      (answer) => {
+        rl.close();
+        input.destroy();
+        output.destroy();
+
+        const trimmed = answer.trim();
+        const numbersStr = trimmed === '' ? defaultValue : trimmed;
+
+        const numbers = numbersStr
+          .split(',')
+          .map((s) => parseInt(s.trim(), 10))
+          .filter((n) => !isNaN(n) && n >= 1 && n <= choices.length);
+
+        const selectedAgents = numbers.map((n) => choices[n - 1].value);
+        resolve(selectedAgents);
+      },
+    );
+  });
+}
 
 export const setupMcpCommand = command({
   name: 'setup-mcp',
@@ -102,22 +165,38 @@ export const setupMcpCommand = command({
       }
 
       const detectedTypes = new Set(detectedAgents.map((a) => a.type));
-      const choices = ALL_AGENTS.map((agentInfo) => ({
+      const choices: AgentChoice[] = ALL_AGENTS.map((agentInfo) => ({
         name: agentInfo.name,
         value: agentInfo.type,
         checked: detectedTypes.has(agentInfo.type),
       }));
 
-      const { selectedAgents: promptedAgents } = await inquirer.default.prompt<{
-        selectedAgents: AgentType[];
-      }>([
-        {
-          type: 'checkbox',
-          name: 'selectedAgents',
-          message: 'Select agents to configure (use space to select):',
-          choices,
-        },
-      ]);
+      let promptedAgents: AgentType[];
+
+      // Use simple readline prompt when:
+      // 1. PACKMIND_SIMPLE_PROMPT env var is set (used by install script)
+      // 2. stdin is not a TTY
+      // This works around Bun's broken raw mode handling on macOS when stdin is redirected
+      const useSimplePrompt =
+        process.env.PACKMIND_SIMPLE_PROMPT === '1' || !process.stdin.isTTY;
+
+      if (useSimplePrompt) {
+        // Simple numbered selection that works without raw mode
+        promptedAgents = await promptAgentsWithReadline(choices);
+      } else {
+        // Use inquirer checkbox when in a normal terminal
+        const result = await inquirer.default.prompt<{
+          selectedAgents: AgentType[];
+        }>([
+          {
+            type: 'checkbox',
+            name: 'selectedAgents',
+            message: 'Select agents to configure (use space to select):',
+            choices,
+          },
+        ]);
+        promptedAgents = result.selectedAgents;
+      }
 
       if (promptedAgents.length === 0) {
         console.log('\nNo agents selected. Exiting.');

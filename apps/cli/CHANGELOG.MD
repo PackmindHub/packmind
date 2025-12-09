@@ -1,15 +1,16 @@
-# [Unreleased]
+# [0.8.0] - 2025-12-10
 
 ## Added
 
-- CLI: add `install -r` to install recursively packages #49
-- CLI: Add `install --status` command to display all packmind.json files and their packages in the workspace #45
+- add `install -r` to install recursively packages #49
+- add `install --status` command to display all packmind.json files and their packages in the workspace #45
 - notify packmind after running `packmind-cli install` #38
 
 ## Changed
 
 ## Fixed
 
+- setup-mcp interactive prompt freezing on macOS when run via install script (curl | sh)
 - only files modified are counted in the summary of changes after running `packmind-cli install` #48
 
 ## Removed
@@ -72,7 +73,7 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.7.0...HEAD
+[0.8.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.7.0...release-cli/0.8.0
 [0.7.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.6.0...release-cli/0.7.0
 [0.6.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.5.0...release-cli/0.6.0
 [0.5.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.4.0...release-cli/0.5.0

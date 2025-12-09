@@ -885,60 +885,66 @@ describe('installPackagesHandler', () => {
           expect(result.totalNotifications).toBe(2);
         });
 
-        it('displays singular form when only one distribution', async () => {
-          mockPackmindCliHexa.findAllConfigsInTree.mockResolvedValue({
-            configs: [
-              {
-                targetPath: '/',
-                absoluteTargetPath: '/project',
-                packages: { backend: '*' },
-              },
-            ],
-            hasConfigs: true,
-            basePath: '/project',
-          });
-          mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
-          mockPackmindCliHexa.installPackages.mockResolvedValue({
-            filesCreated: 2,
-            filesUpdated: 0,
-            filesDeleted: 0,
-            recipesCount: 1,
-            standardsCount: 1,
-            errors: [],
-          });
-          mockPackmindCliHexa.getGitRemoteUrlFromPath.mockReturnValue(
-            'git@github.com:org/repo.git',
-          );
-          mockPackmindCliHexa.getCurrentBranch.mockReturnValue('main');
-          mockPackmindCliHexa.notifyDistribution.mockResolvedValue({
-            deploymentId: 'deployment-123',
-          });
+        describe('when only one distribution', () => {
+          it('displays singular form', async () => {
+            mockPackmindCliHexa.findAllConfigsInTree.mockResolvedValue({
+              configs: [
+                {
+                  targetPath: '/',
+                  absoluteTargetPath: '/project',
+                  packages: { backend: '*' },
+                },
+              ],
+              hasConfigs: true,
+              basePath: '/project',
+            });
+            mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+            mockPackmindCliHexa.installPackages.mockResolvedValue({
+              filesCreated: 2,
+              filesUpdated: 0,
+              filesDeleted: 0,
+              recipesCount: 1,
+              standardsCount: 1,
+              errors: [],
+            });
+            mockPackmindCliHexa.getGitRemoteUrlFromPath.mockReturnValue(
+              'git@github.com:org/repo.git',
+            );
+            mockPackmindCliHexa.getCurrentBranch.mockReturnValue('main');
+            mockPackmindCliHexa.notifyDistribution.mockResolvedValue({
+              deploymentId: 'deployment-123',
+            });
 
-          await recursiveInstallHandler({}, deps);
+            await recursiveInstallHandler({}, deps);
 
-          expect(mockLog).toHaveBeenCalledWith(
-            'Notified Packmind of 1 distribution',
-          );
+            expect(mockLog).toHaveBeenCalledWith(
+              'Notified Packmind of 1 distribution',
+            );
+          });
         });
 
-        it('does not display notification summary when no files are changed', async () => {
-          mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
-          mockPackmindCliHexa.installPackages.mockResolvedValue({
-            filesCreated: 0,
-            filesUpdated: 0,
-            filesDeleted: 0,
-            recipesCount: 0,
-            standardsCount: 0,
-            errors: [],
+        describe('when no files are changed', () => {
+          it('does not display notification summary', async () => {
+            mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+            mockPackmindCliHexa.installPackages.mockResolvedValue({
+              filesCreated: 0,
+              filesUpdated: 0,
+              filesDeleted: 0,
+              recipesCount: 0,
+              standardsCount: 0,
+              errors: [],
+            });
+
+            const result = await recursiveInstallHandler({}, deps);
+
+            expect(
+              mockPackmindCliHexa.notifyDistribution,
+            ).not.toHaveBeenCalled();
+            expect(mockLog).not.toHaveBeenCalledWith(
+              expect.stringMatching(/Notified Packmind of/),
+            );
+            expect(result.totalNotifications).toBe(0);
           });
-
-          const result = await recursiveInstallHandler({}, deps);
-
-          expect(mockPackmindCliHexa.notifyDistribution).not.toHaveBeenCalled();
-          expect(mockLog).not.toHaveBeenCalledWith(
-            expect.stringMatching(/Notified Packmind of/),
-          );
-          expect(result.totalNotifications).toBe(0);
         });
 
         it('does not count failed notifications in summary', async () => {
