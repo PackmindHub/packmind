@@ -297,7 +297,8 @@ setup_mcp() {
     info "Configuring MCP for AI agents..."
 
     # Use /dev/tty to allow interactive input even when script is piped (curl | sh)
-    if "$cli_path" setup-mcp < /dev/tty; then
+    # Set PACKMIND_SIMPLE_PROMPT to use simple readline prompt (works around Bun raw mode issues on macOS)
+    if PACKMIND_SIMPLE_PROMPT=1 "$cli_path" setup-mcp < /dev/tty; then
         success "MCP configured!"
     else
         warn "MCP setup failed. You can try again later with: $BINARY_NAME setup-mcp"
