@@ -1,0 +1,3 @@
+- newRule: "Use arrow functions for functions that do not use the keyword \"this\""
+  operation: ADDED
+  standard: "typescript-code-standards"

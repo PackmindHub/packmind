@@ -8,7 +8,7 @@ import {
 } from '../utils/consoleLogger';
 import { IWhoamiResult } from '../../domain/useCases/IWhoamiUseCase';
 
-function formatExpiresAt(expiresAt: Date): string {
+const formatExpiresAt = (expiresAt: Date): string => {
   const now = new Date();
 
   if (expiresAt < now) {
@@ -28,11 +28,11 @@ function formatExpiresAt(expiresAt: Date): string {
     return `Expires in ${diffHours} hour${diffHours > 1 ? 's' : ''}`;
   }
   return 'Expires soon';
-}
+};
 
-function displayAuthInfo(
+const displayAuthInfo = (
   result: IWhoamiResult & { isAuthenticated: true },
-): void {
+): void => {
   console.log(`\nHost: ${result.host}`);
   if (result.organizationName) {
     console.log(`Organization: ${result.organizationName}`);
@@ -48,7 +48,7 @@ function displayAuthInfo(
   if (result.isExpired) {
     console.log('\nRun `packmind-cli login` to re-authenticate.');
   }
-}
+};
 
 export const whoamiCommand = command({
   name: 'whoami',
