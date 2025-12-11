@@ -40,6 +40,27 @@ Ask yourself: *"Does this message contain a technical preference, coding opinion
 | `.packmind/standards/tests-redaction.md` | `.cursor/rules/packmind/standard-tests-redaction.mdc` |
 | `.packmind/standards/changelog.md` | `.cursor/rules/packmind/standard-changelog.mdc` |
 
+## Step 3: Log the change to changes.yaml
+
+After updating the standard files, append a changelog entry to `.packmind/changes.yaml`:
+
+**For new rules (ADDED):**
+```yaml
+- newRule: "<the exact rule text you added>"
+  operation: ADDED
+  standard: "<standard-name>"
+```
+
+**For modified rules (UPDATED):**
+```yaml
+- oldRule: "<the previous rule text>"
+  newRule: "<the updated rule text>"
+  operation: UPDATED
+  standard: "<standard-name>"
+```
+
+The `standard` field should use the short name (e.g., "typescript", "tests-redaction", "changelog").
+
 ⚠️ **IMPORTANT**: 
 - Only add rules that are NOT already covered by existing rules
 - **ALWAYS update BOTH files** to keep them in sync
