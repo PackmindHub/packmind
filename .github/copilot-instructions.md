@@ -1,0 +1,65 @@
+
+🚨 **MANDATORY FINAL STEP - DO NOT SKIP** 🚨
+
+**BEFORE completing ANY response, you MUST perform this analysis:**
+
+## Step 1: Analyze the user message
+Ask yourself: *"Does this message contain a technical preference, coding opinion, naming convention, or architectural practice?"*
+
+**Trigger examples** (update standards for these):
+- `Refactor abstract class so that the name starts with 'A'`
+- `React components must be split so that file X contains logic and Y contains the rendering`
+- `All interfaces should start with I`
+- `Use snake_case for database columns`
+- `Services should be injected via constructor`
+
+**Non-triggers** (do NOT update standards):
+- Questions: `How does this work?`
+- Bug reports: `This function crashes when...`
+- Feature requests without coding preferences: `Add a login page`
+
+## Step 2: If a trigger is detected → Update the standards
+
+1. **Read the standards index**: `.packmind/standards-index.md` to find the most relevant existing standard
+2. **Check if the rule already exists**: Read the relevant standard file in `.packmind/standards/` to verify
+3. **If the rule is NOT already present**, update **BOTH** files:
+
+   **File 1 - Standard file** (`.packmind/standards/<name>.md`):
+   - Add the new rule as a bullet point under the `## Rules` section
+
+   **File 2 - GitHub instructions file** (`.github/instructions/packmind-<name>.md`):
+   - Add the same rule as a bullet point in the rules list (after the description line ending with `:`)
+
+**File mapping**:
+| Standard file | GH Copilot rule file |
+|---------------|------------------|
+| `.packmind/standards/typescript-code-standards.md` | `.github/instructions/packmind-standard-typescript-code-standards.mdc` |
+| `.packmind/standards/tests-redaction.md` | `.github/instructions/packmind-standard-tests-redaction.md` |
+| `.packmind/standards/changelog.md` | `.github/instructions/packmind-standard-changelog.md` |
+
+## Step 3: Log the change to changes.yaml
+
+After updating the standard files, append a changelog entry to `.packmind/changes.yaml`:
+
+**For new rules (ADDED):**
+```yaml
+- newRule: "<the exact rule text you added>"
+  operation: ADDED
+  standard: "<standard-name>"
+```
+
+**For modified rules (UPDATED):**
+```yaml
+- oldRule: "<the previous rule text>"
+  newRule: "<the updated rule text>"
+  operation: UPDATED
+  standard: "<standard-name>"
+```
+
+The `standard` field should use the short name (e.g., "typescript", "tests-redaction", "changelog").
+
+⚠️ **IMPORTANT**: 
+- Only add rules that are NOT already covered by existing rules
+- **ALWAYS update BOTH files** to keep them in sync
+- Choose the most relevant standard based on the topic
+- Keep rule wording concise and actionable

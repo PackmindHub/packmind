@@ -37,6 +37,8 @@ import {
   DeleteRuleExampleCommand,
   GetRuleExamplesCommand,
   UpdateRuleExampleCommand,
+  ProcessStandardChangesCommand,
+  ProcessStandardChangesResult,
 } from '../../domain/useCases';
 import { GenerateStandardSummaryJobFactory } from '../../infra/jobs/GenerateStandardSummaryJobFactory';
 import { StandardsServices } from '../services/StandardsServices';
@@ -59,6 +61,7 @@ import { ListStandardsBySpaceUsecase } from '../useCases/listStandardsBySpace/li
 import { ListStandardVersionsUsecase } from '../useCases/listStandardVersions/listStandardVersions.usecase';
 import { UpdateRuleExampleUsecase } from '../useCases/updateRuleExample/updateRuleExample.usecase';
 import { UpdateStandardUsecase } from '../useCases/updateStandard/updateStandard.usecase';
+import { ProcessStandardChangesUsecase } from '../useCases/processStandardChanges/processStandardChanges.usecase';
 
 const origin = 'StandardsAdapter';
 
@@ -93,6 +96,7 @@ export class StandardsAdapter
   private _getRuleExamples!: GetRuleExamplesUsecase;
   private _updateRuleExample!: UpdateRuleExampleUsecase;
   private _deleteRuleExample!: DeleteRuleExampleUsecase;
+  private _processStandardChanges!: ProcessStandardChangesUsecase;
 
   constructor(
     private readonly services: StandardsServices,
@@ -265,6 +269,13 @@ export class StandardsAdapter
     this._deleteRuleExample = new DeleteRuleExampleUsecase(
       this.repositories,
       this.linterPort,
+    );
+
+    this._processStandardChanges = new ProcessStandardChangesUsecase(
+      this.accountsPort,
+      this.services.getStandardService(),
+      this._addRuleToStandard,
+      this.spacesPort,
     );
 
     this.logger.info(
@@ -520,5 +531,11 @@ export class StandardsAdapter
 
   async deleteRuleExample(command: DeleteRuleExampleCommand): Promise<void> {
     return this._deleteRuleExample.execute(command);
+  }
+
+  async processStandardChanges(
+    command: ProcessStandardChangesCommand,
+  ): Promise<ProcessStandardChangesResult> {
+    return this._processStandardChanges.execute(command);
   }
 }

@@ -7,5 +7,6 @@ Adopt TypeScript code standards by prefixing interfaces with "I" and abstract cl
 * Prefix abstract classes with Abstract
 * Prefix interfaces with I
 * Use Type for plain objects, Interface when implmentation is required
+* Use arrow functions instead of traditional functions when the function does not use the keyword "this"
 
 Full standard is available here for further request: [Typescript code standards](../../.packmind/standards/typescript-code-standards.md)

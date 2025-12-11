@@ -1,3 +1,3 @@
-- newRule: "Use arrow functions for functions that do not use the keyword \"this\""
+- newRule: "Use arrow functions instead of traditional functions when the function does not use the keyword \"this\""
   operation: ADDED
   standard: "typescript-code-standards"
