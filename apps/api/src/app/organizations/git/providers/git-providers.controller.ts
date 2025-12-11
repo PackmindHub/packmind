@@ -27,7 +27,7 @@ import { AuthService } from '../../../auth/auth.service';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { OrganizationAccessGuard } from '../../guards/organization-access.guard';
 
-interface AddRepositoryDto {
+interface IAddRepositoryDto {
   owner: string;
   repo: string;
   branch: string;
@@ -302,7 +302,7 @@ export class GitProvidersController {
     @Param('orgId') organizationId: OrganizationId,
     @Request() req: AuthenticatedRequest,
     @Param('id') gitProviderId: GitProviderId,
-    @Body() addRepositoryDto: AddRepositoryDto,
+    @Body() addRepositoryDto: IAddRepositoryDto,
   ): Promise<GitRepo> {
     this.logger.info(
       'POST /organizations/:orgId/git/providers/:id/repositories - Adding repository to provider',
