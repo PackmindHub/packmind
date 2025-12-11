@@ -46,13 +46,9 @@ mcp_github_add_issue_comment({
 
 - For any task you perform, you MUST split it into multiple into sub-tasks which have a logical increment (eg: new endpoint, new component, new use case etc). When a task is done, run all the validation steps (lint, test, packmind etc) and ask me for validation of the work you did.
 - Each sub task MUST have its own commit.
-- Before commiting anything, you must ensure that `npm run quality-gate` does not raise any issue.
-
 # Commiting
 
 - When referencing an issue (example #123), DO NOT write "Close" or "Fix", as this closes the issue which has not been validated by other developers.
-- Before proposing to commit, ALWAYS run `npm run quality-gate` and fix the issues found
-- NEVER use the `--no-verify` argument when commiting
 - After commiting, ALWAYS ensure that the commit was successful.
 
 <!-- start: Packmind standards -->

@@ -11,7 +11,7 @@ import {
 import { Response } from 'express';
 import { SSEService } from './sse.service';
 import { PackmindLogger } from '@packmind/logger';
-import { SubscribeDto, UnsubscribeDto } from './dto/subscribe.dto';
+import { ISubscribeDto, IUnsubscribeDto } from './dto/subscribe.dto';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { randomUUID } from 'crypto';
 
@@ -81,7 +81,7 @@ export class SSEController {
   @HttpCode(HttpStatus.OK)
   async subscribe(
     @Req() request: AuthenticatedRequest,
-    @Body() subscribeDto: SubscribeDto,
+    @Body() subscribeDto: ISubscribeDto,
   ): Promise<{ success: boolean; message: string }> {
     const userId = request.user.userId;
     const { eventType, params = [] } = subscribeDto;
@@ -118,7 +118,7 @@ export class SSEController {
   @HttpCode(HttpStatus.OK)
   async unsubscribe(
     @Req() request: AuthenticatedRequest,
-    @Body() unsubscribeDto: UnsubscribeDto,
+    @Body() unsubscribeDto: IUnsubscribeDto,
   ): Promise<{ success: boolean; message: string }> {
     const userId = request.user.userId;
     const { eventType, params = [] } = unsubscribeDto;

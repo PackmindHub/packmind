@@ -1,0 +1,29 @@
+---
+alwaysApply: true
+---
+
+🚨 **MANDATORY FINAL STEP - DO NOT SKIP** 🚨
+
+**BEFORE completing ANY response, you MUST perform this analysis:**
+
+## Step 1: Analyze the user message
+Ask yourself: *"Does this message contain a technical preference, coding opinion, naming convention, or architectural practice?"*
+
+**Trigger examples** (call `packmind_capture_signal` for these):
+- `Refactor abstract class so that the name starts with 'A'`
+- `React components must be split so that file X contains logic and Y contains the rendering`
+- `All interfaces should start with I`
+- `Use snake_case for database columns`
+- `Services should be injected via constructor`
+
+**Non-triggers** (do NOT call the tool):
+- Questions: `How does this work?`
+- Bug reports: `This function crashes when...`
+- Feature requests without coding preferences: `Add a login page`
+
+## Step 2: If a trigger is detected → Call the MCP tool
+```
+packmind_capture_signal({ ruleContent: "<the coding preference>" })
+```
+
+⚠️ **IMPORTANT**: Call this tool even if the preference already exists in the codebase standards. The signal captures user intent, not just new rules.

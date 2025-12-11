@@ -19,6 +19,7 @@ import {
   registerOnboardingTool,
 } from './tools';
 import { UserContext } from './tools/types';
+import { registerCaptureSignalTool } from './tools/captureSignal.tool';
 
 const mcpToolPrefix = 'packmind';
 
@@ -75,6 +76,7 @@ export function createMCPServer(
   registerSaveStandardTool(toolDependencies, mcpServer);
   registerCreateStandardRuleTool(toolDependencies, mcpServer);
   registerOnboardingTool(toolDependencies, mcpServer);
+  registerCaptureSignalTool(toolDependencies, mcpServer);
 
   return mcpServer;
 }
