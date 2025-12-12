@@ -4,9 +4,9 @@ import {
   PackmindCommandBody,
   Standard,
 } from '@packmind/types';
-import { testWithApi } from './fixtures/packmindTest';
-import { apiStandardFactory } from './domain/apiDataFactories/apiStandardFactory';
-import { apiPackageFactory } from './domain/apiDataFactories/apiPackageFactory';
+import { testWithApi } from '../../fixtures/packmindTest';
+import { apiStandardFactory } from '../../domain/apiDataFactories/apiStandardFactory';
+import { apiPackageFactory } from '../../domain/apiDataFactories/apiPackageFactory';
 import { expect } from '@playwright/test';
 
 testWithApi.describe('packmind-cli install', () => {
