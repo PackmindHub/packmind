@@ -5,12 +5,12 @@ import {
   PMPageSection,
   PMHeading,
   PMBox,
-  PMSeparator,
 } from '@packmind/ui';
 import { McpConfigRedesigned } from './McpConfig/McpConfigRedesigned';
 import { SetupLocalEnvironment } from './SetupLocalEnvironment';
 import { CliAuthentication } from './CliAuthentication';
 import { AutobreadCrumb } from '../../../shared/components/navigation/AutobreadCrumb';
+import { SettingsPageDataTestId } from '@packmind/frontend';
 
 export function SettingsPage() {
   return (
@@ -36,6 +36,7 @@ export function SettingsPage() {
           backgroundColor="primary"
           headingLevel="h4"
           collapsible={true}
+          headerDataTestId={SettingsPageDataTestId.CliAccordionHeader}
         >
           <PMBox paddingY={2}>
             <CliAuthentication />

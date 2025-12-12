@@ -14,6 +14,7 @@ import type {
   OrganizationId,
   UserOrganizationRole,
 } from '@packmind/types';
+import { CliAuthenticationDataTestIds } from '@packmind/frontend';
 
 jest.mock('../api/queries/AuthQueries', () => ({
   useGetCurrentApiKeyQuery: jest.fn(),
@@ -290,7 +291,9 @@ describe('CliAuthentication', () => {
       expect(
         screen.getByText('API Key Generated Successfully!'),
       ).toBeInTheDocument();
-      expect(screen.getByTestId('generated-api-key')).toHaveValue(mockApiKey);
+      expect(
+        screen.getByTestId(CliAuthenticationDataTestIds.ApiKeyInput),
+      ).toHaveValue(mockApiKey);
     });
   });
 });

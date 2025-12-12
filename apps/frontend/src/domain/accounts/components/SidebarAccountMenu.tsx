@@ -13,6 +13,7 @@ import { useAuthContext } from '../hooks/useAuthContext';
 import { LuLogOut, LuSettings } from 'react-icons/lu';
 import { Analytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/analytics';
 import { routes } from '../../../shared/utils/routes';
+import { SidebarAccountsMenuDataTestIds } from '@packmind/frontend';
 
 export const SidebarAccountMenu: React.FunctionComponent = () => {
   const signOutMutation = useSignOutMutation();
@@ -57,6 +58,7 @@ export const SidebarAccountMenu: React.FunctionComponent = () => {
           justifyContent={'flex-start'}
           paddingY={'6'}
           paddingX={'2'}
+          data-testid={SidebarAccountsMenuDataTestIds.OpenSubMenuCTA}
         >
           <PMAvatar.Root
             size="xs"
@@ -81,6 +83,7 @@ export const SidebarAccountMenu: React.FunctionComponent = () => {
               value="settings"
               onClick={handleSettings}
               cursor={'pointer'}
+              data-testid={SidebarAccountsMenuDataTestIds.OpenUserSettingsCTA}
             >
               <PMText color="secondary">
                 <PMIcon marginRight={2}>
@@ -96,6 +99,7 @@ export const SidebarAccountMenu: React.FunctionComponent = () => {
               value="sign-out"
               onClick={handleSignOut}
               cursor={'pointer'}
+              data-testid={SidebarAccountsMenuDataTestIds.SignoutCTA}
             >
               <PMText color="secondary">
                 <PMIcon marginRight={2}>
