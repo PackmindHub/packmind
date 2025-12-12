@@ -59,10 +59,8 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
   const isAllSelected =
     packages.length > 0 && selectedPackageIds.length === packages.length;
 
-  const selectedNonEmptyPackages = packages.filter(
-    (pkg) =>
-      selectedPackageIds.includes(pkg.id) &&
-      (pkg.recipes.length > 0 || pkg.standards.length > 0),
+  const selectedPackages = packages.filter((pkg) =>
+    selectedPackageIds.includes(pkg.id),
   );
 
   const handleSelectPackage = (packageId: PackageId, isChecked: boolean) => {
@@ -180,9 +178,9 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
           <PMBox mb={4}>
             <PMButtonGroup>
               <DeployPackageButton
-                selectedPackages={selectedNonEmptyPackages}
+                selectedPackages={selectedPackages}
                 variant="primary"
-                disabled={selectedNonEmptyPackages.length === 0}
+                disabled={selectedPackages.length === 0}
               />
               <PMAlertDialog
                 trigger={
