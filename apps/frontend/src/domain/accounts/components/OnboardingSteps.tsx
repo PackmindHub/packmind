@@ -5,6 +5,7 @@ import {
   PMButton,
   PMField,
   PMHeading,
+  PMTabs,
   PMText,
   PMVStack,
 } from '@packmind/ui';
@@ -61,56 +62,79 @@ export const OnboardingSteps: React.FC = () => {
                 agent:
               </PMText>
 
-              <PMField.Root width="full">
-                <PMField.Label>
-                  Bootstrap with on-boarding MCP tool
-                </PMField.Label>
-                <CopiableTextarea
-                  value="Run the Packmind on-boarding process"
-                  readOnly
-                  rows={1}
-                  width="full"
-                />
-              </PMField.Root>
+              <PMTabs
+                defaultValue="quick-start"
+                width="full"
+                tabs={[
+                  {
+                    value: 'quick-start',
+                    triggerLabel: 'Getting Started',
+                    content: (
+                      <PMVStack align="flex-start" gap={4} paddingTop={4}>
+                        <PMField.Root width="full">
+                          <PMField.Label>
+                            Prompt: Bootstrap with on-boarding MCP tool
+                          </PMField.Label>
+                          <CopiableTextarea
+                            value="Run the Packmind on-boarding process"
+                            readOnly
+                            rows={1}
+                            width="full"
+                          />
+                        </PMField.Root>
+                      </PMVStack>
+                    ),
+                  },
+                  {
+                    value: 'examples',
+                    triggerLabel: 'Advanced',
+                    content: (
+                      <PMVStack align="flex-start" gap={4} paddingTop={4}>
+                        <PMText as="p">
+                          You can contribute to the playbook anytime as you
+                          code. Here are a few examples:
+                        </PMText>
 
-              <PMHeading level="h6" marginTop={4}>
-                As you code
-              </PMHeading>
+                        <PMField.Root width="full">
+                          <PMField.Label>
+                            Prompt: create new standard
+                          </PMField.Label>
+                          <CopiableTextarea
+                            value="Generate a Packmind Standard describing our error handling in Node.js APIs."
+                            readOnly
+                            rows={2}
+                            width="full"
+                          />
+                        </PMField.Root>
 
-              <PMText as="p">
-                You can contribute to the playbook anytime as you code. Here are
-                a few examples:
-              </PMText>
+                        <PMField.Root width="full">
+                          <PMField.Label>
+                            Prompt: create new recipe
+                          </PMField.Label>
+                          <CopiableTextarea
+                            value="From the last commit, create a Packmind Recipe to refactor a React component to use Hooks instead of class components."
+                            readOnly
+                            rows={2}
+                            width="full"
+                          />
+                        </PMField.Root>
 
-              <PMField.Root width="full">
-                <PMField.Label>New standard</PMField.Label>
-                <CopiableTextarea
-                  value="Generate a Packmind Standard describing our error handling in Node.js APIs."
-                  readOnly
-                  rows={2}
-                  width="full"
-                />
-              </PMField.Root>
-
-              <PMField.Root width="full">
-                <PMField.Label>New recipe</PMField.Label>
-                <CopiableTextarea
-                  value="From the last commit, create a Packmind Recipe to refactor a React component to use Hooks instead of class components."
-                  readOnly
-                  rows={2}
-                  width="full"
-                />
-              </PMField.Root>
-
-              <PMField.Root width="full">
-                <PMField.Label>Add a rule to standard</PMField.Label>
-                <CopiableTextarea
-                  value="Add a rule to enforce usage of the Button component instead of plain html buttons in the standard about our design system"
-                  readOnly
-                  rows={2}
-                  width="full"
-                />
-              </PMField.Root>
+                        <PMField.Root width="full">
+                          <PMField.Label>
+                            Prompt: add rule to standard
+                          </PMField.Label>
+                          <CopiableTextarea
+                            value="Add a rule to enforce usage of the Button component instead of plain html buttons in the standard about our design system"
+                            readOnly
+                            rows={2}
+                            width="full"
+                          />
+                        </PMField.Root>
+                      </PMVStack>
+                    ),
+                  },
+                ]}
+              />
             </PMVStack>
           </PMAccordion.ItemContent>
         </PMAccordion.Item>
@@ -166,6 +190,7 @@ export const OnboardingSteps: React.FC = () => {
               </PMText>
 
               <PMField.Root width="full">
+                <PMField.Label>Bash</PMField.Label>
                 <CopiableTextarea
                   value="packmind-cli install <package-name>"
                   readOnly
