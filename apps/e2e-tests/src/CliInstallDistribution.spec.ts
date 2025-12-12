@@ -1,4 +1,9 @@
-import { Package, Standard } from '@packmind/types';
+import {
+  NotifyDistributionCommand,
+  Package,
+  PackmindCommandBody,
+  Standard,
+} from '@packmind/types';
 import { testWithApi } from './fixtures/packmindTest';
 import { apiStandardFactory } from './domain/apiDataFactories/apiStandardFactory';
 import { apiPackageFactory } from './domain/apiDataFactories/apiPackageFactory';
@@ -7,19 +12,23 @@ import { expect } from '@playwright/test';
 testWithApi.describe('packmind-cli install', () => {
   let standard: Standard;
   let defaultPackage: Package;
+  let notifyDistributionCommand: PackmindCommandBody<NotifyDistributionCommand>;
+  const gitRepoOwner = 'my-company';
+  const gitRepoName = 'my-repo';
 
   testWithApi.beforeEach(async ({ packmindApi, dashboardPage }) => {
     standard = await apiStandardFactory(packmindApi);
     defaultPackage = await apiPackageFactory(packmindApi, {
       standardIds: [standard.id],
     });
-
-    await packmindApi.notifyDistribution({
+    notifyDistributionCommand = {
       distributedPackages: [defaultPackage.slug],
       gitBranch: 'main',
-      gitRemoteUrl: 'github.com/my-company/my-repo',
+      gitRemoteUrl: `github.com/${gitRepoOwner}/${gitRepoName}`,
       relativePath: '/',
-    });
+    };
+
+    await packmindApi.notifyDistribution(notifyDistributionCommand);
 
     await dashboardPage.reload();
   });
@@ -35,10 +44,26 @@ testWithApi.describe('packmind-cli install', () => {
       // eslint-disable-next-line playwright/no-standalone-expect
       expect(distributions).toEqual([
         {
-          target: '/ in my-company/my-repo:main',
+          target: `/ in ${gitRepoOwner}/${gitRepoName}:${notifyDistributionCommand.gitBranch}`,
           author: userData.email,
         },
       ]);
     },
   );
+
+  testWithApi('it creates a new GitProvider', async ({ dashboardPage }) => {
+    const settingsPage = await dashboardPage.openSettings();
+    const gitSettingsPage = await settingsPage.openGitSettings();
+
+    const providers = await gitSettingsPage.listGitProviders();
+
+    // eslint-disable-next-line playwright/no-standalone-expect
+    expect(providers).toEqual([
+      {
+        provider: 'github',
+        repositoriesCount: 1,
+        tokenLess: true,
+      },
+    ]);
+  });
 });

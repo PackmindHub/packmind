@@ -1,4 +1,5 @@
 export enum SidebarNavigationDataTestId {
   Component = 'SidebarNavigationDataTestId',
-  PackagesLinks = 'SidebarNavigationDataTestId.PackagesLinks',
+  PackagesLink = 'SidebarNavigationDataTestId.PackagesLinks',
+  SettingsLink = 'SidebarNavigationDataTestId.SettingsLink',
 }

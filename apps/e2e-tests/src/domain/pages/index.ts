@@ -7,6 +7,7 @@ export interface IPackmindAppPage extends IPackmindPage {
   openStandards(): Promise<IStandardsPage>;
   openRecipes(): Promise<IRecipesPage>;
   openPackages(): Promise<IPackagesPage>;
+  openSettings(): Promise<ISettingsPage>;
   openUserSettings(): Promise<IUserSettingsPage>;
 }
 
@@ -16,10 +17,6 @@ export interface ISignUpPage extends IPackmindPage {
     password: string,
     organizationName: string,
   ): Promise<IDashboardPage>;
-}
-
-export interface ISignInPage extends IPackmindPage {
-  signIn(email: string, password: string): Promise<IDashboardPage>;
 }
 
 export interface IDashboardPage extends IPackmindAppPage {
@@ -57,6 +54,16 @@ export interface IRecipesPage extends IPackmindAppPage {
   listRecipes(): Promise<{ IRecipesPagename: string }[]>;
 }
 
+export interface ISettingsPage extends IPackmindAppPage {
+  openGitSettings(): Promise<IGitSettingsPage>;
+}
+
+export interface IGitSettingsPage extends IPackmindAppPage {
+  listGitProviders(): Promise<
+    { provider: string; repositoriesCount: number; tokenLess: boolean }[]
+  >;
+}
+
 export interface IUserSettingsPage extends IPackmindAppPage {
   getMcpToken(): Promise<string>;
   getApiKey(): Promise<string>;
@@ -68,4 +75,6 @@ export interface IPageFactory {
   getUserSettingsPage(): Promise<IUserSettingsPage>;
   getPackagesPage(): Promise<IPackagesPage>;
   getPackagePage(): Promise<IPackagePage>;
+  getSettingsPage(): Promise<ISettingsPage>;
+  getGitSettingsPage(): Promise<IGitSettingsPage>;
 }

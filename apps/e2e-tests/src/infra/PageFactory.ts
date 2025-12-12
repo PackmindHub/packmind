@@ -1,9 +1,11 @@
 import {
   IDashboardPage,
+  IGitSettingsPage,
   IPackagePage,
   IPackagesPage,
   IPackmindPage,
   IPageFactory,
+  ISettingsPage,
   ISignUpPage,
   IUserSettingsPage,
 } from '../domain/pages';
@@ -13,6 +15,8 @@ import { DashboardPage } from './pages/DashboardPage';
 import { UserSettingsPage } from './pages/UserSettingsPage';
 import { PackagesPage } from './pages/PackagesPage';
 import { PackagePage } from './pages/PackagePage';
+import { SettingsPage } from './pages/SettingsPage';
+import { GitSettings } from './pages/GitSettingsPage';
 
 export type Constructor<T> = new (page: Page, pageFactory: IPageFactory) => T;
 
@@ -35,8 +39,17 @@ export class PageFactory implements IPageFactory {
   getPackagesPage(): Promise<IPackagesPage> {
     return this.getPageInstance(PackagesPage);
   }
+
   getPackagePage(): Promise<IPackagePage> {
     return this.getPageInstance(PackagePage);
+  }
+
+  getSettingsPage(): Promise<ISettingsPage> {
+    return this.getPageInstance(SettingsPage);
+  }
+
+  getGitSettingsPage(): Promise<IGitSettingsPage> {
+    return this.getPageInstance(GitSettings);
   }
 
   private async getPageInstance<T extends IPackmindPage>(

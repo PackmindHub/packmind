@@ -23,6 +23,7 @@ import { useEffect } from 'react';
 import { MeResponse } from '../../src/domain/accounts/api/gateways/IAuthGateway';
 import { SidebarNavigationLink } from '../../src/domain/organizations/components/SidebarNavigation';
 import { routes } from '../../src/shared/utils/routes';
+import { SettingsRouteDataTestIds } from '@packmind/frontend';
 
 type HasAccessResponse =
   | {
@@ -113,6 +114,7 @@ export default function SettingsIndexRouteModule() {
               url={orgSlug ? routes.org.toSettingsGit(orgSlug) : '#'}
               label="Git"
               exact
+              data-testid={SettingsRouteDataTestIds.GitLink}
             />,
 
             <SidebarNavigationLink

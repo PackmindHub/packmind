@@ -114,7 +114,7 @@ export const SidebarNavigation: React.FunctionComponent<
             key="packages"
             url={routes.space.toPackages(orgSlug, currentSpaceSlug)}
             label="Packages"
-            data-testid={SidebarNavigationDataTestId.PackagesLinks}
+            data-testid={SidebarNavigationDataTestId.PackagesLink}
           />,
           <SidebarNavigationLink
             key="overview"
@@ -138,6 +138,7 @@ export const SidebarNavigation: React.FunctionComponent<
               url={routes.org.toSettings(orgSlug)}
               label="Settings"
               icon={<LuSettings />}
+              data-testid={SidebarNavigationDataTestId.SettingsLink}
             />,
           );
         }
