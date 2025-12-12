@@ -18,6 +18,7 @@ import {
 } from '../../../shared/components/inputs';
 import { useAuthContext } from '../../accounts/hooks/useAuthContext';
 import { UserId } from '@packmind/types';
+import { CliAuthenticationDataTestIds } from '@packmind/frontend';
 
 const DEFAULT_HOST = 'https://app.packmind.ai';
 
@@ -129,6 +130,7 @@ export const CliAuthentication: React.FunctionComponent = () => {
         <PMButton
           onClick={handleGenerateApiKey}
           disabled={generateApiKeyMutation.isPending}
+          data-testid={CliAuthenticationDataTestIds.GenerateApiKeyCTA}
         >
           {generateApiKeyMutation.isPending
             ? 'Generating...'
@@ -167,8 +169,8 @@ export const CliAuthentication: React.FunctionComponent = () => {
               value={generateApiKeyMutation.data.apiKey}
               readOnly
               rows={4}
-              data-testid="generated-api-key"
               width={'full'}
+              data-testid={CliAuthenticationDataTestIds.ApiKeyInput}
             />
           </PMField.Root>
         </PMVStack>
@@ -181,11 +183,13 @@ export const CliAuthentication: React.FunctionComponent = () => {
       value: 'login-command',
       triggerLabel: 'Login Command',
       content: loginCommandTab,
+      dataTestId: CliAuthenticationDataTestIds.LoginCommandTab,
     },
     {
       value: 'env-var',
       triggerLabel: 'Environment Variable',
       content: envVarTab,
+      dataTestId: CliAuthenticationDataTestIds.EnvironmentVariableTab,
     },
   ];
 

@@ -1,9 +1,9 @@
 import { AbstractPackmindPage } from './AbstractPackmindPage';
-import { IDashboardPage, ISignupPage } from '../../domain/pages';
+import { IDashboardPage, ISignUpPage } from '../../domain/pages';
 
 import { SignUpWithOrganizationFormDataTestIds } from '@packmind/frontend';
 
-export class SignupPage extends AbstractPackmindPage implements ISignupPage {
+export class SignupPage extends AbstractPackmindPage implements ISignUpPage {
   async signup(
     email: string,
     password: string,

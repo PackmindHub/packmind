@@ -22,6 +22,7 @@ interface PMBoxProps extends ComponentPropsWithoutRef<'div'> {
   children: React.ReactNode;
   collapsible?: boolean;
   collapsibleProps?: CollapsibleRootProps;
+  headerDataTestId?: string;
 }
 
 const CollapsibleIcon = () => {
@@ -39,6 +40,7 @@ const PMPageSection = ({
   children,
   collapsible = false,
   collapsibleProps,
+  headerDataTestId,
 }: PMBoxProps) => {
   const boxCustomProps = {
     padding: '4',
@@ -51,7 +53,7 @@ const PMPageSection = ({
 
   const headerContent = (
     <HStack justify={'space-between'} width="full">
-      <PMHeading level={headingLevel} mb={2}>
+      <PMHeading level={headingLevel} mb={2} data-testId={headerDataTestId}>
         {title}
       </PMHeading>
       <HStack gap={2}>

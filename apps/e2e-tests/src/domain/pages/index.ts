@@ -5,14 +5,19 @@ export interface IPackmindPage {
 export interface IPackmindAppPage extends IPackmindPage {
   openStandards(): Promise<IStandardsPage>;
   openRecipes(): Promise<IRecipesPage>;
+  openUserSettings(): Promise<IUserSettingsPage>;
 }
 
-export interface ISignupPage extends IPackmindPage {
+export interface ISignUpPage extends IPackmindPage {
   signup(
     email: string,
     password: string,
     organizationName: string,
   ): Promise<IDashboardPage>;
+}
+
+export interface ISignInPage extends IPackmindPage {
+  signIn(email: string, password: string): Promise<IDashboardPage>;
 }
 
 export interface IDashboardPage extends IPackmindAppPage {
@@ -41,7 +46,13 @@ export interface IRecipesPage extends IPackmindAppPage {
   listRecipes(): Promise<{ IRecipesPagename: string }[]>;
 }
 
+export interface IUserSettingsPage extends IPackmindAppPage {
+  getMcpToken(): Promise<string>;
+  getApiKey(): Promise<string>;
+}
+
 export interface IPageFactory {
-  getSignupPage(): Promise<ISignupPage>;
+  getSignupPage(): Promise<ISignUpPage>;
   getDashboardPage(): Promise<IDashboardPage>;
+  getUserSettingsPage(): Promise<IUserSettingsPage>;
 }

@@ -1,4 +1,4 @@
-import { Box, Tabs, TabsRootProps } from '@chakra-ui/react';
+import { Tabs, TabsRootProps } from '@chakra-ui/react';
 import { PMTabsTrigger } from './PMTabsTrigger';
 import { PMTabsContent } from './PMTabsContent';
 
