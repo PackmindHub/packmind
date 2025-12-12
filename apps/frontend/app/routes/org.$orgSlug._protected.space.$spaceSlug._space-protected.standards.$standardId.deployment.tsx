@@ -5,9 +5,13 @@ import {
   PMHeading,
   PMPageSection,
   PMVStack,
+  PMEmptyState,
+  PMSpinner,
+  PMText,
 } from '@packmind/ui';
 import { StandardDetailsOutletContext } from '../../src/domain/standards/components/StandardDetails';
 import { StandardDistributionsList } from '../../src/domain/deployments/components/StandardDistributionsList/StandardDistributionsList';
+import { useListStandardDistributionsQuery } from '../../src/domain/deployments/api/queries/DeploymentsQueries';
 
 export default function StandardDetailDeploymentRouteModule() {
   const { orgSlug, spaceSlug } = useParams<{
@@ -16,6 +20,36 @@ export default function StandardDetailDeploymentRouteModule() {
   }>();
   const { standard, defaultPath } =
     useOutletContext<StandardDetailsOutletContext>();
+  const { data: distributions, isLoading: isLoadingDistributions } =
+    useListStandardDistributionsQuery(standard.id);
+  const hasDistributions = distributions && distributions.length > 0;
+
+  if (isLoadingDistributions) {
+    return (
+      <PMBox
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        minH="200px"
+      >
+        <PMSpinner size="lg" mr={2} />
+        <PMText ml={2}>Loading distributions...</PMText>
+      </PMBox>
+    );
+  }
+
+  if (!hasDistributions) {
+    return (
+      <PMEmptyState
+        backgroundColor={'background.primary'}
+        borderRadius={'md'}
+        width={'2xl'}
+        mx={'auto'}
+        title={'No distributions yet'}
+        description="This standard has not been distributed."
+      />
+    );
+  }
 
   return (
     <PMVStack align="stretch" gap={6}>

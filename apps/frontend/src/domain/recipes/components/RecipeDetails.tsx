@@ -17,6 +17,7 @@ import {
   PMIconButton,
   PMCopiable,
   PMTooltip,
+  PMEmptyState,
 } from '@packmind/ui';
 import { LuCopy } from 'react-icons/lu';
 import { useNavigate } from 'react-router';
@@ -26,6 +27,7 @@ import {
 } from '../api/queries/RecipesQueries';
 import { RecipeVersionsListDrawer } from './RecipeVersionsListDrawer';
 import { RecipeDistributionsList } from '../../deployments/components/RecipeDistributionsList/RecipeDistributionsList';
+import { useListRecipeDistributionsQuery } from '../../deployments/api/queries/DeploymentsQueries';
 import { EditRecipe } from './EditRecipe';
 import { AutobreadCrumb } from '../../../../src/shared/components/navigation/AutobreadCrumb';
 import { RECIPE_MESSAGES } from '../constants/messages';
@@ -56,6 +58,9 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
   } | null>(null);
   const { data: recipe, isLoading, isError, error } = useGetRecipeByIdQuery(id);
   const deleteMutation = useDeleteRecipeMutation();
+  const { data: distributions, isLoading: isLoadingDistributions } =
+    useListRecipeDistributionsQuery(id);
+  const hasDistributions = distributions && distributions.length > 0;
   const defaultPath = `.packmind/recipes/${recipe?.slug}.md`;
 
   const handleDeleteRecipe = async () => {
@@ -265,7 +270,18 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
             {
               value: 'deployments',
               triggerLabel: 'Distributions',
-              content: (
+              content: isLoadingDistributions ? (
+                <PMBox
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  minH="200px"
+                  marginTop={6}
+                >
+                  <PMSpinner size="lg" mr={2} />
+                  <PMText ml={2}>Loading distributions...</PMText>
+                </PMBox>
+              ) : hasDistributions ? (
                 <PMVStack align="stretch" gap={6} marginTop={6}>
                   <PMPageSection
                     title="Distribution"
@@ -305,6 +321,16 @@ export const RecipeDetails = ({ id, orgSlug }: RecipeDetailsProps) => {
                     spaceSlug={spaceSlug || ''}
                   />
                 </PMVStack>
+              ) : (
+                <PMEmptyState
+                  backgroundColor={'background.primary'}
+                  borderRadius={'md'}
+                  width={'2xl'}
+                  mx={'auto'}
+                  marginTop={6}
+                  title={'No distributions yet'}
+                  description="This recipe has not been distributed."
+                />
               ),
             },
           ]}
