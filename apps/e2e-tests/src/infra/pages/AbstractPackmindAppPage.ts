@@ -2,6 +2,7 @@ import {
   IPackagesPage,
   IPackmindAppPage,
   IRecipesPage,
+  ISettingsPage,
   IStandardsPage,
 } from '../../domain/pages';
 import { AbstractPackmindPage } from './AbstractPackmindPage';
@@ -24,10 +25,18 @@ export abstract class AbstractPackmindAppPage
 
   async openPackages(): Promise<IPackagesPage> {
     await this.page
-      .getByTestId(SidebarNavigationDataTestId.PackagesLinks)
+      .getByTestId(SidebarNavigationDataTestId.PackagesLink)
       .click();
 
     return this.pageFactory.getPackagesPage();
+  }
+
+  async openSettings(): Promise<ISettingsPage> {
+    await this.page
+      .getByTestId(SidebarNavigationDataTestId.SettingsLink)
+      .click();
+
+    return this.pageFactory.getSettingsPage();
   }
 
   async openUserSettings() {
