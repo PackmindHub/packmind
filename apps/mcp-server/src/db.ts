@@ -8,7 +8,6 @@ import { recipesUsageSchemas } from '@packmind/analytics';
 import { deploymentsSchemas } from '@packmind/deployments';
 import { gitSchemas } from '@packmind/git';
 import { linterSchemas } from '@packmind/linter';
-import { llmSchemas } from '@packmind/llm';
 import { recipesSchemas } from '@packmind/recipes';
 import { llmSchemas } from '@packmind/llm';
 import { spacesSchemas } from '@packmind/spaces';
