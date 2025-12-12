@@ -106,5 +106,5 @@ The CLI approach is ideal for:
 
 - **CI/CD pipelines** - Automate distribution as part of your deployment process
 - **Local development** - Quickly install packages without leaving your terminal
-- **Monorepos** - Use `packmind-cli install --recursive` to install packages across multiple directories
+- **Monorepos** - Use `packmind-cli install --recursive` to install packages for all `packmind.json` files in the repository
 - **Self-hosted Git instances** - Distribute to repositories that aren't connected to the app

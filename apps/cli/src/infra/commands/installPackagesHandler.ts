@@ -273,6 +273,7 @@ export type RecursiveInstallResult = {
   totalFilesCreated: number;
   totalFilesUpdated: number;
   totalFilesDeleted: number;
+  totalNotifications: number;
   errors: { directory: string; message: string }[];
 };
 
@@ -281,6 +282,7 @@ type SingleDirectoryInstallResult = {
   filesCreated: number;
   filesUpdated: number;
   filesDeleted: number;
+  notificationSent: boolean;
   errorMessage?: string;
 };
 
@@ -305,6 +307,7 @@ async function executeInstallForDirectory(
       filesCreated: 0,
       filesUpdated: 0,
       filesDeleted: 0,
+      notificationSent: false,
       errorMessage: `Failed to parse packmind.json: ${errorMessage}`,
     };
   }
@@ -316,6 +319,7 @@ async function executeInstallForDirectory(
       filesCreated: 0,
       filesUpdated: 0,
       filesDeleted: 0,
+      notificationSent: false,
     };
   }
 
@@ -351,11 +355,13 @@ async function executeInstallForDirectory(
         filesCreated: result.filesCreated,
         filesUpdated: result.filesUpdated,
         filesDeleted: result.filesDeleted,
+        notificationSent: false,
         errorMessage: result.errors.join(', '),
       };
     }
 
     // Notify distribution if files were created or updated and we're in a git repo
+    let notificationSent = false;
     if (result.filesCreated > 0 || result.filesUpdated > 0) {
       const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(directory);
 
@@ -381,6 +387,7 @@ async function executeInstallForDirectory(
             gitBranch,
             relativePath,
           });
+          notificationSent = true;
         } catch {
           // Silently ignore distribution notification errors
         }
@@ -392,6 +399,7 @@ async function executeInstallForDirectory(
       filesCreated: result.filesCreated,
       filesUpdated: result.filesUpdated,
       filesDeleted: result.filesDeleted,
+      notificationSent,
     };
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : String(err);
@@ -400,6 +408,7 @@ async function executeInstallForDirectory(
       filesCreated: 0,
       filesUpdated: 0,
       filesDeleted: 0,
+      notificationSent: false,
       errorMessage,
     };
   }
@@ -800,6 +809,7 @@ export async function recursiveInstallHandler(
     totalFilesCreated: 0,
     totalFilesUpdated: 0,
     totalFilesDeleted: 0,
+    totalNotifications: 0,
     errors: [],
   };
 
@@ -815,16 +825,14 @@ export async function recursiveInstallHandler(
     );
 
     if (!allConfigs.hasConfigs) {
-      log('No packmind.json files found in this workspace.');
+      log('No packmind.json files found in this repository.');
       log('');
       log('Usage: packmind-cli install -r');
       log('');
       log(
-        'This command requires at least one packmind.json file in the current',
+        'This command requires at least one packmind.json file in the repository.',
       );
-      log(
-        'directory or its subdirectories. Create a packmind.json file first:',
-      );
+      log('Create a packmind.json file first:');
       log('');
       log('  packmind-cli install <package-slug>');
       exit(0);
@@ -852,6 +860,9 @@ export async function recursiveInstallHandler(
       result.totalFilesCreated += installResult.filesCreated;
       result.totalFilesUpdated += installResult.filesUpdated;
       result.totalFilesDeleted += installResult.filesDeleted;
+      if (installResult.notificationSent) {
+        result.totalNotifications++;
+      }
 
       if (!installResult.success && installResult.errorMessage) {
         result.errors.push({
@@ -873,6 +884,13 @@ export async function recursiveInstallHandler(
         `${result.totalFilesUpdated} changed, ` +
         `${result.totalFilesDeleted} removed`,
     );
+
+    // Print notification summary if any notifications were sent
+    if (result.totalNotifications > 0) {
+      const distWord =
+        result.totalNotifications === 1 ? 'distribution' : 'distributions';
+      log(`Notified Packmind of ${result.totalNotifications} ${distWord}`);
+    }
 
     if (result.errors.length > 0) {
       log('');

@@ -693,7 +693,7 @@ describe('installPackagesHandler', () => {
         await recursiveInstallHandler({}, deps);
 
         expect(mockLog).toHaveBeenCalledWith(
-          'No packmind.json files found in this workspace.',
+          'No packmind.json files found in this repository.',
         );
       });
 
@@ -819,6 +819,198 @@ describe('installPackagesHandler', () => {
         await recursiveInstallHandler({}, deps);
 
         expect(mockExit).toHaveBeenCalledWith(0);
+      });
+
+      describe('notification', () => {
+        it('notifies distribution for each directory with file changes', async () => {
+          mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+          mockPackmindCliHexa.installPackages.mockResolvedValue({
+            filesCreated: 2,
+            filesUpdated: 1,
+            filesDeleted: 0,
+            recipesCount: 1,
+            standardsCount: 1,
+            errors: [],
+          });
+          mockPackmindCliHexa.getGitRemoteUrlFromPath.mockReturnValue(
+            'git@github.com:org/repo.git',
+          );
+          mockPackmindCliHexa.getCurrentBranch.mockReturnValue('main');
+          mockPackmindCliHexa.notifyDistribution.mockResolvedValue({
+            deploymentId: 'deployment-123',
+          });
+
+          await recursiveInstallHandler({}, deps);
+
+          expect(mockPackmindCliHexa.notifyDistribution).toHaveBeenCalledTimes(
+            2,
+          );
+          expect(mockPackmindCliHexa.notifyDistribution).toHaveBeenCalledWith({
+            distributedPackages: ['backend'],
+            gitRemoteUrl: 'git@github.com:org/repo.git',
+            gitBranch: 'main',
+            relativePath: '/',
+          });
+          expect(mockPackmindCliHexa.notifyDistribution).toHaveBeenCalledWith({
+            distributedPackages: ['backend'],
+            gitRemoteUrl: 'git@github.com:org/repo.git',
+            gitBranch: 'main',
+            relativePath: '/apps/api/',
+          });
+        });
+
+        it('displays summary message with notification count', async () => {
+          mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+          mockPackmindCliHexa.installPackages.mockResolvedValue({
+            filesCreated: 2,
+            filesUpdated: 0,
+            filesDeleted: 0,
+            recipesCount: 1,
+            standardsCount: 1,
+            errors: [],
+          });
+          mockPackmindCliHexa.getGitRemoteUrlFromPath.mockReturnValue(
+            'git@github.com:org/repo.git',
+          );
+          mockPackmindCliHexa.getCurrentBranch.mockReturnValue('main');
+          mockPackmindCliHexa.notifyDistribution.mockResolvedValue({
+            deploymentId: 'deployment-123',
+          });
+
+          const result = await recursiveInstallHandler({}, deps);
+
+          expect(mockLog).toHaveBeenCalledWith(
+            'Notified Packmind of 2 distributions',
+          );
+          expect(result.totalNotifications).toBe(2);
+        });
+
+        describe('when only one distribution', () => {
+          it('displays singular form', async () => {
+            mockPackmindCliHexa.findAllConfigsInTree.mockResolvedValue({
+              configs: [
+                {
+                  targetPath: '/',
+                  absoluteTargetPath: '/project',
+                  packages: { backend: '*' },
+                },
+              ],
+              hasConfigs: true,
+              basePath: '/project',
+            });
+            mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+            mockPackmindCliHexa.installPackages.mockResolvedValue({
+              filesCreated: 2,
+              filesUpdated: 0,
+              filesDeleted: 0,
+              recipesCount: 1,
+              standardsCount: 1,
+              errors: [],
+            });
+            mockPackmindCliHexa.getGitRemoteUrlFromPath.mockReturnValue(
+              'git@github.com:org/repo.git',
+            );
+            mockPackmindCliHexa.getCurrentBranch.mockReturnValue('main');
+            mockPackmindCliHexa.notifyDistribution.mockResolvedValue({
+              deploymentId: 'deployment-123',
+            });
+
+            await recursiveInstallHandler({}, deps);
+
+            expect(mockLog).toHaveBeenCalledWith(
+              'Notified Packmind of 1 distribution',
+            );
+          });
+        });
+
+        describe('when no files are changed', () => {
+          it('does not display notification summary', async () => {
+            mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+            mockPackmindCliHexa.installPackages.mockResolvedValue({
+              filesCreated: 0,
+              filesUpdated: 0,
+              filesDeleted: 0,
+              recipesCount: 0,
+              standardsCount: 0,
+              errors: [],
+            });
+
+            const result = await recursiveInstallHandler({}, deps);
+
+            expect(
+              mockPackmindCliHexa.notifyDistribution,
+            ).not.toHaveBeenCalled();
+            expect(mockLog).not.toHaveBeenCalledWith(
+              expect.stringMatching(/Notified Packmind of/),
+            );
+            expect(result.totalNotifications).toBe(0);
+          });
+        });
+
+        it('does not count failed notifications in summary', async () => {
+          mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+          mockPackmindCliHexa.installPackages.mockResolvedValue({
+            filesCreated: 2,
+            filesUpdated: 0,
+            filesDeleted: 0,
+            recipesCount: 1,
+            standardsCount: 1,
+            errors: [],
+          });
+          mockPackmindCliHexa.getGitRemoteUrlFromPath.mockReturnValue(
+            'git@github.com:org/repo.git',
+          );
+          mockPackmindCliHexa.getCurrentBranch.mockReturnValue('main');
+          mockPackmindCliHexa.notifyDistribution.mockRejectedValue(
+            new Error('Network error'),
+          );
+
+          const result = await recursiveInstallHandler({}, deps);
+
+          expect(mockLog).not.toHaveBeenCalledWith(
+            expect.stringMatching(/Notified Packmind of/),
+          );
+          expect(result.totalNotifications).toBe(0);
+          expect(result.directoriesProcessed).toBe(2);
+          expect(mockExit).toHaveBeenCalledWith(0);
+        });
+      });
+    });
+
+    describe('when not in git repo', () => {
+      beforeEach(() => {
+        mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(null);
+        mockPackmindCliHexa.findAllConfigsInTree.mockResolvedValue({
+          configs: [
+            {
+              targetPath: '/',
+              absoluteTargetPath: '/project',
+              packages: { backend: '*' },
+            },
+          ],
+          hasConfigs: true,
+          basePath: '/project',
+        });
+      });
+
+      it('does not notify distribution and hides summary message', async () => {
+        mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+        mockPackmindCliHexa.installPackages.mockResolvedValue({
+          filesCreated: 2,
+          filesUpdated: 0,
+          filesDeleted: 0,
+          recipesCount: 1,
+          standardsCount: 1,
+          errors: [],
+        });
+
+        const result = await recursiveInstallHandler({}, deps);
+
+        expect(mockPackmindCliHexa.notifyDistribution).not.toHaveBeenCalled();
+        expect(mockLog).not.toHaveBeenCalledWith(
+          expect.stringMatching(/Notified Packmind of/),
+        );
+        expect(result.totalNotifications).toBe(0);
       });
     });
 
