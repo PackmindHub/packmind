@@ -76,4 +76,4 @@ You can update your standard later to add and remove rules. Each rule can be doc
 ## Standards Versions
 
 Every time you update a standard, this creates a new version.
-This keeps track of the history of your changes, and it's useful to keep track of which versions are currently deployed on Git repositories.
+This keeps track of the history of your changes, and it's useful to keep track of which versions are currently distributed to Git repositories.

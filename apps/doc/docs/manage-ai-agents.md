@@ -36,6 +36,6 @@ The **Packmind** renderer cannot be disabled. It creates internal files in the `
 ## What Happens When You Change Configuration
 
 - Changes apply immediately to all future distributions
-- Existing deployed files in your repositories are not affected
+- Existing distributed files in your repositories are not affected
 - Only the selected agents will receive updates when you distribute standards or recipes
 - The Packmind renderer always creates files regardless of your selection

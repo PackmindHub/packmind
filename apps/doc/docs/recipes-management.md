@@ -56,4 +56,4 @@ For detailed information about the recipe creation workflow and available MCP to
 ## Recipes Versions
 
 Every time you update a recipe, this creates a new version.
-This keeps track of the history of your changes, and it's useful to keep track of which versions are currently deployed on Git repositories.
+This keeps track of the history of your changes, and it's useful to keep track of which versions are currently distributed to Git repositories.

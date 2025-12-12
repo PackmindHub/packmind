@@ -178,7 +178,7 @@ Each `packmind.json` file operates independently. When you run `packmind-cli ins
 
 Instead of pulling locally, you can distribute packages directly to your Git repositories. This pushes standards and recipes as files that are committed to your codebase.
 
-To learn about deploying to Git repositories, see the [Deployment documentation](./distribution.md).
+To learn about distributing to Git repositories, see the [Distribution documentation](./distribution.md).
 
 ## Use your artifacts
 

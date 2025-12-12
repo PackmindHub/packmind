@@ -30,15 +30,15 @@ You can create an issue in our [repository](https://github.com/PackmindHub/packm
 
 There are two ways to distribute packages to your repositories:
 
-1. **Using the Packmind app** - Deploy packages through the web interface with full control over targets and repositories
+1. **Using the Packmind app** - Distribute packages through the web interface with full control over targets and repositories
 2. **Using packmind-cli** - Install packages directly from your terminal, useful for CI/CD pipelines and local development
 
 ### Distribution Methods Overview
 
-| Method  | Best For                                  | Git Provider Management                  |
-| ------- | ----------------------------------------- | ---------------------------------------- |
-| **App** | Centralized deployment, team coordination | Full control via connected Git providers |
-| **CLI** | CI/CD pipelines, local development        | Creates read-only provider entries       |
+| Method  | Best For                                    | Git Provider Management                  |
+| ------- | ------------------------------------------- | ---------------------------------------- |
+| **App** | Centralized distribution, team coordination | Full control via connected Git providers |
+| **CLI** | CI/CD pipelines, local development          | Creates read-only provider entries       |
 
 ## Distribute via the App
 
@@ -46,7 +46,7 @@ To distribute standards and recipes, you need to add them to a package.
 
 A package is a curated collection of recipes and standards grouped together (e.g., "Frontend React Standards", "Backend API Guidelines"). When you distribute a package:
 
-- All recipes and standards in the package are deployed together
+- All recipes and standards in the package are distributed together
 - The latest version of each item is used
 - A single commit contains all the package content
 - You can distribute multiple packages at once to the same target
@@ -60,7 +60,7 @@ To distribute packages:
 
 This approach is useful when you want to:
 
-- Deploy related guidelines together
+- Distribute related guidelines together
 - Maintain consistent sets of standards across projects
 - Organize guidelines by technology, team, or project structure
 
