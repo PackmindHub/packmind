@@ -9,7 +9,8 @@ import { PageFactory } from '../infra/PageFactory';
 export const withUserData = base.extend<{
   userData: SignUpWithOrganizationCommand;
 }>({
-  userData: (_data, use) => {
+  // eslint-disable-next-line no-empty-pattern
+  userData: ({}, use) => {
     use({
       email: `someone-${uuidv4()}@example.com`,
       password: uuidv4(),
