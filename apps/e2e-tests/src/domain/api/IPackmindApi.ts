@@ -1,13 +1,14 @@
 import {
-  IListRecipesBySpaceUseCase,
-  NewGateway,
-  Organization,
-  OrganizationId,
+  ICreateStandardUseCase,
+  Gateway,
   Space,
+  ICreatePackageUseCase,
+  INotifyDistributionUseCase,
 } from '@packmind/types';
 
 export interface IPackmindApi {
-  listOrganizations: () => Promise<Organization[]>;
-  listSpaces: (command: { organizationId: OrganizationId }) => Promise<Space[]>;
-  getRecipesBySpace: NewGateway<IListRecipesBySpaceUseCase>;
+  listSpaces: () => Promise<Space[]>;
+  createStandard: Gateway<ICreateStandardUseCase>;
+  createPackage: Gateway<ICreatePackageUseCase>;
+  notifyDistribution: Gateway<INotifyDistributionUseCase>;
 }
