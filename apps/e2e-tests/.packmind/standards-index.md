@@ -4,8 +4,8 @@ This standards index contains all available coding standards that can be used by
 
 ## Available Standards
 
-- [[E2E] Page object](./standards/e2e-page-object.md) : Define PageObjects for E2E tests in Playwright using regular expressions for expectedUrl to ensure safer and more reliable URL matching.
-- [[E2E] Writing E2E tests](./standards/e2e-writing-e2e-tests.md) : Create non-essential test data via the API in end-to-end test suites to keep scenarios focused, realistic, and maintainable.
+- [[E2E] Page object](./standards/e2e-page-object.md) : Define Playwright E2E PageObjects for each frontend route using regexp-based expectedUrl matching and mandatory this.pageFactory() after navigation to ensure safer URL validation and proper typing.
+- [[E2E] Writing E2E tests](./standards/e2e-writing-e2e-tests.md) : Define modular Playwright E2E test specs using shared fixtures (testWithApi, testWithUser) and API-based data factories to isolate feature behavior, reduce duplication, and improve test reliability.
 
 
 ---
