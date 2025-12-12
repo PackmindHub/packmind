@@ -11,7 +11,7 @@ Instead of managing dozens of individual items, packages let you group related g
 There are two ways to distribute packages to your team:
 
 1. **Install locally via CLI** - Download packages directly to your local machine (no Git required)
-2. **Deploy to Git repositories** - Push packages to your repositories (requires Git configuration)
+2. **Distribute to Git repositories** - Push packages to your repositories (requires Git configuration)
 
 These are alternative distribution methods—you can choose the approach that fits your workflow. You don't need to use both.
 
@@ -47,14 +47,14 @@ This creates the appropriate files for your AI coding assistant on your local ma
 
 See the [CLI documentation](./cli.md#install-command) for details.
 
-### Option 2: Deploy to Repositories
+### Option 2: Distribute to Repositories
 
 Push packages to your Git repositories through the web interface:
 
 1. Navigate to **Packages**
 2. Select packages to distribute
 3. Choose target paths
-4. Click **Deploy**
+4. Click **Distribute**
 
 All recipes and standards in the package are committed together to your repository.
 

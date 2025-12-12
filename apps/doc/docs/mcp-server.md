@@ -201,7 +201,7 @@ Do not call this tool directly. AI agents must first complete the recipe creatio
 
 **Tool:** `list_packages`
 
-Retrieves all packages created in your organization. Packages are collections of recipes and standards that can be deployed together.
+Retrieves all packages created in your organization. Packages are collections of recipes and standards that can be distributed together.
 
 **Parameters:** None
 
