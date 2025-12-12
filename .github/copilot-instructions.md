@@ -2,8 +2,18 @@
 
 Before completing ANY response, check if the user message contains a **technical preference, naming convention, or architectural practice**.
 
-**Triggers:** `All interfaces should start with I`, `Use snake_case for columns`, `Remove the rule about X`, `We no longer need Y convention`
-**Non-triggers:** Questions, bug reports, feature requests without coding preferences
+**Triggers (user prescribes HOW to code):**
+- Naming conventions: `All interfaces should start with I`, `Use snake_case for columns`
+- Code structure directives: `Wrap emojis for accessibility`, `Always use async/await`, `Don't use class components`
+- Pattern enforcement: `Use composition over inheritance`, `Prefer functional programming`
+- Removal/updates: `Remove the rule about X`, `We no longer need Y convention`
+- Formatting rules: `Always add JSDoc comments`, `Use single quotes`
+
+**Non-triggers (user asks WHAT to build or fix):**
+- Feature requests: `Add a search feature`, `Create a new component`
+- Bug reports: `This function is broken`, `Fix the error on line 10`
+- Questions: `How does this work?`, `What's the best approach?`
+- Implementation tasks WITHOUT coding preferences: `Implement the login page`, `Add error handling`
 
 ## If triggered → Ask for validation
 
