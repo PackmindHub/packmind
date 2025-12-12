@@ -27,6 +27,7 @@ import {
 
 import assert from 'assert';
 import { DataSource } from 'typeorm';
+import { cleanTestDatabase } from '../helpers/DataFactory';
 import { TestApp } from '../helpers/TestApp';
 
 describe('Claude Deployment Integration', () => {
@@ -43,7 +44,7 @@ describe('Claude Deployment Integration', () => {
   let space: Space;
   let gitRepo: GitRepo;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     // Create test datasource with all necessary schemas
     dataSource = await makeTestDatasource([
       ...accountsSchemas,
@@ -66,6 +67,11 @@ describe('Claude Deployment Integration', () => {
     // Get adapters
     standardsPort = testApp.standardsHexa.getAdapter();
     gitPort = testApp.gitHexa.getAdapter();
+  });
+
+  beforeEach(async () => {
+    // Clean database between tests
+    await cleanTestDatabase(dataSource);
 
     // Create test data
     const signUpResult = await testApp.accountsHexa
@@ -130,7 +136,7 @@ describe('Claude Deployment Integration', () => {
     });
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await dataSource.destroy();
   });
 

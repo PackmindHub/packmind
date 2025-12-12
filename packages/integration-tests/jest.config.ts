@@ -20,5 +20,6 @@ export default {
     compilerOptions.paths,
     '<rootDir>/../../',
   ),
-  testTimeout: 30000,
+  testTimeout: 10000, // Reduced from 30s to catch slow tests earlier
+  maxWorkers: 1, // Run tests serially (runInBand) to reduce memory pressure
 };

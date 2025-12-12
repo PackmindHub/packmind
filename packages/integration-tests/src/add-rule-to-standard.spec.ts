@@ -13,6 +13,7 @@ import {
 
 import assert from 'assert';
 import { DataSource } from 'typeorm';
+import { cleanTestDatabase } from './helpers/DataFactory';
 import { TestApp } from './helpers/TestApp';
 
 describe('Add rule to standard integration', () => {
@@ -24,7 +25,7 @@ describe('Add rule to standard integration', () => {
   let user: User;
   let space: Space;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     // Create test datasource with all necessary schemas
     dataSource = await makeTestDatasource([
       ...accountsSchemas,
@@ -38,6 +39,11 @@ describe('Add rule to standard integration', () => {
     // Use TestApp which handles all hexa registration and initialization
     testApp = new TestApp(dataSource);
     await testApp.initialize();
+  });
+
+  beforeEach(async () => {
+    // Clean database between tests
+    await cleanTestDatabase(dataSource);
 
     // Create test data
     const signUpResult = await testApp.accountsHexa
@@ -73,7 +79,7 @@ describe('Add rule to standard integration', () => {
     });
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await dataSource.destroy();
   });
 

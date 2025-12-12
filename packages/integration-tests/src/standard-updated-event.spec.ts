@@ -6,7 +6,7 @@ import { standardsSchemas } from '@packmind/standards';
 import { makeTestDatasource } from '@packmind/test-utils';
 import { Standard, StandardUpdatedPayload } from '@packmind/types';
 import { DataSource } from 'typeorm';
-import { DataFactory } from './helpers/DataFactory';
+import { cleanTestDatabase, DataFactory } from './helpers/DataFactory';
 import {
   StubStandardsAdapter,
   StubStandardsListener,
@@ -24,7 +24,7 @@ describe('StandardUpdatedEvent integration', () => {
   let stubAdapter: jest.Mocked<StubStandardsAdapter>;
   let listener: StubStandardsListener;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     dataSource = await makeTestDatasource([
       ...accountsSchemas,
       ...standardsSchemas,
@@ -37,11 +37,16 @@ describe('StandardUpdatedEvent integration', () => {
     testApp = new TestApp(dataSource);
     await testApp.initialize();
 
-    dataFactory = new DataFactory(testApp);
-
     eventEmitterService = testApp.registry.getService(
       PackmindEventEmitterService,
     );
+  });
+
+  beforeEach(async () => {
+    // Clean database between tests
+    await cleanTestDatabase(dataSource);
+
+    dataFactory = new DataFactory(testApp);
 
     // Create stub adapter and listener
     stubAdapter = {
@@ -60,6 +65,9 @@ describe('StandardUpdatedEvent integration', () => {
 
   afterEach(async () => {
     eventEmitterService.removeAllListeners();
+  });
+
+  afterAll(async () => {
     await dataSource.destroy();
   });
 
