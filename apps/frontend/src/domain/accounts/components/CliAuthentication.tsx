@@ -183,13 +183,11 @@ export const CliAuthentication: React.FunctionComponent = () => {
       value: 'login-command',
       triggerLabel: 'Login Command',
       content: loginCommandTab,
-      dataTestId: CliAuthenticationDataTestIds.LoginCommandTab,
     },
     {
       value: 'env-var',
       triggerLabel: 'Environment Variable',
       content: envVarTab,
-      dataTestId: CliAuthenticationDataTestIds.EnvironmentVariableTab,
     },
   ];
 
