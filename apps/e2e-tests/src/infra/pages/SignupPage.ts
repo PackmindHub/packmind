@@ -9,6 +9,8 @@ export class SignupPage extends AbstractPackmindPage implements ISignUpPage {
     password: string,
     organizationName: string,
   ): Promise<IDashboardPage> {
+    console.log(`Creating user ${email} with password ${password}`);
+
     await this.page
       .getByTestId(SignUpWithOrganizationFormDataTestIds.OrganizationField)
       .fill(organizationName);

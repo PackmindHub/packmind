@@ -1,0 +1,9 @@
+---
+alwaysApply: true
+---
+## Standard: [E2E] Page object
+
+Define PageObjects for E2E tests in Playwright using regular expressions for expectedUrl to ensure safer and more reliable URL matching. :
+* Use regExp for `expectedUrl` to ensure safer matching (better than the simili-glob of Playwright)
+
+Full standard is available here for further request: [[E2E] Page object](../../../.packmind/standards/e2e-page-object.md)

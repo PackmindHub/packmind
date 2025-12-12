@@ -1,10 +1,14 @@
 import {
+  IPackagesPage,
   IPackmindAppPage,
   IRecipesPage,
   IStandardsPage,
 } from '../../domain/pages';
 import { AbstractPackmindPage } from './AbstractPackmindPage';
-import { SidebarAccountsMenuDataTestIds } from '@packmind/frontend';
+import {
+  SidebarAccountsMenuDataTestIds,
+  SidebarNavigationDataTestId,
+} from '@packmind/frontend';
 
 export abstract class AbstractPackmindAppPage
   extends AbstractPackmindPage
@@ -16,6 +20,14 @@ export abstract class AbstractPackmindAppPage
 
   openStandards(): Promise<IStandardsPage> {
     throw new Error('Not implemented yet');
+  }
+
+  async openPackages(): Promise<IPackagesPage> {
+    await this.page
+      .getByTestId(SidebarNavigationDataTestId.PackagesLinks)
+      .click();
+
+    return this.pageFactory.getPackagesPage();
   }
 
   async openUserSettings() {

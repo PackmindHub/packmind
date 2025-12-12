@@ -7,7 +7,11 @@ export abstract class AbstractPackmindPage implements IPackmindPage {
     protected readonly pageFactory: IPageFactory,
   ) {}
 
-  abstract expectedUrl(): string;
+  async reload(): Promise<void> {
+    await this.page.reload();
+  }
+
+  abstract expectedUrl(): string | RegExp;
 
   async waitForLoaded(): Promise<void> {
     await this.page.waitForURL(this.expectedUrl());
