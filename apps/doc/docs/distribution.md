@@ -18,6 +18,7 @@ Here is an overview of the supported agents:
 | **Cursor**         | Creates rules in YAML format | `.cursor/rules/`                  |
 | **Claude Code**    | Updates instructions file    | `CLAUDE.md`                       |
 | **Junie**          | Updates guidelines file      | `.junie/guidelines.md`            |
+| **Gitlab Duo**     | Updates chat rules file      | `.gitlab/duo/chat-rules.md`       |
 
 When you distribute standards or recipes, only the enabled agents will receive updates. The Packmind renderer is always active and creates files in the `.packmind/` directory that are used by other agents.
 

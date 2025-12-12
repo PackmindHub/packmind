@@ -805,7 +805,6 @@ export const PackageDetails = ({
             label="Distribute"
             size="md"
             selectedPackages={[pkg]}
-            disabled={isPackageEmpty}
           />
           <PMButton variant="tertiary" onClick={handleEdit}>
             Edit
