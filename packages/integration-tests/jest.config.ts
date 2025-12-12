@@ -21,5 +21,6 @@ export default {
     '<rootDir>/../../',
   ),
   testTimeout: 10000, // Reduced from 30s to catch slow tests earlier
-  maxWorkers: 1, // Run tests serially (runInBand) to reduce memory pressure
+  // maxWorkers: Allow parallel execution for CI performance comparison
+  // Note: With beforeAll pattern, tests can run in parallel as each test file has its own datasource
 };
