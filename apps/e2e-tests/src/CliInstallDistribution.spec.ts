@@ -1,27 +1,44 @@
 import { Package, Standard } from '@packmind/types';
-import { withApi } from './fixtures/packmindTest';
+import { testWithApi } from './fixtures/packmindTest';
 import { apiStandardFactory } from './domain/apiDataFactories/apiStandardFactory';
 import { apiPackageFactory } from './domain/apiDataFactories/apiPackageFactory';
+import { expect } from '@playwright/test';
 
-withApi.describe('packmind-cli install', () => {
+testWithApi.describe('packmind-cli install', () => {
   let standard: Standard;
   let defaultPackage: Package;
 
-  withApi.beforeEach(async ({ packmindApi }) => {
+  testWithApi.beforeEach(async ({ packmindApi, dashboardPage }) => {
     standard = await apiStandardFactory(packmindApi);
     defaultPackage = await apiPackageFactory(packmindApi, {
       standardIds: [standard.id],
     });
 
     await packmindApi.notifyDistribution({
-      distributedPackages: [defaultPackage.id],
+      distributedPackages: [defaultPackage.slug],
       gitBranch: 'main',
       gitRemoteUrl: 'github.com/my-company/my-repo',
       relativePath: '/',
     });
+
+    await dashboardPage.reload();
   });
 
-  withApi('it stores the new distribution of the package', async () => {
-    console.log({ standard, defaultPackage });
-  });
+  testWithApi(
+    'it stores the new distribution of the package',
+    async ({ userData, dashboardPage }) => {
+      const packagesPage = await dashboardPage.openPackages();
+      const packagePage = await packagesPage.openPackage(defaultPackage.name);
+      await packagePage.openDistributionsTab();
+      const distributions = await packagePage.listDistributions();
+
+      // eslint-disable-next-line playwright/no-standalone-expect
+      expect(distributions).toEqual([
+        {
+          target: '/ in my-company/my-repo:main',
+          author: userData.email,
+        },
+      ]);
+    },
+  );
 });

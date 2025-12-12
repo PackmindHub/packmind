@@ -7,16 +7,14 @@ import {
   PMSeparator,
 } from '@packmind/ui';
 import { NavLink, useParams } from 'react-router';
-import {
-  AuthContextOrganization,
-  useAuthContext,
-} from '../../accounts/hooks/useAuthContext';
+import { AuthContextOrganization } from '../../accounts/hooks/useAuthContext';
 import { SidebarAccountMenu } from '../../accounts/components/SidebarAccountMenu';
 import { SidebarOrgaSelector } from './OrgaSelector';
 import { SidebarHelpMenu } from './SidebarHelpMenu';
 import { LuHouse, LuSettings } from 'react-icons/lu';
 import { useGetSpacesQuery } from '../../spaces/api/queries/SpacesQueries';
 import { routes } from '../../../shared/utils/routes';
+import { SidebarNavigationDataTestId } from '@packmind/frontend';
 
 interface ISidebarNavigationProps {
   organization: AuthContextOrganization | undefined;
@@ -27,6 +25,7 @@ interface SidebarNavigationLinkProps {
   label: string;
   exact?: boolean;
   icon?: React.ReactNode;
+  'data-testid'?: string;
 }
 
 export function SidebarNavigationLink(
@@ -40,6 +39,7 @@ export function SidebarNavigationLink(
           variant="navbar"
           data-active={isActive ? 'true' : undefined}
           as="span"
+          data-testid={props['data-testid']}
         >
           {icon && <PMIcon mr={2}>{icon}</PMIcon>}
           {label}
@@ -114,6 +114,7 @@ export const SidebarNavigation: React.FunctionComponent<
             key="packages"
             url={routes.space.toPackages(orgSlug, currentSpaceSlug)}
             label="Packages"
+            data-testid={SidebarNavigationDataTestId.PackagesLinks}
           />,
           <SidebarNavigationLink
             key="overview"

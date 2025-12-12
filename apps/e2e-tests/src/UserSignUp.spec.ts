@@ -1,8 +1,8 @@
 import { IPageFactory } from './domain/pages';
 import { PageFactory } from './infra/PageFactory';
-import { withUserData } from './fixtures/packmindTest';
+import { testWithUserData } from './fixtures/packmindTest';
 
-withUserData('User can signup', async ({ userData, page }) => {
+testWithUserData('User can signup', async ({ userData, page }) => {
   const pageFactory: IPageFactory = new PageFactory(page);
 
   const signupPage = await pageFactory.getSignupPage();

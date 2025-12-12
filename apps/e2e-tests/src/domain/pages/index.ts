@@ -1,10 +1,12 @@
 export interface IPackmindPage {
   waitForLoaded(): Promise<void>;
+  reload(): Promise<void>;
 }
 
 export interface IPackmindAppPage extends IPackmindPage {
   openStandards(): Promise<IStandardsPage>;
   openRecipes(): Promise<IRecipesPage>;
+  openPackages(): Promise<IPackagesPage>;
   openUserSettings(): Promise<IUserSettingsPage>;
 }
 
@@ -34,6 +36,15 @@ export interface IStandardPage extends IPackmindAppPage {
   readStandard(): Promise<{ name: string; description: string; scope: string }>;
 }
 
+export interface IPackagesPage extends IPackmindAppPage {
+  openPackage(packageName: string): Promise<IPackagePage>;
+}
+
+export interface IPackagePage extends IPackmindAppPage {
+  openDistributionsTab(): Promise<void>;
+  listDistributions(): Promise<{ target: string; author: string }[]>;
+}
+
 export interface ICreateStandardPage extends IPackmindAppPage {
   createStandard(
     name: string,
@@ -55,4 +66,6 @@ export interface IPageFactory {
   getSignupPage(): Promise<ISignUpPage>;
   getDashboardPage(): Promise<IDashboardPage>;
   getUserSettingsPage(): Promise<IUserSettingsPage>;
+  getPackagesPage(): Promise<IPackagesPage>;
+  getPackagePage(): Promise<IPackagePage>;
 }

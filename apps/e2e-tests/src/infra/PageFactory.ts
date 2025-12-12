@@ -1,5 +1,7 @@
 import {
   IDashboardPage,
+  IPackagePage,
+  IPackagesPage,
   IPackmindPage,
   IPageFactory,
   ISignUpPage,
@@ -9,6 +11,8 @@ import { Page } from '@playwright/test';
 import { SignupPage } from './pages/SignupPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { UserSettingsPage } from './pages/UserSettingsPage';
+import { PackagesPage } from './pages/PackagesPage';
+import { PackagePage } from './pages/PackagePage';
 
 export type Constructor<T> = new (page: Page, pageFactory: IPageFactory) => T;
 
@@ -26,6 +30,13 @@ export class PageFactory implements IPageFactory {
 
   async getUserSettingsPage(): Promise<IUserSettingsPage> {
     return this.getPageInstance(UserSettingsPage);
+  }
+
+  getPackagesPage(): Promise<IPackagesPage> {
+    return this.getPageInstance(PackagesPage);
+  }
+  getPackagePage(): Promise<IPackagePage> {
+    return this.getPageInstance(PackagePage);
   }
 
   private async getPageInstance<T extends IPackmindPage>(

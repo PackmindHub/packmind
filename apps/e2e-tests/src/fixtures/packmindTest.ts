@@ -6,7 +6,7 @@ import { SignUpWithOrganizationCommand } from '@packmind/types';
 import { IDashboardPage, IPageFactory } from '../domain/pages';
 import { PageFactory } from '../infra/PageFactory';
 
-export const withUserData = base.extend<{
+export const testWithUserData = base.extend<{
   userData: SignUpWithOrganizationCommand;
 }>({
   // eslint-disable-next-line no-empty-pattern
@@ -19,7 +19,7 @@ export const withUserData = base.extend<{
   },
 });
 
-export const withUserSignedUp = withUserData.extend<{
+export const testWithUserSignedUp = testWithUserData.extend<{
   dashboardPage: IDashboardPage;
 }>({
   dashboardPage: async ({ userData, page }, use) => {
@@ -37,7 +37,9 @@ export const withUserSignedUp = withUserData.extend<{
   },
 });
 
-export const withApi = withUserSignedUp.extend<{ packmindApi: IPackmindApi }>({
+export const testWithApi = testWithUserSignedUp.extend<{
+  packmindApi: IPackmindApi;
+}>({
   packmindApi: async ({ dashboardPage, request }, use) => {
     const userSettingsPage = await dashboardPage.openUserSettings();
     const apiKey = await userSettingsPage.getApiKey();
