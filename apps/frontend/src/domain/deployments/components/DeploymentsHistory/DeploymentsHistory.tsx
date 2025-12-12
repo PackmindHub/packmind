@@ -33,6 +33,7 @@ interface DeploymentsHistoryProps {
   orgSlug?: string;
   spaceSlug?: string;
   hidePackageColumn?: boolean;
+  hideVersionColumn?: boolean;
 }
 
 export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
@@ -46,6 +47,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
   orgSlug,
   spaceSlug,
   hidePackageColumn = false,
+  hideVersionColumn = false,
 }) => {
   if (loading) {
     return (
@@ -211,7 +213,16 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
   };
 
   const baseColumns: PMTableColumn[] = [
-    { key: 'version', header: 'Version', width: '100px', align: 'center' },
+    ...(hideVersionColumn
+      ? []
+      : [
+          {
+            key: 'version',
+            header: 'Version',
+            width: '100px',
+            align: 'center',
+          },
+        ]),
     ...(hidePackageColumn
       ? []
       : [{ key: 'package', header: 'Package', width: '150px', align: 'left' }]),
