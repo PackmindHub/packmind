@@ -74,6 +74,7 @@ export const PackageDistributionList: React.FC<
       error={isError ? error?.message : undefined}
       title="Distributions"
       hidePackageColumn
+      hideVersionColumn
     />
   );
 };
