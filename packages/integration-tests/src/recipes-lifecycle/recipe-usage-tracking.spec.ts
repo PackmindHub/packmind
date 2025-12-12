@@ -1,8 +1,8 @@
 import { GitRepo, Recipe } from '@packmind/types';
 
 import { DataSource } from 'typeorm';
+import { cleanTestDatabase, DataFactory } from '../helpers/DataFactory';
 import { TestApp } from '../helpers/TestApp';
-import { DataFactory } from '../helpers/DataFactory';
 import { makeIntegrationTestDataSource } from '../helpers/makeIntegrationTestDataSource';
 
 jest.mock('@packmind/node-utils', () => {
@@ -26,7 +26,7 @@ describe.skip('Recipe usage tracking', () => {
   let dataFactory: DataFactory;
   let recipe: Recipe;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     // Create test datasource with all necessary schemas
     dataSource = await makeIntegrationTestDataSource();
     await dataSource.initialize();
@@ -34,6 +34,11 @@ describe.skip('Recipe usage tracking', () => {
 
     testApp = new TestApp(dataSource);
     await testApp.initialize();
+  });
+
+  beforeEach(async () => {
+    // Clean database between tests
+    await cleanTestDatabase(dataSource);
 
     dataFactory = new DataFactory(testApp);
 
@@ -43,7 +48,7 @@ describe.skip('Recipe usage tracking', () => {
     });
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await dataSource.destroy();
   });
 

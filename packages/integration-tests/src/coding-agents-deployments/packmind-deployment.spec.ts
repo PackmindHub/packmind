@@ -9,7 +9,7 @@ import {
   Standard,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
-import { DataFactory } from '../helpers/DataFactory';
+import { cleanTestDatabase, DataFactory } from '../helpers/DataFactory';
 import { makeIntegrationTestDataSource } from '../helpers/makeIntegrationTestDataSource';
 import { TestApp } from '../helpers/TestApp';
 
@@ -26,14 +26,20 @@ describe('Packmind Deployment Spec', () => {
   let commit: GitCommit;
   let commitToGit: jest.Mock;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     dataSource = await makeIntegrationTestDataSource();
     await dataSource.initialize();
     await dataSource.synchronize();
 
     testApp = new TestApp(dataSource);
     await testApp.initialize();
+  });
 
+  beforeEach(async () => {
+    // Clean database between tests
+    await cleanTestDatabase(dataSource);
+
+    // Recreate test data for each test
     dataFactory = new DataFactory(testApp);
     await dataFactory.withUserAndOrganization();
     await dataFactory.withGitRepo();
@@ -48,6 +54,9 @@ describe('Packmind Deployment Spec', () => {
 
   afterEach(async () => {
     jest.clearAllMocks();
+  });
+
+  afterAll(async () => {
     await dataSource.destroy();
   });
 
