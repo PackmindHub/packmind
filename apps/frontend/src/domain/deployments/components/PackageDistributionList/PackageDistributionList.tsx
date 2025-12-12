@@ -3,6 +3,7 @@ import { useGetUsersInMyOrganizationQuery } from '../../../accounts/api/queries/
 import { useListPackageDeploymentsQuery } from '../../api/queries/DeploymentsQueries';
 import { PackageId } from '@packmind/types';
 import { DeploymentsHistory } from '../DeploymentsHistory/DeploymentsHistory';
+import { PMEmptyState, PMBox, PMSpinner, PMText } from '@packmind/ui';
 
 interface PackageDistributionListProps {
   packageId: PackageId;
@@ -33,13 +34,43 @@ export const PackageDistributionList: React.FC<
     };
   };
 
+  const isLoading = isLoadingDeployments || isLoadingUsers;
+  const hasDistributions = deployments && deployments.length > 0;
+
+  if (isLoading) {
+    return (
+      <PMBox
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        minH="200px"
+      >
+        <PMSpinner size="lg" mr={2} />
+        <PMText ml={2}>Loading distributions...</PMText>
+      </PMBox>
+    );
+  }
+
+  if (!hasDistributions) {
+    return (
+      <PMEmptyState
+        backgroundColor={'background.primary'}
+        borderRadius={'md'}
+        width={'2xl'}
+        mx={'auto'}
+        title={'No distributions yet'}
+        description="This package has not been distributed."
+      />
+    );
+  }
+
   return (
     <DeploymentsHistory
       deployments={deployments || []}
       type="package"
       entityId={packageId}
       usersMap={buildUserMap(users)}
-      loading={isLoadingDeployments || isLoadingUsers}
+      loading={false}
       error={isError ? error?.message : undefined}
       title="Distributions"
       hidePackageColumn
