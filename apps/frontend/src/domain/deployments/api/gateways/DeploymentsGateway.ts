@@ -277,7 +277,7 @@ export class DeploymentsGatewayApi
       targetIds,
     }: NewPackmindCommandBody<RemovePackageFromTargetsCommand>) => {
       return this._api.delete(
-        `${this._endpoint}/${organizationId}/deployments/packages/${packageId}/targets`,
+        `${this._endpoint}/${organizationId}/packages/${packageId}/distributions`,
         { data: { targetIds } },
       );
     };
