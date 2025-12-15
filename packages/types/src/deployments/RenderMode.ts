@@ -6,6 +6,7 @@ export enum RenderMode {
   CURSOR = 'CURSOR',
   PACKMIND = 'PACKMIND',
   GITLAB_DUO = 'GITLAB_DUO',
+  CONTINUE = 'CONTINUE',
 }
 
 export const REQUIRED_RENDER_MODE = RenderMode.PACKMIND;
@@ -18,6 +19,7 @@ export const RENDER_MODE_ORDER: RenderMode[] = [
   RenderMode.CLAUDE,
   RenderMode.CURSOR,
   RenderMode.GITLAB_DUO,
+  RenderMode.CONTINUE,
 ];
 
 export const normalizeRenderModes = (modes: RenderMode[]): RenderMode[] => {
