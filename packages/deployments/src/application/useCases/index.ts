@@ -14,6 +14,7 @@ export { GetTargetsByOrganizationUseCase } from './GetTargetsByOrganizationUseCa
 export { GetTargetsByRepositoryUseCase } from './GetTargetsByRepositoryUseCase';
 export { NotifyDistributionUseCase } from './notifyDistribution/notifyDistribution.usecase';
 export { PullContentUseCase } from './PullContentUseCase';
+export { RemovePackageFromTargetsUseCase } from './RemovePackageFromTargetsUseCase';
 export { UpdateRenderModeConfigurationUseCase } from './UpdateRenderModeConfigurationUseCase';
 export { UpdateTargetUseCase } from './UpdateTargetUseCase';
 
