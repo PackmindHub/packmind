@@ -79,6 +79,7 @@ export class UserService {
         passwordHash,
         active: true,
         memberships: [membership],
+        trial: false,
       };
 
       const createdUser = await this.userRepository.add(user);
@@ -122,6 +123,7 @@ export class UserService {
       passwordHash: null,
       active: false,
       memberships: [],
+      trial: false,
     };
 
     const createdUser = await this.userRepository.add(newUser);

@@ -20,6 +20,7 @@ export type User = {
   passwordHash: string | null;
   active: boolean;
   memberships: UserOrganizationMembership[];
+  trial: boolean;
 };
 
 export type SanitizedUser = Omit<User, 'passwordHash' | 'memberships'>;
