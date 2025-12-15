@@ -22,6 +22,7 @@ import {
   IDeletePackagesBatchUseCase,
   IGetTargetsByOrganizationUseCase,
   IGetTargetsByRepositoryUseCase,
+  IRemovePackageFromTargetsUseCase,
   PackageId,
   ListDeploymentsByPackageCommand,
   ListDistributionsByRecipeCommand,
@@ -38,6 +39,7 @@ import {
   DeleteTargetCommand,
   GetRenderModeConfigurationCommand,
   UpdateRenderModeConfigurationCommand,
+  RemovePackageFromTargetsCommand,
 } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 import { PackmindGateway } from '../../../../shared/PackmindGateway';
@@ -265,6 +267,18 @@ export class DeploymentsGatewayApi
       return this._api.post(
         `${this._endpoint}/${organizationId}/deployments/renderModeConfiguration`,
         { activeRenderModes },
+      );
+    };
+
+  removePackageFromTargets: NewGateway<IRemovePackageFromTargetsUseCase> =
+    async ({
+      organizationId,
+      packageId,
+      targetIds,
+    }: NewPackmindCommandBody<RemovePackageFromTargetsCommand>) => {
+      return this._api.delete(
+        `${this._endpoint}/${organizationId}/deployments/packages/${packageId}/targets`,
+        { data: { targetIds } },
       );
     };
 }

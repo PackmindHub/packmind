@@ -20,6 +20,7 @@ import {
   IDeleteTargetUseCase,
   IGetRenderModeConfigurationUseCase,
   IUpdateRenderModeConfigurationUseCase,
+  IRemovePackageFromTargetsUseCase,
 } from '@packmind/types';
 
 export interface IDeploymentsGateway {
@@ -43,4 +44,5 @@ export interface IDeploymentsGateway {
   deleteTarget: NewGateway<IDeleteTargetUseCase>;
   getRenderModeConfiguration: NewGateway<IGetRenderModeConfigurationUseCase>;
   updateRenderModeConfiguration: NewGateway<IUpdateRenderModeConfigurationUseCase>;
+  removePackageFromTargets: NewGateway<IRemovePackageFromTargetsUseCase>;
 }
