@@ -21,6 +21,7 @@ import {
 } from '@packmind/types';
 import { PackageService } from '../services/PackageService';
 import { PackmindConfigService } from '../services/PackmindConfigService';
+import { NoPackageSlugsProvidedError } from '../../domain/errors/NoPackageSlugsProvidedError';
 import { PackagesNotFoundError } from '../../domain/errors/PackagesNotFoundError';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 
@@ -56,14 +57,11 @@ export class PullContentUseCase extends AbstractMemberUseCase<
 
     // Validate that package slugs are provided
     if (!command.packagesSlugs || command.packagesSlugs.length === 0) {
-      const error = new Error(
-        'No package slugs provided. Please specify at least one package slug.',
-      );
       this.logger.error('Pull content failed: no package slugs provided', {
         organizationId: command.organizationId,
         userId: command.userId,
       });
-      throw error;
+      throw new NoPackageSlugsProvidedError();
     }
 
     try {

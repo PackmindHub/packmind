@@ -269,7 +269,7 @@ export default function CliLoginRoute() {
 
       {me?.organization?.slug && (
         <PMButton variant="outline" onClick={handleGoToOrganization}>
-          Go to {me.organization.name}
+          Go to Packmind
         </PMButton>
       )}
     </PMVStack>
