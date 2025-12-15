@@ -50,7 +50,7 @@ export const SetupLocalEnvironment: React.FunctionComponent = () => {
     <PMVStack width="full" alignItems="stretch" gap={4}>
       <PMText as="p">
         Copy and run this command in your terminal to install the CLI and MCP
-        server automatically.
+        server automatically:
       </PMText>
 
       {createCliLoginCodeMutation.isPending && (

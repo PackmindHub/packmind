@@ -99,7 +99,7 @@ describe('OnboardingSteps', () => {
     // The first step should be expanded and show the SetupLocalEnvironment component content
     expect(
       screen.getByText(
-        'Copy and run this command in your terminal to install the CLI and MCP server automatically.',
+        'Copy and run this command in your terminal to install the CLI and MCP server automatically:',
       ),
     ).toBeInTheDocument();
   });
@@ -120,7 +120,7 @@ describe('OnboardingSteps', () => {
     expect(screen.getByText('Create packages')).toBeInTheDocument();
     expect(
       screen.getByText(
-        'Standards and recipes must be bundled into packages to be distributed in your projects',
+        'Standards and recipes must be bundled into packages to be distributed in your projects.',
       ),
     ).toBeInTheDocument();
     expect(
