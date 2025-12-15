@@ -54,6 +54,8 @@ import {
   NotifyDistributionCommand,
   NotifyDistributionResponse,
   PackagesDeployment,
+  RemovePackageFromTargetsCommand,
+  RemovePackageFromTargetsResponse,
   PublishArtifactsCommand,
   PublishArtifactsResponse,
   PublishPackagesCommand,
@@ -88,6 +90,7 @@ import { ListDistributionsByRecipeUseCase } from '../useCases/ListDistributionsB
 import { ListDistributionsByStandardUseCase } from '../useCases/ListDistributionsByStandardUseCase';
 import { ListPackagesUsecase } from '../useCases/listPackages/listPackages.usecase';
 import { NotifyDistributionUseCase } from '../useCases/notifyDistribution/notifyDistribution.usecase';
+import { RemovePackageFromTargetsUseCase } from '../useCases/RemovePackageFromTargetsUseCase';
 import { ListPackagesBySpaceUsecase } from '../useCases/listPackagesBySpace/listPackagesBySpace.usecase';
 import { GetPackageSummaryUsecase } from '../useCases/getPackageSummary/getPackageSummary.usecase';
 import { PublishArtifactsUseCase } from '../useCases/PublishArtifactsUseCase';
@@ -134,6 +137,7 @@ export class DeploymentsAdapter
   private _deletePackagesBatchUseCase!: DeletePackagesBatchUsecase;
   private _addArtefactsToPackageUseCase!: AddArtefactsToPackageUsecase;
   private _notifyDistributionUseCase!: NotifyDistributionUseCase;
+  private _removePackageFromTargetsUseCase!: RemovePackageFromTargetsUseCase;
 
   constructor(
     private readonly deploymentsServices: DeploymentsServices,
@@ -348,6 +352,17 @@ export class DeploymentsAdapter
       this.distributedPackageRepository,
       this.deploymentsServices.getRenderModeConfigurationService(),
     );
+
+    this._removePackageFromTargetsUseCase = new RemovePackageFromTargetsUseCase(
+      this.deploymentsServices.getPackageService(),
+      this.deploymentsServices.getTargetService(),
+      this.distributionRepository,
+      this.recipesPort,
+      this.standardsPort,
+      this.gitPort,
+      this.codingAgentPort,
+      this.deploymentsServices.getRenderModeConfigurationService(),
+    );
   }
 
   public isReady(): boolean {
@@ -522,5 +537,11 @@ export class DeploymentsAdapter
     command: NotifyDistributionCommand,
   ): Promise<NotifyDistributionResponse> {
     return this._notifyDistributionUseCase.execute(command);
+  }
+
+  async removePackageFromTargets(
+    command: RemovePackageFromTargetsCommand,
+  ): Promise<RemovePackageFromTargetsResponse> {
+    return this._removePackageFromTargetsUseCase.execute(command);
   }
 }

@@ -1,4 +1,3 @@
-export * from './ArtifactFilePathService';
 export * from './DeploymentsServices';
 export * from './PackageService';
 export * from './PackmindConfigService';

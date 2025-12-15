@@ -1,5 +1,6 @@
 import {
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -35,6 +36,8 @@ import {
   ListDistributionsByStandardCommand,
   NotifyDistributionCommand,
   NotifyDistributionResponse,
+  RemovePackageFromTargetsCommand,
+  RemovePackageFromTargetsResponse,
 } from '@packmind/types';
 import { DeploymentsService } from './deployments.service';
 import { PackmindLogger } from '@packmind/logger';
@@ -690,6 +693,60 @@ export class DeploymentsController {
         'POST /organizations/:orgId/deployments/ - Failed to notify distribution',
         {
           organizationId,
+          error: errorMessage,
+        },
+      );
+      throw error;
+    }
+  }
+
+  @Delete('packages/:packageId/distributions')
+  async removePackageFromTargets(
+    @Param('orgId') organizationId: OrganizationId,
+    @Param('packageId') packageId: PackageId,
+    @Body() body: { targetIds: TargetId[] },
+    @Req() request: AuthenticatedRequest,
+  ): Promise<RemovePackageFromTargetsResponse> {
+    this.logger.info(
+      'DELETE /organizations/:orgId/deployments/packages/:packageId/distributions - Removing package from targets',
+      {
+        organizationId,
+        packageId,
+        targetIdsCount: body.targetIds.length,
+      },
+    );
+
+    try {
+      const command: RemovePackageFromTargetsCommand = {
+        userId: request.user.userId,
+        organizationId,
+        packageId,
+        targetIds: body.targetIds,
+      };
+
+      const response =
+        await this.deploymentsService.removePackageFromTargets(command);
+
+      this.logger.info(
+        'DELETE /organizations/:orgId/deployments/packages/:packageId/distributions - Package removed from targets successfully',
+        {
+          organizationId,
+          packageId,
+          resultsCount: response.results.length,
+          successCount: response.results.filter((r) => r.success).length,
+          failureCount: response.results.filter((r) => !r.success).length,
+        },
+      );
+
+      return response;
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        'DELETE /organizations/:orgId/deployments/packages/:packageId/distributions - Failed to remove package from targets',
+        {
+          organizationId,
+          packageId,
           error: errorMessage,
         },
       );

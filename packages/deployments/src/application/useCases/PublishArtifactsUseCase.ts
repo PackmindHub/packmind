@@ -111,6 +111,11 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
           standardsCount: standardVersions.length,
         });
 
+        this.logger.info('--------------');
+        this.logger.info('Recipe versions', { recipeVersions });
+        this.logger.info('Standard versions', { standardVersions });
+        this.logger.info('--------------');
+
         // Get previous deployments for all targets in this repo
         const {
           previous: previousRecipeVersions,
