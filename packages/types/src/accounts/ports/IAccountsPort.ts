@@ -42,6 +42,8 @@ import {
   SignInUserResponse,
   SignUpWithOrganizationCommand,
   SignUpWithOrganizationResponse,
+  StartTrialCommand,
+  StartTrialResult,
   User,
   UserId,
   ValidateInvitationTokenCommand,
@@ -162,4 +164,7 @@ export interface IAccountsPort {
   exchangeCliLoginCode(
     command: ExchangeCliLoginCodeCommand,
   ): Promise<ExchangeCliLoginCodeResponse>;
+
+  // Trial operations
+  startTrial(command: StartTrialCommand): Promise<StartTrialResult>;
 }
