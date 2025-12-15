@@ -30,6 +30,8 @@ import {
   ListPackagesBySpaceResponse,
   NotifyDistributionCommand,
   NotifyDistributionResponse,
+  RemovePackageFromTargetsCommand,
+  RemovePackageFromTargetsResponse,
   IDeploymentPort,
 } from '@packmind/types';
 import { InjectDeploymentAdapter } from '../../shared/HexaInjection';
@@ -149,5 +151,11 @@ export class DeploymentsService {
     command: NotifyDistributionCommand,
   ): Promise<NotifyDistributionResponse> {
     return this.deploymentAdapter.notifyDistribution(command);
+  }
+
+  async removePackageFromTargets(
+    command: RemovePackageFromTargetsCommand,
+  ): Promise<RemovePackageFromTargetsResponse> {
+    return this.deploymentAdapter.removePackageFromTargets(command);
   }
 }

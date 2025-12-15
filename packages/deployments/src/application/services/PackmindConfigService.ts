@@ -35,4 +35,16 @@ export class PackmindConfigService {
 
     return { packages };
   }
+
+  createRemovalConfigFileModification(
+    slugToRemove: string,
+    existingPackages: { [slug: string]: string },
+  ): FileModification {
+    const config = this.removePackageFromConfig(slugToRemove, existingPackages);
+
+    return {
+      path: 'packmind.json',
+      content: JSON.stringify(config, null, 2) + '\n',
+    };
+  }
 }

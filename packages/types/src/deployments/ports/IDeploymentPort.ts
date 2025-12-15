@@ -37,6 +37,8 @@ import {
   PublishArtifactsResponse,
   PublishPackagesCommand,
   PullContentCommand,
+  RemovePackageFromTargetsCommand,
+  RemovePackageFromTargetsResponse,
   UpdatePackageCommand,
   UpdatePackageResponse,
   UpdateRenderModeConfigurationCommand,
@@ -387,4 +389,23 @@ export interface IDeploymentPort {
   notifyDistribution(
     command: NotifyDistributionCommand,
   ): Promise<NotifyDistributionResponse>;
+
+  /**
+   * Removes a package from specified targets
+   *
+   * For each target:
+   * 1. Resolves which artifacts are exclusive to the package (should be deleted)
+   * 2. Resolves which artifacts are shared with other packages (should be re-rendered)
+   * 3. Renders the updated file contents without the exclusive artifacts
+   * 4. Commits the changes to the git repository
+   * 5. Creates distribution records for each target
+   *
+   * @param command - Command containing packageId and targetIds
+   * @returns Promise of RemovePackageFromTargetsResponse with results per target
+   * @throws PackageNotFoundError if the package doesn't exist
+   * @throws TargetNotFoundError if any target doesn't exist
+   */
+  removePackageFromTargets(
+    command: RemovePackageFromTargetsCommand,
+  ): Promise<RemovePackageFromTargetsResponse>;
 }
