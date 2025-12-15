@@ -4,6 +4,7 @@ import {
   Target,
   GitRepo,
   PackagesDeployment,
+  RemovePackageFromTargetsResult,
 } from '@packmind/types';
 
 // Extended target type that includes the joined gitRepo from TypeORM queries
@@ -459,6 +460,37 @@ export function createPackagesDeploymentNotifications(
       type: 'error',
       title: 'Deployment failed',
       description: `${failedPackages} package(s) failed to deploy:\n${failedTargetsList}`,
+    });
+  }
+
+  return notifications;
+}
+
+/**
+ * Creates notifications for package removal results
+ * Handles success and failure statuses
+ */
+export function createPackageRemovalNotifications(
+  results: RemovePackageFromTargetsResult[],
+  packageName: string,
+): DeploymentNotificationResult[] {
+  const successfulRemovals = results.filter((r) => r.success);
+  const failedRemovals = results.filter((r) => !r.success);
+  const notifications: DeploymentNotificationResult[] = [];
+
+  if (successfulRemovals.length > 0) {
+    notifications.push({
+      type: 'success',
+      title: 'Removal completed',
+      description: `"${packageName}" removed from ${successfulRemovals.length} target(s).`,
+    });
+  }
+
+  if (failedRemovals.length > 0) {
+    notifications.push({
+      type: 'error',
+      title: 'Some removals failed',
+      description: `Failed to remove from ${failedRemovals.length} target(s).`,
     });
   }
 

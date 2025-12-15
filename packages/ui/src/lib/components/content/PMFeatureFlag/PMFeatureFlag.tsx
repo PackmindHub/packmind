@@ -12,9 +12,13 @@ export const RULE_DETAILS_DETECTION_TAB_FEATURE_KEY =
 
 export const MCP_CONFIG_REDESIGN_FEATURE_KEY = 'mcp-config-redesign';
 
+export const REMOVE_PACKAGE_FROM_TARGETS_FEATURE_KEY =
+  'remove-package-from-targets';
+
 export const DEFAULT_FEATURE_DOMAIN_MAP: Record<string, readonly string[]> = {
   [RULE_DETAILS_DETECTION_TAB_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
   [MCP_CONFIG_REDESIGN_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
+  [REMOVE_PACKAGE_FROM_TARGETS_FEATURE_KEY]: ['@packmind.com', '@promyze.com'],
 };
 
 const normalizeDomain = (domain: string): string =>

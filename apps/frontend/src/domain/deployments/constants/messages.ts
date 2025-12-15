@@ -27,6 +27,17 @@ export const PACKAGE_MESSAGES = {
     deleteBatchPackages: (count: number) =>
       `Are you sure you want to delete ${count} package(s)? This action cannot be undone.`,
   },
+  removal: {
+    dialogTitle: 'Remove from targets',
+    selectTargetsPrompt: 'Select the targets to remove this package from:',
+    confirmMessage: (packageName: string, count: number) =>
+      `Are you sure you want to remove "${packageName}" from ${count} target(s)?`,
+    noDistributions: 'This package is not distributed to any targets',
+    buttonLabel: 'Remove from target',
+    confirmButtonLabel: 'Remove',
+    cancelButtonLabel: 'Cancel',
+    backButtonLabel: 'Back',
+  },
 } as const;
 
 // Type for message categories
