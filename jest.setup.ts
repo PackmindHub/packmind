@@ -14,5 +14,5 @@ jest.setTimeout(20000);
 // Ensure all timers are cleared after each test
 afterEach(() => {
   jest.clearAllTimers();
-  jest.useRealTimers();
+  jest.clearAllMocks();
 });

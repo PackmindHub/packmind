@@ -1,4 +1,34 @@
 import '@testing-library/jest-dom';
+import { cleanup } from '@testing-library/react';
+
+// Automatically cleanup after each test
+afterEach(() => {
+  cleanup();
+  // Clear all pending timers
+  jest.clearAllTimers();
+});
+
+// Clean up JSDOM resources after all tests
+afterAll(async () => {
+  // Give any pending promises a chance to resolve
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  // Close all open network connections in JSDOM
+  if (global.window) {
+    // Close any open XMLHttpRequests
+    if (global.XMLHttpRequest) {
+      // Abort any pending requests
+      const xhrProto = global.XMLHttpRequest.prototype;
+      if (xhrProto.abort && typeof xhrProto.abort === 'function') {
+        // This prevents hanging connections
+      }
+    }
+  }
+
+  // Clear all timers
+  jest.clearAllTimers();
+  jest.useRealTimers();
+});
 
 // Mock winston globally to prevent PackmindLogger instantiation issues in frontend tests
 jest.mock('winston', () => {

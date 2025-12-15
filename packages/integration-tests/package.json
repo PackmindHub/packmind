@@ -17,6 +17,7 @@
     "@packmind/standards": "*",
     "@packmind/coding-agent": "*",
     "@packmind/deployments": "*",
+    "@packmind/editions": "*",
     "uuid": "11.1.0",
     "@packmind/test-utils": "*",
     "@packmind/llm": "*"
