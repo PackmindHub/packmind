@@ -4,7 +4,6 @@ import { stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createUserId,
-  IMcpTokenService,
   ISpacesPort,
   StartTrialCommand,
   UserSignedUpEvent,
@@ -18,7 +17,6 @@ describe('StartTrialUseCase', () => {
   let startTrialUseCase: StartTrialUseCase;
   let mockUserService: jest.Mocked<UserService>;
   let mockOrganizationService: jest.Mocked<OrganizationService>;
-  let mockMcpTokenService: jest.Mocked<IMcpTokenService>;
   let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let mockSpacesPort: jest.Mocked<ISpacesPort>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
@@ -59,11 +57,6 @@ describe('StartTrialUseCase', () => {
       listOrganizations: jest.fn(),
     } as unknown as jest.Mocked<OrganizationService>;
 
-    mockMcpTokenService = {
-      generateToken: jest.fn(),
-      getMcpUrl: jest.fn(),
-    } as jest.Mocked<IMcpTokenService>;
-
     mockEventEmitterService = {
       emit: jest.fn().mockReturnValue(true),
     } as unknown as jest.Mocked<PackmindEventEmitterService>;
@@ -77,7 +70,6 @@ describe('StartTrialUseCase', () => {
     startTrialUseCase = new StartTrialUseCase(
       mockUserService,
       mockOrganizationService,
-      mockMcpTokenService,
       mockEventEmitterService,
       stubbedLogger,
       mockSpacesPort,
@@ -96,14 +88,6 @@ describe('StartTrialUseCase', () => {
         );
         mockUserService.createUser.mockResolvedValue(mockUser);
         mockSpacesPort.createSpace.mockResolvedValue(undefined);
-        mockMcpTokenService.generateToken.mockReturnValue({
-          accessToken: 'test-token-123',
-          tokenType: 'Bearer',
-          expiresIn: 2592000,
-        });
-        mockMcpTokenService.getMcpUrl.mockReturnValue(
-          'https://api.packmind.com/mcp',
-        );
       });
 
       it('creates organization with generated name', async () => {
@@ -150,44 +134,28 @@ describe('StartTrialUseCase', () => {
         );
       });
 
-      it('generates MCP token with user and organization', async () => {
-        const command: StartTrialCommand = { agent: 'vs-code' };
-
-        await startTrialUseCase.execute(command);
-
-        expect(mockMcpTokenService.generateToken).toHaveBeenCalledWith({
-          user: mockUser,
-          organization: mockOrganization,
-          role: 'admin',
-        });
-      });
-
-      it('returns URL with VS Code protocol', async () => {
+      it('returns user data', async () => {
         const command: StartTrialCommand = { agent: 'vs-code' };
 
         const result = await startTrialUseCase.execute(command);
 
-        expect(result.mcpSetupUrl).toMatch(/^vscode:mcp\/install\?/);
+        expect(result.user).toEqual(mockUser);
       });
 
-      it('includes packmind server name in URL', async () => {
+      it('returns organization data', async () => {
         const command: StartTrialCommand = { agent: 'vs-code' };
 
         const result = await startTrialUseCase.execute(command);
 
-        expect(result.mcpSetupUrl).toContain(
-          encodeURIComponent('"name":"packmind"'),
-        );
+        expect(result.organization).toEqual(mockOrganization);
       });
 
-      it('includes authorization token in URL', async () => {
+      it('returns admin role', async () => {
         const command: StartTrialCommand = { agent: 'vs-code' };
 
         const result = await startTrialUseCase.execute(command);
 
-        expect(result.mcpSetupUrl).toContain(
-          encodeURIComponent('Bearer test-token-123'),
-        );
+        expect(result.role).toBe('admin');
       });
     });
 
@@ -217,18 +185,6 @@ describe('StartTrialUseCase', () => {
 
         expect(mockUserService.createUser).not.toHaveBeenCalled();
       });
-
-      it('does not generate token', async () => {
-        const command: StartTrialCommand = { agent: 'vs-code' };
-
-        try {
-          await startTrialUseCase.execute(command);
-        } catch {
-          // Expected to throw
-        }
-
-        expect(mockMcpTokenService.generateToken).not.toHaveBeenCalled();
-      });
     });
 
     describe('when user creation fails', () => {
@@ -248,22 +204,10 @@ describe('StartTrialUseCase', () => {
           'User creation failed',
         );
       });
-
-      it('does not generate token', async () => {
-        const command: StartTrialCommand = { agent: 'vs-code' };
-
-        try {
-          await startTrialUseCase.execute(command);
-        } catch {
-          // Expected to throw
-        }
-
-        expect(mockMcpTokenService.generateToken).not.toHaveBeenCalled();
-      });
     });
 
     describe('when space creation fails', () => {
-      it('continues without throwing error', async () => {
+      beforeEach(() => {
         mockOrganizationService.createOrganization.mockResolvedValue(
           mockOrganization,
         );
@@ -271,20 +215,30 @@ describe('StartTrialUseCase', () => {
         mockSpacesPort.createSpace.mockRejectedValue(
           new Error('Space creation failed'),
         );
-        mockMcpTokenService.generateToken.mockReturnValue({
-          accessToken: 'test-token-123',
-          tokenType: 'Bearer',
-          expiresIn: 2592000,
-        });
-        mockMcpTokenService.getMcpUrl.mockReturnValue(
-          'https://api.packmind.com/mcp',
-        );
+      });
 
+      it('returns user data', async () => {
         const command: StartTrialCommand = { agent: 'vs-code' };
 
         const result = await startTrialUseCase.execute(command);
 
-        expect(result.mcpSetupUrl).toMatch(/^vscode:mcp\/install\?/);
+        expect(result.user).toEqual(mockUser);
+      });
+
+      it('returns organization data', async () => {
+        const command: StartTrialCommand = { agent: 'vs-code' };
+
+        const result = await startTrialUseCase.execute(command);
+
+        expect(result.organization).toEqual(mockOrganization);
+      });
+
+      it('returns admin role', async () => {
+        const command: StartTrialCommand = { agent: 'vs-code' };
+
+        const result = await startTrialUseCase.execute(command);
+
+        expect(result.role).toBe('admin');
       });
     });
 
@@ -295,7 +249,6 @@ describe('StartTrialUseCase', () => {
         useCaseWithoutSpacesPort = new StartTrialUseCase(
           mockUserService,
           mockOrganizationService,
-          mockMcpTokenService,
           mockEventEmitterService,
           stubbedLogger,
         );
@@ -304,14 +257,6 @@ describe('StartTrialUseCase', () => {
           mockOrganization,
         );
         mockUserService.createUser.mockResolvedValue(mockUser);
-        mockMcpTokenService.generateToken.mockReturnValue({
-          accessToken: 'test-token-123',
-          tokenType: 'Bearer',
-          expiresIn: 2592000,
-        });
-        mockMcpTokenService.getMcpUrl.mockReturnValue(
-          'https://api.packmind.com/mcp',
-        );
       });
 
       it('does not call createSpace', async () => {
@@ -322,12 +267,28 @@ describe('StartTrialUseCase', () => {
         expect(mockSpacesPort.createSpace).not.toHaveBeenCalled();
       });
 
-      it('returns valid MCP setup URL', async () => {
+      it('returns user data', async () => {
         const command: StartTrialCommand = { agent: 'vs-code' };
 
         const result = await useCaseWithoutSpacesPort.execute(command);
 
-        expect(result.mcpSetupUrl).toMatch(/^vscode:mcp\/install\?/);
+        expect(result.user).toEqual(mockUser);
+      });
+
+      it('returns organization data', async () => {
+        const command: StartTrialCommand = { agent: 'vs-code' };
+
+        const result = await useCaseWithoutSpacesPort.execute(command);
+
+        expect(result.organization).toEqual(mockOrganization);
+      });
+
+      it('returns admin role', async () => {
+        const command: StartTrialCommand = { agent: 'vs-code' };
+
+        const result = await useCaseWithoutSpacesPort.execute(command);
+
+        expect(result.role).toBe('admin');
       });
     });
   });

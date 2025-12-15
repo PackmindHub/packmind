@@ -2,7 +2,6 @@ import { PackmindLogger } from '@packmind/logger';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
   createUserId,
-  IMcpTokenService,
   ISpacesPort,
   IStartTrial,
   StartTrialCommand,
@@ -19,7 +18,6 @@ export class StartTrialUseCase implements IStartTrial {
   constructor(
     private readonly userService: UserService,
     private readonly organizationService: OrganizationService,
-    private readonly mcpTokenService: IMcpTokenService,
     private readonly eventEmitterService: PackmindEventEmitterService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
     private readonly spacesPort?: ISpacesPort,
@@ -78,44 +76,17 @@ export class StartTrialUseCase implements IStartTrial {
         }),
       );
 
-      // Generate MCP token
-      const tokenResponse = this.mcpTokenService.generateToken({
-        user,
-        organization,
-        role: 'admin',
-      });
-
-      // Build VS Code MCP setup URL
-      const mcpUrl = this.mcpTokenService.getMcpUrl();
-      const mcpSetupUrl = this.buildVsCodeMcpUrl(
-        tokenResponse.accessToken,
-        mcpUrl,
-      );
-
       this.logger.info('Trial user created successfully', {
         userId: user.id,
         organizationId: organization.id,
       });
 
-      return { mcpSetupUrl };
+      return { user, organization, role: 'admin' };
     } catch (error) {
       this.logger.error('Failed to create trial user', {
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
     }
-  }
-
-  private buildVsCodeMcpUrl(token: string, url: string): string {
-    const config = {
-      name: 'packmind',
-      type: 'http',
-      url,
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    };
-    const jsonConfig = JSON.stringify(config);
-    return `vscode:mcp/install?${encodeURIComponent(jsonConfig)}`;
   }
 }

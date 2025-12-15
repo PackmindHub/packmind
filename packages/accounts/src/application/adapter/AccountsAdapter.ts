@@ -47,7 +47,6 @@ import {
   IListOrganizationUserStatusesUseCase,
   IListOrganizationUsersUseCase,
   IListUserOrganizationsUseCase,
-  IMcpTokenService,
   IRequestPasswordResetUseCase,
   IResetPasswordUseCase,
   ISignInUserUseCase,
@@ -157,7 +156,7 @@ export class AccountsAdapter
   private _getOrganizationOnboardingStatus!: IGetOrganizationOnboardingStatusUseCase;
   private _createCliLoginCode?: ICreateCliLoginCodeUseCase;
   private _exchangeCliLoginCode?: IExchangeCliLoginCodeUseCase;
-  private _startTrial?: IStartTrial;
+  private _startTrial!: IStartTrial;
 
   constructor(
     private readonly accountsServices: EnhancedAccountsServices,
@@ -176,7 +175,6 @@ export class AccountsAdapter
     [IStandardsPortName]: IStandardsPort;
     [IDeploymentPortName]: IDeploymentPort;
     eventEmitterService: PackmindEventEmitterService;
-    mcpTokenService?: IMcpTokenService;
   }): Promise<void> {
     this.logger.info('Initializing AccountsAdapter with optional ports');
 
@@ -334,22 +332,15 @@ export class AccountsAdapter
       this.logger.debug('API key use cases skipped - service not available');
     }
 
-    // Trial use case requires MCP token service
-    if (ports.mcpTokenService) {
-      this._startTrial = new StartTrialUseCase(
-        this.accountsServices.getUserService(),
-        this.accountsServices.getOrganizationService(),
-        ports.mcpTokenService,
-        ports.eventEmitterService,
-        this.logger,
-        this.spacesPort ?? undefined,
-      );
-      this.logger.debug('Start trial use case initialized');
-    } else {
-      this.logger.debug(
-        'Start trial use case skipped - MCP token service not available',
-      );
-    }
+    // Trial use case
+    this._startTrial = new StartTrialUseCase(
+      this.accountsServices.getUserService(),
+      this.accountsServices.getOrganizationService(),
+      ports.eventEmitterService,
+      this.logger,
+      this.spacesPort ?? undefined,
+    );
+    this.logger.debug('Start trial use case initialized');
 
     this.logger.info('AccountsAdapter initialized successfully');
   }
@@ -568,9 +559,6 @@ export class AccountsAdapter
   public async startTrial(
     command: StartTrialCommand,
   ): Promise<StartTrialResult> {
-    if (!this._startTrial) {
-      throw new Error('Start trial not available - missing dependencies');
-    }
     return this._startTrial.execute(command);
   }
 }
