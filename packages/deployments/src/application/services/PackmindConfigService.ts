@@ -25,4 +25,14 @@ export class PackmindConfigService {
       content: JSON.stringify(config, null, 2) + '\n',
     };
   }
+
+  removePackageFromConfig(
+    slugToRemove: string,
+    existingPackages: { [slug: string]: string },
+  ): PackmindFileConfig {
+    const packages = { ...existingPackages };
+    delete packages[slugToRemove];
+
+    return { packages };
+  }
 }

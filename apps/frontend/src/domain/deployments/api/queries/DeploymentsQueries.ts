@@ -36,6 +36,7 @@ import {
   LIST_RECIPE_DEPLOYMENTS_KEY,
   LIST_RECIPE_DISTRIBUTIONS_KEY,
   LIST_STANDARD_DISTRIBUTIONS_KEY,
+  REMOVE_PACKAGE_FROM_TARGETS_MUTATION_KEY,
   UPDATE_PACKAGE_MUTATION_KEY,
 } from '../queryKeys';
 
@@ -695,6 +696,47 @@ export const useDeletePackagesBatchMutation = () => {
     },
     onError: (error) => {
       console.error('Error deleting packages in batch:', error);
+    },
+  });
+};
+
+export const useRemovePackageFromTargetsMutation = () => {
+  const queryClient = useQueryClient();
+  const { organization } = useAuthContext();
+
+  return useMutation({
+    mutationKey: REMOVE_PACKAGE_FROM_TARGETS_MUTATION_KEY,
+    mutationFn: async ({
+      packageId,
+      targetIds,
+    }: {
+      packageId: PackageId;
+      targetIds: TargetId[];
+    }) => {
+      if (!organization?.id) {
+        throw new Error('Organization ID is required');
+      }
+      return deploymentsGateways.removePackageFromTargets({
+        organizationId: organization.id,
+        packageId,
+        targetIds,
+      });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        predicate: (query) =>
+          Array.isArray(query.queryKey) &&
+          query.queryKey.includes(DeploymentQueryKeys.LIST_PACKAGE_DEPLOYMENTS),
+      });
+      await queryClient.invalidateQueries({
+        queryKey: GET_RECIPES_DEPLOYMENT_OVERVIEW_KEY,
+      });
+      await queryClient.invalidateQueries({
+        queryKey: GET_STANDARDS_DEPLOYMENT_OVERVIEW_KEY,
+      });
+    },
+    onError: (error) => {
+      console.error('Error removing package from targets:', error);
     },
   });
 };

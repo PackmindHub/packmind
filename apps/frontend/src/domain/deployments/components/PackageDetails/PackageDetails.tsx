@@ -28,12 +28,16 @@ import {
   PMDataList,
   PMTabs,
   PMEmptyState,
+  PMFeatureFlag,
+  DEFAULT_FEATURE_DOMAIN_MAP,
+  REMOVE_PACKAGE_FROM_TARGETS_FEATURE_KEY,
 } from '@packmind/ui';
 import { Link, useNavigate } from 'react-router';
 import {
   useGetPackageByIdQuery,
   useUpdatePackageMutation,
   useDeletePackagesBatchMutation,
+  useListPackageDeploymentsQuery,
 } from '../../api/queries/DeploymentsQueries';
 import { AutobreadCrumb } from '../../../../shared/components/navigation/AutobreadCrumb';
 import {
@@ -50,6 +54,7 @@ import { useGetRecipesQuery } from '../../../recipes/api/queries/RecipesQueries'
 import { useGetStandardsQuery } from '../../../standards/api/queries/StandardsQueries';
 import { PACKAGE_MESSAGES } from '../../constants/messages';
 import { DeployPackageButton } from '../PackageDeployments/DeployPackageButton';
+import { RemovePackageFromTargetsButton } from '../RemovePackageFromTargets';
 import { PackageDistributionList } from '../PackageDistributionList';
 import {
   MarkdownEditor,
@@ -363,7 +368,7 @@ export const PackageDetails = ({
   spaceSlug,
 }: PackageDetailsProps) => {
   const navigate = useNavigate();
-  const { organization } = useAuthContext();
+  const { organization, user } = useAuthContext();
   const { spaceId } = useCurrentSpace();
 
   const [isEditMode, setIsEditMode] = useState(false);
@@ -390,6 +395,9 @@ export const PackageDetails = ({
 
   const { data: standardsResponse, isLoading: isLoadingStandards } =
     useGetStandardsQuery();
+
+  const { data: deployments = [], isLoading: isLoadingDeployments } =
+    useListPackageDeploymentsQuery(id);
 
   const updatePackageMutation = useUpdatePackageMutation();
   const deletePackageMutation = useDeletePackagesBatchMutation();
@@ -806,6 +814,18 @@ export const PackageDetails = ({
             size="md"
             selectedPackages={[pkg]}
           />
+          <PMFeatureFlag
+            featureKeys={[REMOVE_PACKAGE_FROM_TARGETS_FEATURE_KEY]}
+            featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
+            userEmail={user?.email}
+          >
+            <RemovePackageFromTargetsButton
+              selectedPackage={pkg}
+              distributions={deployments}
+              distributionsLoading={isLoadingDeployments}
+              size="md"
+            />
+          </PMFeatureFlag>
           <PMButton variant="tertiary" onClick={handleEdit}>
             Edit
           </PMButton>

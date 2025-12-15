@@ -7,10 +7,6 @@ describe('PackmindConfigService', () => {
     service = new PackmindConfigService();
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
   describe('generateConfigContent', () => {
     describe('with empty input', () => {
       it('returns empty packages object for empty input', () => {
@@ -180,6 +176,94 @@ describe('PackmindConfigService', () => {
           backend: '*',
           frontend: '*',
           'api-standards': '*',
+        });
+      });
+    });
+  });
+
+  describe('removePackageFromConfig', () => {
+    describe('with existing package to remove', () => {
+      it('removes specified package from config', () => {
+        const existingPackages = {
+          'package-a': '*',
+          'package-b': '*',
+          'package-c': '*',
+        };
+
+        const result = service.removePackageFromConfig(
+          'package-b',
+          existingPackages,
+        );
+
+        expect(result).toEqual({
+          packages: {
+            'package-a': '*',
+            'package-c': '*',
+          },
+        });
+      });
+
+      it('does not mutate original packages object', () => {
+        const existingPackages = {
+          'package-a': '*',
+          'package-b': '*',
+        };
+
+        service.removePackageFromConfig('package-a', existingPackages);
+
+        expect(existingPackages).toEqual({
+          'package-a': '*',
+          'package-b': '*',
+        });
+      });
+    });
+
+    describe('with non-existent package to remove', () => {
+      describe('when slug does not exist', () => {
+        it('returns unchanged config', () => {
+          const existingPackages = {
+            'package-a': '*',
+            'package-b': '*',
+          };
+
+          const result = service.removePackageFromConfig(
+            'non-existent-package',
+            existingPackages,
+          );
+
+          expect(result).toEqual({
+            packages: {
+              'package-a': '*',
+              'package-b': '*',
+            },
+          });
+        });
+      });
+    });
+
+    describe('with empty packages object', () => {
+      describe('when removing from empty config', () => {
+        it('returns empty packages', () => {
+          const result = service.removePackageFromConfig('any-package', {});
+
+          expect(result).toEqual({ packages: {} });
+        });
+      });
+    });
+
+    describe('with single package', () => {
+      describe('when removing the only package', () => {
+        it('returns empty packages', () => {
+          const existingPackages = {
+            'only-package': '*',
+          };
+
+          const result = service.removePackageFromConfig(
+            'only-package',
+            existingPackages,
+          );
+
+          expect(result).toEqual({ packages: {} });
         });
       });
     });
