@@ -31,6 +31,7 @@ const RENDER_MODE_TO_VALUE: Record<RenderMode, string> = {
   [RenderMode.CLAUDE]: 'claude',
   [RenderMode.JUNIE]: 'junie',
   [RenderMode.GITLAB_DUO]: 'gitlab_duo',
+  [RenderMode.CONTINUE]: 'continue',
 };
 
 const VALUE_TO_RENDER_MODE: Record<string, RenderMode> = {
@@ -41,6 +42,7 @@ const VALUE_TO_RENDER_MODE: Record<string, RenderMode> = {
   claude: RenderMode.CLAUDE,
   junie: RenderMode.JUNIE,
   gitlab_duo: RenderMode.GITLAB_DUO,
+  continue: RenderMode.CONTINUE,
 };
 
 const DEFAULT_FORMATS: RenderingItem[] = [
@@ -51,6 +53,7 @@ const DEFAULT_FORMATS: RenderingItem[] = [
   { value: 'claude', name: 'Claude Code', checked: false },
   { value: 'junie', name: 'Junie', checked: false },
   { value: 'gitlab_duo', name: 'Gitlab Duo', checked: false },
+  { value: 'continue', name: 'Continue', checked: false },
 ];
 
 type RenderingSettingsContextValue = {

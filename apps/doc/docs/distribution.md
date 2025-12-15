@@ -10,15 +10,16 @@ Packmind supports multiple AI coding assistants. Organization administrators can
 
 Here is an overview of the supported agents:
 
-| AI Agent           | What It Does                 | File Location                     |
-| ------------------ | ---------------------------- | --------------------------------- |
-| **Packmind**       | Internal renderer (required) | `.packmind/`                      |
-| **AGENTS.md**      | Updates instructions file    | `AGENTS.md`                       |
-| **GitHub Copilot** | Updates instructions file    | `.github/copilot-instructions.md` |
-| **Cursor**         | Creates rules in YAML format | `.cursor/rules/`                  |
-| **Claude Code**    | Updates instructions file    | `CLAUDE.md`                       |
-| **Junie**          | Updates guidelines file      | `.junie/guidelines.md`            |
-| **Gitlab Duo**     | Updates chat rules file      | `.gitlab/duo/chat-rules.md`       |
+| AI Agent           | What It Does                     | File Location                     |
+| ------------------ | -------------------------------- | --------------------------------- |
+| **Packmind**       | Internal renderer (required)     | `.packmind/`                      |
+| **AGENTS.md**      | Updates instructions file        | `AGENTS.md`                       |
+| **GitHub Copilot** | Updates instructions file        | `.github/copilot-instructions.md` |
+| **Cursor**         | Creates rules in YAML format     | `.cursor/rules/`                  |
+| **Claude Code**    | Updates instructions file        | `CLAUDE.md`                       |
+| **Junie**          | Updates guidelines file          | `.junie/guidelines.md`            |
+| **Gitlab Duo**     | Updates chat rules file          | `.gitlab/duo/chat-rules.md`       |
+| **Continue**       | Creates rules in Markdown format | `.continue/rules/`                |
 
 When you distribute standards or recipes, only the enabled agents will receive updates. The Packmind renderer is always active and creates files in the `.packmind/` directory that are used by other agents.
 

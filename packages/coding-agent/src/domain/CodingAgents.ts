@@ -5,7 +5,8 @@ export type CodingAgent =
   | 'cursor'
   | 'copilot'
   | 'agents_md'
-  | 'gitlab_duo';
+  | 'gitlab_duo'
+  | 'continue';
 
 export const CodingAgents: Record<CodingAgent, CodingAgent> = {
   packmind: 'packmind',
@@ -15,4 +16,5 @@ export const CodingAgents: Record<CodingAgent, CodingAgent> = {
   copilot: 'copilot',
   agents_md: 'agents_md',
   gitlab_duo: 'gitlab_duo',
+  continue: 'continue',
 };

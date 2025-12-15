@@ -283,6 +283,7 @@ const RenderModes: React.FunctionComponent<{ renderModes: RenderMode[] }> = ({
     [RenderMode.CURSOR]: 'Cursor',
     [RenderMode.PACKMIND]: 'Packmind',
     [RenderMode.GITLAB_DUO]: 'Gitlab Duo',
+    [RenderMode.CONTINUE]: 'Continue',
   };
   const formattedNames = renderModes.map(
     (renderMode) => formatNames[renderMode],

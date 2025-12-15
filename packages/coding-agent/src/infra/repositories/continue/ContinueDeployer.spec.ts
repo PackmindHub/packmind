@@ -1,0 +1,1471 @@
+import { ContinueDeployer } from './ContinueDeployer';
+import { createUserId } from '@packmind/types';
+import {
+  GitRepo,
+  createGitRepoId,
+  createGitProviderId,
+  StandardVersion,
+  createStandardVersionId,
+  RecipeVersion,
+  createRecipeVersionId,
+  Target,
+  createTargetId,
+  IStandardsPort,
+  Rule,
+} from '@packmind/types';
+import { v4 as uuidv4 } from 'uuid';
+import { recipeFactory } from '@packmind/recipes/test';
+import { standardFactory } from '@packmind/standards/test';
+
+describe('ContinueDeployer', () => {
+  let deployer: ContinueDeployer;
+  let mockStandardsPort: jest.Mocked<IStandardsPort>;
+  let mockGitRepo: GitRepo;
+  let mockTarget: Target;
+
+  beforeEach(() => {
+    mockStandardsPort = {
+      getRulesByStandardId: jest.fn(),
+    } as unknown as jest.Mocked<IStandardsPort>;
+
+    deployer = new ContinueDeployer(mockStandardsPort);
+
+    mockTarget = {
+      id: createTargetId('test-target-id'),
+      name: 'Test Target',
+      path: '/',
+      gitRepoId: createGitRepoId(uuidv4()),
+    };
+
+    mockGitRepo = {
+      id: createGitRepoId('test-repo-id'),
+      owner: 'test-owner',
+      repo: 'test-repo',
+      providerId: createGitProviderId('provider-id'),
+      branch: 'main',
+    };
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('deployRecipes', () => {
+    describe('when deploying recipes', () => {
+      it('creates one file update', async () => {
+        const recipe = recipeFactory({
+          name: 'Test Recipe',
+          slug: 'test-recipe',
+        });
+
+        const recipeVersion: RecipeVersion = {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: recipe.id,
+          name: recipe.name,
+          slug: recipe.slug,
+          content: 'This is the recipe content',
+          version: 1,
+          summary: 'A test recipe summary',
+          userId: createUserId('user-1'),
+        };
+
+        const result = await deployer.deployRecipes(
+          [recipeVersion],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
+
+      it('does not delete any files', async () => {
+        const recipe = recipeFactory({
+          name: 'Test Recipe',
+          slug: 'test-recipe',
+        });
+
+        const recipeVersion: RecipeVersion = {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: recipe.id,
+          name: recipe.name,
+          slug: recipe.slug,
+          content: 'This is the recipe content',
+          version: 1,
+          summary: 'A test recipe summary',
+          userId: createUserId('user-1'),
+        };
+
+        const result = await deployer.deployRecipes(
+          [recipeVersion],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        expect(result.delete).toHaveLength(0);
+      });
+
+      it('creates file at correct path', async () => {
+        const recipe = recipeFactory({
+          name: 'Test Recipe',
+          slug: 'test-recipe',
+        });
+
+        const recipeVersion: RecipeVersion = {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: recipe.id,
+          name: recipe.name,
+          slug: recipe.slug,
+          content: 'This is the recipe content',
+          version: 1,
+          summary: 'A test recipe summary',
+          userId: createUserId('user-1'),
+        };
+
+        const result = await deployer.deployRecipes(
+          [recipeVersion],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        const recipesFile = result.createOrUpdate[0];
+        expect(recipesFile.path).toBe(
+          '.continue/rules/packmind-recipes-index.md',
+        );
+      });
+
+      it('includes frontmatter with name', async () => {
+        const recipe = recipeFactory({
+          name: 'Test Recipe',
+          slug: 'test-recipe',
+        });
+
+        const recipeVersion: RecipeVersion = {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: recipe.id,
+          name: recipe.name,
+          slug: recipe.slug,
+          content: 'This is the recipe content',
+          version: 1,
+          summary: 'A test recipe summary',
+          userId: createUserId('user-1'),
+        };
+
+        const result = await deployer.deployRecipes(
+          [recipeVersion],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        const recipesFile = result.createOrUpdate[0];
+        expect(recipesFile.content).toContain('name: Packmind Recipes');
+      });
+
+      it('includes frontmatter with alwaysApply true', async () => {
+        const recipe = recipeFactory({
+          name: 'Test Recipe',
+          slug: 'test-recipe',
+        });
+
+        const recipeVersion: RecipeVersion = {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: recipe.id,
+          name: recipe.name,
+          slug: recipe.slug,
+          content: 'This is the recipe content',
+          version: 1,
+          summary: 'A test recipe summary',
+          userId: createUserId('user-1'),
+        };
+
+        const result = await deployer.deployRecipes(
+          [recipeVersion],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        const recipesFile = result.createOrUpdate[0];
+        expect(recipesFile.content).toContain('alwaysApply: true');
+      });
+
+      it('includes frontmatter with description', async () => {
+        const recipe = recipeFactory({
+          name: 'Test Recipe',
+          slug: 'test-recipe',
+        });
+
+        const recipeVersion: RecipeVersion = {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: recipe.id,
+          name: recipe.name,
+          slug: recipe.slug,
+          content: 'This is the recipe content',
+          version: 1,
+          summary: 'A test recipe summary',
+          userId: createUserId('user-1'),
+        };
+
+        const result = await deployer.deployRecipes(
+          [recipeVersion],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        const recipesFile = result.createOrUpdate[0];
+        expect(recipesFile.content).toContain(
+          'description: Packmind recipes for Continue',
+        );
+      });
+
+      it('includes Packmind Recipes header', async () => {
+        const recipe = recipeFactory({
+          name: 'Test Recipe',
+          slug: 'test-recipe',
+        });
+
+        const recipeVersion: RecipeVersion = {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: recipe.id,
+          name: recipe.name,
+          slug: recipe.slug,
+          content: 'This is the recipe content',
+          version: 1,
+          summary: 'A test recipe summary',
+          userId: createUserId('user-1'),
+        };
+
+        const result = await deployer.deployRecipes(
+          [recipeVersion],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        const recipesFile = result.createOrUpdate[0];
+        expect(recipesFile.content).toContain('# Packmind Recipes');
+      });
+
+      it('includes mandatory step warning', async () => {
+        const recipe = recipeFactory({
+          name: 'Test Recipe',
+          slug: 'test-recipe',
+        });
+
+        const recipeVersion: RecipeVersion = {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: recipe.id,
+          name: recipe.name,
+          slug: recipe.slug,
+          content: 'This is the recipe content',
+          version: 1,
+          summary: 'A test recipe summary',
+          userId: createUserId('user-1'),
+        };
+
+        const result = await deployer.deployRecipes(
+          [recipeVersion],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        const recipesFile = result.createOrUpdate[0];
+        expect(recipesFile.content).toContain('🚨 **MANDATORY STEP** 🚨');
+      });
+
+      it('includes recipe name in content', async () => {
+        const recipe = recipeFactory({
+          name: 'Test Recipe',
+          slug: 'test-recipe',
+        });
+
+        const recipeVersion: RecipeVersion = {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: recipe.id,
+          name: recipe.name,
+          slug: recipe.slug,
+          content: 'This is the recipe content',
+          version: 1,
+          summary: 'A test recipe summary',
+          userId: createUserId('user-1'),
+        };
+
+        const result = await deployer.deployRecipes(
+          [recipeVersion],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        const recipesFile = result.createOrUpdate[0];
+        expect(recipesFile.content).toContain(recipe.name);
+      });
+    });
+
+    it('returns no file updates for empty recipe list', async () => {
+      const result = await deployer.deployRecipes([], mockGitRepo, mockTarget);
+
+      expect(result.createOrUpdate).toHaveLength(0);
+    });
+
+    it('returns no file deletions for empty recipe list', async () => {
+      const result = await deployer.deployRecipes([], mockGitRepo, mockTarget);
+
+      expect(result.delete).toHaveLength(0);
+    });
+
+    describe('when deploying multiple recipes', () => {
+      it('includes first recipe name in content', async () => {
+        const recipe1 = recipeFactory({
+          name: 'Test Recipe 1',
+          slug: 'test-recipe-1',
+        });
+
+        const recipe2 = recipeFactory({
+          name: 'Test Recipe 2',
+          slug: 'test-recipe-2',
+        });
+
+        const recipeVersion1: RecipeVersion = {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: recipe1.id,
+          name: recipe1.name,
+          slug: recipe1.slug,
+          content: 'Recipe 1 instructions',
+          version: 1,
+          summary: 'Recipe 1 summary',
+          userId: createUserId('user-1'),
+        };
+
+        const recipeVersion2: RecipeVersion = {
+          id: createRecipeVersionId('recipe-version-2'),
+          recipeId: recipe2.id,
+          name: recipe2.name,
+          slug: recipe2.slug,
+          content: 'Recipe 2 instructions',
+          version: 1,
+          summary: 'Recipe 2 summary',
+          userId: createUserId('user-1'),
+        };
+
+        const result = await deployer.deployRecipes(
+          [recipeVersion1, recipeVersion2],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        const recipesFile = result.createOrUpdate[0];
+        expect(recipesFile.content).toContain(recipeVersion1.name);
+      });
+
+      it('includes second recipe name in content', async () => {
+        const recipe1 = recipeFactory({
+          name: 'Test Recipe 1',
+          slug: 'test-recipe-1',
+        });
+
+        const recipe2 = recipeFactory({
+          name: 'Test Recipe 2',
+          slug: 'test-recipe-2',
+        });
+
+        const recipeVersion1: RecipeVersion = {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: recipe1.id,
+          name: recipe1.name,
+          slug: recipe1.slug,
+          content: 'Recipe 1 instructions',
+          version: 1,
+          summary: 'Recipe 1 summary',
+          userId: createUserId('user-1'),
+        };
+
+        const recipeVersion2: RecipeVersion = {
+          id: createRecipeVersionId('recipe-version-2'),
+          recipeId: recipe2.id,
+          name: recipe2.name,
+          slug: recipe2.slug,
+          content: 'Recipe 2 instructions',
+          version: 1,
+          summary: 'Recipe 2 summary',
+          userId: createUserId('user-1'),
+        };
+
+        const result = await deployer.deployRecipes(
+          [recipeVersion1, recipeVersion2],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        const recipesFile = result.createOrUpdate[0];
+        expect(recipesFile.content).toContain(recipeVersion2.name);
+      });
+    });
+  });
+
+  describe('deployStandards', () => {
+    describe('when deploying standard with scope', () => {
+      it('creates one file update', async () => {
+        const standard = standardFactory({
+          name: 'Test Standard',
+          slug: 'test-standard',
+          scope: '**/*.{ts,tsx}',
+        });
+
+        const standardVersion: StandardVersion = {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: standard.id,
+          name: standard.name,
+          slug: standard.slug,
+          description: standard.description,
+          version: 1,
+          summary: 'A test standard summary',
+          userId: createUserId('user-1'),
+          scope: standard.scope,
+          rules: [
+            { content: 'Use TypeScript' },
+            { content: 'Write tests' },
+          ] as Rule[],
+        };
+
+        const result = await deployer.deployStandards(
+          [standardVersion],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
+
+      it('creates file at correct path', async () => {
+        const standard = standardFactory({
+          name: 'Test Standard',
+          slug: 'test-standard',
+          scope: '**/*.{ts,tsx}',
+        });
+
+        const standardVersion: StandardVersion = {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: standard.id,
+          name: standard.name,
+          slug: standard.slug,
+          description: standard.description,
+          version: 1,
+          summary: 'A test standard summary',
+          userId: createUserId('user-1'),
+          scope: standard.scope,
+          rules: [] as Rule[],
+        };
+
+        const result = await deployer.deployStandards(
+          [standardVersion],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        const standardFile = result.createOrUpdate[0];
+        expect(standardFile.path).toBe(
+          '.continue/rules/packmind-standard-test-standard.md',
+        );
+      });
+
+      it('includes frontmatter with name', async () => {
+        const standard = standardFactory({
+          name: 'Test Standard',
+          slug: 'test-standard',
+          scope: '**/*.{ts,tsx}',
+        });
+
+        const standardVersion: StandardVersion = {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: standard.id,
+          name: standard.name,
+          slug: standard.slug,
+          description: standard.description,
+          version: 1,
+          summary: 'A test standard summary',
+          userId: createUserId('user-1'),
+          scope: standard.scope,
+          rules: [] as Rule[],
+        };
+
+        const result = await deployer.deployStandards(
+          [standardVersion],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        const standardFile = result.createOrUpdate[0];
+        expect(standardFile.content).toContain(`name: ${standard.name}`);
+      });
+
+      describe('when scope exists', () => {
+        it('includes frontmatter with globs', async () => {
+          const standard = standardFactory({
+            name: 'Test Standard',
+            slug: 'test-standard',
+            scope: '**/*.{ts,tsx}',
+          });
+
+          const standardVersion: StandardVersion = {
+            id: createStandardVersionId('standard-version-1'),
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: standard.description,
+            version: 1,
+            summary: 'A test standard summary',
+            userId: createUserId('user-1'),
+            scope: standard.scope,
+            rules: [] as Rule[],
+          };
+
+          const result = await deployer.deployStandards(
+            [standardVersion],
+            mockGitRepo,
+            mockTarget,
+          );
+
+          const standardFile = result.createOrUpdate[0];
+          expect(standardFile.content).toContain(`globs: ${standard.scope}`);
+        });
+
+        it('sets alwaysApply to false', async () => {
+          const standard = standardFactory({
+            name: 'Test Standard',
+            slug: 'test-standard',
+            scope: '**/*.{ts,tsx}',
+          });
+
+          const standardVersion: StandardVersion = {
+            id: createStandardVersionId('standard-version-1'),
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: standard.description,
+            version: 1,
+            summary: 'A test standard summary',
+            userId: createUserId('user-1'),
+            scope: standard.scope,
+            rules: [] as Rule[],
+          };
+
+          const result = await deployer.deployStandards(
+            [standardVersion],
+            mockGitRepo,
+            mockTarget,
+          );
+
+          const standardFile = result.createOrUpdate[0];
+          expect(standardFile.content).toContain('alwaysApply: false');
+        });
+      });
+
+      it('includes frontmatter with description from summary', async () => {
+        const standard = standardFactory({
+          name: 'Test Standard',
+          slug: 'test-standard',
+          scope: '**/*.{ts,tsx}',
+        });
+
+        const standardVersion: StandardVersion = {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: standard.id,
+          name: standard.name,
+          slug: standard.slug,
+          description: standard.description,
+          version: 1,
+          summary: 'A test standard summary',
+          userId: createUserId('user-1'),
+          scope: standard.scope,
+          rules: [] as Rule[],
+        };
+
+        const result = await deployer.deployStandards(
+          [standardVersion],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        const standardFile = result.createOrUpdate[0];
+        expect(standardFile.content).toContain(
+          'description: A test standard summary',
+        );
+      });
+
+      it('includes standard header in content', async () => {
+        const standard = standardFactory({
+          name: 'Test Standard',
+          slug: 'test-standard',
+          scope: '**/*.{ts,tsx}',
+        });
+
+        const standardVersion: StandardVersion = {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: standard.id,
+          name: standard.name,
+          slug: standard.slug,
+          description: standard.description,
+          version: 1,
+          summary: 'A test standard summary',
+          userId: createUserId('user-1'),
+          scope: standard.scope,
+          rules: [] as Rule[],
+        };
+
+        const result = await deployer.deployStandards(
+          [standardVersion],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        const standardFile = result.createOrUpdate[0];
+        expect(standardFile.content).toContain('## Standard: Test Standard');
+      });
+
+      it('includes first rule in content', async () => {
+        const standard = standardFactory({
+          name: 'Test Standard',
+          slug: 'test-standard',
+          scope: '**/*.{ts,tsx}',
+        });
+
+        const standardVersion: StandardVersion = {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: standard.id,
+          name: standard.name,
+          slug: standard.slug,
+          description: standard.description,
+          version: 1,
+          summary: 'A test standard summary',
+          userId: createUserId('user-1'),
+          scope: standard.scope,
+          rules: [
+            { content: 'Use TypeScript' },
+            { content: 'Write tests' },
+          ] as Rule[],
+        };
+
+        const result = await deployer.deployStandards(
+          [standardVersion],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        const standardFile = result.createOrUpdate[0];
+        expect(standardFile.content).toContain('* Use TypeScript');
+      });
+
+      it('includes second rule in content', async () => {
+        const standard = standardFactory({
+          name: 'Test Standard',
+          slug: 'test-standard',
+          scope: '**/*.{ts,tsx}',
+        });
+
+        const standardVersion: StandardVersion = {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: standard.id,
+          name: standard.name,
+          slug: standard.slug,
+          description: standard.description,
+          version: 1,
+          summary: 'A test standard summary',
+          userId: createUserId('user-1'),
+          scope: standard.scope,
+          rules: [
+            { content: 'Use TypeScript' },
+            { content: 'Write tests' },
+          ] as Rule[],
+        };
+
+        const result = await deployer.deployStandards(
+          [standardVersion],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        const standardFile = result.createOrUpdate[0];
+        expect(standardFile.content).toContain('* Write tests');
+      });
+
+      it('includes link to full standard', async () => {
+        const standard = standardFactory({
+          name: 'Test Standard',
+          slug: 'test-standard',
+          scope: '**/*.{ts,tsx}',
+        });
+
+        const standardVersion: StandardVersion = {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: standard.id,
+          name: standard.name,
+          slug: standard.slug,
+          description: standard.description,
+          version: 1,
+          summary: 'A test standard summary',
+          userId: createUserId('user-1'),
+          scope: standard.scope,
+          rules: [] as Rule[],
+        };
+
+        const result = await deployer.deployStandards(
+          [standardVersion],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        const standardFile = result.createOrUpdate[0];
+        expect(standardFile.content).toContain(
+          '../../.packmind/standards/test-standard.md',
+        );
+      });
+    });
+
+    describe('when deploying standard without scope', () => {
+      it('sets alwaysApply to true', async () => {
+        const standard = standardFactory({
+          name: 'Global Standard',
+          slug: 'global-standard',
+          scope: '',
+        });
+
+        const standardVersion: StandardVersion = {
+          id: createStandardVersionId('standard-version-2'),
+          standardId: standard.id,
+          name: standard.name,
+          slug: standard.slug,
+          description: standard.description,
+          version: 1,
+          summary: 'A global standard',
+          userId: createUserId('user-1'),
+          scope: standard.scope,
+          rules: [{ content: 'Always use consistent formatting' }] as Rule[],
+        };
+
+        const result = await deployer.deployStandards(
+          [standardVersion],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        const standardFile = result.createOrUpdate[0];
+        expect(standardFile.content).toContain('alwaysApply: true');
+      });
+
+      it('does not include globs in frontmatter', async () => {
+        const standard = standardFactory({
+          name: 'Global Standard',
+          slug: 'global-standard',
+          scope: '',
+        });
+
+        const standardVersion: StandardVersion = {
+          id: createStandardVersionId('standard-version-2'),
+          standardId: standard.id,
+          name: standard.name,
+          slug: standard.slug,
+          description: standard.description,
+          version: 1,
+          summary: 'A global standard',
+          userId: createUserId('user-1'),
+          scope: standard.scope,
+          rules: [] as Rule[],
+        };
+
+        const result = await deployer.deployStandards(
+          [standardVersion],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        const standardFile = result.createOrUpdate[0];
+        expect(standardFile.content).not.toContain('globs:');
+      });
+    });
+
+    describe('when summary and description are not available', () => {
+      it('uses standard name as description', async () => {
+        const standard = standardFactory({
+          name: 'Standard Without Summary',
+          slug: 'standard-without-summary',
+          scope: '**/*.ts',
+        });
+
+        const standardVersion: StandardVersion = {
+          id: createStandardVersionId('standard-version-3'),
+          standardId: standard.id,
+          name: standard.name,
+          slug: standard.slug,
+          description: null,
+          version: 1,
+          userId: createUserId('user-1'),
+          scope: standard.scope,
+          rules: [] as Rule[],
+        };
+
+        const result = await deployer.deployStandards(
+          [standardVersion],
+          mockGitRepo,
+          mockTarget,
+        );
+
+        const standardFile = result.createOrUpdate[0];
+        expect(standardFile.content).toContain(`description: ${standard.name}`);
+      });
+    });
+
+    it('returns no file updates for empty standards list', async () => {
+      const result = await deployer.deployStandards(
+        [],
+        mockGitRepo,
+        mockTarget,
+      );
+
+      expect(result.createOrUpdate).toHaveLength(0);
+    });
+
+    it('returns no file deletions for empty standards list', async () => {
+      const result = await deployer.deployStandards(
+        [],
+        mockGitRepo,
+        mockTarget,
+      );
+
+      expect(result.delete).toHaveLength(0);
+    });
+
+    describe('when deploying multiple standards', () => {
+      it('creates file for first standard with scope', async () => {
+        const standard1 = standardFactory({
+          name: 'Frontend Standard',
+          slug: 'frontend-standard',
+          scope: '**/*.{ts,tsx}',
+        });
+
+        const standard2 = standardFactory({
+          name: 'Backend Standard',
+          slug: 'backend-standard',
+          scope: '',
+        });
+
+        const standardVersions: StandardVersion[] = [
+          {
+            id: createStandardVersionId('standard-version-1'),
+            standardId: standard1.id,
+            name: standard1.name,
+            slug: standard1.slug,
+            description: standard1.description,
+            version: 1,
+            summary: 'Frontend standard',
+            userId: createUserId('user-1'),
+            scope: standard1.scope,
+            rules: [] as Rule[],
+          },
+          {
+            id: createStandardVersionId('standard-version-2'),
+            standardId: standard2.id,
+            name: standard2.name,
+            slug: standard2.slug,
+            description: standard2.description,
+            version: 1,
+            summary: 'Backend standard',
+            userId: createUserId('user-1'),
+            scope: standard2.scope,
+            rules: [] as Rule[],
+          },
+        ];
+
+        const result = await deployer.deployStandards(
+          standardVersions,
+          mockGitRepo,
+          mockTarget,
+        );
+
+        const frontendFile = result.createOrUpdate.find((file) =>
+          file.path.includes('frontend-standard'),
+        );
+        expect(frontendFile).toBeDefined();
+      });
+
+      it('includes globs in first standard file', async () => {
+        const standard1 = standardFactory({
+          name: 'Frontend Standard',
+          slug: 'frontend-standard',
+          scope: '**/*.{ts,tsx}',
+        });
+
+        const standard2 = standardFactory({
+          name: 'Backend Standard',
+          slug: 'backend-standard',
+          scope: '',
+        });
+
+        const standardVersions: StandardVersion[] = [
+          {
+            id: createStandardVersionId('standard-version-1'),
+            standardId: standard1.id,
+            name: standard1.name,
+            slug: standard1.slug,
+            description: standard1.description,
+            version: 1,
+            summary: 'Frontend standard',
+            userId: createUserId('user-1'),
+            scope: standard1.scope,
+            rules: [] as Rule[],
+          },
+          {
+            id: createStandardVersionId('standard-version-2'),
+            standardId: standard2.id,
+            name: standard2.name,
+            slug: standard2.slug,
+            description: standard2.description,
+            version: 1,
+            summary: 'Backend standard',
+            userId: createUserId('user-1'),
+            scope: standard2.scope,
+            rules: [] as Rule[],
+          },
+        ];
+
+        const result = await deployer.deployStandards(
+          standardVersions,
+          mockGitRepo,
+          mockTarget,
+        );
+
+        const frontendFile = result.createOrUpdate.find((file) =>
+          file.path.includes('frontend-standard'),
+        );
+        if (frontendFile) {
+          expect(frontendFile.content).toContain('globs: **/*.{ts,tsx}');
+        }
+      });
+
+      it('sets alwaysApply false for first standard with scope', async () => {
+        const standard1 = standardFactory({
+          name: 'Frontend Standard',
+          slug: 'frontend-standard',
+          scope: '**/*.{ts,tsx}',
+        });
+
+        const standard2 = standardFactory({
+          name: 'Backend Standard',
+          slug: 'backend-standard',
+          scope: '',
+        });
+
+        const standardVersions: StandardVersion[] = [
+          {
+            id: createStandardVersionId('standard-version-1'),
+            standardId: standard1.id,
+            name: standard1.name,
+            slug: standard1.slug,
+            description: standard1.description,
+            version: 1,
+            summary: 'Frontend standard',
+            userId: createUserId('user-1'),
+            scope: standard1.scope,
+            rules: [] as Rule[],
+          },
+          {
+            id: createStandardVersionId('standard-version-2'),
+            standardId: standard2.id,
+            name: standard2.name,
+            slug: standard2.slug,
+            description: standard2.description,
+            version: 1,
+            summary: 'Backend standard',
+            userId: createUserId('user-1'),
+            scope: standard2.scope,
+            rules: [] as Rule[],
+          },
+        ];
+
+        const result = await deployer.deployStandards(
+          standardVersions,
+          mockGitRepo,
+          mockTarget,
+        );
+
+        const frontendFile = result.createOrUpdate.find((file) =>
+          file.path.includes('frontend-standard'),
+        );
+        if (frontendFile) {
+          expect(frontendFile.content).toContain('alwaysApply: false');
+        }
+      });
+
+      it('creates file for second standard without scope', async () => {
+        const standard1 = standardFactory({
+          name: 'Frontend Standard',
+          slug: 'frontend-standard',
+          scope: '**/*.{ts,tsx}',
+        });
+
+        const standard2 = standardFactory({
+          name: 'Backend Standard',
+          slug: 'backend-standard',
+          scope: '',
+        });
+
+        const standardVersions: StandardVersion[] = [
+          {
+            id: createStandardVersionId('standard-version-1'),
+            standardId: standard1.id,
+            name: standard1.name,
+            slug: standard1.slug,
+            description: standard1.description,
+            version: 1,
+            summary: 'Frontend standard',
+            userId: createUserId('user-1'),
+            scope: standard1.scope,
+            rules: [] as Rule[],
+          },
+          {
+            id: createStandardVersionId('standard-version-2'),
+            standardId: standard2.id,
+            name: standard2.name,
+            slug: standard2.slug,
+            description: standard2.description,
+            version: 1,
+            summary: 'Backend standard',
+            userId: createUserId('user-1'),
+            scope: standard2.scope,
+            rules: [] as Rule[],
+          },
+        ];
+
+        const result = await deployer.deployStandards(
+          standardVersions,
+          mockGitRepo,
+          mockTarget,
+        );
+
+        const backendFile = result.createOrUpdate.find((file) =>
+          file.path.includes('backend-standard'),
+        );
+        expect(backendFile).toBeDefined();
+      });
+
+      it('does not include globs in second standard file', async () => {
+        const standard1 = standardFactory({
+          name: 'Frontend Standard',
+          slug: 'frontend-standard',
+          scope: '**/*.{ts,tsx}',
+        });
+
+        const standard2 = standardFactory({
+          name: 'Backend Standard',
+          slug: 'backend-standard',
+          scope: '',
+        });
+
+        const standardVersions: StandardVersion[] = [
+          {
+            id: createStandardVersionId('standard-version-1'),
+            standardId: standard1.id,
+            name: standard1.name,
+            slug: standard1.slug,
+            description: standard1.description,
+            version: 1,
+            summary: 'Frontend standard',
+            userId: createUserId('user-1'),
+            scope: standard1.scope,
+            rules: [] as Rule[],
+          },
+          {
+            id: createStandardVersionId('standard-version-2'),
+            standardId: standard2.id,
+            name: standard2.name,
+            slug: standard2.slug,
+            description: standard2.description,
+            version: 1,
+            summary: 'Backend standard',
+            userId: createUserId('user-1'),
+            scope: standard2.scope,
+            rules: [] as Rule[],
+          },
+        ];
+
+        const result = await deployer.deployStandards(
+          standardVersions,
+          mockGitRepo,
+          mockTarget,
+        );
+
+        const backendFile = result.createOrUpdate.find((file) =>
+          file.path.includes('backend-standard'),
+        );
+        if (backendFile) {
+          expect(backendFile.content).not.toContain('globs:');
+        }
+      });
+
+      it('sets alwaysApply true for second standard without scope', async () => {
+        const standard1 = standardFactory({
+          name: 'Frontend Standard',
+          slug: 'frontend-standard',
+          scope: '**/*.{ts,tsx}',
+        });
+
+        const standard2 = standardFactory({
+          name: 'Backend Standard',
+          slug: 'backend-standard',
+          scope: '',
+        });
+
+        const standardVersions: StandardVersion[] = [
+          {
+            id: createStandardVersionId('standard-version-1'),
+            standardId: standard1.id,
+            name: standard1.name,
+            slug: standard1.slug,
+            description: standard1.description,
+            version: 1,
+            summary: 'Frontend standard',
+            userId: createUserId('user-1'),
+            scope: standard1.scope,
+            rules: [] as Rule[],
+          },
+          {
+            id: createStandardVersionId('standard-version-2'),
+            standardId: standard2.id,
+            name: standard2.name,
+            slug: standard2.slug,
+            description: standard2.description,
+            version: 1,
+            summary: 'Backend standard',
+            userId: createUserId('user-1'),
+            scope: standard2.scope,
+            rules: [] as Rule[],
+          },
+        ];
+
+        const result = await deployer.deployStandards(
+          standardVersions,
+          mockGitRepo,
+          mockTarget,
+        );
+
+        const backendFile = result.createOrUpdate.find((file) =>
+          file.path.includes('backend-standard'),
+        );
+        if (backendFile) {
+          expect(backendFile.content).toContain('alwaysApply: true');
+        }
+      });
+    });
+  });
+
+  describe('generateFileUpdatesForRecipes', () => {
+    it('generates file at correct path', async () => {
+      const recipe = recipeFactory({
+        name: 'Test Recipe',
+        slug: 'test-recipe',
+      });
+
+      const recipeVersion: RecipeVersion = {
+        id: createRecipeVersionId('recipe-version-1'),
+        recipeId: recipe.id,
+        name: recipe.name,
+        slug: recipe.slug,
+        content: 'Recipe content',
+        version: 1,
+        summary: 'Recipe summary',
+        userId: createUserId('user-1'),
+      };
+
+      const result = await deployer.generateFileUpdatesForRecipes([
+        recipeVersion,
+      ]);
+
+      expect(result.createOrUpdate[0].path).toBe(
+        '.continue/rules/packmind-recipes-index.md',
+      );
+    });
+
+    describe('when no recipes', () => {
+      it('returns no file updates', async () => {
+        const result = await deployer.generateFileUpdatesForRecipes([]);
+
+        expect(result.createOrUpdate).toHaveLength(0);
+      });
+
+      it('returns no file deletions', async () => {
+        const result = await deployer.generateFileUpdatesForRecipes([]);
+
+        expect(result.delete).toHaveLength(0);
+      });
+    });
+  });
+
+  describe('generateFileUpdatesForStandards', () => {
+    it('generates file at correct path', async () => {
+      const standard = standardFactory({
+        name: 'Test Standard',
+        slug: 'test-standard',
+        scope: '**/*.ts',
+      });
+
+      const standardVersion: StandardVersion = {
+        id: createStandardVersionId('standard-version-1'),
+        standardId: standard.id,
+        name: standard.name,
+        slug: standard.slug,
+        description: standard.description,
+        version: 1,
+        summary: 'Test standard',
+        userId: createUserId('user-1'),
+        scope: standard.scope,
+        rules: [] as Rule[],
+      };
+
+      const result = await deployer.generateFileUpdatesForStandards([
+        standardVersion,
+      ]);
+
+      expect(result.createOrUpdate[0].path).toBe(
+        '.continue/rules/packmind-standard-test-standard.md',
+      );
+    });
+  });
+
+  describe('deployArtifacts', () => {
+    describe('when deploying both recipes and standards', () => {
+      it('creates two file updates', async () => {
+        const recipe = recipeFactory({
+          name: 'Test Recipe',
+          slug: 'test-recipe',
+        });
+
+        const standard = standardFactory({
+          name: 'Test Standard',
+          slug: 'test-standard',
+          scope: '**/*.ts',
+        });
+
+        const recipeVersion: RecipeVersion = {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: recipe.id,
+          name: recipe.name,
+          slug: recipe.slug,
+          content: 'Recipe content',
+          version: 1,
+          summary: 'Recipe summary',
+          userId: createUserId('user-1'),
+        };
+
+        const standardVersion: StandardVersion = {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: standard.id,
+          name: standard.name,
+          slug: standard.slug,
+          description: standard.description,
+          version: 1,
+          summary: 'Test standard',
+          userId: createUserId('user-1'),
+          scope: standard.scope,
+          rules: [] as Rule[],
+        };
+
+        const result = await deployer.deployArtifacts(
+          [recipeVersion],
+          [standardVersion],
+        );
+
+        expect(result.createOrUpdate).toHaveLength(2);
+      });
+
+      it('creates recipes index file', async () => {
+        const recipe = recipeFactory({
+          name: 'Test Recipe',
+          slug: 'test-recipe',
+        });
+
+        const standard = standardFactory({
+          name: 'Test Standard',
+          slug: 'test-standard',
+          scope: '**/*.ts',
+        });
+
+        const recipeVersion: RecipeVersion = {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: recipe.id,
+          name: recipe.name,
+          slug: recipe.slug,
+          content: 'Recipe content',
+          version: 1,
+          summary: 'Recipe summary',
+          userId: createUserId('user-1'),
+        };
+
+        const standardVersion: StandardVersion = {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: standard.id,
+          name: standard.name,
+          slug: standard.slug,
+          description: standard.description,
+          version: 1,
+          summary: 'Test standard',
+          userId: createUserId('user-1'),
+          scope: standard.scope,
+          rules: [] as Rule[],
+        };
+
+        const result = await deployer.deployArtifacts(
+          [recipeVersion],
+          [standardVersion],
+        );
+
+        expect(
+          result.createOrUpdate.some((f) => f.path.includes('recipes-index')),
+        ).toBe(true);
+      });
+
+      it('creates standard file', async () => {
+        const recipe = recipeFactory({
+          name: 'Test Recipe',
+          slug: 'test-recipe',
+        });
+
+        const standard = standardFactory({
+          name: 'Test Standard',
+          slug: 'test-standard',
+          scope: '**/*.ts',
+        });
+
+        const recipeVersion: RecipeVersion = {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: recipe.id,
+          name: recipe.name,
+          slug: recipe.slug,
+          content: 'Recipe content',
+          version: 1,
+          summary: 'Recipe summary',
+          userId: createUserId('user-1'),
+        };
+
+        const standardVersion: StandardVersion = {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: standard.id,
+          name: standard.name,
+          slug: standard.slug,
+          description: standard.description,
+          version: 1,
+          summary: 'Test standard',
+          userId: createUserId('user-1'),
+          scope: standard.scope,
+          rules: [] as Rule[],
+        };
+
+        const result = await deployer.deployArtifacts(
+          [recipeVersion],
+          [standardVersion],
+        );
+
+        expect(
+          result.createOrUpdate.some((f) =>
+            f.path.includes('standard-test-standard'),
+          ),
+        ).toBe(true);
+      });
+    });
+
+    describe('when deploying only recipes', () => {
+      it('creates one file update', async () => {
+        const recipe = recipeFactory({
+          name: 'Test Recipe',
+          slug: 'test-recipe',
+        });
+
+        const recipeVersion: RecipeVersion = {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: recipe.id,
+          name: recipe.name,
+          slug: recipe.slug,
+          content: 'Recipe content',
+          version: 1,
+          summary: 'Recipe summary',
+          userId: createUserId('user-1'),
+        };
+
+        const result = await deployer.deployArtifacts([recipeVersion], []);
+
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
+
+      it('creates recipes index file', async () => {
+        const recipe = recipeFactory({
+          name: 'Test Recipe',
+          slug: 'test-recipe',
+        });
+
+        const recipeVersion: RecipeVersion = {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: recipe.id,
+          name: recipe.name,
+          slug: recipe.slug,
+          content: 'Recipe content',
+          version: 1,
+          summary: 'Recipe summary',
+          userId: createUserId('user-1'),
+        };
+
+        const result = await deployer.deployArtifacts([recipeVersion], []);
+
+        expect(result.createOrUpdate[0].path).toContain('recipes-index');
+      });
+    });
+
+    describe('when deploying only standards', () => {
+      it('creates one file update', async () => {
+        const standard = standardFactory({
+          name: 'Test Standard',
+          slug: 'test-standard',
+          scope: '**/*.ts',
+        });
+
+        const standardVersion: StandardVersion = {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: standard.id,
+          name: standard.name,
+          slug: standard.slug,
+          description: standard.description,
+          version: 1,
+          summary: 'Test standard',
+          userId: createUserId('user-1'),
+          scope: standard.scope,
+          rules: [] as Rule[],
+        };
+
+        const result = await deployer.deployArtifacts([], [standardVersion]);
+
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
+
+      it('creates standard file', async () => {
+        const standard = standardFactory({
+          name: 'Test Standard',
+          slug: 'test-standard',
+          scope: '**/*.ts',
+        });
+
+        const standardVersion: StandardVersion = {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: standard.id,
+          name: standard.name,
+          slug: standard.slug,
+          description: standard.description,
+          version: 1,
+          summary: 'Test standard',
+          userId: createUserId('user-1'),
+          scope: standard.scope,
+          rules: [] as Rule[],
+        };
+
+        const result = await deployer.deployArtifacts([], [standardVersion]);
+
+        expect(result.createOrUpdate[0].path).toContain(
+          'standard-test-standard',
+        );
+      });
+    });
+  });
+});

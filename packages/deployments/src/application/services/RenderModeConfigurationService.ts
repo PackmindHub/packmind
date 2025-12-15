@@ -21,6 +21,7 @@ const renderModeToCodingAgent: Record<RenderMode, CodingAgent> = {
   [RenderMode.CLAUDE]: CodingAgents.claude,
   [RenderMode.CURSOR]: CodingAgents.cursor,
   [RenderMode.GITLAB_DUO]: CodingAgents.gitlab_duo,
+  [RenderMode.CONTINUE]: CodingAgents.continue,
 };
 
 export class RenderModeConfigurationService {

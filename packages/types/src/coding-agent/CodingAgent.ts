@@ -5,4 +5,5 @@ export type CodingAgent =
   | 'cursor'
   | 'copilot'
   | 'agents_md'
-  | 'gitlab_duo';
+  | 'gitlab_duo'
+  | 'continue';

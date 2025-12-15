@@ -9,6 +9,7 @@ import { CopilotDeployer } from './copilot/CopilotDeployer';
 import { AgentsMDDeployer } from './agentsmd/AgentsMDDeployer';
 import { IStandardsPort, IGitPort } from '@packmind/types';
 import { GitlabDuoDeployer } from './gitlabDuo/GitlabDuoDeployer';
+import { ContinueDeployer } from './continue/ContinueDeployer';
 
 export class CodingAgentDeployerRegistry
   implements ICodingAgentDeployerRegistry
@@ -55,6 +56,8 @@ export class CodingAgentDeployerRegistry
         return new AgentsMDDeployer(this.standardsPort, this.gitPort);
       case 'gitlab_duo':
         return new GitlabDuoDeployer(this.standardsPort, this.gitPort);
+      case 'continue':
+        return new ContinueDeployer(this.standardsPort, this.gitPort);
       default:
         throw new Error(`Unknown coding agent: ${agent}`);
     }
@@ -67,7 +70,9 @@ export class CodingAgentDeployerRegistry
       agent === 'claude' ||
       agent === 'cursor' ||
       agent === 'copilot' ||
-      agent === 'agents_md'
+      agent === 'agents_md' ||
+      agent === 'gitlab_duo' ||
+      agent === 'continue'
     );
   }
 }
