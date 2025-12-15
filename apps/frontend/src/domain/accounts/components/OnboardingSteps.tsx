@@ -155,7 +155,7 @@ export const OnboardingSteps: React.FC = () => {
 
               <PMText as="p">
                 Standards and recipes must be bundled into packages to be
-                distributed in your projects
+                distributed in your projects.
               </PMText>
 
               <NavLink
@@ -172,7 +172,7 @@ export const OnboardingSteps: React.FC = () => {
 
               <PMText as="p">
                 Packmind works with most of the AI agents of the market.
-                Configure which ones you use
+                Configure which ones you use.
               </PMText>
 
               <NavLink to={routes.org.toSettingsDistribution(orgSlug)}>
@@ -186,7 +186,7 @@ export const OnboardingSteps: React.FC = () => {
               </PMHeading>
 
               <PMText as="p">
-                Renders playbook as prompts for your AI agent using the CLI
+                Renders playbook as prompts for your AI agent using the CLI.
               </PMText>
 
               <PMField.Root width="full">
