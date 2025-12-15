@@ -729,34 +729,83 @@ export async function uninstallPackagesHandler(
       (pkg) => !packagesToUninstall.includes(pkg),
     );
 
-    // Execute the install operation with remaining packages
-    // Pass all previous packages so removed ones are detected
-    const result = await packmindCliHexa.installPackages({
-      baseDirectory: cwd,
-      packagesSlugs: remainingPackages,
-      previousPackagesSlugs: configPackages,
-    });
+    let filesDeleted = 0;
 
-    // Show removal message with counts
-    if (result.recipesCount > 0 || result.standardsCount > 0) {
-      log(
-        `Removing ${result.recipesCount} recipes and ${result.standardsCount} standards...`,
-      );
-    }
+    // Handle special case: removing ALL packages
+    if (remainingPackages.length === 0) {
+      log('Removing all packages and cleaning up .packmind directory...');
 
-    // Display results
-    log(`\nremoved ${result.filesDeleted} files`);
+      // Delete the entire .packmind directory
+      const packmindDir = `${cwd}/.packmind`;
+      try {
+        const fs = await import('fs/promises');
+        const dirExists = await fs
+          .access(packmindDir)
+          .then(() => true)
+          .catch(() => false);
 
-    if (result.errors.length > 0) {
-      log('\n⚠️  Errors encountered:');
-      result.errors.forEach((err) => {
-        log(`   - ${err}`);
+        if (dirExists) {
+          // Count files before deletion
+          const files = await fs.readdir(packmindDir, { recursive: true });
+          filesDeleted = files.filter((f) =>
+            typeof f === 'string' ? !f.endsWith('/') : true,
+          ).length;
+
+          await fs.rm(packmindDir, { recursive: true, force: true });
+        }
+
+        // Also remove AGENTS.md if it exists
+        const agentsMdPath = `${cwd}/AGENTS.md`;
+        const agentsMdExists = await fs
+          .access(agentsMdPath)
+          .then(() => true)
+          .catch(() => false);
+
+        if (agentsMdExists) {
+          await fs.unlink(agentsMdPath);
+          filesDeleted++;
+        }
+      } catch (err) {
+        error('\n⚠️  Warning: Failed to clean up some files:');
+        if (err instanceof Error) {
+          error(`   ${err.message}`);
+        }
+      }
+
+      log(`\nremoved ${filesDeleted} files`);
+    } else {
+      // Normal case: some packages remain
+      // Execute the install operation with remaining packages
+      // Pass all previous packages so removed ones are detected
+      const result = await packmindCliHexa.installPackages({
+        baseDirectory: cwd,
+        packagesSlugs: remainingPackages,
+        previousPackagesSlugs: configPackages,
       });
-      exit(1);
-      return {
-        filesDeleted: result.filesDeleted,
-        packagesUninstalled: packagesToUninstall,
-      };
+
+      // Show removal message with counts
+      if (result.recipesCount > 0 || result.standardsCount > 0) {
+        log(
+          `Removing ${result.recipesCount} recipes and ${result.standardsCount} standards...`,
+        );
+      }
+
+      // Display results
+      log(`\nremoved ${result.filesDeleted} files`);
+
+      if (result.errors.length > 0) {
+        log('\n⚠️  Errors encountered:');
+        result.errors.forEach((err) => {
+          log(`   - ${err}`);
+        });
+        exit(1);
+        return {
+          filesDeleted: result.filesDeleted,
+          packagesUninstalled: packagesToUninstall,
+        };
+      }
+
+      filesDeleted = result.filesDeleted;
     }
 
     // Write config with remaining packages
@@ -777,7 +826,7 @@ export async function uninstallPackagesHandler(
     }
 
     return {
-      filesDeleted: result.filesDeleted,
+      filesDeleted,
       packagesUninstalled: packagesToUninstall,
     };
   } catch (err) {
