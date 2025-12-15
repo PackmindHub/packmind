@@ -25,6 +25,7 @@ import {
 import assert from 'assert';
 import { DataSource } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
+import { cleanTestDatabase } from '../helpers/DataFactory';
 import { TestApp } from '../helpers/TestApp';
 
 // Mock the Git provider adapter for file retrieval
@@ -59,7 +60,7 @@ describe('Target-Specific Deployment Integration', () => {
   let vscodeTarget: Target;
   let rootTarget: Target;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     // Create test datasource with all necessary schemas
     dataSource = await makeTestDatasource([
       ...accountsSchemas,
@@ -78,6 +79,11 @@ describe('Target-Specific Deployment Integration', () => {
 
     // Get deployer service from hexa
     deployerService = testApp.codingAgentHexa.getDeployerService();
+  });
+
+  beforeEach(async () => {
+    // Clean database between tests
+    await cleanTestDatabase(dataSource);
 
     // Create test data
     const signUpResult = await testApp.accountsHexa
@@ -175,7 +181,7 @@ class MyService {
     };
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     await dataSource.destroy();
   });
 

@@ -17,7 +17,7 @@ import {
   Recipe,
 } from '@packmind/types';
 import { DataSource } from 'typeorm';
-import { DataFactory } from '../helpers/DataFactory';
+import { cleanTestDatabase, DataFactory } from '../helpers/DataFactory';
 import { makeIntegrationTestDataSource } from '../helpers/makeIntegrationTestDataSource';
 import { TestApp } from '../helpers/TestApp';
 
@@ -195,7 +195,7 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
         });
     };
 
-    beforeEach(async () => {
+    beforeAll(async () => {
       // Create test datasource with all necessary schemas
       dataSource = await makeIntegrationTestDataSource();
       await dataSource.initialize();
@@ -203,6 +203,11 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
 
       testApp = new TestApp(dataSource);
       await testApp.initialize();
+    });
+
+    beforeEach(async () => {
+      // Clean database between tests
+      await cleanTestDatabase(dataSource);
 
       dataFactory = new DataFactory(testApp);
       await dataFactory.withGitProvider({
@@ -220,6 +225,9 @@ function contractWebhookTest<TPayload>(config: WebhookTestConfig<TPayload>) {
 
     afterEach(async () => {
       jest.restoreAllMocks();
+    });
+
+    afterAll(async () => {
       await dataSource.destroy();
     });
 

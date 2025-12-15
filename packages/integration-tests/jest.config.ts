@@ -20,5 +20,7 @@ export default {
     compilerOptions.paths,
     '<rootDir>/../../',
   ),
-  testTimeout: 30000,
+  testTimeout: 10000, // Reduced from 30s to catch slow tests earlier
+  // maxWorkers: Allow parallel execution for CI performance comparison
+  // Note: With beforeAll pattern, tests can run in parallel as each test file has its own datasource
 };
