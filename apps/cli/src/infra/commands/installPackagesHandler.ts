@@ -562,8 +562,16 @@ export async function installPackagesHandler(
     if (err instanceof Error) {
       const errorObj = err as Error & { statusCode?: number };
 
+      // Handle 400 errors specifically (validation errors)
+      if (errorObj.statusCode === 400) {
+        error(`   ${errorObj.message}`);
+        error('\n💡 This is a validation error. Please check:');
+        error('   - The command syntax is correct');
+        error('   - You have provided at least one package slug');
+        error('   - Your packmind.json file contains valid package slugs');
+      }
       // Handle 404 errors specifically (package not found)
-      if (errorObj.statusCode === 404) {
+      else if (errorObj.statusCode === 404) {
         error(`   ${errorObj.message}`);
 
         // If package comes from config, suggest removing it

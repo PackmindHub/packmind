@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   Get,
   NotFoundException,
@@ -18,7 +19,10 @@ import {
 } from '@packmind/types';
 import { OrganizationId } from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/node-utils';
-import { PackagesNotFoundError } from '@packmind/deployments';
+import {
+  NoPackageSlugsProvidedError,
+  PackagesNotFoundError,
+} from '@packmind/deployments';
 import { OrganizationAccessGuard } from './guards/organization-access.guard';
 import {
   InjectAccountsAdapter,
@@ -162,6 +166,10 @@ export class OrganizationsController {
           error: errorMessage,
         },
       );
+
+      if (error instanceof NoPackageSlugsProvidedError) {
+        throw new BadRequestException(error.message);
+      }
 
       if (error instanceof PackagesNotFoundError) {
         throw new NotFoundException(error.message);

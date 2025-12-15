@@ -12,6 +12,7 @@ export * from './DeploymentsHexa';
 export * from './infra/schemas';
 
 // Re-export domain errors
+export * from './domain/errors/NoPackageSlugsProvidedError';
 export * from './domain/errors/PackagesNotFoundError';
 
 /**
