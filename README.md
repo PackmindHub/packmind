@@ -2,7 +2,7 @@
 
 ![License](https://img.shields.io/github/license/PackmindHub/packmind)
 ![Stars](https://img.shields.io/github/stars/PackmindHub/packmind)
-[![Main OSS CI/CD Pipeline](https://github.com/PackmindHub/packmind/actions/workflows/main-oss.yml/badge.svg)](https://github.com/PackmindHub/packmind/actions/workflows/main-oss.yml)
+[![Main OSS CI/CD Pipeline](https://github.com/PackmindHub/packmind/actions/workflows/main.yml/badge.svg)](https://github.com/PackmindHub/packmind/actions/workflows/main-oss.yml)
 ![Works with GitHub Copilot](https://img.shields.io/badge/works%20with-GitHub%20Copilot-blue?logo=githubcopilot&logoColor=white)
 ![Works with Cursor](https://img.shields.io/badge/works%20with-Cursor-blueviolet?logo=cursor&logoColor=white)
 ![Works with Claude Code](https://img.shields.io/badge/works%20with-Claude%20Code-purple?logo=anthropic&logoColor=white)
