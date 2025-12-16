@@ -1,3 +1,13 @@
+# [Unreleased]
+
+## Added
+
+## Changed
+
+## Fixed
+
+## Removed
+
 # [0.9.0] - 2025-12-16
 
 ## Added
@@ -86,6 +96,7 @@
 
 - Add proper CHANGELOG.MD in the GH release
 
+[Unreleased]: https://github.com/PackmindHub/packmind/compare/release-cli/0.9.0...HEAD
 [0.9.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.8.0...release-cli/0.9.0
 [0.8.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.7.0...release-cli/0.8.0
 [0.7.0]: https://github.com/PackmindHub/packmind/compare/release-cli/0.6.0...release-cli/0.7.0
