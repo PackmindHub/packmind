@@ -245,6 +245,209 @@ describe('GitlabRepository', () => {
         'Insufficient permissions to commit to GitLab repository. Please ensure your token has write access to testowner/testrepo',
       );
     });
+
+    describe('when deleting files', () => {
+      const files = [{ path: 'file1.txt', content: 'content1' }];
+      const deleteFiles = [
+        { path: 'file-to-delete.txt' },
+        { path: 'another-file-to-delete.txt' },
+      ];
+
+      beforeEach(() => {
+        // Mock getFileOnRepo to return null (files don't exist for creation)
+        mockAxiosInstance.get.mockImplementation((url: string) => {
+          if (url.includes('/repository/tree')) {
+            // Return tree with existing files
+            return Promise.resolve({
+              data: [
+                { path: 'file-to-delete.txt', type: 'blob' },
+                { path: 'another-file-to-delete.txt', type: 'blob' },
+              ],
+            });
+          }
+          // For file content check, return 404 (files don't exist)
+          return Promise.reject({ response: { status: 404 } });
+        });
+
+        // Mock successful commit
+        mockAxiosInstance.post.mockResolvedValue({
+          data: {
+            id: 'commit-sha-789',
+            author_email: 'test@example.com',
+            web_url:
+              'https://gitlab.com/testowner/testrepo/-/commit/commit-sha-789',
+          },
+        });
+      });
+
+      it('creates commit with delete actions for existing files', async () => {
+        await gitlabRepository.commitFiles(files, 'Delete files', deleteFiles);
+
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          '/projects/testowner%2Ftestrepo/repository/commits',
+          {
+            branch: 'main',
+            commit_message: 'Delete files',
+            actions: [
+              { action: 'create', file_path: 'file1.txt', content: 'content1' },
+              { action: 'delete', file_path: 'file-to-delete.txt' },
+              { action: 'delete', file_path: 'another-file-to-delete.txt' },
+            ],
+          },
+        );
+      });
+
+      describe('when only deleting files without adding new ones', () => {
+        it('creates commit with only delete actions', async () => {
+          await gitlabRepository.commitFiles([], 'Delete only', deleteFiles);
+
+          expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+            '/projects/testowner%2Ftestrepo/repository/commits',
+            {
+              branch: 'main',
+              commit_message: 'Delete only',
+              actions: [
+                { action: 'delete', file_path: 'file-to-delete.txt' },
+                { action: 'delete', file_path: 'another-file-to-delete.txt' },
+              ],
+            },
+          );
+        });
+      });
+    });
+
+    describe('when filtering non-existent files during deletion', () => {
+      describe('when some files to delete do not exist in the repo', () => {
+        const deleteFiles = [
+          { path: 'existing-file.txt' },
+          { path: 'non-existent-file.txt' },
+        ];
+
+        beforeEach(() => {
+          mockAxiosInstance.get.mockImplementation((url: string) => {
+            if (url.includes('/repository/tree')) {
+              // Only return existing-file.txt in the tree
+              return Promise.resolve({
+                data: [{ path: 'existing-file.txt', type: 'blob' }],
+              });
+            }
+            return Promise.reject({ response: { status: 404 } });
+          });
+
+          mockAxiosInstance.post.mockResolvedValue({
+            data: {
+              id: 'commit-sha-filter',
+              author_email: 'test@example.com',
+              web_url:
+                'https://gitlab.com/testowner/testrepo/-/commit/commit-sha-filter',
+            },
+          });
+        });
+
+        it('deletes only files that exist in the repository', async () => {
+          const files = [{ path: 'new-file.txt', content: 'content' }];
+          await gitlabRepository.commitFiles(files, 'Commit', deleteFiles);
+
+          expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+            '/projects/testowner%2Ftestrepo/repository/commits',
+            {
+              branch: 'main',
+              commit_message: 'Commit',
+              actions: [
+                {
+                  action: 'create',
+                  file_path: 'new-file.txt',
+                  content: 'content',
+                },
+                { action: 'delete', file_path: 'existing-file.txt' },
+              ],
+            },
+          );
+        });
+      });
+
+      describe('when all files to delete do not exist in the repo', () => {
+        const nonExistentDeleteFiles = [
+          { path: 'non-existent-1.txt' },
+          { path: 'non-existent-2.txt' },
+        ];
+
+        beforeEach(() => {
+          mockAxiosInstance.get.mockImplementation((url: string) => {
+            if (url.includes('/repository/tree')) {
+              // Return empty tree (no files exist)
+              return Promise.resolve({ data: [] });
+            }
+            return Promise.reject({ response: { status: 404 } });
+          });
+        });
+
+        describe('with file modifications', () => {
+          it('creates commit with only file modifications', async () => {
+            const files = [{ path: 'new-file.txt', content: 'content' }];
+
+            mockAxiosInstance.post.mockResolvedValue({
+              data: {
+                id: 'commit-sha-no-delete',
+                author_email: 'test@example.com',
+                web_url:
+                  'https://gitlab.com/testowner/testrepo/-/commit/commit-sha-no-delete',
+              },
+            });
+
+            await gitlabRepository.commitFiles(
+              files,
+              'Commit',
+              nonExistentDeleteFiles,
+            );
+
+            expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+              '/projects/testowner%2Ftestrepo/repository/commits',
+              {
+                branch: 'main',
+                commit_message: 'Commit',
+                actions: [
+                  {
+                    action: 'create',
+                    file_path: 'new-file.txt',
+                    content: 'content',
+                  },
+                ],
+              },
+            );
+          });
+        });
+
+        describe('without file modifications', () => {
+          describe('when no existing files to delete', () => {
+            it('returns no-changes', async () => {
+              const result = await gitlabRepository.commitFiles(
+                [],
+                'Delete files',
+                nonExistentDeleteFiles,
+              );
+
+              expect(result).toEqual({
+                sha: 'no-changes',
+                message: '',
+                author: '',
+                url: '',
+              });
+            });
+
+            it('does not create a commit', async () => {
+              await gitlabRepository.commitFiles(
+                [],
+                'Delete files',
+                nonExistentDeleteFiles,
+              );
+
+              expect(mockAxiosInstance.post).not.toHaveBeenCalled();
+            });
+          });
+        });
+      });
+    });
   });
 
   describe('getFileOnRepo', () => {
