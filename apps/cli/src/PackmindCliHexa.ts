@@ -129,6 +129,12 @@ export class PackmindCliHexa {
     return this.hexa.useCases.getPackageBySlug.execute(command);
   }
 
+  public async configExists(baseDirectory: string): Promise<boolean> {
+    return await this.hexa.repositories.configFileRepository.configExists(
+      baseDirectory,
+    );
+  }
+
   public async readConfig(baseDirectory: string): Promise<string[]> {
     const config =
       await this.hexa.repositories.configFileRepository.readConfig(

@@ -424,10 +424,10 @@ export async function installPackagesHandler(
 
   // Read existing config
   let configPackages: string[];
-  let configExists = false;
+  let configFileExists = false;
   try {
+    configFileExists = await packmindCliHexa.configExists(cwd);
     configPackages = await packmindCliHexa.readConfig(cwd);
-    configExists = configPackages.length > 0;
   } catch (err) {
     error('ERROR Failed to parse packmind.json');
     if (err instanceof Error) {
@@ -450,7 +450,13 @@ export async function installPackagesHandler(
 
   // Show help if no packages from either source
   if (allPackages.length === 0) {
-    logWarningConsole('config packmind.json not found');
+    if (configFileExists) {
+      logWarningConsole(
+        'config packmind.json is empty, no packages to install',
+      );
+    } else {
+      logWarningConsole('config packmind.json not found');
+    }
     log('Usage: packmind-cli install <package-slug> [package-slug...]');
     log('       packmind-cli install --list');
     log('');
@@ -470,7 +476,7 @@ export async function installPackagesHandler(
   }
 
   // Log config status only if initializing
-  if (!configExists && packagesSlugs.length > 0) {
+  if (!configFileExists && packagesSlugs.length > 0) {
     log('INFO initializing packmind.json');
   }
 
@@ -575,7 +581,7 @@ export async function installPackagesHandler(
         error(`   ${errorObj.message}`);
 
         // If package comes from config, suggest removing it
-        if (configExists && configPackages.length > 0) {
+        if (configFileExists && configPackages.length > 0) {
           const missingPackages = allPackages.filter((pkg) =>
             configPackages.includes(pkg),
           );

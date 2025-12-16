@@ -28,6 +28,7 @@ describe('installPackagesHandler', () => {
     mockPackmindCliHexa = {
       listPackages: jest.fn(),
       getPackageBySlug: jest.fn(),
+      configExists: jest.fn(),
       readConfig: jest.fn(),
       writeConfig: jest.fn(),
       installPackages: jest.fn(),
@@ -178,8 +179,23 @@ describe('installPackagesHandler', () => {
       });
     });
 
-    describe('when no packages provided and no config', () => {
-      it('displays help and exits with 0', async () => {
+    describe('when no packages provided and no config file', () => {
+      it('displays help with "not found" message and exits with 0', async () => {
+        mockPackmindCliHexa.configExists.mockResolvedValue(false);
+        mockPackmindCliHexa.readConfig.mockResolvedValue([]);
+
+        await installPackagesHandler({ packagesSlugs: [] }, deps);
+
+        expect(mockLog).toHaveBeenCalledWith(
+          'Usage: packmind-cli install <package-slug> [package-slug...]',
+        );
+        expect(mockExit).toHaveBeenCalledWith(0);
+      });
+    });
+
+    describe('when no packages provided and config file is empty', () => {
+      it('displays help with "is empty" message and exits with 0', async () => {
+        mockPackmindCliHexa.configExists.mockResolvedValue(true);
         mockPackmindCliHexa.readConfig.mockResolvedValue([]);
 
         await installPackagesHandler({ packagesSlugs: [] }, deps);
@@ -193,6 +209,7 @@ describe('installPackagesHandler', () => {
 
     describe('when install succeeds with no file changes', () => {
       it('does not notify distribution', async () => {
+        mockPackmindCliHexa.configExists.mockResolvedValue(true);
         mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
         mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 0,
@@ -215,6 +232,7 @@ describe('installPackagesHandler', () => {
 
     describe('when install succeeds with file changes but not in git repo', () => {
       it('does not notify distribution', async () => {
+        mockPackmindCliHexa.configExists.mockResolvedValue(true);
         mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
         mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 2,
@@ -238,6 +256,7 @@ describe('installPackagesHandler', () => {
 
     describe('when install succeeds with file changes in git repo', () => {
       beforeEach(() => {
+        mockPackmindCliHexa.configExists.mockResolvedValue(true);
         mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
         mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 2,
@@ -316,6 +335,7 @@ describe('installPackagesHandler', () => {
 
     describe('when pull fails with 404 error', () => {
       it('displays package not found error and exits with 1', async () => {
+        mockPackmindCliHexa.configExists.mockResolvedValue(false);
         mockPackmindCliHexa.readConfig.mockResolvedValue([]);
         const error = new Error('Package not found') as Error & {
           statusCode: number;
@@ -335,6 +355,7 @@ describe('installPackagesHandler', () => {
 
     describe('when pull has errors in result', () => {
       it('displays errors and exits with 1', async () => {
+        mockPackmindCliHexa.configExists.mockResolvedValue(true);
         mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
         mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 1,
@@ -361,6 +382,7 @@ describe('installPackagesHandler', () => {
 
     describe('when initializing new config', () => {
       it('logs initialization message', async () => {
+        mockPackmindCliHexa.configExists.mockResolvedValue(false);
         mockPackmindCliHexa.readConfig.mockResolvedValue([]);
         mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 1,
@@ -380,6 +402,7 @@ describe('installPackagesHandler', () => {
 
     describe('when updating existing config', () => {
       it('does not log initialization message', async () => {
+        mockPackmindCliHexa.configExists.mockResolvedValue(true);
         mockPackmindCliHexa.readConfig.mockResolvedValue(['frontend']);
         mockPackmindCliHexa.installPackages.mockResolvedValue({
           filesCreated: 1,
@@ -401,6 +424,7 @@ describe('installPackagesHandler', () => {
 
     describe('when merging config and cli packages', () => {
       it('deduplicates packages', async () => {
+        mockPackmindCliHexa.configExists.mockResolvedValue(true);
         mockPackmindCliHexa.readConfig.mockResolvedValue([
           'backend',
           'frontend',

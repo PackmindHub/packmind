@@ -29,6 +29,16 @@ export class ConfigFileRepository {
     await fs.writeFile(configPath, configContent, 'utf-8');
   }
 
+  async configExists(baseDirectory: string): Promise<boolean> {
+    const configPath = path.join(baseDirectory, this.CONFIG_FILENAME);
+    try {
+      await fs.access(configPath);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   async readConfig(baseDirectory: string): Promise<PackmindFileConfig | null> {
     const configPath = path.join(baseDirectory, this.CONFIG_FILENAME);
 
