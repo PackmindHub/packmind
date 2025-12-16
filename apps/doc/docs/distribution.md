@@ -19,7 +19,7 @@ Here is an overview of the supported agents:
 | **Claude Code**    | Updates instructions file        | `CLAUDE.md`                       |
 | **Junie**          | Updates guidelines file          | `.junie/guidelines.md`            |
 | **Gitlab Duo**     | Updates chat rules file          | `.gitlab/duo/chat-rules.md`       |
-| **Continue**       | Creates rules in Markdown format | `.continue/rules/`                |
+| **Continue**       | Creates rules in Markdown format | `.continue/rules/packmind/`       |
 
 When you distribute standards or recipes, only the enabled agents will receive updates. The Packmind renderer is always active and creates files in the `.packmind/` directory that are used by other agents.
 

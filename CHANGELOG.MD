@@ -3,6 +3,7 @@
 ## Added
 
 - Track distribution of packages installed using the command line #38
+- Support rendering for Continue.dev #52
 
 ## Changed
 

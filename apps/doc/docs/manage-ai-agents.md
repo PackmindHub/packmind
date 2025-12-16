@@ -29,7 +29,7 @@ When you distribute standards or recipes, only the enabled agents will have thei
 | **Claude Code**    | `CLAUDE.md`                       | Yes              |
 | **Junie**          | `.junie/guidelines.md`            | Yes              |
 | **Gitlab Duo**     | `.gitlab/duo/chat-rules.md`       | Yes              |
-| **Continue**       | `.continue/rules/`                | Yes              |
+| **Continue**       | `.continue/rules/packmind/`       | Yes              |
 
 :::info
 The **Packmind** renderer cannot be disabled. It creates internal files in the `.packmind/` directory that are used by Packmind and other agents to function properly.

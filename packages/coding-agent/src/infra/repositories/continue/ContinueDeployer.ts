@@ -17,7 +17,7 @@ const origin = 'ContinueDeployer';
 
 export class ContinueDeployer implements ICodingAgentDeployer {
   private static readonly RECIPES_INDEX_PATH =
-    '.continue/rules/packmind-recipes-index.md';
+    '.continue/rules/packmind/recipes-index.md';
   private readonly logger: PackmindLogger;
 
   constructor(
@@ -314,13 +314,10 @@ ${packmindInstructions}`;
       GenericStandardSectionWriter.formatStandardContent({
         standardVersion,
         rules,
-        link: `../../.packmind/standards/${standardVersion.slug}.md`,
+        link: `../../../.packmind/standards/${standardVersion.slug}.md`,
       });
 
-    const summary =
-      GenericStandardSectionWriter.extractSummaryOrDescription(
-        standardVersion,
-      ) ?? standardVersion.name;
+    const summary = standardVersion.summary?.trim() || standardVersion.name;
 
     let frontmatter: string;
 
@@ -345,7 +342,7 @@ description: ${summary}
 
 ${instructionContent}`;
 
-    const path = `.continue/rules/packmind-standard-${standardVersion.slug}.md`;
+    const path = `.continue/rules/packmind/standard-${standardVersion.slug}.md`;
 
     return {
       path,
