@@ -5,10 +5,20 @@ import { UIProvider } from '@packmind/ui';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router';
 import { OnboardingSteps } from './OnboardingSteps';
-import { useCreateCliLoginCodeMutation } from '../api/queries/AuthQueries';
+import {
+  useCreateCliLoginCodeMutation,
+  useGetCurrentApiKeyQuery,
+  useGenerateApiKeyMutation,
+  useGetMcpTokenMutation,
+  useGetMcpURLQuery,
+} from '../api/queries/AuthQueries';
 
 jest.mock('../api/queries/AuthQueries', () => ({
   useCreateCliLoginCodeMutation: jest.fn(),
+  useGetCurrentApiKeyQuery: jest.fn(),
+  useGenerateApiKeyMutation: jest.fn(),
+  useGetMcpTokenMutation: jest.fn(),
+  useGetMcpURLQuery: jest.fn(),
 }));
 
 jest.mock('../hooks/useAuthContext', () => ({
@@ -18,6 +28,10 @@ jest.mock('../hooks/useAuthContext', () => ({
       name: 'Test Organization',
       slug: 'test-org',
       role: 'ADMIN',
+    },
+    user: {
+      id: 'user-1',
+      email: 'test@example.com',
     },
   }),
 }));
@@ -30,6 +44,13 @@ jest.mock('../../../shared/components/inputs', () => ({
     value: string;
     [key: string]: unknown;
   }) => <textarea value={value} readOnly {...props} />,
+  CopiableTextField: ({
+    value,
+    ...props
+  }: {
+    value: string;
+    [key: string]: unknown;
+  }) => <input type="text" value={value} readOnly {...props} />,
 }));
 
 const renderWithProviders = (component: React.ReactElement) => {
@@ -57,6 +78,25 @@ describe('OnboardingSteps', () => {
       typeof useCreateCliLoginCodeMutation
     >;
 
+  const mockUseGetCurrentApiKeyQuery =
+    useGetCurrentApiKeyQuery as jest.MockedFunction<
+      typeof useGetCurrentApiKeyQuery
+    >;
+
+  const mockUseGenerateApiKeyMutation =
+    useGenerateApiKeyMutation as jest.MockedFunction<
+      typeof useGenerateApiKeyMutation
+    >;
+
+  const mockUseGetMcpTokenMutation =
+    useGetMcpTokenMutation as jest.MockedFunction<
+      typeof useGetMcpTokenMutation
+    >;
+
+  const mockUseGetMcpURLQuery = useGetMcpURLQuery as jest.MockedFunction<
+    typeof useGetMcpURLQuery
+  >;
+
   const defaultMutationResult = {
     mutate: jest.fn(),
     mutateAsync: jest.fn(),
@@ -76,10 +116,47 @@ describe('OnboardingSteps', () => {
     isPaused: false,
   };
 
+  const defaultQueryResult = {
+    data: undefined,
+    isLoading: false,
+    isError: false,
+    isSuccess: false,
+    error: null,
+    status: 'idle' as const,
+    refetch: jest.fn(),
+    isFetching: false,
+    isPending: false,
+    isRefetching: false,
+    isLoadingError: false,
+    isRefetchError: false,
+    dataUpdatedAt: 0,
+    errorUpdatedAt: 0,
+    failureCount: 0,
+    failureReason: null,
+    errorUpdateCount: 0,
+    isFetched: false,
+    isFetchedAfterMount: false,
+    isPlaceholderData: false,
+    isStale: false,
+    isPaused: false,
+  };
+
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseCreateCliLoginCodeMutation.mockReturnValue(
       defaultMutationResult as ReturnType<typeof useCreateCliLoginCodeMutation>,
+    );
+    mockUseGetCurrentApiKeyQuery.mockReturnValue(
+      defaultQueryResult as ReturnType<typeof useGetCurrentApiKeyQuery>,
+    );
+    mockUseGenerateApiKeyMutation.mockReturnValue(
+      defaultMutationResult as ReturnType<typeof useGenerateApiKeyMutation>,
+    );
+    mockUseGetMcpTokenMutation.mockReturnValue(
+      defaultMutationResult as ReturnType<typeof useGetMcpTokenMutation>,
+    );
+    mockUseGetMcpURLQuery.mockReturnValue(
+      defaultQueryResult as ReturnType<typeof useGetMcpURLQuery>,
     );
   });
 
