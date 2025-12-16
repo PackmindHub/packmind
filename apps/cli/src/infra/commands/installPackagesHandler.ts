@@ -669,7 +669,9 @@ export async function uninstallPackagesHandler(
 
   // Read existing config
   let configPackages: string[];
+  let configFileExists = false;
   try {
+    configFileExists = await packmindCliHexa.configExists(cwd);
     configPackages = await packmindCliHexa.readConfig(cwd);
   } catch (err) {
     error('❌ Failed to read packmind.json');
@@ -686,9 +688,13 @@ export async function uninstallPackagesHandler(
     };
   }
 
-  // Check if config exists
+  // Check if config exists or is empty
   if (configPackages.length === 0) {
-    error('❌ No packmind.json found in current directory.');
+    if (configFileExists) {
+      error('❌ packmind.json is empty.');
+    } else {
+      error('❌ No packmind.json found in current directory.');
+    }
     log('');
     log('💡 There are no packages to uninstall.');
     log('   To install packages, run: packmind-cli install <package-slug>');
