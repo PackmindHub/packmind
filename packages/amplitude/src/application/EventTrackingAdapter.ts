@@ -1,4 +1,9 @@
-import { IEventTrackingPort, UserId, OrganizationId } from '@packmind/types';
+import {
+  IEventTrackingPort,
+  UserId,
+  OrganizationId,
+  UserSignedUpPayload,
+} from '@packmind/types';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
 import { AmplitudeTrackEventService } from './AmplitudeTrackEventService';
 import { AmplitudeNodeEvent } from '../domain/entities/AmplitudeNodeEvent';
@@ -13,6 +18,10 @@ export class EventTrackingAdapter implements IEventTrackingPort {
     this.logger = logger || new PackmindLogger(origin, LogLevel.INFO);
     this.amplitudeService = new AmplitudeTrackEventService(this.logger);
     this.logger.info('EventTrackingAdapter (proprietary version) initialized');
+  }
+
+  async identifyUser(signedUpPayload: UserSignedUpPayload): Promise<void> {
+    await this.amplitudeService.identifyUser(signedUpPayload);
   }
 
   async trackEvent(

@@ -1,8 +1,9 @@
 import { AmplitudeNodeEvent } from '../domain/entities/AmplitudeNodeEvent';
-import { track, init } from '@amplitude/analytics-node';
+import { track, init, identify, Identify } from '@amplitude/analytics-node';
 import { AmplitudeService } from '../nest-api/amplitude/amplitude.service';
 import { ServerZoneType } from '@amplitude/analytics-core/lib/esm/types/server-zone';
 import { PackmindLogger } from '@packmind/logger';
+import { UserSignedUpPayload } from '@packmind/types';
 
 const origin = 'AmplitudeTrackEventService';
 
@@ -25,6 +26,30 @@ export class AmplitudeTrackEventService {
       serverZone: config.amplitudeRegion as ServerZoneType,
     });
     this.initialized = true;
+  }
+
+  async identifyUser(signedUpPayload: UserSignedUpPayload) {
+    if (!this.configurationChecked) {
+      await this.initializeAmplitude();
+    }
+
+    if (!this.initialized) {
+      return;
+    }
+
+    this.logger.info('Identifying user', {
+      userId: signedUpPayload.userId.substring(0, 6) + '*',
+    });
+
+    const identifyObj = new Identify();
+    identifyObj.set('organizationId', signedUpPayload.organizationId);
+    if (signedUpPayload.trialMode) {
+      identifyObj.set('trialMode', signedUpPayload.trialMode);
+    }
+
+    identify(identifyObj, {
+      user_id: signedUpPayload.userId,
+    });
   }
 
   async pushEventToAmplitude(event: AmplitudeNodeEvent) {
