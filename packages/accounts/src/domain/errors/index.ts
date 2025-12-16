@@ -17,3 +17,4 @@ export { UserCannotExcludeSelfError } from './UserCannotExcludeSelfError';
 export { PasswordResetConfigurationError } from './PasswordResetConfigurationError';
 export { PasswordResetTokenNotFoundError } from './PasswordResetTokenNotFoundError';
 export { PasswordResetTokenExpiredError } from './PasswordResetTokenExpiredError';
+export { InvalidTrialActivationTokenError } from './InvalidTrialActivationTokenError';

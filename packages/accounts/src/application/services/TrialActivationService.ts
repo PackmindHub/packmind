@@ -75,4 +75,37 @@ export class TrialActivationService {
     this.logger.info('Deleting trial activation', { id: trialActivation.id });
     await this.trialActivationRepository.delete(trialActivation.id);
   }
+
+  async validateTokenForUser(
+    token: TrialActivationToken,
+    userId: UserId,
+  ): Promise<{ valid: boolean; trialActivation?: TrialActivation }> {
+    this.logger.info('Validating trial activation token for user', { userId });
+
+    const trialActivation =
+      await this.trialActivationRepository.findByToken(token);
+
+    if (!trialActivation) {
+      this.logger.info('Trial activation token not found');
+      return { valid: false };
+    }
+
+    if (trialActivation.userId !== userId) {
+      this.logger.info('Trial activation token does not belong to user', {
+        tokenUserId: trialActivation.userId,
+        requestedUserId: userId,
+      });
+      return { valid: false };
+    }
+
+    if (trialActivation.expirationDate < new Date()) {
+      this.logger.info('Trial activation token has expired', {
+        expirationDate: trialActivation.expirationDate,
+      });
+      return { valid: false };
+    }
+
+    this.logger.info('Trial activation token is valid', { userId });
+    return { valid: true, trialActivation };
+  }
 }

@@ -58,6 +58,9 @@ import {
   IGenerateTrialActivationTokenUseCase,
   GenerateTrialActivationTokenCommand,
   GenerateTrialActivationTokenResult,
+  IActivateTrialAccountUseCase,
+  ActivateTrialAccountCommand,
+  ActivateTrialAccountResult,
   IValidateInvitationTokenUseCase,
   IValidatePasswordResetTokenUseCase,
   IValidatePasswordUseCase,
@@ -95,6 +98,7 @@ import {
   SignUpWithOrganizationCommand,
 } from '../../domain/useCases';
 import { GenerateTrialActivationTokenUseCase } from '../useCases/generateTrialActivationToken/GenerateTrialActivationTokenUseCase';
+import { ActivateTrialAccountUseCase } from '../useCases/activateTrialAccount/ActivateTrialAccountUseCase';
 import { EnhancedAccountsServices } from '../services/EnhancedAccountsServices';
 import { RequestPasswordResetUseCase } from '../useCases/RequestPasswordResetUseCase';
 import { ResetPasswordUseCase } from '../useCases/ResetPasswordUseCase';
@@ -162,6 +166,7 @@ export class AccountsAdapter
   private _exchangeCliLoginCode?: IExchangeCliLoginCodeUseCase;
   private _startTrial!: IStartTrial;
   private _generateTrialActivationToken!: IGenerateTrialActivationTokenUseCase;
+  private _activateTrialAccount!: IActivateTrialAccountUseCase;
 
   constructor(
     private readonly accountsServices: EnhancedAccountsServices,
@@ -358,6 +363,14 @@ export class AccountsAdapter
           this.logger,
         );
       this.logger.debug('Generate trial activation token use case initialized');
+
+      this._activateTrialAccount = new ActivateTrialAccountUseCase(
+        trialActivationService,
+        this.accountsServices.getUserService(),
+        this.accountsServices.getOrganizationService(),
+        this.logger,
+      );
+      this.logger.debug('Activate trial account use case initialized');
     }
 
     this.logger.info('AccountsAdapter initialized successfully');
@@ -589,5 +602,16 @@ export class AccountsAdapter
       );
     }
     return this._generateTrialActivationToken.execute(command);
+  }
+
+  public async activateTrialAccount(
+    command: ActivateTrialAccountCommand,
+  ): Promise<ActivateTrialAccountResult> {
+    if (!this._activateTrialAccount) {
+      throw new Error(
+        'Trial account activation not available - missing dependencies',
+      );
+    }
+    return this._activateTrialAccount.execute(command);
   }
 }
