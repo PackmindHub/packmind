@@ -479,4 +479,339 @@ describe('PackmindDeployer', () => {
       expect(standardFile?.content).toContain('* Fetched rule 2');
     });
   });
+
+  describe('generateRemovalFileUpdates', () => {
+    describe('when recipes are removed and none remain installed', () => {
+      const removedRecipes: RecipeVersion[] = [
+        {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: createRecipeId('recipe-1'),
+          name: 'Removed Recipe',
+          slug: 'removed-recipe',
+          content: '# Removed Recipe',
+          version: 1,
+          summary: 'Removed',
+          userId: createUserId('user-1'),
+        },
+      ];
+
+      let result: FileUpdates;
+
+      beforeEach(async () => {
+        result = await deployer.generateRemovalFileUpdates(
+          {
+            recipeVersions: removedRecipes,
+            standardVersions: [],
+          },
+          {
+            recipeVersions: [],
+            standardVersions: [],
+          },
+        );
+      });
+
+      it('generates two delete entries', () => {
+        expect(result.delete).toHaveLength(2);
+      });
+
+      it('deletes the removed recipe file', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/recipes/removed-recipe.md',
+        });
+      });
+
+      it('deletes the recipes index file', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/recipes-index.md',
+        });
+      });
+
+      it('does not generate createOrUpdate entries', () => {
+        expect(result.createOrUpdate).toHaveLength(0);
+      });
+    });
+
+    describe('when recipes are removed but others remain installed', () => {
+      const removedRecipes: RecipeVersion[] = [
+        {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: createRecipeId('recipe-1'),
+          name: 'Removed Recipe',
+          slug: 'removed-recipe',
+          content: '# Removed Recipe',
+          version: 1,
+          summary: 'Removed',
+          userId: createUserId('user-1'),
+        },
+      ];
+
+      const installedRecipes: RecipeVersion[] = [
+        {
+          id: createRecipeVersionId('recipe-version-2'),
+          recipeId: createRecipeId('recipe-2'),
+          name: 'Installed Recipe',
+          slug: 'installed-recipe',
+          content: '# Installed Recipe',
+          version: 1,
+          summary: 'Installed',
+          userId: createUserId('user-1'),
+        },
+      ];
+
+      let result: FileUpdates;
+
+      beforeEach(async () => {
+        result = await deployer.generateRemovalFileUpdates(
+          {
+            recipeVersions: removedRecipes,
+            standardVersions: [],
+          },
+          {
+            recipeVersions: installedRecipes,
+            standardVersions: [],
+          },
+        );
+      });
+
+      it('generates one delete entry', () => {
+        expect(result.delete).toHaveLength(1);
+      });
+
+      it('deletes only the removed recipe file', () => {
+        expect(result.delete[0].path).toBe(
+          '.packmind/recipes/removed-recipe.md',
+        );
+      });
+
+      it('does not generate createOrUpdate entries', () => {
+        expect(result.createOrUpdate).toHaveLength(0);
+      });
+    });
+
+    describe('when standards are removed and none remain installed', () => {
+      const removedStandards: StandardVersion[] = [
+        {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: createStandardId('standard-1'),
+          name: 'Removed Standard',
+          slug: 'removed-standard',
+          description: 'Removed',
+          version: 1,
+          summary: 'Removed',
+          userId: createUserId('user-1'),
+          scope: 'test',
+        },
+      ];
+
+      let result: FileUpdates;
+
+      beforeEach(async () => {
+        result = await deployer.generateRemovalFileUpdates(
+          {
+            recipeVersions: [],
+            standardVersions: removedStandards,
+          },
+          {
+            recipeVersions: [],
+            standardVersions: [],
+          },
+        );
+      });
+
+      it('generates two delete entries', () => {
+        expect(result.delete).toHaveLength(2);
+      });
+
+      it('deletes the removed standard file', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/standards/removed-standard.md',
+        });
+      });
+
+      it('deletes the standards index file', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/standards-index.md',
+        });
+      });
+
+      it('does not generate createOrUpdate entries', () => {
+        expect(result.createOrUpdate).toHaveLength(0);
+      });
+    });
+
+    describe('when standards are removed but others remain installed', () => {
+      const removedStandards: StandardVersion[] = [
+        {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: createStandardId('standard-1'),
+          name: 'Removed Standard',
+          slug: 'removed-standard',
+          description: 'Removed',
+          version: 1,
+          summary: 'Removed',
+          userId: createUserId('user-1'),
+          scope: 'test',
+        },
+      ];
+
+      const installedStandards: StandardVersion[] = [
+        {
+          id: createStandardVersionId('standard-version-2'),
+          standardId: createStandardId('standard-2'),
+          name: 'Installed Standard',
+          slug: 'installed-standard',
+          description: 'Installed',
+          version: 1,
+          summary: 'Installed',
+          userId: createUserId('user-1'),
+          scope: 'test',
+        },
+      ];
+
+      let result: FileUpdates;
+
+      beforeEach(async () => {
+        result = await deployer.generateRemovalFileUpdates(
+          {
+            recipeVersions: [],
+            standardVersions: removedStandards,
+          },
+          {
+            recipeVersions: [],
+            standardVersions: installedStandards,
+          },
+        );
+      });
+
+      it('generates one delete entry', () => {
+        expect(result.delete).toHaveLength(1);
+      });
+
+      it('deletes only the removed standard file', () => {
+        expect(result.delete[0].path).toBe(
+          '.packmind/standards/removed-standard.md',
+        );
+      });
+
+      it('does not generate createOrUpdate entries', () => {
+        expect(result.createOrUpdate).toHaveLength(0);
+      });
+    });
+
+    describe('when all recipes and standards are removed and none remain installed', () => {
+      const removedRecipes: RecipeVersion[] = [
+        {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: createRecipeId('recipe-1'),
+          name: 'Removed Recipe 1',
+          slug: 'removed-recipe-1',
+          content: '# Removed Recipe 1',
+          version: 1,
+          summary: 'Removed',
+          userId: createUserId('user-1'),
+        },
+        {
+          id: createRecipeVersionId('recipe-version-2'),
+          recipeId: createRecipeId('recipe-2'),
+          name: 'Removed Recipe 2',
+          slug: 'removed-recipe-2',
+          content: '# Removed Recipe 2',
+          version: 1,
+          summary: 'Removed',
+          userId: createUserId('user-1'),
+        },
+      ];
+      const removedStandards: StandardVersion[] = [
+        {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: createStandardId('standard-1'),
+          name: 'Removed Standard',
+          slug: 'removed-standard',
+          description: 'Removed',
+          version: 1,
+          summary: 'Removed',
+          userId: createUserId('user-1'),
+          scope: 'test',
+        },
+      ];
+
+      let result: FileUpdates;
+
+      beforeEach(async () => {
+        result = await deployer.generateRemovalFileUpdates(
+          {
+            recipeVersions: removedRecipes,
+            standardVersions: removedStandards,
+          },
+          {
+            recipeVersions: [],
+            standardVersions: [],
+          },
+        );
+      });
+
+      it('generates five delete entries', () => {
+        expect(result.delete).toHaveLength(5);
+      });
+
+      it('deletes the first removed recipe file', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/recipes/removed-recipe-1.md',
+        });
+      });
+
+      it('deletes the second removed recipe file', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/recipes/removed-recipe-2.md',
+        });
+      });
+
+      it('deletes the recipes index file', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/recipes-index.md',
+        });
+      });
+
+      it('deletes the removed standard file', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/standards/removed-standard.md',
+        });
+      });
+
+      it('deletes the standards index file', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/standards-index.md',
+        });
+      });
+
+      it('does not generate createOrUpdate entries', () => {
+        expect(result.createOrUpdate).toHaveLength(0);
+      });
+    });
+
+    describe('when no artifacts are removed', () => {
+      let result: FileUpdates;
+
+      beforeEach(async () => {
+        result = await deployer.generateRemovalFileUpdates(
+          {
+            recipeVersions: [],
+            standardVersions: [],
+          },
+          {
+            recipeVersions: [],
+            standardVersions: [],
+          },
+        );
+      });
+
+      it('does not generate createOrUpdate entries', () => {
+        expect(result.createOrUpdate).toHaveLength(0);
+      });
+
+      it('does not generate delete entries', () => {
+        expect(result.delete).toHaveLength(0);
+      });
+    });
+  });
 });

@@ -270,6 +270,61 @@ export class PackmindDeployer implements ICodingAgentDeployer {
     return fileUpdates;
   }
 
+  async generateRemovalFileUpdates(
+    removed: {
+      recipeVersions: RecipeVersion[];
+      standardVersions: StandardVersion[];
+    },
+    installed: {
+      recipeVersions: RecipeVersion[];
+      standardVersions: StandardVersion[];
+    },
+  ): Promise<FileUpdates> {
+    this.logger.info('Generating removal file updates for Packmind', {
+      removedRecipesCount: removed.recipeVersions.length,
+      removedStandardsCount: removed.standardVersions.length,
+      installedRecipesCount: installed.recipeVersions.length,
+      installedStandardsCount: installed.standardVersions.length,
+    });
+
+    const fileUpdates: FileUpdates = {
+      createOrUpdate: [],
+      delete: [],
+    };
+
+    // Delete individual recipe files for removed recipes
+    for (const recipeVersion of removed.recipeVersions) {
+      fileUpdates.delete.push({
+        path: `.packmind/recipes/${recipeVersion.slug}.md`,
+      });
+    }
+
+    // Only delete recipes index if no recipes remain installed
+    if (
+      removed.recipeVersions.length > 0 &&
+      installed.recipeVersions.length === 0
+    ) {
+      fileUpdates.delete.push({ path: PackmindDeployer.RECIPES_INDEX_PATH });
+    }
+
+    // Delete individual standard files for removed standards
+    for (const standardVersion of removed.standardVersions) {
+      fileUpdates.delete.push({
+        path: `.packmind/standards/${standardVersion.slug}.md`,
+      });
+    }
+
+    // Only delete standards index if no standards remain installed
+    if (
+      removed.standardVersions.length > 0 &&
+      installed.standardVersions.length === 0
+    ) {
+      fileUpdates.delete.push({ path: '.packmind/standards-index.md' });
+    }
+
+    return fileUpdates;
+  }
+
   private formatStandardVersionContent(
     standardVersion: StandardVersion,
   ): string {

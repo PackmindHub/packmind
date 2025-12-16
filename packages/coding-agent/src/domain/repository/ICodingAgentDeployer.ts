@@ -23,6 +23,16 @@ export interface ICodingAgentDeployer {
   generateFileUpdatesForStandards(
     standardVersions: StandardVersion[],
   ): Promise<FileUpdates>;
+  generateRemovalFileUpdates(
+    removed: {
+      recipeVersions: RecipeVersion[];
+      standardVersions: StandardVersion[];
+    },
+    installed: {
+      recipeVersions: RecipeVersion[];
+      standardVersions: StandardVersion[];
+    },
+  ): Promise<FileUpdates>;
   deployArtifacts(
     recipeVersions: RecipeVersion[],
     standardVersions: StandardVersion[],

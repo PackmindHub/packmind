@@ -45,6 +45,7 @@ class MockDeployer implements ICodingAgentDeployer {
     private recipeResult: FileUpdates = { createOrUpdate: [], delete: [] },
     private standardResult: FileUpdates = { createOrUpdate: [], delete: [] },
     private artifactsResult: FileUpdates = { createOrUpdate: [], delete: [] },
+    private removalResult: FileUpdates = { createOrUpdate: [], delete: [] },
   ) {}
 
   async deployRecipes(
@@ -81,6 +82,21 @@ class MockDeployer implements ICodingAgentDeployer {
     standardVersions: StandardVersion[],
   ): Promise<FileUpdates> {
     return this.standardResult;
+  }
+
+  async generateRemovalFileUpdates(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    removed: {
+      recipeVersions: RecipeVersion[];
+      standardVersions: StandardVersion[];
+    },
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    installed: {
+      recipeVersions: RecipeVersion[];
+      standardVersions: StandardVersion[];
+    },
+  ): Promise<FileUpdates> {
+    return this.removalResult;
   }
 
   async deployArtifacts(

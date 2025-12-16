@@ -313,6 +313,59 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
     return fileUpdates;
   }
 
+  async generateRemovalFileUpdates(
+    removed: {
+      recipeVersions: RecipeVersion[];
+      standardVersions: StandardVersion[];
+    },
+    installed: {
+      recipeVersions: RecipeVersion[];
+      standardVersions: StandardVersion[];
+    },
+  ): Promise<FileUpdates> {
+    this.logger.info(
+      `Generating removal file updates for ${this.config.agentName}`,
+      {
+        removedRecipesCount: removed.recipeVersions.length,
+        removedStandardsCount: removed.standardVersions.length,
+        installedRecipesCount: installed.recipeVersions.length,
+        installedStandardsCount: installed.standardVersions.length,
+      },
+    );
+
+    const fileUpdates: FileUpdates = {
+      createOrUpdate: [],
+      delete: [],
+    };
+
+    const sections: { key: string; content: string }[] = [];
+
+    // Only clear recipes section if there are removed recipes AND no remaining installed recipes
+    if (
+      removed.recipeVersions.length > 0 &&
+      installed.recipeVersions.length === 0
+    ) {
+      sections.push({ key: 'Packmind recipes', content: '' });
+    }
+
+    // Only clear standards section if there are removed standards AND no remaining installed standards
+    if (
+      removed.standardVersions.length > 0 &&
+      installed.standardVersions.length === 0
+    ) {
+      sections.push({ key: 'Packmind standards', content: '' });
+    }
+
+    if (sections.length > 0) {
+      fileUpdates.createOrUpdate.push({
+        path: this.config.filePath,
+        sections,
+      });
+    }
+
+    return fileUpdates;
+  }
+
   private async getExistingContent(
     gitRepo: GitRepo,
     target: Target,
