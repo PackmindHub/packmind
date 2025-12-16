@@ -17,6 +17,7 @@ export type AnalyticsEventMap = {
   mcp_configuration_card_clicked: {
     agent: string;
   };
+  cli_login_done: Record<string, never>;
 };
 
 export type AnalyticsEventName = keyof AnalyticsEventMap;
