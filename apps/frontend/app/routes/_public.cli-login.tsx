@@ -18,6 +18,7 @@ import { LuCopy } from 'react-icons/lu';
 import { useGetMeQuery } from '../../src/domain/accounts/api/queries';
 import { AuthGatewayApi } from '../../src/domain/accounts/api/gateways/AuthGatewayApi';
 import { routes } from '../../src/shared/utils/routes';
+import { useAnalytics } from '@packmind/proprietary/frontend/domain/amplitude/providers/AnalyticsProvider';
 
 type CallbackStatus = 'idle' | 'connecting' | 'success' | 'error';
 
@@ -31,6 +32,7 @@ export default function CliLoginRoute() {
   const [callbackStatus, setCallbackStatus] = useState<CallbackStatus>('idle');
 
   const callbackUrl = searchParams.get('callback_url');
+  const analytics = useAnalytics();
 
   // Check authentication status
   const { data: me, isLoading: authLoading } = useGetMeQuery();
@@ -77,6 +79,7 @@ export default function CliLoginRoute() {
           `${callbackUrl}?code=${encodeURIComponent(code)}`,
         );
         if (response.ok) {
+          analytics.track('cli_login_done', {});
           setCallbackStatus('success');
         } else {
           setCallbackStatus('error');
@@ -86,7 +89,7 @@ export default function CliLoginRoute() {
       }
     }
     sendToCallback();
-  }, [code, callbackUrl]);
+  }, [code, callbackUrl, analytics]);
 
   const formatExpiresAt = (date: Date) => {
     const minutes = Math.ceil((date.getTime() - Date.now()) / 60000);
