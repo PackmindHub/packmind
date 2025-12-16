@@ -189,6 +189,48 @@ export class CopilotDeployer implements ICodingAgentDeployer {
     return fileUpdates;
   }
 
+  async generateRemovalFileUpdates(
+    removed: {
+      recipeVersions: RecipeVersion[];
+      standardVersions: StandardVersion[];
+    },
+    installed: {
+      recipeVersions: RecipeVersion[];
+      standardVersions: StandardVersion[];
+    },
+  ): Promise<FileUpdates> {
+    this.logger.info('Generating removal file updates for GitHub Copilot', {
+      removedRecipesCount: removed.recipeVersions.length,
+      removedStandardsCount: removed.standardVersions.length,
+      installedRecipesCount: installed.recipeVersions.length,
+      installedStandardsCount: installed.standardVersions.length,
+    });
+
+    const fileUpdates: FileUpdates = {
+      createOrUpdate: [],
+      delete: [],
+    };
+
+    // Only delete recipes index file if no recipes remain installed
+    if (
+      removed.recipeVersions.length > 0 &&
+      installed.recipeVersions.length === 0
+    ) {
+      fileUpdates.delete.push({
+        path: CopilotDeployer.RECIPES_INDEX_PATH,
+      });
+    }
+
+    // Delete individual Copilot configuration files for removed standards
+    for (const standardVersion of removed.standardVersions) {
+      fileUpdates.delete.push({
+        path: `.github/instructions/packmind-${standardVersion.slug}.instructions.md`,
+      });
+    }
+
+    return fileUpdates;
+  }
+
   /**
    * Generate content with recipe instructions without target/repo context
    */

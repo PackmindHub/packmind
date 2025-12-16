@@ -575,4 +575,319 @@ describe('SingleFileDeployer', () => {
       expect(standardsSection!.content).not.toMatch(/:\s*null\n/);
     });
   });
+
+  describe('generateRemovalFileUpdates', () => {
+    describe('when all recipes are removed and none remain installed', () => {
+      const removedRecipes: RecipeVersion[] = [
+        {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: createRecipeId('recipe-1'),
+          name: 'Removed Recipe',
+          slug: 'removed-recipe',
+          content: '# Removed Recipe',
+          version: 1,
+          summary: 'Removed',
+          userId: createUserId('user-1'),
+        },
+      ];
+
+      let result: FileUpdates;
+
+      beforeEach(async () => {
+        result = await deployer.generateRemovalFileUpdates(
+          {
+            recipeVersions: removedRecipes,
+            standardVersions: [],
+          },
+          {
+            recipeVersions: [],
+            standardVersions: [],
+          },
+        );
+      });
+
+      it('generates one createOrUpdate entry', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
+
+      it('targets the correct agent file', () => {
+        expect(result.createOrUpdate[0].path).toBe('TEST_AGENT.md');
+      });
+
+      it('generates one section update', () => {
+        expect(result.createOrUpdate[0].sections).toHaveLength(1);
+      });
+
+      it('targets the Packmind recipes section', () => {
+        expect(result.createOrUpdate[0].sections![0].key).toBe(
+          'Packmind recipes',
+        );
+      });
+
+      it('sets the section content to empty', () => {
+        expect(result.createOrUpdate[0].sections![0].content).toBe('');
+      });
+
+      it('does not generate delete entries', () => {
+        expect(result.delete).toHaveLength(0);
+      });
+    });
+
+    describe('when recipes are removed but others remain installed', () => {
+      const removedRecipes: RecipeVersion[] = [
+        {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: createRecipeId('recipe-1'),
+          name: 'Removed Recipe',
+          slug: 'removed-recipe',
+          content: '# Removed Recipe',
+          version: 1,
+          summary: 'Removed',
+          userId: createUserId('user-1'),
+        },
+      ];
+
+      const installedRecipes: RecipeVersion[] = [
+        {
+          id: createRecipeVersionId('recipe-version-2'),
+          recipeId: createRecipeId('recipe-2'),
+          name: 'Installed Recipe',
+          slug: 'installed-recipe',
+          content: '# Installed Recipe',
+          version: 1,
+          summary: 'Installed',
+          userId: createUserId('user-1'),
+        },
+      ];
+
+      let result: FileUpdates;
+
+      beforeEach(async () => {
+        result = await deployer.generateRemovalFileUpdates(
+          {
+            recipeVersions: removedRecipes,
+            standardVersions: [],
+          },
+          {
+            recipeVersions: installedRecipes,
+            standardVersions: [],
+          },
+        );
+      });
+
+      it('does not generate createOrUpdate entries', () => {
+        expect(result.createOrUpdate).toHaveLength(0);
+      });
+
+      it('does not generate delete entries', () => {
+        expect(result.delete).toHaveLength(0);
+      });
+    });
+
+    describe('when all standards are removed and none remain installed', () => {
+      const removedStandards: StandardVersion[] = [
+        {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: createStandardId('standard-1'),
+          name: 'Removed Standard',
+          slug: 'removed-standard',
+          description: 'Removed',
+          version: 1,
+          summary: 'Removed',
+          userId: createUserId('user-1'),
+          scope: 'test',
+        },
+      ];
+
+      let result: FileUpdates;
+
+      beforeEach(async () => {
+        result = await deployer.generateRemovalFileUpdates(
+          {
+            recipeVersions: [],
+            standardVersions: removedStandards,
+          },
+          {
+            recipeVersions: [],
+            standardVersions: [],
+          },
+        );
+      });
+
+      it('generates one createOrUpdate entry', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
+
+      it('targets the correct agent file', () => {
+        expect(result.createOrUpdate[0].path).toBe('TEST_AGENT.md');
+      });
+
+      it('generates one section update', () => {
+        expect(result.createOrUpdate[0].sections).toHaveLength(1);
+      });
+
+      it('targets the Packmind standards section', () => {
+        expect(result.createOrUpdate[0].sections![0].key).toBe(
+          'Packmind standards',
+        );
+      });
+
+      it('sets the section content to empty', () => {
+        expect(result.createOrUpdate[0].sections![0].content).toBe('');
+      });
+
+      it('does not generate delete entries', () => {
+        expect(result.delete).toHaveLength(0);
+      });
+    });
+
+    describe('when standards are removed but others remain installed', () => {
+      const removedStandards: StandardVersion[] = [
+        {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: createStandardId('standard-1'),
+          name: 'Removed Standard',
+          slug: 'removed-standard',
+          description: 'Removed',
+          version: 1,
+          summary: 'Removed',
+          userId: createUserId('user-1'),
+          scope: 'test',
+        },
+      ];
+
+      const installedStandards: StandardVersion[] = [
+        {
+          id: createStandardVersionId('standard-version-2'),
+          standardId: createStandardId('standard-2'),
+          name: 'Installed Standard',
+          slug: 'installed-standard',
+          description: 'Installed',
+          version: 1,
+          summary: 'Installed',
+          userId: createUserId('user-1'),
+          scope: 'test',
+        },
+      ];
+
+      let result: FileUpdates;
+
+      beforeEach(async () => {
+        result = await deployer.generateRemovalFileUpdates(
+          {
+            recipeVersions: [],
+            standardVersions: removedStandards,
+          },
+          {
+            recipeVersions: [],
+            standardVersions: installedStandards,
+          },
+        );
+      });
+
+      it('does not generate createOrUpdate entries', () => {
+        expect(result.createOrUpdate).toHaveLength(0);
+      });
+
+      it('does not generate delete entries', () => {
+        expect(result.delete).toHaveLength(0);
+      });
+    });
+
+    describe('when all recipes and standards are removed and none remain installed', () => {
+      const removedRecipes: RecipeVersion[] = [
+        {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: createRecipeId('recipe-1'),
+          name: 'Removed Recipe',
+          slug: 'removed-recipe',
+          content: '# Removed Recipe',
+          version: 1,
+          summary: 'Removed',
+          userId: createUserId('user-1'),
+        },
+      ];
+      const removedStandards: StandardVersion[] = [
+        {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: createStandardId('standard-1'),
+          name: 'Removed Standard',
+          slug: 'removed-standard',
+          description: 'Removed',
+          version: 1,
+          summary: 'Removed',
+          userId: createUserId('user-1'),
+          scope: 'test',
+        },
+      ];
+
+      let result: FileUpdates;
+
+      beforeEach(async () => {
+        result = await deployer.generateRemovalFileUpdates(
+          {
+            recipeVersions: removedRecipes,
+            standardVersions: removedStandards,
+          },
+          {
+            recipeVersions: [],
+            standardVersions: [],
+          },
+        );
+      });
+
+      it('generates one createOrUpdate entry', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
+      });
+
+      it('generates two section updates', () => {
+        expect(result.createOrUpdate[0].sections).toHaveLength(2);
+      });
+
+      it('targets the Packmind recipes section first', () => {
+        expect(result.createOrUpdate[0].sections![0].key).toBe(
+          'Packmind recipes',
+        );
+      });
+
+      it('sets the recipes section content to empty', () => {
+        expect(result.createOrUpdate[0].sections![0].content).toBe('');
+      });
+
+      it('targets the Packmind standards section second', () => {
+        expect(result.createOrUpdate[0].sections![1].key).toBe(
+          'Packmind standards',
+        );
+      });
+
+      it('sets the standards section content to empty', () => {
+        expect(result.createOrUpdate[0].sections![1].content).toBe('');
+      });
+    });
+
+    describe('when no artifacts are removed', () => {
+      let result: FileUpdates;
+
+      beforeEach(async () => {
+        result = await deployer.generateRemovalFileUpdates(
+          {
+            recipeVersions: [],
+            standardVersions: [],
+          },
+          {
+            recipeVersions: [],
+            standardVersions: [],
+          },
+        );
+      });
+
+      it('does not generate createOrUpdate entries', () => {
+        expect(result.createOrUpdate).toHaveLength(0);
+      });
+
+      it('does not generate delete entries', () => {
+        expect(result.delete).toHaveLength(0);
+      });
+    });
+  });
 });

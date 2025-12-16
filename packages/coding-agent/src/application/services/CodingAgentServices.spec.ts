@@ -286,34 +286,11 @@ describe('CodingAgentServices', () => {
       ).rejects.toThrow('Rendering failed');
     });
 
-    it('generates deletion paths for removed recipes', async () => {
+    describe('when recipes are removed', () => {
       const mockFileUpdates: FileUpdates = {
         createOrUpdate: [{ path: 'CLAUDE.md', content: 'test content' }],
         delete: [],
       };
-
-      mockDeployerService.aggregateArtifactRendering.mockResolvedValue(
-        mockFileUpdates,
-      );
-
-      const mockDeployer = {
-        generateFileUpdatesForRecipes: jest.fn().mockResolvedValue({
-          createOrUpdate: [
-            { path: '.packmind/recipes/removed-recipe.md', content: '' },
-          ],
-          delete: [],
-        }),
-        generateFileUpdatesForStandards: jest.fn().mockResolvedValue({
-          createOrUpdate: [],
-          delete: [],
-        }),
-      };
-
-      mockDeployerService.getDeployerForAgent.mockReturnValue(
-        mockDeployer as unknown as ReturnType<
-          DeployerService['getDeployerForAgent']
-        >,
-      );
 
       const removedRecipe: RecipeVersion = {
         id: 'recipe-version-removed' as RecipeVersionId,
@@ -326,58 +303,77 @@ describe('CodingAgentServices', () => {
         userId: 'user-1' as UserId,
       };
 
-      const result = await service.renderArtifacts(
-        {
-          recipeVersions: mockRecipeVersions,
-          standardVersions: mockStandardVersions,
-        },
-        {
-          recipeVersions: [removedRecipe],
-          standardVersions: [],
-        },
-        ['claude'],
-        new Map(),
-      );
-
-      expect(mockDeployerService.getDeployerForAgent).toHaveBeenCalledWith(
-        'claude',
-      );
-      expect(mockDeployer.generateFileUpdatesForRecipes).toHaveBeenCalledWith([
-        removedRecipe,
-      ]);
-      expect(result.delete).toContainEqual({
-        path: '.packmind/recipes/removed-recipe.md',
-      });
-    });
-
-    it('generates deletion paths for removed standards', async () => {
-      const mockFileUpdates: FileUpdates = {
-        createOrUpdate: [{ path: 'CLAUDE.md', content: 'test content' }],
-        delete: [],
-      };
-
-      mockDeployerService.aggregateArtifactRendering.mockResolvedValue(
-        mockFileUpdates,
-      );
-
       const mockDeployer = {
-        generateFileUpdatesForRecipes: jest.fn().mockResolvedValue({
-          createOrUpdate: [],
-          delete: [],
-        }),
-        generateFileUpdatesForStandards: jest.fn().mockResolvedValue({
+        generateRemovalFileUpdates: jest.fn().mockResolvedValue({
           createOrUpdate: [
-            { path: '.packmind/standards/removed-standard.md', content: '' },
+            {
+              path: 'CLAUDE.md',
+              sections: [{ key: 'Packmind recipes', content: '' }],
+            },
           ],
           delete: [],
         }),
       };
 
-      mockDeployerService.getDeployerForAgent.mockReturnValue(
-        mockDeployer as unknown as ReturnType<
-          DeployerService['getDeployerForAgent']
-        >,
-      );
+      let result: FileUpdates;
+
+      beforeEach(async () => {
+        mockDeployerService.aggregateArtifactRendering.mockResolvedValue(
+          mockFileUpdates,
+        );
+
+        mockDeployerService.getDeployerForAgent.mockReturnValue(
+          mockDeployer as unknown as ReturnType<
+            DeployerService['getDeployerForAgent']
+          >,
+        );
+
+        result = await service.renderArtifacts(
+          {
+            recipeVersions: mockRecipeVersions,
+            standardVersions: mockStandardVersions,
+          },
+          {
+            recipeVersions: [removedRecipe],
+            standardVersions: [],
+          },
+          ['claude'],
+          new Map(),
+        );
+      });
+
+      it('retrieves the deployer for the agent', () => {
+        expect(mockDeployerService.getDeployerForAgent).toHaveBeenCalledWith(
+          'claude',
+        );
+      });
+
+      it('calls generateRemovalFileUpdates with removed recipes', () => {
+        expect(mockDeployer.generateRemovalFileUpdates).toHaveBeenCalledWith(
+          {
+            recipeVersions: [removedRecipe],
+            standardVersions: [],
+          },
+          {
+            recipeVersions: mockRecipeVersions,
+            standardVersions: mockStandardVersions,
+          },
+        );
+      });
+
+      it('includes removal updates in the result', () => {
+        expect(result.createOrUpdate).toContainEqual({
+          path: 'CLAUDE.md',
+          sections: [{ key: 'Packmind recipes', content: '' }],
+        });
+      });
+    });
+
+    describe('when standards are removed', () => {
+      const mockFileUpdates: FileUpdates = {
+        createOrUpdate: [{ path: 'CLAUDE.md', content: 'test content' }],
+        delete: [],
+      };
 
       const removedStandard: StandardVersion = {
         id: 'standard-version-removed' as StandardVersionId,
@@ -391,58 +387,77 @@ describe('CodingAgentServices', () => {
         scope: 'test',
       };
 
-      const result = await service.renderArtifacts(
-        {
-          recipeVersions: mockRecipeVersions,
-          standardVersions: mockStandardVersions,
-        },
-        {
-          recipeVersions: [],
-          standardVersions: [removedStandard],
-        },
-        ['claude'],
-        new Map(),
-      );
+      const mockDeployer = {
+        generateRemovalFileUpdates: jest.fn().mockResolvedValue({
+          createOrUpdate: [
+            {
+              path: 'CLAUDE.md',
+              sections: [{ key: 'Packmind standards', content: '' }],
+            },
+          ],
+          delete: [],
+        }),
+      };
 
-      expect(mockDeployerService.getDeployerForAgent).toHaveBeenCalledWith(
-        'claude',
-      );
-      expect(mockDeployer.generateFileUpdatesForStandards).toHaveBeenCalledWith(
-        [removedStandard],
-      );
-      expect(result.delete).toContainEqual({
-        path: '.packmind/standards/removed-standard.md',
+      let result: FileUpdates;
+
+      beforeEach(async () => {
+        mockDeployerService.aggregateArtifactRendering.mockResolvedValue(
+          mockFileUpdates,
+        );
+
+        mockDeployerService.getDeployerForAgent.mockReturnValue(
+          mockDeployer as unknown as ReturnType<
+            DeployerService['getDeployerForAgent']
+          >,
+        );
+
+        result = await service.renderArtifacts(
+          {
+            recipeVersions: mockRecipeVersions,
+            standardVersions: mockStandardVersions,
+          },
+          {
+            recipeVersions: [],
+            standardVersions: [removedStandard],
+          },
+          ['claude'],
+          new Map(),
+        );
+      });
+
+      it('retrieves the deployer for the agent', () => {
+        expect(mockDeployerService.getDeployerForAgent).toHaveBeenCalledWith(
+          'claude',
+        );
+      });
+
+      it('calls generateRemovalFileUpdates with removed standards', () => {
+        expect(mockDeployer.generateRemovalFileUpdates).toHaveBeenCalledWith(
+          {
+            recipeVersions: [],
+            standardVersions: [removedStandard],
+          },
+          {
+            recipeVersions: mockRecipeVersions,
+            standardVersions: mockStandardVersions,
+          },
+        );
+      });
+
+      it('includes removal updates in the result', () => {
+        expect(result.createOrUpdate).toContainEqual({
+          path: 'CLAUDE.md',
+          sections: [{ key: 'Packmind standards', content: '' }],
+        });
       });
     });
 
-    it('generates deletion paths for multiple agents', async () => {
+    describe('when multiple agents are specified', () => {
       const mockFileUpdates: FileUpdates = {
         createOrUpdate: [{ path: 'CLAUDE.md', content: 'test content' }],
         delete: [],
       };
-
-      mockDeployerService.aggregateArtifactRendering.mockResolvedValue(
-        mockFileUpdates,
-      );
-
-      const mockDeployer = {
-        generateFileUpdatesForRecipes: jest.fn().mockResolvedValue({
-          createOrUpdate: [
-            { path: '.packmind/recipes/removed-recipe.md', content: '' },
-          ],
-          delete: [],
-        }),
-        generateFileUpdatesForStandards: jest.fn().mockResolvedValue({
-          createOrUpdate: [],
-          delete: [],
-        }),
-      };
-
-      mockDeployerService.getDeployerForAgent.mockReturnValue(
-        mockDeployer as unknown as ReturnType<
-          DeployerService['getDeployerForAgent']
-        >,
-      );
 
       const removedRecipe: RecipeVersion = {
         id: 'recipe-version-removed' as RecipeVersionId,
@@ -455,28 +470,72 @@ describe('CodingAgentServices', () => {
         userId: 'user-1' as UserId,
       };
 
-      const result = await service.renderArtifacts(
-        {
-          recipeVersions: mockRecipeVersions,
-          standardVersions: mockStandardVersions,
-        },
-        {
-          recipeVersions: [removedRecipe],
-          standardVersions: [],
-        },
-        ['claude', 'cursor'],
-        new Map(),
-      );
+      const mockDeployer = {
+        generateRemovalFileUpdates: jest.fn().mockResolvedValue({
+          createOrUpdate: [
+            {
+              path: 'CLAUDE.md',
+              sections: [{ key: 'Packmind recipes', content: '' }],
+            },
+          ],
+          delete: [],
+        }),
+      };
 
-      expect(mockDeployerService.getDeployerForAgent).toHaveBeenCalledTimes(2);
-      expect(mockDeployerService.getDeployerForAgent).toHaveBeenCalledWith(
-        'claude',
-      );
-      expect(mockDeployerService.getDeployerForAgent).toHaveBeenCalledWith(
-        'cursor',
-      );
-      expect(result.delete).toContainEqual({
-        path: '.packmind/recipes/removed-recipe.md',
+      beforeEach(async () => {
+        mockDeployerService.aggregateArtifactRendering.mockResolvedValue(
+          mockFileUpdates,
+        );
+
+        mockDeployerService.getDeployerForAgent.mockReturnValue(
+          mockDeployer as unknown as ReturnType<
+            DeployerService['getDeployerForAgent']
+          >,
+        );
+
+        await service.renderArtifacts(
+          {
+            recipeVersions: mockRecipeVersions,
+            standardVersions: mockStandardVersions,
+          },
+          {
+            recipeVersions: [removedRecipe],
+            standardVersions: [],
+          },
+          ['claude', 'cursor'],
+          new Map(),
+        );
+      });
+
+      it('retrieves a deployer for each agent', () => {
+        expect(mockDeployerService.getDeployerForAgent).toHaveBeenCalledTimes(
+          2,
+        );
+      });
+
+      it('retrieves the deployer for claude agent', () => {
+        expect(mockDeployerService.getDeployerForAgent).toHaveBeenCalledWith(
+          'claude',
+        );
+      });
+
+      it('retrieves the deployer for cursor agent', () => {
+        expect(mockDeployerService.getDeployerForAgent).toHaveBeenCalledWith(
+          'cursor',
+        );
+      });
+
+      it('calls generateRemovalFileUpdates with removed artifacts', () => {
+        expect(mockDeployer.generateRemovalFileUpdates).toHaveBeenCalledWith(
+          {
+            recipeVersions: [removedRecipe],
+            standardVersions: [],
+          },
+          {
+            recipeVersions: mockRecipeVersions,
+            standardVersions: mockStandardVersions,
+          },
+        );
       });
     });
 
