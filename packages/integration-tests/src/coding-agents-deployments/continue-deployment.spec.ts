@@ -132,7 +132,7 @@ describe('Continue Deployment Integration', () => {
     await dataSource.destroy();
   });
 
-  describe('when .continue/rules/packmind-recipes-index.md does not exist', () => {
+  describe('when .continue/rules/packmind/recipes-index.md does not exist', () => {
     let defaultTarget: Target;
 
     beforeEach(() => {
@@ -226,7 +226,7 @@ describe('Continue Deployment Integration', () => {
         );
 
         const continueFile = fileUpdates.createOrUpdate.find(
-          (file) => file.path === '.continue/rules/packmind-recipes-index.md',
+          (file) => file.path === '.continue/rules/packmind/recipes-index.md',
         );
 
         expect(continueFile).toBeDefined();
@@ -255,7 +255,7 @@ describe('Continue Deployment Integration', () => {
         );
 
         const continueFile = fileUpdates.createOrUpdate.find(
-          (file) => file.path === '.continue/rules/packmind-recipes-index.md',
+          (file) => file.path === '.continue/rules/packmind/recipes-index.md',
         );
 
         if (continueFile) {
@@ -286,7 +286,7 @@ describe('Continue Deployment Integration', () => {
         );
 
         const continueFile = fileUpdates.createOrUpdate.find(
-          (file) => file.path === '.continue/rules/packmind-recipes-index.md',
+          (file) => file.path === '.continue/rules/packmind/recipes-index.md',
         );
 
         if (continueFile) {
@@ -317,7 +317,7 @@ describe('Continue Deployment Integration', () => {
         );
 
         const continueFile = fileUpdates.createOrUpdate.find(
-          (file) => file.path === '.continue/rules/packmind-recipes-index.md',
+          (file) => file.path === '.continue/rules/packmind/recipes-index.md',
         );
 
         if (continueFile) {
@@ -350,7 +350,7 @@ describe('Continue Deployment Integration', () => {
         );
 
         const continueFile = fileUpdates.createOrUpdate.find(
-          (file) => file.path === '.continue/rules/packmind-recipes-index.md',
+          (file) => file.path === '.continue/rules/packmind/recipes-index.md',
         );
 
         if (continueFile) {
@@ -381,7 +381,7 @@ describe('Continue Deployment Integration', () => {
         );
 
         const continueFile = fileUpdates.createOrUpdate.find(
-          (file) => file.path === '.continue/rules/packmind-recipes-index.md',
+          (file) => file.path === '.continue/rules/packmind/recipes-index.md',
         );
 
         if (continueFile) {
@@ -412,7 +412,7 @@ describe('Continue Deployment Integration', () => {
         );
 
         const continueFile = fileUpdates.createOrUpdate.find(
-          (file) => file.path === '.continue/rules/packmind-recipes-index.md',
+          (file) => file.path === '.continue/rules/packmind/recipes-index.md',
         );
 
         if (continueFile) {
@@ -497,7 +497,7 @@ describe('Continue Deployment Integration', () => {
         const continueStandardFile = fileUpdates.createOrUpdate.find(
           (file) =>
             file.path ===
-            `.continue/rules/packmind-standard-${standard.slug}.md`,
+            `.continue/rules/packmind/standard-${standard.slug}.md`,
         );
 
         expect(continueStandardFile).toBeDefined();
@@ -528,7 +528,7 @@ describe('Continue Deployment Integration', () => {
         const continueStandardFile = fileUpdates.createOrUpdate.find(
           (file) =>
             file.path ===
-            `.continue/rules/packmind-standard-${standard.slug}.md`,
+            `.continue/rules/packmind/standard-${standard.slug}.md`,
         );
 
         if (continueStandardFile) {
@@ -565,7 +565,7 @@ describe('Continue Deployment Integration', () => {
           const continueStandardFile = fileUpdates.createOrUpdate.find(
             (file) =>
               file.path ===
-              `.continue/rules/packmind-standard-${standard.slug}.md`,
+              `.continue/rules/packmind/standard-${standard.slug}.md`,
           );
 
           if (continueStandardFile) {
@@ -601,7 +601,7 @@ describe('Continue Deployment Integration', () => {
           const continueStandardFile = fileUpdates.createOrUpdate.find(
             (file) =>
               file.path ===
-              `.continue/rules/packmind-standard-${standard.slug}.md`,
+              `.continue/rules/packmind/standard-${standard.slug}.md`,
           );
 
           if (continueStandardFile) {
@@ -637,7 +637,7 @@ describe('Continue Deployment Integration', () => {
         const continueStandardFile = fileUpdates.createOrUpdate.find(
           (file) =>
             file.path ===
-            `.continue/rules/packmind-standard-${standard.slug}.md`,
+            `.continue/rules/packmind/standard-${standard.slug}.md`,
         );
 
         if (continueStandardFile) {
@@ -672,7 +672,7 @@ describe('Continue Deployment Integration', () => {
         const continueStandardFile = fileUpdates.createOrUpdate.find(
           (file) =>
             file.path ===
-            `.continue/rules/packmind-standard-${standard.slug}.md`,
+            `.continue/rules/packmind/standard-${standard.slug}.md`,
         );
 
         if (continueStandardFile) {
@@ -707,7 +707,7 @@ describe('Continue Deployment Integration', () => {
         const continueStandardFile = fileUpdates.createOrUpdate.find(
           (file) =>
             file.path ===
-            `.continue/rules/packmind-standard-${standard.slug}.md`,
+            `.continue/rules/packmind/standard-${standard.slug}.md`,
         );
 
         if (continueStandardFile) {
@@ -742,12 +742,12 @@ describe('Continue Deployment Integration', () => {
         const continueStandardFile = fileUpdates.createOrUpdate.find(
           (file) =>
             file.path ===
-            `.continue/rules/packmind-standard-${standard.slug}.md`,
+            `.continue/rules/packmind/standard-${standard.slug}.md`,
         );
 
         if (continueStandardFile) {
           expect(continueStandardFile.content).toContain(
-            `Full standard is available here for further request: [${standard.name}](../../.packmind/standards/${standard.slug}.md)`,
+            `Full standard is available here for further request: [${standard.name}](../../../.packmind/standards/${standard.slug}.md)`,
           );
         }
       });
@@ -925,7 +925,7 @@ describe('Continue Deployment Integration', () => {
         );
 
         expect(recipeUpdates.createOrUpdate[0].path).toBe(
-          '.continue/rules/packmind-recipes-index.md',
+          '.continue/rules/packmind/recipes-index.md',
         );
       });
 
@@ -960,13 +960,13 @@ describe('Continue Deployment Integration', () => {
           );
 
         expect(standardsUpdates.createOrUpdate[0].path).toBe(
-          `.continue/rules/packmind-standard-${standard.slug}.md`,
+          `.continue/rules/packmind/standard-${standard.slug}.md`,
         );
       });
     });
   });
 
-  describe('when .continue/rules/packmind-recipes-index.md already exists', () => {
+  describe('when .continue/rules/packmind/recipes-index.md already exists', () => {
     let defaultTarget: Target;
     const existingContent = `---
 name: Packmind Recipes

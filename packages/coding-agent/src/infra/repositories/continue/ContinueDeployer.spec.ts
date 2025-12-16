@@ -129,7 +129,7 @@ describe('ContinueDeployer', () => {
 
         const recipesFile = result.createOrUpdate[0];
         expect(recipesFile.path).toBe(
-          '.continue/rules/packmind-recipes-index.md',
+          '.continue/rules/packmind/recipes-index.md',
         );
       });
 
@@ -461,7 +461,7 @@ describe('ContinueDeployer', () => {
 
         const standardFile = result.createOrUpdate[0];
         expect(standardFile.path).toBe(
-          '.continue/rules/packmind-standard-test-standard.md',
+          '.continue/rules/packmind/standard-test-standard.md',
         );
       });
 
@@ -780,34 +780,72 @@ describe('ContinueDeployer', () => {
       });
     });
 
-    describe('when summary and description are not available', () => {
-      it('uses standard name as description', async () => {
-        const standard = standardFactory({
-          name: 'Standard Without Summary',
-          slug: 'standard-without-summary',
-          scope: '**/*.ts',
+    describe('when summary is not available', () => {
+      describe('when description is null', () => {
+        it('uses standard name as description', async () => {
+          const standard = standardFactory({
+            name: 'Standard Without Summary',
+            slug: 'standard-without-summary',
+            scope: '**/*.ts',
+          });
+
+          const standardVersion: StandardVersion = {
+            id: createStandardVersionId('standard-version-3'),
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: null,
+            version: 1,
+            userId: createUserId('user-1'),
+            scope: standard.scope,
+            rules: [] as Rule[],
+          };
+
+          const result = await deployer.deployStandards(
+            [standardVersion],
+            mockGitRepo,
+            mockTarget,
+          );
+
+          const standardFile = result.createOrUpdate[0];
+          expect(standardFile.content).toContain(
+            `description: ${standard.name}`,
+          );
         });
+      });
 
-        const standardVersion: StandardVersion = {
-          id: createStandardVersionId('standard-version-3'),
-          standardId: standard.id,
-          name: standard.name,
-          slug: standard.slug,
-          description: null,
-          version: 1,
-          userId: createUserId('user-1'),
-          scope: standard.scope,
-          rules: [] as Rule[],
-        };
+      describe('when description exists but summary does not', () => {
+        it('uses standard name as description', async () => {
+          const standard = standardFactory({
+            name: 'Standard With Description Only',
+            slug: 'standard-with-description-only',
+            scope: '**/*.ts',
+          });
 
-        const result = await deployer.deployStandards(
-          [standardVersion],
-          mockGitRepo,
-          mockTarget,
-        );
+          const standardVersion: StandardVersion = {
+            id: createStandardVersionId('standard-version-4'),
+            standardId: standard.id,
+            name: standard.name,
+            slug: standard.slug,
+            description: 'This is a description that should not be used',
+            version: 1,
+            summary: null,
+            userId: createUserId('user-1'),
+            scope: standard.scope,
+            rules: [] as Rule[],
+          };
 
-        const standardFile = result.createOrUpdate[0];
-        expect(standardFile.content).toContain(`description: ${standard.name}`);
+          const result = await deployer.deployStandards(
+            [standardVersion],
+            mockGitRepo,
+            mockTarget,
+          );
+
+          const standardFile = result.createOrUpdate[0];
+          expect(standardFile.content).toContain(
+            `description: ${standard.name}`,
+          );
+        });
       });
     });
 
@@ -1177,7 +1215,7 @@ describe('ContinueDeployer', () => {
       ]);
 
       expect(result.createOrUpdate[0].path).toBe(
-        '.continue/rules/packmind-recipes-index.md',
+        '.continue/rules/packmind/recipes-index.md',
       );
     });
 
@@ -1222,7 +1260,7 @@ describe('ContinueDeployer', () => {
       ]);
 
       expect(result.createOrUpdate[0].path).toBe(
-        '.continue/rules/packmind-standard-test-standard.md',
+        '.continue/rules/packmind/standard-test-standard.md',
       );
     });
   });

@@ -228,7 +228,7 @@ export class DeployerService {
       junie: '.junie.md',
       packmind: '.packmind.md',
       gitlab_duo: '.gitlab/duo_chat.yml',
-      continue: '.continue/rules/packmind-recipes-index.md',
+      continue: '.continue/rules/packmind/recipes-index.md',
     };
 
     return agentToFile[agent];
