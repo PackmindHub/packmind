@@ -23,11 +23,13 @@ export class CommitToGit {
     repo: GitRepo,
     files: FileModification[],
     commitMessage: string,
+    deleteFiles?: { path: string }[],
   ): Promise<GitCommit> {
     this.logger.info('Committing multiple files to git repository', {
       owner: repo.owner,
       repo: repo.repo,
       fileCount: files.length,
+      deleteFileCount: deleteFiles?.length ?? 0,
     });
 
     // Validate files array is not empty
@@ -88,6 +90,7 @@ export class CommitToGit {
     const commitData = await gitRepoInstance.commitFiles(
       processedFiles,
       commitMessage,
+      deleteFiles,
     );
 
     // Check if no changes were detected (GitLab returns 'no-changes' as sha)

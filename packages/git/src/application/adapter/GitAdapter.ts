@@ -350,8 +350,14 @@ export class GitAdapter implements IBaseAdapter<IGitPort>, IGitPort {
     repo: GitRepo,
     files: { path: string; content: string }[],
     commitMessage: string,
+    deleteFiles?: { path: string }[],
   ): Promise<GitCommit> {
-    return this._commitToGit.commitToGit(repo, files, commitMessage);
+    return this._commitToGit.commitToGit(
+      repo,
+      files,
+      commitMessage,
+      deleteFiles,
+    );
   }
 
   public async handleWebHook(

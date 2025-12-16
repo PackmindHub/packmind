@@ -284,6 +284,7 @@ describe('PublishArtifactsUseCase', () => {
           }),
         ]),
         expect.stringContaining('Update artifacts (recipes + standards)'),
+        expect.any(Array),
       );
     });
 
@@ -542,7 +543,9 @@ describe('PublishArtifactsUseCase', () => {
       await useCase.execute(command);
 
       expect(mockDistributionRepository.add).toHaveBeenCalledWith(
-        expect.objectContaining({ status: DistributionStatus.no_changes }),
+        expect.objectContaining({
+          status: DistributionStatus.no_changes,
+        }),
       );
     });
   });

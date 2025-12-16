@@ -122,6 +122,7 @@ describe('Packmind Deployment Spec', () => {
           },
         ],
         expect.any(String),
+        expect.any(Array),
       );
     });
 
@@ -159,6 +160,7 @@ describe('Packmind Deployment Spec', () => {
             },
           ],
           expect.any(String),
+          expect.any(Array),
         );
       });
     });
@@ -211,6 +213,7 @@ describe('Packmind Deployment Spec', () => {
           },
         ]);
         expect(secondCallArgs[2]).toEqual(expect.any(String));
+        expect(secondCallArgs[3]).toEqual(expect.any(Array));
       });
     });
   });
@@ -250,6 +253,7 @@ describe('Packmind Deployment Spec', () => {
           },
         ],
         expect.any(String),
+        expect.any(Array),
       );
     });
 
@@ -287,6 +291,7 @@ describe('Packmind Deployment Spec', () => {
             },
           ],
           expect.any(String),
+          expect.any(Array),
         );
       });
     });
@@ -329,6 +334,7 @@ describe('Packmind Deployment Spec', () => {
             },
           ],
           expect.any(String),
+          expect.any(Array),
         );
       });
     });

@@ -504,6 +504,7 @@ export class NotifyDistributionUseCase
         packageId: pkg.id,
         standardVersions: [],
         recipeVersions: [],
+        operation: 'add',
         _standardVersionIds: standardVersionIds,
         _recipeVersionIds: recipeVersionIds,
       });

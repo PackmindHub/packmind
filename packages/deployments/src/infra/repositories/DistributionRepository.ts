@@ -448,21 +448,41 @@ export class DistributionRepository implements IDistributionRepository {
         .orderBy('distribution.createdAt', 'DESC')
         .getMany();
 
-      // Extract all standard versions and deduplicate by standardId,
-      // keeping the most recently distributed version of each standard
-      const standardVersionMap = new Map<string, StandardVersion>();
+      // First pass: Track the latest distribution for each package
+      // This is needed to handle package removals correctly
+      const latestDistributionPerPackage = new Map<
+        string,
+        {
+          operation: string;
+          standardVersions: StandardVersion[];
+        }
+      >();
 
-      // Process distributions in chronological order (most recent first)
       for (const distribution of distributions) {
         for (const distributedPackage of distribution.distributedPackages) {
-          for (const standardVersion of distributedPackage.standardVersions) {
-            // Only keep the first (most recent) version of each standard
-            if (!standardVersionMap.has(standardVersion.standardId)) {
-              standardVersionMap.set(
-                standardVersion.standardId,
-                standardVersion,
-              );
-            }
+          // Only keep the first (latest) occurrence of each package
+          if (!latestDistributionPerPackage.has(distributedPackage.packageId)) {
+            latestDistributionPerPackage.set(distributedPackage.packageId, {
+              operation: distributedPackage.operation ?? 'add',
+              standardVersions: distributedPackage.standardVersions,
+            });
+          }
+        }
+      }
+
+      // Second pass: Extract standard versions only from packages whose latest operation is NOT 'remove'
+      const standardVersionMap = new Map<string, StandardVersion>();
+
+      for (const [, data] of latestDistributionPerPackage) {
+        // Skip packages whose latest distribution was a removal
+        if (data.operation === 'remove') {
+          continue;
+        }
+
+        for (const standardVersion of data.standardVersions) {
+          // Only keep the first (most recent) version of each standard
+          if (!standardVersionMap.has(standardVersion.standardId)) {
+            standardVersionMap.set(standardVersion.standardId, standardVersion);
           }
         }
       }
@@ -515,18 +535,41 @@ export class DistributionRepository implements IDistributionRepository {
         .orderBy('distribution.createdAt', 'DESC')
         .getMany();
 
-      // Extract all recipe versions and deduplicate by recipeId,
-      // keeping the most recently distributed version of each recipe
-      const recipeVersionMap = new Map<string, RecipeVersion>();
+      // First pass: Track the latest distribution for each package
+      // This is needed to handle package removals correctly
+      const latestDistributionPerPackage = new Map<
+        string,
+        {
+          operation: string;
+          recipeVersions: RecipeVersion[];
+        }
+      >();
 
-      // Process distributions in chronological order (most recent first)
       for (const distribution of distributions) {
         for (const distributedPackage of distribution.distributedPackages) {
-          for (const recipeVersion of distributedPackage.recipeVersions) {
-            // Only keep the first (most recent) version of each recipe
-            if (!recipeVersionMap.has(recipeVersion.recipeId)) {
-              recipeVersionMap.set(recipeVersion.recipeId, recipeVersion);
-            }
+          // Only keep the first (latest) occurrence of each package
+          if (!latestDistributionPerPackage.has(distributedPackage.packageId)) {
+            latestDistributionPerPackage.set(distributedPackage.packageId, {
+              operation: distributedPackage.operation ?? 'add',
+              recipeVersions: distributedPackage.recipeVersions,
+            });
+          }
+        }
+      }
+
+      // Second pass: Extract recipe versions only from packages whose latest operation is NOT 'remove'
+      const recipeVersionMap = new Map<string, RecipeVersion>();
+
+      for (const [, data] of latestDistributionPerPackage) {
+        // Skip packages whose latest distribution was a removal
+        if (data.operation === 'remove') {
+          continue;
+        }
+
+        for (const recipeVersion of data.recipeVersions) {
+          // Only keep the first (most recent) version of each recipe
+          if (!recipeVersionMap.has(recipeVersion.recipeId)) {
+            recipeVersionMap.set(recipeVersion.recipeId, recipeVersion);
           }
         }
       }

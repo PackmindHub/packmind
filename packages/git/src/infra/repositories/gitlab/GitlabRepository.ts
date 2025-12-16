@@ -74,12 +74,20 @@ export class GitlabRepository implements IGitRepo {
   async commitFiles(
     files: { path: string; content: string }[],
     commitMessage: string,
+    deleteFiles?: { path: string }[],
   ): Promise<Omit<GitCommit, 'id'>> {
-    this.logger.info('Committing multiple files to GitLab repository', {
+    this.logger.info('Committing files to GitLab repository', {
       fileCount: files.length,
+      deleteFileCount: deleteFiles?.length ?? 0,
       owner: this.options.owner,
       repo: this.options.repo,
     });
+
+    if (deleteFiles && deleteFiles.length > 0) {
+      this.logger.warn('File deletion not yet implemented for GitLab', {
+        deleteFilesCount: deleteFiles.length,
+      });
+    }
 
     if (files.length === 0) {
       throw new Error('No files to commit');
