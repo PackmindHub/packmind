@@ -3,6 +3,7 @@ import {
   listPackagesHandler,
   showPackageHandler,
   installPackagesHandler,
+  uninstallPackagesHandler,
   recursiveInstallHandler,
   statusHandler,
   InstallHandlerDependencies,
@@ -449,6 +450,54 @@ describe('installPackagesHandler', () => {
           packagesSlugs: ['backend', 'frontend', 'api'],
           previousPackagesSlugs: ['backend', 'frontend'],
         });
+      });
+    });
+  });
+
+  describe('uninstallPackagesHandler', () => {
+    describe('when no packages specified', () => {
+      it('displays error and exits with 1', async () => {
+        await uninstallPackagesHandler({ packagesSlugs: [] }, deps);
+
+        expect(mockError).toHaveBeenCalledWith('❌ No packages specified.');
+        expect(mockLog).toHaveBeenCalledWith(
+          'Usage: packmind-cli uninstall <package-slug> [package-slug...]',
+        );
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('when config file does not exist', () => {
+      it('displays "not found" error and exits with 1', async () => {
+        mockPackmindCliHexa.configExists.mockResolvedValue(false);
+        mockPackmindCliHexa.readConfig.mockResolvedValue([]);
+
+        await uninstallPackagesHandler({ packagesSlugs: ['backend'] }, deps);
+
+        expect(mockError).toHaveBeenCalledWith(
+          '❌ No packmind.json found in current directory.',
+        );
+        expect(mockLog).toHaveBeenCalledWith('');
+        expect(mockLog).toHaveBeenCalledWith(
+          '💡 There are no packages to uninstall.',
+        );
+        expect(mockExit).toHaveBeenCalledWith(1);
+      });
+    });
+
+    describe('when config file is empty', () => {
+      it('displays "is empty" error and exits with 1', async () => {
+        mockPackmindCliHexa.configExists.mockResolvedValue(true);
+        mockPackmindCliHexa.readConfig.mockResolvedValue([]);
+
+        await uninstallPackagesHandler({ packagesSlugs: ['backend'] }, deps);
+
+        expect(mockError).toHaveBeenCalledWith('❌ packmind.json is empty.');
+        expect(mockLog).toHaveBeenCalledWith('');
+        expect(mockLog).toHaveBeenCalledWith(
+          '💡 There are no packages to uninstall.',
+        );
+        expect(mockExit).toHaveBeenCalledWith(1);
       });
     });
   });
