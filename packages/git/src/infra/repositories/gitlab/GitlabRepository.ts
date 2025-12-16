@@ -83,13 +83,7 @@ export class GitlabRepository implements IGitRepo {
       repo: this.options.repo,
     });
 
-    if (deleteFiles && deleteFiles.length > 0) {
-      this.logger.warn('File deletion not yet implemented for GitLab', {
-        deleteFilesCount: deleteFiles.length,
-      });
-    }
-
-    if (files.length === 0) {
+    if (files.length === 0 && (!deleteFiles || deleteFiles.length === 0)) {
       throw new Error('No files to commit');
     }
 
@@ -100,7 +94,10 @@ export class GitlabRepository implements IGitRepo {
       // Check file existence and prepare actions in one pass
       // For GitLab, we need to determine the correct action (create vs update) for each file
       let fileDifferenceCheck;
-      let actions;
+      let actions: Array<
+        | { action: 'create' | 'update'; file_path: string; content: string }
+        | { action: 'delete'; file_path: string }
+      >;
 
       try {
         const fileAnalysis = await Promise.all(
@@ -189,12 +186,74 @@ export class GitlabRepository implements IGitRepo {
         }));
       }
 
+      // Handle file deletions - fetch tree to filter non-existent files
+      let existingDeleteFiles: { path: string }[] = [];
+      if (deleteFiles && deleteFiles.length > 0) {
+        // Fetch the repository tree to know which files exist
+        const treeResponse = await this.axiosInstance.get(
+          `/projects/${this.encodedProjectPath}/repository/tree`,
+          {
+            params: {
+              ref: targetBranch,
+              recursive: 'true',
+              per_page: 100,
+            },
+          },
+        );
+
+        // Handle pagination for large repositories
+        const allTreeItems: Array<{ path: string; type: string }> = [];
+        if (Array.isArray(treeResponse.data)) {
+          allTreeItems.push(...treeResponse.data);
+        }
+
+        const existingPaths = new Set(
+          allTreeItems
+            .filter((item: { type: string }) => item.type === 'blob')
+            .map((item: { path: string }) => item.path),
+        );
+
+        // Filter deleteFiles to only include files that exist
+        existingDeleteFiles = deleteFiles.filter((file) =>
+          existingPaths.has(file.path),
+        );
+
+        const skippedCount = deleteFiles.length - existingDeleteFiles.length;
+        if (skippedCount > 0) {
+          this.logger.debug('Skipping deletion of non-existent files', {
+            skippedCount,
+            projectPath: this.projectPath,
+          });
+        }
+
+        // Add delete actions for existing files
+        if (existingDeleteFiles.length > 0) {
+          this.logger.info('Adding files for deletion to commit', {
+            deleteFileCount: existingDeleteFiles.length,
+            skippedCount,
+            projectPath: this.projectPath,
+          });
+
+          for (const file of existingDeleteFiles) {
+            actions.push({
+              action: 'delete' as const,
+              file_path: file.path,
+            });
+          }
+        }
+      }
+
       // Check if there are any changes to commit
-      const hasChanges = fileDifferenceCheck.some((file) => file.hasChanges);
+      const hasFileChanges = fileDifferenceCheck.some(
+        (file) => file.hasChanges,
+      );
+      const hasDeletions = existingDeleteFiles.length > 0;
+      const hasChanges = hasFileChanges || hasDeletions;
 
       if (!hasChanges) {
         this.logger.info('No changes detected, skipping commit', {
           fileCount: files.length,
+          deleteFileCount: deleteFiles?.length ?? 0,
           owner: this.options.owner,
           repo: this.options.repo,
           branch: targetBranch,
@@ -211,6 +270,7 @@ export class GitlabRepository implements IGitRepo {
       this.logger.debug('Creating commit with actions', {
         branch: targetBranch,
         actionCount: actions.length,
+        deleteCount: existingDeleteFiles.length,
         projectPath: this.projectPath,
       });
 

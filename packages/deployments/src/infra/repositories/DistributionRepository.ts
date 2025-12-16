@@ -594,4 +594,211 @@ export class DistributionRepository implements IDistributionRepository {
       throw error;
     }
   }
+
+  async findActiveStandardVersionsByTargetAndPackages(
+    organizationId: OrganizationId,
+    targetId: TargetId,
+    packageIds: PackageId[],
+  ): Promise<StandardVersion[]> {
+    this.logger.info(
+      'Finding active standard versions by target and packages',
+      {
+        organizationId,
+        targetId,
+        packageIdsCount: packageIds.length,
+      },
+    );
+
+    if (packageIds.length === 0) {
+      return [];
+    }
+
+    try {
+      const distributions = await this.repository
+        .createQueryBuilder('distribution')
+        .innerJoinAndSelect(
+          'distribution.distributedPackages',
+          'distributedPackage',
+        )
+        .leftJoinAndSelect(
+          'distributedPackage.standardVersions',
+          'standardVersion',
+        )
+        .where('distribution.organizationId = :organizationId', {
+          organizationId,
+        })
+        .andWhere('distribution.target_id = :targetId', { targetId })
+        .andWhere('distribution.status = :status', {
+          status: DistributionStatus.success,
+        })
+        .andWhere('distributedPackage.packageId IN (:...packageIds)', {
+          packageIds: packageIds as string[],
+        })
+        .orderBy('distribution.createdAt', 'DESC')
+        .getMany();
+
+      // First pass: Track the latest distribution for each package
+      const latestDistributionPerPackage = new Map<
+        string,
+        {
+          operation: string;
+          standardVersions: StandardVersion[];
+        }
+      >();
+
+      for (const distribution of distributions) {
+        for (const distributedPackage of distribution.distributedPackages) {
+          // Only process packages that are in the filter list
+          if (!packageIds.includes(distributedPackage.packageId as PackageId)) {
+            continue;
+          }
+          // Only keep the first (latest) occurrence of each package
+          if (!latestDistributionPerPackage.has(distributedPackage.packageId)) {
+            latestDistributionPerPackage.set(distributedPackage.packageId, {
+              operation: distributedPackage.operation ?? 'add',
+              standardVersions: distributedPackage.standardVersions,
+            });
+          }
+        }
+      }
+
+      // Second pass: Extract standard versions only from packages whose latest operation is NOT 'remove'
+      const standardVersionMap = new Map<string, StandardVersion>();
+
+      for (const [, data] of latestDistributionPerPackage) {
+        if (data.operation === 'remove') {
+          continue;
+        }
+
+        for (const standardVersion of data.standardVersions) {
+          if (!standardVersionMap.has(standardVersion.standardId)) {
+            standardVersionMap.set(standardVersion.standardId, standardVersion);
+          }
+        }
+      }
+
+      const activeStandardVersions = Array.from(standardVersionMap.values());
+
+      this.logger.info(
+        'Active standard versions found by target and packages',
+        {
+          organizationId,
+          targetId,
+          packageIdsCount: packageIds.length,
+          activeStandardVersionsCount: activeStandardVersions.length,
+        },
+      );
+
+      return activeStandardVersions;
+    } catch (error) {
+      this.logger.error(
+        'Failed to find active standard versions by target and packages',
+        {
+          organizationId,
+          targetId,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      throw error;
+    }
+  }
+
+  async findActiveRecipeVersionsByTargetAndPackages(
+    organizationId: OrganizationId,
+    targetId: TargetId,
+    packageIds: PackageId[],
+  ): Promise<RecipeVersion[]> {
+    this.logger.info('Finding active recipe versions by target and packages', {
+      organizationId,
+      targetId,
+      packageIdsCount: packageIds.length,
+    });
+
+    if (packageIds.length === 0) {
+      return [];
+    }
+
+    try {
+      const distributions = await this.repository
+        .createQueryBuilder('distribution')
+        .innerJoinAndSelect(
+          'distribution.distributedPackages',
+          'distributedPackage',
+        )
+        .leftJoinAndSelect('distributedPackage.recipeVersions', 'recipeVersion')
+        .where('distribution.organizationId = :organizationId', {
+          organizationId,
+        })
+        .andWhere('distribution.target_id = :targetId', { targetId })
+        .andWhere('distribution.status = :status', {
+          status: DistributionStatus.success,
+        })
+        .andWhere('distributedPackage.packageId IN (:...packageIds)', {
+          packageIds: packageIds as string[],
+        })
+        .orderBy('distribution.createdAt', 'DESC')
+        .getMany();
+
+      // First pass: Track the latest distribution for each package
+      const latestDistributionPerPackage = new Map<
+        string,
+        {
+          operation: string;
+          recipeVersions: RecipeVersion[];
+        }
+      >();
+
+      for (const distribution of distributions) {
+        for (const distributedPackage of distribution.distributedPackages) {
+          // Only process packages that are in the filter list
+          if (!packageIds.includes(distributedPackage.packageId as PackageId)) {
+            continue;
+          }
+          // Only keep the first (latest) occurrence of each package
+          if (!latestDistributionPerPackage.has(distributedPackage.packageId)) {
+            latestDistributionPerPackage.set(distributedPackage.packageId, {
+              operation: distributedPackage.operation ?? 'add',
+              recipeVersions: distributedPackage.recipeVersions,
+            });
+          }
+        }
+      }
+
+      // Second pass: Extract recipe versions only from packages whose latest operation is NOT 'remove'
+      const recipeVersionMap = new Map<string, RecipeVersion>();
+
+      for (const [, data] of latestDistributionPerPackage) {
+        if (data.operation === 'remove') {
+          continue;
+        }
+
+        for (const recipeVersion of data.recipeVersions) {
+          if (!recipeVersionMap.has(recipeVersion.recipeId)) {
+            recipeVersionMap.set(recipeVersion.recipeId, recipeVersion);
+          }
+        }
+      }
+
+      const activeRecipeVersions = Array.from(recipeVersionMap.values());
+
+      this.logger.info('Active recipe versions found by target and packages', {
+        organizationId,
+        targetId,
+        packageIdsCount: packageIds.length,
+        activeRecipeVersionsCount: activeRecipeVersions.length,
+      });
+
+      return activeRecipeVersions;
+    } catch (error) {
+      this.logger.error(
+        'Failed to find active recipe versions by target and packages',
+        {
+          organizationId,
+          targetId,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      throw error;
+    }
+  }
 }

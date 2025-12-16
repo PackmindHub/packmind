@@ -93,6 +93,16 @@ describe('GithubRepository', () => {
     const newTreeSha = 'new-tree-sha-789';
     const newCommitSha = 'new-commit-sha-abc';
 
+    // Default tree items returned by the tree fetch (for filtering deletions)
+    const defaultTreeItems = [
+      { path: 'test/file-to-delete.txt', type: 'blob', sha: 'existing-sha-1' },
+      {
+        path: 'test/another-file-to-delete.txt',
+        type: 'blob',
+        sha: 'existing-sha-2',
+      },
+    ];
+
     beforeEach(() => {
       // Mock GET request for reference
       mockAxiosInstance.get = jest.fn().mockImplementation((url) => {
@@ -110,6 +120,14 @@ describe('GithubRepository', () => {
               tree: {
                 sha: baseTreeSha,
               },
+            },
+          });
+        } else if (url.includes('/git/trees/')) {
+          // Return the tree structure for filtering deletions
+          return Promise.resolve({
+            data: {
+              sha: baseTreeSha,
+              tree: defaultTreeItems,
             },
           });
         } else if (url.includes('/contents/')) {
@@ -498,6 +516,125 @@ describe('GithubRepository', () => {
         await expect(
           githubRepository.commitFiles([], 'Commit message', []),
         ).rejects.toThrow('No files to commit');
+      });
+    });
+
+    describe('when filtering non-existent files during deletion', () => {
+      beforeEach(() => {
+        // Mock getFileOnRepo to return null for new files
+        jest.spyOn(githubRepository, 'getFileOnRepo').mockResolvedValue(null);
+      });
+
+      describe('when some files to delete do not exist in the repo', () => {
+        const deleteFiles = [
+          { path: 'test/file-to-delete.txt' }, // exists in defaultTreeItems
+          { path: 'test/non-existent-file.txt' }, // does not exist
+        ];
+
+        it('deletes only files that exist in the repository', async () => {
+          await githubRepository.commitFiles(
+            files,
+            'Commit message',
+            deleteFiles,
+          );
+
+          expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+            `/repos/${options.owner}/${options.repo}/git/trees`,
+            {
+              base_tree: baseTreeSha,
+              tree: [
+                {
+                  path: files[0].path,
+                  mode: '100644',
+                  type: 'blob',
+                  content: files[0].content,
+                },
+                {
+                  path: files[1].path,
+                  mode: '100644',
+                  type: 'blob',
+                  content: files[1].content,
+                },
+                {
+                  path: 'test/file-to-delete.txt',
+                  mode: '100644',
+                  type: 'blob',
+                  sha: null,
+                },
+              ],
+            },
+          );
+        });
+      });
+
+      describe('when all files to delete do not exist in the repo', () => {
+        const nonExistentDeleteFiles = [
+          { path: 'test/non-existent-1.txt' },
+          { path: 'test/non-existent-2.txt' },
+        ];
+
+        describe('with file modifications', () => {
+          it('creates commit with only file modifications', async () => {
+            await githubRepository.commitFiles(
+              files,
+              'Commit message',
+              nonExistentDeleteFiles,
+            );
+
+            expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+              `/repos/${options.owner}/${options.repo}/git/trees`,
+              {
+                base_tree: baseTreeSha,
+                tree: [
+                  {
+                    path: files[0].path,
+                    mode: '100644',
+                    type: 'blob',
+                    content: files[0].content,
+                  },
+                  {
+                    path: files[1].path,
+                    mode: '100644',
+                    type: 'blob',
+                    content: files[1].content,
+                  },
+                ],
+              },
+            );
+          });
+        });
+
+        describe('without file modifications', () => {
+          describe('when no existing files to delete', () => {
+            it('returns no-changes', async () => {
+              const result = await githubRepository.commitFiles(
+                [],
+                'Delete files',
+                nonExistentDeleteFiles,
+              );
+
+              expect(result).toEqual({
+                sha: 'no-changes',
+                message: '',
+                author: '',
+                url: '',
+              });
+            });
+
+            it('does not create a commit', async () => {
+              await githubRepository.commitFiles(
+                [],
+                'Delete files',
+                nonExistentDeleteFiles,
+              );
+
+              expect(mockAxiosInstance.post).not.toHaveBeenCalledWith(
+                expect.stringContaining('/git/commits'),
+                expect.anything(),
+              );
+            });
+          });
+        });
       });
     });
   });
