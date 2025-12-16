@@ -144,7 +144,18 @@ export class GithubRepository implements IGitRepo {
 
       const baseTreeSha = commitResponse.data.tree.sha;
 
-      // Step 3: Check if files exist and prepare tree items
+      // Step 3: Fetch full tree to know which files exist (for filtering deletions)
+      const treeResponse = await this.axiosInstance.get(
+        `/repos/${owner}/${repo}/git/trees/${baseTreeSha}`,
+        { params: { recursive: 1 } },
+      );
+      const existingPaths = new Set(
+        treeResponse.data.tree
+          .filter((item: { type: string }) => item.type === 'blob')
+          .map((item: { path: string }) => item.path),
+      );
+
+      // Step 4: Check if files exist and prepare tree items
       this.logger.debug('Checking file existence and preparing tree items', {
         owner,
         repo,
@@ -173,29 +184,64 @@ export class GithubRepository implements IGitRepo {
       }
 
       // Add delete items to tree (sha: null tells GitHub to delete the file)
+      // Filter out files that don't exist to avoid GitHub 422 errors
       if (deleteFiles && deleteFiles.length > 0) {
-        this.logger.info('Adding files for deletion to commit', {
-          deleteFileCount: deleteFiles.length,
-          owner,
-          repo,
-        });
+        const existingDeleteFiles = deleteFiles.filter((file) =>
+          existingPaths.has(file.path),
+        );
 
-        for (const file of deleteFiles) {
-          treeItems.push({
-            path: file.path,
-            mode: '100644',
-            type: 'blob',
-            sha: null,
+        const skippedCount = deleteFiles.length - existingDeleteFiles.length;
+        if (skippedCount > 0) {
+          this.logger.debug('Skipping deletion of non-existent files', {
+            skippedCount,
+            owner,
+            repo,
           });
+        }
+
+        if (existingDeleteFiles.length > 0) {
+          this.logger.info('Adding files for deletion to commit', {
+            deleteFileCount: existingDeleteFiles.length,
+            skippedCount,
+            owner,
+            repo,
+          });
+
+          for (const file of existingDeleteFiles) {
+            treeItems.push({
+              path: file.path,
+              mode: '100644',
+              type: 'blob',
+              sha: null,
+            });
+          }
         }
       }
 
-      // Step 4: Create a new tree with all file changes
+      // Check if we have any actual changes after filtering
+      if (treeItems.length === 0) {
+        this.logger.info(
+          'No changes to commit after filtering non-existent files',
+          {
+            owner,
+            repo,
+            branch: targetBranch,
+          },
+        );
+        return {
+          sha: 'no-changes',
+          message: '',
+          author: '',
+          url: ``,
+        };
+      }
+
+      // Step 5: Create a new tree with all file changes
       this.logger.debug('Creating new tree with all file changes', {
         owner,
         repo,
         baseTreeSha,
-        fileCount: files.length,
+        treeItemCount: treeItems.length,
       });
 
       // Create a new tree with all file changes
@@ -209,7 +255,7 @@ export class GithubRepository implements IGitRepo {
 
       const newTreeSha = createTreeResponse.data.sha;
 
-      // Step 5: Create a new commit pointing to the new tree
+      // Step 6: Create a new commit pointing to the new tree
       this.logger.debug('Creating new commit pointing to the new tree', {
         owner,
         repo,
@@ -228,7 +274,7 @@ export class GithubRepository implements IGitRepo {
 
       const newCommitSha = createCommitResponse.data.sha;
 
-      // Step 6: Update the reference to point to the new commit
+      // Step 7: Update the reference to point to the new commit
       this.logger.debug('Updating reference to point to the new commit', {
         owner,
         repo,
