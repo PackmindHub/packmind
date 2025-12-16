@@ -147,39 +147,45 @@ const createTabsFromMethods = (
   token: string,
   url: string,
 ) => {
-  return Object.entries(methodsByType).map(([type, methods]) => {
-    const firstMethod = methods[0];
-    // Use type + label to create unique key when multiple methods of same type
-    const uniqueKey = methods.length > 1 ? `${type}-multi` : type;
+  // Define the desired order: magicLink (One-click install), cli (CLI), json (JSON)
+  const orderedTypes = ['magicLink', 'cli', 'json'];
 
-    return {
-      value: uniqueKey,
-      triggerLabel: firstMethod.label,
-      content: (
-        <PMVStack gap={4} width="100%" p={4} alignItems="flex-start">
-          {methods.length > 1 ? (
-            <PMVStack gap={6} width="100%" alignItems="flex-start">
-              {methods.map((method, index) => (
-                <PMVStack
-                  key={index}
-                  gap={2}
-                  width="100%"
-                  alignItems="flex-start"
-                >
-                  <PMText as="p" fontWeight="bold">
-                    {method.label}
-                  </PMText>
-                  <MethodContent method={method} token={token} url={url} />
-                </PMVStack>
-              ))}
-            </PMVStack>
-          ) : (
-            <MethodContent method={firstMethod} token={token} url={url} />
-          )}
-        </PMVStack>
-      ),
-    };
-  });
+  return orderedTypes
+    .filter((type) => methodsByType[type]) // Only include types that exist
+    .map((type) => {
+      const methods = methodsByType[type];
+      const firstMethod = methods[0];
+      // Use type + label to create unique key when multiple methods of same type
+      const uniqueKey = methods.length > 1 ? `${type}-multi` : type;
+
+      return {
+        value: uniqueKey,
+        triggerLabel: firstMethod.label,
+        content: (
+          <PMVStack gap={4} width="100%" p={4} alignItems="flex-start">
+            {methods.length > 1 ? (
+              <PMVStack gap={6} width="100%" alignItems="flex-start">
+                {methods.map((method, index) => (
+                  <PMVStack
+                    key={index}
+                    gap={2}
+                    width="100%"
+                    alignItems="flex-start"
+                  >
+                    <PMText as="p" fontWeight="bold">
+                      {method.label}
+                    </PMText>
+                    <MethodContent method={method} token={token} url={url} />
+                  </PMVStack>
+                ))}
+              </PMVStack>
+            ) : (
+              <MethodContent method={firstMethod} token={token} url={url} />
+            )}
+          </PMVStack>
+        ),
+      };
+    });
 };
 
 export const AgentModal: React.FunctionComponent<IAgentModalProps> = ({
