@@ -15,7 +15,7 @@ import {
   PMIcon,
 } from '@packmind/ui';
 import { LuInfo } from 'react-icons/lu';
-import { Distribution, RenderMode } from '@packmind/types';
+import { Distribution, RenderMode, DistributedPackage } from '@packmind/types';
 import { format } from 'date-fns';
 import { Link } from 'react-router';
 import { routes } from '../../../../shared/utils/routes';
@@ -212,6 +212,38 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     return packages.map((pkg) => pkg!.name).join(', ');
   };
 
+  const getOperationBadge = (
+    deployment: Distribution,
+  ): React.ReactNode | null => {
+    let distributedPackage: DistributedPackage | undefined;
+
+    if (type === 'package') {
+      distributedPackage = deployment.distributedPackages?.find(
+        (dp: DistributedPackage) => dp.packageId === entityId,
+      );
+    } else if (type === 'recipe') {
+      distributedPackage = deployment.distributedPackages?.find(
+        (dp: DistributedPackage) =>
+          dp.recipeVersions?.some((rv) => rv.recipeId === entityId),
+      );
+    } else if (type === 'standard') {
+      distributedPackage = deployment.distributedPackages?.find(
+        (dp: DistributedPackage) =>
+          dp.standardVersions?.some((sv) => sv.standardId === entityId),
+      );
+    }
+
+    if (!distributedPackage) {
+      return null;
+    }
+
+    if (distributedPackage.operation === 'remove') {
+      return <PMText>Removed</PMText>;
+    }
+
+    return <PMText>Distributed</PMText>;
+  };
+
   const baseColumns: PMTableColumn[] = [
     ...(hideVersionColumn
       ? []
@@ -233,6 +265,12 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
       width: '200px',
       align: 'center',
     },
+    {
+      key: 'operation',
+      header: 'Operation',
+      width: '100px',
+      align: 'center',
+    },
     { key: 'commits', header: 'Git Commits', width: '18%' },
     { key: 'author', header: 'Author', width: '120px' },
     {
@@ -251,6 +289,7 @@ export const DeploymentsHistory: React.FC<DeploymentsHistoryProps> = ({
     package: getPackageInfo(deployment),
     target: getTargetInfo(deployment),
     renderModes: <RenderModes renderModes={deployment.renderModes} />,
+    operation: getOperationBadge(deployment),
     commits: getCommitLinks(deployment),
     author: getAuthor(deployment),
     createdAt: getDate(deployment.createdAt),
