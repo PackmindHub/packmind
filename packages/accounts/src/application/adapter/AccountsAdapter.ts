@@ -54,6 +54,7 @@ import {
   ISpacesPortName,
   IStandardsPort,
   IStandardsPortName,
+  IStartTrial,
   IValidateInvitationTokenUseCase,
   IValidatePasswordResetTokenUseCase,
   IValidatePasswordUseCase,
@@ -71,6 +72,8 @@ import {
   ResetPasswordCommand,
   ResetPasswordResponse,
   SignInUserCommand,
+  StartTrialCommand,
+  StartTrialResult,
   User,
   UserId,
   ValidateInvitationTokenCommand,
@@ -115,6 +118,7 @@ import { SignInUserUseCase } from '../useCases/signInUser/SignInUserUseCase';
 import { SignUpWithOrganizationUseCase } from '../useCases/signUpWithOrganization/SignUpWithOrganizationUseCase';
 import { ValidateInvitationTokenUseCase } from '../useCases/validateInvitationToken/ValidateInvitationTokenUseCase';
 import { ValidatePasswordUseCase } from '../useCases/validatePasswordUseCase/ValidatePasswordUseCase';
+import { StartTrialUseCase } from '../useCases/startTrial/StartTrialUseCase';
 
 const origin = 'AccountsAdapter';
 
@@ -152,6 +156,7 @@ export class AccountsAdapter
   private _getOrganizationOnboardingStatus!: IGetOrganizationOnboardingStatusUseCase;
   private _createCliLoginCode?: ICreateCliLoginCodeUseCase;
   private _exchangeCliLoginCode?: IExchangeCliLoginCodeUseCase;
+  private _startTrial!: IStartTrial;
 
   constructor(
     private readonly accountsServices: EnhancedAccountsServices,
@@ -326,6 +331,16 @@ export class AccountsAdapter
     } else {
       this.logger.debug('API key use cases skipped - service not available');
     }
+
+    // Trial use case
+    this._startTrial = new StartTrialUseCase(
+      this.accountsServices.getUserService(),
+      this.accountsServices.getOrganizationService(),
+      ports.eventEmitterService,
+      this.logger,
+      this.spacesPort ?? undefined,
+    );
+    this.logger.debug('Start trial use case initialized');
 
     this.logger.info('AccountsAdapter initialized successfully');
   }
@@ -538,5 +553,12 @@ export class AccountsAdapter
       );
     }
     return this._exchangeCliLoginCode.execute(command);
+  }
+
+  // Trial use cases
+  public async startTrial(
+    command: StartTrialCommand,
+  ): Promise<StartTrialResult> {
+    return this._startTrial.execute(command);
   }
 }

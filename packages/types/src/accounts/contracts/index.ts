@@ -26,3 +26,4 @@ export * from './IListUserOrganizationsUseCase';
 export * from './ISignInUserUseCase';
 export * from './IValidatePasswordUseCase';
 export * from './IValidateInvitationTokenUseCase';
+export * from './IStartTrial';
