@@ -1,4 +1,6 @@
 import {
+  ActivateTrialAccountCommand,
+  ActivateTrialAccountResult,
   ActivateUserAccountCommand,
   ActivateUserAccountResponse,
   ChangeUserRoleCommand,
@@ -173,4 +175,8 @@ export interface IAccountsPort {
   generateTrialActivationToken(
     command: GenerateTrialActivationTokenCommand,
   ): Promise<GenerateTrialActivationTokenResult>;
+
+  activateTrialAccount(
+    command: ActivateTrialAccountCommand,
+  ): Promise<ActivateTrialAccountResult>;
 }

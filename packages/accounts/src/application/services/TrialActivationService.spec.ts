@@ -161,4 +161,99 @@ describe('TrialActivationService', () => {
       );
     });
   });
+
+  describe('validateTokenForUser', () => {
+    const mockToken = 'test-token' as unknown as ReturnType<
+      typeof import('@packmind/types').createTrialActivationToken
+    >;
+
+    describe('when token is not found', () => {
+      beforeEach(() => {
+        mockTrialActivationRepository.findByToken.mockResolvedValue(null);
+      });
+
+      it('returns valid: false', async () => {
+        const result = await service.validateTokenForUser(
+          mockToken,
+          mockUserId,
+        );
+
+        expect(result).toEqual({ valid: false });
+      });
+    });
+
+    describe('when token belongs to a different user', () => {
+      beforeEach(() => {
+        const differentUserId = createUserId('different-user');
+        mockTrialActivationRepository.findByToken.mockResolvedValue({
+          id: 'ta-123' as unknown as ReturnType<
+            typeof import('@packmind/types').createTrialActivationTokenId
+          >,
+          userId: differentUserId,
+          token: mockToken,
+          expirationDate: new Date(Date.now() + 60000),
+        });
+      });
+
+      it('returns valid: false', async () => {
+        const result = await service.validateTokenForUser(
+          mockToken,
+          mockUserId,
+        );
+
+        expect(result).toEqual({ valid: false });
+      });
+    });
+
+    describe('when token has expired', () => {
+      beforeEach(() => {
+        mockTrialActivationRepository.findByToken.mockResolvedValue({
+          id: 'ta-123' as unknown as ReturnType<
+            typeof import('@packmind/types').createTrialActivationTokenId
+          >,
+          userId: mockUserId,
+          token: mockToken,
+          expirationDate: new Date(Date.now() - 60000),
+        });
+      });
+
+      it('returns valid: false', async () => {
+        const result = await service.validateTokenForUser(
+          mockToken,
+          mockUserId,
+        );
+
+        expect(result).toEqual({ valid: false });
+      });
+    });
+
+    describe('when token is valid', () => {
+      const mockTrialActivation = {
+        id: 'ta-123' as unknown as ReturnType<
+          typeof import('@packmind/types').createTrialActivationTokenId
+        >,
+        userId: mockUserId,
+        token: mockToken,
+        expirationDate: new Date(Date.now() + 60000),
+      };
+
+      beforeEach(() => {
+        mockTrialActivationRepository.findByToken.mockResolvedValue(
+          mockTrialActivation,
+        );
+      });
+
+      it('returns valid: true with trialActivation', async () => {
+        const result = await service.validateTokenForUser(
+          mockToken,
+          mockUserId,
+        );
+
+        expect(result).toEqual({
+          valid: true,
+          trialActivation: mockTrialActivation,
+        });
+      });
+    });
+  });
 });
