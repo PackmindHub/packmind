@@ -2,6 +2,7 @@ import { RemovePackageFromTargetsUseCase } from './RemovePackageFromTargetsUseCa
 import { PackageService } from '../services/PackageService';
 import { TargetService } from '../services/TargetService';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
+import { IDistributedPackageRepository } from '../../domain/repositories/IDistributedPackageRepository';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import { PackmindConfigService } from '../services/PackmindConfigService';
 import { PackageNotFoundError } from '../../domain/errors/PackageNotFoundError';
@@ -31,6 +32,8 @@ import {
   IGitPort,
   ICodingAgentPort,
   GitRepo,
+  createGitProviderId,
+  createGitCommitId,
 } from '@packmind/types';
 
 describe('RemovePackageFromTargetsUseCase', () => {
@@ -38,6 +41,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
   let mockPackageService: jest.Mocked<PackageService>;
   let mockTargetService: jest.Mocked<TargetService>;
   let mockDistributionRepository: jest.Mocked<IDistributionRepository>;
+  let mockDistributedPackageRepository: jest.Mocked<IDistributedPackageRepository>;
   let mockRecipesPort: jest.Mocked<IRecipesPort>;
   let mockStandardsPort: jest.Mocked<IStandardsPort>;
   let mockGitPort: jest.Mocked<IGitPort>;
@@ -79,11 +83,11 @@ describe('RemovePackageFromTargetsUseCase', () => {
   };
 
   const mockGitRepo: GitRepo = {
+    branch: '',
     id: gitRepoId,
     owner: 'test-owner',
     repo: 'test-repo',
-    installationId: 'installation-123',
-    organizationId,
+    providerId: createGitProviderId('provider-123'),
   };
 
   beforeEach(() => {
@@ -99,6 +103,12 @@ describe('RemovePackageFromTargetsUseCase', () => {
       listByTargetIds: jest.fn(),
       add: jest.fn(),
     } as unknown as jest.Mocked<IDistributionRepository>;
+
+    mockDistributedPackageRepository = {
+      add: jest.fn(),
+      addStandardVersions: jest.fn(),
+      addRecipeVersions: jest.fn(),
+    } as unknown as jest.Mocked<IDistributedPackageRepository>;
 
     mockRecipesPort = {
       getRecipeVersionById: jest.fn(),
@@ -133,6 +143,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
       mockPackageService,
       mockTargetService,
       mockDistributionRepository,
+      mockDistributedPackageRepository,
       mockRecipesPort,
       mockStandardsPort,
       mockGitPort,
@@ -209,7 +220,6 @@ describe('RemovePackageFromTargetsUseCase', () => {
           [],
         );
         mockGitPort.getRepositoryById.mockResolvedValue(mockGitRepo);
-        mockGitPort.getFilesInFolder.mockResolvedValue([]);
         mockGitPort.getFileFromRepo.mockResolvedValue(null);
         mockCodingAgentPort.renderArtifacts.mockResolvedValue({
           createOrUpdate: [],
@@ -222,9 +232,11 @@ describe('RemovePackageFromTargetsUseCase', () => {
           },
         );
         mockGitPort.commitToGit.mockResolvedValue({
-          id: 'commit-123',
+          id: createGitCommitId('commit-123'),
           sha: 'abc123',
           message: '[PACKMIND] Remove package: test-package',
+          url: 'https://github.com/test-owner/test-repo/commit/abc123',
+          author: 'test-user',
         });
       });
 
@@ -293,7 +305,51 @@ describe('RemovePackageFromTargetsUseCase', () => {
             mockGitRepo,
             expect.any(Array),
             expect.stringContaining('[PACKMIND] Remove package: test-package'),
+            expect.any(Array),
           );
+        });
+
+        describe('when there are files to delete', () => {
+          const deleteFiles = [{ path: '.packmind/recipes/deleted-recipe.md' }];
+
+          beforeEach(() => {
+            mockCodingAgentPort.renderArtifacts.mockResolvedValue({
+              createOrUpdate: [],
+              delete: deleteFiles,
+            });
+          });
+
+          it('passes delete files to commitToGit with target path prefix', async () => {
+            await useCase.execute(command);
+
+            // Note: The paths are prefixed with the target path (/src/) by applyTargetPrefixingToFileUpdates
+            expect(mockGitPort.commitToGit).toHaveBeenCalledWith(
+              mockGitRepo,
+              expect.any(Array),
+              expect.any(String),
+              [{ path: 'src/.packmind/recipes/deleted-recipe.md' }],
+            );
+          });
+        });
+
+        describe('when there are no files to delete', () => {
+          beforeEach(() => {
+            mockCodingAgentPort.renderArtifacts.mockResolvedValue({
+              createOrUpdate: [],
+              delete: [],
+            });
+          });
+
+          it('passes empty delete array to commitToGit', async () => {
+            await useCase.execute(command);
+
+            expect(mockGitPort.commitToGit).toHaveBeenCalledWith(
+              mockGitRepo,
+              expect.any(Array),
+              expect.any(String),
+              [],
+            );
+          });
         });
 
         it('removes package from packmind.json', async () => {
@@ -343,6 +399,17 @@ describe('RemovePackageFromTargetsUseCase', () => {
           expect(mockDistributionRepository.add).toHaveBeenCalledWith(
             expect.objectContaining({
               status: DistributionStatus.no_changes,
+            }),
+          );
+        });
+
+        it('saves distributed package with remove operation', async () => {
+          await useCase.execute(command);
+
+          expect(mockDistributedPackageRepository.add).toHaveBeenCalledWith(
+            expect.objectContaining({
+              operation: 'remove',
+              packageId,
             }),
           );
         });
@@ -402,6 +469,17 @@ describe('RemovePackageFromTargetsUseCase', () => {
             }),
           );
         });
+
+        it('saves distributed package with remove operation on failure', async () => {
+          await useCase.execute(command);
+
+          expect(mockDistributedPackageRepository.add).toHaveBeenCalledWith(
+            expect.objectContaining({
+              operation: 'remove',
+              packageId,
+            }),
+          );
+        });
       });
 
       describe('artifact resolution', () => {
@@ -440,6 +518,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
                   scope: null,
                 },
               ],
+              operation: 'add',
             };
 
             const distribution: Distribution = {
@@ -562,6 +641,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
                   scope: null,
                 },
               ],
+              operation: 'add',
             };
 
             const otherPackageDistribution: DistributedPackage = {
@@ -608,6 +688,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
                   scope: null,
                 },
               ],
+              operation: 'add',
             };
 
             const distribution: Distribution = {
@@ -812,6 +893,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
                   scope: null,
                 },
               ],
+              operation: 'add',
             };
 
             const otherPackageDistribution: DistributedPackage = {
@@ -840,6 +922,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
                   scope: null,
                 },
               ],
+              operation: 'add',
             };
 
             const distribution: Distribution = {
@@ -920,6 +1003,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
                 },
               ],
               standardVersions: [],
+              operation: 'add',
             };
 
             const dist2OtherPackage: DistributedPackage = {
@@ -938,6 +1022,7 @@ describe('RemovePackageFromTargetsUseCase', () => {
                 },
               ],
               standardVersions: [],
+              operation: 'add',
             };
 
             const distribution1: Distribution = {
@@ -987,6 +1072,122 @@ describe('RemovePackageFromTargetsUseCase', () => {
               result.artifactResolutions![0].exclusiveArtifacts
                 .recipeVersionIds,
             ).toEqual([]);
+          });
+        });
+
+        describe('when a package was previously removed', () => {
+          const packageBId = createPackageId('package-b');
+          const packageBRecipeVersionId = createRecipeVersionId('rv-pkg-b');
+          const packageBStandardVersionId = createStandardVersionId('sv-pkg-b');
+
+          beforeEach(() => {
+            // Distribution 1: Package B was added
+            const packageBAddedDistribution: DistributedPackage = {
+              id: createDistributedPackageId('dp-pkg-b-add'),
+              distributionId: createDistributionId('dist-add'),
+              packageId: packageBId,
+              recipeVersions: [
+                {
+                  id: packageBRecipeVersionId,
+                  recipeId: createRecipeId('recipe-pkg-b'),
+                  name: 'Package B Recipe',
+                  slug: 'package-b-recipe',
+                  content: 'content',
+                  version: 1,
+                  userId: null,
+                },
+              ],
+              standardVersions: [
+                {
+                  id: packageBStandardVersionId,
+                  standardId: createStandardId('standard-pkg-b'),
+                  name: 'Package B Standard',
+                  slug: 'package-b-standard',
+                  description: 'description',
+                  version: 1,
+                  scope: null,
+                },
+              ],
+              operation: 'add',
+            };
+
+            const addDistribution: Distribution = {
+              id: createDistributionId('dist-add'),
+              distributedPackages: [packageBAddedDistribution],
+              createdAt: new Date('2024-01-01').toISOString(),
+              authorId: userId,
+              organizationId,
+              target: mockTarget,
+              status: DistributionStatus.success,
+              renderModes: [],
+              source: 'app',
+            };
+
+            // Distribution 2: Package B was removed (newer distribution)
+            // The remove distribution includes the package reference to track which package was removed
+            const packageBRemovedDistribution: DistributedPackage = {
+              id: createDistributedPackageId('dp-pkg-b-remove'),
+              distributionId: createDistributionId('dist-remove'),
+              packageId: packageBId,
+              recipeVersions: [
+                {
+                  id: packageBRecipeVersionId,
+                  recipeId: createRecipeId('recipe-pkg-b'),
+                  name: 'Package B Recipe',
+                  slug: 'package-b-recipe',
+                  content: 'content',
+                  version: 1,
+                  userId: null,
+                },
+              ],
+              standardVersions: [
+                {
+                  id: packageBStandardVersionId,
+                  standardId: createStandardId('standard-pkg-b'),
+                  name: 'Package B Standard',
+                  slug: 'package-b-standard',
+                  description: 'description',
+                  version: 1,
+                  scope: null,
+                },
+              ],
+              operation: 'remove',
+            };
+
+            const removeDistribution: Distribution = {
+              id: createDistributionId('dist-remove'),
+              distributedPackages: [packageBRemovedDistribution],
+              createdAt: new Date('2024-01-02').toISOString(),
+              authorId: userId,
+              organizationId,
+              target: mockTarget,
+              status: DistributionStatus.success,
+              renderModes: [],
+              source: 'app',
+            };
+
+            mockDistributionRepository.listByTargetIds.mockResolvedValue([
+              addDistribution,
+              removeDistribution,
+            ]);
+          });
+
+          it('excludes removed package artifacts from remainingArtifacts', async () => {
+            const result = await useCase.execute(command);
+
+            expect(
+              result.artifactResolutions![0].remainingArtifacts
+                .recipeVersionIds,
+            ).not.toContain(packageBRecipeVersionId);
+          });
+
+          it('excludes removed package standard artifacts from remainingArtifacts', async () => {
+            const result = await useCase.execute(command);
+
+            expect(
+              result.artifactResolutions![0].remainingArtifacts
+                .standardVersionIds,
+            ).not.toContain(packageBStandardVersionId);
           });
         });
       });

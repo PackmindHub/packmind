@@ -380,6 +380,126 @@ describe('GithubRepository', () => {
         ).rejects.toThrow('No files to commit');
       });
     });
+
+    describe('when deleting files', () => {
+      const deleteFiles = [
+        { path: 'test/file-to-delete.txt' },
+        { path: 'test/another-file-to-delete.txt' },
+      ];
+
+      beforeEach(() => {
+        // Mock getFileOnRepo to return null for new files
+        jest.spyOn(githubRepository, 'getFileOnRepo').mockResolvedValue(null);
+      });
+
+      it('creates tree items with sha null for deleted files', async () => {
+        await githubRepository.commitFiles(
+          files,
+          'Commit message',
+          deleteFiles,
+        );
+
+        // Verify tree creation includes both regular files and delete items
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          `/repos/${options.owner}/${options.repo}/git/trees`,
+          {
+            base_tree: baseTreeSha,
+            tree: [
+              // Regular file items
+              {
+                path: files[0].path,
+                mode: '100644',
+                type: 'blob',
+                content: files[0].content,
+              },
+              {
+                path: files[1].path,
+                mode: '100644',
+                type: 'blob',
+                content: files[1].content,
+              },
+              // Delete items with sha: null
+              {
+                path: deleteFiles[0].path,
+                mode: '100644',
+                type: 'blob',
+                sha: null,
+              },
+              {
+                path: deleteFiles[1].path,
+                mode: '100644',
+                type: 'blob',
+                sha: null,
+              },
+            ],
+          },
+        );
+      });
+
+      describe('when deleting files alongside creating files', () => {
+        it('returns commit data', async () => {
+          const result = await githubRepository.commitFiles(
+            files,
+            'Commit message',
+            deleteFiles,
+          );
+
+          expect(result).toEqual({
+            sha: newCommitSha,
+            message: 'Commit message',
+            author: 'test@example.com',
+            url: `https://github.com/${options.owner}/${options.repo}/commit/${newCommitSha}`,
+          });
+        });
+      });
+    });
+
+    describe('when only deleting files without adding new ones', () => {
+      const deleteFiles = [{ path: 'test/file-to-delete.txt' }];
+
+      it('creates commit with only delete tree items', async () => {
+        await githubRepository.commitFiles([], 'Delete file', deleteFiles);
+
+        // Verify tree creation includes only delete items
+        expect(mockAxiosInstance.post).toHaveBeenCalledWith(
+          `/repos/${options.owner}/${options.repo}/git/trees`,
+          {
+            base_tree: baseTreeSha,
+            tree: [
+              {
+                path: deleteFiles[0].path,
+                mode: '100644',
+                type: 'blob',
+                sha: null,
+              },
+            ],
+          },
+        );
+      });
+
+      it('returns commit data', async () => {
+        const result = await githubRepository.commitFiles(
+          [],
+          'Delete file',
+          deleteFiles,
+        );
+
+        expect(result).toEqual({
+          sha: newCommitSha,
+          message: 'Delete file',
+          author: 'test@example.com',
+          url: `https://github.com/${options.owner}/${options.repo}/commit/${newCommitSha}`,
+        });
+      });
+    });
+
+    describe('when both files and deleteFiles are empty', () => {
+      it('throws an error', async () => {
+        await expect(
+          githubRepository.commitFiles([], 'Commit message', []),
+        ).rejects.toThrow('No files to commit');
+      });
+    });
   });
 
   describe('isValidBranch', () => {

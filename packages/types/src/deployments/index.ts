@@ -14,6 +14,7 @@ export * from './Package';
 export * from './PackmindFileConfig';
 export * from './DistributionId';
 export * from './Distribution';
+export * from './DistributionOperation';
 export * from './DistributedPackageId';
 export * from './DistributedPackage';
 

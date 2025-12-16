@@ -357,6 +357,7 @@ export class DeploymentsAdapter
       this.deploymentsServices.getPackageService(),
       this.deploymentsServices.getTargetService(),
       this.distributionRepository,
+      this.distributedPackageRepository,
       this.recipesPort,
       this.standardsPort,
       this.gitPort,

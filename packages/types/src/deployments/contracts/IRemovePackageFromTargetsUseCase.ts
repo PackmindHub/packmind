@@ -36,7 +36,7 @@ export type TargetArtifactResolution = {
 
 export type RemovePackageFromTargetsResponse = {
   results: RemovePackageFromTargetsResult[];
-  /** Artifact resolutions for each target, computed during removal */
+  /** Optional artifact resolutions for each target showing which artifacts were exclusive vs shared */
   artifactResolutions?: TargetArtifactResolution[];
 };
 

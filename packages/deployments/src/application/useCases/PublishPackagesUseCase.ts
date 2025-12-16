@@ -215,6 +215,7 @@ export class PublishPackagesUseCase implements IPublishPackages {
           packageId: pkg.id,
           standardVersions: [],
           recipeVersions: [],
+          operation: 'add',
         });
 
         // Link standard versions

@@ -17,8 +17,10 @@ import {
   StandardVersion,
   Distribution,
   DistributionStatus,
+  DistributionOperation,
   GitCommit,
   createDistributionId,
+  createDistributedPackageId,
   IRecipesPort,
   IStandardsPort,
   IGitPort,
@@ -33,6 +35,7 @@ import { TargetService } from '../services/TargetService';
 import { PackageNotFoundError } from '../../domain/errors/PackageNotFoundError';
 import { TargetNotFoundError } from '../../domain/errors/TargetNotFoundError';
 import { IDistributionRepository } from '../../domain/repositories/IDistributionRepository';
+import { IDistributedPackageRepository } from '../../domain/repositories/IDistributedPackageRepository';
 import { RenderModeConfigurationService } from '../services/RenderModeConfigurationService';
 import { PackmindConfigService } from '../services/PackmindConfigService';
 import {
@@ -43,6 +46,12 @@ import { v4 as uuidv4 } from 'uuid';
 
 const origin = 'RemovePackageFromTargetsUseCase';
 
+type TargetRemovalData = {
+  fileUpdates: FileUpdates;
+  removedRecipeVersions: RecipeVersion[];
+  removedStandardVersions: StandardVersion[];
+};
+
 export class RemovePackageFromTargetsUseCase
   implements IRemovePackageFromTargetsUseCase
 {
@@ -50,6 +59,7 @@ export class RemovePackageFromTargetsUseCase
     private readonly packageService: PackageService,
     private readonly targetService: TargetService,
     private readonly distributionRepository: IDistributionRepository,
+    private readonly distributedPackageRepository: IDistributedPackageRepository,
     private readonly recipesPort: IRecipesPort,
     private readonly standardsPort: IStandardsPort,
     private readonly gitPort: IGitPort,
@@ -62,12 +72,6 @@ export class RemovePackageFromTargetsUseCase
   async execute(
     command: RemovePackageFromTargetsCommand,
   ): Promise<RemovePackageFromTargetsResponse> {
-    this.logger.info('Removing package from targets', {
-      packageId: command.packageId,
-      targetIdsCount: command.targetIds.length,
-      organizationId: command.organizationId,
-    });
-
     const pkg = await this.packageService.findById(command.packageId);
     if (!pkg) {
       throw new PackageNotFoundError(command.packageId);
@@ -110,16 +114,8 @@ export class RemovePackageFromTargetsUseCase
       { repository: gitRepo, targets },
     ] of repositoryTargetsMap) {
       try {
-        this.logger.info('Processing repository for package removal', {
-          repositoryId,
-          gitRepoOwner: gitRepo.owner,
-          gitRepoName: gitRepo.repo,
-          targetsCount: targets.length,
-          packageSlug: pkg.slug,
-        });
-
         // Prepare removal deployment for all targets
-        const fileUpdatesPerTarget = await this.prepareRemovalDeployment(
+        const removalDataPerTarget = await this.prepareRemovalDeployment(
           command.userId as UserId,
           command.organizationId as OrganizationId,
           artifactResolutions,
@@ -137,22 +133,17 @@ export class RemovePackageFromTargetsUseCase
 
         try {
           // Get file updates from first target
-          const firstTargetUpdates = fileUpdatesPerTarget.values().next().value;
-          if (!firstTargetUpdates) {
+          const firstTargetData = removalDataPerTarget.values().next().value;
+          if (!firstTargetData) {
             throw new Error('No file updates found for any target');
           }
 
           gitCommit = await this.gitPort.commitToGit(
             gitRepo,
-            firstTargetUpdates.createOrUpdate,
+            firstTargetData.fileUpdates.createOrUpdate,
             commitMessage,
+            firstTargetData.fileUpdates.delete,
           );
-
-          this.logger.info('Committed package removal', {
-            commitId: gitCommit.id,
-            commitSha: gitCommit.sha,
-            packageSlug: pkg.slug,
-          });
         } catch (error) {
           if (
             error instanceof Error &&
@@ -171,11 +162,19 @@ export class RemovePackageFromTargetsUseCase
 
         // Create distribution records and results for each target
         for (const target of targets) {
+          const targetData = removalDataPerTarget.get(target.id);
+          if (!targetData) {
+            throw new Error(`No removal data found for target ${target.id}`);
+          }
+
           await this.createDistribution(
             command,
             target,
             activeRenderModes,
             distributionStatus,
+            pkg,
+            targetData.removedRecipeVersions,
+            targetData.removedStandardVersions,
             gitCommit,
           );
 
@@ -206,6 +205,9 @@ export class RemovePackageFromTargetsUseCase
             target,
             activeRenderModes,
             DistributionStatus.failure,
+            pkg,
+            [],
+            [],
             undefined,
             errorMessage,
           );
@@ -257,6 +259,7 @@ export class RemovePackageFromTargetsUseCase
   /**
    * Prepares the removal deployment by rendering artifacts for all targets.
    * Uses remaining artifacts as "installed" and exclusive artifacts as "removed".
+   * Returns both the file updates and the removed artifact versions for each target.
    */
   private async prepareRemovalDeployment(
     userId: UserId,
@@ -266,8 +269,8 @@ export class RemovePackageFromTargetsUseCase
     gitRepo: GitRepo,
     codingAgents: CodingAgent[],
     packageSlugToRemove: string,
-  ): Promise<Map<string, FileUpdates>> {
-    const fileUpdatesPerTarget = new Map<string, FileUpdates>();
+  ): Promise<Map<string, TargetRemovalData>> {
+    const removalDataPerTarget = new Map<string, TargetRemovalData>();
 
     for (const target of targets) {
       const resolution = artifactResolutions.find(
@@ -340,17 +343,22 @@ export class RemovePackageFromTargetsUseCase
         this.logger,
       );
 
-      fileUpdatesPerTarget.set(target.id, prefixedFileUpdates);
+      removalDataPerTarget.set(target.id, {
+        fileUpdates: prefixedFileUpdates,
+        removedRecipeVersions,
+        removedStandardVersions,
+      });
 
       this.logger.debug('Prepared removal deployment for target', {
         targetId: target.id,
-        filesCount: prefixedFileUpdates.createOrUpdate.length,
+        filesCreatedOrUpdatedCount: prefixedFileUpdates.createOrUpdate.length,
+        filesDeletedCount: prefixedFileUpdates.delete.length,
         removedRecipes: removedRecipeVersions.length,
         removedStandards: removedStandardVersions.length,
       });
     }
 
-    return fileUpdatesPerTarget;
+    return removalDataPerTarget;
   }
 
   /**
@@ -473,11 +481,15 @@ export class RemovePackageFromTargetsUseCase
     target: Target,
     activeRenderModes: RenderMode[],
     status: DistributionStatus,
+    pkg: Package,
+    removedRecipeVersions: RecipeVersion[],
+    removedStandardVersions: StandardVersion[],
     gitCommit?: GitCommit,
     error?: string,
   ): Promise<Distribution> {
     const distributionId = createDistributionId(uuidv4());
 
+    // Save distribution first (without distributedPackages - will be added separately)
     const distribution: Distribution = {
       id: distributionId,
       distributedPackages: [],
@@ -494,15 +506,42 @@ export class RemovePackageFromTargetsUseCase
 
     await this.distributionRepository.add(distribution);
 
+    // Save distributed package separately (like PublishPackagesUseCase does)
+    const distributedPackageId = createDistributedPackageId(uuidv4());
+    await this.distributedPackageRepository.add({
+      id: distributedPackageId,
+      distributionId,
+      packageId: pkg.id,
+      standardVersions: [],
+      recipeVersions: [],
+      operation: 'remove',
+    });
+
+    // Link standard versions
+    if (removedStandardVersions.length > 0) {
+      await this.distributedPackageRepository.addStandardVersions(
+        distributedPackageId,
+        removedStandardVersions.map((sv) => sv.id),
+      );
+    }
+
+    // Link recipe versions
+    if (removedRecipeVersions.length > 0) {
+      await this.distributedPackageRepository.addRecipeVersions(
+        distributedPackageId,
+        removedRecipeVersions.map((rv) => rv.id),
+      );
+    }
+
     return distribution;
   }
 
   /**
    * Resolves artifacts for a single target.
-   * 1. Gets all distributions for this target
-   * 2. Identifies artifacts from the package being removed
-   * 3. Identifies artifacts from remaining packages
-   * 4. Computes exclusive artifacts (only in removed package)
+   * 1. Gets all distributions for this target, sorted by createdAt DESC (newest first)
+   * 2. For each package, only considers the LATEST distribution
+   * 3. If a package's latest distribution has operation === 'remove', excludes that package
+   * 4. Computes exclusive artifacts (only in removed package, not shared with remaining packages)
    */
   private async resolveArtifactsForTarget(
     organizationId: OrganizationId,
@@ -514,34 +553,67 @@ export class RemovePackageFromTargetsUseCase
       [targetId],
     );
 
+    // Sort distributions by createdAt DESC to process newest first
+    const sortedDistributions = [...distributions].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+
+    // Track the latest distribution for each package
+    const latestDistributionPerPackage = new Map<
+      string,
+      {
+        operation: DistributionOperation;
+        recipeVersions: RecipeVersion[];
+        standardVersions: StandardVersion[];
+      }
+    >();
+
+    for (const distribution of sortedDistributions) {
+      for (const distributedPackage of distribution.distributedPackages) {
+        // Only keep the first (latest) occurrence of each package
+        if (!latestDistributionPerPackage.has(distributedPackage.packageId)) {
+          latestDistributionPerPackage.set(distributedPackage.packageId, {
+            operation: distributedPackage.operation ?? 'add',
+            recipeVersions: distributedPackage.recipeVersions,
+            standardVersions: distributedPackage.standardVersions,
+          });
+        }
+      }
+    }
+
+    // Classify artifacts based on latest state
     const removedPackageRecipeVersionIds = new Set<RecipeVersionId>();
     const removedPackageStandardVersionIds = new Set<StandardVersionId>();
     const remainingPackageRecipeVersionIds = new Set<RecipeVersionId>();
     const remainingPackageStandardVersionIds = new Set<StandardVersionId>();
 
-    for (const distribution of distributions) {
-      for (const distributedPackage of distribution.distributedPackages) {
-        const isRemovedPackage =
-          distributedPackage.packageId === packageToRemove.id;
+    for (const [packageId, data] of latestDistributionPerPackage) {
+      // Skip packages whose latest distribution was a removal
+      if (data.operation === 'remove') {
+        continue;
+      }
 
-        for (const recipeVersion of distributedPackage.recipeVersions) {
-          if (isRemovedPackage) {
-            removedPackageRecipeVersionIds.add(recipeVersion.id);
-          } else {
-            remainingPackageRecipeVersionIds.add(recipeVersion.id);
-          }
+      const isRemovedPackage = packageId === packageToRemove.id;
+
+      for (const recipeVersion of data.recipeVersions) {
+        if (isRemovedPackage) {
+          removedPackageRecipeVersionIds.add(recipeVersion.id);
+        } else {
+          remainingPackageRecipeVersionIds.add(recipeVersion.id);
         }
+      }
 
-        for (const standardVersion of distributedPackage.standardVersions) {
-          if (isRemovedPackage) {
-            removedPackageStandardVersionIds.add(standardVersion.id);
-          } else {
-            remainingPackageStandardVersionIds.add(standardVersion.id);
-          }
+      for (const standardVersion of data.standardVersions) {
+        if (isRemovedPackage) {
+          removedPackageStandardVersionIds.add(standardVersion.id);
+        } else {
+          remainingPackageStandardVersionIds.add(standardVersion.id);
         }
       }
     }
 
+    // Compute exclusive artifacts (only in removed package)
     const exclusiveRecipeVersionIds = Array.from(
       removedPackageRecipeVersionIds,
     ).filter((id) => !remainingPackageRecipeVersionIds.has(id));

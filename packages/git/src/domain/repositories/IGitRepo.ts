@@ -4,6 +4,7 @@ export interface IGitRepo {
   commitFiles(
     files: { path: string; content: string }[],
     commitMessage: string,
+    deleteFiles?: { path: string }[],
   ): Promise<Omit<GitCommit, 'id'>>;
 
   handlePushHook(

@@ -210,10 +210,13 @@ export class PublishArtifactsUseCase implements IPublishArtifactsUseCase {
             gitRepo,
             firstTargetUpdates.createOrUpdate,
             commitMessage,
+            firstTargetUpdates.delete,
           );
           this.logger.info('Committed unified artifacts', {
             commitId: gitCommit.id,
             commitSha: gitCommit.sha,
+            filesCreatedOrUpdated: firstTargetUpdates.createOrUpdate.length,
+            filesDeleted: firstTargetUpdates.delete.length,
           });
         } catch (error) {
           if (

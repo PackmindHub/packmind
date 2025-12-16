@@ -53,14 +53,16 @@ export class GithubRepository implements IGitRepo {
   async commitFiles(
     files: { path: string; content: string }[],
     commitMessage: string,
+    deleteFiles?: { path: string }[],
   ): Promise<Omit<GitCommit, 'id'>> {
-    this.logger.info('Committing multiple files to GitHub repository', {
+    this.logger.info('Committing files to GitHub repository', {
       fileCount: files.length,
+      deleteFileCount: deleteFiles?.length ?? 0,
       owner: this.options.owner,
       repo: this.options.repo,
     });
 
-    if (files.length === 0) {
+    if (files.length === 0 && (!deleteFiles || deleteFiles.length === 0)) {
       throw new Error('No files to commit');
     }
 
@@ -92,12 +94,17 @@ export class GithubRepository implements IGitRepo {
         }),
       );
 
-      // Check if there are any changes to commit
-      const hasChanges = fileDifferenceCheck.some((file) => file.hasChanges);
+      // Check if there are any changes to commit (file modifications or deletions)
+      const hasFileChanges = fileDifferenceCheck.some(
+        (file) => file.hasChanges,
+      );
+      const hasDeletions = deleteFiles && deleteFiles.length > 0;
+      const hasChanges = hasFileChanges || hasDeletions;
 
       if (!hasChanges) {
         this.logger.info('No changes detected, skipping commit', {
           fileCount: files.length,
+          deleteFileCount: deleteFiles?.length ?? 0,
           owner,
           repo,
           branch: targetBranch,
@@ -146,7 +153,13 @@ export class GithubRepository implements IGitRepo {
       });
 
       // Check existence of each file and prepare tree items
-      const treeItems = [];
+      const treeItems: {
+        path: string;
+        mode: '100644';
+        type: 'blob';
+        content?: string;
+        sha?: null;
+      }[] = [];
 
       for (const file of files) {
         await this.getFileOnRepo(file.path, targetBranch);
@@ -157,6 +170,24 @@ export class GithubRepository implements IGitRepo {
           type: 'blob',
           content: file.content,
         });
+      }
+
+      // Add delete items to tree (sha: null tells GitHub to delete the file)
+      if (deleteFiles && deleteFiles.length > 0) {
+        this.logger.info('Adding files for deletion to commit', {
+          deleteFileCount: deleteFiles.length,
+          owner,
+          repo,
+        });
+
+        for (const file of deleteFiles) {
+          treeItems.push({
+            path: file.path,
+            mode: '100644',
+            type: 'blob',
+            sha: null,
+          });
+        }
       }
 
       // Step 4: Create a new tree with all file changes
@@ -228,6 +259,7 @@ export class GithubRepository implements IGitRepo {
 
       this.logger.info('Files committed successfully in a single commit', {
         fileCount: files.length,
+        deleteFileCount: deleteFiles?.length ?? 0,
         owner,
         repo,
         branch: targetBranch,
@@ -240,6 +272,7 @@ export class GithubRepository implements IGitRepo {
         error instanceof Error ? error.message : String(error);
       this.logger.error('Failed to commit files to GitHub repository', {
         fileCount: files.length,
+        deleteFileCount: deleteFiles?.length ?? 0,
         owner: this.options.owner,
         repo: this.options.repo,
         error: errorMessage,

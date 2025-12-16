@@ -24,6 +24,7 @@ export const distributionFactory: Factory<Distribution> = (
         packageId: createPackageId(uuidv4()),
         recipeVersions: [],
         standardVersions: [],
+        operation: 'add',
       },
     ],
     createdAt: new Date().toISOString(),
@@ -32,6 +33,7 @@ export const distributionFactory: Factory<Distribution> = (
     target: targetFactory(),
     status: DistributionStatus.success,
     renderModes: [],
+    source: 'cli',
     ...distribution,
   };
 };

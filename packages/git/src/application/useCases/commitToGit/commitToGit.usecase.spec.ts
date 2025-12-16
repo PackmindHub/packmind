@@ -127,6 +127,7 @@ describe('CommitToGit', () => {
       expect(mockGithubRepository.commitFiles).toHaveBeenCalledWith(
         files,
         'Commit message',
+        undefined,
       );
       expect(mockGitCommitService.addCommit).toHaveBeenCalledWith(
         commitDataFromGit,
@@ -196,6 +197,73 @@ describe('CommitToGit', () => {
       await expect(
         commitToGit.commitToGit(mockGitRepo, [], ''),
       ).rejects.toThrow('No files to commit');
+    });
+
+    describe('when deleteFiles parameter is provided', () => {
+      it('passes deleteFiles parameter to commitFiles', async () => {
+        const files = [{ path: 'test/file.txt', content: 'test content' }];
+        const deleteFiles = [
+          { path: 'old/file1.txt' },
+          { path: 'old/file2.txt' },
+        ];
+
+        const commitDataFromGit = {
+          sha: 'abc123',
+          message: 'Update and delete files',
+          author: 'test@example.com',
+          url: 'https://github.com/test-owner/test-repo/commit/abc123',
+        };
+
+        const expectedCommit = gitCommitFactory(commitDataFromGit);
+
+        mockGitProviderService.findGitProviderById.mockResolvedValue(
+          mockGitProvider,
+        );
+        mockGithubRepository.commitFiles.mockResolvedValue(commitDataFromGit);
+        mockGitCommitService.addCommit.mockResolvedValue(expectedCommit);
+
+        await commitToGit.commitToGit(
+          mockGitRepo,
+          files,
+          'Commit message',
+          deleteFiles,
+        );
+
+        expect(mockGithubRepository.commitFiles).toHaveBeenCalledWith(
+          files,
+          'Commit message',
+          deleteFiles,
+        );
+      });
+    });
+
+    describe('when deleteFiles parameter is not provided', () => {
+      it('passes undefined deleteFiles parameter to commitFiles', async () => {
+        const files = [{ path: 'test/file.txt', content: 'test content' }];
+
+        const commitDataFromGit = {
+          sha: 'abc123',
+          message: 'Add file',
+          author: 'test@example.com',
+          url: 'https://github.com/test-owner/test-repo/commit/abc123',
+        };
+
+        const expectedCommit = gitCommitFactory(commitDataFromGit);
+
+        mockGitProviderService.findGitProviderById.mockResolvedValue(
+          mockGitProvider,
+        );
+        mockGithubRepository.commitFiles.mockResolvedValue(commitDataFromGit);
+        mockGitCommitService.addCommit.mockResolvedValue(expectedCommit);
+
+        await commitToGit.commitToGit(mockGitRepo, files, 'Commit message');
+
+        expect(mockGithubRepository.commitFiles).toHaveBeenCalledWith(
+          files,
+          'Commit message',
+          undefined,
+        );
+      });
     });
   });
 });

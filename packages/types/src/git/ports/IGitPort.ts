@@ -60,12 +60,14 @@ export interface IGitPort {
    * @param repo - The git repository
    * @param files - Array of file modifications to commit (can contain full content or sections)
    * @param commitMessage - The commit message
+   * @param deleteFiles - Optional array of files to delete in the same commit
    * @returns Promise of git commit
    */
   commitToGit(
     repo: GitRepo,
     files: FileModification[],
     commitMessage: string,
+    deleteFiles?: { path: string }[],
   ): Promise<GitCommit>;
 
   /**
