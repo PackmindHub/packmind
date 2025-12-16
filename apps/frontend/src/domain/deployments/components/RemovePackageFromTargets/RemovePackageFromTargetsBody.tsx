@@ -26,7 +26,10 @@ export const RemovePackageFromTargetsBodyImpl: React.FC = () => {
 
   // Extract unique targets from distributions
   const targets = useMemo(() => {
-    return distributions.map((d) => d.target);
+    const targetMap = new Map(
+      distributions.map((d) => [d.target.id, d.target]),
+    );
+    return Array.from(targetMap.values());
   }, [distributions]);
 
   // Group targets by repository
