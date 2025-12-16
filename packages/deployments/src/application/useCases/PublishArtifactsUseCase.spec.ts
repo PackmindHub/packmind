@@ -86,6 +86,8 @@ describe('PublishArtifactsUseCase', () => {
       add: jest.fn(),
       findActiveStandardVersionsByTarget: jest.fn(),
       findActiveRecipeVersionsByTarget: jest.fn(),
+      findActiveStandardVersionsByTargetAndPackages: jest.fn(),
+      findActiveRecipeVersionsByTargetAndPackages: jest.fn(),
     } as unknown as jest.Mocked<IDistributionRepository>;
 
     mockTargetService = {
@@ -179,6 +181,7 @@ describe('PublishArtifactsUseCase', () => {
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId],
         packagesSlugs: [],
+        packageIds: [],
       };
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
@@ -191,6 +194,12 @@ describe('PublishArtifactsUseCase', () => {
         [],
       );
       mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
         [],
       );
       mockRenderModeConfigurationService.getActiveRenderModes.mockResolvedValue(
@@ -348,6 +357,7 @@ describe('PublishArtifactsUseCase', () => {
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: [],
+        packageIds: [],
       };
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
@@ -357,6 +367,12 @@ describe('PublishArtifactsUseCase', () => {
         [],
       );
       mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
         [],
       );
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
@@ -426,6 +442,7 @@ describe('PublishArtifactsUseCase', () => {
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId],
         packagesSlugs: [],
+        packageIds: [],
       };
 
       mockStandardsPort.getStandardVersionById.mockResolvedValue(
@@ -437,6 +454,12 @@ describe('PublishArtifactsUseCase', () => {
         [],
       );
       mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
         [],
       );
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
@@ -501,6 +524,7 @@ describe('PublishArtifactsUseCase', () => {
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId],
         packagesSlugs: [],
+        packageIds: [],
       };
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
@@ -513,6 +537,12 @@ describe('PublishArtifactsUseCase', () => {
         [],
       );
       mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
         [],
       );
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
@@ -582,6 +612,7 @@ describe('PublishArtifactsUseCase', () => {
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId],
         packagesSlugs: [],
+        packageIds: [],
       };
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
@@ -594,6 +625,12 @@ describe('PublishArtifactsUseCase', () => {
         [],
       );
       mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
         [],
       );
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
@@ -676,6 +713,7 @@ describe('PublishArtifactsUseCase', () => {
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId1, targetId2],
         packagesSlugs: [],
+        packageIds: [],
       };
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
@@ -690,6 +728,12 @@ describe('PublishArtifactsUseCase', () => {
         [],
       );
       mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
         [],
       );
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
@@ -804,6 +848,7 @@ describe('PublishArtifactsUseCase', () => {
         standardVersionIds: [newStandardVersion.id],
         targetIds: [targetId],
         packagesSlugs: [],
+        packageIds: [],
       };
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(newRecipeVersion);
@@ -817,6 +862,12 @@ describe('PublishArtifactsUseCase', () => {
       );
       mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
         [oldStandardVersion],
+      );
+      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
+        [],
       );
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
@@ -873,6 +924,7 @@ describe('PublishArtifactsUseCase', () => {
         standardVersionIds: [],
         targetIds: [createTargetId(uuidv4())],
         packagesSlugs: [],
+        packageIds: [],
       };
 
       mockTargetService.findById.mockResolvedValue(null);
@@ -891,6 +943,7 @@ describe('PublishArtifactsUseCase', () => {
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: [],
+        packageIds: [],
       };
 
       mockTargetService.findById.mockResolvedValue(target);
@@ -920,6 +973,7 @@ describe('PublishArtifactsUseCase', () => {
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: [],
+        packageIds: [],
       };
 
       mockTargetService.findById.mockResolvedValue(target);
@@ -950,6 +1004,7 @@ describe('PublishArtifactsUseCase', () => {
         standardVersionIds: [createStandardVersionId(uuidv4())],
         targetIds: [targetId],
         packagesSlugs: [],
+        packageIds: [],
       };
 
       mockTargetService.findById.mockResolvedValue(target);
@@ -971,6 +1026,7 @@ describe('PublishArtifactsUseCase', () => {
         standardVersionIds: [],
         targetIds: [],
         packagesSlugs: [],
+        packageIds: [],
       };
 
       await expect(useCase.execute(command)).rejects.toThrow(
@@ -1007,6 +1063,7 @@ describe('PublishArtifactsUseCase', () => {
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: [],
+        packageIds: [],
       };
 
       mockRenderModeConfigurationService.getActiveRenderModes.mockResolvedValueOnce(
@@ -1019,6 +1076,12 @@ describe('PublishArtifactsUseCase', () => {
         [],
       );
       mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
         [],
       );
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
@@ -1116,6 +1179,7 @@ describe('PublishArtifactsUseCase', () => {
         standardVersionIds: [newStandardVersion.id],
         targetIds: [targetId],
         packagesSlugs: [],
+        packageIds: [],
       };
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(newRecipeVersion);
@@ -1129,6 +1193,13 @@ describe('PublishArtifactsUseCase', () => {
         [previousRecipeVersion],
       );
       mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [previousStandardVersion],
+      );
+      // For removal calculation, return the same data from filtered methods
+      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        [previousRecipeVersion],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
         [previousStandardVersion],
       );
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
@@ -1264,6 +1335,7 @@ describe('PublishArtifactsUseCase', () => {
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId],
         packagesSlugs: [],
+        packageIds: [],
       };
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
@@ -1277,6 +1349,12 @@ describe('PublishArtifactsUseCase', () => {
         [],
       );
       mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
         [],
       );
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
@@ -1366,6 +1444,7 @@ describe('PublishArtifactsUseCase', () => {
         standardVersionIds: [newStandardVersion.id],
         targetIds: [targetId],
         packagesSlugs: [],
+        packageIds: [],
       };
 
       mockStandardsPort.getStandardVersionById.mockResolvedValue(
@@ -1382,6 +1461,12 @@ describe('PublishArtifactsUseCase', () => {
       // Return previously deployed standard WITHOUT rules
       mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
         [previousStandardVersion],
+      );
+      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
+        [],
       );
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
       mockCodingAgentPort.renderArtifacts.mockResolvedValue({
@@ -1483,6 +1568,7 @@ describe('PublishArtifactsUseCase', () => {
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: ['package-one', 'package-two'],
+        packageIds: [],
       };
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
@@ -1492,6 +1578,12 @@ describe('PublishArtifactsUseCase', () => {
         [],
       );
       mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
         [],
       );
       mockGitPort.getFileFromRepo.mockResolvedValue(null);
@@ -1601,6 +1693,7 @@ describe('PublishArtifactsUseCase', () => {
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: ['new-package'],
+        packageIds: [],
       };
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
@@ -1610,6 +1703,12 @@ describe('PublishArtifactsUseCase', () => {
         [],
       );
       mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
         [],
       );
       // Return existing packmind.json with packages
@@ -1731,6 +1830,7 @@ describe('PublishArtifactsUseCase', () => {
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: ['new-package'],
+        packageIds: [],
       };
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
@@ -1740,6 +1840,12 @@ describe('PublishArtifactsUseCase', () => {
         [],
       );
       mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
         [],
       );
       mockGitPort.getFileFromRepo.mockResolvedValue({
@@ -1819,6 +1925,7 @@ describe('PublishArtifactsUseCase', () => {
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: ['new-package'],
+        packageIds: [],
       };
 
       mockRecipesPort.getRecipeVersionById.mockResolvedValue(recipeVersion);
@@ -1828,6 +1935,12 @@ describe('PublishArtifactsUseCase', () => {
         [],
       );
       mockDistributionRepository.findActiveStandardVersionsByTarget.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveRecipeVersionsByTargetAndPackages.mockResolvedValue(
+        [],
+      );
+      mockDistributionRepository.findActiveStandardVersionsByTargetAndPackages.mockResolvedValue(
         [],
       );
       // No existing packmind.json

@@ -197,6 +197,7 @@ describe('PublishPackagesUseCase', () => {
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId],
         packagesSlugs: [pkg.slug],
+        packageIds: [packageId],
       });
     });
 
@@ -299,6 +300,7 @@ describe('PublishPackagesUseCase', () => {
         standardVersionIds: [],
         targetIds: [targetId],
         packagesSlugs: [pkg.slug],
+        packageIds: [packageId],
       });
     });
   });
@@ -341,6 +343,7 @@ describe('PublishPackagesUseCase', () => {
         standardVersionIds: [standardVersion.id],
         targetIds: [targetId],
         packagesSlugs: [pkg.slug],
+        packageIds: [packageId],
       });
     });
   });
@@ -514,6 +517,7 @@ describe('PublishPackagesUseCase', () => {
         ]),
         targetIds: [targetId],
         packagesSlugs: [package1.slug, package2.slug],
+        packageIds: [package1Id, package2Id],
       });
       expect(
         mockDeploymentPort.publishArtifacts.mock.calls[0][0].recipeVersionIds,

@@ -62,4 +62,30 @@ export interface IDistributionRepository {
     organizationId: OrganizationId,
     targetId: TargetId,
   ): Promise<RecipeVersion[]>;
+
+  /**
+   * Get currently distributed standard versions for a specific target,
+   * filtered by the specified packages.
+   * This returns the latest distributed version of each unique standard
+   * that belongs to one of the specified packages.
+   * Used to compute removed artifacts only from packages being deployed.
+   */
+  findActiveStandardVersionsByTargetAndPackages(
+    organizationId: OrganizationId,
+    targetId: TargetId,
+    packageIds: PackageId[],
+  ): Promise<StandardVersion[]>;
+
+  /**
+   * Get currently distributed recipe versions for a specific target,
+   * filtered by the specified packages.
+   * This returns the latest distributed version of each unique recipe
+   * that belongs to one of the specified packages.
+   * Used to compute removed artifacts only from packages being deployed.
+   */
+  findActiveRecipeVersionsByTargetAndPackages(
+    organizationId: OrganizationId,
+    targetId: TargetId,
+    packageIds: PackageId[],
+  ): Promise<RecipeVersion[]>;
 }

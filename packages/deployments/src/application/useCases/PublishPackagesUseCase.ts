@@ -150,6 +150,7 @@ export class PublishPackagesUseCase implements IPublishPackages {
       standardVersionIds,
       targetIds: command.targetIds,
       packagesSlugs,
+      packageIds: command.packageIds,
     } as PublishArtifactsCommand);
 
     // Store distributed package records for each distribution

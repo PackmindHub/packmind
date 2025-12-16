@@ -3,6 +3,7 @@ import { RecipeVersionId } from '../../recipes';
 import { StandardVersionId } from '../../standards';
 import { TargetId } from '../TargetId';
 import { Distribution } from '../Distribution';
+import { PackageId } from '../Package';
 
 /**
  * Command to publish both recipes and standards artifacts to targets
@@ -12,6 +13,7 @@ export type PublishArtifactsCommand = PackmindCommand & {
   standardVersionIds: StandardVersionId[];
   targetIds: TargetId[];
   packagesSlugs: string[];
+  packageIds: PackageId[];
 };
 
 /**
