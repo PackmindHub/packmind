@@ -2,13 +2,15 @@ Create a CLI release with version {{version}}. Follow these steps:
 
 1. **Verify clean git status**: Check that `git status` shows no uncommitted changes. If there are changes, fail and ask the user to commit or stash them first.
 
-2. **Update apps/cli/CHANGELOG.MD for release (First commit)**:
-   - Replace the `[Unreleased]` heading with `[{{version}}] - {{today_date}}` (use ISO 8601 format YYYY-MM-DD for the date)
-   - Update the unreleased comparison link at the bottom to point to the new release:
-     ```
-     [{{version}}]: https://github.com/PackmindHub/packmind/compare/release-cli/{{previous_version}}...release-cli/{{version}}
-     ```
-   - Extract the previous version from the existing comparison links in apps/cli/CHANGELOG.MD
+2. **Update apps/cli/package.json and apps/cli/CHANGELOG.MD for release (First commit)**:
+   - Update the version in apps/cli/package.json to `{{version}}`
+   - in apps/cli/CHANGELOG.md:
+     - Replace the `[Unreleased]` heading with `[{{version}}] - {{today_date}}` (use ISO 8601 format YYYY-MM-DD for the date)
+     - Update the unreleased comparison link at the bottom to point to the new release:
+       ```
+       [{{version}}]: https://github.com/PackmindHub/packmind/compare/release-cli/{{previous_version}}...release-cli/{{version}}
+       ```
+     - Extract the previous version from the existing comparison links in apps/cli/CHANGELOG.MD
    - Commit with message: `chore(cli): release {{version}}`
 
 3. **Create and push release tag**:
