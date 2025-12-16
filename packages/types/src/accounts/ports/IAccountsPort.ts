@@ -14,6 +14,8 @@ import {
   ExchangeCliLoginCodeResponse,
   GenerateApiKeyCommand,
   GenerateApiKeyResponse,
+  GenerateTrialActivationTokenCommand,
+  GenerateTrialActivationTokenResult,
   GenerateUserTokenCommand,
   GenerateUserTokenResponse,
   GetCurrentApiKeyCommand,
@@ -167,4 +169,8 @@ export interface IAccountsPort {
 
   // Trial operations
   startTrial(command: StartTrialCommand): Promise<StartTrialResult>;
+
+  generateTrialActivationToken(
+    command: GenerateTrialActivationTokenCommand,
+  ): Promise<GenerateTrialActivationTokenResult>;
 }

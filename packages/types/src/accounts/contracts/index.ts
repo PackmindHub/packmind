@@ -27,3 +27,4 @@ export * from './ISignInUserUseCase';
 export * from './IValidatePasswordUseCase';
 export * from './IValidateInvitationTokenUseCase';
 export * from './IStartTrial';
+export * from './IGenerateTrialActivationTokenUseCase';

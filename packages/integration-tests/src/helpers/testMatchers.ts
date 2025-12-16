@@ -12,3 +12,12 @@ export function expectContentToContainAll(
     );
   }
 }
+
+export function lessThanOrEqual(expected: number) {
+  return {
+    $$typeof: Symbol.for('jest.asymmetricMatcher'),
+    asymmetricMatch: (actual: unknown) =>
+      typeof actual === 'number' && actual <= expected,
+    toString: () => `lessThanOrEqual<${expected}>`,
+  };
+}
