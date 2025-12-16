@@ -55,6 +55,9 @@ import {
   IStandardsPort,
   IStandardsPortName,
   IStartTrial,
+  IGenerateTrialActivationTokenUseCase,
+  GenerateTrialActivationTokenCommand,
+  GenerateTrialActivationTokenResult,
   IValidateInvitationTokenUseCase,
   IValidatePasswordResetTokenUseCase,
   IValidatePasswordUseCase,
@@ -91,6 +94,7 @@ import {
   RemoveUserFromOrganizationResponse,
   SignUpWithOrganizationCommand,
 } from '../../domain/useCases';
+import { GenerateTrialActivationTokenUseCase } from '../useCases/generateTrialActivationToken/GenerateTrialActivationTokenUseCase';
 import { EnhancedAccountsServices } from '../services/EnhancedAccountsServices';
 import { RequestPasswordResetUseCase } from '../useCases/RequestPasswordResetUseCase';
 import { ResetPasswordUseCase } from '../useCases/ResetPasswordUseCase';
@@ -157,6 +161,7 @@ export class AccountsAdapter
   private _createCliLoginCode?: ICreateCliLoginCodeUseCase;
   private _exchangeCliLoginCode?: IExchangeCliLoginCodeUseCase;
   private _startTrial!: IStartTrial;
+  private _generateTrialActivationToken!: IGenerateTrialActivationTokenUseCase;
 
   constructor(
     private readonly accountsServices: EnhancedAccountsServices,
@@ -341,6 +346,19 @@ export class AccountsAdapter
       this.spacesPort ?? undefined,
     );
     this.logger.debug('Start trial use case initialized');
+
+    // Trial activation token use case (requires TrialActivationService)
+    const trialActivationService =
+      this.accountsServices.getTrialActivationService?.();
+    if (trialActivationService) {
+      this._generateTrialActivationToken =
+        new GenerateTrialActivationTokenUseCase(
+          this,
+          trialActivationService,
+          this.logger,
+        );
+      this.logger.debug('Generate trial activation token use case initialized');
+    }
 
     this.logger.info('AccountsAdapter initialized successfully');
   }
@@ -560,5 +578,16 @@ export class AccountsAdapter
     command: StartTrialCommand,
   ): Promise<StartTrialResult> {
     return this._startTrial.execute(command);
+  }
+
+  public async generateTrialActivationToken(
+    command: GenerateTrialActivationTokenCommand,
+  ): Promise<GenerateTrialActivationTokenResult> {
+    if (!this._generateTrialActivationToken) {
+      throw new Error(
+        'Trial activation token generation not available - missing dependencies',
+      );
+    }
+    return this._generateTrialActivationToken.execute(command);
   }
 }

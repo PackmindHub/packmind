@@ -4,7 +4,7 @@ import {
   timestampsSchemas,
   uuidSchema,
 } from '@packmind/node-utils';
-import { TrialActivation } from '../../domain/entities/TrialActivationToken';
+import { TrialActivation } from '@packmind/types';
 
 export const TrialActivationSchema = new EntitySchema<
   WithTimestamps<TrialActivation>

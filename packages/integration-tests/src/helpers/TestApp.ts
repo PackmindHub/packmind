@@ -1,4 +1,4 @@
-import { AccountsHexa } from '@packmind/accounts';
+import { AccountsHexa, AccountsHexaOpts } from '@packmind/accounts';
 import { AnalyticsHexa } from '@packmind/analytics';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { DeploymentsHexa } from '@packmind/deployments';
@@ -15,6 +15,24 @@ import { RecipesHexa } from '@packmind/recipes';
 import { SpacesHexa } from '@packmind/spaces';
 import { StandardsHexa } from '@packmind/standards';
 import { DataSource } from 'typeorm';
+import * as jwt from 'jsonwebtoken';
+
+const TEST_JWT_SECRET = 'test-jwt-secret-for-integration-tests';
+
+/**
+ * Simple JWT service implementation for integration tests
+ */
+const testJwtService = {
+  sign: (
+    payload: Record<string, unknown>,
+    options?: { expiresIn?: string | number },
+  ): string => {
+    return jwt.sign(payload, TEST_JWT_SECRET, options);
+  },
+  verify: (token: string): Record<string, unknown> => {
+    return jwt.verify(token, TEST_JWT_SECRET) as Record<string, unknown>;
+  },
+};
 
 export class TestApp {
   public accountsHexa!: AccountsHexa;
@@ -42,7 +60,9 @@ export class TestApp {
     this.dataSource = dataSource;
 
     this._registry.register(SpacesHexa);
-    this._registry.register(AccountsHexa);
+    this._registry.register(AccountsHexa, {
+      jwtService: testJwtService,
+    } as Partial<AccountsHexaOpts>);
     this._registry.registerService(JobsService);
     this._registry.registerService(PackmindEventEmitterService);
     this._registry.register(AmplitudeHexa);

@@ -6,6 +6,7 @@
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
   "dependencies": {
+    "jsonwebtoken": "^9.0.2",
     "tslib": "^2.3.0",
     "@packmind/accounts": "*",
     "@packmind/recipes": "*",

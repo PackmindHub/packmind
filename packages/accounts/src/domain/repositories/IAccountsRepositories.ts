@@ -4,6 +4,7 @@ import { IInvitationRepository } from './IInvitationRepository';
 import { IUserOrganizationMembershipRepository } from './IUserOrganizationMembershipRepository';
 import { IPasswordResetTokenRepository } from './IPasswordResetTokenRepository';
 import { ICliLoginCodeRepository } from './ICliLoginCodeRepository';
+import { ITrialActivationRepository } from './ITrialActivationRepository';
 
 /**
  * IAccountsRepositories - Repository aggregator interface for the Accounts domain
@@ -42,4 +43,9 @@ export interface IAccountsRepositories {
    * Get the CLI login code repository instance
    */
   getCliLoginCodeRepository(): ICliLoginCodeRepository;
+
+  /**
+   * Get the trial activation repository instance
+   */
+  getTrialActivationRepository(): ITrialActivationRepository;
 }

@@ -5,16 +5,19 @@ import { IOrganizationRepository } from '../../domain/repositories/IOrganization
 import { IInvitationRepository } from '../../domain/repositories/IInvitationRepository';
 import { IPasswordResetTokenRepository } from '../../domain/repositories/IPasswordResetTokenRepository';
 import { ICliLoginCodeRepository } from '../../domain/repositories/ICliLoginCodeRepository';
+import { ITrialActivationRepository } from '../../domain/repositories/ITrialActivationRepository';
 import { UserRepository } from './UserRepository';
 import { OrganizationRepository } from './OrganizationRepository';
 import { InvitationRepository } from './InvitationRepository';
 import { PasswordResetTokenRepository } from './PasswordResetTokenRepository';
 import { CliLoginCodeRepository } from './CliLoginCodeRepository';
+import { TrialActivationRepository } from './TrialActivationRepository';
 import { UserSchema } from '../schemas/UserSchema';
 import { OrganizationSchema } from '../schemas/OrganizationSchema';
 import { InvitationSchema } from '../schemas/InvitationSchema';
 import { PasswordResetTokenSchema } from '../schemas/PasswordResetTokenSchema';
 import { CliLoginCodeSchema } from '../schemas/CliLoginCodeSchema';
+import { TrialActivationSchema } from '../schemas/TrialActivationSchema';
 import { UserOrganizationMembershipSchema } from '../schemas/UserOrganizationMembershipSchema';
 import { UserOrganizationMembershipRepository } from './UserOrganizationMembershipRepository';
 import { IUserOrganizationMembershipRepository } from '../../domain/repositories/IUserOrganizationMembershipRepository';
@@ -33,6 +36,7 @@ export class AccountsRepositories implements IAccountsRepositories {
   private readonly passwordResetTokenRepository: IPasswordResetTokenRepository;
   private readonly userOrganizationMembershipRepository: IUserOrganizationMembershipRepository;
   private readonly cliLoginCodeRepository: ICliLoginCodeRepository;
+  private readonly trialActivationRepository: ITrialActivationRepository;
 
   constructor(private readonly dataSource: DataSource) {
     // Initialize all repositories with their respective schemas
@@ -54,6 +58,9 @@ export class AccountsRepositories implements IAccountsRepositories {
       );
     this.cliLoginCodeRepository = new CliLoginCodeRepository(
       this.dataSource.getRepository(CliLoginCodeSchema),
+    );
+    this.trialActivationRepository = new TrialActivationRepository(
+      this.dataSource.getRepository(TrialActivationSchema),
     );
   }
 
@@ -79,5 +86,9 @@ export class AccountsRepositories implements IAccountsRepositories {
 
   getCliLoginCodeRepository(): ICliLoginCodeRepository {
     return this.cliLoginCodeRepository;
+  }
+
+  getTrialActivationRepository(): ITrialActivationRepository {
+    return this.trialActivationRepository;
   }
 }
