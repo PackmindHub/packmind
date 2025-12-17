@@ -154,6 +154,7 @@ describe('NotifyDistributionUseCase', () => {
 
     mockDistributionRepository = {
       add: jest.fn(),
+      findActivePackageIdsByTarget: jest.fn().mockResolvedValue([]),
     } as unknown as jest.Mocked<IDistributionRepository>;
 
     mockDistributedPackageRepository = {
@@ -1654,6 +1655,240 @@ describe('NotifyDistributionUseCase', () => {
 
       it('does not create a new target', () => {
         expect(mockTargetRepository.add).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when a previously active package is removed', () => {
+      const removedPackageId = createPackageId(uuidv4());
+
+      beforeEach(async () => {
+        const existingTarget = buildTarget();
+        const recipeVersion = buildRecipeVersion();
+        const standardVersion = buildStandardVersion();
+        const pkg = buildPackage('my-package');
+
+        mockGitPort.listProviders.mockResolvedValue({
+          providers: [
+            {
+              id: gitProviderId,
+              source: 'github',
+              organizationId,
+              url: 'https://github.com',
+              hasToken: false,
+            },
+          ],
+        });
+
+        mockGitPort.listRepos.mockResolvedValue([
+          {
+            id: gitRepoId,
+            owner: 'test-owner',
+            repo: 'test-repo',
+            branch: 'main',
+            providerId: gitProviderId,
+          },
+        ]);
+
+        mockTargetRepository.findByGitRepoId.mockResolvedValue([
+          existingTarget,
+        ]);
+        mockPackageRepository.findByOrganizationId.mockResolvedValue([pkg]);
+        mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
+          standardVersion,
+        );
+        mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+        mockDistributionRepository.add.mockImplementation((d) =>
+          Promise.resolve(d),
+        );
+        mockDistributedPackageRepository.add.mockImplementation((d) =>
+          Promise.resolve(d),
+        );
+
+        // A different package was previously active for this target
+        mockDistributionRepository.findActivePackageIdsByTarget.mockResolvedValue(
+          [removedPackageId],
+        );
+
+        const command: NotifyDistributionCommand = {
+          userId,
+          organizationId,
+          distributedPackages: ['my-package'],
+          gitRemoteUrl: 'https://github.com/test-owner/test-repo.git',
+          gitBranch: 'main',
+          relativePath: '/',
+        };
+
+        await useCase.execute(command);
+      });
+
+      it('creates a distributed package with remove operation for the removed package', () => {
+        expect(mockDistributedPackageRepository.add).toHaveBeenCalledWith(
+          expect.objectContaining({
+            packageId: removedPackageId,
+            operation: 'remove',
+          }),
+        );
+      });
+
+      it('creates a distributed package with add operation for the new package', () => {
+        expect(mockDistributedPackageRepository.add).toHaveBeenCalledWith(
+          expect.objectContaining({
+            packageId: packageId,
+            operation: 'add',
+          }),
+        );
+      });
+
+      it('creates two distributed packages (one add and one remove)', () => {
+        expect(mockDistributedPackageRepository.add).toHaveBeenCalledTimes(2);
+      });
+    });
+
+    describe('when no packages were previously active', () => {
+      beforeEach(async () => {
+        const existingTarget = buildTarget();
+        const recipeVersion = buildRecipeVersion();
+        const standardVersion = buildStandardVersion();
+        const pkg = buildPackage('my-package');
+
+        mockGitPort.listProviders.mockResolvedValue({
+          providers: [
+            {
+              id: gitProviderId,
+              source: 'github',
+              organizationId,
+              url: 'https://github.com',
+              hasToken: false,
+            },
+          ],
+        });
+
+        mockGitPort.listRepos.mockResolvedValue([
+          {
+            id: gitRepoId,
+            owner: 'test-owner',
+            repo: 'test-repo',
+            branch: 'main',
+            providerId: gitProviderId,
+          },
+        ]);
+
+        mockTargetRepository.findByGitRepoId.mockResolvedValue([
+          existingTarget,
+        ]);
+        mockPackageRepository.findByOrganizationId.mockResolvedValue([pkg]);
+        mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
+          standardVersion,
+        );
+        mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+        mockDistributionRepository.add.mockImplementation((d) =>
+          Promise.resolve(d),
+        );
+        mockDistributedPackageRepository.add.mockImplementation((d) =>
+          Promise.resolve(d),
+        );
+
+        // No packages were previously active
+        mockDistributionRepository.findActivePackageIdsByTarget.mockResolvedValue(
+          [],
+        );
+
+        const command: NotifyDistributionCommand = {
+          userId,
+          organizationId,
+          distributedPackages: ['my-package'],
+          gitRemoteUrl: 'https://github.com/test-owner/test-repo.git',
+          gitBranch: 'main',
+          relativePath: '/',
+        };
+
+        await useCase.execute(command);
+      });
+
+      it('creates only the add operation distributed package', () => {
+        expect(mockDistributedPackageRepository.add).toHaveBeenCalledTimes(1);
+      });
+
+      it('does not create any remove operation', () => {
+        expect(mockDistributedPackageRepository.add).not.toHaveBeenCalledWith(
+          expect.objectContaining({
+            operation: 'remove',
+          }),
+        );
+      });
+    });
+
+    describe('when redistributing the same package', () => {
+      beforeEach(async () => {
+        const existingTarget = buildTarget();
+        const recipeVersion = buildRecipeVersion();
+        const standardVersion = buildStandardVersion();
+        const pkg = buildPackage('my-package');
+
+        mockGitPort.listProviders.mockResolvedValue({
+          providers: [
+            {
+              id: gitProviderId,
+              source: 'github',
+              organizationId,
+              url: 'https://github.com',
+              hasToken: false,
+            },
+          ],
+        });
+
+        mockGitPort.listRepos.mockResolvedValue([
+          {
+            id: gitRepoId,
+            owner: 'test-owner',
+            repo: 'test-repo',
+            branch: 'main',
+            providerId: gitProviderId,
+          },
+        ]);
+
+        mockTargetRepository.findByGitRepoId.mockResolvedValue([
+          existingTarget,
+        ]);
+        mockPackageRepository.findByOrganizationId.mockResolvedValue([pkg]);
+        mockStandardsPort.getLatestStandardVersion.mockResolvedValue(
+          standardVersion,
+        );
+        mockRecipesPort.listRecipeVersions.mockResolvedValue([recipeVersion]);
+        mockDistributionRepository.add.mockImplementation((d) =>
+          Promise.resolve(d),
+        );
+        mockDistributedPackageRepository.add.mockImplementation((d) =>
+          Promise.resolve(d),
+        );
+
+        // Same package was previously active
+        mockDistributionRepository.findActivePackageIdsByTarget.mockResolvedValue(
+          [packageId],
+        );
+
+        const command: NotifyDistributionCommand = {
+          userId,
+          organizationId,
+          distributedPackages: ['my-package'],
+          gitRemoteUrl: 'https://github.com/test-owner/test-repo.git',
+          gitBranch: 'main',
+          relativePath: '/',
+        };
+
+        await useCase.execute(command);
+      });
+
+      it('creates only one distributed package with add operation', () => {
+        expect(mockDistributedPackageRepository.add).toHaveBeenCalledTimes(1);
+      });
+
+      it('does not create a remove entry for the same package', () => {
+        expect(mockDistributedPackageRepository.add).not.toHaveBeenCalledWith(
+          expect.objectContaining({
+            operation: 'remove',
+          }),
+        );
       });
     });
   });
