@@ -7,6 +7,7 @@ import {
   CheckEmailAvailabilityCommand,
   createOrganizationId,
   ActivateUserAccountCommand,
+  ActivateTrialAccountCommand,
   UserId,
   RequestPasswordResetCommand,
   ResetPasswordCommand,
@@ -39,6 +40,7 @@ const ACTIVATE_USER_ACCOUNT_MUTATION_KEY = 'activateUserAccount';
 const REQUEST_PASSWORD_RESET_MUTATION_KEY = 'requestPasswordReset';
 const RESET_PASSWORD_MUTATION_KEY = 'resetPassword';
 const CREATE_CLI_LOGIN_CODE_MUTATION_KEY = 'createCliLoginCode';
+const ACTIVATE_TRIAL_ACCOUNT_MUTATION_KEY = 'activateTrialAccount';
 
 export const useSignUpWithOrganizationMutation = () => {
   const queryClient = useQueryClient();
@@ -273,6 +275,25 @@ export const useResetPasswordMutation = () => {
     },
     onError: (error) => {
       console.error('Error resetting password:', error);
+    },
+  });
+};
+
+export const useActivateTrialAccountMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: [ACTIVATE_TRIAL_ACCOUNT_MUTATION_KEY],
+    mutationFn: async (request: ActivateTrialAccountCommand) => {
+      return authGateway.activateTrialAccount(request);
+    },
+    onSuccess: () => {
+      // Invalidate auth queries to refresh user state after activation
+      queryClient.invalidateQueries({ queryKey: GET_ME_KEY });
+      queryClient.invalidateQueries({ queryKey: GET_USER_ORGANIZATIONS_KEY });
+    },
+    onError: (error) => {
+      console.error('Error activating trial account:', error);
     },
   });
 };

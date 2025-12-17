@@ -2,6 +2,7 @@ import {
   AccountsHexa,
   AccountsHexaOpts,
   ApiKeyService,
+  IJwtService,
 } from '@packmind/accounts';
 import { AnalyticsHexa } from '@packmind/analytics';
 import { CodingAgentHexa } from '@packmind/coding-agent';
@@ -33,6 +34,10 @@ export interface PackmindAppApiConfig {
    * ApiKeyService instance for AccountsHexa authentication
    */
   apiKeyService: ApiKeyService;
+  /**
+   * JwtService instance for trial activation token generation
+   */
+  jwtService: IJwtService;
 }
 
 /**
@@ -98,9 +103,10 @@ export async function initializePackmindApp(
   // Register all hexas in the specified order
   for (const HexaClass of definition.hexas) {
     if (HexaClass === AccountsHexa) {
-      // Register AccountsHexa with apiKeyService option
+      // Register AccountsHexa with apiKeyService and jwtService options
       registry.register(AccountsHexa, {
         apiKeyService: config.apiKeyService,
+        jwtService: config.jwtService,
       } as Partial<AccountsHexaOpts>);
     } else {
       registry.register(HexaClass);

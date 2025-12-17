@@ -20,6 +20,8 @@ import {
   CheckEmailAvailabilityResponse,
   ActivateUserAccountCommand,
   ActivateUserAccountResponse,
+  ActivateTrialAccountCommand,
+  ActivateTrialAccountResult,
   RequestPasswordResetCommand,
   RequestPasswordResetResponse,
   ResetPasswordCommand,
@@ -143,6 +145,15 @@ export class AuthGatewayApi extends PackmindGateway implements IAuthGateway {
   ): Promise<ResetPasswordResponse> {
     return this._api.post<ResetPasswordResponse>(
       `${this._endpoint}/reset-password`,
+      request,
+    );
+  }
+
+  async activateTrialAccount(
+    request: ActivateTrialAccountCommand,
+  ): Promise<ActivateTrialAccountResult> {
+    return this._api.post<ActivateTrialAccountResult>(
+      `${this._endpoint}/activate-trial-account`,
       request,
     );
   }

@@ -17,6 +17,7 @@ import {
   registerSaveStandardTool,
   registerCreateStandardRuleTool,
   registerOnboardingTool,
+  registerGenerateTrialActivationUrlTool,
 } from './tools';
 import { UserContext } from './tools/types';
 
@@ -75,6 +76,7 @@ export function createMCPServer(
   registerSaveStandardTool(toolDependencies, mcpServer);
   registerCreateStandardRuleTool(toolDependencies, mcpServer);
   registerOnboardingTool(toolDependencies, mcpServer);
+  registerGenerateTrialActivationUrlTool(toolDependencies, mcpServer);
 
   return mcpServer;
 }
