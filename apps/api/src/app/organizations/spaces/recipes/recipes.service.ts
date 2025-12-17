@@ -140,6 +140,7 @@ export class RecipesService {
       standardVersionIds: [],
       targetIds,
       packagesSlugs: [],
+      packageIds: [],
     });
 
     return {
