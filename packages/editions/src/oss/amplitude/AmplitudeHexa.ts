@@ -1,8 +1,14 @@
 import { PackmindLogger } from '@packmind/logger';
-import { BaseHexa, BaseHexaOpts } from '@packmind/node-utils';
+import {
+  BaseHexa,
+  BaseHexaOpts,
+  HexaRegistry,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import { IEventTrackingPort, IEventTrackingPortName } from '@packmind/types';
 import { DataSource } from 'typeorm';
 import { EventTrackingAdapter } from './application/EventTrackingAdapter';
+import { AmplitudeListener } from './application/AmplitudeListener';
 
 const origin = 'AmplitudeHexa';
 
@@ -15,6 +21,7 @@ const origin = 'AmplitudeHexa';
  */
 export class AmplitudeHexa extends BaseHexa<BaseHexaOpts, IEventTrackingPort> {
   private readonly adapter: EventTrackingAdapter;
+  private readonly listener: AmplitudeListener;
 
   constructor(
     dataSource: DataSource,
@@ -28,6 +35,9 @@ export class AmplitudeHexa extends BaseHexa<BaseHexaOpts, IEventTrackingPort> {
       this.logger.debug('Creating EventTrackingAdapter (OSS - no-op)');
       this.adapter = new EventTrackingAdapter(this.logger);
 
+      this.logger.debug('Creating AmplitudeListener');
+      this.listener = new AmplitudeListener(this.adapter);
+
       this.logger.info('AmplitudeHexa construction completed');
     } catch (error) {
       this.logger.error('Failed to construct AmplitudeHexa', {
@@ -39,12 +49,28 @@ export class AmplitudeHexa extends BaseHexa<BaseHexaOpts, IEventTrackingPort> {
 
   /**
    * Initialize the hexa with access to the registry for adapter retrieval.
-   * EventTracking has no dependencies, so this is a no-op.
+   * Initializes the AmplitudeListener to start listening to trial events.
    */
-  public async initialize(): Promise<void> {
+  public async initialize(registry: HexaRegistry): Promise<void> {
     this.logger.info('Initializing AmplitudeHexa');
-    // No dependencies to initialize
-    this.logger.info('AmplitudeHexa initialized successfully');
+
+    try {
+      // Get the event emitter service from the registry
+      const eventEmitterService = registry.getService(
+        PackmindEventEmitterService,
+      );
+
+      // Initialize the listener with the event emitter service
+      this.listener.initialize(eventEmitterService);
+      this.logger.info('AmplitudeListener initialized');
+
+      this.logger.info('AmplitudeHexa initialized successfully');
+    } catch (error) {
+      this.logger.error('Failed to initialize AmplitudeHexa', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   }
 
   /**
@@ -67,7 +93,7 @@ export class AmplitudeHexa extends BaseHexa<BaseHexaOpts, IEventTrackingPort> {
    */
   public destroy(): void {
     this.logger.info('Destroying AmplitudeHexa');
-    // Add any cleanup logic here if needed
+    this.listener.destroy();
     this.logger.info('AmplitudeHexa destroyed');
   }
 }

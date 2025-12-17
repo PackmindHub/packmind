@@ -7,6 +7,7 @@ import {
   ISpacesPort,
   StartTrialCommand,
   UserSignedUpEvent,
+  TrialStartedEvent,
 } from '@packmind/types';
 import { organizationFactory, userFactory } from '../../../../test';
 import { OrganizationService } from '../../services/OrganizationService';
@@ -124,14 +125,51 @@ describe('StartTrialUseCase', () => {
         );
       });
 
-      it('emits UserSignedUpEvent', async () => {
+      it('emits UserSignedUpEvent without trialMode', async () => {
         const command: StartTrialCommand = { agent: 'vs-code' };
 
         await startTrialUseCase.execute(command);
 
         expect(mockEventEmitterService.emit).toHaveBeenCalledWith(
-          expect.any(UserSignedUpEvent),
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              userId: expect.anything(),
+              organizationId: mockOrganization.id,
+              email: expect.stringMatching(
+                /^trial-[a-f0-9-]+@packmind\.trial$/,
+              ),
+            }),
+          }),
         );
+
+        // Verify trialMode is NOT in the payload
+        const userSignedUpCall = (
+          mockEventEmitterService.emit as jest.Mock
+        ).mock.calls.find((call) => call[0] instanceof UserSignedUpEvent);
+        expect(userSignedUpCall[0].payload).not.toHaveProperty('trialMode');
+      });
+
+      it('emits TrialStartedEvent with agent and startedAt', async () => {
+        const command: StartTrialCommand = { agent: 'vs-code' };
+
+        await startTrialUseCase.execute(command);
+
+        expect(mockEventEmitterService.emit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            payload: expect.objectContaining({
+              userId: expect.anything(),
+              organizationId: mockOrganization.id,
+              agent: 'vs-code',
+              startedAt: expect.any(Date),
+            }),
+          }),
+        );
+
+        const trialStartedCall = (
+          mockEventEmitterService.emit as jest.Mock
+        ).mock.calls.find((call) => call[0] instanceof TrialStartedEvent);
+        expect(trialStartedCall).toBeDefined();
+        expect(trialStartedCall[0]).toBeInstanceOf(TrialStartedEvent);
       });
 
       it('returns user data', async () => {

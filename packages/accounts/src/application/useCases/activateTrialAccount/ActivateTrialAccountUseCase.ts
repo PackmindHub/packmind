@@ -5,7 +5,9 @@ import {
   ActivateTrialAccountResult,
   IActivateTrialAccountUseCase,
   createTrialActivationToken,
+  TrialAccountActivatedEvent,
 } from '@packmind/types';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 import { TrialActivationService } from '../../services/TrialActivationService';
 import { UserService } from '../../services/UserService';
 import { OrganizationService } from '../../services/OrganizationService';
@@ -22,6 +24,7 @@ export class ActivateTrialAccountUseCase
     private readonly trialActivationService: TrialActivationService,
     private readonly userService: UserService,
     private readonly organizationService: OrganizationService,
+    private readonly eventEmitterService: PackmindEventEmitterService,
     logger: PackmindLogger = new PackmindLogger(origin),
   ) {
     this.logger = logger;
@@ -103,6 +106,15 @@ export class ActivateTrialAccountUseCase
 
     // Delete the used trial activation token
     await this.trialActivationService.delete(trialActivation);
+
+    // Emit trial account activated event
+    this.eventEmitterService.emit(
+      new TrialAccountActivatedEvent({
+        userId,
+        organizationId: updatedOrganization.id,
+        email: command.email,
+      }),
+    );
 
     this.logger.info('Trial account activated successfully', {
       userId: String(userId),
