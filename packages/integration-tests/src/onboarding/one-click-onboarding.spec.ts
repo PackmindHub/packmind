@@ -36,6 +36,10 @@ describe('One click on-boarding', () => {
     organization = startTrialResult.organization;
   });
 
+  afterEach(async () => {
+    await dataSource.destroy();
+  });
+
   it('creates a random user', async () => {
     expect(user).toEqual(
       expect.objectContaining({
