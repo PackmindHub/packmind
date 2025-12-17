@@ -6,6 +6,7 @@ export interface UserSignedUpPayload {
   userId: UserId;
   organizationId: OrganizationId;
   email: string;
+  trialMode?: string;
 }
 
 /**
