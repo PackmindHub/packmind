@@ -14,6 +14,51 @@ export type InstallHandlerDependencies = {
   error: typeof console.error;
 };
 
+/**
+ * Shared helper to notify distribution if the project is in a git repository.
+ * Silently ignores errors to not fail the main operation.
+ */
+async function notifyDistributionIfInGitRepo(params: {
+  packmindCliHexa: PackmindCliHexa;
+  cwd: string;
+  packages: string[];
+  log: (msg: string) => void;
+}): Promise<boolean> {
+  const { packmindCliHexa, cwd, packages, log } = params;
+
+  const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
+  if (!gitRoot) {
+    return false;
+  }
+
+  try {
+    const gitRemoteUrl = packmindCliHexa.getGitRemoteUrlFromPath(gitRoot);
+    const gitBranch = packmindCliHexa.getCurrentBranch(gitRoot);
+
+    let relativePath = cwd.startsWith(gitRoot)
+      ? cwd.slice(gitRoot.length)
+      : '/';
+    if (!relativePath.startsWith('/')) {
+      relativePath = '/' + relativePath;
+    }
+    if (!relativePath.endsWith('/')) {
+      relativePath = relativePath + '/';
+    }
+
+    await packmindCliHexa.notifyDistribution({
+      distributedPackages: packages,
+      gitRemoteUrl,
+      gitBranch,
+      relativePath,
+    });
+    log('Successfully notified Packmind of the new distribution');
+    return true;
+  } catch {
+    // Silently ignore distribution notification errors
+    return false;
+  }
+}
+
 export type ListPackagesArgs = Record<string, never>;
 
 export async function listPackagesHandler(
@@ -360,38 +405,21 @@ async function executeInstallForDirectory(
       };
     }
 
-    // Notify distribution if files were created or updated and we're in a git repo
+    // Notify distribution if files were created, updated or deleted
     let notificationSent = false;
-    if (result.filesCreated > 0 || result.filesUpdated > 0) {
-      const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(directory);
-
-      if (gitRoot) {
-        try {
-          const gitRemoteUrl = packmindCliHexa.getGitRemoteUrlFromPath(gitRoot);
-          const gitBranch = packmindCliHexa.getCurrentBranch(gitRoot);
-
-          // Calculate relative path from git root to current directory
-          let relativePath = directory.startsWith(gitRoot)
-            ? directory.slice(gitRoot.length)
-            : '/';
-          if (!relativePath.startsWith('/')) {
-            relativePath = '/' + relativePath;
-          }
-          if (!relativePath.endsWith('/')) {
-            relativePath = relativePath + '/';
-          }
-
-          await packmindCliHexa.notifyDistribution({
-            distributedPackages: configPackages,
-            gitRemoteUrl,
-            gitBranch,
-            relativePath,
-          });
-          notificationSent = true;
-        } catch {
-          // Silently ignore distribution notification errors
-        }
-      }
+    if (
+      result.filesCreated > 0 ||
+      result.filesUpdated > 0 ||
+      result.filesDeleted > 0
+    ) {
+      notificationSent = await notifyDistributionIfInGitRepo({
+        packmindCliHexa,
+        cwd: directory,
+        packages: configPackages,
+        log: () => {
+          /* empty */
+        },
+      });
     }
 
     return {
@@ -520,40 +548,19 @@ export async function installPackagesHandler(
       };
     }
 
-    // Notify distribution if files were created or updated and we're in a git repo
+    // Notify distribution if files were created, updated or deleted
     let notificationSent = false;
-    if (result.filesCreated > 0 || result.filesUpdated > 0) {
-      const gitRoot = await packmindCliHexa.tryGetGitRepositoryRoot(cwd);
-
-      if (gitRoot) {
-        try {
-          const gitRemoteUrl = packmindCliHexa.getGitRemoteUrlFromPath(gitRoot);
-          const gitBranch = packmindCliHexa.getCurrentBranch(gitRoot);
-
-          // Calculate relative path from git root to current directory
-          let relativePath = cwd.startsWith(gitRoot)
-            ? cwd.slice(gitRoot.length)
-            : '/';
-          if (!relativePath.startsWith('/')) {
-            relativePath = '/' + relativePath;
-          }
-          if (!relativePath.endsWith('/')) {
-            relativePath = relativePath + '/';
-          }
-
-          await packmindCliHexa.notifyDistribution({
-            distributedPackages: allPackages,
-            gitRemoteUrl,
-            gitBranch,
-            relativePath,
-          });
-          log('Successfully notified Packmind of the new distribution');
-          notificationSent = true;
-        } catch {
-          // Silently ignore distribution notification errors
-          // The install was successful, we don't want to fail the command
-        }
-      }
+    if (
+      result.filesCreated > 0 ||
+      result.filesUpdated > 0 ||
+      result.filesDeleted > 0
+    ) {
+      notificationSent = await notifyDistributionIfInGitRepo({
+        packmindCliHexa,
+        cwd,
+        packages: allPackages,
+        log,
+      });
     }
 
     return {
@@ -830,6 +837,14 @@ export async function uninstallPackagesHandler(
 
     // Write config with remaining packages
     await packmindCliHexa.writeConfig(cwd, remainingPackages);
+
+    // Notify distribution with remaining packages so backend can detect removals
+    await notifyDistributionIfInGitRepo({
+      packmindCliHexa,
+      cwd,
+      packages: remainingPackages,
+      log,
+    });
 
     // Show success message
     log('');

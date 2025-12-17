@@ -88,4 +88,15 @@ export interface IDistributionRepository {
     targetId: TargetId,
     packageIds: PackageId[],
   ): Promise<RecipeVersion[]>;
+
+  /**
+   * Get all currently active (not removed) package IDs for a specific target.
+   * This looks at the latest distribution operation for each package
+   * and returns packages where the latest operation is NOT 'remove'.
+   * Used to detect which packages have been removed during a new distribution.
+   */
+  findActivePackageIdsByTarget(
+    organizationId: OrganizationId,
+    targetId: TargetId,
+  ): Promise<PackageId[]>;
 }

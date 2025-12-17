@@ -801,4 +801,71 @@ export class DistributionRepository implements IDistributionRepository {
       throw error;
     }
   }
+
+  async findActivePackageIdsByTarget(
+    organizationId: OrganizationId,
+    targetId: TargetId,
+  ): Promise<PackageId[]> {
+    this.logger.info('Finding active package IDs by target', {
+      organizationId,
+      targetId,
+    });
+
+    try {
+      const distributions = await this.repository
+        .createQueryBuilder('distribution')
+        .innerJoinAndSelect(
+          'distribution.distributedPackages',
+          'distributedPackage',
+        )
+        .where('distribution.organizationId = :organizationId', {
+          organizationId,
+        })
+        .andWhere('distribution.target_id = :targetId', { targetId })
+        .andWhere('distribution.status = :status', {
+          status: DistributionStatus.success,
+        })
+        .orderBy('distribution.createdAt', 'DESC')
+        .getMany();
+
+      // Track the latest operation for each package
+      const latestOperationPerPackage = new Map<string, string>();
+
+      for (const distribution of distributions) {
+        for (const distributedPackage of distribution.distributedPackages) {
+          // Only keep the first (latest) occurrence of each package
+          if (!latestOperationPerPackage.has(distributedPackage.packageId)) {
+            latestOperationPerPackage.set(
+              distributedPackage.packageId,
+              distributedPackage.operation ?? 'add',
+            );
+          }
+        }
+      }
+
+      // Return package IDs where latest operation is NOT 'remove'
+      const activePackageIds: PackageId[] = [];
+      for (const [packageId, operation] of latestOperationPerPackage) {
+        if (operation !== 'remove') {
+          activePackageIds.push(packageId as PackageId);
+        }
+      }
+
+      this.logger.info('Active package IDs found by target', {
+        organizationId,
+        targetId,
+        totalPackagesTracked: latestOperationPerPackage.size,
+        activePackageCount: activePackageIds.length,
+      });
+
+      return activePackageIds;
+    } catch (error) {
+      this.logger.error('Failed to find active package IDs by target', {
+        organizationId,
+        targetId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
 }

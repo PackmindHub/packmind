@@ -19,6 +19,7 @@ import {
   NotifyDistributionResponse,
   OrganizationId,
   Package,
+  PackageId,
   RecipeId,
   RecipeVersion,
   RecipeVersionId,
@@ -26,6 +27,7 @@ import {
   StandardId,
   StandardVersionId,
   Target,
+  TargetId,
   UserId,
 } from '@packmind/types';
 import { RenderModeConfigurationService } from '../../services/RenderModeConfigurationService';
@@ -210,6 +212,11 @@ export class NotifyDistributionUseCase
       relativePath,
     });
 
+    const previouslyActivePackageIds = await this.getPreviouslyActivePackageIds(
+      organizationId,
+      target.id,
+    );
+
     const matchingPackages = await this.findMatchingPackages({
       organizationId,
       packageSlugs,
@@ -224,6 +231,7 @@ export class NotifyDistributionUseCase
     const distributedPackages = await this.buildDistributedPackages({
       distributionId,
       packages: matchingPackages,
+      previouslyActivePackageIds,
     });
 
     await this.saveDistribution({
@@ -483,13 +491,35 @@ export class NotifyDistributionUseCase
     return matchingPackages;
   }
 
+  private async getPreviouslyActivePackageIds(
+    organizationId: OrganizationId,
+    targetId: TargetId,
+  ): Promise<PackageId[]> {
+    const activePackageIds =
+      await this.distributionRepository.findActivePackageIdsByTarget(
+        organizationId,
+        targetId,
+      );
+
+    this.logger.info('Found previously active packages for target', {
+      organizationId,
+      targetId,
+      activePackageCount: activePackageIds.length,
+    });
+
+    return activePackageIds;
+  }
+
   private async buildDistributedPackages(params: {
     distributionId: string;
     packages: Package[];
+    previouslyActivePackageIds: PackageId[];
   }): Promise<DistributedPackageWithVersionIds[]> {
-    const { distributionId, packages } = params;
+    const { distributionId, packages, previouslyActivePackageIds } = params;
     const distributedPackages: DistributedPackageWithVersionIds[] = [];
+    const currentPackageIds = new Set(packages.map((p) => p.id));
 
+    // Create 'add' entries for current packages
     for (const pkg of packages) {
       const standardVersionIds = await this.getLatestStandardVersionIds(
         pkg.standards,
@@ -508,6 +538,26 @@ export class NotifyDistributionUseCase
         _standardVersionIds: standardVersionIds,
         _recipeVersionIds: recipeVersionIds,
       });
+    }
+
+    // Create 'remove' entries for packages that were previously active but are not in current distribution
+    for (const prevPackageId of previouslyActivePackageIds) {
+      if (!currentPackageIds.has(prevPackageId)) {
+        this.logger.info('Package removed from distribution', {
+          packageId: prevPackageId,
+        });
+
+        distributedPackages.push({
+          id: createDistributedPackageId(uuidv4()),
+          distributionId: createDistributionId(distributionId),
+          packageId: prevPackageId,
+          standardVersions: [],
+          recipeVersions: [],
+          operation: 'remove',
+          _standardVersionIds: [],
+          _recipeVersionIds: [],
+        });
+      }
     }
 
     return distributedPackages;
