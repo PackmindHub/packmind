@@ -93,19 +93,21 @@ describe('AmplitudeListener', () => {
       );
     });
 
-    it('does not throw when tracking fails', async () => {
-      mockAdapter.trackEvent.mockRejectedValue(new Error('Tracking failed'));
+    describe('when tracking fails', () => {
+      it('does not throw', async () => {
+        mockAdapter.trackEvent.mockRejectedValue(new Error('Tracking failed'));
 
-      const event = new TrialStartedEvent({
-        userId: mockUserId,
-        organizationId: mockOrganizationId,
-        agent: 'vs-code',
-        startedAt: new Date(),
+        const event = new TrialStartedEvent({
+          userId: mockUserId,
+          organizationId: mockOrganizationId,
+          agent: 'vs-code',
+          startedAt: new Date(),
+        });
+
+        await expect(
+          listener['handleTrialStarted'](event),
+        ).resolves.not.toThrow();
       });
-
-      await expect(
-        listener['handleTrialStarted'](event),
-      ).resolves.not.toThrow();
     });
   });
 
@@ -127,18 +129,20 @@ describe('AmplitudeListener', () => {
       );
     });
 
-    it('does not throw when tracking fails', async () => {
-      mockAdapter.trackEvent.mockRejectedValue(new Error('Tracking failed'));
+    describe('when tracking fails', () => {
+      it('does not throw', async () => {
+        mockAdapter.trackEvent.mockRejectedValue(new Error('Tracking failed'));
 
-      const event = new TrialAccountActivatedEvent({
-        userId: mockUserId,
-        organizationId: mockOrganizationId,
-        email: 'user@example.com',
+        const event = new TrialAccountActivatedEvent({
+          userId: mockUserId,
+          organizationId: mockOrganizationId,
+          email: 'user@example.com',
+        });
+
+        await expect(
+          listener['handleTrialAccountActivated'](event),
+        ).resolves.not.toThrow();
       });
-
-      await expect(
-        listener['handleTrialAccountActivated'](event),
-      ).resolves.not.toThrow();
     });
   });
 });
