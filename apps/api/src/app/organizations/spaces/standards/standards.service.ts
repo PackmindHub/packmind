@@ -104,6 +104,7 @@ export class StandardsService {
       ...command,
       recipeVersionIds: [],
       packagesSlugs: [],
+      packageIds: [],
     });
     return result.distributions;
   }
