@@ -13,7 +13,7 @@ import { TokenResponse } from '../../auth/auth.service';
 import { McpService } from './mcp.service';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { getErrorMessage } from '../../shared/utils/error.utils';
-import { Configuration } from '@packmind/node-utils';
+import { Configuration, removeTrailingSlash } from '@packmind/node-utils';
 import { OrganizationId } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { OrganizationAccessGuard } from '../guards/organization-access.guard';
@@ -85,7 +85,8 @@ export class McpController {
   async getUrl(): Promise<{ url: string }> {
     const url = await Configuration.getConfig('APP_WEB_URL');
     if (url) {
-      return { url: `${url}/mcp` };
+      const normalizedUrl = removeTrailingSlash(url);
+      return { url: `${normalizedUrl}/mcp` };
     }
     return { url: 'http://localhost:8081/mcp' };
   }

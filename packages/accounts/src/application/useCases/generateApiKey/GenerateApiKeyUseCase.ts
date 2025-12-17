@@ -1,5 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
-import { Configuration } from '@packmind/node-utils';
+import { Configuration, removeTrailingSlash } from '@packmind/node-utils';
 import {
   IGenerateApiKeyUseCase,
   GenerateApiKeyCommand,
@@ -85,7 +85,7 @@ export class GenerateApiKeyUseCase implements IGenerateApiKeyUseCase {
   private async getApplicationUrl(): Promise<string> {
     const configValue = await Configuration.getConfig('APP_WEB_URL');
     if (configValue) {
-      return configValue.endsWith('/') ? configValue.slice(0, -1) : configValue;
+      return removeTrailingSlash(configValue);
     }
     this.logger.warn('Failed to get APP_WEB_URL value, using default', {
       configValue,

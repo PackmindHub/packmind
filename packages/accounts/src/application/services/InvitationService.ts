@@ -10,7 +10,11 @@ import { Organization } from '@packmind/types';
 import { User, UserId } from '@packmind/types';
 import { IInvitationRepository } from '../../domain/repositories/IInvitationRepository';
 import { PackmindLogger, maskEmail } from '@packmind/logger';
-import { MailService, Configuration } from '@packmind/node-utils';
+import {
+  MailService,
+  Configuration,
+  removeTrailingSlash,
+} from '@packmind/node-utils';
 
 const origin = 'InvitationService';
 const INVITATION_EXPIRATION_HOURS = 48;
@@ -224,7 +228,7 @@ export class InvitationService {
   private async getApplicationUrl(): Promise<string> {
     const configValue = await Configuration.getConfig('APP_WEB_URL');
     if (configValue) {
-      return configValue.endsWith('/') ? configValue.slice(0, -1) : configValue;
+      return removeTrailingSlash(configValue);
     }
     this.logger.warn('Failed to get APP_WEB_URL value, using default', {
       configValue,
@@ -234,7 +238,7 @@ export class InvitationService {
   }
 
   private buildInvitationUrl(token: InvitationToken, appUrl: string): string {
-    const baseUrl = appUrl.endsWith('/') ? appUrl.slice(0, -1) : appUrl;
+    const baseUrl = removeTrailingSlash(appUrl);
     return `${baseUrl}/activate?token=${encodeURIComponent(token)}`;
   }
 

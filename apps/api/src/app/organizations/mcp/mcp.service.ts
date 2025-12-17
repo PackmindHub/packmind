@@ -8,7 +8,7 @@ import {
 } from '@packmind/types';
 import { PackmindLogger } from '@packmind/logger';
 import { IAccountsPort } from '@packmind/types';
-import { Configuration } from '@packmind/node-utils';
+import { Configuration, removeTrailingSlash } from '@packmind/node-utils';
 import { TokenResponse } from '../../auth/auth.service';
 import { ACCOUNTS_ADAPTER_TOKEN } from '../../shared/HexaRegistryModule';
 
@@ -82,7 +82,11 @@ export class McpService {
 
   async getMcpUrl(): Promise<string> {
     const appWebUrl = await Configuration.getConfig('APP_WEB_URL');
-    return appWebUrl ? `${appWebUrl}/mcp` : 'http://localhost:8081/mcp';
+    if (appWebUrl) {
+      const normalizedUrl = removeTrailingSlash(appWebUrl);
+      return `${normalizedUrl}/mcp`;
+    }
+    return 'http://localhost:8081/mcp';
   }
 
   buildVsCodeMcpUrl(token: string, mcpUrl: string): string {

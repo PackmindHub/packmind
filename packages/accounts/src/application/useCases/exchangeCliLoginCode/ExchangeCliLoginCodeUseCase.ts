@@ -1,5 +1,5 @@
 import { PackmindLogger } from '@packmind/logger';
-import { Configuration } from '@packmind/node-utils';
+import { Configuration, removeTrailingSlash } from '@packmind/node-utils';
 import {
   IExchangeCliLoginCodeUseCase,
   ExchangeCliLoginCodeCommand,
@@ -139,7 +139,7 @@ export class ExchangeCliLoginCodeUseCase
   private async getApplicationUrl(): Promise<string> {
     const configValue = await Configuration.getConfig('APP_WEB_URL');
     if (configValue) {
-      return configValue.endsWith('/') ? configValue.slice(0, -1) : configValue;
+      return removeTrailingSlash(configValue);
     }
     return DEFAULT_APP_WEB_URL;
   }
