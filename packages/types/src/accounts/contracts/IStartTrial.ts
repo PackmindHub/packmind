@@ -3,7 +3,7 @@ import { Organization } from '../Organization';
 import { User, UserOrganizationRole } from '../User';
 
 export type StartTrialCommand = {
-  agent: 'vs-code';
+  agent: 'vs-code' | 'claude' | 'cursor';
 };
 
 export type StartTrialResult = {

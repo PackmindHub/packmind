@@ -7,6 +7,7 @@ import {
   Organization,
   TrialActivation,
   User,
+  TrialAccountActivatedEvent,
 } from '@packmind/types';
 import { ActivateTrialAccountUseCase } from './ActivateTrialAccountUseCase';
 import { TrialActivationService } from '../../services/TrialActivationService';
@@ -14,12 +15,14 @@ import { UserService } from '../../services/UserService';
 import { OrganizationService } from '../../services/OrganizationService';
 import { InvalidTrialActivationTokenError } from '../../../domain/errors';
 import { PackmindLogger } from '@packmind/logger';
+import { PackmindEventEmitterService } from '@packmind/node-utils';
 
 describe('ActivateTrialAccountUseCase', () => {
   let useCase: ActivateTrialAccountUseCase;
   let mockTrialActivationService: jest.Mocked<TrialActivationService>;
   let mockUserService: jest.Mocked<UserService>;
   let mockOrganizationService: jest.Mocked<OrganizationService>;
+  let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   const mockUserId = createUserId('user-123');
@@ -72,12 +75,17 @@ describe('ActivateTrialAccountUseCase', () => {
       updateOrganization: jest.fn(),
     } as unknown as jest.Mocked<OrganizationService>;
 
+    mockEventEmitterService = {
+      emit: jest.fn().mockReturnValue(true),
+    } as unknown as jest.Mocked<PackmindEventEmitterService>;
+
     stubbedLogger = stubLogger();
 
     useCase = new ActivateTrialAccountUseCase(
       mockTrialActivationService,
       mockUserService,
       mockOrganizationService,
+      mockEventEmitterService,
       stubbedLogger,
     );
   });
@@ -258,6 +266,33 @@ describe('ActivateTrialAccountUseCase', () => {
           name: newOrgName,
         }),
       });
+    });
+
+    it('emits TrialAccountActivatedEvent', async () => {
+      await useCase.execute({
+        activationToken: mockToken,
+        email: newEmail,
+        password: newPassword,
+        organizationName: newOrgName,
+      });
+
+      expect(mockEventEmitterService.emit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          payload: expect.objectContaining({
+            userId: mockUserId,
+            organizationId: mockOrganizationId,
+            email: newEmail,
+          }),
+        }),
+      );
+
+      const trialActivatedCall = (
+        mockEventEmitterService.emit as jest.Mock
+      ).mock.calls.find(
+        (call) => call[0] instanceof TrialAccountActivatedEvent,
+      );
+      expect(trialActivatedCall).toBeDefined();
+      expect(trialActivatedCall[0]).toBeInstanceOf(TrialAccountActivatedEvent);
     });
   });
 });

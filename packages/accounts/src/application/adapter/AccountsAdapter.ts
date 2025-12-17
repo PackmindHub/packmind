@@ -368,6 +368,7 @@ export class AccountsAdapter
         trialActivationService,
         this.accountsServices.getUserService(),
         this.accountsServices.getOrganizationService(),
+        ports.eventEmitterService,
         this.logger,
       );
       this.logger.debug('Activate trial account use case initialized');
