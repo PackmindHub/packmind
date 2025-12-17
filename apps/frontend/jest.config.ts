@@ -35,4 +35,7 @@ export default {
     '^@packmind/assets/(.*)$': '<rootDir>/../../packages/assets/src/$1',
   },
   testTimeout: 30000,
+  // Workaround for macOS jest-worker EPERM errors
+  // Reduce maxWorkers to minimize cleanup issues
+  maxWorkers: 1,
 };

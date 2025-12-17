@@ -85,6 +85,9 @@ async function bootstrap() {
 
     const app = await NestFactory.create(AppModule);
 
+    // Enable Amplitude proxy BEFORE body-parser (proxy needs raw body stream)
+    await enableAmplitudeProxy(app);
+
     // Enable cookie parsing
     app.use(cookieParser());
     logger.debug('Cookie parser enabled');
@@ -121,7 +124,6 @@ async function bootstrap() {
 
     // Initialize global cache before starting the server
     await initializeCache();
-    await enableAmplitudeProxy(app);
 
     const port = process.env.PORT || 3000;
     const host = process.env.HOST || 'localhost';
