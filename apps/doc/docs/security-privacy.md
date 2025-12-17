@@ -1,0 +1,146 @@
+# Security & Privacy
+
+## Overview
+
+This document provides comprehensive information about how Packmind handles data, implements security measures, and integrates with AI services. **This page is dedicated mainly to the Cloud version**.
+
+For information about security and privacy in self-hosted and on-premise deployments, please see [Security & Privacy (Self-Hosted)](security-privacy-self-hosted.md).
+
+## Data Handling
+
+### Functional Data (Business Content)
+
+Packmind stores information necessary for building the **Engineering Playbook** used by AI agents:
+
+- **Coding rule descriptions**
+  - Text describing best practices
+  - Code snippets illustrating:
+    - Correct implementation
+    - Incorrect practices
+- This data originates from **the client's codebase** and is generated manually by users.
+
+### Personal Data
+
+Packmind stores **only** the following personal data:
+
+- **Email address** of the user (for authentication)
+
+### External Service Credentials
+
+Stored only if the client configures these integrations:
+
+- GitHub / GitLab connection information (access tokens)
+- LLM provider access keys, including:
+  - OpenAI
+  - Anthropic
+  - Azure OpenAI
+- These credentials enable advanced features related to AI agents.
+
+Packmind **never uses** this data for any other internal purposes.
+
+## Data Origin & Authentication
+
+### Data Source
+
+All data comes from **the client environment**:
+
+- Users provide data to Packmind via the **Model Context Protocol (MCP)**
+- No automated or bulk imports (e.g., CSV) are performed
+- All data is transmitted **manually, voluntarily, and intentionally** via MCP
+
+### Authentication
+
+- Each user must individually authenticate to the Packmind MCP server
+- Web interface authentication uses username/password (SSO available Q1 2026)
+
+## Data Retention & Storage
+
+### Retention Policy
+
+- Data is retained **as long as the client organization is active on the cloud platform**
+- Data can be permanently deleted upon request
+- In self-hosted deployments, the client has full control over retention
+
+### Architecture & Deployment
+
+Packmind offers two deployment modes:
+
+#### Cloud Mode (Hosted by Packmind)
+
+- Infrastructure on **Microsoft Azure AKS** (Kubernetes)
+- Hosting in **France region**
+- Database, backups, and replications located **only in Europe**
+- Deployment planned soon in a **US region**
+
+#### Self-Hosted Mode
+
+- Deployment options:
+  - via Docker Compose
+  - via Kubernetes (open source Helm chart)
+- The client becomes responsible for:
+  - network and isolation
+  - secret management
+  - monitoring
+
+## Security Measures
+
+### Encryption
+
+- **TLS 1.3** for all traffic in transit on the Cloud platform
+- **AES 256** encryption at rest for all data
+- **AES 256** encryption for database backups
+
+### Compliance
+
+Packmind is certified **SOC 2 Type II**. Feel free to contact us to request a copy of the report at contact_at_packmind.com.
+
+### Sub-processors
+
+| Name            | Website                                            | Purpose          | Data Processed            | Region of Data Hosting |
+| --------------- | -------------------------------------------------- | ---------------- | ------------------------- | ---------------------- |
+| Microsoft Azure | [azure.microsoft.com](https://azure.microsoft.com) | Cloud hosting    | All application data      | France Central (EU)    |
+| OpenAI          | [openai.com](https://openai.com)                   | LLM provider     | LLM prompts and responses | United States          |
+| Brevo           | [brevo.com](https://www.brevo.com)                 | SMTP relay       | Email addresses           | Belgium (EU)           |
+| Crisp           | [crisp.chat](https://crisp.chat)                   | Customer Support | Email addresses           | Netherlands (EU)       |
+
+### Personal Data Requests
+
+Packmind only stores email addresses as personal information. Reach us at dpo_at_packmind.com if you have any request regarding your current personal data we own, or any deletion request.
+
+## AI & LLM Integration
+
+### Default Provider
+
+By default, Packmind uses **OpenAI** as the LLM provider for all organizations. You can configure your own LLM provider.
+
+### Data Privacy & Usage
+
+- **Training**: Your data is **not used by OpenAI for training any models**
+- **Storage by OpenAI**: LLM prompts and responses are **not stored by OpenAI**
+- **Storage by Packmind**: Inputs/outputs from models may be stored by Packmind for:
+  - Observability
+  - Analysis
+  - Quality improvement of use cases
+- **Metadata**: Only metadata such as the number of input and output tokens is stored
+
+### No Internal AI Model Development
+
+- Packmind **does not develop its own AI models**
+- Client data:
+  - is never used to train models
+  - does not serve to build internal datasets
+  - is not transmitted to third parties for AI usage
+
+### AI Interaction Nature
+
+- Uses **completion endpoints** (prompt / sequences of prompts)
+- Does **not** use:
+  - Vector storage
+  - Embeddings
+  - Vector databases
+
+## Protocols & Security
+
+- All communications use the **HTTPS** protocol
+- Infrastructure is secured and monitored via Azure
+- Packmind code is **open source** to allow auditing of behavior
