@@ -55,9 +55,30 @@ export function computeActiveConfigurationState(
   isToReview?: boolean,
 ): ActiveConfigurationState {
   if (!program.detectionProgramVersion || !detectionProgram) {
-    return draftProgram
-      ? ActiveConfigurationState.IN_PROGRESS
-      : ActiveConfigurationState.NO_CONFIG;
+    if (!draftProgram) {
+      return ActiveConfigurationState.NO_CONFIG;
+    }
+
+    // Only show IN_PROGRESS when draft is actually being generated
+    if (draftProgram.status === DetectionStatus.IN_PROGRESS) {
+      return ActiveConfigurationState.IN_PROGRESS;
+    }
+
+    // Draft is ready for review/activation
+    if (draftProgram.status === DetectionStatus.READY) {
+      return ActiveConfigurationState.TO_REVIEW;
+    }
+
+    // For FAILURE, ERROR statuses
+    if (
+      draftProgram.status === DetectionStatus.FAILURE ||
+      draftProgram.status === DetectionStatus.ERROR
+    ) {
+      return ActiveConfigurationState.ERROR;
+    }
+
+    // Default fallback for other statuses (e.g., TO_REVIEW)
+    return ActiveConfigurationState.TO_REVIEW;
   }
 
   // Check if program needs review first (due to changes in rules/examples)

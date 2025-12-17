@@ -48,27 +48,104 @@ describe('computeActiveConfigurationState', () => {
     });
 
     describe('when there is a draft program', () => {
-      beforeEach(() => {
-        program.draftDetectionProgram = {
-          id: createDetectionProgramId('draft-123'),
-          code: 'draft code',
-          version: 1,
-          language: ProgrammingLanguage.TYPESCRIPT,
-          status: DetectionStatus.IN_PROGRESS,
-          mode: DetectionModeEnum.SINGLE_AST,
-          ruleId: createRuleId('rule-456'),
-          sourceCodeState: 'AST',
-        };
+      describe('when draft status is IN_PROGRESS', () => {
+        beforeEach(() => {
+          program.draftDetectionProgram = {
+            id: createDetectionProgramId('draft-123'),
+            code: 'draft code',
+            version: 1,
+            language: ProgrammingLanguage.TYPESCRIPT,
+            status: DetectionStatus.IN_PROGRESS,
+            mode: DetectionModeEnum.SINGLE_AST,
+            ruleId: createRuleId('rule-456'),
+            sourceCodeState: 'AST',
+          };
+        });
+
+        it('returns IN_PROGRESS', () => {
+          const result = computeActiveConfigurationState(
+            program,
+            program.detectionProgram,
+            program.draftDetectionProgram,
+          );
+
+          expect(result).toBe(ActiveConfigurationState.IN_PROGRESS);
+        });
       });
 
-      it('returns IN_PROGRESS', () => {
-        const result = computeActiveConfigurationState(
-          program,
-          program.detectionProgram,
-          program.draftDetectionProgram,
-        );
+      describe('when draft status is READY', () => {
+        beforeEach(() => {
+          program.draftDetectionProgram = {
+            id: createDetectionProgramId('draft-123'),
+            code: 'draft code',
+            version: 1,
+            language: ProgrammingLanguage.TYPESCRIPT,
+            status: DetectionStatus.READY,
+            mode: DetectionModeEnum.SINGLE_AST,
+            ruleId: createRuleId('rule-456'),
+            sourceCodeState: 'AST',
+          };
+        });
 
-        expect(result).toBe(ActiveConfigurationState.IN_PROGRESS);
+        it('returns TO_REVIEW', () => {
+          const result = computeActiveConfigurationState(
+            program,
+            program.detectionProgram,
+            program.draftDetectionProgram,
+          );
+
+          expect(result).toBe(ActiveConfigurationState.TO_REVIEW);
+        });
+      });
+
+      describe('when draft status is FAILURE', () => {
+        beforeEach(() => {
+          program.draftDetectionProgram = {
+            id: createDetectionProgramId('draft-123'),
+            code: 'draft code',
+            version: 1,
+            language: ProgrammingLanguage.TYPESCRIPT,
+            status: DetectionStatus.FAILURE,
+            mode: DetectionModeEnum.SINGLE_AST,
+            ruleId: createRuleId('rule-456'),
+            sourceCodeState: 'AST',
+          };
+        });
+
+        it('returns ERROR', () => {
+          const result = computeActiveConfigurationState(
+            program,
+            program.detectionProgram,
+            program.draftDetectionProgram,
+          );
+
+          expect(result).toBe(ActiveConfigurationState.ERROR);
+        });
+      });
+
+      describe('when draft status is ERROR', () => {
+        beforeEach(() => {
+          program.draftDetectionProgram = {
+            id: createDetectionProgramId('draft-123'),
+            code: 'draft code',
+            version: 1,
+            language: ProgrammingLanguage.TYPESCRIPT,
+            status: DetectionStatus.ERROR,
+            mode: DetectionModeEnum.SINGLE_AST,
+            ruleId: createRuleId('rule-456'),
+            sourceCodeState: 'AST',
+          };
+        });
+
+        it('returns ERROR', () => {
+          const result = computeActiveConfigurationState(
+            program,
+            program.detectionProgram,
+            program.draftDetectionProgram,
+          );
+
+          expect(result).toBe(ActiveConfigurationState.ERROR);
+        });
       });
     });
   });
@@ -208,27 +285,104 @@ describe('computeActiveConfigurationState', () => {
     });
 
     describe('when there is a draft program', () => {
-      beforeEach(() => {
-        program.draftDetectionProgram = {
-          id: createDetectionProgramId('draft-123'),
-          code: 'draft code',
-          version: 1,
-          language: ProgrammingLanguage.TYPESCRIPT,
-          status: DetectionStatus.IN_PROGRESS,
-          mode: DetectionModeEnum.SINGLE_AST,
-          ruleId: createRuleId('rule-456'),
-          sourceCodeState: 'AST',
-        };
+      describe('when draft status is IN_PROGRESS', () => {
+        beforeEach(() => {
+          program.draftDetectionProgram = {
+            id: createDetectionProgramId('draft-123'),
+            code: 'draft code',
+            version: 1,
+            language: ProgrammingLanguage.TYPESCRIPT,
+            status: DetectionStatus.IN_PROGRESS,
+            mode: DetectionModeEnum.SINGLE_AST,
+            ruleId: createRuleId('rule-456'),
+            sourceCodeState: 'AST',
+          };
+        });
+
+        it('returns IN_PROGRESS', () => {
+          const result = computeActiveConfigurationState(
+            program,
+            null,
+            program.draftDetectionProgram,
+          );
+
+          expect(result).toBe(ActiveConfigurationState.IN_PROGRESS);
+        });
       });
 
-      it('returns IN_PROGRESS', () => {
-        const result = computeActiveConfigurationState(
-          program,
-          null,
-          program.draftDetectionProgram,
-        );
+      describe('when draft status is READY', () => {
+        beforeEach(() => {
+          program.draftDetectionProgram = {
+            id: createDetectionProgramId('draft-123'),
+            code: 'draft code',
+            version: 1,
+            language: ProgrammingLanguage.TYPESCRIPT,
+            status: DetectionStatus.READY,
+            mode: DetectionModeEnum.SINGLE_AST,
+            ruleId: createRuleId('rule-456'),
+            sourceCodeState: 'AST',
+          };
+        });
 
-        expect(result).toBe(ActiveConfigurationState.IN_PROGRESS);
+        it('returns TO_REVIEW', () => {
+          const result = computeActiveConfigurationState(
+            program,
+            null,
+            program.draftDetectionProgram,
+          );
+
+          expect(result).toBe(ActiveConfigurationState.TO_REVIEW);
+        });
+      });
+
+      describe('when draft status is FAILURE', () => {
+        beforeEach(() => {
+          program.draftDetectionProgram = {
+            id: createDetectionProgramId('draft-123'),
+            code: 'draft code',
+            version: 1,
+            language: ProgrammingLanguage.TYPESCRIPT,
+            status: DetectionStatus.FAILURE,
+            mode: DetectionModeEnum.SINGLE_AST,
+            ruleId: createRuleId('rule-456'),
+            sourceCodeState: 'AST',
+          };
+        });
+
+        it('returns ERROR', () => {
+          const result = computeActiveConfigurationState(
+            program,
+            null,
+            program.draftDetectionProgram,
+          );
+
+          expect(result).toBe(ActiveConfigurationState.ERROR);
+        });
+      });
+
+      describe('when draft status is ERROR', () => {
+        beforeEach(() => {
+          program.draftDetectionProgram = {
+            id: createDetectionProgramId('draft-123'),
+            code: 'draft code',
+            version: 1,
+            language: ProgrammingLanguage.TYPESCRIPT,
+            status: DetectionStatus.ERROR,
+            mode: DetectionModeEnum.SINGLE_AST,
+            ruleId: createRuleId('rule-456'),
+            sourceCodeState: 'AST',
+          };
+        });
+
+        it('returns ERROR', () => {
+          const result = computeActiveConfigurationState(
+            program,
+            null,
+            program.draftDetectionProgram,
+          );
+
+          expect(result).toBe(ActiveConfigurationState.ERROR);
+        });
       });
     });
   });
