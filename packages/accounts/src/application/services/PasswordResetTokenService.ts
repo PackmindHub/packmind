@@ -8,7 +8,11 @@ import {
 } from '../../domain/entities/PasswordResetToken';
 import { User, UserId } from '@packmind/types';
 import { IPasswordResetTokenRepository } from '../../domain/repositories/IPasswordResetTokenRepository';
-import { Configuration, MailService } from '@packmind/node-utils';
+import {
+  Configuration,
+  MailService,
+  removeTrailingSlash,
+} from '@packmind/node-utils';
 import { PackmindLogger, maskEmail } from '@packmind/logger';
 
 const origin = 'PasswordResetTokenService';
@@ -158,7 +162,7 @@ export class PasswordResetTokenService {
   private async getApplicationUrl(): Promise<string> {
     const configValue = await Configuration.getConfig('APP_WEB_URL');
     if (configValue) {
-      return configValue.endsWith('/') ? configValue.slice(0, -1) : configValue;
+      return removeTrailingSlash(configValue);
     }
     this.logger.warn('Failed to get APP_WEB_URL value, using default', {
       configValue,
@@ -171,7 +175,7 @@ export class PasswordResetTokenService {
     token: PasswordResetToken,
     appUrl: string,
   ): string {
-    const baseUrl = appUrl.endsWith('/') ? appUrl.slice(0, -1) : appUrl;
+    const baseUrl = removeTrailingSlash(appUrl);
     return `${baseUrl}/reset-password?token=${encodeURIComponent(token)}`;
   }
 
