@@ -21,7 +21,7 @@ export class PackagePage
       const row = rows.nth(i);
 
       const target = await row.locator('td').nth(0).innerText();
-      const author = await row.locator('td').nth(3).innerText();
+      const author = await row.locator('td').nth(4).innerText();
 
       result.push({ target: target.trim(), author: author.trim() });
     }
