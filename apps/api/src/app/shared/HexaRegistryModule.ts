@@ -154,8 +154,10 @@ export class HexaRegistryModule {
         );
 
         // Initialize using the centralized PackmindApp configuration
+        // Pass jwtService for trial activation token support
         const registry = await initializePackmindApp(dataSource, {
           apiKeyService,
+          jwtService,
         });
 
         return registry;

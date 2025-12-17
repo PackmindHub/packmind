@@ -1,4 +1,8 @@
-import { AccountsHexa } from '@packmind/accounts';
+import {
+  AccountsHexa,
+  AccountsHexaOpts,
+  IJwtService,
+} from '@packmind/accounts';
 import { AnalyticsHexa } from '@packmind/analytics';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { DeploymentsHexa } from '@packmind/deployments';
@@ -21,8 +25,37 @@ import { SpacesHexa } from '@packmind/spaces';
 import { StandardsHexa } from '@packmind/standards';
 import { DataSource } from 'typeorm';
 import { mcpHexaPlugins } from '@packmind/plugins';
+import jwt from 'jsonwebtoken';
 
 const logger = new PackmindLogger('PackmindApp', LogLevel.INFO);
+
+/**
+ * JWT service implementation for the MCP server.
+ * Uses the jsonwebtoken library with the JWT_SECRET environment variable.
+ */
+class McpJwtService implements IJwtService {
+  private readonly secret: string;
+
+  constructor() {
+    this.secret = process.env.JWT_SECRET || 'default';
+  }
+
+  sign(
+    payload: Record<string, unknown>,
+    options?: { expiresIn?: string | number },
+  ): string {
+    const signOptions: jwt.SignOptions = {};
+    if (options?.expiresIn) {
+      // Cast to satisfy jwt.SignOptions type which expects string | number
+      signOptions.expiresIn = options.expiresIn as jwt.SignOptions['expiresIn'];
+    }
+    return jwt.sign(payload, this.secret, signOptions);
+  }
+
+  verify(token: string): Record<string, unknown> {
+    return jwt.verify(token, this.secret) as Record<string, unknown>;
+  }
+}
 
 /**
  * Definition of hexas and services to initialize for the Packmind MCP Server application.
@@ -87,10 +120,21 @@ export async function initializePackmindApp(
   const registry = new HexaRegistry();
   const definition = getPackmindAppDefinition();
 
+  // Create JWT service for AccountsHexa
+  const jwtService = new McpJwtService();
+
   // Register domain hexas in dependency order
   for (const HexaClass of definition.hexas) {
-    registry.register(HexaClass);
-    logger.debug(`${HexaClass.name} registered`);
+    if (HexaClass === AccountsHexa) {
+      // Register AccountsHexa with jwtService for trial activation support
+      registry.register(AccountsHexa, {
+        jwtService,
+      } as Partial<AccountsHexaOpts>);
+      logger.debug('AccountsHexa registered with jwtService');
+    } else {
+      registry.register(HexaClass);
+      logger.debug(`${HexaClass.name} registered`);
+    }
   }
 
   // Register all services

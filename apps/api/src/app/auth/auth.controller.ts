@@ -37,7 +37,9 @@ import {
   ExchangeCliLoginCodeResponse,
   CliLoginCodeExpiredError,
   CliLoginCodeNotFoundError,
+  InvalidTrialActivationTokenError,
 } from '@packmind/accounts';
+import { ActivateTrialAccountResult } from '@packmind/types';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { Configuration } from '@packmind/node-utils';
 import { Public } from '@packmind/node-utils';
@@ -603,6 +605,76 @@ export class AuthController {
           error: getErrorMessage(error),
         },
       );
+      throw error;
+    }
+  }
+
+  @Public()
+  @Post('activate-trial-account')
+  @HttpCode(HttpStatus.OK)
+  async activateTrialAccount(
+    @Body()
+    body: {
+      activationToken: string;
+      email: string;
+      password: string;
+      organizationName: string;
+    },
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<ActivateTrialAccountResult> {
+    this.logger.log(
+      'POST /auth/activate-trial-account - Activating trial account',
+      {
+        token: this.maskToken(body.activationToken),
+        email: maskEmail(body.email),
+      },
+    );
+
+    try {
+      const result = await this.authService.activateTrialAccount(body);
+
+      if (result.authToken) {
+        // Get cookie security setting from Configuration
+        const cookieSecure = await Configuration.getConfig('COOKIE_SECURE');
+        const isSecure = cookieSecure === 'true';
+
+        // Set JWT token as httpOnly cookie for auto-login
+        response.cookie('auth_token', result.authToken, {
+          httpOnly: true,
+          secure: isSecure,
+          sameSite: 'strict',
+          maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days in milliseconds
+          path: '/',
+        });
+      }
+
+      this.logger.log(
+        'POST /auth/activate-trial-account - Trial account activated successfully',
+        {
+          userId: String(result.user.id),
+          email: maskEmail(result.user.email),
+          organizationId: String(result.organization.id),
+        },
+      );
+
+      return {
+        user: result.user,
+        organization: result.organization,
+      };
+    } catch (error) {
+      this.logger.error(
+        'POST /auth/activate-trial-account - Failed to activate trial account',
+        {
+          token: this.maskToken(body.activationToken),
+          email: maskEmail(body.email),
+          error: getErrorMessage(error),
+        },
+      );
+
+      if (error instanceof InvalidTrialActivationTokenError) {
+        throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+      }
+
       throw error;
     }
   }

@@ -7,6 +7,9 @@ import {
   UserId,
   createUserId,
   IAccountsPort,
+  ActivateTrialAccountCommand,
+  ActivateTrialAccountResult,
+  createTrialActivationToken,
 } from '@packmind/types';
 import {
   SignInUserCommand,
@@ -659,6 +662,72 @@ export class AuthService {
     } catch (error) {
       this.logger.error('Failed to validate password reset token', {
         token: this.maskToken(request.token),
+        error: getErrorMessage(error),
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Activates a trial account using an activation token
+   * Sets email, password, and organization name for the trial user
+   */
+  async activateTrialAccount(request: {
+    activationToken: string;
+    email: string;
+    password: string;
+    organizationName: string;
+  }): Promise<ActivateTrialAccountResult & { authToken?: string }> {
+    this.logger.log('Attempting to activate trial account', {
+      token: this.maskToken(request.activationToken),
+      email: maskEmail(request.email),
+    });
+
+    try {
+      const command: ActivateTrialAccountCommand = {
+        activationToken: createTrialActivationToken(request.activationToken),
+        email: request.email,
+        password: request.password,
+        organizationName: request.organizationName,
+      };
+
+      const result = await this.accountsAdapter.activateTrialAccount(command);
+
+      // Generate auth token for auto-login (same as signin flow)
+      let authToken: string | undefined;
+      if (result.user && result.organization) {
+        // Create JWT payload (same structure as signin)
+        const payload = {
+          user: {
+            name: result.user.email,
+            userId: result.user.id,
+          },
+          organization: {
+            id: result.organization.id,
+            name: result.organization.name,
+            slug: result.organization.slug,
+            role: 'admin' as UserOrganizationRole,
+          },
+          memberships: result.user.memberships,
+        };
+
+        authToken = this.jwtService.sign(payload);
+      }
+
+      this.logger.log('Trial account activated successfully', {
+        userId: String(result.user.id),
+        email: maskEmail(result.user.email),
+        organizationId: String(result.organization.id),
+      });
+
+      return {
+        ...result,
+        authToken,
+      };
+    } catch (error) {
+      this.logger.error('Failed to activate trial account', {
+        token: this.maskToken(request.activationToken),
+        email: maskEmail(request.email),
         error: getErrorMessage(error),
       });
       throw error;
