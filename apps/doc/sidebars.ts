@@ -60,6 +60,12 @@ const sidebars: SidebarsConfig = {
       label: 'Administration',
       items: ['manage-users', 'manage-ai-agents', 'llm-configuration'],
     },
+    {
+      type: 'category',
+      label: 'Security and privacy',
+      items: ['security-privacy', 'security-privacy-self-hosted'],
+      collapsed: false,
+    },
   ],
 };
 

@@ -2,6 +2,8 @@
 
 Find how to deploy Packmind using Docker Compose or Kubernetes, and how to customize the setup.
 
+For comprehensive information about security, data ownership, and privacy in self-hosted deployments, please see [Security & Privacy (Self-Hosted)](security-privacy-self-hosted.md).
+
 ## With Docker Compose
 
 For Linux and MacOS users, run this script to create a `./packmind` folder with a Docker Compose setup inside:
