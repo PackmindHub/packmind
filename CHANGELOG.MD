@@ -11,6 +11,8 @@
 
 ## Fixed
 
+- On self-hosted versions, fixed a case where the `APP_WEB_URL` ends with a `/` and raised issues
+
 ## Removed
 
 - Deleted standards are properly removed from packages #34
