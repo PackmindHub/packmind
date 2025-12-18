@@ -794,7 +794,7 @@ describe('ContinueDeployer', () => {
             standardId: standard.id,
             name: standard.name,
             slug: standard.slug,
-            description: null,
+            description: '',
             version: 1,
             userId: createUserId('user-1'),
             scope: standard.scope,
@@ -1503,6 +1503,414 @@ describe('ContinueDeployer', () => {
         expect(result.createOrUpdate[0].path).toContain(
           'standard-test-standard',
         );
+      });
+    });
+  });
+
+  describe('generateRemovalFileUpdates', () => {
+    describe('when removing recipes with other recipes remaining', () => {
+      it('does not delete recipes index file', async () => {
+        const removedRecipe = recipeFactory({
+          name: 'Removed Recipe',
+          slug: 'removed-recipe',
+        });
+
+        const installedRecipe = recipeFactory({
+          name: 'Installed Recipe',
+          slug: 'installed-recipe',
+        });
+
+        const removedRecipeVersion: RecipeVersion = {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: removedRecipe.id,
+          name: removedRecipe.name,
+          slug: removedRecipe.slug,
+          content: 'Recipe content',
+          version: 1,
+          summary: 'Recipe summary',
+          userId: createUserId('user-1'),
+        };
+
+        const installedRecipeVersion: RecipeVersion = {
+          id: createRecipeVersionId('recipe-version-2'),
+          recipeId: installedRecipe.id,
+          name: installedRecipe.name,
+          slug: installedRecipe.slug,
+          content: 'Recipe content',
+          version: 1,
+          summary: 'Recipe summary',
+          userId: createUserId('user-1'),
+        };
+
+        const result = await deployer.generateRemovalFileUpdates(
+          { recipeVersions: [removedRecipeVersion], standardVersions: [] },
+          { recipeVersions: [installedRecipeVersion], standardVersions: [] },
+        );
+
+        expect(result.delete).toHaveLength(0);
+      });
+    });
+
+    describe('when removing last recipe with no standards', () => {
+      it('deletes recipes index file', async () => {
+        const removedRecipe = recipeFactory({
+          name: 'Removed Recipe',
+          slug: 'removed-recipe',
+        });
+
+        const removedRecipeVersion: RecipeVersion = {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: removedRecipe.id,
+          name: removedRecipe.name,
+          slug: removedRecipe.slug,
+          content: 'Recipe content',
+          version: 1,
+          summary: 'Recipe summary',
+          userId: createUserId('user-1'),
+        };
+
+        const result = await deployer.generateRemovalFileUpdates(
+          { recipeVersions: [removedRecipeVersion], standardVersions: [] },
+          { recipeVersions: [], standardVersions: [] },
+        );
+
+        expect(
+          result.delete.some((f) => f.path.includes('recipes-index')),
+        ).toBe(true);
+      });
+
+      it('deletes packmind folder', async () => {
+        const removedRecipe = recipeFactory({
+          name: 'Removed Recipe',
+          slug: 'removed-recipe',
+        });
+
+        const removedRecipeVersion: RecipeVersion = {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: removedRecipe.id,
+          name: removedRecipe.name,
+          slug: removedRecipe.slug,
+          content: 'Recipe content',
+          version: 1,
+          summary: 'Recipe summary',
+          userId: createUserId('user-1'),
+        };
+
+        const result = await deployer.generateRemovalFileUpdates(
+          { recipeVersions: [removedRecipeVersion], standardVersions: [] },
+          { recipeVersions: [], standardVersions: [] },
+        );
+
+        expect(
+          result.delete.some((f) => f.path === '.continue/rules/packmind/'),
+        ).toBe(true);
+      });
+    });
+
+    describe('when removing standards', () => {
+      it('deletes standard file', async () => {
+        const removedStandard = standardFactory({
+          name: 'Removed Standard',
+          slug: 'removed-standard',
+          scope: '**/*.ts',
+        });
+
+        const removedStandardVersion: StandardVersion = {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: removedStandard.id,
+          name: removedStandard.name,
+          slug: removedStandard.slug,
+          description: removedStandard.description,
+          version: 1,
+          summary: 'Standard summary',
+          userId: createUserId('user-1'),
+          scope: removedStandard.scope,
+          rules: [] as Rule[],
+        };
+
+        const installedStandard = standardFactory({
+          name: 'Installed Standard',
+          slug: 'installed-standard',
+          scope: '**/*.ts',
+        });
+
+        const installedStandardVersion: StandardVersion = {
+          id: createStandardVersionId('standard-version-2'),
+          standardId: installedStandard.id,
+          name: installedStandard.name,
+          slug: installedStandard.slug,
+          description: installedStandard.description,
+          version: 1,
+          summary: 'Standard summary',
+          userId: createUserId('user-1'),
+          scope: installedStandard.scope,
+          rules: [] as Rule[],
+        };
+
+        const result = await deployer.generateRemovalFileUpdates(
+          { recipeVersions: [], standardVersions: [removedStandardVersion] },
+          { recipeVersions: [], standardVersions: [installedStandardVersion] },
+        );
+
+        expect(
+          result.delete.some((f) =>
+            f.path.includes('standard-removed-standard'),
+          ),
+        ).toBe(true);
+      });
+    });
+
+    describe('when removing last standard with no recipes', () => {
+      it('deletes standard file', async () => {
+        const removedStandard = standardFactory({
+          name: 'Removed Standard',
+          slug: 'removed-standard',
+          scope: '**/*.ts',
+        });
+
+        const removedStandardVersion: StandardVersion = {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: removedStandard.id,
+          name: removedStandard.name,
+          slug: removedStandard.slug,
+          description: removedStandard.description,
+          version: 1,
+          summary: 'Standard summary',
+          userId: createUserId('user-1'),
+          scope: removedStandard.scope,
+          rules: [] as Rule[],
+        };
+
+        const result = await deployer.generateRemovalFileUpdates(
+          { recipeVersions: [], standardVersions: [removedStandardVersion] },
+          { recipeVersions: [], standardVersions: [] },
+        );
+
+        expect(
+          result.delete.some((f) =>
+            f.path.includes('standard-removed-standard'),
+          ),
+        ).toBe(true);
+      });
+
+      it('deletes packmind folder', async () => {
+        const removedStandard = standardFactory({
+          name: 'Removed Standard',
+          slug: 'removed-standard',
+          scope: '**/*.ts',
+        });
+
+        const removedStandardVersion: StandardVersion = {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: removedStandard.id,
+          name: removedStandard.name,
+          slug: removedStandard.slug,
+          description: removedStandard.description,
+          version: 1,
+          summary: 'Standard summary',
+          userId: createUserId('user-1'),
+          scope: removedStandard.scope,
+          rules: [] as Rule[],
+        };
+
+        const result = await deployer.generateRemovalFileUpdates(
+          { recipeVersions: [], standardVersions: [removedStandardVersion] },
+          { recipeVersions: [], standardVersions: [] },
+        );
+
+        expect(
+          result.delete.some((f) => f.path === '.continue/rules/packmind/'),
+        ).toBe(true);
+      });
+    });
+
+    describe('when removing last recipe but standards remain', () => {
+      it('deletes recipes index file', async () => {
+        const removedRecipe = recipeFactory({
+          name: 'Removed Recipe',
+          slug: 'removed-recipe',
+        });
+
+        const removedRecipeVersion: RecipeVersion = {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: removedRecipe.id,
+          name: removedRecipe.name,
+          slug: removedRecipe.slug,
+          content: 'Recipe content',
+          version: 1,
+          summary: 'Recipe summary',
+          userId: createUserId('user-1'),
+        };
+
+        const installedStandard = standardFactory({
+          name: 'Installed Standard',
+          slug: 'installed-standard',
+          scope: '**/*.ts',
+        });
+
+        const installedStandardVersion: StandardVersion = {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: installedStandard.id,
+          name: installedStandard.name,
+          slug: installedStandard.slug,
+          description: installedStandard.description,
+          version: 1,
+          summary: 'Standard summary',
+          userId: createUserId('user-1'),
+          scope: installedStandard.scope,
+          rules: [] as Rule[],
+        };
+
+        const result = await deployer.generateRemovalFileUpdates(
+          { recipeVersions: [removedRecipeVersion], standardVersions: [] },
+          { recipeVersions: [], standardVersions: [installedStandardVersion] },
+        );
+
+        expect(
+          result.delete.some((f) => f.path.includes('recipes-index')),
+        ).toBe(true);
+      });
+
+      it('does not delete packmind folder', async () => {
+        const removedRecipe = recipeFactory({
+          name: 'Removed Recipe',
+          slug: 'removed-recipe',
+        });
+
+        const removedRecipeVersion: RecipeVersion = {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: removedRecipe.id,
+          name: removedRecipe.name,
+          slug: removedRecipe.slug,
+          content: 'Recipe content',
+          version: 1,
+          summary: 'Recipe summary',
+          userId: createUserId('user-1'),
+        };
+
+        const installedStandard = standardFactory({
+          name: 'Installed Standard',
+          slug: 'installed-standard',
+          scope: '**/*.ts',
+        });
+
+        const installedStandardVersion: StandardVersion = {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: installedStandard.id,
+          name: installedStandard.name,
+          slug: installedStandard.slug,
+          description: installedStandard.description,
+          version: 1,
+          summary: 'Standard summary',
+          userId: createUserId('user-1'),
+          scope: installedStandard.scope,
+          rules: [] as Rule[],
+        };
+
+        const result = await deployer.generateRemovalFileUpdates(
+          { recipeVersions: [removedRecipeVersion], standardVersions: [] },
+          { recipeVersions: [], standardVersions: [installedStandardVersion] },
+        );
+
+        expect(
+          result.delete.some((f) => f.path === '.continue/rules/packmind/'),
+        ).toBe(false);
+      });
+    });
+
+    describe('when removing last standard but recipes remain', () => {
+      it('deletes standard file', async () => {
+        const removedStandard = standardFactory({
+          name: 'Removed Standard',
+          slug: 'removed-standard',
+          scope: '**/*.ts',
+        });
+
+        const removedStandardVersion: StandardVersion = {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: removedStandard.id,
+          name: removedStandard.name,
+          slug: removedStandard.slug,
+          description: removedStandard.description,
+          version: 1,
+          summary: 'Standard summary',
+          userId: createUserId('user-1'),
+          scope: removedStandard.scope,
+          rules: [] as Rule[],
+        };
+
+        const installedRecipe = recipeFactory({
+          name: 'Installed Recipe',
+          slug: 'installed-recipe',
+        });
+
+        const installedRecipeVersion: RecipeVersion = {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: installedRecipe.id,
+          name: installedRecipe.name,
+          slug: installedRecipe.slug,
+          content: 'Recipe content',
+          version: 1,
+          summary: 'Recipe summary',
+          userId: createUserId('user-1'),
+        };
+
+        const result = await deployer.generateRemovalFileUpdates(
+          { recipeVersions: [], standardVersions: [removedStandardVersion] },
+          { recipeVersions: [installedRecipeVersion], standardVersions: [] },
+        );
+
+        expect(
+          result.delete.some((f) =>
+            f.path.includes('standard-removed-standard'),
+          ),
+        ).toBe(true);
+      });
+
+      it('does not delete packmind folder', async () => {
+        const removedStandard = standardFactory({
+          name: 'Removed Standard',
+          slug: 'removed-standard',
+          scope: '**/*.ts',
+        });
+
+        const removedStandardVersion: StandardVersion = {
+          id: createStandardVersionId('standard-version-1'),
+          standardId: removedStandard.id,
+          name: removedStandard.name,
+          slug: removedStandard.slug,
+          description: removedStandard.description,
+          version: 1,
+          summary: 'Standard summary',
+          userId: createUserId('user-1'),
+          scope: removedStandard.scope,
+          rules: [] as Rule[],
+        };
+
+        const installedRecipe = recipeFactory({
+          name: 'Installed Recipe',
+          slug: 'installed-recipe',
+        });
+
+        const installedRecipeVersion: RecipeVersion = {
+          id: createRecipeVersionId('recipe-version-1'),
+          recipeId: installedRecipe.id,
+          name: installedRecipe.name,
+          slug: installedRecipe.slug,
+          content: 'Recipe content',
+          version: 1,
+          summary: 'Recipe summary',
+          userId: createUserId('user-1'),
+        };
+
+        const result = await deployer.generateRemovalFileUpdates(
+          { recipeVersions: [], standardVersions: [removedStandardVersion] },
+          { recipeVersions: [installedRecipeVersion], standardVersions: [] },
+        );
+
+        expect(
+          result.delete.some((f) => f.path === '.continue/rules/packmind/'),
+        ).toBe(false);
       });
     });
   });

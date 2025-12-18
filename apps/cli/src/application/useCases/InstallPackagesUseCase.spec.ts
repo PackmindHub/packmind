@@ -1,6 +1,7 @@
-import { InstallPackagesUseCase } from './InstallPackagesUseCase';
-import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
 import * as fs from 'fs/promises';
+
+import { IPackmindGateway } from '../../domain/repositories/IPackmindGateway';
+import { InstallPackagesUseCase } from './InstallPackagesUseCase';
 
 jest.mock('fs/promises');
 
@@ -25,6 +26,8 @@ describe('InstallPackagesUseCase', () => {
     (fs.readFile as jest.Mock).mockResolvedValue('');
     (fs.access as jest.Mock).mockResolvedValue(undefined);
     (fs.unlink as jest.Mock).mockResolvedValue(undefined);
+    (fs.stat as jest.Mock).mockResolvedValue(null);
+    (fs.rm as jest.Mock).mockResolvedValue(undefined);
 
     useCase = new InstallPackagesUseCase(mockGateway);
   });
@@ -291,8 +294,11 @@ ${newSectionContent}
         },
       });
 
-      // File exists
-      (fs.access as jest.Mock).mockResolvedValue(undefined);
+      // File exists and is a file
+      (fs.stat as jest.Mock).mockResolvedValue({
+        isDirectory: () => false,
+        isFile: () => true,
+      });
 
       const result = await useCase.execute({
         packagesSlugs: ['test-package'],
@@ -300,6 +306,37 @@ ${newSectionContent}
       });
 
       expect(fs.unlink).toHaveBeenCalledWith('/test/old-file.md');
+      expect(result.filesDeleted).toBe(1);
+    });
+
+    it('deletes existing directory recursively', async () => {
+      mockGateway.getPullData.mockResolvedValue({
+        fileUpdates: {
+          createOrUpdate: [],
+          delete: [
+            {
+              path: '.packmind',
+            },
+          ],
+        },
+      });
+
+      // Path exists and is a directory
+      (fs.stat as jest.Mock).mockResolvedValue({
+        isDirectory: () => true,
+        isFile: () => false,
+      });
+
+      const result = await useCase.execute({
+        packagesSlugs: ['test-package'],
+        baseDirectory: '/test',
+      });
+
+      expect(fs.rm).toHaveBeenCalledWith('/test/.packmind', {
+        recursive: true,
+        force: true,
+      });
+      expect(fs.unlink).not.toHaveBeenCalled();
       expect(result.filesDeleted).toBe(1);
     });
 
@@ -316,7 +353,8 @@ ${newSectionContent}
           },
         });
 
-        (fs.access as jest.Mock).mockRejectedValue(new Error('File not found'));
+        // stat returns null when file does not exist (caught error)
+        (fs.stat as jest.Mock).mockResolvedValue(null);
       });
 
       it('does not throw error', async () => {
@@ -326,6 +364,7 @@ ${newSectionContent}
         });
 
         expect(fs.unlink).not.toHaveBeenCalled();
+        expect(fs.rm).not.toHaveBeenCalled();
         expect(result.filesDeleted).toBe(0);
         expect(result.errors).toEqual([]);
       });

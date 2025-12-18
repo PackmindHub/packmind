@@ -322,6 +322,19 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       fileUpdates.delete.push({ path: '.packmind/standards-index.md' });
     }
 
+    // Delete parent folders if all Packmind content is removed and something was actually removed
+    const hasRemovedArtifacts =
+      removed.recipeVersions.length > 0 || removed.standardVersions.length > 0;
+    if (
+      hasRemovedArtifacts &&
+      installed.recipeVersions.length === 0 &&
+      installed.standardVersions.length === 0
+    ) {
+      fileUpdates.delete.push({ path: '.packmind/recipes/' });
+      fileUpdates.delete.push({ path: '.packmind/standards/' });
+      fileUpdates.delete.push({ path: '.packmind/' });
+    }
+
     return fileUpdates;
   }
 

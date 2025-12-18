@@ -99,7 +99,7 @@ describe('Package removal from target integration', () => {
       deleteFiles = commitToGit.mock.calls[0][3];
     });
 
-    it('deletes artifacts files for Cursor and Packmind', () => {
+    it('deletes artifacts files for Cursor, Packmind and Claude', () => {
       expect(deleteFiles).toEqual(
         expect.arrayContaining([
           { path: '.packmind/recipes/recipe-1.md' },
@@ -108,29 +108,17 @@ describe('Package removal from target integration', () => {
           { path: '.packmind/standards-index.md' },
           { path: '.cursor/rules/packmind/recipes-index.mdc' },
           { path: '.cursor/rules/packmind/standard-standard-1.mdc' },
+          { path: 'CLAUDE.md' },
         ]),
       );
     });
 
-    it('update artifacts for Claude and packmind.json', () => {
+    it('updates packmind.json', () => {
       expect(fileUpdates).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             path: 'packmind.json',
             content: expect.not.stringContaining(packageToRemove.slug),
-          }),
-          expect.objectContaining({
-            path: 'CLAUDE.md',
-            sections: expect.arrayContaining([
-              {
-                key: 'Packmind recipes',
-                content: '',
-              },
-              {
-                key: 'Packmind standards',
-                content: '',
-              },
-            ]),
           }),
         ]),
       );

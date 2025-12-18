@@ -225,6 +225,19 @@ export class CursorDeployer implements ICodingAgentDeployer {
       });
     }
 
+    // Delete packmind folder if all artifacts are removed and something was actually removed
+    const hasRemovedArtifacts =
+      removed.recipeVersions.length > 0 || removed.standardVersions.length > 0;
+    if (
+      hasRemovedArtifacts &&
+      installed.recipeVersions.length === 0 &&
+      installed.standardVersions.length === 0
+    ) {
+      fileUpdates.delete.push({
+        path: '.cursor/rules/packmind/',
+      });
+    }
+
     return fileUpdates;
   }
 

@@ -11,6 +11,7 @@ import {
   createStandardVersionId,
   createTargetId,
   createUserId,
+  FileUpdates,
   GitRepo,
   IStandardsPort,
   Recipe,
@@ -510,8 +511,8 @@ describe('PackmindDeployer', () => {
         );
       });
 
-      it('generates two delete entries', () => {
-        expect(result.delete).toHaveLength(2);
+      it('generates five delete entries', () => {
+        expect(result.delete).toHaveLength(5);
       });
 
       it('deletes the removed recipe file', () => {
@@ -523,6 +524,24 @@ describe('PackmindDeployer', () => {
       it('deletes the recipes index file', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/recipes-index.md',
+        });
+      });
+
+      it('deletes the recipes folder', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/recipes/',
+        });
+      });
+
+      it('deletes the standards folder', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/standards/',
+        });
+      });
+
+      it('deletes the packmind folder', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/',
         });
       });
 
@@ -618,8 +637,8 @@ describe('PackmindDeployer', () => {
         );
       });
 
-      it('generates two delete entries', () => {
-        expect(result.delete).toHaveLength(2);
+      it('generates five delete entries', () => {
+        expect(result.delete).toHaveLength(5);
       });
 
       it('deletes the removed standard file', () => {
@@ -631,6 +650,24 @@ describe('PackmindDeployer', () => {
       it('deletes the standards index file', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/standards-index.md',
+        });
+      });
+
+      it('deletes the recipes folder', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/recipes/',
+        });
+      });
+
+      it('deletes the standards folder', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/standards/',
+        });
+      });
+
+      it('deletes the packmind folder', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/',
         });
       });
 
@@ -750,8 +787,8 @@ describe('PackmindDeployer', () => {
         );
       });
 
-      it('generates five delete entries', () => {
-        expect(result.delete).toHaveLength(5);
+      it('generates eight delete entries', () => {
+        expect(result.delete).toHaveLength(8);
       });
 
       it('deletes the first removed recipe file', () => {
@@ -781,6 +818,24 @@ describe('PackmindDeployer', () => {
       it('deletes the standards index file', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/standards-index.md',
+        });
+      });
+
+      it('deletes the recipes folder', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/recipes/',
+        });
+      });
+
+      it('deletes the standards folder', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/standards/',
+        });
+      });
+
+      it('deletes the packmind folder', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/',
         });
       });
 

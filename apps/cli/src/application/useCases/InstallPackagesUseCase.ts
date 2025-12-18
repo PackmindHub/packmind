@@ -206,11 +206,12 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
     result: IInstallPackagesResult,
   ): Promise<void> {
     const fullPath = path.join(baseDirectory, filePath);
+    const stat = await fs.stat(fullPath).catch(() => null);
 
-    // Check if file exists before attempting to delete
-    const fileExists = await this.fileExists(fullPath);
-
-    if (fileExists) {
+    if (stat?.isDirectory()) {
+      await fs.rm(fullPath, { recursive: true, force: true });
+      result.filesDeleted++;
+    } else if (stat?.isFile()) {
       await fs.unlink(fullPath);
       result.filesDeleted++;
     }
