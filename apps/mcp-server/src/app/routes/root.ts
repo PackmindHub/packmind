@@ -64,7 +64,7 @@ export default async function (fastify: FastifyInstance) {
       };
     }
 
-    const mcpServer = createMCPServer(fastify, userContext);
+    const mcpServer = await createMCPServer(fastify, userContext);
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
     });
