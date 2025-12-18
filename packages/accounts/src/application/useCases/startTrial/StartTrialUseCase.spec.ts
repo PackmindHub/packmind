@@ -4,7 +4,9 @@ import { stubLogger } from '@packmind/test-utils';
 import {
   createOrganizationId,
   createUserId,
+  IDeploymentPort,
   ISpacesPort,
+  RenderMode,
   StartTrialCommand,
   TrialStartedEvent,
 } from '@packmind/types';
@@ -19,6 +21,7 @@ describe('StartTrialUseCase', () => {
   let mockOrganizationService: jest.Mocked<OrganizationService>;
   let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let mockSpacesPort: jest.Mocked<ISpacesPort>;
+  let mockDeploymentPort: jest.Mocked<IDeploymentPort>;
   let stubbedLogger: jest.Mocked<PackmindLogger>;
 
   const mockOrganization = organizationFactory({
@@ -65,6 +68,10 @@ describe('StartTrialUseCase', () => {
       createSpace: jest.fn(),
     } as unknown as jest.Mocked<ISpacesPort>;
 
+    mockDeploymentPort = {
+      createRenderModeConfiguration: jest.fn(),
+    } as unknown as jest.Mocked<IDeploymentPort>;
+
     stubbedLogger = stubLogger();
 
     startTrialUseCase = new StartTrialUseCase(
@@ -73,6 +80,7 @@ describe('StartTrialUseCase', () => {
       mockEventEmitterService,
       stubbedLogger,
       mockSpacesPort,
+      mockDeploymentPort,
     );
   });
 
@@ -188,6 +196,20 @@ describe('StartTrialUseCase', () => {
 
         expect(result.role).toBe('admin');
       });
+
+      it('creates render mode configuration with GH_COPILOT for vs-code agent', async () => {
+        const command: StartTrialCommand = { agent: 'vs-code' };
+
+        await startTrialUseCase.execute(command);
+
+        expect(
+          mockDeploymentPort.createRenderModeConfiguration,
+        ).toHaveBeenCalledWith({
+          userId: expect.anything(),
+          organizationId: mockOrganization.id,
+          activeRenderModes: [RenderMode.GH_COPILOT],
+        });
+      });
     });
 
     describe('when organization creation fails', () => {
@@ -282,6 +304,8 @@ describe('StartTrialUseCase', () => {
           mockOrganizationService,
           mockEventEmitterService,
           stubbedLogger,
+          undefined,
+          mockDeploymentPort,
         );
 
         mockOrganizationService.createOrganization.mockResolvedValue(
@@ -318,6 +342,80 @@ describe('StartTrialUseCase', () => {
         const command: StartTrialCommand = { agent: 'vs-code' };
 
         const result = await useCaseWithoutSpacesPort.execute(command);
+
+        expect(result.role).toBe('admin');
+      });
+    });
+
+    describe('when deploymentPort is not provided', () => {
+      let useCaseWithoutDeploymentPort: StartTrialUseCase;
+
+      beforeEach(() => {
+        useCaseWithoutDeploymentPort = new StartTrialUseCase(
+          mockUserService,
+          mockOrganizationService,
+          mockEventEmitterService,
+          stubbedLogger,
+          mockSpacesPort,
+        );
+
+        mockOrganizationService.createOrganization.mockResolvedValue(
+          mockOrganization,
+        );
+        mockUserService.createUser.mockResolvedValue(mockUser);
+      });
+
+      it('does not call createRenderModeConfiguration', async () => {
+        const command: StartTrialCommand = { agent: 'vs-code' };
+
+        await useCaseWithoutDeploymentPort.execute(command);
+
+        expect(
+          mockDeploymentPort.createRenderModeConfiguration,
+        ).not.toHaveBeenCalled();
+      });
+
+      it('returns user data', async () => {
+        const command: StartTrialCommand = { agent: 'vs-code' };
+
+        const result = await useCaseWithoutDeploymentPort.execute(command);
+
+        expect(result.user).toEqual(mockUser);
+      });
+    });
+
+    describe('when render mode configuration creation fails', () => {
+      beforeEach(() => {
+        mockOrganizationService.createOrganization.mockResolvedValue(
+          mockOrganization,
+        );
+        mockUserService.createUser.mockResolvedValue(mockUser);
+        mockSpacesPort.createSpace.mockResolvedValue(undefined);
+        mockDeploymentPort.createRenderModeConfiguration.mockRejectedValue(
+          new Error('Render mode configuration failed'),
+        );
+      });
+
+      it('returns user data', async () => {
+        const command: StartTrialCommand = { agent: 'vs-code' };
+
+        const result = await startTrialUseCase.execute(command);
+
+        expect(result.user).toEqual(mockUser);
+      });
+
+      it('returns organization data', async () => {
+        const command: StartTrialCommand = { agent: 'vs-code' };
+
+        const result = await startTrialUseCase.execute(command);
+
+        expect(result.organization).toEqual(mockOrganization);
+      });
+
+      it('returns admin role', async () => {
+        const command: StartTrialCommand = { agent: 'vs-code' };
+
+        const result = await startTrialUseCase.execute(command);
 
         expect(result.role).toBe('admin');
       });
