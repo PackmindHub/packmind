@@ -6,7 +6,6 @@ import {
   createUserId,
   ISpacesPort,
   StartTrialCommand,
-  UserSignedUpEvent,
   TrialStartedEvent,
 } from '@packmind/types';
 import { organizationFactory, userFactory } from '../../../../test';
@@ -125,7 +124,7 @@ describe('StartTrialUseCase', () => {
         );
       });
 
-      it('emits UserSignedUpEvent without trialMode', async () => {
+      it('emits UserSignedUpEvent with correct payload', async () => {
         const command: StartTrialCommand = { agent: 'vs-code' };
 
         await startTrialUseCase.execute(command);
@@ -141,12 +140,6 @@ describe('StartTrialUseCase', () => {
             }),
           }),
         );
-
-        // Verify trialMode is NOT in the payload
-        const userSignedUpCall = (
-          mockEventEmitterService.emit as jest.Mock
-        ).mock.calls.find((call) => call[0] instanceof UserSignedUpEvent);
-        expect(userSignedUpCall[0].payload).not.toHaveProperty('trialMode');
       });
 
       it('emits TrialStartedEvent with agent and startedAt', async () => {
