@@ -121,11 +121,6 @@ export const SidebarNavigation: React.FunctionComponent<
             url={routes.org.toDeployments(orgSlug)}
             label="Overview"
           />,
-          <SidebarNavigationLink
-            key="analytics"
-            url={routes.org.toAnalytics(orgSlug)}
-            label="Analytics"
-          />,
         ]}
       />
       <PMSeparator borderColor={'border.tertiary'} />

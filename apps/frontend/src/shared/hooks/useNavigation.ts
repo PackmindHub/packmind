@@ -39,10 +39,6 @@ export function useNavigation() {
       if (!currentOrgSlug) return;
       navigate(`/org/${currentOrgSlug}/deployments`);
     },
-    toAnalytics: () => {
-      if (!currentOrgSlug) return;
-      navigate(`/org/${currentOrgSlug}/analytics`);
-    },
     toSettings: () => {
       if (!currentOrgSlug) return;
       navigate(`/org/${currentOrgSlug}/settings`);
