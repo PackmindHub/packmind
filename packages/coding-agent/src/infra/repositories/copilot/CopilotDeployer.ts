@@ -211,11 +211,8 @@ export class CopilotDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Only delete recipes index file if no recipes remain installed
-    if (
-      removed.recipeVersions.length > 0 &&
-      installed.recipeVersions.length === 0
-    ) {
+    // Delete recipes index file if no recipes remain installed
+    if (installed.recipeVersions.length === 0) {
       fileUpdates.delete.push({
         path: CopilotDeployer.RECIPES_INDEX_PATH,
       });

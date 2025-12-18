@@ -35,7 +35,7 @@ export const RemovePackageFromTargetsButton: React.FC<
   const button = (
     <PMButton
       size={size}
-      variant="secondary"
+      variant="outline"
       disabled={isDisabled}
       aria-label={PACKAGE_MESSAGES.removal.buttonLabel}
     >

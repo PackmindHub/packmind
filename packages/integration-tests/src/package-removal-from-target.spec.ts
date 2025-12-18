@@ -112,25 +112,26 @@ describe('Package removal from target integration', () => {
       );
     });
 
-    it('update artifacts for Claude and packmind.json', () => {
+    it('clears Claude sections instead of deleting file', () => {
+      expect(fileUpdates).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            path: 'CLAUDE.md',
+            sections: expect.arrayContaining([
+              { key: 'Packmind recipes', content: '' },
+              { key: 'Packmind standards', content: '' },
+            ]),
+          }),
+        ]),
+      );
+    });
+
+    it('updates packmind.json', () => {
       expect(fileUpdates).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             path: 'packmind.json',
             content: expect.not.stringContaining(packageToRemove.slug),
-          }),
-          expect.objectContaining({
-            path: 'CLAUDE.md',
-            sections: expect.arrayContaining([
-              {
-                key: 'Packmind recipes',
-                content: '',
-              },
-              {
-                key: 'Packmind standards',
-                content: '',
-              },
-            ]),
           }),
         ]),
       );

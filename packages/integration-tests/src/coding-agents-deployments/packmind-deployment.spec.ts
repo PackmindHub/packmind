@@ -105,10 +105,6 @@ describe('Packmind Deployment Spec', () => {
         dataFactory.gitRepo,
         [
           {
-            content: expect.any(String),
-            path: `.packmind/recipes-index.md`,
-          },
-          {
             content: expect.stringContaining(standard1.name),
             path: `.packmind/standards/${standard1.slug}.md`,
           },
@@ -138,10 +134,6 @@ describe('Packmind Deployment Spec', () => {
         expect(commitToGit).toHaveBeenCalledWith(
           dataFactory.gitRepo,
           [
-            {
-              content: expect.any(String),
-              path: `.packmind/recipes-index.md`,
-            },
             {
               content: expect.stringContaining(standard1.name),
               path: `.packmind/standards/${standard1.slug}.md`,
@@ -192,10 +184,6 @@ describe('Packmind Deployment Spec', () => {
         // including previously distributed ones, not just the requested ones
         expect(secondCallArgs[1]).toEqual([
           {
-            content: expect.any(String),
-            path: `.packmind/recipes-index.md`,
-          },
-          {
             content: expect.stringContaining(standard1.name),
             path: `.packmind/standards/${standard1.slug}.md`,
           },
@@ -244,10 +232,6 @@ describe('Packmind Deployment Spec', () => {
             content: expect.any(String),
           },
           {
-            path: `.packmind/standards-index.md`,
-            content: expect.any(String),
-          },
-          {
             path: `packmind.json`,
             content: expect.any(String),
           },
@@ -279,10 +263,6 @@ describe('Packmind Deployment Spec', () => {
             },
             {
               path: `.packmind/recipes-index.md`,
-              content: expect.any(String),
-            },
-            {
-              path: `.packmind/standards-index.md`,
               content: expect.any(String),
             },
             {
@@ -322,10 +302,6 @@ describe('Packmind Deployment Spec', () => {
             },
             {
               path: `.packmind/recipes-index.md`,
-              content: expect.any(String),
-            },
-            {
-              path: `.packmind/standards-index.md`,
               content: expect.any(String),
             },
             {

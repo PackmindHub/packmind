@@ -208,11 +208,8 @@ export class ContinueDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // Only delete recipes index file if no recipes remain installed
-    if (
-      removed.recipeVersions.length > 0 &&
-      installed.recipeVersions.length === 0
-    ) {
+    // Delete recipes index file if no recipes remain installed
+    if (installed.recipeVersions.length === 0) {
       fileUpdates.delete.push({
         path: ContinueDeployer.RECIPES_INDEX_PATH,
       });
@@ -222,6 +219,19 @@ export class ContinueDeployer implements ICodingAgentDeployer {
     for (const standardVersion of removed.standardVersions) {
       fileUpdates.delete.push({
         path: `.continue/rules/packmind/standard-${standardVersion.slug}.md`,
+      });
+    }
+
+    // Delete packmind folder if all artifacts are removed and something was actually removed
+    const hasRemovedArtifacts =
+      removed.recipeVersions.length > 0 || removed.standardVersions.length > 0;
+    if (
+      hasRemovedArtifacts &&
+      installed.recipeVersions.length === 0 &&
+      installed.standardVersions.length === 0
+    ) {
+      fileUpdates.delete.push({
+        path: '.continue/rules/packmind/',
       });
     }
 

@@ -11,6 +11,7 @@ import {
   createStandardVersionId,
   createTargetId,
   createUserId,
+  FileUpdates,
   GitRepo,
   IStandardsPort,
   Recipe,
@@ -510,8 +511,8 @@ describe('PackmindDeployer', () => {
         );
       });
 
-      it('generates two delete entries', () => {
-        expect(result.delete).toHaveLength(2);
+      it('generates six delete entries', () => {
+        expect(result.delete).toHaveLength(6);
       });
 
       it('deletes the removed recipe file', () => {
@@ -523,6 +524,30 @@ describe('PackmindDeployer', () => {
       it('deletes the recipes index file', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/recipes-index.md',
+        });
+      });
+
+      it('deletes the standards index file', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/standards-index.md',
+        });
+      });
+
+      it('deletes the recipes folder', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/recipes/',
+        });
+      });
+
+      it('deletes the standards folder', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/standards/',
+        });
+      });
+
+      it('deletes the packmind folder', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/',
         });
       });
 
@@ -573,14 +598,20 @@ describe('PackmindDeployer', () => {
         );
       });
 
-      it('generates one delete entry', () => {
-        expect(result.delete).toHaveLength(1);
+      it('generates two delete entries', () => {
+        expect(result.delete).toHaveLength(2);
       });
 
-      it('deletes only the removed recipe file', () => {
-        expect(result.delete[0].path).toBe(
-          '.packmind/recipes/removed-recipe.md',
-        );
+      it('deletes the removed recipe file', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/recipes/removed-recipe.md',
+        });
+      });
+
+      it('deletes the standards index file', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/standards-index.md',
+        });
       });
 
       it('does not generate createOrUpdate entries', () => {
@@ -618,8 +649,8 @@ describe('PackmindDeployer', () => {
         );
       });
 
-      it('generates two delete entries', () => {
-        expect(result.delete).toHaveLength(2);
+      it('generates six delete entries', () => {
+        expect(result.delete).toHaveLength(6);
       });
 
       it('deletes the removed standard file', () => {
@@ -631,6 +662,30 @@ describe('PackmindDeployer', () => {
       it('deletes the standards index file', () => {
         expect(result.delete).toContainEqual({
           path: '.packmind/standards-index.md',
+        });
+      });
+
+      it('deletes the recipes index file', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/recipes-index.md',
+        });
+      });
+
+      it('deletes the recipes folder', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/recipes/',
+        });
+      });
+
+      it('deletes the standards folder', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/standards/',
+        });
+      });
+
+      it('deletes the packmind folder', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/',
         });
       });
 
@@ -683,14 +738,20 @@ describe('PackmindDeployer', () => {
         );
       });
 
-      it('generates one delete entry', () => {
-        expect(result.delete).toHaveLength(1);
+      it('generates two delete entries', () => {
+        expect(result.delete).toHaveLength(2);
       });
 
-      it('deletes only the removed standard file', () => {
-        expect(result.delete[0].path).toBe(
-          '.packmind/standards/removed-standard.md',
-        );
+      it('deletes the removed standard file', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/standards/removed-standard.md',
+        });
+      });
+
+      it('deletes the recipes index file', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/recipes-index.md',
+        });
       });
 
       it('does not generate createOrUpdate entries', () => {
@@ -750,8 +811,8 @@ describe('PackmindDeployer', () => {
         );
       });
 
-      it('generates five delete entries', () => {
-        expect(result.delete).toHaveLength(5);
+      it('generates eight delete entries', () => {
+        expect(result.delete).toHaveLength(8);
       });
 
       it('deletes the first removed recipe file', () => {
@@ -784,6 +845,24 @@ describe('PackmindDeployer', () => {
         });
       });
 
+      it('deletes the recipes folder', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/recipes/',
+        });
+      });
+
+      it('deletes the standards folder', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/standards/',
+        });
+      });
+
+      it('deletes the packmind folder', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/',
+        });
+      });
+
       it('does not generate createOrUpdate entries', () => {
         expect(result.createOrUpdate).toHaveLength(0);
       });
@@ -809,8 +888,20 @@ describe('PackmindDeployer', () => {
         expect(result.createOrUpdate).toHaveLength(0);
       });
 
-      it('does not generate delete entries', () => {
-        expect(result.delete).toHaveLength(0);
+      it('generates two delete entries for index files', () => {
+        expect(result.delete).toHaveLength(2);
+      });
+
+      it('deletes the recipes index file', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/recipes-index.md',
+        });
+      });
+
+      it('deletes the standards index file', () => {
+        expect(result.delete).toContainEqual({
+          path: '.packmind/standards-index.md',
+        });
       });
     });
   });

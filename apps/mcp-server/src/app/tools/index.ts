@@ -12,3 +12,4 @@ export { registerSaveStandardTool } from './saveStandard.tool';
 export { registerCreateStandardRuleTool } from './createStandardRule.tool';
 export { registerOnboardingTool } from './onboarding.tool';
 export { registerGenerateTrialActivationUrlTool } from './generateTrialActivationUrl.tool';
+export { registerInstallPackageTool } from './installPackage.tool';
