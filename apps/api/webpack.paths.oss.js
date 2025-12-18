@@ -11,7 +11,6 @@ module.exports = function getOssWebpackPaths(__dirname) {
   return {
     ...basePaths,
     // OSS version uses stubs from editions package
-    '@packmind/analytics': join(__dirname, '../../packages/editions/src'),
     '@packmind/linter': join(__dirname, '../../packages/editions/src'),
     '@packmind/amplitude': join(__dirname, '../../packages/editions/src'),
     '@packmind/plugins': join(__dirname, '../../packages/editions/src'),

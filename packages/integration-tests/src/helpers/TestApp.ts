@@ -1,5 +1,4 @@
 import { AccountsHexa, AccountsHexaOpts } from '@packmind/accounts';
-import { AnalyticsHexa } from '@packmind/analytics';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { DeploymentsHexa } from '@packmind/deployments';
 import { AmplitudeHexa } from '@packmind/amplitude';
@@ -44,7 +43,6 @@ export class TestApp {
   public codingAgentHexa!: CodingAgentHexa;
   public jobsService!: JobsService;
   public deploymentsHexa!: DeploymentsHexa;
-  public analyticsHexa!: AnalyticsHexa;
   public linterHexa!: LinterHexa;
   public amplitudeHexa!: AmplitudeHexa;
 
@@ -73,7 +71,6 @@ export class TestApp {
     this._registry.register(StandardsHexa);
     this._registry.register(CodingAgentHexa);
     this._registry.register(DeploymentsHexa);
-    this._registry.register(AnalyticsHexa);
   }
 
   public async initialize() {
@@ -90,7 +87,6 @@ export class TestApp {
     this.codingAgentHexa = this._registry.get(CodingAgentHexa);
     this.jobsService = this._registry.getService(JobsService);
     this.deploymentsHexa = this._registry.get(DeploymentsHexa);
-    this.analyticsHexa = this._registry.get(AnalyticsHexa);
     this.amplitudeHexa = this._registry.get(AmplitudeHexa);
   }
 }

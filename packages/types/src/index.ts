@@ -2,7 +2,6 @@ export * from './brandedTypes';
 export * from './UseCase';
 export * from './accounts';
 export * from './amplitude';
-export * from './analytics';
 export * from './coding-agent';
 export * from './recipes';
 export * from './deployments';
