@@ -338,16 +338,6 @@ export abstract class SingleFileDeployer implements ICodingAgentDeployer {
       delete: [],
     };
 
-    // If no artifacts remain installed, delete the file entirely
-    if (
-      installed.recipeVersions.length === 0 &&
-      installed.standardVersions.length === 0 &&
-      (removed.recipeVersions.length > 0 || removed.standardVersions.length > 0)
-    ) {
-      fileUpdates.delete.push({ path: this.config.filePath });
-      return fileUpdates;
-    }
-
     const wouldClearRecipes =
       removed.recipeVersions.length > 0 &&
       installed.recipeVersions.length === 0;

@@ -229,13 +229,15 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Generate and deploy the recipes index
-    const recipesIndexContent =
-      this.recipesIndexService.buildRecipesIndex(recipeVersions);
-    fileUpdates.createOrUpdate.push({
-      path: PackmindDeployer.RECIPES_INDEX_PATH,
-      content: recipesIndexContent,
-    });
+    // Generate and deploy the recipes index only if there are recipes
+    if (recipeVersions.length > 0) {
+      const recipesIndexContent =
+        this.recipesIndexService.buildRecipesIndex(recipeVersions);
+      fileUpdates.createOrUpdate.push({
+        path: PackmindDeployer.RECIPES_INDEX_PATH,
+        content: recipesIndexContent,
+      });
+    }
 
     // Deploy each standard to its own file
     for (const standardVersion of standardVersions) {
@@ -253,19 +255,21 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Generate and deploy the standards index
-    const standardsIndexContent =
-      this.standardsIndexService.buildStandardsIndex(
-        standardVersions.map((standardVersion) => ({
-          name: standardVersion.name,
-          slug: standardVersion.slug,
-          summary: standardVersion.summary,
-        })),
-      );
-    fileUpdates.createOrUpdate.push({
-      path: '.packmind/standards-index.md',
-      content: standardsIndexContent,
-    });
+    // Generate and deploy the standards index only if there are standards
+    if (standardVersions.length > 0) {
+      const standardsIndexContent =
+        this.standardsIndexService.buildStandardsIndex(
+          standardVersions.map((standardVersion) => ({
+            name: standardVersion.name,
+            slug: standardVersion.slug,
+            summary: standardVersion.summary,
+          })),
+        );
+      fileUpdates.createOrUpdate.push({
+        path: '.packmind/standards-index.md',
+        content: standardsIndexContent,
+      });
+    }
 
     return fileUpdates;
   }
@@ -299,11 +303,8 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Only delete recipes index if no recipes remain installed
-    if (
-      removed.recipeVersions.length > 0 &&
-      installed.recipeVersions.length === 0
-    ) {
+    // Delete recipes index if no recipes remain installed
+    if (installed.recipeVersions.length === 0) {
       fileUpdates.delete.push({ path: PackmindDeployer.RECIPES_INDEX_PATH });
     }
 
@@ -314,11 +315,8 @@ export class PackmindDeployer implements ICodingAgentDeployer {
       });
     }
 
-    // Only delete standards index if no standards remain installed
-    if (
-      removed.standardVersions.length > 0 &&
-      installed.standardVersions.length === 0
-    ) {
+    // Delete standards index if no standards remain installed
+    if (installed.standardVersions.length === 0) {
       fileUpdates.delete.push({ path: '.packmind/standards-index.md' });
     }
 

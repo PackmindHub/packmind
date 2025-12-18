@@ -607,16 +607,26 @@ describe('SingleFileDeployer', () => {
         );
       });
 
-      it('does not generate createOrUpdate entries', () => {
-        expect(result.createOrUpdate).toHaveLength(0);
+      it('generates one createOrUpdate entry to clear recipes section', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
       });
 
-      it('generates one delete entry', () => {
-        expect(result.delete).toHaveLength(1);
+      it('generates one section in the createOrUpdate entry', () => {
+        expect(result.createOrUpdate[0].sections).toHaveLength(1);
       });
 
-      it('targets the correct agent file for deletion', () => {
-        expect(result.delete[0].path).toBe('TEST_AGENT.md');
+      it('targets the Packmind recipes section', () => {
+        expect(result.createOrUpdate[0].sections![0].key).toBe(
+          'Packmind recipes',
+        );
+      });
+
+      it('sets the recipes section content to empty', () => {
+        expect(result.createOrUpdate[0].sections![0].content).toBe('');
+      });
+
+      it('does not delete the file', () => {
+        expect(result.delete).toHaveLength(0);
       });
     });
 
@@ -701,16 +711,26 @@ describe('SingleFileDeployer', () => {
         );
       });
 
-      it('does not generate createOrUpdate entries', () => {
-        expect(result.createOrUpdate).toHaveLength(0);
+      it('generates one createOrUpdate entry to clear standards section', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
       });
 
-      it('generates one delete entry', () => {
-        expect(result.delete).toHaveLength(1);
+      it('generates one section in the createOrUpdate entry', () => {
+        expect(result.createOrUpdate[0].sections).toHaveLength(1);
       });
 
-      it('targets the correct agent file for deletion', () => {
-        expect(result.delete[0].path).toBe('TEST_AGENT.md');
+      it('targets the Packmind standards section', () => {
+        expect(result.createOrUpdate[0].sections![0].key).toBe(
+          'Packmind standards',
+        );
+      });
+
+      it('sets the standards section content to empty', () => {
+        expect(result.createOrUpdate[0].sections![0].content).toBe('');
+      });
+
+      it('does not delete the file', () => {
+        expect(result.delete).toHaveLength(0);
       });
     });
 
@@ -809,16 +829,44 @@ describe('SingleFileDeployer', () => {
         );
       });
 
-      it('does not generate createOrUpdate entries', () => {
-        expect(result.createOrUpdate).toHaveLength(0);
+      it('generates one createOrUpdate entry to clear both sections', () => {
+        expect(result.createOrUpdate).toHaveLength(1);
       });
 
-      it('generates one delete entry', () => {
-        expect(result.delete).toHaveLength(1);
+      it('generates two sections in the createOrUpdate entry', () => {
+        expect(result.createOrUpdate[0].sections).toHaveLength(2);
       });
 
-      it('targets the correct agent file for deletion', () => {
-        expect(result.delete[0].path).toBe('TEST_AGENT.md');
+      it('targets the Packmind recipes section', () => {
+        const recipesSection = result.createOrUpdate[0].sections!.find(
+          (s) => s.key === 'Packmind recipes',
+        );
+        expect(recipesSection).toBeDefined();
+      });
+
+      it('sets the recipes section content to empty', () => {
+        const recipesSection = result.createOrUpdate[0].sections!.find(
+          (s) => s.key === 'Packmind recipes',
+        );
+        expect(recipesSection!.content).toBe('');
+      });
+
+      it('targets the Packmind standards section', () => {
+        const standardsSection = result.createOrUpdate[0].sections!.find(
+          (s) => s.key === 'Packmind standards',
+        );
+        expect(standardsSection).toBeDefined();
+      });
+
+      it('sets the standards section content to empty', () => {
+        const standardsSection = result.createOrUpdate[0].sections!.find(
+          (s) => s.key === 'Packmind standards',
+        );
+        expect(standardsSection!.content).toBe('');
+      });
+
+      it('does not delete the file', () => {
+        expect(result.delete).toHaveLength(0);
       });
     });
 

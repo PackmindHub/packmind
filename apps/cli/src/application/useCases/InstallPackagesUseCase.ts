@@ -190,12 +190,18 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
 
     // Only write and count if content actually changed
     if (currentContent !== mergedContent) {
-      await fs.writeFile(fullPath, mergedContent, 'utf-8');
-
-      if (fileExists) {
-        result.filesUpdated++;
+      if (this.isEffectivelyEmpty(mergedContent) && fileExists) {
+        // File is empty after section removal - delete it instead of writing empty content
+        await fs.unlink(fullPath);
+        result.filesDeleted++;
       } else {
-        result.filesCreated++;
+        await fs.writeFile(fullPath, mergedContent, 'utf-8');
+
+        if (fileExists) {
+          result.filesUpdated++;
+        } else {
+          result.filesCreated++;
+        }
       }
     }
   }
@@ -273,6 +279,19 @@ export class InstallPackagesUseCase implements IInstallPackagesUseCase {
       // Append new section
       return `${existingContent}\n${startMarker}\n${newSectionContent}\n${endMarker}`;
     }
+  }
+
+  /**
+   * Checks if content is effectively empty (only whitespace and empty section markers).
+   * This helps determine if a file should be deleted after section removal.
+   */
+  private isEffectivelyEmpty(content: string): boolean {
+    // Remove all empty section markers (markers with only whitespace between them)
+    const withoutEmptySections = content.replace(
+      /<!--\s*start:\s*[^-]+?\s*-->\s*<!--\s*end:\s*[^-]+?\s*-->/g,
+      '',
+    );
+    return withoutEmptySections.trim() === '';
   }
 
   /**
