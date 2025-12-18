@@ -2,8 +2,10 @@ import { PackmindLogger } from '@packmind/logger';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
   createUserId,
+  IDeploymentPort,
   ISpacesPort,
   IStartTrial,
+  RenderMode,
   StartTrialCommand,
   StartTrialResult,
   UserSignedUpEvent,
@@ -22,6 +24,7 @@ export class StartTrialUseCase implements IStartTrial {
     private readonly eventEmitterService: PackmindEventEmitterService,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
     private readonly spacesPort?: ISpacesPort,
+    private readonly deploymentPort?: IDeploymentPort,
   ) {
     this.logger.info('StartTrialUseCase initialized');
   }
@@ -87,6 +90,34 @@ export class StartTrialUseCase implements IStartTrial {
         }),
       );
 
+      // Create render mode configuration based on the agent that started the trial
+      if (this.deploymentPort) {
+        const renderModes = this.mapAgentToRenderModes(command.agent);
+        this.logger.info(
+          'Creating render mode configuration for trial organization',
+          {
+            organizationId: organization.id,
+            agent: command.agent,
+            renderModes,
+          },
+        );
+        try {
+          await this.deploymentPort.createRenderModeConfiguration({
+            userId: createUserId(user.id),
+            organizationId: organization.id,
+            activeRenderModes: renderModes,
+          });
+        } catch (error) {
+          this.logger.error(
+            'Failed to create render mode configuration for trial',
+            {
+              organizationId: organization.id,
+              error: error instanceof Error ? error.message : String(error),
+            },
+          );
+        }
+      }
+
       this.logger.info('Trial user created successfully', {
         userId: user.id,
         organizationId: organization.id,
@@ -98,6 +129,17 @@ export class StartTrialUseCase implements IStartTrial {
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
+    }
+  }
+
+  private mapAgentToRenderModes(
+    agent: StartTrialCommand['agent'],
+  ): RenderMode[] {
+    switch (agent) {
+      case 'vs-code':
+        return [RenderMode.GH_COPILOT];
+      default:
+        return [];
     }
   }
 }

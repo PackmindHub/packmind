@@ -349,6 +349,7 @@ export class AccountsAdapter
       ports.eventEmitterService,
       this.logger,
       this.spacesPort ?? undefined,
+      this.deploymentPort ?? undefined,
     );
     this.logger.debug('Start trial use case initialized');
 
