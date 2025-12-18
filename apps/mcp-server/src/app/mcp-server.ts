@@ -49,7 +49,6 @@ export async function createMCPServer(
     hasAccountsHexa: typeof fastify.accountsHexa,
     hasGitHexa: typeof fastify.gitHexa,
     hasRecipesHexa: typeof fastify.recipesHexa,
-    hasAnalyticsHexa: typeof fastify.analyticsHexa,
     hasStandardsHexa: typeof fastify.standardsHexa,
     fastifyKeys: Object.keys(fastify).filter((key) => key.includes('Hexa')),
   });

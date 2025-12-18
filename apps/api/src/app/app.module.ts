@@ -18,11 +18,6 @@ import { HooksModule } from './hooks/hooks.module';
 
 import { AmplitudeModule } from '@packmind/amplitude';
 import {
-  AnalyticsHexa,
-  AnalyticsModule,
-  recipesUsageSchemas,
-} from '@packmind/analytics';
-import {
   ImportLegacyModule,
   ImportPracticeLegacyHexa,
 } from '@packmind/import-practices-legacy';
@@ -58,7 +53,6 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
       url: process.env.DATABASE_URL,
       entities: [
         ...recipesSchemas,
-        ...recipesUsageSchemas,
         ...gitSchemas,
         ...accountsSchemas,
         ...spacesSchemas,
@@ -94,7 +88,6 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
         AccountsHexa,
         GitHexa,
         RecipesHexa,
-        AnalyticsHexa,
         LinterHexa, // Must come before StandardsHexa (StandardsHexa depends on LinterHexa)
         StandardsHexa,
         ImportPracticeLegacyHexa, // After StandardsHexa (depends on Linter/Standards ports)
@@ -109,7 +102,6 @@ const logger = new PackmindLogger('AppModule', LogLevel.INFO);
     AuthModule,
     AccountsOrganizationsModule,
     OrganizationsModule,
-    AnalyticsModule,
     SSEModule,
     AmplitudeModule,
     LinterModule,
