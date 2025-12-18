@@ -21,6 +21,29 @@ export function mergeSectionsIntoFileContent(
     const startIndex = result.indexOf(startMarker);
     const endIndex = result.indexOf(endMarker);
 
+    // If content is empty, remove the entire section (markers included)
+    if (section.content.trim() === '') {
+      if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
+        const before = result.substring(0, startIndex);
+        const after = result.substring(endIndex + endMarker.length);
+        // Remove section and clean up extra newlines
+        const trimmedBefore = before.trimEnd();
+        const trimmedAfter = after.trimStart();
+
+        if (trimmedBefore === '' && trimmedAfter === '') {
+          result = '';
+        } else if (trimmedBefore === '') {
+          result = trimmedAfter;
+        } else if (trimmedAfter === '') {
+          result = trimmedBefore + '\n';
+        } else {
+          result = trimmedBefore + '\n' + trimmedAfter;
+        }
+      }
+      // If section doesn't exist and content is empty, do nothing
+      continue;
+    }
+
     if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
       const before = result.substring(0, startIndex + startMarker.length);
       const after = result.substring(endIndex);
