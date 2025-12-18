@@ -4,7 +4,6 @@ import 'reflect-metadata';
 import dbConnection from 'typeorm-fastify-plugin';
 
 import { accountsSchemas } from '@packmind/accounts';
-import { recipesUsageSchemas } from '@packmind/analytics';
 import { deploymentsSchemas } from '@packmind/deployments';
 import { gitSchemas } from '@packmind/git';
 import { linterSchemas } from '@packmind/linter';
@@ -20,7 +19,6 @@ export async function registerDb(fastify: FastifyInstance) {
     logging: false,
     entities: [
       ...recipesSchemas,
-      ...recipesUsageSchemas,
       ...gitSchemas,
       ...accountsSchemas,
       ...standardsSchemas,
