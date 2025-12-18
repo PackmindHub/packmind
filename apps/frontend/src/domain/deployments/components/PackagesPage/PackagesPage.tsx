@@ -20,6 +20,7 @@ import {
   useListPackagesBySpaceQuery,
   useDeletePackagesBatchMutation,
 } from '../../api/queries/DeploymentsQueries';
+import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
 import { routes } from '../../../../shared/utils/routes';
 import { PACKAGE_MESSAGES } from '../../constants/messages';
 import { DeployPackageButton } from '../PackageDeployments/DeployPackageButton';
@@ -43,6 +44,10 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
   } = useListPackagesBySpaceQuery(spaceId, organizationId);
 
   const deleteBatchMutation = useDeletePackagesBatchMutation();
+
+  const { data: providersResponse } = useGetGitProvidersQuery();
+  const hasGitProviderWithToken =
+    providersResponse?.providers?.some((p) => p.hasToken) ?? false;
 
   const [tableData, setTableData] = React.useState<PMTableRow[]>([]);
   const [selectedPackageIds, setSelectedPackageIds] = React.useState<
@@ -177,11 +182,13 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({
         <PMBox>
           <PMBox mb={4}>
             <PMButtonGroup>
-              <DeployPackageButton
-                selectedPackages={selectedPackages}
-                variant="primary"
-                disabled={selectedPackages.length === 0}
-              />
+              {hasGitProviderWithToken && (
+                <DeployPackageButton
+                  selectedPackages={selectedPackages}
+                  variant="primary"
+                  disabled={selectedPackages.length === 0}
+                />
+              )}
               <PMAlertDialog
                 trigger={
                   <PMButton
