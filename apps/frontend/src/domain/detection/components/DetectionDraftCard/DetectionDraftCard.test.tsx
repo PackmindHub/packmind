@@ -171,12 +171,10 @@ describe('ProgramGenerationTimeline', () => {
     });
 
     describe('when assessment succeeded', () => {
-      beforeEach(() => {
-        baseDraft.status = DetectionStatus.TO_REVIEW;
-      });
-
       describe('when program is not generated yet', () => {
         beforeEach(() => {
+          // Use a status that doesn't match any handled status to trigger ASSESSMENT_SUCCESSFUL
+          baseDraft.status = '' as DetectionStatus;
           screen = renderWithContext(
             createAssessment(RuleDetectionAssessmentStatus.SUCCESS),
           );
@@ -195,6 +193,39 @@ describe('ProgramGenerationTimeline', () => {
               /Packmind AI generates a program that comply with rule specifications/,
             ),
           ).toBeInTheDocument();
+        });
+
+        it('disables the "Ready to use" section', () => {
+          expect(screen.getByText('Ready to use')).toBeInTheDocument();
+        });
+      });
+
+      describe('when program needs review (TO_REVIEW)', () => {
+        beforeEach(() => {
+          baseDraft.status = DetectionStatus.TO_REVIEW;
+          screen = renderWithContext(
+            createAssessment(RuleDetectionAssessmentStatus.SUCCESS),
+          );
+        });
+
+        it('shows "The rule can be detected"', () => {
+          expect(
+            screen.getByText('The rule can be detected'),
+          ).toBeInTheDocument();
+        });
+
+        it('shows "Program needs update" as active with description', () => {
+          expect(screen.getByText('Program needs update')).toBeInTheDocument();
+          expect(
+            screen.getByText(
+              /The rule specifications or examples have been modified since this program was generated/,
+            ),
+          ).toBeInTheDocument();
+        });
+
+        it('shows "Regenerate" and "Show program" buttons', () => {
+          expect(screen.getByText('Regenerate')).toBeInTheDocument();
+          expect(screen.getByText('Show program')).toBeInTheDocument();
         });
 
         it('disables the "Ready to use" section', () => {

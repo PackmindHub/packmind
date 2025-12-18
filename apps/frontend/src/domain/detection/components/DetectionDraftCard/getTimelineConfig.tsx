@@ -269,5 +269,49 @@ export function getTimelineConfig(
           ],
         },
       };
+
+    case DraftStatus.TO_REVIEW:
+      return {
+        step1: {
+          title: 'The rule can be detected',
+          isLast: false,
+          status: TimelineStepStatus.success,
+        },
+        step2: {
+          title: 'Program needs update',
+          description: (
+            <>
+              <PMText as="p" variant="small">
+                The rule specifications or examples have been modified since
+                this program was generated. The program needs to be regenerated
+                to comply with the updated specifications.
+              </PMText>
+            </>
+          ),
+          isLast: false,
+          status: TimelineStepStatus.pending,
+          buttons: [
+            {
+              label: 'Regenerate',
+              onClick: handlers.onRetryDraft,
+              disabled: loadingStates.isGenerating,
+              size: '2xs',
+              icon: <LuRefreshCw />,
+            },
+            {
+              label: 'Show program',
+              onClick: handlers.onShowProgram,
+              variant: 'tertiary',
+              size: '2xs',
+              icon: <LuCode />,
+            },
+          ],
+        },
+        step3: {
+          title: 'Ready to use',
+          isLast: true,
+          status: TimelineStepStatus.unreachable,
+        },
+      };
   }
 }

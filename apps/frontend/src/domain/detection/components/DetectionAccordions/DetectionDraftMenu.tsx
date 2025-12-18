@@ -27,6 +27,8 @@ export const getMenuLabel = (state: DraftStatus): string => {
     case DraftStatus.ASSESSMENT_FAILED:
     case DraftStatus.GENERATION_FAILED:
       return 'Draft: Error';
+    case DraftStatus.TO_REVIEW:
+      return 'Draft: To Review';
     default:
       return 'Draft: Pending';
   }
@@ -34,13 +36,15 @@ export const getMenuLabel = (state: DraftStatus): string => {
 
 const getButtonVariant = (
   state: DraftStatus,
-): 'success' | 'danger' | 'tertiary' => {
+): 'success' | 'danger' | 'warning' | 'tertiary' => {
   switch (state) {
     case DraftStatus.GENERATION_SUCCESSFUL:
       return 'success';
     case DraftStatus.ASSESSMENT_FAILED:
     case DraftStatus.GENERATION_FAILED:
       return 'danger';
+    case DraftStatus.TO_REVIEW:
+      return 'warning';
     default:
       return 'tertiary';
   }

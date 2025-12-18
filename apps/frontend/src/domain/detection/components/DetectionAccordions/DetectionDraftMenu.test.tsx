@@ -139,7 +139,7 @@ describe('DetectionDraftMenu', () => {
       });
     });
 
-    describe('when state is ASSESSMENT_SUCCESSFUL', () => {
+    describe('when state is TO_REVIEW', () => {
       beforeEach(() => {
         baseDraft.status = DetectionStatus.TO_REVIEW;
         screen = renderWithContext(
@@ -147,8 +147,8 @@ describe('DetectionDraftMenu', () => {
         );
       });
 
-      it('displays "Draft: Pending"', () => {
-        expect(screen.getByText('Draft: Pending')).toBeInTheDocument();
+      it('displays "Draft: To Review"', () => {
+        expect(screen.getByText('Draft: To Review')).toBeInTheDocument();
       });
     });
 

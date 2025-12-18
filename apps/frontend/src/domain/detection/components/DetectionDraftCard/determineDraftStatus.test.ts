@@ -43,12 +43,12 @@ describe('determineDraftStatus', () => {
     });
 
     describe('when assessment succeeded', () => {
-      it('returns ASSESSMENT_SUCCESSFUL when draft status is TO_REVIEW', () => {
+      it('returns TO_REVIEW when draft status is TO_REVIEW', () => {
         const state = determineDraftStatus(
           RuleDetectionAssessmentStatus.SUCCESS,
           DetectionStatus.TO_REVIEW,
         );
-        expect(state).toEqual(DraftStatus.ASSESSMENT_SUCCESSFUL);
+        expect(state).toEqual(DraftStatus.TO_REVIEW);
       });
 
       describe('when program generation is in progress', () => {

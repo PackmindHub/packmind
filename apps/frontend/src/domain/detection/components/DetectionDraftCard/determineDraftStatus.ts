@@ -10,6 +10,7 @@ export enum DraftStatus {
   GENERATING = 'generating',
   GENERATION_FAILED = 'generation_failed',
   GENERATION_SUCCESSFUL = 'generation_successful',
+  TO_REVIEW = 'to_review',
 }
 
 export function determineDraftStatus(
@@ -46,6 +47,10 @@ export function determineDraftStatus(
 
     if (draftStatus === DetectionStatus.READY) {
       return DraftStatus.GENERATION_SUCCESSFUL;
+    }
+
+    if (draftStatus === DetectionStatus.TO_REVIEW) {
+      return DraftStatus.TO_REVIEW;
     }
 
     // Assessment successful but generation hasn't started or is in an intermediate state
