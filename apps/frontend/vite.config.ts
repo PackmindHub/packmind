@@ -88,9 +88,8 @@ export default defineConfig(() => {
               return 'routes-public-auth';
             }
 
-            // Group organization analytics and deployments
+            // Group organization deployments and account settings
             if (
-              id.includes('app/routes/org.$orgSlug._protected.analytics') ||
               id.includes('app/routes/org.$orgSlug._protected.deployments') ||
               id.includes(
                 'app/routes/org.$orgSlug._protected.account-settings',
