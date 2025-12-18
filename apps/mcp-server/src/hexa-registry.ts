@@ -1,5 +1,4 @@
 import { AccountsHexa } from '@packmind/accounts';
-import { AnalyticsHexa } from '@packmind/analytics';
 import { DeploymentsHexa } from '@packmind/deployments';
 import { GitHexa } from '@packmind/git';
 import { LlmHexa } from '@packmind/llm';
@@ -148,17 +147,6 @@ async function hexaRegistryPlugin(fastify: FastifyInstance) {
       return fastify.hexaRegistry.get(DeploymentsHexa);
     });
     logger.debug('deploymentsHexa decorator added');
-
-    fastify.decorate('analyticsHexa', () => {
-      logger.debug('analyticsHexa() called');
-      if (!fastify.hexaRegistry || !fastify.hexaRegistry.initialized) {
-        throw new Error(
-          'HexaRegistry not initialized yet. Ensure database connection is ready.',
-        );
-      }
-      return fastify.hexaRegistry.get(AnalyticsHexa);
-    });
-    logger.debug('analyticsHexa decorator added');
   } catch (error) {
     logger.error('Failed to register HexaRegistry plugin', {
       error: error instanceof Error ? error.message : String(error),
@@ -182,7 +170,6 @@ declare module 'fastify' {
     gitHexa: () => GitHexa;
     spacesHexa: () => SpacesHexa;
     recipesHexa: () => RecipesHexa;
-    analyticsHexa: () => AnalyticsHexa;
     standardsHexa: () => StandardsHexa;
     deploymentsHexa: () => DeploymentsHexa;
   }

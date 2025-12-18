@@ -1,6 +1,5 @@
 import { JwtService } from '@nestjs/jwt';
 import { AccountsHexa } from '@packmind/accounts';
-import { AnalyticsHexa } from '@packmind/analytics';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { DeploymentsHexa } from '@packmind/deployments';
 import { AmplitudeHexa } from '@packmind/amplitude';
@@ -55,7 +54,6 @@ describe('PackmindApp API', () => {
         LlmHexa,
         GitHexa,
         RecipesHexa,
-        AnalyticsHexa,
         LinterHexa,
         StandardsHexa,
         CodingAgentHexa,
@@ -103,7 +101,6 @@ describe('PackmindApp API', () => {
       expect(registry.get(AccountsHexa)).toBeDefined();
       expect(registry.get(GitHexa)).toBeDefined();
       expect(registry.get(RecipesHexa)).toBeDefined();
-      expect(registry.get(AnalyticsHexa)).toBeDefined();
       expect(registry.get(LinterHexa)).toBeDefined();
       expect(registry.get(StandardsHexa)).toBeDefined();
       expect(registry.get(CodingAgentHexa)).toBeDefined();

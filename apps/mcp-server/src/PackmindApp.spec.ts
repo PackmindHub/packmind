@@ -1,5 +1,4 @@
 import { AccountsHexa } from '@packmind/accounts';
-import { AnalyticsHexa } from '@packmind/analytics';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { DeploymentsHexa } from '@packmind/deployments';
 import { AmplitudeHexa } from '@packmind/amplitude';
@@ -49,7 +48,6 @@ describe('PackmindApp MCP Server', () => {
         StandardsHexa,
         CodingAgentHexa,
         DeploymentsHexa,
-        AnalyticsHexa,
       ]);
     });
 
@@ -81,7 +79,6 @@ describe('PackmindApp MCP Server', () => {
       expect(registry.get(StandardsHexa)).toBeDefined();
       expect(registry.get(CodingAgentHexa)).toBeDefined();
       expect(registry.get(DeploymentsHexa)).toBeDefined();
-      expect(registry.get(AnalyticsHexa)).toBeDefined();
     });
 
     it('registers JobsService', async () => {

@@ -3,7 +3,6 @@ import {
   AccountsHexaOpts,
   IJwtService,
 } from '@packmind/accounts';
-import { AnalyticsHexa } from '@packmind/analytics';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { DeploymentsHexa } from '@packmind/deployments';
 import { AmplitudeHexa } from '@packmind/amplitude';
@@ -97,7 +96,6 @@ export function getPackmindAppDefinition(): PackmindAppDefinition {
       StandardsHexa,
       CodingAgentHexa,
       DeploymentsHexa,
-      AnalyticsHexa,
       ...mcpHexaPlugins,
     ],
     services: [JobsService, PackmindEventEmitterService],

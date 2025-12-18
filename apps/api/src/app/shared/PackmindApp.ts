@@ -4,7 +4,6 @@ import {
   ApiKeyService,
   IJwtService,
 } from '@packmind/accounts';
-import { AnalyticsHexa } from '@packmind/analytics';
 import { CodingAgentHexa } from '@packmind/coding-agent';
 import { DeploymentsHexa } from '@packmind/deployments';
 import { AmplitudeHexa } from '@packmind/amplitude';
@@ -73,7 +72,6 @@ export function getPackmindAppDefinition(): PackmindAppDefinition {
       LlmHexa,
       GitHexa,
       RecipesHexa,
-      AnalyticsHexa,
       LinterHexa, // Must come before StandardsHexa (StandardsHexa depends on LinterHexa)
       StandardsHexa,
       CodingAgentHexa,
