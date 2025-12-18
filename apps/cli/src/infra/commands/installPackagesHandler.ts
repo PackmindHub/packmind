@@ -760,46 +760,32 @@ export async function uninstallPackagesHandler(
 
     // Handle special case: removing ALL packages
     if (remainingPackages.length === 0) {
-      log('Removing all packages and cleaning up .packmind directory...');
+      log('Removing all packages and cleaning up...');
 
-      // Delete the entire .packmind directory
-      const packmindDir = `${cwd}/.packmind`;
-      try {
-        const fs = await import('fs/promises');
-        const dirExists = await fs
-          .access(packmindDir)
-          .then(() => true)
-          .catch(() => false);
+      // Call installPackages with empty array to trigger proper cleanup via backend API
+      // This ensures all deployer artifacts (.cursor, .continue, .github, etc.) are removed
+      const result = await packmindCliHexa.installPackages({
+        baseDirectory: cwd,
+        packagesSlugs: [],
+        previousPackagesSlugs: configPackages,
+      });
 
-        if (dirExists) {
-          // Count files before deletion
-          const files = await fs.readdir(packmindDir, { recursive: true });
-          filesDeleted = files.filter((f) =>
-            typeof f === 'string' ? !f.endsWith('/') : true,
-          ).length;
+      // Display results
+      log(`\nremoved ${result.filesDeleted} files`);
 
-          await fs.rm(packmindDir, { recursive: true, force: true });
-        }
-
-        // Also remove AGENTS.md if it exists
-        const agentsMdPath = `${cwd}/AGENTS.md`;
-        const agentsMdExists = await fs
-          .access(agentsMdPath)
-          .then(() => true)
-          .catch(() => false);
-
-        if (agentsMdExists) {
-          await fs.unlink(agentsMdPath);
-          filesDeleted++;
-        }
-      } catch (err) {
-        error('\n⚠️  Warning: Failed to clean up some files:');
-        if (err instanceof Error) {
-          error(`   ${err.message}`);
-        }
+      if (result.errors.length > 0) {
+        log('\n⚠️  Errors encountered:');
+        result.errors.forEach((err) => {
+          log(`   - ${err}`);
+        });
+        exit(1);
+        return {
+          filesDeleted: result.filesDeleted,
+          packagesUninstalled: packagesToUninstall,
+        };
       }
 
-      log(`\nremoved ${filesDeleted} files`);
+      filesDeleted = result.filesDeleted;
     } else {
       // Normal case: some packages remain
       // Execute the install operation with remaining packages

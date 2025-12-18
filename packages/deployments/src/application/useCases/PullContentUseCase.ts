@@ -55,8 +55,16 @@ export class PullContentUseCase extends AbstractMemberUseCase<
       packagesSlugs: command.packagesSlugs,
     });
 
-    // Validate that package slugs are provided
-    if (!command.packagesSlugs || command.packagesSlugs.length === 0) {
+    // Validate that package slugs are provided (unless it's a removal-only operation)
+    const isRemovalOnlyOperation =
+      (!command.packagesSlugs || command.packagesSlugs.length === 0) &&
+      command.previousPackagesSlugs &&
+      command.previousPackagesSlugs.length > 0;
+
+    if (
+      !isRemovalOnlyOperation &&
+      (!command.packagesSlugs || command.packagesSlugs.length === 0)
+    ) {
       this.logger.error('Pull content failed: no package slugs provided', {
         organizationId: command.organizationId,
         userId: command.userId,
@@ -76,75 +84,90 @@ export class PullContentUseCase extends AbstractMemberUseCase<
         organizationId: command.organizationId,
       });
 
-      // Fetch packages by slugs with full Recipe[] and Standard[] artefacts
-      const packages =
-        await this.packageService.getPackagesBySlugsWithArtefacts(
-          command.packagesSlugs,
+      // Fetch packages and their artifacts (skip if removal-only operation)
+      let recipeVersions: RecipeVersion[] = [];
+      let standardVersions: StandardVersion[] = [];
+
+      if (!isRemovalOnlyOperation && command.packagesSlugs) {
+        const packages =
+          await this.packageService.getPackagesBySlugsWithArtefacts(
+            command.packagesSlugs,
+          );
+
+        // Check if all requested slugs were found
+        const foundSlugs = packages.map((pkg) => pkg.slug);
+        const unknownSlugs = command.packagesSlugs.filter(
+          (slug) => !foundSlugs.includes(slug),
         );
 
-      // Check if all requested slugs were found
-      const foundSlugs = packages.map((pkg) => pkg.slug);
-      const unknownSlugs = command.packagesSlugs.filter(
-        (slug) => !foundSlugs.includes(slug),
-      );
+        if (unknownSlugs.length > 0) {
+          this.logger.error('Pull content failed: unknown package slugs', {
+            unknownSlugs,
+            requestedSlugs: command.packagesSlugs,
+            foundSlugs,
+            organizationId: command.organizationId,
+          });
+          throw new PackagesNotFoundError(unknownSlugs);
+        }
 
-      if (unknownSlugs.length > 0) {
-        this.logger.error('Pull content failed: unknown package slugs', {
-          unknownSlugs,
-          requestedSlugs: command.packagesSlugs,
-          foundSlugs,
-          organizationId: command.organizationId,
+        this.logger.info('Found packages with relations', {
+          count: packages.length,
+          packagesSlugs: packages.map((p) => p.slug),
         });
-        throw new PackagesNotFoundError(unknownSlugs);
+
+        // Extract recipes and standards from packages
+        const allRecipes = packages.flatMap((pkg) => pkg.recipes);
+        const allStandards = packages.flatMap((pkg) => pkg.standards);
+
+        // Deduplicate by ID (when multiple packages share the same artifact)
+        const recipes = [...new Map(allRecipes.map((r) => [r.id, r])).values()];
+        const standards = [
+          ...new Map(allStandards.map((s) => [s.id, s])).values(),
+        ];
+
+        this.logger.info('Extracted content from packages', {
+          recipeCount: recipes.length,
+          standardCount: standards.length,
+        });
+
+        // Get recipe versions for recipes
+        const recipeVersionsPromises = recipes.map(async (recipe) => {
+          const versions = await this.recipesPort.listRecipeVersions(recipe.id);
+          versions.sort(
+            (a: RecipeVersion, b: RecipeVersion) => b.version - a.version,
+          );
+          return versions[0];
+        });
+
+        recipeVersions = (await Promise.all(recipeVersionsPromises)).filter(
+          (rv): rv is NonNullable<typeof rv> => rv !== null,
+        );
+
+        this.logger.info('Retrieved recipe versions', {
+          count: recipeVersions.length,
+        });
+
+        // Get standard versions for standards
+        const standardVersionsPromises = standards.map(async (standard) => {
+          const versions = await this.standardsPort.listStandardVersions(
+            standard.id,
+          );
+          versions.sort((a, b) => b.version - a.version);
+          return versions[0];
+        });
+
+        standardVersions = (await Promise.all(standardVersionsPromises)).filter(
+          (sv) => sv !== undefined,
+        );
+
+        this.logger.info('Retrieved standard versions', {
+          count: standardVersions.length,
+        });
+      } else {
+        this.logger.info(
+          'Removal-only operation: skipping package fetching, will delete all artifacts from previous packages',
+        );
       }
-
-      this.logger.info('Found packages with relations', {
-        count: packages.length,
-        packagesSlugs: packages.map((p) => p.slug),
-      });
-
-      // Extract recipes and standards from packages
-      const recipes = packages.flatMap((pkg) => pkg.recipes);
-      const standards = packages.flatMap((pkg) => pkg.standards);
-
-      this.logger.info('Extracted content from packages', {
-        recipeCount: recipes.length,
-        standardCount: standards.length,
-      });
-
-      // Get recipe versions for recipes
-      const recipeVersionsPromises = recipes.map(async (recipe) => {
-        const versions = await this.recipesPort.listRecipeVersions(recipe.id);
-        versions.sort(
-          (a: RecipeVersion, b: RecipeVersion) => b.version - a.version,
-        );
-        return versions[0];
-      });
-
-      const recipeVersions = (await Promise.all(recipeVersionsPromises)).filter(
-        (rv): rv is NonNullable<typeof rv> => rv !== null,
-      );
-
-      this.logger.info('Retrieved recipe versions', {
-        count: recipeVersions.length,
-      });
-
-      // Get standard versions for standards
-      const standardVersionsPromises = standards.map(async (standard) => {
-        const versions = await this.standardsPort.listStandardVersions(
-          standard.id,
-        );
-        versions.sort((a, b) => b.version - a.version);
-        return versions[0];
-      });
-
-      const standardVersions = (
-        await Promise.all(standardVersionsPromises)
-      ).filter((sv) => sv !== undefined);
-
-      this.logger.info('Retrieved standard versions', {
-        count: standardVersions.length,
-      });
 
       // Process removed packages if previousPackagesSlugs provided
       let removedRecipeVersions: RecipeVersion[] = [];
@@ -156,7 +179,7 @@ export class PullContentUseCase extends AbstractMemberUseCase<
       ) {
         const removedPackageSlugs = this.computeRemovedPackages(
           command.previousPackagesSlugs,
-          command.packagesSlugs,
+          command.packagesSlugs ?? [],
         );
 
         if (removedPackageSlugs.length > 0) {
@@ -211,28 +234,51 @@ export class PullContentUseCase extends AbstractMemberUseCase<
 
         this.mergeFileUpdates(mergedFileUpdates, artifactFileUpdates);
 
-        // Generate deletion paths for removed artifacts
+        // Generate deletion paths for removed artifacts (excluding shared ones)
         if (
           removedRecipeVersions.length > 0 ||
           removedStandardVersions.length > 0
         ) {
-          const deletionPaths = await this.generateDeletionPaths(
-            deployer,
-            removedRecipeVersions,
-            removedStandardVersions,
-          );
+          const { recipeVersionsToDelete, standardVersionsToDelete } =
+            this.filterSharedArtifacts(
+              removedRecipeVersions,
+              removedStandardVersions,
+              recipeVersions,
+              standardVersions,
+            );
 
-          this.logger.info('Generated deletion paths', {
+          this.logger.info('Filtered shared artifacts from deletion', {
             codingAgent,
-            deletionPathsCount: deletionPaths.length,
+            originalRemovedRecipes: removedRecipeVersions.length,
+            actualRecipesToDelete: recipeVersionsToDelete.length,
+            originalRemovedStandards: removedStandardVersions.length,
+            actualStandardsToDelete: standardVersionsToDelete.length,
           });
 
-          // Add deletion paths to file updates
-          deletionPaths.forEach((path) => {
-            if (!mergedFileUpdates.delete.some((f) => f.path === path)) {
-              mergedFileUpdates.delete.push({ path });
-            }
-          });
+          if (
+            recipeVersionsToDelete.length > 0 ||
+            standardVersionsToDelete.length > 0
+          ) {
+            const removalFileUpdates =
+              await deployer.generateRemovalFileUpdates(
+                {
+                  recipeVersions: recipeVersionsToDelete,
+                  standardVersions: standardVersionsToDelete,
+                },
+                {
+                  recipeVersions: recipeVersions,
+                  standardVersions: standardVersions,
+                },
+              );
+
+            this.logger.info('Generated removal file updates', {
+              codingAgent,
+              createOrUpdateCount: removalFileUpdates.createOrUpdate.length,
+              deleteCount: removalFileUpdates.delete.length,
+            });
+
+            this.mergeFileUpdates(mergedFileUpdates, removalFileUpdates);
+          }
         }
       }
 
@@ -303,6 +349,37 @@ export class PullContentUseCase extends AbstractMemberUseCase<
   }
 
   /**
+   * Filters removed artifacts to exclude those still needed by remaining packages.
+   * Compares by recipeId/standardId since the same artifact produces the same
+   * file path regardless of which package it came from.
+   */
+  private filterSharedArtifacts(
+    removedRecipeVersions: RecipeVersion[],
+    removedStandardVersions: StandardVersion[],
+    remainingRecipeVersions: RecipeVersion[],
+    remainingStandardVersions: StandardVersion[],
+  ): {
+    recipeVersionsToDelete: RecipeVersion[];
+    standardVersionsToDelete: StandardVersion[];
+  } {
+    const remainingRecipeIds = new Set(
+      remainingRecipeVersions.map((rv) => rv.recipeId),
+    );
+    const remainingStandardIds = new Set(
+      remainingStandardVersions.map((sv) => sv.standardId),
+    );
+
+    const recipeVersionsToDelete = removedRecipeVersions.filter(
+      (rv) => !remainingRecipeIds.has(rv.recipeId),
+    );
+    const standardVersionsToDelete = removedStandardVersions.filter(
+      (sv) => !remainingStandardIds.has(sv.standardId),
+    );
+
+    return { recipeVersionsToDelete, standardVersionsToDelete };
+  }
+
+  /**
    * Fetches recipe and standard versions for the removed packages
    */
   private async fetchArtifactsForRemovedPackages(
@@ -318,8 +395,12 @@ export class PullContentUseCase extends AbstractMemberUseCase<
       );
 
     // Extract recipes and standards from removed packages
-    const recipes = packages.flatMap((pkg) => pkg.recipes);
-    const standards = packages.flatMap((pkg) => pkg.standards);
+    const allRecipes = packages.flatMap((pkg) => pkg.recipes);
+    const allStandards = packages.flatMap((pkg) => pkg.standards);
+
+    // Deduplicate by ID (when multiple packages share the same artifact)
+    const recipes = [...new Map(allRecipes.map((r) => [r.id, r])).values()];
+    const standards = [...new Map(allStandards.map((s) => [s.id, s])).values()];
 
     // Get recipe versions for removed recipes
     const recipeVersionsPromises = recipes.map(async (recipe) => {
@@ -348,38 +429,5 @@ export class PullContentUseCase extends AbstractMemberUseCase<
     ).filter((sv) => sv !== undefined);
 
     return { recipeVersions, standardVersions };
-  }
-
-  /**
-   * Generates file paths to delete for removed artifacts using the deployer
-   */
-  private async generateDeletionPaths(
-    deployer: ICodingAgentDeployer,
-    removedRecipeVersions: RecipeVersion[],
-    removedStandardVersions: StandardVersion[],
-  ): Promise<string[]> {
-    const deletionPaths: string[] = [];
-
-    // Generate file updates for removed recipes to get their paths
-    if (removedRecipeVersions.length > 0) {
-      const recipeUpdates = await deployer.generateFileUpdatesForRecipes(
-        removedRecipeVersions,
-      );
-      recipeUpdates.createOrUpdate.forEach((file) =>
-        deletionPaths.push(file.path),
-      );
-    }
-
-    // Generate file updates for removed standards to get their paths
-    if (removedStandardVersions.length > 0) {
-      const standardUpdates = await deployer.generateFileUpdatesForStandards(
-        removedStandardVersions,
-      );
-      standardUpdates.createOrUpdate.forEach((file) =>
-        deletionPaths.push(file.path),
-      );
-    }
-
-    return deletionPaths;
   }
 }
