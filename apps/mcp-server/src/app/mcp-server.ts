@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { EventTrackingAdapter } from '@packmind/amplitude';
 import { LogLevel, PackmindLogger } from '@packmind/logger';
-import { IEventTrackingPort } from '@packmind/types';
+import { createUserId, IEventTrackingPort } from '@packmind/types';
 import { FastifyInstance } from 'fastify';
 import {
   registerSaveRecipeTool,
@@ -17,15 +17,16 @@ import {
   registerSaveStandardTool,
   registerCreateStandardRuleTool,
   registerOnboardingTool,
+  registerGenerateTrialActivationUrlTool,
 } from './tools';
 import { UserContext } from './tools/types';
 
 const mcpToolPrefix = 'packmind';
 
-export function createMCPServer(
+export async function createMCPServer(
   fastify: FastifyInstance,
   userContext?: UserContext,
-) {
+): Promise<McpServer> {
   const logger = new PackmindLogger('MCPServer', LogLevel.INFO);
 
   // Create server instance
@@ -75,8 +76,28 @@ export function createMCPServer(
   registerSaveStandardTool(toolDependencies, mcpServer);
   registerCreateStandardRuleTool(toolDependencies, mcpServer);
   registerOnboardingTool(toolDependencies, mcpServer);
-  // TODO: enable this only for trial users to avoid polluting MCP tools list
-  // registerGenerateTrialActivationUrlTool(toolDependencies, mcpServer);
+
+  // Register trial activation tool only for trial users (fetch fresh data from DB)
+  if (userContext) {
+    try {
+      const accountsAdapter = fastify.accountsHexa().getAdapter();
+      const user = await accountsAdapter.getUserById(
+        createUserId(userContext.userId),
+      );
+
+      if (user?.trial) {
+        registerGenerateTrialActivationUrlTool(toolDependencies, mcpServer);
+        logger.info('Trial activation tool registered for trial user', {
+          userId: userContext.userId,
+        });
+      }
+    } catch (error) {
+      logger.error('Failed to check user trial status', {
+        userId: userContext.userId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
 
   return mcpServer;
 }
