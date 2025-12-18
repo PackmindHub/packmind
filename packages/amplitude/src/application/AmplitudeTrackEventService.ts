@@ -43,9 +43,6 @@ export class AmplitudeTrackEventService {
 
     const identifyObj = new Identify();
     identifyObj.set('organizationId', signedUpPayload.organizationId);
-    if (signedUpPayload.trialMode) {
-      identifyObj.set('trialMode', signedUpPayload.trialMode);
-    }
 
     identify(identifyObj, {
       user_id: signedUpPayload.userId,
