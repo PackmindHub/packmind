@@ -10,11 +10,19 @@ import {
   OrganizationId,
   PackageWithArtefacts,
   PullContentCommand,
+  Recipe,
+  RecipeVersion,
+  Standard,
+  StandardVersion,
   User,
   UserOrganizationMembership,
   createOrganizationId,
   createPackageId,
+  createRecipeId,
+  createRecipeVersionId,
   createSpaceId,
+  createStandardId,
+  createStandardVersionId,
   createUserId,
 } from '@packmind/types';
 import { CodingAgents } from '@packmind/coding-agent';
@@ -40,6 +48,7 @@ const createUserWithMembership = (
       role,
     },
   ],
+  trial: false,
 });
 
 describe('PullContentUseCase', () => {
@@ -439,6 +448,444 @@ describe('PullContentUseCase', () => {
         expect(packmindJsonFile?.content).toBe(
           '{\n  "packages": {\n    "test-package": "*"\n  }\n}\n',
         );
+      });
+    });
+  });
+
+  describe('when removing packages with shared artifacts', () => {
+    let packageA: PackageWithArtefacts;
+    let packageB: PackageWithArtefacts;
+    let sharedRecipe: Recipe;
+    let uniqueRecipe: Recipe;
+    let sharedStandard: Standard;
+    let uniqueStandard: Standard;
+    let sharedRecipeVersion: RecipeVersion;
+    let uniqueRecipeVersion: RecipeVersion;
+    let sharedStandardVersion: StandardVersion;
+    let uniqueStandardVersion: StandardVersion;
+    let mockDeployer: {
+      generateFileUpdatesForRecipes: jest.Mock;
+      generateFileUpdatesForStandards: jest.Mock;
+      deployArtifacts: jest.Mock;
+      generateRemovalFileUpdates: jest.Mock;
+    };
+    let mockRegistry: { getDeployer: jest.Mock };
+
+    beforeEach(() => {
+      const spaceId = createSpaceId('space-1');
+      const userId = createUserId('user-1');
+
+      sharedRecipe = {
+        id: createRecipeId('shared-recipe-id'),
+        name: 'Shared Recipe',
+        slug: 'shared-recipe',
+        content: 'shared content',
+        version: 1,
+        userId,
+        spaceId,
+      };
+
+      uniqueRecipe = {
+        id: createRecipeId('unique-recipe-id'),
+        name: 'Unique Recipe',
+        slug: 'unique-recipe',
+        content: 'unique content',
+        version: 1,
+        userId,
+        spaceId,
+      };
+
+      sharedStandard = {
+        id: createStandardId('shared-standard-id'),
+        name: 'Shared Standard',
+        slug: 'shared-standard',
+        description: 'shared description',
+        version: 1,
+        userId,
+        spaceId,
+        scope: null,
+      };
+
+      uniqueStandard = {
+        id: createStandardId('unique-standard-id'),
+        name: 'Unique Standard',
+        slug: 'unique-standard',
+        description: 'unique description',
+        version: 1,
+        userId,
+        spaceId,
+        scope: null,
+      };
+
+      sharedRecipeVersion = {
+        id: createRecipeVersionId('rv-shared'),
+        recipeId: sharedRecipe.id,
+        name: 'Shared Recipe',
+        slug: 'shared-recipe',
+        content: 'shared content',
+        version: 1,
+        userId: null,
+      };
+
+      uniqueRecipeVersion = {
+        id: createRecipeVersionId('rv-unique'),
+        recipeId: uniqueRecipe.id,
+        name: 'Unique Recipe',
+        slug: 'unique-recipe',
+        content: 'unique content',
+        version: 1,
+        userId: null,
+      };
+
+      sharedStandardVersion = {
+        id: createStandardVersionId('sv-shared'),
+        standardId: sharedStandard.id,
+        name: 'Shared Standard',
+        slug: 'shared-standard',
+        description: 'shared description',
+        version: 1,
+        scope: null,
+      };
+
+      uniqueStandardVersion = {
+        id: createStandardVersionId('sv-unique'),
+        standardId: uniqueStandard.id,
+        name: 'Unique Standard',
+        slug: 'unique-standard',
+        description: 'unique description',
+        version: 1,
+        scope: null,
+      };
+
+      packageA = {
+        id: createPackageId('package-a-id'),
+        slug: 'package-a',
+        name: 'Package A',
+        description: 'Package A description',
+        spaceId,
+        createdBy: userId,
+        recipes: [sharedRecipe, uniqueRecipe],
+        standards: [sharedStandard, uniqueStandard],
+      };
+
+      packageB = {
+        id: createPackageId('package-b-id'),
+        slug: 'package-b',
+        name: 'Package B',
+        description: 'Package B description',
+        spaceId,
+        createdBy: userId,
+        recipes: [sharedRecipe],
+        standards: [sharedStandard],
+      };
+
+      mockDeployer = {
+        generateFileUpdatesForRecipes: jest.fn(),
+        generateFileUpdatesForStandards: jest.fn(),
+        deployArtifacts: jest.fn(),
+        generateRemovalFileUpdates: jest.fn(),
+      };
+
+      mockRegistry = {
+        getDeployer: jest.fn().mockReturnValue(mockDeployer),
+      };
+
+      (codingAgentPort.getDeployerRegistry as jest.Mock).mockReturnValue(
+        mockRegistry,
+      );
+
+      mockDeployer.deployArtifacts.mockResolvedValue({
+        createOrUpdate: [],
+        delete: [],
+      });
+
+      mockDeployer.generateRemovalFileUpdates.mockResolvedValue({
+        createOrUpdate: [],
+        delete: [],
+      });
+    });
+
+    describe('when Package A is removed but Package B remains', () => {
+      beforeEach(() => {
+        command = {
+          ...command,
+          packagesSlugs: ['package-b'],
+          previousPackagesSlugs: ['package-a', 'package-b'],
+        };
+
+        packageService.getPackagesBySlugsWithArtefacts
+          .mockResolvedValueOnce([packageB])
+          .mockResolvedValueOnce([packageA]);
+
+        recipesPort.listRecipeVersions
+          .mockResolvedValueOnce([sharedRecipeVersion])
+          .mockResolvedValueOnce([sharedRecipeVersion])
+          .mockResolvedValueOnce([uniqueRecipeVersion]);
+
+        standardsPort.listStandardVersions
+          .mockResolvedValueOnce([sharedStandardVersion])
+          .mockResolvedValueOnce([sharedStandardVersion])
+          .mockResolvedValueOnce([uniqueStandardVersion]);
+
+        mockDeployer.generateRemovalFileUpdates.mockResolvedValue({
+          createOrUpdate: [],
+          delete: [
+            { path: '.packmind/recipes/unique-recipe.md' },
+            { path: '.packmind/standards/unique-standard.md' },
+          ],
+        });
+      });
+
+      it('does not delete shared recipe files', async () => {
+        const result = await useCase.execute(command);
+
+        const deletedPaths = result.fileUpdates.delete.map((f) => f.path);
+        expect(deletedPaths).not.toContain(
+          '.packmind/recipes/shared-recipe.md',
+        );
+      });
+
+      it('does not delete shared standard files', async () => {
+        const result = await useCase.execute(command);
+
+        const deletedPaths = result.fileUpdates.delete.map((f) => f.path);
+        expect(deletedPaths).not.toContain(
+          '.packmind/standards/shared-standard.md',
+        );
+      });
+
+      it('deletes unique recipe files from removed package', async () => {
+        const result = await useCase.execute(command);
+
+        const deletedPaths = result.fileUpdates.delete.map((f) => f.path);
+        expect(deletedPaths).toContain('.packmind/recipes/unique-recipe.md');
+      });
+
+      it('deletes unique standard files from removed package', async () => {
+        const result = await useCase.execute(command);
+
+        const deletedPaths = result.fileUpdates.delete.map((f) => f.path);
+        expect(deletedPaths).toContain(
+          '.packmind/standards/unique-standard.md',
+        );
+      });
+    });
+
+    describe('when all artifacts are shared with remaining packages', () => {
+      beforeEach(() => {
+        const packageAOnlyShared: PackageWithArtefacts = {
+          ...packageA,
+          recipes: [sharedRecipe],
+          standards: [sharedStandard],
+        };
+
+        command = {
+          ...command,
+          packagesSlugs: ['package-b'],
+          previousPackagesSlugs: ['package-a', 'package-b'],
+        };
+
+        packageService.getPackagesBySlugsWithArtefacts
+          .mockResolvedValueOnce([packageB])
+          .mockResolvedValueOnce([packageAOnlyShared]);
+
+        recipesPort.listRecipeVersions.mockResolvedValue([sharedRecipeVersion]);
+        standardsPort.listStandardVersions.mockResolvedValue([
+          sharedStandardVersion,
+        ]);
+      });
+
+      it('does not generate any deletion paths', async () => {
+        const result = await useCase.execute(command);
+
+        expect(result.fileUpdates.delete).toEqual([]);
+      });
+
+      it('does not call generateRemovalFileUpdates', async () => {
+        await useCase.execute(command);
+
+        expect(mockDeployer.generateRemovalFileUpdates).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('when no artifacts are shared', () => {
+      beforeEach(() => {
+        const packageAUniqueOnly: PackageWithArtefacts = {
+          ...packageA,
+          recipes: [uniqueRecipe],
+          standards: [uniqueStandard],
+        };
+
+        const packageBDifferent: PackageWithArtefacts = {
+          ...packageB,
+          recipes: [],
+          standards: [],
+        };
+
+        command = {
+          ...command,
+          packagesSlugs: ['package-b'],
+          previousPackagesSlugs: ['package-a', 'package-b'],
+        };
+
+        packageService.getPackagesBySlugsWithArtefacts
+          .mockResolvedValueOnce([packageBDifferent])
+          .mockResolvedValueOnce([packageAUniqueOnly]);
+
+        recipesPort.listRecipeVersions.mockResolvedValue([uniqueRecipeVersion]);
+        standardsPort.listStandardVersions.mockResolvedValue([
+          uniqueStandardVersion,
+        ]);
+
+        mockDeployer.generateRemovalFileUpdates.mockResolvedValue({
+          createOrUpdate: [],
+          delete: [
+            { path: '.packmind/recipes/unique-recipe.md' },
+            { path: '.packmind/standards/unique-standard.md' },
+          ],
+        });
+      });
+
+      it('deletes unique recipe from removed package', async () => {
+        const result = await useCase.execute(command);
+
+        const deletedPaths = result.fileUpdates.delete.map((f) => f.path);
+        expect(deletedPaths).toContain('.packmind/recipes/unique-recipe.md');
+      });
+
+      it('deletes unique standard from removed package', async () => {
+        const result = await useCase.execute(command);
+
+        const deletedPaths = result.fileUpdates.delete.map((f) => f.path);
+        expect(deletedPaths).toContain(
+          '.packmind/standards/unique-standard.md',
+        );
+      });
+    });
+
+    describe('when removing the last package', () => {
+      beforeEach(() => {
+        command = {
+          ...command,
+          packagesSlugs: [],
+          previousPackagesSlugs: ['package-a'],
+        };
+
+        packageService.getPackagesBySlugsWithArtefacts.mockResolvedValueOnce([
+          packageA,
+        ]);
+
+        recipesPort.listRecipeVersions
+          .mockResolvedValueOnce([sharedRecipeVersion])
+          .mockResolvedValueOnce([uniqueRecipeVersion]);
+
+        standardsPort.listStandardVersions
+          .mockResolvedValueOnce([sharedStandardVersion])
+          .mockResolvedValueOnce([uniqueStandardVersion]);
+
+        mockDeployer.generateRemovalFileUpdates.mockResolvedValue({
+          createOrUpdate: [],
+          delete: [
+            { path: '.packmind/recipes/shared-recipe.md' },
+            { path: '.packmind/recipes/unique-recipe.md' },
+            { path: '.packmind/standards/shared-standard.md' },
+            { path: '.packmind/standards/unique-standard.md' },
+          ],
+        });
+      });
+
+      it('does not throw NoPackageSlugsProvidedError', async () => {
+        await expect(useCase.execute(command)).resolves.not.toThrow();
+      });
+
+      it('fetches packages only once', async () => {
+        await useCase.execute(command);
+
+        expect(
+          packageService.getPackagesBySlugsWithArtefacts,
+        ).toHaveBeenCalledTimes(1);
+      });
+
+      it('fetches only previous packages', async () => {
+        await useCase.execute(command);
+
+        expect(
+          packageService.getPackagesBySlugsWithArtefacts,
+        ).toHaveBeenCalledWith(['package-a']);
+      });
+
+      it('calls generateRemovalFileUpdates with all artifacts from removed package', async () => {
+        await useCase.execute(command);
+
+        expect(mockDeployer.generateRemovalFileUpdates).toHaveBeenCalledWith(
+          {
+            recipeVersions: [sharedRecipeVersion, uniqueRecipeVersion],
+            standardVersions: [sharedStandardVersion, uniqueStandardVersion],
+          },
+          {
+            recipeVersions: [],
+            standardVersions: [],
+          },
+        );
+      });
+
+      it('marks shared recipe for deletion', async () => {
+        const result = await useCase.execute(command);
+
+        const deletedPaths = result.fileUpdates.delete.map((f) => f.path);
+        expect(deletedPaths).toContain('.packmind/recipes/shared-recipe.md');
+      });
+
+      it('marks unique recipe for deletion', async () => {
+        const result = await useCase.execute(command);
+
+        const deletedPaths = result.fileUpdates.delete.map((f) => f.path);
+        expect(deletedPaths).toContain('.packmind/recipes/unique-recipe.md');
+      });
+
+      it('marks shared standard for deletion', async () => {
+        const result = await useCase.execute(command);
+
+        const deletedPaths = result.fileUpdates.delete.map((f) => f.path);
+        expect(deletedPaths).toContain(
+          '.packmind/standards/shared-standard.md',
+        );
+      });
+
+      it('marks unique standard for deletion', async () => {
+        const result = await useCase.execute(command);
+
+        const deletedPaths = result.fileUpdates.delete.map((f) => f.path);
+        expect(deletedPaths).toContain(
+          '.packmind/standards/unique-standard.md',
+        );
+      });
+
+      it('calls config service with empty package list', async () => {
+        packmindConfigService.createConfigFileModification.mockReturnValue({
+          path: 'packmind.json',
+          content: '{\n  "packages": {}\n}\n',
+        });
+
+        await useCase.execute(command);
+
+        expect(
+          packmindConfigService.createConfigFileModification,
+        ).toHaveBeenCalledWith([]);
+      });
+
+      it('includes packmind.json in createOrUpdate', async () => {
+        packmindConfigService.createConfigFileModification.mockReturnValue({
+          path: 'packmind.json',
+          content: '{\n  "packages": {}\n}\n',
+        });
+
+        const result = await useCase.execute(command);
+
+        const packmindJsonFile = result.fileUpdates.createOrUpdate.find(
+          (file) => file.path === 'packmind.json',
+        );
+        expect(packmindJsonFile).toBeDefined();
       });
     });
   });

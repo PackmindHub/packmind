@@ -500,6 +500,66 @@ describe('installPackagesHandler', () => {
         expect(mockExit).toHaveBeenCalledWith(1);
       });
     });
+
+    describe('when removing all packages', () => {
+      beforeEach(() => {
+        mockPackmindCliHexa.configExists.mockResolvedValue(true);
+        mockPackmindCliHexa.readConfig.mockResolvedValue(['backend']);
+        mockPackmindCliHexa.tryGetGitRepositoryRoot.mockResolvedValue(null);
+      });
+
+      it('calls installPackages with empty array and previous packages', async () => {
+        mockPackmindCliHexa.installPackages.mockResolvedValue({
+          filesCreated: 0,
+          filesUpdated: 0,
+          filesDeleted: 5,
+          recipesCount: 0,
+          standardsCount: 0,
+          errors: [],
+        });
+
+        await uninstallPackagesHandler({ packagesSlugs: ['backend'] }, deps);
+
+        expect(mockPackmindCliHexa.installPackages).toHaveBeenCalledWith({
+          baseDirectory: '/project',
+          packagesSlugs: [],
+          previousPackagesSlugs: ['backend'],
+        });
+      });
+
+      it('displays correct file count from backend response', async () => {
+        mockPackmindCliHexa.installPackages.mockResolvedValue({
+          filesCreated: 0,
+          filesUpdated: 0,
+          filesDeleted: 12,
+          recipesCount: 0,
+          standardsCount: 0,
+          errors: [],
+        });
+
+        await uninstallPackagesHandler({ packagesSlugs: ['backend'] }, deps);
+
+        expect(mockLog).toHaveBeenCalledWith('\nremoved 12 files');
+      });
+
+      it('writes empty packages to config', async () => {
+        mockPackmindCliHexa.installPackages.mockResolvedValue({
+          filesCreated: 0,
+          filesUpdated: 0,
+          filesDeleted: 5,
+          recipesCount: 0,
+          standardsCount: 0,
+          errors: [],
+        });
+
+        await uninstallPackagesHandler({ packagesSlugs: ['backend'] }, deps);
+
+        expect(mockPackmindCliHexa.writeConfig).toHaveBeenCalledWith(
+          '/project',
+          [],
+        );
+      });
+    });
   });
 
   describe('statusHandler', () => {
