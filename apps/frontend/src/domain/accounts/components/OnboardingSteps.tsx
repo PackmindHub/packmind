@@ -5,14 +5,11 @@ import {
   PMButton,
   PMField,
   PMHeading,
-  PMLink,
   PMTabs,
   PMText,
   PMVStack,
 } from '@packmind/ui';
-import { SetupLocalEnvironment } from './SetupLocalEnvironment';
-import { CliAuthentication } from './CliAuthentication';
-import { McpConfigRedesigned } from './McpConfig/McpConfigRedesigned';
+import { LocalEnvironmentSetup } from './LocalEnvironmentSetup/LocalEnvironmentSetup';
 import { CopiableTextarea } from '../../../shared/components/inputs';
 import { NavLink } from 'react-router';
 import { routes } from '../../../shared/utils/routes';
@@ -41,53 +38,7 @@ export const OnboardingSteps: React.FC = () => {
             </PMHeading>
           </PMAccordion.ItemTrigger>
           <PMAccordion.ItemContent p={2}>
-            <PMVStack align="flex-start" paddingBottom={6}>
-              <PMTabs
-                defaultValue="automatic"
-                width="full"
-                tabs={[
-                  {
-                    value: 'automatic',
-                    triggerLabel: 'Automatic',
-                    content: (
-                      <PMVStack align="flex-start" gap={4} paddingTop={4}>
-                        <SetupLocalEnvironment />
-                      </PMVStack>
-                    ),
-                  },
-                  {
-                    value: 'manual',
-                    triggerLabel: 'Manual',
-                    content: (
-                      <PMVStack align="flex-start" gap={6} paddingTop={4}>
-                        <PMBox width="full">
-                          <PMHeading level="h5" marginBottom={4}>
-                            CLI
-                          </PMHeading>
-                          <PMText as="p" marginBottom={4}>
-                            Learn how to install the CLI:{' '}
-                            <PMLink
-                              href="https://docs.packmind.com/cli#installation"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              Installation guide
-                            </PMLink>
-                          </PMText>
-                          <CliAuthentication />
-                        </PMBox>
-                        <PMBox width="full">
-                          <PMHeading level="h5" marginBottom={4}>
-                            MCP server configuration
-                          </PMHeading>
-                          <McpConfigRedesigned />
-                        </PMBox>
-                      </PMVStack>
-                    ),
-                  },
-                ]}
-              />
-            </PMVStack>
+            <LocalEnvironmentSetup />
           </PMAccordion.ItemContent>
         </PMAccordion.Item>
 

@@ -173,12 +173,11 @@ describe('OnboardingSteps', () => {
   it('renders the first step expanded by default', () => {
     renderWithProviders(<OnboardingSteps />);
 
-    // The first step should be expanded and show the SetupLocalEnvironment component content
-    expect(
-      screen.getByText(
-        'Copy and run this command in your terminal to install the CLI and MCP server automatically:',
-      ),
-    ).toBeInTheDocument();
+    // The first step should be expanded and show the LocalEnvironmentSetup component content
+    expect(screen.getByText('Install the Packmind CLI')).toBeInTheDocument();
+    expect(screen.getByText('Install CLI')).toBeInTheDocument();
+    expect(screen.getByText('Authenticate')).toBeInTheDocument();
+    expect(screen.getByText('Connect AI')).toBeInTheDocument();
   });
 
   it('renders placeholder content for step 2', () => {
