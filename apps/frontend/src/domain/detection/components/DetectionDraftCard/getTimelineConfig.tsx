@@ -29,6 +29,7 @@ export enum TimelineStepStatus {
   pending,
   success,
   failure,
+  warning,
   unreachable,
 }
 
@@ -289,7 +290,7 @@ export function getTimelineConfig(
             </>
           ),
           isLast: false,
-          status: TimelineStepStatus.pending,
+          status: TimelineStepStatus.warning,
           buttons: [
             {
               label: 'Regenerate',

@@ -118,6 +118,12 @@ function getStepIcon(status: TimelineStepStatus) {
           <LuCheck />
         </PMIcon>
       );
+    case TimelineStepStatus.warning:
+      return (
+        <PMIcon bgColor={'colorPalette.primary'} color="text.warning" size="xs">
+          <LuCircleAlert />
+        </PMIcon>
+      );
     case TimelineStepStatus.pending:
       return <PMSpinner size="xs" />;
     default:
@@ -144,6 +150,7 @@ enum TimelineStepStatus {
   pending,
   success,
   failure,
+  warning,
   unreachable,
 }
 
@@ -171,6 +178,7 @@ type TimelineHandlers = {
 
 function getStepTextColor(status: TimelineStepStatus): PMTextColors {
   if (status === TimelineStepStatus.unreachable) return 'faded';
+  if (status === TimelineStepStatus.warning) return 'warning';
 
   return 'primary';
 }
@@ -466,7 +474,7 @@ function getTimelineConfig(
             </>
           ),
           isLast: false,
-          status: TimelineStepStatus.pending,
+          status: TimelineStepStatus.warning,
           buttons: [
             {
               label: 'Regenerate',
