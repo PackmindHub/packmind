@@ -52,6 +52,7 @@ import { useAuthContext } from '../../../accounts/hooks/useAuthContext';
 import { routes } from '../../../../shared/utils/routes';
 import { useGetRecipesQuery } from '../../../recipes/api/queries/RecipesQueries';
 import { useGetStandardsQuery } from '../../../standards/api/queries/StandardsQueries';
+import { useGetGitProvidersQuery } from '../../../git/api/queries/GitProviderQueries';
 import { PACKAGE_MESSAGES } from '../../constants/messages';
 import { DeployPackageButton } from '../PackageDeployments/DeployPackageButton';
 import { RemovePackageFromTargetsButton } from '../RemovePackageFromTargets';
@@ -398,6 +399,10 @@ export const PackageDetails = ({
 
   const { data: deployments = [], isLoading: isLoadingDeployments } =
     useListPackageDeploymentsQuery(id);
+
+  const { data: providersResponse } = useGetGitProvidersQuery();
+  const hasGitProviderWithToken =
+    providersResponse?.providers?.some((p) => p.hasToken) ?? false;
 
   const updatePackageMutation = useUpdatePackageMutation();
   const deletePackageMutation = useDeletePackagesBatchMutation();
@@ -809,11 +814,13 @@ export const PackageDetails = ({
       isFullWidth
       actions={
         <PMHStack gap={3}>
-          <DeployPackageButton
-            label="Distribute"
-            size="md"
-            selectedPackages={[pkg]}
-          />
+          {hasGitProviderWithToken && (
+            <DeployPackageButton
+              label="Distribute"
+              size="md"
+              selectedPackages={[pkg]}
+            />
+          )}
           <PMFeatureFlag
             featureKeys={[REMOVE_PACKAGE_FROM_TARGETS_FEATURE_KEY]}
             featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
