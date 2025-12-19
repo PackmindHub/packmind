@@ -143,6 +143,37 @@ export const getAgentsConfig = (): IAgentConfig[] => [
     ],
   },
   {
+    id: 'continue',
+    name: 'Continue.dev Extension',
+    description:
+      'Install Packmind MCP for Continue.dev extension (VS Code, Cursor, JetBrains)',
+    installMethods: [
+      {
+        type: 'cli',
+        label: 'CLI Command',
+        available: true,
+        getCliCommand: () => 'packmind-cli setup-mcp --target continue',
+      },
+      {
+        type: 'json',
+        label: 'YAML Configuration',
+        available: true,
+        getJsonConfig: (token: string, url: string) => {
+          return `name: Packmind MCP Server
+version: 0.0.1
+schema: v1
+mcpServers:
+  - name: Packmind
+    type: streamable-http
+    url: ${url}
+    requestOptions:
+      headers:
+        Authorization: "Bearer ${token}"`;
+        },
+      },
+    ],
+  },
+  {
     id: 'generic',
     name: 'MCP Generic',
     description: 'Generic MCP configuration for compatible clients',

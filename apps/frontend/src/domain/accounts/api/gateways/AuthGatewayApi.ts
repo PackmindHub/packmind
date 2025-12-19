@@ -93,6 +93,20 @@ export class AuthGatewayApi extends PackmindGateway implements IAuthGateway {
     );
   };
 
+  async getMcpConfig(command: { organizationId: string }): Promise<{
+    token: string;
+    url: string;
+    configs: {
+      cursor: object;
+      vscode: object;
+      continue: object;
+      claude: object;
+      generic: object;
+    };
+  }> {
+    return this._api.get(`/organizations/${command.organizationId}/mcp/config`);
+  }
+
   async generateApiKey(): Promise<GenerateApiKeyResponse> {
     return this._api.post<GenerateApiKeyResponse>(
       `${this._endpoint}/api-key/generate`,

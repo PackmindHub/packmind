@@ -120,4 +120,95 @@ export class McpService {
     const encodedMcpUrl = encodeURIComponent(mcpUrl);
     return `${frontendUrl}/claude-trial-setup?token=${encodedToken}&mcpUrl=${encodedMcpUrl}`;
   }
+
+  buildCursorConfig(token: string, mcpUrl: string): object {
+    return {
+      mcpServers: {
+        packmind: {
+          url: mcpUrl,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      },
+    };
+  }
+
+  buildVsCodeConfig(token: string, mcpUrl: string): object {
+    return {
+      mcpServers: {
+        packmind: {
+          url: mcpUrl,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      },
+    };
+  }
+
+  buildContinueConfig(token: string, mcpUrl: string): object {
+    return {
+      mcpServers: {
+        packmind: {
+          url: mcpUrl,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      },
+    };
+  }
+
+  buildClaudeConfig(token: string, mcpUrl: string): object {
+    return {
+      mcpServers: {
+        packmind: {
+          url: mcpUrl,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      },
+    };
+  }
+
+  buildGenericConfig(token: string, mcpUrl: string): object {
+    return {
+      mcpServers: {
+        packmind: {
+          url: mcpUrl,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      },
+    };
+  }
+
+  async getAllConfigs(token: string): Promise<{
+    token: string;
+    url: string;
+    configs: {
+      cursor: object;
+      vscode: object;
+      continue: object;
+      claude: object;
+      generic: object;
+    };
+  }> {
+    const mcpUrl = await this.getMcpUrl();
+
+    return {
+      token,
+      url: mcpUrl,
+      configs: {
+        cursor: this.buildCursorConfig(token, mcpUrl),
+        vscode: this.buildVsCodeConfig(token, mcpUrl),
+        continue: this.buildContinueConfig(token, mcpUrl),
+        claude: this.buildClaudeConfig(token, mcpUrl),
+        generic: this.buildGenericConfig(token, mcpUrl),
+      },
+    };
+  }
 }

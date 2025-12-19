@@ -30,6 +30,8 @@ export class McpConfigService implements IMcpConfigService {
         return this.installCursorMcp(config);
       case 'vscode':
         return this.installVSCodeMcp(config);
+      case 'continue':
+        return this.installContinueMcp(config);
       default:
         return { success: false, error: `Unknown agent: ${agent}` };
     }
@@ -102,6 +104,27 @@ export class McpConfigService implements IMcpConfigService {
     }
   }
 
+  private installContinueMcp(config: McpConfig): InstallResult {
+    try {
+      const continueDir = path.join(this.projectDir, '.continue');
+      const mcpServersDir = path.join(continueDir, 'mcpServers');
+
+      if (!fs.existsSync(mcpServersDir)) {
+        fs.mkdirSync(mcpServersDir, { recursive: true });
+      }
+
+      const continueConfigPath = path.join(mcpServersDir, 'packmind.yaml');
+      const continueConfig = this.buildContinueYamlConfig(config);
+
+      fs.writeFileSync(continueConfigPath, continueConfig);
+      return { success: true };
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      return { success: false, error: errorMessage };
+    }
+  }
+
   private buildCursorConfig(config: McpConfig): Record<string, unknown> {
     return {
       mcpServers: {
@@ -128,6 +151,20 @@ export class McpConfigService implements IMcpConfigService {
       },
       inputs: [],
     };
+  }
+
+  private buildContinueYamlConfig(config: McpConfig): string {
+    return `name: Packmind MCP Server
+version: 0.0.1
+schema: v1
+mcpServers:
+  - name: Packmind
+    type: streamable-http
+    url: ${config.url}
+    requestOptions:
+      headers:
+        Authorization: "Bearer ${config.accessToken}"
+`;
   }
 
   private readExistingJsonConfig(filePath: string): Record<string, unknown> {
