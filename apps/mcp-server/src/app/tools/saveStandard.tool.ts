@@ -274,7 +274,7 @@ export function registerSaveStandardTool(
             content: [
               {
                 type: 'text',
-                text: `${baseMessage}\n\nThe standard has been added to the '${trialPackageSlug}' package. Now call packmind_install_package with packageSlugs: ["${trialPackageSlug}"] to deploy it to your local environment.`,
+                text: `${baseMessage}\n\n**IMPORTANT: You MUST now call packmind_install_package with packageSlugs: ["${trialPackageSlug}"] to deploy the standard to the user's local environment. This is a required step - the standard will not be available to the user until you complete this action.**`,
               },
             ],
           };
