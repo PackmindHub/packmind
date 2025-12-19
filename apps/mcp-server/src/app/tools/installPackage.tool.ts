@@ -17,10 +17,16 @@ export function registerInstallPackageTool(
       description:
         'Install a Packmind package. When called without agentRendering, returns instructions on how to install. When called with agentRendering=true, returns file updates for you to apply.',
       inputSchema: {
-        packageSlugs: z
-          .array(z.string())
+        packageSlug: z
+          .string()
           .describe(
-            'Array of package slugs to install. Use packmind_list_packages to find available packages. Include both new packages AND existing packages from packmind.json.',
+            'The package slug to install. Use packmind_list_packages to find available packages.',
+          ),
+        installedPackages: z
+          .array(z.string())
+          .optional()
+          .describe(
+            'Array of already installed package slugs from packmind.json. Read the packmind.json file and extract the package slugs from the "packages" section.',
           ),
         relativePath: z
           .string()
@@ -47,13 +53,15 @@ export function registerInstallPackageTool(
       },
     },
     async ({
-      packageSlugs,
+      packageSlug,
+      installedPackages,
       relativePath,
       agentRendering,
       gitRemoteUrl,
       gitBranch,
     }: {
-      packageSlugs?: string[];
+      packageSlug?: string;
+      installedPackages?: string[];
       relativePath?: string;
       agentRendering?: boolean;
       gitRemoteUrl?: string;
@@ -99,7 +107,8 @@ First, check if a \`packmind.json\` file exists in the target directory. If it e
 \`\`\`
 
 Then call the \`packmind_install_package\` MCP tool with these parameters:
-- \`packageSlugs\`: array containing BOTH the new package(s) to install AND all existing packages from packmind.json (e.g., ["new-package", "existing-package-1", "existing-package-2"])
+- \`packageSlug\`: the slug of the package to install (e.g., "new-package")
+- \`installedPackages\`: array of existing package slugs from packmind.json (e.g., ["existing-package-1", "existing-package-2"])
 - \`relativePath\`: the target directory (e.g., "/" or "/packages/my-app/")
 - \`agentRendering\`: true
 - \`gitRemoteUrl\`: run \`git remote get-url origin\` to get this value
@@ -128,12 +137,12 @@ Then apply the file updates returned by the tool.`;
       }
 
       // agentRendering is true - call use cases and return file updates prompt
-      if (!packageSlugs || packageSlugs.length === 0) {
+      if (!packageSlug) {
         return {
           content: [
             {
               type: 'text',
-              text: 'Error: packageSlugs is required when agentRendering is true. Use packmind_list_packages to find available packages.',
+              text: 'Error: packageSlug is required when agentRendering is true. Use packmind_list_packages to find available packages.',
             },
           ],
         };
@@ -141,6 +150,7 @@ Then apply the file updates returned by the tool.`;
 
       const safeRelativePath = relativePath || '/';
       const safeGitBranch = gitBranch || 'main';
+      const allPackageSlugs = [packageSlug, ...(installedPackages || [])];
 
       try {
         const deploymentsHexa = fastify.deploymentsHexa();
@@ -152,7 +162,9 @@ Then apply the file updates returned by the tool.`;
         const deploymentsAdapter = deploymentsHexa.getAdapter();
 
         logger.info('Installing packages via MCP tool with agentRendering', {
-          packageSlugs,
+          packageSlug,
+          installedPackages,
+          allPackageSlugs,
           relativePath: safeRelativePath,
           gitRemoteUrl,
           gitBranch: safeGitBranch,
@@ -164,11 +176,11 @@ Then apply the file updates returned by the tool.`;
         const pullContentResult = await deploymentsAdapter.pullAllContent({
           userId: userContext.userId,
           organizationId,
-          packagesSlugs: packageSlugs,
+          packagesSlugs: allPackageSlugs,
         });
 
         logger.info('Generated file updates for package installation', {
-          packageSlugs,
+          allPackageSlugs,
           createOrUpdateCount:
             pullContentResult.fileUpdates.createOrUpdate.length,
           deleteCount: pullContentResult.fileUpdates.delete.length,
@@ -181,7 +193,7 @@ Then apply the file updates returned by the tool.`;
             const notifyResult = await deploymentsAdapter.notifyDistribution({
               userId: userContext.userId,
               organizationId,
-              distributedPackages: packageSlugs,
+              distributedPackages: allPackageSlugs,
               gitRemoteUrl,
               gitBranch: safeGitBranch,
               relativePath: safeRelativePath,
@@ -189,7 +201,7 @@ Then apply the file updates returned by the tool.`;
             distributionId = notifyResult.deploymentId;
 
             logger.info('Recorded distribution for package installation', {
-              packageSlugs,
+              allPackageSlugs,
               distributionId,
               gitRemoteUrl,
               gitBranch: safeGitBranch,
@@ -199,7 +211,7 @@ Then apply the file updates returned by the tool.`;
             logger.error(
               'Failed to record distribution, continuing with file updates',
               {
-                packageSlugs,
+                allPackageSlugs,
                 gitRemoteUrl,
                 error:
                   notifyError instanceof Error
@@ -213,8 +225,9 @@ Then apply the file updates returned by the tool.`;
         // Track analytics event
         analyticsAdapter.trackEvent(userId, organizationId, 'mcp_tool_call', {
           tool: 'install_package',
-          packageSlugs: packageSlugs.join(','),
-          packageCount: String(packageSlugs.length),
+          packageSlug,
+          installedPackages: (installedPackages || []).join(','),
+          packageCount: String(allPackageSlugs.length),
           relativePath: safeRelativePath,
           mode: 'agent_rendering',
           hasGitRemoteUrl: gitRemoteUrl ? 'true' : 'false',
@@ -224,7 +237,8 @@ Then apply the file updates returned by the tool.`;
         // Format file updates for the response
         const fileUpdates = pullContentResult.fileUpdates;
         const responseData = {
-          packageSlugs,
+          packageSlug,
+          installedPackages,
           distributionId,
           fileUpdates: {
             createOrUpdate: fileUpdates.createOrUpdate.map((file) => ({
@@ -239,7 +253,7 @@ Then apply the file updates returned by the tool.`;
         };
 
         // Build the agent-friendly prompt
-        const prompt = `# Package Installation: ${packageSlugs.join(', ')}
+        const prompt = `# Package Installation: ${packageSlug}
 
 You must now apply the following file changes in the \`${safeRelativePath}\` directory.
 
@@ -272,7 +286,8 @@ ${JSON.stringify(responseData.fileUpdates, null, 2)}
         };
       } catch (error) {
         logger.error('Failed to install packages', {
-          packageSlugs,
+          packageSlug,
+          installedPackages,
           error: error instanceof Error ? error.message : String(error),
         });
 
