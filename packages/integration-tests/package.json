@@ -10,7 +10,6 @@
     "tslib": "^2.3.0",
     "@packmind/accounts": "*",
     "@packmind/amplitude": "*",
-    "@packmind/analytics": "*",
     "@packmind/recipes": "*",
     "@packmind/git": "*",
     "@packmind/linter": "*",
