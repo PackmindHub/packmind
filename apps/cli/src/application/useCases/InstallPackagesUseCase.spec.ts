@@ -550,42 +550,46 @@ Section content here
   });
 
   describe('when section merge results in empty content', () => {
-    it('deletes file when content becomes empty after section merge', async () => {
-      mockGateway.getPullData.mockResolvedValue({
-        fileUpdates: {
-          createOrUpdate: [
-            {
-              path: '.cursor/rules/config.mdc',
-              sections: [
-                {
-                  key: 'packmind-section',
-                  content: '', // Empty content clears the section
-                },
-              ],
-            },
-          ],
-          delete: [],
-        },
-      });
+    describe('when content becomes empty after section merge', () => {
+      it('deletes file', async () => {
+        mockGateway.getPullData.mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: '.cursor/rules/config.mdc',
+                sections: [
+                  {
+                    key: 'packmind-section',
+                    content: '', // Empty content clears the section
+                  },
+                ],
+              },
+            ],
+            delete: [],
+          },
+        });
 
-      // File exists
-      (fs.access as jest.Mock).mockResolvedValue(undefined);
+        // File exists
+        (fs.access as jest.Mock).mockResolvedValue(undefined);
 
-      // Existing file has only the packmind section (no user content)
-      const existingContent = `<!-- start: packmind-section -->
+        // Existing file has only the packmind section (no user content)
+        const existingContent = `<!-- start: packmind-section -->
 Old packmind content
 <!-- end: packmind-section -->`;
-      (fs.readFile as jest.Mock).mockResolvedValue(existingContent);
+        (fs.readFile as jest.Mock).mockResolvedValue(existingContent);
 
-      const result = await useCase.execute({
-        packagesSlugs: ['test-package'],
-        baseDirectory: '/test',
+        const result = await useCase.execute({
+          packagesSlugs: ['test-package'],
+          baseDirectory: '/test',
+        });
+
+        expect(fs.unlink).toHaveBeenCalledWith(
+          '/test/.cursor/rules/config.mdc',
+        );
+        expect(fs.writeFile).not.toHaveBeenCalled();
+        expect(result.filesDeleted).toBe(1);
+        expect(result.filesUpdated).toBe(0);
       });
-
-      expect(fs.unlink).toHaveBeenCalledWith('/test/.cursor/rules/config.mdc');
-      expect(fs.writeFile).not.toHaveBeenCalled();
-      expect(result.filesDeleted).toBe(1);
-      expect(result.filesUpdated).toBe(0);
     });
 
     it('preserves file with user content after section merge', async () => {

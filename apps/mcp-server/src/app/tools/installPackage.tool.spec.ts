@@ -105,26 +105,28 @@ describe('installPackage.tool', () => {
       );
     });
 
-    it('logs info when returning instructions', async () => {
-      registerInstallPackageTool(dependencies, mcpServer);
+    describe('when returning instructions', () => {
+      it('logs info ', async () => {
+        registerInstallPackageTool(dependencies, mcpServer);
 
-      await toolHandler({});
+        await toolHandler({});
 
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'Returning installation instructions',
-        expect.objectContaining({
-          organizationId: 'org-123',
-          userId: 'user-123',
-        }),
-      );
-    });
+        expect(mockLogger.info).toHaveBeenCalledWith(
+          'Returning installation instructions',
+          expect.objectContaining({
+            organizationId: 'org-123',
+            userId: 'user-123',
+          }),
+        );
+      });
 
-    it('does not call deploymentsHexa when returning instructions', async () => {
-      registerInstallPackageTool(dependencies, mcpServer);
+      it('does not call deploymentsHexa ', async () => {
+        registerInstallPackageTool(dependencies, mcpServer);
 
-      await toolHandler({});
+        await toolHandler({});
 
-      expect(mockFastify.deploymentsHexa).not.toHaveBeenCalled();
+        expect(mockFastify.deploymentsHexa).not.toHaveBeenCalled();
+      });
     });
   });
 
@@ -152,29 +154,33 @@ describe('installPackage.tool', () => {
       });
     });
 
-    it('returns error when packageSlugs is missing', async () => {
-      registerInstallPackageTool(dependencies, mcpServer);
+    describe('when packageSlugs is missing', () => {
+      it('returns error', async () => {
+        registerInstallPackageTool(dependencies, mcpServer);
 
-      const result = await toolHandler({
-        agentRendering: true,
+        const result = await toolHandler({
+          agentRendering: true,
+        });
+
+        expect(result.content[0].text).toContain(
+          'Error: packageSlugs is required',
+        );
       });
-
-      expect(result.content[0].text).toContain(
-        'Error: packageSlugs is required',
-      );
     });
 
-    it('returns error when packageSlugs is empty array', async () => {
-      registerInstallPackageTool(dependencies, mcpServer);
+    describe('when packageSlugs is empty array', () => {
+      it('returns error', async () => {
+        registerInstallPackageTool(dependencies, mcpServer);
 
-      const result = await toolHandler({
-        packageSlugs: [],
-        agentRendering: true,
+        const result = await toolHandler({
+          packageSlugs: [],
+          agentRendering: true,
+        });
+
+        expect(result.content[0].text).toContain(
+          'Error: packageSlugs is required',
+        );
       });
-
-      expect(result.content[0].text).toContain(
-        'Error: packageSlugs is required',
-      );
     });
 
     it('returns prompt with file updates', async () => {
