@@ -101,4 +101,15 @@ export class McpService {
     const jsonConfig = JSON.stringify(config);
     return `vscode:mcp/install?${encodeURIComponent(jsonConfig)}`;
   }
+
+  buildCursorMcpUrl(token: string, mcpUrl: string): string {
+    const config = {
+      url: mcpUrl,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+    const base64Config = Buffer.from(JSON.stringify(config)).toString('base64');
+    return `cursor://anysphere.cursor-deeplink/mcp/install?name=packmind&config=${base64Config}`;
+  }
 }
