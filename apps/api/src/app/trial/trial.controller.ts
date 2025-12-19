@@ -33,9 +33,9 @@ export class TrialController {
   ): Promise<void> {
     this.logger.info('GET /start-trial - Starting trial', { agent });
 
-    if (agent !== 'vs-code' && agent !== 'cursor') {
+    if (agent !== 'vs-code' && agent !== 'cursor' && agent !== 'claude') {
       throw new BadRequestException(
-        'Invalid agent parameter. Supported values: vs-code, cursor',
+        'Invalid agent parameter. Supported values: vs-code, cursor, claude',
       );
     }
 
@@ -53,16 +53,24 @@ export class TrialController {
 
       // Build MCP setup URL based on agent
       const mcpUrl = await this.mcpService.getMcpUrl();
-      const mcpSetupUrl =
-        agent === 'cursor'
-          ? this.mcpService.buildCursorMcpUrl(
-              tokenResponse.access_token,
-              mcpUrl,
-            )
-          : this.mcpService.buildVsCodeMcpUrl(
-              tokenResponse.access_token,
-              mcpUrl,
-            );
+      let mcpSetupUrl: string;
+
+      if (agent === 'claude') {
+        mcpSetupUrl = await this.mcpService.buildClaudeSetupUrl(
+          tokenResponse.access_token,
+          mcpUrl,
+        );
+      } else if (agent === 'cursor') {
+        mcpSetupUrl = this.mcpService.buildCursorMcpUrl(
+          tokenResponse.access_token,
+          mcpUrl,
+        );
+      } else {
+        mcpSetupUrl = this.mcpService.buildVsCodeMcpUrl(
+          tokenResponse.access_token,
+          mcpUrl,
+        );
+      }
 
       this.logger.info('Trial started successfully, redirecting to MCP setup', {
         agent,

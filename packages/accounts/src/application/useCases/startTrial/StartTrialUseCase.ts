@@ -140,6 +140,8 @@ export class StartTrialUseCase implements IStartTrial {
         return [RenderMode.GH_COPILOT];
       case 'cursor':
         return [RenderMode.CURSOR];
+      case 'claude':
+        return [RenderMode.CLAUDE];
       default:
         return [];
     }

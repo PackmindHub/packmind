@@ -112,4 +112,12 @@ export class McpService {
     const base64Config = Buffer.from(JSON.stringify(config)).toString('base64');
     return `cursor://anysphere.cursor-deeplink/mcp/install?name=packmind&config=${base64Config}`;
   }
+
+  async buildClaudeSetupUrl(token: string, mcpUrl: string): Promise<string> {
+    const appWebUrl = await Configuration.getConfig('APP_WEB_URL');
+    const frontendUrl = appWebUrl || 'http://localhost:4200';
+    const encodedToken = encodeURIComponent(token);
+    const encodedMcpUrl = encodeURIComponent(mcpUrl);
+    return `${frontendUrl}/claude-trial-setup?token=${encodedToken}&mcpUrl=${encodedMcpUrl}`;
+  }
 }
