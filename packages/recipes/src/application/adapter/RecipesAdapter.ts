@@ -346,7 +346,7 @@ export class RecipesAdapter
 
   /**
    * Get recipe by ID without access control (internal use only)
-   * Used by UpdateRecipeFromUI and RecipeUsageAnalytics
+   * Used by UpdateRecipeFromUI
    */
   public getRecipeByIdInternal(id: RecipeId) {
     return this._getRecipeById.getRecipeById(id);
