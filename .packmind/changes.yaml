@@ -1,0 +1,18 @@
+# Packmind Standards Change Log
+#
+# This file tracks detected coding standards and preferences from conversations.
+# Each entry represents a technical preference that should be incorporated into
+# the corresponding standard documentation.
+#
+# Structure:
+# - newRule: The rule text (omit for DELETED operations)
+# - oldRule: Previous rule text (required for UPDATED and DELETED)
+# - operation: ADDED | UPDATED | DELETED
+# - standard: The standard name (e.g., typescript-code-standards)
+# - date: ISO date when captured (YYYY-MM-DD)
+# - sourceFile: File path where signal was captured
+# - language: Programming language (omit for DELETED)
+# - goodExample: Code showing correct usage (omit for DELETED)
+# - badExample: Code showing incorrect usage (omit for DELETED)
+#
+# This file is automatically maintained by the signal-capture skill.
