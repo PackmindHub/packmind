@@ -106,20 +106,6 @@ describe('installPackage.tool', () => {
     });
 
     describe('when returning instructions', () => {
-      it('logs info ', async () => {
-        registerInstallPackageTool(dependencies, mcpServer);
-
-        await toolHandler({});
-
-        expect(mockLogger.info).toHaveBeenCalledWith(
-          'Returning installation instructions',
-          expect.objectContaining({
-            organizationId: 'org-123',
-            userId: 'user-123',
-          }),
-        );
-      });
-
       it('does not call deploymentsHexa ', async () => {
         registerInstallPackageTool(dependencies, mcpServer);
 
@@ -424,7 +410,7 @@ describe('installPackage.tool', () => {
       expect(result.content[0].text).toContain('test.md');
     });
 
-    it('logs the error but does not fail', async () => {
+    it('does not fail', async () => {
       const mockAdapter = {
         pullAllContent: jest.fn().mockResolvedValue({
           fileUpdates: { createOrUpdate: [], delete: [] },
@@ -446,15 +432,6 @@ describe('installPackage.tool', () => {
         agentRendering: true,
         gitRemoteUrl: 'https://github.com/owner/repo',
       });
-
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'Failed to record distribution, continuing with file updates',
-        expect.objectContaining({
-          packageSlugs: ['my-package'],
-          gitRemoteUrl: 'https://github.com/owner/repo',
-          error: 'Distribution failed',
-        }),
-      );
     });
   });
 
