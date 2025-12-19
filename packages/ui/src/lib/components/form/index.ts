@@ -10,6 +10,7 @@ export * from './PMCheckbox/PMCheckbox';
 export { PMCombobox } from './PMCombobox/PMCombobox';
 export * from './PMCheckboxCard/PMCheckboxCard';
 export * from './PMCheckboxGroup/PMCheckboxGroup';
+export * from './PMRadioCard/PMRadioCard';
 export * from './PMEllipsisMenu';
 export { PMSegmentGroup } from './PMSegmentedControl/PMSegmentedControl';
 export * from './PMRadioGroup/PMRadioGroup';
