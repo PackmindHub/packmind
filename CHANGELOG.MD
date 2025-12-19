@@ -4,6 +4,7 @@
 
 - Track distribution of packages installed using the command line #38
 - Support rendering for Continue.dev #52
+- Windows PowerShell installer script (install.ps1) for native Windows installation
 
 ## Changed
 
