@@ -15,50 +15,123 @@ export function registerInstallPackageTool(
     {
       title: 'Install Package',
       description:
-        'Install a Packmind package containing coding standards and recipes. This tool returns file updates that YOU MUST APPLY to the codebase: create new files, update existing files with the provided content, and delete files as specified. After calling this tool, iterate through the fileUpdates.createOrUpdate array and write each file to disk at the specified path with the provided content. Also delete any files listed in fileUpdates.delete.',
+        'Install a Packmind package. When called without agentRendering, returns instructions on how to install. When called with agentRendering=true, returns file updates for you to apply.',
       inputSchema: {
         packageSlug: z
           .string()
-          .min(1)
-          .describe('The slug of the package to install'),
+          .describe(
+            'The slug of the package to install. Use packmind_list_packages to find available packages.',
+          ),
         relativePath: z
           .string()
-          .default('/')
           .describe(
-            'The target path within the repository where files should be installed (e.g., "/" for root, "/packages/my-app/" for a specific folder)',
+            'The target directory where files should be installed (e.g., "/" for root, "/packages/my-app/" for a specific folder)',
+          ),
+        agentRendering: z
+          .boolean()
+          .describe(
+            'DO NOT set this to true unless explicitly instructed by previous tool output or user input. When false or omitted, returns installation instructions. When true, returns file updates for you to apply.',
           ),
         gitRemoteUrl: z
           .string()
           .optional()
           .describe(
-            'REQUIRED when running inside a git repository: The git remote URL (run "git remote get-url origin" to obtain it). Example: https://github.com/owner/repo. This enables tracking of package deployments.',
+            'The git remote URL. Run "git remote get-url origin" to obtain it.',
           ),
         gitBranch: z
           .string()
-          .default('main')
+          .optional()
           .describe(
-            'REQUIRED when running inside a git repository: The current git branch name (run "git branch --show-current" to obtain it). Defaults to "main" if not provided.',
+            'The git branch name. Run "git branch --show-current" to obtain it.',
           ),
       },
     },
     async ({
       packageSlug,
       relativePath,
+      agentRendering,
       gitRemoteUrl,
       gitBranch,
     }: {
-      packageSlug: string;
-      relativePath: string;
+      packageSlug?: string;
+      relativePath?: string;
+      agentRendering?: boolean;
       gitRemoteUrl?: string;
-      gitBranch: string;
+      gitBranch?: string;
     }) => {
       if (!userContext) {
         throw new Error('User context is required to install a package');
       }
 
+      const organizationId = createOrganizationId(userContext.organizationId);
+      const userId = createUserId(userContext.userId);
+
+      // When agentRendering is false or not provided, return installation instructions
+      if (!agentRendering) {
+        const instructions = `# Package Installation Instructions
+
+Follow these steps to install a Packmind package:
+
+## Step 1: Find the package
+Call the \`packmind_list_packages\` MCP tool to see available packages and find the slug of the package you want to install. If you are unsure which package to install, ask the user to confirm.
+
+## Step 2: Check if packmind-cli is installed
+Run: \`which packmind-cli\` or \`packmind-cli --version\`
+
+## Step 3: Install the package
+
+**If packmind-cli IS available:**
+Run this command in the target directory:
+\`\`\`
+packmind-cli install <packageSlug>
+\`\`\`
+
+**If packmind-cli is NOT available (do NOT try to install it):**
+Call the \`packmind_install_package\` MCP tool with these parameters:
+- \`packageSlug\`: the slug of the package to install
+- \`relativePath\`: the target directory (e.g., "/" or "/packages/my-app/")
+- \`agentRendering\`: true
+- \`gitRemoteUrl\`: run \`git remote get-url origin\` to get this value
+- \`gitBranch\`: run \`git branch --show-current\` to get this value
+
+Then apply the file updates returned by the tool.`;
+
+        logger.info('Returning installation instructions', {
+          organizationId,
+          userId,
+        });
+
+        analyticsAdapter.trackEvent(userId, organizationId, 'mcp_tool_call', {
+          tool: 'install_package',
+          mode: 'instructions',
+        });
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: instructions,
+            },
+          ],
+        };
+      }
+
+      // agentRendering is true - call use cases and return file updates prompt
+      if (!packageSlug) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: 'Error: packageSlug is required when agentRendering is true. Use packmind_list_packages to find available packages.',
+            },
+          ],
+        };
+      }
+
+      const safeRelativePath = relativePath || '/';
+      const safeGitBranch = gitBranch || 'main';
+
       try {
-        const organizationId = createOrganizationId(userContext.organizationId);
-        const userId = createUserId(userContext.userId);
         const deploymentsHexa = fastify.deploymentsHexa();
 
         if (!deploymentsHexa) {
@@ -67,11 +140,11 @@ export function registerInstallPackageTool(
 
         const deploymentsAdapter = deploymentsHexa.getAdapter();
 
-        logger.info('Installing package via MCP tool', {
+        logger.info('Installing package via MCP tool with agentRendering', {
           packageSlug,
-          relativePath,
+          relativePath: safeRelativePath,
           gitRemoteUrl,
-          gitBranch,
+          gitBranch: safeGitBranch,
           organizationId,
           userId,
         });
@@ -99,8 +172,8 @@ export function registerInstallPackageTool(
               organizationId,
               distributedPackages: [packageSlug],
               gitRemoteUrl,
-              gitBranch,
-              relativePath,
+              gitBranch: safeGitBranch,
+              relativePath: safeRelativePath,
             });
             distributionId = notifyResult.deploymentId;
 
@@ -108,12 +181,10 @@ export function registerInstallPackageTool(
               packageSlug,
               distributionId,
               gitRemoteUrl,
-              gitBranch,
-              relativePath,
+              gitBranch: safeGitBranch,
+              relativePath: safeRelativePath,
             });
           } catch (notifyError) {
-            // Log the error but don't fail the installation
-            // The file updates are still valid even if recording fails
             logger.error(
               'Failed to record distribution, continuing with file updates',
               {
@@ -132,7 +203,8 @@ export function registerInstallPackageTool(
         analyticsAdapter.trackEvent(userId, organizationId, 'mcp_tool_call', {
           tool: 'install_package',
           packageSlug,
-          relativePath,
+          relativePath: safeRelativePath,
+          mode: 'agent_rendering',
           hasGitRemoteUrl: gitRemoteUrl ? 'true' : 'false',
           distributionRecorded: distributionId ? 'true' : 'false',
         });
@@ -154,11 +226,32 @@ export function registerInstallPackageTool(
           },
         };
 
+        // Build the agent-friendly prompt
+        const prompt = `# Package Installation: ${packageSlug}
+
+You must now apply the following file changes in the \`${safeRelativePath}\` directory.
+
+## File Updates
+
+\`\`\`json
+${JSON.stringify(responseData.fileUpdates, null, 2)}
+\`\`\`
+
+## Instructions
+
+1. **Delete files**: For each file in the \`delete\` array, delete the file at the specified \`path\`.
+
+2. **Create or update files**: For each file in the \`createOrUpdate\` array:
+   - If the file has a \`content\` field: Create the file (or replace its entire content if it exists) with the provided content.
+   - If the file has a \`sections\` field: Skip this file for now (sections handling not yet supported).
+
+**Important**: Apply ALL file changes listed above. Do not skip any files.`;
+
         return {
           content: [
             {
               type: 'text',
-              text: JSON.stringify(responseData, null, 2),
+              text: prompt,
             },
           ],
         };
