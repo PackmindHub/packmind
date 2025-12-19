@@ -12,7 +12,7 @@ describe('installPackage.tool', () => {
   let mockFastify: jest.Mocked<{ deploymentsHexa: () => unknown }>;
   let userContext: UserContext;
   let toolHandler: (params: {
-    packageSlug?: string;
+    packageSlugs?: string[];
     relativePath?: string;
     agentRendering?: boolean;
     gitRemoteUrl?: string;
@@ -85,6 +85,8 @@ describe('installPackage.tool', () => {
       expect(result.content[0].text).toContain('packmind_list_packages');
       expect(result.content[0].text).toContain('packmind-cli install');
       expect(result.content[0].text).toContain('agentRendering');
+      expect(result.content[0].text).toContain('packmind.json');
+      expect(result.content[0].text).toContain('packageSlugs');
     });
 
     it('tracks analytics with instructions mode', async () => {
@@ -150,7 +152,7 @@ describe('installPackage.tool', () => {
       });
     });
 
-    it('returns error when packageSlug is missing', async () => {
+    it('returns error when packageSlugs is missing', async () => {
       registerInstallPackageTool(dependencies, mcpServer);
 
       const result = await toolHandler({
@@ -158,7 +160,20 @@ describe('installPackage.tool', () => {
       });
 
       expect(result.content[0].text).toContain(
-        'Error: packageSlug is required',
+        'Error: packageSlugs is required',
+      );
+    });
+
+    it('returns error when packageSlugs is empty array', async () => {
+      registerInstallPackageTool(dependencies, mcpServer);
+
+      const result = await toolHandler({
+        packageSlugs: [],
+        agentRendering: true,
+      });
+
+      expect(result.content[0].text).toContain(
+        'Error: packageSlugs is required',
       );
     });
 
@@ -166,7 +181,7 @@ describe('installPackage.tool', () => {
       registerInstallPackageTool(dependencies, mcpServer);
 
       const result = await toolHandler({
-        packageSlug: 'my-package',
+        packageSlugs: ['my-package'],
         relativePath: '/',
         agentRendering: true,
       });
@@ -178,6 +193,20 @@ describe('installPackage.tool', () => {
       expect(result.content[0].text).toContain('delete');
       expect(result.content[0].text).toContain(
         'Apply ALL file changes listed above',
+      );
+    });
+
+    it('returns prompt with multiple packages', async () => {
+      registerInstallPackageTool(dependencies, mcpServer);
+
+      const result = await toolHandler({
+        packageSlugs: ['package-1', 'package-2'],
+        relativePath: '/',
+        agentRendering: true,
+      });
+
+      expect(result.content[0].text).toContain(
+        '# Package Installation: package-1, package-2',
       );
     });
 
@@ -198,7 +227,7 @@ describe('installPackage.tool', () => {
       registerInstallPackageTool(dependencies, mcpServer);
 
       await toolHandler({
-        packageSlug: 'my-package',
+        packageSlugs: ['my-package'],
         relativePath: '/',
         agentRendering: true,
       });
@@ -210,11 +239,40 @@ describe('installPackage.tool', () => {
       });
     });
 
+    it('calls pullAllContent with multiple packages', async () => {
+      const mockAdapter = {
+        pullAllContent: jest.fn().mockResolvedValue({
+          fileUpdates: mockFileUpdates,
+        }),
+        notifyDistribution: jest.fn().mockResolvedValue({
+          deploymentId: 'dist-123',
+        }),
+      };
+
+      mockFastify.deploymentsHexa.mockReturnValue({
+        getAdapter: () => mockAdapter,
+      });
+
+      registerInstallPackageTool(dependencies, mcpServer);
+
+      await toolHandler({
+        packageSlugs: ['new-package', 'existing-package'],
+        relativePath: '/',
+        agentRendering: true,
+      });
+
+      expect(mockAdapter.pullAllContent).toHaveBeenCalledWith({
+        userId: 'user-123',
+        organizationId: 'org-123',
+        packagesSlugs: ['new-package', 'existing-package'],
+      });
+    });
+
     it('tracks analytics with agent_rendering mode', async () => {
       registerInstallPackageTool(dependencies, mcpServer);
 
       await toolHandler({
-        packageSlug: 'my-package',
+        packageSlugs: ['my-package'],
         relativePath: '/',
         agentRendering: true,
       });
@@ -225,7 +283,8 @@ describe('installPackage.tool', () => {
         'mcp_tool_call',
         expect.objectContaining({
           tool: 'install_package',
-          packageSlug: 'my-package',
+          packageSlugs: 'my-package',
+          packageCount: '1',
           mode: 'agent_rendering',
         }),
       );
@@ -250,7 +309,7 @@ describe('installPackage.tool', () => {
       registerInstallPackageTool(dependencies, mcpServer);
 
       await toolHandler({
-        packageSlug: 'my-package',
+        packageSlugs: ['my-package'],
         relativePath: '/packages/app/',
         agentRendering: true,
         gitRemoteUrl: 'https://github.com/owner/repo',
@@ -284,7 +343,7 @@ describe('installPackage.tool', () => {
       registerInstallPackageTool(dependencies, mcpServer);
 
       await toolHandler({
-        packageSlug: 'my-package',
+        packageSlugs: ['my-package'],
         relativePath: '/',
         agentRendering: true,
         gitRemoteUrl: 'https://github.com/owner/repo',
@@ -319,7 +378,7 @@ describe('installPackage.tool', () => {
       registerInstallPackageTool(dependencies, mcpServer);
 
       await toolHandler({
-        packageSlug: 'my-package',
+        packageSlugs: ['my-package'],
         relativePath: '/',
         agentRendering: true,
       });
@@ -349,7 +408,7 @@ describe('installPackage.tool', () => {
       registerInstallPackageTool(dependencies, mcpServer);
 
       const result = await toolHandler({
-        packageSlug: 'my-package',
+        packageSlugs: ['my-package'],
         relativePath: '/',
         agentRendering: true,
         gitRemoteUrl: 'https://github.com/owner/repo',
@@ -376,7 +435,7 @@ describe('installPackage.tool', () => {
       registerInstallPackageTool(dependencies, mcpServer);
 
       await toolHandler({
-        packageSlug: 'my-package',
+        packageSlugs: ['my-package'],
         relativePath: '/',
         agentRendering: true,
         gitRemoteUrl: 'https://github.com/owner/repo',
@@ -385,7 +444,7 @@ describe('installPackage.tool', () => {
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Failed to record distribution, continuing with file updates',
         expect.objectContaining({
-          packageSlug: 'my-package',
+          packageSlugs: ['my-package'],
           gitRemoteUrl: 'https://github.com/owner/repo',
           error: 'Distribution failed',
         }),
@@ -412,7 +471,7 @@ describe('installPackage.tool', () => {
       registerInstallPackageTool(dependencies, mcpServer);
 
       const result = await toolHandler({
-        packageSlug: 'my-package',
+        packageSlugs: ['my-package'],
         agentRendering: true,
       });
 
@@ -420,7 +479,7 @@ describe('installPackage.tool', () => {
         content: [
           {
             type: 'text',
-            text: 'Failed to install package: DeploymentsHexa not available',
+            text: 'Failed to install packages: DeploymentsHexa not available',
           },
         ],
       });
@@ -442,7 +501,7 @@ describe('installPackage.tool', () => {
       registerInstallPackageTool(dependencies, mcpServer);
 
       const result = await toolHandler({
-        packageSlug: 'unknown-package',
+        packageSlugs: ['unknown-package'],
         agentRendering: true,
       });
 
@@ -450,7 +509,7 @@ describe('installPackage.tool', () => {
         content: [
           {
             type: 'text',
-            text: 'Failed to install package: Package not found',
+            text: 'Failed to install packages: Package not found',
           },
         ],
       });
@@ -483,7 +542,7 @@ describe('installPackage.tool', () => {
       registerInstallPackageTool(dependencies, mcpServer);
 
       const result = await toolHandler({
-        packageSlug: 'my-package',
+        packageSlugs: ['my-package'],
         agentRendering: true,
       });
 
@@ -513,7 +572,7 @@ describe('installPackage.tool', () => {
       registerInstallPackageTool(dependencies, mcpServer);
 
       const result = await toolHandler({
-        packageSlug: 'my-package',
+        packageSlugs: ['my-package'],
         agentRendering: true,
       });
 
