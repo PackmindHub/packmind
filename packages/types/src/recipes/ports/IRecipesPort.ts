@@ -63,7 +63,7 @@ export interface IRecipesPort {
 
   /**
    * Get a recipe by its ID (internal use - no access control)
-   * Used by UpdateRecipeFromUI and RecipeUsageAnalytics
+   * Used by UpdateRecipeFromUI
    */
   getRecipeByIdInternal(id: RecipeId): Promise<Recipe | null>;
 

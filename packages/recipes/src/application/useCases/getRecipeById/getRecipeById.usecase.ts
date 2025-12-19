@@ -89,7 +89,7 @@ export class GetRecipeByIdUsecase
   }
 
   /**
-   * Legacy method for internal use (UpdateRecipeFromUI, RecipeUsageAnalytics)
+   * Legacy method for internal use (UpdateRecipeFromUI)
    * This bypasses access control and should only be used internally
    */
   public async getRecipeById(id: RecipeId): Promise<Recipe | null> {
