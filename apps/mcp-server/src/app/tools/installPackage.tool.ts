@@ -243,7 +243,10 @@ ${JSON.stringify(responseData.fileUpdates, null, 2)}
 
 2. **Create or update files**: For each file in the \`createOrUpdate\` array:
    - If the file has a \`content\` field: Create the file (or replace its entire content if it exists) with the provided content.
-   - If the file has a \`sections\` field: Skip this file for now (sections handling not yet supported).
+   - If the file has a \`sections\` field: For each section in the array:
+     - Look for an existing section wrapped between \`<!-- start: \${section.key} -->\` and \`<!-- end: \${section.key} -->\`
+     - If the section exists, replace everything between these markers (including the markers) with: \`<!-- start: \${section.key} -->\\n\${section.content}\\n<!-- end: \${section.key} -->\`
+     - If the section does not exist, append to the end of the file: \`<!-- start: \${section.key} -->\\n\${section.content}\\n<!-- end: \${section.key} -->\`
 
 **Important**: Apply ALL file changes listed above. Do not skip any files.`;
 

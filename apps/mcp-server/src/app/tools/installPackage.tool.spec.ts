@@ -490,5 +490,40 @@ describe('installPackage.tool', () => {
       expect(result.content[0].text).toContain('sections');
       expect(result.content[0].text).toContain('standards');
     });
+
+    it('includes section handling instructions in the prompt', async () => {
+      const mockAdapter = {
+        pullAllContent: jest.fn().mockResolvedValue({
+          fileUpdates: {
+            createOrUpdate: [
+              {
+                path: 'CLAUDE.md',
+                sections: [{ key: 'standards', content: '# Standards' }],
+              },
+            ],
+            delete: [],
+          },
+        }),
+      };
+
+      mockFastify.deploymentsHexa.mockReturnValue({
+        getAdapter: () => mockAdapter,
+      });
+
+      registerInstallPackageTool(dependencies, mcpServer);
+
+      const result = await toolHandler({
+        packageSlug: 'my-package',
+        agentRendering: true,
+      });
+
+      expect(result.content[0].text).toContain(
+        '<!-- start: ${section.key} -->',
+      );
+      expect(result.content[0].text).toContain('<!-- end: ${section.key} -->');
+      expect(result.content[0].text).toContain(
+        'If the section does not exist, append to the end of the file',
+      );
+    });
   });
 });
