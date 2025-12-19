@@ -25,9 +25,13 @@ describe('saveRecipe.tool', () => {
   let mockFastify: jest.Mocked<{
     recipesHexa: () => unknown;
     spacesHexa: () => unknown;
+    accountsHexa: () => unknown;
   }>;
   let userContext: UserContext;
   let mockGetGlobalSpace: jest.MockedFunction<typeof getGlobalSpace>;
+  let mockAccountsAdapter: jest.Mocked<{
+    getUserById: jest.Mock;
+  }>;
 
   beforeEach(() => {
     const mockLogger = stubLogger();
@@ -43,12 +47,27 @@ describe('saveRecipe.tool', () => {
       role: 'member',
     };
 
+    mockAccountsAdapter = {
+      getUserById: jest.fn(),
+    };
+
+    // Default: return a non-trial user
+    mockAccountsAdapter.getUserById.mockResolvedValue({
+      id: 'user-123',
+      email: 'test@example.com',
+      trial: false,
+    });
+
     mockFastify = {
       recipesHexa: jest.fn(),
       spacesHexa: jest.fn(),
+      accountsHexa: jest.fn().mockReturnValue({
+        getAdapter: () => mockAccountsAdapter,
+      }),
     } as unknown as jest.Mocked<{
       recipesHexa: () => unknown;
       spacesHexa: () => unknown;
+      accountsHexa: () => unknown;
     }>;
 
     dependencies = {
@@ -491,6 +510,215 @@ export class User {
             ],
           }),
         ).rejects.toThrow('No spaces found in organization');
+      });
+    });
+
+    describe('trial user behavior', () => {
+      let mockDeploymentsAdapter: jest.Mocked<{
+        listPackages: jest.Mock;
+        createPackage: jest.Mock;
+        addArtefactsToPackage: jest.Mock;
+      }>;
+
+      beforeEach(() => {
+        mockDeploymentsAdapter = {
+          listPackages: jest.fn(),
+          createPackage: jest.fn(),
+          addArtefactsToPackage: jest.fn(),
+        };
+
+        (mockFastify as unknown as Record<string, jest.Mock>).deploymentsHexa =
+          jest.fn().mockReturnValue({
+            getAdapter: () => mockDeploymentsAdapter,
+          });
+      });
+
+      describe('when user is a trial user', () => {
+        beforeEach(() => {
+          mockAccountsAdapter.getUserById.mockResolvedValue({
+            id: 'user-123',
+            email: 'trial-abc@packmind.trial',
+            trial: true,
+          });
+        });
+
+        describe('when Default package does not exist', () => {
+          it('creates Default package with the recipe and returns install prompt', async () => {
+            const mockRecipe = {
+              id: 'recipe-123',
+              name: 'Test Recipe',
+            };
+
+            const mockAdapter = {
+              captureRecipe: jest.fn().mockResolvedValue(mockRecipe),
+            };
+
+            mockGetGlobalSpace.mockResolvedValue({
+              id: createSpaceId('space-123'),
+              name: 'Global Space',
+            } as Space);
+
+            mockFastify.recipesHexa.mockReturnValue({
+              getAdapter: () => mockAdapter,
+            });
+
+            mockDeploymentsAdapter.listPackages.mockResolvedValue({
+              packages: [],
+            });
+
+            mockDeploymentsAdapter.createPackage.mockResolvedValue({
+              package: {
+                id: 'package-123',
+                slug: 'default',
+                name: 'Default',
+              },
+            });
+
+            registerSaveRecipeTool(dependencies, mcpServer);
+
+            const result = await toolHandler({
+              name: 'Test Recipe',
+              summary: 'A test recipe',
+              whenToUse: ['When testing'],
+              contextValidationCheckpoints: ['Test exists'],
+              steps: [{ name: 'Step 1', description: 'Do something' }],
+            });
+
+            expect(mockDeploymentsAdapter.createPackage).toHaveBeenCalledWith({
+              userId: 'user-123',
+              organizationId: 'org-123',
+              spaceId: 'space-123',
+              name: 'Default',
+              description:
+                'Default package for organizing your standards and recipes',
+              recipeIds: ['recipe-123'],
+              standardIds: [],
+            });
+
+            expect(result.content[0].text).toContain(
+              "Recipe 'Test Recipe' has been created successfully",
+            );
+            expect(result.content[0].text).toContain(
+              '**IMPORTANT: You MUST now call packmind_install_package',
+            );
+            expect(result.content[0].text).toContain('This is a required step');
+          });
+        });
+
+        describe('when Default package already exists', () => {
+          it('adds recipe to existing Default package and returns install prompt', async () => {
+            const mockRecipe = {
+              id: 'recipe-456',
+              name: 'Another Recipe',
+            };
+
+            const mockAdapter = {
+              captureRecipe: jest.fn().mockResolvedValue(mockRecipe),
+            };
+
+            mockGetGlobalSpace.mockResolvedValue({
+              id: createSpaceId('space-123'),
+              name: 'Global Space',
+            } as Space);
+
+            mockFastify.recipesHexa.mockReturnValue({
+              getAdapter: () => mockAdapter,
+            });
+
+            mockDeploymentsAdapter.listPackages.mockResolvedValue({
+              packages: [
+                {
+                  id: 'existing-package-123',
+                  slug: 'default',
+                  name: 'Default',
+                  spaceId: 'space-123',
+                },
+              ],
+            });
+
+            registerSaveRecipeTool(dependencies, mcpServer);
+
+            const result = await toolHandler({
+              name: 'Another Recipe',
+              summary: 'Another test recipe',
+              whenToUse: ['When testing'],
+              contextValidationCheckpoints: ['Test exists'],
+              steps: [{ name: 'Step 1', description: 'Do something' }],
+            });
+
+            expect(
+              mockDeploymentsAdapter.addArtefactsToPackage,
+            ).toHaveBeenCalledWith({
+              userId: 'user-123',
+              organizationId: 'org-123',
+              packageId: 'existing-package-123',
+              recipeIds: ['recipe-456'],
+              standardIds: undefined,
+            });
+
+            expect(mockDeploymentsAdapter.createPackage).not.toHaveBeenCalled();
+
+            expect(result.content[0].text).toContain(
+              "Recipe 'Another Recipe' has been created successfully",
+            );
+            expect(result.content[0].text).toContain(
+              '**IMPORTANT: You MUST now call packmind_install_package with packageSlugs: ["default"]',
+            );
+          });
+        });
+      });
+
+      describe('when user is not a trial user', () => {
+        beforeEach(() => {
+          mockAccountsAdapter.getUserById.mockResolvedValue({
+            id: 'user-123',
+            email: 'test@example.com',
+            trial: false,
+          });
+        });
+
+        it('does not create or add to Default package', async () => {
+          const mockRecipe = {
+            id: 'recipe-789',
+            name: 'Regular Recipe',
+          };
+
+          const mockAdapter = {
+            captureRecipe: jest.fn().mockResolvedValue(mockRecipe),
+          };
+
+          mockGetGlobalSpace.mockResolvedValue({
+            id: createSpaceId('space-123'),
+            name: 'Global Space',
+          } as Space);
+
+          mockFastify.recipesHexa.mockReturnValue({
+            getAdapter: () => mockAdapter,
+          });
+
+          registerSaveRecipeTool(dependencies, mcpServer);
+
+          const result = await toolHandler({
+            name: 'Regular Recipe',
+            summary: 'A regular recipe',
+            whenToUse: ['When testing'],
+            contextValidationCheckpoints: ['Test exists'],
+            steps: [{ name: 'Step 1', description: 'Do something' }],
+          });
+
+          expect(mockDeploymentsAdapter.listPackages).not.toHaveBeenCalled();
+          expect(mockDeploymentsAdapter.createPackage).not.toHaveBeenCalled();
+          expect(
+            mockDeploymentsAdapter.addArtefactsToPackage,
+          ).not.toHaveBeenCalled();
+
+          expect(result.content[0].text).toBe(
+            "Recipe 'Regular Recipe' has been created successfully.",
+          );
+          expect(result.content[0].text).not.toContain(
+            'packmind_install_package',
+          );
+        });
       });
     });
   });
