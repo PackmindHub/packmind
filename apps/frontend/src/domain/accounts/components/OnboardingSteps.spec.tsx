@@ -175,9 +175,9 @@ describe('OnboardingSteps', () => {
 
     // The first step should be expanded and show the LocalEnvironmentSetup component content
     expect(screen.getByText('Install the Packmind CLI')).toBeInTheDocument();
-    expect(screen.getByText('Install CLI')).toBeInTheDocument();
-    expect(screen.getByText('Authenticate')).toBeInTheDocument();
-    expect(screen.getByText('Connect AI')).toBeInTheDocument();
+    expect(screen.getByText('1. Install CLI')).toBeInTheDocument();
+    expect(screen.getByText('2. Authenticate')).toBeInTheDocument();
+    expect(screen.getByText('3. Connect AI')).toBeInTheDocument();
   });
 
   it('renders placeholder content for step 2', () => {

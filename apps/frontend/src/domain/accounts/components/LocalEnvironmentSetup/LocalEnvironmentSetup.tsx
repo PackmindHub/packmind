@@ -17,7 +17,7 @@ export const LocalEnvironmentSetup: React.FC = () => {
     () => [
       {
         value: 'install-cli',
-        triggerLabel: 'Install CLI',
+        triggerLabel: '1. Install CLI',
         content: (
           <TabContent>
             <InstallCliStep
@@ -31,7 +31,7 @@ export const LocalEnvironmentSetup: React.FC = () => {
       },
       {
         value: 'authenticate',
-        triggerLabel: 'Authenticate',
+        triggerLabel: '2. Authenticate',
         content: (
           <TabContent>
             <AuthenticateStep />
@@ -40,7 +40,7 @@ export const LocalEnvironmentSetup: React.FC = () => {
       },
       {
         value: 'connect-ai',
-        triggerLabel: 'Connect AI',
+        triggerLabel: '3. Connect AI',
         content: (
           <TabContent>
             <ConnectAiStep />
