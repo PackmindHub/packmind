@@ -34,6 +34,16 @@ import { IAgentConfig } from '../McpConfig/types';
 type OsType = 'macos-linux' | 'windows';
 type AuthMethod = 'login-command' | 'api-key';
 
+const detectUserOs = (): OsType => {
+  if (typeof navigator !== 'undefined') {
+    const userAgent = navigator.userAgent?.toLowerCase() || '';
+    if (userAgent.includes('windows')) {
+      return 'windows';
+    }
+  }
+  return 'macos-linux';
+};
+
 const DEFAULT_HOST = 'https://app.packmind.ai';
 
 const buildNpmInstallCommand = () => 'npm install -g @packmind/cli';
@@ -92,7 +102,7 @@ const InstallCliStep: React.FC<IInstallCliStepProps> = ({
   codeExpiresAt,
   onRegenerateCode,
 }) => {
-  const [selectedOs, setSelectedOs] = useState<OsType>('macos-linux');
+  const [selectedOs, setSelectedOs] = useState<OsType>(detectUserOs);
 
   const renderAlternativeInstallContent = () => {
     if (isGeneratingCode) {
@@ -151,7 +161,6 @@ const InstallCliStep: React.FC<IInstallCliStepProps> = ({
         <PMRadioCard.Root
           size="sm"
           variant="outline"
-          defaultValue="macos-linux"
           value={selectedOs}
           onValueChange={(e) => setSelectedOs(e.value as OsType)}
         >
