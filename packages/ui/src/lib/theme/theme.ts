@@ -13,6 +13,7 @@ import { pmCheckboxCard } from '../components/form/PMCheckboxCard/PMCheckboxCard
 import { pmSegmentedControl } from '../components/form/PMSegmentedControl/PMSegmentedControl.recipe';
 import { pmRadioGroup } from '../components/form/PMRadioGroup/PMRadioGroup.recipe';
 import { pmSelectRecipe } from '../components/form/PMSelect/PMSelect.recipe';
+import { pmRadioCard } from '../components/form/PMRadioCard/PMRadioCard.recipe';
 export const packmindTheme = (preflight: boolean) =>
   defineConfig({
     preflight,
@@ -155,6 +156,7 @@ export const packmindTheme = (preflight: boolean) =>
         segmentGroup: pmSegmentedControl,
         radioGroup: pmRadioGroup,
         select: pmSelectRecipe,
+        radioCard: pmRadioCard,
       },
       semanticTokens: {
         colors: {

@@ -6,7 +6,7 @@ import {
   PMHeading,
   PMHStack,
   PMButton,
-  PMSegmentGroup,
+  PMRadioCard,
   PMAlert,
   PMGrid,
   PMSpinner,
@@ -139,7 +139,7 @@ const InstallCliStep: React.FC<IInstallCliStepProps> = ({
   };
 
   return (
-    <PMVStack align="flex-start" gap={6} width="full">
+    <PMVStack align="flex-start" gap={6} width="full" padding={4}>
       <PMVStack align="flex-start" gap={2}>
         <PMHeading level="h5">Install the Packmind CLI</PMHeading>
         <PMText as="p" color="tertiary">
@@ -148,54 +148,83 @@ const InstallCliStep: React.FC<IInstallCliStepProps> = ({
       </PMVStack>
 
       <PMVStack align="flex-start" gap={2} width="full">
-        <PMText as="p" fontWeight="medium">
-          Your operating system
-        </PMText>
-        <PMSegmentGroup.Root
+        <PMRadioCard.Root
           size="sm"
+          variant="outline"
+          defaultValue="macos-linux"
           value={selectedOs}
           onValueChange={(e) => setSelectedOs(e.value as OsType)}
         >
-          <PMSegmentGroup.Indicator />
-          <PMSegmentGroup.Items
-            items={[
-              { label: 'macOS / Linux', value: 'macos-linux' },
-              { label: 'Windows', value: 'windows' },
-            ]}
-          />
-        </PMSegmentGroup.Root>
+          <PMRadioCard.Label>Your operating system</PMRadioCard.Label>
+          <PMHStack gap={2} alignItems={'stretch'} justify={'center'}>
+            <PMRadioCard.Item value="macos-linux">
+              <PMRadioCard.ItemHiddenInput />
+              <PMRadioCard.ItemControl>
+                <PMRadioCard.ItemText>macOS / Linux</PMRadioCard.ItemText>
+                <PMRadioCard.ItemIndicator />
+              </PMRadioCard.ItemControl>
+            </PMRadioCard.Item>
+            <PMRadioCard.Item value="windows">
+              <PMRadioCard.ItemHiddenInput />
+              <PMRadioCard.ItemControl>
+                <PMRadioCard.ItemText>Windows</PMRadioCard.ItemText>
+                <PMRadioCard.ItemIndicator />
+              </PMRadioCard.ItemControl>
+            </PMRadioCard.Item>
+          </PMHStack>
+        </PMRadioCard.Root>
       </PMVStack>
 
-      <PMVStack align="flex-start" gap={4} width="full">
-        <PMVStack align="flex-start" gap={1}>
-          <PMHeading level="h6">Recommended</PMHeading>
-          <PMText as="p" color="tertiary" variant="small">
-            Install via npm (most reliable across environments).
-          </PMText>
-        </PMVStack>
+      <PMVStack alignItems={'flex-start'} width={'full'}>
+        {selectedOs === 'macos-linux' && (
+          <PMVStack
+            align="flex-start"
+            gap={4}
+            width="full"
+            border={'solid 1px'}
+            borderColor={'blue.700'}
+            padding={4}
+            borderRadius={4}
+          >
+            <PMVStack align="flex-start" gap={1}>
+              <PMHeading level="h6">Guided install</PMHeading>
+              <PMText as="p" color="tertiary" variant="small">
+                One-line install script (installs the CLI and continues
+                automatically).
+              </PMText>
+            </PMVStack>
 
-        <PMBox width="1/4">
-          <CopiableTextField
-            value={buildNpmInstallCommand()}
-            readOnly
-            label="Terminal (NPM)"
-          />
-        </PMBox>
-      </PMVStack>
+            <PMBox width="1/2">{renderAlternativeInstallContent()}</PMBox>
+          </PMVStack>
+        )}
 
-      {selectedOs === 'macos-linux' && (
-        <PMVStack align="flex-start" gap={4} width="full">
+        <PMVStack
+          align="flex-start"
+          gap={4}
+          width="full"
+          border={'solid 1px'}
+          borderColor={'border.tertiary'}
+          padding={4}
+          borderRadius={4}
+        >
           <PMVStack align="flex-start" gap={1}>
-            <PMHeading level="h6">Alternative</PMHeading>
+            <PMHeading level="h6">
+              {selectedOs === 'macos-linux' ? 'Alternative' : 'Recommended'}
+            </PMHeading>
             <PMText as="p" color="tertiary" variant="small">
-              One-line install script (installs the CLI and continues
-              automatically).
+              Install via npm (most reliable across environments).
             </PMText>
           </PMVStack>
 
-          <PMBox width="1/2">{renderAlternativeInstallContent()}</PMBox>
+          <PMBox width="1/4">
+            <CopiableTextField
+              value={buildNpmInstallCommand()}
+              readOnly
+              label="Terminal (NPM)"
+            />
+          </PMBox>
         </PMVStack>
-      )}
+      </PMVStack>
     </PMVStack>
   );
 };
@@ -237,7 +266,15 @@ const AuthenticateStep: React.FC = () => {
   };
 
   const renderLoginCommandContent = () => (
-    <PMVStack align="flex-start" gap={4} width="full">
+    <PMVStack
+      align="flex-start"
+      gap={4}
+      width="full"
+      border={'solid 1px'}
+      borderColor={'border.tertiary'}
+      padding={4}
+      borderRadius={4}
+    >
       <PMVStack align="flex-start" gap={1}>
         <PMHeading level="h6">Login command</PMHeading>
         <PMText as="p" color="tertiary" variant="small">
@@ -257,7 +294,15 @@ const AuthenticateStep: React.FC = () => {
   );
 
   const renderApiKeyContent = () => (
-    <PMVStack align="flex-start" gap={4} width="full">
+    <PMVStack
+      align="flex-start"
+      gap={4}
+      width="full"
+      border={'solid 1px'}
+      borderColor={'border.tertiary'}
+      padding={4}
+      borderRadius={4}
+    >
       <PMVStack align="flex-start" gap={1}>
         <PMHeading level="h6">API key</PMHeading>
         <PMText as="p" color="tertiary" variant="small">
@@ -365,7 +410,7 @@ const AuthenticateStep: React.FC = () => {
   );
 
   return (
-    <PMVStack align="flex-start" gap={6} width="full">
+    <PMVStack align="flex-start" gap={6} width="full" padding={4}>
       <PMVStack align="flex-start" gap={2}>
         <PMHeading level="h5">Authenticate with Packmind</PMHeading>
         <PMText as="p" color="tertiary">
@@ -373,19 +418,31 @@ const AuthenticateStep: React.FC = () => {
         </PMText>
       </PMVStack>
 
-      <PMSegmentGroup.Root
+      <PMRadioCard.Root
         size="sm"
+        variant="outline"
+        orientation="horizontal"
+        defaultValue="login-command"
         value={authMethod}
         onValueChange={(e) => setAuthMethod(e.value as AuthMethod)}
       >
-        <PMSegmentGroup.Indicator />
-        <PMSegmentGroup.Items
-          items={[
-            { label: 'Login command', value: 'login-command' },
-            { label: 'API key', value: 'api-key' },
-          ]}
-        />
-      </PMSegmentGroup.Root>
+        <PMHStack gap={2} alignItems={'stretch'} justify={'center'}>
+          <PMRadioCard.Item value="login-command">
+            <PMRadioCard.ItemHiddenInput />
+            <PMRadioCard.ItemControl>
+              <PMRadioCard.ItemText>Login command</PMRadioCard.ItemText>
+              <PMRadioCard.ItemIndicator />
+            </PMRadioCard.ItemControl>
+          </PMRadioCard.Item>
+          <PMRadioCard.Item value="api-key">
+            <PMRadioCard.ItemHiddenInput />
+            <PMRadioCard.ItemControl>
+              <PMRadioCard.ItemText>API key</PMRadioCard.ItemText>
+              <PMRadioCard.ItemIndicator />
+            </PMRadioCard.ItemControl>
+          </PMRadioCard.Item>
+        </PMHStack>
+      </PMRadioCard.Root>
 
       {authMethod === 'login-command'
         ? renderLoginCommandContent()
@@ -433,7 +490,7 @@ const ConnectAiStep: React.FC = () => {
   }, [getMcpTokenMutation.isError, getMcpTokenMutation.error]);
 
   return (
-    <PMVStack align="flex-start" gap={6} width="full">
+    <PMVStack align="flex-start" gap={6} width="full" p={4}>
       <PMVStack align="flex-start" gap={2}>
         <PMHeading level="h5">Connect your AI tool</PMHeading>
         <PMText as="p" color="tertiary">
