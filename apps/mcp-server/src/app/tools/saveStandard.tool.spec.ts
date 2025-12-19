@@ -25,11 +25,15 @@ describe('createStandard.tool', () => {
   let mockFastify: jest.Mocked<{
     standardsHexa: () => unknown;
     spacesHexa: () => unknown;
+    accountsHexa: () => unknown;
   }>;
   let userContext: UserContext;
   let mockStandardsAdapter: jest.Mocked<{
     createStandardWithExamples: jest.Mock;
     createStandardWithPackages: jest.Mock;
+  }>;
+  let mockAccountsAdapter: jest.Mocked<{
+    getUserById: jest.Mock;
   }>;
   let mockLogger: ReturnType<typeof stubLogger>;
   let toolHandler: (params: {
@@ -65,12 +69,27 @@ describe('createStandard.tool', () => {
       createStandardWithPackages: jest.fn(),
     };
 
+    mockAccountsAdapter = {
+      getUserById: jest.fn(),
+    };
+
+    // Default: return a non-trial user
+    mockAccountsAdapter.getUserById.mockResolvedValue({
+      id: 'user-123',
+      email: 'test@example.com',
+      trial: false,
+    });
+
     mockFastify = {
       standardsHexa: jest.fn(),
       spacesHexa: jest.fn(),
+      accountsHexa: jest.fn().mockReturnValue({
+        getAdapter: () => mockAccountsAdapter,
+      }),
     } as unknown as jest.Mocked<{
       standardsHexa: () => unknown;
       spacesHexa: () => unknown;
+      accountsHexa: () => unknown;
     }>;
 
     dependencies = {
@@ -561,6 +580,193 @@ describe('createStandard.tool', () => {
           spaceId: 'custom-space-456',
         }),
       );
+    });
+  });
+
+  describe('trial user behavior', () => {
+    let mockDeploymentsAdapter: jest.Mocked<{
+      listPackages: jest.Mock;
+      createPackage: jest.Mock;
+      addArtefactsToPackage: jest.Mock;
+    }>;
+
+    beforeEach(() => {
+      mockDeploymentsAdapter = {
+        listPackages: jest.fn(),
+        createPackage: jest.fn(),
+        addArtefactsToPackage: jest.fn(),
+      };
+
+      (mockFastify as unknown as Record<string, jest.Mock>).deploymentsHexa =
+        jest.fn().mockReturnValue({
+          getAdapter: () => mockDeploymentsAdapter,
+        });
+    });
+
+    describe('when user is a trial user', () => {
+      beforeEach(() => {
+        mockAccountsAdapter.getUserById.mockResolvedValue({
+          id: 'user-123',
+          email: 'trial-abc@packmind.trial',
+          trial: true,
+        });
+      });
+
+      describe('when Default package does not exist', () => {
+        it('creates Default package with the standard and returns install prompt', async () => {
+          const mockStandard = {
+            id: 'standard-123',
+            slug: 'test-standard',
+            name: 'Test Standard',
+          };
+
+          mockStandardsAdapter.createStandardWithPackages.mockResolvedValue(
+            mockStandard,
+          );
+
+          mockFastify.standardsHexa.mockReturnValue({
+            getAdapter: () => mockStandardsAdapter,
+          });
+
+          mockDeploymentsAdapter.listPackages.mockResolvedValue({
+            packages: [],
+          });
+
+          mockDeploymentsAdapter.createPackage.mockResolvedValue({
+            package: {
+              id: 'package-123',
+              slug: 'default',
+              name: 'Default',
+            },
+          });
+
+          registerSaveStandardTool(dependencies, mcpServer);
+
+          const result = await toolHandler({
+            name: 'Test Standard',
+            description: 'A test standard',
+          });
+
+          expect(mockDeploymentsAdapter.createPackage).toHaveBeenCalledWith({
+            userId: 'user-123',
+            organizationId: 'org-123',
+            spaceId: 'space-123',
+            name: 'Default',
+            description:
+              'Default package for organizing your standards and recipes',
+            recipeIds: [],
+            standardIds: ['standard-123'],
+          });
+
+          expect(result.content[0].text).toContain(
+            "Standard 'test-standard' has been created successfully",
+          );
+          expect(result.content[0].text).toContain(
+            'The standard has been added to the',
+          );
+          expect(result.content[0].text).toContain('packmind_install_package');
+        });
+      });
+
+      describe('when Default package already exists', () => {
+        it('adds standard to existing Default package and returns install prompt', async () => {
+          const mockStandard = {
+            id: 'standard-456',
+            slug: 'another-standard',
+            name: 'Another Standard',
+          };
+
+          mockStandardsAdapter.createStandardWithPackages.mockResolvedValue(
+            mockStandard,
+          );
+
+          mockFastify.standardsHexa.mockReturnValue({
+            getAdapter: () => mockStandardsAdapter,
+          });
+
+          mockDeploymentsAdapter.listPackages.mockResolvedValue({
+            packages: [
+              {
+                id: 'existing-package-123',
+                slug: 'default',
+                name: 'Default',
+                spaceId: 'space-123',
+              },
+            ],
+          });
+
+          registerSaveStandardTool(dependencies, mcpServer);
+
+          const result = await toolHandler({
+            name: 'Another Standard',
+            description: 'Another test standard',
+          });
+
+          expect(
+            mockDeploymentsAdapter.addArtefactsToPackage,
+          ).toHaveBeenCalledWith({
+            userId: 'user-123',
+            organizationId: 'org-123',
+            packageId: 'existing-package-123',
+            standardIds: ['standard-456'],
+          });
+
+          expect(mockDeploymentsAdapter.createPackage).not.toHaveBeenCalled();
+
+          expect(result.content[0].text).toContain(
+            "Standard 'another-standard' has been created successfully",
+          );
+          expect(result.content[0].text).toContain(
+            'packmind_install_package with packageSlugs: ["default"]',
+          );
+        });
+      });
+    });
+
+    describe('when user is not a trial user', () => {
+      beforeEach(() => {
+        mockAccountsAdapter.getUserById.mockResolvedValue({
+          id: 'user-123',
+          email: 'test@example.com',
+          trial: false,
+        });
+      });
+
+      it('does not create or add to Default package', async () => {
+        const mockStandard = {
+          id: 'standard-789',
+          slug: 'regular-standard',
+          name: 'Regular Standard',
+        };
+
+        mockStandardsAdapter.createStandardWithPackages.mockResolvedValue(
+          mockStandard,
+        );
+
+        mockFastify.standardsHexa.mockReturnValue({
+          getAdapter: () => mockStandardsAdapter,
+        });
+
+        registerSaveStandardTool(dependencies, mcpServer);
+
+        const result = await toolHandler({
+          name: 'Regular Standard',
+          description: 'A regular standard',
+        });
+
+        expect(mockDeploymentsAdapter.listPackages).not.toHaveBeenCalled();
+        expect(mockDeploymentsAdapter.createPackage).not.toHaveBeenCalled();
+        expect(
+          mockDeploymentsAdapter.addArtefactsToPackage,
+        ).not.toHaveBeenCalled();
+
+        expect(result.content[0].text).toBe(
+          "Standard 'regular-standard' has been created successfully with 0 rules and 0 examples.",
+        );
+        expect(result.content[0].text).not.toContain(
+          'packmind_install_package',
+        );
+      });
     });
   });
 });
