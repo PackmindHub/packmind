@@ -1,15 +1,23 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { PackmindLogger } from '@packmind/logger';
 import { extractCodeFromMarkdown } from '@packmind/node-utils';
 import {
   createOrganizationId,
   createUserId,
   getAllProgrammingLanguages,
   RuleWithExamples,
+  SpaceId,
+  StandardId,
   stringToProgrammingLanguage,
 } from '@packmind/types';
+import { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { registerMcpTool, ToolDependencies } from './types';
+import { registerMcpTool, ToolDependencies, UserContext } from './types';
 import { getGlobalSpace } from './utils';
+
+const DEFAULT_PACKAGE_NAME = 'Default';
+const DEFAULT_PACKAGE_DESCRIPTION =
+  'Default package for organizing your standards and recipes';
 
 // Define schemas separately to avoid deep type instantiation
 const ruleExampleSchema = z.object({
@@ -53,6 +61,75 @@ type SaveStandardInput = {
   }>;
   packageSlugs?: string[];
 };
+
+async function ensureDefaultPackageWithStandard(
+  fastify: FastifyInstance,
+  userContext: UserContext,
+  spaceId: SpaceId,
+  standardId: StandardId,
+  logger: PackmindLogger,
+): Promise<string> {
+  const deploymentsHexa = fastify.deploymentsHexa();
+  if (!deploymentsHexa) {
+    throw new Error('Deployments module not available');
+  }
+
+  const deploymentsAdapter = deploymentsHexa.getAdapter();
+  const organizationId = createOrganizationId(userContext.organizationId);
+  const userId = userContext.userId;
+
+  // List existing packages to check if Default package exists
+  const { packages } = await deploymentsAdapter.listPackages({
+    userId,
+    organizationId,
+  });
+
+  const defaultPackage = packages.find(
+    (pkg) => pkg.name === DEFAULT_PACKAGE_NAME,
+  );
+
+  if (defaultPackage) {
+    logger.info('Default package exists, adding standard to it', {
+      packageId: defaultPackage.id,
+      packageSlug: defaultPackage.slug,
+      standardId,
+    });
+
+    // Add standard to existing Default package
+    await deploymentsAdapter.addArtefactsToPackage({
+      userId,
+      organizationId,
+      packageId: defaultPackage.id,
+      standardIds: [standardId],
+    });
+
+    return defaultPackage.slug;
+  }
+
+  // Create new Default package with the standard
+  logger.info('Creating Default package for trial user', {
+    spaceId,
+    standardId,
+  });
+
+  const { package: newPackage } = await deploymentsAdapter.createPackage({
+    userId,
+    organizationId,
+    spaceId,
+    name: DEFAULT_PACKAGE_NAME,
+    description: DEFAULT_PACKAGE_DESCRIPTION,
+    recipeIds: [],
+    standardIds: [standardId],
+  });
+
+  logger.info('Default package created successfully', {
+    packageId: newPackage.id,
+    packageSlug: newPackage.slug,
+    standardId,
+  });
+
+  return newPackage.slug;
+}
 
 export function registerSaveStandardTool(
   dependencies: ToolDependencies,
@@ -169,11 +246,45 @@ export function registerSaveStandardTool(
           { tool: `save_standard` },
         );
 
+        // For trial users, ensure the standard is added to the Default package
+        let trialPackageSlug: string | null = null;
+        const accountsAdapter = fastify.accountsHexa().getAdapter();
+        const user = await accountsAdapter.getUserById(
+          createUserId(userContext.userId),
+        );
+
+        if (user?.trial) {
+          logger.info('Trial user detected, ensuring Default package exists', {
+            userId: userContext.userId,
+          });
+
+          trialPackageSlug = await ensureDefaultPackageWithStandard(
+            fastify,
+            userContext,
+            firstSpace.id,
+            standard.id,
+            logger,
+          );
+        }
+
+        const baseMessage = `Standard '${standard.slug}' has been created successfully with ${processedRules.length} rules and ${processedRules.reduce((sum, r) => sum + (r.examples?.length || 0), 0)} examples.`;
+
+        if (trialPackageSlug) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `${baseMessage}\n\nThe standard has been added to the '${trialPackageSlug}' package. Now call packmind_install_package with packageSlugs: ["${trialPackageSlug}"] to deploy it to your local environment.`,
+              },
+            ],
+          };
+        }
+
         return {
           content: [
             {
               type: 'text',
-              text: `Standard '${standard.slug}' has been created successfully with ${processedRules.length} rules and ${processedRules.reduce((sum, r) => sum + (r.examples?.length || 0), 0)} examples.`,
+              text: baseMessage,
             },
           ],
         };
