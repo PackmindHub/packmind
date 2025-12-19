@@ -1,22 +1,31 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { stubLogger } from '@packmind/test-utils';
-import { IEventTrackingPort } from '@packmind/types';
+import { IEventTrackingPort, Space } from '@packmind/types';
 import { registerSaveStandardRuleTool } from './saveStandardRule.tool';
 import { ToolDependencies, UserContext } from './types';
+import * as utils from './utils';
 
 jest.mock('@packmind/node-utils', () => ({
   extractCodeFromMarkdown: jest.fn((code: string) => code),
 }));
+jest.mock('./utils');
 
 describe('addRuleToStandard.tool', () => {
   let mcpServer: McpServer;
   let dependencies: ToolDependencies;
   let mockAnalyticsAdapter: jest.Mocked<IEventTrackingPort>;
-  let mockFastify: jest.Mocked<{ standardsHexa: () => unknown }>;
+  let mockFastify: jest.Mocked<{
+    standardsHexa: () => unknown;
+    accountsHexa: () => unknown;
+  }>;
   let userContext: UserContext;
+  let mockAccountsAdapter: jest.Mocked<{
+    getUserById: jest.Mock;
+  }>;
+  let mockLogger: ReturnType<typeof stubLogger>;
 
   beforeEach(() => {
-    const mockLogger = stubLogger();
+    mockLogger = stubLogger();
 
     mockAnalyticsAdapter = {
       trackEvent: jest.fn(),
@@ -29,9 +38,26 @@ describe('addRuleToStandard.tool', () => {
       role: 'member',
     };
 
+    mockAccountsAdapter = {
+      getUserById: jest.fn(),
+    };
+
+    // Default: return a non-trial user
+    mockAccountsAdapter.getUserById.mockResolvedValue({
+      id: 'user-123',
+      email: 'test@example.com',
+      trial: false,
+    });
+
     mockFastify = {
       standardsHexa: jest.fn(),
-    } as unknown as jest.Mocked<{ standardsHexa: () => unknown }>;
+      accountsHexa: jest.fn().mockReturnValue({
+        getAdapter: () => mockAccountsAdapter,
+      }),
+    } as unknown as jest.Mocked<{
+      standardsHexa: () => unknown;
+      accountsHexa: () => unknown;
+    }>;
 
     dependencies = {
       fastify: mockFastify as unknown as ToolDependencies['fastify'],
@@ -44,6 +70,12 @@ describe('addRuleToStandard.tool', () => {
     mcpServer = {
       tool: jest.fn(),
     } as unknown as McpServer;
+
+    // Mock getGlobalSpace to return a mock space
+    (utils.getGlobalSpace as jest.Mock).mockResolvedValue({
+      id: 'space-123',
+      name: 'Global Space',
+    } as Space);
   });
 
   afterEach(() => {
@@ -561,6 +593,201 @@ describe('addRuleToStandard.tool', () => {
       });
 
       expect(mockAdapter.createRuleExample).not.toHaveBeenCalled();
+    });
+
+    describe('trial user behavior', () => {
+      let mockDeploymentsAdapter: jest.Mocked<{
+        listPackages: jest.Mock;
+        createPackage: jest.Mock;
+        addArtefactsToPackage: jest.Mock;
+      }>;
+
+      beforeEach(() => {
+        mockDeploymentsAdapter = {
+          listPackages: jest.fn(),
+          createPackage: jest.fn(),
+          addArtefactsToPackage: jest.fn(),
+        };
+
+        (mockFastify as unknown as Record<string, jest.Mock>).deploymentsHexa =
+          jest.fn().mockReturnValue({
+            getAdapter: () => mockDeploymentsAdapter,
+          });
+      });
+
+      describe('when user is a trial user', () => {
+        beforeEach(() => {
+          mockAccountsAdapter.getUserById.mockResolvedValue({
+            id: 'user-123',
+            email: 'trial-abc@packmind.trial',
+            trial: true,
+          });
+        });
+
+        describe('when Default package does not exist', () => {
+          it('creates Default package with the standard and returns install prompt', async () => {
+            const mockAdapter = {
+              addRuleToStandard: jest.fn().mockResolvedValue({
+                standardId: 'standard-123',
+                version: '1.1.0',
+              }),
+              getRulesByStandardId: jest.fn().mockResolvedValue([
+                {
+                  id: 'rule-123',
+                  content: 'Test rule',
+                },
+              ]),
+            };
+
+            mockFastify.standardsHexa.mockReturnValue({
+              getAdapter: () => mockAdapter,
+            });
+
+            mockDeploymentsAdapter.listPackages.mockResolvedValue({
+              packages: [],
+            });
+
+            mockDeploymentsAdapter.createPackage.mockResolvedValue({
+              package: {
+                id: 'package-123',
+                slug: 'default',
+                name: 'Default',
+              },
+            });
+
+            registerSaveStandardRuleTool(dependencies, mcpServer);
+
+            const result = await toolHandler({
+              standardSlug: 'test-standard',
+              ruleContent: 'Test rule',
+            });
+
+            expect(mockDeploymentsAdapter.createPackage).toHaveBeenCalledWith({
+              userId: 'user-123',
+              organizationId: 'org-123',
+              spaceId: 'space-123',
+              name: 'Default',
+              description:
+                'Default package for organizing your standards and recipes',
+              recipeIds: [],
+              standardIds: ['standard-123'],
+            });
+
+            expect(result.content[0].text).toContain(
+              "Rule added successfully to standard 'test-standard'",
+            );
+            expect(result.content[0].text).toContain(
+              '**IMPORTANT: You MUST now call packmind_install_package',
+            );
+          });
+        });
+
+        describe('when Default package already exists', () => {
+          it('adds standard to existing Default package and returns install prompt', async () => {
+            const mockAdapter = {
+              addRuleToStandard: jest.fn().mockResolvedValue({
+                standardId: 'standard-456',
+                version: '1.2.0',
+              }),
+              getRulesByStandardId: jest.fn().mockResolvedValue([
+                {
+                  id: 'rule-456',
+                  content: 'Another rule',
+                },
+              ]),
+            };
+
+            mockFastify.standardsHexa.mockReturnValue({
+              getAdapter: () => mockAdapter,
+            });
+
+            mockDeploymentsAdapter.listPackages.mockResolvedValue({
+              packages: [
+                {
+                  id: 'existing-package-123',
+                  slug: 'default',
+                  name: 'Default',
+                  spaceId: 'space-123',
+                },
+              ],
+            });
+
+            registerSaveStandardRuleTool(dependencies, mcpServer);
+
+            const result = await toolHandler({
+              standardSlug: 'another-standard',
+              ruleContent: 'Another rule',
+            });
+
+            expect(
+              mockDeploymentsAdapter.addArtefactsToPackage,
+            ).toHaveBeenCalledWith({
+              userId: 'user-123',
+              organizationId: 'org-123',
+              packageId: 'existing-package-123',
+              standardIds: ['standard-456'],
+            });
+
+            expect(mockDeploymentsAdapter.createPackage).not.toHaveBeenCalled();
+
+            expect(result.content[0].text).toContain(
+              "Rule added successfully to standard 'another-standard'",
+            );
+            expect(result.content[0].text).toContain(
+              '**IMPORTANT: You MUST now call packmind_install_package with packageSlugs: ["default"]',
+            );
+          });
+        });
+      });
+
+      describe('when user is not a trial user', () => {
+        beforeEach(() => {
+          mockAccountsAdapter.getUserById.mockResolvedValue({
+            id: 'user-123',
+            email: 'test@example.com',
+            trial: false,
+          });
+        });
+
+        it('does not create or add to Default package', async () => {
+          const mockAdapter = {
+            addRuleToStandard: jest.fn().mockResolvedValue({
+              standardId: 'standard-789',
+              version: '1.3.0',
+            }),
+            getRulesByStandardId: jest.fn().mockResolvedValue([
+              {
+                id: 'rule-789',
+                content: 'Regular rule',
+              },
+            ]),
+          };
+
+          mockFastify.standardsHexa.mockReturnValue({
+            getAdapter: () => mockAdapter,
+          });
+
+          registerSaveStandardRuleTool(dependencies, mcpServer);
+
+          const result = await toolHandler({
+            standardSlug: 'regular-standard',
+            ruleContent: 'Regular rule',
+          });
+
+          expect(mockDeploymentsAdapter.listPackages).not.toHaveBeenCalled();
+          expect(mockDeploymentsAdapter.createPackage).not.toHaveBeenCalled();
+          expect(
+            mockDeploymentsAdapter.addArtefactsToPackage,
+          ).not.toHaveBeenCalled();
+
+          expect(result.content[0].text).toBe(
+            "Rule added successfully to standard 'regular-standard'. New version 1.3.0 created.",
+          );
+          expect(result.content[0].text).not.toContain(
+            'packmind_install_package',
+          );
+        });
+      });
     });
   });
 });

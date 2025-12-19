@@ -8,7 +8,13 @@ import {
   stringToProgrammingLanguage,
 } from '@packmind/types';
 import { z } from 'zod';
+import {
+  buildTrialInstallPrompt,
+  ensureDefaultPackageWithArtifact,
+  isTrialUser,
+} from './trialPackageUtils';
 import { registerMcpTool, ToolDependencies } from './types';
+import { getGlobalSpace } from './utils';
 
 export function registerSaveStandardRuleTool(
   dependencies: ToolDependencies,
@@ -116,11 +122,50 @@ export function registerSaveStandardRuleTool(
           { tool: `save_standard_rule` },
         );
 
+        // For trial users, ensure the standard is added to the Default package
+        let trialPackageSlug: string | null = null;
+        const isTrial = await isTrialUser(
+          fastify,
+          createUserId(userContext.userId),
+        );
+
+        if (isTrial) {
+          logger.info('Trial user detected, ensuring Default package exists', {
+            userId: userContext.userId,
+          });
+
+          const globalSpace = await getGlobalSpace(
+            fastify,
+            createOrganizationId(userContext.organizationId),
+          );
+
+          trialPackageSlug = await ensureDefaultPackageWithArtifact(
+            fastify,
+            userContext,
+            globalSpace.id,
+            { standardId: newStandardVersion.standardId },
+            logger,
+          );
+        }
+
+        const baseMessage = `Rule added successfully to standard '${standardSlug.toLowerCase()}'. New version ${newStandardVersion.version} created.`;
+
+        if (trialPackageSlug) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `${baseMessage}\n\n${buildTrialInstallPrompt(trialPackageSlug)}`,
+              },
+            ],
+          };
+        }
+
         return {
           content: [
             {
               type: 'text',
-              text: `Rule added successfully to standard '${standardSlug.toLowerCase()}'. New version ${newStandardVersion.version} created.`,
+              text: baseMessage,
             },
           ],
         };
