@@ -17,13 +17,18 @@ jobs:
         id: get-version
         run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
-      - name: Set image suffix
-        id: set-image-suffix
+      - name: Set image name and version suffix
+        id: set-image-naming
         run: |
           if [ "${{ vars.PACKMIND_EDITION }}" = "oss" ]; then
-            echo "suffix=" >> $GITHUB_OUTPUT
+            echo "name_suffix=" >> $GITHUB_OUTPUT
+            echo "version_suffix=" >> $GITHUB_OUTPUT
+          elif [ "${{ vars.PACKMIND_EDITION }}" = "proprietary" ]; then
+            echo "name_suffix=" >> $GITHUB_OUTPUT
+            echo "version_suffix=-enterprise" >> $GITHUB_OUTPUT
           else
-            echo "suffix=-${{ vars.PACKMIND_EDITION }}" >> $GITHUB_OUTPUT
+            echo "name_suffix=-${{ vars.PACKMIND_EDITION }}" >> $GITHUB_OUTPUT
+            echo "version_suffix=-${{ vars.PACKMIND_EDITION }}" >> $GITHUB_OUTPUT
           fi
 
       - name: Create GitHub Release
@@ -41,9 +46,9 @@ jobs:
             ## Docker Images
 
             The following Docker images have been built and pushed to Docker Hub:
-            - `packmind/api${{ steps.set-image-suffix.outputs.suffix }}:${{ steps.get-version.outputs.version }}`
-            - `packmind/frontend${{ steps.set-image-suffix.outputs.suffix }}:${{ steps.get-version.outputs.version }}`
-            - `packmind/mcp${{ steps.set-image-suffix.outputs.suffix }}:${{ steps.get-version.outputs.version }}`
+            - `packmind/api${{ steps.set-image-naming.outputs.name_suffix }}:${{ steps.get-version.outputs.version }}${{ steps.set-image-naming.outputs.version_suffix }}`
+            - `packmind/frontend${{ steps.set-image-naming.outputs.name_suffix }}:${{ steps.get-version.outputs.version }}${{ steps.set-image-naming.outputs.version_suffix }}`
+            - `packmind/mcp${{ steps.set-image-naming.outputs.name_suffix }}:${{ steps.get-version.outputs.version }}${{ steps.set-image-naming.outputs.version_suffix }}`
 
             All images are also available with the `latest` tag.
           draft: false
