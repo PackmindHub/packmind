@@ -16,13 +16,14 @@ import { loadCredentials, getCredentialsPath } from '../utils/credentials';
 import { PackmindCliHexa } from '../../PackmindCliHexa';
 import { PackmindLogger, LogLevel } from '@packmind/logger';
 
-const VALID_AGENTS = ['copilot', 'cursor', 'claude'] as const;
+const VALID_AGENTS = ['copilot', 'cursor', 'claude', 'continue'] as const;
 type AgentArg = (typeof VALID_AGENTS)[number];
 
 const agentArgToType: Record<AgentArg, AgentType> = {
   copilot: 'vscode',
   cursor: 'cursor',
   claude: 'claude',
+  continue: 'continue',
 };
 
 const AgentArgType: Type<string, AgentArg> = {
@@ -46,6 +47,7 @@ const ALL_AGENTS: AgentInfo[] = [
   { type: 'claude', name: 'Claude Code' },
   { type: 'cursor', name: 'Cursor' },
   { type: 'vscode', name: 'VS Code' },
+  { type: 'continue', name: 'Continue.dev' },
 ];
 
 type AgentChoice = {
@@ -118,7 +120,7 @@ export const setupMcpCommand = command({
       long: 'target',
       short: 't',
       description:
-        'Target agent(s) to configure (copilot, cursor, or claude). Can be specified multiple times. If omitted, interactive mode is used.',
+        'Target agent(s) to configure (copilot, cursor, claude, or continue). Can be specified multiple times. If omitted, interactive mode is used.',
     }),
   },
   handler: async ({ targets }) => {

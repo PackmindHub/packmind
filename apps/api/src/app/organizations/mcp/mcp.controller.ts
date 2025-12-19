@@ -90,4 +90,69 @@ export class McpController {
     }
     return { url: 'http://localhost:8081/mcp' };
   }
+
+  @Get('config')
+  @HttpCode(HttpStatus.OK)
+  async getConfig(
+    @Param('orgId') organizationId: OrganizationId,
+    @Req() request: AuthenticatedRequest,
+  ): Promise<{
+    token: string;
+    url: string;
+    configs: {
+      cursor: object;
+      vscode: object;
+      continue: object;
+      claude: object;
+      generic: object;
+    };
+  }> {
+    this.logger.info(
+      'GET /organizations/:orgId/mcp/config - Generating complete MCP configuration',
+      {
+        userId: request.user.userId,
+        organizationId,
+      },
+    );
+
+    try {
+      const tokenResponse =
+        await this.mcpService.generateTokenForAuthenticatedUser({
+          userId: request.user.userId,
+          organizationId,
+        });
+
+      const configResponse = await this.mcpService.getAllConfigs(
+        tokenResponse.access_token,
+      );
+
+      this.logger.info(
+        'GET /organizations/:orgId/mcp/config - Configuration generated successfully',
+        {
+          userId: request.user.userId,
+          organizationId,
+        },
+      );
+
+      return configResponse;
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+
+      this.logger.error(
+        'GET /organizations/:orgId/mcp/config - Error generating configuration',
+        {
+          userId: request.user.userId,
+          organizationId,
+          error: getErrorMessage(error),
+        },
+      );
+
+      throw new InternalServerErrorException({
+        error: 'server_error',
+        error_description: 'An error occurred while processing the request',
+      });
+    }
+  }
 }

@@ -91,6 +91,31 @@ describe('AgentDetectionService', () => {
     });
   });
 
+  describe('isContinueAvailable', () => {
+    describe('when .continue directory exists in project', () => {
+      it('returns true', () => {
+        mockFs.existsSync.mockReturnValue(true);
+        const service = new AgentDetectionService('/project');
+
+        const result = service.isContinueAvailable();
+
+        expect(result).toBe(true);
+        expect(mockFs.existsSync).toHaveBeenCalledWith('/project/.continue');
+      });
+    });
+
+    describe('when .continue directory does not exist in project', () => {
+      it('returns false', () => {
+        mockFs.existsSync.mockReturnValue(false);
+        const service = new AgentDetectionService('/project');
+
+        const result = service.isContinueAvailable();
+
+        expect(result).toBe(false);
+      });
+    });
+  });
+
   describe('detectAgents', () => {
     describe('when all agents are available', () => {
       it('returns all detected agents', () => {
@@ -100,10 +125,14 @@ describe('AgentDetectionService', () => {
 
         const result = service.detectAgents();
 
-        expect(result).toHaveLength(3);
+        expect(result).toHaveLength(4);
         expect(result).toContainEqual({ type: 'claude', name: 'Claude Code' });
         expect(result).toContainEqual({ type: 'cursor', name: 'Cursor' });
         expect(result).toContainEqual({ type: 'vscode', name: 'VS Code' });
+        expect(result).toContainEqual({
+          type: 'continue',
+          name: 'Continue.dev',
+        });
       });
     });
 

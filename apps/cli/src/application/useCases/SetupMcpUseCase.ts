@@ -12,6 +12,7 @@ const ALL_AGENTS: { type: AgentType; name: string }[] = [
   { type: 'claude', name: 'Claude Code' },
   { type: 'cursor', name: 'Cursor' },
   { type: 'vscode', name: 'VS Code' },
+  { type: 'continue', name: 'Continue.dev' },
 ];
 
 export interface ISetupMcpDependencies {

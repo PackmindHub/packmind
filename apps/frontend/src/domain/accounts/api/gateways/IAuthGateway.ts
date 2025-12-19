@@ -90,6 +90,17 @@ export interface IAuthGateway {
   getMe(): Promise<MeResponse>;
   getMcpToken: NewGateway<IGetMcpTokenUseCase>;
   getMcpURL: NewGateway<IGetMcpUrlUseCase>;
+  getMcpConfig(command: { organizationId: OrganizationId }): Promise<{
+    token: string;
+    url: string;
+    configs: {
+      cursor: object;
+      vscode: object;
+      continue: object;
+      claude: object;
+      generic: object;
+    };
+  }>;
   generateApiKey: Gateway<IGenerateApiKeyUseCase>;
   getCurrentApiKey: PublicGateway<IGetCurrentApiKeyUseCase>;
   validateInvitationToken(token: string): Promise<ValidateInvitationResponse>;

@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as os from 'os';
 import { execSync } from 'child_process';
 
-export type AgentType = 'claude' | 'cursor' | 'vscode';
+export type AgentType = 'claude' | 'cursor' | 'vscode' | 'continue';
 
 export type DetectedAgent = {
   type: AgentType;
@@ -15,6 +15,7 @@ export interface IAgentDetectionService {
   isClaudeAvailable(): boolean;
   isCursorAvailable(): boolean;
   isVSCodeAvailable(): boolean;
+  isContinueAvailable(): boolean;
 }
 
 export class AgentDetectionService implements IAgentDetectionService {
@@ -35,6 +36,10 @@ export class AgentDetectionService implements IAgentDetectionService {
       agents.push({ type: 'vscode', name: 'VS Code' });
     }
 
+    if (this.isContinueAvailable()) {
+      agents.push({ type: 'continue', name: 'Continue.dev' });
+    }
+
     return agents;
   }
 
@@ -50,6 +55,11 @@ export class AgentDetectionService implements IAgentDetectionService {
   isVSCodeAvailable(): boolean {
     const vscodeDir = path.join(this.projectDir, '.vscode');
     return fs.existsSync(vscodeDir);
+  }
+
+  isContinueAvailable(): boolean {
+    const continueDir = path.join(this.projectDir, '.continue');
+    return fs.existsSync(continueDir);
   }
 
   private isCommandAvailable(command: string): boolean {
