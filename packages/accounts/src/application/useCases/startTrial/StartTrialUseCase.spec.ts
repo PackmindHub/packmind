@@ -210,6 +210,20 @@ describe('StartTrialUseCase', () => {
           activeRenderModes: [RenderMode.GH_COPILOT],
         });
       });
+
+      it('creates render mode configuration with CURSOR for cursor agent', async () => {
+        const command: StartTrialCommand = { agent: 'cursor' };
+
+        await startTrialUseCase.execute(command);
+
+        expect(
+          mockDeploymentPort.createRenderModeConfiguration,
+        ).toHaveBeenCalledWith({
+          userId: expect.anything(),
+          organizationId: mockOrganization.id,
+          activeRenderModes: [RenderMode.CURSOR],
+        });
+      });
     });
 
     describe('when organization creation fails', () => {

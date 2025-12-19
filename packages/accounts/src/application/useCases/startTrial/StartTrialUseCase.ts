@@ -138,6 +138,8 @@ export class StartTrialUseCase implements IStartTrial {
     switch (agent) {
       case 'vs-code':
         return [RenderMode.GH_COPILOT];
+      case 'cursor':
+        return [RenderMode.CURSOR];
       default:
         return [];
     }
