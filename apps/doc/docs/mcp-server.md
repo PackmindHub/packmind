@@ -86,6 +86,10 @@ Creates a new coding standard with multiple rules and code examples in a single 
 Do not call this tool directly. AI agents must first complete the standard creation workflow using `create_standard`.
 :::
 
+:::tip
+When creating new standard using `save_standard`, you can include the optional `packageSlugs` parameter to automatically add it to packages during creation.
+:::
+
 **Parameters:**
 
 - `name` (required) - Name of the standard (e.g., "Error Handling", "Unit Test Conventions")
@@ -182,6 +186,10 @@ Captures a reusable development process or procedure as a structured Packmind re
 Do not call this tool directly. AI agents must first complete the recipe creation workflow using `create_recipe`.
 :::
 
+:::tip
+When creating new recipe using `save_recipe`, you can include the optional `packageSlugs` parameter to automatically add them to packages during creation.
+:::
+
 **Parameters:**
 
 - `name` (required) - The name of the recipe (e.g., "Add REST Endpoint", "Create Domain Model")
@@ -235,6 +243,30 @@ Retrieves the full content of a specific package including all its recipes and s
 "Show me the details of the frontend-react package"
 ```
 
-:::tip
-When creating new recipes or standards using `save_recipe` or `save_standard`, you can include the optional `packageSlugs` parameter to automatically add them to packages during creation.
-:::
+### Install Package
+
+**Tool:** `install_package`
+
+Installs Packmind packages into your project by generating the necessary configuration files. This tool operates in two modes: instruction mode (default) which returns setup guidance, and agent rendering mode which returns file updates for the AI agent to apply directly.
+
+**Parameters:**
+
+- `packageSlug` (required) - The slug of the package to install. Use `list_packages` to find available packages.
+- `installedPackages` (optional) - Array of already installed package slugs from your `packmind.json` file. Read the file and extract the package slugs from the `packages` section to preserve existing installations.
+- `relativePath` (required) - The target directory where files should be installed (e.g., `"/"` for project root, `"/packages/my-app/"` for a monorepo subfolder)
+- `agentRendering` (required) - Controls the tool's output mode:
+  - `false` - Returns installation instructions for manual setup
+  - `true` - Returns file updates for the AI agent to apply automatically
+- `gitRemoteUrl` (optional) - The git remote URL of your repository. Run `git remote get-url origin` to obtain it.
+- `gitBranch` (optional) - The current git branch name. Run `git branch --show-current` to obtain it.
+
+**Returns:**
+
+- When `agentRendering` is `false`: Step-by-step installation instructions
+- When `agentRendering` is `true`: File contents to create or update, which the AI agent will apply to your project
+
+**Usage Example:**
+
+```plaintext
+"Install the typescript-best-practices package in my project"
+```

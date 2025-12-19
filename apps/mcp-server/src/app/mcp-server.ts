@@ -76,6 +76,7 @@ export async function createMCPServer(
   registerSaveStandardTool(toolDependencies, mcpServer);
   registerCreateStandardRuleTool(toolDependencies, mcpServer);
   registerOnboardingTool(toolDependencies, mcpServer);
+  registerInstallPackageTool(toolDependencies, mcpServer);
 
   // Register trial activation tool only for trial users (fetch fresh data from DB)
   if (userContext) {
@@ -90,13 +91,6 @@ export async function createMCPServer(
         logger.info('Trial activation tool registered for trial user', {
           userId: userContext.userId,
         });
-      }
-
-      if (
-        user?.email?.endsWith('@packmind.com') ||
-        user?.email?.endsWith('@packmind.trial')
-      ) {
-        registerInstallPackageTool(toolDependencies, mcpServer);
       }
     } catch (error) {
       logger.error('Failed to check user trial status', {
