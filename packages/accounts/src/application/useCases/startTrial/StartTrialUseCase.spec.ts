@@ -224,6 +224,20 @@ describe('StartTrialUseCase', () => {
           activeRenderModes: [RenderMode.CURSOR],
         });
       });
+
+      it('creates render mode configuration with CLAUDE for claude agent', async () => {
+        const command: StartTrialCommand = { agent: 'claude' };
+
+        await startTrialUseCase.execute(command);
+
+        expect(
+          mockDeploymentPort.createRenderModeConfiguration,
+        ).toHaveBeenCalledWith({
+          userId: expect.anything(),
+          organizationId: mockOrganization.id,
+          activeRenderModes: [RenderMode.CLAUDE],
+        });
+      });
     });
 
     describe('when organization creation fails', () => {
