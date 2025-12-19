@@ -662,9 +662,9 @@ describe('createStandard.tool', () => {
             "Standard 'test-standard' has been created successfully",
           );
           expect(result.content[0].text).toContain(
-            'The standard has been added to the',
+            '**IMPORTANT: You MUST now call packmind_install_package',
           );
-          expect(result.content[0].text).toContain('packmind_install_package');
+          expect(result.content[0].text).toContain('This is a required step');
         });
       });
 
@@ -717,7 +717,7 @@ describe('createStandard.tool', () => {
             "Standard 'another-standard' has been created successfully",
           );
           expect(result.content[0].text).toContain(
-            'packmind_install_package with packageSlugs: ["default"]',
+            '**IMPORTANT: You MUST now call packmind_install_package with packageSlugs: ["default"]',
           );
         });
       });
