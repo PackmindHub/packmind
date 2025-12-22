@@ -27,6 +27,7 @@
 
 ## Removed
 
+- Recipe usage analytics and tracking system
 - Deleted standards are properly removed from packages #34
 
 # [1.5.0] - 2025-12-05
