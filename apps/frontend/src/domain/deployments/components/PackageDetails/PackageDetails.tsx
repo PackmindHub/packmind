@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   PMPage,
   PMText,
@@ -28,9 +28,6 @@ import {
   PMDataList,
   PMTabs,
   PMEmptyState,
-  PMFeatureFlag,
-  DEFAULT_FEATURE_DOMAIN_MAP,
-  REMOVE_PACKAGE_FROM_TARGETS_FEATURE_KEY,
 } from '@packmind/ui';
 import { Link, useNavigate } from 'react-router';
 import {
@@ -821,18 +818,12 @@ export const PackageDetails = ({
               selectedPackages={[pkg]}
             />
           )}
-          <PMFeatureFlag
-            featureKeys={[REMOVE_PACKAGE_FROM_TARGETS_FEATURE_KEY]}
-            featureDomainMap={DEFAULT_FEATURE_DOMAIN_MAP}
-            userEmail={user?.email}
-          >
-            <RemovePackageFromTargetsButton
-              selectedPackage={pkg}
-              distributions={deployments}
-              distributionsLoading={isLoadingDeployments}
-              size="md"
-            />
-          </PMFeatureFlag>
+          <RemovePackageFromTargetsButton
+            selectedPackage={pkg}
+            distributions={deployments}
+            distributionsLoading={isLoadingDeployments}
+            size="md"
+          />
           <PMButton variant="tertiary" onClick={handleEdit}>
             Edit
           </PMButton>
