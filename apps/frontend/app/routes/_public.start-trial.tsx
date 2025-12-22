@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
 import {
   PMBox,
   PMVStack,
@@ -9,6 +10,7 @@ import {
   PMGrid,
 } from '@packmind/ui';
 import { StartTrialCommand } from '@packmind/types';
+import { routes } from '../../src/shared/utils/routes';
 
 type Agent = StartTrialCommand['agent'];
 
@@ -47,6 +49,14 @@ const AGENT_OPTIONS: IAgentOption[] = [
 
 export default function StartTrialRouteModule() {
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+  const navigate = useNavigate();
+
+  const handleContinue = () => {
+    if (!selectedAgent) return;
+    // Token will be computed server-side in a future iteration
+    const token = 'aaaa-bbbb-cccc-dddd';
+    navigate(routes.auth.toStartTrialAgent(selectedAgent, token));
+  };
 
   return (
     <PMVStack gap={6} align="stretch">
@@ -80,7 +90,7 @@ export default function StartTrialRouteModule() {
         </PMGrid>
       </PMRadioCard.Root>
 
-      <PMButton disabled={!selectedAgent} width="full">
+      <PMButton disabled={!selectedAgent} width="full" onClick={handleContinue}>
         Continue
       </PMButton>
     </PMVStack>
