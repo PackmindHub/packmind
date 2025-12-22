@@ -75,15 +75,32 @@ jobs:
       - name: Set image naming strategy
         id: set-image-naming
         run: |
-          if [ "${{ vars.PACKMIND_EDITION }}" = "oss" ]; then
-            echo "name_suffix=-oss" >> $GITHUB_OUTPUT
-            echo "version_suffix=" >> $GITHUB_OUTPUT
-          elif [ "${{ vars.PACKMIND_EDITION }}" = "proprietary" ]; then
-            echo "name_suffix=-proprietary" >> $GITHUB_OUTPUT
-            echo "version_suffix=-enterprise" >> $GITHUB_OUTPUT
+          # For release tags: use unsuffixed names (packmind/api:version)
+          # For main branch: use suffixed names (packmind/api-oss:sha or packmind/api-proprietary:sha)
+          if [[ "${{ github.ref }}" == refs/tags/release/* ]]; then
+            # Release tags: unsuffixed image names
+            if [ "${{ vars.PACKMIND_EDITION }}" = "oss" ]; then
+              echo "name_suffix=" >> $GITHUB_OUTPUT
+              echo "version_suffix=" >> $GITHUB_OUTPUT
+            elif [ "${{ vars.PACKMIND_EDITION }}" = "proprietary" ]; then
+              echo "name_suffix=" >> $GITHUB_OUTPUT
+              echo "version_suffix=-enterprise" >> $GITHUB_OUTPUT
+            else
+              echo "name_suffix=" >> $GITHUB_OUTPUT
+              echo "version_suffix=-${{ vars.PACKMIND_EDITION }}" >> $GITHUB_OUTPUT
+            fi
           else
-            echo "name_suffix=-${{ vars.PACKMIND_EDITION }}" >> $GITHUB_OUTPUT
-            echo "version_suffix=-${{ vars.PACKMIND_EDITION }}" >> $GITHUB_OUTPUT
+            # Main branch: suffixed image names for internal tracking
+            if [ "${{ vars.PACKMIND_EDITION }}" = "oss" ]; then
+              echo "name_suffix=-oss" >> $GITHUB_OUTPUT
+              echo "version_suffix=" >> $GITHUB_OUTPUT
+            elif [ "${{ vars.PACKMIND_EDITION }}" = "proprietary" ]; then
+              echo "name_suffix=-proprietary" >> $GITHUB_OUTPUT
+              echo "version_suffix=-enterprise" >> $GITHUB_OUTPUT
+            else
+              echo "name_suffix=-${{ vars.PACKMIND_EDITION }}" >> $GITHUB_OUTPUT
+              echo "version_suffix=-${{ vars.PACKMIND_EDITION }}" >> $GITHUB_OUTPUT
+            fi
           fi
 
       - name: Determine image tag
