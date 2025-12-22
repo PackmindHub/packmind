@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+  PMAlert,
   PMBox,
   PMVStack,
   PMHeading,
@@ -53,11 +54,13 @@ export function StartTrialAgentSelector({
 }: IStartTrialAgentSelectorProps) {
   const [selectedAgent, setSelectedAgent] =
     useState<StartTrialCommandAgents | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const { mutate: startTrial, isPending } = useStartTrialMutation();
 
   const handleContinue = () => {
     if (!selectedAgent) return;
 
+    setError(null);
     startTrial(
       { agent: selectedAgent },
       {
@@ -65,6 +68,9 @@ export function StartTrialAgentSelector({
           if (result.mcpToken) {
             onTokenAvailable(selectedAgent, result.mcpToken);
           }
+        },
+        onError: () => {
+          setError('Unable to start your trial, please try again');
         },
       },
     );
@@ -112,6 +118,13 @@ export function StartTrialAgentSelector({
       >
         Continue
       </PMButton>
+
+      {error && (
+        <PMAlert.Root status="error">
+          <PMAlert.Indicator />
+          <PMAlert.Title>{error}</PMAlert.Title>
+        </PMAlert.Root>
+      )}
     </PMVStack>
   );
 }
