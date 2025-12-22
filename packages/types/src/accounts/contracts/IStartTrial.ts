@@ -16,6 +16,7 @@ export type StartTrialResult = {
   user: User;
   organization: Organization;
   role: UserOrganizationRole;
+  mcpToken?: string;
 };
 
 export type IStartTrial = IPublicUseCase<StartTrialCommand, StartTrialResult>;
