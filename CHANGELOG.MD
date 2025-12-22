@@ -1,3 +1,13 @@
+# [Unreleased]
+
+## Added
+
+## Changed
+
+## Fixed
+
+## Removed
+
 # [1.6.0] - 2025-12-22
 
 ## Added
