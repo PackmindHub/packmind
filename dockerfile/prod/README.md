@@ -84,8 +84,8 @@ Enables OpenAI integration for AI-powered features:
 
 The production deployment uses these open-source images:
 
-- `packmind/api-oss:${PACKMIND_TAG:-latest}` - API backend service
-- `packmind/mcp-oss:${PACKMIND_TAG:-latest}` - MCP (Model Context Protocol) server
-- `packmind/front-oss:${PACKMIND_TAG:-latest}` - Frontend web application
+- `packmind/api:${PACKMIND_TAG:-latest}` - API backend service
+- `packmind/mcp:${PACKMIND_TAG:-latest}` - MCP (Model Context Protocol) server
+- `packmind/frontend:${PACKMIND_TAG:-latest}` - Frontend web application
 
 The `PACKMIND_TAG` environment variable can be set to deploy specific versions (defaults to `latest`).
