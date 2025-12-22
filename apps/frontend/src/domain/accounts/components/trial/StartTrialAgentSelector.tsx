@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+  PMAlert,
   PMBox,
   PMVStack,
   PMHeading,
@@ -8,13 +9,11 @@ import {
   PMButton,
   PMGrid,
 } from '@packmind/ui';
-import { StartTrialCommand } from '@packmind/types';
+import { StartTrialCommandAgents } from '@packmind/types';
 import { useStartTrialMutation } from '../../api/queries';
 
-type Agent = StartTrialCommand['agent'];
-
 interface IAgentOption {
-  value: Agent;
+  value: StartTrialCommandAgents;
   label: string;
 }
 
@@ -47,18 +46,21 @@ const AGENT_OPTIONS: IAgentOption[] = [
 ];
 
 interface IStartTrialAgentSelectorProps {
-  onTokenAvailable: (agent: Agent, token: string) => void;
+  onTokenAvailable: (agent: StartTrialCommandAgents, token: string) => void;
 }
 
 export function StartTrialAgentSelector({
   onTokenAvailable,
 }: IStartTrialAgentSelectorProps) {
-  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+  const [selectedAgent, setSelectedAgent] =
+    useState<StartTrialCommandAgents | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const { mutate: startTrial, isPending } = useStartTrialMutation();
 
   const handleContinue = () => {
     if (!selectedAgent) return;
 
+    setError(null);
     startTrial(
       { agent: selectedAgent },
       {
@@ -66,6 +68,9 @@ export function StartTrialAgentSelector({
           if (result.mcpToken) {
             onTokenAvailable(selectedAgent, result.mcpToken);
           }
+        },
+        onError: () => {
+          setError('Unable to start your trial, please try again');
         },
       },
     );
@@ -84,7 +89,9 @@ export function StartTrialAgentSelector({
         size="md"
         variant="outline"
         value={selectedAgent ?? undefined}
-        onValueChange={(e) => setSelectedAgent(e.value as Agent)}
+        onValueChange={(e) =>
+          setSelectedAgent(e.value as StartTrialCommandAgents)
+        }
       >
         <PMGrid gridTemplateColumns="repeat(3, 1fr)" gap={3}>
           {AGENT_OPTIONS.map((option) => (
@@ -111,6 +118,13 @@ export function StartTrialAgentSelector({
       >
         Continue
       </PMButton>
+
+      {error && (
+        <PMAlert.Root status="error">
+          <PMAlert.Indicator />
+          <PMAlert.Title>{error}</PMAlert.Title>
+        </PMAlert.Root>
+      )}
     </PMVStack>
   );
 }

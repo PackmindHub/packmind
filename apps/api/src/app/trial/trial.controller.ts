@@ -10,12 +10,21 @@ import { PackmindLogger } from '@packmind/logger';
 import {
   IAccountsPort,
   StartTrialCommand,
+  StartTrialCommandAgents,
   StartTrialResult,
 } from '@packmind/types';
 import { InjectAccountsAdapter } from '../shared/HexaInjection';
 import { McpService } from '../organizations/mcp/mcp.service';
 
 const origin = 'TrialController';
+const validAgents = [
+  'vs-code',
+  'cursor',
+  'claude',
+  'continue-dev',
+  'jetbrains',
+  'other',
+];
 
 @Controller()
 export class TrialController {
@@ -32,9 +41,9 @@ export class TrialController {
   async startTrial(@Query('agent') agent: string): Promise<StartTrialResult> {
     this.logger.info('GET /start-trial - Starting trial', { agent });
 
-    if (agent !== 'vs-code' && agent !== 'cursor' && agent !== 'claude') {
+    if (!isValidAgent(agent)) {
       throw new BadRequestException(
-        'Invalid agent parameter. Supported values: vs-code, cursor, claude',
+        `Invalid agent parameter. Supported values: ${validAgents.join(', ')}`,
       );
     }
 
@@ -66,4 +75,8 @@ export class TrialController {
       throw new InternalServerErrorException('Failed to start trial');
     }
   }
+}
+
+function isValidAgent(tbd: string): tbd is StartTrialCommandAgents {
+  return validAgents.includes(tbd);
 }

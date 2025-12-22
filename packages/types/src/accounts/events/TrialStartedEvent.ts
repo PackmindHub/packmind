@@ -1,12 +1,12 @@
 import { PackmindEvent } from '../../events';
 import { UserId } from '../User';
 import { OrganizationId } from '../Organization';
-import { StartTrialCommand } from '../contracts';
+import { StartTrialCommandAgents } from '../contracts';
 
 export interface TrialStartedPayload {
   userId: UserId;
   organizationId: OrganizationId;
-  agent: StartTrialCommand['agent'];
+  agent: StartTrialCommandAgents;
   startedAt: Date;
 }
 
