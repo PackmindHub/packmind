@@ -274,6 +274,8 @@ ${JSON.stringify(responseData.fileUpdates, null, 2)}
      - If the section exists, replace everything between these markers (including the markers) with: \`<!-- start: \${section.key} -->\\n\${section.content}\\n<!-- end: \${section.key} -->\`
      - If the section does not exist, append to the end of the file: \`<!-- start: \${section.key} -->\\n\${section.content}\\n<!-- end: \${section.key} -->\`
 
+3. **Clean up empty files**: After applying section updates, if a file contains only whitespace or markdown comments (e.g., \`<!-- ... -->\`), delete the file entirely instead of leaving it empty.
+
 **Important**: Apply ALL file changes listed above. Do not skip any files.`;
 
         return {

@@ -56,6 +56,7 @@ export class CommitToGit {
 
     // Process files to handle section-based updates
     const processedFiles: { path: string; content: string }[] = [];
+    const filesToDelete: { path: string }[] = [];
 
     for (const file of files) {
       if (file.content !== undefined) {
@@ -82,15 +83,36 @@ export class CommitToGit {
           file.sections,
         );
 
-        processedFiles.push({ path: file.path, content: mergedContent });
+        // Check if the merged content is empty
+        if (mergedContent.trim() === '') {
+          if (existingFile) {
+            // File exists but would become empty after merge - mark for deletion
+            this.logger.debug(
+              'File would be empty after section merge, marking for deletion',
+              { path: file.path },
+            );
+            filesToDelete.push({ path: file.path });
+          }
+          // If file didn't exist, skip it entirely (nothing to create or delete)
+        } else {
+          processedFiles.push({ path: file.path, content: mergedContent });
+        }
       }
+    }
+
+    // Combine passed-in deleteFiles with files that became empty
+    const allFilesToDelete = [...(deleteFiles ?? []), ...filesToDelete];
+
+    // Validate that we have something to commit (either files to update or delete)
+    if (processedFiles.length === 0 && allFilesToDelete.length === 0) {
+      throw new Error('No files to commit');
     }
 
     // Commit files to git repository and get commit data
     const commitData = await gitRepoInstance.commitFiles(
       processedFiles,
       commitMessage,
-      deleteFiles,
+      allFilesToDelete.length > 0 ? allFilesToDelete : undefined,
     );
 
     // Check if no changes were detected (GitLab returns 'no-changes' as sha)
